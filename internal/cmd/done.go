@@ -430,6 +430,13 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 		}
 		agentBeadID = getAgentBeadID(ctx)
 
+		// Recreate the agent bead if it's missing (hq-xu4p). Done-intent
+		// labels, checkpoints, and active_mr all write to it; when it's gone
+		// every write fails 'issue not found' and witness zombie detection +
+		// done-resume silently degrade. Best-effort: a failed recreate just
+		// leaves the existing warnings.
+		ensureAgentBeadExists(beads.New(cwd), agentBeadID, ctx)
+
 		// Persistent polecat model (gt-hdf8): no deferred session kill.
 		// Sessions stay alive after gt done — polecat transitions to IDLE.
 	}
@@ -1946,6 +1953,41 @@ doneStateUpdate:
 	// lingering labels to detect the zombie and resume from checkpoints.
 	clearDoneIntentLabel(agentBd, agentBeadID)
 	clearDoneCheckpoints(agentBd, agentBeadID)
+}
+
+// ensureAgentBeadExists recreates a missing agent bead so done-intent labels,
+// checkpoints, and active_mr writes don't silently fail (hq-xu4p). Only
+// rig-level agents are handled — town agents (mayor/deacon) are owned by
+// gt doctor. Best-effort: failures are warned, never fatal.
+func ensureAgentBeadExists(bd *beads.Beads, id string, ctx RoleContext) {
+	if id == "" {
+		return
+	}
+	if issue, err := bd.Show(id); err == nil && issue != nil {
+		return // exists (open or closed — doctor handles reopening)
+	}
+
+	fields := &beads.AgentFields{Rig: ctx.Rig, AgentState: "idle"}
+	var title string
+	switch ctx.Role {
+	case RolePolecat:
+		fields.RoleType = "polecat"
+		title = fmt.Sprintf("Polecat worker %s in %s - autonomous worker with persistent identity.", ctx.Polecat, ctx.Rig)
+	case RoleWitness:
+		fields.RoleType = "witness"
+		title = fmt.Sprintf("Witness for %s - monitors polecat health and progress.", ctx.Rig)
+	case RoleRefinery:
+		fields.RoleType = "refinery"
+		title = fmt.Sprintf("Refinery for %s - processes merge queue.", ctx.Rig)
+	default:
+		return
+	}
+
+	if _, err := bd.CreateAgentBead(id, title, fields); err != nil {
+		style.PrintWarning("agent bead %s missing and recreate failed: %v", id, err)
+	} else {
+		fmt.Printf("%s Recreated missing agent bead: %s\n", style.Bold.Render("✓"), id)
+	}
 }
 
 // isStaleBranchIssue reports whether a branch-derived issue id should be
