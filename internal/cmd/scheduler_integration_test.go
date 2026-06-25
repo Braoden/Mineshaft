@@ -47,7 +47,7 @@ func initBeadsDBForServer(t *testing.T, dir, prefix, homeDir string) {
 	// instead of defaulting to port 3307.
 	// bd v1.0.0+ defaults to embedded mode; --server is required to use an
 	// external server (v0.57.0 defaulted to server mode and ignored --server).
-	if p := os.Getenv("GT_DOLT_PORT"); p != "" {
+	if p := schedulerDoltPort(); p != "" {
 		args = append(args, "--server", "--server-port", p)
 	}
 	cmd := exec.Command("bd", args...)
@@ -84,10 +84,19 @@ func initSchedulerGitRepo(t *testing.T, dir, homeDir string) {
 func schedulerBDInitEnv(homeDir, beadsDir string) []string {
 	env := beads.StripBDTargetEnv(cleanSchedulerTestEnv(homeDir))
 	env = append(env, "BEADS_DIR="+beadsDir)
-	if p := os.Getenv("GT_DOLT_PORT"); p != "" {
+	if p := schedulerDoltPort(); p != "" {
 		env = append(env, "BEADS_DOLT_SERVER_PORT="+p, "BEADS_DOLT_PORT="+p)
 	}
 	return env
+}
+
+func schedulerDoltPort() string {
+	for _, key := range []string{"GT_DOLT_PORT", "BEADS_DOLT_SERVER_PORT", "BEADS_DOLT_PORT"} {
+		if p := os.Getenv(key); p != "" {
+			return p
+		}
+	}
+	return ""
 }
 
 func cleanupSchedulerBeadsDatabases(t *testing.T, prefixes ...string) {
