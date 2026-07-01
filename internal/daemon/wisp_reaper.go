@@ -2,7 +2,6 @@ package daemon
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -132,11 +131,9 @@ func (d *Daemon) dispatchReaperDog(vars map[string]string) error {
 
 	cmd := exec.Command(d.gtPath, args...) //nolint:gosec // G204: d.gtPath resolved at daemon init via LookPath
 	cmd.Dir = d.config.TownRoot
-	// Inherit os.Environ() (cmd.Env left nil) — gt sling performs WRITES
-	// (creates wisps, dispatches dogs) so it must NOT carry
-	// BD_DOLT_AUTO_COMMIT=off from bdReadOnlyEnv(). PATH augmentation at
-	// daemon startup (PATCH-007) ensures the inherited env still finds
-	// gt/bd via os.Environ()'s PATH.
+	// gt sling performs writes, so use mutation routing env: it preserves PATH
+	// while stripping stale bd target selectors and derived Beads endpoint aliases.
+	cmd.Env = bdMutationRoutingEnv(d.config.TownRoot)
 	util.SetDetachedProcessGroup(cmd)
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("gt sling: %w", err)
@@ -355,10 +352,7 @@ func (d *Daemon) doltServerHost() string {
 	if d.doltServer != nil && d.doltServer.config.Host != "" {
 		return d.doltServer.config.Host
 	}
-	if host := os.Getenv("GT_DOLT_HOST"); host != "" {
-		return host
-	}
-	if host := os.Getenv("BEADS_DOLT_SERVER_HOST"); host != "" {
+	if host := agentconfig.ResolveDoltHost(d.config.TownRoot); host != "" {
 		return host
 	}
 	if cfg := doltserver.DefaultConfig(d.config.TownRoot); cfg.Host != "" {

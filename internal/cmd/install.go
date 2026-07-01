@@ -784,23 +784,11 @@ func initTownBeads(townPath string) error {
 	return nil
 }
 
-// withBeadsDirEnv returns an environment with BEADS_DIR pinned to the target
-// beads directory and any inherited BEADS_DIR removed. Also sets
-// BEADS_DOLT_SERVER_DATABASE if metadata.json specifies a database name,
-// ensuring bd never falls back to the default "beads" database.
+// withBeadsDirEnv returns the hardened bd mutation environment pinned to the
+// target beads directory, with stale selectors stripped and canonical Dolt
+// endpoint aliases rebuilt from the shared helper.
 func withBeadsDirEnv(beadsDir string) []string {
-	env := os.Environ()
-	filtered := make([]string, 0, len(env)+2)
-	for _, e := range env {
-		if !strings.HasPrefix(e, "BEADS_DIR=") && !strings.HasPrefix(e, "BEADS_DB=") && !strings.HasPrefix(e, "BEADS_DOLT_SERVER_DATABASE=") {
-			filtered = append(filtered, e)
-		}
-	}
-	filtered = append(filtered, "BEADS_DIR="+beadsDir)
-	if dbEnv := beads.DatabaseEnv(beadsDir); dbEnv != "" {
-		filtered = append(filtered, dbEnv)
-	}
-	return filtered
+	return beads.BuildMutationPinnedBDEnv(os.Environ(), beadsDir)
 }
 
 // ensureCustomTypes registers Gas Town custom issue types with beads.

@@ -876,14 +876,19 @@ func (b *Beads) buildRoutingEnv() []string {
 func filterBeadsEnv(environ []string) []string {
 	filtered := make([]string, 0, len(environ))
 	for _, env := range environ {
+		keyName, _, ok := strings.Cut(env, "=")
+		if !ok {
+			filtered = append(filtered, env)
+			continue
+		}
 		// Preserve Dolt connection env vars needed to reach test/remote Dolt servers.
 		// These must be checked before the broad BEADS_ prefix strip below.
-		if strings.HasPrefix(env, "GT_DOLT_HOST=") ||
-			strings.HasPrefix(env, "GT_DOLT_PORT=") ||
-			strings.HasPrefix(env, "BEADS_DOLT_PORT=") ||
-			strings.HasPrefix(env, "BEADS_DOLT_SERVER_PORT=") ||
-			strings.HasPrefix(env, "BEADS_DOLT_SERVER_HOST=") ||
-			strings.HasPrefix(env, "BEADS_DOLT_AUTO_START=") {
+		if envKeyMatches(keyName, "GT_DOLT_HOST") ||
+			envKeyMatches(keyName, "GT_DOLT_PORT") ||
+			envKeyMatches(keyName, "BEADS_DOLT_PORT") ||
+			envKeyMatches(keyName, "BEADS_DOLT_SERVER_PORT") ||
+			envKeyMatches(keyName, "BEADS_DOLT_SERVER_HOST") ||
+			envKeyMatches(keyName, "BEADS_DOLT_AUTO_START") {
 			filtered = append(filtered, env)
 			continue
 		}
@@ -891,11 +896,11 @@ func filterBeadsEnv(environ []string) []string {
 		// BD_ACTOR, BEADS_* - direct beads config
 		// GT_ROOT - causes bd to find global routes file
 		// HOME - causes bd to find ~/.beads-planning routing
-		if strings.HasPrefix(env, "BD_ACTOR=") ||
-			strings.HasPrefix(env, "BEADS_") ||
-			strings.HasPrefix(env, "GT_DOLT_DATA=") ||
-			strings.HasPrefix(env, "GT_ROOT=") ||
-			strings.HasPrefix(env, "HOME=") {
+		if envKeyMatches(keyName, "BD_ACTOR") ||
+			envKeyHasPrefix(keyName, "BEADS_") ||
+			envKeyMatches(keyName, "GT_DOLT_DATA") ||
+			envKeyMatches(keyName, "GT_ROOT") ||
+			envKeyMatches(keyName, "HOME") {
 			continue
 		}
 		filtered = append(filtered, env)
@@ -903,92 +908,33 @@ func filterBeadsEnv(environ []string) []string {
 	return filtered
 }
 
-// translateDoltPort mirrors authoritative GT_DOLT_* endpoint vars to Beads'
-// endpoint aliases for legacy callers that have not moved to Build*BDEnv.
-func translateDoltPort(env []string) []string {
-	var gtPort, gtHost string
-	for _, e := range env {
-		if strings.HasPrefix(e, "GT_DOLT_PORT=") {
-			gtPort = strings.TrimPrefix(e, "GT_DOLT_PORT=")
-		}
-		if strings.HasPrefix(e, "GT_DOLT_HOST=") {
-			gtHost = strings.TrimPrefix(e, "GT_DOLT_HOST=")
-		}
-	}
-	if gtPort != "" {
-		env = stripEnvPrefixes(env, "BEADS_DOLT_SERVER_PORT=", "BEADS_DOLT_PORT=")
-		env = append(env, "BEADS_DOLT_SERVER_PORT="+gtPort, "BEADS_DOLT_PORT="+gtPort)
-	}
-	if gtHost != "" {
-		env = stripEnvPrefixes(env, "BEADS_DOLT_SERVER_HOST=")
-		env = append(env, "BEADS_DOLT_SERVER_HOST="+gtHost)
-	}
-	return env
-}
-
-// overrideDoltEnvFromBeadsDir replaces inherited BEADS_DOLT_* values with the
-// authoritative connection data for the selected beads directory when present.
-// This prevents a parent shell's stale Dolt config from routing bd commands to
-// the wrong server/database when the command explicitly targets a .beads dir.
-func overrideDoltEnvFromBeadsDir(env []string, beadsDir string) []string {
-	env = stripEnvPrefixes(env, "BEADS_DOLT_")
-	port, host, database := doltConnectionFromBeadsDir(beadsDir)
-	if port != "" {
-		env = append(env, "BEADS_DOLT_PORT="+port)
-	}
-	if host != "" {
-		env = append(env, "BEADS_DOLT_SERVER_HOST="+host)
-	}
-	if database != "" {
-		env = append(env, "BEADS_DOLT_SERVER_DATABASE="+database)
-	}
-	return env
-}
-
-// doltConnectionFromBeadsDir reads the preferred Dolt connection info for a
-// beads directory. The per-directory port file is authoritative when present;
-// metadata.json is used as a fallback and to supply the server host/database.
-func doltConnectionFromBeadsDir(beadsDir string) (port string, host string, database string) {
-	if beadsDir == "" {
-		return "", "", ""
-	}
-
-	if data, err := os.ReadFile(filepath.Join(beadsDir, "dolt-server.port")); err == nil {
-		port = strings.TrimSpace(string(data))
-	}
-
-	data, err := os.ReadFile(filepath.Join(beadsDir, "metadata.json"))
-	if err != nil {
-		return port, "", ""
-	}
-
-	var meta struct {
-		DoltServerPort int    `json:"dolt_server_port"`
-		DoltServerHost string `json:"dolt_server_host"`
-		DoltDatabase   string `json:"dolt_database"`
-	}
-	if err := json.Unmarshal(data, &meta); err != nil {
-		return port, "", ""
-	}
-
-	if port == "" && meta.DoltServerPort > 0 {
-		port = strconv.Itoa(meta.DoltServerPort)
-	}
-	host = strings.TrimSpace(meta.DoltServerHost)
-	database = strings.TrimSpace(meta.DoltDatabase)
-	return port, host, database
-}
-
 // stripEnvPrefixes removes entries matching any of the given prefixes from an
 // environment variable slice. Used by runWithRouting to strip BEADS_DIR.
 func stripEnvPrefixes(environ []string, prefixes ...string) []string {
 	filtered := make([]string, 0, len(environ))
 	for _, env := range environ {
+		keyName, _, ok := strings.Cut(env, "=")
 		skip := false
-		for _, prefix := range prefixes {
-			if strings.HasPrefix(env, prefix) {
-				skip = true
-				break
+		if ok {
+			for _, prefix := range prefixes {
+				if strings.HasSuffix(prefix, "=") {
+					if envKeyMatches(keyName, strings.TrimSuffix(prefix, "=")) {
+						skip = true
+						break
+					}
+					continue
+				}
+				if envKeyHasPrefix(keyName, prefix) {
+					skip = true
+					break
+				}
+			}
+		} else {
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(env, prefix) {
+					skip = true
+					break
+				}
 			}
 		}
 		if !skip {

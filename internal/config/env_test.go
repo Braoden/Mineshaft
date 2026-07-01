@@ -900,7 +900,8 @@ func TestAgentEnv_PropagatesDoltPort(t *testing.T) {
 		assertEnv(t, env, "BEADS_DOLT_PORT", "13307")
 	})
 
-	// Subtest: only BEADS_DOLT_PORT set (no GT_DOLT_PORT) → still propagated
+	// Subtest: only BEADS_DOLT_PORT set (no GT_DOLT_PORT) → ignored because
+	// Beads aliases are derived outputs, not endpoint authority.
 	t.Run("beads_only", func(t *testing.T) {
 		t.Setenv("GT_DOLT_PORT", "")
 		t.Setenv("BEADS_DOLT_SERVER_PORT", "")
@@ -909,8 +910,8 @@ func TestAgentEnv_PropagatesDoltPort(t *testing.T) {
 		if _, ok := env["GT_DOLT_PORT"]; ok {
 			t.Error("GT_DOLT_PORT should not be set when env is empty")
 		}
-		assertEnv(t, env, "BEADS_DOLT_SERVER_PORT", "3307")
-		assertEnv(t, env, "BEADS_DOLT_PORT", "3307")
+		assertNotSet(t, env, "BEADS_DOLT_SERVER_PORT")
+		assertNotSet(t, env, "BEADS_DOLT_PORT")
 	})
 
 	// Subtest: neither set → neither propagated
@@ -938,6 +939,14 @@ func TestAgentEnv_PropagatesDoltHost(t *testing.T) {
 		env := AgentEnv(AgentEnvConfig{Role: "crew", Rig: "myrig", AgentName: "alice"})
 		assertEnv(t, env, "GT_DOLT_HOST", "127.0.0.2")
 		assertEnv(t, env, "BEADS_DOLT_SERVER_HOST", "127.0.0.2")
+	})
+
+	t.Run("beads_host_ignored_without_gt_or_config", func(t *testing.T) {
+		t.Setenv("GT_DOLT_HOST", "")
+		t.Setenv("BEADS_DOLT_SERVER_HOST", "stale-host")
+		env := AgentEnv(AgentEnvConfig{Role: "crew", Rig: "myrig", AgentName: "alice"})
+		assertNotSet(t, env, "GT_DOLT_HOST")
+		assertNotSet(t, env, "BEADS_DOLT_SERVER_HOST")
 	})
 }
 
@@ -1189,7 +1198,7 @@ func TestResolveDoltPort_GTDoltPortTakesPrecedenceOverConfigYAML(t *testing.T) {
 	}
 	if err := os.WriteFile(
 		filepath.Join(doltDataDir, "config.yaml"),
-		[]byte("listener:\n  port: 3307\n"),
+		[]byte("listener:\n  host: 127.0.0.2\n  port: 3307\n"),
 		0644,
 	); err != nil {
 		t.Fatal(err)
@@ -1270,6 +1279,50 @@ func TestResolveDoltPort_NoConfig(t *testing.T) {
 	}
 }
 
+func TestResolveDoltHost_FromConfigYAML(t *testing.T) {
+	t.Setenv("GT_DOLT_IGNORE_CONFIG", "")
+	t.Setenv("GT_DOLT_HOST", "")
+	tmpDir := t.TempDir()
+	doltDataDir := filepath.Join(tmpDir, ".dolt-data")
+	if err := os.MkdirAll(doltDataDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(doltDataDir, "config.yaml"), []byte("listener:\n  host: 127.0.0.2\n  port: 3309\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	got := ResolveDoltHost(tmpDir)
+	if got != "127.0.0.2" {
+		t.Errorf("ResolveDoltHost() = %q, want 127.0.0.2", got)
+	}
+}
+
+func TestResolveDoltHost_FromDaemonJSON(t *testing.T) {
+	t.Setenv("GT_DOLT_HOST", "")
+	tmpDir := t.TempDir()
+	mayorDir := filepath.Join(tmpDir, "mayor")
+	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(mayorDir, "daemon.json"), []byte(`{"env":{"GT_DOLT_HOST":"127.0.0.3"}}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	got := ResolveDoltHost(tmpDir)
+	if got != "127.0.0.3" {
+		t.Errorf("ResolveDoltHost() = %q, want 127.0.0.3", got)
+	}
+}
+
+func TestResolveDoltHost_IgnoresBeadsAlias(t *testing.T) {
+	t.Setenv("GT_DOLT_HOST", "")
+	t.Setenv("BEADS_DOLT_SERVER_HOST", "stale-host")
+	got := ResolveDoltHost(t.TempDir())
+	if got != "" {
+		t.Errorf("ResolveDoltHost() = %q, want empty", got)
+	}
+}
+
 func TestResolveConfiguredDoltPort_ConfigYAMLBeatsEnv(t *testing.T) {
 	tmpDir := t.TempDir()
 	t.Setenv("GT_DOLT_IGNORE_CONFIG", "")
@@ -1335,7 +1388,9 @@ func TestResolveConfiguredDoltPort_DaemonJSONFallback(t *testing.T) {
 
 func TestAgentEnv_InjectsDoltPort(t *testing.T) {
 	t.Setenv("GT_DOLT_IGNORE_CONFIG", "")
+	t.Setenv("GT_DOLT_HOST", "")
 	t.Setenv("GT_DOLT_PORT", "")
+	t.Setenv("BEADS_DOLT_SERVER_HOST", "stale-host")
 	t.Setenv("BEADS_DOLT_SERVER_PORT", "")
 	t.Setenv("BEADS_DOLT_PORT", "")
 	tmpDir := t.TempDir()
@@ -1345,7 +1400,7 @@ func TestAgentEnv_InjectsDoltPort(t *testing.T) {
 	}
 	if err := os.WriteFile(
 		filepath.Join(doltDataDir, "config.yaml"),
-		[]byte("listener:\n  port: 3307\n"),
+		[]byte("listener:\n  host: 127.0.0.2\n  port: 3307\n"),
 		0644,
 	); err != nil {
 		t.Fatal(err)
@@ -1366,6 +1421,8 @@ func TestAgentEnv_InjectsDoltPort(t *testing.T) {
 	for _, tc := range roles {
 		t.Run(tc.name, func(t *testing.T) {
 			env := AgentEnv(tc.cfg)
+			assertEnv(t, env, "GT_DOLT_HOST", "127.0.0.2")
+			assertEnv(t, env, "BEADS_DOLT_SERVER_HOST", "127.0.0.2")
 			assertEnv(t, env, "GT_DOLT_PORT", "3307")
 			assertEnv(t, env, "BEADS_DOLT_SERVER_PORT", "3307")
 			assertEnv(t, env, "BEADS_DOLT_PORT", "3307")

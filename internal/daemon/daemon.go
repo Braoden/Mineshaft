@@ -332,16 +332,15 @@ func New(config *Config) (*Daemon, error) {
 	}
 
 	// Propagate Dolt host to process env so bd doesn't fall back to 127.0.0.1
-	// when the server runs on a remote machine (e.g., mini2 over Tailscale).
-	if host := os.Getenv("GT_DOLT_HOST"); host != "" {
+	// when the server runs on a remote machine. BEADS_DOLT_SERVER_HOST is a
+	// derived alias, not an authority, so stale inherited values are replaced or
+	// removed here.
+	if host := agentconfig.ResolveDoltHost(config.TownRoot); host != "" {
+		os.Setenv("GT_DOLT_HOST", host)
 		os.Setenv("BEADS_DOLT_SERVER_HOST", host)
-	} else if os.Getenv("BEADS_DOLT_SERVER_HOST") == "" {
-		doltCfg := doltserver.DefaultConfig(config.TownRoot)
-		if doltCfg.Host != "" {
-			os.Setenv("GT_DOLT_HOST", doltCfg.Host)
-			os.Setenv("BEADS_DOLT_SERVER_HOST", doltCfg.Host)
-			logger.Printf("Set BEADS_DOLT_SERVER_HOST=%s from Dolt config", doltCfg.Host)
-		}
+		logger.Printf("Set BEADS_DOLT_SERVER_HOST=%s from resolved Dolt host", host)
+	} else {
+		os.Unsetenv("BEADS_DOLT_SERVER_HOST")
 	}
 
 	// PATCH-006: Resolve binary paths at startup.

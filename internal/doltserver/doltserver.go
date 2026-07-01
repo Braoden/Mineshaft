@@ -52,7 +52,6 @@ import (
 	"github.com/steveyegge/gastown/internal/beads"
 	configpkg "github.com/steveyegge/gastown/internal/config"
 	"github.com/steveyegge/gastown/internal/style"
-	"gopkg.in/yaml.v3"
 )
 
 // EnsureDoltIdentity configures dolt global identity (user.name, user.email)
@@ -176,30 +175,6 @@ const (
 	// Override with GT_DOLT_TIME_ZONE; set to empty to skip the override.
 	DefaultTimeZone = "+00:00"
 )
-
-// doltConfigYAML represents the subset of Dolt's config.yaml that we need to read.
-type doltConfigYAML struct {
-	Listener struct {
-		Port int `yaml:"port"`
-	} `yaml:"listener"`
-}
-
-// readPortFromConfigYAML reads the port from .dolt-data/config.yaml if it exists.
-// Returns the configured port, or 0 if the file doesn't exist or doesn't specify a port.
-func readPortFromConfigYAML(townRoot string) int {
-	configPath := filepath.Join(townRoot, ".dolt-data", "config.yaml")
-	data, err := os.ReadFile(configPath)
-	if err != nil {
-		return 0 // File doesn't exist or can't be read
-	}
-
-	var cfg doltConfigYAML
-	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return 0 // Invalid YAML or doesn't match structure
-	}
-
-	return cfg.Listener.Port // 0 if not specified
-}
 
 // metadataMu provides per-path mutexes for EnsureMetadata goroutine synchronization.
 // flock is inter-process only and cannot reliably synchronize goroutines within the
@@ -337,7 +312,7 @@ func DefaultConfig(townRoot string) *Config {
 		config.TimeZone = v
 	}
 
-	if h := os.Getenv("GT_DOLT_HOST"); h != "" {
+	if h := configpkg.ResolveDoltHost(townRoot); h != "" {
 		config.Host = h
 	}
 

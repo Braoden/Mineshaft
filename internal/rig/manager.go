@@ -1156,41 +1156,9 @@ func (m *Manager) InitBeads(rigPath, prefix, rigName string) error {
 		return err
 	}
 
-	// Build environment with explicit BEADS_DIR to prevent bd from
-	// finding a parent directory's .beads/ database
-	env := os.Environ()
-	filteredEnv := make([]string, 0, len(env)+2)
-	for _, e := range env {
-		if !strings.HasPrefix(e, "BEADS_DIR=") && !strings.HasPrefix(e, "BEADS_DB=") && !strings.HasPrefix(e, "BEADS_DOLT_SERVER_DATABASE=") {
-			filteredEnv = append(filteredEnv, e)
-		}
-	}
-	filteredEnv = append(filteredEnv, "BEADS_DIR="+beadsDir)
-	if rigName != "" {
-		filteredEnv = append(filteredEnv, "BEADS_DOLT_SERVER_DATABASE="+rigName)
-	}
-
-	// Ensure Beads endpoint aliases are set when their GT_
-	// counterparts are present, so that bd subprocesses connect to the correct
-	// Dolt server (especially in tests or when the server is remote).
-	var gtDoltPort, gtDoltHost string
-	for _, e := range filteredEnv {
-		if strings.HasPrefix(e, "GT_DOLT_PORT=") {
-			gtDoltPort = strings.TrimPrefix(e, "GT_DOLT_PORT=")
-		}
-		if strings.HasPrefix(e, "GT_DOLT_HOST=") {
-			gtDoltHost = strings.TrimPrefix(e, "GT_DOLT_HOST=")
-		}
-	}
-	if gtDoltPort != "" {
-		filteredEnv = beads.StripEnvKey(filteredEnv, "BEADS_DOLT_SERVER_PORT")
-		filteredEnv = beads.StripEnvKey(filteredEnv, "BEADS_DOLT_PORT")
-		filteredEnv = append(filteredEnv, "BEADS_DOLT_SERVER_PORT="+gtDoltPort, "BEADS_DOLT_PORT="+gtDoltPort)
-	}
-	if gtDoltHost != "" {
-		filteredEnv = beads.StripEnvKey(filteredEnv, "BEADS_DOLT_SERVER_HOST")
-		filteredEnv = append(filteredEnv, "BEADS_DOLT_SERVER_HOST="+gtDoltHost)
-	}
+	// Pin bd to the intended .beads directory/database through the shared
+	// hardened env builder so stale shell selectors cannot leak into rig init.
+	filteredEnv := bdSubprocessEnv(beadsDir, rigName)
 
 	// Run bd init if available (Dolt is the only backend since bd v0.51.0).
 	// --server tells bd to set dolt_mode=server in metadata.json so bd
@@ -1491,17 +1459,9 @@ func isValidBeadsPrefix(prefix string) bool {
 }
 
 func bdSubprocessEnv(beadsDir, database string) []string {
-	env := make([]string, 0, len(os.Environ())+2)
-	for _, e := range os.Environ() {
-		if strings.HasPrefix(e, "BEADS_DIR=") || strings.HasPrefix(e, "BEADS_DB=") || strings.HasPrefix(e, "BEADS_DOLT_SERVER_DATABASE=") {
-			continue
-		}
-		env = append(env, e)
-	}
-	if beadsDir != "" {
-		env = append(env, "BEADS_DIR="+beadsDir)
-	}
+	env := beads.BuildMutationPinnedBDEnv(os.Environ(), beadsDir)
 	if database != "" {
+		env = beads.StripEnvKey(env, "BEADS_DOLT_SERVER_DATABASE")
 		env = append(env, "BEADS_DOLT_SERVER_DATABASE="+database)
 	}
 	return env

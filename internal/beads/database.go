@@ -53,8 +53,7 @@ func DatabaseEnv(beadsDir string) string {
 
 // StripBDTargetEnv removes inherited environment variables that can make a bd
 // subprocess select a database/server other than the .beads directory chosen by
-// Gas Town. It intentionally preserves BEADS_DOLT_AUTO_START so callers can keep
-// the shared-server guardrail enabled.
+// Gas Town. Callers re-add the small set of canonical bd env values they need.
 func StripBDTargetEnv(env []string) []string {
 	filtered := make([]string, 0, len(env))
 	for _, entry := range env {
@@ -76,7 +75,7 @@ func isBDTargetEnv(entry string) bool {
 			return true
 		}
 	}
-	return envKeyHasPrefix(keyName, "BEADS_DOLT_") && !envKeyMatches(keyName, "BEADS_DOLT_AUTO_START")
+	return envKeyHasPrefix(keyName, "BEADS_DOLT_")
 }
 
 // BuildPinnedBDEnv returns env for a bd subprocess pinned to beadsDir. BEADS_DIR
@@ -227,6 +226,7 @@ func hasReadOnlySQLPrefix(query string) bool {
 func SuppressBDSideEffects(env []string) []string {
 	for _, key := range []string{
 		"BEADS_NO_AUTO_IMPORT",
+		"BEADS_DOLT_AUTO_START",
 		"BD_EXPORT_AUTO",
 		"BD_BACKUP_ENABLED",
 		"BD_DOLT_AUTO_PUSH",
@@ -238,6 +238,7 @@ func SuppressBDSideEffects(env []string) []string {
 	}
 	return append(env,
 		"BEADS_NO_AUTO_IMPORT=1",
+		"BEADS_DOLT_AUTO_START=0",
 		"BD_EXPORT_AUTO=false",
 		"BD_BACKUP_ENABLED=false",
 		"BD_DOLT_AUTO_PUSH=false",
