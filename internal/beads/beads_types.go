@@ -13,9 +13,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/util"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/util"
 )
 
 // typesSentinel is a marker file indicating custom types have been configured.
@@ -32,17 +32,17 @@ var (
 	ensuredMu   sync.Mutex
 )
 
-// FindTownRoot walks up from startDir to find the Gas Town root directory.
-// The town root is identified by the presence of mayor/town.json.
+// FindTownRoot walks up from startDir to find the Excavation Site root directory.
+// The town root is identified by the presence of overseer/town.json.
 // Returns the outermost town root found, so that rig repos which were
-// originally standalone towns (and still contain mayor/town.json) don't
+// originally standalone towns (and still contain overseer/town.json) don't
 // shadow the real town root above them.
 // Returns empty string if not found (reached filesystem root).
 func FindTownRoot(startDir string) string {
 	dir := startDir
 	candidate := ""
 	for {
-		townFile := filepath.Join(dir, "mayor", "town.json")
+		townFile := filepath.Join(dir, "overseer", "town.json")
 		if _, err := os.Stat(townFile); err == nil {
 			candidate = dir
 		}
@@ -64,7 +64,7 @@ func ResolveRoutingTarget(townRoot, beadID, fallbackDir string) string {
 		return fallbackDir
 	}
 
-	// Extract prefix from bead ID (e.g., "gt-gastown-polecat-Toast" -> "gt-")
+	// Extract prefix from bead ID (e.g., "gt-excavation-miner-Toast" -> "gt-")
 	prefix := ExtractPrefix(beadID)
 	if prefix == "" {
 		return fallbackDir
@@ -93,7 +93,7 @@ func ResolveRoutingTarget(townRoot, beadID, fallbackDir string) string {
 //   - Sentinel file on disk for persistence across CLI invocations
 //
 // The sentinel file stores the configured types list. When the types list changes
-// (e.g., new types added in a gastown upgrade), the sentinel is detected as stale
+// (e.g., new types added in a excavation upgrade), the sentinel is detected as stale
 // and types are re-configured automatically (gt-zmy, gt-26f).
 //
 // This function is thread-safe and idempotent.
@@ -175,7 +175,7 @@ func EnsureCustomTypes(beadsDir string) error {
 	return nil
 }
 
-// EnsureCustomTypesConfigYAML records Gas Town custom types directly in
+// EnsureCustomTypesConfigYAML records Excavation Site custom types directly in
 // config.yaml. Fresh install uses this before invoking any bd config command so
 // older cached bd binaries do not initialize legacy views against the new schema.
 func EnsureCustomTypesConfigYAML(beadsDir string) error {
@@ -303,11 +303,11 @@ var prefixRe = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9-]{0,19}$`)
 // This handles the case where a rig was added but the database was never created,
 // which causes Dolt panics when trying to create agent beads.
 //
-// Uses --server mode to match all production bd init callers (gastown uses a
+// Uses --server mode to match all production bd init callers (excavation uses a
 // centralized Dolt sql-server). JSONL auto-import is handled by bd init itself.
 func ensureDatabaseInitialized(beadsDir string) error {
 	// If this beads dir has a redirect, the database lives elsewhere.
-	// Never create a new database for a redirected location (polecats, crew, refinery).
+	// Never create a new database for a redirected location (miners, crew, refinery).
 	redirectFile := filepath.Join(beadsDir, "redirect")
 	if _, err := os.Stat(redirectFile); err == nil {
 		return nil
@@ -319,7 +319,7 @@ func ensureDatabaseInitialized(beadsDir string) error {
 		return nil
 	}
 
-	// Check for metadata.json (server mode — gastown's exclusive mode).
+	// Check for metadata.json (server mode — excavation's exclusive mode).
 	// In server mode, .beads/ may contain only metadata.json with no local dolt/ dir.
 	// This mirrors the deep check in bdDatabaseExists (internal/rig/manager.go):
 	// parse metadata.json and verify the referenced database exists in .dolt-data/.
@@ -421,7 +421,7 @@ func ensureDatabaseInitialized(beadsDir string) error {
 //
 // All candidates are validated against prefixRe before use.
 //
-// Known limitation: when beadsDir is a routed path (e.g., mayor/rig/.beads
+// Known limitation: when beadsDir is a routed path (e.g., overseer/rig/.beads
 // via beads routing), filepath.Base(filepath.Dir(beadsDir)) yields "rig" not
 // the actual rig name. GetRigPrefix will not find "rig" in rigs.json and
 // returns the default "gt". This is a safe fallback — "gt" is the universal

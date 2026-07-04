@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	agentconfig "github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/reaper"
-	"github.com/steveyegge/gastown/internal/style"
+	agentconfig "github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/reaper"
+	"github.com/steveyegge/excavation/internal/style"
 )
 
 var (
@@ -91,10 +91,10 @@ formula. They execute SQL operations but leave eligibility decisions to the
 Dog agent or daemon orchestrator.
 
 When run by a Dog:
-  gt reaper scan --db=gastown          # Discover candidates
-  gt reaper reap --db=gastown          # Close stale wisps
-  gt reaper purge --db=gastown         # Delete old closed wisps + mail
-  gt reaper auto-close --db=gastown    # Close stale issues`,
+  gt reaper scan --db=excavation          # Discover candidates
+  gt reaper reap --db=excavation          # Close stale wisps
+  gt reaper purge --db=excavation         # Delete old closed wisps + mail
+  gt reaper auto-close --db=excavation    # Close stale issues`,
 	RunE: requireSubcommand,
 }
 

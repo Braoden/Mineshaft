@@ -21,9 +21,9 @@ When git pull/rebase hits conflicts, the agent should:
 1. Assess if the conflicting work is still valuable
 2. If valuable: re-envision against new baseline, file a bead for re-implementation
 3. If obsolete (e.g., touches deleted system): discard with a note
-4. If unclear: escalate to human/mayor
+4. If unclear: escalate to human/overseer
 
-Polecats can file a bead and delegate. Refinery must resolve inline.
+Miners can file a bead and delegate. Refinery must resolve inline.
 
 ## Variables
 
@@ -215,15 +215,15 @@ The Preservation Protocol:
    ```
 
 4. **If unclear:**
-   - Escalate to human/mayor
+   - Escalate to human/overseer
    - Document the conflict
    - Proceed with sync on clean baseline
 
 **Refinery-specific conflict resolution:**
 
-Unlike polecats who can file a bead and delegate, the Refinery MUST resolve
+Unlike miners who can file a bead and delegate, the Refinery MUST resolve
 conflicts inline. The Refinery processes the merge queue - if it can't resolve
-a conflict, the queue backs up and polecats' completed work never lands.
+a conflict, the queue backs up and miners' completed work never lands.
 
 **Refinery conflict protocol:**
 
@@ -258,14 +258,14 @@ a conflict, the queue backs up and polecats' completed work never lands.
    git rebase --continue
    ```
 
-4. **Complex conflicts (abort and notify polecat):**
+4. **Complex conflicts (abort and notify miner):**
    - Conflicting business logic changes
    - Unclear which version is correct
    - Risk of subtle bugs from incorrect merge
 
    ```bash
    git rebase --abort
-   gt mail send <rig>/polecats/<worker> -s "Rebase needed" \
+   gt mail send <rig>/miners/<worker> -s "Rebase needed" \
      -m "Your branch conflicts with main in <files>. Please rebase and resubmit via gt done."
    # Skip this branch, continue with queue
    ```
@@ -304,7 +304,7 @@ git fetch origin beads-sync
 bd sync
 ```
 
-If still failing, escalate to mayor.
+If still failing, escalate to overseer.
 
 **Exit criteria:** Beads synced successfully."""
 

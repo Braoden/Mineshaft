@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
+	"github.com/steveyegge/excavation/internal/beads"
 )
 
 func TestGetTTL(t *testing.T) {

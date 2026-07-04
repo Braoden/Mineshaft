@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/hooks"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/hooks"
 )
 
 func TestSyncTargetCreatesNew(t *testing.T) {
@@ -371,16 +371,16 @@ func TestRunHooksSyncFailsClosedOnIntegrityViolation(t *testing.T) {
 	t.Setenv("HOME", tmpDir)
 
 	townRoot := filepath.Join(tmpDir, "town")
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", ".claude"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", ".claude"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "deacon"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "supervisor"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "mayor", "town.json"), []byte(`{"type":"town","version":1,"name":"test"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"type":"town","version":1,"name":"test"}`), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "mayor", ".claude", "settings.json"), []byte(`{"hooks":{"SessionStart":"bad"}}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", ".claude", "settings.json"), []byte(`{"hooks":{"SessionStart":"bad"}}`), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -430,11 +430,11 @@ func TestRunHooksSyncNonClaudeAgent(t *testing.T) {
 
 	townRoot := filepath.Join(tmpDir, "town")
 
-	// Scaffold workspace: mayor, deacon, and a rig with a crew worktree
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor"), 0755); err != nil {
+	// Scaffold workspace: overseer, supervisor, and a rig with a crew worktree
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "deacon"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "supervisor"), 0755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, "myrig", "crew", "alice"), 0755); err != nil {
@@ -443,7 +443,7 @@ func TestRunHooksSyncNonClaudeAgent(t *testing.T) {
 
 	// Workspace marker
 	if err := os.WriteFile(
-		filepath.Join(townRoot, "mayor", "town.json"),
+		filepath.Join(townRoot, "overseer", "town.json"),
 		[]byte(`{"type":"town","version":1,"name":"test"}`),
 		0644,
 	); err != nil {
@@ -494,13 +494,13 @@ func TestRunHooksSyncNonClaudeAgent(t *testing.T) {
 	}
 
 	// Verify OpenCode plugin was synced to the worktree (not the parent)
-	pluginPath := filepath.Join(townRoot, "myrig", "crew", "alice", ".opencode", "plugins", "gastown.js")
+	pluginPath := filepath.Join(townRoot, "myrig", "crew", "alice", ".opencode", "plugins", "excavation.js")
 	if _, err := os.Stat(pluginPath); os.IsNotExist(err) {
 		t.Error("opencode plugin not created in worktree alice")
 	}
 
 	// Verify it was NOT created in the parent (crew/) since useSettingsDir=false
-	parentPlugin := filepath.Join(townRoot, "myrig", "crew", ".opencode", "plugins", "gastown.js")
+	parentPlugin := filepath.Join(townRoot, "myrig", "crew", ".opencode", "plugins", "excavation.js")
 	if _, err := os.Stat(parentPlugin); !os.IsNotExist(err) {
 		t.Error("opencode plugin should not be in the parent crew/ directory")
 	}
@@ -512,10 +512,10 @@ func TestRunHooksSyncNonClaudeAgentDryRun(t *testing.T) {
 
 	townRoot := filepath.Join(tmpDir, "town")
 
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "deacon"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "supervisor"), 0755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, "myrig", "crew", "alice"), 0755); err != nil {
@@ -523,7 +523,7 @@ func TestRunHooksSyncNonClaudeAgentDryRun(t *testing.T) {
 	}
 
 	if err := os.WriteFile(
-		filepath.Join(townRoot, "mayor", "town.json"),
+		filepath.Join(townRoot, "overseer", "town.json"),
 		[]byte(`{"type":"town","version":1,"name":"test"}`),
 		0644,
 	); err != nil {
@@ -564,13 +564,13 @@ func TestRunHooksSyncNonClaudeAgentDryRun(t *testing.T) {
 	}
 
 	// Dry run should NOT create the file
-	pluginPath := filepath.Join(townRoot, "myrig", "crew", "alice", ".opencode", "plugins", "gastown.js")
+	pluginPath := filepath.Join(townRoot, "myrig", "crew", "alice", ".opencode", "plugins", "excavation.js")
 	if _, err := os.Stat(pluginPath); !os.IsNotExist(err) {
 		t.Error("dry-run should not create opencode plugin file")
 	}
 }
 
-func TestRunHooksSyncNonClaudeAgentNestedPolecatWorktree(t *testing.T) {
+func TestRunHooksSyncNonClaudeAgentNestedMinerWorktree(t *testing.T) {
 	tmpDir := t.TempDir()
 	t.Setenv("HOME", tmpDir)
 
@@ -584,19 +584,19 @@ func TestRunHooksSyncNonClaudeAgentNestedPolecatWorktree(t *testing.T) {
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
 	townRoot := filepath.Join(tmpDir, "town")
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "deacon"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "supervisor"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	worktree := filepath.Join(townRoot, "myrig", "polecats", "fury", "gastown")
+	worktree := filepath.Join(townRoot, "myrig", "miners", "fury", "excavation")
 	if err := os.MkdirAll(filepath.Join(worktree, ".git"), 0755); err != nil {
 		t.Fatal(err)
 	}
 
 	if err := os.WriteFile(
-		filepath.Join(townRoot, "mayor", "town.json"),
+		filepath.Join(townRoot, "overseer", "town.json"),
 		[]byte(`{"type":"town","version":1,"name":"test"}`),
 		0644,
 	); err != nil {
@@ -604,7 +604,7 @@ func TestRunHooksSyncNonClaudeAgentNestedPolecatWorktree(t *testing.T) {
 	}
 
 	townSettings := config.NewTownSettings()
-	townSettings.RoleAgents = map[string]string{"polecat": "opencode"}
+	townSettings.RoleAgents = map[string]string{"miner": "opencode"}
 	townSettings.Agents = map[string]*config.RuntimeConfig{
 		"opencode": {
 			Provider: "opencode",
@@ -641,13 +641,13 @@ func TestRunHooksSyncNonClaudeAgentNestedPolecatWorktree(t *testing.T) {
 		t.Fatalf("runHooksSync failed: %v", err)
 	}
 
-	pluginPath := filepath.Join(worktree, ".opencode", "plugins", "gastown.js")
+	pluginPath := filepath.Join(worktree, ".opencode", "plugins", "excavation.js")
 	if _, err := os.Stat(pluginPath); os.IsNotExist(err) {
-		t.Fatalf("opencode plugin not created in nested polecat worktree %s", pluginPath)
+		t.Fatalf("opencode plugin not created in nested miner worktree %s", pluginPath)
 	}
 
-	wrongParentPath := filepath.Join(townRoot, "myrig", "polecats", "fury", ".opencode", "plugins", "gastown.js")
+	wrongParentPath := filepath.Join(townRoot, "myrig", "miners", "fury", ".opencode", "plugins", "excavation.js")
 	if _, err := os.Stat(wrongParentPath); !os.IsNotExist(err) {
-		t.Fatalf("opencode plugin should not be created in polecat slot parent %s", wrongParentPath)
+		t.Fatalf("opencode plugin should not be created in miner slot parent %s", wrongParentPath)
 	}
 }

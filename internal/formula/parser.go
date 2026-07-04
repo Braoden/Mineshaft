@@ -48,7 +48,7 @@ func (f *Formula) inferType() {
 	} else if len(f.Steps) > 0 {
 		f.Type = TypeWorkflow
 	} else if len(f.Legs) > 0 {
-		f.Type = TypeConvoy
+		f.Type = TypeMinecart
 	} else if len(f.Template) > 0 {
 		f.Type = TypeExpansion
 	} else if len(f.Aspects) > 0 {
@@ -64,13 +64,13 @@ func (f *Formula) Validate() error {
 	}
 
 	if !f.Type.IsValid() {
-		return fmt.Errorf("invalid formula type %q (must be convoy, workflow, expansion, or aspect)", f.Type)
+		return fmt.Errorf("invalid formula type %q (must be minecart, workflow, expansion, or aspect)", f.Type)
 	}
 
 	// Type-specific validation
 	switch f.Type {
-	case TypeConvoy:
-		return f.validateConvoy()
+	case TypeMinecart:
+		return f.validateMinecart()
 	case TypeWorkflow:
 		return f.validateWorkflow()
 	case TypeExpansion:
@@ -82,9 +82,9 @@ func (f *Formula) Validate() error {
 	return nil
 }
 
-func (f *Formula) validateConvoy() error {
+func (f *Formula) validateMinecart() error {
 	if len(f.Legs) == 0 {
-		return fmt.Errorf("convoy formula requires at least one leg")
+		return fmt.Errorf("minecart formula requires at least one leg")
 	}
 
 	// Check leg IDs are unique
@@ -293,8 +293,8 @@ func (f *Formula) TopologicalSort() ([]string, error) {
 		for _, tmpl := range f.Template {
 			deps[tmpl.ID] = tmpl.Needs
 		}
-	case TypeConvoy:
-		// Convoy legs are parallel; return all leg IDs
+	case TypeMinecart:
+		// Minecart legs are parallel; return all leg IDs
 		for _, leg := range f.Legs {
 			items = append(items, leg.ID)
 		}
@@ -398,7 +398,7 @@ func (f *Formula) ReadySteps(completed map[string]bool) []string {
 				ready = append(ready, tmpl.ID)
 			}
 		}
-	case TypeConvoy:
+	case TypeMinecart:
 		// All legs are ready unless already completed
 		for _, leg := range f.Legs {
 			if !completed[leg.ID] {
@@ -438,7 +438,7 @@ func (f *Formula) ParallelReadySteps(completed map[string]bool) (parallel []stri
 		return nil, ""
 	}
 
-	// For non-workflow formulas, return all as parallel (convoy/aspect are inherently parallel)
+	// For non-workflow formulas, return all as parallel (minecart/aspect are inherently parallel)
 	if f.Type != TypeWorkflow {
 		return ready, ""
 	}

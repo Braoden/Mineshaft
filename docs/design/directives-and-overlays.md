@@ -4,7 +4,7 @@
 
 > **Reference examples:** [`docs/contrib-harnesses/`](../contrib-harnesses/)
 > contains copy-and-adapt directives and overlays that contributors can drop
-> into their own rig. See for example `polecat-pr-flow/` for a rig that gates
+> into their own rig. See for example `miner-pr-flow/` for a rig that gates
 > work on GitHub PR review rather than the canonical Refinery merge queue.
 
 ## Problem
@@ -193,9 +193,9 @@ This is the motivating use case that drove the feature.
 
 ### The Problem
 
-The `mol-polecat-work` formula has a step called `submit-review` that tells
-polecats to post review results to GitHub using `gh pr review --comment`.
-In the gastown rig, the operator wants polecats to report findings back in
+The `mol-miner-work` formula has a step called `submit-review` that tells
+miners to post review results to GitHub using `gh pr review --comment`.
+In the excavation rig, the operator wants miners to report findings back in
 conversation instead.
 
 ### The Solution
@@ -203,10 +203,10 @@ conversation instead.
 **Step 1: Create a rig-level formula overlay.**
 
 ```bash
-mkdir -p ~/gt/gastown/formula-overlays
+mkdir -p ~/gt/excavation/formula-overlays
 ```
 
-Create `~/gt/gastown/formula-overlays/mol-polecat-work.toml`:
+Create `~/gt/excavation/formula-overlays/mol-miner-work.toml`:
 
 ```toml
 [[step-overrides]]
@@ -236,10 +236,10 @@ gt doctor
 
 ```bash
 gt prime --explain
-# Shows: "Formula overlay: applying 1 override(s) for mol-polecat-work (rig=gastown)"
+# Shows: "Formula overlay: applying 1 override(s) for mol-miner-work (rig=excavation)"
 ```
 
-Now any polecat in the gastown rig running `mol-polecat-work` will see the
+Now any miner in the excavation rig running `mol-miner-work` will see the
 replacement step instead of the original "post to GitHub" instruction.
 
 ### What If the Formula Changes?
@@ -248,8 +248,8 @@ If a future `gt` release renames `submit-review` to `post-results`, the
 overlay's `step_id` becomes stale. On next `gt doctor` run:
 
 ```
-⚠ overlay-health: stale step IDs in gastown/formula-overlays/mol-polecat-work.toml:
-  - step_id "submit-review" not found in formula mol-polecat-work
+⚠ overlay-health: stale step IDs in excavation/formula-overlays/mol-miner-work.toml:
+  - step_id "submit-review" not found in formula mol-miner-work
 ```
 
 Running `gt doctor --fix` removes the stale override. The operator then
@@ -270,7 +270,7 @@ Directives and overlays solve different problems at different granularities:
 | Example | "Never post to GitHub" | "In step X, do Y instead" |
 
 A role directive saying "never post to GitHub" applies everywhere — any formula,
-any step. An overlay targeting `submit-review` in `mol-polecat-work` applies
+any step. An overlay targeting `submit-review` in `mol-miner-work` applies
 only to that specific step in that specific formula.
 
 Both are needed: directives for broad guardrails, overlays for surgical fixes.

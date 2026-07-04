@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/steveyegge/gastown/internal/deps"
+	"github.com/steveyegge/excavation/internal/deps"
 )
 
 var (

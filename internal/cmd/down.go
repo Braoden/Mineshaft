@@ -13,19 +13,19 @@ import (
 
 	"github.com/gofrs/flock"
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/crew"
-	"github.com/steveyegge/gastown/internal/daemon"
-	"github.com/steveyegge/gastown/internal/doltserver"
-	"github.com/steveyegge/gastown/internal/events"
-	"github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/polecat"
-	"github.com/steveyegge/gastown/internal/rig"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/crew"
+	"github.com/steveyegge/excavation/internal/daemon"
+	"github.com/steveyegge/excavation/internal/doltserver"
+	"github.com/steveyegge/excavation/internal/events"
+	"github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/miner"
+	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 const (
@@ -45,22 +45,22 @@ const (
 var downCmd = &cobra.Command{
 	Use:     "down",
 	GroupID: GroupServices,
-	Short:   "Stop all Gas Town services",
-	Long: `Stop Gas Town services (reversible pause).
+	Short:   "Stop all Excavation Site services",
+	Long: `Stop Excavation Site services (reversible pause).
 
 Shutdown levels (progressively more aggressive):
   gt down                    Stop infrastructure (default)
-  gt down --polecats         Also stop all polecat sessions
+  gt down --miners         Also stop all miner sessions
   gt down --all              Full shutdown with orphan cleanup
   gt down --nuke             Also kill the shared tmux server
 
 Infrastructure agents stopped:
   • Crew       - Per-rig crew member sessions
   • Refineries - Per-rig work processors
-  • Witnesses  - Per-rig polecat managers
-  • Mayor      - Global work coordinator
-  • Boot       - Deacon's watchdog
-  • Deacon     - Health orchestrator
+  • Witnesses  - Per-rig miner managers
+  • Overseer      - Global work coordinator
+  • Boot       - Supervisor's watchdog
+  • Supervisor     - Health orchestrator
   • Daemon     - Go background process
   • Dolt       - Shared SQL database server
 
@@ -80,13 +80,13 @@ var (
 	downAll      bool
 	downNuke     bool
 	downDryRun   bool
-	downPolecats bool
+	downMiners bool
 )
 
 func init() {
 	downCmd.Flags().BoolVarP(&downQuiet, "quiet", "q", false, "Only show errors")
 	downCmd.Flags().BoolVarP(&downForce, "force", "f", false, "Force kill without graceful shutdown")
-	downCmd.Flags().BoolVarP(&downPolecats, "polecats", "p", false, "Also stop all polecat sessions")
+	downCmd.Flags().BoolVarP(&downMiners, "miners", "p", false, "Also stop all miner sessions")
 	downCmd.Flags().BoolVarP(&downAll, "all", "a", false, "Full shutdown with orphan cleanup and verification")
 	downCmd.Flags().BoolVar(&downNuke, "nuke", false, "Kill the shared tmux server (default socket) and all its sessions")
 	downCmd.Flags().BoolVar(&downDryRun, "dry-run", false, "Preview what would be stopped without taking action")
@@ -96,7 +96,7 @@ func init() {
 func runDown(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	t := tmux.NewTmux()
@@ -140,25 +140,25 @@ func runDown(cmd *cobra.Command, args []string) error {
 
 	rigs := discoverRigs(townRoot)
 
-	// Phase 0.5: Stop polecats if --polecats
-	if downPolecats {
+	// Phase 0.5: Stop miners if --miners
+	if downMiners {
 		if downDryRun {
-			fmt.Println("Would stop polecats...")
+			fmt.Println("Would stop miners...")
 		} else {
-			fmt.Println("Stopping polecats...")
+			fmt.Println("Stopping miners...")
 		}
-		polecatsStopped := stopAllPolecats(t, townRoot, rigs, downForce, downDryRun)
+		minersStopped := stopAllMiners(t, townRoot, rigs, downForce, downDryRun)
 		if downDryRun {
-			if polecatsStopped > 0 {
-				printDownStatus("Polecats", true, fmt.Sprintf("%d would stop", polecatsStopped))
+			if minersStopped > 0 {
+				printDownStatus("Miners", true, fmt.Sprintf("%d would stop", minersStopped))
 			} else {
-				printDownStatus("Polecats", true, "none running")
+				printDownStatus("Miners", true, "none running")
 			}
 		} else {
-			if polecatsStopped > 0 {
-				printDownStatus("Polecats", true, fmt.Sprintf("%d stopped", polecatsStopped))
+			if minersStopped > 0 {
+				printDownStatus("Miners", true, fmt.Sprintf("%d stopped", minersStopped))
 			} else {
-				printDownStatus("Polecats", true, "none running")
+				printDownStatus("Miners", true, "none running")
 			}
 		}
 		fmt.Println()
@@ -217,7 +217,7 @@ func runDown(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Phase 3: Stop town-level sessions (Mayor, Boot, Deacon)
+	// Phase 3: Stop town-level sessions (Overseer, Boot, Supervisor)
 	for _, ts := range session.TownSessions() {
 		if downDryRun {
 			if running, _ := t.HasSession(ts.SessionID); running {
@@ -444,7 +444,7 @@ func runDown(cmd *cobra.Command, args []string) error {
 
 	if allOK {
 		fmt.Printf("%s All services stopped\n", style.Bold.Render("✓"))
-		stoppedServices := []string{"dolt", "daemon", "deacon", "boot", "mayor"}
+		stoppedServices := []string{"dolt", "daemon", "supervisor", "boot", "overseer"}
 		for _, rigName := range rigs {
 			stoppedServices = append(stoppedServices, fmt.Sprintf("%s/refinery", rigName))
 			stoppedServices = append(stoppedServices, fmt.Sprintf("%s/witness", rigName))
@@ -452,8 +452,8 @@ func runDown(cmd *cobra.Command, args []string) error {
 		if crewStopped > 0 {
 			stoppedServices = append(stoppedServices, "crew")
 		}
-		if downPolecats {
-			stoppedServices = append(stoppedServices, "polecats")
+		if downMiners {
+			stoppedServices = append(stoppedServices, "miners")
 		}
 		if downAll {
 			stoppedServices = append(stoppedServices, "bd-processes")
@@ -470,14 +470,14 @@ func runDown(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// stopAllPolecats stops all polecat sessions across all rigs.
+// stopAllMiners stops all miner sessions across all rigs.
 // Stops are performed in parallel for faster teardown.
-// Returns the number of polecats stopped (or would be stopped in dry-run).
-func stopAllPolecats(t *tmux.Tmux, townRoot string, rigNames []string, force bool, dryRun bool) int {
+// Returns the number of miners stopped (or would be stopped in dry-run).
+func stopAllMiners(t *tmux.Tmux, townRoot string, rigNames []string, force bool, dryRun bool) int {
 	stopped := 0
 
 	// Load rigs config
-	rigsConfigPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsConfigPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsConfigPath)
 	if err != nil {
 		rigsConfig = &config.RigsConfig{Rigs: make(map[string]config.RigEntry)}
@@ -492,27 +492,27 @@ func stopAllPolecats(t *tmux.Tmux, townRoot string, rigNames []string, force boo
 			if err != nil {
 				continue
 			}
-			polecatMgr := polecat.NewSessionManager(t, r)
-			infos, err := polecatMgr.ListPolecats()
+			minerMgr := miner.NewSessionManager(t, r)
+			infos, err := minerMgr.ListMiners()
 			if err != nil {
 				continue
 			}
 			for _, info := range infos {
 				stopped++
-				fmt.Printf("  %s [%s] %s would stop\n", style.Dim.Render("○"), rigName, info.Polecat)
+				fmt.Printf("  %s [%s] %s would stop\n", style.Dim.Render("○"), rigName, info.Miner)
 			}
 		}
 		return stopped
 	}
 
 	// Collect targets and stop all in parallel.
-	type polecatResult struct {
+	type minerResult struct {
 		rigName string
 		name    string
 		err     error
 	}
 
-	var results []polecatResult
+	var results []minerResult
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 
@@ -522,21 +522,21 @@ func stopAllPolecats(t *tmux.Tmux, townRoot string, rigNames []string, force boo
 			continue
 		}
 
-		polecatMgr := polecat.NewSessionManager(t, r)
-		infos, err := polecatMgr.ListPolecats()
+		minerMgr := miner.NewSessionManager(t, r)
+		infos, err := minerMgr.ListMiners()
 		if err != nil {
 			continue
 		}
 
 		for _, info := range infos {
 			wg.Add(1)
-			go func(rn, name string, mgr *polecat.SessionManager) {
+			go func(rn, name string, mgr *miner.SessionManager) {
 				defer wg.Done()
 				err := mgr.Stop(name, force)
 				mu.Lock()
-				results = append(results, polecatResult{rigName: rn, name: name, err: err})
+				results = append(results, minerResult{rigName: rn, name: name, err: err})
 				mu.Unlock()
-			}(rigName, info.Polecat, polecatMgr)
+			}(rigName, info.Miner, minerMgr)
 		}
 	}
 	wg.Wait()
@@ -559,7 +559,7 @@ func stopAllPolecats(t *tmux.Tmux, townRoot string, rigNames []string, force boo
 func stopAllCrew(t *tmux.Tmux, townRoot string, rigNames []string, dryRun bool) int {
 	stopped := 0
 
-	rigsConfigPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsConfigPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsConfigPath)
 	if err != nil {
 		rigsConfig = &config.RigsConfig{Rigs: make(map[string]config.RigEntry)}
@@ -742,7 +742,7 @@ func verifyShutdown(t *tmux.Tmux, townRoot string) []string {
 	return respawned
 }
 
-// findOrphanedClaudeProcesses finds Gas Town agent processes (claude/codex/opencode/cursor-agent/copilot/node)
+// findOrphanedClaudeProcesses finds Excavation Site agent processes (claude/codex/opencode/cursor-agent/copilot/node)
 // that are running in the town directory but aren't associated with any active tmux session.
 // This can happen when tmux sessions are killed but child processes don't terminate.
 //
@@ -752,7 +752,7 @@ func verifyShutdown(t *tmux.Tmux, townRoot string) []string {
 func findOrphanedClaudeProcesses(townRoot string) []int {
 	// Use ps to get PID, process name, and full command line in a single pass.
 	// Previous implementation used "pgrep -l node" which matched ALL node
-	// processes on the system regardless of whether they belonged to Gas Town.
+	// processes on the system regardless of whether they belonged to Excavation Site.
 	out, err := exec.Command("ps", "-eo", "pid,comm,args").Output()
 	if err != nil {
 		return nil
@@ -775,18 +775,18 @@ func findOrphanedClaudeProcesses(townRoot string) []int {
 			continue
 		}
 
-		// Only consider known Gas Town process names
+		// Only consider known Excavation Site process names
 		comm := strings.ToLower(fields[1])
 		switch comm {
 		case "claude", "claude-code", "codex", "opencode", "cursor-agent", "agent", "copilot", "node":
-			// Potential Gas Town process
+			// Potential Excavation Site process
 		default:
 			continue
 		}
 
 		// Verify the process's command line references the town root.
 		// This filters out unrelated node processes (VS Code, web servers, etc.)
-		// whose command lines won't contain the Gas Town directory path.
+		// whose command lines won't contain the Excavation Site directory path.
 		args := strings.Join(fields[2:], " ")
 		if strings.Contains(args, townRoot) {
 			orphaned = append(orphaned, pid)
@@ -796,26 +796,26 @@ func findOrphanedClaudeProcesses(townRoot string) []int {
 	return orphaned
 }
 
-// cleanupLegacyDefaultSocket removes Gas Town sessions left on the "default"
+// cleanupLegacyDefaultSocket removes Excavation Site sessions left on the "default"
 // tmux socket by old binaries. Returns the number of sessions cleaned.
 func cleanupLegacyDefaultSocket() int {
 	return session.CleanupLegacyDefaultSocket()
 }
 
-// countLegacyDefaultSocketSessions counts Gas Town sessions on the "default"
+// countLegacyDefaultSocketSessions counts Excavation Site sessions on the "default"
 // tmux socket (for dry-run output).
 func countLegacyDefaultSocketSessions() int {
 	return session.CountLegacyDefaultSocketSessions()
 }
 
-// cleanupLegacyBaseSocket removes Gas Town sessions left on the old basename-only
+// cleanupLegacyBaseSocket removes Excavation Site sessions left on the old basename-only
 // tmux socket (e.g., "gt") by binaries from before path-hashed socket names were
 // introduced (e.g., "gt-a1b2c3"). Returns the number of sessions cleaned.
 func cleanupLegacyBaseSocket(townRoot string) int {
 	return session.CleanupLegacyBaseSocket(townRoot)
 }
 
-// countLegacyBaseSocketSessions counts Gas Town sessions on the old basename-only
+// countLegacyBaseSocketSessions counts Excavation Site sessions on the old basename-only
 // tmux socket (for dry-run output).
 func countLegacyBaseSocketSessions(townRoot string) int {
 	return session.CountLegacyBaseSocketSessions(townRoot)

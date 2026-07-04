@@ -7,17 +7,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/activity"
+	"github.com/steveyegge/excavation/internal/activity"
 )
 
-func TestConvoyTemplate_RendersConvoyList(t *testing.T) {
+func TestMinecartTemplate_RendersMinecartList(t *testing.T) {
 	tmpl, err := LoadTemplates()
 	if err != nil {
 		t.Fatalf("LoadTemplates() error = %v", err)
 	}
 
-	data := ConvoyData{
-		Convoys: []ConvoyRow{
+	data := MinecartData{
+		Minecarts: []MinecartRow{
 			{
 				ID:           "hq-cv-abc",
 				Title:        "Feature X",
@@ -40,23 +40,23 @@ func TestConvoyTemplate_RendersConvoyList(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	err = tmpl.ExecuteTemplate(&buf, "convoy.html", data)
+	err = tmpl.ExecuteTemplate(&buf, "minecart.html", data)
 	if err != nil {
 		t.Fatalf("ExecuteTemplate() error = %v", err)
 	}
 
 	output := buf.String()
 
-	// Check convoy IDs are rendered
+	// Check minecart IDs are rendered
 	if !strings.Contains(output, "hq-cv-abc") {
-		t.Error("Template should contain convoy ID hq-cv-abc")
+		t.Error("Template should contain minecart ID hq-cv-abc")
 	}
 	if !strings.Contains(output, "hq-cv-def") {
-		t.Error("Template should contain convoy ID hq-cv-def")
+		t.Error("Template should contain minecart ID hq-cv-def")
 	}
 
-	// The simplified dashboard no longer shows convoy titles in the table,
-	// only the convoy IDs. Titles are shown in expanded view.
+	// The simplified dashboard no longer shows minecart titles in the table,
+	// only the minecart IDs. Titles are shown in expanded view.
 }
 
 func TestDashboardScript_SlingUsesLongRunTimeout(t *testing.T) {
@@ -70,7 +70,7 @@ func TestDashboardScript_SlingUsesLongRunTimeout(t *testing.T) {
 	}
 }
 
-func TestConvoyTemplate_LastActivityColors(t *testing.T) {
+func TestMinecartTemplate_LastActivityColors(t *testing.T) {
 	tmpl, err := LoadTemplates()
 	if err != nil {
 		t.Fatalf("LoadTemplates() error = %v", err)
@@ -88,8 +88,8 @@ func TestConvoyTemplate_LastActivityColors(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			data := ConvoyData{
-				Convoys: []ConvoyRow{
+			data := MinecartData{
+				Minecarts: []MinecartRow{
 					{
 						ID:           "hq-cv-test",
 						Title:        "Test",
@@ -100,7 +100,7 @@ func TestConvoyTemplate_LastActivityColors(t *testing.T) {
 			}
 
 			var buf bytes.Buffer
-			err = tmpl.ExecuteTemplate(&buf, "convoy.html", data)
+			err = tmpl.ExecuteTemplate(&buf, "minecart.html", data)
 			if err != nil {
 				t.Fatalf("ExecuteTemplate() error = %v", err)
 			}
@@ -113,14 +113,14 @@ func TestConvoyTemplate_LastActivityColors(t *testing.T) {
 	}
 }
 
-func TestConvoyTemplate_HtmxAutoRefresh(t *testing.T) {
+func TestMinecartTemplate_HtmxAutoRefresh(t *testing.T) {
 	tmpl, err := LoadTemplates()
 	if err != nil {
 		t.Fatalf("LoadTemplates() error = %v", err)
 	}
 
-	data := ConvoyData{
-		Convoys: []ConvoyRow{
+	data := MinecartData{
+		Minecarts: []MinecartRow{
 			{
 				ID:     "hq-cv-test",
 				Title:  "Test",
@@ -130,7 +130,7 @@ func TestConvoyTemplate_HtmxAutoRefresh(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	err = tmpl.ExecuteTemplate(&buf, "convoy.html", data)
+	err = tmpl.ExecuteTemplate(&buf, "minecart.html", data)
 	if err != nil {
 		t.Fatalf("ExecuteTemplate() error = %v", err)
 	}
@@ -152,14 +152,14 @@ func TestConvoyTemplate_HtmxAutoRefresh(t *testing.T) {
 	}
 }
 
-func TestConvoyTemplate_ProgressDisplay(t *testing.T) {
+func TestMinecartTemplate_ProgressDisplay(t *testing.T) {
 	tmpl, err := LoadTemplates()
 	if err != nil {
 		t.Fatalf("LoadTemplates() error = %v", err)
 	}
 
-	data := ConvoyData{
-		Convoys: []ConvoyRow{
+	data := MinecartData{
+		Minecarts: []MinecartRow{
 			{
 				ID:        "hq-cv-test",
 				Title:     "Test",
@@ -172,7 +172,7 @@ func TestConvoyTemplate_ProgressDisplay(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	err = tmpl.ExecuteTemplate(&buf, "convoy.html", data)
+	err = tmpl.ExecuteTemplate(&buf, "minecart.html", data)
 	if err != nil {
 		t.Fatalf("ExecuteTemplate() error = %v", err)
 	}
@@ -185,23 +185,23 @@ func TestConvoyTemplate_ProgressDisplay(t *testing.T) {
 	}
 }
 
-func TestConvoyTemplate_StatusIndicators(t *testing.T) {
+func TestMinecartTemplate_StatusIndicators(t *testing.T) {
 	tmpl, err := LoadTemplates()
 	if err != nil {
 		t.Fatalf("LoadTemplates() error = %v", err)
 	}
 
-	data := ConvoyData{
-		Convoys: []ConvoyRow{
+	data := MinecartData{
+		Minecarts: []MinecartRow{
 			{
 				ID:         "hq-cv-active",
-				Title:      "Active Convoy",
+				Title:      "Active Minecart",
 				Status:     "open",
 				WorkStatus: "active",
 			},
 			{
 				ID:         "hq-cv-stuck",
-				Title:      "Stuck Convoy",
+				Title:      "Stuck Minecart",
 				Status:     "open",
 				WorkStatus: "stuck",
 			},
@@ -209,7 +209,7 @@ func TestConvoyTemplate_StatusIndicators(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	err = tmpl.ExecuteTemplate(&buf, "convoy.html", data)
+	err = tmpl.ExecuteTemplate(&buf, "minecart.html", data)
 	if err != nil {
 		t.Fatalf("ExecuteTemplate() error = %v", err)
 	}
@@ -225,18 +225,18 @@ func TestConvoyTemplate_StatusIndicators(t *testing.T) {
 	}
 }
 
-func TestConvoyTemplate_EmptyState(t *testing.T) {
+func TestMinecartTemplate_EmptyState(t *testing.T) {
 	tmpl, err := LoadTemplates()
 	if err != nil {
 		t.Fatalf("LoadTemplates() error = %v", err)
 	}
 
-	data := ConvoyData{
-		Convoys: []ConvoyRow{},
+	data := MinecartData{
+		Minecarts: []MinecartRow{},
 	}
 
 	var buf bytes.Buffer
-	err = tmpl.ExecuteTemplate(&buf, "convoy.html", data)
+	err = tmpl.ExecuteTemplate(&buf, "minecart.html", data)
 	if err != nil {
 		t.Fatalf("ExecuteTemplate() error = %v", err)
 	}
@@ -244,7 +244,7 @@ func TestConvoyTemplate_EmptyState(t *testing.T) {
 	output := buf.String()
 
 	// Check for empty state message
-	if !strings.Contains(output, "No active convoys") {
-		t.Error("Template should show empty state message when no convoys")
+	if !strings.Contains(output, "No active minecarts") {
+		t.Error("Template should show empty state message when no minecarts")
 	}
 }

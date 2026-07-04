@@ -17,9 +17,9 @@ import (
 
 	"github.com/gofrs/flock"
 	beadsdk "github.com/steveyegge/beads"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/runtime"
-	"github.com/steveyegge/gastown/internal/telemetry"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/runtime"
+	"github.com/steveyegge/excavation/internal/telemetry"
 )
 
 // timeNow is a function that returns the current time. It can be overridden in tests.
@@ -35,7 +35,7 @@ var (
 // When store is non-nil, beads-mode methods use the in-process beadsdk.Storage
 // directly instead of shelling out to the bd CLI.
 type Mailbox struct {
-	identity string // beads identity (e.g., "gastown/polecats/Toast")
+	identity string // beads identity (e.g., "excavation/miners/Toast")
 	workDir  string // directory to run bd commands in
 	beadsDir string // explicit .beads directory path (set via BEADS_DIR)
 	path     string // for legacy JSONL mode (crew workers)
@@ -66,7 +66,7 @@ func NewMailboxBeads(identity, workDir string) *Mailbox {
 }
 
 // NewMailboxFromAddress creates a beads-backed mailbox from a GGT address.
-// Follows .beads/redirect for crew workers and polecats using shared beads.
+// Follows .beads/redirect for crew workers and miners using shared beads.
 func NewMailboxFromAddress(address, workDir string) *Mailbox {
 	beadsDir := beads.ResolveBeadsDir(workDir)
 	return &Mailbox{
@@ -398,7 +398,7 @@ func parseWispTimestamp(value string) (time.Time, bool) {
 	for _, layout := range []string{
 		time.RFC3339,
 		"2006-01-02 15:04:05 -0700 MST",
-		// Dolt/MySQL DATETIME values are emitted without a zone; Gas Town runs
+		// Dolt/MySQL DATETIME values are emitted without a zone; Excavation Site runs
 		// managed Dolt servers in UTC, so treat bare timestamps as UTC.
 		"2006-01-02 15:04:05",
 	} {
@@ -424,16 +424,16 @@ func escapeSQLString(s string) string {
 }
 
 // identityVariants returns all identity formats to query.
-// For town-level agents (mayor/, deacon/), also includes the variant without
+// For town-level agents (overseer/, supervisor/), also includes the variant without
 // trailing slash for backwards compatibility with legacy messages.
 func (m *Mailbox) identityVariants() []string {
 	variants := []string{m.identity}
 
 	// Town-level agents may have legacy messages without trailing slash
-	if m.identity == "mayor/" {
-		variants = append(variants, "mayor")
-	} else if m.identity == "deacon/" {
-		variants = append(variants, "deacon")
+	if m.identity == "overseer/" {
+		variants = append(variants, "overseer")
+	} else if m.identity == "supervisor/" {
+		variants = append(variants, "supervisor")
 	}
 
 	return variants

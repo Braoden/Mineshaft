@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/config"
 )
 
 // =============================================================================
@@ -23,7 +23,7 @@ func skipIfNoGit(t *testing.T) {
 }
 
 // testTownWithGitRigs creates a complete test town with git repositories.
-// Sets up bare repos and mayor worktrees to simulate real Gas Town structure.
+// Sets up bare repos and overseer worktrees to simulate real Excavation Site structure.
 func testTownWithGitRigs(t *testing.T) (*Manager, string) {
 	t.Helper()
 	skipIfNoGit(t)
@@ -53,41 +53,41 @@ func testTownWithGitRigs(t *testing.T) (*Manager, string) {
 		t.Fatalf("Failed to init bare repo: %v\n%s", err, out)
 	}
 
-	// Create mayor/rig worktree with initial commit
-	mayorPath := filepath.Join(rigPath, "mayor", "rig")
-	if err := os.MkdirAll(mayorPath, 0755); err != nil {
-		t.Fatalf("Failed to create mayor dir: %v", err)
+	// Create overseer/rig worktree with initial commit
+	overseerPath := filepath.Join(rigPath, "overseer", "rig")
+	if err := os.MkdirAll(overseerPath, 0755); err != nil {
+		t.Fatalf("Failed to create overseer dir: %v", err)
 	}
 
-	// Initialize mayor/rig as a regular repo
-	cmd = exec.Command("git", "init", mayorPath)
+	// Initialize overseer/rig as a regular repo
+	cmd = exec.Command("git", "init", overseerPath)
 	if out, err := cmd.CombinedOutput(); err != nil {
-		t.Fatalf("Failed to init mayor repo: %v\n%s", err, out)
+		t.Fatalf("Failed to init overseer repo: %v\n%s", err, out)
 	}
 
 	// Configure git user for commits
-	cmd = exec.Command("git", "-C", mayorPath, "config", "user.email", "test@test.com")
+	cmd = exec.Command("git", "-C", overseerPath, "config", "user.email", "test@test.com")
 	cmd.Run()
-	cmd = exec.Command("git", "-C", mayorPath, "config", "user.name", "Test")
+	cmd = exec.Command("git", "-C", overseerPath, "config", "user.name", "Test")
 	cmd.Run()
 
-	// Create initial commit in mayor/rig
-	readmePath := filepath.Join(mayorPath, "README.md")
+	// Create initial commit in overseer/rig
+	readmePath := filepath.Join(overseerPath, "README.md")
 	if err := os.WriteFile(readmePath, []byte("# Test Rig\n"), 0644); err != nil {
 		t.Fatalf("Failed to write README: %v", err)
 	}
-	cmd = exec.Command("git", "-C", mayorPath, "add", ".")
+	cmd = exec.Command("git", "-C", overseerPath, "add", ".")
 	if out, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Failed to git add: %v\n%s", err, out)
 	}
-	cmd = exec.Command("git", "-C", mayorPath, "commit", "-m", "Initial commit")
+	cmd = exec.Command("git", "-C", overseerPath, "commit", "-m", "Initial commit")
 	if out, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Failed to git commit: %v\n%s", err, out)
 	}
 
 	// Set up bare repo with proper remote configuration
-	// Add mayor/rig as a remote to bare repo and fetch
-	cmd = gitBareCommand(bareRepoPath, "remote", "add", "origin", mayorPath)
+	// Add overseer/rig as a remote to bare repo and fetch
+	cmd = gitBareCommand(bareRepoPath, "remote", "add", "origin", overseerPath)
 	if out, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Failed to add remote: %v\n%s", err, out)
 	}
@@ -135,7 +135,7 @@ func TestManager_Add_Integration_CreatesWorktrees(t *testing.T) {
 	}
 
 	// Verify dog directory exists
-	dogPath := filepath.Join(tmpDir, "deacon", "dogs", "alpha")
+	dogPath := filepath.Join(tmpDir, "supervisor", "dogs", "alpha")
 	if _, err := os.Stat(dogPath); os.IsNotExist(err) {
 		t.Error("Dog directory was not created")
 	}
@@ -243,7 +243,7 @@ func TestManager_Remove_Integration_CleansUpWorktrees(t *testing.T) {
 		t.Fatalf("Add() error = %v", err)
 	}
 
-	dogPath := filepath.Join(tmpDir, "deacon", "dogs", "doomed")
+	dogPath := filepath.Join(tmpDir, "supervisor", "dogs", "doomed")
 	worktreePath := dog.Worktrees["testrig"]
 
 	// Verify dog and worktree exist
@@ -549,7 +549,7 @@ func TestManager_Integration_RecoveryFromPartialState(t *testing.T) {
 	}
 
 	// Manually corrupt the worktree (simulate crash during creation)
-	dogPath := filepath.Join(tmpDir, "deacon", "dogs", "partial")
+	dogPath := filepath.Join(tmpDir, "supervisor", "dogs", "partial")
 	worktreePath := filepath.Join(dogPath, "testrig")
 
 	// Delete the worktree directory but keep state file

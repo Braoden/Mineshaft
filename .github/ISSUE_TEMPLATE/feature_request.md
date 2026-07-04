@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest a new feature for Gas Town
+about: Suggest a new feature for Excavation Site
 title: ''
 labels: enhancement
 assignees: ''

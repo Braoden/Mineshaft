@@ -7,10 +7,10 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/tui/feed"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/tui/feed"
+	"github.com/steveyegge/excavation/internal/workspace"
 	"golang.org/x/term"
 )
 
@@ -50,7 +50,7 @@ var feedCmd = &cobra.Command{
 
 By default, launches an interactive TUI dashboard with:
   - Agent tree (top): Shows all agents organized by role with latest activity
-  - Convoy panel (middle): Shows in-progress and recently landed convoys
+  - Minecart panel (middle): Shows in-progress and recently landed minecarts
   - Event stream (bottom): Chronological feed you can scroll through
   - Vim-style navigation: j/k to scroll, tab to switch panels, 1/2/3 for panels, q to quit
 
@@ -64,7 +64,7 @@ Problems View (--problems/-p):
 The feed combines multiple event sources:
   - GT events: Agent activity like patrol, sling, handoff (from .events.jsonl)
   - Beads activity: Issue creates, updates, completions (from bd activity, when available)
-  - Convoy status: In-progress and recently-landed convoys (refreshes every 10s)
+  - Minecart status: In-progress and recently-landed minecarts (refreshes every 10s)
 
 Use --plain for simple text output (reads .events.jsonl directly).
 
@@ -79,7 +79,7 @@ Event symbols:
   ✗  failed            - Step or issue failed
   ⊘  deleted           - Issue removed
   🦉  patrol_started   - Witness began patrol cycle
-  ⚡  polecat_nudged   - Worker was nudged
+  ⚡  miner_nudged   - Worker was nudged
   🎯  sling            - Work was slung to worker
   🤝  handoff          - Session handed off
 
@@ -103,15 +103,15 @@ Examples:
   gt feed --plain               # Plain text output (bd activity)
   gt feed --window              # Open in dedicated tmux window
   gt feed --since 1h            # Events from last hour
-  gt feed --rig greenplace      # Use gastown rig's beads`,
+  gt feed --rig greenplace      # Use excavation rig's beads`,
 	RunE: runFeed,
 }
 
 func runFeed(cmd *cobra.Command, args []string) error {
-	// Must be in a Gas Town workspace
+	// Must be in a Excavation Site workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace (run from ~/gt or a rig directory)")
+		return fmt.Errorf("not in a Excavation Site workspace (run from ~/gt or a rig directory)")
 	}
 
 	// Build feed arguments for window mode
@@ -137,7 +137,7 @@ func runFeed(cmd *cobra.Command, args []string) error {
 		}
 		if feedRig != "" {
 			candidates := []string{
-				fmt.Sprintf("%s/%s/mayor/rig", townRoot, feedRig),
+				fmt.Sprintf("%s/%s/overseer/rig", townRoot, feedRig),
 				fmt.Sprintf("%s/%s", townRoot, feedRig),
 			}
 			found := false
@@ -231,10 +231,10 @@ func runFeedDirect(townRoot string) error {
 
 // runFeedTUI runs the interactive TUI feed.
 func runFeedTUI(workDir string, problemsView bool) error {
-	// Must be in a Gas Town workspace
+	// Must be in a Excavation Site workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	var sources []feed.EventSource

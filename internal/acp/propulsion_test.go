@@ -8,12 +8,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/nudge"
+	"github.com/steveyegge/excavation/internal/nudge"
 )
 
 func TestNewPropeller(t *testing.T) {
 	proxy := NewProxy()
-	prop := NewPropeller(proxy, "/town", "hq-mayor")
+	prop := NewPropeller(proxy, "/town", "hq-overseer")
 
 	if prop.proxy != proxy {
 		t.Error("proxy not set correctly")
@@ -21,13 +21,13 @@ func TestNewPropeller(t *testing.T) {
 	if prop.townRoot != "/town" {
 		t.Error("townRoot not set correctly")
 	}
-	if prop.session != "hq-mayor" {
+	if prop.session != "hq-overseer" {
 		t.Error("session not set correctly")
 	}
 }
 
 func TestPropeller_StartStop(t *testing.T) {
-	prop := NewPropeller(nil, "", "hq-mayor")
+	prop := NewPropeller(nil, "", "hq-overseer")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -41,13 +41,13 @@ func TestPropeller_StartStop(t *testing.T) {
 
 func TestPropeller_DeliverNudges_NoProxy(t *testing.T) {
 	// Test that deliverNudges handles nil proxy gracefully
-	prop := NewPropeller(nil, "/town", "hq-mayor")
+	prop := NewPropeller(nil, "/town", "hq-overseer")
 	prop.deliverNudges() // Should not panic
 }
 
 func TestPropeller_EventLoop_Cancellation(t *testing.T) {
 	// Test that eventLoop exits on context cancellation
-	prop := NewPropeller(nil, "/town", "hq-mayor")
+	prop := NewPropeller(nil, "/town", "hq-overseer")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	prop.ctx = ctx
@@ -75,9 +75,9 @@ func TestPropeller_EventLoop_Cancellation(t *testing.T) {
 func TestPropeller_DeliverNudges_RequeuesWhenSessionUnavailable(t *testing.T) {
 	townRoot := t.TempDir()
 	proxy := NewProxy()
-	prop := NewPropeller(proxy, townRoot, "hq-mayor")
+	prop := NewPropeller(proxy, townRoot, "hq-overseer")
 
-	if err := nudge.Enqueue(townRoot, "hq-mayor", nudge.QueuedNudge{
+	if err := nudge.Enqueue(townRoot, "hq-overseer", nudge.QueuedNudge{
 		Sender:   "witness",
 		Message:  "Escalation pending",
 		Priority: nudge.PriorityUrgent,
@@ -87,7 +87,7 @@ func TestPropeller_DeliverNudges_RequeuesWhenSessionUnavailable(t *testing.T) {
 
 	prop.deliverNudges()
 
-	pending, err := nudge.Pending(townRoot, "hq-mayor")
+	pending, err := nudge.Pending(townRoot, "hq-overseer")
 	if err != nil {
 		t.Fatalf("Pending: %v", err)
 	}
@@ -95,7 +95,7 @@ func TestPropeller_DeliverNudges_RequeuesWhenSessionUnavailable(t *testing.T) {
 		t.Fatalf("expected requeued nudge to remain pending, got %d", pending)
 	}
 
-	drained, err := nudge.Drain(townRoot, "hq-mayor")
+	drained, err := nudge.Drain(townRoot, "hq-overseer")
 	if err != nil {
 		t.Fatalf("Drain: %v", err)
 	}
@@ -109,7 +109,7 @@ func TestPropeller_DeliverNudges_RequeuesWhenSessionUnavailable(t *testing.T) {
 
 func TestPropeller_NotifyReturnsErrorWithoutSessionID(t *testing.T) {
 	proxy := NewProxy()
-	prop := NewPropeller(proxy, t.TempDir(), "hq-mayor")
+	prop := NewPropeller(proxy, t.TempDir(), "hq-overseer")
 
 	err := prop.notify("test message", map[string]string{"gt/eventType": "nudge"}, true)
 	if err == nil {
@@ -144,7 +144,7 @@ func TestEscalationMetaFromNudges_IgnoresHeuristicText(t *testing.T) {
 
 func TestBuildSessionUpdateMetaAddsEscalationFields(t *testing.T) {
 	nudges := []nudge.QueuedNudge{{Sender: "witness", Message: "neutral", Priority: nudge.PriorityUrgent, Kind: "escalation", ThreadID: "hq-esc999", Severity: "critical"}}
-	meta := buildSessionUpdateMeta(nudges, "hq-mayor")
+	meta := buildSessionUpdateMeta(nudges, "hq-overseer")
 	if meta["gt/escalation"] != "true" || meta["gt/threadID"] != "hq-esc999" || meta["gt/severity"] != "critical" || meta["gt/kind"] != "escalation" {
 		t.Fatalf("unexpected meta: %#v", meta)
 	}
@@ -162,7 +162,7 @@ func TestNotifyWithMetaInjectsEscalationMetadataToUI(t *testing.T) {
 	p.sessionID = "test-session"
 	p.sessionMux.Unlock()
 
-	prop := NewPropeller(p, t.TempDir(), "hq-mayor")
+	prop := NewPropeller(p, t.TempDir(), "hq-overseer")
 	meta := map[string]string{"gt/eventType": "nudge", "gt/escalation": "true", "gt/threadID": "hq-esc777", "gt/severity": "high"}
 
 	go func() {
@@ -190,11 +190,11 @@ func TestNotifyWithMetaInjectsEscalationMetadataToUI(t *testing.T) {
 	}
 }
 
-func TestACPAttachedMayorEscalationPath_MetadataAndUrgencyEndToEnd(t *testing.T) {
+func TestACPAttachedOverseerEscalationPath_MetadataAndUrgencyEndToEnd(t *testing.T) {
 	townRoot := t.TempDir()
-	if err := nudge.Enqueue(townRoot, "hq-mayor", nudge.QueuedNudge{
-		Sender:   "gastown/witness",
-		Message:  "Escalation mail from gastown/witness. ID: hq-esc-end2end. Severity: critical. Run 'gt mail read hq-esc-end2end' or 'gt escalate ack hq-esc-end2end'.",
+	if err := nudge.Enqueue(townRoot, "hq-overseer", nudge.QueuedNudge{
+		Sender:   "excavation/witness",
+		Message:  "Escalation mail from excavation/witness. ID: hq-esc-end2end. Severity: critical. Run 'gt mail read hq-esc-end2end' or 'gt escalate ack hq-esc-end2end'.",
 		Priority: nudge.PriorityUrgent,
 		Kind:     "escalation",
 		ThreadID: "hq-esc-end2end",
@@ -214,7 +214,7 @@ func TestACPAttachedMayorEscalationPath_MetadataAndUrgencyEndToEnd(t *testing.T)
 	p.sessionID = "attached-session"
 	p.sessionMux.Unlock()
 
-	prop := NewPropeller(p, townRoot, "hq-mayor")
+	prop := NewPropeller(p, townRoot, "hq-overseer")
 	go func() {
 		prop.deliverNudges()
 		w.Close()
@@ -246,7 +246,7 @@ func TestACPAttachedMayorEscalationPath_MetadataAndUrgencyEndToEnd(t *testing.T)
 			t.Fatalf("_meta[%s] = %#v, want %q", key, meta[key], want)
 		}
 	}
-	remaining, err := nudge.Pending(townRoot, "hq-mayor")
+	remaining, err := nudge.Pending(townRoot, "hq-overseer")
 	if err != nil {
 		t.Fatalf("Pending: %v", err)
 	}

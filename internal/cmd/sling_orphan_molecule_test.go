@@ -65,13 +65,13 @@ func TestIsOrphanMolecule_TableDriven(t *testing.T) {
 		},
 		{
 			name:     "hooked, assignee, session alive — refuse",
-			info:     &beadInfo{Status: "hooked", Assignee: "rig/polecats/Toast"},
+			info:     &beadInfo{Status: "hooked", Assignee: "rig/miners/Toast"},
 			deadFn:   func(string) bool { return false },
 			expected: false,
 		},
 		{
 			name:     "hooked, assignee, session dead — auto-burn",
-			info:     &beadInfo{Status: "hooked", Assignee: "rig/polecats/Toast"},
+			info:     &beadInfo{Status: "hooked", Assignee: "rig/miners/Toast"},
 			deadFn:   func(string) bool { return true },
 			expected: true,
 		},

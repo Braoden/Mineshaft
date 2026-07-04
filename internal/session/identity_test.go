@@ -7,7 +7,7 @@ import (
 // testRegistry returns a PrefixRegistry populated with test rig prefixes.
 func testRegistry() *PrefixRegistry {
 	r := NewPrefixRegistry()
-	r.Register("gt", "gastown")
+	r.Register("gt", "excavation")
 	r.Register("bd", "beads")
 	r.Register("hop", "hop")
 	r.Register("sky", "sky")
@@ -32,21 +32,21 @@ func TestParseSessionName(t *testing.T) {
 		wantPrefix string
 		wantErr    bool
 	}{
-		// Town-level roles (hq-mayor, hq-deacon)
+		// Town-level roles (hq-overseer, hq-supervisor)
 		{
-			name:     "mayor",
-			session:  "hq-mayor",
-			wantRole: RoleMayor,
+			name:     "overseer",
+			session:  "hq-overseer",
+			wantRole: RoleOverseer,
 		},
 		{
-			name:     "deacon",
-			session:  "hq-deacon",
-			wantRole: RoleDeacon,
+			name:     "supervisor",
+			session:  "hq-supervisor",
+			wantRole: RoleSupervisor,
 		},
 		{
 			name:     "boot",
 			session:  "hq-boot",
-			wantRole: RoleDeacon,
+			wantRole: RoleSupervisor,
 			wantName: "boot",
 		},
 
@@ -64,7 +64,7 @@ func TestParseSessionName(t *testing.T) {
 			wantName: "my-dog",
 		},
 
-		// Rig prefix "hq" collision: hq-refinery/hq-witness/hq-<polecat>
+		// Rig prefix "hq" collision: hq-refinery/hq-witness/hq-<miner>
 		// should resolve as rig-level roles when "hq" is a registered prefix.
 		{
 			name:       "hq prefix witness",
@@ -81,9 +81,9 @@ func TestParseSessionName(t *testing.T) {
 			wantPrefix: "hq",
 		},
 		{
-			name:       "hq prefix polecat",
+			name:       "hq prefix miner",
 			session:    "hq-jasper",
-			wantRole:   RolePolecat,
+			wantRole:   RoleMiner,
 			wantRig:    "knjn",
 			wantName:   "jasper",
 			wantPrefix: "hq",
@@ -99,10 +99,10 @@ func TestParseSessionName(t *testing.T) {
 
 		// Witness (new format: <prefix>-witness)
 		{
-			name:       "witness gastown",
+			name:       "witness excavation",
 			session:    "gt-witness",
 			wantRole:   RoleWitness,
-			wantRig:    "gastown",
+			wantRig:    "excavation",
 			wantPrefix: "gt",
 		},
 		{
@@ -122,10 +122,10 @@ func TestParseSessionName(t *testing.T) {
 
 		// Refinery (new format: <prefix>-refinery)
 		{
-			name:       "refinery gastown",
+			name:       "refinery excavation",
 			session:    "gt-refinery",
 			wantRole:   RoleRefinery,
-			wantRig:    "gastown",
+			wantRig:    "excavation",
 			wantPrefix: "gt",
 		},
 		{
@@ -138,10 +138,10 @@ func TestParseSessionName(t *testing.T) {
 
 		// Crew (new format: <prefix>-crew-<name>)
 		{
-			name:       "crew gastown",
+			name:       "crew excavation",
 			session:    "gt-crew-max",
 			wantRole:   RoleCrew,
-			wantRig:    "gastown",
+			wantRig:    "excavation",
 			wantName:   "max",
 			wantPrefix: "gt",
 		},
@@ -157,40 +157,40 @@ func TestParseSessionName(t *testing.T) {
 			name:       "crew hyphenated name",
 			session:    "gt-crew-my-worker",
 			wantRole:   RoleCrew,
-			wantRig:    "gastown",
+			wantRig:    "excavation",
 			wantName:   "my-worker",
 			wantPrefix: "gt",
 		},
 
-		// Polecat (new format: <prefix>-<name>)
+		// Miner (new format: <prefix>-<name>)
 		{
-			name:       "polecat gastown",
+			name:       "miner excavation",
 			session:    "gt-morsov",
-			wantRole:   RolePolecat,
-			wantRig:    "gastown",
+			wantRole:   RoleMiner,
+			wantRig:    "excavation",
 			wantName:   "morsov",
 			wantPrefix: "gt",
 		},
 		{
-			name:       "polecat beads",
+			name:       "miner beads",
 			session:    "bd-worker1",
-			wantRole:   RolePolecat,
+			wantRole:   RoleMiner,
 			wantRig:    "beads",
 			wantName:   "worker1",
 			wantPrefix: "bd",
 		},
 		{
-			name:       "polecat hop",
+			name:       "miner hop",
 			session:    "hop-ostrom",
-			wantRole:   RolePolecat,
+			wantRole:   RoleMiner,
 			wantRig:    "hop",
 			wantName:   "ostrom",
 			wantPrefix: "hop",
 		},
 		{
-			name:       "polecat sky",
+			name:       "miner sky",
 			session:    "sky-furiosa",
-			wantRole:   RolePolecat,
+			wantRole:   RoleMiner,
 			wantRig:    "sky",
 			wantName:   "furiosa",
 			wantPrefix: "sky",
@@ -198,7 +198,7 @@ func TestParseSessionName(t *testing.T) {
 
 		// Error cases: unknown prefixes should fail (not fall back to splitting on dash)
 		{
-			name:    "unknown prefix polecat",
+			name:    "unknown prefix miner",
 			session: "zz-alpha",
 			wantErr: true,
 		},
@@ -252,23 +252,23 @@ func TestAgentIdentity_SessionName(t *testing.T) {
 		want     string
 	}{
 		{
-			name:     "mayor",
-			identity: AgentIdentity{Role: RoleMayor},
-			want:     "hq-mayor",
+			name:     "overseer",
+			identity: AgentIdentity{Role: RoleOverseer},
+			want:     "hq-overseer",
 		},
 		{
-			name:     "deacon",
-			identity: AgentIdentity{Role: RoleDeacon},
-			want:     "hq-deacon",
+			name:     "supervisor",
+			identity: AgentIdentity{Role: RoleSupervisor},
+			want:     "hq-supervisor",
 		},
 		{
 			name:     "boot",
-			identity: AgentIdentity{Role: RoleDeacon, Name: "boot"},
+			identity: AgentIdentity{Role: RoleSupervisor, Name: "boot"},
 			want:     "hq-boot",
 		},
 		{
 			name:     "witness",
-			identity: AgentIdentity{Role: RoleWitness, Rig: "gastown", Prefix: "gt"},
+			identity: AgentIdentity{Role: RoleWitness, Rig: "excavation", Prefix: "gt"},
 			want:     "gt-witness",
 		},
 		{
@@ -278,17 +278,17 @@ func TestAgentIdentity_SessionName(t *testing.T) {
 		},
 		{
 			name:     "crew",
-			identity: AgentIdentity{Role: RoleCrew, Rig: "gastown", Name: "max", Prefix: "gt"},
+			identity: AgentIdentity{Role: RoleCrew, Rig: "excavation", Name: "max", Prefix: "gt"},
 			want:     "gt-crew-max",
 		},
 		{
-			name:     "polecat",
-			identity: AgentIdentity{Role: RolePolecat, Rig: "gastown", Name: "morsov", Prefix: "gt"},
+			name:     "miner",
+			identity: AgentIdentity{Role: RoleMiner, Rig: "excavation", Name: "morsov", Prefix: "gt"},
 			want:     "gt-morsov",
 		},
 		{
-			name:     "polecat hop",
-			identity: AgentIdentity{Role: RolePolecat, Rig: "hop", Name: "ostrom", Prefix: "hop"},
+			name:     "miner hop",
+			identity: AgentIdentity{Role: RoleMiner, Rig: "hop", Name: "ostrom", Prefix: "hop"},
 			want:     "hop-ostrom",
 		},
 		{
@@ -314,19 +314,19 @@ func TestAgentIdentity_Address(t *testing.T) {
 		want     string
 	}{
 		{
-			name:     "mayor",
-			identity: AgentIdentity{Role: RoleMayor},
-			want:     "mayor",
+			name:     "overseer",
+			identity: AgentIdentity{Role: RoleOverseer},
+			want:     "overseer",
 		},
 		{
-			name:     "deacon",
-			identity: AgentIdentity{Role: RoleDeacon},
-			want:     "deacon",
+			name:     "supervisor",
+			identity: AgentIdentity{Role: RoleSupervisor},
+			want:     "supervisor",
 		},
 		{
 			name:     "witness",
-			identity: AgentIdentity{Role: RoleWitness, Rig: "gastown", Prefix: "gt"},
-			want:     "gastown/witness",
+			identity: AgentIdentity{Role: RoleWitness, Rig: "excavation", Prefix: "gt"},
+			want:     "excavation/witness",
 		},
 		{
 			name:     "refinery",
@@ -335,18 +335,18 @@ func TestAgentIdentity_Address(t *testing.T) {
 		},
 		{
 			name:     "crew",
-			identity: AgentIdentity{Role: RoleCrew, Rig: "gastown", Name: "max", Prefix: "gt"},
-			want:     "gastown/crew/max",
+			identity: AgentIdentity{Role: RoleCrew, Rig: "excavation", Name: "max", Prefix: "gt"},
+			want:     "excavation/crew/max",
 		},
 		{
-			name:     "polecat",
-			identity: AgentIdentity{Role: RolePolecat, Rig: "gastown", Name: "Toast", Prefix: "gt"},
-			want:     "gastown/polecats/Toast",
+			name:     "miner",
+			identity: AgentIdentity{Role: RoleMiner, Rig: "excavation", Name: "Toast", Prefix: "gt"},
+			want:     "excavation/miners/Toast",
 		},
 		{
 			name:     "dog",
 			identity: AgentIdentity{Role: RoleDog, Name: "alpha"},
-			want:     "deacon/dogs/alpha",
+			want:     "supervisor/dogs/alpha",
 		},
 	}
 
@@ -367,8 +367,8 @@ func TestParseSessionName_RoundTrip(t *testing.T) {
 
 	// Test that parsing then reconstructing gives the same result
 	sessions := []string{
-		"hq-mayor",
-		"hq-deacon",
+		"hq-overseer",
+		"hq-supervisor",
 		"hq-dog-alpha",
 		"gt-witness",
 		"bd-refinery",
@@ -403,19 +403,19 @@ func TestParseAddress(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:    "mayor",
-			address: "mayor/",
-			want:    AgentIdentity{Role: RoleMayor},
+			name:    "overseer",
+			address: "overseer/",
+			want:    AgentIdentity{Role: RoleOverseer},
 		},
 		{
-			name:    "deacon",
-			address: "deacon",
-			want:    AgentIdentity{Role: RoleDeacon},
+			name:    "supervisor",
+			address: "supervisor",
+			want:    AgentIdentity{Role: RoleSupervisor},
 		},
 		{
 			name:    "witness",
-			address: "gastown/witness",
-			want:    AgentIdentity{Role: RoleWitness, Rig: "gastown", Prefix: PrefixFor("gastown")},
+			address: "excavation/witness",
+			want:    AgentIdentity{Role: RoleWitness, Rig: "excavation", Prefix: PrefixFor("excavation")},
 		},
 		{
 			name:    "refinery",
@@ -424,22 +424,22 @@ func TestParseAddress(t *testing.T) {
 		},
 		{
 			name:    "crew",
-			address: "gastown/crew/max",
-			want:    AgentIdentity{Role: RoleCrew, Rig: "gastown", Name: "max", Prefix: PrefixFor("gastown")},
+			address: "excavation/crew/max",
+			want:    AgentIdentity{Role: RoleCrew, Rig: "excavation", Name: "max", Prefix: PrefixFor("excavation")},
 		},
 		{
-			name:    "polecat explicit",
-			address: "gastown/polecats/nux",
-			want:    AgentIdentity{Role: RolePolecat, Rig: "gastown", Name: "nux", Prefix: PrefixFor("gastown")},
+			name:    "miner explicit",
+			address: "excavation/miners/nux",
+			want:    AgentIdentity{Role: RoleMiner, Rig: "excavation", Name: "nux", Prefix: PrefixFor("excavation")},
 		},
 		{
-			name:    "polecat canonical",
-			address: "gastown/nux",
-			want:    AgentIdentity{Role: RolePolecat, Rig: "gastown", Name: "nux", Prefix: PrefixFor("gastown")},
+			name:    "miner canonical",
+			address: "excavation/nux",
+			want:    AgentIdentity{Role: RoleMiner, Rig: "excavation", Name: "nux", Prefix: PrefixFor("excavation")},
 		},
 		{
 			name:    "invalid",
-			address: "gastown/crew",
+			address: "excavation/crew",
 			wantErr: true,
 		},
 	}
@@ -465,11 +465,11 @@ func TestParseAddress(t *testing.T) {
 
 func TestPrefixRegistry(t *testing.T) {
 	r := NewPrefixRegistry()
-	r.Register("gt", "gastown")
+	r.Register("gt", "excavation")
 	r.Register("bd", "beads")
 
-	if got := r.PrefixForRig("gastown"); got != "gt" {
-		t.Errorf("PrefixForRig(gastown) = %q, want %q", got, "gt")
+	if got := r.PrefixForRig("excavation"); got != "gt" {
+		t.Errorf("PrefixForRig(excavation) = %q, want %q", got, "gt")
 	}
 	if got := r.RigForPrefix("bd"); got != "beads" {
 		t.Errorf("RigForPrefix(bd) = %q, want %q", got, "beads")

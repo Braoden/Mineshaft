@@ -3,7 +3,7 @@
 #
 # Runs across all rig repos. Covers:
 # - Merged local branches
-# - Orphan local branches (polecat/*, dog/*, fix/*, etc. with no remote)
+# - Orphan local branches (miner/*, dog/*, fix/*, etc. with no remote)
 # - Merged remote branches on GitHub
 # - Stale stashes
 # - Git garbage collection
@@ -90,7 +90,7 @@ while IFS= read -r REPO_PATH; do
 
   # Step 3: Delete stale unmerged orphan branches
   log "  Deleting stale orphan branches..."
-  STALE_PATTERNS="polecat/|dog/|fix/|pr-|integration/|worktree-agent-"
+  STALE_PATTERNS="miner/|dog/|fix/|pr-|integration/|worktree-agent-"
   ALL_BRANCHES=$(git -C "$REPO_PATH" branch 2>/dev/null \
     | grep -v "^\*" \
     | grep -v "^+" \
@@ -132,7 +132,7 @@ while IFS= read -r REPO_PATH; do
       | grep -vE "origin/merge/" \
       | sed 's|^[[:space:]]*origin/||' || true)
 
-    REMOTE_PATTERNS="polecat/|fix/|pr-|integration/|worktree-agent-"
+    REMOTE_PATTERNS="miner/|fix/|pr-|integration/|worktree-agent-"
 
     while IFS= read -r RBRANCH; do
       [ -z "$RBRANCH" ] && continue

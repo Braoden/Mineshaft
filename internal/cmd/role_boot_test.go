@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/beads"
+	"github.com/steveyegge/excavation/internal/beads"
 )
 
 func TestParseRoleStringBoot(t *testing.T) {
@@ -16,18 +16,18 @@ func TestParseRoleStringBoot(t *testing.T) {
 	}{
 		// Simple "boot" → RoleBoot
 		{"boot", RoleBoot, "", ""},
-		// Compound "deacon/boot" → RoleBoot
-		{"deacon/boot", RoleBoot, "", ""},
-		// Non-deacon compound should NOT match RoleBoot
+		// Compound "supervisor/boot" → RoleBoot
+		{"supervisor/boot", RoleBoot, "", ""},
+		// Non-supervisor compound should NOT match RoleBoot
 		{"west/boot", Role("west/boot"), "", ""},
 		// Extra path segments should NOT match RoleBoot
-		{"deacon/boot/extra", Role("deacon/boot/extra"), "", ""},
+		{"supervisor/boot/extra", Role("supervisor/boot/extra"), "", ""},
 		// Double-slash normalization
 		{"gamestore//refinery", RoleRefinery, "gamestore", ""},
 		{"gamestore//witness", RoleWitness, "gamestore", ""},
 		{"gamestore///refinery", RoleRefinery, "gamestore", ""},
 		{"gamestore/refinery/", RoleRefinery, "gamestore", ""},
-		{"gamestore//polecats//alpha", RolePolecat, "gamestore", "alpha"},
+		{"gamestore//miners//alpha", RoleMiner, "gamestore", "alpha"},
 	}
 
 	for _, tt := range tests {
@@ -47,7 +47,7 @@ func TestParseRoleStringBoot(t *testing.T) {
 func TestGetRoleHomeBoot(t *testing.T) {
 	townRoot := "/tmp/gt"
 	got := getRoleHome(RoleBoot, "", "", townRoot)
-	want := filepath.Join(townRoot, "deacon", "dogs", "boot")
+	want := filepath.Join(townRoot, "supervisor", "dogs", "boot")
 	if got != want {
 		t.Errorf("getRoleHome(RoleBoot) = %q, want %q", got, want)
 	}
@@ -58,13 +58,13 @@ func TestIsTownLevelRoleBoot(t *testing.T) {
 		agentID string
 		want    bool
 	}{
-		{"deacon/boot", true},
-		{"deacon-boot", true},
-		{"mayor", true},
-		{"mayor/", true},
-		{"deacon", true},
-		{"deacon/", true},
-		{"gastown/witness", false},
+		{"supervisor/boot", true},
+		{"supervisor-boot", true},
+		{"overseer", true},
+		{"overseer/", true},
+		{"supervisor", true},
+		{"supervisor/", true},
+		{"excavation/witness", false},
 		{"west/boot", false},
 		{"boot", false}, // bare "boot" is not a valid agentID
 	}
@@ -80,7 +80,7 @@ func TestIsTownLevelRoleBoot(t *testing.T) {
 func TestActorStringBoot(t *testing.T) {
 	info := RoleInfo{Role: RoleBoot}
 	got := info.ActorString()
-	want := "deacon-boot"
+	want := "supervisor-boot"
 	if got != want {
 		t.Errorf("ActorString() for RoleBoot = %q, want %q", got, want)
 	}
@@ -92,7 +92,7 @@ func TestActorStringConsistentWithBDActorBoot(t *testing.T) {
 	// update it here too.
 	info := RoleInfo{Role: RoleBoot}
 	actorString := info.ActorString()
-	bdActor := "deacon-boot" // snapshot from internal/config/env.go:57
+	bdActor := "supervisor-boot" // snapshot from internal/config/env.go:57
 	if actorString != bdActor {
 		t.Errorf("ActorString() = %q does not match BD_ACTOR = %q", actorString, bdActor)
 	}
@@ -104,14 +104,14 @@ func TestBuildAgentBeadIDBoot(t *testing.T) {
 	want := beads.DogBeadIDTown("boot")
 
 	// Explicit role path
-	got := buildAgentBeadID("deacon-boot", RoleBoot, "/tmp/gt")
+	got := buildAgentBeadID("supervisor-boot", RoleBoot, "/tmp/gt")
 	if got != want {
 		t.Errorf("buildAgentBeadID(RoleBoot) = %q, want %q", got, want)
 	}
 
-	// Identity inference path (RoleUnknown + "deacon-boot" identity)
-	got = buildAgentBeadID("deacon-boot", RoleUnknown, "/tmp/gt")
+	// Identity inference path (RoleUnknown + "supervisor-boot" identity)
+	got = buildAgentBeadID("supervisor-boot", RoleUnknown, "/tmp/gt")
 	if got != want {
-		t.Errorf("buildAgentBeadID(RoleUnknown, \"deacon-boot\") = %q, want %q", got, want)
+		t.Errorf("buildAgentBeadID(RoleUnknown, \"supervisor-boot\") = %q, want %q", got, want)
 	}
 }

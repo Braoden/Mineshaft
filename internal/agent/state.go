@@ -1,5 +1,5 @@
-// Package agent provides shared types and utilities for Gas Town agents
-// (witness, refinery, deacon, etc.).
+// Package agent provides shared types and utilities for Excavation Site agents
+// (witness, refinery, supervisor, etc.).
 package agent
 
 import (
@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/steveyegge/gastown/internal/atomicfile"
+	"github.com/steveyegge/excavation/internal/atomicfile"
 )
 
 // StateManager handles loading and saving agent state to disk.

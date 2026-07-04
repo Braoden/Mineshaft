@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/lock"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/lock"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // respawnMu serializes in-process access to the respawn state file.
@@ -65,7 +65,7 @@ func saveBeadRespawnState(townRoot string, state *beadRespawnState) error {
 
 // ShouldBlockRespawn returns true if the bead has already been respawned
 // MaxBeadRespawns times (from operational config). When true, the caller
-// should escalate to mayor instead of sending RECOVERED_BEAD to deacon
+// should escalate to overseer instead of sending RECOVERED_BEAD to supervisor
 // for re-dispatch. This is the primary circuit breaker for spawn storms
 // (clown show #22).
 func ShouldBlockRespawn(workDir, beadID string) bool {

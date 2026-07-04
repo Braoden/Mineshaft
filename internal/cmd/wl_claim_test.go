@@ -3,7 +3,7 @@ package cmd
 import (
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/doltserver"
+	"github.com/steveyegge/excavation/internal/doltserver"
 )
 
 func TestClaimWanted_Success(t *testing.T) {

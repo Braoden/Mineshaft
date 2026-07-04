@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/constants"
+	"github.com/steveyegge/excavation/internal/constants"
 )
 
 // TestExtractTemplateVariables verifies we can find all {{variable}} patterns.
@@ -169,12 +169,12 @@ required = true
 	}
 }
 
-// TestMolConvoyFeedFormula_VariableValidation is a regression test for issue #1133.
-// The mol-convoy-feed formula uses template variables like {{ready_count}} that
+// TestMolMinecartFeedFormula_VariableValidation is a regression test for issue #1133.
+// The mol-minecart-feed formula uses template variables like {{ready_count}} that
 // aren't defined in [vars], causing wisp creation to fail.
-func TestMolConvoyFeedFormula_VariableValidation(t *testing.T) {
+func TestMolMinecartFeedFormula_VariableValidation(t *testing.T) {
 	// Find the formula file
-	formulaPath := filepath.Join("formulas", constants.MolConvoyFeed+".formula.toml")
+	formulaPath := filepath.Join("formulas", constants.MolMinecartFeed+".formula.toml")
 	data, err := os.ReadFile(formulaPath)
 	if err != nil {
 		t.Skipf("Formula file not found: %v", err)
@@ -182,13 +182,13 @@ func TestMolConvoyFeedFormula_VariableValidation(t *testing.T) {
 
 	f, err := Parse(data)
 	if err != nil {
-		t.Fatalf("Failed to parse mol-convoy-feed formula: %v", err)
+		t.Fatalf("Failed to parse mol-minecart-feed formula: %v", err)
 	}
 
 	// This test will FAIL until the formula is fixed
 	err = f.ValidateTemplateVariables()
 	if err != nil {
-		t.Errorf("mol-convoy-feed formula has undefined template variables: %v", err)
+		t.Errorf("mol-minecart-feed formula has undefined template variables: %v", err)
 		t.Log("Fix: Add all computed variables to [vars] with default = \"\"")
 	}
 }

@@ -8,14 +8,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/session"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/session"
 )
 
 func setupSlingTestRegistry(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "gastown")
+	reg.Register("gt", "excavation")
 	reg.Register("bd", "beads")
 	reg.Register("mp", "my-project")
 	old := session.DefaultRegistry()
@@ -38,7 +38,7 @@ func TestNudgeRefinerySessionName(t *testing.T) {
 	}{
 		{
 			name:        "simple rig name",
-			rigName:     "gastown",
+			rigName:     "excavation",
 			message:     "MERGE_READY received - check inbox for pending work",
 			wantSession: "gt-refinery",
 		},
@@ -83,7 +83,7 @@ func TestNudgeRefinerySessionName(t *testing.T) {
 
 // TestWakeRigAgentsDoesNotNudgeRefinery verifies that wakeRigAgents only
 // nudges the witness, not the refinery. The refinery should only be nudged
-// when an MR is actually created (via nudgeRefinery), not at polecat dispatch time.
+// when an MR is actually created (via nudgeRefinery), not at miner dispatch time.
 func TestWakeRigAgentsDoesNotNudgeRefinery(t *testing.T) {
 	logPath := filepath.Join(t.TempDir(), "nudge.log")
 	t.Setenv("GT_TEST_NUDGE_LOG", logPath)
@@ -321,7 +321,7 @@ exit 1
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1")
 
-	err := hookBeadWithRetry("gt-work", "gastown/polecats/rust", t.TempDir())
+	err := hookBeadWithRetry("gt-work", "excavation/miners/rust", t.TempDir())
 	if err == nil {
 		t.Fatal("hookBeadWithRetry error = nil, want fail-fast error")
 	}

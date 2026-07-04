@@ -7,18 +7,18 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/cli"
-	"github.com/steveyegge/gastown/internal/refinery"
-	"github.com/steveyegge/gastown/internal/style"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/cli"
+	"github.com/steveyegge/excavation/internal/refinery"
+	"github.com/steveyegge/excavation/internal/style"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
 
 // PatrolConfig holds role-specific patrol configuration.
 type PatrolConfig struct {
-	RoleName      string       // "deacon", "witness", "refinery"
-	PatrolMolName string       // "mol-deacon-patrol", etc.
+	RoleName      string       // "supervisor", "witness", "refinery"
+	PatrolMolName string       // "mol-supervisor-patrol", etc.
 	BeadsDir      string       // where to look for beads
 	Assignee      string       // agent identity for pinning
 	HeaderEmoji   string       // display emoji

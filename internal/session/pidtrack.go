@@ -9,8 +9,8 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/util"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/util"
 )
 
 // pidStartTimeFunc is overridden in tests. This package's tests must NOT use

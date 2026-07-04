@@ -9,9 +9,9 @@ import (
 	"sync"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/mail"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/mail"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // stopHookResponse is the JSON response for Claude Code's Stop hook.
@@ -47,7 +47,7 @@ All output goes to stdout as JSON for Claude Code to consume.`,
 func runSignalStop(cmd *cobra.Command, args []string) error {
 	// Detect agent identity
 	address := detectSender()
-	if address == "" || address == "overseer" {
+	if address == "" || address == "boss" {
 		// Not an agent session — allow the stop
 		return outputStopAllow()
 	}
@@ -55,7 +55,7 @@ func runSignalStop(cmd *cobra.Command, args []string) error {
 	// Find town root for mail and beads operations
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil || townRoot == "" {
-		// Not in a Gas Town workspace — allow the stop
+		// Not in a Excavation Site workspace — allow the stop
 		return outputStopAllow()
 	}
 

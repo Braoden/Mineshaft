@@ -13,15 +13,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/config"
 )
 
 //go:embed static
 var staticFiles embed.FS
 
-// ConvoyFetcher defines the interface for fetching convoy data.
-type ConvoyFetcher interface {
-	FetchConvoys() ([]ConvoyRow, error)
+// MinecartFetcher defines the interface for fetching minecart data.
+type MinecartFetcher interface {
+	FetchMinecarts() ([]MinecartRow, error)
 	FetchMergeQueue() ([]MergeQueueRow, error)
 	FetchWorkers() ([]WorkerRow, error)
 	FetchMail() ([]MailRow, error)
@@ -32,7 +32,7 @@ type ConvoyFetcher interface {
 	FetchQueues() ([]QueueRow, error)
 	FetchSessions() ([]SessionRow, error)
 	FetchHooks() ([]HookRow, error)
-	FetchMayor() (*MayorStatus, error)
+	FetchOverseer() (*OverseerStatus, error)
 	FetchIssues() ([]IssueRow, error)
 	FetchActivity() ([]ActivityRow, error)
 }
@@ -43,9 +43,9 @@ type expandCacheEntry struct {
 	time time.Time
 }
 
-// ConvoyHandler handles HTTP requests for the convoy dashboard.
-type ConvoyHandler struct {
-	fetcher      ConvoyFetcher
+// MinecartHandler handles HTTP requests for the minecart dashboard.
+type MinecartHandler struct {
+	fetcher      MinecartFetcher
 	template     *template.Template
 	fetchTimeout time.Duration
 	csrfToken    string
@@ -70,14 +70,14 @@ type ConvoyHandler struct {
 // Requests arriving within this window get the cached response.
 const defaultCacheTTL = 10 * time.Second
 
-// NewConvoyHandler creates a new convoy handler with the given fetcher, fetch timeout, and CSRF token.
-func NewConvoyHandler(fetcher ConvoyFetcher, fetchTimeout time.Duration, csrfToken string) (*ConvoyHandler, error) {
+// NewMinecartHandler creates a new minecart handler with the given fetcher, fetch timeout, and CSRF token.
+func NewMinecartHandler(fetcher MinecartFetcher, fetchTimeout time.Duration, csrfToken string) (*MinecartHandler, error) {
 	tmpl, err := LoadTemplates()
 	if err != nil {
 		return nil, err
 	}
 
-	return &ConvoyHandler{
+	return &MinecartHandler{
 		fetcher:      fetcher,
 		template:     tmpl,
 		fetchTimeout: fetchTimeout,
@@ -86,11 +86,11 @@ func NewConvoyHandler(fetcher ConvoyFetcher, fetchTimeout time.Duration, csrfTok
 	}, nil
 }
 
-// ServeHTTP handles GET / requests and renders the convoy dashboard.
+// ServeHTTP handles GET / requests and renders the minecart dashboard.
 // Uses a response cache to prevent bd process storms from overlapping
 // requests (htmx auto-refresh, multiple tabs). Only one fetch cycle
 // runs at a time; concurrent requests get the cached response.
-func (h *ConvoyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *MinecartHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Check for expand parameter — expanded views render a different template
 	// variant but are still cached to prevent process storms (GH#3117).
 	expandPanel := r.URL.Query().Get("expand")
@@ -184,12 +184,12 @@ func (h *ConvoyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // fetchAndRender runs all 14 fetchers in parallel and renders the template.
 // Returns the rendered HTML bytes, or nil on template error.
-func (h *ConvoyHandler) fetchAndRender(r *http.Request, expandPanel string) []byte {
+func (h *MinecartHandler) fetchAndRender(r *http.Request, expandPanel string) []byte {
 	ctx, cancel := context.WithTimeout(r.Context(), h.fetchTimeout)
 	defer cancel()
 
 	var (
-		convoys     []ConvoyRow
+		minecarts     []MinecartRow
 		mergeQueue  []MergeQueueRow
 		workers     []WorkerRow
 		mail        []MailRow
@@ -200,7 +200,7 @@ func (h *ConvoyHandler) fetchAndRender(r *http.Request, expandPanel string) []by
 		queues      []QueueRow
 		sessions    []SessionRow
 		hooks       []HookRow
-		mayor       *MayorStatus
+		overseer       *OverseerStatus
 		issues      []IssueRow
 		activity    []ActivityRow
 		wg          sync.WaitGroup
@@ -212,9 +212,9 @@ func (h *ConvoyHandler) fetchAndRender(r *http.Request, expandPanel string) []by
 	go func() {
 		defer wg.Done()
 		var err error
-		convoys, err = h.fetcher.FetchConvoys()
+		minecarts, err = h.fetcher.FetchMinecarts()
 		if err != nil {
-			log.Printf("dashboard: FetchConvoys failed: %v", err)
+			log.Printf("dashboard: FetchMinecarts failed: %v", err)
 		}
 	}()
 	go func() {
@@ -300,9 +300,9 @@ func (h *ConvoyHandler) fetchAndRender(r *http.Request, expandPanel string) []by
 	go func() {
 		defer wg.Done()
 		var err error
-		mayor, err = h.fetcher.FetchMayor()
+		overseer, err = h.fetcher.FetchOverseer()
 		if err != nil {
-			log.Printf("dashboard: FetchMayor failed: %v", err)
+			log.Printf("dashboard: FetchOverseer failed: %v", err)
 		}
 	}()
 	go func() {
@@ -340,10 +340,10 @@ func (h *ConvoyHandler) fetchAndRender(r *http.Request, expandPanel string) []by
 	}
 
 	// Compute summary from already-fetched data
-	summary := computeSummary(workers, hooks, issues, convoys, escalations, activity)
+	summary := computeSummary(workers, hooks, issues, minecarts, escalations, activity)
 
-	data := ConvoyData{
-		Convoys:     convoys,
+	data := MinecartData{
+		Minecarts:     minecarts,
 		MergeQueue:  mergeQueue,
 		Workers:     workers,
 		Mail:        mail,
@@ -354,7 +354,7 @@ func (h *ConvoyHandler) fetchAndRender(r *http.Request, expandPanel string) []by
 		Queues:      queues,
 		Sessions:    sessions,
 		Hooks:       hooks,
-		Mayor:       mayor,
+		Overseer:       overseer,
 		Issues:      enrichIssuesWithAssignees(issues, hooks),
 		Activity:    activity,
 		Summary:     summary,
@@ -363,7 +363,7 @@ func (h *ConvoyHandler) fetchAndRender(r *http.Request, expandPanel string) []by
 	}
 
 	var buf bytes.Buffer
-	if err := h.template.ExecuteTemplate(&buf, "convoy.html", data); err != nil {
+	if err := h.template.ExecuteTemplate(&buf, "minecart.html", data); err != nil {
 		log.Printf("dashboard: template execution failed: %v", err)
 		return nil
 	}
@@ -373,20 +373,20 @@ func (h *ConvoyHandler) fetchAndRender(r *http.Request, expandPanel string) []by
 
 // computeSummary calculates dashboard stats and alerts from fetched data.
 func computeSummary(workers []WorkerRow, hooks []HookRow, issues []IssueRow,
-	convoys []ConvoyRow, escalations []EscalationRow, activity []ActivityRow) *DashboardSummary {
+	minecarts []MinecartRow, escalations []EscalationRow, activity []ActivityRow) *DashboardSummary {
 
 	summary := &DashboardSummary{
-		PolecatCount:    len(workers),
+		MinerCount:    len(workers),
 		HookCount:       len(hooks),
 		IssueCount:      len(issues),
-		ConvoyCount:     len(convoys),
+		MinecartCount:     len(minecarts),
 		EscalationCount: len(escalations),
 	}
 
 	// Count stuck workers (status = "stuck")
 	for _, w := range workers {
 		if w.WorkStatus == "stuck" {
-			summary.StuckPolecats++
+			summary.StuckMiners++
 		}
 	}
 
@@ -419,7 +419,7 @@ func computeSummary(workers []WorkerRow, hooks []HookRow, issues []IssueRow,
 	}
 
 	// Set HasAlerts flag
-	summary.HasAlerts = summary.StuckPolecats > 0 ||
+	summary.HasAlerts = summary.StuckMiners > 0 ||
 		summary.StaleHooks > 0 ||
 		summary.UnackedEscalations > 0 ||
 		summary.DeadSessions > 0 ||
@@ -456,7 +456,7 @@ func generateCSRFToken() string {
 
 // NewDashboardMux creates an HTTP handler that serves both the dashboard and API.
 // webCfg may be nil, in which case defaults are used.
-func NewDashboardMux(fetcher ConvoyFetcher, webCfg *config.WebTimeoutsConfig) (http.Handler, error) {
+func NewDashboardMux(fetcher MinecartFetcher, webCfg *config.WebTimeoutsConfig) (http.Handler, error) {
 	if webCfg == nil {
 		webCfg = config.DefaultWebTimeoutsConfig()
 	}
@@ -464,7 +464,7 @@ func NewDashboardMux(fetcher ConvoyFetcher, webCfg *config.WebTimeoutsConfig) (h
 	csrfToken := generateCSRFToken()
 
 	fetchTimeout := config.ParseDurationOrDefault(webCfg.FetchTimeout, 8*time.Second)
-	convoyHandler, err := NewConvoyHandler(fetcher, fetchTimeout, csrfToken)
+	minecartHandler, err := NewMinecartHandler(fetcher, fetchTimeout, csrfToken)
 	if err != nil {
 		return nil, err
 	}
@@ -483,7 +483,7 @@ func NewDashboardMux(fetcher ConvoyFetcher, webCfg *config.WebTimeoutsConfig) (h
 	mux := http.NewServeMux()
 	mux.Handle("/api/", apiHandler)
 	mux.Handle("/static/", http.StripPrefix("/static/", staticHandler))
-	mux.Handle("/", convoyHandler)
+	mux.Handle("/", minecartHandler)
 
 	return mux, nil
 }

@@ -17,8 +17,8 @@ recommendation.
 - **testability**: Can we verify this plan worked?
 
 ## Execution Model
-1. Each leg spawns as a separate polecat
-2. Polecats work in parallel
+1. Each leg spawns as a separate miner
+2. Miners work in parallel
 3. Each writes their review to a designated output file
 4. Synthesis step combines all findings into a final verdict with must-fix items
 
@@ -28,7 +28,7 @@ A .plan-reviews/<review-id>/ directory containing:
 - plan-review.md with consolidated findings and go/no-go recommendation
 """
 formula = "mol-plan-review"
-type = "convoy"
+type = "minecart"
 version = 1
 
 [inputs]
@@ -51,7 +51,7 @@ required = false
 base = """
 # Implementation Plan Review Assignment
 
-You are a specialized reviewer participating in a parallel plan review convoy.
+You are a specialized reviewer participating in a parallel plan review minecart.
 
 ## Context
 - **Formula**: {{.formula_name}}
@@ -288,7 +288,7 @@ All leg reviews from: {{.output.directory}}/
 ## Next Steps
 - [ ] Address must-fix items in plan (if any)
 - [ ] Re-review if NO-GO
-- [ ] Pour `shiny` or `mol-polecat-work` per plan bead if GO
+- [ ] Pour `shiny` or `mol-miner-work` per plan bead if GO
 ```
 
 **After writing the file, mail the coordinator (whoever poured this formula):**

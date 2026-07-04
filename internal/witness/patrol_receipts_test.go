@@ -8,8 +8,8 @@ import (
 
 func TestBuildPatrolReceipt_StaleVerdictFromHookBead(t *testing.T) {
 	t.Parallel()
-	receipt := BuildPatrolReceipt("gastown", ZombieResult{
-		PolecatName:    "atlas",
+	receipt := BuildPatrolReceipt("excavation", ZombieResult{
+		MinerName:    "atlas",
 		AgentState:     "idle",
 		Classification: ZombieSessionDeadActive,
 		HookBead:       "gt-abc123",
@@ -27,8 +27,8 @@ func TestBuildPatrolReceipt_StaleVerdictFromHookBead(t *testing.T) {
 
 func TestBuildPatrolReceipt_OrphanVerdictWithoutHookedWork(t *testing.T) {
 	t.Parallel()
-	receipt := BuildPatrolReceipt("gastown", ZombieResult{
-		PolecatName:    "echo",
+	receipt := BuildPatrolReceipt("excavation", ZombieResult{
+		MinerName:    "echo",
 		AgentState:     "idle",
 		Classification: ZombieIdleDirtySandbox,
 		Action:         "cleanup-wisp-created",
@@ -41,8 +41,8 @@ func TestBuildPatrolReceipt_OrphanVerdictWithoutHookedWork(t *testing.T) {
 
 func TestBuildPatrolReceipt_ErrorIncludedInEvidence(t *testing.T) {
 	t.Parallel()
-	receipt := BuildPatrolReceipt("gastown", ZombieResult{
-		PolecatName:    "nux",
+	receipt := BuildPatrolReceipt("excavation", ZombieResult{
+		MinerName:    "nux",
 		AgentState:     "running",
 		Classification: ZombieAgentDeadInSession,
 		WasActive:      true,
@@ -103,20 +103,20 @@ func TestBuildPatrolReceipts_NilAndEmpty(t *testing.T) {
 	if got := BuildPatrolReceipts("rig", nil); got != nil {
 		t.Errorf("BuildPatrolReceipts(nil) = %v, want nil", got)
 	}
-	if got := BuildPatrolReceipts("rig", &DetectZombiePolecatsResult{}); got != nil {
+	if got := BuildPatrolReceipts("rig", &DetectZombieMinersResult{}); got != nil {
 		t.Errorf("BuildPatrolReceipts(empty) = %v, want nil", got)
 	}
-	if got := BuildPatrolReceipts("rig", &DetectZombiePolecatsResult{Zombies: []ZombieResult{}}); got != nil {
+	if got := BuildPatrolReceipts("rig", &DetectZombieMinersResult{Zombies: []ZombieResult{}}); got != nil {
 		t.Errorf("BuildPatrolReceipts(empty zombies) = %v, want nil", got)
 	}
 }
 
 func TestBuildPatrolReceipts_JSONShape(t *testing.T) {
 	t.Parallel()
-	receipts := BuildPatrolReceipts("gastown", &DetectZombiePolecatsResult{
+	receipts := BuildPatrolReceipts("excavation", &DetectZombieMinersResult{
 		Zombies: []ZombieResult{
 			{
-				PolecatName: "atlas",
+				MinerName: "atlas",
 				AgentState:  "working",
 				HookBead:    "gt-123",
 				WasActive:   true,
@@ -155,17 +155,17 @@ func TestBuildPatrolReceipts_JSONShape(t *testing.T) {
 
 func TestBuildPatrolReceipts_DeterministicStaleOrphanOrdering(t *testing.T) {
 	t.Parallel()
-	receipts := BuildPatrolReceipts("gastown", &DetectZombiePolecatsResult{
+	receipts := BuildPatrolReceipts("excavation", &DetectZombieMinersResult{
 		Zombies: []ZombieResult{
 			{
-				PolecatName: "atlas",
+				MinerName: "atlas",
 				AgentState:  "working",
 				HookBead:    "gt-123",
 				WasActive:   true,
 				Action:      "restarted",
 			},
 			{
-				PolecatName: "echo",
+				MinerName: "echo",
 				AgentState:  "idle",
 				Action:      "cleanup-wisp-created",
 			},
@@ -174,10 +174,10 @@ func TestBuildPatrolReceipts_DeterministicStaleOrphanOrdering(t *testing.T) {
 	if len(receipts) != 2 {
 		t.Fatalf("len(receipts) = %d, want 2", len(receipts))
 	}
-	if receipts[0].Polecat != "atlas" || receipts[0].Verdict != PatrolVerdictStale {
-		t.Fatalf("first receipt = %+v, want polecat=atlas verdict=%q", receipts[0], PatrolVerdictStale)
+	if receipts[0].Miner != "atlas" || receipts[0].Verdict != PatrolVerdictStale {
+		t.Fatalf("first receipt = %+v, want miner=atlas verdict=%q", receipts[0], PatrolVerdictStale)
 	}
-	if receipts[1].Polecat != "echo" || receipts[1].Verdict != PatrolVerdictOrphan {
-		t.Fatalf("second receipt = %+v, want polecat=echo verdict=%q", receipts[1], PatrolVerdictOrphan)
+	if receipts[1].Miner != "echo" || receipts[1].Verdict != PatrolVerdictOrphan {
+		t.Fatalf("second receipt = %+v, want miner=echo verdict=%q", receipts[1], PatrolVerdictOrphan)
 	}
 }

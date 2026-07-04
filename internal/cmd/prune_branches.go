@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	gitpkg "github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/style"
+	gitpkg "github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/style"
 )
 
 var (
@@ -16,16 +16,16 @@ var (
 var pruneBranchesCmd = &cobra.Command{
 	Use:     "prune-branches",
 	GroupID: GroupWork,
-	Short:   "Remove stale local polecat tracking branches",
-	Long: `Remove local branches that were created when tracking remote polecat branches.
+	Short:   "Remove stale local miner tracking branches",
+	Long: `Remove local branches that were created when tracking remote miner branches.
 
-When polecats push branches to origin, other clones create local tracking
+When miners push branches to origin, other clones create local tracking
 branches via git fetch. After the remote branch is deleted (post-merge),
 git fetch --prune removes the remote tracking ref but the local branch
 persists indefinitely.
 
 This command finds and removes local branches matching the pattern (default:
-polecat/*) that are either:
+miner/*) that are either:
   - Fully merged to the default branch (main)
   - Have no corresponding remote tracking branch (remote was deleted)
 
@@ -33,7 +33,7 @@ Safety: Uses git branch -d (not -D) so only fully-merged branches are deleted.
 Never deletes the current branch or the default branch.
 
 Examples:
-  gt prune-branches              # Clean up stale polecat branches
+  gt prune-branches              # Clean up stale miner branches
   gt prune-branches --dry-run    # Show what would be deleted
   gt prune-branches --pattern "feature/*"  # Custom pattern`,
 	RunE: runPruneBranches,
@@ -41,7 +41,7 @@ Examples:
 
 func init() {
 	pruneBranchesCmd.Flags().BoolVar(&pruneBranchesDryRun, "dry-run", false, "Show what would be deleted without deleting")
-	pruneBranchesCmd.Flags().StringVar(&pruneBranchesPattern, "pattern", "polecat/*", "Branch name pattern to match")
+	pruneBranchesCmd.Flags().StringVar(&pruneBranchesPattern, "pattern", "miner/*", "Branch name pattern to match")
 
 	rootCmd.AddCommand(pruneBranchesCmd)
 }

@@ -3,9 +3,9 @@ package doctor
 import (
 	"fmt"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 // SessionEnvReader abstracts tmux session environment reads for testing.
@@ -77,7 +77,7 @@ func NewEnvVarsCheckWithAccessor(accessor SessionEnvAccessor) *EnvVarsCheck {
 	return c
 }
 
-// Run checks environment variables for all Gas Town sessions.
+// Run checks environment variables for all Excavation Site sessions.
 func (c *EnvVarsCheck) Run(ctx *CheckContext) *CheckResult {
 	reader := c.reader
 	if reader == nil {
@@ -86,7 +86,7 @@ func (c *EnvVarsCheck) Run(ctx *CheckContext) *CheckResult {
 
 	sessions, err := reader.ListSessions()
 	if err != nil {
-		// No tmux server - treat as success (valid when Gas Town is down)
+		// No tmux server - treat as success (valid when Excavation Site is down)
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusOK,
@@ -94,7 +94,7 @@ func (c *EnvVarsCheck) Run(ctx *CheckContext) *CheckResult {
 		}
 	}
 
-	// Filter to Gas Town sessions only (known rig prefixes and hq-*)
+	// Filter to Excavation Site sessions only (known rig prefixes and hq-*)
 	var gtSessions []string
 	for _, sess := range sessions {
 		if session.IsKnownSession(sess) {
@@ -103,11 +103,11 @@ func (c *EnvVarsCheck) Run(ctx *CheckContext) *CheckResult {
 	}
 
 	if len(gtSessions) == 0 {
-		// No Gas Town sessions - treat as success (valid when Gas Town is down)
+		// No Excavation Site sessions - treat as success (valid when Excavation Site is down)
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusOK,
-			Message: "No Gas Town sessions running",
+			Message: "No Excavation Site sessions running",
 		}
 	}
 
@@ -123,10 +123,10 @@ func (c *EnvVarsCheck) Run(ctx *CheckContext) *CheckResult {
 		}
 
 		// Determine role for AgentEnv lookup.
-		// Boot watchdog is parsed as deacon with name "boot", but AgentEnv
+		// Boot watchdog is parsed as supervisor with name "boot", but AgentEnv
 		// uses "boot" as a distinct role for env var generation.
 		role := string(identity.Role)
-		if identity.Role == session.RoleDeacon && identity.Name == "boot" {
+		if identity.Role == session.RoleSupervisor && identity.Name == "boot" {
 			role = "boot"
 		}
 
@@ -209,7 +209,7 @@ func (c *EnvVarsCheck) Run(ctx *CheckContext) *CheckResult {
 	}
 }
 
-// Fix applies missing or incorrect env vars to all Gas Town tmux sessions in-place.
+// Fix applies missing or incorrect env vars to all Excavation Site tmux sessions in-place.
 // The running Claude process is unaffected (it already has env vars from startup);
 // this updates the tmux session store so future processes and gt doctor agree.
 func (c *EnvVarsCheck) Fix(ctx *CheckContext) error {
@@ -234,7 +234,7 @@ func (c *EnvVarsCheck) Fix(ctx *CheckContext) error {
 		}
 
 		role := string(identity.Role)
-		if identity.Role == session.RoleDeacon && identity.Name == "boot" {
+		if identity.Role == session.RoleSupervisor && identity.Name == "boot" {
 			role = "boot"
 		}
 

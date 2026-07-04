@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/formula"
-	"github.com/steveyegge/gastown/internal/style"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/formula"
+	"github.com/steveyegge/excavation/internal/style"
 )
 
 var (
@@ -55,12 +55,12 @@ func runPatrolReport(cmd *cobra.Command, args []string) error {
 	// Build config based on role
 	var cfg PatrolConfig
 	switch roleInfo.Role {
-	case RoleDeacon:
+	case RoleSupervisor:
 		cfg = PatrolConfig{
-			RoleName:      "deacon",
-			PatrolMolName: constants.MolDeaconPatrol,
+			RoleName:      "supervisor",
+			PatrolMolName: constants.MolSupervisorPatrol,
 			BeadsDir:      roleInfo.TownRoot,
-			Assignee:      "deacon",
+			Assignee:      "supervisor",
 		}
 	case RoleWitness:
 		cfg = PatrolConfig{

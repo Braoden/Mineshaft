@@ -1,6 +1,6 @@
 //go:build integration
 
-// Package doctor provides integration tests for Gas Town doctor functionality.
+// Package doctor provides integration tests for Excavation Site doctor functionality.
 // These tests verify that:
 // 1. New town setup works correctly
 // 2. Doctor accurately detects problems (no false positives/negatives)
@@ -18,9 +18,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 // TestIntegrationTownSetup verifies that a fresh town setup passes all doctor checks.
@@ -63,8 +63,8 @@ func TestIntegrationOrphanSessionDetection(t *testing.T) {
 
 	townRoot := setupIntegrationTown(t)
 
-	// Create test rigs (gastown → prefix "ga", niflheim → prefix "ni")
-	createTestRig(t, townRoot, "gastown")
+	// Create test rigs (excavation → prefix "ga", niflheim → prefix "ni")
+	createTestRig(t, townRoot, "excavation")
 	createTestRig(t, townRoot, "niflheim")
 
 	// Initialize the session prefix registry so ParseSessionName can resolve prefixes
@@ -79,13 +79,13 @@ func TestIntegrationOrphanSessionDetection(t *testing.T) {
 		sessionName  string
 		expectOrphan bool
 	}{
-		// Valid Gas Town sessions should NOT be detected as orphans
-		{"mayor_session", "hq-mayor", false},
-		{"deacon_session", "hq-deacon", false},
+		// Valid Excavation Site sessions should NOT be detected as orphans
+		{"overseer_session", "hq-overseer", false},
+		{"supervisor_session", "hq-supervisor", false},
 		{"witness_session", "ga-witness", false},
 		{"refinery_session", "ga-refinery", false},
 		{"crew_session", "ga-crew-max", false},
-		{"polecat_session", "ga-abc123", false},
+		{"miner_session", "ga-abc123", false},
 
 		// Different rig names
 		{"niflheim_witness", "ni-witness", false},
@@ -94,7 +94,7 @@ func TestIntegrationOrphanSessionDetection(t *testing.T) {
 		// Invalid sessions SHOULD be detected as orphans
 		{"unknown_prefix", "xx-witness", true},          // Unregistered prefix
 		{"unregistered_prefix", "gt-only-two", true},    // "gt" not in test registry
-		{"non_gt_prefix", "foo-gastown-witness", false}, // Not a GT session, ignored
+		{"non_gt_prefix", "foo-excavation-witness", false}, // Not a GT session, ignored
 	}
 
 	check := NewOrphanSessionCheck()
@@ -103,10 +103,10 @@ func TestIntegrationOrphanSessionDetection(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			validRigs := check.getValidRigs(townRoot)
-			mayorSession := "hq-mayor"
-			deaconSession := "hq-deacon"
+			overseerSession := "hq-overseer"
+			supervisorSession := "hq-supervisor"
 
-			isValid := check.isValidSession(tt.sessionName, validRigs, mayorSession, deaconSession)
+			isValid := check.isValidSession(tt.sessionName, validRigs, overseerSession, supervisorSession)
 
 			if tt.expectOrphan && isValid {
 				t.Errorf("session %q should be detected as orphan but was marked valid", tt.sessionName)
@@ -130,7 +130,7 @@ func TestIntegrationCrewSessionProtection(t *testing.T) {
 	oldRegistry := session.DefaultRegistry()
 	defer session.SetDefaultRegistry(oldRegistry)
 	r := session.NewPrefixRegistry()
-	r.Register("ga", "gastown")
+	r.Register("ga", "excavation")
 	r.Register("ni", "niflheim")
 	session.SetDefaultRegistry(r)
 
@@ -144,8 +144,8 @@ func TestIntegrationCrewSessionProtection(t *testing.T) {
 		{"crew_different_rig", "ni-crew-codex1", true},
 		{"witness_not_crew", "ga-witness", false},
 		{"refinery_not_crew", "ga-refinery", false},
-		{"polecat_not_crew", "ga-abc", false},
-		{"mayor_not_crew", "hq-mayor", false},
+		{"miner_not_crew", "ga-abc", false},
+		{"overseer_not_crew", "hq-overseer", false},
 	}
 
 	for _, tt := range tests {
@@ -165,7 +165,7 @@ func TestIntegrationEnvVarsConsistency(t *testing.T) {
 	}
 
 	townRoot := setupIntegrationTown(t)
-	createTestRig(t, townRoot, "gastown")
+	createTestRig(t, townRoot, "excavation")
 
 	// Test that expected env vars are computed correctly for different roles
 	tests := []struct {
@@ -173,11 +173,11 @@ func TestIntegrationEnvVarsConsistency(t *testing.T) {
 		rig       string
 		wantActor string
 	}{
-		{"mayor", "", "mayor"},
-		{"deacon", "", "deacon"},
-		{"witness", "gastown", "gastown/witness"},
-		{"refinery", "gastown", "gastown/refinery"},
-		{"crew", "gastown", "gastown/crew/"},
+		{"overseer", "", "overseer"},
+		{"supervisor", "", "supervisor"},
+		{"witness", "excavation", "excavation/witness"},
+		{"refinery", "excavation", "excavation/refinery"},
+		{"crew", "excavation", "excavation/crew/"},
 	}
 
 	for _, tt := range tests {
@@ -196,7 +196,7 @@ func TestIntegrationEnvVarsConsistency(t *testing.T) {
 // operations to use the wrong database (e.g., rig ops used town beads with hq- prefix).
 func TestIntegrationBeadsDirRigLevel(t *testing.T) {
 	townRoot := setupIntegrationTown(t)
-	createTestRig(t, townRoot, "gastown")
+	createTestRig(t, townRoot, "excavation")
 	createTestRig(t, townRoot, "niflheim")
 
 	tests := []struct {
@@ -206,22 +206,22 @@ func TestIntegrationBeadsDirRigLevel(t *testing.T) {
 		wantBeadsSuffix string // Expected suffix in BEADS_DIR path
 	}{
 		{
-			name:           "mayor_uses_town_beads",
-			role:           "mayor",
+			name:           "overseer_uses_town_beads",
+			role:           "overseer",
 			rig:            "",
 			wantBeadsSuffix: "/.beads",
 		},
 		{
-			name:           "deacon_uses_town_beads",
-			role:           "deacon",
+			name:           "supervisor_uses_town_beads",
+			role:           "supervisor",
 			rig:            "",
 			wantBeadsSuffix: "/.beads",
 		},
 		{
 			name:           "witness_uses_rig_beads",
 			role:           "witness",
-			rig:            "gastown",
-			wantBeadsSuffix: "/gastown/.beads",
+			rig:            "excavation",
+			wantBeadsSuffix: "/excavation/.beads",
 		},
 		{
 			name:           "refinery_uses_rig_beads",
@@ -232,8 +232,8 @@ func TestIntegrationBeadsDirRigLevel(t *testing.T) {
 		{
 			name:           "crew_uses_rig_beads",
 			role:           "crew",
-			rig:            "gastown",
-			wantBeadsSuffix: "/gastown/.beads",
+			rig:            "excavation",
+			wantBeadsSuffix: "/excavation/.beads",
 		},
 	}
 
@@ -271,12 +271,12 @@ func TestIntegrationEnvVarsBeadsDirMismatch(t *testing.T) {
 	oldRegistry := session.DefaultRegistry()
 	defer session.SetDefaultRegistry(oldRegistry)
 	r := session.NewPrefixRegistry()
-	r.Register("ga", "gastown")
+	r.Register("ga", "excavation")
 	session.SetDefaultRegistry(r)
 
 	townRoot := "/town" // Fixed path for consistent expected values
 	townBeadsDir := townRoot + "/.beads"
-	rigBeadsDir := townRoot + "/gastown/.beads"
+	rigBeadsDir := townRoot + "/excavation/.beads"
 
 	// Create mock reader with mismatched BEADS_DIR
 	reader := &mockEnvReaderIntegration{
@@ -284,7 +284,7 @@ func TestIntegrationEnvVarsBeadsDirMismatch(t *testing.T) {
 		sessionEnvs: map[string]map[string]string{
 			"ga-witness": {
 				"GT_ROLE":   "witness",
-				"GT_RIG":    "gastown",
+				"GT_RIG":    "excavation",
 				"BEADS_DIR": townBeadsDir, // WRONG: Should be rigBeadsDir
 				"GT_ROOT":   townRoot,
 			},
@@ -324,10 +324,10 @@ func TestIntegrationAgentBeadsExist(t *testing.T) {
 	}
 
 	townRoot := setupIntegrationTown(t)
-	createTestRig(t, townRoot, "gastown")
+	createTestRig(t, townRoot, "excavation")
 
 	// Create mock beads for testing
-	setupMockBeads(t, townRoot, "gastown")
+	setupMockBeads(t, townRoot, "excavation")
 
 	check := NewAgentBeadsCheck()
 	ctx := &CheckContext{TownRoot: townRoot}
@@ -349,10 +349,10 @@ func TestIntegrationRigBeadsExist(t *testing.T) {
 	}
 
 	townRoot := setupIntegrationTown(t)
-	createTestRig(t, townRoot, "gastown")
+	createTestRig(t, townRoot, "excavation")
 
 	// Create mock beads for testing
-	setupMockBeads(t, townRoot, "gastown")
+	setupMockBeads(t, townRoot, "excavation")
 
 	check := NewRigBeadsCheck()
 	ctx := &CheckContext{TownRoot: townRoot}
@@ -372,7 +372,7 @@ func TestIntegrationDoctorFixReliability(t *testing.T) {
 	}
 
 	townRoot := setupIntegrationTown(t)
-	createTestRig(t, townRoot, "gastown")
+	createTestRig(t, townRoot, "excavation")
 	ctx := &CheckContext{TownRoot: townRoot}
 
 	// Deliberately break something fixable
@@ -414,12 +414,12 @@ func TestIntegrationFixMultipleIssues(t *testing.T) {
 	}
 
 	townRoot := setupIntegrationTown(t)
-	createTestRig(t, townRoot, "gastown")
+	createTestRig(t, townRoot, "excavation")
 	ctx := &CheckContext{TownRoot: townRoot}
 
 	// Break multiple things
 	breakRuntimeGitignore(t, townRoot)
-	breakCrewGitignore(t, townRoot, "gastown", "worker1")
+	breakCrewGitignore(t, townRoot, "excavation", "worker1")
 
 	d := NewDoctor()
 	d.RegisterAll(NewRuntimeGitignoreCheck())
@@ -445,7 +445,7 @@ func TestIntegrationFixIdempotent(t *testing.T) {
 	}
 
 	townRoot := setupIntegrationTown(t)
-	createTestRig(t, townRoot, "gastown")
+	createTestRig(t, townRoot, "excavation")
 	ctx := &CheckContext{TownRoot: townRoot}
 
 	// Break something
@@ -485,7 +485,7 @@ func TestIntegrationFixDoesntBreakWorking(t *testing.T) {
 	}
 
 	townRoot := setupIntegrationTown(t)
-	createTestRig(t, townRoot, "gastown")
+	createTestRig(t, townRoot, "excavation")
 	ctx := &CheckContext{TownRoot: townRoot}
 
 	d := NewDoctor()
@@ -523,8 +523,8 @@ func TestIntegrationNoFalsePositives(t *testing.T) {
 	}
 
 	townRoot := setupIntegrationTown(t)
-	createTestRig(t, townRoot, "gastown")
-	setupMockBeads(t, townRoot, "gastown")
+	createTestRig(t, townRoot, "excavation")
+	setupMockBeads(t, townRoot, "excavation")
 	ctx := &CheckContext{TownRoot: townRoot}
 
 	d := NewDoctor()
@@ -554,7 +554,7 @@ func TestIntegrationSessionNaming(t *testing.T) {
 	oldRegistry := session.DefaultRegistry()
 	defer session.SetDefaultRegistry(oldRegistry)
 	r := session.NewPrefixRegistry()
-	r.Register("ga", "gastown")
+	r.Register("ga", "excavation")
 	r.Register("ni", "niflheim")
 	session.SetDefaultRegistry(r)
 
@@ -566,23 +566,23 @@ func TestIntegrationSessionNaming(t *testing.T) {
 		wantName    string
 	}{
 		{
-			name:        "mayor",
-			sessionName: "hq-mayor",
+			name:        "overseer",
+			sessionName: "hq-overseer",
 			wantRig:     "",
-			wantRole:    "mayor",
+			wantRole:    "overseer",
 			wantName:    "",
 		},
 		{
 			name:        "witness",
 			sessionName: "ga-witness",
-			wantRig:     "gastown",
+			wantRig:     "excavation",
 			wantRole:    "witness",
 			wantName:    "",
 		},
 		{
 			name:        "crew",
 			sessionName: "ga-crew-max",
-			wantRig:     "gastown",
+			wantRig:     "excavation",
 			wantRole:    "crew",
 			wantName:    "max",
 		},
@@ -622,8 +622,8 @@ func TestIntegrationMultiTownSocketIsolation(t *testing.T) {
 	townA := setupIntegrationTown(t)
 	townB := setupIntegrationTown(t)
 
-	createTestRig(t, townA, "gastown")
-	createTestRig(t, townB, "gastown")
+	createTestRig(t, townA, "excavation")
+	createTestRig(t, townB, "excavation")
 
 	// Init townA and capture its socket
 	if err := session.InitRegistry(townA); err != nil {
@@ -685,7 +685,7 @@ func TestIntegrationMultiTownSocketIsolation(t *testing.T) {
 	}
 
 	// Verify the split-brain check passes when the "default" socket has no
-	// Gas Town sessions.  We mock the default lister to avoid interacting with
+	// Excavation Site sessions.  We mock the default lister to avoid interacting with
 	// the user's real default tmux socket.
 	tmux.SetDefaultSocket(socketA)
 	checkA := NewSocketSplitBrainCheck()
@@ -755,7 +755,7 @@ func setupIntegrationTown(t *testing.T) string {
 
 	// Create minimal town structure
 	dirs := []string{
-		"mayor",
+		"overseer",
 		".beads",
 	}
 	for _, dir := range dirs {
@@ -771,7 +771,7 @@ func setupIntegrationTown(t *testing.T) string {
 		"version": 2,
 	}
 	townJSON, _ := json.Marshal(townConfig)
-	if err := os.WriteFile(filepath.Join(townRoot, "mayor", "town.json"), townJSON, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), townJSON, 0644); err != nil {
 		t.Fatalf("failed to create town.json: %v", err)
 	}
 
@@ -781,7 +781,7 @@ func setupIntegrationTown(t *testing.T) string {
 		"rigs":    map[string]interface{}{},
 	}
 	rigsJSON, _ := json.Marshal(rigsConfig)
-	if err := os.WriteFile(filepath.Join(townRoot, "mayor", "rigs.json"), rigsJSON, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "rigs.json"), rigsJSON, 0644); err != nil {
 		t.Fatalf("failed to create rigs.json: %v", err)
 	}
 
@@ -810,11 +810,11 @@ func createTestRig(t *testing.T, townRoot, rigName string) {
 
 	// Create rig directories
 	dirs := []string{
-		"polecats",
+		"miners",
 		"crew",
 		"witness",
 		"refinery",
-		"mayor/rig",
+		"overseer/rig",
 		".beads",
 	}
 	for _, dir := range dirs {
@@ -855,7 +855,7 @@ func createTestRig(t *testing.T, townRoot, rigName string) {
 	f.Close()
 
 	// Update rigs.json
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsData, _ := os.ReadFile(rigsPath)
 	var rigsConfig map[string]interface{}
 	json.Unmarshal(rigsData, &rigsConfig)
@@ -942,15 +942,15 @@ func setupMockBeads(t *testing.T, townRoot, rigName string) {
 			"labels":     []string{"gt:role"},
 		},
 		{
-			"id":         "hq-mayor-role",
-			"title":      "Mayor Role",
+			"id":         "hq-overseer-role",
+			"title":      "Overseer Role",
 			"status":     "open",
 			"issue_type": "role",
 			"labels":     []string{"gt:role"},
 		},
 		{
-			"id":         "hq-deacon-role",
-			"title":      "Deacon Role",
+			"id":         "hq-supervisor-role",
+			"title":      "Supervisor Role",
 			"status":     "open",
 			"issue_type": "role",
 			"labels":     []string{"gt:role"},
@@ -980,7 +980,7 @@ func setupMockBeads(t *testing.T, townRoot, rigName string) {
 func breakRuntimeGitignore(t *testing.T, townRoot string) {
 	t.Helper()
 	// Create a crew directory without .runtime in gitignore
-	crewDir := filepath.Join(townRoot, "gastown", "crew", "test-worker")
+	crewDir := filepath.Join(townRoot, "excavation", "crew", "test-worker")
 	if err := os.MkdirAll(crewDir, 0755); err != nil {
 		t.Fatalf("failed to create crew dir: %v", err)
 	}

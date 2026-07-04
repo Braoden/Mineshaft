@@ -1,6 +1,6 @@
 # OpenTelemetry Data Model
 
-Complete schema of all telemetry events emitted by Gas Town. Each event consists of:
+Complete schema of all telemetry events emitted by Excavation Site. Each event consists of:
 
 1. **Log record** (→ any OTLP v1.x+ backend, defaults to VictoriaLogs) with full structured attributes
 2. **Metric counter** (→ any OTLP v1.x+ backend, defaults to VictoriaMetrics) for aggregation
@@ -28,13 +28,13 @@ Complete schema of all telemetry events emitted by Gas Town. Each event consists
 | `nudge` | Workflow | ✅ Main |
 | `sling` | Workflow | ✅ Main |
 | `done` | Workflow | ✅ Main |
-| `polecat.spawn` | Lifecycle | ✅ Main |
-| `polecat.remove` | Lifecycle | ✅ Main |
+| `miner.spawn` | Lifecycle | ✅ Main |
+| `miner.remove` | Lifecycle | ✅ Main |
 | `daemon.restart` | Lifecycle | ✅ Main |
 | `pane.read` | Internal | ✅ Main |
 | `pane.output` | Internal | ✅ Main |
 | `formula.instantiate` | Molecule | ✅ Main |
-| `convoy.create` | Molecule | ✅ Main |
+| `minecart.create` | Molecule | ✅ Main |
 | `agent.instantiate` | Session | ❌ Roadmap |
 | `mol.cook` | Molecule | ❌ Roadmap |
 | `mol.wisp` | Molecule | ❌ Roadmap |
@@ -63,10 +63,10 @@ Resource attributes set at process start via `OTEL_RESOURCE_ATTRIBUTES` (populat
 
 | Attribute | Type | Source | Notes |
 |---|---|---|---|
-| `gt.role` | string | `GT_ROLE` env var | e.g. `"gastown/polecats/Toast"` |
-| `gt.rig` | string | `GT_RIG` env var | e.g. `"gastown"` |
+| `gt.role` | string | `GT_ROLE` env var | e.g. `"excavation/miners/Toast"` |
+| `gt.rig` | string | `GT_RIG` env var | e.g. `"excavation"` |
 | `gt.actor` | string | `BD_ACTOR` env var | bd actor identity |
-| `gt.agent` | string | `GT_POLECAT` or `GT_CREW` env var | agent name |
+| `gt.agent` | string | `GT_MINER` or `GT_CREW` env var | agent name |
 | `gt.session` | string | `GT_SESSION` env var | tmux session name — **PR #2199** |
 | `gt.run_id` | string | `GT_RUN` env var | correlation key — **PR #2199** |
 | `gt.work_rig` | string | `GT_WORK_RIG` env var | work rig at last `gt prime` — **PR #2199** |
@@ -87,7 +87,7 @@ tmux session lifecycle events.
 | Attribute | Type | Description |
 |---|---|---|
 | `session_id` | string | tmux pane name |
-| `role` | string | Gastown role |
+| `role` | string | Excavation role |
 | `status` | string | `"ok"` · `"error"` |
 | `error` | string | error message; empty when `"ok"` |
 
@@ -100,7 +100,7 @@ separately as `prime.context` (same attributes plus `formula`).
 
 | Attribute | Type | Description |
 |---|---|---|
-| `role` | string | Gastown role |
+| `role` | string | Excavation role |
 | `hook_mode` | bool | true when invoked from a hook |
 | `status` | string | `"ok"` · `"error"` |
 | `error` | string | error message; empty when `"ok"` |
@@ -116,7 +116,7 @@ Companion to `prime`, emitted in the same invocation. Carries the full rendered 
 
 | Attribute | Type | Description |
 |---|---|---|
-| `role` | string | Gastown role |
+| `role` | string | Excavation role |
 | `hook_mode` | bool | true when invoked from a hook |
 | `formula` | string | full rendered formula text |
 | `status` | string | `"ok"` · `"error"` |
@@ -195,7 +195,7 @@ in a shell.
 
 ### `mail`
 
-All operations on the Gastown mail system. Carries operation and result only;
+All operations on the Excavation mail system. Carries operation and result only;
 message payload attributes are not recorded.
 
 | Attribute | Type | Description |
@@ -256,14 +256,14 @@ All carry `status` and `error` fields.
 
 | Event body | Key attributes | Metric |
 |---|---|---|
-| `sling` | `bead`, `target`, `status`, `error` | `gastown.sling.dispatches.total` |
-| `nudge` | `target`, `status`, `error` | `gastown.nudge.total` |
-| `done` | `exit_type` (`COMPLETED` · `ESCALATED` · `DEFERRED`), `status`, `error` | `gastown.done.total` |
-| `polecat.spawn` | `name`, `status`, `error` | `gastown.polecat.spawns.total` |
-| `polecat.remove` | `name`, `status`, `error` | `gastown.polecat.removes.total` |
-| `formula.instantiate` | `formula_name`, `bead_id`, `status`, `error` | `gastown.formula.instantiations.total` |
-| `convoy.create` | `bead_id`, `status`, `error` | `gastown.convoy.creates.total` |
-| `daemon.restart` | `agent_type` | `gastown.daemon.agent_restarts.total` |
+| `sling` | `bead`, `target`, `status`, `error` | `excavation.sling.dispatches.total` |
+| `nudge` | `target`, `status`, `error` | `excavation.nudge.total` |
+| `done` | `exit_type` (`COMPLETED` · `ESCALATED` · `DEFERRED`), `status`, `error` | `excavation.done.total` |
+| `miner.spawn` | `name`, `status`, `error` | `excavation.miner.spawns.total` |
+| `miner.remove` | `name`, `status`, `error` | `excavation.miner.removes.total` |
+| `formula.instantiate` | `formula_name`, `bead_id`, `status`, `error` | `excavation.formula.instantiations.total` |
+| `minecart.create` | `bead_id`, `status`, `error` | `excavation.minecart.creates.total` |
+| `daemon.restart` | `agent_type` | `excavation.daemon.agent_restarts.total` |
 
 ---
 
@@ -279,10 +279,10 @@ Intended to anchor all subsequent events for a run. One span per agent spawn.
 | Attribute | Type | Description |
 |---|---|---|
 | `agent_type` | string | `"claudecode"` · `"opencode"` · … |
-| `role` | string | Gastown role |
+| `role` | string | Excavation role |
 | `agent_name` | string | agent name |
 | `session_id` | string | tmux pane name |
-| `rig` | string | allocation rig (empty for generic polecats) |
+| `rig` | string | allocation rig (empty for generic miners) |
 | `issue_id` | string | bead ID passed at spawn via `--issue`; empty if none |
 | `git_branch` | string | git branch of the working directory at spawn time |
 | `git_commit` | string | HEAD SHA of the working directory at spawn time |
@@ -301,25 +301,25 @@ Per-child-bead event during molecule instantiation. No `RecordBeadCreate` functi
 
 | Metric | Type | Labels | Status |
 |--------|------|--------|--------|
-| `gastown.session.starts.total` | Counter | `status`, `role` | ✅ Main |
-| `gastown.session.stops.total` | Counter | `status` | ✅ Main |
-| `gastown.agent.state_changes.total` | Counter | `status`, `new_state` | ✅ Main |
-| `gastown.bd.calls.total` | Counter | `status`, `subcommand` | ✅ Main |
-| `gastown.bd.duration_ms` | Histogram | `subcommand` | ✅ Main |
-| `gastown.mail.operations.total` | Counter | `status`, `operation` | ✅ Main |
-| `gastown.prime.total` | Counter | `status`, `role`, `hook_mode` | ✅ Main |
-| `gastown.prompt.sends.total` | Counter | `status` | ✅ Main |
-| `gastown.pane.reads.total` | Counter | `status` | ✅ Main |
-| `gastown.pane.output.total` | Counter | `session` | ✅ Main |
-| `gastown.nudge.total` | Counter | `status` | ✅ Main |
-| `gastown.sling.dispatches.total` | Counter | `status` | ✅ Main |
-| `gastown.done.total` | Counter | `status`, `exit_type` | ✅ Main |
-| `gastown.polecat.spawns.total` | Counter | `status` | ✅ Main |
-| `gastown.polecat.removes.total` | Counter | `status` | ✅ Main |
-| `gastown.daemon.agent_restarts.total` | Counter | `agent_type` | ✅ Main |
-| `gastown.formula.instantiations.total` | Counter | `status`, `formula` | ✅ Main |
-| `gastown.convoy.creates.total` | Counter | `status` | ✅ Main |
-| `gastown.agent.events.total` | Counter | `session`, `event_type`, `role` | 🔲 PR #2199 |
+| `excavation.session.starts.total` | Counter | `status`, `role` | ✅ Main |
+| `excavation.session.stops.total` | Counter | `status` | ✅ Main |
+| `excavation.agent.state_changes.total` | Counter | `status`, `new_state` | ✅ Main |
+| `excavation.bd.calls.total` | Counter | `status`, `subcommand` | ✅ Main |
+| `excavation.bd.duration_ms` | Histogram | `subcommand` | ✅ Main |
+| `excavation.mail.operations.total` | Counter | `status`, `operation` | ✅ Main |
+| `excavation.prime.total` | Counter | `status`, `role`, `hook_mode` | ✅ Main |
+| `excavation.prompt.sends.total` | Counter | `status` | ✅ Main |
+| `excavation.pane.reads.total` | Counter | `status` | ✅ Main |
+| `excavation.pane.output.total` | Counter | `session` | ✅ Main |
+| `excavation.nudge.total` | Counter | `status` | ✅ Main |
+| `excavation.sling.dispatches.total` | Counter | `status` | ✅ Main |
+| `excavation.done.total` | Counter | `status`, `exit_type` | ✅ Main |
+| `excavation.miner.spawns.total` | Counter | `status` | ✅ Main |
+| `excavation.miner.removes.total` | Counter | `status` | ✅ Main |
+| `excavation.daemon.agent_restarts.total` | Counter | `agent_type` | ✅ Main |
+| `excavation.formula.instantiations.total` | Counter | `status`, `formula` | ✅ Main |
+| `excavation.minecart.creates.total` | Counter | `status` | ✅ Main |
+| `excavation.agent.events.total` | Counter | `session`, `event_type`, `role` | 🔲 PR #2199 |
 
 ---
 
@@ -379,24 +379,24 @@ Audited against `origin/main` @ `2d8d71ee35fafda3bbdf353683692bfcc9165476`
 | Claim | Source |
 |-------|--------|
 | `initInstruments()` function | `recorder.go:59` |
-| `gastown.bd.calls.total` Counter | `recorder.go:64` |
-| `gastown.session.starts.total` Counter | `recorder.go:67` |
-| `gastown.session.stops.total` Counter | `recorder.go:70` |
-| `gastown.prompt.sends.total` Counter | `recorder.go:73` |
-| `gastown.pane.reads.total` Counter | `recorder.go:76` |
-| `gastown.pane.output.total` Counter | `recorder.go:79` |
-| `gastown.prime.total` Counter | `recorder.go:82` |
-| `gastown.agent.state_changes.total` Counter | `recorder.go:85` |
-| `gastown.polecat.spawns.total` Counter | `recorder.go:88` |
-| `gastown.polecat.removes.total` Counter | `recorder.go:91` |
-| `gastown.sling.dispatches.total` Counter | `recorder.go:94` |
-| `gastown.mail.operations.total` Counter | `recorder.go:97` |
-| `gastown.nudge.total` Counter | `recorder.go:100` |
-| `gastown.done.total` Counter | `recorder.go:103` |
-| `gastown.daemon.agent_restarts.total` Counter | `recorder.go:106` |
-| `gastown.formula.instantiations.total` Counter | `recorder.go:109` |
-| `gastown.convoy.creates.total` Counter | `recorder.go:112` |
-| `gastown.bd.duration_ms` Histogram | `recorder.go:117` |
+| `excavation.bd.calls.total` Counter | `recorder.go:64` |
+| `excavation.session.starts.total` Counter | `recorder.go:67` |
+| `excavation.session.stops.total` Counter | `recorder.go:70` |
+| `excavation.prompt.sends.total` Counter | `recorder.go:73` |
+| `excavation.pane.reads.total` Counter | `recorder.go:76` |
+| `excavation.pane.output.total` Counter | `recorder.go:79` |
+| `excavation.prime.total` Counter | `recorder.go:82` |
+| `excavation.agent.state_changes.total` Counter | `recorder.go:85` |
+| `excavation.miner.spawns.total` Counter | `recorder.go:88` |
+| `excavation.miner.removes.total` Counter | `recorder.go:91` |
+| `excavation.sling.dispatches.total` Counter | `recorder.go:94` |
+| `excavation.mail.operations.total` Counter | `recorder.go:97` |
+| `excavation.nudge.total` Counter | `recorder.go:100` |
+| `excavation.done.total` Counter | `recorder.go:103` |
+| `excavation.daemon.agent_restarts.total` Counter | `recorder.go:106` |
+| `excavation.formula.instantiations.total` Counter | `recorder.go:109` |
+| `excavation.minecart.creates.total` Counter | `recorder.go:112` |
+| `excavation.bd.duration_ms` Histogram | `recorder.go:117` |
 
 ### Log events (`internal/telemetry/recorder.go`)
 
@@ -410,15 +410,15 @@ Audited against `origin/main` @ `2d8d71ee35fafda3bbdf353683692bfcc9165476`
 | `prime` | `RecordPrime` | `role`, `hook_mode`, `status`, `error` | `recorder.go:282`, emit at `recorder.go:292` |
 | `prime.context` | `RecordPrimeContext` | `role`, `hook_mode`, `formula` | `recorder.go:305`, emit at `recorder.go:310` |
 | `agent.state_change` | `RecordAgentStateChange` | `agent_id`, `new_state`, `has_hook_bead` (bool), `status`, `error` | `recorder.go:318`, emit at `recorder.go:328` |
-| `polecat.spawn` | `RecordPolecatSpawn` | `name`, `status`, `error` | `recorder.go:338`, emit at `recorder.go:344` |
-| `polecat.remove` | `RecordPolecatRemove` | `name`, `status`, `error` | `recorder.go:352`, emit at `recorder.go:358` |
+| `miner.spawn` | `RecordMinerSpawn` | `name`, `status`, `error` | `recorder.go:338`, emit at `recorder.go:344` |
+| `miner.remove` | `RecordMinerRemove` | `name`, `status`, `error` | `recorder.go:352`, emit at `recorder.go:358` |
 | `sling` | `RecordSling` | `bead`, `target`, `status`, `error` | `recorder.go:366`, emit at `recorder.go:372` |
 | `mail` | `RecordMail` | `operation`, `status`, `error` | `recorder.go:381`, emit at `recorder.go:390` |
 | `nudge` | `RecordNudge` | `target`, `status`, `error` | `recorder.go:398`, emit at `recorder.go:404` |
 | `done` | `RecordDone` | `exit_type`, `status`, `error` | `recorder.go:413`, emit at `recorder.go:422` |
 | `daemon.restart` | `RecordDaemonRestart` | `agent_type` | `recorder.go:431`, emit at `recorder.go:436` |
 | `formula.instantiate` | `RecordFormulaInstantiate` | `formula_name`, `bead_id`, `status`, `error` | `recorder.go:442`, emit at `recorder.go:451` |
-| `convoy.create` | `RecordConvoyCreate` | `bead_id`, `status`, `error` | `recorder.go:460`, emit at `recorder.go:466` |
+| `minecart.create` | `RecordMinecartCreate` | `bead_id`, `status`, `error` | `recorder.go:460`, emit at `recorder.go:466` |
 | `pane.output` | `RecordPaneOutput` | `session`, `content` | `recorder.go:477`, emit at `recorder.go:482` |
 
 ### `prompt.send`: `keys` attribute absent (confirmed)
@@ -446,9 +446,9 @@ Audited against `origin/main` @ `2d8d71ee35fafda3bbdf353683692bfcc9165476`
 | `mol.cook/wisp/squash/burn` — do not exist | `grep -r "mol\.cook\|mol\.wisp\|mol\.squash\|mol\.burn" internal/ → zero matches` |
 | `bead.create` — does not exist | `grep -r "bead\.create\|RecordBeadCreate" internal/ → zero matches` |
 | `RecordMailMessage` — does not exist | `grep -r "RecordMailMessage\|MailMessageInfo" internal/ → zero matches` |
-| `gastown.agent.instantiations.total` — not in `initInstruments()` | `grep -r "agent.instantiations" internal/ → zero matches` |
-| `gastown.mol.cooks.total` etc. — not in `initInstruments()` | `grep -r "mol\.cooks\|mol\.wisps\|mol\.squashes\|mol\.burns" internal/ → zero matches` |
-| `gastown.bead.creates.total` — not in `initInstruments()` | `grep -r "bead\.creates" internal/ → zero matches` |
+| `excavation.agent.instantiations.total` — not in `initInstruments()` | `grep -r "agent.instantiations" internal/ → zero matches` |
+| `excavation.mol.cooks.total` etc. — not in `initInstruments()` | `grep -r "mol\.cooks\|mol\.wisps\|mol\.squashes\|mol\.burns" internal/ → zero matches` |
+| `excavation.bead.creates.total` — not in `initInstruments()` | `grep -r "bead\.creates" internal/ → zero matches` |
 
 ### PR #2199 additions (in `otel-p0-work-context`, not yet on main)
 
@@ -456,7 +456,7 @@ Audited against `origin/main` @ `2d8d71ee35fafda3bbdf353683692bfcc9165476`
 |-------|---------------------------|
 | `RecordAgentEvent` / `agent.event` | `recorder.go` (added in `8b88de15`) |
 | `RecordAgentTokenUsage` / `agent.usage` | `recorder.go` (added in `8b88de15`) |
-| `gastown.agent.events.total` Counter | `recorder.go` (added in `8b88de15`) |
+| `excavation.agent.events.total` Counter | `recorder.go` (added in `8b88de15`) |
 | `WithRunID(ctx, runID)` / `RunIDFromCtx(ctx)` | `recorder.go` (added in `8b88de15`) |
 | `addRunID(ctx, *record)` — injects `run.id` into all emit calls | `recorder.go` (added in `8b88de15`) |
 | `gt.session` in `OTEL_RESOURCE_ATTRIBUTES` | `subprocess.go` (updated in `8b88de15`) |

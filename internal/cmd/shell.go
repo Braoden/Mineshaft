@@ -7,16 +7,16 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/shell"
-	"github.com/steveyegge/gastown/internal/state"
-	"github.com/steveyegge/gastown/internal/style"
+	"github.com/steveyegge/excavation/internal/shell"
+	"github.com/steveyegge/excavation/internal/state"
+	"github.com/steveyegge/excavation/internal/style"
 )
 
 var shellCmd = &cobra.Command{
 	Use:     "shell",
 	GroupID: GroupConfig,
 	Short:   "Manage shell integration",
-	Long: `Manage the Gas Town shell integration hook.
+	Long: `Manage the Excavation Site shell integration hook.
 
 The shell integration adds a cd hook to your shell RC file that automatically
 sets GT_TOWN_ROOT and GT_RIG environment variables when you enter a rig directory.
@@ -28,11 +28,11 @@ Subcommands: install, remove, status.`,
 var shellInstallCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install or update shell integration",
-	Long: `Install or update the Gas Town shell integration.
+	Long: `Install or update the Excavation Site shell integration.
 
 This adds a hook to your shell RC file that:
-  - Sets GT_TOWN_ROOT and GT_RIG when you cd into a Gas Town rig
-  - Offers to add new git repos to Gas Town on first visit
+  - Sets GT_TOWN_ROOT and GT_RIG when you cd into a Excavation Site rig
+  - Offers to add new git repos to Excavation Site on first visit
 
 Run this after upgrading gt to get the latest shell hook features.`,
 	RunE: runShellInstall,
@@ -41,7 +41,7 @@ Run this after upgrading gt to get the latest shell hook features.`,
 var shellRemoveCmd = &cobra.Command{
 	Use:   "remove",
 	Short: "Remove shell integration",
-	Long: `Remove the Gas Town shell integration from your shell RC file.
+	Long: `Remove the Excavation Site shell integration from your shell RC file.
 
 Removes the hook that was added by 'gt shell install'. You may need
 to restart your shell or source the RC file for the change to take effect.`,
@@ -51,7 +51,7 @@ to restart your shell or source the RC file for the change to take effect.`,
 var shellStatusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Show shell integration status",
-	Long: `Show whether Gas Town is enabled and whether shell integration is installed.
+	Long: `Show whether Excavation Site is enabled and whether shell integration is installed.
 
 Displays the current state and which shell RC file contains the integration hook.`,
 	RunE: runShellStatus,
@@ -70,7 +70,7 @@ func runShellInstall(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := state.Enable(Version); err != nil {
-		fmt.Printf("%s Could not enable Gas Town: %v\n", style.Dim.Render("⚠"), err)
+		fmt.Printf("%s Could not enable Excavation Site: %v\n", style.Dim.Render("⚠"), err)
 	}
 
 	rcPath := shell.RCFilePath(shell.DetectShell())
@@ -92,15 +92,15 @@ func runShellRemove(cmd *cobra.Command, args []string) error {
 func runShellStatus(cmd *cobra.Command, args []string) error {
 	s, err := state.Load()
 	if err != nil {
-		fmt.Println("Gas Town: not configured")
+		fmt.Println("Excavation Site: not configured")
 		fmt.Println("Shell integration: not installed")
 		return nil
 	}
 
 	if s.Enabled {
-		fmt.Println("Gas Town: enabled")
+		fmt.Println("Excavation Site: enabled")
 	} else {
-		fmt.Println("Gas Town: disabled")
+		fmt.Println("Excavation Site: disabled")
 	}
 
 	if s.ShellIntegration != "" {

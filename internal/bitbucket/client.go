@@ -1,7 +1,7 @@
 // Package bitbucket provides a Bitbucket Cloud API client for PR lifecycle management.
 //
 // It wraps the Bitbucket Cloud REST API 2.0 for operations needed
-// by the Gas Town merge queue: creating draft PRs, managing approvals,
+// by the Excavation Site merge queue: creating draft PRs, managing approvals,
 // and merging.
 //
 // Authentication uses a BITBUCKET_TOKEN environment variable

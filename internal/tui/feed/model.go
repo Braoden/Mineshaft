@@ -9,10 +9,10 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/util"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/util"
 )
 
 // Panel represents which panel has focus
@@ -20,7 +20,7 @@ type Panel int
 
 const (
 	PanelTree Panel = iota
-	PanelConvoy
+	PanelMinecart
 	PanelFeed
 	PanelProblems // Problems panel in problems view
 )
@@ -36,7 +36,7 @@ const (
 // Layout constants for panel height distribution and event history.
 const (
 	treePanelPercent   = 30
-	convoyPanelPercent = 25
+	minecartPanelPercent = 25
 	maxEventHistory    = 1000
 )
 
@@ -44,7 +44,7 @@ const (
 type Event struct {
 	Time    time.Time
 	Type    string // create, update, complete, fail, delete
-	Actor   string // who did it (e.g., "gastown/crew/joe")
+	Actor   string // who did it (e.g., "excavation/crew/joe")
 	Target  string // what was affected (e.g., "gt-xyz")
 	Message string // human-readable description
 	Rig     string // which rig
@@ -56,7 +56,7 @@ type Event struct {
 type Agent struct {
 	ID         string
 	Name       string
-	Role       string // mayor, witness, refinery, crew, polecat
+	Role       string // overseer, witness, refinery, crew, miner
 	Rig        string
 	Status     string // running, idle, working, dead
 	LastEvent  *Event
@@ -80,13 +80,13 @@ type Model struct {
 	// Panels
 	focusedPanel   Panel
 	treeViewport   viewport.Model
-	convoyViewport viewport.Model
+	minecartViewport viewport.Model
 	feedViewport   viewport.Model
 
 	// Data
 	rigs        map[string]*Rig
 	events      []Event
-	convoyState *ConvoyState
+	minecartState *MinecartState
 	townRoot    string
 
 	// UI state
@@ -113,7 +113,7 @@ type Model struct {
 	closeOnce sync.Once
 
 	// mu protects all fields read by View() from concurrent access:
-	// events, rigs, convoyState, eventChan, townRoot, width, height,
+	// events, rigs, minecartState, eventChan, townRoot, width, height,
 	// focusedPanel, showHelp, help, filter, viewMode, problemAgents,
 	// selectedProblem, selectedBeadID, problemsError, lastProblemsCheck,
 	// and all viewports. Write lock is held during Update/handleKey
@@ -130,7 +130,7 @@ func NewModel(bd *beads.Beads) *Model {
 	return &Model{
 		focusedPanel:     PanelTree,
 		treeViewport:     viewport.New(0, 0),
-		convoyViewport:   viewport.New(0, 0),
+		minecartViewport:   viewport.New(0, 0),
 		feedViewport:     viewport.New(0, 0),
 		problemsViewport: viewport.New(0, 0),
 		rigs:             make(map[string]*Rig),
@@ -153,7 +153,7 @@ func NewModelWithProblemsView(bd *beads.Beads) *Model {
 	return m
 }
 
-// SetTownRoot sets the town root for convoy fetching.
+// SetTownRoot sets the town root for minecart fetching.
 // Safe to call concurrently with the Bubble Tea event loop.
 func (m *Model) SetTownRoot(townRoot string) {
 	m.mu.Lock()
@@ -165,7 +165,7 @@ func (m *Model) SetTownRoot(townRoot string) {
 func (m *Model) Init() tea.Cmd {
 	cmds := []tea.Cmd{
 		m.listenForEvents(),
-		m.fetchConvoys(),
+		m.fetchMinecarts(),
 		tea.SetWindowTitle("GT Feed"),
 	}
 	// If starting in problems view, fetch problems immediately
@@ -178,9 +178,9 @@ func (m *Model) Init() tea.Cmd {
 // eventMsg is sent when a new event arrives
 type eventMsg Event
 
-// convoyUpdateMsg is sent when convoy data is refreshed
-type convoyUpdateMsg struct {
-	state *ConvoyState
+// minecartUpdateMsg is sent when minecart data is refreshed
+type minecartUpdateMsg struct {
+	state *MinecartState
 }
 
 // problemsUpdateMsg is sent when problems data is refreshed
@@ -227,9 +227,9 @@ func tick() tea.Cmd {
 	})
 }
 
-// fetchConvoys returns a command that fetches convoy data.
+// fetchMinecarts returns a command that fetches minecart data.
 // Captures townRoot under the read lock to avoid racing with SetTownRoot.
-func (m *Model) fetchConvoys() tea.Cmd {
+func (m *Model) fetchMinecarts() tea.Cmd {
 	m.mu.RLock()
 	townRoot := m.townRoot
 	m.mu.RUnlock()
@@ -238,15 +238,15 @@ func (m *Model) fetchConvoys() tea.Cmd {
 		return nil
 	}
 	return func() tea.Msg {
-		state, _ := FetchConvoys(townRoot)
-		return convoyUpdateMsg{state: state}
+		state, _ := FetchMinecarts(townRoot)
+		return minecartUpdateMsg{state: state}
 	}
 }
 
-// convoyRefreshTick returns a command that schedules the next convoy refresh
-func (m *Model) convoyRefreshTick() tea.Cmd {
+// minecartRefreshTick returns a command that schedules the next minecart refresh
+func (m *Model) minecartRefreshTick() tea.Cmd {
 	return tea.Tick(10*time.Second, func(t time.Time) tea.Msg {
-		return convoyUpdateMsg{} // Empty state triggers a refresh
+		return minecartUpdateMsg{} // Empty state triggers a refresh
 	})
 }
 
@@ -288,17 +288,17 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.addEvent(Event(msg))
 		cmds = append(cmds, m.listenForEvents())
 
-	case convoyUpdateMsg:
+	case minecartUpdateMsg:
 		if msg.state != nil {
 			// Fresh data arrived - update state and schedule next tick
 			m.mu.Lock()
-			m.convoyState = msg.state
+			m.minecartState = msg.state
 			m.updateViewContentLocked()
 			m.mu.Unlock()
-			cmds = append(cmds, m.convoyRefreshTick())
+			cmds = append(cmds, m.minecartRefreshTick())
 		} else {
 			// Tick fired - fetch new data
-			cmds = append(cmds, m.fetchConvoys())
+			cmds = append(cmds, m.fetchMinecarts())
 		}
 
 	case problemsUpdateMsg:
@@ -347,8 +347,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch m.focusedPanel {
 	case PanelTree:
 		m.treeViewport, cmd = m.treeViewport.Update(msg)
-	case PanelConvoy:
-		m.convoyViewport, cmd = m.convoyViewport.Update(msg)
+	case PanelMinecart:
+		m.minecartViewport, cmd = m.minecartViewport.Update(msg)
 	case PanelFeed:
 		m.feedViewport, cmd = m.feedViewport.Update(msg)
 	case PanelProblems:
@@ -396,10 +396,10 @@ func (m *Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
-	case key.Matches(msg, m.keys.FocusConvoy):
+	case key.Matches(msg, m.keys.FocusMinecart):
 		if m.viewMode == ViewActivity {
 			m.mu.Lock()
-			m.focusedPanel = PanelConvoy
+			m.focusedPanel = PanelMinecart
 			m.mu.Unlock()
 		}
 		return m, nil
@@ -443,8 +443,8 @@ func (m *Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch m.focusedPanel {
 	case PanelTree:
 		m.treeViewport, cmd = m.treeViewport.Update(msg)
-	case PanelConvoy:
-		m.convoyViewport, cmd = m.convoyViewport.Update(msg)
+	case PanelMinecart:
+		m.minecartViewport, cmd = m.minecartViewport.Update(msg)
 	case PanelFeed:
 		m.feedViewport, cmd = m.feedViewport.Update(msg)
 	case PanelProblems:
@@ -486,8 +486,8 @@ func (m *Model) handleTabKey() (tea.Model, tea.Cmd) {
 	m.mu.Lock()
 	switch m.focusedPanel {
 	case PanelTree:
-		m.focusedPanel = PanelConvoy
-	case PanelConvoy:
+		m.focusedPanel = PanelMinecart
+	case PanelMinecart:
 		m.focusedPanel = PanelFeed
 	case PanelFeed:
 		m.focusedPanel = PanelTree
@@ -627,17 +627,17 @@ func (m *Model) attachToSelected() (tea.Model, tea.Cmd) {
 }
 
 // nudgeTarget returns the proper gt nudge target for an agent.
-// Uses rig/name format for polecats, rig/crew/name for crew,
-// and role shortcuts for singletons (mayor, deacon, witness, refinery).
+// Uses rig/name format for miners, rig/crew/name for crew,
+// and role shortcuts for singletons (overseer, supervisor, witness, refinery).
 func nudgeTarget(agent *ProblemAgent) string {
 	switch agent.Role {
-	case constants.RoleMayor, constants.RoleDeacon:
+	case constants.RoleOverseer, constants.RoleSupervisor:
 		return agent.Role
 	case constants.RoleWitness, constants.RoleRefinery:
 		return agent.Rig + "/" + agent.Role
 	case constants.RoleCrew:
 		return agent.Rig + "/crew/" + agent.Name
-	case constants.RolePolecat:
+	case constants.RoleMiner:
 		return agent.Rig + "/" + agent.Name
 	default:
 		// Fallback to session ID
@@ -712,15 +712,15 @@ func (m *Model) updateViewportSizes() {
 	} else {
 		// Activity view: split by configured percentages
 		treeHeight := availableHeight * treePanelPercent / 100
-		convoyHeight := availableHeight * convoyPanelPercent / 100
-		feedHeight := availableHeight - treeHeight - convoyHeight
+		minecartHeight := availableHeight * minecartPanelPercent / 100
+		feedHeight := availableHeight - treeHeight - minecartHeight
 
 		// Ensure minimum heights
 		if treeHeight < 3 {
 			treeHeight = 3
 		}
-		if convoyHeight < 3 {
-			convoyHeight = 3
+		if minecartHeight < 3 {
+			minecartHeight = 3
 		}
 		if feedHeight < 3 {
 			feedHeight = 3
@@ -728,8 +728,8 @@ func (m *Model) updateViewportSizes() {
 
 		m.treeViewport.Width = contentWidth
 		m.treeViewport.Height = treeHeight
-		m.convoyViewport.Width = contentWidth
-		m.convoyViewport.Height = convoyHeight
+		m.minecartViewport.Width = contentWidth
+		m.minecartViewport.Height = minecartHeight
 		m.feedViewport.Width = contentWidth
 		m.feedViewport.Height = feedHeight
 	}
@@ -752,7 +752,7 @@ func (m *Model) updateViewContentLocked() {
 		m.problemsViewport.SetContent(m.renderProblemsContent())
 	} else {
 		m.treeViewport.SetContent(m.renderTree())
-		m.convoyViewport.SetContent(m.renderConvoys())
+		m.minecartViewport.SetContent(m.renderMinecarts())
 		m.feedViewport.SetContent(m.renderFeed())
 	}
 }
@@ -806,7 +806,7 @@ func (m *Model) addEventLocked(e Event) bool {
 	}
 
 	// Filter out noisy agent session updates from the event feed.
-	// Agent session molecules (like gt-gastown-crew-joe) update frequently
+	// Agent session molecules (like gt-excavation-crew-joe) update frequently
 	// for status tracking. These updates are visible in the agent tree,
 	// so we don't need to clutter the event feed with them.
 	// We still show create/complete/fail/delete events for agent sessions.

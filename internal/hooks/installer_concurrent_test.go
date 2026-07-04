@@ -11,7 +11,7 @@ import (
 )
 
 // TestInstallForRole_ConcurrentSpawnsProduceValidJSON covers gh#3500: when
-// multiple polecats spawn at the same time they all call InstallForRole on
+// multiple miners spawn at the same time they all call InstallForRole on
 // the same shared settings file. The previous implementation used
 // os.WriteFile (open with O_TRUNC then write); on the affected platforms an
 // observer between truncate and write saw a partial JSON file that Claude
@@ -32,7 +32,7 @@ func TestInstallForRole_ConcurrentSpawnsProduceValidJSON(t *testing.T) {
 	// Pre-create the target file with content that differs from the template,
 	// so every writer takes the write path (not the "content equal, skip"
 	// early-return). This forces the truncate+write race that gh#3500
-	// describes when N polecats race to install settings.json simultaneously.
+	// describes when N miners race to install settings.json simultaneously.
 	dotClaude := filepath.Join(dir, ".claude")
 	if err := os.MkdirAll(dotClaude, 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
@@ -57,7 +57,7 @@ func TestInstallForRole_ConcurrentSpawnsProduceValidJSON(t *testing.T) {
 			defer wg.Done()
 			ready.Done()
 			<-start
-			if err := InstallForRole("claude", dir, dir, "polecat", ".claude", "settings.json", true); err != nil {
+			if err := InstallForRole("claude", dir, dir, "miner", ".claude", "settings.json", true); err != nil {
 				errs <- err
 			}
 		}()
@@ -83,7 +83,7 @@ func TestInstallForRole_ConcurrentSpawnsProduceValidJSON(t *testing.T) {
 	}
 
 	// And it must match the resolved template byte-for-byte.
-	want, err := resolveAndSubstitute("claude", "settings-autonomous.json", "polecat")
+	want, err := resolveAndSubstitute("claude", "settings-autonomous.json", "miner")
 	if err != nil {
 		t.Fatalf("resolveAndSubstitute: %v", err)
 	}
@@ -121,7 +121,7 @@ func TestInstallForRole_AtomicWriteErrorPropagates(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chmod(dotClaude, 0755) })
 
-	err := InstallForRole("claude", dir, dir, "polecat", ".claude", "settings.json", true)
+	err := InstallForRole("claude", dir, dir, "miner", ".claude", "settings.json", true)
 	if err == nil {
 		t.Fatal("expected error from read-only directory, got nil")
 	}
@@ -146,7 +146,7 @@ func TestSyncForRole_AtomicWriteErrorPropagates(t *testing.T) {
 	if err := os.MkdirAll(pluginsDir, 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
-	target := filepath.Join(pluginsDir, "gastown.js")
+	target := filepath.Join(pluginsDir, "excavation.js")
 	// Seed with content that differs from the template so SyncForRole takes
 	// the write path (not the "content equal" early-return).
 	if err := os.WriteFile(target, []byte("// stale\n"), 0644); err != nil {
@@ -157,7 +157,7 @@ func TestSyncForRole_AtomicWriteErrorPropagates(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chmod(pluginsDir, 0755) })
 
-	_, err := SyncForRole("opencode", dir, dir, "polecat", ".opencode/plugins", "gastown.js", false)
+	_, err := SyncForRole("opencode", dir, dir, "miner", ".opencode/plugins", "excavation.js", false)
 	if err == nil {
 		t.Fatal("expected error from read-only directory, got nil")
 	}

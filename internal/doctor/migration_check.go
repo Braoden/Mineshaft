@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/doltserver"
-	"github.com/steveyegge/gastown/internal/atomicfile"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/doltserver"
+	"github.com/steveyegge/excavation/internal/atomicfile"
 )
 
 var verifyExpectedDatabasesAtConfig = doltserver.VerifyExpectedDatabasesAtConfig
@@ -74,7 +74,7 @@ func (c *DoltMetadataCheck) Run(ctx *CheckContext) *CheckResult {
 	}
 
 	// Check rig-level beads
-	rigsPath := filepath.Join(ctx.TownRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(ctx.TownRoot, "overseer", "rigs.json")
 	rigs := c.loadRigs(rigsPath)
 	for rigName := range rigs {
 		// Resolve the expected DB name: some rigs use their prefix as the
@@ -384,11 +384,11 @@ func (c *DoltServerReachableCheck) findServerModeRigs(townRoot string) map[strin
 	}
 
 	// Check rig-level beads
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigs := loadRigNames(rigsPath)
 	for rigName := range rigs {
-		// Check mayor/rig/.beads first (canonical), then rig/.beads
-		beadsDir := filepath.Join(townRoot, rigName, "mayor", "rig", ".beads")
+		// Check overseer/rig/.beads first (canonical), then rig/.beads
+		beadsDir := filepath.Join(townRoot, rigName, "overseer", "rig", ".beads")
 		if _, err := os.Stat(beadsDir); os.IsNotExist(err) {
 			beadsDir = filepath.Join(townRoot, rigName, ".beads")
 		}

@@ -2,10 +2,10 @@
 //
 // Formulas define structured workflows that can be executed by agents.
 // There are four types of formulas:
-//   - convoy: Parallel execution of legs with synthesis
+//   - minecart: Parallel execution of legs with synthesis
 //   - workflow: Sequential steps with dependencies
 //   - expansion: Template-based step generation
-//   - aspect: Multi-aspect parallel analysis (like convoy but for analysis)
+//   - aspect: Multi-aspect parallel analysis (like minecart but for analysis)
 package formula
 
 import "fmt"
@@ -14,8 +14,8 @@ import "fmt"
 type FormulaType string
 
 const (
-	// TypeConvoy is a convoy formula with parallel legs and synthesis.
-	TypeConvoy FormulaType = "convoy"
+	// TypeMinecart is a minecart formula with parallel legs and synthesis.
+	TypeMinecart FormulaType = "minecart"
 	// TypeWorkflow is a workflow formula with sequential steps.
 	TypeWorkflow FormulaType = "workflow"
 	// TypeExpansion is an expansion formula with template-based steps.
@@ -35,7 +35,7 @@ type Formula struct {
 	Agent       string      `toml:"agent"`       // Default agent for all legs (GH#2118)
 	ReviewOnly  bool        `toml:"review_only"` // If true, all legs are analysis-only — no code commits expected (gt-kvf)
 
-	// Convoy-specific
+	// Minecart-specific
 	Inputs    map[string]Input  `toml:"inputs"`
 	Prompts   map[string]string `toml:"prompts"`
 	Output    *Output           `toml:"output"`
@@ -53,7 +53,7 @@ type Formula struct {
 	// Expansion-specific
 	Template []Template `toml:"template"`
 
-	// Aspect-specific (similar to convoy but for analysis)
+	// Aspect-specific (similar to minecart but for analysis)
 	Aspects []Aspect `toml:"aspects"`
 }
 
@@ -100,7 +100,7 @@ type Output struct {
 	Synthesis  string `toml:"synthesis"`
 }
 
-// Leg represents a parallel execution unit in a convoy formula.
+// Leg represents a parallel execution unit in a minecart formula.
 type Leg struct {
 	ID          string `toml:"id"`
 	Title       string `toml:"title"`
@@ -125,7 +125,7 @@ type Step struct {
 	Needs       []string `toml:"needs"`
 	Target      string   `toml:"target"`      // Optional gt sling target for this workflow step; defaults to the formula target rig
 	Parallel    bool     `toml:"parallel"`    // If true, this step can run concurrently with other parallel steps that share the same needs
-	Interactive bool     `toml:"interactive"` // If true, this step requires user dialog and runs in the current session instead of being dispatched to a polecat
+	Interactive bool     `toml:"interactive"` // If true, this step requires user dialog and runs in the current session instead of being dispatched to a miner
 	Acceptance  string   `toml:"acceptance"`  // Exit criteria for this step (used by Ralph loop mode)
 }
 
@@ -179,7 +179,7 @@ func (v *Var) UnmarshalTOML(data any) error {
 // IsValid returns true if the formula type is recognized.
 func (t FormulaType) IsValid() bool {
 	switch t {
-	case TypeConvoy, TypeWorkflow, TypeExpansion, TypeAspect:
+	case TypeMinecart, TypeWorkflow, TypeExpansion, TypeAspect:
 		return true
 	default:
 		return false
@@ -187,7 +187,7 @@ func (t FormulaType) IsValid() bool {
 }
 
 // GetDependencies returns the ordered dependencies for a step/template.
-// For convoy formulas, legs are parallel so this returns an empty slice.
+// For minecart formulas, legs are parallel so this returns an empty slice.
 // For workflow and expansion formulas, this returns the Needs field.
 func (f *Formula) GetDependencies(id string) []string {
 	switch f.Type {
@@ -203,7 +203,7 @@ func (f *Formula) GetDependencies(id string) []string {
 				return tmpl.Needs
 			}
 		}
-	case TypeConvoy:
+	case TypeMinecart:
 		// Legs are parallel; synthesis depends on all legs
 		if f.Synthesis != nil && id == "synthesis" {
 			return f.Synthesis.DependsOn
@@ -224,7 +224,7 @@ func (f *Formula) GetAllIDs() []string {
 		for _, tmpl := range f.Template {
 			ids = append(ids, tmpl.ID)
 		}
-	case TypeConvoy:
+	case TypeMinecart:
 		for _, leg := range f.Legs {
 			ids = append(ids, leg.ID)
 		}

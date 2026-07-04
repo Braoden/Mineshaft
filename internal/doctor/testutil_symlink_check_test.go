@@ -57,7 +57,7 @@ func TestTestutilSymlinkCheck_NoCrew(t *testing.T) {
 	rigName := "testrig"
 
 	// Create canonical testutil
-	canonical := filepath.Join(tmpDir, rigName, "mayor", "rig", "internal", "testutil")
+	canonical := filepath.Join(tmpDir, rigName, "overseer", "rig", "internal", "testutil")
 	if err := os.MkdirAll(canonical, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -80,7 +80,7 @@ func TestTestutilSymlinkCheck_CrewRealDir(t *testing.T) {
 	rigName := "testrig"
 
 	// Create canonical testutil
-	canonical := filepath.Join(tmpDir, rigName, "mayor", "rig", "internal", "testutil")
+	canonical := filepath.Join(tmpDir, rigName, "overseer", "rig", "internal", "testutil")
 	if err := os.MkdirAll(canonical, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -124,7 +124,7 @@ func TestTestutilSymlinkCheck_ValidSymlink(t *testing.T) {
 	rigName := "testrig"
 
 	// Create canonical testutil
-	canonical := filepath.Join(tmpDir, rigName, "mayor", "rig", "internal", "testutil")
+	canonical := filepath.Join(tmpDir, rigName, "overseer", "rig", "internal", "testutil")
 	if err := os.MkdirAll(canonical, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -137,7 +137,7 @@ func TestTestutilSymlinkCheck_ValidSymlink(t *testing.T) {
 	if err := os.MkdirAll(crewInternal, 0755); err != nil {
 		t.Fatal(err)
 	}
-	// Relative symlink: crew/bob/internal/testutil -> ../../../mayor/rig/internal/testutil
+	// Relative symlink: crew/bob/internal/testutil -> ../../../overseer/rig/internal/testutil
 	relTarget, err := filepath.Rel(crewInternal, canonical)
 	if err != nil {
 		t.Fatal(err)
@@ -164,7 +164,7 @@ func TestTestutilSymlinkCheck_BrokenSymlink(t *testing.T) {
 	rigName := "testrig"
 
 	// Create canonical testutil
-	canonical := filepath.Join(tmpDir, rigName, "mayor", "rig", "internal", "testutil")
+	canonical := filepath.Join(tmpDir, rigName, "overseer", "rig", "internal", "testutil")
 	if err := os.MkdirAll(canonical, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -196,7 +196,7 @@ func TestTestutilSymlinkCheck_WrongTarget(t *testing.T) {
 	rigName := "testrig"
 
 	// Create canonical testutil
-	canonical := filepath.Join(tmpDir, rigName, "mayor", "rig", "internal", "testutil")
+	canonical := filepath.Join(tmpDir, rigName, "overseer", "rig", "internal", "testutil")
 	if err := os.MkdirAll(canonical, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -231,7 +231,7 @@ func TestTestutilSymlinkCheck_RefineryRealDir(t *testing.T) {
 	rigName := "testrig"
 
 	// Create canonical testutil
-	canonical := filepath.Join(tmpDir, rigName, "mayor", "rig", "internal", "testutil")
+	canonical := filepath.Join(tmpDir, rigName, "overseer", "rig", "internal", "testutil")
 	if err := os.MkdirAll(canonical, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -263,7 +263,7 @@ func TestTestutilSymlinkCheck_Fix(t *testing.T) {
 	rigName := "testrig"
 
 	// Create canonical testutil with a file
-	canonical := filepath.Join(tmpDir, rigName, "mayor", "rig", "internal", "testutil")
+	canonical := filepath.Join(tmpDir, rigName, "overseer", "rig", "internal", "testutil")
 	if err := os.MkdirAll(canonical, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -355,7 +355,7 @@ func TestTestutilSymlinkCheck_MultipleCrewMembers(t *testing.T) {
 	rigName := "testrig"
 
 	// Create canonical testutil
-	canonical := filepath.Join(tmpDir, rigName, "mayor", "rig", "internal", "testutil")
+	canonical := filepath.Join(tmpDir, rigName, "overseer", "rig", "internal", "testutil")
 	if err := os.MkdirAll(canonical, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -400,7 +400,7 @@ func TestTestutilSymlinkCheck_NoInternalDir(t *testing.T) {
 	rigName := "testrig"
 
 	// Create canonical testutil
-	canonical := filepath.Join(tmpDir, rigName, "mayor", "rig", "internal", "testutil")
+	canonical := filepath.Join(tmpDir, rigName, "overseer", "rig", "internal", "testutil")
 	if err := os.MkdirAll(canonical, 0755); err != nil {
 		t.Fatal(err)
 	}

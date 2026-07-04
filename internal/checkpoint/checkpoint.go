@@ -1,5 +1,5 @@
 // Package checkpoint provides session checkpointing for crash recovery.
-// When a polecat session dies (context limit, crash, timeout), checkpoints
+// When a miner session dies (context limit, crash, timeout), checkpoints
 // allow the next session to recover state and resume work.
 package checkpoint
 
@@ -12,12 +12,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/runtime"
-	"github.com/steveyegge/gastown/internal/util"
+	"github.com/steveyegge/excavation/internal/runtime"
+	"github.com/steveyegge/excavation/internal/util"
 )
 
-// Filename is the checkpoint file name within the polecat directory.
-const Filename = ".polecat-checkpoint.json"
+// Filename is the checkpoint file name within the miner directory.
+const Filename = ".miner-checkpoint.json"
 
 // Checkpoint represents a session recovery checkpoint.
 type Checkpoint struct {
@@ -52,17 +52,17 @@ type Checkpoint struct {
 	Notes string `json:"notes,omitempty"`
 }
 
-// Path returns the checkpoint file path for a given polecat directory.
-func Path(polecatDir string) string {
-	return filepath.Join(polecatDir, Filename)
+// Path returns the checkpoint file path for a given miner directory.
+func Path(minerDir string) string {
+	return filepath.Join(minerDir, Filename)
 }
 
-// Read loads a checkpoint from the polecat directory.
+// Read loads a checkpoint from the miner directory.
 // Returns nil, nil if no checkpoint exists.
-func Read(polecatDir string) (*Checkpoint, error) {
-	path := Path(polecatDir)
+func Read(minerDir string) (*Checkpoint, error) {
+	path := Path(minerDir)
 
-	data, err := os.ReadFile(path) //nolint:gosec // G304: path is constructed from trusted polecatDir
+	data, err := os.ReadFile(path) //nolint:gosec // G304: path is constructed from trusted minerDir
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil
@@ -78,8 +78,8 @@ func Read(polecatDir string) (*Checkpoint, error) {
 	return &cp, nil
 }
 
-// Write saves a checkpoint to the polecat directory.
-func Write(polecatDir string, cp *Checkpoint) error {
+// Write saves a checkpoint to the miner directory.
+func Write(minerDir string, cp *Checkpoint) error {
 	// Set timestamp if not already set
 	if cp.Timestamp.IsZero() {
 		cp.Timestamp = time.Now()
@@ -98,7 +98,7 @@ func Write(polecatDir string, cp *Checkpoint) error {
 		return fmt.Errorf("marshaling checkpoint: %w", err)
 	}
 
-	path := Path(polecatDir)
+	path := Path(minerDir)
 	if err := os.WriteFile(path, data, 0600); err != nil {
 		return fmt.Errorf("writing checkpoint: %w", err)
 	}
@@ -107,8 +107,8 @@ func Write(polecatDir string, cp *Checkpoint) error {
 }
 
 // Remove deletes the checkpoint file.
-func Remove(polecatDir string) error {
-	path := Path(polecatDir)
+func Remove(minerDir string) error {
+	path := Path(minerDir)
 	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("removing checkpoint: %w", err)
 	}
@@ -116,14 +116,14 @@ func Remove(polecatDir string) error {
 }
 
 // Capture creates a checkpoint by capturing current git and work state.
-func Capture(polecatDir string) (*Checkpoint, error) {
+func Capture(minerDir string) (*Checkpoint, error) {
 	cp := &Checkpoint{
 		Timestamp: time.Now(),
 	}
 
 	// Get modified files from git status
 	cmd := exec.Command("git", "status", "--porcelain")
-	cmd.Dir = polecatDir
+	cmd.Dir = minerDir
 	util.SetDetachedProcessGroup(cmd)
 	output, err := cmd.Output()
 	if err == nil {
@@ -141,7 +141,7 @@ func Capture(polecatDir string) (*Checkpoint, error) {
 
 	// Get last commit SHA
 	cmd = exec.Command("git", "rev-parse", "HEAD")
-	cmd.Dir = polecatDir
+	cmd.Dir = minerDir
 	util.SetDetachedProcessGroup(cmd)
 	output, err = cmd.Output()
 	if err == nil {
@@ -150,7 +150,7 @@ func Capture(polecatDir string) (*Checkpoint, error) {
 
 	// Get current branch
 	cmd = exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
-	cmd.Dir = polecatDir
+	cmd.Dir = minerDir
 	util.SetDetachedProcessGroup(cmd)
 	output, err = cmd.Output()
 	if err == nil {

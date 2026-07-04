@@ -14,16 +14,16 @@
     shell_output: |
       ## Orphan: gt-work1 "Add user roles"
       $ bd show gt-work1 --json
-      {"id": "gt-work1", "title": "Add user roles", "status": "in_progress", "assignee": "polecat-Toast"}
+      {"id": "gt-work1", "title": "Add user roles", "status": "in_progress", "assignee": "miner-Toast"}
 
-      $ tmux has-session -t bd-polecat-Toast 2>/dev/null; echo $?
+      $ tmux has-session -t bd-miner-Toast 2>/dev/null; echo $?
       1
 
       $ git branch -a | grep -i "user.roles\|Toast"
       (no output)
 
-      $ ls /town/gastown/polecats/Toast 2>/dev/null
-      ls: /town/gastown/polecats/Toast: No such file or directory
+      $ ls /town/excavation/miners/Toast 2>/dev/null
+      ls: /town/excavation/miners/Toast: No such file or directory
     context: ""
   assert:
     - type: javascript
@@ -44,19 +44,19 @@
     shell_output: |
       ## Orphan: gt-work4 "Add search feature"
       $ bd show gt-work4 --json
-      {"id": "gt-work4", "title": "Add search feature", "status": "in_progress", "assignee": "polecat-Waffles"}
+      {"id": "gt-work4", "title": "Add search feature", "status": "in_progress", "assignee": "miner-Waffles"}
 
-      $ tmux has-session -t bd-polecat-Waffles 2>/dev/null; echo $?
+      $ tmux has-session -t bd-miner-Waffles 2>/dev/null; echo $?
       1
 
-      $ git -C /town/gastown/polecats/Waffles log --oneline origin/main..HEAD
+      $ git -C /town/excavation/miners/Waffles log --oneline origin/main..HEAD
       a1b2c3d feat: add search endpoint
       d4e5f6g feat: search UI component
       h7i8j9k feat: search indexing
       k0l1m2n test: search integration tests
       o3p4q5r docs: search API documentation
 
-      $ git -C /town/gastown/polecats/Waffles branch -vv | grep '*'
+      $ git -C /town/excavation/miners/Waffles branch -vv | grep '*'
       * feat/search a1b2c3d [no remote] feat: add search endpoint
     context: ""
   assert:
@@ -78,12 +78,12 @@
     shell_output: |
       ## Orphan: gt-work7 "Database migration"
       $ bd show gt-work7 --json
-      {"id": "gt-work7", "title": "Database migration", "status": "in_progress", "assignee": "polecat-Pixel"}
+      {"id": "gt-work7", "title": "Database migration", "status": "in_progress", "assignee": "miner-Pixel"}
 
-      $ tmux has-session -t bd-polecat-Pixel 2>/dev/null; echo $?
+      $ tmux has-session -t bd-miner-Pixel 2>/dev/null; echo $?
       1
 
-      $ git -C /town/gastown/polecats/Pixel status
+      $ git -C /town/excavation/miners/Pixel status
       interactive rebase in progress; onto abc1234
       You have unmerged paths.
       Unmerged paths:

@@ -297,7 +297,7 @@ func sourceBetween(t *testing.T, source, startMarker, endMarker string) string {
 
 // TestReapExcludesAgentBeads verifies that the Reap function excludes agent beads
 // from being closed, regardless of their age. This is a regression test for the bug
-// where the wisp reaper was closing agent beads (hq-mayor, hq-deacon, witness, refinery,
+// where the wisp reaper was closing agent beads (hq-overseer, hq-supervisor, witness, refinery,
 // etc.) after 24 hours, causing doctor to report them as missing.
 func TestReapExcludesAgentBeads(t *testing.T) {
 	// Verify that the WHERE clause in Reap() excludes issue_type='agent'
@@ -314,7 +314,7 @@ func TestReapExcludesAgentBeads(t *testing.T) {
 	// beyond the scope of this unit test. The exclusion is verified manually
 	// by checking that agent beads are not closed by the wisp_reaper patrol.
 	t.Log("Agent beads (issue_type='agent') are excluded from wisp reaping")
-	t.Log("This prevents hq-mayor, hq-deacon, witness, refinery, etc. from being closed")
+	t.Log("This prevents hq-overseer, hq-supervisor, witness, refinery, etc. from being closed")
 }
 
 // TestScanExcludesAgentBeads documents that Scan() must use the same eligibility

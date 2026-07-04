@@ -148,15 +148,15 @@ func ensureConfigYAML(beadsDir, prefix string, onlyIfMissing bool) error {
 	configPath := filepath.Join(beadsDir, "config.yaml")
 	wantPrefix := "prefix: " + prefix
 	wantIssuePrefix := "issue-prefix: " + prefix
-	// Gas Town rigs should disable idle-monitor to use centralized Dolt server
+	// Excavation Site rigs should disable idle-monitor to use centralized Dolt server
 	wantIdleTimeout := "dolt.idle-timeout: \"0\""
-	// Gas Town stores beads in Dolt/server-mode runtime directories that are often
+	// Excavation Site stores beads in Dolt/server-mode runtime directories that are often
 	// redirected or gitignored; bd's post-run auto-export git-add is noisy there.
 	wantExportAuto := "export.auto: \"false\""
 
 	data, err := os.ReadFile(configPath)
 	if os.IsNotExist(err) {
-		// New config: include all Gas Town defaults
+		// New config: include all Excavation Site defaults
 		content := wantPrefix + "\n" + wantIssuePrefix + "\n" + wantIdleTimeout + "\n" + wantExportAuto + "\n"
 		return os.WriteFile(configPath, []byte(content), 0644)
 	}

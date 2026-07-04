@@ -15,27 +15,27 @@ func TestBeaconRecipient(t *testing.T) {
 		wantNot  []string // must NOT contain these (path separators, etc.)
 	}{
 		{
-			name:    "polecat with rig",
-			role:    "polecat",
+			name:    "miner with rig",
+			role:    "miner",
 			agentNm: "rust",
 			rig:     "testrig",
-			want:    "polecat rust (rig: testrig)",
+			want:    "miner rust (rig: testrig)",
 			wantNot: []string{"/"},
 		},
 		{
 			name:    "crew with rig",
 			role:    "crew",
 			agentNm: "gus",
-			rig:     "gastown",
-			want:    "crew gus (rig: gastown)",
+			rig:     "excavation",
+			want:    "crew gus (rig: excavation)",
 			wantNot: []string{"/"},
 		},
 		{
 			name:    "witness singleton with rig",
 			role:    "witness",
 			agentNm: "",
-			rig:     "gastown",
-			want:    "witness (rig: gastown)",
+			rig:     "excavation",
+			want:    "witness (rig: excavation)",
 			wantNot: []string{"/"},
 		},
 		{
@@ -56,25 +56,25 @@ func TestBeaconRecipient(t *testing.T) {
 		},
 		{
 			name:    "town-level role no rig no name",
-			role:    "mayor",
+			role:    "overseer",
 			agentNm: "",
 			rig:     "",
-			want:    "mayor",
+			want:    "overseer",
 			wantNot: []string{"/", "(rig:"},
 		},
 		{
-			name:    "deacon no rig no name",
-			role:    "deacon",
+			name:    "supervisor no rig no name",
+			role:    "supervisor",
 			agentNm: "",
 			rig:     "",
-			want:    "deacon",
+			want:    "supervisor",
 		},
 		{
-			name:    "polecat name with hyphen",
-			role:    "polecat",
+			name:    "miner name with hyphen",
+			role:    "miner",
 			agentNm: "my-worker",
 			rig:     "prod-rig",
-			want:    "polecat my-worker (rig: prod-rig)",
+			want:    "miner my-worker (rig: prod-rig)",
 			wantNot: []string{"prod-rig/"},
 		},
 	}
@@ -100,15 +100,15 @@ func TestBeaconRecipientContainsNoPathSeparators(t *testing.T) {
 	// Exhaustive check: no BeaconRecipient output should contain "/" which
 	// could trick LLMs into interpreting it as a filesystem path.
 	cases := []struct{ role, name, rig string }{
-		{"polecat", "rust", "testrig"},
-		{"crew", "gus", "gastown"},
-		{"witness", "", "gastown"},
-		{"refinery", "", "gastown"},
+		{"miner", "rust", "testrig"},
+		{"crew", "gus", "excavation"},
+		{"witness", "", "excavation"},
+		{"refinery", "", "excavation"},
 		{"dog", "fido", ""},
-		{"mayor", "", ""},
-		{"deacon", "", ""},
+		{"overseer", "", ""},
+		{"supervisor", "", ""},
 		{"boot", "", ""},
-		{"polecat", "a/b", "c/d"}, // edge case: slashes in inputs
+		{"miner", "a/b", "c/d"}, // edge case: slashes in inputs
 	}
 	for _, c := range cases {
 		got := BeaconRecipient(c.role, c.name, c.rig)
@@ -130,38 +130,38 @@ func TestAgentIdentityBeaconAddress(t *testing.T) {
 		wantNot []string
 	}{
 		{
-			name: "mayor",
-			id:   AgentIdentity{Role: RoleMayor},
-			want: "mayor",
+			name: "overseer",
+			id:   AgentIdentity{Role: RoleOverseer},
+			want: "overseer",
 		},
 		{
-			name: "deacon",
-			id:   AgentIdentity{Role: RoleDeacon},
-			want: "deacon",
+			name: "supervisor",
+			id:   AgentIdentity{Role: RoleSupervisor},
+			want: "supervisor",
 		},
 		{
 			name:    "witness",
-			id:      AgentIdentity{Role: RoleWitness, Rig: "gastown"},
-			want:    "witness (rig: gastown)",
-			wantNot: []string{"gastown/witness"},
+			id:      AgentIdentity{Role: RoleWitness, Rig: "excavation"},
+			want:    "witness (rig: excavation)",
+			wantNot: []string{"excavation/witness"},
 		},
 		{
 			name:    "refinery",
-			id:      AgentIdentity{Role: RoleRefinery, Rig: "gastown"},
-			want:    "refinery (rig: gastown)",
-			wantNot: []string{"gastown/refinery"},
+			id:      AgentIdentity{Role: RoleRefinery, Rig: "excavation"},
+			want:    "refinery (rig: excavation)",
+			wantNot: []string{"excavation/refinery"},
 		},
 		{
 			name:    "crew",
-			id:      AgentIdentity{Role: RoleCrew, Rig: "gastown", Name: "max"},
-			want:    "crew max (rig: gastown)",
-			wantNot: []string{"gastown/crew/max"},
+			id:      AgentIdentity{Role: RoleCrew, Rig: "excavation", Name: "max"},
+			want:    "crew max (rig: excavation)",
+			wantNot: []string{"excavation/crew/max"},
 		},
 		{
-			name:    "polecat",
-			id:      AgentIdentity{Role: RolePolecat, Rig: "gastown", Name: "Toast"},
-			want:    "polecat Toast (rig: gastown)",
-			wantNot: []string{"gastown/polecats/Toast"},
+			name:    "miner",
+			id:      AgentIdentity{Role: RoleMiner, Rig: "excavation", Name: "Toast"},
+			want:    "miner Toast (rig: excavation)",
+			wantNot: []string{"excavation/miners/Toast"},
 		},
 	}
 
@@ -184,10 +184,10 @@ func TestBeaconAddressVsAddress(t *testing.T) {
 	// Verify that BeaconAddress produces different (non-path) output
 	// while Address produces the traditional path-like output.
 	ids := []AgentIdentity{
-		{Role: RoleWitness, Rig: "gastown"},
-		{Role: RoleRefinery, Rig: "gastown"},
-		{Role: RoleCrew, Rig: "gastown", Name: "max"},
-		{Role: RolePolecat, Rig: "gastown", Name: "Toast"},
+		{Role: RoleWitness, Rig: "excavation"},
+		{Role: RoleRefinery, Rig: "excavation"},
+		{Role: RoleCrew, Rig: "excavation", Name: "max"},
+		{Role: RoleMiner, Rig: "excavation", Name: "Toast"},
 	}
 	for _, id := range ids {
 		addr := id.Address()
@@ -202,13 +202,13 @@ func TestBeaconAddressVsAddress(t *testing.T) {
 			t.Errorf("BeaconAddress() for %v = %q, should NOT contain /", id.Role, beacon)
 		}
 		// Both should contain the rig name
-		if !strings.Contains(beacon, "gastown") {
+		if !strings.Contains(beacon, "excavation") {
 			t.Errorf("BeaconAddress() for %v = %q, missing rig name", id.Role, beacon)
 		}
 	}
 
 	// Town-level roles should be identical
-	for _, role := range []Role{RoleMayor, RoleDeacon} {
+	for _, role := range []Role{RoleOverseer, RoleSupervisor} {
 		id := AgentIdentity{Role: role}
 		if id.Address() != id.BeaconAddress() {
 			t.Errorf("For %v: Address()=%q != BeaconAddress()=%q", role, id.Address(), id.BeaconAddress())
@@ -226,34 +226,34 @@ func TestFormatStartupBeacon(t *testing.T) {
 		{
 			name: "assigned with mol-id uses new format",
 			cfg: BeaconConfig{
-				Recipient: BeaconRecipient("crew", "gus", "gastown"),
-				Sender:    "deacon",
+				Recipient: BeaconRecipient("crew", "gus", "excavation"),
+				Sender:    "supervisor",
 				Topic:     "assigned",
 				MolID:     "gt-abc12",
 			},
 			wantSub: []string{
 				"[GAS TOWN]",
-				"crew gus (rig: gastown)",
-				"<- deacon",
+				"crew gus (rig: excavation)",
+				"<- supervisor",
 				"assigned:gt-abc12",
 				"gt prime --hook",
 				"begin work",
 			},
 			wantNot: []string{
-				"gastown/crew/gus", // must NOT contain path-like format
+				"excavation/crew/gus", // must NOT contain path-like format
 			},
 		},
 		{
 			name: "cold-start no mol-id",
 			cfg: BeaconConfig{
-				Recipient: "deacon",
-				Sender:    "mayor",
+				Recipient: "supervisor",
+				Sender:    "overseer",
 				Topic:     "cold-start",
 			},
 			wantSub: []string{
 				"[GAS TOWN]",
-				"deacon",
-				"<- mayor",
+				"supervisor",
+				"<- overseer",
 				"cold-start",
 				"Check your hook and mail",
 				"gt hook",
@@ -263,13 +263,13 @@ func TestFormatStartupBeacon(t *testing.T) {
 		{
 			name: "handoff self uses new format",
 			cfg: BeaconConfig{
-				Recipient: BeaconRecipient("witness", "", "gastown"),
+				Recipient: BeaconRecipient("witness", "", "excavation"),
 				Sender:    "self",
 				Topic:     "handoff",
 			},
 			wantSub: []string{
 				"[GAS TOWN]",
-				"witness (rig: gastown)",
+				"witness (rig: excavation)",
 				"<- self",
 				"handoff",
 				"Check your hook and mail",
@@ -277,31 +277,31 @@ func TestFormatStartupBeacon(t *testing.T) {
 				"gt mail inbox",
 			},
 			wantNot: []string{
-				"gastown/witness",
+				"excavation/witness",
 			},
 		},
 		{
-			name: "polecat assigned uses new format",
+			name: "miner assigned uses new format",
 			cfg: BeaconConfig{
-				Recipient: BeaconRecipient("polecat", "Toast", "gastown"),
+				Recipient: BeaconRecipient("miner", "Toast", "excavation"),
 				Sender:    "witness",
 				MolID:     "gt-xyz99",
 			},
 			wantSub: []string{
 				"[GAS TOWN]",
-				"polecat Toast (rig: gastown)",
+				"miner Toast (rig: excavation)",
 				"<- witness",
 				"gt-xyz99",
 			},
 			wantNot: []string{
-				"gastown/polecats/Toast",
+				"excavation/miners/Toast",
 			},
 		},
 		{
 			name: "empty topic defaults to ready",
 			cfg: BeaconConfig{
-				Recipient: "deacon",
-				Sender:    "mayor",
+				Recipient: "supervisor",
+				Sender:    "overseer",
 			},
 			wantSub: []string{
 				"[GAS TOWN]",
@@ -329,31 +329,31 @@ func TestFormatStartupBeacon(t *testing.T) {
 		{
 			name: "restart beacon has no prime instruction",
 			cfg: BeaconConfig{
-				Recipient: BeaconRecipient("crew", "george", "gastown"),
+				Recipient: BeaconRecipient("crew", "george", "excavation"),
 				Sender:    "human",
 				Topic:     "restart",
 			},
 			wantSub: []string{
 				"[GAS TOWN]",
-				"crew george (rig: gastown)",
+				"crew george (rig: excavation)",
 				"restart",
 			},
 			wantNot: []string{
 				"gt prime",
-				"gastown/crew/george",
+				"excavation/crew/george",
 			},
 		},
 		{
 			name: "include prime instruction for non-hook agents",
 			cfg: BeaconConfig{
-				Recipient:               BeaconRecipient("polecat", "ruby", "myrig"),
+				Recipient:               BeaconRecipient("miner", "ruby", "myrig"),
 				Sender:                  "witness",
 				Topic:                   "assigned",
 				IncludePrimeInstruction: true,
 			},
 			wantSub: []string{
 				"[GAS TOWN]",
-				"polecat ruby (rig: myrig)",
+				"miner ruby (rig: myrig)",
 				"gt prime",
 			},
 			wantNot: []string{
@@ -363,13 +363,13 @@ func TestFormatStartupBeacon(t *testing.T) {
 		{
 			name: "attach topic includes hook/mail instructions",
 			cfg: BeaconConfig{
-				Recipient: "mayor",
+				Recipient: "overseer",
 				Sender:    "human",
 				Topic:     "attach",
 			},
 			wantSub: []string{
 				"[GAS TOWN]",
-				"mayor",
+				"overseer",
 				"attach",
 				"gt hook",
 				"gt mail inbox",
@@ -399,7 +399,7 @@ func TestFormatStartupBeacon(t *testing.T) {
 func TestBuildStartupPrompt(t *testing.T) {
 	// BuildStartupPrompt combines beacon + instructions
 	cfg := BeaconConfig{
-		Recipient: "deacon",
+		Recipient: "supervisor",
 		Sender:    "daemon",
 		Topic:     "patrol",
 	}
@@ -411,7 +411,7 @@ func TestBuildStartupPrompt(t *testing.T) {
 	if !strings.Contains(got, "[GAS TOWN]") {
 		t.Errorf("BuildStartupPrompt() missing beacon header")
 	}
-	if !strings.Contains(got, "deacon") {
+	if !strings.Contains(got, "supervisor") {
 		t.Errorf("BuildStartupPrompt() missing recipient")
 	}
 	if !strings.Contains(got, "<- daemon") {

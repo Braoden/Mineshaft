@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/doltserver"
+	"github.com/steveyegge/excavation/internal/doltserver"
 )
 
 // setupDoltDB creates a fake Dolt database directory under .dolt-data/.
@@ -32,7 +32,7 @@ func setupRigMetadata(t *testing.T, townRoot, rigName, doltDatabase string) {
 	if rigName == "hq" {
 		beadsDir = filepath.Join(townRoot, ".beads")
 	} else {
-		beadsDir = filepath.Join(townRoot, rigName, "mayor", "rig", ".beads")
+		beadsDir = filepath.Join(townRoot, rigName, "overseer", "rig", ".beads")
 	}
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatalf("creating beads dir for %s: %v", rigName, err)
@@ -77,11 +77,11 @@ func setupServerMetadata(t *testing.T, beadsDir, host string, port int) {
 	}
 }
 
-// setupRigsJSON creates a minimal mayor/rigs.json for tests.
+// setupRigsJSON creates a minimal overseer/rigs.json for tests.
 func setupRigsJSON(t *testing.T, townRoot string, rigNames []string) {
 	t.Helper()
-	mayorDir := filepath.Join(townRoot, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(townRoot, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 	rigs := "{"
@@ -93,7 +93,7 @@ func setupRigsJSON(t *testing.T, townRoot string, rigNames []string) {
 	}
 	rigs += "}"
 	content := `{"version":1,"rigs":` + rigs + `}`
-	if err := os.WriteFile(filepath.Join(mayorDir, "rigs.json"), []byte(content), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), []byte(content), 0644); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -219,9 +219,9 @@ func TestDoltServerReachableCheck_FailsWhenExpectedRigDatabaseMissing(t *testing
 	check := NewDoltServerReachableCheck()
 	townRoot := t.TempDir()
 
-	setupRigsJSON(t, townRoot, []string{"gastown"})
+	setupRigsJSON(t, townRoot, []string{"excavation"})
 	setupRigMetadata(t, townRoot, "hq", "hq")
-	setupRigMetadata(t, townRoot, "gastown", "gastown")
+	setupRigMetadata(t, townRoot, "excavation", "excavation")
 
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
@@ -232,19 +232,19 @@ func TestDoltServerReachableCheck_FailsWhenExpectedRigDatabaseMissing(t *testing
 	if err != nil {
 		t.Fatal(err)
 	}
-	beadsDir := filepath.Join(townRoot, "gastown", "mayor", "rig", ".beads")
+	beadsDir := filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads")
 	setupServerMetadata(t, beadsDir, host, mustAtoi(t, portStr))
-	writeServerMetadata(t, beadsDir, "gastown", host, mustAtoi(t, portStr))
+	writeServerMetadata(t, beadsDir, "excavation", host, mustAtoi(t, portStr))
 	hqBeadsDir := filepath.Join(townRoot, ".beads")
 	setupServerMetadata(t, hqBeadsDir, host, mustAtoi(t, portStr))
 	writeServerMetadata(t, hqBeadsDir, "hq", host, mustAtoi(t, portStr))
 
 	origVerify := verifyExpectedDatabasesAtConfig
 	verifyExpectedDatabasesAtConfig = func(_ *doltserver.Config, expected []string) ([]string, []string, error) {
-		if len(expected) != 2 || expected[0] != "hq" || expected[1] != "gastown" {
+		if len(expected) != 2 || expected[0] != "hq" || expected[1] != "excavation" {
 			t.Fatalf("unexpected expected database list: %#v", expected)
 		}
-		return []string{"hq"}, []string{"gastown"}, nil
+		return []string{"hq"}, []string{"excavation"}, nil
 	}
 	defer func() { verifyExpectedDatabasesAtConfig = origVerify }()
 
@@ -255,8 +255,8 @@ func TestDoltServerReachableCheck_FailsWhenExpectedRigDatabaseMissing(t *testing
 	if !strings.Contains(result.Message, "expected rig database") {
 		t.Fatalf("expected missing database message, got %q", result.Message)
 	}
-	if len(result.Details) != 1 || result.Details[0] != "gastown (gastown)" {
-		t.Fatalf("expected gastown missing detail, got %#v", result.Details)
+	if len(result.Details) != 1 || result.Details[0] != "excavation (excavation)" {
+		t.Fatalf("expected excavation missing detail, got %#v", result.Details)
 	}
 }
 
@@ -264,9 +264,9 @@ func TestDoltServerReachableCheck_FailsWhenDatabaseVerificationErrors(t *testing
 	check := NewDoltServerReachableCheck()
 	townRoot := t.TempDir()
 
-	setupRigsJSON(t, townRoot, []string{"gastown"})
+	setupRigsJSON(t, townRoot, []string{"excavation"})
 	setupRigMetadata(t, townRoot, "hq", "hq")
-	setupRigMetadata(t, townRoot, "gastown", "gastown")
+	setupRigMetadata(t, townRoot, "excavation", "excavation")
 
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
@@ -277,16 +277,16 @@ func TestDoltServerReachableCheck_FailsWhenDatabaseVerificationErrors(t *testing
 	if err != nil {
 		t.Fatal(err)
 	}
-	beadsDir := filepath.Join(townRoot, "gastown", "mayor", "rig", ".beads")
+	beadsDir := filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads")
 	setupServerMetadata(t, beadsDir, host, mustAtoi(t, portStr))
-	writeServerMetadata(t, beadsDir, "gastown", host, mustAtoi(t, portStr))
+	writeServerMetadata(t, beadsDir, "excavation", host, mustAtoi(t, portStr))
 	hqBeadsDir := filepath.Join(townRoot, ".beads")
 	setupServerMetadata(t, hqBeadsDir, host, mustAtoi(t, portStr))
 	writeServerMetadata(t, hqBeadsDir, "hq", host, mustAtoi(t, portStr))
 
 	origVerify := verifyExpectedDatabasesAtConfig
 	verifyExpectedDatabasesAtConfig = func(_ *doltserver.Config, expected []string) ([]string, []string, error) {
-		if len(expected) != 2 || expected[0] != "hq" || expected[1] != "gastown" {
+		if len(expected) != 2 || expected[0] != "hq" || expected[1] != "excavation" {
 			t.Fatalf("unexpected expected database list: %#v", expected)
 		}
 		return nil, nil, fmt.Errorf("panic from sibling db")
@@ -322,7 +322,7 @@ func TestDoltServerReachableCheck_UsesConfiguredDatabaseNameNotRigName(t *testin
 	if err != nil {
 		t.Fatal(err)
 	}
-	beadsDir := filepath.Join(townRoot, "laneassist", "mayor", "rig", ".beads")
+	beadsDir := filepath.Join(townRoot, "laneassist", "overseer", "rig", ".beads")
 	writeServerMetadata(t, beadsDir, "lc", host, mustAtoi(t, portStr))
 	hqBeadsDir := filepath.Join(townRoot, ".beads")
 	writeServerMetadata(t, hqBeadsDir, "hq", host, mustAtoi(t, portStr))
@@ -373,11 +373,11 @@ func TestDoltOrphanedDatabaseCheck_NoOrphans(t *testing.T) {
 	townRoot := t.TempDir()
 
 	setupDoltDB(t, townRoot, "hq")
-	setupDoltDB(t, townRoot, "gastown")
+	setupDoltDB(t, townRoot, "excavation")
 
-	setupRigsJSON(t, townRoot, []string{"gastown"})
+	setupRigsJSON(t, townRoot, []string{"excavation"})
 	setupRigMetadata(t, townRoot, "hq", "hq")
-	setupRigMetadata(t, townRoot, "gastown", "gastown")
+	setupRigMetadata(t, townRoot, "excavation", "excavation")
 
 	check := NewDoltOrphanedDatabaseCheck()
 	ctx := &CheckContext{TownRoot: townRoot}

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/templates"
+	"github.com/steveyegge/excavation/internal/templates"
 )
 
 func TestTownCLAUDEmdCheck_Missing(t *testing.T) {
@@ -48,9 +48,9 @@ func TestTownCLAUDEmdCheck_MissingSections(t *testing.T) {
 	ctx := &CheckContext{TownRoot: tmpDir}
 
 	// Write only the identity anchor (no Dolt or communication sections)
-	content := `# Gas Town
+	content := `# Excavation Site
 
-This is a Gas Town workspace. Your identity and role are determined by ` + "`gt prime`" + `.
+This is a Excavation Site workspace. Your identity and role are determined by ` + "`gt prime`" + `.
 
 Run ` + "`gt prime`" + ` for full context after compaction, clear, or new session.
 `
@@ -75,9 +75,9 @@ func TestTownCLAUDEmdCheck_PartialSections(t *testing.T) {
 	ctx := &CheckContext{TownRoot: tmpDir}
 
 	// Write identity anchor + Dolt section but no communication hygiene
-	content := `# Gas Town
+	content := `# Excavation Site
 
-This is a Gas Town workspace.
+This is a Excavation Site workspace.
 
 ## Dolt Server — Operational Awareness
 
@@ -137,9 +137,9 @@ func TestTownCLAUDEmdCheck_Fix_AppendSections(t *testing.T) {
 	ctx := &CheckContext{TownRoot: tmpDir}
 
 	// Write minimal anchor + a user custom section
-	original := `# Gas Town
+	original := `# Excavation Site
 
-This is a Gas Town workspace.
+This is a Excavation Site workspace.
 
 ## My Custom Section
 
@@ -274,7 +274,7 @@ func TestIsIdentityAnchor_MinimalAnchor(t *testing.T) {
 	tmpDir := t.TempDir()
 	path := filepath.Join(tmpDir, "CLAUDE.md")
 
-	content := `# Gas Town
+	content := `# Excavation Site
 
 Run ` + "`gt prime`" + ` for full context.
 `
@@ -301,19 +301,19 @@ func TestIsIdentityAnchor_ExpandedCLAUDEmd(t *testing.T) {
 	}
 }
 
-func TestIsIdentityAnchor_NonGasTownFile(t *testing.T) {
+func TestIsIdentityAnchor_NonExcavationFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	path := filepath.Join(tmpDir, "CLAUDE.md")
 
 	content := `# My Project
 
-This is a regular project CLAUDE.md, not Gas Town.
+This is a regular project CLAUDE.md, not Excavation Site.
 `
 	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	if isIdentityAnchor(path) {
-		t.Error("non-Gas Town file should not be recognized as identity anchor")
+		t.Error("non-Excavation Site file should not be recognized as identity anchor")
 	}
 }

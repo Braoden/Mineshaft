@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
+	"github.com/steveyegge/excavation/internal/beads"
 )
 
 func TestBdError_Error(t *testing.T) {
@@ -179,7 +179,7 @@ func TestParseBeadsListOutput(t *testing.T) {
 		Status:    "open",
 		Priority:  2,
 		CreatedAt: created,
-		Labels:    []string{"gt:message", "from:mayor/"},
+		Labels:    []string{"gt:message", "from:overseer/"},
 	}})
 	if err != nil {
 		t.Fatalf("marshal valid message: %v", err)
@@ -225,8 +225,8 @@ func TestParseBeadsListOutput(t *testing.T) {
 	if !got[0].CreatedAt.Equal(created) {
 		t.Fatalf("CreatedAt = %v, want %v", got[0].CreatedAt, created)
 	}
-	if len(got[0].Labels) != 2 || got[0].Labels[0] != "gt:message" || got[0].Labels[1] != "from:mayor/" {
-		t.Fatalf("Labels = %#v, want gt:message/from:mayor/", got[0].Labels)
+	if len(got[0].Labels) != 2 || got[0].Labels[0] != "gt:message" || got[0].Labels[1] != "from:overseer/" {
+		t.Fatalf("Labels = %#v, want gt:message/from:overseer/", got[0].Labels)
 	}
 }
 
@@ -369,7 +369,7 @@ func TestArgsAreReadOnlyForMailCommands(t *testing.T) {
 		{[]string{"sql", "UPDATE issues SET status='closed'"}, false},
 		{[]string{"sql", "--json", "WITH x AS (SELECT 1) SELECT * FROM x"}, false},
 		{[]string{"mol", "wisp", "create", "mol-test"}, false},
-		{[]string{"message", "send", "mayor", "--body", "hi"}, false},
+		{[]string{"message", "send", "overseer", "--body", "hi"}, false},
 		{[]string{"create", "title"}, false},
 		{[]string{"close", "hq-abc"}, false},
 		{[]string{"label", "add", "hq-abc", "read"}, false},
@@ -403,11 +403,11 @@ func TestRunBdCommandUsesCentralEnvPolicy(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	if _, err := runBdCommand(ctx, []string{"list", "--json"}, workDir, beadsDir, "BD_IDENTITY=gastown/chrome", "BD_READONLY=false", "BD_DOLT_AUTO_COMMIT=on"); err != nil {
+	if _, err := runBdCommand(ctx, []string{"list", "--json"}, workDir, beadsDir, "BD_IDENTITY=excavation/chrome", "BD_READONLY=false", "BD_DOLT_AUTO_COMMIT=on"); err != nil {
 		t.Fatalf("run read bd command: %v", err)
 	}
 	readLog := readStubLog(t, logPath)
-	for _, want := range []string{"args:[list][--json][--flat]", "BD_READONLY=true", "BD_DOLT_AUTO_COMMIT=off", "BEADS_NO_AUTO_IMPORT=1", "BD_IDENTITY=gastown/chrome", "BEADS_DIR=" + beadsDir, "BEADS_DOLT_SERVER_DATABASE=maildb"} {
+	for _, want := range []string{"args:[list][--json][--flat]", "BD_READONLY=true", "BD_DOLT_AUTO_COMMIT=off", "BEADS_NO_AUTO_IMPORT=1", "BD_IDENTITY=excavation/chrome", "BEADS_DIR=" + beadsDir, "BEADS_DOLT_SERVER_DATABASE=maildb"} {
 		if !strings.Contains(readLog, want) {
 			t.Fatalf("read command log missing %q:\n%s", want, readLog)
 		}
@@ -416,11 +416,11 @@ func TestRunBdCommandUsesCentralEnvPolicy(t *testing.T) {
 	if err := os.WriteFile(logPath, nil, 0644); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := runBdCommand(ctx, []string{"label", "add", "hq-msg", "read"}, workDir, beadsDir, "BD_IDENTITY=gastown/chrome", "BD_READONLY=true", "BD_DOLT_AUTO_COMMIT=off"); err != nil {
+	if _, err := runBdCommand(ctx, []string{"label", "add", "hq-msg", "read"}, workDir, beadsDir, "BD_IDENTITY=excavation/chrome", "BD_READONLY=true", "BD_DOLT_AUTO_COMMIT=off"); err != nil {
 		t.Fatalf("run write bd command: %v", err)
 	}
 	writeLog := readStubLog(t, logPath)
-	for _, want := range []string{"args:[label][add][hq-msg][read]", "\nBD_READONLY=\n", "BD_DOLT_AUTO_COMMIT=on", "BEADS_NO_AUTO_IMPORT=1", "BD_IDENTITY=gastown/chrome", "BEADS_DIR=" + beadsDir, "BEADS_DOLT_SERVER_DATABASE=maildb"} {
+	for _, want := range []string{"args:[label][add][hq-msg][read]", "\nBD_READONLY=\n", "BD_DOLT_AUTO_COMMIT=on", "BEADS_NO_AUTO_IMPORT=1", "BD_IDENTITY=excavation/chrome", "BEADS_DIR=" + beadsDir, "BEADS_DOLT_SERVER_DATABASE=maildb"} {
 		if !strings.Contains(writeLog, want) {
 			t.Fatalf("write command log missing %q:\n%s", want, writeLog)
 		}

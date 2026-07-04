@@ -1,0 +1,23 @@
+# Supervisor role definition
+# Daemon beacon for heartbeats and monitoring. One per town.
+
+role = "supervisor"
+scope = "town"
+nudge = "Run 'gt prime' to check patrol status and begin heartbeat cycle."
+prompt_template = "supervisor.md.tmpl"
+
+[session]
+pattern = "hq-supervisor"
+work_dir = "{town}"
+needs_pre_sync = false
+start_command = "exec claude --dangerously-skip-permissions"
+
+[env]
+GT_ROLE = "supervisor"
+GT_SCOPE = "town"
+
+[health]
+ping_timeout = "30s"
+consecutive_failures = 3
+kill_cooldown = "5m"
+stuck_threshold = "1h"

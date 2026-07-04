@@ -12,10 +12,10 @@ import (
 	"golang.org/x/term"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/doltserver"
-	"github.com/steveyegge/gastown/internal/web"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/doltserver"
+	"github.com/steveyegge/excavation/internal/web"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var (
@@ -27,12 +27,12 @@ var (
 var dashboardCmd = &cobra.Command{
 	Use:     "dashboard",
 	GroupID: GroupDiag,
-	Short:   "Start the convoy tracking web dashboard",
-	Long: `Start a web server that displays the convoy tracking dashboard.
+	Short:   "Start the minecart tracking web dashboard",
+	Long: `Start a web server that displays the minecart tracking dashboard.
 
-The dashboard shows real-time convoy status with:
-- Convoy list with status indicators
-- Progress tracking for each convoy
+The dashboard shows real-time minecart status with:
+- Minecart list with status indicators
+- Progress tracking for each minecart
 - Last activity indicator (green/yellow/red)
 - Auto-refresh every 30 seconds via htmx
 
@@ -76,9 +76,9 @@ func runDashboard(cmd *cobra.Command, args []string) error {
 		// Without this, inherited env vars could point bd at the wrong port.
 		ensureDoltPortEnv(townRoot)
 
-		fetcher, fetchErr := web.NewLiveConvoyFetcher()
+		fetcher, fetchErr := web.NewLiveMinecartFetcher()
 		if fetchErr != nil {
-			return fmt.Errorf("creating convoy fetcher: %w", fetchErr)
+			return fmt.Errorf("creating minecart fetcher: %w", fetchErr)
 		}
 
 		// Load web timeouts config (nil-safe: NewDashboardMux applies defaults)
@@ -146,7 +146,7 @@ func runDashboard(cmd *cobra.Command, args []string) error {
 
 `)
 	} else {
-		fmt.Print("\n  WELCOME TO GASTOWN\n\n")
+		fmt.Print("\n  WELCOME TO EXCAVATION\n\n")
 	}
 	fmt.Printf("  launching dashboard at %s  •  api: %s/api/  •  listening on %s  •  ctrl+c to stop\n", url, url, listenAddr)
 

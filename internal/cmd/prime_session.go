@@ -10,12 +10,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/checkpoint"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/events"
-	"github.com/steveyegge/gastown/internal/runtime"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/checkpoint"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/events"
+	"github.com/steveyegge/excavation/internal/runtime"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // hookInput represents the JSON input from LLM runtime hooks.
@@ -228,7 +228,7 @@ func emitSessionEvent(ctx RoleContext) {
 
 	// Determine topic from hook state or default
 	topic := ""
-	if ctx.Role == RoleWitness || ctx.Role == RoleRefinery || ctx.Role == RoleDeacon {
+	if ctx.Role == RoleWitness || ctx.Role == RoleRefinery || ctx.Role == RoleSupervisor {
 		topic = "patrol"
 	}
 
@@ -295,8 +295,8 @@ func detectSessionState(ctx RoleContext) SessionState {
 		return state
 	}
 
-	// Check for checkpoint (crash-recovery state) - only for polecat/crew
-	if ctx.Role == RolePolecat || ctx.Role == RoleCrew {
+	// Check for checkpoint (crash-recovery state) - only for miner/crew
+	if ctx.Role == RoleMiner || ctx.Role == RoleCrew {
 		if cp, err := checkpoint.Read(ctx.WorkDir); err == nil && cp != nil && !cp.IsStale(24*time.Hour) {
 			state.State = "crash-recovery"
 			state.CheckpointAge = cp.Age().Round(time.Minute).String()
@@ -309,7 +309,7 @@ func detectSessionState(ctx RoleContext) SessionState {
 	// Fallback: query hooked/in_progress beads by assignee.
 	agentID := getAgentIdentity(ctx)
 	if agentID != "" {
-		// Use rig beads directory, not polecat worktree. Polecats don't have their
+		// Use rig beads directory, not miner worktree. Miners don't have their
 		// own .beads — the rig's beads dir is the authoritative source. (GH#2503)
 		beadsDir := ctx.WorkDir
 		if ctx.Rig != "" && ctx.TownRoot != "" {

@@ -9,11 +9,11 @@ func TestIsAgentSession(t *testing.T) {
 		name string
 		want bool
 	}{
-		{"hq-mayor", true},
+		{"hq-overseer", true},
 		{"rig-witness", true},
 		{"rig-refinery", true},
-		{"rig-polecat-abc", true},
-		{"hq-deacon", true},
+		{"rig-miner-abc", true},
+		{"hq-supervisor", true},
 		{"hq-boot", true},
 		{"rig-dog-fido", true},
 		{"my-personal-session", false},

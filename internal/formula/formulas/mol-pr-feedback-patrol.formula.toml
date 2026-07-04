@@ -2,14 +2,14 @@ description = """
 Standing patrol for open PR review feedback and failing CI checks.
 
 Scans all open PRs across rigs, identifies those needing attention (review
-feedback or failing CI), and dispatches polecat work beads for each finding.
-A dedup guard prevents re-slinging polecats for PRs that already have open beads.
+feedback or failing CI), and dispatches miner work beads for each finding.
+A dedup guard prevents re-slinging miners for PRs that already have open beads.
 
 ## Purpose
 
 Without this patrol, review feedback and CI failures on open PRs go unnoticed
 until someone manually checks GitHub. This patrol closes that gap by running
-continuously and dispatching polecats to address findings.
+continuously and dispatching miners to address findings.
 
 ## Rig Parameterization
 
@@ -21,7 +21,7 @@ per rig, or configure a single instance to scan multiple repos.
 For each actionable PR finding, the patrol:
 1. Checks for an existing open bead tagged with the PR number (dedup guard)
 2. If no existing bead, creates a new bead with PR context (URL, type, check names)
-3. Slings a polecat to the appropriate rig to address the finding
+3. Slings a miner to the appropriate rig to address the finding
 
 One bead per PR item. If a bead already exists for that PR, it is skipped.
 
@@ -39,7 +39,7 @@ Draft PRs are excluded from actionability by default.
 | Variable | Default | Description |
 |----------|---------|-------------|
 | wisp_type | patrol | Type of wisp — patrol loops continuously |
-| rig | (required) | Target rig to sling polecats to for found work |
+| rig | (required) | Target rig to sling miners to for found work |
 | repo | (required) | GitHub repo in owner/name format (e.g. acme/myapp) |
 | base_branch | main | Base branch filter for open PRs |
 | scan_interval_seconds | 300 | Seconds to sleep between patrol cycles |
@@ -56,7 +56,7 @@ description = "Type of wisp created for this molecule"
 default = "patrol"
 
 [vars.rig]
-description = "Target rig to sling polecats to for found work (e.g. dotfiles)"
+description = "Target rig to sling miners to for found work (e.g. dotfiles)"
 required = true
 
 [vars.repo]
@@ -191,10 +191,10 @@ checks for existing open beads by PR number AND type.
 
 [[steps]]
 id = "dispatch-work"
-title = "Dispatch polecats for each actionable PR finding"
+title = "Dispatch miners for each actionable PR finding"
 needs = ["check-review-status", "check-ci-status"]
 description = """
-For each finding in /tmp/patrol-findings.txt, create a work bead and sling a polecat.
+For each finding in /tmp/patrol-findings.txt, create a work bead and sling a miner.
 
 **Safety valve — check open bead count first:**
 ```bash
@@ -263,7 +263,7 @@ Dispatched by mol-pr-feedback-patrol."
 
   echo "Created bead ${BEAD_ID} for PR #${PR_NUM} (${TYPE})"
 
-  # Sling a polecat to handle it
+  # Sling a miner to handle it
   gt sling {{rig}} "$BEAD_ID" 2>/dev/null || echo "Warning: sling failed for ${BEAD_ID}"
 
 done < /tmp/patrol-findings.txt
@@ -284,7 +284,7 @@ Context-check and either sleep for the next cycle or exit if context is filling.
 ```bash
 # A rough proxy: check if we're getting close to context limits
 # by checking if the session has been running for a long time.
-# Gas Town agents typically cycle every 30-60 minutes.
+# Excavation Site agents typically cycle every 30-60 minutes.
 gt mol step context-check 2>/dev/null || true
 ```
 

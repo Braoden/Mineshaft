@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 var issueCmd = &cobra.Command{
@@ -125,15 +125,15 @@ func detectCurrentSession() string {
 	// Try to build session name from GT env vars
 	role := os.Getenv("GT_ROLE")
 	rig := os.Getenv("GT_RIG")
-	polecat := os.Getenv("GT_POLECAT")
+	miner := os.Getenv("GT_MINER")
 	crew := os.Getenv("GT_CREW")
 
-	// Gate polecat path on GT_ROLE: coordinators may have stale GT_POLECAT.
+	// Gate miner path on GT_ROLE: coordinators may have stale GT_MINER.
 	if rig != "" {
-		if polecat != "" {
+		if miner != "" {
 			parsedRole, _, _ := parseRoleString(role)
-			if role == "" || parsedRole == RolePolecat {
-				return session.PolecatSessionName(session.PrefixFor(rig), polecat)
+			if role == "" || parsedRole == RoleMiner {
+				return session.MinerSessionName(session.PrefixFor(rig), miner)
 			}
 		}
 		if crew != "" {
@@ -141,10 +141,10 @@ func detectCurrentSession() string {
 		}
 	}
 
-	// Check if we're mayor (handles both bare and compound forms)
+	// Check if we're overseer (handles both bare and compound forms)
 	parsedRole, _, _ := parseRoleString(role)
-	if parsedRole == RoleMayor {
-		return getMayorSessionName()
+	if parsedRole == RoleOverseer {
+		return getOverseerSessionName()
 	}
 
 	return ""

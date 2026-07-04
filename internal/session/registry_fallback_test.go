@@ -8,18 +8,18 @@ import (
 
 const testRigsJSON = `{
   "rigs": {
-    "gastown": {"beads": {"prefix": "-"}},
+    "excavation": {"beads": {"prefix": "-"}},
     "beads":   {"beads": {"prefix": "bd-"}}
   }
 }`
 
 func TestBuildPrefixRegistryFromTown_CanonicalExists_FallbackCreated(t *testing.T) {
 	townRoot := t.TempDir()
-	mayorDir := filepath.Join(townRoot, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(townRoot, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	canonical := filepath.Join(mayorDir, "rigs.json")
+	canonical := filepath.Join(overseerDir, "rigs.json")
 	if err := os.WriteFile(canonical, []byte(testRigsJSON), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -30,8 +30,8 @@ func TestBuildPrefixRegistryFromTown_CanonicalExists_FallbackCreated(t *testing.
 	}
 
 	// Registry should be populated.
-	if rig := r.RigForPrefix("-"); rig != "gastown" {
-		t.Errorf("expected gastown for prefix -, got %q", rig)
+	if rig := r.RigForPrefix("-"); rig != "excavation" {
+		t.Errorf("expected excavation for prefix -, got %q", rig)
 	}
 
 	// Fallback copy should have been created at town root.
@@ -43,7 +43,7 @@ func TestBuildPrefixRegistryFromTown_CanonicalExists_FallbackCreated(t *testing.
 
 func TestBuildPrefixRegistryFromTown_CanonicalMissing_FallbackUsed(t *testing.T) {
 	townRoot := t.TempDir()
-	// No mayor/rigs.json — only fallback at town root.
+	// No overseer/rigs.json — only fallback at town root.
 	fallback := filepath.Join(townRoot, "rigs.json")
 	if err := os.WriteFile(fallback, []byte(testRigsJSON), 0644); err != nil {
 		t.Fatal(err)
@@ -74,7 +74,7 @@ func TestBuildPrefixRegistryFromTown_BothMissing_EmptyRegistry(t *testing.T) {
 		t.Errorf("expected fallthrough prefix -, got %q", rig)
 	}
 	// Verify no rigs were registered by checking a known rig name returns default.
-	if prefix := r.PrefixForRig("gastown"); prefix != DefaultPrefix {
+	if prefix := r.PrefixForRig("excavation"); prefix != DefaultPrefix {
 		t.Errorf("expected default prefix for unknown rig, got %q", prefix)
 	}
 }

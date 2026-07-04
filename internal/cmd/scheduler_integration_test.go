@@ -24,10 +24,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/formula"
-	"github.com/steveyegge/gastown/internal/scheduler/capacity"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/formula"
+	"github.com/steveyegge/excavation/internal/scheduler/capacity"
 )
 
 // schedulerTestCounter generates unique prefixes for each test to isolate Dolt
@@ -155,15 +155,15 @@ func setTestBeadStatus(t *testing.T, dir, beadID, status string) {
 
 func installSchedulerTestFormula(t *testing.T, rigPath string) {
 	t.Helper()
-	content, err := formula.GetEmbeddedFormulaContent("mol-polecat-work")
+	content, err := formula.GetEmbeddedFormulaContent("mol-miner-work")
 	if err != nil {
-		t.Fatalf("load embedded mol-polecat-work formula: %v", err)
+		t.Fatalf("load embedded mol-miner-work formula: %v", err)
 	}
 	formulasDir := filepath.Join(rigPath, ".beads", "formulas")
 	if err := os.MkdirAll(formulasDir, 0755); err != nil {
 		t.Fatalf("mkdir formulas dir: %v", err)
 	}
-	path := filepath.Join(formulasDir, "mol-polecat-work.formula.toml")
+	path := filepath.Join(formulasDir, "mol-miner-work.formula.toml")
 	if err := os.WriteFile(path, content, 0644); err != nil {
 		t.Fatalf("write %s: %v", path, err)
 	}
@@ -202,14 +202,14 @@ func setupSchedulerIntegrationTown(t *testing.T) (hqPath, rigPath, gtBinary stri
 	cleanupSchedulerBeadsDatabases(t, hqPrefix, rigPrefix)
 
 	hqPath = filepath.Join(tmpDir, "test-hq")
-	rigPath = filepath.Join(hqPath, "testrig", "mayor", "rig")
+	rigPath = filepath.Join(hqPath, "testrig", "overseer", "rig")
 
-	// --- mayor/ ---
-	mayorDir := filepath.Join(hqPath, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+	// --- overseer/ ---
+	overseerDir := filepath.Join(hqPath, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
+		t.Fatalf("mkdir overseer: %v", err)
 	}
-	writeJSONFile(t, filepath.Join(mayorDir, "town.json"), &config.TownConfig{
+	writeJSONFile(t, filepath.Join(overseerDir, "town.json"), &config.TownConfig{
 		Type:    "town",
 		Name:    "test",
 		Version: config.CurrentTownVersion,
@@ -226,7 +226,7 @@ func setupSchedulerIntegrationTown(t *testing.T) (hqPath, rigPath, gtBinary stri
 			},
 		},
 	}
-	if err := config.SaveRigsConfig(filepath.Join(mayorDir, "rigs.json"), rigsConfig); err != nil {
+	if err := config.SaveRigsConfig(filepath.Join(overseerDir, "rigs.json"), rigsConfig); err != nil {
 		t.Fatalf("save rigs.json: %v", err)
 	}
 
@@ -242,10 +242,10 @@ func setupSchedulerIntegrationTown(t *testing.T) (hqPath, rigPath, gtBinary stri
 	}
 	routes := []beads.Route{
 		{Prefix: hqPrefix + "-", Path: "."},
-		{Prefix: rigPrefix + "-", Path: "testrig/mayor/rig"},
-		// Convoy beads use a literal "hq-cv-" prefix (see install.go — registered
+		{Prefix: rigPrefix + "-", Path: "testrig/overseer/rig"},
+		// Minecart beads use a literal "hq-cv-" prefix (see install.go — registered
 		// on real towns during `gt install`). Route them to HQ so tests that
-		// look up auto-convoys via `bd show` resolve correctly.
+		// look up auto-minecarts via `bd show` resolve correctly.
 		{Prefix: "hq-cv-", Path: "."},
 	}
 	if err := beads.WriteRoutes(townBeadsDir, routes); err != nil {
@@ -260,14 +260,14 @@ func setupSchedulerIntegrationTown(t *testing.T) (hqPath, rigPath, gtBinary stri
 	initBeadsDBForServer(t, rigPath, rigPrefix, tmpDir)
 	installSchedulerTestFormula(t, rigPath)
 
-	// Redirect: testrig/.beads/ → mayor/rig/.beads
+	// Redirect: testrig/.beads/ → overseer/rig/.beads
 	// beadsSearchDirs scans townRoot/<dir>/.beads — the redirect lets bd commands
 	// from testrig/ resolve to the actual rig beads DB.
 	rigBeadsRedirect := filepath.Join(hqPath, "testrig", ".beads")
 	if err := os.MkdirAll(rigBeadsRedirect, 0755); err != nil {
 		t.Fatalf("mkdir rig .beads redirect: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(rigBeadsRedirect, "redirect"), []byte("mayor/rig/.beads"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(rigBeadsRedirect, "redirect"), []byte("overseer/rig/.beads"), 0644); err != nil {
 		t.Fatalf("write rig redirect: %v", err)
 	}
 
@@ -362,15 +362,15 @@ func TestSchedulerCircuitBreakerExclusion(t *testing.T) {
 	}
 }
 
-// TestSchedulerAutoConvoyCreation verifies that gt sling deferred dispatch (max_polecats > 0)
-// creates an auto-convoy, stores the convoy ID in the sling context, and the
-// convoy is resolvable via bd show.
-func TestSchedulerAutoConvoyCreation(t *testing.T) {
+// TestSchedulerAutoMinecartCreation verifies that gt sling deferred dispatch (max_miners > 0)
+// creates an auto-minecart, stores the minecart ID in the sling context, and the
+// minecart is resolvable via bd show.
+func TestSchedulerAutoMinecartCreation(t *testing.T) {
 	hqPath, rigPath, gtBinary, env := setupSchedulerIntegrationTown(t)
 
-	beadID := createTestBead(t, rigPath, "Auto convoy test")
+	beadID := createTestBead(t, rigPath, "Auto minecart test")
 
-	// Schedule via gt sling deferred dispatch (max_polecats > 0)
+	// Schedule via gt sling deferred dispatch (max_miners > 0)
 	slingOut := slingToScheduler(t, gtBinary, hqPath, env, beadID, "testrig")
 	t.Logf("gt sling output: %s", slingOut)
 
@@ -382,46 +382,46 @@ func TestSchedulerAutoConvoyCreation(t *testing.T) {
 	if fields.TargetRig != "testrig" {
 		t.Errorf("target_rig = %q, want %q", fields.TargetRig, "testrig")
 	}
-	if fields.Convoy == "" {
-		t.Fatalf("convoy ID not stored in sling context")
+	if fields.Minecart == "" {
+		t.Fatalf("minecart ID not stored in sling context")
 	}
 
-	// Verify: convoy is resolvable via bd show from hq.
-	showArgs := beads.MaybePrependAllowStale([]string{"show", fields.Convoy, "--json"})
+	// Verify: minecart is resolvable via bd show from hq.
+	showArgs := beads.MaybePrependAllowStale([]string{"show", fields.Minecart, "--json"})
 	cmd := exec.Command("bd", showArgs...)
 	cmd.Dir = hqPath
 	out, err := cmd.Output()
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
-			t.Fatalf("bd show convoy %s failed: %v\nstderr: %s\nstdout: %s", fields.Convoy, err, exitErr.Stderr, out)
+			t.Fatalf("bd show minecart %s failed: %v\nstderr: %s\nstdout: %s", fields.Minecart, err, exitErr.Stderr, out)
 		}
-		t.Fatalf("bd show convoy %s failed: %v\noutput: %s", fields.Convoy, err, out)
+		t.Fatalf("bd show minecart %s failed: %v\noutput: %s", fields.Minecart, err, out)
 	}
-	var convoys []struct {
+	var minecarts []struct {
 		ID        string   `json:"id"`
 		IssueType string   `json:"issue_type"`
 		Labels    []string `json:"labels"`
 	}
-	if err := json.Unmarshal(out, &convoys); err != nil {
-		t.Fatalf("parse convoy show: %v\nraw output: %s", err, out)
+	if err := json.Unmarshal(out, &minecarts); err != nil {
+		t.Fatalf("parse minecart show: %v\nraw output: %s", err, out)
 	}
-	if len(convoys) == 0 {
-		t.Fatalf("convoy %s not found via bd show", fields.Convoy)
+	if len(minecarts) == 0 {
+		t.Fatalf("minecart %s not found via bd show", fields.Minecart)
 	}
-	if convoys[0].IssueType != "task" || !hasLabel(convoys[0].Labels, "gt:convoy") {
-		t.Errorf("convoy identity = type %q labels %v, want task with gt:convoy", convoys[0].IssueType, convoys[0].Labels)
+	if minecarts[0].IssueType != "task" || !hasLabel(minecarts[0].Labels, "gt:minecart") {
+		t.Errorf("minecart identity = type %q labels %v, want task with gt:minecart", minecarts[0].IssueType, minecarts[0].Labels)
 	}
 
-	// Verify: convoy has a "tracks" dependency pointing to the rig bead.
+	// Verify: minecart has a "tracks" dependency pointing to the rig bead.
 	depArgs := beads.MaybePrependAllowStale([]string{
-		"dep", "list", fields.Convoy, fields.Convoy,
+		"dep", "list", fields.Minecart, fields.Minecart,
 		"--direction=down", "--type=tracks", "--json",
 	})
 	depCmd := exec.Command("bd", depArgs...)
 	depCmd.Dir = hqPath
 	depOut, err := depCmd.Output()
 	if err != nil {
-		t.Fatalf("convoy %s dep list failed: %v", fields.Convoy, err)
+		t.Fatalf("minecart %s dep list failed: %v", fields.Minecart, err)
 	}
 	var deps []struct {
 		DependsOnID string `json:"depends_on_id"`
@@ -437,7 +437,7 @@ func TestSchedulerAutoConvoyCreation(t *testing.T) {
 		}
 	}
 	if !foundTracked {
-		t.Errorf("convoy %s should track bead %s via tracks dep, got deps: %s", fields.Convoy, beadID, depOut)
+		t.Errorf("minecart %s should track bead %s via tracks dep, got deps: %s", fields.Minecart, beadID, depOut)
 	}
 }
 
@@ -451,7 +451,7 @@ func TestSchedulerBlockedStatusReporting(t *testing.T) {
 	blockedID := createTestBead(t, rigPath, "Blocked bead")
 	blockerID := createTestBead(t, rigPath, "Blocker bead")
 
-	// Schedule ready and blocked beads via gt sling deferred dispatch (max_polecats > 0)
+	// Schedule ready and blocked beads via gt sling deferred dispatch (max_miners > 0)
 	slingToScheduler(t, gtBinary, hqPath, env, readyID, "testrig")
 	slingToScheduler(t, gtBinary, hqPath, env, blockedID, "testrig")
 
@@ -551,8 +551,8 @@ func TestSchedulerBlockedStatusReporting(t *testing.T) {
 	}
 }
 
-// TestSchedulerSlingDryRun verifies that gt sling deferred dispatch (max_polecats > 0) --dry-run
-// has no side effects: no sling context created, no convoy created.
+// TestSchedulerSlingDryRun verifies that gt sling deferred dispatch (max_miners > 0) --dry-run
+// has no side effects: no sling context created, no minecart created.
 func TestSchedulerSlingDryRun(t *testing.T) {
 	hqPath, rigPath, gtBinary, env := setupSchedulerIntegrationTown(t)
 
@@ -561,7 +561,7 @@ func TestSchedulerSlingDryRun(t *testing.T) {
 	// Capture description before dry-run
 	descBefore := getBeadDescription(t, beadID, rigPath)
 
-	// Run sling deferred dispatch (max_polecats > 0) --dry-run
+	// Run sling deferred dispatch (max_miners > 0) --dry-run
 	slingToScheduler(t, gtBinary, hqPath, env, beadID, "testrig", "--dry-run")
 
 	// Verify: no sling context created
@@ -575,22 +575,22 @@ func TestSchedulerSlingDryRun(t *testing.T) {
 		t.Errorf("dry-run should NOT modify description\nbefore: %q\nafter:  %q", descBefore, descAfter)
 	}
 
-	// Verify: no convoy created (HQ beads DB should have no convoy issues)
-	listArgs := beads.MaybePrependAllowStale([]string{"list", "--label=gt:convoy", "--json"})
+	// Verify: no minecart created (HQ beads DB should have no minecart issues)
+	listArgs := beads.MaybePrependAllowStale([]string{"list", "--label=gt:minecart", "--json"})
 	cmd := exec.Command("bd", listArgs...)
 	cmd.Dir = hqPath
 	out, err := cmd.Output()
 	if err != nil {
-		t.Fatalf("bd list convoys failed: %v", err)
+		t.Fatalf("bd list minecarts failed: %v", err)
 	}
-	var convoys []struct {
+	var minecarts []struct {
 		ID string `json:"id"`
 	}
-	if err := json.Unmarshal(out, &convoys); err != nil {
-		t.Fatalf("parse convoy list: %v", err)
+	if err := json.Unmarshal(out, &minecarts); err != nil {
+		t.Fatalf("parse minecart list: %v", err)
 	}
-	if len(convoys) != 0 {
-		t.Errorf("dry-run should NOT create convoys, found %d", len(convoys))
+	if len(minecarts) != 0 {
+		t.Errorf("dry-run should NOT create minecarts, found %d", len(minecarts))
 	}
 }
 
@@ -676,15 +676,15 @@ func setupMultiRigSchedulerTown(t *testing.T) (hqPath, rig1Path, rig2Path, gtBin
 	cleanupSchedulerBeadsDatabases(t, hqPrefix, rig1Prefix, rig2Prefix)
 
 	hqPath = filepath.Join(tmpDir, "test-hq")
-	rig1Path = filepath.Join(hqPath, "rig1", "mayor", "rig")
-	rig2Path = filepath.Join(hqPath, "rig2", "mayor", "rig")
+	rig1Path = filepath.Join(hqPath, "rig1", "overseer", "rig")
+	rig2Path = filepath.Join(hqPath, "rig2", "overseer", "rig")
 
-	// --- mayor/ ---
-	mayorDir := filepath.Join(hqPath, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+	// --- overseer/ ---
+	overseerDir := filepath.Join(hqPath, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
+		t.Fatalf("mkdir overseer: %v", err)
 	}
-	writeJSONFile(t, filepath.Join(mayorDir, "town.json"), &config.TownConfig{
+	writeJSONFile(t, filepath.Join(overseerDir, "town.json"), &config.TownConfig{
 		Type:    "town",
 		Name:    "test",
 		Version: config.CurrentTownVersion,
@@ -707,7 +707,7 @@ func setupMultiRigSchedulerTown(t *testing.T) (hqPath, rig1Path, rig2Path, gtBin
 			},
 		},
 	}
-	if err := config.SaveRigsConfig(filepath.Join(mayorDir, "rigs.json"), rigsConfig); err != nil {
+	if err := config.SaveRigsConfig(filepath.Join(overseerDir, "rigs.json"), rigsConfig); err != nil {
 		t.Fatalf("save rigs.json: %v", err)
 	}
 
@@ -723,9 +723,9 @@ func setupMultiRigSchedulerTown(t *testing.T) (hqPath, rig1Path, rig2Path, gtBin
 	}
 	routes := []beads.Route{
 		{Prefix: hqPrefix + "-", Path: "."},
-		{Prefix: rig1Prefix + "-", Path: "rig1/mayor/rig"},
-		{Prefix: rig2Prefix + "-", Path: "rig2/mayor/rig"},
-		// Convoy beads use a literal "hq-cv-" prefix (see install.go).
+		{Prefix: rig1Prefix + "-", Path: "rig1/overseer/rig"},
+		{Prefix: rig2Prefix + "-", Path: "rig2/overseer/rig"},
+		// Minecart beads use a literal "hq-cv-" prefix (see install.go).
 		{Prefix: "hq-cv-", Path: "."},
 	}
 	if err := beads.WriteRoutes(townBeadsDir, routes); err != nil {
@@ -748,7 +748,7 @@ func setupMultiRigSchedulerTown(t *testing.T) (hqPath, rig1Path, rig2Path, gtBin
 	if err := os.MkdirAll(rig1Redirect, 0755); err != nil {
 		t.Fatalf("mkdir rig1 redirect: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(rig1Redirect, "redirect"), []byte("mayor/rig/.beads"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(rig1Redirect, "redirect"), []byte("overseer/rig/.beads"), 0644); err != nil {
 		t.Fatalf("write rig1 redirect: %v", err)
 	}
 
@@ -765,7 +765,7 @@ func setupMultiRigSchedulerTown(t *testing.T) (hqPath, rig1Path, rig2Path, gtBin
 	if err := os.MkdirAll(rig2Redirect, 0755); err != nil {
 		t.Fatalf("mkdir rig2 redirect: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(rig2Redirect, "redirect"), []byte("mayor/rig/.beads"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(rig2Redirect, "redirect"), []byte("overseer/rig/.beads"), 0644); err != nil {
 		t.Fatalf("write rig2 redirect: %v", err)
 	}
 
@@ -831,12 +831,12 @@ func TestSchedulerMultiRigDispatch(t *testing.T) {
 // --------------------------------------------------------------------------
 // Cross-rig container tests
 //
-// These tests verify that gt sling deferred dispatch (max_polecats > 0) correctly auto-resolves
+// These tests verify that gt sling deferred dispatch (max_miners > 0) correctly auto-resolves
 // each child's target rig from its bead ID prefix, enabling multi-rig epics
-// and convoys.
+// and minecarts.
 // --------------------------------------------------------------------------
 
-// TestSchedulerMultiRigEpicAutoResolve verifies that gt sling <epic> deferred dispatch (max_polecats > 0)
+// TestSchedulerMultiRigEpicAutoResolve verifies that gt sling <epic> deferred dispatch (max_miners > 0)
 // auto-resolves each child's target rig from its prefix. An epic in rig1 with
 // children in rig1 and rig2 should schedule each child to its respective rig.
 func TestSchedulerMultiRigEpicAutoResolve(t *testing.T) {
@@ -859,7 +859,7 @@ func TestSchedulerMultiRigEpicAutoResolve(t *testing.T) {
 	addBeadDependencyOfType(t, epicID, child2ExtRef, "depends_on", rig1Path)
 
 	// Dry-run: verify auto-rig-resolution routes each child correctly.
-	// Uses --dry-run to avoid needing formula infrastructure (mol-polecat-work).
+	// Uses --dry-run to avoid needing formula infrastructure (mol-miner-work).
 	out := runGTCmdOutput(t, gtBinary, hqPath, env, "sling", epicID, "--dry-run")
 
 	// Verify: child1 should be routed to rig1
@@ -905,21 +905,21 @@ func TestSchedulerMultiRigEpicAutoResolve(t *testing.T) {
 	}
 }
 
-// TestSchedulerConvoyFlagRejection verifies that task-only flags are rejected
-// when gt sling deferred dispatch (max_polecats > 0) auto-detects a convoy ID.
-func TestSchedulerConvoyFlagRejection(t *testing.T) {
+// TestSchedulerMinecartFlagRejection verifies that task-only flags are rejected
+// when gt sling deferred dispatch (max_miners > 0) auto-detects a minecart ID.
+func TestSchedulerMinecartFlagRejection(t *testing.T) {
 	hqPath, _, _, gtBinary, env := setupMultiRigSchedulerTown(t)
 
-	// Create a convoy in HQ.
-	convoyID := createTestBeadOfType(t, hqPath, "Flag rejection convoy", "convoy")
+	// Create a minecart in HQ.
+	minecartID := createTestBeadOfType(t, hqPath, "Flag rejection minecart", "minecart")
 
-	// Attempt to schedule convoy with task-only flag --ralph.
-	out, err := runGTCmdMayFail(t, gtBinary, hqPath, env, "sling", convoyID, "--ralph")
+	// Attempt to schedule minecart with task-only flag --ralph.
+	out, err := runGTCmdMayFail(t, gtBinary, hqPath, env, "sling", minecartID, "--ralph")
 	if err == nil {
-		t.Fatalf("gt sling %s deferred dispatch (max_polecats > 0) --ralph should fail, but succeeded:\n%s", convoyID, out)
+		t.Fatalf("gt sling %s deferred dispatch (max_miners > 0) --ralph should fail, but succeeded:\n%s", minecartID, out)
 	}
-	if !strings.Contains(out, "convoy mode does not support") {
-		t.Errorf("expected 'convoy mode does not support' error, got:\n%s", out)
+	if !strings.Contains(out, "minecart mode does not support") {
+		t.Errorf("expected 'minecart mode does not support' error, got:\n%s", out)
 	}
 	if !strings.Contains(out, "--ralph") {
 		t.Errorf("error should mention --ralph, got:\n%s", out)
@@ -927,7 +927,7 @@ func TestSchedulerConvoyFlagRejection(t *testing.T) {
 }
 
 // TestSchedulerEpicFlagRejection verifies that task-only flags are rejected
-// when gt sling deferred dispatch (max_polecats > 0) auto-detects an epic ID.
+// when gt sling deferred dispatch (max_miners > 0) auto-detects an epic ID.
 func TestSchedulerEpicFlagRejection(t *testing.T) {
 	hqPath, rig1Path, _, gtBinary, env := setupMultiRigSchedulerTown(t)
 
@@ -940,7 +940,7 @@ func TestSchedulerEpicFlagRejection(t *testing.T) {
 	// Attempt to schedule epic with task-only flag --account.
 	out, err := runGTCmdMayFail(t, gtBinary, hqPath, env, "sling", epicID, "--account", "foo")
 	if err == nil {
-		t.Fatalf("gt sling %s deferred dispatch (max_polecats > 0) --account foo should fail, but succeeded:\n%s", epicID, out)
+		t.Fatalf("gt sling %s deferred dispatch (max_miners > 0) --account foo should fail, but succeeded:\n%s", epicID, out)
 	}
 	if !strings.Contains(out, "epic mode does not support") {
 		t.Errorf("expected 'epic mode does not support' error, got:\n%s", out)
@@ -950,7 +950,7 @@ func TestSchedulerEpicFlagRejection(t *testing.T) {
 	}
 }
 
-// TestSchedulerEpicDetection verifies that gt sling <epic-id> deferred dispatch (max_polecats > 0)
+// TestSchedulerEpicDetection verifies that gt sling <epic-id> deferred dispatch (max_miners > 0)
 // auto-detects the epic and routes to the epic handler (dry-run).
 func TestSchedulerEpicDetection(t *testing.T) {
 	hqPath, rig1Path, rig2Path, gtBinary, env := setupMultiRigSchedulerTown(t)
@@ -964,7 +964,7 @@ func TestSchedulerEpicDetection(t *testing.T) {
 	child2ExtRef := fmt.Sprintf("external:%s:%s", child2Prefix, child2)
 	addBeadDependencyOfType(t, epicID, child2ExtRef, "depends_on", rig1Path)
 
-	// gt sling <epic-id> deferred dispatch (max_polecats > 0) --dry-run should auto-detect epic and list children.
+	// gt sling <epic-id> deferred dispatch (max_miners > 0) --dry-run should auto-detect epic and list children.
 	out := runGTCmdOutput(t, gtBinary, hqPath, env, "sling", epicID, "--dry-run")
 
 	// Should show both children with rig resolution.
@@ -998,45 +998,45 @@ func TestSchedulerMixedBatchRejection(t *testing.T) {
 	}
 }
 
-// TestSchedulerMultiRigConvoyAutoResolve verifies that gt sling <convoy> deferred dispatch (max_polecats > 0)
-// auto-resolves each tracked issue's target rig from its prefix. A convoy in HQ
+// TestSchedulerMultiRigMinecartAutoResolve verifies that gt sling <minecart> deferred dispatch (max_miners > 0)
+// auto-resolves each tracked issue's target rig from its prefix. A minecart in HQ
 // tracking beads in rig1 and rig2 should schedule each bead to its respective rig.
-func TestSchedulerMultiRigConvoyAutoResolve(t *testing.T) {
+func TestSchedulerMultiRigMinecartAutoResolve(t *testing.T) {
 	hqPath, rig1Path, rig2Path, gtBinary, env := setupMultiRigSchedulerTown(t)
 
-	// Create a convoy in HQ (the typical location for convoys).
-	convoyID := createTestBeadOfType(t, hqPath, "Multi-rig convoy", "convoy")
+	// Create a minecart in HQ (the typical location for minecarts).
+	minecartID := createTestBeadOfType(t, hqPath, "Multi-rig minecart", "minecart")
 
 	// Create beads in different rigs.
 	bead1 := createTestBead(t, rig1Path, "Rig1 tracked bead")
 	bead2 := createTestBead(t, rig2Path, "Rig2 tracked bead")
 
-	// Add tracks deps from convoy (HQ) to beads in each rig.
+	// Add tracks deps from minecart (HQ) to beads in each rig.
 	// bead1 and bead2 are in different DBs — stored as external refs in HQ.
 	bead1Prefix := strings.TrimSuffix(beads.ExtractPrefix(bead1), "-")
 	bead1ExtRef := fmt.Sprintf("external:%s:%s", bead1Prefix, bead1)
-	addBeadDependencyOfType(t, convoyID, bead1ExtRef, "tracks", hqPath)
+	addBeadDependencyOfType(t, minecartID, bead1ExtRef, "tracks", hqPath)
 	bead2Prefix := strings.TrimSuffix(beads.ExtractPrefix(bead2), "-")
 	bead2ExtRef := fmt.Sprintf("external:%s:%s", bead2Prefix, bead2)
-	addBeadDependencyOfType(t, convoyID, bead2ExtRef, "tracks", hqPath)
+	addBeadDependencyOfType(t, minecartID, bead2ExtRef, "tracks", hqPath)
 
 	// Wait for bd's issues.jsonl timestamp to settle (same race as
-	// TestSchedulerDirectConvoyDispatch — 1-second granularity stale check).
+	// TestSchedulerDirectMinecartDispatch — 1-second granularity stale check).
 	time.Sleep(2 * time.Second)
 
 	// Dry-run: verify auto-rig-resolution routes each bead correctly.
-	out := runGTCmdOutput(t, gtBinary, hqPath, env, "sling", convoyID, "--dry-run")
+	out := runGTCmdOutput(t, gtBinary, hqPath, env, "sling", minecartID, "--dry-run")
 
 	// Verify: bead1 should be routed to rig1
 	expected1 := fmt.Sprintf("%s -> rig1", bead1)
 	if !strings.Contains(out, expected1) {
-		t.Errorf("convoy dry-run should route %s -> rig1\noutput: %s", bead1, out)
+		t.Errorf("minecart dry-run should route %s -> rig1\noutput: %s", bead1, out)
 	}
 
 	// Verify: bead2 should be routed to rig2
 	expected2 := fmt.Sprintf("%s -> rig2", bead2)
 	if !strings.Contains(out, expected2) {
-		t.Errorf("convoy dry-run should route %s -> rig2\noutput: %s", bead2, out)
+		t.Errorf("minecart dry-run should route %s -> rig2\noutput: %s", bead2, out)
 	}
 
 	// Non-dry-run: actually schedule each bead to its auto-resolved rig.
@@ -1072,12 +1072,12 @@ func TestSchedulerMultiRigConvoyAutoResolve(t *testing.T) {
 // Dispatch mode tests (direct, disabled)
 // --------------------------------------------------------------------------
 
-// TestSchedulerDisabledMode verifies that max_polecats=0 behaves as direct dispatch
+// TestSchedulerDisabledMode verifies that max_miners=0 behaves as direct dispatch
 // (same as -1). Beads should NOT be queued — they fall through to normal dispatch.
 func TestSchedulerDisabledMode(t *testing.T) {
 	hqPath, rigPath, gtBinary, env := setupSchedulerIntegrationTown(t)
 
-	// Reconfigure scheduler to disabled mode (max_polecats=0)
+	// Reconfigure scheduler to disabled mode (max_miners=0)
 	configureScheduler(t, hqPath, 0, 1)
 
 	beadID := createTestBead(t, rigPath, "Disabled mode test")
@@ -1085,10 +1085,10 @@ func TestSchedulerDisabledMode(t *testing.T) {
 	// gt sling --dry-run should succeed (direct dispatch, not deferred)
 	out := runGTCmdOutput(t, gtBinary, hqPath, env, "sling", beadID, "testrig", "--hook-raw-bead", "--dry-run")
 	if strings.Contains(out, "scheduler is disabled") {
-		t.Errorf("max_polecats=0 should act as direct dispatch, not error:\n%s", out)
+		t.Errorf("max_miners=0 should act as direct dispatch, not error:\n%s", out)
 	}
 	if strings.Contains(out, "Would schedule") {
-		t.Errorf("max_polecats=0 should NOT schedule (deferred), got:\n%s", out)
+		t.Errorf("max_miners=0 should NOT schedule (deferred), got:\n%s", out)
 	}
 
 	// Bead should NOT have a sling context
@@ -1097,7 +1097,7 @@ func TestSchedulerDisabledMode(t *testing.T) {
 	}
 }
 
-// TestSchedulerDirectModeNoQueue verifies that max_polecats=-1 (direct dispatch mode)
+// TestSchedulerDirectModeNoQueue verifies that max_miners=-1 (direct dispatch mode)
 // does not queue beads. Scheduler run and status should show zero queued.
 func TestSchedulerDirectModeNoQueue(t *testing.T) {
 	hqPath, _, gtBinary, env := setupSchedulerIntegrationTown(t)
@@ -1119,7 +1119,7 @@ func TestSchedulerDirectModeNoQueue(t *testing.T) {
 	}
 }
 
-// TestSchedulerDeferredTaskWithoutRig verifies that in deferred mode (max_polecats > 0),
+// TestSchedulerDeferredTaskWithoutRig verifies that in deferred mode (max_miners > 0),
 // gt sling <task-bead> (without a rig) returns an error requiring a rig target.
 func TestSchedulerDeferredTaskWithoutRig(t *testing.T) {
 	hqPath, rigPath, gtBinary, env := setupSchedulerIntegrationTown(t)
@@ -1136,7 +1136,7 @@ func TestSchedulerDeferredTaskWithoutRig(t *testing.T) {
 	}
 }
 
-// TestSchedulerDeferredNonRigRejection verifies that in deferred mode (max_polecats > 0),
+// TestSchedulerDeferredNonRigRejection verifies that in deferred mode (max_miners > 0),
 // gt sling <bead> <non-rig> is rejected rather than falling through to direct dispatch.
 func TestSchedulerDeferredNonRigRejection(t *testing.T) {
 	hqPath, rigPath, gtBinary, env := setupSchedulerIntegrationTown(t)
@@ -1164,16 +1164,16 @@ func TestSchedulerDeferredNonRigRejection(t *testing.T) {
 }
 
 // TestSchedulerDeferredAcceptsDogTarget verifies that in deferred mode
-// (max_polecats > 0), dog pool targets (deacon/dogs, dog:) fall through to
+// (max_miners > 0), dog pool targets (supervisor/dogs, dog:) fall through to
 // direct dispatch instead of being rejected as "not a known rig".
 //
 // Regression test for bead aa-4yf2: dispatchFeedDog was broken because the
 // deferred sling path validated that the target was a rig, rejecting the
-// pool target "deacon/dogs". That caused every stranded-convoy feed attempt
+// pool target "supervisor/dogs". That caused every stranded-minecart feed attempt
 // to fail with "failed to dispatch feed dog: exit status 1" whenever a
 // scheduler was active (i.e., in normal operation on hq).
 //
-// Dogs are a self-managed Deacon-owned pool, not rig polecat slots, and
+// Dogs are a self-managed Supervisor-owned pool, not rig miner slots, and
 // therefore don't participate in the capacity scheduler. They must dispatch
 // directly regardless of scheduler mode.
 func TestSchedulerDeferredAcceptsDogTarget(t *testing.T) {
@@ -1183,8 +1183,8 @@ func TestSchedulerDeferredAcceptsDogTarget(t *testing.T) {
 
 	// Targets that must NOT be rejected with "deferred dispatch requires a rig target".
 	dogTargets := []string{
-		"deacon/dogs",
-		"deacon/dogs/alpha",
+		"supervisor/dogs",
+		"supervisor/dogs/alpha",
 		"dog:",
 		"dog:alpha",
 	}
@@ -1211,7 +1211,7 @@ func TestSchedulerDeferredAcceptsDogTarget(t *testing.T) {
 }
 
 // TestSchedulerDirectEpicDispatch verifies that gt sling <epic-id> --dry-run
-// with max_polecats=-1 (direct mode) routes to the direct dispatch path.
+// with max_miners=-1 (direct mode) routes to the direct dispatch path.
 func TestSchedulerDirectEpicDispatch(t *testing.T) {
 	hqPath, rig1Path, rig2Path, gtBinary, env := setupMultiRigSchedulerTown(t)
 
@@ -1243,7 +1243,7 @@ func TestSchedulerDirectEpicDispatch(t *testing.T) {
 	}
 }
 
-// TestSchedulerBatchEpicRejection verifies that in deferred mode (max_polecats > 0),
+// TestSchedulerBatchEpicRejection verifies that in deferred mode (max_miners > 0),
 // gt sling <epic-id> <task-id> <rig> rejects the epic ID rather than scheduling it as a task.
 func TestSchedulerBatchEpicRejection(t *testing.T) {
 	hqPath, rig1Path, _, gtBinary, env := setupMultiRigSchedulerTown(t)
@@ -1321,15 +1321,15 @@ func TestSchedulerActualDispatchRoutesPollutedEnvToTargetRig(t *testing.T) {
 		t.Fatalf("CreateSlingContext: %v", err)
 	}
 
-	prevSpawn := spawnPolecatForSling
-	t.Cleanup(func() { spawnPolecatForSling = prevSpawn })
-	spawnPolecatForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedPolecatInfo, error) {
+	prevSpawn := spawnMinerForSling
+	t.Cleanup(func() { spawnMinerForSling = prevSpawn })
+	spawnMinerForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedMinerInfo, error) {
 		if rigName != "testrig" {
 			t.Fatalf("spawn rig = %q, want testrig", rigName)
 		}
-		return &SpawnedPolecatInfo{
+		return &SpawnedMinerInfo{
 			RigName:     rigName,
-			PolecatName: "envtest",
+			MinerName: "envtest",
 			ClonePath:   rigPath,
 			Pane:        "test-pane", // StartSession becomes a no-op.
 		}, nil
@@ -1351,8 +1351,8 @@ func TestSchedulerActualDispatchRoutesPollutedEnvToTargetRig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("rig bead show after dispatch: %v", err)
 	}
-	if issue.Status != "hooked" || issue.Assignee != "testrig/polecats/envtest" {
-		t.Fatalf("rig bead state = status:%q assignee:%q, want hooked testrig/polecats/envtest", issue.Status, issue.Assignee)
+	if issue.Status != "hooked" || issue.Assignee != "testrig/miners/envtest" {
+		t.Fatalf("rig bead state = status:%q assignee:%q, want hooked testrig/miners/envtest", issue.Status, issue.Assignee)
 	}
 
 	openContexts, err := rigBeads.ListOpenSlingContexts()
@@ -1375,22 +1375,22 @@ func TestSchedulerFormulaDispatchRoutesPollutedEnvToTargetRig(t *testing.T) {
 		Version:    1,
 		WorkBeadID: beadID,
 		TargetRig:  "testrig",
-		Formula:    "mol-polecat-work",
+		Formula:    "mol-miner-work",
 		EnqueuedAt: "2026-01-01T00:00:00Z",
 	})
 	if err != nil {
 		t.Fatalf("CreateSlingContext: %v", err)
 	}
 
-	prevSpawn := spawnPolecatForSling
-	t.Cleanup(func() { spawnPolecatForSling = prevSpawn })
-	spawnPolecatForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedPolecatInfo, error) {
+	prevSpawn := spawnMinerForSling
+	t.Cleanup(func() { spawnMinerForSling = prevSpawn })
+	spawnMinerForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedMinerInfo, error) {
 		if rigName != "testrig" {
 			t.Fatalf("spawn rig = %q, want testrig", rigName)
 		}
-		return &SpawnedPolecatInfo{
+		return &SpawnedMinerInfo{
 			RigName:     rigName,
-			PolecatName: "formulaenv",
+			MinerName: "formulaenv",
 			ClonePath:   rigPath,
 			Pane:        "test-pane",
 		}, nil
@@ -1414,12 +1414,12 @@ func TestSchedulerFormulaDispatchRoutesPollutedEnvToTargetRig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("rig bead show after dispatch: %v", err)
 	}
-	if issue.Status != "hooked" || issue.Assignee != "testrig/polecats/formulaenv" {
-		t.Fatalf("rig bead state = status:%q assignee:%q, want hooked testrig/polecats/formulaenv", issue.Status, issue.Assignee)
+	if issue.Status != "hooked" || issue.Assignee != "testrig/miners/formulaenv" {
+		t.Fatalf("rig bead state = status:%q assignee:%q, want hooked testrig/miners/formulaenv", issue.Status, issue.Assignee)
 	}
 	attachment := beads.ParseAttachmentFields(issue)
-	if attachment == nil || attachment.AttachedFormula != "mol-polecat-work" || attachment.AttachedMolecule == "" {
-		t.Fatalf("attachment fields = %#v, want mol-polecat-work with attached molecule (description: %s)", attachment, issue.Description)
+	if attachment == nil || attachment.AttachedFormula != "mol-miner-work" || attachment.AttachedMolecule == "" {
+		t.Fatalf("attachment fields = %#v, want mol-miner-work with attached molecule (description: %s)", attachment, issue.Description)
 	}
 
 	openContexts, err := rigBeads.ListOpenSlingContexts()
@@ -1445,9 +1445,9 @@ func TestSchedulerDispatchFailureRecordedInContextSourceDB(t *testing.T) {
 		EnqueuedAt:  "2026-01-01T00:00:00Z",
 	})
 
-	prevSpawn := spawnPolecatForSling
-	t.Cleanup(func() { spawnPolecatForSling = prevSpawn })
-	spawnPolecatForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedPolecatInfo, error) {
+	prevSpawn := spawnMinerForSling
+	t.Cleanup(func() { spawnMinerForSling = prevSpawn })
+	spawnMinerForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedMinerInfo, error) {
 		if rigName != "testrig" {
 			t.Fatalf("spawn rig = %q, want testrig", rigName)
 		}
@@ -1490,24 +1490,24 @@ func TestSchedulerDispatchFailureRecordedInContextSourceDB(t *testing.T) {
 	}
 }
 
-// TestSchedulerDirectConvoyDispatch verifies that gt sling <convoy-id> --dry-run
-// with max_polecats=-1 (direct mode) routes to the direct dispatch path.
-func TestSchedulerDirectConvoyDispatch(t *testing.T) {
+// TestSchedulerDirectMinecartDispatch verifies that gt sling <minecart-id> --dry-run
+// with max_miners=-1 (direct mode) routes to the direct dispatch path.
+func TestSchedulerDirectMinecartDispatch(t *testing.T) {
 	hqPath, rig1Path, rig2Path, gtBinary, env := setupMultiRigSchedulerTown(t)
 
 	// Reconfigure to direct dispatch mode
 	configureScheduler(t, hqPath, -1, 1)
 
-	// Create a convoy in HQ tracking beads in different rigs.
-	convoyID := createTestBeadOfType(t, hqPath, "Direct dispatch convoy", "convoy")
+	// Create a minecart in HQ tracking beads in different rigs.
+	minecartID := createTestBeadOfType(t, hqPath, "Direct dispatch minecart", "minecart")
 	bead1 := createTestBead(t, rig1Path, "Rig1 direct tracked")
 	bead2 := createTestBead(t, rig2Path, "Rig2 direct tracked")
 	bead1Prefix := strings.TrimSuffix(beads.ExtractPrefix(bead1), "-")
 	bead1ExtRef := fmt.Sprintf("external:%s:%s", bead1Prefix, bead1)
-	addBeadDependencyOfType(t, convoyID, bead1ExtRef, "tracks", hqPath)
+	addBeadDependencyOfType(t, minecartID, bead1ExtRef, "tracks", hqPath)
 	bead2Prefix := strings.TrimSuffix(beads.ExtractPrefix(bead2), "-")
 	bead2ExtRef := fmt.Sprintf("external:%s:%s", bead2Prefix, bead2)
-	addBeadDependencyOfType(t, convoyID, bead2ExtRef, "tracks", hqPath)
+	addBeadDependencyOfType(t, minecartID, bead2ExtRef, "tracks", hqPath)
 
 	// Wait for bd's issues.jsonl timestamp to settle. bd checks that the Dolt
 	// import timestamp >= jsonl mtime (1-second granularity). Without this,
@@ -1515,15 +1515,15 @@ func TestSchedulerDirectConvoyDispatch(t *testing.T) {
 	// and Dolt import straddle a second boundary.
 	time.Sleep(2 * time.Second)
 
-	// gt sling <convoy-id> --dry-run in direct mode
-	out := runGTCmdOutput(t, gtBinary, hqPath, env, "sling", convoyID, "--dry-run")
+	// gt sling <minecart-id> --dry-run in direct mode
+	out := runGTCmdOutput(t, gtBinary, hqPath, env, "sling", minecartID, "--dry-run")
 
 	// Should mention tracked beads
 	if !strings.Contains(out, bead1) {
-		t.Errorf("direct convoy dry-run should mention bead1 %s\noutput: %s", bead1, out)
+		t.Errorf("direct minecart dry-run should mention bead1 %s\noutput: %s", bead1, out)
 	}
 	if !strings.Contains(out, bead2) {
-		t.Errorf("direct convoy dry-run should mention bead2 %s\noutput: %s", bead2, out)
+		t.Errorf("direct minecart dry-run should mention bead2 %s\noutput: %s", bead2, out)
 	}
 	// Direct dispatch uses "Would sling" not "Would schedule"
 	if strings.Contains(out, "Would schedule") {
@@ -1534,7 +1534,7 @@ func TestSchedulerDirectConvoyDispatch(t *testing.T) {
 // TestScheduleBead_RefusesClosed verifies that scheduleBead (deferred dispatch
 // path) refuses to schedule a closed bead. Mirrors the closed-bead guards in
 // runSling and executeSling. Regression test for hq-ki2: the daemon's stranded
-// scan was creating ghost convoys for already-closed cross-prefix beads via
+// scan was creating ghost minecarts for already-closed cross-prefix beads via
 // scheduleBead → CreateSlingContext, because scheduleBead was the only sling
 // entry point missing the closed-bead guard.
 func TestScheduleBead_RefusesClosed(t *testing.T) {

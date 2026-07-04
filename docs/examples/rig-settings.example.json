@@ -19,14 +19,14 @@
     },
 
     "role_agents": {
-        "polecat":  "pi",
+        "miner":  "pi",
         "witness":  "pi",
         "refinery": "pi"
     },
 
     "merge_queue": {
         "enabled": true,
-        "integration_branch_polecat_enabled": true,
+        "integration_branch_miner_enabled": true,
         "integration_branch_refinery_enabled": true,
         "integration_branch_template": "integration/{epic}",
         "integration_branch_auto_land": false,
@@ -72,6 +72,6 @@
     },
 
     "workflow": {
-        "default_formula": "mol-polecat-work"
+        "default_formula": "mol-miner-work"
     }
 }

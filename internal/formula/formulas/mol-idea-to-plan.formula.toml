@@ -11,18 +11,18 @@ They'll pour this formula and it takes over from there.
       ↓
 [intake]         Agent structures it into a draft PRD
       ↓
-[prd-review]     6 polecats review PRD in parallel (mol-prd-review convoy)
+[prd-review]     6 miners review PRD in parallel (mol-prd-review minecart)
                  → requirements, gaps, ambiguity, feasibility, scope, stakeholders
       ↓
 [human-clarify]  Agent presents consolidated questions, you answer
       ↓
-[generate-plan]  6 polecats design the implementation in parallel (design convoy)
+[generate-plan]  6 miners design the implementation in parallel (design minecart)
                  → api, data, ux, scale, security, integration
       ↓
-[prd-align 1-3]  3 rounds × 2 polecats: align plan with PRD, apply fixes each round
+[prd-align 1-3]  3 rounds × 2 miners: align plan with PRD, apply fixes each round
                  → requirements, goals, constraints, non-goals, user-stories, open-questions
       ↓
-[plan-review 1-3] 3 rounds × 2 polecats: review plan itself, apply fixes each round
+[plan-review 1-3] 3 rounds × 2 miners: review plan itself, apply fixes each round
                   → completeness, sequencing, risk, scope-creep, testability, coherence
       ↓
 [create-beads]   Agent converts the refined plan into beads with dependencies
@@ -36,14 +36,14 @@ There is one human gate:
 1. **After PRD review**: You answer clarifying questions before plan generation
 
 This is the only step requiring your input. The 6-round iterative plan review
-runs autonomously — polecats review, orchestrator applies fixes, repeat.
+runs autonomously — miners review, orchestrator applies fixes, repeat.
 
 ## Orchestration Model
 
 This is a workflow formula. The orchestrating crew worker runs through
-steps sequentially. The parallel review steps kick off convoy sub-workflows
-(separate polecats for each review dimension) and await their synthesis reports
-via mail before proceeding. The iterative plan review rounds dispatch 2 polecats
+steps sequentially. The parallel review steps kick off minecart sub-workflows
+(separate miners for each review dimension) and await their synthesis reports
+via mail before proceeding. The iterative plan review rounds dispatch 2 miners
 each, await their findings, apply fixes to the plan, then proceed to the next round.
 
 ## Variables
@@ -115,18 +115,18 @@ echo "prd_draft=.prd-reviews/{{review_id}}/prd-draft.md" >> .prd-reviews/{{revie
 id = "prd-review"
 title = "Run parallel PRD review (6 legs)"
 needs = ["intake"]
-target = "mayor"
+target = "overseer"
 description = """
-Pour the mol-prd-review convoy to run 6 parallel PRD reviewers.
+Pour the mol-prd-review minecart to run 6 parallel PRD reviewers.
 
-**1. Pour the convoy:**
+**1. Pour the minecart:**
 ```bash
 gt formula run mol-prd-review \\
   --set problem="{{problem}}" \\
   --set context="See .prd-reviews/{{review_id}}/prd-draft.md. {{context}}"
 ```
 
-This spawns 6 polecats in parallel:
+This spawns 6 miners in parallel:
 - requirements — success criteria and acceptance conditions
 - gaps — missing requirements nobody thought of
 - ambiguity — unclear or contradictory language
@@ -135,7 +135,7 @@ This spawns 6 polecats in parallel:
 - stakeholders — unconsidered actors and conflicting needs
 
 **2. Await synthesis:**
-The convoy's synthesis step will mail you when complete. Check your inbox:
+The minecart's synthesis step will mail you when complete. Check your inbox:
 ```bash
 gt mail inbox
 ```
@@ -154,7 +154,7 @@ cat .prd-reviews/<review-id>/prd-review.md
 id = "human-clarify"
 title = "Gather human clarifications on PRD"
 needs = ["prd-review"]
-target = "mayor"
+target = "overseer"
 interactive = true
 description = """
 Present the consolidated questions to the human and capture their answers.
@@ -208,18 +208,18 @@ A: <human's answer>
 id = "generate-plan"
 title = "Generate implementation plan (6 design dimensions)"
 needs = ["human-clarify"]
-target = "mayor"
+target = "overseer"
 description = """
-Pour the design convoy to generate an implementation plan from the refined PRD.
+Pour the design minecart to generate an implementation plan from the refined PRD.
 
-**1. Pour the design convoy:**
+**1. Pour the design minecart:**
 ```bash
 gt formula run design \\
   --set problem="{{problem}}" \\
   --set context="PRD with clarifications: .prd-reviews/{{review_id}}/prd-draft.md. {{context}}"
 ```
 
-This spawns 6 polecats in parallel, each exploring a different dimension:
+This spawns 6 miners in parallel, each exploring a different dimension:
 - api — interface design and developer ergonomics
 - data — data model, storage, migrations
 - ux — user experience and CLI/UI ergonomics
@@ -249,7 +249,7 @@ Pay attention to:
 # ============================================================================
 # PRD ALIGNMENT ROUNDS (1-3)
 #
-# Three rounds of 2 polecats each. Each round identifies gaps between the PRD
+# Three rounds of 2 miners each. Each round identifies gaps between the PRD
 # and the implementation plan, then the orchestrator applies all must-fix and
 # should-fix changes before proceeding to the next round.
 # ============================================================================
@@ -259,11 +259,11 @@ id = "prd-align-1"
 title = "PRD alignment round 1: requirements + goals"
 needs = ["generate-plan"]
 description = """
-First PRD-alignment round. Dispatch 2 polecats to check the plan against the PRD.
+First PRD-alignment round. Dispatch 2 miners to check the plan against the PRD.
 
-**1. Dispatch 2 polecats:**
+**1. Dispatch 2 miners:**
 
-Polecat A — **requirements-coverage**:
+Miner A — **requirements-coverage**:
 ```bash
 gt sling --prompt="Review an implementation plan for PRD alignment.
 
@@ -283,7 +283,7 @@ Classify each GAP/PARTIAL as must-fix or should-fix.
 Mail your full report back when done." --mail-back
 ```
 
-Polecat B — **goals-alignment**:
+Miner B — **goals-alignment**:
 ```bash
 gt sling --prompt="Review an implementation plan for PRD alignment.
 
@@ -304,7 +304,7 @@ Mail your full report back when done." --mail-back
 
 **2. Await reports:**
 ```bash
-gt mail inbox  # wait for both polecats to report back
+gt mail inbox  # wait for both miners to report back
 ```
 
 **3. Apply fixes to the plan:**
@@ -322,9 +322,9 @@ needs = ["prd-align-1"]
 description = """
 Second PRD-alignment round. The plan has been updated from round 1 findings.
 
-**1. Dispatch 2 polecats:**
+**1. Dispatch 2 miners:**
 
-Polecat A — **constraints-compliance**:
+Miner A — **constraints-compliance**:
 ```bash
 gt sling --prompt="Review an implementation plan for PRD alignment (round 2).
 
@@ -345,7 +345,7 @@ Classify each as must-fix or should-fix.
 Mail your full report back when done." --mail-back
 ```
 
-Polecat B — **non-goals-enforcement**:
+Miner B — **non-goals-enforcement**:
 ```bash
 gt sling --prompt="Review an implementation plan for PRD alignment (round 2).
 
@@ -385,9 +385,9 @@ needs = ["prd-align-2"]
 description = """
 Third and final PRD-alignment round. Plan has been updated from rounds 1-2.
 
-**1. Dispatch 2 polecats:**
+**1. Dispatch 2 miners:**
 
-Polecat A — **user-stories-coverage**:
+Miner A — **user-stories-coverage**:
 ```bash
 gt sling --prompt="Review an implementation plan for PRD alignment (round 3).
 
@@ -408,7 +408,7 @@ Classify each as must-fix or should-fix.
 Mail your full report back when done." --mail-back
 ```
 
-Polecat B — **open-questions-resolution**:
+Miner B — **open-questions-resolution**:
 ```bash
 gt sling --prompt="Review an implementation plan for PRD alignment (round 3).
 
@@ -455,10 +455,10 @@ Proceeding to plan self-review...
 # ============================================================================
 # PLAN SELF-REVIEW ROUNDS (1-3)
 #
-# Three rounds of 2 polecats each. Each round reviews the plan itself (not
+# Three rounds of 2 miners each. Each round reviews the plan itself (not
 # against the PRD) for internal quality. Covers the 5 original review angles
 # (completeness, sequencing, risk, scope-creep, testability) plus coherence,
-# distributed across 6 polecat slots.
+# distributed across 6 miner slots.
 # ============================================================================
 
 [[steps]]
@@ -469,9 +469,9 @@ description = """
 First plan self-review round. The plan has been PRD-aligned through 3 rounds.
 Now review the plan itself for internal quality.
 
-**1. Dispatch 2 polecats:**
+**1. Dispatch 2 miners:**
 
-Polecat A — **completeness**:
+Miner A — **completeness**:
 ```bash
 gt sling --prompt="Review an implementation plan for completeness.
 
@@ -495,7 +495,7 @@ Report format for each finding:
 Mail your full report back when done." --mail-back
 ```
 
-Polecat B — **sequencing**:
+Miner B — **sequencing**:
 ```bash
 gt sling --prompt="Review an implementation plan for correct sequencing.
 
@@ -534,9 +534,9 @@ needs = ["plan-review-1"]
 description = """
 Second plan self-review round.
 
-**1. Dispatch 2 polecats:**
+**1. Dispatch 2 miners:**
 
-Polecat A — **risk**:
+Miner A — **risk**:
 ```bash
 gt sling --prompt="Review an implementation plan for risk.
 
@@ -560,7 +560,7 @@ Report format for each risk:
 Mail your full report back when done." --mail-back
 ```
 
-Polecat B — **scope-creep**:
+Miner B — **scope-creep**:
 ```bash
 gt sling --prompt="Review an implementation plan for scope creep.
 
@@ -603,9 +603,9 @@ needs = ["plan-review-2"]
 description = """
 Third and final plan self-review round.
 
-**1. Dispatch 2 polecats:**
+**1. Dispatch 2 miners:**
 
-Polecat A — **testability**:
+Miner A — **testability**:
 ```bash
 gt sling --prompt="Review an implementation plan for testability.
 
@@ -628,7 +628,7 @@ Classify each as must-fix or should-fix.
 Mail your full report back when done." --mail-back
 ```
 
-Polecat B — **coherence**:
+Miner B — **coherence**:
 ```bash
 gt sling --prompt="Review an implementation plan for overall coherence.
 

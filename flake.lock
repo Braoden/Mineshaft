@@ -7,13 +7,13 @@
       "locked": {
         "lastModified": 1775495284,
         "narHash": "sha256-/dV4HKOW8S1PtlU5ewcacUxbGhRclzxeNBXVfZbdj2Q=",
-        "owner": "gastownhall",
+        "owner": "excavationhall",
         "repo": "beads",
         "rev": "97fea942f6588dc5772ed92b5434281ad458727c",
         "type": "github"
       },
       "original": {
-        "owner": "gastownhall",
+        "owner": "excavationhall",
         "repo": "beads",
         "type": "github"
       }

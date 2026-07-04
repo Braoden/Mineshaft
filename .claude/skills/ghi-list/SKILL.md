@@ -5,7 +5,7 @@ description: >
   --assignee, --label. Use for issue triage and tracking workflows.
 allowed-tools: "Bash(gh issue list:*)"
 version: "1.0.0"
-author: "Gas Town"
+author: "Excavation Site"
 ---
 
 # GHI List - Formatted GitHub Issues Table

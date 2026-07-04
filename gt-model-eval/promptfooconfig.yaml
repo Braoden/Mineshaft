@@ -1,4 +1,4 @@
-# Gas Town Model Comparison Framework
+# Excavation Site Model Comparison Framework
 # Compare Claude Opus, Sonnet, and Haiku on patrol agent decisions.
 #
 # Usage:
@@ -9,7 +9,7 @@
 #
 # Requires: ANTHROPIC_API_KEY environment variable
 
-description: "Gas Town patrol agent model comparison"
+description: "Excavation Site patrol agent model comparison"
 
 prompts:
   - file://prompts/patrol-decision.txt
@@ -67,16 +67,16 @@ defaultTest:
 
 tests:
   # Class B: Directive role_context (instruction-following)
-  - file://tests/deacon-zombie.yaml
-  - file://tests/deacon-plugin-gate.yaml
-  - file://tests/deacon-dog-health.yaml
+  - file://tests/supervisor-zombie.yaml
+  - file://tests/supervisor-plugin-gate.yaml
+  - file://tests/supervisor-dog-health.yaml
   - file://tests/witness-stuck.yaml
   - file://tests/witness-cleanup.yaml
   - file://tests/refinery-triage.yaml
   - file://tests/refinery-conflict.yaml
   - file://tests/dog-orphan.yaml
   # Class A: Neutral role_context (reasoning from evidence)
-  - file://tests/class-a-deacon.yaml
+  - file://tests/class-a-supervisor.yaml
   - file://tests/class-a-witness.yaml
   - file://tests/class-a-refinery.yaml
   - file://tests/class-a-dog.yaml

@@ -8,10 +8,10 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/doltserver"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/wasteland"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/doltserver"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/wasteland"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var wlCharsheetJSON bool
@@ -40,7 +40,7 @@ func init() {
 func runWlCharsheet(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	handle := ""

@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/util"
+	"github.com/steveyegge/excavation/internal/util"
 )
 
 // WIPCommitPrefix is the commit message prefix used by checkpoint_dog auto-commits.
@@ -42,8 +42,8 @@ func CountWIPCommits(workDir, baseRef string) (int, error) {
 // commit, preserving non-WIP commit messages in the body. Returns the number
 // of WIP commits that were squashed.
 //
-// This is safe because Refinery squash-merges polecat branches anyway —
-// individual commit history on polecat branches is not preserved.
+// This is safe because Refinery squash-merges miner branches anyway —
+// individual commit history on miner branches is not preserved.
 func SquashWIPCommits(workDir, baseRef string) (int, error) {
 	mergeBase, err := gitOutput(workDir, "merge-base", baseRef, "HEAD")
 	if err != nil {

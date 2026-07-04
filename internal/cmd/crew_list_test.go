@@ -9,16 +9,16 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/config"
 )
 
 func setupTestTownForCrewList(t *testing.T, rigs map[string][]string) string {
 	t.Helper()
 
 	townRoot := t.TempDir()
-	mayorDir := filepath.Join(townRoot, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+	overseerDir := filepath.Join(townRoot, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
+		t.Fatalf("mkdir overseer: %v", err)
 	}
 
 	townConfig := &config.TownConfig{
@@ -28,7 +28,7 @@ func setupTestTownForCrewList(t *testing.T, rigs map[string][]string) string {
 		PublicName: "Test Town",
 		CreatedAt:  time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
 	}
-	if err := config.SaveTownConfig(filepath.Join(mayorDir, "town.json"), townConfig); err != nil {
+	if err := config.SaveTownConfig(filepath.Join(overseerDir, "town.json"), townConfig); err != nil {
 		t.Fatalf("save town.json: %v", err)
 	}
 
@@ -55,7 +55,7 @@ func setupTestTownForCrewList(t *testing.T, rigs map[string][]string) string {
 		}
 	}
 
-	if err := config.SaveRigsConfig(filepath.Join(mayorDir, "rigs.json"), rigsConfig); err != nil {
+	if err := config.SaveRigsConfig(filepath.Join(overseerDir, "rigs.json"), rigsConfig); err != nil {
 		t.Fatalf("save rigs.json: %v", err)
 	}
 

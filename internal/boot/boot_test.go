@@ -14,7 +14,7 @@ func TestAcquireLock(t *testing.T) {
 
 	b := &Boot{
 		townRoot: tmpDir,
-		bootDir:  filepath.Join(tmpDir, "deacon", "dogs", "boot"),
+		bootDir:  filepath.Join(tmpDir, "supervisor", "dogs", "boot"),
 	}
 
 	// First acquire should succeed
@@ -60,11 +60,11 @@ func TestAcquireLockConcurrent(t *testing.T) {
 
 	b1 := &Boot{
 		townRoot: tmpDir,
-		bootDir:  filepath.Join(tmpDir, "deacon", "dogs", "boot"),
+		bootDir:  filepath.Join(tmpDir, "supervisor", "dogs", "boot"),
 	}
 	b2 := &Boot{
 		townRoot: tmpDir,
-		bootDir:  filepath.Join(tmpDir, "deacon", "dogs", "boot"),
+		bootDir:  filepath.Join(tmpDir, "supervisor", "dogs", "boot"),
 	}
 
 	// First boot acquires lock
@@ -97,7 +97,7 @@ func TestReleaseLockIdempotent(t *testing.T) {
 
 	b := &Boot{
 		townRoot: tmpDir,
-		bootDir:  filepath.Join(tmpDir, "deacon", "dogs", "boot"),
+		bootDir:  filepath.Join(tmpDir, "supervisor", "dogs", "boot"),
 	}
 
 	// Release without acquire should not error (lockHandle is nil)

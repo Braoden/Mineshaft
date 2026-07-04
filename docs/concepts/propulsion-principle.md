@@ -2,7 +2,7 @@
 
 > **If you find something on your hook, YOU RUN IT.**
 
-Gas Town is a steam engine. Agents are pistons. The entire system's throughput
+Excavation Site is a steam engine. Agents are pistons. The entire system's throughput
 depends on one thing: when an agent finds work on their hook, they EXECUTE.
 
 ## Why This Matters
@@ -43,7 +43,7 @@ Formula steps are shown inline at prime time — no step beads to manage:
 ```bash
 gt prime             # See your checklist
 # Work through each step in order
-gt done              # Submit and self-clean (polecats)
+gt done              # Submit and self-clean (miners)
 gt patrol report     # Close + next cycle (patrol agents)
 ```
 
@@ -69,12 +69,12 @@ One command. Auto-advance. Momentum preserved.
 ## The Failure Mode We're Preventing
 
 ```
-Polecat restarts with work on hook
-  → Polecat announces itself
-  → Polecat waits for confirmation
+Miner restarts with work on hook
+  → Miner announces itself
+  → Miner waits for confirmation
   → Witness assumes work is progressing
   → Nothing happens
-  → Gas Town stops
+  → Excavation Site stops
 ```
 
 ## Startup Behavior

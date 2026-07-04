@@ -5,22 +5,22 @@ description: >
   Prints recommendations inline - does NOT post to GitHub.
 allowed-tools: "Bash(gh pr *), Bash(git *), Bash(gt *), Bash(bd *), Bash(cat *)"
 version: "2.0.0"
-author: "Gas Town"
+author: "Excavation Site"
 ---
 
 # PR Sheriff - Triage and Review Workflow
 
 This skill delegates to the `mol-pr-sheriff-patrol` formula, which lives at
 `$GT_ROOT/.beads/formulas/mol-pr-sheriff-patrol.formula.toml` and is shared
-across all Gas Town rigs (gastown, beads, etc.).
+across all Excavation Site rigs (excavation, beads, etc.).
 
 ## Repo Scope
 
-This rig (gastown/crew/max) is responsible for **steveyegge/gastown only**.
+This rig (excavation/crew/max) is responsible for **steveyegge/excavation only**.
 The beads repo (steveyegge/beads) is handled by beads/crew/emma.
 Do NOT discover or triage PRs from repos outside your scope.
 
-When loading the shared config, filter the repo list to only `steveyegge/gastown`.
+When loading the shared config, filter the repo list to only `steveyegge/excavation`.
 
 ## Usage
 
@@ -29,7 +29,7 @@ When loading the shared config, filter the repo list to only `steveyegge/gastown
 ```
 
 - `repo` - Optional. If provided, overrides the default scope.
-  If omitted, scan only `steveyegge/gastown` (this rig's scope).
+  If omitted, scan only `steveyegge/excavation` (this rig's scope).
 
 ## How to Execute
 
@@ -58,7 +58,7 @@ The formula defines a 7-step workflow:
 | dispatch-crew-reviews | Nudge crew for NEEDS-CREW PRs |
 | dispatch-deep-reviews | Nudge crew for NEEDS-HUMAN PRs (full evaluation framework) |
 | collect-results | Gather crew review nudge-backs |
-| interactive-review | Walk through remaining NEEDS-HUMAN PRs with overseer |
+| interactive-review | Walk through remaining NEEDS-HUMAN PRs with boss |
 | summarize | Print patrol summary |
 
 **3. For each step, read the full description:**
@@ -140,12 +140,12 @@ Author: <login> | +<additions>/-<deletions> | <changedFiles> files
 
 ## Dispatching Work: Use Ephemeral Beads
 
-When creating beads to track fix-merge work for polecats or crew, **use
+When creating beads to track fix-merge work for miners or crew, **use
 ephemeral beads (wisps)** rather than persistent beads. PR review/fix-merge
-tasks are orchestration scaffolding — they exist to give a polecat something
+tasks are orchestration scaffolding — they exist to give a miner something
 to hook and track, not to create a permanent record.
 
-Ephemeral beads are the right trade-off: they give polecats and crew trackable
+Ephemeral beads are the right trade-off: they give miners and crew trackable
 work items without polluting Dolt's permanent ledger with one-off orchestration
 noise. If/when beads are exported to permanent ledgers, review-task wisps won't
 clutter the history.
@@ -160,12 +160,12 @@ bd new -t task "Fix-merge PR #1234: description" -p 2 -l pr-review
 ```
 
 The `--wisp-type patrol` flag marks it as ephemeral orchestration work that
-the reaper will eventually clean up. The polecat/crew member can still hook it,
+the reaper will eventually clean up. The miner/crew member can still hook it,
 work it, and close it normally.
 
 ## CRITICAL Rules
 
 - All output is printed inline. Do NOT post comments to GitHub.
-- The overseer decides what gets posted externally.
+- The boss decides what gets posted externally.
 - Contributor-friendly: help contributors get to the finish line.
 - Use `Co-authored-by` trailer when fixing up contributor work.

@@ -28,7 +28,7 @@ var escalateCmd = &cobra.Command{
 	Long: `Create and manage escalations for critical issues.
 
 The escalation system provides severity-based routing for issues that need
-human or mayor attention. Escalations are tracked as beads with gt:escalation label.
+human or overseer attention. Escalations are tracked as beads with gt:escalation label.
 
 SEVERITY LEVELS:
   critical  (P0) Immediate attention required
@@ -45,7 +45,7 @@ WORKFLOW:
 
 CONFIGURATION:
   Routing is configured in ~/gt/settings/escalation.json:
-  - routes: Map severity to action lists (bead, mail:mayor, email:human, sms:human)
+  - routes: Map severity to action lists (bead, mail:overseer, email:human, sms:human)
   - contacts: Human email/SMS for external notifications
   - stale_threshold: When unacked escalations are re-escalated (default: 4h)
   - max_reescalations: How many times to bump severity (default: 2)
@@ -53,7 +53,7 @@ CONFIGURATION:
 Examples:
   gt escalate "Build failing" --severity critical --reason "CI blocked"
   gt escalate "Need API credentials" --severity high --source "plugin:rebuild-gt"
-  gt escalate "Deacon await-signal timeout" --severity medium --source deacon --fingerprint deacon:await-signal:hq-deacon
+  gt escalate "Supervisor await-signal timeout" --severity medium --source supervisor --fingerprint supervisor:await-signal:hq-supervisor
   gt escalate "Code review requested" --reason "PR #123 ready"
   gt escalate list                          # Show open escalations
   gt escalate ack hq-abc123                 # Acknowledge
@@ -142,7 +142,7 @@ func init() {
 	// Main escalate command flags
 	escalateCmd.Flags().StringVarP(&escalateSeverity, "severity", "s", "medium", "Severity level: critical, high, medium, low")
 	escalateCmd.Flags().StringVarP(&escalateReason, "reason", "r", "", "Detailed reason for escalation")
-	escalateCmd.Flags().StringVar(&escalateSource, "source", "", "Source identifier (e.g., plugin:rebuild-gt, patrol:deacon)")
+	escalateCmd.Flags().StringVar(&escalateSource, "source", "", "Source identifier (e.g., plugin:rebuild-gt, patrol:supervisor)")
 	escalateCmd.Flags().StringVar(&escalateRelatedBead, "related", "", "Related bead ID (task, bug, etc.)")
 	escalateCmd.Flags().StringVar(&escalateFingerprint, "fingerprint", "", "Stable duplicate-suppression key for repeated alerts")
 	escalateCmd.Flags().BoolVar(&escalateJSON, "json", false, "Output as JSON")

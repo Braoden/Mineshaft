@@ -989,8 +989,8 @@ func TestLoadRigAgentRegistry(t *testing.T) {
 		if info.HooksDir != ".opencode/plugins" {
 			t.Errorf("expected opencode HooksDir to inherit '.opencode/plugins', got %q", info.HooksDir)
 		}
-		if info.HooksSettingsFile != "gastown.js" {
-			t.Errorf("expected opencode HooksSettingsFile to inherit 'gastown.js', got %q", info.HooksSettingsFile)
+		if info.HooksSettingsFile != "excavation.js" {
+			t.Errorf("expected opencode HooksSettingsFile to inherit 'excavation.js', got %q", info.HooksSettingsFile)
 		}
 		if len(info.ProcessNames) == 0 {
 			t.Errorf("expected opencode ProcessNames to remain populated after partial override")
@@ -1229,9 +1229,9 @@ func TestPiAgentPreset(t *testing.T) {
 		t.Errorf("pi command = %q, want pi", info.Command)
 	}
 
-	// Pi preset includes -e flag to load gastown hooks extension
+	// Pi preset includes -e flag to load excavation hooks extension
 	if len(info.Args) != 2 || info.Args[0] != "-e" {
-		t.Errorf("pi args = %v, want [-e .pi/extensions/gastown-hooks.js]", info.Args)
+		t.Errorf("pi args = %v, want [-e .pi/extensions/excavation-hooks.js]", info.Args)
 	}
 
 	if len(info.ProcessNames) != 3 {
@@ -1310,8 +1310,8 @@ func TestCopilotProviderDefaults(t *testing.T) {
 	}
 
 	file := defaultHooksFile("copilot")
-	if file != "gastown.json" {
-		t.Errorf("defaultHooksFile(copilot) = %q, want gastown.json", file)
+	if file != "excavation.json" {
+		t.Errorf("defaultHooksFile(copilot) = %q, want excavation.json", file)
 	}
 
 	names := defaultProcessNames("copilot", "copilot")

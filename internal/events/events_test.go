@@ -5,12 +5,12 @@ import (
 )
 
 func TestSlingPayload(t *testing.T) {
-	p := SlingPayload("gt-123", "gastown")
+	p := SlingPayload("gt-123", "excavation")
 	if p["bead"] != "gt-123" {
 		t.Errorf("bead = %v, want gt-123", p["bead"])
 	}
-	if p["target"] != "gastown" {
-		t.Errorf("target = %v, want gastown", p["target"])
+	if p["target"] != "excavation" {
+		t.Errorf("target = %v, want excavation", p["target"])
 	}
 }
 
@@ -52,19 +52,19 @@ func TestHandoffPayload_NoSubject(t *testing.T) {
 }
 
 func TestDonePayload(t *testing.T) {
-	p := DonePayload("gt-100", "polecat/alpha")
+	p := DonePayload("gt-100", "miner/alpha")
 	if p["bead"] != "gt-100" {
 		t.Errorf("bead = %v, want gt-100", p["bead"])
 	}
-	if p["branch"] != "polecat/alpha" {
-		t.Errorf("branch = %v, want polecat/alpha", p["branch"])
+	if p["branch"] != "miner/alpha" {
+		t.Errorf("branch = %v, want miner/alpha", p["branch"])
 	}
 }
 
 func TestMailPayload(t *testing.T) {
-	p := MailPayload("mayor/", "status update")
-	if p["to"] != "mayor/" {
-		t.Errorf("to = %v, want mayor/", p["to"])
+	p := MailPayload("overseer/", "status update")
+	if p["to"] != "overseer/" {
+		t.Errorf("to = %v, want overseer/", p["to"])
 	}
 	if p["subject"] != "status update" {
 		t.Errorf("subject = %v, want 'status update'", p["subject"])
@@ -72,20 +72,20 @@ func TestMailPayload(t *testing.T) {
 }
 
 func TestSpawnPayload(t *testing.T) {
-	p := SpawnPayload("gastown", "alpha")
-	if p["rig"] != "gastown" {
-		t.Errorf("rig = %v, want gastown", p["rig"])
+	p := SpawnPayload("excavation", "alpha")
+	if p["rig"] != "excavation" {
+		t.Errorf("rig = %v, want excavation", p["rig"])
 	}
-	if p["polecat"] != "alpha" {
-		t.Errorf("polecat = %v, want alpha", p["polecat"])
+	if p["miner"] != "alpha" {
+		t.Errorf("miner = %v, want alpha", p["miner"])
 	}
 }
 
 func TestBootPayload(t *testing.T) {
 	agents := []string{"witness", "refinery"}
-	p := BootPayload("gastown", agents)
-	if p["rig"] != "gastown" {
-		t.Errorf("rig = %v, want gastown", p["rig"])
+	p := BootPayload("excavation", agents)
+	if p["rig"] != "excavation" {
+		t.Errorf("rig = %v, want excavation", p["rig"])
 	}
 	gotAgents, ok := p["agents"].([]string)
 	if !ok {
@@ -97,7 +97,7 @@ func TestBootPayload(t *testing.T) {
 }
 
 func TestMergePayload_WithReason(t *testing.T) {
-	p := MergePayload("mr-1", "alpha", "polecat/alpha", "conflict")
+	p := MergePayload("mr-1", "alpha", "miner/alpha", "conflict")
 	if p["mr"] != "mr-1" {
 		t.Errorf("mr = %v, want mr-1", p["mr"])
 	}
@@ -107,19 +107,19 @@ func TestMergePayload_WithReason(t *testing.T) {
 }
 
 func TestMergePayload_NoReason(t *testing.T) {
-	p := MergePayload("mr-2", "beta", "polecat/beta", "")
+	p := MergePayload("mr-2", "beta", "miner/beta", "")
 	if _, ok := p["reason"]; ok {
 		t.Error("expected no reason key when empty")
 	}
 }
 
 func TestPatrolPayload_WithMessage(t *testing.T) {
-	p := PatrolPayload("gastown", 3, "all healthy")
-	if p["rig"] != "gastown" {
-		t.Errorf("rig = %v, want gastown", p["rig"])
+	p := PatrolPayload("excavation", 3, "all healthy")
+	if p["rig"] != "excavation" {
+		t.Errorf("rig = %v, want excavation", p["rig"])
 	}
-	if p["polecat_count"] != 3 {
-		t.Errorf("polecat_count = %v, want 3", p["polecat_count"])
+	if p["miner_count"] != 3 {
+		t.Errorf("miner_count = %v, want 3", p["miner_count"])
 	}
 	if p["message"] != "all healthy" {
 		t.Errorf("message = %v, want 'all healthy'", p["message"])
@@ -127,30 +127,30 @@ func TestPatrolPayload_WithMessage(t *testing.T) {
 }
 
 func TestPatrolPayload_NoMessage(t *testing.T) {
-	p := PatrolPayload("gastown", 0, "")
+	p := PatrolPayload("excavation", 0, "")
 	if _, ok := p["message"]; ok {
 		t.Error("expected no message key when empty")
 	}
 }
 
-func TestPolecatCheckPayload_WithIssue(t *testing.T) {
-	p := PolecatCheckPayload("gastown", "alpha", "working", "gt-123")
+func TestMinerCheckPayload_WithIssue(t *testing.T) {
+	p := MinerCheckPayload("excavation", "alpha", "working", "gt-123")
 	if p["issue"] != "gt-123" {
 		t.Errorf("issue = %v, want gt-123", p["issue"])
 	}
 }
 
-func TestPolecatCheckPayload_NoIssue(t *testing.T) {
-	p := PolecatCheckPayload("gastown", "alpha", "working", "")
+func TestMinerCheckPayload_NoIssue(t *testing.T) {
+	p := MinerCheckPayload("excavation", "alpha", "working", "")
 	if _, ok := p["issue"]; ok {
 		t.Error("expected no issue key when empty")
 	}
 }
 
 func TestNudgePayload(t *testing.T) {
-	p := NudgePayload("gastown", "alpha", "stuck")
-	if p["rig"] != "gastown" {
-		t.Errorf("rig = %v, want gastown", p["rig"])
+	p := NudgePayload("excavation", "alpha", "stuck")
+	if p["rig"] != "excavation" {
+		t.Errorf("rig = %v, want excavation", p["rig"])
 	}
 	if p["target"] != "alpha" {
 		t.Errorf("target = %v, want alpha", p["target"])
@@ -161,9 +161,9 @@ func TestNudgePayload(t *testing.T) {
 }
 
 func TestEscalationPayload(t *testing.T) {
-	p := EscalationPayload("gastown", "alpha", "mayor", "unresponsive")
-	if p["to"] != "mayor" {
-		t.Errorf("to = %v, want mayor", p["to"])
+	p := EscalationPayload("excavation", "alpha", "overseer", "unresponsive")
+	if p["to"] != "overseer" {
+		t.Errorf("to = %v, want overseer", p["to"])
 	}
 	if p["reason"] != "unresponsive" {
 		t.Errorf("reason = %v, want unresponsive", p["reason"])
@@ -171,9 +171,9 @@ func TestEscalationPayload(t *testing.T) {
 }
 
 func TestKillPayload(t *testing.T) {
-	p := KillPayload("gastown", "alpha", "zombie")
-	if p["rig"] != "gastown" {
-		t.Errorf("rig = %v, want gastown", p["rig"])
+	p := KillPayload("excavation", "alpha", "zombie")
+	if p["rig"] != "excavation" {
+		t.Errorf("rig = %v, want excavation", p["rig"])
 	}
 	if p["target"] != "alpha" {
 		t.Errorf("target = %v, want alpha", p["target"])
@@ -184,7 +184,7 @@ func TestKillPayload(t *testing.T) {
 }
 
 func TestHaltPayload(t *testing.T) {
-	services := []string{"witness", "refinery", "deacon"}
+	services := []string{"witness", "refinery", "supervisor"}
 	p := HaltPayload(services)
 	gotServices, ok := p["services"].([]string)
 	if !ok {
@@ -196,11 +196,11 @@ func TestHaltPayload(t *testing.T) {
 }
 
 func TestSessionDeathPayload(t *testing.T) {
-	p := SessionDeathPayload("gt-gastown-alpha", "gastown/polecats/alpha", "zombie cleanup", "daemon")
-	if p["session"] != "gt-gastown-alpha" {
-		t.Errorf("session = %v, want gt-gastown-alpha", p["session"])
+	p := SessionDeathPayload("gt-excavation-alpha", "excavation/miners/alpha", "zombie cleanup", "daemon")
+	if p["session"] != "gt-excavation-alpha" {
+		t.Errorf("session = %v, want gt-excavation-alpha", p["session"])
 	}
-	if p["agent"] != "gastown/polecats/alpha" {
+	if p["agent"] != "excavation/miners/alpha" {
 		t.Errorf("agent = %v", p["agent"])
 	}
 	if p["reason"] != "zombie cleanup" {
@@ -233,11 +233,11 @@ func TestMassDeathPayload_NoCause(t *testing.T) {
 }
 
 func TestSessionPayload_Full(t *testing.T) {
-	p := SessionPayload("uuid-123", "gastown/crew/tester", "fixing bugs", "/some/dir")
+	p := SessionPayload("uuid-123", "excavation/crew/tester", "fixing bugs", "/some/dir")
 	if p["session_id"] != "uuid-123" {
 		t.Errorf("session_id = %v", p["session_id"])
 	}
-	if p["role"] != "gastown/crew/tester" {
+	if p["role"] != "excavation/crew/tester" {
 		t.Errorf("role = %v", p["role"])
 	}
 	if p["topic"] != "fixing bugs" {
@@ -249,7 +249,7 @@ func TestSessionPayload_Full(t *testing.T) {
 }
 
 func TestSessionPayload_Minimal(t *testing.T) {
-	p := SessionPayload("uuid-456", "deacon", "", "")
+	p := SessionPayload("uuid-456", "supervisor", "", "")
 	if _, ok := p["topic"]; ok {
 		t.Error("expected no topic key when empty")
 	}

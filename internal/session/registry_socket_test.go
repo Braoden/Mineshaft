@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 // TestInitRegistry_SocketFromTownName verifies GT_TMUX_SOCKET socket selection:
@@ -51,7 +51,7 @@ func TestInitRegistry_SocketFromTownName(t *testing.T) {
 		{
 			name:        "auto → sanitized town name with caps",
 			gtTmuxSocket: "auto",
-			townDir:     "GasTown",
+			townDir:     "Excavation",
 		},
 	}
 

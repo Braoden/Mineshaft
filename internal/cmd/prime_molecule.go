@@ -8,15 +8,15 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/cli"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/deacon"
-	"github.com/steveyegge/gastown/internal/formula"
-	"github.com/steveyegge/gastown/internal/refinery"
-	"github.com/steveyegge/gastown/internal/rig"
-	"github.com/steveyegge/gastown/internal/style"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/cli"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/supervisor"
+	"github.com/steveyegge/excavation/internal/formula"
+	"github.com/steveyegge/excavation/internal/refinery"
+	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/excavation/internal/style"
 )
 
 // MoleculeCurrentOutput represents the JSON output of bd mol current.
@@ -149,7 +149,7 @@ func showFormulaSteps(formulaName, label, townRoot, rigName string, extraVars ..
 }
 
 // showFormulaStepsFull renders formula steps with full descriptions.
-// Used for polecat work formulas where step details are the primary instructions.
+// Used for miner work formulas where step details are the primary instructions.
 // townRoot and rigName are used to load formula overlays (operator customizations).
 // extraVars is an optional list of "key=value" overrides substituted into step descriptions.
 func showFormulaStepsFull(formulaName, townRoot, rigName string, extraVars ...[]string) {
@@ -286,14 +286,14 @@ func truncateDescription(desc string, maxLen int) string {
 
 // outputMoleculeContext checks if the agent is working on a molecule step and shows progress.
 func outputMoleculeContext(ctx RoleContext) {
-	// Applies to polecats, crew workers, deacon, witness, and refinery
-	if ctx.Role != RolePolecat && ctx.Role != RoleCrew && ctx.Role != RoleDeacon && ctx.Role != RoleWitness && ctx.Role != RoleRefinery {
+	// Applies to miners, crew workers, supervisor, witness, and refinery
+	if ctx.Role != RoleMiner && ctx.Role != RoleCrew && ctx.Role != RoleSupervisor && ctx.Role != RoleWitness && ctx.Role != RoleRefinery {
 		return
 	}
 
-	// For Deacon, use special patrol molecule handling
-	if ctx.Role == RoleDeacon {
-		outputDeaconPatrolContext(ctx)
+	// For Supervisor, use special patrol molecule handling
+	if ctx.Role == RoleSupervisor {
+		outputSupervisorPatrolContext(ctx)
 		return
 	}
 
@@ -309,36 +309,36 @@ func outputMoleculeContext(ctx RoleContext) {
 		return
 	}
 
-	// For polecats with root-only wisps, formula steps are shown inline
+	// For miners with root-only wisps, formula steps are shown inline
 	// in outputMoleculeWorkflow() via the attached_formula field.
 	// No child-based tracking needed.
 }
 
-// outputDeaconPatrolContext shows patrol molecule status for the Deacon.
-// Deacon uses wisps (Wisp:true issues in main .beads/) for patrol cycles.
-// Deacon is a town-level role, so it uses town root beads (not rig beads).
-func outputDeaconPatrolContext(ctx RoleContext) {
-	// Check if Deacon is paused - if so, output PAUSED message and skip patrol context
-	paused, state, err := deacon.IsPaused(ctx.TownRoot)
+// outputSupervisorPatrolContext shows patrol molecule status for the Supervisor.
+// Supervisor uses wisps (Wisp:true issues in main .beads/) for patrol cycles.
+// Supervisor is a town-level role, so it uses town root beads (not rig beads).
+func outputSupervisorPatrolContext(ctx RoleContext) {
+	// Check if Supervisor is paused - if so, output PAUSED message and skip patrol context
+	paused, state, err := supervisor.IsPaused(ctx.TownRoot)
 	if err == nil && paused {
-		outputDeaconPausedMessage(state)
+		outputSupervisorPausedMessage(state)
 		return
 	}
 
 	cfg := PatrolConfig{
-		RoleName:      "deacon",
-		PatrolMolName: constants.MolDeaconPatrol,
+		RoleName:      "supervisor",
+		PatrolMolName: constants.MolSupervisorPatrol,
 		BeadsDir:      ctx.TownRoot, // Town-level role uses town root beads
-		Assignee:      "deacon",
+		Assignee:      "supervisor",
 		HeaderEmoji:   "🔄",
 		HeaderTitle:   "Patrol Status (Wisp-based)",
 		WorkLoopSteps: []string{
 			"Work through each patrol step in sequence (see checklist below)",
-			"At cycle end:\n   - If context LOW:\n     * Report and loop: `" + cli.Name() + " patrol report --summary \"<brief summary of observations>\"`\n     * This closes the current patrol and starts a new cycle\n   - If context HIGH:\n     * Send handoff: `" + cli.Name() + " handoff -s \"Deacon patrol\" -m \"<observations>\"`\n     * Exit cleanly (daemon respawns fresh session)",
+			"At cycle end:\n   - If context LOW:\n     * Report and loop: `" + cli.Name() + " patrol report --summary \"<brief summary of observations>\"`\n     * This closes the current patrol and starts a new cycle\n   - If context HIGH:\n     * Send handoff: `" + cli.Name() + " handoff -s \"Supervisor patrol\" -m \"<observations>\"`\n     * Exit cleanly (daemon respawns fresh session)",
 		},
 	}
 	outputPatrolContext(cfg)
-	showFormulaSteps(constants.MolDeaconPatrol, "Patrol Steps", ctx.TownRoot, ctx.Rig)
+	showFormulaSteps(constants.MolSupervisorPatrol, "Patrol Steps", ctx.TownRoot, ctx.Rig)
 }
 
 // outputWitnessPatrolContext shows patrol molecule status for the Witness.

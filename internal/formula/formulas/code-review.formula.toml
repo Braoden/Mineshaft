@@ -1,6 +1,6 @@
-# Code Review Convoy Formula
+# Code Review Minecart Formula
 #
-# A convoy-style formula that spawns multiple polecats in parallel,
+# A minecart-style formula that spawns multiple miners in parallel,
 # each focusing on a different review aspect. Results are collected
 # and synthesized into a unified review.
 #
@@ -36,13 +36,13 @@ collected and synthesized into a prioritized, actionable review.
 - **custom**: Select specific legs via --legs flag
 
 ## Execution Model
-1. Each leg spawns as a separate polecat
-2. Polecats work in parallel
+1. Each leg spawns as a separate miner
+2. Miners work in parallel
 3. Each writes findings to their designated output
 4. Synthesis step combines all findings into unified review
 """
 formula = "code-review"
-type = "convoy"
+type = "minecart"
 version = 1
 
 # Input variables - provided at runtime
@@ -68,7 +68,7 @@ required_unless = ["pr", "files"]
 base = """
 # Code Review Assignment
 
-You are a specialized code reviewer participating in a convoy review.
+You are a specialized code reviewer participating in a minecart review.
 
 ## Context
 - **Formula**: {{.formula_name}}
@@ -131,7 +131,7 @@ directory = ".reviews/{{.review_id}}"
 leg_pattern = "{{.leg.id}}-findings.md"
 synthesis = "review-summary.md"
 
-# Leg definitions - each spawns a parallel polecat
+# Leg definitions - each spawns a parallel miner
 [[legs]]
 id = "correctness"
 title = "Correctness Review"

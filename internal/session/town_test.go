@@ -11,8 +11,8 @@ func TestTownSessions(t *testing.T) {
 		t.Errorf("TownSessions() returned %d sessions, want 3", len(sessions))
 	}
 
-	// Verify order is correct (Mayor, Boot, Deacon)
-	expectedOrder := []string{"Mayor", "Boot", "Deacon"}
+	// Verify order is correct (Overseer, Boot, Supervisor)
+	expectedOrder := []string{"Overseer", "Boot", "Supervisor"}
 	for i, s := range sessions {
 		if s.Name != expectedOrder[i] {
 			t.Errorf("TownSessions()[%d].Name = %q, want %q", i, s.Name, expectedOrder[i])
@@ -57,7 +57,7 @@ func TestTownSession_CanBeCreated(t *testing.T) {
 		name      string
 		sessionID string
 	}{
-		{"Mayor", "hq-mayor"},
+		{"Overseer", "hq-overseer"},
 		{"Boot", "hq-boot"},
 		{"Custom", "custom-session"},
 	}
@@ -77,17 +77,17 @@ func TestTownSession_CanBeCreated(t *testing.T) {
 }
 
 func TestTownSession_ShutdownOrder(t *testing.T) {
-	// Verify that shutdown order is Mayor -> Boot -> Deacon
-	// This is critical because Boot monitors Deacon
+	// Verify that shutdown order is Overseer -> Boot -> Supervisor
+	// This is critical because Boot monitors Supervisor
 	sessions := TownSessions()
 
-	if sessions[0].Name != "Mayor" {
-		t.Errorf("First session should be Mayor, got %q", sessions[0].Name)
+	if sessions[0].Name != "Overseer" {
+		t.Errorf("First session should be Overseer, got %q", sessions[0].Name)
 	}
 	if sessions[1].Name != "Boot" {
 		t.Errorf("Second session should be Boot, got %q", sessions[1].Name)
 	}
-	if sessions[2].Name != "Deacon" {
-		t.Errorf("Third session should be Deacon, got %q", sessions[2].Name)
+	if sessions[2].Name != "Supervisor" {
+		t.Errorf("Third session should be Supervisor, got %q", sessions[2].Name)
 	}
 }

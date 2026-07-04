@@ -99,7 +99,7 @@ func TestRestartTracker_RecordPause_DoesNotEscalate(t *testing.T) {
 		PauseBackoff:      45 * time.Second,
 	})
 
-	const id = "deacon"
+	const id = "supervisor"
 
 	// Many pauses in a row should not escalate or trigger crash loop.
 	for i := 0; i < 10; i++ {
@@ -142,7 +142,7 @@ func TestRestartTracker_RecordRestart_StillEscalates(t *testing.T) {
 		PauseBackoff:      60 * time.Second,
 	})
 
-	const id = "deacon"
+	const id = "supervisor"
 	for i := 0; i < 3; i++ {
 		rt.RecordRestart(id)
 	}

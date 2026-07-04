@@ -500,9 +500,9 @@ func TestIntegration_PropulsionNotificationFormat(t *testing.T) {
 	p.sessionMux.Unlock()
 
 	propulsionParams := map[string]any{
-		"role":    "polecat",
-		"rig":     "gastown",
-		"message": "Polecat nux checking in",
+		"role":    "miner",
+		"rig":     "excavation",
+		"message": "Miner nux checking in",
 	}
 
 	go func() {
@@ -530,8 +530,8 @@ func TestIntegration_PropulsionNotificationFormat(t *testing.T) {
 	if params["sessionId"] != "test-session-propulsion" {
 		t.Errorf("expected sessionId test-session-propulsion, got %v", params["sessionId"])
 	}
-	if params["role"] != "polecat" {
-		t.Errorf("expected role polecat, got %v", params["role"])
+	if params["role"] != "miner" {
+		t.Errorf("expected role miner, got %v", params["role"])
 	}
 }
 

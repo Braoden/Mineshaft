@@ -95,7 +95,7 @@ for DB in "${PROD_DBS[@]}"; do
 
   log "Exporting $DB..."
 
-  # Skip databases without an issues table (e.g. gastown config DB)
+  # Skip databases without an issues table (e.g. excavation config DB)
   if ! dolt_query "$DB" "SHOW TABLES LIKE 'issues'" 2>/dev/null | grep -q 'issues'; then
     log "  $DB: skipped (no issues table)"
     continue
@@ -154,7 +154,7 @@ if ! $SKIP_GIT && [[ -d "$BACKUP_REPO/.git" ]]; then
   else
     git add *.jsonl 2>/dev/null || true
     git commit -m "Archive snapshot $(date +%Y-%m-%d-%H%M)" \
-      --author="Gas Town Archive <archive@gastown.local>" 2>/dev/null || true
+      --author="Excavation Site Archive <archive@excavation.local>" 2>/dev/null || true
 
     if git remote get-url origin > /dev/null 2>&1; then
       if git push origin main 2>/dev/null; then

@@ -3,13 +3,13 @@ package cmd
 import (
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/session"
+	"github.com/steveyegge/excavation/internal/session"
 )
 
 func setupAssigneeTestRegistry(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "gastown")
+	reg.Register("gt", "excavation")
 	reg.Register("bd", "beads")
 	reg.Register("st", "schema_tools")
 	old := session.DefaultRegistry()
@@ -26,7 +26,7 @@ func TestAssigneeToSessionName(t *testing.T) {
 		wantPersistent bool
 	}{
 		{
-			name:           "two part polecat",
+			name:           "two part miner",
 			assignee:       "schema_tools/nux",
 			wantSession:    "st-nux",
 			wantPersistent: false,
@@ -38,8 +38,8 @@ func TestAssigneeToSessionName(t *testing.T) {
 			wantPersistent: true,
 		},
 		{
-			name:           "three part polecats",
-			assignee:       "schema_tools/polecats/nux",
+			name:           "three part miners",
+			assignee:       "schema_tools/miners/nux",
 			wantSession:    "st-nux",
 			wantPersistent: false,
 		},

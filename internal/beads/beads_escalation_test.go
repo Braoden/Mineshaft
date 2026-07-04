@@ -28,16 +28,16 @@ func TestFormatEscalationDescription(t *testing.T) {
 			fields: &EscalationFields{
 				Severity:    "high",
 				Reason:      "Build failed 3 times",
-				Source:      "patrol:deacon",
-				EscalatedBy: "gastown/deacon",
+				Source:      "patrol:supervisor",
+				EscalatedBy: "excavation/supervisor",
 				EscalatedAt: "2024-01-15T10:00:00Z",
 			},
 			want: []string{
 				"Build failure",
 				"severity: high",
 				"reason: Build failed 3 times",
-				"source: patrol:deacon",
-				"escalated_by: gastown/deacon",
+				"source: patrol:supervisor",
+				"escalated_by: excavation/supervisor",
 				"escalated_at: 2024-01-15T10:00:00Z",
 			},
 		},
@@ -47,14 +47,14 @@ func TestFormatEscalationDescription(t *testing.T) {
 			fields: &EscalationFields{
 				Severity:    "medium",
 				Reason:      "Agent not responding",
-				EscalatedBy: "gastown/witness",
+				EscalatedBy: "excavation/witness",
 				EscalatedAt: "2024-01-15T10:00:00Z",
-				AckedBy:     "gastown/crew/joe",
+				AckedBy:     "excavation/crew/joe",
 				AckedAt:     "2024-01-15T10:05:00Z",
 			},
 			want: []string{
 				"severity: medium",
-				"acked_by: gastown/crew/joe",
+				"acked_by: excavation/crew/joe",
 				"acked_at: 2024-01-15T10:05:00Z",
 			},
 		},
@@ -64,7 +64,7 @@ func TestFormatEscalationDescription(t *testing.T) {
 			fields: &EscalationFields{
 				Severity:     "critical",
 				Reason:       "Disk >95%",
-				EscalatedBy:  "gastown/deacon",
+				EscalatedBy:  "excavation/supervisor",
 				EscalatedAt:  "2024-01-15T10:00:00Z",
 				ClosedBy:     "human",
 				ClosedReason: "Cleaned up temp files",
@@ -103,13 +103,13 @@ func TestFormatEscalationDescription(t *testing.T) {
 				OriginalSeverity:  "low",
 				ReescalationCount: 2,
 				LastReescalatedAt: "2024-01-15T10:00:00Z",
-				LastReescalatedBy: "deacon",
+				LastReescalatedBy: "supervisor",
 			},
 			want: []string{
 				"original_severity: low",
 				"reescalation_count: 2",
 				"last_reescalated_at: 2024-01-15T10:00:00Z",
-				"last_reescalated_by: deacon",
+				"last_reescalated_by: supervisor",
 			},
 		},
 		{
@@ -118,7 +118,7 @@ func TestFormatEscalationDescription(t *testing.T) {
 			fields: &EscalationFields{
 				Severity:    "medium",
 				Reason:      "control-plane timeout",
-				EscalatedBy: "deacon",
+				EscalatedBy: "supervisor",
 				EscalatedAt: "2024-01-15T10:00:00Z",
 				Fingerprint: "escalation-fp:abc123def456",
 			},
@@ -162,10 +162,10 @@ func TestParseEscalationFields(t *testing.T) {
 
 severity: high
 reason: Build failed 3 times
-source: patrol:deacon
-escalated_by: gastown/deacon
+source: patrol:supervisor
+escalated_by: excavation/supervisor
 escalated_at: 2024-01-15T10:00:00Z
-acked_by: gastown/crew/joe
+acked_by: excavation/crew/joe
 acked_at: 2024-01-15T10:05:00Z
 closed_by: null
 closed_reason: null
@@ -173,15 +173,15 @@ related_bead: gt-abc123
 original_severity: medium
 reescalation_count: 1
 last_reescalated_at: 2024-01-15T09:30:00Z
-last_reescalated_by: deacon
+last_reescalated_by: supervisor
 fingerprint: escalation-fp:abc123def456`,
 			want: &EscalationFields{
 				Severity:          "high",
 				Reason:            "Build failed 3 times",
-				Source:            "patrol:deacon",
-				EscalatedBy:       "gastown/deacon",
+				Source:            "patrol:supervisor",
+				EscalatedBy:       "excavation/supervisor",
 				EscalatedAt:       "2024-01-15T10:00:00Z",
-				AckedBy:           "gastown/crew/joe",
+				AckedBy:           "excavation/crew/joe",
 				AckedAt:           "2024-01-15T10:05:00Z",
 				ClosedBy:          "",
 				ClosedReason:      "",
@@ -189,7 +189,7 @@ fingerprint: escalation-fp:abc123def456`,
 				OriginalSeverity:  "medium",
 				ReescalationCount: 1,
 				LastReescalatedAt: "2024-01-15T09:30:00Z",
-				LastReescalatedBy: "deacon",
+				LastReescalatedBy: "supervisor",
 				Fingerprint:       "escalation-fp:abc123def456",
 			},
 		},
@@ -269,15 +269,15 @@ func TestEscalationFieldsRoundTrip(t *testing.T) {
 		Severity:          "high",
 		Reason:            "Agent stuck for 1h",
 		Source:            "patrol:witness",
-		EscalatedBy:       "gastown/witness",
+		EscalatedBy:       "excavation/witness",
 		EscalatedAt:       "2024-06-15T12:00:00Z",
-		AckedBy:           "gastown/crew/joe",
+		AckedBy:           "excavation/crew/joe",
 		AckedAt:           "2024-06-15T12:05:00Z",
 		RelatedBead:       "gt-stuck123",
 		OriginalSeverity:  "medium",
 		ReescalationCount: 1,
 		LastReescalatedAt: "2024-06-15T11:30:00Z",
-		LastReescalatedBy: "deacon",
+		LastReescalatedBy: "supervisor",
 		Fingerprint:       "escalation-fp:feedface1234",
 	}
 

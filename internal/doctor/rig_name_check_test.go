@@ -27,17 +27,17 @@ func setupRigNameTestDir(t *testing.T, rigName string, rigConfig *rigConfigLocal
 		}
 	}
 
-	// Create mayor/rigs.json if provided
+	// Create overseer/rigs.json if provided
 	if rigsJSON != nil {
-		mayorDir := filepath.Join(townRoot, "mayor")
-		if err := os.MkdirAll(mayorDir, 0755); err != nil {
+		overseerDir := filepath.Join(townRoot, "overseer")
+		if err := os.MkdirAll(overseerDir, 0755); err != nil {
 			t.Fatal(err)
 		}
 		data, err := json.MarshalIndent(rigsJSON, "", "  ")
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err := os.WriteFile(filepath.Join(mayorDir, "rigs.json"), data, 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), data, 0644); err != nil {
 			t.Fatal(err)
 		}
 	}

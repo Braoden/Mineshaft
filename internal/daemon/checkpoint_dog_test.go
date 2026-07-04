@@ -106,48 +106,48 @@ func TestCheckpointDogEnabled(t *testing.T) {
 }
 
 func TestResolveCheckpointWorkDir_NestedLayout(t *testing.T) {
-	// New polecat layout: polecats/<name>/<rigName>/.git is the worktree.
+	// New miner layout: miners/<name>/<rigName>/.git is the worktree.
 	tmp := t.TempDir()
 	rig := "myrig"
-	polecat := "alice"
-	polecatsDir := filepath.Join(tmp, "polecats")
-	worktree := filepath.Join(polecatsDir, polecat, rig)
+	miner := "alice"
+	minersDir := filepath.Join(tmp, "miners")
+	worktree := filepath.Join(minersDir, miner, rig)
 	if err := os.MkdirAll(filepath.Join(worktree, ".git"), 0o755); err != nil {
 		t.Fatalf("setup: %v", err)
 	}
-	got := resolveCheckpointWorkDir(polecatsDir, polecat, rig)
+	got := resolveCheckpointWorkDir(minersDir, miner, rig)
 	if got != worktree {
 		t.Errorf("got %q, want %q", got, worktree)
 	}
 }
 
 func TestResolveCheckpointWorkDir_LegacyFlatLayout(t *testing.T) {
-	// Legacy layout: polecats/<name>/.git directly. polecat.Manager still
+	// Legacy layout: miners/<name>/.git directly. miner.Manager still
 	// recognizes this; checkpoint_dog must too rather than silently skip.
 	tmp := t.TempDir()
 	rig := "myrig"
-	polecat := "bob"
-	polecatsDir := filepath.Join(tmp, "polecats")
-	worktree := filepath.Join(polecatsDir, polecat)
+	miner := "bob"
+	minersDir := filepath.Join(tmp, "miners")
+	worktree := filepath.Join(minersDir, miner)
 	if err := os.MkdirAll(filepath.Join(worktree, ".git"), 0o755); err != nil {
 		t.Fatalf("setup: %v", err)
 	}
-	got := resolveCheckpointWorkDir(polecatsDir, polecat, rig)
+	got := resolveCheckpointWorkDir(minersDir, miner, rig)
 	if got != worktree {
 		t.Errorf("got %q, want %q (legacy flat layout)", got, worktree)
 	}
 }
 
 func TestResolveCheckpointWorkDir_NoGitNeitherLevel(t *testing.T) {
-	// Critical regression case: polecat container exists but has no .git
+	// Critical regression case: miner container exists but has no .git
 	// at either level. Function MUST return "" so the caller skips, NOT
 	// fall back to a parent dir (which would have the workspace's .git
 	// and cause the wrong-branch checkpoint bug this code prevents).
 	tmp := t.TempDir()
 	rig := "myrig"
-	polecat := "carol"
-	polecatsDir := filepath.Join(tmp, "polecats")
-	if err := os.MkdirAll(filepath.Join(polecatsDir, polecat, rig), 0o755); err != nil {
+	miner := "carol"
+	minersDir := filepath.Join(tmp, "miners")
+	if err := os.MkdirAll(filepath.Join(minersDir, miner, rig), 0o755); err != nil {
 		t.Fatalf("setup: %v", err)
 	}
 	// Simulate top-level workspace .git that git would walk up to find.
@@ -156,9 +156,9 @@ func TestResolveCheckpointWorkDir_NoGitNeitherLevel(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(tmp, ".git"), 0o755); err != nil {
 		t.Fatalf("setup parent .git: %v", err)
 	}
-	got := resolveCheckpointWorkDir(polecatsDir, polecat, rig)
+	got := resolveCheckpointWorkDir(minersDir, miner, rig)
 	if got != "" {
-		t.Errorf("got %q, want empty (skip — no polecat-level .git)", got)
+		t.Errorf("got %q, want empty (skip — no miner-level .git)", got)
 	}
 }
 
@@ -167,16 +167,16 @@ func TestResolveCheckpointWorkDir_PrefersNestedOverFlat(t *testing.T) {
 	// prefer the nested (newer) layout.
 	tmp := t.TempDir()
 	rig := "myrig"
-	polecat := "dave"
-	polecatsDir := filepath.Join(tmp, "polecats")
-	flat := filepath.Join(polecatsDir, polecat)
+	miner := "dave"
+	minersDir := filepath.Join(tmp, "miners")
+	flat := filepath.Join(minersDir, miner)
 	nested := filepath.Join(flat, rig)
 	for _, d := range []string{flat, nested} {
 		if err := os.MkdirAll(filepath.Join(d, ".git"), 0o755); err != nil {
 			t.Fatalf("setup %s: %v", d, err)
 		}
 	}
-	got := resolveCheckpointWorkDir(polecatsDir, polecat, rig)
+	got := resolveCheckpointWorkDir(minersDir, miner, rig)
 	if got != nested {
 		t.Errorf("got %q, want nested %q", got, nested)
 	}
@@ -237,7 +237,7 @@ func TestCheckpointWorktreeExcludesNestedRuntimeArtifacts(t *testing.T) {
 	}
 
 	d := &Daemon{logger: log.New(io.Discard, "", 0)}
-	if !d.checkpointWorktree(workDir, "rig", "polecat") {
+	if !d.checkpointWorktree(workDir, "rig", "miner") {
 		t.Fatal("checkpointWorktree did not create a checkpoint commit")
 	}
 
@@ -273,7 +273,7 @@ func TestCheckpointWorktreeSkipsRuntimeOnlyNestedArtifacts(t *testing.T) {
 	}
 
 	d := &Daemon{logger: log.New(io.Discard, "", 0)}
-	if d.checkpointWorktree(workDir, "rig", "polecat") {
+	if d.checkpointWorktree(workDir, "rig", "miner") {
 		t.Fatal("checkpointWorktree created a checkpoint for runtime-only changes")
 	}
 	if after := mustRunGit(t, workDir, "rev-parse", "HEAD"); after != before {

@@ -14,17 +14,17 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/nudge"
-	"github.com/steveyegge/gastown/internal/rig"
-	"github.com/steveyegge/gastown/internal/runtime"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/util"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/nudge"
+	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/excavation/internal/runtime"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/util"
 )
 
 // Common errors
@@ -153,14 +153,14 @@ func (m *Manager) Start(foreground bool, agentOverride string) error {
 	// Background mode: spawn a Claude agent in a tmux session
 	// The Claude agent handles MR processing using git commands and beads
 
-	// Working directory is the refinery worktree (shares .git with mayor/polecats).
+	// Working directory is the refinery worktree (shares .git with overseer/miners).
 	// If the worktree is missing (pruned, deleted, or corrupted), auto-repair it
-	// from the shared bare repo (.repo.git) instead of falling back to mayor/rig.
-	// Falling back to mayor/rig causes the refinery to operate in the mayor's
-	// clone, which can interfere with mayor operations and confuse agents.
+	// from the shared bare repo (.repo.git) instead of falling back to overseer/rig.
+	// Falling back to overseer/rig causes the refinery to operate in the overseer's
+	// clone, which can interfere with overseer operations and confuse agents.
 	//
 	// Rigs using a standard .git clone (e.g. beads) never have a .repo.git bare
-	// repo, so the repair path is not applicable for them. Fall back to mayor/rig
+	// repo, so the repair path is not applicable for them. Fall back to overseer/rig
 	// silently in that case — the fallback is correct and the warning would be noise.
 	refineryRigDir := filepath.Join(m.rig.Path, "refinery", "rig")
 	if _, err := os.Stat(refineryRigDir); os.IsNotExist(err) {
@@ -170,12 +170,12 @@ func (m *Manager) Start(foreground bool, agentOverride string) error {
 		_, standardGitErr := os.Stat(standardGitPath)
 		if os.IsNotExist(bareErr) && standardGitErr == nil {
 			// Rig uses standard .git layout — worktree repair is not applicable.
-			// Fall back to mayor/rig silently; the fallback works correctly here.
-			refineryRigDir = filepath.Join(m.rig.Path, "mayor", "rig")
+			// Fall back to overseer/rig silently; the fallback works correctly here.
+			refineryRigDir = filepath.Join(m.rig.Path, "overseer", "rig")
 		} else if repairErr := m.repairRefineryWorktree(refineryRigDir); repairErr != nil {
-			// Repair failed — fall back to mayor/rig as last resort.
-			_, _ = fmt.Fprintf(m.output, "⚠ Could not repair refinery worktree: %v (falling back to mayor/rig)\n", repairErr)
-			refineryRigDir = filepath.Join(m.rig.Path, "mayor", "rig")
+			// Repair failed — fall back to overseer/rig as last resort.
+			_, _ = fmt.Fprintf(m.output, "⚠ Could not repair refinery worktree: %v (falling back to overseer/rig)\n", repairErr)
+			refineryRigDir = filepath.Join(m.rig.Path, "overseer", "rig")
 		}
 	}
 
@@ -184,7 +184,7 @@ func (m *Manager) Start(foreground bool, agentOverride string) error {
 
 	// Resolve CLAUDE_CONFIG_DIR from accounts.json so refinery sessions
 	// use the correct account. Mirrors the daemon restart path (lifecycle.go).
-	accountsPath := constants.MayorAccountsPath(townRoot)
+	accountsPath := constants.OverseerAccountsPath(townRoot)
 	runtimeConfigDir, _, _ := config.ResolveAccountConfigDir(accountsPath, "")
 	if runtimeConfigDir == "" {
 		runtimeConfigDir = os.Getenv("CLAUDE_CONFIG_DIR")
@@ -196,14 +196,14 @@ func (m *Manager) Start(foreground bool, agentOverride string) error {
 		return fmt.Errorf("ensuring runtime settings: %w", err)
 	}
 
-	// Ensure .gitignore has required Gas Town patterns
+	// Ensure .gitignore has required Excavation Site patterns
 	if err := rig.EnsureGitignorePatterns(refineryRigDir); err != nil {
 		style.PrintWarning("could not update refinery .gitignore: %v", err)
 	}
 
 	initialPrompt := session.BuildStartupPrompt(session.BeaconConfig{
 		Recipient: session.BeaconRecipient("refinery", "", m.rig.Name),
-		Sender:    "deacon",
+		Sender:    "supervisor",
 		Topic:     "patrol",
 	}, "Run `gt prime --hook` and begin patrol.")
 
@@ -241,14 +241,14 @@ func (m *Manager) Start(foreground bool, agentOverride string) error {
 
 	// Create session with command and env vars via -e flags so the initial
 	// shell — and Claude's subprocesses — inherit them from the start.
-	// See: https://github.com/anthropics/gastown/issues/280 (race condition fix)
+	// See: https://github.com/anthropics/excavation/issues/280 (race condition fix)
 	if err := t.NewSessionWithCommandAndEnv(sessionID, refineryRigDir, command, envVars); err != nil {
 		return fmt.Errorf("creating tmux session: %w", err)
 	}
 
 	// Apply theme (non-fatal: theming failure doesn't affect operation)
 	theme := tmux.ResolveSessionTheme(townRoot, m.rig.Name, "refinery", "")
-	_ = t.ConfigureGasTownSession(sessionID, theme, m.rig.Name, "refinery", "refinery")
+	_ = t.ConfigureExcavationSession(sessionID, theme, m.rig.Name, "refinery", "refinery")
 
 	// Accept startup dialogs (workspace trust + bypass permissions) if they appear.
 	// Must be before WaitForRuntimeReady to avoid race where dialog blocks prompt detection.
@@ -434,10 +434,10 @@ func (m *Manager) calculateIssueScore(issue *beads.Issue, now time.Time) float64
 	if fields != nil {
 		input.RetryCount = fields.RetryCount
 
-		// Parse convoy created at if available
-		if fields.ConvoyCreatedAt != "" {
-			if convoyTime := parseTime(fields.ConvoyCreatedAt); !convoyTime.IsZero() {
-				input.ConvoyCreatedAt = &convoyTime
+		// Parse minecart created at if available
+		if fields.MinecartCreatedAt != "" {
+			if minecartTime := parseTime(fields.MinecartCreatedAt); !minecartTime.IsZero() {
+				input.MinecartCreatedAt = &minecartTime
 			}
 		}
 	}
@@ -536,11 +536,11 @@ func (m *Manager) FindMR(idOrBranch string) (*MergeRequest, error) {
 		if item.MR.ID == idOrBranch {
 			return item.MR, nil
 		}
-		// Match by branch name (with or without polecat/ prefix)
+		// Match by branch name (with or without miner/ prefix)
 		if item.MR.Branch == idOrBranch {
 			return item.MR, nil
 		}
-		if constants.BranchPolecatPrefix+idOrBranch == item.MR.Branch {
+		if constants.BranchMinerPrefix+idOrBranch == item.MR.Branch {
 			return item.MR, nil
 		}
 		// Match by ID prefix (partial match for convenience)
@@ -651,7 +651,7 @@ func (m *Manager) PostMerge(idOrBranch string) (*PostMergeResult, error) {
 			closeReason = fmt.Sprintf("%s\ntarget_branch: %s\ncommit_sha: %s", closeReason, mr.TargetBranch, mr.MergeCommit)
 		}
 		if err := b.ForceCloseWithReason(closeReason, mr.IssueID); err != nil {
-			// Check if already closed (by polecat's gt done) — that's fine
+			// Check if already closed (by miner's gt done) — that's fine
 			if issue, showErr := b.Show(mr.IssueID); showErr == nil && beads.IssueStatus(issue.Status).IsTerminal() {
 				_, _ = fmt.Fprintf(m.output, "  %s source issue already closed: %s\n", style.Dim.Render("○"), mr.IssueID)
 				result.SourceIssueClosed = true
@@ -667,11 +667,11 @@ func (m *Manager) PostMerge(idOrBranch string) (*PostMergeResult, error) {
 	return result, nil
 }
 
-// notifyWorkerRejected sends a rejection notification to a polecat.
+// notifyWorkerRejected sends a rejection notification to a miner.
 func (m *Manager) notifyWorkerRejected(mr *MergeRequest, reason string) {
-	// Nudge polecat about rejection instead of sending permanent mail.
-	polecatName := strings.TrimPrefix(mr.Worker, "polecats/")
-	target := fmt.Sprintf("%s/%s", m.rig.Name, polecatName)
+	// Nudge miner about rejection instead of sending permanent mail.
+	minerName := strings.TrimPrefix(mr.Worker, "miners/")
+	target := fmt.Sprintf("%s/%s", m.rig.Name, minerName)
 	nudgeMsg := fmt.Sprintf("MR rejected: branch=%s issue=%s reason=%s — review feedback and resubmit with 'gt done'",
 		mr.Branch, mr.IssueID, reason)
 	nudgeCmd := exec.Command("gt", "nudge", target, nudgeMsg)

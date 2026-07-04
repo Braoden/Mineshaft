@@ -28,7 +28,7 @@ Resolution: Town and rig directives are concatenated (town first, rig last).
 Rig-level content gets the last word.
 
 Examples:
-  gt directive show polecat             # Show active polecat directive
+  gt directive show miner             # Show active miner directive
   gt directive show witness --rig sky   # Show witness directive for sky rig
   gt directive edit crew                # Edit crew directive (rig-level)
   gt directive list                     # List all directive files`,

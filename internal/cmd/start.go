@@ -12,22 +12,22 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/crew"
-	"github.com/steveyegge/gastown/internal/daemon"
-	"github.com/steveyegge/gastown/internal/deacon"
-	"github.com/steveyegge/gastown/internal/doltserver"
-	"github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/mayor"
-	"github.com/steveyegge/gastown/internal/polecat"
-	"github.com/steveyegge/gastown/internal/refinery"
-	"github.com/steveyegge/gastown/internal/rig"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/witness"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/crew"
+	"github.com/steveyegge/excavation/internal/daemon"
+	"github.com/steveyegge/excavation/internal/supervisor"
+	"github.com/steveyegge/excavation/internal/doltserver"
+	"github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/overseer"
+	"github.com/steveyegge/excavation/internal/miner"
+	"github.com/steveyegge/excavation/internal/refinery"
+	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/witness"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // defaultOrphanGraceSecs is the grace period (in seconds) between SIGTERM and SIGKILL
@@ -49,7 +49,7 @@ var (
 	shutdownAll                 bool
 	shutdownForce               bool
 	shutdownYes                 bool
-	shutdownPolecatsOnly        bool
+	shutdownMinersOnly        bool
 	shutdownNuclear             bool
 	shutdownCleanupOrphans      bool
 	shutdownCleanupOrphansGrace int
@@ -58,11 +58,11 @@ var (
 var startCmd = &cobra.Command{
 	Use:     "start [path]",
 	GroupID: GroupServices,
-	Short:   "Start Gas Town or a crew workspace",
-	Long: `Start Gas Town by launching the Deacon and Mayor.
+	Short:   "Start Excavation Site or a crew workspace",
+	Long: `Start Excavation Site by launching the Supervisor and Overseer.
 
-The Deacon is the health-check orchestrator that monitors Mayor and Witnesses.
-The Mayor is the global coordinator that dispatches work.
+The Supervisor is the health-check orchestrator that monitors Overseer and Witnesses.
+The Overseer is the global coordinator that dispatches work.
 
 By default, other agents (Witnesses, Refineries) are started lazily as needed.
 Use --all to start Witnesses and Refineries for all registered rigs immediately.
@@ -71,7 +71,7 @@ Crew shortcut:
   If a path like "rig/crew/name" is provided, starts that crew workspace.
   This is equivalent to 'gt start crew rig/name'.
 
-To stop Gas Town, use 'gt shutdown'.`,
+To stop Excavation Site, use 'gt shutdown'.`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runStart,
 }
@@ -79,29 +79,29 @@ To stop Gas Town, use 'gt shutdown'.`,
 var shutdownCmd = &cobra.Command{
 	Use:     "shutdown",
 	GroupID: GroupServices,
-	Short:   "Shutdown Gas Town with cleanup",
-	Long: `Shutdown Gas Town by stopping agents and cleaning up polecats.
+	Short:   "Shutdown Excavation Site with cleanup",
+	Long: `Shutdown Excavation Site by stopping agents and cleaning up miners.
 
 This is the "done for the day" command - it stops everything AND removes
-polecat worktrees/branches. For a reversible pause, use 'gt down' instead.
+miner worktrees/branches. For a reversible pause, use 'gt down' instead.
 
 Comparison:
   gt down      - Pause (stop processes, keep worktrees) - reversible
   gt shutdown  - Done (stop + cleanup worktrees) - permanent cleanup
 
-After killing sessions, polecats are cleaned up:
+After killing sessions, miners are cleaned up:
   - Worktrees are removed
-  - Polecat branches are deleted
-  - Polecats with uncommitted work are SKIPPED (protected)
+  - Miner branches are deleted
+  - Miners with uncommitted work are SKIPPED (protected)
 
 Shutdown levels (progressively more aggressive):
-  (default)       - Stop infrastructure + polecats + cleanup
+  (default)       - Stop infrastructure + miners + cleanup
   --all           - Also stop crew sessions
-  --polecats-only - Only stop polecats (leaves infrastructure running)
+  --miners-only - Only stop miners (leaves infrastructure running)
 
 Use --force or --yes to skip confirmation prompt.
 Use --graceful to allow agents time to save state before killing.
-Use --nuclear to force cleanup even if polecats have uncommitted work (DANGER).
+Use --nuclear to force cleanup even if miners have uncommitted work (DANGER).
 Use --cleanup-orphans to use a longer grace period for orphan cleanup (default 60s).
 Use --cleanup-orphans-grace-secs to set that grace period.
 
@@ -124,7 +124,7 @@ If not specified, the rig is inferred from the current directory.
 
 Examples:
   gt start crew joe                    # Start joe in current rig
-  gt start crew greenplace/joe            # Start joe in gastown rig
+  gt start crew greenplace/joe            # Start joe in excavation rig
   gt start crew joe --rig beads        # Start joe in beads rig`,
 	Args: cobra.ExactArgs(1),
 	RunE: runStartCrew,
@@ -133,7 +133,7 @@ Examples:
 func init() {
 	startCmd.Flags().BoolVarP(&startAll, "all", "a", false,
 		"Also start Witnesses and Refineries for all rigs")
-	startCmd.Flags().StringVar(&startAgentOverride, "agent", "", "Agent alias to run Mayor/Deacon with (overrides town default)")
+	startCmd.Flags().StringVar(&startAgentOverride, "agent", "", "Agent alias to run Overseer/Supervisor with (overrides town default)")
 	startCmd.Flags().StringVar(&startCostTier, "cost-tier", "", "Ephemeral cost tier for this session (standard/economy/budget)")
 
 	startCrewCmd.Flags().StringVar(&startCrewRig, "rig", "", "Rig to use")
@@ -151,10 +151,10 @@ func init() {
 		"Skip confirmation prompt (alias for --yes)")
 	shutdownCmd.Flags().BoolVarP(&shutdownYes, "yes", "y", false,
 		"Skip confirmation prompt")
-	shutdownCmd.Flags().BoolVar(&shutdownPolecatsOnly, "polecats-only", false,
-		"Only stop polecats (minimal shutdown)")
+	shutdownCmd.Flags().BoolVar(&shutdownMinersOnly, "miners-only", false,
+		"Only stop miners (minimal shutdown)")
 	shutdownCmd.Flags().BoolVar(&shutdownNuclear, "nuclear", false,
-		"Force cleanup even if polecats have uncommitted work (DANGER: may lose work)")
+		"Force cleanup even if miners have uncommitted work (DANGER: may lose work)")
 	shutdownCmd.Flags().BoolVar(&shutdownCleanupOrphans, "cleanup-orphans", false,
 		"Use longer grace period (--cleanup-orphans-grace-secs) for orphan cleanup instead of default 5s")
 	shutdownCmd.Flags().IntVar(&shutdownCleanupOrphansGrace, "cleanup-orphans-grace-secs", 60,
@@ -176,10 +176,10 @@ func runStart(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Verify we're in a Gas Town workspace
+	// Verify we're in a Excavation Site workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Apply ephemeral cost tier if specified
@@ -206,7 +206,7 @@ func runStart(cmd *cobra.Command, args []string) error {
 		fmt.Printf("  %s Cleaned up %d orphaned session(s)\n", style.Bold.Render("✓"), cleaned)
 	}
 
-	fmt.Printf("Starting Gas Town from %s\n\n", style.Dim.Render(townRoot))
+	fmt.Printf("Starting Excavation Site from %s\n\n", style.Dim.Render(townRoot))
 	fmt.Println("Starting all agents in parallel...")
 	fmt.Println()
 
@@ -250,7 +250,7 @@ func runStart(cmd *cobra.Command, args []string) error {
 	var mu sync.Mutex // Protects stdout
 	var coreErr error
 
-	// Start core agents (Mayor and Deacon) in background
+	// Start core agents (Overseer and Supervisor) in background
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -286,76 +286,76 @@ func runStart(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Println()
-	fmt.Printf("%s Gas Town is running\n", style.Bold.Render("✓"))
+	fmt.Printf("%s Excavation Site is running\n", style.Bold.Render("✓"))
 	fmt.Println()
-	fmt.Printf("  Attach to Mayor:  %s\n", style.Dim.Render("gt mayor attach"))
-	fmt.Printf("  Attach to Deacon: %s\n", style.Dim.Render("gt deacon attach"))
+	fmt.Printf("  Attach to Overseer:  %s\n", style.Dim.Render("gt overseer attach"))
+	fmt.Printf("  Attach to Supervisor: %s\n", style.Dim.Render("gt supervisor attach"))
 	fmt.Printf("  Check status:     %s\n", style.Dim.Render("gt status"))
 
 	return nil
 }
 
-// startCoreAgents starts Mayor and Deacon sessions in parallel using the Manager pattern.
+// startCoreAgents starts Overseer and Supervisor sessions in parallel using the Manager pattern.
 // The mutex is used to synchronize output with other parallel startup operations.
 func startCoreAgents(townRoot string, agentOverride string, mu *sync.Mutex) error {
 	var wg sync.WaitGroup
 	var firstErr error
 	var errMu sync.Mutex
 
-	// Start Mayor in goroutine
+	// Start Overseer in goroutine
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		mayorMgr := mayor.NewManager(townRoot)
-		if err := mayorMgr.Start(agentOverride); err != nil {
-			if errors.Is(err, mayor.ErrAlreadyRunning) {
+		overseerMgr := overseer.NewManager(townRoot)
+		if err := overseerMgr.Start(agentOverride); err != nil {
+			if errors.Is(err, overseer.ErrAlreadyRunning) {
 				mu.Lock()
-				fmt.Printf("  %s Mayor already running\n", style.Dim.Render("○"))
+				fmt.Printf("  %s Overseer already running\n", style.Dim.Render("○"))
 				mu.Unlock()
-			} else if errors.Is(err, mayor.ErrACPActive) {
+			} else if errors.Is(err, overseer.ErrACPActive) {
 				mu.Lock()
-				fmt.Printf("  %s Mayor already running (ACP mode)\n", style.Dim.Render("○"))
+				fmt.Printf("  %s Overseer already running (ACP mode)\n", style.Dim.Render("○"))
 				mu.Unlock()
 			} else {
 				errMu.Lock()
 				if firstErr == nil {
-					firstErr = fmt.Errorf("starting Mayor: %w", err)
+					firstErr = fmt.Errorf("starting Overseer: %w", err)
 				}
 				errMu.Unlock()
 				mu.Lock()
-				fmt.Printf("  %s Mayor failed: %v\n", style.Dim.Render("○"), err)
+				fmt.Printf("  %s Overseer failed: %v\n", style.Dim.Render("○"), err)
 				mu.Unlock()
 			}
 		} else {
 			mu.Lock()
-			fmt.Printf("  %s Mayor started\n", style.Bold.Render("✓"))
+			fmt.Printf("  %s Overseer started\n", style.Bold.Render("✓"))
 			mu.Unlock()
 		}
 	}()
 
-	// Start Deacon in goroutine
+	// Start Supervisor in goroutine
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		deaconMgr := deacon.NewManager(townRoot)
-		if err := deaconMgr.Start(agentOverride); err != nil {
-			if errors.Is(err, deacon.ErrAlreadyRunning) {
+		supervisorMgr := supervisor.NewManager(townRoot)
+		if err := supervisorMgr.Start(agentOverride); err != nil {
+			if errors.Is(err, supervisor.ErrAlreadyRunning) {
 				mu.Lock()
-				fmt.Printf("  %s Deacon already running\n", style.Dim.Render("○"))
+				fmt.Printf("  %s Supervisor already running\n", style.Dim.Render("○"))
 				mu.Unlock()
 			} else {
 				errMu.Lock()
 				if firstErr == nil {
-					firstErr = fmt.Errorf("starting Deacon: %w", err)
+					firstErr = fmt.Errorf("starting Supervisor: %w", err)
 				}
 				errMu.Unlock()
 				mu.Lock()
-				fmt.Printf("  %s Deacon failed: %v\n", style.Dim.Render("○"), err)
+				fmt.Printf("  %s Supervisor failed: %v\n", style.Dim.Render("○"), err)
 				mu.Unlock()
 			}
 		} else {
 			mu.Lock()
-			fmt.Printf("  %s Deacon started\n", style.Bold.Render("✓"))
+			fmt.Printf("  %s Supervisor started\n", style.Bold.Render("✓"))
 			mu.Unlock()
 		}
 	}()
@@ -486,7 +486,7 @@ func startOrRestartCrewMember(t *tmux.Tmux, r *rig.Rig, crewName, townRoot strin
 
 // discoverAllRigs finds all rigs in the workspace.
 func discoverAllRigs(townRoot string) ([]*rig.Rig, error) {
-	rigsConfigPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsConfigPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsConfigPath)
 	if err != nil {
 		return nil, fmt.Errorf("loading rigs config: %w", err)
@@ -501,7 +501,7 @@ func discoverAllRigs(townRoot string) ([]*rig.Rig, error) {
 func runShutdown(cmd *cobra.Command, args []string) error {
 	t := tmux.NewTmux()
 
-	// Find workspace root for polecat cleanup
+	// Find workspace root for miner cleanup
 	townRoot, _ := workspace.FindFromCwd()
 
 	// Collect sessions to show what will be stopped
@@ -513,7 +513,7 @@ func runShutdown(cmd *cobra.Command, args []string) error {
 	toStop, preserved := categorizeSessions(sessions)
 
 	if len(toStop) == 0 {
-		fmt.Printf("%s Gas Town was not running\n", style.Dim.Render("○"))
+		fmt.Printf("%s Excavation Site was not running\n", style.Dim.Render("○"))
 
 		// Still check for orphaned daemons even if no sessions are running
 		if townRoot != "" {
@@ -560,27 +560,27 @@ func runShutdown(cmd *cobra.Command, args []string) error {
 // categorizeSessions splits sessions into those to stop and those to preserve.
 func categorizeSessions(sessions []string) (toStop, preserved []string) {
 	for _, sess := range sessions {
-		// Gas Town sessions use rig-specific prefixes or hq- (town-level)
+		// Excavation Site sessions use rig-specific prefixes or hq- (town-level)
 		if !session.IsKnownSession(sess) {
-			continue // Not a Gas Town session
+			continue // Not a Excavation Site session
 		}
 
 		// Parse session to determine role
-		isPolecat := false
+		isMiner := false
 		isCrew := false
 		if identity, err := session.ParseSessionName(sess); err == nil {
 			switch identity.Role {
-			case session.RolePolecat:
-				isPolecat = true
+			case session.RoleMiner:
+				isMiner = true
 			case session.RoleCrew:
 				isCrew = true
 			}
 		}
 
 		// Decide based on flags
-		if shutdownPolecatsOnly {
-			// Only stop polecats
-			if isPolecat {
+		if shutdownMinersOnly {
+			// Only stop miners
+			if isMiner {
 				toStop = append(toStop, sess)
 			} else {
 				preserved = append(preserved, sess)
@@ -601,7 +601,7 @@ func categorizeSessions(sessions []string) (toStop, preserved []string) {
 }
 
 func runGracefulShutdown(t *tmux.Tmux, gtSessions []string, townRoot string) error {
-	fmt.Printf("Graceful shutdown of Gas Town (waiting up to %ds)...\n\n", shutdownWait)
+	fmt.Printf("Graceful shutdown of Excavation Site (waiting up to %ds)...\n\n", shutdownWait)
 
 	// Phase 1: Send ESC to all agents to interrupt them
 	fmt.Printf("Phase 1: Sending ESC to %d agent(s)...\n", len(gtSessions))
@@ -612,7 +612,7 @@ func runGracefulShutdown(t *tmux.Tmux, gtSessions []string, townRoot string) err
 
 	// Phase 2: Send shutdown message asking agents to handoff
 	fmt.Printf("\nPhase 2: Requesting handoff from agents...\n")
-	shutdownMsg := "[SHUTDOWN] Gas Town is shutting down. Please save your state and update your handoff bead, then type /exit or wait to be terminated."
+	shutdownMsg := "[SHUTDOWN] Excavation Site is shutting down. Please save your state and update your handoff bead, then type /exit or wait to be terminated."
 	for _, sess := range gtSessions {
 		// Small delay then send the message
 		time.Sleep(constants.ShutdownNotifyDelay)
@@ -637,9 +637,9 @@ func runGracefulShutdown(t *tmux.Tmux, gtSessions []string, townRoot string) err
 
 	// Phase 4: Kill sessions in correct order
 	fmt.Printf("\nPhase 4: Terminating sessions...\n")
-	mayorSession := getMayorSessionName()
-	deaconSession := getDeaconSessionName()
-	stopped := killSessionsInOrder(t, gtSessions, mayorSession, deaconSession)
+	overseerSession := getOverseerSessionName()
+	supervisorSession := getSupervisorSessionName()
+	stopped := killSessionsInOrder(t, gtSessions, overseerSession, supervisorSession)
 
 	// Phase 5: Always clean up orphaned Claude processes after killing sessions.
 	// Processes can survive session kills if they caught/ignored SIGHUP or called setsid().
@@ -652,10 +652,10 @@ func runGracefulShutdown(t *tmux.Tmux, gtSessions []string, townRoot string) err
 	fmt.Printf("\nPhase 5: Cleaning up orphaned Claude processes...\n")
 	cleanupOrphanedClaude(graceSecs)
 
-	// Phase 6: Cleanup polecat worktrees and branches
-	fmt.Printf("\nPhase 6: Cleaning up polecats...\n")
+	// Phase 6: Cleanup miner worktrees and branches
+	fmt.Printf("\nPhase 6: Cleaning up miners...\n")
 	if townRoot != "" {
-		cleanupPolecats(townRoot)
+		cleanupMiners(townRoot)
 	}
 
 	// Phase 7: Stop the daemon
@@ -674,11 +674,11 @@ func runGracefulShutdown(t *tmux.Tmux, gtSessions []string, townRoot string) err
 }
 
 func runImmediateShutdown(t *tmux.Tmux, gtSessions []string, townRoot string) error {
-	fmt.Println("Shutting down Gas Town...")
+	fmt.Println("Shutting down Excavation Site...")
 
-	mayorSession := getMayorSessionName()
-	deaconSession := getDeaconSessionName()
-	stopped := killSessionsInOrder(t, gtSessions, mayorSession, deaconSession)
+	overseerSession := getOverseerSessionName()
+	supervisorSession := getSupervisorSessionName()
+	stopped := killSessionsInOrder(t, gtSessions, overseerSession, supervisorSession)
 
 	// Always clean up orphaned Claude processes after killing sessions.
 	// Processes can survive session kills if they caught/ignored SIGHUP or called setsid().
@@ -692,11 +692,11 @@ func runImmediateShutdown(t *tmux.Tmux, gtSessions []string, townRoot string) er
 	fmt.Println("Cleaning up orphaned Claude processes...")
 	cleanupOrphanedClaude(graceSecs)
 
-	// Cleanup polecat worktrees and branches
+	// Cleanup miner worktrees and branches
 	if townRoot != "" {
 		fmt.Println()
-		fmt.Println("Cleaning up polecats...")
-		cleanupPolecats(townRoot)
+		fmt.Println("Cleaning up miners...")
+		cleanupMiners(townRoot)
 	}
 
 	// Stop the daemon
@@ -712,23 +712,23 @@ func runImmediateShutdown(t *tmux.Tmux, gtSessions []string, townRoot string) er
 	verifyNoOrphans()
 
 	fmt.Println()
-	fmt.Printf("%s Gas Town shutdown complete (%d sessions stopped)\n", style.Bold.Render("✓"), stopped)
+	fmt.Printf("%s Excavation Site shutdown complete (%d sessions stopped)\n", style.Bold.Render("✓"), stopped)
 
 	return nil
 }
 
 // killSessionsInOrder stops sessions in the correct shutdown order, matching gt down:
-//  1. Polecats and crew (workers - stop before monitors can restart them)
+//  1. Miners and crew (workers - stop before monitors can restart them)
 //  2. Refineries (work processors)
-//  3. Witnesses (monitors - stop before deacon so they can't restart workers)
-//  4. Town sessions: Mayor, Boot, Deacon
-//     Boot monitors Deacon, so must be stopped before Deacon.
+//  3. Witnesses (monitors - stop before supervisor so they can't restart workers)
+//  4. Town sessions: Overseer, Boot, Supervisor
+//     Boot monitors Supervisor, so must be stopped before Supervisor.
 //
-// mayorSession and deaconSession are the dynamic session names for the current town.
+// overseerSession and supervisorSession are the dynamic session names for the current town.
 //
 // Returns the count of sessions that were successfully stopped (verified by checking
 // if the session no longer exists after the kill attempt).
-func killSessionsInOrder(t *tmux.Tmux, sessions []string, mayorSession, deaconSession string) int {
+func killSessionsInOrder(t *tmux.Tmux, sessions []string, overseerSession, supervisorSession string) int {
 	stopped := 0
 	bootSession := session.BootSessionName()
 
@@ -739,10 +739,10 @@ func killSessionsInOrder(t *tmux.Tmux, sessions []string, mayorSession, deaconSe
 	}
 
 	// Categorize sessions by type for ordered shutdown.
-	var polecats, refineries, witnesses []string
+	var miners, refineries, witnesses []string
 	for _, sess := range sessions {
 		// Skip town-level sessions (handled explicitly below)
-		if sess == mayorSession || sess == deaconSession || sess == bootSession {
+		if sess == overseerSession || sess == supervisorSession || sess == bootSession {
 			continue
 		}
 
@@ -754,12 +754,12 @@ func killSessionsInOrder(t *tmux.Tmux, sessions []string, mayorSession, deaconSe
 			case session.RoleRefinery:
 				refineries = append(refineries, sess)
 			default:
-				// Polecats, crew, and any other rig-level sessions
-				polecats = append(polecats, sess)
+				// Miners, crew, and any other rig-level sessions
+				miners = append(miners, sess)
 			}
 		} else {
 			// Unknown pattern, treat as worker (stop early)
-			polecats = append(polecats, sess)
+			miners = append(miners, sess)
 		}
 	}
 
@@ -785,8 +785,8 @@ func killSessionsInOrder(t *tmux.Tmux, sessions []string, mayorSession, deaconSe
 		return false
 	}
 
-	// 1. Stop polecats and crew first (workers)
-	for _, sess := range polecats {
+	// 1. Stop miners and crew first (workers)
+	for _, sess := range miners {
 		if killAndVerify(sess) {
 			stopped++
 		}
@@ -806,9 +806,9 @@ func killSessionsInOrder(t *tmux.Tmux, sessions []string, mayorSession, deaconSe
 		}
 	}
 
-	// 4. Stop town sessions: Mayor, Boot, Deacon (matching TownSessions() order)
-	if sessionSet[mayorSession] {
-		if killAndVerify(mayorSession) {
+	// 4. Stop town sessions: Overseer, Boot, Supervisor (matching TownSessions() order)
+	if sessionSet[overseerSession] {
+		if killAndVerify(overseerSession) {
 			stopped++
 		}
 	}
@@ -817,8 +817,8 @@ func killSessionsInOrder(t *tmux.Tmux, sessions []string, mayorSession, deaconSe
 			stopped++
 		}
 	}
-	if sessionSet[deaconSession] {
-		if killAndVerify(deaconSession) {
+	if sessionSet[supervisorSession] {
+		if killAndVerify(supervisorSession) {
 			stopped++
 		}
 	}
@@ -826,11 +826,11 @@ func killSessionsInOrder(t *tmux.Tmux, sessions []string, mayorSession, deaconSe
 	return stopped
 }
 
-// cleanupPolecats removes polecat worktrees and branches for all rigs.
-// It refuses to clean up polecats with uncommitted work unless --nuclear is set.
-func cleanupPolecats(townRoot string) {
+// cleanupMiners removes miner worktrees and branches for all rigs.
+// It refuses to clean up miners with uncommitted work unless --nuclear is set.
+func cleanupMiners(townRoot string) {
 	// Load rigs config
-	rigsConfigPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsConfigPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsConfigPath)
 	if err != nil {
 		fmt.Printf("  %s Could not load rigs config: %v\n", style.Dim.Render("○"), err)
@@ -849,18 +849,18 @@ func cleanupPolecats(townRoot string) {
 
 	totalCleaned := 0
 	totalSkipped := 0
-	var uncommittedPolecats []string
+	var uncommittedMiners []string
 
 	for _, r := range rigs {
-		polecatGit := git.NewGit(r.Path)
-		polecatMgr := polecat.NewManager(r, polecatGit, nil) // nil tmux: just listing, not allocating
+		minerGit := git.NewGit(r.Path)
+		minerMgr := miner.NewManager(r, minerGit, nil) // nil tmux: just listing, not allocating
 
-		polecats, err := polecatMgr.List()
+		miners, err := minerMgr.List()
 		if err != nil {
 			continue
 		}
 
-		for _, p := range polecats {
+		for _, p := range miners {
 			// Check for uncommitted work
 			pGit := git.NewGit(p.ClonePath)
 			status, err := pGit.CheckUncommittedWork()
@@ -875,7 +875,7 @@ func cleanupPolecats(townRoot string) {
 			} else if !status.Clean() {
 				// Has uncommitted work
 				if !shutdownNuclear {
-					uncommittedPolecats = append(uncommittedPolecats,
+					uncommittedMiners = append(uncommittedMiners,
 						fmt.Sprintf("%s/%s (%s)", r.Name, p.Name, status.String()))
 					totalSkipped++
 					continue
@@ -886,19 +886,19 @@ func cleanupPolecats(townRoot string) {
 			}
 
 			// Clean: remove worktree and branch
-			// selfNuke=false because this is gt start --shutdown cleanup, not polecat self-deleting
-			if err := polecatMgr.RemoveWithOptions(p.Name, true, shutdownNuclear, false); err != nil {
+			// selfNuke=false because this is gt start --shutdown cleanup, not miner self-deleting
+			if err := minerMgr.RemoveWithOptions(p.Name, true, shutdownNuclear, false); err != nil {
 				fmt.Printf("  %s %s/%s: cleanup failed: %v\n",
 					style.Dim.Render("○"), r.Name, p.Name, err)
 				totalSkipped++
 				continue
 			}
 
-			// Delete the polecat branch from mayor's clone
-			branchName := fmt.Sprintf("polecat/%s", p.Name)
-			mayorPath := filepath.Join(r.Path, "mayor", "rig")
-			mayorGit := git.NewGit(mayorPath)
-			_ = mayorGit.DeleteBranch(branchName, true) // Ignore errors
+			// Delete the miner branch from overseer's clone
+			branchName := fmt.Sprintf("miner/%s", p.Name)
+			overseerPath := filepath.Join(r.Path, "overseer", "rig")
+			overseerGit := git.NewGit(overseerPath)
+			_ = overseerGit.DeleteBranch(branchName, true) // Ignore errors
 
 			fmt.Printf("  %s %s/%s: cleaned up\n", style.Bold.Render("✓"), r.Name, p.Name)
 			totalCleaned++
@@ -906,11 +906,11 @@ func cleanupPolecats(townRoot string) {
 	}
 
 	// Summary
-	if len(uncommittedPolecats) > 0 {
+	if len(uncommittedMiners) > 0 {
 		fmt.Println()
-		fmt.Printf("  %s Polecats with uncommitted work (use --nuclear to force):\n",
+		fmt.Printf("  %s Miners with uncommitted work (use --nuclear to force):\n",
 			style.Bold.Render("⚠"))
-		for _, pc := range uncommittedPolecats {
+		for _, pc := range uncommittedMiners {
 			fmt.Printf("    • %s\n", pc)
 		}
 	}
@@ -918,7 +918,7 @@ func cleanupPolecats(townRoot string) {
 	if totalCleaned > 0 || totalSkipped > 0 {
 		fmt.Printf("  Cleaned: %d, Skipped: %d\n", totalCleaned, totalSkipped)
 	} else {
-		fmt.Printf("  %s No polecats to clean up\n", style.Dim.Render("○"))
+		fmt.Printf("  %s No miners to clean up\n", style.Dim.Render("○"))
 	}
 }
 
@@ -974,7 +974,7 @@ func stopDaemonIfRunning(townRoot string) {
 func runStartCrew(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
-	// Parse rig/name format (e.g., "greenplace/joe" -> rig=gastown, name=joe)
+	// Parse rig/name format (e.g., "greenplace/joe" -> rig=excavation, name=joe)
 	rigName := startCrewRig
 	if parsedRig, crewName, ok := parseRigSlashName(name); ok {
 		if rigName == "" {
@@ -986,7 +986,7 @@ func runStartCrew(cmd *cobra.Command, args []string) error {
 	// Find workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// If rig still not specified, try to infer from cwd, then by crew name
@@ -1001,7 +1001,7 @@ func runStartCrew(cmd *cobra.Command, args []string) error {
 	}
 
 	// Load rigs config
-	rigsConfigPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsConfigPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsConfigPath)
 	if err != nil {
 		rigsConfig = &config.RigsConfig{Rigs: make(map[string]config.RigEntry)}
@@ -1020,7 +1020,7 @@ func runStartCrew(cmd *cobra.Command, args []string) error {
 	crewMgr := crew.NewManager(r, crewGit)
 
 	// Resolve account for Claude config
-	accountsPath := constants.MayorAccountsPath(townRoot)
+	accountsPath := constants.OverseerAccountsPath(townRoot)
 	claudeConfigDir, accountHandle, err := config.ResolveAccountConfigDir(accountsPath, startCrewAccount)
 	if err != nil {
 		return fmt.Errorf("resolving account: %w", err)
@@ -1101,7 +1101,7 @@ func getCrewToStart(r *rig.Rig) []string {
 // This is a simplified version of runStartCrew that doesn't print output.
 func startCrewMember(rigName, crewName, townRoot string) error {
 	// Load rigs config
-	rigsConfigPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsConfigPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsConfigPath)
 	if err != nil {
 		rigsConfig = &config.RigsConfig{Rigs: make(map[string]config.RigEntry)}

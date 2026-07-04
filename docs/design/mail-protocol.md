@@ -1,21 +1,21 @@
-# Gas Town Mail Protocol
+# Excavation Site Mail Protocol
 
-> Reference for inter-agent mail communication in Gas Town
+> Reference for inter-agent mail communication in Excavation Site
 
 ## Overview
 
-Gas Town agents coordinate via mail messages routed through the beads system.
+Excavation Site agents coordinate via mail messages routed through the beads system.
 Mail uses `type=message` beads with routing handled by `gt mail`.
 
 ## Message Types
 
-### POLECAT_DONE
+### MINER_DONE
 
-**Route**: Polecat → Witness
+**Route**: Miner → Witness
 
 **Purpose**: Signal work completion, trigger cleanup flow.
 
-**Subject format**: `POLECAT_DONE <polecat-name>`
+**Subject format**: `MINER_DONE <miner-name>`
 
 **Body format**:
 ```
@@ -27,7 +27,7 @@ Branch: <branch>
 
 **Trigger**: `gt done` command generates this automatically.
 
-**Handler**: Witness creates a cleanup wisp for the polecat.
+**Handler**: Witness creates a cleanup wisp for the miner.
 
 ### MERGE_READY
 
@@ -35,17 +35,17 @@ Branch: <branch>
 
 **Purpose**: Signal a branch is ready for merge queue processing.
 
-**Subject format**: `MERGE_READY <polecat-name>`
+**Subject format**: `MERGE_READY <miner-name>`
 
 **Body format**:
 ```
 Branch: <branch>
 Issue: <issue-id>
-Polecat: <polecat-name>
+Miner: <miner-name>
 Verified: clean git state, issue closed
 ```
 
-**Trigger**: Witness sends after verifying polecat work is complete.
+**Trigger**: Witness sends after verifying miner work is complete.
 
 **Handler**: Refinery adds to merge queue, processes when ready.
 
@@ -53,15 +53,15 @@ Verified: clean git state, issue closed
 
 **Route**: Refinery → Witness
 
-**Purpose**: Confirm branch was merged successfully, safe to nuke polecat.
+**Purpose**: Confirm branch was merged successfully, safe to nuke miner.
 
-**Subject format**: `MERGED <polecat-name>`
+**Subject format**: `MERGED <miner-name>`
 
 **Body format**:
 ```
 Branch: <branch>
 Issue: <issue-id>
-Polecat: <polecat-name>
+Miner: <miner-name>
 Rig: <rig>
 Target: <target-branch>
 Merged-At: <timestamp>
@@ -70,7 +70,7 @@ Merge-Commit: <sha>
 
 **Trigger**: Refinery sends after successful merge to main.
 
-**Handler**: Witness completes cleanup wisp, nukes polecat worktree.
+**Handler**: Witness completes cleanup wisp, nukes miner worktree.
 
 ### MERGE_FAILED
 
@@ -78,13 +78,13 @@ Merge-Commit: <sha>
 
 **Purpose**: Notify that merge attempt failed (tests, build, or other non-conflict error).
 
-**Subject format**: `MERGE_FAILED <polecat-name>`
+**Subject format**: `MERGE_FAILED <miner-name>`
 
 **Body format**:
 ```
 Branch: <branch>
 Issue: <issue-id>
-Polecat: <polecat-name>
+Miner: <miner-name>
 Rig: <rig>
 Target: <target-branch>
 Failed-At: <timestamp>
@@ -94,21 +94,21 @@ Error: <error-message>
 
 **Trigger**: Refinery sends when merge fails for non-conflict reasons.
 
-**Handler**: Witness notifies polecat, assigns work back for rework.
+**Handler**: Witness notifies miner, assigns work back for rework.
 
 ### REWORK_REQUEST
 
 **Route**: Refinery → Witness
 
-**Purpose**: Request polecat to rebase branch due to merge conflicts.
+**Purpose**: Request miner to rebase branch due to merge conflicts.
 
-**Subject format**: `REWORK_REQUEST <polecat-name>`
+**Subject format**: `REWORK_REQUEST <miner-name>`
 
 **Body format**:
 ```
 Branch: <branch>
 Issue: <issue-id>
-Polecat: <polecat-name>
+Miner: <miner-name>
 Rig: <rig>
 Target: <target-branch>
 Requested-At: <timestamp>
@@ -126,64 +126,64 @@ The Refinery will retry the merge after rebase is complete.
 
 **Trigger**: Refinery sends when merge has conflicts with target branch.
 
-**Handler**: Witness notifies polecat with rebase instructions.
+**Handler**: Witness notifies miner with rebase instructions.
 
 ### RECOVERED_BEAD
 
-**Route**: Witness → Deacon
+**Route**: Witness → Supervisor
 
-**Purpose**: Notify Deacon that a dead polecat's abandoned work has been recovered
+**Purpose**: Notify Supervisor that a dead miner's abandoned work has been recovered
 and needs re-dispatch.
 
 **Subject format**: `RECOVERED_BEAD <bead-id>`
 
 **Body format**:
 ```
-Recovered abandoned bead from dead polecat.
+Recovered abandoned bead from dead miner.
 
 Bead: <bead-id>
-Polecat: <rig>/<polecat-name>
+Miner: <rig>/<miner-name>
 Previous Status: <hooked|in_progress>
 
 The bead has been reset to open with no assignee.
-Please re-dispatch to an available polecat.
+Please re-dispatch to an available miner.
 ```
 
-**Trigger**: Witness detects a zombie polecat with work still hooked/in_progress.
+**Trigger**: Witness detects a zombie miner with work still hooked/in_progress.
 The bead is reset to open status and this mail is sent for re-dispatch.
 
-**Handler**: Deacon runs `gt deacon redispatch <bead-id>` which:
+**Handler**: Supervisor runs `gt supervisor redispatch <bead-id>` which:
 - Rate-limits re-dispatches (5-minute cooldown per bead)
-- Tracks failure count (after 3 failures, escalates to Mayor)
+- Tracks failure count (after 3 failures, escalates to Overseer)
 - Auto-detects target rig from bead prefix
-- Slings the bead to an available polecat via `gt sling`
+- Slings the bead to an available miner via `gt sling`
 
 ### RECOVERY_NEEDED
 
-**Route**: Witness → Deacon
+**Route**: Witness → Supervisor
 
-**Purpose**: Escalate a dirty polecat that has unpushed/uncommitted work needing
+**Purpose**: Escalate a dirty miner that has unpushed/uncommitted work needing
 manual recovery before cleanup.
 
-**Subject format**: `RECOVERY_NEEDED <rig>/<polecat-name>`
+**Subject format**: `RECOVERY_NEEDED <rig>/<miner-name>`
 
 **Body format**:
 ```
-Polecat: <rig>/<polecat-name>
+Miner: <rig>/<miner-name>
 Cleanup Status: <has_uncommitted|has_stash|has_unpushed>
 Branch: <branch>
 Issue: <issue-id>
 Detected: <timestamp>
 ```
 
-**Trigger**: Witness detects zombie polecat with dirty git state.
+**Trigger**: Witness detects zombie miner with dirty git state.
 
-**Handler**: Deacon coordinates recovery (push branch, save work) before
-authorizing cleanup. Only escalates to Mayor if Deacon cannot resolve.
+**Handler**: Supervisor coordinates recovery (push branch, save work) before
+authorizing cleanup. Only escalates to Overseer if Supervisor cannot resolve.
 
 ### HELP
 
-**Route**: Any → escalation target (usually Mayor)
+**Route**: Any → escalation target (usually Overseer)
 
 **Purpose**: Request intervention for stuck/blocked work.
 
@@ -238,9 +238,9 @@ attached_at: <timestamp>
 
 Examples:
 ```
-POLECAT_DONE nux
+MINER_DONE nux
 MERGE_READY greenplace/nux
-HELP: Polecat stuck on test failures
+HELP: Miner stuck on test failures
 🤝 HANDOFF: Schema work in progress
 ```
 
@@ -258,19 +258,19 @@ Examples:
 ```
 greenplace/witness       # Witness for greenplace rig
 beads/refinery           # Refinery for beads rig
-greenplace/polecats/nux  # Specific polecat
-mayor/                # Town-level Mayor
-deacon/               # Town-level Deacon
+greenplace/miners/nux  # Specific miner
+overseer/                # Town-level Overseer
+supervisor/               # Town-level Supervisor
 ```
 
 ## Protocol Flows
 
-### Polecat Completion Flow
+### Miner Completion Flow
 
 ```
-Polecat                    Witness                    Refinery
+Miner                    Witness                    Refinery
    │                          │                          │
-   │ POLECAT_DONE             │                          │
+   │ MINER_DONE             │                          │
    │─────────────────────────>│                          │
    │                          │                          │
    │                    (verify clean)                   │
@@ -283,7 +283,7 @@ Polecat                    Witness                    Refinery
    │                          │ MERGED (success)         │
    │                          │<─────────────────────────│
    │                          │                          │
-   │                    (nuke polecat)                   │
+   │                    (nuke miner)                   │
    │                          │                          │
 ```
 
@@ -300,7 +300,7 @@ Polecat                    Witness                    Refinery
    │ (failure notification)   │                          │
    │<─────────────────────────│                          │
    │                          │                          │
-Polecat (rework needed)
+Miner (rework needed)
 ```
 
 ### Rebase Required Flow
@@ -316,7 +316,7 @@ Polecat (rework needed)
    │ (rebase instructions)    │                          │
    │<─────────────────────────│                          │
    │                          │                          │
-Polecat                       │                          │
+Miner                       │                          │
    │                          │                          │
    │ (rebases, gt done)       │                          │
    │─────────────────────────>│ MERGE_READY              │
@@ -327,7 +327,7 @@ Polecat                       │                          │
 ### Abandoned Work Recovery Flow
 
 ```
-Dead Polecat               Witness                    Deacon
+Dead Miner               Witness                    Supervisor
      │                        │                          │
      │ (session dies)         │                          │
      │                        │                          │
@@ -340,10 +340,10 @@ Dead Polecat               Witness                    Deacon
      │                        │ RECOVERED_BEAD           │
      │                        │─────────────────────────>│
      │                        │                          │
-     │                        │                    gt deacon redispatch
+     │                        │                    gt supervisor redispatch
      │                        │                    gt sling <bead> <rig>
      │                        │                          │
-     │                        │                          ├──> New Polecat
+     │                        │                          ├──> New Miner
      │                        │                          │    (re-dispatched)
 ```
 
@@ -352,14 +352,14 @@ Dead Polecat               Witness                    Deacon
 ```
 Witness-1 ──┐
             │ (check agent bead last_activity)
-Witness-2 ──┼────────────────> Deacon agent bead
+Witness-2 ──┼────────────────> Supervisor agent bead
             │
 Witness-N ──┘
                                  │
                           (if stale >5min)
                                  │
             ─────────────────────┘
-            ALERT to Mayor (mail only on failure)
+            ALERT to Overseer (mail only on failure)
 ```
 
 ## Communication Hygiene: Mail vs Nudge
@@ -397,12 +397,12 @@ message?" If yes -> mail. If no -> nudge.
 
 | Role | Mail Budget | When to Mail | When to Nudge |
 |------|-------------|-------------|---------------|
-| **Polecat** | 0-1 per session | HELP/ESCALATE only (gt escalate preferred) | Everything else |
-| **Witness** | Protocol msgs only | MERGE_READY, RECOVERED_BEAD, RECOVERY_NEEDED, escalations to Mayor | Polecat health checks, status pings, nudge-and-observe |
+| **Miner** | 0-1 per session | HELP/ESCALATE only (gt escalate preferred) | Everything else |
+| **Witness** | Protocol msgs only | MERGE_READY, RECOVERED_BEAD, RECOVERY_NEEDED, escalations to Overseer | Miner health checks, status pings, nudge-and-observe |
 | **Refinery** | Protocol msgs only | MERGED, MERGE_FAILED, REWORK_REQUEST | Status updates to Witness |
-| **Deacon** | Escalations only | Escalations to Mayor, HANDOFF to self | TIMER callbacks, HEALTH_CHECK, lifecycle pokes |
-| **Dogs** | Zero | Never (results go to event beads or logs) | Report completion to Deacon via nudge |
-| **Mayor** | Strategic only | Cross-rig coordination, HANDOFF to self | Instructions to Deacon/Witness |
+| **Supervisor** | Escalations only | Escalations to Overseer, HANDOFF to self | TIMER callbacks, HEALTH_CHECK, lifecycle pokes |
+| **Dogs** | Zero | Never (results go to event beads or logs) | Report completion to Supervisor via nudge |
+| **Overseer** | Strategic only | Cross-rig coordination, HANDOFF to self | Instructions to Supervisor/Witness |
 
 ### Why This Matters (The Commit Graph)
 
@@ -415,18 +415,18 @@ normal operations:
 ### Anti-Patterns
 
 **DOG_DONE as mail** -- Dogs should not mail their completion status. Use
-`gt nudge deacon/ "DOG_DONE: plugin-name success"` instead.
+`gt nudge supervisor/ "DOG_DONE: plugin-name success"` instead.
 
 **Duplicate escalations** -- Witnesses sending 2+ mails about the same issue
 minutes apart. Check inbox before sending: if you already sent about this topic,
 don't send again.
 
-**HANDOFF for routine cycles** -- Patrol agents (Witness, Deacon) doing routine
+**HANDOFF for routine cycles** -- Patrol agents (Witness, Supervisor) doing routine
 handoffs should use minimal mail. If there's nothing extraordinary, just cycle --
 the next session discovers state from beads, not from mail.
 
-**Health check responses via mail** -- When Deacon sends a health check nudge, do
-NOT respond with mail. The Deacon tracks health via session status, not mail
+**Health check responses via mail** -- When Supervisor sends a health check nudge, do
+NOT respond with mail. The Supervisor tracks health via session status, not mail
 responses.
 
 ## Implementation
@@ -440,7 +440,7 @@ gt mail send <addr> -s "Subject" -m "Body"
 # With structured body
 gt mail send greenplace/witness -s "MERGE_READY nux" -m "Branch: feature-xyz
 Issue: gp-abc
-Polecat: nux
+Miner: nux
 Verified: clean"
 ```
 
@@ -490,8 +490,8 @@ delivers to all members.
 
 **Bead ID format:** `hq-group-<name>`
 
-**Member types:** direct addresses (`gastown/crew/max`), wildcard patterns
-(`*/witness`, `gastown/crew/*`), special patterns (`@town`, `@crew`,
+**Member types:** direct addresses (`excavation/crew/max`), wildcard patterns
+(`*/witness`, `excavation/crew/*`), special patterns (`@town`, `@crew`,
 `@witnesses`), or nested group names.
 
 ### Queues (`gt:queue`)
@@ -554,7 +554,7 @@ explicit prefix.
 
 Channels support count-based (`--retain-count=N`) and time-based
 (`--retain-hours=N`) retention. Retention is enforced on-write (after posting)
-and on-patrol (Deacon runs `PruneAllChannels()` with a 10% buffer to avoid
+and on-patrol (Supervisor runs `PruneAllChannels()` with a 10% buffer to avoid
 thrashing).
 
 ## Related Documents

@@ -7,14 +7,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/channelevents"
+	"github.com/steveyegge/excavation/internal/channelevents"
 )
 
 func TestEmitEvent(t *testing.T) {
 	t.Run("basic event creation", func(t *testing.T) {
 		townRoot := t.TempDir()
 
-		path, err := channelevents.EmitToTown(townRoot, "test-channel", "MERGE_READY", []string{"polecat=nux", "branch=feat/test"})
+		path, err := channelevents.EmitToTown(townRoot, "test-channel", "MERGE_READY", []string{"miner=nux", "branch=feat/test"})
 		if err != nil {
 			t.Fatalf("EmitEvent failed: %v", err)
 		}
@@ -46,8 +46,8 @@ func TestEmitEvent(t *testing.T) {
 		if !ok {
 			t.Fatalf("payload is not a map: %T", event["payload"])
 		}
-		if payload["polecat"] != "nux" {
-			t.Errorf("payload.polecat = %v, want nux", payload["polecat"])
+		if payload["miner"] != "nux" {
+			t.Errorf("payload.miner = %v, want nux", payload["miner"])
 		}
 		if payload["branch"] != "feat/test" {
 			t.Errorf("payload.branch = %v, want feat/test", payload["branch"])

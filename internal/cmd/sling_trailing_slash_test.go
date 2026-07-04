@@ -16,13 +16,13 @@ func TestSlingTrimsTrailingSlash(t *testing.T) {
 	}{
 		{"rig with trailing slash", "slingshot/", "slingshot"},
 		{"rig without slash", "slingshot", "slingshot"},
-		{"path with trailing slash", "gastown/crew/", "gastown/crew"},
-		{"path without slash", "gastown/crew", "gastown/crew"},
+		{"path with trailing slash", "excavation/crew/", "excavation/crew"},
+		{"path without slash", "excavation/crew", "excavation/crew"},
 		{"multiple trailing slashes", "slingshot///", "slingshot"},
 		{"just slashes", "///", ""},
 		{"empty string", "", ""},
-		{"mayor role", "mayor", "mayor"},
-		{"deacon role", "deacon", "deacon"},
+		{"overseer role", "overseer", "overseer"},
+		{"supervisor role", "supervisor", "supervisor"},
 	}
 
 	for _, tt := range tests {
@@ -52,8 +52,8 @@ func TestIsRigNameWithTrailingSlash(t *testing.T) {
 		wantOk   bool
 	}{
 		{
-			name:     "deacon/dogs has slash",
-			target:   "deacon/dogs",
+			name:     "supervisor/dogs has slash",
+			target:   "supervisor/dogs",
 			wantName: "",
 			wantOk:   false,
 		},
@@ -64,10 +64,10 @@ func TestIsRigNameWithTrailingSlash(t *testing.T) {
 			wantOk:   false,
 		},
 		{
-			name:     "mayor role without slash",
-			target:   "mayor",
+			name:     "overseer role without slash",
+			target:   "overseer",
 			wantName: "",
-			wantOk:   false, // mayor is a known role, not a rig
+			wantOk:   false, // overseer is a known role, not a rig
 		},
 	}
 

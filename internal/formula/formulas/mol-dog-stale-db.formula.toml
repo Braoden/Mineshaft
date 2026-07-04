@@ -22,7 +22,7 @@ This is infrastructure work. You:
 1. Query SHOW DATABASES and identify stale/test databases
 2. Count and classify orphans
 3. Clean up if count is manageable, escalate if excessive
-4. Report findings to Deacon
+4. Report findings to Supervisor
 5. Return to kennel
 
 ## Variables
@@ -157,12 +157,12 @@ No action needed.
 **2. Warn if above threshold:**
 If orphan count >= {{warn_threshold}}, this is early warning:
 ```bash
-gt mail send deacon/ -s "WARN: {{orphan_count}} orphan databases detected" -m "..."
+gt mail send supervisor/ -s "WARN: {{orphan_count}} orphan databases detected" -m "..."
 ```
 
-**3. Signal completion to Deacon:**
+**3. Signal completion to Supervisor:**
 ```bash
-gt mail send deacon/ -s "DOG_DONE: stale-db" -m "Task: stale-db-scan
+gt mail send supervisor/ -s "DOG_DONE: stale-db" -m "Task: stale-db-scan
 Total DBs: {{total_count}}
 Production: {{prod_count}}
 Orphans: {{orphan_count}}

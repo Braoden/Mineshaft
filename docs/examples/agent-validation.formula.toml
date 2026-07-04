@@ -1,19 +1,19 @@
 description = """
-Self-test formula run by a polecat to validate its own Gas Town integration.
+Self-test formula run by a miner to validate its own Excavation Site integration.
 
-When slung to a rig, the polecat verifies that it received correct Gas Town
-context injection, has work on its hook, can use Gas Town CLI tools, confirms
-mail delivery by replying to the mayor, and executes a test task.
+When slung to a rig, the miner verifies that it received correct Excavation Site
+context injection, has work on its hook, can use Excavation Site CLI tools, confirms
+mail delivery by replying to the overseer, and executes a test task.
 
-## Prerequisites (Mayor / Overseer)
+## Prerequisites (Overseer / Boss)
 
 Before slinging this formula, configure the target agent:
 
-**1. Set the polecat agent in town settings** (`~/gt/settings/config.json`):
+**1. Set the miner agent in town settings** (`~/gt/settings/config.json`):
 ```json
 {
     "role_agents": {
-        "polecat": "pi"
+        "miner": "pi"
     }
 }
 ```
@@ -22,7 +22,7 @@ Or override at rig level (`~/gt/<rig>/settings/config.json`):
 ```json
 {
     "role_agents": {
-        "polecat": "pi"
+        "miner": "pi"
     }
 }
 ```
@@ -43,74 +43,74 @@ which claude   # Should resolve to ~/.local/bin/claude
 ```
 
 **4. Clean up stale beads before slinging:**
-Polecat names are recycled from the namepool. If a previous polecat with the
-same name left beads in HOOKED or IN_PROGRESS state, the new polecat will pick
+Miner names are recycled from the namepool. If a previous miner with the
+same name left beads in HOOKED or IN_PROGRESS state, the new miner will pick
 those up instead of the formula wisps.
 
 ```bash
 # Check what name will be allocated (or sling and note the name)
-# Then close any stale beads assigned to that polecat:
-bd list --status=open --assignee=sfgastown/polecats/<name> 2>/dev/null
+# Then close any stale beads assigned to that miner:
+bd list --status=open --assignee=sfexcavation/miners/<name> 2>/dev/null
 # Close any that appear:
-bd close <stale-id> --reason "stale bead from previous polecat session"
+bd close <stale-id> --reason "stale bead from previous miner session"
 ```
 
-**5. Sling and run the mayor-side validation protocol:**
+**5. Sling and run the overseer-side validation protocol:**
 
 `gt sling` "cooks" the formula: it reads the [[steps]] below, creates a parent
 epic bead (the formula itself) with one child wisp per step, wires up the
-dependency chain from the `needs` fields, hooks the epic to a fresh polecat,
-and nudges it to start. The polecat then autonomously works through the wisps
+dependency chain from the `needs` fields, hooks the epic to a fresh miner,
+and nudges it to start. The miner then autonomously works through the wisps
 in dependency order.
 
 ```bash
 # 1. Sling the formula (this cooks it into an epic + child wisps automatically)
-gt sling agent-validation sfgastown
-# Note the polecat name from the output (e.g., "obsidian")
+gt sling agent-validation sfexcavation
+# Note the miner name from the output (e.g., "obsidian")
 
-# 2. Wait for polecat to boot (~30s for pi, ~15s for claude)
+# 2. Wait for miner to boot (~30s for pi, ~15s for claude)
 sleep 30
 
-# 3. Send the polecat a test mail
-gt mail send sfgastown/polecats/<name> -s "VALIDATION: mail test" -m "Reply with your identity to confirm you received Gas Town context."
+# 3. Send the miner a test mail
+gt mail send sfexcavation/miners/<name> -s "VALIDATION: mail test" -m "Reply with your identity to confirm you received Excavation Site context."
 
-# 4. Wait for the polecat's reply (check inbox)
+# 4. Wait for the miner's reply (check inbox)
 #    The reply should contain: role, name, rig, agent runtime, hooked bead
 gt mail inbox   # Look for "VALIDATION: identity confirmed"
 gt mail read <reply-id>
 
 # 5. Verify the reply contains VALIDATION_MAIL_OK and correct identity info
 
-# 6. Wait for the polecat to complete and hand off
-#    The polecat will run gt done when finished. Check:
-gt polecat status sfgastown/<name>   # Should show "done" or session ended
+# 6. Wait for the miner to complete and hand off
+#    The miner will run gt done when finished. Check:
+gt miner status sfexcavation/<name>   # Should show "done" or session ended
 gt mail inbox                        # Look for handoff mail
 ```
 
 **Validation is complete when:**
-- Polecat replied with correct identity (role, rig, agent runtime)
-- Polecat completed all formula steps
-- Polecat handed off via gt done
+- Miner replied with correct identity (role, rig, agent runtime)
+- Miner completed all formula steps
+- Miner handed off via gt done
 
 ## Usage
 
 ```bash
 # Set agent, then sling
-# In ~/gt/settings/config.json: "role_agents": {"polecat": "pi"}
-gt sling agent-validation sfgastown
+# In ~/gt/settings/config.json: "role_agents": {"miner": "pi"}
+gt sling agent-validation sfexcavation
 
 # Or for Claude (default):
-# "role_agents": {"polecat": "opus-46"}
-gt sling agent-validation sfgastown
+# "role_agents": {"miner": "opus-46"}
+gt sling agent-validation sfexcavation
 ```
 
 ## What it does
 
-1. **Context**: Verifies Gas Town identity, role, and startup context are present
-2. **Lifecycle**: Checks tmux session for deacon boot and witness nudge messages
+1. **Context**: Verifies Excavation Site identity, role, and startup context are present
+2. **Lifecycle**: Checks tmux session for supervisor boot and witness nudge messages
 3. **Hook**: Confirms work is hooked and the bead is accessible
 4. **Tools**: Validates gt and bd CLI tools are functional
-5. **Mail**: Waits for mail from the mayor, reads it, and replies to confirm receipt
+5. **Mail**: Waits for mail from the overseer, reads it, and replies to confirm receipt
 6. **Task**: Executes an optional test task to prove agent responsiveness
 7. **Report**: Prints pass/fail summary and completes the bead
 """
@@ -125,26 +125,26 @@ default = "Read the first 5 lines of any source file in this repo and report the
 
 [[steps]]
 id = "verify-context"
-title = "Verify Gas Town context was injected"
+title = "Verify Excavation Site context was injected"
 description = """
-Check that Gas Town context is present in your session. You should have received
+Check that Excavation Site context is present in your session. You should have received
 identity and role information during startup.
 
 **1. Check environment variables:**
 ```bash
 echo "GT_ROLE=$GT_ROLE"
 echo "GT_RIG=$GT_RIG"
-echo "GT_POLECAT=$GT_POLECAT"
+echo "GT_MINER=$GT_MINER"
 echo "GT_ROOT=$GT_ROOT"
 ```
 
-At minimum, GT_ROLE should be set (typically "polecat").
+At minimum, GT_ROLE should be set (typically "miner").
 
 **2. Verify you know your identity:**
 Report the following from your injected context:
-- Your role (polecat, crew, etc.)
+- Your role (miner, crew, etc.)
 - The rig you're working in
-- The town name (Gas Town)
+- The town name (Excavation Site)
 
 **3. Check that gt prime output was captured:**
 ```bash
@@ -153,35 +153,35 @@ gt prime 2>/dev/null | head -5
 
 Record pass/fail for each check.
 
-**Exit criteria:** Gas Town context is confirmed present in your session."""
+**Exit criteria:** Excavation Site context is confirmed present in your session."""
 
 [[steps]]
 id = "verify-lifecycle"
-title = "Verify deacon boot and witness nudge were received"
+title = "Verify supervisor boot and witness nudge were received"
 needs = ["verify-context"]
 description = """
-Confirm that the Gas Town lifecycle infrastructure (witness and deacon) fired
+Confirm that the Excavation Site lifecycle infrastructure (witness and supervisor) fired
 correctly during your startup. You should have received these as messages in
 your session before you started working.
 
 **1. Witness nudge:**
 Check if you received a message from the witness during startup. It looks like:
-`[GAS TOWN] <rig>/polecats/<name> <- witness • <timestamp> • assigned`
+`[GAS TOWN] <rig>/miners/<name> <- witness • <timestamp> • assigned`
 followed by `Run gt prime --hook and begin work on your hook.`
 
 Report whether you saw this witness nudge in your conversation. PASS if yes.
 
-**2. Deacon boot:**
-Check if the deacon (boot agent) sent you a message or ran any commands in
-your session before you started. The deacon handles initial session setup.
+**2. Supervisor boot:**
+Check if the supervisor (boot agent) sent you a message or ran any commands in
+your session before you started. The supervisor handles initial session setup.
 
-Report whether deacon activity was visible. PASS if yes, SKIP if not seen
-(the deacon may run silently or be disabled).
+Report whether supervisor activity was visible. PASS if yes, SKIP if not seen
+(the supervisor may run silently or be disabled).
 
 **3. gt prime execution:**
 Confirm that `gt prime` was executed during your startup (either by you, by
 the witness nudge instruction, or by a startup hook). The output should have
-included your Gas Town role and context.
+included your Excavation Site role and context.
 
 ```bash
 gt prime 2>/dev/null | head -3
@@ -189,7 +189,7 @@ gt prime 2>/dev/null | head -3
 
 PASS if gt prime output includes your role and `[GAS TOWN]` header.
 
-**Exit criteria:** Witness nudge confirmed received. Deacon boot noted. gt prime ran."""
+**Exit criteria:** Witness nudge confirmed received. Supervisor boot noted. gt prime ran."""
 
 [[steps]]
 id = "verify-hook"
@@ -219,10 +219,10 @@ The hooked bead should be in_progress.
 
 [[steps]]
 id = "verify-tools"
-title = "Verify Gas Town CLI tools work"
+title = "Verify Excavation Site CLI tools work"
 needs = ["verify-hook"]
 description = """
-Run basic Gas Town commands to verify the CLI is functional.
+Run basic Excavation Site commands to verify the CLI is functional.
 
 **1. Check gt is available:**
 ```bash
@@ -250,13 +250,13 @@ Record pass/fail for each tool check.
 
 [[steps]]
 id = "verify-mail"
-title = "Wait for mail from mayor and reply to confirm"
+title = "Wait for mail from overseer and reply to confirm"
 needs = ["verify-tools"]
 description = """
-The mayor will send you a test mail after you boot. Wait for it, read it, and
+The overseer will send you a test mail after you boot. Wait for it, read it, and
 reply to confirm receipt. This validates the full mail round-trip.
 
-**1. Check your inbox for mail from the mayor:**
+**1. Check your inbox for mail from the overseer:**
 ```bash
 gt mail inbox
 ```
@@ -269,7 +269,7 @@ for i in $(seq 1 18); do
         echo "Mail received"
         break
     fi
-    echo "Waiting for mail from mayor... ($i/18)"
+    echo "Waiting for mail from overseer... ($i/18)"
     sleep 5
 done
 ```
@@ -281,25 +281,25 @@ gt mail inbox
 gt mail read <mail-id>
 ```
 
-**4. Reply to the mayor confirming your identity and receipt:**
-Your reply MUST include identity details extracted from your injected Gas Town prompt:
-- Your role (e.g., polecat)
+**4. Reply to the overseer confirming your identity and receipt:**
+Your reply MUST include identity details extracted from your injected Excavation Site prompt:
+- Your role (e.g., miner)
 - Your name (e.g., obsidian)
-- The rig you're in (e.g., sfgastown)
+- The rig you're in (e.g., sfexcavation)
 - The agent runtime you're using (e.g., Claude Opus 4.6, Pi/Gemini, OpenCode)
 - Your hooked bead ID
 
 ```bash
-gt mail send mayor/ -s "VALIDATION: identity confirmed" -m "VALIDATION_MAIL_OK
+gt mail send overseer/ -s "VALIDATION: identity confirmed" -m "VALIDATION_MAIL_OK
 Role: <your role from prompt>
-Name: <your polecat name>
+Name: <your miner name>
 Rig: <your rig>
 Agent: <your agent runtime/model>
 Hooked bead: <bead ID>
-I received your test mail and confirm my Gas Town identity."
+I received your test mail and confirm my Excavation Site identity."
 ```
 
-This proves the agent actually received and understood its Gas Town context,
+This proves the agent actually received and understood its Excavation Site context,
 not just that mail delivery works.
 
 **5. Mark the mail as read:**
@@ -309,7 +309,7 @@ gt mail mark-read <mail-id>
 
 Record pass/fail. If no mail arrives within 90 seconds, record FAIL but continue.
 
-**Exit criteria:** Mail received, read, and reply sent to mayor (or timeout recorded)."""
+**Exit criteria:** Mail received, read, and reply sent to overseer (or timeout recorded)."""
 
 [[steps]]
 id = "execute-task"
@@ -321,7 +321,7 @@ Execute the test task to prove agent responsiveness.
 **Task:** {{task}}
 
 Execute the task above and record the output. This proves the agent can
-receive instructions and produce results within the Gas Town framework.
+receive instructions and produce results within the Excavation Site framework.
 
 **Exit criteria:** Test task executed, output captured."""
 
@@ -336,13 +336,13 @@ Print a summary of all validation checks and complete the bead.
 ```
 === Agent Validation Self-Test ===
 
-Gas Town context:     [PASS/FAIL]
+Excavation Site context:     [PASS/FAIL]
   - Role awareness:   [PASS/FAIL]
   - Rig identity:     [PASS/FAIL]
   - Startup context:  [PASS/FAIL]
 Lifecycle:            [PASS/FAIL]
   - Witness nudge:    [PASS/FAIL]
-  - Deacon boot:      [PASS/FAIL/SKIP]
+  - Supervisor boot:      [PASS/FAIL/SKIP]
   - gt prime fired:   [PASS/FAIL]
 Hook assignment:      [PASS/FAIL]
   - Work hooked:      [PASS/FAIL]

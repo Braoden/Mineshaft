@@ -9,7 +9,7 @@ import (
 	"go.opentelemetry.io/otel/metric"
 )
 
-const meterName = "github.com/steveyegge/gastown/daemon"
+const meterName = "github.com/steveyegge/excavation/daemon"
 
 // daemonMetrics holds OTel instruments for the daemon.
 // All methods are nil-safe so callers don't need to guard against disabled telemetry.
@@ -20,8 +20,8 @@ type daemonMetrics struct {
 	// restartTotal counts agent session restarts, labeled by agent type.
 	restartTotal metric.Int64Counter
 
-	// polecatSpawns counts polecat session spawns, labeled by rig name.
-	polecatSpawns metric.Int64Counter
+	// minerSpawns counts miner session spawns, labeled by rig name.
+	minerSpawns metric.Int64Counter
 
 	// doltMu protects dolt gauge values written by the health check goroutine.
 	doltMu             sync.RWMutex
@@ -41,22 +41,22 @@ func newDaemonMetrics() (*daemonMetrics, error) {
 
 	var err error
 
-	dm.heartbeatTotal, err = m.Int64Counter("gastown.daemon.heartbeat.total",
+	dm.heartbeatTotal, err = m.Int64Counter("excavation.daemon.heartbeat.total",
 		metric.WithDescription("Total number of daemon heartbeat cycles"),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	dm.restartTotal, err = m.Int64Counter("gastown.daemon.restart.total",
+	dm.restartTotal, err = m.Int64Counter("excavation.daemon.restart.total",
 		metric.WithDescription("Total number of agent session restarts"),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	dm.polecatSpawns, err = m.Int64Counter("gastown.polecat.spawns.total",
-		metric.WithDescription("Total number of polecat session spawns"),
+	dm.minerSpawns, err = m.Int64Counter("excavation.miner.spawns.total",
+		metric.WithDescription("Total number of miner session spawns"),
 	)
 	if err != nil {
 		return nil, err
@@ -64,21 +64,21 @@ func newDaemonMetrics() (*daemonMetrics, error) {
 
 	// Dolt observable gauges — values are updated by health checks and
 	// collected by the SDK on each export interval.
-	connGauge, err := m.Int64ObservableGauge("gastown.dolt.connections",
+	connGauge, err := m.Int64ObservableGauge("excavation.dolt.connections",
 		metric.WithDescription("Active Dolt server connections"),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	maxConnGauge, err := m.Int64ObservableGauge("gastown.dolt.max_connections",
+	maxConnGauge, err := m.Int64ObservableGauge("excavation.dolt.max_connections",
 		metric.WithDescription("Configured maximum Dolt server connections"),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	latencyGauge, err := m.Float64ObservableGauge("gastown.dolt.query_latency_ms",
+	latencyGauge, err := m.Float64ObservableGauge("excavation.dolt.query_latency_ms",
 		metric.WithDescription("Dolt health probe round-trip latency in milliseconds"),
 		metric.WithUnit("ms"),
 	)
@@ -86,7 +86,7 @@ func newDaemonMetrics() (*daemonMetrics, error) {
 		return nil, err
 	}
 
-	diskGauge, err := m.Int64ObservableGauge("gastown.dolt.disk_usage_bytes",
+	diskGauge, err := m.Int64ObservableGauge("excavation.dolt.disk_usage_bytes",
 		metric.WithDescription("Dolt data directory disk usage"),
 		metric.WithUnit("By"),
 	)
@@ -94,7 +94,7 @@ func newDaemonMetrics() (*daemonMetrics, error) {
 		return nil, err
 	}
 
-	healthyGauge, err := m.Int64ObservableGauge("gastown.dolt.healthy",
+	healthyGauge, err := m.Int64ObservableGauge("excavation.dolt.healthy",
 		metric.WithDescription("Dolt server health (1=healthy, 0=unhealthy)"),
 	)
 	if err != nil {
@@ -127,7 +127,7 @@ func (dm *daemonMetrics) recordHeartbeat(ctx context.Context) {
 }
 
 // recordRestart increments the restart counter, labeled with the agent type
-// (e.g. "deacon", "witness", "refinery", "polecat").
+// (e.g. "supervisor", "witness", "refinery", "miner").
 func (dm *daemonMetrics) recordRestart(ctx context.Context, agentType string) {
 	if dm == nil {
 		return
@@ -137,12 +137,12 @@ func (dm *daemonMetrics) recordRestart(ctx context.Context, agentType string) {
 	)
 }
 
-// recordPolecatSpawn increments the polecat spawn counter, labeled with the rig name.
-func (dm *daemonMetrics) recordPolecatSpawn(ctx context.Context, rigName string) {
+// recordMinerSpawn increments the miner spawn counter, labeled with the rig name.
+func (dm *daemonMetrics) recordMinerSpawn(ctx context.Context, rigName string) {
 	if dm == nil {
 		return
 	}
-	dm.polecatSpawns.Add(ctx, 1,
+	dm.minerSpawns.Add(ctx, 1,
 		metric.WithAttributes(attribute.String("rig", rigName)),
 	)
 }

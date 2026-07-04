@@ -11,7 +11,7 @@ import (
 func TestPluginRunRecord(t *testing.T) {
 	record := PluginRunRecord{
 		PluginName: "test-plugin",
-		RigName:    "gastown",
+		RigName:    "excavation",
 		Result:     ResultSuccess,
 		Body:       "Test run completed successfully",
 	}
@@ -19,8 +19,8 @@ func TestPluginRunRecord(t *testing.T) {
 	if record.PluginName != "test-plugin" {
 		t.Errorf("expected plugin name 'test-plugin', got %q", record.PluginName)
 	}
-	if record.RigName != "gastown" {
-		t.Errorf("expected rig name 'gastown', got %q", record.RigName)
+	if record.RigName != "excavation" {
+		t.Errorf("expected rig name 'excavation', got %q", record.RigName)
 	}
 	if record.Result != ResultSuccess {
 		t.Errorf("expected result 'success', got %q", record.Result)
@@ -48,7 +48,7 @@ func TestRecordRunCreatesAndClosesReceipt(t *testing.T) {
 	recorder := NewRecorder(townRoot)
 	id, err := recorder.RecordRun(PluginRunRecord{
 		PluginName:  "tool-updater",
-		RigName:     "gastown",
+		RigName:     "excavation",
 		Result:      RunResult("warning"),
 		Title:       "tool-updater: failed=brew",
 		Body:        "brew failed",
@@ -71,7 +71,7 @@ func TestRecordRunCreatesAndClosesReceipt(t *testing.T) {
 		"-l type:plugin-run",
 		"-l plugin:tool-updater",
 		"-l result:warning",
-		"-l rig:gastown",
+		"-l rig:excavation",
 		"-l source:test",
 		"--description=brew failed",
 		"close gt-test-run --reason plugin run recorded",

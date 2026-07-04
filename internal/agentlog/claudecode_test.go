@@ -29,7 +29,7 @@ func TestClaudeProjectDirFor(t *testing.T) {
 
 func TestParseClaudeCodeLine_Text(t *testing.T) {
 	line := `{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Hello world"}]},"timestamp":"2026-02-23T10:00:00Z"}`
-	events := parseClaudeCodeLine(line, "hq-mayor", "claudecode", "test-uuid")
+	events := parseClaudeCodeLine(line, "hq-overseer", "claudecode", "test-uuid")
 	if len(events) != 1 {
 		t.Fatalf("expected 1 event, got %d", len(events))
 	}
@@ -43,8 +43,8 @@ func TestParseClaudeCodeLine_Text(t *testing.T) {
 	if ev.Content != "Hello world" {
 		t.Errorf("Content = %q, want %q", ev.Content, "Hello world")
 	}
-	if ev.SessionID != "hq-mayor" {
-		t.Errorf("SessionID = %q, want %q", ev.SessionID, "hq-mayor")
+	if ev.SessionID != "hq-overseer" {
+		t.Errorf("SessionID = %q, want %q", ev.SessionID, "hq-overseer")
 	}
 	if ev.AgentType != "claudecode" {
 		t.Errorf("AgentType = %q, want %q", ev.AgentType, "claudecode")

@@ -1,12 +1,12 @@
 # Factory Worker API
 
-Design for the API boundary between Gas Town and AI agent runtimes.
+Design for the API boundary between Excavation Site and AI agent runtimes.
 
 Ref: gt-5zs8
 
 ## Problem
 
-Gas Town has no stable interface with AI agents. Every integration is a hack:
+Excavation Site has no stable interface with AI agents. Every integration is a hack:
 
 - **Prompt delivery**: tmux send-keys with 512-byte chunking, ESC+600ms readline
   dance, Enter retries, SIGWINCH wake
@@ -77,7 +77,7 @@ POST /prompt
   "priority": "normal" | "urgent" | "system",
   "source": "nudge" | "mail" | "sling" | "prime",
   "metadata": {
-    "from": "gastown/crew/tom",
+    "from": "excavation/crew/tom",
     "bead_id": "gt-abc12"
   }
 }
@@ -108,7 +108,7 @@ POST /context
 {
   "run_id": "uuid",
   "sections": [
-    {"type": "role", "content": "You are a polecat worker..."},
+    {"type": "role", "content": "You are a miner worker..."},
     {"type": "work", "content": "AUTONOMOUS WORK MODE: gt-abc12..."},
     {"type": "mail", "content": "2 unread messages..."},
     {"type": "checkpoint", "content": "Previous session state..."},
@@ -133,8 +133,8 @@ POST /authorize
   "tool": "Bash",
   "input": {"command": "git push --force"},
   "context": {
-    "role": "polecat",
-    "rig": "gastown",
+    "role": "miner",
+    "rig": "excavation",
     "bead_id": "gt-abc12"
   }
 }
@@ -150,7 +150,7 @@ Replaces: `PreToolUse` hook with exit code 2, PR-workflow guard, dangerous-comma
 guard, patrol-formula guard, per-agent `--dangerously-*` flags.
 
 **Permission model:**
-- Per-role permission sets (polecat: full, witness: read-only, crew: configurable)
+- Per-role permission sets (miner: full, witness: read-only, crew: configurable)
 - Guard rules as data, not shell scripts
 - Fail-closed: if GT is unreachable, block the tool call
 
@@ -201,18 +201,18 @@ GT assigns identity; the runtime authenticates.
 POST /identity
 {
   "run_id": "uuid",
-  "role": "polecat",
-  "rig": "gastown",
+  "role": "miner",
+  "rig": "excavation",
   "agent_name": "alpha",
-  "session_id": "gt-gastown-alpha",
+  "session_id": "gt-excavation-alpha",
   "credentials": {
     "type": "api_key" | "oauth" | "token",
     "value": "sk-ant-...",
     "expires_at": "2026-03-02T00:00:00Z"
   },
   "env": {
-    "GT_ROLE": "gastown/polecats/alpha",
-    "BD_ACTOR": "gastown/polecats/alpha",
+    "GT_ROLE": "excavation/miners/alpha",
+    "BD_ACTOR": "excavation/miners/alpha",
     "GT_ROOT": "/Users/stevey/gt"
   }
 }

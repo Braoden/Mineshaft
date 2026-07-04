@@ -6,12 +6,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/hooks"
+	"github.com/steveyegge/excavation/internal/hooks"
 )
 
 // StaleTaskDispatchCheck detects settings.json files that still reference
 // the removed "gt tap guard task-dispatch" command. After the task-dispatch
-// guard was removed, existing Mayor settings.json files may retain stale
+// guard was removed, existing Overseer settings.json files may retain stale
 // hook entries that invoke the deleted subcommand.
 type StaleTaskDispatchCheck struct {
 	FixableCheck

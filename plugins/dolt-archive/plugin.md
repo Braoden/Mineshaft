@@ -126,7 +126,7 @@ if [ -d "$BACKUP_REPO/.git" ]; then
   else
     git add *.jsonl
     git commit -m "Archive snapshot $(date +%Y-%m-%d-%H%M)" \
-      --author="Gas Town Archive <archive@gastown.local>" 2>/dev/null
+      --author="Excavation Site Archive <archive@excavation.local>" 2>/dev/null
 
     # Check if remote exists before pushing
     if git remote get-url origin > /dev/null 2>&1; then

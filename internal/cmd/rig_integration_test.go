@@ -17,10 +17,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/rig"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/rig"
 )
 
 // =============================================================================
@@ -36,13 +36,13 @@ import (
 // All agents also implicitly allow .beads/ or .beads/redirect (added in checkWorktreeClean).
 //
 // IMPORTANT: Be very conservative about adding files here. Each entry represents
-// a file that Gas Town creates inside the user's repo, which could be accidentally
+// a file that Excavation Site creates inside the user's repo, which could be accidentally
 // committed and pushed upstream. Prefer ephemeral context injection (gt prime) over
 // on-disk files.
 var agentAllowlist = map[string][]string{
-	// Mayor is a clone (not worktree) - it's the canonical copy of the user's repo.
-	// For tracked beads repos, bd init creates files here (runs in mayor/rig).
-	"mayor": {
+	// Overseer is a clone (not worktree) - it's the canonical copy of the user's repo.
+	// For tracked beads repos, bd init creates files here (runs in overseer/rig).
+	"overseer": {
 		"?? AGENTS.md",  // bd init: creates multi-provider instructions (tracked beads repos only)
 		"?? .claude/",   // bd init: creates .claude/settings.json with onboard prompt
 		"?? .gitignore", // EnsureGitignorePatterns: adds .claude/, .runtime/, .logs/, __pycache__/ patterns
@@ -53,15 +53,15 @@ var agentAllowlist = map[string][]string{
 
 	// Crew workers are user-managed worktrees for human developers.
 	"crew": {
-		"?? state.json", // crew/manager.go: Gas Town metadata (TODO: migrate to beads like polecats)
+		"?? state.json", // crew/manager.go: Excavation Site metadata (TODO: migrate to beads like miners)
 		"?? .gitignore", // EnsureGitignorePatterns: adds .claude/, .runtime/, .logs/, __pycache__/ patterns
 	},
 
-	// Polecats are ephemeral worktrees for autonomous agents.
-	"polecat": {
+	// Miners are ephemeral worktrees for autonomous agents.
+	"miner": {
 		"?? .claude/",   // bd init: creates .claude/commands/ with handoff/review slash commands
 		"?? .gitignore", // EnsureGitignorePatterns: adds .claude/, .runtime/, .logs/, __pycache__/ patterns
-		"?? CLAUDE.md",  // CreatePolecatCLAUDEmd: gt done instructions and lifecycle context
+		"?? CLAUDE.md",  // CreateMinerCLAUDEmd: gt done instructions and lifecycle context
 	},
 }
 
@@ -152,21 +152,21 @@ func createTestGitRepoAt(t *testing.T, repoDir string) {
 	}
 }
 
-// setupTestTown creates a minimal Gas Town workspace for testing.
+// setupTestTown creates a minimal Excavation Site workspace for testing.
 // Returns townRoot and a cleanup function.
 func setupTestTown(t *testing.T) string {
 	t.Helper()
 
 	townRoot := t.TempDir()
 
-	// Create mayor directory (required for rigs.json)
-	mayorDir := filepath.Join(townRoot, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+	// Create overseer directory (required for rigs.json)
+	overseerDir := filepath.Join(townRoot, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
+		t.Fatalf("mkdir overseer: %v", err)
 	}
 
 	// Create empty rigs.json
-	rigsPath := filepath.Join(mayorDir, "rigs.json")
+	rigsPath := filepath.Join(overseerDir, "rigs.json")
 	rigsConfig := &config.RigsConfig{
 		Version: 1,
 		Rigs:    make(map[string]config.RigEntry),
@@ -347,7 +347,7 @@ func TestRigAddCreatesCorrectStructure(t *testing.T) {
 	gitURL := createTestGitRepo(t, "testproject")
 
 	// Load rigs config
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsPath)
 	if err != nil {
 		t.Fatalf("load rigs.json: %v", err)
@@ -371,12 +371,12 @@ func TestRigAddCreatesCorrectStructure(t *testing.T) {
 	// Verify directory structure
 	expectedDirs := []string{
 		"",             // rig root
-		"mayor",        // mayor container
-		"mayor/rig",    // mayor clone
+		"overseer",        // overseer container
+		"overseer/rig",    // overseer clone
 		"refinery",     // refinery container
 		"refinery/rig", // refinery worktree
 		"witness",      // witness dir
-		"polecats",     // polecats dir
+		"miners",     // miners dir
 		"crew",         // crew dir
 		".beads",       // beads dir
 		"plugins",      // plugins dir
@@ -406,11 +406,11 @@ func TestRigAddCreatesCorrectStructure(t *testing.T) {
 		t.Errorf(".repo.git not found: %v", err)
 	}
 
-	// Verify mayor/rig is a git repo
-	mayorRigPath := filepath.Join(rigPath, "mayor", "rig")
-	gitDirPath := filepath.Join(mayorRigPath, ".git")
+	// Verify overseer/rig is a git repo
+	overseerRigPath := filepath.Join(rigPath, "overseer", "rig")
+	gitDirPath := filepath.Join(overseerRigPath, ".git")
 	if _, err := os.Stat(gitDirPath); err != nil {
-		t.Errorf("mayor/rig/.git not found: %v", err)
+		t.Errorf("overseer/rig/.git not found: %v", err)
 	}
 
 	// Verify refinery/rig is a git worktree (has .git file pointing to bare repo)
@@ -424,7 +424,7 @@ func TestRigAddCreatesCorrectStructure(t *testing.T) {
 	}
 
 	// NOTE: Most agent settings are installed at startup time, not by gt rig add.
-	// Exception: polecats/.claude/ is scaffolded by gt rig add so polecat sessions
+	// Exception: miners/.claude/ is scaffolded by gt rig add so miner sessions
 	// don't fail on startup due to missing hooks (gt-ke4mj).
 	parentSettingsThatShouldNotExist := []struct {
 		path string
@@ -441,14 +441,14 @@ func TestRigAddCreatesCorrectStructure(t *testing.T) {
 		}
 	}
 
-	// Polecats settings should be scaffolded by gt rig add (gt-ke4mj).
-	polecatSettings := filepath.Join(rigPath, "polecats", ".claude", "settings.json")
-	if _, err := os.Stat(polecatSettings); os.IsNotExist(err) {
-		t.Errorf("polecats/.claude/settings.json should exist after gt rig add (scaffolded for polecat startup)")
+	// Miners settings should be scaffolded by gt rig add (gt-ke4mj).
+	minerSettings := filepath.Join(rigPath, "miners", ".claude", "settings.json")
+	if _, err := os.Stat(minerSettings); os.IsNotExist(err) {
+		t.Errorf("miners/.claude/settings.json should exist after gt rig add (scaffolded for miner startup)")
 	}
-	polecatHandoff := filepath.Join(rigPath, "polecats", ".claude", "commands", "handoff.md")
-	if _, err := os.Stat(polecatHandoff); os.IsNotExist(err) {
-		t.Errorf("polecats/.claude/commands/handoff.md should exist after gt rig add (scaffolded for polecat startup)")
+	minerHandoff := filepath.Join(rigPath, "miners", ".claude", "commands", "handoff.md")
+	if _, err := os.Stat(minerHandoff); os.IsNotExist(err) {
+		t.Errorf("miners/.claude/commands/handoff.md should exist after gt rig add (scaffolded for miner startup)")
 	}
 
 	// NOTE: No per-directory CLAUDE.md/AGENTS.md is created at agent level.
@@ -479,9 +479,9 @@ func TestRigAddCreatesCorrectStructure(t *testing.T) {
 		path string
 		desc string
 	}{
-		{filepath.Join(rigPath, "mayor", "CLAUDE.md"), "mayor/CLAUDE.md (per-rig mayor is just a clone)"},
-		{filepath.Join(rigPath, "mayor", "AGENTS.md"), "mayor/AGENTS.md (per-rig mayor is just a clone)"},
-		{filepath.Join(rigPath, "mayor", "rig", "CLAUDE.md"), "mayor/rig/CLAUDE.md (inside source repo)"},
+		{filepath.Join(rigPath, "overseer", "CLAUDE.md"), "overseer/CLAUDE.md (per-rig overseer is just a clone)"},
+		{filepath.Join(rigPath, "overseer", "AGENTS.md"), "overseer/AGENTS.md (per-rig overseer is just a clone)"},
+		{filepath.Join(rigPath, "overseer", "rig", "CLAUDE.md"), "overseer/rig/CLAUDE.md (inside source repo)"},
 		{filepath.Join(rigPath, "refinery", "rig", "CLAUDE.md"), "refinery/rig/CLAUDE.md (inside source repo)"},
 		{filepath.Join(rigPath, "refinery", "CLAUDE.md"), "refinery/CLAUDE.md (no per-directory bootstrap)"},
 		{filepath.Join(rigPath, "refinery", "AGENTS.md"), "refinery/AGENTS.md (no per-directory bootstrap)"},
@@ -489,8 +489,8 @@ func TestRigAddCreatesCorrectStructure(t *testing.T) {
 		{filepath.Join(rigPath, "witness", "AGENTS.md"), "witness/AGENTS.md (no per-directory bootstrap)"},
 		{filepath.Join(rigPath, "crew", "CLAUDE.md"), "crew/CLAUDE.md (no per-directory bootstrap)"},
 		{filepath.Join(rigPath, "crew", "AGENTS.md"), "crew/AGENTS.md (no per-directory bootstrap)"},
-		{filepath.Join(rigPath, "polecats", "CLAUDE.md"), "polecats/CLAUDE.md (no per-directory bootstrap)"},
-		{filepath.Join(rigPath, "polecats", "AGENTS.md"), "polecats/AGENTS.md (no per-directory bootstrap)"},
+		{filepath.Join(rigPath, "miners", "CLAUDE.md"), "miners/CLAUDE.md (no per-directory bootstrap)"},
+		{filepath.Join(rigPath, "miners", "AGENTS.md"), "miners/AGENTS.md (no per-directory bootstrap)"},
 	}
 
 	for _, w := range wrongClaudeMd {
@@ -500,7 +500,7 @@ func TestRigAddCreatesCorrectStructure(t *testing.T) {
 	}
 }
 
-// TestRigAddRespectsDefaultAgent verifies that gt rig add scaffolds the polecat
+// TestRigAddRespectsDefaultAgent verifies that gt rig add scaffolds the miner
 // config directory matching the town's default_agent setting (gt-vdx).
 func TestRigAddRespectsDefaultAgent(t *testing.T) {
 	requireDoltServer(t)
@@ -520,7 +520,7 @@ func TestRigAddRespectsDefaultAgent(t *testing.T) {
 		t.Fatalf("save town settings: %v", err)
 	}
 
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsPath)
 	if err != nil {
 		t.Fatalf("load rigs.json: %v", err)
@@ -540,16 +540,16 @@ func TestRigAddRespectsDefaultAgent(t *testing.T) {
 
 	rigPath := filepath.Join(townRoot, "agentrig")
 
-	// With default_agent=opencode, polecats/ should use .opencode/, not .claude/.
-	opencodePath := filepath.Join(rigPath, "polecats", ".opencode")
+	// With default_agent=opencode, miners/ should use .opencode/, not .claude/.
+	opencodePath := filepath.Join(rigPath, "miners", ".opencode")
 	if _, err := os.Stat(opencodePath); os.IsNotExist(err) {
-		t.Errorf("polecats/.opencode/ should exist when default_agent=opencode")
+		t.Errorf("miners/.opencode/ should exist when default_agent=opencode")
 	}
 
 	// .claude/ must NOT be created when default_agent=opencode.
-	claudePath := filepath.Join(rigPath, "polecats", ".claude")
+	claudePath := filepath.Join(rigPath, "miners", ".claude")
 	if _, err := os.Stat(claudePath); err == nil {
-		t.Errorf("polecats/.claude/ should NOT exist when default_agent=opencode")
+		t.Errorf("miners/.claude/ should NOT exist when default_agent=opencode")
 	}
 }
 
@@ -562,7 +562,7 @@ func TestRigAddInitializesBeads(t *testing.T) {
 	bridgeDoltPidToTown(t, townRoot)
 	gitURL := createTestGitRepo(t, "beadstest")
 
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsPath)
 	if err != nil {
 		t.Fatalf("load rigs.json: %v", err)
@@ -631,7 +631,7 @@ func TestRigAddUpdatesRoutes(t *testing.T) {
 	bridgeDoltPidToTown(t, townRoot)
 	gitURL := createTestGitRepo(t, "routetest")
 
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsPath)
 	if err != nil {
 		t.Fatalf("load rigs.json: %v", err)
@@ -686,7 +686,7 @@ func TestRigAddUpdatesRoutes(t *testing.T) {
 		t.Error("route with prefix 'rt-' not found in routes.jsonl")
 		t.Logf("routes: %+v", routes)
 	} else {
-		// The path should point to the rig (or mayor/rig if .beads is tracked in source)
+		// The path should point to the rig (or overseer/rig if .beads is tracked in source)
 		if !strings.HasPrefix(foundRoute.Path, "routetest") {
 			t.Errorf("route path = %q, want prefix 'routetest'", foundRoute.Path)
 		}
@@ -702,7 +702,7 @@ func TestRigAddUpdatesRigsJson(t *testing.T) {
 	bridgeDoltPidToTown(t, townRoot)
 	gitURL := createTestGitRepo(t, "jsontest")
 
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsPath)
 	if err != nil {
 		t.Fatalf("load rigs.json: %v", err)
@@ -753,7 +753,7 @@ func TestRigAddDerivesPrefix(t *testing.T) {
 	bridgeDoltPidToTown(t, townRoot)
 	gitURL := createTestGitRepo(t, "myproject")
 
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsPath)
 	if err != nil {
 		t.Fatalf("load rigs.json: %v", err)
@@ -786,7 +786,7 @@ func TestRigAddCreatesRigConfig(t *testing.T) {
 	bridgeDoltPidToTown(t, townRoot)
 	gitURL := createTestGitRepo(t, "configtest")
 
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsPath)
 	if err != nil {
 		t.Fatalf("load rigs.json: %v", err)
@@ -836,7 +836,7 @@ func TestRigAddCreatesRigConfig(t *testing.T) {
 }
 
 // TestRigAddWithUpstreamURL verifies that gt rig add --upstream-url
-// configures the upstream remote on both the bare repo and mayor clone,
+// configures the upstream remote on both the bare repo and overseer clone,
 // and persists the URL to config.json and rigs.json.
 func TestRigAddWithUpstreamURL(t *testing.T) {
 	_ = mockBdCommand(t)
@@ -846,7 +846,7 @@ func TestRigAddWithUpstreamURL(t *testing.T) {
 	forkURL := createTestGitRepo(t, "myfork")
 	upstreamURL := createTestGitRepo(t, "upstream_origin")
 
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsPath)
 	if err != nil {
 		t.Fatalf("load rigs.json: %v", err)
@@ -878,14 +878,14 @@ func TestRigAddWithUpstreamURL(t *testing.T) {
 		}
 	})
 
-	t.Run("mayor clone has upstream remote", func(t *testing.T) {
-		mayorGit := git.NewGit(filepath.Join(rigPath, "mayor", "rig"))
-		got, err := mayorGit.GetUpstreamURL()
+	t.Run("overseer clone has upstream remote", func(t *testing.T) {
+		overseerGit := git.NewGit(filepath.Join(rigPath, "overseer", "rig"))
+		got, err := overseerGit.GetUpstreamURL()
 		if err != nil {
-			t.Fatalf("GetUpstreamURL on mayor: %v", err)
+			t.Fatalf("GetUpstreamURL on overseer: %v", err)
 		}
 		if got != upstreamURL {
-			t.Errorf("mayor upstream = %q, want %q", got, upstreamURL)
+			t.Errorf("overseer upstream = %q, want %q", got, upstreamURL)
 		}
 	})
 
@@ -929,7 +929,7 @@ func TestRigAddCreatesAgentDirs(t *testing.T) {
 	bridgeDoltPidToTown(t, townRoot)
 	gitURL := createTestGitRepo(t, "agenttest")
 
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsPath)
 	if err != nil {
 		t.Fatalf("load rigs.json: %v", err)
@@ -953,7 +953,7 @@ func TestRigAddCreatesAgentDirs(t *testing.T) {
 	expectedDirs := []string{
 		"witness",
 		"refinery",
-		"mayor",
+		"overseer",
 	}
 
 	for _, dir := range expectedDirs {
@@ -974,7 +974,7 @@ func TestRigAddRejectsInvalidNames(t *testing.T) {
 	townRoot := setupTestTown(t)
 	gitURL := createTestGitRepo(t, "validname")
 
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsPath)
 	if err != nil {
 		t.Fatalf("load rigs.json: %v", err)
@@ -1015,7 +1015,7 @@ func TestRigAddCreatesAgentBeads(t *testing.T) {
 	bridgeDoltPidToTown(t, townRoot)
 	gitURL := createTestGitRepo(t, "agentbeadtest")
 
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsPath)
 	if err != nil {
 		t.Fatalf("load rigs.json: %v", err)
@@ -1089,22 +1089,22 @@ func TestAgentBeadIDs(t *testing.T) {
 }
 
 // TestAgentWorktreesStayClean verifies that after gt install, gt rig add, and
-// agent creation, all agent worktrees have no unexpected Gas Town files.
+// agent creation, all agent worktrees have no unexpected Excavation Site files.
 //
 // This is a critical invariant: user repos should stay clean. The only allowed
-// Gas Town file is .beads/redirect which points to the shared rig-level beads.
+// Excavation Site file is .beads/redirect which points to the shared rig-level beads.
 //
 // Agents tested:
-// - Mayor: mayor/rig/ (clone, created by gt rig add)
+// - Overseer: overseer/rig/ (clone, created by gt rig add)
 // - Refinery: refinery/rig/ (worktree, created by gt rig add)
 // - Crew: crew/<name>/ (worktree, created by gt crew add)
-// - Polecat: polecats/<name>/<rigname>/ (worktree, created by gt polecat identity add)
+// - Miner: miners/<name>/<rigname>/ (worktree, created by gt miner identity add)
 //
 // Known issues this test catches:
 // - Extra files in .beads/ beyond redirect (e.g., PRIME.md, databases)
 // - AGENTS.md being copied/created in worktrees
-// - CLAUDE.md being created in non-polecat worktrees (polecats need it for gt done)
-// - Any other Gas Town artifacts polluting the repo
+// - CLAUDE.md being created in non-miner worktrees (miners need it for gt done)
+// - Any other Excavation Site artifacts polluting the repo
 //
 // Tests two scenarios:
 // - Repo WITHOUT tracked .beads/ (clean repo)
@@ -1133,7 +1133,7 @@ func TestAgentWorktreesStayClean(t *testing.T) {
 
 // agentWorktree describes an agent's worktree to check for cleanliness.
 type agentWorktree struct {
-	name      string   // Human-readable name (e.g., "mayor", "polecat")
+	name      string   // Human-readable name (e.g., "overseer", "miner")
 	path      string   // Path to the worktree
 	allowlist []string // Additional allowlisted files beyond .beads/redirect
 	isClone   bool     // True if this is a clone (not worktree) - has different expectations
@@ -1225,7 +1225,7 @@ func runAgentCleanTest(t *testing.T, hasTrackedBeads bool) {
 	if hasTrackedBeads {
 		prefix = "test" // Must match the prefix in source repo's .beads/config.yaml
 	}
-	rigsPath := filepath.Join(hqPath, "mayor", "rigs.json")
+	rigsPath := filepath.Join(hqPath, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsPath)
 	if err != nil {
 		t.Fatalf("load rigs.json: %v", err)
@@ -1263,22 +1263,22 @@ func runAgentCleanTest(t *testing.T, hasTrackedBeads bool) {
 	}
 	t.Logf("gt crew add output:\n%s", output)
 
-	// Step 5: Create a polecat (non-fatal: beads infrastructure may not support
+	// Step 5: Create a miner (non-fatal: beads infrastructure may not support
 	// agent bead creation in environments without a running Dolt server).
 	// Use a context with timeout to avoid the 10-retry exponential backoff
 	// consuming the entire test timeout.
-	polecatCreated := false
+	minerCreated := false
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	cmd = exec.CommandContext(ctx, gtBinary, "polecat", "add", "testrig", "TestCat")
+	cmd = exec.CommandContext(ctx, gtBinary, "miner", "add", "testrig", "TestCat")
 	cmd.Dir = hqPath
 	cmd.Env = append(os.Environ(), "HOME="+tmpDir, "GT_ROOT="+hqPath)
 	output, err = cmd.CombinedOutput()
 	if err != nil {
-		t.Logf("gt polecat identity add failed (non-fatal, beads may not be available): %v", err)
+		t.Logf("gt miner identity add failed (non-fatal, beads may not be available): %v", err)
 	} else {
-		polecatCreated = true
-		t.Logf("gt polecat identity add output:\n%s", output)
+		minerCreated = true
+		t.Logf("gt miner identity add output:\n%s", output)
 	}
 
 	// Step 6: Define all agent worktrees to check
@@ -1286,10 +1286,10 @@ func runAgentCleanTest(t *testing.T, hasTrackedBeads bool) {
 
 	agents := []agentWorktree{
 		{
-			name:      "mayor",
-			path:      filepath.Join(rigPath, "mayor", "rig"),
+			name:      "overseer",
+			path:      filepath.Join(rigPath, "overseer", "rig"),
 			isClone:   true,
-			allowlist: agentAllowlist["mayor"],
+			allowlist: agentAllowlist["overseer"],
 		},
 		{
 			name:      "refinery",
@@ -1305,17 +1305,17 @@ func runAgentCleanTest(t *testing.T, hasTrackedBeads bool) {
 		},
 	}
 
-	if polecatCreated {
-		// Find polecat worktree path (handles both old and new structure)
-		polecatPath := filepath.Join(rigPath, "polecats", "TestCat", "testrig")
-		if _, err := os.Stat(polecatPath); os.IsNotExist(err) {
-			polecatPath = filepath.Join(rigPath, "polecats", "TestCat")
+	if minerCreated {
+		// Find miner worktree path (handles both old and new structure)
+		minerPath := filepath.Join(rigPath, "miners", "TestCat", "testrig")
+		if _, err := os.Stat(minerPath); os.IsNotExist(err) {
+			minerPath = filepath.Join(rigPath, "miners", "TestCat")
 		}
 		agents = append(agents, agentWorktree{
-			name:      "polecat",
-			path:      polecatPath,
+			name:      "miner",
+			path:      minerPath,
 			isClone:   false,
-			allowlist: agentAllowlist["polecat"],
+			allowlist: agentAllowlist["miner"],
 		})
 	}
 

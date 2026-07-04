@@ -10,8 +10,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/constants"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/constants"
 )
 
 // SettingsCheck verifies each rig has a settings/ directory.
@@ -186,54 +186,54 @@ func (c *RuntimeGitignoreCheck) findRigs(townRoot string) []string {
 	return findAllRigs(townRoot)
 }
 
-// LegacyGastownCheck warns if old .gastown/ directories still exist.
-type LegacyGastownCheck struct {
+// LegacyExcavationCheck warns if old .excavation/ directories still exist.
+type LegacyExcavationCheck struct {
 	FixableCheck
 	legacyDirs []string // Cached during Run for use in Fix
 }
 
-// NewLegacyGastownCheck creates a new legacy gastown check.
-func NewLegacyGastownCheck() *LegacyGastownCheck {
-	return &LegacyGastownCheck{
+// NewLegacyExcavationCheck creates a new legacy excavation check.
+func NewLegacyExcavationCheck() *LegacyExcavationCheck {
+	return &LegacyExcavationCheck{
 		FixableCheck: FixableCheck{
 			BaseCheck: BaseCheck{
-				CheckName:        "legacy-gastown",
-				CheckDescription: "Check for old .gastown/ directories that should be migrated",
+				CheckName:        "legacy-excavation",
+				CheckDescription: "Check for old .excavation/ directories that should be migrated",
 				CheckCategory:    CategoryConfig,
 			},
 		},
 	}
 }
 
-// Run checks for legacy .gastown/ directories.
-func (c *LegacyGastownCheck) Run(ctx *CheckContext) *CheckResult {
+// Run checks for legacy .excavation/ directories.
+func (c *LegacyExcavationCheck) Run(ctx *CheckContext) *CheckResult {
 	var found []string
 
-	// Check town-level .gastown/
-	townGastown := filepath.Join(ctx.TownRoot, ".gastown")
-	if info, err := os.Stat(townGastown); err == nil && info.IsDir() {
-		found = append(found, ".gastown/ (town root)")
+	// Check town-level .excavation/
+	townExcavation := filepath.Join(ctx.TownRoot, ".excavation")
+	if info, err := os.Stat(townExcavation); err == nil && info.IsDir() {
+		found = append(found, ".excavation/ (town root)")
 	}
 
-	// Check each rig for .gastown/
+	// Check each rig for .excavation/
 	rigs := c.findRigs(ctx.TownRoot)
 	for _, rig := range rigs {
-		rigGastown := filepath.Join(rig, ".gastown")
-		if info, err := os.Stat(rigGastown); err == nil && info.IsDir() {
+		rigExcavation := filepath.Join(rig, ".excavation")
+		if info, err := os.Stat(rigExcavation); err == nil && info.IsDir() {
 			relPath, _ := filepath.Rel(ctx.TownRoot, rig)
-			found = append(found, fmt.Sprintf("%s/.gastown/", relPath))
+			found = append(found, fmt.Sprintf("%s/.excavation/", relPath))
 		}
 	}
 
 	// Cache for Fix
 	c.legacyDirs = nil
-	if info, err := os.Stat(townGastown); err == nil && info.IsDir() {
-		c.legacyDirs = append(c.legacyDirs, townGastown)
+	if info, err := os.Stat(townExcavation); err == nil && info.IsDir() {
+		c.legacyDirs = append(c.legacyDirs, townExcavation)
 	}
 	for _, rig := range rigs {
-		rigGastown := filepath.Join(rig, ".gastown")
-		if info, err := os.Stat(rigGastown); err == nil && info.IsDir() {
-			c.legacyDirs = append(c.legacyDirs, rigGastown)
+		rigExcavation := filepath.Join(rig, ".excavation")
+		if info, err := os.Stat(rigExcavation); err == nil && info.IsDir() {
+			c.legacyDirs = append(c.legacyDirs, rigExcavation)
 		}
 	}
 
@@ -241,21 +241,21 @@ func (c *LegacyGastownCheck) Run(ctx *CheckContext) *CheckResult {
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusOK,
-			Message: "No legacy .gastown/ directories found",
+			Message: "No legacy .excavation/ directories found",
 		}
 	}
 
 	return &CheckResult{
 		Name:    c.Name(),
 		Status:  StatusWarning,
-		Message: fmt.Sprintf("%d legacy .gastown/ directory(ies) found", len(found)),
+		Message: fmt.Sprintf("%d legacy .excavation/ directory(ies) found", len(found)),
 		Details: found,
 		FixHint: "Run 'gt doctor --fix' to remove after verifying migration is complete",
 	}
 }
 
-// Fix removes legacy .gastown/ directories.
-func (c *LegacyGastownCheck) Fix(ctx *CheckContext) error {
+// Fix removes legacy .excavation/ directories.
+func (c *LegacyExcavationCheck) Fix(ctx *CheckContext) error {
 	for _, dir := range c.legacyDirs {
 		if err := os.RemoveAll(dir); err != nil {
 			return fmt.Errorf("failed to remove %s: %w", dir, err)
@@ -265,7 +265,7 @@ func (c *LegacyGastownCheck) Fix(ctx *CheckContext) error {
 }
 
 // findRigs returns rig directories within the town.
-func (c *LegacyGastownCheck) findRigs(townRoot string) []string {
+func (c *LegacyExcavationCheck) findRigs(townRoot string) []string {
 	return findAllRigs(townRoot)
 }
 
@@ -510,19 +510,19 @@ func (c *SessionHookCheck) usesSessionStartScript(content, hookType string) bool
 }
 
 // findSettingsFiles finds all settings.json files in the town.
-// Settings are installed in gastown-managed parent directories and passed via --settings flag.
+// Settings are installed in excavation-managed parent directories and passed via --settings flag.
 func (c *SessionHookCheck) findSettingsFiles(townRoot string) []string {
 	var files []string
 
-	// Town-level agents: mayor and deacon (settings in their own dir)
-	mayorSettings := filepath.Join(townRoot, "mayor", ".claude", "settings.json")
-	if _, err := os.Stat(mayorSettings); err == nil {
-		files = append(files, mayorSettings)
+	// Town-level agents: overseer and supervisor (settings in their own dir)
+	overseerSettings := filepath.Join(townRoot, "overseer", ".claude", "settings.json")
+	if _, err := os.Stat(overseerSettings); err == nil {
+		files = append(files, overseerSettings)
 	}
 
-	deaconSettings := filepath.Join(townRoot, "deacon", ".claude", "settings.json")
-	if _, err := os.Stat(deaconSettings); err == nil {
-		files = append(files, deaconSettings)
+	supervisorSettings := filepath.Join(townRoot, "supervisor", ".claude", "settings.json")
+	if _, err := os.Stat(supervisorSettings); err == nil {
+		files = append(files, supervisorSettings)
 	}
 
 	// Find all rigs
@@ -546,10 +546,10 @@ func (c *SessionHookCheck) findSettingsFiles(townRoot string) []string {
 			files = append(files, crewSettings)
 		}
 
-		// Polecats - shared settings in parent directory (polecats/)
-		polecatSettings := filepath.Join(rig, "polecats", ".claude", "settings.json")
-		if _, err := os.Stat(polecatSettings); err == nil {
-			files = append(files, polecatSettings)
+		// Miners - shared settings in parent directory (miners/)
+		minerSettings := filepath.Join(rig, "miners", ".claude", "settings.json")
+		if _, err := os.Stat(minerSettings); err == nil {
+			files = append(files, minerSettings)
 		}
 	}
 
@@ -571,14 +571,14 @@ func findAllRigs(townRoot string) []string {
 		}
 		// Skip non-rig directories
 		name := entry.Name()
-		if name == "mayor" || name == ".beads" || strings.HasPrefix(name, ".") {
+		if name == "overseer" || name == ".beads" || strings.HasPrefix(name, ".") {
 			continue
 		}
 
 		rigPath := filepath.Join(townRoot, name)
 
-		// Check if this looks like a rig (has crew/, polecats/, witness/, or refinery/)
-		markers := []string{"crew", "polecats", "witness", "refinery"}
+		// Check if this looks like a rig (has crew/, miners/, witness/, or refinery/)
+		markers := []string{"crew", "miners", "witness", "refinery"}
 		for _, marker := range markers {
 			if _, err := os.Stat(filepath.Join(rigPath, marker)); err == nil {
 				rigs = append(rigs, rigPath)
@@ -603,7 +603,7 @@ func containsFlag(s, flag string) bool {
 	return next == '"' || next == ' ' || next == '\'' || next == '\n' || next == '\t'
 }
 
-// CustomTypesCheck verifies Gas Town custom types are registered with beads.
+// CustomTypesCheck verifies Excavation Site custom types are registered with beads.
 type CustomTypesCheck struct {
 	FixableCheck
 	missingTypes   []string // Cached during Run for use in Fix
@@ -616,7 +616,7 @@ func NewCustomTypesCheck() *CustomTypesCheck {
 		FixableCheck: FixableCheck{
 			BaseCheck: BaseCheck{
 				CheckName:        "beads-custom-types",
-				CheckDescription: "Check that Gas Town custom types are registered with beads",
+				CheckDescription: "Check that Excavation Site custom types are registered with beads",
 				CheckCategory:    CategoryConfig,
 			},
 		},
@@ -658,7 +658,7 @@ func (c *CustomTypesCheck) Run(ctx *CheckContext) *CheckResult {
 			Status:  StatusWarning,
 			Message: "Custom types not configured",
 			Details: []string{
-				"Gas Town custom types (agent, role, rig, convoy, slot) are not registered",
+				"Excavation Site custom types (agent, role, rig, minecart, slot) are not registered",
 				"This may cause bead creation/validation errors",
 			},
 			FixHint: "Run 'gt doctor --fix' or 'bd config set types.custom \"" + constants.BeadsCustomTypes + "\"'",
@@ -750,7 +750,7 @@ func (c *CustomTypesCheck) Fix(ctx *CheckContext) error {
 	return nil
 }
 
-// CustomStatusesCheck verifies Gas Town custom statuses are registered with beads.
+// CustomStatusesCheck verifies Excavation Site custom statuses are registered with beads.
 type CustomStatusesCheck struct {
 	FixableCheck
 	missingStatuses []string // Cached during Run for use in Fix
@@ -763,7 +763,7 @@ func NewCustomStatusesCheck() *CustomStatusesCheck {
 		FixableCheck: FixableCheck{
 			BaseCheck: BaseCheck{
 				CheckName:        "beads-custom-statuses",
-				CheckDescription: "Check that Gas Town custom statuses are registered with beads",
+				CheckDescription: "Check that Excavation Site custom statuses are registered with beads",
 				CheckCategory:    CategoryConfig,
 			},
 		},
@@ -802,8 +802,8 @@ func (c *CustomStatusesCheck) Run(ctx *CheckContext) *CheckResult {
 			Status:  StatusWarning,
 			Message: "Custom statuses not configured",
 			Details: []string{
-				"Gas Town custom statuses (staged_ready, staged_warnings) are not registered",
-				"Convoy staging will fail without these statuses",
+				"Excavation Site custom statuses (staged_ready, staged_warnings) are not registered",
+				"Minecart staging will fail without these statuses",
 			},
 			FixHint: "Run 'gt doctor --fix' or 'bd config set status.custom \"" + constants.BeadsCustomStatuses + "\"'",
 		}

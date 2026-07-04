@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/krc"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/krc"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var krcCmd = &cobra.Command{
@@ -154,7 +154,7 @@ func init() {
 func runKrcStats(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	config, err := krc.LoadConfig(townRoot)
@@ -236,7 +236,7 @@ func runKrcStats(cmd *cobra.Command, args []string) error {
 func runKrcPrune(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	config, err := krc.LoadConfig(townRoot)
@@ -334,7 +334,7 @@ func runKrcPrune(cmd *cobra.Command, args []string) error {
 func runKrcConfig(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	config, err := krc.LoadConfig(townRoot)
@@ -377,7 +377,7 @@ func runKrcConfigSet(cmd *cobra.Command, args []string) error {
 
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	config, err := krc.LoadConfig(townRoot)
@@ -406,7 +406,7 @@ func runKrcConfigSet(cmd *cobra.Command, args []string) error {
 func runKrcConfigReset(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	config := krc.DefaultConfig()
@@ -471,7 +471,7 @@ func formatBytes(b int64) string {
 }
 
 // runKrcAutoPrune runs pruning only if the PruneInterval has elapsed.
-// Designed for daemon/deacon integration: call frequently, only prunes when due.
+// Designed for daemon/supervisor integration: call frequently, only prunes when due.
 func runKrcAutoPrune(townRoot string, config *krc.Config) error {
 	result, ran, err := krc.AutoPrune(townRoot, config)
 	if err != nil {
@@ -506,7 +506,7 @@ func runKrcAutoPrune(townRoot string, config *krc.Config) error {
 func runKrcDecay(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	config, err := krc.LoadConfig(townRoot)
@@ -583,7 +583,7 @@ func runKrcDecay(cmd *cobra.Command, args []string) error {
 func runKrcAutoPruneStatus(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	config, err := krc.LoadConfig(townRoot)

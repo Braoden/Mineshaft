@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/config"
 )
 
 func writeRollbackCleanupBDStub(t *testing.T, binDir, unixScript, windowsScript string) {
@@ -31,30 +31,30 @@ func writeRollbackCleanupBDStub(t *testing.T, binDir, unixScript, windowsScript 
 	}
 }
 
-// TestCleanupSpawnedPolecat_DeletesBranch verifies that cleanupSpawnedPolecat
+// TestCleanupSpawnedMiner_DeletesBranch verifies that cleanupSpawnedMiner
 // attempts to delete the git branch when spawnInfo.Branch is set.
 // The branch deletion may fail in tests (no real git repo), but the code path is exercised.
-func TestCleanupSpawnedPolecat_DeletesBranch(t *testing.T) {
+func TestCleanupSpawnedMiner_DeletesBranch(t *testing.T) {
 	townRoot, _ := filepath.EvalSymlinks(t.TempDir())
 
 	// Create minimal workspace structure
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "gastown", "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir gastown/mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir excavation/overseer/rig: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 
 	// Set up rigs.json with proper time.Time type
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigs := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"gastown": {
-				GitURL:    "git@github.com:test/gastown.git",
+			"excavation": {
+				GitURL:    "git@github.com:test/excavation.git",
 				LocalRepo: "",
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
@@ -69,7 +69,7 @@ func TestCleanupSpawnedPolecat_DeletesBranch(t *testing.T) {
 	}
 
 	// Create bare repo directory (even though it's not a real git repo)
-	bareRepoPath := filepath.Join(townRoot, "gastown", ".repo.git")
+	bareRepoPath := filepath.Join(townRoot, "excavation", ".repo.git")
 	if err := os.MkdirAll(bareRepoPath, 0755); err != nil {
 		t.Fatalf("mkdir bare repo: %v", err)
 	}
@@ -85,56 +85,56 @@ exit 0
 	writeRollbackCleanupBDStub(t, binDir, bdScript, "@echo off\r\nexit /b 0\r\n")
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
+	t.Setenv(EnvGTRole, "overseer")
 
 	cwd, err := os.Getwd()
 	if err != nil {
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
-	// Call cleanupSpawnedPolecat with a branch
-	// This test verifies that cleanupSpawnedPolecat properly attempts branch deletion
+	// Call cleanupSpawnedMiner with a branch
+	// This test verifies that cleanupSpawnedMiner properly attempts branch deletion
 	// The actual deletion will fail due to no real git repo, but we verify the code path runs
-	spawnInfo := &SpawnedPolecatInfo{
-		RigName:     "gastown",
-		PolecatName: "Toast",
-		ClonePath:   filepath.Join(townRoot, "gastown", "polecats", "Toast"),
+	spawnInfo := &SpawnedMinerInfo{
+		RigName:     "excavation",
+		MinerName: "Toast",
+		ClonePath:   filepath.Join(townRoot, "excavation", "miners", "Toast"),
 		Branch:      "p-toast-123",
 	}
 
 	// This should not panic and should attempt to delete the branch
-	cleanupSpawnedPolecat(spawnInfo, "gastown", "")
+	cleanupSpawnedMiner(spawnInfo, "excavation", "")
 
 	// If we get here without panic, the test passes for the basic code path
-	t.Logf("cleanupSpawnedPolecat with Branch completed without panic")
+	t.Logf("cleanupSpawnedMiner with Branch completed without panic")
 }
 
-// TestCleanupSpawnedPolecat_WithEmptyBranch skips branch deletion when Branch is empty.
-func TestCleanupSpawnedPolecat_WithEmptyBranch(t *testing.T) {
+// TestCleanupSpawnedMiner_WithEmptyBranch skips branch deletion when Branch is empty.
+func TestCleanupSpawnedMiner_WithEmptyBranch(t *testing.T) {
 	townRoot, _ := filepath.EvalSymlinks(t.TempDir())
 
 	// Create minimal workspace structure
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "gastown", "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir gastown/mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir excavation/overseer/rig: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 
 	// Set up rigs.json
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigs := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"gastown": {
-				GitURL:    "git@github.com:test/gastown.git",
+			"excavation": {
+				GitURL:    "git@github.com:test/excavation.git",
 				LocalRepo: "",
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
@@ -159,73 +159,73 @@ exit 0
 	writeRollbackCleanupBDStub(t, binDir, bdScript, "@echo off\r\nexit /b 0\r\n")
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
+	t.Setenv(EnvGTRole, "overseer")
 
 	cwd, err := os.Getwd()
 	if err != nil {
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
-	// Call cleanupSpawnedPolecat with EMPTY branch
-	spawnInfo := &SpawnedPolecatInfo{
-		RigName:     "gastown",
-		PolecatName: "Toast",
-		ClonePath:   filepath.Join(townRoot, "gastown", "polecats", "Toast"),
+	// Call cleanupSpawnedMiner with EMPTY branch
+	spawnInfo := &SpawnedMinerInfo{
+		RigName:     "excavation",
+		MinerName: "Toast",
+		ClonePath:   filepath.Join(townRoot, "excavation", "miners", "Toast"),
 		Branch:      "", // Empty branch
 	}
 
 	// This should complete without attempting branch deletion
-	cleanupSpawnedPolecat(spawnInfo, "gastown", "")
+	cleanupSpawnedMiner(spawnInfo, "excavation", "")
 
 	// If we get here, the empty branch check works
-	t.Logf("cleanupSpawnedPolecat with empty Branch completed without panic")
+	t.Logf("cleanupSpawnedMiner with empty Branch completed without panic")
 }
 
-// TestCleanupSpawnedPolecat_WithNilSpawnInfo handles nil spawnInfo gracefully.
-func TestCleanupSpawnedPolecat_WithNilSpawnInfo(t *testing.T) {
-	// This test verifies that cleanupSpawnedPolecat doesn't panic when spawnInfo is nil
+// TestCleanupSpawnedMiner_WithNilSpawnInfo handles nil spawnInfo gracefully.
+func TestCleanupSpawnedMiner_WithNilSpawnInfo(t *testing.T) {
+	// This test verifies that cleanupSpawnedMiner doesn't panic when spawnInfo is nil
 	// The function should handle this gracefully
 
 	// We expect this to return early without panicking
 	// In practice this might dereference nil, so let's check
 	defer func() {
 		if r := recover(); r != nil {
-			t.Logf("ISSUE: cleanupSpawnedPolecat panics with nil spawnInfo: %v", r)
+			t.Logf("ISSUE: cleanupSpawnedMiner panics with nil spawnInfo: %v", r)
 			// Don't fail the test, just document the behavior
-			t.Skip("Known issue: cleanupSpawnedPolecat panics with nil spawnInfo")
+			t.Skip("Known issue: cleanupSpawnedMiner panics with nil spawnInfo")
 		}
 	}()
 
-	cleanupSpawnedPolecat(nil, "gastown", "")
+	cleanupSpawnedMiner(nil, "excavation", "")
 }
 
-// TestCloseConvoy_ClosesConvoy verifies that the convoy is closed
-// when a convoyID is provided.
-func TestCloseConvoy_ClosesConvoy(t *testing.T) {
+// TestCloseMinecart_ClosesMinecart verifies that the minecart is closed
+// when a minecartID is provided.
+func TestCloseMinecart_ClosesMinecart(t *testing.T) {
 	townRoot, _ := filepath.EvalSymlinks(t.TempDir())
 
 	// Create minimal workspace structure
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "gastown", "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir gastown/mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir excavation/overseer/rig: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 
 	// Set up rigs.json
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigs := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"gastown": {
-				GitURL:    "git@github.com:test/gastown.git",
+			"excavation": {
+				GitURL:    "git@github.com:test/excavation.git",
 				LocalRepo: "",
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
@@ -272,67 +272,67 @@ exit 0
 			"exit /b 0\r\n")
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
+	t.Setenv(EnvGTRole, "overseer")
 
 	cwd, err := os.Getwd()
 	if err != nil {
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
-	// Call cleanupSpawnedPolecat with a convoyID
-	spawnInfo := &SpawnedPolecatInfo{
-		RigName:     "gastown",
-		PolecatName: "Toast",
-		ClonePath:   filepath.Join(townRoot, "gastown", "polecats", "Toast"),
+	// Call cleanupSpawnedMiner with a minecartID
+	spawnInfo := &SpawnedMinerInfo{
+		RigName:     "excavation",
+		MinerName: "Toast",
+		ClonePath:   filepath.Join(townRoot, "excavation", "miners", "Toast"),
 		Branch:      "p-toast-123",
 	}
 
-	cleanupSpawnedPolecat(spawnInfo, "gastown", "convoy-test-123")
+	cleanupSpawnedMiner(spawnInfo, "excavation", "minecart-test-123")
 
 	// Check if close command was logged
 	logContent, err := os.ReadFile(filepath.Join(townRoot, "bd_close.log"))
 	if err != nil {
 		if os.IsNotExist(err) {
-			t.Errorf("BUG: convoy close command was not executed")
+			t.Errorf("BUG: minecart close command was not executed")
 		} else {
 			t.Fatalf("reading close log: %v", err)
 		}
 	} else {
 		closeCommands = append(closeCommands, string(logContent))
-		if !strings.Contains(string(logContent), "convoy-test-123") {
-			t.Errorf("convoy close did not include correct convoy ID: %s", string(logContent))
+		if !strings.Contains(string(logContent), "minecart-test-123") {
+			t.Errorf("minecart close did not include correct minecart ID: %s", string(logContent))
 		}
 	}
 
 	_ = closeCommands
 }
 
-// TestCloseConvoy_EmptyConvoyID skips convoy close when convoyID is empty.
-func TestCloseConvoy_EmptyConvoyID(t *testing.T) {
+// TestCloseMinecart_EmptyMinecartID skips minecart close when minecartID is empty.
+func TestCloseMinecart_EmptyMinecartID(t *testing.T) {
 	townRoot, _ := filepath.EvalSymlinks(t.TempDir())
 
 	// Create minimal workspace structure
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "gastown", "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir gastown/mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir excavation/overseer/rig: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 
 	// Set up rigs.json
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigs := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"gastown": {
-				GitURL:    "git@github.com:test/gastown.git",
+			"excavation": {
+				GitURL:    "git@github.com:test/excavation.git",
 				LocalRepo: "",
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
@@ -379,27 +379,27 @@ exit 0
 			"exit /b 0\r\n")
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
+	t.Setenv(EnvGTRole, "overseer")
 
 	cwd, err := os.Getwd()
 	if err != nil {
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
-	// Call cleanupSpawnedPolecat with EMPTY convoyID
-	spawnInfo := &SpawnedPolecatInfo{
-		RigName:     "gastown",
-		PolecatName: "Toast",
-		ClonePath:   filepath.Join(townRoot, "gastown", "polecats", "Toast"),
+	// Call cleanupSpawnedMiner with EMPTY minecartID
+	spawnInfo := &SpawnedMinerInfo{
+		RigName:     "excavation",
+		MinerName: "Toast",
+		ClonePath:   filepath.Join(townRoot, "excavation", "miners", "Toast"),
 		Branch:      "p-toast-123",
 	}
 
-	cleanupSpawnedPolecat(spawnInfo, "gastown", "")
-	// Do NOT call closeConvoy — this test verifies empty convoyID path
+	cleanupSpawnedMiner(spawnInfo, "excavation", "")
+	// Do NOT call closeMinecart — this test verifies empty minecartID path
 
 	// Check if close command was logged (should NOT be)
 	_, err = os.ReadFile(filepath.Join(townRoot, "bd_close.log"))
@@ -408,32 +408,32 @@ exit 0
 	}
 
 	if closeCalled {
-		t.Errorf("convoy close should NOT be called when convoyID is empty")
+		t.Errorf("minecart close should NOT be called when minecartID is empty")
 	}
 }
 
-// TestRollbackSlingArtifacts_WithConvoyID verifies convoy cleanup in rollback.
-func TestRollbackSlingArtifacts_WithConvoyID(t *testing.T) {
+// TestRollbackSlingArtifacts_WithMinecartID verifies minecart cleanup in rollback.
+func TestRollbackSlingArtifacts_WithMinecartID(t *testing.T) {
 	townRoot, _ := filepath.EvalSymlinks(t.TempDir())
 
 	// Create minimal workspace structure
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "gastown", "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir gastown/mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir excavation/overseer/rig: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 
 	// Set up rigs.json
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigs := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"gastown": {
-				GitURL:    "git@github.com:test/gastown.git",
+			"excavation": {
+				GitURL:    "git@github.com:test/excavation.git",
 				LocalRepo: "",
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
@@ -487,14 +487,14 @@ exit 0
 			"exit /b 0\r\n")
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
+	t.Setenv(EnvGTRole, "overseer")
 
 	cwd, err := os.Getwd()
 	if err != nil {
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
@@ -514,53 +514,53 @@ exit 0
 	}
 	t.Cleanup(func() { collectExistingMoleculesForRollback = prevCollectMolecules })
 
-	// Call rollbackSlingArtifacts with a convoyID
-	spawnInfo := &SpawnedPolecatInfo{
-		RigName:     "gastown",
-		PolecatName: "Toast",
-		ClonePath:   filepath.Join(townRoot, "gastown", "polecats", "Toast"),
+	// Call rollbackSlingArtifacts with a minecartID
+	spawnInfo := &SpawnedMinerInfo{
+		RigName:     "excavation",
+		MinerName: "Toast",
+		ClonePath:   filepath.Join(townRoot, "excavation", "miners", "Toast"),
 		Branch:      "p-toast-123",
 	}
 
-	rollbackSlingArtifacts(spawnInfo, "gt-abc123", "", "convoy-rollback-123")
+	rollbackSlingArtifacts(spawnInfo, "gt-abc123", "", "minecart-rollback-123")
 
 	// Check if close command was logged
 	logContent, err := os.ReadFile(filepath.Join(townRoot, "bd_close.log"))
 	if err != nil {
 		if os.IsNotExist(err) {
-			t.Errorf("BUG: rollbackSlingArtifacts did not close convoy")
+			t.Errorf("BUG: rollbackSlingArtifacts did not close minecart")
 		} else {
 			t.Fatalf("reading close log: %v", err)
 		}
 	} else {
-		if !strings.Contains(string(logContent), "convoy-rollback-123") {
-			t.Errorf("rollbackSlingArtifacts did not close correct convoy: %s", string(logContent))
+		if !strings.Contains(string(logContent), "minecart-rollback-123") {
+			t.Errorf("rollbackSlingArtifacts did not close correct minecart: %s", string(logContent))
 		}
 	}
 }
 
-// TestRollbackSlingArtifacts_EmptyConvoyID skips convoy cleanup when convoyID is empty.
-func TestRollbackSlingArtifacts_EmptyConvoyID(t *testing.T) {
+// TestRollbackSlingArtifacts_EmptyMinecartID skips minecart cleanup when minecartID is empty.
+func TestRollbackSlingArtifacts_EmptyMinecartID(t *testing.T) {
 	townRoot, _ := filepath.EvalSymlinks(t.TempDir())
 
 	// Create minimal workspace structure
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "gastown", "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir gastown/mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir excavation/overseer/rig: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 
 	// Set up rigs.json
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigs := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"gastown": {
-				GitURL:    "git@github.com:test/gastown.git",
+			"excavation": {
+				GitURL:    "git@github.com:test/excavation.git",
 				LocalRepo: "",
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
@@ -604,14 +604,14 @@ exit 0
 			"exit /b 0\r\n")
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
+	t.Setenv(EnvGTRole, "overseer")
 
 	cwd, err := os.Getwd()
 	if err != nil {
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
@@ -631,50 +631,50 @@ exit 0
 	}
 	t.Cleanup(func() { collectExistingMoleculesForRollback = prevCollectMolecules })
 
-	// Call rollbackSlingArtifacts with EMPTY convoyID
-	spawnInfo := &SpawnedPolecatInfo{
-		RigName:     "gastown",
-		PolecatName: "Toast",
-		ClonePath:   filepath.Join(townRoot, "gastown", "polecats", "Toast"),
+	// Call rollbackSlingArtifacts with EMPTY minecartID
+	spawnInfo := &SpawnedMinerInfo{
+		RigName:     "excavation",
+		MinerName: "Toast",
+		ClonePath:   filepath.Join(townRoot, "excavation", "miners", "Toast"),
 		Branch:      "p-toast-123",
 	}
 
-	rollbackSlingArtifacts(spawnInfo, "gt-abc123", "", "") // Empty convoyID
+	rollbackSlingArtifacts(spawnInfo, "gt-abc123", "", "") // Empty minecartID
 
 	// Check if close command was logged (should NOT be)
 	_, err = os.ReadFile(filepath.Join(townRoot, "bd_close.log"))
 	if err == nil {
-		t.Errorf("rollbackSlingArtifacts should NOT close convoy when convoyID is empty")
+		t.Errorf("rollbackSlingArtifacts should NOT close minecart when minecartID is empty")
 	}
 }
 
-// TestRollbackSlingArtifacts_CallsCleanupSpawnedPolecat verifies that
-// rollbackSlingArtifacts calls cleanupSpawnedPolecat with the correct parameters.
-func TestRollbackSlingArtifacts_CallsCleanupSpawnedPolecat(t *testing.T) {
+// TestRollbackSlingArtifacts_CallsCleanupSpawnedMiner verifies that
+// rollbackSlingArtifacts calls cleanupSpawnedMiner with the correct parameters.
+func TestRollbackSlingArtifacts_CallsCleanupSpawnedMiner(t *testing.T) {
 	// This test verifies the integration between rollbackSlingArtifacts and
-	// cleanupSpawnedPolecat. We verify that cleanupSpawnedPolecat is called
-	// by checking that the polecat removal is attempted (via the warning output).
+	// cleanupSpawnedMiner. We verify that cleanupSpawnedMiner is called
+	// by checking that the miner removal is attempted (via the warning output).
 
 	townRoot, _ := filepath.EvalSymlinks(t.TempDir())
 
 	// Create minimal workspace structure
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "gastown", "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir gastown/mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir excavation/overseer/rig: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 
 	// Set up rigs.json
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigs := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"gastown": {
-				GitURL:    "git@github.com:test/gastown.git",
+			"excavation": {
+				GitURL:    "git@github.com:test/excavation.git",
 				LocalRepo: "",
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
@@ -724,14 +724,14 @@ exit 0
 			"exit /b 0\r\n")
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
+	t.Setenv(EnvGTRole, "overseer")
 
 	cwd, err := os.Getwd()
 	if err != nil {
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
@@ -752,17 +752,17 @@ exit 0
 	t.Cleanup(func() { collectExistingMoleculesForRollback = prevCollectMolecules })
 
 	// Call rollbackSlingArtifacts
-	spawnInfo := &SpawnedPolecatInfo{
-		RigName:     "gastown",
-		PolecatName: "Toast",
-		ClonePath:   filepath.Join(townRoot, "gastown", "polecats", "Toast"),
+	spawnInfo := &SpawnedMinerInfo{
+		RigName:     "excavation",
+		MinerName: "Toast",
+		ClonePath:   filepath.Join(townRoot, "excavation", "miners", "Toast"),
 		Branch:      "p-toast-123",
 	}
 
 	rollbackSlingArtifacts(spawnInfo, "gt-abc123", "", "")
 
 	// The test passes if we get here without panic
-	// cleanupSpawnedPolecat is called internally and will fail to find the polecat,
+	// cleanupSpawnedMiner is called internally and will fail to find the miner,
 	// which is expected in a test environment
-	t.Logf("rollbackSlingArtifacts completed and called cleanupSpawnedPolecat")
+	t.Logf("rollbackSlingArtifacts completed and called cleanupSpawnedMiner")
 }

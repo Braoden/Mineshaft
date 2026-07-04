@@ -109,14 +109,14 @@ func makeFakeRequest(method, path, body, cn string) *http.Request {
 	return req
 }
 
-func TestPolecatName(t *testing.T) {
+func TestMinerName(t *testing.T) {
 	cases := []struct {
 		cn   string
 		want string
 	}{
-		{"gt-gastown-furiosa", "furiosa"},
-		{"gt-gas-town-furiosa", "furiosa"}, // hyphenated rig
-		{"gt-gastown-", ""},                // empty name
+		{"gt-excavation-furiosa", "furiosa"},
+		{"gt-excavation-site-furiosa", "furiosa"}, // hyphenated rig
+		{"gt-excavation-", ""},                // empty name
 		{"gt--furiosa", ""},                // empty rig; rejected
 		{"noprefix-rig-name", ""},          // missing gt- prefix
 		{"gt-nodashinrest", ""},            // only one component after stripping gt-
@@ -125,7 +125,7 @@ func TestPolecatName(t *testing.T) {
 	for _, tc := range cases {
 		tc := tc
 		t.Run(tc.cn, func(t *testing.T) {
-			got := polecatName(tc.cn)
+			got := minerName(tc.cn)
 			assert.Equal(t, tc.want, got)
 		})
 	}
@@ -136,9 +136,9 @@ func TestCnToIdentity(t *testing.T) {
 		cn   string
 		want string
 	}{
-		{"gt-gastown-furiosa", "gastown/furiosa"},
-		{"gt-gas-town-furiosa", "gas-town/furiosa"}, // hyphenated rig
-		{"gt-gastown-", ""},                         // empty name
+		{"gt-excavation-furiosa", "excavation/furiosa"},
+		{"gt-excavation-site-furiosa", "excavation-site/furiosa"}, // hyphenated rig
+		{"gt-excavation-", ""},                         // empty name
 		{"gt--furiosa", ""},                         // empty rig (two consecutive dashes after gt-)
 		{"noprefix-rig-name", ""},                   // missing gt- prefix
 		{"gt-nodashinrest", ""},                     // only one component after stripping gt-
@@ -167,8 +167,8 @@ func TestExtractIdentity(t *testing.T) {
 	})
 
 	t.Run("valid CN parses to identity", func(t *testing.T) {
-		req := makeFakeRequest("POST", "/v1/exec", "", "gt-gastown-rust")
-		assert.Equal(t, "gastown/rust", extractIdentity(req))
+		req := makeFakeRequest("POST", "/v1/exec", "", "gt-excavation-rust")
+		assert.Equal(t, "excavation/rust", extractIdentity(req))
 	})
 }
 
@@ -243,14 +243,14 @@ func TestHandleExec(t *testing.T) {
 
 		srv2 := newExecTestServer(t, Config{AllowedCommands: []string{commandName}})
 		body := `{"argv":["` + commandName + `"]}`
-		req := makeFakeRequest("POST", "/v1/exec", body, "gt-gastown-rust")
+		req := makeFakeRequest("POST", "/v1/exec", body, "gt-excavation-rust")
 		rec := httptest.NewRecorder()
 		srv2.handleExec(rec, req)
 
 		require.Equal(t, http.StatusOK, rec.Code)
 		var resp execResponse
 		require.NoError(t, json.NewDecoder(rec.Body).Decode(&resp))
-		assert.Equal(t, "gastown/rust", resp.Stdout)
+		assert.Equal(t, "excavation/rust", resp.Stdout)
 	})
 
 	t.Run("non-zero exit code is returned", func(t *testing.T) {
@@ -337,8 +337,8 @@ func TestHandleExec_BDCreateRepoAliasPinsCanonicalBeadsDir(t *testing.T) {
 
 	townRoot := t.TempDir()
 	townBeads := filepath.Join(townRoot, ".beads")
-	rigRoot := filepath.Join(townRoot, "gastown")
-	canonicalRig := filepath.Join(rigRoot, "mayor", "rig")
+	rigRoot := filepath.Join(townRoot, "excavation")
+	canonicalRig := filepath.Join(rigRoot, "overseer", "rig")
 	canonicalBeads := filepath.Join(canonicalRig, ".beads")
 	decoyBeads := filepath.Join(rigRoot, ".beads")
 	require.NoError(t, os.MkdirAll(canonicalBeads, 0755))
@@ -346,9 +346,9 @@ func TestHandleExec_BDCreateRepoAliasPinsCanonicalBeadsDir(t *testing.T) {
 	require.NoError(t, os.MkdirAll(townBeads, 0755))
 	require.NoError(t, os.WriteFile(filepath.Join(townBeads, "routes.jsonl"), []byte(
 		`{"prefix":"hq-","path":"."}`+"\n"+
-			`{"prefix":"gt-","path":"gastown/mayor/rig"}`+"\n"), 0644))
+			`{"prefix":"gt-","path":"excavation/overseer/rig"}`+"\n"), 0644))
 	require.NoError(t, os.WriteFile(filepath.Join(townBeads, "metadata.json"), []byte(`{"dolt_database":"hq"}`), 0644))
-	require.NoError(t, os.WriteFile(filepath.Join(canonicalBeads, "metadata.json"), []byte(`{"dolt_database":"gastown"}`), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(canonicalBeads, "metadata.json"), []byte(`{"dolt_database":"excavation"}`), 0644))
 	require.NoError(t, os.WriteFile(filepath.Join(decoyBeads, "metadata.json"), []byte(`{"dolt_database":"hq"}`), 0644))
 
 	scriptDir := t.TempDir()
@@ -388,31 +388,31 @@ func TestHandleExec_BDCreateRepoAliasPinsCanonicalBeadsDir(t *testing.T) {
 	}
 
 	t.Run("space form rig alias", func(t *testing.T) {
-		resp := run(`{"argv":["bd","create","--repo","gastown","--title","x"]}`)
+		resp := run(`{"argv":["bd","create","--repo","excavation","--title","x"]}`)
 		assert.Contains(t, resp.Stdout, "[create][--title][x]")
 		assert.NotContains(t, resp.Stdout, "[--repo]")
-		assert.NotContains(t, resp.Stdout, "[gastown]")
+		assert.NotContains(t, resp.Stdout, "[excavation]")
 		assert.Contains(t, resp.Stdout, "BEADS_DIR="+canonicalBeads)
-		assert.Contains(t, resp.Stdout, "BEADS_DOLT_SERVER_DATABASE=gastown\n")
+		assert.Contains(t, resp.Stdout, "BEADS_DOLT_SERVER_DATABASE=excavation\n")
 		assert.Contains(t, resp.Stdout, "BD_DOLT_AUTO_COMMIT=on")
 		assert.Contains(t, resp.Stdout, "BD_NO_GIT_OPS=true")
 		assert.NotContains(t, resp.Stdout, "BEADS_DIR="+decoyBeads)
 	})
 
 	t.Run("bd global flag before create", func(t *testing.T) {
-		resp := run(`{"argv":["bd","--allow-stale","create","--repo","gastown","--title","x"]}`)
+		resp := run(`{"argv":["bd","--allow-stale","create","--repo","excavation","--title","x"]}`)
 		assert.Contains(t, resp.Stdout, "[--allow-stale][create][--title][x]")
 		assert.NotContains(t, resp.Stdout, "[--repo]")
 		assert.Contains(t, resp.Stdout, "BEADS_DIR="+canonicalBeads)
 	})
 
 	t.Run("equals form rig alias", func(t *testing.T) {
-		resp := run(`{"argv":["bd","create","--repo=gastown","--title","x"]}`)
+		resp := run(`{"argv":["bd","create","--repo=excavation","--title","x"]}`)
 		assert.Contains(t, resp.Stdout, "[create][--title][x]")
-		assert.NotContains(t, resp.Stdout, "--repo=gastown")
-		assert.NotContains(t, resp.Stdout, "[gastown]")
+		assert.NotContains(t, resp.Stdout, "--repo=excavation")
+		assert.NotContains(t, resp.Stdout, "[excavation]")
 		assert.Contains(t, resp.Stdout, "BEADS_DIR="+canonicalBeads)
-		assert.Contains(t, resp.Stdout, "BEADS_DOLT_SERVER_DATABASE=gastown\n")
+		assert.Contains(t, resp.Stdout, "BEADS_DOLT_SERVER_DATABASE=excavation\n")
 		assert.Contains(t, resp.Stdout, "BD_DOLT_AUTO_COMMIT=on")
 	})
 
@@ -435,8 +435,8 @@ func TestHandleExec_BDCreateRepoAliasPinsCanonicalBeadsDir(t *testing.T) {
 	})
 
 	t.Run("path-like repo remains explicit", func(t *testing.T) {
-		resp := run(`{"argv":["bd","create","--repo","gastown/mayor/rig","--title","x"]}`)
-		assert.Contains(t, resp.Stdout, "[create][--repo][gastown/mayor/rig][--title][x]")
+		resp := run(`{"argv":["bd","create","--repo","excavation/overseer/rig","--title","x"]}`)
+		assert.Contains(t, resp.Stdout, "[create][--repo][excavation/overseer/rig][--title][x]")
 		assert.Contains(t, resp.Stdout, "BEADS_DIR=\n")
 		assert.Contains(t, resp.Stdout, "BEADS_DOLT_SERVER_DATABASE=\n")
 		assert.Contains(t, resp.Stdout, "BEADS_DOLT_DATA_DIR=\n")
@@ -452,15 +452,15 @@ func TestHandleExec_BDCreateRepoAliasPinsCanonicalBeadsDir(t *testing.T) {
 	})
 
 	t.Run("repo after sentinel remains positional", func(t *testing.T) {
-		resp := run(`{"argv":["bd","create","--","--repo","gastown"]}`)
-		assert.Contains(t, resp.Stdout, "[create][--][--repo][gastown]")
+		resp := run(`{"argv":["bd","create","--","--repo","excavation"]}`)
+		assert.Contains(t, resp.Stdout, "[create][--][--repo][excavation]")
 		assert.Contains(t, resp.Stdout, "BEADS_DIR=\n")
 		assert.Contains(t, resp.Stdout, "BEADS_DOLT_SERVER_DATABASE=\n")
 	})
 
 	t.Run("duplicate repo flags remain explicit", func(t *testing.T) {
-		resp := run(`{"argv":["bd","create","--repo","gastown","--repo","/tmp/other","--title","x"]}`)
-		assert.Contains(t, resp.Stdout, "[create][--repo][gastown][--repo][/tmp/other][--title][x]")
+		resp := run(`{"argv":["bd","create","--repo","excavation","--repo","/tmp/other","--title","x"]}`)
+		assert.Contains(t, resp.Stdout, "[create][--repo][excavation][--repo][/tmp/other][--title][x]")
 		assert.Contains(t, resp.Stdout, "BEADS_DIR=\n")
 	})
 
@@ -471,19 +471,19 @@ func TestHandleExec_BDCreateRepoAliasPinsCanonicalBeadsDir(t *testing.T) {
 	})
 
 	t.Run("unknown leading bd flag returns 403", func(t *testing.T) {
-		code, body := runStatus(`{"argv":["bd","--not-a-global","create","--repo","gastown"]}`)
+		code, body := runStatus(`{"argv":["bd","--not-a-global","create","--repo","excavation"]}`)
 		assert.Equal(t, http.StatusForbidden, code)
 		assert.Contains(t, body, "subcommand required")
 	})
 
 	t.Run("target-selector bd global returns 403", func(t *testing.T) {
-		code, body := runStatus(`{"argv":["bd","--db","/tmp/other","create","--repo","gastown"]}`)
+		code, body := runStatus(`{"argv":["bd","--db","/tmp/other","create","--repo","excavation"]}`)
 		assert.Equal(t, http.StatusForbidden, code)
 		assert.Contains(t, body, "subcommand required")
 	})
 
 	t.Run("target-selector flag after subcommand returns 403", func(t *testing.T) {
-		code, body := runStatus(`{"argv":["bd","create","--db","/tmp/other","--repo","gastown"]}`)
+		code, body := runStatus(`{"argv":["bd","create","--db","/tmp/other","--repo","excavation"]}`)
 		assert.Equal(t, http.StatusForbidden, code)
 		assert.Contains(t, body, "target-selector")
 	})
@@ -591,14 +591,14 @@ func TestHandleExecAuditLog(t *testing.T) {
 		logger := slog.New(lc)
 		srv := newExecTestServer(t, Config{AllowedCommands: []string{"echo"}, Logger: logger})
 
-		req := makeFakeRequest("POST", "/v1/exec", `{"argv":["echo","hi"]}`, "gt-gastown-shiny")
+		req := makeFakeRequest("POST", "/v1/exec", `{"argv":["echo","hi"]}`, "gt-excavation-shiny")
 		rec := httptest.NewRecorder()
 		srv.handleExec(rec, req)
 
 		require.Equal(t, http.StatusOK, rec.Code)
 		e, ok := lc.findEntry(slog.LevelInfo, "exec")
 		require.True(t, ok, "expected INFO 'exec' log record")
-		assert.Equal(t, "gastown/shiny", e.attrs["identity"])
+		assert.Equal(t, "excavation/shiny", e.attrs["identity"])
 		assert.Equal(t, "echo", e.attrs["cmd"])
 	})
 
@@ -631,20 +631,20 @@ func TestExecRateLimit(t *testing.T) {
 	body := `{"argv":["echo","hi"]}`
 
 	// First request should succeed (consumes the single burst token).
-	req1 := makeFakeRequest("POST", "/v1/exec", body, "gt-gastown-ratelimitclient")
+	req1 := makeFakeRequest("POST", "/v1/exec", body, "gt-excavation-ratelimitclient")
 	rec1 := httptest.NewRecorder()
 	srv.handleExec(rec1, req1)
 	assert.Equal(t, http.StatusOK, rec1.Code)
 
 	// Second immediate request from the same client should be rate-limited.
-	req2 := makeFakeRequest("POST", "/v1/exec", body, "gt-gastown-ratelimitclient")
+	req2 := makeFakeRequest("POST", "/v1/exec", body, "gt-excavation-ratelimitclient")
 	rec2 := httptest.NewRecorder()
 	srv.handleExec(rec2, req2)
 	assert.Equal(t, http.StatusTooManyRequests, rec2.Code)
 	assert.Contains(t, rec2.Body.String(), "rate limit exceeded")
 
 	// A different client should still succeed (rate limits are per-client).
-	req3 := makeFakeRequest("POST", "/v1/exec", body, "gt-gastown-otherclient")
+	req3 := makeFakeRequest("POST", "/v1/exec", body, "gt-excavation-otherclient")
 	rec3 := httptest.NewRecorder()
 	srv.handleExec(rec3, req3)
 	assert.Equal(t, http.StatusOK, rec3.Code)
@@ -663,10 +663,10 @@ func TestExecRateLimitLogsWarn(t *testing.T) {
 	body := `{"argv":["echo","hi"]}`
 	// Drain the burst token.
 	srv.handleExec(httptest.NewRecorder(),
-		makeFakeRequest("POST", "/v1/exec", body, "gt-gastown-warntest"))
+		makeFakeRequest("POST", "/v1/exec", body, "gt-excavation-warntest"))
 	// This one should be rejected and logged.
 	srv.handleExec(httptest.NewRecorder(),
-		makeFakeRequest("POST", "/v1/exec", body, "gt-gastown-warntest"))
+		makeFakeRequest("POST", "/v1/exec", body, "gt-excavation-warntest"))
 
 	_, ok := lc.findEntry(slog.LevelWarn, "exec rate limit exceeded")
 	assert.True(t, ok, "expected WARN 'exec rate limit exceeded' log entry")

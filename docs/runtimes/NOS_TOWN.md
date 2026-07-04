@@ -1,47 +1,47 @@
 # NOS Town Runtime Integration
 
-This document describes how to use Gas Town's core orchestration with the NOS Town Groq-native runtime.
+This document describes how to use Excavation Site's core orchestration with the NOS Town Groq-native runtime.
 
 ## Overview
 
-NOS Town extends Gas Town with Groq-hosted open model support, multi-model routing, consensus councils, and institutional memory via the Historian. The two systems share the same core concepts (Hooks, Beads, Convoys, Mayor/Witness/Deacon roles) but diverge on runtime and model selection.
+NOS Town extends Excavation Site with Groq-hosted open model support, multi-model routing, consensus councils, and institutional memory via the Historian. The two systems share the same core concepts (Hooks, Beads, Minecarts, Overseer/Witness/Supervisor roles) but diverge on runtime and model selection.
 
 ## Architecture
 
 ```
-Gas Town Core (this repo)     NOS Town Runtime (kab0rn/nostown)
+Excavation Site Core (this repo)     NOS Town Runtime (kab0rn/nostown)
 │                              │
 ├── Hook lifecycle            ├── Groq API client
 ├── Beads integration         ├── Multi-model routing table
-├── Convoy management          ├── Council orchestration
-├── Mayor/Witness/Deacon       ├── Historian (Batch job)
+├── Minecart management          ├── Council orchestration
+├── Overseer/Witness/Supervisor       ├── Historian (Batch job)
 ├── Refinery merge queue       ├── Safeguard integration
 └── gt CLI                     └── nos CLI (wraps gt + Groq)
 ```
 
 ## Fork Strategy
 
-**NOS Town is NOT a git fork of Gas Town.** Instead:
+**NOS Town is NOT a git fork of Excavation Site.** Instead:
 
-1. **kab0rn/gastown** tracks `gastownhall/gastown` upstream via normal fork/sync workflow
-2. **kab0rn/nostown** imports Gas Town core as a dependency (Go modules or submodule)
+1. **kab0rn/excavation** tracks `excavationhall/excavation` upstream via normal fork/sync workflow
+2. **kab0rn/nostown** imports Excavation Site core as a dependency (Go modules or submodule)
 3. NOS-specific logic (Groq runtime, routing, councils) lives only in `kab0rn/nostown`
 
 ### Why This Approach?
 
-- **Preserves upstream evolution**: Steve Yegge actively iterates on Gas Town. A true fork would diverge.
-- **Clean separation**: Gas Town core doesn't need Groq dependencies; NOS doesn't duplicate orchestration logic.
-- **Easy upstream contributions**: Improvements to Hooks, Convoys, or roles can be PR'd back to Gas Town without Groq-specific baggage.
+- **Preserves upstream evolution**: Steve Yegge actively iterates on Excavation Site. A true fork would diverge.
+- **Clean separation**: Excavation Site core doesn't need Groq dependencies; NOS doesn't duplicate orchestration logic.
+- **Easy upstream contributions**: Improvements to Hooks, Minecarts, or roles can be PR'd back to Excavation Site without Groq-specific baggage.
 
 ## Configuration
 
-To use NOS Town with this Gas Town fork:
+To use NOS Town with this Excavation Site fork:
 
 ### 1. Install Prerequisites
 
 ```bash
-# Gas Town deps (same as standard install)
-go install github.com/kab0rn/gastown/cmd/gt@latest
+# Excavation Site deps (same as standard install)
+go install github.com/kab0rn/excavation/cmd/gt@latest
 go install github.com/steveyegge/beads/cmd/bd@latest
 
 # NOS Town CLI
@@ -77,12 +77,12 @@ Edit `<rig>/settings/config.json`:
     "api_key_env": "GROQ_API_KEY"
   },
   "routing": {
-    "mayor":    { "default": "llama-3.3-70b-versatile" },
+    "overseer":    { "default": "llama-3.3-70b-versatile" },
     "crew":     { "default": "llama-3.3-70b-versatile" },
-    "polecat":  { "default": "llama-3.1-8b-instant", "boosted": "llama-3.3-70b-versatile" },
+    "miner":  { "default": "llama-3.1-8b-instant", "boosted": "llama-3.3-70b-versatile" },
     "witness":  { "default": "llama-3.3-70b-versatile", "council": ["llama-3.3-70b-versatile", "openai/gpt-oss-120b"] },
     "refinery": { "default": "llama-3.3-70b-versatile", "fast_path": "llama-3.1-8b-instant" },
-    "deacon":   { "default": "llama-3.1-8b-instant" },
+    "supervisor":   { "default": "llama-3.1-8b-instant" },
     "dogs":     { "default": "llama-3.1-8b-instant" }
   }
 }
@@ -98,11 +98,11 @@ The `nos` CLI wraps all `gt` commands and adds Groq-specific extensions:
 # Same as gt
 nos rig add myproject https://github.com/you/repo.git
 nos crew add yourname --rig myproject
-nos mayor attach
+nos overseer attach
 
 # NOS-specific: routing config
 nos config route show
-nos config route set polecat.consistency high  # Enable N-way self-consistent mode
+nos config route set miner.consistency high  # Enable N-way self-consistent mode
 
 # NOS-specific: historian status
 nos historian status
@@ -114,20 +114,20 @@ nos historian rebuild  # Force Playbook rebuild from Beads
 You can also use `gt` directly if you configure the Groq runtime in `settings/config.json`. All core commands work:
 
 ```bash
-gt mayor attach
-gt convoy create "Feature X" gt-abc12 gt-def34
+gt overseer attach
+gt minecart create "Feature X" gt-abc12 gt-def34
 gt sling gt-abc12 myproject
 ```
 
 The main difference: `gt` doesn't know about NOS-specific features like councils, Historian, or routing table management. Use `nos` for those.
 
-## Key Differences from Standard Gas Town
+## Key Differences from Standard Excavation Site
 
-| Feature | Gas Town (Claude Code) | NOS Town (Groq) |
+| Feature | Excavation Site (Claude Code) | NOS Town (Groq) |
 |---------|------------------------|------------------|
 | **Runtime** | Claude Code IDE | Groq OpenAI-compatible API |
 | **Model Selection** | Single model (Opus/Sonnet/Haiku) | Multi-model routing per role |
-| **Polecat Modes** | Single instance per bead | Standard / Self-consistent / Power |
+| **Miner Modes** | Single instance per bead | Standard / Self-consistent / Power |
 | **Witness** | Single judgment | Optional council (N judges) |
 | **Refinery** | Live merge queue only | + Offline Batch merge simulation |
 | **Institutional Memory** | CLAUDE.md per rig | + Historian mines Playbooks from all Beads |
@@ -137,14 +137,14 @@ The main difference: `gt` doesn't know about NOS-specific features like councils
 
 ## Contributing
 
-### To Gas Town Core
+### To Excavation Site Core
 
-If you discover improvements to Hooks, Beads, Convoy lifecycle, or core roles:
+If you discover improvements to Hooks, Beads, Minecart lifecycle, or core roles:
 
-1. Fork `gastownhall/gastown`
+1. Fork `excavationhall/excavation`
 2. Make changes in your fork
-3. PR back to `gastownhall/gastown`
-4. `kab0rn/gastown` will sync from upstream
+3. PR back to `excavationhall/excavation`
+4. `kab0rn/excavation` will sync from upstream
 5. `kab0rn/nostown` pulls the updated core
 
 ### To NOS Town Runtime
@@ -157,7 +157,7 @@ Groq-specific features (routing, councils, Historian, Safeguard):
 
 ## Documentation
 
-- **Gas Town**: [README.md](../../README.md), [docs/](../)
+- **Excavation Site**: [README.md](../../README.md), [docs/](../)
 - **NOS Town**: [github.com/kab0rn/nostown](https://github.com/kab0rn/nostown)
   - [docs/ROLES.md](https://github.com/kab0rn/nostown/blob/main/docs/ROLES.md) — Groq-specific role designs
   - [docs/ROUTING.md](https://github.com/kab0rn/nostown/blob/main/docs/ROUTING.md) — Multi-model routing
@@ -165,4 +165,4 @@ Groq-specific features (routing, councils, Historian, Safeguard):
 
 ## License
 
-Both Gas Town and NOS Town are MIT licensed.
+Both Excavation Site and NOS Town are MIT licensed.

@@ -385,7 +385,7 @@ func TestParsePluginMD_GitHubSheriff(t *testing.T) {
 		t.Skipf("github-sheriff plugin not found (expected in plugins/): %v", err)
 	}
 
-	plugin, err := parsePluginMD(content, "/test/github-sheriff", LocationRig, "gastown")
+	plugin, err := parsePluginMD(content, "/test/github-sheriff", LocationRig, "excavation")
 	if err != nil {
 		t.Fatalf("parsePluginMD failed: %v", err)
 	}
@@ -428,7 +428,7 @@ func TestParsePluginMD_StuckAgentDogUsesCanonicalHeartbeatPath(t *testing.T) {
 		t.Skipf("stuck-agent-dog plugin not found (expected in plugins/): %v", err)
 	}
 
-	plugin, err := parsePluginMD(content, "/test/stuck-agent-dog", LocationRig, "gastown")
+	plugin, err := parsePluginMD(content, "/test/stuck-agent-dog", LocationRig, "excavation")
 	if err != nil {
 		t.Fatalf("parsePluginMD failed: %v", err)
 	}
@@ -436,10 +436,10 @@ func TestParsePluginMD_StuckAgentDogUsesCanonicalHeartbeatPath(t *testing.T) {
 	if plugin.Name != "stuck-agent-dog" {
 		t.Fatalf("expected name 'stuck-agent-dog', got %q", plugin.Name)
 	}
-	if !strings.Contains(plugin.Instructions, "deacon/heartbeat.json") {
+	if !strings.Contains(plugin.Instructions, "supervisor/heartbeat.json") {
 		t.Fatalf("expected canonical heartbeat path in instructions, got:\n%s", plugin.Instructions)
 	}
-	if strings.Contains(plugin.Instructions, ".deacon-heartbeat") {
+	if strings.Contains(plugin.Instructions, ".supervisor-heartbeat") {
 		t.Fatalf("did not expect legacy heartbeat path in instructions, got:\n%s", plugin.Instructions)
 	}
 	if !strings.Contains(plugin.Instructions, "Fallback for older/runtime-copied layouts") {
@@ -448,8 +448,8 @@ func TestParsePluginMD_StuckAgentDogUsesCanonicalHeartbeatPath(t *testing.T) {
 	if !strings.Contains(plugin.Instructions, "RIGS_JSON_PATH=\"${TOWN_ROOT}/rigs.json\"") {
 		t.Fatalf("expected town-root rigs.json as canonical source in instructions, got:\n%s", plugin.Instructions)
 	}
-	if !strings.Contains(plugin.Instructions, "$TOWN_ROOT/mayor/rigs.json") {
-		t.Fatalf("expected mayor/ fallback in instructions, got:\n%s", plugin.Instructions)
+	if !strings.Contains(plugin.Instructions, "$TOWN_ROOT/overseer/rigs.json") {
+		t.Fatalf("expected overseer/ fallback in instructions, got:\n%s", plugin.Instructions)
 	}
 	if !strings.Contains(plugin.Instructions, "Filter out any malformed/blank rows") {
 		t.Fatalf("expected fail-safe blank/malformed rigs row handling in instructions, got:\n%s", plugin.Instructions)
@@ -457,8 +457,8 @@ func TestParsePluginMD_StuckAgentDogUsesCanonicalHeartbeatPath(t *testing.T) {
 	if !strings.Contains(plugin.Instructions, "could not parse rigs.json") {
 		t.Fatalf("expected fail-safe rigs.json parse handling in instructions, got:\n%s", plugin.Instructions)
 	}
-	if !strings.Contains(plugin.Instructions, "GT_STUCK_AGENT_DOG_DEACON_STALE_SECONDS") {
-		t.Fatalf("expected configurable deacon stale threshold in instructions, got:\n%s", plugin.Instructions)
+	if !strings.Contains(plugin.Instructions, "GT_STUCK_AGENT_DOG_SUPERVISOR_STALE_SECONDS") {
+		t.Fatalf("expected configurable supervisor stale threshold in instructions, got:\n%s", plugin.Instructions)
 	}
 	if !strings.Contains(plugin.Instructions, "heartbeat_write_divergence") {
 		t.Fatalf("expected heartbeat write-divergence handling in instructions, got:\n%s", plugin.Instructions)
@@ -506,7 +506,7 @@ Deterministic cleanup plugin with run.sh script.
 		t.Fatalf("reading plugin.md fixture: %v", err)
 	}
 
-	plugin, err := parsePluginMD(content, pluginDir, LocationRig, "gastown")
+	plugin, err := parsePluginMD(content, pluginDir, LocationRig, "excavation")
 	if err != nil {
 		t.Fatalf("parsePluginMD failed: %v", err)
 	}
@@ -724,20 +724,20 @@ func TestFormatMailBody_WithRunScript(t *testing.T) {
 func TestParsePluginMD_ExecWrapper(t *testing.T) {
 	content := []byte(`+++
 name = "exitbox-sandbox"
-description = "Sandbox polecat execution with exitbox"
+description = "Sandbox miner execution with exitbox"
 version = 1
 
 [execution]
 type = "exec-wrapper"
-wrapper = ["exitbox", "run", "--profile=gastown-polecat", "--"]
+wrapper = ["exitbox", "run", "--profile=excavation-miner", "--"]
 +++
 
 # Exitbox Sandbox
 
-Wraps polecat sessions in an exitbox sandbox for filesystem and network isolation.
+Wraps miner sessions in an exitbox sandbox for filesystem and network isolation.
 `)
 
-	p, err := parsePluginMD(content, "/test/exitbox-sandbox", LocationRig, "gastown")
+	p, err := parsePluginMD(content, "/test/exitbox-sandbox", LocationRig, "excavation")
 	if err != nil {
 		t.Fatalf("parsePluginMD failed: %v", err)
 	}
@@ -789,7 +789,7 @@ func TestPlugin_ExecWrapperSummary(t *testing.T) {
 	p := &Plugin{
 		Name:     "exitbox-sandbox",
 		Location: LocationRig,
-		RigName:  "gastown",
+		RigName:  "excavation",
 		Execution: &Execution{
 			Type:    ExecTypeExecWrapper,
 			Wrapper: []string{"exitbox", "run", "--"},

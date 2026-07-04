@@ -9,11 +9,11 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/plugin"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/plugin"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // Plugin command flags
@@ -39,7 +39,7 @@ var pluginCmd = &cobra.Command{
 	Use:     "plugin",
 	GroupID: GroupConfig,
 	Short:   "Plugin management",
-	Long: `Manage plugins that run during Deacon patrol cycles.
+	Long: `Manage plugins that run during Supervisor patrol cycles.
 
 Plugins are periodic automation tasks defined by plugin.md files with TOML frontmatter.
 
@@ -111,10 +111,10 @@ Examples:
 var pluginSyncCmd = &cobra.Command{
 	Use:   "sync",
 	Short: "Sync plugins from source repo to runtime directories",
-	Long: `Copy plugins from the gastown source repository to runtime plugin directories.
+	Long: `Copy plugins from the excavation source repository to runtime plugin directories.
 
 By default, auto-detects the source by walking up from the current directory
-looking for a gastown repo, or checks known locations within the town.
+looking for a excavation repo, or checks known locations within the town.
 
 Syncs to town-level plugins (~/gt/plugins/) so all rigs see the latest plugins.
 
@@ -195,11 +195,11 @@ func init() {
 func getPluginScanner() (*plugin.Scanner, string, error) {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return nil, "", fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return nil, "", fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Load rigs config to get rig names
-	rigsConfigPath := constants.MayorRigsPath(townRoot)
+	rigsConfigPath := constants.OverseerRigsPath(townRoot)
 	rigsConfig, err := config.LoadRigsConfig(rigsConfigPath)
 	if err != nil {
 		rigsConfig = &config.RigsConfig{Rigs: make(map[string]config.RigEntry)}
@@ -518,13 +518,13 @@ func runPluginRun(cmd *cobra.Command, args []string) error {
 func runPluginSync(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Determine source directory
 	sourceDir := pluginSyncSource
 	if sourceDir == "" {
-		sourceDir, err = plugin.FindGastownSource(townRoot)
+		sourceDir, err = plugin.FindExcavationSource(townRoot)
 		if err != nil {
 			return err
 		}
@@ -665,7 +665,7 @@ func runPluginRecordRun(cmd *cobra.Command, args []string) error {
 
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	recorder := plugin.NewRecorder(townRoot)

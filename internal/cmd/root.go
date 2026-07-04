@@ -11,20 +11,20 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/cli"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/polecat"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/telemetry"
-	"github.com/steveyegge/gastown/internal/ui"
-	"github.com/steveyegge/gastown/internal/version"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/cli"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/miner"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/telemetry"
+	"github.com/steveyegge/excavation/internal/ui"
+	"github.com/steveyegge/excavation/internal/version"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var rootCmd = &cobra.Command{
 	Use:               "gt", // Updated in init() based on GT_COMMAND
-	Short:             "Gas Town - Multi-agent workspace manager",
+	Short:             "Excavation Site - Multi-agent workspace manager",
 	Version:           Version,
 	Long:              "", // Updated in init() based on GT_COMMAND
 	PersistentPreRunE: persistentPreRun,
@@ -34,7 +34,7 @@ func init() {
 	// Update command name based on GT_COMMAND env var
 	cmdName := cli.Name()
 	rootCmd.Use = cmdName
-	rootCmd.Long = fmt.Sprintf(`Gas Town (%s) manages multi-agent workspaces called rigs.
+	rootCmd.Long = fmt.Sprintf(`Excavation Site (%s) manages multi-agent workspaces called rigs.
 
 It coordinates agent spawning, work distribution, and communication
 across distributed teams of AI agents working on shared codebases.`, cmdName)
@@ -47,7 +47,7 @@ var beadsExemptCommands = map[string]bool{
 	"help":          true,
 	"completion":    true,
 	"crew":          true,
-	"polecat":       true,
+	"miner":       true,
 	"witness":       true,
 	"refinery":      true,
 	"status":        true,
@@ -141,11 +141,11 @@ func persistentPreRun(cmd *cobra.Command, args []string) error {
 		warnIfTownRootOffMain()
 	}
 
-	// Touch polecat session heartbeat on every gt command (gt-qjtq: ZFC liveness fix).
+	// Touch miner session heartbeat on every gt command (gt-qjtq: ZFC liveness fix).
 	// This is best-effort and non-blocking — the heartbeat file signals that the agent
 	// is alive and actively running gt commands. Used by isSessionProcessDead to
 	// determine liveness without PID signal probing.
-	touchPolecatHeartbeat()
+	touchMinerHeartbeat()
 
 	// Skip beads check for exempt commands
 	if beadsExempt || isRoleCommand(cmd) {
@@ -198,23 +198,23 @@ func initCLITheme() {
 	ui.ApplyThemeMode()
 }
 
-// touchPolecatHeartbeat touches the session heartbeat file for polecat agents.
+// touchMinerHeartbeat touches the session heartbeat file for miner agents.
 // Called from persistentPreRun on every gt command. The heartbeat signals that
 // the agent process is alive and actively running gt commands. Used by
 // isSessionProcessDead to determine liveness without PID signal probing (gt-qjtq).
 //
-// This is best-effort: errors are silently ignored. Non-polecat sessions and
+// This is best-effort: errors are silently ignored. Non-miner sessions and
 // sessions without GT_SESSION are skipped silently.
-func touchPolecatHeartbeat() {
+func touchMinerHeartbeat() {
 	sessionName := os.Getenv("GT_SESSION")
 	if sessionName == "" {
 		return
 	}
 
-	// Only polecats, crew, and dogs need heartbeats — they're the ones checked
+	// Only miners, crew, and dogs need heartbeats — they're the ones checked
 	// by isSessionProcessDead for stale session detection.
 	role := os.Getenv("GT_ROLE")
-	if !strings.Contains(role, "polecat") && !strings.Contains(role, "crew") && !strings.Contains(role, "dog") {
+	if !strings.Contains(role, "miner") && !strings.Contains(role, "crew") && !strings.Contains(role, "dog") {
 		return
 	}
 
@@ -223,7 +223,7 @@ func touchPolecatHeartbeat() {
 		return
 	}
 
-	polecat.TouchSessionHeartbeat(townRoot, sessionName)
+	miner.TouchSessionHeartbeat(townRoot, sessionName)
 }
 
 // warnIfTownRootOffMain prints a warning if the town root is not on main branch.
@@ -292,7 +292,7 @@ func checkStaleBinaryWarning() {
 		msg := info.Describe("gt binary")
 		fmt.Fprintf(os.Stderr, "%s %s\n", style.WarningPrefix, msg)
 		if info.IsForward && info.OnMainBranch {
-			fmt.Fprintf(os.Stderr, "    %s Run 'make install' in gastown repo to update\n", style.ArrowPrefix)
+			fmt.Fprintf(os.Stderr, "    %s Run 'make install' in excavation repo to update\n", style.ArrowPrefix)
 		} else {
 			fmt.Fprintf(os.Stderr, "    %s Run 'gt stale' for details; switch to a build branch before rebuilding\n", style.ArrowPrefix)
 		}
@@ -303,7 +303,7 @@ func checkStaleBinaryWarning() {
 // The caller (main) should call os.Exit with this code.
 func Execute() int {
 	ctx := context.Background()
-	provider, err := telemetry.Init(ctx, "gastown", Version)
+	provider, err := telemetry.Init(ctx, "excavation", Version)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "warning: telemetry init: %v\n", err)
 	}

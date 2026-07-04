@@ -13,19 +13,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/channelevents"
-	"github.com/steveyegge/gastown/internal/cli"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/daemon"
-	"github.com/steveyegge/gastown/internal/formula"
-	rigpkg "github.com/steveyegge/gastown/internal/rig"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/telemetry"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/channelevents"
+	"github.com/steveyegge/excavation/internal/cli"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/daemon"
+	"github.com/steveyegge/excavation/internal/formula"
+	rigpkg "github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/telemetry"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // resolveBeadDir returns the directory to run bd commands for a given bead ID.
@@ -38,7 +38,7 @@ import (
 // (and stripping BEADS_DIR). This function reads routes.jsonl from the town-level
 // .beads directory and resolves the bead's prefix to the owning rig.
 //
-// PR #3166 (steveyegge/gastown) will replace bd shell-outs with the Go module
+// PR #3166 (steveyegge/excavation) will replace bd shell-outs with the Go module
 // Storage API, making this function unnecessary. Until then, this is the
 // routing bridge between gt and the routing-free bd CLI.
 func resolveBeadDir(beadID string) string {
@@ -57,13 +57,13 @@ func resolveBeadDirFromTownRoot(townRoot, beadID string) string {
 	resolved := beads.ResolveBeadsDirForID(townBeadsDir, beadID)
 	// Return the parent of the .beads directory so bd discovers it naturally.
 	// For town-level beads this returns townRoot; for rig beads it returns
-	// the rig's mayor/rig directory (e.g., gastown/mayor/rig).
+	// the rig's overseer/rig directory (e.g., excavation/overseer/rig).
 	return filepath.Dir(resolved)
 }
 
 // resolveBeadDirFromRigsJSON looks up the rig directory from rigs.json using prefix.
 func resolveBeadDirFromRigsJSON(townRoot, prefix string) string {
-	rigsPath := townRoot + "/mayor/rigs.json"
+	rigsPath := townRoot + "/overseer/rigs.json"
 	data, err := os.ReadFile(rigsPath)
 	if err != nil {
 		return ""
@@ -82,8 +82,8 @@ func resolveBeadDirFromRigsJSON(townRoot, prefix string) string {
 	trimmedPrefix := strings.TrimSuffix(prefix, "-")
 	for rigName, rigConfig := range rigsFile.Rigs {
 		if rigConfig.Beads.Prefix == trimmedPrefix {
-			// Return mayor/rig path within the rig (where .beads/ lives)
-			return townRoot + "/" + rigName + "/mayor/rig"
+			// Return overseer/rig path within the rig (where .beads/ lives)
+			return townRoot + "/" + rigName + "/overseer/rig"
 		}
 	}
 	return ""
@@ -389,7 +389,7 @@ func verifyBeadExists(beadID string) error {
 
 // verifyBeadExistsInTargetRigDatabase checks the target rig's beads database
 // directly instead of following prefix routing. This prevents gt sling from
-// spawning polecats or creating molecule/hook side effects for beads that only
+// spawning miners or creating molecule/hook side effects for beads that only
 // resolve from HQ or another rig database.
 func verifyBeadExistsInTargetRigDatabase(beadID, targetRig, townRoot string) error {
 	if beadID == "" {
@@ -539,15 +539,15 @@ type beadFieldUpdates struct {
 	Args             string   // Natural language instructions
 	Vars             []string // Formula variables (key=value pairs)
 	AttachedMolecule string   // Wisp root ID
-	AttachedFormula  string   // Formula name (e.g., "mol-polecat-work") for inline step display
+	AttachedFormula  string   // Formula name (e.g., "mol-miner-work") for inline step display
 	ClearAttachment  bool     // Clear stale workflow attachment fields before applying updates
 	AttachedAt       string   // Assignment timestamp; refreshed when workflow metadata is written
 	NoMerge          bool     // Skip merge queue on completion
 	ReviewOnly       bool     // Review-only mode: assignee must not merge/commit/push
 	Mode             *string  // Execution mode: nil means unchanged, "" clears, "ralph" enables Ralph mode
-	ConvoyID         string   // Convoy bead ID (e.g., "hq-cv-abc")
-	MergeStrategy    string   // Convoy merge strategy: "direct", "mr", "local"
-	ConvoyOwned      bool     // Convoy has gt:owned label (caller-managed lifecycle)
+	MinecartID         string   // Minecart bead ID (e.g., "hq-cv-abc")
+	MergeStrategy    string   // Minecart merge strategy: "direct", "mr", "local"
+	MinecartOwned      bool     // Minecart has gt:owned label (caller-managed lifecycle)
 	FormulaVars      string   // Newline-separated key=value pairs for formula template substitution
 }
 
@@ -561,9 +561,9 @@ func buildSlingFieldUpdates(
 	reviewOnly bool,
 	mode string,
 	formulaVars string,
-	convoyID string,
+	minecartID string,
 	mergeStrategy string,
-	convoyOwned bool,
+	minecartOwned bool,
 ) beadFieldUpdates {
 	updates := beadFieldUpdates{
 		Dispatcher:       dispatcher,
@@ -574,9 +574,9 @@ func buildSlingFieldUpdates(
 		NoMerge:          noMerge,
 		ReviewOnly:       reviewOnly,
 		Mode:             &mode,
-		ConvoyID:         convoyID,
+		MinecartID:         minecartID,
 		MergeStrategy:    mergeStrategy,
-		ConvoyOwned:      convoyOwned,
+		MinecartOwned:      minecartOwned,
 		FormulaVars:      formulaVars,
 	}
 	if attachedMolecule != "" || attachedFormula != "" || noMerge || reviewOnly {
@@ -660,14 +660,14 @@ func storeFieldsInBeadFromTownRoot(townRoot, beadID string, updates beadFieldUpd
 	if updates.Mode != nil {
 		fields.Mode = *updates.Mode
 	}
-	if updates.ConvoyID != "" {
-		fields.ConvoyID = updates.ConvoyID
+	if updates.MinecartID != "" {
+		fields.MinecartID = updates.MinecartID
 	}
 	if updates.MergeStrategy != "" {
 		fields.MergeStrategy = updates.MergeStrategy
 	}
-	if updates.ConvoyOwned {
-		fields.ConvoyOwned = true
+	if updates.MinecartOwned {
+		fields.MinecartOwned = true
 	}
 	if updates.FormulaVars != "" {
 		fields.FormulaVars = updates.FormulaVars
@@ -844,19 +844,19 @@ func detectActor() string {
 
 // agentIDToBeadID converts an agent ID to its corresponding agent bead ID.
 // Uses canonical naming: prefix-rig-role-name
-// Town-level agents (Mayor, Deacon) use hq- prefix and are stored in town beads.
+// Town-level agents (Overseer, Supervisor) use hq- prefix and are stored in town beads.
 // Rig-level agents use the rig's configured prefix (default "gt-").
 // townRoot is needed to look up the rig's configured prefix.
 func agentIDToBeadID(agentID, townRoot string) string {
-	// Normalize: strip trailing slash (resolveSelfTarget returns "mayor/" not "mayor")
+	// Normalize: strip trailing slash (resolveSelfTarget returns "overseer/" not "overseer")
 	agentID = strings.TrimSuffix(agentID, "/")
 
 	// Handle simple cases (town-level agents with hq- prefix)
-	if agentID == "mayor" {
-		return beads.MayorBeadIDTown()
+	if agentID == "overseer" {
+		return beads.OverseerBeadIDTown()
 	}
-	if agentID == "deacon" {
-		return beads.DeaconBeadIDTown()
+	if agentID == "supervisor" {
+		return beads.SupervisorBeadIDTown()
 	}
 
 	// Parse path-style agent IDs
@@ -875,9 +875,9 @@ func agentIDToBeadID(agentID, townRoot string) string {
 		return beads.RefineryBeadIDWithPrefix(prefix, rig)
 	case len(parts) == 3 && parts[1] == "crew":
 		return beads.CrewBeadIDWithPrefix(prefix, rig, parts[2])
-	case len(parts) == 3 && parts[1] == "polecats":
-		return beads.PolecatBeadIDWithPrefix(prefix, rig, parts[2])
-	case len(parts) == 3 && parts[0] == "deacon" && parts[1] == "dogs":
+	case len(parts) == 3 && parts[1] == "miners":
+		return beads.MinerBeadIDWithPrefix(prefix, rig, parts[2])
+	case len(parts) == 3 && parts[0] == "supervisor" && parts[1] == "dogs":
 		// Dogs are town-level agents with hq- prefix
 		return beads.DogBeadIDTown(parts[2])
 	default:
@@ -895,7 +895,7 @@ func updateAgentHookBead(agentID, beadID, workDir, townBeadsDir string) {
 	// Agent bead hook_bead slot is no longer maintained.
 }
 
-// wakeRigAgents wakes the witness for a rig after polecat dispatch.
+// wakeRigAgents wakes the witness for a rig after miner dispatch.
 // This ensures the witness is ready to monitor. The refinery is nudged
 // separately when an MR is actually created (by nudgeRefinery).
 func wakeRigAgents(rigName string) {
@@ -903,12 +903,12 @@ func wakeRigAgents(rigName string) {
 	bootCmd := exec.Command("gt", "rig", "boot", rigName)
 	_ = bootCmd.Run() // Ignore errors - rig might already be running
 
-	// Verify daemon is running — polecat triggering depends on daemon
-	// processing deacon mail. Warn if not running (gt-9wv0).
+	// Verify daemon is running — miner triggering depends on daemon
+	// processing supervisor mail. Warn if not running (gt-9wv0).
 	townRoot, _ := workspace.FindFromCwd()
 	if townRoot != "" {
 		if running, _, _ := daemon.IsRunning(townRoot); !running {
-			fmt.Fprintf(os.Stderr, "Warning: daemon is not running. Polecat may not auto-start.\n")
+			fmt.Fprintf(os.Stderr, "Warning: daemon is not running. Miner may not auto-start.\n")
 			fmt.Fprintf(os.Stderr, "  Start with: gt daemon start\n")
 		}
 	}
@@ -919,13 +919,13 @@ func wakeRigAgents(rigName string) {
 	// agent is busy, text buffers in tmux and is processed at next prompt.
 	witnessSession := session.WitnessSessionName(session.PrefixFor(rigName))
 	t := tmux.NewTmux()
-	if err := t.NudgeSession(witnessSession, "Polecat dispatched - check for work"); err != nil {
+	if err := t.NudgeSession(witnessSession, "Miner dispatched - check for work"); err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: failed to nudge witness %s: %v\n", witnessSession, err)
 	}
 }
 
-// nudgeWitness wakes the witness after polecat completion (gt-a6gp).
-// Replaces POLECAT_DONE mail — nudges are free (no Dolt commit).
+// nudgeWitness wakes the witness after miner completion (gt-a6gp).
+// Replaces MINER_DONE mail — nudges are free (no Dolt commit).
 // Uses immediate delivery: sends directly to the tmux pane.
 func nudgeWitness(rigName, message string) {
 	witnessSession := session.WitnessSessionName(session.PrefixFor(rigName))
@@ -944,8 +944,8 @@ func nudgeWitness(rigName, message string) {
 	// Emit a file event so the witness's await-event unblocks instantly.
 	townRoot, _ := workspace.FindFromCwd()
 	if townRoot != "" {
-		_, _ = channelevents.EmitToTown(townRoot, "witness", "POLECAT_DONE", []string{
-			"source=polecat",
+		_, _ = channelevents.EmitToTown(townRoot, "witness", "MINER_DONE", []string{
+			"source=miner",
 			"message=" + message,
 		})
 	}
@@ -991,13 +991,13 @@ func nudgeRefinery(rigName, message string) {
 	}
 }
 
-// isPolecatTarget checks if the target string refers to a polecat.
-// Returns true if the target format is "rig/polecats/name".
-// This is used to determine if we should respawn a dead polecat
+// isMinerTarget checks if the target string refers to a miner.
+// Returns true if the target format is "rig/miners/name".
+// This is used to determine if we should respawn a dead miner
 // instead of failing when slinging work.
-func isPolecatTarget(target string) bool {
+func isMinerTarget(target string) bool {
 	parts := strings.Split(target, "/")
-	return len(parts) >= 3 && parts[1] == "polecats"
+	return len(parts) >= 3 && parts[1] == "miners"
 }
 
 // FormulaOnBeadResult contains the result of instantiating a formula on a bead.
@@ -1008,13 +1008,13 @@ type FormulaOnBeadResult struct {
 }
 
 // InstantiateFormulaOnBead bonds a formula directly to a bead.
-// This is the formula-on-bead pattern used by issue #288 for auto-applying mol-polecat-work.
+// This is the formula-on-bead pattern used by issue #288 for auto-applying mol-miner-work.
 //
 // Parameters:
-//   - formulaName: the formula to instantiate (e.g., "mol-polecat-work")
+//   - formulaName: the formula to instantiate (e.g., "mol-miner-work")
 //   - beadID: the base bead to bond the wisp to
 //   - title: the bead title (used for --var feature=<title>)
-//   - hookWorkDir: working directory for bd commands (polecat's worktree)
+//   - hookWorkDir: working directory for bd commands (miner's worktree)
 //   - townRoot: the town root directory
 //   - skipCook: if true, skip cooking (for batch mode optimization where cook happens once)
 //   - extraVars: additional --var values supplied by the user
@@ -1027,7 +1027,7 @@ func InstantiateFormulaOnBead(ctx context.Context, formulaName, beadID, title, h
 
 	// Step 1: Cook the formula (ensures proto exists)
 	// If cook fails, retry with the embedded formula extracted to a temp file.
-	// This handles non-gastown rigs that don't have formulas provisioned on disk.
+	// This handles non-excavation rigs that don't have formulas provisioned on disk.
 	// See gt-oir.
 	resolvedFormula := formulaName
 	var formulaCleanup func()
@@ -1158,8 +1158,8 @@ func parseBondSpawnRootIDWithStatus(bondOut []byte, formulaName, beadID, fallbac
 // ensureFormulaRequiredVars appends missing required vars for formulas that enforce
 // strict var presence on direct bond paths.
 func ensureFormulaRequiredVars(formulaName string, vars []string) []string {
-	// Currently only mol-polecat-work has strict required vars on bond.
-	if formulaName != "mol-polecat-work" && formulaName != "polecat-work" {
+	// Currently only mol-miner-work has strict required vars on bond.
+	if formulaName != "mol-miner-work" && formulaName != "miner-work" {
 		return vars
 	}
 
@@ -1263,7 +1263,7 @@ func isHookedAgentDead(assignee string) bool {
 // hookBeadWithRetry hooks a bead to a target agent with exponential backoff retry
 // and post-hook verification. This ensures the hook sticks even under Dolt concurrency.
 // Fails fast on configuration/initialization errors (gt-2ra).
-// See: https://github.com/steveyegge/gastown/issues/148
+// See: https://github.com/steveyegge/excavation/issues/148
 func hookBeadWithRetry(beadID, targetAgent, hookDir string) error {
 	return hookBeadWithRetryWithTownRoot(beadID, targetAgent, hookDir, "")
 }
@@ -1382,7 +1382,7 @@ func isSlingConfigError(err error) bool {
 // and the default branch (base_branch). Only non-empty values are included.
 //
 // Settings are resolved in priority order:
-//  1. Repository defaults: <rig>/mayor/rig/.gastown/settings.json (committed to git)
+//  1. Repository defaults: <rig>/overseer/rig/.excavation/settings.json (committed to git)
 //  2. Rig-local overrides: <rig>/settings/config.json (operator tuning)
 //  3. User --var flags (handled by caller, not here)
 func loadRigCommandVars(townRoot, rig string) []string {
@@ -1392,7 +1392,7 @@ func loadRigCommandVars(townRoot, rig string) []string {
 	var vars []string
 
 	// Load default_branch from rig root config.json (single source of truth per 5ee9abcc).
-	// This sets base_branch for formula instantiation so polecats fork from the right branch.
+	// This sets base_branch for formula instantiation so miners fork from the right branch.
 	rigCfg, err := rigpkg.LoadRigConfig(filepath.Join(townRoot, rig))
 	if err == nil && rigCfg != nil && rigCfg.DefaultBranch != "" {
 		vars = append(vars, fmt.Sprintf("base_branch=%s", rigCfg.DefaultBranch))
@@ -1400,7 +1400,7 @@ func loadRigCommandVars(townRoot, rig string) []string {
 
 	// Load repo-sourced settings (floor — committed to git, always present after clone)
 	var repoMQ *config.MergeQueueConfig
-	repoRoot := filepath.Join(townRoot, rig, "mayor", "rig")
+	repoRoot := filepath.Join(townRoot, rig, "overseer", "rig")
 	repoSettings, _ := config.LoadRepoSettings(repoRoot)
 	if repoSettings != nil {
 		repoMQ = repoSettings.MergeQueue
@@ -1485,7 +1485,7 @@ func updateAgentMode(agentID, mode, workDir, townBeadsDir string) {
 
 // lookupPriorAttempt checks if there are existing open MRs for the given issue.
 // If found, returns formula variables with the prior branch name so the new
-// polecat can cherry-pick or reference prior work instead of starting from scratch.
+// miner can cherry-pick or reference prior work instead of starting from scratch.
 // Returns nil if no prior attempt exists. (GH#gt-zqvj)
 func lookupPriorAttempt(beadsDir, issueID string) []string {
 	bd := beads.New(beadsDir)

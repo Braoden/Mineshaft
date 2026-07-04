@@ -3,12 +3,12 @@ package doctor
 import (
 	"fmt"
 
-	"github.com/steveyegge/gastown/internal/util"
+	"github.com/steveyegge/excavation/internal/util"
 )
 
 // DiskSpaceCheck verifies that the filesystem has sufficient free space.
 // Low disk space is the root cause of cascading failures: Dolt data loss,
-// polecat session death, lost commits, and broken mail delivery.
+// miner session death, lost commits, and broken mail delivery.
 type DiskSpaceCheck struct {
 	BaseCheck
 }
@@ -48,7 +48,7 @@ func (c *DiskSpaceCheck) Run(ctx *CheckContext) *CheckResult {
 					info.AvailableHuman(),
 					util.FormatBytesHuman(info.TotalBytes),
 					info.UsedPercent),
-				"Disk space exhaustion causes: Dolt data loss, polecat session death, lost commits",
+				"Disk space exhaustion causes: Dolt data loss, miner session death, lost commits",
 				"Free up space immediately, then run 'gt doctor --fix' to recover",
 			},
 			FixHint: "Free disk space, then run 'gt doctor --fix'",
@@ -64,7 +64,7 @@ func (c *DiskSpaceCheck) Run(ctx *CheckContext) *CheckResult {
 					info.AvailableHuman(),
 					util.FormatBytesHuman(info.TotalBytes),
 					info.UsedPercent),
-				"Consider freeing space or reducing active polecats to prevent failures",
+				"Consider freeing space or reducing active miners to prevent failures",
 			},
 		}
 

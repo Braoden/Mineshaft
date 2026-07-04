@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/wisp"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/wisp"
 )
 
 // ConfigSource identifies which layer a config value came from.
@@ -34,11 +34,11 @@ var SystemDefaults = map[string]interface{}{
 	"status":                  "operational",
 	"auto_restart":            true,
 	"auto_start_on_up":        false, // If true, rig agents start on gt up even when docked
-	"max_polecats":            10,
+	"max_miners":            10,
 	"priority_adjustment":     0,
 	"dnd":                     false,
-	"polecat_branch_template": "", // Empty = use default behavior (polecat/{name}/...)
-	"default_formula":         "mol-polecat-work",
+	"miner_branch_template": "", // Empty = use default behavior (miner/{name}/...)
+	"default_formula":         "mol-miner-work",
 }
 
 // StackingKeys defines which keys use stacking semantics (values add up).

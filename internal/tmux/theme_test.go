@@ -7,8 +7,8 @@ import (
 func TestAssignTheme_Deterministic(t *testing.T) {
 	t.Parallel()
 	// Same rig name should always get same theme
-	theme1 := AssignTheme("gastown")
-	theme2 := AssignTheme("gastown")
+	theme1 := AssignTheme("excavation")
+	theme2 := AssignTheme("excavation")
 
 	if theme1.Name != theme2.Name {
 		t.Errorf("AssignTheme not deterministic: got %s and %s for same input", theme1.Name, theme2.Name)
@@ -19,7 +19,7 @@ func TestAssignTheme_Distribution(t *testing.T) {
 	t.Parallel()
 	// Different rig names should (mostly) get different themes
 	// With 10 themes and good hashing, collisions should be rare
-	rigs := []string{"gastown", "beads", "myproject", "frontend", "backend", "api", "web", "mobile"}
+	rigs := []string{"excavation", "beads", "myproject", "frontend", "backend", "api", "web", "mobile"}
 	themes := make(map[string]int)
 
 	for _, rig := range rigs {
@@ -65,17 +65,17 @@ func TestThemeStyle(t *testing.T) {
 	}
 }
 
-func TestMayorTheme(t *testing.T) {
+func TestOverseerTheme(t *testing.T) {
 	t.Parallel()
-	theme := MayorTheme()
+	theme := OverseerTheme()
 
-	if theme.Name != "mayor" {
-		t.Errorf("MayorTheme().Name = %q, want %q", theme.Name, "mayor")
+	if theme.Name != "overseer" {
+		t.Errorf("OverseerTheme().Name = %q, want %q", theme.Name, "overseer")
 	}
 
-	// Mayor should have distinct gold/dark colors
+	// Overseer should have distinct gold/dark colors
 	if theme.BG == "" || theme.FG == "" {
-		t.Error("MayorTheme() has empty colors")
+		t.Error("OverseerTheme() has empty colors")
 	}
 }
 

@@ -8,11 +8,11 @@ import (
 
 	"github.com/muesli/termenv"
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var (
@@ -27,7 +27,7 @@ var themeCmd = &cobra.Command{
 	Use:     "theme [name]",
 	GroupID: GroupConfig,
 	Short:   "View or set tmux theme for the current rig",
-	Long: `Manage tmux status bar themes for Gas Town sessions.
+	Long: `Manage tmux status bar themes for Excavation Site sessions.
 
 Without arguments, shows the current theme assignment.
 With a name argument, sets the theme for this rig.
@@ -44,7 +44,7 @@ Examples:
 var themeApplyCmd = &cobra.Command{
 	Use:   "apply",
 	Short: "Apply theme to running sessions",
-	Long: `Apply theme to running Gas Town sessions.
+	Long: `Apply theme to running Excavation Site sessions.
 
 By default, only applies to sessions in the current rig.
 Use --all to apply to sessions across all rigs.`,
@@ -54,7 +54,7 @@ Use --all to apply to sessions across all rigs.`,
 var themeCLICmd = &cobra.Command{
 	Use:   "cli [mode]",
 	Short: "View or set CLI color scheme (dark/light/auto)",
-	Long: `Manage CLI output color scheme for Gas Town commands.
+	Long: `Manage CLI output color scheme for Excavation Site commands.
 
 Without arguments, shows the current CLI theme mode and detection.
 With a mode argument, sets the CLI theme preference.
@@ -93,9 +93,9 @@ func runTheme(cmd *cobra.Command, args []string) error {
 			fmt.Printf("  %-10s  %s\n", name, theme.Style())
 		}
 		fmt.Printf("  %-10s  disable tmux theming\n", "none")
-		// Also show Mayor theme
-		mayor := tmux.MayorTheme()
-		fmt.Printf("  %-10s  %s (Mayor only)\n", mayor.Name, mayor.Style())
+		// Also show Overseer theme
+		overseer := tmux.OverseerTheme()
+		fmt.Printf("  %-10s  %s (Overseer only)\n", overseer.Name, overseer.Style())
 		return nil
 	}
 
@@ -165,14 +165,14 @@ func runThemeApply(cmd *cobra.Command, args []string) error {
 
 		var crewMember string
 		switch identity.Role {
-		case session.RoleMayor:
-			theme = tmux.ResolveSessionTheme(townRoot, "", constants.RoleMayor, "")
-			worker = "Mayor"
-			role = constants.RoleMayor
-		case session.RoleDeacon:
-			theme = tmux.ResolveSessionTheme(townRoot, "", constants.RoleDeacon, "")
-			worker = "Deacon"
-			role = constants.RoleDeacon
+		case session.RoleOverseer:
+			theme = tmux.ResolveSessionTheme(townRoot, "", constants.RoleOverseer, "")
+			worker = "Overseer"
+			role = constants.RoleOverseer
+		case session.RoleSupervisor:
+			theme = tmux.ResolveSessionTheme(townRoot, "", constants.RoleSupervisor, "")
+			worker = "Supervisor"
+			role = constants.RoleSupervisor
 		default:
 			rig = identity.Rig
 
@@ -211,7 +211,7 @@ func runThemeApply(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		if err := t.ConfigureGasTownSession(sess, theme, rig, worker, role); err != nil {
+		if err := t.ConfigureExcavationSession(sess, theme, rig, worker, role); err != nil {
 			fmt.Printf("  %s: failed (%v)\n", sess, err)
 			continue
 		}
@@ -266,9 +266,9 @@ func detectCurrentRig() string {
 	}
 
 	// Extract first path component (rig name)
-	// Patterns: <rig>/..., mayor/..., deacon/...
+	// Patterns: <rig>/..., overseer/..., supervisor/...
 	parts := strings.Split(rel, string(filepath.Separator))
-	if len(parts) > 0 && parts[0] != "." && parts[0] != constants.RoleMayor && parts[0] != constants.RoleDeacon {
+	if len(parts) > 0 && parts[0] != "." && parts[0] != constants.RoleOverseer && parts[0] != constants.RoleSupervisor {
 		return parts[0]
 	}
 
@@ -316,7 +316,7 @@ func saveRigTheme(rigName, themeName string) error {
 		return fmt.Errorf("finding workspace: %w", err)
 	}
 	if townRoot == "" {
-		return fmt.Errorf("not in a Gas Town workspace")
+		return fmt.Errorf("not in a Excavation Site workspace")
 	}
 
 	settingsPath := filepath.Join(townRoot, rigName, "settings", "config.json")
@@ -361,7 +361,7 @@ func runThemeCLI(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("finding workspace: %w", err)
 	}
 	if townRoot == "" {
-		return fmt.Errorf("not in a Gas Town workspace")
+		return fmt.Errorf("not in a Excavation Site workspace")
 	}
 
 	settingsPath := config.TownSettingsPath(townRoot)

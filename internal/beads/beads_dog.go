@@ -80,7 +80,7 @@ func (b *Beads) FindDogAgentBead(name string) (*Issue, error) {
 }
 
 // ResetDogAgentBead finds and resets the agent bead for a dog, preserving
-// persistent identity. Dogs, like polecats, have persistent agent beads that
+// persistent identity. Dogs, like miners, have persistent agent beads that
 // accumulate work history across assignments. Removal transitions state to
 // "nuked" rather than deleting the bead.
 // Returns nil if the bead doesn't exist (idempotent).

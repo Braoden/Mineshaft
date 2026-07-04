@@ -26,8 +26,8 @@ This is infrastructure work. You:
 
 ## Why Dogs?
 
-Cross-rig work requires multi-rig worktrees. Dogs have these, polecats don't.
-The Deacon detects the closure, but the propagation needs rig access."""
+Cross-rig work requires multi-rig worktrees. Dogs have these, miners don't.
+The Supervisor detects the closure, but the propagation needs rig access."""
 formula = "mol-dep-propagate"
 version = 1
 
@@ -111,7 +111,7 @@ description = """
 Send notifications to Witnesses of affected rigs.
 
 **1. Group dependents by rig:**
-- gastown/witness: for gt-* issues
+- excavation/witness: for gt-* issues
 - beads/witness: for bd-* issues
 - etc.
 
@@ -166,8 +166,8 @@ bd show <issue-id>
 
 **3. If triggering dispatch:**
 ```bash
-# For high priority, suggest to Mayor:
-gt mail send mayor/ -s "High-priority work unblocked: <issue>" -m "..."
+# For high priority, suggest to Overseer:
+gt mail send overseer/ -s "High-priority work unblocked: <issue>" -m "..."
 ```
 
 Usually, the Witness notification (previous step) is sufficient - Witnesses
@@ -182,9 +182,9 @@ needs = ["trigger-dispatch"]
 description = """
 Signal work complete and return to available pool.
 
-**1. Signal completion to Deacon:**
+**1. Signal completion to Supervisor:**
 ```bash
-gt mail send deacon/ -s "DOG_DONE $(hostname)" -m "Task: dep-propagate
+gt mail send supervisor/ -s "DOG_DONE $(hostname)" -m "Task: dep-propagate
 Resolved: {{resolved_issue}}
 Cross-rig dependents: {{dependent_count}}
 Witnesses notified: {{witness_list}}
@@ -200,7 +200,7 @@ No explicit entry needed.
 **3. Return to kennel:**
 Dog returns to available state in the pool.
 
-**Exit criteria:** Deacon notified, dog ready for next work or retirement."""
+**Exit criteria:** Supervisor notified, dog ready for next work or retirement."""
 
 [vars]
 [vars.resolved_issue]

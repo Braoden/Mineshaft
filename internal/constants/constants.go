@@ -1,4 +1,4 @@
-// Package constants defines shared constant values used throughout Gas Town.
+// Package constants defines shared constant values used throughout Excavation Site.
 // Centralizing these magic strings improves maintainability and consistency.
 package constants
 
@@ -92,7 +92,7 @@ const (
 	MinHandoffCooldown = 2 * time.Minute
 
 	// GUPPViolationTimeout is how long an agent can have work on hook without
-	// progressing before it's considered a GUPP (Gas Town Universal Propulsion
+	// progressing before it's considered a GUPP (Excavation Site Universal Propulsion
 	// Principle) violation. GUPP states: if you have work on your hook, you run it.
 	//
 	// Single source of truth — referenced by daemon lifecycle patrol,
@@ -106,13 +106,13 @@ const (
 	HungSessionThreshold = 30 * time.Minute
 )
 
-// Directory names within a Gas Town workspace.
+// Directory names within a Excavation Site workspace.
 const (
-	// DirMayor is the directory containing mayor configuration and state.
-	DirMayor = "mayor"
+	// DirOverseer is the directory containing overseer configuration and state.
+	DirOverseer = "overseer"
 
-	// DirPolecats is the directory containing polecat worktrees.
-	DirPolecats = "polecats"
+	// DirMiners is the directory containing miner worktrees.
+	DirMiners = "miners"
 
 	// DirCrew is the directory containing crew workspaces.
 	DirCrew = "crew"
@@ -138,16 +138,16 @@ const (
 
 // File names for configuration and state.
 const (
-	// FileRigsJSON is the rig registry file in mayor/.
+	// FileRigsJSON is the rig registry file in overseer/.
 	FileRigsJSON = "rigs.json"
 
-	// FileTownJSON is the town configuration file in mayor/.
+	// FileTownJSON is the town configuration file in overseer/.
 	FileTownJSON = "town.json"
 
 	// FileConfigJSON is the general config file.
 	FileConfigJSON = "config.json"
 
-	// FileAccountsJSON is the accounts configuration file in mayor/.
+	// FileAccountsJSON is the accounts configuration file in overseer/.
 	FileAccountsJSON = "accounts.json"
 
 	// FileHandoffMarker is the marker file indicating a handoff just occurred.
@@ -160,21 +160,21 @@ const (
 	// (gt-058d)
 	FileLastHandoffTS = "last_handoff_ts"
 
-	// FileQuotaJSON is the quota state file in mayor/.
+	// FileQuotaJSON is the quota state file in overseer/.
 	FileQuotaJSON = "quota.json"
 )
 
 // Beads configuration constants.
 const (
 	// BeadsCustomTypes is the comma-separated list of custom issue types that
-	// Gas Town registers with beads. These types were extracted from beads core
+	// Excavation Site registers with beads. These types were extracted from beads core
 	// in v0.46.0 and now require explicit configuration.
 	//
 	// Type origins:
 	//   agent         - Agent identity beads (gt install, rig init)
 	//   role          - Agent role definitions (gt doctor role checks)
 	//   rig           - Rig identity beads (gt rig init)
-	//   convoy        - Cross-project work tracking
+	//   minecart        - Cross-project work tracking
 	//   slot          - Exclusive access / merge slots
 	//   queue         - Message queue routing (gt mail queue)
 	//   event         - Session/cost events (gt costs record)
@@ -182,23 +182,23 @@ const (
 	//   molecule      - Work decomposition (patrol checks, gt swarm)
 	//   gate          - Async coordination (bd gate wait, park/resume)
 	//   merge-request - Refinery MR processing (gt done, refinery)
-	BeadsCustomTypes = "agent,role,rig,convoy,slot,queue,event,message,molecule,gate,merge-request"
+	BeadsCustomTypes = "agent,role,rig,minecart,slot,queue,event,message,molecule,gate,merge-request"
 )
 
 // BeadsCustomTypesList returns the custom types as a slice.
 func BeadsCustomTypesList() []string {
-	return []string{"agent", "role", "rig", "convoy", "slot", "queue", "event", "message", "molecule", "gate", "merge-request"}
+	return []string{"agent", "role", "rig", "minecart", "slot", "queue", "event", "message", "molecule", "gate", "merge-request"}
 }
 
 // Beads custom status configuration constants.
 const (
 	// BeadsCustomStatuses is the comma-separated list of custom issue statuses
-	// that Gas Town registers with beads. Convoy staging uses staged_ready and
-	// staged_warnings to track convoy readiness before launch.
+	// that Excavation Site registers with beads. Minecart staging uses staged_ready and
+	// staged_warnings to track minecart readiness before launch.
 	//
 	// Status origins:
-	//   staged_ready    - Convoy staged with no warnings (ready to launch)
-	//   staged_warnings - Convoy staged with warnings (requires --force to launch)
+	//   staged_ready    - Minecart staged with no warnings (ready to launch)
+	//   staged_warnings - Minecart staged with warnings (requires --force to launch)
 	BeadsCustomStatuses = "staged_ready,staged_warnings"
 )
 
@@ -215,29 +215,29 @@ const (
 	// BranchBeadsSync is the branch used for beads synchronization.
 	BranchBeadsSync = "beads-sync"
 
-	// BranchPolecatPrefix is the prefix for polecat work branches.
-	BranchPolecatPrefix = "polecat/"
+	// BranchMinerPrefix is the prefix for miner work branches.
+	BranchMinerPrefix = "miner/"
 
 	// BranchIntegrationPrefix is the prefix for integration branches.
 	BranchIntegrationPrefix = "integration/"
 )
 
 // Tmux session names.
-// Mayor and Deacon use hq- prefix: hq-mayor, hq-deacon (town-level, one per machine).
+// Overseer and Supervisor use hq- prefix: hq-overseer, hq-supervisor (town-level, one per machine).
 // Rig-level services use gt- prefix: gt-<rig>-witness, gt-<rig>-refinery, etc.
-// Use session.MayorSessionName() and session.DeaconSessionName().
+// Use session.OverseerSessionName() and session.SupervisorSessionName().
 const (
-	// SessionPrefix is the prefix for rig-level Gas Town tmux sessions.
+	// SessionPrefix is the prefix for rig-level Excavation Site tmux sessions.
 	SessionPrefix = "gt-"
 
-	// HQSessionPrefix is the prefix for town-level services (Mayor, Deacon).
+	// HQSessionPrefix is the prefix for town-level services (Overseer, Supervisor).
 	HQSessionPrefix = "hq-"
 )
 
 // Agent role names.
 const (
-	// RoleMayor is the mayor agent role.
-	RoleMayor = "mayor"
+	// RoleOverseer is the overseer agent role.
+	RoleOverseer = "overseer"
 
 	// RoleWitness is the witness agent role.
 	RoleWitness = "witness"
@@ -245,50 +245,50 @@ const (
 	// RoleRefinery is the refinery agent role.
 	RoleRefinery = "refinery"
 
-	// RolePolecat is the polecat agent role.
-	RolePolecat = "polecat"
+	// RoleMiner is the miner agent role.
+	RoleMiner = "miner"
 
 	// RoleCrew is the crew agent role.
 	RoleCrew = "crew"
 
-	// RoleDeacon is the deacon agent role.
-	RoleDeacon = "deacon"
+	// RoleSupervisor is the supervisor agent role.
+	RoleSupervisor = "supervisor"
 
-	// RoleBoot is the boot watchdog role (modeled as a deacon dog).
+	// RoleBoot is the boot watchdog role (modeled as a supervisor dog).
 	RoleBoot = "boot"
 )
 
 // Role emojis - centralized for easy customization.
-// These match the Gas Town visual identity (see ~/Desktop/Gas Town/ prompts).
+// These match the Excavation Site visual identity (see ~/Desktop/Excavation Site/ prompts).
 const (
-	// EmojiMayor is the mayor emoji (fox conductor).
-	EmojiMayor = "🎩"
+	// EmojiOverseer is the overseer emoji (pickaxe).
+	EmojiOverseer = "⛏️"
 
-	// EmojiDeacon is the deacon emoji (wolf in the engine room).
-	EmojiDeacon = "🐺"
+	// EmojiSupervisor is the supervisor emoji (the works).
+	EmojiSupervisor = "🏭"
 
-	// EmojiWitness is the witness emoji (watchful owl).
-	EmojiWitness = "🦉"
+	// EmojiWitness is the witness emoji (hard hat on watch).
+	EmojiWitness = "👷"
 
-	// EmojiRefinery is the refinery emoji (industrial).
-	EmojiRefinery = "🏭"
+	// EmojiRefinery is the refinery emoji (hammer).
+	EmojiRefinery = "🔨"
 
-	// EmojiCrew is the crew emoji (established worker).
-	EmojiCrew = "👷"
+	// EmojiCrew is the crew emoji (safety vest, established worker).
+	EmojiCrew = "🦺"
 
-	// EmojiPolecat is the polecat emoji (transient worker).
-	EmojiPolecat = "😺"
+	// EmojiMiner is the miner emoji (crossed hammers, transient worker).
+	EmojiMiner = "⚒️"
 
 	// EmojiBoot is the boot watchdog emoji (dog).
-	EmojiBoot = "🐾"
+	EmojiBoot = "🐕"
 )
 
 // Molecule formula names for patrol and dog workflows.
 // These are used as formula identifiers in `bd mol wisp <name>` commands
 // and to match active patrol wisps by title prefix.
 const (
-	// MolDeaconPatrol is the deacon patrol formula name.
-	MolDeaconPatrol = "mol-deacon-patrol"
+	// MolSupervisorPatrol is the supervisor patrol formula name.
+	MolSupervisorPatrol = "mol-supervisor-patrol"
 
 	// MolWitnessPatrol is the witness patrol formula name.
 	MolWitnessPatrol = "mol-witness-patrol"
@@ -314,33 +314,33 @@ const (
 	// MolDogBackup is the Dolt backup dog formula name.
 	MolDogBackup = "mol-dog-backup"
 
-	// MolConvoyFeed is the convoy feeder formula name.
-	MolConvoyFeed = "mol-convoy-feed"
+	// MolMinecartFeed is the minecart feeder formula name.
+	MolMinecartFeed = "mol-minecart-feed"
 
-	// MolConvoyCleanup is the convoy cleanup formula name.
-	MolConvoyCleanup = "mol-convoy-cleanup"
+	// MolMinecartCleanup is the minecart cleanup formula name.
+	MolMinecartCleanup = "mol-minecart-cleanup"
 )
 
 // PatrolFormulas returns the list of patrol formula names.
 func PatrolFormulas() []string {
-	return []string{MolDeaconPatrol, MolWitnessPatrol, MolRefineryPatrol}
+	return []string{MolSupervisorPatrol, MolWitnessPatrol, MolRefineryPatrol}
 }
 
 // RoleEmoji returns the emoji for a given role name.
 func RoleEmoji(role string) string {
 	switch role {
-	case RoleMayor:
-		return EmojiMayor
-	case RoleDeacon:
-		return EmojiDeacon
+	case RoleOverseer:
+		return EmojiOverseer
+	case RoleSupervisor:
+		return EmojiSupervisor
 	case RoleWitness:
 		return EmojiWitness
 	case RoleRefinery:
 		return EmojiRefinery
 	case RoleCrew:
 		return EmojiCrew
-	case RolePolecat:
-		return EmojiPolecat
+	case RoleMiner:
+		return EmojiMiner
 	case RoleBoot:
 		return EmojiBoot
 	default:
@@ -348,35 +348,35 @@ func RoleEmoji(role string) string {
 	}
 }
 
-// SupportedShells lists shell binaries that Gas Town can detect and work with.
+// SupportedShells lists shell binaries that Excavation Site can detect and work with.
 // Used to identify if a tmux pane is at a shell prompt vs running a command.
 var SupportedShells = []string{"bash", "zsh", "sh", "fish", "tcsh", "ksh", "pwsh", "powershell"}
 
 // Path helpers construct common paths.
 
-// MayorRigsPath returns the path to rigs.json within a town root.
-func MayorRigsPath(townRoot string) string {
-	return townRoot + "/" + DirMayor + "/" + FileRigsJSON
+// OverseerRigsPath returns the path to rigs.json within a town root.
+func OverseerRigsPath(townRoot string) string {
+	return townRoot + "/" + DirOverseer + "/" + FileRigsJSON
 }
 
-// MayorTownPath returns the path to town.json within a town root.
-func MayorTownPath(townRoot string) string {
-	return townRoot + "/" + DirMayor + "/" + FileTownJSON
+// OverseerTownPath returns the path to town.json within a town root.
+func OverseerTownPath(townRoot string) string {
+	return townRoot + "/" + DirOverseer + "/" + FileTownJSON
 }
 
-// RigMayorPath returns the path to mayor/rig within a rig.
-func RigMayorPath(rigPath string) string {
-	return rigPath + "/" + DirMayor + "/" + DirRig
+// RigOverseerPath returns the path to overseer/rig within a rig.
+func RigOverseerPath(rigPath string) string {
+	return rigPath + "/" + DirOverseer + "/" + DirRig
 }
 
-// RigBeadsPath returns the path to mayor/rig/.beads within a rig.
+// RigBeadsPath returns the path to overseer/rig/.beads within a rig.
 func RigBeadsPath(rigPath string) string {
-	return rigPath + "/" + DirMayor + "/" + DirRig + "/" + DirBeads
+	return rigPath + "/" + DirOverseer + "/" + DirRig + "/" + DirBeads
 }
 
-// RigPolecatsPath returns the path to polecats/ within a rig.
-func RigPolecatsPath(rigPath string) string {
-	return rigPath + "/" + DirPolecats
+// RigMinersPath returns the path to miners/ within a rig.
+func RigMinersPath(rigPath string) string {
+	return rigPath + "/" + DirMiners
 }
 
 // RigCrewPath returns the path to crew/ within a rig.
@@ -384,9 +384,9 @@ func RigCrewPath(rigPath string) string {
 	return rigPath + "/" + DirCrew
 }
 
-// MayorConfigPath returns the path to mayor/config.json within a town root.
-func MayorConfigPath(townRoot string) string {
-	return townRoot + "/" + DirMayor + "/" + FileConfigJSON
+// OverseerConfigPath returns the path to overseer/config.json within a town root.
+func OverseerConfigPath(townRoot string) string {
+	return townRoot + "/" + DirOverseer + "/" + FileConfigJSON
 }
 
 // TownRuntimePath returns the path to .runtime/ at the town root.
@@ -404,14 +404,14 @@ func RigSettingsPath(rigPath string) string {
 	return rigPath + "/" + DirSettings
 }
 
-// MayorAccountsPath returns the path to mayor/accounts.json within a town root.
-func MayorAccountsPath(townRoot string) string {
-	return townRoot + "/" + DirMayor + "/" + FileAccountsJSON
+// OverseerAccountsPath returns the path to overseer/accounts.json within a town root.
+func OverseerAccountsPath(townRoot string) string {
+	return townRoot + "/" + DirOverseer + "/" + FileAccountsJSON
 }
 
-// MayorQuotaPath returns the path to mayor/quota.json within a town root.
-func MayorQuotaPath(townRoot string) string {
-	return townRoot + "/" + DirMayor + "/" + FileQuotaJSON
+// OverseerQuotaPath returns the path to overseer/quota.json within a town root.
+func OverseerQuotaPath(townRoot string) string {
+	return townRoot + "/" + DirOverseer + "/" + FileQuotaJSON
 }
 
 // DefaultRateLimitPatterns are the default patterns that indicate a session

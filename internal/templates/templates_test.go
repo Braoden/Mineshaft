@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/constants"
+	"github.com/steveyegge/excavation/internal/constants"
 )
 
 func TestNew(t *testing.T) {
@@ -20,30 +20,30 @@ func TestNew(t *testing.T) {
 	}
 }
 
-func TestRenderRole_Mayor(t *testing.T) {
+func TestRenderRole_Overseer(t *testing.T) {
 	tmpl, err := New()
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
 
 	data := RoleData{
-		Role:          "mayor",
+		Role:          "overseer",
 		TownRoot:      "/test/town",
 		TownName:      "town",
 		WorkDir:       "/test/town",
 		DefaultBranch: "main",
-		MayorSession:  "gt-town-mayor",
-		DeaconSession: "gt-town-deacon",
+		OverseerSession:  "gt-town-overseer",
+		SupervisorSession: "gt-town-supervisor",
 	}
 
-	output, err := tmpl.RenderRole("mayor", data)
+	output, err := tmpl.RenderRole("overseer", data)
 	if err != nil {
 		t.Fatalf("RenderRole() error = %v", err)
 	}
 
 	// Check for key content
-	if !strings.Contains(output, "Mayor Context") {
-		t.Error("output missing 'Mayor Context'")
+	if !strings.Contains(output, "Overseer Context") {
+		t.Error("output missing 'Overseer Context'")
 	}
 	if !strings.Contains(output, "/test/town") {
 		t.Error("output missing town root")
@@ -53,65 +53,65 @@ func TestRenderRole_Mayor(t *testing.T) {
 	}
 }
 
-func TestRenderRole_Polecat(t *testing.T) {
+func TestRenderRole_Miner(t *testing.T) {
 	tmpl, err := New()
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
 
 	data := RoleData{
-		Role:          "polecat",
+		Role:          "miner",
 		RigName:       "myrig",
 		TownRoot:      "/test/town",
 		TownName:      "town",
-		WorkDir:       "/test/town/myrig/polecats/TestCat",
+		WorkDir:       "/test/town/myrig/miners/TestCat",
 		DefaultBranch: "main",
-		Polecat:       "TestCat",
-		MayorSession:  "gt-town-mayor",
-		DeaconSession: "gt-town-deacon",
+		Miner:       "TestCat",
+		OverseerSession:  "gt-town-overseer",
+		SupervisorSession: "gt-town-supervisor",
 	}
 
-	output, err := tmpl.RenderRole("polecat", data)
+	output, err := tmpl.RenderRole("miner", data)
 	if err != nil {
 		t.Fatalf("RenderRole() error = %v", err)
 	}
 
 	// Check for key content
-	if !strings.Contains(output, "Polecat Context") {
-		t.Error("output missing 'Polecat Context'")
+	if !strings.Contains(output, "Miner Context") {
+		t.Error("output missing 'Miner Context'")
 	}
 	if !strings.Contains(output, "TestCat") {
-		t.Error("output missing polecat name")
+		t.Error("output missing miner name")
 	}
 	if !strings.Contains(output, "myrig") {
 		t.Error("output missing rig name")
 	}
 }
 
-func TestRenderRole_Deacon(t *testing.T) {
+func TestRenderRole_Supervisor(t *testing.T) {
 	tmpl, err := New()
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
 
 	data := RoleData{
-		Role:          "deacon",
+		Role:          "supervisor",
 		TownRoot:      "/test/town",
 		TownName:      "town",
 		WorkDir:       "/test/town",
 		DefaultBranch: "main",
-		MayorSession:  "gt-town-mayor",
-		DeaconSession: "gt-town-deacon",
+		OverseerSession:  "gt-town-overseer",
+		SupervisorSession: "gt-town-supervisor",
 	}
 
-	output, err := tmpl.RenderRole("deacon", data)
+	output, err := tmpl.RenderRole("supervisor", data)
 	if err != nil {
 		t.Fatalf("RenderRole() error = %v", err)
 	}
 
 	// Check for key content
-	if !strings.Contains(output, "Deacon Context") {
-		t.Error("output missing 'Deacon Context'")
+	if !strings.Contains(output, "Supervisor Context") {
+		t.Error("output missing 'Supervisor Context'")
 	}
 	if !strings.Contains(output, "/test/town") {
 		t.Error("output missing town root")
@@ -122,7 +122,7 @@ func TestRenderRole_Deacon(t *testing.T) {
 	if !strings.Contains(output, "Startup Protocol: Propulsion") {
 		t.Error("output missing startup protocol section")
 	}
-	if !strings.Contains(output, constants.MolDeaconPatrol) {
+	if !strings.Contains(output, constants.MolSupervisorPatrol) {
 		t.Error("output missing patrol molecule reference")
 	}
 }
@@ -141,8 +141,8 @@ func TestRenderRole_Refinery_DefaultBranch(t *testing.T) {
 		TownName:      "town",
 		WorkDir:       "/test/town/myrig/refinery/rig",
 		DefaultBranch: "develop",
-		MayorSession:  "gt-town-mayor",
-		DeaconSession: "gt-town-deacon",
+		OverseerSession:  "gt-town-overseer",
+		SupervisorSession: "gt-town-supervisor",
 	}
 
 	output, err := tmpl.RenderRole("refinery", data)
@@ -201,7 +201,7 @@ func TestRenderMessage_Spawn(t *testing.T) {
 		Description: "Test description",
 		Branch:      "feature/test",
 		RigName:     "myrig",
-		Polecat:     "TestCat",
+		Miner:     "TestCat",
 	}
 
 	output, err := tmpl.RenderMessage("spawn", data)
@@ -225,7 +225,7 @@ func TestRenderMessage_Nudge(t *testing.T) {
 	}
 
 	data := NudgeData{
-		Polecat:    "TestCat",
+		Miner:    "TestCat",
 		Reason:     "No progress for 30 minutes",
 		NudgeCount: 2,
 		MaxNudges:  3,
@@ -240,7 +240,7 @@ func TestRenderMessage_Nudge(t *testing.T) {
 
 	// Check for key content
 	if !strings.Contains(output, "TestCat") {
-		t.Error("output missing polecat name")
+		t.Error("output missing miner name")
 	}
 	if !strings.Contains(output, "2/3") {
 		t.Error("output missing nudge count")
@@ -258,10 +258,10 @@ func TestRenderRole_Dog(t *testing.T) {
 		DogName:       "Fido",
 		TownRoot:      "/test/town",
 		TownName:      "town",
-		WorkDir:       "/test/town/deacon/dogs/Fido",
+		WorkDir:       "/test/town/supervisor/dogs/Fido",
 		DefaultBranch: "main",
-		MayorSession:  "gt-town-mayor",
-		DeaconSession: "gt-town-deacon",
+		OverseerSession:  "gt-town-overseer",
+		SupervisorSession: "gt-town-supervisor",
 	}
 
 	output, err := tmpl.RenderRole("dog", data)
@@ -296,10 +296,10 @@ func TestRenderRole_Dog_NoHardcodedGtPath(t *testing.T) {
 		DogName:       "Rover",
 		TownRoot:      customTownRoot,
 		TownName:      "instance",
-		WorkDir:       customTownRoot + "/deacon/dogs/Rover",
+		WorkDir:       customTownRoot + "/supervisor/dogs/Rover",
 		DefaultBranch: "main",
-		MayorSession:  "gt-instance-mayor",
-		DeaconSession: "gt-instance-deacon",
+		OverseerSession:  "gt-instance-overseer",
+		SupervisorSession: "gt-instance-supervisor",
 	}
 
 	output, err := tmpl.RenderRole("dog", data)
@@ -340,22 +340,22 @@ func TestRenderRole_NoHardcodedGtPath(t *testing.T) {
 		data RoleData
 	}{
 		{
-			role: "polecat",
+			role: "miner",
 			data: RoleData{
-				Role: "polecat", RigName: "myrig", Polecat: "TestCat",
+				Role: "miner", RigName: "myrig", Miner: "TestCat",
 				TownRoot: customTownRoot2, TownName: "instance",
-				WorkDir:       customTownRoot2 + "/myrig/polecats/TestCat",
+				WorkDir:       customTownRoot2 + "/myrig/miners/TestCat",
 				DefaultBranch: "main",
-				MayorSession:  "gt-instance-mayor", DeaconSession: "gt-instance-deacon",
+				OverseerSession:  "gt-instance-overseer", SupervisorSession: "gt-instance-supervisor",
 			},
 		},
 		{
-			role: "mayor",
+			role: "overseer",
 			data: RoleData{
-				Role: "mayor", TownRoot: customTownRoot2, TownName: "instance",
+				Role: "overseer", TownRoot: customTownRoot2, TownName: "instance",
 				WorkDir:       customTownRoot2,
 				DefaultBranch: "main",
-				MayorSession:  "gt-instance-mayor", DeaconSession: "gt-instance-deacon",
+				OverseerSession:  "gt-instance-overseer", SupervisorSession: "gt-instance-supervisor",
 			},
 		},
 		{
@@ -365,27 +365,27 @@ func TestRenderRole_NoHardcodedGtPath(t *testing.T) {
 				TownRoot: customTownRoot2, TownName: "instance",
 				WorkDir:       customTownRoot2 + "/myrig/witness",
 				DefaultBranch: "main",
-				Polecats:      []string{"Cat1", "Cat2"},
-				MayorSession:  "gt-instance-mayor", DeaconSession: "gt-instance-deacon",
+				Miners:      []string{"Cat1", "Cat2"},
+				OverseerSession:  "gt-instance-overseer", SupervisorSession: "gt-instance-supervisor",
 			},
 		},
 		{
 			role: "crew",
 			data: RoleData{
-				Role: "crew", RigName: "myrig", Polecat: "TestCrew",
+				Role: "crew", RigName: "myrig", Miner: "TestCrew",
 				TownRoot: customTownRoot2, TownName: "instance",
 				WorkDir:       customTownRoot2 + "/myrig/crew/TestCrew",
 				DefaultBranch: "main",
-				MayorSession:  "gt-instance-mayor", DeaconSession: "gt-instance-deacon",
+				OverseerSession:  "gt-instance-overseer", SupervisorSession: "gt-instance-supervisor",
 			},
 		},
 		{
-			role: "deacon",
+			role: "supervisor",
 			data: RoleData{
-				Role: "deacon", TownRoot: customTownRoot2, TownName: "instance",
+				Role: "supervisor", TownRoot: customTownRoot2, TownName: "instance",
 				WorkDir:       customTownRoot2,
 				DefaultBranch: "main",
-				MayorSession:  "gt-instance-mayor", DeaconSession: "gt-instance-deacon",
+				OverseerSession:  "gt-instance-overseer", SupervisorSession: "gt-instance-supervisor",
 			},
 		},
 		// dog tested separately in TestRenderRole_Dog_NoHardcodedGtPath
@@ -420,27 +420,27 @@ func TestRenderRole_TownRootInOutput(t *testing.T) {
 		t.Fatalf("New() error = %v", err)
 	}
 
-	const customRoot = "/Users/pa/dev/gastown-tests/my-instance"
+	const customRoot = "/Users/pa/dev/excavation-tests/my-instance"
 
 	roles := []struct {
 		role string
 		data RoleData
 	}{
 		{
-			role: "polecat",
+			role: "miner",
 			data: RoleData{
-				Role: "polecat", RigName: "myrig", Polecat: "Sparky",
+				Role: "miner", RigName: "myrig", Miner: "Sparky",
 				TownRoot: customRoot, TownName: "my-instance",
-				WorkDir: customRoot + "/myrig/polecats/Sparky", DefaultBranch: "main",
-				MayorSession: "gt-my-instance-mayor", DeaconSession: "gt-my-instance-deacon",
+				WorkDir: customRoot + "/myrig/miners/Sparky", DefaultBranch: "main",
+				OverseerSession: "gt-my-instance-overseer", SupervisorSession: "gt-my-instance-supervisor",
 			},
 		},
 		{
-			role: "mayor",
+			role: "overseer",
 			data: RoleData{
-				Role: "mayor", TownRoot: customRoot, TownName: "my-instance",
+				Role: "overseer", TownRoot: customRoot, TownName: "my-instance",
 				WorkDir: customRoot, DefaultBranch: "main",
-				MayorSession: "gt-my-instance-mayor", DeaconSession: "gt-my-instance-deacon",
+				OverseerSession: "gt-my-instance-overseer", SupervisorSession: "gt-my-instance-supervisor",
 			},
 		},
 		{
@@ -449,24 +449,24 @@ func TestRenderRole_TownRootInOutput(t *testing.T) {
 				Role: "witness", RigName: "myrig",
 				TownRoot: customRoot, TownName: "my-instance",
 				WorkDir: customRoot + "/myrig/witness", DefaultBranch: "main",
-				MayorSession: "gt-my-instance-mayor", DeaconSession: "gt-my-instance-deacon",
+				OverseerSession: "gt-my-instance-overseer", SupervisorSession: "gt-my-instance-supervisor",
 			},
 		},
 		{
 			role: "crew",
 			data: RoleData{
-				Role: "crew", RigName: "myrig", Polecat: "Sparky",
+				Role: "crew", RigName: "myrig", Miner: "Sparky",
 				TownRoot: customRoot, TownName: "my-instance",
 				WorkDir: customRoot + "/myrig/crew/Sparky", DefaultBranch: "main",
-				MayorSession: "gt-my-instance-mayor", DeaconSession: "gt-my-instance-deacon",
+				OverseerSession: "gt-my-instance-overseer", SupervisorSession: "gt-my-instance-supervisor",
 			},
 		},
 		{
-			role: "deacon",
+			role: "supervisor",
 			data: RoleData{
-				Role: "deacon", TownRoot: customRoot, TownName: "my-instance",
+				Role: "supervisor", TownRoot: customRoot, TownName: "my-instance",
 				WorkDir: customRoot, DefaultBranch: "main",
-				MayorSession: "gt-my-instance-mayor", DeaconSession: "gt-my-instance-deacon",
+				OverseerSession: "gt-my-instance-overseer", SupervisorSession: "gt-my-instance-supervisor",
 			},
 		},
 	}
@@ -484,30 +484,30 @@ func TestRenderRole_TownRootInOutput(t *testing.T) {
 	}
 }
 
-// TestRenderRole_Polecat_CwdInstruction verifies the critical cwd instruction
+// TestRenderRole_Miner_CwdInstruction verifies the critical cwd instruction
 // uses the actual town root, not a hardcoded ~/gt path.
 // Regression test: agents were following hardcoded ~/gt even in test instances.
-func TestRenderRole_Polecat_CwdInstruction(t *testing.T) {
+func TestRenderRole_Miner_CwdInstruction(t *testing.T) {
 	tmpl, err := New()
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
 
-	const customRoot = "/srv/gastown-ci"
+	const customRoot = "/srv/excavation-ci"
 
 	data := RoleData{
-		Role: "polecat", RigName: "rig1", Polecat: "Worker",
-		TownRoot: customRoot, TownName: "gastown-ci",
-		WorkDir: customRoot + "/rig1/polecats/Worker", DefaultBranch: "main",
-		MayorSession: "gt-gastown-ci-mayor", DeaconSession: "gt-gastown-ci-deacon",
+		Role: "miner", RigName: "rig1", Miner: "Worker",
+		TownRoot: customRoot, TownName: "excavation-ci",
+		WorkDir: customRoot + "/rig1/miners/Worker", DefaultBranch: "main",
+		OverseerSession: "gt-excavation-ci-overseer", SupervisorSession: "gt-excavation-ci-supervisor",
 	}
 
-	output, err := tmpl.RenderRole("polecat", data)
+	output, err := tmpl.RenderRole("miner", data)
 	if err != nil {
 		t.Fatalf("RenderRole() error = %v", err)
 	}
 
-	wantCwd := customRoot + "/rig1/polecats/Worker/"
+	wantCwd := customRoot + "/rig1/miners/Worker/"
 	if !strings.Contains(output, wantCwd) {
 		t.Errorf("cwd instruction missing %q\n(agent would use wrong path for non-default instance)", wantCwd)
 	}
@@ -525,7 +525,7 @@ func TestRoleNames(t *testing.T) {
 	}
 
 	names := tmpl.RoleNames()
-	expected := []string{"mayor", "witness", "refinery", "polecat", "crew", "deacon", "boot"}
+	expected := []string{"overseer", "witness", "refinery", "miner", "crew", "supervisor", "boot"}
 
 	if len(names) != len(expected) {
 		t.Errorf("RoleNames() = %v, want %v", names, expected)
@@ -548,16 +548,16 @@ func TestRenderRole_BootUsesNudgeNotRawTmux(t *testing.T) {
 		Role:          "boot",
 		TownRoot:      "/test/town",
 		TownName:      "town",
-		WorkDir:       "/test/town/deacon/dogs/boot",
+		WorkDir:       "/test/town/supervisor/dogs/boot",
 		DefaultBranch: "main",
-		MayorSession:  "gt-town-mayor",
-		DeaconSession: "gt-town-deacon",
+		OverseerSession:  "gt-town-overseer",
+		SupervisorSession: "gt-town-supervisor",
 	})
 	if err != nil {
 		t.Fatalf("RenderRole() error = %v", err)
 	}
 
-	if !strings.Contains(output, `gt nudge --mode=immediate deacon "Boot wake: check your inbox"`) {
+	if !strings.Contains(output, `gt nudge --mode=immediate supervisor "Boot wake: check your inbox"`) {
 		t.Fatalf("boot template missing immediate nudge wake guidance:\n%s", output)
 	}
 	if !strings.Contains(output, "Boot hooks block it") {
@@ -570,15 +570,15 @@ func TestRenderRole_BootUsesNudgeNotRawTmux(t *testing.T) {
 	}
 }
 
-func TestCreatePolecatCLAUDEmd(t *testing.T) {
+func TestCreateMinerCLAUDEmd(t *testing.T) {
 	dir := t.TempDir()
 
-	created, err := CreatePolecatCLAUDEmd(dir, "greenplace", "furiosa")
+	created, err := CreateMinerCLAUDEmd(dir, "greenplace", "furiosa")
 	if err != nil {
-		t.Fatalf("CreatePolecatCLAUDEmd() error = %v", err)
+		t.Fatalf("CreateMinerCLAUDEmd() error = %v", err)
 	}
 	if !created {
-		t.Fatal("CreatePolecatCLAUDEmd() created = false, want true")
+		t.Fatal("CreateMinerCLAUDEmd() created = false, want true")
 	}
 
 	data, err := os.ReadFile(filepath.Join(dir, "CLAUDE.md"))
@@ -600,44 +600,44 @@ func TestCreatePolecatCLAUDEmd(t *testing.T) {
 		t.Error("CLAUDE.md does not contain rig name 'greenplace'")
 	}
 	if !strings.Contains(content, "furiosa") {
-		t.Error("CLAUDE.md does not contain polecat name 'furiosa'")
+		t.Error("CLAUDE.md does not contain miner name 'furiosa'")
 	}
 
 	// Verify critical gt done instructions are present
 	if !strings.Contains(content, "gt done") {
-		t.Fatal("CLAUDE.md does not contain 'gt done' — polecats will not know to call it")
+		t.Fatal("CLAUDE.md does not contain 'gt done' — miners will not know to call it")
 	}
-	if !strings.Contains(content, "IDLE POLECAT HERESY") {
-		t.Error("CLAUDE.md missing 'IDLE POLECAT HERESY' warning section")
+	if !strings.Contains(content, "IDLE MINER HERESY") {
+		t.Error("CLAUDE.md missing 'IDLE MINER HERESY' warning section")
 	}
 	if !strings.Contains(content, "MANDATORY FINAL STEP") {
 		t.Error("CLAUDE.md missing completion protocol with MANDATORY FINAL STEP")
 	}
 }
 
-func TestCreatePolecatCLAUDEmd_WritesToLocalWhenTrackedExists(t *testing.T) {
+func TestCreateMinerCLAUDEmd_WritesToLocalWhenTrackedExists(t *testing.T) {
 	dir := t.TempDir()
 
 	// Write a CLAUDE.md with the exact town-root template content that gets
 	// tracked in repos. This is the real-world scenario: gt install creates
 	// ~/gt/CLAUDE.md with Dolt operational awareness, the user commits it to
-	// their repo, and git worktree add checks it out in the polecat worktree.
+	// their repo, and git worktree add checks it out in the miner worktree.
 	existing := TownRootCLAUDEmd()
 	if err := os.WriteFile(filepath.Join(dir, "CLAUDE.md"), []byte(existing), 0644); err != nil {
 		t.Fatalf("writing existing CLAUDE.md: %v", err)
 	}
 
-	created, err := CreatePolecatCLAUDEmd(dir, "greenplace", "furiosa")
+	created, err := CreateMinerCLAUDEmd(dir, "greenplace", "furiosa")
 	if err != nil {
-		t.Fatalf("CreatePolecatCLAUDEmd() error = %v", err)
+		t.Fatalf("CreateMinerCLAUDEmd() error = %v", err)
 	}
 	if !created {
-		t.Fatal("CreatePolecatCLAUDEmd() created = false, want true (should write to CLAUDE.local.md)")
+		t.Fatal("CreateMinerCLAUDEmd() created = false, want true (should write to CLAUDE.local.md)")
 	}
 
 	// CLAUDE.md must NOT be modified — it's a tracked file and modifying it
 	// creates uncommitted changes that the gt done safety net would commit onto
-	// the polecat's branch, polluting the PR diff.
+	// the miner's branch, polluting the PR diff.
 	data, err := os.ReadFile(filepath.Join(dir, "CLAUDE.md"))
 	if err != nil {
 		t.Fatalf("reading CLAUDE.md: %v", err)
@@ -645,31 +645,31 @@ func TestCreatePolecatCLAUDEmd_WritesToLocalWhenTrackedExists(t *testing.T) {
 	if string(data) != existing {
 		t.Error("CLAUDE.md was modified — tracked file must not be touched when CLAUDE.local.md is used")
 	}
-	if strings.Contains(string(data), PolecatLifecycleMarker) {
-		t.Error("polecat lifecycle marker written to tracked CLAUDE.md — should go to CLAUDE.local.md")
+	if strings.Contains(string(data), MinerLifecycleMarker) {
+		t.Error("miner lifecycle marker written to tracked CLAUDE.md — should go to CLAUDE.local.md")
 	}
 
-	// Polecat lifecycle instructions written to CLAUDE.local.md (gitignored)
+	// Miner lifecycle instructions written to CLAUDE.local.md (gitignored)
 	localData, err := os.ReadFile(filepath.Join(dir, "CLAUDE.local.md"))
 	if err != nil {
 		t.Fatalf("reading CLAUDE.local.md: %v", err)
 	}
 	localContent := string(localData)
-	if !strings.Contains(localContent, "IDLE POLECAT HERESY") {
-		t.Error("polecat lifecycle instructions not written to CLAUDE.local.md")
+	if !strings.Contains(localContent, "IDLE MINER HERESY") {
+		t.Error("miner lifecycle instructions not written to CLAUDE.local.md")
 	}
 	if !strings.Contains(localContent, "gt done") {
-		t.Fatal("gt done instructions not in CLAUDE.local.md — polecats will not know to call it")
+		t.Fatal("gt done instructions not in CLAUDE.local.md — miners will not know to call it")
 	}
 }
 
-func TestCreatePolecatCLAUDEmd_SkipsWhenAlreadyProvisioned(t *testing.T) {
+func TestCreateMinerCLAUDEmd_SkipsWhenAlreadyProvisioned(t *testing.T) {
 	dir := t.TempDir()
 
 	// First call — creates the file
-	created, err := CreatePolecatCLAUDEmd(dir, "greenplace", "furiosa")
+	created, err := CreateMinerCLAUDEmd(dir, "greenplace", "furiosa")
 	if err != nil {
-		t.Fatalf("first CreatePolecatCLAUDEmd() error = %v", err)
+		t.Fatalf("first CreateMinerCLAUDEmd() error = %v", err)
 	}
 	if !created {
 		t.Fatal("first call should create")
@@ -678,9 +678,9 @@ func TestCreatePolecatCLAUDEmd_SkipsWhenAlreadyProvisioned(t *testing.T) {
 	data1, _ := os.ReadFile(filepath.Join(dir, "CLAUDE.md"))
 
 	// Second call — should skip (marker already present)
-	created, err = CreatePolecatCLAUDEmd(dir, "greenplace", "furiosa")
+	created, err = CreateMinerCLAUDEmd(dir, "greenplace", "furiosa")
 	if err != nil {
-		t.Fatalf("second CreatePolecatCLAUDEmd() error = %v", err)
+		t.Fatalf("second CreateMinerCLAUDEmd() error = %v", err)
 	}
 	if created {
 		t.Fatal("second call should skip (lifecycle instructions already present)")
@@ -692,15 +692,15 @@ func TestCreatePolecatCLAUDEmd_SkipsWhenAlreadyProvisioned(t *testing.T) {
 	}
 }
 
-// TestCreatePolecatCLAUDEmd_ReusePath simulates the polecat reuse scenario:
+// TestCreateMinerCLAUDEmd_ReusePath simulates the miner reuse scenario:
 // 1. Worktree has tracked CLAUDE.md from repo (town-root Dolt content)
-// 2. CreatePolecatCLAUDEmd writes lifecycle instructions to CLAUDE.local.md
+// 2. CreateMinerCLAUDEmd writes lifecycle instructions to CLAUDE.local.md
 // 3. git reset --hard restores CLAUDE.md (CLAUDE.local.md unaffected — it's gitignored)
-// 4. Second CreatePolecatCLAUDEmd call is a no-op (CLAUDE.local.md still has the marker)
+// 4. Second CreateMinerCLAUDEmd call is a no-op (CLAUDE.local.md still has the marker)
 //
 // This is better than the old append-to-CLAUDE.md approach because git reset --hard
 // no longer loses the lifecycle instructions.
-func TestCreatePolecatCLAUDEmd_ReusePath(t *testing.T) {
+func TestCreateMinerCLAUDEmd_ReusePath(t *testing.T) {
 	dir := t.TempDir()
 	claudePath := filepath.Join(dir, "CLAUDE.md")
 	claudeLocalPath := filepath.Join(dir, "CLAUDE.local.md")
@@ -712,9 +712,9 @@ func TestCreatePolecatCLAUDEmd_ReusePath(t *testing.T) {
 	}
 
 	// Step 2: First provision — writes lifecycle instructions to CLAUDE.local.md
-	created, err := CreatePolecatCLAUDEmd(dir, "greenplace", "furiosa")
+	created, err := CreateMinerCLAUDEmd(dir, "greenplace", "furiosa")
 	if err != nil {
-		t.Fatalf("first CreatePolecatCLAUDEmd() error = %v", err)
+		t.Fatalf("first CreateMinerCLAUDEmd() error = %v", err)
 	}
 	if !created {
 		t.Fatal("first call should create CLAUDE.local.md")
@@ -722,11 +722,11 @@ func TestCreatePolecatCLAUDEmd_ReusePath(t *testing.T) {
 
 	// Lifecycle instructions are in CLAUDE.local.md, not CLAUDE.md
 	localData, _ := os.ReadFile(claudeLocalPath)
-	if !strings.Contains(string(localData), PolecatLifecycleMarker) {
+	if !strings.Contains(string(localData), MinerLifecycleMarker) {
 		t.Fatal("lifecycle marker not found in CLAUDE.local.md after first provision")
 	}
 	claudeData, _ := os.ReadFile(claudePath)
-	if strings.Contains(string(claudeData), PolecatLifecycleMarker) {
+	if strings.Contains(string(claudeData), MinerLifecycleMarker) {
 		t.Fatal("lifecycle marker written to tracked CLAUDE.md — must not modify tracked file")
 	}
 
@@ -738,14 +738,14 @@ func TestCreatePolecatCLAUDEmd_ReusePath(t *testing.T) {
 
 	// CLAUDE.local.md still has the lifecycle marker (survived git reset)
 	localData, _ = os.ReadFile(claudeLocalPath)
-	if !strings.Contains(string(localData), PolecatLifecycleMarker) {
+	if !strings.Contains(string(localData), MinerLifecycleMarker) {
 		t.Fatal("CLAUDE.local.md lifecycle marker lost — should survive git reset --hard")
 	}
 
 	// Step 4: Second provision — no-op since CLAUDE.local.md already has the marker
-	created, err = CreatePolecatCLAUDEmd(dir, "greenplace", "furiosa")
+	created, err = CreateMinerCLAUDEmd(dir, "greenplace", "furiosa")
 	if err != nil {
-		t.Fatalf("second CreatePolecatCLAUDEmd() error = %v", err)
+		t.Fatalf("second CreateMinerCLAUDEmd() error = %v", err)
 	}
 	if created {
 		t.Fatal("second call should be a no-op (lifecycle instructions still in CLAUDE.local.md)")
@@ -762,9 +762,9 @@ func TestCreatePolecatCLAUDEmd_ReusePath(t *testing.T) {
 	}
 }
 
-// TestCreatePolecatCLAUDEmd_GitCleanRemovesLocal simulates git clean -f removing
+// TestCreateMinerCLAUDEmd_GitCleanRemovesLocal simulates git clean -f removing
 // the untracked CLAUDE.local.md. On re-provision, the function must recreate it.
-func TestCreatePolecatCLAUDEmd_GitCleanRemovesLocal(t *testing.T) {
+func TestCreateMinerCLAUDEmd_GitCleanRemovesLocal(t *testing.T) {
 	dir := t.TempDir()
 	claudePath := filepath.Join(dir, "CLAUDE.md")
 	claudeLocalPath := filepath.Join(dir, "CLAUDE.local.md")
@@ -776,7 +776,7 @@ func TestCreatePolecatCLAUDEmd_GitCleanRemovesLocal(t *testing.T) {
 	}
 
 	// First provision: writes to CLAUDE.local.md
-	if _, err := CreatePolecatCLAUDEmd(dir, "greenplace", "nux"); err != nil {
+	if _, err := CreateMinerCLAUDEmd(dir, "greenplace", "nux"); err != nil {
 		t.Fatalf("first provision: %v", err)
 	}
 
@@ -786,7 +786,7 @@ func TestCreatePolecatCLAUDEmd_GitCleanRemovesLocal(t *testing.T) {
 	}
 
 	// Second provision: CLAUDE.local.md is gone, must recreate it
-	created, err := CreatePolecatCLAUDEmd(dir, "greenplace", "nux")
+	created, err := CreateMinerCLAUDEmd(dir, "greenplace", "nux")
 	if err != nil {
 		t.Fatalf("second provision: %v", err)
 	}
@@ -795,7 +795,7 @@ func TestCreatePolecatCLAUDEmd_GitCleanRemovesLocal(t *testing.T) {
 	}
 
 	localData, _ := os.ReadFile(claudeLocalPath)
-	if !strings.Contains(string(localData), PolecatLifecycleMarker) {
+	if !strings.Contains(string(localData), MinerLifecycleMarker) {
 		t.Fatal("lifecycle marker not in recreated CLAUDE.local.md")
 	}
 	// CLAUDE.md must still be unmodified
@@ -805,16 +805,16 @@ func TestCreatePolecatCLAUDEmd_GitCleanRemovesLocal(t *testing.T) {
 	}
 }
 
-// TestCreatePolecatCLAUDEmd_GitCleanScenario simulates git clean -f removing
+// TestCreateMinerCLAUDEmd_GitCleanScenario simulates git clean -f removing
 // an untracked CLAUDE.md (repo without tracked CLAUDE.md), then re-provisioning.
-func TestCreatePolecatCLAUDEmd_GitCleanScenario(t *testing.T) {
+func TestCreateMinerCLAUDEmd_GitCleanScenario(t *testing.T) {
 	dir := t.TempDir()
 	claudePath := filepath.Join(dir, "CLAUDE.md")
 
 	// Step 1: First provision — creates fresh file
-	created, err := CreatePolecatCLAUDEmd(dir, "greenplace", "nux")
+	created, err := CreateMinerCLAUDEmd(dir, "greenplace", "nux")
 	if err != nil {
-		t.Fatalf("first CreatePolecatCLAUDEmd() error = %v", err)
+		t.Fatalf("first CreateMinerCLAUDEmd() error = %v", err)
 	}
 	if !created {
 		t.Fatal("first call should create file")
@@ -827,9 +827,9 @@ func TestCreatePolecatCLAUDEmd_GitCleanScenario(t *testing.T) {
 	}
 
 	// Step 3: Re-provision after clean
-	created, err = CreatePolecatCLAUDEmd(dir, "greenplace", "nux")
+	created, err = CreateMinerCLAUDEmd(dir, "greenplace", "nux")
 	if err != nil {
-		t.Fatalf("second CreatePolecatCLAUDEmd() error = %v", err)
+		t.Fatalf("second CreateMinerCLAUDEmd() error = %v", err)
 	}
 	if !created {
 		t.Fatal("second call should re-create file after git clean")

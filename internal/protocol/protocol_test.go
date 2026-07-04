@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/mail"
+	"github.com/steveyegge/excavation/internal/mail"
 )
 
 func TestParseMessageType(t *testing.T) {
@@ -19,7 +19,7 @@ func TestParseMessageType(t *testing.T) {
 		{"MERGED Toast", TypeMerged},
 		{"MERGE_FAILED ace", TypeMergeFailed},
 		{"REWORK_REQUEST valkyrie", TypeReworkRequest},
-		{"MERGE_READY", TypeMergeReady}, // no polecat name
+		{"MERGE_READY", TypeMergeReady}, // no miner name
 		{"Unknown subject", ""},
 		{"", ""},
 		{"  MERGE_READY nux  ", TypeMergeReady}, // with whitespace
@@ -39,7 +39,7 @@ func TestParseMessageType(t *testing.T) {
 	}
 }
 
-func TestExtractPolecat(t *testing.T) {
+func TestExtractMiner(t *testing.T) {
 	tests := []struct {
 		subject  string
 		expected string
@@ -55,9 +55,9 @@ func TestExtractPolecat(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.subject, func(t *testing.T) {
-			result := ExtractPolecat(tt.subject)
+			result := ExtractMiner(tt.subject)
 			if result != tt.expected {
-				t.Errorf("ExtractPolecat(%q) = %q, want %q", tt.subject, result, tt.expected)
+				t.Errorf("ExtractMiner(%q) = %q, want %q", tt.subject, result, tt.expected)
 			}
 		})
 	}
@@ -72,7 +72,7 @@ func TestIsProtocolMessage(t *testing.T) {
 		{"MERGED Toast", true},
 		{"MERGE_FAILED ace", true},
 		{"REWORK_REQUEST valkyrie", true},
-		{"CONVOY_NEEDS_FEEDING hq-cv123", true},
+		{"MINECART_NEEDS_FEEDING hq-cv123", true},
 		{"Unknown subject", false},
 		{"", false},
 		{"Hello world", false},
@@ -89,21 +89,21 @@ func TestIsProtocolMessage(t *testing.T) {
 }
 
 func TestNewMergeReadyMessage(t *testing.T) {
-	msg := NewMergeReadyMessage("gastown", "nux", "polecat/nux/gt-abc", "gt-abc")
+	msg := NewMergeReadyMessage("excavation", "nux", "miner/nux/gt-abc", "gt-abc")
 
 	if msg.Subject != "MERGE_READY nux" {
 		t.Errorf("Subject = %q, want %q", msg.Subject, "MERGE_READY nux")
 	}
-	if msg.From != "gastown/witness" {
-		t.Errorf("From = %q, want %q", msg.From, "gastown/witness")
+	if msg.From != "excavation/witness" {
+		t.Errorf("From = %q, want %q", msg.From, "excavation/witness")
 	}
-	if msg.To != "gastown/refinery" {
-		t.Errorf("To = %q, want %q", msg.To, "gastown/refinery")
+	if msg.To != "excavation/refinery" {
+		t.Errorf("To = %q, want %q", msg.To, "excavation/refinery")
 	}
 	if msg.Priority != mail.PriorityHigh {
 		t.Errorf("Priority = %q, want %q", msg.Priority, mail.PriorityHigh)
 	}
-	if !strings.Contains(msg.Body, "Branch: polecat/nux/gt-abc") {
+	if !strings.Contains(msg.Body, "Branch: miner/nux/gt-abc") {
 		t.Errorf("Body missing branch: %s", msg.Body)
 	}
 	if !strings.Contains(msg.Body, "Issue: gt-abc") {
@@ -112,16 +112,16 @@ func TestNewMergeReadyMessage(t *testing.T) {
 }
 
 func TestNewMergedMessage(t *testing.T) {
-	msg := NewMergedMessage("gastown", "nux", "polecat/nux/gt-abc", "gt-abc", "main", "abc123")
+	msg := NewMergedMessage("excavation", "nux", "miner/nux/gt-abc", "gt-abc", "main", "abc123")
 
 	if msg.Subject != "MERGED nux" {
 		t.Errorf("Subject = %q, want %q", msg.Subject, "MERGED nux")
 	}
-	if msg.From != "gastown/refinery" {
-		t.Errorf("From = %q, want %q", msg.From, "gastown/refinery")
+	if msg.From != "excavation/refinery" {
+		t.Errorf("From = %q, want %q", msg.From, "excavation/refinery")
 	}
-	if msg.To != "gastown/witness" {
-		t.Errorf("To = %q, want %q", msg.To, "gastown/witness")
+	if msg.To != "excavation/witness" {
+		t.Errorf("To = %q, want %q", msg.To, "excavation/witness")
 	}
 	if !strings.Contains(msg.Body, "Merge-Commit: abc123") {
 		t.Errorf("Body missing merge commit: %s", msg.Body)
@@ -129,7 +129,7 @@ func TestNewMergedMessage(t *testing.T) {
 }
 
 func TestNewMergeFailedMessage(t *testing.T) {
-	msg := NewMergeFailedMessage("gastown", "nux", "polecat/nux/gt-abc", "gt-abc", "main", "tests", "Test failed")
+	msg := NewMergeFailedMessage("excavation", "nux", "miner/nux/gt-abc", "gt-abc", "main", "tests", "Test failed")
 
 	if msg.Subject != "MERGE_FAILED nux" {
 		t.Errorf("Subject = %q, want %q", msg.Subject, "MERGE_FAILED nux")
@@ -144,7 +144,7 @@ func TestNewMergeFailedMessage(t *testing.T) {
 
 func TestNewReworkRequestMessage(t *testing.T) {
 	conflicts := []string{"file1.go", "file2.go"}
-	msg := NewReworkRequestMessage("gastown", "nux", "polecat/nux/gt-abc", "gt-abc", "main", conflicts)
+	msg := NewReworkRequestMessage("excavation", "nux", "miner/nux/gt-abc", "gt-abc", "main", conflicts)
 
 	if msg.Subject != "REWORK_REQUEST nux" {
 		t.Errorf("Subject = %q, want %q", msg.Subject, "REWORK_REQUEST nux")
@@ -158,10 +158,10 @@ func TestNewReworkRequestMessage(t *testing.T) {
 }
 
 func TestParseMergeReadyPayload(t *testing.T) {
-	body := `Branch: polecat/nux/gt-abc
+	body := `Branch: miner/nux/gt-abc
 Issue: gt-abc
-Polecat: nux
-Rig: gastown
+Miner: nux
+Rig: excavation
 Verified: clean git state`
 
 	payload, err := ParseMergeReadyPayload(body)
@@ -169,28 +169,28 @@ Verified: clean git state`
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if payload.Branch != "polecat/nux/gt-abc" {
-		t.Errorf("Branch = %q, want %q", payload.Branch, "polecat/nux/gt-abc")
+	if payload.Branch != "miner/nux/gt-abc" {
+		t.Errorf("Branch = %q, want %q", payload.Branch, "miner/nux/gt-abc")
 	}
 	if payload.Issue != "gt-abc" {
 		t.Errorf("Issue = %q, want %q", payload.Issue, "gt-abc")
 	}
-	if payload.Polecat != "nux" {
-		t.Errorf("Polecat = %q, want %q", payload.Polecat, "nux")
+	if payload.Miner != "nux" {
+		t.Errorf("Miner = %q, want %q", payload.Miner, "nux")
 	}
-	if payload.Rig != "gastown" {
-		t.Errorf("Rig = %q, want %q", payload.Rig, "gastown")
+	if payload.Rig != "excavation" {
+		t.Errorf("Rig = %q, want %q", payload.Rig, "excavation")
 	}
 }
 
-func TestParseMessageType_ConvoyNeedsFeeding(t *testing.T) {
+func TestParseMessageType_MinecartNeedsFeeding(t *testing.T) {
 	tests := []struct {
 		subject  string
 		expected MessageType
 	}{
-		{"CONVOY_NEEDS_FEEDING hq-cv123", TypeConvoyNeedsFeeding},
-		{"CONVOY_NEEDS_FEEDING", TypeConvoyNeedsFeeding},
-		{"CONVOY_NEEDS_FEEDINGX", ""},
+		{"MINECART_NEEDS_FEEDING hq-cv123", TypeMinecartNeedsFeeding},
+		{"MINECART_NEEDS_FEEDING", TypeMinecartNeedsFeeding},
+		{"MINECART_NEEDS_FEEDINGX", ""},
 	}
 
 	for _, tt := range tests {
@@ -203,65 +203,65 @@ func TestParseMessageType_ConvoyNeedsFeeding(t *testing.T) {
 	}
 }
 
-func TestNewConvoyNeedsFeedingMessage(t *testing.T) {
-	msg := NewConvoyNeedsFeedingMessage("gastown", "hq-cv123", "gt-abc")
+func TestNewMinecartNeedsFeedingMessage(t *testing.T) {
+	msg := NewMinecartNeedsFeedingMessage("excavation", "hq-cv123", "gt-abc")
 
-	if msg.Subject != "CONVOY_NEEDS_FEEDING hq-cv123" {
-		t.Errorf("Subject = %q, want %q", msg.Subject, "CONVOY_NEEDS_FEEDING hq-cv123")
+	if msg.Subject != "MINECART_NEEDS_FEEDING hq-cv123" {
+		t.Errorf("Subject = %q, want %q", msg.Subject, "MINECART_NEEDS_FEEDING hq-cv123")
 	}
-	if msg.From != "gastown/refinery" {
-		t.Errorf("From = %q, want %q", msg.From, "gastown/refinery")
+	if msg.From != "excavation/refinery" {
+		t.Errorf("From = %q, want %q", msg.From, "excavation/refinery")
 	}
-	if msg.To != "deacon/" {
-		t.Errorf("To = %q, want %q", msg.To, "deacon/")
+	if msg.To != "supervisor/" {
+		t.Errorf("To = %q, want %q", msg.To, "supervisor/")
 	}
 	if msg.Priority != mail.PriorityHigh {
 		t.Errorf("Priority = %q, want %q", msg.Priority, mail.PriorityHigh)
 	}
-	if !strings.Contains(msg.Body, "ConvoyID: hq-cv123") {
-		t.Errorf("Body missing ConvoyID: %s", msg.Body)
+	if !strings.Contains(msg.Body, "MinecartID: hq-cv123") {
+		t.Errorf("Body missing MinecartID: %s", msg.Body)
 	}
 	if !strings.Contains(msg.Body, "SourceIssue: gt-abc") {
 		t.Errorf("Body missing SourceIssue: %s", msg.Body)
 	}
-	if !strings.Contains(msg.Body, "Rig: gastown") {
+	if !strings.Contains(msg.Body, "Rig: excavation") {
 		t.Errorf("Body missing Rig: %s", msg.Body)
 	}
 }
 
-func TestParseConvoyNeedsFeedingPayload(t *testing.T) {
+func TestParseMinecartNeedsFeedingPayload(t *testing.T) {
 	ts := time.Now().Format(time.RFC3339)
-	body := "ConvoyID: hq-cv123\nSourceIssue: gt-abc\nRig: gastown\nMerged-At: " + ts
+	body := "MinecartID: hq-cv123\nSourceIssue: gt-abc\nRig: excavation\nMerged-At: " + ts
 
-	payload, err := ParseConvoyNeedsFeedingPayload(body)
+	payload, err := ParseMinecartNeedsFeedingPayload(body)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if payload.ConvoyID != "hq-cv123" {
-		t.Errorf("ConvoyID = %q, want %q", payload.ConvoyID, "hq-cv123")
+	if payload.MinecartID != "hq-cv123" {
+		t.Errorf("MinecartID = %q, want %q", payload.MinecartID, "hq-cv123")
 	}
 	if payload.SourceIssue != "gt-abc" {
 		t.Errorf("SourceIssue = %q, want %q", payload.SourceIssue, "gt-abc")
 	}
-	if payload.Rig != "gastown" {
-		t.Errorf("Rig = %q, want %q", payload.Rig, "gastown")
+	if payload.Rig != "excavation" {
+		t.Errorf("Rig = %q, want %q", payload.Rig, "excavation")
 	}
 }
 
-func TestParseConvoyNeedsFeedingPayload_InvalidInput(t *testing.T) {
+func TestParseMinecartNeedsFeedingPayload_InvalidInput(t *testing.T) {
 	tests := []struct {
 		name string
 		body string
 	}{
 		{"empty body", ""},
-		{"missing convoy id", "Rig: gastown\nSourceIssue: gt-abc"},
-		{"missing rig", "ConvoyID: hq-cv123\nSourceIssue: gt-abc"},
+		{"missing minecart id", "Rig: excavation\nSourceIssue: gt-abc"},
+		{"missing rig", "MinecartID: hq-cv123\nSourceIssue: gt-abc"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			payload, err := ParseConvoyNeedsFeedingPayload(tt.body)
+			payload, err := ParseMinecartNeedsFeedingPayload(tt.body)
 			if err == nil {
 				t.Errorf("expected error for body %q, got payload: %+v", tt.body, payload)
 			}
@@ -279,9 +279,9 @@ func TestParseMergeReadyPayload_InvalidInput(t *testing.T) {
 	}{
 		{"empty body", ""},
 		{"missing all fields", "Hello: world"},
-		{"missing branch", "Polecat: nux\nRig: gastown"},
-		{"missing polecat", "Branch: polecat/nux\nRig: gastown"},
-		{"missing rig", "Branch: polecat/nux\nPolecat: nux"},
+		{"missing branch", "Miner: nux\nRig: excavation"},
+		{"missing miner", "Branch: miner/nux\nRig: excavation"},
+		{"missing rig", "Branch: miner/nux\nMiner: nux"},
 	}
 
 	for _, tt := range tests {
@@ -299,10 +299,10 @@ func TestParseMergeReadyPayload_InvalidInput(t *testing.T) {
 
 func TestParseMergedPayload(t *testing.T) {
 	ts := time.Now().Format(time.RFC3339)
-	body := `Branch: polecat/nux/gt-abc
+	body := `Branch: miner/nux/gt-abc
 Issue: gt-abc
-Polecat: nux
-Rig: gastown
+Miner: nux
+Rig: excavation
 Target: main
 Merged-At: ` + ts + `
 Merge-Commit: abc123`
@@ -312,8 +312,8 @@ Merge-Commit: abc123`
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if payload.Branch != "polecat/nux/gt-abc" {
-		t.Errorf("Branch = %q, want %q", payload.Branch, "polecat/nux/gt-abc")
+	if payload.Branch != "miner/nux/gt-abc" {
+		t.Errorf("Branch = %q, want %q", payload.Branch, "miner/nux/gt-abc")
 	}
 	if payload.MergeCommit != "abc123" {
 		t.Errorf("MergeCommit = %q, want %q", payload.MergeCommit, "abc123")
@@ -329,8 +329,8 @@ func TestParseMergedPayload_InvalidInput(t *testing.T) {
 		body string
 	}{
 		{"empty body", ""},
-		{"missing polecat", "Branch: polecat/nux\nRig: gastown"},
-		{"missing rig", "Branch: polecat/nux\nPolecat: nux"},
+		{"missing miner", "Branch: miner/nux\nRig: excavation"},
+		{"missing rig", "Branch: miner/nux\nMiner: nux"},
 	}
 
 	for _, tt := range tests {
@@ -347,10 +347,10 @@ func TestParseMergedPayload_InvalidInput(t *testing.T) {
 }
 
 func TestParseMergeFailedPayload(t *testing.T) {
-	body := `Branch: polecat/nux/gt-abc
+	body := `Branch: miner/nux/gt-abc
 Issue: gt-abc
-Polecat: nux
-Rig: gastown
+Miner: nux
+Rig: excavation
 Target: main
 Failure-Type: tests
 Error: Test failed`
@@ -360,8 +360,8 @@ Error: Test failed`
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if payload.Branch != "polecat/nux/gt-abc" {
-		t.Errorf("Branch = %q, want %q", payload.Branch, "polecat/nux/gt-abc")
+	if payload.Branch != "miner/nux/gt-abc" {
+		t.Errorf("Branch = %q, want %q", payload.Branch, "miner/nux/gt-abc")
 	}
 	if payload.FailureType != "tests" {
 		t.Errorf("FailureType = %q, want %q", payload.FailureType, "tests")
@@ -382,10 +382,10 @@ func TestParseMergeFailedPayload_InvalidInput(t *testing.T) {
 }
 
 func TestParseReworkRequestPayload(t *testing.T) {
-	body := `Branch: polecat/nux/gt-abc
+	body := `Branch: miner/nux/gt-abc
 Issue: gt-abc
-Polecat: nux
-Rig: gastown
+Miner: nux
+Rig: excavation
 Target: main
 Conflict-Files: file1.go, file2.go`
 
@@ -394,8 +394,8 @@ Conflict-Files: file1.go, file2.go`
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if payload.Branch != "polecat/nux/gt-abc" {
-		t.Errorf("Branch = %q, want %q", payload.Branch, "polecat/nux/gt-abc")
+	if payload.Branch != "miner/nux/gt-abc" {
+		t.Errorf("Branch = %q, want %q", payload.Branch, "miner/nux/gt-abc")
 	}
 	if payload.TargetBranch != "main" {
 		t.Errorf("TargetBranch = %q, want %q", payload.TargetBranch, "main")
@@ -490,7 +490,7 @@ func TestWrapWitnessHandlers(t *testing.T) {
 	// Test MERGED
 	mergedMsg := &mail.Message{
 		Subject: "MERGED nux",
-		Body:    "Branch: polecat/nux\nIssue: gt-abc\nPolecat: nux\nRig: gastown\nTarget: main",
+		Body:    "Branch: miner/nux\nIssue: gt-abc\nMiner: nux\nRig: excavation\nTarget: main",
 	}
 	if err := registry.Handle(mergedMsg); err != nil {
 		t.Errorf("HandleMerged error: %v", err)
@@ -502,7 +502,7 @@ func TestWrapWitnessHandlers(t *testing.T) {
 	// Test MERGE_FAILED
 	failedMsg := &mail.Message{
 		Subject: "MERGE_FAILED nux",
-		Body:    "Branch: polecat/nux\nIssue: gt-abc\nPolecat: nux\nRig: gastown\nTarget: main\nFailure-Type: tests\nError: failed",
+		Body:    "Branch: miner/nux\nIssue: gt-abc\nMiner: nux\nRig: excavation\nTarget: main\nFailure-Type: tests\nError: failed",
 	}
 	if err := registry.Handle(failedMsg); err != nil {
 		t.Errorf("HandleMergeFailed error: %v", err)
@@ -514,7 +514,7 @@ func TestWrapWitnessHandlers(t *testing.T) {
 	// Test REWORK_REQUEST
 	reworkMsg := &mail.Message{
 		Subject: "REWORK_REQUEST nux",
-		Body:    "Branch: polecat/nux\nIssue: gt-abc\nPolecat: nux\nRig: gastown\nTarget: main",
+		Body:    "Branch: miner/nux\nIssue: gt-abc\nMiner: nux\nRig: excavation\nTarget: main",
 	}
 	if err := registry.Handle(reworkMsg); err != nil {
 		t.Errorf("HandleReworkRequest error: %v", err)
@@ -530,7 +530,7 @@ func TestWrapRefineryHandlers(t *testing.T) {
 
 	msg := &mail.Message{
 		Subject: "MERGE_READY nux",
-		Body:    "Branch: polecat/nux\nIssue: gt-abc\nPolecat: nux\nRig: gastown",
+		Body:    "Branch: miner/nux\nIssue: gt-abc\nMiner: nux\nRig: excavation",
 	}
 
 	if err := registry.Handle(msg); err != nil {
@@ -588,7 +588,7 @@ func TestWrapRefineryHandlers_InvalidPayload(t *testing.T) {
 func TestDefaultWitnessHandler(t *testing.T) {
 	// Prevent GT_TOWN_ROOT / GT_ROOT from pointing NewRouter at production beads.
 	// Without this, synthetic mail ("Work merged successfully", "Merge failed: tests",
-	// "Rebase required") is delivered to live polecats during test runs (gt-gbu nux report).
+	// "Rebase required") is delivered to live miners during test runs (gt-gbu nux report).
 	t.Setenv("GT_TOWN_ROOT", "")
 	t.Setenv("GT_ROOT", "")
 	tmpDir := t.TempDir()
@@ -597,7 +597,7 @@ func TestDefaultWitnessHandler(t *testing.T) {
 	// synthetic protocol messages to the live mail system during test runs.
 	t.Setenv("GT_TOWN_ROOT", tmpDir)
 	t.Setenv("GT_ROOT", tmpDir)
-	handler := NewWitnessHandler("gastown", tmpDir)
+	handler := NewWitnessHandler("excavation", tmpDir)
 	handler.Router = mail.NewRouterWithTownRoot(tmpDir, "")
 
 	// Capture output
@@ -606,10 +606,10 @@ func TestDefaultWitnessHandler(t *testing.T) {
 
 	// Test HandleMerged — delivery fails (no .beads in tmpDir); we only verify output.
 	mergedPayload := &MergedPayload{
-		Branch:       "polecat/nux/gt-abc",
+		Branch:       "miner/nux/gt-abc",
 		Issue:        "gt-abc",
-		Polecat:      "nux",
-		Rig:          "gastown",
+		Miner:      "nux",
+		Rig:          "excavation",
 		TargetBranch: "main",
 		MergeCommit:  "abc123",
 	}
@@ -621,10 +621,10 @@ func TestDefaultWitnessHandler(t *testing.T) {
 	// Test HandleMergeFailed
 	buf.Reset()
 	failedPayload := &MergeFailedPayload{
-		Branch:       "polecat/nux/gt-abc",
+		Branch:       "miner/nux/gt-abc",
 		Issue:        "gt-abc",
-		Polecat:      "nux",
-		Rig:          "gastown",
+		Miner:      "nux",
+		Rig:          "excavation",
 		TargetBranch: "main",
 		FailureType:  "tests",
 		Error:        "Test failed",
@@ -637,10 +637,10 @@ func TestDefaultWitnessHandler(t *testing.T) {
 	// Test HandleReworkRequest
 	buf.Reset()
 	reworkPayload := &ReworkRequestPayload{
-		Branch:        "polecat/nux/gt-abc",
+		Branch:        "miner/nux/gt-abc",
 		Issue:         "gt-abc",
-		Polecat:       "nux",
-		Rig:           "gastown",
+		Miner:       "nux",
+		Rig:           "excavation",
 		TargetBranch:  "main",
 		ConflictFiles: []string{"file1.go"},
 	}
@@ -684,16 +684,16 @@ func (m *mockRefineryHandler) HandleMergeReady(payload *MergeReadyPayload) error
 
 func TestDefaultRefineryHandler_HandleMergeReady(t *testing.T) {
 	tmpDir := t.TempDir()
-	handler := NewRefineryHandler("gastown", tmpDir)
+	handler := NewRefineryHandler("excavation", tmpDir)
 
 	var buf bytes.Buffer
 	handler.SetOutput(&buf)
 
 	payload := &MergeReadyPayload{
-		Branch:   "polecat/nux/gt-abc",
+		Branch:   "miner/nux/gt-abc",
 		Issue:    "gt-abc",
-		Polecat:  "nux",
-		Rig:      "gastown",
+		Miner:  "nux",
+		Rig:      "excavation",
 		Verified: "clean git state",
 	}
 	if err := handler.HandleMergeReady(payload); err != nil {
@@ -705,9 +705,9 @@ func TestDefaultRefineryHandler_HandleMergeReady(t *testing.T) {
 		t.Errorf("missing MERGE_READY text: %s", output)
 	}
 	if !strings.Contains(output, "nux") {
-		t.Errorf("missing polecat name: %s", output)
+		t.Errorf("missing miner name: %s", output)
 	}
-	if !strings.Contains(output, "polecat/nux/gt-abc") {
+	if !strings.Contains(output, "miner/nux/gt-abc") {
 		t.Errorf("missing branch: %s", output)
 	}
 }
@@ -719,7 +719,7 @@ func TestDefaultRefineryHandler_NotifyMergeOutcome_Success(t *testing.T) {
 	// synthetic "MERGED nux" messages to the live mail system during test runs.
 	t.Setenv("GT_TOWN_ROOT", tmpDir)
 	t.Setenv("GT_ROOT", tmpDir)
-	handler := NewRefineryHandler("gastown", tmpDir)
+	handler := NewRefineryHandler("excavation", tmpDir)
 	handler.Router = mail.NewRouterWithTownRoot(tmpDir, "")
 
 	outcome := MergeOutcome{
@@ -728,7 +728,7 @@ func TestDefaultRefineryHandler_NotifyMergeOutcome_Success(t *testing.T) {
 	}
 
 	// Testing routing logic only — delivery will fail (no .beads in tmpDir)
-	err := handler.NotifyMergeOutcome("nux", "polecat/nux/gt-abc", "gt-abc", "main", outcome)
+	err := handler.NotifyMergeOutcome("nux", "miner/nux/gt-abc", "gt-abc", "main", outcome)
 	_ = err
 }
 
@@ -736,7 +736,7 @@ func TestDefaultRefineryHandler_NotifyMergeOutcome_Conflict(t *testing.T) {
 	tmpDir := t.TempDir()
 	t.Setenv("GT_TOWN_ROOT", tmpDir)
 	t.Setenv("GT_ROOT", tmpDir)
-	handler := NewRefineryHandler("gastown", tmpDir)
+	handler := NewRefineryHandler("excavation", tmpDir)
 	handler.Router = mail.NewRouterWithTownRoot(tmpDir, "")
 
 	outcome := MergeOutcome{
@@ -745,7 +745,7 @@ func TestDefaultRefineryHandler_NotifyMergeOutcome_Conflict(t *testing.T) {
 		ConflictFiles: []string{"file1.go", "file2.go"},
 	}
 
-	err := handler.NotifyMergeOutcome("nux", "polecat/nux/gt-abc", "gt-abc", "main", outcome)
+	err := handler.NotifyMergeOutcome("nux", "miner/nux/gt-abc", "gt-abc", "main", outcome)
 	_ = err
 }
 
@@ -753,7 +753,7 @@ func TestDefaultRefineryHandler_NotifyMergeOutcome_Failure(t *testing.T) {
 	tmpDir := t.TempDir()
 	t.Setenv("GT_TOWN_ROOT", tmpDir)
 	t.Setenv("GT_ROOT", tmpDir)
-	handler := NewRefineryHandler("gastown", tmpDir)
+	handler := NewRefineryHandler("excavation", tmpDir)
 	handler.Router = mail.NewRouterWithTownRoot(tmpDir, "")
 
 	outcome := MergeOutcome{
@@ -763,7 +763,7 @@ func TestDefaultRefineryHandler_NotifyMergeOutcome_Failure(t *testing.T) {
 		Error:       "Test suite failed",
 	}
 
-	err := handler.NotifyMergeOutcome("nux", "polecat/nux/gt-abc", "gt-abc", "main", outcome)
+	err := handler.NotifyMergeOutcome("nux", "miner/nux/gt-abc", "gt-abc", "main", outcome)
 	_ = err
 }
 

@@ -1,4 +1,4 @@
-// Package proxy provides mTLS CA management and server for sandboxed polecat execution.
+// Package proxy provides mTLS CA management and server for sandboxed miner execution.
 package proxy
 
 import (
@@ -43,7 +43,7 @@ func GenerateCA(dir string) (*CA, error) {
 
 	tmpl := &x509.Certificate{
 		SerialNumber:          serial,
-		Subject:               pkix.Name{CommonName: "GasTown CA"},
+		Subject:               pkix.Name{CommonName: "Excavation CA"},
 		NotBefore:             time.Now().Add(-time.Minute),
 		NotAfter:              time.Now().Add(10 * 365 * 24 * time.Hour),
 		IsCA:                  true,
@@ -142,13 +142,13 @@ func (ca *CA) IssueServer(cn string, extraIPs []net.IP, extraDNSNames []string, 
 	return ca.issue(cn, dnsNames, extraIPs, ttl, x509.ExtKeyUsageServerAuth)
 }
 
-// IssuePolecat issues a leaf certificate signed by the CA for a polecat (client auth).
+// IssueMiner issues a leaf certificate signed by the CA for a miner (client auth).
 // cn must be in the format "gt-<rig>-<name>" with non-empty rig and name segments
-// (e.g. "gt-gastown-furiosa"). Returns an error for malformed CNs to prevent issuing
+// (e.g. "gt-excavation-furiosa"). Returns an error for malformed CNs to prevent issuing
 // certs whose rig/name parsing would be inconsistent across exec and git auth.
-func (ca *CA) IssuePolecat(cn string, ttl time.Duration) (certPEM, keyPEM []byte, err error) {
+func (ca *CA) IssueMiner(cn string, ttl time.Duration) (certPEM, keyPEM []byte, err error) {
 	if cnToIdentity(cn) == "" {
-		return nil, nil, fmt.Errorf("invalid polecat CN %q: must be gt-<rig>-<name> with non-empty rig and name", cn)
+		return nil, nil, fmt.Errorf("invalid miner CN %q: must be gt-<rig>-<name> with non-empty rig and name", cn)
 	}
 	return ca.issue(cn, nil, nil, ttl, x509.ExtKeyUsageClientAuth)
 }

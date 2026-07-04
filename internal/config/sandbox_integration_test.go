@@ -16,7 +16,7 @@ import (
 // macOS sandbox-exec actually enforce filesystem and network restrictions.
 //
 // These tests use sandbox-exec directly (the underlying mechanism that
-// exitbox wraps) to validate that the gastown-polecat sandbox profile
+// exitbox wraps) to validate that the excavation-miner sandbox profile
 // enforces the intended security boundaries:
 //
 //   - File writes restricted to PROJECT_DIR and /private/tmp
@@ -25,7 +25,7 @@ import (
 //   - External network access denied
 
 // testSandboxProfile is a sandbox-exec SBPL profile modeled after the
-// gastown-polecat profile described in docs/design/sandboxed-polecat-execution.md.
+// excavation-miner profile described in docs/design/sandboxed-miner-execution.md.
 //
 // Key restrictions:
 //   - Writes: only PROJECT_DIR + /private/tmp + /dev devices
@@ -180,7 +180,7 @@ func TestSandbox_DenyWriteOutsideProjectDir(t *testing.T) {
 	t.Logf("write outside project dir correctly denied: %s", strings.TrimSpace(stdout))
 }
 
-// TestSandbox_DenyWriteToGTRoot verifies that a sandboxed polecat
+// TestSandbox_DenyWriteToGTRoot verifies that a sandboxed miner
 // cannot write to the GT town root (~/gt/) — only its own worktree.
 func TestSandbox_DenyWriteToGTRoot(t *testing.T) {
 	skipIfNoSandboxExec(t)
@@ -354,7 +354,7 @@ echo "DONE"
 
 	// Build the startup command (this is what session_manager would do)
 	startupCmd := BuildStartupCommand(
-		map[string]string{"GT_ROLE": "testrig/polecats/test"},
+		map[string]string{"GT_ROLE": "testrig/miners/test"},
 		rigPath, "",
 	)
 

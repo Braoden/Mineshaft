@@ -43,7 +43,7 @@ gt reaper databases --json
 ```
 
 This lists all production databases on the Dolt server.
-Expected databases: `hq`, `beads`, `gastown` (and any rig-specific DBs).
+Expected databases: `hq`, `beads`, `excavation` (and any rig-specific DBs).
 
 ### Step 3: Scan each database for candidates
 

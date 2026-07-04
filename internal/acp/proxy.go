@@ -14,7 +14,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/style"
+	"github.com/steveyegge/excavation/internal/style"
 )
 
 type handshakeState int
@@ -756,7 +756,7 @@ func (p *Proxy) trackPromptResponse(msg *JSONRPCMessage) {
 			p.propulsionBuffer = ""
 		}
 
-		if idStr == "gastown-startup-prompt" {
+		if idStr == "excavation-startup-prompt" {
 			p.setStartupPromptState(startupPromptStateComplete)
 		}
 	}
@@ -806,7 +806,7 @@ func (p *Proxy) injectStartupPrompt() error {
 
 	req := JSONRPCMessage{
 		JSONRPC: "2.0",
-		ID:      "gastown-startup-prompt",
+		ID:      "excavation-startup-prompt",
 		Method:  "session/prompt",
 		Params:  paramsBytes,
 	}

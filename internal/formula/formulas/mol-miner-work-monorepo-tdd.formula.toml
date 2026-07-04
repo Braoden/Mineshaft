@@ -1,0 +1,11 @@
+description = "Monorepo miner workflow with TDD: extends mol-miner-work-monorepo, expands the implement step with a red-green-refactor cycle."
+extends = ["mol-miner-work-monorepo"]
+formula = "mol-miner-work-monorepo-tdd"
+type = "workflow"
+version = 1
+
+[compose]
+
+[[compose.expand]]
+target = "implement"
+with = "tdd-cycle"

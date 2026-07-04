@@ -33,8 +33,8 @@ var crewCmd = &cobra.Command{
 	RunE:    requireSubcommand,
 	Long: `Manage crew workers - persistent workspaces for human developers.
 
-CREW VS POLECATS:
-  Polecats: Ephemeral sessions. Witness-managed. Auto-nuked after work.
+CREW VS MINERS:
+  Miners: Ephemeral sessions. Witness-managed. Auto-nuked after work.
   Crew:     Persistent. User-managed. Stays until you remove it.
 
 Crew workers are full git clones (not worktrees) for human developers
@@ -43,7 +43,7 @@ Use crew workers for exploratory work, long-running tasks, or when you
 want to keep uncommitted changes around.
 
 Features:
-  - Gas Town integrated: Mail, nudge, handoff all work
+  - Excavation Site integrated: Mail, nudge, handoff all work
   - Recognizable names: dave, emma, fred (not ephemeral pool names)
   - Tmux optional: Can work in terminal directly without tmux session
 
@@ -128,7 +128,7 @@ Rig Discovery:
 Examples:
   gt crew at dave                 # Attach to dave's session (rig auto-detected)
   gt crew at                      # Auto-detect from cwd
-  gt crew at gastown/dave         # Explicit rig/name format
+  gt crew at excavation/dave         # Explicit rig/name format
   gt crew at dave --reset         # Reset to default branch first
   gt crew at dave --detached      # Start session without attaching
   gt crew at dave --no-tmux       # Just print path`,
@@ -301,14 +301,14 @@ The crew session starts in the background with Claude running and ready.
 
 Use --resume to resume a previous session instead of starting fresh. This
 passes the agent's resume flag (e.g., Claude's --resume) so the session
-picks up where it left off, with proper Gas Town metadata set so GC doesn't
+picks up where it left off, with proper Excavation Site metadata set so GC doesn't
 kill the session.
 
 Examples:
   gt crew start beads             # Start all crew in beads rig
   gt crew start                   # Start all crew (rig inferred from cwd)
   gt crew start beads grip fang   # Start specific crew in beads rig
-  gt crew start gastown joe       # Start joe in gastown rig
+  gt crew start excavation joe       # Start joe in excavation rig
   gt crew start beads ace --resume          # Resume ace's most recent session
   gt crew start beads ace --resume abc123   # Resume specific session ID`,
 	Args: func(cmd *cobra.Command, args []string) error {

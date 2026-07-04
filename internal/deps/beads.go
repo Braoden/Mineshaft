@@ -1,4 +1,4 @@
-// Package deps manages external dependencies for Gas Town.
+// Package deps manages external dependencies for Excavation Site.
 package deps
 
 import (
@@ -11,11 +11,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/util"
+	"github.com/steveyegge/excavation/internal/util"
 )
 
-// MinBeadsVersion is the minimum compatible beads version for this Gas Town release.
-// Update this when Gas Town requires new beads features.
+// MinBeadsVersion is the minimum compatible beads version for this Excavation Site release.
+// Update this when Excavation Site requires new beads features.
 const MinBeadsVersion = "0.57.0"
 
 // BeadsInstallPath is the go install path for beads.

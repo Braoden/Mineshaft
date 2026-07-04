@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/wisp"
+	"github.com/steveyegge/excavation/internal/wisp"
 )
 
 // TestAreScheduledFailClosed verifies that areScheduled fails closed when
@@ -65,14 +65,14 @@ func TestResolveFormula(t *testing.T) {
 		}
 	})
 
-	t.Run("system default mol-polecat-work", func(t *testing.T) {
+	t.Run("system default mol-miner-work", func(t *testing.T) {
 		t.Parallel()
 		tmpDir := t.TempDir()
 		rigName := "testrig"
 		_ = os.MkdirAll(filepath.Join(tmpDir, rigName), 0o755)
 		got := resolveFormula("", false, tmpDir, rigName)
-		if got != "mol-polecat-work" {
-			t.Errorf("got %q, want %q", got, "mol-polecat-work")
+		if got != "mol-miner-work" {
+			t.Errorf("got %q, want %q", got, "mol-miner-work")
 		}
 	})
 
@@ -113,8 +113,8 @@ func TestResolveFormula(t *testing.T) {
 	t.Run("empty rigName falls back to hardcoded default", func(t *testing.T) {
 		t.Parallel()
 		got := resolveFormula("", false, "/tmp/nonexistent", "")
-		if got != "mol-polecat-work" {
-			t.Errorf("got %q, want %q", got, "mol-polecat-work")
+		if got != "mol-miner-work" {
+			t.Errorf("got %q, want %q", got, "mol-miner-work")
 		}
 	})
 }

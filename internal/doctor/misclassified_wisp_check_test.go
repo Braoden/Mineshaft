@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/beads"
+	"github.com/steveyegge/excavation/internal/beads"
 )
 
 // TestFixWorkDir_HQ verifies that Fix() resolves the "hq" rig name to the
@@ -35,13 +35,13 @@ func TestFixWorkDir_RoutedRig(t *testing.T) {
 	}
 
 	routesContent := `{"prefix":"hq-","path":"."}
-{"prefix":"sw-","path":"sallaWork/mayor/rig"}
+{"prefix":"sw-","path":"sallaWork/overseer/rig"}
 `
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 
-	want := filepath.Join(townRoot, "sallaWork/mayor/rig")
+	want := filepath.Join(townRoot, "sallaWork/overseer/rig")
 	got := resolveMisclassifiedWispWorkDir(townRoot, misclassifiedWisp{rigName: "sw"})
 	if got != want {
 		t.Fatalf("resolveMisclassifiedWispWorkDir(%q, sw) = %q, want %q", townRoot, got, want)
@@ -65,7 +65,7 @@ func TestNoHeuristicClassification(t *testing.T) {
 
 func TestRunIgnoresJSONLWhenDoltUnavailable(t *testing.T) {
 	townRoot := t.TempDir()
-	beadsDir := filepath.Join(townRoot, "gastown", ".beads")
+	beadsDir := filepath.Join(townRoot, "excavation", ".beads")
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -91,7 +91,7 @@ func TestRunIgnoresJSONLWhenDoltUnavailable(t *testing.T) {
 // TestGetRigPathForPrefix_RoutesResolution verifies that GetRigPathForPrefix
 // correctly resolves rig paths from routes.jsonl. This is critical for the
 // misclassified-wisps check which uses database names (e.g., "sw") to look up
-// rig directories that may have custom paths (e.g., "sallaWork/mayor/rig").
+// rig directories that may have custom paths (e.g., "sallaWork/overseer/rig").
 // Regression test for: DB probe failures when database name != directory name.
 func TestGetRigPathForPrefix_RoutesResolution(t *testing.T) {
 	// Create a temporary town structure with routes.jsonl
@@ -103,8 +103,8 @@ func TestGetRigPathForPrefix_RoutesResolution(t *testing.T) {
 
 	// Create routes.jsonl with custom rig paths
 	routesContent := `{"prefix":"hq-","path":"."}
-{"prefix":"sw-","path":"sallaWork/mayor/rig"}
-{"prefix":"gt-","path":"gastown/mayor/rig"}
+{"prefix":"sw-","path":"sallaWork/overseer/rig"}
+{"prefix":"gt-","path":"excavation/overseer/rig"}
 `
 	routesPath := filepath.Join(beadsDir, "routes.jsonl")
 	if err := os.WriteFile(routesPath, []byte(routesContent), 0644); err != nil {
@@ -124,12 +124,12 @@ func TestGetRigPathForPrefix_RoutesResolution(t *testing.T) {
 		{
 			name:     "sw prefix resolves to custom path",
 			prefix:   "sw-",
-			wantPath: filepath.Join(tmpDir, "sallaWork/mayor/rig"),
+			wantPath: filepath.Join(tmpDir, "sallaWork/overseer/rig"),
 		},
 		{
 			name:     "gt prefix resolves to custom path",
 			prefix:   "gt-",
-			wantPath: filepath.Join(tmpDir, "gastown/mayor/rig"),
+			wantPath: filepath.Join(tmpDir, "excavation/overseer/rig"),
 		},
 		{
 			name:     "unknown prefix returns empty",
@@ -172,7 +172,7 @@ func TestRigDirResolution_Logic(t *testing.T) {
 
 	// Create routes with custom paths
 	routesContent := `{"prefix":"hq-","path":"."}
-{"prefix":"sw-","path":"sallaWork/mayor/rig"}
+{"prefix":"sw-","path":"sallaWork/overseer/rig"}
 `
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
@@ -190,7 +190,7 @@ func TestRigDirResolution_Logic(t *testing.T) {
 		},
 		{
 			dbName:  "sw",
-			wantDir: filepath.Join(tmpDir, "sallaWork/mayor/rig"),
+			wantDir: filepath.Join(tmpDir, "sallaWork/overseer/rig"),
 			desc:    "sw database maps to custom path via route",
 		},
 		{

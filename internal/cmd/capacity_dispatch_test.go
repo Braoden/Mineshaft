@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/scheduler/capacity"
+	"github.com/steveyegge/excavation/internal/scheduler/capacity"
 )
 
 func TestShouldFireCrossRigEscalation_Debounces(t *testing.T) {
@@ -53,17 +53,17 @@ func TestShouldFireCrossRigEscalation_KeyedByRigAndPrefix(t *testing.T) {
 func TestDispatchSingleBeadRawReviewOnlyHookFailureClearsMetadata(t *testing.T) {
 	townRoot, _, descPath := setupMutableBDRawSlingTest(t, "Keep this body.")
 
-	prevSpawn := spawnPolecatForSling
+	prevSpawn := spawnMinerForSling
 	prevHook := hookBeadWithRetryWithTownRootFn
 	t.Cleanup(func() {
-		spawnPolecatForSling = prevSpawn
+		spawnMinerForSling = prevSpawn
 		hookBeadWithRetryWithTownRootFn = prevHook
 	})
-	spawnPolecatForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedPolecatInfo, error) {
-		return &SpawnedPolecatInfo{
+	spawnMinerForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedMinerInfo, error) {
+		return &SpawnedMinerInfo{
 			RigName:     rigName,
-			PolecatName: "toast",
-			ClonePath:   filepath.Join(townRoot, "gastown", "polecats", "toast"),
+			MinerName: "toast",
+			ClonePath:   filepath.Join(townRoot, "excavation", "miners", "toast"),
 		}, nil
 	}
 	hookBeadWithRetryWithTownRootFn = func(beadID, targetAgent, hookDir, townRoot string) error {
@@ -74,10 +74,10 @@ func TestDispatchSingleBeadRawReviewOnlyHookFailureClearsMetadata(t *testing.T) 
 	_, err := dispatchSingleBead(capacity.PendingBead{
 		ID:         "gt-context",
 		WorkBeadID: "gt-rawrollback",
-		TargetRig:  "gastown",
+		TargetRig:  "excavation",
 		Context: &capacity.SlingContextFields{
 			WorkBeadID:  "gt-rawrollback",
-			TargetRig:   "gastown",
+			TargetRig:   "excavation",
 			HookRawBead: true,
 			NoMerge:     true,
 			ReviewOnly:  true,

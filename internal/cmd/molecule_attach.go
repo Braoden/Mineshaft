@@ -6,9 +6,9 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 func runMoleculeAttach(cmd *cobra.Command, args []string) error {
@@ -40,7 +40,7 @@ func runMoleculeAttach(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("finding workspace: %w", err)
 		}
 		if townRoot == "" {
-			return fmt.Errorf("not in a Gas Town workspace")
+			return fmt.Errorf("not in a Excavation Site workspace")
 		}
 
 		roleInfo, err := GetRoleWithContext(cwd, townRoot)
@@ -50,7 +50,7 @@ func runMoleculeAttach(cmd *cobra.Command, args []string) error {
 		roleCtx := RoleContext{
 			Role:     roleInfo.Role,
 			Rig:      roleInfo.Rig,
-			Polecat:  roleInfo.Polecat,
+			Miner:  roleInfo.Miner,
 			TownRoot: townRoot,
 			WorkDir:  cwd,
 		}
@@ -200,7 +200,7 @@ func detectCurrentAgent() string {
 	ctx := RoleContext{
 		Role:     roleInfo.Role,
 		Rig:      roleInfo.Rig,
-		Polecat:  roleInfo.Polecat,
+		Miner:  roleInfo.Miner,
 		TownRoot: townRoot,
 		WorkDir:  cwd,
 	}

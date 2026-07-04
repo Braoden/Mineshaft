@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/hooks"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/hooks"
 )
 
 // scaffoldWorkspace creates a minimal town workspace in a temp directory with
@@ -37,14 +37,14 @@ func scaffoldWorkspace(t *testing.T, roleAgents map[string]string) string {
 	townRoot := filepath.Join(tmpDir, "town")
 
 	// Required workspace structure
-	for _, dir := range []string{"mayor", "deacon"} {
+	for _, dir := range []string{"overseer", "supervisor"} {
 		if err := os.MkdirAll(filepath.Join(townRoot, dir), 0755); err != nil {
 			t.Fatal(err)
 		}
 	}
 	// Workspace marker
 	if err := os.WriteFile(
-		filepath.Join(townRoot, "mayor", "town.json"),
+		filepath.Join(townRoot, "overseer", "town.json"),
 		[]byte(`{"type":"town","version":1,"name":"test"}`),
 		0644,
 	); err != nil {
@@ -114,7 +114,7 @@ func TestHooksSyncCheck_ClaudeTargetInSync(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Sync ALL Claude targets (mayor, deacon, crew worktree)
+	// Sync ALL Claude targets (overseer, supervisor, crew worktree)
 	syncAllClaudeTargets(t, townRoot)
 
 	check := NewHooksSyncCheck()
@@ -133,7 +133,7 @@ func TestHooksSyncCheck_ClaudeTargetMissingPromptDefaults(t *testing.T) {
 	townRoot := scaffoldWorkspace(t, nil)
 	syncAllClaudeTargets(t, townRoot)
 
-	targetPath := filepath.Join(townRoot, "mayor", ".claude", "settings.json")
+	targetPath := filepath.Join(townRoot, "overseer", ".claude", "settings.json")
 	data, err := os.ReadFile(targetPath)
 	if err != nil {
 		t.Fatal(err)
@@ -184,7 +184,7 @@ func TestHooksSyncCheck_TemplateAgent_InSync(t *testing.T) {
 	syncAllClaudeTargets(t, townRoot)
 
 	// Install the correct OpenCode template file
-	expectedContent, err := hooks.ComputeExpectedTemplate("opencode", "gastown.js", "crew")
+	expectedContent, err := hooks.ComputeExpectedTemplate("opencode", "excavation.js", "crew")
 	if err != nil {
 		t.Fatalf("ComputeExpectedTemplate: %v", err)
 	}
@@ -192,7 +192,7 @@ func TestHooksSyncCheck_TemplateAgent_InSync(t *testing.T) {
 	if err := os.MkdirAll(pluginDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(pluginDir, "gastown.js"), expectedContent, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(pluginDir, "excavation.js"), expectedContent, 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -217,7 +217,7 @@ func TestHooksSyncCheck_TemplateAgent_OutOfSync(t *testing.T) {
 	if err := os.MkdirAll(pluginDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(pluginDir, "gastown.js"), []byte("// old stale content"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(pluginDir, "excavation.js"), []byte("// old stale content"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -263,7 +263,7 @@ func TestHooksSyncCheck_Fix_TemplateAgent(t *testing.T) {
 	if err := os.MkdirAll(pluginDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(pluginDir, "gastown.js"), []byte("// stale"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(pluginDir, "excavation.js"), []byte("// stale"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -285,12 +285,12 @@ func TestHooksSyncCheck_Fix_TemplateAgent(t *testing.T) {
 	}
 
 	// Verify file now matches expected template
-	pluginPath := filepath.Join(pluginDir, "gastown.js")
+	pluginPath := filepath.Join(pluginDir, "excavation.js")
 	actual, err := os.ReadFile(pluginPath)
 	if err != nil {
 		t.Fatalf("reading fixed file: %v", err)
 	}
-	expected, err := hooks.ComputeExpectedTemplate("opencode", "gastown.js", "crew")
+	expected, err := hooks.ComputeExpectedTemplate("opencode", "excavation.js", "crew")
 	if err != nil {
 		t.Fatalf("ComputeExpectedTemplate: %v", err)
 	}
@@ -299,17 +299,17 @@ func TestHooksSyncCheck_Fix_TemplateAgent(t *testing.T) {
 	}
 }
 
-func TestHooksSyncCheck_PolecatNestedWorktree_InSync(t *testing.T) {
-	townRoot := scaffoldWorkspace(t, map[string]string{"polecat": "opencode"})
+func TestHooksSyncCheck_MinerNestedWorktree_InSync(t *testing.T) {
+	townRoot := scaffoldWorkspace(t, map[string]string{"miner": "opencode"})
 
-	worktree := filepath.Join(townRoot, "myrig", "polecats", "fury", "gastown")
+	worktree := filepath.Join(townRoot, "myrig", "miners", "fury", "excavation")
 	if err := os.MkdirAll(filepath.Join(worktree, ".git"), 0755); err != nil {
 		t.Fatal(err)
 	}
 
 	syncAllClaudeTargets(t, townRoot)
 
-	expectedContent, err := hooks.ComputeExpectedTemplate("opencode", "gastown.js", "polecat")
+	expectedContent, err := hooks.ComputeExpectedTemplate("opencode", "excavation.js", "miner")
 	if err != nil {
 		t.Fatalf("ComputeExpectedTemplate: %v", err)
 	}
@@ -317,7 +317,7 @@ func TestHooksSyncCheck_PolecatNestedWorktree_InSync(t *testing.T) {
 	if err := os.MkdirAll(pluginDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(pluginDir, "gastown.js"), expectedContent, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(pluginDir, "excavation.js"), expectedContent, 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -326,7 +326,7 @@ func TestHooksSyncCheck_PolecatNestedWorktree_InSync(t *testing.T) {
 	result := check.Run(ctx)
 
 	if result.Status != StatusOK {
-		t.Errorf("expected StatusOK for in-sync nested polecat worktree, got %v: %s", result.Status, result.Message)
+		t.Errorf("expected StatusOK for in-sync nested miner worktree, got %v: %s", result.Status, result.Message)
 		for _, d := range result.Details {
 			t.Logf("  detail: %s", d)
 		}
@@ -336,11 +336,11 @@ func TestHooksSyncCheck_PolecatNestedWorktree_InSync(t *testing.T) {
 func TestHooksSyncCheck_Fix_PreservesClaudePath(t *testing.T) {
 	townRoot := scaffoldWorkspace(t, nil)
 
-	// Sync all Claude targets first (creates in-sync settings for mayor, deacon)
+	// Sync all Claude targets first (creates in-sync settings for overseer, supervisor)
 	syncAllClaudeTargets(t, townRoot)
 
-	// THEN overwrite mayor's settings with stale hooks but a custom editorMode
-	mayorClaudeDir := filepath.Join(townRoot, "mayor", ".claude")
+	// THEN overwrite overseer's settings with stale hooks but a custom editorMode
+	overseerClaudeDir := filepath.Join(townRoot, "overseer", ".claude")
 	stale := &hooks.SettingsJSON{
 		EditorMode: "vim",
 		Hooks: hooks.HooksConfig{
@@ -353,7 +353,7 @@ func TestHooksSyncCheck_Fix_PreservesClaudePath(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(mayorClaudeDir, "settings.json"), append(data, '\n'), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerClaudeDir, "settings.json"), append(data, '\n'), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -372,7 +372,7 @@ func TestHooksSyncCheck_Fix_PreservesClaudePath(t *testing.T) {
 	}
 
 	// Verify editorMode was preserved (merge path, not overwrite)
-	settings, err := hooks.LoadSettings(filepath.Join(mayorClaudeDir, "settings.json"))
+	settings, err := hooks.LoadSettings(filepath.Join(overseerClaudeDir, "settings.json"))
 	if err != nil {
 		t.Fatalf("LoadSettings: %v", err)
 	}

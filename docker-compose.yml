@@ -2,11 +2,11 @@
 # GIT_USER="<your name>" GIT_EMAIL="<your email>" FOLDER="/Users/you/code" docker compose up -d
 
 services:
-  gastown:
+  excavation:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: gastown-sandbox
+    container_name: excavation-sandbox
     stdin_open: false
     tty: false
     security_opt:
@@ -37,7 +37,7 @@ services:
       - "${DASHBOARD_PORT:-8080}:8080"
     command: sleep infinity
 
-    # Exec into the container with: docker compose exec gastown zsh
+    # Exec into the container with: docker compose exec excavation zsh
 
 volumes:
   agent-home:

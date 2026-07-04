@@ -93,15 +93,15 @@ local_sha=$(get_sha HEAD)
 assert_pass "Normal push allowed" run_hook "refs/heads/$DEFAULT_BRANCH" "$local_sha" "refs/heads/$DEFAULT_BRANCH" "$remote_sha"
 cleanup
 
-# Test 2: Push to polecat/* branch
-echo "Test 2: Push to polecat/* branch"
+# Test 2: Push to miner/* branch
+echo "Test 2: Push to miner/* branch"
 setup_repos
 cd "$TMPDIR/local"
-git checkout -b polecat/worker1 >/dev/null 2>&1
-echo "polecat work" >> file.txt
-git add file.txt && git commit -m "polecat work" >/dev/null 2>&1
+git checkout -b miner/worker1 >/dev/null 2>&1
+echo "miner work" >> file.txt
+git add file.txt && git commit -m "miner work" >/dev/null 2>&1
 local_sha=$(get_sha HEAD)
-assert_pass "Polecat push allowed" run_hook "refs/heads/polecat/worker1" "$local_sha" "refs/heads/polecat/worker1" "0000000000000000000000000000000000000000"
+assert_pass "Miner push allowed" run_hook "refs/heads/miner/worker1" "$local_sha" "refs/heads/miner/worker1" "0000000000000000000000000000000000000000"
 cleanup
 
 # Test 3: Push to integration/* branch

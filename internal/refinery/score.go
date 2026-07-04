@@ -15,10 +15,10 @@ type ScoreConfig struct {
 	// Default: 1000 (keeps all scores positive)
 	BaseScore float64
 
-	// ConvoyAgeWeight is points added per hour of convoy age.
-	// Older convoys get priority to prevent starvation.
+	// MinecartAgeWeight is points added per hour of minecart age.
+	// Older minecarts get priority to prevent starvation.
 	// Default: 10.0 (10 pts/hour = 240 pts/day)
-	ConvoyAgeWeight float64
+	MinecartAgeWeight float64
 
 	// PriorityWeight is multiplied by (4 - priority) so P0 gets most points.
 	// P0 adds 4*weight, P1 adds 3*weight, ..., P4 adds 0*weight.
@@ -31,7 +31,7 @@ type ScoreConfig struct {
 	RetryPenalty float64
 
 	// MRAgeWeight is points added per hour since MR submission.
-	// Minor factor for FIFO ordering within same priority/convoy.
+	// Minor factor for FIFO ordering within same priority/minecart.
 	// Default: 1.0 (1 pt/hour)
 	MRAgeWeight float64
 
@@ -44,7 +44,7 @@ type ScoreConfig struct {
 func DefaultScoreConfig() ScoreConfig {
 	return ScoreConfig{
 		BaseScore:       1000.0,
-		ConvoyAgeWeight: 10.0,
+		MinecartAgeWeight: 10.0,
 		PriorityWeight:  100.0,
 		RetryPenalty:    50.0,
 		MRAgeWeight:     1.0,
@@ -54,7 +54,7 @@ func DefaultScoreConfig() ScoreConfig {
 
 // ScoreInput contains the data needed to score an MR.
 // This struct decouples scoring from the MR struct, allowing the
-// caller to provide convoy age from external lookups.
+// caller to provide minecart age from external lookups.
 type ScoreInput struct {
 	// Priority is the issue priority (0=P0/critical, 4=P4/backlog).
 	Priority int
@@ -62,9 +62,9 @@ type ScoreInput struct {
 	// MRCreatedAt is when the MR was submitted to the queue.
 	MRCreatedAt time.Time
 
-	// ConvoyCreatedAt is when the convoy was created.
-	// Nil if MR is not part of a convoy (standalone work).
-	ConvoyCreatedAt *time.Time
+	// MinecartCreatedAt is when the minecart was created.
+	// Nil if MR is not part of a minecart (standalone work).
+	MinecartCreatedAt *time.Time
 
 	// RetryCount is how many times this MR has been retried after conflicts.
 	// 0 = first attempt.
@@ -81,7 +81,7 @@ type ScoreInput struct {
 // The scoring formula:
 //
 //	score = BaseScore
-//	      + ConvoyAgeWeight * hoursOld(convoy)       // Prevent convoy starvation
+//	      + MinecartAgeWeight * hoursOld(minecart)       // Prevent minecart starvation
 //	      + PriorityWeight * (4 - priority)          // P0=+400, P4=+0
 //	      - min(RetryPenalty * retryCount, MaxRetryPenalty)  // Prevent thrashing
 //	      + MRAgeWeight * hoursOld(MR)               // FIFO tiebreaker
@@ -93,12 +93,12 @@ func ScoreMR(input ScoreInput, config ScoreConfig) float64 {
 
 	score := config.BaseScore
 
-	// Convoy age factor: prevent starvation of old convoys
-	if input.ConvoyCreatedAt != nil {
-		convoyAge := now.Sub(*input.ConvoyCreatedAt)
-		convoyHours := convoyAge.Hours()
-		if convoyHours > 0 {
-			score += config.ConvoyAgeWeight * convoyHours
+	// Minecart age factor: prevent starvation of old minecarts
+	if input.MinecartCreatedAt != nil {
+		minecartAge := now.Sub(*input.MinecartCreatedAt)
+		minecartHours := minecartAge.Hours()
+		if minecartHours > 0 {
+			score += config.MinecartAgeWeight * minecartHours
 		}
 	}
 
@@ -147,7 +147,7 @@ func (mr *MRInfo) ScoreAt(now time.Time) float64 {
 	input := ScoreInput{
 		Priority:        mr.Priority,
 		MRCreatedAt:     mr.CreatedAt,
-		ConvoyCreatedAt: mr.ConvoyCreatedAt,
+		MinecartCreatedAt: mr.MinecartCreatedAt,
 		RetryCount:      mr.RetryCount,
 		Now:             now,
 	}

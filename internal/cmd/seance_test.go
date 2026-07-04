@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/events"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/events"
 )
 
 // setupSeanceTestEnv creates a test environment with multiple accounts and sessions.
@@ -23,10 +23,10 @@ func setupSeanceTestEnv(t *testing.T) (townRoot, fakeHome string, cleanup func()
 	// Create town root
 	townRoot = t.TempDir()
 
-	// Create mayor directory structure
-	mayorDir := filepath.Join(townRoot, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+	// Create overseer directory structure
+	overseerDir := filepath.Join(townRoot, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
+		t.Fatalf("mkdir overseer: %v", err)
 	}
 
 	// Create two account config directories
@@ -48,7 +48,7 @@ func setupSeanceTestEnv(t *testing.T) (townRoot, fakeHome string, cleanup func()
 			"account2": {Email: "test2@example.com", ConfigDir: account2Dir},
 		},
 	}
-	accountsPath := filepath.Join(mayorDir, "accounts.json")
+	accountsPath := filepath.Join(overseerDir, "accounts.json")
 	if err := config.SaveAccountsConfig(accountsPath, accountsCfg); err != nil {
 		t.Fatalf("save accounts.json: %v", err)
 	}

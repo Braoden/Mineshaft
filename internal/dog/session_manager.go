@@ -1,4 +1,4 @@
-// Package dog provides dog session management for Deacon's helper workers.
+// Package dog provides dog session management for Supervisor's helper workers.
 package dog
 
 import (
@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/cli"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/cli"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 // Session errors
@@ -68,16 +68,16 @@ type SessionInfo struct {
 
 // SessionName generates the tmux session name for a dog.
 // Pattern: hq-dog-{name}
-// Dogs are town-level (managed by deacon), so they use the hq- prefix.
-// We use "hq-dog-" instead of "hq-deacon-" to avoid tmux prefix-matching
-// collisions with the "hq-deacon" session.
+// Dogs are town-level (managed by supervisor), so they use the hq- prefix.
+// We use "hq-dog-" instead of "hq-supervisor-" to avoid tmux prefix-matching
+// collisions with the "hq-supervisor" session.
 func (m *SessionManager) SessionName(dogName string) string {
 	return fmt.Sprintf("hq-dog-%s", dogName)
 }
 
 // kennelPath returns the path to the dog's kennel directory.
 func (m *SessionManager) kennelPath(dogName string) string {
-	return filepath.Join(m.townRoot, "deacon", "dogs", dogName)
+	return filepath.Join(m.townRoot, "supervisor", "dogs", dogName)
 }
 
 // Start creates and starts a new session for a dog.
@@ -122,7 +122,7 @@ func (m *SessionManager) Start(dogName string, opts SessionStartOptions) error {
 		AgentName: dogName,
 		Beacon: session.BeaconConfig{
 			Recipient: session.BeaconRecipient("dog", dogName, ""),
-			Sender:    "deacon",
+			Sender:    "supervisor",
 			Topic:     "assigned",
 		},
 		Instructions:   instructions,

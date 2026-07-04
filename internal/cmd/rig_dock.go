@@ -8,15 +8,15 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/polecat"
-	"github.com/steveyegge/gastown/internal/refinery"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/witness"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/miner"
+	"github.com/steveyegge/excavation/internal/refinery"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/witness"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // RigDockedLabel is the label set on rig identity beads when docked.
@@ -30,7 +30,7 @@ var rigDockCmd = &cobra.Command{
 Docking a rig:
   - Stops the witness if running
   - Stops the refinery if running
-  - Stops all polecat sessions if running
+  - Stops all miner sessions if running
   - Sets status:docked label on the rig identity bead
   - Syncs via git so all clones see the docked status
 
@@ -42,7 +42,7 @@ This is a Level 2 (global/persistent) operation:
 Use 'gt rig undock' to resume normal operation.
 
 Examples:
-  gt rig dock gastown
+  gt rig dock excavation
   gt rig dock beads`,
 	Args: cobra.ExactArgs(1),
 	RunE: runRigDock,
@@ -60,7 +60,7 @@ Undocking a rig:
   - Does NOT automatically start agents (use 'gt rig start' for that)
 
 Examples:
-  gt rig undock gastown
+  gt rig undock excavation
   gt rig undock beads`,
 	Args: cobra.ExactArgs(1),
 	RunE: runRigUndock,
@@ -149,15 +149,15 @@ func runRigDock(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Stop polecat sessions if any
-	polecatMgr := polecat.NewSessionManager(t, r)
-	polecatInfos, err := polecatMgr.List()
-	if err == nil && len(polecatInfos) > 0 {
-		fmt.Printf("  Stopping %d polecat session(s)...\n", len(polecatInfos))
-		if err := polecatMgr.StopAll(false); err != nil {
-			fmt.Printf("  %s Failed to stop polecat sessions: %v\n", style.Warning.Render("!"), err)
+	// Stop miner sessions if any
+	minerMgr := miner.NewSessionManager(t, r)
+	minerInfos, err := minerMgr.List()
+	if err == nil && len(minerInfos) > 0 {
+		fmt.Printf("  Stopping %d miner session(s)...\n", len(minerInfos))
+		if err := minerMgr.StopAll(false); err != nil {
+			fmt.Printf("  %s Failed to stop miner sessions: %v\n", style.Warning.Render("!"), err)
 		} else {
-			stoppedAgents = append(stoppedAgents, fmt.Sprintf("%d polecat session(s) stopped", len(polecatInfos)))
+			stoppedAgents = append(stoppedAgents, fmt.Sprintf("%d miner session(s) stopped", len(minerInfos)))
 		}
 	}
 
@@ -268,7 +268,7 @@ func runRigUndock(cmd *cobra.Command, args []string) error {
 func IsRigDocked(townRoot, rigName, prefix string) bool {
 	// Construct the rig beads path
 	rigPath := filepath.Join(townRoot, rigName)
-	beadsPath := filepath.Join(rigPath, "mayor", "rig")
+	beadsPath := filepath.Join(rigPath, "overseer", "rig")
 	if _, err := os.Stat(beadsPath); err != nil {
 		beadsPath = rigPath
 	}

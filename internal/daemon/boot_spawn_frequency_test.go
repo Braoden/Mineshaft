@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/boot"
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/boot"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 func writeFakeTmux(t *testing.T, dir string) {
@@ -106,8 +106,8 @@ func TestEnsureBootRunning_DoesNotSpawnEveryTick(t *testing.T) {
 }
 
 // Regression test for gt-qu883c:
-// daemon should suppress Boot spawns when Boot's last action was "nothing" (deacon healthy).
-func TestEnsureBootRunning_SuppressesWhenDeaconHealthy(t *testing.T) {
+// daemon should suppress Boot spawns when Boot's last action was "nothing" (supervisor healthy).
+func TestEnsureBootRunning_SuppressesWhenSupervisorHealthy(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on Windows — fake tmux requires bash")
 	}
@@ -123,7 +123,7 @@ func TestEnsureBootRunning_SuppressesWhenDeaconHealthy(t *testing.T) {
 	t.Setenv("TMUX_LOG", tmuxLog)
 	t.Setenv("GT_DEGRADED", "false")
 
-	// Write a boot-status.json indicating deacon was healthy ("nothing") recently.
+	// Write a boot-status.json indicating supervisor was healthy ("nothing") recently.
 	b := boot.New(townRoot)
 	if err := b.SaveStatus(&boot.Status{
 		StartedAt:   time.Now().Add(-30 * time.Second),
@@ -155,12 +155,12 @@ func TestEnsureBootRunning_SuppressesWhenDeaconHealthy(t *testing.T) {
 		}
 	}
 	if spawns != 0 {
-		t.Fatalf("boot spawn count = %d, want 0 (should suppress when deacon healthy)", spawns)
+		t.Fatalf("boot spawn count = %d, want 0 (should suppress when supervisor healthy)", spawns)
 	}
 }
 
 // Test that idle suppression does NOT prevent spawning when Boot's last action was not "nothing".
-func TestEnsureBootRunning_SpawnsWhenDeaconUnhealthy(t *testing.T) {
+func TestEnsureBootRunning_SpawnsWhenSupervisorUnhealthy(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on Windows — fake tmux requires bash")
 	}
@@ -176,13 +176,13 @@ func TestEnsureBootRunning_SpawnsWhenDeaconUnhealthy(t *testing.T) {
 	t.Setenv("TMUX_LOG", tmuxLog)
 	t.Setenv("GT_DEGRADED", "false")
 
-	// Write a boot-status.json indicating Boot had to wake deacon recently.
+	// Write a boot-status.json indicating Boot had to wake supervisor recently.
 	b := boot.New(townRoot)
 	if err := b.SaveStatus(&boot.Status{
 		StartedAt:   time.Now().Add(-30 * time.Second),
 		CompletedAt: time.Now().Add(-20 * time.Second),
 		LastAction:  "wake",
-		Target:      "deacon",
+		Target:      "supervisor",
 	}); err != nil {
 		t.Fatalf("save boot status: %v", err)
 	}
@@ -208,6 +208,6 @@ func TestEnsureBootRunning_SpawnsWhenDeaconUnhealthy(t *testing.T) {
 		}
 	}
 	if spawns != 1 {
-		t.Fatalf("boot spawn count = %d, want 1 (should spawn when deacon was unhealthy)", spawns)
+		t.Fatalf("boot spawn count = %d, want 1 (should spawn when supervisor was unhealthy)", spawns)
 	}
 }

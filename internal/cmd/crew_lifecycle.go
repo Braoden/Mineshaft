@@ -11,16 +11,16 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/crew"
-	"github.com/steveyegge/gastown/internal/mail"
-	"github.com/steveyegge/gastown/internal/runtime"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/townlog"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/crew"
+	"github.com/steveyegge/excavation/internal/mail"
+	"github.com/steveyegge/excavation/internal/runtime"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/townlog"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 func runCrewRemove(cmd *cobra.Command, args []string) error {
@@ -85,13 +85,13 @@ func runCrewRemove(cmd *cobra.Command, args []string) error {
 		// Remove the workspace
 		if isWorktree {
 			// For worktrees, use git worktree remove
-			mayorRigPath := constants.RigMayorPath(r.Path)
+			overseerRigPath := constants.RigOverseerPath(r.Path)
 			removeArgs := []string{"worktree", "remove", crewPath}
 			if forceRemove {
 				removeArgs = []string{"worktree", "remove", "--force", crewPath}
 			}
 			removeCmd := exec.Command("git", removeArgs...)
-			removeCmd.Dir = mayorRigPath
+			removeCmd.Dir = overseerRigPath
 			if output, err := removeCmd.CombinedOutput(); err != nil {
 				fmt.Printf("Error removing worktree %s: %v\n%s", arg, err, string(output))
 				lastErr = err
@@ -312,7 +312,7 @@ func runCrewStart(cmd *cobra.Command, args []string) error {
 	if townRoot == "" {
 		townRoot = filepath.Dir(r.Path)
 	}
-	accountsPath := constants.MayorAccountsPath(townRoot)
+	accountsPath := constants.OverseerAccountsPath(townRoot)
 	claudeConfigDir, _, _ := config.ResolveAccountConfigDir(accountsPath, crewAccount)
 
 	// Validate: --resume with a specific session ID only makes sense for a single
@@ -458,7 +458,7 @@ func runCrewRestart(cmd *cobra.Command, args []string) error {
 // runCrewRestartAll restarts all running crew sessions.
 // If crewRig is set, only restarts crew in that rig.
 func runCrewRestartAll() error {
-	// Get all agent sessions (including polecats to find crew)
+	// Get all agent sessions (including miners to find crew)
 	agents, err := getAgentSessions(true)
 	if err != nil {
 		return fmt.Errorf("listing sessions: %w", err)
@@ -660,7 +660,7 @@ func runCrewStop(cmd *cobra.Command, args []string) error {
 // runCrewStopAll stops all running crew sessions.
 // If crewRig is set, only stops crew in that rig.
 func runCrewStopAll() error {
-	// Get all agent sessions (including polecats to find crew)
+	// Get all agent sessions (including miners to find crew)
 	agents, err := getAgentSessions(true)
 	if err != nil {
 		return fmt.Errorf("listing sessions: %w", err)

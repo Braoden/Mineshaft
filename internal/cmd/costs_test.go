@@ -7,13 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/session"
+	"github.com/steveyegge/excavation/internal/session"
 )
 
 func setupCostsTestRegistry(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "gastown")
+	reg.Register("gt", "excavation")
 	reg.Register("bd", "beads")
 	old := session.DefaultRegistry()
 	session.SetDefaultRegistry(reg)
@@ -28,11 +28,11 @@ func TestDeriveSessionName(t *testing.T) {
 		expected string
 	}{
 		{
-			name: "polecat session",
+			name: "miner session",
 			envVars: map[string]string{
-				"GT_ROLE":    "polecat",
-				"GT_RIG":     "gastown",
-				"GT_POLECAT": "toast",
+				"GT_ROLE":    "miner",
+				"GT_RIG":     "excavation",
+				"GT_MINER": "toast",
 			},
 			expected: "gt-toast",
 		},
@@ -40,7 +40,7 @@ func TestDeriveSessionName(t *testing.T) {
 			name: "crew session",
 			envVars: map[string]string{
 				"GT_ROLE": "crew",
-				"GT_RIG":  "gastown",
+				"GT_RIG":  "excavation",
 				"GT_CREW": "max",
 			},
 			expected: "gt-crew-max",
@@ -49,7 +49,7 @@ func TestDeriveSessionName(t *testing.T) {
 			name: "witness session",
 			envVars: map[string]string{
 				"GT_ROLE": "witness",
-				"GT_RIG":  "gastown",
+				"GT_RIG":  "excavation",
 			},
 			expected: "gt-witness",
 		},
@@ -57,83 +57,83 @@ func TestDeriveSessionName(t *testing.T) {
 			name: "refinery session",
 			envVars: map[string]string{
 				"GT_ROLE": "refinery",
-				"GT_RIG":  "gastown",
+				"GT_RIG":  "excavation",
 			},
 			expected: "gt-refinery",
 		},
 		{
-			name: "mayor session",
+			name: "overseer session",
 			envVars: map[string]string{
-				"GT_ROLE": "mayor",
+				"GT_ROLE": "overseer",
 				"GT_TOWN": "ai",
 			},
-			expected: "hq-mayor",
+			expected: "hq-overseer",
 		},
 		{
-			name: "deacon session",
+			name: "supervisor session",
 			envVars: map[string]string{
-				"GT_ROLE": "deacon",
+				"GT_ROLE": "supervisor",
 				"GT_TOWN": "ai",
 			},
-			expected: "hq-deacon",
+			expected: "hq-supervisor",
 		},
 		{
-			name: "mayor session without GT_TOWN",
+			name: "overseer session without GT_TOWN",
 			envVars: map[string]string{
-				"GT_ROLE": "mayor",
+				"GT_ROLE": "overseer",
 			},
-			expected: "hq-mayor",
+			expected: "hq-overseer",
 		},
 		{
-			name: "deacon session without GT_TOWN",
+			name: "supervisor session without GT_TOWN",
 			envVars: map[string]string{
-				"GT_ROLE": "deacon",
+				"GT_ROLE": "supervisor",
 			},
-			expected: "hq-deacon",
+			expected: "hq-supervisor",
 		},
 		{
-			name: "mayor with stale GT_POLECAT is NOT polecat session",
+			name: "overseer with stale GT_MINER is NOT miner session",
 			envVars: map[string]string{
-				"GT_ROLE":    "mayor",
-				"GT_RIG":     "gastown",
-				"GT_POLECAT": "toast",
+				"GT_ROLE":    "overseer",
+				"GT_RIG":     "excavation",
+				"GT_MINER": "toast",
 				"GT_TOWN":    "ai",
 			},
-			expected: "hq-mayor",
+			expected: "hq-overseer",
 		},
 		{
-			name: "compound witness with stale GT_POLECAT is NOT polecat session",
+			name: "compound witness with stale GT_MINER is NOT miner session",
 			envVars: map[string]string{
-				"GT_ROLE":    "gastown/witness",
-				"GT_RIG":     "gastown",
-				"GT_POLECAT": "toast",
+				"GT_ROLE":    "excavation/witness",
+				"GT_RIG":     "excavation",
+				"GT_MINER": "toast",
 			},
 			expected: "gt-witness",
 		},
 		{
-			name: "compound refinery with stale GT_POLECAT is NOT polecat session",
+			name: "compound refinery with stale GT_MINER is NOT miner session",
 			envVars: map[string]string{
-				"GT_ROLE":    "gastown/refinery",
-				"GT_RIG":     "gastown",
-				"GT_POLECAT": "toast",
+				"GT_ROLE":    "excavation/refinery",
+				"GT_RIG":     "excavation",
+				"GT_MINER": "toast",
 			},
 			expected: "gt-refinery",
 		},
 		{
-			name: "compound crew with stale GT_POLECAT is NOT polecat session",
+			name: "compound crew with stale GT_MINER is NOT miner session",
 			envVars: map[string]string{
-				"GT_ROLE":    "gastown/crew/alice",
-				"GT_RIG":     "gastown",
-				"GT_POLECAT": "toast",
+				"GT_ROLE":    "excavation/crew/alice",
+				"GT_RIG":     "excavation",
+				"GT_MINER": "toast",
 			},
 			expected: "gt-crew-alice",
 		},
 		{
-			name: "compound polecat role uses GT_POLECAT for session name",
+			name: "compound miner role uses GT_MINER for session name",
 			envVars: map[string]string{
-				"GT_ROLE":    "gastown/polecats/toast",
-				"GT_RIG":     "gastown",
-				"GT_POLECAT": "toast",
+				"GT_ROLE":    "excavation/miners/toast",
+				"GT_RIG":     "excavation",
+				"GT_MINER": "toast",
 			},
 			expected: "gt-toast",
 		},
@@ -148,7 +148,7 @@ func TestDeriveSessionName(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Save and clear relevant env vars
 			saved := make(map[string]string)
-			envKeys := []string{"GT_ROLE", "GT_RIG", "GT_POLECAT", "GT_CREW", "GT_TOWN"}
+			envKeys := []string{"GT_ROLE", "GT_RIG", "GT_MINER", "GT_CREW", "GT_TOWN"}
 			for _, key := range envKeys {
 				saved[key] = os.Getenv(key)
 				os.Unsetenv(key)
@@ -177,7 +177,7 @@ func TestDeriveSessionName(t *testing.T) {
 
 func TestRunCostsRecord_NoSession_ReturnsNil(t *testing.T) {
 	// Clear all session-related env vars so no session can be derived.
-	envKeys := []string{"GT_SESSION", "GT_ROLE", "GT_RIG", "GT_POLECAT", "GT_CREW", "GT_TOWN"}
+	envKeys := []string{"GT_SESSION", "GT_ROLE", "GT_RIG", "GT_MINER", "GT_CREW", "GT_TOWN"}
 	saved := make(map[string]string)
 	for _, key := range envKeys {
 		saved[key] = os.Getenv(key)
@@ -211,12 +211,12 @@ func TestCostDigestPayload_ExcludesSessions(t *testing.T) {
 		SessionCount: 2885,
 		Sessions:     make([]CostEntry, 2885),
 		ByRole: map[string]float64{
-			"polecat": 500.0,
+			"miner": 500.0,
 			"witness": 100.0,
-			"mayor":   94.25,
+			"overseer":   94.25,
 		},
 		ByRig: map[string]float64{
-			"gastown": 600.0,
+			"excavation": 600.0,
 			"beads":   94.25,
 		},
 	}
@@ -225,8 +225,8 @@ func TestCostDigestPayload_ExcludesSessions(t *testing.T) {
 	for i := range digest.Sessions {
 		digest.Sessions[i] = CostEntry{
 			SessionID: "gt-session-" + time.Now().Format("150405"),
-			Role:      "polecat",
-			Rig:       "gastown",
+			Role:      "miner",
+			Rig:       "excavation",
 			Worker:    "toast",
 			CostUSD:   0.24,
 			EndedAt:   time.Now(),

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/doltserver"
+	"github.com/steveyegge/excavation/internal/doltserver"
 )
 
 // dsnOpts captures the optional MySQL DSN query parameters used by gt's

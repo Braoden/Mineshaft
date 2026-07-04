@@ -10,12 +10,12 @@ import (
 func TestGenerateCLAUDEMD(t *testing.T) {
 	content := generateCLAUDEMD()
 
-	// Must contain the Gas Town header
+	// Must contain the Excavation Site header
 	if content == "" {
 		t.Fatal("generateCLAUDEMD returned empty string")
 	}
-	if content[0:10] != "# Gas Town" {
-		t.Errorf("expected content to start with '# Gas Town', got: %q", content[:10])
+	if content[0:10] != "# Excavation Site" {
+		t.Errorf("expected content to start with '# Excavation Site', got: %q", content[:10])
 	}
 
 	// Must contain identity anchoring instructions
@@ -120,9 +120,9 @@ func TestUpgradeCLAUDEMD_DryRun(t *testing.T) {
 func TestUpgradeDaemonConfig_CreatesMissing(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// Create mayor directory (required by DaemonPatrolConfigPath)
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	// Create overseer directory (required by DaemonPatrolConfigPath)
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -136,7 +136,7 @@ func TestUpgradeDaemonConfig_CreatesMissing(t *testing.T) {
 	}
 
 	// Verify file exists
-	daemonPath := filepath.Join(mayorDir, "daemon.json")
+	daemonPath := filepath.Join(overseerDir, "daemon.json")
 	if _, err := os.Stat(daemonPath); err != nil {
 		t.Errorf("daemon.json not created: %v", err)
 	}
@@ -144,13 +144,13 @@ func TestUpgradeDaemonConfig_CreatesMissing(t *testing.T) {
 
 func TestUpgradeDaemonConfig_ExistingValid(t *testing.T) {
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create a valid daemon.json
-	daemonPath := filepath.Join(mayorDir, "daemon.json")
+	daemonPath := filepath.Join(overseerDir, "daemon.json")
 	content := `{
 		"type": "daemon-patrol-config",
 		"version": 1,

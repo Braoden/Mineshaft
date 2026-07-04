@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/style"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/style"
 )
 
 // MQ next command flags
@@ -23,18 +23,18 @@ var mqNextCmd = &cobra.Command{
 	Long: `Show the next merge request to process based on priority score.
 
 The priority scoring function considers:
-  - Convoy age: Older convoys get higher priority (starvation prevention)
+  - Minecart age: Older minecarts get higher priority (starvation prevention)
   - Issue priority: P0 > P1 > P2 > P3 > P4
   - Retry count: MRs that fail repeatedly get deprioritized
-  - MR age: FIFO tiebreaker for same priority/convoy
+  - MR age: FIFO tiebreaker for same priority/minecart
 
 Use --strategy=fifo for first-in-first-out ordering instead.
 
 Examples:
-  gt mq next gastown                    # Show highest-priority MR
-  gt mq next gastown --strategy=fifo    # Show oldest MR instead
-  gt mq next gastown --quiet            # Just print the MR ID
-  gt mq next gastown --json             # Output as JSON`,
+  gt mq next excavation                    # Show highest-priority MR
+  gt mq next excavation --strategy=fifo    # Show oldest MR instead
+  gt mq next excavation --quiet            # Just print the MR ID
+  gt mq next excavation --json             # Output as JSON`,
 	Args: cobra.ExactArgs(1),
 	RunE: runMQNext,
 }
@@ -152,8 +152,8 @@ func runMQNext(cmd *cobra.Command, args []string) error {
 		if fields.Worker != "" {
 			fmt.Printf("  Worker:   %s\n", fields.Worker)
 		}
-		if fields.ConvoyID != "" {
-			fmt.Printf("  Convoy:   %s\n", fields.ConvoyID)
+		if fields.MinecartID != "" {
+			fmt.Printf("  Minecart:   %s\n", fields.MinecartID)
 		}
 		if fields.RetryCount > 0 {
 			fmt.Printf("  Retries:  %d\n", fields.RetryCount)

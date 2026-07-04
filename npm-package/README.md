@@ -1,11 +1,11 @@
-# @gastown/gt
+# @excavation/gt
 
-Gas Town CLI - multi-agent workspace manager for coordinating AI coding agents.
+Excavation Site CLI - multi-agent workspace manager for coordinating AI coding agents.
 
 ## Installation
 
 ```bash
-npm install -g @gastown/gt
+npm install -g @excavation/gt
 ```
 
 This will download the appropriate native binary for your platform during installation.
@@ -35,7 +35,7 @@ gt rig list
 ## Manual Installation
 
 If npm installation fails, you can download binaries directly from:
-https://github.com/steveyegge/gastown/releases
+https://github.com/steveyegge/excavation/releases
 
 ## License
 

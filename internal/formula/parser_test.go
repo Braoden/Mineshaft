@@ -56,11 +56,11 @@ required = true
 	}
 }
 
-func TestParse_Convoy(t *testing.T) {
+func TestParse_Minecart(t *testing.T) {
 	data := []byte(`
-description = "Test convoy"
-formula = "test-convoy"
-type = "convoy"
+description = "Test minecart"
+formula = "test-minecart"
+type = "minecart"
 version = 1
 
 [[legs]]
@@ -86,11 +86,11 @@ depends_on = ["leg1", "leg2"]
 		t.Fatalf("Parse failed: %v", err)
 	}
 
-	if f.Name != "test-convoy" {
-		t.Errorf("Name = %q, want %q", f.Name, "test-convoy")
+	if f.Name != "test-minecart" {
+		t.Errorf("Name = %q, want %q", f.Name, "test-minecart")
 	}
-	if f.Type != TypeConvoy {
-		t.Errorf("Type = %q, want %q", f.Type, TypeConvoy)
+	if f.Type != TypeMinecart {
+		t.Errorf("Type = %q, want %q", f.Type, TypeMinecart)
 	}
 	if len(f.Legs) != 2 {
 		t.Errorf("len(Legs) = %d, want 2", len(f.Legs))
@@ -421,10 +421,10 @@ needs = ["step2", "step3"]
 	}
 }
 
-func TestConvoyReadySteps(t *testing.T) {
+func TestMinecartReadySteps(t *testing.T) {
 	data := []byte(`
 formula = "test"
-type = "convoy"
+type = "minecart"
 version = 1
 [[legs]]
 id = "leg1"
@@ -455,11 +455,11 @@ title = "Leg 3"
 	}
 }
 
-func TestParse_ConvoyWithAgent(t *testing.T) {
+func TestParse_MinecartWithAgent(t *testing.T) {
 	t.Parallel()
 	data := []byte(`
 formula = "agent-test"
-type = "convoy"
+type = "minecart"
 version = 1
 agent = "gemini"
 
@@ -494,12 +494,12 @@ agent = "codex"
 	}
 }
 
-func TestParse_ConvoyWithoutAgent(t *testing.T) {
+func TestParse_MinecartWithoutAgent(t *testing.T) {
 	t.Parallel()
 	// Existing formulas without agent field should continue to work
 	data := []byte(`
 formula = "no-agent"
-type = "convoy"
+type = "minecart"
 version = 1
 
 [[legs]]
@@ -815,10 +815,10 @@ func TestResolve_TDDCycle(t *testing.T) {
 	}
 }
 
-// TestResolve_MonorepoTDD verifies mol-polecat-work-monorepo-tdd resolves correctly:
+// TestResolve_MonorepoTDD verifies mol-miner-work-monorepo-tdd resolves correctly:
 // the implement step is expanded into 5 TDD sub-steps.
 func TestResolve_MonorepoTDD(t *testing.T) {
-	data, err := GetEmbeddedFormulaContent("mol-polecat-work-monorepo-tdd")
+	data, err := GetEmbeddedFormulaContent("mol-miner-work-monorepo-tdd")
 	if err != nil {
 		t.Fatalf("GetEmbeddedFormulaContent: %v", err)
 	}
@@ -833,7 +833,7 @@ func TestResolve_MonorepoTDD(t *testing.T) {
 		t.Fatalf("Resolve: %v", err)
 	}
 
-	// mol-polecat-work-monorepo has 10 steps. Expanding "implement" with tdd-cycle
+	// mol-miner-work-monorepo has 10 steps. Expanding "implement" with tdd-cycle
 	// (5 template steps) replaces 1 step with 5 → 14 total steps.
 	// Original: load-context, branch-setup, implement, self-review, build-check,
 	//           commit-changes, push-and-create-pr, validate-ci, handle-ai-reviews, submit-and-exit

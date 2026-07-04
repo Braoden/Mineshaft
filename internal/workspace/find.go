@@ -7,28 +7,28 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/config"
 )
 
 // ErrNotFound indicates no workspace was found.
-var ErrNotFound = errors.New("not in a Gas Town workspace")
+var ErrNotFound = errors.New("not in a Excavation Site workspace")
 
-// Markers used to detect a Gas Town workspace.
+// Markers used to detect a Excavation Site workspace.
 const (
 	// PrimaryMarker is the main config file that identifies a workspace.
-	// The town.json file lives in mayor/ along with other mayor config.
-	PrimaryMarker = "mayor/town.json"
+	// The town.json file lives in overseer/ along with other overseer config.
+	PrimaryMarker = "overseer/town.json"
 
 	// SecondaryMarker is an alternative indicator at the town level.
-	// Note: This can match rig-level mayors too, so we continue searching
+	// Note: This can match rig-level overseers too, so we continue searching
 	// upward after finding this to look for primary markers.
-	SecondaryMarker = "mayor"
+	SecondaryMarker = "overseer"
 )
 
 // Find locates the town root by walking up from the given directory.
-// It prefers mayor/town.json over mayor/ directory as workspace marker.
+// It prefers overseer/town.json over overseer/ directory as workspace marker.
 // Always continues to the outermost workspace, correctly handling nested
-// workspace structures (e.g., rig directories with their own mayor/town.json).
+// workspace structures (e.g., rig directories with their own overseer/town.json).
 // Does not resolve symlinks to stay consistent with os.Getwd().
 func Find(startDir string) (string, error) {
 	absDir, err := filepath.Abs(startDir)
@@ -43,7 +43,7 @@ func Find(startDir string) (string, error) {
 		// Always keep updating primaryMatch and secondaryMatch to find the outermost
 		// directory with the respective markers. This handles nested workspace
 		// structures where inner workspaces (e.g., rig directories or worktrees)
-		// have their own mayor/town.json, ensuring we return the actual town root.
+		// have their own overseer/town.json, ensuring we return the actual town root.
 		if _, err := os.Stat(filepath.Join(current, PrimaryMarker)); err == nil {
 			primaryMatch = current
 		}
@@ -115,7 +115,7 @@ func FindFromCwdOrError() (string, error) {
 // FindFromCwdWithFallback is like FindFromCwdOrError but returns (townRoot, cwd, error).
 // If getcwd fails, returns (townRoot, "", nil) using GT_TOWN_ROOT fallback.
 // This is useful for commands like `gt done` that need to continue even if the
-// working directory is deleted (e.g., polecat worktree nuked by Witness).
+// working directory is deleted (e.g., miner worktree nuked by Witness).
 func FindFromCwdWithFallback() (townRoot string, cwd string, err error) {
 	cwd, err = os.Getwd()
 	if err != nil {
@@ -136,22 +136,22 @@ func FindFromCwdWithFallback() (townRoot string, cwd string, err error) {
 	return townRoot, cwd, nil
 }
 
-// IsWorkspace checks if the given directory is a Gas Town workspace root.
-// A directory is a workspace if it has a primary marker (mayor/town.json)
-// or a secondary marker (mayor/ directory).
+// IsWorkspace checks if the given directory is a Excavation Site workspace root.
+// A directory is a workspace if it has a primary marker (overseer/town.json)
+// or a secondary marker (overseer/ directory).
 func IsWorkspace(dir string) (bool, error) {
 	absDir, err := filepath.Abs(dir)
 	if err != nil {
 		return false, fmt.Errorf("resolving path: %w", err)
 	}
 
-	// Check for primary marker (mayor/town.json)
+	// Check for primary marker (overseer/town.json)
 	primaryPath := filepath.Join(absDir, PrimaryMarker)
 	if _, err := os.Stat(primaryPath); err == nil {
 		return true, nil
 	}
 
-	// Check for secondary marker (mayor/ directory)
+	// Check for secondary marker (overseer/ directory)
 	secondaryPath := filepath.Join(absDir, SecondaryMarker)
 	info, err := os.Stat(secondaryPath)
 	if err == nil && info.IsDir() {
@@ -163,7 +163,7 @@ func IsWorkspace(dir string) (bool, error) {
 
 // GetTownName loads the town name from the workspace's town.json config.
 // This is used for generating unique tmux session names that avoid collisions
-// when running multiple Gas Town instances.
+// when running multiple Excavation Site instances.
 func GetTownName(townRoot string) (string, error) {
 	townConfigPath := filepath.Join(townRoot, PrimaryMarker)
 	townConfig, err := config.LoadTownConfig(townConfigPath)

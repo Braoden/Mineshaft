@@ -6,14 +6,14 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/session"
+	"github.com/steveyegge/excavation/internal/session"
 )
 
 // setupTestRegistry sets up a prefix registry for tests and returns a cleanup function.
 func setupTestRegistry(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "gastown")
+	reg.Register("gt", "excavation")
 	reg.Register("bd", "beads")
 	reg.Register("nif", "niflheim")
 	reg.Register("grc", "grctool")
@@ -105,16 +105,16 @@ func TestIsCrewSession(t *testing.T) {
 		session string
 		want    bool
 	}{
-		{"gt-crew-joe", true},  // gastown crew (prefix: gt)
+		{"gt-crew-joe", true},  // excavation crew (prefix: gt)
 		{"bd-crew-max", true},  // beads crew (prefix: bd)
 		{"nif-crew-a", true},   // niflheim crew (prefix: nif)
 		{"gt-witness", false},  // witness, not crew
 		{"gt-refinery", false}, // refinery, not crew
-		{"gt-polecat1", false}, // polecat, not crew
-		{"hq-deacon", false},
-		{"hq-mayor", false},
+		{"gt-miner1", false}, // miner, not crew
+		{"hq-supervisor", false},
+		{"hq-overseer", false},
 		{"other-session", false},
-		{"gt-crew", false}, // "crew" is a polecat name, not crew role (no name after crew-)
+		{"gt-crew", false}, // "crew" is a miner name, not crew role (no name after crew-)
 	}
 
 	for _, tt := range tests {
@@ -130,25 +130,25 @@ func TestIsCrewSession(t *testing.T) {
 func TestOrphanSessionCheck_IsValidSession(t *testing.T) {
 	setupTestRegistry(t)
 	check := NewOrphanSessionCheck()
-	validRigs := []string{"gastown", "beads"}
-	mayorSession := "hq-mayor"
-	deaconSession := "hq-deacon"
+	validRigs := []string{"excavation", "beads"}
+	overseerSession := "hq-overseer"
+	supervisorSession := "hq-supervisor"
 
 	tests := []struct {
 		session string
 		want    bool
 	}{
 		// Town-level sessions
-		{"hq-mayor", true},
-		{"hq-deacon", true},
+		{"hq-overseer", true},
+		{"hq-supervisor", true},
 
 		// Boot watchdog session
 		{"hq-boot", true},
 
 		// Valid rig sessions (using rig prefixes)
-		{"gt-witness", true},  // gastown witness (prefix: gt)
-		{"gt-refinery", true}, // gastown refinery
-		{"gt-polecat1", true}, // gastown polecat
+		{"gt-witness", true},  // excavation witness (prefix: gt)
+		{"gt-refinery", true}, // excavation refinery
+		{"gt-miner1", true}, // excavation miner
 		{"bd-witness", true},  // beads witness (prefix: bd)
 		{"bd-refinery", true}, // beads refinery
 		{"bd-crew-max", true}, // beads crew
@@ -163,7 +163,7 @@ func TestOrphanSessionCheck_IsValidSession(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.session, func(t *testing.T) {
-			got := check.isValidSession(tt.session, validRigs, mayorSession, deaconSession)
+			got := check.isValidSession(tt.session, validRigs, overseerSession, supervisorSession)
 			if got != tt.want {
 				t.Errorf("isValidSession(%q) = %v, want %v", tt.session, got, tt.want)
 			}
@@ -176,9 +176,9 @@ func TestOrphanSessionCheck_IsValidSession(t *testing.T) {
 func TestOrphanSessionCheck_IsValidSession_EdgeCases(t *testing.T) {
 	setupTestRegistry(t)
 	check := NewOrphanSessionCheck()
-	validRigs := []string{"gastown", "niflheim", "grctool", "7thsense", "pulseflow"}
-	mayorSession := "hq-mayor"
-	deaconSession := "hq-deacon"
+	validRigs := []string{"excavation", "niflheim", "grctool", "7thsense", "pulseflow"}
+	overseerSession := "hq-overseer"
+	supervisorSession := "hq-supervisor"
 
 	tests := []struct {
 		name    string
@@ -218,18 +218,18 @@ func TestOrphanSessionCheck_IsValidSession_EdgeCases(t *testing.T) {
 			reason:  "pf1 crew name should be valid",
 		},
 
-		// Polecat sessions (any name after prefix should be accepted)
+		// Miner sessions (any name after prefix should be accepted)
 		{
-			name:    "polecat_hash_style",
+			name:    "miner_hash_style",
 			session: "gt-abc123def",
 			want:    true,
-			reason:  "polecat with hash-style name should be valid",
+			reason:  "miner with hash-style name should be valid",
 		},
 		{
-			name:    "polecat_descriptive",
+			name:    "miner_descriptive",
 			session: "nif-fix-auth-bug",
 			want:    true,
-			reason:  "polecat with descriptive name should be valid",
+			reason:  "miner with descriptive name should be valid",
 		},
 
 		// Sessions that should be detected as orphans
@@ -253,7 +253,7 @@ func TestOrphanSessionCheck_IsValidSession_EdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := check.isValidSession(tt.session, validRigs, mayorSession, deaconSession)
+			got := check.isValidSession(tt.session, validRigs, overseerSession, supervisorSession)
 			if got != tt.want {
 				t.Errorf("isValidSession(%q) = %v, want %v: %s", tt.session, got, tt.want, tt.reason)
 			}
@@ -266,36 +266,36 @@ func TestOrphanSessionCheck_GetValidRigs(t *testing.T) {
 	check := NewOrphanSessionCheck()
 	townRoot := t.TempDir()
 
-	// Setup: create mayor directory (required for getValidRigs to proceed)
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor"), 0755); err != nil {
-		t.Fatalf("failed to create mayor dir: %v", err)
+	// Setup: create overseer directory (required for getValidRigs to proceed)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer"), 0755); err != nil {
+		t.Fatalf("failed to create overseer dir: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "mayor", "rigs.json"), []byte("{}"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "rigs.json"), []byte("{}"), 0644); err != nil {
 		t.Fatalf("failed to create rigs.json: %v", err)
 	}
 
-	// Create some rigs with polecats/crew directories
-	createRigDir := func(name string, hasCrew, hasPolecats bool) {
+	// Create some rigs with miners/crew directories
+	createRigDir := func(name string, hasCrew, hasMiners bool) {
 		rigPath := filepath.Join(townRoot, name)
 		os.MkdirAll(rigPath, 0755)
 		if hasCrew {
 			os.MkdirAll(filepath.Join(rigPath, "crew"), 0755)
 		}
-		if hasPolecats {
-			os.MkdirAll(filepath.Join(rigPath, "polecats"), 0755)
+		if hasMiners {
+			os.MkdirAll(filepath.Join(rigPath, "miners"), 0755)
 		}
 	}
 
-	createRigDir("gastown", true, true)
+	createRigDir("excavation", true, true)
 	createRigDir("niflheim", true, false)
 	createRigDir("grctool", false, true)
-	createRigDir("not-a-rig", false, false) // No crew or polecats
+	createRigDir("not-a-rig", false, false) // No crew or miners
 
 	rigs := check.getValidRigs(townRoot)
 
-	// Should find gastown, niflheim, grctool but not "not-a-rig"
+	// Should find excavation, niflheim, grctool but not "not-a-rig"
 	expected := map[string]bool{
-		"gastown":  true,
+		"excavation":  true,
 		"niflheim": true,
 		"grctool":  true,
 	}
@@ -348,7 +348,7 @@ func TestIsCrewSession_ComprehensivePatterns(t *testing.T) {
 		reason  string
 	}{
 		// Valid crew patterns (new format: <prefix>-crew-<name>)
-		{"gt-crew-joe", true, "gastown crew session"},
+		{"gt-crew-joe", true, "excavation crew session"},
 		{"bd-crew-max", true, "beads crew session"},
 		{"nif-crew-codex1", true, "niflheim crew with numbers in name"},
 		{"grc-crew-grc1", true, "grctool crew with alphanumeric name"},
@@ -357,11 +357,11 @@ func TestIsCrewSession_ComprehensivePatterns(t *testing.T) {
 		// Invalid crew patterns
 		{"gt-witness", false, "witness is not crew"},
 		{"gt-refinery", false, "refinery is not crew"},
-		{"gt-polecat-abc", false, "polecat name, not crew"},
-		{"hq-deacon", false, "deacon is not crew"},
-		{"hq-mayor", false, "mayor is not crew"},
+		{"gt-miner-abc", false, "miner name, not crew"},
+		{"hq-supervisor", false, "supervisor is not crew"},
+		{"hq-overseer", false, "overseer is not crew"},
 		{"", false, "empty string"},
-		{"gt-morsov", false, "polecat, not crew"},
+		{"gt-morsov", false, "miner, not crew"},
 	}
 
 	for _, tt := range tests {
@@ -377,18 +377,18 @@ func TestIsCrewSession_ComprehensivePatterns(t *testing.T) {
 // TestOrphanSessionCheck_HQSessions tests that hq-* sessions are properly recognized as valid.
 func TestOrphanSessionCheck_HQSessions(t *testing.T) {
 	townRoot := t.TempDir()
-	mayorDir := filepath.Join(townRoot, "mayor")
-	if err := os.MkdirAll(mayorDir, 0o755); err != nil {
-		t.Fatalf("create mayor dir: %v", err)
+	overseerDir := filepath.Join(townRoot, "overseer")
+	if err := os.MkdirAll(overseerDir, 0o755); err != nil {
+		t.Fatalf("create overseer dir: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(mayorDir, "rigs.json"), []byte("{}"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), []byte("{}"), 0o644); err != nil {
 		t.Fatalf("create rigs.json: %v", err)
 	}
 
 	lister := &mockSessionLister{
 		sessions: []string{
-			"hq-mayor",  // valid: headquarters mayor session
-			"hq-deacon", // valid: headquarters deacon session
+			"hq-overseer",  // valid: headquarters overseer session
+			"hq-supervisor", // valid: headquarters supervisor session
 		},
 	}
 	check := NewOrphanSessionCheckWithSessionLister(lister)
@@ -397,7 +397,7 @@ func TestOrphanSessionCheck_HQSessions(t *testing.T) {
 	if result.Status != StatusOK {
 		t.Fatalf("expected StatusOK for valid hq sessions, got %v: %s", result.Status, result.Message)
 	}
-	if result.Message != "All 2 Gas Town sessions are valid" {
+	if result.Message != "All 2 Excavation Site sessions are valid" {
 		t.Fatalf("unexpected message: %q", result.Message)
 	}
 	if len(check.orphanSessions) != 0 {
@@ -411,17 +411,17 @@ func TestOrphanSessionCheck_Run_Deterministic(t *testing.T) {
 	setupTestRegistry(t)
 
 	townRoot := t.TempDir()
-	mayorDir := filepath.Join(townRoot, "mayor")
-	if err := os.MkdirAll(mayorDir, 0o755); err != nil {
-		t.Fatalf("create mayor dir: %v", err)
+	overseerDir := filepath.Join(townRoot, "overseer")
+	if err := os.MkdirAll(overseerDir, 0o755); err != nil {
+		t.Fatalf("create overseer dir: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(mayorDir, "rigs.json"), []byte("{}"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), []byte("{}"), 0o644); err != nil {
 		t.Fatalf("create rigs.json: %v", err)
 	}
 
 	// Create rig directories to make them "valid"
-	if err := os.MkdirAll(filepath.Join(townRoot, "gastown", "polecats"), 0o755); err != nil {
-		t.Fatalf("create gastown rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "miners"), 0o755); err != nil {
+		t.Fatalf("create excavation rig: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, "beads", "crew"), 0o755); err != nil {
 		t.Fatalf("create beads rig: %v", err)
@@ -429,14 +429,14 @@ func TestOrphanSessionCheck_Run_Deterministic(t *testing.T) {
 
 	lister := &mockSessionLister{
 		sessions: []string{
-			"gt-witness",     // valid: gastown rig exists (prefix "gt")
-			"gt-polecat1",    // valid: gastown rig exists
+			"gt-witness",     // valid: excavation rig exists (prefix "gt")
+			"gt-miner1",    // valid: excavation rig exists
 			"bd-refinery",    // valid: beads rig exists (prefix "bd")
-			"hq-mayor",       // valid: hq-mayor is recognized
-			"hq-deacon",      // valid: hq-deacon is recognized
-			"zz-witness",     // ignored: unknown prefix, not a gastown session
-			"xx-crew-joe",    // ignored: unknown prefix, not a gastown session
-			"random-session", // ignored: unknown prefix, not a gastown session
+			"hq-overseer",       // valid: hq-overseer is recognized
+			"hq-supervisor",      // valid: hq-supervisor is recognized
+			"zz-witness",     // ignored: unknown prefix, not a excavation session
+			"xx-crew-joe",    // ignored: unknown prefix, not a excavation session
+			"random-session", // ignored: unknown prefix, not a excavation session
 		},
 	}
 	check := NewOrphanSessionCheckWithSessionLister(lister)
@@ -460,7 +460,7 @@ func TestArgvHasFlag(t *testing.T) {
 	}
 }
 
-func TestGasTownRuntimeYOLO(t *testing.T) {
+func TestExcavationRuntimeYOLO(t *testing.T) {
 	tests := []struct {
 		name string
 		cmd  string

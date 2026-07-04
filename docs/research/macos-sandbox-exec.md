@@ -2,7 +2,7 @@
 
 **Bead:** gt-6qt
 **Date:** 2026-03-08
-**Blocks:** gt-2pb (Spike: macOS sandbox-exec polecat isolation)
+**Blocks:** gt-2pb (Spike: macOS sandbox-exec miner isolation)
 
 ## 1. Is sandbox-exec still functional despite deprecation?
 

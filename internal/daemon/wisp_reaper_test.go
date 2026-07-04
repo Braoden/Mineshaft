@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/constants"
+	"github.com/steveyegge/excavation/internal/constants"
 )
 
 func TestWispReaperInterval(t *testing.T) {
@@ -108,7 +108,7 @@ func TestDispatchReaperDogUsesDogPoolSling(t *testing.T) {
 		t.Fatalf("read gt args log: %v", err)
 	}
 	args := strings.Split(strings.TrimSpace(string(data)), "\n")
-	wantPrefix := []string{"sling", constants.MolDogReaper, "deacon/dogs"}
+	wantPrefix := []string{"sling", constants.MolDogReaper, "supervisor/dogs"}
 	if len(args) < len(wantPrefix) {
 		t.Fatalf("gt args = %v, want prefix %v", args, wantPrefix)
 	}

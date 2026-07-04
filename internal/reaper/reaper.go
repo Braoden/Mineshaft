@@ -159,7 +159,7 @@ const (
 	DefaultBatchSize = 100
 	// DefaultAlertThreshold is the open-wisp count above which callers should
 	// surface a warning. Sized above the natural steady-state for the current
-	// dog/deacon emit rate (~23 wisps/h × 24h TTL ≈ 550). See hq-57jr8.
+	// dog/supervisor emit rate (~23 wisps/h × 24h TTL ≈ 550). See hq-57jr8.
 	DefaultAlertThreshold = 800
 )
 
@@ -351,14 +351,14 @@ func Scan(db *sql.DB, dbName string, maxAge, purgeAge, mailDeleteAge, staleIssue
 
 	// Count stale issue candidates.
 	// Same caveat: issues/dependencies tables may live on a separate Dolt instance.
-	// Convoys excluded to mirror AutoClose (hq-jnap): convoy lifecycle is
+	// Minecarts excluded to mirror AutoClose (hq-jnap): minecart lifecycle is
 	// tracked-bead-status driven, never staleness driven.
 	staleQuery := `
 		SELECT COUNT(*) FROM issues i
 		WHERE i.status IN ('open', 'in_progress')
 		AND i.updated_at < ?
 		AND i.priority > 1
-		AND i.issue_type NOT IN ('epic', 'convoy')
+		AND i.issue_type NOT IN ('epic', 'minecart')
 		AND i.id NOT IN (
 			SELECT DISTINCT d.issue_id FROM dependencies d
 			INNER JOIN issues dep ON d.depends_on_issue_id = dep.id
@@ -719,17 +719,17 @@ func AutoClose(db *sql.DB, dbName string, staleAge time.Duration, dryRun bool) (
 	staleCutoff := time.Now().UTC().Add(-staleAge)
 	result := &AutoCloseResult{Database: dbName, DryRun: dryRun}
 
-	// Convoys are excluded from staleness auto-close (hq-jnap): their lifecycle
-	// is driven by tracked-bead status (`gt convoy check` / refinery post-merge),
+	// Minecarts are excluded from staleness auto-close (hq-jnap): their lifecycle
+	// is driven by tracked-bead status (`gt minecart check` / refinery post-merge),
 	// and the 'tracks' relation is non-blocking so the dependency exclusions
-	// below do NOT protect a convoy with open tracked issues. Stale-closing a
-	// convoy while its tracked beads are open orphans them from dispatch
+	// below do NOT protect a minecart with open tracked issues. Stale-closing a
+	// minecart while its tracked beads are open orphans them from dispatch
 	// tracking and causes duplicate dispatches (hq-qouv/hq-shb1 incident).
 	whereClause := fmt.Sprintf(`
 		i.status IN ('open', 'in_progress')
 		AND i.updated_at < ?
 		AND i.priority > 1
-		AND i.issue_type NOT IN ('epic', 'convoy')
+		AND i.issue_type NOT IN ('epic', 'minecart')
 		AND i.id NOT IN (
 			SELECT DISTINCT l.issue_id FROM `+"`%s`"+`.labels l
 			WHERE l.label IN ('gt:standing-orders', 'gt:keep', 'gt:role', 'gt:rig')
@@ -920,7 +920,7 @@ type ClosePluginReceiptResult struct {
 }
 
 // ClosePluginReceipts closes open issues labeled "type:plugin-run" that are
-// older than maxAge. These are transient run receipts created by deacon dog
+// older than maxAge. These are transient run receipts created by supervisor dog
 // plugins; they should be closed shortly after creation since they exist only
 // for audit/cooldown-gate purposes. The standard AutoClose path requires 7 days
 // of staleness, which lets plugin receipts accumulate into the hundreds.

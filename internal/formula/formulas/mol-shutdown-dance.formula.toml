@@ -8,7 +8,7 @@ goroutine (NOT a Claude session) that runs the interrogation state machine.
 
 Dogs are lightweight workers in Boot's pool (see dog-pool-architecture.md):
 - Fixed pool of 5 goroutines (configurable via GT_DOG_POOL_SIZE)
-- State persisted to $GT_ROOT/deacon/dogs/active/<id>.json
+- State persisted to $GT_ROOT/supervisor/dogs/active/<id>.json
 - Recovery on Boot restart via orphan state files
 
 ## State Machine
@@ -106,7 +106,7 @@ func (d *Dog) CheckForResponse() bool {
 | warrant_id  | hook_bead   | Bead ID of the death warrant                  |
 | target      | warrant     | Session name to interrogate                   |
 | reason      | warrant     | Why warrant was issued                        |
-| requester   | warrant     | Who filed the warrant (e.g., deacon, witness) |
+| requester   | warrant     | Who filed the warrant (e.g., supervisor, witness) |
 
 ## Integration
 
@@ -136,9 +136,9 @@ Entry point when Dog is allocated from pool.
 **1. Read warrant from allocation:**
 The Dog receives a Warrant struct containing:
 - ID: Bead ID of the warrant
-- Target: Session name (e.g., "gt-gastown-Toast")
+- Target: Session name (e.g., "gt-excavation-Toast")
 - Reason: Why termination requested
-- Requester: Who filed (deacon, witness, mayor)
+- Requester: Who filed (supervisor, witness, overseer)
 - FiledAt: Timestamp
 
 **2. Validate target exists:**
@@ -151,7 +151,7 @@ If target doesn't exist:
 - Skip to EPITAPH with outcome=already_dead
 
 **3. Initialize state file:**
-Write initial state to $GT_ROOT/deacon/dogs/active/{dog-id}.json
+Write initial state to $GT_ROOT/supervisor/dogs/active/{dog-id}.json
 
 **4. Set initial attempt counter:**
 attempt = 1
@@ -477,11 +477,11 @@ bd close {warrant_id} --reason "{epitaph_summary}"
 
 **3. Move state file to completed:**
 ```bash
-mv $GT_ROOT/deacon/dogs/active/{dog-id}.json $GT_ROOT/deacon/dogs/completed/
+mv $GT_ROOT/supervisor/dogs/active/{dog-id}.json $GT_ROOT/supervisor/dogs/completed/
 ```
 
 **4. Report to Boot:**
-Write completion file: $GT_ROOT/deacon/dogs/active/{dog-id}.done
+Write completion file: $GT_ROOT/supervisor/dogs/active/{dog-id}.done
 ```json
 {
   "dog_id": "{dog-id}",
@@ -506,7 +506,7 @@ description = "Bead ID of the death warrant being processed"
 required = true
 
 [vars.target]
-description = "Session name to interrogate (e.g., gt-gastown-Toast)"
+description = "Session name to interrogate (e.g., gt-excavation-Toast)"
 required = true
 
 [vars.reason]
@@ -514,6 +514,6 @@ description = "Why the warrant was issued"
 required = true
 
 [vars.requester]
-description = "Who filed the warrant (deacon, witness, mayor)"
+description = "Who filed the warrant (supervisor, witness, overseer)"
 required = true
-default = "deacon"
+default = "supervisor"

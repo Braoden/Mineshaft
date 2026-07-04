@@ -1,6 +1,6 @@
-# Gastown OTel Data Model
+# Excavation OTel Data Model
 
-All Gastown telemetry events are OTel log records exported via OTLP
+All Excavation telemetry events are OTel log records exported via OTLP
 (`GT_OTEL_LOGS_URL`). Every record carries a `run.id` attribute — a UUID
 generated once per agent spawn — so all records from a single agent session
 can be retrieved and correlated.
@@ -30,7 +30,7 @@ session carry the same `run.id`.
 | `instance` | string | `hostname:basename(town_root)` |
 | `town_root` | string | absolute town root path |
 | `agent_type` | string | `"claudecode"`, `"opencode"`, `"copilot"`, … |
-| `role` | string | `polecat` · `witness` · `mayor` · `refinery` · `crew` · `deacon` · `dog` · `boot` |
+| `role` | string | `miner` · `witness` · `overseer` · `refinery` · `crew` · `supervisor` · `dog` · `boot` |
 | `agent_name` | string | specific name within the role (e.g. `"wyvern-Toast"`); equals role for singletons |
 | `session_id` | string | tmux pane name |
 | `rig` | string | rig name; empty for town-level agents |
@@ -49,7 +49,7 @@ Emitted once per agent spawn. Anchors all subsequent events for that run.
 | `instance` | string | `hostname:basename(town_root)` |
 | `town_root` | string | absolute town root path |
 | `agent_type` | string | `"claudecode"` · `"opencode"` · `"copilot"` · … |
-| `role` | string | Gastown role |
+| `role` | string | Excavation role |
 | `agent_name` | string | agent name |
 | `session_id` | string | tmux pane name |
 | `rig` | string | rig name (empty = town-level) |
@@ -67,7 +67,7 @@ tmux session lifecycle events.
 |---|---|---|
 | `run.id` | string | run UUID |
 | `session_id` | string | tmux pane name |
-| `role` | string | Gastown role |
+| `role` | string | Excavation role |
 | `status` | string | `"ok"` · `"error"` |
 
 ---
@@ -80,7 +80,7 @@ separately as `prime.context` (same attributes plus `formula`).
 | Attribute | Type | Description |
 |---|---|---|
 | `run.id` | string | run UUID |
-| `role` | string | Gastown role |
+| `role` | string | Excavation role |
 | `hook_mode` | bool | true when invoked from a hook |
 | `formula` | string | full rendered formula (`prime.context` only) |
 | `status` | string | `"ok"` · `"error"` |
@@ -158,7 +158,7 @@ in a shell.
 
 ### `mail`
 
-All operations on the Gastown mail system.
+All operations on the Excavation mail system.
 
 | Attribute | Type | Description |
 |---|---|---|
@@ -203,7 +203,7 @@ Molecule lifecycle events emitted at each stage of the formula workflow.
 | Attribute | Type | Description |
 |---|---|---|
 | `run.id` | string | run UUID |
-| `formula_name` | string | formula name (e.g. `"mol-polecat-work"`) |
+| `formula_name` | string | formula name (e.g. `"mol-miner-work"`) |
 | `status` | string | `"ok"` · `"error"` |
 
 **`mol.wisp`** — proto instantiated as a live wisp (ephemeral molecule instance):
@@ -262,10 +262,10 @@ All carry `run.id`.
 | `sling` | `bead`, `target`, `status` |
 | `nudge` | `target`, `status` |
 | `done` | `exit_type` (`COMPLETED` · `ESCALATED` · `DEFERRED`), `status` |
-| `polecat.spawn` | `name`, `status` |
-| `polecat.remove` | `name`, `status` |
+| `miner.spawn` | `name`, `status` |
+| `miner.remove` | `name`, `status` |
 | `formula.instantiate` | `formula_name`, `bead_id`, `status` (top-level formula-on-bead result) |
-| `convoy.create` | `bead_id`, `status` |
+| `minecart.create` | `bead_id`, `status` |
 | `daemon.restart` | `agent_type` |
 | `pane.output` | `session`, `content` (opt-in: `GT_LOG_PANE_OUTPUT=true`) |
 

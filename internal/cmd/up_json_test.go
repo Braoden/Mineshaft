@@ -5,15 +5,15 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/session"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/session"
 )
 
 func TestBuildUpSummary(t *testing.T) {
 	services := []ServiceStatus{
 		{Name: "Daemon", Type: "daemon", OK: true, Detail: "PID 123"},
-		{Name: "Deacon", Type: constants.RoleDeacon, OK: true, Detail: "gt-deacon"},
-		{Name: "Mayor", Type: constants.RoleMayor, OK: false, Detail: "failed"},
+		{Name: "Supervisor", Type: constants.RoleSupervisor, OK: true, Detail: "gt-supervisor"},
+		{Name: "Overseer", Type: constants.RoleOverseer, OK: false, Detail: "failed"},
 	}
 
 	summary := buildUpSummary(services)
@@ -32,7 +32,7 @@ func TestEmitUpJSON_Success(t *testing.T) {
 	services := []ServiceStatus{
 		{Name: "Dolt", Type: "dolt", OK: true, Detail: "started (port 3306)"},
 		{Name: "Daemon", Type: "daemon", OK: true, Detail: "PID 123"},
-		{Name: "Deacon", Type: constants.RoleDeacon, OK: true, Detail: "gt-deacon"},
+		{Name: "Supervisor", Type: constants.RoleSupervisor, OK: true, Detail: "gt-supervisor"},
 	}
 
 	var buf bytes.Buffer
@@ -60,7 +60,7 @@ func TestEmitUpJSON_Success(t *testing.T) {
 func TestEmitUpJSON_FailureReturnsSilentExitAndValidJSON(t *testing.T) {
 	services := []ServiceStatus{
 		{Name: "Daemon", Type: "daemon", OK: true, Detail: "PID 123"},
-		{Name: "Mayor", Type: constants.RoleMayor, OK: false, Detail: "start failed"},
+		{Name: "Overseer", Type: constants.RoleOverseer, OK: false, Detail: "start failed"},
 	}
 
 	var buf bytes.Buffer
@@ -128,23 +128,23 @@ func TestEmitUpJSON_SuccessDerivesFromServices(t *testing.T) {
 }
 
 func TestEmitUpJSON_SessionNames(t *testing.T) {
-	rigName := "gastown"
+	rigName := "excavation"
 	prefix := session.PrefixFor(rigName)
 
 	services := []ServiceStatus{
 		{
-			Name:   "Crew (gastown/max)",
+			Name:   "Crew (excavation/max)",
 			Type:   constants.RoleCrew,
 			Rig:    rigName,
 			OK:     true,
 			Detail: session.CrewSessionName(prefix, "max"),
 		},
 		{
-			Name:   "Polecat (gastown/alpha)",
-			Type:   constants.RolePolecat,
+			Name:   "Miner (excavation/alpha)",
+			Type:   constants.RoleMiner,
 			Rig:    rigName,
 			OK:     true,
-			Detail: session.PolecatSessionName(prefix, "alpha"),
+			Detail: session.MinerSessionName(prefix, "alpha"),
 		},
 	}
 
@@ -164,9 +164,9 @@ func TestEmitUpJSON_SessionNames(t *testing.T) {
 		t.Fatalf("crew Detail = %q, want %q", output.Services[0].Detail, wantCrew)
 	}
 
-	// Verify polecat session name uses prefix (format: {prefix}-{name})
-	wantPolecat := session.PolecatSessionName(prefix, "alpha")
-	if output.Services[1].Detail != wantPolecat {
-		t.Fatalf("polecat Detail = %q, want %q", output.Services[1].Detail, wantPolecat)
+	// Verify miner session name uses prefix (format: {prefix}-{name})
+	wantMiner := session.MinerSessionName(prefix, "alpha")
+	if output.Services[1].Detail != wantMiner {
+		t.Fatalf("miner Detail = %q, want %q", output.Services[1].Detail, wantMiner)
 	}
 }

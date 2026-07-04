@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/session"
+	"github.com/steveyegge/excavation/internal/session"
 )
 
 // mockSocketLister implements socketSessionLister for testing.
@@ -35,7 +35,7 @@ func setupSocketTestRegistry(t *testing.T) {
 	oldRegistry := session.DefaultRegistry()
 	t.Cleanup(func() { session.SetDefaultRegistry(oldRegistry) })
 	r := session.NewPrefixRegistry()
-	r.Register("ga", "gastown")
+	r.Register("ga", "excavation")
 	session.SetDefaultRegistry(r)
 }
 
@@ -194,7 +194,7 @@ func TestSocketSplitBrainCheck_DetectsOrphans(t *testing.T) {
 	}
 }
 
-func TestSocketSplitBrainCheck_MixedWithNonGastown(t *testing.T) {
+func TestSocketSplitBrainCheck_MixedWithNonExcavation(t *testing.T) {
 	setupSocketTestRegistry(t)
 
 	check := NewSocketSplitBrainCheck()

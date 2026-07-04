@@ -6,11 +6,11 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/dog"
-	"github.com/steveyegge/gastown/internal/mail"
-	"github.com/steveyegge/gastown/internal/plugin"
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/dog"
+	"github.com/steveyegge/excavation/internal/mail"
+	"github.com/steveyegge/excavation/internal/plugin"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 // Dog lifecycle defaults — now config-driven via operational.daemon thresholds.
@@ -287,7 +287,7 @@ func (d *Daemon) dispatchPlugins(mgr *dog.Manager, sm *dog.SessionManager, rigsC
 		// so the dog finds work in its inbox on first check.
 		msg := mail.NewMessage(
 			"daemon",
-			fmt.Sprintf("deacon/dogs/%s", idleDog.Name),
+			fmt.Sprintf("supervisor/dogs/%s", idleDog.Name),
 			fmt.Sprintf("Plugin: %s", p.Name),
 			p.FormatMailBody(),
 		)
@@ -364,9 +364,9 @@ func findDispatchableDog(mgr *dog.Manager, sm *dog.SessionManager, logger *log.L
 	return nil
 }
 
-// loadRigsConfig loads the rigs configuration from mayor/rigs.json.
+// loadRigsConfig loads the rigs configuration from overseer/rigs.json.
 func (d *Daemon) loadRigsConfig() (*config.RigsConfig, error) {
-	rigsPath := filepath.Join(d.config.TownRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(d.config.TownRoot, "overseer", "rigs.json")
 	return config.LoadRigsConfig(rigsPath)
 }
 

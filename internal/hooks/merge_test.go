@@ -131,14 +131,14 @@ func TestMergeHooksEmptyHooksDisables(t *testing.T) {
 	}
 
 	overrides := map[string]*HooksConfig{
-		"mayor": {
+		"overseer": {
 			Stop: []HookEntry{
 				{Matcher: "", Hooks: []Hook{}}, // Explicit disable
 			},
 		},
 	}
 
-	result := MergeHooks(base, overrides, "mayor")
+	result := MergeHooks(base, overrides, "overseer")
 
 	if len(result.Stop) != 0 {
 		t.Errorf("expected 0 Stop hooks (disabled), got %d", len(result.Stop))
@@ -158,20 +158,20 @@ func TestMergeHooksRigRoleLayering(t *testing.T) {
 				{Matcher: "", Hooks: []Hook{{Type: "command", Command: "crew-prime"}}},
 			},
 		},
-		"gastown/crew": {
+		"excavation/crew": {
 			SessionStart: []HookEntry{
-				{Matcher: "", Hooks: []Hook{{Type: "command", Command: "gastown-crew-prime"}}},
+				{Matcher: "", Hooks: []Hook{{Type: "command", Command: "excavation-crew-prime"}}},
 			},
 		},
 	}
 
-	result := MergeHooks(base, overrides, "gastown/crew")
+	result := MergeHooks(base, overrides, "excavation/crew")
 
 	// rig+role override should win (applied last)
 	if len(result.SessionStart) != 1 {
 		t.Fatalf("expected 1 SessionStart, got %d", len(result.SessionStart))
 	}
-	if result.SessionStart[0].Hooks[0].Command != "gastown-crew-prime" {
+	if result.SessionStart[0].Hooks[0].Command != "excavation-crew-prime" {
 		t.Errorf("expected rig+role override, got %q", result.SessionStart[0].Hooks[0].Command)
 	}
 }
@@ -240,11 +240,11 @@ func TestLoadAllOverrides(t *testing.T) {
 
 	gasCrewOverride := &HooksConfig{
 		SessionStart: []HookEntry{
-			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "gastown-prime"}}},
+			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "excavation-prime"}}},
 		},
 	}
-	if err := SaveOverride("gastown/crew", gasCrewOverride); err != nil {
-		t.Fatalf("SaveOverride gastown/crew: %v", err)
+	if err := SaveOverride("excavation/crew", gasCrewOverride); err != nil {
+		t.Fatalf("SaveOverride excavation/crew: %v", err)
 	}
 
 	overrides, err := LoadAllOverrides()
@@ -259,8 +259,8 @@ func TestLoadAllOverrides(t *testing.T) {
 	if _, ok := overrides["crew"]; !ok {
 		t.Error("missing 'crew' override")
 	}
-	if _, ok := overrides["gastown/crew"]; !ok {
-		t.Error("missing 'gastown/crew' override")
+	if _, ok := overrides["excavation/crew"]; !ok {
+		t.Error("missing 'excavation/crew' override")
 	}
 }
 
@@ -293,7 +293,7 @@ func TestLoadAllOverridesSkipsInvalidJSON(t *testing.T) {
 	}
 
 	// Write an invalid JSON file directly into overrides dir
-	invalidPath := filepath.Join(OverridesDir(), "polecats.json")
+	invalidPath := filepath.Join(OverridesDir(), "miners.json")
 	if err := os.WriteFile(invalidPath, []byte("{invalid json!!}"), 0644); err != nil {
 		t.Fatalf("writing invalid file: %v", err)
 	}
@@ -309,8 +309,8 @@ func TestLoadAllOverridesSkipsInvalidJSON(t *testing.T) {
 	}
 
 	// Invalid file should be skipped (not present in map)
-	if _, ok := overrides["polecats"]; ok {
-		t.Error("invalid 'polecats' override should have been skipped")
+	if _, ok := overrides["miners"]; ok {
+		t.Error("invalid 'miners' override should have been skipped")
 	}
 }
 

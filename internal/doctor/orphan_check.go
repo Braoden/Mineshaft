@@ -7,13 +7,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/events"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/events"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 // OrphanSessionCheck detects orphaned tmux sessions that don't match
-// the expected Gas Town session naming patterns.
+// the expected Excavation Site session naming patterns.
 type OrphanSessionCheck struct {
 	FixableCheck
 	sessionLister  SessionLister
@@ -53,7 +53,7 @@ func NewOrphanSessionCheckWithSessionLister(lister SessionLister) *OrphanSession
 	return check
 }
 
-// Run checks for orphaned Gas Town tmux sessions.
+// Run checks for orphaned Excavation Site tmux sessions.
 func (c *OrphanSessionCheck) Run(ctx *CheckContext) *CheckResult {
 	lister := c.sessionLister
 	if lister == nil {
@@ -81,9 +81,9 @@ func (c *OrphanSessionCheck) Run(ctx *CheckContext) *CheckResult {
 	// Get list of valid rigs
 	validRigs := c.getValidRigs(ctx.TownRoot)
 
-	// Get session names for mayor/deacon
-	mayorSession := session.MayorSessionName()
-	deaconSession := session.DeaconSessionName()
+	// Get session names for overseer/supervisor
+	overseerSession := session.OverseerSessionName()
+	supervisorSession := session.SupervisorSessionName()
 
 	// Check each session
 	var orphans []string
@@ -94,12 +94,12 @@ func (c *OrphanSessionCheck) Run(ctx *CheckContext) *CheckResult {
 			continue
 		}
 
-		// Only check sessions that parse as Gas Town sessions
+		// Only check sessions that parse as Excavation Site sessions
 		if _, err := session.ParseSessionName(sess); err != nil {
 			continue
 		}
 
-		if c.isValidSession(sess, validRigs, mayorSession, deaconSession) {
+		if c.isValidSession(sess, validRigs, overseerSession, supervisorSession) {
 			validCount++
 		} else {
 			orphans = append(orphans, sess)
@@ -113,7 +113,7 @@ func (c *OrphanSessionCheck) Run(ctx *CheckContext) *CheckResult {
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusOK,
-			Message: fmt.Sprintf("All %d Gas Town sessions are valid", validCount),
+			Message: fmt.Sprintf("All %d Excavation Site sessions are valid", validCount),
 		}
 	}
 
@@ -173,17 +173,17 @@ func (c *OrphanSessionCheck) getValidRigs(townRoot string) []string {
 	var rigs []string
 
 	// Read rigs.json if it exists
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	if _, err := os.Stat(rigsPath); err == nil {
 		// For simplicity, just scan directories at town root that look like rigs
 		entries, err := os.ReadDir(townRoot)
 		if err == nil {
 			for _, entry := range entries {
-				if entry.IsDir() && entry.Name() != "mayor" && entry.Name() != ".beads" && !strings.HasPrefix(entry.Name(), ".") {
-					// Check if it looks like a rig (has polecats/ or crew/ directory)
-					polecatsDir := filepath.Join(townRoot, entry.Name(), "polecats")
+				if entry.IsDir() && entry.Name() != "overseer" && entry.Name() != ".beads" && !strings.HasPrefix(entry.Name(), ".") {
+					// Check if it looks like a rig (has miners/ or crew/ directory)
+					minersDir := filepath.Join(townRoot, entry.Name(), "miners")
 					crewDir := filepath.Join(townRoot, entry.Name(), "crew")
-					if _, err := os.Stat(polecatsDir); err == nil {
+					if _, err := os.Stat(minersDir); err == nil {
 						rigs = append(rigs, entry.Name())
 					} else if _, err := os.Stat(crewDir); err == nil {
 						rigs = append(rigs, entry.Name())
@@ -196,24 +196,24 @@ func (c *OrphanSessionCheck) getValidRigs(townRoot string) []string {
 	return rigs
 }
 
-// isValidSession checks if a session name matches expected Gas Town patterns.
+// isValidSession checks if a session name matches expected Excavation Site patterns.
 // Valid patterns:
-//   - hq-mayor (headquarters mayor session)
-//   - hq-deacon (headquarters deacon session)
+//   - hq-overseer (headquarters overseer session)
+//   - hq-supervisor (headquarters supervisor session)
 //   - gt-boot (boot watchdog session)
 //   - gt-<rig>-witness
 //   - gt-<rig>-refinery
-//   - gt-<rig>-<polecat> (where polecat is any name)
+//   - gt-<rig>-<miner> (where miner is any name)
 //
-// Note: We can't verify polecat names without reading state, so we're permissive.
-func (c *OrphanSessionCheck) isValidSession(sess string, validRigs []string, mayorSession, deaconSession string) bool {
-	// Mayor session is always valid (dynamic name based on town)
-	if mayorSession != "" && sess == mayorSession {
+// Note: We can't verify miner names without reading state, so we're permissive.
+func (c *OrphanSessionCheck) isValidSession(sess string, validRigs []string, overseerSession, supervisorSession string) bool {
+	// Overseer session is always valid (dynamic name based on town)
+	if overseerSession != "" && sess == overseerSession {
 		return true
 	}
 
-	// Deacon session is always valid (dynamic name based on town)
-	if deaconSession != "" && sess == deaconSession {
+	// Supervisor session is always valid (dynamic name based on town)
+	if supervisorSession != "" && sess == supervisorSession {
 		return true
 	}
 
@@ -235,8 +235,8 @@ func (c *OrphanSessionCheck) isValidSession(sess string, validRigs []string, may
 	}
 
 	// Check if this rig exists.
-	// For polecats, ParseSessionName assumes rig = everything except last segment,
-	// but polecat names can contain hyphens (e.g., gt-niflheim-fix-auth-bug where
+	// For miners, ParseSessionName assumes rig = everything except last segment,
+	// but miner names can contain hyphens (e.g., gt-niflheim-fix-auth-bug where
 	// rig=niflheim, name=fix-auth-bug). If the initial parse doesn't match a valid
 	// rig, check if any valid rig is a prefix of the session suffix.
 	rigFound := false
@@ -247,7 +247,7 @@ func (c *OrphanSessionCheck) isValidSession(sess string, validRigs []string, may
 		}
 	}
 
-	if !rigFound && identity.Role == session.RolePolecat {
+	if !rigFound && identity.Role == session.RoleMiner {
 		// Try alternate rig interpretations: check if any valid rig
 		// matches the parsed prefix (via the registry)
 		for _, r := range validRigs {
@@ -263,9 +263,9 @@ func (c *OrphanSessionCheck) isValidSession(sess string, validRigs []string, may
 		return false
 	}
 
-	// witness, refinery, crew, and polecat are all valid roles
+	// witness, refinery, crew, and miner are all valid roles
 	switch identity.Role {
-	case session.RoleWitness, session.RoleRefinery, session.RoleCrew, session.RolePolecat:
+	case session.RoleWitness, session.RoleRefinery, session.RoleCrew, session.RoleMiner:
 		return true
 	}
 
@@ -276,9 +276,9 @@ func (c *OrphanSessionCheck) isValidSession(sess string, validRigs []string, may
 
 // OrphanProcessCheck detects runtime processes that are not
 // running inside a tmux session. These may be user's personal sessions
-// or legitimately orphaned processes from crashed Gas Town sessions.
+// or legitimately orphaned processes from crashed Excavation Site sessions.
 // This check is informational only - it does not auto-fix since we cannot
-// distinguish user sessions from orphaned Gas Town processes.
+// distinguish user sessions from orphaned Excavation Site processes.
 type OrphanProcessCheck struct {
 	BaseCheck
 }
@@ -347,7 +347,7 @@ func (c *OrphanProcessCheck) Run(ctx *CheckContext) *CheckResult {
 	}
 
 	details := make([]string, 0, len(outsideTmux)+2)
-	details = append(details, "These may be your personal sessions or orphaned Gas Town processes.")
+	details = append(details, "These may be your personal sessions or orphaned Excavation Site processes.")
 	details = append(details, "Verify these are expected before manually killing any:")
 	for _, proc := range outsideTmux {
 		details = append(details, fmt.Sprintf("  PID %d: %s (parent: %d)", proc.pid, proc.cmd, proc.ppid))
@@ -419,7 +419,7 @@ func argvHasFlag(args, flag string) bool {
 	return false
 }
 
-// gasTownRuntimeYOLO returns true when argv matches a Gas Town-managed agent (YOLO / auto-approve),
+// gasTownRuntimeYOLO returns true when argv matches a Excavation Site-managed agent (YOLO / auto-approve),
 // excluding personal interactive sessions that omit these flags.
 func gasTownRuntimeYOLO(cmdName, args string) bool {
 	cmdName = strings.ToLower(filepath.Base(cmdName))
@@ -439,13 +439,13 @@ func gasTownRuntimeYOLO(cmdName, args string) bool {
 	}
 }
 
-// findRuntimeProcesses finds Gas Town agent processes by per-provider YOLO / launch signatures
+// findRuntimeProcesses finds Excavation Site agent processes by per-provider YOLO / launch signatures
 // in argv (not comm name alone): claude/codex --dangerously-skip-permissions, cursor-agent -f,
 // copilot --yolo, etc.
 func (c *OrphanProcessCheck) findRuntimeProcesses() ([]processInfo, error) {
 	var procs []processInfo
 
-	// Use ps with args to get full command line (needed to check for Gas Town signature)
+	// Use ps with args to get full command line (needed to check for Excavation Site signature)
 	out, err := exec.Command("ps", "-eo", "pid,ppid,args").Output()
 	if err != nil {
 		return nil, err

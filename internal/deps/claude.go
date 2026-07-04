@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/util"
+	"github.com/steveyegge/excavation/internal/util"
 )
 
-// MinClaudeCodeVersion is the minimum compatible Claude Code version for Gas Town.
-// v2.0.20 introduced the Skills system, which Gas Town uses for crew-commit,
+// MinClaudeCodeVersion is the minimum compatible Claude Code version for Excavation Site.
+// v2.0.20 introduced the Skills system, which Excavation Site uses for crew-commit,
 // ghi-list, pr-list, and pr-sheriff. See docs/design/claude-code-minimum-version.md.
 const MinClaudeCodeVersion = "2.0.20"
 

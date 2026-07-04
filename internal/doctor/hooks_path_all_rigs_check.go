@@ -101,8 +101,8 @@ func (c *HooksPathAllRigsCheck) Fix(ctx *CheckContext) error {
 func findRigClones(rigPath string) []string {
 	var clones []string
 
-	// Mayor clone
-	clones = append(clones, filepath.Join(rigPath, "mayor", "rig"))
+	// Overseer clone
+	clones = append(clones, filepath.Join(rigPath, "overseer", "rig"))
 	// Refinery clone
 	clones = append(clones, filepath.Join(rigPath, "refinery", "rig"))
 
@@ -116,13 +116,13 @@ func findRigClones(rigPath string) []string {
 		}
 	}
 
-	// Polecat clones
-	polecatDir := filepath.Join(rigPath, "polecats")
-	if entries, err := os.ReadDir(polecatDir); err == nil {
+	// Miner clones
+	minerDir := filepath.Join(rigPath, "miners")
+	if entries, err := os.ReadDir(minerDir); err == nil {
 		for _, entry := range entries {
 			if entry.IsDir() {
-				// Polecats have nested structure: polecats/<name>/<rigname>/
-				subDir := filepath.Join(polecatDir, entry.Name())
+				// Miners have nested structure: miners/<name>/<rigname>/
+				subDir := filepath.Join(minerDir, entry.Name())
 				if subEntries, err := os.ReadDir(subDir); err == nil {
 					for _, subEntry := range subEntries {
 						if subEntry.IsDir() {

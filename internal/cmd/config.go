@@ -11,23 +11,23 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/daemon"
-	"github.com/steveyegge/gastown/internal/polecat"
-	"github.com/steveyegge/gastown/internal/scheduler/capacity"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/daemon"
+	"github.com/steveyegge/excavation/internal/miner"
+	"github.com/steveyegge/excavation/internal/scheduler/capacity"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var configCmd = &cobra.Command{
 	Use:     "config",
 	GroupID: GroupConfig,
-	Short:   "Manage Gas Town configuration",
+	Short:   "Manage Excavation Site configuration",
 	RunE:    requireSubcommand,
-	Long: `Manage Gas Town configuration settings.
+	Long: `Manage Excavation Site configuration settings.
 
 This command allows you to view and modify configuration settings
-for your Gas Town workspace, including agent aliases and defaults.
+for your Excavation Site workspace, including agent aliases and defaults.
 
 Commands:
   gt config agent list              List all agents (built-in and custom)
@@ -207,17 +207,17 @@ var configAgentEmailDomainCmd = &cobra.Command{
 	Long: `Get or set the domain used for agent git commit emails.
 
 When agents commit code via 'gt commit', their identity is converted
-to a git email address. For example, "gastown/crew/jack" becomes
-"gastown.crew.jack@{domain}".
+to a git email address. For example, "excavation/crew/jack" becomes
+"excavation.crew.jack@{domain}".
 
 With no arguments, shows the current domain.
 With an argument, sets the domain.
 
-Default: gastown.local
+Default: excavation.local
 
 Examples:
   gt config agent-email-domain                 # Show current domain
-  gt config agent-email-domain gastown.local   # Set to gastown.local
+  gt config agent-email-domain excavation.local   # Set to excavation.local
   gt config agent-email-domain example.com     # Set custom domain`,
 	RunE: runConfigAgentEmailDomain,
 }
@@ -583,7 +583,7 @@ func runConfigAgentEmailDomain(cmd *cobra.Command, args []string) error {
 			domain = DefaultAgentEmailDomain
 		}
 		fmt.Printf("Agent email domain: %s\n", style.Bold.Render(domain))
-		fmt.Printf("\nExample: gastown/crew/jack → gastown.crew.jack@%s\n", domain)
+		fmt.Printf("\nExample: excavation/crew/jack → excavation.crew.jack@%s\n", domain)
 		return nil
 	}
 
@@ -607,7 +607,7 @@ func runConfigAgentEmailDomain(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("Agent email domain set to '%s'\n", style.Bold.Render(domain))
-	fmt.Printf("\nExample: gastown/crew/jack → gastown.crew.jack@%s\n", domain)
+	fmt.Printf("\nExample: excavation/crew/jack → excavation.crew.jack@%s\n", domain)
 	return nil
 }
 
@@ -618,17 +618,17 @@ var configSetCmd = &cobra.Command{
 	Long: `Set a town configuration value using dot-notation keys.
 
 Supported keys:
-  convoy.notify_on_complete   Push notification to Mayor session on convoy
+  minecart.notify_on_complete   Push notification to Overseer session on minecart
                               completion (true/false, default: false)
   cli_theme                   CLI color scheme ("dark", "light", "auto")
   default_agent               Default agent preset name
   dolt.port                   Dolt SQL server port (default: 3307). Set this when
-                              another Gas Town instance is using the same port.
-                              Writes GT_DOLT_PORT to mayor/daemon.json env section.
-  scheduler.max_polecats      Dispatch mode: -1 = direct (default), N > 0 = deferred
+                              another Excavation Site instance is using the same port.
+                              Writes GT_DOLT_PORT to overseer/daemon.json env section.
+  scheduler.max_miners      Dispatch mode: -1 = direct (default), N > 0 = deferred
   scheduler.batch_size        Beads per heartbeat (default: 1)
   scheduler.spawn_delay       Delay between spawns (default: 0s)
-  polecat.target_clean_policy When to delete <polecat>/target/ on reuse
+  miner.target_clean_policy When to delete <miner>/target/ on reuse
                               ("per_bead", "every_n_beads:<N>", "never";
                               default: per_bead)
   maintenance.window          Maintenance window start time in HH:MM (e.g., "03:00")
@@ -648,11 +648,11 @@ Supported keys:
   lifecycle.backup.interval    Backup interval (default: 15m)
 
 Examples:
-  gt config set convoy.notify_on_complete true
+  gt config set minecart.notify_on_complete true
   gt config set cli_theme dark
   gt config set default_agent claude
   gt config set dolt.port 3308
-  gt config set scheduler.max_polecats 5
+  gt config set scheduler.max_miners 5
   gt config set maintenance.window 03:00
   gt config set maintenance.interval daily
   gt config set lifecycle.reaper.delete_age 336h
@@ -668,14 +668,14 @@ var configGetCmd = &cobra.Command{
 	Long: `Get a town configuration value using dot-notation keys.
 
 Supported keys:
-  convoy.notify_on_complete   Push notification to Mayor session on convoy
+  minecart.notify_on_complete   Push notification to Overseer session on minecart
                               completion (true/false, default: false)
   cli_theme                   CLI color scheme
   default_agent               Default agent preset name
-  scheduler.max_polecats      Dispatch mode (-1 = direct, N > 0 = deferred)
+  scheduler.max_miners      Dispatch mode (-1 = direct, N > 0 = deferred)
   scheduler.batch_size        Beads per heartbeat
   scheduler.spawn_delay       Delay between spawns
-  polecat.target_clean_policy When to delete <polecat>/target/ on reuse
+  miner.target_clean_policy When to delete <miner>/target/ on reuse
                               (per_bead, every_n_beads:<N>, never)
   maintenance.window          Maintenance window start time (HH:MM)
   maintenance.interval        How often: daily, weekly, monthly, or duration
@@ -694,7 +694,7 @@ Supported keys:
   lifecycle.backup.interval    Backup interval
 
 Examples:
-  gt config get convoy.notify_on_complete
+  gt config get minecart.notify_on_complete
   gt config get cli_theme
   gt config get maintenance.window
   gt config get lifecycle.reaper.delete_age`,
@@ -718,15 +718,15 @@ func runConfigSet(cmd *cobra.Command, args []string) error {
 	}
 
 	switch key {
-	case "convoy.notify_on_complete":
+	case "minecart.notify_on_complete":
 		b, err := parseBool(value)
 		if err != nil {
 			return fmt.Errorf("invalid value for %s: %w (expected true/false)", key, err)
 		}
-		if townSettings.Convoy == nil {
-			townSettings.Convoy = &config.ConvoyConfig{}
+		if townSettings.Minecart == nil {
+			townSettings.Minecart = &config.MinecartConfig{}
 		}
-		townSettings.Convoy.NotifyOnComplete = b
+		townSettings.Minecart.NotifyOnComplete = b
 
 	case "cli_theme":
 		switch value {
@@ -739,7 +739,7 @@ func runConfigSet(cmd *cobra.Command, args []string) error {
 	case "default_agent":
 		townSettings.DefaultAgent = value
 
-	case "scheduler.max_polecats":
+	case "scheduler.max_miners":
 		n, err := strconv.Atoi(value)
 		if err != nil {
 			return fmt.Errorf("invalid value for %s: %w (expected integer)", key, err)
@@ -750,7 +750,7 @@ func runConfigSet(cmd *cobra.Command, args []string) error {
 		if townSettings.Scheduler == nil {
 			townSettings.Scheduler = capacity.DefaultSchedulerConfig()
 		}
-		townSettings.Scheduler.MaxPolecats = &n
+		townSettings.Scheduler.MaxMiners = &n
 
 	case "scheduler.batch_size":
 		n, err := strconv.Atoi(value)
@@ -773,17 +773,17 @@ func runConfigSet(cmd *cobra.Command, args []string) error {
 		}
 		townSettings.Scheduler.SpawnDelay = value
 
-	case "polecat.target_clean_policy":
+	case "miner.target_clean_policy":
 		// Validate the policy string parses cleanly. Storage form is the raw input
 		// (normalized via parsed.String() so e.g. "  per_bead  " becomes "per_bead").
-		parsed, err := polecat.ParseTargetCleanPolicy(value)
+		parsed, err := miner.ParseTargetCleanPolicy(value)
 		if err != nil {
 			return fmt.Errorf("invalid value for %s: %w", key, err)
 		}
-		if townSettings.Polecat == nil {
-			townSettings.Polecat = &config.PolecatConfig{}
+		if townSettings.Miner == nil {
+			townSettings.Miner = &config.MinerConfig{}
 		}
-		townSettings.Polecat.TargetCleanPolicy = parsed.String()
+		townSettings.Miner.TargetCleanPolicy = parsed.String()
 
 	case "maintenance.window", "maintenance.interval", "maintenance.threshold":
 		return setMaintenanceConfig(townRoot, key, value)
@@ -804,7 +804,7 @@ func runConfigSet(cmd *cobra.Command, args []string) error {
 		if err := daemon.SavePatrolConfig(townRoot, patrolCfg); err != nil {
 			return fmt.Errorf("saving daemon.json: %w", err)
 		}
-		fmt.Printf("Set GT_DOLT_PORT = %s in mayor/daemon.json\n", style.Bold.Render(value))
+		fmt.Printf("Set GT_DOLT_PORT = %s in overseer/daemon.json\n", style.Bold.Render(value))
 		fmt.Printf("  %s\n", style.Dim.Render("Restart the daemon for the change to take effect: gt daemon restart"))
 		return nil
 
@@ -812,7 +812,7 @@ func runConfigSet(cmd *cobra.Command, args []string) error {
 		if strings.HasPrefix(key, "lifecycle.") {
 			return setLifecycleConfig(townRoot, key, value)
 		}
-		return fmt.Errorf("unknown config key: %q\n\nSupported keys:\n  convoy.notify_on_complete\n  cli_theme\n  default_agent\n  dolt.port\n  scheduler.max_polecats\n  scheduler.batch_size\n  scheduler.spawn_delay\n  polecat.target_clean_policy\n  maintenance.window\n  maintenance.interval\n  maintenance.threshold\n  lifecycle.reaper.*\n  lifecycle.compactor.*\n  lifecycle.doctor.*\n  lifecycle.backup.*", key)
+		return fmt.Errorf("unknown config key: %q\n\nSupported keys:\n  minecart.notify_on_complete\n  cli_theme\n  default_agent\n  dolt.port\n  scheduler.max_miners\n  scheduler.batch_size\n  scheduler.spawn_delay\n  miner.target_clean_policy\n  maintenance.window\n  maintenance.interval\n  maintenance.threshold\n  lifecycle.reaper.*\n  lifecycle.compactor.*\n  lifecycle.doctor.*\n  lifecycle.backup.*", key)
 	}
 
 	if err := config.SaveTownSettings(settingsPath, townSettings); err != nil {
@@ -839,8 +839,8 @@ func runConfigGet(cmd *cobra.Command, args []string) error {
 
 	var value string
 	switch key {
-	case "convoy.notify_on_complete":
-		if townSettings.Convoy != nil && townSettings.Convoy.NotifyOnComplete {
+	case "minecart.notify_on_complete":
+		if townSettings.Minecart != nil && townSettings.Minecart.NotifyOnComplete {
 			value = "true"
 		} else {
 			value = "false"
@@ -858,12 +858,12 @@ func runConfigGet(cmd *cobra.Command, args []string) error {
 			value = "claude"
 		}
 
-	case "scheduler.max_polecats":
+	case "scheduler.max_miners":
 		scfg := townSettings.Scheduler
 		if scfg == nil {
 			scfg = capacity.DefaultSchedulerConfig()
 		}
-		value = strconv.Itoa(scfg.GetMaxPolecats())
+		value = strconv.Itoa(scfg.GetMaxMiners())
 
 	case "scheduler.batch_size":
 		scfg := townSettings.Scheduler
@@ -879,11 +879,11 @@ func runConfigGet(cmd *cobra.Command, args []string) error {
 		}
 		value = scfg.GetSpawnDelay().String()
 
-	case "polecat.target_clean_policy":
-		if townSettings.Polecat != nil && townSettings.Polecat.TargetCleanPolicy != "" {
-			value = townSettings.Polecat.TargetCleanPolicy
+	case "miner.target_clean_policy":
+		if townSettings.Miner != nil && townSettings.Miner.TargetCleanPolicy != "" {
+			value = townSettings.Miner.TargetCleanPolicy
 		} else {
-			value = polecat.DefaultTargetCleanPolicy().String()
+			value = miner.DefaultTargetCleanPolicy().String()
 		}
 
 	case "maintenance.window", "maintenance.interval", "maintenance.threshold":
@@ -904,7 +904,7 @@ func runConfigGet(cmd *cobra.Command, args []string) error {
 		if strings.HasPrefix(key, "lifecycle.") {
 			return getLifecycleConfig(townRoot, key)
 		}
-		return fmt.Errorf("unknown config key: %q\n\nSupported keys:\n  convoy.notify_on_complete\n  cli_theme\n  default_agent\n  dolt.port\n  scheduler.max_polecats\n  scheduler.batch_size\n  scheduler.spawn_delay\n  polecat.target_clean_policy\n  maintenance.window\n  maintenance.interval\n  maintenance.threshold\n  lifecycle.reaper.*\n  lifecycle.compactor.*\n  lifecycle.doctor.*\n  lifecycle.backup.*", key)
+		return fmt.Errorf("unknown config key: %q\n\nSupported keys:\n  minecart.notify_on_complete\n  cli_theme\n  default_agent\n  dolt.port\n  scheduler.max_miners\n  scheduler.batch_size\n  scheduler.spawn_delay\n  miner.target_clean_policy\n  maintenance.window\n  maintenance.interval\n  maintenance.threshold\n  lifecycle.reaper.*\n  lifecycle.compactor.*\n  lifecycle.doctor.*\n  lifecycle.backup.*", key)
 	}
 
 	fmt.Println(value)

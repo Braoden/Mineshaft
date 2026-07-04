@@ -12,13 +12,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/polecat"
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/miner"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
-type testMayorEvent struct {
+type testOverseerEvent struct {
 	Type    string            `json:"type"`
 	Payload map[string]string `json:"payload"`
 }
@@ -26,32 +26,32 @@ type testMayorEvent struct {
 func setupSlotOpenTestTown(t *testing.T) (string, string) {
 	t.Helper()
 	townRoot := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "mayor", "town.json"), []byte(`{"name":"test"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"name":"test"}`), 0644); err != nil {
 		t.Fatal(err)
 	}
-	workDir := filepath.Join(townRoot, "gastown", "witness")
+	workDir := filepath.Join(townRoot, "excavation", "witness")
 	if err := os.MkdirAll(workDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 	return townRoot, workDir
 }
 
-func readMayorEvents(t *testing.T, townRoot string) []testMayorEvent {
+func readOverseerEvents(t *testing.T, townRoot string) []testOverseerEvent {
 	t.Helper()
-	paths, err := filepath.Glob(filepath.Join(townRoot, "events", "mayor", "*.event"))
+	paths, err := filepath.Glob(filepath.Join(townRoot, "events", "overseer", "*.event"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	events := make([]testMayorEvent, 0, len(paths))
+	events := make([]testOverseerEvent, 0, len(paths))
 	for _, path := range paths {
 		data, err := os.ReadFile(path)
 		if err != nil {
 			t.Fatal(err)
 		}
-		var event testMayorEvent
+		var event testOverseerEvent
 		if err := json.Unmarshal(data, &event); err != nil {
 			t.Fatal(err)
 		}
@@ -60,12 +60,12 @@ func readMayorEvents(t *testing.T, townRoot string) []testMayorEvent {
 	return events
 }
 
-func TestNotifyMayorSlotOpen_BlocksNonCompletedExit(t *testing.T) {
+func TestNotifyOverseerSlotOpen_BlocksNonCompletedExit(t *testing.T) {
 	townRoot, workDir := setupSlotOpenTestTown(t)
 
-	notifyMayorSlotOpen(workDir, "gastown", "guzzle", string(ExitTypeDeferred))
+	notifyOverseerSlotOpen(workDir, "excavation", "guzzle", string(ExitTypeDeferred))
 
-	events := readMayorEvents(t, townRoot)
+	events := readOverseerEvents(t, townRoot)
 	if len(events) != 1 {
 		t.Fatalf("events = %v, want one SLOT_BLOCKED event", events)
 	}
@@ -78,7 +78,7 @@ func TestNotifyMayorSlotOpen_BlocksNonCompletedExit(t *testing.T) {
 	}
 }
 
-func TestNotifyMayorSlotOpen_SchedulerDispatchSuppressesMayor(t *testing.T) {
+func TestNotifyOverseerSlotOpen_SchedulerDispatchSuppressesOverseer(t *testing.T) {
 	t.Setenv("PATH", t.TempDir())
 	townRoot, workDir := setupSlotOpenTestTown(t)
 
@@ -91,11 +91,11 @@ func TestNotifyMayorSlotOpen_SchedulerDispatchSuppressesMayor(t *testing.T) {
 		runSchedulerForSlotOpen = prevScheduler
 	})
 
-	slotOpenRecoveryCheck = func(workDir, rigName, polecatName string) (string, error) {
+	slotOpenRecoveryCheck = func(workDir, rigName, minerName string) (string, error) {
 		return `{"verdict":"SAFE_TO_NUKE"}`, nil
 	}
-	slotOpenDecisionForNotify = func(workDir, townRoot, rigName, polecatName, exitType string) polecat.SlotReuseDecision {
-		return polecat.SlotReuseDecision{Reusable: true}
+	slotOpenDecisionForNotify = func(workDir, townRoot, rigName, minerName, exitType string) miner.SlotReuseDecision {
+		return miner.SlotReuseDecision{Reusable: true}
 	}
 	called := false
 	runSchedulerForSlotOpen = func(gotTownRoot string) (slotOpenSchedulerResult, error) {
@@ -106,17 +106,17 @@ func TestNotifyMayorSlotOpen_SchedulerDispatchSuppressesMayor(t *testing.T) {
 		return slotOpenSchedulerResult{Dispatched: 1}, nil
 	}
 
-	notifyMayorSlotOpen(workDir, "gastown", "guzzle", string(ExitTypeCompleted))
+	notifyOverseerSlotOpen(workDir, "excavation", "guzzle", string(ExitTypeCompleted))
 
 	if !called {
 		t.Fatal("scheduler trigger was not called")
 	}
-	if events := readMayorEvents(t, townRoot); len(events) != 0 {
+	if events := readOverseerEvents(t, townRoot); len(events) != 0 {
 		t.Fatalf("events = %+v, want none when scheduler dispatches", events)
 	}
 }
 
-func TestNotifyMayorSlotOpen_DispatchThenEmptyEmitsSchedulerOpen(t *testing.T) {
+func TestNotifyOverseerSlotOpen_DispatchThenEmptyEmitsSchedulerOpen(t *testing.T) {
 	t.Setenv("PATH", t.TempDir())
 	townRoot, workDir := setupSlotOpenTestTown(t)
 
@@ -129,11 +129,11 @@ func TestNotifyMayorSlotOpen_DispatchThenEmptyEmitsSchedulerOpen(t *testing.T) {
 		runSchedulerForSlotOpen = prevScheduler
 	})
 
-	slotOpenRecoveryCheck = func(workDir, rigName, polecatName string) (string, error) {
+	slotOpenRecoveryCheck = func(workDir, rigName, minerName string) (string, error) {
 		return `{"verdict":"SAFE_TO_NUKE"}`, nil
 	}
-	slotOpenDecisionForNotify = func(workDir, townRoot, rigName, polecatName, exitType string) polecat.SlotReuseDecision {
-		return polecat.SlotReuseDecision{Reusable: true}
+	slotOpenDecisionForNotify = func(workDir, townRoot, rigName, minerName, exitType string) miner.SlotReuseDecision {
+		return miner.SlotReuseDecision{Reusable: true}
 	}
 	runSchedulerForSlotOpen = func(gotTownRoot string) (slotOpenSchedulerResult, error) {
 		var result slotOpenSchedulerResult
@@ -145,9 +145,9 @@ func TestNotifyMayorSlotOpen_DispatchThenEmptyEmitsSchedulerOpen(t *testing.T) {
 		return result, nil
 	}
 
-	notifyMayorSlotOpen(workDir, "gastown", "guzzle", string(ExitTypeCompleted))
+	notifyOverseerSlotOpen(workDir, "excavation", "guzzle", string(ExitTypeCompleted))
 
-	events := readMayorEvents(t, townRoot)
+	events := readOverseerEvents(t, townRoot)
 	if len(events) != 1 {
 		t.Fatalf("events = %+v, want one SCHEDULER_OPEN event", events)
 	}
@@ -156,7 +156,7 @@ func TestNotifyMayorSlotOpen_DispatchThenEmptyEmitsSchedulerOpen(t *testing.T) {
 	}
 }
 
-func TestNotifyMayorSlotOpen_DispatchWithStatusErrorSuppressesMayor(t *testing.T) {
+func TestNotifyOverseerSlotOpen_DispatchWithStatusErrorSuppressesOverseer(t *testing.T) {
 	t.Setenv("PATH", t.TempDir())
 	townRoot, workDir := setupSlotOpenTestTown(t)
 
@@ -169,24 +169,24 @@ func TestNotifyMayorSlotOpen_DispatchWithStatusErrorSuppressesMayor(t *testing.T
 		runSchedulerForSlotOpen = prevScheduler
 	})
 
-	slotOpenRecoveryCheck = func(workDir, rigName, polecatName string) (string, error) {
+	slotOpenRecoveryCheck = func(workDir, rigName, minerName string) (string, error) {
 		return `{"verdict":"SAFE_TO_NUKE"}`, nil
 	}
-	slotOpenDecisionForNotify = func(workDir, townRoot, rigName, polecatName, exitType string) polecat.SlotReuseDecision {
-		return polecat.SlotReuseDecision{Reusable: true}
+	slotOpenDecisionForNotify = func(workDir, townRoot, rigName, minerName, exitType string) miner.SlotReuseDecision {
+		return miner.SlotReuseDecision{Reusable: true}
 	}
 	runSchedulerForSlotOpen = func(gotTownRoot string) (slotOpenSchedulerResult, error) {
 		return slotOpenSchedulerResult{Dispatched: 1}, errors.New("status read failed")
 	}
 
-	notifyMayorSlotOpen(workDir, "gastown", "guzzle", string(ExitTypeCompleted))
+	notifyOverseerSlotOpen(workDir, "excavation", "guzzle", string(ExitTypeCompleted))
 
-	if events := readMayorEvents(t, townRoot); len(events) != 0 {
+	if events := readOverseerEvents(t, townRoot); len(events) != 0 {
 		t.Fatalf("events = %+v, want none after confirmed dispatch", events)
 	}
 }
 
-func TestNotifyMayorSlotOpen_EmitsSchedulerOpenWhenQueueEmpty(t *testing.T) {
+func TestNotifyOverseerSlotOpen_EmitsSchedulerOpenWhenQueueEmpty(t *testing.T) {
 	t.Setenv("PATH", t.TempDir())
 	townRoot, workDir := setupSlotOpenTestTown(t)
 
@@ -199,11 +199,11 @@ func TestNotifyMayorSlotOpen_EmitsSchedulerOpenWhenQueueEmpty(t *testing.T) {
 		runSchedulerForSlotOpen = prevScheduler
 	})
 
-	slotOpenRecoveryCheck = func(workDir, rigName, polecatName string) (string, error) {
+	slotOpenRecoveryCheck = func(workDir, rigName, minerName string) (string, error) {
 		return `{"verdict":"SAFE_TO_NUKE"}`, nil
 	}
-	slotOpenDecisionForNotify = func(workDir, townRoot, rigName, polecatName, exitType string) polecat.SlotReuseDecision {
-		return polecat.SlotReuseDecision{Reusable: true}
+	slotOpenDecisionForNotify = func(workDir, townRoot, rigName, minerName, exitType string) miner.SlotReuseDecision {
+		return miner.SlotReuseDecision{Reusable: true}
 	}
 	runSchedulerForSlotOpen = func(gotTownRoot string) (slotOpenSchedulerResult, error) {
 		var result slotOpenSchedulerResult
@@ -213,9 +213,9 @@ func TestNotifyMayorSlotOpen_EmitsSchedulerOpenWhenQueueEmpty(t *testing.T) {
 		return result, nil
 	}
 
-	notifyMayorSlotOpen(workDir, "gastown", "guzzle", string(ExitTypeCompleted))
+	notifyOverseerSlotOpen(workDir, "excavation", "guzzle", string(ExitTypeCompleted))
 
-	events := readMayorEvents(t, townRoot)
+	events := readOverseerEvents(t, townRoot)
 	if len(events) != 1 {
 		t.Fatalf("events = %+v, want one SCHEDULER_OPEN event", events)
 	}
@@ -227,7 +227,7 @@ func TestNotifyMayorSlotOpen_EmitsSchedulerOpenWhenQueueEmpty(t *testing.T) {
 	}
 }
 
-func TestNotifyMayorSlotOpen_QueuedReadyWithoutDispatchFallsBack(t *testing.T) {
+func TestNotifyOverseerSlotOpen_QueuedReadyWithoutDispatchFallsBack(t *testing.T) {
 	t.Setenv("PATH", t.TempDir())
 	townRoot, workDir := setupSlotOpenTestTown(t)
 
@@ -240,11 +240,11 @@ func TestNotifyMayorSlotOpen_QueuedReadyWithoutDispatchFallsBack(t *testing.T) {
 		runSchedulerForSlotOpen = prevScheduler
 	})
 
-	slotOpenRecoveryCheck = func(workDir, rigName, polecatName string) (string, error) {
+	slotOpenRecoveryCheck = func(workDir, rigName, minerName string) (string, error) {
 		return `{"verdict":"SAFE_TO_NUKE"}`, nil
 	}
-	slotOpenDecisionForNotify = func(workDir, townRoot, rigName, polecatName, exitType string) polecat.SlotReuseDecision {
-		return polecat.SlotReuseDecision{Reusable: true}
+	slotOpenDecisionForNotify = func(workDir, townRoot, rigName, minerName, exitType string) miner.SlotReuseDecision {
+		return miner.SlotReuseDecision{Reusable: true}
 	}
 	runSchedulerForSlotOpen = func(gotTownRoot string) (slotOpenSchedulerResult, error) {
 		var result slotOpenSchedulerResult
@@ -256,9 +256,9 @@ func TestNotifyMayorSlotOpen_QueuedReadyWithoutDispatchFallsBack(t *testing.T) {
 		return result, nil
 	}
 
-	notifyMayorSlotOpen(workDir, "gastown", "guzzle", string(ExitTypeCompleted))
+	notifyOverseerSlotOpen(workDir, "excavation", "guzzle", string(ExitTypeCompleted))
 
-	events := readMayorEvents(t, townRoot)
+	events := readOverseerEvents(t, townRoot)
 	if len(events) != 1 {
 		t.Fatalf("events = %+v, want one fallback SLOT_OPEN event", events)
 	}
@@ -267,7 +267,7 @@ func TestNotifyMayorSlotOpen_QueuedReadyWithoutDispatchFallsBack(t *testing.T) {
 	}
 }
 
-func TestNotifyMayorSlotOpen_NoDispatchAfterCapacityFillsSuppressesMayor(t *testing.T) {
+func TestNotifyOverseerSlotOpen_NoDispatchAfterCapacityFillsSuppressesOverseer(t *testing.T) {
 	t.Setenv("PATH", t.TempDir())
 	townRoot, workDir := setupSlotOpenTestTown(t)
 
@@ -280,11 +280,11 @@ func TestNotifyMayorSlotOpen_NoDispatchAfterCapacityFillsSuppressesMayor(t *test
 		runSchedulerForSlotOpen = prevScheduler
 	})
 
-	slotOpenRecoveryCheck = func(workDir, rigName, polecatName string) (string, error) {
+	slotOpenRecoveryCheck = func(workDir, rigName, minerName string) (string, error) {
 		return `{"verdict":"SAFE_TO_NUKE"}`, nil
 	}
-	slotOpenDecisionForNotify = func(workDir, townRoot, rigName, polecatName, exitType string) polecat.SlotReuseDecision {
-		return polecat.SlotReuseDecision{Reusable: true}
+	slotOpenDecisionForNotify = func(workDir, townRoot, rigName, minerName, exitType string) miner.SlotReuseDecision {
+		return miner.SlotReuseDecision{Reusable: true}
 	}
 	runSchedulerForSlotOpen = func(gotTownRoot string) (slotOpenSchedulerResult, error) {
 		var result slotOpenSchedulerResult
@@ -298,9 +298,9 @@ func TestNotifyMayorSlotOpen_NoDispatchAfterCapacityFillsSuppressesMayor(t *test
 		return result, nil
 	}
 
-	notifyMayorSlotOpen(workDir, "gastown", "guzzle", string(ExitTypeCompleted))
+	notifyOverseerSlotOpen(workDir, "excavation", "guzzle", string(ExitTypeCompleted))
 
-	if events := readMayorEvents(t, townRoot); len(events) != 0 {
+	if events := readOverseerEvents(t, townRoot); len(events) != 0 {
 		t.Fatalf("events = %+v, want none when scheduler no longer has capacity", events)
 	}
 }
@@ -325,7 +325,7 @@ func TestParseSchedulerRunDispatched(t *testing.T) {
 	}
 }
 
-func TestShouldNotifyMayorSlotOpenRequiresSafeRecovery(t *testing.T) {
+func TestShouldNotifyOverseerSlotOpenRequiresSafeRecovery(t *testing.T) {
 	prev := slotOpenRecoveryCheck
 	t.Cleanup(func() { slotOpenRecoveryCheck = prev })
 
@@ -365,11 +365,11 @@ func TestShouldNotifyMayorSlotOpenRequiresSafeRecovery(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			slotOpenRecoveryCheck = func(workDir, rigName, polecatName string) (string, error) {
+			slotOpenRecoveryCheck = func(workDir, rigName, minerName string) (string, error) {
 				return tt.output, tt.err
 			}
 
-			gotOK, gotMsg := shouldNotifyMayorSlotOpen("/tmp", "gastown", "nitro")
+			gotOK, gotMsg := shouldNotifyOverseerSlotOpen("/tmp", "excavation", "nitro")
 			if gotOK != tt.wantOK {
 				t.Fatalf("ok = %v, want %v (msg=%q)", gotOK, tt.wantOK, gotMsg)
 			}
@@ -411,9 +411,9 @@ func TestActiveMRBlockerFromCLIUsesTerminalStatus(t *testing.T) {
 	}
 }
 
-func TestHandlePolecatDoneFromBead_NilFields(t *testing.T) {
+func TestHandleMinerDoneFromBead_NilFields(t *testing.T) {
 	t.Parallel()
-	result := HandlePolecatDoneFromBead(DefaultBdCli(), "/tmp", "testrig", "nux", nil, nil)
+	result := HandleMinerDoneFromBead(DefaultBdCli(), "/tmp", "testrig", "nux", nil, nil)
 	if result.Error == nil {
 		t.Error("expected error for nil fields")
 	}
@@ -422,13 +422,13 @@ func TestHandlePolecatDoneFromBead_NilFields(t *testing.T) {
 	}
 }
 
-func TestHandlePolecatDoneFromBead_PhaseComplete(t *testing.T) {
+func TestHandleMinerDoneFromBead_PhaseComplete(t *testing.T) {
 	t.Parallel()
 	fields := &beads.AgentFields{
 		ExitType: "PHASE_COMPLETE",
-		Branch:   "polecat/nux",
+		Branch:   "miner/nux",
 	}
-	result := HandlePolecatDoneFromBead(DefaultBdCli(), "/tmp", "testrig", "nux", fields, nil)
+	result := HandleMinerDoneFromBead(DefaultBdCli(), "/tmp", "testrig", "nux", fields, nil)
 	if !result.Handled {
 		t.Error("expected PHASE_COMPLETE to be handled")
 	}
@@ -440,15 +440,15 @@ func TestHandlePolecatDoneFromBead_PhaseComplete(t *testing.T) {
 	}
 }
 
-func TestHandlePolecatDoneFromBead_NoMR(t *testing.T) {
+func TestHandleMinerDoneFromBead_NoMR(t *testing.T) {
 	t.Parallel()
 	fields := &beads.AgentFields{
 		ExitType:       "COMPLETED",
-		Branch:         "polecat/nux",
+		Branch:         "miner/nux",
 		HookBead:       "gt-test123",
 		CompletionTime: "2026-02-28T01:00:00Z",
 	}
-	result := HandlePolecatDoneFromBead(DefaultBdCli(), "/tmp/nonexistent", "testrig", "nux", fields, nil)
+	result := HandleMinerDoneFromBead(DefaultBdCli(), "/tmp/nonexistent", "testrig", "nux", fields, nil)
 	if !result.Handled {
 		t.Error("expected completion with no MR to be handled")
 	}
@@ -457,15 +457,15 @@ func TestHandlePolecatDoneFromBead_NoMR(t *testing.T) {
 	}
 }
 
-func TestHandlePolecatDoneFromBead_ProtocolType(t *testing.T) {
+func TestHandleMinerDoneFromBead_ProtocolType(t *testing.T) {
 	t.Parallel()
 	fields := &beads.AgentFields{
 		ExitType: "COMPLETED",
-		Branch:   "polecat/nux",
+		Branch:   "miner/nux",
 	}
-	result := HandlePolecatDoneFromBead(DefaultBdCli(), "/tmp/nonexistent", "testrig", "nux", fields, nil)
-	if result.ProtocolType != ProtoPolecatDone {
-		t.Errorf("ProtocolType = %q, want %q", result.ProtocolType, ProtoPolecatDone)
+	result := HandleMinerDoneFromBead(DefaultBdCli(), "/tmp/nonexistent", "testrig", "nux", fields, nil)
+	if result.ProtocolType != ProtoMinerDone {
+		t.Errorf("ProtocolType = %q, want %q", result.ProtocolType, ProtoMinerDone)
 	}
 }
 
@@ -473,7 +473,7 @@ func TestZombieResult_Types(t *testing.T) {
 	t.Parallel()
 	// Verify the ZombieResult type has all expected fields
 	z := ZombieResult{
-		PolecatName:    "nux",
+		MinerName:    "nux",
 		AgentState:     "working",
 		Classification: ZombieSessionDeadActive,
 		HookBead:       "gt-abc123",
@@ -482,8 +482,8 @@ func TestZombieResult_Types(t *testing.T) {
 		Error:          nil,
 	}
 
-	if z.PolecatName != "nux" {
-		t.Errorf("PolecatName = %q, want %q", z.PolecatName, "nux")
+	if z.MinerName != "nux" {
+		t.Errorf("MinerName = %q, want %q", z.MinerName, "nux")
 	}
 	if z.AgentState != "working" {
 		t.Errorf("AgentState = %q, want %q", z.AgentState, "working")
@@ -502,9 +502,9 @@ func TestZombieResult_Types(t *testing.T) {
 	}
 }
 
-func TestDetectZombiePolecatsResult_EmptyResult(t *testing.T) {
+func TestDetectZombieMinersResult_EmptyResult(t *testing.T) {
 	t.Parallel()
-	result := &DetectZombiePolecatsResult{}
+	result := &DetectZombieMinersResult{}
 
 	if result.Checked != 0 {
 		t.Errorf("Checked = %d, want 0", result.Checked)
@@ -514,10 +514,10 @@ func TestDetectZombiePolecatsResult_EmptyResult(t *testing.T) {
 	}
 }
 
-func TestDetectZombiePolecats_NonexistentDir(t *testing.T) {
+func TestDetectZombieMiners_NonexistentDir(t *testing.T) {
 	t.Parallel()
-	// Should handle missing polecats directory gracefully
-	result := DetectZombiePolecats(DefaultBdCli(), "/nonexistent/path", "testrig", nil)
+	// Should handle missing miners directory gracefully
+	result := DetectZombieMiners(DefaultBdCli(), "/nonexistent/path", "testrig", nil)
 
 	if result.Checked != 0 {
 		t.Errorf("Checked = %d, want 0 for nonexistent dir", result.Checked)
@@ -527,61 +527,61 @@ func TestDetectZombiePolecats_NonexistentDir(t *testing.T) {
 	}
 }
 
-func TestDetectZombiePolecats_DirectoryScanning(t *testing.T) {
+func TestDetectZombieMiners_DirectoryScanning(t *testing.T) {
 	t.Parallel()
-	// Create a temp directory structure simulating polecats
+	// Create a temp directory structure simulating miners
 	tmpDir := t.TempDir()
 	rigName := "testrig"
-	polecatsDir := filepath.Join(tmpDir, rigName, "polecats")
-	if err := os.MkdirAll(polecatsDir, 0o755); err != nil {
+	minersDir := filepath.Join(tmpDir, rigName, "miners")
+	if err := os.MkdirAll(minersDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
-	// Create polecat directories
+	// Create miner directories
 	for _, name := range []string{"alpha", "bravo", "charlie"} {
-		if err := os.Mkdir(filepath.Join(polecatsDir, name), 0o755); err != nil {
+		if err := os.Mkdir(filepath.Join(minersDir, name), 0o755); err != nil {
 			t.Fatal(err)
 		}
 	}
 
 	// Create hidden dir (should be skipped)
-	if err := os.Mkdir(filepath.Join(polecatsDir, ".hidden"), 0o755); err != nil {
+	if err := os.Mkdir(filepath.Join(minersDir, ".hidden"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create a regular file (should be skipped, not a dir)
-	if err := os.WriteFile(filepath.Join(polecatsDir, "notadir.txt"), []byte("test"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(minersDir, "notadir.txt"), []byte("test"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	result := DetectZombiePolecats(DefaultBdCli(), tmpDir, rigName, nil)
+	result := DetectZombieMiners(DefaultBdCli(), tmpDir, rigName, nil)
 
-	// Should have checked 3 polecat dirs (not hidden, not file)
+	// Should have checked 3 miner dirs (not hidden, not file)
 	if result.Checked != 3 {
 		t.Errorf("Checked = %d, want 3 (should skip hidden dirs and files)", result.Checked)
 	}
 
 	// No zombies because agent bead state will be empty (bd not available),
-	// so isZombie stays false for all polecats
+	// so isZombie stays false for all miners
 	if len(result.Zombies) != 0 {
 		t.Errorf("Zombies = %d, want 0 (no agent state = not zombie)", len(result.Zombies))
 	}
 }
 
-func TestDetectZombiePolecats_EmptyPolecatsDir(t *testing.T) {
+func TestDetectZombieMiners_EmptyMinersDir(t *testing.T) {
 	t.Parallel()
-	// Empty polecats directory should return 0 checked
+	// Empty miners directory should return 0 checked
 	tmpDir := t.TempDir()
 	rigName := "testrig"
-	polecatsDir := filepath.Join(tmpDir, rigName, "polecats")
-	if err := os.MkdirAll(polecatsDir, 0o755); err != nil {
+	minersDir := filepath.Join(tmpDir, rigName, "miners")
+	if err := os.MkdirAll(minersDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
-	result := DetectZombiePolecats(DefaultBdCli(), tmpDir, rigName, nil)
+	result := DetectZombieMiners(DefaultBdCli(), tmpDir, rigName, nil)
 
 	if result.Checked != 0 {
-		t.Errorf("Checked = %d, want 0 for empty polecats dir", result.Checked)
+		t.Errorf("Checked = %d, want 0 for empty miners dir", result.Checked)
 	}
 }
 
@@ -634,7 +634,7 @@ func TestSessionRecreated_DetectedAtEdgeCases(t *testing.T) {
 func TestZombieClassification_SpawningState(t *testing.T) {
 	t.Parallel()
 	// Verify that "spawning" agent state is treated as a zombie indicator.
-	// This tests the classification logic inline in DetectZombiePolecats.
+	// This tests the classification logic inline in DetectZombieMiners.
 	// We can't easily test this via the full function without mocking,
 	// so we test the boolean logic directly.
 	states := map[string]bool{
@@ -664,7 +664,7 @@ func TestZombieClassification_SpawningState(t *testing.T) {
 
 func TestZombieClassification_HookBeadAlwaysZombie(t *testing.T) {
 	t.Parallel()
-	// Any polecat with a hook_bead and dead session should be classified as zombie,
+	// Any miner with a hook_bead and dead session should be classified as zombie,
 	// regardless of agent_state.
 	for _, state := range []string{"", "idle", "done", "working"} {
 		hookBead := "gt-some-issue"
@@ -684,7 +684,7 @@ func TestZombieClassification_HookBeadAlwaysZombie(t *testing.T) {
 
 func TestZombieClassification_NoHookNoActiveState(t *testing.T) {
 	t.Parallel()
-	// Polecats with no hook_bead and non-active agent_state should NOT be zombies.
+	// Miners with no hook_bead and non-active agent_state should NOT be zombies.
 	for _, state := range []string{"", "idle", "done", "completed"} {
 		hookBead := ""
 		isZombie := false
@@ -705,7 +705,7 @@ func TestFindAnyCleanupWisp_NoBdAvailable(t *testing.T) {
 	t.Parallel()
 	// When bd is not available (test environment), findAnyCleanupWisp
 	// should return empty string without panicking
-	result := findAnyCleanupWisp(DefaultBdCli(), "/nonexistent", "testpolecat")
+	result := findAnyCleanupWisp(DefaultBdCli(), "/nonexistent", "testminer")
 	if result != "" {
 		t.Errorf("findAnyCleanupWisp = %q, want empty when bd unavailable", result)
 	}
@@ -769,7 +769,7 @@ func fakeBd() (*BdCli, *mockBdCalls) {
 				case "list":
 					return "[]", nil
 				case "show":
-					return `[{"labels":["cleanup","polecat:testpol","state:pending"]}]`, nil
+					return `[{"labels":["cleanup","miner:testpol","state:pending"]}]`, nil
 				}
 			}
 			return "{}", nil
@@ -778,10 +778,10 @@ func fakeBd() (*BdCli, *mockBdCalls) {
 	)
 }
 
-func setupActiveMRGitSafeWorkDir(t *testing.T, rigName, polecatName string) string {
+func setupActiveMRGitSafeWorkDir(t *testing.T, rigName, minerName string) string {
 	t.Helper()
 	townRoot := t.TempDir()
-	clonePath := filepath.Join(townRoot, rigName, "polecats", polecatName, rigName)
+	clonePath := filepath.Join(townRoot, rigName, "miners", minerName, rigName)
 	if err := os.MkdirAll(clonePath, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -866,7 +866,7 @@ func TestHasPendingMRFromSnapshotAssessesMRStatus(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			workDir := setupActiveMRGitSafeWorkDir(t, "gastown", "nux")
+			workDir := setupActiveMRGitSafeWorkDir(t, "excavation", "nux")
 			bd, _ := mockBd(
 				func(args []string) (string, error) {
 					if len(args) == 0 {
@@ -883,7 +883,7 @@ func TestHasPendingMRFromSnapshotAssessesMRStatus(t *testing.T) {
 				func(args []string) error { return nil },
 			)
 			snap := &agentBeadSnapshot{ActiveMR: "gt-mr", Fields: &beads.AgentFields{ActiveMR: "gt-mr", LastSourceIssue: "gt-src"}}
-			if got := hasPendingMRFromSnapshot(bd, workDir, "gastown", "nux", snap); got != tt.want {
+			if got := hasPendingMRFromSnapshot(bd, workDir, "excavation", "nux", snap); got != tt.want {
 				t.Fatalf("hasPendingMRFromSnapshot() = %v, want %v", got, tt.want)
 			}
 		})
@@ -891,7 +891,7 @@ func TestHasPendingMRFromSnapshotAssessesMRStatus(t *testing.T) {
 }
 
 func TestHasPendingMRUsesAgentLastSourceIssue(t *testing.T) {
-	workDir := setupActiveMRGitSafeWorkDir(t, "gastown", "nux")
+	workDir := setupActiveMRGitSafeWorkDir(t, "excavation", "nux")
 	bd, _ := mockBd(
 		func(args []string) (string, error) {
 			if len(args) == 0 {
@@ -915,7 +915,7 @@ func TestHasPendingMRUsesAgentLastSourceIssue(t *testing.T) {
 		func(args []string) error { return nil },
 	)
 
-	if got := hasPendingMR(bd, workDir, "gastown", "nux", "gt-agent"); got {
+	if got := hasPendingMR(bd, workDir, "excavation", "nux", "gt-agent"); got {
 		t.Fatalf("hasPendingMR() = true, want false for missing MR with terminal source")
 	}
 }
@@ -940,13 +940,13 @@ func TestHasPendingMRFromSnapshotRequiresGitSafe(t *testing.T) {
 		func(args []string) error { return nil },
 	)
 	snap := &agentBeadSnapshot{ActiveMR: "gt-mr", Fields: &beads.AgentFields{ActiveMR: "gt-mr", LastSourceIssue: "gt-src"}}
-	if got := hasPendingMRFromSnapshot(bd, t.TempDir(), "gastown", "nux", snap); !got {
+	if got := hasPendingMRFromSnapshot(bd, t.TempDir(), "excavation", "nux", snap); !got {
 		t.Fatalf("hasPendingMRFromSnapshot() = false, want true when git is unsafe")
 	}
 }
 
 func TestHasPendingMRCleanupWispFailsClosed(t *testing.T) {
-	workDir := setupActiveMRGitSafeWorkDir(t, "gastown", "nux")
+	workDir := setupActiveMRGitSafeWorkDir(t, "excavation", "nux")
 	tests := []struct {
 		name string
 		list string
@@ -975,7 +975,7 @@ func TestHasPendingMRCleanupWispFailsClosed(t *testing.T) {
 				},
 				func(args []string) error { return nil },
 			)
-			if got := hasPendingMR(bd, workDir, "gastown", "nux", "gt-agent"); !got {
+			if got := hasPendingMR(bd, workDir, "excavation", "nux", "gt-agent"); !got {
 				t.Fatalf("hasPendingMR() = false, want true")
 			}
 		})
@@ -983,7 +983,7 @@ func TestHasPendingMRCleanupWispFailsClosed(t *testing.T) {
 }
 
 func TestTerminalSafeDoneSnapshot(t *testing.T) {
-	workDir := setupActiveMRGitSafeWorkDir(t, "gastown", "nux")
+	workDir := setupActiveMRGitSafeWorkDir(t, "excavation", "nux")
 	bd, _ := mockBd(
 		func(args []string) (string, error) {
 			if len(args) == 0 || args[0] != "show" {
@@ -994,11 +994,11 @@ func TestTerminalSafeDoneSnapshot(t *testing.T) {
 		func(args []string) error { return nil },
 	)
 	snap := &agentBeadSnapshot{Fields: &beads.AgentFields{LastSourceIssue: "gt-src"}}
-	if !terminalSafeDoneSnapshot(bd, workDir, "gastown", "nux", snap) {
+	if !terminalSafeDoneSnapshot(bd, workDir, "excavation", "nux", snap) {
 		t.Fatalf("terminalSafeDoneSnapshot() = false, want true")
 	}
 	snap.Fields.HookBead = "gt-hook"
-	if terminalSafeDoneSnapshot(bd, workDir, "gastown", "nux", snap) {
+	if terminalSafeDoneSnapshot(bd, workDir, "excavation", "nux", snap) {
 		t.Fatalf("terminalSafeDoneSnapshot() = true with hook set, want false")
 	}
 }
@@ -1025,9 +1025,9 @@ func TestFindCleanupWisp_UsesCorrectBdListFlags(t *testing.T) {
 		t.Errorf("findCleanupWisp: must not use --ephemeral (invalid for bd list), got: %s", got)
 	}
 
-	// Must include the polecat label filter
-	if !strings.Contains(got, "polecat:nux") {
-		t.Errorf("findCleanupWisp: expected polecat:nux label, got: %s", got)
+	// Must include the miner label filter
+	if !strings.Contains(got, "miner:nux") {
+		t.Errorf("findCleanupWisp: expected miner:nux label, got: %s", got)
 	}
 }
 
@@ -1053,16 +1053,16 @@ func TestFindAnyCleanupWisp_UsesCorrectBdListFlags(t *testing.T) {
 		t.Errorf("findAnyCleanupWisp: must not use --ephemeral (invalid for bd list), got: %s", got)
 	}
 
-	// Must include the polecat label filter
-	if !strings.Contains(got, "polecat:bravo") {
-		t.Errorf("findAnyCleanupWisp: expected polecat:bravo label, got: %s", got)
+	// Must include the miner label filter
+	if !strings.Contains(got, "miner:bravo") {
+		t.Errorf("findAnyCleanupWisp: expected miner:bravo label, got: %s", got)
 	}
 }
 
 func TestFindAllCleanupWisps_NoBdAvailable(t *testing.T) {
 	t.Parallel()
 	// When bd is not available, findAllCleanupWisps should return nil
-	result := findAllCleanupWisps(DefaultBdCli(), "/nonexistent", "testpolecat")
+	result := findAllCleanupWisps(DefaultBdCli(), "/nonexistent", "testminer")
 	if result != nil {
 		t.Errorf("findAllCleanupWisps = %v, want nil when bd unavailable", result)
 	}
@@ -1094,8 +1094,8 @@ func TestFindAllCleanupWisps_ReturnsAllIDs(t *testing.T) {
 	if !strings.Contains(got, "--label") {
 		t.Errorf("findAllCleanupWisps: expected --label flag, got: %s", got)
 	}
-	if !strings.Contains(got, "polecat:nux") {
-		t.Errorf("findAllCleanupWisps: expected polecat:nux label, got: %s", got)
+	if !strings.Contains(got, "miner:nux") {
+		t.Errorf("findAllCleanupWisps: expected miner:nux label, got: %s", got)
 	}
 }
 
@@ -1121,8 +1121,8 @@ func TestUpdateCleanupWispState_UsesCorrectBdUpdateFlags(t *testing.T) {
 	workDir := t.TempDir()
 
 	// UpdateCleanupWispState first calls "bd show <id> --json", then "bd update".
-	// Our mock returns valid JSON for show with polecat:testpol label,
-	// so polecatName will be "testpol". Then it calls bd update with new labels.
+	// Our mock returns valid JSON for show with miner:testpol label,
+	// so minerName will be "testpol". Then it calls bd update with new labels.
 	_ = UpdateCleanupWispState(bd, workDir, "gt-wisp-abc", "merged")
 
 	got := strings.Join(mock.calls, "\n")
@@ -1136,12 +1136,12 @@ func TestUpdateCleanupWispState_UsesCorrectBdUpdateFlags(t *testing.T) {
 		t.Errorf("UpdateCleanupWispState: must not use --labels (invalid for bd update), got: %s", got)
 	}
 
-	// Verify individual per-label arguments with correct polecat name from show output
+	// Verify individual per-label arguments with correct miner name from show output
 	if !strings.Contains(got, "--set-labels=cleanup") {
 		t.Errorf("UpdateCleanupWispState: expected --set-labels=cleanup, got: %s", got)
 	}
-	if !strings.Contains(got, "--set-labels=polecat:testpol") {
-		t.Errorf("UpdateCleanupWispState: expected --set-labels=polecat:testpol, got: %s", got)
+	if !strings.Contains(got, "--set-labels=miner:testpol") {
+		t.Errorf("UpdateCleanupWispState: expected --set-labels=miner:testpol, got: %s", got)
 	}
 	if !strings.Contains(got, "--set-labels=state:merged") {
 		t.Errorf("UpdateCleanupWispState: expected --set-labels=state:merged, got: %s", got)
@@ -1255,7 +1255,7 @@ func TestDetectZombie_DoneIntentLiveStuck(t *testing.T) {
 
 func TestDetectZombie_DoneIntentRecent(t *testing.T) {
 	t.Parallel()
-	// Verify the logic: done-intent younger than config.DefaultWitnessDoneIntentStuckTimeout → skip (polecat still working)
+	// Verify the logic: done-intent younger than config.DefaultWitnessDoneIntentStuckTimeout → skip (miner still working)
 	doneIntent := &DoneIntent{
 		ExitType:  "COMPLETED",
 		Timestamp: time.Now().Add(-10 * time.Second), // 10s old
@@ -1279,10 +1279,10 @@ func TestDetectZombie_DoneIntentRecent(t *testing.T) {
 
 func TestDetectZombie_DoneOrNukedNotZombie(t *testing.T) {
 	t.Parallel()
-	// GH#2795: Polecats with agent_state=done or agent_state=nuked and a dead
+	// GH#2795: Miners with agent_state=done or agent_state=nuked and a dead
 	// session should NOT be treated as zombies, even if hook_bead is still set.
 	// Without this, isZombieState returns true (hookBead != ""), and the witness
-	// floods the mayor inbox with RECOVERY_NEEDED alerts every patrol cycle.
+	// floods the overseer inbox with RECOVERY_NEEDED alerts every patrol cycle.
 	for _, state := range []beads.AgentState{beads.AgentStateDone, beads.AgentStateNuked} {
 		hookBead := "gt-some-issue"
 		// isZombieState returns true because hookBead != ""
@@ -1300,7 +1300,7 @@ func TestDetectZombie_DoneOrNukedNotZombie(t *testing.T) {
 func TestDetectZombie_AgentDeadInLiveSession(t *testing.T) {
 	t.Parallel()
 	// Verify the logic: live session + agent process dead → zombie
-	// This is the gt-kj6r6 fix: DetectZombiePolecats now checks IsAgentAlive
+	// This is the gt-kj6r6 fix: DetectZombieMiners now checks IsAgentAlive
 	// for sessions that DO exist, catching the tmux-alive-but-agent-dead class.
 	sessionAlive := true
 	agentAlive := false
@@ -1329,18 +1329,18 @@ func TestGetAgentBeadLabels_NoBdAvailable(t *testing.T) {
 	}
 }
 
-// --- extractPolecatFromJSON tests (issue #1228: panic-safe JSON parsing) ---
+// --- extractMinerFromJSON tests (issue #1228: panic-safe JSON parsing) ---
 
-func TestExtractPolecatFromJSON_ValidOutput(t *testing.T) {
+func TestExtractMinerFromJSON_ValidOutput(t *testing.T) {
 	t.Parallel()
-	input := `[{"labels":["cleanup","polecat:nux","state:pending"]}]`
-	got := extractPolecatFromJSON(input)
+	input := `[{"labels":["cleanup","miner:nux","state:pending"]}]`
+	got := extractMinerFromJSON(input)
 	if got != "nux" {
-		t.Errorf("extractPolecatFromJSON() = %q, want %q", got, "nux")
+		t.Errorf("extractMinerFromJSON() = %q, want %q", got, "nux")
 	}
 }
 
-func TestExtractPolecatFromJSON_InvalidInputs(t *testing.T) {
+func TestExtractMinerFromJSON_InvalidInputs(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name  string
@@ -1349,16 +1349,16 @@ func TestExtractPolecatFromJSON_InvalidInputs(t *testing.T) {
 		{"empty output", ""},
 		{"malformed JSON", "{not valid json"},
 		{"empty array", "[]"},
-		{"no polecat label", `[{"labels":["cleanup","state:pending"]}]`},
+		{"no miner label", `[{"labels":["cleanup","state:pending"]}]`},
 		{"empty labels", `[{"labels":[]}]`},
-		{"truncated JSON", `[{"labels":["polecat:`},
+		{"truncated JSON", `[{"labels":["miner:`},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := extractPolecatFromJSON(tt.input)
+			got := extractMinerFromJSON(tt.input)
 			if got != "" {
-				t.Errorf("extractPolecatFromJSON(%q) = %q, want empty", tt.input, got)
+				t.Errorf("extractMinerFromJSON(%q) = %q, want empty", tt.input, got)
 			}
 		})
 	}
@@ -1386,8 +1386,8 @@ func TestGetBeadStatus_EmptyBeadID(t *testing.T) {
 func TestDetectZombie_BeadClosedStillRunning(t *testing.T) {
 	t.Parallel()
 	// Verify the logic: live session + agent alive + hooked bead closed → zombie
-	// This is the gt-h1l6i fix: DetectZombiePolecats now checks if the
-	// polecat's hooked bead has been closed while the session is still running.
+	// This is the gt-h1l6i fix: DetectZombieMiners now checks if the
+	// miner's hooked bead has been closed while the session is still running.
 	sessionAlive := true
 	agentAlive := true
 	var doneIntent *DoneIntent // No done-intent
@@ -1422,7 +1422,7 @@ func TestDetectZombie_BeadClosedStillRunning(t *testing.T) {
 func TestDetectZombie_BeadClosedVsDoneIntent(t *testing.T) {
 	t.Parallel()
 	// Verify done-intent takes priority over closed-bead check.
-	// If done-intent exists (recent), the polecat is still working through
+	// If done-intent exists (recent), the miner is still working through
 	// gt done and we should NOT trigger the closed-bead path.
 	sessionAlive := true
 	agentAlive := true
@@ -1474,7 +1474,7 @@ func TestResetAbandonedBead_ClosesWhenWorkOnMain(t *testing.T) {
 	// bead instead of resetting it for re-dispatch. This is the fix for #2036.
 
 	oldVerify := verifyCommitOnMain
-	verifyCommitOnMain = func(workDir, rigName, polecatName string) (bool, error) {
+	verifyCommitOnMain = func(workDir, rigName, minerName string) (bool, error) {
 		return true, nil // work is on main
 	}
 	t.Cleanup(func() { verifyCommitOnMain = oldVerify })
@@ -1521,7 +1521,7 @@ func TestResetAbandonedBead_ResetsWhenWorkNotOnMain(t *testing.T) {
 	// the bead for re-dispatch (existing behavior).
 
 	oldVerify := verifyCommitOnMain
-	verifyCommitOnMain = func(workDir, rigName, polecatName string) (bool, error) {
+	verifyCommitOnMain = func(workDir, rigName, minerName string) (bool, error) {
 		return false, nil // work NOT on main
 	}
 	t.Cleanup(func() { verifyCommitOnMain = oldVerify })
@@ -1560,7 +1560,7 @@ func TestBeadRecoveredField_DefaultFalse(t *testing.T) {
 	t.Parallel()
 	// BeadRecovered should default to false (zero value)
 	z := ZombieResult{
-		PolecatName:    "nux",
+		MinerName:    "nux",
 		AgentState:     "working",
 		Classification: ZombieSessionDeadActive,
 	}
@@ -1573,14 +1573,14 @@ func TestStalledResult_Types(t *testing.T) {
 	t.Parallel()
 	// Verify the StalledResult type has all expected fields
 	s := StalledResult{
-		PolecatName: "alpha",
+		MinerName: "alpha",
 		StallType:   "startup-stall",
 		Action:      "auto-dismissed",
 		Error:       nil,
 	}
 
-	if s.PolecatName != "alpha" {
-		t.Errorf("PolecatName = %q, want %q", s.PolecatName, "alpha")
+	if s.MinerName != "alpha" {
+		t.Errorf("MinerName = %q, want %q", s.MinerName, "alpha")
 	}
 	if s.StallType != "startup-stall" {
 		t.Errorf("StallType = %q, want %q", s.StallType, "startup-stall")
@@ -1594,7 +1594,7 @@ func TestStalledResult_Types(t *testing.T) {
 
 	// Verify error field works
 	s2 := StalledResult{
-		PolecatName: "bravo",
+		MinerName: "bravo",
 		StallType:   "startup-stall",
 		Action:      "escalated",
 		Error:       fmt.Errorf("auto-dismiss failed"),
@@ -1604,9 +1604,9 @@ func TestStalledResult_Types(t *testing.T) {
 	}
 }
 
-func TestDetectStalledPolecatsResult_Empty(t *testing.T) {
+func TestDetectStalledMinersResult_Empty(t *testing.T) {
 	t.Parallel()
-	result := &DetectStalledPolecatsResult{}
+	result := &DetectStalledMinersResult{}
 
 	if result.Checked != 0 {
 		t.Errorf("Checked = %d, want 0", result.Checked)
@@ -1619,10 +1619,10 @@ func TestDetectStalledPolecatsResult_Empty(t *testing.T) {
 	}
 }
 
-func TestDetectStalledPolecats_NoPolecats(t *testing.T) {
+func TestDetectStalledMiners_NoMiners(t *testing.T) {
 	t.Parallel()
-	// Should handle missing polecats directory gracefully
-	result := DetectStalledPolecats("/nonexistent/path", "testrig")
+	// Should handle missing miners directory gracefully
+	result := DetectStalledMiners("/nonexistent/path", "testrig")
 
 	if result.Checked != 0 {
 		t.Errorf("Checked = %d, want 0 for nonexistent dir", result.Checked)
@@ -1635,58 +1635,58 @@ func TestDetectStalledPolecats_NoPolecats(t *testing.T) {
 	}
 }
 
-func TestDetectStalledPolecats_EmptyPolecatsDir(t *testing.T) {
+func TestDetectStalledMiners_EmptyMinersDir(t *testing.T) {
 	t.Parallel()
-	// Empty polecats directory should return 0 checked
+	// Empty miners directory should return 0 checked
 	tmpDir := t.TempDir()
 	rigName := "testrig"
-	polecatsDir := filepath.Join(tmpDir, rigName, "polecats")
-	if err := os.MkdirAll(polecatsDir, 0o755); err != nil {
+	minersDir := filepath.Join(tmpDir, rigName, "miners")
+	if err := os.MkdirAll(minersDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
-	result := DetectStalledPolecats(tmpDir, rigName)
+	result := DetectStalledMiners(tmpDir, rigName)
 
 	if result.Checked != 0 {
-		t.Errorf("Checked = %d, want 0 for empty polecats dir", result.Checked)
+		t.Errorf("Checked = %d, want 0 for empty miners dir", result.Checked)
 	}
 	if len(result.Stalled) != 0 {
-		t.Errorf("Stalled = %d, want 0 for empty polecats dir", len(result.Stalled))
+		t.Errorf("Stalled = %d, want 0 for empty miners dir", len(result.Stalled))
 	}
 }
 
-func TestDetectStalledPolecats_NoSession(t *testing.T) {
+func TestDetectStalledMiners_NoSession(t *testing.T) {
 	t.Parallel()
 	// When tmux sessions don't exist (no real tmux in test),
-	// HasSession returns false so polecats are skipped (not errors).
+	// HasSession returns false so miners are skipped (not errors).
 	tmpDir := t.TempDir()
 	rigName := "testrig"
-	polecatsDir := filepath.Join(tmpDir, rigName, "polecats")
-	if err := os.MkdirAll(polecatsDir, 0o755); err != nil {
+	minersDir := filepath.Join(tmpDir, rigName, "miners")
+	if err := os.MkdirAll(minersDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
-	// Create polecat directories
+	// Create miner directories
 	for _, name := range []string{"alpha", "bravo"} {
-		if err := os.Mkdir(filepath.Join(polecatsDir, name), 0o755); err != nil {
+		if err := os.Mkdir(filepath.Join(minersDir, name), 0o755); err != nil {
 			t.Fatal(err)
 		}
 	}
 
 	// Create hidden dir (should be skipped)
-	if err := os.Mkdir(filepath.Join(polecatsDir, ".hidden"), 0o755); err != nil {
+	if err := os.Mkdir(filepath.Join(minersDir, ".hidden"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 
-	result := DetectStalledPolecats(tmpDir, rigName)
+	result := DetectStalledMiners(tmpDir, rigName)
 
-	// Should count 2 polecats (skip hidden)
+	// Should count 2 miners (skip hidden)
 	if result.Checked != 2 {
 		t.Errorf("Checked = %d, want 2 (should skip hidden dirs)", result.Checked)
 	}
 
 	// No stalled because HasSession returns false (no real tmux in test),
-	// so polecats are skipped before structured signal checks.
+	// so miners are skipped before structured signal checks.
 	if len(result.Stalled) != 0 {
 		t.Errorf("Stalled = %d, want 0 (no tmux sessions in test)", len(result.Stalled))
 	}
@@ -1730,19 +1730,19 @@ func TestDetectOrphanedBeads_ResultTypes(t *testing.T) {
 	// Verify the OrphanedBeadResult type has all expected fields
 	o := OrphanedBeadResult{
 		BeadID:        "gt-orphan1",
-		Assignee:      "testrig/polecats/alpha",
-		PolecatName:   "alpha",
+		Assignee:      "testrig/miners/alpha",
+		MinerName:   "alpha",
 		BeadRecovered: true,
 	}
 
 	if o.BeadID != "gt-orphan1" {
 		t.Errorf("BeadID = %q, want %q", o.BeadID, "gt-orphan1")
 	}
-	if o.Assignee != "testrig/polecats/alpha" {
-		t.Errorf("Assignee = %q, want %q", o.Assignee, "testrig/polecats/alpha")
+	if o.Assignee != "testrig/miners/alpha" {
+		t.Errorf("Assignee = %q, want %q", o.Assignee, "testrig/miners/alpha")
 	}
-	if o.PolecatName != "alpha" {
-		t.Errorf("PolecatName = %q, want %q", o.PolecatName, "alpha")
+	if o.MinerName != "alpha" {
+		t.Errorf("MinerName = %q, want %q", o.MinerName, "alpha")
 	}
 	if !o.BeadRecovered {
 		t.Error("BeadRecovered = false, want true")
@@ -1755,19 +1755,19 @@ func TestDetectOrphanedBeads_WithMockBd(t *testing.T) {
 	// Set up town directory structure
 	townRoot := t.TempDir()
 	rigName := "testrig"
-	polecatsDir := filepath.Join(townRoot, rigName, "polecats")
-	if err := os.MkdirAll(polecatsDir, 0o755); err != nil {
+	minersDir := filepath.Join(townRoot, rigName, "miners")
+	if err := os.MkdirAll(minersDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
-	// Create a polecat directory for "bravo" (alive dir, dead session)
-	// This case should be SKIPPED (deferred to DetectZombiePolecats)
-	if err := os.Mkdir(filepath.Join(polecatsDir, "bravo"), 0o755); err != nil {
+	// Create a miner directory for "bravo" (alive dir, dead session)
+	// This case should be SKIPPED (deferred to DetectZombieMiners)
+	if err := os.Mkdir(filepath.Join(minersDir, "bravo"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 
 	// "alpha" has NO directory and NO tmux session — true orphan
-	// "bravo" has directory but no session — deferred to DetectZombiePolecats
+	// "bravo" has directory but no session — deferred to DetectZombieMiners
 	// "charlie" is hooked, no dir, no session — also an orphan
 	// "delta" is assigned to a different rig — skipped by rigName filter
 
@@ -1781,15 +1781,15 @@ func TestDetectOrphanedBeads_WithMockBd(t *testing.T) {
 				joined := strings.Join(args, " ")
 				if strings.Contains(joined, "--status=in_progress") {
 					return `[
-  {"id":"gt-orphan1","assignee":"testrig/polecats/alpha"},
-  {"id":"gt-alive1","assignee":"testrig/polecats/bravo"},
+  {"id":"gt-orphan1","assignee":"testrig/miners/alpha"},
+  {"id":"gt-alive1","assignee":"testrig/miners/bravo"},
   {"id":"gt-nocrew","assignee":"testrig/crew/sean"},
   {"id":"gt-noassign","assignee":""},
-  {"id":"gt-otherrig","assignee":"otherrig/polecats/delta"}
+  {"id":"gt-otherrig","assignee":"otherrig/miners/delta"}
 ]`, nil
 				}
 				if strings.Contains(joined, "--status=hooked") {
-					return `[{"id":"gt-hooked1","assignee":"testrig/polecats/charlie"}]`, nil
+					return `[{"id":"gt-hooked1","assignee":"testrig/miners/charlie"}]`, nil
 				}
 				return "[]", nil
 			case "show":
@@ -1815,17 +1815,17 @@ func TestDetectOrphanedBeads_WithMockBd(t *testing.T) {
 		t.Errorf("bd list was not called with --status=hooked; log:\n%s", logStr)
 	}
 
-	// Should have checked 3 polecat assignees in "testrig":
+	// Should have checked 3 miner assignees in "testrig":
 	// alpha (in_progress), bravo (in_progress), charlie (hooked)
-	// "crew/sean" is not a polecat, "" has no assignee,
-	// "otherrig/polecats/delta" is filtered out by rigName
+	// "crew/sean" is not a miner, "" has no assignee,
+	// "otherrig/miners/delta" is filtered out by rigName
 	if result.Checked != 3 {
 		t.Errorf("Checked = %d, want 3 (alpha + bravo from in_progress, charlie from hooked)", result.Checked)
 	}
 
 	// Should have found 2 orphans:
 	// alpha (in_progress, no dir, no session) and charlie (hooked, no dir, no session)
-	// bravo has directory so deferred to DetectZombiePolecats
+	// bravo has directory so deferred to DetectZombieMiners
 	if len(result.Orphans) != 2 {
 		t.Fatalf("Orphans = %d, want 2 (alpha + charlie)", len(result.Orphans))
 	}
@@ -1835,11 +1835,11 @@ func TestDetectOrphanedBeads_WithMockBd(t *testing.T) {
 	if orphan.BeadID != "gt-orphan1" {
 		t.Errorf("orphan[0] BeadID = %q, want %q", orphan.BeadID, "gt-orphan1")
 	}
-	if orphan.PolecatName != "alpha" {
-		t.Errorf("orphan[0] PolecatName = %q, want %q", orphan.PolecatName, "alpha")
+	if orphan.MinerName != "alpha" {
+		t.Errorf("orphan[0] MinerName = %q, want %q", orphan.MinerName, "alpha")
 	}
-	if orphan.Assignee != "testrig/polecats/alpha" {
-		t.Errorf("orphan[0] Assignee = %q, want %q", orphan.Assignee, "testrig/polecats/alpha")
+	if orphan.Assignee != "testrig/miners/alpha" {
+		t.Errorf("orphan[0] Assignee = %q, want %q", orphan.Assignee, "testrig/miners/alpha")
 	}
 	// BeadRecovered should be true (mock bd update succeeds)
 	if !orphan.BeadRecovered {
@@ -1851,8 +1851,8 @@ func TestDetectOrphanedBeads_WithMockBd(t *testing.T) {
 	if orphan2.BeadID != "gt-hooked1" {
 		t.Errorf("orphan[1] BeadID = %q, want %q", orphan2.BeadID, "gt-hooked1")
 	}
-	if orphan2.PolecatName != "charlie" {
-		t.Errorf("orphan[1] PolecatName = %q, want %q", orphan2.PolecatName, "charlie")
+	if orphan2.MinerName != "charlie" {
+		t.Errorf("orphan[1] MinerName = %q, want %q", orphan2.MinerName, "charlie")
 	}
 
 	// Verify no unexpected errors
@@ -1890,8 +1890,8 @@ func TestOrphanedMoleculeResult_Types(t *testing.T) {
 	r := OrphanedMoleculeResult{
 		BeadID:        "gt-work-123",
 		MoleculeID:    "gt-mol-456",
-		Assignee:      "testrig/polecats/alpha",
-		PolecatName:   "alpha",
+		Assignee:      "testrig/miners/alpha",
+		MinerName:   "alpha",
 		Closed:        5,
 		BeadRecovered: true,
 		Error:         nil,
@@ -1902,8 +1902,8 @@ func TestOrphanedMoleculeResult_Types(t *testing.T) {
 	if r.MoleculeID != "gt-mol-456" {
 		t.Errorf("MoleculeID = %q, want %q", r.MoleculeID, "gt-mol-456")
 	}
-	if r.PolecatName != "alpha" {
-		t.Errorf("PolecatName = %q, want %q", r.PolecatName, "alpha")
+	if r.MinerName != "alpha" {
+		t.Errorf("MinerName = %q, want %q", r.MinerName, "alpha")
 	}
 	if r.Closed != 5 {
 		t.Errorf("Closed = %d, want 5", r.Closed)
@@ -1983,17 +1983,17 @@ func TestGetAttachedMoleculeID_EmptyOutput(t *testing.T) {
 	}
 }
 
-func TestHandlePolecatDone_CompletedWithoutMRID_NoMergeReady(t *testing.T) {
+func TestHandleMinerDone_CompletedWithoutMRID_NoMergeReady(t *testing.T) {
 	t.Parallel()
 	// When Exit==COMPLETED but MRID is empty and MRFailed is true,
 	// the witness should NOT send MERGE_READY (go to no-MR path).
 	// This tests the fix for gt-xp6e9p.
-	payload := &PolecatDonePayload{
-		PolecatName: "nux",
+	payload := &MinerDonePayload{
+		MinerName: "nux",
 		Exit:        "COMPLETED",
 		IssueID:     "gt-abc123",
 		MRID:        "",
-		Branch:      "polecat/nux-abc123",
+		Branch:      "miner/nux-abc123",
 		MRFailed:    true,
 	}
 
@@ -2009,14 +2009,14 @@ func TestHandlePolecatDone_CompletedWithoutMRID_NoMergeReady(t *testing.T) {
 	}
 }
 
-func TestHandlePolecatDone_CompletedWithMRID(t *testing.T) {
+func TestHandleMinerDone_CompletedWithMRID(t *testing.T) {
 	t.Parallel()
 	// When Exit==COMPLETED and MRID is set, hasPendingMR should be true.
-	payload := &PolecatDonePayload{
-		PolecatName: "nux",
+	payload := &MinerDonePayload{
+		MinerName: "nux",
 		Exit:        "COMPLETED",
 		MRID:        "gt-mr-xyz",
-		Branch:      "polecat/nux-abc123",
+		Branch:      "miner/nux-abc123",
 	}
 
 	hasPendingMR := payload.MRID != ""
@@ -2028,7 +2028,7 @@ func TestHandlePolecatDone_CompletedWithMRID(t *testing.T) {
 func TestFindMRBeadForBranch_NoBdAvailable(t *testing.T) {
 	t.Parallel()
 	// When bd is not available, should return empty string
-	result := findMRBeadForBranch(DefaultBdCli(), "/nonexistent", "polecat/nux-abc123")
+	result := findMRBeadForBranch(DefaultBdCli(), "/nonexistent", "miner/nux-abc123")
 	if result != "" {
 		t.Errorf("findMRBeadForBranch = %q, want empty when bd unavailable", result)
 	}
@@ -2037,27 +2037,27 @@ func TestFindMRBeadForBranch_NoBdAvailable(t *testing.T) {
 func TestDetectOrphanedMolecules_WithMockBd(t *testing.T) {
 	installFakeTmuxNoServer(t)
 
-	// Full test with mock bd returning beads assigned to dead polecats.
+	// Full test with mock bd returning beads assigned to dead miners.
 	//
 	// Setup:
-	// - alpha: dead polecat (no tmux, no directory) with attached molecule → orphaned
-	// - bravo: alive polecat (directory exists) → skip
-	// - crew/sean: non-polecat assignee → skip
+	// - alpha: dead miner (no tmux, no directory) with attached molecule → orphaned
+	// - bravo: alive miner (directory exists) → skip
+	// - crew/sean: non-miner assignee → skip
 	// - empty assignee → skip
 
 	tmpDir := t.TempDir()
 
 	// Create town structure: tmpDir is the "town root"
 	rigName := "testrig"
-	polecatsDir := filepath.Join(tmpDir, rigName, "polecats")
-	if err := os.MkdirAll(polecatsDir, 0755); err != nil {
+	minersDir := filepath.Join(tmpDir, rigName, "miners")
+	if err := os.MkdirAll(minersDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	// Create bravo's directory (alive polecat)
-	if err := os.MkdirAll(filepath.Join(polecatsDir, "bravo"), 0755); err != nil {
+	// Create bravo's directory (alive miner)
+	if err := os.MkdirAll(filepath.Join(minersDir, "bravo"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	// No directory for alpha (dead polecat)
+	// No directory for alpha (dead miner)
 
 	// Create workspace.Find marker
 	if err := os.WriteFile(filepath.Join(tmpDir, ".gt-root"), []byte(""), 0644); err != nil {
@@ -2074,8 +2074,8 @@ func TestDetectOrphanedMolecules_WithMockBd(t *testing.T) {
 			case "list":
 				if strings.Contains(joined, "--status=hooked") {
 					return `[
-  {"id":"gt-work-001","assignee":"testrig/polecats/alpha"},
-  {"id":"gt-work-002","assignee":"testrig/polecats/bravo"},
+  {"id":"gt-work-001","assignee":"testrig/miners/alpha"},
+  {"id":"gt-work-002","assignee":"testrig/miners/bravo"},
   {"id":"gt-work-003","assignee":"testrig/crew/sean"},
   {"id":"gt-work-004","assignee":""}
 ]`, nil
@@ -2095,7 +2095,7 @@ func TestDetectOrphanedMolecules_WithMockBd(t *testing.T) {
 				if len(args) > 1 {
 					switch args[1] {
 					case "gt-work-001":
-						return `[{"status":"hooked","description":"attached_molecule: gt-mol-orphan\nattached_at: 2026-01-15T10:00:00Z\ndispatched_by: mayor"}]`, nil
+						return `[{"status":"hooked","description":"attached_molecule: gt-mol-orphan\nattached_at: 2026-01-15T10:00:00Z\ndispatched_by: overseer"}]`, nil
 					case "gt-mol-orphan":
 						return `[{"status":"open"}]`, nil
 					}
@@ -2112,7 +2112,7 @@ func TestDetectOrphanedMolecules_WithMockBd(t *testing.T) {
 		t.Fatal("result should not be nil")
 	}
 
-	// Should have checked 2 polecat-assigned beads (alpha and bravo)
+	// Should have checked 2 miner-assigned beads (alpha and bravo)
 	if result.Checked != 2 {
 		t.Errorf("Checked = %d, want 2 (alpha + bravo)", result.Checked)
 	}
@@ -2129,8 +2129,8 @@ func TestDetectOrphanedMolecules_WithMockBd(t *testing.T) {
 	if orphan.MoleculeID != "gt-mol-orphan" {
 		t.Errorf("orphan.MoleculeID = %q, want %q", orphan.MoleculeID, "gt-mol-orphan")
 	}
-	if orphan.PolecatName != "alpha" {
-		t.Errorf("orphan.PolecatName = %q, want %q", orphan.PolecatName, "alpha")
+	if orphan.MinerName != "alpha" {
+		t.Errorf("orphan.MinerName = %q, want %q", orphan.MinerName, "alpha")
 	}
 	// Closed should be 3: 2 open step children + 1 molecule itself
 	if orphan.Closed != 3 {
@@ -2161,25 +2161,25 @@ func TestCompletionDiscovery_Types(t *testing.T) {
 	t.Parallel()
 	// Verify CompletionDiscovery has all expected fields
 	d := CompletionDiscovery{
-		PolecatName:    "nux",
-		AgentBeadID:    "gt-gastown-polecat-nux",
+		MinerName:    "nux",
+		AgentBeadID:    "gt-excavation-miner-nux",
 		ExitType:       "COMPLETED",
 		IssueID:        "gt-abc123",
 		MRID:           "gt-mr-xyz",
-		Branch:         "polecat/nux/gt-abc123@hash",
+		Branch:         "miner/nux/gt-abc123@hash",
 		MRFailed:       false,
 		CompletionTime: "2026-02-28T02:00:00Z",
 		Action:         "merge-ready-sent",
 		WispCreated:    "gt-wisp-123",
 	}
 
-	if d.PolecatName != "nux" {
-		t.Errorf("PolecatName = %q, want %q", d.PolecatName, "nux")
+	if d.MinerName != "nux" {
+		t.Errorf("MinerName = %q, want %q", d.MinerName, "nux")
 	}
 	if d.ExitType != "COMPLETED" {
 		t.Errorf("ExitType = %q, want %q", d.ExitType, "COMPLETED")
 	}
-	if d.Branch != "polecat/nux/gt-abc123@hash" {
+	if d.Branch != "miner/nux/gt-abc123@hash" {
 		t.Errorf("Branch = %q, want correct value", d.Branch)
 	}
 }
@@ -2207,13 +2207,13 @@ func TestDiscoverCompletions_NonexistentDir(t *testing.T) {
 	}
 }
 
-func TestDiscoverCompletions_EmptyPolecatsDir(t *testing.T) {
+func TestDiscoverCompletions_EmptyMinersDir(t *testing.T) {
 	t.Parallel()
-	// When polecats directory exists but is empty, should scan 0
+	// When miners directory exists but is empty, should scan 0
 	tmpDir := t.TempDir()
 	rigName := "testrig"
-	polecatsDir := filepath.Join(tmpDir, rigName, "polecats")
-	if err := os.MkdirAll(polecatsDir, 0755); err != nil {
+	minersDir := filepath.Join(tmpDir, rigName, "miners")
+	if err := os.MkdirAll(minersDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 	// Create workspace marker
@@ -2223,16 +2223,16 @@ func TestDiscoverCompletions_EmptyPolecatsDir(t *testing.T) {
 
 	result := DiscoverCompletions(DefaultBdCli(), tmpDir, rigName, nil)
 	if result.Checked != 0 {
-		t.Errorf("Checked = %d, want 0 for empty polecats dir", result.Checked)
+		t.Errorf("Checked = %d, want 0 for empty miners dir", result.Checked)
 	}
 }
 
 func TestDiscoverCompletions_NoCompletionMetadata(t *testing.T) {
-	// Polecat exists but agent bead has no completion metadata — should be skipped
+	// Miner exists but agent bead has no completion metadata — should be skipped
 	tmpDir := t.TempDir()
 	rigName := "testrig"
-	polecatsDir := filepath.Join(tmpDir, rigName, "polecats")
-	if err := os.MkdirAll(filepath.Join(polecatsDir, "nux"), 0755); err != nil {
+	minersDir := filepath.Join(tmpDir, rigName, "miners")
+	if err := os.MkdirAll(filepath.Join(minersDir, "nux"), 0755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(tmpDir, ".gt-root"), []byte(""), 0644); err != nil {
@@ -2243,7 +2243,7 @@ func TestDiscoverCompletions_NoCompletionMetadata(t *testing.T) {
 	bd, _ := mockBd(
 		func(args []string) (string, error) {
 			if len(args) > 0 && args[0] == "show" {
-				return `[{"id":"gt-testrig-polecat-nux","description":"Agent: testrig/polecats/nux\n\nrole_type: polecat\nrig: testrig\nagent_state: working\nhook_bead: gt-work-001","agent_state":"working","hook_bead":"gt-work-001"}]`, nil
+				return `[{"id":"gt-testrig-miner-nux","description":"Agent: testrig/miners/nux\n\nrole_type: miner\nrig: testrig\nagent_state: working\nhook_bead: gt-work-001","agent_state":"working","hook_bead":"gt-work-001"}]`, nil
 			}
 			return "[]", nil
 		},
@@ -2261,8 +2261,8 @@ func TestDiscoverCompletions_NoCompletionMetadata(t *testing.T) {
 
 func TestProcessDiscoveredCompletion_PhaseComplete(t *testing.T) {
 	t.Parallel()
-	payload := &PolecatDonePayload{
-		PolecatName: "nux",
+	payload := &MinerDonePayload{
+		MinerName: "nux",
 		Exit:        "PHASE_COMPLETE",
 	}
 	discovery := &CompletionDiscovery{}
@@ -2274,8 +2274,8 @@ func TestProcessDiscoveredCompletion_PhaseComplete(t *testing.T) {
 
 func TestProcessDiscoveredCompletion_NoMR(t *testing.T) {
 	t.Parallel()
-	payload := &PolecatDonePayload{
-		PolecatName: "nux",
+	payload := &MinerDonePayload{
+		MinerName: "nux",
 		Exit:        "COMPLETED",
 		MRFailed:    true, // Prevents fallback MR lookup
 	}
@@ -2288,8 +2288,8 @@ func TestProcessDiscoveredCompletion_NoMR(t *testing.T) {
 
 func TestProcessDiscoveredCompletion_EscalatedNoMR(t *testing.T) {
 	t.Parallel()
-	payload := &PolecatDonePayload{
-		PolecatName: "nux",
+	payload := &MinerDonePayload{
+		MinerName: "nux",
 		Exit:        "ESCALATED",
 	}
 	discovery := &CompletionDiscovery{}
@@ -2335,20 +2335,20 @@ func TestHeartbeatV2_ExitingStateSkipsZombieDetection(t *testing.T) {
 	// This replaces timer-based inference for v2 agents.
 
 	// Fresh heartbeat with state="exiting" → not a zombie
-	hb := &polecat.SessionHeartbeat{
+	hb := &miner.SessionHeartbeat{
 		Timestamp: time.Now(),
-		State:     polecat.HeartbeatExiting,
+		State:     miner.HeartbeatExiting,
 	}
-	stale := time.Since(hb.Timestamp) >= polecat.SessionHeartbeatStaleThreshold
+	stale := time.Since(hb.Timestamp) >= miner.SessionHeartbeatStaleThreshold
 	if stale {
 		t.Error("fresh heartbeat should not be stale")
 	}
-	if hb.EffectiveState() != polecat.HeartbeatExiting {
-		t.Errorf("EffectiveState() = %q, want %q", hb.EffectiveState(), polecat.HeartbeatExiting)
+	if hb.EffectiveState() != miner.HeartbeatExiting {
+		t.Errorf("EffectiveState() = %q, want %q", hb.EffectiveState(), miner.HeartbeatExiting)
 	}
 
 	// With a v2 exiting heartbeat, the witness should NOT check done-intent timers
-	shouldSkip := hb.IsV2() && !stale && hb.EffectiveState() == polecat.HeartbeatExiting
+	shouldSkip := hb.IsV2() && !stale && hb.EffectiveState() == miner.HeartbeatExiting
 	if !shouldSkip {
 		t.Error("expected v2 exiting heartbeat to skip zombie detection")
 	}
@@ -2358,17 +2358,17 @@ func TestHeartbeatV2_StuckStateEscalates(t *testing.T) {
 	t.Parallel()
 	// Agent self-reports "stuck" via heartbeat v2.
 	// The witness should escalate (not restart — agent is alive).
-	hb := &polecat.SessionHeartbeat{
+	hb := &miner.SessionHeartbeat{
 		Timestamp: time.Now(),
-		State:     polecat.HeartbeatStuck,
+		State:     miner.HeartbeatStuck,
 		Context:   "blocked on auth issue",
 	}
-	stale := time.Since(hb.Timestamp) >= polecat.SessionHeartbeatStaleThreshold
+	stale := time.Since(hb.Timestamp) >= miner.SessionHeartbeatStaleThreshold
 	if stale {
 		t.Error("fresh heartbeat should not be stale")
 	}
 
-	shouldEscalate := hb.IsV2() && !stale && hb.EffectiveState() == polecat.HeartbeatStuck
+	shouldEscalate := hb.IsV2() && !stale && hb.EffectiveState() == miner.HeartbeatStuck
 	if !shouldEscalate {
 		t.Error("expected v2 stuck heartbeat to trigger escalation")
 	}
@@ -2377,12 +2377,12 @@ func TestHeartbeatV2_StuckStateEscalates(t *testing.T) {
 func TestHeartbeatV2_WorkingStateHealthy(t *testing.T) {
 	t.Parallel()
 	// Agent heartbeats "working" — healthy, not a zombie.
-	hb := &polecat.SessionHeartbeat{
+	hb := &miner.SessionHeartbeat{
 		Timestamp: time.Now(),
-		State:     polecat.HeartbeatWorking,
+		State:     miner.HeartbeatWorking,
 	}
-	stale := time.Since(hb.Timestamp) >= polecat.SessionHeartbeatStaleThreshold
-	shouldSkip := hb.IsV2() && !stale && (hb.EffectiveState() == polecat.HeartbeatWorking || hb.EffectiveState() == polecat.HeartbeatIdle)
+	stale := time.Since(hb.Timestamp) >= miner.SessionHeartbeatStaleThreshold
+	shouldSkip := hb.IsV2() && !stale && (hb.EffectiveState() == miner.HeartbeatWorking || hb.EffectiveState() == miner.HeartbeatIdle)
 	if !shouldSkip {
 		t.Error("expected v2 working heartbeat to skip zombie detection")
 	}
@@ -2390,12 +2390,12 @@ func TestHeartbeatV2_WorkingStateHealthy(t *testing.T) {
 
 func TestHeartbeatV2_IdleStateHealthy(t *testing.T) {
 	t.Parallel()
-	hb := &polecat.SessionHeartbeat{
+	hb := &miner.SessionHeartbeat{
 		Timestamp: time.Now(),
-		State:     polecat.HeartbeatIdle,
+		State:     miner.HeartbeatIdle,
 	}
-	stale := time.Since(hb.Timestamp) >= polecat.SessionHeartbeatStaleThreshold
-	shouldSkip := hb.IsV2() && !stale && (hb.EffectiveState() == polecat.HeartbeatWorking || hb.EffectiveState() == polecat.HeartbeatIdle)
+	stale := time.Since(hb.Timestamp) >= miner.SessionHeartbeatStaleThreshold
+	shouldSkip := hb.IsV2() && !stale && (hb.EffectiveState() == miner.HeartbeatWorking || hb.EffectiveState() == miner.HeartbeatIdle)
 	if !shouldSkip {
 		t.Error("expected v2 idle heartbeat to skip zombie detection")
 	}
@@ -2404,11 +2404,11 @@ func TestHeartbeatV2_IdleStateHealthy(t *testing.T) {
 func TestHeartbeatV2_StaleHeartbeatFallsThrough(t *testing.T) {
 	t.Parallel()
 	// Stale v2 heartbeat (agent died) → fall through to legacy detection.
-	hb := &polecat.SessionHeartbeat{
+	hb := &miner.SessionHeartbeat{
 		Timestamp: time.Now().Add(-10 * time.Minute), // 10min old → stale
-		State:     polecat.HeartbeatWorking,
+		State:     miner.HeartbeatWorking,
 	}
-	stale := time.Since(hb.Timestamp) >= polecat.SessionHeartbeatStaleThreshold
+	stale := time.Since(hb.Timestamp) >= miner.SessionHeartbeatStaleThreshold
 	if !stale {
 		t.Error("10-minute-old heartbeat should be stale")
 	}
@@ -2423,7 +2423,7 @@ func TestHeartbeatV2_StaleHeartbeatFallsThrough(t *testing.T) {
 func TestHeartbeatV2_V1FallsThrough(t *testing.T) {
 	t.Parallel()
 	// v1 heartbeat (no state field) → fall through to legacy detection.
-	hb := &polecat.SessionHeartbeat{
+	hb := &miner.SessionHeartbeat{
 		Timestamp: time.Now(),
 		// No State field → v1
 	}
@@ -2442,11 +2442,11 @@ func TestHeartbeatV2_DeadSessionFreshHeartbeatRace(t *testing.T) {
 	t.Parallel()
 	// Dead session but fresh heartbeat → possible race (session just restarted).
 	// Should skip zombie detection to avoid killing a newly-started session.
-	hb := &polecat.SessionHeartbeat{
+	hb := &miner.SessionHeartbeat{
 		Timestamp: time.Now(),
-		State:     polecat.HeartbeatWorking,
+		State:     miner.HeartbeatWorking,
 	}
-	stale := time.Since(hb.Timestamp) >= polecat.SessionHeartbeatStaleThreshold
+	stale := time.Since(hb.Timestamp) >= miner.SessionHeartbeatStaleThreshold
 	sessionDead := true
 
 	// Fresh heartbeat + dead session → skip (race condition)
@@ -2506,9 +2506,9 @@ func TestSubmittedStillRunningCandidate(t *testing.T) {
 			MRID:          "gt-mr-123",
 		},
 	}
-	staleHB := &polecat.SessionHeartbeat{
+	staleHB := &miner.SessionHeartbeat{
 		Timestamp: time.Now().Add(-10 * time.Minute),
-		State:     polecat.HeartbeatWorking,
+		State:     miner.HeartbeatWorking,
 	}
 
 	age, ok := isSubmittedStillRunningCandidate(baseSnap, staleHB, config.DefaultWitnessHeartbeatStartupGrace)
@@ -2525,12 +2525,12 @@ func TestSubmittedStillRunningCandidate(t *testing.T) {
 	idleSnap := *baseSnap
 	idleSnap.AgentState = string(beads.AgentStateIdle)
 	if _, ok := isSubmittedStillRunningCandidate(&idleSnap, staleHB, config.DefaultWitnessHeartbeatStartupGrace); ok {
-		t.Error("normal idle polecats with submitted MR metadata must not be treated as submitted still-running")
+		t.Error("normal idle miners with submitted MR metadata must not be treated as submitted still-running")
 	}
 
-	freshHB := &polecat.SessionHeartbeat{
+	freshHB := &miner.SessionHeartbeat{
 		Timestamp: time.Now(),
-		State:     polecat.HeartbeatWorking,
+		State:     miner.HeartbeatWorking,
 	}
 	if _, ok := isSubmittedStillRunningCandidate(baseSnap, freshHB, config.DefaultWitnessHeartbeatStartupGrace); ok {
 		t.Error("fresh heartbeat must not be treated as submitted still-running")
@@ -2597,10 +2597,10 @@ func TestZombieSubmittedStillRunning_Classification(t *testing.T) {
 func TestNotifyRefineryMergeReady_EmitsChannelEvent(t *testing.T) {
 	// Create a fake town root with the workspace marker so workspace.Find recognizes it
 	townRoot := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "mayor", "town.json"), []byte("{}"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte("{}"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -2687,15 +2687,15 @@ func TestCherryHasUnmergedCommits(t *testing.T) {
 }
 
 // TestHandleZombieRestart_SkipsWhenBranchAlreadyMerged verifies the aa-apw fix:
-// when a stopped polecat's branch work is already merged to origin/main (e.g.,
+// when a stopped miner's branch work is already merged to origin/main (e.g.,
 // via squash-merge), the witness must NOT restart the session — restarting
-// would let the polecat re-push its pre-squash HEAD and create a duplicate MR.
-// Instead the polecat is archived.
+// would let the miner re-push its pre-squash HEAD and create a duplicate MR.
+// Instead the miner is archived.
 //
 // Not parallel: overrides the package-level verifyBranchAlreadyMerged var.
 func TestHandleZombieRestart_SkipsWhenBranchAlreadyMerged(t *testing.T) {
 	oldVerify := verifyBranchAlreadyMerged
-	verifyBranchAlreadyMerged = func(workDir, rigName, polecatName string) (bool, error) {
+	verifyBranchAlreadyMerged = func(workDir, rigName, minerName string) (bool, error) {
 		return true, nil
 	}
 	t.Cleanup(func() { verifyBranchAlreadyMerged = oldVerify })
@@ -2705,7 +2705,7 @@ func TestHandleZombieRestart_SkipsWhenBranchAlreadyMerged(t *testing.T) {
 		func(args []string) error { return nil },
 	)
 
-	z := &ZombieResult{PolecatName: "scavenger", HookBead: "ma-poc.4"}
+	z := &ZombieResult{MinerName: "scavenger", HookBead: "ma-poc.4"}
 	handleZombieRestart(bd, t.TempDir(), "testrig", "scavenger", "ma-poc.4", "has_unpushed", z)
 
 	// Action must reflect the archive decision; must NOT be a "restarted*" action.
@@ -2713,7 +2713,7 @@ func TestHandleZombieRestart_SkipsWhenBranchAlreadyMerged(t *testing.T) {
 		t.Errorf("action = %q, want it to mention work-already-merged (aa-apw)", z.Action)
 	}
 	if strings.HasPrefix(z.Action, "restarted") || strings.HasPrefix(z.Action, "restart-") {
-		t.Errorf("action = %q, polecat must not be restarted when work is already merged", z.Action)
+		t.Errorf("action = %q, miner must not be restarted when work is already merged", z.Action)
 	}
 }
 
@@ -2724,7 +2724,7 @@ func TestHandleZombieRestart_SkipsWhenBranchAlreadyMerged(t *testing.T) {
 // Not parallel: overrides the package-level verifyBranchAlreadyMerged var.
 func TestHandleZombieRestart_RestartsWhenBranchNotMerged(t *testing.T) {
 	oldVerify := verifyBranchAlreadyMerged
-	verifyBranchAlreadyMerged = func(workDir, rigName, polecatName string) (bool, error) {
+	verifyBranchAlreadyMerged = func(workDir, rigName, minerName string) (bool, error) {
 		return false, nil
 	}
 	t.Cleanup(func() { verifyBranchAlreadyMerged = oldVerify })
@@ -2734,7 +2734,7 @@ func TestHandleZombieRestart_RestartsWhenBranchNotMerged(t *testing.T) {
 		func(args []string) error { return nil },
 	)
 
-	z := &ZombieResult{PolecatName: "scavenger", HookBead: "ma-poc.4"}
+	z := &ZombieResult{MinerName: "scavenger", HookBead: "ma-poc.4"}
 	handleZombieRestart(bd, t.TempDir(), "testrig", "scavenger", "ma-poc.4", "clean", z)
 
 	// Should NOT take the archive path.

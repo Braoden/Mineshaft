@@ -76,7 +76,7 @@ func (f *Formula) ValidateTemplateVariables() error {
 		allText.WriteString("\n")
 	}
 
-	// Legs (convoy)
+	// Legs (minecart)
 	for _, leg := range f.Legs {
 		allText.WriteString(leg.Title)
 		allText.WriteString("\n")

@@ -5,33 +5,33 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/polecat"
-	"github.com/steveyegge/gastown/internal/rig"
+	"github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/miner"
+	"github.com/steveyegge/excavation/internal/rig"
 )
 
 func stubUncommittedWorkCheckDeps(
 	t *testing.T,
-	listFn func(*rig.Rig) ([]*polecat.Polecat, error),
+	listFn func(*rig.Rig) ([]*miner.Miner, error),
 	checkFn func(string) (*git.UncommittedWorkStatus, error),
 	isTTYFn func() bool,
 	promptFn func(string) bool,
 ) {
 	t.Helper()
 
-	oldList := listPolecatsForWorkCheck
-	oldCheck := checkPolecatWorkStatus
+	oldList := listMinersForWorkCheck
+	oldCheck := checkMinerWorkStatus
 	oldIsTTY := isStdinTerminal
 	oldPrompt := promptYesNoUnsafeProceed
 
-	listPolecatsForWorkCheck = listFn
-	checkPolecatWorkStatus = checkFn
+	listMinersForWorkCheck = listFn
+	checkMinerWorkStatus = checkFn
 	isStdinTerminal = isTTYFn
 	promptYesNoUnsafeProceed = promptFn
 
 	t.Cleanup(func() {
-		listPolecatsForWorkCheck = oldList
-		checkPolecatWorkStatus = oldCheck
+		listMinersForWorkCheck = oldList
+		checkMinerWorkStatus = oldCheck
 		isStdinTerminal = oldIsTTY
 		promptYesNoUnsafeProceed = oldPrompt
 	})
@@ -47,7 +47,7 @@ func testRig() *rig.Rig {
 func TestCheckUncommittedWork_ListErrorBlocksWithoutForce(t *testing.T) {
 	stubUncommittedWorkCheckDeps(
 		t,
-		func(*rig.Rig) ([]*polecat.Polecat, error) {
+		func(*rig.Rig) ([]*miner.Miner, error) {
 			return nil, errors.New("list failed")
 		},
 		func(string) (*git.UncommittedWorkStatus, error) {
@@ -67,9 +67,9 @@ func TestCheckUncommittedWork_ListErrorBlocksWithoutForce(t *testing.T) {
 	})
 
 	if proceed {
-		t.Fatal("expected proceed=false when polecat listing fails without --force")
+		t.Fatal("expected proceed=false when miner listing fails without --force")
 	}
-	if !strings.Contains(output, "Could not check polecats for uncommitted work") {
+	if !strings.Contains(output, "Could not check miners for uncommitted work") {
 		t.Fatalf("expected list-error warning, got: %q", output)
 	}
 	if !strings.Contains(output, "--force") || !strings.Contains(output, "--nuclear") {
@@ -80,7 +80,7 @@ func TestCheckUncommittedWork_ListErrorBlocksWithoutForce(t *testing.T) {
 func TestCheckUncommittedWork_ListErrorForceTTYPrompts(t *testing.T) {
 	stubUncommittedWorkCheckDeps(
 		t,
-		func(*rig.Rig) ([]*polecat.Polecat, error) {
+		func(*rig.Rig) ([]*miner.Miner, error) {
 			return nil, errors.New("list failed")
 		},
 		func(string) (*git.UncommittedWorkStatus, error) {
@@ -102,11 +102,11 @@ func TestCheckUncommittedWork_ListErrorForceTTYPrompts(t *testing.T) {
 	}
 }
 
-func TestCheckUncommittedWork_PolecatStatusErrorBlocks(t *testing.T) {
+func TestCheckUncommittedWork_MinerStatusErrorBlocks(t *testing.T) {
 	stubUncommittedWorkCheckDeps(
 		t,
-		func(*rig.Rig) ([]*polecat.Polecat, error) {
-			return []*polecat.Polecat{
+		func(*rig.Rig) ([]*miner.Miner, error) {
+			return []*miner.Miner{
 				{Name: "alpha", ClonePath: "/tmp/alpha"},
 			}, nil
 		},
@@ -126,21 +126,21 @@ func TestCheckUncommittedWork_PolecatStatusErrorBlocks(t *testing.T) {
 	})
 
 	if proceed {
-		t.Fatal("expected proceed=false when polecat status check fails")
+		t.Fatal("expected proceed=false when miner status check fails")
 	}
 	if !strings.Contains(output, "Could not verify uncommitted work for") {
 		t.Fatalf("expected status-check error warning, got: %q", output)
 	}
 	if !strings.Contains(output, "alpha") {
-		t.Fatalf("expected polecat name in warning, got: %q", output)
+		t.Fatalf("expected miner name in warning, got: %q", output)
 	}
 }
 
 func TestCheckUncommittedWork_DirtyForceNonTTYBlocks(t *testing.T) {
 	stubUncommittedWorkCheckDeps(
 		t,
-		func(*rig.Rig) ([]*polecat.Polecat, error) {
-			return []*polecat.Polecat{
+		func(*rig.Rig) ([]*miner.Miner, error) {
+			return []*miner.Miner{
 				{Name: "alpha", ClonePath: "/tmp/alpha"},
 			}, nil
 		},
@@ -173,8 +173,8 @@ func TestCheckUncommittedWork_DirtyForceNonTTYBlocks(t *testing.T) {
 func TestCheckUncommittedWork_DirtyForceTTYPrompts(t *testing.T) {
 	stubUncommittedWorkCheckDeps(
 		t,
-		func(*rig.Rig) ([]*polecat.Polecat, error) {
-			return []*polecat.Polecat{
+		func(*rig.Rig) ([]*miner.Miner, error) {
+			return []*miner.Miner{
 				{Name: "alpha", ClonePath: "/tmp/alpha"},
 			}, nil
 		},

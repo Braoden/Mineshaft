@@ -3,7 +3,7 @@ package quota
 import (
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/config"
 )
 
 func TestPlanRotation_NoLimitedSessions(t *testing.T) {
@@ -227,14 +227,14 @@ func TestPlanRotation_MultipleLimitedSessions(t *testing.T) {
 	setupTestRegistry(t)
 
 	tmux := &mockTmux{
-		sessions: []string{"hq-mayor", "gt-crew-bear", "gt-crew-wolf"},
+		sessions: []string{"hq-overseer", "gt-crew-bear", "gt-crew-wolf"},
 		paneContent: map[string]string{
-			"hq-mayor":     "You've hit your limit · resets 7pm",
+			"hq-overseer":     "You've hit your limit · resets 7pm",
 			"gt-crew-bear": "You've hit your limit · resets 7pm",
 			"gt-crew-wolf": "working fine...",
 		},
 		envVars: map[string]map[string]string{
-			"hq-mayor":     {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
+			"hq-overseer":     {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
 			"gt-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
 			"gt-crew-wolf": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/beta"},
 		},
@@ -295,13 +295,13 @@ func TestPlanRotation_ConfigDirGrouping_SameDir(t *testing.T) {
 
 	// Two sessions on the same config dir (alpha) should produce one config dir swap.
 	tmux := &mockTmux{
-		sessions: []string{"hq-mayor", "gt-crew-bear"},
+		sessions: []string{"hq-overseer", "gt-crew-bear"},
 		paneContent: map[string]string{
-			"hq-mayor":     "You've hit your limit · resets 7pm",
+			"hq-overseer":     "You've hit your limit · resets 7pm",
 			"gt-crew-bear": "You've hit your limit · resets 7pm",
 		},
 		envVars: map[string]map[string]string{
-			"hq-mayor":     {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
+			"hq-overseer":     {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
 			"gt-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
 		},
 	}
@@ -366,13 +366,13 @@ func TestPlanRotation_ConfigDirGrouping_DifferentDirs(t *testing.T) {
 
 	// Two sessions on different config dirs should produce separate swap entries.
 	tmux := &mockTmux{
-		sessions: []string{"hq-mayor", "gt-crew-bear"},
+		sessions: []string{"hq-overseer", "gt-crew-bear"},
 		paneContent: map[string]string{
-			"hq-mayor":     "You've hit your limit · resets 7pm",
+			"hq-overseer":     "You've hit your limit · resets 7pm",
 			"gt-crew-bear": "You've hit your limit · resets 7pm",
 		},
 		envVars: map[string]map[string]string{
-			"hq-mayor":     {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
+			"hq-overseer":     {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
 			"gt-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/beta"},
 		},
 	}

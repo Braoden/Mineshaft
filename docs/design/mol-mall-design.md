@@ -2,22 +2,22 @@
 
 > **Status: Vision document** — Phase 1 (local formulas) exists. Phases 2-5 (registry, publishing, federation) are not implemented.
 
-> A marketplace for Gas Town formulas
+> A marketplace for Excavation Site formulas
 
 ## Vision
 
-**Mol Mall** is a registry for sharing formulas across Gas Town installations. Think npm for molecules, or Terraform Registry for workflows.
+**Mol Mall** is a registry for sharing formulas across Excavation Site installations. Think npm for molecules, or Terraform Registry for workflows.
 
 ```
-"Cook a formula, sling it to a polecat, the witness watches, refinery merges."
+"Cook a formula, sling it to a miner, the witness watches, refinery merges."
 
 What if you could browse a mall of formulas, install one, and immediately
-have your polecats executing world-class workflows?
+have your miners executing world-class workflows?
 ```
 
 ### The Network Effect
 
-A well-designed formula for "code review" or "security audit" or "deploy to K8s" can spread across thousands of Gas Town installations. Each adoption means:
+A well-designed formula for "code review" or "security audit" or "deploy to K8s" can spread across thousands of Excavation Site installations. Each adoption means:
 - More agents executing proven workflows
 - More structured, trackable work output
 - Better capability routing (agents with track records on a formula get similar work)
@@ -31,9 +31,9 @@ A well-designed formula for "code review" or "security audit" or "deploy to K8s"
 │                      MOL MALL REGISTRIES                         │
 └─────────────────────────────────────────────────────────────────┘
 
-PUBLIC REGISTRY (molmall.gastown.io)
+PUBLIC REGISTRY (molmall.excavation.io)
 ├── Community formulas (MIT licensed)
-├── Official Gas Town formulas (blessed)
+├── Official Excavation Site formulas (blessed)
 ├── Verified publisher formulas
 └── Open contribution model
 
@@ -53,14 +53,14 @@ FEDERATED REGISTRY (HOP future)
 ### URI Scheme
 
 ```
-hop://molmall.gastown.io/formulas/mol-polecat-work@4.0.0
+hop://molmall.excavation.io/formulas/mol-miner-work@4.0.0
        └──────────────────┘         └──────────────┘ └───┘
            registry host              formula name   version
 
 # Short forms
-mol-polecat-work                    # Default registry, latest version
-mol-polecat-work@4                  # Major version
-mol-polecat-work@4.0.0              # Exact version
+mol-miner-work                    # Default registry, latest version
+mol-miner-work@4                  # Major version
+mol-miner-work@4.0.0              # Exact version
 @acme/mol-deploy                    # Scoped to publisher
 hop://acme.corp/formulas/mol-deploy # Full HOP URI
 ```
@@ -80,21 +80,21 @@ GET /formulas
     - offset: int
   Response:
     formulas:
-      - name: mol-polecat-work
+      - name: mol-miner-work
         version: 4.0.0
-        description: "Full polecat work lifecycle..."
-        author: steve@gastown.io
+        description: "Full miner work lifecycle..."
+        author: steve@excavation.io
         downloads: 12543
         capabilities: [go, testing, code-review]
 
 GET /formulas/{name}
   # Get formula metadata
   Response:
-    name: mol-polecat-work
+    name: mol-miner-work
     versions: [4.0.0, 3.2.1, 3.2.0, ...]
     latest: 4.0.0
-    author: steve@gastown.io
-    repository: https://github.com/steveyegge/gastown
+    author: steve@excavation.io
+    repository: https://github.com/steveyegge/excavation
     license: MIT
     capabilities:
       primary: [go, testing]
@@ -107,7 +107,7 @@ GET /formulas/{name}
 GET /formulas/{name}/{version}
   # Get specific version
   Response:
-    name: mol-polecat-work
+    name: mol-miner-work
     version: 4.0.0
     checksum: sha256:abc123...
     signature: <optional PGP signature>
@@ -136,8 +136,8 @@ GET /formulas/{name}/{version}/download
 Most formulas are single `.formula.toml` files:
 
 ```bash
-gt formula install mol-polecat-code-review
-# Downloads mol-polecat-code-review.formula.toml to ~/gt/.beads/formulas/
+gt formula install mol-miner-code-review
+# Downloads mol-miner-code-review.formula.toml to ~/gt/.beads/formulas/
 ```
 
 ### Complex Case: Formula Bundle
@@ -173,37 +173,37 @@ gt formula install mol-deploy-k8s
 ### Basic Install
 
 ```bash
-$ gt formula install mol-polecat-code-review
+$ gt formula install mol-miner-code-review
 
-Resolving mol-polecat-code-review...
-  Registry: molmall.gastown.io
+Resolving mol-miner-code-review...
+  Registry: molmall.excavation.io
   Version:  1.2.0 (latest)
-  Author:   steve@gastown.io
+  Author:   steve@excavation.io
   Skills:   code-review, security
 
 Downloading... ████████████████████ 100%
 Verifying checksum... ✓
 
-Installed to: ~/gt/.beads/formulas/mol-polecat-code-review.formula.toml
+Installed to: ~/gt/.beads/formulas/mol-miner-code-review.formula.toml
 ```
 
 ### Version Pinning
 
 ```bash
-$ gt formula install mol-polecat-work@4.0.0
+$ gt formula install mol-miner-work@4.0.0
 
-Installing mol-polecat-work@4.0.0 (pinned)...
+Installing mol-miner-work@4.0.0 (pinned)...
 ✓ Installed
 
 $ gt formula list --installed
-  mol-polecat-work           4.0.0   [pinned]
-  mol-polecat-code-review    1.2.0   [latest]
+  mol-miner-work           4.0.0   [pinned]
+  mol-miner-code-review    1.2.0   [latest]
 ```
 
 ### Upgrade Flow
 
 ```bash
-$ gt formula upgrade mol-polecat-code-review
+$ gt formula upgrade mol-miner-code-review
 
 Checking for updates...
   Current: 1.2.0
@@ -216,7 +216,7 @@ Changelog for 1.3.0:
 Upgrade? [y/N] y
 
 Downloading... ✓
-Installed: mol-polecat-code-review@1.3.0
+Installed: mol-miner-code-review@1.3.0
 ```
 
 ### Lock File
@@ -226,19 +226,19 @@ Installed: mol-polecat-code-review@1.3.0
 {
   "version": 1,
   "formulas": {
-    "mol-polecat-work": {
+    "mol-miner-work": {
       "version": "4.0.0",
       "pinned": true,
       "checksum": "sha256:abc123...",
       "installed_at": "2026-01-10T00:00:00Z",
-      "source": "hop://molmall.gastown.io/formulas/mol-polecat-work@4.0.0"
+      "source": "hop://molmall.excavation.io/formulas/mol-miner-work@4.0.0"
     },
-    "mol-polecat-code-review": {
+    "mol-miner-code-review": {
       "version": "1.3.0",
       "pinned": false,
       "checksum": "sha256:def456...",
       "installed_at": "2026-01-10T12:00:00Z",
-      "source": "hop://molmall.gastown.io/formulas/mol-polecat-code-review@1.3.0"
+      "source": "hop://molmall.excavation.io/formulas/mol-miner-code-review@1.3.0"
     }
   }
 }
@@ -253,21 +253,21 @@ $ gt formula publish --init
 
 Setting up Mol Mall publishing...
 
-1. Create account at https://molmall.gastown.io/signup
-2. Generate API token at https://molmall.gastown.io/settings/tokens
+1. Create account at https://molmall.excavation.io/signup
+2. Generate API token at https://molmall.excavation.io/settings/tokens
 3. Run: gt formula login
 
 $ gt formula login
 Token: ********
-Logged in as: steve@gastown.io
+Logged in as: steve@excavation.io
 ```
 
 ### Publishing
 
 ```bash
-$ gt formula publish mol-polecat-work
+$ gt formula publish mol-miner-work
 
-Publishing mol-polecat-work...
+Publishing mol-miner-work...
 
 Pre-flight checks:
   ✓ formula.toml is valid
@@ -275,12 +275,12 @@ Pre-flight checks:
   ✓ Required fields present (name, version, description)
   ✓ Skills declared
 
-Publish to molmall.gastown.io? [y/N] y
+Publish to molmall.excavation.io? [y/N] y
 
 Uploading... ✓
-Published: hop://molmall.gastown.io/formulas/mol-polecat-work@4.0.0
+Published: hop://molmall.excavation.io/formulas/mol-miner-work@4.0.0
 
-View at: https://molmall.gastown.io/formulas/mol-polecat-work
+View at: https://molmall.excavation.io/formulas/mol-miner-work
 ```
 
 ### Verification Levels
@@ -301,7 +301,7 @@ VERIFIED PUBLISHER
   Higher search ranking
 
 OFFICIAL
-  Maintained by Gas Town team
+  Maintained by Excavation Site team
   Displayed with 🏛️ badge
   Included in embedded defaults
 
@@ -346,11 +346,11 @@ Formulas matching capabilities: security, go
 
 ### Agent Accountability
 
-When a polecat completes a formula, the execution is tracked:
+When a miner completes a formula, the execution is tracked:
 
 ```
-Polecat: beads/amber
-Formula: mol-polecat-code-review@1.3.0
+Miner: beads/amber
+Formula: mol-miner-code-review@1.3.0
 Completed: 2026-01-10T15:30:00Z
 Capabilities exercised:
   - code-review (primary)
@@ -376,7 +376,7 @@ registries:
     priority: 1  # Check first
 
   - name: public
-    url: https://molmall.gastown.io
+    url: https://molmall.excavation.io
     auth: none
     priority: 2  # Fallback
 ```
@@ -389,7 +389,7 @@ docker run -d \
   -p 8080:8080 \
   -v /data/formulas:/formulas \
   -e AUTH_PROVIDER=oidc \
-  gastown/molmall-registry:latest
+  excavation/molmall-registry:latest
 
 # Configuration
 MOLMALL_STORAGE=s3://bucket/formulas
@@ -408,7 +408,7 @@ $ gt formula search "deploy kubernetes" --federated
 
 Searching across federated registries...
 
-  molmall.gastown.io:
+  molmall.excavation.io:
     mol-deploy-k8s           v3.0.0   🏛️ Official
 
   molmall.acme.corp:
@@ -444,13 +444,13 @@ See [Formula Resolution](formula-resolution.md) for the implemented three-tier r
 ### Phase 2: Manual Sharing
 
 - Formula export/import
-- `gt formula export mol-polecat-work > mol-polecat-work.formula.toml`
-- `gt formula import < mol-polecat-work.formula.toml`
+- `gt formula export mol-miner-work > mol-miner-work.formula.toml`
+- `gt formula import < mol-miner-work.formula.toml`
 - Lock file format
 
 ### Phase 3: Public Registry
 
-- molmall.gastown.io launch
+- molmall.excavation.io launch
 - `gt formula install` from registry
 - `gt formula publish` flow
 - Basic search and browse

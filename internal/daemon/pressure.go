@@ -6,8 +6,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 // PressureResult holds the outcome of a pressure check.
@@ -35,9 +35,9 @@ type PressureResult struct {
 //  2. Memory pressure: available memory vs minimum threshold.
 //  3. Session concurrency: active tmux sessions vs maximum cap.
 //
-// Infrastructure agents (deacon, witness, mayor) should NOT be gated by
+// Infrastructure agents (supervisor, witness, overseer) should NOT be gated by
 // pressure—they are the monitoring/recovery layer. Only gate:
-//   - Polecats (dispatchQueuedWork, crash restarts)
+//   - Miners (dispatchQueuedWork, crash restarts)
 //   - Refineries
 //   - Dogs
 func (d *Daemon) checkPressure(_ string) PressureResult {
@@ -90,7 +90,7 @@ func (d *Daemon) checkPressure(_ string) PressureResult {
 	return result
 }
 
-// countAgentSessions counts active tmux sessions that belong to Gas Town agents.
+// countAgentSessions counts active tmux sessions that belong to Excavation Site agents.
 // Uses the town's tmux socket so it only counts sessions for this town.
 func (d *Daemon) countAgentSessions() int {
 	t := tmux.NewTmux()
@@ -108,16 +108,16 @@ func (d *Daemon) countAgentSessions() int {
 	return count
 }
 
-// isAgentSession returns true if the tmux session name looks like a Gas Town agent.
-// Agent sessions use prefixed names (e.g., "hq-mayor", "rig-witness", "rig-polecat-foo").
+// isAgentSession returns true if the tmux session name looks like a Excavation Site agent.
+// Agent sessions use prefixed names (e.g., "hq-overseer", "rig-witness", "rig-miner-foo").
 func isAgentSession(name string) bool {
 	// Agent sessions contain role markers
 	for _, marker := range []string{
-		constants.RoleMayor,
+		constants.RoleOverseer,
 		constants.RoleWitness,
 		constants.RoleRefinery,
-		constants.RolePolecat,
-		constants.RoleDeacon,
+		constants.RoleMiner,
+		constants.RoleSupervisor,
 		constants.RoleCrew,
 		"boot",
 		"dog",

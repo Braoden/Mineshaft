@@ -8,7 +8,7 @@ import (
 )
 
 // TestutilSymlinkCheck verifies that crew and refinery/rig internal/testutil/
-// directories are symlinks to the canonical mayor/rig/internal/testutil/.
+// directories are symlinks to the canonical overseer/rig/internal/testutil/.
 // This prevents identical-copies drift across rig clones.
 type TestutilSymlinkCheck struct {
 	FixableCheck
@@ -27,7 +27,7 @@ func NewTestutilSymlinkCheck() *TestutilSymlinkCheck {
 		FixableCheck: FixableCheck{
 			BaseCheck: BaseCheck{
 				CheckName:        "testutil-symlink",
-				CheckDescription: "Verify testutil dirs are symlinks to mayor/rig canonical copy",
+				CheckDescription: "Verify testutil dirs are symlinks to overseer/rig canonical copy",
 				CheckCategory:    CategoryRig,
 			},
 		},
@@ -36,7 +36,7 @@ func NewTestutilSymlinkCheck() *TestutilSymlinkCheck {
 
 // canonicalTestutilPath returns the path to the canonical testutil directory.
 func canonicalTestutilPath(rigPath string) string {
-	return filepath.Join(rigPath, "mayor", "rig", "internal", "testutil")
+	return filepath.Join(rigPath, "overseer", "rig", "internal", "testutil")
 }
 
 // Run checks if crew and refinery/rig internal/testutil are proper symlinks.
@@ -56,8 +56,8 @@ func (c *TestutilSymlinkCheck) Run(ctx *CheckContext) *CheckResult {
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusWarning,
-			Message: "No mayor/rig/internal/testutil/ found (canonical source missing)",
-			FixHint: "Ensure mayor/rig clone is set up with internal/testutil/",
+			Message: "No overseer/rig/internal/testutil/ found (canonical source missing)",
+			FixHint: "Ensure overseer/rig clone is set up with internal/testutil/",
 		}
 	}
 
@@ -143,7 +143,7 @@ func (c *TestutilSymlinkCheck) checkSymlink(testutilPath, canonicalResolved, lab
 		c.issues = append(c.issues, symlinkIssue{
 			dir:     label,
 			path:    testutilPath,
-			problem: "real directory (should be symlink to mayor/rig canonical copy)",
+			problem: "real directory (should be symlink to overseer/rig canonical copy)",
 		})
 		return
 	}

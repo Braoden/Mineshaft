@@ -8,19 +8,19 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/config"
 )
 
-// setupTestTown creates a minimal Gas Town workspace for testing.
+// setupTestTown creates a minimal Excavation Site workspace for testing.
 func setupTestTownForConfig(t *testing.T) string {
 	t.Helper()
 
 	townRoot := t.TempDir()
 
-	// Create mayor directory with required files
-	mayorDir := filepath.Join(townRoot, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+	// Create overseer directory with required files
+	overseerDir := filepath.Join(townRoot, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
+		t.Fatalf("mkdir overseer: %v", err)
 	}
 
 	// Create town.json
@@ -31,7 +31,7 @@ func setupTestTownForConfig(t *testing.T) string {
 		PublicName: "Test Town",
 		CreatedAt:  time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
 	}
-	townConfigPath := filepath.Join(mayorDir, "town.json")
+	townConfigPath := filepath.Join(overseerDir, "town.json")
 	if err := config.SaveTownConfig(townConfigPath, townConfig); err != nil {
 		t.Fatalf("save town.json: %v", err)
 	}
@@ -41,7 +41,7 @@ func setupTestTownForConfig(t *testing.T) string {
 		Version: 1,
 		Rigs:    make(map[string]config.RigEntry),
 	}
-	rigsPath := filepath.Join(mayorDir, "rigs.json")
+	rigsPath := filepath.Join(overseerDir, "rigs.json")
 	if err := config.SaveRigsConfig(rigsPath, rigsConfig); err != nil {
 		t.Fatalf("save rigs.json: %v", err)
 	}
@@ -722,7 +722,7 @@ func TestConfigDefaultAgentList(t *testing.T) {
 }
 
 func TestConfigSetGet(t *testing.T) {
-	t.Run("set and get convoy.notify_on_complete", func(t *testing.T) {
+	t.Run("set and get minecart.notify_on_complete", func(t *testing.T) {
 		townRoot := setupTestTownForConfig(t)
 		settingsPath := config.TownSettingsPath(townRoot)
 
@@ -732,9 +732,9 @@ func TestConfigSetGet(t *testing.T) {
 			t.Fatalf("chdir: %v", err)
 		}
 
-		// Set convoy.notify_on_complete to true
+		// Set minecart.notify_on_complete to true
 		cmd := &cobra.Command{}
-		err := runConfigSet(cmd, []string{"convoy.notify_on_complete", "true"})
+		err := runConfigSet(cmd, []string{"minecart.notify_on_complete", "true"})
 		if err != nil {
 			t.Fatalf("runConfigSet failed: %v", err)
 		}
@@ -744,21 +744,21 @@ func TestConfigSetGet(t *testing.T) {
 		if err != nil {
 			t.Fatalf("load settings: %v", err)
 		}
-		if loaded.Convoy == nil {
-			t.Fatal("Convoy config is nil after set")
+		if loaded.Minecart == nil {
+			t.Fatal("Minecart config is nil after set")
 		}
-		if !loaded.Convoy.NotifyOnComplete {
+		if !loaded.Minecart.NotifyOnComplete {
 			t.Error("NotifyOnComplete should be true")
 		}
 
 		// Get the value back
-		err = runConfigGet(cmd, []string{"convoy.notify_on_complete"})
+		err = runConfigGet(cmd, []string{"minecart.notify_on_complete"})
 		if err != nil {
 			t.Fatalf("runConfigGet failed: %v", err)
 		}
 
 		// Set back to false
-		err = runConfigSet(cmd, []string{"convoy.notify_on_complete", "false"})
+		err = runConfigSet(cmd, []string{"minecart.notify_on_complete", "false"})
 		if err != nil {
 			t.Fatalf("runConfigSet(false) failed: %v", err)
 		}
@@ -767,7 +767,7 @@ func TestConfigSetGet(t *testing.T) {
 		if err != nil {
 			t.Fatalf("load settings: %v", err)
 		}
-		if loaded.Convoy != nil && loaded.Convoy.NotifyOnComplete {
+		if loaded.Minecart != nil && loaded.Minecart.NotifyOnComplete {
 			t.Error("NotifyOnComplete should be false after setting to false")
 		}
 	})
@@ -854,7 +854,7 @@ func TestConfigSetGet(t *testing.T) {
 		}
 	})
 
-	t.Run("convoy.notify_on_complete rejects non-boolean", func(t *testing.T) {
+	t.Run("minecart.notify_on_complete rejects non-boolean", func(t *testing.T) {
 		townRoot := setupTestTownForConfig(t)
 
 		originalWd, _ := os.Getwd()
@@ -864,7 +864,7 @@ func TestConfigSetGet(t *testing.T) {
 		}
 
 		cmd := &cobra.Command{}
-		err := runConfigSet(cmd, []string{"convoy.notify_on_complete", "maybe"})
+		err := runConfigSet(cmd, []string{"minecart.notify_on_complete", "maybe"})
 		if err == nil {
 			t.Fatal("expected error for non-boolean value")
 		}
@@ -885,7 +885,7 @@ func TestSchedulerConfigSetZero(t *testing.T) {
 	}
 
 	cmd := &cobra.Command{}
-	if err := runConfigSet(cmd, []string{"scheduler.max_polecats", "0"}); err != nil {
+	if err := runConfigSet(cmd, []string{"scheduler.max_miners", "0"}); err != nil {
 		t.Fatalf("runConfigSet failed: %v", err)
 	}
 
@@ -893,22 +893,22 @@ func TestSchedulerConfigSetZero(t *testing.T) {
 	if err != nil {
 		t.Fatalf("load settings: %v", err)
 	}
-	if loaded.Scheduler == nil || loaded.Scheduler.MaxPolecats == nil {
-		t.Fatal("scheduler.max_polecats was not persisted")
+	if loaded.Scheduler == nil || loaded.Scheduler.MaxMiners == nil {
+		t.Fatal("scheduler.max_miners was not persisted")
 	}
-	if got := loaded.Scheduler.GetMaxPolecats(); got != 0 {
-		t.Fatalf("persisted scheduler.max_polecats = %d, want 0", got)
+	if got := loaded.Scheduler.GetMaxMiners(); got != 0 {
+		t.Fatalf("persisted scheduler.max_miners = %d, want 0", got)
 	}
 
 	var getErr error
 	out := captureStdout(t, func() {
-		getErr = runConfigGet(cmd, []string{"scheduler.max_polecats"})
+		getErr = runConfigGet(cmd, []string{"scheduler.max_miners"})
 	})
 	if getErr != nil {
 		t.Fatalf("runConfigGet failed: %v", getErr)
 	}
 	if strings.TrimSpace(out) != "0" {
-		t.Fatalf("config get scheduler.max_polecats = %q, want 0", strings.TrimSpace(out))
+		t.Fatalf("config get scheduler.max_miners = %q, want 0", strings.TrimSpace(out))
 	}
 }
 

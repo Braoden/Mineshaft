@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/util"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/util"
 )
 
 // EventSource represents a source of events
@@ -177,7 +177,7 @@ func parseSimpleLine(line string) *Event {
 
 // parseBeadContext extracts actor/rig/role from a bead ID
 // Uses canonical naming: prefix-rig-role-name
-// Examples: gt-gastown-crew-joe, gt-gastown-witness, gt-mayor
+// Examples: gt-excavation-crew-joe, gt-excavation-witness, gt-overseer
 func parseBeadContext(beadID string) (actor, rig, role string) {
 	if beadID == "" {
 		return
@@ -194,7 +194,7 @@ func parseBeadContext(beadID string) (actor, rig, role string) {
 
 	// Build actor identifier
 	switch parsedRole {
-	case constants.RoleMayor, constants.RoleDeacon:
+	case constants.RoleOverseer, constants.RoleSupervisor:
 		actor = parsedRole
 	case constants.RoleWitness, constants.RoleRefinery:
 		actor = parsedRole
@@ -204,7 +204,7 @@ func parseBeadContext(beadID string) (actor, rig, role string) {
 		} else {
 			actor = parsedRole
 		}
-	case constants.RolePolecat:
+	case constants.RoleMiner:
 		if name != "" {
 			actor = parsedRig + "/" + name
 		} else {
@@ -371,9 +371,9 @@ func parseGtEventLine(line string) *Event {
 		}
 	}
 	if rig == "" && ge.Actor != "" {
-		// Extract rig from actor like "gastown/witness"
+		// Extract rig from actor like "excavation/witness"
 		parts := strings.Split(ge.Actor, "/")
-		if len(parts) > 0 && parts[0] != constants.RoleMayor && parts[0] != constants.RoleDeacon {
+		if len(parts) > 0 && parts[0] != constants.RoleOverseer && parts[0] != constants.RoleSupervisor {
 			rig = parts[0]
 		}
 	}
@@ -389,11 +389,11 @@ func parseGtEventLine(line string) *Event {
 			case constants.RoleWitness, constants.RoleRefinery:
 				role = parts[len(parts)-1]
 			default:
-				// Could be polecat name - check second-to-last part
+				// Could be miner name - check second-to-last part
 				if len(parts) >= 2 {
 					switch parts[len(parts)-2] {
-					case "polecats":
-						role = constants.RolePolecat
+					case "miners":
+						role = constants.RoleMiner
 					case constants.RoleCrew:
 						role = constants.RoleCrew
 					}
@@ -423,46 +423,46 @@ func parseGtEventLine(line string) *Event {
 func buildEventMessage(eventType string, payload map[string]interface{}) string {
 	switch eventType {
 	case "patrol_started":
-		count := getPayloadInt(payload, "polecat_count")
+		count := getPayloadInt(payload, "miner_count")
 		if msg := getPayloadString(payload, "message"); msg != "" {
 			return msg
 		}
 		if count > 0 {
-			return fmt.Sprintf("patrol started (%d polecats)", count)
+			return fmt.Sprintf("patrol started (%d miners)", count)
 		}
 		return "patrol started"
 
 	case "patrol_complete":
-		count := getPayloadInt(payload, "polecat_count")
+		count := getPayloadInt(payload, "miner_count")
 		if msg := getPayloadString(payload, "message"); msg != "" {
 			return msg
 		}
 		if count > 0 {
-			return fmt.Sprintf("patrol complete (%d polecats)", count)
+			return fmt.Sprintf("patrol complete (%d miners)", count)
 		}
 		return "patrol complete"
 
-	case "polecat_checked":
-		polecat := getPayloadString(payload, "polecat")
+	case "miner_checked":
+		miner := getPayloadString(payload, "miner")
 		status := getPayloadString(payload, "status")
-		if polecat != "" {
+		if miner != "" {
 			if status != "" {
-				return fmt.Sprintf("checked %s (%s)", polecat, status)
+				return fmt.Sprintf("checked %s (%s)", miner, status)
 			}
-			return fmt.Sprintf("checked %s", polecat)
+			return fmt.Sprintf("checked %s", miner)
 		}
-		return "polecat checked"
+		return "miner checked"
 
-	case "polecat_nudged":
-		polecat := getPayloadString(payload, "polecat")
+	case "miner_nudged":
+		miner := getPayloadString(payload, "miner")
 		reason := getPayloadString(payload, "reason")
-		if polecat != "" {
+		if miner != "" {
 			if reason != "" {
-				return fmt.Sprintf("nudged %s: %s", polecat, reason)
+				return fmt.Sprintf("nudged %s: %s", miner, reason)
 			}
-			return fmt.Sprintf("nudged %s", polecat)
+			return fmt.Sprintf("nudged %s", miner)
 		}
-		return "polecat nudged"
+		return "miner nudged"
 
 	case "escalation_sent":
 		target := getPayloadString(payload, "target")

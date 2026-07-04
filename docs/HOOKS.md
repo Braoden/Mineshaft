@@ -1,25 +1,25 @@
-# Gas Town Hooks Management
+# Excavation Site Hooks Management
 
-Centralized hook management for Gas Town workspaces.
+Centralized hook management for Excavation Site workspaces.
 
 ## Overview
 
-Gas Town manages context injection for all supported agents. The mechanism varies by agent:
+Excavation Site manages context injection for all supported agents. The mechanism varies by agent:
 
 | Agent | Hook mechanism | Managed file |
 |-------|---------------|-------------|
 | Claude Code, Gemini | `settings.json` lifecycle hooks | `<role>/.claude/settings.json` |
-| OpenCode | JS plugin | `workDir/.opencode/plugins/gastown.js` |
-| GitHub Copilot | JSON lifecycle hooks | `workDir/.github/hooks/gastown.json` |
+| OpenCode | JS plugin | `workDir/.opencode/plugins/excavation.js` |
+| GitHub Copilot | JSON lifecycle hooks | `workDir/.github/hooks/excavation.json` |
 | Codex, others | Startup nudge fallback | *(no file — nudge only)* |
 
 > **GitHub Copilot note**: Copilot CLI supports full executable lifecycle hooks
 > (`sessionStart`, `userPromptSubmitted`, `preToolUse`, `sessionEnd`) via
-> `.github/hooks/gastown.json`. This is the same lifecycle coverage as Claude Code,
+> `.github/hooks/excavation.json`. This is the same lifecycle coverage as Claude Code,
 > delivered in Copilot's JSON format rather than Claude's `settings.json` format.
 > The `gt hooks` commands below apply to Claude Code (and Gemini) only.
 
-Gas Town manages `.claude/settings.json` files in gastown-managed parent directories
+Excavation Site manages `.claude/settings.json` files in excavation-managed parent directories
 and passes them to Claude Code via the `--settings` flag. This keeps customer repos
 clean while providing role-specific hook configuration. The hooks system provides
 a single source of truth with a base config and per-role/per-rig overrides.
@@ -31,16 +31,16 @@ a single source of truth with a base config and per-role/per-rig overrides.
 ~/.gt/hooks-overrides/
   ├── crew.json                    ← Override for all crew workers
   ├── witness.json                 ← Override for all witnesses
-  ├── gastown__crew.json           ← Override for gastown crew specifically
+  ├── excavation__crew.json           ← Override for excavation crew specifically
   └── ...
 ```
 
 **Merge strategy:** `base → role → rig+role` (more specific wins)
 
-For a target like `gastown/crew`:
+For a target like `excavation/crew`:
 1. Start with base config
 2. Apply `crew` override (if exists)
-3. Apply `gastown/crew` override (if exists)
+3. Apply `excavation/crew` override (if exists)
 
 ## Generated targets
 
@@ -51,11 +51,11 @@ Each rig generates settings in shared parent directories (not per-worktree):
 | Crew (shared) | `<rig>/crew/.claude/settings.json` | `<rig>/crew` |
 | Witness | `<rig>/witness/.claude/settings.json` | `<rig>/witness` |
 | Refinery | `<rig>/refinery/.claude/settings.json` | `<rig>/refinery` |
-| Polecats (shared) | `<rig>/polecats/.claude/settings.json` | `<rig>/polecats` |
+| Miners (shared) | `<rig>/miners/.claude/settings.json` | `<rig>/miners` |
 
 Town-level targets:
-- `mayor/.claude/settings.json` (key: `mayor`)
-- `deacon/.claude/settings.json` (key: `deacon`)
+- `overseer/.claude/settings.json` (key: `overseer`)
+- `supervisor/.claude/settings.json` (key: `supervisor`)
 
 Settings are passed to Claude Code via `--settings <path>`, which loads them as
 a separate priority tier that merges additively with project settings.
@@ -96,7 +96,7 @@ Edit overrides for a specific role or rig+role.
 
 ```bash
 gt hooks override crew              # Edit crew override
-gt hooks override gastown/witness   # Edit gastown witness override
+gt hooks override excavation/witness   # Edit excavation witness override
 gt hooks override crew --show       # Print current override
 ```
 
@@ -148,20 +148,20 @@ The registry (`~/gt/hooks/registry.toml`) defines 7 hooks, 5 enabled by default:
 
 | Hook | Event | Enabled | Roles |
 |---|---|---|---|
-| pr-workflow-guard | PreToolUse | Yes | crew, polecat |
+| pr-workflow-guard | PreToolUse | Yes | crew, miner |
 | session-prime | SessionStart | Yes | all |
 | pre-compact-prime | PreCompact | Yes | all |
 | mail-check | UserPromptSubmit | Yes | all |
-| costs-record | Stop | Yes | crew, polecat, witness, refinery |
-| clone-guard | PreToolUse | No | crew, polecat |
-| dangerous-command-guard | PreToolUse | Yes | crew, polecat |
+| costs-record | Stop | Yes | crew, miner, witness, refinery |
+| clone-guard | PreToolUse | No | crew, miner |
+| dangerous-command-guard | PreToolUse | Yes | crew, miner |
 
 Additional hooks exist in settings.json files but are not yet in the registry:
 
-- **bd init guard** (gastown/crew, beads/crew) - blocks `bd init*` inside `.beads/`
-- **mol patrol guards** (gastown roles) - blocks persistent patrol molecules
-- **tmux clear-history** (gastown root) - clears terminal history on session start
-- **SessionStart .beads/ validation** (gastown/crew, beads/crew) - validates CWD
+- **bd init guard** (excavation/crew, beads/crew) - blocks `bd init*` inside `.beads/`
+- **mol patrol guards** (excavation roles) - blocks persistent patrol molecules
+- **tmux clear-history** (excavation root) - clears terminal history on session start
+- **SessionStart .beads/ validation** (excavation/crew, beads/crew) - validates CWD
 
 ## Design Decision: Registry as Catalog vs Source of Truth
 
@@ -194,8 +194,8 @@ Additional hooks exist in settings.json files but are not yet in the registry:
    with empty hooks list), but there is no convenience wrapper yet.
 
 4. **Private hooks (settings.local.json)** — Claude Code supports
-   `settings.local.json` for personal overrides. Gas Town doesn't manage
-   these yet. Low priority since Gas Town is primarily agent-operated.
+   `settings.local.json` for personal overrides. Excavation Site doesn't manage
+   these yet. Low priority since Excavation Site is primarily agent-operated.
 
 5. **Hook ordering** — No action needed currently. The merge chain
    (base -> override) produces deterministic order, and per-matcher merge
@@ -206,7 +206,7 @@ Additional hooks exist in settings.json files but are not yet in the registry:
 ### `gt rig add`
 
 When a new rig is created, hooks are automatically synced for all the
-new rig's targets (crew, witness, refinery, polecats).
+new rig's targets (crew, witness, refinery, miners).
 
 ### `gt doctor`
 

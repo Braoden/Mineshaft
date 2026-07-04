@@ -1,12 +1,12 @@
 # Cursor / `cursor-agent` in this repo
 
-This directory holds **Cursor-specific** onboarding. For general Gas Town agent instructions, see [`../AGENTS.md`](../AGENTS.md) and [`../CLAUDE.md`](../CLAUDE.md).
+This directory holds **Cursor-specific** onboarding. For general Excavation Site agent instructions, see [`../AGENTS.md`](../AGENTS.md) and [`../CLAUDE.md`](../CLAUDE.md).
 
 ## Prerequisites
 
-1. **Build `gt`** from the repo root (`make build` or `go install ./cmd/gt`). Gas Town expects a working `gt` on your `PATH` for hooks and crew workflows.
+1. **Build `gt`** from the repo root (`make build` or `go install ./cmd/gt`). Excavation Site expects a working `gt` on your `PATH` for hooks and crew workflows.
 2. **`bd` (beads)** — issue DB under `.beads/`; see [`../CONTRIBUTING.md`](../CONTRIBUTING.md) for workflow.
-3. **Cursor Agent CLI** — install the `cursor-agent` binary per Cursor’s documentation. The Gas Town preset name is **`cursor`**; the process is typically **`cursor-agent`** (an **`agent`** symlink may exist).
+3. **Cursor Agent CLI** — install the `cursor-agent` binary per Cursor’s documentation. The Excavation Site preset name is **`cursor`**; the process is typically **`cursor-agent`** (an **`agent`** symlink may exist).
 
 ## Preset vs binary
 
@@ -19,7 +19,7 @@ Hooks are installed under **`.cursor/hooks.json`** when roles are provisioned (`
 
 ## Skills
 
-See [`.cursor/skills/gas-town-cursor/SKILL.md`](skills/gas-town-cursor/SKILL.md) for agent-facing workflow (gt, resume, pointers to code).
+See [`.cursor/skills/excavation-site-cursor/SKILL.md`](skills/excavation-site-cursor/SKILL.md) for agent-facing workflow (gt, resume, pointers to code).
 
 ## Beads / plan tracking
 

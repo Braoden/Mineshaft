@@ -11,10 +11,10 @@ import (
 	"testing"
 )
 
-// TestCreateBatchConvoy_CreatesOneConvoyTrackingAllBeads verifies that
-// createBatchConvoy creates exactly one convoy and adds tracking deps for all
-// provided bead IDs. This is the core contract of the N-convoys → 1-convoy change.
-func TestCreateBatchConvoy_CreatesOneConvoyTrackingAllBeads(t *testing.T) {
+// TestCreateBatchMinecart_CreatesOneMinecartTrackingAllBeads verifies that
+// createBatchMinecart creates exactly one minecart and adds tracking deps for all
+// provided bead IDs. This is the core contract of the N-minecarts → 1-minecart change.
+func TestCreateBatchMinecart_CreatesOneMinecartTrackingAllBeads(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows — shell stubs")
 	}
@@ -22,8 +22,8 @@ func TestCreateBatchConvoy_CreatesOneConvoyTrackingAllBeads(t *testing.T) {
 	townRoot := t.TempDir()
 
 	// Minimal workspace marker so workspace.FindFromCwd() succeeds.
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 	townBeads := filepath.Join(townRoot, ".beads")
 	if err := os.MkdirAll(townBeads, 0755); err != nil {
@@ -73,14 +73,14 @@ exit 0
 	}
 
 	beadIDs := []string{"gt-aaa", "gt-bbb", "gt-ccc"}
-	convoyID, _, err := createBatchConvoy(beadIDs, "gastown", false, "mr", "")
+	minecartID, _, err := createBatchMinecart(beadIDs, "excavation", false, "mr", "")
 	if err != nil {
-		t.Fatalf("createBatchConvoy() error: %v", err)
+		t.Fatalf("createBatchMinecart() error: %v", err)
 	}
 
-	// Convoy ID must have hq-cv- prefix
-	if !strings.HasPrefix(convoyID, "hq-cv-") {
-		t.Errorf("convoy ID %q should have hq-cv- prefix", convoyID)
+	// Minecart ID must have hq-cv- prefix
+	if !strings.HasPrefix(minecartID, "hq-cv-") {
+		t.Errorf("minecart ID %q should have hq-cv- prefix", minecartID)
 	}
 
 	// Parse logged commands
@@ -119,19 +119,19 @@ exit 0
 	}
 	for _, beadID := range beadIDs {
 		if !trackedBeads[beadID] {
-			t.Errorf("bead %q was not tracked in convoy\nLog:\n%s", beadID, string(logBytes))
+			t.Errorf("bead %q was not tracked in minecart\nLog:\n%s", beadID, string(logBytes))
 		}
 	}
 }
 
-// TestCreateBatchConvoy_OwnedLabel verifies that --owned flag adds gt:owned label.
-func TestCreateBatchConvoy_OwnedLabel(t *testing.T) {
+// TestCreateBatchMinecart_OwnedLabel verifies that --owned flag adds gt:owned label.
+func TestCreateBatchMinecart_OwnedLabel(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows")
 	}
 
 	townRoot := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
@@ -167,9 +167,9 @@ exit 0
 		t.Fatalf("chdir: %v", err)
 	}
 
-	_, _, err = createBatchConvoy([]string{"gt-aaa"}, "gastown", true, "direct", "")
+	_, _, err = createBatchMinecart([]string{"gt-aaa"}, "excavation", true, "direct", "")
 	if err != nil {
-		t.Fatalf("createBatchConvoy() error: %v", err)
+		t.Fatalf("createBatchMinecart() error: %v", err)
 	}
 
 	logBytes, err := os.ReadFile(logPath)
@@ -178,20 +178,20 @@ exit 0
 	}
 	logContent := string(logBytes)
 
-	if !strings.Contains(logContent, "--labels=gt:convoy,gt:owned") {
-		t.Errorf("create command missing convoy/owned labels in log:\n%q", logContent)
+	if !strings.Contains(logContent, "--labels=gt:minecart,gt:owned") {
+		t.Errorf("create command missing minecart/owned labels in log:\n%q", logContent)
 	}
 }
 
-// TestCreateBatchConvoy_MergeStrategyInDescription verifies that merge strategy
-// is included in the convoy description.
-func TestCreateBatchConvoy_MergeStrategyInDescription(t *testing.T) {
+// TestCreateBatchMinecart_MergeStrategyInDescription verifies that merge strategy
+// is included in the minecart description.
+func TestCreateBatchMinecart_MergeStrategyInDescription(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows")
 	}
 
 	townRoot := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
@@ -226,9 +226,9 @@ exit 0
 		t.Fatalf("chdir: %v", err)
 	}
 
-	_, _, err = createBatchConvoy([]string{"gt-aaa", "gt-bbb"}, "gastown", false, "direct", "")
+	_, _, err = createBatchMinecart([]string{"gt-aaa", "gt-bbb"}, "excavation", false, "direct", "")
 	if err != nil {
-		t.Fatalf("createBatchConvoy() error: %v", err)
+		t.Fatalf("createBatchMinecart() error: %v", err)
 	}
 
 	logBytes, err := os.ReadFile(logPath)
@@ -244,10 +244,10 @@ exit 0
 	}
 }
 
-// TestCreateBatchConvoy_EmptyBeadIDs verifies that createBatchConvoy returns
+// TestCreateBatchMinecart_EmptyBeadIDs verifies that createBatchMinecart returns
 // an error when called with no bead IDs.
-func TestCreateBatchConvoy_EmptyBeadIDs(t *testing.T) {
-	_, _, err := createBatchConvoy(nil, "gastown", false, "", "")
+func TestCreateBatchMinecart_EmptyBeadIDs(t *testing.T) {
+	_, _, err := createBatchMinecart(nil, "excavation", false, "", "")
 	if err == nil {
 		t.Fatal("expected error for empty bead IDs, got nil")
 	}
@@ -256,15 +256,15 @@ func TestCreateBatchConvoy_EmptyBeadIDs(t *testing.T) {
 	}
 }
 
-// TestCreateBatchConvoy_TitleIncludesBeadCount verifies that the convoy title
+// TestCreateBatchMinecart_TitleIncludesBeadCount verifies that the minecart title
 // includes the bead count and rig name.
-func TestCreateBatchConvoy_TitleIncludesBeadCount(t *testing.T) {
+func TestCreateBatchMinecart_TitleIncludesBeadCount(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows")
 	}
 
 	townRoot := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
@@ -296,9 +296,9 @@ exit 0
 		t.Fatalf("chdir: %v", err)
 	}
 
-	_, _, err = createBatchConvoy([]string{"gt-a", "gt-b", "gt-c", "gt-d", "gt-e"}, "myrig", false, "", "")
+	_, _, err = createBatchMinecart([]string{"gt-a", "gt-b", "gt-c", "gt-d", "gt-e"}, "myrig", false, "", "")
 	if err != nil {
-		t.Fatalf("createBatchConvoy() error: %v", err)
+		t.Fatalf("createBatchMinecart() error: %v", err)
 	}
 
 	logBytes, err := os.ReadFile(logPath)
@@ -319,16 +319,16 @@ exit 0
 	}
 }
 
-// TestCreateBatchConvoy_PartialDepFailureContinues verifies that if a dep add
-// fails for one bead, the convoy is still created and other beads are tracked.
+// TestCreateBatchMinecart_PartialDepFailureContinues verifies that if a dep add
+// fails for one bead, the minecart is still created and other beads are tracked.
 // Partial tracking is better than no tracking.
-func TestCreateBatchConvoy_PartialDepFailureContinues(t *testing.T) {
+func TestCreateBatchMinecart_PartialDepFailureContinues(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows")
 	}
 
 	townRoot := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
@@ -382,16 +382,16 @@ exit 0
 	}
 
 	// Should NOT return error — partial tracking is acceptable
-	convoyID, tracked, err := createBatchConvoy([]string{"gt-aaa", "gt-bbb", "gt-ccc"}, "gastown", false, "", "")
+	minecartID, tracked, err := createBatchMinecart([]string{"gt-aaa", "gt-bbb", "gt-ccc"}, "excavation", false, "", "")
 	if err != nil {
-		t.Fatalf("createBatchConvoy() should not error on partial dep failure: %v", err)
+		t.Fatalf("createBatchMinecart() should not error on partial dep failure: %v", err)
 	}
 	// Verify tracked set excludes the failed bead
 	if len(tracked) != 2 {
 		t.Errorf("expected 2 tracked beads (gt-bbb failed), got %d: %v", len(tracked), tracked)
 	}
-	if convoyID == "" {
-		t.Fatal("convoy ID should not be empty")
+	if minecartID == "" {
+		t.Fatal("minecart ID should not be empty")
 	}
 
 	logBytes, err := os.ReadFile(logPath)
@@ -412,29 +412,29 @@ exit 0
 	}
 }
 
-// TestBatchSling_ConvoyIDStoredInBeadFieldUpdates verifies that the batch convoy ID
-// is stored in each bead's fieldUpdates.ConvoyID. This was a bug where ConvoyID and
+// TestBatchSling_MinecartIDStoredInBeadFieldUpdates verifies that the batch minecart ID
+// is stored in each bead's fieldUpdates.MinecartID. This was a bug where MinecartID and
 // MergeStrategy were never persisted in batch mode.
-func TestBatchSling_ConvoyIDStoredInBeadFieldUpdates(t *testing.T) {
-	// This test verifies the data flow: batchConvoyID is set in fieldUpdates.ConvoyID
+func TestBatchSling_MinecartIDStoredInBeadFieldUpdates(t *testing.T) {
+	// This test verifies the data flow: batchMinecartID is set in fieldUpdates.MinecartID
 	// for each bead in the loop. We test this at the unit level by checking the
 	// beadFieldUpdates struct construction.
 
-	// Simulate the logic from runBatchSling: convoy created before loop,
-	// ConvoyID stored in each bead's fieldUpdates.
-	batchConvoyID := "hq-cv-test1"
+	// Simulate the logic from runBatchSling: minecart created before loop,
+	// MinecartID stored in each bead's fieldUpdates.
+	batchMinecartID := "hq-cv-test1"
 	mergeStrategy := "direct"
 
 	beadIDs := []string{"gt-aaa", "gt-bbb", "gt-ccc"}
 	for _, beadID := range beadIDs {
 		fieldUpdates := beadFieldUpdates{
 			Dispatcher:    "test-actor",
-			ConvoyID:      batchConvoyID,
+			MinecartID:      batchMinecartID,
 			MergeStrategy: mergeStrategy,
 		}
 
-		if fieldUpdates.ConvoyID != batchConvoyID {
-			t.Errorf("bead %s: ConvoyID = %q, want %q", beadID, fieldUpdates.ConvoyID, batchConvoyID)
+		if fieldUpdates.MinecartID != batchMinecartID {
+			t.Errorf("bead %s: MinecartID = %q, want %q", beadID, fieldUpdates.MinecartID, batchMinecartID)
 		}
 		if fieldUpdates.MergeStrategy != mergeStrategy {
 			t.Errorf("bead %s: MergeStrategy = %q, want %q", beadID, fieldUpdates.MergeStrategy, mergeStrategy)
@@ -443,8 +443,8 @@ func TestBatchSling_ConvoyIDStoredInBeadFieldUpdates(t *testing.T) {
 }
 
 // TestBatchSling_ErrorsOnAlreadyTrackedBead verifies that batch sling refuses
-// to proceed when any bead is already tracked by another convoy, and that
-// isTrackedByConvoy correctly identifies the conflict.
+// to proceed when any bead is already tracked by another minecart, and that
+// isTrackedByMinecart correctly identifies the conflict.
 func TestBatchSling_ErrorsOnAlreadyTrackedBead(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows")
@@ -452,7 +452,7 @@ func TestBatchSling_ErrorsOnAlreadyTrackedBead(t *testing.T) {
 
 	binDir := t.TempDir()
 
-	// Stub bd: dep list returns a tracking convoy for gt-bbb (already tracked),
+	// Stub bd: dep list returns a tracking minecart for gt-bbb (already tracked),
 	// empty results for everything else.
 	bdScript := `#!/bin/sh
 cmd="$1"
@@ -476,10 +476,10 @@ case "$cmd" in
     exit 0
     ;;
   show)
-    # bdShow: return convoy details for isTrackedByConvoy check
+    # bdShow: return minecart details for isTrackedByMinecart check
     case "$1" in
       hq-cv-existing)
-        echo '[{"id":"hq-cv-existing","issue_type":"convoy","status":"open"}]'
+        echo '[{"id":"hq-cv-existing","issue_type":"minecart","status":"open"}]'
         ;;
       *)
         echo '[]'
@@ -491,7 +491,7 @@ case "$cmd" in
     sub="$1"; shift || true
     beadID="$1"
     if [ "$beadID" = "gt-bbb" ]; then
-      echo '[{"id":"hq-cv-existing","issue_type":"convoy","status":"open"}]'
+      echo '[{"id":"hq-cv-existing","issue_type":"minecart","status":"open"}]'
     else
       echo '[]'
     fi
@@ -510,7 +510,7 @@ exit 0
 	}
 
 	townRoot := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
 	townBeads := filepath.Join(townRoot, ".beads")
@@ -535,13 +535,13 @@ exit 0
 	beadIDs := []string{"gt-aaa", "gt-bbb", "gt-ccc"}
 	var conflictFound bool
 	for _, beadID := range beadIDs {
-		if existing := isTrackedByConvoy(beadID); existing != "" {
+		if existing := isTrackedByMinecart(beadID); existing != "" {
 			conflictFound = true
 			if beadID != "gt-bbb" {
-				t.Errorf("unexpected conflict for bead %s (convoy: %s)", beadID, existing)
+				t.Errorf("unexpected conflict for bead %s (minecart: %s)", beadID, existing)
 			}
 			if existing != "hq-cv-existing" {
-				t.Errorf("expected convoy hq-cv-existing, got %s", existing)
+				t.Errorf("expected minecart hq-cv-existing, got %s", existing)
 			}
 			break // runBatchSling errors on the first conflict
 		}
@@ -565,10 +565,10 @@ func TestAllBeadIDs_TrueWhenAllBeadIDs(t *testing.T) {
 		{"all beads", []string{"gt-abc", "gt-def", "gt-ghi"}, true},
 		{"mixed prefixes", []string{"gt-abc", "bd-def", "hq-ghi"}, true},
 		{"single bead", []string{"gt-abc"}, true},
-		{"last is rig name", []string{"gt-abc", "gt-def", "gastown"}, false},
+		{"last is rig name", []string{"gt-abc", "gt-def", "excavation"}, false},
 		{"empty list", []string{}, false},
-		{"contains path", []string{"gt-abc", "gastown/polecats/foo"}, false},
-		{"contains bare word no hyphen", []string{"gt-abc", "gastown"}, false},
+		{"contains path", []string{"gt-abc", "excavation/miners/foo"}, false},
+		{"contains bare word no hyphen", []string{"gt-abc", "excavation"}, false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -589,8 +589,8 @@ func TestResolveRigFromBeadIDs_AllSamePrefix(t *testing.T) {
 		t.Fatalf("mkdir: %v", err)
 	}
 
-	// Write routes.jsonl mapping gt- to gastown
-	routesContent := `{"prefix":"gt-","path":"gastown/.beads"}` + "\n"
+	// Write routes.jsonl mapping gt- to excavation
+	routesContent := `{"prefix":"gt-","path":"excavation/.beads"}` + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
@@ -599,8 +599,8 @@ func TestResolveRigFromBeadIDs_AllSamePrefix(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if rigName != "gastown" {
-		t.Errorf("rigName = %q, want %q", rigName, "gastown")
+	if rigName != "excavation" {
+		t.Errorf("rigName = %q, want %q", rigName, "excavation")
 	}
 }
 
@@ -613,7 +613,7 @@ func TestResolveRigFromBeadIDs_MixedPrefixes_Errors(t *testing.T) {
 		t.Fatalf("mkdir: %v", err)
 	}
 
-	routesContent := `{"prefix":"gt-","path":"gastown/.beads"}
+	routesContent := `{"prefix":"gt-","path":"excavation/.beads"}
 {"prefix":"bd-","path":"beads/.beads"}
 `
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
@@ -628,7 +628,7 @@ func TestResolveRigFromBeadIDs_MixedPrefixes_Errors(t *testing.T) {
 	if !strings.Contains(errMsg, "different rigs") {
 		t.Errorf("error should mention 'different rigs', got: %s", errMsg)
 	}
-	if !strings.Contains(errMsg, "gastown") || !strings.Contains(errMsg, "beads") {
+	if !strings.Contains(errMsg, "excavation") || !strings.Contains(errMsg, "beads") {
 		t.Errorf("error should mention both rig names, got: %s", errMsg)
 	}
 	if !strings.Contains(errMsg, "Options") {
@@ -646,7 +646,7 @@ func TestResolveRigFromBeadIDs_UnmappedPrefix_Errors(t *testing.T) {
 	}
 
 	// Only gt- is mapped; zz- is not
-	routesContent := `{"prefix":"gt-","path":"gastown/.beads"}` + "\n"
+	routesContent := `{"prefix":"gt-","path":"excavation/.beads"}` + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
@@ -689,9 +689,9 @@ func TestResolveRigFromBeadIDs_TownLevelPrefix_Errors(t *testing.T) {
 	}
 }
 
-// TestCloseConvoyPinsTownDatabaseUnderStaleEnv verifies convoy cleanup closes
+// TestCloseMinecartPinsTownDatabaseUnderStaleEnv verifies minecart cleanup closes
 // hq-cv-* beads through the town database even when ambient bd env points away.
-func TestCloseConvoyPinsTownDatabaseUnderStaleEnv(t *testing.T) {
+func TestCloseMinecartPinsTownDatabaseUnderStaleEnv(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows")
 	}
@@ -699,10 +699,10 @@ func TestCloseConvoyPinsTownDatabaseUnderStaleEnv(t *testing.T) {
 	binDir := t.TempDir()
 	townRoot := t.TempDir()
 
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "mayor", "town.json"), []byte(`{"type":"town","name":"test"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"type":"town","name":"test"}`), 0644); err != nil {
 		t.Fatalf("write town.json: %v", err)
 	}
 	townBeads := filepath.Join(townRoot, ".beads")
@@ -738,7 +738,7 @@ exit 0
 
 	t.Setenv("PATH", binDir+":"+os.Getenv("PATH"))
 	t.Setenv("BEADS_DIR", filepath.Join(townRoot, "wrong", ".beads"))
-	t.Setenv("BEADS_DOLT_SERVER_DATABASE", "gastown")
+	t.Setenv("BEADS_DOLT_SERVER_DATABASE", "excavation")
 	t.Setenv("BEADS_DB", filepath.Join(townRoot, "wrong.db"))
 	t.Setenv("BD_DB", filepath.Join(townRoot, "wrong.bd"))
 	t.Setenv("BEADS_DOLT_DATA_DIR", filepath.Join(townRoot, "wrong-data"))
@@ -751,12 +751,12 @@ exit 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
-	batchConvoyID := "hq-cv-cleanup-test"
-	closeConvoy(batchConvoyID, "all beads failed to sling")
+	batchMinecartID := "hq-cv-cleanup-test"
+	closeMinecart(batchMinecartID, "all beads failed to sling")
 
 	// Verify close was called
 	closeBytes, err := os.ReadFile(closeLogPath)
@@ -764,8 +764,8 @@ exit 0
 		t.Fatalf("close log not written: %v", err)
 	}
 	closeContent := string(closeBytes)
-	if !strings.Contains(closeContent, batchConvoyID) {
-		t.Errorf("close log should contain convoy ID %q:\n%s", batchConvoyID, closeContent)
+	if !strings.Contains(closeContent, batchMinecartID) {
+		t.Errorf("close log should contain minecart ID %q:\n%s", batchMinecartID, closeContent)
 	}
 	if !strings.Contains(closeContent, "all beads failed") {
 		t.Errorf("close log should contain failure reason:\n%s", closeContent)
@@ -826,20 +826,20 @@ func TestSlingGenerateShortID_Unique(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// ConvoyInfo.IsOwnedDirect tests
+// MinecartInfo.IsOwnedDirect tests
 // ---------------------------------------------------------------------------
 
-func TestConvoyInfo_IsOwnedDirect(t *testing.T) {
+func TestMinecartInfo_IsOwnedDirect(t *testing.T) {
 	cases := []struct {
 		name string
-		info *ConvoyInfo
+		info *MinecartInfo
 		want bool
 	}{
 		{"nil receiver", nil, false},
-		{"owned + direct", &ConvoyInfo{Owned: true, MergeStrategy: "direct"}, true},
-		{"owned + mr", &ConvoyInfo{Owned: true, MergeStrategy: "mr"}, false},
-		{"not owned + direct", &ConvoyInfo{Owned: false, MergeStrategy: "direct"}, false},
-		{"not owned + empty", &ConvoyInfo{Owned: false, MergeStrategy: ""}, false},
+		{"owned + direct", &MinecartInfo{Owned: true, MergeStrategy: "direct"}, true},
+		{"owned + mr", &MinecartInfo{Owned: true, MergeStrategy: "mr"}, false},
+		{"not owned + direct", &MinecartInfo{Owned: false, MergeStrategy: "direct"}, false},
+		{"not owned + empty", &MinecartInfo{Owned: false, MergeStrategy: ""}, false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -852,7 +852,7 @@ func TestConvoyInfo_IsOwnedDirect(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// createAutoConvoy tests
+// createAutoMinecart tests
 // ---------------------------------------------------------------------------
 
 // setupTownWithBdStub creates a minimal town workspace and installs a bd
@@ -861,8 +861,8 @@ func setupTownWithBdStub(t *testing.T, bdScript string) (townRoot, logPath strin
 	t.Helper()
 
 	townRoot = t.TempDir()
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
@@ -892,10 +892,10 @@ func setupTownWithBdStub(t *testing.T, bdScript string) (townRoot, logPath strin
 	return townRoot, logPath
 }
 
-// TestCreateAutoConvoy_BasicSuccess verifies that createAutoConvoy creates a
-// convoy with "Work: <title>" title, delegates tracking to the helper, and
+// TestCreateAutoMinecart_BasicSuccess verifies that createAutoMinecart creates a
+// minecart with "Work: <title>" title, delegates tracking to the helper, and
 // returns an hq-cv-* ID.
-func TestCreateAutoConvoy_BasicSuccess(t *testing.T) {
+func TestCreateAutoMinecart_BasicSuccess(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows")
 	}
@@ -913,23 +913,23 @@ exit 0
 		t.Fatalf("rewrite bd stub: %v", err)
 	}
 
-	var helperTownRoot, helperConvoyID, helperBeadID string
+	var helperTownRoot, helperMinecartID, helperBeadID string
 	oldAddTracking := addTrackingRelationFn
-	addTrackingRelationFn = func(townRoot, convoyID, issueID string) error {
+	addTrackingRelationFn = func(townRoot, minecartID, issueID string) error {
 		helperTownRoot = townRoot
-		helperConvoyID = convoyID
+		helperMinecartID = minecartID
 		helperBeadID = issueID
 		return nil
 	}
 	t.Cleanup(func() { addTrackingRelationFn = oldAddTracking })
 
-	convoyID, err := createAutoConvoy("gt-aaa", "Fix the widget", false, "mr", "")
+	minecartID, err := createAutoMinecart("gt-aaa", "Fix the widget", false, "mr", "")
 	if err != nil {
-		t.Fatalf("createAutoConvoy() error: %v", err)
+		t.Fatalf("createAutoMinecart() error: %v", err)
 	}
 
-	if !strings.HasPrefix(convoyID, "hq-cv-") {
-		t.Errorf("convoy ID %q should have hq-cv- prefix", convoyID)
+	if !strings.HasPrefix(minecartID, "hq-cv-") {
+		t.Errorf("minecart ID %q should have hq-cv- prefix", minecartID)
 	}
 
 	logBytes, err := os.ReadFile(logPath)
@@ -946,18 +946,18 @@ exit 0
 	if helperTownRoot != townRoot {
 		t.Errorf("tracking helper townRoot = %q, want %q", helperTownRoot, townRoot)
 	}
-	if helperConvoyID != convoyID {
-		t.Errorf("tracking helper convoyID = %q, want %q", helperConvoyID, convoyID)
+	if helperMinecartID != minecartID {
+		t.Errorf("tracking helper minecartID = %q, want %q", helperMinecartID, minecartID)
 	}
 	if helperBeadID != "gt-aaa" {
 		t.Errorf("tracking helper issueID = %q, want %q", helperBeadID, "gt-aaa")
 	}
 }
 
-// TestCreateAutoConvoy_FlagLikeTitleReturnsError verifies that a title starting
+// TestCreateAutoMinecart_FlagLikeTitleReturnsError verifies that a title starting
 // with "--" is rejected.
-func TestCreateAutoConvoy_FlagLikeTitleReturnsError(t *testing.T) {
-	_, err := createAutoConvoy("gt-aaa", "--verbose", false, "", "")
+func TestCreateAutoMinecart_FlagLikeTitleReturnsError(t *testing.T) {
+	_, err := createAutoMinecart("gt-aaa", "--verbose", false, "", "")
 	if err == nil {
 		t.Fatal("expected error for flag-like title, got nil")
 	}
@@ -966,8 +966,8 @@ func TestCreateAutoConvoy_FlagLikeTitleReturnsError(t *testing.T) {
 	}
 }
 
-// TestCreateAutoConvoy_OwnedLabel verifies that owned=true adds --labels=gt:owned.
-func TestCreateAutoConvoy_OwnedLabel(t *testing.T) {
+// TestCreateAutoMinecart_OwnedLabel verifies that owned=true adds --labels=gt:owned.
+func TestCreateAutoMinecart_OwnedLabel(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows")
 	}
@@ -984,26 +984,26 @@ exit 0
 		t.Fatalf("rewrite bd stub: %v", err)
 	}
 
-	_, err := createAutoConvoy("gt-aaa", "My task", true, "direct", "")
+	_, err := createAutoMinecart("gt-aaa", "My task", true, "direct", "")
 	if err != nil {
-		t.Fatalf("createAutoConvoy() error: %v", err)
+		t.Fatalf("createAutoMinecart() error: %v", err)
 	}
 
 	logBytes, err := os.ReadFile(logPath)
 	if err != nil {
 		t.Fatalf("read log: %v", err)
 	}
-	if !strings.Contains(string(logBytes), "--labels=gt:convoy,gt:owned") {
-		t.Errorf("create should include convoy/owned labels:\n%q", string(logBytes))
+	if !strings.Contains(string(logBytes), "--labels=gt:minecart,gt:owned") {
+		t.Errorf("create should include minecart/owned labels:\n%q", string(logBytes))
 	}
 }
 
-// TestCreateAutoConvoy_DepFailIsNonFatal verifies that when the dep add fails
-// (e.g., cross-rig bead), createAutoConvoy succeeds with a warning rather than
+// TestCreateAutoMinecart_DepFailIsNonFatal verifies that when the dep add fails
+// (e.g., cross-rig bead), createAutoMinecart succeeds with a warning rather than
 // returning an error. Tracking failure is non-fatal since commit 103b6aaa because
-// beads v0.62 removed cross-rig routing from bd dep add. The convoy still works
+// beads v0.62 removed cross-rig routing from bd dep add. The minecart still works
 // without the tracking dep — witness and daemon provide backup tracking.
-func TestCreateAutoConvoy_DepFailIsNonFatal(t *testing.T) {
+func TestCreateAutoMinecart_DepFailIsNonFatal(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows")
 	}
@@ -1032,15 +1032,15 @@ exit 0
 		t.Fatalf("rewrite bd stub: %v", err)
 	}
 
-	convoyID, err := createAutoConvoy("gt-aaa", "My task", false, "", "")
+	minecartID, err := createAutoMinecart("gt-aaa", "My task", false, "", "")
 	if err != nil {
 		t.Fatalf("expected no error (dep fail is non-fatal), got: %v", err)
 	}
-	if convoyID == "" {
-		t.Fatal("expected non-empty convoy ID")
+	if minecartID == "" {
+		t.Fatal("expected non-empty minecart ID")
 	}
 
-	// Verify create was called but close was NOT called (convoy is not orphaned)
+	// Verify create was called but close was NOT called (minecart is not orphaned)
 	logBytes, err := os.ReadFile(logPath)
 	if err != nil {
 		t.Fatalf("read log: %v", err)
@@ -1055,12 +1055,12 @@ exit 0
 }
 
 // ---------------------------------------------------------------------------
-// convoyTracksBead tests
+// minecartTracksBead tests
 // ---------------------------------------------------------------------------
 
-// TestConvoyTracksBead_ExactMatch verifies exact bead ID match.
+// TestMinecartTracksBead_ExactMatch verifies exact bead ID match.
 // Uses bd sql --json output format (depends_on_id column).
-func TestConvoyTracksBead_ExactMatch(t *testing.T) {
+func TestMinecartTracksBead_ExactMatch(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows")
 	}
@@ -1079,17 +1079,17 @@ exit 0
 	origPath := os.Getenv("PATH")
 	t.Setenv("PATH", binDir+":"+origPath)
 
-	if !convoyTracksBead(beadsDir, "hq-cv-test", "gt-aaa") {
+	if !minecartTracksBead(beadsDir, "hq-cv-test", "gt-aaa") {
 		t.Error("expected true for exact match gt-aaa")
 	}
-	if !convoyTracksBead(beadsDir, "hq-cv-test", "gt-bbb") {
+	if !minecartTracksBead(beadsDir, "hq-cv-test", "gt-bbb") {
 		t.Error("expected true for exact match gt-bbb")
 	}
 }
 
-// TestConvoyTracksBead_ExternalWrappedMatch verifies matching through
+// TestMinecartTracksBead_ExternalWrappedMatch verifies matching through
 // the "external:prefix:beadID" format (unwrapped by bdDepListRawIDs).
-func TestConvoyTracksBead_ExternalWrappedMatch(t *testing.T) {
+func TestMinecartTracksBead_ExternalWrappedMatch(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows")
 	}
@@ -1107,13 +1107,13 @@ exit 0
 	}
 	t.Setenv("PATH", binDir+":"+os.Getenv("PATH"))
 
-	if !convoyTracksBead(beadsDir, "hq-cv-test", "gt-abc") {
+	if !minecartTracksBead(beadsDir, "hq-cv-test", "gt-abc") {
 		t.Error("expected true for external-wrapped match gt-abc")
 	}
 }
 
-// TestConvoyTracksBead_NoMatch verifies false when bead is not tracked.
-func TestConvoyTracksBead_NoMatch(t *testing.T) {
+// TestMinecartTracksBead_NoMatch verifies false when bead is not tracked.
+func TestMinecartTracksBead_NoMatch(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows")
 	}
@@ -1130,13 +1130,13 @@ exit 0
 	}
 	t.Setenv("PATH", binDir+":"+os.Getenv("PATH"))
 
-	if convoyTracksBead(beadsDir, "hq-cv-test", "gt-zzz") {
+	if minecartTracksBead(beadsDir, "hq-cv-test", "gt-zzz") {
 		t.Error("expected false when bead is not tracked")
 	}
 }
 
-// TestConvoyTracksBead_BdError verifies false when bd command fails.
-func TestConvoyTracksBead_BdError(t *testing.T) {
+// TestMinecartTracksBead_BdError verifies false when bd command fails.
+func TestMinecartTracksBead_BdError(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows")
 	}
@@ -1152,7 +1152,7 @@ exit 1
 	}
 	t.Setenv("PATH", binDir+":"+os.Getenv("PATH"))
 
-	if convoyTracksBead(beadsDir, "hq-cv-test", "gt-aaa") {
+	if minecartTracksBead(beadsDir, "hq-cv-test", "gt-aaa") {
 		t.Error("expected false when bd fails")
 	}
 }
@@ -1169,16 +1169,16 @@ func TestBatchSling_CrossRigGuardRejectsPrefix(t *testing.T) {
 	}
 
 	townRoot := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 	beadsDir := filepath.Join(townRoot, ".beads")
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 
-	// Routes: gt- -> gastown, bd- -> beads
-	routesContent := `{"prefix":"gt-","path":"gastown/.beads"}
+	// Routes: gt- -> excavation, bd- -> beads
+	routesContent := `{"prefix":"gt-","path":"excavation/.beads"}
 {"prefix":"bd-","path":"beads/.beads"}
 `
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
@@ -1227,9 +1227,9 @@ exit 0
 	slingForce = false
 
 	// Directly test the cross-rig guard logic from runBatchSling lines 32-61.
-	// A bd- bead targeting "gastown" should be rejected.
+	// A bd- bead targeting "excavation" should be rejected.
 	beadIDs := []string{"gt-aaa", "bd-bbb"}
-	rigName := "gastown"
+	rigName := "excavation"
 	townBeadsDir := beadsDir
 
 	var guardErr error
@@ -1253,8 +1253,8 @@ exit 0
 	if !strings.Contains(guardErr.Error(), "beads") {
 		t.Errorf("error should mention rig 'beads', got: %v", guardErr)
 	}
-	if !strings.Contains(guardErr.Error(), "gastown") {
-		t.Errorf("error should mention target rig 'gastown', got: %v", guardErr)
+	if !strings.Contains(guardErr.Error(), "excavation") {
+		t.Errorf("error should mention target rig 'excavation', got: %v", guardErr)
 	}
 }
 
@@ -1302,17 +1302,17 @@ func lookupRigForPrefixInTest(townRoot, prefix string) string {
 // Review fix tests: Julian review findings on PR #1759
 // ---------------------------------------------------------------------------
 
-// TestCreateBatchConvoy_ReturnsTrackedBeadSet verifies that createBatchConvoy
+// TestCreateBatchMinecart_ReturnsTrackedBeadSet verifies that createBatchMinecart
 // returns the set of successfully-tracked bead IDs so callers can stamp
-// ConvoyID only on beads that the convoy actually tracks.
-// Review finding: ConvoyID stamped on beads not tracked by convoy on partial dep failure.
-func TestCreateBatchConvoy_ReturnsTrackedBeadSet(t *testing.T) {
+// MinecartID only on beads that the minecart actually tracks.
+// Review finding: MinecartID stamped on beads not tracked by minecart on partial dep failure.
+func TestCreateBatchMinecart_ReturnsTrackedBeadSet(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows")
 	}
 
 	townRoot := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
@@ -1358,12 +1358,12 @@ exit 0
 		t.Fatalf("chdir: %v", err)
 	}
 
-	convoyID, tracked, err := createBatchConvoy([]string{"gt-aaa", "gt-bbb", "gt-ccc"}, "gastown", false, "", "")
+	minecartID, tracked, err := createBatchMinecart([]string{"gt-aaa", "gt-bbb", "gt-ccc"}, "excavation", false, "", "")
 	if err != nil {
-		t.Fatalf("createBatchConvoy() error: %v", err)
+		t.Fatalf("createBatchMinecart() error: %v", err)
 	}
-	if convoyID == "" {
-		t.Fatal("convoy ID should not be empty")
+	if minecartID == "" {
+		t.Fatal("minecart ID should not be empty")
 	}
 
 	// gt-bbb dep add failed, so only gt-aaa and gt-ccc should be in tracked set
@@ -1396,7 +1396,7 @@ func TestResolveRigFromBeadIDs_MixedPrefixes_DoesNotSuggestForce(t *testing.T) {
 		t.Fatalf("mkdir: %v", err)
 	}
 
-	routesContent := `{"prefix":"gt-","path":"gastown/.beads"}
+	routesContent := `{"prefix":"gt-","path":"excavation/.beads"}
 {"prefix":"bd-","path":"beads/.beads"}
 `
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
@@ -1420,32 +1420,32 @@ func TestResolveRigFromBeadIDs_MixedPrefixes_DoesNotSuggestForce(t *testing.T) {
 	}
 }
 
-// TestBatchSling_ConvoyCreationFailureIsHardError verifies that when
-// createBatchConvoy fails, runBatchSling returns an error instead of
-// continuing with empty ConvoyID (which silently regresses to pre-fix behavior).
-// Review finding: convoy creation failure silently regresses.
-func TestBatchSling_ConvoyCreationFailureIsHardError(t *testing.T) {
-	// Verify the contract: when convoy creation fails and --no-convoy is not set,
+// TestBatchSling_MinecartCreationFailureIsHardError verifies that when
+// createBatchMinecart fails, runBatchSling returns an error instead of
+// continuing with empty MinecartID (which silently regresses to pre-fix behavior).
+// Review finding: minecart creation failure silently regresses.
+func TestBatchSling_MinecartCreationFailureIsHardError(t *testing.T) {
+	// Verify the contract: when minecart creation fails and --no-minecart is not set,
 	// the batch should NOT proceed. We test this by checking that runBatchSling
-	// would return an error rather than continuing with empty batchConvoyID.
+	// would return an error rather than continuing with empty batchMinecartID.
 
-	// The pattern: if createBatchConvoy returns error and !slingNoConvoy,
+	// The pattern: if createBatchMinecart returns error and !slingNoMinecart,
 	// runBatchSling should return that error.
 	// We test the decision logic inline since runBatchSling has many side effects.
-	slingNoConvoyVal := false
-	var batchConvoyID string
-	convoyErr := fmt.Errorf("creating batch convoy: connection refused")
+	slingNoMinecartVal := false
+	var batchMinecartID string
+	minecartErr := fmt.Errorf("creating batch minecart: connection refused")
 
-	// Simulate the fix: convoy creation failure is now a hard error
-	if convoyErr != nil && !slingNoConvoyVal {
+	// Simulate the fix: minecart creation failure is now a hard error
+	if minecartErr != nil && !slingNoMinecartVal {
 		// This is the expected behavior after the fix
-		if batchConvoyID != "" {
-			t.Error("batchConvoyID should be empty when creation fails")
+		if batchMinecartID != "" {
+			t.Error("batchMinecartID should be empty when creation fails")
 		}
 		// The error should be returned, not swallowed
 		return
 	}
-	t.Fatal("should have returned error for convoy creation failure")
+	t.Fatal("should have returned error for minecart creation failure")
 }
 
 // TestBatchSling_SliceAliasingInCrossRigGuard verifies that the cross-rig guard
@@ -1453,37 +1453,37 @@ func TestBatchSling_ConvoyCreationFailureIsHardError(t *testing.T) {
 // Review finding: append(beadIDs, rigName) mutates shared backing array.
 func TestBatchSling_SliceAliasingInCrossRigGuard(t *testing.T) {
 	// Simulate the slice aliasing scenario:
-	// args = ["gt-aaa", "bd-bbb", "gastown"]
+	// args = ["gt-aaa", "bd-bbb", "excavation"]
 	// beadIDs = args[:2] → shares backing array with args
 	// append(beadIDs, rigName) writes into args[2]
-	args := []string{"gt-aaa", "bd-bbb", "gastown"}
+	args := []string{"gt-aaa", "bd-bbb", "excavation"}
 	beadIDs := args[:len(args)-1] // beadIDs = ["gt-aaa", "bd-bbb"], shares backing
 	rigName := "resolved-rig"
 
-	// Before the fix, this would mutate args[2] from "gastown" to "resolved-rig"
+	// Before the fix, this would mutate args[2] from "excavation" to "resolved-rig"
 	_ = strings.Join(append([]string{}, beadIDs...), " ") // safe copy
 	_ = rigName
 
 	// Verify the original args are not mutated
-	if args[2] != "gastown" {
-		t.Errorf("args[2] was mutated from 'gastown' to %q — slice aliasing bug", args[2])
+	if args[2] != "excavation" {
+		t.Errorf("args[2] was mutated from 'excavation' to %q — slice aliasing bug", args[2])
 	}
 }
 
 // ---------------------------------------------------------------------------
-// findConvoyByDescription tests
+// findMinecartByDescription tests
 // ---------------------------------------------------------------------------
 
-// TestFindConvoyByDescription_MatchesDescriptionPattern verifies that a convoy
+// TestFindMinecartByDescription_MatchesDescriptionPattern verifies that a minecart
 // whose description contains "tracking <beadID>" is found by description scan.
-func TestFindConvoyByDescription_MatchesDescriptionPattern(t *testing.T) {
+func TestFindMinecartByDescription_MatchesDescriptionPattern(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows — shell stubs")
 	}
 
 	townRoot, logPath := setupTownWithBdStub(t, "")
 
-	// Rewrite bd stub to return a convoy list with matching description.
+	// Rewrite bd stub to return a minecart list with matching description.
 	bdScript := fmt.Sprintf(`#!/bin/sh
 echo "CMD:$*" >> "%s"
 cmd="$1"
@@ -1494,7 +1494,7 @@ fi
 shift || true
 case "$cmd" in
   list)
-    echo '[{"id":"hq-cv-match1","description":"Auto-created convoy tracking gt-abc"}]'
+    echo '[{"id":"hq-cv-match1","description":"Auto-created minecart tracking gt-abc"}]'
     exit 0
     ;;
 esac
@@ -1504,22 +1504,22 @@ exit 0
 		t.Fatalf("rewrite bd stub: %v", err)
 	}
 
-	got := findConvoyByDescription(townRoot, "gt-abc")
+	got := findMinecartByDescription(townRoot, "gt-abc")
 	if got != "hq-cv-match1" {
-		t.Errorf("findConvoyByDescription() = %q, want %q", got, "hq-cv-match1")
+		t.Errorf("findMinecartByDescription() = %q, want %q", got, "hq-cv-match1")
 	}
 }
 
-// TestFindConvoyByDescription_NoMatch verifies that empty string is returned
-// when no convoy description matches and no convoy tracks the bead.
-func TestFindConvoyByDescription_NoMatch(t *testing.T) {
+// TestFindMinecartByDescription_NoMatch verifies that empty string is returned
+// when no minecart description matches and no minecart tracks the bead.
+func TestFindMinecartByDescription_NoMatch(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows — shell stubs")
 	}
 
 	townRoot, logPath := setupTownWithBdStub(t, "")
 
-	// bd stub: list returns convoys with non-matching descriptions,
+	// bd stub: list returns minecarts with non-matching descriptions,
 	// dep list returns empty (no tracked deps) for the fallback path.
 	bdScript := fmt.Sprintf(`#!/bin/sh
 echo "CMD:$*" >> "%s"
@@ -1531,7 +1531,7 @@ fi
 shift || true
 case "$cmd" in
   list)
-    echo '[{"id":"hq-cv-other","description":"Auto-created convoy tracking gt-other"}]'
+    echo '[{"id":"hq-cv-other","description":"Auto-created minecart tracking gt-other"}]'
     exit 0
     ;;
   dep)
@@ -1545,24 +1545,24 @@ exit 0
 		t.Fatalf("rewrite bd stub: %v", err)
 	}
 
-	got := findConvoyByDescription(townRoot, "gt-zzz")
+	got := findMinecartByDescription(townRoot, "gt-zzz")
 	if got != "" {
-		t.Errorf("findConvoyByDescription() = %q, want empty string", got)
+		t.Errorf("findMinecartByDescription() = %q, want empty string", got)
 	}
 }
 
-// TestFindConvoyByDescription_FallsBackToTrackedDeps verifies that when no
+// TestFindMinecartByDescription_FallsBackToTrackedDeps verifies that when no
 // description matches, the function falls back to checking tracked deps of
-// each convoy via convoyTracksBead.
-func TestFindConvoyByDescription_FallsBackToTrackedDeps(t *testing.T) {
+// each minecart via minecartTracksBead.
+func TestFindMinecartByDescription_FallsBackToTrackedDeps(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows — shell stubs")
 	}
 
 	townRoot, logPath := setupTownWithBdStub(t, "")
 
-	// bd stub: list returns a convoy whose description does NOT match gt-abc,
-	// dep list --direction=down returns gt-abc as a tracked dep of that convoy.
+	// bd stub: list returns a minecart whose description does NOT match gt-abc,
+	// dep list --direction=down returns gt-abc as a tracked dep of that minecart.
 	bdScript := fmt.Sprintf(`#!/bin/sh
 echo "CMD:$*" >> "%s"
 cmd="$1"
@@ -1573,7 +1573,7 @@ fi
 shift || true
 case "$cmd" in
   list)
-    echo '[{"id":"hq-cv-manual","description":"Manually created convoy"}]'
+    echo '[{"id":"hq-cv-manual","description":"Manually created minecart"}]'
     exit 0
     ;;
   sql)
@@ -1582,7 +1582,7 @@ case "$cmd" in
     exit 0
     ;;
   dep)
-    # dep list <convoyID> --direction=down --type=tracks --json
+    # dep list <minecartID> --direction=down --type=tracks --json
     echo '[{"id":"gt-abc"}]'
     exit 0
     ;;
@@ -1593,26 +1593,26 @@ exit 0
 		t.Fatalf("rewrite bd stub: %v", err)
 	}
 
-	got := findConvoyByDescription(townRoot, "gt-abc")
+	got := findMinecartByDescription(townRoot, "gt-abc")
 	if got != "hq-cv-manual" {
-		t.Errorf("findConvoyByDescription() = %q, want %q", got, "hq-cv-manual")
+		t.Errorf("findMinecartByDescription() = %q, want %q", got, "hq-cv-manual")
 	}
 }
 
 // ---------------------------------------------------------------------------
-// isTrackedByConvoy tests
+// isTrackedByMinecart tests
 // ---------------------------------------------------------------------------
 
-// TestIsTrackedByConvoy_FoundViaDepList verifies that isTrackedByConvoy returns
-// a convoy ID when the bd dep list (direction=up) finds a tracking convoy.
-func TestIsTrackedByConvoy_FoundViaDepList(t *testing.T) {
+// TestIsTrackedByMinecart_FoundViaDepList verifies that isTrackedByMinecart returns
+// a minecart ID when the bd dep list (direction=up) finds a tracking minecart.
+func TestIsTrackedByMinecart_FoundViaDepList(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows — shell stubs")
 	}
 
 	townRoot, logPath := setupTownWithBdStub(t, "")
 
-	// bd stub: sql returns a tracking convoy ID for direction=up, show returns details.
+	// bd stub: sql returns a tracking minecart ID for direction=up, show returns details.
 	bdScript := fmt.Sprintf(`#!/bin/sh
 echo "CMD:$*" >> "%s"
 cmd="$1"
@@ -1623,17 +1623,17 @@ fi
 shift || true
 case "$cmd" in
   sql)
-    # bdDepListRawIDs up: return convoy IDs tracking this bead
+    # bdDepListRawIDs up: return minecart IDs tracking this bead
     echo '[{"issue_id":"hq-cv-found"}]'
     exit 0
     ;;
   show)
-    # bdShow: return convoy details
-    echo '[{"id":"hq-cv-found","issue_type":"convoy","status":"open"}]'
+    # bdShow: return minecart details
+    echo '[{"id":"hq-cv-found","issue_type":"minecart","status":"open"}]'
     exit 0
     ;;
   dep)
-    echo '[{"id":"hq-cv-found","issue_type":"convoy","status":"open"}]'
+    echo '[{"id":"hq-cv-found","issue_type":"minecart","status":"open"}]'
     exit 0
     ;;
 esac
@@ -1643,15 +1643,15 @@ exit 0
 		t.Fatalf("rewrite bd stub: %v", err)
 	}
 
-	got := isTrackedByConvoy("gt-abc")
+	got := isTrackedByMinecart("gt-abc")
 	if got != "hq-cv-found" {
-		t.Errorf("isTrackedByConvoy() = %q, want %q", got, "hq-cv-found")
+		t.Errorf("isTrackedByMinecart() = %q, want %q", got, "hq-cv-found")
 	}
 }
 
-// TestIsTrackedByConvoy_NotFound verifies that isTrackedByConvoy returns empty
-// string when no convoy tracks the bead (neither via dep list nor description).
-func TestIsTrackedByConvoy_NotFound(t *testing.T) {
+// TestIsTrackedByMinecart_NotFound verifies that isTrackedByMinecart returns empty
+// string when no minecart tracks the bead (neither via dep list nor description).
+func TestIsTrackedByMinecart_NotFound(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows — shell stubs")
 	}
@@ -1683,33 +1683,33 @@ exit 0
 		t.Fatalf("rewrite bd stub: %v", err)
 	}
 
-	got := isTrackedByConvoy("gt-zzz")
+	got := isTrackedByMinecart("gt-zzz")
 	if got != "" {
-		t.Errorf("isTrackedByConvoy() = %q, want empty string", got)
+		t.Errorf("isTrackedByMinecart() = %q, want empty string", got)
 	}
 }
 
 // ---------------------------------------------------------------------------
-// printConvoyConflict tests
+// printMinecartConflict tests
 // ---------------------------------------------------------------------------
 
-// TestPrintConvoyConflict_PrintsConflictInfo verifies that printConvoyConflict
-// outputs convoy conflict details including the convoy title, tracked beads with
+// TestPrintMinecartConflict_PrintsConflictInfo verifies that printMinecartConflict
+// outputs minecart conflict details including the minecart title, tracked beads with
 // status icons, and the 4 recommended actions.
-func TestPrintConvoyConflict_PrintsConflictInfo(t *testing.T) {
+func TestPrintMinecartConflict_PrintsConflictInfo(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows — shell stubs")
 	}
 
 	townRoot, logPath := setupTownWithBdStub(t, "")
 
-	// bd stub: handles show (convoy title), dep list (tracked beads),
+	// bd stub: handles show (minecart title), dep list (tracked beads),
 	// and show for issue details batch.
 	// getTrackedIssues calls:
-	//   1. bd dep list <convoyID> --direction=down --type=tracks --json (from townRoot)
+	//   1. bd dep list <minecartID> --direction=down --type=tracks --json (from townRoot)
 	//   2. bd show <id1> <id2> ... --json (getIssueDetailsBatch, from unknown cwd)
-	// printConvoyConflict also calls:
-	//   3. bd show <convoyID> --json (from townBeads)
+	// printMinecartConflict also calls:
+	//   3. bd show <minecartID> --json (from townBeads)
 	bdScript := fmt.Sprintf(`#!/bin/sh
 echo "CMD:$*" >> "%s"
 cmd="$1"
@@ -1720,7 +1720,7 @@ fi
 shift || true
 case "$cmd" in
   sql)
-    # bdDepListRawIDs down: return tracked bead IDs for convoy
+    # bdDepListRawIDs down: return tracked bead IDs for minecart
     echo '[{"depends_on_id":"gt-aaa"},{"depends_on_id":"gt-bbb"}]'
     exit 0
     ;;
@@ -1729,7 +1729,7 @@ case "$cmd" in
     all_show_args="$*"
     case "$all_show_args" in
       hq-cv-test*)
-        echo '[{"title":"Test convoy title","labels":[]}]'
+        echo '[{"title":"Test minecart title","labels":[]}]'
         ;;
       *gt-aaa*gt-bbb*|*gt-bbb*gt-aaa*)
         # Batch show for issue details - return details for each ID
@@ -1770,7 +1770,7 @@ exit 0
 	}
 	os.Stdout = w
 
-	printConvoyConflict("gt-bbb", "hq-cv-test")
+	printMinecartConflict("gt-bbb", "hq-cv-test")
 
 	w.Close()
 	os.Stdout = oldStdout
@@ -1781,9 +1781,9 @@ exit 0
 	}
 	output := buf.String()
 
-	// Verify convoy ID appears in output
+	// Verify minecart ID appears in output
 	if !strings.Contains(output, "hq-cv-test") {
-		t.Errorf("output should contain convoy ID 'hq-cv-test':\n%s", output)
+		t.Errorf("output should contain minecart ID 'hq-cv-test':\n%s", output)
 	}
 
 	// Verify conflict bead mentioned
@@ -1791,9 +1791,9 @@ exit 0
 		t.Errorf("output should contain conflict bead 'gt-bbb':\n%s", output)
 	}
 
-	// Verify convoy title
-	if !strings.Contains(output, "Test convoy title") {
-		t.Errorf("output should contain convoy title 'Test convoy title':\n%s", output)
+	// Verify minecart title
+	if !strings.Contains(output, "Test minecart title") {
+		t.Errorf("output should contain minecart title 'Test minecart title':\n%s", output)
 	}
 
 	// Verify status icons (● for open, ✓ for closed)
@@ -1813,8 +1813,8 @@ exit 0
 	for _, option := range []string{
 		"1. Remove the bead from this batch",
 		"2. Move the bead to the new batch",
-		"3. Close the existing convoy",
-		"4. Add the other beads to the existing convoy",
+		"3. Close the existing minecart",
+		"4. Add the other beads to the existing minecart",
 	} {
 		if !strings.Contains(output, option) {
 			t.Errorf("output should contain option %q:\n%s", option, output)
@@ -1823,21 +1823,21 @@ exit 0
 }
 
 // ---------------------------------------------------------------------------
-// getConvoyInfoFromIssue tests
+// getMinecartInfoFromIssue tests
 // ---------------------------------------------------------------------------
 
-// TestGetConvoyInfoFromIssue_EmptyIssueID verifies that passing an empty
+// TestGetMinecartInfoFromIssue_EmptyIssueID verifies that passing an empty
 // issueID returns nil immediately (line 207).
-func TestGetConvoyInfoFromIssue_EmptyIssueID(t *testing.T) {
-	got := getConvoyInfoFromIssue("", "/tmp")
+func TestGetMinecartInfoFromIssue_EmptyIssueID(t *testing.T) {
+	got := getMinecartInfoFromIssue("", "/tmp")
 	if got != nil {
-		t.Errorf("getConvoyInfoFromIssue(\"\", ...) = %+v, want nil", got)
+		t.Errorf("getMinecartInfoFromIssue(\"\", ...) = %+v, want nil", got)
 	}
 }
 
-// TestGetConvoyInfoFromIssue_NonexistentIssue verifies that when bd.Show fails
+// TestGetMinecartInfoFromIssue_NonexistentIssue verifies that when bd.Show fails
 // (e.g., nonexistent issue), nil is returned (line 213).
-func TestGetConvoyInfoFromIssue_NonexistentIssue(t *testing.T) {
+func TestGetMinecartInfoFromIssue_NonexistentIssue(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows — shell stubs")
 	}
@@ -1861,21 +1861,21 @@ exit 1
 	}
 	t.Setenv("PATH", binDir+":"+os.Getenv("PATH"))
 
-	got := getConvoyInfoFromIssue("nonexistent-id", tmpDir)
+	got := getMinecartInfoFromIssue("nonexistent-id", tmpDir)
 	if got != nil {
-		t.Errorf("getConvoyInfoFromIssue(\"nonexistent-id\", ...) = %+v, want nil", got)
+		t.Errorf("getMinecartInfoFromIssue(\"nonexistent-id\", ...) = %+v, want nil", got)
 	}
 }
 
 // ---------------------------------------------------------------------------
-// getConvoyInfoForIssue tests (gt-9xum2: phantom convoy fix)
+// getMinecartInfoForIssue tests (gt-9xum2: phantom minecart fix)
 // ---------------------------------------------------------------------------
 
-// TestGetConvoyInfoForIssue_PhantomConvoy verifies that when isTrackedByConvoy
-// returns a convoy ID but bd show fails with "not found", the function returns
-// nil instead of partial ConvoyInfo. This ensures phantom convoys (deleted from
+// TestGetMinecartInfoForIssue_PhantomMinecart verifies that when isTrackedByMinecart
+// returns a minecart ID but bd show fails with "not found", the function returns
+// nil instead of partial MinecartInfo. This ensures phantom minecarts (deleted from
 // HQ but still referenced in local deps) don't break gt done MR creation.
-func TestGetConvoyInfoForIssue_PhantomConvoy(t *testing.T) {
+func TestGetMinecartInfoForIssue_PhantomMinecart(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows — shell stubs")
 	}
@@ -1890,15 +1890,15 @@ func TestGetConvoyInfoForIssue_PhantomConvoy(t *testing.T) {
 	}
 
 	// Install a bd stub that:
-	// - For "dep list": returns phantom convoy (simulating stale tracking dep)
-	// - For "show": returns "Issue not found" (convoy deleted from HQ)
+	// - For "dep list": returns phantom minecart (simulating stale tracking dep)
+	// - For "show": returns "Issue not found" (minecart deleted from HQ)
 	binDir := filepath.Join(tmpDir, "bin")
 	if err := os.MkdirAll(binDir, 0755); err != nil {
 		t.Fatalf("mkdir binDir: %v", err)
 	}
 
 	bdScript := `#!/bin/sh
-# Phantom convoy test stub
+# Phantom minecart test stub
 case "$1" in
 	"--allow-stale")
 		shift  # Remove --allow-stale flag
@@ -1906,20 +1906,20 @@ case "$1" in
 esac
 case "$1" in
 	"dep")
-		# Simulate stale tracking dep returning phantom convoy
+		# Simulate stale tracking dep returning phantom minecart
 		if echo "$*" | grep -q "direction=up"; then
-			echo '[{"id":"hq-cv-phantom","issue_type":"convoy","status":"open"}]'
+			echo '[{"id":"hq-cv-phantom","issue_type":"minecart","status":"open"}]'
 			exit 0
 		fi
 		exit 1
 		;;
 	"show")
-		# Simulate convoy not found in HQ
+		# Simulate minecart not found in HQ
 		echo "Issue not found: hq-cv-phantom" >&2
 		exit 1
 		;;
 	"list")
-		# Return empty list for convoy fallback search
+		# Return empty list for minecart fallback search
 		echo '[]'
 		exit 0
 		;;
@@ -1945,17 +1945,17 @@ esac
 		_ = os.Chdir(origDir)
 	}()
 
-	// Create mayor directory structure (needed for workspace detection)
-	if err := os.MkdirAll(filepath.Join(tmpDir, "mayor"), 0755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+	// Create overseer directory structure (needed for workspace detection)
+	if err := os.MkdirAll(filepath.Join(tmpDir, "overseer"), 0755); err != nil {
+		t.Fatalf("mkdir overseer: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(tmpDir, "mayor", "town.json"), []byte("{}"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "overseer", "town.json"), []byte("{}"), 0644); err != nil {
 		t.Fatalf("write town.json: %v", err)
 	}
 
-	// Call getConvoyInfoForIssue - should return nil for phantom convoy
-	got := getConvoyInfoForIssue("gt-test")
+	// Call getMinecartInfoForIssue - should return nil for phantom minecart
+	got := getMinecartInfoForIssue("gt-test")
 	if got != nil {
-		t.Errorf("getConvoyInfoForIssue returned %+v, want nil for phantom convoy", got)
+		t.Errorf("getMinecartInfoForIssue returned %+v, want nil for phantom minecart", got)
 	}
 }

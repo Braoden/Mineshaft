@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/config"
 )
 
 var directiveEditCmd = &cobra.Command{
@@ -22,7 +22,7 @@ rig-level directive (if a rig is detected) or the town-level directive.
 Use --town to explicitly edit the town-level directive.
 
 Examples:
-  gt directive edit polecat             # Edit rig-level polecat directive
+  gt directive edit miner             # Edit rig-level miner directive
   gt directive edit crew --rig sky      # Edit sky rig crew directive
   gt directive edit witness --town      # Edit town-level witness directive`,
 	Args: cobra.ExactArgs(1),

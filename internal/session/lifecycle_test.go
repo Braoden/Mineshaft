@@ -3,13 +3,13 @@ package session
 import (
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/config"
 )
 
 func TestStartSession_RequiresSessionID(t *testing.T) {
 	_, err := StartSession(nil, SessionConfig{
 		WorkDir: "/tmp",
-		Role:    "polecat",
+		Role:    "miner",
 	})
 	if err == nil {
 		t.Fatal("expected error for missing SessionID")
@@ -22,7 +22,7 @@ func TestStartSession_RequiresSessionID(t *testing.T) {
 func TestStartSession_RequiresWorkDir(t *testing.T) {
 	_, err := StartSession(nil, SessionConfig{
 		SessionID: "gt-test",
-		Role:      "polecat",
+		Role:      "miner",
 	})
 	if err == nil {
 		t.Fatal("expected error for missing WorkDir")
@@ -119,7 +119,7 @@ func TestKillExistingSession_NoSession(t *testing.T) {
 func TestMapKeysSorted(t *testing.T) {
 	got := mapKeysSorted(map[string]string{
 		"GT_SESSION": "1",
-		"GT_ROLE":    "polecat",
+		"GT_ROLE":    "miner",
 		"GT_RIG":     "alpha",
 	})
 
@@ -136,7 +136,7 @@ func TestMapKeysSorted(t *testing.T) {
 
 func TestMergeRuntimeLivenessEnv_SetsResolvedAgentAndProcessNames(t *testing.T) {
 	env := map[string]string{
-		"GT_ROLE": "polecat",
+		"GT_ROLE": "miner",
 	}
 	rc := &config.RuntimeConfig{
 		Command:       "claude",

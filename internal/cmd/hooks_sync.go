@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/hooks"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/hooks"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var hooksSyncDryRun bool
@@ -46,7 +46,7 @@ func init() {
 func runHooksSync(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	targets, err := hooks.DiscoverTargets(townRoot)
@@ -156,7 +156,7 @@ func runHooksSync(cmd *cobra.Command, args []string) error {
 			useSettingsDir := preset.HooksUseSettingsDir
 
 			// Determine sync targets.
-			// - Town-level roles (mayor, deacon): the role dir IS the working directory.
+			// - Town-level roles (overseer, supervisor): the role dir IS the working directory.
 			// - Rig roles with useSettingsDir: one shared file in the role parent.
 			// - Rig roles without useSettingsDir (OpenCode, etc.): need files in each
 			//   individual worktree subdirectory.

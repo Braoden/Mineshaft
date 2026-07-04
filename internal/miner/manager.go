@@ -1,0 +1,3020 @@
+// Liftoff test: 2026-02-08T14:00:00
+
+package miner
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"math/rand/v2"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"sync"
+	"syscall"
+	"time"
+
+	"github.com/gofrs/flock"
+
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/doltserver"
+	"github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/excavation/internal/runtime"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/telemetry"
+	"github.com/steveyegge/excavation/internal/templates"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/util"
+)
+
+// Retry constants for Dolt operations (matching hook update pattern in sling.go).
+// Configurable via operational.miner in settings/config.json.
+const (
+	doltMaxRetries  = 10
+	doltBaseBackoff = 500 * time.Millisecond
+	doltBackoffMax  = 30 * time.Second
+	setupCmdTimeout = 30 * time.Minute
+
+	// doltStateRetries is a reduced retry count for SetAgentStateWithRetry.
+	// Agent state is a monitoring concern, not a correctness requirement (see
+	// comment on SetAgentStateWithRetry). 10 retries with exponential backoff
+	// wastes ~2 minutes on persistent failures, blocking `gt sling` for no
+	// benefit since the caller already treats errors as warn-only.
+	// 3 retries (total backoff ~3.5s) is sufficient to ride out transient
+	// Dolt hiccups without punishing interactive workflows.
+	doltStateRetries = 3
+)
+
+// doltBackoff calculates exponential backoff with ±25% jitter for a given attempt (1-indexed).
+// Formula: base * 2^(attempt-1) * (1 ± 25% random), capped at doltBackoffMax.
+func doltBackoff(attempt int) time.Duration {
+	backoff := doltBaseBackoff
+	for i := 1; i < attempt; i++ {
+		backoff *= 2
+		if backoff > doltBackoffMax {
+			backoff = doltBackoffMax
+			break
+		}
+	}
+	// Apply ±25% jitter
+	jitter := 1.0 + (rand.Float64()-0.5)*0.5 // range [0.75, 1.25]
+	result := time.Duration(float64(backoff) * jitter)
+	if result > doltBackoffMax {
+		result = doltBackoffMax
+	}
+	return result
+}
+
+// isDoltOptimisticLockError returns true if the error is an optimistic lock / serialization failure.
+// These indicate transient write conflicts from concurrent Dolt operations — worth retrying.
+func isDoltOptimisticLockError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	return strings.Contains(msg, "optimistic lock") ||
+		strings.Contains(msg, "serialization failure") ||
+		strings.Contains(msg, "lock wait timeout") ||
+		strings.Contains(msg, "try restarting transaction") ||
+		strings.Contains(msg, "database is read only") ||
+		strings.Contains(msg, "cannot update manifest")
+}
+
+// isDoltConfigError returns true if the error indicates a configuration or initialization
+// problem rather than a transient failure. Config errors should NOT be retried because
+// they will fail identically on every attempt, wasting ~3 minutes in the retry loop.
+// See gt-2ra: miner spawn hang when Dolt DB not initialized.
+func isDoltConfigError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "not initialized") ||
+		strings.Contains(msg, "no such table") ||
+		strings.Contains(msg, "table not found") ||
+		strings.Contains(msg, "issue_prefix") ||
+		strings.Contains(msg, "no database") ||
+		strings.Contains(msg, "database not found") ||
+		strings.Contains(msg, "connection refused") ||
+		strings.Contains(msg, "circuit breaker") ||
+		strings.Contains(msg, "server appears down") ||
+		strings.Contains(msg, "server down") ||
+		strings.Contains(msg, "server is not running") ||
+		strings.Contains(msg, "server may not be running") ||
+		strings.Contains(msg, "configure custom types") ||
+		strings.Contains(msg, "identity mismatch") ||
+		strings.Contains(msg, "unknown database")
+}
+
+// Common errors
+var (
+	ErrMinerExists      = errors.New("miner already exists")
+	ErrMinerNotFound    = errors.New("miner not found")
+	ErrHasChanges         = errors.New("miner has uncommitted changes")
+	ErrHasUncommittedWork = errors.New("miner has uncommitted work")
+	ErrShellInWorktree    = errors.New("shell working directory is inside miner worktree")
+	ErrDoltUnhealthy      = errors.New("dolt health check failed")
+	ErrDoltAtCapacity     = errors.New("dolt server at connection capacity")
+	ErrDiskSpaceLow       = errors.New("insufficient disk space")
+)
+
+// UncommittedWorkError provides details about uncommitted work.
+type UncommittedWorkError struct {
+	MinerName string
+	Status      *git.UncommittedWorkStatus
+}
+
+func (e *UncommittedWorkError) Error() string {
+	return fmt.Sprintf("miner %s has uncommitted work: %s", e.MinerName, e.Status.String())
+}
+
+func (e *UncommittedWorkError) Unwrap() error {
+	return ErrHasUncommittedWork
+}
+
+// Manager handles miner lifecycle.
+type Manager struct {
+	rig      *rig.Rig
+	git      *git.Git
+	beads    *beads.Beads
+	namePool *NamePool
+	tmux     *tmux.Tmux
+	townRoot string // Computed once at construction; used by agentBeadID for deterministic IDs
+}
+
+// NewManager creates a new miner manager.
+func NewManager(r *rig.Rig, g *git.Git, t *tmux.Tmux) *Manager {
+	// Use the resolved beads directory to find where bd commands should run.
+	// For tracked beads: rig/.beads/redirect -> overseer/rig/.beads, so use overseer/rig
+	// For local beads: rig/.beads is the database, so use rig root
+	resolvedBeads := beads.ResolveBeadsDir(r.Path)
+	beadsPath := filepath.Dir(resolvedBeads) // Get the directory containing .beads
+
+	// Compute town root once for deterministic use across all Manager methods.
+	// Rig path is always filepath.Join(townRoot, rigName), so filepath.Dir is correct
+	// and avoids the non-determinism of workspace.Find which can fail or resolve
+	// differently depending on call-site context (gt-lph).
+	townRoot := filepath.Dir(r.Path)
+
+	// Try to load rig settings for namepool config
+	settingsPath := filepath.Join(r.Path, "settings", "config.json")
+	var pool *NamePool
+
+	settings, err := config.LoadRigSettings(settingsPath)
+	if err == nil && settings.Namepool != nil {
+		// If style is set but not built-in and no explicit names, resolve custom theme
+		names := settings.Namepool.Names
+		if len(names) == 0 && settings.Namepool.Style != "" && !IsBuiltinTheme(settings.Namepool.Style) {
+			if resolved, rErr := ResolveThemeNames(townRoot, settings.Namepool.Style); rErr == nil {
+				names = resolved
+			}
+		}
+		pool = NewNamePoolWithConfig(
+			r.Path,
+			r.Name,
+			settings.Namepool.Style,
+			names,
+			settings.Namepool.MaxBeforeNumbering,
+		)
+	} else {
+		// Fallback: check rig-level config.json for miner_names
+		// (pool-init and gt rig config write namepool config here).
+		if rigCfg, rcErr := rig.LoadRigConfig(r.Path); rcErr == nil && len(rigCfg.MinerNames) > 0 {
+			pool = NewNamePoolWithConfig(r.Path, r.Name, "", rigCfg.MinerNames, 0)
+		} else {
+			pool = NewNamePool(r.Path, r.Name)
+		}
+	}
+
+	// Set town root for custom theme resolution in getNames()
+	pool.SetTownRoot(townRoot)
+
+	_ = pool.Load() // non-fatal: state file may not exist for new rigs
+
+	return &Manager{
+		rig:      r,
+		git:      g,
+		beads:    beads.NewWithBeadsDir(beadsPath, resolvedBeads),
+		namePool: pool,
+		tmux:     t,
+		townRoot: townRoot,
+	}
+}
+
+// GetNamePool returns the manager's name pool for external use (e.g., pool init).
+func (m *Manager) GetNamePool() *NamePool {
+	return m.namePool
+}
+
+// lockMiner acquires an exclusive file lock for a specific miner.
+// This prevents concurrent gt processes from racing on the same miner's
+// filesystem operations (Add, Remove, RepairWorktree).
+// Caller must defer fl.Unlock().
+func (m *Manager) lockMiner(name string) (*flock.Flock, error) {
+	lockDir := filepath.Join(m.rig.Path, ".runtime", "locks")
+	if err := os.MkdirAll(lockDir, 0755); err != nil {
+		return nil, fmt.Errorf("creating lock dir: %w", err)
+	}
+	lockPath := filepath.Join(lockDir, fmt.Sprintf("miner-%s.lock", name))
+	fl := flock.New(lockPath)
+	if err := fl.Lock(); err != nil {
+		return nil, fmt.Errorf("acquiring miner lock for %s: %w", name, err)
+	}
+	return fl, nil
+}
+
+// lockPool acquires an exclusive file lock for name pool operations.
+// This prevents concurrent gt processes from racing on AllocateName/ReconcilePool.
+// Caller must defer fl.Unlock().
+func (m *Manager) lockPool() (*flock.Flock, error) {
+	lockDir := filepath.Join(m.rig.Path, ".runtime", "locks")
+	if err := os.MkdirAll(lockDir, 0755); err != nil {
+		return nil, fmt.Errorf("creating lock dir: %w", err)
+	}
+	lockPath := filepath.Join(lockDir, "miner-pool.lock")
+	fl := flock.New(lockPath)
+	if err := fl.Lock(); err != nil {
+		return nil, fmt.Errorf("acquiring pool lock: %w", err)
+	}
+	return fl, nil
+}
+
+// CheckDoltHealth verifies that the Dolt database is reachable before spawning.
+// Returns an error if Dolt exists but is unhealthy after retries.
+// Returns nil if beads is not configured (test/setup environments).
+// If read-only errors persist after retries, attempts server recovery (gt-chx92).
+// Fails fast on configuration/initialization errors (gt-2ra).
+func (m *Manager) CheckDoltHealth() error {
+	var lastErr error
+	for attempt := 1; attempt <= doltMaxRetries; attempt++ {
+		// Use a lightweight beads operation to verify Dolt is responsive
+		_, err := m.beads.Show("__health_check_nonexistent__")
+		if err == nil || errors.Is(err, beads.ErrNotFound) || strings.Contains(err.Error(), "not found") {
+			// Dolt is healthy — a "not found" error means the DB responded
+			return nil
+		}
+		// Optimistic lock errors mean Dolt is alive but busy with concurrent writes
+		if isDoltOptimisticLockError(err) {
+			return nil
+		}
+		// If beads isn't configured at all, skip the health check
+		if strings.Contains(err.Error(), "does not exist") || errors.Is(err, beads.ErrNotInstalled) {
+			return nil
+		}
+		// Fail fast on config/init errors — retrying won't help (gt-2ra, gas-tc4)
+		if isDoltConfigError(err) {
+			return fmt.Errorf("%w: %v\n\nRecovery: run 'gt doctor --fix' to repair database configuration.\n"+
+				"If that doesn't help, try: bd init --force --server", ErrDoltUnhealthy, err)
+		}
+		lastErr = err
+		if attempt < doltMaxRetries {
+			backoff := doltBackoff(attempt)
+			style.PrintWarning("Dolt health check attempt %d failed, retrying in %v...", attempt, backoff)
+			time.Sleep(backoff)
+		}
+	}
+
+	// If the persistent failure looks like read-only, attempt server recovery
+	// before giving up. This is the gt-level recovery path (gt-chx92).
+	if lastErr != nil && doltserver.IsReadOnlyError(lastErr.Error()) {
+		if recoverErr := doltserver.RecoverReadOnly(m.townRoot); recoverErr == nil {
+			// Recovery succeeded — verify health once more
+			_, err := m.beads.Show("__health_check_nonexistent__")
+			if err == nil || errors.Is(err, beads.ErrNotFound) || strings.Contains(err.Error(), "not found") {
+				return nil
+			}
+		}
+	}
+
+	return fmt.Errorf("%w: %v\n\nRecovery: run 'gt doctor --fix' to diagnose and repair Dolt configuration", ErrDoltUnhealthy, lastErr)
+}
+
+// CheckDoltServerCapacity verifies the Dolt server has capacity for new connections.
+// This is an admission control gate: if the server is near its max_connections limit,
+// spawning another miner (which will make many bd calls) could overwhelm it.
+// Returns nil if capacity is available, ErrDoltAtCapacity if the server is overloaded.
+// Fails closed if the check errors — a server that can't report capacity is likely
+// already under stress (gt-lfc0d).
+func (m *Manager) CheckDoltServerCapacity() error {
+	// NOTE: Prior to gt-lph, this method called workspace.Find to locate townRoot,
+	// which could fail and silently skip the capacity check (return nil). Now that
+	// m.townRoot is computed deterministically at Manager construction, errors from
+	// HasConnectionCapacity always propagate — this is intentional. A server that
+	// can't report capacity is likely under stress, and silently passing was a
+	// latent bug that allowed connection storms under load (gt-lfc0d).
+	hasCapacity, active, err := doltserver.HasConnectionCapacity(m.townRoot)
+	if err != nil {
+		// Fail closed: if we can't check capacity, the server may be overloaded.
+		// Proceeding optimistically caused read-only mode under load (gt-lfc0d).
+		return fmt.Errorf("%w: capacity check failed: %v", ErrDoltAtCapacity, err)
+	}
+
+	if !hasCapacity {
+		return fmt.Errorf("%w: %d active connections (server near limit)", ErrDoltAtCapacity, active)
+	}
+
+	return nil
+}
+
+// createAgentBeadWithRetry wraps CreateOrReopenAgentBead with retry logic.
+// For transient Dolt failures (server exists but write fails), retries with backoff
+// and fails hard — a miner without an agent bead is untrackable.
+// If beads is not configured (no .beads directory), warns and returns nil
+// since this indicates a test/setup environment, not a Dolt failure.
+// Fails fast on configuration/initialization errors (gt-2ra) — these are not
+// transient and retrying them wastes ~3 minutes for identical failures.
+func (m *Manager) createAgentBeadWithRetry(agentID string, fields *beads.AgentFields) error {
+	var lastErr error
+	for attempt := 1; attempt <= doltMaxRetries; attempt++ {
+		_, err := m.agentBeads().CreateOrReopenAgentBead(agentID, agentID, fields)
+		if err == nil {
+			return nil
+		}
+		lastErr = err
+		// If beads directory doesn't exist, this is a test/setup env — warn only
+		if strings.Contains(err.Error(), "does not exist") || errors.Is(err, beads.ErrNotInstalled) {
+			style.PrintWarning("could not create agent bead (beads not configured): %v", err)
+			return nil
+		}
+		// Fail fast on config/init errors — retrying won't help (gt-2ra)
+		if isDoltConfigError(err) {
+			return fmt.Errorf("agent bead creation failed (DB not initialized — not retrying): %w", err)
+		}
+		if attempt < doltMaxRetries {
+			backoff := doltBackoff(attempt)
+			style.PrintWarning("agent bead creation attempt %d failed, retrying in %v: %v", attempt, backoff, err)
+			time.Sleep(backoff)
+		}
+	}
+	return fmt.Errorf("creating agent bead after %d attempts: %w", doltMaxRetries, lastErr)
+}
+
+func (m *Manager) agentBeads() *beads.Beads {
+	return m.beads.ForAgentBead()
+}
+
+func (m *Manager) resetAgentBeadForReuse(agentID, reason string) error {
+	return m.agentBeads().ResetAgentBeadForReuse(agentID, reason)
+}
+
+// SetAgentStateWithRetry wraps SetAgentState with retry logic.
+// Returns an error after exhausting retries, but callers may choose to warn
+// rather than fail — e.g., in StartSession where the tmux session is already
+// running and failing hard would orphan it. Agent state is a monitoring
+// concern, not a correctness requirement.
+// Fails fast on configuration/initialization errors (gt-2ra).
+func (m *Manager) SetAgentStateWithRetry(name string, state string) error {
+	var lastErr error
+	for attempt := 1; attempt <= doltStateRetries; attempt++ {
+		err := m.SetAgentState(name, state)
+		if err == nil {
+			return nil
+		}
+		lastErr = err
+		// Fail fast on config/init errors — retrying won't help (gt-2ra)
+		if isDoltConfigError(err) {
+			return fmt.Errorf("setting agent state failed (DB not initialized — not retrying): %w", err)
+		}
+		if attempt < doltStateRetries {
+			backoff := doltBackoff(attempt)
+			style.PrintWarning("SetAgentState attempt %d failed, retrying in %v: %v", attempt, backoff, err)
+			time.Sleep(backoff)
+		}
+	}
+	return fmt.Errorf("setting agent state after %d attempts: %w", doltStateRetries, lastErr)
+}
+
+// assigneeID returns the beads assignee identifier for a miner.
+// Format: "rig/miners/minerName" (e.g., "excavation/miners/Toast")
+func (m *Manager) assigneeID(name string) string {
+	return fmt.Sprintf("%s/miners/%s", m.rig.Name, name)
+}
+
+// agentBeadID returns the agent bead ID for a miner.
+// Format: "<prefix>-<rig>-miner-<name>" (e.g., "gt-excavation-miner-Toast", "bd-beads-miner-obsidian")
+// The prefix is looked up from routes.jsonl to support rigs with custom prefixes.
+// Uses the town root computed at Manager construction for deterministic IDs
+// regardless of call site (gt-lph).
+func (m *Manager) agentBeadID(name string) string {
+	prefix := beads.GetPrefixForRig(m.townRoot, m.rig.Name)
+	return beads.MinerBeadIDWithPrefix(prefix, m.rig.Name, name)
+}
+
+// getCleanupStatusFromBead reads the cleanup_status from the miner's agent bead.
+// Returns CleanupUnknown if the bead doesn't exist or has no cleanup_status.
+// ZFC #10: This is the ZFC-compliant way to check if removal is safe.
+func (m *Manager) getCleanupStatusFromBead(name string) CleanupStatus {
+	agentID := m.agentBeadID(name)
+	_, fields, err := m.beads.GetAgentBead(agentID)
+	if err != nil || fields == nil {
+		return CleanupUnknown
+	}
+	if fields.CleanupStatus == "" {
+		return CleanupUnknown
+	}
+	return CleanupStatus(fields.CleanupStatus)
+}
+
+// checkCleanupStatus validates the cleanup status against removal safety rules.
+// Returns an error if removal should be blocked based on the status.
+// force=true: allow has_uncommitted and has_unpushed, block has_stash
+// force=false: block all non-clean statuses
+func (m *Manager) checkCleanupStatus(name string, status CleanupStatus, force bool) error {
+	// Clean status is always safe
+	if status.IsSafe() {
+		return nil
+	}
+
+	// With force, uncommitted changes can be bypassed
+	if force && status.CanForceRemove() {
+		return nil
+	}
+
+	// Map status to appropriate error
+	switch status {
+	case CleanupUncommitted:
+		return &UncommittedWorkError{
+			MinerName: name,
+			Status:      &git.UncommittedWorkStatus{HasUncommittedChanges: true},
+		}
+	case CleanupStash:
+		return &UncommittedWorkError{
+			MinerName: name,
+			Status:      &git.UncommittedWorkStatus{StashCount: 1},
+		}
+	case CleanupUnpushed:
+		return &UncommittedWorkError{
+			MinerName: name,
+			Status:      &git.UncommittedWorkStatus{UnpushedCommits: 1},
+		}
+	default:
+		// Unknown status - be conservative and block
+		return &UncommittedWorkError{
+			MinerName: name,
+			Status:      &git.UncommittedWorkStatus{HasUncommittedChanges: true},
+		}
+	}
+}
+
+// repoBase returns the git directory and Git object to use for worktree operations.
+// Prefers the shared bare repo (.repo.git) if it exists, otherwise falls back to overseer/rig.
+// The bare repo architecture allows all worktrees (refinery, miners) to share branch visibility.
+func (m *Manager) repoBase() (*git.Git, error) {
+	// First check for shared bare repo (new architecture)
+	bareRepoPath := filepath.Join(m.rig.Path, ".repo.git")
+	if info, err := os.Stat(bareRepoPath); err == nil && info.IsDir() {
+		// Bare repo exists - use it
+		return git.NewGitWithDir(bareRepoPath, ""), nil
+	}
+
+	// Fall back to overseer/rig (legacy architecture)
+	overseerPath := filepath.Join(m.rig.Path, "overseer", "rig")
+	if _, err := os.Stat(overseerPath); os.IsNotExist(err) {
+		return nil, fmt.Errorf("no repo base found (neither .repo.git nor overseer/rig exists)")
+	}
+	return git.NewGit(overseerPath), nil
+}
+
+// minerDir returns the parent directory for a miner.
+// This is miners/<name>/ - the miner's home directory.
+func (m *Manager) minerDir(name string) string {
+	return filepath.Join(m.rig.Path, "miners", name)
+}
+
+// pendingPath returns the path of the allocation reservation marker for a name.
+// Written inside the pool lock by AllocateName; removed by AddWithOptions after
+// the miner directory is created. Prevents concurrent processes from allocating
+// the same name during the window between pool save and directory creation.
+func (m *Manager) pendingPath(name string) string {
+	return filepath.Join(m.rig.Path, "miners", name+".pending")
+}
+
+// clonePath returns the path where the git worktree lives.
+// New structure: miners/<name>/<rigname>/ - gives LLMs recognizable repo context.
+// Falls back to old structure: miners/<name>/ for backward compatibility.
+func (m *Manager) clonePath(name string) string {
+	// New structure: miners/<name>/<rigname>/
+	newPath := filepath.Join(m.rig.Path, "miners", name, m.rig.Name)
+	if info, err := os.Stat(newPath); err == nil && info.IsDir() {
+		return newPath
+	}
+
+	// Old structure: miners/<name>/ (backward compat)
+	oldPath := filepath.Join(m.rig.Path, "miners", name)
+	if info, err := os.Stat(oldPath); err == nil && info.IsDir() {
+		// Check if this is actually a git worktree (has .git file or dir)
+		gitPath := filepath.Join(oldPath, ".git")
+		if _, err := os.Stat(gitPath); err == nil {
+			return oldPath
+		}
+	}
+
+	// Default to new structure for new miners
+	return newPath
+}
+
+// ClonePath returns the path to a miner's git worktree.
+func (m *Manager) ClonePath(name string) string {
+	return m.clonePath(name)
+}
+
+// exists checks if a miner exists.
+func (m *Manager) exists(name string) bool {
+	_, err := os.Stat(m.minerDir(name))
+	return err == nil
+}
+
+// AddOptions configures miner creation.
+type AddOptions struct {
+	HookBead   string // Bead ID to set as hook_bead at spawn time (atomic assignment)
+	BaseBranch string // Override base branch for worktree (e.g., "origin/integration/gt-epic")
+	// ResumeBranch reuses an existing branch (typically a PR head) for the miner
+	// worktree instead of creating a fresh miner/<name>/<bead>@<ts> branch (gh#3602).
+	// When set, the miner's branch IS this branch — pushes go back to the same ref,
+	// updating the existing PR. Mutually exclusive with BaseBranch (resume implies its
+	// own start point). When empty, normal fresh-branch behavior is used.
+	ResumeBranch string
+}
+
+// Add creates a new miner as a git worktree from the repo base.
+// Uses the shared bare repo (.repo.git) if available, otherwise overseer/rig.
+// This is much faster than a full clone and shares objects with all worktrees.
+// buildBranchName creates a branch name using the configured template or default format.
+// Supported template variables:
+// - {user}: git config user.name
+// - {year}: current year (YY format)
+// - {month}: current month (MM format)
+// - {name}: miner name
+// - {issue}: issue ID (without prefix)
+// - {description}: sanitized issue title
+// - {timestamp}: unique timestamp
+//
+// If no template is configured or template is empty, uses default format:
+// - miner/{name}/{issue}@{timestamp} when issue is available
+// - miner/{name}-{timestamp} otherwise
+func (m *Manager) buildBranchName(name, issue string) string {
+	template := m.rig.GetStringConfig("miner_branch_template")
+
+	// No template configured - use default behavior for backward compatibility
+	if template == "" {
+		timestamp := strconv.FormatInt(time.Now().UnixMilli(), 36)
+		if issue != "" {
+			return fmt.Sprintf("miner/%s/%s@%s", name, issue, timestamp)
+		}
+		return fmt.Sprintf("miner/%s-%s", name, timestamp)
+	}
+
+	// Build template variables
+	vars := make(map[string]string)
+
+	// {user} - from git config user.name
+	if userName, err := m.git.ConfigGet("user.name"); err == nil && userName != "" {
+		vars["{user}"] = userName
+	} else {
+		vars["{user}"] = "unknown"
+	}
+
+	// {year} and {month}
+	now := time.Now()
+	vars["{year}"] = now.Format("06")  // YY format
+	vars["{month}"] = now.Format("01") // MM format
+
+	// {name}
+	vars["{name}"] = name
+
+	// {timestamp}
+	vars["{timestamp}"] = strconv.FormatInt(now.UnixMilli(), 36)
+
+	// {issue} - issue ID without prefix
+	if issue != "" {
+		// Strip prefix (e.g., "gt-123" -> "123")
+		if idx := strings.Index(issue, "-"); idx >= 0 {
+			vars["{issue}"] = issue[idx+1:]
+		} else {
+			vars["{issue}"] = issue
+		}
+	} else {
+		vars["{issue}"] = ""
+	}
+
+	// {description} - try to get from beads if issue is set
+	if issue != "" {
+		if issueData, err := m.beads.Show(issue); err == nil && issueData.Title != "" {
+			// Sanitize title for branch name: lowercase, replace spaces/special chars with hyphens
+			desc := strings.ToLower(issueData.Title)
+			desc = strings.Map(func(r rune) rune {
+				if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
+					return r
+				}
+				return '-'
+			}, desc)
+			// Remove consecutive hyphens and trim
+			desc = strings.Trim(desc, "-")
+			for strings.Contains(desc, "--") {
+				desc = strings.ReplaceAll(desc, "--", "-")
+			}
+			// Limit length to keep branch names reasonable
+			if len(desc) > 40 {
+				desc = desc[:40]
+			}
+			vars["{description}"] = desc
+		} else {
+			vars["{description}"] = ""
+		}
+	} else {
+		vars["{description}"] = ""
+	}
+
+	// Replace all variables in template
+	result := template
+	for key, value := range vars {
+		result = strings.ReplaceAll(result, key, value)
+	}
+
+	// Clean up any remaining empty segments (e.g., "adam///" -> "adam")
+	parts := strings.Split(result, "/")
+	cleanParts := make([]string, 0, len(parts))
+	for _, part := range parts {
+		if part != "" {
+			cleanParts = append(cleanParts, part)
+		}
+	}
+	result = strings.Join(cleanParts, "/")
+
+	return result
+}
+
+// Miner state is derived from beads assignee field, not state.json.
+//
+// Branch naming: Each miner run gets a unique branch (miner/<name>-<timestamp>).
+// This prevents drift issues from stale branches and ensures a clean starting state.
+// Old branches are ephemeral and never pushed to origin.
+func (m *Manager) Add(name string) (*Miner, error) {
+	return m.AddWithOptions(name, AddOptions{})
+}
+
+// AllocateAndAdd atomically allocates a name and creates a miner.
+// This eliminates the TOCTOU race between AllocateName and AddWithOptions
+// (GH#2215) by holding the pool lock through directory creation, ensuring
+// no concurrent process can allocate the same name.
+func (m *Manager) AllocateAndAdd(opts AddOptions) (string, *Miner, error) {
+	// Hold pool lock across allocation + directory creation to close the
+	// race window where a concurrent AllocateName could miss the pending
+	// marker and reallocate the same name.
+	poolLock, err := m.lockPool()
+	if err != nil {
+		return "", nil, err
+	}
+
+	m.reconcilePoolInternal()
+
+	name, err := m.namePool.Allocate()
+	if err != nil {
+		_ = poolLock.Unlock()
+		return "", nil, err
+	}
+
+	if err := m.namePool.Save(); err != nil {
+		_ = poolLock.Unlock()
+		return "", nil, fmt.Errorf("saving pool state: %w", err)
+	}
+
+	// Acquire per-miner lock while still holding pool lock
+	minerLock, err := m.lockMiner(name)
+	if err != nil {
+		_ = poolLock.Unlock()
+		return "", nil, err
+	}
+
+	// Create miner directory while holding both locks
+	minerDir := m.minerDir(name)
+	if err := os.MkdirAll(minerDir, 0755); err != nil {
+		_ = minerLock.Unlock()
+		_ = poolLock.Unlock()
+		return "", nil, fmt.Errorf("creating miner dir: %w", err)
+	}
+
+	// Kill any lingering tmux session for this name (gt-pqf9x)
+	if m.tmux != nil {
+		sessionName := session.MinerSessionName(session.PrefixFor(m.rig.Name), name)
+		if alive, _ := m.tmux.HasSession(sessionName); alive {
+			_ = m.tmux.KillSessionWithProcesses(sessionName)
+		}
+	}
+
+	// Directory exists — pool lock can be released. No concurrent AllocateName
+	// can reallocate this name because reconcilePoolInternal will see the directory.
+	_ = poolLock.Unlock()
+
+	// Continue with the rest of AddWithOptions under the miner lock only.
+	// addWithOptionsLocked expects the miner directory to already exist
+	// and the miner lock to be held by the caller.
+	p, err := m.addWithOptionsLocked(name, opts, minerDir)
+	_ = minerLock.Unlock()
+	if err != nil {
+		return "", nil, err
+	}
+	return name, p, nil
+}
+
+// addWithOptionsLocked performs the expensive parts of miner creation
+// (worktree, beads, settings) after the directory has been created.
+// Caller MUST hold the miner lock and have already created minerDir.
+func (m *Manager) addWithOptionsLocked(name string, opts AddOptions, minerDir string) (_ *Miner, retErr error) {
+	defer func() { telemetry.RecordMinerSpawn(context.Background(), name, retErr) }()
+
+	// Pre-check: Verify sufficient disk space before expensive worktree creation.
+	if level, msg, err := util.CheckDiskSpace(m.rig.Path); err == nil && level == util.DiskSpaceCritical {
+		return nil, fmt.Errorf("%w: %s", ErrDiskSpaceLow, msg)
+	}
+
+	clonePath := filepath.Join(minerDir, m.rig.Name)
+	branchName := m.buildBranchName(name, opts.HookBead)
+	if opts.ResumeBranch != "" {
+		branchName = opts.ResumeBranch
+	}
+
+	// Track resources created for rollback on error.
+	var worktreeCreated bool
+	cleanupOnError := func() {
+		aid := m.agentBeadID(name)
+		_ = m.resetAgentBeadForReuse(aid, "spawn rollback")
+
+		if worktreeCreated {
+			if rg, repoErr := m.repoBase(); repoErr == nil {
+				_ = rg.WorktreeRemove(clonePath, true)
+			}
+		}
+
+		_ = os.RemoveAll(minerDir)
+
+		m.namePool.Release(name)
+		_ = m.namePool.Save()
+	}
+
+	repoGit, err := m.repoBase()
+	if err != nil {
+		cleanupOnError()
+		return nil, fmt.Errorf("finding repo base: %w", err)
+	}
+
+	if err := repoGit.Fetch("origin"); err != nil {
+		style.PrintWarning("could not fetch origin: %v", err)
+	}
+
+	if opts.ResumeBranch != "" {
+		// Resume an existing branch (gh#3602). Make sure we have the latest tip
+		// for the named branch, then attach the worktree directly. WorktreeAddExistingForce
+		// handles the case where another worktree previously had this branch checked out.
+		if err := repoGit.FetchBranch("origin", opts.ResumeBranch); err != nil {
+			style.PrintWarning("could not fetch resume branch %s: %v", opts.ResumeBranch, err)
+		}
+		if err := repoGit.WorktreeAddExistingForce(clonePath, opts.ResumeBranch); err != nil {
+			cleanupOnError()
+			return nil, fmt.Errorf("creating worktree on existing branch %s: %w", opts.ResumeBranch, err)
+		}
+		worktreeCreated = true
+	} else {
+		var startPoint string
+		if opts.BaseBranch != "" {
+			startPoint = opts.BaseBranch
+		} else {
+			defaultBranch := "main"
+			if rigCfg, err := rig.LoadRigConfig(m.rig.Path); err == nil && rigCfg.DefaultBranch != "" {
+				defaultBranch = rigCfg.DefaultBranch
+			}
+			startPoint = fmt.Sprintf("origin/%s", defaultBranch)
+		}
+
+		if exists, err := repoGit.RefExists(startPoint); err != nil {
+			cleanupOnError()
+			return nil, fmt.Errorf("checking ref %s: %w", startPoint, err)
+		} else if !exists {
+			cleanupOnError()
+			return nil, fmt.Errorf("configured default_branch not found as %s in bare repo\n\n"+
+				"Possible causes:\n"+
+				"  - Branch doesn't exist on the remote (create it there first)\n"+
+				"  - default_branch is misconfigured (check %s/config.json)\n"+
+				"  - Bare repo fetch failed (try: git -C %s fetch origin)\n\n"+
+				"Run 'gt doctor' to diagnose.",
+				startPoint, m.rig.Path, filepath.Join(m.rig.Path, ".repo.git"))
+		}
+
+		if err := repoGit.WorktreeAddFromRef(clonePath, branchName, startPoint); err != nil {
+			cleanupOnError()
+			return nil, fmt.Errorf("creating worktree from %s: %w", startPoint, err)
+		}
+		worktreeCreated = true
+	}
+
+	// Provision CLAUDE.md with gt done instructions (same as AddWithOptions path).
+	lockedRigName := filepath.Base(m.rig.Path)
+	if _, err := templates.CreateMinerCLAUDEmd(clonePath, lockedRigName, name); err != nil {
+		style.PrintWarning("could not provision miner CLAUDE.md: %v", err)
+	}
+
+	if err := m.setupSharedBeads(clonePath); err != nil {
+		cleanupOnError()
+		return nil, fmt.Errorf("setting up shared beads: %w (miner cannot submit MRs without shared beads)", err)
+	}
+
+	if err := beads.ProvisionPrimeMDForWorktree(clonePath); err != nil {
+		style.PrintWarning("could not provision PRIME.md: %v", err)
+	}
+
+	if err := rig.CopyOverlay(m.rig.Path, clonePath); err != nil {
+		style.PrintWarning("could not copy overlay files: %v", err)
+	}
+
+	if err := rig.EnsureLocalExcludePatterns(clonePath); err != nil {
+		style.PrintWarning("could not update local git excludes: %v", err)
+	}
+
+	townRoot := filepath.Dir(m.rig.Path)
+	runtimeConfig := config.ResolveRoleAgentConfig("miner", townRoot, m.rig.Path)
+	minerSettingsDir := config.RoleSettingsDir("miner", m.rig.Path)
+	if err := runtime.EnsureSettingsForRole(minerSettingsDir, clonePath, "miner", runtimeConfig); err != nil {
+		style.PrintWarning("could not install runtime settings: %v", err)
+	}
+
+	if err := rig.RunSetupHooks(m.rig.Path, clonePath); err != nil {
+		style.PrintWarning("could not run setup hooks: %v", err)
+	}
+	if err := m.runSetupCommand(clonePath); err != nil {
+		cleanupOnError()
+		return nil, err
+	}
+
+	agentID := m.agentBeadID(name)
+	if err = m.createAgentBeadWithRetry(agentID, &beads.AgentFields{
+		RoleType:   "miner",
+		Rig:        m.rig.Name,
+		AgentState: "spawning",
+		HookBead:   opts.HookBead,
+	}); err != nil {
+		cleanupOnError()
+		return nil, fmt.Errorf("agent bead required for miner tracking: %w", err)
+	}
+
+	now := time.Now()
+	miner := &Miner{
+		Name:      name,
+		Rig:       m.rig.Name,
+		State:     StateWorking,
+		ClonePath: clonePath,
+		Branch:    branchName,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+
+	return miner, nil
+}
+
+// AddWithOptions creates a new miner with the specified options.
+// This allows setting hook_bead atomically at creation time, avoiding
+// cross-beads routing issues when slinging work to new miners.
+func (m *Manager) AddWithOptions(name string, opts AddOptions) (_ *Miner, retErr error) {
+	defer func() { telemetry.RecordMinerSpawn(context.Background(), name, retErr) }()
+	// Acquire per-miner file lock to prevent concurrent Add/Remove/Repair races
+	fl, err := m.lockMiner(name)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = fl.Unlock() }()
+
+	if m.exists(name) {
+		return nil, ErrMinerExists
+	}
+
+	// Pre-check: Verify sufficient disk space before creating worktree.
+	// Spawning a miner creates a git worktree, copies overlay files, and writes
+	// beads state — all requiring disk I/O. If the disk is nearly full, fail early
+	// with a clear message rather than leaving a half-created miner.
+	// See: disk-space-resilience — 5 miners died silently on disk exhaustion.
+	if level, msg, err := util.CheckDiskSpace(m.rig.Path); err == nil && level == util.DiskSpaceCritical {
+		return nil, fmt.Errorf("%w: %s", ErrDiskSpaceLow, msg)
+	}
+
+	// New structure: miners/<name>/<rigname>/ for LLM ergonomics
+	// The miner's home dir is miners/<name>/, worktree is miners/<name>/<rigname>/
+	minerDir := m.minerDir(name)
+	clonePath := filepath.Join(minerDir, m.rig.Name)
+
+	// Build branch name using configured template or default format.
+	// When resuming an existing branch (gh#3602), use that branch's name directly
+	// so pushes go back to the same ref and update the existing PR.
+	branchName := m.buildBranchName(name, opts.HookBead)
+	if opts.ResumeBranch != "" {
+		branchName = opts.ResumeBranch
+	}
+
+	// Create miner directory (miners/<name>/)
+	if err := os.MkdirAll(minerDir, 0755); err != nil {
+		return nil, fmt.Errorf("creating miner dir: %w", err)
+	}
+
+	// Directory created — remove the allocation reservation marker.
+	// reconcilePoolInternal will now find the directory directly and treat the
+	// name as in-use without needing the .pending file.
+	_ = os.Remove(m.pendingPath(name))
+
+	// Track resources created for rollback on error.
+	// AddWithOptions creates several resources in sequence (directory, worktree,
+	// agent bead); on failure, all created resources must be cleaned up to prevent
+	// leaking names, orphaning beads, or leaving stale worktree registrations.
+	// See: gt-2vs22
+	var worktreeCreated bool
+	cleanupOnError := func() {
+		// Best-effort reset of agent bead (may have been partially created
+		// by a failed createAgentBeadWithRetry)
+		aid := m.agentBeadID(name)
+		_ = m.resetAgentBeadForReuse(aid, "spawn rollback")
+
+		// Remove git worktree registration if worktree was successfully added.
+		// Must happen before directory removal so git can clean up properly.
+		if worktreeCreated {
+			if rg, repoErr := m.repoBase(); repoErr == nil {
+				_ = rg.WorktreeRemove(clonePath, true)
+			}
+		}
+
+		// Remove miner directory
+		_ = os.RemoveAll(minerDir)
+
+		// Release name back to pool so it can be reallocated immediately
+		// rather than waiting for the next reconcile cycle.
+		m.namePool.Release(name)
+		_ = m.namePool.Save()
+	}
+
+	// Get the repo base (bare repo or overseer/rig)
+	repoGit, err := m.repoBase()
+	if err != nil {
+		cleanupOnError()
+		return nil, fmt.Errorf("finding repo base: %w", err)
+	}
+
+	// Fetch latest from origin to ensure worktree starts from up-to-date code
+	if err := repoGit.Fetch("origin"); err != nil {
+		// Non-fatal - proceed with potentially stale code
+		style.PrintWarning("could not fetch origin: %v", err)
+	}
+
+	if opts.ResumeBranch != "" {
+		// Resume an existing branch (gh#3602): attach the worktree directly to the
+		// named branch. WorktreeAddExistingForce tolerates the branch being checked
+		// out elsewhere (stale worktree), and the explicit fetch ensures we have
+		// the latest tip before checkout.
+		if err := repoGit.FetchBranch("origin", opts.ResumeBranch); err != nil {
+			style.PrintWarning("could not fetch resume branch %s: %v", opts.ResumeBranch, err)
+		}
+		if err := repoGit.WorktreeAddExistingForce(clonePath, opts.ResumeBranch); err != nil {
+			cleanupOnError()
+			return nil, fmt.Errorf("creating worktree on existing branch %s: %w", opts.ResumeBranch, err)
+		}
+		worktreeCreated = true
+	} else {
+		// Determine the start point for the new worktree
+		var startPoint string
+		if opts.BaseBranch != "" {
+			startPoint = opts.BaseBranch
+		} else {
+			defaultBranch := "main"
+			if rigCfg, err := rig.LoadRigConfig(m.rig.Path); err == nil && rigCfg.DefaultBranch != "" {
+				defaultBranch = rigCfg.DefaultBranch
+			}
+			startPoint = fmt.Sprintf("origin/%s", defaultBranch)
+		}
+
+		// Validate that startPoint ref exists before attempting worktree creation
+		if exists, err := repoGit.RefExists(startPoint); err != nil {
+			cleanupOnError()
+			return nil, fmt.Errorf("checking ref %s: %w", startPoint, err)
+		} else if !exists {
+			cleanupOnError()
+			return nil, fmt.Errorf("configured default_branch not found as %s in bare repo\n\n"+
+				"Possible causes:\n"+
+				"  - Branch doesn't exist on the remote (create it there first)\n"+
+				"  - default_branch is misconfigured (check %s/config.json)\n"+
+				"  - Bare repo fetch failed (try: git -C %s fetch origin)\n\n"+
+				"Run 'gt doctor' to diagnose.",
+				startPoint, m.rig.Path, filepath.Join(m.rig.Path, ".repo.git"))
+		}
+
+		// Always create fresh branch - unique name guarantees no collision
+		// git worktree add -b miner/<name>-<timestamp> <path> <startpoint>
+		// Worktree goes in miners/<name>/<rigname>/ for LLM ergonomics
+		if err := repoGit.WorktreeAddFromRef(clonePath, branchName, startPoint); err != nil {
+			cleanupOnError()
+			return nil, fmt.Errorf("creating worktree from %s: %w", startPoint, err)
+		}
+		worktreeCreated = true
+	}
+
+	// Provision CLAUDE.md with gt done instructions and lifecycle context.
+	// This is the primary mechanism for miners to learn about completion —
+	// the file persists across compaction and session restarts (unlike ephemeral
+	// gt prime output which scrolls past and gets lost).
+	rigName := filepath.Base(m.rig.Path)
+	if _, err := templates.CreateMinerCLAUDEmd(clonePath, rigName, name); err != nil {
+		// Non-fatal — miner can still learn via gt prime hook
+		style.PrintWarning("could not provision miner CLAUDE.md: %v", err)
+	}
+
+	// Set up shared beads: miner uses rig's .beads via redirect file.
+	// This eliminates git sync overhead - all miners share one database.
+	// Fatal: without shared beads, gt done writes MR beads to a local .beads/
+	// that the Refinery never reads, causing the merge queue to stay empty.
+	if err := m.setupSharedBeads(clonePath); err != nil {
+		cleanupOnError()
+		return nil, fmt.Errorf("setting up shared beads: %w (miner cannot submit MRs without shared beads)", err)
+	}
+
+	// Provision PRIME.md with Excavation Site context for this worker.
+	// This is the fallback if SessionStart hook fails - ensures miners
+	// always have GUPP and essential Excavation Site context.
+	if err := beads.ProvisionPrimeMDForWorktree(clonePath); err != nil {
+		// Non-fatal - miner can still work via hook, warn but don't fail
+		style.PrintWarning("could not provision PRIME.md: %v", err)
+	}
+
+	// Copy overlay files from .runtime/overlay/ to miner root.
+	// This allows services to have .env and other config files at their root.
+	if err := rig.CopyOverlay(m.rig.Path, clonePath); err != nil {
+		// Non-fatal - log warning but continue
+		style.PrintWarning("could not copy overlay files: %v", err)
+	}
+
+	// Keep worktree runtime ignores local so the tracked tree stays clean.
+	if err := rig.EnsureLocalExcludePatterns(clonePath); err != nil {
+		style.PrintWarning("could not update local git excludes: %v", err)
+	}
+
+	// Install runtime settings in the shared miners parent directory.
+	// Settings are passed to Claude Code via --settings flag.
+	townRoot := filepath.Dir(m.rig.Path)
+	runtimeConfig := config.ResolveRoleAgentConfig("miner", townRoot, m.rig.Path)
+	minerSettingsDir := config.RoleSettingsDir("miner", m.rig.Path)
+	if err := runtime.EnsureSettingsForRole(minerSettingsDir, clonePath, "miner", runtimeConfig); err != nil {
+		// Non-fatal - log warning but continue
+		style.PrintWarning("could not install runtime settings: %v", err)
+	}
+
+	// Run setup hooks from .runtime/setup-hooks/.
+	// These hooks can inject local git config, copy secrets, or perform other setup tasks.
+	if err := rig.RunSetupHooks(m.rig.Path, clonePath); err != nil {
+		// Non-fatal - log warning but continue
+		style.PrintWarning("could not run setup hooks: %v", err)
+	}
+	if err := m.runSetupCommand(clonePath); err != nil {
+		cleanupOnError()
+		return nil, err
+	}
+
+	// NOTE: Slash commands (.claude/commands/) are provisioned at town level by gt install.
+	// All agents inherit them via Claude's directory traversal - no per-workspace copies needed.
+
+	// Create or reopen agent bead for ZFC compliance (self-report state).
+	// State starts as "spawning" - will be updated to "working" when Claude starts.
+	// HookBead is set atomically at creation time if provided (avoids cross-beads routing issues).
+	// Uses CreateOrReopenAgentBead to handle re-spawning with same name (GH #332).
+	// Retries with backoff — a miner without an agent bead is untrackable (gt-94llt7).
+	agentID := m.agentBeadID(name)
+	if err = m.createAgentBeadWithRetry(agentID, &beads.AgentFields{
+		RoleType:   "miner",
+		Rig:        m.rig.Name,
+		AgentState: "spawning",
+		HookBead:   opts.HookBead, // Set atomically at spawn time
+	}); err != nil {
+		// Hard fail — an untrackable miner is worse than no miner
+		cleanupOnError()
+		return nil, fmt.Errorf("agent bead required for miner tracking: %w", err)
+	}
+
+	// Return miner with working state (transient model: miners are spawned with work)
+	// State is derived from beads, not stored in state.json
+	now := time.Now()
+	miner := &Miner{
+		Name:      name,
+		Rig:       m.rig.Name,
+		State:     StateWorking, // Transient model: miner spawns with work
+		ClonePath: clonePath,
+		Branch:    branchName,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+
+	return miner, nil
+}
+
+// Remove deletes a miner worktree.
+// If force is true, removes even with uncommitted changes and unpushed commits.
+// Stashes still block removal with force (use nuclear=true to bypass all checks).
+func (m *Manager) Remove(name string, force bool) error {
+	return m.RemoveWithOptions(name, force, false, false)
+}
+
+// RemoveWithOptions deletes a miner worktree with explicit control over safety checks.
+// force=true: bypass uncommitted changes and unpushed commits check
+// nuclear=true: bypass ALL safety checks including stashes
+// selfNuke=true: bypass cwd-in-worktree check (for miner deleting its own worktree)
+//
+// ZFC #10: Uses cleanup_status from agent bead if available (miner self-report),
+// falls back to git check for backward compatibility.
+func (m *Manager) RemoveWithOptions(name string, force, nuclear, selfNuke bool) (retErr error) {
+	defer func() { telemetry.RecordMinerRemove(context.Background(), name, retErr) }()
+	// Acquire per-miner file lock to prevent concurrent Remove races
+	fl, err := m.lockMiner(name)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = fl.Unlock() }()
+
+	if !m.exists(name) {
+		return ErrMinerNotFound
+	}
+
+	// Clone path is where the git worktree lives (new or old structure)
+	clonePath := m.clonePath(name)
+	// Miner dir is the parent directory (miners/<name>/)
+	minerDir := m.minerDir(name)
+
+	// Check for uncommitted work unless bypassed
+	if !nuclear {
+		// ZFC #10: First try to read cleanup_status from agent bead
+		// This is the ZFC-compliant path - trust what the miner reported
+		cleanupStatus := m.getCleanupStatusFromBead(name)
+
+		if cleanupStatus != CleanupUnknown {
+			// ZFC path: Use miner's self-reported status
+			if err := m.checkCleanupStatus(name, cleanupStatus, force); err != nil {
+				return err
+			}
+		} else {
+			// Fallback path: Check git directly (for miners that haven't reported yet)
+			minerGit := git.NewGit(clonePath)
+			status, err := minerGit.CheckUncommittedWork()
+			if err == nil && !status.Clean() {
+				if force {
+					// Force mode: bypass uncommitted changes and unpushed commits.
+					// Only block on stashes, which represent intentional work-in-progress.
+					if status.StashCount > 0 {
+						return &UncommittedWorkError{MinerName: name, Status: status}
+					}
+				} else {
+					return &UncommittedWorkError{MinerName: name, Status: status}
+				}
+			}
+		}
+	}
+
+	// Even nuclear mode must not delete worktrees with unmerged MRs.
+	// The nuclear flag bypasses git-status checks (needed for self-nuke)
+	// but MR status is a higher-level concern that should always be checked.
+	if !force {
+		agentID := m.agentBeadID(name)
+		_, fields, aErr := m.agentBeads().GetAgentBead(agentID)
+		if aErr == nil && fields != nil && fields.ActiveMR != "" {
+			mrBead, mrErr := m.beads.Show(fields.ActiveMR)
+			if mrErr == nil && mrBead != nil && beads.IssueStatus(mrBead.Status).BlocksRemoval() {
+				return fmt.Errorf("cannot remove miner %s: MR %s is still open in merge queue\nRefinery will process the MR and clean up after merge\nUse --force to override (risks data loss)", name, fields.ActiveMR)
+			}
+		}
+	}
+
+	// Reset agent bead FIRST, before any filesystem operations.
+	// This prevents a race where a concurrent sling allocates the same name,
+	// sets hook_bead, and then has it cleared by this cleanup. By resetting
+	// the agent bead first (clearing fields, setting agent_state="nuked"),
+	// concurrent slings see a clean bead and CreateOrReopenAgentBead can
+	// simply update it without needing close/reopen (which fails on Dolt).
+	// See gt-14b8o: close/reopen cycle breaks on Dolt backend.
+	agentID := m.agentBeadID(name)
+	if err := m.resetAgentBeadForReuse(agentID, "miner removed"); err != nil {
+		// Only log if not "not found" - it's ok if it doesn't exist
+		if !errors.Is(err, beads.ErrNotFound) {
+			style.PrintWarning("could not reset agent bead %s: %v", agentID, err)
+		}
+	}
+
+	// Unassign any work beads still pointing at this miner (gt-e4u1).
+	// Without this, beads remain assigned to a ghost miner (status in_progress,
+	// assignee set) after removal, permanently stuck with no one working on them.
+	m.unassignWorkBeads(name)
+
+	// Check if user's shell is cd'd into the worktree (prevents broken shell)
+	// This check runs unless selfNuke=true (miner deleting its own worktree).
+	// When a miner calls `gt done`, it's inside its worktree by design - the session
+	// will be killed immediately after, so breaking the shell is expected and harmless.
+	// See: https://github.com/steveyegge/excavation/issues/942
+	if !selfNuke {
+		cwd, cwdErr := os.Getwd()
+		if cwdErr == nil {
+			// Normalize paths for comparison
+			cwdAbs, absErr1 := filepath.Abs(cwd)
+			cloneAbs, absErr2 := filepath.Abs(clonePath)
+			minerAbs, absErr3 := filepath.Abs(minerDir)
+
+			if absErr1 != nil || absErr2 != nil || absErr3 != nil {
+				// If we can't resolve paths, refuse to nuke for safety
+				return fmt.Errorf("cannot verify shell safety: failed to resolve paths")
+			}
+
+			if strings.HasPrefix(cwdAbs, cloneAbs) || strings.HasPrefix(cwdAbs, minerAbs) {
+				return fmt.Errorf("%w: your shell is in %s\n\nPlease cd elsewhere first, then retry:\n  cd ~/gt\n  gt miner nuke %s/%s --force",
+					ErrShellInWorktree, cwd, m.rig.Name, name)
+			}
+		}
+	}
+
+	// Best-effort: Push the miner's branch to remote before removing the worktree.
+	// This preserves committed work that hasn't been pushed yet — without this,
+	// nuking a stalled miner (e.g., after disk space recovery) permanently loses
+	// any commits on the branch. The push is non-blocking: failures are warnings,
+	// not errors, so nuke still proceeds. See: disk-space-resilience.
+	minerGit := git.NewGit(clonePath)
+	if branch, brErr := minerGit.CurrentBranch(); brErr == nil && branch != "" {
+		pushed, unpushedCount, checkErr := minerGit.BranchPushedToRemote(branch, "origin")
+		if checkErr == nil && !pushed && unpushedCount > 0 {
+			if pushErr := minerGit.Push("origin", branch, false); pushErr != nil {
+				style.PrintWarning("could not push branch %s before removal (%d unpushed commit(s)): %v",
+					branch, unpushedCount, pushErr)
+				style.PrintWarning("WORK AT RISK: branch %s has %d unpushed commit(s) in worktree %s",
+					branch, unpushedCount, clonePath)
+			}
+		}
+	}
+
+	// Get repo base to remove the worktree properly
+	repoGit, err := m.repoBase()
+	if err != nil {
+		// Best-effort: try to prune stale worktree entries from both possible repo locations.
+		// This handles edge cases where the repo base is corrupted but worktree entries exist.
+		bareRepoPath := filepath.Join(m.rig.Path, ".repo.git")
+		if info, statErr := os.Stat(bareRepoPath); statErr == nil && info.IsDir() {
+			bareGit := git.NewGitWithDir(bareRepoPath, "")
+			_ = bareGit.WorktreePrune()
+		}
+		overseerRigPath := filepath.Join(m.rig.Path, "overseer", "rig")
+		if info, statErr := os.Stat(overseerRigPath); statErr == nil && info.IsDir() {
+			overseerGit := git.NewGit(overseerRigPath)
+			_ = overseerGit.WorktreePrune()
+		}
+		// Fall back to direct removal if repo base not found
+		return os.RemoveAll(minerDir)
+	}
+
+	// Try to remove as a worktree first (use force flag for worktree removal too)
+	if err := repoGit.WorktreeRemove(clonePath, force); err != nil {
+		// Fall back to direct removal if worktree removal fails
+		// (e.g., if this is an old-style clone, not a worktree)
+		if removeErr := os.RemoveAll(clonePath); removeErr != nil {
+			return fmt.Errorf("removing clone path: %w", removeErr)
+		}
+	} else {
+		// GT-1L3MY9: git worktree remove may leave untracked directories behind.
+		// Clean up any leftover files (overlay files, .beads/, setup hook outputs, etc.)
+		// Use RemoveAll to handle non-empty directories with untracked files.
+		_ = os.RemoveAll(clonePath)
+	}
+
+	// Also remove the parent miner directory
+	// (for new structure: miners/<name>/ contains only miners/<name>/<rigname>/)
+	if minerDir != clonePath {
+		// GT-1L3MY9: Clean up any orphaned files at miner level.
+		// Use RemoveAll to handle non-empty directories with leftover files.
+		_ = os.RemoveAll(minerDir)
+	}
+
+	// Prune any stale worktree entries (non-fatal: cleanup only)
+	_ = repoGit.WorktreePrune()
+
+	// Verify removal succeeded (fixes #618)
+	// The above removal attempts may fail silently on permissions, symlinks, or busy files
+	if err := verifyRemovalComplete(minerDir, clonePath); err != nil {
+		// Log warning but don't fail - the miner is effectively "removed" from Excavation Site's perspective
+		style.PrintWarning("incomplete removal for %s: %v", name, err)
+	}
+
+	// Release name back to pool if it's a pooled name (non-fatal: state file update)
+	m.namePool.Release(name)
+	_ = m.namePool.Save()
+
+	return nil
+}
+
+// verifyRemovalComplete checks that miner directories were actually removed.
+// If they still exist, it attempts more aggressive cleanup and returns an error
+// describing what couldn't be removed.
+func verifyRemovalComplete(minerDir, clonePath string) error {
+	var remaining []string
+
+	// Check if clone path still exists
+	if _, err := os.Stat(clonePath); err == nil {
+		// Try one more aggressive removal
+		if removeErr := forceRemoveDir(clonePath); removeErr != nil {
+			remaining = append(remaining, clonePath)
+		}
+	}
+
+	// Check if miner dir still exists (and is different from clone path)
+	if minerDir != clonePath {
+		if _, err := os.Stat(minerDir); err == nil {
+			if removeErr := forceRemoveDir(minerDir); removeErr != nil {
+				remaining = append(remaining, minerDir)
+			}
+		}
+	}
+
+	if len(remaining) > 0 {
+		return fmt.Errorf("directories still exist after removal: %v", remaining)
+	}
+	return nil
+}
+
+// forceRemoveDir attempts aggressive removal of a directory.
+// It handles permission issues by making files writable before removal.
+func forceRemoveDir(dir string) error {
+	// First try normal removal
+	if err := os.RemoveAll(dir); err == nil {
+		return nil
+	}
+
+	// Walk the directory and make everything writable, then try again
+	_ = filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return nil // Continue on error
+		}
+		// Make writable (0755 for dirs, 0644 for files)
+		if d.IsDir() {
+			//nolint:gosec // Controlled cleanup of a path inside the allocated miner directory.
+			_ = os.Chmod(path, 0755)
+		} else {
+			//nolint:gosec // Controlled cleanup of a path inside the allocated miner directory.
+			_ = os.Chmod(path, 0644)
+		}
+		return nil
+	})
+
+	// Try removal again after fixing permissions
+	return os.RemoveAll(dir)
+}
+
+// AllocateName allocates a name from the name pool.
+// Returns a themed pooled name (furiosa, nux, etc.) if available,
+// otherwise returns an overflow name (just a number like "51").
+// The rig prefix is added by SessionName to create full session names like "gt-<rig>-51".
+// After allocation, kills any lingering tmux session for the name (gt-pqf9x)
+// to prevent "session already running" errors when reusing names from dead miners.
+func (m *Manager) AllocateName() (string, error) {
+	// Acquire pool lock to prevent concurrent allocations from racing
+	fl, err := m.lockPool()
+	if err != nil {
+		return "", err
+	}
+	defer func() { _ = fl.Unlock() }()
+
+	// Reconcile without re-acquiring the pool lock
+	m.reconcilePoolInternal()
+
+	name, err := m.namePool.Allocate()
+	if err != nil {
+		return "", err
+	}
+
+	if err := m.namePool.Save(); err != nil {
+		return "", fmt.Errorf("saving pool state: %w", err)
+	}
+
+	// Write a reservation marker inside the pool lock scope.
+	// This closes the TOCTOU window between pool save and directory creation:
+	// reconcilePoolInternal uses directories as the source of truth for in-use
+	// names, so a concurrent process calling AllocateName (after this lock is
+	// released but before AddWithOptions creates the directory) would see the
+	// name as available and reallocate it. The marker acts as a stand-in
+	// directory until AddWithOptions removes it after os.MkdirAll succeeds.
+	// Stale markers (process crashed before AddWithOptions) are cleaned up by
+	// cleanupOrphanMinerState after pendingMaxAge.
+	if err := os.MkdirAll(filepath.Join(m.rig.Path, "miners"), 0755); err != nil {
+		return "", fmt.Errorf("creating miners dir for reservation marker: %w", err)
+	}
+	if err := os.WriteFile(m.pendingPath(name), []byte(fmt.Sprintf("%d", os.Getpid())), 0644); err != nil {
+		return "", fmt.Errorf("writing reservation marker: %w", err)
+	}
+
+	// Kill any lingering tmux session for this name (gt-pqf9x).
+	// ReconcilePool kills sessions for names without directories, but a name
+	// can be allocated after its directory was cleaned up while the tmux session
+	// lingers (race between cleanup and allocation). This extra check ensures
+	// no stale session blocks the new miner's session creation.
+	if m.tmux != nil {
+		sessionName := session.MinerSessionName(session.PrefixFor(m.rig.Name), name)
+		if alive, _ := m.tmux.HasSession(sessionName); alive {
+			_ = m.tmux.KillSessionWithProcesses(sessionName)
+		}
+	}
+
+	return name, nil
+}
+
+// ReleaseName releases a name back to the pool.
+// This is called when a miner is removed.
+func (m *Manager) ReleaseName(name string) {
+	m.namePool.Release(name)
+	_ = m.namePool.Save() // non-fatal: state file update
+}
+
+// RepairWorktree repairs a stale miner by removing it and creating a fresh worktree.
+// This is NOT for normal operation - it handles reconciliation when AllocateName
+// returns a name that unexpectedly already exists (stale state recovery).
+//
+// The miner starts with the latest code from origin/<default-branch>.
+// The name is preserved (not released to pool) since we're repairing immediately.
+// force controls whether to bypass uncommitted changes check.
+//
+// Branch naming: Each repair gets a unique branch (miner/<name>-<timestamp>).
+// Old branches are left for garbage collection - they're never pushed to origin.
+func (m *Manager) RepairWorktree(name string, force bool) (*Miner, error) {
+	return m.RepairWorktreeWithOptions(name, force, AddOptions{})
+}
+
+// RepairWorktreeWithOptions repairs a stale miner and creates a fresh worktree with options.
+// This is NOT for normal operation - see RepairWorktree for context.
+// Allows setting hook_bead atomically at repair time.
+// After repair, uses new structure: miners/<name>/<rigname>/
+func (m *Manager) RepairWorktreeWithOptions(name string, force bool, opts AddOptions) (*Miner, error) {
+	// Acquire per-miner file lock to prevent concurrent Repair/Remove races
+	fl, err := m.lockMiner(name)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = fl.Unlock() }()
+
+	if !m.exists(name) {
+		return nil, ErrMinerNotFound
+	}
+
+	// Get the old clone path (may be old or new structure)
+	oldClonePath := m.clonePath(name)
+	minerGit := git.NewGit(oldClonePath)
+
+	// New clone path uses new structure
+	minerDir := m.minerDir(name)
+	newClonePath := filepath.Join(minerDir, m.rig.Name)
+
+	// Get the repo base (bare repo or overseer/rig)
+	repoGit, err := m.repoBase()
+	if err != nil {
+		return nil, fmt.Errorf("finding repo base: %w", err)
+	}
+
+	// Check for uncommitted work unless forced
+	if !force {
+		status, err := minerGit.CheckUncommittedWork()
+		if err == nil && !status.Clean() {
+			return nil, &UncommittedWorkError{MinerName: name, Status: status}
+		}
+	}
+
+	// Fetch latest from origin to ensure we have fresh commits (non-fatal: may be offline)
+	_ = repoGit.Fetch("origin")
+
+	// Ensure miner directory exists for new structure
+	if err := os.MkdirAll(minerDir, 0755); err != nil {
+		return nil, fmt.Errorf("creating miner dir: %w", err)
+	}
+
+	// Build branch name. When resuming an existing branch (gh#3602), use that
+	// branch's name directly so pushes update the existing PR.
+	branchName := m.buildBranchName(name, opts.HookBead)
+	if opts.ResumeBranch != "" {
+		branchName = opts.ResumeBranch
+	}
+
+	tmpClonePath := newClonePath + ".repair-tmp"
+	_ = os.RemoveAll(tmpClonePath) // clean up any leftover temp dir
+
+	if opts.ResumeBranch != "" {
+		// Resume an existing branch: fetch and attach the temp worktree directly
+		// to the named branch instead of creating a fresh miner/<name>/<bead>@<ts>.
+		if err := repoGit.FetchBranch("origin", opts.ResumeBranch); err != nil {
+			style.PrintWarning("could not fetch resume branch %s: %v", opts.ResumeBranch, err)
+		}
+		if err := repoGit.WorktreeAddExistingForce(tmpClonePath, opts.ResumeBranch); err != nil {
+			return nil, fmt.Errorf("creating fresh worktree on existing branch %s: %w", opts.ResumeBranch, err)
+		}
+	} else {
+		// Determine the start point for the new worktree
+		var startPoint string
+		if opts.BaseBranch != "" {
+			startPoint = opts.BaseBranch
+		} else {
+			defaultBranch := "main"
+			if rigCfg, err := rig.LoadRigConfig(m.rig.Path); err == nil && rigCfg.DefaultBranch != "" {
+				defaultBranch = rigCfg.DefaultBranch
+			}
+			startPoint = fmt.Sprintf("origin/%s", defaultBranch)
+		}
+
+		// Validate that startPoint ref exists before attempting worktree creation
+		if exists, err := repoGit.RefExists(startPoint); err != nil {
+			return nil, fmt.Errorf("checking ref %s: %w", startPoint, err)
+		} else if !exists {
+			return nil, fmt.Errorf("configured default_branch not found as %s in bare repo\n\n"+
+				"Possible causes:\n"+
+				"  - Branch doesn't exist on the remote (create it there first)\n"+
+				"  - default_branch is misconfigured (check %s/config.json)\n"+
+				"  - Bare repo fetch failed (try: git -C %s fetch origin)\n\n"+
+				"Run 'gt doctor' to diagnose.",
+				startPoint, m.rig.Path, filepath.Join(m.rig.Path, ".repo.git"))
+		}
+
+		// Create fresh worktree to a temporary path first, so we can roll back if it fails.
+		// This prevents destroying the old worktree before the new one is confirmed working.
+		if err := repoGit.WorktreeAddFromRef(tmpClonePath, branchName, startPoint); err != nil {
+			return nil, fmt.Errorf("creating fresh worktree from %s: %w", startPoint, err)
+		}
+	}
+
+	// New worktree created successfully — now safe to remove old worktree and reset bead.
+	// Kill the existing session first: its cwd is about to disappear, and leaving
+	// a live idle session around makes SessionManager.Start return ErrSessionRunning
+	// instead of creating a fresh session for the repaired worktree.
+	if err := m.killExistingMinerSession(name, "repair"); err != nil {
+		_ = repoGit.WorktreeRemove(tmpClonePath, true)
+		_ = os.RemoveAll(tmpClonePath)
+		return nil, err
+	}
+
+	// Remove old worktree BEFORE resetting bead to prevent name collision if a new
+	// spawn sees the clean bead while the old worktree still exists.
+	if err := repoGit.WorktreeRemove(oldClonePath, true); err != nil {
+		// Fall back to direct removal
+		if removeErr := os.RemoveAll(oldClonePath); removeErr != nil {
+			// Clean up temp worktree before returning
+			_ = repoGit.WorktreeRemove(tmpClonePath, true)
+			_ = os.RemoveAll(tmpClonePath)
+			return nil, fmt.Errorf("removing old clone path: %w", removeErr)
+		}
+	}
+
+	// Reset agent bead AFTER old worktree is confirmed removed.
+	// NOTE: We use ResetAgentBeadForReuse to avoid the close/reopen cycle
+	// that fails on Dolt backend (gt-14b8o).
+	agentID := m.agentBeadID(name)
+	if err := m.resetAgentBeadForReuse(agentID, "miner repair"); err != nil {
+		if !errors.Is(err, beads.ErrNotFound) {
+			style.PrintWarning("could not reset old agent bead %s: %v", agentID, err)
+		}
+	}
+
+	// Prune stale worktree entries (non-fatal: cleanup only)
+	_ = repoGit.WorktreePrune()
+
+	// Move temp worktree to final location using git worktree move.
+	// os.Rename breaks worktrees: the .git file and registry gitdir still
+	// reference the old temp path, leaving a broken worktree. (GH#2056)
+	if err := repoGit.WorktreeMove(tmpClonePath, newClonePath); err != nil {
+		// Clean up temp worktree if move fails
+		_ = repoGit.WorktreeRemove(tmpClonePath, true)
+		_ = os.RemoveAll(tmpClonePath)
+		return nil, fmt.Errorf("moving repaired worktree to final path: %w", err)
+	}
+
+	// Provision CLAUDE.md (same as spawn path — repair creates a fresh worktree).
+	repairRigName := filepath.Base(m.rig.Path)
+	if _, err := templates.CreateMinerCLAUDEmd(newClonePath, repairRigName, name); err != nil {
+		style.PrintWarning("could not provision miner CLAUDE.md during repair: %v", err)
+	}
+
+	// Set up shared beads — fatal during repair too, same reason as spawn.
+	if err := m.setupSharedBeads(newClonePath); err != nil {
+		_ = repoGit.WorktreeRemove(newClonePath, true)
+		_ = os.RemoveAll(newClonePath)
+		return nil, fmt.Errorf("setting up shared beads after repair: %w (miner cannot submit MRs without shared beads)", err)
+	}
+
+	// Copy overlay files from .runtime/overlay/ to miner root.
+	if err := rig.CopyOverlay(m.rig.Path, newClonePath); err != nil {
+		style.PrintWarning("could not copy overlay files: %v", err)
+	}
+
+	// Keep worktree runtime ignores local so the tracked tree stays clean.
+	if err := rig.EnsureLocalExcludePatterns(newClonePath); err != nil {
+		style.PrintWarning("could not update local git excludes: %v", err)
+	}
+
+	// NOTE: Slash commands inherited from town level - no per-workspace copies needed.
+	if err := m.runSetupCommand(newClonePath); err != nil {
+		_ = repoGit.WorktreeRemove(newClonePath, true)
+		_ = os.RemoveAll(newClonePath)
+		_ = os.RemoveAll(minerDir)
+		return nil, err
+	}
+
+	// Create or reopen agent bead for ZFC compliance
+	// HookBead is set atomically at recreation time if provided.
+	// Uses CreateOrReopenAgentBead to handle re-spawning with same name (GH #332).
+	// Retries with backoff — a miner without an agent bead is untrackable (gt-94llt7).
+	if err = m.createAgentBeadWithRetry(agentID, &beads.AgentFields{
+		RoleType:   "miner",
+		Rig:        m.rig.Name,
+		AgentState: "spawning",
+		HookBead:   opts.HookBead, // Set atomically at spawn time
+	}); err != nil {
+		// Hard fail — clean up the new worktree since we can't track this miner
+		_ = repoGit.WorktreeRemove(newClonePath, true)
+		_ = os.RemoveAll(newClonePath)
+		// Remove minerDir to prevent limbo state where m.exists(name) returns true
+		// but no valid worktree exists. Matches AddWithOptions cleanupOnError behavior.
+		_ = os.RemoveAll(minerDir)
+		return nil, fmt.Errorf("agent bead required for miner tracking: %w", err)
+	}
+
+	// Return fresh miner in working state (transient model: miners are spawned with work)
+	now := time.Now()
+	return &Miner{
+		Name:      name,
+		Rig:       m.rig.Name,
+		State:     StateWorking,
+		ClonePath: newClonePath,
+		Branch:    branchName,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}, nil
+}
+
+// ReuseIdleMiner prepares an idle miner for new work using branch-only operations.
+// Unlike RepairWorktreeWithOptions, this does NOT create/remove git worktrees.
+// It simply creates a fresh branch on the existing worktree, which eliminates the
+// ~5s overhead of worktree creation. Phase 3 of persistent-miner-pool.md.
+//
+// Steps:
+//  1. Verify miner exists and worktree is accessible
+//  2. Fetch latest from origin
+//  3. Create fresh branch: git checkout -b <branch> <startPoint>
+//  4. Reset agent bead and set hook_bead atomically
+//  5. Return miner in working state
+func (m *Manager) ReuseIdleMiner(name string, opts AddOptions) (*Miner, error) {
+	// Acquire per-miner file lock to prevent concurrent reuse/remove races
+	fl, err := m.lockMiner(name)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = fl.Unlock() }()
+
+	if !m.exists(name) {
+		return nil, ErrMinerNotFound
+	}
+	current, err := m.loadFromBeads(name)
+	if err != nil {
+		return nil, err
+	}
+	if current.Issue == "" {
+		switch current.State {
+		case StateWorking, StateStalled, StateReviewNeeded:
+			current.State = StateIdle
+		}
+	}
+	if current.State == StateIdle {
+		// A live session with no active work is a dead prompt, not preserved work.
+		// Clear it before evaluating reuse so recovery-blocked idle slots don't
+		// continue consuming capacity.
+		if err := m.killExistingMinerSession(name, "reuse"); err != nil {
+			return nil, err
+		}
+	}
+	if decision := m.reuseDecisionForMiner(name, current.State); !decision.Reusable {
+		return nil, fmt.Errorf("%w: %s", ErrMinerNeedsRecovery, decision.Reason)
+	}
+
+	// Get worktree path (must already exist for reuse)
+	clonePath := m.clonePath(name)
+	if _, err := os.Stat(clonePath); err != nil {
+		return nil, fmt.Errorf("idle miner worktree not found at %s: %w", clonePath, err)
+	}
+
+	// hq-x0v7v: per-bead target/ clean hook.
+	// Rust miners accumulate huge target/ dirs (30-50 GB each) when reused
+	// across many beads; the dipgt daemon has hit 100% disk twice from this.
+	// Policy is per-town config (miner.target_clean_policy). target/ is
+	// gitignored, so the subsequent reset/clean below won't touch it on its own.
+	// Errors are logged as warnings — reuse must not fail because a cleanup did.
+	{
+		policy := m.targetCleanPolicy()
+		minerDir := m.minerDir(name)
+		msg, err := RunTargetCleanHook(minerDir, clonePath, policy)
+		if err != nil {
+			style.PrintWarning("target-clean hook for %s: %v", name, err)
+		} else if msg != "" {
+			fmt.Println(msg)
+		}
+	}
+
+	minerGit := git.NewGit(clonePath)
+
+	// Fetch latest from origin (non-fatal: may be offline)
+	repoGit, err := m.repoBase()
+	if err == nil {
+		_ = repoGit.Fetch("origin")
+	}
+	// Also fetch in the worktree itself so it has the latest refs
+	_ = minerGit.Fetch("origin")
+
+	// Determine the start point for the new branch.
+	// When resuming an existing branch (gh#3602), the start point IS that branch's
+	// remote tip — we want HEAD on the named branch, not on a detached fresh ref.
+	var startPoint string
+	switch {
+	case opts.ResumeBranch != "":
+		// Fetch the resume branch directly so origin/<branch> is up-to-date even
+		// on shallow / single-branch reference clones.
+		if repoGit != nil {
+			if err := repoGit.FetchBranch("origin", opts.ResumeBranch); err != nil {
+				style.PrintWarning("could not fetch resume branch %s on bare repo: %v", opts.ResumeBranch, err)
+			}
+		}
+		if err := minerGit.FetchBranch("origin", opts.ResumeBranch); err != nil {
+			style.PrintWarning("could not fetch resume branch %s in worktree: %v", opts.ResumeBranch, err)
+		}
+		startPoint = "origin/" + opts.ResumeBranch
+	case opts.BaseBranch != "":
+		startPoint = opts.BaseBranch
+	default:
+		defaultBranch := "main"
+		if rigCfg, err := rig.LoadRigConfig(m.rig.Path); err == nil && rigCfg.DefaultBranch != "" {
+			defaultBranch = rigCfg.DefaultBranch
+		}
+		startPoint = fmt.Sprintf("origin/%s", defaultBranch)
+	}
+
+	// Validate that startPoint ref exists
+	if exists, err := minerGit.RefExists(startPoint); err != nil {
+		return nil, fmt.Errorf("checking ref %s: %w", startPoint, err)
+	} else if !exists {
+		return nil, fmt.Errorf("start point %s not found — fall back to full repair", startPoint)
+	}
+
+	// GH#2536: Clean worktree state before branch switch — the worktree may have
+	// stale state from a previous dog/pool dispatch (uncommitted changes, untracked
+	// files, detached HEAD, or checked out on an old dog/alpha-* branch).
+	// Reset to the start point directly (not HEAD) to avoid "local changes would
+	// be overwritten" errors when the start point has different file content.
+	_ = minerGit.ResetHard(startPoint)
+	_ = minerGit.CleanForce()
+
+	// Re-provision CLAUDE.md after reset — git reset --hard restores the tracked
+	// version (which lacks gt done instructions), and git clean -f removes any
+	// untracked CLAUDE.md we previously wrote. Without this, reused miners
+	// lose all lifecycle instructions and never call gt done.
+	reuseRigName := filepath.Base(m.rig.Path)
+	if _, err := templates.CreateMinerCLAUDEmd(clonePath, reuseRigName, name); err != nil {
+		style.PrintWarning("could not re-provision miner CLAUDE.md on reuse: %v", err)
+	}
+
+	// Create or reset the branch tracking the start point. For resume, the branch
+	// IS opts.ResumeBranch (so pushes go back to the existing PR head). For fresh
+	// work, build a new miner/<name>/<bead>@<ts> branch.
+	branchName := m.buildBranchName(name, opts.HookBead)
+	if opts.ResumeBranch != "" {
+		branchName = opts.ResumeBranch
+		// CheckoutResetBranch (`git checkout -B`) creates or resets the branch to
+		// the start point. Use this instead of CheckoutNewBranch because the local
+		// branch may already exist from a prior run on this idle miner.
+		if err := minerGit.CheckoutResetBranch(branchName, startPoint); err != nil {
+			return nil, fmt.Errorf("checking out resume branch %s from %s: %w", branchName, startPoint, err)
+		}
+	} else {
+		if err := minerGit.CheckoutNewBranch(branchName, startPoint); err != nil {
+			// checkout -b fails if branch already exists or other edge case.
+			// Fall back to: checkout start point, then create branch.
+			_ = minerGit.Checkout(startPoint)
+			if err2 := minerGit.CheckoutNewBranch(branchName, startPoint); err2 != nil {
+				return nil, fmt.Errorf("creating branch %s from %s (retry after cleanup): %w", branchName, startPoint, err2)
+			}
+		}
+	}
+
+	// Verify the worktree is actually on the expected branch
+	if actual, err := minerGit.CurrentBranch(); err == nil && actual != branchName {
+		return nil, fmt.Errorf("branch mismatch after checkout: expected %s, got %s", branchName, actual)
+	}
+
+	if err := m.runSetupCommand(clonePath); err != nil {
+		_ = minerGit.ResetHard(startPoint)
+		_ = minerGit.CleanForce()
+		return nil, err
+	}
+
+	// Reset agent bead for reuse
+	agentID := m.agentBeadID(name)
+	if err := m.resetAgentBeadForReuse(agentID, "idle miner reuse"); err != nil {
+		if !errors.Is(err, beads.ErrNotFound) {
+			style.PrintWarning("could not reset agent bead %s: %v", agentID, err)
+		}
+	}
+
+	// Create or reopen agent bead with hook_bead set atomically
+	if err = m.createAgentBeadWithRetry(agentID, &beads.AgentFields{
+		RoleType:   "miner",
+		Rig:        m.rig.Name,
+		AgentState: "spawning",
+		HookBead:   opts.HookBead,
+	}); err != nil {
+		return nil, fmt.Errorf("agent bead required for miner tracking: %w", err)
+	}
+
+	// Sync agent_state column to "spawning" (gt-ulom).
+	// createAgentBeadWithRetry sets agent_state in the description only.
+	// The column stays stale (e.g., "idle" from previous gt done) until
+	// StartSession sets it to "working". Without this, the column and
+	// description diverge, causing dashboards to show incorrect state.
+	// Agent beads live in town DB — bypass prefix routing.
+	if err := m.agentBeads().UpdateAgentState(agentID, "spawning"); err != nil {
+		style.PrintWarning("could not sync agent_state column to spawning: %v", err)
+	}
+
+	now := time.Now()
+	return &Miner{
+		Name:      name,
+		Rig:       m.rig.Name,
+		State:     StateWorking,
+		ClonePath: clonePath,
+		Branch:    branchName,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}, nil
+}
+
+// killExistingMinerSession clears an existing tmux session before reusing or
+// repairing its worktree. The next SessionManager.Start call will create a fresh
+// session with the current hook and startup prompt.
+func (m *Manager) killExistingMinerSession(name, action string) error {
+	if m.tmux == nil {
+		return nil
+	}
+
+	sessionName := session.MinerSessionName(session.PrefixFor(m.rig.Name), name)
+	running, err := m.tmux.HasSession(sessionName)
+	if err != nil || !running {
+		return nil
+	}
+	if err := m.tmux.KillSessionWithProcesses(sessionName); err != nil {
+		return fmt.Errorf("killing existing session %s for %s: %w", sessionName, action, err)
+	}
+
+	// Remove stale heartbeat so SessionManager.Start doesn't see leftover data.
+	townRoot := filepath.Dir(m.rig.Path)
+	RemoveSessionHeartbeat(townRoot, sessionName)
+	return nil
+}
+
+// ReconcilePool derives pool InUse state from existing miner directories and active sessions.
+// This implements ZFC: InUse is discovered from filesystem and tmux, not tracked separately.
+// Called before each allocation to ensure InUse reflects reality.
+//
+// In addition to directory checks, this also kills orphaned tmux sessions
+// (sessions without directories are broken).
+func (m *Manager) ReconcilePool() {
+	fl, err := m.lockPool()
+	if err != nil {
+		return
+	}
+	defer func() { _ = fl.Unlock() }()
+
+	m.reconcilePoolInternal()
+}
+
+// reconcilePoolInternal performs pool reconciliation without acquiring the pool lock.
+// Called by ReconcilePool (which holds the lock) and AllocateName (which also holds it).
+func (m *Manager) reconcilePoolInternal() {
+	// Get miners with existing directories
+	miners, err := m.List()
+	if err != nil {
+		return
+	}
+
+	var namesWithDirs []string
+	for _, p := range miners {
+		namesWithDirs = append(namesWithDirs, p.Name)
+	}
+
+	// Include names with pending reservation markers.
+	// A .pending file means AllocateName has claimed the name but AddWithOptions
+	// hasn't created the directory yet. Without this, Reconcile would see no
+	// directory and treat the name as available, causing a duplicate allocation.
+	minersDir := filepath.Join(m.rig.Path, "miners")
+	if entries, err := os.ReadDir(minersDir); err == nil {
+		for _, e := range entries {
+			if !e.IsDir() && strings.HasSuffix(e.Name(), ".pending") {
+				namesWithDirs = append(namesWithDirs, strings.TrimSuffix(e.Name(), ".pending"))
+			}
+		}
+	}
+
+	// Get names with tmux sessions
+	var namesWithSessions []string
+	if m.tmux != nil {
+		poolNames := m.namePool.getNames()
+		for _, name := range poolNames {
+			sessionName := session.MinerSessionName(session.PrefixFor(m.rig.Name), name)
+			hasSession, _ := m.tmux.HasSession(sessionName)
+			if hasSession {
+				namesWithSessions = append(namesWithSessions, name)
+			}
+		}
+	}
+
+	m.ReconcilePoolWith(namesWithDirs, namesWithSessions)
+
+	// Prune any stale git worktree entries (handles manually deleted directories)
+	if repoGit, err := m.repoBase(); err == nil {
+		_ = repoGit.WorktreePrune()
+	}
+}
+
+// ReconcilePoolWith reconciles the name pool given lists of names from different sources.
+// This is the testable core of ReconcilePool.
+//
+// - namesWithDirs: names that have existing worktree directories (in use)
+// - namesWithSessions: names that have tmux sessions
+//
+// Names with sessions but no directories are orphans and their sessions are killed.
+// Only namesWithDirs are marked as in-use for allocation.
+func (m *Manager) ReconcilePoolWith(namesWithDirs, namesWithSessions []string) {
+	dirSet := make(map[string]bool)
+	for _, name := range namesWithDirs {
+		dirSet[name] = true
+	}
+
+	// Kill orphaned sessions only. Directory-backed sessions are lifecycle-owned by
+	// their miner/witness paths; allocation must never reap unrelated workers.
+	// - No directory: orphan session, always kill (worktree was removed but tmux lingered)
+	// Use KillSessionWithProcesses to ensure all descendant processes are killed.
+	if m.tmux != nil {
+		townRoot := filepath.Dir(m.rig.Path)
+		for _, name := range namesWithSessions {
+			sessionName := session.MinerSessionName(session.PrefixFor(m.rig.Name), name)
+			if !dirSet[name] {
+				// Orphan: session exists but no directory
+				_ = m.tmux.KillSessionWithProcesses(sessionName)
+				RemoveSessionHeartbeat(townRoot, sessionName)
+			}
+		}
+	}
+
+	m.namePool.Reconcile(namesWithDirs)
+	// Note: No Save() needed - InUse is transient state, only OverflowNext is persisted
+
+	// Clean up orphaned miner state (fixes #698)
+	m.cleanupOrphanMinerState()
+}
+
+// isSessionProcessDead checks if a miner session's agent has exited.
+//
+// Uses heartbeat-based liveness detection (gt-qjtq): checks whether the session's
+// heartbeat file has been updated recently. Miner sessions touch their heartbeat
+// via gt commands (gt prime, gt hook, bd show, etc.) which run frequently during
+// normal operation. A stale heartbeat indicates the agent is no longer active.
+//
+// Falls back to PID signal probing when no heartbeat file exists (backward
+// compatibility for sessions started before heartbeat support was added).
+//
+// Returns true only when we can confirm the process is dead, not on transient
+// failures (gt-kncti: permission denied false positives).
+func isSessionProcessDead(t *tmux.Tmux, sessionName string, townRoot string) bool {
+	// Primary: heartbeat-based liveness check (gt-qjtq ZFC fix).
+	if townRoot != "" {
+		stale, exists := IsSessionHeartbeatStale(townRoot, sessionName)
+		if exists {
+			return stale
+		}
+		// No heartbeat file — fall through to PID-based check for backward compatibility.
+	}
+
+	// Fallback: PID signal probing (legacy, for sessions without heartbeat support).
+	pidStr, err := t.GetPanePID(sessionName)
+	if err != nil {
+		// Tmux query failed — could be permission denied, server busy, etc.
+		// Don't assume dead; let a future cycle retry.
+		return false
+	}
+	if pidStr == "" {
+		// No PID means no process — session is dead.
+		return true
+	}
+	pid, err := strconv.Atoi(pidStr)
+	if err != nil {
+		// Got a non-numeric PID — shouldn't happen, but don't kill.
+		return false
+	}
+	p, err := os.FindProcess(pid)
+	if err != nil {
+		return true
+	}
+	// On Unix, Signal(0) checks if process exists without sending a signal
+	if err := p.Signal(syscall.Signal(0)); err != nil {
+		return true
+	}
+	return false
+}
+
+// pendingMaxAge is how long a .pending reservation marker may exist before
+// it is considered stale. gt sling completes in seconds, so 5 minutes is
+// a conservative bound that avoids false positives on slow machines.
+// Configurable via operational.miner.pending_max_age in settings/config.json.
+const pendingMaxAge = 5 * time.Minute
+
+// cleanupOrphanMinerState removes partial/broken miner state during allocation.
+// This handles the race condition where worktree creation fails mid-way, leaving:
+// - Empty miner directories without .git
+// - Directories with invalid/corrupt .git files
+// - Stale git worktree registrations
+// - Stale .pending reservation markers (gt sling crashed before AddWithOptions)
+func (m *Manager) cleanupOrphanMinerState() {
+	minersDir := filepath.Join(m.rig.Path, "miners")
+
+	entries, err := os.ReadDir(minersDir)
+	if err != nil {
+		return // miners dir doesn't exist, nothing to clean
+	}
+
+	for _, entry := range entries {
+		// Clean up stale allocation reservation markers.
+		// A .pending file older than pendingMaxAge means gt sling crashed after
+		// AllocateName but before AddWithOptions created the directory. Remove it
+		// so the name can be reallocated on the next reconcile.
+		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".pending") {
+			info, err := entry.Info()
+			if err == nil && time.Since(info.ModTime()) > pendingMaxAge {
+				_ = os.Remove(filepath.Join(minersDir, entry.Name()))
+			}
+			continue
+		}
+
+		if !entry.IsDir() || strings.HasPrefix(entry.Name(), ".") {
+			continue
+		}
+
+		name := entry.Name()
+		minerDir := filepath.Join(minersDir, name)
+
+		// Check if this is a valid miner with a working worktree
+		clonePath := filepath.Join(minerDir, m.rig.Name)
+		gitPath := filepath.Join(clonePath, ".git")
+
+		// Check if clone directory exists
+		if _, err := os.Stat(clonePath); os.IsNotExist(err) {
+			// Empty miner directory without clone - remove it
+			_ = os.RemoveAll(minerDir)
+			continue
+		}
+
+		// Check if .git exists (file for worktree, or directory for full clone)
+		if _, err := os.Stat(gitPath); os.IsNotExist(err) {
+			// Clone exists but no .git - incomplete worktree, remove it
+			_ = os.RemoveAll(minerDir)
+			continue
+		}
+	}
+}
+
+// PoolStatus returns information about the name pool.
+func (m *Manager) PoolStatus() (active int, names []string) {
+	return m.namePool.ActiveCount(), m.namePool.ActiveNames()
+}
+
+// List returns all miners in the rig.
+// Loads miner state in parallel to avoid sequential bd subprocess overhead.
+func (m *Manager) List() ([]*Miner, error) {
+	minersDir := filepath.Join(m.rig.Path, "miners")
+
+	entries, err := os.ReadDir(minersDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("reading miners dir: %w", err)
+	}
+
+	// Filter to valid directories first
+	var names []string
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		if strings.HasPrefix(entry.Name(), ".") {
+			continue
+		}
+		names = append(names, entry.Name())
+	}
+
+	// Load all miners in parallel — each loadFromBeads call involves
+	// multiple bd/git subprocess calls that are independent per miner.
+	results := make([]*Miner, len(names))
+	var wg sync.WaitGroup
+	for i, name := range names {
+		wg.Add(1)
+		go func(idx int, name string) {
+			defer wg.Done()
+			p, err := m.Get(name)
+			if err != nil {
+				return // Skip invalid miners (leaves nil in results)
+			}
+			results[idx] = p
+		}(i, name)
+	}
+	wg.Wait()
+
+	// Compact — remove nil entries from failed Gets
+	miners := make([]*Miner, 0, len(results))
+	for _, p := range results {
+		if p != nil {
+			miners = append(miners, p)
+		}
+	}
+
+	return miners, nil
+}
+
+// FindIdleMiner returns the first idle miner in the rig, or nil if none.
+// Idle miners have completed their work and have a preserved sandbox (worktree)
+// that can be reused by gt sling without creating a new worktree.
+// Persistent miner model (gt-4ac).
+func (m *Manager) FindIdleMiner() (*Miner, error) {
+	miners, err := m.List()
+	if err != nil {
+		return nil, err
+	}
+	for _, p := range miners {
+		if p.State == StateIdle && m.reuseDecisionForMiner(p.Name, p.State).Reusable {
+			return p, nil
+		}
+	}
+	return nil, nil
+}
+
+// ReuseDecisionForMiner exposes the same reuse verdict used by FindIdleMiner
+// so admission planning cannot drift from the destructive reuse gate.
+func (m *Manager) ReuseDecisionForMiner(name string, state State) SlotReuseDecision {
+	return m.reuseDecisionForMiner(name, state)
+}
+
+// WorkstateDispositionForMiner exposes the canonical lifecycle disposition
+// used by reuse, recovery, list, witness, and scheduler capacity projections.
+func (m *Manager) WorkstateDispositionForMiner(name string, state State, issue string) WorkstateDisposition {
+	return DecideWorkstate(m.workstateInputForMiner(name, state, issue))
+}
+
+func (m *Manager) reuseDecisionForMiner(name string, state State) SlotReuseDecision {
+	d := m.WorkstateDispositionForMiner(name, state, "")
+	return SlotReuseDecision{Reusable: d.Reusable, Reason: d.Reason}
+}
+
+func (m *Manager) workstateInputForMiner(name string, state State, issue string) WorkstateInput {
+	input := WorkstateInput{State: state, CleanupStatus: CleanupUnknown}
+	agentID := m.agentBeadID(name)
+	activeMR := ""
+	sourceHint := ""
+	_, fields, err := m.agentBeads().GetAgentBead(agentID)
+	hookSafe := true
+	hookTerminal := false
+	if err != nil {
+		input.GitCheckFailed = true
+	}
+	if err == nil && fields != nil {
+		hookSafe, hookTerminal = m.hookBeadSafeForWorkstate(fields.HookBead)
+		if !hookSafe {
+			input.HookBead = fields.HookBead
+		}
+		input.PushFailed = fields.PushFailed
+		input.MRFailed = fields.MRFailed
+		input.ActiveMR = fields.ActiveMR
+		activeMR = fields.ActiveMR
+		sourceHint = issue
+		if sourceHint == "" {
+			sourceHint = fields.LastSourceIssue
+		}
+		if sourceHint == "" {
+			sourceHint = fields.HookBead
+		}
+		if fields.CleanupStatus != "" {
+			input.CleanupStatus = CleanupStatus(fields.CleanupStatus)
+		}
+	}
+	targetRefs := m.reuseTargetRefs(fields)
+
+	clonePath := m.clonePath(name)
+	g := git.NewGit(clonePath)
+	branch, branchErr := g.CurrentBranch()
+	if branchErr != nil {
+		input.GitCheckFailed = true
+	} else {
+		input.Branch = branch
+	}
+	if status, err := g.CheckUncommittedWork(); err == nil {
+		input.GitDirty = !status.CleanExcludingRuntime()
+		input.StashCount = status.StashCount
+		input.UnpushedCommits = status.UnpushedCommits
+	} else {
+		input.GitCheckFailed = true
+	}
+	if branch != "" {
+		if preservation, err := g.BranchPreservationStatus(branch, "origin", targetRefs); err == nil {
+			input.UnpushedCommits = preservation.UnpreservedPatchCount
+		} else {
+			input.GitCheckFailed = true
+		}
+	}
+	// Legacy/test miners can lack agent cleanup metadata. If git proves there is
+	// no local work at risk, treat the missing cleanup_status as clean; otherwise
+	// DecideSlotReuse will continue to fail closed on CleanupUnknown.
+	gitSafe := !input.GitCheckFailed && !input.GitDirty && input.StashCount == 0 && input.UnpushedCommits == 0
+	if input.CleanupStatus == CleanupUnknown && gitSafe {
+		input.CleanupStatus = CleanupClean
+	}
+	activeMRSafe := true
+	sourceTerminal := sourceHint != "" && m.assignedBeadTerminal(sourceHint)
+	if activeMR != "" {
+		assessment := AssessActiveMR(m.agentBeads(), ActiveMRInput{ActiveMR: activeMR, SourceIssueHint: sourceHint, RequireGitSafe: true, GitSafe: gitSafe})
+		if assessment.Pending {
+			input.ActiveMRBlocker = assessment.Reason
+		}
+		activeMRSafe = !assessment.Pending
+		if assessment.SourceTerminal {
+			sourceTerminal = true
+		}
+	}
+	input.MQCheckRequired = input.Branch != ""
+	input.HasSubmittableWork = hasSubmittableWorkForWorkstate(clonePath)
+	input.AssignedBeadTerminal = m.assignedBeadTerminal(issue)
+	workTerminal := input.AssignedBeadTerminal || sourceTerminal || hookTerminal
+	if CanIgnoreStaleCleanupStatus(input.CleanupStatus, workTerminal, hookSafe, activeMRSafe, gitSafe) {
+		input.IgnoreCleanupStatus = true
+	}
+	input.MQNotRequired = m.mqNotRequiredSource(issue)
+	if input.MQCheckRequired && input.HasSubmittableWork && !input.AssignedBeadTerminal && !input.MQNotRequired {
+		mr, err := m.beads.FindMRForBranchAny(input.Branch)
+		if err != nil {
+			input.MQLookupFailed = true
+		} else {
+			input.MRSubmitted = mr != nil
+		}
+	}
+	return input
+}
+
+func (m *Manager) hookBeadSafeForWorkstate(hookBead string) (safe bool, terminal bool) {
+	if hookBead == "" {
+		return true, false
+	}
+	issue, err := m.beads.Show(hookBead)
+	if err != nil || issue == nil {
+		return false, false
+	}
+	if beads.IssueStatus(issue.Status).IsTerminal() {
+		return true, true
+	}
+	return false, false
+}
+
+func (m *Manager) assignedBeadTerminal(issueID string) bool {
+	if issueID == "" {
+		return false
+	}
+	issue, err := m.beads.Show(issueID)
+	return err == nil && issue != nil && beads.IssueStatus(issue.Status).IsTerminal()
+}
+
+func (m *Manager) mqNotRequiredSource(issueID string) bool {
+	if issueID == "" {
+		return false
+	}
+	issue, err := m.beads.Show(issueID)
+	if err != nil || issue == nil {
+		return false
+	}
+	attachment := beads.ParseAttachmentFields(issue)
+	if attachment == nil {
+		return false
+	}
+	return attachment.NoMerge || attachment.ReviewOnly || strings.EqualFold(strings.TrimSpace(attachment.MergeStrategy), "local")
+}
+
+func hasSubmittableWorkForWorkstate(worktreePath string) bool {
+	ref, err := workstateComparisonRef(worktreePath)
+	if err != nil {
+		return false
+	}
+	count, err := countPatchUniqueCommitsForWorkstate(worktreePath, ref)
+	return err == nil && count > 0
+}
+
+func workstateComparisonRef(worktreePath string) (string, error) {
+	upstreamCmd := exec.Command("git", "rev-parse", "--abbrev-ref", "@{u}")
+	upstreamCmd.Dir = worktreePath
+	if output, err := upstreamCmd.Output(); err == nil {
+		upstream := strings.TrimSpace(string(output))
+		upstreamBranch := strings.TrimPrefix(upstream, "origin/")
+		if upstream != "" && isWorkstateRecoveryBaseBranch(upstreamBranch) {
+			return upstream, nil
+		}
+	}
+	for _, ref := range []string{"origin/main", "origin/master"} {
+		verifyCmd := exec.Command("git", "rev-parse", "--verify", "--quiet", ref)
+		verifyCmd.Dir = worktreePath
+		if err := verifyCmd.Run(); err == nil {
+			return ref, nil
+		}
+	}
+	return "", fmt.Errorf("no recovery base ref")
+}
+
+func isWorkstateRecoveryBaseBranch(branch string) bool {
+	return branch == "main" || branch == "master" || strings.HasPrefix(branch, "integration/")
+}
+
+func countPatchUniqueCommitsForWorkstate(worktreePath, baseRef string) (int, error) {
+	cherryCmd := exec.Command("git", "cherry", baseRef, "HEAD")
+	cherryCmd.Dir = worktreePath
+	output, err := cherryCmd.Output()
+	if err != nil {
+		return 0, err
+	}
+	count := 0
+	for _, line := range strings.Split(strings.TrimSpace(string(output)), "\n") {
+		if strings.HasPrefix(strings.TrimSpace(line), "+") {
+			count++
+		}
+	}
+	return count, nil
+}
+
+func (m *Manager) reuseTargetRefs(fields *beads.AgentFields) []string {
+	if fields == nil {
+		return nil
+	}
+	var refs []string
+	if fields.ActiveMR != "" {
+		if issue, err := m.beads.Show(fields.ActiveMR); err == nil {
+			if mrFields := beads.ParseMRFields(issue); mrFields != nil && mrFields.Target != "" {
+				refs = append(refs, mrFields.Target)
+			}
+		}
+	}
+	if fields.HookBead != "" {
+		if issue, err := m.beads.Show(fields.HookBead); err == nil {
+			refs = append(refs, attachmentTargetRefs(m.beads, issue)...)
+		}
+	}
+	return uniqueRefs(refs)
+}
+
+func attachmentTargetRefs(bd *beads.Beads, issue *beads.Issue) []string {
+	attachment := beads.ParseAttachmentFields(issue)
+	if attachment == nil {
+		return nil
+	}
+	var refs []string
+	appendBaseBranchRefs(&refs, attachment.FormulaVars)
+	for _, value := range attachment.AttachedVars {
+		appendBaseBranchRefs(&refs, value)
+	}
+	if attachment.MinecartID != "" && bd != nil {
+		if minecart, err := bd.Show(attachment.MinecartID); err == nil {
+			if fields := beads.ParseMinecartFields(minecart); fields != nil && fields.BaseBranch != "" {
+				refs = append(refs, fields.BaseBranch)
+			}
+		}
+	}
+	return refs
+}
+
+func appendBaseBranchRefs(refs *[]string, vars string) {
+	for _, line := range strings.Split(vars, "\n") {
+		key, value, ok := strings.Cut(strings.TrimSpace(line), "=")
+		if !ok || strings.TrimSpace(key) != "base_branch" {
+			continue
+		}
+		if value = strings.TrimSpace(value); value != "" {
+			*refs = append(*refs, value)
+		}
+	}
+}
+
+func uniqueRefs(values []string) []string {
+	seen := make(map[string]bool, len(values))
+	var out []string
+	for _, value := range values {
+		value = strings.TrimSpace(value)
+		if value == "" || seen[value] {
+			continue
+		}
+		seen[value] = true
+		out = append(out, value)
+	}
+	return out
+}
+
+// Get returns a specific miner by name.
+// State is derived from active work beads/assignment first, with tmux liveness
+// used only to distinguish working from stalled when work exists. A live session
+// without an active issue is not work; it is reusable idle only after clean
+// cleanup status, otherwise it needs recovery review.
+func (m *Manager) Get(name string) (*Miner, error) {
+	if !m.exists(name) {
+		return nil, ErrMinerNotFound
+	}
+
+	return m.loadFromBeads(name)
+}
+
+// SetState updates a miner's state.
+// In the beads model, state is derived from issue status:
+// - StateWorking: issue status set to in_progress
+// SetAgentState updates the agent bead's agent_state field.
+// This is called after a miner session successfully starts to transition
+// from "spawning" to "working", making gt miner identity show accurate status.
+// Valid states: "spawning", "working", "done", "stuck", "idle"
+func (m *Manager) SetAgentState(name string, state string) error {
+	agentID := m.agentBeadID(name)
+	// Agent beads live in the town DB — bypass prefix routing that would
+	// otherwise misroute "za-*" / "my-*" agent IDs to a rig DB.
+	return m.agentBeads().UpdateAgentState(agentID, state)
+}
+
+// - StateDone: assignee cleared from issue (miner ready for cleanup)
+// - StateStuck: issue status set to blocked (if supported)
+// If beads is not available, this is a no-op.
+func (m *Manager) SetState(name string, state State) error {
+	if !m.exists(name) {
+		return ErrMinerNotFound
+	}
+
+	// Find the issue assigned to this miner
+	assignee := m.assigneeID(name)
+	issue, err := m.beads.GetAssignedIssue(assignee)
+	if err != nil {
+		// If beads is not available, treat as no-op (state can't be changed)
+		return nil
+	}
+
+	switch state {
+	case StateWorking:
+		// Set issue to in_progress if there is one.
+		// Skip if status is "hooked" — sling sets this, and changing it here causes
+		// merge conflicts when gt done runs. The miner should claim work via gt prime,
+		// not have sling change status during spawn (gt-zecmc).
+		if issue != nil && issue.Status != beads.StatusHooked {
+			status := "in_progress"
+			if err := m.beads.Update(issue.ID, beads.UpdateOptions{Status: &status}); err != nil {
+				return fmt.Errorf("setting issue status: %w", err)
+			}
+		}
+	case StateDone:
+		// Clear assignment when done (miner ready for cleanup)
+		if issue != nil {
+			empty := ""
+			if err := m.beads.Update(issue.ID, beads.UpdateOptions{Assignee: &empty}); err != nil {
+				return fmt.Errorf("clearing assignee: %w", err)
+			}
+		}
+	case StateStuck:
+		// Mark issue as blocked if supported, otherwise just note in issue
+		if issue != nil {
+			// For now, just keep the assignment - the issue's blocked_by would indicate stuck
+			// We could add a status="blocked" here if beads supports it
+		}
+	}
+
+	return nil
+}
+
+// AssignIssue assigns an issue to a miner by setting the issue's assignee in beads.
+func (m *Manager) AssignIssue(name, issue string) error {
+	if !m.exists(name) {
+		return ErrMinerNotFound
+	}
+
+	// Set the issue's assignee to this miner
+	assignee := m.assigneeID(name)
+	status := "in_progress"
+	if err := m.beads.Update(issue, beads.UpdateOptions{
+		Assignee: &assignee,
+		Status:   &status,
+	}); err != nil {
+		return fmt.Errorf("setting issue assignee: %w", err)
+	}
+
+	return nil
+}
+
+// ClearIssue removes the issue assignment from a miner.
+// In the transient model, this transitions to Done state for cleanup.
+// This clears the assignee from the currently assigned issue in beads.
+// If beads is not available, this is a no-op.
+func (m *Manager) ClearIssue(name string) error {
+	if !m.exists(name) {
+		return ErrMinerNotFound
+	}
+
+	// Find the issue assigned to this miner
+	assignee := m.assigneeID(name)
+	issue, err := m.beads.GetAssignedIssue(assignee)
+	if err != nil {
+		// If beads is not available, treat as no-op
+		return nil
+	}
+
+	if issue == nil {
+		// No issue assigned, nothing to clear
+		return nil
+	}
+
+	// Clear the assignee from the issue
+	empty := ""
+	if err := m.beads.Update(issue.ID, beads.UpdateOptions{
+		Assignee: &empty,
+	}); err != nil {
+		return fmt.Errorf("clearing issue assignee: %w", err)
+	}
+
+	return nil
+}
+
+// unassignWorkBeads finds all active work beads assigned to a miner and resets them
+// to status=open with an empty assignee, so they can be picked up by another miner.
+// This must be called during miner removal to prevent orphaned beads (gt-e4u1).
+// Agent beads are skipped (handled separately by ResetAgentBeadForReuse).
+// Errors are logged as warnings but do not block removal.
+func (m *Manager) unassignWorkBeads(name string) {
+	assignee := m.assigneeID(name)
+	issues, err := m.beads.ListByAssignee(assignee)
+	if err != nil {
+		style.PrintWarning("could not list assigned beads for %s: %v", name, err)
+		return
+	}
+
+	for _, issue := range activeWorkBeadsForCleanup(issues) {
+		openStatus := "open"
+		empty := ""
+		if err := m.beads.Update(issue.ID, beads.UpdateOptions{
+			Status:   &openStatus,
+			Assignee: &empty,
+		}); err != nil {
+			style.PrintWarning("could not unassign bead %s from %s: %v", issue.ID, name, err)
+		}
+	}
+}
+
+func activeWorkBeadsForCleanup(issues []*beads.Issue) []*beads.Issue {
+	activeStatuses := map[string]bool{
+		"open":             true,
+		"in_progress":      true,
+		beads.StatusHooked: true,
+	}
+	var work []*beads.Issue
+	for _, issue := range issues {
+		if issue == nil || !activeStatuses[issue.Status] {
+			continue
+		}
+		// Skip agent beads — handled by ResetAgentBeadForReuse.
+		if beads.IsAgentBead(issue) {
+			continue
+		}
+		// Skip protected beads (standing orders, role defs, etc.) — they should
+		// retain status and assignee across miner lifecycles.
+		if beads.IsProtectedBead(issue) {
+			continue
+		}
+		work = append(work, issue)
+	}
+	return work
+}
+
+// loadFromBeads gets miner info from hooked work beads + beads assignee field + tmux session state.
+// State derivation priority:
+//  1. Work bead status=hooked + assignee=<miner> → working (authoritative source)
+//  2. Legacy agent hook_bead that still points to a currently hooked bead for this assignee
+//     → working (compatibility fallback during migration)
+//  3. Issue assigned via beads assignee (open/in_progress/hooked) → working
+//  4. Live session without active issue + clean cleanup → idle
+//  5. Live session without active issue + non-clean/unknown cleanup → review-needed
+//  6. Beads query failure + live/dead session → review-needed/stalled fallback
+func (m *Manager) loadFromBeads(name string) (*Miner, error) {
+	// Use clonePath which handles both new (miners/<name>/<rigname>/)
+	// and old (miners/<name>/) structures
+	clonePath := m.clonePath(name)
+
+	// Get actual branch from worktree (branches are now timestamped)
+	minerGit := git.NewGit(clonePath)
+	branchName, err := minerGit.CurrentBranch()
+	if err != nil {
+		// Fall back to old format if we can't read the branch
+		branchName = fmt.Sprintf("miner/%s", name)
+	}
+
+	assignee := m.assigneeID(name)
+
+	// Cross-check tmux session liveness once for use in state derivation below.
+	// When a tmux session has died (e.g., due to disk space exhaustion or OOM),
+	// beads may still report the miner as "working" because the bead state was
+	// never updated. Without this check, `gt miner list` shows zombies as working.
+	// See: disk-space-resilience — all 5 miners appeared "working" after sessions died.
+	//
+	// When tmux is nil (e.g., no tmux available or in tests), we cannot determine
+	// session state, so we must NOT assume the session is dead — default to alive.
+	sessionRunning, sessionStale := m.minerSessionState(name)
+	sessionDead := m.tmux != nil && (!sessionRunning || sessionStale)
+
+	// Primary source: the work bead itself (status=hooked + assignee).
+	// This is the direct-tracking model introduced in hq-l6mm5.
+	hookedBeads, hookedErr := m.beads.List(beads.ListOptions{
+		Status:   beads.StatusHooked,
+		Assignee: assignee,
+		Priority: -1,
+	})
+	if hookedErr == nil && len(hookedBeads) > 0 {
+		state := StateWorking
+		if sessionDead {
+			state = StateStalled
+		}
+		return &Miner{
+			Name:      name,
+			Rig:       m.rig.Name,
+			State:     state,
+			ClonePath: clonePath,
+			Branch:    branchName,
+			Issue:     hookedBeads[0].ID,
+		}, nil
+	}
+
+	// Compatibility fallback: if legacy hook_bead is still set, only trust it when
+	// it resolves to a currently hooked bead for this assignee. This avoids stale
+	// issue reporting when hook_bead diverges from the work bead state.
+	agentID := m.agentBeadID(name)
+	_, fields, agentErr := m.beads.GetAgentBead(agentID)
+	if agentErr == nil && fields != nil && fields.HookBead != "" {
+		if hookIssue, err := m.beads.Show(fields.HookBead); err == nil &&
+			isCurrentHookedIssueForAssignee(hookIssue, assignee) {
+			state := StateWorking
+			if sessionDead {
+				state = StateStalled
+			}
+			return &Miner{
+				Name:      name,
+				Rig:       m.rig.Name,
+				State:     state,
+				ClonePath: clonePath,
+				Branch:    branchName,
+				Issue:     fields.HookBead,
+			}, nil
+		}
+	}
+
+	// Fallback: Query beads for assigned issue (for miners without agent beads
+	// or with empty hook_bead)
+	issue, beadsErr := m.beads.GetAssignedIssue(assignee)
+	if beadsErr != nil {
+		// If beads query fails, cross-check tmux session state.
+		// Avoid synthesizing working with no issue when we cannot verify active work.
+		state := StateWorking
+		if sessionDead {
+			state = StateStalled
+		} else if sessionRunning {
+			state = StateReviewNeeded
+		}
+		return &Miner{
+			Name:      name,
+			Rig:       m.rig.Name,
+			State:     state,
+			ClonePath: clonePath,
+			Branch:    branchName,
+		}, nil
+	}
+
+	// Persistent model: only an active issue means working. A live tmux session
+	// without active work is only idle if cleanup is explicitly clean; otherwise
+	// keep it non-reusable for recovery instead of reporting working with Issue:none.
+	issueID := ""
+	if issue != nil {
+		issueID = issue.ID
+	}
+
+	state := StateIdle
+	if issueID != "" {
+		state = StateWorking
+		if sessionDead {
+			state = StateStalled
+		}
+	} else if sessionRunning && !sessionStale && !m.getCleanupStatusFromBead(name).IsSafe() {
+		state = StateReviewNeeded
+	}
+
+	return &Miner{
+		Name:      name,
+		Rig:       m.rig.Name,
+		State:     state,
+		ClonePath: clonePath,
+		Branch:    branchName,
+		Issue:     issueID,
+	}, nil
+}
+
+func (m *Manager) minerSessionState(name string) (running bool, stale bool) {
+	if m.tmux == nil {
+		return false, false
+	}
+
+	sessionName := session.MinerSessionName(session.PrefixFor(m.rig.Name), name)
+	running, err := m.tmux.HasSession(sessionName)
+	if err != nil || !running {
+		return false, false
+	}
+
+	return true, NewSessionManager(m.tmux, m.rig).isSessionStale(sessionName)
+}
+
+func isCurrentHookedIssueForAssignee(issue *beads.Issue, assignee string) bool {
+	return issue != nil &&
+		issue.Status == beads.StatusHooked &&
+		issue.Assignee == assignee
+}
+
+// setupSharedBeads creates a redirect file so the miner uses the rig's shared .beads database.
+// This eliminates the need for git sync between miner clones - all miners share one database.
+// Also propagates beads git config (role, issue_prefix) so bd commands work without warnings.
+func (m *Manager) setupSharedBeads(clonePath string) error {
+	townRoot := filepath.Dir(m.rig.Path)
+	if err := beads.SetupRedirect(townRoot, clonePath); err != nil {
+		return err
+	}
+
+	// Propagate beads git config to the worktree so bd commands in miner
+	// sessions don't warn about missing role/prefix.
+	prefix := beads.GetPrefixForRig(townRoot, m.rig.Name)
+	if prefix != "" {
+		cmd := exec.Command("git", "-C", clonePath, "config", "beads.issue-prefix", prefix)
+		util.SetDetachedProcessGroup(cmd)
+		_ = cmd.Run()
+	}
+	cmd := exec.Command("git", "-C", clonePath, "config", "beads.role", "contributor")
+	util.SetDetachedProcessGroup(cmd)
+	_ = cmd.Run()
+
+	return nil
+}
+
+func (m *Manager) resolveSetupCommand(worktreePath string) string {
+	if result := m.rig.GetConfigWithSource("setup_command"); result.Source != rig.SourceNone && result.Source != rig.SourceSystem {
+		if result.Source == rig.SourceBlocked {
+			return ""
+		}
+		if setup, ok := result.Value.(string); ok && strings.TrimSpace(setup) != "" {
+			return strings.TrimSpace(setup)
+		}
+	}
+
+	var repoMQ *config.MergeQueueConfig
+	if repoSettings, err := config.LoadRepoSettings(worktreePath); err == nil && repoSettings != nil {
+		repoMQ = repoSettings.MergeQueue
+	}
+
+	var localMQ *config.MergeQueueConfig
+	settingsPath := filepath.Join(m.rig.Path, "settings", "config.json")
+	if localSettings, err := config.LoadRigSettings(settingsPath); err == nil && localSettings != nil {
+		localMQ = localSettings.MergeQueue
+	}
+
+	mq := config.MergeSettingsCommand(repoMQ, localMQ)
+	if mq == nil {
+		return ""
+	}
+	return strings.TrimSpace(mq.SetupCommand)
+}
+
+func (m *Manager) runSetupCommand(worktreePath string) error {
+	setupCmd := m.resolveSetupCommand(worktreePath)
+	if setupCmd == "" {
+		return nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), setupCmdTimeout)
+	defer cancel()
+
+	shell, args := setupShellCommand(setupCmd)
+	cmd := exec.CommandContext(ctx, shell, args...) //nolint:gosec // setup_command is operator-controlled rig configuration.
+	util.SetProcessGroup(cmd)
+	cmd.Dir = worktreePath
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Env = append(os.Environ(),
+		fmt.Sprintf("GT_WORKTREE_PATH=%s", worktreePath),
+		fmt.Sprintf("GT_RIG_PATH=%s", m.rig.Path),
+	)
+
+	fmt.Println("Running setup_command...")
+	if err := cmd.Run(); err != nil {
+		if ctx.Err() == context.DeadlineExceeded {
+			return fmt.Errorf("setup_command timed out after %s", setupCmdTimeout)
+		}
+		return fmt.Errorf("setup_command failed: %w", err)
+	}
+	fmt.Println("Ran setup_command")
+	return nil
+}
+
+func setupShellCommand(command string) (string, []string) {
+	if os.PathSeparator == '\\' {
+		return "cmd", []string{"/C", command}
+	}
+
+	shell := os.Getenv("SHELL")
+	if shell == "" {
+		shell = "/bin/sh"
+	}
+	return shell, []string{"-c", command}
+}
+
+// CleanupStaleBranches removes orphaned miner branches that are no longer in use.
+// This includes:
+// - Branches for miners that no longer exist
+// - Old timestamped branches (keeps only the most recent per miner name)
+// Returns the number of branches deleted.
+func (m *Manager) CleanupStaleBranches() (int, error) {
+	repoGit, err := m.repoBase()
+	if err != nil {
+		return 0, fmt.Errorf("finding repo base: %w", err)
+	}
+
+	// List all miner branches
+	branches, err := repoGit.ListBranches("miner/*")
+	if err != nil {
+		return 0, fmt.Errorf("listing branches: %w", err)
+	}
+
+	if len(branches) == 0 {
+		return 0, nil
+	}
+
+	// Get list of existing miners
+	miners, err := m.List()
+	if err != nil {
+		return 0, fmt.Errorf("listing miners: %w", err)
+	}
+
+	// Build set of current miner branches (from actual miner objects)
+	currentBranches := make(map[string]bool)
+	for _, p := range miners {
+		currentBranches[p.Branch] = true
+	}
+
+	// Delete branches not in current set
+	deleted := 0
+	for _, branch := range branches {
+		if currentBranches[branch] {
+			continue // This branch is in use
+		}
+		// Delete orphaned branch
+		if err := repoGit.DeleteBranch(branch, true); err != nil {
+			// Log but continue - non-fatal
+			style.PrintWarning("could not delete branch %s: %v", branch, err)
+			continue
+		}
+		deleted++
+	}
+
+	return deleted, nil
+}
+
+// StalenessInfo contains details about a miner's staleness.
+type StalenessInfo struct {
+	Name               string
+	CommitsBehind      int    // How many commits behind origin/main
+	HasActiveSession   bool   // Whether tmux session is running
+	HasUncommittedWork bool   // Whether there's uncommitted or unpushed work
+	AgentState         string // From agent bead (empty if no bead)
+	IsStale            bool   // Overall assessment: safe to clean up
+	Reason             string // Why it's considered stale (or not)
+}
+
+// DetectStaleMiners identifies miners that are candidates for cleanup.
+// A miner is considered stale if:
+// - No active tmux session AND
+// - Either: way behind main (>threshold commits) OR no agent bead/activity
+// - Has no uncommitted work that could be lost
+//
+// threshold: minimum commits behind main to consider "way behind" (e.g., 20)
+func (m *Manager) DetectStaleMiners(threshold int) ([]*StalenessInfo, error) {
+	miners, err := m.List()
+	if err != nil {
+		return nil, fmt.Errorf("listing miners: %w", err)
+	}
+
+	if len(miners) == 0 {
+		return nil, nil
+	}
+
+	// Get default branch from rig config
+	defaultBranch := "main"
+	if rigCfg, err := rig.LoadRigConfig(m.rig.Path); err == nil && rigCfg.DefaultBranch != "" {
+		defaultBranch = rigCfg.DefaultBranch
+	}
+
+	var results []*StalenessInfo
+	for _, p := range miners {
+		info := &StalenessInfo{
+			Name: p.Name,
+		}
+
+		// Check for active tmux session
+		// Session name follows pattern: gt-<rig>-<miner>
+		sessionName := session.MinerSessionName(session.PrefixFor(m.rig.Name), p.Name)
+		info.HasActiveSession = checkTmuxSession(sessionName)
+
+		// Check how far behind main
+		minerGit := git.NewGit(p.ClonePath)
+		info.CommitsBehind = countCommitsBehind(minerGit, defaultBranch)
+
+		// Check for uncommitted work (excluding .beads/ files which are synced across worktrees)
+		status, err := minerGit.CheckUncommittedWork()
+		if err == nil && !status.CleanExcludingBeads() {
+			info.HasUncommittedWork = true
+		}
+
+		// Check agent bead state
+		agentID := m.agentBeadID(p.Name)
+		_, fields, err := m.beads.GetAgentBead(agentID)
+		if err == nil && fields != nil {
+			info.AgentState = fields.AgentState
+		}
+
+		// Determine staleness
+		info.IsStale, info.Reason = assessStaleness(info, threshold)
+		results = append(results, info)
+	}
+
+	return results, nil
+}
+
+// checkTmuxSession checks if a tmux session exists.
+func checkTmuxSession(sessionName string) bool {
+	// Use has-session command which returns 0 if session exists
+	cmd := tmux.BuildCommand("has-session", "-t", sessionName)
+	return cmd.Run() == nil
+}
+
+// countCommitsBehind counts how many commits a worktree is behind origin/<defaultBranch>.
+func countCommitsBehind(g *git.Git, defaultBranch string) int {
+	// Use rev-list to count commits: origin/main..HEAD shows commits ahead,
+	// HEAD..origin/main shows commits behind
+	remoteBranch := "origin/" + defaultBranch
+	count, err := g.CountCommitsBehind(remoteBranch)
+	if err != nil {
+		return 0 // Can't determine, assume not behind
+	}
+	return count
+}
+
+// assessStaleness determines if a miner should be cleaned up.
+// Per gt-zecmc: uses tmux state (HasActiveSession) rather than agent_state
+// since observable states (running, done, idle) are no longer recorded in beads.
+func assessStaleness(info *StalenessInfo, threshold int) (bool, string) {
+	// Never clean up if there's uncommitted work
+	if info.HasUncommittedWork {
+		return false, "has uncommitted work"
+	}
+
+	// If session is active, not stale (tmux is source of truth for liveness)
+	if info.HasActiveSession {
+		return false, "session active"
+	}
+
+	// No active session - this miner is a cleanup candidate
+	// Check for reasons to keep it:
+
+	// Check for non-observable states that indicate intentional pause
+	// (stuck, awaiting-gate are still stored in beads per gt-zecmc)
+	if beads.AgentState(info.AgentState).ProtectsFromCleanup() {
+		return false, fmt.Sprintf("agent_state=%s (intentional pause)", info.AgentState)
+	}
+
+	// No session and way behind main = stale
+	if info.CommitsBehind >= threshold {
+		return true, fmt.Sprintf("%d commits behind main, no active session", info.CommitsBehind)
+	}
+
+	// No session and no agent bead = abandoned, clean up
+	if info.AgentState == "" {
+		return true, "no agent bead, no active session"
+	}
+
+	// No session but has agent bead without special state = clean up
+	// (The session is the source of truth for liveness)
+	return true, "no active session"
+}

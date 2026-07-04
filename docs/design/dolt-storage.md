@@ -1,14 +1,14 @@
 # Dolt Storage Architecture
 
-> **Status**: Current reference for Gas Town agents
+> **Status**: Current reference for Excavation Site agents
 > **Updated**: 2026-02-28
-> **Context**: Dolt is the sole storage backend for Beads and Gas Town
+> **Context**: Dolt is the sole storage backend for Beads and Excavation Site
 
 ---
 
 ## Overview
 
-Gas Town uses [Dolt](https://github.com/dolthub/dolt), an open-source
+Excavation Site uses [Dolt](https://github.com/dolthub/dolt), an open-source
 SQL database with Git-like versioning (Apache 2.0). One Dolt SQL server
 per town serves all databases via MySQL protocol on port 3307. There is
 no embedded mode and no SQLite. JSONL is used only for disaster-recovery
@@ -23,7 +23,7 @@ every 30s, crash restart with exponential backoff).
 ```
 Dolt SQL Server (one per town, port 3307)
 ├── hq/       town-level beads  (hq-* prefix)
-├── gastown/  rig beads         (gt-* prefix)
+├── excavation/  rig beads         (gt-* prefix)
 ├── beads/    rig beads         (bd-* prefix)
 ├── wyvern/   rig beads         (wy-* prefix)
 └── sky/      rig beads         (sky-* prefix)
@@ -39,7 +39,7 @@ accessible via `USE <name>` in SQL.
 gt and bd use separate env vars for Dolt connection. gt automatically
 translates its variables to bd's equivalents when spawning agents.
 
-| gt (Gas Town) | bd (Beads) | Purpose |
+| gt (Excavation Site) | bd (Beads) | Purpose |
 |---------------|------------|---------|
 | `GT_DOLT_HOST` | `BEADS_DOLT_SERVER_HOST` | Server host (bd defaults to `127.0.0.1` if unset) |
 | `GT_DOLT_PORT` | `BEADS_DOLT_PORT` | Server port (default: `3307`) |
@@ -47,7 +47,7 @@ translates its variables to bd's equivalents when spawning agents.
 **Remote Dolt servers**: If Dolt runs on a different machine (e.g., over
 Tailscale), set `GT_DOLT_HOST` in the environment. gt propagates this as
 `BEADS_DOLT_SERVER_HOST` to all bd subprocesses, overriding bd's hardcoded
-`127.0.0.1` default. Without this, every new rig/worktree/polecat silently
+`127.0.0.1` default. Without this, every new rig/worktree/miner silently
 connects to localhost and fails.
 
 Per-workspace override: set `dolt.host` in a rig's `.beads/config.yaml`.
@@ -72,25 +72,25 @@ gt dolt list           # List all databases
 If the server isn't running, `bd` fails fast with a clear message
 pointing to `gt dolt start`.
 
-## Gas Town Scope vs `bd --global`
+## Excavation Site Scope vs `bd --global`
 
-Gas Town's town-level beads are the `hq` database. Access them by running
+Excavation Site's town-level beads are the `hq` database. Access them by running
 direct `bd` commands from the town root (`~/gt`) or with `bd -C ~/gt ...`.
 Direct `bd` commands from rig worktrees use that rig's `.beads` redirect and
 database, so do not assume an `hq-*` ID will retarget the command.
 
-Do not use `bd --global` for Gas Town town beads. In Beads, `--global`
+Do not use `bd --global` for Excavation Site town beads. In Beads, `--global`
 means the standalone shared-server database named `beads_global`; it does
-not mean Gas Town's `hq` database, and `BEADS_DOLT_DATABASE=hq` does not
+not mean Excavation Site's `hq` database, and `BEADS_DOLT_DATABASE=hq` does not
 retarget `--global`.
 
-For Gas Town Dolt health, use `gt dolt status`. `bd dolt status` reports
+For Excavation Site Dolt health, use `gt dolt status`. `bd dolt status` reports
 the Beads client/runtime view and can say no Beads-managed server is running
-even when the Gas Town Dolt server on port 3307 is healthy.
+even when the Excavation Site Dolt server on port 3307 is healthy.
 
 ## Write Concurrency: All-on-Main
 
-All agents — polecats, crew, witness, refinery, deacon — write directly
+All agents — miners, crew, witness, refinery, supervisor — write directly
 to `main`. Concurrency is managed through transaction discipline: every
 write wraps `BEGIN` / `DOLT_COMMIT` / `COMMIT` atomically.
 
@@ -103,7 +103,7 @@ bd update <bead> --status=in_progress
 ```
 
 This eliminates the former branch-per-worker strategy (BD_BRANCH,
-per-polecat Dolt branches, merge-at-done). All writes are immediately
+per-miner Dolt branches, merge-at-done). All writes are immediately
 visible to all agents — no cross-agent visibility gaps.
 
 Multi-statement `bd` commands batch their writes inside a single
@@ -184,7 +184,7 @@ issues table — there is no separate mail table. The `sender` field and
 
 ## Dolt-Specific Capabilities
 
-These are available to agents via SQL and used throughout Gas Town:
+These are available to agents via SQL and used throughout Excavation Site:
 
 | Feature | Usage |
 |---------|-------|
@@ -422,7 +422,7 @@ that SQL events cannot provide:
 - Threshold checking (only compact when commit count exceeds N)
 - Integrity verification (row count comparison pre/post)
 - Concurrency abort (detects if main HEAD moved during compaction)
-- Error escalation (notifies Mayor on failure)
+- Error escalation (notifies Overseer on failure)
 - Cross-database iteration (single patrol handles all DBs)
 - Daemon-level logging and observability
 
@@ -472,16 +472,16 @@ survive the recipient's session death.**
 
 | Role | Mail budget | Nudge for everything else |
 |------|-------------|--------------------------|
-| Polecat | 0-1 per session (HELP only) | Status, questions, updates |
-| Witness | Protocol messages only | Health checks, polecat pokes |
+| Miner | 0-1 per session (HELP only) | Status, questions, updates |
+| Witness | Protocol messages only | Health checks, miner pokes |
 | Refinery | Protocol messages only | Status to Witness |
-| Deacon | Escalations only | Timer callbacks, health pokes |
-| Dogs | Zero (never mail) | DOG_DONE via nudge to Deacon |
+| Supervisor | Escalations only | Timer callbacks, health pokes |
+| Dogs | Zero (never mail) | DOG_DONE via nudge to Supervisor |
 
 ## Standalone Beads Note
 
 The `bd` CLI retains an embedded Dolt option for standalone use (outside
-Gas Town). Server-only mode applies to Gas Town exclusively — standalone
+Excavation Site). Server-only mode applies to Excavation Site exclusively — standalone
 users may not have a Dolt server running.
 
 The Dolt team is working on improving embedded mode for single-process
@@ -491,7 +491,7 @@ versioning capabilities.
 
 ## Remote Push (Git Protocol)
 
-Gas Town pushes Dolt databases to GitHub remotes via `gt dolt sync`. These
+Excavation Site pushes Dolt databases to GitHub remotes via `gt dolt sync`. These
 use git SSH protocol (`git+ssh://git@github.com/...`), not DoltHub's native
 protocol.
 
@@ -504,7 +504,7 @@ stores git objects built from Dolt's internal format. Per the Dolt team
 - **The cache is necessary** — Dolt uses it to build git objects for push/pull
 - **Accumulates garbage** (orphaned refs) and is not cleaned up automatically
 - **Safe to delete** between pushes, but causes a full rebuild on next push
-  (beads: ~20 min rebuild, gastown: even longer)
+  (beads: ~20 min rebuild, excavation: even longer)
 - **Orphaned refs** can be pruned without deleting the whole cache — better balance
 - **Grows over time** as the database grows — inherent to git-protocol remotes
 
@@ -548,7 +548,7 @@ require DoltHub accounts and reconfiguring remotes with
 ~/gt/                            Town root
 ├── .dolt-data/                  Centralized Dolt data directory
 │   ├── hq/                      Town beads (hq-*)
-│   ├── gastown/                 Gastown rig (gt-*)
+│   ├── excavation/                 Excavation rig (gt-*)
 │   ├── beads/                   Beads rig (bd-*)
 │   ├── wyvern/                  Wyvern rig (wy-*)
 │   └── sky/                     Sky rig (sky-*)
@@ -556,6 +556,6 @@ require DoltHub accounts and reconfiguring remotes with
 │   ├── dolt.pid                 Server PID (daemon-managed)
 │   ├── dolt.log                 Server log
 │   └── dolt-state.json          Server state
-└── mayor/
+└── overseer/
     └── daemon.json              Daemon config (dolt_server section)
 ```

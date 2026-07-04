@@ -17,9 +17,9 @@ This formula orchestrates a complete release cycle:
 bd mol wisp create beads-release --var version=0.37.0
 ```
 
-Or assign to a polecat:
+Or assign to a miner:
 ```bash
-gt sling beads/polecats/p1 --formula beads-release --var version=0.37.0
+gt sling beads/miners/p1 --formula beads-release --var version=0.37.0
 ```
 """
 formula = "beads-release"

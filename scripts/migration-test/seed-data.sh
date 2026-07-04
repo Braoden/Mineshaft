@@ -72,9 +72,9 @@ TOWN_BEADS="$TOWN_ROOT/.beads"
 if [[ -d "$TOWN_BEADS" ]]; then
     log "Seeding town-level beads..."
 
-    # hq- prefix beads (mail, convoys, escalations)
+    # hq- prefix beads (mail, minecarts, escalations)
     create_bead "$TOWN_BEADS" "hq-seed1" "Test mail message" "message" "open" "2"
-    create_bead "$TOWN_BEADS" "hq-seed2" "Test convoy tracker" "convoy" "open" "2"
+    create_bead "$TOWN_BEADS" "hq-seed2" "Test minecart tracker" "minecart" "open" "2"
     create_bead "$TOWN_BEADS" "hq-seed3" "Closed escalation" "message" "closed" "1"
     create_bead "$TOWN_BEADS" "hq-seed4" "Open high-priority work" "task" "open" "1"
 

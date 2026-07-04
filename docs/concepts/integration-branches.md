@@ -3,8 +3,8 @@
 > Group epic work on a shared branch, land to main as a unit.
 
 Integration branches provide end-to-end support for epic-scoped work across
-the Gas Town pipeline. When you create an integration branch for an epic, it
-becomes the automatic target for every stage: polecats spawn their worktrees
+the Excavation Site pipeline. When you create an integration branch for an epic, it
+becomes the automatic target for every stage: miners spawn their worktrees
 from the integration branch (so they start with sibling work already present),
 the Refinery merges completed MRs into the integration branch instead of main,
 and when all epic children are closed, the Refinery can land the integration
@@ -27,38 +27,38 @@ to final land, without any manual branch targeting.
    gt mq integration create gt-auth-epic
    ```
 
-3. **Create a convoy to track the work.** The convoy gives you a single dashboard
+3. **Create a minecart to track the work.** The minecart gives you a single dashboard
    for the entire epic's progress.
    ```bash
-   gt convoy create "Auth overhaul" gt-auth-tokens gt-auth-sessions gt-auth-middleware
+   gt minecart create "Auth overhaul" gt-auth-tokens gt-auth-sessions gt-auth-middleware
    ```
 
 4. **Sling the first wave.** Identify children with no blockers and sling them
-   to the rig. Use `--no-convoy` since the tracking convoy already exists.
+   to the rig. Use `--no-minecart` since the tracking minecart already exists.
    ```bash
-   gt sling gt-auth-tokens gastown --no-convoy
-   gt sling gt-auth-sessions gastown --no-convoy
+   gt sling gt-auth-tokens excavation --no-minecart
+   gt sling gt-auth-sessions excavation --no-minecart
    ```
 
-5. **Polecats process the work.** Each polecat spawns its worktree from the
+5. **Miners process the work.** Each miner spawns its worktree from the
    integration branch, so it starts with any sibling work that has already
-   landed there. When a polecat finishes, it submits a merge request.
+   landed there. When a miner finishes, it submits a merge request.
 
 6. **Refinery merges to the integration branch.** Instead of merging to main,
    the Refinery merges each MR into the integration branch and marks the child
    task as complete.
 
-7. **Track progress via the convoy.** The convoy status updates each time the
+7. **Track progress via the minecart.** The minecart status updates each time the
    Refinery completes a task.
    ```bash
-   gt convoy status hq-cv-abc
+   gt minecart status hq-cv-abc
    ```
 
 8. **Sling the next wave.** When a wave completes and its dependent children
-   unblock, sling the next batch. Those polecats will start from the integration
+   unblock, sling the next batch. Those miners will start from the integration
    branch — which now contains all the work from the preceding wave.
    ```bash
-   gt sling gt-auth-middleware gastown --no-convoy
+   gt sling gt-auth-middleware excavation --no-minecart
    ```
 
 9. **Land when complete.** When all children under the epic are closed, the
@@ -150,19 +150,19 @@ This pushes a new branch to origin and records its name on the epic.
 
 ### 3. Sling Work
 
-Assign children to polecats as normal:
+Assign children to miners as normal:
 
 ```bash
-gt sling gt-auth-tokens gastown
-gt sling gt-auth-sessions gastown
+gt sling gt-auth-tokens excavation
+gt sling gt-auth-sessions excavation
 ```
 
-Polecats auto-detect the integration branch when their issue is a child of an
+Miners auto-detect the integration branch when their issue is a child of an
 epic that has one. No manual targeting needed.
 
 ### 4. MRs Merge to Integration Branch
 
-When polecats run `gt done` or `gt mq submit`, auto-detection kicks in:
+When miners run `gt done` or `gt mq submit`, auto-detection kicks in:
 
 ```
 gt done
@@ -194,7 +194,7 @@ Integration branches work without manual targeting. Three systems auto-detect th
 | System | What It Does | Config Gate |
 |--------|-------------|-------------|
 | `gt done` / `gt mq submit` | Targets MR at integration branch instead of main | `integration_branch_refinery_enabled` |
-| Polecat spawn | Sources worktree from integration branch | `integration_branch_polecat_enabled` |
+| Miner spawn | Sources worktree from integration branch | `integration_branch_miner_enabled` |
 | Refinery patrol | Checks if integration branches are ready to land | `integration_branch_auto_land` |
 
 ### Detection Algorithm
@@ -396,7 +396,7 @@ All integration branch fields live under `merge_queue` in rig settings (`setting
 {
   "merge_queue": {
     "enabled": true,
-    "integration_branch_polecat_enabled": true,
+    "integration_branch_miner_enabled": true,
     "integration_branch_refinery_enabled": true,
     "integration_branch_template": "integration/{title}",
     "integration_branch_auto_land": false
@@ -406,13 +406,13 @@ All integration branch fields live under `merge_queue` in rig settings (`setting
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `integration_branch_polecat_enabled` | `*bool` | `true` | Polecats auto-source worktrees from integration branches |
+| `integration_branch_miner_enabled` | `*bool` | `true` | Miners auto-source worktrees from integration branches |
 | `integration_branch_refinery_enabled` | `*bool` | `true` | `gt mq submit` and `gt done` auto-detect integration branches as MR targets |
 | `integration_branch_template` | `string` | `"integration/{title}"` | Branch name template (supports `{title}`, `{epic}`, `{prefix}`, `{user}`) |
 | `integration_branch_auto_land` | `*bool` | `false` | Refinery patrol auto-lands when all children closed |
 
 **Note:** `*bool` fields use pointer semantics — `null`/omitted means "use default"
-(true for polecat/refinery enabled, false for auto-land). Set explicitly to `false`
+(true for miner/refinery enabled, false for auto-land). Set explicitly to `false`
 to disable.
 
 ## Auto-Landing
@@ -501,7 +501,7 @@ bypass the hook.
 ## Build Pipeline Configuration
 
 Integration branches work with different project toolchains. The rig's build pipeline
-commands are auto-injected into polecat-work, refinery-patrol, and sync-workspace
+commands are auto-injected into miner-work, refinery-patrol, and sync-workspace
 formulas so agents know how to validate work for each project.
 
 ### The 5-Command Pipeline
@@ -545,7 +545,7 @@ Commands run in this order (any can be empty = skip):
 Commands are auto-injected from `<rig>/settings/config.json` into formula vars:
 
 - **Refinery patrol**: `buildRefineryPatrolVars()` reads rig config during `gt prime`
-- **Polecat work / sync**: `loadRigCommandVars()` reads rig config during `gt sling`
+- **Miner work / sync**: `loadRigCommandVars()` reads rig config during `gt sling`
 
 User-provided `--var` flags on `gt sling` override rig config values.
 
@@ -555,7 +555,7 @@ Any command left empty (or not configured) is skipped silently by the formula.
 This means a Go rig doesn't need `setup_command` or `typecheck_command`, and a
 TypeScript rig can add all five without affecting Go rigs.
 
-Polecats working on integration branches inherit the rig's build pipeline
+Miners working on integration branches inherit the rig's build pipeline
 automatically — no per-branch configuration is needed.
 
 ## Anti-Patterns
@@ -586,5 +586,5 @@ If you need to land early, close or remove the incomplete children first.
 
 ## See Also
 
-- [Polecat Lifecycle](polecat-lifecycle.md) — How polecats submit to the merge queue
+- [Miner Lifecycle](miner-lifecycle.md) — How miners submit to the merge queue
 - [Reference](../reference.md) — Full CLI reference including MQ commands

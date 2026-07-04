@@ -10,7 +10,7 @@
 # ///
 
 """
-Generate a weekly Gas Town newsletter based on changelog, commits, and changes.
+Generate a weekly Excavation Site newsletter based on changelog, commits, and changes.
 
 Usage:
     python generate-newsletter.py
@@ -60,7 +60,7 @@ except ImportError:
 
 
 # Newsletter prompt template
-NEWSLETTER_PROMPT_TEMPLATE = """Generate a Gas Town newsletter covering the period from {since_date} to {until_date}.
+NEWSLETTER_PROMPT_TEMPLATE = """Generate a Excavation Site newsletter covering the period from {since_date} to {until_date}.
 
 Reporting Period:
 - Date Range: {since_date} to {until_date}
@@ -626,7 +626,7 @@ def generate_newsletter(
     return newsletter, version, since_date, until_date, input_tokens, output_tokens, actual_cost
 
 
-app = typer.Typer(help="Generate a weekly Gas Town newsletter based on changelog and commits")
+app = typer.Typer(help="Generate a weekly Excavation Site newsletter based on changelog and commits")
 
 
 @app.command()

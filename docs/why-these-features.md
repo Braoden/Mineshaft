@@ -1,6 +1,6 @@
 # Why These Features?
 
-> Gas Town's architecture explained through enterprise AI challenges
+> Excavation Site's architecture explained through enterprise AI challenges
 
 ## The Problem
 
@@ -19,7 +19,7 @@ nuanced reality of who actually did what, and how well.
 
 ## The Solution: A Work Ledger
 
-Gas Town treats work as structured data. Every action is recorded. Every agent
+Excavation Site treats work as structured data. Every action is recorded. Every agent
 has a track record. Every piece of work has provenance.
 
 This isn't about surveillance. It's about **visibility** - the same visibility
@@ -33,13 +33,13 @@ you'd expect from any serious engineering system.
 a critical bug. Which one? Traditional git blame shows a generic "AI Assistant"
 or worse, the human's name.
 
-**The solution:** Every Gas Town agent has a distinct identity. Every action is
+**The solution:** Every Excavation Site agent has a distinct identity. Every action is
 attributed:
 
 ```
-Git commits:    gastown/polecats/toast <owner@example.com>
-Beads records:  created_by: gastown/crew/joe
-Event logs:     actor: gastown/polecats/nux
+Git commits:    excavation/miners/toast <owner@example.com>
+Beads records:  created_by: excavation/crew/joe
+Event logs:     actor: excavation/miners/nux
 ```
 
 **Why it matters:**
@@ -59,10 +59,10 @@ choose?
 
 ```bash
 # What has this agent done?
-bd audit --actor=gastown/polecats/toast
+bd audit --actor=excavation/miners/toast
 
 # Success rate on Go projects
-bd stats --actor=gastown/polecats/toast --tag=go
+bd stats --actor=excavation/miners/toast --tag=go
 ```
 
 **Why it matters:**
@@ -87,7 +87,7 @@ capabilities (derived from their work history). Matching is automatic:
 
 ```bash
 # Agent capabilities (derived from work history)
-bd skills gastown/polecats/toast
+bd skills excavation/miners/toast
 # → go: 47 tasks, python: 12 tasks, typescript: 3 tasks
 
 # Route based on fit
@@ -152,7 +152,7 @@ depends_on:
 
 ## Feature: Federation
 
-> **Status: Planned** — Federation via the Highway Operations Protocol (HOP) is designed but not yet implemented. Gas Town currently operates as a single-town system.
+> **Status: Planned** — Federation via the Highway Operations Protocol (HOP) is designed but not yet implemented. Excavation Site currently operates as a single-town system.
 
 **The problem:** Enterprise projects span multiple repositories, multiple teams,
 sometimes multiple organizations (contractors, partners). Visibility is fragmented.
@@ -183,7 +183,7 @@ acceptable? Did it pass review?
 
 ```json
 {
-  "validated_by": "gastown/refinery",
+  "validated_by": "excavation/refinery",
   "validation_type": "merge",
   "timestamp": "2025-01-15T10:30:00Z",
   "quality_signals": {
@@ -227,7 +227,7 @@ bd activity --follow
 
 ## The Enterprise Value Proposition
 
-Gas Town is a developer tool - like an IDE, but for AI orchestration. However,
+Excavation Site is a developer tool - like an IDE, but for AI orchestration. However,
 the architecture provides enterprise-grade foundations:
 
 | Capability | Developer Benefit | Enterprise Benefit |
@@ -260,5 +260,5 @@ These features aren't bolted on. They're foundational:
 4. **Scale is assumed.** Multi-repo, multi-agent, multi-org from day one.
 5. **Verification over trust.** Quality gates are first-class primitives.
 
-Gas Town is built to answer the questions enterprises will ask as AI agents
+Excavation Site is built to answer the questions enterprises will ask as AI agents
 become central to their engineering workflows.

@@ -11,18 +11,18 @@ import (
 
 	"github.com/gofrs/flock"
 
-	"github.com/steveyegge/gastown/internal/atomicfile"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/nudge"
-	"github.com/steveyegge/gastown/internal/rig"
-	"github.com/steveyegge/gastown/internal/runtime"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/util"
+	"github.com/steveyegge/excavation/internal/atomicfile"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/nudge"
+	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/excavation/internal/runtime"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/util"
 )
 
 // Common errors
@@ -236,7 +236,7 @@ func (m *Manager) addLocked(name string, createBranch bool) (*CrewWorker, error)
 		}
 	}
 
-	// Sync remotes from mayor/rig so crew clone matches the rig's remote config.
+	// Sync remotes from overseer/rig so crew clone matches the rig's remote config.
 	// This prevents origin pointing to upstream instead of the fork.
 	if err := m.syncRemotesFromRig(crewPath); err != nil {
 		if m.rig.PushURL != "" {
@@ -277,9 +277,9 @@ func (m *Manager) addLocked(name string, createBranch bool) (*CrewWorker, error)
 		style.PrintWarning("could not set up shared beads: %v", err)
 	}
 
-	// Provision PRIME.md with Gas Town context for this worker.
+	// Provision PRIME.md with Excavation Site context for this worker.
 	// This is the fallback if SessionStart hook fails - ensures crew workers
-	// always have GUPP and essential Gas Town context.
+	// always have GUPP and essential Excavation Site context.
 	if err := beads.ProvisionPrimeMDForWorktree(crewPath); err != nil {
 		// Non-fatal - crew can still work via hook, warn but don't fail
 		style.PrintWarning("could not provision PRIME.md: %v", err)
@@ -299,7 +299,7 @@ func (m *Manager) addLocked(name string, createBranch bool) (*CrewWorker, error)
 		style.PrintWarning("could not run setup hooks: %v", err)
 	}
 
-	// Ensure .gitignore has required Gas Town patterns
+	// Ensure .gitignore has required Excavation Site patterns
 	if err := rig.EnsureGitignorePatterns(crewPath); err != nil {
 		// Non-fatal - log warning but continue
 		style.PrintWarning("could not update .gitignore: %v", err)
@@ -319,9 +319,9 @@ func (m *Manager) addLocked(name string, createBranch bool) (*CrewWorker, error)
 	// All agents inherit them via Claude's directory traversal - no per-workspace copies needed.
 
 	// NOTE: We intentionally do NOT write to CLAUDE.md here.
-	// Gas Town context is injected ephemerally via SessionStart hook (gt prime).
+	// Excavation Site context is injected ephemerally via SessionStart hook (gt prime).
 	// Writing to CLAUDE.md would overwrite project instructions and leak
-	// Gas Town internals into the project repo when workers commit/push.
+	// Excavation Site internals into the project repo when workers commit/push.
 
 	// Create crew worker state
 	now := time.Now()
@@ -343,13 +343,13 @@ func (m *Manager) addLocked(name string, createBranch bool) (*CrewWorker, error)
 	return crew, nil
 }
 
-// syncRemotesFromRig copies remote configuration from the mayor/rig repo to a crew clone.
+// syncRemotesFromRig copies remote configuration from the overseer/rig repo to a crew clone.
 // This ensures crew clones have the same origin (fork) and upstream as the rig,
 // preventing repo ID mismatches and broken formula slinging.
 func (m *Manager) syncRemotesFromRig(crewPath string) error {
-	rigRepoPath := filepath.Join(m.rig.Path, "mayor", "rig")
+	rigRepoPath := filepath.Join(m.rig.Path, "overseer", "rig")
 	if _, err := os.Stat(rigRepoPath); err != nil {
-		return fmt.Errorf("mayor/rig not found at %s", rigRepoPath)
+		return fmt.Errorf("overseer/rig not found at %s", rigRepoPath)
 	}
 
 	rigGit := git.NewGit(rigRepoPath)
@@ -361,7 +361,7 @@ func (m *Manager) syncRemotesFromRig(crewPath string) error {
 	}
 
 	for _, remote := range remotes {
-		if remote == "" || remote == "mayor" {
+		if remote == "" || remote == "overseer" {
 			continue // Skip empty and local-only remotes
 		}
 
@@ -387,7 +387,7 @@ func (m *Manager) syncRemotesFromRig(crewPath string) error {
 		// Sync push URL for read-only upstream forks.
 		// Dual-source authority model: origin's push URL comes from town.json
 		// (via m.rig.PushURL, which config.json populates). Non-origin remotes
-		// get push URLs from mayor's git config. This split relies on town.json
+		// get push URLs from overseer's git config. This split relies on town.json
 		// and config.json staying in sync — RegisterRig writes both to ensure this.
 		if remote == "origin" {
 			configPushURL := strings.TrimSpace(m.rig.PushURL)
@@ -417,7 +417,7 @@ func (m *Manager) syncRemotesFromRig(crewPath string) error {
 					style.PrintWarning("could not sync push URL for %s: %v", remote, cfgErr)
 				}
 			} else {
-				// Mayor has no custom push URL — only clear if crew has a stale one.
+				// Overseer has no custom push URL — only clear if crew has a stale one.
 				crewPush, cpErr := crewGit.GetPushURL(remote)
 				crewFetch, cfErr := crewGit.RemoteURL(remote)
 				if cpErr != nil || cfErr != nil {
@@ -723,8 +723,8 @@ func (m *Manager) Start(name string, opts StartOptions) error {
 
 	// Compute environment variables BEFORE creating the session.
 	// These are passed via tmux -e flags so the initial shell inherits the correct
-	// env from the start, preventing parent env (e.g., GT_ROLE=mayor) from leaking
-	// into crew sessions. See: https://github.com/steveyegge/gastown/issues/1289
+	// env from the start, preventing parent env (e.g., GT_ROLE=overseer) from leaking
+	// into crew sessions. See: https://github.com/steveyegge/excavation/issues/1289
 	envVars := config.AgentEnv(config.AgentEnvConfig{
 		Role:             "crew",
 		Rig:              m.rig.Name,
@@ -752,7 +752,7 @@ func (m *Manager) Start(name string, opts StartOptions) error {
 
 		// Resume mode: build command without prompt, then append resume flag.
 		// No beacon is passed as prompt - the resumed session already has context.
-		// The SessionStart hook still fires and injects Gas Town metadata.
+		// The SessionStart hook still fires and injects Excavation Site metadata.
 		claudeCmd, err = config.BuildCrewStartupCommandWithAgentOverride(m.rig.Name, name, m.rig.Path, "", opts.AgentOverride)
 		if err != nil {
 			return fmt.Errorf("building resume command: %w", err)
@@ -837,8 +837,8 @@ func (m *Manager) Start(name string, opts StartOptions) error {
 	// Create session with command and env vars via -e flags.
 	// The -e flags set session-level env BEFORE the shell starts, ensuring the
 	// initial shell inherits the correct GT_ROLE (not the parent's).
-	// See: https://github.com/anthropics/gastown/issues/280 (race condition fix)
-	// See: https://github.com/steveyegge/gastown/issues/1289 (env inheritance fix)
+	// See: https://github.com/anthropics/excavation/issues/280 (race condition fix)
+	// See: https://github.com/steveyegge/excavation/issues/1289 (env inheritance fix)
 	if err := t.NewSessionWithCommandAndEnv(sessionID, worker.ClonePath, claudeCmd, envVars); err != nil {
 		return fmt.Errorf("creating session: %w", err)
 	}
@@ -860,7 +860,7 @@ func (m *Manager) Start(name string, opts StartOptions) error {
 			}
 		}
 	}
-	_ = t.ConfigureGasTownSession(sessionID, theme, m.rig.Name, name, "crew")
+	_ = t.ConfigureExcavationSession(sessionID, theme, m.rig.Name, name, "crew")
 
 	// Set up C-b n/p keybindings for crew session cycling (non-fatal)
 	_ = t.SetCrewCycleBindings(sessionID)

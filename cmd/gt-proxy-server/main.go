@@ -1,4 +1,4 @@
-// gt-proxy-server is the mTLS proxy server for sandboxed polecat execution.
+// gt-proxy-server is the mTLS proxy server for sandboxed miner execution.
 // It runs on the host and allows containers to call gt/bd and access git repos
 // via authenticated, authorized HTTP endpoints.
 package main
@@ -15,14 +15,14 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/steveyegge/gastown/internal/proxy"
-	"github.com/steveyegge/gastown/internal/util"
+	"github.com/steveyegge/excavation/internal/proxy"
+	"github.com/steveyegge/excavation/internal/util"
 )
 
 // defaultAllowedSubcmds lists the safe subcommands for gt and bd.
-// Dangerous subcommands (e.g. gt polecat, gt rig, gt admin, gt nuke) are excluded.
+// Dangerous subcommands (e.g. gt miner, gt rig, gt admin, gt nuke) are excluded.
 const defaultAllowedSubcmds = "" +
-	"gt:prime,hook,done,mail,nudge,mol,status,handoff,version,convoy,sling;" +
+	"gt:prime,hook,done,mail,nudge,mol,status,handoff,version,minecart,sling;" +
 	"bd:create,update,close,show,list,ready,dep,export,prime,stats,blocked,doctor"
 
 func main() {
@@ -34,7 +34,7 @@ func main() {
 		allowedCmds    = flag.String("allowed-cmds", "gt,bd", "comma-separated list of allowed commands")
 		allowedSubcmds = flag.String("allowed-subcmds", discoverAllowedSubcmds(),
 			`semicolon-separated list of "cmd:sub1,sub2,..." subcommand allowlists`)
-		townRoot = flag.String("town-root", "", "Gas Town root directory (default: $GT_TOWN or ~/gt)")
+		townRoot = flag.String("town-root", "", "Excavation Site root directory (default: $GT_TOWN or ~/gt)")
 	)
 	flag.Parse()
 

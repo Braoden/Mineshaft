@@ -87,7 +87,7 @@ agent heartbeats). Think of it as the "git squash" of work records.
 | `created_at` | bead.created_at | When work was imagined |
 | `closed_at` | bead.closed_at | When work completed |
 | `duration_days` | computed | closed_at - created_at |
-| `parent` | bead.parent | Convoy/epic linkage |
+| `parent` | bead.parent | Minecart/epic linkage |
 | `rig` | context | Which rig this belongs to |
 | `commit_refs` | git log | Associated git commits (if any) |
 | `files_touched` | git diff | File paths changed (for skill derivation) |
@@ -100,31 +100,31 @@ flagged for Level 3), agent assignment churn, heartbeat/patrol associations.
 get deleted by TTL or promoted to Level 1 (permanent operational). Promoted wisps
 can then trigger Level 2 export on closure like any other bead.
 
-### Trigger 2: Convoy Completion
+### Trigger 2: Minecart Completion
 
-**When**: All beads in a convoy reach `closed` status.
+**When**: All beads in a minecart reach `closed` status.
 
-**What gets exported**: A convoy-level summary record in addition to the
+**What gets exported**: A minecart-level summary record in addition to the
 individual bead records (which export via Trigger 1).
 
 | Field | Source | Notes |
 |-------|--------|-------|
-| `convoy_id` | convoy bead id | The coordination unit |
-| `title` | convoy title | What was coordinated |
+| `minecart_id` | minecart bead id | The coordination unit |
+| `title` | minecart title | What was coordinated |
 | `bead_count` | count of children | Scale of effort |
 | `agents_involved` | unique assignees | Who participated |
 | `rigs_involved` | unique rig contexts | Cross-rig breadth |
-| `created_at` | convoy created | When coordination began |
+| `created_at` | minecart created | When coordination began |
 | `completed_at` | last child closed | When all work landed |
 | `duration_days` | computed | Total elapsed time |
 
-**Why separate from Trigger 1**: Convoy records capture coordination patterns —
+**Why separate from Trigger 1**: Minecart records capture coordination patterns —
 multi-agent work, cross-rig breadth, parallelism. These are distinct skill
 signals that individual bead records don't capture.
 
 ### Trigger 3: Refinery Merge
 
-**When**: The Refinery successfully merges a polecat's work to main.
+**When**: The Refinery successfully merges a miner's work to main.
 
 **What gets exported**: An enriched version of the bead closure record with
 validation metadata.
@@ -133,7 +133,7 @@ validation metadata.
 |-------|--------|-------|
 | `merge_id` | refinery record | Merge queue entry |
 | `bead_id` | associated bead | Links to bead record |
-| `branch` | polecat branch | Source of work |
+| `branch` | miner branch | Source of work |
 | `merged_by` | refinery agent | Validator identity |
 | `merge_result` | pass/fail/conflict | Outcome |
 | `test_results` | CI output | If tests ran |
@@ -239,8 +239,8 @@ new. The latter is a fundamentally different and more valuable skill signal.
 
 ### Trigger 7: Cross-Rig Coordination
 
-**When**: A bead or convoy involves work across multiple rigs (detected via
-convoy membership, cross-rig references, or worktree usage).
+**When**: A bead or minecart involves work across multiple rigs (detected via
+minecart membership, cross-rig references, or worktree usage).
 
 **What gets exported**: All Level 2 fields plus:
 
@@ -250,7 +250,7 @@ convoy membership, cross-rig references, or worktree usage).
 | `worktrees_used` | gt worktree | Cross-rig work sessions |
 | `coordination_pattern` | analysis | Serial vs parallel, delegation vs direct |
 | `mail_thread` | gt mail | Inter-agent communication for this work |
-| `convoy_structure` | bead graph | How work was decomposed |
+| `minecart_structure` | bead graph | How work was decomposed |
 
 **Why this matters for HOP**: Cross-rig work demonstrates architectural
 understanding — knowing where code lives, how systems interact, when to delegate
@@ -287,14 +287,14 @@ bead closes → Level 2 export (always)
             → Level 3 export (if design/novel/cross-rig/flagged)
 ```
 
-### Boundary 2: Convoy Landing
+### Boundary 2: Minecart Landing
 
-All beads in a convoy close. Fires Trigger 2 (convoy summary) after all
+All beads in a minecart close. Fires Trigger 2 (minecart summary) after all
 individual Trigger 1 exports. This is the natural "project completion" boundary.
 
 ```
-last convoy bead closes → all Trigger 1 exports (if not already done)
-                        → Trigger 2 convoy summary
+last minecart bead closes → all Trigger 1 exports (if not already done)
+                        → Trigger 2 minecart summary
                         → Trigger 7 (if multi-rig)
 ```
 
@@ -396,7 +396,7 @@ CREATE TABLE ledger_completions (
     created_at TIMESTAMP,
     closed_at TIMESTAMP,
     duration_days FLOAT,
-    parent VARCHAR(64),              -- convoy linkage
+    parent VARCHAR(64),              -- minecart linkage
     commit_refs JSON,                -- associated git commits
     files_touched JSON,              -- file paths (for skill derivation)
     lines_changed JSON,              -- {added: N, removed: M}
@@ -405,9 +405,9 @@ CREATE TABLE ledger_completions (
     export_trigger VARCHAR(32)       -- which trigger caused export
 );
 
--- Level 2: Convoy summary records
-CREATE TABLE ledger_convoys (
-    convoy_id VARCHAR(64) PRIMARY KEY,
+-- Level 2: Minecart summary records
+CREATE TABLE ledger_minecarts (
+    minecart_id VARCHAR(64) PRIMARY KEY,
     title TEXT,
     bead_count INT,
     agents_involved JSON,
@@ -569,7 +569,7 @@ Ledger tables are the input to HOP skill queries. Example:
 -- "What Go work has agent X done?"
 SELECT lc.title, lc.files_touched, lc.duration_days
 FROM ledger_completions lc
-WHERE lc.assignee = 'gastown/crew/mel'
+WHERE lc.assignee = 'excavation/crew/mel'
   AND JSON_CONTAINS(lc.files_touched, '"*.go"')
 ORDER BY lc.closed_at DESC;
 
@@ -593,9 +593,9 @@ WHERE JSON_CONTAINS(lc.labels, '"architecture"')
 - `bd ledger export <id>` command for manual trigger
 - `bd ledger status` command to check export state
 
-### Phase 2: Convoy + Merge (Triggers 2-3)
+### Phase 2: Minecart + Merge (Triggers 2-3)
 
-- Convoy completion detection and summary export
+- Minecart completion detection and summary export
 - Refinery merge hook integration
 - Link merge records to completion records
 

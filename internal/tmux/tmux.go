@@ -17,9 +17,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/telemetry"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/telemetry"
 )
 
 // sessionNudgeLocks serializes nudges to the same session.
@@ -219,7 +219,7 @@ func NewTmuxWithSocket(socket string) *Tmux {
 
 // run executes a tmux command and returns stdout.
 // All commands include -u flag for UTF-8 support regardless of locale settings.
-// See: https://github.com/steveyegge/gastown/issues/1219
+// See: https://github.com/steveyegge/excavation/issues/1219
 func (t *Tmux) run(args ...string) (string, error) {
 	// Prepend global flags: -u (UTF-8 mode, PATCH-004) and optionally -L (socket).
 	// The -L flag must come before the subcommand, so it goes in the prefix.
@@ -294,7 +294,7 @@ func (t *Tmux) NewSession(name, workDir string) error {
 // Validates workDir (if non-empty) exists and is a directory. After creation, performs
 // a brief health check to catch immediate command failures (binary not found, syntax
 // errors, etc.) so callers get an error instead of a silently dead session.
-// See: https://github.com/anthropics/gastown/issues/280
+// See: https://github.com/anthropics/excavation/issues/280
 func (t *Tmux) NewSessionWithCommand(name, workDir, command string) error {
 	if err := validateSessionName(name); err != nil {
 		return err
@@ -318,7 +318,7 @@ func (t *Tmux) NewSessionWithCommand(name, workDir, command string) error {
 	// detection failures if inherited (GH#1666).
 	// IdentityEnvVars (GT_ROLE, BD_ACTOR, GIT_AUTHOR_NAME, etc.): the daemon
 	// process sets BD_ACTOR=daemon; if the tmux server was started from the
-	// daemon's context the global env inherits that value. Polecat sessions
+	// daemon's context the global env inherits that value. Miner sessions
 	// then inherit BD_ACTOR=daemon and gt done rejects them with "you are daemon"
 	// (gt-xyr). Clearing these here ensures every session gets identity vars
 	// only from its own startup command / -e flags, not from a stale global.
@@ -372,8 +372,8 @@ func (t *Tmux) NewSessionWithCommand(name, workDir, command string) error {
 // variables set via -e flags. This ensures the initial shell process inherits the
 // correct environment from the session, rather than inheriting from the tmux server
 // or parent process. The -e flags set session-level environment before the shell
-// starts, preventing stale env vars (e.g., GT_ROLE from a parent mayor session)
-// from leaking into crew/polecat shells.
+// starts, preventing stale env vars (e.g., GT_ROLE from a parent overseer session)
+// from leaking into crew/miner shells.
 //
 // The command should still use 'exec env' for WaitForCommand detection compatibility,
 // but -e provides defense-in-depth for the initial shell environment.
@@ -1012,7 +1012,7 @@ func (t *Tmux) KillServer() error {
 // When on (default), the server exits when there are no sessions.
 // When off, the server stays running even with no sessions.
 // This is useful during shutdown to prevent the server from exiting
-// when all Gas Town sessions are killed but the user has no other sessions.
+// when all Excavation Site sessions are killed but the user has no other sessions.
 func (t *Tmux) SetExitEmpty(on bool) error {
 	value := "on"
 	if !on {
@@ -1034,7 +1034,7 @@ func (t *Tmux) IsAvailable() bool {
 
 // HasSession checks if a session exists (exact match).
 // Uses "=" prefix for exact matching, preventing prefix matches
-// (e.g., "gt-deacon-boot" won't match when checking for "gt-deacon").
+// (e.g., "gt-supervisor-boot" won't match when checking for "gt-supervisor").
 func (t *Tmux) HasSession(name string) (bool, error) {
 	// psmux (Windows tmux alternative) doesn't support the "=" exact-match
 	// prefix for session targets. Use the bare name on Windows.
@@ -1747,7 +1747,7 @@ func (t *Tmux) NudgeSessionWithOpts(session, message string, opts NudgeOpts) err
 
 	if sendEscape {
 		// 5. Send Escape to exit vim INSERT mode if enabled (harmless in normal mode)
-		// See: https://github.com/anthropics/gastown/issues/307
+		// See: https://github.com/anthropics/excavation/issues/307
 		_, _ = t.run("send-keys", "-t", target, "Escape")
 
 		// 6. Wait 600ms — must exceed bash readline's keyseq-timeout (500ms default)
@@ -1828,7 +1828,7 @@ func (t *Tmux) NudgePane(pane, message string) error {
 
 	if sendEscape {
 		// 5. Send Escape to exit vim INSERT mode if enabled (harmless in normal mode)
-		// See: https://github.com/anthropics/gastown/issues/307
+		// See: https://github.com/anthropics/excavation/issues/307
 		_, _ = t.run("send-keys", "-t", pane, "Escape")
 
 		// 6. Wait 600ms — must exceed bash readline's keyseq-timeout (500ms default)
@@ -2950,20 +2950,20 @@ func (t *Tmux) WaitForShellReady(session string, timeout time.Duration) error {
 // Bootstrap (acceptable):
 //
 //	During cold startup when no AI agent is running, the daemon uses this
-//	function to get the Deacon online. Regex is acceptable here.
+//	function to get the Supervisor online. Regex is acceptable here.
 //
 // Steady-State (use AI observation instead):
 //
 //	Once any AI agent is running, observation should be AI-to-AI:
-//	- Deacon monitoring polecats → use patrol formula + AI analysis
-//	- Deacon restarting → Mayor watches via 'gt peek'
-//	- Mayor restarting → Deacon watches via 'gt peek'
+//	- Supervisor monitoring miners → use patrol formula + AI analysis
+//	- Supervisor restarting → Overseer watches via 'gt peek'
+//	- Overseer restarting → Supervisor watches via 'gt peek'
 
 // matchesPromptPrefix reports whether a captured pane line matches the
 // configured ready-prompt prefix. It normalizes non-breaking spaces
 // (U+00A0) to regular spaces before matching, because Claude Code uses
 // NBSP after its ❯ prompt character while the default ReadyPromptPrefix
-// uses a regular space. See https://github.com/steveyegge/gastown/issues/1387.
+// uses a regular space. See https://github.com/steveyegge/excavation/issues/1387.
 func matchesPromptPrefix(line, readyPromptPrefix string) bool {
 	if readyPromptPrefix == "" {
 		return false
@@ -2992,14 +2992,14 @@ func hasBusyIndicator(line string) bool {
 // Enter submits the line (GH#307). But in Claude Code — and Codex/Gemini —
 // Escape also cancels in-flight generation; the status bar literally reads
 // "esc to interrupt" while the agent is working. Sending Escape in that state
-// would interrupt the agent's current turn (e.g. the Mayor). Returns false when
+// would interrupt the agent's current turn (e.g. the Overseer). Returns false when
 // any line shows the busy indicator so the caller suppresses the Escape.
 //
 // FRAGILITY: this depends on the agent TUI rendering the literal substring
 // "esc to interrupt" while generating (via hasBusyIndicator — the same
 // assumption IsIdle/WaitForIdle already make). If that upstream status text
 // changes, the gate fails open and silently: the Escape is sent again and
-// nudges can resume interrupting the agent. Tracked in gastownhall/gastown#4240.
+// nudges can resume interrupting the agent. Tracked in excavationhall/excavation#4240.
 func shouldSendEscapeForLines(lines []string) bool {
 	for _, line := range lines {
 		if hasBusyIndicator(line) {
@@ -3280,7 +3280,7 @@ func (t *Tmux) ApplyTheme(session string, theme Theme) error {
 	return err
 }
 
-// ClearTheme removes Gas Town tmux styling from a session.
+// ClearTheme removes Excavation Site tmux styling from a session.
 func (t *Tmux) ClearTheme(session string) error {
 	if _, err := t.run("set-option", "-t", session, "-u", "status-style"); err != nil {
 		return err
@@ -3305,15 +3305,15 @@ func (t *Tmux) ApplyWindowStyle(session string, ws *WindowStyle) error {
 // Includes legacy keys ("coordinator", "health-check") for backwards compatibility.
 var roleIcons = map[string]string{
 	// Standard role names (from constants)
-	constants.RoleMayor:    constants.EmojiMayor,
-	constants.RoleDeacon:   constants.EmojiDeacon,
+	constants.RoleOverseer:    constants.EmojiOverseer,
+	constants.RoleSupervisor:   constants.EmojiSupervisor,
 	constants.RoleWitness:  constants.EmojiWitness,
 	constants.RoleRefinery: constants.EmojiRefinery,
 	constants.RoleCrew:     constants.EmojiCrew,
-	constants.RolePolecat:  constants.EmojiPolecat,
+	constants.RoleMiner:  constants.EmojiMiner,
 	// Legacy names (for backwards compatibility)
-	"coordinator":  constants.EmojiMayor,
-	"health-check": constants.EmojiDeacon,
+	"coordinator":  constants.EmojiOverseer,
+	"health-check": constants.EmojiSupervisor,
 }
 
 // SetStatusFormat configures the left side of the status bar.
@@ -3323,12 +3323,12 @@ func (t *Tmux) SetStatusFormat(session, rig, worker, role string) error {
 	icon := roleIcons[role]
 
 	// Compact format - icon already identifies role
-	// Mayor: 🎩 Mayor
-	// Crew:  👷 gastown/crew/max (full path)
-	// Polecat: 😺 gastown/Toast
+	// Overseer: 🎩 Overseer
+	// Crew:  👷 excavation/crew/max (full path)
+	// Miner: 😺 excavation/Toast
 	var left string
 	if rig == "" {
-		// Town-level agent (Mayor, Deacon) - keep as-is
+		// Town-level agent (Overseer, Supervisor) - keep as-is
 		left = fmt.Sprintf("%s %s ", icon, worker)
 	} else {
 		// Rig agents - use session name (already in prefix format: gt-crew-gus)
@@ -3373,13 +3373,13 @@ func (t *Tmux) SetDynamicStatus(session string) error {
 	return err
 }
 
-// ConfigureGasTownSession applies Gas Town status configuration to a session.
+// ConfigureExcavationSession applies Excavation Site status configuration to a session.
 // A nil theme disables tmux styling while still applying status/bindings.
 //
 // Window background is controlled by theme.Window:
 //   - non-nil: apply Window's colors as the window background
 //   - nil: reset window background to terminal defaults (disabled)
-func (t *Tmux) ConfigureGasTownSession(session string, theme *Theme, rig, worker, role string) error {
+func (t *Tmux) ConfigureExcavationSession(session string, theme *Theme, rig, worker, role string) error {
 	if theme != nil {
 		if err := t.ApplyTheme(session, *theme); err != nil {
 			return fmt.Errorf("applying theme: %w", err)
@@ -3451,10 +3451,10 @@ func IsInsideTmux() bool {
 // SetMailClickBinding configures left-click on status-right to show mail preview.
 // This creates a popup showing the first unread message when clicking the mail icon area.
 //
-// The binding is conditional: it only activates in Gas Town sessions (those matching
+// The binding is conditional: it only activates in Excavation Site sessions (those matching
 // a registered rig prefix or "hq-"). In non-GT sessions, the user's original
 // MouseDown1StatusRight binding (if any) is preserved.
-// See: https://github.com/steveyegge/gastown/issues/1548
+// See: https://github.com/steveyegge/excavation/issues/1548
 func (t *Tmux) SetMailClickBinding(session string) error {
 	// Skip if already configured — preserves user's original fallback from first call
 	if t.isGTBinding("root", "MouseDown1StatusRight") {
@@ -3566,8 +3566,8 @@ func (t *Tmux) SetTownCycleBindings(session string) error {
 	return t.SetCycleBindings(session)
 }
 
-// isGTBinding checks if the given key already has a Gas Town binding.
-// Used to skip redundant re-binding on repeated ConfigureGasTownSession /
+// isGTBinding checks if the given key already has a Excavation Site binding.
+// Used to skip redundant re-binding on repeated ConfigureExcavationSession /
 // EnsureBindingsOnSocket calls, preserving the user's original fallback.
 //
 // Two forms are recognized:
@@ -3621,7 +3621,7 @@ func (t *Tmux) isGTBindingCurrent(table, key, currentPattern string) bool {
 // The returned string is a tmux command (e.g., "next-window", "run-shell 'lazygit'")
 // suitable for use as a command argument to bind-key or if-shell.
 //
-// If the existing binding is already a Gas Town if-shell binding (detected by
+// If the existing binding is already a Excavation Site if-shell binding (detected by
 // the presence of both "if-shell" and "gt " in the output), it is treated as
 // no prior binding to avoid recursive wrapping on repeated calls.
 func (t *Tmux) getKeyBinding(table, key string) string {
@@ -3688,14 +3688,14 @@ func (t *Tmux) getKeyBinding(table, key string) string {
 var safePrefixRe = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9-]{0,19}$`)
 
 // sessionPrefixPattern returns a grep -Eq pattern that matches any registered
-// Gas Town session name.  The pattern is built dynamically from rigs.json
-// (via config.AllRigPrefixes) so that rigs beyond gastown/hq are recognized.
+// Excavation Site session name.  The pattern is built dynamically from rigs.json
+// (via config.AllRigPrefixes) so that rigs beyond excavation/hq are recognized.
 // "hq" is always included because it lives outside the rig registry
 // (town-level services).
 //
 // Example output: "^(bd|db|fa|gl|gt|hq|la|lc)-"
 func sessionPrefixPattern() string {
-	seen := map[string]bool{"hq": true, "gt": true} // always include HQ + gastown fallback
+	seen := map[string]bool{"hq": true, "gt": true} // always include HQ + excavation fallback
 	townRoot := os.Getenv("GT_ROOT")
 	if townRoot == "" {
 		townRoot = os.Getenv("GT_TOWN_ROOT")
@@ -3718,17 +3718,17 @@ func sessionPrefixPattern() string {
 // SetCycleBindings sets up C-b n/p to cycle through related sessions.
 // The gt cycle command automatically detects the session type and cycles
 // within the appropriate group:
-// - Town sessions: Mayor ↔ Deacon
+// - Town sessions: Overseer ↔ Supervisor
 // - Crew sessions: All crew members in the same rig
-// - Rig ops sessions: Witness + Refinery + Polecats in the same rig
+// - Rig ops sessions: Witness + Refinery + Miners in the same rig
 //
 // IMPORTANT: These bindings are conditional - they only run gt cycle for
-// Gas Town sessions (those matching a registered rig prefix or "hq-").
+// Excavation Site sessions (those matching a registered rig prefix or "hq-").
 // For non-GT sessions, the user's original binding is preserved. If no
 // prior binding existed, the tmux defaults (next-window/previous-window)
 // are used.
-// See: https://github.com/steveyegge/gastown/issues/13
-// See: https://github.com/steveyegge/gastown/issues/1548
+// See: https://github.com/steveyegge/excavation/issues/13
+// See: https://github.com/steveyegge/excavation/issues/1548
 //
 // IMPORTANT: We pass #{session_name} to the command because run-shell doesn't
 // reliably preserve the session context. tmux expands #{session_name} at binding
@@ -3739,7 +3739,7 @@ func (t *Tmux) SetCycleBindings(session string) error {
 	// 2. Has the current prefix pattern (not stale from before a gt rig add)
 	// We must re-bind if an older GT binding exists without --client, or if the
 	// prefix pattern is stale (missing newly added rig prefixes).
-	// See: https://github.com/steveyegge/gastown/issues/2299
+	// See: https://github.com/steveyegge/excavation/issues/2299
 	pattern := sessionPrefixPattern()
 	if t.isGTBindingWithClient("prefix", "n") && t.isGTBindingCurrent("prefix", "n", pattern) {
 		return nil
@@ -3756,16 +3756,16 @@ func (t *Tmux) SetCycleBindings(session string) error {
 		prevFallback = "previous-window"
 	}
 
-	// C-b n → gt cycle next for Gas Town sessions, original binding otherwise
+	// C-b n → gt cycle next for Excavation Site sessions, original binding otherwise
 	// Pass --client #{client_tty} so switch-client targets the correct client
-	// when multiple tmux clients are attached (e.g., gastown + beads rigs).
+	// when multiple tmux clients are attached (e.g., excavation + beads rigs).
 	if _, err := t.run("bind-key", "-T", "prefix", "n",
 		"if-shell", ifShell,
 		"run-shell 'gt cycle next --session #{session_name} --client #{client_tty}'",
 		nextFallback); err != nil {
 		return err
 	}
-	// C-b p → gt cycle prev for Gas Town sessions, original binding otherwise
+	// C-b p → gt cycle prev for Excavation Site sessions, original binding otherwise
 	if _, err := t.run("bind-key", "-T", "prefix", "p",
 		"if-shell", ifShell,
 		"run-shell 'gt cycle prev --session #{session_name} --client #{client_tty}'",
@@ -3779,12 +3779,12 @@ func (t *Tmux) SetCycleBindings(session string) error {
 // This creates the feed window if it doesn't exist, or switches to it if it does.
 // Uses `gt feed --window` which handles both creation and switching.
 //
-// IMPORTANT: This binding is conditional - it only runs for Gas Town sessions
+// IMPORTANT: This binding is conditional - it only runs for Excavation Site sessions
 // (those matching a registered rig prefix or "hq-"). For non-GT sessions, the
 // user's original binding is preserved. If no prior binding existed, the key
 // press is silently ignored.
-// See: https://github.com/steveyegge/gastown/issues/13
-// See: https://github.com/steveyegge/gastown/issues/1548
+// See: https://github.com/steveyegge/excavation/issues/13
+// See: https://github.com/steveyegge/excavation/issues/1548
 func (t *Tmux) SetFeedBinding(session string) error {
 	pattern := sessionPrefixPattern()
 	// Skip if already configured with the current rig prefix pattern.
@@ -3806,13 +3806,13 @@ func (t *Tmux) SetFeedBinding(session string) error {
 }
 
 // SetAgentsBinding configures C-b g to open the agent switcher popup menu.
-// This runs `gt agents menu` which displays a tmux popup with all Gas Town agents.
+// This runs `gt agents menu` which displays a tmux popup with all Excavation Site agents.
 //
-// IMPORTANT: This binding is conditional - it only runs for Gas Town sessions
+// IMPORTANT: This binding is conditional - it only runs for Excavation Site sessions
 // (those matching a registered rig prefix or "hq-"). For non-GT sessions, the
 // user's original binding is preserved. If no prior binding existed, the key
 // press is silently ignored.
-// See: https://github.com/steveyegge/gastown/issues/1548
+// See: https://github.com/steveyegge/excavation/issues/1548
 func (t *Tmux) SetAgentsBinding(session string) error {
 	pattern := sessionPrefixPattern()
 	// Skip if already configured with the current rig prefix pattern.
@@ -3986,11 +3986,11 @@ func CurrentSessionName() string {
 	return strings.TrimSpace(string(out))
 }
 
-// CleanupOrphanedSessions scans for zombie Gas Town sessions and kills them.
+// CleanupOrphanedSessions scans for zombie Excavation Site sessions and kills them.
 // A zombie session is one where tmux is alive but the Claude process has died.
 // This runs at `gt start` time to prevent session name conflicts and resource accumulation.
 //
-// The isGTSession predicate identifies Gas Town sessions (e.g. session.IsKnownSession).
+// The isGTSession predicate identifies Excavation Site sessions (e.g. session.IsKnownSession).
 // It is passed as a parameter to avoid a circular import from tmux → session.
 //
 // Returns:
@@ -4003,7 +4003,7 @@ func (t *Tmux) CleanupOrphanedSessions(isGTSession func(string) bool) (cleaned i
 	}
 
 	for _, sess := range sessions {
-		// Only process Gas Town sessions
+		// Only process Excavation Site sessions
 		if !isGTSession(sess) {
 			continue
 		}
@@ -4025,7 +4025,7 @@ func (t *Tmux) CleanupOrphanedSessions(isGTSession func(string) bool) (cleaned i
 
 // SetPaneDiedHook sets a pane-died hook on a session to detect crashes.
 // When the pane exits, tmux runs the hook command with exit status info.
-// The agentID is used to identify the agent in crash logs (e.g., "gastown/Toast").
+// The agentID is used to identify the agent in crash logs (e.g., "excavation/Toast").
 func (t *Tmux) SetPaneDiedHook(session, agentID string) error {
 	if err := validateSessionName(session); err != nil {
 		return err
@@ -4046,8 +4046,8 @@ func (t *Tmux) SetPaneDiedHook(session, agentID string) error {
 }
 
 // SetAutoRespawnHook configures a session to automatically respawn when the pane dies.
-// This is used for persistent agents like Deacon that should never exit.
-// PATCH-010: Fixes Deacon crash loop by respawning at tmux level.
+// This is used for persistent agents like Supervisor that should never exit.
+// PATCH-010: Fixes Supervisor crash loop by respawning at tmux level.
 //
 // The hook:
 // 1. Waits 3 seconds (debounce rapid crashes)

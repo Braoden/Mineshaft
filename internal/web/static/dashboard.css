@@ -194,22 +194,22 @@
         .activity-red .activity-dot { background: var(--red); box-shadow: 0 0 6px var(--red); }
         .activity-unknown .activity-dot { background: var(--text-muted); }
 
-        /* Convoy-specific styles */
-        .convoy-row {
+        /* Minecart-specific styles */
+        .minecart-row {
             cursor: pointer;
         }
 
-        .convoy-id {
+        .minecart-id {
             font-weight: 600;
             color: var(--blue);
         }
 
-        .convoy-title {
+        .minecart-title {
             color: var(--text-secondary);
             margin-left: 8px;
         }
 
-        .convoy-assignees {
+        .minecart-assignees {
             display: flex;
             flex-wrap: wrap;
             gap: 4px;
@@ -228,22 +228,22 @@
             max-width: 120px;
         }
 
-        .convoy-progress-cell {
+        .minecart-progress-cell {
             min-width: 80px;
         }
 
-        .convoy-progress-header {
+        .minecart-progress-header {
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
-        .convoy-progress-fraction {
+        .minecart-progress-fraction {
             font-size: 0.8rem;
             color: var(--text-primary);
         }
 
-        .convoy-progress-pct {
+        .minecart-progress-pct {
             font-size: 0.7rem;
             color: var(--text-muted);
         }
@@ -264,11 +264,11 @@
             transition: width 0.3s ease;
         }
 
-        .convoy-work-cell {
+        .minecart-work-cell {
             min-width: 80px;
         }
 
-        .convoy-work-breakdown {
+        .minecart-work-breakdown {
             display: flex;
             flex-direction: column;
             gap: 3px;
@@ -296,22 +296,22 @@
             color: var(--green);
         }
 
-        /* Convoy detail view */
-        #convoy-detail {
+        /* Minecart detail view */
+        #minecart-detail {
             padding: 8px;
         }
 
-        .convoy-detail-title {
+        .minecart-detail-title {
             font-size: 1rem;
             font-weight: 600;
             color: var(--text-primary);
         }
 
-        .convoy-detail-content {
+        .minecart-detail-content {
             margin-top: 12px;
         }
 
-        .convoy-detail-meta {
+        .minecart-detail-meta {
             display: flex;
             align-items: center;
             gap: 12px;
@@ -319,11 +319,11 @@
             font-size: 0.85rem;
         }
 
-        .convoy-detail-section {
+        .minecart-detail-section {
             margin-top: 12px;
         }
 
-        .convoy-detail-section h4 {
+        .minecart-detail-section h4 {
             margin: 0;
             font-size: 0.85rem;
             color: var(--text-secondary);
@@ -332,14 +332,14 @@
             letter-spacing: 0.05em;
         }
 
-        .convoy-issues-header {
+        .minecart-issues-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             margin-bottom: 8px;
         }
 
-        .convoy-add-issue-btn {
+        .minecart-add-issue-btn {
             background: var(--green);
             border: none;
             border-radius: 4px;
@@ -351,18 +351,18 @@
             transition: all 0.15s ease;
         }
 
-        .convoy-add-issue-btn:hover {
+        .minecart-add-issue-btn:hover {
             background: var(--cyan);
         }
 
-        .convoy-add-issue-form {
+        .minecart-add-issue-form {
             display: flex;
             gap: 8px;
             align-items: center;
             margin-bottom: 12px;
         }
 
-        .convoy-add-issue-input {
+        .minecart-add-issue-input {
             flex: 1;
             background: var(--bg-dark);
             border: 1px solid var(--border);
@@ -373,28 +373,28 @@
             font-family: inherit;
         }
 
-        .convoy-add-issue-input:focus {
+        .minecart-add-issue-input:focus {
             outline: none;
             border-color: var(--blue);
         }
 
-        .convoy-add-issue-submit {
+        .minecart-add-issue-submit {
             padding: 6px 12px;
             font-size: 0.8rem;
         }
 
-        .convoy-add-issue-cancel {
+        .minecart-add-issue-cancel {
             padding: 6px 12px;
             font-size: 0.8rem;
         }
 
-        /* Convoy issue status icons in sub-table */
-        #convoy-issues-table .convoy-issue-status {
+        /* Minecart issue status icons in sub-table */
+        #minecart-issues-table .minecart-issue-status {
             text-align: center;
         }
 
-        /* New Convoy button */
-        .new-convoy-btn {
+        /* New Minecart button */
+        .new-minecart-btn {
             background: var(--green);
             border: none;
             border-radius: 4px;
@@ -407,23 +407,23 @@
             transition: all 0.15s ease;
         }
 
-        .new-convoy-btn:hover {
+        .new-minecart-btn:hover {
             background: var(--cyan);
             color: #000;
             transform: scale(1.05);
         }
 
-        /* New convoy form */
-        .convoy-create-form {
+        /* New minecart form */
+        .minecart-create-form {
             padding: 8px;
         }
 
-        .convoy-create-fields {
+        .minecart-create-fields {
             margin-top: 12px;
         }
 
-        /* Convoy toggle arrow */
-        .convoy-toggle {
+        /* Minecart toggle arrow */
+        .minecart-toggle {
             display: inline-block;
             width: 14px;
             font-size: 0.7rem;
@@ -432,20 +432,20 @@
             margin-right: 4px;
         }
 
-        .convoy-expanded {
+        .minecart-expanded {
             background: rgba(89, 194, 255, 0.06);
         }
 
-        /* Convoy detail row (expanded sub-table) */
-        .convoy-detail-row {
+        /* Minecart detail row (expanded sub-table) */
+        .minecart-detail-row {
             background: none;
         }
 
-        .convoy-detail-row:hover {
+        .minecart-detail-row:hover {
             background: none;
         }
 
-        .convoy-detail-row td {
+        .minecart-detail-row td {
             padding: 0;
             border-bottom: 1px solid var(--border);
         }
@@ -516,15 +516,15 @@
             font-size: 0.75rem;
         }
 
-        .convoy-progress-done {
+        .minecart-progress-done {
             color: var(--green);
         }
 
-        .convoy-progress-active {
+        .minecart-progress-active {
             color: var(--cyan);
         }
 
-        .convoy-progress-age {
+        .minecart-progress-age {
             color: var(--text-muted);
         }
 
@@ -600,17 +600,17 @@
             margin-left: 8px;
         }
 
-        /* Polecat styles */
-        .polecat-name {
+        /* Miner styles */
+        .miner-name {
             font-weight: 600;
             color: var(--cyan);
         }
 
-        .polecat-rig {
+        .miner-rig {
             color: var(--text-muted);
         }
 
-        .polecat-work {
+        .miner-work {
             color: var(--text-secondary);
             font-size: 0.8rem;
         }
@@ -624,29 +624,29 @@
             white-space: nowrap;
         }
 
-        /* Polecat issue styles */
-        .polecat-issue {
+        /* Miner issue styles */
+        .miner-issue {
             font-size: 0.8rem;
             max-width: 180px;
         }
 
-        .polecat-issue .issue-id {
+        .miner-issue .issue-id {
             color: var(--blue);
             font-weight: 600;
             margin-right: 4px;
         }
 
-        .polecat-issue .issue-title {
+        .miner-issue .issue-title {
             color: var(--text-secondary);
         }
 
-        .polecat-issue .no-issue {
+        .miner-issue .no-issue {
             color: var(--text-muted);
         }
 
-        /* Polecat status row highlights */
-        tr.polecat-working { }
-        tr.polecat-stale { background: rgba(255, 180, 84, 0.05); }
+        /* Miner status row highlights */
+        tr.miner-working { }
+        tr.miner-stale { background: rgba(255, 180, 84, 0.05); }
 
         /* Crew styles */
         .crew-name {
@@ -1020,8 +1020,8 @@
 
         tr.ready-p1 { background: rgba(240, 113, 120, 0.08); }
         tr.ready-p2 { background: rgba(255, 180, 84, 0.08); }
-        tr.polecat-stuck { background: rgba(240, 113, 120, 0.08); }
-        tr.polecat-idle { opacity: 0.7; }
+        tr.miner-stuck { background: rgba(240, 113, 120, 0.08); }
+        tr.miner-idle { opacity: 0.7; }
 
         /* Mail styles */
         .mail-unread {
@@ -1110,10 +1110,10 @@
         .dog-working { color: var(--yellow); }
 
         /* Session role styles */
-        .role-deacon { color: var(--purple); }
+        .role-supervisor { color: var(--purple); }
         .role-witness { color: var(--cyan); }
         .role-refinery { color: var(--orange); }
-        .role-polecat { color: var(--green); }
+        .role-miner { color: var(--green); }
         .role-crew { color: var(--blue); }
 
         /* Health status */
@@ -2034,8 +2034,8 @@
             background: var(--text-muted);
         }
 
-        /* Mayor status banner */
-        .mayor-banner {
+        /* Overseer status banner */
+        .overseer-banner {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -2046,59 +2046,59 @@
             border: 1px solid var(--border);
         }
 
-        .mayor-banner.attached {
+        .overseer-banner.attached {
             border-color: var(--green);
             background: rgba(166, 209, 137, 0.08);
         }
 
-        .mayor-banner.detached {
+        .overseer-banner.detached {
             border-color: var(--text-muted);
             opacity: 0.7;
         }
 
-        .mayor-info {
+        .overseer-info {
             display: flex;
             align-items: center;
             gap: 12px;
         }
 
-        .mayor-icon {
+        .overseer-icon {
             font-size: 1.5rem;
         }
 
-        .mayor-title {
+        .overseer-title {
             font-weight: 600;
             color: var(--text-primary);
         }
 
-        .mayor-status {
+        .overseer-status {
             display: flex;
             align-items: center;
             gap: 16px;
         }
 
-        .mayor-stat {
+        .overseer-stat {
             display: flex;
             flex-direction: column;
             align-items: flex-end;
         }
 
-        .mayor-stat-label {
+        .overseer-stat-label {
             font-size: 0.7rem;
             color: var(--text-muted);
             text-transform: uppercase;
         }
 
-        .mayor-stat-value {
+        .overseer-stat-value {
             font-size: 0.85rem;
             font-weight: 500;
         }
 
-        .mayor-stat-value.active {
+        .overseer-stat-value.active {
             color: var(--green);
         }
 
-        .mayor-stat-value.idle {
+        .overseer-stat-value.idle {
             color: var(--yellow);
         }
 
@@ -2287,13 +2287,13 @@
                 justify-content: center;
             }
 
-            .mayor-banner {
+            .overseer-banner {
                 flex-direction: column;
                 gap: 12px;
                 text-align: center;
             }
 
-            .mayor-status {
+            .overseer-status {
                 justify-content: center;
             }
 
@@ -2367,8 +2367,8 @@
 
         /* Don't truncate text when expanded */
         .panel.expanded .pr-title,
-        .panel.expanded .convoy-id,
-        .panel.expanded .polecat-issue,
+        .panel.expanded .minecart-id,
+        .panel.expanded .miner-issue,
         .panel.expanded .issue-title,
         .panel.expanded .hook-title,
         .panel.expanded .mail-subject,
@@ -2406,14 +2406,14 @@
                 display: none; /* Hide on mobile, too wide */
             }
 
-            .mayor-banner {
+            .overseer-banner {
                 flex-direction: column;
                 gap: 12px;
                 text-align: center;
                 padding: 10px 14px;
             }
 
-            .mayor-status {
+            .overseer-status {
                 justify-content: center;
             }
 
@@ -2507,11 +2507,11 @@
             .hook-title,
             .mail-subject,
             .ready-title,
-            .convoy-title {
+            .minecart-title {
                 max-width: 120px;
             }
 
-            .polecat-issue {
+            .miner-issue {
                 max-width: 100px;
             }
 
@@ -2908,7 +2908,7 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Dynamic options (clickable buttons for rigs/polecats/etc) */
+        /* Dynamic options (clickable buttons for rigs/miners/etc) */
         .command-options {
             margin-bottom: 12px;
         }

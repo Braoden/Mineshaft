@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
+	"github.com/steveyegge/excavation/internal/beads"
 )
 
 func TestParseBranchName(t *testing.T) {
@@ -15,32 +15,32 @@ func TestParseBranchName(t *testing.T) {
 		wantWorker string
 	}{
 		{
-			name:       "polecat branch format",
-			branch:     "polecat/Nux/gt-xyz",
+			name:       "miner branch format",
+			branch:     "miner/Nux/gt-xyz",
 			wantIssue:  "gt-xyz",
 			wantWorker: "Nux",
 		},
 		{
-			name:       "polecat branch with subtask",
-			branch:     "polecat/Worker/gt-abc.1",
+			name:       "miner branch with subtask",
+			branch:     "miner/Worker/gt-abc.1",
 			wantIssue:  "gt-abc.1",
 			wantWorker: "Worker",
 		},
 		{
-			name:       "polecat branch with issue and timestamp",
-			branch:     "polecat/furiosa/gt-jns7.1@mk123456",
+			name:       "miner branch with issue and timestamp",
+			branch:     "miner/furiosa/gt-jns7.1@mk123456",
 			wantIssue:  "gt-jns7.1",
 			wantWorker: "furiosa",
 		},
 		{
-			name:       "modern polecat branch (timestamp format)",
-			branch:     "polecat/furiosa-mkc36bb9",
+			name:       "modern miner branch (timestamp format)",
+			branch:     "miner/furiosa-mkc36bb9",
 			wantIssue:  "", // Should NOT extract fake issue from worker-timestamp
 			wantWorker: "furiosa",
 		},
 		{
-			name:       "modern polecat branch with longer name",
-			branch:     "polecat/citadel-mk0vro62",
+			name:       "modern miner branch with longer name",
+			branch:     "miner/citadel-mk0vro62",
 			wantIssue:  "",
 			wantWorker: "citadel",
 		},
@@ -123,12 +123,12 @@ func TestGetDescriptionWithoutMRFields(t *testing.T) {
 		},
 		{
 			name:        "only MR fields",
-			description: "branch: polecat/Nux/gt-xyz\ntarget: main\nworker: Nux",
+			description: "branch: miner/Nux/gt-xyz\ntarget: main\nworker: Nux",
 			want:        "",
 		},
 		{
 			name:        "mixed content",
-			description: "branch: polecat/Nux/gt-xyz\nSome custom notes\ntarget: main",
+			description: "branch: miner/Nux/gt-xyz\nSome custom notes\ntarget: main",
 			want:        "Some custom notes",
 		},
 		{
@@ -334,7 +334,7 @@ func TestIssuePatternCompiledAtPackageLevel(t *testing.T) {
 		wantMatch bool
 		wantIssue string
 	}{
-		{"polecat/Nux/gt-xyz", true, "gt-xyz"},
+		{"miner/Nux/gt-xyz", true, "gt-xyz"},
 		{"gt-abc", true, "gt-abc"},
 		{"feature/proj-123-add-feature", true, "proj-123"},
 		{"main", false, ""},
@@ -354,8 +354,8 @@ func TestIssuePatternCompiledAtPackageLevel(t *testing.T) {
 	}
 }
 
-// TestPolecatCleanupTimeoutConstant verifies the timeout constant is set correctly.
-func TestPolecatCleanupTimeoutConstant(t *testing.T) {
+// TestMinerCleanupTimeoutConstant verifies the timeout constant is set correctly.
+func TestMinerCleanupTimeoutConstant(t *testing.T) {
 	// This test documents the expected timeout value.
 	// The actual timeout behavior is tested manually or with integration tests.
 	const expectedMaxCleanupWait = 5 * time.Minute

@@ -25,12 +25,12 @@
         },
         "pi": {
             "command": "pi",
-            "args": ["-e", "/path/to/gastown-hooks.js"],
+            "args": ["-e", "/path/to/excavation-hooks.js"],
             "prompt_mode": "arg",
             "hooks": {
                 "provider": "pi",
                 "dir": ".pi/extensions",
-                "settings_file": "gastown-hooks.js"
+                "settings_file": "excavation-hooks.js"
             },
             "tmux": {
                 "process_names": ["pi", "node", "bun"],
@@ -62,11 +62,11 @@
     },
 
     "role_agents": {
-        "mayor":    "opus-46",
-        "deacon":   "opus-46",
+        "overseer":    "opus-46",
+        "supervisor":   "opus-46",
         "witness":  "opus-46-capped",
         "refinery": "opus-46-capped",
-        "polecat":  "opus-46-capped",
+        "miner":  "opus-46-capped",
         "crew":     "opus-46",
         "boot":     "opus-46",
         "dog":      "opus-46"
@@ -74,7 +74,7 @@
 
     "cli_theme": "dark",
 
-    "agent_email_domain": "gastown.local",
+    "agent_email_domain": "excavation.local",
 
     "web_timeouts": {
         "cmd_timeout": "15s",
@@ -89,7 +89,7 @@
         "stale_threshold": "5m",
         "stuck_threshold": "30m",
         "heartbeat_fresh_threshold": "5m",
-        "mayor_active_threshold": "5m"
+        "overseer_active_threshold": "5m"
     },
 
     "feed_curator": {

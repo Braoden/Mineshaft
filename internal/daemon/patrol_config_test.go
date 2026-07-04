@@ -9,8 +9,8 @@ import (
 func TestLoadPatrolConfig(t *testing.T) {
 	// Create a temp dir with test config
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -23,7 +23,7 @@ func TestLoadPatrolConfig(t *testing.T) {
 			"witness": {"enabled": true}
 		}
 	}`
-	if err := os.WriteFile(filepath.Join(mayorDir, "daemon.json"), []byte(configJSON), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "daemon.json"), []byte(configJSON), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -40,8 +40,8 @@ func TestLoadPatrolConfig(t *testing.T) {
 	if !IsPatrolEnabled(config, "witness") {
 		t.Error("expected witness to be enabled")
 	}
-	if !IsPatrolEnabled(config, "deacon") {
-		t.Error("expected deacon to be enabled (default)")
+	if !IsPatrolEnabled(config, "supervisor") {
+		t.Error("expected supervisor to be enabled (default)")
 	}
 }
 

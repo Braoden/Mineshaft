@@ -12,15 +12,15 @@ import (
 func TestEnqueueAndDrain(t *testing.T) {
 	townRoot := t.TempDir()
 
-	session := "gt-gastown-crew-sean"
+	session := "gt-excavation-crew-sean"
 	n1 := QueuedNudge{
-		Sender:   "mayor",
+		Sender:   "overseer",
 		Message:  "Check your hook",
 		Priority: PriorityNormal,
 	}
 	n2 := QueuedNudge{
-		Sender:   "gastown/witness",
-		Message:  "Polecat alpha is stuck",
+		Sender:   "excavation/witness",
+		Message:  "Miner alpha is stuck",
 		Priority: PriorityUrgent,
 	}
 
@@ -53,11 +53,11 @@ func TestEnqueueAndDrain(t *testing.T) {
 	}
 
 	// Verify FIFO order
-	if nudges[0].Sender != "mayor" {
-		t.Errorf("nudges[0].Sender = %q, want %q", nudges[0].Sender, "mayor")
+	if nudges[0].Sender != "overseer" {
+		t.Errorf("nudges[0].Sender = %q, want %q", nudges[0].Sender, "overseer")
 	}
-	if nudges[1].Sender != "gastown/witness" {
-		t.Errorf("nudges[1].Sender = %q, want %q", nudges[1].Sender, "gastown/witness")
+	if nudges[1].Sender != "excavation/witness" {
+		t.Errorf("nudges[1].Sender = %q, want %q", nudges[1].Sender, "excavation/witness")
 	}
 
 	// After drain, pending should be 0
@@ -129,7 +129,7 @@ func TestDrainSkipsMalformed(t *testing.T) {
 
 func TestFormatForInjection_Normal(t *testing.T) {
 	nudges := []QueuedNudge{
-		{Sender: "mayor", Message: "Check status", Priority: PriorityNormal},
+		{Sender: "overseer", Message: "Check status", Priority: PriorityNormal},
 	}
 	output := FormatForInjection(nudges)
 
@@ -149,8 +149,8 @@ func TestFormatForInjection_Normal(t *testing.T) {
 
 func TestFormatForInjection_Urgent(t *testing.T) {
 	nudges := []QueuedNudge{
-		{Sender: "witness", Message: "Polecat stuck", Priority: PriorityUrgent},
-		{Sender: "mayor", Message: "FYI", Priority: PriorityNormal},
+		{Sender: "witness", Message: "Miner stuck", Priority: PriorityUrgent},
+		{Sender: "overseer", Message: "FYI", Priority: PriorityNormal},
 	}
 	output := FormatForInjection(nudges)
 
@@ -568,7 +568,7 @@ func TestDrainMixedDeferredAndReady(t *testing.T) {
 	session := "gt-test-mixed-deferred"
 
 	// Enqueue: immediate, then deferred, then immediate (interleaved order).
-	n1 := QueuedNudge{Sender: "mayor", Message: "immediate-1"}
+	n1 := QueuedNudge{Sender: "overseer", Message: "immediate-1"}
 	if err := Enqueue(townRoot, session, n1); err != nil {
 		t.Fatalf("Enqueue n1: %v", err)
 	}
@@ -709,7 +709,7 @@ func TestZeroDeliverAfterIsImmediate(t *testing.T) {
 	session := "gt-test-zero-deliver-after"
 
 	n := QueuedNudge{
-		Sender:  "mayor",
+		Sender:  "overseer",
 		Message: "no delay",
 		// DeliverAfter intentionally left zero
 	}

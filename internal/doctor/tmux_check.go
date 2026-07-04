@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 // LinkedPaneCheck detects tmux sessions that share panes,
@@ -28,7 +28,7 @@ func NewLinkedPaneCheck() *LinkedPaneCheck {
 	}
 }
 
-// Run checks for linked panes across Gas Town tmux sessions.
+// Run checks for linked panes across Excavation Site tmux sessions.
 func (c *LinkedPaneCheck) Run(ctx *CheckContext) *CheckResult {
 	t := tmux.NewTmux()
 
@@ -42,7 +42,7 @@ func (c *LinkedPaneCheck) Run(ctx *CheckContext) *CheckResult {
 		}
 	}
 
-	// Filter to Gas Town sessions only
+	// Filter to Excavation Site sessions only
 	var gtSessions []string
 	for _, s := range sessions {
 		if session.IsKnownSession(s) {
@@ -84,12 +84,12 @@ func (c *LinkedPaneCheck) Run(ctx *CheckContext) *CheckResult {
 		}
 	}
 
-	// Cache for Fix (exclude mayor session since we don't want to kill it)
-	mayorSession := session.MayorSessionName()
+	// Cache for Fix (exclude overseer session since we don't want to kill it)
+	overseerSession := session.OverseerSessionName()
 
 	c.linkedSessions = nil
 	for sess := range linkedSessionSet {
-		if mayorSession == "" || sess != mayorSession {
+		if overseerSession == "" || sess != overseerSession {
 			c.linkedSessions = append(c.linkedSessions, sess)
 		}
 	}
@@ -98,7 +98,7 @@ func (c *LinkedPaneCheck) Run(ctx *CheckContext) *CheckResult {
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusOK,
-			Message: fmt.Sprintf("All %d Gas Town sessions have independent panes", len(gtSessions)),
+			Message: fmt.Sprintf("All %d Excavation Site sessions have independent panes", len(gtSessions)),
 		}
 	}
 
@@ -111,7 +111,7 @@ func (c *LinkedPaneCheck) Run(ctx *CheckContext) *CheckResult {
 	}
 }
 
-// Fix kills sessions with linked panes (except mayor session).
+// Fix kills sessions with linked panes (except overseer session).
 // The daemon will recreate them with independent panes.
 func (c *LinkedPaneCheck) Fix(ctx *CheckContext) error {
 	if len(c.linkedSessions) == 0 {

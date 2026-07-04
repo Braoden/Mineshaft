@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a bug in Gas Town
+about: Report a bug in Excavation Site
 title: ''
 labels: bug
 assignees: ''
@@ -23,7 +23,7 @@ assignees: ''
 ## Environment
 - **OS**:
 - **Go version**:
-- **Gas Town version**: (`gt version`)
+- **Excavation Site version**: (`gt version`)
 - **tmux version** (if applicable):
 
 ## Logs / Error Output

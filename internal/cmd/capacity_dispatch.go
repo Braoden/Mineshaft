@@ -12,12 +12,12 @@ import (
 	"time"
 
 	"github.com/gofrs/flock"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/doltserver"
-	"github.com/steveyegge/gastown/internal/events"
-	"github.com/steveyegge/gastown/internal/scheduler/capacity"
-	"github.com/steveyegge/gastown/internal/style"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/doltserver"
+	"github.com/steveyegge/excavation/internal/events"
+	"github.com/steveyegge/excavation/internal/scheduler/capacity"
+	"github.com/steveyegge/excavation/internal/style"
 )
 
 // crossRigEscalationDebounce is the minimum interval between cross-rig prefix
@@ -116,15 +116,15 @@ func dispatchScheduledWork(townRoot, actor string, batchOverride int, dryRun boo
 	}
 
 	// Nothing to dispatch when scheduler is in direct dispatch or disabled mode.
-	maxPolecats := schedulerCfg.GetMaxPolecats()
-	if maxPolecats <= 0 {
+	maxMiners := schedulerCfg.GetMaxMiners()
+	if maxMiners <= 0 {
 		if !dryRun && !isDaemonDispatch() {
 			staleBeads, _ := getReadySlingContexts(townRoot)
 			if len(staleBeads) > 0 {
 				fmt.Printf("%s %d context bead(s) still open from a previous deferred mode\n",
 					style.Warning.Render("⚠"), len(staleBeads))
 				fmt.Printf("  Use: gt scheduler clear  (close all sling context beads)\n")
-				fmt.Printf("  Or:  gt config set scheduler.max_polecats N  (re-enable deferred dispatch)\n")
+				fmt.Printf("  Or:  gt config set scheduler.max_miners N  (re-enable deferred dispatch)\n")
 			}
 		}
 		return 0, nil
@@ -145,12 +145,12 @@ func dispatchScheduledWork(townRoot, actor string, batchOverride int, dryRun boo
 
 	// Wire up the DispatchCycle
 	successfulRigs := make(map[string]bool)
-	// Track polecat names from dispatch results, keyed by context bead ID.
-	polecatNames := make(map[string]string)
-	lastCapacitySnapshot := polecatCapacitySnapshot{Max: maxPolecats}
+	// Track miner names from dispatch results, keyed by context bead ID.
+	minerNames := make(map[string]string)
+	lastCapacitySnapshot := minerCapacitySnapshot{Max: maxMiners}
 	cycle := &capacity.DispatchCycle{
 		AvailableCapacity: func() (int, error) {
-			snapshot, err := polecatCapacitySnapshotForTown(townRoot)
+			snapshot, err := minerCapacitySnapshotForTown(townRoot)
 			if err != nil {
 				return 0, err
 			}
@@ -172,14 +172,14 @@ func dispatchScheduledWork(townRoot, actor string, batchOverride int, dryRun boo
 				return err
 			}
 			// Track side effects here (Execute runs exactly once, never retried).
-			if result != nil && result.PolecatName != "" {
-				polecatNames[b.ID] = result.PolecatName
+			if result != nil && result.MinerName != "" {
+				minerNames[b.ID] = result.MinerName
 			}
 			if b.TargetRig != "" {
 				successfulRigs[b.TargetRig] = true
 			}
 			_ = events.LogFeed(events.TypeSchedulerDispatch, actor,
-				events.SchedulerDispatchPayload(b.WorkBeadID, b.TargetRig, polecatNames[b.ID]))
+				events.SchedulerDispatchPayload(b.WorkBeadID, b.TargetRig, minerNames[b.ID]))
 			return nil
 		},
 		OnSuccess: func(b capacity.PendingBead) error {
@@ -189,10 +189,10 @@ func dispatchScheduledWork(townRoot, actor string, batchOverride int, dryRun boo
 		},
 		OnFailure: func(b capacity.PendingBead, err error) {
 			var onSuccessErr *capacity.ErrOnSuccessFailed
-			var admissionErr *polecatCapacityAdmissionError
+			var admissionErr *minerCapacityAdmissionError
 			if errors.As(err, &onSuccessErr) {
-				// Polecat launched but context close failed — not a true dispatch failure.
-				// Log a distinct warning so operators can distinguish from "polecat never launched".
+				// Miner launched but context close failed — not a true dispatch failure.
+				// Log a distinct warning so operators can distinguish from "miner never launched".
 				fmt.Fprintf(os.Stderr, "%s Dispatch of %s succeeded but context close failed: %v\n",
 					style.Warning.Render("⚠"), b.WorkBeadID, err)
 				// Last-resort close attempt to prevent double-dispatch on next cycle.
@@ -205,7 +205,7 @@ func dispatchScheduledWork(townRoot, actor string, batchOverride int, dryRun boo
 					// Last-resort close succeeded — context is now closed.
 					// Log feed event so dashboards can detect bead DB degradation.
 					_ = events.LogFeed(events.TypeSchedulerCloseRetry, actor,
-						events.SchedulerDispatchPayload(b.WorkBeadID, b.TargetRig, polecatNames[b.ID]))
+						events.SchedulerDispatchPayload(b.WorkBeadID, b.TargetRig, minerNames[b.ID]))
 					// Skip recordDispatchFailure to avoid writing to a closed context.
 					return
 				}
@@ -260,7 +260,7 @@ func dispatchScheduledWork(townRoot, actor string, batchOverride int, dryRun boo
 		fmt.Printf("\n%s Dispatched %d, failed %d (reason: %s)\n",
 			style.Bold.Render("✓"), report.Dispatched, report.Failed, report.Reason)
 	} else if report.Skipped > 0 {
-		snapshot, err := polecatCapacitySnapshotForTown(townRoot)
+		snapshot, err := minerCapacitySnapshotForTown(townRoot)
 		if err != nil {
 			snapshot = lastCapacitySnapshot
 		}
@@ -272,7 +272,7 @@ func dispatchScheduledWork(townRoot, actor string, batchOverride int, dryRun boo
 }
 
 // printDryRunPlan displays a dry-run dispatch plan.
-func printDryRunPlan(plan capacity.DispatchPlan, snapshot polecatCapacitySnapshot, batchSize int) {
+func printDryRunPlan(plan capacity.DispatchPlan, snapshot minerCapacitySnapshot, batchSize int) {
 	if plan.Reason == "none" {
 		fmt.Println("No ready beads scheduled for dispatch")
 		return
@@ -372,7 +372,7 @@ func cleanupStaleContexts(townRoot string) {
 	// Second pass: close contexts whose work beads are stale.
 	// Note: in_progress is intentionally excluded — the work bead is being
 	// actively worked, and bd ready won't return it, so the dispatch query
-	// already prevents re-dispatch. The context stays open until the polecat
+	// already prevents re-dispatch. The context stays open until the miner
 	// finishes and the bead transitions to closed/tombstone.
 	for i, ctx := range staleCheckContexts {
 		fields := staleCheckFields[i]
@@ -466,7 +466,7 @@ func getReadySlingContexts(townRoot string) ([]capacity.PendingBead, error) {
 
 	// 2. Batch-fetch work bead labels/status so we can defensively filter messaging
 	// beads (gt:message / gt:handoff / gt:merge-request) that should never be
-	// handed to a polecat. See gt-el4 / gastownhall/gastown#3800.
+	// handed to a miner. See gt-el4 / excavationhall/excavation#3800.
 	workBeadIDs := make([]string, 0, len(allContexts))
 	for _, ctx := range allContexts {
 		fields := beads.ParseSlingContextFields(ctx.issue.Description)
@@ -525,7 +525,7 @@ func getReadySlingContexts(townRoot string) ([]capacity.PendingBead, error) {
 		seenWork[fields.WorkBeadID] = true
 
 		// Defensive filter: messaging beads (gt:message / gt:handoff /
-		// gt:merge-request) must never reach a rig polecat. Log the skip so
+		// gt:merge-request) must never reach a rig miner. Log the skip so
 		// the gap is observable and operators can chase the upstream cause.
 		workLabels := info.Labels
 		if capacity.IsMessagingBead(workLabels) {
@@ -552,7 +552,7 @@ func getReadySlingContexts(townRoot string) ([]capacity.PendingBead, error) {
 
 // dispatchSingleBead dispatches one scheduled bead via executeSling.
 // Context fields are already parsed (from PendingBead.Context).
-// Returns the SlingResult (including PolecatName) on success.
+// Returns the SlingResult (including MinerName) on success.
 func dispatchSingleBead(b capacity.PendingBead, townRoot, _ string) (*SlingResult, error) {
 	if b.Context == nil {
 		return nil, fmt.Errorf("missing sling context for %s", b.ID)
@@ -584,7 +584,7 @@ func dispatchSingleBead(b capacity.PendingBead, townRoot, _ string) (*SlingResul
 		Mode:             dp.Mode,
 		FormulaFailFatal: true,
 		CallerContext:    "scheduler-dispatch",
-		NoConvoy:         true,
+		NoMinecart:         true,
 		NoBoot:           true,
 		TownRoot:         townRoot,
 		BeadsDir:         targetBeadsDir,
@@ -636,7 +636,7 @@ func validateDryRunDispatchPlan(townRoot string, plan capacity.DispatchPlan) cap
 
 func validatePendingBeadForDispatch(townRoot string, b capacity.PendingBead, escalate bool) error {
 	// Cross-rig prefix guard (gt-el4). A bead whose ID prefix does not match the
-	// target rig's registered prefix must not be dispatched — the polecat would
+	// target rig's registered prefix must not be dispatched — the miner would
 	// land in a rig DB that cannot resolve the bead and hang in prime.
 	if b.TargetRig == "" {
 		return nil
@@ -693,7 +693,7 @@ func recordDispatchFailure(townBeads *beads.Beads, b capacity.PendingBead, dispa
 //
 // Deduplicates by context ID: different search dirs can resolve to the same
 // underlying beads DB (e.g., when a rig's top-level .beads is a redirect to
-// mayor/rig/.beads), and both paths would otherwise return the same contexts.
+// overseer/rig/.beads), and both paths would otherwise return the same contexts.
 func listAllSlingContexts(townRoot string) []*beads.Issue {
 	records := listAllSlingContextRecords(townRoot)
 	all := make([]*beads.Issue, 0, len(records))

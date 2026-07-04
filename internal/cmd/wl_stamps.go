@@ -9,10 +9,10 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/doltserver"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/wasteland"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/doltserver"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/wasteland"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var (
@@ -39,13 +39,13 @@ Use --author to filter by who issued the stamp. Use --skill, --type,
 and --severity to narrow results.
 
 EXAMPLES:
-  gt wl stamps gastown                         # All stamps for gastown
-  gt wl stamps gastown --author hop-mayor      # Stamps from a specific validator
-  gt wl stamps gastown --skill go              # Filter by skill tag
-  gt wl stamps gastown --type boot_block       # Boot block stamps only
-  gt wl stamps gastown --severity branch       # Branch-level stamps
-  gt wl stamps gastown --limit 10              # Show 10 stamps
-  gt wl stamps gastown --json                  # JSON output`,
+  gt wl stamps excavation                         # All stamps for excavation
+  gt wl stamps excavation --author hop-overseer      # Stamps from a specific validator
+  gt wl stamps excavation --skill go              # Filter by skill tag
+  gt wl stamps excavation --type boot_block       # Boot block stamps only
+  gt wl stamps excavation --severity branch       # Branch-level stamps
+  gt wl stamps excavation --limit 10              # Show 10 stamps
+  gt wl stamps excavation --json                  # JSON output`,
 }
 
 func init() {
@@ -113,7 +113,7 @@ func runWLStamps(cmd *cobra.Command, args []string) error {
 
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Fast path: query through the Dolt server if the database is registered.

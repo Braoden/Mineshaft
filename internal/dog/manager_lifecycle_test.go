@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/config"
 )
 
 // =============================================================================
@@ -22,7 +22,7 @@ func testManager(t *testing.T) (*Manager, string) {
 	rigsConfig := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"gastown": {GitURL: "git@github.com:test/gastown.git"},
+			"excavation": {GitURL: "git@github.com:test/excavation.git"},
 			"beads":   {GitURL: "git@github.com:test/beads.git"},
 		},
 	}
@@ -103,7 +103,7 @@ func TestNewManager_PathConstruction(t *testing.T) {
 			if m.townRoot != tt.townRoot {
 				t.Errorf("townRoot = %q, want %q", m.townRoot, tt.townRoot)
 			}
-			wantKennelPath := filepath.Join(tt.townRoot, "deacon", "dogs")
+			wantKennelPath := filepath.Join(tt.townRoot, "supervisor", "dogs")
 			if m.kennelPath != wantKennelPath {
 				t.Errorf("kennelPath = %q, want %q", m.kennelPath, wantKennelPath)
 			}
@@ -157,7 +157,7 @@ func TestManager_exists(t *testing.T) {
 	m, tmpDir := testManager(t)
 
 	// Create a dog directory manually
-	dogPath := filepath.Join(tmpDir, "deacon", "dogs", "existing-dog")
+	dogPath := filepath.Join(tmpDir, "supervisor", "dogs", "existing-dog")
 	if err := os.MkdirAll(dogPath, 0755); err != nil {
 		t.Fatalf("Failed to create dog dir: %v", err)
 	}
@@ -191,7 +191,7 @@ func TestManager_saveState_loadState_roundtrip(t *testing.T) {
 	m, tmpDir := testManager(t)
 
 	// Create dog directory
-	dogPath := filepath.Join(tmpDir, "deacon", "dogs", "testdog")
+	dogPath := filepath.Join(tmpDir, "supervisor", "dogs", "testdog")
 	if err := os.MkdirAll(dogPath, 0755); err != nil {
 		t.Fatalf("Failed to create dog dir: %v", err)
 	}
@@ -203,7 +203,7 @@ func TestManager_saveState_loadState_roundtrip(t *testing.T) {
 		LastActive: now,
 		Work:       "hq-abc123",
 		Worktrees: map[string]string{
-			"gastown": "/path/to/gastown",
+			"excavation": "/path/to/excavation",
 			"beads":   "/path/to/beads",
 		},
 		CreatedAt: now,
@@ -255,7 +255,7 @@ func TestManager_loadState_invalidJSON(t *testing.T) {
 	m, tmpDir := testManager(t)
 
 	// Create dog directory with invalid JSON
-	dogPath := filepath.Join(tmpDir, "deacon", "dogs", "baddog")
+	dogPath := filepath.Join(tmpDir, "supervisor", "dogs", "baddog")
 	if err := os.MkdirAll(dogPath, 0755); err != nil {
 		t.Fatalf("Failed to create dog dir: %v", err)
 	}
@@ -285,7 +285,7 @@ func TestManager_Get_success(t *testing.T) {
 		LastActive: now,
 		Work:       "test-work",
 		Worktrees: map[string]string{
-			"gastown": "/path/gastown",
+			"excavation": "/path/excavation",
 		},
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -306,8 +306,8 @@ func TestManager_Get_success(t *testing.T) {
 	if dog.Work != "test-work" {
 		t.Errorf("Work = %q, want %q", dog.Work, "test-work")
 	}
-	if dog.Worktrees["gastown"] != "/path/gastown" {
-		t.Errorf("Worktrees[gastown] = %q, want %q", dog.Worktrees["gastown"], "/path/gastown")
+	if dog.Worktrees["excavation"] != "/path/excavation" {
+		t.Errorf("Worktrees[excavation] = %q, want %q", dog.Worktrees["excavation"], "/path/excavation")
 	}
 }
 
@@ -324,7 +324,7 @@ func TestManager_Get_dirExistsButNoStateFile(t *testing.T) {
 	m, tmpDir := testManager(t)
 
 	// Create dog directory but no .dog.json (e.g., boot watchdog)
-	dogPath := filepath.Join(tmpDir, "deacon", "dogs", "boot")
+	dogPath := filepath.Join(tmpDir, "supervisor", "dogs", "boot")
 	if err := os.MkdirAll(dogPath, 0755); err != nil {
 		t.Fatalf("Failed to create dog dir: %v", err)
 	}
@@ -403,7 +403,7 @@ func TestManager_List_skipsInvalidDogs(t *testing.T) {
 	setupDogWithState(t, m, "valid", state)
 
 	// Create directory without state file (should be skipped)
-	invalidPath := filepath.Join(tmpDir, "deacon", "dogs", "invalid")
+	invalidPath := filepath.Join(tmpDir, "supervisor", "dogs", "invalid")
 	if err := os.MkdirAll(invalidPath, 0755); err != nil {
 		t.Fatalf("Failed to create invalid dir: %v", err)
 	}
@@ -768,7 +768,7 @@ func TestManager_ClearWorkIfMatches_notFound(t *testing.T) {
 	if cleared {
 		t.Fatal("ClearWorkIfMatches() cleared = true, want false")
 	}
-	if _, statErr := os.Stat(filepath.Join(root, "deacon", "dogs", "nonexistent")); !os.IsNotExist(statErr) {
+	if _, statErr := os.Stat(filepath.Join(root, "supervisor", "dogs", "nonexistent")); !os.IsNotExist(statErr) {
 		t.Fatalf("ClearWorkIfMatches() created dog dir unexpectedly: %v", statErr)
 	}
 }
@@ -975,7 +975,7 @@ func TestManager_Remove_cleansUpDirectory(t *testing.T) {
 	setupDogWithState(t, m, "doomed", state)
 
 	// Verify dog exists
-	dogPath := filepath.Join(tmpDir, "deacon", "dogs", "doomed")
+	dogPath := filepath.Join(tmpDir, "supervisor", "dogs", "doomed")
 	if _, err := os.Stat(dogPath); os.IsNotExist(err) {
 		t.Fatal("Dog directory should exist before Remove")
 	}
@@ -995,7 +995,7 @@ func TestManager_Remove_handlesMissingStateFile(t *testing.T) {
 	m, tmpDir := testManager(t)
 
 	// Create dog directory but no state file
-	dogPath := filepath.Join(tmpDir, "deacon", "dogs", "orphan")
+	dogPath := filepath.Join(tmpDir, "supervisor", "dogs", "orphan")
 	if err := os.MkdirAll(dogPath, 0755); err != nil {
 		t.Fatalf("Failed to create dog dir: %v", err)
 	}
@@ -1027,7 +1027,7 @@ func TestManager_Refresh_notFound(t *testing.T) {
 func TestManager_RefreshRig_notFound(t *testing.T) {
 	m, _ := testManager(t)
 
-	err := m.RefreshRig("nonexistent", "gastown")
+	err := m.RefreshRig("nonexistent", "excavation")
 	if err != ErrDogNotFound {
 		t.Errorf("RefreshRig() error = %v, want ErrDogNotFound", err)
 	}
@@ -1076,7 +1076,7 @@ func TestManager_RefreshRig_rejectsWorkingDog(t *testing.T) {
 	}
 	setupDogWithState(t, m, "busy", state)
 
-	err := m.RefreshRig("busy", "gastown")
+	err := m.RefreshRig("busy", "excavation")
 	if err != ErrDogWorking {
 		t.Errorf("RefreshRig() error = %v, want ErrDogWorking", err)
 	}

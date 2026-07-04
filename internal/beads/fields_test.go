@@ -83,7 +83,7 @@ func TestSetAttachmentFieldsPreservesMode(t *testing.T) {
 
 func TestAttachmentFormulaVarsRoundTrip(t *testing.T) {
 	fields := &AttachmentFields{
-		AttachedFormula: "mol-polecat-work",
+		AttachedFormula: "mol-miner-work",
 		FormulaVars:     "feature=Bug to fix\nissue=gt-abc123\nbase_branch=main",
 	}
 
@@ -147,14 +147,14 @@ func TestSetAttachmentFieldsPreservesAdjacentKeyValueLines(t *testing.T) {
 
 func TestAgentFieldsModeRoundTrip(t *testing.T) {
 	original := &AgentFields{
-		RoleType:   "polecat",
-		Rig:        "gastown",
+		RoleType:   "miner",
+		Rig:        "excavation",
 		AgentState: "working",
 		HookBead:   "gt-abc",
 		Mode:       "ralph",
 	}
 
-	formatted := FormatAgentDescription("Polecat Test", original)
+	formatted := FormatAgentDescription("Miner Test", original)
 	if !strings.Contains(formatted, "mode: ralph") {
 		t.Errorf("FormatAgentDescription missing mode field, got:\n%s", formatted)
 	}
@@ -163,62 +163,62 @@ func TestAgentFieldsModeRoundTrip(t *testing.T) {
 	if parsed.Mode != "ralph" {
 		t.Errorf("Mode: got %q, want %q", parsed.Mode, "ralph")
 	}
-	if parsed.RoleType != "polecat" {
-		t.Errorf("RoleType: got %q, want %q", parsed.RoleType, "polecat")
+	if parsed.RoleType != "miner" {
+		t.Errorf("RoleType: got %q, want %q", parsed.RoleType, "miner")
 	}
 }
 
 func TestAgentFieldsModeOmittedWhenEmpty(t *testing.T) {
 	fields := &AgentFields{
-		RoleType:   "polecat",
-		Rig:        "gastown",
+		RoleType:   "miner",
+		Rig:        "excavation",
 		AgentState: "working",
 		// Mode intentionally empty
 	}
 
-	formatted := FormatAgentDescription("Polecat Test", fields)
+	formatted := FormatAgentDescription("Miner Test", fields)
 	if strings.Contains(formatted, "mode:") {
 		t.Errorf("FormatAgentDescription should not include mode when empty, got:\n%s", formatted)
 	}
 }
 
-// --- Convoy fields in AttachmentFields (gt-7b6wf fix) ---
+// --- Minecart fields in AttachmentFields (gt-7b6wf fix) ---
 
-func TestParseAttachmentFieldsConvoy(t *testing.T) {
+func TestParseAttachmentFieldsMinecart(t *testing.T) {
 	tests := []struct {
 		name              string
 		desc              string
-		wantConvoyID      string
+		wantMinecartID      string
 		wantMergeStrategy string
 	}{
 		{
-			name:              "convoy_id and merge_strategy",
-			desc:              "attached_molecule: gt-wisp-abc\nconvoy_id: hq-cv-xyz\nmerge_strategy: direct",
-			wantConvoyID:      "hq-cv-xyz",
+			name:              "minecart_id and merge_strategy",
+			desc:              "attached_molecule: gt-wisp-abc\nminecart_id: hq-cv-xyz\nmerge_strategy: direct",
+			wantMinecartID:      "hq-cv-xyz",
 			wantMergeStrategy: "direct",
 		},
 		{
 			name:              "hyphenated keys",
-			desc:              "convoy-id: hq-cv-123\nmerge-strategy: local",
-			wantConvoyID:      "hq-cv-123",
+			desc:              "minecart-id: hq-cv-123\nmerge-strategy: local",
+			wantMinecartID:      "hq-cv-123",
 			wantMergeStrategy: "local",
 		},
 		{
-			name:              "convoy key alias",
-			desc:              "convoy: hq-cv-456",
-			wantConvoyID:      "hq-cv-456",
+			name:              "minecart key alias",
+			desc:              "minecart: hq-cv-456",
+			wantMinecartID:      "hq-cv-456",
 			wantMergeStrategy: "",
 		},
 		{
-			name:              "only merge_strategy (no convoy_id)",
+			name:              "only merge_strategy (no minecart_id)",
 			desc:              "merge_strategy: mr",
-			wantConvoyID:      "",
+			wantMinecartID:      "",
 			wantMergeStrategy: "mr",
 		},
 		{
-			name:              "no convoy fields",
-			desc:              "attached_molecule: gt-wisp-abc\ndispatched_by: mayor/",
-			wantConvoyID:      "",
+			name:              "no minecart fields",
+			desc:              "attached_molecule: gt-wisp-abc\ndispatched_by: overseer/",
+			wantMinecartID:      "",
 			wantMergeStrategy: "",
 		},
 	}
@@ -228,13 +228,13 @@ func TestParseAttachmentFieldsConvoy(t *testing.T) {
 			issue := &Issue{Description: tt.desc}
 			fields := ParseAttachmentFields(issue)
 			if fields == nil {
-				if tt.wantConvoyID != "" || tt.wantMergeStrategy != "" {
+				if tt.wantMinecartID != "" || tt.wantMergeStrategy != "" {
 					t.Fatal("ParseAttachmentFields() = nil, want non-nil")
 				}
 				return
 			}
-			if fields.ConvoyID != tt.wantConvoyID {
-				t.Errorf("ConvoyID = %q, want %q", fields.ConvoyID, tt.wantConvoyID)
+			if fields.MinecartID != tt.wantMinecartID {
+				t.Errorf("MinecartID = %q, want %q", fields.MinecartID, tt.wantMinecartID)
 			}
 			if fields.MergeStrategy != tt.wantMergeStrategy {
 				t.Errorf("MergeStrategy = %q, want %q", fields.MergeStrategy, tt.wantMergeStrategy)
@@ -243,40 +243,40 @@ func TestParseAttachmentFieldsConvoy(t *testing.T) {
 	}
 }
 
-func TestFormatAttachmentFieldsConvoy(t *testing.T) {
+func TestFormatAttachmentFieldsMinecart(t *testing.T) {
 	fields := &AttachmentFields{
 		AttachedMolecule: "gt-wisp-abc",
-		ConvoyID:         "hq-cv-xyz",
+		MinecartID:         "hq-cv-xyz",
 		MergeStrategy:    "direct",
-		ConvoyOwned:      true,
+		MinecartOwned:      true,
 	}
 	got := FormatAttachmentFields(fields)
-	if !strings.Contains(got, "convoy_id: hq-cv-xyz") {
-		t.Errorf("FormatAttachmentFields missing convoy_id, got:\n%s", got)
+	if !strings.Contains(got, "minecart_id: hq-cv-xyz") {
+		t.Errorf("FormatAttachmentFields missing minecart_id, got:\n%s", got)
 	}
 	if !strings.Contains(got, "merge_strategy: direct") {
 		t.Errorf("FormatAttachmentFields missing merge_strategy, got:\n%s", got)
 	}
-	if !strings.Contains(got, "convoy_owned: true") {
-		t.Errorf("FormatAttachmentFields missing convoy_owned, got:\n%s", got)
+	if !strings.Contains(got, "minecart_owned: true") {
+		t.Errorf("FormatAttachmentFields missing minecart_owned, got:\n%s", got)
 	}
 }
 
-func TestConvoyFieldsRoundTrip(t *testing.T) {
+func TestMinecartFieldsRoundTrip(t *testing.T) {
 	original := &AttachmentFields{
 		AttachedMolecule: "gt-wisp-abc",
-		DispatchedBy:     "mayor/",
-		ConvoyID:         "hq-cv-xyz",
+		DispatchedBy:     "overseer/",
+		MinecartID:         "hq-cv-xyz",
 		MergeStrategy:    "direct",
-		ConvoyOwned:      true,
+		MinecartOwned:      true,
 	}
 	formatted := FormatAttachmentFields(original)
 	parsed := ParseAttachmentFields(&Issue{Description: formatted})
 	if parsed == nil {
 		t.Fatal("round-trip parse returned nil")
 	}
-	if parsed.ConvoyID != original.ConvoyID {
-		t.Errorf("ConvoyID: got %q, want %q", parsed.ConvoyID, original.ConvoyID)
+	if parsed.MinecartID != original.MinecartID {
+		t.Errorf("MinecartID: got %q, want %q", parsed.MinecartID, original.MinecartID)
 	}
 	if parsed.MergeStrategy != original.MergeStrategy {
 		t.Errorf("MergeStrategy: got %q, want %q", parsed.MergeStrategy, original.MergeStrategy)
@@ -284,53 +284,53 @@ func TestConvoyFieldsRoundTrip(t *testing.T) {
 	if parsed.AttachedMolecule != original.AttachedMolecule {
 		t.Errorf("AttachedMolecule: got %q, want %q", parsed.AttachedMolecule, original.AttachedMolecule)
 	}
-	if parsed.ConvoyOwned != original.ConvoyOwned {
-		t.Errorf("ConvoyOwned: got %v, want %v", parsed.ConvoyOwned, original.ConvoyOwned)
+	if parsed.MinecartOwned != original.MinecartOwned {
+		t.Errorf("MinecartOwned: got %v, want %v", parsed.MinecartOwned, original.MinecartOwned)
 	}
 }
 
-func TestConvoyOwnedFalseNotFormatted(t *testing.T) {
+func TestMinecartOwnedFalseNotFormatted(t *testing.T) {
 	fields := &AttachmentFields{
-		ConvoyID:    "hq-cv-xyz",
-		ConvoyOwned: false,
+		MinecartID:    "hq-cv-xyz",
+		MinecartOwned: false,
 	}
 	got := FormatAttachmentFields(fields)
-	if strings.Contains(got, "convoy_owned") {
-		t.Errorf("FormatAttachmentFields should not include convoy_owned when false, got:\n%s", got)
+	if strings.Contains(got, "minecart_owned") {
+		t.Errorf("FormatAttachmentFields should not include minecart_owned when false, got:\n%s", got)
 	}
 }
 
-func TestSetAttachmentFieldsPreservesConvoy(t *testing.T) {
+func TestSetAttachmentFieldsPreservesMinecart(t *testing.T) {
 	issue := &Issue{
-		Description: "convoy_id: hq-cv-old\nmerge_strategy: direct\nconvoy_owned: true\nattached_molecule: gt-wisp-old\nSome other content",
+		Description: "minecart_id: hq-cv-old\nmerge_strategy: direct\nminecart_owned: true\nattached_molecule: gt-wisp-old\nSome other content",
 	}
 	fields := &AttachmentFields{
 		AttachedMolecule: "gt-wisp-new",
-		ConvoyID:         "hq-cv-new",
+		MinecartID:         "hq-cv-new",
 		MergeStrategy:    "local",
-		ConvoyOwned:      true,
+		MinecartOwned:      true,
 	}
 	newDesc := SetAttachmentFields(issue, fields)
-	if !strings.Contains(newDesc, "convoy_id: hq-cv-new") {
-		t.Errorf("SetAttachmentFields lost convoy_id field, got:\n%s", newDesc)
+	if !strings.Contains(newDesc, "minecart_id: hq-cv-new") {
+		t.Errorf("SetAttachmentFields lost minecart_id field, got:\n%s", newDesc)
 	}
 	if !strings.Contains(newDesc, "merge_strategy: local") {
 		t.Errorf("SetAttachmentFields lost merge_strategy field, got:\n%s", newDesc)
 	}
-	if !strings.Contains(newDesc, "convoy_owned: true") {
-		t.Errorf("SetAttachmentFields lost convoy_owned field, got:\n%s", newDesc)
+	if !strings.Contains(newDesc, "minecart_owned: true") {
+		t.Errorf("SetAttachmentFields lost minecart_owned field, got:\n%s", newDesc)
 	}
 	if !strings.Contains(newDesc, "Some other content") {
 		t.Errorf("SetAttachmentFields lost non-attachment content, got:\n%s", newDesc)
 	}
 }
 
-// --- FormatConvoyFields / SetConvoyFields ---
+// --- FormatMinecartFields / SetMinecartFields ---
 
-func TestFormatConvoyFields(t *testing.T) {
+func TestFormatMinecartFields(t *testing.T) {
 	tests := []struct {
 		name   string
-		fields *ConvoyFields
+		fields *MinecartFields
 		want   string
 	}{
 		{
@@ -340,84 +340,84 @@ func TestFormatConvoyFields(t *testing.T) {
 		},
 		{
 			name:   "empty fields",
-			fields: &ConvoyFields{},
+			fields: &MinecartFields{},
 			want:   "",
 		},
 		{
 			name:   "all fields",
-			fields: &ConvoyFields{Owner: "mayor/", Notify: "witness/", Merge: "direct", Molecule: "gt-wisp-abc"},
-			want:   "Owner: mayor/\nNotify: witness/\nMerge: direct\nMolecule: gt-wisp-abc",
+			fields: &MinecartFields{Owner: "overseer/", Notify: "witness/", Merge: "direct", Molecule: "gt-wisp-abc"},
+			want:   "Owner: overseer/\nNotify: witness/\nMerge: direct\nMolecule: gt-wisp-abc",
 		},
 		{
 			name:   "only merge",
-			fields: &ConvoyFields{Merge: "mr"},
+			fields: &MinecartFields{Merge: "mr"},
 			want:   "Merge: mr",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := FormatConvoyFields(tt.fields)
+			got := FormatMinecartFields(tt.fields)
 			if got != tt.want {
-				t.Errorf("FormatConvoyFields() = %q, want %q", got, tt.want)
+				t.Errorf("FormatMinecartFields() = %q, want %q", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestSetConvoyFields(t *testing.T) {
+func TestSetMinecartFields(t *testing.T) {
 	tests := []struct {
 		name   string
 		issue  *Issue
-		fields *ConvoyFields
+		fields *MinecartFields
 		want   string
 	}{
 		{
 			name:   "nil issue",
 			issue:  nil,
-			fields: &ConvoyFields{Owner: "mayor/", Merge: "direct"},
-			want:   "Owner: mayor/\nMerge: direct",
+			fields: &MinecartFields{Owner: "overseer/", Merge: "direct"},
+			want:   "Owner: overseer/\nMerge: direct",
 		},
 		{
 			name:   "preserves prose",
-			issue:  &Issue{Description: "Convoy tracking 3 issues"},
-			fields: &ConvoyFields{Owner: "mayor/", Merge: "mr"},
-			want:   "Convoy tracking 3 issues\nOwner: mayor/\nMerge: mr",
+			issue:  &Issue{Description: "Minecart tracking 3 issues"},
+			fields: &MinecartFields{Owner: "overseer/", Merge: "mr"},
+			want:   "Minecart tracking 3 issues\nOwner: overseer/\nMerge: mr",
 		},
 		{
 			name:   "replaces existing fields",
-			issue:  &Issue{Description: "Convoy tracking 3 issues\nOwner: old/\nMerge: local"},
-			fields: &ConvoyFields{Owner: "mayor/", Merge: "direct"},
-			want:   "Convoy tracking 3 issues\nOwner: mayor/\nMerge: direct",
+			issue:  &Issue{Description: "Minecart tracking 3 issues\nOwner: old/\nMerge: local"},
+			fields: &MinecartFields{Owner: "overseer/", Merge: "direct"},
+			want:   "Minecart tracking 3 issues\nOwner: overseer/\nMerge: direct",
 		},
 		{
 			name:   "empty fields removes field lines",
-			issue:  &Issue{Description: "Convoy tracking 3 issues\nOwner: mayor/\nMerge: direct"},
-			fields: &ConvoyFields{},
-			want:   "Convoy tracking 3 issues",
+			issue:  &Issue{Description: "Minecart tracking 3 issues\nOwner: overseer/\nMerge: direct"},
+			fields: &MinecartFields{},
+			want:   "Minecart tracking 3 issues",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := SetConvoyFields(tt.issue, tt.fields)
+			got := SetMinecartFields(tt.issue, tt.fields)
 			if got != tt.want {
-				t.Errorf("SetConvoyFields() = %q, want %q", got, tt.want)
+				t.Errorf("SetMinecartFields() = %q, want %q", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestConvoyFieldsParseFormatRoundTrip(t *testing.T) {
-	original := &ConvoyFields{
-		Owner:                "mayor/",
+func TestMinecartFieldsParseFormatRoundTrip(t *testing.T) {
+	original := &MinecartFields{
+		Owner:                "overseer/",
 		Notify:               "witness/",
 		Merge:                "direct",
 		Molecule:             "gt-wisp-abc",
 		CompletionNotifiedAt: "2026-05-25T02:30:00Z",
 	}
-	formatted := FormatConvoyFields(original)
-	parsed := ParseConvoyFields(&Issue{Description: formatted})
+	formatted := FormatMinecartFields(original)
+	parsed := ParseMinecartFields(&Issue{Description: formatted})
 	if parsed == nil {
 		t.Fatal("round-trip parse returned nil")
 	}
@@ -438,12 +438,12 @@ func TestConvoyFieldsParseFormatRoundTrip(t *testing.T) {
 	}
 }
 
-func TestSetConvoyFieldsWithMixedContent(t *testing.T) {
-	issue := &Issue{Description: "Convoy tracking 3 issues\nOwner: old/\nSome prose line\nMerge: local\nAnother line"}
-	fields := &ConvoyFields{Owner: "new/", Merge: "direct", Molecule: "gt-mol-xyz"}
-	got := SetConvoyFields(issue, fields)
+func TestSetMinecartFieldsWithMixedContent(t *testing.T) {
+	issue := &Issue{Description: "Minecart tracking 3 issues\nOwner: old/\nSome prose line\nMerge: local\nAnother line"}
+	fields := &MinecartFields{Owner: "new/", Merge: "direct", Molecule: "gt-mol-xyz"}
+	got := SetMinecartFields(issue, fields)
 
-	// Should preserve non-convoy prose
+	// Should preserve non-minecart prose
 	if !strings.Contains(got, "Some prose line") {
 		t.Errorf("lost prose line, got:\n%s", got)
 	}
@@ -472,13 +472,13 @@ func TestSetConvoyFieldsWithMixedContent(t *testing.T) {
 // --- ParseAgentFields (not covered in beads_test.go) ---
 
 func TestParseAgentFields_AllFields(t *testing.T) {
-	desc := "role_type: polecat\nrig: gastown\nagent_state: working\nhook_bead: gt-abc\ncleanup_status: clean\nactive_mr: gt-mr1\nlast_source_issue: gt-src\nnotification_level: verbose"
+	desc := "role_type: miner\nrig: excavation\nagent_state: working\nhook_bead: gt-abc\ncleanup_status: clean\nactive_mr: gt-mr1\nlast_source_issue: gt-src\nnotification_level: verbose"
 	got := ParseAgentFields(desc)
-	if got.RoleType != "polecat" {
-		t.Errorf("RoleType = %q, want %q", got.RoleType, "polecat")
+	if got.RoleType != "miner" {
+		t.Errorf("RoleType = %q, want %q", got.RoleType, "miner")
 	}
-	if got.Rig != "gastown" {
-		t.Errorf("Rig = %q, want %q", got.Rig, "gastown")
+	if got.Rig != "excavation" {
+		t.Errorf("Rig = %q, want %q", got.Rig, "excavation")
 	}
 	if got.AgentState != "working" {
 		t.Errorf("AgentState = %q, want %q", got.AgentState, "working")
@@ -504,19 +504,19 @@ func TestParseAgentFields_AllFields(t *testing.T) {
 
 func TestAgentFieldsCompletionMetadataRoundTrip(t *testing.T) {
 	original := &AgentFields{
-		RoleType:        "polecat",
-		Rig:             "gastown",
+		RoleType:        "miner",
+		Rig:             "excavation",
 		AgentState:      "done",
 		HookBead:        "gt-abc",
 		ExitType:        "COMPLETED",
 		MRID:            "gt-mr-xyz",
-		Branch:          "polecat/nux/gt-abc@hash",
+		Branch:          "miner/nux/gt-abc@hash",
 		LastSourceIssue: "gt-abc",
 		MRFailed:        false,
 		CompletionTime:  "2026-02-28T01:00:00Z",
 	}
 
-	formatted := FormatAgentDescription("Polecat nux", original)
+	formatted := FormatAgentDescription("Miner nux", original)
 
 	// Verify all completion fields are present
 	if !strings.Contains(formatted, "exit_type: COMPLETED") {
@@ -525,7 +525,7 @@ func TestAgentFieldsCompletionMetadataRoundTrip(t *testing.T) {
 	if !strings.Contains(formatted, "mr_id: gt-mr-xyz") {
 		t.Errorf("missing mr_id in formatted output:\n%s", formatted)
 	}
-	if !strings.Contains(formatted, "branch: polecat/nux/gt-abc@hash") {
+	if !strings.Contains(formatted, "branch: miner/nux/gt-abc@hash") {
 		t.Errorf("missing branch in formatted output:\n%s", formatted)
 	}
 	if !strings.Contains(formatted, "last_source_issue: gt-abc") {
@@ -547,8 +547,8 @@ func TestAgentFieldsCompletionMetadataRoundTrip(t *testing.T) {
 	if parsed.MRID != "gt-mr-xyz" {
 		t.Errorf("MRID: got %q, want %q", parsed.MRID, "gt-mr-xyz")
 	}
-	if parsed.Branch != "polecat/nux/gt-abc@hash" {
-		t.Errorf("Branch: got %q, want %q", parsed.Branch, "polecat/nux/gt-abc@hash")
+	if parsed.Branch != "miner/nux/gt-abc@hash" {
+		t.Errorf("Branch: got %q, want %q", parsed.Branch, "miner/nux/gt-abc@hash")
 	}
 	if parsed.LastSourceIssue != "gt-abc" {
 		t.Errorf("LastSourceIssue: got %q, want %q", parsed.LastSourceIssue, "gt-abc")
@@ -560,8 +560,8 @@ func TestAgentFieldsCompletionMetadataRoundTrip(t *testing.T) {
 		t.Errorf("CompletionTime: got %q, want %q", parsed.CompletionTime, "2026-02-28T01:00:00Z")
 	}
 	// Verify non-completion fields survive
-	if parsed.RoleType != "polecat" {
-		t.Errorf("RoleType: got %q, want %q", parsed.RoleType, "polecat")
+	if parsed.RoleType != "miner" {
+		t.Errorf("RoleType: got %q, want %q", parsed.RoleType, "miner")
 	}
 	if parsed.HookBead != "gt-abc" {
 		t.Errorf("HookBead: got %q, want %q", parsed.HookBead, "gt-abc")
@@ -570,14 +570,14 @@ func TestAgentFieldsCompletionMetadataRoundTrip(t *testing.T) {
 
 func TestAgentFieldsMRFailedTrue(t *testing.T) {
 	fields := &AgentFields{
-		RoleType:   "polecat",
-		Rig:        "gastown",
+		RoleType:   "miner",
+		Rig:        "excavation",
 		AgentState: "done",
 		ExitType:   "COMPLETED",
 		MRFailed:   true,
 	}
 
-	formatted := FormatAgentDescription("Polecat nux", fields)
+	formatted := FormatAgentDescription("Miner nux", fields)
 	if !strings.Contains(formatted, "mr_failed: true") {
 		t.Errorf("missing mr_failed: true in formatted output:\n%s", formatted)
 	}
@@ -590,13 +590,13 @@ func TestAgentFieldsMRFailedTrue(t *testing.T) {
 
 func TestAgentFieldsCompletionOmittedWhenEmpty(t *testing.T) {
 	fields := &AgentFields{
-		RoleType:   "polecat",
-		Rig:        "gastown",
+		RoleType:   "miner",
+		Rig:        "excavation",
 		AgentState: "working",
 		// All completion fields intentionally empty
 	}
 
-	formatted := FormatAgentDescription("Polecat nux", fields)
+	formatted := FormatAgentDescription("Miner nux", fields)
 	for _, keyword := range []string{"exit_type:", "mr_id:", "branch:", "last_source_issue:", "mr_failed:", "completion_time:"} {
 		if strings.Contains(formatted, keyword) {
 			t.Errorf("empty completion field %q should not appear in output:\n%s", keyword, formatted)
@@ -605,13 +605,13 @@ func TestAgentFieldsCompletionOmittedWhenEmpty(t *testing.T) {
 }
 
 func TestParseAgentFields_WithCompletionMetadata(t *testing.T) {
-	desc := "role_type: polecat\nrig: gastown\nagent_state: done\nhook_bead: gt-abc\nexit_type: ESCALATED\nbranch: polecat/nux/gt-abc@hash\nlast_source_issue: gt-abc\nmr_failed: true\ncompletion_time: 2026-02-28T02:00:00Z"
+	desc := "role_type: miner\nrig: excavation\nagent_state: done\nhook_bead: gt-abc\nexit_type: ESCALATED\nbranch: miner/nux/gt-abc@hash\nlast_source_issue: gt-abc\nmr_failed: true\ncompletion_time: 2026-02-28T02:00:00Z"
 	got := ParseAgentFields(desc)
 	if got.ExitType != "ESCALATED" {
 		t.Errorf("ExitType = %q, want %q", got.ExitType, "ESCALATED")
 	}
-	if got.Branch != "polecat/nux/gt-abc@hash" {
-		t.Errorf("Branch = %q, want %q", got.Branch, "polecat/nux/gt-abc@hash")
+	if got.Branch != "miner/nux/gt-abc@hash" {
+		t.Errorf("Branch = %q, want %q", got.Branch, "miner/nux/gt-abc@hash")
 	}
 	if !got.MRFailed {
 		t.Errorf("MRFailed = false, want true")
@@ -627,17 +627,17 @@ func TestParseAgentFields_WithCompletionMetadata(t *testing.T) {
 	}
 }
 
-// --- Convoy watcher tests ---
+// --- Minecart watcher tests ---
 
-func TestConvoyFieldsWatchersRoundTrip(t *testing.T) {
-	original := &ConvoyFields{
-		Owner:         "mayor/",
+func TestMinecartFieldsWatchersRoundTrip(t *testing.T) {
+	original := &MinecartFields{
+		Owner:         "overseer/",
 		Notify:        "witness/",
-		Watchers:      "gastown/crew/mel,gastown/crew/tom",
-		NudgeWatchers: "gastown/crew/joe",
+		Watchers:      "excavation/crew/mel,excavation/crew/tom",
+		NudgeWatchers: "excavation/crew/joe",
 	}
-	formatted := FormatConvoyFields(original)
-	parsed := ParseConvoyFields(&Issue{Description: formatted})
+	formatted := FormatMinecartFields(original)
+	parsed := ParseMinecartFields(&Issue{Description: formatted})
 	if parsed == nil {
 		t.Fatal("round-trip parse returned nil")
 	}
@@ -649,48 +649,48 @@ func TestConvoyFieldsWatchersRoundTrip(t *testing.T) {
 	}
 }
 
-func TestConvoyFieldsAddWatcher(t *testing.T) {
-	f := &ConvoyFields{}
+func TestMinecartFieldsAddWatcher(t *testing.T) {
+	f := &MinecartFields{}
 
 	// First add
-	if !f.AddWatcher("gastown/crew/mel") {
+	if !f.AddWatcher("excavation/crew/mel") {
 		t.Error("AddWatcher should return true for new address")
 	}
-	if f.Watchers != "gastown/crew/mel" {
-		t.Errorf("Watchers = %q, want %q", f.Watchers, "gastown/crew/mel")
+	if f.Watchers != "excavation/crew/mel" {
+		t.Errorf("Watchers = %q, want %q", f.Watchers, "excavation/crew/mel")
 	}
 
 	// Second add
-	if !f.AddWatcher("gastown/crew/tom") {
+	if !f.AddWatcher("excavation/crew/tom") {
 		t.Error("AddWatcher should return true for new address")
 	}
-	if f.Watchers != "gastown/crew/mel,gastown/crew/tom" {
-		t.Errorf("Watchers = %q, want %q", f.Watchers, "gastown/crew/mel,gastown/crew/tom")
+	if f.Watchers != "excavation/crew/mel,excavation/crew/tom" {
+		t.Errorf("Watchers = %q, want %q", f.Watchers, "excavation/crew/mel,excavation/crew/tom")
 	}
 
 	// Duplicate add
-	if f.AddWatcher("gastown/crew/mel") {
+	if f.AddWatcher("excavation/crew/mel") {
 		t.Error("AddWatcher should return false for duplicate")
 	}
 }
 
-func TestConvoyFieldsAddNudgeWatcher(t *testing.T) {
-	f := &ConvoyFields{}
+func TestMinecartFieldsAddNudgeWatcher(t *testing.T) {
+	f := &MinecartFields{}
 
-	if !f.AddNudgeWatcher("mayor/") {
+	if !f.AddNudgeWatcher("overseer/") {
 		t.Error("AddNudgeWatcher should return true for new address")
 	}
-	if f.NudgeWatchers != "mayor/" {
-		t.Errorf("NudgeWatchers = %q, want %q", f.NudgeWatchers, "mayor/")
+	if f.NudgeWatchers != "overseer/" {
+		t.Errorf("NudgeWatchers = %q, want %q", f.NudgeWatchers, "overseer/")
 	}
 
-	if f.AddNudgeWatcher("mayor/") {
+	if f.AddNudgeWatcher("overseer/") {
 		t.Error("AddNudgeWatcher should return false for duplicate")
 	}
 }
 
-func TestConvoyFieldsRemoveWatcher(t *testing.T) {
-	f := &ConvoyFields{Watchers: "a,b,c"}
+func TestMinecartFieldsRemoveWatcher(t *testing.T) {
+	f := &MinecartFields{Watchers: "a,b,c"}
 
 	if !f.RemoveWatcher("b") {
 		t.Error("RemoveWatcher should return true for existing address")
@@ -704,8 +704,8 @@ func TestConvoyFieldsRemoveWatcher(t *testing.T) {
 	}
 }
 
-func TestConvoyFieldsRemoveNudgeWatcher(t *testing.T) {
-	f := &ConvoyFields{NudgeWatchers: "x,y"}
+func TestMinecartFieldsRemoveNudgeWatcher(t *testing.T) {
+	f := &MinecartFields{NudgeWatchers: "x,y"}
 
 	if !f.RemoveNudgeWatcher("x") {
 		t.Error("RemoveNudgeWatcher should return true for existing address")
@@ -716,15 +716,15 @@ func TestConvoyFieldsRemoveNudgeWatcher(t *testing.T) {
 }
 
 func TestNotificationAddressesIncludesWatchers(t *testing.T) {
-	f := &ConvoyFields{
-		Owner:    "mayor/",
+	f := &MinecartFields{
+		Owner:    "overseer/",
 		Notify:   "witness/",
-		Watchers: "gastown/crew/mel,mayor/", // mayor/ overlaps with Owner
+		Watchers: "excavation/crew/mel,overseer/", // overseer/ overlaps with Owner
 	}
 	addrs := f.NotificationAddresses()
 
-	// Should be deduplicated: mayor/, witness/, gastown/crew/mel
-	want := map[string]bool{"mayor/": true, "witness/": true, "gastown/crew/mel": true}
+	// Should be deduplicated: overseer/, witness/, excavation/crew/mel
+	want := map[string]bool{"overseer/": true, "witness/": true, "excavation/crew/mel": true}
 	got := make(map[string]bool)
 	for _, a := range addrs {
 		got[a] = true
@@ -740,8 +740,8 @@ func TestNotificationAddressesIncludesWatchers(t *testing.T) {
 }
 
 func TestNudgeNotificationAddresses(t *testing.T) {
-	f := &ConvoyFields{
-		NudgeWatchers: "gastown/crew/mel,gastown/crew/tom",
+	f := &MinecartFields{
+		NudgeWatchers: "excavation/crew/mel,excavation/crew/tom",
 	}
 	addrs := f.NudgeNotificationAddresses()
 	if len(addrs) != 2 {
@@ -749,14 +749,14 @@ func TestNudgeNotificationAddresses(t *testing.T) {
 	}
 }
 
-func TestSetConvoyFieldsPreservesWatchers(t *testing.T) {
+func TestSetMinecartFieldsPreservesWatchers(t *testing.T) {
 	issue := &Issue{Description: "Some text\nWatchers: a,b\nnudge_watchers: c"}
-	fields := &ConvoyFields{
+	fields := &MinecartFields{
 		Owner:         "new/",
 		Watchers:      "a,b,d",
 		NudgeWatchers: "c,e",
 	}
-	got := SetConvoyFields(issue, fields)
+	got := SetMinecartFields(issue, fields)
 
 	if !strings.Contains(got, "Watchers: a,b,d") {
 		t.Errorf("missing updated Watchers, got:\n%s", got)

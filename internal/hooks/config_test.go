@@ -116,20 +116,20 @@ func TestLoadSaveOverrideRigRole(t *testing.T) {
 
 	cfg := &HooksConfig{
 		SessionStart: []HookEntry{
-			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "echo gastown-crew"}}},
+			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "echo excavation-crew"}}},
 		},
 	}
 
-	if err := SaveOverride("gastown/crew", cfg); err != nil {
+	if err := SaveOverride("excavation/crew", cfg); err != nil {
 		t.Fatalf("SaveOverride failed: %v", err)
 	}
 
-	expectedPath := filepath.Join(tmpDir, ".gt", "hooks-overrides", "gastown__crew.json")
+	expectedPath := filepath.Join(tmpDir, ".gt", "hooks-overrides", "excavation__crew.json")
 	if _, err := os.Stat(expectedPath); err != nil {
 		t.Fatalf("expected override file at %s: %v", expectedPath, err)
 	}
 
-	loaded, err := LoadOverride("gastown/crew")
+	loaded, err := LoadOverride("excavation/crew")
 	if err != nil {
 		t.Fatalf("LoadOverride failed: %v", err)
 	}
@@ -162,21 +162,21 @@ func TestValidTarget(t *testing.T) {
 		{"crew", true},
 		{"witness", true},
 		{"refinery", true},
-		{"polecats", true},
-		{"polecat", true},
-		{"mayor", true},
-		{"deacon", true},
+		{"miners", true},
+		{"miner", true},
+		{"overseer", true},
+		{"supervisor", true},
 		{"rig", false},
-		{"gastown/rig", false},
-		{"gastown/crew", true},
+		{"excavation/rig", false},
+		{"excavation/crew", true},
 		{"beads/witness", true},
-		{"sky/polecats", true},
+		{"sky/miners", true},
 		{"wyvern/refinery", true},
 		{"", false},
 		{"invalid", false},
-		{"gastown/invalid", false},
+		{"excavation/invalid", false},
 		{"/crew", false},
-		{"gastown/", false},
+		{"excavation/", false},
 	}
 
 	for _, tt := range tests {
@@ -195,13 +195,13 @@ func TestNormalizeTarget(t *testing.T) {
 		valid      bool
 	}{
 		{"crew", "crew", true},
-		{"polecats", "polecats", true},
-		{"polecat", "polecats", true},
-		{"gastown/polecats", "gastown/polecats", true},
-		{"gastown/polecat", "gastown/polecats", true},
-		{"mayor", "mayor", true},
+		{"miners", "miners", true},
+		{"miner", "miners", true},
+		{"excavation/miners", "excavation/miners", true},
+		{"excavation/miner", "excavation/miners", true},
+		{"overseer", "overseer", true},
 		{"invalid", "", false},
-		{"gastown/invalid", "", false},
+		{"excavation/invalid", "", false},
 	}
 
 	for _, tt := range tests {
@@ -222,9 +222,9 @@ func TestGetApplicableOverrides(t *testing.T) {
 		target   string
 		expected []string
 	}{
-		{"mayor", []string{"mayor"}},
+		{"overseer", []string{"overseer"}},
 		{"crew", []string{"crew"}},
-		{"gastown/crew", []string{"crew", "gastown/crew"}},
+		{"excavation/crew", []string{"crew", "excavation/crew"}},
 		{"beads/witness", []string{"witness", "beads/witness"}},
 	}
 
@@ -429,20 +429,20 @@ func TestComputeExpected(t *testing.T) {
 
 	gcOverride := &HooksConfig{
 		SessionStart: []HookEntry{
-			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "gastown-crew-session"}}},
+			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "excavation-crew-session"}}},
 		},
 	}
-	if err := SaveOverride("gastown/crew", gcOverride); err != nil {
-		t.Fatalf("SaveOverride gastown/crew failed: %v", err)
+	if err := SaveOverride("excavation/crew", gcOverride); err != nil {
+		t.Fatalf("SaveOverride excavation/crew failed: %v", err)
 	}
 
-	expected, err := ComputeExpected("gastown/crew")
+	expected, err := ComputeExpected("excavation/crew")
 	if err != nil {
 		t.Fatalf("ComputeExpected failed: %v", err)
 	}
 
-	if len(expected.SessionStart) != 1 || expected.SessionStart[0].Hooks[0].Command != "gastown-crew-session" {
-		t.Errorf("expected gastown/crew SessionStart, got %v", expected.SessionStart)
+	if len(expected.SessionStart) != 1 || expected.SessionStart[0].Hooks[0].Command != "excavation-crew-session" {
+		t.Errorf("expected excavation/crew SessionStart, got %v", expected.SessionStart)
 	}
 	// On-disk base has no PreToolUse, so DefaultBase's 3 pr-workflow guards are
 	// backfilled. The crew override adds Bash(git*), making 4 total.
@@ -487,7 +487,7 @@ func TestComputeExpectedBackfillsSessionStart(t *testing.T) {
 	}
 
 	// All targets should get SessionStart backfilled from DefaultBase
-	for _, target := range []string{"mayor", "crew", "witness", "gastown/crew"} {
+	for _, target := range []string{"overseer", "crew", "witness", "excavation/crew"} {
 		expected, err := ComputeExpected(target)
 		if err != nil {
 			t.Fatalf("ComputeExpected(%s) failed: %v", target, err)
@@ -556,15 +556,15 @@ func TestComputeExpectedNoBase(t *testing.T) {
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
 
-	// Mayor should get DefaultBase (no built-in overrides)
-	expected, err := ComputeExpected("mayor")
+	// Overseer should get DefaultBase (no built-in overrides)
+	expected, err := ComputeExpected("overseer")
 	if err != nil {
 		t.Fatalf("ComputeExpected failed: %v", err)
 	}
 
 	defaultBase := DefaultBase()
 	if !HooksEqual(expected, defaultBase) {
-		t.Error("expected DefaultBase for mayor when no configs exist")
+		t.Error("expected DefaultBase for overseer when no configs exist")
 	}
 
 	// Crew should get DefaultBase + built-in crew override (PreCompact)
@@ -598,7 +598,7 @@ func TestComputeExpectedNoBase(t *testing.T) {
 	patrolMatchers := map[string]bool{
 		"Bash(*bd mol pour*patrol*)":        false,
 		"Bash(*bd mol pour *mol-witness*)":  false,
-		"Bash(*bd mol pour *mol-deacon*)":   false,
+		"Bash(*bd mol pour *mol-supervisor*)":   false,
 		"Bash(*bd mol pour *mol-refinery*)": false,
 	}
 	for _, entry := range witness.PreToolUse {
@@ -612,34 +612,34 @@ func TestComputeExpectedNoBase(t *testing.T) {
 		}
 	}
 
-	// Deacon should get DefaultBase + built-in patrol-formula-guard plus anti-batch guards.
-	deacon, err := ComputeExpected("deacon")
+	// Supervisor should get DefaultBase + built-in patrol-formula-guard plus anti-batch guards.
+	supervisor, err := ComputeExpected("supervisor")
 	if err != nil {
-		t.Fatalf("ComputeExpected(deacon) failed: %v", err)
+		t.Fatalf("ComputeExpected(supervisor) failed: %v", err)
 	}
-	if len(deacon.PreToolUse) < 7 {
-		t.Errorf("expected deacon to have at least 7 PreToolUse hooks from DefaultOverrides (anti-batch + patrol-formula-guard), got %d", len(deacon.PreToolUse))
+	if len(supervisor.PreToolUse) < 7 {
+		t.Errorf("expected supervisor to have at least 7 PreToolUse hooks from DefaultOverrides (anti-batch + patrol-formula-guard), got %d", len(supervisor.PreToolUse))
 	}
-	if len(deacon.SessionStart) != len(defaultBase.SessionStart) {
-		t.Error("expected deacon to inherit SessionStart from DefaultBase")
+	if len(supervisor.SessionStart) != len(defaultBase.SessionStart) {
+		t.Error("expected supervisor to inherit SessionStart from DefaultBase")
 	}
-	deaconPatrolMatchers := map[string]bool{
+	supervisorPatrolMatchers := map[string]bool{
 		"Bash(*for *seq*)":                  false,
 		"Bash(*while true*)":                false,
 		"Bash(*while :*)":                   false,
 		"Bash(*bd mol pour*patrol*)":        false,
 		"Bash(*bd mol pour *mol-witness*)":  false,
-		"Bash(*bd mol pour *mol-deacon*)":   false,
+		"Bash(*bd mol pour *mol-supervisor*)":   false,
 		"Bash(*bd mol pour *mol-refinery*)": false,
 	}
-	for _, entry := range deacon.PreToolUse {
-		if _, ok := deaconPatrolMatchers[entry.Matcher]; ok {
-			deaconPatrolMatchers[entry.Matcher] = true
+	for _, entry := range supervisor.PreToolUse {
+		if _, ok := supervisorPatrolMatchers[entry.Matcher]; ok {
+			supervisorPatrolMatchers[entry.Matcher] = true
 		}
 	}
-	for matcher, found := range deaconPatrolMatchers {
+	for matcher, found := range supervisorPatrolMatchers {
 		if !found {
-			t.Errorf("deacon missing patrol-formula-guard matcher: %s", matcher)
+			t.Errorf("supervisor missing patrol-formula-guard matcher: %s", matcher)
 		}
 	}
 
@@ -657,7 +657,7 @@ func TestComputeExpectedNoBase(t *testing.T) {
 	refineryPatrolMatchers := map[string]bool{
 		"Bash(*bd mol pour*patrol*)":        false,
 		"Bash(*bd mol pour *mol-witness*)":  false,
-		"Bash(*bd mol pour *mol-deacon*)":   false,
+		"Bash(*bd mol pour *mol-supervisor*)":   false,
 		"Bash(*bd mol pour *mol-refinery*)": false,
 	}
 	for _, entry := range refinery.PreToolUse {
@@ -709,7 +709,7 @@ func TestComputeExpectedPatrolRolesDisableUserPromptMailCheck(t *testing.T) {
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
 
-	for _, target := range []string{"witness", "refinery", "deacon", "boot", "sky/witness", "sky/refinery"} {
+	for _, target := range []string{"witness", "refinery", "supervisor", "boot", "sky/witness", "sky/refinery"} {
 		t.Run(target, func(t *testing.T) {
 			cfg, err := ComputeExpected(target)
 			if err != nil {
@@ -741,7 +741,7 @@ func TestComputeExpectedBootBlocksRawTmuxSendKeys(t *testing.T) {
 	command := entry.Hooks[0].Command
 	for _, want := range []string{
 		"BLOCKED: Boot must not use raw tmux send-keys",
-		"gt nudge --mode=immediate deacon",
+		"gt nudge --mode=immediate supervisor",
 		"exit 2",
 	} {
 		if !strings.Contains(command, want) {
@@ -752,12 +752,12 @@ func TestComputeExpectedBootBlocksRawTmuxSendKeys(t *testing.T) {
 		t.Fatalf("boot should still disable UserPromptSubmit mail-check, got %+v", boot.UserPromptSubmit)
 	}
 
-	mayor, err := ComputeExpected("mayor")
+	overseer, err := ComputeExpected("overseer")
 	if err != nil {
-		t.Fatalf("ComputeExpected(mayor): %v", err)
+		t.Fatalf("ComputeExpected(overseer): %v", err)
 	}
-	if _, ok := findPreToolUse(mayor, "Bash(*tmux*send-keys*)"); ok {
-		t.Fatal("mayor must not receive Boot's raw tmux send-keys guard")
+	if _, ok := findPreToolUse(overseer, "Bash(*tmux*send-keys*)"); ok {
+		t.Fatal("overseer must not receive Boot's raw tmux send-keys guard")
 	}
 }
 
@@ -770,16 +770,16 @@ func findPreToolUse(cfg *HooksConfig, matcher string) (HookEntry, bool) {
 	return HookEntry{}, false
 }
 
-func TestComputeExpectedPolecatsKeepUserPromptMailCheck(t *testing.T) {
+func TestComputeExpectedMinersKeepUserPromptMailCheck(t *testing.T) {
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
 
-	cfg, err := ComputeExpected("polecats")
+	cfg, err := ComputeExpected("miners")
 	if err != nil {
-		t.Fatalf("ComputeExpected(polecats): %v", err)
+		t.Fatalf("ComputeExpected(miners): %v", err)
 	}
 	if len(cfg.UserPromptSubmit) == 0 {
-		t.Fatal("polecats should retain UserPromptSubmit mail-check")
+		t.Fatal("miners should retain UserPromptSubmit mail-check")
 	}
 }
 
@@ -789,17 +789,17 @@ func TestComputeExpectedBuiltinPlusOnDisk(t *testing.T) {
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
 
-	// Save an on-disk mayor override that adds a custom SessionStart hook
+	// Save an on-disk overseer override that adds a custom SessionStart hook
 	customOverride := &HooksConfig{
 		SessionStart: []HookEntry{
-			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "custom-mayor-session"}}},
+			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "custom-overseer-session"}}},
 		},
 	}
-	if err := SaveOverride("mayor", customOverride); err != nil {
+	if err := SaveOverride("overseer", customOverride); err != nil {
 		t.Fatalf("SaveOverride failed: %v", err)
 	}
 
-	expected, err := ComputeExpected("mayor")
+	expected, err := ComputeExpected("overseer")
 	if err != nil {
 		t.Fatalf("ComputeExpected failed: %v", err)
 	}
@@ -807,8 +807,8 @@ func TestComputeExpectedBuiltinPlusOnDisk(t *testing.T) {
 	// Should have the custom SessionStart from on-disk override
 	if len(expected.SessionStart) == 0 {
 		t.Error("on-disk SessionStart override should be present")
-	} else if expected.SessionStart[0].Hooks[0].Command != "custom-mayor-session" {
-		t.Errorf("expected custom-mayor-session, got %q", expected.SessionStart[0].Hooks[0].Command)
+	} else if expected.SessionStart[0].Hooks[0].Command != "custom-overseer-session" {
+		t.Errorf("expected custom-overseer-session, got %q", expected.SessionStart[0].Hooks[0].Command)
 	}
 }
 
@@ -897,8 +897,8 @@ func TestLoadSettingsIntegrityError(t *testing.T) {
 func TestDiscoverTargets(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	os.MkdirAll(filepath.Join(tmpDir, "mayor"), 0755)
-	os.MkdirAll(filepath.Join(tmpDir, "deacon"), 0755)
+	os.MkdirAll(filepath.Join(tmpDir, "overseer"), 0755)
+	os.MkdirAll(filepath.Join(tmpDir, "supervisor"), 0755)
 	os.MkdirAll(filepath.Join(tmpDir, "testrig", "crew", "alice"), 0755)
 	os.MkdirAll(filepath.Join(tmpDir, "testrig", "crew", "bob"), 0755)
 	os.MkdirAll(filepath.Join(tmpDir, "testrig", "witness"), 0755)
@@ -920,7 +920,7 @@ func TestDiscoverTargets(t *testing.T) {
 		found[tgt.DisplayKey()] = true
 	}
 
-	for _, expected := range []string{"mayor", "deacon", "testrig/crew", "testrig/witness"} {
+	for _, expected := range []string{"overseer", "supervisor", "testrig/crew", "testrig/witness"} {
 		if !found[expected] {
 			t.Errorf("expected target %q not found", expected)
 		}
@@ -930,10 +930,10 @@ func TestDiscoverTargets(t *testing.T) {
 func TestDiscoverTargets_RoleNames(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	os.MkdirAll(filepath.Join(tmpDir, "mayor"), 0755)
-	os.MkdirAll(filepath.Join(tmpDir, "deacon"), 0755)
+	os.MkdirAll(filepath.Join(tmpDir, "overseer"), 0755)
+	os.MkdirAll(filepath.Join(tmpDir, "supervisor"), 0755)
 	os.MkdirAll(filepath.Join(tmpDir, "rig1", "crew", "alice"), 0755)
-	os.MkdirAll(filepath.Join(tmpDir, "rig1", "polecats", "toast"), 0755)
+	os.MkdirAll(filepath.Join(tmpDir, "rig1", "miners", "toast"), 0755)
 	os.MkdirAll(filepath.Join(tmpDir, "rig1", "witness"), 0755)
 	os.MkdirAll(filepath.Join(tmpDir, "rig1", "refinery"), 0755)
 
@@ -949,10 +949,10 @@ func TestDiscoverTargets_RoleNames(t *testing.T) {
 	}
 
 	expected := map[string]string{
-		"mayor":         "mayor",
-		"deacon":        "deacon",
+		"overseer":         "overseer",
+		"supervisor":        "supervisor",
 		"rig1/crew":     "crew",
-		"rig1/polecats": "polecat",
+		"rig1/miners": "miner",
 		"rig1/witness":  "witness",
 		"rig1/refinery": "refinery",
 	}
@@ -972,8 +972,8 @@ func TestDiscoverTargets_RoleNames(t *testing.T) {
 func TestDiscoverTargets_ReturnsOnlyClaude(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	os.MkdirAll(filepath.Join(tmpDir, "mayor"), 0755)
-	os.MkdirAll(filepath.Join(tmpDir, "deacon"), 0755)
+	os.MkdirAll(filepath.Join(tmpDir, "overseer"), 0755)
+	os.MkdirAll(filepath.Join(tmpDir, "supervisor"), 0755)
 
 	// Create a rig with crew members that have both Claude and Gemini settings.
 	// DiscoverTargets should only return Claude targets; non-Claude agents are
@@ -1001,8 +1001,8 @@ func TestDiscoverTargets_ReturnsOnlyClaude(t *testing.T) {
 func TestDiscoverTargets_BootIncluded(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	os.MkdirAll(filepath.Join(tmpDir, "mayor"), 0755)
-	os.MkdirAll(filepath.Join(tmpDir, "deacon", "dogs", "boot"), 0755)
+	os.MkdirAll(filepath.Join(tmpDir, "overseer"), 0755)
+	os.MkdirAll(filepath.Join(tmpDir, "supervisor", "dogs", "boot"), 0755)
 
 	targets, err := DiscoverTargets(tmpDir)
 	if err != nil {
@@ -1013,7 +1013,7 @@ func TestDiscoverTargets_BootIncluded(t *testing.T) {
 	for _, tgt := range targets {
 		if tgt.Key == "boot" {
 			found = true
-			wantPath := filepath.Join(tmpDir, "deacon", "dogs", "boot", ".claude", "settings.json")
+			wantPath := filepath.Join(tmpDir, "supervisor", "dogs", "boot", ".claude", "settings.json")
 			if tgt.Path != wantPath {
 				t.Errorf("boot target Path = %q, want %q", tgt.Path, wantPath)
 			}
@@ -1023,16 +1023,16 @@ func TestDiscoverTargets_BootIncluded(t *testing.T) {
 		}
 	}
 	if !found {
-		t.Error("expected boot target when deacon/dogs/boot/ exists, not found")
+		t.Error("expected boot target when supervisor/dogs/boot/ exists, not found")
 	}
 }
 
 func TestDiscoverTargets_BootAbsent(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	os.MkdirAll(filepath.Join(tmpDir, "mayor"), 0755)
-	os.MkdirAll(filepath.Join(tmpDir, "deacon"), 0755)
-	// No deacon/dogs/boot directory
+	os.MkdirAll(filepath.Join(tmpDir, "overseer"), 0755)
+	os.MkdirAll(filepath.Join(tmpDir, "supervisor"), 0755)
+	// No supervisor/dogs/boot directory
 
 	targets, err := DiscoverTargets(tmpDir)
 	if err != nil {
@@ -1041,7 +1041,7 @@ func TestDiscoverTargets_BootAbsent(t *testing.T) {
 
 	for _, tgt := range targets {
 		if tgt.Key == "boot" {
-			t.Errorf("expected no boot target when deacon/dogs/boot/ absent, got one: %+v", tgt)
+			t.Errorf("expected no boot target when supervisor/dogs/boot/ absent, got one: %+v", tgt)
 		}
 	}
 }
@@ -1049,10 +1049,10 @@ func TestDiscoverTargets_BootAbsent(t *testing.T) {
 func TestDiscoverRoleLocations(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	os.MkdirAll(filepath.Join(tmpDir, "mayor"), 0755)
-	os.MkdirAll(filepath.Join(tmpDir, "deacon"), 0755)
+	os.MkdirAll(filepath.Join(tmpDir, "overseer"), 0755)
+	os.MkdirAll(filepath.Join(tmpDir, "supervisor"), 0755)
 	os.MkdirAll(filepath.Join(tmpDir, "rig1", "crew", "alice"), 0755)
-	os.MkdirAll(filepath.Join(tmpDir, "rig1", "polecats", "toast"), 0755)
+	os.MkdirAll(filepath.Join(tmpDir, "rig1", "miners", "toast"), 0755)
 	os.MkdirAll(filepath.Join(tmpDir, "rig1", "witness"), 0755)
 	os.MkdirAll(filepath.Join(tmpDir, "rig1", "refinery"), 0755)
 
@@ -1071,10 +1071,10 @@ func TestDiscoverRoleLocations(t *testing.T) {
 	expected := []struct {
 		rig, role string
 	}{
-		{"", "mayor"},
-		{"", "deacon"},
+		{"", "overseer"},
+		{"", "supervisor"},
 		{"rig1", "crew"},
-		{"rig1", "polecat"},
+		{"rig1", "miner"},
 		{"rig1", "witness"},
 		{"rig1", "refinery"},
 	}
@@ -1098,7 +1098,7 @@ func TestDiscoverRoleLocations(t *testing.T) {
 func TestDiscoverRoleLocations_SkipsNonRigs(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// Create a directory that isn't a rig (no crew/witness/polecats/refinery subdirs)
+	// Create a directory that isn't a rig (no crew/witness/miners/refinery subdirs)
 	os.MkdirAll(filepath.Join(tmpDir, "notarig", "something"), 0755)
 	// Hidden dirs should be skipped
 	os.MkdirAll(filepath.Join(tmpDir, ".beads"), 0755)
@@ -1156,7 +1156,7 @@ func TestDiscoverWorktrees_EmptyDir(t *testing.T) {
 func TestDiscoverWorktrees_PrefersNestedGitWorktreeRoots(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	worktree := filepath.Join(tmpDir, "fury", "gastown")
+	worktree := filepath.Join(tmpDir, "fury", "excavation")
 	if err := os.MkdirAll(filepath.Join(worktree, ".git"), 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -1202,8 +1202,8 @@ func TestTargetDisplayKey(t *testing.T) {
 		target   Target
 		expected string
 	}{
-		{Target{Key: "mayor", Role: "mayor"}, "mayor"},
-		{Target{Key: "gastown/crew", Rig: "gastown", Role: "crew"}, "gastown/crew"},
+		{Target{Key: "overseer", Role: "overseer"}, "overseer"},
+		{Target{Key: "excavation/crew", Rig: "excavation", Role: "crew"}, "excavation/crew"},
 		{Target{Key: "beads/witness", Rig: "beads", Role: "witness"}, "beads/witness"},
 	}
 

@@ -6,11 +6,11 @@ usage() {
 Usage:
   bootstrap-local-rig.sh --town-root PATH --rig NAME --local-repo PATH [options]
 
-Create a clean Gas Town rig from a local source repo by using `gt rig add` with
+Create a clean Excavation Site rig from a local source repo by using `gt rig add` with
 `--local-repo` instead of adopting a manually assembled rig directory.
 
 Required:
-  --town-root PATH       Gas Town town root
+  --town-root PATH       Excavation Site town root
   --rig NAME             New rig name
   --local-repo PATH      Existing local repo to use as the object reference
 
@@ -20,7 +20,7 @@ Optional:
   --gt-bin PATH          gt binary to use (default: ./gt if present, else gt)
   --prefix PREFIX        Beads prefix override
   --branch NAME          Default branch override
-  --polecat-agent NAME   Write rig settings role_agents.polecat
+  --miner-agent NAME   Write rig settings role_agents.miner
   --witness-agent NAME   Write rig settings role_agents.witness
   --refinery-agent NAME  Write rig settings role_agents.refinery
 
@@ -30,7 +30,7 @@ Example:
     --rig nightrider_local \
     --local-repo /gt/nightRider \
     --prefix nr \
-    --polecat-agent claude \
+    --miner-agent claude \
     --witness-agent codex \
     --refinery-agent codex
 EOF
@@ -49,7 +49,7 @@ LOCAL_REPO=""
 GT_BIN="${DEFAULT_GT_BIN}"
 PREFIX=""
 BRANCH=""
-POLECAT_AGENT=""
+MINER_AGENT=""
 WITNESS_AGENT=""
 REFINERY_AGENT=""
 
@@ -83,8 +83,8 @@ while [[ $# -gt 0 ]]; do
       BRANCH="${2:-}"
       shift 2
       ;;
-    --polecat-agent)
-      POLECAT_AGENT="${2:-}"
+    --miner-agent)
+      MINER_AGENT="${2:-}"
       shift 2
       ;;
     --witness-agent)
@@ -153,15 +153,15 @@ fi
   "${GT_BIN}" "${GT_ARGS[@]}"
 )
 
-if [[ -n "${POLECAT_AGENT}" || -n "${WITNESS_AGENT}" || -n "${REFINERY_AGENT}" ]]; then
+if [[ -n "${MINER_AGENT}" || -n "${WITNESS_AGENT}" || -n "${REFINERY_AGENT}" ]]; then
   SETTINGS_PATH="${RIG_PATH}/settings/config.json"
   mkdir -p "$(dirname "${SETTINGS_PATH}")"
-  python3 - "${SETTINGS_PATH}" "${POLECAT_AGENT}" "${WITNESS_AGENT}" "${REFINERY_AGENT}" <<'PY'
+  python3 - "${SETTINGS_PATH}" "${MINER_AGENT}" "${WITNESS_AGENT}" "${REFINERY_AGENT}" <<'PY'
 import json
 import os
 import sys
 
-settings_path, polecat, witness, refinery = sys.argv[1:]
+settings_path, miner, witness, refinery = sys.argv[1:]
 data = {}
 if os.path.exists(settings_path):
     with open(settings_path, "r", encoding="utf-8") as fh:
@@ -170,8 +170,8 @@ if os.path.exists(settings_path):
 data.setdefault("type", "rig-settings")
 data.setdefault("version", 1)
 role_agents = data.setdefault("role_agents", {})
-if polecat:
-    role_agents["polecat"] = polecat
+if miner:
+    role_agents["miner"] = miner
 if witness:
     role_agents["witness"] = witness
 if refinery:

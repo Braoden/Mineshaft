@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/beads"
+	"github.com/steveyegge/excavation/internal/beads"
 )
 
 type hookShowJSON struct {
@@ -19,18 +19,18 @@ type hookShowJSON struct {
 }
 
 // TestHookShowShorthandResolvesToCanonical verifies that hook show accepts
-// shorthand polecat targets (rig/name) and resolves them to canonical
-// assignee IDs (rig/polecats/name) before querying hooked work.
+// shorthand miner targets (rig/name) and resolves them to canonical
+// assignee IDs (rig/miners/name) before querying hooked work.
 func TestHookShowShorthandResolvesToCanonical(t *testing.T) {
 	if _, err := exec.LookPath("bd"); err != nil {
 		t.Skip("bd not installed, skipping integration test")
 	}
 
-	townRoot, polecatDir, rigPrefix := setupHookTestTown(t)
+	townRoot, minerDir, rigPrefix := setupHookTestTown(t)
 
-	rigDir := filepath.Join(polecatDir, "..", "..", "mayor", "rig")
+	rigDir := filepath.Join(minerDir, "..", "..", "overseer", "rig")
 	initBeadsDBWithPrefix(t, rigDir, rigPrefix)
-	rigRootBeadsDir := filepath.Join(townRoot, "gastown", ".beads")
+	rigRootBeadsDir := filepath.Join(townRoot, "excavation", ".beads")
 	if err := os.MkdirAll(rigRootBeadsDir, 0755); err != nil {
 		t.Fatalf("mkdir stale rig-root beads dir: %v", err)
 	}
@@ -54,7 +54,7 @@ func TestHookShowShorthandResolvesToCanonical(t *testing.T) {
 	}
 
 	hooked := beads.StatusHooked
-	assignee := "gastown/polecats/toast"
+	assignee := "excavation/miners/toast"
 	if err := b.Update(issue.ID, beads.UpdateOptions{
 		Status:   &hooked,
 		Assignee: &assignee,
@@ -66,8 +66,8 @@ func TestHookShowShorthandResolvesToCanonical(t *testing.T) {
 	if err != nil {
 		t.Fatalf("getwd: %v", err)
 	}
-	if err := os.Chdir(polecatDir); err != nil {
-		t.Fatalf("chdir to polecat dir: %v", err)
+	if err := os.Chdir(minerDir); err != nil {
+		t.Fatalf("chdir to miner dir: %v", err)
 	}
 	t.Cleanup(func() {
 		_ = os.Chdir(oldWD)
@@ -92,27 +92,27 @@ func TestHookShowShorthandResolvesToCanonical(t *testing.T) {
 		return parsed
 	}
 
-	canonical := runShow("gastown/polecats/toast")
+	canonical := runShow("excavation/miners/toast")
 	if canonical.BeadID != issue.ID || canonical.Status != beads.StatusHooked {
 		t.Fatalf("canonical target mismatch: got bead=%q status=%q, want bead=%q status=%q",
 			canonical.BeadID, canonical.Status, issue.ID, beads.StatusHooked)
 	}
 
-	shorthand := runShow("gastown/toast")
+	shorthand := runShow("excavation/toast")
 	if shorthand.BeadID != issue.ID || shorthand.Status != beads.StatusHooked {
 		t.Fatalf("shorthand target mismatch: got bead=%q status=%q, want bead=%q status=%q",
 			shorthand.BeadID, shorthand.Status, issue.ID, beads.StatusHooked)
 	}
-	if shorthand.Agent != "gastown/polecats/toast" {
+	if shorthand.Agent != "excavation/miners/toast" {
 		t.Fatalf("shorthand target did not normalize: got agent=%q, want %q",
-			shorthand.Agent, "gastown/polecats/toast")
+			shorthand.Agent, "excavation/miners/toast")
 	}
 
 	inProgress := "in_progress"
 	if err := b.Update(issue.ID, beads.UpdateOptions{Status: &inProgress}); err != nil {
 		t.Fatalf("mark issue in progress: %v", err)
 	}
-	active := runShow("gastown/toast")
+	active := runShow("excavation/toast")
 	if active.BeadID != issue.ID || active.Status != "in_progress" {
 		t.Fatalf("in-progress target mismatch: got bead=%q status=%q, want bead=%q status=in_progress",
 			active.BeadID, active.Status, issue.ID)

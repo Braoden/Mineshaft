@@ -15,21 +15,21 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/cli"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/deps"
-	"github.com/steveyegge/gastown/internal/doltserver"
-	"github.com/steveyegge/gastown/internal/formula"
-	"github.com/steveyegge/gastown/internal/hooks"
-	"github.com/steveyegge/gastown/internal/runtime"
-	"github.com/steveyegge/gastown/internal/shell"
-	"github.com/steveyegge/gastown/internal/state"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/templates"
-	"github.com/steveyegge/gastown/internal/workspace"
-	"github.com/steveyegge/gastown/internal/wrappers"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/cli"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/deps"
+	"github.com/steveyegge/excavation/internal/doltserver"
+	"github.com/steveyegge/excavation/internal/formula"
+	"github.com/steveyegge/excavation/internal/hooks"
+	"github.com/steveyegge/excavation/internal/runtime"
+	"github.com/steveyegge/excavation/internal/shell"
+	"github.com/steveyegge/excavation/internal/state"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/templates"
+	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/excavation/internal/wrappers"
 )
 
 var (
@@ -50,14 +50,14 @@ var (
 var installCmd = &cobra.Command{
 	Use:     "install [path]",
 	GroupID: GroupWorkspace,
-	Short:   "Create a new Gas Town HQ (workspace)",
-	Long: `Create a new Gas Town HQ at the specified path.
+	Short:   "Create a new Excavation Site HQ (workspace)",
+	Long: `Create a new Excavation Site HQ at the specified path.
 
-The HQ (headquarters) is the top-level directory where Gas Town is installed -
+The HQ (headquarters) is the top-level directory where Excavation Site is installed -
 the root of your workspace where all rigs and agents live. It contains:
-  - CLAUDE.md            Mayor role context (Mayor runs from HQ root)
-  - mayor/               Mayor config, state, and rig registry
-  - .beads/              Town-level beads DB (hq-* prefix for mayor mail)
+  - CLAUDE.md            Overseer role context (Overseer runs from HQ root)
+  - overseer/               Overseer config, state, and rig registry
+  - .beads/              Town-level beads DB (hq-* prefix for overseer mail)
 
 If path is omitted, uses the current directory.
 
@@ -131,15 +131,15 @@ func runInstall(cmd *cobra.Command, args []string) error {
 			fmt.Printf("✓ Installed gt-codex, gt-gemini, and gt-opencode to %s\n", wrappers.BinDir())
 			return nil
 		}
-		return fmt.Errorf("directory is already a Gas Town HQ (use --force to reinitialize)")
+		return fmt.Errorf("directory is already a Excavation Site HQ (use --force to reinitialize)")
 	}
 
 	// Check if inside an existing workspace (e.g., crew worktree, rig directory)
 	if existingRoot, _ := workspace.Find(absPath); existingRoot != "" && existingRoot != absPath && !installForce {
-		return fmt.Errorf("cannot create HQ inside existing Gas Town workspace\n"+
+		return fmt.Errorf("cannot create HQ inside existing Excavation Site workspace\n"+
 			"  Current location: %s\n"+
 			"  Town root: %s\n\n"+
-			"Did you mean to update the binary? Run 'make install' in the gastown repo.\n"+
+			"Did you mean to update the binary? Run 'make install' in the excavation repo.\n"+
 			"Use --force to override (not recommended).", absPath, existingRoot)
 	}
 
@@ -184,7 +184,7 @@ func runInstall(cmd *cobra.Command, args []string) error {
 				} else if pid > 0 {
 					msg += fmt.Sprintf("\nPort is held by PID %d", pid)
 				}
-				msg += "\n\nAnother Gas Town instance is using this port. Specify a free port:"
+				msg += "\n\nAnother Excavation Site instance is using this port. Specify a free port:"
 				origArgs := strings.Join(os.Args[1:], " ")
 				if freePort := doltserver.FindFreePort(port + 1); freePort > 0 {
 					msg += fmt.Sprintf("\n\n  gt %s --dolt-port %d", origArgs, freePort)
@@ -196,7 +196,7 @@ func runInstall(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	fmt.Printf("%s Creating Gas Town HQ at %s\n\n",
+	fmt.Printf("%s Creating Excavation Site HQ at %s\n\n",
 		style.Bold.Render("🏭"), style.Dim.Render(absPath))
 
 	// Create directory structure
@@ -204,12 +204,12 @@ func runInstall(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("creating directory: %w", err)
 	}
 
-	// Create mayor directory (holds config, state, and mail)
-	mayorDir := filepath.Join(absPath, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
-		return fmt.Errorf("creating mayor directory: %w", err)
+	// Create overseer directory (holds config, state, and mail)
+	overseerDir := filepath.Join(absPath, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
+		return fmt.Errorf("creating overseer directory: %w", err)
 	}
-	fmt.Printf("   ✓ Created mayor/\n")
+	fmt.Printf("   ✓ Created overseer/\n")
 
 	// Determine owner (defaults to git user.email)
 	owner := installOwner
@@ -226,8 +226,8 @@ func runInstall(cmd *cobra.Command, args []string) error {
 		publicName = townName
 	}
 
-	// Create town.json in mayor/ (only if it doesn't already exist).
-	townPath := filepath.Join(mayorDir, "town.json")
+	// Create town.json in overseer/ (only if it doesn't already exist).
+	townPath := filepath.Join(overseerDir, "town.json")
 	if townInfo, err := os.Stat(townPath); os.IsNotExist(err) {
 		townConfig := &config.TownConfig{
 			Type:       "town",
@@ -240,18 +240,18 @@ func runInstall(cmd *cobra.Command, args []string) error {
 		if err := config.SaveTownConfig(townPath, townConfig); err != nil {
 			return fmt.Errorf("writing town.json: %w", err)
 		}
-		fmt.Printf("   ✓ Created mayor/town.json\n")
+		fmt.Printf("   ✓ Created overseer/town.json\n")
 	} else if err != nil {
 		return fmt.Errorf("checking town.json: %w", err)
 	} else if !townInfo.Mode().IsRegular() {
 		return fmt.Errorf("town.json exists but is not a regular file")
 	} else {
-		fmt.Printf("   • mayor/town.json already exists, preserving\n")
+		fmt.Printf("   • overseer/town.json already exists, preserving\n")
 	}
 
-	// Create rigs.json in mayor/ (only if it doesn't already exist).
+	// Create rigs.json in overseer/ (only if it doesn't already exist).
 	// Re-running install must NOT clobber existing rig registrations.
-	rigsPath := filepath.Join(mayorDir, "rigs.json")
+	rigsPath := filepath.Join(overseerDir, "rigs.json")
 	if rigsInfo, err := os.Stat(rigsPath); os.IsNotExist(err) {
 		rigsConfig := &config.RigsConfig{
 			Version: config.CurrentRigsVersion,
@@ -260,21 +260,21 @@ func runInstall(cmd *cobra.Command, args []string) error {
 		if err := config.SaveRigsConfig(rigsPath, rigsConfig); err != nil {
 			return fmt.Errorf("writing rigs.json: %w", err)
 		}
-		fmt.Printf("   ✓ Created mayor/rigs.json\n")
+		fmt.Printf("   ✓ Created overseer/rigs.json\n")
 	} else if err != nil {
 		return fmt.Errorf("checking rigs.json: %w", err)
 	} else if !rigsInfo.Mode().IsRegular() {
 		return fmt.Errorf("rigs.json exists but is not a regular file")
 	} else {
-		fmt.Printf("   • mayor/rigs.json already exists, preserving\n")
+		fmt.Printf("   • overseer/rigs.json already exists, preserving\n")
 	}
 
 	// Create a generic CLAUDE.md at the town root as an identity anchor.
-	// Claude Code sets its CWD to the git root (~/gt/), so mayor/CLAUDE.md is
+	// Claude Code sets its CWD to the git root (~/gt/), so overseer/CLAUDE.md is
 	// not loaded directly. This town-root file ensures agents running from within
-	// the town git tree (Mayor, Deacon) always get a baseline identity reminder.
+	// the town git tree (Overseer, Supervisor) always get a baseline identity reminder.
 	// It is NOT role-specific — role context comes from gt prime.
-	// Crew/polecats have their own nested git repos and won't inherit this.
+	// Crew/miners have their own nested git repos and won't inherit this.
 	if created, err := createTownRootAgentMDs(absPath); err != nil {
 		fmt.Printf("   %s Could not create agent MDs at town root: %v\n", style.Dim.Render("⚠"), err)
 	} else if created {
@@ -283,38 +283,38 @@ func runInstall(cmd *cobra.Command, args []string) error {
 		fmt.Printf("   ✓ Preserved existing CLAUDE.md + AGENTS.md (town root identity anchor)\n")
 	}
 
-	// Create mayor settings (mayor runs from ~/gt/mayor/)
-	// IMPORTANT: Settings must be in ~/gt/mayor/.claude/, NOT ~/gt/.claude/
+	// Create overseer settings (overseer runs from ~/gt/overseer/)
+	// IMPORTANT: Settings must be in ~/gt/overseer/.claude/, NOT ~/gt/.claude/
 	// Settings at town root would be found by ALL agents via directory traversal,
-	// causing crew/polecat/etc to cd to town root before running commands.
-	// mayorDir already defined above
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
-		fmt.Printf("   %s Could not create mayor directory: %v\n", style.Dim.Render("⚠"), err)
+	// causing crew/miner/etc to cd to town root before running commands.
+	// overseerDir already defined above
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
+		fmt.Printf("   %s Could not create overseer directory: %v\n", style.Dim.Render("⚠"), err)
 	} else {
-		mayorRuntimeConfig := config.ResolveRoleAgentConfig("mayor", absPath, mayorDir)
-		if err := runtime.EnsureSettingsForRole(mayorDir, mayorDir, "mayor", mayorRuntimeConfig); err != nil {
-			fmt.Printf("   %s Could not create mayor settings: %v\n", style.Dim.Render("⚠"), err)
+		overseerRuntimeConfig := config.ResolveRoleAgentConfig("overseer", absPath, overseerDir)
+		if err := runtime.EnsureSettingsForRole(overseerDir, overseerDir, "overseer", overseerRuntimeConfig); err != nil {
+			fmt.Printf("   %s Could not create overseer settings: %v\n", style.Dim.Render("⚠"), err)
 		} else {
-			fmt.Printf("   ✓ Created mayor/.claude/settings.json\n")
+			fmt.Printf("   ✓ Created overseer/.claude/settings.json\n")
 		}
 	}
 
-	// Create deacon directory and settings (deacon runs from ~/gt/deacon/)
-	deaconDir := filepath.Join(absPath, "deacon")
-	if err := os.MkdirAll(deaconDir, 0755); err != nil {
-		fmt.Printf("   %s Could not create deacon directory: %v\n", style.Dim.Render("⚠"), err)
+	// Create supervisor directory and settings (supervisor runs from ~/gt/supervisor/)
+	supervisorDir := filepath.Join(absPath, "supervisor")
+	if err := os.MkdirAll(supervisorDir, 0755); err != nil {
+		fmt.Printf("   %s Could not create supervisor directory: %v\n", style.Dim.Render("⚠"), err)
 	} else {
-		deaconRuntimeConfig := config.ResolveRoleAgentConfig("deacon", absPath, deaconDir)
-		if err := runtime.EnsureSettingsForRole(deaconDir, deaconDir, "deacon", deaconRuntimeConfig); err != nil {
-			fmt.Printf("   %s Could not create deacon settings: %v\n", style.Dim.Render("⚠"), err)
+		supervisorRuntimeConfig := config.ResolveRoleAgentConfig("supervisor", absPath, supervisorDir)
+		if err := runtime.EnsureSettingsForRole(supervisorDir, supervisorDir, "supervisor", supervisorRuntimeConfig); err != nil {
+			fmt.Printf("   %s Could not create supervisor settings: %v\n", style.Dim.Render("⚠"), err)
 		} else {
-			fmt.Printf("   ✓ Created deacon/.claude/settings.json\n")
+			fmt.Printf("   ✓ Created supervisor/.claude/settings.json\n")
 		}
 	}
 
-	// Create boot directory (deacon/dogs/boot/) for Boot watchdog.
+	// Create boot directory (supervisor/dogs/boot/) for Boot watchdog.
 	// This avoids gt doctor warning on fresh install.
-	bootDir := filepath.Join(deaconDir, "dogs", "boot")
+	bootDir := filepath.Join(supervisorDir, "dogs", "boot")
 	if err := os.MkdirAll(bootDir, 0755); err != nil {
 		fmt.Printf("   %s Could not create boot directory: %v\n", style.Dim.Render("⚠"), err)
 	}
@@ -333,7 +333,7 @@ func runInstall(cmd *cobra.Command, args []string) error {
 	if err := config.EnsureDaemonPatrolConfig(absPath); err != nil {
 		fmt.Printf("   %s Could not create daemon.json: %v\n", style.Dim.Render("⚠"), err)
 	} else {
-		fmt.Printf("   ✓ Created mayor/daemon.json\n")
+		fmt.Printf("   ✓ Created overseer/daemon.json\n")
 	}
 
 	// Initialize git BEFORE beads so that bd can compute repository fingerprint.
@@ -346,7 +346,7 @@ func runInstall(cmd *cobra.Command, args []string) error {
 	}
 
 	// Initialize town-level beads database (optional)
-	// Town beads (hq- prefix) stores mayor mail, cross-rig coordination, and handoffs.
+	// Town beads (hq- prefix) stores overseer mail, cross-rig coordination, and handoffs.
 	// Rig beads are separate and have their own prefixes.
 	if !installNoBeads {
 		port := doltserver.DefaultConfig(absPath).Port
@@ -387,7 +387,7 @@ func runInstall(cmd *cobra.Command, args []string) error {
 			fmt.Printf("   ✓ Provisioned %d formulas\n", count)
 		}
 
-		// Create town-level agent beads (Mayor, Deacon).
+		// Create town-level agent beads (Overseer, Supervisor).
 		// These use hq- prefix and are stored in town beads for cross-rig coordination.
 		if err := initTownAgentBeads(absPath); err != nil {
 			fmt.Printf("   %s Could not create town-level agent beads: %v\n", style.Dim.Render("⚠"), err)
@@ -402,16 +402,16 @@ func runInstall(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Detect and save overseer identity
-	overseer, err := config.DetectOverseer(absPath)
+	// Detect and save boss identity
+	boss, err := config.DetectBoss(absPath)
 	if err != nil {
-		fmt.Printf("   %s Could not detect overseer identity: %v\n", style.Dim.Render("⚠"), err)
+		fmt.Printf("   %s Could not detect boss identity: %v\n", style.Dim.Render("⚠"), err)
 	} else {
-		overseerPath := config.OverseerConfigPath(absPath)
-		if err := config.SaveOverseerConfig(overseerPath, overseer); err != nil {
-			fmt.Printf("   %s Could not save overseer config: %v\n", style.Dim.Render("⚠"), err)
+		bossPath := config.BossConfigPath(absPath)
+		if err := config.SaveBossConfig(bossPath, boss); err != nil {
+			fmt.Printf("   %s Could not save boss config: %v\n", style.Dim.Render("⚠"), err)
 		} else {
-			fmt.Printf("   ✓ Detected overseer: %s (via %s)\n", overseer.FormatOverseerIdentity(), overseer.Source)
+			fmt.Printf("   ✓ Detected boss: %s (via %s)\n", boss.FormatBossIdentity(), boss.Source)
 		}
 	}
 
@@ -452,9 +452,9 @@ func runInstall(cmd *cobra.Command, args []string) error {
 			fmt.Printf("   ✓ Installed shell integration (%s)\n", shell.RCFilePath(shell.DetectShell()))
 		}
 		if err := state.Enable(Version); err != nil {
-			fmt.Printf("   %s Could not enable Gas Town: %v\n", style.Dim.Render("⚠"), err)
+			fmt.Printf("   %s Could not enable Excavation Site: %v\n", style.Dim.Render("⚠"), err)
 		} else {
-			fmt.Printf("   ✓ Enabled Gas Town globally\n")
+			fmt.Printf("   ✓ Enabled Excavation Site globally\n")
 		}
 	}
 
@@ -489,7 +489,7 @@ func runInstall(cmd *cobra.Command, args []string) error {
 	step++
 	fmt.Printf("  %d. (Optional) Configure agents: %s\n", step, style.Dim.Render("gt config agent list"))
 	step++
-	fmt.Printf("  %d. Enter the Mayor's office: %s\n", step, style.Dim.Render("gt mayor attach"))
+	fmt.Printf("  %d. Enter the Overseer's office: %s\n", step, style.Dim.Render("gt overseer attach"))
 	fmt.Println()
 	if !installNoBeads {
 		fmt.Printf("Note: Dolt server is running (stop with %s)\n", style.Dim.Render("gt dolt stop"))
@@ -603,12 +603,12 @@ func doltReinstallHint(goos string) string {
 // createTownRootAgentMDs creates a minimal, non-role-specific CLAUDE.md at the
 // town root and symlinks AGENTS.md to it. Claude Code rebases its CWD to the
 // git root (~/gt/), so role-specific CLAUDE.md files in subdirectories
-// (mayor/, deacon/) are not loaded. This file provides a baseline identity
+// (overseer/, supervisor/) are not loaded. This file provides a baseline identity
 // anchor that survives compaction. AGENTS.md is a symlink so agent frameworks
 // that look for it (e.g. OpenCode) also pick up the same content.
 //
-// Crew and polecats have their own nested git repos, so they won't inherit this.
-// Only Mayor and Deacon (which run from within the town root git tree) see it.
+// Crew and miners have their own nested git repos, so they won't inherit this.
+// Only Overseer and Supervisor (which run from within the town root git tree) see it.
 //
 // Returns (created bool, error) - created is false if both files already exist.
 func createTownRootAgentMDs(townRoot string) (bool, error) {
@@ -617,9 +617,9 @@ func createTownRootAgentMDs(townRoot string) (bool, error) {
 	// Create CLAUDE.md if it doesn't exist.
 	claudePath := filepath.Join(townRoot, "CLAUDE.md")
 	if _, err := os.Stat(claudePath); os.IsNotExist(err) {
-		content := `# Gas Town
+		content := `# Excavation Site
 
-This is a Gas Town workspace. Your identity and role are determined by ` + "`" + cli.Name() + " prime`" + `.
+This is a Excavation Site workspace. Your identity and role are determined by ` + "`" + cli.Name() + " prime`" + `.
 
 Run ` + "`" + cli.Name() + " prime`" + ` for full context after compaction, clear, or new session.
 
@@ -681,8 +681,8 @@ func bdInitDoltConfig(townPath string) *doltserver.Config {
 }
 
 // initTownBeads initializes town-level beads database using bd init.
-// Town beads use the "hq-" prefix for mayor mail and cross-rig coordination.
-// Uses Dolt backend in server mode (Gas Town requires a running Dolt sql-server).
+// Town beads use the "hq-" prefix for overseer mail and cross-rig coordination.
+// Uses Dolt backend in server mode (Excavation Site requires a running Dolt sql-server).
 func initTownBeads(townPath string) error {
 	// Dolt server is required — wait for it to accept queries before proceeding.
 	// The server may have just been started by gt install and TCP reachability
@@ -752,13 +752,13 @@ func initTownBeads(townPath string) error {
 		fmt.Printf("   %s Could not set beads.role: %v\n", style.Dim.Render("⚠"), err)
 	}
 
-	// Configure custom types for Gas Town before any bd config command can force
+	// Configure custom types for Excavation Site before any bd config command can force
 	// an older bd binary through legacy schema initialization.
 	if err := beads.EnsureCustomTypesConfigYAML(beadsDir); err != nil {
 		return fmt.Errorf("ensuring custom types: %w", err)
 	}
 
-	// Configure allowed_prefixes for convoy beads (hq-cv-* IDs).
+	// Configure allowed_prefixes for minecart beads (hq-cv-* IDs).
 	// This allows bd create --id=hq-cv-xxx to pass prefix validation.
 	if err := beads.EnsureConfigYAMLValue(beadsDir, "allowed_prefixes", "hq,hq-cv"); err != nil {
 		fmt.Printf("   %s Could not set allowed_prefixes: %v\n", style.Dim.Render("⚠"), err)
@@ -779,10 +779,10 @@ func initTownBeads(townPath string) error {
 		fmt.Printf("   %s Could not update routes.jsonl: %v\n", style.Dim.Render("⚠"), err)
 	}
 
-	// Register hq-cv- prefix for convoy beads (auto-created by gt sling).
-	// Convoys use hq-cv-* IDs for visual distinction from other town beads.
+	// Register hq-cv- prefix for minecart beads (auto-created by gt sling).
+	// Minecarts use hq-cv-* IDs for visual distinction from other town beads.
 	if err := beads.AppendRoute(townPath, beads.Route{Prefix: "hq-cv-", Path: "."}); err != nil {
-		fmt.Printf("   %s Could not register convoy prefix: %v\n", style.Dim.Render("⚠"), err)
+		fmt.Printf("   %s Could not register minecart prefix: %v\n", style.Dim.Render("⚠"), err)
 	}
 
 	return nil
@@ -807,9 +807,9 @@ func withBeadsDirEnv(beadsDir string) []string {
 	return beads.BuildMutationPinnedBDEnv(base, beadsDir)
 }
 
-// ensureCustomTypes registers Gas Town custom issue types with beads.
+// ensureCustomTypes registers Excavation Site custom issue types with beads.
 // Beads core only supports built-in types (bug, feature, task, etc.).
-// Gas Town needs custom types: agent, role, rig, convoy, slot.
+// Excavation Site needs custom types: agent, role, rig, minecart, slot.
 // This is idempotent - safe to call multiple times.
 func ensureCustomTypes(beadsPath string) error {
 	cmd := exec.Command("bd", "config", "set", "types.custom", constants.BeadsCustomTypes)
@@ -823,7 +823,7 @@ func ensureCustomTypes(beadsPath string) error {
 
 // initTownAgentBeads creates town-level agent beads using hq- prefix.
 // This creates:
-//   - hq-mayor, hq-deacon (agent beads for town-level agents)
+//   - hq-overseer, hq-supervisor (agent beads for town-level agents)
 //
 // These beads are stored in town beads (~/gt/.beads/) and are shared across all rigs.
 // Rig-level agent beads (witness, refinery) are created by gt rig add in rig beads.
@@ -838,7 +838,7 @@ func ensureCustomTypes(beadsPath string) error {
 func initTownAgentBeads(townPath string) error {
 	bd := beads.New(townPath)
 
-	// bd init doesn't enable "custom" issue types by default, but Gas Town uses
+	// bd init doesn't enable "custom" issue types by default, but Excavation Site uses
 	// agent beads during install and runtime. Ensure these types are enabled
 	// before attempting to create any town-level system beads.
 	if err := beads.EnsureCustomTypesConfigYAML(beads.ResolveBeadsDir(townPath)); err != nil {
@@ -852,14 +852,14 @@ func initTownAgentBeads(townPath string) error {
 		title    string
 	}{
 		{
-			id:       beads.MayorBeadIDTown(),
-			roleType: "mayor",
-			title:    "Mayor - global coordinator, handles cross-rig communication and escalations.",
+			id:       beads.OverseerBeadIDTown(),
+			roleType: "overseer",
+			title:    "Overseer - global coordinator, handles cross-rig communication and escalations.",
 		},
 		{
-			id:       beads.DeaconBeadIDTown(),
-			roleType: "deacon",
-			title:    "Deacon (daemon beacon) - receives mechanical heartbeats, runs town plugins and monitoring.",
+			id:       beads.SupervisorBeadIDTown(),
+			roleType: "supervisor",
+			title:    "Supervisor (daemon beacon) - receives mechanical heartbeats, runs town plugins and monitoring.",
 		},
 	}
 

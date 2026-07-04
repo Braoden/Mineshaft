@@ -7,16 +7,16 @@ import (
 	"testing"
 )
 
-func TestAgentEnv_Mayor(t *testing.T) {
+func TestAgentEnv_Overseer(t *testing.T) {
 	t.Parallel()
 	env := AgentEnv(AgentEnvConfig{
-		Role:     "mayor",
+		Role:     "overseer",
 		TownRoot: "/town",
 	})
 
-	assertEnv(t, env, "GT_ROLE", "mayor")
-	assertEnv(t, env, "BD_ACTOR", "mayor")
-	assertEnv(t, env, "GIT_AUTHOR_NAME", "mayor")
+	assertEnv(t, env, "GT_ROLE", "overseer")
+	assertEnv(t, env, "BD_ACTOR", "overseer")
+	assertEnv(t, env, "GIT_AUTHOR_NAME", "overseer")
 	assertEnv(t, env, "GT_ROOT", "/town")
 	assertEnv(t, env, "GIT_CEILING_DIRECTORIES", "/town") // prevents git walking to umbrella
 	assertEnv(t, env, "NODE_OPTIONS", "")                 // cleared to prevent debugger inheritance
@@ -39,19 +39,19 @@ func TestAgentEnv_Witness(t *testing.T) {
 	assertEnv(t, env, "GT_ROOT", "/town")
 }
 
-func TestAgentEnv_Polecat(t *testing.T) {
+func TestAgentEnv_Miner(t *testing.T) {
 	t.Parallel()
 	env := AgentEnv(AgentEnvConfig{
-		Role:      "polecat",
+		Role:      "miner",
 		Rig:       "myrig",
 		AgentName: "Toast",
 		TownRoot:  "/town",
 	})
 
-	assertEnv(t, env, "GT_ROLE", "myrig/polecats/Toast") // compound format
+	assertEnv(t, env, "GT_ROLE", "myrig/miners/Toast") // compound format
 	assertEnv(t, env, "GT_RIG", "myrig")
-	assertEnv(t, env, "GT_POLECAT", "Toast")
-	assertEnv(t, env, "BD_ACTOR", "myrig/polecats/Toast")
+	assertEnv(t, env, "GT_MINER", "Toast")
+	assertEnv(t, env, "BD_ACTOR", "myrig/miners/Toast")
 	assertEnv(t, env, "GIT_AUTHOR_NAME", "Toast")
 	assertEnv(t, env, "BEADS_AGENT_NAME", "myrig/Toast")
 	assertEnv(t, env, "BD_DOLT_AUTO_COMMIT", "off") // gt-5cc2p: prevent manifest contention
@@ -90,16 +90,16 @@ func TestAgentEnv_Refinery(t *testing.T) {
 	assertEnv(t, env, "GIT_AUTHOR_NAME", "myrig/refinery")
 }
 
-func TestAgentEnv_Deacon(t *testing.T) {
+func TestAgentEnv_Supervisor(t *testing.T) {
 	t.Parallel()
 	env := AgentEnv(AgentEnvConfig{
-		Role:     "deacon",
+		Role:     "supervisor",
 		TownRoot: "/town",
 	})
 
-	assertEnv(t, env, "GT_ROLE", "deacon")
-	assertEnv(t, env, "BD_ACTOR", "deacon")
-	assertEnv(t, env, "GIT_AUTHOR_NAME", "deacon")
+	assertEnv(t, env, "GT_ROLE", "supervisor")
+	assertEnv(t, env, "BD_ACTOR", "supervisor")
+	assertEnv(t, env, "GIT_AUTHOR_NAME", "supervisor")
 	assertEnv(t, env, "GT_ROOT", "/town")
 	assertNotSet(t, env, "GT_RIG")
 }
@@ -111,8 +111,8 @@ func TestAgentEnv_Boot(t *testing.T) {
 		TownRoot: "/town",
 	})
 
-	assertEnv(t, env, "GT_ROLE", "deacon/boot") // compound format
-	assertEnv(t, env, "BD_ACTOR", "deacon-boot")
+	assertEnv(t, env, "GT_ROLE", "supervisor/boot") // compound format
+	assertEnv(t, env, "BD_ACTOR", "supervisor-boot")
 	assertEnv(t, env, "GIT_AUTHOR_NAME", "boot")
 	assertEnv(t, env, "GT_ROOT", "/town")
 	assertNotSet(t, env, "GT_RIG")
@@ -128,7 +128,7 @@ func TestAgentEnv_Dog(t *testing.T) {
 
 	assertEnv(t, env, "GT_ROLE", "dog")
 	assertEnv(t, env, "GT_DOG_NAME", "alpha")
-	assertEnv(t, env, "BD_ACTOR", "deacon/dogs/alpha")
+	assertEnv(t, env, "BD_ACTOR", "supervisor/dogs/alpha")
 	assertEnv(t, env, "GIT_AUTHOR_NAME", "alpha")
 	assertEnv(t, env, "GT_ROOT", "/town")
 	assertNotSet(t, env, "GT_RIG")
@@ -145,7 +145,7 @@ func TestIdentityEnvVars_CoversAgentEnvOutput(t *testing.T) {
 	// GT_ROOT, NODE_OPTIONS, CLAUDECODE, etc.
 	identityKeys := map[string]bool{
 		"GT_ROLE": true, "GT_RIG": true, "GT_CREW": true,
-		"GT_POLECAT": true, "GT_DOG_NAME": true, "GT_SESSION": true,
+		"GT_MINER": true, "GT_DOG_NAME": true, "GT_SESSION": true,
 		"GT_AGENT": true, "BD_ACTOR": true, "GIT_AUTHOR_NAME": true,
 		"BEADS_AGENT_NAME": true,
 	}
@@ -165,7 +165,7 @@ func TestIdentityEnvVars_CoversAgentEnvOutput(t *testing.T) {
 func TestAgentEnv_WithRuntimeConfigDir(t *testing.T) {
 	t.Parallel()
 	env := AgentEnv(AgentEnvConfig{
-		Role:             "polecat",
+		Role:             "miner",
 		Rig:              "myrig",
 		AgentName:        "Toast",
 		TownRoot:         "/town",
@@ -178,7 +178,7 @@ func TestAgentEnv_WithRuntimeConfigDir(t *testing.T) {
 func TestAgentEnv_WithoutRuntimeConfigDir(t *testing.T) {
 	t.Parallel()
 	env := AgentEnv(AgentEnvConfig{
-		Role:      "polecat",
+		Role:      "miner",
 		Rig:       "myrig",
 		AgentName: "Toast",
 		TownRoot:  "/town",
@@ -189,11 +189,11 @@ func TestAgentEnv_WithoutRuntimeConfigDir(t *testing.T) {
 
 func TestAgentEnvSimple(t *testing.T) {
 	t.Parallel()
-	env := AgentEnvSimple("polecat", "myrig", "Toast")
+	env := AgentEnvSimple("miner", "myrig", "Toast")
 
-	assertEnv(t, env, "GT_ROLE", "myrig/polecats/Toast") // compound format
+	assertEnv(t, env, "GT_ROLE", "myrig/miners/Toast") // compound format
 	assertEnv(t, env, "GT_RIG", "myrig")
-	assertEnv(t, env, "GT_POLECAT", "Toast")
+	assertEnv(t, env, "GT_MINER", "Toast")
 	// Simple doesn't set TownRoot, so key should be absent
 	// (not empty string which would override tmux session environment)
 	assertNotSet(t, env, "GT_ROOT")
@@ -205,7 +205,7 @@ func TestAgentEnv_EmptyTownRootOmitted(t *testing.T) {
 	// If it was set to empty string, ExportPrefix would generate "export GT_ROOT= ..."
 	// which overrides tmux session environment where it's correctly set.
 	env := AgentEnv(AgentEnvConfig{
-		Role:      "polecat",
+		Role:      "miner",
 		Rig:       "myrig",
 		AgentName: "Toast",
 		TownRoot:  "", // explicitly empty
@@ -216,14 +216,14 @@ func TestAgentEnv_EmptyTownRootOmitted(t *testing.T) {
 	assertNotSet(t, env, "GIT_CEILING_DIRECTORIES") // also not set when TownRoot empty
 
 	// Other keys should still be set
-	assertEnv(t, env, "GT_ROLE", "myrig/polecats/Toast") // compound format
+	assertEnv(t, env, "GT_ROLE", "myrig/miners/Toast") // compound format
 	assertEnv(t, env, "GT_RIG", "myrig")
 }
 
 func TestAgentEnv_WithAgentOverride(t *testing.T) {
 	t.Parallel()
 	env := AgentEnv(AgentEnvConfig{
-		Role:      "polecat",
+		Role:      "miner",
 		Rig:       "myrig",
 		AgentName: "Toast",
 		TownRoot:  "/town",
@@ -236,7 +236,7 @@ func TestAgentEnv_WithAgentOverride(t *testing.T) {
 func TestAgentEnv_WithoutAgentOverride(t *testing.T) {
 	t.Parallel()
 	env := AgentEnv(AgentEnvConfig{
-		Role:      "polecat",
+		Role:      "miner",
 		Rig:       "myrig",
 		AgentName: "Toast",
 		TownRoot:  "/town",
@@ -253,10 +253,10 @@ func TestAgentEnv_WithoutAgentOverride(t *testing.T) {
 func TestAgentEnv_WithoutAgentOverride_RequiresFallback(t *testing.T) {
 	t.Parallel()
 
-	// Simulate the default polecat dispatch path (no --agent flag).
+	// Simulate the default miner dispatch path (no --agent flag).
 	// This is what lifecycle.go calls when gt scheduler run / gt sling dispatches.
 	env := AgentEnv(AgentEnvConfig{
-		Role:      "polecat",
+		Role:      "miner",
 		Rig:       "myrig",
 		AgentName: "Toast",
 		TownRoot:  "/town",
@@ -273,7 +273,7 @@ func TestAgentEnv_WithoutAgentOverride_RequiresFallback(t *testing.T) {
 
 	// With an explicit override, GT_AGENT IS set.
 	envWithOverride := AgentEnv(AgentEnvConfig{
-		Role:      "polecat",
+		Role:      "miner",
 		Rig:       "myrig",
 		AgentName: "Toast",
 		TownRoot:  "/town",
@@ -292,9 +292,9 @@ func TestAgentEnv_AgentOverrideAllRoles(t *testing.T) {
 		cfg  AgentEnvConfig
 	}{
 		{
-			name: "polecat via session_manager",
+			name: "miner via session_manager",
 			cfg: AgentEnvConfig{
-				Role:      "polecat",
+				Role:      "miner",
 				Rig:       "rig1",
 				AgentName: "Toast",
 				TownRoot:  "/town",
@@ -320,9 +320,9 @@ func TestAgentEnv_AgentOverrideAllRoles(t *testing.T) {
 			},
 		},
 		{
-			name: "deacon",
+			name: "supervisor",
 			cfg: AgentEnvConfig{
-				Role:     "deacon",
+				Role:     "supervisor",
 				TownRoot: "/town",
 				Agent:    "gemini",
 			},
@@ -352,7 +352,7 @@ func TestAgentEnv_AgentOverrideAllRoles(t *testing.T) {
 // Agent is empty, for all roles. This is the default behavior.
 func TestAgentEnv_NoAgentOverrideOmitsKey(t *testing.T) {
 	t.Parallel()
-	roles := []string{"polecat", "witness", "refinery", "deacon", "crew"}
+	roles := []string{"miner", "witness", "refinery", "supervisor", "crew"}
 	for _, role := range roles {
 		t.Run(role, func(t *testing.T) {
 			t.Parallel()
@@ -390,13 +390,13 @@ func TestShellQuote(t *testing.T) {
 		},
 		{
 			name:     "BD_ACTOR with slashes",
-			input:    "myrig/polecats/Toast",
-			expected: "myrig/polecats/Toast", // NOT quoted
+			input:    "myrig/miners/Toast",
+			expected: "myrig/miners/Toast", // NOT quoted
 		},
 		{
 			name:     "value with hyphen",
-			input:    "deacon-boot",
-			expected: "deacon-boot", // NOT quoted
+			input:    "supervisor-boot",
+			expected: "supervisor-boot", // NOT quoted
 		},
 		{
 			name:     "value with dots",
@@ -498,9 +498,9 @@ func TestExportPrefix(t *testing.T) {
 			env: map[string]string{
 				"SIMPLE":  "value",
 				"COMPLEX": `{"key":"val"}`,
-				"GT_ROLE": "polecat",
+				"GT_ROLE": "miner",
 			},
-			expected: `export COMPLEX='{"key":"val"}' GT_ROLE=polecat SIMPLE=value && `,
+			expected: `export COMPLEX='{"key":"val"}' GT_ROLE=miner SIMPLE=value && `,
 		},
 	}
 
@@ -532,17 +532,17 @@ func TestBuildStartupCommandWithEnv(t *testing.T) {
 		},
 		{
 			name:     "env no prompt",
-			env:      map[string]string{"GT_ROLE": "polecat"},
+			env:      map[string]string{"GT_ROLE": "miner"},
 			agentCmd: "claude",
 			prompt:   "",
-			expected: "export GT_ROLE=polecat && claude",
+			expected: "export GT_ROLE=miner && claude",
 		},
 		{
 			name:     "env with prompt",
-			env:      map[string]string{"GT_ROLE": "polecat"},
+			env:      map[string]string{"GT_ROLE": "miner"},
 			agentCmd: "claude",
 			prompt:   "gt prime",
-			expected: `export GT_ROLE=polecat && claude "gt prime"`,
+			expected: `export GT_ROLE=miner && claude "gt prime"`,
 		},
 	}
 
@@ -638,8 +638,8 @@ func TestSanitizeAgentEnv(t *testing.T) {
 	}{
 		{
 			name:        "neither map has NODE_OPTIONS — sets empty",
-			resolvedEnv: map[string]string{"GT_ROLE": "polecat"},
-			callerEnv:   map[string]string{"GT_ROLE": "polecat"},
+			resolvedEnv: map[string]string{"GT_ROLE": "miner"},
+			callerEnv:   map[string]string{"GT_ROLE": "miner"},
 			wantKey:     true,
 			wantValue:   "",
 		},
@@ -666,14 +666,14 @@ func TestSanitizeAgentEnv(t *testing.T) {
 		},
 		{
 			name:        "same map without NODE_OPTIONS — sets empty (lifecycle.go pattern)",
-			resolvedEnv: map[string]string{"GT_ROLE": "polecat", "GT_RIG": "myrig"},
+			resolvedEnv: map[string]string{"GT_ROLE": "miner", "GT_RIG": "myrig"},
 			callerEnv:   nil, // will be set to same map below
 			wantKey:     true,
 			wantValue:   "",
 		},
 		{
 			name:        "AgentEnv output with empty callerEnv — preserves empty NODE_OPTIONS",
-			resolvedEnv: map[string]string{"GT_ROLE": "polecat", "NODE_OPTIONS": ""},
+			resolvedEnv: map[string]string{"GT_ROLE": "miner", "NODE_OPTIONS": ""},
 			callerEnv:   map[string]string{},
 			wantKey:     true,
 			wantValue:   "",
@@ -711,8 +711,8 @@ func TestSanitizeAgentEnv_ClearsClaudeCode(t *testing.T) {
 	}{
 		{
 			name:        "neither map has CLAUDECODE — sets empty",
-			resolvedEnv: map[string]string{"GT_ROLE": "polecat"},
-			callerEnv:   map[string]string{"GT_ROLE": "polecat"},
+			resolvedEnv: map[string]string{"GT_ROLE": "miner"},
+			callerEnv:   map[string]string{"GT_ROLE": "miner"},
 			wantKey:     true,
 			wantValue:   "",
 		},
@@ -739,7 +739,7 @@ func TestSanitizeAgentEnv_ClearsClaudeCode(t *testing.T) {
 		},
 		{
 			name:        "same map without CLAUDECODE — sets empty (lifecycle.go pattern)",
-			resolvedEnv: map[string]string{"GT_ROLE": "polecat", "GT_RIG": "myrig"},
+			resolvedEnv: map[string]string{"GT_ROLE": "miner", "GT_RIG": "myrig"},
 			callerEnv:   nil, // will be set to same map below
 			wantKey:     true,
 			wantValue:   "",
@@ -770,11 +770,11 @@ func TestAgentEnv_ExcludesAnthropicBaseURL(t *testing.T) {
 	// Even when ANTHROPIC_BASE_URL is set in the process environment,
 	// AgentEnv must NOT forward it. Agents that need a custom base URL
 	// get it from their agent config's Env block (rc.Env), not inheritance.
-	// Passthrough caused cross-provider contamination: a MiniMax deacon's
-	// base URL leaked into Claude polecats, causing 401 auth failures.
+	// Passthrough caused cross-provider contamination: a MiniMax supervisor's
+	// base URL leaked into Claude miners, causing 401 auth failures.
 	t.Setenv("ANTHROPIC_BASE_URL", "https://api.minimax.io/anthropic")
 
-	env := AgentEnv(AgentEnvConfig{Role: "polecat", Rig: "testrig", AgentName: "ember"})
+	env := AgentEnv(AgentEnvConfig{Role: "miner", Rig: "testrig", AgentName: "ember"})
 	if val, ok := env["ANTHROPIC_BASE_URL"]; ok {
 		t.Errorf("AgentEnv should not forward ANTHROPIC_BASE_URL, got %q", val)
 	}
@@ -789,12 +789,12 @@ func TestAgentEnv_IncludesNodeOptionsClearing(t *testing.T) {
 		rig       string
 		agentName string
 	}{
-		{"mayor", "", ""},
-		{"deacon", "", ""},
+		{"overseer", "", ""},
+		{"supervisor", "", ""},
 		{"boot", "", ""},
 		{"witness", "myrig", ""},
 		{"refinery", "myrig", ""},
-		{"polecat", "myrig", "Toast"},
+		{"miner", "myrig", "Toast"},
 		{"crew", "myrig", "emma"},
 	}
 	for _, r := range roles {
@@ -820,12 +820,12 @@ func TestAgentEnv_IncludesClaudeCodeClearing(t *testing.T) {
 		rig       string
 		agentName string
 	}{
-		{"mayor", "", ""},
-		{"deacon", "", ""},
+		{"overseer", "", ""},
+		{"supervisor", "", ""},
 		{"boot", "", ""},
 		{"witness", "myrig", ""},
 		{"refinery", "myrig", ""},
-		{"polecat", "myrig", "Toast"},
+		{"miner", "myrig", "Toast"},
 		{"crew", "myrig", "emma"},
 	}
 	for _, r := range roles {
@@ -844,7 +844,7 @@ func TestAgentEnv_IncludesClaudeCodeClearing(t *testing.T) {
 func TestAgentEnv_DisablesBdBackup(t *testing.T) {
 	t.Parallel()
 	// Verify AgentEnv always includes BD_BACKUP_ENABLED=false regardless of role.
-	// In Gas Town, Dolt is the persistent data store and the daemon provides
+	// In Excavation Site, Dolt is the persistent data store and the daemon provides
 	// centralized backup patrols (dolt_backup, jsonl_git_backup). bd's per-repo
 	// auto-backup is redundant and pollutes rig git history via git add -f.
 	// See: https://github.com/steveyegge/beads/issues/2241
@@ -853,12 +853,12 @@ func TestAgentEnv_DisablesBdBackup(t *testing.T) {
 		rig       string
 		agentName string
 	}{
-		{"mayor", "", ""},
-		{"deacon", "", ""},
+		{"overseer", "", ""},
+		{"supervisor", "", ""},
 		{"boot", "", ""},
 		{"witness", "myrig", ""},
 		{"refinery", "myrig", ""},
-		{"polecat", "myrig", "Toast"},
+		{"miner", "myrig", "Toast"},
 		{"crew", "myrig", "emma"},
 	}
 	for _, r := range roles {
@@ -894,7 +894,7 @@ func TestAgentEnv_PropagatesDoltPort(t *testing.T) {
 		t.Setenv("GT_DOLT_PORT", "13307")
 		t.Setenv("BEADS_DOLT_SERVER_PORT", "88888")
 		t.Setenv("BEADS_DOLT_PORT", "99999")
-		env := AgentEnv(AgentEnvConfig{Role: "polecat", Rig: "myrig", AgentName: "Toast"})
+		env := AgentEnv(AgentEnvConfig{Role: "miner", Rig: "myrig", AgentName: "Toast"})
 		assertEnv(t, env, "GT_DOLT_PORT", "13307")
 		assertEnv(t, env, "BEADS_DOLT_SERVER_PORT", "13307")
 		assertEnv(t, env, "BEADS_DOLT_PORT", "13307")
@@ -919,7 +919,7 @@ func TestAgentEnv_PropagatesDoltPort(t *testing.T) {
 		t.Setenv("GT_DOLT_PORT", "")
 		t.Setenv("BEADS_DOLT_SERVER_PORT", "")
 		t.Setenv("BEADS_DOLT_PORT", "")
-		env := AgentEnv(AgentEnvConfig{Role: "mayor"})
+		env := AgentEnv(AgentEnvConfig{Role: "overseer"})
 		if _, ok := env["GT_DOLT_PORT"]; ok {
 			t.Error("GT_DOLT_PORT should not be set")
 		}
@@ -955,11 +955,11 @@ func TestBuildStartupCommandWithEnv_IncludesNodeOptions(t *testing.T) {
 	// Integration test: verify BuildStartupCommandWithEnv output includes NODE_OPTIONS=
 	// when the env map has it set to empty (as AgentEnv produces).
 	env := map[string]string{
-		"GT_ROLE":      "polecat",
+		"GT_ROLE":      "miner",
 		"NODE_OPTIONS": "",
 	}
 	result := BuildStartupCommandWithEnv(env, "claude", "")
-	expected := "export GT_ROLE=polecat NODE_OPTIONS= && claude"
+	expected := "export GT_ROLE=miner NODE_OPTIONS= && claude"
 	if result != expected {
 		t.Errorf("BuildStartupCommandWithEnv() = %q, want %q", result, expected)
 	}
@@ -999,9 +999,9 @@ func TestSanitizeOTELAttrValue(t *testing.T) {
 		},
 		{
 			name:   "beacon first line",
-			input:  "[GAS TOWN] polecat rust (rig: gastown) <- witness • 2025-12-30T15:42 • assigned:gt-abc12\n\nRun `gt prime --hook`",
+			input:  "[GAS TOWN] miner rust (rig: excavation) <- witness • 2025-12-30T15:42 • assigned:gt-abc12\n\nRun `gt prime --hook`",
 			maxLen: 120,
-			want:   "[GAS TOWN] polecat rust (rig: gastown) <- witness • 2025-12-30T15:42 • assigned:gt-abc12",
+			want:   "[GAS TOWN] miner rust (rig: excavation) <- witness • 2025-12-30T15:42 • assigned:gt-abc12",
 		},
 		{
 			name:   "trims leading/trailing space",
@@ -1030,10 +1030,10 @@ func TestAgentEnv_OTELPromptAndTown(t *testing.T) {
 	t.Setenv("GT_OTEL_METRICS_URL", "http://localhost:8428/opentelemetry/api/v1/push")
 	t.Setenv("GT_OTEL_LOGS_URL", "http://localhost:9428/insert/opentelemetry/v1/logs")
 
-	beacon := "[GAS TOWN] polecat rust (rig: gastown) <- witness • 2025-12-30T15:42 • assigned:gt-abc12\n\nRun `gt prime --hook`"
+	beacon := "[GAS TOWN] miner rust (rig: excavation) <- witness • 2025-12-30T15:42 • assigned:gt-abc12\n\nRun `gt prime --hook`"
 	env := AgentEnv(AgentEnvConfig{
-		Role:      "polecat",
-		Rig:       "gastown",
+		Role:      "miner",
+		Rig:       "excavation",
 		AgentName: "rust",
 		TownRoot:  "/home/user/mytown",
 		Prompt:    beacon,
@@ -1050,7 +1050,7 @@ func TestAgentEnv_OTELPromptAndTown(t *testing.T) {
 	}
 
 	// gt.prompt should be the first line of the beacon (no newlines, commas replaced)
-	wantPromptPrefix := "gt.prompt=[GAS TOWN] polecat rust"
+	wantPromptPrefix := "gt.prompt=[GAS TOWN] miner rust"
 	if !contains(attrs, wantPromptPrefix) {
 		t.Errorf("OTEL_RESOURCE_ATTRIBUTES missing %q, got: %s", wantPromptPrefix, attrs)
 	}
@@ -1066,7 +1066,7 @@ func TestAgentEnv_OTELNoPromptNoTown(t *testing.T) {
 	t.Setenv("GT_OTEL_LOGS_URL", "http://localhost:9428/insert/opentelemetry/v1/logs")
 
 	env := AgentEnv(AgentEnvConfig{
-		Role: "mayor",
+		Role: "overseer",
 		// No Prompt, no TownRoot
 	})
 
@@ -1280,12 +1280,12 @@ func TestResolveDoltPort_IgnoresStoppedStateFile(t *testing.T) {
 func TestResolveDoltPort_FromDaemonJSON(t *testing.T) {
 	t.Setenv("GT_DOLT_PORT", "") // isolate from live Dolt server
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 	daemonJSON := `{"env": {"GT_DOLT_PORT": "3311"}, "type": "daemon-patrol-config"}`
-	if err := os.WriteFile(filepath.Join(mayorDir, "daemon.json"), []byte(daemonJSON), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "daemon.json"), []byte(daemonJSON), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1325,11 +1325,11 @@ func TestResolveDoltHost_FromConfigYAML(t *testing.T) {
 func TestResolveDoltHost_FromDaemonJSON(t *testing.T) {
 	t.Setenv("GT_DOLT_HOST", "")
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(mayorDir, "daemon.json"), []byte(`{"env":{"GT_DOLT_HOST":"127.0.0.3"}}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "daemon.json"), []byte(`{"env":{"GT_DOLT_HOST":"127.0.0.3"}}`), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1397,11 +1397,11 @@ func TestResolveConfiguredDoltPort_IgnoreConfigUsesEnv(t *testing.T) {
 func TestResolveConfiguredDoltPort_DaemonJSONFallback(t *testing.T) {
 	tmpDir := t.TempDir()
 	t.Setenv("GT_DOLT_PORT", "")
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(mayorDir, "daemon.json"), []byte(`{"env":{"GT_DOLT_PORT":"5507"}}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "daemon.json"), []byte(`{"env":{"GT_DOLT_PORT":"5507"}}`), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1544,12 +1544,12 @@ func TestAgentEnv_InjectsDoltPort(t *testing.T) {
 		name string
 		cfg  AgentEnvConfig
 	}{
-		{"mayor", AgentEnvConfig{Role: "mayor", TownRoot: tmpDir}},
+		{"overseer", AgentEnvConfig{Role: "overseer", TownRoot: tmpDir}},
 		{"witness", AgentEnvConfig{Role: "witness", Rig: "myrig", TownRoot: tmpDir}},
 		{"refinery", AgentEnvConfig{Role: "refinery", Rig: "myrig", TownRoot: tmpDir}},
-		{"polecat", AgentEnvConfig{Role: "polecat", Rig: "myrig", AgentName: "Toast", TownRoot: tmpDir}},
+		{"miner", AgentEnvConfig{Role: "miner", Rig: "myrig", AgentName: "Toast", TownRoot: tmpDir}},
 		{"crew", AgentEnvConfig{Role: "crew", Rig: "myrig", AgentName: "emma", TownRoot: tmpDir}},
-		{"deacon", AgentEnvConfig{Role: "deacon", TownRoot: tmpDir}},
+		{"supervisor", AgentEnvConfig{Role: "supervisor", TownRoot: tmpDir}},
 	}
 
 	for _, tc := range roles {
@@ -1569,7 +1569,7 @@ func TestAgentEnv_NoDoltPortWithoutTownRoot(t *testing.T) {
 	t.Setenv("BEADS_DOLT_SERVER_PORT", "")
 	t.Setenv("BEADS_DOLT_PORT", "") // isolate from live Dolt server
 	env := AgentEnv(AgentEnvConfig{
-		Role: "mayor",
+		Role: "overseer",
 	})
 	assertNotSet(t, env, "GT_DOLT_PORT")
 	assertNotSet(t, env, "BEADS_DOLT_PORT")
@@ -1581,7 +1581,7 @@ func TestAgentEnv_NoDoltPortWithoutConfig(t *testing.T) {
 	t.Setenv("BEADS_DOLT_PORT", "") // isolate from live Dolt server
 	tmpDir := t.TempDir()
 	env := AgentEnv(AgentEnvConfig{
-		Role:     "mayor",
+		Role:     "overseer",
 		TownRoot: tmpDir,
 	})
 	assertNotSet(t, env, "GT_DOLT_PORT")

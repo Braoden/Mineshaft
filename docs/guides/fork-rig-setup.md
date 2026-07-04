@@ -4,7 +4,7 @@ When you run a rig against a repository you **don't own**, the rig has to
 fetch canonical history from upstream but push all work to your fork.
 `gt rig add` supports this directly through `--push-url` and
 `--upstream-url`. Without them, the default `gt rig add <name> <fork-url>`
-produces a rig whose refinery merges polecat work into your fork's `main`,
+produces a rig whose refinery merges miner work into your fork's `main`,
 diverging it from upstream.
 
 ## When you need fork mode
@@ -26,12 +26,12 @@ gt rig add <name> <upstream-url> \
   --upstream-url <upstream-url>
 ```
 
-Concretely, for a Gas Town contributor:
+Concretely, for a Excavation Site contributor:
 
 ```bash
-gt rig add gastown https://github.com/gastownhall/gastown \
-  --push-url     https://github.com/<you>/gastown \
-  --upstream-url https://github.com/gastownhall/gastown
+gt rig add excavation https://github.com/excavationhall/excavation \
+  --push-url     https://github.com/<you>/excavation \
+  --upstream-url https://github.com/excavationhall/excavation
 ```
 
 What each flag does:
@@ -43,24 +43,24 @@ What each flag does:
 | `--upstream-url` | Adds a separate named `upstream` remote for rebases against `upstream/main` |
 
 These remotes are configured on **both** the bare canonical clone
-(`<rig>/refinery/rig`) and the mayor's working clone (`<rig>/mayor/rig`).
+(`<rig>/refinery/rig`) and the overseer's working clone (`<rig>/overseer/rig`).
 
 ## Verifying the setup
 
-Check the remotes in the refinery's bare clone and the mayor's clone:
+Check the remotes in the refinery's bare clone and the overseer's clone:
 
 ```bash
 cd <town>/<rig>/refinery/rig && git remote -v
-cd <town>/<rig>/mayor/rig    && git remote -v
+cd <town>/<rig>/overseer/rig    && git remote -v
 ```
 
 Expect (substituting your fork and the canonical repo):
 
 ```
-origin    https://github.com/gastownhall/gastown (fetch)
-origin    https://github.com/<you>/gastown       (push)
-upstream  https://github.com/gastownhall/gastown (fetch)
-upstream  https://github.com/gastownhall/gastown (push)
+origin    https://github.com/excavationhall/excavation (fetch)
+origin    https://github.com/<you>/excavation       (push)
+upstream  https://github.com/excavationhall/excavation (fetch)
+upstream  https://github.com/excavationhall/excavation (push)
 ```
 
 The key invariant: **`origin`'s fetch URL is upstream, `origin`'s push URL
@@ -70,24 +70,24 @@ did not take effect — re-add the rig.
 ## Current limitation: the refinery is not yet fork-aware
 
 Even a correctly-configured fork rig will, today, have its refinery attempt
-to **merge polecat branches into the fork's `main`** rather than open a PR
+to **merge miner branches into the fork's `main`** rather than open a PR
 to upstream. The foundation flags (`--push-url` / `--upstream-url`) shipped
-in [gastownhall/gastown#2018](https://github.com/gastownhall/gastown/issues/2018),
+in [excavationhall/excavation#2018](https://github.com/excavationhall/excavation/issues/2018),
 but the behavioral half — refinery raising PRs to upstream instead of
 merging to `origin` — is tracked in
-[gastownhall/gastown#1794](https://github.com/gastownhall/gastown/issues/1794)
+[excavationhall/excavation#1794](https://github.com/excavationhall/excavation/issues/1794)
 and is not yet implemented.
 
 Until then, for strict PR-only behavior:
 
 - Do **not** start the refinery. Park the rig with `gt rig park <rig>`.
-- Use the polecat → feature branch → manual PR path. Push the branch to
+- Use the miner → feature branch → manual PR path. Push the branch to
   your fork and open the PR by hand.
 
 ## Recovery: a polluted fork `main`
 
 If you added a rig **without** the fork-routing flags, the refinery may
-have already merged polecat work into your fork's `main`, leaving it with
+have already merged miner work into your fork's `main`, leaving it with
 mixed `Merge branch ...` and refinery-generated commits diverged from
 upstream.
 
@@ -99,7 +99,7 @@ upstream.
 1. Inspect the divergence before touching anything:
 
    ```bash
-   cd <town>/<rig>/mayor/rig
+   cd <town>/<rig>/overseer/rig
    git fetch upstream
    git log --oneline --graph upstream/main...origin/main
    ```
@@ -122,5 +122,5 @@ upstream.
 ## See also
 
 - [CONTRIBUTING.md](../../CONTRIBUTING.md) — "Setting up a rig to contribute
-  to Gas Town" (Gas Town-specific worked example)
+  to Excavation Site" (Excavation Site-specific worked example)
 - [Local Rig Bootstrap](local-rig-bootstrap.md) — local/private repo setup

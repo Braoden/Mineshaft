@@ -18,11 +18,11 @@ func realPath(t *testing.T, path string) string {
 func TestFindWithPrimaryMarker(t *testing.T) {
 	// Create temp workspace structure
 	root := realPath(t, t.TempDir())
-	mayorDir := filepath.Join(root, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(root, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
-	townFile := filepath.Join(mayorDir, "town.json")
+	townFile := filepath.Join(overseerDir, "town.json")
 	if err := os.WriteFile(townFile, []byte(`{"type":"town"}`), 0644); err != nil {
 		t.Fatalf("write: %v", err)
 	}
@@ -44,10 +44,10 @@ func TestFindWithPrimaryMarker(t *testing.T) {
 }
 
 func TestFindWithSecondaryMarker(t *testing.T) {
-	// Create temp workspace with just mayor/ directory
+	// Create temp workspace with just overseer/ directory
 	root := realPath(t, t.TempDir())
-	mayorDir := filepath.Join(root, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(root, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
 
@@ -92,11 +92,11 @@ func TestFindOrErrorNotFound(t *testing.T) {
 func TestFindAtRoot(t *testing.T) {
 	// Create workspace at temp root level
 	root := realPath(t, t.TempDir())
-	mayorDir := filepath.Join(root, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(root, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
-	townFile := filepath.Join(mayorDir, "town.json")
+	townFile := filepath.Join(overseerDir, "town.json")
 	if err := os.WriteFile(townFile, []byte(`{"type":"town"}`), 0644); err != nil {
 		t.Fatalf("write: %v", err)
 	}
@@ -123,12 +123,12 @@ func TestIsWorkspace(t *testing.T) {
 		t.Error("expected not a workspace initially")
 	}
 
-	// Add primary marker (mayor/town.json)
-	mayorDir := filepath.Join(root, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	// Add primary marker (overseer/town.json)
+	overseerDir := filepath.Join(root, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
-	townFile := filepath.Join(mayorDir, "town.json")
+	townFile := filepath.Join(overseerDir, "town.json")
 	if err := os.WriteFile(townFile, []byte(`{"type":"town"}`), 0644); err != nil {
 		t.Fatalf("write: %v", err)
 	}
@@ -145,11 +145,11 @@ func TestIsWorkspace(t *testing.T) {
 
 func TestFindFromSymlinkedDir(t *testing.T) {
 	root := realPath(t, t.TempDir())
-	mayorDir := filepath.Join(root, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(root, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
-	townFile := filepath.Join(mayorDir, "town.json")
+	townFile := filepath.Join(overseerDir, "town.json")
 	if err := os.WriteFile(townFile, []byte(`{"type":"town"}`), 0644); err != nil {
 		t.Fatalf("write: %v", err)
 	}
@@ -185,16 +185,16 @@ func TestFindPreservesSymlinkPath(t *testing.T) {
 		t.Skipf("symlink not supported: %v", err)
 	}
 
-	mayorDir := filepath.Join(symRoot, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(symRoot, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
-	townFile := filepath.Join(mayorDir, "town.json")
+	townFile := filepath.Join(overseerDir, "town.json")
 	if err := os.WriteFile(townFile, []byte(`{}`), 0644); err != nil {
 		t.Fatalf("write: %v", err)
 	}
 
-	subdir := filepath.Join(symRoot, "rigs", "project", "polecats", "worker")
+	subdir := filepath.Join(symRoot, "rigs", "project", "miners", "worker")
 	if err := os.MkdirAll(subdir, 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
@@ -213,59 +213,59 @@ func TestFindPreservesSymlinkPath(t *testing.T) {
 		t.Fatalf("Rel: %v", err)
 	}
 
-	if filepath.ToSlash(relPath) != "rigs/project/polecats/worker" {
-		t.Errorf("Rel = %q, want 'rigs/project/polecats/worker'", relPath)
+	if filepath.ToSlash(relPath) != "rigs/project/miners/worker" {
+		t.Errorf("Rel = %q, want 'rigs/project/miners/worker'", relPath)
 	}
 }
 
 func TestFindSkipsNestedWorkspaceInWorktree(t *testing.T) {
 	root := realPath(t, t.TempDir())
 
-	if err := os.MkdirAll(filepath.Join(root, "mayor"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(root, "overseer"), 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(root, "mayor", "town.json"), []byte(`{"name":"outer"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "overseer", "town.json"), []byte(`{"name":"outer"}`), 0644); err != nil {
 		t.Fatalf("write: %v", err)
 	}
 
-	polecatDir := filepath.Join(root, "myrig", "polecats", "worker")
-	if err := os.MkdirAll(filepath.Join(polecatDir, "mayor"), 0755); err != nil {
+	minerDir := filepath.Join(root, "myrig", "miners", "worker")
+	if err := os.MkdirAll(filepath.Join(minerDir, "overseer"), 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(polecatDir, "mayor", "town.json"), []byte(`{"name":"inner"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(minerDir, "overseer", "town.json"), []byte(`{"name":"inner"}`), 0644); err != nil {
 		t.Fatalf("write: %v", err)
 	}
 
-	found, err := Find(polecatDir)
+	found, err := Find(minerDir)
 	if err != nil {
 		t.Fatalf("Find: %v", err)
 	}
 
 	if found != root {
-		t.Errorf("Find = %q, want %q (should skip nested workspace in polecats/)", found, root)
+		t.Errorf("Find = %q, want %q (should skip nested workspace in miners/)", found, root)
 	}
 
-	rel, _ := filepath.Rel(found, polecatDir)
-	if filepath.ToSlash(rel) != "myrig/polecats/worker" {
-		t.Errorf("Rel = %q, want 'myrig/polecats/worker'", rel)
+	rel, _ := filepath.Rel(found, minerDir)
+	if filepath.ToSlash(rel) != "myrig/miners/worker" {
+		t.Errorf("Rel = %q, want 'myrig/miners/worker'", rel)
 	}
 }
 
 func TestFindSkipsNestedWorkspaceInCrew(t *testing.T) {
 	root := realPath(t, t.TempDir())
 
-	if err := os.MkdirAll(filepath.Join(root, "mayor"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(root, "overseer"), 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(root, "mayor", "town.json"), []byte(`{"name":"outer"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "overseer", "town.json"), []byte(`{"name":"outer"}`), 0644); err != nil {
 		t.Fatalf("write: %v", err)
 	}
 
 	crewDir := filepath.Join(root, "myrig", "crew", "worker")
-	if err := os.MkdirAll(filepath.Join(crewDir, "mayor"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(crewDir, "overseer"), 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(crewDir, "mayor", "town.json"), []byte(`{"name":"inner"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(crewDir, "overseer", "town.json"), []byte(`{"name":"inner"}`), 0644); err != nil {
 		t.Fatalf("write: %v", err)
 	}
 

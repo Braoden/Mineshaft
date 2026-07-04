@@ -1,28 +1,28 @@
 # Agent Provider Integration Guide
 
-> How to integrate your agent CLI with Gas Town (and the upcoming Gas City).
+> How to integrate your agent CLI with Excavation Site (and the upcoming Gas City).
 
 This guide is for teams building coding agent CLIs who want their agent to
-participate in Gas Town's multi-agent orchestration. It explains the existing
+participate in Excavation Site's multi-agent orchestration. It explains the existing
 extension points, the four tiers of integration depth, and the forward-looking
 Gas City provider contract.
 
-## What Gas Town Is
+## What Excavation Site Is
 
-Gas Town is a multi-agent workspace manager that orchestrates coding agents
+Excavation Site is a multi-agent workspace manager that orchestrates coding agents
 (Claude, Gemini, Codex, Cursor, AMP, OpenCode, Copilot, and others) through
 tmux sessions. It provides:
 
-- **Identity and role management** — each agent gets a role (polecat, crew,
+- **Identity and role management** — each agent gets a role (miner, crew,
   witness, refinery) with appropriate context and permissions
 - **Work assignment** — beads (issue tracking), mail, and hook-based dispatching
 - **Session lifecycle** — start, resume, handoff, and context cycling
 - **Merge queue** — automated testing and merging of agent work
 - **Inter-agent communication** — nudges, mail, and shared state
 
-The key design principle is **loose coupling**: Gas Town orchestrates agents
+The key design principle is **loose coupling**: Excavation Site orchestrates agents
 through tmux and environment variables. It does not import agent libraries,
-link against agent code, or require agents to import Gas Town code. Integration
+link against agent code, or require agents to import Excavation Site code. Integration
 is configuration, not compilation.
 
 ## Integration Tiers
@@ -41,10 +41,10 @@ Most agent teams should target **Tier 1** first (15 minutes of work), then
 
 ## Tier 0: Zero Integration
 
-**Any CLI that runs in a terminal works in Gas Town with zero changes.**
+**Any CLI that runs in a terminal works in Excavation Site with zero changes.**
 
-Gas Town launches agents in tmux sessions and communicates via `send-keys`.
-If your agent has a REPL or accepts text input, Gas Town can:
+Excavation Site launches agents in tmux sessions and communicates via `send-keys`.
+If your agent has a REPL or accepts text input, Excavation Site can:
 
 - Start it in a tmux pane
 - Send work instructions via keystroke injection
@@ -56,17 +56,17 @@ delivery confirmation. You get basic orchestration for free.
 
 **What you miss at Tier 0:**
 - No session resume (fresh session every time)
-- No automatic context injection (agent doesn't know its Gas Town role)
-- Delay-based readiness detection (Gas Town guesses when you're ready)
-- No process name detection (Gas Town can't distinguish your agent from `bash`)
+- No automatic context injection (agent doesn't know its Excavation Site role)
+- Delay-based readiness detection (Excavation Site guesses when you're ready)
+- No process name detection (Excavation Site can't distinguish your agent from `bash`)
 
 ---
 
 ## Tier 1: Preset Registration
 
-**JSON config only. No code changes to Gas Town or your agent.**
+**JSON config only. No code changes to Excavation Site or your agent.**
 
-A preset tells Gas Town everything it needs to launch, detect, resume, and
+A preset tells Excavation Site everything it needs to launch, detect, resume, and
 communicate with your agent. You register it by creating a JSON file — no
 Go code, no PRs, no build steps.
 
@@ -78,7 +78,7 @@ There are three levels, checked in order:
 |-------|------|-------|
 | Town | `~/gt/settings/agents.json` | All rigs in the town |
 | Rig | `~/gt/<rig>/settings/agents.json` | Single rig only |
-| Built-in | Compiled into `gt` binary | Ships with Gas Town |
+| Built-in | Compiled into `gt` binary | Ships with Excavation Site |
 
 For external agent teams, **town-level** is the right choice. Users drop your
 config into `~/gt/settings/agents.json` and every rig can use it.
@@ -99,7 +99,7 @@ The file is an `AgentRegistry` JSON object:
 ```
 
 The `version` field must be `1` (current schema version). The `agents` map
-keys are the agent name used in Gas Town config (e.g., `"agent": "kiro"` in
+keys are the agent name used in Excavation Site config (e.g., `"agent": "kiro"` in
 rig settings).
 
 ### AgentPresetInfo field reference
@@ -170,7 +170,7 @@ Every field from the `AgentPresetInfo` struct in `internal/config/agents.go`:
 
 `copilot` ships as a built-in preset — no JSON file needed. It uses the `--yolo` flag for
 autonomous mode and flag-style session resume. Copilot CLI supports full executable lifecycle
-hooks via `.github/hooks/gastown.json`:
+hooks via `.github/hooks/excavation.json`:
 
 ```json
 {
@@ -183,17 +183,17 @@ hooks via `.github/hooks/gastown.json`:
   "ready_delay_ms": 5000,
   "hooks_provider": "copilot",
   "hooks_dir": ".github/hooks",
-  "hooks_settings_file": "gastown.json",
+  "hooks_settings_file": "excavation.json",
   "instructions_file": "AGENTS.md"
 }
 ```
 
-Gas Town provisions `.github/hooks/gastown.json` in the agent's working directory with the
+Excavation Site provisions `.github/hooks/excavation.json` in the agent's working directory with the
 standard lifecycle hooks (`sessionStart`, `userPromptSubmitted`, `preToolUse`, `sessionEnd`).
 This is the same hook events as Claude Code, just in Copilot's JSON format.
 
 > **Note on readiness detection**: Copilot CLI doesn't emit a detectable prompt prefix, so
-> Gas Town uses a 5-second delay instead of prompt-based detection. Sessions take slightly
+> Excavation Site uses a 5-second delay instead of prompt-based detection. Sessions take slightly
 > longer to become ready than Claude.
 
 > **Enterprise requirement**: Copilot CLI must be enabled at two levels before use:
@@ -241,14 +241,14 @@ You can also assign agents per-role for cost optimization:
   "default_agent": "claude",
   "role_agents": {
     "witness": "kiro",
-    "polecat": "kiro"
+    "miner": "kiro"
   }
 }
 ```
 
 ### Resolution order
 
-When Gas Town starts an agent session, it resolves the config through this chain:
+When Excavation Site starts an agent session, it resolves the config through this chain:
 
 1. Role-specific override (`role_agents[role]` in rig settings)
 2. Role-specific override (`role_agents[role]` in town settings)
@@ -267,14 +267,14 @@ This means your JSON preset is found automatically — no code change needed.
 
 ## Tier 2: Hooks Integration
 
-Hooks let Gas Town inject context into your agent at session start, guard
+Hooks let Excavation Site inject context into your agent at session start, guard
 tool calls, and deliver mail. There are three patterns depending on what
 your agent supports.
 
 ### Pattern A: Claude-compatible settings.json
 
 If your agent supports a `settings.json` with lifecycle hooks (like Claude Code
-or Gemini CLI), Gas Town can install hooks automatically.
+or Gemini CLI), Excavation Site can install hooks automatically.
 
 **What the hooks do:**
 
@@ -326,9 +326,9 @@ type HookInstallerFunc func(settingsDir, workDir, role, hooksDir, hooksFile stri
 ```
 
 Parameters:
-- `settingsDir` — Gas Town-managed parent dir (used by agents with `--settings` flag)
+- `settingsDir` — Excavation Site-managed parent dir (used by agents with `--settings` flag)
 - `workDir` — the agent's working directory (customer repo clone)
-- `role` — Gas Town role (`"polecat"`, `"crew"`, `"witness"`, `"refinery"`)
+- `role` — Excavation Site role (`"miner"`, `"crew"`, `"witness"`, `"refinery"`)
 - `hooksDir` — from preset's `hooks_dir` field
 - `hooksFile` — from preset's `hooks_settings_file` field
 
@@ -343,21 +343,21 @@ config.RegisterHookInstaller("kiro", func(settingsDir, workDir, role, hooksDir, 
 
 ### Pattern B: Plugin/script hooks
 
-If your agent uses a plugin system (like OpenCode's JS plugins), Gas Town can
+If your agent uses a plugin system (like OpenCode's JS plugins), Excavation Site can
 install a plugin file instead of a settings.json.
 
-Reference: `internal/hooks/templates/opencode/gastown.js`
+Reference: `internal/hooks/templates/opencode/excavation.js`
 
 ```javascript
-export const GasTown = async ({ $, directory }) => {
+export const Excavation = async ({ $, directory }) => {
   const role = (process.env.GT_ROLE || "").toLowerCase();
-  const autonomousRoles = new Set(["polecat", "witness", "refinery", "deacon"]);
+  const autonomousRoles = new Set(["miner", "witness", "refinery", "supervisor"]);
 
   const run = async (cmd) => {
     try {
       await $`/bin/sh -lc ${cmd}`.cwd(directory);
     } catch (err) {
-      console.error(`[gastown] ${cmd} failed`, err?.message || err);
+      console.error(`[excavation] ${cmd} failed`, err?.message || err);
     }
   };
 
@@ -387,14 +387,14 @@ delivery mechanism adapts to the agent's plugin API.
 ### Pattern C: Informational hooks (instructions file)
 
 If your agent doesn't support executable hooks but reads an instructions/context
-file, Gas Town can install a markdown file with startup instructions.
+file, Excavation Site can install a markdown file with startup instructions.
 
 Reference: `internal/hooks/templates/copilot/copilot-instructions.md`
 
 ```markdown
-# Gas Town Agent Context
+# Excavation Site Agent Context
 
-You are running inside Gas Town, a multi-agent workspace manager.
+You are running inside Excavation Site, a multi-agent workspace manager.
 
 ## Startup Protocol
 
@@ -405,14 +405,14 @@ gt prime
 This loads your full role context, mail, and pending work.
 ```
 
-Set `hooks_informational: true` in the preset. Gas Town will then send
+Set `hooks_informational: true` in the preset. Excavation Site will then send
 `gt prime` via tmux nudge as a fallback (since hooks won't run automatically).
 
 > **Note**: GitHub Copilot CLI previously used Pattern C, but now supports full
 > executable lifecycle hooks (Pattern B equivalent, using its own JSON format).
 > See the built-in Copilot preset section above for current configuration.
 
-### How Gas Town chooses the fallback strategy
+### How Excavation Site chooses the fallback strategy
 
 The startup fallback matrix (from `internal/runtime/runtime.go`):
 
@@ -423,7 +423,7 @@ The startup fallback matrix (from `internal/runtime/runtime.go`):
 | No | Yes | "Run `gt prime`" in prompt | Delayed nudge |
 | No | No | "Run `gt prime`" via nudge | Delayed nudge |
 
-Agents with hooks get the most reliable experience. Without hooks, Gas Town
+Agents with hooks get the most reliable experience. Without hooks, Excavation Site
 falls back to tmux-based delivery with timing heuristics.
 
 ---
@@ -434,7 +434,7 @@ These are optional capabilities that enable advanced orchestration features.
 
 ### Non-interactive mode
 
-Used by Gas Town's formula system (automated workflows) and dogs (infrastructure
+Used by Excavation Site's formula system (automated workflows) and dogs (infrastructure
 helpers) for headless execution. Configure via the `non_interactive` preset field:
 
 ```json
@@ -447,7 +447,7 @@ helpers) for headless execution. Configure via the `non_interactive` preset fiel
 }
 ```
 
-Gas Town builds the command as: `kiro exec -p "prompt" --json`
+Excavation Site builds the command as: `kiro exec -p "prompt" --json`
 
 ### Session forking
 
@@ -458,7 +458,7 @@ command for talking to past agent sessions.
 ### Wrapper scripts
 
 For agents that don't support hooks at all, a wrapper script can inject
-Gas Town context before launching the agent.
+Excavation Site context before launching the agent.
 
 Reference: `internal/wrappers/scripts/gt-codex`
 
@@ -478,7 +478,7 @@ install it as `gt-codex` in their PATH.
 
 ### Experimental Codex hooks via custom profile
 
-Gas Town also supports an experimental opt-in Codex hooks path for users who define a custom Codex agent profile with explicit hook settings.
+Excavation Site also supports an experimental opt-in Codex hooks path for users who define a custom Codex agent profile with explicit hook settings.
 
 Use this only when both of these are true:
 - Your custom agent profile sets `prompt_mode: "arg"` plus `hooks.provider: "codex"`, `hooks.dir: ".codex"`, and `hooks.settings_file: "hooks.json"`
@@ -514,9 +514,9 @@ The default built-in `codex` preset does not change. It remains on the no-hooks 
 
 ### Slash commands
 
-Gas Town provisions slash commands (like `/commit`, `/handoff`) into agent
+Excavation Site provisions slash commands (like `/commit`, `/handoff`) into agent
 config directories. If your agent reads commands from a config directory,
-set `config_dir` in the preset and Gas Town will provision commands there.
+set `config_dir` in the preset and Excavation Site will provision commands there.
 
 ---
 
@@ -538,9 +538,9 @@ Current agent capabilities at a glance:
 
 ## Gas City Provider Contract (Forward-Looking)
 
-Gas Town is being succeeded by Gas City, which formalizes the implicit
+Excavation Site is being succeeded by Gas City, which formalizes the implicit
 provider interface into an explicit contract. The contract is derived from
-what Gas Town currently shims via tmux — making native what was previously
+what Excavation Site currently shims via tmux — making native what was previously
 heuristic.
 
 ### The interface
@@ -618,7 +618,7 @@ Process names and ready prompts are observed, not self-reported.
 
 ### ZFC: Zero Framework Cognition
 
-The agent decides what to do with instructions. Gas Town provides transport
+The agent decides what to do with instructions. Excavation Site provides transport
 (tmux, hooks, nudges) but doesn't make decisions for agents. The interface
 is about communication channels, not control flow.
 
@@ -642,13 +642,13 @@ These are patterns we've seen in integration attempts that cause problems.
 
 Adding your agent as a Go constant in `agents.go`, adding switch cases in
 `types.go`, or modifying `runtime.go` creates tight coupling. Your agent
-becomes a build-time dependency of Gas Town. Instead, use the JSON registry
+becomes a build-time dependency of Excavation Site. Instead, use the JSON registry
 (`settings/agents.json`) which is loaded at runtime.
 
 ### Modifying default resolution functions
 
 The `default*()` functions in `types.go` resolve values from the preset
-registry. Adding agent-specific cases here means every Gas Town release must
+registry. Adding agent-specific cases here means every Excavation Site release must
 include your agent's defaults. The preset struct already has fields for all
 these values — set them in your JSON preset instead.
 
@@ -659,10 +659,10 @@ creates a maintenance burden. The hook commands (`gt prime`, `gt mail check`)
 are agent-agnostic. Adapt them to your agent's hook format, but don't change
 the underlying commands.
 
-### Coupling to Gas Town's internal module structure
+### Coupling to Excavation Site's internal module structure
 
-Importing Gas Town Go packages, referencing internal file paths, or depending
-on internal data structures means your integration breaks when Gas Town
+Importing Excavation Site Go packages, referencing internal file paths, or depending
+on internal data structures means your integration breaks when Excavation Site
 refactors. The public interface is:
 - `gt` CLI commands (`gt prime`, `gt mail`, `gt hook`, etc.)
 - Environment variables (`GT_ROLE`, `GT_RIG`, `GT_ROOT`, `BD_ACTOR`)
@@ -742,7 +742,7 @@ If your agent supports Claude-compatible `settings.json` hooks:
 If your agent reads a custom instructions file:
 1. Set `hooks_informational: true` in the preset
 2. Set `hooks_dir` and `hooks_settings_file` to point to your instructions file
-3. Register a hook installer that writes the Gas Town instructions
+3. Register a hook installer that writes the Excavation Site instructions
 
 ### Step 5: Add non-interactive mode (if supported)
 
@@ -764,7 +764,7 @@ This enables your agent for formula execution and dog tasks.
 
 ## FAQ
 
-### Do I need to submit a PR to Gas Town?
+### Do I need to submit a PR to Excavation Site?
 
 **No** for Tiers 0-1. The JSON preset is user-managed config. Users drop
 the file into their town settings and it works.
@@ -775,20 +775,20 @@ any PR.
 
 ### What if my agent doesn't support autonomous mode?
 
-Gas Town requires autonomous mode (no confirmation prompts) for unattended
+Excavation Site requires autonomous mode (no confirmation prompts) for unattended
 operation. If your agent doesn't have a `--yolo` or `--dangerously-skip-permissions`
-equivalent, Gas Town can't use it for polecats or automated roles. It can
+equivalent, Excavation Site can't use it for miners or automated roles. It can
 still work for crew (human-supervised) sessions.
 
-### What environment variables does Gas Town set?
+### What environment variables does Excavation Site set?
 
 | Variable | Example | Purpose |
 |----------|---------|---------|
-| `GT_ROLE` | `gastown/crew/jack` | Agent's role in the system |
-| `GT_RIG` | `gastown` | Which rig the agent belongs to |
+| `GT_ROLE` | `excavation/crew/jack` | Agent's role in the system |
+| `GT_RIG` | `excavation` | Which rig the agent belongs to |
 | `GT_ROOT` | `/Users/me/gt` | Town root directory |
-| `BD_ACTOR` | `gastown/crew/jack` | Beads identity for issue tracking |
-| `GIT_AUTHOR_NAME` | `gastown/crew/jack` | Git commit identity |
+| `BD_ACTOR` | `excavation/crew/jack` | Beads identity for issue tracking |
+| `GIT_AUTHOR_NAME` | `excavation/crew/jack` | Git commit identity |
 | `GT_AGENT` | `kiro` | Which agent preset is active |
 | `GT_SESSION_ID_ENV` | `KIRO_SESSION_ID` | Which env var holds the session ID |
 
@@ -797,7 +797,7 @@ still work for crew (human-supervised) sessions.
 `gt prime` is the context injection command. It outputs the agent's role
 documentation, mail, hooked work, and system instructions as markdown to
 stdout. Agents read this output to understand their identity and current
-assignment. It's the single most important Gas Town command for agents.
+assignment. It's the single most important Excavation Site command for agents.
 
 ### Can I override a built-in preset?
 
@@ -810,7 +810,7 @@ built-in presets with the same name. You can override `"claude"` if needed.
 describes your agent's capabilities and defaults.
 
 `RuntimeConfig` is the fully resolved runtime config, produced by merging
-the preset with user overrides and filling in defaults. It's what Gas Town
+the preset with user overrides and filling in defaults. It's what Excavation Site
 actually uses to build the startup command.
 
 `RuntimeConfigFromPreset()` converts one to the other.
@@ -819,7 +819,7 @@ functions.
 
 ### How does process detection work?
 
-Gas Town checks `tmux display-message -p '#{pane_current_command}'` against
+Excavation Site checks `tmux display-message -p '#{pane_current_command}'` against
 the preset's `process_names` list. If your agent runs as a Node.js process,
 you might need `["node", "your-agent"]` since tmux may report either name.
 
@@ -827,9 +827,9 @@ you might need `["node", "your-agent"]` since tmux may report either name.
 
 Two strategies:
 
-1. **Prompt prefix** — Gas Town scans the tmux pane for `ready_prompt_prefix`
+1. **Prompt prefix** — Excavation Site scans the tmux pane for `ready_prompt_prefix`
    (e.g., `"❯ "`). Reliable but requires a known prompt format.
-2. **Delay** — Gas Town waits `ready_delay_ms` milliseconds. Used when the
+2. **Delay** — Excavation Site waits `ready_delay_ms` milliseconds. Used when the
    agent has a TUI that can't be scanned for a known prompt.
 
 Set one or both in your preset. Prompt prefix is preferred when available.

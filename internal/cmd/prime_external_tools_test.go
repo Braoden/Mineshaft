@@ -84,7 +84,7 @@ esac
 `)
 
 	start := time.Now()
-	output := captureStdout(t, func() { runPrimeExternalTools(RoleContext{Role: RolePolecat}, workDir) })
+	output := captureStdout(t, func() { runPrimeExternalTools(RoleContext{Role: RoleMiner}, workDir) })
 	assertElapsedUnder(t, time.Since(start), time.Second)
 	assertPrimeToolCalled(t, "bd:kv list --json")
 	assertPrimeToolCalled(t, "gt:mail check --inject")
@@ -119,7 +119,7 @@ esac
 	t.Setenv("PRIME_CHILD_SURVIVED", survivedPath)
 
 	start := time.Now()
-	output := captureStdout(t, func() { runPrimeExternalTools(RoleContext{Role: RolePolecat}, workDir) })
+	output := captureStdout(t, func() { runPrimeExternalTools(RoleContext{Role: RoleMiner}, workDir) })
 	assertElapsedUnder(t, time.Since(start), time.Second)
 	assertPrimeToolCalled(t, "bd:kv list --json")
 	assertPrimeToolCalled(t, "gt:mail check --inject")
@@ -140,7 +140,7 @@ esac
 }
 
 func TestRunPrimeExternalTools_SkipsMailCheckForPatrolRoles(t *testing.T) {
-	for _, role := range []string{string(RoleWitness), string(RoleRefinery), string(RoleDeacon), string(RoleBoot)} {
+	for _, role := range []string{string(RoleWitness), string(RoleRefinery), string(RoleSupervisor), string(RoleBoot)} {
 		t.Run(role, func(t *testing.T) {
 			workDir := setupPrimeExternalToolTest(t, `
 case "$*" in
@@ -178,7 +178,7 @@ esac
 
 	start := time.Now()
 	output := captureStdout(t, func() {
-		checkPendingEscalations(RoleContext{Role: RoleMayor, WorkDir: workDir})
+		checkPendingEscalations(RoleContext{Role: RoleOverseer, WorkDir: workDir})
 	})
 	assertElapsedUnder(t, time.Since(start), time.Second)
 	assertPrimeToolCalled(t, "bd:list --status=open --tag=escalation --json --flat")

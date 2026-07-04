@@ -25,7 +25,7 @@ bead description. Placeholders are substituted at creation time.
 
 This is a verification gate for plan **{{plan_title}}** (`{{plan_bead}}`).
 
-You are a gate polecat. Your job is to execute the review steps listed below
+You are a gate miner. Your job is to execute the review steps listed below
 against the implementation work that was done under this plan. You have no
 memory of the implementation — everything you need is in this description and
 in the code on the current branch.
@@ -90,7 +90,7 @@ bd dep add {{gate_id}} <fix-bead-id>
 
 This ensures the gate bead becomes blocked again until all fixes are closed.
 
-**3. Sling each fix to a polecat:**
+**3. Sling each fix to a miner:**
 
 ```bash
 gt sling <fix-bead-id> <rig>
@@ -103,15 +103,15 @@ This dispatches the fix work to an available worker.
 Clear your assignment and let your session end. You are done for now.
 
 The system handles the rest:
-- Fix polecats work on each fix bead independently.
+- Fix miners work on each fix bead independently.
 - As each fix bead closes, its blocking dep on this gate is satisfied.
 - When ALL fix beads close, this gate bead becomes unblocked again.
-- The stranded-bead scan re-dispatches this gate bead to a fresh polecat
+- The stranded-bead scan re-dispatches this gate bead to a fresh miner
   within 30 seconds of becoming unblocked.
-- The fresh polecat re-runs all review steps from the top.
+- The fresh miner re-runs all review steps from the top.
 
 **Important:** Do NOT attempt to fix issues yourself. Your role is gate review,
-not implementation. File precise fix beads so fix polecats can execute without
+not implementation. File precise fix beads so fix miners can execute without
 ambiguity.
 
 ## Clean Pass Signal

@@ -5,12 +5,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/steveyegge/gastown/internal/git"
+	"github.com/steveyegge/excavation/internal/git"
 )
 
 // SparseCheckoutCheck detects legacy sparse checkout configurations that should be removed.
 // Sparse checkout was previously used to exclude .claude/ from source repos, but this
-// prevented valid .claude/ files in rigged repos from being used. Now that gastown's
+// prevented valid .claude/ files in rigged repos from being used. Now that excavation's
 // repo no longer has .claude/ files, sparse checkout is no longer needed.
 //
 // This check runs in both modes:
@@ -91,7 +91,7 @@ func (c *SparseCheckoutCheck) Run(ctx *CheckContext) *CheckResult {
 }
 
 // discoverRigPaths finds all rig directories in the town root.
-// Skips known non-rig directories (mayor, deacon, daemon, .git, etc.).
+// Skips known non-rig directories (overseer, supervisor, daemon, .git, etc.).
 func (c *SparseCheckoutCheck) discoverRigPaths(townRoot string) []string {
 	entries, err := os.ReadDir(townRoot)
 	if err != nil {
@@ -105,7 +105,7 @@ func (c *SparseCheckoutCheck) discoverRigPaths(townRoot string) []string {
 		}
 		name := entry.Name()
 		// Skip known non-rig directories
-		if name == "mayor" || name == "deacon" || name == "daemon" ||
+		if name == "overseer" || name == "supervisor" || name == "daemon" ||
 			name == ".git" || name == "docs" || name[0] == '.' {
 			continue
 		}
@@ -121,7 +121,7 @@ func (c *SparseCheckoutCheck) discoverRigPaths(townRoot string) []string {
 // checkRig checks all worktree repos within a single rig for legacy sparse checkout.
 func (c *SparseCheckoutCheck) checkRig(rigPath string) {
 	repoPaths := []string{
-		filepath.Join(rigPath, "mayor", "rig"),
+		filepath.Join(rigPath, "overseer", "rig"),
 		filepath.Join(rigPath, "refinery", "rig"),
 	}
 
@@ -135,21 +135,21 @@ func (c *SparseCheckoutCheck) checkRig(rigPath string) {
 		}
 	}
 
-	// Add polecat worktrees (nested structure: polecats/<name>/<rigname>/)
-	polecatDir := filepath.Join(rigPath, "polecats")
-	if entries, err := os.ReadDir(polecatDir); err == nil {
+	// Add miner worktrees (nested structure: miners/<name>/<rigname>/)
+	minerDir := filepath.Join(rigPath, "miners")
+	if entries, err := os.ReadDir(minerDir); err == nil {
 		rigName := filepath.Base(rigPath)
 		for _, entry := range entries {
 			if !entry.IsDir() {
 				continue
 			}
-			// The actual worktree is at polecats/<name>/<rigname>/
-			worktreePath := filepath.Join(polecatDir, entry.Name(), rigName)
+			// The actual worktree is at miners/<name>/<rigname>/
+			worktreePath := filepath.Join(minerDir, entry.Name(), rigName)
 			if _, err := os.Stat(worktreePath); err == nil {
 				repoPaths = append(repoPaths, worktreePath)
 			} else {
-				// Fallback: legacy flat layout polecats/<name>/
-				repoPaths = append(repoPaths, filepath.Join(polecatDir, entry.Name()))
+				// Fallback: legacy flat layout miners/<name>/
+				repoPaths = append(repoPaths, filepath.Join(minerDir, entry.Name()))
 			}
 		}
 	}

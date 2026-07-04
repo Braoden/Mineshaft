@@ -19,7 +19,7 @@ severity = "medium"
 
 # Quality Review — Trend Analysis
 
-This plugin runs every 6h during Deacon patrol. It analyzes quality-review result
+This plugin runs every 6h during Supervisor patrol. It analyzes quality-review result
 wisps recorded by the Refinery during merges, computes per-worker trends, and
 alerts on quality breaches.
 
@@ -42,7 +42,7 @@ gt plugin record-run --plugin quality-review --result success \
 ## Step 2: Compute per-worker trends
 
 Parse the wisp labels to extract per-worker data. Each result wisp has labels:
-- `worker:<polecat-name>`
+- `worker:<miner-name>`
 - `rig:<rig-name>`
 - `score:<0.0-1.0>`
 - `recommendation:<approve|request_changes>`
@@ -67,7 +67,7 @@ Apply thresholds to each worker's average score:
 For each worker in BREACH status, send an alert:
 
 ```bash
-gt mail send mayor/ -s "Quality BREACH: <worker>" -m "Worker: <worker>
+gt mail send overseer/ -s "Quality BREACH: <worker>" -m "Worker: <worker>
 Rig: <rig>
 Avg Score: <avg>
 Reviews: <count>
@@ -116,7 +116,7 @@ merges via the `quality-review` formula step. Each merge produces a wisp like:
 
 ```bash
 gt plugin record-run --plugin quality-review-result --result success --rig <rig-name> \
-  --label worker:<polecat-name> --label score:0.85 --label recommendation:approve \
+  --label worker:<miner-name> --label score:0.85 --label recommendation:approve \
   --title "quality-review: Score 0.85, approve" \
   --description "Score: 0.85, approve. Issues: 1 minor (style)" >/dev/null 2>&1 || true
 ```

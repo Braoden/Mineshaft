@@ -10,18 +10,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/rig"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/testutil"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/testutil"
 )
 
 func setupTestRegistry(t *testing.T) {
 	t.Helper()
-	// Use a prefix that won't collide with real gastown sessions.
+	// Use a prefix that won't collide with real excavation sessions.
 	// The "tr" prefix conflicts with actual rigs running on the host
 	// (e.g., tr-refinery, tr-witness), causing tests that assert
-	// "no session exists" to fail in gastown workspaces.
+	// "no session exists" to fail in excavation workspaces.
 	reg := session.NewPrefixRegistry()
 	reg.Register("xut", "testrig")
 	old := session.DefaultRegistry()
@@ -91,15 +91,15 @@ func TestActiveSafetyStopUsesRoutesPrefix(t *testing.T) {
 		t.Skip("mock bd script uses POSIX shell")
 	}
 	townRoot := t.TempDir()
-	for _, dir := range []string{filepath.Join(townRoot, "mayor"), filepath.Join(townRoot, ".beads"), filepath.Join(townRoot, "beads")} {
+	for _, dir := range []string{filepath.Join(townRoot, "overseer"), filepath.Join(townRoot, ".beads"), filepath.Join(townRoot, "beads")} {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			t.Fatalf("mkdir %s: %v", dir, err)
 		}
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "mayor", "town.json"), []byte(`{"name":"test"}`), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"name":"test"}`), 0o644); err != nil {
 		t.Fatalf("write town.json: %v", err)
 	}
-	if err := beads.WriteRoutes(filepath.Join(townRoot, ".beads"), []beads.Route{{Prefix: "bd-", Path: "beads/mayor/rig"}}); err != nil {
+	if err := beads.WriteRoutes(filepath.Join(townRoot, ".beads"), []beads.Route{{Prefix: "bd-", Path: "beads/overseer/rig"}}); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
 
@@ -126,12 +126,12 @@ func TestManager_StartSafetyStoppedDoesNotCreateSession(t *testing.T) {
 	setupTestRegistry(t)
 
 	townRoot := t.TempDir()
-	for _, dir := range []string{filepath.Join(townRoot, "mayor"), filepath.Join(townRoot, ".beads"), filepath.Join(townRoot, "testrig")} {
+	for _, dir := range []string{filepath.Join(townRoot, "overseer"), filepath.Join(townRoot, ".beads"), filepath.Join(townRoot, "testrig")} {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			t.Fatalf("mkdir %s: %v", dir, err)
 		}
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "mayor", "town.json"), []byte(`{"name":"test"}`), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"name":"test"}`), 0o644); err != nil {
 		t.Fatalf("write town.json: %v", err)
 	}
 
@@ -162,12 +162,12 @@ func TestManager_StartSafetyStoppedKillsLeftoverSession(t *testing.T) {
 	setupTestRegistry(t)
 
 	townRoot := t.TempDir()
-	for _, dir := range []string{filepath.Join(townRoot, "mayor"), filepath.Join(townRoot, ".beads"), filepath.Join(townRoot, "testrig")} {
+	for _, dir := range []string{filepath.Join(townRoot, "overseer"), filepath.Join(townRoot, ".beads"), filepath.Join(townRoot, "testrig")} {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			t.Fatalf("mkdir %s: %v", dir, err)
 		}
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "mayor", "town.json"), []byte(`{"name":"test"}`), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"name":"test"}`), 0o644); err != nil {
 		t.Fatalf("write town.json: %v", err)
 	}
 
@@ -409,7 +409,7 @@ func TestManager_RegisterMR_Deprecated(t *testing.T) {
 
 	mr := &MergeRequest{
 		ID:     "gt-mr-test",
-		Branch: "polecat/Test/gt-123",
+		Branch: "miner/Test/gt-123",
 		Worker: "Test",
 		Status: MROpen,
 	}
@@ -476,7 +476,7 @@ func TestManager_PostMerge_ClosesMRAndSourceIssue(t *testing.T) {
 	}
 
 	// Create an MR bead with branch and source_issue fields
-	mrDesc := "branch: polecat/test/gt-xyz\nsource_issue: " + srcIssue.ID + "\nworker: test\ntarget: main"
+	mrDesc := "branch: miner/test/gt-xyz\nsource_issue: " + srcIssue.ID + "\nworker: test\ntarget: main"
 	mrIssue, err := b.Create(beads.CreateOptions{
 		Title:       "MR for feature X",
 		Labels:      []string{"gt:merge-request"},
@@ -502,8 +502,8 @@ func TestManager_PostMerge_ClosesMRAndSourceIssue(t *testing.T) {
 	if result.SourceIssueID != srcIssue.ID {
 		t.Errorf("PostMerge() SourceIssueID = %s, want %s", result.SourceIssueID, srcIssue.ID)
 	}
-	if result.MR.Branch != "polecat/test/gt-xyz" {
-		t.Errorf("PostMerge() MR.Branch = %s, want polecat/test/gt-xyz", result.MR.Branch)
+	if result.MR.Branch != "miner/test/gt-xyz" {
+		t.Errorf("PostMerge() MR.Branch = %s, want miner/test/gt-xyz", result.MR.Branch)
 	}
 }
 
@@ -520,7 +520,7 @@ func TestManager_PostMerge_AlreadyClosedMR(t *testing.T) {
 	mrIssue, err := b.Create(beads.CreateOptions{
 		Title:       "Already merged MR",
 		Labels:      []string{"gt:merge-request"},
-		Description: "branch: polecat/old/gt-old\ntarget: main",
+		Description: "branch: miner/old/gt-old\ntarget: main",
 	})
 	if err != nil {
 		t.Fatalf("create MR issue: %v", err)

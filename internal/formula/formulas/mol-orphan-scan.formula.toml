@@ -2,7 +2,7 @@ description = """
 Find and reassign orphaned work.
 
 Dogs work through molecules (poured from this formula) to scan for orphaned state:
-- Issues marked in_progress with no active polecat
+- Issues marked in_progress with no active miner
 - Molecules attached but worker gone
 - Merge queue entries with dead owners
 - Wisps from terminated sessions
@@ -85,8 +85,8 @@ bd show <issue-id>
 
 **3. Check if assignee session exists:**
 
-Parse the assignee field to extract rig and polecat name:
-- Assignee format: `<rig>/polecats/<name>` (e.g., `nrpk/polecats/rust`)
+Parse the assignee field to extract rig and miner name:
+- Assignee format: `<rig>/miners/<name>` (e.g., `nrpk/miners/rust`)
 - Extract: rig and name from the path
 
 ```bash
@@ -94,7 +94,7 @@ Parse the assignee field to extract rig and polecat name:
 gt session status <rig>/<name> --json | jq -r '.running' | grep -q true && echo ALIVE || echo DEAD
 ```
 
-If the assignee is NOT a polecat (e.g., witness, refinery), use:
+If the assignee is NOT a miner (e.g., witness, refinery), use:
 ```bash
 gt session status <rig>/<role> --json | jq -r '.running' | grep -q true && echo ALIVE || echo DEAD
 ```
@@ -131,7 +131,7 @@ bd mol show <mol-id>
 **3. Check if owner session exists:**
 
 Parse the owner/agent field to extract rig and name:
-- Owner format: `<rig>/polecats/<name>` or `<rig>/<role>`
+- Owner format: `<rig>/miners/<name>` or `<rig>/<role>`
 
 ```bash
 # Check session liveness using gt session status (handles prefix derivation)
@@ -191,7 +191,7 @@ Classify orphans by severity and determine action.
 For issues/molecules with possible work:
 ```bash
 # Check for branch with work
-git branch -a | grep <polecat-or-issue>
+git branch -a | grep <miner-or-issue>
 git log --oneline <branch>
 ```
 
@@ -235,7 +235,7 @@ bd update <issue> --status=open \
 
 **4. ESCALATE orphans:**
 ```bash
-gt mail send mayor/ -s "Orphan requires escalation: <issue>" \
+gt mail send overseer/ -s "Orphan requires escalation: <issue>" \
   -m "Issue <id> orphaned with possible data loss.
 Details: ...
 Recommended action: ..."
@@ -281,16 +281,16 @@ Create summary report of orphan scan and actions.
 {{/each}}
 ```
 
-**2. Send to Deacon (for logs):**
+**2. Send to Supervisor (for logs):**
 ```bash
-gt mail send deacon/ -s "Orphan scan complete: {{total_count}} found" \
+gt mail send supervisor/ -s "Orphan scan complete: {{total_count}} found" \
   -m "{{report}}"
 ```
 
-**3. Send to Mayor (if escalations):**
+**3. Send to Overseer (if escalations):**
 ```bash
 # Only if there were escalations
-gt mail send mayor/ -s "Orphan scan: {{escalate_count}} escalations" \
+gt mail send overseer/ -s "Orphan scan: {{escalate_count}} escalations" \
   -m "{{escalations_section}}"
 ```
 
@@ -303,9 +303,9 @@ needs = ["report-findings"]
 description = """
 Signal work complete and return to available pool.
 
-**1. Signal completion to Deacon:**
+**1. Signal completion to Supervisor:**
 ```bash
-gt mail send deacon/ -s "DOG_DONE $(hostname)" -m "Task: orphan-scan
+gt mail send supervisor/ -s "DOG_DONE $(hostname)" -m "Task: orphan-scan
 Scope: {{scope}}
 Orphans found: {{total_count}}
 Actions taken: {{action_summary}}
@@ -317,7 +317,7 @@ Ready for next assignment."
 **2. Return to kennel:**
 Dog returns to available state in the pool.
 
-**Exit criteria:** Deacon notified, dog ready for next work."""
+**Exit criteria:** Supervisor notified, dog ready for next work."""
 
 [vars]
 [vars.scope]
@@ -341,7 +341,7 @@ description = "Number of orphans escalated (computed during execution)"
 default = ""
 
 [vars.escalations_section]
-description = "Formatted escalations section for Mayor report (computed during execution)"
+description = "Formatted escalations section for Overseer report (computed during execution)"
 default = ""
 
 [vars.id]

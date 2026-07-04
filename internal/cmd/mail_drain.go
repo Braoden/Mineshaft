@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/mail"
-	"github.com/steveyegge/gastown/internal/style"
+	"github.com/steveyegge/excavation/internal/mail"
+	"github.com/steveyegge/excavation/internal/style"
 )
 
 var (
@@ -27,8 +27,8 @@ agent inboxes (especially witness). These are messages that have been
 processed or are no longer actionable.
 
 DRAINABLE MESSAGE TYPES:
-  POLECAT_DONE       Polecat completion notifications
-  POLECAT_STARTED    Polecat startup notifications
+  MINER_DONE       Miner completion notifications
+  MINER_STARTED    Miner startup notifications
   LIFECYCLE:*        Lifecycle events (shutdown, etc.)
   MERGED             Merge confirmations
   MERGE_READY        Merge ready notifications
@@ -44,7 +44,7 @@ Use --max-age to change the threshold, or --all to drain regardless of age.
 
 Examples:
   gt mail drain                              # Drain own inbox (30m default)
-  gt mail drain --identity gastown/witness   # Drain witness inbox
+  gt mail drain --identity excavation/witness   # Drain witness inbox
   gt mail drain --max-age 1h                 # Only drain messages >1h old
   gt mail drain --all                        # Drain all protocol messages
   gt mail drain --dry-run                    # Preview what would be drained`,
@@ -54,7 +54,7 @@ Examples:
 func init() {
 	mailDrainCmd.Flags().StringVar(&mailDrainMaxAge, "max-age", "30m", "Only drain messages older than this duration (e.g., 30m, 1h, 2h)")
 	mailDrainCmd.Flags().BoolVarP(&mailDrainDryRun, "dry-run", "n", false, "Show what would be drained without archiving")
-	mailDrainCmd.Flags().StringVar(&mailDrainIdentity, "identity", "", "Target inbox identity (e.g., gastown/witness)")
+	mailDrainCmd.Flags().StringVar(&mailDrainIdentity, "identity", "", "Target inbox identity (e.g., excavation/witness)")
 	mailDrainCmd.Flags().BoolVar(&mailDrainAll, "all", false, "Drain all protocol messages regardless of age")
 }
 
@@ -62,9 +62,9 @@ func init() {
 // bulk-archive. These are routine notifications that don't require individual
 // attention once the information is stale.
 var drainableSubjects = []string{
-	"CRASHED_POLECAT",
-	"POLECAT_DONE",
-	"POLECAT_STARTED",
+	"CRASHED_MINER",
+	"MINER_DONE",
+	"MINER_STARTED",
 	"LIFECYCLE:",
 	"MERGED",
 	"MERGE_READY",

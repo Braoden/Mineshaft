@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/formula"
+	"github.com/steveyegge/excavation/internal/formula"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -32,16 +32,16 @@ func TestOverlayHealthCheck_HealthyOverlay(t *testing.T) {
 	tmpDir := t.TempDir()
 	setupRigsJSON(t, tmpDir, []string{"testrig"})
 
-	// Create a town-level overlay referencing real step IDs from mol-polecat-work.
+	// Create a town-level overlay referencing real step IDs from mol-miner-work.
 	overlayDir := filepath.Join(tmpDir, "formula-overlays")
 	require.NoError(t, os.MkdirAll(overlayDir, 0o755))
 
 	// Get valid step IDs from the embedded formula.
-	validIDs := getEmbeddedFormulaStepIDs(t, "mol-polecat-work")
+	validIDs := getEmbeddedFormulaStepIDs(t, "mol-miner-work")
 	require.NotEmpty(t, validIDs, "embedded formula must have step IDs")
 
 	content := "[[step-overrides]]\nstep_id = " + quote(validIDs[0]) + "\nmode = \"append\"\ndescription = \"Extra instructions\"\n"
-	require.NoError(t, os.WriteFile(filepath.Join(overlayDir, "mol-polecat-work.toml"), []byte(content), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(overlayDir, "mol-miner-work.toml"), []byte(content), 0o644))
 
 	check := NewOverlayHealthCheck()
 	result := check.Run(&CheckContext{TownRoot: tmpDir})
@@ -62,7 +62,7 @@ step_id = "nonexistent-step-from-old-binary"
 mode = "replace"
 description = "This won't match anything"
 `
-	require.NoError(t, os.WriteFile(filepath.Join(overlayDir, "mol-polecat-work.toml"), []byte(content), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(overlayDir, "mol-miner-work.toml"), []byte(content), 0o644))
 
 	check := NewOverlayHealthCheck()
 	result := check.Run(&CheckContext{TownRoot: tmpDir})
@@ -81,7 +81,7 @@ func TestOverlayHealthCheck_MalformedTOML(t *testing.T) {
 	overlayDir := filepath.Join(tmpDir, "formula-overlays")
 	require.NoError(t, os.MkdirAll(overlayDir, 0o755))
 
-	require.NoError(t, os.WriteFile(filepath.Join(overlayDir, "mol-polecat-work.toml"), []byte("[[invalid"), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(overlayDir, "mol-miner-work.toml"), []byte("[[invalid"), 0o644))
 
 	check := NewOverlayHealthCheck()
 	result := check.Run(&CheckContext{TownRoot: tmpDir})
@@ -102,7 +102,7 @@ func TestOverlayHealthCheck_RigLevel(t *testing.T) {
 step_id = "old-removed-step"
 mode = "skip"
 `
-	require.NoError(t, os.WriteFile(filepath.Join(rigDir, "mol-polecat-work.toml"), []byte(content), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(rigDir, "mol-miner-work.toml"), []byte(content), 0o644))
 
 	check := NewOverlayHealthCheck()
 	result := check.Run(&CheckContext{TownRoot: tmpDir})
@@ -141,13 +141,13 @@ func TestOverlayHealthCheck_Fix_RemovesStaleEntries(t *testing.T) {
 	require.NoError(t, os.MkdirAll(overlayDir, 0o755))
 
 	// Get a valid step ID.
-	validIDs := getEmbeddedFormulaStepIDs(t, "mol-polecat-work")
+	validIDs := getEmbeddedFormulaStepIDs(t, "mol-miner-work")
 	require.NotEmpty(t, validIDs)
 
 	// Create overlay with one valid and one stale override.
 	content := "[[step-overrides]]\nstep_id = " + quote(validIDs[0]) + "\nmode = \"append\"\ndescription = \"Keep this\"\n\n" +
 		"[[step-overrides]]\nstep_id = \"ghost-step\"\nmode = \"skip\"\n"
-	overlayPath := filepath.Join(overlayDir, "mol-polecat-work.toml")
+	overlayPath := filepath.Join(overlayDir, "mol-miner-work.toml")
 	require.NoError(t, os.WriteFile(overlayPath, []byte(content), 0o644))
 
 	check := NewOverlayHealthCheck()
@@ -186,7 +186,7 @@ step_id = "ghost-step-2"
 mode = "replace"
 description = "Also stale"
 `
-	overlayPath := filepath.Join(overlayDir, "mol-polecat-work.toml")
+	overlayPath := filepath.Join(overlayDir, "mol-miner-work.toml")
 	require.NoError(t, os.WriteFile(overlayPath, []byte(content), 0o644))
 
 	check := NewOverlayHealthCheck()
@@ -210,7 +210,7 @@ func TestOverlayHealthCheck_Fix_SkipsMalformed(t *testing.T) {
 	overlayDir := filepath.Join(tmpDir, "formula-overlays")
 	require.NoError(t, os.MkdirAll(overlayDir, 0o755))
 
-	overlayPath := filepath.Join(overlayDir, "mol-polecat-work.toml")
+	overlayPath := filepath.Join(overlayDir, "mol-miner-work.toml")
 	require.NoError(t, os.WriteFile(overlayPath, []byte("[[invalid"), 0o644))
 
 	check := NewOverlayHealthCheck()

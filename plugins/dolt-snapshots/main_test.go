@@ -19,9 +19,9 @@ func TestSanitizeName(t *testing.T) {
 		{"", "hq-cv-123", "hq-cv-123"},
 		{"a]b[c{d}e", "hq-cv-z", "a-b-c-d-e-hq-cv-z"},
 		{
-			"This is an extremely long convoy title that exceeds the maximum slug length limit we set",
+			"This is an extremely long minecart title that exceeds the maximum slug length limit we set",
 			"hq-cv-long",
-			"this-is-an-extremely-long-convoy-title-that-exceed-hq-cv-long",
+			"this-is-an-extremely-long-minecart-title-that-exceed-hq-cv-long",
 		},
 		{"---leading-trailing---", "id", "leading-trailing-id"},
 		{"UPPERCASE TITLE", "hq-cv-up", "uppercase-title-hq-cv-up"},
@@ -58,7 +58,7 @@ func TestSanitizeDBName(t *testing.T) {
 	}{
 		{"hq", "hq"},
 		{"pi_agent_rust", "pi_agent_rust"},
-		{"sf-gastown", "sfgastown"},          // dashes stripped
+		{"sf-excavation", "sfexcavation"},          // dashes stripped
 		{"db'; DROP TABLE--", "dbDROPTABLE"}, // injection attempt sanitized
 		{"normal_db_123", "normal_db_123"},
 		{"", ""},
@@ -90,7 +90,7 @@ func TestIsSystemDB(t *testing.T) {
 		{"doctest_xyz", true},
 		{"hq", false},
 		{"petals", false},
-		{"sfgastown", false},
+		{"sfexcavation", false},
 		{"lora_forge", false},
 		{"node0", false},
 		// Edge cases: names that start with system prefixes but aren't
@@ -115,9 +115,9 @@ func TestLoadRoutes(t *testing.T) {
 
 	content := `{"prefix":"hq-","path":"."}
 {"prefix":"hq-cv-","path":"."}
-{"prefix":"pe-","path":"petals/mayor/rig"}
-{"prefix":"lf-","path":"lora_forge/mayor/rig"}
-{"prefix":"gs-","path":"sfgastown/mayor/rig"}
+{"prefix":"pe-","path":"petals/overseer/rig"}
+{"prefix":"lf-","path":"lora_forge/overseer/rig"}
+{"prefix":"gs-","path":"sfexcavation/overseer/rig"}
 {"prefix":"sc-","path":"sf_config"}
 `
 	if err := os.WriteFile(routesFile, []byte(content), 0644); err != nil {
@@ -141,9 +141,9 @@ func TestLoadRoutes(t *testing.T) {
 		t.Errorf("routes[lf] = %q, want 'lora_forge'", got)
 	}
 
-	// gs → sfgastown
-	if got, ok := routes["gs"]; !ok || got != "sfgastown" {
-		t.Errorf("routes[gs] = %q, want 'sfgastown'", got)
+	// gs → sfexcavation
+	if got, ok := routes["gs"]; !ok || got != "sfexcavation" {
+		t.Errorf("routes[gs] = %q, want 'sfexcavation'", got)
 	}
 
 	// sc → sf_config (no slash in path, whole thing is db name)
@@ -163,9 +163,9 @@ func TestLoadRoutes_MalformedJSON(t *testing.T) {
 	dir := t.TempDir()
 	routesFile := filepath.Join(dir, "routes.jsonl")
 
-	content := `{"prefix":"pe-","path":"petals/mayor/rig"}
+	content := `{"prefix":"pe-","path":"petals/overseer/rig"}
 not json at all
-{"prefix":"lf-","path":"lora_forge/mayor/rig"}
+{"prefix":"lf-","path":"lora_forge/overseer/rig"}
 {"bad json
 `
 	if err := os.WriteFile(routesFile, []byte(content), 0644); err != nil {
@@ -188,9 +188,9 @@ func TestLoadRoutes_EmptyLines(t *testing.T) {
 	routesFile := filepath.Join(dir, "routes.jsonl")
 
 	content := `
-{"prefix":"pe-","path":"petals/mayor/rig"}
+{"prefix":"pe-","path":"petals/overseer/rig"}
 
-{"prefix":"lf-","path":"lora_forge/mayor/rig"}
+{"prefix":"lf-","path":"lora_forge/overseer/rig"}
 
 `
 	if err := os.WriteFile(routesFile, []byte(content), 0644); err != nil {
@@ -209,7 +209,7 @@ func TestLoadRoutes_DuplicatePrefix(t *testing.T) {
 
 	// Last one wins
 	content := `{"prefix":"pe-","path":"petals/old"}
-{"prefix":"pe-","path":"petals/mayor/rig"}
+{"prefix":"pe-","path":"petals/overseer/rig"}
 `
 	if err := os.WriteFile(routesFile, []byte(content), 0644); err != nil {
 		t.Fatal(err)
@@ -226,7 +226,7 @@ func TestResolveDependencyDB(t *testing.T) {
 		"pe": "petals",
 		"lf": "lora_forge",
 		"no": "node0",
-		"gs": "sfgastown",
+		"gs": "sfexcavation",
 	}
 
 	tests := []struct {
@@ -282,8 +282,8 @@ func TestResolveDependencyDB_EmptyRoutes(t *testing.T) {
 	}
 }
 
-func TestConvoyDependencyTargetsQueryUsesTypedTargets(t *testing.T) {
-	query := convoyDependencyTargetsQuery()
+func TestMinecartDependencyTargetsQueryUsesTypedTargets(t *testing.T) {
+	query := minecartDependencyTargetsQuery()
 	if strings.Contains(query, "d.depends_on_id") {
 		t.Fatalf("query should not select legacy physical depends_on_id column:\n%s", query)
 	}
@@ -387,56 +387,56 @@ func TestResolveRoutesFile(t *testing.T) {
 	}
 }
 
-func TestConvoyRow_SnapshotLogic(t *testing.T) {
-	// Test the snapshot decision logic that snapshotConvoys uses
+func TestMinecartRow_SnapshotLogic(t *testing.T) {
+	// Test the snapshot decision logic that snapshotMinecarts uses
 	tests := []struct {
 		name       string
-		convoy     convoyRow
+		minecart     minecartRow
 		wantOpen   bool // should create open/ tag
 		wantStaged bool // should create staged/ tag + branch
 	}{
 		{
-			name:       "new open convoy needs open tag only",
-			convoy:     convoyRow{Status: "open", HasOpenTag: false, HasStagedTag: false},
+			name:       "new open minecart needs open tag only",
+			minecart:     minecartRow{Status: "open", HasOpenTag: false, HasStagedTag: false},
 			wantOpen:   true,
 			wantStaged: false,
 		},
 		{
-			name:       "staged_ready convoy needs both",
-			convoy:     convoyRow{Status: "staged_ready", HasOpenTag: false, HasStagedTag: false},
+			name:       "staged_ready minecart needs both",
+			minecart:     minecartRow{Status: "staged_ready", HasOpenTag: false, HasStagedTag: false},
 			wantOpen:   true,
 			wantStaged: true,
 		},
 		{
-			name:       "closed convoy with both tags needs nothing",
-			convoy:     convoyRow{Status: "closed", HasOpenTag: true, HasStagedTag: true},
+			name:       "closed minecart with both tags needs nothing",
+			minecart:     minecartRow{Status: "closed", HasOpenTag: true, HasStagedTag: true},
 			wantOpen:   false,
 			wantStaged: false,
 		},
 		{
-			name:       "closed convoy missing staged tag",
-			convoy:     convoyRow{Status: "closed", HasOpenTag: true, HasStagedTag: false},
+			name:       "closed minecart missing staged tag",
+			minecart:     minecartRow{Status: "closed", HasOpenTag: true, HasStagedTag: false},
 			wantOpen:   false,
 			wantStaged: true,
 		},
 		{
-			name:       "launched convoy needs staged tag",
-			convoy:     convoyRow{Status: "launched", HasOpenTag: true, HasStagedTag: false},
+			name:       "launched minecart needs staged tag",
+			minecart:     minecartRow{Status: "launched", HasOpenTag: true, HasStagedTag: false},
 			wantOpen:   false,
 			wantStaged: true,
 		},
 		{
-			name:       "open convoy already tagged",
-			convoy:     convoyRow{Status: "open", HasOpenTag: true, HasStagedTag: false},
+			name:       "open minecart already tagged",
+			minecart:     minecartRow{Status: "open", HasOpenTag: true, HasStagedTag: false},
 			wantOpen:   false,
-			wantStaged: false, // open convoys don't get staged tags
+			wantStaged: false, // open minecarts don't get staged tags
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			needOpen := !tt.convoy.HasOpenTag
-			needStaged := !tt.convoy.HasStagedTag && tt.convoy.Status != "open"
+			needOpen := !tt.minecart.HasOpenTag
+			needStaged := !tt.minecart.HasStagedTag && tt.minecart.Status != "open"
 
 			if needOpen != tt.wantOpen {
 				t.Errorf("needOpen = %v, want %v", needOpen, tt.wantOpen)

@@ -32,12 +32,12 @@ For thorough validation with multiple test scenarios:
 **What it does:**
 - ✓ Builds binaries
 - ✓ Starts server and keeps it running
-- ✓ Issues polecat certificate
+- ✓ Issues miner certificate
 - ✓ Tests client connection
 - ✓ Runs multiple `gt` commands:
   - `gt --version`
   - `gt status`
-  - `gt convoy --help`
+  - `gt minecart --help`
 - ✓ Tests rate limiting (25 rapid requests)
 - ✓ Displays server health and logs
 - ✓ Keeps server running for manual testing
@@ -173,12 +173,12 @@ For testing the proxy in a containerized environment:
 
 ```bash
 # Build a test container image
-docker build -f Dockerfile.e2e -t gastown-test:latest .
+docker build -f Dockerfile.e2e -t excavation-test:latest .
 
 # Run tests in container
 docker run --rm \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  gastown-test:latest \
+  excavation-test:latest \
   go test -v ./internal/proxy/...
 ```
 

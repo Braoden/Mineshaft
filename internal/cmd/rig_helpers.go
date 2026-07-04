@@ -6,13 +6,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/rig"
-	"github.com/steveyegge/gastown/internal/wisp"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/excavation/internal/wisp"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // checkRigNotParkedOrDocked checks if a rig is parked or docked and returns
@@ -46,10 +46,10 @@ func checkRigNotParkedOrDocked(rigName string) error {
 func getRig(rigName string) (string, *rig.Rig, error) {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return "", nil, fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return "", nil, fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
-	rigsConfigPath := constants.MayorRigsPath(townRoot)
+	rigsConfigPath := constants.OverseerRigsPath(townRoot)
 	rigsConfig, err := config.LoadRigsConfig(rigsConfigPath)
 	if err != nil {
 		rigsConfig = &config.RigsConfig{Rigs: make(map[string]config.RigEntry)}
@@ -74,7 +74,7 @@ func hasRigBeadLabel(townRoot, rigName, label string) bool {
 		return false
 	}
 
-	beadsPath := filepath.Join(rigPath, "mayor", "rig")
+	beadsPath := filepath.Join(rigPath, "overseer", "rig")
 	if _, err := os.Stat(beadsPath); err != nil {
 		beadsPath = rigPath
 	}
@@ -97,8 +97,8 @@ func hasRigBeadLabel(townRoot, rigName, label string) bool {
 
 // IsRigParkedOrDocked checks if a rig is parked or docked by any mechanism
 // (wisp ephemeral state or persistent bead labels). Returns (blocked, reason).
-// This is the single entry point for all dispatch paths (sling, convoy launch,
-// convoy stage) to check rig availability.
+// This is the single entry point for all dispatch paths (sling, minecart launch,
+// minecart stage) to check rig availability.
 //
 // Parked vs docked asymmetry: parked state is checked in both the wisp layer
 // (ephemeral, set by "gt rig park") and bead labels (persistent fallback for
@@ -121,7 +121,7 @@ func IsRigParkedOrDocked(townRoot, rigName string) (bool, string) {
 		return false, ""
 	}
 
-	beadsPath := filepath.Join(rigPath, "mayor", "rig")
+	beadsPath := filepath.Join(rigPath, "overseer", "rig")
 	if _, err := os.Stat(beadsPath); err != nil {
 		beadsPath = rigPath
 	}
@@ -146,7 +146,7 @@ func IsRigParkedOrDocked(townRoot, rigName string) (bool, string) {
 }
 
 func rigBeadsPrefix(townRoot, rigPath, rigName string) string {
-	rigsConfigPath := constants.MayorRigsPath(townRoot)
+	rigsConfigPath := constants.OverseerRigsPath(townRoot)
 	if rigsConfig, err := config.LoadRigsConfig(rigsConfigPath); err == nil {
 		if entry, ok := rigsConfig.Rigs[rigName]; ok && entry.BeadsConfig != nil && entry.BeadsConfig.Prefix != "" {
 			return entry.BeadsConfig.Prefix
@@ -165,7 +165,7 @@ func rigBeadsPrefix(townRoot, rigPath, rigName string) string {
 // returns all registered rigs. Callers that don't yet have a town root
 // should use getAllRigs, which resolves it from the cwd first.
 func discoverRigsForTownRoot(townRoot string) ([]*rig.Rig, error) {
-	rigsConfig, err := config.LoadRigsConfig(constants.MayorRigsPath(townRoot))
+	rigsConfig, err := config.LoadRigsConfig(constants.OverseerRigsPath(townRoot))
 	if err != nil {
 		rigsConfig = &config.RigsConfig{Rigs: make(map[string]config.RigEntry)}
 	}
@@ -177,8 +177,8 @@ func discoverRigsForTownRoot(townRoot string) ([]*rig.Rig, error) {
 
 // autoInferRig returns the sole registered rig for a given townRoot, or an
 // actionable error when the result is ambiguous. Callers use this when no
-// --rig flag was provided and cwd-based detection found nothing (e.g. Deacon
-// at HQ level on a non-default install where "gastown" rig does not exist).
+// --rig flag was provided and cwd-based detection found nothing (e.g. Supervisor
+// at HQ level on a non-default install where "excavation" rig does not exist).
 func autoInferRig(townRoot string) (name, path string, err error) {
 	rigs, err := discoverRigsForTownRoot(townRoot)
 	if err != nil {
@@ -199,12 +199,12 @@ func autoInferRig(townRoot string) (name, path string, err error) {
 	}
 }
 
-// getAllRigs discovers all rigs in the current Gas Town workspace.
+// getAllRigs discovers all rigs in the current Excavation Site workspace.
 // Returns the list of rigs and any error.
 func getAllRigs() ([]*rig.Rig, error) {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return nil, fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return nil, fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 	return discoverRigsForTownRoot(townRoot)
 }

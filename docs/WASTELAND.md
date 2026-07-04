@@ -1,6 +1,6 @@
 # Getting Started with the Wasteland
 
-The Wasteland is a federated work coordination network linking Gas Towns
+The Wasteland is a federated work coordination network linking Excavation Sites
 through [DoltHub](https://www.dolthub.com). Rigs post work, claim tasks,
 submit completions, and earn portable reputation via multi-dimensional
 stamps — all backed by a shared Dolt database with Git semantics.
@@ -32,11 +32,11 @@ board, claiming your first task, and submitting evidence of completion.
 
 ## Prerequisites
 
-You need a running Gas Town installation and a DoltHub account.
+You need a running Excavation Site installation and a DoltHub account.
 
 | Requirement | Check | Setup |
 |-------------|-------|-------|
-| **Gas Town** | `gt version` | See [INSTALLING.md](INSTALLING.md) |
+| **Excavation Site** | `gt version` | See [INSTALLING.md](INSTALLING.md) |
 | **Dolt** | `dolt version` (>= 2.0.7) | See [dolthub/dolt](https://github.com/dolthub/dolt?tab=readme-ov-file#installation) |
 | **DoltHub account** | — | [Sign up](https://www.dolthub.com/signin) |
 | **DoltHub API token** | — | [Generate token](https://www.dolthub.com/settings/tokens) |
@@ -62,7 +62,7 @@ Before joining the wasteland, ensure your dolt is authenticated:
 dolt login
 ```
 
-From your Gas Town workspace directory:
+From your Excavation Site workspace directory:
 
 ```bash
 cd ~/gt
@@ -83,7 +83,7 @@ This command:
 2. **Clones** the fork locally into your workspace
 3. **Registers** your rig in the shared `rigs` table
 4. **Pushes** the registration to your fork
-5. **Saves** wasteland configuration to `mayor/wasteland.json`
+5. **Saves** wasteland configuration to `overseer/wasteland.json`
 
 On success you'll see:
 
@@ -97,7 +97,7 @@ On success you'll see:
 ```
 
 **Note:** `gt wl leave` is not yet implemented. To switch wastelands,
-manually delete `mayor/wasteland.json` and the local database directory
+manually delete `overseer/wasteland.json` and the local database directory
 it references (the `local_dir` value — typically
 `~/gt/.wasteland/<org>/<db>`).
 
@@ -121,7 +121,7 @@ items and claim them. Items have these fields:
 |-------|-------------|--------|
 | **id** | Unique identifier | `w-<hash>` |
 | **title** | Short description | Free text |
-| **project** | Source project | `gastown`, `beads`, `hop`, etc. |
+| **project** | Source project | `excavation`, `beads`, `hop`, etc. |
 | **type** | Kind of work | `feature`, `bug`, `design`, `rfc`, `docs` |
 | **priority** | Urgency | 0=critical, 1=high, 2=medium, 3=low, 4=backlog |
 | **effort** | Estimated size | `trivial`, `small`, `medium`, `large`, `epic` |
@@ -131,7 +131,7 @@ items and claim them. Items have these fields:
 ### Rigs
 
 In Wasteland context, a **rig** is your participant identity — distinct
-from Gas Town rigs, which are project containers. When you join, your
+from Excavation Site rigs, which are project containers. When you join, your
 DoltHub org name becomes your rig handle. Every claim, completion, and
 stamp is attributed to your rig.
 
@@ -166,7 +166,7 @@ accumulate validated completions and stamps once enforcement is enabled.
 ```bash
 cd ~/gt
 gt wl browse                          # All open items
-gt wl browse --project gastown        # Filter by project
+gt wl browse --project excavation        # Filter by project
 gt wl browse --type bug               # Only bugs
 gt wl browse --type docs              # Only documentation work
 gt wl browse --status claimed         # See what's claimed
@@ -223,7 +223,7 @@ commands — use your normal development workflow:
 
 1. **Fork the relevant repo** (if contributing code)
 2. **Create a feature branch** following the target project's contribution
-   guidelines (Gas Town uses `docs/*`, `fix/*`, `feat/*`, `refactor/*` —
+   guidelines (Excavation Site uses `docs/*`, `fix/*`, `feat/*`, `refactor/*` —
    see [CONTRIBUTING.md](../CONTRIBUTING.md))
 3. **Make your changes**
 4. **Open a pull request** against the upstream repository
@@ -238,7 +238,7 @@ description), submit it:
 
 ```bash
 cd ~/gt
-gt wl done w-abc123 --evidence "https://github.com/steveyegge/gastown/pull/99"
+gt wl done w-abc123 --evidence "https://github.com/steveyegge/excavation/pull/99"
 ```
 
 The item must be in `claimed` status and claimed by **your** rig. If you
@@ -267,7 +267,7 @@ See something that needs doing? Post it to the wanted board:
 cd ~/gt
 gt wl post \
   --title "Add retry logic to federation sync" \
-  --project gastown \
+  --project excavation \
   --type feature \
   --priority 2 \
   --effort medium \
@@ -313,7 +313,7 @@ Here's the end-to-end flow for a first contribution:
 export DOLTHUB_ORG="your-username"
 export DOLTHUB_TOKEN="dhat.v1.your-token"
 
-# 2. Join the wasteland (one-time, from Gas Town workspace)
+# 2. Join the wasteland (one-time, from Excavation Site workspace)
 cd ~/gt
 gt wl join hop/wl-commons
 
@@ -333,7 +333,7 @@ git push -u origin HEAD
 # 6. Open a PR on GitHub
 gh pr create --title "docs: My contribution"
 
-# 7. Submit completion evidence (back in Gas Town workspace)
+# 7. Submit completion evidence (back in Excavation Site workspace)
 cd ~/gt
 gt wl done w-abc123 --evidence "https://github.com/org/repo/pull/123"
 
@@ -384,7 +384,7 @@ dolt remote add upstream https://doltremoteapi.dolthub.com/hop/wl-commons
 rm -rf /tmp/wl-setup
 ```
 
-After the manual setup, create the config file at `~/gt/mayor/wasteland.json`:
+After the manual setup, create the config file at `~/gt/overseer/wasteland.json`:
 
 ```json
 {
@@ -408,9 +408,9 @@ gt wl browse --status claimed         # Try a different status
 gt wl browse --limit 50              # Increase the limit
 ```
 
-### `gt wl claim` says "not in a Gas Town workspace"
+### `gt wl claim` says "not in a Excavation Site workspace"
 
-All `gt wl` commands must be run from within your Gas Town workspace
+All `gt wl` commands must be run from within your Excavation Site workspace
 (typically `~/gt`):
 
 ```bash
@@ -421,7 +421,7 @@ gt wl claim w-abc123
 ### `gt wl sync` fails to pull
 
 Ensure the upstream remote exists in your local fork. Find the clone
-path from `local_dir` in `~/gt/mayor/wasteland.json`, then check:
+path from `local_dir` in `~/gt/overseer/wasteland.json`, then check:
 
 ```bash
 cd /path/from/local_dir            # e.g. ~/gt/.wasteland/hop/wl-commons
@@ -463,7 +463,7 @@ After your first completion:
   is portable across all of them
 
 For the full Wasteland design rationale, see Steve Yegge's
-[Welcome to the Wasteland](https://steve-yegge.medium.com/welcome-to-the-wasteland-a-thousand-gas-towns-a5eb9bc8dc1f).
+[Welcome to the Wasteland](https://steve-yegge.medium.com/welcome-to-the-wasteland-a-thousand-excavation-sites-a5eb9bc8dc1f).
 
-For Gas Town concepts referenced here, see [overview.md](overview.md) and
+For Excavation Site concepts referenced here, see [overview.md](overview.md) and
 [glossary.md](glossary.md).

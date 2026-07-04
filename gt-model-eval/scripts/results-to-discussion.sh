@@ -14,7 +14,7 @@ set -euo pipefail
 RESULTS_FILE="${1:?Usage: $0 results.json [--post] [--repo owner/repo]}"
 POST=false
 COMMENT_NUM=""
-REPO="steveyegge/gastown"
+REPO="steveyegge/excavation"
 CATEGORY="Ideas"
 
 shift || true
@@ -67,7 +67,7 @@ generate_summary() {
 }
 
 # Build per-suite breakdown per provider
-# Groups test descriptions by prefix: "[Class A] Deacon..." -> "class-a-deacon", "Clear zombie..." -> "deacon-zombie" etc.
+# Groups test descriptions by prefix: "[Class A] Supervisor..." -> "class-a-supervisor", "Clear zombie..." -> "supervisor-zombie" etc.
 generate_suite_breakdown() {
   local file="$1"
   jq -r '

@@ -180,7 +180,7 @@ func (p *LocalProvider) Close() error {
 	return nil
 }
 
-func TranslateGastownMessage(from, to, subject, body string) Message {
+func TranslateExcavationMessage(from, to, subject, body string) Message {
 	var content string
 	if subject != "" && body != "" {
 		content = fmt.Sprintf("**Subject:** %s\n\n%s", subject, body)

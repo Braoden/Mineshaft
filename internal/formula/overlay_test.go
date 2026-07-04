@@ -11,7 +11,7 @@ import (
 
 func TestLoadFormulaOverlay_NoFiles(t *testing.T) {
 	tmpDir := t.TempDir()
-	overlay, err := LoadFormulaOverlay("mol-polecat-work", tmpDir, "gastown")
+	overlay, err := LoadFormulaOverlay("mol-miner-work", tmpDir, "excavation")
 	require.NoError(t, err)
 	assert.Nil(t, overlay)
 }
@@ -27,9 +27,9 @@ step_id = "submit-review"
 mode = "replace"
 description = "Custom submission instructions"
 `
-	require.NoError(t, os.WriteFile(filepath.Join(overlayDir, "mol-polecat-work.toml"), []byte(content), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(overlayDir, "mol-miner-work.toml"), []byte(content), 0o644))
 
-	overlay, err := LoadFormulaOverlay("mol-polecat-work", tmpDir, "gastown")
+	overlay, err := LoadFormulaOverlay("mol-miner-work", tmpDir, "excavation")
 	require.NoError(t, err)
 	require.NotNil(t, overlay)
 	require.Len(t, overlay.StepOverrides, 1)
@@ -40,7 +40,7 @@ description = "Custom submission instructions"
 
 func TestLoadFormulaOverlay_RigLevel(t *testing.T) {
 	tmpDir := t.TempDir()
-	rigDir := filepath.Join(tmpDir, "gastown", "formula-overlays")
+	rigDir := filepath.Join(tmpDir, "excavation", "formula-overlays")
 	require.NoError(t, os.MkdirAll(rigDir, 0o755))
 
 	content := `
@@ -49,9 +49,9 @@ step_id = "build"
 mode = "append"
 description = "Also run integration tests"
 `
-	require.NoError(t, os.WriteFile(filepath.Join(rigDir, "mol-polecat-work.toml"), []byte(content), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(rigDir, "mol-miner-work.toml"), []byte(content), 0o644))
 
-	overlay, err := LoadFormulaOverlay("mol-polecat-work", tmpDir, "gastown")
+	overlay, err := LoadFormulaOverlay("mol-miner-work", tmpDir, "excavation")
 	require.NoError(t, err)
 	require.NotNil(t, overlay)
 	require.Len(t, overlay.StepOverrides, 1)
@@ -71,19 +71,19 @@ step_id = "submit-review"
 mode = "replace"
 description = "Town-level override"
 `
-	require.NoError(t, os.WriteFile(filepath.Join(townDir, "mol-polecat-work.toml"), []byte(townContent), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(townDir, "mol-miner-work.toml"), []byte(townContent), 0o644))
 
 	// Create rig-level overlay (should win).
-	rigDir := filepath.Join(tmpDir, "gastown", "formula-overlays")
+	rigDir := filepath.Join(tmpDir, "excavation", "formula-overlays")
 	require.NoError(t, os.MkdirAll(rigDir, 0o755))
 	rigContent := `
 [[step-overrides]]
 step_id = "build"
 mode = "skip"
 `
-	require.NoError(t, os.WriteFile(filepath.Join(rigDir, "mol-polecat-work.toml"), []byte(rigContent), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(rigDir, "mol-miner-work.toml"), []byte(rigContent), 0o644))
 
-	overlay, err := LoadFormulaOverlay("mol-polecat-work", tmpDir, "gastown")
+	overlay, err := LoadFormulaOverlay("mol-miner-work", tmpDir, "excavation")
 	require.NoError(t, err)
 	require.NotNil(t, overlay)
 	// Rig-level wins entirely — only its overrides appear.

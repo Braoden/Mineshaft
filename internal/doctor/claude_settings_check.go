@@ -8,11 +8,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/runtime"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/runtime"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 // gitFileStatus represents the git status of a file.
@@ -35,7 +35,7 @@ type ClaudeSettingsCheck struct {
 
 type staleSettingsInfo struct {
 	path           string        // Full path to settings file
-	agentType      string        // e.g., "witness", "refinery", "deacon", "mayor"
+	agentType      string        // e.g., "witness", "refinery", "supervisor", "overseer"
 	rigName        string        // Rig name (empty for town-level agents)
 	sessionName    string        // tmux session name for cycling
 	missing        []string      // What's missing from the settings
@@ -83,13 +83,13 @@ func (c *ClaudeSettingsCheck) Run(ctx *CheckContext) *CheckResult {
 			// Check git status to determine safe deletion strategy
 			sf.gitStatus = c.getGitFileStatus(sf.path)
 
-			// Skip gitignored files that aren't gastown-generated settings.
-			// Gastown settings (settings.json, settings.local.json) must always
-			// be detected even when gitignored, since gastown itself previously
+			// Skip gitignored files that aren't excavation-generated settings.
+			// Excavation settings (settings.json, settings.local.json) must always
+			// be detected even when gitignored, since excavation itself previously
 			// added the gitignore patterns and stale files must be cleaned up.
 			baseName := filepath.Base(sf.path)
-			isGastownSettings := baseName == "settings.json" || baseName == "settings.local.json"
-			if sf.gitStatus == gitStatusIgnored && !isGastownSettings {
+			isExcavationSettings := baseName == "settings.json" || baseName == "settings.local.json"
+			if sf.gitStatus == gitStatusIgnored && !isExcavationSettings {
 				continue
 			}
 
@@ -166,7 +166,7 @@ func (c *ClaudeSettingsCheck) Run(ctx *CheckContext) *CheckResult {
 }
 
 // findSettingsFiles locates all .claude/settings.json files and identifies their agent type.
-// Settings are now installed in gastown-managed parent directories (crew/, polecats/,
+// Settings are now installed in excavation-managed parent directories (crew/, miners/,
 // witness/, refinery/) and passed via --settings flag. Old settings.local.json files
 // in working directories are detected as stale.
 func (c *ClaudeSettingsCheck) findSettingsFiles(townRoot string) []staleSettingsInfo {
@@ -178,8 +178,8 @@ func (c *ClaudeSettingsCheck) findSettingsFiles(townRoot string) []staleSettings
 	if fileExists(staleTownRootSettings) {
 		files = append(files, staleSettingsInfo{
 			path:          staleTownRootSettings,
-			agentType:     "mayor",
-			sessionName:   "hq-mayor",
+			agentType:     "overseer",
+			sessionName:   "hq-overseer",
 			wrongLocation: true,
 			gitStatus:     c.getGitFileStatus(staleTownRootSettings),
 			missing:       []string{"stale settings.json at town root (should not exist)"},
@@ -190,8 +190,8 @@ func (c *ClaudeSettingsCheck) findSettingsFiles(townRoot string) []staleSettings
 	if fileExists(staleTownRootLocal) {
 		files = append(files, staleSettingsInfo{
 			path:          staleTownRootLocal,
-			agentType:     "mayor",
-			sessionName:   "hq-mayor",
+			agentType:     "overseer",
+			sessionName:   "hq-overseer",
 			wrongLocation: true,
 			gitStatus:     c.getGitFileStatus(staleTownRootLocal),
 			missing:       []string{"stale settings.local.json at town root (should not exist)"},
@@ -199,75 +199,75 @@ func (c *ClaudeSettingsCheck) findSettingsFiles(townRoot string) []staleSettings
 	}
 
 	// Check for STALE CLAUDE.md at town root (~/gt/CLAUDE.md)
-	// This is WRONG if it contains Mayor-specific instructions that would be inherited
+	// This is WRONG if it contains Overseer-specific instructions that would be inherited
 	// by ALL agents via directory traversal. However, a short identity anchor file
 	// (created by priming) that just says "run gt prime" is intentional and safe.
 	staleTownRootCLAUDEmd := filepath.Join(townRoot, "CLAUDE.md")
 	if fileExists(staleTownRootCLAUDEmd) && !isIdentityAnchor(staleTownRootCLAUDEmd) {
 		files = append(files, staleSettingsInfo{
 			path:          staleTownRootCLAUDEmd,
-			agentType:     "mayor",
-			sessionName:   "hq-mayor",
+			agentType:     "overseer",
+			sessionName:   "hq-overseer",
 			wrongLocation: true,
 			gitStatus:     c.getGitFileStatus(staleTownRootCLAUDEmd),
-			missing:       []string{"should be at mayor/CLAUDE.md, not town root"},
+			missing:       []string{"should be at overseer/CLAUDE.md, not town root"},
 		})
 	}
 
-	// Town-level: mayor - check for stale settings.local.json (should be settings.json)
-	mayorStaleLocal := filepath.Join(townRoot, "mayor", ".claude", "settings.local.json")
-	if fileExists(mayorStaleLocal) {
+	// Town-level: overseer - check for stale settings.local.json (should be settings.json)
+	overseerStaleLocal := filepath.Join(townRoot, "overseer", ".claude", "settings.local.json")
+	if fileExists(overseerStaleLocal) {
 		files = append(files, staleSettingsInfo{
-			path:          mayorStaleLocal,
-			agentType:     "mayor",
-			sessionName:   "hq-mayor",
+			path:          overseerStaleLocal,
+			agentType:     "overseer",
+			sessionName:   "hq-overseer",
 			wrongLocation: true,
 			missing:       []string{"stale settings.local.json (should be settings.json)"},
 		})
 	}
 	// Check for correct settings.json
-	mayorSettings := filepath.Join(townRoot, "mayor", ".claude", "settings.json")
-	mayorWorkDir := filepath.Join(townRoot, "mayor")
-	if fileExists(mayorSettings) {
+	overseerSettings := filepath.Join(townRoot, "overseer", ".claude", "settings.json")
+	overseerWorkDir := filepath.Join(townRoot, "overseer")
+	if fileExists(overseerSettings) {
 		files = append(files, staleSettingsInfo{
-			path:        mayorSettings,
-			agentType:   "mayor",
-			sessionName: "hq-mayor",
+			path:        overseerSettings,
+			agentType:   "overseer",
+			sessionName: "hq-overseer",
 		})
-	} else if dirExists(mayorWorkDir) {
+	} else if dirExists(overseerWorkDir) {
 		files = append(files, staleSettingsInfo{
-			path:        mayorSettings,
-			agentType:   "mayor",
-			sessionName: "hq-mayor",
+			path:        overseerSettings,
+			agentType:   "overseer",
+			sessionName: "hq-overseer",
 			missingFile: true,
 		})
 	}
 
-	// Town-level: deacon - check for stale settings.local.json (should be settings.json)
-	deaconStaleLocal := filepath.Join(townRoot, "deacon", ".claude", "settings.local.json")
-	if fileExists(deaconStaleLocal) {
+	// Town-level: supervisor - check for stale settings.local.json (should be settings.json)
+	supervisorStaleLocal := filepath.Join(townRoot, "supervisor", ".claude", "settings.local.json")
+	if fileExists(supervisorStaleLocal) {
 		files = append(files, staleSettingsInfo{
-			path:          deaconStaleLocal,
-			agentType:     "deacon",
-			sessionName:   "hq-deacon",
+			path:          supervisorStaleLocal,
+			agentType:     "supervisor",
+			sessionName:   "hq-supervisor",
 			wrongLocation: true,
 			missing:       []string{"stale settings.local.json (should be settings.json)"},
 		})
 	}
 	// Check for correct settings.json
-	deaconSettings := filepath.Join(townRoot, "deacon", ".claude", "settings.json")
-	deaconWorkDir := filepath.Join(townRoot, "deacon")
-	if fileExists(deaconSettings) {
+	supervisorSettings := filepath.Join(townRoot, "supervisor", ".claude", "settings.json")
+	supervisorWorkDir := filepath.Join(townRoot, "supervisor")
+	if fileExists(supervisorSettings) {
 		files = append(files, staleSettingsInfo{
-			path:        deaconSettings,
-			agentType:   "deacon",
-			sessionName: "hq-deacon",
+			path:        supervisorSettings,
+			agentType:   "supervisor",
+			sessionName: "hq-supervisor",
 		})
-	} else if dirExists(deaconWorkDir) {
+	} else if dirExists(supervisorWorkDir) {
 		files = append(files, staleSettingsInfo{
-			path:        deaconSettings,
-			agentType:   "deacon",
-			sessionName: "hq-deacon",
+			path:        supervisorSettings,
+			agentType:   "supervisor",
+			sessionName: "hq-supervisor",
 			missingFile: true,
 		})
 	}
@@ -287,7 +287,7 @@ func (c *ClaudeSettingsCheck) findSettingsFiles(townRoot string) []staleSettings
 		rigPath := filepath.Join(townRoot, rigName)
 
 		// Skip known non-rig directories
-		if rigName == "mayor" || rigName == "deacon" || rigName == "daemon" ||
+		if rigName == "overseer" || rigName == "supervisor" || rigName == "daemon" ||
 			rigName == ".git" || rigName == "docs" || rigName[0] == '.' {
 			continue
 		}
@@ -452,69 +452,69 @@ func (c *ClaudeSettingsCheck) findSettingsFiles(townRoot string) []staleSettings
 			}
 		}
 
-		// Check for polecat settings
-		polecatsDir := filepath.Join(rigPath, "polecats")
-		if dirExists(polecatsDir) {
-			// CORRECT: polecats/.claude/settings.json (shared parent directory)
-			polecatCorrectSettings := filepath.Join(polecatsDir, ".claude", "settings.json")
-			if fileExists(polecatCorrectSettings) {
+		// Check for miner settings
+		minersDir := filepath.Join(rigPath, "miners")
+		if dirExists(minersDir) {
+			// CORRECT: miners/.claude/settings.json (shared parent directory)
+			minerCorrectSettings := filepath.Join(minersDir, ".claude", "settings.json")
+			if fileExists(minerCorrectSettings) {
 				files = append(files, staleSettingsInfo{
-					path:        polecatCorrectSettings,
-					agentType:   "polecat",
+					path:        minerCorrectSettings,
+					agentType:   "miner",
 					rigName:     rigName,
 				})
 			} else {
 				files = append(files, staleSettingsInfo{
-					path:        polecatCorrectSettings,
-					agentType:   "polecat",
+					path:        minerCorrectSettings,
+					agentType:   "miner",
 					rigName:     rigName,
 					missingFile: true,
 				})
 			}
 			// STALE: old settings.local.json in parent directory
-			polecatParentStaleLocal := filepath.Join(polecatsDir, ".claude", "settings.local.json")
-			if fileExists(polecatParentStaleLocal) {
+			minerParentStaleLocal := filepath.Join(minersDir, ".claude", "settings.local.json")
+			if fileExists(minerParentStaleLocal) {
 				files = append(files, staleSettingsInfo{
-					path:          polecatParentStaleLocal,
-					agentType:     "polecat",
+					path:          minerParentStaleLocal,
+					agentType:     "miner",
 					rigName:       rigName,
 					wrongLocation: true,
-					missing:       []string{"stale settings.local.json in parent (settings now in polecats/.claude/settings.json)"},
+					missing:       []string{"stale settings.local.json in parent (settings now in miners/.claude/settings.json)"},
 				})
 			}
-			// STALE: old settings in individual polecat workdirs
-			polecatEntries, _ := os.ReadDir(polecatsDir)
-			for _, pcEntry := range polecatEntries {
+			// STALE: old settings in individual miner workdirs
+			minerEntries, _ := os.ReadDir(minersDir)
+			for _, pcEntry := range minerEntries {
 				if !pcEntry.IsDir() || pcEntry.Name() == ".claude" {
 					continue
 				}
-				// Intermediate-level (polecats/<name>/) — always Gas Town artifacts
+				// Intermediate-level (miners/<name>/) — always Excavation Site artifacts
 				for _, staleFile := range []string{"settings.json", "settings.local.json"} {
-					stalePath := filepath.Join(polecatsDir, pcEntry.Name(), ".claude", staleFile)
+					stalePath := filepath.Join(minersDir, pcEntry.Name(), ".claude", staleFile)
 					if fileExists(stalePath) {
 						files = append(files, staleSettingsInfo{
 							path:          stalePath,
-							agentType:     "polecat",
+							agentType:     "miner",
 							rigName:       rigName,
-							sessionName:   session.PolecatSessionName(session.PrefixFor(rigName), pcEntry.Name()),
+							sessionName:   session.MinerSessionName(session.PrefixFor(rigName), pcEntry.Name()),
 							wrongLocation: true,
-							missing:       []string{"stale settings in intermediate dir (settings now in polecats/.claude/settings.json)"},
+							missing:       []string{"stale settings in intermediate dir (settings now in miners/.claude/settings.json)"},
 						})
 					}
 				}
-				// Worktree-level (polecats/<name>/<rig>/) — skip if tracked
+				// Worktree-level (miners/<name>/<rig>/) — skip if tracked
 				for _, staleFile := range []string{"settings.json", "settings.local.json"} {
-					stalePath := filepath.Join(polecatsDir, pcEntry.Name(), rigName, ".claude", staleFile)
+					stalePath := filepath.Join(minersDir, pcEntry.Name(), rigName, ".claude", staleFile)
 					if fileExists(stalePath) {
 						gs := c.getGitFileStatus(stalePath)
 						if gs != gitStatusTrackedClean && gs != gitStatusTrackedModified {
 							files = append(files, staleSettingsInfo{
 								path:          stalePath,
-								agentType:     "polecat",
+								agentType:     "miner",
 								rigName:       rigName,
-								sessionName:   session.PolecatSessionName(session.PrefixFor(rigName), pcEntry.Name()),
+								sessionName:   session.MinerSessionName(session.PrefixFor(rigName), pcEntry.Name()),
 								wrongLocation: true,
-								missing:       []string{"stale settings in workdir (settings now in polecats/.claude/settings.json)"},
+								missing:       []string{"stale settings in workdir (settings now in miners/.claude/settings.json)"},
 							})
 						}
 					}
@@ -524,7 +524,7 @@ func (c *ClaudeSettingsCheck) findSettingsFiles(townRoot string) []staleSettings
 
 		// Check for STALE rig-root settings (<rig>/.claude/settings.json).
 		// Legacy pattern predating the per-role architecture. Superseded by
-		// per-role files (witness/.claude/, polecats/.claude/, etc.).
+		// per-role files (witness/.claude/, miners/.claude/, etc.).
 		// Skip if tracked in a customer repo — could be intentional.
 		for _, staleFile := range []string{"settings.json", "settings.local.json"} {
 			rigRootSettings := filepath.Join(rigPath, ".claude", staleFile)
@@ -551,12 +551,12 @@ func (c *ClaudeSettingsCheck) findSettingsFiles(townRoot string) []staleSettings
 // Returns a list of what's missing. Stop-hook expectations are role-specific
 // to match the canonical hook templates in internal/hooks/config.go (#3648):
 //
-//   - polecat → `gt tap polecat-stop-check` (idle-polecat catcher)
+//   - miner → `gt tap miner-stop-check` (idle-miner catcher)
 //   - everyone else → `gt costs record` (autonomous cost accounting)
 //
-// Without this, doctor never converged for polecats: hooks sync wrote
-// polecat-stop-check, doctor demanded costs record, fix deleted the file,
-// the daemon recreated the same polecat-stop-check file, repeat forever.
+// Without this, doctor never converged for miners: hooks sync wrote
+// miner-stop-check, doctor demanded costs record, fix deleted the file,
+// the daemon recreated the same miner-stop-check file, repeat forever.
 func (c *ClaudeSettingsCheck) checkSettings(path, agentType string) []string {
 	var missing []string
 
@@ -606,8 +606,8 @@ func (c *ClaudeSettingsCheck) checkSettings(path, agentType string) []string {
 // DefaultOverrides — when those change, this must change too.
 func expectedStopPattern(agentType string) string {
 	switch agentType {
-	case "polecat", "polecats":
-		return "polecat-stop-check"
+	case "miner", "miners":
+		return "miner-stop-check"
 	default:
 		return "costs record"
 	}
@@ -740,27 +740,27 @@ func (c *ClaudeSettingsCheck) Fix(ctx *CheckContext) error {
 		// Rig-root settings: just delete. Per-role files are authoritative.
 		// There is no correct "rig-root" settings location to recreate at.
 		if sf.agentType == "rig-root" {
-			fmt.Printf("\n  %s Rig-root settings removed. Per-role settings in %s/{witness,polecats,...}/.claude/ are authoritative.\n", style.Warning.Render("⚠"), sf.rigName)
+			fmt.Printf("\n  %s Rig-root settings removed. Per-role settings in %s/{witness,miners,...}/.claude/ are authoritative.\n", style.Warning.Render("⚠"), sf.rigName)
 			continue
 		}
 
-		// Handle town-root files: redirect to mayor/ instead of recreating at root.
+		// Handle town-root files: redirect to overseer/ instead of recreating at root.
 		// Town-root settings pollute ALL agents via directory traversal.
 		// This handles both settings.json and settings.local.json at the town root.
-		if sf.agentType == "mayor" && !strings.Contains(sf.path, "/mayor/") {
-			mayorDir := filepath.Join(ctx.TownRoot, "mayor")
+		if sf.agentType == "overseer" && !strings.Contains(sf.path, "/overseer/") {
+			overseerDir := filepath.Join(ctx.TownRoot, "overseer")
 
 			if strings.HasSuffix(claudeDir, ".claude") {
-				// Town-root .claude/settings{.local}.json → recreate at mayor/.claude/
-				if err := os.MkdirAll(mayorDir, 0755); err == nil {
-					runtimeConfig := config.ResolveRoleAgentConfig("mayor", ctx.TownRoot, mayorDir)
-					_ = runtime.EnsureSettingsForRole(mayorDir, mayorDir, "mayor", runtimeConfig)
+				// Town-root .claude/settings{.local}.json → recreate at overseer/.claude/
+				if err := os.MkdirAll(overseerDir, 0755); err == nil {
+					runtimeConfig := config.ResolveRoleAgentConfig("overseer", ctx.TownRoot, overseerDir)
+					_ = runtime.EnsureSettingsForRole(overseerDir, overseerDir, "overseer", runtimeConfig)
 				}
 			}
 
 			// Town-root files were inherited by ALL agents via directory traversal.
 			// Warn user to restart agents - don't auto-kill sessions as that's too disruptive,
-			// especially since deacon runs gt doctor automatically which would create a loop.
+			// especially since supervisor runs gt doctor automatically which would create a loop.
 			fmt.Printf("\n  %s Town-root settings were moved. Restart agents to pick up new config:\n", style.Warning.Render("⚠"))
 			fmt.Printf("      gt up --restore\n\n")
 			continue
@@ -768,7 +768,7 @@ func (c *ClaudeSettingsCheck) Fix(ctx *CheckContext) error {
 
 		// Recreate settings at the correct location using EnsureSettingsForRole.
 		// For rig roles, compute settingsDir from role+rig path.
-		// For town-level roles (mayor/deacon), settingsDir == workDir.
+		// For town-level roles (overseer/supervisor), settingsDir == workDir.
 		settingsDir := filepath.Dir(claudeDir)
 		workDir := settingsDir
 		rigPath := ""
@@ -791,10 +791,10 @@ func (c *ClaudeSettingsCheck) Fix(ctx *CheckContext) error {
 
 		// Only cycle patrol roles if --restart-sessions was explicitly passed.
 		// This prevents unexpected session restarts during routine --fix operations.
-		// Crew and polecats are spawned on-demand and won't auto-restart anyway.
+		// Crew and miners are spawned on-demand and won't auto-restart anyway.
 		if ctx.RestartSessions {
 			if sf.agentType == "witness" || sf.agentType == "refinery" ||
-				sf.agentType == "deacon" || sf.agentType == "mayor" {
+				sf.agentType == "supervisor" || sf.agentType == "overseer" {
 				running, _ := t.HasSession(sf.sessionName)
 				if running {
 					// Cycle the agent by killing and letting gt up restart it.
@@ -834,14 +834,14 @@ func fileExists(path string) bool {
 	return !info.IsDir()
 }
 
-// isIdentityAnchor checks if a CLAUDE.md file is the Gas Town town-root
+// isIdentityAnchor checks if a CLAUDE.md file is the Excavation Site town-root
 // identity file. This includes both the minimal bootstrap anchor (<20 lines)
 // and the expanded version with operational norms (Dolt awareness,
-// communication hygiene, etc.). Both formats are intentional Gas Town files
+// communication hygiene, etc.). Both formats are intentional Excavation Site files
 // and should NOT be flagged as "wrong location".
 //
-// A Gas Town CLAUDE.md is identified by:
-// - Starting with "# Gas Town" (the standard header)
+// A Excavation Site CLAUDE.md is identified by:
+// - Starting with "# Excavation Site" (the standard header)
 // - Containing "prime" (the recovery instruction)
 func isIdentityAnchor(path string) bool {
 	data, err := os.ReadFile(path)
@@ -849,5 +849,5 @@ func isIdentityAnchor(path string) bool {
 		return false
 	}
 	content := string(data)
-	return strings.HasPrefix(content, "# Gas Town") && strings.Contains(content, "prime")
+	return strings.HasPrefix(content, "# Excavation Site") && strings.Contains(content, "prime")
 }

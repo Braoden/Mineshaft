@@ -82,9 +82,9 @@ func TestLegOutput(t *testing.T) {
 	}
 }
 
-func TestConvoyMeta(t *testing.T) {
-	// Test ConvoyMeta struct
-	meta := ConvoyMeta{
+func TestMinecartMeta(t *testing.T) {
+	// Test MinecartMeta struct
+	meta := MinecartMeta{
 		ID:        "hq-cv-abc",
 		Title:     "Code Review: PR #123",
 		Status:    "open",

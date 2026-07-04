@@ -7,7 +7,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/wisp"
+	"github.com/steveyegge/excavation/internal/wisp"
 )
 
 // Regression test for gt-arz:
@@ -16,12 +16,12 @@ func TestGetPatrolRigs_FiltersNonOperationalRigs(t *testing.T) {
 	townRoot := t.TempDir()
 
 	// Seed known rigs.
-	mayorDir := filepath.Join(townRoot, "mayor")
-	if err := os.MkdirAll(mayorDir, 0o755); err != nil {
-		t.Fatalf("mkdir mayor dir: %v", err)
+	overseerDir := filepath.Join(townRoot, "overseer")
+	if err := os.MkdirAll(overseerDir, 0o755); err != nil {
+		t.Fatalf("mkdir overseer dir: %v", err)
 	}
 	rigsJSON := `{"rigs":{"alpha":{},"beta":{},"gamma":{}}}`
-	if err := os.WriteFile(filepath.Join(mayorDir, "rigs.json"), []byte(rigsJSON), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), []byte(rigsJSON), 0o644); err != nil {
 		t.Fatalf("write rigs.json: %v", err)
 	}
 

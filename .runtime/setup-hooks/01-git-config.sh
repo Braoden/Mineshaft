@@ -1,5 +1,5 @@
 #!/bin/bash
-# Propagate global git identity into polecat worktrees.
+# Propagate global git identity into miner worktrees.
 # Without this, commits may fall back to system defaults and be misattributed.
 set -euo pipefail
 

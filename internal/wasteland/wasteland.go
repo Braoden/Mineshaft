@@ -1,6 +1,6 @@
-// Package wasteland implements the Wasteland federation protocol for Gas Town.
+// Package wasteland implements the Wasteland federation protocol for Excavation Site.
 //
-// The Wasteland is a federation of Gas Towns via DoltHub. Each rig has a
+// The Wasteland is a federation of Excavation Sites via DoltHub. Each rig has a
 // sovereign fork of a shared commons database. Rigs register by writing
 // to the commons' rigs table, and contribute wanted work items and
 // completions through DoltHub's fork/PR/merge primitives.
@@ -20,7 +20,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/util"
+	"github.com/steveyegge/excavation/internal/util"
 )
 
 // ErrNotJoined indicates the rig has not joined a wasteland.
@@ -49,7 +49,7 @@ type Config struct {
 
 // ConfigPath returns the path to the wasteland config file for a town.
 func ConfigPath(townRoot string) string {
-	return filepath.Join(townRoot, "mayor", "wasteland.json")
+	return filepath.Join(townRoot, "overseer", "wasteland.json")
 }
 
 // LoadConfig loads the wasteland configuration from disk.

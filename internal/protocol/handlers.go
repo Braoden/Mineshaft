@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/steveyegge/gastown/internal/mail"
+	"github.com/steveyegge/excavation/internal/mail"
 )
 
 // ErrNoHandler is returned when a message is a recognized protocol message
@@ -76,7 +76,7 @@ type WitnessHandler interface {
 // RefineryHandler defines the interface for Refinery protocol handlers.
 // The Refinery receives messages from Witness about ready branches.
 type RefineryHandler interface {
-	// HandleMergeReady is called when a polecat's work is verified and ready.
+	// HandleMergeReady is called when a miner's work is verified and ready.
 	HandleMergeReady(payload *MergeReadyPayload) error
 }
 

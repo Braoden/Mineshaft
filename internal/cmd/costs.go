@@ -15,12 +15,12 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var (
@@ -46,7 +46,7 @@ var costsCmd = &cobra.Command{
 	Use:     "costs",
 	GroupID: GroupDiag,
 	Short:   "Show costs for running Claude sessions",
-	Long: `Display costs for Claude Code sessions in Gas Town.
+	Long: `Display costs for Claude Code sessions in Excavation Site.
 
 Costs are calculated from Claude Code transcript files in
 $CLAUDE_CONFIG_DIR/projects/ (defaults to ~/.claude/projects/) by summing
@@ -56,14 +56,14 @@ Examples:
   gt costs              # Live costs from running sessions
   gt costs --today      # Today's costs from log file (not yet digested)
   gt costs --week       # This week's costs from digest beads + today's log
-  gt costs --by-role    # Breakdown by role (polecat, witness, etc.)
+  gt costs --by-role    # Breakdown by role (miner, witness, etc.)
   gt costs --by-rig     # Breakdown by rig
   gt costs --json       # Output as JSON
   gt costs -v           # Show debug output for failures
 
 Subcommands:
   gt costs record       # Record session cost to local log file (Stop hook)
-  gt costs digest       # Aggregate log entries into daily digest bead (Deacon patrol)`,
+  gt costs digest       # Aggregate log entries into daily digest bead (Supervisor patrol)`,
 	RunE: runCosts,
 }
 
@@ -83,8 +83,8 @@ Session costs are aggregated daily by 'gt costs digest' into a single
 permanent "Cost Report YYYY-MM-DD" bead for audit purposes.
 
 Examples:
-  gt costs record --session gt-gastown-toast
-  gt costs record --session gt-gastown-toast --work-item gt-abc123`,
+  gt costs record --session gt-excavation-toast
+  gt costs record --session gt-excavation-toast --work-item gt-abc123`,
 	RunE: runCostsRecord,
 }
 
@@ -93,7 +93,7 @@ var costsDigestCmd = &cobra.Command{
 	Short: "Aggregate session cost log entries into a daily digest bead",
 	Long: `Aggregate session cost log entries into a permanent daily digest.
 
-This command is intended to be run by Deacon patrol (daily) or manually.
+This command is intended to be run by Supervisor patrol (daily) or manually.
 It reads entries from ~/.gt/costs.jsonl for a target date, creates a single
 aggregate "Cost Report YYYY-MM-DD" bead, then removes the source entries.
 
@@ -236,7 +236,7 @@ func runLiveCosts() error {
 	var total float64
 
 	for _, sess := range sessions {
-		// Only process Gas Town sessions
+		// Only process Excavation Site sessions
 		if !session.IsKnownSession(sess) {
 			continue
 		}
@@ -406,7 +406,7 @@ func querySessionEvents() []CostEntry {
 	// Discover town root for cwd-based bd discovery
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		// Not in a Gas Town workspace - return empty list
+		// Not in a Excavation Site workspace - return empty list
 		return nil
 	}
 
@@ -414,7 +414,7 @@ func querySessionEvents() []CostEntry {
 	beadsLocations := []string{townRoot}
 
 	// Load rigs to find all rig beads locations
-	rigsConfigPath := filepath.Join(townRoot, constants.DirMayor, constants.FileRigsJSON)
+	rigsConfigPath := filepath.Join(townRoot, constants.DirOverseer, constants.FileRigsJSON)
 	rigsConfig, err := config.LoadRigsConfig(rigsConfigPath)
 	if err == nil && rigsConfig != nil {
 		for rigName := range rigsConfig.Rigs {
@@ -637,23 +637,23 @@ func parseSessionName(sess string) (role, rig, worker string) {
 	}
 
 	switch identity.Role {
-	case session.RoleMayor:
-		return constants.RoleMayor, "", "mayor"
-	case session.RoleDeacon:
-		// Boot is modeled as a deacon dog (Role: deacon, Name: boot).
+	case session.RoleOverseer:
+		return constants.RoleOverseer, "", "overseer"
+	case session.RoleSupervisor:
+		// Boot is modeled as a supervisor dog (Role: supervisor, Name: boot).
 		// Attribute its costs separately so token spend is visible per role.
 		if identity.Name == "boot" {
 			return constants.RoleBoot, "", "boot"
 		}
-		return constants.RoleDeacon, "", "deacon"
+		return constants.RoleSupervisor, "", "supervisor"
 	case session.RoleWitness:
 		return constants.RoleWitness, identity.Rig, ""
 	case session.RoleRefinery:
 		return constants.RoleRefinery, identity.Rig, ""
 	case session.RoleCrew:
 		return constants.RoleCrew, identity.Rig, identity.Name
-	case session.RolePolecat:
-		return constants.RolePolecat, identity.Rig, identity.Name
+	case session.RoleMiner:
+		return constants.RoleMiner, identity.Rig, identity.Name
 	default:
 		return "unknown", identity.Rig, identity.Name
 	}
@@ -841,7 +841,7 @@ func outputCostsJSON(output CostsOutput) error {
 
 func outputCostsHuman(costs []SessionCost, total float64) error {
 	if len(costs) == 0 {
-		fmt.Println(style.Dim.Render("No Gas Town sessions found"))
+		fmt.Println(style.Dim.Render("No Excavation Site sessions found"))
 		return nil
 	}
 
@@ -952,7 +952,7 @@ func runCostsRecord(cmd *cobra.Command, args []string) error {
 		session = detectCurrentTmuxSession()
 	}
 	if session == "" {
-		// Not a Gas Town session (e.g., Claude Code launched outside gt agent system).
+		// Not a Excavation Site session (e.g., Claude Code launched outside gt agent system).
 		// Exit silently — no costs to record.
 		if costsVerbose {
 			fmt.Fprintf(os.Stderr, "[costs] no session context found, skipping costs record\n")
@@ -1043,21 +1043,21 @@ func runCostsRecord(cmd *cobra.Command, args []string) error {
 
 // deriveSessionName derives the tmux session name from GT_* environment variables.
 // Uses session.* helpers for canonical naming. Parses GT_ROLE via parseRoleString
-// so compound forms (e.g. "gastown/witness") resolve to their canonical session names.
+// so compound forms (e.g. "excavation/witness") resolve to their canonical session names.
 func deriveSessionName() string {
 	role := os.Getenv("GT_ROLE")
 	rig := os.Getenv("GT_RIG")
-	polecat := os.Getenv("GT_POLECAT")
+	miner := os.Getenv("GT_MINER")
 	crew := os.Getenv("GT_CREW")
 
 	// Parse GT_ROLE once to handle both bare and compound forms.
 	parsedRole, _, parsedName := parseRoleString(role)
 
-	// Polecat: {prefix}-{polecat}
-	// Gate on GT_ROLE: coordinators may have stale GT_POLECAT from spawning polecats.
-	if polecat != "" && rig != "" {
-		if role == "" || parsedRole == RolePolecat {
-			return session.PolecatSessionName(session.PrefixFor(rig), polecat)
+	// Miner: {prefix}-{miner}
+	// Gate on GT_ROLE: coordinators may have stale GT_MINER from spawning miners.
+	if miner != "" && rig != "" {
+		if role == "" || parsedRole == RoleMiner {
+			return session.MinerSessionName(session.PrefixFor(rig), miner)
 		}
 	}
 
@@ -1069,12 +1069,12 @@ func deriveSessionName() string {
 		return session.CrewSessionName(session.PrefixFor(rig), crew)
 	}
 
-	// Town-level roles (mayor, deacon)
-	if parsedRole == RoleMayor {
-		return session.MayorSessionName()
+	// Town-level roles (overseer, supervisor)
+	if parsedRole == RoleOverseer {
+		return session.OverseerSessionName()
 	}
-	if parsedRole == RoleDeacon {
-		return session.DeaconSessionName()
+	if parsedRole == RoleSupervisor {
+		return session.SupervisorSessionName()
 	}
 
 	// Rig-based roles (witness, refinery): {prefix}-{role}
@@ -1107,8 +1107,8 @@ func detectCurrentTmuxSession() string {
 	}
 
 	session := strings.TrimSpace(string(output))
-	// Only return if it looks like a Gas Town session
-	// Accept both gt- (rig sessions) and hq- (town-level sessions like hq-mayor)
+	// Only return if it looks like a Excavation Site session
+	// Accept both gt- (rig sessions) and hq- (town-level sessions like hq-overseer)
 	if strings.HasPrefix(session, constants.SessionPrefix) || strings.HasPrefix(session, constants.HQSessionPrefix) {
 		return session
 	}

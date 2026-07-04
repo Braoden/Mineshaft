@@ -11,10 +11,10 @@ func TestHandoffBeadTitle(t *testing.T) {
 		role string
 		want string
 	}{
-		{"mayor", "mayor Handoff"},
-		{"deacon", "deacon Handoff"},
-		{"gastown/witness", "gastown/witness Handoff"},
-		{"gastown/crew/joe", "gastown/crew/joe Handoff"},
+		{"overseer", "overseer Handoff"},
+		{"supervisor", "supervisor Handoff"},
+		{"excavation/witness", "excavation/witness Handoff"},
+		{"excavation/crew/joe", "excavation/crew/joe Handoff"},
 		{"", " Handoff"},
 	}
 
@@ -85,9 +85,9 @@ func TestCloseStaleHookedMailBeads(t *testing.T) {
 	t.Run("closes hooked gt:message beads for agent", func(t *testing.T) {
 		store := newMockStorage()
 		b := newTestBeads(store)
-		id := hookedMailBead(store, "gastown/mayor")
+		id := hookedMailBead(store, "excavation/overseer")
 
-		n, err := b.CloseStaleHookedMailBeads("gastown/mayor")
+		n, err := b.CloseStaleHookedMailBeads("excavation/overseer")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -106,12 +106,12 @@ func TestCloseStaleHookedMailBeads(t *testing.T) {
 		store.issues[taskID] = &beadsdk.Issue{
 			ID:       taskID,
 			Status:   beadsdk.Status(StatusHooked),
-			Assignee: "gastown/mayor",
+			Assignee: "excavation/overseer",
 			Labels:   []string{"gt:task"},
 		}
 		store.labels[taskID] = []string{"gt:task"}
 
-		n, err := b.CloseStaleHookedMailBeads("gastown/mayor")
+		n, err := b.CloseStaleHookedMailBeads("excavation/overseer")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -126,7 +126,7 @@ func TestCloseStaleHookedMailBeads(t *testing.T) {
 	t.Run("returns 0 when no hooked mail beads exist", func(t *testing.T) {
 		b := newTestBeads(newMockStorage())
 
-		n, err := b.CloseStaleHookedMailBeads("gastown/mayor")
+		n, err := b.CloseStaleHookedMailBeads("excavation/overseer")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -138,9 +138,9 @@ func TestCloseStaleHookedMailBeads(t *testing.T) {
 	t.Run("does not close mail beads belonging to other agents", func(t *testing.T) {
 		store := newMockStorage()
 		b := newTestBeads(store)
-		id := hookedMailBead(store, "gastown/witness")
+		id := hookedMailBead(store, "excavation/witness")
 
-		n, err := b.CloseStaleHookedMailBeads("gastown/mayor")
+		n, err := b.CloseStaleHookedMailBeads("excavation/overseer")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}

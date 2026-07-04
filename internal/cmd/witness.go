@@ -6,11 +6,11 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/witness"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/witness"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // Witness command flags
@@ -24,21 +24,21 @@ var (
 var witnessCmd = &cobra.Command{
 	Use:     "witness",
 	GroupID: GroupAgents,
-	Short:   "Manage the Witness (per-rig polecat health monitor)",
+	Short:   "Manage the Witness (per-rig miner health monitor)",
 	RunE:    requireSubcommand,
-	Long: `Manage the Witness - the per-rig polecat health monitor.
+	Long: `Manage the Witness - the per-rig miner health monitor.
 
-The Witness patrols a single rig, watching over its polecats:
-  - Detects stalled polecats (crashed or stuck mid-work)
+The Witness patrols a single rig, watching over its miners:
+  - Detects stalled miners (crashed or stuck mid-work)
   - Nudges unresponsive sessions back to life
-  - Cleans up zombie polecats (finished but failed to exit)
-  - Nukes sandboxes when polecats complete via 'gt done'
+  - Cleans up zombie miners (finished but failed to exit)
+  - Nukes sandboxes when miners complete via 'gt done'
 
-The Witness does NOT force session cycles or interrupt working polecats.
-Polecats manage their own sessions (via gt handoff). The Witness handles
+The Witness does NOT force session cycles or interrupt working miners.
+Miners manage their own sessions (via gt handoff). The Witness handles
 failures and edge cases only.
 
-One Witness per rig. The Deacon monitors all Witnesses.
+One Witness per rig. The Supervisor monitors all Witnesses.
 
 Role shortcuts: "witness" in mail/nudge addresses resolves to this rig's Witness.`,
 }
@@ -49,12 +49,12 @@ var witnessStartCmd = &cobra.Command{
 	Short:   "Start the witness",
 	Long: `Start the Witness for a rig.
 
-Launches the monitoring agent which watches for stuck polecats and orphaned
+Launches the monitoring agent which watches for stuck miners and orphaned
 sandboxes, taking action to keep work flowing.
 
-Self-Cleaning Model: Polecats nuke themselves after work. The Witness handles
+Self-Cleaning Model: Miners nuke themselves after work. The Witness handles
 crash recovery (restart with hooked work) and orphan cleanup (nuke abandoned
-sandboxes). There is no "idle" state - polecats either have work or don't exist.
+sandboxes). There is no "idle" state - miners either have work or don't exist.
 
 Examples:
   gt witness start greenplace
@@ -79,7 +79,7 @@ var witnessStatusCmd = &cobra.Command{
 	Short: "Show witness status",
 	Long: `Show the status of a rig's Witness.
 
-Displays running state, monitored polecats, and statistics.`,
+Displays running state, monitored miners, and statistics.`,
 	Args: cobra.ExactArgs(1),
 	RunE: runWitnessStatus,
 }
@@ -225,13 +225,13 @@ type WitnessStatusOutput struct {
 	Running           bool     `json:"running"`
 	RigName           string   `json:"rig_name"`
 	Session           string   `json:"session,omitempty"`
-	MonitoredPolecats []string `json:"monitored_polecats,omitempty"`
+	MonitoredMiners []string `json:"monitored_miners,omitempty"`
 }
 
 func runWitnessStatus(cmd *cobra.Command, args []string) error {
 	rigName := args[0]
 
-	// Get rig for polecat info
+	// Get rig for miner info
 	_, r, err := getRig(rigName)
 	if err != nil {
 		return err
@@ -243,15 +243,15 @@ func runWitnessStatus(cmd *cobra.Command, args []string) error {
 	running, _ := mgr.IsRunning()
 	sessionInfo, _ := mgr.Status() // may be nil if not running
 
-	// Polecats come from rig config, not state file
-	polecats := r.Polecats
+	// Miners come from rig config, not state file
+	miners := r.Miners
 
 	// JSON output
 	if witnessStatusJSON {
 		output := WitnessStatusOutput{
 			Running:           running,
 			RigName:           rigName,
-			MonitoredPolecats: polecats,
+			MonitoredMiners: miners,
 		}
 		if sessionInfo != nil {
 			output.Session = sessionInfo.Name
@@ -273,12 +273,12 @@ func runWitnessStatus(cmd *cobra.Command, args []string) error {
 		fmt.Printf("  State: %s\n", style.Dim.Render("○ stopped"))
 	}
 
-	// Show monitored polecats
-	fmt.Printf("\n  %s\n", style.Bold.Render("Monitored Polecats:"))
-	if len(polecats) == 0 {
+	// Show monitored miners
+	fmt.Printf("\n  %s\n", style.Bold.Render("Monitored Miners:"))
+	if len(miners) == 0 {
 		fmt.Printf("    %s\n", style.Dim.Render("(none)"))
 	} else {
-		for _, p := range polecats {
+		for _, p := range miners {
 			fmt.Printf("    • %s\n", p)
 		}
 	}
@@ -301,7 +301,7 @@ func runWitnessAttach(cmd *cobra.Command, args []string) error {
 	if rigName == "" {
 		townRoot, err := workspace.FindFromCwdOrError()
 		if err != nil {
-			return fmt.Errorf("not in a Gas Town workspace: %w", err)
+			return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 		}
 		rigName, err = inferRigFromCwd(townRoot)
 		if err != nil {

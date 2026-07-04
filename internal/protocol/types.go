@@ -7,7 +7,7 @@
 //   - MERGE_READY: Witness → Refinery (branch ready for merge)
 //   - MERGED: Refinery → Witness (merge succeeded, cleanup ok)
 //   - MERGE_FAILED: Refinery → Witness (merge failed, needs rework) [LEGACY]
-//   - FIX_NEEDED: Refinery → Polecat (merge failed, fix and resubmit)
+//   - FIX_NEEDED: Refinery → Miner (merge failed, fix and resubmit)
 //   - REWORK_REQUEST: Refinery → Witness (rebase needed)
 package protocol
 
@@ -20,39 +20,39 @@ import (
 type MessageType string
 
 const (
-	// TypeMergeReady is sent from Witness to Refinery when a polecat's work
+	// TypeMergeReady is sent from Witness to Refinery when a miner's work
 	// is verified and ready for merge queue processing.
-	// Subject format: "MERGE_READY <polecat-name>"
+	// Subject format: "MERGE_READY <miner-name>"
 	TypeMergeReady MessageType = "MERGE_READY"
 
 	// TypeMerged is sent from Refinery to Witness when a branch has been
 	// successfully merged to the target branch.
-	// Subject format: "MERGED <polecat-name>"
+	// Subject format: "MERGED <miner-name>"
 	TypeMerged MessageType = "MERGED"
 
 	// TypeMergeFailed is sent from Refinery to Witness when a merge attempt
 	// failed (tests, build, or other non-conflict error).
-	// LEGACY: New code should use TypeFixNeeded (sent directly to polecat).
-	// Subject format: "MERGE_FAILED <polecat-name>"
+	// LEGACY: New code should use TypeFixNeeded (sent directly to miner).
+	// Subject format: "MERGE_FAILED <miner-name>"
 	TypeMergeFailed MessageType = "MERGE_FAILED"
 
-	// TypeFixNeeded is sent from Refinery directly to the Polecat when a
-	// merge attempt failed (tests, build, lint, etc.). The polecat reads
+	// TypeFixNeeded is sent from Refinery directly to the Miner when a
+	// merge attempt failed (tests, build, lint, etc.). The miner reads
 	// failure details, fixes the code, and resubmits the MR.
-	// This replaces the old MERGE_FAILED → Witness → Polecat flow.
-	// Subject format: "FIX_NEEDED <polecat-name>"
+	// This replaces the old MERGE_FAILED → Witness → Miner flow.
+	// Subject format: "FIX_NEEDED <miner-name>"
 	TypeFixNeeded MessageType = "FIX_NEEDED"
 
-	// TypeReworkRequest is sent from Refinery to Witness when a polecat's
+	// TypeReworkRequest is sent from Refinery to Witness when a miner's
 	// branch needs rebasing due to conflicts with the target branch.
-	// Subject format: "REWORK_REQUEST <polecat-name>"
+	// Subject format: "REWORK_REQUEST <miner-name>"
 	TypeReworkRequest MessageType = "REWORK_REQUEST"
 
-	// TypeConvoyNeedsFeeding is sent from Refinery to Deacon after a
-	// convoy-eligible merge completes. This triggers immediate convoy
-	// feeding instead of waiting for the next deacon patrol cycle.
-	// Subject format: "CONVOY_NEEDS_FEEDING <convoy-id>"
-	TypeConvoyNeedsFeeding MessageType = "CONVOY_NEEDS_FEEDING"
+	// TypeMinecartNeedsFeeding is sent from Refinery to Supervisor after a
+	// minecart-eligible merge completes. This triggers immediate minecart
+	// feeding instead of waiting for the next supervisor patrol cycle.
+	// Subject format: "MINECART_NEEDS_FEEDING <minecart-id>"
+	TypeMinecartNeedsFeeding MessageType = "MINECART_NEEDS_FEEDING"
 )
 
 // ParseMessageType extracts the protocol message type from a mail subject.
@@ -67,7 +67,7 @@ func ParseMessageType(subject string) MessageType {
 		TypeMergeFailed,
 		TypeFixNeeded,
 		TypeReworkRequest,
-		TypeConvoyNeedsFeeding,
+		TypeMinecartNeedsFeeding,
 	}
 
 	for _, prefix := range prefixes {
@@ -81,18 +81,18 @@ func ParseMessageType(subject string) MessageType {
 }
 
 // MergeReadyPayload contains the data for a MERGE_READY message.
-// Sent by Witness after verifying polecat work is complete.
+// Sent by Witness after verifying miner work is complete.
 type MergeReadyPayload struct {
-	// Branch is the polecat's work branch (e.g., "polecat/Toast/gt-abc").
+	// Branch is the miner's work branch (e.g., "miner/Toast/gt-abc").
 	Branch string `json:"branch"`
 
-	// Issue is the beads issue ID the polecat completed.
+	// Issue is the beads issue ID the miner completed.
 	Issue string `json:"issue"`
 
-	// Polecat is the worker name.
-	Polecat string `json:"polecat"`
+	// Miner is the worker name.
+	Miner string `json:"miner"`
 
-	// Rig is the rig name containing the polecat.
+	// Rig is the rig name containing the miner.
 	Rig string `json:"rig"`
 
 	// Verified contains verification notes.
@@ -111,8 +111,8 @@ type MergedPayload struct {
 	// Issue is the beads issue ID.
 	Issue string `json:"issue"`
 
-	// Polecat is the worker name.
-	Polecat string `json:"polecat"`
+	// Miner is the worker name.
+	Miner string `json:"miner"`
 
 	// Rig is the rig name.
 	Rig string `json:"rig"`
@@ -136,8 +136,8 @@ type MergeFailedPayload struct {
 	// Issue is the beads issue ID.
 	Issue string `json:"issue"`
 
-	// Polecat is the worker name.
-	Polecat string `json:"polecat"`
+	// Miner is the worker name.
+	Miner string `json:"miner"`
 
 	// Rig is the rig name.
 	Rig string `json:"rig"`
@@ -156,8 +156,8 @@ type MergeFailedPayload struct {
 }
 
 // FixNeededPayload contains the data for a FIX_NEEDED message.
-// Sent by Refinery directly to the Polecat when merge fails due to tests,
-// build, lint, or other quality checks. The polecat fixes and resubmits.
+// Sent by Refinery directly to the Miner when merge fails due to tests,
+// build, lint, or other quality checks. The miner fixes and resubmits.
 type FixNeededPayload struct {
 	// Branch is the source branch that failed to merge.
 	Branch string `json:"branch"`
@@ -165,8 +165,8 @@ type FixNeededPayload struct {
 	// Issue is the beads issue ID.
 	Issue string `json:"issue"`
 
-	// Polecat is the worker name.
-	Polecat string `json:"polecat"`
+	// Miner is the worker name.
+	Miner string `json:"miner"`
 
 	// Rig is the rig name.
 	Rig string `json:"rig"`
@@ -191,7 +191,7 @@ type FixNeededPayload struct {
 }
 
 // ReworkRequestPayload contains the data for a REWORK_REQUEST message.
-// Sent by Refinery when a polecat's branch has conflicts requiring rebase.
+// Sent by Refinery when a miner's branch has conflicts requiring rebase.
 type ReworkRequestPayload struct {
 	// Branch is the source branch that needs rebasing.
 	Branch string `json:"branch"`
@@ -199,8 +199,8 @@ type ReworkRequestPayload struct {
 	// Issue is the beads issue ID.
 	Issue string `json:"issue"`
 
-	// Polecat is the worker name.
-	Polecat string `json:"polecat"`
+	// Miner is the worker name.
+	Miner string `json:"miner"`
 
 	// Rig is the rig name.
 	Rig string `json:"rig"`
@@ -218,49 +218,49 @@ type ReworkRequestPayload struct {
 	Instructions string `json:"instructions,omitempty"`
 }
 
-// PolecatDonePayload contains the data from a POLECAT_DONE notification.
+// MinerDonePayload contains the data from a MINER_DONE notification.
 // This is not a formal protocol message (it's a mail convention), but the
 // payload is structured for programmatic parsing by witness handlers.
-type PolecatDonePayload struct {
-	// Polecat is the worker name.
-	Polecat string `json:"polecat"`
+type MinerDonePayload struct {
+	// Miner is the worker name.
+	Miner string `json:"miner"`
 
 	// ExitType is the exit status (COMPLETED, ESCALATED, DEFERRED, PHASE_COMPLETE).
 	ExitType string `json:"exit_type"`
 
-	// Issue is the beads issue ID the polecat worked on.
+	// Issue is the beads issue ID the miner worked on.
 	Issue string `json:"issue,omitempty"`
 
-	// Branch is the polecat's work branch.
+	// Branch is the miner's work branch.
 	Branch string `json:"branch"`
 
-	// MR is the merge-request bead ID (empty for owned+direct convoys).
+	// MR is the merge-request bead ID (empty for owned+direct minecarts).
 	MR string `json:"mr,omitempty"`
 
-	// ConvoyID is the tracking convoy ID (if any).
-	ConvoyID string `json:"convoy_id,omitempty"`
+	// MinecartID is the tracking minecart ID (if any).
+	MinecartID string `json:"minecart_id,omitempty"`
 
-	// ConvoyOwned indicates the convoy has caller-managed lifecycle.
-	ConvoyOwned bool `json:"convoy_owned,omitempty"`
+	// MinecartOwned indicates the minecart has caller-managed lifecycle.
+	MinecartOwned bool `json:"minecart_owned,omitempty"`
 
-	// MergeStrategy is the convoy's merge strategy (direct, mr, local).
+	// MergeStrategy is the minecart's merge strategy (direct, mr, local).
 	MergeStrategy string `json:"merge_strategy,omitempty"`
 
 	// Errors contains any non-fatal errors encountered during gt done.
 	Errors string `json:"errors,omitempty"`
 }
 
-// SkipMergeFlow returns true if this polecat's work should bypass the
-// standard witness/refinery merge pipeline (owned convoy + direct merge).
-func (p *PolecatDonePayload) SkipMergeFlow() bool {
-	return p.ConvoyOwned && p.MergeStrategy == "direct"
+// SkipMergeFlow returns true if this miner's work should bypass the
+// standard witness/refinery merge pipeline (owned minecart + direct merge).
+func (p *MinerDonePayload) SkipMergeFlow() bool {
+	return p.MinecartOwned && p.MergeStrategy == "direct"
 }
 
-// ConvoyNeedsFeedingPayload contains the data for a CONVOY_NEEDS_FEEDING message.
-// Sent by Refinery to Deacon after a convoy-eligible merge completes.
-type ConvoyNeedsFeedingPayload struct {
-	// ConvoyID is the convoy that may have newly-ready issues.
-	ConvoyID string `json:"convoy_id"`
+// MinecartNeedsFeedingPayload contains the data for a MINECART_NEEDS_FEEDING message.
+// Sent by Refinery to Supervisor after a minecart-eligible merge completes.
+type MinecartNeedsFeedingPayload struct {
+	// MinecartID is the minecart that may have newly-ready issues.
+	MinecartID string `json:"minecart_id"`
 
 	// SourceIssue is the issue that was just merged and closed.
 	SourceIssue string `json:"source_issue"`
@@ -277,9 +277,9 @@ func IsProtocolMessage(subject string) bool {
 	return ParseMessageType(subject) != ""
 }
 
-// ExtractPolecat extracts the polecat name from a protocol message subject.
-// Subject format: "TYPE <polecat-name>"
-func ExtractPolecat(subject string) string {
+// ExtractMiner extracts the miner name from a protocol message subject.
+// Subject format: "TYPE <miner-name>"
+func ExtractMiner(subject string) string {
 	subject = strings.TrimSpace(subject)
 	parts := strings.SplitN(subject, " ", 2)
 	if len(parts) < 2 {

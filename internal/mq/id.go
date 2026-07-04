@@ -12,11 +12,11 @@ import (
 // GenerateMRID generates a merge request ID following the convention: <prefix>-mr-<hash>
 //
 // The hash is derived from the branch name + current timestamp + random bytes to ensure uniqueness.
-// Example: gt-mr-abc1234567 for a gastown merge request.
+// Example: gt-mr-abc1234567 for a excavation merge request.
 //
 // Parameters:
-//   - prefix: The project prefix (e.g., "gt" for gastown)
-//   - branch: The source branch name (e.g., "polecat/Nux/gt-xyz")
+//   - prefix: The project prefix (e.g., "gt" for excavation)
+//   - branch: The source branch name (e.g., "miner/Nux/gt-xyz")
 //
 // Returns a string in the format "<prefix>-mr-<10-char-hash>"
 func GenerateMRID(prefix, branch string) string {
@@ -32,8 +32,8 @@ func GenerateMRID(prefix, branch string) string {
 // Note: Without randomness, two calls with identical inputs will produce the same ID.
 //
 // Parameters:
-//   - prefix: The project prefix (e.g., "gt" for gastown, "bd" for beads)
-//   - branch: The source branch name (e.g., "polecat/Nux/gt-xyz")
+//   - prefix: The project prefix (e.g., "gt" for excavation, "bd" for beads)
+//   - branch: The source branch name (e.g., "miner/Nux/gt-xyz")
 //   - timestamp: The time to use for ID generation instead of time.Now()
 //
 // Returns a string in the format "<prefix>-mr-<10-char-hash>"

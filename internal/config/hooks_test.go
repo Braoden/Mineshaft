@@ -1,6 +1,6 @@
 // Test Hook Configuration Validation
 //
-// These tests ensure Claude Code hook configurations are correct across Gas Town.
+// These tests ensure Claude Code hook configurations are correct across Excavation Site.
 // Specifically, they validate that:
 // - All SessionStart hooks with `gt prime` include the `--hook` flag
 // - The registry.toml includes all required roles for session-prime
@@ -50,8 +50,8 @@ type RegistryHook struct {
 	Enabled     bool     `toml:"enabled"`
 }
 
-// findTownRoot walks up from cwd to find the Gas Town root.
-// We look for hooks/registry.toml as the unique marker (mayor/ exists at multiple levels).
+// findTownRoot walks up from cwd to find the Excavation Site root.
+// We look for hooks/registry.toml as the unique marker (overseer/ exists at multiple levels).
 func findTownRoot() (string, error) {
 	dir, err := os.Getwd()
 	if err != nil {
@@ -79,7 +79,7 @@ func findTownRoot() (string, error) {
 func TestSessionStartHooksHaveHookFlag(t *testing.T) {
 	townRoot, err := findTownRoot()
 	if err != nil {
-		t.Skip("Not running inside Gas Town directory structure")
+		t.Skip("Not running inside Excavation Site directory structure")
 	}
 
 	var settingsFiles []string
@@ -146,7 +146,7 @@ func TestSessionStartHooksHaveHookFlag(t *testing.T) {
 func TestRegistrySessionPrimeIncludesAllRoles(t *testing.T) {
 	townRoot, err := findTownRoot()
 	if err != nil {
-		t.Skip("Not running inside Gas Town directory structure")
+		t.Skip("Not running inside Excavation Site directory structure")
 	}
 
 	registryPath := filepath.Join(townRoot, "hooks", "registry.toml")
@@ -166,7 +166,7 @@ func TestRegistrySessionPrimeIncludesAllRoles(t *testing.T) {
 	}
 
 	// All roles that should be able to use seance
-	requiredRoles := []string{"crew", "polecat", "witness", "refinery", "mayor", "deacon"}
+	requiredRoles := []string{"crew", "miner", "witness", "refinery", "overseer", "supervisor"}
 
 	roleSet := make(map[string]bool)
 	for _, role := range sessionPrime.Roles {
@@ -226,7 +226,7 @@ var knownAgentPatterns = []agentSettingsPattern{
 	{".claude", "settings.json", "json"},
 	{".gemini", "settings.json", "json"},
 	// copilot uses .copilot/copilot-instructions.md (markdown, not JSON hooks)
-	// opencode uses .opencode/plugin/gastown.js (JS, not JSON hooks)
+	// opencode uses .opencode/plugin/excavation.js (JS, not JSON hooks)
 }
 
 // TestAllAgentSessionStartHooksHaveHookFlag validates that across all agent
@@ -236,7 +236,7 @@ var knownAgentPatterns = []agentSettingsPattern{
 func TestAllAgentSessionStartHooksHaveHookFlag(t *testing.T) {
 	townRoot, err := findTownRoot()
 	if err != nil {
-		t.Skip("Not running inside Gas Town directory structure")
+		t.Skip("Not running inside Excavation Site directory structure")
 	}
 
 	var failures []string

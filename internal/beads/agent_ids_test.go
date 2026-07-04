@@ -5,21 +5,21 @@ import (
 	"testing"
 )
 
-// TestMayorBeadIDTown tests the town-level Mayor bead ID.
-func TestMayorBeadIDTown(t *testing.T) {
-	got := MayorBeadIDTown()
-	want := "hq-mayor"
+// TestOverseerBeadIDTown tests the town-level Overseer bead ID.
+func TestOverseerBeadIDTown(t *testing.T) {
+	got := OverseerBeadIDTown()
+	want := "hq-overseer"
 	if got != want {
-		t.Errorf("MayorBeadIDTown() = %q, want %q", got, want)
+		t.Errorf("OverseerBeadIDTown() = %q, want %q", got, want)
 	}
 }
 
-// TestDeaconBeadIDTown tests the town-level Deacon bead ID.
-func TestDeaconBeadIDTown(t *testing.T) {
-	got := DeaconBeadIDTown()
-	want := "hq-deacon"
+// TestSupervisorBeadIDTown tests the town-level Supervisor bead ID.
+func TestSupervisorBeadIDTown(t *testing.T) {
+	got := SupervisorBeadIDTown()
+	want := "hq-supervisor"
 	if got != want {
-		t.Errorf("DeaconBeadIDTown() = %q, want %q", got, want)
+		t.Errorf("SupervisorBeadIDTown() = %q, want %q", got, want)
 	}
 }
 
@@ -55,15 +55,15 @@ func TestAgentBeadIDWithPrefix(t *testing.T) {
 		want   string
 	}{
 		// Normal cases (prefix != rig)
-		{"town-level mayor", "gt", "", "mayor", "", "gt-mayor"},
-		{"rig witness", "gt", "gastown", "witness", "", "gt-gastown-witness"},
-		{"rig polecat", "gt", "gastown", "polecat", "nux", "gt-gastown-polecat-nux"},
+		{"town-level overseer", "gt", "", "overseer", "", "gt-overseer"},
+		{"rig witness", "gt", "excavation", "witness", "", "gt-excavation-witness"},
+		{"rig miner", "gt", "excavation", "miner", "nux", "gt-excavation-miner-nux"},
 		{"rig crew", "bd", "beads", "crew", "dave", "bd-beads-crew-dave"},
 
 		// Collapsed cases (prefix == rig) — should NOT stutter
 		{"dedup witness", "ff", "ff", "witness", "", "ff-witness"},
 		{"dedup refinery", "ff", "ff", "refinery", "", "ff-refinery"},
-		{"dedup polecat", "ff", "ff", "polecat", "nux", "ff-polecat-nux"},
+		{"dedup miner", "ff", "ff", "miner", "nux", "ff-miner-nux"},
 		{"dedup crew", "ff", "ff", "crew", "dave", "ff-crew-dave"},
 		{"dedup bd-beads", "bd", "bd", "witness", "", "bd-witness"},
 	}
@@ -88,69 +88,69 @@ func TestValidateAgentID(t *testing.T) {
 		errorContains string
 	}{
 		// Town-level agents (no rig)
-		{"valid mayor", "gt-mayor", false, ""},
-		{"valid deacon", "gt-deacon", false, ""},
+		{"valid overseer", "gt-overseer", false, ""},
+		{"valid supervisor", "gt-supervisor", false, ""},
 
 		// Town-level named agents (dogs)
 		{"valid dog", "gt-dog-alpha", false, ""},
 		{"valid dog with hyphen", "gt-dog-war-boy", false, ""},
 
 		// Per-rig agents (canonical format: gt-<rig>-<role>)
-		{"valid witness gastown", "gt-gastown-witness", false, ""},
+		{"valid witness excavation", "gt-excavation-witness", false, ""},
 		{"valid refinery beads", "gt-beads-refinery", false, ""},
 
 		// Named agents (canonical format: gt-<rig>-<role>-<name>)
-		{"valid polecat", "gt-gastown-polecat-nux", false, ""},
+		{"valid miner", "gt-excavation-miner-nux", false, ""},
 		{"valid crew", "gt-beads-crew-dave", false, ""},
-		{"valid polecat with complex name", "gt-gastown-polecat-war-boy-1", false, ""},
+		{"valid miner with complex name", "gt-excavation-miner-war-boy-1", false, ""},
 
 		// Valid: alternative prefixes (beads uses bd-)
-		{"valid bd-mayor", "bd-mayor", false, ""},
-		{"valid bd-beads-polecat-pearl", "bd-beads-polecat-pearl", false, ""},
+		{"valid bd-overseer", "bd-overseer", false, ""},
+		{"valid bd-beads-miner-pearl", "bd-beads-miner-pearl", false, ""},
 		{"valid bd-beads-witness", "bd-beads-witness", false, ""},
 
 		// Valid: hyphenated rig names
 		{"hyphenated rig witness", "ob-my-project-witness", false, ""},
 		{"hyphenated rig refinery", "gt-foo-bar-refinery", false, ""},
 		{"hyphenated rig crew", "bd-my-cool-project-crew-fang", false, ""},
-		{"hyphenated rig polecat", "gt-some-long-rig-name-polecat-nux", false, ""},
-		{"hyphenated rig and name", "gt-my-rig-polecat-war-boy", false, ""},
+		{"hyphenated rig miner", "gt-some-long-rig-name-miner-nux", false, ""},
+		{"hyphenated rig and name", "gt-my-rig-miner-war-boy", false, ""},
 		{"multi-hyphen rig crew", "ob-a-b-c-d-crew-dave", false, ""},
 
 		// Invalid: no prefix (missing hyphen)
-		{"no prefix", "mayor", true, "must have a prefix followed by '-'"},
+		{"no prefix", "overseer", true, "must have a prefix followed by '-'"},
 
 		// Invalid: empty
 		{"empty id", "", true, "agent ID is required"},
 
 		// Invalid: unknown role in position 2
-		{"unknown role", "gt-gastown-admin", true, "invalid agent format"},
+		{"unknown role", "gt-excavation-admin", true, "invalid agent format"},
 
 		// Invalid: town-level with rig (put role first)
-		{"mayor with rig suffix", "gt-gastown-mayor", true, "cannot have rig/name suffixes"},
-		{"deacon with rig suffix", "gt-beads-deacon", true, "cannot have rig/name suffixes"},
+		{"overseer with rig suffix", "gt-excavation-overseer", true, "cannot have rig/name suffixes"},
+		{"supervisor with rig suffix", "gt-beads-supervisor", true, "cannot have rig/name suffixes"},
 
 		// Collapsed form: rig-level role without rig (prefix == rig)
 		{"collapsed witness", "gt-witness", false, ""},
 		{"collapsed refinery", "gt-refinery", false, ""},
-		{"collapsed polecat", "ff-polecat-nux", false, ""},
+		{"collapsed miner", "ff-miner-nux", false, ""},
 		{"collapsed crew", "ff-crew-dave", false, ""},
 
 		// Invalid: named agent without name
 		{"crew no name", "gt-beads-crew", true, "requires name"},
-		{"polecat no name", "gt-gastown-polecat", true, "requires name"},
+		{"miner no name", "gt-excavation-miner", true, "requires name"},
 		{"dog no name", "gt-dog", true, "requires name"},
 
 		// Valid: worker name collides with role keyword
-		{"polecat named witness", "gt-gastown-polecat-witness", false, ""},
-		{"polecat named refinery", "gt-gastown-polecat-refinery", false, ""},
-		{"crew named witness", "gt-gastown-crew-witness", false, ""},
-		{"crew named refinery", "gt-gastown-crew-refinery", false, ""},
-		{"polecat named crew", "gt-gastown-polecat-crew", false, ""},
-		{"crew named polecat", "gt-gastown-crew-polecat", false, ""},
+		{"miner named witness", "gt-excavation-miner-witness", false, ""},
+		{"miner named refinery", "gt-excavation-miner-refinery", false, ""},
+		{"crew named witness", "gt-excavation-crew-witness", false, ""},
+		{"crew named refinery", "gt-excavation-crew-refinery", false, ""},
+		{"miner named crew", "gt-excavation-miner-crew", false, ""},
+		{"crew named miner", "gt-excavation-crew-miner", false, ""},
 
 		// Invalid: witness/refinery with extra parts (no named role to the left)
-		{"witness with name", "gt-gastown-witness-extra", true, "cannot have name suffix"},
+		{"witness with name", "gt-excavation-witness-extra", true, "cannot have name suffix"},
 		{"refinery with name", "gt-beads-refinery-extra", true, "cannot have name suffix"},
 
 		// Invalid: empty components
@@ -181,26 +181,26 @@ func TestExtractAgentPrefix(t *testing.T) {
 		wantPrefix string
 	}{
 		// Town-level agents
-		{"mayor", "gt-mayor", "gt"},
-		{"deacon", "gt-deacon", "gt"},
-		{"bd mayor", "bd-mayor", "bd"},
+		{"overseer", "gt-overseer", "gt"},
+		{"supervisor", "gt-supervisor", "gt"},
+		{"bd overseer", "bd-overseer", "bd"},
 
 		// Town-level named (dogs)
 		{"dog", "gt-dog-alpha", "gt"},
 		{"dog hyphen name", "gt-dog-war-boy", "gt"},
 
 		// Per-rig agents
-		{"witness", "gt-gastown-witness", "gt"},
+		{"witness", "gt-excavation-witness", "gt"},
 		{"refinery", "bd-beads-refinery", "bd"},
 
 		// Named agents - the bug case
-		{"polecat 3-char name", "nx-nexus-polecat-nux", "nx"},
-		{"polecat regular", "gt-gastown-polecat-phoenix", "gt"},
+		{"miner 3-char name", "nx-nexus-miner-nux", "nx"},
+		{"miner regular", "gt-excavation-miner-phoenix", "gt"},
 		{"crew", "gt-beads-crew-dave", "gt"},
 
 		// Hyphenated rig names
 		{"hyphenated rig", "gt-my-project-witness", "gt"},
-		{"multi-hyphen rig polecat", "bd-my-cool-app-polecat-bob", "bd"},
+		{"multi-hyphen rig miner", "bd-my-cool-app-miner-bob", "bd"},
 
 		// Edge cases
 		{"no hyphen", "nohyphen", ""},
@@ -229,14 +229,14 @@ func TestAgentBeadIDRoundTrip(t *testing.T) {
 		wname  string
 	}{
 		// Normal cases
-		{"normal witness", "gt", "gastown", "witness", ""},
-		{"normal polecat", "gt", "gastown", "polecat", "nux"},
+		{"normal witness", "gt", "excavation", "witness", ""},
+		{"normal miner", "gt", "excavation", "miner", "nux"},
 		{"normal crew", "bd", "beads", "crew", "dave"},
 
 		// Collapsed cases (prefix == rig)
 		{"collapsed witness", "ff", "ff", "witness", ""},
 		{"collapsed refinery", "ff", "ff", "refinery", ""},
-		{"collapsed polecat", "ff", "ff", "polecat", "nux"},
+		{"collapsed miner", "ff", "ff", "miner", "nux"},
 		{"collapsed crew", "ff", "ff", "crew", "dave"},
 	}
 

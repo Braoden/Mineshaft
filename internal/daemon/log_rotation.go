@@ -140,10 +140,10 @@ func collectDoltLogFiles(daemonDir, townRoot string) []string {
 		if _, err := os.Stat(rigLog); err == nil {
 			logFiles = append(logFiles, rigLog)
 		}
-		// Also check mayor/rig/.beads path
-		mayorRigLog := filepath.Join(townRoot, entry.Name(), "rig", ".beads", "dolt-server.log")
-		if _, err := os.Stat(mayorRigLog); err == nil {
-			logFiles = append(logFiles, mayorRigLog)
+		// Also check overseer/rig/.beads path
+		overseerRigLog := filepath.Join(townRoot, entry.Name(), "rig", ".beads", "dolt-server.log")
+		if _, err := os.Stat(overseerRigLog); err == nil {
+			logFiles = append(logFiles, overseerRigLog)
 		}
 	}
 

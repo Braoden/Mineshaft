@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/version"
+	"github.com/steveyegge/excavation/internal/version"
 )
 
 // TestOutputStaleText exercises the pure text renderer for `gt stale`,

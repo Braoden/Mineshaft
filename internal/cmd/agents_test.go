@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 func TestAgentsCmd_DefaultRunE(t *testing.T) {
@@ -71,7 +71,7 @@ func TestAgentsListCmd_StillRegistered(t *testing.T) {
 }
 
 func TestAgentsCmd_ShortDescription(t *testing.T) {
-	if agentsCmd.Short == "Switch between Gas Town agent sessions" {
+	if agentsCmd.Short == "Switch between Excavation Site agent sessions" {
 		t.Error("agentsCmd.Short still describes popup menu behavior; should describe listing")
 	}
 }
@@ -83,14 +83,14 @@ func TestCategorizeSession_AllTypes(t *testing.T) {
 		input    string
 		wantType AgentType
 	}{
-		{"mayor", "hq-mayor", AgentMayor},
-		{"deacon", "hq-deacon", AgentDeacon},
+		{"overseer", "hq-overseer", AgentOverseer},
+		{"supervisor", "hq-supervisor", AgentSupervisor},
 		// Rig-level sessions require a registered prefix. Use "gt" which is
 		// commonly registered in the default PrefixRegistry.
 		{"witness", "gt-witness", AgentWitness},
 		{"refinery", "gt-refinery", AgentRefinery},
 		{"crew", "gt-crew-max", AgentCrew},
-		{"polecat", "gt-furiosa", AgentPolecat},
+		{"miner", "gt-furiosa", AgentMiner},
 	}
 
 	for _, tt := range tests {
@@ -111,7 +111,7 @@ func TestCategorizeSession_InvalidName(t *testing.T) {
 		name  string
 		input string
 	}{
-		{"random string", "not-a-gastown-session"},
+		{"random string", "not-a-excavation-session"},
 		{"bare word", "foobar"},
 	}
 
@@ -125,10 +125,10 @@ func TestCategorizeSession_InvalidName(t *testing.T) {
 	}
 }
 
-func TestCategorizeSession_Overseer(t *testing.T) {
-	got := categorizeSession("hq-overseer")
+func TestCategorizeSession_Boss(t *testing.T) {
+	got := categorizeSession("hq-boss")
 	if got != nil {
-		t.Errorf("categorizeSession(%q) = %+v, want nil (overseer is not a display agent)", "hq-overseer", got)
+		t.Errorf("categorizeSession(%q) = %+v, want nil (boss is not a display agent)", "hq-boss", got)
 	}
 }
 
@@ -178,12 +178,12 @@ func TestDisplayLabel_AllTypes(t *testing.T) {
 		agent       AgentSession
 		wantContain string
 	}{
-		{"mayor", AgentSession{Name: "hq-mayor", Type: AgentMayor}, "Mayor"},
-		{"deacon", AgentSession{Name: "hq-deacon", Type: AgentDeacon}, "Deacon"},
-		{"witness", AgentSession{Name: "gt-witness", Type: AgentWitness, Rig: "gastown"}, "gastown/witness"},
-		{"refinery", AgentSession{Name: "gt-refinery", Type: AgentRefinery, Rig: "gastown"}, "gastown/refinery"},
-		{"crew", AgentSession{Name: "gt-crew-max", Type: AgentCrew, Rig: "gastown", AgentName: "max"}, "crew/max"},
-		{"polecat", AgentSession{Name: "gt-furiosa", Type: AgentPolecat, Rig: "gastown", AgentName: "furiosa"}, "furiosa"},
+		{"overseer", AgentSession{Name: "hq-overseer", Type: AgentOverseer}, "Overseer"},
+		{"supervisor", AgentSession{Name: "hq-supervisor", Type: AgentSupervisor}, "Supervisor"},
+		{"witness", AgentSession{Name: "gt-witness", Type: AgentWitness, Rig: "excavation"}, "excavation/witness"},
+		{"refinery", AgentSession{Name: "gt-refinery", Type: AgentRefinery, Rig: "excavation"}, "excavation/refinery"},
+		{"crew", AgentSession{Name: "gt-crew-max", Type: AgentCrew, Rig: "excavation", AgentName: "max"}, "crew/max"},
+		{"miner", AgentSession{Name: "gt-furiosa", Type: AgentMiner, Rig: "excavation", AgentName: "furiosa"}, "furiosa"},
 	}
 
 	for _, tt := range tests {
@@ -223,51 +223,51 @@ func TestFilterAndSortSessions_AllFiltered(t *testing.T) {
 	}
 	got := filterAndSortSessions(input, true)
 	if len(got) != 0 {
-		t.Errorf("filterAndSortSessions(non-gastown names) returned %d agents, want 0", len(got))
+		t.Errorf("filterAndSortSessions(non-excavation names) returned %d agents, want 0", len(got))
 	}
 }
 
-func TestFilterAndSortSessions_PolecatFiltering(t *testing.T) {
+func TestFilterAndSortSessions_MinerFiltering(t *testing.T) {
 	setupCmdTestRegistry(t)
 	input := []string{
-		"hq-mayor",
-		"gt-furiosa", // polecat
+		"hq-overseer",
+		"gt-furiosa", // miner
 		"gt-witness",
 	}
 
-	// With polecats excluded
+	// With miners excluded
 	got := filterAndSortSessions(input, false)
 	for _, a := range got {
-		if a.Type == AgentPolecat {
-			t.Errorf("polecat %q present when includePolecats=false", a.Name)
+		if a.Type == AgentMiner {
+			t.Errorf("miner %q present when includeMiners=false", a.Name)
 		}
 	}
 	if len(got) != 2 {
-		t.Errorf("filterAndSortSessions(includePolecats=false) returned %d agents, want 2", len(got))
+		t.Errorf("filterAndSortSessions(includeMiners=false) returned %d agents, want 2", len(got))
 	}
 
-	// With polecats included
+	// With miners included
 	got = filterAndSortSessions(input, true)
-	hasPolecat := false
+	hasMiner := false
 	for _, a := range got {
-		if a.Type == AgentPolecat {
-			hasPolecat = true
+		if a.Type == AgentMiner {
+			hasMiner = true
 		}
 	}
-	if !hasPolecat {
-		t.Error("no polecat found when includePolecats=true")
+	if !hasMiner {
+		t.Error("no miner found when includeMiners=true")
 	}
 	if len(got) != 3 {
-		t.Errorf("filterAndSortSessions(includePolecats=true) returned %d agents, want 3", len(got))
+		t.Errorf("filterAndSortSessions(includeMiners=true) returned %d agents, want 3", len(got))
 	}
 }
 
 func TestFilterAndSortSessions_BootSessionFiltered(t *testing.T) {
 	setupCmdTestRegistry(t)
 	input := []string{
-		"hq-mayor",
+		"hq-overseer",
 		"hq-boot", // should always be excluded
-		"hq-deacon",
+		"hq-supervisor",
 	}
 
 	got := filterAndSortSessions(input, true)
@@ -284,38 +284,38 @@ func TestFilterAndSortSessions_BootSessionFiltered(t *testing.T) {
 func TestFilterAndSortSessions_SortOrder(t *testing.T) {
 	setupCmdTestRegistry(t)
 	input := []string{
-		"gt-crew-zed",   // crew (gastown)
-		"gt-witness",    // witness (gastown)
-		"hq-deacon",     // deacon
-		"gt-refinery",   // refinery (gastown)
-		"hq-mayor",      // mayor
-		"gt-furiosa",    // polecat (gastown)
+		"gt-crew-zed",   // crew (excavation)
+		"gt-witness",    // witness (excavation)
+		"hq-supervisor",     // supervisor
+		"gt-refinery",   // refinery (excavation)
+		"hq-overseer",      // overseer
+		"gt-furiosa",    // miner (excavation)
 		"mr-witness",    // witness (myrig)
-		"gt-crew-alpha", // crew (gastown)
+		"gt-crew-alpha", // crew (excavation)
 	}
 
 	got := filterAndSortSessions(input, true)
 
 	// Expected order:
-	// 1. mayor (town-level)
-	// 2. deacon (town-level)
-	// 3. gastown/refinery (rig "gastown" < "myrig", refinery before witness)
-	// 4. gastown/witness
-	// 5. gastown/crew/alpha (crew after witness, alpha < zed)
-	// 6. gastown/crew/zed
-	// 7. gastown/polecat/furiosa (polecat last within rig)
+	// 1. overseer (town-level)
+	// 2. supervisor (town-level)
+	// 3. excavation/refinery (rig "excavation" < "myrig", refinery before witness)
+	// 4. excavation/witness
+	// 5. excavation/crew/alpha (crew after witness, alpha < zed)
+	// 6. excavation/crew/zed
+	// 7. excavation/miner/furiosa (miner last within rig)
 	// 8. myrig/witness
 	wantOrder := []struct {
 		wantType AgentType
 		wantName string
 	}{
-		{AgentMayor, "hq-mayor"},
-		{AgentDeacon, "hq-deacon"},
+		{AgentOverseer, "hq-overseer"},
+		{AgentSupervisor, "hq-supervisor"},
 		{AgentRefinery, "gt-refinery"},
 		{AgentWitness, "gt-witness"},
 		{AgentCrew, "gt-crew-alpha"},
 		{AgentCrew, "gt-crew-zed"},
-		{AgentPolecat, "gt-furiosa"},
+		{AgentMiner, "gt-furiosa"},
 		{AgentWitness, "mr-witness"},
 	}
 
@@ -336,19 +336,19 @@ func TestFilterAndSortSessions_SortOrder(t *testing.T) {
 func TestFilterAndSortSessions_CombinedFiltering(t *testing.T) {
 	setupCmdTestRegistry(t)
 	input := []string{
-		"hq-mayor",
+		"hq-overseer",
 		"hq-boot",        // boot: always filtered
-		"gt-furiosa",     // polecat: filtered when includePolecats=false
-		"random-session", // non-gastown: always filtered
+		"gt-furiosa",     // miner: filtered when includeMiners=false
+		"random-session", // non-excavation: always filtered
 		"gt-witness",
 	}
 
 	got := filterAndSortSessions(input, false)
 	if len(got) != 2 {
-		t.Fatalf("filterAndSortSessions(combined, polecats=false) returned %d agents, want 2 (mayor + witness)", len(got))
+		t.Fatalf("filterAndSortSessions(combined, miners=false) returned %d agents, want 2 (overseer + witness)", len(got))
 	}
-	if got[0].Type != AgentMayor {
-		t.Errorf("position 0: type = %d, want AgentMayor", got[0].Type)
+	if got[0].Type != AgentOverseer {
+		t.Errorf("position 0: type = %d, want AgentOverseer", got[0].Type)
 	}
 	if got[1].Type != AgentWitness {
 		t.Errorf("position 1: type = %d, want AgentWitness", got[1].Type)
@@ -356,7 +356,7 @@ func TestFilterAndSortSessions_CombinedFiltering(t *testing.T) {
 
 	got = filterAndSortSessions(input, true)
 	if len(got) != 3 {
-		t.Fatalf("filterAndSortSessions(combined, polecats=true) returned %d agents, want 3 (mayor + witness + polecat)", len(got))
+		t.Fatalf("filterAndSortSessions(combined, miners=true) returned %d agents, want 3 (overseer + witness + miner)", len(got))
 	}
 }
 
@@ -381,10 +381,10 @@ func TestRunAgentsList_EmptyList_Output(t *testing.T) {
 	}
 
 	// runAgentsList succeeded: output is either the empty-list message
-	// or a real agent listing if gastown sessions happen to be running.
+	// or a real agent listing if excavation sessions happen to be running.
 	if !strings.Contains(output, "No agent sessions running.") &&
-		!strings.Contains(output, "Mayor") &&
-		!strings.Contains(output, "Deacon") &&
+		!strings.Contains(output, "Overseer") &&
+		!strings.Contains(output, "Supervisor") &&
 		!strings.Contains(output, "witness") {
 		t.Errorf("unexpected output from runAgentsList: %q", output)
 	}
@@ -406,7 +406,7 @@ func TestDisplayLabel_PersonalSession(t *testing.T) {
 // session's own socket, not a global town socket.
 func TestBuildMenuAction_PerSessionSocket(t *testing.T) {
 	// GT session on the gt socket
-	action := buildMenuAction("gt", "hq-deacon")
+	action := buildMenuAction("gt", "hq-supervisor")
 	if !strings.Contains(action, "-L gt") {
 		t.Errorf("GT session action should use -L gt, got: %s", action)
 	}
@@ -437,21 +437,21 @@ func TestBuildMenuAction_CrossSocket(t *testing.T) {
 		{
 			name:       "with town socket — cross-socket aware",
 			townSocket: "gt",
-			session:    "hq-deacon",
+			session:    "hq-supervisor",
 			wantContain: []string{
 				"-L gt",         // targets the town socket
 				"switch-client", // fast path (same socket)
 				"detach-client", // fallback (cross-socket)
-				"hq-deacon",     // session name
+				"hq-supervisor",     // session name
 			},
 		},
 		{
 			name:       "empty socket — same-server switch only",
 			townSocket: "",
-			session:    "hq-mayor",
+			session:    "hq-overseer",
 			wantContain: []string{
 				"switch-client",
-				"hq-mayor",
+				"hq-overseer",
 			},
 			wantMissing: []string{
 				"detach-client", // no cross-socket fallback needed
@@ -608,14 +608,14 @@ func TestGuessSessionFromWorkerDir(t *testing.T) {
 		workerDir string
 		want      string
 	}{
-		{"crew worker", "/town/gastown/crew/max", "gt-crew-max"},
-		{"polecat worker", "/town/gastown/polecats/furiosa", "gt-furiosa"},
-		{"witness worker", "/town/gastown/witness/main", "gt-witness"},
-		{"witness worker rig", "/town/gastown/witness/rig", "gt-witness"},
-		{"refinery worker", "/town/gastown/refinery/main", "gt-refinery"},
-		{"refinery worker rig", "/town/gastown/refinery/rig", "gt-refinery"},
-		{"unknown type", "/town/gastown/unknown/thing", ""},
-		{"too few path parts", "/town/gastown", ""},
+		{"crew worker", "/town/excavation/crew/max", "gt-crew-max"},
+		{"miner worker", "/town/excavation/miners/furiosa", "gt-furiosa"},
+		{"witness worker", "/town/excavation/witness/main", "gt-witness"},
+		{"witness worker rig", "/town/excavation/witness/rig", "gt-witness"},
+		{"refinery worker", "/town/excavation/refinery/main", "gt-refinery"},
+		{"refinery worker rig", "/town/excavation/refinery/rig", "gt-refinery"},
+		{"unknown type", "/town/excavation/unknown/thing", ""},
+		{"too few path parts", "/town/excavation", ""},
 		{"different rig", "/town/myrig/crew/alpha", "mr-crew-alpha"},
 	}
 

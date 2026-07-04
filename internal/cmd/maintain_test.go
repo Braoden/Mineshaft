@@ -60,12 +60,12 @@ func TestMaintainThreshold(t *testing.T) {
 func TestMaintainDBInfo(t *testing.T) {
 	// Verify the struct can hold expected values.
 	info := maintainDBInfo{
-		name:        "gastown",
+		name:        "excavation",
 		commitCount: 500,
 		hasBackup:   true,
 	}
-	if info.name != "gastown" {
-		t.Errorf("expected name gastown, got %s", info.name)
+	if info.name != "excavation" {
+		t.Errorf("expected name excavation, got %s", info.name)
 	}
 	if info.commitCount != 500 {
 		t.Errorf("expected 500 commits, got %d", info.commitCount)

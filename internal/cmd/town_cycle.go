@@ -13,20 +13,20 @@ var townCycleSession string
 
 // getTownLevelSessions returns the town-level session names for the current workspace.
 func getTownLevelSessions() []string {
-	mayorSession := getMayorSessionName()
-	deaconSession := getDeaconSessionName()
-	return []string{mayorSession, deaconSession}
+	overseerSession := getOverseerSessionName()
+	supervisorSession := getSupervisorSessionName()
+	return []string{overseerSession, supervisorSession}
 }
 
 // isTownLevelSession checks if the given session name is a town-level session.
-// Town-level sessions (Mayor, Deacon) use the "hq-" prefix, so we can identify
+// Town-level sessions (Overseer, Supervisor) use the "hq-" prefix, so we can identify
 // them by name alone without requiring workspace context. This is critical for
 // tmux run-shell which may execute from outside the workspace directory.
 func isTownLevelSession(sessionName string) bool {
 	// Town-level sessions are identified by their fixed names
-	mayorSession := getMayorSessionName()  // "hq-mayor"
-	deaconSession := getDeaconSessionName() // "hq-deacon"
-	return sessionName == mayorSession || sessionName == deaconSession
+	overseerSession := getOverseerSessionName()  // "hq-overseer"
+	supervisorSession := getSupervisorSessionName() // "hq-supervisor"
+	return sessionName == overseerSession || sessionName == supervisorSession
 }
 
 func init() {
@@ -46,12 +46,12 @@ var townCmd = &cobra.Command{
 
 var townNextCmd = &cobra.Command{
 	Use:   "next",
-	Short: "Switch to next town session (mayor/deacon)",
+	Short: "Switch to next town session (overseer/supervisor)",
 	Long: `Switch to the next town-level session in the cycle order.
-Town sessions cycle between Mayor and Deacon.
+Town sessions cycle between Overseer and Supervisor.
 
 This command is typically invoked via the C-b n keybinding when in a
-town-level session (Mayor or Deacon).`,
+town-level session (Overseer or Supervisor).`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cycleTownSession(1, townCycleSession)
 	},
@@ -59,12 +59,12 @@ town-level session (Mayor or Deacon).`,
 
 var townPrevCmd = &cobra.Command{
 	Use:   "prev",
-	Short: "Switch to previous town session (mayor/deacon)",
+	Short: "Switch to previous town session (overseer/supervisor)",
 	Long: `Switch to the previous town-level session in the cycle order.
-Town sessions cycle between Mayor and Deacon.
+Town sessions cycle between Overseer and Supervisor.
 
 This command is typically invoked via the C-b p keybinding when in a
-town-level session (Mayor or Deacon).`,
+town-level session (Overseer or Supervisor).`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cycleTownSession(-1, townCycleSession)
 	},

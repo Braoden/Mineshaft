@@ -6,15 +6,15 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
 )
 
 // determineRigBeadsPath returns the correct route path for a rig based on its actual layout.
-// Uses ResolveBeadsDir to follow any redirects (e.g., rig/.beads/redirect -> mayor/rig/.beads).
-// Falls back to the default mayor layout path if the resolved path is invalid or escapes the town root.
+// Uses ResolveBeadsDir to follow any redirects (e.g., rig/.beads/redirect -> overseer/rig/.beads).
+// Falls back to the default overseer layout path if the resolved path is invalid or escapes the town root.
 func determineRigBeadsPath(townRoot, rigName string) string {
-	defaultPath := rigName + "/mayor/rig"
+	defaultPath := rigName + "/overseer/rig"
 	rigPath := filepath.Join(townRoot, rigName)
 	resolved := beads.ResolveBeadsDir(rigPath)
 
@@ -99,7 +99,7 @@ func (c *RoutesCheck) Run(ctx *CheckContext) *CheckResult {
 
 	var details []string
 	var missingTownRoute bool
-	var missingConvoyRoute bool
+	var missingMinecartRoute bool
 
 	// Check town root route exists (hq- -> .)
 	if _, hasTownRoute := routeByPrefix["hq-"]; !hasTownRoute {
@@ -107,18 +107,18 @@ func (c *RoutesCheck) Run(ctx *CheckContext) *CheckResult {
 		details = append(details, "Town root route (hq- -> .) is missing")
 	}
 
-	// Check convoy route exists (hq-cv- -> .)
-	if _, hasConvoyRoute := routeByPrefix["hq-cv-"]; !hasConvoyRoute {
-		missingConvoyRoute = true
-		details = append(details, "Convoy route (hq-cv- -> .) is missing")
+	// Check minecart route exists (hq-cv- -> .)
+	if _, hasMinecartRoute := routeByPrefix["hq-cv-"]; !hasMinecartRoute {
+		missingMinecartRoute = true
+		details = append(details, "Minecart route (hq-cv- -> .) is missing")
 	}
 
 	// Load rigs registry
-	rigsPath := filepath.Join(ctx.TownRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(ctx.TownRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsPath)
 	if err != nil {
-		// No rigs config - check for missing town/convoy routes and validate existing routes
-		if missingTownRoute || missingConvoyRoute {
+		// No rigs config - check for missing town/minecart routes and validate existing routes
+		if missingTownRoute || missingMinecartRoute {
 			return &CheckResult{
 				Name:    c.Name(),
 				Status:  StatusWarning,
@@ -209,15 +209,15 @@ func (c *RoutesCheck) Run(ctx *CheckContext) *CheckResult {
 	}
 
 	// Determine result
-	if missingTownRoute || missingConvoyRoute || len(missingRigs) > 0 || len(invalidRoutes) > 0 || len(suboptimalRoutes) > 0 {
+	if missingTownRoute || missingMinecartRoute || len(missingRigs) > 0 || len(invalidRoutes) > 0 || len(suboptimalRoutes) > 0 {
 		status := StatusWarning
 		var messageParts []string
 
 		if missingTownRoute {
 			messageParts = append(messageParts, "town root route missing")
 		}
-		if missingConvoyRoute {
-			messageParts = append(messageParts, "convoy route missing")
+		if missingMinecartRoute {
+			messageParts = append(messageParts, "minecart route missing")
 		}
 		if len(missingRigs) > 0 {
 			messageParts = append(messageParts, fmt.Sprintf("%d rig(s) missing routes", len(missingRigs)))
@@ -332,8 +332,8 @@ func (c *RoutesCheck) Fix(ctx *CheckContext) error {
 		modified = true
 	}
 
-	// Ensure convoy route exists (hq-cv- -> .)
-	// Convoys use hq-cv-* IDs for visual distinction from other town beads
+	// Ensure minecart route exists (hq-cv- -> .)
+	// Minecarts use hq-cv-* IDs for visual distinction from other town beads
 	if _, exists := routeMap["hq-cv-"]; !exists {
 		routeMap["hq-cv-"] = len(routes)
 		routes = append(routes, beads.Route{Prefix: "hq-cv-", Path: "."})
@@ -341,7 +341,7 @@ func (c *RoutesCheck) Fix(ctx *CheckContext) error {
 	}
 
 	// Load rigs registry
-	rigsPath := filepath.Join(ctx.TownRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(ctx.TownRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsPath)
 	if err != nil {
 		// No rigs config - just write town root route if we added it
@@ -364,7 +364,7 @@ func (c *RoutesCheck) Fix(ctx *CheckContext) error {
 	// Add missing routes and rewrite redirect-dependent ones for each rig.
 	// Only rewrites routes that rely on .beads/redirect at the rig root —
 	// the specific legacy pattern broken by beads#1749. Routes are rewritten
-	// to the canonical path (e.g., "crom/mayor/rig") which has a real .beads
+	// to the canonical path (e.g., "crom/overseer/rig") which has a real .beads
 	// directory and needs no redirect resolution.
 	for rigName, rigEntry := range rigsConfig.Rigs {
 		prefix := ""

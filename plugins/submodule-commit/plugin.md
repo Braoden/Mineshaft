@@ -27,7 +27,7 @@ severity = "low"
 # Submodule Commit
 
 Auto-commits accumulated changes inside git submodules and updates the parent
-repo's submodule pointer. Polecats only operate on parent repo worktrees and
+repo's submodule pointer. Miners only operate on parent repo worktrees and
 have no commit mandate for submodule repos — this plugin fills that gap.
 
 **Opt-in only.** Rigs must enable this plugin in their `plugin.md` frontmatter.
@@ -128,7 +128,7 @@ for REPO_PATH in "${ENABLED_RIGS[@]}"; do
       git -C "$FULL_SUB" commit -m "chore: accumulated changes [skip ci]
 
 Auto-committed by submodule-commit plugin ($STAGED file(s))." \
-        --author="Gas Town <gastown@local>" 2>/dev/null && \
+        --author="Excavation Site <excavation@local>" 2>/dev/null && \
         echo "    Committed $STAGED file(s)" && \
         TOTAL_COMMITTED=$((TOTAL_COMMITTED + 1)) || \
         { echo "    WARN: commit failed"; continue; }
@@ -156,7 +156,7 @@ Auto-committed by submodule-commit plugin ($STAGED file(s))." \
           git -C "$REPO_PATH" commit -m "chore: update submodule pointers [skip ci]
 
 Auto-committed by submodule-commit plugin." \
-            --author="Gas Town <gastown@local>" 2>/dev/null && \
+            --author="Excavation Site <excavation@local>" 2>/dev/null && \
             TOTAL_PARENT_UPDATED=$((TOTAL_PARENT_UPDATED + 1)) || true
           git -C "$REPO_PATH" push origin main 2>/dev/null || echo "  WARN: parent push failed (local commit preserved)"
         fi

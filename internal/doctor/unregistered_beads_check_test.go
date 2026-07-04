@@ -30,7 +30,7 @@ func TestUnregisteredBeadsDirs_Clean(t *testing.T) {
 	writeBeadsMetadata(t, filepath.Join(tmpDir, "myrig"), "myrig_db")
 
 	// Create system dirs (should be ignored)
-	os.MkdirAll(filepath.Join(tmpDir, "mayor"), 0755)
+	os.MkdirAll(filepath.Join(tmpDir, "overseer"), 0755)
 	os.MkdirAll(filepath.Join(tmpDir, ".beads"), 0755)
 
 	check := NewUnregisteredBeadsDirsCheck()
@@ -89,7 +89,7 @@ func TestUnregisteredBeadsDirs_IgnoresSystemDirs(t *testing.T) {
 	setupRigsJSON(t, tmpDir, nil)
 
 	// Create system dirs with beads metadata (should still be ignored)
-	for _, sysDir := range []string{"mayor", "deacon", ".runtime"} {
+	for _, sysDir := range []string{"overseer", "supervisor", ".runtime"} {
 		writeBeadsMetadata(t, filepath.Join(tmpDir, sysDir), "some_db")
 	}
 
@@ -102,7 +102,7 @@ func TestUnregisteredBeadsDirs_IgnoresSystemDirs(t *testing.T) {
 	}
 }
 
-func TestUnregisteredBeadsDirs_DeaconMismatch(t *testing.T) {
+func TestUnregisteredBeadsDirs_SupervisorMismatch(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	setupRigsJSON(t, tmpDir, nil)
@@ -110,8 +110,8 @@ func TestUnregisteredBeadsDirs_DeaconMismatch(t *testing.T) {
 	// Town beads uses "hq"
 	writeBeadsMetadata(t, tmpDir, "hq")
 
-	// Deacon uses a different database
-	writeBeadsMetadata(t, filepath.Join(tmpDir, "deacon"), "beads_deacon")
+	// Supervisor uses a different database
+	writeBeadsMetadata(t, filepath.Join(tmpDir, "supervisor"), "beads_supervisor")
 
 	check := NewUnregisteredBeadsDirsCheck()
 	ctx := &CheckContext{TownRoot: tmpDir}
@@ -126,14 +126,14 @@ func TestUnregisteredBeadsDirs_DeaconMismatch(t *testing.T) {
 	}
 }
 
-func TestUnregisteredBeadsDirs_DeaconMatchesOK(t *testing.T) {
+func TestUnregisteredBeadsDirs_SupervisorMatchesOK(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	setupRigsJSON(t, tmpDir, nil)
 
-	// Town and deacon both use "hq"
+	// Town and supervisor both use "hq"
 	writeBeadsMetadata(t, tmpDir, "hq")
-	writeBeadsMetadata(t, filepath.Join(tmpDir, "deacon"), "hq")
+	writeBeadsMetadata(t, filepath.Join(tmpDir, "supervisor"), "hq")
 
 	check := NewUnregisteredBeadsDirsCheck()
 	ctx := &CheckContext{TownRoot: tmpDir}

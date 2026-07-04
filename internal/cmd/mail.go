@@ -55,24 +55,24 @@ var (
 var mailCmd = &cobra.Command{
 	Use:         "mail",
 	GroupID:     GroupComm,
-	Annotations: map[string]string{AnnotationPolecatSafe: "true"},
+	Annotations: map[string]string{AnnotationMinerSafe: "true"},
 	Short:       "Agent messaging system",
 	RunE:        requireSubcommand,
 	Long: `Send and receive messages between agents.
 
-The mail system allows Mayor, polecats, and the Refinery to communicate.
+The mail system allows Overseer, miners, and the Refinery to communicate.
 Messages are stored in beads as issues with type=message.
 
 MAIL ROUTING:
   ┌─────────────────────────────────────────────────────┐
   │                    Town (.beads/)                   │
   │  ┌─────────────────────────────────────────────┐   │
-  │  │                 Mayor Inbox                 │   │
-  │  │  └── mayor/                                 │   │
+  │  │                 Overseer Inbox                 │   │
+  │  │  └── overseer/                                 │   │
   │  └─────────────────────────────────────────────┘   │
   │                                                     │
   │  ┌─────────────────────────────────────────────┐   │
-  │  │           gastown/ (rig mailboxes)          │   │
+  │  │           excavation/ (rig mailboxes)          │   │
   │  │  ├── witness      ← greenplace/witness         │   │
   │  │  ├── refinery     ← greenplace/refinery        │   │
   │  │  ├── Toast        ← greenplace/Toast           │   │
@@ -81,12 +81,12 @@ MAIL ROUTING:
   └─────────────────────────────────────────────────────┘
 
 ADDRESS FORMATS:
-  mayor/              → Mayor inbox
+  overseer/              → Overseer inbox
   <rig>/witness       → Rig's Witness
   <rig>/refinery      → Rig's Refinery
-  <rig>/<polecat>     → Polecat (e.g., greenplace/Toast)
+  <rig>/<miner>     → Miner (e.g., greenplace/Toast)
   <rig>/crew/<name>   → Crew worker (e.g., greenplace/crew/max)
-  --human             → Special: human overseer
+  --human             → Special: human boss
 
 COMMANDS:
   inbox     View your inbox
@@ -101,9 +101,9 @@ var mailSendCmd = &cobra.Command{
 	Long: `Send a message to an agent.
 
 Addresses:
-  mayor/           - Send to Mayor
+  overseer/           - Send to Overseer
   <rig>/refinery   - Send to a rig's Refinery
-  <rig>/<polecat>  - Send to a specific polecat
+  <rig>/<miner>  - Send to a specific miner
   <rig>/           - Broadcast to a rig
   list:<name>      - Send to a mailing list (fans out to all members)
 
@@ -128,17 +128,17 @@ Use --urgent as shortcut for --priority 0.
 
 Examples:
   gt mail send greenplace/Toast -s "Status check" -m "How's that bug fix going?"
-  gt mail send mayor/ -s "Work complete" -m "Finished gt-abc"
-  gt mail send gastown/ -s "All hands" -m "Swarm starting" --notify
+  gt mail send overseer/ -s "Work complete" -m "Finished gt-abc"
+  gt mail send excavation/ -s "All hands" -m "Swarm starting" --notify
   gt mail send greenplace/Toast -s "Task" -m "Fix bug" --type task --priority 1
   gt mail send greenplace/Toast -s "Urgent" -m "Help!" --urgent
-  gt mail send mayor/ -s "Re: Status" -m "Done" --reply-to msg-abc123
+  gt mail send overseer/ -s "Re: Status" -m "Done" --reply-to msg-abc123
   gt mail send --self -s "Handoff" -m "Context for next session"
-  gt mail send greenplace/Toast -s "Update" -m "Progress report" --cc overseer
+  gt mail send greenplace/Toast -s "Update" -m "Progress report" --cc boss
   gt mail send list:oncall -s "Alert" -m "System down"
 
   # Read body from stdin (avoids shell quoting issues):
-  gt mail send mayor/ -s "Update" --stdin <<'BODY'
+  gt mail send overseer/ -s "Update" --stdin <<'BODY'
   Message with 'quotes' and "quotes" and $variables.
   BODY`,
 	Args: cobra.MaximumNArgs(1),
@@ -151,7 +151,7 @@ var mailInboxCmd = &cobra.Command{
 	Long: `Check messages in an inbox.
 
 If no address is specified, shows the current context's inbox.
-Use --identity for polecats to explicitly specify their identity.
+Use --identity for miners to explicitly specify their identity.
 
 By default, shows all messages. Use --unread to filter to unread only,
 or --all to explicitly show all messages (read and unread).
@@ -160,9 +160,9 @@ Examples:
   gt mail inbox                       # Current context (auto-detected)
   gt mail inbox --all                 # Explicitly show all messages
   gt mail inbox --unread              # Show only unread messages
-  gt mail inbox mayor/                # Mayor's inbox
-  gt mail inbox greenplace/Toast         # Polecat's inbox
-  gt mail inbox --identity greenplace/Toast  # Explicit polecat identity`,
+  gt mail inbox overseer/                # Overseer's inbox
+  gt mail inbox greenplace/Toast         # Miner's inbox
+  gt mail inbox --identity greenplace/Toast  # Explicit miner identity`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runMailInbox,
 }
@@ -279,12 +279,12 @@ Exit codes (--inject mode):
   0 - Always (hooks should never block)
   Output: system-reminder if mail exists, silent if no mail
 
-Use --identity for polecats to explicitly specify their identity.
+Use --identity for miners to explicitly specify their identity.
 
 Examples:
   gt mail check                           # Simple check (auto-detect identity)
   gt mail check --inject                  # For hooks
-  gt mail check --identity greenplace/Toast  # Explicit polecat identity`,
+  gt mail check --identity greenplace/Toast  # Explicit miner identity`,
 	RunE: runMailCheck,
 }
 
@@ -337,7 +337,7 @@ BEHAVIOR:
 
 ELIGIBILITY:
 The caller must match the queue's claim_pattern (stored in the queue bead).
-Pattern examples: "*" (anyone), "gastown/polecats/*" (specific rig crew).
+Pattern examples: "*" (anyone), "excavation/miners/*" (specific rig crew).
 
 Examples:
   gt mail claim work-requests   # Claim from specific queue
@@ -390,8 +390,8 @@ Use case: Town quiescence - reset all inboxes across workers efficiently.
 
 Examples:
   gt mail clear                      # Clear your inbox
-  gt mail clear gastown/polecats/joe # Clear joe's inbox
-  gt mail clear mayor/               # Clear mayor's inbox`,
+  gt mail clear excavation/miners/joe # Clear joe's inbox
+  gt mail clear overseer/               # Clear overseer's inbox`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runMailClear,
 }
@@ -420,7 +420,7 @@ Examples:
   gt mail search "status.*check" --subject   # Regex in subjects only
   gt mail search "error" --from witness      # From witness, containing "error"
   gt mail search "handoff" --archive         # Include archived messages
-  gt mail search "" --from mayor/            # All messages from mayor`,
+  gt mail search "" --from overseer/            # All messages from overseer`,
 	Args: cobra.ExactArgs(1),
 	RunE: runMailSearch,
 }

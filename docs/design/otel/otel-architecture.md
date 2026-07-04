@@ -2,7 +2,7 @@
 
 ## Overview
 
-Gas Town uses OpenTelemetry (OTel) for structured observability of all agent operations. Telemetry is emitted via standard OTLP HTTP to any compatible backend (metrics, logs).
+Excavation Site uses OpenTelemetry (OTel) for structured observability of all agent operations. Telemetry is emitted via standard OTLP HTTP to any compatible backend (metrics, logs).
 
 **Backend-agnostic design**: The system emits standard OpenTelemetry Protocol (OTLP) — any OTLP v1.x+ compatible backend can consume it. You are **not obligated** to use VictoriaMetrics/VictoriaLogs; these are simply development defaults.
 
@@ -42,7 +42,7 @@ docker run -d -p 9428:9428 victoriametrics/victoria-logs
 |---------|--------|-------|
 | Core OTel initialization | ✅ Main | `telemetry.Init()`, providers setup |
 | Metrics export (counters) | ✅ Main | 18 metric instruments |
-| Metrics export (histograms) | ✅ Main | `gastown.bd.duration_ms` histogram |
+| Metrics export (histograms) | ✅ Main | `excavation.bd.duration_ms` histogram |
 | Logs export (any OTLP backend) | ✅ Main | OTLP logs exporter |
 | Subprocess correlation | ✅ Main | `OTEL_RESOURCE_ATTRIBUTES` via `SetProcessOTELAttrs()` |
 
@@ -68,10 +68,10 @@ docker run -d -p 9428:9428 victoriametrics/victoria-logs
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Polecat lifecycle telemetry | ✅ Main | `polecat.spawn`/`polecat.remove` |
+| Miner lifecycle telemetry | ✅ Main | `miner.spawn`/`miner.remove` |
 | Agent state telemetry | ✅ Main | `agent.state_change` events |
 | Daemon restart telemetry | ✅ Main | `daemon.restart` events |
-| Polecat spawn metric | ✅ Main | `gastown.polecat.spawns.total` |
+| Miner spawn metric | ✅ Main | `excavation.miner.spawns.total` |
 
 ### Molecule Lifecycle
 
@@ -80,7 +80,7 @@ docker run -d -p 9428:9428 victoriametrics/victoria-logs
 | Molecule lifecycle telemetry | ❌ Roadmap | `mol.cook`/`mol.wisp`/`mol.squash`/`mol.burn` — no `RecordMol*` functions exist |
 | Bead creation telemetry | ❌ Roadmap | `bead.create` — no `RecordBeadCreate` function exists |
 | Formula instantiation telemetry | ✅ Main | `formula.instantiate` |
-| Convoy telemetry | ✅ Main | `convoy.create` events |
+| Minecart telemetry | ✅ Main | `minecart.create` events |
 
 ### Agent Events (PR #2199)
 
@@ -102,15 +102,15 @@ docker run -d -p 9428:9428 victoriametrics/victoria-logs
 
 **Work context injection at `gt prime`** — implemented in PR #2199
 
-Polecats are **generic agents** — they have no fixed rig. `GT_RIG` at session start reflects an allocation rig or is empty, which is meaningless for attributing work. The actual work context (which rig, bead, and molecule a polecat is processing) is only known at each `gt prime` invocation.
+Miners are **generic agents** — they have no fixed rig. `GT_RIG` at session start reflects an allocation rig or is empty, which is meaningless for attributing work. The actual work context (which rig, bead, and molecule a miner is processing) is only known at each `gt prime` invocation.
 
-A single polecat session goes through multiple `gt prime` cycles, each on a potentially different rig and bead:
+A single miner session goes through multiple `gt prime` cycles, each on a potentially different rig and bead:
 
 ```
 session start → rig="" (generic, no work yet)
-gt prime #1   → work_rig="gastown", work_bead="sg-05iq", work_mol="mol-polecat-work"
+gt prime #1   → work_rig="excavation", work_bead="sg-05iq", work_mol="mol-miner-work"
   bd.call, mail, sling, done  ← carry work context from prime #1
-gt prime #2   → work_rig="sfgastown", work_bead="sg-g8vs", work_mol="mol-polecat-work"
+gt prime #2   → work_rig="sfexcavation", work_bead="sg-g8vs", work_mol="mol-miner-work"
   bd.call, mail, sling, done  ← carry work context from prime #2
 ```
 
@@ -128,11 +128,11 @@ New attributes emitted on the `prime` event and carried by all events until the 
 
 ### P1 — High value
 
-**Token cost metric (`gastown.token.cost_usd`)**
+**Token cost metric (`excavation.token.cost_usd`)**
 
 Compute dollar cost per run from token counts using Claude model pricing. Emit as a Gauge metric at session end. Enables per-rig and per-bead cost dashboards.
 
-New metric: `gastown.token.cost_usd{rig, role, agent_type}` — accumulated cost per session.
+New metric: `excavation.token.cost_usd{rig, role, agent_type}` — accumulated cost per session.
 New event attribute on `agent.usage`: `cost_usd` — cost of the current turn.
 
 ---
@@ -151,9 +151,9 @@ The Refinery's merge queue is a central health indicator but currently completel
 
 | Metric | Type | Description |
 |--------|------|-------------|
-| `gastown.refinery.queue_depth` | Gauge | pending items in merge queue |
-| `gastown.refinery.item_age_ms` | Histogram | age of oldest item in queue |
-| `gastown.refinery.dispatch_latency_ms` | Histogram | time between enqueue and dispatch |
+| `excavation.refinery.queue_depth` | Gauge | pending items in merge queue |
+| `excavation.refinery.item_age_ms` | Histogram | age of oldest item in queue |
+| `excavation.refinery.dispatch_latency_ms` | Histogram | time between enqueue and dispatch |
 
 New log event: `refinery.dispatch` with `bead_id`, `queue_depth`, `wait_ms`, `status`.
 
@@ -167,7 +167,7 @@ Currently the waterfall relies on `run.id` as a manual correlation key across fl
 - Automatic parent → child span attribution (no manual run.id joins)
 - P95/P99 latency per operation derived from spans, not histograms
 
-Architecture: each polecat session spawn creates a **root span** (`gt.session`). Child spans are created for `bd.call`, `mail`, `sling`, `done`. The `run.id` becomes the trace ID. `GT_RUN` propagation becomes W3C `traceparent` header injection.
+Architecture: each miner session spawn creates a **root span** (`gt.session`). Child spans are created for `bd.call`, `mail`, `sling`, `done`. The `run.id` becomes the trace ID. `GT_RUN` propagation becomes W3C `traceparent` header injection.
 
 This is a significant effort (requires `go.opentelemetry.io/otel/trace` + tracer provider + exporter) but would be the single highest-impact observability improvement.
 
@@ -219,7 +219,7 @@ New event: `witness.patrol` with `duration_ms`, `stale_count`, `restart_count`, 
 
 Dolt issues are only detected at spawn time today. Exposing health metrics continuously:
 
-New metrics: `gastown.dolt.connections`, `gastown.dolt.query_duration_ms` (histogram), `gastown.dolt.replication_lag_ms`.
+New metrics: `excavation.dolt.connections`, `excavation.dolt.query_duration_ms` (histogram), `excavation.dolt.replication_lag_ms`.
 
 ---
 
@@ -227,11 +227,11 @@ New metrics: `gastown.dolt.connections`, `gastown.dolt.query_duration_ms` (histo
 
 | Item | Description |
 |------|-------------|
-| **Deacon watchdog telemetry** | State machine transitions in the deacon watchdog chain |
+| **Supervisor watchdog telemetry** | State machine transitions in the supervisor watchdog chain |
 | **Crew session tracking** | Crew session cycle events: start, push, done, idle |
-| **Git operation telemetry** | Track clone, checkout, fetch duration per polecat session |
+| **Git operation telemetry** | Track clone, checkout, fetch duration per miner session |
 | **OTel W3C Baggage** | Replace `GT_RUN` env var propagation with W3C Baggage for standard cross-process context |
-| **Retry pattern detection** | Alert when a polecat's error rate exceeds threshold across runs |
+| **Retry pattern detection** | Alert when a miner's error rate exceeds threshold across runs |
 
 ---
 
@@ -242,7 +242,7 @@ New metrics: `gastown.dolt.connections`, `gastown.dolt.query_duration_ms` (histo
 The `telemetry.Init()` function sets up OTel providers on process startup:
 
 ```go
-provider, err := telemetry.Init(ctx, "gastown", version)
+provider, err := telemetry.Init(ctx, "excavation", version)
 if err != nil {
     // Log and continue — telemetry is best-effort
 }
@@ -259,7 +259,7 @@ defer provider.Shutdown(ctx)
 - Metrics: `http://localhost:8428/opentelemetry/api/v1/push`
 - Logs: `http://localhost:9428/insert/opentelemetry/v1/logs`
 
-> **Note**: These defaults target VictoriaMetrics/VictoriaLogs for local development convenience. Gas Town uses standard OTLP — you can override endpoints to use any OTLP v1.x+ compatible backend (Prometheus, Grafana Mimir, Datadog, New Relic, Grafana Cloud, Loki, OpenTelemetry Collector, etc.).
+> **Note**: These defaults target VictoriaMetrics/VictoriaLogs for local development convenience. Excavation Site uses standard OTLP — you can override endpoints to use any OTLP v1.x+ compatible backend (Prometheus, Grafana Mimir, Datadog, New Relic, Grafana Cloud, Loki, OpenTelemetry Collector, etc.).
 
 **OTLP Compatibility**:
 - Uses standard OpenTelemetry Protocol (OTLP) over HTTP
@@ -270,7 +270,7 @@ defer provider.Shutdown(ctx)
 
 | OTel attribute | Source |
 |---|---|
-| `service.name` | `"gastown"` (hardcoded at call site) |
+| `service.name` | `"excavation"` (hardcoded at call site) |
 | `service.version` | GT binary version |
 | `host.name`, `host.arch` | `resource.WithHost()` — OTel SDK reads system hostname |
 | `os.type`, `os.version`, `os.description` | `resource.WithOS()` — OTel SDK reads OS info |
@@ -279,10 +279,10 @@ defer provider.Shutdown(ctx)
 
 | Attribute | Source env var | Notes |
 |---|---|---|
-| `gt.role` | `GT_ROLE` | Agent role (e.g. `gastown/polecats/Toast`) |
+| `gt.role` | `GT_ROLE` | Agent role (e.g. `excavation/miners/Toast`) |
 | `gt.rig` | `GT_RIG` | Rig name |
 | `gt.actor` | `BD_ACTOR` | BD actor/identity |
-| `gt.agent` | `GT_POLECAT` or `GT_CREW` | Agent name |
+| `gt.agent` | `GT_MINER` or `GT_CREW` | Agent name |
 | `gt.session` | `GT_SESSION` | Tmux session name — **PR #2199** |
 | `gt.run_id` | `GT_RUN` | Run UUID — **PR #2199** |
 | `gt.work_rig` | `GT_WORK_RIG` | Work rig at last prime — **PR #2199** |
@@ -325,8 +325,8 @@ func RecordSomething(ctx context.Context, args ..., err error) {
 
 | Type | Description | Example |
 |------|-------------|---------|
-| Counters | Total counts per attribute combination | `gastown.polecat.spawns.total{status="ok"}` |
-| Histograms | Distribution of measurements (latency, duration) | `gastown.bd.duration_ms` |
+| Counters | Total counts per attribute combination | `excavation.miner.spawns.total{status="ok"}` |
+| Histograms | Distribution of measurements (latency, duration) | `excavation.bd.duration_ms` |
 | Log records | Structured events with full payload | `prime`, `mail`, `agent.event` (PR #2199) |
 
 ---
@@ -354,7 +354,7 @@ Two mechanisms ensure subprocess telemetry is correlated:
 
 On main, there is no run-level correlation key in log records. PR #2199 adds:
 
-- `GT_RUN` env var — UUID generated at polecat spawn
+- `GT_RUN` env var — UUID generated at miner spawn
 - `gt.run_id` in `OTEL_RESOURCE_ATTRIBUTES` — carried by all subprocesses
 - `WithRunID(ctx, runID)` / `RunIDFromCtx(ctx)` — Go context carrier
 - `addRunID(ctx, &record)` — called in every emit, injects `run.id` into log record
@@ -385,7 +385,7 @@ run.id:uuid-1234
 - `agent.usage`: Token usage per assistant turn (input, output, cache stats)
 
 **Session name in telemetry:**
-- `session`: Tmux session name (e.g., `gt-gastown-Toast`)
+- `session`: Tmux session name (e.g., `gt-excavation-Toast`)
 - `native_session_id`: Claude Code JSONL filename UUID
 
 ---
@@ -405,16 +405,16 @@ run.id:uuid-1234
 
 | Variable | Values / Format | Description |
 |----------|-----------------|-------------|
-| `GT_ROLE` | `<rig>/polecats/<name>` · `mayor` · `beads/witness` | Agent role for identity parsing |
-| `GT_RIG` | `gastown`, `beads` | Rig name (empty for town-level agents) |
-| `GT_POLECAT` | `Toast`, `Shadow`, `Furiosa` | Polecat name (rig-specific) |
+| `GT_ROLE` | `<rig>/miners/<name>` · `overseer` · `beads/witness` | Agent role for identity parsing |
+| `GT_RIG` | `excavation`, `beads` | Rig name (empty for town-level agents) |
+| `GT_MINER` | `Toast`, `Shadow`, `Furiosa` | Miner name (rig-specific) |
 | `GT_CREW` | `max`, `jane` | Crew member name |
-| `GT_SESSION` | `gt-gastown-Toast`, `hq-mayor` | Tmux session name |
+| `GT_SESSION` | `gt-excavation-Toast`, `hq-overseer` | Tmux session name |
 | `GT_AGENT` | Preset names: `claude`, `gemini`, `codex`, `cursor`, `copilot`, `opencode`, … | Agent override (if specified) |
 | `GT_RUN` | UUID v4 | **PR #2199** — Run identifier, primary waterfall correlation key |
 | `GT_ROOT` | `/Users/pa/gt` | Town root path |
 | `CLAUDE_CONFIG_DIR` | `~/gt/.claude` | Runtime config directory (for agent overrides) |
-| `BD_ACTOR` | `<rig>/polecats/<name>` | BD actor identity (git author) |
+| `BD_ACTOR` | `<rig>/miners/<name>` | BD actor identity (git author) |
 | `GIT_AUTHOR_NAME` | Agent name | Git author name |
 | `GIT_CEILING_DIRECTORIES` | Town root | Git ceiling (prevents repo traversal) |
 
@@ -436,10 +436,10 @@ See [OTel Data Model](otel-data-model.md) for the complete event schema, attribu
 | Tmux prompts/nudges | Full (content length, debouncing — content not logged) |
 | BD operations | Full (all BD CLI calls) |
 | Mail operations | Full (operation + status; message payload not recorded) |
-| Polecat lifecycle | Full (spawn, remove, state changes) |
+| Miner lifecycle | Full (spawn, remove, state changes) |
 | Formula instantiation | Full (formula name, bead ID) |
-| Convoy tracking | Full (auto-convoy creation) |
-| Daemon restarts | Full (witness/deacon-initiated) |
+| Minecart tracking | Full (auto-minecart creation) |
+| Daemon restarts | Full (witness/supervisor-initiated) |
 | GT prime operations | Full (with formula context) |
 | Agent conversation events | 🔲 PR #2199 — requires `GT_LOG_AGENT_OUTPUT=true` |
 | Token usage | 🔲 PR #2199 — requires `GT_LOG_AGENT_OUTPUT=true` |
@@ -448,7 +448,7 @@ See [OTel Data Model](otel-data-model.md) for the complete event schema, attribu
 
 | Area | Notes | Operational Impact |
 |-------|-------|-------------------|
-| **Generic polecat work context** | **Critical gap** — see [Generic Polecat Work Context](#generic-polecat-work-context-️) below | No work attribution on any event between two `gt prime` calls; token costs unattributable |
+| **Generic miner work context** | **Critical gap** — see [Generic Miner Work Context](#generic-miner-work-context-️) below | No work attribution on any event between two `gt prime` calls; token costs unattributable |
 | **Agent instantiation** | No `agent.instantiate` event (roadmap) | Cannot anchor a run to a specific agent spawn |
 | **Molecule lifecycle** | No `mol.cook/wisp/squash/burn` events (roadmap) | Cannot observe formula-to-wisp pipeline |
 | **Bead creation** | No `bead.create` event (roadmap) | Cannot trace child bead graph during molecule instantiation |
@@ -461,18 +461,18 @@ See [OTel Data Model](otel-data-model.md) for the complete event schema, attribu
 | Network activity | Not instrumented (Claude API calls logged by agent, but external traffic not) | Cannot diagnose network issues or detect unusual external connections |
 | Cross-rig worktree operations | Worktrees are created/managed but operations not tracked | Cannot correlate worktree lifecycle with work items |
 | Witness monitoring loops | Health checks happen but not exposed to observability | Cannot monitor witness health trends or detect degraded performance |
-| Deacon watchdog chain | Internal state machine, not currently exposed to observability | Cannot track deacon health or detect daemon failures |
+| Supervisor watchdog chain | Internal state machine, not currently exposed to observability | Cannot track supervisor health or detect daemon failures |
 
 ---
 
-## Generic Polecat Work Context ⚠️
+## Generic Miner Work Context ⚠️
 
-**Critical gap**: Polecats are generic agents with no fixed rig. `gt.rig` in resource attributes reflects the allocation rig (or is empty), which has no bearing on the actual work being done. Work context is only determined at each `gt prime` invocation — and changes with every new work assignment.
+**Critical gap**: Miners are generic agents with no fixed rig. `gt.rig` in resource attributes reflects the allocation rig (or is empty), which has no bearing on the actual work being done. Work context is only determined at each `gt prime` invocation — and changes with every new work assignment.
 
 This means all events emitted between two `gt prime` calls (`bd.call`, `mail`, `sling`, `done`) have no work attribution today. You cannot answer "which bead did this `bd.call` serve?" from current telemetry.
 
 **Impact**:
-- `gt.rig` resource attribute is the allocation rig, not the work rig — misleading for multi-rig polecats
+- `gt.rig` resource attribute is the allocation rig, not the work rig — misleading for multi-rig miners
 - Token usage (`agent.usage`, PR #2199) cannot be attributed to a specific bead, rig, or molecule
 - `bd.call`, `mail`, `done` events carry no indication of which work item triggered them
 
@@ -499,30 +499,30 @@ See [OTel Data Model](otel-data-model.md) for complete schema of all events.
 
 **Total counts by status:**
 ```promql
-sum(rate(gastown_polecat_spawns_total[5m])) by (status)
-sum(rate(gastown_bd_calls_total[5m])) by (subcommand, status)
+sum(rate(excavation_miner_spawns_total[5m])) by (status)
+sum(rate(excavation_bd_calls_total[5m])) by (subcommand, status)
 ```
 
-> **Naming note**: OTel SDK metric names use dot notation (e.g. `gastown.bd.calls.total`).
-> Prometheus-compatible backends export these with underscores (e.g. `gastown_bd_calls_total`).
+> **Naming note**: OTel SDK metric names use dot notation (e.g. `excavation.bd.calls.total`).
+> Prometheus-compatible backends export these with underscores (e.g. `excavation_bd_calls_total`).
 > Use underscore form in PromQL queries.
 
 **Latency distributions:**
 ```promql
-histogram_quantile(0.5, rate(gastown_bd_duration_ms_bucket[5m])) by (subcommand)
-histogram_quantile(0.95, rate(gastown_bd_duration_ms_bucket[5m])) by (subcommand)
-histogram_quantile(0.99, rate(gastown_bd_duration_ms_bucket[5m])) by (subcommand)
+histogram_quantile(0.5, rate(excavation_bd_duration_ms_bucket[5m])) by (subcommand)
+histogram_quantile(0.95, rate(excavation_bd_duration_ms_bucket[5m])) by (subcommand)
+histogram_quantile(0.99, rate(excavation_bd_duration_ms_bucket[5m])) by (subcommand)
 ```
 
 **Session activity:**
 ```promql
-sum(increase(gastown_session_starts_total[1h])) by (role)
-sum(increase(gastown_done_total[1h])) by (exit_type)
+sum(increase(excavation_session_starts_total[1h])) by (role)
+sum(increase(excavation_done_total[1h])) by (exit_type)
 ```
 
 ### VictoriaLogs (Structured Logs)
 
-**Find all events from a polecat:**
+**Find all events from a miner:**
 ```logsql
 gt.agent:Toast
 ```
@@ -534,20 +534,20 @@ _msg:bd.call AND status:error
 _msg:session.stop AND status:error
 ```
 
-**Polecat lifecycle:**
+**Miner lifecycle:**
 ```logsql
-_msg:polecat.spawn
-_msg:polecat.remove
+_msg:miner.spawn
+_msg:miner.remove
 _msg:agent.state_change AND new_state:working
 ```
 
 ### Debugging Examples
 
-**Track a polecat working across multiple rigs:**
+**Track a miner working across multiple rigs:**
 ```logsql
 gt.agent:Toast
 ```
-Shows all events from polecat Toast, regardless of rig assignment.
+Shows all events from miner Toast, regardless of rig assignment.
 
 **Identify sessions with high error rates:**
 ```logsql
@@ -564,7 +564,7 @@ run.id:uuid-1234
 ## Related Documentation
 
 - [OTel Data Model](otel-data-model.md) — Complete event schema
-- [Polecat Lifecycle](../../concepts/polecat-lifecycle.md) — Persistent polecat model
+- [Miner Lifecycle](../../concepts/miner-lifecycle.md) — Persistent miner model
 - [Overview](../../overview.md) — Role taxonomy and architecture
 - [Reference](../../reference.md) — Environment variables and commands
 
@@ -615,7 +615,7 @@ Audited against `origin/main` @ `2d8d71ee35fafda3bbdf353683692bfcc9165476`
 | `GT_ROLE` → `gt.role` | `subprocess.go:13` |
 | `GT_RIG` → `gt.rig` | `subprocess.go:16` |
 | `BD_ACTOR` → `gt.actor` | `subprocess.go:19` |
-| `GT_POLECAT` → `gt.agent` | `subprocess.go:23` |
+| `GT_MINER` → `gt.agent` | `subprocess.go:23` |
 | `GT_CREW` → `gt.agent` (fallback) | `subprocess.go:25` |
 | `func SetProcessOTELAttrs()` | `subprocess.go:42` |
 | Sets `OTEL_RESOURCE_ATTRIBUTES` | `subprocess.go:48` |
@@ -638,15 +638,15 @@ Audited against `origin/main` @ `2d8d71ee35fafda3bbdf353683692bfcc9165476`
 | `RecordPrime` / `prime` event | `recorder.go:282` |
 | `RecordPrimeContext` / `prime.context` event | `recorder.go:305` |
 | `RecordAgentStateChange` / `agent.state_change` — `has_hook_bead` bool | `recorder.go:318` |
-| `RecordPolecatSpawn` / `polecat.spawn` event | `recorder.go:338` |
-| `RecordPolecatRemove` / `polecat.remove` event | `recorder.go:352` |
+| `RecordMinerSpawn` / `miner.spawn` event | `recorder.go:338` |
+| `RecordMinerRemove` / `miner.remove` event | `recorder.go:352` |
 | `RecordSling` / `sling` event | `recorder.go:366` |
 | `RecordMail` / `mail` event — `operation`, `status`, `error` only | `recorder.go:381` |
 | `RecordNudge` / `nudge` event | `recorder.go:398` |
 | `RecordDone` / `done` event | `recorder.go:413` |
 | `RecordDaemonRestart` / `daemon.restart` event | `recorder.go:431` |
 | `RecordFormulaInstantiate` / `formula.instantiate` event | `recorder.go:442` |
-| `RecordConvoyCreate` / `convoy.create` event | `recorder.go:460` |
+| `RecordMinecartCreate` / `minecart.create` event | `recorder.go:460` |
 | `RecordPaneOutput` / `pane.output` event | `recorder.go:477` |
 
 ### Absent functions and features (confirmed by grep on `origin/main`)
@@ -670,11 +670,11 @@ OTel SDK uses dot notation; Prometheus-compatible backends export with underscor
 
 | SDK name | PromQL / MetricsQL name |
 |----------|------------------------|
-| `gastown.bd.calls.total` | `gastown_bd_calls_total` |
-| `gastown.bd.duration_ms` | `gastown_bd_duration_ms_bucket` / `_sum` / `_count` |
-| `gastown.polecat.spawns.total` | `gastown_polecat_spawns_total` |
-| `gastown.session.starts.total` | `gastown_session_starts_total` |
-| `gastown.done.total` | `gastown_done_total` |
+| `excavation.bd.calls.total` | `excavation_bd_calls_total` |
+| `excavation.bd.duration_ms` | `excavation_bd_duration_ms_bucket` / `_sum` / `_count` |
+| `excavation.miner.spawns.total` | `excavation_miner_spawns_total` |
+| `excavation.session.starts.total` | `excavation_session_starts_total` |
+| `excavation.done.total` | `excavation_done_total` |
 
 ### PR #2199 additions (commit `8b88de15`, not yet on main)
 
@@ -682,7 +682,7 @@ OTel SDK uses dot notation; Prometheus-compatible backends export with underscor
 |-------|--------|
 | `RecordAgentEvent` / `agent.event` | added in `8b88de15` |
 | `RecordAgentTokenUsage` / `agent.usage` | added in `8b88de15` |
-| `gastown.agent.events.total` Counter | added in `8b88de15` |
+| `excavation.agent.events.total` Counter | added in `8b88de15` |
 | `WithRunID` / `RunIDFromCtx` / `addRunID` | added in `8b88de15` |
 | `gt.session`, `gt.run_id`, `gt.work_*` in resource attrs | `subprocess.go` updated in `8b88de15` |
 | `GT_RUN` propagation to subprocesses | `subprocess.go` updated in `8b88de15` |

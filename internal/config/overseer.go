@@ -10,10 +10,10 @@ import (
 
 )
 
-// OverseerConfig represents the human operator's identity (mayor/overseer.json).
-// The overseer is the human who controls Gas Town, distinct from AI agents.
-type OverseerConfig struct {
-	Type     string `json:"type"`               // "overseer"
+// BossConfig represents the human operator's identity (overseer/boss.json).
+// The boss is the human who controls Excavation Site, distinct from AI agents.
+type BossConfig struct {
+	Type     string `json:"type"`               // "boss"
 	Version  int    `json:"version"`            // schema version
 	Name     string `json:"name"`               // display name
 	Email    string `json:"email,omitempty"`    // email address
@@ -21,39 +21,39 @@ type OverseerConfig struct {
 	Source   string `json:"source"`             // how identity was detected
 }
 
-// CurrentOverseerVersion is the current schema version for OverseerConfig.
-const CurrentOverseerVersion = 1
+// CurrentBossVersion is the current schema version for BossConfig.
+const CurrentBossVersion = 1
 
-// OverseerConfigPath returns the standard path for overseer config in a town.
-func OverseerConfigPath(townRoot string) string {
-	return filepath.Join(townRoot, "mayor", "overseer.json")
+// BossConfigPath returns the standard path for boss config in a town.
+func BossConfigPath(townRoot string) string {
+	return filepath.Join(townRoot, "overseer", "boss.json")
 }
 
-// LoadOverseerConfig loads and validates an overseer configuration file.
-func LoadOverseerConfig(path string) (*OverseerConfig, error) {
+// LoadBossConfig loads and validates an boss configuration file.
+func LoadBossConfig(path string) (*BossConfig, error) {
 	data, err := os.ReadFile(path) //nolint:gosec // G304: path is constructed internally, not from user input
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, fmt.Errorf("%w: %s", ErrNotFound, path)
 		}
-		return nil, fmt.Errorf("reading overseer config: %w", err)
+		return nil, fmt.Errorf("reading boss config: %w", err)
 	}
 
-	var config OverseerConfig
+	var config BossConfig
 	if err := json.Unmarshal(data, &config); err != nil {
-		return nil, fmt.Errorf("parsing overseer config: %w", err)
+		return nil, fmt.Errorf("parsing boss config: %w", err)
 	}
 
-	if err := validateOverseerConfig(&config); err != nil {
+	if err := validateBossConfig(&config); err != nil {
 		return nil, err
 	}
 
 	return &config, nil
 }
 
-// SaveOverseerConfig saves an overseer configuration to a file.
-func SaveOverseerConfig(path string, config *OverseerConfig) error {
-	if err := validateOverseerConfig(config); err != nil {
+// SaveBossConfig saves an boss configuration to a file.
+func SaveBossConfig(path string, config *BossConfig) error {
+	if err := validateBossConfig(config); err != nil {
 		return err
 	}
 
@@ -63,28 +63,28 @@ func SaveOverseerConfig(path string, config *OverseerConfig) error {
 
 	data, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
-		return fmt.Errorf("encoding overseer config: %w", err)
+		return fmt.Errorf("encoding boss config: %w", err)
 	}
 
-	if err := os.WriteFile(path, data, 0644); err != nil { //nolint:gosec // G306: overseer config doesn't contain secrets
-		return fmt.Errorf("writing overseer config: %w", err)
+	if err := os.WriteFile(path, data, 0644); err != nil { //nolint:gosec // G306: boss config doesn't contain secrets
+		return fmt.Errorf("writing boss config: %w", err)
 	}
 
 	return nil
 }
 
-// validateOverseerConfig validates an OverseerConfig.
-func validateOverseerConfig(c *OverseerConfig) error {
-	// Type must be "overseer" (allow empty for backwards compat on load, set on save)
-	if c.Type != "overseer" && c.Type != "" {
-		return fmt.Errorf("%w: expected type 'overseer', got '%s'", ErrInvalidType, c.Type)
+// validateBossConfig validates an BossConfig.
+func validateBossConfig(c *BossConfig) error {
+	// Type must be "boss" (allow empty for backwards compat on load, set on save)
+	if c.Type != "boss" && c.Type != "" {
+		return fmt.Errorf("%w: expected type 'boss', got '%s'", ErrInvalidType, c.Type)
 	}
 	// Ensure type is set for saving
 	if c.Type == "" {
-		c.Type = "overseer"
+		c.Type = "boss"
 	}
-	if c.Version > CurrentOverseerVersion {
-		return fmt.Errorf("%w: got %d, max supported %d", ErrInvalidVersion, c.Version, CurrentOverseerVersion)
+	if c.Version > CurrentBossVersion {
+		return fmt.Errorf("%w: got %d, max supported %d", ErrInvalidVersion, c.Version, CurrentBossVersion)
 	}
 	if c.Name == "" {
 		return fmt.Errorf("%w: name", ErrMissingField)
@@ -92,17 +92,17 @@ func validateOverseerConfig(c *OverseerConfig) error {
 	return nil
 }
 
-// DetectOverseer attempts to detect the overseer's identity from available sources.
+// DetectBoss attempts to detect the boss's identity from available sources.
 // Priority order:
 //  1. Existing config file (if path provided and exists)
 //  2. Git config (user.name + user.email)
 //  3. GitHub CLI (gh api user)
 //  4. Environment ($USER or whoami)
-func DetectOverseer(townRoot string) (*OverseerConfig, error) {
-	configPath := OverseerConfigPath(townRoot)
+func DetectBoss(townRoot string) (*BossConfig, error) {
+	configPath := BossConfigPath(townRoot)
 
 	// Priority 1: Check existing config
-	if existing, err := LoadOverseerConfig(configPath); err == nil {
+	if existing, err := LoadBossConfig(configPath); err == nil {
 		return existing, nil
 	}
 
@@ -121,7 +121,7 @@ func DetectOverseer(townRoot string) (*OverseerConfig, error) {
 }
 
 // detectFromGitConfig attempts to get identity from git config.
-func detectFromGitConfig(dir string) *OverseerConfig {
+func detectFromGitConfig(dir string) *BossConfig {
 	// Try to get user.name
 	nameCmd := exec.Command("git", "config", "user.name")
 	nameCmd.Dir = dir
@@ -135,9 +135,9 @@ func detectFromGitConfig(dir string) *OverseerConfig {
 		return nil
 	}
 
-	config := &OverseerConfig{
-		Type:    "overseer",
-		Version: CurrentOverseerVersion,
+	config := &BossConfig{
+		Type:    "boss",
+		Version: CurrentBossVersion,
 		Name:    name,
 		Source:  "git-config",
 	}
@@ -161,7 +161,7 @@ func detectFromGitConfig(dir string) *OverseerConfig {
 }
 
 // detectFromGitHub attempts to get identity from GitHub CLI.
-func detectFromGitHub() *OverseerConfig {
+func detectFromGitHub() *BossConfig {
 	cmd := exec.Command("gh", "api", "user", "--jq", ".login + \"|\" + .name + \"|\" + .email")
 
 	out, err := cmd.Output()
@@ -174,9 +174,9 @@ func detectFromGitHub() *OverseerConfig {
 		return nil
 	}
 
-	config := &OverseerConfig{
-		Type:     "overseer",
-		Version:  CurrentOverseerVersion,
+	config := &BossConfig{
+		Type:     "boss",
+		Version:  CurrentBossVersion,
 		Username: parts[0],
 		Source:   "github-cli",
 	}
@@ -197,7 +197,7 @@ func detectFromGitHub() *OverseerConfig {
 }
 
 // detectFromEnvironment falls back to environment variables.
-func detectFromEnvironment() *OverseerConfig {
+func detectFromEnvironment() *BossConfig {
 	username := os.Getenv("USER")
 	if username == "" {
 		// Try whoami as last resort
@@ -208,45 +208,45 @@ func detectFromEnvironment() *OverseerConfig {
 		}
 	}
 	if username == "" {
-		username = "overseer"
+		username = "boss"
 	}
 
-	return &OverseerConfig{
-		Type:     "overseer",
-		Version:  CurrentOverseerVersion,
+	return &BossConfig{
+		Type:     "boss",
+		Version:  CurrentBossVersion,
 		Name:     username,
 		Username: username,
 		Source:   "environment",
 	}
 }
 
-// LoadOrDetectOverseer loads existing config or detects and saves a new one.
-func LoadOrDetectOverseer(townRoot string) (*OverseerConfig, error) {
-	configPath := OverseerConfigPath(townRoot)
+// LoadOrDetectBoss loads existing config or detects and saves a new one.
+func LoadOrDetectBoss(townRoot string) (*BossConfig, error) {
+	configPath := BossConfigPath(townRoot)
 
 	// Try loading existing
-	if config, err := LoadOverseerConfig(configPath); err == nil {
+	if config, err := LoadBossConfig(configPath); err == nil {
 		return config, nil
 	}
 
 	// Detect new
-	config, err := DetectOverseer(townRoot)
+	config, err := DetectBoss(townRoot)
 	if err != nil {
 		return nil, err
 	}
 
 	// Save for next time
-	if err := SaveOverseerConfig(configPath, config); err != nil {
+	if err := SaveBossConfig(configPath, config); err != nil {
 		// Non-fatal - we can still use the detected config
-		fmt.Fprintf(os.Stderr, "warning: could not save overseer config: %v\n", err)
+		fmt.Fprintf(os.Stderr, "warning: could not save boss config: %v\n", err)
 	}
 
 	return config, nil
 }
 
-// FormatOverseerIdentity returns a formatted string for display.
+// FormatBossIdentity returns a formatted string for display.
 // Example: "Steve Yegge <stevey@example.com>"
-func (c *OverseerConfig) FormatOverseerIdentity() string {
+func (c *BossConfig) FormatBossIdentity() string {
 	if c.Email != "" {
 		return fmt.Sprintf("%s <%s>", c.Name, c.Email)
 	}

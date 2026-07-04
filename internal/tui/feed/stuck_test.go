@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
+	"github.com/steveyegge/excavation/internal/beads"
 )
 
 // mockHealthSource is a test double for HealthDataSource
@@ -241,8 +241,8 @@ func TestThresholdConstants(t *testing.T) {
 // TestCheckAll_GUPPViolation tests that agents with hook + >30min stale are detected as GUPP
 func TestCheckAll_GUPPViolation(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-gastown-polecat-Toast"] = &beads.Issue{
-		ID:        "gt-gastown-polecat-Toast",
+	mock.agents["gt-excavation-miner-Toast"] = &beads.Issue{
+		ID:        "gt-excavation-miner-Toast",
 		HookBead:  "gt-abc12",
 		UpdatedAt: time.Now().Add(-45 * time.Minute).Format(time.RFC3339),
 	}
@@ -271,8 +271,8 @@ func TestCheckAll_GUPPViolation(t *testing.T) {
 // TestCheckAll_Stalled tests that agents with hook + >15min stale are detected as stalled
 func TestCheckAll_Stalled(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-gastown-polecat-Pearl"] = &beads.Issue{
-		ID:        "gt-gastown-polecat-Pearl",
+	mock.agents["gt-excavation-miner-Pearl"] = &beads.Issue{
+		ID:        "gt-excavation-miner-Pearl",
 		HookBead:  "gt-def34",
 		UpdatedAt: time.Now().Add(-20 * time.Minute).Format(time.RFC3339),
 	}
@@ -295,8 +295,8 @@ func TestCheckAll_Stalled(t *testing.T) {
 // TestCheckAll_Working tests that agents with hook + recent update are working
 func TestCheckAll_Working(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-gastown-polecat-Max"] = &beads.Issue{
-		ID:        "gt-gastown-polecat-Max",
+	mock.agents["gt-excavation-miner-Max"] = &beads.Issue{
+		ID:        "gt-excavation-miner-Max",
 		HookBead:  "gt-xyz89",
 		UpdatedAt: time.Now().Add(-2 * time.Minute).Format(time.RFC3339),
 	}
@@ -319,8 +319,8 @@ func TestCheckAll_Working(t *testing.T) {
 // TestCheckAll_Idle tests that agents with no hook are idle
 func TestCheckAll_Idle(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-gastown-polecat-Joe"] = &beads.Issue{
-		ID:        "gt-gastown-polecat-Joe",
+	mock.agents["gt-excavation-miner-Joe"] = &beads.Issue{
+		ID:        "gt-excavation-miner-Joe",
 		HookBead:  "", // no hooked work
 		UpdatedAt: time.Now().Add(-5 * time.Minute).Format(time.RFC3339),
 	}
@@ -343,8 +343,8 @@ func TestCheckAll_Idle(t *testing.T) {
 // TestCheckAll_Zombie tests that agents with dead sessions are zombies
 func TestCheckAll_Zombie(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-gastown-polecat-Dead"] = &beads.Issue{
-		ID:        "gt-gastown-polecat-Dead",
+	mock.agents["gt-excavation-miner-Dead"] = &beads.Issue{
+		ID:        "gt-excavation-miner-Dead",
 		HookBead:  "gt-work1",
 		UpdatedAt: time.Now().Add(-10 * time.Minute).Format(time.RFC3339),
 	}
@@ -370,24 +370,24 @@ func TestCheckAll_MultipleAgents(t *testing.T) {
 	now := time.Now()
 
 	// GUPP violation agent
-	mock.agents["gt-gastown-polecat-Stuck"] = &beads.Issue{
-		ID:        "gt-gastown-polecat-Stuck",
+	mock.agents["gt-excavation-miner-Stuck"] = &beads.Issue{
+		ID:        "gt-excavation-miner-Stuck",
 		HookBead:  "gt-work1",
 		UpdatedAt: now.Add(-40 * time.Minute).Format(time.RFC3339),
 	}
 	mock.sessions["gt-Stuck"] = true
 
 	// Working agent
-	mock.agents["gt-gastown-polecat-Happy"] = &beads.Issue{
-		ID:        "gt-gastown-polecat-Happy",
+	mock.agents["gt-excavation-miner-Happy"] = &beads.Issue{
+		ID:        "gt-excavation-miner-Happy",
 		HookBead:  "gt-work2",
 		UpdatedAt: now.Add(-2 * time.Minute).Format(time.RFC3339),
 	}
 	mock.sessions["gt-Happy"] = true
 
 	// Idle agent
-	mock.agents["gt-gastown-polecat-Lazy"] = &beads.Issue{
-		ID:        "gt-gastown-polecat-Lazy",
+	mock.agents["gt-excavation-miner-Lazy"] = &beads.Issue{
+		ID:        "gt-excavation-miner-Lazy",
 		HookBead:  "",
 		UpdatedAt: now.Add(-5 * time.Minute).Format(time.RFC3339),
 	}
@@ -442,15 +442,15 @@ func TestCheckAll_ListError(t *testing.T) {
 	}
 }
 
-// TestCheckAll_TownLevelAgent tests detection of town-level agents (mayor, deacon)
+// TestCheckAll_TownLevelAgent tests detection of town-level agents (overseer, supervisor)
 func TestCheckAll_TownLevelAgent(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["hq-mayor"] = &beads.Issue{
-		ID:        "hq-mayor",
+	mock.agents["hq-overseer"] = &beads.Issue{
+		ID:        "hq-overseer",
 		HookBead:  "",
 		UpdatedAt: time.Now().Add(-3 * time.Minute).Format(time.RFC3339),
 	}
-	mock.sessions["hq-mayor"] = true
+	mock.sessions["hq-overseer"] = true
 
 	detector := NewStuckDetectorWithSource(mock)
 	agents, err := detector.CheckAll()
@@ -461,11 +461,11 @@ func TestCheckAll_TownLevelAgent(t *testing.T) {
 	if len(agents) != 1 {
 		t.Fatalf("expected 1 agent, got %d", len(agents))
 	}
-	if agents[0].Role != "mayor" {
-		t.Errorf("expected role 'mayor', got %q", agents[0].Role)
+	if agents[0].Role != "overseer" {
+		t.Errorf("expected role 'overseer', got %q", agents[0].Role)
 	}
-	if agents[0].SessionID != "hq-mayor" {
-		t.Errorf("expected session 'hq-mayor', got %q", agents[0].SessionID)
+	if agents[0].SessionID != "hq-overseer" {
+		t.Errorf("expected session 'hq-overseer', got %q", agents[0].SessionID)
 	}
 	if agents[0].State != StateIdle {
 		t.Errorf("expected StateIdle, got %s", agents[0].State)
@@ -475,8 +475,8 @@ func TestCheckAll_TownLevelAgent(t *testing.T) {
 // TestCheckAll_RigSingleton tests detection of rig-level singletons (witness, refinery)
 func TestCheckAll_RigSingleton(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-gastown-witness"] = &beads.Issue{
-		ID:        "gt-gastown-witness",
+	mock.agents["gt-excavation-witness"] = &beads.Issue{
+		ID:        "gt-excavation-witness",
 		HookBead:  "",
 		UpdatedAt: time.Now().Add(-1 * time.Minute).Format(time.RFC3339),
 	}
@@ -494,8 +494,8 @@ func TestCheckAll_RigSingleton(t *testing.T) {
 	if agents[0].Role != "witness" {
 		t.Errorf("expected role 'witness', got %q", agents[0].Role)
 	}
-	if agents[0].Rig != "gastown" {
-		t.Errorf("expected rig 'gastown', got %q", agents[0].Rig)
+	if agents[0].Rig != "excavation" {
+		t.Errorf("expected rig 'excavation', got %q", agents[0].Rig)
 	}
 	if agents[0].SessionID != "gt-witness" {
 		t.Errorf("expected session 'gt-witness', got %q", agents[0].SessionID)
@@ -505,8 +505,8 @@ func TestCheckAll_RigSingleton(t *testing.T) {
 // TestCheckAll_CrewAgent tests detection of crew agents
 func TestCheckAll_CrewAgent(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-gastown-crew-joe"] = &beads.Issue{
-		ID:        "gt-gastown-crew-joe",
+	mock.agents["gt-excavation-crew-joe"] = &beads.Issue{
+		ID:        "gt-excavation-crew-joe",
 		HookBead:  "gt-task1",
 		UpdatedAt: time.Now().Add(-5 * time.Minute).Format(time.RFC3339),
 	}
@@ -541,12 +541,12 @@ func TestDeriveSessionName(t *testing.T) {
 		agentNm  string
 		expected string
 	}{
-		{"mayor", "", "mayor", "", "hq-mayor"},
-		{"deacon", "", "deacon", "", "hq-deacon"},
-		{"witness", "gastown", "witness", "", "gt-witness"},
-		{"refinery", "gastown", "refinery", "", "gt-refinery"},
-		{"crew", "gastown", "crew", "joe", "gt-crew-joe"},
-		{"polecat", "gastown", "polecat", "Toast", "gt-Toast"},
+		{"overseer", "", "overseer", "", "hq-overseer"},
+		{"supervisor", "", "supervisor", "", "hq-supervisor"},
+		{"witness", "excavation", "witness", "", "gt-witness"},
+		{"refinery", "excavation", "refinery", "", "gt-refinery"},
+		{"crew", "excavation", "crew", "joe", "gt-crew-joe"},
+		{"miner", "excavation", "miner", "Toast", "gt-Toast"},
 	}
 
 	for _, tt := range tests {
@@ -584,8 +584,8 @@ func TestCheckAll_InvalidBeadID(t *testing.T) {
 // TestCheckAll_SessionError tests that IsSessionAlive errors don't cause false zombies
 func TestCheckAll_SessionError(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-gastown-polecat-Alpha"] = &beads.Issue{
-		ID:        "gt-gastown-polecat-Alpha",
+	mock.agents["gt-excavation-miner-Alpha"] = &beads.Issue{
+		ID:        "gt-excavation-miner-Alpha",
 		HookBead:  "gt-work1",
 		UpdatedAt: time.Now().Add(-5 * time.Minute).Format(time.RFC3339),
 	}
@@ -611,16 +611,16 @@ func TestCheckAll_SessionError(t *testing.T) {
 }
 
 // TestCheckAll_RalphcatNotStalled tests that a ralphcat with 45min idle is NOT stalled
-// (would be stalled for a normal polecat at the 15min threshold)
+// (would be stalled for a normal miner at the 15min threshold)
 func TestCheckAll_RalphcatNotStalled(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-gastown-polecat-Ralph"] = &beads.Issue{
-		ID:       "gt-gastown-polecat-Ralph",
+	mock.agents["gt-excavation-miner-Ralph"] = &beads.Issue{
+		ID:       "gt-excavation-miner-Ralph",
 		HookBead: "gt-abc12",
-		// 45 minutes idle — stalled for normal polecat, but fine for ralphcat
+		// 45 minutes idle — stalled for normal miner, but fine for ralphcat
 		UpdatedAt: time.Now().Add(-45 * time.Minute).Format(time.RFC3339),
 		// Description contains mode: ralph (agent fields)
-		Description: "Polecat Ralph\n\nrole_type: polecat\nrig: gastown\nagent_state: working\nhook_bead: gt-abc12\ncleanup_status: null\nactive_mr: null\nnotification_level: null\nmode: ralph",
+		Description: "Miner Ralph\n\nrole_type: miner\nrig: excavation\nagent_state: working\nhook_bead: gt-abc12\ncleanup_status: null\nactive_mr: null\nnotification_level: null\nmode: ralph",
 	}
 	mock.sessions["gt-Ralph"] = true // session alive
 
@@ -633,7 +633,7 @@ func TestCheckAll_RalphcatNotStalled(t *testing.T) {
 	if len(agents) != 1 {
 		t.Fatalf("expected 1 agent, got %d", len(agents))
 	}
-	// At 45 min, normal polecat would be GUPP (>=30min). Ralphcat threshold is 240min.
+	// At 45 min, normal miner would be GUPP (>=30min). Ralphcat threshold is 240min.
 	// At 45 min idle, ralphcat should be Working (< 120min stalled threshold).
 	if agents[0].State != StateWorking {
 		t.Errorf("expected StateWorking for ralphcat at 45min idle, got %s", agents[0].State)
@@ -643,11 +643,11 @@ func TestCheckAll_RalphcatNotStalled(t *testing.T) {
 // TestCheckAll_RalphcatStalled tests that a ralphcat IS stalled after 2+ hours
 func TestCheckAll_RalphcatStalled(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-gastown-polecat-Ralph2"] = &beads.Issue{
-		ID:          "gt-gastown-polecat-Ralph2",
+	mock.agents["gt-excavation-miner-Ralph2"] = &beads.Issue{
+		ID:          "gt-excavation-miner-Ralph2",
 		HookBead:    "gt-def34",
 		UpdatedAt:   time.Now().Add(-150 * time.Minute).Format(time.RFC3339), // 2.5 hours
-		Description: "Polecat Ralph2\n\nrole_type: polecat\nrig: gastown\nagent_state: working\nhook_bead: gt-def34\ncleanup_status: null\nactive_mr: null\nnotification_level: null\nmode: ralph",
+		Description: "Miner Ralph2\n\nrole_type: miner\nrig: excavation\nagent_state: working\nhook_bead: gt-def34\ncleanup_status: null\nactive_mr: null\nnotification_level: null\nmode: ralph",
 	}
 	mock.sessions["gt-Ralph2"] = true
 
@@ -669,11 +669,11 @@ func TestCheckAll_RalphcatStalled(t *testing.T) {
 // TestCheckAll_RalphcatGUPP tests that a ralphcat with 5h idle IS in GUPP violation
 func TestCheckAll_RalphcatGUPP(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-gastown-polecat-Ralph3"] = &beads.Issue{
-		ID:          "gt-gastown-polecat-Ralph3",
+	mock.agents["gt-excavation-miner-Ralph3"] = &beads.Issue{
+		ID:          "gt-excavation-miner-Ralph3",
 		HookBead:    "gt-ghi56",
 		UpdatedAt:   time.Now().Add(-300 * time.Minute).Format(time.RFC3339), // 5 hours
-		Description: "Polecat Ralph3\n\nrole_type: polecat\nrig: gastown\nagent_state: working\nhook_bead: gt-ghi56\ncleanup_status: null\nactive_mr: null\nnotification_level: null\nmode: ralph",
+		Description: "Miner Ralph3\n\nrole_type: miner\nrig: excavation\nagent_state: working\nhook_bead: gt-ghi56\ncleanup_status: null\nactive_mr: null\nnotification_level: null\nmode: ralph",
 	}
 	mock.sessions["gt-Ralph3"] = true
 
@@ -711,17 +711,17 @@ func TestIsRalphMode(t *testing.T) {
 		},
 		{
 			name:     "no mode field",
-			issue:    &beads.Issue{Description: "role_type: polecat\nrig: gastown"},
+			issue:    &beads.Issue{Description: "role_type: miner\nrig: excavation"},
 			expected: false,
 		},
 		{
 			name:     "mode ralph",
-			issue:    &beads.Issue{Description: "role_type: polecat\nmode: ralph"},
+			issue:    &beads.Issue{Description: "role_type: miner\nmode: ralph"},
 			expected: true,
 		},
 		{
 			name:     "mode other",
-			issue:    &beads.Issue{Description: "role_type: polecat\nmode: other"},
+			issue:    &beads.Issue{Description: "role_type: miner\nmode: other"},
 			expected: false,
 		},
 	}
@@ -743,34 +743,34 @@ func TestNudgeTarget(t *testing.T) {
 		expected string
 	}{
 		{
-			name:     "mayor",
-			agent:    &ProblemAgent{Role: "mayor", Name: "mayor", Rig: ""},
-			expected: "mayor",
+			name:     "overseer",
+			agent:    &ProblemAgent{Role: "overseer", Name: "overseer", Rig: ""},
+			expected: "overseer",
 		},
 		{
-			name:     "deacon",
-			agent:    &ProblemAgent{Role: "deacon", Name: "deacon", Rig: ""},
-			expected: "deacon",
+			name:     "supervisor",
+			agent:    &ProblemAgent{Role: "supervisor", Name: "supervisor", Rig: ""},
+			expected: "supervisor",
 		},
 		{
 			name:     "witness",
-			agent:    &ProblemAgent{Role: "witness", Name: "witness", Rig: "gastown"},
-			expected: "gastown/witness",
+			agent:    &ProblemAgent{Role: "witness", Name: "witness", Rig: "excavation"},
+			expected: "excavation/witness",
 		},
 		{
 			name:     "refinery",
-			agent:    &ProblemAgent{Role: "refinery", Name: "refinery", Rig: "gastown"},
-			expected: "gastown/refinery",
+			agent:    &ProblemAgent{Role: "refinery", Name: "refinery", Rig: "excavation"},
+			expected: "excavation/refinery",
 		},
 		{
 			name:     "crew",
-			agent:    &ProblemAgent{Role: "crew", Name: "joe", Rig: "gastown"},
-			expected: "gastown/crew/joe",
+			agent:    &ProblemAgent{Role: "crew", Name: "joe", Rig: "excavation"},
+			expected: "excavation/crew/joe",
 		},
 		{
-			name:     "polecat",
-			agent:    &ProblemAgent{Role: "polecat", Name: "Toast", Rig: "gastown"},
-			expected: "gastown/Toast",
+			name:     "miner",
+			agent:    &ProblemAgent{Role: "miner", Name: "Toast", Rig: "excavation"},
+			expected: "excavation/Toast",
 		},
 		{
 			name:     "unknown role falls back to session ID",

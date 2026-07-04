@@ -32,7 +32,7 @@
     role: refinery
     role_context: >
       You are the Refinery. Rebase failed with a merge conflict. Abort the rebase and
-      skip this MR. Do not attempt to resolve conflicts — that's the polecat's job.
+      skip this MR. Do not attempt to resolve conflicts — that's the miner's job.
     formula_step: process-branch
     allowed_actions: '["proceed-to-tests", "abort-and-skip", "retry", "close-mr-bead", "send-merged-notification"]'
     shell_output: |
@@ -115,10 +115,10 @@
     formula_step: process-branch
     allowed_actions: '["proceed-to-tests", "abort-and-skip", "retry", "close-mr-bead", "send-merged-notification"]'
     shell_output: |
-      $ gt mq list gastown
-      📋 Merge queue for 'gastown':
+      $ gt mq list excavation
+      📋 Merge queue for 'excavation':
 
-      ID           SCORE PRI CONVOY       BRANCH              TARGET            STATUS AGE
+      ID           SCORE PRI MINECART       BRANCH              TARGET            STATUS AGE
       mr-release   9.8   P1  (none)       fix/release-hotfix  release/v2.1      ready   3m
 
       $ git checkout -b temp-merge origin/fix/release-hotfix
@@ -143,10 +143,10 @@
     formula_step: process-branch
     allowed_actions: '["proceed-to-tests", "abort-and-skip", "retry", "close-mr-bead", "send-merged-notification"]'
     shell_output: |
-      $ gt mq list gastown
-      📋 Merge queue for 'gastown':
+      $ gt mq list excavation
+      📋 Merge queue for 'excavation':
 
-      ID         SCORE PRI CONVOY       BRANCH           TARGET               STATUS AGE
+      ID         SCORE PRI MINECART       BRANCH           TARGET               STATUS AGE
       mr-wave2   9.6   P1  (none)       feat/wave-2-api  integration/gt-epic  ready   2m
 
       $ git checkout -b temp-merge origin/feat/wave-2-api
@@ -173,10 +173,10 @@
     formula_step: process-branch
     allowed_actions: '["proceed-to-tests", "abort-and-skip", "retry", "close-mr-bead", "send-merged-notification"]'
     shell_output: |
-      $ gt mq list gastown
-      📋 Merge queue for 'gastown':
+      $ gt mq list excavation
+      📋 Merge queue for 'excavation':
 
-      ID         SCORE PRI CONVOY       BRANCH           TARGET               STATUS AGE
+      ID         SCORE PRI MINECART       BRANCH           TARGET               STATUS AGE
       mr-wave2   9.6   P1  (none)       feat/wave-2-api  integration/gt-epic  ready   2m
 
       $ git checkout -b temp-merge origin/feat/wave-2-api
@@ -206,10 +206,10 @@
     formula_step: process-branch
     allowed_actions: '["proceed-to-tests", "abort-and-skip", "retry", "close-mr-bead", "send-merged-notification"]'
     shell_output: |
-      $ gt mq list gastown
-      📋 Merge queue for 'gastown':
+      $ gt mq list excavation
+      📋 Merge queue for 'excavation':
 
-      ID         SCORE PRI CONVOY       BRANCH           TARGET               STATUS AGE
+      ID         SCORE PRI MINECART       BRANCH           TARGET               STATUS AGE
       mr-wave2   9.6   P1  (none)       feat/wave-2-api  integration/gt-epic  ready   2m
 
       $ git checkout -b temp-merge origin/feat/wave-2-api
@@ -229,7 +229,7 @@
       You are the Refinery. After pushing, you MUST verify the push succeeded by
       comparing local and remote SHAs. If they match, send the MERGED notification
       to the witness IMMEDIATELY — before any cleanup. This is critical: without
-      the notification, polecat worktrees accumulate indefinitely.
+      the notification, miner worktrees accumulate indefinitely.
     formula_step: merge-push
     allowed_actions: '["proceed-to-tests", "abort-and-skip", "retry", "close-mr-bead", "send-merged-notification"]'
     shell_output: |
@@ -266,10 +266,10 @@
     shell_output: |
       ## Branch merged to integration/gt-epic
 
-      $ gt mq list gastown
-      📋 Merge queue for 'gastown':
+      $ gt mq list excavation
+      📋 Merge queue for 'excavation':
 
-      ID         SCORE PRI CONVOY       BRANCH           TARGET               STATUS AGE
+      ID         SCORE PRI MINECART       BRANCH           TARGET               STATUS AGE
       mr-wave2   9.6   P1  (none)       feat/wave-2-api  integration/gt-epic  ready   2m
 
       $ git checkout integration/gt-epic
@@ -305,10 +305,10 @@
     shell_output: |
       ## MR target is integration/gt-epic, but config requires target_branch=main
 
-      $ gt mq list gastown
-      📋 Merge queue for 'gastown':
+      $ gt mq list excavation
+      📋 Merge queue for 'excavation':
 
-      ID         SCORE PRI CONVOY       BRANCH           TARGET               STATUS AGE
+      ID         SCORE PRI MINECART       BRANCH           TARGET               STATUS AGE
       mr-wave2   9.6   P1  (none)       feat/wave-2-api  integration/gt-epic  ready   2m
 
       $ git checkout main
@@ -344,10 +344,10 @@
     shell_output: |
       ## MR target: integration/gt-epic
 
-      $ gt mq list gastown
-      📋 Merge queue for 'gastown':
+      $ gt mq list excavation
+      📋 Merge queue for 'excavation':
 
-      ID         SCORE PRI CONVOY       BRANCH           TARGET               STATUS AGE
+      ID         SCORE PRI MINECART       BRANCH           TARGET               STATUS AGE
       mr-wave2   9.6   P1  (none)       feat/wave-2-api  integration/gt-epic  ready   2m
 
       $ git checkout main

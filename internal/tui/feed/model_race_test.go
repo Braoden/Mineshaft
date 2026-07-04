@@ -27,10 +27,10 @@ func TestAddEventConcurrentWithView(t *testing.T) {
 			m.addEvent(Event{
 				Time:    time.Now(),
 				Type:    "update",
-				Actor:   "gastown/crew/test",
+				Actor:   "excavation/crew/test",
 				Target:  "gt-xyz",
 				Message: "test event",
-				Rig:     "gastown",
+				Rig:     "excavation",
 				Role:    "crew",
 			})
 		}
@@ -78,7 +78,7 @@ func TestSetEventChannelConcurrentWithListen(t *testing.T) {
 }
 
 // TestSetTownRootConcurrentWithFetch verifies that SetTownRoot can be called
-// concurrently with fetchConvoys without data races.
+// concurrently with fetchMinecarts without data races.
 func TestSetTownRootConcurrentWithFetch(t *testing.T) {
 	m := NewModel(nil)
 
@@ -93,12 +93,12 @@ func TestSetTownRootConcurrentWithFetch(t *testing.T) {
 		}
 	}()
 
-	// Reader goroutine: call fetchConvoys (reads townRoot)
+	// Reader goroutine: call fetchMinecarts (reads townRoot)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		for i := 0; i < 100; i++ {
-			_ = m.fetchConvoys()
+			_ = m.fetchMinecarts()
 		}
 	}()
 
@@ -125,10 +125,10 @@ func TestMultipleWritersConcurrent(t *testing.T) {
 				m.addEvent(Event{
 					Time:    time.Now(),
 					Type:    "create",
-					Actor:   "gastown/crew/test",
+					Actor:   "excavation/crew/test",
 					Target:  "gt-test",
 					Message: "concurrent event",
-					Rig:     "gastown",
+					Rig:     "excavation",
 					Role:    "crew",
 				})
 			}
@@ -167,10 +167,10 @@ func TestAddEventLocked(t *testing.T) {
 			event: Event{
 				Time:    time.Now(),
 				Type:    "create",
-				Actor:   "gastown/crew/joe",
+				Actor:   "excavation/crew/joe",
 				Target:  "gt-abc",
 				Message: "created issue",
-				Rig:     "gastown",
+				Rig:     "excavation",
 				Role:    "crew",
 			},
 			wantUpdate: true,
@@ -217,8 +217,8 @@ func TestAddEventLocked(t *testing.T) {
 	}
 
 	// Verify agent tree was populated
-	if _, ok := m.rigs["gastown"]; !ok {
-		t.Error("expected gastown rig in tree")
+	if _, ok := m.rigs["excavation"]; !ok {
+		t.Error("expected excavation rig in tree")
 	}
 	if _, ok := m.rigs["beads"]; !ok {
 		t.Error("expected beads rig in tree")
@@ -236,10 +236,10 @@ func TestEventsHistoryLimit(t *testing.T) {
 		m.addEventLocked(Event{
 			Time:    time.Now().Add(time.Duration(i) * time.Millisecond),
 			Type:    "create",
-			Actor:   "gastown/crew/test",
+			Actor:   "excavation/crew/test",
 			Target:  "gt-test",
 			Message: "event",
-			Rig:     "gastown",
+			Rig:     "excavation",
 			Role:    "crew",
 		})
 		m.mu.Unlock()

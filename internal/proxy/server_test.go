@@ -348,7 +348,7 @@ func TestStartIntegration(t *testing.T) {
 	pool := x509.NewCertPool()
 	pool.AddCert(ca.Cert)
 
-	clientCertPEM, clientKeyPEM, err := ca.IssuePolecat("gt-gastown-testclient", time.Hour)
+	clientCertPEM, clientKeyPEM, err := ca.IssueMiner("gt-excavation-testclient", time.Hour)
 	require.NoError(t, err)
 	clientCert, err := tls.X509KeyPair(clientCertPEM, clientKeyPEM)
 	require.NoError(t, err)
@@ -402,7 +402,7 @@ func TestStartIntegration(t *testing.T) {
 		ca2, err := GenerateCA(dir2)
 		require.NoError(t, err)
 
-		wrongCertPEM, wrongKeyPEM, err := ca2.IssuePolecat("gt-gastown-evil", time.Hour)
+		wrongCertPEM, wrongKeyPEM, err := ca2.IssueMiner("gt-excavation-evil", time.Hour)
 		require.NoError(t, err)
 		wrongClientCert, err := tls.X509KeyPair(wrongCertPEM, wrongKeyPEM)
 		require.NoError(t, err)
@@ -486,13 +486,13 @@ func TestCertRevocation(t *testing.T) {
 	pool := x509.NewCertPool()
 	pool.AddCert(ca.Cert)
 
-	// Issue two distinct polecat certs.
-	cert1PEM, key1PEM, err := ca.IssuePolecat("gt-gastown-alice", time.Hour)
+	// Issue two distinct miner certs.
+	cert1PEM, key1PEM, err := ca.IssueMiner("gt-excavation-alice", time.Hour)
 	require.NoError(t, err)
 	tlsCert1, err := tls.X509KeyPair(cert1PEM, key1PEM)
 	require.NoError(t, err)
 
-	cert2PEM, key2PEM, err := ca.IssuePolecat("gt-gastown-bob", time.Hour)
+	cert2PEM, key2PEM, err := ca.IssueMiner("gt-excavation-bob", time.Hour)
 	require.NoError(t, err)
 	tlsCert2, err := tls.X509KeyPair(cert2PEM, key2PEM)
 	require.NoError(t, err)
@@ -579,7 +579,7 @@ func TestAdminDenyCertEndpoint(t *testing.T) {
 	pool.AddCert(ca.Cert)
 
 	// Issue a cert for testing.
-	certPEM, keyPEM, err := ca.IssuePolecat("gt-gastown-carol", time.Hour)
+	certPEM, keyPEM, err := ca.IssueMiner("gt-excavation-carol", time.Hour)
 	require.NoError(t, err)
 	tlsCert, err := tls.X509KeyPair(certPEM, keyPEM)
 	require.NoError(t, err)
@@ -677,7 +677,7 @@ func TestAdminDenyCertEndpoint(t *testing.T) {
 	})
 }
 
-// TestAdminIssueCertEndpoint verifies the local admin HTTP endpoint for issuing polecat certs.
+// TestAdminIssueCertEndpoint verifies the local admin HTTP endpoint for issuing miner certs.
 func TestAdminIssueCertEndpoint(t *testing.T) {
 	dir := t.TempDir()
 	ca, err := GenerateCA(dir)

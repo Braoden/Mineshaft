@@ -16,8 +16,8 @@ synthesized into a prioritized list of clarifying questions for the human.
 - **stakeholders**: Who's affected? Are there conflicting needs?
 
 ## Execution Model
-1. Each leg spawns as a separate polecat
-2. Polecats work in parallel
+1. Each leg spawns as a separate miner
+2. Miners work in parallel
 3. Each writes analysis to their designated output file
 4. Synthesis step combines all findings into consolidated questions for the human
 
@@ -27,7 +27,7 @@ A .prd-reviews/<review-id>/ directory containing:
 - prd-review.md with consolidated questions and confidence assessment
 """
 formula = "mol-prd-review"
-type = "convoy"
+type = "minecart"
 version = 1
 
 [inputs]
@@ -45,7 +45,7 @@ required = false
 base = """
 # PRD Review Assignment
 
-You are a specialized analyst participating in a parallel PRD review convoy.
+You are a specialized analyst participating in a parallel PRD review minecart.
 
 ## Context
 - **Formula**: {{.formula_name}}
@@ -272,7 +272,7 @@ All leg analyses from: {{.output.directory}}/
 3. Deduplicate and prioritize
 4. Group into must-answer-before-build vs important-but-not-blocking
 5. Write the synthesized review
-6. Mail the human overseer with the questions
+6. Mail the human boss with the questions
 
 **Output file:** {{.output.directory}}/{{.output.synthesis}}
 
@@ -314,10 +314,10 @@ All leg analyses from: {{.output.directory}}/
 ## Next Steps
 - [ ] Human answers critical questions above
 - [ ] Updated PRD bead with answers
-- [ ] Pour `design` convoy to generate implementation plan
+- [ ] Pour `design` minecart to generate implementation plan
 ```
 
-**After writing the file, mail the human overseer:**
+**After writing the file, mail the human boss:**
 ```bash
 gt mail send --human -s "PRD Review Complete: {{.problem}}" -m "
 Review is ready: {{.output.directory}}/prd-review.md

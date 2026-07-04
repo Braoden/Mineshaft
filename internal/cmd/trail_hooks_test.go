@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/events"
+	"github.com/steveyegge/excavation/internal/events"
 )
 
 func writeTrailEventsFile(t *testing.T, path string, entries []events.Event) {
@@ -58,13 +58,13 @@ func TestReadHookTrailEntriesFiltersAndOrders(t *testing.T) {
 		{
 			Timestamp: base.Add(-3 * time.Hour).Format(time.RFC3339),
 			Type:      events.TypeHook,
-			Actor:     "rig/polecats/kim",
+			Actor:     "rig/miners/kim",
 			Payload:   map[string]interface{}{"bead": "gt-101"},
 		},
 		{
 			Timestamp: base.Add(-2 * time.Hour).Format(time.RFC3339),
 			Type:      events.TypeUnhook,
-			Actor:     "rig/polecats/lee",
+			Actor:     "rig/miners/lee",
 			Payload:   map[string]interface{}{"bead": "gt-102"},
 		},
 		{
@@ -103,19 +103,19 @@ func TestReadHookTrailEntriesSinceAndLimit(t *testing.T) {
 		{
 			Timestamp: base.Add(-3 * time.Hour).Format(time.RFC3339),
 			Type:      events.TypeHook,
-			Actor:     "rig/polecats/a",
+			Actor:     "rig/miners/a",
 			Payload:   map[string]interface{}{"bead": "gt-201"},
 		},
 		{
 			Timestamp: base.Add(-2 * time.Hour).Format(time.RFC3339),
 			Type:      events.TypeUnhook,
-			Actor:     "rig/polecats/b",
+			Actor:     "rig/miners/b",
 			Payload:   map[string]interface{}{"bead": "gt-202"},
 		},
 		{
 			Timestamp: base.Add(-1 * time.Hour).Format(time.RFC3339),
 			Type:      events.TypeHook,
-			Actor:     "rig/polecats/c",
+			Actor:     "rig/miners/c",
 			Payload:   map[string]interface{}{"bead": "gt-203"},
 		},
 	})

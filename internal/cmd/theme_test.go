@@ -7,20 +7,20 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/config"
 )
 
-// setupTestTownForTheme creates a minimal Gas Town workspace for theme tests.
+// setupTestTownForTheme creates a minimal Excavation Site workspace for theme tests.
 // Returns the town root directory. Caller should chdir into it and restore afterwards.
 func setupTestTownForTheme(t *testing.T) string {
 	t.Helper()
 
 	townRoot := t.TempDir()
 
-	// Create mayor/town.json (required workspace marker)
-	mayorDir := filepath.Join(townRoot, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+	// Create overseer/town.json (required workspace marker)
+	overseerDir := filepath.Join(townRoot, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
+		t.Fatalf("mkdir overseer: %v", err)
 	}
 	townConfig := &config.TownConfig{
 		Type:      "town",
@@ -28,7 +28,7 @@ func setupTestTownForTheme(t *testing.T) string {
 		Name:      "test-town",
 		CreatedAt: time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
 	}
-	if err := config.SaveTownConfig(filepath.Join(mayorDir, "town.json"), townConfig); err != nil {
+	if err := config.SaveTownConfig(filepath.Join(overseerDir, "town.json"), townConfig); err != nil {
 		t.Fatalf("save town.json: %v", err)
 	}
 
@@ -206,7 +206,7 @@ func TestSaveRigTheme_RoundTripsJSON(t *testing.T) {
 		RoleThemes: map[string]string{
 			"witness":  "rust",
 			"refinery": "plum",
-			"polecat":  "forest",
+			"miner":  "forest",
 		},
 		Custom: &config.CustomTheme{
 			BG: "#001122",

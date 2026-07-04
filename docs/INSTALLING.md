@@ -1,6 +1,6 @@
-# Installing Gas Town
+# Installing Excavation Site
 
-Complete setup guide for Gas Town multi-agent orchestrator.
+Complete setup guide for Excavation Site multi-agent orchestrator.
 
 ## Prerequisites
 
@@ -11,7 +11,7 @@ Complete setup guide for Gas Town multi-agent orchestrator.
 | **Go** | 1.25.8+ | `go version` | See [golang.org](https://go.dev/doc/install) |
 | **Git** | 2.20+ | `git --version` | See below |
 | **Dolt** | >= 2.0.7 | `dolt version` | macOS: `brew install dolt`; other platforms: see [dolthub/dolt](https://github.com/dolthub/dolt?tab=readme-ov-file#installation) |
-| **Beads** | >= 0.55.4 | `bd version` | Installed by `brew install gastown`, or from source with `go install github.com/steveyegge/beads/cmd/bd@latest` |
+| **Beads** | >= 0.55.4 | `bd version` | Installed by `brew install excavation`, or from source with `go install github.com/steveyegge/beads/cmd/bd@latest` |
 
 ### Optional (for Full Stack Mode)
 
@@ -78,13 +78,13 @@ dolt version      # Should show 2.0.7 or higher
 tmux -V           # (Optional) Should show 3.0 or higher
 ```
 
-## Installing Gas Town
+## Installing Excavation Site
 
 ### Step 1: Install the Binaries
 
 ```bash
-# Install Gas Town CLI
-brew install gastown
+# Install Excavation Site CLI
+brew install excavation
 
 # Verify installation
 gt version
@@ -93,7 +93,7 @@ dolt version
 ```
 
 Homebrew installs the runtime dependencies declared by the core formula. The
-`gastownhall/gastown` tap is reserved for emergency updates. If you build from
+`excavationhall/excavation` tap is reserved for emergency updates. If you build from
 source instead, install `dolt` first, install `bd` with Go, ensure `$GOPATH/bin`
 (usually `~/go/bin`) is in your PATH, and ensure `~/.local/bin` appears before
 older install locations. On macOS, do not install `gt` with `go install`:
@@ -104,21 +104,21 @@ instead.
 brew install dolt
 go install github.com/steveyegge/beads/cmd/bd@latest
 export PATH="$HOME/.local/bin:$PATH:$HOME/go/bin"
-git clone https://github.com/steveyegge/gastown.git
-cd gastown
+git clone https://github.com/steveyegge/excavation.git
+cd excavation
 make install
 ```
 
 ### Step 2: Create Your Workspace
 
 ```bash
-# Create a Gas Town workspace (HQ)
+# Create a Excavation Site workspace (HQ)
 gt install ~/gt --shell
 
 # This creates:
 #   ~/gt/
 #   ├── CLAUDE.md          # Identity anchor (run gt prime)
-#   ├── mayor/             # Mayor config and state
+#   ├── overseer/             # Overseer config and state
 #   ├── rigs/              # Project containers (initially empty)
 #   └── .beads/            # Town-level issue tracking
 ```
@@ -132,10 +132,10 @@ gt rig add myproject https://github.com/you/repo.git
 # This clones the repo and sets up:
 #   ~/gt/myproject/
 #   ├── .beads/            # Project issue tracking
-#   ├── mayor/rig/         # Mayor's clone (canonical)
+#   ├── overseer/rig/         # Overseer's clone (canonical)
 #   ├── refinery/rig/      # Merge queue processor
 #   ├── witness/           # Worker monitor
-#   └── polecats/          # Worker clones (created on demand)
+#   └── miners/          # Worker clones (created on demand)
 ```
 
 ### Step 4: Verify Installation
@@ -143,7 +143,7 @@ gt rig add myproject https://github.com/you/repo.git
 ```bash
 cd ~/gt
 
-gt enable              # enable Gas Town system-wide
+gt enable              # enable Excavation Site system-wide
 gt git-init            # initialize a git repo for your HQ
 gt up                  # Start all services. Use gt down or gt shutdown for stopping. 
 
@@ -153,7 +153,7 @@ gt status              # Show workspace status
 
 ### Step 5: Configure Agents (Optional)
 
-Gas Town supports built-in runtimes (`claude`, `gemini`, `codex`, `cursor`, `auggie`, `amp`, `opencode`, `copilot`) plus custom agent aliases.
+Excavation Site supports built-in runtimes (`claude`, `gemini`, `codex`, `cursor`, `auggie`, `amp`, `opencode`, `copilot`) plus custom agent aliases.
 
 ```bash
 # List available agents
@@ -176,24 +176,24 @@ gt sling gt-abc12 myproject --agent claude-haiku
 
 ## Minimal Mode vs Full Stack Mode
 
-Gas Town supports two operational modes:
+Excavation Site supports two operational modes:
 
 ### Minimal Mode (No Daemon)
 
-Run individual runtime instances manually. Gas Town only tracks state.
+Run individual runtime instances manually. Excavation Site only tracks state.
 
 ```bash
 # Create and assign work
-gt convoy create "Fix bugs" gt-abc12
+gt minecart create "Fix bugs" gt-abc12
 gt sling gt-abc12 myproject
 
 # Run runtime manually
-cd ~/gt/myproject/polecats/<worker>
+cd ~/gt/myproject/miners/<worker>
 claude --resume          # Claude Code
 # or: codex              # Codex CLI
 
 # Check progress
-gt convoy list
+gt minecart list
 ```
 
 **When to use**: Testing, simple workflows, or when you prefer manual control.
@@ -207,15 +207,15 @@ Agents run in tmux sessions. Daemon manages lifecycle automatically.
 gt daemon start
 
 # Create and assign work (workers spawn automatically)
-gt convoy create "Feature X" gt-abc12 gt-def34
+gt minecart create "Feature X" gt-abc12 gt-def34
 gt sling gt-abc12 myproject
 gt sling gt-def34 myproject
 
 # Monitor on dashboard
-gt convoy list
+gt minecart list
 
 # Attach to any agent session
-gt mayor attach
+gt overseer attach
 gt witness attach myproject
 ```
 
@@ -223,20 +223,20 @@ gt witness attach myproject
 
 ### Choosing Roles
 
-Gas Town is modular. Enable only what you need:
+Excavation Site is modular. Enable only what you need:
 
 | Configuration | Roles | Use Case |
 |--------------|-------|----------|
-| **Polecats only** | Workers | Manual spawning, no monitoring |
+| **Miners only** | Workers | Manual spawning, no monitoring |
 | **+ Witness** | + Monitor | Automatic lifecycle, stuck detection |
 | **+ Refinery** | + Merge queue | MR review, code integration |
-| **+ Mayor** | + Coordinator | Cross-project coordination |
+| **+ Overseer** | + Coordinator | Cross-project coordination |
 
 ## Troubleshooting
 
 ### `gt: command not found`
 
-The Gas Town binary directory is not in PATH. Homebrew usually handles this for
+The Excavation Site binary directory is not in PATH. Homebrew usually handles this for
 Homebrew installs. Source installs place `gt` in `~/.local/bin`:
 
 ```bash
@@ -295,19 +295,19 @@ git config --global credential.helper cache
 If experiencing beads problems:
 
 ```bash
-cd ~/gt/myproject/mayor/rig
+cd ~/gt/myproject/overseer/rig
 bd status                  # Check database health
 bd doctor                  # Run beads health check
 ```
 
 ## Updating
 
-Update Gas Town through the same channel you used to install it. For the
+Update Excavation Site through the same channel you used to install it. For the
 recommended Homebrew install:
 
 ```bash
 brew update
-brew upgrade gastown
+brew upgrade excavation
 command -v gt              # Should be Homebrew's gt, e.g. /opt/homebrew/bin/gt
 gt version
 gt doctor --fix            # Fix any post-update issues
@@ -351,7 +351,7 @@ rm -rf ~/gt
 After installation:
 
 1. **Read the README** - Core concepts and workflows
-2. **Try a simple workflow** - `bd create "Test task"` then `gt convoy create "Test" <bead-id>`
+2. **Try a simple workflow** - `bd create "Test task"` then `gt minecart create "Test" <bead-id>`
 3. **Explore docs** - `docs/reference.md` for command reference
 4. **Run doctor regularly** - `gt doctor` catches problems early
 5. **Join the Wasteland** - `gt wl join hop/wl-commons` to browse and claim federated work (see [WASTELAND.md](WASTELAND.md))

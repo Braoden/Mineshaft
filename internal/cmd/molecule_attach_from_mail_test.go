@@ -64,7 +64,7 @@ attached_molecule: gt-multiline
 Please complete by EOD.
 
 Thanks,
-Mayor`,
+Overseer`,
 			expected: "gt-multiline",
 		},
 	}

@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
 )
 
 // TestClaimPatternMatching tests claim pattern matching via the beads package.
@@ -21,40 +21,40 @@ func TestClaimPatternMatching(t *testing.T) {
 		// Exact matches
 		{
 			name:    "exact match",
-			pattern: "gastown/polecats/capable",
-			caller:  "gastown/polecats/capable",
+			pattern: "excavation/miners/capable",
+			caller:  "excavation/miners/capable",
 			want:    true,
 		},
 		{
 			name:    "exact match with different name",
-			pattern: "gastown/polecats/toast",
-			caller:  "gastown/polecats/capable",
+			pattern: "excavation/miners/toast",
+			caller:  "excavation/miners/capable",
 			want:    false,
 		},
 
 		// Wildcard at end
 		{
-			name:    "wildcard matches polecat",
-			pattern: "gastown/polecats/*",
-			caller:  "gastown/polecats/capable",
+			name:    "wildcard matches miner",
+			pattern: "excavation/miners/*",
+			caller:  "excavation/miners/capable",
 			want:    true,
 		},
 		{
-			name:    "wildcard matches different polecat",
-			pattern: "gastown/polecats/*",
-			caller:  "gastown/polecats/toast",
+			name:    "wildcard matches different miner",
+			pattern: "excavation/miners/*",
+			caller:  "excavation/miners/toast",
 			want:    true,
 		},
 		{
 			name:    "wildcard doesn't match wrong rig",
-			pattern: "gastown/polecats/*",
-			caller:  "beads/polecats/capable",
+			pattern: "excavation/miners/*",
+			caller:  "beads/miners/capable",
 			want:    false,
 		},
 		{
 			name:    "wildcard doesn't match nested path",
-			pattern: "gastown/polecats/*",
-			caller:  "gastown/polecats/sub/capable",
+			pattern: "excavation/miners/*",
+			caller:  "excavation/miners/sub/capable",
 			want:    false,
 		},
 
@@ -96,11 +96,11 @@ func TestQueueMessageReleaseValidation(t *testing.T) {
 			msgInfo: &queueMessageInfo{
 				ID:        "hq-test1",
 				Title:     "Test Message",
-				ClaimedBy: "gastown/polecats/nux",
+				ClaimedBy: "excavation/miners/nux",
 				QueueName: "work-requests",
 				Status:    "open",
 			},
-			caller:  "gastown/polecats/nux",
+			caller:  "excavation/miners/nux",
 			wantErr: false,
 		},
 		{
@@ -112,7 +112,7 @@ func TestQueueMessageReleaseValidation(t *testing.T) {
 				QueueName: "work-requests",
 				Status:    "open",
 			},
-			caller:      "gastown/polecats/nux",
+			caller:      "excavation/miners/nux",
 			wantErr:     true,
 			errContains: "not claimed",
 		},
@@ -121,11 +121,11 @@ func TestQueueMessageReleaseValidation(t *testing.T) {
 			msgInfo: &queueMessageInfo{
 				ID:        "hq-test3",
 				Title:     "Test Message",
-				ClaimedBy: "gastown/polecats/other",
+				ClaimedBy: "excavation/miners/other",
 				QueueName: "work-requests",
 				Status:    "open",
 			},
-			caller:      "gastown/polecats/nux",
+			caller:      "excavation/miners/nux",
 			wantErr:     true,
 			errContains: "was claimed by",
 		},
@@ -134,11 +134,11 @@ func TestQueueMessageReleaseValidation(t *testing.T) {
 			msgInfo: &queueMessageInfo{
 				ID:        "hq-test4",
 				Title:     "Test Message",
-				ClaimedBy: "gastown/polecats/nux",
+				ClaimedBy: "excavation/miners/nux",
 				QueueName: "", // No queue label
 				Status:    "open",
 			},
-			caller:      "gastown/polecats/nux",
+			caller:      "excavation/miners/nux",
 			wantErr:     true,
 			errContains: "not a queue message",
 		},
@@ -260,13 +260,13 @@ func TestAnnounceMessageParsing(t *testing.T) {
 	}{
 		{
 			name:   "extracts from label",
-			labels: []string{"from:mayor/", "announce_channel:alerts"},
-			want:   "mayor/",
+			labels: []string{"from:overseer/", "announce_channel:alerts"},
+			want:   "overseer/",
 		},
 		{
 			name:   "extracts from with rig path",
-			labels: []string{"announce_channel:alerts", "from:gastown/witness"},
-			want:   "gastown/witness",
+			labels: []string{"announce_channel:alerts", "from:excavation/witness"},
+			want:   "excavation/witness",
 		},
 		{
 			name:   "no from label",

@@ -12,29 +12,29 @@ func TestParseAddress(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:  "rig/polecat",
-			input: "gastown/rictus",
-			want:  &Address{Rig: "gastown", Polecat: "rictus"},
+			name:  "rig/miner",
+			input: "excavation/rictus",
+			want:  &Address{Rig: "excavation", Miner: "rictus"},
 		},
 		{
 			name:  "rig/ broadcast",
-			input: "gastown/",
-			want:  &Address{Rig: "gastown"},
+			input: "excavation/",
+			want:  &Address{Rig: "excavation"},
 		},
 		{
-			name:  "machine:rig/polecat",
-			input: "vm:gastown/rictus",
-			want:  &Address{Machine: "vm", Rig: "gastown", Polecat: "rictus"},
+			name:  "machine:rig/miner",
+			input: "vm:excavation/rictus",
+			want:  &Address{Machine: "vm", Rig: "excavation", Miner: "rictus"},
 		},
 		{
 			name:  "machine:rig/ broadcast",
-			input: "vm:gastown/",
-			want:  &Address{Machine: "vm", Rig: "gastown"},
+			input: "vm:excavation/",
+			want:  &Address{Machine: "vm", Rig: "excavation"},
 		},
 		{
 			name:  "rig only (no slash)",
-			input: "gastown",
-			want:  &Address{Rig: "gastown"},
+			input: "excavation",
+			want:  &Address{Rig: "excavation"},
 		},
 		{
 			name:    "empty string",
@@ -43,7 +43,7 @@ func TestParseAddress(t *testing.T) {
 		},
 		{
 			name:    "empty machine",
-			input:   ":gastown/rictus",
+			input:   ":excavation/rictus",
 			wantErr: true,
 		},
 		{
@@ -72,8 +72,8 @@ func TestParseAddress(t *testing.T) {
 			if got.Rig != tt.want.Rig {
 				t.Errorf("Rig = %q, want %q", got.Rig, tt.want.Rig)
 			}
-			if got.Polecat != tt.want.Polecat {
-				t.Errorf("Polecat = %q, want %q", got.Polecat, tt.want.Polecat)
+			if got.Miner != tt.want.Miner {
+				t.Errorf("Miner = %q, want %q", got.Miner, tt.want.Miner)
 			}
 		})
 	}
@@ -85,20 +85,20 @@ func TestAddressString(t *testing.T) {
 		want string
 	}{
 		{
-			addr: &Address{Rig: "gastown", Polecat: "rictus"},
-			want: "gastown/rictus",
+			addr: &Address{Rig: "excavation", Miner: "rictus"},
+			want: "excavation/rictus",
 		},
 		{
-			addr: &Address{Rig: "gastown"},
-			want: "gastown/",
+			addr: &Address{Rig: "excavation"},
+			want: "excavation/",
 		},
 		{
-			addr: &Address{Machine: "vm", Rig: "gastown", Polecat: "rictus"},
-			want: "vm:gastown/rictus",
+			addr: &Address{Machine: "vm", Rig: "excavation", Miner: "rictus"},
+			want: "vm:excavation/rictus",
 		},
 		{
-			addr: &Address{Machine: "vm", Rig: "gastown"},
-			want: "vm:gastown/",
+			addr: &Address{Machine: "vm", Rig: "excavation"},
+			want: "vm:excavation/",
 		},
 	}
 
@@ -117,10 +117,10 @@ func TestAddressIsLocal(t *testing.T) {
 		addr *Address
 		want bool
 	}{
-		{&Address{Rig: "gastown"}, true},
-		{&Address{Machine: "", Rig: "gastown"}, true},
-		{&Address{Machine: "local", Rig: "gastown"}, true},
-		{&Address{Machine: "vm", Rig: "gastown"}, false},
+		{&Address{Rig: "excavation"}, true},
+		{&Address{Machine: "", Rig: "excavation"}, true},
+		{&Address{Machine: "local", Rig: "excavation"}, true},
+		{&Address{Machine: "vm", Rig: "excavation"}, false},
 	}
 
 	for _, tt := range tests {
@@ -137,9 +137,9 @@ func TestAddressIsBroadcast(t *testing.T) {
 		addr *Address
 		want bool
 	}{
-		{&Address{Rig: "gastown"}, true},
-		{&Address{Rig: "gastown", Polecat: ""}, true},
-		{&Address{Rig: "gastown", Polecat: "rictus"}, false},
+		{&Address{Rig: "excavation"}, true},
+		{&Address{Rig: "excavation", Miner: ""}, true},
+		{&Address{Rig: "excavation", Miner: "rictus"}, false},
 	}
 
 	for _, tt := range tests {
@@ -157,22 +157,22 @@ func TestAddressEqual(t *testing.T) {
 		want bool
 	}{
 		{
-			&Address{Rig: "gastown", Polecat: "rictus"},
-			&Address{Rig: "gastown", Polecat: "rictus"},
+			&Address{Rig: "excavation", Miner: "rictus"},
+			&Address{Rig: "excavation", Miner: "rictus"},
 			true,
 		},
 		{
-			&Address{Machine: "", Rig: "gastown"},
-			&Address{Machine: "local", Rig: "gastown"},
+			&Address{Machine: "", Rig: "excavation"},
+			&Address{Machine: "local", Rig: "excavation"},
 			true,
 		},
 		{
-			&Address{Rig: "gastown", Polecat: "rictus"},
-			&Address{Rig: "gastown", Polecat: "nux"},
+			&Address{Rig: "excavation", Miner: "rictus"},
+			&Address{Rig: "excavation", Miner: "nux"},
 			false,
 		},
 		{
-			&Address{Rig: "gastown"},
+			&Address{Rig: "excavation"},
 			nil,
 			false,
 		},
@@ -229,12 +229,12 @@ func TestParseAddress_EdgeCases(t *testing.T) {
 		// Malformed: leading/trailing issues
 		{
 			name:    "leading slash",
-			input:   "/polecat",
+			input:   "/miner",
 			wantErr: true,
 		},
 		{
 			name:    "leading slash with rig",
-			input:   "/rig/polecat",
+			input:   "/rig/miner",
 			wantErr: true,
 		},
 		{
@@ -256,108 +256,108 @@ func TestParseAddress_EdgeCases(t *testing.T) {
 		},
 		{
 			name:    "empty machine with colon",
-			input:   ":rig/polecat",
+			input:   ":rig/miner",
 			wantErr: true,
 		},
 		{
 			name:  "multiple colons in machine",
-			input: "host:8080:rig/polecat",
-			want:  &Address{Machine: "host", Rig: "8080:rig", Polecat: "polecat"},
+			input: "host:8080:rig/miner",
+			want:  &Address{Machine: "host", Rig: "8080:rig", Miner: "miner"},
 		},
 		{
 			name:  "colon in rig name",
-			input: "machine:rig:port/polecat",
-			want:  &Address{Machine: "machine", Rig: "rig:port", Polecat: "polecat"},
+			input: "machine:rig:port/miner",
+			want:  &Address{Machine: "machine", Rig: "rig:port", Miner: "miner"},
 		},
 
 		// Multiple slash handling (SplitN behavior)
 		{
-			name:  "extra slashes in polecat",
+			name:  "extra slashes in miner",
 			input: "rig/pole/cat/extra",
-			want:  &Address{Rig: "rig", Polecat: "pole/cat/extra"},
+			want:  &Address{Rig: "rig", Miner: "pole/cat/extra"},
 		},
 		{
 			name:  "many path components",
 			input: "a/b/c/d/e",
-			want:  &Address{Rig: "a", Polecat: "b/c/d/e"},
+			want:  &Address{Rig: "a", Miner: "b/c/d/e"},
 		},
 
 		// Unicode handling
 		{
 			name:  "unicode rig name",
-			input: "日本語/polecat",
-			want:  &Address{Rig: "日本語", Polecat: "polecat"},
+			input: "日本語/miner",
+			want:  &Address{Rig: "日本語", Miner: "miner"},
 		},
 		{
-			name:  "unicode polecat name",
+			name:  "unicode miner name",
 			input: "rig/工作者",
-			want:  &Address{Rig: "rig", Polecat: "工作者"},
+			want:  &Address{Rig: "rig", Miner: "工作者"},
 		},
 		{
 			name:  "emoji in address",
 			input: "🔧/🐱",
-			want:  &Address{Rig: "🔧", Polecat: "🐱"},
+			want:  &Address{Rig: "🔧", Miner: "🐱"},
 		},
 		{
 			name:  "unicode machine name",
-			input: "マシン:rig/polecat",
-			want:  &Address{Machine: "マシン", Rig: "rig", Polecat: "polecat"},
+			input: "マシン:rig/miner",
+			want:  &Address{Machine: "マシン", Rig: "rig", Miner: "miner"},
 		},
 
 		// Long addresses
 		{
 			name:  "very long rig name",
-			input: "abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789/polecat",
-			want:  &Address{Rig: "abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789", Polecat: "polecat"},
+			input: "abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789/miner",
+			want:  &Address{Rig: "abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789", Miner: "miner"},
 		},
 		{
-			name:  "very long polecat name",
+			name:  "very long miner name",
 			input: "rig/abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789",
-			want:  &Address{Rig: "rig", Polecat: "abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789"},
+			want:  &Address{Rig: "rig", Miner: "abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789"},
 		},
 
 		// Special characters
 		{
 			name:  "hyphen in names",
-			input: "my-rig/my-polecat",
-			want:  &Address{Rig: "my-rig", Polecat: "my-polecat"},
+			input: "my-rig/my-miner",
+			want:  &Address{Rig: "my-rig", Miner: "my-miner"},
 		},
 		{
 			name:  "underscore in names",
-			input: "my_rig/my_polecat",
-			want:  &Address{Rig: "my_rig", Polecat: "my_polecat"},
+			input: "my_rig/my_miner",
+			want:  &Address{Rig: "my_rig", Miner: "my_miner"},
 		},
 		{
 			name:  "dots in names",
-			input: "my.rig/my.polecat",
-			want:  &Address{Rig: "my.rig", Polecat: "my.polecat"},
+			input: "my.rig/my.miner",
+			want:  &Address{Rig: "my.rig", Miner: "my.miner"},
 		},
 		{
 			name:  "mixed special chars",
-			input: "rig-1_v2.0/polecat-alpha_1.0",
-			want:  &Address{Rig: "rig-1_v2.0", Polecat: "polecat-alpha_1.0"},
+			input: "rig-1_v2.0/miner-alpha_1.0",
+			want:  &Address{Rig: "rig-1_v2.0", Miner: "miner-alpha_1.0"},
 		},
 
 		// Whitespace in components
 		{
 			name:  "space in rig name",
-			input: "my rig/polecat",
-			want:  &Address{Rig: "my rig", Polecat: "polecat"},
+			input: "my rig/miner",
+			want:  &Address{Rig: "my rig", Miner: "miner"},
 		},
 		{
-			name:  "space in polecat name",
-			input: "rig/my polecat",
-			want:  &Address{Rig: "rig", Polecat: "my polecat"},
+			name:  "space in miner name",
+			input: "rig/my miner",
+			want:  &Address{Rig: "rig", Miner: "my miner"},
 		},
 		{
 			name:  "leading space in rig",
-			input: " rig/polecat",
-			want:  &Address{Rig: " rig", Polecat: "polecat"},
+			input: " rig/miner",
+			want:  &Address{Rig: " rig", Miner: "miner"},
 		},
 		{
-			name:  "trailing space in polecat",
-			input: "rig/polecat ",
-			want:  &Address{Rig: "rig", Polecat: "polecat "},
+			name:  "trailing space in miner",
+			input: "rig/miner ",
+			want:  &Address{Rig: "rig", Miner: "miner "},
 		},
 
 		// Edge case: machine with no rig after colon
@@ -392,8 +392,8 @@ func TestParseAddress_EdgeCases(t *testing.T) {
 			if got.Rig != tt.want.Rig {
 				t.Errorf("Rig = %q, want %q", got.Rig, tt.want.Rig)
 			}
-			if got.Polecat != tt.want.Polecat {
-				t.Errorf("Polecat = %q, want %q", got.Polecat, tt.want.Polecat)
+			if got.Miner != tt.want.Miner {
+				t.Errorf("Miner = %q, want %q", got.Miner, tt.want.Miner)
 			}
 		})
 	}
@@ -410,8 +410,8 @@ func TestMustParseAddress_Panics(t *testing.T) {
 
 func TestMustParseAddress_Valid(t *testing.T) {
 	// Should not panic
-	addr := MustParseAddress("rig/polecat")
-	if addr.Rig != "rig" || addr.Polecat != "polecat" {
+	addr := MustParseAddress("rig/miner")
+	if addr.Rig != "rig" || addr.Miner != "miner" {
 		t.Errorf("MustParseAddress returned wrong address: %+v", addr)
 	}
 }
@@ -422,19 +422,19 @@ func TestAddressRigPath(t *testing.T) {
 		want string
 	}{
 		{
-			addr: &Address{Rig: "gastown", Polecat: "rictus"},
-			want: "gastown/rictus",
+			addr: &Address{Rig: "excavation", Miner: "rictus"},
+			want: "excavation/rictus",
 		},
 		{
-			addr: &Address{Rig: "gastown"},
-			want: "gastown/",
+			addr: &Address{Rig: "excavation"},
+			want: "excavation/",
 		},
 		{
-			addr: &Address{Machine: "vm", Rig: "gastown", Polecat: "rictus"},
-			want: "gastown/rictus",
+			addr: &Address{Machine: "vm", Rig: "excavation", Miner: "rictus"},
+			want: "excavation/rictus",
 		},
 		{
-			addr: &Address{Rig: "a", Polecat: "b/c/d"},
+			addr: &Address{Rig: "a", Miner: "b/c/d"},
 			want: "a/b/c/d",
 		},
 	}

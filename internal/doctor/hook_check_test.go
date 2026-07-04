@@ -181,10 +181,10 @@ func TestHookSingletonCheck_FormatDuplicate(t *testing.T) {
 	}{
 		{
 			dup: duplicateHandoff{
-				title:   "Mayor Handoff",
+				title:   "Overseer Handoff",
 				beadIDs: []string{"hq-123", "hq-456"},
 			},
-			expected: `"Mayor Handoff" has 2 beads: hq-123, hq-456`,
+			expected: `"Overseer Handoff" has 2 beads: hq-123, hq-456`,
 		},
 		{
 			dup: duplicateHandoff{
@@ -246,16 +246,16 @@ func TestOrphanedAttachmentsCheck_FormatOrphan(t *testing.T) {
 		{
 			orph: orphanedHandoff{
 				beadID: "hq-123",
-				agent:  "gastown/nux",
+				agent:  "excavation/nux",
 			},
-			expected: `hq-123: agent "gastown/nux" no longer exists`,
+			expected: `hq-123: agent "excavation/nux" no longer exists`,
 		},
 		{
 			orph: orphanedHandoff{
 				beadID: "gt-456",
-				agent:  "gastown/crew/joe",
+				agent:  "excavation/crew/joe",
 			},
-			expected: `gt-456: agent "gastown/crew/joe" no longer exists`,
+			expected: `gt-456: agent "excavation/crew/joe" no longer exists`,
 		},
 	}
 
@@ -271,22 +271,22 @@ func TestOrphanedAttachmentsCheck_AgentExists(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Create some agent directories
-	polecatDir := filepath.Join(tmpDir, "gastown", "polecats", "nux")
-	if err := os.MkdirAll(polecatDir, 0755); err != nil {
+	minerDir := filepath.Join(tmpDir, "excavation", "miners", "nux")
+	if err := os.MkdirAll(minerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
-	crewDir := filepath.Join(tmpDir, "gastown", "crew", "joe")
+	crewDir := filepath.Join(tmpDir, "excavation", "crew", "joe")
 	if err := os.MkdirAll(crewDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
-	witnessDir := filepath.Join(tmpDir, "gastown", "witness")
+	witnessDir := filepath.Join(tmpDir, "excavation", "witness")
 	if err := os.MkdirAll(witnessDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -298,14 +298,14 @@ func TestOrphanedAttachmentsCheck_AgentExists(t *testing.T) {
 		expected bool
 	}{
 		// Existing agents
-		{"gastown/nux", true},
-		{"gastown/crew/joe", true},
-		{"mayor", true},
-		{"gastown-witness", true},
+		{"excavation/nux", true},
+		{"excavation/crew/joe", true},
+		{"overseer", true},
+		{"excavation-witness", true},
 
 		// Non-existent agents
-		{"gastown/deleted", false},
-		{"gastown/crew/gone", false},
+		{"excavation/deleted", false},
+		{"excavation/crew/gone", false},
 		{"otherrig-witness", false},
 	}
 

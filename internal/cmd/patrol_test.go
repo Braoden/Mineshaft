@@ -12,9 +12,9 @@ func TestExtractPatrolRole(t *testing.T) {
 		expected string
 	}{
 		{
-			name:     "deacon patrol",
-			title:    "Digest: mol-deacon-patrol",
-			expected: "deacon",
+			name:     "supervisor patrol",
+			title:    "Digest: mol-supervisor-patrol",
+			expected: "supervisor",
 		},
 		{
 			name:     "witness patrol",
@@ -48,7 +48,7 @@ func TestExtractPatrolRole(t *testing.T) {
 		},
 		{
 			name:     "mol prefix but no patrol suffix",
-			title:    "Digest: mol-deacon-other",
+			title:    "Digest: mol-supervisor-other",
 			expected: "patrol",
 		},
 	}
@@ -68,7 +68,7 @@ func TestPatrolDigestDateFormat(t *testing.T) {
 	digest := PatrolDigest{
 		Date:        "2026-01-17",
 		TotalCycles: 5,
-		ByRole:      map[string]int{"deacon": 2, "witness": 3},
+		ByRole:      map[string]int{"supervisor": 2, "witness": 3},
 	}
 
 	if digest.Date != "2026-01-17" {
@@ -79,16 +79,16 @@ func TestPatrolDigestDateFormat(t *testing.T) {
 		t.Errorf("TotalCycles: got %d, want 5", digest.TotalCycles)
 	}
 
-	if digest.ByRole["deacon"] != 2 {
-		t.Errorf("ByRole[deacon]: got %d, want 2", digest.ByRole["deacon"])
+	if digest.ByRole["supervisor"] != 2 {
+		t.Errorf("ByRole[supervisor]: got %d, want 2", digest.ByRole["supervisor"])
 	}
 }
 
 func TestPatrolCycleEntry(t *testing.T) {
 	entry := PatrolCycleEntry{
 		ID:          "gt-abc123",
-		Role:        "deacon",
-		Title:       "Digest: mol-deacon-patrol",
+		Role:        "supervisor",
+		Title:       "Digest: mol-supervisor-patrol",
 		Description: "Test description",
 	}
 
@@ -96,8 +96,8 @@ func TestPatrolCycleEntry(t *testing.T) {
 		t.Errorf("ID: got %q, want %q", entry.ID, "gt-abc123")
 	}
 
-	if entry.Role != "deacon" {
-		t.Errorf("Role: got %q, want %q", entry.Role, "deacon")
+	if entry.Role != "supervisor" {
+		t.Errorf("Role: got %q, want %q", entry.Role, "supervisor")
 	}
 }
 
@@ -179,23 +179,23 @@ func TestBuildStepAudit(t *testing.T) {
 		wantContain string // check output contains this
 	}{
 		{
-			name:        "deacon patrol with no steps reported",
-			formulaName: "mol-deacon-patrol",
+			name:        "supervisor patrol with no steps reported",
+			formulaName: "mol-supervisor-patrol",
 			stepsFlag:   "",
 			wantPrefix:  "Steps: NOT REPORTED",
 			wantContain: "/26)",
 		},
 		{
-			name:        "deacon patrol with all steps OK",
-			formulaName: "mol-deacon-patrol",
-			stepsFlag:   "heartbeat:OK,inbox-check:OK,orphan-process-cleanup:OK,test-pollution-cleanup:OK,gate-evaluation:OK,dispatch-gated-molecules:OK,check-convoy-completion:OK,resolve-external-deps:OK,fire-notifications:OK,heartbeat-mid:OK,health-scan:OK,dolt-health:OK,zombie-scan:OK,plugin-run:OK,dog-pool-maintenance:OK,dog-health-check:OK,orphan-check:OK,session-gc:OK,wisp-compact:OK,compact-report:OK,costs-digest:OK,patrol-digest:OK,log-maintenance:OK,patrol-cleanup:OK,context-check:OK,loop-or-exit:OK",
+			name:        "supervisor patrol with all steps OK",
+			formulaName: "mol-supervisor-patrol",
+			stepsFlag:   "heartbeat:OK,inbox-check:OK,orphan-process-cleanup:OK,test-pollution-cleanup:OK,gate-evaluation:OK,dispatch-gated-molecules:OK,check-minecart-completion:OK,resolve-external-deps:OK,fire-notifications:OK,heartbeat-mid:OK,health-scan:OK,dolt-health:OK,zombie-scan:OK,plugin-run:OK,dog-pool-maintenance:OK,dog-health-check:OK,orphan-check:OK,session-gc:OK,wisp-compact:OK,compact-report:OK,costs-digest:OK,patrol-digest:OK,log-maintenance:OK,patrol-cleanup:OK,context-check:OK,loop-or-exit:OK",
 			wantPrefix:  "Steps:",
 			wantSuffix:  "(26/26)",
 			wantContain: "heartbeat OK",
 		},
 		{
-			name:        "deacon patrol with some steps skipped",
-			formulaName: "mol-deacon-patrol",
+			name:        "supervisor patrol with some steps skipped",
+			formulaName: "mol-supervisor-patrol",
 			stepsFlag:   "heartbeat:OK,inbox-check:OK,loop-or-exit:OK",
 			wantPrefix:  "Steps:",
 			wantSuffix:  "(3/26)",
@@ -203,7 +203,7 @@ func TestBuildStepAudit(t *testing.T) {
 		},
 		{
 			name:        "skipped steps shown as SKIP",
-			formulaName: "mol-deacon-patrol",
+			formulaName: "mol-supervisor-patrol",
 			stepsFlag:   "heartbeat:OK",
 			wantContain: "inbox-check SKIP",
 		},

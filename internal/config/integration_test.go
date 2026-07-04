@@ -1,7 +1,7 @@
 // Test Rig-Level Custom Agent Support
 //
 // This integration test verifies that custom agents defined in rig-level
-// settings/config.json are correctly loaded and used when spawning polecats.
+// settings/config.json are correctly loaded and used when spawning miners.
 // It creates a stub agent, configures it at the rig level, and verifies
 // the agent is actually used via tmux session capture.
 
@@ -22,7 +22,7 @@ import (
 // This test:
 // 1. Creates a stub agent script that echoes identifiable output
 // 2. Sets up a minimal town/rig with the custom agent configured
-// 3. Verifies that BuildPolecatStartupCommand uses the custom agent
+// 3. Verifies that BuildMinerStartupCommand uses the custom agent
 // 4. Optionally spawns a tmux session and verifies output (if tmux available)
 func TestRigLevelCustomAgentIntegration(t *testing.T) {
 	t.Parallel()
@@ -55,9 +55,9 @@ func TestRigLevelCustomAgentIntegration(t *testing.T) {
 		}
 	})
 
-	// Test 2: Verify BuildPolecatStartupCommand includes the custom agent
-	t.Run("BuildPolecatStartupCommand uses custom agent", func(t *testing.T) {
-		cmd := BuildPolecatStartupCommand(rigName, "test-polecat", rigPath, "")
+	// Test 2: Verify BuildMinerStartupCommand includes the custom agent
+	t.Run("BuildMinerStartupCommand uses custom agent", func(t *testing.T) {
+		cmd := BuildMinerStartupCommand(rigName, "test-miner", rigPath, "")
 
 		if !strings.Contains(cmd, stubAgentPath) {
 			t.Errorf("Expected command to contain stub agent path %q, got: %s", stubAgentPath, cmd)
@@ -68,12 +68,12 @@ func TestRigLevelCustomAgentIntegration(t *testing.T) {
 		}
 
 		// Verify environment variables are set (GT_ROLE is compound format)
-		if !strings.Contains(cmd, "GT_ROLE=testrig/polecats/test-polecat") {
-			t.Errorf("Expected GT_ROLE=testrig/polecats/test-polecat in command, got: %s", cmd)
+		if !strings.Contains(cmd, "GT_ROLE=testrig/miners/test-miner") {
+			t.Errorf("Expected GT_ROLE=testrig/miners/test-miner in command, got: %s", cmd)
 		}
 
-		if !strings.Contains(cmd, "GT_POLECAT=test-polecat") {
-			t.Errorf("Expected GT_POLECAT=test-polecat in command, got: %s", cmd)
+		if !strings.Contains(cmd, "GT_MINER=test-miner") {
+			t.Errorf("Expected GT_MINER=test-miner in command, got: %s", cmd)
 		}
 	})
 
@@ -133,7 +133,7 @@ echo "Agent: $AGENT_NAME v$AGENT_VERSION"
 echo "Args: $@"
 echo "Working Dir: $(pwd)"
 echo "GT_ROLE: ${GT_ROLE:-not_set}"
-echo "GT_POLECAT: ${GT_POLECAT:-not_set}"
+echo "GT_MINER: ${GT_MINER:-not_set}"
 echo "GT_RIG: ${GT_RIG:-not_set}"
 echo "=========================================="
 
@@ -190,10 +190,10 @@ func setupTestTownWithCustomAgent(t *testing.T, townRoot, rigName, stubAgentPath
 
 	// Create directory structure
 	dirs := []string{
-		filepath.Join(townRoot, "mayor"),
+		filepath.Join(townRoot, "overseer"),
 		filepath.Join(townRoot, "settings"),
 		filepath.Join(rigPath, "settings"),
-		filepath.Join(rigPath, "polecats"),
+		filepath.Join(rigPath, "miners"),
 	}
 
 	for _, dir := range dirs {
@@ -209,7 +209,7 @@ func setupTestTownWithCustomAgent(t *testing.T, townRoot, rigName, stubAgentPath
 		"name":       "test-town",
 		"created_at": time.Now().Format(time.RFC3339),
 	}
-	writeTownJSON(t, filepath.Join(townRoot, "mayor", "town.json"), townConfig)
+	writeTownJSON(t, filepath.Join(townRoot, "overseer", "town.json"), townConfig)
 
 	// Create town settings (empty, uses defaults)
 	townSettings := map[string]interface{}{
@@ -243,7 +243,7 @@ func setupTestTownWithCustomAgent(t *testing.T, townRoot, rigName, stubAgentPath
 			},
 		},
 	}
-	writeTownJSON(t, filepath.Join(townRoot, "mayor", "rigs.json"), rigsConfig)
+	writeTownJSON(t, filepath.Join(townRoot, "overseer", "rigs.json"), rigsConfig)
 }
 
 // writeTownJSON writes a JSON config file.
@@ -291,8 +291,8 @@ func testTmuxSessionWithStubAgent(t *testing.T, tmpDir, stubAgentPath, rigName s
 	}
 
 	envVars := map[string]string{
-		"GT_ROLE":    "polecat",
-		"GT_POLECAT": "test-polecat",
+		"GT_ROLE":    "miner",
+		"GT_MINER": "test-miner",
 		"GT_RIG":     rigName,
 	}
 
@@ -314,7 +314,7 @@ func testTmuxSessionWithStubAgent(t *testing.T, tmpDir, stubAgentPath, rigName s
 		t.Skipf("stub agent output not detected; tmux capture unreliable. Output:\n%s", output)
 	}
 
-	if !strings.Contains(output, "GT_ROLE: polecat") {
+	if !strings.Contains(output, "GT_ROLE: miner") {
 		t.Logf("Warning: GT_ROLE not visible in agent output (tmux env may not propagate to subshell)")
 	}
 
@@ -381,7 +381,7 @@ func TestRigAgentOverridesTownAgent(t *testing.T) {
 
 	// Create directory structure
 	dirs := []string{
-		filepath.Join(townRoot, "mayor"),
+		filepath.Join(townRoot, "overseer"),
 		filepath.Join(townRoot, "settings"),
 		filepath.Join(rigPath, "settings"),
 	}
@@ -427,7 +427,7 @@ func TestRigAgentOverridesTownAgent(t *testing.T) {
 		"name":       "test-town",
 		"created_at": time.Now().Format(time.RFC3339),
 	}
-	writeTownJSON(t, filepath.Join(townRoot, "mayor", "town.json"), townConfig)
+	writeTownJSON(t, filepath.Join(townRoot, "overseer", "town.json"), townConfig)
 
 	// Resolve agent config
 	rc := ResolveAgentConfig(townRoot, rigPath)

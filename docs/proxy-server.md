@@ -1,18 +1,18 @@
 # gt-proxy-server and gt-proxy-client
 
-The proxy server and client implement sandboxed execution for polecats: containers
+The proxy server and client implement sandboxed execution for miners: containers
 can call `gt` and `bd` commands, and push/pull git repositories, over an encrypted
 and mutually authenticated channel — without direct access to the host filesystem,
 credentials, or GitHub.
 
 ## Overview
 
-When a polecat runs inside a container or isolated execution environment (such as
-[Daytona](https://www.daytona.io/)), it still needs to interact with Gas Town's
+When a miner runs inside a container or isolated execution environment (such as
+[Daytona](https://www.daytona.io/)), it still needs to interact with Excavation Site's
 control plane. Specifically, it needs to:
 
 - Call `gt` and `bd` commands (mail, status, handoff, issue updates, etc.)
-- Push its work to the polecat branch in the rig's `.repo.git` bare repository
+- Push its work to the miner branch in the rig's `.repo.git` bare repository
 
 The proxy solves this by running two small Go binaries:
 
@@ -44,8 +44,8 @@ The binaries live alongside `gt` in the same module:
 
 ```bash
 # Build both binaries
-go install github.com/steveyegge/gastown/cmd/gt-proxy-server@latest
-go install github.com/steveyegge/gastown/cmd/gt-proxy-client@latest
+go install github.com/steveyegge/excavation/cmd/gt-proxy-server@latest
+go install github.com/steveyegge/excavation/cmd/gt-proxy-client@latest
 ```
 
 ---
@@ -56,11 +56,11 @@ go install github.com/steveyegge/gastown/cmd/gt-proxy-client@latest
 
 The server listens on an mTLS port and provides two endpoints:
 
-- **`POST /v1/exec`** — run a `gt` or `bd` subcommand on behalf of a polecat
+- **`POST /v1/exec`** — run a `gt` or `bd` subcommand on behalf of a miner
 - **`GET/POST /v1/git/<rig>/...`** — proxy git smart-HTTP for a rig's bare repo
 
 Every client must present a certificate signed by the server's CA.  Only
-certificates whose Common Name matches `gt-<rig>-<name>` are accepted (polecat
+certificates whose Common Name matches `gt-<rig>-<name>` are accepted (miner
 identity format).
 
 ### Starting the server
@@ -89,7 +89,7 @@ gt-proxy-server: listening  addr=0.0.0.0:9876  tls=mTLS
 | `--ca-dir` | `~/gt/.runtime/ca` | Directory that stores `ca.crt` and `ca.key` |
 | `--allowed-cmds` | `gt,bd` | Comma-separated list of binary names containers may invoke |
 | `--allowed-subcmds` | *(auto-discovered)* | Semicolon-separated subcommand allowlists per binary, e.g. `gt:prime,hook,done;bd:create,update` |
-| `--town-root` | `$GT_TOWN` or `~/gt` | Gas Town root directory; used to locate bare repos |
+| `--town-root` | `$GT_TOWN` or `~/gt` | Excavation Site root directory; used to locate bare repos |
 | `--config` | `~/gt/.runtime/proxy/config.json` | Path to a JSON config file; file values are overridden by explicit CLI flags |
 
 ### Environment variables
@@ -123,7 +123,7 @@ The default subcommand allowlists are:
 
 | Binary | Subcommands |
 |--------|-------------|
-| `gt` | `prime`, `hook`, `done`, `mail`, `nudge`, `mol`, `status`, `handoff`, `version`, `convoy`, `sling` |
+| `gt` | `prime`, `hook`, `done`, `mail`, `nudge`, `mol`, `status`, `handoff`, `version`, `minecart`, `sling` |
 | `bd` | `create`, `update`, `close`, `show`, `list`, `ready`, `dep`, `export`, `prime`, `stats`, `blocked`, `doctor` |
 
 #### Auto-discovery via `gt proxy-subcmds`
@@ -151,8 +151,8 @@ The CA is a self-signed certificate stored in `--ca-dir`:
 On first run the CA is created automatically.  You can pre-create it or
 rotate it with `gt-proxy-server --ca-dir` pointing at a fresh directory.
 
-Polecat leaf certificates are issued per-polecat and must be generated
-separately (see "Issuing polecat certificates" below).
+Miner leaf certificates are issued per-miner and must be generated
+separately (see "Issuing miner certificates" below).
 
 ### HTTP timeouts
 
@@ -200,14 +200,14 @@ without any changes to agent code.
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `GT_PROXY_URL` | Yes (for proxy) | Base URL of the proxy server, e.g. `https://192.168.1.10:9876` |
-| `GT_PROXY_CERT` | Yes (for proxy) | Path to the polecat's client certificate (PEM) |
-| `GT_PROXY_KEY` | Yes (for proxy) | Path to the polecat's client private key (PEM) |
+| `GT_PROXY_CERT` | Yes (for proxy) | Path to the miner's client certificate (PEM) |
+| `GT_PROXY_KEY` | Yes (for proxy) | Path to the miner's client private key (PEM) |
 | `GT_PROXY_CA` | Recommended | Path to the CA certificate used to verify the server's TLS cert |
 | `GT_REAL_BIN` | No | Path to the real `gt` binary when falling back (default: `/usr/local/bin/gt.real`) |
 
 If any of `GT_PROXY_URL`, `GT_PROXY_CERT`, or `GT_PROXY_KEY` is absent, the
 client silently falls through to `execReal()`.  This makes it safe to install
-unconditionally — polecats that are not sandboxed simply exec the real binary.
+unconditionally — miners that are not sandboxed simply exec the real binary.
 
 ### Git integration
 
@@ -217,15 +217,15 @@ For git operations, configure git to use the proxy's git smart-HTTP endpoint:
 # Tell git to use the proxy server for this rig's repo
 git remote set-url origin https://<proxy-host>:9876/v1/git/<RigName>
 
-# Tell git to use the CA cert and polecat cert for TLS
+# Tell git to use the CA cert and miner cert for TLS
 export GIT_SSL_CAINFO=$GT_PROXY_CA
 export GIT_SSL_CERT=$GT_PROXY_CERT
 export GIT_SSL_KEY=$GT_PROXY_KEY
 ```
 
 The git client authenticates with the same mTLS certificate as the exec client.
-Branch authorization is enforced server-side: a polecat named `rust` can only
-push to `refs/heads/polecat/rust-*`.
+Branch authorization is enforced server-side: a miner named `rust` can only
+push to `refs/heads/miner/rust-*`.
 
 ---
 
@@ -240,21 +240,21 @@ gt-proxy-server --listen 0.0.0.0:9876
 # The CA cert is now at ~/gt/.runtime/ca/ca.crt
 ```
 
-### Step 2: Issue a polecat certificate
+### Step 2: Issue a miner certificate
 
 Use the Go API or a small helper:
 
 ```go
 ca, _ := proxy.LoadOrGenerateCA("~/gt/.runtime/ca")
-certPEM, keyPEM, _ := ca.IssuePolecat("gt-MyRig-rust", 365*24*time.Hour)
+certPEM, keyPEM, _ := ca.IssueMiner("gt-MyRig-rust", 365*24*time.Hour)
 ```
 
 Save the output files:
 
 ```
-~/gt/.runtime/polecats/rust/
-  polecat.crt   ← client certificate for this polecat
-  polecat.key   ← client private key for this polecat
+~/gt/.runtime/miners/rust/
+  miner.crt   ← client certificate for this miner
+  miner.key   ← client private key for this miner
 ```
 
 ### Step 3: Install the client binary in the container
@@ -277,8 +277,8 @@ mv /usr/local/bin/gt.original /usr/local/bin/gt.real
 
 ```bash
 export GT_PROXY_URL=https://192.168.1.10:9876
-export GT_PROXY_CERT=/secrets/polecat.crt
-export GT_PROXY_KEY=/secrets/polecat.key
+export GT_PROXY_CERT=/secrets/miner.crt
+export GT_PROXY_KEY=/secrets/miner.key
 export GT_PROXY_CA=/secrets/ca.crt
 
 # For git operations:
@@ -287,7 +287,7 @@ export GIT_SSL_CERT=$GT_PROXY_CERT
 export GIT_SSL_KEY=$GT_PROXY_KEY
 ```
 
-You may mount `ca.crt`, `polecat.crt`, and `polecat.key` as container secrets
+You may mount `ca.crt`, `miner.crt`, and `miner.key` as container secrets
 (Docker secrets, Kubernetes secrets, Daytona workspace env, etc.).
 
 ### Step 5: Verify the connection
@@ -295,9 +295,9 @@ You may mount `ca.crt`, `polecat.crt`, and `polecat.key` as container secrets
 Inside the container:
 
 ```bash
-gt version           # Should print the Gas Town version via the proxy
+gt version           # Should print the Excavation Site version via the proxy
 gt status            # Should show town status from the host
-git push origin HEAD # Should push to the polecat branch via the proxy
+git push origin HEAD # Should push to the miner branch via the proxy
 ```
 
 ---
@@ -316,7 +316,7 @@ always take precedence over file values.
   "town_root":          "",
   "allowed_commands":   ["gt", "bd"],
   "allowed_subcommands": {
-    "gt": ["prime", "hook", "done", "mail", "nudge", "mol", "status", "handoff", "version", "convoy", "sling"],
+    "gt": ["prime", "hook", "done", "mail", "nudge", "mol", "status", "handoff", "version", "minecart", "sling"],
     "bd": ["create", "update", "close", "show", "list", "ready", "dep", "export", "prime", "stats", "blocked", "doctor"]
   },
   "extra_san_ips":      ["10.0.1.5", "172.20.0.1"],
@@ -333,8 +333,8 @@ always take precedence over file values.
 | `listen_addr` | `string` | TCP address for the mTLS server (default: `0.0.0.0:9876`) |
 | `admin_listen_addr` | `string` | TCP address for the local admin HTTP server (default: `127.0.0.1:9877`); set to `""` to disable |
 | `ca_dir` | `string` | Directory holding `ca.crt` and `ca.key` (default: `~/gt/.runtime/ca`) |
-| `town_root` | `string` | Gas Town root directory (default: `$GT_TOWN` or `~/gt`) |
-| `allowed_commands` | `[]string` | Binary names polecats may execute |
+| `town_root` | `string` | Excavation Site root directory (default: `$GT_TOWN` or `~/gt`) |
+| `allowed_commands` | `[]string` | Binary names miners may execute |
 | `allowed_subcommands` | `map[string][]string` | Per-command subcommand allowlists |
 | `extra_san_ips` | `[]string` | Additional IP addresses to include in the server certificate's SAN list |
 | `extra_san_hosts` | `[]string` | Additional hostnames (DNS names) to include in the server certificate's SAN list |
@@ -379,11 +379,11 @@ curl -s https://api.ipify.org
 |-------|------|-----|
 | **Transport** | All traffic is encrypted | TLS 1.3 minimum |
 | **Server identity** | Container verifies the host is legitimate | Server cert signed by the shared CA |
-| **Client identity** | Server verifies every request comes from a known polecat | Client cert signed by the same CA; CN format `gt-<rig>-<name>` required |
+| **Client identity** | Server verifies every request comes from a known miner | Client cert signed by the same CA; CN format `gt-<rig>-<name>` required |
 | **Exec allowlist** | Containers can only call `gt` and `bd` (or the configured set) | `--allowed-cmds` checked on every `/v1/exec` request |
-| **Subcommand allowlist** | Polecats may only invoke permitted subcommands of `gt`/`bd` | `--allowed-subcmds` checked on every `/v1/exec` request; missing or disallowed subcommands → 403 |
-| **Subcommand injection** | Polecat identity is injected as `--identity <rig>/<name>` and cannot be overridden | Server derives identity from the client certificate, not from the request body |
-| **Branch scope** | A polecat can only push to `refs/heads/polecat/<name>-*` | pkt-line stream parsed and validated before `git-receive-pack` is invoked |
+| **Subcommand allowlist** | Miners may only invoke permitted subcommands of `gt`/`bd` | `--allowed-subcmds` checked on every `/v1/exec` request; missing or disallowed subcommands → 403 |
+| **Subcommand injection** | Miner identity is injected as `--identity <rig>/<name>` and cannot be overridden | Server derives identity from the client certificate, not from the request body |
+| **Branch scope** | A miner can only push to `refs/heads/miner/<name>-*` | pkt-line stream parsed and validated before `git-receive-pack` is invoked |
 | **Path traversal** | Rig names are validated against `[a-zA-Z0-9_-]+` | Rejects `../` and other traversal attempts |
 | **Body size limits** | `/v1/exec` body capped at 1 MiB; receive-pack ref list capped at 32 MiB | `http.MaxBytesReader` applied before reading |
 | **Env isolation** | `gt`/`bd`/`git` subprocesses only see `HOME` and `PATH` | Server never passes its own `GITHUB_TOKEN`, `GT_TOKEN`, or other credentials |
@@ -409,12 +409,12 @@ security.
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `POST` | `/v1/admin/issue-cert` | Issue a new polecat client certificate |
+| `POST` | `/v1/admin/issue-cert` | Issue a new miner client certificate |
 | `POST` | `/v1/admin/deny-cert` | Add a certificate serial to the runtime deny list |
 
-### Issuing a polecat certificate
+### Issuing a miner certificate
 
-Issue a client certificate for a polecat by providing the rig name, polecat
+Issue a client certificate for a miner by providing the rig name, miner
 name, and an optional TTL (defaults to 720h / 30 days):
 
 ```bash
@@ -440,7 +440,7 @@ and CA certificate, plus metadata:
 | Field | Type | Description |
 |-------|------|-------------|
 | `rig` | `string` | **Required.** Rig name (e.g. `"MyRig"`) |
-| `name` | `string` | **Required.** Polecat name (e.g. `"rust"`) |
+| `name` | `string` | **Required.** Miner name (e.g. `"rust"`) |
 | `ttl` | `string` | Optional Go duration (e.g. `"720h"`). Default: `720h` (30 days) |
 
 ### Revoking a certificate
@@ -490,13 +490,13 @@ git-receive-pack --stateless-rpc [--advertise-refs] ~/gt/MyRig/.repo.git
 ```
 
 For pushes (`git-receive-pack`), the server reads the pkt-line ref list **before**
-passing the body to git, and rejects any ref that falls outside the polecat's
+passing the body to git, and rejects any ref that falls outside the miner's
 allowed scope:
 
 ```
-refs/heads/polecat/<name>-*   ✓ allowed
+refs/heads/miner/<name>-*   ✓ allowed
 refs/heads/main               ✗ denied (403 Forbidden)
-refs/heads/polecat/other-*    ✗ denied (belongs to another polecat)
+refs/heads/miner/other-*    ✗ denied (belongs to another miner)
 ```
 
 The pkt-line stream is then rewound and fed to `git-receive-pack` unchanged, so
@@ -527,7 +527,7 @@ Verify:
 
 ```bash
 # Check that the client cert was signed by ca.crt
-openssl verify -CAfile ~/gt/.runtime/ca/ca.crt /path/to/polecat.crt
+openssl verify -CAfile ~/gt/.runtime/ca/ca.crt /path/to/miner.crt
 
 # Check that GT_PROXY_CA points at the correct CA
 openssl x509 -in $GT_PROXY_CA -noout -subject
@@ -543,8 +543,8 @@ the agent is trying to execute a shell — which is intentionally blocked.
 
 ### `push to "refs/heads/main" denied`
 
-The polecat tried to push to a branch it does not own.  Polecats may only push to
-`refs/heads/polecat/<their-name>-*`.  The refinery merges these branches; polecats
+The miner tried to push to a branch it does not own.  Miners may only push to
+`refs/heads/miner/<their-name>-*`.  The refinery merges these branches; miners
 do not push directly to `main` or `proxy`.
 
 ### `gt-proxy-client: proxy request failed: ...` (fallback active)
@@ -584,7 +584,7 @@ but for production always configure the correct SANs or use a hostname.
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `POST` | `/v1/admin/issue-cert` | Issue a new polecat client certificate |
+| `POST` | `/v1/admin/issue-cert` | Issue a new miner client certificate |
 | `POST` | `/v1/admin/deny-cert` | Add a certificate serial to the runtime deny list |
 
 ### Certificate CN format
@@ -592,9 +592,9 @@ but for production always configure the correct SANs or use a hostname.
 | Role | CN format | Example |
 |------|-----------|---------|
 | Server | `gt-proxy-server` | `gt-proxy-server` |
-| Polecat client | `gt-<rig>-<name>` | `gt-GasTown-rust` |
+| Miner client | `gt-<rig>-<name>` | `gt-Excavation-rust` |
 
-The server derives the polecat's identity (`<rig>/<name>`) from the CN at request
+The server derives the miner's identity (`<rig>/<name>`) from the CN at request
 time.  The last `-` in the remainder after stripping `gt-` is the rig/name
 separator, so hyphenated rig names such as `my-rig` are parsed correctly:
 
@@ -612,10 +612,10 @@ CN: gt-my-rig-rust   →   rig=my-rig, name=rust, identity=my-rig/rust
       ca.key           ← CA private key  (host-only; never leave this machine)
     proxy/
       config.json      ← Optional: extra_san_ips, extra_san_hosts
-    polecats/
+    miners/
       <name>/
-        polecat.crt    ← Per-polecat client certificate
-        polecat.key    ← Per-polecat private key
+        miner.crt    ← Per-miner client certificate
+        miner.key    ← Per-miner private key
   <RigName>/
     .repo.git/         ← Bare repository proxied by git endpoints
 ```

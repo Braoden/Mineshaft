@@ -100,9 +100,9 @@ func TestLevenshteinDistance(t *testing.T) {
 }
 
 func TestFormatSuggestion(t *testing.T) {
-	msg := FormatSuggestion("Polecat", "Tosat", []string{"Toast", "Ghost"}, "Create with: gt polecat add Tosat")
+	msg := FormatSuggestion("Miner", "Tosat", []string{"Toast", "Ghost"}, "Create with: gt miner add Tosat")
 
-	if !strings.Contains(msg, "Polecat") {
+	if !strings.Contains(msg, "Miner") {
 		t.Errorf("FormatSuggestion missing entity name")
 	}
 	if !strings.Contains(msg, "Tosat") {

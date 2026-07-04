@@ -8,12 +8,12 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/daemon"
-	"github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/rig"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/daemon"
+	"github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var initForce bool
@@ -21,11 +21,11 @@ var initForce bool
 var initCmd = &cobra.Command{
 	Use:     "init",
 	GroupID: GroupWorkspace,
-	Short:   "Initialize current directory as a Gas Town rig",
-	Long: `Initialize the current directory for use as a Gas Town rig.
+	Short:   "Initialize current directory as a Excavation Site rig",
+	Long: `Initialize the current directory for use as a Excavation Site rig.
 
-This creates the standard agent directories (polecats/, witness/, refinery/,
-mayor/) and updates .git/info/exclude to ignore them.
+This creates the standard agent directories (miners/, witness/, refinery/,
+overseer/) and updates .git/info/exclude to ignore them.
 
 The current directory must be a git repository. Use --force to reinitialize
 an existing rig structure.`,
@@ -50,12 +50,12 @@ func runInit(cmd *cobra.Command, args []string) error {
 	}
 
 	// Check if already initialized
-	polecatsDir := filepath.Join(cwd, "polecats")
-	if _, err := os.Stat(polecatsDir); err == nil && !initForce {
+	minersDir := filepath.Join(cwd, "miners")
+	if _, err := os.Stat(minersDir); err == nil && !initForce {
 		return fmt.Errorf("rig already initialized (use --force to reinitialize)")
 	}
 
-	fmt.Printf("%s Initializing Gas Town rig in %s\n\n",
+	fmt.Printf("%s Initializing Excavation Site rig in %s\n\n",
 		style.Bold.Render("⚙️"), style.Dim.Render(cwd))
 
 	// Create agent directories
@@ -84,7 +84,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 		fmt.Printf("   ✓ Updated .git/info/exclude\n")
 	}
 
-	// Register custom beads types for Gas Town (agent, role, rig, convoy, slot).
+	// Register custom beads types for Excavation Site (agent, role, rig, minecart, slot).
 	// This is best-effort: if beads isn't installed or DB doesn't exist, we skip.
 	// The doctor check will catch missing types later.
 	if err := registerCustomTypes(cwd); err != nil {
@@ -96,7 +96,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 
 	// Auto-configure the six-stage Dolt lifecycle with sensible defaults.
 	// This sets up reaper, compactor, doctor, backup, and maintenance patrols
-	// in mayor/daemon.json so they run automatically. Only fills in missing
+	// in overseer/daemon.json so they run automatically. Only fills in missing
 	// config — never overwrites existing user settings.
 	if townRoot, err := workspace.FindFromCwd(); err == nil {
 		if err := daemon.EnsureLifecycleConfigFile(townRoot); err != nil {
@@ -113,8 +113,8 @@ func runInit(cmd *cobra.Command, args []string) error {
 	fmt.Println("Next steps:")
 	fmt.Printf("  1. Add this rig to a town: %s\n",
 		style.Dim.Render("gt rig add <name> <git-url>"))
-	fmt.Printf("  2. Create a polecat: %s\n",
-		style.Dim.Render("gt polecat identity add <rig> <name>"))
+	fmt.Printf("  2. Create a miner: %s\n",
+		style.Dim.Render("gt miner identity add <rig> <name>"))
 
 	return nil
 }
@@ -134,17 +134,17 @@ func updateGitExclude(repoPath string) error {
 		return err
 	}
 
-	// Check if already has Gas Town section
-	if strings.Contains(string(content), "Gas Town") {
+	// Check if already has Excavation Site section
+	if strings.Contains(string(content), "Excavation Site") {
 		return nil // Already configured
 	}
 
 	// Append agent dirs with leading '/' to anchor at repo root.
 	// Without the anchor, patterns like 'refinery/' match at any depth
 	// and would hide source code directories like 'internal/refinery/'.
-	additions := "\n# Gas Town agent directories\n"
+	additions := "\n# Excavation Site agent directories\n"
 	for _, dir := range rig.AgentDirs {
-		// Get first component (e.g., "polecats" from "polecats")
+		// Get first component (e.g., "miners" from "miners")
 		// or "refinery" from "refinery/rig"
 		base := filepath.Dir(dir)
 		if base == "." {
@@ -157,7 +157,7 @@ func updateGitExclude(repoPath string) error {
 	return os.WriteFile(excludePath, append(content, []byte(additions)...), 0644)
 }
 
-// registerCustomTypes registers Gas Town custom issue types with beads.
+// registerCustomTypes registers Excavation Site custom issue types with beads.
 // This is best-effort: returns nil if beads isn't available or DB doesn't exist.
 // Handles gracefully: beads not installed, no .beads directory, or config errors.
 func registerCustomTypes(workDir string) error {

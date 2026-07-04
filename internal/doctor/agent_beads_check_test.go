@@ -18,7 +18,7 @@ func TestAgentBeadsExistCheck_NoRoutes(t *testing.T) {
 
 	result := check.Run(ctx)
 
-	// With no routes, only global agents (deacon, mayor) are checked
+	// With no routes, only global agents (supervisor, overseer) are checked
 	// They won't exist without Dolt, so we expect error
 	t.Logf("Result: status=%v, message=%s", result.Status, result.Message)
 	if result.Status == StatusOK {
@@ -44,7 +44,7 @@ func TestAgentBeadsExistCheck_NoRigs(t *testing.T) {
 
 	result := check.Run(ctx)
 
-	// With empty routes, only global agents (deacon, mayor) are checked
+	// With empty routes, only global agents (supervisor, overseer) are checked
 	// They won't exist without Dolt, so we expect error or warning
 	t.Logf("Result: status=%v, message=%s", result.Status, result.Message)
 }
@@ -59,13 +59,13 @@ func TestAgentBeadsExistCheck_ExpectedIDs(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Use "sw" prefix to match sallaWork pattern
-	routesContent := `{"prefix":"sw-","path":"sallaWork/mayor/rig"}` + "\n"
+	routesContent := `{"prefix":"sw-","path":"sallaWork/overseer/rig"}` + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create rig beads directory
-	rigBeadsDir := filepath.Join(tmpDir, "sallaWork", "mayor", "rig", ".beads")
+	rigBeadsDir := filepath.Join(tmpDir, "sallaWork", "overseer", "rig", ".beads")
 	if err := os.MkdirAll(rigBeadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -113,16 +113,16 @@ func TestAgentBeadsExistCheck_RespectsRigScope(t *testing.T) {
 		t.Fatal(err)
 	}
 	routesContent := strings.Join([]string{
-		`{"prefix":"gs-","path":"gastown/mayor/rig"}`,
-		`{"prefix":"do-","path":"coder_dotfiles/mayor/rig"}`,
+		`{"prefix":"gs-","path":"excavation/overseer/rig"}`,
+		`{"prefix":"do-","path":"coder_dotfiles/overseer/rig"}`,
 	}, "\n") + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	for _, path := range []string{
-		filepath.Join(tmpDir, "gastown", "mayor", "rig", ".beads"),
-		filepath.Join(tmpDir, "coder_dotfiles", "mayor", "rig", ".beads"),
+		filepath.Join(tmpDir, "excavation", "overseer", "rig", ".beads"),
+		filepath.Join(tmpDir, "coder_dotfiles", "overseer", "rig", ".beads"),
 	} {
 		if err := os.MkdirAll(path, 0755); err != nil {
 			t.Fatal(err)
@@ -130,7 +130,7 @@ func TestAgentBeadsExistCheck_RespectsRigScope(t *testing.T) {
 	}
 
 	check := NewAgentBeadsCheck()
-	ctx := &CheckContext{TownRoot: tmpDir, RigName: "gastown"}
+	ctx := &CheckContext{TownRoot: tmpDir, RigName: "excavation"}
 
 	result := check.Run(ctx)
 
@@ -142,15 +142,15 @@ func TestAgentBeadsExistCheck_RespectsRigScope(t *testing.T) {
 			t.Fatalf("expected --rig scope to exclude coder_dotfiles agent bead %q, got details: %v", detail, result.Details)
 		}
 	}
-	foundGastown := false
+	foundExcavation := false
 	for _, detail := range result.Details {
 		if strings.HasPrefix(detail, "gs-") {
-			foundGastown = true
+			foundExcavation = true
 			break
 		}
 	}
-	if !foundGastown {
-		t.Fatalf("expected scoped result to include gastown agent beads, got details: %v", result.Details)
+	if !foundExcavation {
+		t.Fatalf("expected scoped result to include excavation agent beads, got details: %v", result.Details)
 	}
 }
 
@@ -164,22 +164,22 @@ func TestAgentBeadsExistCheck_FixRespectsRigScope(t *testing.T) {
 		t.Fatal(err)
 	}
 	routesContent := strings.Join([]string{
-		`{"prefix":"gs-","path":"gastown/mayor/rig"}`,
-		`{"prefix":"do-","path":"coder_dotfiles/mayor/rig"}`,
+		`{"prefix":"gs-","path":"excavation/overseer/rig"}`,
+		`{"prefix":"do-","path":"coder_dotfiles/overseer/rig"}`,
 	}, "\n") + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	for _, path := range []string{
-		filepath.Join(tmpDir, "gastown", "mayor", "rig", ".beads"),
-		filepath.Join(tmpDir, "coder_dotfiles", "mayor", "rig", ".beads"),
+		filepath.Join(tmpDir, "excavation", "overseer", "rig", ".beads"),
+		filepath.Join(tmpDir, "coder_dotfiles", "overseer", "rig", ".beads"),
 	} {
 		if err := os.MkdirAll(path, 0755); err != nil {
 			t.Fatal(err)
 		}
 	}
-	if err := os.MkdirAll(filepath.Join(tmpDir, "gastown", "crew", "alice", ".git"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(tmpDir, "excavation", "crew", "alice", ".git"), 0755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.MkdirAll(filepath.Join(tmpDir, "coder_dotfiles", "crew", "bella", ".git"), 0755); err != nil {
@@ -265,7 +265,7 @@ esac
 	t.Setenv("PATH", fmt.Sprintf("%s%c%s", binDir, os.PathListSeparator, os.Getenv("PATH")))
 
 	check := NewAgentBeadsCheck()
-	ctx := &CheckContext{TownRoot: tmpDir, RigName: "gastown"}
+	ctx := &CheckContext{TownRoot: tmpDir, RigName: "excavation"}
 	if err := check.Fix(ctx); err != nil {
 		t.Fatalf("Fix() returned error: %v", err)
 	}
@@ -280,8 +280,8 @@ esac
 			t.Fatalf("expected scoped Fix() to avoid coder_dotfiles beads, got log line %q", line)
 		}
 	}
-	if !strings.Contains(log, "create gs-gastown-witness") {
-		t.Fatalf("expected scoped Fix() to create gastown witness bead, got log: %q", log)
+	if !strings.Contains(log, "create gs-excavation-witness") {
+		t.Fatalf("expected scoped Fix() to create excavation witness bead, got log: %q", log)
 	}
 }
 
@@ -347,7 +347,7 @@ func TestListCrewWorkers_FiltersWorktrees(t *testing.T) {
 // wisp_labels can find the bead.
 func TestAddWispLabelSQL_ErrorsGracefully(t *testing.T) {
 	tmpDir := t.TempDir()
-	err := addWispLabelSQL(tmpDir, "gt-gastown-witness", "gt:agent")
+	err := addWispLabelSQL(tmpDir, "gt-excavation-witness", "gt:agent")
 	// bd sql will fail without a Dolt server — just verify no panic and that the
 	// function returns an error (not silently discarding the failure).
 	if err == nil {
@@ -357,20 +357,20 @@ func TestAddWispLabelSQL_ErrorsGracefully(t *testing.T) {
 	}
 }
 
-// TestListPolecats_FiltersWorktrees verifies that listPolecats skips
+// TestListMiners_FiltersWorktrees verifies that listMiners skips
 // git worktrees, same as listCrewWorkers. See GH#2767.
-func TestListPolecats_FiltersWorktrees(t *testing.T) {
+func TestListMiners_FiltersWorktrees(t *testing.T) {
 	tmpDir := t.TempDir()
 	rigName := "myrig"
-	polecatDir := filepath.Join(tmpDir, rigName, "polecats")
+	minerDir := filepath.Join(tmpDir, rigName, "miners")
 
-	// Canonical polecat
-	if err := os.MkdirAll(filepath.Join(polecatDir, "scout", ".git"), 0755); err != nil {
+	// Canonical miner
+	if err := os.MkdirAll(filepath.Join(minerDir, "scout", ".git"), 0755); err != nil {
 		t.Fatal(err)
 	}
 
-	// Worktree polecat (.git is a file)
-	wtDir := filepath.Join(polecatDir, "scout-wt")
+	// Worktree miner (.git is a file)
+	wtDir := filepath.Join(minerDir, "scout-wt")
 	if err := os.MkdirAll(wtDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -379,9 +379,9 @@ func TestListPolecats_FiltersWorktrees(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	polecats := listPolecats(tmpDir, rigName)
+	miners := listMiners(tmpDir, rigName)
 
-	if len(polecats) != 1 || polecats[0] != "scout" {
-		t.Errorf("listPolecats should return only [scout], got: %v", polecats)
+	if len(miners) != 1 || miners[0] != "scout" {
+		t.Errorf("listMiners should return only [scout], got: %v", miners)
 	}
 }

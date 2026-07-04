@@ -9,10 +9,10 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // Environment variables for role detection
@@ -29,11 +29,11 @@ type RoleInfo struct {
 	Source        string `json:"source"` // "env", "cwd", or "explicit"
 	Home          string `json:"home"`
 	Rig           string `json:"rig,omitempty"`
-	Polecat       string `json:"polecat,omitempty"`
+	Miner       string `json:"miner,omitempty"`
 	EnvRole       string `json:"env_role,omitempty"`    // Value of GT_ROLE if set
 	CwdRole       Role   `json:"cwd_role,omitempty"`    // Role detected from cwd
 	Mismatch      bool   `json:"mismatch,omitempty"`    // True if env != cwd detection
-	EnvIncomplete bool   `json:"env_incomplete,omitempty"` // True if env was set but missing rig/polecat, filled from cwd
+	EnvIncomplete bool   `json:"env_incomplete,omitempty"` // True if env was set but missing rig/miner, filled from cwd
 	TownRoot      string `json:"town_root,omitempty"`
 	WorkDir       string `json:"work_dir,omitempty"`    // Current working directory
 }
@@ -72,7 +72,7 @@ If no role is specified, shows the home for the current role.
 
 Examples:
   gt role home           # Home for current role
-  gt role home mayor     # Home for mayor
+  gt role home overseer     # Home for overseer
   gt role home witness   # Home for witness (requires --rig)`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runRoleHome,
@@ -90,11 +90,11 @@ This is useful for debugging role detection issues.`,
 var roleListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all known roles",
-	Long: `List all known Gas Town agent roles and their descriptions.
+	Long: `List all known Excavation Site agent roles and their descriptions.
 
-Roles include mayor, deacon, witness, refinery, polecat, and crew.
+Roles include overseer, supervisor, witness, refinery, miner, and crew.
 Each role has a specific scope and responsibilities within the
-Gas Town multi-agent architecture.`,
+Excavation Site multi-agent architecture.`,
 	RunE: runRoleList,
 }
 
@@ -132,7 +132,7 @@ Examples:
 // Flags for role home command
 var (
 	roleRig     string
-	rolePolecat string
+	roleMiner string
 )
 
 func init() {
@@ -144,9 +144,9 @@ func init() {
 	roleCmd.AddCommand(roleEnvCmd)
 	roleCmd.AddCommand(roleDefCmd)
 
-	// Add --rig and --polecat flags to home command for overrides
+	// Add --rig and --miner flags to home command for overrides
 	roleHomeCmd.Flags().StringVar(&roleRig, "rig", "", "Rig name (required for rig-specific roles)")
-	roleHomeCmd.Flags().StringVar(&rolePolecat, "polecat", "", "Polecat/crew member name")
+	roleHomeCmd.Flags().StringVar(&roleMiner, "miner", "", "Miner/crew member name")
 }
 
 // GetRole returns the current role, checking GT_ROLE first then falling back to cwd.
@@ -162,7 +162,7 @@ func GetRole() (RoleInfo, error) {
 		return RoleInfo{}, fmt.Errorf("finding workspace: %w", err)
 	}
 	if townRoot == "" {
-		return RoleInfo{}, fmt.Errorf("not in a Gas Town workspace")
+		return RoleInfo{}, fmt.Errorf("not in a Excavation Site workspace")
 	}
 
 	return GetRoleWithContext(cwd, townRoot)
@@ -185,39 +185,39 @@ func GetRoleWithContext(cwd, townRoot string) (RoleInfo, error) {
 
 	// Determine authoritative role
 	if envRole != "" {
-		// Parse env role - it might be simple ("mayor") or compound ("gastown/witness")
-		parsedRole, rig, polecat := parseRoleString(envRole)
+		// Parse env role - it might be simple ("overseer") or compound ("excavation/witness")
+		parsedRole, rig, miner := parseRoleString(envRole)
 		info.Role = parsedRole
 		info.Rig = rig
-		info.Polecat = polecat
+		info.Miner = miner
 		info.Source = "env"
 
-		// For simple role strings like "crew" or "polecat", also check
-		// GT_RIG and GT_CREW/GT_POLECAT env vars for the full identity
+		// For simple role strings like "crew" or "miner", also check
+		// GT_RIG and GT_CREW/GT_MINER env vars for the full identity
 		if info.Rig == "" {
 			if envRig := os.Getenv("GT_RIG"); envRig != "" {
 				info.Rig = envRig
 			}
 		}
-		if info.Polecat == "" {
+		if info.Miner == "" {
 			if envCrew := os.Getenv("GT_CREW"); envCrew != "" {
-				info.Polecat = envCrew
-			} else if envPolecat := os.Getenv("GT_POLECAT"); envPolecat != "" {
-				info.Polecat = envPolecat
+				info.Miner = envCrew
+			} else if envMiner := os.Getenv("GT_MINER"); envMiner != "" {
+				info.Miner = envMiner
 			}
 		}
 
-		// If env is incomplete (missing rig/polecat for roles that need them),
+		// If env is incomplete (missing rig/miner for roles that need them),
 		// fill gaps from cwd detection and mark as incomplete
-		needsRig := parsedRole == RoleWitness || parsedRole == RoleRefinery || parsedRole == RolePolecat || parsedRole == RoleCrew
-		needsPolecat := parsedRole == RolePolecat || parsedRole == RoleCrew || parsedRole == RoleDog
+		needsRig := parsedRole == RoleWitness || parsedRole == RoleRefinery || parsedRole == RoleMiner || parsedRole == RoleCrew
+		needsMiner := parsedRole == RoleMiner || parsedRole == RoleCrew || parsedRole == RoleDog
 
 		if needsRig && info.Rig == "" && cwdCtx.Rig != "" {
 			info.Rig = cwdCtx.Rig
 			info.EnvIncomplete = true
 		}
-		if needsPolecat && info.Polecat == "" && cwdCtx.Polecat != "" {
-			info.Polecat = cwdCtx.Polecat
+		if needsMiner && info.Miner == "" && cwdCtx.Miner != "" {
+			info.Miner = cwdCtx.Miner
 			info.EnvIncomplete = true
 		}
 
@@ -229,12 +229,12 @@ func GetRoleWithContext(cwd, townRoot string) (RoleInfo, error) {
 		// Fall back to cwd detection - copy all fields from cwdCtx
 		info.Role = cwdCtx.Role
 		info.Rig = cwdCtx.Rig
-		info.Polecat = cwdCtx.Polecat
+		info.Miner = cwdCtx.Miner
 		info.Source = "cwd"
 	}
 
 	// Determine home directory
-	info.Home = getRoleHome(info.Role, info.Rig, info.Polecat, townRoot)
+	info.Home = getRoleHome(info.Role, info.Rig, info.Miner, townRoot)
 
 	return info, nil
 }
@@ -260,35 +260,35 @@ func detectRole(cwd, townRoot string) RoleInfo {
 	parts := strings.Split(relPath, "/")
 
 	// Town root is a neutral location — don't infer any role from it.
-	// The mayor's actual home is mayor/ (matched below).
+	// The overseer's actual home is overseer/ (matched below).
 	if relPath == "." || relPath == "" {
 		return ctx
 	}
 
-	// Check for mayor role: mayor/ or mayor/rig/
-	if len(parts) >= 1 && parts[0] == "mayor" {
-		ctx.Role = RoleMayor
+	// Check for overseer role: overseer/ or overseer/rig/
+	if len(parts) >= 1 && parts[0] == "overseer" {
+		ctx.Role = RoleOverseer
 		return ctx
 	}
 
-	// Check for boot role: deacon/dogs/boot/
-	// Must check before deacon since boot is under deacon directory
-	if len(parts) >= 3 && parts[0] == "deacon" && parts[1] == "dogs" && parts[2] == "boot" {
+	// Check for boot role: supervisor/dogs/boot/
+	// Must check before supervisor since boot is under supervisor directory
+	if len(parts) >= 3 && parts[0] == "supervisor" && parts[1] == "dogs" && parts[2] == "boot" {
 		ctx.Role = RoleBoot
 		return ctx
 	}
 
-	// Check for dog role: deacon/dogs/<name>/
-	// Must check before deacon since dogs are under deacon directory
-	if len(parts) >= 3 && parts[0] == "deacon" && parts[1] == "dogs" {
+	// Check for dog role: supervisor/dogs/<name>/
+	// Must check before supervisor since dogs are under supervisor directory
+	if len(parts) >= 3 && parts[0] == "supervisor" && parts[1] == "dogs" {
 		ctx.Role = RoleDog
-		ctx.Polecat = parts[2] // dog name stored in Polecat field
+		ctx.Miner = parts[2] // dog name stored in Miner field
 		return ctx
 	}
 
-	// Check for deacon role: deacon/
-	if len(parts) >= 1 && parts[0] == "deacon" {
-		ctx.Role = RoleDeacon
+	// Check for supervisor role: supervisor/
+	if len(parts) >= 1 && parts[0] == "supervisor" {
+		ctx.Role = RoleSupervisor
 		return ctx
 	}
 
@@ -299,9 +299,9 @@ func detectRole(cwd, townRoot string) RoleInfo {
 	rigName := parts[0]
 	ctx.Rig = rigName
 
-	// Check for mayor: <rig>/mayor/ or <rig>/mayor/rig/
-	if len(parts) >= 2 && parts[1] == "mayor" {
-		ctx.Role = RoleMayor
+	// Check for overseer: <rig>/overseer/ or <rig>/overseer/rig/
+	if len(parts) >= 2 && parts[1] == "overseer" {
+		ctx.Role = RoleOverseer
 		return ctx
 	}
 
@@ -317,17 +317,17 @@ func detectRole(cwd, townRoot string) RoleInfo {
 		return ctx
 	}
 
-	// Check for polecat: <rig>/polecats/<name>/
-	if len(parts) >= 3 && parts[1] == "polecats" {
-		ctx.Role = RolePolecat
-		ctx.Polecat = parts[2]
+	// Check for miner: <rig>/miners/<name>/
+	if len(parts) >= 3 && parts[1] == "miners" {
+		ctx.Role = RoleMiner
+		ctx.Miner = parts[2]
 		return ctx
 	}
 
 	// Check for crew: <rig>/crew/<name>/
 	if len(parts) >= 3 && parts[1] == "crew" {
 		ctx.Role = RoleCrew
-		ctx.Polecat = parts[2] // Use Polecat field for crew member name
+		ctx.Miner = parts[2] // Use Miner field for crew member name
 		return ctx
 	}
 
@@ -335,7 +335,7 @@ func detectRole(cwd, townRoot string) RoleInfo {
 	return ctx
 }
 
-// parseRoleString parses a role string like "mayor", "gastown/witness", or "gastown/polecats/alpha".
+// parseRoleString parses a role string like "overseer", "excavation/witness", or "excavation/miners/alpha".
 func parseRoleString(s string) (Role, string, string) {
 	s = strings.TrimSpace(s)
 
@@ -347,17 +347,17 @@ func parseRoleString(s string) (Role, string, string) {
 
 	// Simple roles
 	switch s {
-	case constants.RoleMayor:
-		return RoleMayor, "", ""
-	case constants.RoleDeacon:
-		return RoleDeacon, "", ""
+	case constants.RoleOverseer:
+		return RoleOverseer, "", ""
+	case constants.RoleSupervisor:
+		return RoleSupervisor, "", ""
 	case "boot":
 		return RoleBoot, "", ""
 	case "dog":
 		return RoleDog, "", ""
 	}
 
-	// Compound roles: rig/role or rig/polecats/name or rig/crew/name
+	// Compound roles: rig/role or rig/miners/name or rig/crew/name
 	parts := strings.Split(s, "/")
 	if len(parts) < 2 {
 		// Unknown format, try to match as simple role
@@ -368,8 +368,8 @@ func parseRoleString(s string) (Role, string, string) {
 
 	switch parts[1] {
 	case "boot":
-		// Handle compound "deacon/boot" format from GT_ROLE env var
-		if rig == "deacon" && len(parts) == 2 {
+		// Handle compound "supervisor/boot" format from GT_ROLE env var
+		if rig == "supervisor" && len(parts) == 2 {
 			return RoleBoot, "", ""
 		}
 		return Role(s), "", ""
@@ -377,34 +377,34 @@ func parseRoleString(s string) (Role, string, string) {
 		return RoleWitness, rig, ""
 	case constants.RoleRefinery:
 		return RoleRefinery, rig, ""
-	case "polecats":
+	case "miners":
 		if len(parts) >= 3 {
-			return RolePolecat, rig, parts[2]
+			return RoleMiner, rig, parts[2]
 		}
-		return RolePolecat, rig, ""
+		return RoleMiner, rig, ""
 	case constants.RoleCrew:
 		if len(parts) >= 3 {
 			return RoleCrew, rig, parts[2]
 		}
 		return RoleCrew, rig, ""
 	default:
-		// Might be rig/polecatName format
-		return RolePolecat, rig, parts[1]
+		// Might be rig/minerName format
+		return RoleMiner, rig, parts[1]
 	}
 }
 
 // ActorString returns the actor identity string for beads attribution.
 // Format matches beads created_by convention:
-//   - Simple roles: "mayor", "deacon"
-//   - Dog roles: "deacon-boot" (hyphenated, matching BD_ACTOR)
-//   - Rig-specific: "gastown/witness", "gastown/refinery"
-//   - Workers: "gastown/crew/max", "gastown/polecats/Toast"
+//   - Simple roles: "overseer", "supervisor"
+//   - Dog roles: "supervisor-boot" (hyphenated, matching BD_ACTOR)
+//   - Rig-specific: "excavation/witness", "excavation/refinery"
+//   - Workers: "excavation/crew/max", "excavation/miners/Toast"
 func (info RoleInfo) ActorString() string {
 	switch info.Role {
-	case RoleMayor:
-		return "mayor"
-	case RoleDeacon:
-		return "deacon"
+	case RoleOverseer:
+		return "overseer"
+	case RoleSupervisor:
+		return "supervisor"
 	case RoleWitness:
 		if info.Rig != "" {
 			return fmt.Sprintf("%s/witness", info.Rig)
@@ -415,30 +415,30 @@ func (info RoleInfo) ActorString() string {
 			return fmt.Sprintf("%s/refinery", info.Rig)
 		}
 		return "refinery"
-	case RolePolecat:
-		if info.Rig != "" && info.Polecat != "" {
-			return fmt.Sprintf("%s/polecats/%s", info.Rig, info.Polecat)
+	case RoleMiner:
+		if info.Rig != "" && info.Miner != "" {
+			return fmt.Sprintf("%s/miners/%s", info.Rig, info.Miner)
 		}
-		return "polecat"
+		return "miner"
 	case RoleCrew:
-		if info.Rig != "" && info.Polecat != "" {
-			return fmt.Sprintf("%s/crew/%s", info.Rig, info.Polecat)
+		if info.Rig != "" && info.Miner != "" {
+			return fmt.Sprintf("%s/crew/%s", info.Rig, info.Miner)
 		}
 		return "crew"
 	case RoleBoot:
-		return "deacon-boot"
+		return "supervisor-boot"
 	default:
 		return string(info.Role)
 	}
 }
 
 // getRoleHome returns the canonical home directory for a role.
-func getRoleHome(role Role, rig, polecat, townRoot string) string {
+func getRoleHome(role Role, rig, miner, townRoot string) string {
 	switch role {
-	case RoleMayor:
-		return filepath.Join(townRoot, "mayor")
-	case RoleDeacon:
-		return filepath.Join(townRoot, "deacon")
+	case RoleOverseer:
+		return filepath.Join(townRoot, "overseer")
+	case RoleSupervisor:
+		return filepath.Join(townRoot, "supervisor")
 	case RoleWitness:
 		if rig == "" {
 			return ""
@@ -449,23 +449,23 @@ func getRoleHome(role Role, rig, polecat, townRoot string) string {
 			return ""
 		}
 		return filepath.Join(townRoot, rig, "refinery", "rig")
-	case RolePolecat:
-		if rig == "" || polecat == "" {
+	case RoleMiner:
+		if rig == "" || miner == "" {
 			return ""
 		}
-		return filepath.Join(townRoot, rig, "polecats", polecat)
+		return filepath.Join(townRoot, rig, "miners", miner)
 	case RoleCrew:
-		if rig == "" || polecat == "" {
+		if rig == "" || miner == "" {
 			return ""
 		}
-		return filepath.Join(townRoot, rig, "crew", polecat)
+		return filepath.Join(townRoot, rig, "crew", miner)
 	case RoleBoot:
-		return filepath.Join(townRoot, "deacon", "dogs", "boot")
+		return filepath.Join(townRoot, "supervisor", "dogs", "boot")
 	case RoleDog:
-		if polecat == "" {
+		if miner == "" {
 			return ""
 		}
-		return filepath.Join(townRoot, "deacon", "dogs", polecat)
+		return filepath.Join(townRoot, "supervisor", "dogs", miner)
 	default:
 		return ""
 	}
@@ -489,8 +489,8 @@ func runRoleShow(cmd *cobra.Command, args []string) error {
 		fmt.Printf("Rig: %s\n", info.Rig)
 	}
 
-	if info.Polecat != "" {
-		fmt.Printf("Worker: %s\n", info.Polecat)
+	if info.Miner != "" {
+		fmt.Printf("Worker: %s\n", info.Miner)
 	}
 
 	// Show mismatch warning
@@ -518,12 +518,12 @@ func runRoleHome(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("finding workspace: %w", err)
 	}
 	if townRoot == "" {
-		return fmt.Errorf("not in a Gas Town workspace")
+		return fmt.Errorf("not in a Excavation Site workspace")
 	}
 
-	// Validate flag combinations: --polecat requires --rig to prevent strange merges
-	if rolePolecat != "" && roleRig == "" {
-		return fmt.Errorf("--polecat requires --rig to be specified")
+	// Validate flag combinations: --miner requires --rig to prevent strange merges
+	if roleMiner != "" && roleRig == "" {
+		return fmt.Errorf("--miner requires --rig to be specified")
 	}
 
 	// Start with current role detection (from env vars or cwd)
@@ -533,7 +533,7 @@ func runRoleHome(cmd *cobra.Command, args []string) error {
 	}
 	role := info.Role
 	rig := info.Rig
-	polecat := info.Polecat
+	miner := info.Miner
 
 	// Apply overrides from arguments/flags
 	if len(args) > 0 {
@@ -542,13 +542,13 @@ func runRoleHome(cmd *cobra.Command, args []string) error {
 	if roleRig != "" {
 		rig = roleRig
 	}
-	if rolePolecat != "" {
-		polecat = rolePolecat
+	if roleMiner != "" {
+		miner = roleMiner
 	}
 
-	home := getRoleHome(role, rig, polecat, townRoot)
+	home := getRoleHome(role, rig, miner, townRoot)
 	if home == "" {
-		return fmt.Errorf("cannot determine home for role %s (rig=%q, polecat=%q)", role, rig, polecat)
+		return fmt.Errorf("cannot determine home for role %s (rig=%q, miner=%q)", role, rig, miner)
 	}
 
 	// Warn if computed home doesn't match cwd
@@ -571,7 +571,7 @@ func runRoleDetect(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("finding workspace: %w", err)
 	}
 	if townRoot == "" {
-		return fmt.Errorf("not in a Gas Town workspace")
+		return fmt.Errorf("not in a Excavation Site workspace")
 	}
 
 	ctx := detectRole(cwd, townRoot)
@@ -582,8 +582,8 @@ func runRoleDetect(cmd *cobra.Command, args []string) error {
 	if ctx.Rig != "" {
 		fmt.Printf("Rig: %s\n", ctx.Rig)
 	}
-	if ctx.Polecat != "" {
-		fmt.Printf("Worker: %s\n", ctx.Polecat)
+	if ctx.Miner != "" {
+		fmt.Printf("Worker: %s\n", ctx.Miner)
 	}
 
 	// Check if env var disagrees
@@ -606,11 +606,11 @@ func runRoleList(cmd *cobra.Command, args []string) error {
 		name Role
 		desc string
 	}{
-		{RoleMayor, "Global coordinator at mayor/"},
-		{RoleDeacon, "Background supervisor daemon"},
-		{RoleWitness, "Per-rig polecat lifecycle manager"},
+		{RoleOverseer, "Global coordinator at overseer/"},
+		{RoleSupervisor, "Background supervisor daemon"},
+		{RoleWitness, "Per-rig miner lifecycle manager"},
 		{RoleRefinery, "Per-rig merge queue processor"},
-		{RolePolecat, "Worker with persistent identity, ephemeral sessions"},
+		{RoleMiner, "Worker with persistent identity, ephemeral sessions"},
 		{RoleCrew, "Persistent worker with own worktree"},
 	}
 
@@ -633,7 +633,7 @@ func runRoleEnv(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("finding workspace: %w", err)
 	}
 	if townRoot == "" {
-		return fmt.Errorf("not in a Gas Town workspace")
+		return fmt.Errorf("not in a Excavation Site workspace")
 	}
 
 	// Get current role (read-only - from env vars or cwd)
@@ -642,9 +642,9 @@ func runRoleEnv(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	home := getRoleHome(info.Role, info.Rig, info.Polecat, townRoot)
+	home := getRoleHome(info.Role, info.Rig, info.Miner, townRoot)
 	if home == "" {
-		return fmt.Errorf("cannot determine home for role %s (rig=%q, polecat=%q)", info.Role, info.Rig, info.Polecat)
+		return fmt.Errorf("cannot determine home for role %s (rig=%q, miner=%q)", info.Role, info.Rig, info.Miner)
 	}
 
 	// Warn if env was incomplete and we filled from cwd
@@ -661,7 +661,7 @@ func runRoleEnv(cmd *cobra.Command, args []string) error {
 	envVars := config.AgentEnv(config.AgentEnvConfig{
 		Role:      string(info.Role),
 		Rig:       info.Rig,
-		AgentName: info.Polecat,
+		AgentName: info.Miner,
 		TownRoot:  townRoot,
 	})
 	envVars[EnvGTRoleHome] = home

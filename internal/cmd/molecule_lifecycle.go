@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/telemetry"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/telemetry"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // runMoleculeBurn burns (destroys) the current molecule attachment.
@@ -29,7 +29,7 @@ func runMoleculeBurn(cmd *cobra.Command, args []string) (retErr error) {
 		return fmt.Errorf("finding workspace: %w", err)
 	}
 	if townRoot == "" {
-		return fmt.Errorf("not in a Gas Town workspace")
+		return fmt.Errorf("not in a Excavation Site workspace")
 	}
 
 	// Determine target agent
@@ -45,7 +45,7 @@ func runMoleculeBurn(cmd *cobra.Command, args []string) (retErr error) {
 		roleCtx := RoleContext{
 			Role:     roleInfo.Role,
 			Rig:      roleInfo.Rig,
-			Polecat:  roleInfo.Polecat,
+			Miner:  roleInfo.Miner,
 			TownRoot: townRoot,
 			WorkDir:  cwd,
 		}
@@ -163,7 +163,7 @@ func runMoleculeSquash(cmd *cobra.Command, args []string) (retErr error) {
 		return fmt.Errorf("finding workspace: %w", err)
 	}
 	if townRoot == "" {
-		return fmt.Errorf("not in a Gas Town workspace")
+		return fmt.Errorf("not in a Excavation Site workspace")
 	}
 
 	// Determine target agent
@@ -179,7 +179,7 @@ func runMoleculeSquash(cmd *cobra.Command, args []string) (retErr error) {
 		roleCtx := RoleContext{
 			Role:     roleInfo.Role,
 			Rig:      roleInfo.Rig,
-			Polecat:  roleInfo.Polecat,
+			Miner:  roleInfo.Miner,
 			TownRoot: townRoot,
 			WorkDir:  cwd,
 		}
@@ -224,7 +224,7 @@ func runMoleculeSquash(cmd *cobra.Command, args []string) (retErr error) {
 	}()
 
 	// Apply jitter before acquiring any Dolt locks.
-	// Multiple patrol agents (deacon, witness, refinery) squash concurrently at
+	// Multiple patrol agents (supervisor, witness, refinery) squash concurrently at
 	// cycle end, causing exclusive-lock contention. A random pre-sleep
 	// desynchronizes them without changing semantics.
 	if jitterMax > 0 {
@@ -243,7 +243,7 @@ func runMoleculeSquash(cmd *cobra.Command, args []string) (retErr error) {
 	childrenClosed := closeDescendants(b, moleculeID)
 
 	// Skip digest creation if --no-digest flag is set (gt-t2bjt).
-	// Patrol molecules (deacon, witness, refinery) run frequently and their
+	// Patrol molecules (supervisor, witness, refinery) run frequently and their
 	// digests pollute the database with thousands of low-value beads.
 	if !moleculeNoDigest {
 		// Get progress info for the digest

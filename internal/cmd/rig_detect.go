@@ -11,9 +11,9 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/state"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/state"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var rigDetectCache string
@@ -25,9 +25,9 @@ var rigDetectCmd = &cobra.Command{
 	Long: `Detect rig from a repository path and optionally cache the result.
 
 This is an internal command used by shell integration. It checks if the given
-path is inside a Gas Town rig and outputs shell variable assignments.
+path is inside a Excavation Site rig and outputs shell variable assignments.
 
-When --cache is specified, the result is written to ~/.cache/gastown/rigs.cache
+When --cache is specified, the result is written to ~/.cache/excavation/rigs.cache
 for fast lookups by the shell hook.
 
 Output format (to stdout):
@@ -97,7 +97,7 @@ func detectRigFromPath(townRoot, absPath string) string {
 	candidateRig := parts[0]
 
 	switch candidateRig {
-	case constants.RoleMayor, constants.RoleDeacon, ".beads", ".claude", ".git", "plugins":
+	case constants.RoleOverseer, constants.RoleSupervisor, ".beads", ".claude", ".git", "plugins":
 		return ""
 	}
 

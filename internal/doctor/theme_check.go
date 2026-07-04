@@ -5,8 +5,8 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 // ThemeCheck verifies tmux sessions have correct themes applied.
@@ -42,7 +42,7 @@ func (c *ThemeCheck) Run(ctx *CheckContext) *CheckResult {
 		}
 	}
 
-	// Check for Gas Town sessions
+	// Check for Excavation Site sessions
 	var gtSessions []string
 	for _, s := range sessions {
 		if session.IsKnownSession(s) {
@@ -54,7 +54,7 @@ func (c *ThemeCheck) Run(ctx *CheckContext) *CheckResult {
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusOK,
-			Message: "No Gas Town sessions running",
+			Message: "No Excavation Site sessions running",
 		}
 	}
 
@@ -65,7 +65,7 @@ func (c *ThemeCheck) Run(ctx *CheckContext) *CheckResult {
 		if err != nil {
 			continue
 		}
-		// Old format had brackets like [Mayor] or [gastown/crew]
+		// Old format had brackets like [Overseer] or [excavation/crew]
 		if strings.Contains(statusLeft, "[") && strings.Contains(statusLeft, "]") {
 			needsUpdate = append(needsUpdate, session)
 		}

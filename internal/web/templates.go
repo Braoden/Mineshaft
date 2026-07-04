@@ -1,4 +1,4 @@
-// Package web provides HTTP server and templates for the Gas Town dashboard.
+// Package web provides HTTP server and templates for the Excavation Site dashboard.
 package web
 
 import (
@@ -7,15 +7,15 @@ import (
 	"io/fs"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/activity"
+	"github.com/steveyegge/excavation/internal/activity"
 )
 
 //go:embed templates/*.html
 var templateFS embed.FS
 
-// ConvoyData represents data passed to the convoy template.
-type ConvoyData struct {
-	Convoys     []ConvoyRow
+// MinecartData represents data passed to the minecart template.
+type MinecartData struct {
+	Minecarts     []MinecartRow
 	MergeQueue  []MergeQueueRow
 	Workers     []WorkerRow
 	Mail        []MailRow
@@ -26,7 +26,7 @@ type ConvoyData struct {
 	Queues      []QueueRow
 	Sessions    []SessionRow
 	Hooks       []HookRow
-	Mayor       *MayorStatus
+	Overseer       *OverseerStatus
 	Issues      []IssueRow
 	Activity    []ActivityRow
 	Summary     *DashboardSummary
@@ -38,13 +38,13 @@ type ConvoyData struct {
 type RigRow struct {
 	Name         string
 	GitURL       string
-	PolecatCount int
+	MinerCount int
 	CrewCount    int
 	HasWitness   bool
 	HasRefinery  bool
 }
 
-// DogRow represents a Deacon helper worker.
+// DogRow represents a Supervisor helper worker.
 type DogRow struct {
 	Name       string // Dog name (e.g., "alpha")
 	State      string // idle, working
@@ -65,8 +65,8 @@ type EscalationRow struct {
 
 // HealthRow represents system health status.
 type HealthRow struct {
-	DeaconHeartbeat string // Age of heartbeat (e.g., "2m ago")
-	DeaconCycle     int64
+	SupervisorHeartbeat string // Age of heartbeat (e.g., "2m ago")
+	SupervisorCycle     int64
 	HealthyAgents   int
 	UnhealthyAgents int
 	IsPaused        bool
@@ -86,10 +86,10 @@ type QueueRow struct {
 
 // SessionRow represents a tmux session.
 type SessionRow struct {
-	Name     string // Session name (e.g., "gt-gastown-witness")
-	Role     string // witness, refinery, polecat, crew, deacon
+	Name     string // Session name (e.g., "gt-excavation-witness")
+	Role     string // witness, refinery, miner, crew, supervisor
 	Rig      string // Rig name if applicable
-	Worker   string // Worker name for polecats/crew
+	Worker   string // Worker name for miners/crew
 	Activity string // Age since last activity
 	IsAlive  bool   // Whether Claude is running in session
 }
@@ -98,15 +98,15 @@ type SessionRow struct {
 type HookRow struct {
 	ID       string // Bead ID (e.g., "gt-abc12")
 	Title    string // Work item title
-	Assignee string // Agent address (e.g., "gastown/polecats/nux")
+	Assignee string // Agent address (e.g., "excavation/miners/nux")
 	Agent    string // Formatted agent name
 	Age      string // Time since hooked
 	IsStale  bool   // True if hooked > 1 hour (potentially stuck)
 }
 
-// MayorStatus represents the Mayor's current state.
-type MayorStatus struct {
-	IsAttached   bool   // True if gt-mayor tmux session exists
+// OverseerStatus represents the Overseer's current state.
+type OverseerStatus struct {
+	IsAttached   bool   // True if gt-overseer tmux session exists
 	SessionName  string // Tmux session name
 	LastActivity string // Age since last activity
 	IsActive     bool   // True if activity < 5 min (likely working)
@@ -131,7 +131,7 @@ type ActivityRow struct {
 	Type         string // Event type (sling, done, mail, etc.)
 	Category     string // Event category for filtering (agent, work, comms, system)
 	Actor        string // Who did it
-	Rig          string // Rig name extracted from actor (e.g., "gastown")
+	Rig          string // Rig name extracted from actor (e.g., "excavation")
 	Summary      string // Human-readable description
 	RawTimestamp string // ISO 8601 timestamp for JS sorting/filtering
 }
@@ -139,14 +139,14 @@ type ActivityRow struct {
 // DashboardSummary provides at-a-glance stats and alerts.
 type DashboardSummary struct {
 	// Stats
-	PolecatCount    int
+	MinerCount    int
 	HookCount       int
 	IssueCount      int
-	ConvoyCount     int
+	MinecartCount     int
 	EscalationCount int
 
 	// Alerts (things needing attention)
-	StuckPolecats      int // No activity > 5 min
+	StuckMiners      int // No activity > 5 min
 	StaleHooks         int // Hooked > 1 hour
 	UnackedEscalations int
 	DeadSessions       int // Sessions that died recently
@@ -159,9 +159,9 @@ type DashboardSummary struct {
 // MailRow represents a mail message in the dashboard.
 type MailRow struct {
 	ID        string // Message ID (e.g., "hq-msg-abc123")
-	From      string // Sender (e.g., "gastown/polecats/Toast")
+	From      string // Sender (e.g., "excavation/miners/Toast")
 	FromRaw   string // Raw sender address for color hashing
-	To        string // Recipient (e.g., "mayor/")
+	To        string // Recipient (e.g., "overseer/")
 	Subject   string // Message subject
 	Timestamp string // Formatted timestamp
 	Age       string // Human-readable age (e.g., "5m ago")
@@ -171,23 +171,23 @@ type MailRow struct {
 	SortKey   int64  // Unix timestamp for sorting
 }
 
-// WorkerRow represents a worker (polecat or refinery) in the dashboard.
+// WorkerRow represents a worker (miner or refinery) in the dashboard.
 type WorkerRow struct {
 	Name         string        // e.g., "dag", "nux", "refinery"
-	Rig          string        // e.g., "roxas", "gastown"
+	Rig          string        // e.g., "roxas", "excavation"
 	SessionID    string        // e.g., "gt-roxas-dag"
 	LastActivity activity.Info // Colored activity display
 	StatusHint   string        // Last line from pane (optional)
 	IssueID      string        // Currently assigned issue ID (e.g., "hq-1234")
 	IssueTitle   string        // Issue title (truncated)
 	WorkStatus   string        // working, stale, stuck, idle
-	AgentType    string        // "polecat" (ephemeral sessions) or "refinery" (permanent)
+	AgentType    string        // "miner" (ephemeral sessions) or "refinery" (permanent)
 }
 
 // MergeQueueRow represents a PR in the merge queue.
 type MergeQueueRow struct {
 	Number     int
-	Repo       string // Short repo name (e.g., "roxas", "gastown")
+	Repo       string // Short repo name (e.g., "roxas", "excavation")
 	Title      string
 	URL        string
 	CIStatus   string // "pass", "fail", "pending"
@@ -195,8 +195,8 @@ type MergeQueueRow struct {
 	ColorClass string // "mq-green", "mq-yellow", "mq-red"
 }
 
-// ConvoyRow represents a single convoy in the dashboard.
-type ConvoyRow struct {
+// MinecartRow represents a single minecart in the dashboard.
+type MinecartRow struct {
 	ID            string
 	Title         string
 	Status        string // "open" or "closed" (raw beads status)
@@ -212,7 +212,7 @@ type ConvoyRow struct {
 	TrackedIssues []TrackedIssue
 }
 
-// TrackedIssue represents an issue tracked by a convoy.
+// TrackedIssue represents an issue tracked by a minecart.
 type TrackedIssue struct {
 	ID       string
 	Title    string
@@ -231,7 +231,7 @@ func LoadTemplates() (*template.Template, error) {
 		"severityClass":      severityClass,
 		"dogStateClass":      dogStateClass,
 		"queueStatusClass":   queueStatusClass,
-		"polecatStatusClass": polecatStatusClass,
+		"minerStatusClass": minerStatusClass,
 		"activityTypeClass": activityTypeClass,
 		"contains": func(s, substr string) bool {
 			return strings.Contains(s, substr)
@@ -267,7 +267,7 @@ func activityClass(info activity.Info) string {
 	}
 }
 
-// statusClass returns the CSS class for a convoy status.
+// statusClass returns the CSS class for a minecart status.
 func statusClass(status string) string {
 	switch status {
 	case "open":
@@ -363,19 +363,19 @@ func queueStatusClass(status string) string {
 	}
 }
 
-// polecatStatusClass returns CSS class for polecat work status.
-func polecatStatusClass(status string) string {
+// minerStatusClass returns CSS class for miner work status.
+func minerStatusClass(status string) string {
 	switch status {
 	case "working":
-		return "polecat-working"
+		return "miner-working"
 	case "stale":
-		return "polecat-stale"
+		return "miner-stale"
 	case "stuck":
-		return "polecat-stuck"
+		return "miner-stuck"
 	case "idle":
-		return "polecat-idle"
+		return "miner-idle"
 	default:
-		return "polecat-unknown"
+		return "miner-unknown"
 	}
 }
 

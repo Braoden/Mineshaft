@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/version"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/version"
 )
 
 var staleJSON bool
@@ -20,7 +20,7 @@ var staleCmd = &cobra.Command{
 	Long: `Check if the gt binary was built from an older commit than a build ref.
 
 This command compares the commit hash embedded in the binary at build time
-with the resolved build branch of the gastown repository (main/master/carry/*).
+with the resolved build branch of the excavation repository (main/master/carry/*).
 
 Examples:
   gt stale              # Human-readable output
@@ -56,7 +56,7 @@ type StaleOutput struct {
 }
 
 func runStale(cmd *cobra.Command, args []string) error {
-	// Find the gastown repo
+	// Find the excavation repo
 	repoRoot, err := version.GetRepoRoot()
 	if err != nil {
 		if staleQuiet {
@@ -65,7 +65,7 @@ func runStale(cmd *cobra.Command, args []string) error {
 		if staleJSON {
 			return outputStaleJSON(StaleOutput{Error: err.Error()})
 		}
-		return fmt.Errorf("cannot find gastown repo: %w", err)
+		return fmt.Errorf("cannot find excavation repo: %w", err)
 	}
 
 	// Check staleness

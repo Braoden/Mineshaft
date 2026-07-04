@@ -14,20 +14,20 @@ func TestInstantiateFormulaOnBead(t *testing.T) {
 	townRoot := t.TempDir()
 
 	// Minimal workspace marker
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 
 	// Create routes.jsonl
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	rigDir := filepath.Join(townRoot, "gastown", "mayor", "rig")
+	rigDir := filepath.Join(townRoot, "excavation", "overseer", "rig")
 	if err := os.MkdirAll(rigDir, 0755); err != nil {
 		t.Fatalf("mkdir rigDir: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"gastown/mayor/rig"}`,
+		`{"prefix":"gt-","path":"excavation/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
@@ -51,7 +51,7 @@ case "$cmd" in
     echo '[{"title":"Fix bug ABC","status":"open","assignee":"","description":""}]'
     ;;
   formula)
-    echo '{"name":"mol-polecat-work"}'
+    echo '{"name":"mol-miner-work"}'
     ;;
   cook)
     ;;
@@ -64,7 +64,7 @@ case "$cmd" in
         exit 1
         ;;
       bond)
-        echo '{"result_id":"gt-abc123","id_mapping":{"mol-polecat-work":"gt-wisp-288"}}'
+        echo '{"result_id":"gt-abc123","id_mapping":{"mol-miner-work":"gt-wisp-288"}}'
         ;;
     esac
     ;;
@@ -83,7 +83,7 @@ if "%cmd%"=="show" (
   exit /b 0
 )
 if "%cmd%"=="formula" (
-  echo {^"name^":^"mol-polecat-work^"}
+  echo {^"name^":^"mol-miner-work^"}
   exit /b 0
 )
 if "%cmd%"=="cook" exit /b 0
@@ -93,7 +93,7 @@ if "%cmd%"=="mol" (
     exit /b 1
   )
   if "%sub%"=="bond" (
-    echo {^"result_id^":^"gt-abc123^",^"id_mapping^":{^"mol-polecat-work^":^"gt-wisp-288^"}}
+    echo {^"result_id^":^"gt-abc123^",^"id_mapping^":{^"mol-miner-work^":^"gt-wisp-288^"}}
     exit /b 0
   )
 )
@@ -110,13 +110,13 @@ exit /b 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
 	// Test the helper function directly
-	extraVars := []string{"branch=polecat/furiosa/gt-abc123"}
-	result, err := InstantiateFormulaOnBead(context.Background(), "mol-polecat-work", "gt-abc123", "Test Bug Fix", "", townRoot, false, extraVars)
+	extraVars := []string{"branch=miner/furiosa/gt-abc123"}
+	result, err := InstantiateFormulaOnBead(context.Background(), "mol-miner-work", "gt-abc123", "Test Bug Fix", "", townRoot, false, extraVars)
 	if err != nil {
 		t.Fatalf("InstantiateFormulaOnBead failed: %v", err)
 	}
@@ -135,16 +135,16 @@ exit /b 0
 	}
 	logContent := string(logBytes)
 
-	if !strings.Contains(logContent, "cook mol-polecat-work") {
+	if !strings.Contains(logContent, "cook mol-miner-work") {
 		t.Errorf("cook command not found in log:\n%s", logContent)
 	}
 	if strings.Contains(logContent, "mol wisp") {
 		t.Errorf("legacy mol wisp command should not be called:\n%s", logContent)
 	}
-	if !strings.Contains(logContent, "--var branch=polecat/furiosa/gt-abc123") {
+	if !strings.Contains(logContent, "--var branch=miner/furiosa/gt-abc123") {
 		t.Errorf("extra vars not passed to bond command:\n%s", logContent)
 	}
-	if !strings.Contains(logContent, "mol bond mol-polecat-work gt-abc123 --json --ephemeral") {
+	if !strings.Contains(logContent, "mol bond mol-miner-work gt-abc123 --json --ephemeral") {
 		t.Errorf("direct mol bond command not found in log:\n%s", logContent)
 	}
 }
@@ -154,8 +154,8 @@ func TestInstantiateFormulaOnBeadSkipCook(t *testing.T) {
 	townRoot := t.TempDir()
 
 	// Minimal workspace marker
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 
 	// Create routes.jsonl
@@ -181,7 +181,7 @@ case "$cmd" in
     sub="$1"; shift || true
     case "$sub" in
       wisp) echo 'legacy mol wisp should not be called' >&2; exit 1;;
-      bond) echo '{"result_id":"gt-test","id_mapping":{"mol-polecat-work":"gt-wisp-skip"}}';;
+      bond) echo '{"result_id":"gt-test","id_mapping":{"mol-miner-work":"gt-wisp-skip"}}';;
     esac;;
 esac
 exit 0
@@ -197,7 +197,7 @@ if "%cmd%"=="mol" (
     exit /b 1
   )
   if "%sub%"=="bond" (
-    echo {^"result_id^":^"gt-test^",^"id_mapping^":{^"mol-polecat-work^":^"gt-wisp-skip^"}}
+    echo {^"result_id^":^"gt-test^",^"id_mapping^":{^"mol-miner-work^":^"gt-wisp-skip^"}}
     exit /b 0
   )
 )
@@ -213,7 +213,7 @@ exit /b 0
 	_ = os.Chdir(townRoot)
 
 	// Test with skipCook=true
-	_, err := InstantiateFormulaOnBead(context.Background(), "mol-polecat-work", "gt-test", "Test", "", townRoot, true, nil)
+	_, err := InstantiateFormulaOnBead(context.Background(), "mol-miner-work", "gt-test", "Test", "", townRoot, true, nil)
 	if err != nil {
 		t.Fatalf("InstantiateFormulaOnBead failed: %v", err)
 	}
@@ -230,7 +230,7 @@ exit /b 0
 	if strings.Contains(logContent, "mol wisp") {
 		t.Errorf("mol wisp should not be called")
 	}
-	if !strings.Contains(logContent, "mol bond mol-polecat-work gt-test --json --ephemeral") {
+	if !strings.Contains(logContent, "mol bond mol-miner-work gt-test --json --ephemeral") {
 		t.Errorf("mol bond should still be called")
 	}
 }
@@ -257,13 +257,13 @@ exit /b 0
 	t.Setenv("BD_LOG", logPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
-	err := CookFormula("mol-polecat-work", townRoot, townRoot)
+	err := CookFormula("mol-miner-work", townRoot, townRoot)
 	if err != nil {
 		t.Fatalf("CookFormula failed: %v", err)
 	}
 
 	logBytes, _ := os.ReadFile(logPath)
-	if !strings.Contains(string(logBytes), "cook mol-polecat-work") {
+	if !strings.Contains(string(logBytes), "cook mol-miner-work") {
 		t.Errorf("cook command not found in log")
 	}
 }
@@ -286,7 +286,7 @@ func TestSlingHookRawBeadFlag(t *testing.T) {
 }
 
 // TestAutoApplyLogic verifies the auto-apply detection logic.
-// When formulaName is empty and target contains "/polecats/", mol-polecat-work should be applied.
+// When formulaName is empty and target contains "/miners/", mol-miner-work should be applied.
 func TestAutoApplyLogic(t *testing.T) {
 	tests := []struct {
 		name          string
@@ -296,38 +296,38 @@ func TestAutoApplyLogic(t *testing.T) {
 		wantAutoApply bool
 	}{
 		{
-			name:          "bare bead to polecat - should auto-apply",
+			name:          "bare bead to miner - should auto-apply",
 			formulaName:   "",
 			hookRawBead:   false,
-			targetAgent:   "gastown/polecats/Toast",
+			targetAgent:   "excavation/miners/Toast",
 			wantAutoApply: true,
 		},
 		{
 			name:          "bare bead with --hook-raw-bead - should not auto-apply",
 			formulaName:   "",
 			hookRawBead:   true,
-			targetAgent:   "gastown/polecats/Toast",
+			targetAgent:   "excavation/miners/Toast",
 			wantAutoApply: false,
 		},
 		{
 			name:          "formula already specified - should not auto-apply",
 			formulaName:   "mol-review",
 			hookRawBead:   false,
-			targetAgent:   "gastown/polecats/Toast",
+			targetAgent:   "excavation/miners/Toast",
 			wantAutoApply: false,
 		},
 		{
-			name:          "non-polecat target - should not auto-apply",
+			name:          "non-miner target - should not auto-apply",
 			formulaName:   "",
 			hookRawBead:   false,
-			targetAgent:   "gastown/witness",
+			targetAgent:   "excavation/witness",
 			wantAutoApply: false,
 		},
 		{
-			name:          "mayor target - should not auto-apply",
+			name:          "overseer target - should not auto-apply",
 			formulaName:   "",
 			hookRawBead:   false,
-			targetAgent:   "mayor",
+			targetAgent:   "overseer",
 			wantAutoApply: false,
 		},
 	}
@@ -335,7 +335,7 @@ func TestAutoApplyLogic(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// This mirrors the logic in sling.go
-			shouldAutoApply := tt.formulaName == "" && !tt.hookRawBead && strings.Contains(tt.targetAgent, "/polecats/")
+			shouldAutoApply := tt.formulaName == "" && !tt.hookRawBead && strings.Contains(tt.targetAgent, "/miners/")
 
 			if shouldAutoApply != tt.wantAutoApply {
 				t.Errorf("auto-apply logic: got %v, want %v", shouldAutoApply, tt.wantAutoApply)
@@ -349,7 +349,7 @@ func TestFormulaOnBeadPassesVariables(t *testing.T) {
 	townRoot := t.TempDir()
 
 	// Minimal workspace
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
@@ -373,7 +373,7 @@ case "$cmd" in
     sub="$1"; shift || true
     case "$sub" in
       wisp) echo 'legacy mol wisp should not be called' >&2; exit 1;;
-      bond) echo '{"result_id":"gt-abc123","id_mapping":{"mol-polecat-work":"gt-wisp-var"}}';;
+      bond) echo '{"result_id":"gt-abc123","id_mapping":{"mol-miner-work":"gt-wisp-var"}}';;
     esac;;
 esac
 exit 0
@@ -390,7 +390,7 @@ if "%cmd%"=="mol" (
     exit /b 1
   )
   if "%sub%"=="bond" (
-    echo {^"result_id^":^"gt-abc123^",^"id_mapping^":{^"mol-polecat-work^":^"gt-wisp-var^"}}
+    echo {^"result_id^":^"gt-abc123^",^"id_mapping^":{^"mol-miner-work^":^"gt-wisp-var^"}}
     exit /b 0
   )
 )
@@ -405,7 +405,7 @@ exit /b 0
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
 	_ = os.Chdir(townRoot)
 
-	_, err := InstantiateFormulaOnBead(context.Background(), "mol-polecat-work", "gt-abc123", "My Cool Feature", "", townRoot, false, nil)
+	_, err := InstantiateFormulaOnBead(context.Background(), "mol-miner-work", "gt-abc123", "My Cool Feature", "", townRoot, false, nil)
 	if err != nil {
 		t.Fatalf("InstantiateFormulaOnBead: %v", err)
 	}
@@ -439,7 +439,7 @@ func TestInstantiateFormulaOnBead_DirectBondParsesIDMapping(t *testing.T) {
 	townRoot := t.TempDir()
 
 	// Minimal workspace
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
@@ -478,8 +478,8 @@ case "$cmd" in
           echo "Error: 'gt-wisp-missing' not found (not an issue ID or formula name)" >&2
           exit 1
         fi
-        if [ "$left" = "mol-polecat-work" ]; then
-          echo '{"result_id":"gt-abc123","id_mapping":{"mol-polecat-work":"gt-mol-fallback"}}'
+        if [ "$left" = "mol-miner-work" ]; then
+          echo '{"result_id":"gt-abc123","id_mapping":{"mol-miner-work":"gt-mol-fallback"}}'
           exit 0
         fi
         echo "Error: unexpected bond target: $left" >&2
@@ -507,8 +507,8 @@ if "%cmd%"=="mol" (
       echo Error: 'gt-wisp-missing' not found - not an issue ID or formula name 1>&2
       exit /b 1
     )
-    if "%left%"=="mol-polecat-work" (
-      echo {^"result_id^":^"gt-abc123^",^"id_mapping^":{^"mol-polecat-work^":^"gt-mol-fallback^"}}
+    if "%left%"=="mol-miner-work" (
+      echo {^"result_id^":^"gt-abc123^",^"id_mapping^":{^"mol-miner-work^":^"gt-mol-fallback^"}}
       exit /b 0
     )
     echo Error: unexpected bond target: %left% 1>&2
@@ -526,7 +526,7 @@ exit /b 0
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
 	_ = os.Chdir(townRoot)
 
-	result, err := InstantiateFormulaOnBead(context.Background(), "mol-polecat-work", "gt-abc123", "My Cool Feature", "", townRoot, false, nil)
+	result, err := InstantiateFormulaOnBead(context.Background(), "mol-miner-work", "gt-abc123", "My Cool Feature", "", townRoot, false, nil)
 	if err != nil {
 		t.Fatalf("InstantiateFormulaOnBead: %v", err)
 	}
@@ -547,7 +547,7 @@ exit /b 0
 	}
 	var directBondLine string
 	for _, line := range strings.Split(logContent, "\n") {
-		if strings.Contains(line, "mol bond mol-polecat-work gt-abc123 --json --ephemeral") {
+		if strings.Contains(line, "mol bond mol-miner-work gt-abc123 --json --ephemeral") {
 			directBondLine = line
 			break
 		}
@@ -582,7 +582,7 @@ func TestInstantiateFormulaOnBead_DirectBondHandlesNonGTIDs(t *testing.T) {
 	townRoot := t.TempDir()
 
 	// Minimal workspace
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
@@ -617,8 +617,8 @@ case "$cmd" in
 			;;
 		  bond)
 			left="$1"; shift || true
-			if [ "$left" = "mol-polecat-work" ]; then
-			  echo '{"result_id":"oag-npeat","id_mapping":{"mol-polecat-work":"oag-wisp-wisp-rsia"}}'
+			if [ "$left" = "mol-miner-work" ]; then
+			  echo '{"result_id":"oag-npeat","id_mapping":{"mol-miner-work":"oag-wisp-wisp-rsia"}}'
 			  exit 0
 			fi
         echo "Error: unexpected bond target: $left" >&2
@@ -642,8 +642,8 @@ if "%cmd%"=="mol" (
     exit /b 1
   )
   if "%sub%"=="bond" (
-    if "%left%"=="mol-polecat-work" (
-      echo {^"result_id^":^"oag-npeat^",^"id_mapping^":{^"mol-polecat-work^":^"oag-wisp-wisp-rsia^"}}
+    if "%left%"=="mol-miner-work" (
+      echo {^"result_id^":^"oag-npeat^",^"id_mapping^":{^"mol-miner-work^":^"oag-wisp-wisp-rsia^"}}
       exit /b 0
     )
     echo Error: unexpected bond target: %left% 1>&2
@@ -661,7 +661,7 @@ exit /b 0
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
 	_ = os.Chdir(townRoot)
 
-	result, err := InstantiateFormulaOnBead(context.Background(), "mol-polecat-work", "oag-npeat", "Fix formula bug", "", townRoot, false, nil)
+	result, err := InstantiateFormulaOnBead(context.Background(), "mol-miner-work", "oag-npeat", "Fix formula bug", "", townRoot, false, nil)
 	if err != nil {
 		t.Fatalf("InstantiateFormulaOnBead: %v", err)
 	}
@@ -680,7 +680,7 @@ exit /b 0
 	if strings.Contains(logContent, "mol wisp") {
 		t.Fatalf("legacy mol wisp should not have been called:\n%s", logContent)
 	}
-	if !strings.Contains(logContent, "mol bond mol-polecat-work oag-npeat --json --ephemeral") {
+	if !strings.Contains(logContent, "mol bond mol-miner-work oag-npeat --json --ephemeral") {
 		t.Fatalf("direct bond should have been called with formula and bead:\n%s", logContent)
 	}
 }
@@ -689,7 +689,7 @@ func TestInstantiateFormulaOnBead_DirectBondCreatesNoOrphanCleanup(t *testing.T)
 	townRoot := t.TempDir()
 
 	// Minimal workspace
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
@@ -723,8 +723,8 @@ case "$cmd" in
 			;;
 		  bond)
 			left="$1"; shift || true
-			if [ "$left" = "mol-polecat-work" ]; then
-			  echo '{"result_id":"gt-test","id_mapping":{"mol-polecat-work":"gt-wisp-clean"}}'
+			if [ "$left" = "mol-miner-work" ]; then
+			  echo '{"result_id":"gt-test","id_mapping":{"mol-miner-work":"gt-wisp-clean"}}'
           exit 0
         fi
         echo "Error: unexpected bond target: $left" >&2
@@ -751,8 +751,8 @@ if "%cmd%"=="mol" (
     exit /b 1
   )
   if "%sub%"=="bond" (
-    if "%left%"=="mol-polecat-work" (
-      echo {^"result_id^":^"gt-test^",^"id_mapping^":{^"mol-polecat-work^":^"gt-wisp-clean^"}}
+    if "%left%"=="mol-miner-work" (
+      echo {^"result_id^":^"gt-test^",^"id_mapping^":{^"mol-miner-work^":^"gt-wisp-clean^"}}
       exit /b 0
     )
     echo Error: unexpected bond target: %left% 1>&2
@@ -771,7 +771,7 @@ exit /b 0
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
 	_ = os.Chdir(townRoot)
 
-	result, err := InstantiateFormulaOnBead(context.Background(), "mol-polecat-work", "gt-test", "Test cleanup", "", townRoot, false, nil)
+	result, err := InstantiateFormulaOnBead(context.Background(), "mol-miner-work", "gt-test", "Test cleanup", "", townRoot, false, nil)
 	if err != nil {
 		t.Fatalf("InstantiateFormulaOnBead: %v", err)
 	}
@@ -793,7 +793,7 @@ func TestInstantiateFormulaOnBead_DirectBondParseFailure(t *testing.T) {
 	townRoot := t.TempDir()
 
 	// Minimal workspace
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
@@ -827,7 +827,7 @@ case "$cmd" in
 			;;
 		  bond)
 			left="$1"; shift || true
-			if [ "$left" = "mol-polecat-work" ]; then
+			if [ "$left" = "mol-miner-work" ]; then
 			  echo 'NOT-JSON-GARBAGE'
 			  exit 0
         fi
@@ -852,7 +852,7 @@ if "%cmd%"=="mol" (
     exit /b 1
   )
   if "%sub%"=="bond" (
-    if "%left%"=="mol-polecat-work" (
+    if "%left%"=="mol-miner-work" (
       echo NOT-JSON-GARBAGE
       exit /b 0
     )
@@ -871,7 +871,7 @@ exit /b 0
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
 	_ = os.Chdir(townRoot)
 
-	_, err := InstantiateFormulaOnBead(context.Background(), "mol-polecat-work", "gt-abc123", "My Feature", "", townRoot, false, nil)
+	_, err := InstantiateFormulaOnBead(context.Background(), "mol-miner-work", "gt-abc123", "My Feature", "", townRoot, false, nil)
 	if err == nil {
 		t.Fatal("expected error when bond returns non-JSON and fallback fails, got nil")
 	}

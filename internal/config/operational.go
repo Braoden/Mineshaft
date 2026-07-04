@@ -38,7 +38,7 @@ const (
 	DefaultMassDeathWindow                 = 30 * time.Second
 	DefaultMassDeathThreshold              = 3
 	DefaultDogIdleSessionTimeout           = 1 * time.Hour
-	DefaultPolecatIdleSessionTimeout       = 15 * time.Minute
+	DefaultMinerIdleSessionTimeout       = 15 * time.Minute
 	DefaultDogIdleRemoveTimeout            = 4 * time.Hour
 	DefaultStaleWorkingTimeout             = 2 * time.Hour
 	DefaultMaxDogPoolSize                  = 4
@@ -48,7 +48,7 @@ const (
 	DefaultRecoveryHeartbeatInterval       = 3 * time.Minute
 	DefaultBootSpawnCooldown               = 2 * time.Minute
 	DefaultBootIdleSuppression             = 15 * time.Minute
-	DefaultDeaconGracePeriod               = 5 * time.Minute
+	DefaultSupervisorGracePeriod               = 5 * time.Minute
 
 	// Pressure check defaults — fully opt-in. All zero = disabled.
 	// Configure in settings/config.json under operational.daemon to enable.
@@ -58,27 +58,27 @@ const (
 	DefaultPressureMaxSessions    = 0
 )
 
-// Deacon defaults.
+// Supervisor defaults.
 const (
-	DefaultDeaconPingTimeout               = 30 * time.Second
-	DefaultDeaconConsecutiveFailures       = 3
-	DefaultDeaconCooldown                  = 5 * time.Minute
-	DefaultDeaconHeartbeatStaleThreshold   = 5 * time.Minute
-	DefaultDeaconHeartbeatVeryStale        = 20 * time.Minute
+	DefaultSupervisorPingTimeout               = 30 * time.Second
+	DefaultSupervisorConsecutiveFailures       = 3
+	DefaultSupervisorCooldown                  = 5 * time.Minute
+	DefaultSupervisorHeartbeatStaleThreshold   = 5 * time.Minute
+	DefaultSupervisorHeartbeatVeryStale        = 20 * time.Minute
 	DefaultMaxRedispatches                 = 3
 	DefaultRedispatchCooldown              = 5 * time.Minute
 	DefaultMaxFeedsPerCycle                = 3
 	DefaultFeedCooldown                    = 10 * time.Minute
 )
 
-// Polecat defaults.
+// Miner defaults.
 const (
-	DefaultPolecatHeartbeatStale = 3 * time.Minute
-	DefaultPolecatDoltMaxRetries = 10
-	DefaultPolecatDoltBaseBackoff = 500 * time.Millisecond
-	DefaultPolecatDoltBackoffMax  = 30 * time.Second
-	DefaultPolecatPendingMaxAge   = 5 * time.Minute
-	DefaultPolecatNamepoolSize    = 50
+	DefaultMinerHeartbeatStale = 3 * time.Minute
+	DefaultMinerDoltMaxRetries = 10
+	DefaultMinerDoltBaseBackoff = 500 * time.Millisecond
+	DefaultMinerDoltBackoffMax  = 30 * time.Second
+	DefaultMinerPendingMaxAge   = 5 * time.Minute
+	DefaultMinerNamepoolSize    = 50
 )
 
 // Dolt defaults.
@@ -311,15 +311,15 @@ func (d *DaemonThresholds) DogIdleSessionTimeoutD() time.Duration {
 	return DefaultDogIdleSessionTimeout
 }
 
-// PolecatIdleSessionTimeoutD returns the configured or default polecat idle session timeout.
-// Polecats that have been idle (no hooked work, heartbeat state=idle) longer than this
+// MinerIdleSessionTimeoutD returns the configured or default miner idle session timeout.
+// Miners that have been idle (no hooked work, heartbeat state=idle) longer than this
 // threshold are auto-killed to prevent API slot burn. Default 15 minutes — long enough
-// for polecats to run gt done after completing work, short enough to prevent hour-long burns.
-func (d *DaemonThresholds) PolecatIdleSessionTimeoutD() time.Duration {
+// for miners to run gt done after completing work, short enough to prevent hour-long burns.
+func (d *DaemonThresholds) MinerIdleSessionTimeoutD() time.Duration {
 	if d != nil {
-		return ParseDurationOrDefault(d.PolecatIdleSessionTimeout, DefaultPolecatIdleSessionTimeout)
+		return ParseDurationOrDefault(d.MinerIdleSessionTimeout, DefaultMinerIdleSessionTimeout)
 	}
-	return DefaultPolecatIdleSessionTimeout
+	return DefaultMinerIdleSessionTimeout
 }
 
 // DogIdleRemoveTimeoutD returns the configured or default dog idle remove timeout.
@@ -387,7 +387,7 @@ func (d *DaemonThresholds) BootSpawnCooldownD() time.Duration {
 }
 
 // BootIdleSuppressionD returns the configured or default boot idle suppression duration.
-// When Boot's last action was "nothing" (deacon healthy), spawns are suppressed for this long.
+// When Boot's last action was "nothing" (supervisor healthy), spawns are suppressed for this long.
 func (d *DaemonThresholds) BootIdleSuppressionD() time.Duration {
 	if d != nil {
 		return ParseDurationOrDefault(d.BootIdleSuppression, DefaultBootIdleSuppression)
@@ -395,12 +395,12 @@ func (d *DaemonThresholds) BootIdleSuppressionD() time.Duration {
 	return DefaultBootIdleSuppression
 }
 
-// DeaconGracePeriodD returns the configured or default deacon grace period.
-func (d *DaemonThresholds) DeaconGracePeriodD() time.Duration {
+// SupervisorGracePeriodD returns the configured or default supervisor grace period.
+func (d *DaemonThresholds) SupervisorGracePeriodD() time.Duration {
 	if d != nil {
-		return ParseDurationOrDefault(d.DeaconGracePeriod, DefaultDeaconGracePeriod)
+		return ParseDurationOrDefault(d.SupervisorGracePeriod, DefaultSupervisorGracePeriod)
 	}
-	return DefaultDeaconGracePeriod
+	return DefaultSupervisorGracePeriod
 }
 
 // PressureCPUThresholdV returns the configured or default CPU pressure threshold (load per core).
@@ -427,58 +427,58 @@ func (d *DaemonThresholds) PressureMaxSessionsV() int {
 	return DefaultPressureMaxSessions
 }
 
-// --- Deacon accessors ---
+// --- Supervisor accessors ---
 
-// GetDeaconConfig returns the deacon thresholds, never nil.
-func (c *OperationalConfig) GetDeaconConfig() *DeaconThresholds {
-	if c != nil && c.Deacon != nil {
-		return c.Deacon
+// GetSupervisorConfig returns the supervisor thresholds, never nil.
+func (c *OperationalConfig) GetSupervisorConfig() *SupervisorThresholds {
+	if c != nil && c.Supervisor != nil {
+		return c.Supervisor
 	}
-	return &DeaconThresholds{}
+	return &SupervisorThresholds{}
 }
 
-// PingTimeoutD returns the configured or default deacon ping timeout.
-func (d *DeaconThresholds) PingTimeoutD() time.Duration {
+// PingTimeoutD returns the configured or default supervisor ping timeout.
+func (d *SupervisorThresholds) PingTimeoutD() time.Duration {
 	if d != nil {
-		return ParseDurationOrDefault(d.PingTimeout, DefaultDeaconPingTimeout)
+		return ParseDurationOrDefault(d.PingTimeout, DefaultSupervisorPingTimeout)
 	}
-	return DefaultDeaconPingTimeout
+	return DefaultSupervisorPingTimeout
 }
 
 // ConsecutiveFailuresV returns the configured or default consecutive failures.
-func (d *DeaconThresholds) ConsecutiveFailuresV() int {
+func (d *SupervisorThresholds) ConsecutiveFailuresV() int {
 	if d != nil && d.ConsecutiveFailures != nil {
 		return *d.ConsecutiveFailures
 	}
-	return DefaultDeaconConsecutiveFailures
+	return DefaultSupervisorConsecutiveFailures
 }
 
-// CooldownD returns the configured or default deacon cooldown.
-func (d *DeaconThresholds) CooldownD() time.Duration {
+// CooldownD returns the configured or default supervisor cooldown.
+func (d *SupervisorThresholds) CooldownD() time.Duration {
 	if d != nil {
-		return ParseDurationOrDefault(d.Cooldown, DefaultDeaconCooldown)
+		return ParseDurationOrDefault(d.Cooldown, DefaultSupervisorCooldown)
 	}
-	return DefaultDeaconCooldown
+	return DefaultSupervisorCooldown
 }
 
 // HeartbeatStaleThresholdD returns the configured or default heartbeat stale threshold.
-func (d *DeaconThresholds) HeartbeatStaleThresholdD() time.Duration {
+func (d *SupervisorThresholds) HeartbeatStaleThresholdD() time.Duration {
 	if d != nil {
-		return ParseDurationOrDefault(d.HeartbeatStaleThreshold, DefaultDeaconHeartbeatStaleThreshold)
+		return ParseDurationOrDefault(d.HeartbeatStaleThreshold, DefaultSupervisorHeartbeatStaleThreshold)
 	}
-	return DefaultDeaconHeartbeatStaleThreshold
+	return DefaultSupervisorHeartbeatStaleThreshold
 }
 
 // HeartbeatVeryStaleThresholdD returns the configured or default heartbeat very stale threshold.
-func (d *DeaconThresholds) HeartbeatVeryStaleThresholdD() time.Duration {
+func (d *SupervisorThresholds) HeartbeatVeryStaleThresholdD() time.Duration {
 	if d != nil {
-		return ParseDurationOrDefault(d.HeartbeatVeryStaleThreshold, DefaultDeaconHeartbeatVeryStale)
+		return ParseDurationOrDefault(d.HeartbeatVeryStaleThreshold, DefaultSupervisorHeartbeatVeryStale)
 	}
-	return DefaultDeaconHeartbeatVeryStale
+	return DefaultSupervisorHeartbeatVeryStale
 }
 
 // MaxRedispatchesV returns the configured or default max redispatches.
-func (d *DeaconThresholds) MaxRedispatchesV() int {
+func (d *SupervisorThresholds) MaxRedispatchesV() int {
 	if d != nil && d.MaxRedispatches != nil {
 		return *d.MaxRedispatches
 	}
@@ -486,7 +486,7 @@ func (d *DeaconThresholds) MaxRedispatchesV() int {
 }
 
 // RedispatchCooldownD returns the configured or default redispatch cooldown.
-func (d *DeaconThresholds) RedispatchCooldownD() time.Duration {
+func (d *SupervisorThresholds) RedispatchCooldownD() time.Duration {
 	if d != nil {
 		return ParseDurationOrDefault(d.RedispatchCooldown, DefaultRedispatchCooldown)
 	}
@@ -494,7 +494,7 @@ func (d *DeaconThresholds) RedispatchCooldownD() time.Duration {
 }
 
 // MaxFeedsPerCycleV returns the configured or default max feeds per cycle.
-func (d *DeaconThresholds) MaxFeedsPerCycleV() int {
+func (d *SupervisorThresholds) MaxFeedsPerCycleV() int {
 	if d != nil && d.MaxFeedsPerCycle != nil {
 		return *d.MaxFeedsPerCycle
 	}
@@ -502,69 +502,69 @@ func (d *DeaconThresholds) MaxFeedsPerCycleV() int {
 }
 
 // FeedCooldownD returns the configured or default feed cooldown.
-func (d *DeaconThresholds) FeedCooldownD() time.Duration {
+func (d *SupervisorThresholds) FeedCooldownD() time.Duration {
 	if d != nil {
 		return ParseDurationOrDefault(d.FeedCooldown, DefaultFeedCooldown)
 	}
 	return DefaultFeedCooldown
 }
 
-// --- Polecat accessors ---
+// --- Miner accessors ---
 
-// GetPolecatConfig returns the polecat thresholds, never nil.
-func (c *OperationalConfig) GetPolecatConfig() *PolecatThresholds {
-	if c != nil && c.Polecat != nil {
-		return c.Polecat
+// GetMinerConfig returns the miner thresholds, never nil.
+func (c *OperationalConfig) GetMinerConfig() *MinerThresholds {
+	if c != nil && c.Miner != nil {
+		return c.Miner
 	}
-	return &PolecatThresholds{}
+	return &MinerThresholds{}
 }
 
-// HeartbeatStaleThresholdD returns the configured or default polecat heartbeat stale threshold.
-func (p *PolecatThresholds) HeartbeatStaleThresholdD() time.Duration {
+// HeartbeatStaleThresholdD returns the configured or default miner heartbeat stale threshold.
+func (p *MinerThresholds) HeartbeatStaleThresholdD() time.Duration {
 	if p != nil {
-		return ParseDurationOrDefault(p.HeartbeatStaleThreshold, DefaultPolecatHeartbeatStale)
+		return ParseDurationOrDefault(p.HeartbeatStaleThreshold, DefaultMinerHeartbeatStale)
 	}
-	return DefaultPolecatHeartbeatStale
+	return DefaultMinerHeartbeatStale
 }
 
 // DoltMaxRetriesV returns the configured or default Dolt max retries.
-func (p *PolecatThresholds) DoltMaxRetriesV() int {
+func (p *MinerThresholds) DoltMaxRetriesV() int {
 	if p != nil && p.DoltMaxRetries != nil {
 		return *p.DoltMaxRetries
 	}
-	return DefaultPolecatDoltMaxRetries
+	return DefaultMinerDoltMaxRetries
 }
 
 // DoltBaseBackoffD returns the configured or default Dolt base backoff.
-func (p *PolecatThresholds) DoltBaseBackoffD() time.Duration {
+func (p *MinerThresholds) DoltBaseBackoffD() time.Duration {
 	if p != nil {
-		return ParseDurationOrDefault(p.DoltBaseBackoff, DefaultPolecatDoltBaseBackoff)
+		return ParseDurationOrDefault(p.DoltBaseBackoff, DefaultMinerDoltBaseBackoff)
 	}
-	return DefaultPolecatDoltBaseBackoff
+	return DefaultMinerDoltBaseBackoff
 }
 
 // DoltBackoffMaxD returns the configured or default Dolt backoff max.
-func (p *PolecatThresholds) DoltBackoffMaxD() time.Duration {
+func (p *MinerThresholds) DoltBackoffMaxD() time.Duration {
 	if p != nil {
-		return ParseDurationOrDefault(p.DoltBackoffMax, DefaultPolecatDoltBackoffMax)
+		return ParseDurationOrDefault(p.DoltBackoffMax, DefaultMinerDoltBackoffMax)
 	}
-	return DefaultPolecatDoltBackoffMax
+	return DefaultMinerDoltBackoffMax
 }
 
 // PendingMaxAgeD returns the configured or default pending max age.
-func (p *PolecatThresholds) PendingMaxAgeD() time.Duration {
+func (p *MinerThresholds) PendingMaxAgeD() time.Duration {
 	if p != nil {
-		return ParseDurationOrDefault(p.PendingMaxAge, DefaultPolecatPendingMaxAge)
+		return ParseDurationOrDefault(p.PendingMaxAge, DefaultMinerPendingMaxAge)
 	}
-	return DefaultPolecatPendingMaxAge
+	return DefaultMinerPendingMaxAge
 }
 
 // NamepoolSizeV returns the configured or default namepool size.
-func (p *PolecatThresholds) NamepoolSizeV() int {
+func (p *MinerThresholds) NamepoolSizeV() int {
 	if p != nil && p.NamepoolSize != nil {
 		return *p.NamepoolSize
 	}
-	return DefaultPolecatNamepoolSize
+	return DefaultMinerNamepoolSize
 }
 
 // --- Dolt accessors ---
@@ -745,7 +745,7 @@ func (wt *WitnessThresholds) DoneIntentRecentGraceD() time.Duration {
 }
 
 // HeartbeatStartupGraceD returns the configured or default heartbeat startup grace period.
-// A live polecat with assigned work but no heartbeat file older than this is flagged
+// A live miner with assigned work but no heartbeat file older than this is flagged
 // for review as possibly stuck at startup (e.g., auth 401). (gt-uk7)
 func (wt *WitnessThresholds) HeartbeatStartupGraceD() time.Duration {
 	if wt != nil {

@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/style"
+	"github.com/steveyegge/excavation/internal/style"
 )
 
 var (
@@ -28,7 +28,7 @@ var patrolCmd = &cobra.Command{
 	Short:   "Patrol digest management",
 	Long: `Manage patrol cycle digests.
 
-Patrol cycles (Deacon, Witness, Refinery) create ephemeral per-cycle digests.
+Patrol cycles (Supervisor, Witness, Refinery) create ephemeral per-cycle digests.
 This command aggregates them into permanent daily summaries.
 
 Examples:
@@ -41,7 +41,7 @@ var patrolDigestCmd = &cobra.Command{
 	Short: "Aggregate patrol cycle digests into a daily summary bead",
 	Long: `Aggregate ephemeral patrol cycle digests into a permanent daily summary.
 
-This command is intended to be run by Deacon patrol (daily) or manually.
+This command is intended to be run by Supervisor patrol (daily) or manually.
 It queries patrol digests for a target date, creates a single aggregate
 "Patrol Report YYYY-MM-DD" bead, then deletes the source digests.
 
@@ -72,14 +72,14 @@ func init() {
 type PatrolDigest struct {
 	Date         string                   `json:"date"`
 	TotalCycles  int                      `json:"total_cycles"`
-	ByRole       map[string]int           `json:"by_role"`        // deacon, witness, refinery
+	ByRole       map[string]int           `json:"by_role"`        // supervisor, witness, refinery
 	Cycles       []PatrolCycleEntry       `json:"cycles"`
 }
 
 // PatrolCycleEntry represents a single patrol cycle in the digest.
 type PatrolCycleEntry struct {
 	ID          string    `json:"id"`
-	Role        string    `json:"role"`         // deacon, witness, refinery
+	Role        string    `json:"role"`         // supervisor, witness, refinery
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
 	CreatedAt   time.Time `json:"created_at"`
@@ -185,7 +185,7 @@ func runPatrolDigest(cmd *cobra.Command, args []string) error {
 // queryPatrolDigests queries ephemeral patrol digest beads for a target date.
 func queryPatrolDigests(targetDate time.Time) ([]PatrolCycleEntry, error) {
 	// List closed issues with "digest" label that are ephemeral
-	// Patrol digests have titles like "Digest: mol-deacon-patrol", "Digest: mol-witness-patrol"
+	// Patrol digests have titles like "Digest: mol-supervisor-patrol", "Digest: mol-witness-patrol"
 	listCmd := exec.Command("bd", "list",
 		"--status=closed",
 		"--label=digest",
@@ -234,7 +234,7 @@ func queryPatrolDigests(targetDate time.Time) ([]PatrolCycleEntry, error) {
 			continue
 		}
 
-		// Extract role from title (e.g., "Digest: mol-deacon-patrol" -> "deacon")
+		// Extract role from title (e.g., "Digest: mol-supervisor-patrol" -> "supervisor")
 		role := extractPatrolRole(issue.Title)
 
 		patrolDigests = append(patrolDigests, PatrolCycleEntry{
@@ -251,7 +251,7 @@ func queryPatrolDigests(targetDate time.Time) ([]PatrolCycleEntry, error) {
 }
 
 // extractPatrolRole extracts the role from a patrol digest title.
-// "Digest: mol-deacon-patrol" -> "deacon"
+// "Digest: mol-supervisor-patrol" -> "supervisor"
 // "Digest: mol-witness-patrol" -> "witness"
 // "Digest: gt-wisp-abc123" -> "unknown"
 func extractPatrolRole(title string) string {
@@ -260,7 +260,7 @@ func extractPatrolRole(title string) string {
 
 	// Extract role from "mol-<role>-patrol" or "gt-wisp-<id>"
 	if strings.HasPrefix(title, "mol-") && strings.HasSuffix(title, "-patrol") {
-		// "mol-deacon-patrol" -> "deacon"
+		// "mol-supervisor-patrol" -> "supervisor"
 		role := strings.TrimPrefix(title, "mol-")
 		role = strings.TrimSuffix(role, "-patrol")
 		return role

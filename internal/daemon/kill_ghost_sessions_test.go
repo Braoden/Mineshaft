@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 // writeFakeTmuxGhost creates a fake tmux that uses environment variables to
@@ -133,8 +133,8 @@ func (e *ghostTestEnv) addSessions(t *testing.T, names ...string) {
 // writeRigsJSON writes a rigs.json for getKnownRigs().
 func writeRigsJSON(t *testing.T, townRoot string, rigs []string) {
 	t.Helper()
-	mayorDir := filepath.Join(townRoot, "mayor")
-	if err := os.MkdirAll(mayorDir, 0o755); err != nil {
+	overseerDir := filepath.Join(townRoot, "overseer")
+	if err := os.MkdirAll(overseerDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 	entries := make([]string, len(rigs))
@@ -142,7 +142,7 @@ func writeRigsJSON(t *testing.T, townRoot string, rigs []string) {
 		entries[i] = `"` + r + `":{}`
 	}
 	content := `{"rigs":{` + strings.Join(entries, ",") + `}}`
-	if err := os.WriteFile(filepath.Join(mayorDir, "rigs.json"), []byte(content), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -183,9 +183,9 @@ func TestKillDefaultPrefixGhosts_EmptyRegistry(t *testing.T) {
 func TestKillDefaultPrefixGhosts_GTIsLegitimate(t *testing.T) {
 	env := setupGhostTest(t)
 
-	// Register gastown with "gt" prefix — makes gt-* sessions legitimate.
+	// Register excavation with "gt" prefix — makes gt-* sessions legitimate.
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "gastown")
+	reg.Register("gt", "excavation")
 	session.SetDefaultRegistry(reg)
 
 	// Even if gt-witness exists, it should NOT be killed.
@@ -249,7 +249,7 @@ func TestKillDefaultPrefixGhosts_NoKillWhenGhostsAbsent(t *testing.T) {
 	}
 }
 
-func TestKillDefaultPrefixGhosts_PolecatDuplicate_Killed(t *testing.T) {
+func TestKillDefaultPrefixGhosts_MinerDuplicate_Killed(t *testing.T) {
 	env := setupGhostTest(t)
 
 	// Register rig with non-gt prefix.
@@ -257,9 +257,9 @@ func TestKillDefaultPrefixGhosts_PolecatDuplicate_Killed(t *testing.T) {
 	reg.Register("ti", "titanium")
 	session.SetDefaultRegistry(reg)
 
-	// Set up rigs.json and polecat directory.
+	// Set up rigs.json and miner directory.
 	writeRigsJSON(t, env.daemon.config.TownRoot, []string{"titanium"})
-	if err := os.MkdirAll(filepath.Join(env.daemon.config.TownRoot, "titanium", "polecats", "furiosa"), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Join(env.daemon.config.TownRoot, "titanium", "miners", "furiosa"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -278,12 +278,12 @@ func TestKillDefaultPrefixGhosts_PolecatDuplicate_Killed(t *testing.T) {
 	if !found {
 		t.Errorf("expected gt-furiosa to be killed (duplicate), kills: %v", kills)
 	}
-	if !strings.Contains(env.logBuf.String(), "Killing duplicate ghost polecat session gt-furiosa") {
+	if !strings.Contains(env.logBuf.String(), "Killing duplicate ghost miner session gt-furiosa") {
 		t.Errorf("expected duplicate kill log message, got: %s", env.logBuf.String())
 	}
 }
 
-func TestKillDefaultPrefixGhosts_PolecatSolo_NotKilled(t *testing.T) {
+func TestKillDefaultPrefixGhosts_MinerSolo_NotKilled(t *testing.T) {
 	env := setupGhostTest(t)
 
 	// Register rig with non-gt prefix.
@@ -291,9 +291,9 @@ func TestKillDefaultPrefixGhosts_PolecatSolo_NotKilled(t *testing.T) {
 	reg.Register("ti", "titanium")
 	session.SetDefaultRegistry(reg)
 
-	// Set up rigs.json and polecat directory.
+	// Set up rigs.json and miner directory.
 	writeRigsJSON(t, env.daemon.config.TownRoot, []string{"titanium"})
-	if err := os.MkdirAll(filepath.Join(env.daemon.config.TownRoot, "titanium", "polecats", "furiosa"), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Join(env.daemon.config.TownRoot, "titanium", "miners", "furiosa"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -306,7 +306,7 @@ func TestKillDefaultPrefixGhosts_PolecatSolo_NotKilled(t *testing.T) {
 	kills := readKills(t, env.tmuxLog)
 	for _, k := range kills {
 		if k == "gt-furiosa" {
-			t.Error("should NOT kill solo ghost polecat gt-furiosa (may have active work)")
+			t.Error("should NOT kill solo ghost miner gt-furiosa (may have active work)")
 		}
 	}
 	if !strings.Contains(env.logBuf.String(), "not killing") {
@@ -314,20 +314,20 @@ func TestKillDefaultPrefixGhosts_PolecatSolo_NotKilled(t *testing.T) {
 	}
 }
 
-func TestKillDefaultPrefixGhosts_PolecatSkippedWhenRigUsesDefaultPrefix(t *testing.T) {
+func TestKillDefaultPrefixGhosts_MinerSkippedWhenRigUsesDefaultPrefix(t *testing.T) {
 	env := setupGhostTest(t)
 
 	// If any rig uses "gt", gtIsLegitimate is true and the whole function bails.
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "gastown")
+	reg.Register("gt", "excavation")
 	reg.Register("ti", "titanium")
 	session.SetDefaultRegistry(reg)
 
-	writeRigsJSON(t, env.daemon.config.TownRoot, []string{"gastown", "titanium"})
-	if err := os.MkdirAll(filepath.Join(env.daemon.config.TownRoot, "gastown", "polecats", "alice"), 0o755); err != nil {
+	writeRigsJSON(t, env.daemon.config.TownRoot, []string{"excavation", "titanium"})
+	if err := os.MkdirAll(filepath.Join(env.daemon.config.TownRoot, "excavation", "miners", "alice"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.MkdirAll(filepath.Join(env.daemon.config.TownRoot, "titanium", "polecats", "bob"), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Join(env.daemon.config.TownRoot, "titanium", "miners", "bob"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 

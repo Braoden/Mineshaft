@@ -1,11 +1,11 @@
 ---
-name: gas-town-cursor
+name: excavation-site-cursor
 description: >
-  Develop and operate Gas Town with the Cursor agent preset (cursor-agent CLI):
+  Develop and operate Excavation Site with the Cursor agent preset (cursor-agent CLI):
   gt flags, hooks at .cursor/hooks.json, session resume, and how this repo differs from README marketing copy.
 ---
 
-# Gas Town + Cursor Agent CLI
+# Excavation Site + Cursor Agent CLI
 
 Use this skill when working **in this repository** with the **`cursor`** agent preset (CLI binary **`cursor-agent`**, sometimes symlinked as **`agent`**).
 
@@ -13,7 +13,7 @@ Use this skill when working **in this repository** with the **`cursor`** agent p
 
 | Name | Meaning |
 |------|---------|
-| **Preset `cursor`** | Gas Town agent id (`GT_AGENT=cursor`). Config lives in `internal/config/agents.go` (`AgentCursor`). |
+| **Preset `cursor`** | Excavation Site agent id (`GT_AGENT=cursor`). Config lives in `internal/config/agents.go` (`AgentCursor`). |
 | **Binary `cursor-agent`** | The Cursor Agent CLI process name for pane/detection; install docs may also symlink `agent` → same binary. |
 | **Hooks** | Cursor lifecycle hooks are configured at **`.cursor/hooks.json`** (see preset `HooksSettingsFile`). |
 

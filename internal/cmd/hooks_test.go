@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/hooks"
+	"github.com/steveyegge/excavation/internal/hooks"
 )
 
 func TestParseHooksFile(t *testing.T) {
@@ -178,12 +178,12 @@ func TestParseHooksFileEmptyHooks(t *testing.T) {
 }
 
 func TestDiscoverHooksCrewLevel(t *testing.T) {
-	// Create a temp directory structure simulating a Gas Town workspace
+	// Create a temp directory structure simulating a Excavation Site workspace
 	tmpDir := t.TempDir()
 
-	// Create rig structure with shared crew and polecats settings at the parent level.
+	// Create rig structure with shared crew and miners settings at the parent level.
 	// DiscoverTargets targets the shared parent directories (crew/.claude/settings.json),
-	// not individual crew member or polecat worktree directories.
+	// not individual crew member or miner worktree directories.
 	rigName := "testrig"
 	rigDir := filepath.Join(tmpDir, rigName)
 
@@ -210,27 +210,27 @@ func TestDiscoverHooksCrewLevel(t *testing.T) {
 		t.Fatalf("failed to write crew settings: %v", err)
 	}
 
-	// Create shared polecats settings (polecats/.claude/settings.json)
-	polecatsClaudeDir := filepath.Join(rigDir, "polecats", ".claude")
-	if err := os.MkdirAll(polecatsClaudeDir, 0755); err != nil {
-		t.Fatalf("failed to create polecats/.claude dir: %v", err)
+	// Create shared miners settings (miners/.claude/settings.json)
+	minersClaudeDir := filepath.Join(rigDir, "miners", ".claude")
+	if err := os.MkdirAll(minersClaudeDir, 0755); err != nil {
+		t.Fatalf("failed to create miners/.claude dir: %v", err)
 	}
 
-	polecatsSettings := hooks.SettingsJSON{
+	minersSettings := hooks.SettingsJSON{
 		Hooks: hooks.HooksConfig{
 			PreToolUse: []hooks.HookEntry{
 				{
 					Matcher: "",
 					Hooks: []hooks.Hook{
-						{Type: "command", Command: "polecats-level-hook"},
+						{Type: "command", Command: "miners-level-hook"},
 					},
 				},
 			},
 		},
 	}
-	polecatsData, _ := hooks.MarshalSettings(&polecatsSettings)
-	if err := os.WriteFile(filepath.Join(polecatsClaudeDir, "settings.json"), polecatsData, 0644); err != nil {
-		t.Fatalf("failed to write polecats settings: %v", err)
+	minersData, _ := hooks.MarshalSettings(&minersSettings)
+	if err := os.WriteFile(filepath.Join(minersClaudeDir, "settings.json"), minersData, 0644); err != nil {
+		t.Fatalf("failed to write miners settings: %v", err)
 	}
 
 	// Discover hooks
@@ -239,22 +239,22 @@ func TestDiscoverHooksCrewLevel(t *testing.T) {
 		t.Fatalf("discoverHooks failed: %v", err)
 	}
 
-	// Verify shared crew and polecats hooks were discovered
-	var foundCrewLevel, foundPolecatsLevel bool
+	// Verify shared crew and miners hooks were discovered
+	var foundCrewLevel, foundMinersLevel bool
 	for _, h := range hookInfos {
 		if h.Agent == "testrig/crew" && len(h.Commands) > 0 && h.Commands[0] == "crew-level-hook" {
 			foundCrewLevel = true
 		}
-		if h.Agent == "testrig/polecats" && len(h.Commands) > 0 && h.Commands[0] == "polecats-level-hook" {
-			foundPolecatsLevel = true
+		if h.Agent == "testrig/miners" && len(h.Commands) > 0 && h.Commands[0] == "miners-level-hook" {
+			foundMinersLevel = true
 		}
 	}
 
 	if !foundCrewLevel {
 		t.Error("expected crew hook to be discovered (testrig/crew)")
 	}
-	if !foundPolecatsLevel {
-		t.Error("expected polecats hook to be discovered (testrig/polecats)")
+	if !foundMinersLevel {
+		t.Error("expected miners hook to be discovered (testrig/miners)")
 	}
 }
 
@@ -277,9 +277,9 @@ func TestResolveSettingsTarget(t *testing.T) {
 			expected: "/home/user/gt/myrig/crew",
 		},
 		{
-			name:     "polecat worktree resolves to polecats parent",
-			cwd:      "/home/user/gt/myrig/polecats/toast/myrig",
-			expected: "/home/user/gt/myrig/polecats",
+			name:     "miner worktree resolves to miners parent",
+			cwd:      "/home/user/gt/myrig/miners/toast/myrig",
+			expected: "/home/user/gt/myrig/miners",
 		},
 		{
 			name:     "witness subdir resolves to witness parent",
@@ -292,14 +292,14 @@ func TestResolveSettingsTarget(t *testing.T) {
 			expected: "/home/user/gt/myrig/refinery",
 		},
 		{
-			name:     "mayor stays at cwd",
-			cwd:      "/home/user/gt/mayor",
-			expected: "/home/user/gt/mayor",
+			name:     "overseer stays at cwd",
+			cwd:      "/home/user/gt/overseer",
+			expected: "/home/user/gt/overseer",
 		},
 		{
-			name:     "deacon stays at cwd",
-			cwd:      "/home/user/gt/deacon",
-			expected: "/home/user/gt/deacon",
+			name:     "supervisor stays at cwd",
+			cwd:      "/home/user/gt/supervisor",
+			expected: "/home/user/gt/supervisor",
 		},
 		{
 			name:     "town root stays at cwd",

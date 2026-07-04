@@ -297,8 +297,8 @@ func TestEnsureGitignorePatterns_AppendsToExisting(t *testing.T) {
 	}
 
 	// Should add header
-	if !containsLine(string(content), "# Gas Town (added by gt)") {
-		t.Error("Missing Gas Town header comment")
+	if !containsLine(string(content), "# Excavation Site (added by gt)") {
+		t.Error("Missing Excavation Site header comment")
 	}
 
 	// Should add required patterns (.beads/ intentionally excluded — see overlay.go)
@@ -313,7 +313,7 @@ func TestEnsureGitignorePatterns_AppendsToExisting(t *testing.T) {
 func TestEnsureGitignorePatterns_SkipsExistingPatterns(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// Create existing .gitignore with some Gas Town patterns already.
+	// Create existing .gitignore with some Excavation Site patterns already.
 	// The broader ".claude/" covers ".claude/commands/", so it should
 	// not add the narrower pattern.
 	existing := ".runtime/\n.claude/\n.opencode/\n"
@@ -361,7 +361,7 @@ func TestEnsureGitignorePatterns_SkipsExistingPatterns(t *testing.T) {
 	// Regression guard: .beads/ must NOT be in required patterns.
 	// Beads manages its own .beads/.gitignore via bd init.
 	// Adding .beads/ here breaks bd sync. This has regressed twice
-	// (PR #753, #966). If this test fails, you're about to break polecats.
+	// (PR #753, #966). If this test fails, you're about to break miners.
 	if containsLine(string(content), ".beads/") {
 		t.Error(".gitignore must NOT contain .beads/ - beads manages its own .gitignore (see overlay.go comment)")
 	}
@@ -423,7 +423,7 @@ func TestEnsureGitignorePatterns_AllPatternsPresent(t *testing.T) {
 	}
 
 	// File should be unchanged (no header added)
-	if containsLine(string(content), "# Gas Town") {
+	if containsLine(string(content), "# Excavation Site") {
 		t.Error("Should not add header when all patterns already present")
 	}
 
@@ -493,10 +493,10 @@ func TestEnsureGitignorePatterns_OldNarrowClaudeUpgraded(t *testing.T) {
 func TestEnsureGitignorePatterns_UpgradePreservesBroadPattern(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// Simulate an existing installation that has .claude/ plus other Gas Town
+	// Simulate an existing installation that has .claude/ plus other Excavation Site
 	// patterns but is missing __pycache__/ (added later). After upgrade,
 	// __pycache__/ should be appended.
-	existing := "# Gas Town (added by gt)\n.runtime/\n.claude/\n.logs/\n"
+	existing := "# Excavation Site (added by gt)\n.runtime/\n.claude/\n.logs/\n"
 	if err := os.WriteFile(filepath.Join(tmpDir, ".gitignore"), []byte(existing), 0644); err != nil {
 		t.Fatalf("Failed to create .gitignore: %v", err)
 	}
@@ -525,10 +525,10 @@ func TestEnsureGitignorePatterns_UpgradePreservesBroadPattern(t *testing.T) {
 	}
 }
 
-// TestGasTownLocalExcludePatterns_IncludesBeads verifies that the local exclude
+// TestExcavationLocalExcludePatterns_IncludesBeads verifies that the local exclude
 // patterns include .beads/ (defense-in-depth for gas-7vg) while the gitignore
 // patterns do NOT include .beads/ (regression guard).
-func TestGasTownLocalExcludePatterns_IncludesBeads(t *testing.T) {
+func TestExcavationLocalExcludePatterns_IncludesBeads(t *testing.T) {
 	localPatterns := gasTownLocalExcludePatterns()
 	found := false
 	for _, p := range localPatterns {

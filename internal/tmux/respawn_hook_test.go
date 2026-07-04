@@ -69,11 +69,11 @@ func TestAutoRespawnHookCmd_Format(t *testing.T) {
 		session  string
 		wantFlag string
 	}{
-		{"background_flag", "tmux -L gt", "hq-deacon", "run-shell -b"},
-		{"dead_pane_guard", "tmux -L gt", "hq-deacon", "pane_dead"},
-		{"error_suppression", "tmux -L gt", "hq-deacon", "|| true"},
-		{"socket_in_respawn", "tmux -L gt", "hq-deacon", "-L gt"},
-		{"bare_tmux_no_socket", "tmux", "hq-deacon", "tmux respawn-pane"},
+		{"background_flag", "tmux -L gt", "hq-supervisor", "run-shell -b"},
+		{"dead_pane_guard", "tmux -L gt", "hq-supervisor", "pane_dead"},
+		{"error_suppression", "tmux -L gt", "hq-supervisor", "|| true"},
+		{"socket_in_respawn", "tmux -L gt", "hq-supervisor", "-L gt"},
+		{"bare_tmux_no_socket", "tmux", "hq-supervisor", "tmux respawn-pane"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

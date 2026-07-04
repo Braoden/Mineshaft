@@ -2,7 +2,7 @@
 package rig
 
 import (
-	"github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/config"
 )
 
 // Rig represents a managed repository in the workspace.
@@ -17,7 +17,7 @@ type Rig struct {
 	GitURL string `json:"git_url"`
 
 	// PushURL is an optional push URL for read-only upstreams.
-	// When set, polecats push here instead of to GitURL (e.g., personal fork).
+	// When set, miners push here instead of to GitURL (e.g., personal fork).
 	PushURL string `json:"push_url,omitempty"`
 
 	// LocalRepo is an optional local repository used for reference clones.
@@ -26,8 +26,8 @@ type Rig struct {
 	// Config is the rig-level configuration.
 	Config *config.BeadsConfig `json:"config,omitempty"`
 
-	// Polecats is the list of polecat names in this rig.
-	Polecats []string `json:"polecats,omitempty"`
+	// Miners is the list of miner names in this rig.
+	Miners []string `json:"miners,omitempty"`
 
 	// Crew is the list of crew worker names in this rig.
 	// Crew workers are user-managed persistent workspaces.
@@ -39,24 +39,24 @@ type Rig struct {
 	// HasRefinery indicates if the rig has a refinery agent.
 	HasRefinery bool `json:"has_refinery"`
 
-	// HasMayor indicates if the rig has a mayor clone.
-	HasMayor bool `json:"has_mayor"`
+	// HasOverseer indicates if the rig has a overseer clone.
+	HasOverseer bool `json:"has_overseer"`
 }
 
 // AgentDirs are the standard agent directories in a rig.
 // Note: witness doesn't have a /rig subdirectory (no clone needed).
 var AgentDirs = []string{
-	"polecats",
+	"miners",
 	"crew",
 	"refinery/rig",
 	"witness",
-	"mayor/rig",
+	"overseer/rig",
 }
 
 // RigSummary provides a concise overview of a rig.
 type RigSummary struct {
 	Name         string `json:"name"`
-	PolecatCount int    `json:"polecat_count"`
+	MinerCount int    `json:"miner_count"`
 	CrewCount    int    `json:"crew_count"`
 	HasWitness   bool   `json:"has_witness"`
 	HasRefinery  bool   `json:"has_refinery"`
@@ -66,7 +66,7 @@ type RigSummary struct {
 func (r *Rig) Summary() RigSummary {
 	return RigSummary{
 		Name:         r.Name,
-		PolecatCount: len(r.Polecats),
+		MinerCount: len(r.Miners),
 		CrewCount:    len(r.Crew),
 		HasWitness:   r.HasWitness,
 		HasRefinery:  r.HasRefinery,
@@ -76,12 +76,12 @@ func (r *Rig) Summary() RigSummary {
 // BeadsPath returns the path to use for beads operations.
 // Always returns the rig root path where .beads/ contains either:
 //   - A local beads database (when repo doesn't track .beads/)
-//   - A redirect file pointing to mayor/rig/.beads (when repo tracks .beads/)
+//   - A redirect file pointing to overseer/rig/.beads (when repo tracks .beads/)
 //
 // The redirect is set up by initBeads() during rig creation and followed
 // automatically by the bd CLI and beads.ResolveBeadsDir().
 //
-// This ensures we never write to the user's repo clone (mayor/rig/) and
+// This ensures we never write to the user's repo clone (overseer/rig/) and
 // all beads operations go through the redirect system.
 func (r *Rig) BeadsPath() string {
 	return r.Path

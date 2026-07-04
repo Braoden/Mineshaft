@@ -1,7 +1,7 @@
-// Package quota manages Claude Code account quota rotation for Gas Town.
+// Package quota manages Claude Code account quota rotation for Excavation Site.
 //
-// When sessions hit rate limits, the overseer can scan for blocked sessions
-// and rotate them to available accounts. State is persisted to mayor/quota.json
+// When sessions hit rate limits, the boss can scan for blocked sessions
+// and rotate them to available accounts. State is persisted to overseer/quota.json
 // with crash-safe atomic writes and file-level locking.
 package quota
 
@@ -15,10 +15,10 @@ import (
 	"time"
 
 	"github.com/gofrs/flock"
-	"github.com/steveyegge/gastown/internal/atomicfile"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/util"
+	"github.com/steveyegge/excavation/internal/atomicfile"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/util"
 )
 
 // Manager handles quota state persistence with file locking.
@@ -33,12 +33,12 @@ func NewManager(townRoot string) *Manager {
 
 // statePath returns the path to quota.json.
 func (m *Manager) statePath() string {
-	return constants.MayorQuotaPath(m.townRoot)
+	return constants.OverseerQuotaPath(m.townRoot)
 }
 
 // lockPath returns the path to the flock file for quota state.
 func (m *Manager) lockPath() string {
-	return filepath.Join(m.townRoot, constants.DirMayor, constants.DirRuntime, "quota.lock")
+	return filepath.Join(m.townRoot, constants.DirOverseer, constants.DirRuntime, "quota.lock")
 }
 
 // lock acquires an exclusive file lock for quota state operations.

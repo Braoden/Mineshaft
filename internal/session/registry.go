@@ -1,4 +1,4 @@
-// Package session provides polecat session lifecycle management.
+// Package session provides miner session lifecycle management.
 package session
 
 import (
@@ -15,17 +15,17 @@ import (
 
 	"regexp"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 // PrefixRegistry maps beads prefixes to rig names and vice versa.
 // Used to resolve session names that use rig-specific prefixes.
 type PrefixRegistry struct {
 	mu          sync.RWMutex
-	prefixToRig map[string]string // "gt" → "gastown"
-	rigToPrefix map[string]string // "gastown" → "gt"
+	prefixToRig map[string]string // "gt" → "excavation"
+	rigToPrefix map[string]string // "excavation" → "gt"
 }
 
 // NewPrefixRegistry creates an empty prefix registry.
@@ -198,30 +198,30 @@ func PrefixFor(rigName string) string {
 }
 
 // BuildPrefixRegistryFromTown reads rigs.json and returns a populated PrefixRegistry.
-// Checks mayor/rigs.json first (canonical), then falls back to town-root rigs.json.
+// Checks overseer/rigs.json first (canonical), then falls back to town-root rigs.json.
 // Warns to stderr if rigs.json is missing entirely — an empty registry causes
 // silent failures in session name parsing (crew cycling, nudge routing, etc.).
 func BuildPrefixRegistryFromTown(townRoot string) (*PrefixRegistry, error) {
-	// Canonical location: inside mayor worktree.
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	// Canonical location: inside overseer worktree.
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	fallbackPath := filepath.Join(townRoot, "rigs.json")
 	if _, err := os.Stat(rigsPath); err == nil {
 		r, err := BuildPrefixRegistryFromFile(rigsPath)
 		if err == nil {
-			// Maintain fallback copy at town root (resilient to git ops in mayor/).
+			// Maintain fallback copy at town root (resilient to git ops in overseer/).
 			copyFileIfNewer(rigsPath, fallbackPath)
 		}
 		return r, err
 	}
 
-	// Fallback: town root (safe from git operations in mayor worktree).
+	// Fallback: town root (safe from git operations in overseer worktree).
 	if _, err := os.Stat(fallbackPath); err == nil {
-		style.PrintWarning("mayor/rigs.json missing, using fallback %s", fallbackPath)
+		style.PrintWarning("overseer/rigs.json missing, using fallback %s", fallbackPath)
 		return BuildPrefixRegistryFromFile(fallbackPath)
 	}
 
 	// No rigs.json found anywhere — warn loudly.
-	style.PrintWarning("rigs.json not found (checked mayor/rigs.json and town root). " +
+	style.PrintWarning("rigs.json not found (checked overseer/rigs.json and town root). " +
 		"PrefixRegistry is empty — session parsing will fail. " +
 		"Run 'gt doctor' or restore rigs.json.")
 	return NewPrefixRegistry(), nil
@@ -267,7 +267,7 @@ func BuildPrefixRegistryFromFile(path string) (*PrefixRegistry, error) {
 }
 
 // LegacyPrefixes are prefixes accepted as valid even when the registry is empty.
-// gt = default rig, bd = beads, hq = town-level HQ services, gthq = gastown HQ.
+// gt = default rig, bd = beads, hq = town-level HQ services, gthq = excavation HQ.
 var LegacyPrefixes = []string{"gt", "bd", "hq", "gthq"}
 
 // HasKnownPrefix returns true if s starts with a registered or legacy prefix
@@ -297,7 +297,7 @@ func (r *PrefixRegistry) HasPrefix(sess string) bool {
 	return false
 }
 
-// IsKnownSession returns true if the session name belongs to Gas Town.
+// IsKnownSession returns true if the session name belongs to Excavation Site.
 // Checks for HQ prefix and registered rig prefixes from the default registry.
 func IsKnownSession(sess string) bool {
 	if strings.HasPrefix(sess, HQPrefix) {
@@ -310,8 +310,8 @@ func IsKnownSession(sess string) bool {
 // Returns the prefix and the remaining string after the prefix dash.
 // Tries longest prefix match first.
 // Only matches sessions with registered prefixes - does NOT fall back to
-// splitting on dashes, as that would incorrectly match non-gastown sessions
-// (e.g., "gs-1923" or "dotfiles-main" would be parsed as gastown sessions).
+// splitting on dashes, as that would incorrectly match non-excavation sessions
+// (e.g., "gs-1923" or "dotfiles-main" would be parsed as excavation sessions).
 func (r *PrefixRegistry) matchPrefix(session string) (prefix, rest string, matched bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()

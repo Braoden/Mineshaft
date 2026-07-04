@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/config"
 )
 
 // Route represents a prefix-to-path routing rule.
@@ -163,8 +163,8 @@ func WriteRoutes(beadsDir string, routes []Route) error {
 }
 
 // GetTownBeadsPath returns the path to town-level beads directory.
-// Town beads store hq-* prefixed issues including Mayor, Deacon, and role beads.
-// The townRoot should be the Gas Town root directory (e.g., ~/gt).
+// Town beads store hq-* prefixed issues including Overseer, Supervisor, and role beads.
+// The townRoot should be the Excavation Site root directory (e.g., ~/gt).
 func GetTownBeadsPath(townRoot string) string {
 	return filepath.Join(townRoot, ".beads")
 }
@@ -172,7 +172,7 @@ func GetTownBeadsPath(townRoot string) string {
 // GetPrefixForRig returns the beads prefix for a given rig name.
 // The prefix is returned without the trailing hyphen (e.g., "bd" not "bd-").
 // If the rig is not found in routes, returns "gt" as the default.
-// The townRoot should be the Gas Town root directory (e.g., ~/gt).
+// The townRoot should be the Excavation Site root directory (e.g., ~/gt).
 func GetPrefixForRig(townRoot, rigName string) string {
 	beadsDir := filepath.Join(townRoot, ".beads")
 	routes, err := LoadRoutes(beadsDir)
@@ -181,7 +181,7 @@ func GetPrefixForRig(townRoot, rigName string) string {
 	}
 
 	// Look for a route where the path starts with the rig name
-	// Routes paths are like "gastown/mayor/rig" or "beads/mayor/rig"
+	// Routes paths are like "excavation/overseer/rig" or "beads/overseer/rig"
 	for _, r := range routes {
 		parts := strings.SplitN(r.Path, "/", 2)
 		if len(parts) > 0 && parts[0] == rigName {
@@ -195,7 +195,7 @@ func GetPrefixForRig(townRoot, rigName string) string {
 
 // CheckPrefixAvailable verifies that a prefix is not already used by a different rig.
 // The prefix should include the trailing hyphen (e.g., "gt-").
-// newPath is the path of the rig being added (e.g., "gastown" or "gastown/mayor/rig").
+// newPath is the path of the rig being added (e.g., "excavation" or "excavation/overseer/rig").
 // Returns nil if the prefix is available or already maps to the same rig.
 func CheckPrefixAvailable(townRoot string, prefix string, newPath string) error {
 	beadsDir := filepath.Join(townRoot, ".beads")
@@ -205,7 +205,7 @@ func CheckPrefixAvailable(townRoot string, prefix string, newPath string) error 
 	}
 
 	// Extract the rig name (first path component) for comparison,
-	// since the same rig can have different path variants (e.g., "gastown" vs "gastown/mayor/rig").
+	// since the same rig can have different path variants (e.g., "excavation" vs "excavation/overseer/rig").
 	newRig := strings.SplitN(newPath, "/", 2)[0]
 
 	for _, r := range routes {
@@ -263,7 +263,7 @@ func ExtractPrefix(beadID string) string {
 }
 
 // GetRigPathForPrefix returns the rig path for a given bead ID prefix.
-// The townRoot should be the Gas Town root directory (e.g., ~/gt).
+// The townRoot should be the Excavation Site root directory (e.g., ~/gt).
 // Returns the full absolute path to the rig directory, or empty string if not found.
 // For town-level beads (path="."), returns townRoot.
 func GetRigPathForPrefix(townRoot, prefix string) string {
@@ -307,8 +307,8 @@ func GetRigDirForName(townRoot, rigName string) string {
 	return ""
 }
 
-// ResolveRepoAliasBeadsDir resolves a Gas Town repo alias to its canonical
-// .beads directory. Bare aliases are route names like "gastown" plus the
+// ResolveRepoAliasBeadsDir resolves a Excavation Site repo alias to its canonical
+// .beads directory. Bare aliases are route names like "excavation" plus the
 // town aliases "hq" and "town"; path-like repo values are intentionally left
 // unresolved so callers can preserve bd's native --repo path semantics.
 func ResolveRepoAliasBeadsDir(townRoot, repo string) (string, bool) {
@@ -336,7 +336,7 @@ func ResolveRepoAliasBeadsDir(townRoot, repo string) (string, bool) {
 // RewriteBDCreateRepoAlias removes a single bd create --repo alias from argv
 // and returns the canonical .beads target for callers to pin via BEADS_DIR.
 // Unresolved, path-like, duplicate, or positional --repo values are preserved so
-// bd keeps its native --repo behavior outside Gas Town aliases.
+// bd keeps its native --repo behavior outside Excavation Site aliases.
 func RewriteBDCreateRepoAlias(townRoot string, argv []string) ([]string, string) {
 	cmdIndex, ok := BDSubcommandIndex(argv)
 	if !ok || argv[cmdIndex] != "create" {
@@ -447,7 +447,7 @@ func pathWithin(root, path string) bool {
 }
 
 // GetRigNameForPrefix returns the rig name that owns a given bead prefix.
-// For example, "gt-" returns "gastown", "bd-" returns "beads".
+// For example, "gt-" returns "excavation", "bd-" returns "beads".
 // Returns empty string if the prefix is town-level (path=".") or not found in routes.
 func GetRigNameForPrefix(townRoot, prefix string) string {
 	beadsDir := filepath.Join(townRoot, ".beads")

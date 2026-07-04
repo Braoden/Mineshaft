@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/constants"
+	"github.com/steveyegge/excavation/internal/constants"
 )
 
 // Operational constants — timeouts needed to perform checks.
@@ -33,7 +33,7 @@ type DoctorDogConfig struct {
 	Databases []string `json:"databases,omitempty"`
 
 	// Advisory thresholds — when exceeded, recommendations are added to the report.
-	// Agents (Mayor/Deacon) read the report and decide what actions to take.
+	// Agents (Overseer/Supervisor) read the report and decide what actions to take.
 	// Zero values mean "use default".
 
 	// LatencyAlertMs: latency threshold in ms. Default: 5000 (5s).
@@ -90,7 +90,7 @@ func doctorDogDatabases(config *DaemonPatrolConfig) []string {
 }
 
 // runDoctorDog pours a mol-dog-doctor molecule for agent execution.
-// The daemon is a thin ticker — it creates the molecule and agents (Deacon)
+// The daemon is a thin ticker — it creates the molecule and agents (Supervisor)
 // execute the formula steps (probe, inspect, report). This follows ZFC:
 // daemons schedule, agents decide and act.
 func (d *Daemon) runDoctorDog() {

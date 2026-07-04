@@ -1,0 +1,199 @@
+description = """
+Witness-side tracking of a single miner's lifecycle.
+
+The Witness bonds this molecule for each active miner, creating a lease that
+tracks the miner from spawn through work to cleanup. This is the WITNESS'S
+view of the miner, not the miner's own work molecule.
+
+## Lifecycle States
+
+```
+BOOT ─► WORKING ─► VERIFYING ─► MERGE_REQUESTED ─► DONE
+  │         │           │              │
+  └─► STUCK ─┴─► STUCK ──┴──► STUCK ───┘
+```
+
+## Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| miner | Yes | Name of the miner |
+| issue | Yes | The issue assigned to the miner |
+| rig | Yes | The rig this miner belongs to |"""
+formula = "mol-miner-lease"
+version = 2
+
+[[steps]]
+id = "boot"
+title = "Verify miner boots successfully"
+description = """
+Miner has been spawned. Verify it initializes and starts working.
+
+**Check if alive:**
+```bash
+tmux capture-pane -t gt-{{rig}}-{{miner}} -p | tail -20
+```
+
+Look for:
+- Claude prompt visible ("> " at start of line)
+- `gt prime` output
+- Signs of reading the assigned issue
+
+**If idle for >60 seconds:**
+```bash
+gt nudge {{rig}}/miners/{{miner}} "Begin work on {{issue}}."
+```
+
+**If still no response after nudge:**
+```bash
+gt nudge {{rig}}/miners/{{miner}} "Are you there? Please acknowledge."
+```
+
+After 3 failed nudges, mark as stuck and escalate.
+
+**Exit criteria:** Miner shows signs of active work on {{issue}}."""
+
+[[steps]]
+id = "working"
+title = "Monitor miner progress"
+needs = ["boot"]
+description = """
+Miner is actively working. Monitor for stuck or completion.
+
+**Periodic checks:**
+- Use standard nudge protocol from Witness CLAUDE.md
+- Watch for MINER_DONE mail or agent_state=done
+
+**Signs of progress:**
+- Git commits appearing
+- File changes visible in peek
+- Active tool usage in tmux capture
+
+**Signs of stuck:**
+- Idle >15 minutes
+- Repeated errors
+- Explicit "I'm stuck" messages
+
+**If MINER_DONE received or agent_state=done:**
+Proceed to verifying step.
+
+**Exit criteria:** Miner signals completion (MINER_DONE mail or state=done)."""
+
+[[steps]]
+id = "verifying"
+title = "Verify miner work is merge-ready"
+needs = ["working"]
+description = """
+Miner claims completion. Verify before sending to Refinery.
+
+**1. Check git state:**
+```bash
+cd miners/{{miner}}
+git status                    # Must be "working tree clean"
+git stash list                # Must be empty
+git log origin/main..HEAD     # Should have commits
+```
+
+**2. Verify branch is pushed:**
+```bash
+git log origin/$(git branch --show-current)..HEAD  # Should be empty
+```
+
+**3. Verify issue is closed:**
+```bash
+bd show {{issue}}             # Status should be 'closed'
+```
+
+**4. Spot-check quality (ZFC - your judgment):**
+- Commits have reasonable messages
+- Changes look related to issue
+- No obvious problems in git log
+
+**If verification fails:**
+Nudge miner to fix:
+```bash
+# Use --mode=queue to avoid interrupting in-flight tool calls
+gt nudge --mode=queue {{rig}}/miners/{{miner}} "Verification failed: <issue>. Please fix."
+```
+Return to working step.
+
+**If verification passes:**
+Proceed to merge_requested step.
+
+**Exit criteria:** Git clean, branch pushed, issue closed, work looks legit."""
+
+[[steps]]
+id = "merge_requested"
+title = "Request merge from Refinery"
+needs = ["verifying"]
+description = """
+Work verified. Send MERGE_READY to Refinery and wait.
+
+**Send merge request:**
+```bash
+gt mail send {{rig}}/refinery -s "MERGE_READY {{miner}}" -m "Branch: $(cd miners/{{miner}} && git branch --show-current)
+Issue: {{issue}}
+Miner: {{miner}}
+Verified: clean git state, issue closed"
+```
+
+**Update cleanup wisp state:**
+```bash
+bd update <wisp-id> --labels cleanup,miner:{{miner}},state:merge-requested
+```
+
+**Wait for MERGED response:**
+The Refinery will:
+1. Fetch and rebase the branch
+2. Run tests
+3. Merge to main (if pass)
+4. Send MERGED mail back
+
+This may take several minutes.
+
+**If MERGED received:** Proceed to done step.
+**If merge fails:** Refinery notifies, return to working state.
+
+**Exit criteria:** MERGED mail received from Refinery."""
+
+[[steps]]
+id = "done"
+title = "Complete miner cleanup"
+needs = ["merge_requested"]
+description = """
+Merge confirmed. Clean up the miner.
+
+**1. Kill the miner session:**
+```bash
+gt session kill {{rig}}/miners/{{miner}}
+```
+
+**2. Remove worktree (if ephemeral):**
+```bash
+git worktree remove miners/{{miner}} --force
+```
+
+**3. Delete local branch (if exists):**
+```bash
+git branch -D miner/{{miner}} 2>/dev/null || true
+```
+
+**4. Close this lease:**
+```bash
+bd close <this-lease-id>
+```
+
+**Exit criteria:** Miner session killed, worktree removed, lease closed."""
+
+[vars]
+[vars.miner]
+description = "Name of the miner"
+required = true
+
+[vars.issue]
+description = "The issue assigned to the miner"
+required = true
+
+[vars.rig]
+description = "The rig this miner belongs to"
+required = true

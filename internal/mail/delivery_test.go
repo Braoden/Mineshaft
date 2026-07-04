@@ -25,7 +25,7 @@ func TestParseDeliveryLabels_CrashAndRetryStates(t *testing.T) {
 	t.Run("partial ack write keeps pending", func(t *testing.T) {
 		state, by, at := ParseDeliveryLabels([]string{
 			DeliveryLabelPending,
-			"delivery-acked-by:gastown/worker",
+			"delivery-acked-by:excavation/worker",
 			"delivery-acked-at:2026-02-17T12:00:00Z",
 		})
 		if state != DeliveryStatePending {
@@ -39,15 +39,15 @@ func TestParseDeliveryLabels_CrashAndRetryStates(t *testing.T) {
 	t.Run("acked label flips state", func(t *testing.T) {
 		state, by, at := ParseDeliveryLabels([]string{
 			DeliveryLabelPending,
-			"delivery-acked-by:gastown/worker",
+			"delivery-acked-by:excavation/worker",
 			"delivery-acked-at:2026-02-17T12:00:00Z",
 			DeliveryLabelAcked,
 		})
 		if state != DeliveryStateAcked {
 			t.Fatalf("state = %q, want %q", state, DeliveryStateAcked)
 		}
-		if by != "gastown/worker" {
-			t.Fatalf("ackedBy = %q, want %q", by, "gastown/worker")
+		if by != "excavation/worker" {
+			t.Fatalf("ackedBy = %q, want %q", by, "excavation/worker")
 		}
 		if at == nil {
 			t.Fatal("ackedAt should be populated for acked state")
@@ -58,15 +58,15 @@ func TestParseDeliveryLabels_CrashAndRetryStates(t *testing.T) {
 		// bd show --json returns labels in lexicographic order.
 		state, by, at := ParseDeliveryLabels([]string{
 			"delivery-acked-at:2026-02-17T12:00:00Z",
-			"delivery-acked-by:gastown/worker",
+			"delivery-acked-by:excavation/worker",
 			"delivery:acked",
 			"delivery:pending",
 		})
 		if state != DeliveryStateAcked {
 			t.Fatalf("state = %q, want %q", state, DeliveryStateAcked)
 		}
-		if by != "gastown/worker" {
-			t.Fatalf("ackedBy = %q, want %q", by, "gastown/worker")
+		if by != "excavation/worker" {
+			t.Fatalf("ackedBy = %q, want %q", by, "excavation/worker")
 		}
 		if at == nil {
 			t.Fatal("ackedAt should be populated for acked state with lex-ordered labels")
@@ -77,9 +77,9 @@ func TestParseDeliveryLabels_CrashAndRetryStates(t *testing.T) {
 func TestDeliveryAckLabelSequence(t *testing.T) {
 	t.Run("no existing labels uses new timestamp", func(t *testing.T) {
 		at := time.Date(2026, 2, 17, 14, 0, 0, 0, time.UTC)
-		got := DeliveryAckLabelSequence("gastown/worker", at, nil)
+		got := DeliveryAckLabelSequence("excavation/worker", at, nil)
 		want := []string{
-			"delivery-acked-by:gastown/worker",
+			"delivery-acked-by:excavation/worker",
 			"delivery-acked-at:2026-02-17T14:00:00Z",
 			"delivery:acked",
 		}
@@ -91,14 +91,14 @@ func TestDeliveryAckLabelSequence(t *testing.T) {
 	t.Run("existing timestamp is reused on retry", func(t *testing.T) {
 		existing := []string{
 			"delivery:pending",
-			"delivery-acked-by:gastown/worker",
+			"delivery-acked-by:excavation/worker",
 			"delivery-acked-at:2026-02-17T12:00:00Z",
 		}
 		// Use a different time — should be ignored in favor of existing.
 		at := time.Date(2026, 2, 17, 14, 0, 0, 0, time.UTC)
-		got := DeliveryAckLabelSequence("gastown/worker", at, existing)
+		got := DeliveryAckLabelSequence("excavation/worker", at, existing)
 		want := []string{
-			"delivery-acked-by:gastown/worker",
+			"delivery-acked-by:excavation/worker",
 			"delivery-acked-at:2026-02-17T12:00:00Z",
 			"delivery:acked",
 		}
@@ -112,14 +112,14 @@ func TestDeliveryAckLabelSequence(t *testing.T) {
 		// appears before acked-by. The function must be order-independent.
 		existing := []string{
 			"delivery-acked-at:2026-02-17T12:00:00Z",
-			"delivery-acked-by:gastown/worker",
+			"delivery-acked-by:excavation/worker",
 			"delivery:acked",
 			"delivery:pending",
 		}
 		at := time.Date(2026, 2, 17, 14, 0, 0, 0, time.UTC)
-		got := DeliveryAckLabelSequence("gastown/worker", at, existing)
+		got := DeliveryAckLabelSequence("excavation/worker", at, existing)
 		want := []string{
-			"delivery-acked-by:gastown/worker",
+			"delivery-acked-by:excavation/worker",
 			"delivery-acked-at:2026-02-17T12:00:00Z",
 			"delivery:acked",
 		}
@@ -131,14 +131,14 @@ func TestDeliveryAckLabelSequence(t *testing.T) {
 	t.Run("different recipient gets fresh timestamp", func(t *testing.T) {
 		existing := []string{
 			"delivery:pending",
-			"delivery-acked-by:gastown/workerA",
+			"delivery-acked-by:excavation/workerA",
 			"delivery-acked-at:2026-02-17T12:00:00Z",
 		}
 		// Different recipient — should NOT reuse workerA's timestamp.
 		at := time.Date(2026, 2, 17, 14, 0, 0, 0, time.UTC)
-		got := DeliveryAckLabelSequence("gastown/workerB", at, existing)
+		got := DeliveryAckLabelSequence("excavation/workerB", at, existing)
 		want := []string{
-			"delivery-acked-by:gastown/workerB",
+			"delivery-acked-by:excavation/workerB",
 			"delivery-acked-at:2026-02-17T14:00:00Z",
 			"delivery:acked",
 		}
@@ -152,16 +152,16 @@ func TestDeliveryAckLabelSequence(t *testing.T) {
 		// writing acked-by:B (before acked-at). Labels accumulated:
 		existing := []string{
 			"delivery:pending",
-			"delivery-acked-by:gastown/workerA",
+			"delivery-acked-by:excavation/workerA",
 			"delivery-acked-at:2026-02-17T12:00:00Z",
 			"delivery:acked",
-			"delivery-acked-by:gastown/workerB",
+			"delivery-acked-by:excavation/workerB",
 		}
 		// B retries — must generate a fresh timestamp, not reuse A's t1.
 		at := time.Date(2026, 2, 17, 14, 0, 0, 0, time.UTC)
-		got := DeliveryAckLabelSequence("gastown/workerB", at, existing)
+		got := DeliveryAckLabelSequence("excavation/workerB", at, existing)
 		want := []string{
-			"delivery-acked-by:gastown/workerB",
+			"delivery-acked-by:excavation/workerB",
 			"delivery-acked-at:2026-02-17T14:00:00Z",
 			"delivery:acked",
 		}
@@ -177,10 +177,10 @@ func TestDeliveryAckLabelsToWriteSkipsExistingLabels(t *testing.T) {
 	t.Run("partial retry only writes missing ack label", func(t *testing.T) {
 		existing := []string{
 			"delivery:pending",
-			"delivery-acked-by:gastown/worker",
+			"delivery-acked-by:excavation/worker",
 			"delivery-acked-at:2026-02-17T12:00:00Z",
 		}
-		got := deliveryAckLabelsToWrite("gastown/worker", at, existing)
+		got := deliveryAckLabelsToWrite("excavation/worker", at, existing)
 		want := []string{"delivery:acked"}
 		if !reflect.DeepEqual(got, want) {
 			t.Fatalf("got %v, want %v", got, want)
@@ -190,11 +190,11 @@ func TestDeliveryAckLabelsToWriteSkipsExistingLabels(t *testing.T) {
 	t.Run("complete retry writes nothing", func(t *testing.T) {
 		existing := []string{
 			"delivery:pending",
-			"delivery-acked-by:gastown/worker",
+			"delivery-acked-by:excavation/worker",
 			"delivery-acked-at:2026-02-17T12:00:00Z",
 			"delivery:acked",
 		}
-		got := deliveryAckLabelsToWrite("gastown/worker", at, existing)
+		got := deliveryAckLabelsToWrite("excavation/worker", at, existing)
 		if len(got) != 0 {
 			t.Fatalf("got %v, want no labels", got)
 		}
@@ -209,7 +209,7 @@ func TestDeliveryPendingRemovalNeeded(t *testing.T) {
 	}{
 		{"no delivery labels", []string{"gt:message"}, false},
 		{"pending only", []string{DeliveryLabelPending}, false},
-		{"partial ack keeps pending", []string{DeliveryLabelPending, "delivery-acked-by:gastown/worker", "delivery-acked-at:2026-02-17T12:00:00Z"}, false},
+		{"partial ack keeps pending", []string{DeliveryLabelPending, "delivery-acked-by:excavation/worker", "delivery-acked-at:2026-02-17T12:00:00Z"}, false},
 		{"pending and acked converges", []string{DeliveryLabelPending, DeliveryLabelAcked}, true},
 		{"acked only", []string{DeliveryLabelAcked}, false},
 	}
@@ -229,7 +229,7 @@ func TestAcknowledgeDeliveryBeadConvergesPendingLabel(t *testing.T) {
 	logPath := filepath.Join(tmp, "bd.log")
 	initialLabels := strings.Join([]string{
 		DeliveryLabelPending,
-		"delivery-acked-by:gastown/worker",
+		"delivery-acked-by:excavation/worker",
 		"delivery-acked-at:2026-02-17T12:00:00Z",
 		DeliveryLabelAcked,
 	}, "\n") + "\n"
@@ -307,7 +307,7 @@ exit 1
 	t.Setenv("BD_STUB_LABELS", labelsPath)
 	t.Setenv("BD_STUB_LOG", logPath)
 
-	if err := AcknowledgeDeliveryBead(tmp, "", "msg-1", "gastown/worker"); err != nil {
+	if err := AcknowledgeDeliveryBead(tmp, "", "msg-1", "excavation/worker"); err != nil {
 		t.Fatalf("AcknowledgeDeliveryBead: %v", err)
 	}
 

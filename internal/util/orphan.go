@@ -13,8 +13,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/lock"
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/lock"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 // minOrphanAge is the minimum age (in seconds) a process must be before
@@ -64,7 +64,7 @@ func addDescendants(parentPID int, childMap map[int][]int, pids map[int]bool) {
 // This prevents killing Claude processes that are running in tmux sessions,
 // even if they temporarily show TTY "?" during startup or session transitions.
 //
-// CRITICAL: We protect ALL tmux sessions on ALL sockets. When multiple Gas Town
+// CRITICAL: We protect ALL tmux sessions on ALL sockets. When multiple Excavation Site
 // instances run on the same machine, each uses its own tmux socket. A single-socket
 // query would miss processes in other towns' sessions, causing cross-town kills.
 func getTmuxSessionPIDs() map[int]bool {
@@ -74,7 +74,7 @@ func getTmuxSessionPIDs() map[int]bool {
 	childMap := buildChildMap()
 
 	// Scan all tmux sockets in the socket directory.
-	// Each Gas Town instance (and any personal tmux servers) gets its own socket.
+	// Each Excavation Site instance (and any personal tmux servers) gets its own socket.
 	socketDir := tmux.SocketDir()
 	entries, err := os.ReadDir(socketDir)
 	if err == nil {
@@ -123,7 +123,7 @@ func collectPanePIDs(socketPath string, childMap map[int][]int, pids map[int]boo
 func getACPSessionPIDs() map[int]bool {
 	pids := make(map[int]bool)
 
-	// Find all town roots by looking for mayor-acp.pid files
+	// Find all town roots by looking for overseer-acp.pid files
 	// Common locations: ~/gt, ~/town-*, etc.
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -134,7 +134,7 @@ func getACPSessionPIDs() map[int]bool {
 	childMap := buildChildMap()
 
 	// Check the primary town root (~/gt)
-	pidPath := filepath.Join(homeDir, "gt", "mayor", "mayor-acp.pid")
+	pidPath := filepath.Join(homeDir, "gt", "overseer", "overseer-acp.pid")
 	if data, err := os.ReadFile(pidPath); err == nil {
 		if pid, err := strconv.Atoi(strings.TrimSpace(string(data))); err == nil {
 			// Check if process is still alive
@@ -240,7 +240,7 @@ func saveSignalState(filename string, state map[int]signalState) error {
 }
 
 // orphanStateFile is the filename for orphan process tracking state.
-const orphanStateFile = "gastown-orphan-state"
+const orphanStateFile = "excavation-orphan-state"
 
 // loadOrphanState reads the orphan state file.
 func loadOrphanState() map[int]signalState {
@@ -274,7 +274,7 @@ func getProcessCwd(pid int) string {
 	// Fails on hardened kernels (ptrace_scope>=1) for non-descendant processes.
 	if target, err := os.Readlink(filepath.Join("/proc", pidStr, "cwd")); err == nil {
 		// Linux appends " (deleted)" when the directory has been removed.
-		// Strip it so the walk-up in isInGasTownWorkspace can still match
+		// Strip it so the walk-up in isInExcavationWorkspace can still match
 		// the workspace root (the process is definitely orphaned if its
 		// workspace was nuked).
 		return strings.TrimSuffix(target, " (deleted)")
@@ -297,8 +297,8 @@ func getProcessCwd(pid int) string {
 	return ""
 }
 
-// resolveTownRoot returns the Gas Town workspace root for a process, identified
-// by walking up from its CWD looking for the mayor/town.json marker.
+// resolveTownRoot returns the Excavation Site workspace root for a process, identified
+// by walking up from its CWD looking for the overseer/town.json marker.
 // Returns the workspace root path, or "" if the process is not in any workspace
 // or its CWD cannot be determined.
 func resolveTownRoot(pid int) string {
@@ -309,12 +309,12 @@ func resolveTownRoot(pid int) string {
 	return resolveTownRootFromDir(cwd)
 }
 
-// resolveTownRootFromDir walks up from dir looking for mayor/town.json.
+// resolveTownRootFromDir walks up from dir looking for overseer/town.json.
 // Returns the workspace root path, or "" if not found.
 func resolveTownRootFromDir(dir string) string {
 	current := dir
 	for {
-		if _, err := os.Stat(filepath.Join(current, "mayor", "town.json")); err == nil {
+		if _, err := os.Stat(filepath.Join(current, "overseer", "town.json")); err == nil {
 			return current
 		}
 		parent := filepath.Dir(current)
@@ -325,9 +325,9 @@ func resolveTownRootFromDir(dir string) string {
 	}
 }
 
-// isInGasTownWorkspace checks whether a process's working directory is inside
-// a Gas Town workspace (identified by the mayor/town.json marker).
-func isInGasTownWorkspace(pid int) bool {
+// isInExcavationWorkspace checks whether a process's working directory is inside
+// a Excavation Site workspace (identified by the overseer/town.json marker).
+func isInExcavationWorkspace(pid int) bool {
 	return resolveTownRoot(pid) != ""
 }
 
@@ -421,10 +421,10 @@ type OrphanedProcess struct {
 	PID      int
 	Cmd      string
 	Age      int    // Age in seconds
-	TownRoot string // Gas Town workspace root, or "" if not in any workspace
+	TownRoot string // Excavation Site workspace root, or "" if not in any workspace
 }
 
-// FindOrphanedClaudeProcesses finds Gas Town agent processes (claude/codex/opencode/cursor-agent/copilot, etc.)
+// FindOrphanedClaudeProcesses finds Excavation Site agent processes (claude/codex/opencode/cursor-agent/copilot, etc.)
 // without a controlling terminal.
 // These are typically subagent processes spawned by Claude Code's Task tool that didn't
 // clean up properly after completion.
@@ -438,7 +438,7 @@ type OrphanedProcess struct {
 // Additionally, processes must be older than minOrphanAge seconds to be considered
 // orphaned. This prevents race conditions with newly spawned processes.
 func FindOrphanedClaudeProcesses() ([]OrphanedProcess, error) {
-	// Get PIDs belonging to valid Gas Town tmux sessions.
+	// Get PIDs belonging to valid Excavation Site tmux sessions.
 	// These should not be killed even if they show TTY "?" during startup.
 	protectedPIDs := getTmuxSessionPIDs()
 
@@ -485,8 +485,8 @@ func FindOrphanedClaudeProcesses() ([]OrphanedProcess, error) {
 			continue
 		}
 
-		// Skip processes that belong to valid Gas Town tmux sessions.
-		// This prevents killing witnesses/refineries/deacon during startup
+		// Skip processes that belong to valid Excavation Site tmux sessions.
+		// This prevents killing witnesses/refineries/supervisor during startup
 		// when they may temporarily show TTY "?".
 		if protectedPIDs[pid] {
 			continue
@@ -508,8 +508,8 @@ func FindOrphanedClaudeProcesses() ([]OrphanedProcess, error) {
 			continue
 		}
 
-		// Skip processes NOT in a Gas Town workspace.
-		// Only kill orphaned Claude processes whose cwd is under a Gas Town
+		// Skip processes NOT in a Excavation Site workspace.
+		// Only kill orphaned Claude processes whose cwd is under a Excavation Site
 		// workspace root. This prevents killing user's Claude Code instances
 		// running in repos outside ~/gt/ (or wherever the workspace is).
 		townRoot := resolveTownRoot(pid)
@@ -541,7 +541,7 @@ type ZombieProcess struct {
 	Cmd      string
 	Age      int    // Age in seconds
 	TTY      string // TTY column from ps (may be "?" or a session like "s024")
-	TownRoot string // Gas Town workspace root, or "" if not in any workspace
+	TownRoot string // Excavation Site workspace root, or "" if not in any workspace
 }
 
 // FindZombieClaudeProcesses finds Claude processes with no TTY that are NOT in
@@ -599,7 +599,7 @@ func FindZombieClaudeProcesses() ([]ZombieProcess, error) {
 			continue
 		}
 
-		// Skip processes that belong to valid Gas Town tmux sessions
+		// Skip processes that belong to valid Excavation Site tmux sessions
 		if validPIDs[pid] {
 			continue
 		}
@@ -626,8 +626,8 @@ func FindZombieClaudeProcesses() ([]ZombieProcess, error) {
 			continue
 		}
 
-		// Skip processes NOT in a Gas Town workspace.
-		// Only kill zombie Claude processes whose cwd is under a Gas Town
+		// Skip processes NOT in a Excavation Site workspace.
+		// Only kill zombie Claude processes whose cwd is under a Excavation Site
 		// workspace root. This prevents killing user's Claude Code instances
 		// running in repos outside ~/gt/.
 		townRoot := resolveTownRoot(pid)
@@ -649,7 +649,7 @@ func FindZombieClaudeProcesses() ([]ZombieProcess, error) {
 }
 
 // zombieStateFile is the filename for zombie process tracking state.
-const zombieStateFile = "gastown-zombie-state"
+const zombieStateFile = "excavation-zombie-state"
 
 // loadZombieState reads the zombie state file.
 func loadZombieState() map[int]signalState {

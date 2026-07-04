@@ -1,4 +1,4 @@
-// ABOUTME: Command to disable Gas Town system-wide.
+// ABOUTME: Command to disable Excavation Site system-wide.
 // ABOUTME: Sets the global state to disabled so tools work vanilla.
 
 package cmd
@@ -7,9 +7,9 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/shell"
-	"github.com/steveyegge/gastown/internal/state"
-	"github.com/steveyegge/gastown/internal/style"
+	"github.com/steveyegge/excavation/internal/shell"
+	"github.com/steveyegge/excavation/internal/state"
+	"github.com/steveyegge/excavation/internal/style"
 )
 
 var disableClean bool
@@ -17,13 +17,13 @@ var disableClean bool
 var disableCmd = &cobra.Command{
 	Use:     "disable",
 	GroupID: GroupConfig,
-	Short:   "Disable Gas Town system-wide",
-	Long: `Disable Gas Town for all agentic coding tools.
+	Short:   "Disable Excavation Site system-wide",
+	Long: `Disable Excavation Site for all agentic coding tools.
 
 When disabled:
   - Shell hooks become no-ops
   - Claude Code SessionStart hooks skip 'gt prime'
-  - Tools work 100% vanilla (no Gas Town behavior)
+  - Tools work 100% vanilla (no Excavation Site behavior)
 
 The workspace (~/gt) is preserved. Use 'gt enable' to re-enable.
 
@@ -31,7 +31,7 @@ Flags:
   --clean  Also remove shell integration from ~/.zshrc/~/.bashrc
 
 Environment overrides still work:
-  GASTOWN_ENABLED=1   - Enable for current session only`,
+  EXCAVATION_ENABLED=1   - Enable for current session only`,
 	RunE: runDisable,
 }
 
@@ -43,7 +43,7 @@ func init() {
 
 func runDisable(cmd *cobra.Command, args []string) error {
 	if err := state.Disable(); err != nil {
-		return fmt.Errorf("disabling Gas Town: %w", err)
+		return fmt.Errorf("disabling Excavation Site: %w", err)
 	}
 
 	if disableClean {
@@ -55,7 +55,7 @@ func runDisable(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	fmt.Printf("%s Gas Town disabled\n", style.Success.Render("✓"))
+	fmt.Printf("%s Excavation Site disabled\n", style.Success.Render("✓"))
 	fmt.Println()
 	fmt.Println("All agentic coding tools now work vanilla.")
 	if !disableClean {

@@ -2,7 +2,7 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in Gas Town, please report it responsibly:
+If you discover a security vulnerability in Excavation Site, please report it responsibly:
 
 1. **Do not** open a public issue for security vulnerabilities
 2. Email the maintainers directly with details
@@ -11,7 +11,7 @@ If you discover a security vulnerability in Gas Town, please report it responsib
 
 ## Scope
 
-Gas Town is experimental software focused on multi-agent coordination. Security considerations include:
+Excavation Site is experimental software focused on multi-agent coordination. Security considerations include:
 
 - **Agent isolation**: Workers run in separate tmux sessions but share filesystem access
 - **Git operations**: Workers can push to configured remotes
@@ -20,7 +20,7 @@ Gas Town is experimental software focused on multi-agent coordination. Security 
 
 ## Best Practices
 
-When using Gas Town:
+When using Excavation Site:
 
 - Run in isolated environments for untrusted code
 - Review agent output before pushing to production branches

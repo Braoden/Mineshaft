@@ -8,20 +8,20 @@ import (
 	"testing"
 )
 
-func TestPrimingCheck_PolecatNewStructure(t *testing.T) {
-	// This test verifies that priming check correctly handles the new polecat path structure.
-	// Bug: priming_check.go looks at polecats/<name>/ but the actual worktree is at
-	// polecats/<name>/<rigname>/ which is where the .beads/redirect file lives.
+func TestPrimingCheck_MinerNewStructure(t *testing.T) {
+	// This test verifies that priming check correctly handles the new miner path structure.
+	// Bug: priming_check.go looks at miners/<name>/ but the actual worktree is at
+	// miners/<name>/<rigname>/ which is where the .beads/redirect file lives.
 	//
-	// Expected behavior: If polecats/<name>/<rigname>/.beads/redirect points to rig's beads
+	// Expected behavior: If miners/<name>/<rigname>/.beads/redirect points to rig's beads
 	// which has PRIME.md, the priming check should report no issues.
 	//
-	// Actual behavior with bug: Check looks at polecats/<name>/ which has no .beads/redirect,
+	// Actual behavior with bug: Check looks at miners/<name>/ which has no .beads/redirect,
 	// so it incorrectly reports PRIME.MD as missing.
 
 	tmpDir := t.TempDir()
 	rigName := "testrig"
-	polecatName := "testpc"
+	minerName := "testpc"
 
 	// Set up rig structure with .beads and PRIME.md
 	rigBeadsDir := filepath.Join(tmpDir, rigName, ".beads")
@@ -33,16 +33,16 @@ func TestPrimingCheck_PolecatNewStructure(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Set up polecat with NEW structure: polecats/<name>/<rigname>/
-	polecatWorktree := filepath.Join(tmpDir, rigName, "polecats", polecatName, rigName)
-	polecatWorktreeBeads := filepath.Join(polecatWorktree, ".beads")
-	if err := os.MkdirAll(polecatWorktreeBeads, 0755); err != nil {
+	// Set up miner with NEW structure: miners/<name>/<rigname>/
+	minerWorktree := filepath.Join(tmpDir, rigName, "miners", minerName, rigName)
+	minerWorktreeBeads := filepath.Join(minerWorktree, ".beads")
+	if err := os.MkdirAll(minerWorktreeBeads, 0755); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create redirect file pointing to rig's beads (from worktree perspective)
-	// From polecats/<name>/<rigname>/, we go up 3 levels to rig root: ../../../.beads
-	redirectFile := filepath.Join(polecatWorktreeBeads, "redirect")
+	// From miners/<name>/<rigname>/, we go up 3 levels to rig root: ../../../.beads
+	redirectFile := filepath.Join(minerWorktreeBeads, "redirect")
 	if err := os.WriteFile(redirectFile, []byte("../../../.beads\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -52,37 +52,37 @@ func TestPrimingCheck_PolecatNewStructure(t *testing.T) {
 	ctx := &CheckContext{TownRoot: tmpDir}
 	result := check.Run(ctx)
 
-	// Look for any polecat-related issues
-	polecatIssueFound := false
+	// Look for any miner-related issues
+	minerIssueFound := false
 	for _, detail := range result.Details {
-		// The bug would report: "testrig/polecats/testpc: Missing PRIME.md..."
-		if filepath.Base(filepath.Dir(detail)) == "polecats" ||
-			(len(detail) > 0 && detail[0:len(rigName)+len("/polecats/")] == rigName+"/polecats/") {
-			polecatIssueFound = true
-			t.Logf("Found polecat issue: %s", detail)
+		// The bug would report: "testrig/miners/testpc: Missing PRIME.md..."
+		if filepath.Base(filepath.Dir(detail)) == "miners" ||
+			(len(detail) > 0 && detail[0:len(rigName)+len("/miners/")] == rigName+"/miners/") {
+			minerIssueFound = true
+			t.Logf("Found miner issue: %s", detail)
 		}
 	}
 
-	// With the bug fixed, there should be NO polecat issues because:
-	// - The worktree at polecats/<name>/<rigname>/ has .beads/redirect
+	// With the bug fixed, there should be NO miner issues because:
+	// - The worktree at miners/<name>/<rigname>/ has .beads/redirect
 	// - The redirect points to rig's .beads which has PRIME.md
 	//
-	// With the bug present, the check looks at polecats/<name>/ which has no redirect,
+	// With the bug present, the check looks at miners/<name>/ which has no redirect,
 	// so it reports missing PRIME.md
-	if polecatIssueFound {
-		t.Errorf("priming check incorrectly reported polecat issues; result: %+v", result)
+	if minerIssueFound {
+		t.Errorf("priming check incorrectly reported miner issues; result: %+v", result)
 	}
 }
 
-func TestPrimingCheck_PolecatDirLevel_NoPrimeMD(t *testing.T) {
-	// This test verifies that NO PRIME.md should exist at the polecatDir level
-	// (polecats/<name>/.beads/PRIME.md). PRIME.md should only exist at:
+func TestPrimingCheck_MinerDirLevel_NoPrimeMD(t *testing.T) {
+	// This test verifies that NO PRIME.md should exist at the minerDir level
+	// (miners/<name>/.beads/PRIME.md). PRIME.md should only exist at:
 	// 1. Rig level: <rig>/.beads/PRIME.md
-	// 2. Accessed via redirect from worktree: polecats/<name>/<rigname>/.beads/redirect -> rig's beads
+	// 2. Accessed via redirect from worktree: miners/<name>/<rigname>/.beads/redirect -> rig's beads
 
 	tmpDir := t.TempDir()
 	rigName := "testrig"
-	polecatName := "testpc"
+	minerName := "testpc"
 
 	// Set up rig with PRIME.md
 	rigBeadsDir := filepath.Join(tmpDir, rigName, ".beads")
@@ -93,45 +93,45 @@ func TestPrimingCheck_PolecatDirLevel_NoPrimeMD(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Create the intermediate polecatDir level (polecats/<name>/)
+	// Create the intermediate minerDir level (miners/<name>/)
 	// This directory should NOT have .beads/PRIME.md
-	polecatDir := filepath.Join(tmpDir, rigName, "polecats", polecatName)
-	if err := os.MkdirAll(polecatDir, 0755); err != nil {
+	minerDir := filepath.Join(tmpDir, rigName, "miners", minerName)
+	if err := os.MkdirAll(minerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create the actual worktree with redirect
-	polecatWorktree := filepath.Join(polecatDir, rigName)
-	polecatWorktreeBeads := filepath.Join(polecatWorktree, ".beads")
-	if err := os.MkdirAll(polecatWorktreeBeads, 0755); err != nil {
+	minerWorktree := filepath.Join(minerDir, rigName)
+	minerWorktreeBeads := filepath.Join(minerWorktree, ".beads")
+	if err := os.MkdirAll(minerWorktreeBeads, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(polecatWorktreeBeads, "redirect"), []byte("../../../.beads\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(minerWorktreeBeads, "redirect"), []byte("../../../.beads\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
-	// Verify: polecatDir level should NOT have .beads/PRIME.md
-	polecatDirPrimeMd := filepath.Join(polecatDir, ".beads", "PRIME.md")
-	if _, err := os.Stat(polecatDirPrimeMd); err == nil {
-		t.Errorf("PRIME.md should NOT exist at polecatDir level: %s", polecatDirPrimeMd)
+	// Verify: minerDir level should NOT have .beads/PRIME.md
+	minerDirPrimeMd := filepath.Join(minerDir, ".beads", "PRIME.md")
+	if _, err := os.Stat(minerDirPrimeMd); err == nil {
+		t.Errorf("PRIME.md should NOT exist at minerDir level: %s", minerDirPrimeMd)
 	}
 
 	// Also verify the doctor doesn't create one at the wrong level when fixing
-	// (This would happen if doctor --fix incorrectly provisions PRIME.md at polecats/<name>/)
+	// (This would happen if doctor --fix incorrectly provisions PRIME.md at miners/<name>/)
 }
 
-func TestPrimingCheck_FixRemovesBadPolecatBeads(t *testing.T) {
+func TestPrimingCheck_FixRemovesBadMinerBeads(t *testing.T) {
 	// This test verifies that doctor --fix removes spurious .beads directories
-	// that were incorrectly created at the polecatDir level (polecats/<name>/.beads).
+	// that were incorrectly created at the minerDir level (miners/<name>/.beads).
 	//
-	// Background: A bug in priming_check.go caused it to look at polecats/<name>/
-	// instead of polecats/<name>/<rigname>/. When it didn't find a redirect, it
+	// Background: A bug in priming_check.go caused it to look at miners/<name>/
+	// instead of miners/<name>/<rigname>/. When it didn't find a redirect, it
 	// would create .beads/PRIME.md at the wrong level. These orphaned .beads
 	// directories should be cleaned up.
 
 	tmpDir := t.TempDir()
 	rigName := "testrig"
-	polecatName := "testpc"
+	minerName := "testpc"
 
 	// Set up rig with .beads and PRIME.md
 	rigBeadsDir := filepath.Join(tmpDir, rigName, ".beads")
@@ -142,20 +142,20 @@ func TestPrimingCheck_FixRemovesBadPolecatBeads(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Set up correct polecat worktree structure: polecats/<name>/<rigname>/
-	polecatDir := filepath.Join(tmpDir, rigName, "polecats", polecatName)
-	polecatWorktree := filepath.Join(polecatDir, rigName)
-	polecatWorktreeBeads := filepath.Join(polecatWorktree, ".beads")
-	if err := os.MkdirAll(polecatWorktreeBeads, 0755); err != nil {
+	// Set up correct miner worktree structure: miners/<name>/<rigname>/
+	minerDir := filepath.Join(tmpDir, rigName, "miners", minerName)
+	minerWorktree := filepath.Join(minerDir, rigName)
+	minerWorktreeBeads := filepath.Join(minerWorktree, ".beads")
+	if err := os.MkdirAll(minerWorktreeBeads, 0755); err != nil {
 		t.Fatal(err)
 	}
 	// Create redirect pointing to rig's beads
-	if err := os.WriteFile(filepath.Join(polecatWorktreeBeads, "redirect"), []byte("../../../.beads\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(minerWorktreeBeads, "redirect"), []byte("../../../.beads\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
-	// Create BAD .beads at polecatDir level (this is what the bug created)
-	badBeadsDir := filepath.Join(polecatDir, ".beads")
+	// Create BAD .beads at minerDir level (this is what the bug created)
+	badBeadsDir := filepath.Join(minerDir, ".beads")
 	if err := os.MkdirAll(badBeadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -180,7 +180,7 @@ func TestPrimingCheck_FixRemovesBadPolecatBeads(t *testing.T) {
 
 	// Verify bad .beads was removed
 	if _, err := os.Stat(badBeadsDir); err == nil {
-		t.Errorf("bad .beads directory at polecatDir level should have been removed: %s", badBeadsDir)
+		t.Errorf("bad .beads directory at minerDir level should have been removed: %s", badBeadsDir)
 		// List contents for debugging
 		entries, _ := os.ReadDir(badBeadsDir)
 		for _, e := range entries {
@@ -189,10 +189,10 @@ func TestPrimingCheck_FixRemovesBadPolecatBeads(t *testing.T) {
 	}
 
 	// Verify correct structure still exists
-	if _, err := os.Stat(polecatWorktreeBeads); os.IsNotExist(err) {
-		t.Errorf("correct .beads at worktree level should still exist: %s", polecatWorktreeBeads)
+	if _, err := os.Stat(minerWorktreeBeads); os.IsNotExist(err) {
+		t.Errorf("correct .beads at worktree level should still exist: %s", minerWorktreeBeads)
 	}
-	if _, err := os.Stat(filepath.Join(polecatWorktreeBeads, "redirect")); os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(minerWorktreeBeads, "redirect")); os.IsNotExist(err) {
 		t.Errorf("redirect file should still exist")
 	}
 
@@ -202,15 +202,15 @@ func TestPrimingCheck_FixRemovesBadPolecatBeads(t *testing.T) {
 	}
 }
 
-// TestPrimingCheck_AllowsClaudeMdInMayorRig verifies that CLAUDE.md
-// inside mayor/rig/ (the customer's source repo) is NOT flagged.
+// TestPrimingCheck_AllowsClaudeMdInOverseerRig verifies that CLAUDE.md
+// inside overseer/rig/ (the customer's source repo) is NOT flagged.
 // With sparse checkout removed, this is the customer's legitimate file.
-func TestPrimingCheck_AllowsClaudeMdInMayorRig(t *testing.T) {
+func TestPrimingCheck_AllowsClaudeMdInOverseerRig(t *testing.T) {
 	tmpDir := t.TempDir()
 	rigName := "testrig"
 
 	// Create town root CLAUDE.md identity anchor
-	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Gas Town\nRun gt prime\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Excavation Site\nRun gt prime\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -223,14 +223,14 @@ func TestPrimingCheck_AllowsClaudeMdInMayorRig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Create mayor/rig/ structure (the source repo clone)
-	mayorRigPath := filepath.Join(tmpDir, rigName, "mayor", "rig")
-	if err := os.MkdirAll(mayorRigPath, 0755); err != nil {
+	// Create overseer/rig/ structure (the source repo clone)
+	overseerRigPath := filepath.Join(tmpDir, rigName, "overseer", "rig")
+	if err := os.MkdirAll(overseerRigPath, 0755); err != nil {
 		t.Fatal(err)
 	}
 
-	// Create CLAUDE.md inside mayor/rig/ — customer's legitimate file
-	customerClaudeMd := filepath.Join(mayorRigPath, "CLAUDE.md")
+	// Create CLAUDE.md inside overseer/rig/ — customer's legitimate file
+	customerClaudeMd := filepath.Join(overseerRigPath, "CLAUDE.md")
 	if err := os.WriteFile(customerClaudeMd, []byte("# Customer CLAUDE.md\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -242,8 +242,8 @@ func TestPrimingCheck_AllowsClaudeMdInMayorRig(t *testing.T) {
 
 	// Should NOT flag CLAUDE.md inside worktrees
 	for _, detail := range result.Details {
-		if strings.Contains(detail, "mayor/rig") && strings.Contains(detail, "CLAUDE.md") {
-			t.Errorf("CLAUDE.md inside mayor/rig should NOT be flagged (customer file), got: %s", detail)
+		if strings.Contains(detail, "overseer/rig") && strings.Contains(detail, "CLAUDE.md") {
+			t.Errorf("CLAUDE.md inside overseer/rig should NOT be flagged (customer file), got: %s", detail)
 		}
 	}
 }
@@ -255,7 +255,7 @@ func TestPrimingCheck_AllowsClaudeMdInRefineryRig(t *testing.T) {
 	rigName := "testrig"
 
 	// Create town root CLAUDE.md identity anchor
-	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Gas Town\nRun gt prime\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Excavation Site\nRun gt prime\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -301,7 +301,7 @@ func TestPrimingCheck_AllowsClaudeMdInCrewWorktree(t *testing.T) {
 	crewName := "alice"
 
 	// Create town root CLAUDE.md identity anchor
-	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Gas Town\nRun gt prime\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Excavation Site\nRun gt prime\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -343,15 +343,15 @@ func TestPrimingCheck_AllowsClaudeMdInCrewWorktree(t *testing.T) {
 	}
 }
 
-// TestPrimingCheck_AllowsClaudeMdInPolecatWorktree verifies that CLAUDE.md
-// inside polecats/<name>/<rigname>/ (the customer's worktree) is NOT flagged.
-func TestPrimingCheck_AllowsClaudeMdInPolecatWorktree(t *testing.T) {
+// TestPrimingCheck_AllowsClaudeMdInMinerWorktree verifies that CLAUDE.md
+// inside miners/<name>/<rigname>/ (the customer's worktree) is NOT flagged.
+func TestPrimingCheck_AllowsClaudeMdInMinerWorktree(t *testing.T) {
 	tmpDir := t.TempDir()
 	rigName := "testrig"
-	polecatName := "testpc"
+	minerName := "testpc"
 
 	// Create town root CLAUDE.md identity anchor
-	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Gas Town\nRun gt prime\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Excavation Site\nRun gt prime\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -364,18 +364,18 @@ func TestPrimingCheck_AllowsClaudeMdInPolecatWorktree(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Create polecat worktree structure: polecats/<name>/<rigname>/
-	polecatWorktree := filepath.Join(tmpDir, rigName, "polecats", polecatName, rigName)
-	polecatBeadsDir := filepath.Join(polecatWorktree, ".beads")
-	if err := os.MkdirAll(polecatBeadsDir, 0755); err != nil {
+	// Create miner worktree structure: miners/<name>/<rigname>/
+	minerWorktree := filepath.Join(tmpDir, rigName, "miners", minerName, rigName)
+	minerBeadsDir := filepath.Join(minerWorktree, ".beads")
+	if err := os.MkdirAll(minerBeadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(polecatBeadsDir, "redirect"), []byte("../../../.beads\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(minerBeadsDir, "redirect"), []byte("../../../.beads\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
-	// Create CLAUDE.md inside polecat worktree — customer's legitimate file
-	customerClaudeMd := filepath.Join(polecatWorktree, "CLAUDE.md")
+	// Create CLAUDE.md inside miner worktree — customer's legitimate file
+	customerClaudeMd := filepath.Join(minerWorktree, "CLAUDE.md")
 	if err := os.WriteFile(customerClaudeMd, []byte("# Customer CLAUDE.md\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -387,8 +387,8 @@ func TestPrimingCheck_AllowsClaudeMdInPolecatWorktree(t *testing.T) {
 
 	// Should NOT flag CLAUDE.md inside worktrees
 	for _, detail := range result.Details {
-		if strings.Contains(detail, "polecats/"+polecatName) && strings.Contains(detail, "CLAUDE.md") {
-			t.Errorf("CLAUDE.md inside polecats/%s should NOT be flagged (customer file), got: %s", polecatName, detail)
+		if strings.Contains(detail, "miners/"+minerName) && strings.Contains(detail, "CLAUDE.md") {
+			t.Errorf("CLAUDE.md inside miners/%s should NOT be flagged (customer file), got: %s", minerName, detail)
 		}
 	}
 }
@@ -401,7 +401,7 @@ func TestPrimingCheck_FixPreservesCustomerClaudeMd(t *testing.T) {
 	rigName := "testrig"
 
 	// Create town root CLAUDE.md identity anchor
-	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Gas Town\nRun gt prime\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Excavation Site\nRun gt prime\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -414,12 +414,12 @@ func TestPrimingCheck_FixPreservesCustomerClaudeMd(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Create mayor/rig/ with customer's CLAUDE.md
-	mayorRigPath := filepath.Join(tmpDir, rigName, "mayor", "rig")
-	if err := os.MkdirAll(mayorRigPath, 0755); err != nil {
+	// Create overseer/rig/ with customer's CLAUDE.md
+	overseerRigPath := filepath.Join(tmpDir, rigName, "overseer", "rig")
+	if err := os.MkdirAll(overseerRigPath, 0755); err != nil {
 		t.Fatal(err)
 	}
-	customerClaudeMd := filepath.Join(mayorRigPath, "CLAUDE.md")
+	customerClaudeMd := filepath.Join(overseerRigPath, "CLAUDE.md")
 	if err := os.WriteFile(customerClaudeMd, []byte("# Customer CLAUDE.md\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -447,7 +447,7 @@ func TestPrimingCheck_FlagsStaleAgentLevelFiles(t *testing.T) {
 	rigName := "testrig"
 
 	// Create town root CLAUDE.md identity anchor (required by upstream check)
-	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Gas Town\nRun gt prime\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Excavation Site\nRun gt prime\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -509,7 +509,7 @@ func TestPrimingCheck_NoIssuesWhenCorrectlyConfigured(t *testing.T) {
 	rigName := "testrig"
 
 	// Create town root CLAUDE.md identity anchor (required by upstream check)
-	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Gas Town\nRun gt prime\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Excavation Site\nRun gt prime\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -540,9 +540,9 @@ func TestPrimingCheck_NoIssuesWhenCorrectlyConfigured(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Create polecats directory — NO CLAUDE.md or AGENTS.md
-	polecatsPath := filepath.Join(tmpDir, rigName, "polecats")
-	if err := os.MkdirAll(polecatsPath, 0755); err != nil {
+	// Create miners directory — NO CLAUDE.md or AGENTS.md
+	minersPath := filepath.Join(tmpDir, rigName, "miners")
+	if err := os.MkdirAll(minersPath, 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -569,17 +569,17 @@ func TestPrimingCheck_NoIssuesWhenCorrectlyConfigured(t *testing.T) {
 func TestPrimingCheck_DetectsLargeClaudeMd(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// Create town-level mayor directory with large CLAUDE.md (>30 lines)
-	// The priming check looks at townRoot/mayor/CLAUDE.md for town-level mayor
-	mayorPath := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorPath, 0755); err != nil {
+	// Create town-level overseer directory with large CLAUDE.md (>30 lines)
+	// The priming check looks at townRoot/overseer/CLAUDE.md for town-level overseer
+	overseerPath := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerPath, 0755); err != nil {
 		t.Fatal(err)
 	}
 	var largeContent strings.Builder
 	for i := 0; i < 50; i++ {
 		largeContent.WriteString("# Line " + string(rune('0'+i%10)) + "\n")
 	}
-	if err := os.WriteFile(filepath.Join(mayorPath, "CLAUDE.md"), []byte(largeContent.String()), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerPath, "CLAUDE.md"), []byte(largeContent.String()), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -603,13 +603,13 @@ func TestPrimingCheck_DetectsLargeClaudeMd(t *testing.T) {
 }
 
 // TestPrimingCheck_DetectsStaleIntermediateFiles verifies that stale CLAUDE.md/AGENTS.md
-// at intermediate directories (refinery/, witness/, crew/, polecats/, mayor/) are detected.
+// at intermediate directories (refinery/, witness/, crew/, miners/, overseer/) are detected.
 func TestPrimingCheck_DetectsStaleIntermediateFiles(t *testing.T) {
 	tmpDir := t.TempDir()
 	rigName := "testrig"
 
 	// Create town root CLAUDE.md identity anchor
-	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Gas Town\nRun gt prime\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Excavation Site\nRun gt prime\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -623,7 +623,7 @@ func TestPrimingCheck_DetectsStaleIntermediateFiles(t *testing.T) {
 	}
 
 	// Create stale files at all four intermediate directories
-	for _, role := range []string{"refinery", "witness", "crew", "polecats"} {
+	for _, role := range []string{"refinery", "witness", "crew", "miners"} {
 		rolePath := filepath.Join(tmpDir, rigName, role)
 		if err := os.MkdirAll(rolePath, 0755); err != nil {
 			t.Fatal(err)
@@ -635,13 +635,13 @@ func TestPrimingCheck_DetectsStaleIntermediateFiles(t *testing.T) {
 		}
 	}
 
-	// Also create stale mayor/CLAUDE.md and mayor/AGENTS.md
-	mayorPath := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorPath, 0755); err != nil {
+	// Also create stale overseer/CLAUDE.md and overseer/AGENTS.md
+	overseerPath := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerPath, 0755); err != nil {
 		t.Fatal(err)
 	}
 	for _, filename := range []string{"CLAUDE.md", "AGENTS.md"} {
-		if err := os.WriteFile(filepath.Join(mayorPath, filename), []byte("# Stale\n"), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(overseerPath, filename), []byte("# Stale\n"), 0644); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -651,8 +651,8 @@ func TestPrimingCheck_DetectsStaleIntermediateFiles(t *testing.T) {
 	ctx := &CheckContext{TownRoot: tmpDir}
 	result := check.Run(ctx)
 
-	// Should find stale issues for all roles + mayor
-	expectedLocations := []string{"refinery", "witness", "crew", "polecats", "mayor"}
+	// Should find stale issues for all roles + overseer
+	expectedLocations := []string{"refinery", "witness", "crew", "miners", "overseer"}
 	for _, loc := range expectedLocations {
 		found := false
 		for _, detail := range result.Details {
@@ -674,7 +674,7 @@ func TestPrimingCheck_FixRemovesStaleIntermediateFiles(t *testing.T) {
 	rigName := "testrig"
 
 	// Create town root CLAUDE.md identity anchor
-	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Gas Town\nRun gt prime\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Excavation Site\nRun gt prime\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -689,7 +689,7 @@ func TestPrimingCheck_FixRemovesStaleIntermediateFiles(t *testing.T) {
 
 	// Create stale files at intermediate directories
 	staleFiles := []string{}
-	for _, role := range []string{"refinery", "witness", "crew", "polecats"} {
+	for _, role := range []string{"refinery", "witness", "crew", "miners"} {
 		rolePath := filepath.Join(tmpDir, rigName, role)
 		if err := os.MkdirAll(rolePath, 0755); err != nil {
 			t.Fatal(err)
@@ -703,13 +703,13 @@ func TestPrimingCheck_FixRemovesStaleIntermediateFiles(t *testing.T) {
 		}
 	}
 
-	// Also create stale mayor files
-	mayorPath := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorPath, 0755); err != nil {
+	// Also create stale overseer files
+	overseerPath := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerPath, 0755); err != nil {
 		t.Fatal(err)
 	}
 	for _, filename := range []string{"CLAUDE.md", "AGENTS.md"} {
-		filePath := filepath.Join(mayorPath, filename)
+		filePath := filepath.Join(overseerPath, filename)
 		if err := os.WriteFile(filePath, []byte("# Stale\n"), 0644); err != nil {
 			t.Fatal(err)
 		}
@@ -746,7 +746,7 @@ func TestPrimingCheck_DetectsNoPrimeHook(t *testing.T) {
 	rigName := "testrig"
 
 	// Create town root CLAUDE.md identity anchor
-	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Gas Town\nRun gt prime\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Excavation Site\nRun gt prime\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -828,7 +828,7 @@ func TestPrimingCheck_FixNoPrimeHook(t *testing.T) {
 	rigName := "testrig"
 
 	// Create town root CLAUDE.md identity anchor
-	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Gas Town\nRun gt prime\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Excavation Site\nRun gt prime\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 

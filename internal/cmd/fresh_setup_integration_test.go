@@ -15,12 +15,12 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/beads"
+	"github.com/steveyegge/excavation/internal/beads"
 )
 
 var freshSetupIntegrationCounter atomic.Int32
 
-func TestFreshInstallRigPolecatHookIntegration(t *testing.T) {
+func TestFreshInstallRigMinerHookIntegration(t *testing.T) {
 	if _, err := exec.LookPath("bd"); err != nil {
 		t.Skip("bd not installed, skipping fresh setup integration test")
 	}
@@ -33,7 +33,7 @@ func TestFreshInstallRigPolecatHookIntegration(t *testing.T) {
 	doltPort := freeTCPPort(t)
 	doltPortString := strconv.Itoa(doltPort)
 
-	// createAutoConvoy and related helpers shell out with the process env.
+	// createAutoMinecart and related helpers shell out with the process env.
 	t.Setenv("GT_DOLT_PORT", doltPortString)
 	t.Setenv("BEADS_DOLT_PORT", doltPortString)
 
@@ -63,17 +63,17 @@ func TestFreshInstallRigPolecatHookIntegration(t *testing.T) {
 	assertFreshSetupRoutePathExists(t, hqPath, prefix+"-")
 	assertBeadsRedirectResolves(t, filepath.Join(rigPath, ".beads"))
 
-	polecatName := "toast"
-	runFreshSetupCmd(t, hqPath, env, gtBinary, "polecat", "add", rigName, polecatName)
-	polecatWorktree := filepath.Join(rigPath, "polecats", polecatName, rigName)
-	assertBeadsRedirectResolves(t, filepath.Join(polecatWorktree, ".beads"))
+	minerName := "toast"
+	runFreshSetupCmd(t, hqPath, env, gtBinary, "miner", "add", rigName, minerName)
+	minerWorktree := filepath.Join(rigPath, "miners", minerName, rigName)
+	assertBeadsRedirectResolves(t, filepath.Join(minerWorktree, ".beads"))
 
 	issue := createFreshSetupIssue(t, rigPath, env, "Fresh setup hook smoke")
 	if !strings.HasPrefix(issue.ID, prefix+"-") {
 		t.Fatalf("created issue ID %q does not use rig prefix %q", issue.ID, prefix+"-")
 	}
 
-	agentID := rigName + "/polecats/" + polecatName
+	agentID := rigName + "/miners/" + minerName
 	runFreshSetupCmd(t, rigPath, env, "bd", "update", issue.ID, "--status=hooked", "--assignee="+agentID)
 	shown := showFreshSetupIssue(t, rigPath, env, issue.ID)
 	if shown.Status != beads.StatusHooked || shown.Assignee != agentID {
@@ -81,10 +81,10 @@ func TestFreshInstallRigPolecatHookIntegration(t *testing.T) {
 			shown.Status, shown.Assignee, beads.StatusHooked, agentID)
 	}
 
-	runFreshSetupCmd(t, polecatWorktree, env, "bd", "list")
-	runFreshSetupCmd(t, polecatWorktree, env, "bd", "show", issue.ID)
+	runFreshSetupCmd(t, minerWorktree, env, "bd", "list")
+	runFreshSetupCmd(t, minerWorktree, env, "bd", "show", issue.ID)
 
-	hookJSON := runFreshSetupOutputCmd(t, polecatWorktree, env, gtBinary, "hook", "--json")
+	hookJSON := runFreshSetupOutputCmd(t, minerWorktree, env, gtBinary, "hook", "--json")
 	var hookStatus MoleculeStatusInfo
 	if err := json.Unmarshal([]byte(hookJSON), &hookStatus); err != nil {
 		t.Fatalf("parse gt hook --json output: %v\n%s", err, hookJSON)
@@ -95,16 +95,16 @@ func TestFreshInstallRigPolecatHookIntegration(t *testing.T) {
 	}
 
 	withWorkingDir(t, hqPath, func() {
-		convoyID, err := createAutoConvoy(issue.ID, issue.Title, false, "mr", "main")
+		minecartID, err := createAutoMinecart(issue.ID, issue.Title, false, "mr", "main")
 		if err != nil {
-			t.Fatalf("create auto convoy: %v", err)
+			t.Fatalf("create auto minecart: %v", err)
 		}
-		if !strings.HasPrefix(convoyID, "hq-cv-") {
-			t.Fatalf("convoy ID %q does not use hq-cv- prefix", convoyID)
+		if !strings.HasPrefix(minecartID, "hq-cv-") {
+			t.Fatalf("minecart ID %q does not use hq-cv- prefix", minecartID)
 		}
-		runFreshSetupCmd(t, hqPath, env, "bd", "show", convoyID)
-		if got := isTrackedByConvoy(issue.ID); got != convoyID {
-			t.Fatalf("isTrackedByConvoy(%s) = %q, want %q", issue.ID, got, convoyID)
+		runFreshSetupCmd(t, hqPath, env, "bd", "show", minecartID)
+		if got := isTrackedByMinecart(issue.ID); got != minecartID {
+			t.Fatalf("isTrackedByMinecart(%s) = %q, want %q", issue.ID, got, minecartID)
 		}
 	})
 }

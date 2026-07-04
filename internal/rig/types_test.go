@@ -7,12 +7,12 @@ import (
 func TestBeadsPath_AlwaysReturnsRigRoot(t *testing.T) {
 	t.Parallel()
 
-	// BeadsPath should always return the rig root path, regardless of HasMayor.
+	// BeadsPath should always return the rig root path, regardless of HasOverseer.
 	// The redirect system at <rig>/.beads/redirect handles finding the actual
-	// beads location (either local at <rig>/.beads/ or tracked at mayor/rig/.beads/).
+	// beads location (either local at <rig>/.beads/ or tracked at overseer/rig/.beads/).
 	//
 	// This ensures:
-	// 1. We don't write files to the user's repo clone (mayor/rig/)
+	// 1. We don't write files to the user's repo clone (overseer/rig/)
 	// 2. The redirect architecture is respected
 	// 3. All code paths use the same beads resolution logic
 
@@ -22,11 +22,11 @@ func TestBeadsPath_AlwaysReturnsRigRoot(t *testing.T) {
 		wantPath string
 	}{
 		{
-			name: "rig with mayor only",
+			name: "rig with overseer only",
 			rig: Rig{
 				Name:     "testrig",
 				Path:     "/home/user/gt/testrig",
-				HasMayor: true,
+				HasOverseer: true,
 			},
 			wantPath: "/home/user/gt/testrig",
 		},
@@ -57,21 +57,21 @@ func TestBeadsPath_AlwaysReturnsRigRoot(t *testing.T) {
 			wantPath: "/home/user/gt/testrig",
 		},
 		{
-			name: "rig with mayor and witness",
+			name: "rig with overseer and witness",
 			rig: Rig{
 				Name:       "testrig",
 				Path:       "/home/user/gt/testrig",
-				HasMayor:   true,
+				HasOverseer:   true,
 				HasWitness: true,
 			},
 			wantPath: "/home/user/gt/testrig",
 		},
 		{
-			name: "rig with mayor and refinery",
+			name: "rig with overseer and refinery",
 			rig: Rig{
 				Name:        "testrig",
 				Path:        "/home/user/gt/testrig",
-				HasMayor:    true,
+				HasOverseer:    true,
 				HasRefinery: true,
 			},
 			wantPath: "/home/user/gt/testrig",
@@ -91,19 +91,19 @@ func TestBeadsPath_AlwaysReturnsRigRoot(t *testing.T) {
 			rig: Rig{
 				Name:        "fullrig",
 				Path:        "/tmp/gt/fullrig",
-				HasMayor:    true,
+				HasOverseer:    true,
 				HasWitness:  true,
 				HasRefinery: true,
 			},
 			wantPath: "/tmp/gt/fullrig",
 		},
 		{
-			name: "rig with polecats",
+			name: "rig with miners",
 			rig: Rig{
 				Name:     "testrig",
 				Path:     "/home/user/gt/testrig",
-				HasMayor: true,
-				Polecats: []string{"polecat1", "polecat2"},
+				HasOverseer: true,
+				Miners: []string{"miner1", "miner2"},
 			},
 			wantPath: "/home/user/gt/testrig",
 		},
@@ -112,7 +112,7 @@ func TestBeadsPath_AlwaysReturnsRigRoot(t *testing.T) {
 			rig: Rig{
 				Name:     "testrig",
 				Path:     "/home/user/gt/testrig",
-				HasMayor: true,
+				HasOverseer: true,
 				Crew:     []string{"crew1", "crew2"},
 			},
 			wantPath: "/home/user/gt/testrig",

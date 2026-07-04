@@ -91,7 +91,7 @@ func TestFirstLine(t *testing.T) {
 		{"  hello  \nworld", "hello"},
 		{"", ""},
 		{"\n\n\n", ""},
-		{"Error: something went wrong\nUsage:\n  gt convoy [flags]\n", "Error: something went wrong"},
+		{"Error: something went wrong\nUsage:\n  gt minecart [flags]\n", "Error: something went wrong"},
 	}
 	for _, tc := range tests {
 		got := FirstLine(tc.input)

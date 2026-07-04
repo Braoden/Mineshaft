@@ -57,7 +57,7 @@ func TestListEphemeralQuotesQueryValuesAndDisablesLimit(t *testing.T) {
 	b := New(t.TempDir())
 	_, err := b.List(ListOptions{
 		Status:    StatusHooked,
-		Assignee:  "deacon/dogs/alpha",
+		Assignee:  "supervisor/dogs/alpha",
 		Parent:    "gt-wisp/root",
 		Priority:  -1,
 		Ephemeral: true,
@@ -69,7 +69,7 @@ func TestListEphemeralQuotesQueryValuesAndDisablesLimit(t *testing.T) {
 
 	logOutput := readMockBDLog(t, logPath)
 	for _, want := range []string{
-		`query --json ephemeral=true AND status="hooked" AND parent="gt-wisp/root" AND assignee="deacon/dogs/alpha" --limit=0`,
+		`query --json ephemeral=true AND status="hooked" AND parent="gt-wisp/root" AND assignee="supervisor/dogs/alpha" --limit=0`,
 	} {
 		if !strings.Contains(logOutput, want) {
 			t.Fatalf("bd log missing %q\nlog:\n%s", want, logOutput)
@@ -95,18 +95,18 @@ func TestCreateOptions(t *testing.T) {
 }
 
 // TestCreateOptionsRig verifies the Rig field targets the correct rig database (gt-7y7).
-// When a polecat works on a cross-rig bead (e.g., hq-xxx), gt done must explicitly
-// set Rig on CreateOptions so the MR bead lands in the polecat's rig database,
+// When a miner works on a cross-rig bead (e.g., hq-xxx), gt done must explicitly
+// set Rig on CreateOptions so the MR bead lands in the miner's rig database,
 // not the town-level database where the source bead lives.
 func TestCreateOptionsRig(t *testing.T) {
 	opts := CreateOptions{
 		Title:     "Merge: hq-abc",
 		Labels:    []string{"gt:merge-request"},
 		Ephemeral: true,
-		Rig:       "gastown",
+		Rig:       "excavation",
 	}
-	if opts.Rig != "gastown" {
-		t.Errorf("Rig = %q, want %q", opts.Rig, "gastown")
+	if opts.Rig != "excavation" {
+		t.Errorf("Rig = %q, want %q", opts.Rig, "excavation")
 	}
 
 	// Zero value: Rig is empty string (no --repo flag passed).
@@ -200,19 +200,19 @@ func TestBuildPinnedBDEnvPinsRigDatabaseInsideTown(t *testing.T) {
 func TestBuildPinnedBDEnvFollowsRedirectBeforeMetadata(t *testing.T) {
 	rigRoot := t.TempDir()
 	rigBeadsDir := filepath.Join(rigRoot, ".beads")
-	canonicalBeadsDir := filepath.Join(rigRoot, "mayor", "rig", ".beads")
+	canonicalBeadsDir := filepath.Join(rigRoot, "overseer", "rig", ".beads")
 	for _, dir := range []string{rigBeadsDir, canonicalBeadsDir} {
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			t.Fatal(err)
 		}
 	}
-	if err := os.WriteFile(filepath.Join(rigBeadsDir, "redirect"), []byte("mayor/rig/.beads\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(rigBeadsDir, "redirect"), []byte("overseer/rig/.beads\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(rigBeadsDir, "metadata.json"), []byte(`{"dolt_database":"hq","dolt_server_host":"wrong-host","dolt_server_port":9999}`), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(canonicalBeadsDir, "metadata.json"), []byte(`{"dolt_database":"gastown","dolt_server_host":"127.0.0.2","dolt_server_port":4407}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(canonicalBeadsDir, "metadata.json"), []byte(`{"dolt_database":"excavation","dolt_server_host":"127.0.0.2","dolt_server_port":4407}`), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -227,8 +227,8 @@ func TestBuildPinnedBDEnvFollowsRedirectBeforeMetadata(t *testing.T) {
 	if got["BEADS_DIR"] != canonicalBeadsDir {
 		t.Fatalf("BEADS_DIR = %q, want canonical %q in %v", got["BEADS_DIR"], canonicalBeadsDir, env)
 	}
-	if got["BEADS_DOLT_SERVER_DATABASE"] != "gastown" {
-		t.Fatalf("BEADS_DOLT_SERVER_DATABASE = %q, want gastown in %v", got["BEADS_DOLT_SERVER_DATABASE"], env)
+	if got["BEADS_DOLT_SERVER_DATABASE"] != "excavation" {
+		t.Fatalf("BEADS_DOLT_SERVER_DATABASE = %q, want excavation in %v", got["BEADS_DOLT_SERVER_DATABASE"], env)
 	}
 	if got["BEADS_DOLT_SERVER_HOST"] != "127.0.0.2" || got["BEADS_DOLT_SERVER_PORT"] != "4407" || got["BEADS_DOLT_PORT"] != "4407" {
 		t.Fatalf("connection env used stale redirect metadata: %v", env)
@@ -571,8 +571,8 @@ func TestDeleteBeadsUseSupportedBdDeleteFlags(t *testing.T) {
 		},
 		{
 			name:   "rig",
-			delete: func() error { return b.DeleteRigBead("gastown") },
-			want:   "delete gt-rig-gastown --force",
+			delete: func() error { return b.DeleteRigBead("excavation") },
+			want:   "delete gt-rig-excavation --force",
 		},
 	}
 
@@ -605,7 +605,7 @@ func TestArgsAreReadOnlyClassifiesKnownReadCommands(t *testing.T) {
 		{"query", "merge-request", "--json"},
 		{"dep", "list", "hq-cv-123", "--json"},
 		{"formula", "list"},
-		{"formula", "show", "mol-polecat-work"},
+		{"formula", "show", "mol-miner-work"},
 		{"kv", "get", "key"},
 		{"kv", "list"},
 		{"message", "thread", "hq-msg", "--json"},
@@ -632,13 +632,13 @@ func TestArgsAreReadOnlyFailsClosedForMutations(t *testing.T) {
 	cases := [][]string{
 		{"--db", "hq", "show", "gt-123"},
 		{"--directory", "/tmp", "list"},
-		{"--repo", "gastown", "show", "gt-123"},
+		{"--repo", "excavation", "show", "gt-123"},
 		{"--unknown", "show", "gt-123"},
 		{"update", "gt-123", "--status=open"},
 		{"close", "gt-123"},
 		{"label", "add", "gt-123", "read"},
-		{"message", "send", "mayor", "--body", "hi"},
-		{"formula", "cook", "mol-polecat-work"},
+		{"message", "send", "overseer", "--body", "hi"},
+		{"formula", "cook", "mol-miner-work"},
 		{"kv", "set", "key", "value"},
 		{"mol", "wisp", "formula"},
 		{"mol", "wisp", "create", "mol-test"},
@@ -684,15 +684,15 @@ func withCaseInsensitiveEnvKeys(t *testing.T) {
 //
 // --repo with an absolute path triggers a second database connection while
 // BEADS_DIR already holds one, causing a pthread_cond_wait deadlock when both
-// paths resolve to the same database (polecat running gt done on its own rig).
+// paths resolve to the same database (miner running gt done on its own rig).
 func TestCreateRoutesSameDatabaseViaBEADSDIR(t *testing.T) {
 	// Build a minimal town layout with a single rig.
 	townRoot := t.TempDir()
 
-	// mayor/town.json so FindTownRoot works
-	majorDir := filepath.Join(townRoot, "mayor")
+	// overseer/town.json so FindTownRoot works
+	majorDir := filepath.Join(townRoot, "overseer")
 	if err := os.MkdirAll(majorDir, 0755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+		t.Fatalf("mkdir overseer: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(majorDir, "town.json"), []byte(`{"name":"test"}`), 0644); err != nil {
 		t.Fatalf("write town.json: %v", err)
@@ -718,14 +718,14 @@ func TestCreateRoutesSameDatabaseViaBEADSDIR(t *testing.T) {
 		t.Fatalf("mkdir rig .beads: %v", err)
 	}
 
-	// polecat worktree inside the testrig, redirected to rig .beads
-	polecatDir := filepath.Join(rigDir, "polecats", "quartz")
-	polecatBeadsDir := filepath.Join(polecatDir, ".beads")
-	if err := os.MkdirAll(polecatBeadsDir, 0755); err != nil {
-		t.Fatalf("mkdir polecat .beads: %v", err)
+	// miner worktree inside the testrig, redirected to rig .beads
+	minerDir := filepath.Join(rigDir, "miners", "quartz")
+	minerBeadsDir := filepath.Join(minerDir, ".beads")
+	if err := os.MkdirAll(minerBeadsDir, 0755); err != nil {
+		t.Fatalf("mkdir miner .beads: %v", err)
 	}
 	// redirect points to the rig's .beads (simulating the real worktree layout)
-	if err := os.WriteFile(filepath.Join(polecatBeadsDir, "redirect"), []byte("../../.beads"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(minerBeadsDir, "redirect"), []byte("../../.beads"), 0644); err != nil {
 		t.Fatalf("write redirect: %v", err)
 	}
 
@@ -745,15 +745,15 @@ exit 0
 	origPath := os.Getenv("PATH")
 	t.Setenv("PATH", stubDir+string(os.PathListSeparator)+origPath)
 
-	// Beads instance rooted at the polecat dir (same as gt done sets up).
-	b := New(polecatDir)
+	// Beads instance rooted at the miner dir (same as gt done sets up).
+	b := New(minerDir)
 
 	// Force town root detection (normally lazy from workDir walk)
-	// by having mayor/town.json in townRoot above polecatDir.
-	// The town root search walks up from polecatDir.
-	// polecatDir is inside townRoot so the walk will find it.
+	// by having overseer/town.json in townRoot above minerDir.
+	// The town root search walks up from minerDir.
+	// minerDir is inside townRoot so the walk will find it.
 
-	// Create with Rig="testrig" — same rig as the polecat's own rig.
+	// Create with Rig="testrig" — same rig as the miner's own rig.
 	// Old code: appended --repo=<rigDir> → would open same DB twice → hang.
 	// New code: routes via BEADS_DIR to rigBeadsDir → no --repo → no hang.
 	_ = b.getTownRoot() // prime the lazy cache
@@ -787,10 +787,10 @@ func TestCreateRoutesToResolvedRigBeadsDir(t *testing.T) {
 	}
 
 	townRoot := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor"), 0755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer"), 0755); err != nil {
+		t.Fatalf("mkdir overseer: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "mayor", "town.json"), []byte(`{"name":"test"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"name":"test"}`), 0644); err != nil {
 		t.Fatalf("write town.json: %v", err)
 	}
 
@@ -807,13 +807,13 @@ func TestCreateRoutesToResolvedRigBeadsDir(t *testing.T) {
 
 	rigDir := filepath.Join(townRoot, "testrig")
 	rigBeadsDir := filepath.Join(rigDir, ".beads")
-	canonicalRigBeadsDir := filepath.Join(rigDir, "mayor", "rig", ".beads")
+	canonicalRigBeadsDir := filepath.Join(rigDir, "overseer", "rig", ".beads")
 	for _, dir := range []string{rigBeadsDir, canonicalRigBeadsDir} {
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			t.Fatalf("mkdir %s: %v", dir, err)
 		}
 	}
-	if err := os.WriteFile(filepath.Join(rigBeadsDir, "redirect"), []byte("mayor/rig/.beads\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(rigBeadsDir, "redirect"), []byte("overseer/rig/.beads\n"), 0644); err != nil {
 		t.Fatalf("write rig redirect: %v", err)
 	}
 
@@ -841,7 +841,7 @@ exit 0
 	t.Setenv("PATH", stubDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv("MOCK_BD_LOG", logPath)
 
-	workerDir := filepath.Join(rigDir, "polecats", "quartz")
+	workerDir := filepath.Join(rigDir, "miners", "quartz")
 	if err := os.MkdirAll(workerDir, 0755); err != nil {
 		t.Fatalf("mkdir worker: %v", err)
 	}
@@ -908,10 +908,10 @@ func TestCreateWithRigRepairsTargetConfigPrefix(t *testing.T) {
 	}
 
 	townRoot := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor"), 0755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer"), 0755); err != nil {
+		t.Fatalf("mkdir overseer: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "mayor", "town.json"), []byte(`{"name":"test"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"name":"test"}`), 0644); err != nil {
 		t.Fatalf("write town.json: %v", err)
 	}
 
@@ -921,12 +921,12 @@ func TestCreateWithRigRepairsTargetConfigPrefix(t *testing.T) {
 	}
 	if err := WriteRoutes(townBeadsDir, []Route{
 		{Prefix: "hq-", Path: "."},
-		{Prefix: "tr-", Path: "testrig/mayor/rig"},
+		{Prefix: "tr-", Path: "testrig/overseer/rig"},
 	}); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
 
-	rigDir := filepath.Join(townRoot, "testrig", "mayor", "rig")
+	rigDir := filepath.Join(townRoot, "testrig", "overseer", "rig")
 	rigBeadsDir := filepath.Join(rigDir, ".beads")
 	if err := os.MkdirAll(rigBeadsDir, 0755); err != nil {
 		t.Fatalf("mkdir rig .beads: %v", err)
@@ -955,7 +955,7 @@ printf '{}\n'
 	}
 	t.Setenv("PATH", stubDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
-	workerDir := filepath.Join(townRoot, "testrig", "polecats", "quartz")
+	workerDir := filepath.Join(townRoot, "testrig", "miners", "quartz")
 	if err := os.MkdirAll(workerDir, 0755); err != nil {
 		t.Fatalf("mkdir worker: %v", err)
 	}
@@ -991,10 +991,10 @@ func TestCreateWithTownAliasDoesNotRepairConfigPrefix(t *testing.T) {
 	}
 
 	townRoot := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor"), 0755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer"), 0755); err != nil {
+		t.Fatalf("mkdir overseer: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "mayor", "town.json"), []byte(`{"name":"test"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"name":"test"}`), 0644); err != nil {
 		t.Fatalf("write town.json: %v", err)
 	}
 
@@ -1004,7 +1004,7 @@ func TestCreateWithTownAliasDoesNotRepairConfigPrefix(t *testing.T) {
 	}
 	if err := WriteRoutes(townBeadsDir, []Route{
 		{Prefix: "hq-", Path: "."},
-		{Prefix: "tr-", Path: "testrig/mayor/rig"},
+		{Prefix: "tr-", Path: "testrig/overseer/rig"},
 	}); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
@@ -1012,7 +1012,7 @@ func TestCreateWithTownAliasDoesNotRepairConfigPrefix(t *testing.T) {
 		t.Fatalf("write town config: %v", err)
 	}
 
-	rigBeadsDir := filepath.Join(townRoot, "testrig", "mayor", "rig", ".beads")
+	rigBeadsDir := filepath.Join(townRoot, "testrig", "overseer", "rig", ".beads")
 	if err := os.MkdirAll(rigBeadsDir, 0755); err != nil {
 		t.Fatalf("mkdir rig .beads: %v", err)
 	}
@@ -1041,7 +1041,7 @@ printf '{}\n'
 	}
 	t.Setenv("PATH", stubDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
-	workerDir := filepath.Join(townRoot, "testrig", "polecats", "quartz")
+	workerDir := filepath.Join(townRoot, "testrig", "miners", "quartz")
 	if err := os.MkdirAll(workerDir, 0755); err != nil {
 		t.Fatalf("mkdir worker: %v", err)
 	}
@@ -1079,10 +1079,10 @@ printf '{}\n'
 
 func TestCreateWithUnknownRigErrors(t *testing.T) {
 	townRoot := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor"), 0755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer"), 0755); err != nil {
+		t.Fatalf("mkdir overseer: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "mayor", "town.json"), []byte(`{"name":"test"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"name":"test"}`), 0644); err != nil {
 		t.Fatalf("write town.json: %v", err)
 	}
 	townBeadsDir := filepath.Join(townRoot, ".beads")
@@ -1093,7 +1093,7 @@ func TestCreateWithUnknownRigErrors(t *testing.T) {
 		t.Fatalf("write routes: %v", err)
 	}
 
-	workerDir := filepath.Join(townRoot, "gastown", "polecats", "rust")
+	workerDir := filepath.Join(townRoot, "excavation", "miners", "rust")
 	if err := os.MkdirAll(workerDir, 0755); err != nil {
 		t.Fatalf("mkdir worker: %v", err)
 	}
@@ -1221,10 +1221,10 @@ func TestBDListSlowListDoesNotBlockUnrelatedList(t *testing.T) {
 		t.Skipf("temp dir is nested under existing town root %s", outer)
 	}
 	townRoot := filepath.Join(tmp, "town")
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor"), 0755); err != nil {
-		t.Fatalf("create town mayor dir: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer"), 0755); err != nil {
+		t.Fatalf("create town overseer dir: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "mayor", "town.json"), []byte(`{"name":"test"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"name":"test"}`), 0644); err != nil {
 		t.Fatalf("write town.json: %v", err)
 	}
 
@@ -1651,7 +1651,7 @@ func TestIntegration(t *testing.T) {
 
 	// Resolve the actual beads directory (following redirect if present)
 	// In multi-worktree setups, worktrees have .beads/redirect pointing to
-	// the canonical beads location (e.g., mayor/rig/.beads)
+	// the canonical beads location (e.g., overseer/rig/.beads)
 	beadsDir := ResolveBeadsDir(dir)
 	doltPath := filepath.Join(beadsDir, "dolt")
 	if _, err := os.Stat(doltPath); os.IsNotExist(err) {
@@ -1731,20 +1731,20 @@ func TestParseMRFields(t *testing.T) {
 		{
 			name: "all fields",
 			issue: &Issue{
-				Description: `branch: polecat/Nux/gt-xyz
+				Description: `branch: miner/Nux/gt-xyz
 target: main
 source_issue: gt-xyz
 worker: Nux
-rig: gastown
+rig: excavation
 merge_commit: abc123def
 close_reason: merged`,
 			},
 			wantFields: &MRFields{
-				Branch:      "polecat/Nux/gt-xyz",
+				Branch:      "miner/Nux/gt-xyz",
 				Target:      "main",
 				SourceIssue: "gt-xyz",
 				Worker:      "Nux",
-				Rig:         "gastown",
+				Rig:         "excavation",
 				MergeCommit: "abc123def",
 				CloseReason: "merged",
 			},
@@ -1752,13 +1752,13 @@ close_reason: merged`,
 		{
 			name: "partial fields",
 			issue: &Issue{
-				Description: `branch: polecat/Toast/gt-abc
+				Description: `branch: miner/Toast/gt-abc
 target: integration/gt-epic
 source_issue: gt-abc
 worker: Toast`,
 			},
 			wantFields: &MRFields{
-				Branch:      "polecat/Toast/gt-abc",
+				Branch:      "miner/Toast/gt-abc",
 				Target:      "integration/gt-epic",
 				SourceIssue: "gt-abc",
 				Worker:      "Toast",
@@ -1767,7 +1767,7 @@ worker: Toast`,
 		{
 			name: "mixed with prose",
 			issue: &Issue{
-				Description: `branch: polecat/Capable/gt-def
+				Description: `branch: miner/Capable/gt-def
 target: main
 source_issue: gt-def
 
@@ -1778,7 +1778,7 @@ worker: Capable
 rig: wasteland`,
 			},
 			wantFields: &MRFields{
-				Branch:      "polecat/Capable/gt-def",
+				Branch:      "miner/Capable/gt-def",
 				Target:      "main",
 				SourceIssue: "gt-def",
 				Worker:      "Capable",
@@ -1788,12 +1788,12 @@ rig: wasteland`,
 		{
 			name: "alternate key formats",
 			issue: &Issue{
-				Description: `branch: polecat/Max/gt-ghi
+				Description: `branch: miner/Max/gt-ghi
 source-issue: gt-ghi
 merge-commit: 789xyz`,
 			},
 			wantFields: &MRFields{
-				Branch:      "polecat/Max/gt-ghi",
+				Branch:      "miner/Max/gt-ghi",
 				SourceIssue: "gt-ghi",
 				MergeCommit: "789xyz",
 			},
@@ -1801,27 +1801,27 @@ merge-commit: 789xyz`,
 		{
 			name: "case insensitive keys",
 			issue: &Issue{
-				Description: `Branch: polecat/Furiosa/gt-jkl
+				Description: `Branch: miner/Furiosa/gt-jkl
 TARGET: main
 Worker: Furiosa
-RIG: gastown`,
+RIG: excavation`,
 			},
 			wantFields: &MRFields{
-				Branch: "polecat/Furiosa/gt-jkl",
+				Branch: "miner/Furiosa/gt-jkl",
 				Target: "main",
 				Worker: "Furiosa",
-				Rig:    "gastown",
+				Rig:    "excavation",
 			},
 		},
 		{
 			name: "extra whitespace",
 			issue: &Issue{
-				Description: `  branch:   polecat/Nux/gt-mno
+				Description: `  branch:   miner/Nux/gt-mno
 target:main
   worker:   Nux  `,
 			},
 			wantFields: &MRFields{
-				Branch: "polecat/Nux/gt-mno",
+				Branch: "miner/Nux/gt-mno",
 				Target: "main",
 				Worker: "Nux",
 			},
@@ -1829,43 +1829,43 @@ target:main
 		{
 			name: "ignores empty values",
 			issue: &Issue{
-				Description: `branch: polecat/Nux/gt-pqr
+				Description: `branch: miner/Nux/gt-pqr
 target:
 source_issue: gt-pqr`,
 			},
 			wantFields: &MRFields{
-				Branch:      "polecat/Nux/gt-pqr",
+				Branch:      "miner/Nux/gt-pqr",
 				SourceIssue: "gt-pqr",
 			},
 		},
 		{
 			name: "commit_sha field (GH#3032)",
 			issue: &Issue{
-				Description: `branch: polecat/nux/es-ixjt@mmw5d6mv
+				Description: `branch: miner/nux/es-ixjt@mmw5d6mv
 target: main
 source_issue: es-ixjt
-rig: gastown
+rig: excavation
 commit_sha: a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2`,
 			},
 			wantFields: &MRFields{
-				Branch:      "polecat/nux/es-ixjt@mmw5d6mv",
+				Branch:      "miner/nux/es-ixjt@mmw5d6mv",
 				Target:      "main",
 				SourceIssue: "es-ixjt",
-				Rig:         "gastown",
+				Rig:         "excavation",
 				CommitSHA:   "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
 			},
 		},
 		{
 			name: "null optional fields are empty",
 			issue: &Issue{
-				Description: `branch: polecat/Nux/gt-null
+				Description: `branch: miner/Nux/gt-null
 target: main
 source_issue: gt-null
 last_conflict_sha: null
 conflict_task_id: null`,
 			},
 			wantFields: &MRFields{
-				Branch:      "polecat/Nux/gt-null",
+				Branch:      "miner/Nux/gt-null",
 				Target:      "main",
 				SourceIssue: "gt-null",
 			},
@@ -1941,31 +1941,31 @@ func TestFormatMRFields(t *testing.T) {
 		{
 			name: "all fields",
 			fields: &MRFields{
-				Branch:      "polecat/Nux/gt-xyz",
+				Branch:      "miner/Nux/gt-xyz",
 				Target:      "main",
 				SourceIssue: "gt-xyz",
 				Worker:      "Nux",
-				Rig:         "gastown",
+				Rig:         "excavation",
 				MergeCommit: "abc123def",
 				CloseReason: "merged",
 			},
-			want: `branch: polecat/Nux/gt-xyz
+			want: `branch: miner/Nux/gt-xyz
 target: main
 source_issue: gt-xyz
 worker: Nux
-rig: gastown
+rig: excavation
 merge_commit: abc123def
 close_reason: merged`,
 		},
 		{
 			name: "partial fields",
 			fields: &MRFields{
-				Branch:      "polecat/Toast/gt-abc",
+				Branch:      "miner/Toast/gt-abc",
 				Target:      "main",
 				SourceIssue: "gt-abc",
 				Worker:      "Toast",
 			},
-			want: `branch: polecat/Toast/gt-abc
+			want: `branch: miner/Toast/gt-abc
 target: main
 source_issue: gt-abc
 worker: Toast`,
@@ -1982,16 +1982,16 @@ close_reason: rejected`,
 		{
 			name: "with commit_sha (GH#3032)",
 			fields: &MRFields{
-				Branch:      "polecat/nux/es-ixjt@mmw5d6mv",
+				Branch:      "miner/nux/es-ixjt@mmw5d6mv",
 				Target:      "main",
 				SourceIssue: "es-ixjt",
-				Rig:         "gastown",
+				Rig:         "excavation",
 				CommitSHA:   "a1b2c3d4",
 			},
-			want: `branch: polecat/nux/es-ixjt@mmw5d6mv
+			want: `branch: miner/nux/es-ixjt@mmw5d6mv
 target: main
 source_issue: es-ixjt
-rig: gastown
+rig: excavation
 commit_sha: a1b2c3d4`,
 		},
 	}
@@ -2018,21 +2018,21 @@ func TestSetMRFields(t *testing.T) {
 			name:  "nil issue",
 			issue: nil,
 			fields: &MRFields{
-				Branch: "polecat/Nux/gt-xyz",
+				Branch: "miner/Nux/gt-xyz",
 				Target: "main",
 			},
-			want: `branch: polecat/Nux/gt-xyz
+			want: `branch: miner/Nux/gt-xyz
 target: main`,
 		},
 		{
 			name:  "empty description",
 			issue: &Issue{Description: ""},
 			fields: &MRFields{
-				Branch:      "polecat/Nux/gt-xyz",
+				Branch:      "miner/Nux/gt-xyz",
 				Target:      "main",
 				SourceIssue: "gt-xyz",
 			},
-			want: `branch: polecat/Nux/gt-xyz
+			want: `branch: miner/Nux/gt-xyz
 target: main
 source_issue: gt-xyz`,
 		},
@@ -2040,10 +2040,10 @@ source_issue: gt-xyz`,
 			name:  "preserve prose content",
 			issue: &Issue{Description: "This is a description of the work.\n\nIt spans multiple lines."},
 			fields: &MRFields{
-				Branch: "polecat/Toast/gt-abc",
+				Branch: "miner/Toast/gt-abc",
 				Worker: "Toast",
 			},
-			want: `branch: polecat/Toast/gt-abc
+			want: `branch: miner/Toast/gt-abc
 worker: Toast
 
 This is a description of the work.
@@ -2053,7 +2053,7 @@ It spans multiple lines.`,
 		{
 			name: "replace existing fields",
 			issue: &Issue{
-				Description: `branch: polecat/Nux/gt-old
+				Description: `branch: miner/Nux/gt-old
 target: develop
 source_issue: gt-old
 commit_sha: oldsha
@@ -2062,14 +2062,14 @@ worker: Nux
 Some existing prose content.`,
 			},
 			fields: &MRFields{
-				Branch:      "polecat/Nux/gt-new",
+				Branch:      "miner/Nux/gt-new",
 				Target:      "main",
 				SourceIssue: "gt-new",
 				CommitSHA:   "newsha",
 				Worker:      "Nux",
 				MergeCommit: "abc123",
 			},
-			want: `branch: polecat/Nux/gt-new
+			want: `branch: miner/Nux/gt-new
 target: main
 source_issue: gt-new
 worker: Nux
@@ -2081,17 +2081,17 @@ Some existing prose content.`,
 		{
 			name: "preserve non-MR key-value lines",
 			issue: &Issue{
-				Description: `branch: polecat/Capable/gt-def
+				Description: `branch: miner/Capable/gt-def
 custom_field: some value
 author: someone
 target: main`,
 			},
 			fields: &MRFields{
-				Branch:      "polecat/Capable/gt-ghi",
+				Branch:      "miner/Capable/gt-ghi",
 				Target:      "integration/epic",
 				CloseReason: "merged",
 			},
-			want: `branch: polecat/Capable/gt-ghi
+			want: `branch: miner/Capable/gt-ghi
 target: integration/epic
 close_reason: merged
 
@@ -2119,11 +2119,11 @@ author: someone`,
 // TestMRFieldsRoundTrip tests that parse/format round-trips correctly.
 func TestMRFieldsRoundTrip(t *testing.T) {
 	original := &MRFields{
-		Branch:      "polecat/Nux/gt-xyz",
+		Branch:      "miner/Nux/gt-xyz",
 		Target:      "main",
 		SourceIssue: "gt-xyz",
 		Worker:      "Nux",
-		Rig:         "gastown",
+		Rig:         "excavation",
 		MergeCommit: "abc123def789",
 		CloseReason: "merged",
 	}
@@ -2147,11 +2147,11 @@ func TestMRFieldsRoundTrip(t *testing.T) {
 // TestParseMRFieldsFromDesignDoc tests the example from the design doc.
 func TestParseMRFieldsFromDesignDoc(t *testing.T) {
 	// Example from docs/merge-queue-design.md
-	description := `branch: polecat/Nux/gt-xyz
+	description := `branch: miner/Nux/gt-xyz
 target: main
 source_issue: gt-xyz
 worker: Nux
-rig: gastown`
+rig: excavation`
 
 	issue := &Issue{Description: description}
 	fields := ParseMRFields(issue)
@@ -2161,8 +2161,8 @@ rig: gastown`
 	}
 
 	// Verify all fields match the design doc
-	if fields.Branch != "polecat/Nux/gt-xyz" {
-		t.Errorf("Branch = %q, want polecat/Nux/gt-xyz", fields.Branch)
+	if fields.Branch != "miner/Nux/gt-xyz" {
+		t.Errorf("Branch = %q, want miner/Nux/gt-xyz", fields.Branch)
 	}
 	if fields.Target != "main" {
 		t.Errorf("Target = %q, want main", fields.Target)
@@ -2173,8 +2173,8 @@ rig: gastown`
 	if fields.Worker != "Nux" {
 		t.Errorf("Worker = %q, want Nux", fields.Worker)
 	}
-	if fields.Rig != "gastown" {
-		t.Errorf("Rig = %q, want gastown", fields.Rig)
+	if fields.Rig != "excavation" {
+		t.Errorf("Rig = %q, want excavation", fields.Rig)
 	}
 }
 
@@ -2255,7 +2255,7 @@ attached_at: 2025-12-21T15:30:00Z`,
 				Description: `attached_molecule: mol-def
 attached_at: 2025-12-21T10:00:00Z
 
-This is a handoff bead for the polecat.
+This is a handoff bead for the miner.
 Keep working on the current task.`,
 			},
 			wantFields: &AttachmentFields{
@@ -2487,7 +2487,7 @@ func TestAttachmentFieldsRoundTrip(t *testing.T) {
 // The no_merge flag tells gt done to skip the merge queue and keep work on a feature branch.
 func TestNoMergeField(t *testing.T) {
 	t.Run("parse no_merge true", func(t *testing.T) {
-		issue := &Issue{Description: "no_merge: true\ndispatched_by: mayor"}
+		issue := &Issue{Description: "no_merge: true\ndispatched_by: overseer"}
 		fields := ParseAttachmentFields(issue)
 		if fields == nil {
 			t.Fatal("ParseAttachmentFields() = nil")
@@ -2495,8 +2495,8 @@ func TestNoMergeField(t *testing.T) {
 		if !fields.NoMerge {
 			t.Error("NoMerge should be true")
 		}
-		if fields.DispatchedBy != "mayor" {
-			t.Errorf("DispatchedBy = %q, want 'mayor'", fields.DispatchedBy)
+		if fields.DispatchedBy != "overseer" {
+			t.Errorf("DispatchedBy = %q, want 'overseer'", fields.DispatchedBy)
 		}
 	})
 
@@ -2525,13 +2525,13 @@ func TestNoMergeField(t *testing.T) {
 	t.Run("format no_merge", func(t *testing.T) {
 		fields := &AttachmentFields{
 			NoMerge:      true,
-			DispatchedBy: "mayor",
+			DispatchedBy: "overseer",
 		}
 		got := FormatAttachmentFields(fields)
 		if !strings.Contains(got, "no_merge: true") {
 			t.Errorf("FormatAttachmentFields() missing no_merge, got:\n%s", got)
 		}
-		if !strings.Contains(got, "dispatched_by: mayor") {
+		if !strings.Contains(got, "dispatched_by: overseer") {
 			t.Errorf("FormatAttachmentFields() missing dispatched_by, got:\n%s", got)
 		}
 	})
@@ -2540,7 +2540,7 @@ func TestNoMergeField(t *testing.T) {
 		original := &AttachmentFields{
 			AttachedMolecule: "mol-test",
 			AttachedAt:       "2026-01-24T12:00:00Z",
-			DispatchedBy:     "gastown/crew/max",
+			DispatchedBy:     "excavation/crew/max",
 			NoMerge:          true,
 		}
 
@@ -2582,10 +2582,10 @@ func TestResolveBeadsDir(t *testing.T) {
 	})
 
 	t.Run("with redirect", func(t *testing.T) {
-		// Create structure like: crew/max/.beads/redirect -> ../../mayor/rig/.beads
+		// Create structure like: crew/max/.beads/redirect -> ../../overseer/rig/.beads
 		workDir := filepath.Join(tmpDir, "crew", "max")
 		localBeadsDir := filepath.Join(workDir, ".beads")
-		targetBeadsDir := filepath.Join(tmpDir, "mayor", "rig", ".beads")
+		targetBeadsDir := filepath.Join(tmpDir, "overseer", "rig", ".beads")
 
 		// Create both directories
 		if err := os.MkdirAll(localBeadsDir, 0755); err != nil {
@@ -2597,7 +2597,7 @@ func TestResolveBeadsDir(t *testing.T) {
 
 		// Create redirect file
 		redirectPath := filepath.Join(localBeadsDir, "redirect")
-		if err := os.WriteFile(redirectPath, []byte("../../mayor/rig/.beads\n"), 0644); err != nil {
+		if err := os.WriteFile(redirectPath, []byte("../../overseer/rig/.beads\n"), 0644); err != nil {
 			t.Fatal(err)
 		}
 
@@ -2643,10 +2643,10 @@ func TestResolveBeadsDir(t *testing.T) {
 	})
 
 	t.Run("absolute path redirect", func(t *testing.T) {
-		// Redirect file contains an absolute path (e.g., /Users/emech/.../gastown/.beads)
+		// Redirect file contains an absolute path (e.g., /Users/emech/.../excavation/.beads)
 		// This was the path-doubling bug: filepath.Join(workDir, absPath) produces
 		// workDir/Users/emech/... instead of using absPath directly.
-		workDir := filepath.Join(tmpDir, "polecat", "chrome")
+		workDir := filepath.Join(tmpDir, "miner", "chrome")
 		localBeadsDir := filepath.Join(workDir, ".beads")
 		targetBeadsDir := filepath.Join(tmpDir, "canonical", ".beads")
 
@@ -2693,17 +2693,17 @@ func TestResolveBeadsDir(t *testing.T) {
 	})
 
 	t.Run("circular redirect", func(t *testing.T) {
-		// Redirect that points to itself (e.g., mayor/rig/.beads/redirect -> ../../mayor/rig/.beads)
+		// Redirect that points to itself (e.g., overseer/rig/.beads/redirect -> ../../overseer/rig/.beads)
 		// This is the bug scenario from gt-csbjj
-		workDir := filepath.Join(tmpDir, "mayor", "rig")
+		workDir := filepath.Join(tmpDir, "overseer", "rig")
 		beadsDir := filepath.Join(workDir, ".beads")
 		if err := os.MkdirAll(beadsDir, 0755); err != nil {
 			t.Fatal(err)
 		}
 
-		// Create a circular redirect: ../../mayor/rig/.beads resolves back to .beads
+		// Create a circular redirect: ../../overseer/rig/.beads resolves back to .beads
 		redirectPath := filepath.Join(beadsDir, "redirect")
-		if err := os.WriteFile(redirectPath, []byte("../../mayor/rig/.beads\n"), 0644); err != nil {
+		if err := os.WriteFile(redirectPath, []byte("../../overseer/rig/.beads\n"), 0644); err != nil {
 			t.Fatal(err)
 		}
 
@@ -2730,42 +2730,42 @@ func TestParseAgentBeadID(t *testing.T) {
 		wantOK   bool
 	}{
 		// Town-level agents
-		{"gt-mayor", "", "mayor", "", true},
-		{"gt-deacon", "", "deacon", "", true},
+		{"gt-overseer", "", "overseer", "", true},
+		{"gt-supervisor", "", "supervisor", "", true},
 		// Rig-level singletons
-		{"gt-gastown-witness", "gastown", "witness", "", true},
-		{"gt-gastown-refinery", "gastown", "refinery", "", true},
+		{"gt-excavation-witness", "excavation", "witness", "", true},
+		{"gt-excavation-refinery", "excavation", "refinery", "", true},
 		// Rig-level named agents
-		{"gt-gastown-crew-joe", "gastown", "crew", "joe", true},
-		{"gt-gastown-crew-max", "gastown", "crew", "max", true},
-		{"gt-gastown-polecat-capable", "gastown", "polecat", "capable", true},
+		{"gt-excavation-crew-joe", "excavation", "crew", "joe", true},
+		{"gt-excavation-crew-max", "excavation", "crew", "max", true},
+		{"gt-excavation-miner-capable", "excavation", "miner", "capable", true},
 		// Names with hyphens
-		{"gt-gastown-polecat-my-agent", "gastown", "polecat", "my-agent", true},
+		{"gt-excavation-miner-my-agent", "excavation", "miner", "my-agent", true},
 		// Worker name collides with role keyword
-		{"gt-gastown-polecat-witness", "gastown", "polecat", "witness", true},
-		{"gt-gastown-polecat-refinery", "gastown", "polecat", "refinery", true},
-		{"gt-gastown-crew-witness", "gastown", "crew", "witness", true},
-		{"gt-gastown-crew-refinery", "gastown", "crew", "refinery", true},
-		{"gt-gastown-polecat-crew", "gastown", "polecat", "crew", true},
-		{"gt-gastown-crew-polecat", "gastown", "crew", "polecat", true},
+		{"gt-excavation-miner-witness", "excavation", "miner", "witness", true},
+		{"gt-excavation-miner-refinery", "excavation", "miner", "refinery", true},
+		{"gt-excavation-crew-witness", "excavation", "crew", "witness", true},
+		{"gt-excavation-crew-refinery", "excavation", "crew", "refinery", true},
+		{"gt-excavation-miner-crew", "excavation", "miner", "crew", true},
+		{"gt-excavation-crew-miner", "excavation", "crew", "miner", true},
 		// Worker name collides with role keyword + hyphenated rig
-		{"gt-my-rig-polecat-witness", "my-rig", "polecat", "witness", true},
+		{"gt-my-rig-miner-witness", "my-rig", "miner", "witness", true},
 		// Collapsed form: prefix == rig (e.g., rig "ff" with prefix "ff")
 		{"ff-witness", "ff", "witness", "", true},                // collapsed rig-level singleton
 		{"ff-refinery", "ff", "refinery", "", true},              // collapsed rig-level singleton
-		{"ff-polecat-nux", "ff", "polecat", "nux", true},         // collapsed named agent
+		{"ff-miner-nux", "ff", "miner", "nux", true},         // collapsed named agent
 		{"ff-crew-dave", "ff", "crew", "dave", true},             // collapsed named agent
-		{"ff-polecat-war-boy", "ff", "polecat", "war-boy", true}, // collapsed named with hyphen
+		{"ff-miner-war-boy", "ff", "miner", "war-boy", true}, // collapsed named with hyphen
 		// Parseable but not valid agent roles (IsAgentSessionBead will reject)
 		{"gt-abc123", "", "abc123", "", true}, // Parses as town-level but not valid role
 		// Other prefixes (bd-, hq-)
-		{"bd-mayor", "", "mayor", "", true},                           // bd prefix town-level
+		{"bd-overseer", "", "overseer", "", true},                           // bd prefix town-level
 		{"bd-beads-witness", "beads", "witness", "", true},            // bd prefix rig-level singleton
-		{"bd-beads-polecat-pearl", "beads", "polecat", "pearl", true}, // bd prefix rig-level named
-		{"hq-mayor", "", "mayor", "", true},                           // hq prefix town-level
+		{"bd-beads-miner-pearl", "beads", "miner", "pearl", true}, // bd prefix rig-level named
+		{"hq-overseer", "", "overseer", "", true},                           // hq prefix town-level
 		// Truly invalid patterns
-		{"x-mayor", "", "", "", false},    // Prefix too short (1 char)
-		{"abcd-mayor", "", "", "", false}, // Prefix too long (4 chars)
+		{"x-overseer", "", "", "", false},    // Prefix too short (1 char)
+		{"abcd-overseer", "", "", "", false}, // Prefix too long (4 chars)
 		{"", "", "", "", false},
 	}
 
@@ -2795,19 +2795,19 @@ func TestIsAgentSessionBead(t *testing.T) {
 		want   bool
 	}{
 		// Agent session beads with gt- prefix (should return true)
-		{"gt-mayor", true},
-		{"gt-deacon", true},
-		{"gt-gastown-witness", true},
-		{"gt-gastown-refinery", true},
-		{"gt-gastown-crew-joe", true},
-		{"gt-gastown-polecat-capable", true},
+		{"gt-overseer", true},
+		{"gt-supervisor", true},
+		{"gt-excavation-witness", true},
+		{"gt-excavation-refinery", true},
+		{"gt-excavation-crew-joe", true},
+		{"gt-excavation-miner-capable", true},
 		// Agent session beads with bd- prefix (should return true)
-		{"bd-mayor", true},
-		{"bd-deacon", true},
+		{"bd-overseer", true},
+		{"bd-supervisor", true},
 		{"bd-beads-witness", true},
 		{"bd-beads-refinery", true},
 		{"bd-beads-crew-joe", true},
-		{"bd-beads-polecat-pearl", true},
+		{"bd-beads-miner-pearl", true},
 		// Regular work beads (should return false)
 		{"gt-abc123", false},
 		{"gt-sb6m4", false},
@@ -2848,25 +2848,25 @@ func TestParseRoleConfig(t *testing.T) {
 		{
 			name: "all fields",
 			description: `session_pattern: gt-{rig}-{name}
-work_dir_pattern: {town}/{rig}/polecats/{name}
+work_dir_pattern: {town}/{rig}/miners/{name}
 needs_pre_sync: true
 start_command: exec claude --dangerously-skip-permissions
-env_var: GT_ROLE=polecat
+env_var: GT_ROLE=miner
 env_var: GT_RIG={rig}`,
 			wantConfig: &RoleConfig{
 				SessionPattern: "gt-{rig}-{name}",
-				WorkDirPattern: "{town}/{rig}/polecats/{name}",
+				WorkDirPattern: "{town}/{rig}/miners/{name}",
 				NeedsPreSync:   true,
 				StartCommand:   "exec claude --dangerously-skip-permissions",
-				EnvVars:        map[string]string{"GT_ROLE": "polecat", "GT_RIG": "{rig}"},
+				EnvVars:        map[string]string{"GT_ROLE": "miner", "GT_RIG": "{rig}"},
 			},
 		},
 		{
 			name: "partial fields",
-			description: `session_pattern: gt-mayor
+			description: `session_pattern: gt-overseer
 work_dir_pattern: {town}`,
 			wantConfig: &RoleConfig{
-				SessionPattern: "gt-mayor",
+				SessionPattern: "gt-overseer",
 				WorkDirPattern: "{town}",
 				EnvVars:        map[string]string{},
 			},
@@ -2890,21 +2890,21 @@ Your job is to monitor workers.`,
 		{
 			name: "alternate key formats (hyphen)",
 			description: `session-pattern: gt-{rig}-{name}
-work-dir-pattern: {town}/{rig}/polecats/{name}
+work-dir-pattern: {town}/{rig}/miners/{name}
 needs-pre-sync: true`,
 			wantConfig: &RoleConfig{
 				SessionPattern: "gt-{rig}-{name}",
-				WorkDirPattern: "{town}/{rig}/polecats/{name}",
+				WorkDirPattern: "{town}/{rig}/miners/{name}",
 				NeedsPreSync:   true,
 				EnvVars:        map[string]string{},
 			},
 		},
 		{
 			name: "case insensitive keys",
-			description: `SESSION_PATTERN: gt-mayor
+			description: `SESSION_PATTERN: gt-overseer
 Work_Dir_Pattern: {town}`,
 			wantConfig: &RoleConfig{
-				SessionPattern: "gt-mayor",
+				SessionPattern: "gt-overseer",
 				WorkDirPattern: "{town}",
 				EnvVars:        map[string]string{},
 			},
@@ -2972,14 +2972,14 @@ func TestExpandRolePattern(t *testing.T) {
 		want     string
 	}{
 		{
-			pattern:  "gt-mayor",
+			pattern:  "gt-overseer",
 			townRoot: "/Users/stevey/gt",
-			want:     "gt-mayor",
+			want:     "gt-overseer",
 		},
 		{
 			pattern:  "{prefix}-{role}",
 			townRoot: "/Users/stevey/gt",
-			rig:      "gastown",
+			rig:      "excavation",
 			role:     "witness",
 			prefix:   "gt",
 			want:     "gt-witness",
@@ -2987,31 +2987,31 @@ func TestExpandRolePattern(t *testing.T) {
 		{
 			pattern:  "{prefix}-{name}",
 			townRoot: "/Users/stevey/gt",
-			rig:      "gastown",
+			rig:      "excavation",
 			name:     "toast",
 			prefix:   "gt",
 			want:     "gt-toast",
 		},
 		{
-			pattern:  "{town}/{rig}/polecats/{name}",
+			pattern:  "{town}/{rig}/miners/{name}",
 			townRoot: "/Users/stevey/gt",
-			rig:      "gastown",
+			rig:      "excavation",
 			name:     "toast",
-			want:     "/Users/stevey/gt/gastown/polecats/toast",
+			want:     "/Users/stevey/gt/excavation/miners/toast",
 		},
 		{
 			pattern:  "{town}/{rig}/refinery/rig",
 			townRoot: "/Users/stevey/gt",
-			rig:      "gastown",
-			want:     "/Users/stevey/gt/gastown/refinery/rig",
+			rig:      "excavation",
+			want:     "/Users/stevey/gt/excavation/refinery/rig",
 		},
 		{
-			pattern:  "export GT_ROLE={role} GT_RIG={rig} BD_ACTOR={rig}/polecats/{name}",
+			pattern:  "export GT_ROLE={role} GT_RIG={rig} BD_ACTOR={rig}/miners/{name}",
 			townRoot: "/Users/stevey/gt",
-			rig:      "gastown",
+			rig:      "excavation",
 			name:     "toast",
-			role:     "polecat",
-			want:     "export GT_ROLE=polecat GT_RIG=gastown BD_ACTOR=gastown/polecats/toast",
+			role:     "miner",
+			want:     "export GT_ROLE=miner GT_RIG=excavation BD_ACTOR=excavation/miners/toast",
 		},
 	}
 
@@ -3046,23 +3046,23 @@ func TestFormatRoleConfig(t *testing.T) {
 			name: "all fields",
 			config: &RoleConfig{
 				SessionPattern: "gt-{rig}-{name}",
-				WorkDirPattern: "{town}/{rig}/polecats/{name}",
+				WorkDirPattern: "{town}/{rig}/miners/{name}",
 				NeedsPreSync:   true,
 				StartCommand:   "exec claude",
 				EnvVars:        map[string]string{},
 			},
 			want: `session_pattern: gt-{rig}-{name}
-work_dir_pattern: {town}/{rig}/polecats/{name}
+work_dir_pattern: {town}/{rig}/miners/{name}
 needs_pre_sync: true
 start_command: exec claude`,
 		},
 		{
 			name: "only session pattern",
 			config: &RoleConfig{
-				SessionPattern: "gt-mayor",
+				SessionPattern: "gt-overseer",
 				EnvVars:        map[string]string{},
 			},
-			want: "session_pattern: gt-mayor",
+			want: "session_pattern: gt-overseer",
 		},
 	}
 
@@ -3080,7 +3080,7 @@ start_command: exec claude`,
 func TestRoleConfigRoundTrip(t *testing.T) {
 	original := &RoleConfig{
 		SessionPattern: "gt-{rig}-{name}",
-		WorkDirPattern: "{town}/{rig}/polecats/{name}",
+		WorkDirPattern: "{town}/{rig}/miners/{name}",
 		NeedsPreSync:   true,
 		StartCommand:   "exec claude --dangerously-skip-permissions",
 		EnvVars:        map[string]string{}, // Can't round-trip env vars due to order
@@ -3308,7 +3308,7 @@ func TestDelegationStruct(t *testing.T) {
 			name: "full delegation",
 			delegation: Delegation{
 				Parent:      "hop://accenture.com/eng/proj-123/task-a",
-				Child:       "hop://alice@example.com/main-town/gastown/gt-xyz",
+				Child:       "hop://alice@example.com/main-town/excavation/gt-xyz",
 				DelegatedBy: "hop://accenture.com",
 				DelegatedTo: "hop://alice@example.com",
 				Terms: &DelegationTerms{
@@ -3318,7 +3318,7 @@ func TestDelegationStruct(t *testing.T) {
 				},
 				CreatedAt: "2025-01-15T10:00:00Z",
 			},
-			wantJSON: `{"parent":"hop://accenture.com/eng/proj-123/task-a","child":"hop://alice@example.com/main-town/gastown/gt-xyz","delegated_by":"hop://accenture.com","delegated_to":"hop://alice@example.com","terms":{"portion":"backend-api","deadline":"2025-06-01","credit_share":80},"created_at":"2025-01-15T10:00:00Z"}`,
+			wantJSON: `{"parent":"hop://accenture.com/eng/proj-123/task-a","child":"hop://alice@example.com/main-town/excavation/gt-xyz","delegated_by":"hop://accenture.com","delegated_to":"hop://alice@example.com","terms":{"portion":"backend-api","deadline":"2025-06-01","credit_share":80},"created_at":"2025-01-15T10:00:00Z"}`,
 		},
 		{
 			name: "minimal delegation",
@@ -3518,24 +3518,24 @@ func TestSetupRedirect(t *testing.T) {
 	})
 
 	t.Run("crew worktree with tracked beads", func(t *testing.T) {
-		// Setup: town/rig/.beads/redirect -> mayor/rig/.beads (tracked).
+		// Setup: town/rig/.beads/redirect -> overseer/rig/.beads (tracked).
 		// Runtime metadata may coexist with the rig redirect; it must not cause
 		// SetupRedirect to create a bd-incompatible redirect chain.
 		townRoot := t.TempDir()
 		rigRoot := filepath.Join(townRoot, "testrig")
 		rigBeads := filepath.Join(rigRoot, ".beads")
-		mayorRigBeads := filepath.Join(rigRoot, "mayor", "rig", ".beads")
+		overseerRigBeads := filepath.Join(rigRoot, "overseer", "rig", ".beads")
 		crewPath := filepath.Join(rigRoot, "crew", "max")
 
 		// Create rig structure with tracked beads
-		if err := os.MkdirAll(mayorRigBeads, 0755); err != nil {
-			t.Fatalf("mkdir mayor/rig beads: %v", err)
+		if err := os.MkdirAll(overseerRigBeads, 0755); err != nil {
+			t.Fatalf("mkdir overseer/rig beads: %v", err)
 		}
 		if err := os.MkdirAll(rigBeads, 0755); err != nil {
 			t.Fatalf("mkdir rig beads: %v", err)
 		}
-		// Create rig-level redirect to mayor/rig/.beads
-		if err := os.WriteFile(filepath.Join(rigBeads, "redirect"), []byte("mayor/rig/.beads\n"), 0644); err != nil {
+		// Create rig-level redirect to overseer/rig/.beads
+		if err := os.WriteFile(filepath.Join(rigBeads, "redirect"), []byte("overseer/rig/.beads\n"), 0644); err != nil {
 			t.Fatalf("write rig redirect: %v", err)
 		}
 		if err := os.WriteFile(filepath.Join(rigBeads, "metadata.json"), []byte(`{"dolt_database":"hq","backend":"dolt"}`), 0644); err != nil {
@@ -3550,23 +3550,23 @@ func TestSetupRedirect(t *testing.T) {
 			t.Fatalf("SetupRedirect failed: %v", err)
 		}
 
-		// Verify redirect goes directly to mayor/rig/.beads (no chain - bd CLI doesn't support chains)
+		// Verify redirect goes directly to overseer/rig/.beads (no chain - bd CLI doesn't support chains)
 		redirectPath := filepath.Join(crewPath, ".beads", "redirect")
 		content, err := os.ReadFile(redirectPath)
 		if err != nil {
 			t.Fatalf("read redirect: %v", err)
 		}
 
-		want := "../../mayor/rig/.beads\n"
+		want := "../../overseer/rig/.beads\n"
 		if string(content) != want {
 			t.Errorf("redirect content = %q, want %q", string(content), want)
 		}
 
 		// Verify redirect resolves correctly
 		resolved := ResolveBeadsDir(crewPath)
-		// crew/max -> ../../mayor/rig/.beads (direct, no chain)
-		if resolved != mayorRigBeads {
-			t.Errorf("resolved = %q, want %q", resolved, mayorRigBeads)
+		// crew/max -> ../../overseer/rig/.beads (direct, no chain)
+		if resolved != overseerRigBeads {
+			t.Errorf("resolved = %q, want %q", resolved, overseerRigBeads)
 		}
 	})
 
@@ -3618,24 +3618,24 @@ func TestSetupRedirect(t *testing.T) {
 		}
 	})
 
-	t.Run("polecat worktree", func(t *testing.T) {
+	t.Run("miner worktree", func(t *testing.T) {
 		townRoot := t.TempDir()
 		rigRoot := filepath.Join(townRoot, "testrig")
 		rigBeads := filepath.Join(rigRoot, ".beads")
-		polecatPath := filepath.Join(rigRoot, "polecats", "worker1")
+		minerPath := filepath.Join(rigRoot, "miners", "worker1")
 
 		if err := os.MkdirAll(rigBeads, 0755); err != nil {
 			t.Fatalf("mkdir rig beads: %v", err)
 		}
-		if err := os.MkdirAll(polecatPath, 0755); err != nil {
-			t.Fatalf("mkdir polecat: %v", err)
+		if err := os.MkdirAll(minerPath, 0755); err != nil {
+			t.Fatalf("mkdir miner: %v", err)
 		}
 
-		if err := SetupRedirect(townRoot, polecatPath); err != nil {
+		if err := SetupRedirect(townRoot, minerPath); err != nil {
 			t.Fatalf("SetupRedirect failed: %v", err)
 		}
 
-		redirectPath := filepath.Join(polecatPath, ".beads", "redirect")
+		redirectPath := filepath.Join(minerPath, ".beads", "redirect")
 		content, err := os.ReadFile(redirectPath)
 		if err != nil {
 			t.Fatalf("read redirect: %v", err)
@@ -3733,22 +3733,22 @@ func TestSetupRedirect(t *testing.T) {
 		}
 	})
 
-	t.Run("rejects mayor/rig canonical location", func(t *testing.T) {
+	t.Run("rejects overseer/rig canonical location", func(t *testing.T) {
 		townRoot := t.TempDir()
 		rigRoot := filepath.Join(townRoot, "testrig")
 		rigBeads := filepath.Join(rigRoot, ".beads")
-		mayorRigPath := filepath.Join(rigRoot, "mayor", "rig")
+		overseerRigPath := filepath.Join(rigRoot, "overseer", "rig")
 
 		if err := os.MkdirAll(rigBeads, 0755); err != nil {
 			t.Fatalf("mkdir rig beads: %v", err)
 		}
-		if err := os.MkdirAll(mayorRigPath, 0755); err != nil {
-			t.Fatalf("mkdir mayor/rig: %v", err)
+		if err := os.MkdirAll(overseerRigPath, 0755); err != nil {
+			t.Fatalf("mkdir overseer/rig: %v", err)
 		}
 
-		err := SetupRedirect(townRoot, mayorRigPath)
+		err := SetupRedirect(townRoot, overseerRigPath)
 		if err == nil {
-			t.Error("SetupRedirect should reject mayor/rig location")
+			t.Error("SetupRedirect should reject overseer/rig location")
 		}
 		if err != nil && !strings.Contains(err.Error(), "canonical") {
 			t.Errorf("error should mention canonical location, got: %v", err)
@@ -3832,7 +3832,7 @@ func TestSetupRedirect(t *testing.T) {
 		rigRoot := filepath.Join(townRoot, "testrig")
 		crewPath := filepath.Join(rigRoot, "crew", "max")
 
-		// No rig/.beads or mayor/rig/.beads created
+		// No rig/.beads or overseer/rig/.beads created
 		if err := os.MkdirAll(crewPath, 0755); err != nil {
 			t.Fatalf("mkdir crew: %v", err)
 		}
@@ -3846,12 +3846,12 @@ func TestSetupRedirect(t *testing.T) {
 	t.Run("crew worktree with rig beads but no database", func(t *testing.T) {
 		// Setup: rig/.beads exists (has metadata.json) but no actual database.
 		// This is the dolt architecture where rig/.beads has metadata only and
-		// the actual dolt DB lives at mayor/rig/.beads/dolt/.
-		// The redirect should point to mayor/rig/.beads, not rig/.beads.
+		// the actual dolt DB lives at overseer/rig/.beads/dolt/.
+		// The redirect should point to overseer/rig/.beads, not rig/.beads.
 		townRoot := t.TempDir()
 		rigRoot := filepath.Join(townRoot, "testrig")
 		rigBeads := filepath.Join(rigRoot, ".beads")
-		mayorRigBeads := filepath.Join(rigRoot, "mayor", "rig", ".beads")
+		overseerRigBeads := filepath.Join(rigRoot, "overseer", "rig", ".beads")
 		crewPath := filepath.Join(rigRoot, "crew", "max")
 
 		// Create rig/.beads with metadata but NO database (no dolt/)
@@ -3862,76 +3862,76 @@ func TestSetupRedirect(t *testing.T) {
 			[]byte(`{"database":"dolt","backend":"dolt","dolt_mode":"embedded"}`), 0644); err != nil {
 			t.Fatalf("write metadata: %v", err)
 		}
-		// Create mayor/rig/.beads with dolt DB marker
-		doltDir := filepath.Join(mayorRigBeads, "dolt")
+		// Create overseer/rig/.beads with dolt DB marker
+		doltDir := filepath.Join(overseerRigBeads, "dolt")
 		if err := os.MkdirAll(doltDir, 0755); err != nil {
-			t.Fatalf("mkdir mayor dolt: %v", err)
+			t.Fatalf("mkdir overseer dolt: %v", err)
 		}
 		if err := os.MkdirAll(crewPath, 0755); err != nil {
 			t.Fatalf("mkdir crew: %v", err)
 		}
 
-		// Run SetupRedirect - should detect no DB at rig/.beads and fall back to mayor/rig/.beads
+		// Run SetupRedirect - should detect no DB at rig/.beads and fall back to overseer/rig/.beads
 		if err := SetupRedirect(townRoot, crewPath); err != nil {
 			t.Fatalf("SetupRedirect failed: %v", err)
 		}
 
-		// Verify redirect points to mayor/rig/.beads (not rig/.beads)
+		// Verify redirect points to overseer/rig/.beads (not rig/.beads)
 		redirectPath := filepath.Join(crewPath, ".beads", "redirect")
 		content, err := os.ReadFile(redirectPath)
 		if err != nil {
 			t.Fatalf("read redirect: %v", err)
 		}
 
-		want := "../../mayor/rig/.beads\n"
+		want := "../../overseer/rig/.beads\n"
 		if string(content) != want {
 			t.Errorf("redirect content = %q, want %q", string(content), want)
 		}
 
 		// Verify redirect resolves correctly
 		resolved := ResolveBeadsDir(crewPath)
-		if resolved != mayorRigBeads {
-			t.Errorf("resolved = %q, want %q", resolved, mayorRigBeads)
+		if resolved != overseerRigBeads {
+			t.Errorf("resolved = %q, want %q", resolved, overseerRigBeads)
 		}
 	})
 
-	t.Run("crew worktree with mayor/rig beads only", func(t *testing.T) {
-		// Setup: no rig/.beads, only mayor/rig/.beads exists
+	t.Run("crew worktree with overseer/rig beads only", func(t *testing.T) {
+		// Setup: no rig/.beads, only overseer/rig/.beads exists
 		// This is the tracked beads architecture where rig root has no .beads directory
 		townRoot := t.TempDir()
 		rigRoot := filepath.Join(townRoot, "testrig")
-		mayorRigBeads := filepath.Join(rigRoot, "mayor", "rig", ".beads")
+		overseerRigBeads := filepath.Join(rigRoot, "overseer", "rig", ".beads")
 		crewPath := filepath.Join(rigRoot, "crew", "max")
 
-		// Create only mayor/rig/.beads (no rig/.beads)
-		if err := os.MkdirAll(mayorRigBeads, 0755); err != nil {
-			t.Fatalf("mkdir mayor/rig beads: %v", err)
+		// Create only overseer/rig/.beads (no rig/.beads)
+		if err := os.MkdirAll(overseerRigBeads, 0755); err != nil {
+			t.Fatalf("mkdir overseer/rig beads: %v", err)
 		}
 		if err := os.MkdirAll(crewPath, 0755); err != nil {
 			t.Fatalf("mkdir crew: %v", err)
 		}
 
-		// Run SetupRedirect - should succeed and point to mayor/rig/.beads
+		// Run SetupRedirect - should succeed and point to overseer/rig/.beads
 		if err := SetupRedirect(townRoot, crewPath); err != nil {
 			t.Fatalf("SetupRedirect failed: %v", err)
 		}
 
-		// Verify redirect points to mayor/rig/.beads
+		// Verify redirect points to overseer/rig/.beads
 		redirectPath := filepath.Join(crewPath, ".beads", "redirect")
 		content, err := os.ReadFile(redirectPath)
 		if err != nil {
 			t.Fatalf("read redirect: %v", err)
 		}
 
-		want := "../../mayor/rig/.beads\n"
+		want := "../../overseer/rig/.beads\n"
 		if string(content) != want {
 			t.Errorf("redirect content = %q, want %q", string(content), want)
 		}
 
 		// Verify redirect resolves correctly
 		resolved := ResolveBeadsDir(crewPath)
-		if resolved != mayorRigBeads {
-			t.Errorf("resolved = %q, want %q", resolved, mayorRigBeads)
+		if resolved != overseerRigBeads {
+			t.Errorf("resolved = %q, want %q", resolved, overseerRigBeads)
 		}
 	})
 
@@ -3998,11 +3998,11 @@ func TestResetAgentBeadForReuse_NukeRespawnCycle(t *testing.T) {
 		t.Fatalf("bd init: %v", err)
 	}
 
-	agentID := "test-testrig-polecat-reset"
+	agentID := "test-testrig-miner-reset"
 
 	// Spawn 1: Create agent bead
 	issue1, err := bd.CreateOrReopenAgentBead(agentID, agentID, &AgentFields{
-		RoleType:   "polecat",
+		RoleType:   "miner",
 		Rig:        "testrig",
 		AgentState: "spawning",
 		HookBead:   "test-task-1",
@@ -4015,7 +4015,7 @@ func TestResetAgentBeadForReuse_NukeRespawnCycle(t *testing.T) {
 	}
 
 	// Nuke 1: Reset for reuse (bead stays open with cleared fields)
-	err = bd.ResetAgentBeadForReuse(agentID, "polecat nuked")
+	err = bd.ResetAgentBeadForReuse(agentID, "miner nuked")
 	if err != nil {
 		t.Fatalf("Nuke 1 - ResetAgentBeadForReuse: %v", err)
 	}
@@ -4038,7 +4038,7 @@ func TestResetAgentBeadForReuse_NukeRespawnCycle(t *testing.T) {
 
 	// Spawn 2: CreateOrReopenAgentBead should detect open bead and update it
 	issue2, err := bd.CreateOrReopenAgentBead(agentID, agentID, &AgentFields{
-		RoleType:   "polecat",
+		RoleType:   "miner",
 		Rig:        "testrig",
 		AgentState: "spawning",
 		HookBead:   "test-task-2",
@@ -4058,14 +4058,14 @@ func TestResetAgentBeadForReuse_NukeRespawnCycle(t *testing.T) {
 	}
 
 	// Nuke 2: Reset again
-	err = bd.ResetAgentBeadForReuse(agentID, "polecat nuked again")
+	err = bd.ResetAgentBeadForReuse(agentID, "miner nuked again")
 	if err != nil {
 		t.Fatalf("Nuke 2: %v", err)
 	}
 
 	// Spawn 3: Should still work
 	issue3, err := bd.CreateOrReopenAgentBead(agentID, agentID, &AgentFields{
-		RoleType:   "polecat",
+		RoleType:   "miner",
 		Rig:        "testrig",
 		AgentState: "spawning",
 		HookBead:   "test-task-3",
@@ -4097,7 +4097,7 @@ func TestIsAgentBead(t *testing.T) {
 		{
 			name: "agent with legacy type",
 			issue: &Issue{
-				ID:     "gt-gastown-polecat-toast",
+				ID:     "gt-excavation-miner-toast",
 				Type:   "agent",
 				Labels: []string{},
 			},
@@ -4106,7 +4106,7 @@ func TestIsAgentBead(t *testing.T) {
 		{
 			name: "agent with gt:agent label",
 			issue: &Issue{
-				ID:     "gt-gastown-polecat-toast",
+				ID:     "gt-excavation-miner-toast",
 				Type:   "task",
 				Labels: []string{"gt:agent"},
 			},
@@ -4115,7 +4115,7 @@ func TestIsAgentBead(t *testing.T) {
 		{
 			name: "agent with both type and label",
 			issue: &Issue{
-				ID:     "gt-gastown-polecat-toast",
+				ID:     "gt-excavation-miner-toast",
 				Type:   "agent",
 				Labels: []string{"gt:agent", "other-label"},
 			},
@@ -4142,7 +4142,7 @@ func TestIsAgentBead(t *testing.T) {
 		{
 			name: "agent with gt:agent label and other labels",
 			issue: &Issue{
-				ID:     "gt-gastown-witness",
+				ID:     "gt-excavation-witness",
 				Type:   "task",
 				Labels: []string{"priority-high", "gt:agent", "status-running"},
 			},
@@ -4493,7 +4493,7 @@ func TestStripEnvPrefixes_CaseInsensitiveKeys(t *testing.T) {
 // TestFilterBeadsEnv_Integration verifies filterBeadsEnv strips all expected
 // vars from a real os.Environ() with multiple beads vars set.
 func TestFilterBeadsEnv_Integration(t *testing.T) {
-	t.Setenv("BD_ACTOR", "gastown/polecats/TestPolecat")
+	t.Setenv("BD_ACTOR", "excavation/miners/TestMiner")
 	t.Setenv("BEADS_DIR", "/tmp/test-beads")
 	t.Setenv("GT_ROOT", "/tmp/test-gt-root")
 
@@ -4518,7 +4518,7 @@ func TestBdBranch_SystemScenario_FilterBeadsEnvIsolation(t *testing.T) {
 		t.Skip("skipping system test in short mode")
 	}
 
-	t.Setenv("BD_ACTOR", "gastown/polecats/FilterTest")
+	t.Setenv("BD_ACTOR", "excavation/miners/FilterTest")
 	t.Setenv("BEADS_DIR", "/tmp/filter-test-beads")
 	t.Setenv("GT_ROOT", "/tmp/filter-test-gt")
 
@@ -4728,7 +4728,7 @@ func TestRunEnv_StripsPollutedDoltEnvAndUsesRigMetadata(t *testing.T) {
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	metadata := []byte(`{"backend":"dolt","dolt_mode":"server","dolt_server_host":"127.0.0.1","dolt_server_port":3307,"dolt_database":"gastown"}`)
+	metadata := []byte(`{"backend":"dolt","dolt_mode":"server","dolt_server_host":"127.0.0.1","dolt_server_port":3307,"dolt_database":"excavation"}`)
 	if err := os.WriteFile(filepath.Join(beadsDir, "metadata.json"), metadata, 0644); err != nil {
 		t.Fatalf("write metadata.json: %v", err)
 	}
@@ -4798,7 +4798,7 @@ printf 'unknown\n'
 	}
 	for _, want := range []string{
 		"BEADS_DIR=" + beadsDir,
-		"BEADS_DOLT_SERVER_DATABASE=gastown",
+		"BEADS_DOLT_SERVER_DATABASE=excavation",
 		"BEADS_DOLT_PORT=3307",
 		"BEADS_DOLT_SERVER_HOST=127.0.0.1",
 	} {

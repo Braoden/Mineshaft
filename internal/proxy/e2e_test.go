@@ -65,7 +65,7 @@ func TestE2EEchoThroughProxy(t *testing.T) {
 
 	// --- Issue client certificate ---
 	certDir := t.TempDir()
-	certPEM, keyPEM, err := ca.IssuePolecat("gt-gastown-e2etest", time.Hour)
+	certPEM, keyPEM, err := ca.IssueMiner("gt-excavation-e2etest", time.Hour)
 	require.NoError(t, err)
 
 	certFile := filepath.Join(certDir, "client.crt")
@@ -114,7 +114,7 @@ func TestE2EEchoThroughProxy(t *testing.T) {
 		// Issue a cert from a completely different CA.
 		otherCA, err := GenerateCA(t.TempDir())
 		require.NoError(t, err)
-		wrongCertPEM, wrongKeyPEM, err := otherCA.IssuePolecat("gt-gastown-evil", time.Hour)
+		wrongCertPEM, wrongKeyPEM, err := otherCA.IssueMiner("gt-excavation-evil", time.Hour)
 		require.NoError(t, err)
 
 		wrongDir := t.TempDir()

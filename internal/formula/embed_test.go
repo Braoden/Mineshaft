@@ -21,8 +21,8 @@ func TestGetEmbeddedFormulas(t *testing.T) {
 	}
 
 	// Verify at least one known formula exists
-	if _, ok := embedded["mol-deacon-patrol.formula.toml"]; !ok {
-		t.Error("should contain mol-deacon-patrol.formula.toml")
+	if _, ok := embedded["mol-supervisor-patrol.formula.toml"]; !ok {
+		t.Error("should contain mol-supervisor-patrol.formula.toml")
 	}
 
 	// Verify hashes are valid hex strings
@@ -77,8 +77,8 @@ func TestProvisionFormulas_SkipsExisting(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	customContent := []byte("# Custom user formula\nformula = \"mol-deacon-patrol\"\n")
-	customPath := filepath.Join(formulasDir, "mol-deacon-patrol.formula.toml")
+	customContent := []byte("# Custom user formula\nformula = \"mol-supervisor-patrol\"\n")
+	customPath := filepath.Join(formulasDir, "mol-supervisor-patrol.formula.toml")
 	if err := os.WriteFile(customPath, customContent, 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -141,8 +141,8 @@ func TestCheckFormulaHealth_UserModified(t *testing.T) {
 
 	// Modify a formula
 	formulasDir := filepath.Join(tmpDir, ".beads", "formulas")
-	formulaPath := filepath.Join(formulasDir, "mol-deacon-patrol.formula.toml")
-	modifiedContent := []byte("# User modified this\nformula = \"mol-deacon-patrol\"\nversion = 999\n")
+	formulaPath := filepath.Join(formulasDir, "mol-supervisor-patrol.formula.toml")
+	modifiedContent := []byte("# User modified this\nformula = \"mol-supervisor-patrol\"\nversion = 999\n")
 	if err := os.WriteFile(formulaPath, modifiedContent, 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -160,16 +160,16 @@ func TestCheckFormulaHealth_UserModified(t *testing.T) {
 	// Verify the specific formula is marked as modified
 	found := false
 	for _, f := range report.Formulas {
-		if f.Name == "mol-deacon-patrol.formula.toml" {
+		if f.Name == "mol-supervisor-patrol.formula.toml" {
 			if f.Status != "modified" {
-				t.Errorf("mol-deacon-patrol status = %q, want %q", f.Status, "modified")
+				t.Errorf("mol-supervisor-patrol status = %q, want %q", f.Status, "modified")
 			}
 			found = true
 			break
 		}
 	}
 	if !found {
-		t.Error("mol-deacon-patrol.formula.toml not found in report")
+		t.Error("mol-supervisor-patrol.formula.toml not found in report")
 	}
 }
 
@@ -185,7 +185,7 @@ func TestCheckFormulaHealth_Missing(t *testing.T) {
 
 	// Delete a formula
 	formulasDir := filepath.Join(tmpDir, ".beads", "formulas")
-	formulaPath := filepath.Join(formulasDir, "mol-deacon-patrol.formula.toml")
+	formulaPath := filepath.Join(formulasDir, "mol-supervisor-patrol.formula.toml")
 	if err := os.Remove(formulaPath); err != nil {
 		t.Fatal(err)
 	}
@@ -867,7 +867,7 @@ func TestCheckFormulaHealth_MixedScenarios(t *testing.T) {
 // TestResolveFormulaContent verifies resolution order: rig > town > embedded.
 func TestResolveFormulaContent(t *testing.T) {
 	t.Run("returns embedded formula when no disk overrides exist", func(t *testing.T) {
-		content, err := ResolveFormulaContent("mol-polecat-work", "", "")
+		content, err := ResolveFormulaContent("mol-miner-work", "", "")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -882,12 +882,12 @@ func TestResolveFormulaContent(t *testing.T) {
 		if err := os.MkdirAll(formulasDir, 0755); err != nil {
 			t.Fatal(err)
 		}
-		townContent := []byte("formula = \"mol-polecat-work\"\nversion = 99\n")
-		if err := os.WriteFile(filepath.Join(formulasDir, "mol-polecat-work.formula.toml"), townContent, 0644); err != nil {
+		townContent := []byte("formula = \"mol-miner-work\"\nversion = 99\n")
+		if err := os.WriteFile(filepath.Join(formulasDir, "mol-miner-work.formula.toml"), townContent, 0644); err != nil {
 			t.Fatal(err)
 		}
 
-		content, err := ResolveFormulaContent("mol-polecat-work", tmpDir, "")
+		content, err := ResolveFormulaContent("mol-miner-work", tmpDir, "")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -904,8 +904,8 @@ func TestResolveFormulaContent(t *testing.T) {
 		if err := os.MkdirAll(townFormulasDir, 0755); err != nil {
 			t.Fatal(err)
 		}
-		townContent := []byte("formula = \"mol-polecat-work\"\nversion = 99\n")
-		if err := os.WriteFile(filepath.Join(townFormulasDir, "mol-polecat-work.formula.toml"), townContent, 0644); err != nil {
+		townContent := []byte("formula = \"mol-miner-work\"\nversion = 99\n")
+		if err := os.WriteFile(filepath.Join(townFormulasDir, "mol-miner-work.formula.toml"), townContent, 0644); err != nil {
 			t.Fatal(err)
 		}
 
@@ -914,12 +914,12 @@ func TestResolveFormulaContent(t *testing.T) {
 		if err := os.MkdirAll(rigFormulasDir, 0755); err != nil {
 			t.Fatal(err)
 		}
-		rigContent := []byte("formula = \"mol-polecat-work\"\nversion = 100\n")
-		if err := os.WriteFile(filepath.Join(rigFormulasDir, "mol-polecat-work.formula.toml"), rigContent, 0644); err != nil {
+		rigContent := []byte("formula = \"mol-miner-work\"\nversion = 100\n")
+		if err := os.WriteFile(filepath.Join(rigFormulasDir, "mol-miner-work.formula.toml"), rigContent, 0644); err != nil {
 			t.Fatal(err)
 		}
 
-		content, err := ResolveFormulaContent("mol-polecat-work", tmpDir, "myrig")
+		content, err := ResolveFormulaContent("mol-miner-work", tmpDir, "myrig")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -959,16 +959,16 @@ func TestResolveFormulaContent(t *testing.T) {
 // TestGetEmbeddedFormulaContent verifies extraction of individual embedded formulas.
 func TestGetEmbeddedFormulaContent(t *testing.T) {
 	// Known embedded formula should succeed
-	content, err := GetEmbeddedFormulaContent("mol-polecat-work")
+	content, err := GetEmbeddedFormulaContent("mol-miner-work")
 	if err != nil {
-		t.Fatalf("GetEmbeddedFormulaContent(mol-polecat-work) error: %v", err)
+		t.Fatalf("GetEmbeddedFormulaContent(mol-miner-work) error: %v", err)
 	}
 	if len(content) == 0 {
 		t.Error("expected non-empty content")
 	}
 
 	// With suffix should also work
-	content2, err := GetEmbeddedFormulaContent("mol-polecat-work.formula.toml")
+	content2, err := GetEmbeddedFormulaContent("mol-miner-work.formula.toml")
 	if err != nil {
 		t.Fatalf("GetEmbeddedFormulaContent with suffix error: %v", err)
 	}

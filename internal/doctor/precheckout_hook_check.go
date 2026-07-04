@@ -36,11 +36,11 @@ func NewPreCheckoutHookCheck() *BranchProtectionCheck {
 }
 
 // branchProtectionMarker identifies our branch protection code in post-checkout.
-const branchProtectionMarker = "Gas Town branch protection"
+const branchProtectionMarker = "Excavation Site branch protection"
 
 // branchProtectionScript is the code to prepend to post-checkout hook.
 // It auto-reverts to main if a non-main branch was checked out in the town root.
-const branchProtectionScript = `# Gas Town branch protection
+const branchProtectionScript = `# Excavation Site branch protection
 # Auto-reverts to main if a non-main branch is checked out in the town root.
 # The town root must stay on main to avoid breaking gt commands.
 # NOTE: Git does NOT support pre-checkout hooks, so we auto-revert after.
@@ -59,7 +59,7 @@ if [ "$3" = "1" ]; then
         echo "" >&2
         echo "⚠️  AUTO-REVERTING: Town root must stay on main branch" >&2
         echo "" >&2
-        echo "   Detected checkout to '$CURRENT_BRANCH' in the Gas Town HQ directory." >&2
+        echo "   Detected checkout to '$CURRENT_BRANCH' in the Excavation Site HQ directory." >&2
         echo "   The town root should always be on main. Switching back..." >&2
         echo "" >&2
 
@@ -93,7 +93,7 @@ func (c *BranchProtectionCheck) Run(ctx *CheckContext) *CheckResult {
 	// Also check for and warn about the useless pre-checkout hook
 	preCheckoutPath := filepath.Join(gitDir, "hooks", "pre-checkout")
 	if content, err := os.ReadFile(preCheckoutPath); err == nil {
-		if strings.Contains(string(content), "Gas Town pre-checkout hook") {
+		if strings.Contains(string(content), "Excavation Site pre-checkout hook") {
 			// Old useless hook exists - needs migration
 			c.needsUpdate = true
 			return &CheckResult{
@@ -121,7 +121,7 @@ func (c *BranchProtectionCheck) Run(ctx *CheckContext) *CheckResult {
 			Message: "Post-checkout hook not installed",
 			Details: []string{
 				"Branch protection prevents accidental branch switches in the town root",
-				"Without it, a git checkout in ~/gt could switch to a polecat branch",
+				"Without it, a git checkout in ~/gt could switch to a miner branch",
 				"This can break gt commands (missing rigs.json, wrong configs)",
 			},
 			FixHint: "Run 'gt doctor --fix' to install branch protection",
@@ -174,7 +174,7 @@ func (c *BranchProtectionCheck) Fix(ctx *CheckContext) error {
 	// Remove obsolete pre-checkout hook if it's ours
 	preCheckoutPath := filepath.Join(hooksDir, "pre-checkout")
 	if content, err := os.ReadFile(preCheckoutPath); err == nil {
-		if strings.Contains(string(content), "Gas Town pre-checkout hook") {
+		if strings.Contains(string(content), "Excavation Site pre-checkout hook") {
 			_ = os.Remove(preCheckoutPath) // Best effort removal
 		}
 	}

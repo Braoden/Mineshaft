@@ -113,7 +113,7 @@ while IFS= read -r REPO_PATH; do
   # - Have no active worktree (not + prefixed)
   # - Have no corresponding remote tracking branch
   echo "  Deleting stale orphan branches..."
-  STALE_PATTERNS="polecat/|dog/|fix/|pr-|integration/|worktree-agent-"
+  STALE_PATTERNS="miner/|dog/|fix/|pr-|integration/|worktree-agent-"
   ALL_BRANCHES=$(git -C "$REPO_PATH" branch 2>/dev/null \
     | grep -v "^\*" \
     | grep -v "^+" \
@@ -159,7 +159,7 @@ while IFS= read -r REPO_PATH; do
       | grep -vE "origin/merge/" \
       | sed 's|^[[:space:]]*origin/||')
 
-    REMOTE_PATTERNS="polecat/|fix/|pr-|integration/|worktree-agent-"
+    REMOTE_PATTERNS="miner/|fix/|pr-|integration/|worktree-agent-"
 
     while IFS= read -r RBRANCH; do
       [ -z "$RBRANCH" ] && continue

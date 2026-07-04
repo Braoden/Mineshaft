@@ -7,15 +7,15 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/constants"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/constants"
 )
 
 // StaleAgentBeadsCheck detects agent beads that exist in the database but have
 // no corresponding agent on disk. This catches beads inherited from upstream or
 // left over after crew members are removed.
 //
-// Checks crew worker beads and polecat agent beads. Polecats have persistent
+// Checks crew worker beads and miner agent beads. Miners have persistent
 // identity (agent beads survive nuke cycles), so stale detection applies to them too.
 //
 // Also detects orphaned agent beads from deregistered rigs — beads whose prefix
@@ -33,7 +33,7 @@ func NewStaleAgentBeadsCheck() *StaleAgentBeadsCheck {
 		FixableCheck: FixableCheck{
 			BaseCheck: BaseCheck{
 				CheckName:        "stale-agent-beads",
-				CheckDescription: "Detect agent beads for removed workers (crew and polecats)",
+				CheckDescription: "Detect agent beads for removed workers (crew and miners)",
 				CheckCategory:    CategoryRig,
 			},
 		},
@@ -76,7 +76,7 @@ func (c *StaleAgentBeadsCheck) Run(ctx *CheckContext) *CheckResult {
 	var stale []string
 	var staleMu sync.Mutex
 
-	// Phase 1: Check known rigs for stale crew/polecat beads.
+	// Phase 1: Check known rigs for stale crew/miner beads.
 	// Run rigs in parallel — each rig spawns 2 bd subprocesses (List +
 	// ListAgentBeadsFromWisps). With 6 rigs sequentially, that's 12 calls;
 	// under Dolt memory pressure each can take 30s of retry, so the check
@@ -100,18 +100,18 @@ func (c *StaleAgentBeadsCheck) Run(ctx *CheckContext) *CheckResult {
 				crewDiskSet[w] = true
 			}
 
-			// Get actual polecats on disk
-			polecatDiskWorkers := listPolecats(ctx.TownRoot, rigName)
-			polecatDiskSet := make(map[string]bool, len(polecatDiskWorkers))
-			for _, w := range polecatDiskWorkers {
-				polecatDiskSet[w] = true
+			// Get actual miners on disk
+			minerDiskWorkers := listMiners(ctx.TownRoot, rigName)
+			minerDiskSet := make(map[string]bool, len(minerDiskWorkers))
+			for _, w := range minerDiskWorkers {
+				minerDiskSet[w] = true
 			}
 
 			// Agent bead ID patterns:
 			// Crew:    prefix-rig-crew-name (or prefix-crew-name when prefix == rig)
-			// Polecat: prefix-rig-polecat-name (or prefix-polecat-name when prefix == rig)
+			// Miner: prefix-rig-miner-name (or prefix-miner-name when prefix == rig)
 			crewPrefix := beads.AgentBeadIDWithPrefix(prefix, rigName, constants.RoleCrew, "") + "-"
-			polecatPrefix := beads.AgentBeadIDWithPrefix(prefix, rigName, constants.RolePolecat, "") + "-"
+			minerPrefix := beads.AgentBeadIDWithPrefix(prefix, rigName, constants.RoleMiner, "") + "-"
 			allBeads, err := bd.List(beads.ListOptions{
 				Status:   "open",
 				Priority: -1,
@@ -138,9 +138,9 @@ func (c *StaleAgentBeadsCheck) Run(ctx *CheckContext) *CheckResult {
 					if workerName != "" && !crewDiskSet[workerName] {
 						rigStale = append(rigStale, issue.ID)
 					}
-				case strings.HasPrefix(issue.ID, polecatPrefix):
-					workerName := strings.TrimPrefix(issue.ID, polecatPrefix)
-					if workerName != "" && !polecatDiskSet[workerName] {
+				case strings.HasPrefix(issue.ID, minerPrefix):
+					workerName := strings.TrimPrefix(issue.ID, minerPrefix)
+					if workerName != "" && !minerDiskSet[workerName] {
 						rigStale = append(rigStale, issue.ID)
 					}
 				}
@@ -176,7 +176,7 @@ func (c *StaleAgentBeadsCheck) Run(ctx *CheckContext) *CheckResult {
 			if !ok {
 				continue
 			}
-			// Skip town-level agents (mayor, deacon, dogs) — they don't belong to a rig
+			// Skip town-level agents (overseer, supervisor, dogs) — they don't belong to a rig
 			if rig == "" {
 				continue
 			}
@@ -193,12 +193,12 @@ func (c *StaleAgentBeadsCheck) Run(ctx *CheckContext) *CheckResult {
 			}
 			// Also check: known prefix but the rig directory no longer exists on disk.
 			// This catches beads stored in the town DB (hq) for rigs that still have
-			// routes but whose crew/polecat workers were removed. The per-rig scan in
+			// routes but whose crew/miner workers were removed. The per-rig scan in
 			// Phase 1 may miss these if the beads are in hq rather than the rig DB.
 			if info, exists := prefixToRig[idPrefix]; exists {
 				switch role {
 				case constants.RoleCrew:
-					workerName := parseCrewOrPolecatFromID(id, idPrefix, info.name, constants.RoleCrew)
+					workerName := parseCrewOrMinerFromID(id, idPrefix, info.name, constants.RoleCrew)
 					if workerName != "" {
 						crewWorkers := listCrewWorkers(ctx.TownRoot, info.name)
 						found := false
@@ -212,12 +212,12 @@ func (c *StaleAgentBeadsCheck) Run(ctx *CheckContext) *CheckResult {
 							stale = append(stale, id)
 						}
 					}
-				case constants.RolePolecat:
-					workerName := parseCrewOrPolecatFromID(id, idPrefix, info.name, constants.RolePolecat)
+				case constants.RoleMiner:
+					workerName := parseCrewOrMinerFromID(id, idPrefix, info.name, constants.RoleMiner)
 					if workerName != "" {
-						polecats := listPolecats(ctx.TownRoot, info.name)
+						miners := listMiners(ctx.TownRoot, info.name)
 						found := false
-						for _, p := range polecats {
+						for _, p := range miners {
 							if p == workerName {
 								found = true
 								break
@@ -252,9 +252,9 @@ func (c *StaleAgentBeadsCheck) Run(ctx *CheckContext) *CheckResult {
 	}
 }
 
-// parseCrewOrPolecatFromID extracts the worker name from a crew or polecat bead ID.
+// parseCrewOrMinerFromID extracts the worker name from a crew or miner bead ID.
 // Returns the worker name, or empty string if the ID doesn't match the expected pattern.
-func parseCrewOrPolecatFromID(id, prefix, rigName, role string) string {
+func parseCrewOrMinerFromID(id, prefix, rigName, role string) string {
 	// Build the expected prefix pattern: prefix-rig-role- or prefix-role- (collapsed)
 	var idPrefix string
 	if prefix == rigName {

@@ -11,13 +11,13 @@ import (
 
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
-	"github.com/steveyegge/gastown/internal/activity"
+	"github.com/steveyegge/excavation/internal/activity"
 )
 
 // =============================================================================
 // Browser-based E2E Tests using Rod
 //
-// These tests launch a real browser (Chromium) to verify the convoy dashboard
+// These tests launch a real browser (Chromium) to verify the minecart dashboard
 // works correctly in an actual browser environment.
 //
 // Run with: go test -tags=browser -v ./internal/web -run TestBrowser
@@ -73,20 +73,20 @@ func launchBrowser(cfg browserTestConfig) (*rod.Browser, func()) {
 	return browser, cleanup
 }
 
-// mockFetcher implements ConvoyFetcher for testing
+// mockFetcher implements MinecartFetcher for testing
 type mockFetcher struct {
-	convoys []ConvoyRow
+	minecarts []MinecartRow
 }
 
-func (m *mockFetcher) FetchConvoys() ([]ConvoyRow, error) {
-	return m.convoys, nil
+func (m *mockFetcher) FetchMinecarts() ([]MinecartRow, error) {
+	return m.minecarts, nil
 }
 
-// TestBrowser_ConvoyListLoads tests that the convoy list page loads correctly
-func TestBrowser_ConvoyListLoads(t *testing.T) {
+// TestBrowser_MinecartListLoads tests that the minecart list page loads correctly
+func TestBrowser_MinecartListLoads(t *testing.T) {
 	// Setup test server with mock data
 	fetcher := &mockFetcher{
-		convoys: []ConvoyRow{
+		minecarts: []MinecartRow{
 			{
 				ID:           "hq-cv-abc",
 				Title:        "Feature X",
@@ -108,7 +108,7 @@ func TestBrowser_ConvoyListLoads(t *testing.T) {
 		},
 	}
 
-	handler, err := NewConvoyHandler(fetcher, 8*time.Second, "test-token")
+	handler, err := NewMinecartHandler(fetcher, 8*time.Second, "test-token")
 	if err != nil {
 		t.Fatalf("Failed to create handler: %v", err)
 	}
@@ -127,17 +127,17 @@ func TestBrowser_ConvoyListLoads(t *testing.T) {
 
 	// Verify page title
 	title := page.MustElement("title").MustText()
-	if !strings.Contains(title, "Gas Town") {
-		t.Fatalf("Expected title to contain 'Gas Town', got: %s", title)
+	if !strings.Contains(title, "Excavation Site") {
+		t.Fatalf("Expected title to contain 'Excavation Site', got: %s", title)
 	}
 
-	// Verify convoy IDs are displayed
+	// Verify minecart IDs are displayed
 	bodyText := page.MustElement("body").MustText()
 	if !strings.Contains(bodyText, "hq-cv-abc") {
-		t.Error("Expected convoy ID hq-cv-abc in page")
+		t.Error("Expected minecart ID hq-cv-abc in page")
 	}
 	if !strings.Contains(bodyText, "hq-cv-def") {
-		t.Error("Expected convoy ID hq-cv-def in page")
+		t.Error("Expected minecart ID hq-cv-def in page")
 	}
 
 	// Verify titles are displayed
@@ -148,14 +148,14 @@ func TestBrowser_ConvoyListLoads(t *testing.T) {
 		t.Error("Expected title 'Bugfix Y' in page")
 	}
 
-	t.Log("PASSED: Convoy list loads correctly")
+	t.Log("PASSED: Minecart list loads correctly")
 }
 
 // TestBrowser_LastActivityColors tests that activity colors are displayed correctly
 func TestBrowser_LastActivityColors(t *testing.T) {
-	// Setup test server with convoys at different activity ages
+	// Setup test server with minecarts at different activity ages
 	fetcher := &mockFetcher{
-		convoys: []ConvoyRow{
+		minecarts: []MinecartRow{
 			{
 				ID:           "hq-cv-green",
 				Title:        "Active Work",
@@ -177,7 +177,7 @@ func TestBrowser_LastActivityColors(t *testing.T) {
 		},
 	}
 
-	handler, err := NewConvoyHandler(fetcher, 8*time.Second, "test-token")
+	handler, err := NewMinecartHandler(fetcher, 8*time.Second, "test-token")
 	if err != nil {
 		t.Fatalf("Failed to create handler: %v", err)
 	}
@@ -213,16 +213,16 @@ func TestBrowser_LastActivityColors(t *testing.T) {
 // TestBrowser_HtmxAutoRefresh tests that htmx auto-refresh attributes are present
 func TestBrowser_HtmxAutoRefresh(t *testing.T) {
 	fetcher := &mockFetcher{
-		convoys: []ConvoyRow{
+		minecarts: []MinecartRow{
 			{
 				ID:     "hq-cv-test",
-				Title:  "Test Convoy",
+				Title:  "Test Minecart",
 				Status: "open",
 			},
 		},
 	}
 
-	handler, err := NewConvoyHandler(fetcher, 8*time.Second, "test-token")
+	handler, err := NewMinecartHandler(fetcher, 8*time.Second, "test-token")
 	if err != nil {
 		t.Fatalf("Failed to create handler: %v", err)
 	}
@@ -260,13 +260,13 @@ func TestBrowser_HtmxAutoRefresh(t *testing.T) {
 	t.Log("PASSED: htmx auto-refresh attributes present")
 }
 
-// TestBrowser_EmptyState tests the empty state when no convoys exist
+// TestBrowser_EmptyState tests the empty state when no minecarts exist
 func TestBrowser_EmptyState(t *testing.T) {
 	fetcher := &mockFetcher{
-		convoys: []ConvoyRow{}, // Empty convoy list
+		minecarts: []MinecartRow{}, // Empty minecart list
 	}
 
-	handler, err := NewConvoyHandler(fetcher, 8*time.Second, "test-token")
+	handler, err := NewMinecartHandler(fetcher, 8*time.Second, "test-token")
 	if err != nil {
 		t.Fatalf("Failed to create handler: %v", err)
 	}
@@ -286,13 +286,13 @@ func TestBrowser_EmptyState(t *testing.T) {
 	// Check for empty state message
 	bodyText := page.MustElement("body").MustText()
 
-	if !strings.Contains(bodyText, "No convoys") {
-		t.Errorf("Expected 'No convoys' empty state message, got: %s", bodyText[:min(len(bodyText), 500)])
+	if !strings.Contains(bodyText, "No minecarts") {
+		t.Errorf("Expected 'No minecarts' empty state message, got: %s", bodyText[:min(len(bodyText), 500)])
 	}
 
 	// Verify help text is shown
-	if !strings.Contains(bodyText, "gt convoy create") {
-		t.Error("Expected help text with 'gt convoy create' command")
+	if !strings.Contains(bodyText, "gt minecart create") {
+		t.Error("Expected help text with 'gt minecart create' command")
 	}
 
 	t.Log("PASSED: Empty state displays correctly")
@@ -301,21 +301,21 @@ func TestBrowser_EmptyState(t *testing.T) {
 // TestBrowser_StatusIndicators tests open/closed status indicators
 func TestBrowser_StatusIndicators(t *testing.T) {
 	fetcher := &mockFetcher{
-		convoys: []ConvoyRow{
+		minecarts: []MinecartRow{
 			{
 				ID:     "hq-cv-open",
-				Title:  "Open Convoy",
+				Title:  "Open Minecart",
 				Status: "open",
 			},
 			{
 				ID:     "hq-cv-closed",
-				Title:  "Closed Convoy",
+				Title:  "Closed Minecart",
 				Status: "closed",
 			},
 		},
 	}
 
-	handler, err := NewConvoyHandler(fetcher, 8*time.Second, "test-token")
+	handler, err := NewMinecartHandler(fetcher, 8*time.Second, "test-token")
 	if err != nil {
 		t.Fatalf("Failed to create handler: %v", err)
 	}
@@ -336,10 +336,10 @@ func TestBrowser_StatusIndicators(t *testing.T) {
 
 	// Check for status classes
 	if !strings.Contains(html, "status-open") {
-		t.Error("Expected status-open class for open convoy")
+		t.Error("Expected status-open class for open minecart")
 	}
 	if !strings.Contains(html, "status-closed") {
-		t.Error("Expected status-closed class for closed convoy")
+		t.Error("Expected status-closed class for closed minecart")
 	}
 
 	t.Log("PASSED: Status indicators display correctly")
@@ -348,10 +348,10 @@ func TestBrowser_StatusIndicators(t *testing.T) {
 // TestBrowser_ProgressDisplay tests progress bar rendering
 func TestBrowser_ProgressDisplay(t *testing.T) {
 	fetcher := &mockFetcher{
-		convoys: []ConvoyRow{
+		minecarts: []MinecartRow{
 			{
 				ID:        "hq-cv-progress",
-				Title:     "Progress Convoy",
+				Title:     "Progress Minecart",
 				Status:    "open",
 				Progress:  "3/7",
 				Completed: 3,
@@ -360,7 +360,7 @@ func TestBrowser_ProgressDisplay(t *testing.T) {
 		},
 	}
 
-	handler, err := NewConvoyHandler(fetcher, 8*time.Second, "test-token")
+	handler, err := NewMinecartHandler(fetcher, 8*time.Second, "test-token")
 	if err != nil {
 		t.Fatalf("Failed to create handler: %v", err)
 	}

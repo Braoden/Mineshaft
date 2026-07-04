@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   # Guard: go.mod must not contain replace directives — they break `go install`.
-  # See: https://github.com/steveyegge/gastown/issues/2230
+  # See: https://github.com/steveyegge/excavation/issues/2230
   check-no-replace-directives:
     name: Reject go.mod replace directives
     runs-on: ubuntu-latest
@@ -24,8 +24,8 @@ jobs:
           if grep -qE '^replace\s' go.mod; then
             echo "ERROR: go.mod contains replace directives."
             echo ""
-            echo "Replace directives break 'go install github.com/steveyegge/gastown/cmd/gt@latest'."
-            echo "See: https://github.com/steveyegge/gastown/issues/2230"
+            echo "Replace directives break 'go install github.com/steveyegge/excavation/cmd/gt@latest'."
+            echo "See: https://github.com/steveyegge/excavation/issues/2230"
             echo ""
             echo "Found:"
             grep -n '^replace' go.mod
@@ -35,7 +35,7 @@ jobs:
           fi
           echo "OK: no replace directives in go.mod"
 
-  # Guard: gastown no longer supports issues.jsonl — Dolt server is the only backend.
+  # Guard: excavation no longer supports issues.jsonl — Dolt server is the only backend.
   check-no-issues-jsonl:
     name: Reject issues.jsonl
     runs-on: ubuntu-latest
@@ -48,7 +48,7 @@ jobs:
           if [ -f .beads/issues.jsonl ]; then
             echo "ERROR: .beads/issues.jsonl must not exist in the repository."
             echo ""
-            echo "Gastown requires a Dolt server — issues.jsonl is no longer supported."
+            echo "Excavation requires a Dolt server — issues.jsonl is no longer supported."
             echo ""
             echo "To fix, run:"
             echo "  git rm .beads/issues.jsonl"
@@ -79,7 +79,7 @@ jobs:
       - name: Configure Git
         run: |
           git config --global user.name "CI Bot"
-          git config --global user.email "ci@gastown.test"
+          git config --global user.email "ci@excavation.test"
 
       - name: Install Dolt
         run: |
@@ -160,7 +160,7 @@ jobs:
       - name: Configure Git
         run: |
           git config --global user.name "CI Bot"
-          git config --global user.email "ci@gastown.test"
+          git config --global user.email "ci@excavation.test"
 
       - name: Install Dolt
         run: |
@@ -207,12 +207,12 @@ jobs:
 
           gotestsum --format testname --junitfile junit-scheduler-1.xml -- \
             -tags='integration scheduler_integration' -timeout=15m -v \
-            -run '^(TestScheduler(CircuitBreakerExclusion|AutoConvoyCreation|BlockedStatusReporting|SlingDryRun|SlingContextIdempotency|SlingContextWorkBeadPristine))$' \
+            -run '^(TestScheduler(CircuitBreakerExclusion|AutoMinecartCreation|BlockedStatusReporting|SlingDryRun|SlingContextIdempotency|SlingContextWorkBeadPristine))$' \
             ./internal/cmd || status=1
 
           gotestsum --format testname --junitfile junit-scheduler-2.xml -- \
             -tags='integration scheduler_integration' -timeout=15m -v \
-            -run '^(TestScheduler(MultiRigDispatch|MultiRigEpicAutoResolve|ConvoyFlagRejection|EpicFlagRejection|EpicDetection|MixedBatchRejection|MultiRigConvoyAutoResolve))$' \
+            -run '^(TestScheduler(MultiRigDispatch|MultiRigEpicAutoResolve|MinecartFlagRejection|EpicFlagRejection|EpicDetection|MixedBatchRejection|MultiRigMinecartAutoResolve))$' \
             ./internal/cmd || status=1
 
           gotestsum --format testname --junitfile junit-scheduler-3.xml -- \
@@ -222,7 +222,7 @@ jobs:
 
           gotestsum --format testname --junitfile junit-scheduler-4.xml -- \
             -tags='integration scheduler_integration' -timeout=15m -v \
-            -run '^(TestScheduler(InvalidJSONContextCleanup|ActualDispatchRoutesPollutedEnvToTargetRig|FormulaDispatchRoutesPollutedEnvToTargetRig|DispatchFailureRecordedInContextSourceDB|DirectConvoyDispatch)|TestScheduleBead_(RefusesClosed|RefusesTombstone|ClosedForceDoesNotBypass))$' \
+            -run '^(TestScheduler(InvalidJSONContextCleanup|ActualDispatchRoutesPollutedEnvToTargetRig|FormulaDispatchRoutesPollutedEnvToTargetRig|DispatchFailureRecordedInContextSourceDB|DirectMinecartDispatch)|TestScheduleBead_(RefusesClosed|RefusesTombstone|ClosedForceDoesNotBypass))$' \
             ./internal/cmd || status=1
 
           exit "$status"

@@ -22,7 +22,7 @@ type PatrolReceiptEvidence struct {
 // PatrolReceipt is a machine-readable witness patrol verdict with recommended action.
 type PatrolReceipt struct {
 	Rig               string                `json:"rig"`
-	Polecat           string                `json:"polecat"`
+	Miner           string                `json:"miner"`
 	Verdict           PatrolVerdict         `json:"verdict"`
 	RecommendedAction string                `json:"recommended_action"`
 	Evidence          PatrolReceiptEvidence `json:"evidence"`
@@ -54,7 +54,7 @@ func BuildPatrolReceipt(rigName string, z ZombieResult) PatrolReceipt {
 
 	receipt := PatrolReceipt{
 		Rig:               rigName,
-		Polecat:           z.PolecatName,
+		Miner:           z.MinerName,
 		Verdict:           receiptVerdictForZombie(z),
 		RecommendedAction: action,
 		Evidence: PatrolReceiptEvidence{
@@ -73,7 +73,7 @@ func BuildPatrolReceipt(rigName string, z ZombieResult) PatrolReceipt {
 }
 
 // BuildPatrolReceipts returns machine-readable patrol verdicts for all detected zombies.
-func BuildPatrolReceipts(rigName string, result *DetectZombiePolecatsResult) []PatrolReceipt {
+func BuildPatrolReceipts(rigName string, result *DetectZombieMinersResult) []PatrolReceipt {
 	if result == nil || len(result.Zombies) == 0 {
 		return nil
 	}

@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
+	"github.com/steveyegge/excavation/internal/beads"
 )
 
 // SyncOptions controls the behavior of SyncDatabases.
@@ -342,7 +342,7 @@ func PushDatabaseSQL(townRoot, db, remote string, force bool) error {
 
 	// Commit working set
 	commitQuery := fmt.Sprintf(
-		"USE `%s`; CALL DOLT_COMMIT('-m', 'gt dolt sync: auto-commit working changes', '--allow-empty', '--author', 'Gas Town Sync <sync@gastown.local>')",
+		"USE `%s`; CALL DOLT_COMMIT('-m', 'gt dolt sync: auto-commit working changes', '--allow-empty', '--author', 'Excavation Site Sync <sync@excavation.local>')",
 		db,
 	)
 	if err := serverExecSQL(townRoot, commitQuery); err != nil {
@@ -581,7 +581,7 @@ func SyncDatabasesSQL(townRoot string, opts SyncOptions) []SyncResult {
 }
 
 // PurgeClosedEphemerals runs "bd purge" for a specific rig database to remove
-// closed ephemeral beads (wisps, convoys) before pushing to DoltHub.
+// closed ephemeral beads (wisps, minecarts) before pushing to DoltHub.
 // Returns the number of beads purged and any error encountered.
 // Errors are non-fatal — the caller should log them but continue with sync.
 // Must be called while the Dolt server is still running (bd purge needs SQL access).

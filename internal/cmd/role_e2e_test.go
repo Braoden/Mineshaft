@@ -54,14 +54,14 @@ func TestRoleHomeE2E(t *testing.T) {
 		expected string
 	}{
 		{
-			name:     "mayor",
-			args:     []string{"role", "home", "mayor"},
-			expected: filepath.Join(hqPath, "mayor"),
+			name:     "overseer",
+			args:     []string{"role", "home", "overseer"},
+			expected: filepath.Join(hqPath, "overseer"),
 		},
 		{
-			name:     "deacon",
-			args:     []string{"role", "home", "deacon"},
-			expected: filepath.Join(hqPath, "deacon"),
+			name:     "supervisor",
+			args:     []string{"role", "home", "supervisor"},
+			expected: filepath.Join(hqPath, "supervisor"),
 		},
 		{
 			name:     "witness",
@@ -74,13 +74,13 @@ func TestRoleHomeE2E(t *testing.T) {
 			expected: filepath.Join(hqPath, rigName, "refinery", "rig"),
 		},
 		{
-			name:     "polecat",
-			args:     []string{"role", "home", "polecat", "--rig", rigName, "--polecat", "Toast"},
-			expected: filepath.Join(hqPath, rigName, "polecats", "Toast"),
+			name:     "miner",
+			args:     []string{"role", "home", "miner", "--rig", rigName, "--miner", "Toast"},
+			expected: filepath.Join(hqPath, rigName, "miners", "Toast"),
 		},
 		{
 			name:     "crew",
-			args:     []string{"role", "home", "crew", "--rig", rigName, "--polecat", "worker1"},
+			args:     []string{"role", "home", "crew", "--rig", rigName, "--miner", "worker1"},
 			expected: filepath.Join(hqPath, rigName, "crew", "worker1"),
 		},
 	}
@@ -130,19 +130,19 @@ func TestRoleHomeMissingFlags(t *testing.T) {
 			args: []string{"role", "home", "refinery"},
 		},
 		{
-			name: "polecat without --rig",
-			args: []string{"role", "home", "polecat", "--polecat", "Toast"},
+			name: "miner without --rig",
+			args: []string{"role", "home", "miner", "--miner", "Toast"},
 		},
 		{
-			name: "polecat without --polecat",
-			args: []string{"role", "home", "polecat", "--rig", "testrig"},
+			name: "miner without --miner",
+			args: []string{"role", "home", "miner", "--rig", "testrig"},
 		},
 		{
 			name: "crew without --rig",
-			args: []string{"role", "home", "crew", "--polecat", "worker1"},
+			args: []string{"role", "home", "crew", "--miner", "worker1"},
 		},
 		{
-			name: "crew without --polecat",
+			name: "crew without --miner",
 			args: []string{"role", "home", "crew", "--rig", "testrig"},
 		},
 	}
@@ -181,7 +181,7 @@ func TestRoleHomeCwdDetection(t *testing.T) {
 	dirs := []string{
 		filepath.Join(hqPath, rigName, "witness"),
 		filepath.Join(hqPath, rigName, "refinery", "rig"),
-		filepath.Join(hqPath, rigName, "polecats", "Toast"),
+		filepath.Join(hqPath, rigName, "miners", "Toast"),
 		filepath.Join(hqPath, rigName, "crew", "worker1"),
 	}
 	for _, dir := range dirs {
@@ -196,14 +196,14 @@ func TestRoleHomeCwdDetection(t *testing.T) {
 		expected string
 	}{
 		{
-			name:     "mayor from mayor dir",
-			cwd:      filepath.Join(hqPath, "mayor"),
-			expected: filepath.Join(hqPath, "mayor"),
+			name:     "overseer from overseer dir",
+			cwd:      filepath.Join(hqPath, "overseer"),
+			expected: filepath.Join(hqPath, "overseer"),
 		},
 		{
-			name:     "deacon from deacon dir",
-			cwd:      filepath.Join(hqPath, "deacon"),
-			expected: filepath.Join(hqPath, "deacon"),
+			name:     "supervisor from supervisor dir",
+			cwd:      filepath.Join(hqPath, "supervisor"),
+			expected: filepath.Join(hqPath, "supervisor"),
 		},
 		{
 			name:     "witness from witness dir",
@@ -216,9 +216,9 @@ func TestRoleHomeCwdDetection(t *testing.T) {
 			expected: filepath.Join(hqPath, rigName, "refinery", "rig"),
 		},
 		{
-			name:     "polecat from polecats/Toast dir",
-			cwd:      filepath.Join(hqPath, rigName, "polecats", "Toast"),
-			expected: filepath.Join(hqPath, rigName, "polecats", "Toast"),
+			name:     "miner from miners/Toast dir",
+			cwd:      filepath.Join(hqPath, rigName, "miners", "Toast"),
+			expected: filepath.Join(hqPath, rigName, "miners", "Toast"),
 		},
 		{
 			name:     "crew from crew/worker1 dir",
@@ -264,7 +264,7 @@ func TestRoleEnvCwdDetection(t *testing.T) {
 	dirs := []string{
 		filepath.Join(hqPath, rigName, "witness"),
 		filepath.Join(hqPath, rigName, "refinery", "rig"),
-		filepath.Join(hqPath, rigName, "polecats", "Toast"),
+		filepath.Join(hqPath, rigName, "miners", "Toast"),
 		filepath.Join(hqPath, rigName, "crew", "worker1"),
 	}
 	for _, dir := range dirs {
@@ -279,19 +279,19 @@ func TestRoleEnvCwdDetection(t *testing.T) {
 		want []string
 	}{
 		{
-			name: "mayor from mayor dir",
-			cwd:  filepath.Join(hqPath, "mayor"),
+			name: "overseer from overseer dir",
+			cwd:  filepath.Join(hqPath, "overseer"),
 			want: []string{
-				"export GT_ROLE=mayor",
-				"export GT_ROLE_HOME=" + filepath.Join(hqPath, "mayor"),
+				"export GT_ROLE=overseer",
+				"export GT_ROLE_HOME=" + filepath.Join(hqPath, "overseer"),
 			},
 		},
 		{
-			name: "deacon from deacon dir",
-			cwd:  filepath.Join(hqPath, "deacon"),
+			name: "supervisor from supervisor dir",
+			cwd:  filepath.Join(hqPath, "supervisor"),
 			want: []string{
-				"export GT_ROLE=deacon",
-				"export GT_ROLE_HOME=" + filepath.Join(hqPath, "deacon"),
+				"export GT_ROLE=supervisor",
+				"export GT_ROLE_HOME=" + filepath.Join(hqPath, "supervisor"),
 			},
 		},
 		{
@@ -315,14 +315,14 @@ func TestRoleEnvCwdDetection(t *testing.T) {
 			},
 		},
 		{
-			name: "polecat from polecats/Toast dir",
-			cwd:  filepath.Join(hqPath, rigName, "polecats", "Toast"),
+			name: "miner from miners/Toast dir",
+			cwd:  filepath.Join(hqPath, rigName, "miners", "Toast"),
 			want: []string{
-				"export GT_ROLE=" + rigName + "/polecats/Toast",
+				"export GT_ROLE=" + rigName + "/miners/Toast",
 				"export GT_RIG=" + rigName,
-				"export GT_POLECAT=Toast",
-				"export BD_ACTOR=" + rigName + "/polecats/Toast",
-				"export GT_ROLE_HOME=" + filepath.Join(hqPath, rigName, "polecats", "Toast"),
+				"export GT_MINER=Toast",
+				"export BD_ACTOR=" + rigName + "/miners/Toast",
+				"export GT_ROLE_HOME=" + filepath.Join(hqPath, rigName, "miners", "Toast"),
 			},
 		},
 		{
@@ -388,7 +388,7 @@ func TestRoleListE2E(t *testing.T) {
 	}
 
 	// Check all roles are listed
-	roles := []string{"mayor", "deacon", "witness", "refinery", "polecat", "crew"}
+	roles := []string{"overseer", "supervisor", "witness", "refinery", "miner", "crew"}
 	for _, role := range roles {
 		if !strings.Contains(got, role) {
 			t.Errorf("output missing role %q\ngot: %s", role, got)
@@ -414,7 +414,7 @@ func TestRoleShowE2E(t *testing.T) {
 	dirs := []string{
 		filepath.Join(hqPath, rigName, "witness"),
 		filepath.Join(hqPath, rigName, "refinery", "rig"),
-		filepath.Join(hqPath, rigName, "polecats", "Toast", "rig"),
+		filepath.Join(hqPath, rigName, "miners", "Toast", "rig"),
 		filepath.Join(hqPath, rigName, "crew", "worker1", "rig"),
 	}
 	for _, dir := range dirs {
@@ -433,18 +433,18 @@ func TestRoleShowE2E(t *testing.T) {
 		wantWorker string
 	}{
 		{
-			name:       "mayor from mayor dir",
-			cwd:        filepath.Join(hqPath, "mayor"),
-			wantRole:   "mayor",
+			name:       "overseer from overseer dir",
+			cwd:        filepath.Join(hqPath, "overseer"),
+			wantRole:   "overseer",
 			wantSource: "cwd",
-			wantHome:   filepath.Join(hqPath, "mayor"),
+			wantHome:   filepath.Join(hqPath, "overseer"),
 		},
 		{
-			name:       "deacon from deacon dir",
-			cwd:        filepath.Join(hqPath, "deacon"),
-			wantRole:   "deacon",
+			name:       "supervisor from supervisor dir",
+			cwd:        filepath.Join(hqPath, "supervisor"),
+			wantRole:   "supervisor",
 			wantSource: "cwd",
-			wantHome:   filepath.Join(hqPath, "deacon"),
+			wantHome:   filepath.Join(hqPath, "supervisor"),
 		},
 		{
 			name:       "witness from witness dir",
@@ -455,11 +455,11 @@ func TestRoleShowE2E(t *testing.T) {
 			wantRig:    rigName,
 		},
 		{
-			name:       "polecat from polecats/Toast/rig dir",
-			cwd:        filepath.Join(hqPath, rigName, "polecats", "Toast", "rig"),
-			wantRole:   "polecat",
+			name:       "miner from miners/Toast/rig dir",
+			cwd:        filepath.Join(hqPath, rigName, "miners", "Toast", "rig"),
+			wantRole:   "miner",
 			wantSource: "cwd",
-			wantHome:   filepath.Join(hqPath, rigName, "polecats", "Toast"),
+			wantHome:   filepath.Join(hqPath, rigName, "miners", "Toast"),
 			wantRig:    rigName,
 			wantWorker: "Toast",
 		},
@@ -517,10 +517,10 @@ func TestRoleShowMismatch(t *testing.T) {
 		t.Fatalf("gt install failed: %v\nOutput: %s", err, output)
 	}
 
-	// Run from mayor dir but set GT_ROLE to deacon
+	// Run from overseer dir but set GT_ROLE to supervisor
 	cmd = exec.Command(gtBinary, "role", "show")
-	cmd.Dir = filepath.Join(hqPath, "mayor")
-	cmd.Env = append(cleanGTEnv(), "HOME="+tmpDir, "GT_ROLE=deacon")
+	cmd.Dir = filepath.Join(hqPath, "overseer")
+	cmd.Env = append(cleanGTEnv(), "HOME="+tmpDir, "GT_ROLE=supervisor")
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -529,9 +529,9 @@ func TestRoleShowMismatch(t *testing.T) {
 
 	got := string(output)
 
-	// GT_ROLE takes precedence, so role should be deacon
-	if !strings.Contains(got, "deacon") {
-		t.Errorf("should show 'deacon' from GT_ROLE, got: %s", got)
+	// GT_ROLE takes precedence, so role should be supervisor
+	if !strings.Contains(got, "supervisor") {
+		t.Errorf("should show 'supervisor' from GT_ROLE, got: %s", got)
 	}
 
 	// Source should be env
@@ -545,18 +545,18 @@ func TestRoleShowMismatch(t *testing.T) {
 	}
 
 	// Should show both the env value and cwd suggestion
-	if !strings.Contains(got, "GT_ROLE=deacon") {
+	if !strings.Contains(got, "GT_ROLE=supervisor") {
 		t.Errorf("should show GT_ROLE value\ngot: %s", got)
 	}
 
-	if !strings.Contains(got, "cwd suggests: mayor") {
+	if !strings.Contains(got, "cwd suggests: overseer") {
 		t.Errorf("should show cwd suggestion\ngot: %s", got)
 	}
 }
 
 // TestRoleShowNoMismatchAtTownRoot validates that town root + GT_ROLE does not
-// trigger a mismatch warning, since town root returns RoleUnknown (not RoleMayor).
-// Regression test for https://github.com/steveyegge/gastown/issues/1496
+// trigger a mismatch warning, since town root returns RoleUnknown (not RoleOverseer).
+// Regression test for https://github.com/steveyegge/excavation/issues/1496
 func TestRoleShowNoMismatchAtTownRoot(t *testing.T) {
 	tmpDir := resolveSymlinks(t, t.TempDir())
 	hqPath := filepath.Join(tmpDir, "test-hq")
@@ -568,10 +568,10 @@ func TestRoleShowNoMismatchAtTownRoot(t *testing.T) {
 		t.Fatalf("gt install failed: %v\nOutput: %s", err, output)
 	}
 
-	// Run from town root with GT_ROLE=mayor — should NOT show mismatch
+	// Run from town root with GT_ROLE=overseer — should NOT show mismatch
 	cmd = exec.Command(gtBinary, "role", "show")
 	cmd.Dir = hqPath
-	cmd.Env = append(cleanGTEnv(), "HOME="+tmpDir, "GT_ROLE=mayor")
+	cmd.Env = append(cleanGTEnv(), "HOME="+tmpDir, "GT_ROLE=overseer")
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -580,9 +580,9 @@ func TestRoleShowNoMismatchAtTownRoot(t *testing.T) {
 
 	got := string(output)
 
-	// GT_ROLE takes precedence, so role should be mayor
-	if !strings.Contains(got, "mayor") {
-		t.Errorf("should show 'mayor' from GT_ROLE, got: %s", got)
+	// GT_ROLE takes precedence, so role should be overseer
+	if !strings.Contains(got, "overseer") {
+		t.Errorf("should show 'overseer' from GT_ROLE, got: %s", got)
 	}
 
 	// Source should be env
@@ -614,7 +614,7 @@ func TestRoleDetectE2E(t *testing.T) {
 	dirs := []string{
 		filepath.Join(hqPath, rigName, "witness"),
 		filepath.Join(hqPath, rigName, "refinery", "rig"),
-		filepath.Join(hqPath, rigName, "polecats", "Toast", "rig"),
+		filepath.Join(hqPath, rigName, "miners", "Toast", "rig"),
 		filepath.Join(hqPath, rigName, "crew", "worker1", "rig"),
 	}
 	for _, dir := range dirs {
@@ -636,14 +636,14 @@ func TestRoleDetectE2E(t *testing.T) {
 			wantRole: "unknown",
 		},
 		{
-			name:     "mayor from mayor dir",
-			cwd:      filepath.Join(hqPath, "mayor"),
-			wantRole: "mayor",
+			name:     "overseer from overseer dir",
+			cwd:      filepath.Join(hqPath, "overseer"),
+			wantRole: "overseer",
 		},
 		{
-			name:     "deacon from deacon dir",
-			cwd:      filepath.Join(hqPath, "deacon"),
-			wantRole: "deacon",
+			name:     "supervisor from supervisor dir",
+			cwd:      filepath.Join(hqPath, "supervisor"),
+			wantRole: "supervisor",
 		},
 		{
 			name:     "witness from witness dir",
@@ -658,9 +658,9 @@ func TestRoleDetectE2E(t *testing.T) {
 			wantRig:  rigName,
 		},
 		{
-			name:       "polecat from polecats/Toast/rig dir",
-			cwd:        filepath.Join(hqPath, rigName, "polecats", "Toast", "rig"),
-			wantRole:   "polecat",
+			name:       "miner from miners/Toast/rig dir",
+			cwd:        filepath.Join(hqPath, rigName, "miners", "Toast", "rig"),
+			wantRole:   "miner",
 			wantRig:    rigName,
 			wantWorker: "Toast",
 		},
@@ -725,10 +725,10 @@ func TestRoleDetectIgnoresGTRole(t *testing.T) {
 		t.Fatalf("gt install failed: %v\nOutput: %s", err, output)
 	}
 
-	// Run from mayor dir but set GT_ROLE to deacon
+	// Run from overseer dir but set GT_ROLE to supervisor
 	cmd = exec.Command(gtBinary, "role", "detect")
-	cmd.Dir = filepath.Join(hqPath, "mayor")
-	cmd.Env = append(cleanGTEnv(), "HOME="+tmpDir, "GT_ROLE=deacon")
+	cmd.Dir = filepath.Join(hqPath, "overseer")
+	cmd.Env = append(cleanGTEnv(), "HOME="+tmpDir, "GT_ROLE=supervisor")
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -737,9 +737,9 @@ func TestRoleDetectIgnoresGTRole(t *testing.T) {
 
 	got := string(output)
 
-	// Should detect mayor from cwd, not deacon from env
-	if !strings.Contains(got, "mayor") {
-		t.Errorf("should detect 'mayor' from cwd, got: %s", got)
+	// Should detect overseer from cwd, not supervisor from env
+	if !strings.Contains(got, "overseer") {
+		t.Errorf("should detect 'overseer' from cwd, got: %s", got)
 	}
 
 	// Should show mismatch warning
@@ -747,7 +747,7 @@ func TestRoleDetectIgnoresGTRole(t *testing.T) {
 		t.Errorf("should show mismatch warning when GT_ROLE disagrees\ngot: %s", got)
 	}
 
-	if !strings.Contains(got, "GT_ROLE=deacon") {
+	if !strings.Contains(got, "GT_ROLE=supervisor") {
 		t.Errorf("should show conflicting GT_ROLE value\ngot: %s", got)
 	}
 }
@@ -769,7 +769,7 @@ func TestRoleDetectInvalidPaths(t *testing.T) {
 	// Create incomplete directory structures
 	dirs := []string{
 		filepath.Join(hqPath, rigName),                        // rig root
-		filepath.Join(hqPath, rigName, "polecats"),            // polecats without name
+		filepath.Join(hqPath, rigName, "miners"),            // miners without name
 		filepath.Join(hqPath, rigName, "crew"),                // crew without name
 		filepath.Join(hqPath, rigName, "refinery"),            // refinery without /rig
 		filepath.Join(hqPath, rigName, "witness"),             // witness (valid - no /rig needed)
@@ -791,8 +791,8 @@ func TestRoleDetectInvalidPaths(t *testing.T) {
 			wantRole: "unknown",
 		},
 		{
-			name:     "polecats without name returns unknown",
-			cwd:      filepath.Join(hqPath, rigName, "polecats"),
+			name:     "miners without name returns unknown",
+			cwd:      filepath.Join(hqPath, rigName, "miners"),
 			wantRole: "unknown",
 		},
 		{
@@ -849,7 +849,7 @@ func TestRoleEnvIncompleteEnvVars(t *testing.T) {
 	dirs := []string{
 		filepath.Join(hqPath, rigName, "witness"),
 		filepath.Join(hqPath, rigName, "refinery", "rig"),
-		filepath.Join(hqPath, rigName, "polecats", "Toast", "rig"),
+		filepath.Join(hqPath, rigName, "miners", "Toast", "rig"),
 		filepath.Join(hqPath, rigName, "crew", "worker1", "rig"),
 	}
 	for _, dir := range dirs {
@@ -888,26 +888,26 @@ func TestRoleEnvIncompleteEnvVars(t *testing.T) {
 			wantStderr: "env vars incomplete",
 		},
 		{
-			name: "GT_ROLE=polecat without GT_RIG or GT_POLECAT, filled from cwd",
-			cwd:  filepath.Join(hqPath, rigName, "polecats", "Toast", "rig"),
-			envVars: []string{"GT_ROLE=polecat"},
+			name: "GT_ROLE=miner without GT_RIG or GT_MINER, filled from cwd",
+			cwd:  filepath.Join(hqPath, rigName, "miners", "Toast", "rig"),
+			envVars: []string{"GT_ROLE=miner"},
 			wantExport: []string{
-				"export GT_ROLE=" + rigName + "/polecats/Toast",
+				"export GT_ROLE=" + rigName + "/miners/Toast",
 				"export GT_RIG=" + rigName,
-				"export GT_POLECAT=Toast",
-				"export BD_ACTOR=" + rigName + "/polecats/Toast",
+				"export GT_MINER=Toast",
+				"export BD_ACTOR=" + rigName + "/miners/Toast",
 			},
 			wantStderr: "env vars incomplete",
 		},
 		{
-			name: "GT_ROLE=polecat with GT_RIG but no GT_POLECAT, filled from cwd",
-			cwd:  filepath.Join(hqPath, rigName, "polecats", "Toast", "rig"),
-			envVars: []string{"GT_ROLE=polecat", "GT_RIG=" + rigName},
+			name: "GT_ROLE=miner with GT_RIG but no GT_MINER, filled from cwd",
+			cwd:  filepath.Join(hqPath, rigName, "miners", "Toast", "rig"),
+			envVars: []string{"GT_ROLE=miner", "GT_RIG=" + rigName},
 			wantExport: []string{
-				"export GT_ROLE=" + rigName + "/polecats/Toast",
+				"export GT_ROLE=" + rigName + "/miners/Toast",
 				"export GT_RIG=" + rigName,
-				"export GT_POLECAT=Toast",
-				"export BD_ACTOR=" + rigName + "/polecats/Toast",
+				"export GT_MINER=Toast",
+				"export BD_ACTOR=" + rigName + "/miners/Toast",
 			},
 			wantStderr: "env vars incomplete",
 		},
@@ -992,7 +992,7 @@ func TestRoleEnvCwdMismatchFromIncompleteDir(t *testing.T) {
 	// Create incomplete directory structures (missing /rig)
 	dirs := []string{
 		filepath.Join(hqPath, rigName, "refinery"),            // refinery without /rig
-		filepath.Join(hqPath, rigName, "polecats", "Toast"),   // polecat without /rig
+		filepath.Join(hqPath, rigName, "miners", "Toast"),   // miner without /rig
 		filepath.Join(hqPath, rigName, "crew", "worker1"),     // crew without /rig
 	}
 	for _, dir := range dirs {
@@ -1014,10 +1014,10 @@ func TestRoleEnvCwdMismatchFromIncompleteDir(t *testing.T) {
 			wantStderr: "cwd",
 		},
 		{
-			name: "polecat without /rig is valid (home is polecats/name)",
-			cwd:  filepath.Join(hqPath, rigName, "polecats", "Toast"),
-			envVars: []string{"GT_ROLE=polecat", "GT_RIG=" + rigName, "GT_POLECAT=Toast"},
-			wantStderr: "", // No mismatch: polecat home is polecats/<name>, not polecats/<name>/rig
+			name: "miner without /rig is valid (home is miners/name)",
+			cwd:  filepath.Join(hqPath, rigName, "miners", "Toast"),
+			envVars: []string{"GT_ROLE=miner", "GT_RIG=" + rigName, "GT_MINER=Toast"},
+			wantStderr: "", // No mismatch: miner home is miners/<name>, not miners/<name>/rig
 		},
 		{
 			name: "crew without /rig is valid (home is crew/name)",
@@ -1070,7 +1070,7 @@ func TestRoleHomeInvalidPaths(t *testing.T) {
 	// Create incomplete directory structures
 	dirs := []string{
 		filepath.Join(hqPath, rigName),
-		filepath.Join(hqPath, rigName, "polecats"),
+		filepath.Join(hqPath, rigName, "miners"),
 		filepath.Join(hqPath, rigName, "crew"),
 	}
 	for _, dir := range dirs {
@@ -1090,8 +1090,8 @@ func TestRoleHomeInvalidPaths(t *testing.T) {
 			shouldErr: true,
 		},
 		{
-			name:      "polecats without name fails",
-			cwd:       filepath.Join(hqPath, rigName, "polecats"),
+			name:      "miners without name fails",
+			cwd:       filepath.Join(hqPath, rigName, "miners"),
 			shouldErr: true,
 		},
 		{

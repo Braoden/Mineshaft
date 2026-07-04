@@ -13,8 +13,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/atomicfile"
-	"github.com/steveyegge/gastown/internal/constants"
+	"github.com/steveyegge/excavation/internal/atomicfile"
+	"github.com/steveyegge/excavation/internal/constants"
 )
 
 // resolveConfigMu serializes agent config resolution across all callers.
@@ -300,12 +300,12 @@ func NewRigSettings() *RigSettings {
 }
 
 // RepoSettingsPath is the conventional path within a repository where
-// gastown rig settings can be stored. This file is committed to git and
+// excavation rig settings can be stored. This file is committed to git and
 // provides durable defaults that survive rig re-scaffolding.
-const RepoSettingsPath = ".gastown/settings.json"
+const RepoSettingsPath = ".excavation/settings.json"
 
-// LoadRepoSettings loads rig settings from a repository's .gastown/settings.json.
-// Returns nil, nil if the file does not exist (repo has no gastown settings).
+// LoadRepoSettings loads rig settings from a repository's .excavation/settings.json.
+// Returns nil, nil if the file does not exist (repo has no excavation settings).
 func LoadRepoSettings(repoRoot string) (*RigSettings, error) {
 	path := filepath.Join(repoRoot, RepoSettingsPath)
 	data, err := os.ReadFile(path) //nolint:gosec // G304: path is constructed internally
@@ -460,8 +460,8 @@ func SaveRigSettings(path string, settings *RigSettings) error {
 	return nil
 }
 
-// LoadMayorConfig loads and validates a mayor config file.
-func LoadMayorConfig(path string) (*MayorConfig, error) {
+// LoadOverseerConfig loads and validates a overseer config file.
+func LoadOverseerConfig(path string) (*OverseerConfig, error) {
 	data, err := os.ReadFile(path) //nolint:gosec // G304: path is constructed internally, not from user input
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -470,21 +470,21 @@ func LoadMayorConfig(path string) (*MayorConfig, error) {
 		return nil, fmt.Errorf("reading config: %w", err)
 	}
 
-	var config MayorConfig
+	var config OverseerConfig
 	if err := json.Unmarshal(data, &config); err != nil {
 		return nil, fmt.Errorf("parsing config: %w", err)
 	}
 
-	if err := validateMayorConfig(&config); err != nil {
+	if err := validateOverseerConfig(&config); err != nil {
 		return nil, err
 	}
 
 	return &config, nil
 }
 
-// SaveMayorConfig saves a mayor config to a file.
-func SaveMayorConfig(path string, config *MayorConfig) error {
-	if err := validateMayorConfig(config); err != nil {
+// SaveOverseerConfig saves a overseer config to a file.
+func SaveOverseerConfig(path string, config *OverseerConfig) error {
+	if err := validateOverseerConfig(config); err != nil {
 		return err
 	}
 
@@ -504,28 +504,28 @@ func SaveMayorConfig(path string, config *MayorConfig) error {
 	return nil
 }
 
-// validateMayorConfig validates a MayorConfig.
-func validateMayorConfig(c *MayorConfig) error {
-	if c.Type != "mayor-config" && c.Type != "" {
-		return fmt.Errorf("%w: expected type 'mayor-config', got '%s'", ErrInvalidType, c.Type)
+// validateOverseerConfig validates a OverseerConfig.
+func validateOverseerConfig(c *OverseerConfig) error {
+	if c.Type != "overseer-config" && c.Type != "" {
+		return fmt.Errorf("%w: expected type 'overseer-config', got '%s'", ErrInvalidType, c.Type)
 	}
-	if c.Version > CurrentMayorConfigVersion {
-		return fmt.Errorf("%w: got %d, max supported %d", ErrInvalidVersion, c.Version, CurrentMayorConfigVersion)
+	if c.Version > CurrentOverseerConfigVersion {
+		return fmt.Errorf("%w: got %d, max supported %d", ErrInvalidVersion, c.Version, CurrentOverseerConfigVersion)
 	}
 	return nil
 }
 
-// NewMayorConfig creates a new MayorConfig with defaults.
-func NewMayorConfig() *MayorConfig {
-	return &MayorConfig{
-		Type:    "mayor-config",
-		Version: CurrentMayorConfigVersion,
+// NewOverseerConfig creates a new OverseerConfig with defaults.
+func NewOverseerConfig() *OverseerConfig {
+	return &OverseerConfig{
+		Type:    "overseer-config",
+		Version: CurrentOverseerConfigVersion,
 	}
 }
 
 // DaemonPatrolConfigPath returns the path to the daemon patrol config file.
 func DaemonPatrolConfigPath(townRoot string) string {
-	return filepath.Join(townRoot, constants.DirMayor, DaemonPatrolConfigFileName)
+	return filepath.Join(townRoot, constants.DirOverseer, DaemonPatrolConfigFileName)
 }
 
 // LoadDaemonPatrolConfig loads and validates a daemon patrol config file.
@@ -1124,7 +1124,7 @@ func SaveTownSettings(path string, settings *TownSettings) error {
 //  4. Fall back to claude defaults
 //
 // townRoot is the path to the town directory (e.g., ~/gt).
-// rigPath is the path to the rig directory (e.g., ~/gt/gastown).
+// rigPath is the path to the rig directory (e.g., ~/gt/excavation).
 func ResolveAgentConfig(townRoot, rigPath string) *RuntimeConfig {
 	resolveConfigMu.Lock()
 	defer resolveConfigMu.Unlock()
@@ -1345,9 +1345,9 @@ func lookupAgentConfigIfExists(name string, townSettings *TownSettings, rigSetti
 // If a configured agent is not found or its binary doesn't exist, a warning is
 // printed to stderr and it falls back to the default agent.
 //
-// role is one of: "mayor", "deacon", "witness", "refinery", "polecat", "crew", "boot".
+// role is one of: "overseer", "supervisor", "witness", "refinery", "miner", "crew", "boot".
 // townRoot is the path to the town directory (e.g., ~/gt).
-// rigPath is the path to the rig directory (e.g., ~/gt/gastown), or empty for town-level roles.
+// rigPath is the path to the rig directory (e.g., ~/gt/excavation), or empty for town-level roles.
 func ResolveRoleAgentConfig(role, townRoot, rigPath string) *RuntimeConfig {
 	resolveConfigMu.Lock()
 	defer resolveConfigMu.Unlock()
@@ -1540,13 +1540,13 @@ func withRoleSettingsFlag(rc *RuntimeConfig, role, rigPath string) *RuntimeConfi
 
 // RoleSettingsDir returns the shared settings directory for roles whose session
 // working directory differs from their settings location. Returns empty for
-// roles where settings and session directory are the same (mayor, deacon).
+// roles where settings and session directory are the same (overseer, supervisor).
 func RoleSettingsDir(role, rigPath string) string {
 	switch role {
 	case constants.RoleCrew, constants.RoleWitness, constants.RoleRefinery:
 		return filepath.Join(rigPath, role)
-	case constants.RolePolecat:
-		return filepath.Join(rigPath, "polecats")
+	case constants.RoleMiner:
+		return filepath.Join(rigPath, "miners")
 	default:
 		return ""
 	}
@@ -1636,7 +1636,7 @@ func hasExplicitNonClaudeOverride(role string, townSettings *TownSettings, rigSe
 }
 
 func resolveRoleAgentConfigCore(role, townRoot, rigPath string) *RuntimeConfig {
-	// Load rig settings (may be nil for town-level roles like mayor/deacon)
+	// Load rig settings (may be nil for town-level roles like overseer/supervisor)
 	var rigSettings *RigSettings
 	if rigPath != "" {
 		var err error
@@ -2067,7 +2067,7 @@ func inferAgentName(rc *RuntimeConfig) string {
 // for starting an LLM session. It resolves the agent config and builds the command.
 func GetRuntimeCommand(rigPath string) string {
 	if rigPath == "" {
-		// Try to detect town root from cwd for town-level agents (mayor, deacon)
+		// Try to detect town root from cwd for town-level agents (overseer, supervisor)
 		townRoot, err := findTownRootFromCwd()
 		if err != nil {
 			return DefaultRuntimeConfig().BuildCommand()
@@ -2105,7 +2105,7 @@ func GetRuntimeCommandWithAgentOverride(rigPath, agentOverride string) (string, 
 // GetRuntimeCommandWithPrompt returns the full command with an initial prompt.
 func GetRuntimeCommandWithPrompt(rigPath, prompt string) string {
 	if rigPath == "" {
-		// Try to detect town root from cwd for town-level agents (mayor, deacon)
+		// Try to detect town root from cwd for town-level agents (overseer, supervisor)
 		townRoot, err := findTownRootFromCwd()
 		if err != nil {
 			return DefaultRuntimeConfig().BuildCommandWithPrompt(prompt)
@@ -2140,7 +2140,7 @@ func GetRuntimeCommandWithPromptAndAgentOverride(rigPath, prompt, agentOverride 
 }
 
 // findTownRootFromCwd locates the town root by walking up from cwd.
-// It looks for the mayor/town.json marker file.
+// It looks for the overseer/town.json marker file.
 // Returns empty string and no error if not found (caller should use defaults).
 func findTownRootFromCwd() (string, error) {
 	cwd, err := os.Getwd()
@@ -2153,7 +2153,7 @@ func findTownRootFromCwd() (string, error) {
 		return "", fmt.Errorf("resolving path: %w", err)
 	}
 
-	const marker = "mayor/town.json"
+	const marker = "overseer/town.json"
 
 	current := absDir
 	for {
@@ -2171,8 +2171,8 @@ func findTownRootFromCwd() (string, error) {
 
 // ExtractSimpleRole extracts the simple role name from a GT_ROLE value.
 // GT_ROLE can be:
-//   - Simple: "mayor", "deacon"
-//   - Compound: "rig/witness", "rig/refinery", "rig/crew/name", "rig/polecats/name"
+//   - Simple: "overseer", "supervisor"
+//   - Compound: "rig/witness", "rig/refinery", "rig/crew/name", "rig/miners/name"
 //
 // For compound format, returns the role segment (second part).
 // For simple format, returns the role as-is.
@@ -2183,16 +2183,16 @@ func ExtractSimpleRole(gtRole string) string {
 	parts := strings.Split(gtRole, "/")
 	switch len(parts) {
 	case 1:
-		// Simple format: "mayor", "deacon"
+		// Simple format: "overseer", "supervisor"
 		return parts[0]
 	case 2:
 		// "rig/witness", "rig/refinery"
 		return parts[1]
 	case 3:
-		// "rig/crew/name" → "crew", "rig/polecats/name" → "polecat"
+		// "rig/crew/name" → "crew", "rig/miners/name" → "miner"
 		role := parts[1]
-		if role == "polecats" {
-			return constants.RolePolecat
+		if role == "miners" {
+			return constants.RoleMiner
 		}
 		return role
 	default:
@@ -2231,7 +2231,7 @@ func BuildStartupCommand(envVars map[string]string, rigPath, prompt string) stri
 			rc = ResolveAgentConfig(townRoot, rigPath)
 		}
 	} else {
-		// For town-level agents (mayor, deacon), prefer GT_ROOT from envVars
+		// For town-level agents (overseer, supervisor), prefer GT_ROOT from envVars
 		// (set by AgentEnv) over cwd detection. This ensures role_agents config
 		// is respected even when the daemon runs outside the town hierarchy.
 		townRoot = envVars["GT_ROOT"]
@@ -2272,7 +2272,7 @@ func BuildStartupCommand(envVars map[string]string, rigPath, prompt string) stri
 	// Set GT_AGENT from resolved agent name so IsAgentAlive can detect
 	// non-Claude processes (e.g., opencode). Without this, witness patrol
 	// falls back to ["node", "claude"] process detection and auto-nukes
-	// polecats running non-Claude agents. See: gt-agent-role-agents.
+	// miners running non-Claude agents. See: gt-agent-role-agents.
 	if rc.ResolvedAgent != "" {
 		resolvedEnv["GT_AGENT"] = rc.ResolvedAgent
 	}
@@ -2376,7 +2376,7 @@ func BuildStartupCommand(envVars map[string]string, rigPath, prompt string) stri
 //
 // This is a SUPPLEMENTAL guard for paths that don't use AgentEnv() (which is
 // the primary guard — see env.go). It protects: lifecycle.go's default path
-// (non-polecat/non-crew roles) and handoff.go's manual export building.
+// (non-miner/non-crew roles) and handoff.go's manual export building.
 // For callers that pass AgentEnv()-produced maps, this is a no-op since
 // AgentEnv() already sets NODE_OPTIONS="".
 //
@@ -2397,10 +2397,10 @@ func SanitizeAgentEnv(resolvedEnv, callerEnv map[string]string) {
 
 	// CLAUDECODE is set by Claude Code v2.x on startup and triggers nested session
 	// detection. When gt sling is invoked from within a Claude Code session, tmux
-	// inherits this variable into its global environment, causing new polecat sessions
+	// inherits this variable into its global environment, causing new miner sessions
 	// to fail with "Nested sessions share runtime resources and will crash all active
 	// sessions." Clear it unless the caller explicitly provides it.
-	// See: https://github.com/steveyegge/gastown/issues/1666
+	// See: https://github.com/steveyegge/excavation/issues/1666
 	if _, ok := callerEnv["CLAUDECODE"]; !ok {
 		resolvedEnv["CLAUDECODE"] = ""
 	}
@@ -2462,7 +2462,7 @@ func BuildStartupCommandWithAgentOverride(envVars map[string]string, rigPath, pr
 			rc = ResolveAgentConfig(townRoot, rigPath)
 		}
 	} else {
-		// For town-level agents (mayor, deacon), prefer GT_ROOT from envVars
+		// For town-level agents (overseer, supervisor), prefer GT_ROOT from envVars
 		// (set by AgentEnv) over cwd detection. This ensures role_agents config
 		// is respected even when the daemon runs outside the town hierarchy.
 		townRoot = envVars["GT_ROOT"]
@@ -2471,7 +2471,7 @@ func BuildStartupCommandWithAgentOverride(envVars map[string]string, rigPath, pr
 			townRoot, err = findTownRootFromCwd()
 			if err != nil {
 				// Can't find town root from cwd - but if agentOverride is specified,
-				// try to use the preset directly. This allows `gt deacon start --agent codex`
+				// try to use the preset directly. This allows `gt supervisor start --agent codex`
 				// to work even when run from outside the town directory.
 				if agentOverride != "" {
 					if preset := GetAgentPresetByName(agentOverride); preset != nil {
@@ -2503,7 +2503,7 @@ func BuildStartupCommandWithAgentOverride(envVars map[string]string, rigPath, pr
 	// differs from the session working directory. This must run for ALL
 	// resolution paths (including agent overrides) — previously only the
 	// non-override ResolveRoleAgentConfig path included it, causing hooks
-	// to silently not fire for polecats launched with --agent.
+	// to silently not fire for miners launched with --agent.
 	rc = withRoleSettingsFlag(rc, role, rigPath)
 
 	// Apply exec wrapper from rig/town settings if not already set on the resolved config.
@@ -2625,7 +2625,7 @@ func BuildStartupCommandFromConfig(cfg AgentEnvConfig, rigPath, prompt, agentOve
 // BuildAgentStartupCommand is a convenience function for starting agent sessions.
 // It uses AgentEnv to set all standard environment variables.
 // For rig-level roles (witness, refinery), pass the rig name and rigPath.
-// For town-level roles (mayor, deacon, boot), pass empty rig and rigPath, but provide townRoot.
+// For town-level roles (overseer, supervisor, boot), pass empty rig and rigPath, but provide townRoot.
 func BuildAgentStartupCommand(role, rig, townRoot, rigPath, prompt string) string {
 	envVars := AgentEnv(AgentEnvConfig{
 		Role:     role,
@@ -2647,33 +2647,33 @@ func BuildAgentStartupCommandWithAgentOverride(role, rig, townRoot, rigPath, pro
 	return BuildStartupCommandWithAgentOverride(envVars, rigPath, prompt, agentOverride)
 }
 
-// BuildPolecatStartupCommand builds the startup command for a polecat.
-// Sets GT_ROLE, GT_RIG, GT_POLECAT, BD_ACTOR, GIT_AUTHOR_NAME, and GT_ROOT.
-func BuildPolecatStartupCommand(rigName, polecatName, rigPath, prompt string) string {
+// BuildMinerStartupCommand builds the startup command for a miner.
+// Sets GT_ROLE, GT_RIG, GT_MINER, BD_ACTOR, GIT_AUTHOR_NAME, and GT_ROOT.
+func BuildMinerStartupCommand(rigName, minerName, rigPath, prompt string) string {
 	var townRoot string
 	if rigPath != "" {
 		townRoot = filepath.Dir(rigPath)
 	}
 	envVars := AgentEnv(AgentEnvConfig{
-		Role:      constants.RolePolecat,
+		Role:      constants.RoleMiner,
 		Rig:       rigName,
-		AgentName: polecatName,
+		AgentName: minerName,
 		TownRoot:  townRoot,
 		Prompt:    prompt,
 	})
 	return BuildStartupCommand(envVars, rigPath, prompt)
 }
 
-// BuildPolecatStartupCommandWithAgentOverride is like BuildPolecatStartupCommand, but uses agentOverride if non-empty.
-func BuildPolecatStartupCommandWithAgentOverride(rigName, polecatName, rigPath, prompt, agentOverride string) (string, error) {
+// BuildMinerStartupCommandWithAgentOverride is like BuildMinerStartupCommand, but uses agentOverride if non-empty.
+func BuildMinerStartupCommandWithAgentOverride(rigName, minerName, rigPath, prompt, agentOverride string) (string, error) {
 	var townRoot string
 	if rigPath != "" {
 		townRoot = filepath.Dir(rigPath)
 	}
 	envVars := AgentEnv(AgentEnvConfig{
-		Role:      constants.RolePolecat,
+		Role:      constants.RoleMiner,
 		Rig:       rigName,
-		AgentName: polecatName,
+		AgentName: minerName,
 		TownRoot:  townRoot,
 		Prompt:    prompt,
 	})
@@ -2742,7 +2742,7 @@ func ExpectedPaneCommands(rc *RuntimeConfig) []string {
 
 // GetDefaultFormula returns the default formula for a rig from settings/config.json.
 // Returns empty string if no default is configured.
-// rigPath is the path to the rig directory (e.g., ~/gt/gastown).
+// rigPath is the path to the rig directory (e.g., ~/gt/excavation).
 func GetDefaultFormula(rigPath string) string {
 	settingsPath := RigSettingsPath(rigPath)
 	settings, err := LoadRigSettings(settingsPath)
@@ -2759,7 +2759,7 @@ func GetDefaultFormula(rigPath string) string {
 // Falls back to "gt" if the rig isn't found or has no prefix configured.
 // townRoot is the path to the town directory (e.g., ~/gt).
 func GetRigPrefix(townRoot, rigName string) string {
-	rigsConfigPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsConfigPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := LoadRigsConfig(rigsConfigPath)
 	if err != nil {
 		return "gt" // fallback
@@ -2783,7 +2783,7 @@ func GetRigPrefix(townRoot, rigName string) string {
 // Trailing hyphens are stripped (e.g. "gt-" becomes "gt").
 // Returns nil on error (caller should handle the fallback).
 func AllRigPrefixes(townRoot string) []string {
-	rigsConfigPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsConfigPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := LoadRigsConfig(rigsConfigPath)
 	if err != nil {
 		return nil
@@ -2909,13 +2909,13 @@ func (c *EscalationConfig) GetStaleThreshold() time.Duration {
 }
 
 // GetRouteForSeverity returns the escalation route actions for a given severity.
-// Falls back to ["bead", "mail:mayor"] if no specific route is configured.
+// Falls back to ["bead", "mail:overseer"] if no specific route is configured.
 func (c *EscalationConfig) GetRouteForSeverity(severity string) []string {
 	if route, ok := c.Routes[severity]; ok {
 		return route
 	}
 	// Fallback to default route
-	return []string{"bead", "mail:mayor"}
+	return []string{"bead", "mail:overseer"}
 }
 
 // GetMaxReescalations returns the maximum number of re-escalations allowed.

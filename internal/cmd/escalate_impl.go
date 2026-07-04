@@ -13,12 +13,12 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/events"
-	"github.com/steveyegge/gastown/internal/mail"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/events"
+	"github.com/steveyegge/excavation/internal/mail"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 func runEscalate(cmd *cobra.Command, args []string) error {
@@ -50,7 +50,7 @@ func runEscalate(cmd *cobra.Command, args []string) error {
 	// Find workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Load escalation config
@@ -271,7 +271,7 @@ type deliveryStatus struct {
 func runEscalateList(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	bd := beads.New(beads.ResolveBeadsDir(townRoot))
@@ -358,7 +358,7 @@ func runEscalateAck(cmd *cobra.Command, args []string) error {
 
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Detect who is acknowledging
@@ -387,7 +387,7 @@ func runEscalateClose(cmd *cobra.Command, args []string) error {
 
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Detect who is closing
@@ -416,7 +416,7 @@ func runEscalateClose(cmd *cobra.Command, args []string) error {
 func runEscalateStale(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Load escalation config for threshold and max reescalations
@@ -607,7 +607,7 @@ func runEscalateShow(cmd *cobra.Command, args []string) error {
 
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	bd := beads.New(beads.ResolveBeadsDir(townRoot))
@@ -668,7 +668,7 @@ func runEscalateShow(cmd *cobra.Command, args []string) error {
 
 // extractMailTargetsFromActions extracts mail targets from action strings.
 // Action format: "mail:target" returns "target"
-// E.g., ["bead", "mail:mayor", "email:human"] returns ["mayor"]
+// E.g., ["bead", "mail:overseer", "email:human"] returns ["overseer"]
 func extractMailTargetsFromActions(actions []string) []string {
 	var targets []string
 	for _, action := range actions {
@@ -765,13 +765,13 @@ func sendEscalationEmail(cfg *config.EscalationConfig, beadID, severity, descrip
 	}
 	from := cfg.Contacts.SMTPFrom
 	if from == "" {
-		from = "gastown@localhost"
+		from = "excavation@localhost"
 	}
 	to := cfg.Contacts.HumanEmail
-	subject := fmt.Sprintf("[Gas Town %s] %s", strings.ToUpper(severity), description)
+	subject := fmt.Sprintf("[Excavation Site %s] %s", strings.ToUpper(severity), description)
 
 	body := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n"+
-		"Gas Town Escalation\r\n"+
+		"Excavation Site Escalation\r\n"+
 		"====================\r\n"+
 		"Bead: %s\r\n"+
 		"Severity: %s\r\n"+
@@ -827,7 +827,7 @@ func sendEscalationSlack(cfg *config.EscalationConfig, beadID, severity, descrip
 func sendEscalationSMS(cfg *config.EscalationConfig, beadID, severity, description string) error {
 	payload := map[string]string{
 		"to":   cfg.Contacts.HumanSMS,
-		"body": fmt.Sprintf("[Gas Town %s] %s (bead: %s)", strings.ToUpper(severity), description, beadID),
+		"body": fmt.Sprintf("[Excavation Site %s] %s (bead: %s)", strings.ToUpper(severity), description, beadID),
 	}
 	body, err := json.Marshal(payload)
 	if err != nil {

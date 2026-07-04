@@ -1,6 +1,6 @@
 # Towers of Hanoi Demo
 
-A durability proof demonstrating Gas Town's ability to execute arbitrarily long
+A durability proof demonstrating Excavation Site's ability to execute arbitrarily long
 sequential workflows with crash recovery and session cycling.
 
 ## What This Proves

@@ -1,6 +1,6 @@
 #!/bin/bash
 # Block PRs by preventing pushes to arbitrary feature branches.
-# Gas Town agents push to main (crew) or polecat/* branches (polecats).
+# Excavation Site agents push to main (crew) or miner/* branches (miners).
 # PRs are for external contributors only.
 #
 # Also enforces integration branch landing guardrails: pushes to the default
@@ -23,7 +23,7 @@ fi
 
 # Allowed patterns:
 #   <default_branch>, beads-sync  - Direct work branches
-#   polecat/*                     - Polecat working branches (Refinery merges these)
+#   miner/*                     - Miner working branches (Refinery merges these)
 #   integration/*                 - Integration branches (created by gt mq integration)
 
 while read local_ref local_sha remote_ref remote_sha; do
@@ -61,7 +61,7 @@ while read local_ref local_sha remote_ref remote_sha; do
   fi
 
   case "$branch" in
-    "${default_branch}"|beads-sync|polecat/*|integration/*)
+    "${default_branch}"|beads-sync|miner/*|integration/*)
       # Allowed branches
       ;;
     *)
@@ -69,17 +69,17 @@ while read local_ref local_sha remote_ref remote_sha; do
       # If an 'upstream' remote exists, this is a contribution setup where
       # feature branches are needed for PRs. See: #848
       if ! git remote get-url upstream &>/dev/null; then
-        echo "ERROR: Invalid branch for Gas Town agents."
+        echo "ERROR: Invalid branch for Excavation Site agents."
         echo ""
         echo "Blocked push to: $branch"
         echo ""
         echo "Allowed branches:"
         echo "  ${default_branch}        - Crew workers push here directly"
-        echo "  polecat/*   - Polecat working branches"
+        echo "  miner/*   - Miner working branches"
         echo "  integration/* - Integration branches"
         echo "  beads-sync  - Beads synchronization"
         echo ""
-        echo "Do NOT create PRs. Push to main or let Refinery merge polecat work."
+        echo "Do NOT create PRs. Push to main or let Refinery merge miner work."
         exit 1
       fi
       ;;

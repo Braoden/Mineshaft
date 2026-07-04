@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/dog"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/dog"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // maxDogPoolSize is the maximum number of dogs allowed in the pool.
@@ -22,19 +22,19 @@ const maxDogPoolSize = 4
 // IsDogTarget checks if target is a dog target pattern.
 // Returns the dog name (or empty for pool dispatch) and true if it's a dog target.
 // Patterns:
-//   - "deacon/dogs" -> ("", true) - dispatch to any idle dog
-//   - "deacon/dogs/alpha" -> ("alpha", true) - dispatch to specific dog
+//   - "supervisor/dogs" -> ("", true) - dispatch to any idle dog
+//   - "supervisor/dogs/alpha" -> ("alpha", true) - dispatch to specific dog
 //   - "dog:" -> ("", true) - dispatch to any idle dog (shorthand)
 //   - "dog:alpha" -> ("alpha", true) - dispatch to specific dog (shorthand)
 func IsDogTarget(target string) (dogName string, isDog bool) {
 	target = strings.ToLower(target)
 
-	// Check for exact "deacon/dogs" (pool dispatch)
-	if target == "deacon/dogs" || target == "dog:" {
+	// Check for exact "supervisor/dogs" (pool dispatch)
+	if target == "supervisor/dogs" || target == "dog:" {
 		return "", true
 	}
 
-	// Check for "dog:<name>" shorthand (like rig:polecat syntax)
+	// Check for "dog:<name>" shorthand (like rig:miner syntax)
 	if strings.HasPrefix(target, "dog:") {
 		name := strings.TrimPrefix(target, "dog:")
 		if name != "" && !strings.Contains(name, "/") {
@@ -43,9 +43,9 @@ func IsDogTarget(target string) (dogName string, isDog bool) {
 		return "", true // "dog:" without name = pool dispatch
 	}
 
-	// Check for "deacon/dogs/<name>" (specific dog)
-	if strings.HasPrefix(target, "deacon/dogs/") {
-		name := strings.TrimPrefix(target, "deacon/dogs/")
+	// Check for "supervisor/dogs/<name>" (specific dog)
+	if strings.HasPrefix(target, "supervisor/dogs/") {
+		name := strings.TrimPrefix(target, "supervisor/dogs/")
 		if name != "" && !strings.Contains(name, "/") {
 			return name, true
 		}
@@ -65,7 +65,7 @@ type DogDispatchOptions struct {
 // DogDispatchInfo contains information about a dog dispatch.
 type DogDispatchInfo struct {
 	DogName string // Name of the dog
-	AgentID string // Agent ID format (deacon/dogs/<name>)
+	AgentID string // Agent ID format (supervisor/dogs/<name>)
 	Pane    string // Tmux pane (empty if session start was delayed)
 	Spawned bool   // True if dog was spawned (new)
 
@@ -90,7 +90,7 @@ func DispatchToDog(dogName string, opts DogDispatchOptions) (*DogDispatchInfo, e
 		return nil, fmt.Errorf("finding town root: %w", err)
 	}
 
-	rigsConfigPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsConfigPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsConfigPath)
 	if err != nil {
 		return nil, fmt.Errorf("loading rigs config: %w", err)
@@ -119,7 +119,7 @@ func DispatchToDog(dogName string, opts DogDispatchOptions) (*DogDispatchInfo, e
 			}
 		}
 
-		agentID := fmt.Sprintf("deacon/dogs/%s", targetDog.Name)
+		agentID := fmt.Sprintf("supervisor/dogs/%s", targetDog.Name)
 		if existing, err := findHookedFormulaSingleton(townRoot, agentID, opts.WorkDesc); err != nil {
 			return nil, fmt.Errorf("checking existing dog formula: %w", err)
 		} else if existing != nil && dogWorksOnHook(targetDog, opts.WorkDesc, existing) {
@@ -146,7 +146,7 @@ func DispatchToDog(dogName string, opts DogDispatchOptions) (*DogDispatchInfo, e
 		} else if existing != nil {
 			targetDog, err = mgr.Get(existingDogName)
 			if err == nil && dogWorksOnHook(targetDog, opts.WorkDesc, existing) {
-				agentID := fmt.Sprintf("deacon/dogs/%s", targetDog.Name)
+				agentID := fmt.Sprintf("supervisor/dogs/%s", targetDog.Name)
 				return &DogDispatchInfo{
 					DogName:        targetDog.Name,
 					AgentID:        agentID,
@@ -173,7 +173,7 @@ func DispatchToDog(dogName string, opts DogDispatchOptions) (*DogDispatchInfo, e
 			if targetDog == nil {
 				// No idle dogs - auto-create one if pool is under max size.
 				// Pool dispatch means "send to any available dog" - if none exist,
-				// spawning one is the natural behavior (see mol-deacon-patrol:
+				// spawning one is the natural behavior (see mol-supervisor-patrol:
 				// "Spawn on demand when pool is empty").
 				dogs, listErr := mgr.List()
 				if listErr != nil {
@@ -213,7 +213,7 @@ func DispatchToDog(dogName string, opts DogDispatchOptions) (*DogDispatchInfo, e
 	}
 
 	// Build agent ID
-	agentID := fmt.Sprintf("deacon/dogs/%s", targetDog.Name)
+	agentID := fmt.Sprintf("supervisor/dogs/%s", targetDog.Name)
 
 	// If delayed start, return info for later session start
 	if opts.DelaySessionStart {

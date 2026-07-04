@@ -1,4 +1,4 @@
-// Package crew provides crew workspace management for overseer workspaces.
+// Package crew provides crew workspace management for boss workspaces.
 package crew
 
 import "time"

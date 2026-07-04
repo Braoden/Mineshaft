@@ -47,7 +47,7 @@ func TestPrefixMismatchCheck_NoRigsJson(t *testing.T) {
 
 	// Create routes.jsonl
 	routesPath := filepath.Join(beadsDir, "routes.jsonl")
-	routesContent := `{"prefix":"gt-","path":"gastown/mayor/rig"}`
+	routesContent := `{"prefix":"gt-","path":"excavation/overseer/rig"}`
 	if err := os.WriteFile(routesPath, []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -65,28 +65,28 @@ func TestPrefixMismatchCheck_NoRigsJson(t *testing.T) {
 func TestPrefixMismatchCheck_Matching(t *testing.T) {
 	tmpDir := t.TempDir()
 	beadsDir := filepath.Join(tmpDir, ".beads")
-	mayorDir := filepath.Join(tmpDir, "mayor")
+	overseerDir := filepath.Join(tmpDir, "overseer")
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create routes.jsonl with gt- prefix
 	routesPath := filepath.Join(beadsDir, "routes.jsonl")
-	routesContent := `{"prefix":"gt-","path":"gastown/mayor/rig"}`
+	routesContent := `{"prefix":"gt-","path":"excavation/overseer/rig"}`
 	if err := os.WriteFile(routesPath, []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create rigs.json with matching gt prefix
-	rigsPath := filepath.Join(mayorDir, "rigs.json")
+	rigsPath := filepath.Join(overseerDir, "rigs.json")
 	rigsContent := `{
 		"version": 1,
 		"rigs": {
-			"gastown": {
-				"git_url": "https://github.com/example/gastown",
+			"excavation": {
+				"git_url": "https://github.com/example/excavation",
 				"beads": {
 					"prefix": "gt"
 				}
@@ -110,14 +110,14 @@ func TestPrefixMismatchCheck_Matching(t *testing.T) {
 func TestPrefixMismatchCheck_Mismatch(t *testing.T) {
 	tmpDir := t.TempDir()
 	beadsDir := filepath.Join(tmpDir, ".beads")
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	// Create rig's mayor/rig/.beads directory and redirect so ResolveBeadsDir returns the mayor/rig path
-	rigBeadsDir := filepath.Join(tmpDir, "gastown", "mayor", "rig", ".beads")
-	rigRootBeadsDir := filepath.Join(tmpDir, "gastown", ".beads")
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	// Create rig's overseer/rig/.beads directory and redirect so ResolveBeadsDir returns the overseer/rig path
+	rigBeadsDir := filepath.Join(tmpDir, "excavation", "overseer", "rig", ".beads")
+	rigRootBeadsDir := filepath.Join(tmpDir, "excavation", ".beads")
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.MkdirAll(rigBeadsDir, 0755); err != nil {
@@ -127,24 +127,24 @@ func TestPrefixMismatchCheck_Mismatch(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Create redirect file so ResolveBeadsDir follows it
-	if err := os.WriteFile(filepath.Join(rigRootBeadsDir, "redirect"), []byte("mayor/rig/.beads\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(rigRootBeadsDir, "redirect"), []byte("overseer/rig/.beads\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create routes.jsonl with gt- prefix
 	routesPath := filepath.Join(beadsDir, "routes.jsonl")
-	routesContent := `{"prefix":"gt-","path":"gastown/mayor/rig"}`
+	routesContent := `{"prefix":"gt-","path":"excavation/overseer/rig"}`
 	if err := os.WriteFile(routesPath, []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create rigs.json with WRONG prefix (ga instead of gt)
-	rigsPath := filepath.Join(mayorDir, "rigs.json")
+	rigsPath := filepath.Join(overseerDir, "rigs.json")
 	rigsContent := `{
 		"version": 1,
 		"rigs": {
-			"gastown": {
-				"git_url": "https://github.com/example/gastown",
+			"excavation": {
+				"git_url": "https://github.com/example/excavation",
 				"beads": {
 					"prefix": "ga"
 				}
@@ -172,14 +172,14 @@ func TestPrefixMismatchCheck_Mismatch(t *testing.T) {
 func TestPrefixMismatchCheck_Fix(t *testing.T) {
 	tmpDir := t.TempDir()
 	beadsDir := filepath.Join(tmpDir, ".beads")
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	// Create rig's mayor/rig/.beads directory and redirect so ResolveBeadsDir returns the mayor/rig path
-	rigBeadsDir := filepath.Join(tmpDir, "gastown", "mayor", "rig", ".beads")
-	rigRootBeadsDir := filepath.Join(tmpDir, "gastown", ".beads")
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	// Create rig's overseer/rig/.beads directory and redirect so ResolveBeadsDir returns the overseer/rig path
+	rigBeadsDir := filepath.Join(tmpDir, "excavation", "overseer", "rig", ".beads")
+	rigRootBeadsDir := filepath.Join(tmpDir, "excavation", ".beads")
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.MkdirAll(rigBeadsDir, 0755); err != nil {
@@ -189,24 +189,24 @@ func TestPrefixMismatchCheck_Fix(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Create redirect file so ResolveBeadsDir follows it
-	if err := os.WriteFile(filepath.Join(rigRootBeadsDir, "redirect"), []byte("mayor/rig/.beads\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(rigRootBeadsDir, "redirect"), []byte("overseer/rig/.beads\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create routes.jsonl with gt- prefix
 	routesPath := filepath.Join(beadsDir, "routes.jsonl")
-	routesContent := `{"prefix":"gt-","path":"gastown/mayor/rig"}`
+	routesContent := `{"prefix":"gt-","path":"excavation/overseer/rig"}`
 	if err := os.WriteFile(routesPath, []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create rigs.json with WRONG prefix (ga instead of gt)
-	rigsPath := filepath.Join(mayorDir, "rigs.json")
+	rigsPath := filepath.Join(overseerDir, "rigs.json")
 	rigsContent := `{
 		"version": 1,
 		"rigs": {
-			"gastown": {
-				"git_url": "https://github.com/example/gastown",
+			"excavation": {
+				"git_url": "https://github.com/example/excavation",
 				"beads": {
 					"prefix": "ga"
 				}
@@ -246,8 +246,8 @@ func TestPrefixMismatchCheck_Fix(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to load fixed rigs.json: %v (content: %s)", err, data)
 	}
-	if cfg.Rigs["gastown"].BeadsConfig.Prefix != "gt" {
-		t.Errorf("expected prefix 'gt' after fix, got %q", cfg.Rigs["gastown"].BeadsConfig.Prefix)
+	if cfg.Rigs["excavation"].BeadsConfig.Prefix != "gt" {
+		t.Errorf("expected prefix 'gt' after fix, got %q", cfg.Rigs["excavation"].BeadsConfig.Prefix)
 	}
 }
 
@@ -312,7 +312,7 @@ func TestDatabasePrefixCheck_NoBeadsDir(t *testing.T) {
 
 	// Create routes.jsonl with a route to a non-existent beads directory
 	routesPath := filepath.Join(beadsDir, "routes.jsonl")
-	routesContent := `{"prefix":"gt-","path":"gastown/mayor/rig"}`
+	routesContent := `{"prefix":"gt-","path":"excavation/overseer/rig"}`
 	if err := os.WriteFile(routesPath, []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -458,23 +458,23 @@ func TestDatabasePrefixCheck_UsesMetadataDatabaseEnv(t *testing.T) {
 	if err := os.MkdirAll(townBeads, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(townBeads, "routes.jsonl"), []byte("{\"prefix\":\"gt-\",\"path\":\"gastown/mayor/rig\"}\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townBeads, "routes.jsonl"), []byte("{\"prefix\":\"gt-\",\"path\":\"excavation/overseer/rig\"}\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
-	rigPath := filepath.Join(tmpDir, "gastown", "mayor", "rig")
+	rigPath := filepath.Join(tmpDir, "excavation", "overseer", "rig")
 	beadsDir := filepath.Join(rigPath, ".beads")
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(beadsDir, "metadata.json"), []byte(`{"dolt_mode":"server","dolt_database":"gastown"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(beadsDir, "metadata.json"), []byte(`{"dolt_mode":"server","dolt_database":"excavation"}`), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	binDir := t.TempDir()
 	script := `#!/usr/bin/env bash
 if [ "$1 $2 $3" = "config get issue_prefix" ]; then
-  if [ "$BEADS_DIR" = "$EXPECT_BEADS_DIR" ] && [ "$BEADS_DOLT_SERVER_DATABASE" = "gastown" ]; then
+  if [ "$BEADS_DIR" = "$EXPECT_BEADS_DIR" ] && [ "$BEADS_DOLT_SERVER_DATABASE" = "excavation" ]; then
     printf 'gt\n'
   else
     printf 'hq\n'
@@ -504,12 +504,12 @@ func TestDatabasePrefixCheck_FixUsesMetadataDatabaseEnv(t *testing.T) {
 	}
 
 	tmpDir := t.TempDir()
-	rigPath := filepath.Join(tmpDir, "gastown", "mayor", "rig")
+	rigPath := filepath.Join(tmpDir, "excavation", "overseer", "rig")
 	beadsDir := filepath.Join(rigPath, ".beads")
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(beadsDir, "metadata.json"), []byte(`{"dolt_mode":"server","dolt_database":"gastown"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(beadsDir, "metadata.json"), []byte(`{"dolt_mode":"server","dolt_database":"excavation"}`), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -528,7 +528,7 @@ exit 0
 	t.Setenv("BEADS_DIR", filepath.Join(tmpDir, "wrong", ".beads"))
 
 	check := NewDatabasePrefixCheck()
-	check.mismatches = []databasePrefixMismatch{{rigPath: "gastown/mayor/rig", routesPrefix: "gt", dbPrefix: "hq"}}
+	check.mismatches = []databasePrefixMismatch{{rigPath: "excavation/overseer/rig", routesPrefix: "gt", dbPrefix: "hq"}}
 	if err := check.Fix(&CheckContext{TownRoot: tmpDir}); err != nil {
 		t.Fatalf("Fix failed: %v", err)
 	}
@@ -538,7 +538,7 @@ exit 0
 		t.Fatalf("read bd log: %v", err)
 	}
 	log := string(logData)
-	if !strings.Contains(log, "args=config set issue_prefix gt") || !strings.Contains(log, "db=gastown") || !strings.Contains(log, "beads="+beadsDir) {
+	if !strings.Contains(log, "args=config set issue_prefix gt") || !strings.Contains(log, "db=excavation") || !strings.Contains(log, "beads="+beadsDir) {
 		t.Fatalf("bd config set did not use metadata database env; log:\n%s", log)
 	}
 	if strings.Contains(log, "stale") || strings.Contains(log, filepath.Join(tmpDir, "wrong", ".beads")) {

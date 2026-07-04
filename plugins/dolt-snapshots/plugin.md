@@ -1,11 +1,11 @@
 +++
 name = "dolt-snapshots"
-description = "Tag Dolt databases at convoy boundaries for audit, diff, and rollback"
+description = "Tag Dolt databases at minecart boundaries for audit, diff, and rollback"
 version = 3
 
 [gate]
 type = "event"
-on = "convoy.created"
+on = "minecart.created"
 
 [tracking]
 labels = ["plugin:dolt-snapshots", "category:data-safety"]
@@ -19,7 +19,7 @@ severity = "low"
 
 # Dolt Snapshots v3
 
-Snapshots Dolt databases at convoy lifecycle boundaries using **tags** (immutable)
+Snapshots Dolt databases at minecart lifecycle boundaries using **tags** (immutable)
 and optionally **branches** (mutable, for working diffs).
 
 Implemented as a standalone Go binary with parameterized SQL — no shell
@@ -27,19 +27,19 @@ interpolation, no subshell bugs, no auto-committing dirty state.
 
 ## What this enables
 
-**Convoy audit** — verify agents did what they were supposed to:
+**Minecart audit** — verify agents did what they were supposed to:
 ```sql
 SELECT * FROM dolt_diff('staged/pi-rust-bug-fixes-hq-cv-xrwki', 'HEAD', 'issues')
 SELECT * FROM dolt_diff_stat('staged/pi-rust-bug-fixes-hq-cv-xrwki', 'HEAD')
 ```
 
-**Convoy rollback** — revert a database to pre-convoy state:
+**Minecart rollback** — revert a database to pre-minecart state:
 ```sql
 CALL DOLT_CHECKOUT('staged/pi-rust-bug-fixes-hq-cv-xrwki');          -- whole DB
 CALL DOLT_CHECKOUT('staged/pi-rust-bug-fixes-hq-cv-xrwki', 'issues'); -- single table
 ```
 
-**Cross-convoy comparison** — track progress between runs:
+**Cross-minecart comparison** — track progress between runs:
 ```sql
 SELECT * FROM dolt_diff('staged/pi-rust-bug-fixes-hq-cv-xrwki', 'staged/otel-dashboard-hq-cv-7q3vi', 'issues')
 ```
@@ -55,18 +55,18 @@ WHERE diff_type = 'removed'
 Branches are writable copies of the database at snapshot time. Unlike tags,
 you can commit to them — making them useful for:
 
-- **Dry-run convoy work** — test bulk operations without touching main
-- **Isolated convoy writes** — agents write to branch, refinery merges
+- **Dry-run minecart work** — test bulk operations without touching main
+- **Isolated minecart writes** — agents write to branch, refinery merges
 - **What-if analysis** — test theories without risk
-- **Parallel convoy isolation** — two convoys write to separate branches
+- **Parallel minecart isolation** — two minecarts write to separate branches
 
 ## Why tags over branches
 
 - A branch is just a pointer that moves with new commits — not a true snapshot
 - A tag is immutable: `staged/pi-rust-bug-fixes-hq-cv-xrwki` always points to
-  the exact state when the convoy was staged
+  the exact state when the minecart was staged
 - Tags survive branch cleanup and are cheaper to keep long-term
-- `dolt diff staged/convoy-A staged/convoy-B` works with tags
+- `dolt diff staged/minecart-A staged/minecart-B` works with tags
 
 ## Trigger
 
@@ -74,22 +74,22 @@ This is one of three event-gated plugins sharing the same Go binary:
 
 | Plugin | Event | Snapshot |
 |--------|-------|----------|
-| `dolt-snapshots` | `convoy.created` | `open/` tags (pre-work baseline) |
-| `dolt-snapshots-staged` | `convoy.staged` | `staged/` tags + branches (staging baseline) |
-| `dolt-snapshots-launched` | `convoy.launched` | `staged/` tags + branches (launch baseline) |
+| `dolt-snapshots` | `minecart.created` | `open/` tags (pre-work baseline) |
+| `dolt-snapshots-staged` | `minecart.staged` | `staged/` tags + branches (staging baseline) |
+| `dolt-snapshots-launched` | `minecart.launched` | `staged/` tags + branches (launch baseline) |
 
 Each fires on its specific event. The binary is idempotent — it checks all
-convoys and creates whichever tags/branches are missing.
+minecarts and creates whichever tags/branches are missing.
 
 ## Step 1: Build and start the snapshot watcher
 
 The Go binary handles all Dolt operations with parameterized SQL.
-It connects using gastown's standard Dolt config (`GT_DOLT_HOST` / `GT_DOLT_PORT`, defaulting to 127.0.0.1:3307, root, no password)
+It connects using excavation's standard Dolt config (`GT_DOLT_HOST` / `GT_DOLT_PORT`, defaulting to 127.0.0.1:3307, root, no password)
 and reads routes.jsonl to discover rig databases.
 
 In `--watch` mode, the binary tails `~/.events.jsonl` and runs a snapshot cycle
-immediately (<1s) when convoy events are detected. This is much faster than the
-~60s deacon patrol polling approach — critical for `convoy.launched` where agents
+immediately (<1s) when minecart events are detected. This is much faster than the
+~60s supervisor patrol polling approach — critical for `minecart.launched` where agents
 start writing to databases immediately.
 
 ```bash
@@ -120,7 +120,7 @@ if [ $SNAPSHOT_EXIT -ne 0 ]; then
   echo "Snapshot catch-up exited with code $SNAPSHOT_EXIT"
 fi
 
-# Start watcher in background (sub-second response to convoy events)
+# Start watcher in background (sub-second response to minecart events)
 nohup "$PLUGIN_DIR/snapshot" --watch --routes "$HOME/gt/.beads/routes.jsonl" \
   >> "$PLUGIN_DIR/.snapshot.log" 2>&1 &
 echo $! > "$PIDFILE"

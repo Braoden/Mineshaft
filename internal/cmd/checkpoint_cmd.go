@@ -6,17 +6,17 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/checkpoint"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/checkpoint"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var checkpointCmd = &cobra.Command{
 	Use:     "checkpoint",
 	GroupID: GroupDiag,
 	Short:   "Manage session checkpoints for crash recovery",
-	Long: `Manage checkpoints for polecat session crash recovery.
+	Long: `Manage checkpoints for miner session crash recovery.
 
 Checkpoints capture the current work state so that if a session crashes,
 the next session can resume from where it left off.
@@ -28,7 +28,7 @@ Checkpoint data includes:
 - Git branch and last commit
 - Timestamp
 
-Checkpoints are stored in .polecat-checkpoint.json in the polecat directory.`,
+Checkpoints are stored in .miner-checkpoint.json in the miner directory.`,
 }
 
 var checkpointWriteCmd = &cobra.Command{
@@ -89,7 +89,7 @@ func runCheckpointWrite(cmd *cobra.Command, args []string) error {
 	// Detect role context
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil || townRoot == "" {
-		return fmt.Errorf("not in a Gas Town workspace")
+		return fmt.Errorf("not in a Excavation Site workspace")
 	}
 
 	roleInfo, err := GetRoleWithContext(cwd, townRoot)
@@ -97,9 +97,9 @@ func runCheckpointWrite(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("detecting role: %w", err)
 	}
 
-	// Only polecats and crew workers use checkpoints
-	if roleInfo.Role != RolePolecat && roleInfo.Role != RoleCrew {
-		fmt.Printf("%s Checkpoints only apply to polecats and crew workers\n",
+	// Only miners and crew workers use checkpoints
+	if roleInfo.Role != RoleMiner && roleInfo.Role != RoleCrew {
+		fmt.Printf("%s Checkpoints only apply to miners and crew workers\n",
 			style.Dim.Render("○"))
 		return nil
 	}
@@ -226,7 +226,7 @@ func detectMoleculeContext(workDir string, ctx RoleInfo) (moleculeID, stepID, st
 	roleCtx := RoleContext{
 		Role:    ctx.Role,
 		Rig:     ctx.Rig,
-		Polecat: ctx.Polecat,
+		Miner: ctx.Miner,
 	}
 	assignee := getAgentIdentity(roleCtx)
 	if assignee == "" {
@@ -269,7 +269,7 @@ func detectHookedBead(workDir string, ctx RoleInfo) string {
 	roleCtx := RoleContext{
 		Role:    ctx.Role,
 		Rig:     ctx.Rig,
-		Polecat: ctx.Polecat,
+		Miner: ctx.Miner,
 	}
 	assignee := getAgentIdentity(roleCtx)
 	if assignee == "" {

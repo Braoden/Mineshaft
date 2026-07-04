@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/version"
+	"github.com/steveyegge/excavation/internal/version"
 )
 
 // Version information - set at build time via ldflags
@@ -31,7 +31,7 @@ var versionShort bool
 var versionCmd = &cobra.Command{
 	Use:         "version",
 	GroupID:     GroupDiag,
-	Annotations: map[string]string{AnnotationPolecatSafe: "true"},
+	Annotations: map[string]string{AnnotationMinerSafe: "true"},
 	Short:       "Print version information",
 	Long: `Print the gt version, build type, git branch, and commit hash.
 

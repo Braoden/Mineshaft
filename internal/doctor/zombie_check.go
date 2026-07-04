@@ -3,12 +3,12 @@ package doctor
 import (
 	"fmt"
 
-	"github.com/steveyegge/gastown/internal/events"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/events"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
-// ZombieSessionCheck detects tmux sessions that are valid Gas Town sessions
+// ZombieSessionCheck detects tmux sessions that are valid Excavation Site sessions
 // but have no Claude/node process running inside (zombies).
 // These occur when Claude exits or crashes but the tmux session remains.
 type ZombieSessionCheck struct {
@@ -29,7 +29,7 @@ func NewZombieSessionCheck() *ZombieSessionCheck {
 	}
 }
 
-// Run checks for zombie Gas Town sessions (tmux alive but Claude dead).
+// Run checks for zombie Excavation Site sessions (tmux alive but Claude dead).
 func (c *ZombieSessionCheck) Run(ctx *CheckContext) *CheckResult {
 	t := tmux.NewTmux()
 
@@ -51,7 +51,7 @@ func (c *ZombieSessionCheck) Run(ctx *CheckContext) *CheckResult {
 		}
 	}
 
-	// Check each Gas Town session for zombie status
+	// Check each Excavation Site session for zombie status
 	var zombies []string
 	var healthyCount int
 
@@ -60,7 +60,7 @@ func (c *ZombieSessionCheck) Run(ctx *CheckContext) *CheckResult {
 			continue
 		}
 
-		// Only check Gas Town sessions
+		// Only check Excavation Site sessions
 		if !session.IsKnownSession(sess) {
 			continue
 		}
@@ -85,7 +85,7 @@ func (c *ZombieSessionCheck) Run(ctx *CheckContext) *CheckResult {
 	if len(zombies) == 0 {
 		msg := "No zombie sessions found"
 		if healthyCount > 0 {
-			msg = fmt.Sprintf("All %d Gas Town sessions have running Claude processes", healthyCount)
+			msg = fmt.Sprintf("All %d Excavation Site sessions have running Claude processes", healthyCount)
 		}
 		return &CheckResult{
 			Name:    c.Name(),

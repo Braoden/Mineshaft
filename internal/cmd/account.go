@@ -8,10 +8,10 @@ import (
 	"sort"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // Account command flags
@@ -26,7 +26,7 @@ var accountCmd = &cobra.Command{
 	GroupID: GroupConfig,
 	Short:   "Manage Claude Code accounts",
 	RunE:    requireSubcommand,
-	Long: `Manage multiple Claude Code accounts for Gas Town.
+	Long: `Manage multiple Claude Code accounts for Excavation Site.
 
 This enables switching between accounts (e.g., personal vs work) with
 easy account selection per spawn or globally.
@@ -98,7 +98,7 @@ func runAccountList(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("finding town root: %w", err)
 	}
 
-	accountsPath := constants.MayorAccountsPath(townRoot)
+	accountsPath := constants.OverseerAccountsPath(townRoot)
 	cfg, err := config.LoadAccountsConfig(accountsPath)
 	if err != nil {
 		// If file doesn't exist, show empty message
@@ -171,7 +171,7 @@ func runAccountAdd(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("finding town root: %w", err)
 	}
 
-	accountsPath := constants.MayorAccountsPath(townRoot)
+	accountsPath := constants.OverseerAccountsPath(townRoot)
 
 	// Load existing config or create new
 	cfg, err := config.LoadAccountsConfig(accountsPath)
@@ -237,7 +237,7 @@ func runAccountDefault(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("finding town root: %w", err)
 	}
 
-	accountsPath := constants.MayorAccountsPath(townRoot)
+	accountsPath := constants.OverseerAccountsPath(townRoot)
 	cfg, err := config.LoadAccountsConfig(accountsPath)
 	if err != nil {
 		return fmt.Errorf("loading accounts config: %w", err)
@@ -300,7 +300,7 @@ func runAccountStatus(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("finding town root: %w", err)
 	}
 
-	accountsPath := constants.MayorAccountsPath(townRoot)
+	accountsPath := constants.OverseerAccountsPath(townRoot)
 
 	// Resolve account (empty flag since we want to show default resolution)
 	configDir, handle, err := config.ResolveAccountConfigDir(accountsPath, "")
@@ -356,7 +356,7 @@ func runAccountSwitch(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("finding town root: %w", err)
 	}
 
-	accountsPath := constants.MayorAccountsPath(townRoot)
+	accountsPath := constants.OverseerAccountsPath(townRoot)
 	cfg, err := config.LoadAccountsConfig(accountsPath)
 	if err != nil {
 		return fmt.Errorf("loading accounts config: %w", err)

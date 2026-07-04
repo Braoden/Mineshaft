@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/beads"
+	"github.com/steveyegge/excavation/internal/beads"
 )
 
 // mockBranchVerifier implements branchVerifier for testing.
@@ -43,7 +43,7 @@ func TestVerifyBranch(t *testing.T) {
 			name:        "verify disabled",
 			verify:      false,
 			client:      &mockBranchVerifier{},
-			fields:      &beads.MRFields{Branch: "polecat/Nux/gt-abc"},
+			fields:      &beads.MRFields{Branch: "miner/Nux/gt-abc"},
 			wantMissing: false,
 			wantErr:     false,
 		},
@@ -51,7 +51,7 @@ func TestVerifyBranch(t *testing.T) {
 			name:        "nil client",
 			verify:      true,
 			client:      nil,
-			fields:      &beads.MRFields{Branch: "polecat/Nux/gt-abc"},
+			fields:      &beads.MRFields{Branch: "miner/Nux/gt-abc"},
 			wantMissing: false,
 			wantErr:     false,
 		},
@@ -67,9 +67,9 @@ func TestVerifyBranch(t *testing.T) {
 			name:   "local branch exists",
 			verify: true,
 			client: &mockBranchVerifier{
-				localBranches: map[string]bool{"polecat/Nux/gt-abc": true},
+				localBranches: map[string]bool{"miner/Nux/gt-abc": true},
 			},
-			fields:      &beads.MRFields{Branch: "polecat/Nux/gt-abc"},
+			fields:      &beads.MRFields{Branch: "miner/Nux/gt-abc"},
 			wantMissing: false,
 			wantErr:     false,
 		},
@@ -78,9 +78,9 @@ func TestVerifyBranch(t *testing.T) {
 			verify: true,
 			client: &mockBranchVerifier{
 				localBranches:  map[string]bool{},
-				remoteBranches: map[string]bool{"origin/polecat/Nux/gt-abc": true},
+				remoteBranches: map[string]bool{"origin/miner/Nux/gt-abc": true},
 			},
-			fields:      &beads.MRFields{Branch: "polecat/Nux/gt-abc"},
+			fields:      &beads.MRFields{Branch: "miner/Nux/gt-abc"},
 			wantMissing: false,
 			wantErr:     false,
 		},
@@ -91,7 +91,7 @@ func TestVerifyBranch(t *testing.T) {
 				localBranches:  map[string]bool{},
 				remoteBranches: map[string]bool{},
 			},
-			fields:      &beads.MRFields{Branch: "polecat/Nux/gt-abc"},
+			fields:      &beads.MRFields{Branch: "miner/Nux/gt-abc"},
 			wantMissing: true,
 			wantErr:     false,
 		},
@@ -101,7 +101,7 @@ func TestVerifyBranch(t *testing.T) {
 			client: &mockBranchVerifier{
 				localErr: errors.New("permission denied"),
 			},
-			fields:      &beads.MRFields{Branch: "polecat/Nux/gt-abc"},
+			fields:      &beads.MRFields{Branch: "miner/Nux/gt-abc"},
 			wantMissing: false,
 			wantErr:     true,
 		},
@@ -112,7 +112,7 @@ func TestVerifyBranch(t *testing.T) {
 				localBranches: map[string]bool{},
 				remoteErr:     errors.New("corrupt repo"),
 			},
-			fields:      &beads.MRFields{Branch: "polecat/Nux/gt-abc"},
+			fields:      &beads.MRFields{Branch: "miner/Nux/gt-abc"},
 			wantMissing: false,
 			wantErr:     true,
 		},

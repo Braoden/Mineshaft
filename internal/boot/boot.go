@@ -1,10 +1,10 @@
-// Package boot manages the Boot watchdog - the daemon's entry point for Deacon triage.
+// Package boot manages the Boot watchdog - the daemon's entry point for Supervisor triage.
 // Boot is a dog that runs fresh on each daemon tick, deciding whether to wake/nudge/interrupt
-// the Deacon or let it continue. This centralizes the "when to wake" decision in an agent.
+// the Supervisor or let it continue. This centralizes the "when to wake" decision in an agent.
 package boot
 
 import (
-	"github.com/steveyegge/gastown/internal/cli"
+	"github.com/steveyegge/excavation/internal/cli"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -13,10 +13,10 @@ import (
 	"time"
 
 	"github.com/gofrs/flock"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/util"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/util"
 )
 
 // MarkerFileName is the lock file for Boot startup coordination.
@@ -30,15 +30,15 @@ type Status struct {
 	StartedAt   time.Time `json:"started_at,omitempty"`
 	CompletedAt time.Time `json:"completed_at,omitempty"`
 	LastAction  string    `json:"last_action,omitempty"` // start/wake/nudge/nothing
-	Target      string    `json:"target,omitempty"`      // deacon, witness, etc.
+	Target      string    `json:"target,omitempty"`      // supervisor, witness, etc.
 	Error       string    `json:"error,omitempty"`
 }
 
 // Boot manages the Boot watchdog lifecycle.
 type Boot struct {
 	townRoot   string
-	bootDir    string // ~/gt/deacon/dogs/boot/
-	deaconDir  string // ~/gt/deacon/
+	bootDir    string // ~/gt/supervisor/dogs/boot/
+	supervisorDir  string // ~/gt/supervisor/
 	tmux       *tmux.Tmux
 	degraded   bool
 	lockHandle *flock.Flock // held during triage execution
@@ -48,8 +48,8 @@ type Boot struct {
 func New(townRoot string) *Boot {
 	return &Boot{
 		townRoot:  townRoot,
-		bootDir:   filepath.Join(townRoot, "deacon", "dogs", "boot"),
-		deaconDir: filepath.Join(townRoot, "deacon"),
+		bootDir:   filepath.Join(townRoot, "supervisor", "dogs", "boot"),
+		supervisorDir: filepath.Join(townRoot, "supervisor"),
 		tmux:      tmux.NewTmux(),
 		degraded:  os.Getenv("GT_DEGRADED") == "true",
 	}
@@ -201,7 +201,7 @@ func (b *Boot) spawnDegraded() error {
 	// In degraded mode, we run gt boot triage directly
 	// This performs the triage logic without a full Claude session
 	cmd := exec.Command("gt", "boot", "triage", "--degraded")
-	cmd.Dir = b.deaconDir
+	cmd.Dir = b.supervisorDir
 	util.SetDetachedProcessGroup(cmd)
 
 	// Use centralized AgentEnv for consistency with tmux mode
@@ -226,9 +226,9 @@ func (b *Boot) Dir() string {
 	return b.bootDir
 }
 
-// DeaconDir returns the Deacon's directory.
-func (b *Boot) DeaconDir() string {
-	return b.deaconDir
+// SupervisorDir returns the Supervisor's directory.
+func (b *Boot) SupervisorDir() string {
+	return b.supervisorDir
 }
 
 // Tmux returns the tmux manager.

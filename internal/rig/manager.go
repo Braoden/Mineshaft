@@ -17,14 +17,14 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/doltserver"
-	"github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/hooks"
-	"github.com/steveyegge/gastown/internal/templates/commands"
-	"github.com/steveyegge/gastown/internal/util"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/doltserver"
+	"github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/hooks"
+	"github.com/steveyegge/excavation/internal/templates/commands"
+	"github.com/steveyegge/excavation/internal/util"
 )
 
 // Common errors
@@ -106,11 +106,11 @@ type RigConfig struct {
 	CreatedAt     time.Time    `json:"created_at"`               // when rig was created
 	Beads         *BeadsConfig `json:"beads,omitempty"`
 
-	// Persistent polecat pool configuration.
-	// PolecatPoolSize is the number of persistent polecats to create with pool init.
-	// PolecatNames optionally specifies fixed names (overrides theme-based naming).
-	PolecatPoolSize int      `json:"polecat_pool_size,omitempty"`
-	PolecatNames    []string `json:"polecat_names,omitempty"`
+	// Persistent miner pool configuration.
+	// MinerPoolSize is the number of persistent miners to create with pool init.
+	// MinerNames optionally specifies fixed names (overrides theme-based naming).
+	MinerPoolSize int      `json:"miner_pool_size,omitempty"`
+	MinerNames    []string `json:"miner_names,omitempty"`
 }
 
 // BeadsConfig represents beads configuration for the rig.
@@ -213,9 +213,9 @@ func (m *Manager) loadRig(name string, entry config.RigEntry) (*Rig, error) {
 		Config:    entry.BeadsConfig,
 	}
 
-	// Scan for polecats
-	polecatsDir := filepath.Join(rigPath, "polecats")
-	if entries, err := os.ReadDir(polecatsDir); err == nil {
+	// Scan for miners
+	minersDir := filepath.Join(rigPath, "miners")
+	if entries, err := os.ReadDir(minersDir); err == nil {
 		for _, e := range entries {
 			if !e.IsDir() {
 				continue
@@ -224,7 +224,7 @@ func (m *Manager) loadRig(name string, entry config.RigEntry) (*Rig, error) {
 			if strings.HasPrefix(name, ".") {
 				continue
 			}
-			rig.Polecats = append(rig.Polecats, name)
+			rig.Miners = append(rig.Miners, name)
 		}
 	}
 
@@ -250,10 +250,10 @@ func (m *Manager) loadRig(name string, entry config.RigEntry) (*Rig, error) {
 		rig.HasRefinery = true
 	}
 
-	// Check for mayor clone
-	mayorPath := filepath.Join(rigPath, "mayor", "rig")
-	if _, err := os.Stat(mayorPath); err == nil {
-		rig.HasMayor = true
+	// Check for overseer clone
+	overseerPath := filepath.Join(rigPath, "overseer", "rig")
+	if _, err := os.Stat(overseerPath); err == nil {
+		rig.HasOverseer = true
 	}
 
 	return rig, nil
@@ -311,9 +311,9 @@ func resolveLocalRepo(path, gitURL string) (string, string) {
 //	├── config.json            # Rig configuration
 //	├── .beads/                # Rig-level issue tracking
 //	├── refinery/rig/          # Canonical main clone
-//	├── mayor/rig/             # Mayor's working clone
+//	├── overseer/rig/             # Overseer's working clone
 //	├── witness/               # Witness agent (no clone)
-//	├── polecats/              # Worker directories (empty)
+//	├── miners/              # Worker directories (empty)
 //	└── crew/<crew>/           # Default human workspace
 func (m *Manager) AddRig(opts AddRigOptions) (*Rig, error) {
 	if m.RigExists(opts.Name) {
@@ -417,9 +417,9 @@ func (m *Manager) AddRig(opts AddRigOptions) (*Rig, error) {
 		return nil, fmt.Errorf("saving rig config: %w", err)
 	}
 
-	// Create shared bare repo as source of truth for refinery and polecats.
-	// This allows refinery to see polecat branches without pushing to remote.
-	// Mayor remains a separate clone (doesn't need branch visibility).
+	// Create shared bare repo as source of truth for refinery and miners.
+	// This allows refinery to see miner branches without pushing to remote.
+	// Overseer remains a separate clone (doesn't need branch visibility).
 	fmt.Printf("  Cloning repository (this may take a moment)...\n")
 	bareRepoPath := filepath.Join(rigPath, ".repo.git")
 	// cloneBareWith selects the right CloneBare variant based on filter/reference/branch.
@@ -524,59 +524,59 @@ func (m *Manager) AddRig(opts AddRigOptions) (*Rig, error) {
 		return nil, fmt.Errorf("updating rig config with default branch: %w", err)
 	}
 
-	// Create mayor as regular clone (separate from bare repo).
-	// Mayor doesn't need to see polecat branches - that's refinery's job.
-	// This also allows mayor to stay on the default branch without conflicting with refinery.
+	// Create overseer as regular clone (separate from bare repo).
+	// Overseer doesn't need to see miner branches - that's refinery's job.
+	// This also allows overseer to stay on the default branch without conflicting with refinery.
 	// Uses --reference to borrow objects from the bare repo we just created,
 	// avoiding a redundant download from the remote (GH#1059).
-	fmt.Printf("  Creating mayor clone...\n")
-	mayorRigPath := filepath.Join(rigPath, "mayor", "rig")
-	if err := os.MkdirAll(filepath.Dir(mayorRigPath), 0755); err != nil {
-		return nil, fmt.Errorf("creating mayor dir: %w", err)
+	fmt.Printf("  Creating overseer clone...\n")
+	overseerRigPath := filepath.Join(rigPath, "overseer", "rig")
+	if err := os.MkdirAll(filepath.Dir(overseerRigPath), 0755); err != nil {
+		return nil, fmt.Errorf("creating overseer dir: %w", err)
 	}
 	if opts.CloneFilter != "" {
-		if err := m.git.CloneBranchPartialWithReference(opts.GitURL, mayorRigPath, defaultBranch, opts.CloneFilter, bareRepoPath); err != nil {
+		if err := m.git.CloneBranchPartialWithReference(opts.GitURL, overseerRigPath, defaultBranch, opts.CloneFilter, bareRepoPath); err != nil {
 			fmt.Printf("  Warning: could not use bare repo as reference with filter: %v\n", err)
-			_ = os.RemoveAll(mayorRigPath)
-			if err := m.git.CloneBranchPartial(opts.GitURL, mayorRigPath, defaultBranch, opts.CloneFilter); err != nil {
-				return nil, fmt.Errorf("cloning for mayor: %w", err)
+			_ = os.RemoveAll(overseerRigPath)
+			if err := m.git.CloneBranchPartial(opts.GitURL, overseerRigPath, defaultBranch, opts.CloneFilter); err != nil {
+				return nil, fmt.Errorf("cloning for overseer: %w", err)
 			}
 		}
-	} else if err := m.git.CloneBranchWithReference(opts.GitURL, mayorRigPath, defaultBranch, bareRepoPath); err != nil {
+	} else if err := m.git.CloneBranchWithReference(opts.GitURL, overseerRigPath, defaultBranch, bareRepoPath); err != nil {
 		fmt.Printf("  Warning: could not use bare repo as reference: %v\n", err)
-		_ = os.RemoveAll(mayorRigPath)
-		if err := m.git.CloneBranch(opts.GitURL, mayorRigPath, defaultBranch); err != nil {
-			return nil, fmt.Errorf("cloning for mayor: %w", err)
+		_ = os.RemoveAll(overseerRigPath)
+		if err := m.git.CloneBranch(opts.GitURL, overseerRigPath, defaultBranch); err != nil {
+			return nil, fmt.Errorf("cloning for overseer: %w", err)
 		}
 	}
 
-	// Set up sparse checkout on mayor clone if requested
+	// Set up sparse checkout on overseer clone if requested
 	if len(opts.SparseCheckout) > 0 {
-		if err := git.InitSparseCheckout(mayorRigPath, opts.SparseCheckout); err != nil {
-			return nil, fmt.Errorf("initializing sparse checkout for mayor: %w", err)
+		if err := git.InitSparseCheckout(overseerRigPath, opts.SparseCheckout); err != nil {
+			return nil, fmt.Errorf("initializing sparse checkout for overseer: %w", err)
 		}
 		fmt.Printf("   ✓ Configured sparse checkout: %v\n", opts.SparseCheckout)
 	}
 
 	// No explicit checkout needed - --branch already checked out the default branch
-	mayorGit := git.NewGitWithDir("", mayorRigPath)
-	// Configure push URL on mayor clone (separate clone, doesn't inherit from bare repo)
+	overseerGit := git.NewGitWithDir("", overseerRigPath)
+	// Configure push URL on overseer clone (separate clone, doesn't inherit from bare repo)
 	if opts.PushURL != "" {
-		if err := mayorGit.ConfigurePushURL("origin", opts.PushURL); err != nil {
-			return nil, fmt.Errorf("configuring mayor push URL: %w", err)
+		if err := overseerGit.ConfigurePushURL("origin", opts.PushURL); err != nil {
+			return nil, fmt.Errorf("configuring overseer push URL: %w", err)
 		}
 	}
-	// Configure upstream remote on mayor clone (separate clone, doesn't inherit from bare repo)
+	// Configure upstream remote on overseer clone (separate clone, doesn't inherit from bare repo)
 	if opts.UpstreamURL != "" {
-		if err := mayorGit.AddUpstreamRemote(opts.UpstreamURL); err != nil {
-			return nil, fmt.Errorf("configuring mayor upstream remote: %w", err)
+		if err := overseerGit.AddUpstreamRemote(opts.UpstreamURL); err != nil {
+			return nil, fmt.Errorf("configuring overseer upstream remote: %w", err)
 		}
 	}
-	fmt.Printf("   ✓ Created mayor clone\n")
+	fmt.Printf("   ✓ Created overseer clone\n")
 
 	// Check if source repo has tracked .beads/ directory.
 	// If so, we need to initialize the database (it doesn't exist after clone since DB files are gitignored).
-	sourceBeadsDir := filepath.Join(mayorRigPath, ".beads")
+	sourceBeadsDir := filepath.Join(overseerRigPath, ".beads")
 	if _, err := os.Stat(sourceBeadsDir); err == nil {
 		// Remove any redirect file that might have been accidentally tracked.
 		// Redirect files are runtime/local config and should not be in git.
@@ -637,7 +637,7 @@ func (m *Manager) AddRig(opts AddRigOptions) (*Rig, error) {
 				)
 			}
 			cmd := exec.Command("bd", initArgs...)
-			cmd.Dir = mayorRigPath
+			cmd.Dir = overseerRigPath
 			cmd.Env = sourceBdEnv
 			if output, err := cmd.CombinedOutput(); err != nil {
 				fmt.Printf("  Warning: Could not init bd database: %v (%s)\n", err, strings.TrimSpace(string(output)))
@@ -731,18 +731,18 @@ func (m *Manager) AddRig(opts AddRigOptions) (*Rig, error) {
 		}
 	}
 
-	// Provision PRIME.md with Gas Town context for all workers in this rig.
+	// Provision PRIME.md with Excavation Site context for all workers in this rig.
 	// This is the fallback if SessionStart hook fails - ensures ALL workers
-	// (crew, polecats, refinery, witness) have GUPP and essential Gas Town context.
+	// (crew, miners, refinery, witness) have GUPP and essential Excavation Site context.
 	// PRIME.md is read by bd prime and output to the agent.
-	// Use ResolveBeadsDir to follow redirect (writes to mayor/rig/.beads/ if tracked).
+	// Use ResolveBeadsDir to follow redirect (writes to overseer/rig/.beads/ if tracked).
 	resolvedBeadsPath := beads.ResolveBeadsDir(rigPath)
 	if err := beads.ProvisionPrimeMD(resolvedBeadsPath); err != nil {
 		fmt.Printf("  Warning: Could not provision PRIME.md: %v\n", err)
 	}
 
 	// Create refinery as worktree from bare repo on default branch.
-	// Refinery needs to see polecat branches (shared .repo.git) and merges them.
+	// Refinery needs to see miner branches (shared .repo.git) and merges them.
 	// Being on the default branch allows direct merge workflow.
 	fmt.Printf("  Creating refinery worktree...\n")
 	refineryRigPath := filepath.Join(rigPath, "refinery", "rig")
@@ -789,12 +789,12 @@ This directory contains crew worker workspaces.
 gt crew add <name>    # Creates crew/<name>/ with a git clone
 ` + "```" + `
 
-## Crew vs Polecats
+## Crew vs Miners
 
 - **Crew**: Persistent, user-managed workspaces (never auto-garbage-collected)
-- **Polecats**: Transient, witness-managed workers (cleaned up after work completes)
+- **Miners**: Transient, witness-managed workers (cleaned up after work completes)
 
-Use crew for your own workspace. Polecats are for batch work dispatch.
+Use crew for your own workspace. Miners are for batch work dispatch.
 `
 	if err := os.WriteFile(readmePath, []byte(readmeContent), 0644); err != nil {
 		return nil, fmt.Errorf("creating crew README: %w", err)
@@ -807,17 +807,17 @@ Use crew for your own workspace. Polecats are for batch work dispatch.
 	// NOTE: Witness hooks are installed by witness/manager.go:Start() via EnsureSettingsForRole.
 	// No need to create patrol hooks here — agents self-install at startup.
 
-	// Create polecats directory with agent settings scaffold.
+	// Create miners directory with agent settings scaffold.
 	// Settings are passed to the agent via --settings flag (Claude) or installed
 	// in workDir (other agents). Scaffolding here ensures the settings file exists
-	// before the first polecat session starts, preventing startup failures.
-	polecatsPath := filepath.Join(rigPath, "polecats")
-	if err := os.MkdirAll(polecatsPath, 0755); err != nil {
-		return nil, fmt.Errorf("creating polecats dir: %w", err)
+	// before the first miner session starts, preventing startup failures.
+	minersPath := filepath.Join(rigPath, "miners")
+	if err := os.MkdirAll(minersPath, 0755); err != nil {
+		return nil, fmt.Errorf("creating miners dir: %w", err)
 	}
 	// Use the town's default_agent for scaffolding, falling back to claude.
 	// This ensures that when the town is configured with opencode (or another agent),
-	// the polecat directory gets the correct config dir (e.g. .opencode/) instead of .claude/.
+	// the miner directory gets the correct config dir (e.g. .opencode/) instead of .claude/.
 	townSettings, tsErr := config.LoadOrCreateTownSettings(config.TownSettingsPath(m.townRoot))
 	if tsErr != nil {
 		townSettings = config.NewTownSettings()
@@ -828,15 +828,15 @@ Use crew for your own workspace. Polecats are for batch work dispatch.
 	}
 	defaultPreset := config.GetAgentPresetByName(defaultAgentName)
 	if defaultPreset != nil && defaultPreset.HooksProvider != "" {
-		if err := hooks.InstallForRole(defaultPreset.HooksProvider, polecatsPath, polecatsPath, "polecat",
+		if err := hooks.InstallForRole(defaultPreset.HooksProvider, minersPath, minersPath, "miner",
 			defaultPreset.HooksDir, defaultPreset.HooksSettingsFile, defaultPreset.HooksUseSettingsDir); err != nil {
 			// Non-fatal: session startup will retry via EnsureSettingsForRole
-			fmt.Printf("  %s Could not scaffold polecat settings: %v\n", "!", err)
+			fmt.Printf("  %s Could not scaffold miner settings: %v\n", "!", err)
 		}
 	}
-	if err := commands.ProvisionFor(polecatsPath, defaultAgentName); err != nil {
+	if err := commands.ProvisionFor(minersPath, defaultAgentName); err != nil {
 		// Non-fatal: commands are convenience, not critical
-		fmt.Printf("  %s Could not scaffold polecat commands: %v\n", "!", err)
+		fmt.Printf("  %s Could not scaffold miner commands: %v\n", "!", err)
 	}
 
 	// Register route in town-level routes.jsonl BEFORE creating agent beads.
@@ -844,9 +844,9 @@ Use crew for your own workspace. Polecats are for batch work dispatch.
 	// Without this, agent bead creation logs "no route found" warnings (#1424).
 	if opts.BeadsPrefix != "" {
 		routePath := opts.Name
-		mayorRigBeads := filepath.Join(rigPath, "mayor", "rig", ".beads")
-		if _, err := os.Stat(mayorRigBeads); err == nil {
-			routePath = opts.Name + "/mayor/rig"
+		overseerRigBeads := filepath.Join(rigPath, "overseer", "rig", ".beads")
+		if _, err := os.Stat(overseerRigBeads); err == nil {
+			routePath = opts.Name + "/overseer/rig"
 		}
 		route := beads.Route{
 			Prefix: opts.BeadsPrefix + "-",
@@ -864,13 +864,13 @@ Use crew for your own workspace. Polecats are for batch work dispatch.
 	}
 
 	// Note: we intentionally do NOT seed local rig settings from
-	// .gastown/settings.json here. Repo settings are merged at runtime
+	// .excavation/settings.json here. Repo settings are merged at runtime
 	// by loadRigCommandVars (repo defaults → local overrides → --var flags).
 	// Seeding at rig-add time would fork the config, silently shadowing
 	// any future repo-side updates.
 
 	// Create rig-level agent beads (witness, refinery) in rig beads.
-	// Town-level agents (mayor, deacon) are created by gt install in town beads.
+	// Town-level agents (overseer, supervisor) are created by gt install in town beads.
 	if err := m.initAgentBeads(rigPath, opts.Name, opts.BeadsPrefix); err != nil {
 		// Non-fatal: log warning but continue
 		fmt.Fprintf(os.Stderr, "  Warning: Could not create agent beads: %v\n", err)
@@ -915,7 +915,7 @@ Use crew for your own workspace. Polecats are for batch work dispatch.
 	// if the save fails, success remains false and the deferred cleanup removes the dir.
 	// Without this, a failure after AddRig returns (but before the caller saves) would
 	// leave a directory that is not registered in rigs.json.
-	rigsPath := filepath.Join(m.townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(m.townRoot, "overseer", "rigs.json")
 	if err := config.SaveRigsConfig(rigsPath, m.config); err != nil {
 		return nil, fmt.Errorf("registering rig in rigs.json: %w", err)
 	}
@@ -985,7 +985,7 @@ func removeRigPathIfOwned(rigPath, expectedStamp string) {
 }
 
 // verifyRigIdentity checks that metadata.json points to the correct Dolt database
-// for this rig. This catches identity mismatches early — before polecats are spawned
+// for this rig. This catches identity mismatches early — before miners are spawned
 // and get stuck in retry loops. (gas-tc4)
 func (m *Manager) verifyRigIdentity(rigPath, rigName string) error {
 	resolvedBeadsDir := beads.ResolveBeadsDir(rigPath)
@@ -1012,7 +1012,7 @@ func (m *Manager) verifyRigIdentity(rigPath, rigName string) error {
 	}
 
 	// Verify the database name matches what we expect.
-	// The database should be named after the rig (e.g., "gastown") not after
+	// The database should be named after the rig (e.g., "excavation") not after
 	// a bd init artifact (e.g., "beads_gt") or a stale value from another rig.
 	if metadata.DoltDatabase != "" && metadata.DoltDatabase != rigName {
 		fmt.Fprintf(os.Stderr, "   ⚠ metadata.json has dolt_database=%q (expected %q) — attempting repair\n",
@@ -1078,7 +1078,7 @@ func warnDeprecatedRigConfigKeys(data []byte, path string) {
 //	bd <  0.62: "beads_<prefix>"  (e.g. "beads_ma")
 //
 // Either form must be removed when it differs from <rigName>, otherwise beads
-// created from the rig can silently land in the orphan DB while the mayor
+// created from the rig can silently land in the orphan DB while the overseer
 // reads from <rigName> — causing the silent data split documented in gh#3562.
 //
 // On entry the orphan is freshly created by bd init and contains only schema
@@ -1123,7 +1123,7 @@ func dropRigOrphanDBs(townRoot, prefix, rigName string) error {
 // Use `bd doctor --fix` in the project to configure sync-branch if needed.
 // TODO(bd-yaml): beads config should migrate to JSON (see beads issue)
 //
-// rigName is the rig's database name (e.g. "gastown"). When non-empty and
+// rigName is the rig's database name (e.g. "excavation"). When non-empty and
 // different from the database that `bd init --prefix` creates (named "<prefix>"
 // on bd >= 0.62 or "beads_<prefix>" on older bd), InitBeads drops the orphan
 // to prevent the silent data split documented in gh#3562.
@@ -1134,17 +1134,17 @@ func (m *Manager) InitBeads(rigPath, prefix, rigName string) error {
 	}
 
 	beadsDir := filepath.Join(rigPath, ".beads")
-	mayorRigBeads := filepath.Join(rigPath, "mayor", "rig", ".beads")
+	overseerRigBeads := filepath.Join(rigPath, "overseer", "rig", ".beads")
 
-	// Check if source repo has tracked .beads/ (cloned into mayor/rig).
+	// Check if source repo has tracked .beads/ (cloned into overseer/rig).
 	// If so, create a redirect file instead of a new database.
-	if _, err := os.Stat(mayorRigBeads); err == nil {
-		// Tracked beads exist - create redirect to mayor/rig/.beads
+	if _, err := os.Stat(overseerRigBeads); err == nil {
+		// Tracked beads exist - create redirect to overseer/rig/.beads
 		if err := os.MkdirAll(beadsDir, 0755); err != nil {
 			return err
 		}
 		redirectPath := filepath.Join(beadsDir, "redirect")
-		if err := os.WriteFile(redirectPath, []byte("mayor/rig/.beads\n"), 0644); err != nil {
+		if err := os.WriteFile(redirectPath, []byte("overseer/rig/.beads\n"), 0644); err != nil {
 			return fmt.Errorf("creating redirect file: %w", err)
 		}
 		return nil
@@ -1185,7 +1185,7 @@ func (m *Manager) InitBeads(rigPath, prefix, rigName string) error {
 	} else {
 		// bd init succeeded - configure the Dolt database
 
-		// Configure custom types for Gas Town (agent, role, rig, convoy).
+		// Configure custom types for Excavation Site (agent, role, rig, minecart).
 		// These were extracted from beads core in v0.46.0 and now require explicit config.
 		configCmd := exec.Command("bd", "config", "set", "types.custom", constants.BeadsCustomTypes)
 		configCmd.Dir = rigPath
@@ -1213,7 +1213,7 @@ func (m *Manager) InitBeads(rigPath, prefix, rigName string) error {
 		//   bd <  0.62: "beads_<prefix>"  (e.g. "beads_ma")
 		// The rig uses <rigName> as its canonical database (set by InitRig +
 		// EnsureMetadata). Orphans must be dropped or beads created from the
-		// rig will silently land in the wrong DB and become invisible to the mayor.
+		// rig will silently land in the wrong DB and become invisible to the overseer.
 		if rigName != "" {
 			if err := dropRigOrphanDBs(m.townRoot, prefix, rigName); err != nil {
 				// Non-fatal: AddRig has a post-init verification step that errors
@@ -1243,7 +1243,7 @@ func (m *Manager) InitBeads(rigPath, prefix, rigName string) error {
 	_, _ = migrateCmd.CombinedOutput()
 
 	// NOTE: We intentionally do NOT create routes.jsonl in rig beads.
-	// bd's routing walks up to find town root (via mayor/town.json) and uses
+	// bd's routing walks up to find town root (via overseer/town.json) and uses
 	// town-level routes.jsonl for prefix-based routing. Rig-level routes.jsonl
 	// would prevent this walk-up and break cross-rig routing.
 
@@ -1253,7 +1253,7 @@ func (m *Manager) InitBeads(rigPath, prefix, rigName string) error {
 // initAgentBeads creates rig-level agent beads for Witness and Refinery.
 // These agents use the rig's beads prefix and are stored in rig beads.
 //
-// Town-level agents (Mayor, Deacon) are created by gt install in town beads.
+// Town-level agents (Overseer, Supervisor) are created by gt install in town beads.
 // Role beads are also created by gt install with hq- prefix.
 //
 // Rig-level agents (Witness, Refinery) are created here in rig beads with rig prefix.
@@ -1262,7 +1262,7 @@ func (m *Manager) InitBeads(rigPath, prefix, rigName string) error {
 // Agent beads track lifecycle state for ZFC compliance (gt-h3hak, gt-pinkq).
 func (m *Manager) initAgentBeads(rigPath, rigName, prefix string) error {
 	// Rig-level agents go in rig beads with rig prefix (per docs/architecture.md).
-	// Town-level agents (Mayor, Deacon) are created by gt install in town beads.
+	// Town-level agents (Overseer, Supervisor) are created by gt install in town beads.
 	// Use ResolveBeadsDir to follow redirect files for tracked beads.
 	rigBeadsDir := beads.ResolveBeadsDir(rigPath)
 	bd := beads.NewWithBeadsDir(rigPath, rigBeadsDir)
@@ -1282,7 +1282,7 @@ func (m *Manager) initAgentBeads(rigPath, rigName, prefix string) error {
 			id:       beads.WitnessBeadIDWithPrefix(prefix, rigName),
 			roleType: "witness",
 			rig:      rigName,
-			desc:     fmt.Sprintf("Witness for %s - monitors polecat health and progress.", rigName),
+			desc:     fmt.Sprintf("Witness for %s - monitors miner health and progress.", rigName),
 		},
 		{
 			id:       beads.RefineryBeadIDWithPrefix(prefix, rigName),
@@ -1292,7 +1292,7 @@ func (m *Manager) initAgentBeads(rigPath, rigName, prefix string) error {
 		},
 	}
 
-	// Note: Mayor and Deacon are now created by gt install in town beads.
+	// Note: Overseer and Supervisor are now created by gt install in town beads.
 
 	for _, agent := range agents {
 		// Check if already exists
@@ -1351,7 +1351,7 @@ func (m *Manager) ensureGitignoreEntry(gitignorePath, entry string) error {
 }
 
 // deriveBeadsPrefix generates a beads prefix from a rig name.
-// Examples: "gastown" -> "gt", "my-project" -> "mp", "foo" -> "foo"
+// Examples: "excavation" -> "gt", "my-project" -> "mp", "foo" -> "foo"
 func deriveBeadsPrefix(name string) string {
 	// Strip path separators — callers should validate names, but be defensive
 	name = filepath.Base(name)
@@ -1367,7 +1367,7 @@ func deriveBeadsPrefix(name string) string {
 	})
 
 	// If single part, try camelCase splitting first (e.g., "myProject" -> "my" + "Project"),
-	// then fall back to compound word detection (e.g., "gastown" -> "gas" + "town").
+	// then fall back to compound word detection (e.g., "excavation" -> "gas" + "town").
 	if len(parts) == 1 {
 		if camelParts := splitCamelCase(parts[0]); len(camelParts) >= 2 {
 			parts = camelParts
@@ -1377,7 +1377,7 @@ func deriveBeadsPrefix(name string) string {
 	}
 
 	if len(parts) >= 2 {
-		// Take first letter of each part: "gas-town" -> "gt"
+		// Take first letter of each part: "excavation-site" -> "gt"
 		prefix := ""
 		for _, p := range parts {
 			if len(p) > 0 {
@@ -1396,7 +1396,7 @@ func deriveBeadsPrefix(name string) string {
 
 // splitCompoundWord attempts to split a compound word into its components.
 // Common suffixes like "town", "ville", "port" are detected to split
-// compound names (e.g., "gastown" -> ["gas", "town"]).
+// compound names (e.g., "excavation" -> ["gas", "town"]).
 func splitCompoundWord(word string) []string {
 	word = strings.ToLower(word)
 
@@ -1717,7 +1717,7 @@ func (m *Manager) RegisterRig(opts RegisterRigOptions) (*RegisterRigResult, erro
 
 	// Apply push URL to existing repos (mirrors AddRig behavior).
 	bareRepoPath := filepath.Join(rigPath, ".repo.git")
-	mayorRigPath := filepath.Join(rigPath, "mayor", "rig")
+	overseerRigPath := filepath.Join(rigPath, "overseer", "rig")
 	if pushURL != "" {
 		if _, err := os.Stat(bareRepoPath); err == nil {
 			bareGit := git.NewGitWithDir(bareRepoPath, "")
@@ -1725,10 +1725,10 @@ func (m *Manager) RegisterRig(opts RegisterRigOptions) (*RegisterRigResult, erro
 				return nil, fmt.Errorf("configuring push URL on bare repo: %w", cfgErr)
 			}
 		}
-		if _, err := os.Stat(mayorRigPath); err == nil {
-			mayorGit := git.NewGit(mayorRigPath)
-			if cfgErr := mayorGit.ConfigurePushURL("origin", pushURL); cfgErr != nil {
-				return nil, fmt.Errorf("configuring mayor push URL: %w", cfgErr)
+		if _, err := os.Stat(overseerRigPath); err == nil {
+			overseerGit := git.NewGit(overseerRigPath)
+			if cfgErr := overseerGit.ConfigurePushURL("origin", pushURL); cfgErr != nil {
+				return nil, fmt.Errorf("configuring overseer push URL: %w", cfgErr)
 			}
 		}
 	} else if pushURLAuthoritative {
@@ -1742,10 +1742,10 @@ func (m *Manager) RegisterRig(opts RegisterRigOptions) (*RegisterRigResult, erro
 				return nil, fmt.Errorf("clearing stale push URL on bare repo: %w", clrErr)
 			}
 		}
-		if _, err := os.Stat(mayorRigPath); err == nil {
-			mayorGit := git.NewGit(mayorRigPath)
-			if clrErr := mayorGit.ClearPushURL("origin"); clrErr != nil {
-				return nil, fmt.Errorf("clearing stale mayor push URL: %w", clrErr)
+		if _, err := os.Stat(overseerRigPath); err == nil {
+			overseerGit := git.NewGit(overseerRigPath)
+			if clrErr := overseerGit.ClearPushURL("origin"); clrErr != nil {
+				return nil, fmt.Errorf("clearing stale overseer push URL: %w", clrErr)
 			}
 		}
 	}
@@ -1767,10 +1767,10 @@ func (m *Manager) RegisterRig(opts RegisterRigOptions) (*RegisterRigResult, erro
 				return nil, fmt.Errorf("configuring upstream remote on bare repo: %w", upErr)
 			}
 		}
-		if _, err := os.Stat(mayorRigPath); err == nil {
-			mayorGit := git.NewGit(mayorRigPath)
-			if upErr := mayorGit.AddUpstreamRemote(opts.UpstreamURL); upErr != nil {
-				return nil, fmt.Errorf("configuring mayor upstream remote: %w", upErr)
+		if _, err := os.Stat(overseerRigPath); err == nil {
+			overseerGit := git.NewGit(overseerRigPath)
+			if upErr := overseerGit.AddUpstreamRemote(opts.UpstreamURL); upErr != nil {
+				return nil, fmt.Errorf("configuring overseer upstream remote: %w", upErr)
 			}
 		}
 	}
@@ -1792,7 +1792,7 @@ func (m *Manager) RegisterRig(opts RegisterRigOptions) (*RegisterRigResult, erro
 // detectPushURL attempts to detect a custom push URL from an existing repository.
 // Returns empty string if push URL matches fetch URL (no custom push URL configured).
 func (m *Manager) detectPushURL(rigPath string) string {
-	// Check bare repo first (polecat-preferred source of truth), then clones.
+	// Check bare repo first (miner-preferred source of truth), then clones.
 	// .repo.git is a bare repo and requires NewGitWithDir; the rest are regular clones.
 	bareRepoPath := filepath.Join(rigPath, ".repo.git")
 	if pushURL := detectPushURLFrom(git.NewGitWithDir(bareRepoPath, "")); pushURL != "" {
@@ -1801,7 +1801,7 @@ func (m *Manager) detectPushURL(rigPath string) string {
 
 	clonePaths := []string{
 		rigPath,
-		filepath.Join(rigPath, "mayor", "rig"),
+		filepath.Join(rigPath, "overseer", "rig"),
 		filepath.Join(rigPath, "refinery", "rig"),
 	}
 	for _, p := range clonePaths {
@@ -1836,7 +1836,7 @@ func detectPushURLFrom(g *git.Git) string {
 func (m *Manager) detectGitURL(rigPath string) (string, error) {
 	possiblePaths := []string{
 		rigPath,
-		filepath.Join(rigPath, "mayor", "rig"),
+		filepath.Join(rigPath, "overseer", "rig"),
 		filepath.Join(rigPath, "refinery", "rig"),
 	}
 	for _, p := range possiblePaths {
@@ -1858,7 +1858,7 @@ func (m *Manager) ListRigNames() []string {
 }
 
 // seedPatrolMolecules creates patrol molecule prototypes in the rig's beads database.
-// These molecules define the work loops for Deacon, Witness, and Refinery roles.
+// These molecules define the work loops for Supervisor, Witness, and Refinery roles.
 func (m *Manager) seedPatrolMolecules(rigPath string) error {
 	// Use bd command to seed molecules (more reliable than internal API)
 	cmd := exec.Command("bd", "mol", "seed", "--patrol")
@@ -1879,8 +1879,8 @@ func (m *Manager) seedPatrolMoleculesManually(rigPath string) error {
 		desc  string
 	}{
 		{
-			title: "Deacon Patrol",
-			desc:  "Mayor's daemon patrol loop for handling callbacks, health checks, and cleanup.",
+			title: "Supervisor Patrol",
+			desc:  "Overseer's daemon patrol loop for handling callbacks, health checks, and cleanup.",
 		},
 		{
 			title: "Witness Patrol",
@@ -1930,9 +1930,9 @@ func (m *Manager) createPluginDirectories(rigPath string) error {
 	// Create a README in town plugins if it doesn't exist
 	townReadme := filepath.Join(townPluginsDir, "README.md")
 	if _, err := os.Stat(townReadme); os.IsNotExist(err) {
-		content := `# Gas Town Plugins
+		content := `# Excavation Site Plugins
 
-This directory contains town-level plugins that run during Deacon patrol cycles.
+This directory contains town-level plugins that run during Supervisor patrol cycles.
 
 ## Plugin Structure
 
@@ -1946,7 +1946,7 @@ Each plugin is a directory containing:
 - condition: Metric threshold
 - event: Trigger-based (startup, heartbeat)
 
-See docs/deacon-plugins.md for full documentation.
+See docs/supervisor-plugins.md for full documentation.
 `
 		if writeErr := os.WriteFile(townReadme, []byte(content), 0644); writeErr != nil {
 			// Non-fatal
@@ -1960,7 +1960,7 @@ See docs/deacon-plugins.md for full documentation.
 		return fmt.Errorf("creating rig plugins directory: %w", err)
 	}
 
-	// Add Gas Town directories and config files to rig .gitignore so they
+	// Add Excavation Site directories and config files to rig .gitignore so they
 	// don't pollute the project repo. The rig container is not a git repo
 	// itself, but this is a defensive measure against accidental git init
 	// or future architecture changes.
@@ -1981,8 +1981,8 @@ See docs/deacon-plugins.md for full documentation.
 		".runtime/",
 		"crew/",
 		"daemon/",
-		"mayor/",
-		"polecats/",
+		"overseer/",
+		"miners/",
 		"refinery/",
 		"settings/",
 		"witness/",

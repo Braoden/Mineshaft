@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/formula"
+	"github.com/steveyegge/excavation/internal/formula"
 )
 
 func TestNewFormulaCheck(t *testing.T) {
@@ -48,7 +48,7 @@ func TestFormulaCheck_Run_Missing(t *testing.T) {
 
 	// Delete a formula
 	formulasDir := filepath.Join(tmpDir, ".beads", "formulas")
-	formulaPath := filepath.Join(formulasDir, "mol-deacon-patrol.formula.toml")
+	formulaPath := filepath.Join(formulasDir, "mol-supervisor-patrol.formula.toml")
 	if err := os.Remove(formulaPath); err != nil {
 		t.Fatal(err)
 	}
@@ -77,7 +77,7 @@ func TestFormulaCheck_Fix(t *testing.T) {
 
 	// Delete a formula
 	formulasDir := filepath.Join(tmpDir, ".beads", "formulas")
-	formulaPath := filepath.Join(formulasDir, "mol-deacon-patrol.formula.toml")
+	formulaPath := filepath.Join(formulasDir, "mol-supervisor-patrol.formula.toml")
 	if err := os.Remove(formulaPath); err != nil {
 		t.Fatal(err)
 	}

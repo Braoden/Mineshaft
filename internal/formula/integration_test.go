@@ -59,11 +59,11 @@ func TestParseRealFormulas(t *testing.T) {
 
 			// Type-specific checks on the (possibly resolved) formula.
 			switch f.Type {
-			case TypeConvoy:
+			case TypeMinecart:
 				if len(f.Legs) == 0 {
-					t.Error("Convoy formula has no legs")
+					t.Error("Minecart formula has no legs")
 				}
-				t.Logf("Convoy formula with %d legs", len(f.Legs))
+				t.Logf("Minecart formula with %d legs", len(f.Legs))
 			case TypeWorkflow:
 				if len(f.Steps) == 0 {
 					t.Error("Workflow formula has no steps")

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/config"
 )
 
 type fakeStartupPromptSession struct {
@@ -119,7 +119,7 @@ func TestStartupFallbackCommands_NoHooks(t *testing.T) {
 		},
 	}
 
-	commands := StartupFallbackCommands("polecat", rc)
+	commands := StartupFallbackCommands("miner", rc)
 	if commands == nil {
 		t.Error("StartupFallbackCommands() with no hooks should return commands")
 	}
@@ -135,7 +135,7 @@ func TestStartupFallbackCommands_WithHooks(t *testing.T) {
 		},
 	}
 
-	commands := StartupFallbackCommands("polecat", rc)
+	commands := StartupFallbackCommands("miner", rc)
 	if commands != nil {
 		t.Error("StartupFallbackCommands() with hooks provider should return nil")
 	}
@@ -144,7 +144,7 @@ func TestStartupFallbackCommands_WithHooks(t *testing.T) {
 func TestStartupFallbackCommands_NilConfig(t *testing.T) {
 	// Nil config defaults to claude provider, which has hooks
 	// So it returns nil (no fallback commands needed)
-	commands := StartupFallbackCommands("polecat", nil)
+	commands := StartupFallbackCommands("miner", nil)
 	if commands != nil {
 		t.Error("StartupFallbackCommands() with nil config should return nil (defaults to claude with hooks)")
 	}
@@ -157,7 +157,7 @@ func TestStartupFallbackCommands_AutonomousRole(t *testing.T) {
 		},
 	}
 
-	autonomousRoles := []string{"polecat"}
+	autonomousRoles := []string{"miner"}
 	for _, role := range autonomousRoles {
 		t.Run(role, func(t *testing.T) {
 			commands := StartupFallbackCommands(role, rc)
@@ -180,7 +180,7 @@ func TestStartupFallbackCommands_PatrolRolesSkipMailInject(t *testing.T) {
 		},
 	}
 
-	for _, role := range []string{"witness", "refinery", "deacon", "boot", "deacon/boot"} {
+	for _, role := range []string{"witness", "refinery", "supervisor", "boot", "supervisor/boot"} {
 		t.Run(role, func(t *testing.T) {
 			commands := StartupFallbackCommands(role, rc)
 			if commands == nil || len(commands) == 0 {
@@ -202,7 +202,7 @@ func TestStartupFallbackCommands_NonAutonomousRole(t *testing.T) {
 		},
 	}
 
-	nonAutonomousRoles := []string{"mayor", "crew", "keeper"}
+	nonAutonomousRoles := []string{"overseer", "crew", "keeper"}
 	for _, role := range nonAutonomousRoles {
 		t.Run(role, func(t *testing.T) {
 			commands := StartupFallbackCommands(role, rc)
@@ -227,7 +227,7 @@ func TestStartupFallbackCommands_RoleCasing(t *testing.T) {
 	}
 
 	// Role should be lowercased internally
-	commands := StartupFallbackCommands("POLECAT", rc)
+	commands := StartupFallbackCommands("MINER", rc)
 	if commands == nil {
 		t.Error("StartupFallbackCommands() should handle uppercase role")
 	}
@@ -235,7 +235,7 @@ func TestStartupFallbackCommands_RoleCasing(t *testing.T) {
 
 func TestEnsureSettingsForRole_NilConfig(t *testing.T) {
 	// Should not panic with nil config
-	err := EnsureSettingsForRole("/tmp/test", "/tmp/test", "polecat", nil)
+	err := EnsureSettingsForRole("/tmp/test", "/tmp/test", "miner", nil)
 	if err != nil {
 		t.Errorf("EnsureSettingsForRole() with nil config should not error, got %v", err)
 	}
@@ -246,7 +246,7 @@ func TestEnsureSettingsForRole_NilHooks(t *testing.T) {
 		Hooks: nil,
 	}
 
-	err := EnsureSettingsForRole("/tmp/test", "/tmp/test", "polecat", rc)
+	err := EnsureSettingsForRole("/tmp/test", "/tmp/test", "miner", rc)
 	if err != nil {
 		t.Errorf("EnsureSettingsForRole() with nil hooks should not error, got %v", err)
 	}
@@ -259,7 +259,7 @@ func TestEnsureSettingsForRole_UnknownProvider(t *testing.T) {
 		},
 	}
 
-	err := EnsureSettingsForRole("/tmp/test", "/tmp/test", "polecat", rc)
+	err := EnsureSettingsForRole("/tmp/test", "/tmp/test", "miner", rc)
 	if err != nil {
 		t.Errorf("EnsureSettingsForRole() with unknown provider should not error, got %v", err)
 	}
@@ -275,7 +275,7 @@ func TestEnsureSettingsForRole_OpenCodeUsesWorkDir(t *testing.T) {
 		Hooks: &config.RuntimeHooksConfig{
 			Provider:     "opencode",
 			Dir:          "plugins",
-			SettingsFile: "gastown.js",
+			SettingsFile: "excavation.js",
 		},
 	}
 
@@ -285,10 +285,10 @@ func TestEnsureSettingsForRole_OpenCodeUsesWorkDir(t *testing.T) {
 	}
 
 	// Plugin should be in workDir, not settingsDir
-	if _, err := os.Stat(settingsDir + "/plugins/gastown.js"); err == nil {
+	if _, err := os.Stat(settingsDir + "/plugins/excavation.js"); err == nil {
 		t.Error("OpenCode plugin should NOT be in settingsDir")
 	}
-	if _, err := os.Stat(workDir + "/plugins/gastown.js"); err != nil {
+	if _, err := os.Stat(workDir + "/plugins/excavation.js"); err != nil {
 		t.Error("OpenCode plugin should be in workDir")
 	}
 }
@@ -618,7 +618,7 @@ func TestStartupFallbackCommands_InformationalHooks(t *testing.T) {
 		},
 	}
 
-	commands := StartupFallbackCommands("polecat", rc)
+	commands := StartupFallbackCommands("miner", rc)
 	if commands == nil {
 		t.Error("StartupFallbackCommands() with informational hooks should return commands")
 	}
@@ -880,10 +880,10 @@ func TestRuntimeConfigWithMinDelay_ZeroMin(t *testing.T) {
 func makeTownRoot(t *testing.T) string {
 	t.Helper()
 	root := t.TempDir()
-	if err := os.MkdirAll(root+"/mayor", 0755); err != nil {
+	if err := os.MkdirAll(root+"/overseer", 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(root+"/mayor/town.json", []byte(`{"type":"town"}`), 0644); err != nil {
+	if err := os.WriteFile(root+"/overseer/town.json", []byte(`{"type":"town"}`), 0644); err != nil {
 		t.Fatal(err)
 	}
 	return root
@@ -901,9 +901,9 @@ func makeTownRootWithGit(t *testing.T) string {
 func TestCommandsInherited_WorkDirIsNestedInTownRoot(t *testing.T) {
 	// workDir is a subdirectory of the town root (same git repo) → inherited
 	root := makeTownRootWithGit(t)
-	mayorDir := root + "/mayor"
+	overseerDir := root + "/overseer"
 
-	if !commandsInherited(mayorDir) {
+	if !commandsInherited(overseerDir) {
 		t.Error("commandsInherited() = false, want true for workDir nested inside town root")
 	}
 }
@@ -918,21 +918,21 @@ func TestCommandsInherited_WorkDirIsTownRoot(t *testing.T) {
 }
 
 func TestCommandsInherited_WorkDirNestedInTownRootBeforeGitInit(t *testing.T) {
-	// gt install creates mayor/deacon settings before it initializes town .git.
+	// gt install creates overseer/supervisor settings before it initializes town .git.
 	// Those role dirs still inherit town-level commands once install provisions them.
 	root := makeTownRoot(t)
-	mayorDir := root + "/mayor"
+	overseerDir := root + "/overseer"
 
-	if !commandsInherited(mayorDir) {
+	if !commandsInherited(overseerDir) {
 		t.Error("commandsInherited() = false, want true for town role dir before .git exists")
 	}
 }
 
 func TestCommandsInherited_NestedGitRepoInsideTownRoot(t *testing.T) {
-	// Crew/polecat workdirs live in nested git repos under the town root. Claude
+	// Crew/miner workdirs live in nested git repos under the town root. Claude
 	// Code stops at that repo boundary, so they need explicit command provisioning.
 	root := makeTownRootWithGit(t)
-	workDir := root + "/rig/polecats/chrome/repo"
+	workDir := root + "/rig/miners/chrome/repo"
 	if err := os.MkdirAll(workDir+"/.git", 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -943,7 +943,7 @@ func TestCommandsInherited_NestedGitRepoInsideTownRoot(t *testing.T) {
 }
 
 func TestCommandsInherited_WorkDirIsOutsideTownRoot(t *testing.T) {
-	// workDir in a standalone git repo that is NOT a Gas Town workspace → not inherited
+	// workDir in a standalone git repo that is NOT a Excavation Site workspace → not inherited
 	dir := t.TempDir()
 	if err := os.MkdirAll(dir+"/.git", 0755); err != nil {
 		t.Fatal(err)
@@ -969,12 +969,12 @@ func TestCommandsInherited_NoGitRoot(t *testing.T) {
 }
 
 func TestEnsureSettingsForRole_SkipsCommandsWhenInheritedFromTownRoot(t *testing.T) {
-	// Mayor/deacon run inside the town root git repo. Commands provisioned at the
+	// Overseer/supervisor run inside the town root git repo. Commands provisioned at the
 	// town root are inherited by Claude Code's path-hierarchy traversal, so
 	// EnsureSettingsForRole must NOT provision a duplicate copy in the role dir.
 	root := makeTownRootWithGit(t)
-	mayorDir := root + "/mayor"
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := root + "/overseer"
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -986,21 +986,21 @@ func TestEnsureSettingsForRole_SkipsCommandsWhenInheritedFromTownRoot(t *testing
 		},
 	}
 
-	if err := EnsureSettingsForRole(mayorDir, mayorDir, "mayor", rc); err != nil {
+	if err := EnsureSettingsForRole(overseerDir, overseerDir, "overseer", rc); err != nil {
 		t.Fatalf("EnsureSettingsForRole() error = %v", err)
 	}
 
 	// Commands must NOT be provisioned inside the role dir
 	for _, cmd := range []string{"done", "handoff", "review"} {
-		path := mayorDir + "/.claude/commands/" + cmd + ".md"
+		path := overseerDir + "/.claude/commands/" + cmd + ".md"
 		if _, err := os.Stat(path); err == nil {
-			t.Errorf("command %s.md was provisioned in mayor dir, want skipped (would duplicate town-root copy)", cmd)
+			t.Errorf("command %s.md was provisioned in overseer dir, want skipped (would duplicate town-root copy)", cmd)
 		}
 	}
 }
 
 func TestEnsureSettingsForRole_ProvisionCommandsOutsideTownRoot(t *testing.T) {
-	// Crew/polecat workDirs are outside the town root git repo.
+	// Crew/miner workDirs are outside the town root git repo.
 	// EnsureSettingsForRole must provision commands normally.
 	workDir := t.TempDir()
 	// workDir has no .git ancestor, so commandsInherited returns false.

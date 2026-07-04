@@ -1,4 +1,4 @@
-// Package hooks provides centralized Claude Code hook management for Gas Town.
+// Package hooks provides centralized Claude Code hook management for Excavation Site.
 //
 // It manages a base hook configuration and per-role/per-rig overrides,
 // generating .claude/settings.json files for all agents in the workspace.
@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/atomicfile"
+	"github.com/steveyegge/excavation/internal/atomicfile"
 )
 
 // HookEntry represents a single hook matcher with its associated hooks.
@@ -137,7 +137,7 @@ func MarshalSettings(s *SettingsJSON) ([]byte, error) {
 }
 
 // HasClaudePromptDefaults reports whether settings already contain the Claude
-// startup defaults Gas Town needs for non-interactive agent sessions.
+// startup defaults Excavation Site needs for non-interactive agent sessions.
 func HasClaudePromptDefaults(s *SettingsJSON) bool {
 	if s == nil {
 		return false
@@ -290,9 +290,9 @@ func HooksEqual(a, b *HooksConfig) bool {
 // Target represents a managed settings.json location.
 type Target struct {
 	Path     string // Full path to .claude/settings.json or .gemini/settings.json
-	Key      string // Override key: "gastown/crew", "mayor", etc.
+	Key      string // Override key: "excavation/crew", "overseer", etc.
 	Rig      string // Rig name or empty for town-level
-	Role     string // Informational only — does NOT participate in override resolution (Key does). Singular form matching RoleSettingsDir: crew, witness, refinery, polecat, mayor, deacon.
+	Role     string // Informational only — does NOT participate in override resolution (Key does). Singular form matching RoleSettingsDir: crew, witness, refinery, miner, overseer, supervisor.
 	Provider string // Hook provider: "claude" (default/empty) or "gemini", etc.
 }
 
@@ -325,19 +325,19 @@ func Merge(base, override *HooksConfig) *HooksConfig {
 // The successor picks up hooked work via SessionStart hook (gt prime --hook).
 func DefaultOverrides() map[string]*HooksConfig {
 	return map[string]*HooksConfig{
-		// Polecats: auto-run gt done on session Stop (gas-lob).
-		// Catches the "idle polecat" problem: polecats that finish work but
-		// forget to call gt done before the session ends. The polecat-stop-check
+		// Miners: auto-run gt done on session Stop (gas-lob).
+		// Catches the "idle miner" problem: miners that finish work but
+		// forget to call gt done before the session ends. The miner-stop-check
 		// command is idempotent — it checks heartbeat state and branch commits
 		// before deciding whether to run gt done.
-		"polecats": {
+		"miners": {
 			Stop: []HookEntry{
 				{
 					Matcher: "",
 					Hooks: []Hook{
 						{
 							Type:    "command",
-							Command: gtCommand("gt tap polecat-stop-check"),
+							Command: gtCommand("gt tap miner-stop-check"),
 						},
 					},
 				},
@@ -382,7 +382,7 @@ func DefaultOverrides() map[string]*HooksConfig {
 					}},
 				},
 				{
-					Matcher: "Bash(*bd mol pour *mol-deacon*)",
+					Matcher: "Bash(*bd mol pour *mol-supervisor*)",
 					Hooks: []Hook{{
 						Type:    "command",
 						Command: "echo '❌ BLOCKED: Patrol formulas must use wisps, not persistent molecules.' && echo 'Use: bd mol wisp mol-*-patrol' && echo 'Not:  bd mol pour mol-*-patrol' && exit 2",
@@ -404,35 +404,35 @@ func DefaultOverrides() map[string]*HooksConfig {
 					Matcher: "Bash(*tmux*send-keys*)",
 					Hooks: []Hook{{
 						Type:    "command",
-						Command: "echo 'BLOCKED: Boot must not use raw tmux send-keys; it can leave unsubmitted text staged in the Deacon TUI.' && echo 'Use: gt nudge --mode=immediate deacon \"message\" (do not add --force).' && exit 2",
+						Command: "echo 'BLOCKED: Boot must not use raw tmux send-keys; it can leave unsubmitted text staged in the Supervisor TUI.' && echo 'Use: gt nudge --mode=immediate supervisor \"message\" (do not add --force).' && exit 2",
 					}},
 				},
 			},
 		},
-		// Deacon roles: patrol-formula-guard (same as witness).
-		// Deacons also run patrols and must use wisps, not persistent molecules.
-		"deacon": {
+		// Supervisor roles: patrol-formula-guard (same as witness).
+		// Supervisors also run patrols and must use wisps, not persistent molecules.
+		"supervisor": {
 			UserPromptSubmit: []HookEntry{{Matcher: ""}},
 			PreToolUse: []HookEntry{
 				{
 					Matcher: "Bash(*for *seq*)",
 					Hooks: []Hook{{
 						Type:    "command",
-						Command: "echo '❌ BLOCKED: Deacon must not batch patrol cycles with for/seq loops.' && echo 'Run one patrol cycle, then use gt patrol report or gt handoff.' && exit 2",
+						Command: "echo '❌ BLOCKED: Supervisor must not batch patrol cycles with for/seq loops.' && echo 'Run one patrol cycle, then use gt patrol report or gt handoff.' && exit 2",
 					}},
 				},
 				{
 					Matcher: "Bash(*while true*)",
 					Hooks: []Hook{{
 						Type:    "command",
-						Command: "echo '❌ BLOCKED: Deacon must not run open-ended patrol loops.' && echo 'Run one patrol cycle, then use gt patrol report or gt handoff.' && exit 2",
+						Command: "echo '❌ BLOCKED: Supervisor must not run open-ended patrol loops.' && echo 'Run one patrol cycle, then use gt patrol report or gt handoff.' && exit 2",
 					}},
 				},
 				{
 					Matcher: "Bash(*while :*)",
 					Hooks: []Hook{{
 						Type:    "command",
-						Command: "echo '❌ BLOCKED: Deacon must not run open-ended patrol loops.' && echo 'Run one patrol cycle, then use gt patrol report or gt handoff.' && exit 2",
+						Command: "echo '❌ BLOCKED: Supervisor must not run open-ended patrol loops.' && echo 'Run one patrol cycle, then use gt patrol report or gt handoff.' && exit 2",
 					}},
 				},
 				{
@@ -450,7 +450,7 @@ func DefaultOverrides() map[string]*HooksConfig {
 					}},
 				},
 				{
-					Matcher: "Bash(*bd mol pour *mol-deacon*)",
+					Matcher: "Bash(*bd mol pour *mol-supervisor*)",
 					Hooks: []Hook{{
 						Type:    "command",
 						Command: "echo '❌ BLOCKED: Patrol formulas must use wisps, not persistent molecules.' && echo 'Use: bd mol wisp mol-*-patrol' && echo 'Not:  bd mol pour mol-*-patrol' && exit 2",
@@ -485,7 +485,7 @@ func DefaultOverrides() map[string]*HooksConfig {
 					}},
 				},
 				{
-					Matcher: "Bash(*bd mol pour *mol-deacon*)",
+					Matcher: "Bash(*bd mol pour *mol-supervisor*)",
 					Hooks: []Hook{{
 						Type:    "command",
 						Command: "echo '❌ BLOCKED: Patrol formulas must use wisps, not persistent molecules.' && echo 'Use: bd mol wisp mol-*-patrol' && echo 'Not:  bd mol pour mol-*-patrol' && exit 2",
@@ -553,29 +553,29 @@ func ComputeExpected(target string) (*HooksConfig, error) {
 }
 
 // DiscoverTargets finds all managed .claude/settings.json locations in the workspace.
-// Settings are installed in gastown-managed parent directories and passed to Claude Code
-// via --settings flag. Crew members in a rig share one settings file, as do polecats.
+// Settings are installed in excavation-managed parent directories and passed to Claude Code
+// via --settings flag. Crew members in a rig share one settings file, as do miners.
 // Returns Target structs with path, override key, rig, and role information.
 func DiscoverTargets(townRoot string) ([]Target, error) {
 	var targets []Target
 
-	// Town-level targets (mayor/deacon cwd IS the settings dir)
+	// Town-level targets (overseer/supervisor cwd IS the settings dir)
 	targets = append(targets, Target{
-		Path: filepath.Join(townRoot, "mayor", ".claude", "settings.json"),
-		Key:  "mayor",
-		Role: "mayor",
+		Path: filepath.Join(townRoot, "overseer", ".claude", "settings.json"),
+		Key:  "overseer",
+		Role: "overseer",
 	})
 	targets = append(targets, Target{
-		Path: filepath.Join(townRoot, "deacon", ".claude", "settings.json"),
-		Key:  "deacon",
-		Role: "deacon",
+		Path: filepath.Join(townRoot, "supervisor", ".claude", "settings.json"),
+		Key:  "supervisor",
+		Role: "supervisor",
 	})
 
-	// Boot watchdog — ephemeral Claude agent in deacon/dogs/boot/.
+	// Boot watchdog — ephemeral Claude agent in supervisor/dogs/boot/.
 	// Only added when the directory exists (gitignored and optional).
 	// Adding it here ensures HooksSyncCheck manages the file and Fix() preserves
 	// custom fields (e.g. model) via the LoadSettings → MarshalSettings round-trip.
-	bootDir := filepath.Join(townRoot, "deacon", "dogs", "boot")
+	bootDir := filepath.Join(townRoot, "supervisor", "dogs", "boot")
 	if info, err := os.Stat(bootDir); err == nil && info.IsDir() {
 		targets = append(targets, Target{
 			Path: filepath.Join(bootDir, ".claude", "settings.json"),
@@ -591,7 +591,7 @@ func DiscoverTargets(townRoot string) ([]Target, error) {
 	}
 
 	for _, entry := range entries {
-		if !entry.IsDir() || entry.Name() == "mayor" || entry.Name() == "deacon" ||
+		if !entry.IsDir() || entry.Name() == "overseer" || entry.Name() == "supervisor" ||
 			entry.Name() == ".beads" || strings.HasPrefix(entry.Name(), ".") {
 			continue
 		}
@@ -599,7 +599,7 @@ func DiscoverTargets(townRoot string) ([]Target, error) {
 		rigName := entry.Name()
 		rigPath := filepath.Join(townRoot, rigName)
 
-		// Skip directories that aren't rigs (no crew/ or witness/ or polecats/ subdirs)
+		// Skip directories that aren't rigs (no crew/ or witness/ or miners/ subdirs)
 		if !isRig(rigPath) {
 			continue
 		}
@@ -616,15 +616,15 @@ func DiscoverTargets(townRoot string) ([]Target, error) {
 			})
 		}
 
-		// Polecats — one shared settings file in the polecats parent directory.
-		// All polecats share this via --settings flag.
-		polecatsDir := filepath.Join(rigPath, "polecats")
-		if info, err := os.Stat(polecatsDir); err == nil && info.IsDir() {
+		// Miners — one shared settings file in the miners parent directory.
+		// All miners share this via --settings flag.
+		minersDir := filepath.Join(rigPath, "miners")
+		if info, err := os.Stat(minersDir); err == nil && info.IsDir() {
 			targets = append(targets, Target{
-				Path: filepath.Join(polecatsDir, ".claude", "settings.json"),
-				Key:  rigName + "/polecats",
+				Path: filepath.Join(minersDir, ".claude", "settings.json"),
+				Key:  rigName + "/miners",
 				Rig:  rigName,
-				Role: "polecat",
+				Role: "miner",
 			})
 		}
 
@@ -661,7 +661,7 @@ func DiscoverTargets(townRoot string) ([]Target, error) {
 type RoleLocation struct {
 	Dir  string // Absolute path to the role's parent directory (e.g., .../rig/crew)
 	Rig  string // Rig name, or empty for town-level roles
-	Role string // Role name: crew, polecat, witness, refinery, mayor, deacon
+	Role string // Role name: crew, miner, witness, refinery, overseer, supervisor
 }
 
 // DiscoverRoleLocations finds all role directories in a workspace.
@@ -671,7 +671,7 @@ func DiscoverRoleLocations(townRoot string) ([]RoleLocation, error) {
 	var locations []RoleLocation
 
 	// Town-level roles
-	for _, role := range []string{"mayor", "deacon"} {
+	for _, role := range []string{"overseer", "supervisor"} {
 		dir := filepath.Join(townRoot, role)
 		if info, err := os.Stat(dir); err == nil && info.IsDir() {
 			locations = append(locations, RoleLocation{Dir: dir, Role: role})
@@ -685,7 +685,7 @@ func DiscoverRoleLocations(townRoot string) ([]RoleLocation, error) {
 	}
 
 	for _, entry := range entries {
-		if !entry.IsDir() || entry.Name() == "mayor" || entry.Name() == "deacon" ||
+		if !entry.IsDir() || entry.Name() == "overseer" || entry.Name() == "supervisor" ||
 			entry.Name() == ".beads" || strings.HasPrefix(entry.Name(), ".") {
 			continue
 		}
@@ -700,7 +700,7 @@ func DiscoverRoleLocations(townRoot string) ([]RoleLocation, error) {
 		// Map subdirectories to roles
 		for _, sub := range []struct{ dir, role string }{
 			{"crew", "crew"},
-			{"polecats", "polecat"},
+			{"miners", "miner"},
 			{"witness", "witness"},
 			{"refinery", "refinery"},
 		} {
@@ -715,11 +715,11 @@ func DiscoverRoleLocations(townRoot string) ([]RoleLocation, error) {
 }
 
 // DiscoverWorktrees returns subdirectories within a role parent directory that
-// are individual worktrees (e.g., crew/alice, crew/bob, polecats/toast).
+// are individual worktrees (e.g., crew/alice, crew/bob, miners/toast).
 // Skips hidden directories and non-directories.
 //
-// Some roles, especially polecats, keep the git worktree one level below the
-// agent slot directory (for example, polecats/fury/gastown). When an immediate
+// Some roles, especially miners, keep the git worktree one level below the
+// agent slot directory (for example, miners/fury/excavation). When an immediate
 // child contains nested git worktree roots, prefer those nested directories so
 // hooks are synced into the real repo root instead of the slot parent.
 func DiscoverWorktrees(roleDir string) []string {
@@ -772,9 +772,9 @@ func isGitWorktreeRoot(dir string) bool {
 	return err == nil
 }
 
-// isRig checks if a directory looks like a rig (has crew/, witness/, or polecats/ subdirectory).
+// isRig checks if a directory looks like a rig (has crew/, witness/, or miners/ subdirectory).
 func isRig(path string) bool {
-	for _, sub := range []string{"crew", "witness", "polecats", "refinery"} {
+	for _, sub := range []string{"crew", "witness", "miners", "refinery"} {
 		info, err := os.Stat(filepath.Join(path, sub))
 		if err == nil && info.IsDir() {
 			return true
@@ -906,7 +906,7 @@ func BasePath() string {
 // OverridePath returns the path to the override config for a given target in
 // the primary dir.
 func OverridePath(target string) string {
-	// Replace "/" with "__" for filesystem safety (e.g., "gastown/crew" -> "gastown__crew")
+	// Replace "/" with "__" for filesystem safety (e.g., "excavation/crew" -> "excavation__crew")
 	safe := strings.ReplaceAll(target, "/", "__")
 	return filepath.Join(gtPrimaryDir(), "hooks-overrides", safe+".json")
 }
@@ -968,17 +968,17 @@ func MarshalConfig(cfg *HooksConfig) ([]byte, error) {
 }
 
 // NormalizeTarget normalizes a target string, mapping singular role aliases
-// to their canonical forms (e.g., "polecat" → "polecats", "rig/polecat" → "rig/polecats").
+// to their canonical forms (e.g., "miner" → "miners", "rig/miner" → "rig/miners").
 // Returns the normalized target and true if valid, or ("", false) if invalid.
 func NormalizeTarget(target string) (string, bool) {
 	// Alias map: singular → canonical
 	aliases := map[string]string{
-		"polecat": "polecats",
+		"miner": "miners",
 	}
 
 	validRoles := map[string]bool{
 		"crew": true, "witness": true, "refinery": true,
-		"polecats": true, "mayor": true, "deacon": true,
+		"miners": true, "overseer": true, "supervisor": true,
 	}
 
 	// Simple role target
@@ -989,7 +989,7 @@ func NormalizeTarget(target string) (string, bool) {
 		return canonical, true
 	}
 
-	// Rig/role target (e.g., "gastown/crew")
+	// Rig/role target (e.g., "excavation/crew")
 	parts := strings.SplitN(target, "/", 2)
 	if len(parts) == 2 && parts[0] != "" {
 		role := parts[1]
@@ -1006,7 +1006,7 @@ func NormalizeTarget(target string) (string, bool) {
 
 // ValidTarget returns true if the target string is a valid override target.
 // Valid targets are roles (crew, witness, etc.) or rig/role combinations.
-// Accepts singular aliases (e.g., "polecat") — use NormalizeTarget to get canonical form.
+// Accepts singular aliases (e.g., "miner") — use NormalizeTarget to get canonical form.
 func ValidTarget(target string) bool {
 	_, ok := NormalizeTarget(target)
 	return ok
@@ -1112,8 +1112,8 @@ func DefaultBase() *HooksConfig {
 //
 // Examples:
 //
-//	"gastown/crew" -> ["crew", "gastown/crew"]
-//	"mayor"        -> ["mayor"]
+//	"excavation/crew" -> ["crew", "excavation/crew"]
+//	"overseer"        -> ["overseer"]
 //	"beads/witness" -> ["witness", "beads/witness"]
 func GetApplicableOverrides(target string) []string {
 	parts := strings.SplitN(target, "/", 2)

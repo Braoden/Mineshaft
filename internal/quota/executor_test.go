@@ -9,8 +9,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
 )
 
 // mockExecutor implements TmuxExecutor for testing.
@@ -217,13 +217,13 @@ func TestExecute_MultiSession(t *testing.T) {
 
 	tmuxClient := &mockTmux{
 		envVars: map[string]map[string]string{
-			"hq-mayor":     {"CLAUDE_CONFIG_DIR": "/home/.claude/alpha"},
+			"hq-overseer":     {"CLAUDE_CONFIG_DIR": "/home/.claude/alpha"},
 			"gt-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/.claude/alpha"},
 		},
 	}
 
 	exec := newMockExecutor()
-	exec.paneIDs["hq-mayor"] = "%0"
+	exec.paneIDs["hq-overseer"] = "%0"
 	exec.paneIDs["gt-crew-bear"] = "%1"
 
 	accounts := &config.AccountsConfig{
@@ -242,11 +242,11 @@ func TestExecute_MultiSession(t *testing.T) {
 	plan := &RotatePlan{
 		Assignments: map[string]string{
 			"gt-crew-bear": "beta",
-			"hq-mayor":     "gamma",
+			"hq-overseer":     "gamma",
 		},
 	}
 
-	results := rotator.Execute(plan, []string{"gt-crew-bear", "hq-mayor"})
+	results := rotator.Execute(plan, []string{"gt-crew-bear", "hq-overseer"})
 
 	rotated := 0
 	for _, r := range results {
@@ -693,16 +693,16 @@ func TestExecute_SaveUnlockedFailure(t *testing.T) {
 	}
 
 	// Pre-create the runtime directory (for lock file) then make the
-	// mayor directory read-only so SaveUnlocked's temp file creation fails.
-	runtimeDir := filepath.Join(townRoot, constants.DirMayor, constants.DirRuntime)
+	// overseer directory read-only so SaveUnlocked's temp file creation fails.
+	runtimeDir := filepath.Join(townRoot, constants.DirOverseer, constants.DirRuntime)
 	if err := os.MkdirAll(runtimeDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	mayorDir := filepath.Join(townRoot, constants.DirMayor)
-	if err := os.Chmod(mayorDir, 0555); err != nil {
+	overseerDir := filepath.Join(townRoot, constants.DirOverseer)
+	if err := os.Chmod(overseerDir, 0555); err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { os.Chmod(mayorDir, 0755) })
+	t.Cleanup(func() { os.Chmod(overseerDir, 0755) })
 
 	results := rotator.Execute(plan, []string{"gt-test"})
 
@@ -732,7 +732,7 @@ func TestExecute_CorruptStateFile(t *testing.T) {
 	mgr := NewManager(townRoot)
 
 	// Write corrupt JSON to state file
-	statePath := constants.MayorQuotaPath(townRoot)
+	statePath := constants.OverseerQuotaPath(townRoot)
 	if err := os.WriteFile(statePath, []byte("{invalid"), 0644); err != nil {
 		t.Fatal(err)
 	}

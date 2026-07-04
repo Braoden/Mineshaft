@@ -10,26 +10,26 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/doltserver"
-	"github.com/steveyegge/gastown/internal/rig"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/doltserver"
+	"github.com/steveyegge/excavation/internal/rig"
 )
 
 func TestAgentStartResult_Fields(t *testing.T) {
 	result := agentStartResult{
-		name:   "Witness (gastown)",
+		name:   "Witness (excavation)",
 		ok:     true,
-		detail: "gt-gastown-witness",
+		detail: "gt-excavation-witness",
 	}
 
-	if result.name != "Witness (gastown)" {
-		t.Errorf("name = %q, want %q", result.name, "Witness (gastown)")
+	if result.name != "Witness (excavation)" {
+		t.Errorf("name = %q, want %q", result.name, "Witness (excavation)")
 	}
 	if !result.ok {
 		t.Error("ok should be true")
 	}
-	if result.detail != "gt-gastown-witness" {
-		t.Errorf("detail = %q, want %q", result.detail, "gt-gastown-witness")
+	if result.detail != "gt-excavation-witness" {
+		t.Errorf("detail = %q, want %q", result.detail, "gt-excavation-witness")
 	}
 }
 
@@ -290,14 +290,14 @@ func TestRecoverOrphanedBeads_SkipsUnloadedRigs(t *testing.T) {
 
 func TestRecoverOrphanedBeads_NoOrphansCleanRig(t *testing.T) {
 	// Set up a rig directory with no beads — should produce no services.
-	// Note: Full recovery-path tests (hooked bead + dead polecat → reset to open)
+	// Note: Full recovery-path tests (hooked bead + dead miner → reset to open)
 	// require a live Dolt server and are covered by DetectOrphanedBeads tests
 	// in internal/witness/handlers_test.go. These up_test.go tests verify the
 	// integration wiring: correct rig iteration, skip logic, and service reporting.
 	townRoot := t.TempDir()
 	rigName := "testrig"
 	rigPath := filepath.Join(townRoot, rigName)
-	if err := os.MkdirAll(filepath.Join(rigPath, "polecats"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(rigPath, "miners"), 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -315,7 +315,7 @@ func TestRecoverOrphanedBeads_MultipleRigsOnlyProcessesLoaded(t *testing.T) {
 	// Set up two rigs, but only prefetch one
 	for _, name := range []string{"rig-a", "rig-b"} {
 		rigPath := filepath.Join(townRoot, name)
-		if err := os.MkdirAll(filepath.Join(rigPath, "polecats"), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Join(rigPath, "miners"), 0755); err != nil {
 			t.Fatal(err)
 		}
 	}

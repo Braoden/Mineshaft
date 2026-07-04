@@ -14,8 +14,8 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/steveyegge/gastown/internal/atomicfile"
-	"github.com/steveyegge/gastown/internal/hookutil"
+	"github.com/steveyegge/excavation/internal/atomicfile"
+	"github.com/steveyegge/excavation/internal/hookutil"
 )
 
 //go:embed templates/*
@@ -32,9 +32,9 @@ var templateFS embed.FS
 //
 // Parameters:
 //   - provider: the preset's HooksProvider (e.g., "claude", "gemini").
-//   - settingsDir: the gastown-managed parent (used by agents with --settings flag).
+//   - settingsDir: the excavation-managed parent (used by agents with --settings flag).
 //   - workDir: the agent's working directory.
-//   - role: the Gas Town role (e.g., "polecat", "crew", "witness").
+//   - role: the Excavation Site role (e.g., "miner", "crew", "witness").
 //   - hooksDir/hooksFile: from the preset's HooksDir and HooksSettingsFile.
 //
 // Template resolution:
@@ -81,7 +81,7 @@ func needsUpgrade(content []byte) bool {
 	if bytes.Contains(content, []byte(`export PATH=`)) {
 		return true
 	}
-	if bytes.Contains(content, []byte(`Gas Town OpenCode plugin`)) {
+	if bytes.Contains(content, []byte(`Excavation Site OpenCode plugin`)) {
 		return bytes.Contains(content, []byte(`captureRun("gt prime")`)) ||
 			bytes.Contains(content, []byte("$`gt prime`")) ||
 			!bytes.Contains(content, []byte(`prime --hook`))
@@ -140,7 +140,7 @@ func SyncForRole(provider, settingsDir, workDir, role, hooksDir, hooksFile strin
 		perm = 0600
 	}
 
-	// Atomic write (temp + rename) prevents concurrent polecat spawns from
+	// Atomic write (temp + rename) prevents concurrent miner spawns from
 	// interleaving truncates+writes into a partial JSON file that Claude
 	// rejects at startup. See gh#3500.
 	if err := atomicfile.WriteFile(targetPath, content, perm); err != nil {

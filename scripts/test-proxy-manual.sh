@@ -18,7 +18,7 @@ PROXY_ADMIN_PORT=${PROXY_ADMIN_PORT:-9877}
 TOWN_ROOT=${TOWN_ROOT:-${HOME}/gt}
 PROXY_DIR=${PROXY_DIR:-/tmp/gt-proxy-test}
 TEST_RIG="testrig"
-TEST_POLECAT="testpolecat"
+TEST_MINER="testminer"
 FAILURES=0
 
 cleanup() {
@@ -106,9 +106,9 @@ else
 fi
 
 # =============================================================================
-# STEP 4: Issue polecat certificate via admin API
+# STEP 4: Issue miner certificate via admin API
 # =============================================================================
-log_section "Step 4: Issuing polecat certificate via admin API"
+log_section "Step 4: Issuing miner certificate via admin API"
 
 CERT_FILE="${PROXY_DIR}/client.crt"
 KEY_FILE="${PROXY_DIR}/client.key"
@@ -117,7 +117,7 @@ CA_FILE="${PROXY_DIR}/ca-client.crt"
 CERT_RESPONSE=$(curl -sf \
     -X POST \
     -H "Content-Type: application/json" \
-    -d "{\"rig\":\"${TEST_RIG}\",\"name\":\"${TEST_POLECAT}\"}" \
+    -d "{\"rig\":\"${TEST_RIG}\",\"name\":\"${TEST_MINER}\"}" \
     "http://127.0.0.1:${PROXY_ADMIN_PORT}/v1/admin/issue-cert" 2>/dev/null)
 
 if [[ -z "${CERT_RESPONSE}" ]]; then
@@ -199,7 +199,7 @@ test_exec() {
 
 test_exec "gt version"         '{"argv":["gt","version"]}'
 test_exec "gt status"          '{"argv":["gt","status"]}'
-test_exec "gt convoy --help"   '{"argv":["gt","convoy","--help"]}'
+test_exec "gt minecart --help"   '{"argv":["gt","minecart","--help"]}'
 test_exec "bd list --status=open" '{"argv":["bd","list","--status=open"]}'
 
 # =============================================================================

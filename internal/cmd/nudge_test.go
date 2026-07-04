@@ -6,14 +6,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/nudge"
-	"github.com/steveyegge/gastown/internal/session"
+	"github.com/steveyegge/excavation/internal/nudge"
+	"github.com/steveyegge/excavation/internal/session"
 )
 
 func setupNudgeTestRegistry(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "gastown")
+	reg.Register("gt", "excavation")
 	reg.Register("bd", "beads")
 	old := session.DefaultRegistry()
 	session.SetDefaultRegistry(reg)
@@ -33,7 +33,7 @@ func TestNudgeStdinConflict(t *testing.T) {
 	nudgeStdinFlag = true
 	nudgeMessageFlag = "some message"
 
-	err := runNudge(nudgeCmd, []string{"gastown/alpha"})
+	err := runNudge(nudgeCmd, []string{"excavation/alpha"})
 	if err == nil {
 		t.Fatal("expected error when --stdin and --message are both set")
 	}
@@ -46,16 +46,16 @@ func TestResolveNudgePattern(t *testing.T) {
 	setupNudgeTestRegistry(t)
 	// Create test agent sessions (using rig prefixes)
 	agents := []*AgentSession{
-		{Name: "hq-mayor", Type: AgentMayor},
-		{Name: "hq-deacon", Type: AgentDeacon},
-		{Name: "gt-witness", Type: AgentWitness, Rig: "gastown"},
-		{Name: "gt-refinery", Type: AgentRefinery, Rig: "gastown"},
-		{Name: "gt-crew-max", Type: AgentCrew, Rig: "gastown", AgentName: "max"},
-		{Name: "gt-crew-jack", Type: AgentCrew, Rig: "gastown", AgentName: "jack"},
-		{Name: "gt-alpha", Type: AgentPolecat, Rig: "gastown", AgentName: "alpha"},
-		{Name: "gt-beta", Type: AgentPolecat, Rig: "gastown", AgentName: "beta"},
+		{Name: "hq-overseer", Type: AgentOverseer},
+		{Name: "hq-supervisor", Type: AgentSupervisor},
+		{Name: "gt-witness", Type: AgentWitness, Rig: "excavation"},
+		{Name: "gt-refinery", Type: AgentRefinery, Rig: "excavation"},
+		{Name: "gt-crew-max", Type: AgentCrew, Rig: "excavation", AgentName: "max"},
+		{Name: "gt-crew-jack", Type: AgentCrew, Rig: "excavation", AgentName: "jack"},
+		{Name: "gt-alpha", Type: AgentMiner, Rig: "excavation", AgentName: "alpha"},
+		{Name: "gt-beta", Type: AgentMiner, Rig: "excavation", AgentName: "beta"},
 		{Name: "bd-witness", Type: AgentWitness, Rig: "beads"},
-		{Name: "bd-gamma", Type: AgentPolecat, Rig: "beads", AgentName: "gamma"},
+		{Name: "bd-gamma", Type: AgentMiner, Rig: "beads", AgentName: "gamma"},
 	}
 
 	tests := []struct {
@@ -64,18 +64,18 @@ func TestResolveNudgePattern(t *testing.T) {
 		expected []string
 	}{
 		{
-			name:     "mayor special case",
-			pattern:  "mayor",
-			expected: []string{"hq-mayor"},
+			name:     "overseer special case",
+			pattern:  "overseer",
+			expected: []string{"hq-overseer"},
 		},
 		{
-			name:     "deacon special case",
-			pattern:  "deacon",
-			expected: []string{"hq-deacon"},
+			name:     "supervisor special case",
+			pattern:  "supervisor",
+			expected: []string{"hq-supervisor"},
 		},
 		{
 			name:     "specific witness",
-			pattern:  "gastown/witness",
+			pattern:  "excavation/witness",
 			expected: []string{"gt-witness"},
 		},
 		{
@@ -85,37 +85,37 @@ func TestResolveNudgePattern(t *testing.T) {
 		},
 		{
 			name:     "specific refinery",
-			pattern:  "gastown/refinery",
+			pattern:  "excavation/refinery",
 			expected: []string{"gt-refinery"},
 		},
 		{
-			name:     "all polecats in rig",
-			pattern:  "gastown/polecats/*",
+			name:     "all miners in rig",
+			pattern:  "excavation/miners/*",
 			expected: []string{"gt-alpha", "gt-beta"},
 		},
 		{
-			name:     "specific polecat",
-			pattern:  "gastown/polecats/alpha",
+			name:     "specific miner",
+			pattern:  "excavation/miners/alpha",
 			expected: []string{"gt-alpha"},
 		},
 		{
 			name:     "all crew in rig",
-			pattern:  "gastown/crew/*",
+			pattern:  "excavation/crew/*",
 			expected: []string{"gt-crew-max", "gt-crew-jack"},
 		},
 		{
 			name:     "specific crew member",
-			pattern:  "gastown/crew/max",
+			pattern:  "excavation/crew/max",
 			expected: []string{"gt-crew-max"},
 		},
 		{
-			name:     "legacy polecat format",
-			pattern:  "gastown/alpha",
+			name:     "legacy miner format",
+			pattern:  "excavation/alpha",
 			expected: []string{"gt-alpha"},
 		},
 		{
 			name:     "no matches",
-			pattern:  "nonexistent/polecats/*",
+			pattern:  "nonexistent/miners/*",
 			expected: nil,
 		},
 		{
@@ -158,34 +158,34 @@ func TestSessionNameToAddress(t *testing.T) {
 		expected    string
 	}{
 		{
-			name:        "mayor",
-			sessionName: "hq-mayor",
-			expected:    "mayor",
+			name:        "overseer",
+			sessionName: "hq-overseer",
+			expected:    "overseer",
 		},
 		{
-			name:        "deacon",
-			sessionName: "hq-deacon",
-			expected:    "deacon",
+			name:        "supervisor",
+			sessionName: "hq-supervisor",
+			expected:    "supervisor",
 		},
 		{
 			name:        "witness",
 			sessionName: "gt-witness",
-			expected:    "gastown/witness",
+			expected:    "excavation/witness",
 		},
 		{
 			name:        "refinery",
 			sessionName: "gt-refinery",
-			expected:    "gastown/refinery",
+			expected:    "excavation/refinery",
 		},
 		{
 			name:        "crew member",
 			sessionName: "gt-crew-max",
-			expected:    "gastown/crew/max",
+			expected:    "excavation/crew/max",
 		},
 		{
-			name:        "polecat",
+			name:        "miner",
 			sessionName: "gt-alpha",
-			expected:    "gastown/alpha",
+			expected:    "excavation/alpha",
 		},
 		{
 			name:        "unrecognized format",
@@ -238,7 +238,7 @@ func TestNudgeInvalidMode(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			nudgeModeFlag = tt.mode
 			nudgePriorityFlag = "normal"
-			err := runNudge(nudgeCmd, []string{"gastown/alpha", "hello"})
+			err := runNudge(nudgeCmd, []string{"excavation/alpha", "hello"})
 			if err == nil {
 				t.Fatal("expected error for invalid mode")
 			}
@@ -278,7 +278,7 @@ func TestNudgeInvalidPriority(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			nudgePriorityFlag = tt.priority
-			err := runNudge(nudgeCmd, []string{"gastown/alpha", "hello"})
+			err := runNudge(nudgeCmd, []string{"excavation/alpha", "hello"})
 			if err == nil {
 				t.Fatal("expected error for invalid priority")
 			}
@@ -306,7 +306,7 @@ func TestNudgeValidModesAccepted(t *testing.T) {
 	}()
 
 	// Route nudge transport to a log file so the test doesn't deliver "test"
-	// messages to live agents (mayor reported recurring synthetic nudges).
+	// messages to live agents (overseer reported recurring synthetic nudges).
 	t.Setenv("GT_TEST_NUDGE_LOG", filepath.Join(t.TempDir(), "nudge.log"))
 
 	// Shorten wait-idle timeout to avoid 15s test delay
@@ -319,7 +319,7 @@ func TestNudgeValidModesAccepted(t *testing.T) {
 	for _, mode := range []string{NudgeModeImmediate, NudgeModeQueue, NudgeModeWaitIdle} {
 		t.Run(mode, func(t *testing.T) {
 			nudgeModeFlag = mode
-			err := runNudge(nudgeCmd, []string{"gastown/alpha", "hello"})
+			err := runNudge(nudgeCmd, []string{"excavation/alpha", "hello"})
 			// The error should NOT be about invalid mode — it will fail on
 			// tmux or workspace, which is fine.
 			if err != nil && strings.Contains(err.Error(), "invalid --mode") {
@@ -450,9 +450,9 @@ func TestIdleWatcherPollInterval(t *testing.T) {
 }
 
 func TestNudgeTrailingSlashNormalization(t *testing.T) {
-	// The mail system uses "mayor/" and "deacon/" as canonical addresses.
+	// The mail system uses "overseer/" and "supervisor/" as canonical addresses.
 	// runNudge must strip the trailing slash so these match the role shortcuts.
-	// Without normalization, "mayor/" falls through to parseAddress which
+	// Without normalization, "overseer/" falls through to parseAddress which
 	// rejects it ("invalid address format"), silently dropping the nudge.
 	origMode := nudgeModeFlag
 	origPriority := nudgePriorityFlag
@@ -468,7 +468,7 @@ func TestNudgeTrailingSlashNormalization(t *testing.T) {
 	}()
 
 	// Route nudge transport to a log file so this test doesn't deliver to
-	// the real mayor/deacon/witness/refinery sessions on host.
+	// the real overseer/supervisor/witness/refinery sessions on host.
 	t.Setenv("GT_TEST_NUDGE_LOG", filepath.Join(t.TempDir(), "nudge.log"))
 
 	waitIdleTimeout = 200 * time.Millisecond
@@ -477,7 +477,7 @@ func TestNudgeTrailingSlashNormalization(t *testing.T) {
 	nudgePriorityFlag = "normal"
 	nudgeModeFlag = NudgeModeImmediate
 
-	for _, target := range []string{"mayor/", "deacon/", "witness/", "refinery/"} {
+	for _, target := range []string{"overseer/", "supervisor/", "witness/", "refinery/"} {
 		t.Run(target, func(t *testing.T) {
 			err := runNudge(nudgeCmd, []string{target, "hello"})
 			// Will fail on tmux/session lookup, but must NOT fail on address parsing.

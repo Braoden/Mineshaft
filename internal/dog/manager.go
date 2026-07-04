@@ -11,11 +11,11 @@ import (
 
 	"github.com/gofrs/flock"
 
-	"github.com/steveyegge/gastown/internal/atomicfile"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/rig"
-	"github.com/steveyegge/gastown/internal/style"
+	"github.com/steveyegge/excavation/internal/atomicfile"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/excavation/internal/style"
 )
 
 // Common errors
@@ -30,7 +30,7 @@ var (
 // Manager handles dog lifecycle in the kennel.
 type Manager struct {
 	townRoot   string
-	kennelPath string // ~/gt/deacon/dogs/
+	kennelPath string // ~/gt/supervisor/dogs/
 	rigsConfig *config.RigsConfig
 }
 
@@ -38,7 +38,7 @@ type Manager struct {
 func NewManager(townRoot string, rigsConfig *config.RigsConfig) *Manager {
 	return &Manager{
 		townRoot:   townRoot,
-		kennelPath: filepath.Join(townRoot, "deacon", "dogs"),
+		kennelPath: filepath.Join(townRoot, "supervisor", "dogs"),
 		rigsConfig: rigsConfig,
 	}
 }
@@ -90,8 +90,8 @@ func (m *Manager) stateFilePath(name string) string {
 }
 
 // Add creates a new dog in the kennel with worktrees into each rig.
-// Each dog gets a worktree per rig (e.g., dogs/alpha/gastown/, dogs/alpha/beads/).
-// Worktrees are created from each rig's bare repo (.repo.git) or mayor/rig.
+// Each dog gets a worktree per rig (e.g., dogs/alpha/excavation/, dogs/alpha/beads/).
+// Worktrees are created from each rig's bare repo (.repo.git) or overseer/rig.
 func (m *Manager) Add(name string) (*Dog, error) {
 	if err := validateDogName(name); err != nil {
 		return nil, err
@@ -163,13 +163,13 @@ func (m *Manager) Add(name string) (*Dog, error) {
 }
 
 // createRigWorktree creates a worktree for a dog into a specific rig.
-// Uses the rig's bare repo (.repo.git) if available, otherwise mayor/rig.
+// Uses the rig's bare repo (.repo.git) if available, otherwise overseer/rig.
 // Branch naming: dog/<dog-name>-<rig>-<timestamp> for uniqueness.
 func (m *Manager) createRigWorktree(dogPath, dogName, rigName string) (string, error) {
 	rigPath := filepath.Join(m.townRoot, rigName)
 	worktreePath := filepath.Join(dogPath, rigName)
 
-	// Find the repo base (bare repo or mayor/rig)
+	// Find the repo base (bare repo or overseer/rig)
 	repoGit, err := m.findRepoBase(rigPath)
 	if err != nil {
 		return "", fmt.Errorf("finding repo base for %s: %w", rigName, err)
@@ -195,7 +195,7 @@ func (m *Manager) createRigWorktree(dogPath, dogName, rigName string) (string, e
 }
 
 // findRepoBase locates the git repo base for a rig.
-// Prefers .repo.git (bare repo), falls back to mayor/rig.
+// Prefers .repo.git (bare repo), falls back to overseer/rig.
 func (m *Manager) findRepoBase(rigPath string) (*git.Git, error) {
 	// Check for shared bare repo
 	bareRepoPath := filepath.Join(rigPath, ".repo.git")
@@ -203,12 +203,12 @@ func (m *Manager) findRepoBase(rigPath string) (*git.Git, error) {
 		return git.NewGitWithDir(bareRepoPath, ""), nil
 	}
 
-	// Fall back to mayor/rig
-	mayorPath := filepath.Join(rigPath, "mayor", "rig")
-	if _, err := os.Stat(mayorPath); os.IsNotExist(err) {
-		return nil, fmt.Errorf("no repo base found (neither .repo.git nor mayor/rig exists)")
+	// Fall back to overseer/rig
+	overseerPath := filepath.Join(rigPath, "overseer", "rig")
+	if _, err := os.Stat(overseerPath); os.IsNotExist(err) {
+		return nil, fmt.Errorf("no repo base found (neither .repo.git nor overseer/rig exists)")
 	}
-	return git.NewGit(mayorPath), nil
+	return git.NewGit(overseerPath), nil
 }
 
 // Remove deletes a dog from the kennel.

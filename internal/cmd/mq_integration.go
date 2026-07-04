@@ -11,11 +11,11 @@ import (
 
 	"github.com/gofrs/flock"
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // defaultIntegrationBranchTemplate is kept for local backward compat references.
@@ -24,7 +24,7 @@ var defaultIntegrationBranchTemplate = beads.DefaultIntegrationBranchTemplate
 // LandConflictError is returned by `gt mq integration land` when the merge of
 // an integration branch into its target branch fails due to conflicts. Callers
 // (notably the refinery patrol formula) can detect this typed error to drive a
-// structured recovery path — escalate to mayor, file a conflict-resolution
+// structured recovery path — escalate to overseer, file a conflict-resolution
 // bead, and stop the patrol cycle for the epic — instead of parsing message
 // text. The temp .land-worktree is always cleaned up before this is returned.
 type LandConflictError struct {
@@ -106,21 +106,21 @@ func getIntegrationBranchField(description string) string {
 }
 
 // getRigGit returns a Git object for the rig's repository.
-// Prefers .repo.git (bare repo) if it exists, falls back to mayor/rig.
+// Prefers .repo.git (bare repo) if it exists, falls back to overseer/rig.
 func getRigGit(rigPath string) (*git.Git, error) {
 	bareRepoPath := filepath.Join(rigPath, ".repo.git")
 	if info, err := os.Stat(bareRepoPath); err == nil && info.IsDir() {
 		return git.NewGitWithDir(bareRepoPath, ""), nil
 	}
-	mayorPath := filepath.Join(rigPath, "mayor", "rig")
-	if _, err := os.Stat(mayorPath); os.IsNotExist(err) {
-		return nil, fmt.Errorf("no repo base found (neither .repo.git nor mayor/rig exists)")
+	overseerPath := filepath.Join(rigPath, "overseer", "rig")
+	if _, err := os.Stat(overseerPath); os.IsNotExist(err) {
+		return nil, fmt.Errorf("no repo base found (neither .repo.git nor overseer/rig exists)")
 	}
-	return git.NewGit(mayorPath), nil
+	return git.NewGit(overseerPath), nil
 }
 
 // createLandWorktree creates a temporary worktree from .repo.git for land operations.
-// This avoids disrupting running agents (refinery, mayor) by operating in an isolated worktree.
+// This avoids disrupting running agents (refinery, overseer) by operating in an isolated worktree.
 // The caller MUST call the returned cleanup function when done (typically via defer).
 // The worktree is checked out to startBranch (e.g., "main").
 //
@@ -134,7 +134,7 @@ func createLandWorktree(rigPath, startBranch string) (*git.Git, func(), error) {
 	noop := func() {}
 
 	// Acquire file lock to prevent concurrent land operations from racing.
-	// Matches the lockPolecat() pattern used elsewhere in the codebase.
+	// Matches the lockMiner() pattern used elsewhere in the codebase.
 	lockDir := filepath.Join(rigPath, ".runtime", "locks")
 	if err := os.MkdirAll(lockDir, 0755); err != nil {
 		return nil, noop, fmt.Errorf("creating lock dir: %w", err)
@@ -336,7 +336,7 @@ func runMqIntegrationCreate(cmd *cobra.Command, args []string) error {
 	// Find workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Find current rig
@@ -460,7 +460,7 @@ func runMqIntegrationLand(cmd *cobra.Command, args []string) error {
 	// Find workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Find current rig
@@ -635,7 +635,7 @@ func runMqIntegrationLand(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create a temporary worktree for the merge operation.
-	// This avoids disrupting running agents (refinery, mayor) whose worktrees
+	// This avoids disrupting running agents (refinery, overseer) whose worktrees
 	// would be corrupted by checkout/merge operations.
 	fmt.Printf("Creating temporary worktree for merge...\n")
 	landGit, cleanup, err := createLandWorktree(r.Path, targetBranch)
@@ -859,7 +859,7 @@ func runMqIntegrationStatus(cmd *cobra.Command, args []string) error {
 	// Find workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Find current rig

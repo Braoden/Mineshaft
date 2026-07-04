@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/rig"
+	"github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/rig"
 )
 
 func TestManagerAddAndGet(t *testing.T) {
@@ -432,13 +432,13 @@ func TestManagerAddSyncsRemotesFromRig(t *testing.T) {
 		t.Fatalf("failed to create upstream repo: %v", err)
 	}
 
-	// Create mayor/rig with both remotes configured
-	mayorRigPath := filepath.Join(rigPath, "mayor", "rig")
-	if err := runCmd("git", "clone", forkRepoPath, mayorRigPath); err != nil {
-		t.Fatalf("failed to clone mayor rig: %v", err)
+	// Create overseer/rig with both remotes configured
+	overseerRigPath := filepath.Join(rigPath, "overseer", "rig")
+	if err := runCmd("git", "clone", forkRepoPath, overseerRigPath); err != nil {
+		t.Fatalf("failed to clone overseer rig: %v", err)
 	}
-	if err := runCmd("git", "-C", mayorRigPath, "remote", "add", "upstream", upstreamRepoPath); err != nil {
-		t.Fatalf("failed to add upstream to mayor: %v", err)
+	if err := runCmd("git", "-C", overseerRigPath, "remote", "add", "upstream", upstreamRepoPath); err != nil {
+		t.Fatalf("failed to add upstream to overseer: %v", err)
 	}
 
 	// Rig GitURL uses upstream (simulating the bug — clone from upstream)
@@ -455,14 +455,14 @@ func TestManagerAddSyncsRemotesFromRig(t *testing.T) {
 		t.Fatalf("Add failed: %v", err)
 	}
 
-	// Verify crew clone's origin was updated to match mayor/rig's origin (the fork)
+	// Verify crew clone's origin was updated to match overseer/rig's origin (the fork)
 	crewGit := git.NewGit(worker.ClonePath)
 	originURL, err := crewGit.RemoteURL("origin")
 	if err != nil {
 		t.Fatalf("failed to get crew origin URL: %v", err)
 	}
 	if originURL != forkRepoPath {
-		t.Errorf("crew origin = %q, want %q (should match mayor/rig)", originURL, forkRepoPath)
+		t.Errorf("crew origin = %q, want %q (should match overseer/rig)", originURL, forkRepoPath)
 	}
 
 	// Verify upstream remote was added
@@ -746,16 +746,16 @@ func TestManagerAddSyncsCustomPushURLFromRig(t *testing.T) {
 		t.Fatalf("failed to create fork bare repo: %v", err)
 	}
 
-	// Create mayor clone with fetch=upstream and push=fork.
-	mayorRigPath := filepath.Join(rigPath, "mayor", "rig")
-	if err := os.MkdirAll(filepath.Dir(mayorRigPath), 0755); err != nil {
-		t.Fatalf("failed to create mayor dir: %v", err)
+	// Create overseer clone with fetch=upstream and push=fork.
+	overseerRigPath := filepath.Join(rigPath, "overseer", "rig")
+	if err := os.MkdirAll(filepath.Dir(overseerRigPath), 0755); err != nil {
+		t.Fatalf("failed to create overseer dir: %v", err)
 	}
-	if err := runCmd("git", "clone", upstreamRepoPath, mayorRigPath); err != nil {
-		t.Fatalf("failed to clone mayor rig: %v", err)
+	if err := runCmd("git", "clone", upstreamRepoPath, overseerRigPath); err != nil {
+		t.Fatalf("failed to clone overseer rig: %v", err)
 	}
-	if err := runCmd("git", "-C", mayorRigPath, "remote", "set-url", "origin", "--push", forkRepoPath); err != nil {
-		t.Fatalf("failed to set mayor push url: %v", err)
+	if err := runCmd("git", "-C", overseerRigPath, "remote", "set-url", "origin", "--push", forkRepoPath); err != nil {
+		t.Fatalf("failed to set overseer push url: %v", err)
 	}
 
 	r := &rig.Rig{
@@ -793,7 +793,7 @@ func TestManagerAddSyncsCustomPushURLFromRig(t *testing.T) {
 }
 
 func TestManagerAddSyncsFallbackPushURLFromConfig(t *testing.T) {
-	// When mayor has NO custom push URL but Rig.PushURL is set (from config.json),
+	// When overseer has NO custom push URL but Rig.PushURL is set (from config.json),
 	// the crew clone should receive the push URL via the config fallback path.
 	tmpDir, err := os.MkdirTemp("", "crew-test-push-fallback-*")
 	if err != nil {
@@ -815,15 +815,15 @@ func TestManagerAddSyncsFallbackPushURLFromConfig(t *testing.T) {
 		t.Fatalf("failed to create fork bare repo: %v", err)
 	}
 
-	// Create mayor clone pointing to upstream — NO custom push URL on mayor.
-	mayorRigPath := filepath.Join(rigPath, "mayor", "rig")
-	if err := os.MkdirAll(filepath.Dir(mayorRigPath), 0755); err != nil {
-		t.Fatalf("failed to create mayor dir: %v", err)
+	// Create overseer clone pointing to upstream — NO custom push URL on overseer.
+	overseerRigPath := filepath.Join(rigPath, "overseer", "rig")
+	if err := os.MkdirAll(filepath.Dir(overseerRigPath), 0755); err != nil {
+		t.Fatalf("failed to create overseer dir: %v", err)
 	}
-	if err := runCmd("git", "clone", upstreamRepoPath, mayorRigPath); err != nil {
-		t.Fatalf("failed to clone mayor rig: %v", err)
+	if err := runCmd("git", "clone", upstreamRepoPath, overseerRigPath); err != nil {
+		t.Fatalf("failed to clone overseer rig: %v", err)
 	}
-	// Intentionally NOT setting push URL on mayor — this tests the fallback path.
+	// Intentionally NOT setting push URL on overseer — this tests the fallback path.
 
 	// Rig has PushURL set (as if loaded from config.json)
 	r := &rig.Rig{
@@ -852,7 +852,7 @@ func TestManagerAddSyncsFallbackPushURLFromConfig(t *testing.T) {
 }
 
 func TestManagerAddNoPushURLWhenConfigEmpty(t *testing.T) {
-	// When Rig.PushURL is empty and mayor has no custom push URL,
+	// When Rig.PushURL is empty and overseer has no custom push URL,
 	// crew clone should NOT have a custom push URL (push URL == fetch URL).
 	tmpDir, err := os.MkdirTemp("", "crew-test-no-push-*")
 	if err != nil {
@@ -870,13 +870,13 @@ func TestManagerAddNoPushURLWhenConfigEmpty(t *testing.T) {
 		t.Fatalf("failed to create upstream bare repo: %v", err)
 	}
 
-	// Create mayor clone with NO custom push URL.
-	mayorRigPath := filepath.Join(rigPath, "mayor", "rig")
-	if err := os.MkdirAll(filepath.Dir(mayorRigPath), 0755); err != nil {
-		t.Fatalf("failed to create mayor dir: %v", err)
+	// Create overseer clone with NO custom push URL.
+	overseerRigPath := filepath.Join(rigPath, "overseer", "rig")
+	if err := os.MkdirAll(filepath.Dir(overseerRigPath), 0755); err != nil {
+		t.Fatalf("failed to create overseer dir: %v", err)
 	}
-	if err := runCmd("git", "clone", upstreamRepoPath, mayorRigPath); err != nil {
-		t.Fatalf("failed to clone mayor rig: %v", err)
+	if err := runCmd("git", "clone", upstreamRepoPath, overseerRigPath); err != nil {
+		t.Fatalf("failed to clone overseer rig: %v", err)
 	}
 
 	r := &rig.Rig{
@@ -934,13 +934,13 @@ func TestManagerAddClearsStalePushURLOnSync(t *testing.T) {
 		t.Fatalf("failed to create fork bare repo: %v", err)
 	}
 
-	// Create mayor clone (no custom push URL on mayor)
-	mayorRigPath := filepath.Join(rigPath, "mayor", "rig")
-	if err := os.MkdirAll(filepath.Dir(mayorRigPath), 0755); err != nil {
-		t.Fatalf("failed to create mayor dir: %v", err)
+	// Create overseer clone (no custom push URL on overseer)
+	overseerRigPath := filepath.Join(rigPath, "overseer", "rig")
+	if err := os.MkdirAll(filepath.Dir(overseerRigPath), 0755); err != nil {
+		t.Fatalf("failed to create overseer dir: %v", err)
 	}
-	if err := runCmd("git", "clone", upstreamRepoPath, mayorRigPath); err != nil {
-		t.Fatalf("failed to clone mayor rig: %v", err)
+	if err := runCmd("git", "clone", upstreamRepoPath, overseerRigPath); err != nil {
+		t.Fatalf("failed to clone overseer rig: %v", err)
 	}
 
 	// Step 1: Create crew with a push URL configured (simulating previous config)

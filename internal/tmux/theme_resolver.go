@@ -4,8 +4,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
 )
 
 // ResolveSessionTheme returns the configured tmux theme for a session.
@@ -30,11 +30,11 @@ func ResolveSessionTheme(townRoot, rigName, role, crewMember string) *Theme {
 	}
 
 	switch role {
-	case constants.RoleMayor:
-		theme := MayorTheme()
+	case constants.RoleOverseer:
+		theme := OverseerTheme()
 		return &theme
-	case constants.RoleDeacon:
-		theme := DeaconTheme()
+	case constants.RoleSupervisor:
+		theme := SupervisorTheme()
 		return &theme
 	case "dog":
 		theme := DogTheme()
@@ -82,32 +82,32 @@ func resolveTownSessionTheme(townRoot, role, crewMember string) *Theme {
 		return unresolvedTheme
 	}
 
-	mayorCfg, err := config.LoadMayorConfig(filepath.Join(townRoot, "mayor", "config.json"))
-	if err != nil || mayorCfg.Theme == nil {
+	overseerCfg, err := config.LoadOverseerConfig(filepath.Join(townRoot, "overseer", "config.json"))
+	if err != nil || overseerCfg.Theme == nil {
 		return unresolvedTheme
 	}
 
 	// Per-member theme takes priority over role defaults at town level too.
-	if crewMember != "" && mayorCfg.Theme.CrewThemes != nil {
-		if resolved, ok := resolveRoleThemeName(mayorCfg.Theme.CrewThemes[crewMember]); ok {
+	if crewMember != "" && overseerCfg.Theme.CrewThemes != nil {
+		if resolved, ok := resolveRoleThemeName(overseerCfg.Theme.CrewThemes[crewMember]); ok {
 			return resolved
 		}
 	}
 
-	if mayorCfg.Theme.RoleDefaults != nil {
-		if resolved, ok := resolveRoleThemeName(mayorCfg.Theme.RoleDefaults[role]); ok {
+	if overseerCfg.Theme.RoleDefaults != nil {
+		if resolved, ok := resolveRoleThemeName(overseerCfg.Theme.RoleDefaults[role]); ok {
 			return resolved
 		}
 	}
 
-	if mayorCfg.Theme.Disabled {
+	if overseerCfg.Theme.Disabled {
 		return nil
 	}
-	if mayorCfg.Theme.Custom != nil {
-		return customTheme("custom", mayorCfg.Theme.Custom)
+	if overseerCfg.Theme.Custom != nil {
+		return customTheme("custom", overseerCfg.Theme.Custom)
 	}
-	if mayorCfg.Theme.Name != "" {
-		if theme := GetThemeByName(mayorCfg.Theme.Name); theme != nil {
+	if overseerCfg.Theme.Name != "" {
+		if theme := GetThemeByName(overseerCfg.Theme.Name); theme != nil {
 			return theme
 		}
 	}
@@ -164,9 +164,9 @@ func customTheme(name string, custom *config.CustomTheme) *Theme {
 func normalizeThemeRole(role string) string {
 	switch role {
 	case "coordinator":
-		return constants.RoleMayor
+		return constants.RoleOverseer
 	case "health-check":
-		return constants.RoleDeacon
+		return constants.RoleSupervisor
 	default:
 		return role
 	}

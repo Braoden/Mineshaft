@@ -25,8 +25,8 @@ Resolution: If a rig-level overlay exists, it takes full precedence
 (town-level is not merged).
 
 Examples:
-  gt formula overlay show mol-polecat-work
-  gt formula overlay edit mol-polecat-work --rig gastown
+  gt formula overlay show mol-miner-work
+  gt formula overlay edit mol-miner-work --rig excavation
   gt formula overlay list`,
 	RunE: requireSubcommand,
 }

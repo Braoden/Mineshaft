@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var (
@@ -20,16 +20,16 @@ var (
 var gitInitCmd = &cobra.Command{
 	Use:     "git-init",
 	GroupID: GroupWorkspace,
-	Short:   "Initialize git repository for a Gas Town HQ",
-	Long: `Initialize or configure git for an existing Gas Town HQ.
+	Short:   "Initialize git repository for a Excavation Site HQ",
+	Long: `Initialize or configure git for an existing Excavation Site HQ.
 
 This command:
-  1. Creates a comprehensive .gitignore for Gas Town
+  1. Creates a comprehensive .gitignore for Excavation Site
   2. Initializes a git repository if not already present
   3. Optionally creates a GitHub repository (private by default)
 
 The .gitignore excludes:
-  - Polecat worktrees and rig clones (recreated with 'gt sling' or 'gt rig add')
+  - Miner worktrees and rig clones (recreated with 'gt sling' or 'gt rig add')
   - Runtime state files (state.json, *.lock)
   - OS and editor files
 
@@ -51,10 +51,10 @@ func init() {
 	rootCmd.AddCommand(gitInitCmd)
 }
 
-// HQGitignore is the standard .gitignore for Gas Town HQs
-const HQGitignore = `# Gas Town HQ .gitignore
+// HQGitignore is the standard .gitignore for Excavation Site HQs
+const HQGitignore = `# Excavation Site HQ .gitignore
 # Track: Role context, handoff docs, beads config/data, rig configs
-# Ignore: Git worktrees (polecats) and clones (mayor/refinery rigs), runtime state
+# Ignore: Git worktrees (miners) and clones (overseer/refinery rigs), runtime state
 
 # =============================================================================
 # Runtime state files (transient)
@@ -104,14 +104,14 @@ beads_hq/
 # Rig git worktrees (recreate with 'gt sling' or 'gt rig add')
 # =============================================================================
 
-# Polecats - worker worktrees
-**/polecats/
+# Miners - worker worktrees
+**/miners/
 
-# Deacon dogs - patrol worker worktrees
-**/deacon/dogs/
+# Supervisor dogs - patrol worker worktrees
+**/supervisor/dogs/
 
-# Mayor rig clones
-**/mayor/rig/
+# Overseer rig clones
+**/overseer/rig/
 
 # Refinery working clones
 **/refinery/rig/
@@ -125,10 +125,10 @@ beads_hq/
 **/.runtime/
 
 # =============================================================================
-# Rig .beads symlinks (point to ignored mayor/rig/.beads, recreated on setup)
+# Rig .beads symlinks (point to ignored overseer/rig/.beads, recreated on setup)
 # =============================================================================
 # Add rig-specific symlinks here, e.g.:
-# gastown/.beads
+# excavation/.beads
 
 # =============================================================================
 # OS and editor files
@@ -156,7 +156,7 @@ func runGitInit(cmd *cobra.Command, args []string) error {
 
 	hqRoot, err := workspace.Find(cwd)
 	if err != nil || hqRoot == "" {
-		return fmt.Errorf("not inside a Gas Town HQ (run 'gt install' first)")
+		return fmt.Errorf("not inside a Excavation Site HQ (run 'gt install' first)")
 	}
 
 	fmt.Printf("%s Initializing git for HQ at %s\n\n",
@@ -197,7 +197,7 @@ func runGitInit(cmd *cobra.Command, args []string) error {
 		fmt.Println()
 		fmt.Println("Next steps:")
 		fmt.Printf("  1. Create initial commit: %s\n",
-			style.Dim.Render("git add . && git commit -m 'Initial Gas Town HQ'"))
+			style.Dim.Render("git add . && git commit -m 'Initial Excavation Site HQ'"))
 		fmt.Printf("  2. Create remote repo: %s\n",
 			style.Dim.Render("gt git-init --github=user/repo"))
 	}
@@ -214,9 +214,9 @@ func createGitignore(path string) error {
 			return fmt.Errorf("reading existing .gitignore: %w", err)
 		}
 
-		// Check if it already has Gas Town section
-		if strings.Contains(string(content), "Gas Town HQ") {
-			fmt.Printf("   ✓ .gitignore already configured for Gas Town\n")
+		// Check if it already has Excavation Site section
+		if strings.Contains(string(content), "Excavation Site HQ") {
+			fmt.Printf("   ✓ .gitignore already configured for Excavation Site\n")
 			return nil
 		}
 
@@ -225,7 +225,7 @@ func createGitignore(path string) error {
 		if err := os.WriteFile(path, []byte(combined), 0644); err != nil {
 			return fmt.Errorf("updating .gitignore: %w", err)
 		}
-		fmt.Printf("   ✓ Updated .gitignore with Gas Town patterns\n")
+		fmt.Printf("   ✓ Updated .gitignore with Excavation Site patterns\n")
 		return nil
 	}
 
@@ -315,7 +315,7 @@ func ensureInitialCommit(hqRoot string) error {
 		return fmt.Errorf("git add: %w", err)
 	}
 
-	commitCmd := exec.Command("git", "commit", "-m", "Initial Gas Town HQ")
+	commitCmd := exec.Command("git", "commit", "-m", "Initial Excavation Site HQ")
 	commitCmd.Dir = hqRoot
 	if output, err := commitCmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("git commit failed: %s", strings.TrimSpace(string(output)))
@@ -361,14 +361,14 @@ func InitGitForHarness(hqRoot string, github string, private bool) error {
 }
 
 // BranchProtectionMarker identifies our branch protection code in post-checkout.
-const BranchProtectionMarker = "Gas Town branch protection"
+const BranchProtectionMarker = "Excavation Site branch protection"
 
 // BranchProtectionScript is the code to prepend to post-checkout hook.
 // It auto-reverts to main if a non-main branch was checked out in the town root.
 //
 // NOTE: Git does NOT support "pre-checkout" hooks. We use post-checkout to
 // detect and auto-revert bad checkouts immediately after they happen.
-const BranchProtectionScript = `# Gas Town branch protection
+const BranchProtectionScript = `# Excavation Site branch protection
 # Auto-reverts to main if a non-main branch is checked out in the town root.
 # The town root must stay on main to avoid breaking gt commands.
 # NOTE: Git does NOT support pre-checkout hooks, so we auto-revert after.
@@ -387,7 +387,7 @@ if [ "$3" = "1" ]; then
         echo "" >&2
         echo "⚠️  AUTO-REVERTING: Town root must stay on main branch" >&2
         echo "" >&2
-        echo "   Detected checkout to '$CURRENT_BRANCH' in the Gas Town HQ directory." >&2
+        echo "   Detected checkout to '$CURRENT_BRANCH' in the Excavation Site HQ directory." >&2
         echo "   The town root should always be on main. Switching back..." >&2
         echo "" >&2
 
@@ -427,7 +427,7 @@ func InstallBranchProtection(hqRoot string) error {
 	// Remove obsolete pre-checkout hook if it's ours
 	preCheckoutPath := filepath.Join(hooksDir, "pre-checkout")
 	if content, err := os.ReadFile(preCheckoutPath); err == nil {
-		if strings.Contains(string(content), "Gas Town pre-checkout hook") {
+		if strings.Contains(string(content), "Excavation Site pre-checkout hook") {
 			_ = os.Remove(preCheckoutPath) // Best effort removal
 			fmt.Printf("   ✓ Removed obsolete pre-checkout hook\n")
 		}

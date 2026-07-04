@@ -7,15 +7,15 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/testutil"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/testutil"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // TestQuerySessionEvents_FindsEventsFromAllLocations verifies that querySessionEvents
 // finds session.ended events from both town-level and rig-level beads databases.
 //
-// Bug: Events created by rig-level agents (polecats, witness, etc.) are stored in
-// the rig's .beads database. Events created by town-level agents (mayor, deacon)
+// Bug: Events created by rig-level agents (miners, witness, etc.) are stored in
+// the rig's .beads database. Events created by town-level agents (overseer, supervisor)
 // are stored in the town's .beads database. querySessionEvents must query ALL
 // beads locations to find all events.
 //
@@ -37,11 +37,11 @@ func TestQuerySessionEvents_FindsEventsFromAllLocations(t *testing.T) {
 		t.Skip("bd not installed, skipping integration test")
 	}
 
-	// Skip when running inside a Gas Town workspace - this integration test
+	// Skip when running inside a Excavation Site workspace - this integration test
 	// creates a separate workspace and the subprocesses can interact with
 	// the parent workspace's daemon, causing hangs.
 	if os.Getenv("GT_TOWN_ROOT") != "" || os.Getenv("BD_ACTOR") != "" {
-		t.Skip("skipping integration test inside Gas Town workspace (use 'go test' outside workspace)")
+		t.Skip("skipping integration test inside Excavation Site workspace (use 'go test' outside workspace)")
 	}
 
 	// Create a temporary directory structure
@@ -117,8 +117,8 @@ func TestQuerySessionEvents_FindsEventsFromAllLocations(t *testing.T) {
 		t.Fatalf("rig .beads not created at %s", rigBeadsPath)
 	}
 
-	// Create a session.ended event in TOWN beads (simulating mayor/deacon)
-	townEventPayload := `{"cost_usd":1.50,"session_id":"hq-mayor","role":"mayor","ended_at":"2026-01-12T10:00:00Z"}`
+	// Create a session.ended event in TOWN beads (simulating overseer/supervisor)
+	townEventPayload := `{"cost_usd":1.50,"session_id":"hq-overseer","role":"overseer","ended_at":"2026-01-12T10:00:00Z"}`
 	townEventCmd := exec.Command("bd", "create",
 		"--type=event",
 		"--title=Town session ended",
@@ -134,8 +134,8 @@ func TestQuerySessionEvents_FindsEventsFromAllLocations(t *testing.T) {
 	}
 	t.Logf("Created town event: %s", string(townOut))
 
-	// Create a session.ended event in RIG beads (simulating polecat)
-	rigEventPayload := `{"cost_usd":2.50,"session_id":"gt-testrig-toast","role":"polecat","rig":"testrig","worker":"toast","ended_at":"2026-01-12T11:00:00Z"}`
+	// Create a session.ended event in RIG beads (simulating miner)
+	rigEventPayload := `{"cost_usd":2.50,"session_id":"gt-testrig-toast","role":"miner","rig":"testrig","worker":"toast","ended_at":"2026-01-12T11:00:00Z"}`
 	rigEventCmd := exec.Command("bd", "create",
 		"--type=event",
 		"--title=Rig session ended",
@@ -226,22 +226,22 @@ func TestQuerySessionEvents_FindsEventsFromAllLocations(t *testing.T) {
 		t.Log("This indicates the bug: querySessionEvents only queries town-level beads, missing rig-level events")
 	}
 
-	// Verify we found both the mayor and polecat sessions
-	var foundMayor, foundPolecat bool
+	// Verify we found both the overseer and miner sessions
+	var foundOverseer, foundMiner bool
 	for _, e := range entries {
 		t.Logf("  Entry: session=%s role=%s cost=$%.2f", e.SessionID, e.Role, e.CostUSD)
-		if e.Role == "mayor" {
-			foundMayor = true
+		if e.Role == "overseer" {
+			foundOverseer = true
 		}
-		if e.Role == "polecat" {
-			foundPolecat = true
+		if e.Role == "miner" {
+			foundMiner = true
 		}
 	}
 
-	if !foundMayor {
-		t.Error("Missing mayor session from town beads")
+	if !foundOverseer {
+		t.Error("Missing overseer session from town beads")
 	}
-	if !foundPolecat {
-		t.Error("Missing polecat session from rig beads")
+	if !foundMiner {
+		t.Error("Missing miner session from rig beads")
 	}
 }

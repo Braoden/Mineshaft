@@ -20,14 +20,14 @@ func TestRoutesCheck_MissingTownRoute(t *testing.T) {
 
 		// Create routes.jsonl with only a rig route (no hq- or hq-cv- routes)
 		routesPath := filepath.Join(beadsDir, "routes.jsonl")
-		routesContent := `{"prefix": "gt-", "path": "gastown/mayor/rig"}
+		routesContent := `{"prefix": "gt-", "path": "excavation/overseer/rig"}
 `
 		if err := os.WriteFile(routesPath, []byte(routesContent), 0644); err != nil {
 			t.Fatal(err)
 		}
 
-		// Create mayor directory
-		if err := os.MkdirAll(filepath.Join(tmpDir, "mayor"), 0755); err != nil {
+		// Create overseer directory
+		if err := os.MkdirAll(filepath.Join(tmpDir, "overseer"), 0755); err != nil {
 			t.Fatal(err)
 		}
 
@@ -62,8 +62,8 @@ func TestRoutesCheck_MissingTownRoute(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		// Create mayor directory
-		if err := os.MkdirAll(filepath.Join(tmpDir, "mayor"), 0755); err != nil {
+		// Create overseer directory
+		if err := os.MkdirAll(filepath.Join(tmpDir, "overseer"), 0755); err != nil {
 			t.Fatal(err)
 		}
 
@@ -93,8 +93,8 @@ func TestRoutesCheck_FixRestoresTownRoute(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		// Create mayor directory (no rigs.json needed for this test)
-		if err := os.MkdirAll(filepath.Join(tmpDir, "mayor"), 0755); err != nil {
+		// Create overseer directory (no rigs.json needed for this test)
+		if err := os.MkdirAll(filepath.Join(tmpDir, "overseer"), 0755); err != nil {
 			t.Fatal(err)
 		}
 
@@ -140,21 +140,21 @@ func TestRoutesCheck_FixRestoresTownRoute(t *testing.T) {
 		}
 
 		// Create rig directory structure for route validation
-		rigPath := filepath.Join(tmpDir, "myrig", "mayor", "rig", ".beads")
+		rigPath := filepath.Join(tmpDir, "myrig", "overseer", "rig", ".beads")
 		if err := os.MkdirAll(rigPath, 0755); err != nil {
 			t.Fatal(err)
 		}
 
 		// Create routes.jsonl with only a rig route (no hq- or hq-cv- routes)
 		routesPath := filepath.Join(beadsDir, "routes.jsonl")
-		routesContent := `{"prefix": "my-", "path": "myrig/mayor/rig"}
+		routesContent := `{"prefix": "my-", "path": "myrig/overseer/rig"}
 `
 		if err := os.WriteFile(routesPath, []byte(routesContent), 0644); err != nil {
 			t.Fatal(err)
 		}
 
-		// Create mayor directory
-		if err := os.MkdirAll(filepath.Join(tmpDir, "mayor"), 0755); err != nil {
+		// Create overseer directory
+		if err := os.MkdirAll(filepath.Join(tmpDir, "overseer"), 0755); err != nil {
 			t.Fatal(err)
 		}
 
@@ -174,7 +174,7 @@ func TestRoutesCheck_FixRestoresTownRoute(t *testing.T) {
 
 		contentStr := string(content)
 		// Should have the original rig route plus both hq- and hq-cv- routes
-		if contentStr != `{"prefix":"my-","path":"myrig/mayor/rig"}
+		if contentStr != `{"prefix":"my-","path":"myrig/overseer/rig"}
 {"prefix":"hq-","path":"."}
 {"prefix":"hq-cv-","path":"."}
 ` {
@@ -200,8 +200,8 @@ func TestRoutesCheck_FixRestoresTownRoute(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		// Create mayor directory
-		if err := os.MkdirAll(filepath.Join(tmpDir, "mayor"), 0755); err != nil {
+		// Create overseer directory
+		if err := os.MkdirAll(filepath.Join(tmpDir, "overseer"), 0755); err != nil {
 			t.Fatal(err)
 		}
 
@@ -243,11 +243,11 @@ func TestRoutesCheck_DirectLayoutRig(t *testing.T) {
 		}
 		// No redirect file — this is a direct layout
 
-		// Create mayor dir and rigs.json
-		if err := os.MkdirAll(filepath.Join(tmpDir, "mayor"), 0755); err != nil {
+		// Create overseer dir and rigs.json
+		if err := os.MkdirAll(filepath.Join(tmpDir, "overseer"), 0755); err != nil {
 			t.Fatal(err)
 		}
-		rigsPath := filepath.Join(tmpDir, "mayor", "rigs.json")
+		rigsPath := filepath.Join(tmpDir, "overseer", "rigs.json")
 		rigsContent := `{
 			"version": 1,
 			"rigs": {
@@ -261,7 +261,7 @@ func TestRoutesCheck_DirectLayoutRig(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		// Create routes.jsonl with the direct-layout path (myrig, not myrig/mayor/rig)
+		// Create routes.jsonl with the direct-layout path (myrig, not myrig/overseer/rig)
 		routesPath := filepath.Join(beadsDir, "routes.jsonl")
 		routesContent := `{"prefix":"hq-","path":"."}
 {"prefix":"hq-cv-","path":"."}
@@ -300,11 +300,11 @@ func TestRoutesCheck_DirectLayoutRig(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		// Create mayor dir and rigs.json
-		if err := os.MkdirAll(filepath.Join(tmpDir, "mayor"), 0755); err != nil {
+		// Create overseer dir and rigs.json
+		if err := os.MkdirAll(filepath.Join(tmpDir, "overseer"), 0755); err != nil {
 			t.Fatal(err)
 		}
-		rigsPath := filepath.Join(tmpDir, "mayor", "rigs.json")
+		rigsPath := filepath.Join(tmpDir, "overseer", "rigs.json")
 		rigsContent := `{
 			"version": 1,
 			"rigs": {
@@ -331,7 +331,7 @@ func TestRoutesCheck_DirectLayoutRig(t *testing.T) {
 		}
 
 		contentStr := string(content)
-		// Should use "myrig" path (direct layout), not "myrig/mayor/rig"
+		// Should use "myrig" path (direct layout), not "myrig/overseer/rig"
 		expected := `{"prefix":"hq-","path":"."}
 {"prefix":"hq-cv-","path":"."}
 {"prefix":"mr-","path":"myrig"}
@@ -358,7 +358,7 @@ func TestDetermineRigBeadsPath_Containment(t *testing.T) {
 		}
 
 		result := determineRigBeadsPath(tmpDir, "myrig")
-		expected := "myrig/mayor/rig"
+		expected := "myrig/overseer/rig"
 		if result != expected {
 			t.Errorf("expected fallback %q for escaped redirect, got %q", expected, result)
 		}
@@ -367,22 +367,22 @@ func TestDetermineRigBeadsPath_Containment(t *testing.T) {
 	t.Run("valid redirect within town root resolves correctly", func(t *testing.T) {
 		tmpDir := t.TempDir()
 
-		// Create rig with redirect to mayor/rig/.beads
+		// Create rig with redirect to overseer/rig/.beads
 		rigDir := filepath.Join(tmpDir, "myrig")
 		rigBeadsDir := filepath.Join(rigDir, ".beads")
-		mayorBeadsDir := filepath.Join(rigDir, "mayor", "rig", ".beads")
+		overseerBeadsDir := filepath.Join(rigDir, "overseer", "rig", ".beads")
 		if err := os.MkdirAll(rigBeadsDir, 0755); err != nil {
 			t.Fatal(err)
 		}
-		if err := os.MkdirAll(mayorBeadsDir, 0755); err != nil {
+		if err := os.MkdirAll(overseerBeadsDir, 0755); err != nil {
 			t.Fatal(err)
 		}
-		if err := os.WriteFile(filepath.Join(rigBeadsDir, "redirect"), []byte("mayor/rig/.beads\n"), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(rigBeadsDir, "redirect"), []byte("overseer/rig/.beads\n"), 0644); err != nil {
 			t.Fatal(err)
 		}
 
 		result := determineRigBeadsPath(tmpDir, "myrig")
-		expected := "myrig/mayor/rig"
+		expected := "myrig/overseer/rig"
 		if result != expected {
 			t.Errorf("expected %q, got %q", expected, result)
 		}
@@ -407,7 +407,7 @@ func TestDetermineRigBeadsPath_Containment(t *testing.T) {
 
 func TestRoutesCheck_SuboptimalRoutes(t *testing.T) {
 	// Helper to set up a town with a legacy rig whose route points to the rig root
-	// instead of the canonical mayor/rig path.
+	// instead of the canonical overseer/rig path.
 	setupLegacyRig := func(t *testing.T) (tmpDir string) {
 		t.Helper()
 		tmpDir = t.TempDir()
@@ -418,22 +418,22 @@ func TestRoutesCheck_SuboptimalRoutes(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		// Legacy rig: redirect at rig root points to mayor/rig/.beads
+		// Legacy rig: redirect at rig root points to overseer/rig/.beads
 		rigBeadsDir := filepath.Join(tmpDir, "crom", ".beads")
 		if err := os.MkdirAll(rigBeadsDir, 0755); err != nil {
 			t.Fatal(err)
 		}
-		if err := os.WriteFile(filepath.Join(rigBeadsDir, "redirect"), []byte("mayor/rig/.beads\n"), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(rigBeadsDir, "redirect"), []byte("overseer/rig/.beads\n"), 0644); err != nil {
 			t.Fatal(err)
 		}
 		// The canonical target must exist with a real .beads directory
-		canonicalBeads := filepath.Join(tmpDir, "crom", "mayor", "rig", ".beads")
+		canonicalBeads := filepath.Join(tmpDir, "crom", "overseer", "rig", ".beads")
 		if err := os.MkdirAll(canonicalBeads, 0755); err != nil {
 			t.Fatal(err)
 		}
 
 		// rigs.json registers the rig
-		if err := os.MkdirAll(filepath.Join(tmpDir, "mayor"), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Join(tmpDir, "overseer"), 0755); err != nil {
 			t.Fatal(err)
 		}
 		rigsContent := `{
@@ -445,7 +445,7 @@ func TestRoutesCheck_SuboptimalRoutes(t *testing.T) {
 				}
 			}
 		}`
-		if err := os.WriteFile(filepath.Join(tmpDir, "mayor", "rigs.json"), []byte(rigsContent), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(tmpDir, "overseer", "rigs.json"), []byte(rigsContent), 0644); err != nil {
 			t.Fatal(err)
 		}
 
@@ -476,13 +476,13 @@ func TestRoutesCheck_SuboptimalRoutes(t *testing.T) {
 		}
 		found := false
 		for _, d := range result.Details {
-			if strings.Contains(d, "cr-") && strings.Contains(d, "crom/mayor/rig") {
+			if strings.Contains(d, "cr-") && strings.Contains(d, "crom/overseer/rig") {
 				found = true
 				break
 			}
 		}
 		if !found {
-			t.Errorf("expected detail mentioning cr- and crom/mayor/rig, got: %v", result.Details)
+			t.Errorf("expected detail mentioning cr- and crom/overseer/rig, got: %v", result.Details)
 		}
 	})
 
@@ -496,14 +496,14 @@ func TestRoutesCheck_SuboptimalRoutes(t *testing.T) {
 			t.Fatalf("Fix failed: %v", err)
 		}
 
-		// Read routes.jsonl and verify cr- now points to crom/mayor/rig
+		// Read routes.jsonl and verify cr- now points to crom/overseer/rig
 		content, err := os.ReadFile(filepath.Join(tmpDir, ".beads", "routes.jsonl"))
 		if err != nil {
 			t.Fatal(err)
 		}
 		contentStr := string(content)
-		if !strings.Contains(contentStr, `"path":"crom/mayor/rig"`) {
-			t.Errorf("expected route rewritten to crom/mayor/rig, got:\n%s", contentStr)
+		if !strings.Contains(contentStr, `"path":"crom/overseer/rig"`) {
+			t.Errorf("expected route rewritten to crom/overseer/rig, got:\n%s", contentStr)
 		}
 		if strings.Contains(contentStr, `"path":"crom"}`) {
 			t.Error("old suboptimal route path 'crom' still present after fix")
@@ -530,17 +530,17 @@ func TestRoutesCheck_SuboptimalRoutes(t *testing.T) {
 		if err := os.MkdirAll(rigBeadsDir, 0755); err != nil {
 			t.Fatal(err)
 		}
-		if err := os.WriteFile(filepath.Join(rigBeadsDir, "redirect"), []byte("mayor/rig/.beads\n"), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(rigBeadsDir, "redirect"), []byte("overseer/rig/.beads\n"), 0644); err != nil {
 			t.Fatal(err)
 		}
 		// Create the canonical directory but WITHOUT .beads inside it
-		if err := os.MkdirAll(filepath.Join(tmpDir, "crom", "mayor", "rig"), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Join(tmpDir, "crom", "overseer", "rig"), 0755); err != nil {
 			t.Fatal(err)
 		}
 		// Intentionally no .beads here — this makes the target beads-invalid
 
 		// rigs.json
-		if err := os.MkdirAll(filepath.Join(tmpDir, "mayor"), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Join(tmpDir, "overseer"), 0755); err != nil {
 			t.Fatal(err)
 		}
 		rigsContent := `{
@@ -552,7 +552,7 @@ func TestRoutesCheck_SuboptimalRoutes(t *testing.T) {
 				}
 			}
 		}`
-		if err := os.WriteFile(filepath.Join(tmpDir, "mayor", "rigs.json"), []byte(rigsContent), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(tmpDir, "overseer", "rigs.json"), []byte(rigsContent), 0644); err != nil {
 			t.Fatal(err)
 		}
 
@@ -599,8 +599,8 @@ func TestRoutesCheck_SuboptimalRoutes(t *testing.T) {
 			t.Fatal(err)
 		}
 		contentStr := string(content)
-		if strings.Contains(contentStr, `"path":"crom/mayor/rig"`) {
-			t.Error("route was rewritten to crom/mayor/rig despite missing .beads directory at canonical target")
+		if strings.Contains(contentStr, `"path":"crom/overseer/rig"`) {
+			t.Error("route was rewritten to crom/overseer/rig despite missing .beads directory at canonical target")
 		}
 	})
 }
@@ -622,8 +622,8 @@ func TestRoutesCheck_CorruptedRoutesJsonl(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		// Create mayor directory
-		if err := os.MkdirAll(filepath.Join(tmpDir, "mayor"), 0755); err != nil {
+		// Create overseer directory
+		if err := os.MkdirAll(filepath.Join(tmpDir, "overseer"), 0755); err != nil {
 			t.Fatal(err)
 		}
 
@@ -656,8 +656,8 @@ func TestRoutesCheck_CorruptedRoutesJsonl(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		// Create mayor directory
-		if err := os.MkdirAll(filepath.Join(tmpDir, "mayor"), 0755); err != nil {
+		// Create overseer directory
+		if err := os.MkdirAll(filepath.Join(tmpDir, "overseer"), 0755); err != nil {
 			t.Fatal(err)
 		}
 

@@ -22,7 +22,7 @@ func (b *Beads) FindMRForBranchAny(branch string) (*Issue, error) {
 // FindMRForBranchAndSHA searches for an open merge-request bead matching both
 // the branch name AND the commit SHA. This is the correct dedup key: two MRs
 // from the same branch but with different commit SHAs are distinct submissions
-// (e.g., polecat fixed a gate failure and re-pushed). See GH#3032.
+// (e.g., miner fixed a gate failure and re-pushed). See GH#3032.
 //
 // Returns nil if no MR matches both branch and SHA. Callers should create a
 // new MR in that case and supersede old MRs for the same source issue.

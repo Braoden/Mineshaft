@@ -303,8 +303,8 @@ func TestLocalProvider_AddRemoveTool(t *testing.T) {
 	}
 }
 
-func TestTranslateGastownMessage(t *testing.T) {
-	msg := TranslateGastownMessage("sender", "recipient", "Test Subject", "Test Body")
+func TestTranslateExcavationMessage(t *testing.T) {
+	msg := TranslateExcavationMessage("sender", "recipient", "Test Subject", "Test Body")
 	if msg.Role != RoleUser {
 		t.Errorf("expected role %s, got %s", RoleUser, msg.Role)
 	}

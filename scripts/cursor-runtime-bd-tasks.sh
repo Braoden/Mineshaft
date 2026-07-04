@@ -5,7 +5,7 @@ set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 if [[ -z "$ROOT" ]] || [[ ! -d "$ROOT/.beads" ]]; then
-  echo "Run from a gastown clone with beads initialized (bd init or bd bootstrap)." >&2
+  echo "Run from a excavation clone with beads initialized (bd init or bd bootstrap)." >&2
   exit 1
 fi
 cd "$ROOT"
@@ -37,7 +37,7 @@ T5="$(bd create --silent "cursor-runtime: Docs + CLI — Cursor clarity and full
   -d "§4+§4b: internal/cmd/config.go help (full built-ins incl. cursor). README prerequisites (Cursor Agent CLI). docs/INSTALLING.md, docs/reference.md — preset cursor vs binaries cursor-agent/agent; align lists with README (pi, omp). Optional otel GT_AGENT. Plan §4, §4b.")"
 T6="$(bd create --silent "cursor-runtime: Tests for cursor preset + related packages (§11)" --type=task -p 2 -l cursor-runtime --parent "$EPIC" \
   -d "TestEnsureSettingsForRole_CursorUsesWorkDir; orphan/down, web, doctor tests; go test ./internal/config/... ./internal/hooks/... ./internal/crew/... ./internal/tmux/... ./internal/runtime/... Plan §6, §11.")"
-T7="$(bd create --silent "cursor-runtime: Add .cursor/skills/ (Gas Town + cursor-agent ops)" --type=task -p 2 -l cursor-runtime --parent "$EPIC" \
+T7="$(bd create --silent "cursor-runtime: Add .cursor/skills/ (Excavation Site + cursor-agent ops)" --type=task -p 2 -l cursor-runtime --parent "$EPIC" \
   -d "Project skills per plan §7.")"
 T8="$(bd create --silent "cursor-runtime: Add .cursor/README.md onboarding + manual smoke test" --type=task -p 2 -l cursor-runtime --parent "$EPIC" \
   -d "Primary entry for Cursor users; plan §8, §9.")"

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/util"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/util"
 )
 
 // setupTestRegistry populates the default session prefix registry for tests.
@@ -14,7 +14,7 @@ import (
 func setupTestRegistry(t *testing.T) {
 	t.Helper()
 	r := session.NewPrefixRegistry()
-	r.Register("gt", "gastown")
+	r.Register("gt", "excavation")
 	r.Register("bd", "beads")
 	old := session.DefaultRegistry()
 	session.SetDefaultRegistry(r)
@@ -78,9 +78,9 @@ func TestScanAll_DetectsRateLimited(t *testing.T) {
 	setupTestRegistry(t)
 
 	tmux := &mockTmux{
-		sessions: []string{"hq-mayor", "gt-crew-bear", "gt-witness", "some-other"},
+		sessions: []string{"hq-overseer", "gt-crew-bear", "gt-witness", "some-other"},
 		paneContent: map[string]string{
-			"hq-mayor": `❯ /rate-limit-options
+			"hq-overseer": `❯ /rate-limit-options
   ⎿  You've hit your limit · resets 7pm (America/Los_Angeles)
 
 ❯ 📬 You have new mail from laser/witness.`,
@@ -91,7 +91,7 @@ func TestScanAll_DetectsRateLimited(t *testing.T) {
 			"some-other": `This is not a gas town session content`,
 		},
 		envVars: map[string]map[string]string{
-			"hq-mayor":     {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/work"},
+			"hq-overseer":     {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/work"},
 			"gt-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/personal"},
 			"gt-witness":   {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/work"},
 		},
@@ -114,7 +114,7 @@ func TestScanAll_DetectsRateLimited(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Should scan: hq-mayor, gt-crew-bear, gt-witness (known prefixes)
+	// Should scan: hq-overseer, gt-crew-bear, gt-witness (known prefixes)
 	// "some-other" is skipped — not a registered prefix
 	if len(results) != 3 {
 		t.Fatalf("expected 3 results, got %d", len(results))
@@ -126,16 +126,16 @@ func TestScanAll_DetectsRateLimited(t *testing.T) {
 		resultMap[r.Session] = r
 	}
 
-	// hq-mayor should be rate-limited
-	mayor := resultMap["hq-mayor"]
-	if !mayor.RateLimited {
-		t.Error("expected hq-mayor to be rate-limited")
+	// hq-overseer should be rate-limited
+	overseer := resultMap["hq-overseer"]
+	if !overseer.RateLimited {
+		t.Error("expected hq-overseer to be rate-limited")
 	}
-	if mayor.AccountHandle != "work" {
-		t.Errorf("expected hq-mayor account 'work', got %q", mayor.AccountHandle)
+	if overseer.AccountHandle != "work" {
+		t.Errorf("expected hq-overseer account 'work', got %q", overseer.AccountHandle)
 	}
-	if mayor.ResetsAt != "7pm (America/Los_Angeles)" {
-		t.Errorf("expected resets at '7pm (America/Los_Angeles)', got %q", mayor.ResetsAt)
+	if overseer.ResetsAt != "7pm (America/Los_Angeles)" {
+		t.Errorf("expected resets at '7pm (America/Los_Angeles)', got %q", overseer.ResetsAt)
 	}
 
 	// gt-crew-bear should NOT be rate-limited
@@ -157,7 +157,7 @@ func TestScanAll_DetectsRateLimited(t *testing.T) {
 	}
 }
 
-func TestScanAll_SkipsNonGasTownSessions(t *testing.T) {
+func TestScanAll_SkipsNonExcavationSessions(t *testing.T) {
 	setupTestRegistry(t)
 
 	tmux := &mockTmux{
@@ -376,16 +376,16 @@ func TestParseResetTime(t *testing.T) {
 	}
 }
 
-func TestIsGasTownSession(t *testing.T) {
+func TestIsExcavationSession(t *testing.T) {
 	setupTestRegistry(t)
 
 	tests := []struct {
 		session  string
 		expected bool
 	}{
-		{"hq-mayor", true},
-		{"hq-deacon", true},
 		{"hq-overseer", true},
+		{"hq-supervisor", true},
+		{"hq-boss", true},
 		{"gt-crew-bear", true},
 		{"gt-witness", true},
 		{"bd-refinery", true},
@@ -396,9 +396,9 @@ func TestIsGasTownSession(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		got := isGasTownSession(tt.session)
+		got := isExcavationSession(tt.session)
 		if got != tt.expected {
-			t.Errorf("isGasTownSession(%q) = %v, want %v", tt.session, got, tt.expected)
+			t.Errorf("isExcavationSession(%q) = %v, want %v", tt.session, got, tt.expected)
 		}
 	}
 }

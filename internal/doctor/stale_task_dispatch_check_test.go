@@ -5,16 +5,16 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/hooks"
+	"github.com/steveyegge/excavation/internal/hooks"
 )
 
 func TestStaleTaskDispatchCheck_Clean(t *testing.T) {
 	tmpDir := t.TempDir()
 	t.Setenv("HOME", tmpDir)
 
-	// Create a mayor settings.json without task-dispatch
-	mayorDir := filepath.Join(tmpDir, "mayor", ".claude")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	// Create a overseer settings.json without task-dispatch
+	overseerDir := filepath.Join(tmpDir, "overseer", ".claude")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -29,7 +29,7 @@ func TestStaleTaskDispatchCheck_Clean(t *testing.T) {
   }
 }
 `
-	if err := os.WriteFile(filepath.Join(mayorDir, "settings.json"), []byte(settings), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "settings.json"), []byte(settings), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -46,9 +46,9 @@ func TestStaleTaskDispatchCheck_Stale(t *testing.T) {
 	tmpDir := t.TempDir()
 	t.Setenv("HOME", tmpDir)
 
-	// Create a mayor settings.json WITH stale task-dispatch
-	mayorDir := filepath.Join(tmpDir, "mayor", ".claude")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	// Create a overseer settings.json WITH stale task-dispatch
+	overseerDir := filepath.Join(tmpDir, "overseer", ".claude")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -67,7 +67,7 @@ func TestStaleTaskDispatchCheck_Stale(t *testing.T) {
   }
 }
 `
-	if err := os.WriteFile(filepath.Join(mayorDir, "settings.json"), []byte(settings), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "settings.json"), []byte(settings), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -87,9 +87,9 @@ func TestStaleTaskDispatchCheck_Fix(t *testing.T) {
 	tmpDir := t.TempDir()
 	t.Setenv("HOME", tmpDir)
 
-	// Create a mayor settings.json WITH stale task-dispatch
-	mayorDir := filepath.Join(tmpDir, "mayor", ".claude")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	// Create a overseer settings.json WITH stale task-dispatch
+	overseerDir := filepath.Join(tmpDir, "overseer", ".claude")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -104,7 +104,7 @@ func TestStaleTaskDispatchCheck_Fix(t *testing.T) {
   }
 }
 `
-	settingsPath := filepath.Join(mayorDir, "settings.json")
+	settingsPath := filepath.Join(overseerDir, "settings.json")
 	if err := os.WriteFile(settingsPath, []byte(settings), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -147,7 +147,7 @@ func TestStaleTaskDispatchCheck_FixConvergesWithOverride(t *testing.T) {
 	tmpDir := t.TempDir()
 	t.Setenv("HOME", tmpDir)
 
-	// Create an on-disk mayor override that contains task-dispatch
+	// Create an on-disk overseer override that contains task-dispatch
 	overrideDir := filepath.Join(tmpDir, ".gt", "hooks-overrides")
 	if err := os.MkdirAll(overrideDir, 0755); err != nil {
 		t.Fatal(err)
@@ -161,13 +161,13 @@ func TestStaleTaskDispatchCheck_FixConvergesWithOverride(t *testing.T) {
   ]
 }
 `
-	if err := os.WriteFile(filepath.Join(overrideDir, "mayor.json"), []byte(override), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overrideDir, "overseer.json"), []byte(override), 0644); err != nil {
 		t.Fatal(err)
 	}
 
-	// Create a mayor settings.json WITH stale task-dispatch
-	mayorDir := filepath.Join(tmpDir, "mayor", ".claude")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	// Create a overseer settings.json WITH stale task-dispatch
+	overseerDir := filepath.Join(tmpDir, "overseer", ".claude")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -182,7 +182,7 @@ func TestStaleTaskDispatchCheck_FixConvergesWithOverride(t *testing.T) {
   }
 }
 `
-	settingsPath := filepath.Join(mayorDir, "settings.json")
+	settingsPath := filepath.Join(overseerDir, "settings.json")
 	if err := os.WriteFile(settingsPath, []byte(settings), 0644); err != nil {
 		t.Fatal(err)
 	}

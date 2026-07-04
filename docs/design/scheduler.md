@@ -1,6 +1,6 @@
 # Scheduler Architecture
 
-> Config-driven capacity-controlled polecat dispatch.
+> Config-driven capacity-controlled miner dispatch.
 
 ## Quick Start
 
@@ -8,12 +8,12 @@ Enable deferred dispatch and schedule some work:
 
 ```bash
 # 1. Enable deferred dispatch (config-driven, no per-command flag)
-gt config set scheduler.max_polecats 5
+gt config set scheduler.max_miners 5
 
-# 2. Schedule work via gt sling (auto-defers when max_polecats > 0)
-gt sling gt-abc gastown              # Single task bead
-gt sling gt-abc gt-def gt-ghi gastown  # Batch task beads
-gt sling hq-cv-abc                   # Convoy (schedules all tracked issues)
+# 2. Schedule work via gt sling (auto-defers when max_miners > 0)
+gt sling gt-abc excavation              # Single task bead
+gt sling gt-abc gt-def gt-ghi excavation  # Batch task beads
+gt sling hq-cv-abc                   # Minecart (schedules all tracked issues)
 gt sling gt-epic-123                 # Epic (schedules all children)
 
 # 3. Check what's scheduled
@@ -27,7 +27,7 @@ gt scheduler run --dry-run    # Preview first
 
 ### Dispatch Modes
 
-The `scheduler.max_polecats` config value controls dispatch behavior:
+The `scheduler.max_miners` config value controls dispatch behavior:
 
 | Value | Mode | Behavior |
 |-------|------|----------|
@@ -43,7 +43,7 @@ No per-invocation flag needed. The same `gt sling` command adapts automatically.
 |---------|-------------|
 | `gt sling <bead> <rig>` | Sling bead (direct or deferred, per config) |
 | `gt sling <bead>... <rig>` | Batch sling/schedule multiple beads |
-| `gt sling <convoy-id>` | Sling/schedule all tracked issues in convoy |
+| `gt sling <minecart-id>` | Sling/schedule all tracked issues in minecart |
 | `gt sling <epic-id>` | Sling/schedule all children of epic |
 | `gt scheduler status` | Show scheduler state and capacity |
 | `gt scheduler list` | List all scheduled beads by rig |
@@ -55,19 +55,19 @@ No per-invocation flag needed. The same `gt sling` command adapts automatically.
 ### Minimal Example
 
 ```bash
-gt config set scheduler.max_polecats 5
-gt sling gt-abc gastown              # Defers: creates sling context bead
+gt config set scheduler.max_miners 5
+gt sling gt-abc excavation              # Defers: creates sling context bead
 gt scheduler status                  # "Queued: 1 total, 1 ready"
-gt scheduler run                     # Dispatches -> spawns polecat -> closes context
+gt scheduler run                     # Dispatches -> spawns miner -> closes context
 ```
 
 ---
 
 ## Overview
 
-The scheduler solves **back-pressure** and **capacity control** for batched polecat dispatch.
+The scheduler solves **back-pressure** and **capacity control** for batched miner dispatch.
 
-Without the scheduler, slinging N beads spawns N polecats simultaneously, exhausting API rate limits, memory, and CPU. The scheduler introduces a governor: beads enter a waiting state and the daemon dispatches them incrementally, respecting a configurable concurrency cap.
+Without the scheduler, slinging N beads spawns N miners simultaneously, exhausting API rate limits, memory, and CPU. The scheduler introduces a governor: beads enter a waiting state and the daemon dispatches them incrementally, respecting a configurable concurrency cap.
 
 The scheduler integrates into the daemon heartbeat as **step 14** — after all agent health checks, lifecycle processing, and branch pruning. This ensures the system is healthy before spawning new work.
 
@@ -80,8 +80,8 @@ Daemon heartbeat (every 3 min)
          |
          +- flock (exclusive)
          +- Check paused state
-         +- Load config (max_polecats, batch_size)
-         +- Count active polecats (tmux)
+         +- Load config (max_miners, batch_size)
+         +- Count active miners (tmux)
          +- Query sling contexts (bd list --label=gt:sling-context)
          +- Join with bd ready to determine unblocked beads
          +- DispatchCycle.Run() — plan + execute + report
@@ -124,18 +124,18 @@ Sling context beads eliminate all of this:
 | `version` | int | Schema version (currently 1) |
 | `work_bead_id` | string | The actual work bead being scheduled |
 | `target_rig` | string | Destination rig name |
-| `formula` | string | Formula to apply at dispatch (e.g., `mol-polecat-work`) |
+| `formula` | string | Formula to apply at dispatch (e.g., `mol-miner-work`) |
 | `args` | string | Natural language instructions for executor |
 | `vars` | string | Newline-separated formula variables (`key=value`) |
 | `enqueued_at` | RFC3339 | Timestamp of schedule |
 | `merge` | string | Merge strategy: `direct`, `mr`, `local` |
-| `convoy` | string | Convoy bead ID (set after auto-convoy creation) |
-| `base_branch` | string | Override base branch for polecat worktree |
+| `minecart` | string | Minecart bead ID (set after auto-minecart creation) |
+| `base_branch` | string | Override base branch for miner worktree |
 | `no_merge` | bool | Skip merge queue on completion |
 | `account` | string | Claude Code account handle |
 | `agent` | string | Agent/runtime override |
 | `hook_raw_bead` | bool | Hook without default formula |
-| `owned` | bool | Caller-managed convoy lifecycle |
+| `owned` | bool | Caller-managed minecart lifecycle |
 | `mode` | string | Execution mode: `ralph` (fresh context per step) |
 | `dispatch_failures` | int | Consecutive failure count (circuit breaker) |
 | `last_failure` | string | Most recent dispatch error message |
@@ -177,19 +177,19 @@ Key invariant: the work bead is **never modified** by the scheduler. All state l
 
 `gt sling` auto-detects the dispatch mode from config and the ID type:
 
-| Command | Direct Mode (max_polecats=-1) | Deferred Mode (max_polecats>0) |
+| Command | Direct Mode (max_miners=-1) | Deferred Mode (max_miners>0) |
 |---------|-------------------------------|-------------------------------|
 | `gt sling <bead> <rig>` | Immediate dispatch | Schedule for later dispatch |
 | `gt sling <bead>... <rig>` | Batch immediate dispatch | Batch schedule |
 | `gt sling <epic-id>` | `runEpicSlingByID()` — dispatch all children | `runEpicScheduleByID()` — schedule all children |
-| `gt sling <convoy-id>` | `runConvoySlingByID()` — dispatch all tracked | `runConvoyScheduleByID()` — schedule all tracked |
+| `gt sling <minecart-id>` | `runMinecartSlingByID()` — dispatch all tracked | `runMinecartScheduleByID()` — schedule all tracked |
 
 **Detection chain** in `runSling`:
-1. `shouldDeferDispatch()` — check `scheduler.max_polecats` config
+1. `shouldDeferDispatch()` — check `scheduler.max_miners` config
 2. Batch (3+ args, last is rig) — `runBatchSchedule()` or `runBatchSling()`
 3. `--on` flag set — formula-on-bead mode
 4. 2 args + last is rig — `scheduleBead()` or inline dispatch
-5. 1 arg, auto-detect type: epic/convoy/task
+5. 1 arg, auto-detect type: epic/minecart/task
 
 All schedule paths go through `scheduleBead()` in `internal/cmd/sling_schedule.go`.
 All dispatch goes through `dispatchScheduledWork()` in `internal/cmd/capacity_dispatch.go`.
@@ -213,7 +213,7 @@ func (d *Daemon) dispatchScheduledWork() {
 |----------|-------|
 | Timeout | 5 minutes |
 | Environment | `GT_DAEMON=1` (identifies daemon dispatch) |
-| Gating | `scheduler.max_polecats > 0` (deferred mode) |
+| Gating | `scheduler.max_miners > 0` (deferred mode) |
 
 ---
 
@@ -229,7 +229,7 @@ func (d *Daemon) dispatchScheduledWork() {
 6. **Cook formula** — `bd cook` to catch bad protos before daemon dispatch
 7. **Build context fields** — `SlingContextFields` struct with all sling params
 8. **Create sling context** — `bd create --ephemeral` + `bd dep add --type=tracks` (atomic)
-9. **Auto-convoy** — create convoy if not already tracked, store convoy ID in context fields
+9. **Auto-minecart** — create minecart if not already tracked, store minecart ID in context fields
 10. **Log event** — feed event for dashboard visibility
 
 The create is a **single atomic operation** — no two-step write, no rollback needed.
@@ -261,7 +261,7 @@ type DispatchCycle struct {
 ```
 DispatchCycle.Run()
     |
-    +- AvailableCapacity() → capacity = maxPolecats - activePolecats
+    +- AvailableCapacity() → capacity = maxMiners - activeMiners
     |
     +- QueryPending() → getReadySlingContexts():
     |    +- bd list --label=gt:sling-context --status=open (all rig DBs)
@@ -299,15 +299,15 @@ Post-dispatch cleanup is handled by callbacks:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `scheduler.max_polecats` | *int | `-1` | Max concurrent polecats (-1=direct, 0=disabled, N=deferred) |
+| `scheduler.max_miners` | *int | `-1` | Max concurrent miners (-1=direct, 0=disabled, N=deferred) |
 | `scheduler.batch_size` | *int | `1` | Beads dispatched per heartbeat tick |
 | `scheduler.spawn_delay` | string | `"0s"` | Delay between spawns (Dolt lock contention) |
 
 Set via `gt config set`:
 
 ```bash
-gt config set scheduler.max_polecats 5    # Enable deferred dispatch
-gt config set scheduler.max_polecats -1   # Direct dispatch (default)
+gt config set scheduler.max_miners 5    # Enable deferred dispatch
+gt config set scheduler.max_miners -1   # Direct dispatch (default)
 gt config set scheduler.batch_size 2
 gt config set scheduler.spawn_delay 3s
 ```
@@ -318,14 +318,14 @@ gt config set scheduler.spawn_delay 3s
 toDispatch = min(capacity, batchSize, readyCount)
 
 where:
-  capacity   = maxPolecats - activePolecats (positive = that many slots, 0 or negative = no capacity)
+  capacity   = maxMiners - activeMiners (positive = that many slots, 0 or negative = no capacity)
   batchSize  = scheduler.batch_size (default 1)
   readyCount = sling contexts whose work bead appears in bd ready
 ```
 
-### Active Polecat Counting
+### Active Miner Counting
 
-Active polecats are counted by scanning tmux sessions and matching role via `session.ParseSessionName()`. This counts **all** polecats (both scheduler-dispatched and directly-slung) because API rate limits, memory, and CPU are shared resources.
+Active miners are counted by scanning tmux sessions and matching role via `session.ParseSessionName()`. This counts **all** miners (both scheduler-dispatched and directly-slung) because API rate limits, memory, and CPU are shared resources.
 
 ---
 
@@ -381,7 +381,7 @@ gt scheduler clear --bead gt-abc  # Close context for specific bead
 ### Status / List
 
 ```bash
-gt scheduler status         # Summary: paused, queued count, active polecats
+gt scheduler status         # Summary: paused, queued count, active miners
 gt scheduler status --json  # JSON output
 
 gt scheduler list           # Beads grouped by target rig, with blocked indicator
@@ -392,30 +392,30 @@ gt scheduler list --json    # JSON output
 
 ---
 
-## Scheduler and Convoy Integration
+## Scheduler and Minecart Integration
 
-Convoys and the scheduler are complementary but distinct mechanisms. Convoys track completion of related beads; the scheduler controls dispatch capacity. Two paths exist for dispatching convoy work:
+Minecarts and the scheduler are complementary but distinct mechanisms. Minecarts track completion of related beads; the scheduler controls dispatch capacity. Two paths exist for dispatching minecart work:
 
 ### Dispatch Paths
 
 | Path | Trigger | Capacity Control | Use Case |
 |------|---------|-----------------|----------|
-| **Direct dispatch** | `gt sling <convoy-id>` (max_polecats=-1) | None (fires immediately) | Default mode — all issues dispatch at once |
-| **Deferred dispatch** | `gt sling <convoy-id>` (max_polecats>0) | Yes (daemon heartbeat, max_polecats, batch_size) | Capacity-controlled — batched with back-pressure |
+| **Direct dispatch** | `gt sling <minecart-id>` (max_miners=-1) | None (fires immediately) | Default mode — all issues dispatch at once |
+| **Deferred dispatch** | `gt sling <minecart-id>` (max_miners>0) | Yes (daemon heartbeat, max_miners, batch_size) | Capacity-controlled — batched with back-pressure |
 
-**Direct dispatch** (max_polecats=-1): `gt sling <convoy-id>` calls `runConvoySlingByID()` which dispatches all open tracked issues immediately via `executeSling()`. Each issue's rig is auto-resolved from its bead ID prefix. No capacity control — all issues dispatch at once.
+**Direct dispatch** (max_miners=-1): `gt sling <minecart-id>` calls `runMinecartSlingByID()` which dispatches all open tracked issues immediately via `executeSling()`. Each issue's rig is auto-resolved from its bead ID prefix. No capacity control — all issues dispatch at once.
 
-**Deferred dispatch** (max_polecats>0): `gt sling <convoy-id>` calls `runConvoyScheduleByID()` which schedules all open tracked issues (creating sling context beads). The daemon dispatches incrementally via `gt scheduler run`, respecting `max_polecats` and `batch_size`. Use this for large batches where simultaneous dispatch would exhaust resources.
+**Deferred dispatch** (max_miners>0): `gt sling <minecart-id>` calls `runMinecartScheduleByID()` which schedules all open tracked issues (creating sling context beads). The daemon dispatches incrementally via `gt scheduler run`, respecting `max_miners` and `batch_size`. Use this for large batches where simultaneous dispatch would exhaust resources.
 
 ### When to Use Which
 
-- **Small convoys (< 5 issues)**: Direct dispatch (default, max_polecats=-1)
-- **Large batches (5+ issues)**: Set `scheduler.max_polecats` for capacity-controlled dispatch
+- **Small minecarts (< 5 issues)**: Direct dispatch (default, max_miners=-1)
+- **Large batches (5+ issues)**: Set `scheduler.max_miners` for capacity-controlled dispatch
 - **Epics**: Same logic — `gt sling <epic-id>` auto-resolves mode from config
 
 ### Rig Resolution
 
-`gt sling <convoy-id>` and `gt sling <epic-id>` auto-resolve the target rig per-bead from its ID prefix using `beads.ExtractPrefix()` + `beads.GetRigNameForPrefix()`. Town-root beads (`hq-*`) are skipped with a warning since they are coordination artifacts, not dispatchable work.
+`gt sling <minecart-id>` and `gt sling <epic-id>` auto-resolve the target rig per-bead from its ID prefix using `beads.ExtractPrefix()` + `beads.GetRigNameForPrefix()`. Town-root beads (`hq-*`) are skipped with a warning since they are coordination artifacts, not dispatchable work.
 
 ---
 
@@ -446,7 +446,7 @@ Convoys and the scheduler are complementary but distinct mechanisms. Convoys tra
 | `internal/cmd/sling_schedule.go` | `scheduleBead()`, `shouldDeferDispatch()`, `isScheduled()` |
 | `internal/cmd/scheduler.go` | `gt scheduler` command tree |
 | `internal/cmd/scheduler_epic.go` | Epic schedule/sling handlers |
-| `internal/cmd/scheduler_convoy.go` | Convoy schedule/sling handlers |
+| `internal/cmd/scheduler_minecart.go` | Minecart schedule/sling handlers |
 | `internal/cmd/capacity_dispatch.go` | `dispatchScheduledWork()`, dispatch callback wiring |
 | `internal/daemon/daemon.go` | Heartbeat integration (`gt scheduler run`) |
 
@@ -455,5 +455,5 @@ Convoys and the scheduler are complementary but distinct mechanisms. Convoys tra
 ## See Also
 
 - [Watchdog Chain](watchdog-chain.md) — Daemon heartbeat, where scheduler dispatch runs as step 14
-- [Convoys](../concepts/convoy.md) — Convoy tracking, auto-convoy on schedule
+- [Minecarts](../concepts/minecart.md) — Minecart tracking, auto-minecart on schedule
 - [Property Layers](property-layers.md) — Labels-as-state pattern used by scheduler labels (see Operational State Events section)

@@ -10,20 +10,20 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/rig"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // branchInfo holds parsed branch information.
 type branchInfo struct {
 	Branch string // Full branch name
 	Issue  string // Issue ID extracted from branch
-	Worker string // Worker name (polecat name)
+	Worker string // Worker name (miner name)
 }
 
 // issuePattern matches issue IDs in branch names (e.g., "gt-xyz" or "gt-abc.1")
@@ -31,14 +31,14 @@ var issuePattern = regexp.MustCompile(`([a-z]+-[a-z0-9]+(?:\.[0-9]+)?)`)
 
 // parseBranchName extracts issue ID and worker from a branch name.
 // Supports formats:
-//   - polecat/<worker>/<issue>  → issue=<issue>, worker=<worker>
-//   - polecat/<worker>-<timestamp>  → issue="", worker=<worker> (modern polecat branches)
+//   - miner/<worker>/<issue>  → issue=<issue>, worker=<worker>
+//   - miner/<worker>-<timestamp>  → issue="", worker=<worker> (modern miner branches)
 //   - <issue>                   → issue=<issue>, worker=""
 func parseBranchName(branch string) branchInfo {
 	info := branchInfo{Branch: branch}
 
-	// Try polecat/<worker>/<issue> or polecat/<worker>/<issue>@<timestamp> format
-	if strings.HasPrefix(branch, constants.BranchPolecatPrefix) {
+	// Try miner/<worker>/<issue> or miner/<worker>/<issue>@<timestamp> format
+	if strings.HasPrefix(branch, constants.BranchMinerPrefix) {
 		parts := strings.SplitN(branch, "/", 3)
 		if len(parts) == 3 {
 			info.Worker = parts[1]
@@ -50,7 +50,7 @@ func parseBranchName(branch string) branchInfo {
 			info.Issue = issue
 			return info
 		}
-		// Modern polecat branch format: polecat/<worker>-<timestamp>
+		// Modern miner branch format: miner/<worker>-<timestamp>
 		// The second part is "worker-timestamp", not an issue ID.
 		// Don't try to extract an issue ID - gt done will use hook_bead fallback.
 		if len(parts) == 2 {
@@ -79,7 +79,7 @@ func runMqSubmit(cmd *cobra.Command, args []string) error {
 	// Find workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Find current rig
@@ -95,24 +95,24 @@ func runMqSubmit(cmd *cobra.Command, args []string) error {
 	}
 
 	// When gt is invoked via shell alias (cd ~/gt && gt), cwd is the town
-	// root, not the polecat's worktree. Reconstruct actual path.
+	// root, not the miner's worktree. Reconstruct actual path.
 	if cwd == townRoot {
-		// Gate polecat cwd switch on GT_ROLE: coordinators may have stale GT_POLECAT.
-		isPolecat := false
+		// Gate miner cwd switch on GT_ROLE: coordinators may have stale GT_MINER.
+		isMiner := false
 		if role := os.Getenv("GT_ROLE"); role != "" {
 			parsedRole, _, _ := parseRoleString(role)
-			isPolecat = parsedRole == RolePolecat
+			isMiner = parsedRole == RoleMiner
 		} else {
-			isPolecat = os.Getenv("GT_POLECAT") != ""
+			isMiner = os.Getenv("GT_MINER") != ""
 		}
-		if polecatName := os.Getenv("GT_POLECAT"); polecatName != "" && rigName != "" && isPolecat {
-			polecatClone := filepath.Join(townRoot, rigName, "polecats", polecatName, rigName)
-			if _, err := os.Stat(polecatClone); err == nil {
-				cwd = polecatClone
+		if minerName := os.Getenv("GT_MINER"); minerName != "" && rigName != "" && isMiner {
+			minerClone := filepath.Join(townRoot, rigName, "miners", minerName, rigName)
+			if _, err := os.Stat(minerClone); err == nil {
+				cwd = minerClone
 			} else {
-				polecatClone = filepath.Join(townRoot, rigName, "polecats", polecatName)
-				if _, err := os.Stat(filepath.Join(polecatClone, ".git")); err == nil {
-					cwd = polecatClone
+				minerClone = filepath.Join(townRoot, rigName, "miners", minerName)
+				if _, err := os.Stat(filepath.Join(minerClone, ".git")); err == nil {
+					cwd = minerClone
 				}
 			}
 		} else if crewName := os.Getenv("GT_CREW"); crewName != "" && rigName != "" {
@@ -173,7 +173,7 @@ func runMqSubmit(cmd *cobra.Command, args []string) error {
 		// When gt sling dispatches with --base-branch, the value is persisted in
 		// the bead's formula_vars field. Without this check, MRs created via
 		// gt mq submit always target the rig's default branch (usually main),
-		// even when the polecat was working against a feature branch.
+		// even when the miner was working against a feature branch.
 		if sourceIssue, showErr := bd.Show(issueID); showErr == nil {
 			if af := beads.ParseAttachmentFields(sourceIssue); af != nil {
 				if bb := extractFormulaVar(af.FormulaVars, "base_branch"); bb != "" && bb != defaultBranch {
@@ -224,7 +224,7 @@ func runMqSubmit(cmd *cobra.Command, args []string) error {
 
 	// Enforce molecule step dependencies before allowing submit.
 	// If the source issue has an attached molecule, verify that prerequisite
-	// steps are complete. This prevents polecats from skipping steps like
+	// steps are complete. This prevents miners from skipping steps like
 	// self-review, build-check, or state-update.
 	if !mqSubmitSkipDeps && !mqSubmitResubmit && sourceIssue != nil {
 		if err := checkMoleculeStepDeps(bd, sourceIssue); err != nil {
@@ -304,7 +304,7 @@ func runMqSubmit(cmd *cobra.Command, args []string) error {
 		}
 
 		// Supersede older open MRs for the same source issue.
-		// When a new polecat reattempts an issue, the old MR (different branch)
+		// When a new miner reattempts an issue, the old MR (different branch)
 		// is orphaned. Close it so the queue and GitHub PRs stay clean.
 		if issueID != "" {
 			if oldMRs, err := bd.FindOpenMRsForIssue(issueID); err == nil {
@@ -320,10 +320,10 @@ func runMqSubmit(cmd *cobra.Command, args []string) error {
 					fmt.Printf("  %s Superseded old MR: %s\n", style.Dim.Render("○"), old.ID)
 
 					// Delete the old remote branch to auto-close the GitHub PR.
-					// Only polecat branches — non-polecat branches may belong to
+					// Only miner branches — non-miner branches may belong to
 					// contributor forks; deleting them closes upstream PRs. (GH#2669)
 					oldFields := beads.ParseMRFields(old)
-					if oldFields != nil && strings.HasPrefix(oldFields.Branch, "polecat/") {
+					if oldFields != nil && strings.HasPrefix(oldFields.Branch, "miner/") {
 						g := git.NewGit(cwd)
 						if err := g.DeleteRemoteBranch("origin", oldFields.Branch); err != nil {
 							style.PrintWarning("could not delete superseded branch %s: %v", oldFields.Branch, err)
@@ -347,18 +347,18 @@ func runMqSubmit(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Printf("  Priority: P%d\n", priority)
 
-	// Auto-cleanup for polecats: if this is a polecat branch and cleanup not disabled,
+	// Auto-cleanup for miners: if this is a miner branch and cleanup not disabled,
 	// send lifecycle request and wait for termination
 	if worker != "" && !mqSubmitNoCleanup {
 		fmt.Println()
-		fmt.Printf("%s Auto-cleanup: polecat work submitted\n", style.Bold.Render("✓"))
-		if err := polecatCleanup(rigName, worker, townRoot); err != nil {
+		fmt.Printf("%s Auto-cleanup: miner work submitted\n", style.Bold.Render("✓"))
+		if err := minerCleanup(rigName, worker, townRoot); err != nil {
 			// Non-fatal: warn but return success (MR was created)
 			style.PrintWarning("Could not auto-cleanup: %v", err)
 			fmt.Println(style.Dim.Render("  You may need to run 'gt handoff --shutdown' manually"))
 			return nil
 		}
-		// polecatCleanup may timeout while waiting, but MR was already created
+		// minerCleanup may timeout while waiting, but MR was already created
 	}
 
 	return nil
@@ -469,13 +469,13 @@ func validateMoleculePrereqs(children []*beads.Issue) error {
 	return fmt.Errorf("%s", sb.String())
 }
 
-// polecatCleanup sends a lifecycle shutdown request to the witness and waits for termination.
-// This is called after a polecat successfully submits an MR.
-func polecatCleanup(rigName, worker, townRoot string) error {
+// minerCleanup sends a lifecycle shutdown request to the witness and waits for termination.
+// This is called after a miner successfully submits an MR.
+func minerCleanup(rigName, worker, townRoot string) error {
 	// Send lifecycle request to witness
 	manager := rigName + "/witness"
-	subject := fmt.Sprintf("LIFECYCLE: polecat-%s requesting shutdown", worker)
-	body := fmt.Sprintf(`Lifecycle request from polecat %s.
+	subject := fmt.Sprintf("LIFECYCLE: miner-%s requesting shutdown", worker)
+	body := fmt.Sprintf(`Lifecycle request from miner %s.
 
 Action: shutdown
 Reason: MR submitted to merge queue
@@ -520,9 +520,9 @@ Please verify state and execute lifecycle action.
 				fmt.Println(style.Dim.Render("  - Use Ctrl+C to abort and manually exit"))
 			}
 		case <-timeout:
-			fmt.Printf("%s Timeout waiting for polecat retirement\n", style.WarningPrefix)
-			fmt.Println(style.Dim.Render("  The polecat may have already terminated, or witness is unresponsive."))
-			fmt.Println(style.Dim.Render("  You can verify with: gt polecat status"))
+			fmt.Printf("%s Timeout waiting for miner retirement\n", style.WarningPrefix)
+			fmt.Println(style.Dim.Render("  The miner may have already terminated, or witness is unresponsive."))
+			fmt.Println(style.Dim.Render("  You can verify with: gt miner status"))
 			return nil // Don't fail the MR submission just because cleanup timed out
 		}
 	}

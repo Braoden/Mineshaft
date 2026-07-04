@@ -1,11 +1,11 @@
 # Property Layers: Multi-Level Configuration
 
-> Implementation guide for Gas Town's configuration system.
+> Implementation guide for Excavation Site's configuration system.
 > Created: 2025-01-06
 
 ## Overview
 
-Gas Town uses a layered property system for configuration. Properties are
+Excavation Site uses a layered property system for configuration. Properties are
 looked up through multiple layers, with earlier layers overriding later ones.
 This enables both local control and global coordination.
 
@@ -84,7 +84,7 @@ This enables temporary adjustments without changing the base value.
 You can explicitly block a property from being inherited:
 
 ```bash
-gt rig config set gastown auto_restart --block
+gt rig config set excavation auto_restart --block
 ```
 
 This creates a "blocked" marker in the wisp layer. Even if the rig bead
@@ -95,10 +95,10 @@ or defaults say `auto_restart: true`, the lookup returns nil.
 Each rig has an identity bead for operational state:
 
 ```yaml
-id: gt-rig-gastown
+id: gt-rig-excavation
 type: rig
-name: gastown
-repo: git@github.com:steveyegge/gastown.git
+name: excavation
+repo: git@github.com:steveyegge/excavation.git
 prefix: gt
 
 labels:
@@ -113,8 +113,8 @@ These beads sync via git, so all clones of the rig see the same state.
 ### Level 1: Park (Local, Ephemeral)
 
 ```bash
-gt rig park gastown      # Stop services, daemon won't restart
-gt rig unpark gastown    # Allow services to run
+gt rig park excavation      # Stop services, daemon won't restart
+gt rig unpark excavation    # Allow services to run
 ```
 
 - Stored in wisp layer (`.beads-wisp/config/`)
@@ -125,8 +125,8 @@ gt rig unpark gastown    # Allow services to run
 ### Level 2: Dock (Global, Persistent)
 
 ```bash
-gt rig dock gastown      # Set status:docked label on rig bead
-gt rig undock gastown    # Remove label
+gt rig dock excavation      # Set status:docked label on rig bead
+gt rig undock excavation    # Remove label
 ```
 
 - Stored on rig identity bead
@@ -154,7 +154,7 @@ func shouldAutoRestart(rig *Rig) bool {
 |-----|------|----------|-------------|
 | `status` | string | Override | operational/parked/docked |
 | `auto_restart` | bool | Override | Daemon auto-restart behavior |
-| `max_polecats` | int | Override | Maximum concurrent polecats |
+| `max_miners` | int | Override | Maximum concurrent miners |
 | `priority_adjustment` | int | **Stack** | Scheduling priority modifier |
 | `maintenance_window` | string | Override | When maintenance allowed |
 | `dnd` | bool | Override | Do not disturb mode |
@@ -164,36 +164,36 @@ func shouldAutoRestart(rig *Rig) bool {
 ### View Configuration
 
 ```bash
-gt rig config show gastown           # Show effective config (all layers)
-gt rig config show gastown --layer   # Show which layer each value comes from
+gt rig config show excavation           # Show effective config (all layers)
+gt rig config show excavation --layer   # Show which layer each value comes from
 ```
 
 ### Set Configuration
 
 ```bash
 # Set in wisp layer (local, ephemeral)
-gt rig config set gastown key value
+gt rig config set excavation key value
 
 # Set in bead layer (global, permanent)
-gt rig config set gastown key value --global
+gt rig config set excavation key value --global
 
 # Block inheritance
-gt rig config set gastown key --block
+gt rig config set excavation key --block
 
 # Clear from wisp layer
-gt rig config unset gastown key
+gt rig config unset excavation key
 ```
 
 ### Rig Lifecycle
 
 ```bash
-gt rig park gastown          # Local: stop + prevent restart
-gt rig unpark gastown        # Local: allow restart
+gt rig park excavation          # Local: stop + prevent restart
+gt rig unpark excavation        # Local: allow restart
 
-gt rig dock gastown          # Global: mark as offline
-gt rig undock gastown        # Global: mark as operational
+gt rig dock excavation          # Global: mark as offline
+gt rig undock excavation        # Global: mark as operational
 
-gt rig status gastown        # Show current state
+gt rig status excavation        # Show current state
 ```
 
 ## Examples
@@ -204,36 +204,36 @@ gt rig status gastown        # Show current state
 # Base priority: 0 (from defaults)
 # Give this rig temporary priority boost for urgent work
 
-gt rig config set gastown priority_adjustment 10
+gt rig config set excavation priority_adjustment 10
 
 # Effective priority: 0 + 10 = 10
 # When done, clear it:
 
-gt rig config unset gastown priority_adjustment
+gt rig config unset excavation priority_adjustment
 ```
 
 ### Local Maintenance
 
 ```bash
 # I'm upgrading the local clone, don't restart services
-gt rig park gastown
+gt rig park excavation
 
 # ... do maintenance ...
 
-gt rig unpark gastown
+gt rig unpark excavation
 ```
 
 ### Project-Wide Maintenance
 
 ```bash
 # Major refactor in progress, all clones should pause
-gt rig dock gastown
+gt rig dock excavation
 
 # Syncs via git - other towns see the rig as docked
 bd sync
 
 # When done:
-gt rig undock gastown
+gt rig undock excavation
 bd sync
 ```
 
@@ -243,7 +243,7 @@ bd sync
 # Rig bead says auto_restart: true
 # But I'm debugging and don't want that here
 
-gt rig config set gastown auto_restart --block
+gt rig config set excavation auto_restart --block
 
 # Now auto_restart returns nil for this town only
 ```
@@ -256,7 +256,7 @@ Wisp config stored in `.beads-wisp/config/<rig>.json`:
 
 ```json
 {
-  "rig": "gastown",
+  "rig": "excavation",
   "values": {
     "status": "parked",
     "priority_adjustment": 10
@@ -270,8 +270,8 @@ Wisp config stored in `.beads-wisp/config/<rig>.json`:
 Rig operational state stored as labels on the rig identity bead:
 
 ```bash
-bd label add gt-rig-gastown status:docked
-bd label remove gt-rig-gastown status:docked
+bd label add gt-rig-excavation status:docked
+bd label remove gt-rig-excavation status:docked
 ```
 
 ### Daemon Integration
@@ -314,11 +314,11 @@ trail. Labels cache the current state for fast queries.
 ```bash
 # Create operational event
 bd create --type=event --event-type=patrol.muted \
-  --actor=human:overseer --target=agent:deacon \
-  --payload='{"reason":"fixing convoy deadlock","until":"gt-abc1"}'
+  --actor=human:boss --target=agent:supervisor \
+  --payload='{"reason":"fixing minecart deadlock","until":"gt-abc1"}'
 
 # Query recent events for an agent
-bd list --type=event --target=agent:deacon --limit=10
+bd list --type=event --target=agent:supervisor --limit=10
 
 # Query current state via labels
 bd list --type=role --label=patrol:muted
@@ -337,7 +337,7 @@ State change flow: create event bead (immutable), then update role bead labels (
 ```bash
 # Mute patrol
 bd create --type=event --event-type=patrol.muted ...
-bd update role-deacon --add-label=patrol:muted --remove-label=patrol:active
+bd update role-supervisor --add-label=patrol:muted --remove-label=patrol:active
 ```
 
 ### Configuration vs State
@@ -348,7 +348,7 @@ bd update role-deacon --add-label=patrol:muted --remove-label=patrol:active
 | **Role directives** | Markdown files | Operator behavioral policy per role |
 | **Formula overlays** | TOML files | Per-step formula modifications |
 | **Operational state** | Beads (events + labels) | Patrol muted |
-| **Runtime flags** | Marker files | `.deacon-disabled` |
+| **Runtime flags** | Marker files | `.supervisor-disabled` |
 
 *Events are the source of truth. Labels are the cache.*
 

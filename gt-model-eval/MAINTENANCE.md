@@ -1,6 +1,6 @@
 # Maintenance Guide
 
-This eval framework is a **snapshot** of Gas Town patrol protocols. When patrol formulas, role definitions, or infrastructure change, these tests must be updated to stay aligned.
+This eval framework is a **snapshot** of Excavation Site patrol protocols. When patrol formulas, role definitions, or infrastructure change, these tests must be updated to stay aligned.
 
 ## What to Update When
 
@@ -10,9 +10,9 @@ Each role has hardcoded `allowed_actions` in every test case. If an action is re
 
 | Role | Actions | Test Files |
 |------|---------|------------|
-| Deacon (zombie-scan) | `file-warrant`, `no-op`, `nudge`, `log-and-watch`, `escalate-to-mayor`, `create-cleanup-wisp` | `deacon-zombie.yaml`, `class-a-deacon.yaml` |
-| Deacon (plugin-run) | `execute-plugin`, `skip` | `deacon-plugin-gate.yaml` |
-| Deacon (dog-health) | `no-op`, `log-and-watch`, `file-warrant`, `force-clear`, `spawn-dog`, `retire-dog` | `deacon-dog-health.yaml`, `class-a-deacon.yaml` |
+| Supervisor (zombie-scan) | `file-warrant`, `no-op`, `nudge`, `log-and-watch`, `escalate-to-overseer`, `create-cleanup-wisp` | `supervisor-zombie.yaml`, `class-a-supervisor.yaml` |
+| Supervisor (plugin-run) | `execute-plugin`, `skip` | `supervisor-plugin-gate.yaml` |
+| Supervisor (dog-health) | `no-op`, `log-and-watch`, `file-warrant`, `force-clear`, `spawn-dog`, `retire-dog` | `supervisor-dog-health.yaml`, `class-a-supervisor.yaml` |
 | Witness | `no-op`, `nudge`, `escalate`, `nuke`, `mark-zombie`, `create-cleanup-wisp` | `witness-stuck.yaml`, `witness-cleanup.yaml`, `class-a-witness.yaml` |
 | Refinery | `reject-mr`, `file-bead-and-proceed`, `retry`, `skip-mr`, `investigate` | `refinery-triage.yaml`, `refinery-conflict.yaml`, `class-a-refinery.yaml` |
 | Dog | `reset`, `reassign`, `recover`, `escalate`, `burn` | `dog-orphan.yaml`, `class-a-dog.yaml` |
@@ -33,7 +33,7 @@ grep -r 'formula_step:' tests/
 
 ### Bead metadata labels change
 
-Shell output in test cases contains bead JSON with labels like `agent_state:running`, `agent_state:idle`. If these label names change in `bd` or Gas Town agent code, update the simulated shell output in affected tests.
+Shell output in test cases contains bead JSON with labels like `agent_state:running`, `agent_state:idle`. If these label names change in `bd` or Excavation Site agent code, update the simulated shell output in affected tests.
 
 ### Infrastructure paths change
 
@@ -41,16 +41,16 @@ Test shell output hardcodes these paths and naming conventions:
 
 | Pattern | Example | Used In |
 |---------|---------|---------|
-| Polecat worktree | `git -C /town/gastown/polecats/<name>` | deacon, witness, dog tests |
-| Tmux session | `tmux has-session -t bd-polecat-<name>` | deacon, witness tests |
+| Miner worktree | `git -C /town/excavation/miners/<name>` | supervisor, witness, dog tests |
+| Tmux session | `tmux has-session -t bd-miner-<name>` | supervisor, witness tests |
 | Bead commands | `bd show agent-<name> --json` | all role tests |
-| Mail commands | `gt mail list --to polecat-<name>` | witness tests |
+| Mail commands | `gt mail list --to miner-<name>` | witness tests |
 
 If directory structure, tmux naming, or CLI interfaces change, search and update:
 
 ```bash
-grep -r '/town/gastown/polecats/' tests/
-grep -r 'bd-polecat-' tests/
+grep -r '/town/excavation/miners/' tests/
+grep -r 'bd-miner-' tests/
 grep -r 'bd show' tests/
 grep -r 'gt mail' tests/
 ```
@@ -100,11 +100,11 @@ Eval action names are **abstractions** of the actual CLI commands. This is inten
 
 | Eval Action | Actual CLI Command | Context |
 |-------------|-------------------|---------|
-| `spawn-dog` | `gt dog add` | Deacon dog pool maintenance |
-| `retire-dog` | `gt dog remove` | Deacon dog pool maintenance |
-| `force-clear` | `gt dog clear --force` | Deacon dog health check |
-| `file-warrant` | `bd create --type=warrant ...` | Deacon zombie detection |
-| `create-cleanup-wisp` | `bd create --type=wisp ...` | Deacon/witness cleanup |
+| `spawn-dog` | `gt dog add` | Supervisor dog pool maintenance |
+| `retire-dog` | `gt dog remove` | Supervisor dog pool maintenance |
+| `force-clear` | `gt dog clear --force` | Supervisor dog health check |
+| `file-warrant` | `bd create --type=warrant ...` | Supervisor zombie detection |
+| `create-cleanup-wisp` | `bd create --type=wisp ...` | Supervisor/witness cleanup |
 
 ## Future Improvements
 

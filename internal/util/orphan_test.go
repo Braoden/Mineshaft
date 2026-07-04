@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 func TestParseEtime(t *testing.T) {
@@ -87,7 +87,7 @@ func TestGetProcessCwd(t *testing.T) {
 	}
 }
 
-func TestIsInGasTownWorkspace(t *testing.T) {
+func TestIsInExcavationWorkspace(t *testing.T) {
 	// NOTE: This test uses os.Chdir on the process-global cwd.
 	// Do NOT add t.Parallel() here or to any test in this file—concurrent
 	// tests sharing the same process would race on the working directory.
@@ -98,13 +98,13 @@ func TestIsInGasTownWorkspace(t *testing.T) {
 	}
 	defer os.Chdir(origDir)
 
-	// Create a temporary directory structure simulating a Gas Town workspace
+	// Create a temporary directory structure simulating a Excavation Site workspace
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0o755); err != nil {
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	townJSON := filepath.Join(mayorDir, "town.json")
+	townJSON := filepath.Join(overseerDir, "town.json")
 	if err := os.WriteFile(townJSON, []byte(`{"name":"test-town"}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -117,27 +117,27 @@ func TestIsInGasTownWorkspace(t *testing.T) {
 	}
 
 	// Our process is NOT in the temp workspace, so should return false
-	if isInGasTownWorkspace(os.Getpid()) {
-		t.Error("isInGasTownWorkspace(self) = true, want false (not in a GT workspace)")
+	if isInExcavationWorkspace(os.Getpid()) {
+		t.Error("isInExcavationWorkspace(self) = true, want false (not in a GT workspace)")
 	}
 
 	if err := os.Chdir(tmpDir); err != nil {
 		t.Fatal(err)
 	}
-	if !isInGasTownWorkspace(os.Getpid()) {
-		t.Error("isInGasTownWorkspace(self) = false, want true (in GT workspace root)")
+	if !isInExcavationWorkspace(os.Getpid()) {
+		t.Error("isInExcavationWorkspace(self) = false, want true (in GT workspace root)")
 	}
 
 	// Test from a subdirectory of the workspace
-	subDir := filepath.Join(tmpDir, "polecats", "test-polecat")
+	subDir := filepath.Join(tmpDir, "miners", "test-miner")
 	if err := os.MkdirAll(subDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.Chdir(subDir); err != nil {
 		t.Fatal(err)
 	}
-	if !isInGasTownWorkspace(os.Getpid()) {
-		t.Error("isInGasTownWorkspace(self) = false, want true (in GT workspace subdir)")
+	if !isInExcavationWorkspace(os.Getpid()) {
+		t.Error("isInExcavationWorkspace(self) = false, want true (in GT workspace subdir)")
 	}
 }
 
@@ -249,19 +249,19 @@ func TestResolveTownRoot(t *testing.T) {
 	defer os.Chdir(origDir)
 
 	townA := realPath(t, t.TempDir())
-	if err := os.MkdirAll(filepath.Join(townA, "mayor"), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townA, "overseer"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(townA, "mayor", "town.json"),
+	if err := os.WriteFile(filepath.Join(townA, "overseer", "town.json"),
 		[]byte(`{"name":"town-a"}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
 	townB := realPath(t, t.TempDir())
-	if err := os.MkdirAll(filepath.Join(townB, "mayor"), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townB, "overseer"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(townB, "mayor", "town.json"),
+	if err := os.WriteFile(filepath.Join(townB, "overseer", "town.json"),
 		[]byte(`{"name":"town-b"}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -275,7 +275,7 @@ func TestResolveTownRoot(t *testing.T) {
 	}
 
 	// From a subdirectory of Town A
-	subDir := filepath.Join(townA, "polecats", "test-polecat")
+	subDir := filepath.Join(townA, "miners", "test-miner")
 	if err := os.MkdirAll(subDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -305,7 +305,7 @@ func TestResolveTownRoot(t *testing.T) {
 }
 
 func TestResolveTownRoot_DistinguishesAdjacentTowns(t *testing.T) {
-	// Two sibling towns under the same parent (mirrors ~/gastown and ~/gt-financing)
+	// Two sibling towns under the same parent (mirrors ~/excavation and ~/gt-financing)
 	origDir, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
@@ -314,13 +314,13 @@ func TestResolveTownRoot_DistinguishesAdjacentTowns(t *testing.T) {
 
 	parent := realPath(t, t.TempDir())
 
-	townA := filepath.Join(parent, "gastown")
+	townA := filepath.Join(parent, "excavation")
 	townB := filepath.Join(parent, "gt-financing")
 	for _, town := range []string{townA, townB} {
-		if err := os.MkdirAll(filepath.Join(town, "mayor"), 0o755); err != nil {
+		if err := os.MkdirAll(filepath.Join(town, "overseer"), 0o755); err != nil {
 			t.Fatal(err)
 		}
-		if err := os.WriteFile(filepath.Join(town, "mayor", "town.json"),
+		if err := os.WriteFile(filepath.Join(town, "overseer", "town.json"),
 			[]byte(`{"name":"test"}`), 0o644); err != nil {
 			t.Fatal(err)
 		}

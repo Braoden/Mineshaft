@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 func TestIsAgentSessionHealthy_DeadPane(t *testing.T) {

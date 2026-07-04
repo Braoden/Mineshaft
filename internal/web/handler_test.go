@@ -10,15 +10,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/activity"
+	"github.com/steveyegge/excavation/internal/activity"
 )
 
 // Test error for simulating fetch failures
 var errFetchFailed = errors.New("fetch failed")
 
-// MockConvoyFetcher is a mock implementation for testing.
-type MockConvoyFetcher struct {
-	Convoys     []ConvoyRow
+// MockMinecartFetcher is a mock implementation for testing.
+type MockMinecartFetcher struct {
+	Minecarts     []MinecartRow
 	MergeQueue  []MergeQueueRow
 	Workers     []WorkerRow
 	Mail        []MailRow
@@ -29,74 +29,74 @@ type MockConvoyFetcher struct {
 	Queues      []QueueRow
 	Sessions    []SessionRow
 	Hooks       []HookRow
-	Mayor       *MayorStatus
+	Overseer       *OverseerStatus
 	Issues      []IssueRow
 	Activity    []ActivityRow
 	Error       error
 }
 
-func (m *MockConvoyFetcher) FetchConvoys() ([]ConvoyRow, error) {
-	return m.Convoys, m.Error
+func (m *MockMinecartFetcher) FetchMinecarts() ([]MinecartRow, error) {
+	return m.Minecarts, m.Error
 }
 
-func (m *MockConvoyFetcher) FetchMergeQueue() ([]MergeQueueRow, error) {
+func (m *MockMinecartFetcher) FetchMergeQueue() ([]MergeQueueRow, error) {
 	return m.MergeQueue, nil
 }
 
-func (m *MockConvoyFetcher) FetchWorkers() ([]WorkerRow, error) {
+func (m *MockMinecartFetcher) FetchWorkers() ([]WorkerRow, error) {
 	return m.Workers, nil
 }
 
-func (m *MockConvoyFetcher) FetchMail() ([]MailRow, error) {
+func (m *MockMinecartFetcher) FetchMail() ([]MailRow, error) {
 	return m.Mail, nil
 }
 
-func (m *MockConvoyFetcher) FetchRigs() ([]RigRow, error) {
+func (m *MockMinecartFetcher) FetchRigs() ([]RigRow, error) {
 	return m.Rigs, nil
 }
 
-func (m *MockConvoyFetcher) FetchDogs() ([]DogRow, error) {
+func (m *MockMinecartFetcher) FetchDogs() ([]DogRow, error) {
 	return m.Dogs, nil
 }
 
-func (m *MockConvoyFetcher) FetchEscalations() ([]EscalationRow, error) {
+func (m *MockMinecartFetcher) FetchEscalations() ([]EscalationRow, error) {
 	return m.Escalations, nil
 }
 
-func (m *MockConvoyFetcher) FetchHealth() (*HealthRow, error) {
+func (m *MockMinecartFetcher) FetchHealth() (*HealthRow, error) {
 	return m.Health, nil
 }
 
-func (m *MockConvoyFetcher) FetchQueues() ([]QueueRow, error) {
+func (m *MockMinecartFetcher) FetchQueues() ([]QueueRow, error) {
 	return m.Queues, nil
 }
 
-func (m *MockConvoyFetcher) FetchSessions() ([]SessionRow, error) {
+func (m *MockMinecartFetcher) FetchSessions() ([]SessionRow, error) {
 	return m.Sessions, nil
 }
 
-func (m *MockConvoyFetcher) FetchHooks() ([]HookRow, error) {
+func (m *MockMinecartFetcher) FetchHooks() ([]HookRow, error) {
 	return m.Hooks, nil
 }
 
-func (m *MockConvoyFetcher) FetchMayor() (*MayorStatus, error) {
-	return m.Mayor, nil
+func (m *MockMinecartFetcher) FetchOverseer() (*OverseerStatus, error) {
+	return m.Overseer, nil
 }
 
-func (m *MockConvoyFetcher) FetchIssues() ([]IssueRow, error) {
+func (m *MockMinecartFetcher) FetchIssues() ([]IssueRow, error) {
 	return m.Issues, nil
 }
 
-func (m *MockConvoyFetcher) FetchActivity() ([]ActivityRow, error) {
+func (m *MockMinecartFetcher) FetchActivity() ([]ActivityRow, error) {
 	return m.Activity, nil
 }
 
-func TestConvoyHandler_RendersTemplate(t *testing.T) {
-	mock := &MockConvoyFetcher{
-		Convoys: []ConvoyRow{
+func TestMinecartHandler_RendersTemplate(t *testing.T) {
+	mock := &MockMinecartFetcher{
+		Minecarts: []MinecartRow{
 			{
 				ID:           "hq-cv-abc",
-				Title:        "Test Convoy",
+				Title:        "Test Minecart",
 				Status:       "open",
 				Progress:     "2/5",
 				Completed:    2,
@@ -106,9 +106,9 @@ func TestConvoyHandler_RendersTemplate(t *testing.T) {
 		},
 	}
 
-	handler, err := NewConvoyHandler(mock, 8*time.Second, "test-token")
+	handler, err := NewMinecartHandler(mock, 8*time.Second, "test-token")
 	if err != nil {
-		t.Fatalf("NewConvoyHandler() error = %v", err)
+		t.Fatalf("NewMinecartHandler() error = %v", err)
 	}
 
 	req := httptest.NewRequest("GET", "/", nil)
@@ -122,17 +122,17 @@ func TestConvoyHandler_RendersTemplate(t *testing.T) {
 
 	body := w.Body.String()
 
-	// Check convoy data is rendered
+	// Check minecart data is rendered
 	if !strings.Contains(body, "hq-cv-abc") {
-		t.Error("Response should contain convoy ID")
+		t.Error("Response should contain minecart ID")
 	}
-	// Note: Convoy titles are no longer shown in the simplified dashboard table view
+	// Note: Minecart titles are no longer shown in the simplified dashboard table view
 	if !strings.Contains(body, "2/5") {
 		t.Error("Response should contain progress")
 	}
 }
 
-func TestConvoyHandler_LastActivityColors(t *testing.T) {
+func TestMinecartHandler_LastActivityColors(t *testing.T) {
 	tests := []struct {
 		name      string
 		age       time.Duration
@@ -145,8 +145,8 @@ func TestConvoyHandler_LastActivityColors(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mock := &MockConvoyFetcher{
-				Convoys: []ConvoyRow{
+			mock := &MockMinecartFetcher{
+				Minecarts: []MinecartRow{
 					{
 						ID:           "hq-cv-test",
 						Title:        "Test",
@@ -156,9 +156,9 @@ func TestConvoyHandler_LastActivityColors(t *testing.T) {
 				},
 			}
 
-			handler, err := NewConvoyHandler(mock, 8*time.Second, "test-token")
+			handler, err := NewMinecartHandler(mock, 8*time.Second, "test-token")
 			if err != nil {
-				t.Fatalf("NewConvoyHandler() error = %v", err)
+				t.Fatalf("NewMinecartHandler() error = %v", err)
 			}
 
 			req := httptest.NewRequest("GET", "/", nil)
@@ -174,14 +174,14 @@ func TestConvoyHandler_LastActivityColors(t *testing.T) {
 	}
 }
 
-func TestConvoyHandler_EmptyConvoys(t *testing.T) {
-	mock := &MockConvoyFetcher{
-		Convoys: []ConvoyRow{},
+func TestMinecartHandler_EmptyMinecarts(t *testing.T) {
+	mock := &MockMinecartFetcher{
+		Minecarts: []MinecartRow{},
 	}
 
-	handler, err := NewConvoyHandler(mock, 8*time.Second, "test-token")
+	handler, err := NewMinecartHandler(mock, 8*time.Second, "test-token")
 	if err != nil {
-		t.Fatalf("NewConvoyHandler() error = %v", err)
+		t.Fatalf("NewMinecartHandler() error = %v", err)
 	}
 
 	req := httptest.NewRequest("GET", "/", nil)
@@ -194,19 +194,19 @@ func TestConvoyHandler_EmptyConvoys(t *testing.T) {
 	}
 
 	body := w.Body.String()
-	if !strings.Contains(body, "No active convoys") {
+	if !strings.Contains(body, "No active minecarts") {
 		t.Error("Response should show empty state message")
 	}
 }
 
-func TestConvoyHandler_ContentType(t *testing.T) {
-	mock := &MockConvoyFetcher{
-		Convoys: []ConvoyRow{},
+func TestMinecartHandler_ContentType(t *testing.T) {
+	mock := &MockMinecartFetcher{
+		Minecarts: []MinecartRow{},
 	}
 
-	handler, err := NewConvoyHandler(mock, 8*time.Second, "test-token")
+	handler, err := NewMinecartHandler(mock, 8*time.Second, "test-token")
 	if err != nil {
-		t.Fatalf("NewConvoyHandler() error = %v", err)
+		t.Fatalf("NewMinecartHandler() error = %v", err)
 	}
 
 	req := httptest.NewRequest("GET", "/", nil)
@@ -220,18 +220,18 @@ func TestConvoyHandler_ContentType(t *testing.T) {
 	}
 }
 
-func TestConvoyHandler_MultipleConvoys(t *testing.T) {
-	mock := &MockConvoyFetcher{
-		Convoys: []ConvoyRow{
-			{ID: "hq-cv-1", Title: "First Convoy", Status: "open"},
-			{ID: "hq-cv-2", Title: "Second Convoy", Status: "closed"},
-			{ID: "hq-cv-3", Title: "Third Convoy", Status: "open"},
+func TestMinecartHandler_MultipleMinecarts(t *testing.T) {
+	mock := &MockMinecartFetcher{
+		Minecarts: []MinecartRow{
+			{ID: "hq-cv-1", Title: "First Minecart", Status: "open"},
+			{ID: "hq-cv-2", Title: "Second Minecart", Status: "closed"},
+			{ID: "hq-cv-3", Title: "Third Minecart", Status: "open"},
 		},
 	}
 
-	handler, err := NewConvoyHandler(mock, 8*time.Second, "test-token")
+	handler, err := NewMinecartHandler(mock, 8*time.Second, "test-token")
 	if err != nil {
-		t.Fatalf("NewConvoyHandler() error = %v", err)
+		t.Fatalf("NewMinecartHandler() error = %v", err)
 	}
 
 	req := httptest.NewRequest("GET", "/", nil)
@@ -241,10 +241,10 @@ func TestConvoyHandler_MultipleConvoys(t *testing.T) {
 
 	body := w.Body.String()
 
-	// Check all convoys are rendered
+	// Check all minecarts are rendered
 	for _, id := range []string{"hq-cv-1", "hq-cv-2", "hq-cv-3"} {
 		if !strings.Contains(body, id) {
-			t.Errorf("Response should contain convoy %s", id)
+			t.Errorf("Response should contain minecart %s", id)
 		}
 	}
 }
@@ -253,14 +253,14 @@ func TestConvoyHandler_MultipleConvoys(t *testing.T) {
 // Note: The refactored dashboard handler treats fetch errors as non-fatal,
 // rendering an empty section instead of returning an error.
 
-func TestConvoyHandler_FetchConvoysError(t *testing.T) {
-	mock := &MockConvoyFetcher{
+func TestMinecartHandler_FetchMinecartsError(t *testing.T) {
+	mock := &MockMinecartFetcher{
 		Error: errFetchFailed,
 	}
 
-	handler, err := NewConvoyHandler(mock, 8*time.Second, "test-token")
+	handler, err := NewMinecartHandler(mock, 8*time.Second, "test-token")
 	if err != nil {
-		t.Fatalf("NewConvoyHandler() error = %v", err)
+		t.Fatalf("NewMinecartHandler() error = %v", err)
 	}
 
 	req := httptest.NewRequest("GET", "/", nil)
@@ -274,17 +274,17 @@ func TestConvoyHandler_FetchConvoysError(t *testing.T) {
 	}
 
 	body := w.Body.String()
-	// Should show the empty state for convoys section
-	if !strings.Contains(body, "No active convoys") {
+	// Should show the empty state for minecarts section
+	if !strings.Contains(body, "No active minecarts") {
 		t.Error("Response should show empty state when fetch fails")
 	}
 }
 
 // Integration tests for merge queue rendering
 
-func TestConvoyHandler_MergeQueueRendering(t *testing.T) {
-	mock := &MockConvoyFetcher{
-		Convoys: []ConvoyRow{},
+func TestMinecartHandler_MergeQueueRendering(t *testing.T) {
+	mock := &MockMinecartFetcher{
+		Minecarts: []MinecartRow{},
 		MergeQueue: []MergeQueueRow{
 			{
 				Number:     123,
@@ -297,7 +297,7 @@ func TestConvoyHandler_MergeQueueRendering(t *testing.T) {
 			},
 			{
 				Number:     456,
-				Repo:       "gastown",
+				Repo:       "excavation",
 				Title:      "Add dashboard feature",
 				URL:        "https://github.com/test/repo/pull/456",
 				CIStatus:   "pending",
@@ -307,9 +307,9 @@ func TestConvoyHandler_MergeQueueRendering(t *testing.T) {
 		},
 	}
 
-	handler, err := NewConvoyHandler(mock, 8*time.Second, "test-token")
+	handler, err := NewMinecartHandler(mock, 8*time.Second, "test-token")
 	if err != nil {
-		t.Fatalf("NewConvoyHandler() error = %v", err)
+		t.Fatalf("NewMinecartHandler() error = %v", err)
 	}
 
 	req := httptest.NewRequest("GET", "/", nil)
@@ -350,15 +350,15 @@ func TestConvoyHandler_MergeQueueRendering(t *testing.T) {
 	}
 }
 
-func TestConvoyHandler_EmptyMergeQueue(t *testing.T) {
-	mock := &MockConvoyFetcher{
-		Convoys:    []ConvoyRow{},
+func TestMinecartHandler_EmptyMergeQueue(t *testing.T) {
+	mock := &MockMinecartFetcher{
+		Minecarts:    []MinecartRow{},
 		MergeQueue: []MergeQueueRow{},
 	}
 
-	handler, err := NewConvoyHandler(mock, 8*time.Second, "test-token")
+	handler, err := NewMinecartHandler(mock, 8*time.Second, "test-token")
 	if err != nil {
-		t.Fatalf("NewConvoyHandler() error = %v", err)
+		t.Fatalf("NewMinecartHandler() error = %v", err)
 	}
 
 	req := httptest.NewRequest("GET", "/", nil)
@@ -374,11 +374,11 @@ func TestConvoyHandler_EmptyMergeQueue(t *testing.T) {
 	}
 }
 
-// Integration tests for polecat workers rendering
+// Integration tests for miner workers rendering
 
-func TestConvoyHandler_PolecatWorkersRendering(t *testing.T) {
-	mock := &MockConvoyFetcher{
-		Convoys: []ConvoyRow{},
+func TestMinecartHandler_MinerWorkersRendering(t *testing.T) {
+	mock := &MockMinecartFetcher{
+		Minecarts: []MinecartRow{},
 		Workers: []WorkerRow{
 			{
 				Name:         "dag",
@@ -397,9 +397,9 @@ func TestConvoyHandler_PolecatWorkersRendering(t *testing.T) {
 		},
 	}
 
-	handler, err := NewConvoyHandler(mock, 8*time.Second, "test-token")
+	handler, err := NewMinecartHandler(mock, 8*time.Second, "test-token")
 	if err != nil {
-		t.Fatalf("NewConvoyHandler() error = %v", err)
+		t.Fatalf("NewMinecartHandler() error = %v", err)
 	}
 
 	req := httptest.NewRequest("GET", "/", nil)
@@ -413,17 +413,17 @@ func TestConvoyHandler_PolecatWorkersRendering(t *testing.T) {
 
 	body := w.Body.String()
 
-	// Check polecat section header
-	if !strings.Contains(body, "Polecats") {
-		t.Error("Response should contain polecats section header")
+	// Check miner section header
+	if !strings.Contains(body, "Miners") {
+		t.Error("Response should contain miners section header")
 	}
 
-	// Check polecat names
+	// Check miner names
 	if !strings.Contains(body, "dag") {
-		t.Error("Response should contain polecat 'dag'")
+		t.Error("Response should contain miner 'dag'")
 	}
 	if !strings.Contains(body, "nux") {
-		t.Error("Response should contain polecat 'nux'")
+		t.Error("Response should contain miner 'nux'")
 	}
 
 	// Check rig names
@@ -441,7 +441,7 @@ func TestConvoyHandler_PolecatWorkersRendering(t *testing.T) {
 
 // Integration tests for work status rendering
 
-func TestConvoyHandler_WorkStatusRendering(t *testing.T) {
+func TestMinecartHandler_WorkStatusRendering(t *testing.T) {
 	tests := []struct {
 		name           string
 		workStatus     string
@@ -457,11 +457,11 @@ func TestConvoyHandler_WorkStatusRendering(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mock := &MockConvoyFetcher{
-				Convoys: []ConvoyRow{
+			mock := &MockMinecartFetcher{
+				Minecarts: []MinecartRow{
 					{
 						ID:           "hq-cv-test",
-						Title:        "Test Convoy",
+						Title:        "Test Minecart",
 						Status:       "open",
 						WorkStatus:   tt.workStatus,
 						Progress:     "1/2",
@@ -472,9 +472,9 @@ func TestConvoyHandler_WorkStatusRendering(t *testing.T) {
 				},
 			}
 
-			handler, err := NewConvoyHandler(mock, 8*time.Second, "test-token")
+			handler, err := NewMinecartHandler(mock, 8*time.Second, "test-token")
 			if err != nil {
-				t.Fatalf("NewConvoyHandler() error = %v", err)
+				t.Fatalf("NewMinecartHandler() error = %v", err)
 			}
 
 			req := httptest.NewRequest("GET", "/", nil)
@@ -499,9 +499,9 @@ func TestConvoyHandler_WorkStatusRendering(t *testing.T) {
 
 // Integration tests for progress bar rendering
 
-func TestConvoyHandler_ProgressBarRendering(t *testing.T) {
-	mock := &MockConvoyFetcher{
-		Convoys: []ConvoyRow{
+func TestMinecartHandler_ProgressBarRendering(t *testing.T) {
+	mock := &MockMinecartFetcher{
+		Minecarts: []MinecartRow{
 			{
 				ID:           "hq-cv-progress",
 				Title:        "Progress Test",
@@ -516,9 +516,9 @@ func TestConvoyHandler_ProgressBarRendering(t *testing.T) {
 		},
 	}
 
-	handler, err := NewConvoyHandler(mock, 8*time.Second, "test-token")
+	handler, err := NewMinecartHandler(mock, 8*time.Second, "test-token")
 	if err != nil {
-		t.Fatalf("NewConvoyHandler() error = %v", err)
+		t.Fatalf("NewMinecartHandler() error = %v", err)
 	}
 
 	req := httptest.NewRequest("GET", "/", nil)
@@ -549,14 +549,14 @@ func TestConvoyHandler_ProgressBarRendering(t *testing.T) {
 
 // Integration test for HTMX auto-refresh
 
-func TestConvoyHandler_HTMXAutoRefresh(t *testing.T) {
-	mock := &MockConvoyFetcher{
-		Convoys: []ConvoyRow{},
+func TestMinecartHandler_HTMXAutoRefresh(t *testing.T) {
+	mock := &MockMinecartFetcher{
+		Minecarts: []MinecartRow{},
 	}
 
-	handler, err := NewConvoyHandler(mock, 8*time.Second, "test-token")
+	handler, err := NewMinecartHandler(mock, 8*time.Second, "test-token")
 	if err != nil {
-		t.Fatalf("NewConvoyHandler() error = %v", err)
+		t.Fatalf("NewMinecartHandler() error = %v", err)
 	}
 
 	req := httptest.NewRequest("GET", "/", nil)
@@ -583,12 +583,12 @@ func TestConvoyHandler_HTMXAutoRefresh(t *testing.T) {
 
 // Integration test for full dashboard with all sections
 
-func TestConvoyHandler_FullDashboard(t *testing.T) {
-	mock := &MockConvoyFetcher{
-		Convoys: []ConvoyRow{
+func TestMinecartHandler_FullDashboard(t *testing.T) {
+	mock := &MockMinecartFetcher{
+		Minecarts: []MinecartRow{
 			{
 				ID:           "hq-cv-full",
-				Title:        "Full Test Convoy",
+				Title:        "Full Test Minecart",
 				Status:       "open",
 				WorkStatus:   "active",
 				Progress:     "2/3",
@@ -618,9 +618,9 @@ func TestConvoyHandler_FullDashboard(t *testing.T) {
 		},
 	}
 
-	handler, err := NewConvoyHandler(mock, 8*time.Second, "test-token")
+	handler, err := NewMinecartHandler(mock, 8*time.Second, "test-token")
 	if err != nil {
-		t.Fatalf("NewConvoyHandler() error = %v", err)
+		t.Fatalf("NewMinecartHandler() error = %v", err)
 	}
 
 	req := httptest.NewRequest("GET", "/", nil)
@@ -635,11 +635,11 @@ func TestConvoyHandler_FullDashboard(t *testing.T) {
 	body := w.Body.String()
 
 	// Verify all three sections are present
-	if !strings.Contains(body, "Convoys") {
-		t.Error("Response should contain convoy section")
+	if !strings.Contains(body, "Minecarts") {
+		t.Error("Response should contain minecart section")
 	}
 	if !strings.Contains(body, "hq-cv-full") {
-		t.Error("Response should contain convoy data")
+		t.Error("Response should contain minecart data")
 	}
 	if !strings.Contains(body, "Merge Queue") {
 		t.Error("Response should contain merge queue section")
@@ -647,11 +647,11 @@ func TestConvoyHandler_FullDashboard(t *testing.T) {
 	if !strings.Contains(body, "#789") {
 		t.Error("Response should contain PR data")
 	}
-	if !strings.Contains(body, "Polecats") {
-		t.Error("Response should contain polecats section")
+	if !strings.Contains(body, "Miners") {
+		t.Error("Response should contain miners section")
 	}
 	if !strings.Contains(body, "worker1") {
-		t.Error("Response should contain polecat data")
+		t.Error("Response should contain miner data")
 	}
 }
 
@@ -661,11 +661,11 @@ func TestConvoyHandler_FullDashboard(t *testing.T) {
 
 // TestE2E_Server_FullDashboard tests the full dashboard using a real HTTP server.
 func TestE2E_Server_FullDashboard(t *testing.T) {
-	mock := &MockConvoyFetcher{
-		Convoys: []ConvoyRow{
+	mock := &MockMinecartFetcher{
+		Minecarts: []MinecartRow{
 			{
 				ID:           "hq-cv-e2e",
-				Title:        "E2E Test Convoy",
+				Title:        "E2E Test Minecart",
 				Status:       "open",
 				WorkStatus:   "active",
 				Progress:     "2/4",
@@ -696,9 +696,9 @@ func TestE2E_Server_FullDashboard(t *testing.T) {
 		},
 	}
 
-	handler, err := NewConvoyHandler(mock, 8*time.Second, "test-token")
+	handler, err := NewMinecartHandler(mock, 8*time.Second, "test-token")
 	if err != nil {
-		t.Fatalf("NewConvoyHandler() error = %v", err)
+		t.Fatalf("NewMinecartHandler() error = %v", err)
 	}
 
 	// Create a real HTTP server
@@ -735,14 +735,14 @@ func TestE2E_Server_FullDashboard(t *testing.T) {
 		name    string
 		content string
 	}{
-		{"Convoy section", "Convoys"},
-		{"Convoy ID", "hq-cv-e2e"},
-		{"Convoy progress", "2/4"},
+		{"Minecart section", "Minecarts"},
+		{"Minecart ID", "hq-cv-e2e"},
+		{"Minecart progress", "2/4"},
 		{"Merge queue section", "Merge Queue"},
 		{"PR number", "#101"},
 		{"PR repo", "roxas"},
-		{"Polecats section", "Polecats"},
-		{"Polecat name", "furiosa"},
+		{"Miners section", "Miners"},
+		{"Miner name", "furiosa"},
 		{"HTMX SSE trigger", `hx-trigger="sse:dashboard-update`},
 	}
 
@@ -767,7 +767,7 @@ func TestE2E_Server_ActivityColors(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mock := &MockConvoyFetcher{
+			mock := &MockMinecartFetcher{
 				Workers: []WorkerRow{
 					{
 						Name:         "test-worker",
@@ -779,9 +779,9 @@ func TestE2E_Server_ActivityColors(t *testing.T) {
 				},
 			}
 
-			handler, err := NewConvoyHandler(mock, 8*time.Second, "test-token")
+			handler, err := NewMinecartHandler(mock, 8*time.Second, "test-token")
 			if err != nil {
-				t.Fatalf("NewConvoyHandler() error = %v", err)
+				t.Fatalf("NewMinecartHandler() error = %v", err)
 			}
 
 			server := httptest.NewServer(handler)
@@ -805,15 +805,15 @@ func TestE2E_Server_ActivityColors(t *testing.T) {
 
 // TestE2E_Server_MergeQueueEmpty tests that empty merge queue shows message.
 func TestE2E_Server_MergeQueueEmpty(t *testing.T) {
-	mock := &MockConvoyFetcher{
-		Convoys:    []ConvoyRow{},
+	mock := &MockMinecartFetcher{
+		Minecarts:    []MinecartRow{},
 		MergeQueue: []MergeQueueRow{},
 		Workers:    []WorkerRow{},
 	}
 
-	handler, err := NewConvoyHandler(mock, 8*time.Second, "test-token")
+	handler, err := NewMinecartHandler(mock, 8*time.Second, "test-token")
 	if err != nil {
-		t.Fatalf("NewConvoyHandler() error = %v", err)
+		t.Fatalf("NewMinecartHandler() error = %v", err)
 	}
 
 	server := httptest.NewServer(handler)
@@ -857,7 +857,7 @@ func TestE2E_Server_MergeQueueStatuses(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mock := &MockConvoyFetcher{
+			mock := &MockMinecartFetcher{
 				MergeQueue: []MergeQueueRow{
 					{
 						Number:     42,
@@ -871,9 +871,9 @@ func TestE2E_Server_MergeQueueStatuses(t *testing.T) {
 				},
 			}
 
-			handler, err := NewConvoyHandler(mock, 8*time.Second, "test-token")
+			handler, err := NewMinecartHandler(mock, 8*time.Second, "test-token")
 			if err != nil {
-				t.Fatalf("NewConvoyHandler() error = %v", err)
+				t.Fatalf("NewMinecartHandler() error = %v", err)
 			}
 
 			server := httptest.NewServer(handler)
@@ -903,11 +903,11 @@ func TestE2E_Server_MergeQueueStatuses(t *testing.T) {
 
 // TestE2E_Server_HTMLStructure validates HTML document structure.
 func TestE2E_Server_HTMLStructure(t *testing.T) {
-	mock := &MockConvoyFetcher{Convoys: []ConvoyRow{}}
+	mock := &MockMinecartFetcher{Minecarts: []MinecartRow{}}
 
-	handler, err := NewConvoyHandler(mock, 8*time.Second, "test-token")
+	handler, err := NewMinecartHandler(mock, 8*time.Second, "test-token")
 	if err != nil {
-		t.Fatalf("NewConvoyHandler() error = %v", err)
+		t.Fatalf("NewMinecartHandler() error = %v", err)
 	}
 
 	server := httptest.NewServer(handler)
@@ -927,7 +927,7 @@ func TestE2E_Server_HTMLStructure(t *testing.T) {
 		"<!DOCTYPE html>",
 		"<html",
 		"<head>",
-		"<title>Gas Town Control Center</title>",
+		"<title>Excavation Site Control Center</title>",
 		"htmx.org",
 		"<body>",
 		"</body>",
@@ -946,9 +946,9 @@ func TestE2E_Server_HTMLStructure(t *testing.T) {
 	}
 }
 
-// TestE2E_Server_RefineryInPolecats tests that refinery appears in polecat workers.
-func TestE2E_Server_RefineryInPolecats(t *testing.T) {
-	mock := &MockConvoyFetcher{
+// TestE2E_Server_RefineryInMiners tests that refinery appears in miner workers.
+func TestE2E_Server_RefineryInMiners(t *testing.T) {
+	mock := &MockMinecartFetcher{
 		Workers: []WorkerRow{
 			{
 				Name:         "refinery",
@@ -967,9 +967,9 @@ func TestE2E_Server_RefineryInPolecats(t *testing.T) {
 		},
 	}
 
-	handler, err := NewConvoyHandler(mock, 8*time.Second, "test-token")
+	handler, err := NewMinecartHandler(mock, 8*time.Second, "test-token")
 	if err != nil {
-		t.Fatalf("NewConvoyHandler() error = %v", err)
+		t.Fatalf("NewMinecartHandler() error = %v", err)
 	}
 
 	server := httptest.NewServer(handler)
@@ -984,89 +984,89 @@ func TestE2E_Server_RefineryInPolecats(t *testing.T) {
 	bodyBytes, _ := io.ReadAll(resp.Body)
 	body := string(bodyBytes)
 
-	// Refinery should appear in polecat workers
+	// Refinery should appear in miner workers
 	if !strings.Contains(body, "refinery") {
-		t.Error("Refinery should appear in polecat workers section")
+		t.Error("Refinery should appear in miner workers section")
 	}
 	// Note: StatusHint is no longer displayed in the simplified dashboard view
 
-	// Regular polecats should also appear
+	// Regular miners should also appear
 	if !strings.Contains(body, "dag") {
-		t.Error("Regular polecat 'dag' should appear")
+		t.Error("Regular miner 'dag' should appear")
 	}
 }
 
-// Test that merge queue and polecat errors are non-fatal
+// Test that merge queue and miner errors are non-fatal
 
-type MockConvoyFetcherWithErrors struct {
-	Convoys         []ConvoyRow
+type MockMinecartFetcherWithErrors struct {
+	Minecarts         []MinecartRow
 	MergeQueueError error
 	WorkersError    error
 }
 
-func (m *MockConvoyFetcherWithErrors) FetchConvoys() ([]ConvoyRow, error) {
-	return m.Convoys, nil
+func (m *MockMinecartFetcherWithErrors) FetchMinecarts() ([]MinecartRow, error) {
+	return m.Minecarts, nil
 }
 
-func (m *MockConvoyFetcherWithErrors) FetchMergeQueue() ([]MergeQueueRow, error) {
+func (m *MockMinecartFetcherWithErrors) FetchMergeQueue() ([]MergeQueueRow, error) {
 	return nil, m.MergeQueueError
 }
 
-func (m *MockConvoyFetcherWithErrors) FetchWorkers() ([]WorkerRow, error) {
+func (m *MockMinecartFetcherWithErrors) FetchWorkers() ([]WorkerRow, error) {
 	return nil, m.WorkersError
 }
 
-func (m *MockConvoyFetcherWithErrors) FetchMail() ([]MailRow, error) {
+func (m *MockMinecartFetcherWithErrors) FetchMail() ([]MailRow, error) {
 	return nil, nil
 }
 
-func (m *MockConvoyFetcherWithErrors) FetchRigs() ([]RigRow, error) {
+func (m *MockMinecartFetcherWithErrors) FetchRigs() ([]RigRow, error) {
 	return nil, nil
 }
 
-func (m *MockConvoyFetcherWithErrors) FetchDogs() ([]DogRow, error) {
+func (m *MockMinecartFetcherWithErrors) FetchDogs() ([]DogRow, error) {
 	return nil, nil
 }
 
-func (m *MockConvoyFetcherWithErrors) FetchEscalations() ([]EscalationRow, error) {
+func (m *MockMinecartFetcherWithErrors) FetchEscalations() ([]EscalationRow, error) {
 	return nil, nil
 }
 
-func (m *MockConvoyFetcherWithErrors) FetchHealth() (*HealthRow, error) {
+func (m *MockMinecartFetcherWithErrors) FetchHealth() (*HealthRow, error) {
 	return nil, nil
 }
 
-func (m *MockConvoyFetcherWithErrors) FetchQueues() ([]QueueRow, error) {
+func (m *MockMinecartFetcherWithErrors) FetchQueues() ([]QueueRow, error) {
 	return nil, nil
 }
 
-func (m *MockConvoyFetcherWithErrors) FetchSessions() ([]SessionRow, error) {
+func (m *MockMinecartFetcherWithErrors) FetchSessions() ([]SessionRow, error) {
 	return nil, nil
 }
 
-func (m *MockConvoyFetcherWithErrors) FetchHooks() ([]HookRow, error) {
+func (m *MockMinecartFetcherWithErrors) FetchHooks() ([]HookRow, error) {
 	return nil, nil
 }
 
-func (m *MockConvoyFetcherWithErrors) FetchMayor() (*MayorStatus, error) {
+func (m *MockMinecartFetcherWithErrors) FetchOverseer() (*OverseerStatus, error) {
 	return nil, nil
 }
 
-func (m *MockConvoyFetcherWithErrors) FetchIssues() ([]IssueRow, error) {
+func (m *MockMinecartFetcherWithErrors) FetchIssues() ([]IssueRow, error) {
 	return nil, nil
 }
 
-func (m *MockConvoyFetcherWithErrors) FetchActivity() ([]ActivityRow, error) {
+func (m *MockMinecartFetcherWithErrors) FetchActivity() ([]ActivityRow, error) {
 	return nil, nil
 }
 
-// TestConvoyHandler_TemplateErrorReturns500 verifies that template execution errors
+// TestMinecartHandler_TemplateErrorReturns500 verifies that template execution errors
 // return a proper 500 status code, not 200 (which would happen if we wrote directly
 // to the ResponseWriter and it failed mid-execution).
-func TestConvoyHandler_TemplateErrorReturns500(t *testing.T) {
+func TestMinecartHandler_TemplateErrorReturns500(t *testing.T) {
 	// Create a template that writes some output, then fails
 	failingFuncCalled := false
-	tmpl := template.Must(template.New("convoy.html").Funcs(template.FuncMap{
+	tmpl := template.Must(template.New("minecart.html").Funcs(template.FuncMap{
 		"failAfterOutput": func() (string, error) {
 			failingFuncCalled = true
 			return "", errors.New("intentional template error")
@@ -1074,8 +1074,8 @@ func TestConvoyHandler_TemplateErrorReturns500(t *testing.T) {
 	}).Parse(`<!DOCTYPE html><html>{{failAfterOutput}}</html>`))
 
 	// Create handler with the failing template
-	handler := &ConvoyHandler{
-		fetcher:      &MockConvoyFetcher{Convoys: []ConvoyRow{}},
+	handler := &MinecartHandler{
+		fetcher:      &MockMinecartFetcher{Minecarts: []MinecartRow{}},
 		template:     tmpl,
 		fetchTimeout: 5 * time.Second,
 	}
@@ -1106,18 +1106,18 @@ func TestConvoyHandler_TemplateErrorReturns500(t *testing.T) {
 	}
 }
 
-// TestConvoyHandler_CachePreventsDuplicateFetches verifies that rapid requests
+// TestMinecartHandler_CachePreventsDuplicateFetches verifies that rapid requests
 // reuse the cached response instead of spawning fresh fetches (GH#2618).
-func TestConvoyHandler_CachePreventsDuplicateFetches(t *testing.T) {
+func TestMinecartHandler_CachePreventsDuplicateFetches(t *testing.T) {
 	fetchCount := 0
 	mock := &CountingMockFetcher{
-		inner:      &MockConvoyFetcher{Convoys: []ConvoyRow{{ID: "hq-cv-cache", Title: "Cache Test", Status: "open"}}},
+		inner:      &MockMinecartFetcher{Minecarts: []MinecartRow{{ID: "hq-cv-cache", Title: "Cache Test", Status: "open"}}},
 		fetchCount: &fetchCount,
 	}
 
-	handler, err := NewConvoyHandler(mock, 8*time.Second, "test-token")
+	handler, err := NewMinecartHandler(mock, 8*time.Second, "test-token")
 	if err != nil {
-		t.Fatalf("NewConvoyHandler() error = %v", err)
+		t.Fatalf("NewMinecartHandler() error = %v", err)
 	}
 	handler.cacheTTL = 5 * time.Second // Explicit TTL for test
 
@@ -1151,18 +1151,18 @@ func TestConvoyHandler_CachePreventsDuplicateFetches(t *testing.T) {
 	}
 }
 
-// TestConvoyHandler_CacheBypassOnExpand verifies that ?expand= requests bypass
+// TestMinecartHandler_CacheBypassOnExpand verifies that ?expand= requests bypass
 // the normal response cache but have their own per-panel expand cache (GH#3117).
-func TestConvoyHandler_CacheBypassOnExpand(t *testing.T) {
+func TestMinecartHandler_CacheBypassOnExpand(t *testing.T) {
 	fetchCount := 0
 	mock := &CountingMockFetcher{
-		inner:      &MockConvoyFetcher{Convoys: []ConvoyRow{{ID: "hq-cv-expand", Title: "Expand Test", Status: "open"}}},
+		inner:      &MockMinecartFetcher{Minecarts: []MinecartRow{{ID: "hq-cv-expand", Title: "Expand Test", Status: "open"}}},
 		fetchCount: &fetchCount,
 	}
 
-	handler, err := NewConvoyHandler(mock, 8*time.Second, "test-token")
+	handler, err := NewMinecartHandler(mock, 8*time.Second, "test-token")
 	if err != nil {
-		t.Fatalf("NewConvoyHandler() error = %v", err)
+		t.Fatalf("NewMinecartHandler() error = %v", err)
 	}
 	handler.cacheTTL = 5 * time.Second
 
@@ -1176,7 +1176,7 @@ func TestConvoyHandler_CacheBypassOnExpand(t *testing.T) {
 	}
 
 	// First expand request — should bypass normal cache (different template)
-	req2 := httptest.NewRequest("GET", "/?expand=convoys", nil)
+	req2 := httptest.NewRequest("GET", "/?expand=minecarts", nil)
 	w2 := httptest.NewRecorder()
 	handler.ServeHTTP(w2, req2)
 
@@ -1185,7 +1185,7 @@ func TestConvoyHandler_CacheBypassOnExpand(t *testing.T) {
 	}
 
 	// Second identical expand request — should hit expand cache (GH#3117)
-	req3 := httptest.NewRequest("GET", "/?expand=convoys", nil)
+	req3 := httptest.NewRequest("GET", "/?expand=minecarts", nil)
 	w3 := httptest.NewRecorder()
 	handler.ServeHTTP(w3, req3)
 
@@ -1194,20 +1194,20 @@ func TestConvoyHandler_CacheBypassOnExpand(t *testing.T) {
 	}
 }
 
-func TestConvoyHandler_ExpandCachePreventsRepeatedFetchConvoysErrors(t *testing.T) {
+func TestMinecartHandler_ExpandCachePreventsRepeatedFetchMinecartsErrors(t *testing.T) {
 	fetchCount := 0
 	mock := &CountingMockFetcher{
-		inner:      &MockConvoyFetcher{Error: errFetchFailed},
+		inner:      &MockMinecartFetcher{Error: errFetchFailed},
 		fetchCount: &fetchCount,
 	}
 
-	handler, err := NewConvoyHandler(mock, 8*time.Second, "test-token")
+	handler, err := NewMinecartHandler(mock, 8*time.Second, "test-token")
 	if err != nil {
-		t.Fatalf("NewConvoyHandler() error = %v", err)
+		t.Fatalf("NewMinecartHandler() error = %v", err)
 	}
 	handler.cacheTTL = 5 * time.Second
 
-	req1 := httptest.NewRequest("GET", "/?expand=convoys", nil)
+	req1 := httptest.NewRequest("GET", "/?expand=minecarts", nil)
 	w1 := httptest.NewRecorder()
 	handler.ServeHTTP(w1, req1)
 	if w1.Code != http.StatusOK {
@@ -1217,7 +1217,7 @@ func TestConvoyHandler_ExpandCachePreventsRepeatedFetchConvoysErrors(t *testing.
 		t.Fatalf("After first expand request, fetchCount = %d, want 1", fetchCount)
 	}
 
-	req2 := httptest.NewRequest("GET", "/?expand=convoys", nil)
+	req2 := httptest.NewRequest("GET", "/?expand=minecarts", nil)
 	w2 := httptest.NewRecorder()
 	handler.ServeHTTP(w2, req2)
 	if w2.Code != http.StatusOK {
@@ -1231,15 +1231,15 @@ func TestConvoyHandler_ExpandCachePreventsRepeatedFetchConvoysErrors(t *testing.
 	}
 }
 
-// CountingMockFetcher wraps a ConvoyFetcher and counts FetchConvoys calls.
+// CountingMockFetcher wraps a MinecartFetcher and counts FetchMinecarts calls.
 type CountingMockFetcher struct {
-	inner      ConvoyFetcher
+	inner      MinecartFetcher
 	fetchCount *int
 }
 
-func (m *CountingMockFetcher) FetchConvoys() ([]ConvoyRow, error) {
+func (m *CountingMockFetcher) FetchMinecarts() ([]MinecartRow, error) {
 	*m.fetchCount++
-	return m.inner.FetchConvoys()
+	return m.inner.FetchMinecarts()
 }
 func (m *CountingMockFetcher) FetchMergeQueue() ([]MergeQueueRow, error) {
 	return m.inner.FetchMergeQueue()
@@ -1255,24 +1255,24 @@ func (m *CountingMockFetcher) FetchHealth() (*HealthRow, error)     { return m.i
 func (m *CountingMockFetcher) FetchQueues() ([]QueueRow, error)     { return m.inner.FetchQueues() }
 func (m *CountingMockFetcher) FetchSessions() ([]SessionRow, error) { return m.inner.FetchSessions() }
 func (m *CountingMockFetcher) FetchHooks() ([]HookRow, error)       { return m.inner.FetchHooks() }
-func (m *CountingMockFetcher) FetchMayor() (*MayorStatus, error)    { return m.inner.FetchMayor() }
+func (m *CountingMockFetcher) FetchOverseer() (*OverseerStatus, error)    { return m.inner.FetchOverseer() }
 func (m *CountingMockFetcher) FetchIssues() ([]IssueRow, error)     { return m.inner.FetchIssues() }
 func (m *CountingMockFetcher) FetchActivity() ([]ActivityRow, error) {
 	return m.inner.FetchActivity()
 }
 
-func TestConvoyHandler_NonFatalErrors(t *testing.T) {
-	mock := &MockConvoyFetcherWithErrors{
-		Convoys: []ConvoyRow{
+func TestMinecartHandler_NonFatalErrors(t *testing.T) {
+	mock := &MockMinecartFetcherWithErrors{
+		Minecarts: []MinecartRow{
 			{ID: "hq-cv-test", Title: "Test", Status: "open", WorkStatus: "active"},
 		},
 		MergeQueueError: errFetchFailed,
 		WorkersError:    errFetchFailed,
 	}
 
-	handler, err := NewConvoyHandler(mock, 8*time.Second, "test-token")
+	handler, err := NewMinecartHandler(mock, 8*time.Second, "test-token")
 	if err != nil {
-		t.Fatalf("NewConvoyHandler() error = %v", err)
+		t.Fatalf("NewMinecartHandler() error = %v", err)
 	}
 
 	req := httptest.NewRequest("GET", "/", nil)
@@ -1280,16 +1280,16 @@ func TestConvoyHandler_NonFatalErrors(t *testing.T) {
 
 	handler.ServeHTTP(w, req)
 
-	// Should still return OK even if merge queue and polecats fail
+	// Should still return OK even if merge queue and miners fail
 	if w.Code != http.StatusOK {
 		t.Errorf("Status = %d, want %d (non-fatal errors should not fail request)", w.Code, http.StatusOK)
 	}
 
 	body := w.Body.String()
 
-	// Convoys should still render
+	// Minecarts should still render
 	if !strings.Contains(body, "hq-cv-test") {
-		t.Error("Response should contain convoy data even when other fetches fail")
+		t.Error("Response should contain minecart data even when other fetches fail")
 	}
 }
 

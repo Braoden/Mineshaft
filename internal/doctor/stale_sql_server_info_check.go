@@ -47,7 +47,7 @@ func (c *StaleSQLServerInfoCheck) Run(ctx *CheckContext) *CheckResult {
 
 	// Collect rig names from rigs.json and top-level directories.
 	rigNames := make(map[string]struct{})
-	rigsConfig := filepath.Join(ctx.TownRoot, "mayor", "rigs.json")
+	rigsConfig := filepath.Join(ctx.TownRoot, "overseer", "rigs.json")
 	if data, err := os.ReadFile(rigsConfig); err == nil {
 		var rigs struct {
 			Rigs map[string]struct{} `json:"rigs"`

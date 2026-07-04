@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/hooks"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/hooks"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var (
@@ -39,7 +39,7 @@ Examples:
 
 func init() {
 	hooksCmd.AddCommand(hooksInstallCmd)
-	hooksInstallCmd.Flags().StringVar(&installRole, "role", "", "Install to all worktrees of this role (crew, polecat, witness, refinery)")
+	hooksInstallCmd.Flags().StringVar(&installRole, "role", "", "Install to all worktrees of this role (crew, miner, witness, refinery)")
 	hooksInstallCmd.Flags().BoolVar(&installAllRigs, "all-rigs", false, "Install across all rigs (requires --role)")
 	hooksInstallCmd.Flags().BoolVar(&installDryRun, "dry-run", false, "Preview changes without writing files")
 	hooksInstallCmd.Flags().BoolVar(&hooksInstForce, "force", false, "Install even if hook is disabled in registry")
@@ -50,7 +50,7 @@ func runHooksInstall(cmd *cobra.Command, args []string) error {
 
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Load registry
@@ -84,7 +84,7 @@ func runHooksInstall(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("no targets found for role %q in workspace", installRole)
 		}
 		// No role specified — resolve CWD to the correct settings directory.
-		// For shared-parent roles (crew, polecats, witness, refinery), the
+		// For shared-parent roles (crew, miners, witness, refinery), the
 		// settings live in the role parent dir, not the individual worktree.
 		cwd, err := os.Getwd()
 		if err != nil {
@@ -165,7 +165,7 @@ func determineTargets(townRoot, role string, allRigs bool, allowedRoles []string
 			return nil, err
 		}
 		for _, e := range entries {
-			if e.IsDir() && !strings.HasPrefix(e.Name(), ".") && e.Name() != "mayor" && e.Name() != "deacon" && e.Name() != "hooks" {
+			if e.IsDir() && !strings.HasPrefix(e.Name(), ".") && e.Name() != "overseer" && e.Name() != "supervisor" && e.Name() != "hooks" {
 				rigs = append(rigs, e.Name())
 			}
 		}
@@ -197,10 +197,10 @@ func determineTargets(townRoot, role string, allRigs bool, allowedRoles []string
 			if info, err := os.Stat(crewDir); err == nil && info.IsDir() {
 				targets = append(targets, crewDir)
 			}
-		case constants.RolePolecat:
-			polecatsDir := filepath.Join(rigPath, "polecats")
-			if info, err := os.Stat(polecatsDir); err == nil && info.IsDir() {
-				targets = append(targets, polecatsDir)
+		case constants.RoleMiner:
+			minersDir := filepath.Join(rigPath, "miners")
+			if info, err := os.Stat(minersDir); err == nil && info.IsDir() {
+				targets = append(targets, minersDir)
 			}
 		case constants.RoleWitness:
 			witnessDir := filepath.Join(rigPath, "witness")
@@ -219,7 +219,7 @@ func determineTargets(townRoot, role string, allRigs bool, allowedRoles []string
 }
 
 // resolveSettingsTarget resolves a working directory to the appropriate settings
-// target directory. For shared-parent roles (crew, polecats, witness, refinery),
+// target directory. For shared-parent roles (crew, miners, witness, refinery),
 // this returns the role parent directory rather than the individual worktree,
 // matching the shared settings model used by DiscoverTargets and EnsureSettingsForRole.
 func resolveSettingsTarget(townRoot, cwd string) string {
@@ -229,12 +229,12 @@ func resolveSettingsTarget(townRoot, cwd string) string {
 	}
 	parts := strings.Split(relPath, string(filepath.Separator))
 	if len(parts) < 2 {
-		return cwd // At town root or top-level dir (mayor/deacon)
+		return cwd // At town root or top-level dir (overseer/supervisor)
 	}
-	// parts[0] = rig name (or mayor/deacon), parts[1] = role dir
+	// parts[0] = rig name (or overseer/supervisor), parts[1] = role dir
 	roleDir := parts[1]
 	switch roleDir {
-	case "crew", "polecats", "witness", "refinery":
+	case "crew", "miners", "witness", "refinery":
 		return filepath.Join(townRoot, parts[0], roleDir)
 	default:
 		return cwd
@@ -267,7 +267,7 @@ func installHookTo(worktreePath string, hookDef HookDefinition, dryRun bool) err
 		settings.Hooks.AddEntry(hookDef.Event, entry)
 	}
 
-	// Ensure beads plugin is disabled (standard for Gas Town)
+	// Ensure beads plugin is disabled (standard for Excavation Site)
 	settings.EnabledPlugins["beads@beads-marketplace"] = false
 
 	// Pretty print relative path

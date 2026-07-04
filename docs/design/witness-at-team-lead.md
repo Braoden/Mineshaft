@@ -7,7 +7,7 @@
 
 > **Bead:** gt-ky4jf
 > **Date:** 2026-02-08
-> **Author:** furiosa (gastown polecat)
+> **Author:** furiosa (excavation miner)
 > **Depends on:** AT spike report (gt-3nqoz), AT integration design (agent-teams-integration.md)
 > **Status:** Phase 1 implementation spec
 
@@ -16,10 +16,10 @@
 ## Overview
 
 This document specifies how the Witness becomes an AT team lead, replacing the
-current tmux-based polecat session management with Claude Code Agent Teams.
+current tmux-based miner session management with Claude Code Agent Teams.
 
 The Witness enters delegate mode (structurally enforced coordination-only), spawns
-polecat teammates for assigned work, monitors them via AT's native lifecycle hooks,
+miner teammates for assigned work, monitors them via AT's native lifecycle hooks,
 and syncs completions to beads at task boundaries.
 
 **What changes:** Session management layer (tmux → AT).
@@ -44,7 +44,7 @@ and syncs completions to beads at task boundaries.
 | Teammate cycling | WORKAROUND | Handoff + respawn pattern |
 | Token cost acceptable | CONDITIONAL | Sonnet teammates reduce cost |
 | gt/bd command access | GO | PATH via SessionStart hook |
-| Task list with dependencies | GO | Native match to Gas Town workflow |
+| Task list with dependencies | GO | Native match to Excavation Site workflow |
 
 5/8 clear GO. 2 require workarounds (viable mitigations). 1 conditional on Phase 1 cost validation.
 
@@ -52,7 +52,7 @@ and syncs completions to beads at task boundaries.
 
 1. **No per-teammate working directory** — AT teammates inherit lead's cwd. Workaround: `cd` in spawn prompt + PreToolUse hook (`gt validate-worktree-scope`) for structural enforcement.
 2. **No session resumption for teammates** — Crashed teammates cannot resume. Workaround: PreCompact handoff + beads state recovery + Witness respawn.
-3. **Token cost ~7x per teammate** — Mitigated by using Sonnet for polecat teammates, Opus for Witness lead only.
+3. **Token cost ~7x per teammate** — Mitigated by using Sonnet for miner teammates, Opus for Witness lead only.
 
 ### Risk Register Summary
 
@@ -77,7 +77,7 @@ In delegate mode, the Witness has access to:
 | Tool | Purpose |
 |------|---------|
 | `Teammate` | Spawn/shutdown teammates, send messages, manage team |
-| `TaskCreate` | Create AT tasks for polecat work |
+| `TaskCreate` | Create AT tasks for miner work |
 | `TaskUpdate` | Update task status, set dependencies |
 | `TaskList` | Monitor team progress |
 | `TaskGet` | Read task details |
@@ -162,14 +162,14 @@ The `gt witness-bash-guard` script:
 
 ### The Spawn Flow
 
-When work arrives (via convoy, gt sling, or direct assignment):
+When work arrives (via minecart, gt sling, or direct assignment):
 
 ```
-1. Witness receives work (mail, convoy dispatch, bd ready)
+1. Witness receives work (mail, minecart dispatch, bd ready)
 2. Witness creates AT team (if not already active)
 3. For each issue to dispatch:
    a. Create AT task with issue details and dependencies
-   b. Spawn polecat teammate assigned to that task
+   b. Spawn miner teammate assigned to that task
 4. Teammates self-claim tasks and begin execution
 ```
 
@@ -179,23 +179,23 @@ When work arrives (via convoy, gt sling, or direct assignment):
 Teammate({
   operation: "spawnTeam",
   team_name: "<rig-name>-work",
-  description: "Polecat work team for <convoy/sprint description>"
+  description: "Miner work team for <minecart/sprint description>"
 })
 ```
 
 Team naming convention: `<rig>-work` for the primary work team.
-One team per rig per active convoy. Multiple convoys = multiple teams
-(AT limitation: one team per session, so Witness manages one convoy
+One team per rig per active minecart. Multiple minecarts = multiple teams
+(AT limitation: one team per session, so Witness manages one minecart
 at a time).
 
 ### AT Task Creation from Beads Issues
 
-For each issue dispatched to a polecat:
+For each issue dispatched to a miner:
 
 ```
 TaskCreate({
   subject: "<issue title>",
-  description: "Issue: <issue-id>\n<issue description>\n\nWorktree: /path/to/<polecat>/\nFormula: mol-polecat-work",
+  description: "Issue: <issue-id>\n<issue description>\n\nWorktree: /path/to/<miner>/\nFormula: mol-miner-work",
   activeForm: "Working on <issue title>",
   metadata: {
     "bead_id": "<issue-id>",
@@ -207,8 +207,8 @@ TaskCreate({
 
 **Key fields in metadata:**
 - `bead_id`: Links AT task back to the beads issue for sync
-- `worktree`: The git worktree path this polecat should use
-- `molecule`: The mol-polecat-work instance for this issue
+- `worktree`: The git worktree path this miner should use
+- `molecule`: The mol-miner-work instance for this issue
 
 ### Dependency Mapping
 
@@ -226,29 +226,29 @@ TaskUpdate({
 This enables AT's native self-claim: when task A completes, task B becomes
 unblocked and the next idle teammate picks it up automatically.
 
-### Polecat Teammate Spawn
+### Miner Teammate Spawn
 
 ```
 Task({
-  subagent_type: "polecat",
+  subagent_type: "miner",
   team_name: "<rig>-work",
-  name: "<polecat-name>",
+  name: "<miner-name>",
   model: "sonnet",
-  prompt: "You are polecat <name>. Your worktree is <path>.\n\nAssigned issue: <id> - <title>\n<description>\n\nWorkflow:\n1. cd <worktree>\n2. Run `gt prime` for full context\n3. Follow mol-polecat-work steps\n4. When done: commit, push, run `gt done`"
+  prompt: "You are miner <name>. Your worktree is <path>.\n\nAssigned issue: <id> - <title>\n<description>\n\nWorkflow:\n1. cd <worktree>\n2. Run `gt prime` for full context\n3. Follow mol-miner-work steps\n4. When done: commit, push, run `gt done`"
 })
 ```
 
 **Model selection:**
-- Polecat teammates: `model: "sonnet"` (execution-focused, cost-efficient)
+- Miner teammates: `model: "sonnet"` (execution-focused, cost-efficient)
 - Witness lead: Opus (judgment, coordination, quality review)
 - Refinery teammate (Phase 2): `model: "sonnet"` (mechanical merge work)
 
-### The `.claude/agents/polecat.md` Definition
+### The `.claude/agents/miner.md` Definition
 
 ```yaml
 ---
-name: polecat
-description: Gas Town polecat worker agent (persistent identity, ephemeral sessions)
+name: miner
+description: Excavation Site miner worker agent (persistent identity, ephemeral sessions)
 model: sonnet
 hooks:
   SessionStart:
@@ -271,7 +271,7 @@ hooks:
           command: "gt signal stop"
 ---
 
-You are a Gas Town polecat (persistent identity, ephemeral sessions).
+You are a Excavation Site miner (persistent identity, ephemeral sessions).
 
 ## Startup
 1. `cd` to your assigned worktree (given in your spawn prompt)
@@ -294,7 +294,7 @@ When all steps done:
 
 ### Worktree Assignment
 
-Each polecat teammate operates in its own git worktree. Since AT doesn't support
+Each miner teammate operates in its own git worktree. Since AT doesn't support
 per-teammate working directories natively, enforcement is via:
 
 1. **Spawn prompt:** First instruction is `cd /path/to/worktree`
@@ -304,7 +304,7 @@ per-teammate working directories natively, enforcement is via:
 
 The Witness creates worktrees before spawning teammates:
 ```bash
-git worktree add /path/to/polecats/<name>/<rig> -b polecat/<name>/<issue-id>
+git worktree add /path/to/miners/<name>/<rig> -b miner/<name>/<issue-id>
 ```
 
 This matches the current worktree management — the change is WHO creates them
@@ -325,9 +325,9 @@ Layer 2 (Beads/Dolt, durable): Issue creation, completion, audit trail
 
 | AT Event | Beads Action | Trigger |
 |----------|-------------|---------|
-| Task claimed (in_progress) | `bd update <id> --status=in_progress` | TaskCompleted hook / polecat prompt |
+| Task claimed (in_progress) | `bd update <id> --status=in_progress` | TaskCompleted hook / miner prompt |
 | Task completed | `bd close <step-id>` | TaskCompleted hook |
-| New issue discovered | AT task created by Witness | Witness reads polecat message |
+| New issue discovered | AT task created by Witness | Witness reads miner message |
 | Teammate idle | Check beads for more work | TeammateIdle hook |
 | Team shutdown | Verify all beads synced | Witness cleanup routine |
 
@@ -365,14 +365,14 @@ Hook configuration:
 `bd close` fails (Dolt contention), it will be retried at the next sync point.
 The AT task list is the real-time truth; beads catches up at boundaries.
 
-### Polecat-Side Bead Updates
+### Miner-Side Bead Updates
 
-Polecats still run `bd update` and `bd close` directly as part of their molecule
+Miners still run `bd update` and `bd close` directly as part of their molecule
 workflow. The TaskCompleted hook is a safety net, not the primary mechanism. This
 means:
 
-- Polecat marks molecule step in_progress → `bd update --status=in_progress`
-- Polecat completes molecule step → `bd close <step-id>`
+- Miner marks molecule step in_progress → `bd update --status=in_progress`
+- Miner completes molecule step → `bd close <step-id>`
 - AT task completion → TaskCompleted hook also fires `bd close` (idempotent)
 
 Double-close is safe: `bd close` on an already-closed bead is a no-op.
@@ -391,7 +391,7 @@ For each AT task marked completed:
 
 This is the "boundary sync" pattern from the integration design: AT handles
 real-time coordination, beads catches up at lifecycle boundaries (team shutdown,
-convoy completion).
+minecart completion).
 
 ---
 
@@ -439,10 +439,10 @@ Teammate stops
         ├── Assess: recoverable or escalate?
         │   ├── Normal completion: AT task done, beads synced → no action
         │   ├── Incomplete work: respawn with resume context
-        │   └── Repeated crashes: escalate to Witness mail → Mayor
+        │   └── Repeated crashes: escalate to Witness mail → Overseer
         │
         └── If recoverable: spawn replacement teammate
-            └── Task({ subagent_type: "polecat", ... resume prompt ... })
+            └── Task({ subagent_type: "miner", ... resume prompt ... })
 ```
 
 ### SubagentStop Hook (Witness Side)
@@ -450,7 +450,7 @@ Teammate stops
 ```json
 {
   "SubagentStop": [{
-    "matcher": "polecat",
+    "matcher": "miner",
     "hooks": [{
       "type": "command",
       "command": "gt witness-teammate-stopped"
@@ -480,7 +480,7 @@ Last known state:
 - Branch: <branch-name>
 - Worktree: <path>
 
-Spawn a replacement polecat with this context. The new teammate
+Spawn a replacement miner with this context. The new teammate
 should read beads state and continue from the last checkpoint.
 ```
 
@@ -490,8 +490,8 @@ Track respawn attempts per issue. If a teammate crashes 3 times on the
 same issue:
 
 1. Mark the AT task as blocked
-2. File a bead: `bd create --title "Polecat crash loop on <issue>" --type bug`
-3. Mail the Witness/Mayor for escalation
+2. File a bead: `bd create --title "Miner crash loop on <issue>" --type bug`
+3. Mail the Witness/Overseer for escalation
 4. Do NOT respawn — the issue has a structural problem
 
 Tracking: Use AT task metadata `{ "respawn_count": N }` incremented on
@@ -509,10 +509,10 @@ crash tracking only matters during the current team session.
 | Teammate crash | SubagentStop hook | Respawn or escalate (see above) |
 | Teammate stuck (no progress) | TeammateIdle hook | Send message asking for status |
 | Test failures | TaskCompleted hook (exit 2) | Block completion, teammate must fix |
-| Merge conflict | Polecat messages Witness | Witness advises or reassigns |
+| Merge conflict | Miner messages Witness | Witness advises or reassigns |
 | Dolt write failure | bd command exit code | Retry with backoff (existing mechanism) |
-| AT team crash | Witness session dies | Daemon/Boot/Deacon chain detects, restarts Witness |
-| Worktree scope violation | PreToolUse hook | Block the operation, warn polecat |
+| AT team crash | Witness session dies | Daemon/Boot/Supervisor chain detects, restarts Witness |
+| Worktree scope violation | PreToolUse hook | Block the operation, warn miner |
 
 ### TeammateIdle Hook
 
@@ -567,33 +567,33 @@ exit 0
 
 ---
 
-## 6. Convoy Mapping to AT Teams
+## 6. Minecart Mapping to AT Teams
 
 ### The Natural Mapping
 
-| Gas Town | AT Equivalent |
+| Excavation Site | AT Equivalent |
 |----------|--------------|
-| Convoy | AT team lifecycle |
-| Convoy issues | AT tasks |
-| War Rig (per-rig convoy execution) | AT team instance |
+| Minecart | AT team lifecycle |
+| Minecart issues | AT tasks |
+| War Rig (per-rig minecart execution) | AT team instance |
 | Ready front (unblocked issues) | Unblocked AT tasks |
 | Dispatch | AT task creation + teammate spawn |
 | Completion tracking | AT task list status |
 
-### One Convoy = One AT Team Session
+### One Minecart = One AT Team Session
 
-A convoy arrives at a rig. The Witness creates an AT team for that convoy:
+A minecart arrives at a rig. The Witness creates an AT team for that minecart:
 
 ```
-Convoy hq-abc arrives at gastown
+Minecart hq-abc arrives at excavation
     │
-    ├── Witness creates team: "gastown-convoy-abc"
+    ├── Witness creates team: "excavation-minecart-abc"
     │
-    ├── For each issue in convoy:
+    ├── For each issue in minecart:
     │   ├── Create AT task (with bead_id in metadata)
     │   └── Set dependencies (from beads dep graph)
     │
-    ├── Spawn N polecat teammates (N = min(issues, max_polecats))
+    ├── Spawn N miner teammates (N = min(issues, max_miners))
     │
     ├── Teammates self-claim tasks from ready front
     │
@@ -604,39 +604,39 @@ Convoy hq-abc arrives at gastown
     │
     └── All tasks done:
         ├── Witness verifies beads sync
-        ├── Witness sends convoy completion to Mayor (gt mail)
+        ├── Witness sends minecart completion to Overseer (gt mail)
         └── Team shutdown
 ```
 
-### Multiple Convoys
+### Multiple Minecarts
 
-AT limitation: one team per session. If a second convoy arrives while the
+AT limitation: one team per session. If a second minecart arrives while the
 first is active:
 
-**Option A: Sequential processing.** Finish convoy 1, then start convoy 2.
-Simple, no concurrency issues. Acceptable if convoy throughput is sufficient.
+**Option A: Sequential processing.** Finish minecart 1, then start minecart 2.
+Simple, no concurrency issues. Acceptable if minecart throughput is sufficient.
 
-**Option B: Convoy queue.** The Witness queues incoming convoys and processes
+**Option B: Minecart queue.** The Witness queues incoming minecarts and processes
 them in order. The queue lives in beads (mail inbox) — the Witness checks for
-new convoys when the current team finishes.
+new minecarts when the current team finishes.
 
 **Option C: Multiple Witness sessions.** The daemon spawns a second Witness
-session for the second convoy. Each Witness manages its own AT team. This
+session for the second minecart. Each Witness manages its own AT team. This
 requires the daemon to support multiple Witness instances per rig.
 
 **Recommendation:** Option A for Phase 1 (sequential). Option C for Phase 2+
-if throughput demands it. The convoy queue in Option B is implicit in beads
-already (unprocessed convoy mail = queued work).
+if throughput demands it. The minecart queue in Option B is implicit in beads
+already (unprocessed minecart mail = queued work).
 
 ### Steady-State Worker Pool
 
-For large convoys (20+ issues), the Witness doesn't spawn 20 teammates at once.
+For large minecarts (20+ issues), the Witness doesn't spawn 20 teammates at once.
 Instead:
 
 ```
 max_teammates = 5  # configurable per rig
 
-1. Spawn max_teammates polecats
+1. Spawn max_teammates miners
 2. Create all AT tasks (with dependencies)
 3. Teammates self-claim from ready front
 4. As teammates complete tasks:
@@ -676,14 +676,14 @@ When the Witness receives gt mail relevant to an active teammate:
 ```
 gt mail inbox
     │
-    ├── From Mayor: "Priority shift — issue X is now P0"
+    ├── From Overseer: "Priority shift — issue X is now P0"
     │   └── Witness sends AT message to relevant teammate:
-    │       Teammate({ operation: "write", target_agent_id: "<polecat>",
+    │       Teammate({ operation: "write", target_agent_id: "<miner>",
     │                  value: "Priority update: <issue> is now P0. Expedite." })
     │
     ├── From Refinery: "Merge conflict on <branch>"
-    │   └── Witness sends AT message to the polecat on that branch:
-    │       Teammate({ operation: "write", target_agent_id: "<polecat>",
+    │   └── Witness sends AT message to the miner on that branch:
+    │       Teammate({ operation: "write", target_agent_id: "<miner>",
     │                  value: "Merge conflict detected. Rebase on main." })
     │
     └── From another rig's Witness: "Dependency <issue> is done"
@@ -699,13 +699,13 @@ Teammate completes final task
     │
     └── Witness detects all tasks done
         │
-        ├── gt mail send gastown/refinery -s "MERGE_READY: <branch>"
+        ├── gt mail send excavation/refinery -s "MERGE_READY: <branch>"
         │   └── Refinery processes merge queue
         │
-        ├── gt mail send mayor/ -s "CONVOY COMPLETE: hq-abc"
-        │   └── Mayor updates convoy tracking
+        ├── gt mail send overseer/ -s "MINECART COMPLETE: hq-abc"
+        │   └── Overseer updates minecart tracking
         │
-        └── gt mail send gastown/witness -s "POLECAT_DONE: <name>"
+        └── gt mail send excavation/witness -s "MINER_DONE: <name>"
             └── (Self-mail for beads record)
 ```
 
@@ -713,29 +713,29 @@ Teammate completes final task
 
 | Communication | Channel | Why |
 |--------------|---------|-----|
-| Witness ↔ Polecat | AT messaging | Same team, real-time, ephemeral |
-| Polecat ↔ Polecat | AT messaging | Same team, coordination chatter |
+| Witness ↔ Miner | AT messaging | Same team, real-time, ephemeral |
+| Miner ↔ Miner | AT messaging | Same team, coordination chatter |
 | Witness → Refinery | gt mail | Different lifecycle, needs persistence |
-| Witness → Mayor | gt mail | Cross-rig, needs persistence |
-| Mayor → Witness | gt mail | Cross-rig, needs persistence |
-| Polecat escalation | AT message to Witness, Witness relays via gt mail | Bridge pattern |
+| Witness → Overseer | gt mail | Cross-rig, needs persistence |
+| Overseer → Witness | gt mail | Cross-rig, needs persistence |
+| Miner escalation | AT message to Witness, Witness relays via gt mail | Bridge pattern |
 
 ### The Relay Pattern
 
-Polecats can't send gt mail directly to entities outside their team (AT
+Miners can't send gt mail directly to entities outside their team (AT
 messaging is team-scoped). Instead:
 
 ```
-Polecat needs to escalate to Mayor:
+Miner needs to escalate to Overseer:
     │
-    ├── Polecat sends AT message to Witness:
-    │   "ESCALATE: Need Mayor decision on auth approach"
+    ├── Miner sends AT message to Witness:
+    │   "ESCALATE: Need Overseer decision on auth approach"
     │
     └── Witness relays via gt mail:
-        gt mail send mayor/ -s "ESCALATE from polecat <name>" -m "..."
+        gt mail send overseer/ -s "ESCALATE from miner <name>" -m "..."
 ```
 
-This is analogous to the current model where polecats mail the Witness and
+This is analogous to the current model where miners mail the Witness and
 the Witness escalates. The difference: AT messaging is real-time (no Dolt
 sync lag), and the Witness can relay immediately.
 
@@ -764,7 +764,7 @@ sync lag), and the Witness can relay immediately.
       }]
     }],
     "SubagentStop": [{
-      "matcher": "polecat",
+      "matcher": "miner",
       "hooks": [{
         "type": "command",
         "command": ".claude/hooks/teammate-stopped.sh"
@@ -779,7 +779,7 @@ sync lag), and the Witness can relay immediately.
 ```yaml
 ---
 name: witness-lead
-description: Gas Town Witness operating as AT team lead
+description: Excavation Site Witness operating as AT team lead
 model: opus
 permissionMode: delegate
 hooks:
@@ -798,16 +798,16 @@ hooks:
           command: "gt signal stop"
 ---
 
-You are the Gas Town Witness for this rig.
+You are the Excavation Site Witness for this rig.
 
 ## Role
-You coordinate polecat workers. You NEVER implement code directly.
+You coordinate miner workers. You NEVER implement code directly.
 Delegate mode enforces this structurally — you cannot edit files.
 
 ## Startup
 1. Check for incoming work: `gt mail inbox`, `bd ready`
 2. Create AT team if work is available
-3. Spawn polecat teammates for each issue
+3. Spawn miner teammates for each issue
 4. Monitor progress via AT task list
 
 ## During Work
@@ -820,11 +820,11 @@ Delegate mode enforces this structurally — you cannot edit files.
 - Verify all AT tasks completed
 - Verify beads are synced (all issues closed)
 - Send MERGE_READY to Refinery via gt mail
-- Send convoy completion to Mayor via gt mail
+- Send minecart completion to Overseer via gt mail
 - Shutdown team
 ```
 
-### `.claude/agents/polecat.md`
+### `.claude/agents/miner.md`
 
 See Section 2 above for the full definition.
 
@@ -836,13 +836,13 @@ See Section 2 above for the full definition.
 
 | Component | Replacement | Notes |
 |-----------|-------------|-------|
-| `gt sling` (polecat spawn) | `Teammate({ operation: "spawn" })` | AT native |
-| `gt polecat nuke` | `Teammate({ operation: "requestShutdown" })` | AT native |
-| tmux session management | AT manages teammate sessions | No more tmux for polecats |
+| `gt sling` (miner spawn) | `Teammate({ operation: "spawn" })` | AT native |
+| `gt miner nuke` | `Teammate({ operation: "requestShutdown" })` | AT native |
+| tmux session management | AT manages teammate sessions | No more tmux for miners |
 | `gt nudge` (tmux send-keys) | `Teammate({ operation: "write" })` | AT messaging |
 | Zombie detection (tmux-based) | SubagentStop / TeammateIdle hooks | Structural |
 | Witness "are you stuck?" polling | TeammateIdle hook (automatic) | Event-driven |
-| Polecat-to-polecat isolation | Prompt + PreToolUse hook | Behavioral → hook-enforced |
+| Miner-to-miner isolation | Prompt + PreToolUse hook | Behavioral → hook-enforced |
 
 ### Infrastructure Kept (Phase 1)
 
@@ -851,21 +851,21 @@ See Section 2 above for the full definition.
 | Beads (Dolt) | Durable ledger — AT tasks are ephemeral |
 | gt mail | Cross-rig communication — AT is team-scoped |
 | Molecules/formulas | Work templates — AT tasks created from these |
-| `gt done` | Polecat self-clean — unchanged lifecycle |
+| `gt done` | Miner self-clean — unchanged lifecycle |
 | Git worktrees | Filesystem isolation — AT doesn't provide this |
-| Daemon/Boot/Deacon | Health monitoring — AT has no crash recovery |
+| Daemon/Boot/Supervisor | Health monitoring — AT has no crash recovery |
 | Refinery (separate) | Different lifecycle (Phase 2 brings it in-band) |
-| Convoy tracking | Cross-rig work orders — above AT scope |
+| Minecart tracking | Cross-rig work orders — above AT scope |
 
 ### Dolt Write Pressure Reduction
 
-**Current:** Every `bd update`, `bd close`, `bd create` from every polecat
-= concurrent Dolt writes. 20 polecats = 20+ concurrent commits.
+**Current:** Every `bd update`, `bd close`, `bd create` from every miner
+= concurrent Dolt writes. 20 miners = 20+ concurrent commits.
 
 **With AT:** Real-time task coordination happens in AT (file-locked, no Dolt).
 Dolt writes only at boundaries:
 - `bd close` when a molecule step completes (1 per task)
-- `bd create` when polecats discover new issues (rare)
+- `bd create` when miners discover new issues (rare)
 
 **Estimated reduction: 80-90%.** The remaining writes are naturally staggered
 across minutes (task completions), not milliseconds (concurrent status updates).
@@ -881,7 +881,7 @@ Witness session starts (managed by daemon)
     │   └── Loads role context, checks hook
     │
     ├── Check for work:
-    │   ├── gt mail inbox (convoy dispatch, priority changes)
+    │   ├── gt mail inbox (minecart dispatch, priority changes)
     │   ├── bd ready (unblocked issues)
     │   └── gt hook (hooked work)
     │
@@ -894,18 +894,18 @@ Witness session starts (managed by daemon)
     │   │   For each issue: TaskCreate({ subject, description, metadata: { bead_id } })
     │   │   Set dependencies: TaskUpdate({ addBlockedBy: [...] })
     │   │
-    │   ├── Create worktrees for polecats:
-    │   │   For each polecat: git worktree add ...
+    │   ├── Create worktrees for miners:
+    │   │   For each miner: git worktree add ...
     │   │
-    │   ├── Spawn polecat teammates:
+    │   ├── Spawn miner teammates:
     │   │   For each (up to max_teammates):
-    │   │     Task({ subagent_type: "polecat", team_name: "...", name: "..." })
+    │   │     Task({ subagent_type: "miner", team_name: "...", name: "..." })
     │   │
     │   └── Enter monitoring loop:
     │       ├── Watch AT task list for completions
     │       ├── Handle teammate crashes (SubagentStop)
     │       ├── Relay gt mail ↔ AT messages
-    │       ├── Check for new convoy arrivals
+    │       ├── Check for new minecart arrivals
     │       └── When all tasks done: cleanup and report
     │
     └── If no work:
@@ -920,17 +920,17 @@ Witness session starts (managed by daemon)
 ### In Scope
 
 1. Witness as AT team lead in delegate mode (with Bash for gt/bd)
-2. Polecat teammates with `.claude/agents/polecat.md`
+2. Miner teammates with `.claude/agents/miner.md`
 3. Bead sync via TaskCompleted hook
 4. Session cycling via PreCompact handoff + respawn
 5. Basic error handling (crash detection, respawn, crash loop prevention)
 6. Mail bridge (gt mail ↔ AT messaging)
-7. Single-convoy sequential processing
+7. Single-minecart sequential processing
 
 ### Out of Scope (Phase 2+)
 
 1. Refinery as AT teammate
-2. Multiple concurrent convoys
+2. Multiple concurrent minecarts
 3. Cross-rig AT coordination
 4. Crew squads / shadow workers
 5. Advanced plan approval workflows
@@ -941,14 +941,14 @@ Witness session starts (managed by daemon)
 | Criterion | Test |
 |-----------|------|
 | Witness stays in delegate mode | Verify Witness cannot write/edit files |
-| Polecats complete work | End-to-end: spawn → implement → push → gt done |
+| Miners complete work | End-to-end: spawn → implement → push → gt done |
 | Beads sync correctly | AT task completion → bd close fires → bead is closed |
 | Session cycling works | Force compaction → new teammate resumes from beads |
 | Crash recovery works | Kill a teammate → Witness detects → respawns |
-| Mail bridge works | Mayor sends mail → Witness relays to polecat |
+| Mail bridge works | Overseer sends mail → Witness relays to miner |
 | Dolt writes reduced | Measure bd command frequency: before vs after |
 | Token cost acceptable | `/cost` shows < 3x overhead vs current model |
-| Convoy completes | Full convoy lifecycle: dispatch → work → merge → done |
+| Minecart completes | Full minecart lifecycle: dispatch → work → merge → done |
 
 ---
 
@@ -960,23 +960,23 @@ The transition is additive: AT runs alongside existing infrastructure during
 validation. The Witness can fall back to tmux-based management if AT fails.
 
 ```
-Step 1: Enable AT feature flag in gastown .claude/settings.json
-Step 2: Create .claude/agents/polecat.md and .claude/agents/witness-lead.md
+Step 1: Enable AT feature flag in excavation .claude/settings.json
+Step 2: Create .claude/agents/miner.md and .claude/agents/witness-lead.md
 Step 3: Implement hook scripts (task-completed-sync, teammate-idle, teammate-stopped)
 Step 4: Implement gt witness-bash-guard
 Step 5: Implement gt validate-worktree-scope
 Step 6: Implement gt witness-teammate-stopped
-Step 7: Update Witness startup to create AT team instead of tmux polecat sessions
-Step 8: Test with 2 polecats on a small convoy
+Step 7: Update Witness startup to create AT team instead of tmux miner sessions
+Step 8: Test with 2 miners on a small minecart
 Step 9: Validate all criteria above
-Step 10: If validated: expand to 3-5 polecats, larger convoys
+Step 10: If validated: expand to 3-5 miners, larger minecarts
 ```
 
 ### Rollback Plan
 
 If Phase 1 fails:
 1. Disable AT feature flag
-2. Witness reverts to tmux-based polecat management
+2. Witness reverts to tmux-based miner management
 3. No beads data lost (beads sync is additive)
 4. File lessons-learned bead for Phase 1 retry
 

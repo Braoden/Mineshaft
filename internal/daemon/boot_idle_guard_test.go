@@ -13,8 +13,8 @@ import (
 	"time"
 
 	beadsdk "github.com/steveyegge/beads"
-	"github.com/steveyegge/gastown/internal/deacon"
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/supervisor"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 // searchStorage is a minimal Storage stub for hasActiveWork tests.
@@ -38,13 +38,13 @@ func (s *searchStorage) SearchIssues(_ context.Context, _ string, filter beadsdk
 	return s.results[status], nil
 }
 
-// writeDeaconHeartbeat writes a fresh or stale deacon heartbeat file to townRoot.
-func writeDeaconHeartbeat(t *testing.T, townRoot string, age time.Duration) {
+// writeSupervisorHeartbeat writes a fresh or stale supervisor heartbeat file to townRoot.
+func writeSupervisorHeartbeat(t *testing.T, townRoot string, age time.Duration) {
 	t.Helper()
 	ts := time.Now().Add(-age)
-	hb := &deacon.Heartbeat{Timestamp: ts}
-	if err := deacon.WriteHeartbeat(townRoot, hb); err != nil {
-		t.Fatalf("writeDeaconHeartbeat: %v", err)
+	hb := &supervisor.Heartbeat{Timestamp: ts}
+	if err := supervisor.WriteHeartbeat(townRoot, hb); err != nil {
+		t.Fatalf("writeSupervisorHeartbeat: %v", err)
 	}
 }
 
@@ -137,7 +137,7 @@ func TestHasActiveWork(t *testing.T) {
 }
 
 // TestEnsureBootRunning_IdleGuard verifies that Boot is not spawned when
-// Deacon is healthy and no work is active (idle guard).
+// Supervisor is healthy and no work is active (idle guard).
 func TestEnsureBootRunning_IdleGuard(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on Windows — fake tmux requires bash")
@@ -166,7 +166,7 @@ func TestEnsureBootRunning_IdleGuard(t *testing.T) {
 				"hq": &searchStorage{results: map[string][]*beadsdk.Issue{}},
 			},
 			wantSpawns: 1,
-			desc:       "Deacon may be stuck: Boot must spawn",
+			desc:       "Supervisor may be stuck: Boot must spawn",
 		},
 		{
 			name:         "fresh heartbeat, active work — spawn",
@@ -186,7 +186,7 @@ func TestEnsureBootRunning_IdleGuard(t *testing.T) {
 				"hq": &searchStorage{results: map[string][]*beadsdk.Issue{}},
 			},
 			wantSpawns: 1,
-			desc:       "No heartbeat: Deacon never started or died: Boot must spawn",
+			desc:       "No heartbeat: Supervisor never started or died: Boot must spawn",
 		},
 		{
 			name:         "store error — spawn conservatively",
@@ -214,7 +214,7 @@ func TestEnsureBootRunning_IdleGuard(t *testing.T) {
 			t.Setenv("GT_DEGRADED", "false")
 
 			if tc.heartbeatAge > 0 {
-				writeDeaconHeartbeat(t, townRoot, tc.heartbeatAge)
+				writeSupervisorHeartbeat(t, townRoot, tc.heartbeatAge)
 			}
 
 			d := newTestDaemonWithStores(t, townRoot, tc.stores)

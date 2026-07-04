@@ -12,13 +12,13 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/quota"
-	"github.com/steveyegge/gastown/internal/style"
-	ttmux "github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/util"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/quota"
+	"github.com/steveyegge/excavation/internal/style"
+	ttmux "github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // quotaLogger adapts style.PrintWarning to the quota.Logger interface.
@@ -38,7 +38,7 @@ var quotaCmd = &cobra.Command{
 	GroupID: GroupServices,
 	Short:   "Manage account quota rotation",
 	RunE:    requireSubcommand,
-	Long: `Manage Claude Code account quota rotation for Gas Town.
+	Long: `Manage Claude Code account quota rotation for Excavation Site.
 
 When sessions hit rate limits, quota commands help detect blocked sessions
 and rotate them to available accounts from the pool.
@@ -82,7 +82,7 @@ func runQuotaStatus(cmd *cobra.Command, args []string) error {
 	}
 
 	// Load accounts
-	accountsPath := constants.MayorAccountsPath(townRoot)
+	accountsPath := constants.OverseerAccountsPath(townRoot)
 	acctCfg, err := config.LoadAccountsConfig(accountsPath)
 	if err != nil {
 		fmt.Println("No accounts configured.")
@@ -206,7 +206,7 @@ var (
 var quotaScanCmd = &cobra.Command{
 	Use:   "scan",
 	Short: "Detect rate-limited sessions",
-	Long: `Scan all Gas Town tmux sessions for rate-limit indicators.
+	Long: `Scan all Excavation Site tmux sessions for rate-limit indicators.
 
 Captures recent pane output from each session and checks for rate-limit
 messages. Reports which sessions are blocked and which account they use.
@@ -227,7 +227,7 @@ func runQuotaScan(cmd *cobra.Command, args []string) error {
 	}
 
 	// Load accounts config
-	accountsPath := constants.MayorAccountsPath(townRoot)
+	accountsPath := constants.OverseerAccountsPath(townRoot)
 	acctCfg, loadErr := config.LoadAccountsConfig(accountsPath)
 	// acctCfg can be nil if no accounts configured — scan still works
 
@@ -369,7 +369,7 @@ it hits its rate limit. This is useful for switching idle sessions while
 it's not disruptive.
 
 The rotation process:
-  1. Scans all Gas Town sessions for rate-limit indicators
+  1. Scans all Excavation Site sessions for rate-limit indicators
   2. Selects available accounts (LRU order)
   3. Swaps macOS Keychain credentials (same config dir preserved)
   4. Restarts blocked sessions via respawn-pane
@@ -391,7 +391,7 @@ func runQuotaRotate(cmd *cobra.Command, args []string) error {
 	}
 
 	// Load accounts config (required for rotation)
-	accountsPath := constants.MayorAccountsPath(townRoot)
+	accountsPath := constants.OverseerAccountsPath(townRoot)
 	acctCfg, err := config.LoadAccountsConfig(accountsPath)
 	if err != nil {
 		return fmt.Errorf("no accounts configured (run 'gt account add' first): %w", err)
@@ -724,7 +724,7 @@ func executeKeychainRotation(
 		ContinueSession: true,
 	})
 	if err != nil {
-		// Session types that can't be restarted (e.g., hq-boot/deacon) still
+		// Session types that can't be restarted (e.g., hq-boot/supervisor) still
 		// benefit from the keychain swap above — mark as rotated without restart.
 		result.Rotated = true
 		result.Error = fmt.Sprintf("keychain swapped but could not restart: %v", err)
@@ -814,7 +814,7 @@ var quotaWatchCmd = &cobra.Command{
 	Short: "Monitor sessions and rotate proactively before hard 429",
 	Long: `Continuously monitor sessions for approaching rate limits and rotate proactively.
 
-Polls all Gas Town sessions on the specified interval, checking for both
+Polls all Excavation Site sessions on the specified interval, checking for both
 hard rate limits and near-limit warning signals via pane pattern matching.
 
 When a session is detected as approaching its limit, rotation is triggered
@@ -833,7 +833,7 @@ func runQuotaWatch(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("finding town root: %w", err)
 	}
 
-	accountsPath := constants.MayorAccountsPath(townRoot)
+	accountsPath := constants.OverseerAccountsPath(townRoot)
 	acctCfg, err := config.LoadAccountsConfig(accountsPath)
 	if err != nil {
 		return fmt.Errorf("no accounts configured: %w", err)

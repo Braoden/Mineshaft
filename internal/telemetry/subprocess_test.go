@@ -10,7 +10,7 @@ func TestBuildGTResourceAttrs_Empty(t *testing.T) {
 	t.Setenv("GT_ROLE", "")
 	t.Setenv("GT_RIG", "")
 	t.Setenv("BD_ACTOR", "")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("GT_SESSION", "")
 	t.Setenv("GT_RUN", "")
@@ -25,15 +25,15 @@ func TestBuildGTResourceAttrs_Empty(t *testing.T) {
 }
 
 func TestBuildGTResourceAttrs_Session(t *testing.T) {
-	t.Setenv("GT_ROLE", "deacon")
+	t.Setenv("GT_ROLE", "supervisor")
 	t.Setenv("GT_RIG", "")
-	t.Setenv("BD_ACTOR", "deacon")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("BD_ACTOR", "supervisor")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_SESSION", "hq-deacon")
+	t.Setenv("GT_SESSION", "hq-supervisor")
 
 	result := buildGTResourceAttrs()
-	if !strings.Contains(result, "gt.session=hq-deacon") {
+	if !strings.Contains(result, "gt.session=hq-supervisor") {
 		t.Errorf("expected gt.session in result, got %q", result)
 	}
 }
@@ -42,7 +42,7 @@ func TestBuildGTResourceAttrs_AllVars(t *testing.T) {
 	t.Setenv("GT_ROLE", "mol/witness")
 	t.Setenv("GT_RIG", "mol")
 	t.Setenv("BD_ACTOR", "mol/witness")
-	t.Setenv("GT_POLECAT", "furiosa")
+	t.Setenv("GT_MINER", "furiosa")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("GT_SESSION", "")
 
@@ -54,32 +54,32 @@ func TestBuildGTResourceAttrs_AllVars(t *testing.T) {
 	}
 }
 
-func TestBuildGTResourceAttrs_PolecatTakesPriorityOverCrew(t *testing.T) {
-	t.Setenv("GT_POLECAT", "furiosa")
-	t.Setenv("GT_CREW", "mayor")
+func TestBuildGTResourceAttrs_MinerTakesPriorityOverCrew(t *testing.T) {
+	t.Setenv("GT_MINER", "furiosa")
+	t.Setenv("GT_CREW", "overseer")
 	t.Setenv("GT_ROLE", "")
 	t.Setenv("GT_RIG", "")
 	t.Setenv("BD_ACTOR", "")
 
 	result := buildGTResourceAttrs()
 	if !strings.Contains(result, "gt.agent=furiosa") {
-		t.Errorf("expected gt.agent=furiosa (GT_POLECAT), got %q", result)
+		t.Errorf("expected gt.agent=furiosa (GT_MINER), got %q", result)
 	}
-	if strings.Contains(result, "gt.agent=mayor") {
-		t.Errorf("GT_CREW should not override GT_POLECAT, got %q", result)
+	if strings.Contains(result, "gt.agent=overseer") {
+		t.Errorf("GT_CREW should not override GT_MINER, got %q", result)
 	}
 }
 
 func TestBuildGTResourceAttrs_CrewFallback(t *testing.T) {
-	t.Setenv("GT_POLECAT", "")
-	t.Setenv("GT_CREW", "mayor")
+	t.Setenv("GT_MINER", "")
+	t.Setenv("GT_CREW", "overseer")
 	t.Setenv("GT_ROLE", "")
 	t.Setenv("GT_RIG", "")
 	t.Setenv("BD_ACTOR", "")
 
 	result := buildGTResourceAttrs()
-	if !strings.Contains(result, "gt.agent=mayor") {
-		t.Errorf("expected gt.agent=mayor from GT_CREW, got %q", result)
+	if !strings.Contains(result, "gt.agent=overseer") {
+		t.Errorf("expected gt.agent=overseer from GT_CREW, got %q", result)
 	}
 }
 
@@ -87,14 +87,14 @@ func TestBuildGTResourceAttrs_WorkContext(t *testing.T) {
 	t.Setenv("GT_ROLE", "")
 	t.Setenv("GT_RIG", "")
 	t.Setenv("BD_ACTOR", "")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_WORK_RIG", "gastown")
+	t.Setenv("GT_WORK_RIG", "excavation")
 	t.Setenv("GT_WORK_BEAD", "sg-05iq")
-	t.Setenv("GT_WORK_MOL", "mol-polecat-work")
+	t.Setenv("GT_WORK_MOL", "mol-miner-work")
 
 	result := buildGTResourceAttrs()
-	for _, want := range []string{"gt.work_rig=gastown", "gt.work_bead=sg-05iq", "gt.work_mol=mol-polecat-work"} {
+	for _, want := range []string{"gt.work_rig=excavation", "gt.work_bead=sg-05iq", "gt.work_mol=mol-miner-work"} {
 		if !strings.Contains(result, want) {
 			t.Errorf("expected %q in result, got %q", want, result)
 		}
@@ -105,7 +105,7 @@ func TestBuildGTResourceAttrs_WorkContextPartial(t *testing.T) {
 	t.Setenv("GT_ROLE", "")
 	t.Setenv("GT_RIG", "")
 	t.Setenv("BD_ACTOR", "")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("GT_WORK_RIG", "")
 	t.Setenv("GT_WORK_BEAD", "sg-05iq")
@@ -127,7 +127,7 @@ func TestBuildGTResourceAttrs_Comma(t *testing.T) {
 	t.Setenv("GT_ROLE", "a")
 	t.Setenv("GT_RIG", "b")
 	t.Setenv("BD_ACTOR", "")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
 
 	result := buildGTResourceAttrs()
@@ -150,7 +150,7 @@ func TestOTELEnvForSubprocess_BothURLs(t *testing.T) {
 	t.Setenv("GT_ROLE", "")
 	t.Setenv("GT_RIG", "")
 	t.Setenv("BD_ACTOR", "")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
 
 	env := OTELEnvForSubprocess()
@@ -181,7 +181,7 @@ func TestOTELEnvForSubprocess_NoLogsURL(t *testing.T) {
 	t.Setenv("GT_ROLE", "")
 	t.Setenv("GT_RIG", "")
 	t.Setenv("BD_ACTOR", "")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
 
 	env := OTELEnvForSubprocess()
@@ -198,7 +198,7 @@ func TestOTELEnvForSubprocess_WithResourceAttrs(t *testing.T) {
 	t.Setenv("GT_ROLE", "mol/witness")
 	t.Setenv("GT_RIG", "mol")
 	t.Setenv("BD_ACTOR", "")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
 
 	env := OTELEnvForSubprocess()
@@ -236,7 +236,7 @@ func TestSetProcessOTELAttrs_Enabled(t *testing.T) {
 	t.Setenv("GT_ROLE", "")
 	t.Setenv("GT_RIG", "")
 	t.Setenv("BD_ACTOR", "")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
 
 	SetProcessOTELAttrs()
@@ -255,7 +255,7 @@ func TestSetProcessOTELAttrs_SetsResourceAttrs(t *testing.T) {
 	t.Setenv("GT_ROLE", "mol/witness")
 	t.Setenv("GT_RIG", "mol")
 	t.Setenv("BD_ACTOR", "")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
 	os.Unsetenv("OTEL_RESOURCE_ATTRIBUTES")
 

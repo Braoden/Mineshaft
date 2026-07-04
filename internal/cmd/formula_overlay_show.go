@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/formula"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/formula"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var formulaOverlayShowCmd = &cobra.Command{
@@ -19,8 +19,8 @@ var formulaOverlayShowCmd = &cobra.Command{
 Shows which file provides the overlay (town-level or rig-level) and its contents.
 
 Examples:
-  gt formula overlay show mol-polecat-work
-  gt formula overlay show mol-polecat-work --rig gastown`,
+  gt formula overlay show mol-miner-work
+  gt formula overlay show mol-miner-work --rig excavation`,
 	Args: cobra.ExactArgs(1),
 	RunE: runFormulaOverlayShow,
 }
@@ -94,7 +94,7 @@ func runFormulaOverlayShow(cmd *cobra.Command, args []string) error {
 func resolveOverlayContext(explicitRig string) (townRoot, rigName string, err error) {
 	townRoot, err = workspace.FindFromCwdOrError()
 	if err != nil {
-		return "", "", fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return "", "", fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	rigName = explicitRig

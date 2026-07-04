@@ -17,14 +17,14 @@ agent session risks killing sibling agents or even the caller's own
 molecule.
 
 This guard blocks:
-  - gt mol patrol (when called from within a Gas Town agent)
+  - gt mol patrol (when called from within a Excavation Site agent)
 
 Exit codes:
-  0 - Operation allowed (not in Gas Town agent context, or Mayor)
+  0 - Operation allowed (not in Excavation Site agent context, or Overseer)
   2 - Operation BLOCKED (in agent context)
 
-Mol patrol should only be run by the Mayor or by humans from outside
-the Gas Town agent tree.`,
+Mol patrol should only be run by the Overseer or by humans from outside
+the Excavation Site agent tree.`,
 	RunE: runTapGuardMolPatrol,
 }
 
@@ -33,12 +33,12 @@ func init() {
 }
 
 func runTapGuardMolPatrol(cmd *cobra.Command, args []string) error {
-	if !isGasTownAgentContext() {
+	if !isExcavationAgentContext() {
 		return nil
 	}
 
-	// Allow Mayor to run patrol (it coordinates agents)
-	if os.Getenv("GT_MAYOR") != "" {
+	// Allow Overseer to run patrol (it coordinates agents)
+	if os.Getenv("GT_OVERSEER") != "" {
 		return nil
 	}
 
@@ -49,7 +49,7 @@ func runTapGuardMolPatrol(cmd *cobra.Command, args []string) error {
 	fmt.Fprintln(os.Stderr, "║  Running 'gt mol patrol' from an agent can kill sibling agents  ║")
 	fmt.Fprintln(os.Stderr, "║  or even your own molecule.                                     ║")
 	fmt.Fprintln(os.Stderr, "║                                                                  ║")
-	fmt.Fprintln(os.Stderr, "║  Only the Mayor or human operators should run mol patrol.       ║")
+	fmt.Fprintln(os.Stderr, "║  Only the Overseer or human operators should run mol patrol.       ║")
 	fmt.Fprintln(os.Stderr, "║                                                                  ║")
 	fmt.Fprintln(os.Stderr, "║  If you need to check molecule status, use:                     ║")
 	fmt.Fprintln(os.Stderr, "║    gt mol status    (safe, read-only)                           ║")

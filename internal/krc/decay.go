@@ -37,8 +37,8 @@ const (
 var defaultDecayCurves = map[string]DecayCurve{
 	// Rapid decay: operational noise
 	"patrol_*":        DecayRapid,
-	"polecat_checked": DecayRapid,
-	"polecat_nudged":  DecayRapid,
+	"miner_checked": DecayRapid,
+	"miner_nudged":  DecayRapid,
 	"heartbeat":       DecayRapid,
 	"ping":            DecayRapid,
 

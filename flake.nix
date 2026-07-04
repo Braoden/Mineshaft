@@ -4,7 +4,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    beads.url = "github:gastownhall/beads";
+    beads.url = "github:excavationhall/beads";
   };
 
   outputs =
@@ -31,15 +31,15 @@
             vendorHash = "sha256-mJzpsl4XnIm3ZSg7fFn0MOdQQW1bdOkAJ+TikiLMXJM=";
 
             ldflags = [
-              "-X github.com/gastownhall/gastown/internal/cmd.Build=nix"
-              "-X github.com/steveyegge/gastown/internal/cmd.BuiltProperly=1"
+              "-X github.com/excavationhall/excavation/internal/cmd.Build=nix"
+              "-X github.com/steveyegge/excavation/internal/cmd.BuiltProperly=1"
             ];
 
             subPackages = [ "cmd/gt" ];
 
             meta = with pkgs.lib; {
               description = "Multi-agent orchestration system for Claude Code with persistent work tracking";
-              homepage = "https://github.com/gastownhall/gastown";
+              homepage = "https://github.com/excavationhall/excavation";
               license = licenses.mit;
               mainProgram = "gt";
             };

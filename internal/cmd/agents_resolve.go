@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
+	"github.com/steveyegge/excavation/internal/beads"
 )
 
 var (
@@ -31,7 +31,7 @@ record, then rig issue, town wisp, and town issue. Closed beads are ignored.`,
 }
 
 func init() {
-	agentsResolveCmd.Flags().StringVar(&agentsResolveRole, "role", "", "Agent role to resolve (witness, refinery, crew, polecat, mayor, deacon)")
+	agentsResolveCmd.Flags().StringVar(&agentsResolveRole, "role", "", "Agent role to resolve (witness, refinery, crew, miner, overseer, supervisor)")
 	agentsResolveCmd.Flags().StringVar(&agentsResolveRig, "rig", "", "Rig name for rig-scoped roles")
 	agentsResolveCmd.Flags().BoolVar(&agentsResolveJSON, "json", false, "Output match provenance as JSON")
 	agentsResolveCmd.Flags().BoolVar(&agentsResolveQuiet, "quiet", false, "Suppress no-match diagnostics")

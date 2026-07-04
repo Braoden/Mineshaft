@@ -4,7 +4,7 @@ import "sync"
 
 // MessageDeduplicator tracks processed message IDs to prevent duplicate handling.
 // If the witness crashes and restarts, re-reading the mailbox could process the
-// same message twice (e.g., POLECAT_DONE creating duplicate cleanup wisps).
+// same message twice (e.g., MINER_DONE creating duplicate cleanup wisps).
 // This provides in-memory idempotency within a single witness session.
 //
 // Thread-safe for concurrent patrol goroutines.

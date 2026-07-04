@@ -7,62 +7,62 @@ import (
 	"testing"
 )
 
-// TestHookPolecatEnvCheck verifies that the polecat guard in runHook uses
-// GT_ROLE as the authoritative check, so coordinators with a stale GT_POLECAT
+// TestHookMinerEnvCheck verifies that the miner guard in runHook uses
+// GT_ROLE as the authoritative check, so coordinators with a stale GT_MINER
 // in their environment are not blocked from hooking (GH #1707).
-func TestHookPolecatEnvCheck(t *testing.T) {
+func TestHookMinerEnvCheck(t *testing.T) {
 	tests := []struct {
 		name      string
 		role      string
-		polecat   string
+		miner   string
 		wantBlock bool
 	}{
 		{
-			name:      "bare polecat role is blocked",
-			role:      "polecat",
-			polecat:   "alpha",
+			name:      "bare miner role is blocked",
+			role:      "miner",
+			miner:   "alpha",
 			wantBlock: true,
 		},
 		{
-			name:      "compound polecat role is blocked",
-			role:      "gastown/polecats/Toast",
-			polecat:   "Toast",
+			name:      "compound miner role is blocked",
+			role:      "excavation/miners/Toast",
+			miner:   "Toast",
 			wantBlock: true,
 		},
 		{
-			name:      "mayor with stale GT_POLECAT is NOT blocked",
-			role:      "mayor",
-			polecat:   "alpha",
+			name:      "overseer with stale GT_MINER is NOT blocked",
+			role:      "overseer",
+			miner:   "alpha",
 			wantBlock: false,
 		},
 		{
-			name:      "compound witness with stale GT_POLECAT is NOT blocked",
-			role:      "gastown/witness",
-			polecat:   "alpha",
+			name:      "compound witness with stale GT_MINER is NOT blocked",
+			role:      "excavation/witness",
+			miner:   "alpha",
 			wantBlock: false,
 		},
 		{
-			name:      "crew with stale GT_POLECAT is NOT blocked",
+			name:      "crew with stale GT_MINER is NOT blocked",
 			role:      "crew",
-			polecat:   "alpha",
+			miner:   "alpha",
 			wantBlock: false,
 		},
 		{
-			name:      "compound crew with stale GT_POLECAT is NOT blocked",
-			role:      "gastown/crew/den",
-			polecat:   "alpha",
+			name:      "compound crew with stale GT_MINER is NOT blocked",
+			role:      "excavation/crew/den",
+			miner:   "alpha",
 			wantBlock: false,
 		},
 		{
-			name:      "no GT_ROLE with GT_POLECAT set is blocked",
+			name:      "no GT_ROLE with GT_MINER set is blocked",
 			role:      "",
-			polecat:   "alpha",
+			miner:   "alpha",
 			wantBlock: true,
 		},
 		{
-			name:      "no GT_ROLE and no GT_POLECAT is not blocked",
+			name:      "no GT_ROLE and no GT_MINER is not blocked",
 			role:      "",
-			polecat:   "",
+			miner:   "",
 			wantBlock: false,
 		},
 	}
@@ -70,11 +70,11 @@ func TestHookPolecatEnvCheck(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Setenv("GT_ROLE", tt.role)
-			t.Setenv("GT_POLECAT", tt.polecat)
+			t.Setenv("GT_MINER", tt.miner)
 
-			// We only test the polecat guard, so we call runHook with a dummy arg.
+			// We only test the miner guard, so we call runHook with a dummy arg.
 			// It will either fail at the guard or fail later (missing bead, etc.).
-			// We only care whether the error is the polecat-block message.
+			// We only care whether the error is the miner-block message.
 			var blocked bool
 			func() {
 				defer func() {
@@ -84,14 +84,14 @@ func TestHookPolecatEnvCheck(t *testing.T) {
 					}
 				}()
 				err := runHook(nil, []string{"fake-bead-id"})
-				blocked = err != nil && strings.Contains(err.Error(), "polecats cannot hook")
+				blocked = err != nil && strings.Contains(err.Error(), "miners cannot hook")
 			}()
 
 			if blocked != tt.wantBlock {
 				if tt.wantBlock {
-					t.Errorf("expected polecat block but was not blocked (GT_ROLE=%q GT_POLECAT=%q)", tt.role, tt.polecat)
+					t.Errorf("expected miner block but was not blocked (GT_ROLE=%q GT_MINER=%q)", tt.role, tt.miner)
 				} else {
-					t.Errorf("unexpected polecat block with GT_ROLE=%q GT_POLECAT=%q", tt.role, tt.polecat)
+					t.Errorf("unexpected miner block with GT_ROLE=%q GT_MINER=%q", tt.role, tt.miner)
 				}
 			}
 		})
@@ -103,9 +103,9 @@ func TestHookPolecatEnvCheck(t *testing.T) {
 // look like bead IDs should produce a clear error pointing at --help rather
 // than the misleading "bead 'set' not found" emitted by bd show.
 func TestHookRejectsNonBeadArg(t *testing.T) {
-	// Ensure we don't trip the polecat guard.
+	// Ensure we don't trip the miner guard.
 	t.Setenv("GT_ROLE", "")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("GT_MINER", "")
 
 	tests := []string{"set", "list", "delete", "nonexistentword12345"}
 	for _, arg := range tests {
@@ -131,14 +131,14 @@ func TestNormalizeHookShowTarget(t *testing.T) {
 		want   string
 	}{
 		{
-			name:   "shorthand polecat path resolves",
-			target: "gastown/toast",
-			want:   "gastown/polecats/toast",
+			name:   "shorthand miner path resolves",
+			target: "excavation/toast",
+			want:   "excavation/miners/toast",
 		},
 		{
-			name:   "canonical polecat path stays canonical",
-			target: "gastown/polecats/toast",
-			want:   "gastown/polecats/toast",
+			name:   "canonical miner path stays canonical",
+			target: "excavation/miners/toast",
+			want:   "excavation/miners/toast",
 		},
 		{
 			name:   "unknown target stays unchanged",

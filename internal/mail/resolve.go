@@ -14,10 +14,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/constants"
+	"github.com/steveyegge/excavation/internal/constants"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
 )
 
 // ErrUnknownRecipient indicates the address does not match any known agent.
@@ -36,7 +36,7 @@ const (
 
 // Recipient represents a resolved message recipient.
 type Recipient struct {
-	Address      string        // The resolved address (e.g., "gastown/crew/max")
+	Address      string        // The resolved address (e.g., "excavation/crew/max")
 	Type         RecipientType // Type of recipient (agent, queue, channel)
 	OriginalName string        // Original name before resolution (for queues/channels)
 }
@@ -110,9 +110,9 @@ func (r *Resolver) resolveAgentAddress(address string) ([]Recipient, error) {
 	}
 
 	// Validate that the address refers to a known agent before accepting.
-	// Without this check, typos like "laser/mayor" (instead of "mayor/")
+	// Without this check, typos like "laser/overseer" (instead of "overseer/")
 	// silently deliver to a dead inbox with no error.
-	// See: https://github.com/steveyegge/gastown/issues/2038
+	// See: https://github.com/steveyegge/excavation/issues/2038
 	if err := r.validateAgentAddress(address); err != nil {
 		return nil, err
 	}
@@ -141,7 +141,7 @@ func (r *Resolver) validateAgentAddress(address string) error {
 
 	// Well-known town-level singletons always valid
 	switch normalized {
-	case constants.RoleMayor + "/", constants.RoleMayor, constants.RoleDeacon + "/", constants.RoleDeacon, "overseer":
+	case constants.RoleOverseer + "/", constants.RoleOverseer, constants.RoleSupervisor + "/", constants.RoleSupervisor, "boss":
 		return nil
 	}
 
@@ -176,18 +176,18 @@ func (r *Resolver) validateAgentAddress(address string) error {
 		switch len(parts) {
 		case 2:
 			rig, name := parts[0], parts[1]
-			// Singleton role: rig/name (e.g., gastown/witness)
+			// Singleton role: rig/name (e.g., excavation/witness)
 			if dirExistsAt(filepath.Join(r.townRoot, rig, name)) {
 				return nil
 			}
-			// Named agent (normalized, could be crew or polecat)
-			for _, role := range []string{"crew", "polecats"} {
+			// Named agent (normalized, could be crew or miner)
+			for _, role := range []string{"crew", "miners"} {
 				if dirExistsAt(filepath.Join(r.townRoot, rig, role, name)) {
 					return nil
 				}
 			}
 		case 3:
-			// Explicit: rig/crew/name or rig/polecats/name
+			// Explicit: rig/crew/name or rig/miners/name
 			if dirExistsAt(filepath.Join(r.townRoot, parts[0], parts[1], parts[2])) {
 				return nil
 			}
@@ -204,7 +204,7 @@ func dirExistsAt(path string) bool {
 }
 
 // resolvePattern expands a wildcard pattern to matching agents.
-// Patterns like "*/witness" or "gastown/*" are expanded.
+// Patterns like "*/witness" or "excavation/*" are expanded.
 func (r *Resolver) resolvePattern(pattern string) ([]Recipient, error) {
 	if r.beads == nil {
 		return nil, fmt.Errorf("beads not available for pattern resolution")
@@ -236,7 +236,7 @@ func (r *Resolver) resolvePattern(pattern string) ([]Recipient, error) {
 }
 
 // resolveAtPattern handles @-prefixed patterns.
-// These include @town, @crew, @rig/X, @role/X, @overseer.
+// These include @town, @crew, @rig/X, @role/X, @boss.
 func (r *Resolver) resolveAtPattern(address string) ([]Recipient, error) {
 	return r.resolveAtPatternWithVisited(address, make(map[string]bool))
 }
@@ -460,9 +460,9 @@ func (r *Resolver) resolveChannel(name string) ([]Recipient, error) {
 
 // AgentBeadIDToAddress converts an agent bead ID to a mail address.
 // Handles both gt- (rig agents) and hq- (town agents) prefixes:
-//   - hq-mayor → mayor/
-//   - hq-deacon → deacon/
-//   - gt-gastown-crew-max → gastown/crew/max
+//   - hq-overseer → overseer/
+//   - hq-supervisor → supervisor/
+//   - gt-excavation-crew-max → excavation/crew/max
 func AgentBeadIDToAddress(id string) string {
 	var rest string
 
@@ -480,7 +480,7 @@ func AgentBeadIDToAddress(id string) string {
 	parts := strings.Split(rest, "-")
 
 	if len(parts) == 1 {
-		// Town-level: gt-mayor → mayor/
+		// Town-level: gt-overseer → overseer/
 		return parts[0] + "/"
 	}
 
@@ -491,20 +491,20 @@ func AgentBeadIDToAddress(id string) string {
 			// Singleton role: rig is everything before the role
 			rig := strings.Join(parts[:i], "-")
 			return rig + "/" + parts[i]
-		case constants.RoleCrew, constants.RolePolecat:
+		case constants.RoleCrew, constants.RoleMiner:
 			// Named role: rig/role/name
 			rig := strings.Join(parts[:i], "-")
 			if i+1 < len(parts) {
 				name := strings.Join(parts[i+1:], "-")
 				role := parts[i]
-				if role == constants.RolePolecat {
-					role = "polecats"
+				if role == constants.RoleMiner {
+					role = "miners"
 				}
 				return rig + "/" + role + "/" + name
 			}
 			role := parts[i]
-			if role == constants.RolePolecat {
-				role = "polecats"
+			if role == constants.RoleMiner {
+				role = "miners"
 			}
 			return rig + "/" + role
 		case "dog":

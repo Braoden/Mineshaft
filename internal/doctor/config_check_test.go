@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/constants"
+	"github.com/steveyegge/excavation/internal/constants"
 )
 
 func installFakeBdForConfigChecks(t *testing.T, townRoot string) {
@@ -186,10 +186,10 @@ func TestSessionHookCheck_UsesSessionStartScript(t *testing.T) {
 }
 
 func TestSessionHookCheck_Run(t *testing.T) {
-	t.Run("mayor bare gt prime warns", func(t *testing.T) {
+	t.Run("overseer bare gt prime warns", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		// Settings must be at mayor/.claude/settings.json
-		claudeDir := filepath.Join(tmpDir, "mayor", ".claude")
+		// Settings must be at overseer/.claude/settings.json
+		claudeDir := filepath.Join(tmpDir, "overseer", ".claude")
 		if err := os.MkdirAll(claudeDir, 0755); err != nil {
 			t.Fatal(err)
 		}
@@ -208,10 +208,10 @@ func TestSessionHookCheck_Run(t *testing.T) {
 		}
 	})
 
-	t.Run("mayor gt prime --hook passes", func(t *testing.T) {
+	t.Run("overseer gt prime --hook passes", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		// Settings must be at mayor/.claude/settings.json
-		claudeDir := filepath.Join(tmpDir, "mayor", ".claude")
+		// Settings must be at overseer/.claude/settings.json
+		claudeDir := filepath.Join(tmpDir, "overseer", ".claude")
 		if err := os.MkdirAll(claudeDir, 0755); err != nil {
 			t.Fatal(err)
 		}
@@ -288,8 +288,8 @@ func TestSessionHookCheck_Run(t *testing.T) {
 
 	t.Run("mixed valid and invalid hooks warns", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		// Settings must be at mayor/.claude/settings.json
-		claudeDir := filepath.Join(tmpDir, "mayor", ".claude")
+		// Settings must be at overseer/.claude/settings.json
+		claudeDir := filepath.Join(tmpDir, "overseer", ".claude")
 		if err := os.MkdirAll(claudeDir, 0755); err != nil {
 			t.Fatal(err)
 		}
@@ -327,8 +327,8 @@ func TestSessionHookCheck_Run(t *testing.T) {
 func TestSessionHookCheck_Fix(t *testing.T) {
 	t.Run("fixes bare gt prime to gt prime --hook", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		// Create mayor/.claude/ directory (SessionHookCheck looks for settings.json in agent dirs)
-		claudeDir := filepath.Join(tmpDir, "mayor", ".claude")
+		// Create overseer/.claude/ directory (SessionHookCheck looks for settings.json in agent dirs)
+		claudeDir := filepath.Join(tmpDir, "overseer", ".claude")
 		if err := os.MkdirAll(claudeDir, 0755); err != nil {
 			t.Fatal(err)
 		}
@@ -373,8 +373,8 @@ func TestSessionHookCheck_Fix(t *testing.T) {
 
 	t.Run("fixes multiple hooks in same file", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		// Create mayor/.claude/ directory (SessionHookCheck looks for settings.json in agent dirs)
-		claudeDir := filepath.Join(tmpDir, "mayor", ".claude")
+		// Create overseer/.claude/ directory (SessionHookCheck looks for settings.json in agent dirs)
+		claudeDir := filepath.Join(tmpDir, "overseer", ".claude")
 		if err := os.MkdirAll(claudeDir, 0755); err != nil {
 			t.Fatal(err)
 		}
@@ -415,8 +415,8 @@ func TestSessionHookCheck_Fix(t *testing.T) {
 
 	t.Run("does not double-add --hook", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		// Create mayor/.claude/ directory (SessionHookCheck looks for settings.json in agent dirs)
-		claudeDir := filepath.Join(tmpDir, "mayor", ".claude")
+		// Create overseer/.claude/ directory (SessionHookCheck looks for settings.json in agent dirs)
+		claudeDir := filepath.Join(tmpDir, "overseer", ".claude")
 		if err := os.MkdirAll(claudeDir, 0755); err != nil {
 			t.Fatal(err)
 		}
@@ -461,23 +461,23 @@ func TestParseConfigOutput(t *testing.T) {
 	}{
 		{
 			name:  "simple value",
-			input: "agent,role,rig,convoy,slot\n",
-			want:  "agent,role,rig,convoy,slot",
+			input: "agent,role,rig,minecart,slot\n",
+			want:  "agent,role,rig,minecart,slot",
 		},
 		{
 			name:  "value with trailing newlines",
-			input: "agent,role,rig,convoy,slot\n\n",
-			want:  "agent,role,rig,convoy,slot",
+			input: "agent,role,rig,minecart,slot\n\n",
+			want:  "agent,role,rig,minecart,slot",
 		},
 		{
 			name:  "Note prefix filtered",
-			input: "Note: No git repository initialized - running without background sync\nagent,role,rig,convoy,slot\n",
-			want:  "agent,role,rig,convoy,slot",
+			input: "Note: No git repository initialized - running without background sync\nagent,role,rig,minecart,slot\n",
+			want:  "agent,role,rig,minecart,slot",
 		},
 		{
 			name:  "multiple Note prefixes filtered",
-			input: "Note: First note\nNote: Second note\nagent,role,rig,convoy,slot\n",
-			want:  "agent,role,rig,convoy,slot",
+			input: "Note: First note\nNote: Second note\nagent,role,rig,minecart,slot\n",
+			want:  "agent,role,rig,minecart,slot",
 		},
 		{
 			name:  "empty output",
@@ -574,7 +574,7 @@ func TestCustomStatusesCheck_ParsesOutputWithNotePrefix(t *testing.T) {
 
 func TestCustomTypesCheck_UsesRigScopedBeadsDir(t *testing.T) {
 	townRoot := t.TempDir()
-	rigDir := filepath.Join(townRoot, "gastown")
+	rigDir := filepath.Join(townRoot, "excavation")
 	townBeadsDir := filepath.Join(townRoot, ".beads")
 	rigBeadsDir := filepath.Join(rigDir, ".beads")
 
@@ -583,7 +583,7 @@ func TestCustomTypesCheck_UsesRigScopedBeadsDir(t *testing.T) {
 	installFakeBdForConfigChecks(t, townRoot)
 
 	check := NewCustomTypesCheck()
-	ctx := &CheckContext{TownRoot: townRoot, RigName: "gastown"}
+	ctx := &CheckContext{TownRoot: townRoot, RigName: "excavation"}
 
 	result := check.Run(ctx)
 	if result.Status != StatusWarning {
@@ -620,7 +620,7 @@ func TestCustomTypesCheck_UsesRigScopedBeadsDir(t *testing.T) {
 
 func TestCustomTypesCheck_FixPreservesExistingRigTypes(t *testing.T) {
 	townRoot := t.TempDir()
-	rigDir := filepath.Join(townRoot, "gastown")
+	rigDir := filepath.Join(townRoot, "excavation")
 	townBeadsDir := filepath.Join(townRoot, ".beads")
 	rigBeadsDir := filepath.Join(rigDir, ".beads")
 
@@ -629,7 +629,7 @@ func TestCustomTypesCheck_FixPreservesExistingRigTypes(t *testing.T) {
 	installFakeBdForConfigChecks(t, townRoot)
 
 	check := NewCustomTypesCheck()
-	ctx := &CheckContext{TownRoot: townRoot, RigName: "gastown"}
+	ctx := &CheckContext{TownRoot: townRoot, RigName: "excavation"}
 
 	result := check.Run(ctx)
 	if result.Status != StatusWarning {
@@ -655,7 +655,7 @@ func TestCustomTypesCheck_FixPreservesExistingRigTypes(t *testing.T) {
 
 func TestCustomStatusesCheck_UsesRigScopedBeadsDir(t *testing.T) {
 	townRoot := t.TempDir()
-	rigDir := filepath.Join(townRoot, "gastown")
+	rigDir := filepath.Join(townRoot, "excavation")
 	townBeadsDir := filepath.Join(townRoot, ".beads")
 	rigBeadsDir := filepath.Join(rigDir, ".beads")
 
@@ -664,7 +664,7 @@ func TestCustomStatusesCheck_UsesRigScopedBeadsDir(t *testing.T) {
 	installFakeBdForConfigChecks(t, townRoot)
 
 	check := NewCustomStatusesCheck()
-	ctx := &CheckContext{TownRoot: townRoot, RigName: "gastown"}
+	ctx := &CheckContext{TownRoot: townRoot, RigName: "excavation"}
 
 	result := check.Run(ctx)
 	if result.Status != StatusWarning {

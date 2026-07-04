@@ -132,15 +132,15 @@
         var mailCompose = document.getElementById('mail-compose');
         var issueDetail = document.getElementById('issue-detail');
         var prDetail = document.getElementById('pr-detail');
-        var convoyDetailView = document.getElementById('convoy-detail');
-        var convoyCreateView = document.getElementById('convoy-create-form');
+        var minecartDetailView = document.getElementById('minecart-detail');
+        var minecartCreateView = document.getElementById('minecart-create-form');
         var sessionPreview = document.getElementById('session-preview');
         var inDetailView = (mailDetail && mailDetail.style.display !== 'none') ||
                           (mailCompose && mailCompose.style.display !== 'none') ||
                           (issueDetail && issueDetail.style.display !== 'none') ||
                           (prDetail && prDetail.style.display !== 'none') ||
-                          (convoyDetailView && convoyDetailView.style.display !== 'none') ||
-                          (convoyCreateView && convoyCreateView.style.display !== 'none') ||
+                          (minecartDetailView && minecartDetailView.style.display !== 'none') ||
+                          (minecartCreateView && minecartCreateView.style.display !== 'none') ||
                           (sessionPreview && sessionPreview.style.display !== 'none');
         if (!inDetailView && !hasExpanded) {
             window.pauseRefresh = false;
@@ -300,7 +300,7 @@
             console.error('Failed to load commands');
         });
 
-    // Fetch dynamic options (rigs, polecats, convoys, agents, hooks)
+    // Fetch dynamic options (rigs, miners, minecarts, agents, hooks)
     function fetchOptions() {
         return fetch('/api/options')
             .then(function(r) { return r.json(); })
@@ -322,8 +322,8 @@
         var rawOptions;
         switch (argType) {
             case 'rigs': rawOptions = cachedOptions.rigs || []; break;
-            case 'polecats': rawOptions = cachedOptions.polecats || []; break;
-            case 'convoys': rawOptions = cachedOptions.convoys || []; break;
+            case 'miners': rawOptions = cachedOptions.miners || []; break;
+            case 'minecarts': rawOptions = cachedOptions.minecarts || []; break;
             case 'agents': rawOptions = cachedOptions.agents || []; break;
             case 'hooks': rawOptions = cachedOptions.hooks || []; break;
             case 'messages': rawOptions = cachedOptions.messages || []; break;
@@ -1068,10 +1068,10 @@
 
                         // Build the attach command based on the crew member's role
                         var attachCmd = 'gt crew at ' + member.name;
-                        if (member.name === 'mayor') {
-                            attachCmd = 'gt mayor attach';
-                        } else if (member.name === 'deacon') {
-                            attachCmd = 'gt deacon attach';
+                        if (member.name === 'overseer') {
+                            attachCmd = 'gt overseer attach';
+                        } else if (member.name === 'supervisor') {
+                            attachCmd = 'gt supervisor attach';
                         } else if (member.name === 'witness' || member.name.startsWith('witness-')) {
                             attachCmd = 'gt witness attach';
                         }
@@ -1559,67 +1559,67 @@
     window.refreshReadyPanel = loadReady;
 
     // ============================================
-    // CONVOY PANEL INTERACTIONS
+    // MINECART PANEL INTERACTIONS
     // ============================================
-    var convoyList = document.getElementById('convoy-list');
-    var convoyDetail = document.getElementById('convoy-detail');
-    var convoyCreateForm = document.getElementById('convoy-create-form');
-    var currentConvoyId = null;
+    var minecartList = document.getElementById('minecart-list');
+    var minecartDetail = document.getElementById('minecart-detail');
+    var minecartCreateForm = document.getElementById('minecart-create-form');
+    var currentMinecartId = null;
 
-    // Click on convoy row to view details
+    // Click on minecart row to view details
     document.addEventListener('click', function(e) {
-        var convoyRow = e.target.closest('.convoy-row');
-        if (convoyRow && convoyRow.hasAttribute('data-convoy-id')) {
+        var minecartRow = e.target.closest('.minecart-row');
+        if (minecartRow && minecartRow.hasAttribute('data-minecart-id')) {
             e.preventDefault();
-            var convoyId = convoyRow.getAttribute('data-convoy-id');
-            if (convoyId) {
-                openConvoyDetail(convoyId);
+            var minecartId = minecartRow.getAttribute('data-minecart-id');
+            if (minecartId) {
+                openMinecartDetail(minecartId);
             }
         }
     });
 
-    function openConvoyDetail(convoyId) {
-        currentConvoyId = convoyId;
+    function openMinecartDetail(minecartId) {
+        currentMinecartId = minecartId;
         window.pauseRefresh = true;
 
         // Reset views
-        document.getElementById('convoy-detail-id').textContent = convoyId;
-        document.getElementById('convoy-detail-title').textContent = 'Convoy: ' + convoyId;
-        document.getElementById('convoy-detail-status').textContent = '';
-        document.getElementById('convoy-detail-progress').textContent = '';
-        document.getElementById('convoy-issues-loading').style.display = 'block';
-        document.getElementById('convoy-issues-table').style.display = 'none';
-        document.getElementById('convoy-issues-empty').style.display = 'none';
-        document.getElementById('convoy-add-issue-form').style.display = 'none';
+        document.getElementById('minecart-detail-id').textContent = minecartId;
+        document.getElementById('minecart-detail-title').textContent = 'Minecart: ' + minecartId;
+        document.getElementById('minecart-detail-status').textContent = '';
+        document.getElementById('minecart-detail-progress').textContent = '';
+        document.getElementById('minecart-issues-loading').style.display = 'block';
+        document.getElementById('minecart-issues-table').style.display = 'none';
+        document.getElementById('minecart-issues-empty').style.display = 'none';
+        document.getElementById('minecart-add-issue-form').style.display = 'none';
 
         // Show detail, hide list and create form
-        convoyList.style.display = 'none';
-        convoyCreateForm.style.display = 'none';
-        convoyDetail.style.display = 'block';
+        minecartList.style.display = 'none';
+        minecartCreateForm.style.display = 'none';
+        minecartDetail.style.display = 'block';
 
-        // Fetch convoy status via /api/run
+        // Fetch minecart status via /api/run
         fetch('/api/run', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ command: 'convoy status ' + convoyId })
+            body: JSON.stringify({ command: 'minecart status ' + minecartId })
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
-            document.getElementById('convoy-issues-loading').style.display = 'none';
+            document.getElementById('minecart-issues-loading').style.display = 'none';
 
             if (!data.success) {
-                document.getElementById('convoy-issues-empty').style.display = 'block';
-                document.getElementById('convoy-issues-empty').querySelector('p').textContent = data.error || 'Failed to load convoy';
+                document.getElementById('minecart-issues-empty').style.display = 'block';
+                document.getElementById('minecart-issues-empty').querySelector('p').textContent = data.error || 'Failed to load minecart';
                 return;
             }
 
-            var issues = parseConvoyStatusOutput(data.output || '');
+            var issues = parseMinecartStatusOutput(data.output || '');
             if (issues.length === 0) {
-                document.getElementById('convoy-issues-empty').style.display = 'block';
+                document.getElementById('minecart-issues-empty').style.display = 'block';
                 return;
             }
 
-            var tbody = document.getElementById('convoy-issues-tbody');
+            var tbody = document.getElementById('minecart-issues-tbody');
             tbody.innerHTML = '';
             issues.forEach(function(issue) {
                 var tr = document.createElement('tr');
@@ -1638,36 +1638,36 @@
                 }
 
                 tr.innerHTML =
-                    '<td class="convoy-issue-status">' + statusBadge + '</td>' +
+                    '<td class="minecart-issue-status">' + statusBadge + '</td>' +
                     '<td><span class="issue-id">' + escapeHtml(issue.id) + '</span></td>' +
                     '<td class="issue-title">' + escapeHtml(issue.title || '') + '</td>' +
                     '<td>' + (issue.assignee ? '<span class="badge badge-blue">' + escapeHtml(issue.assignee) + '</span>' : '<span class="badge badge-muted">Unassigned</span>') + '</td>' +
                     '<td>' + escapeHtml(issue.progress || '') + '</td>';
                 tbody.appendChild(tr);
             });
-            document.getElementById('convoy-issues-table').style.display = 'table';
+            document.getElementById('minecart-issues-table').style.display = 'table';
         })
         .catch(function(err) {
-            document.getElementById('convoy-issues-loading').style.display = 'none';
-            document.getElementById('convoy-issues-empty').style.display = 'block';
-            document.getElementById('convoy-issues-empty').querySelector('p').textContent = 'Error: ' + err.message;
+            document.getElementById('minecart-issues-loading').style.display = 'none';
+            document.getElementById('minecart-issues-empty').style.display = 'block';
+            document.getElementById('minecart-issues-empty').querySelector('p').textContent = 'Error: ' + err.message;
         });
     }
 
-    // Parse convoy status text output into issue objects
-    function parseConvoyStatusOutput(output) {
+    // Parse minecart status text output into issue objects
+    function parseMinecartStatusOutput(output) {
         var issues = [];
         var lines = output.split('\n');
         for (var i = 0; i < lines.length; i++) {
             var line = lines[i].trim();
             if (!line) continue;
-            // Skip header lines and convoy summary lines
-            if (line.startsWith('Convoy') || line.startsWith('===') || line.startsWith('---') ||
+            // Skip header lines and minecart summary lines
+            if (line.startsWith('Minecart') || line.startsWith('===') || line.startsWith('---') ||
                 line.startsWith('Status:') || line.startsWith('Progress:') || line.startsWith('Created:') ||
                 line.startsWith('Title:') || line.startsWith('Issues:') || line.startsWith('Name:')) {
-                // Extract convoy-level status/progress for the detail header
+                // Extract minecart-level status/progress for the detail header
                 if (line.startsWith('Status:')) {
-                    var statusEl = document.getElementById('convoy-detail-status');
+                    var statusEl = document.getElementById('minecart-detail-status');
                     var statusVal = line.replace('Status:', '').trim().toLowerCase();
                     statusEl.textContent = statusVal;
                     statusEl.className = 'badge';
@@ -1678,14 +1678,14 @@
                     else statusEl.classList.add('badge-muted');
                 }
                 if (line.startsWith('Progress:')) {
-                    document.getElementById('convoy-detail-progress').textContent = line.replace('Progress:', '').trim();
+                    document.getElementById('minecart-detail-progress').textContent = line.replace('Progress:', '').trim();
                 }
                 continue;
             }
             // Look for issue lines - typically formatted as:
             // "○ id · title [● P2 · STATUS]" or similar bead-style output
             // Or tabular: "id   title   status   assignee"
-            var issue = parseConvoyIssueLine(line);
+            var issue = parseMinecartIssueLine(line);
             if (issue) {
                 issues.push(issue);
             }
@@ -1693,8 +1693,8 @@
         return issues;
     }
 
-    // Parse a single issue line from convoy status output
-    function parseConvoyIssueLine(line) {
+    // Parse a single issue line from minecart status output
+    function parseMinecartIssueLine(line) {
         // Try bead-style format: "○ id · title   [● P2 · OPEN]"
         // or "◐ id · title   [● P2 · IN_PROGRESS]"
         var beadMatch = line.match(/^[○◐●✓]\s+(\S+)\s+[·:]\s+(.+?)(?:\s+\[.*?([A-Z_]+)\])?$/);
@@ -1732,51 +1732,51 @@
         return null;
     }
 
-    // Back button from convoy detail
-    document.getElementById('convoy-back-btn').addEventListener('click', function() {
-        convoyDetail.style.display = 'none';
-        convoyList.style.display = 'block';
-        currentConvoyId = null;
+    // Back button from minecart detail
+    document.getElementById('minecart-back-btn').addEventListener('click', function() {
+        minecartDetail.style.display = 'none';
+        minecartList.style.display = 'block';
+        currentMinecartId = null;
         window.pauseRefresh = false;
     });
 
-    // New Convoy button
-    document.getElementById('new-convoy-btn').addEventListener('click', function() {
+    // New Minecart button
+    document.getElementById('new-minecart-btn').addEventListener('click', function() {
         window.pauseRefresh = true;
-        convoyList.style.display = 'none';
-        convoyDetail.style.display = 'none';
-        convoyCreateForm.style.display = 'block';
-        document.getElementById('convoy-create-name').value = '';
-        document.getElementById('convoy-create-issues').value = '';
-        document.getElementById('convoy-create-name').focus();
+        minecartList.style.display = 'none';
+        minecartDetail.style.display = 'none';
+        minecartCreateForm.style.display = 'block';
+        document.getElementById('minecart-create-name').value = '';
+        document.getElementById('minecart-create-issues').value = '';
+        document.getElementById('minecart-create-name').focus();
     });
 
-    // Cancel create convoy
-    document.getElementById('convoy-create-back-btn').addEventListener('click', cancelConvoyCreate);
-    document.getElementById('convoy-create-cancel-btn').addEventListener('click', cancelConvoyCreate);
+    // Cancel create minecart
+    document.getElementById('minecart-create-back-btn').addEventListener('click', cancelMinecartCreate);
+    document.getElementById('minecart-create-cancel-btn').addEventListener('click', cancelMinecartCreate);
 
-    function cancelConvoyCreate() {
-        convoyCreateForm.style.display = 'none';
-        convoyList.style.display = 'block';
+    function cancelMinecartCreate() {
+        minecartCreateForm.style.display = 'none';
+        minecartList.style.display = 'block';
         window.pauseRefresh = false;
     }
 
-    // Submit create convoy
-    document.getElementById('convoy-create-submit-btn').addEventListener('click', function() {
-        var name = document.getElementById('convoy-create-name').value.trim();
-        var issuesStr = document.getElementById('convoy-create-issues').value.trim();
+    // Submit create minecart
+    document.getElementById('minecart-create-submit-btn').addEventListener('click', function() {
+        var name = document.getElementById('minecart-create-name').value.trim();
+        var issuesStr = document.getElementById('minecart-create-issues').value.trim();
 
         if (!name) {
-            showToast('error', 'Missing', 'Convoy name is required');
+            showToast('error', 'Missing', 'Minecart name is required');
             return;
         }
 
-        var btn = document.getElementById('convoy-create-submit-btn');
+        var btn = document.getElementById('minecart-create-submit-btn');
         btn.disabled = true;
         btn.textContent = 'Creating...';
 
-        // Build command: convoy create <name> [issue1 issue2 ...]
-        var cmd = 'convoy create ' + name;
+        // Build command: minecart create <name> [issue1 issue2 ...]
+        var cmd = 'minecart create ' + name;
         if (issuesStr) {
             cmd += ' ' + issuesStr;
         }
@@ -1789,8 +1789,8 @@
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (data.success) {
-                showToast('success', 'Created', 'Convoy "' + name + '" created');
-                cancelConvoyCreate();
+                showToast('success', 'Created', 'Minecart "' + name + '" created');
+                cancelMinecartCreate();
                 if (data.output && data.output.trim()) {
                     showOutput(cmd, data.output);
                 }
@@ -1803,51 +1803,51 @@
         })
         .finally(function() {
             btn.disabled = false;
-            btn.textContent = 'Create Convoy';
+            btn.textContent = 'Create Minecart';
         });
     });
 
-    // Add Issue button in convoy detail
-    document.getElementById('convoy-add-issue-btn').addEventListener('click', function() {
-        var form = document.getElementById('convoy-add-issue-form');
+    // Add Issue button in minecart detail
+    document.getElementById('minecart-add-issue-btn').addEventListener('click', function() {
+        var form = document.getElementById('minecart-add-issue-form');
         form.style.display = form.style.display === 'none' ? 'flex' : 'none';
         if (form.style.display !== 'none') {
-            document.getElementById('convoy-add-issue-input').value = '';
-            document.getElementById('convoy-add-issue-input').focus();
+            document.getElementById('minecart-add-issue-input').value = '';
+            document.getElementById('minecart-add-issue-input').focus();
         }
     });
 
     // Cancel add issue
-    document.getElementById('convoy-add-issue-cancel').addEventListener('click', function() {
-        document.getElementById('convoy-add-issue-form').style.display = 'none';
+    document.getElementById('minecart-add-issue-cancel').addEventListener('click', function() {
+        document.getElementById('minecart-add-issue-form').style.display = 'none';
     });
 
-    // Submit add issue to convoy
-    document.getElementById('convoy-add-issue-submit').addEventListener('click', submitAddIssueToConvoy);
+    // Submit add issue to minecart
+    document.getElementById('minecart-add-issue-submit').addEventListener('click', submitAddIssueToMinecart);
 
     // Enter key in add issue input
-    document.getElementById('convoy-add-issue-input').addEventListener('keydown', function(e) {
+    document.getElementById('minecart-add-issue-input').addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
-            submitAddIssueToConvoy();
+            submitAddIssueToMinecart();
         } else if (e.key === 'Escape') {
             e.preventDefault();
-            document.getElementById('convoy-add-issue-form').style.display = 'none';
+            document.getElementById('minecart-add-issue-form').style.display = 'none';
         }
     });
 
-    function submitAddIssueToConvoy() {
-        var issueId = document.getElementById('convoy-add-issue-input').value.trim();
-        if (!issueId || !currentConvoyId) {
+    function submitAddIssueToMinecart() {
+        var issueId = document.getElementById('minecart-add-issue-input').value.trim();
+        if (!issueId || !currentMinecartId) {
             showToast('error', 'Missing', 'Issue ID is required');
             return;
         }
 
-        var btn = document.getElementById('convoy-add-issue-submit');
+        var btn = document.getElementById('minecart-add-issue-submit');
         btn.disabled = true;
         btn.textContent = 'Adding...';
 
-        var cmd = 'convoy add ' + currentConvoyId + ' ' + issueId;
+        var cmd = 'minecart add ' + currentMinecartId + ' ' + issueId;
 
         fetch('/api/run', {
             method: 'POST',
@@ -1857,10 +1857,10 @@
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (data.success) {
-                showToast('success', 'Added', 'Issue ' + issueId + ' added to convoy');
-                document.getElementById('convoy-add-issue-form').style.display = 'none';
-                // Refresh the convoy detail view
-                openConvoyDetail(currentConvoyId);
+                showToast('success', 'Added', 'Issue ' + issueId + ' added to minecart');
+                document.getElementById('minecart-add-issue-form').style.display = 'none';
+                // Refresh the minecart detail view
+                openMinecartDetail(currentMinecartId);
             } else {
                 showToast('error', 'Failed', data.error || 'Unknown error');
             }
@@ -2350,9 +2350,9 @@
                 // Rebuild dropdown
                 var html = '<option value="">Unassigned</option>';
                 var agents = data.agents || [];
-                var polecats = data.polecats || [];
+                var miners = data.miners || [];
 
-                // Combine agents and polecats for assignee options
+                // Combine agents and miners for assignee options
                 var seen = {};
                 var allOptions = [];
 
@@ -2364,10 +2364,10 @@
                     }
                 });
 
-                polecats.forEach(function(polecat) {
-                    if (!seen[polecat]) {
-                        seen[polecat] = true;
-                        allOptions.push(polecat);
+                miners.forEach(function(miner) {
+                    if (!seen[miner]) {
+                        seen[miner] = true;
+                        allOptions.push(miner);
                     }
                 });
 
@@ -3079,45 +3079,45 @@
     }
 
     // ============================================
-    // CONVOY DRILL-DOWN (expand rows to show tracked issues)
+    // MINECART DRILL-DOWN (expand rows to show tracked issues)
     // ============================================
-    var convoyCache = {}; // Cache fetched convoy data by ID
+    var minecartCache = {}; // Cache fetched minecart data by ID
 
     document.addEventListener('click', function(e) {
-        var row = e.target.closest('.convoy-row');
+        var row = e.target.closest('.minecart-row');
         if (!row) return;
 
         e.preventDefault();
-        var convoyId = row.getAttribute('data-convoy-id');
-        if (!convoyId) return;
+        var minecartId = row.getAttribute('data-minecart-id');
+        if (!minecartId) return;
 
         // Check if already expanded
         var existingDetail = row.nextElementSibling;
-        if (existingDetail && existingDetail.classList.contains('convoy-detail-row')) {
+        if (existingDetail && existingDetail.classList.contains('minecart-detail-row')) {
             // Collapse: remove the detail row
             existingDetail.remove();
-            row.classList.remove('convoy-expanded');
-            var toggle = row.querySelector('.convoy-toggle');
+            row.classList.remove('minecart-expanded');
+            var toggle = row.querySelector('.minecart-toggle');
             if (toggle) toggle.textContent = '▶';
             return;
         }
 
-        // Collapse any other expanded convoy
-        document.querySelectorAll('.convoy-detail-row').forEach(function(r) { r.remove(); });
-        document.querySelectorAll('.convoy-row.convoy-expanded').forEach(function(r) {
-            r.classList.remove('convoy-expanded');
-            var t = r.querySelector('.convoy-toggle');
+        // Collapse any other expanded minecart
+        document.querySelectorAll('.minecart-detail-row').forEach(function(r) { r.remove(); });
+        document.querySelectorAll('.minecart-row.minecart-expanded').forEach(function(r) {
+            r.classList.remove('minecart-expanded');
+            var t = r.querySelector('.minecart-toggle');
             if (t) t.textContent = '▶';
         });
 
         // Mark this row as expanded
-        row.classList.add('convoy-expanded');
-        var toggleEl = row.querySelector('.convoy-toggle');
+        row.classList.add('minecart-expanded');
+        var toggleEl = row.querySelector('.minecart-toggle');
         if (toggleEl) toggleEl.textContent = '▼';
 
         // Create detail row
         var detailRow = document.createElement('tr');
-        detailRow.className = 'convoy-detail-row';
+        detailRow.className = 'minecart-detail-row';
         var detailCell = document.createElement('td');
         detailCell.colSpan = 4;
         detailCell.innerHTML = '<div class="tracked-issues"><div class="tracked-issues-loading">Loading tracked issues...</div></div>';
@@ -3125,8 +3125,8 @@
         row.parentNode.insertBefore(detailRow, row.nextSibling);
 
         // Check cache first
-        if (convoyCache[convoyId]) {
-            renderConvoyIssues(detailCell, convoyCache[convoyId]);
+        if (minecartCache[minecartId]) {
+            renderMinecartIssues(detailCell, minecartCache[minecartId]);
             return;
         }
 
@@ -3134,7 +3134,7 @@
         fetch('/api/run', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ command: 'convoy status ' + convoyId + ' --json' })
+            body: JSON.stringify({ command: 'minecart status ' + minecartId + ' --json' })
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
@@ -3144,8 +3144,8 @@
             }
             try {
                 var parsed = JSON.parse(data.output);
-                convoyCache[convoyId] = parsed;
-                renderConvoyIssues(detailCell, parsed);
+                minecartCache[minecartId] = parsed;
+                renderMinecartIssues(detailCell, parsed);
             } catch (err) {
                 detailCell.innerHTML = '<div class="tracked-issues"><div class="tracked-issues-error">Failed to parse response</div></div>';
             }
@@ -3155,7 +3155,7 @@
         });
     });
 
-    function renderConvoyIssues(cell, data) {
+    function renderMinecartIssues(cell, data) {
         var issues = data.tracked || [];
         if (issues.length === 0) {
             cell.innerHTML = '<div class="tracked-issues"><div class="tracked-issues-empty">No tracked issues</div></div>';
@@ -3196,12 +3196,12 @@
             // Worker info as progress indicator
             var progress = '';
             if (issue.status === 'closed') {
-                progress = '<span class="convoy-progress-done">✓</span>';
+                progress = '<span class="minecart-progress-done">✓</span>';
             } else if (issue.worker) {
                 var workerName = issue.worker.split('/').pop();
-                progress = '<span class="convoy-progress-active">@' + escapeHtml(workerName) + '</span>';
+                progress = '<span class="minecart-progress-active">@' + escapeHtml(workerName) + '</span>';
                 if (issue.worker_age) {
-                    progress += ' <span class="convoy-progress-age">' + escapeHtml(issue.worker_age) + '</span>';
+                    progress += ' <span class="minecart-progress-age">' + escapeHtml(issue.worker_age) + '</span>';
                 }
             }
 

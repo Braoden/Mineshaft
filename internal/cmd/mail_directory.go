@@ -8,9 +8,9 @@ import (
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/mail"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/mail"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var mailDirJSON bool
@@ -45,7 +45,7 @@ func init() {
 func runMailDirectory(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	b := beads.New(townRoot)
@@ -109,17 +109,17 @@ func runMailDirectory(cmd *cobra.Command, args []string) error {
 
 	// 5. Well-known addresses
 	wellKnown := []DirectoryEntry{
-		{Address: "mayor/", Type: "well-known"},
+		{Address: "overseer/", Type: "well-known"},
 		{Address: "--human", Type: "well-known"},
 		{Address: "--self", Type: "well-known"},
 		{Address: "@town", Type: "special"},
 		{Address: "@crew", Type: "special"},
 		{Address: "@witnesses", Type: "special"},
-		{Address: "@overseer", Type: "special"},
+		{Address: "@boss", Type: "special"},
 	}
 	entries = append(entries, wellKnown...)
 
-	// Deduplicate (e.g., mayor/ may appear as both agent and well-known)
+	// Deduplicate (e.g., overseer/ may appear as both agent and well-known)
 	seen := make(map[string]bool)
 	deduped := entries[:0]
 	for _, e := range entries {

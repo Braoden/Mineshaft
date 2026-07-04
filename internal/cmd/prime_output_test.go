@@ -15,7 +15,7 @@ func TestOutputRoleDirectives(t *testing.T) {
 		t.Parallel()
 		townRoot := t.TempDir()
 		ctx := RoleContext{
-			Role:     RolePolecat,
+			Role:     RoleMiner,
 			TownRoot: townRoot,
 			Rig:      "myrig",
 		}
@@ -36,12 +36,12 @@ func TestOutputRoleDirectives(t *testing.T) {
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			t.Fatal(err)
 		}
-		if err := os.WriteFile(filepath.Join(dir, "polecat.md"), []byte("Always be polite."), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, "miner.md"), []byte("Always be polite."), 0644); err != nil {
 			t.Fatal(err)
 		}
 
 		ctx := RoleContext{
-			Role:     RolePolecat,
+			Role:     RoleMiner,
 			TownRoot: townRoot,
 			Rig:      "myrig",
 		}
@@ -95,7 +95,7 @@ func TestOutputRoleDirectives(t *testing.T) {
 		if err := os.MkdirAll(townDir, 0755); err != nil {
 			t.Fatal(err)
 		}
-		if err := os.WriteFile(filepath.Join(townDir, "polecat.md"), []byte("Town rule."), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(townDir, "miner.md"), []byte("Town rule."), 0644); err != nil {
 			t.Fatal(err)
 		}
 
@@ -103,12 +103,12 @@ func TestOutputRoleDirectives(t *testing.T) {
 		if err := os.MkdirAll(rigDir, 0755); err != nil {
 			t.Fatal(err)
 		}
-		if err := os.WriteFile(filepath.Join(rigDir, "polecat.md"), []byte("Rig rule."), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(rigDir, "miner.md"), []byte("Rig rule."), 0644); err != nil {
 			t.Fatal(err)
 		}
 
 		ctx := RoleContext{
-			Role:     RolePolecat,
+			Role:     RoleMiner,
 			TownRoot: townRoot,
 			Rig:      "myrig",
 		}
@@ -133,7 +133,7 @@ func TestOutputRoleDirectives(t *testing.T) {
 		townRoot := t.TempDir()
 
 		ctx := RoleContext{
-			Role:     RolePolecat,
+			Role:     RoleMiner,
 			TownRoot: townRoot,
 			Rig:      "myrig",
 		}
@@ -145,7 +145,7 @@ func TestOutputRoleDirectives(t *testing.T) {
 		if !strings.Contains(out, "[EXPLAIN]") {
 			t.Errorf("expected EXPLAIN output, got: %s", out)
 		}
-		if !strings.Contains(out, filepath.Join("directives", "polecat.md")) {
+		if !strings.Contains(out, filepath.Join("directives", "miner.md")) {
 			t.Errorf("expected file path in explain output, got: %s", out)
 		}
 	})
@@ -158,12 +158,12 @@ func TestOutputRoleDirectives(t *testing.T) {
 		if err := os.MkdirAll(townDir, 0755); err != nil {
 			t.Fatal(err)
 		}
-		if err := os.WriteFile(filepath.Join(townDir, "mayor.md"), []byte("Mayor directive."), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(townDir, "overseer.md"), []byte("Overseer directive."), 0644); err != nil {
 			t.Fatal(err)
 		}
 
 		ctx := RoleContext{
-			Role:     RoleMayor,
+			Role:     RoleOverseer,
 			TownRoot: townRoot,
 			Rig:      "",
 		}
@@ -175,7 +175,7 @@ func TestOutputRoleDirectives(t *testing.T) {
 		if !strings.Contains(out, "## Town Directives") {
 			t.Errorf("expected Town Directives header, got: %s", out)
 		}
-		if !strings.Contains(out, "Mayor directive.") {
+		if !strings.Contains(out, "Overseer directive.") {
 			t.Errorf("expected directive content, got: %s", out)
 		}
 	})
@@ -187,7 +187,7 @@ func TestOutputCommandQuickReferenceBootBlocksRawTmux(t *testing.T) {
 	})
 
 	for _, want := range []string{
-		"gt nudge deacon",
+		"gt nudge supervisor",
 		"blocked; can stage unsubmitted input",
 	} {
 		if !strings.Contains(output, want) {

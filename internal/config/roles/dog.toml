@@ -1,5 +1,5 @@
 # Dog role definition
-# Town-level workers for cross-rig tasks. Dispatched by Deacon.
+# Town-level workers for cross-rig tasks. Dispatched by Supervisor.
 
 role = "dog"
 scope = "town"
@@ -8,7 +8,7 @@ prompt_template = "dog.md.tmpl"
 
 [session]
 pattern = "gt-dog-{name}"
-work_dir = "{town}/deacon/dogs/{name}"
+work_dir = "{town}/supervisor/dogs/{name}"
 needs_pre_sync = false
 start_command = "exec claude --dangerously-skip-permissions"
 

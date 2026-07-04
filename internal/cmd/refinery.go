@@ -9,13 +9,13 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/refinery"
-	"github.com/steveyegge/gastown/internal/rig"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/refinery"
+	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // Refinery command flags
@@ -35,14 +35,14 @@ var refineryCmd = &cobra.Command{
 	Long: `Manage the Refinery - the per-rig merge queue processor.
 
 The Refinery serializes all merges to main for a rig:
-  - Receives MRs submitted by polecats (via gt done)
+  - Receives MRs submitted by miners (via gt done)
   - Rebases work branches onto latest main
   - Runs validation (tests, builds, checks)
   - Merges to main when clear
-  - If conflict: spawns FRESH polecat to re-implement (original is gone)
+  - If conflict: spawns FRESH miner to re-implement (original is gone)
 
-Work flows: Polecat completes → gt done → MR in queue → Refinery merges.
-The polecat is already nuked by the time the Refinery processes.
+Work flows: Miner completes → gt done → MR in queue → Refinery merges.
+The miner is already nuked by the time the Refinery processes.
 
 One Refinery per rig. Persistent agent that processes work as it arrives.
 
@@ -55,7 +55,7 @@ var refineryStartCmd = &cobra.Command{
 	Short:   "Start the refinery",
 	Long: `Start the Refinery for a rig.
 
-Launches the merge queue processor which monitors for polecat work branches
+Launches the merge queue processor which monitors for miner work branches
 and merges them to the appropriate target branches.
 
 If rig is not specified, infers it from the current directory.
@@ -277,7 +277,7 @@ func getRefineryManager(rigName string) (*refinery.Manager, *rig.Rig, string, er
 	if rigName == "" {
 		townRoot, err := workspace.FindFromCwdOrError()
 		if err != nil {
-			return nil, nil, "", fmt.Errorf("not in a Gas Town workspace: %w", err)
+			return nil, nil, "", fmt.Errorf("not in a Excavation Site workspace: %w", err)
 		}
 		rigName, err = inferRigFromCwd(townRoot)
 		if err != nil {
@@ -590,7 +590,7 @@ func runRefineryClaim(cmd *cobra.Command, args []string) error {
 	// Find beads from current working directory
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 	rigName, err := inferRigFromCwd(townRoot)
 	if err != nil {
@@ -617,7 +617,7 @@ func runRefineryRelease(cmd *cobra.Command, args []string) error {
 	// Find beads from current working directory
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 	rigName, err := inferRigFromCwd(townRoot)
 	if err != nil {

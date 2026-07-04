@@ -11,8 +11,8 @@ import (
 func TestRigConfigSyncCheck_MissingConfig(t *testing.T) {
 	// Create temp town root
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -29,7 +29,7 @@ func TestRigConfigSyncCheck_MissingConfig(t *testing.T) {
 			}
 		}
 	}`
-	if err := os.WriteFile(filepath.Join(mayorDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -55,8 +55,8 @@ func TestRigConfigSyncCheck_MissingConfig(t *testing.T) {
 func TestRigConfigSyncCheck_FixCreatesConfig(t *testing.T) {
 	// Create temp town root
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -73,7 +73,7 @@ func TestRigConfigSyncCheck_FixCreatesConfig(t *testing.T) {
 			}
 		}
 	}`
-	if err := os.WriteFile(filepath.Join(mayorDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -113,8 +113,8 @@ func TestRigConfigSyncCheck_FixCreatesConfig(t *testing.T) {
 func TestRigConfigSyncCheck_AllConfigsPresent(t *testing.T) {
 	// Create temp town root
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -131,7 +131,7 @@ func TestRigConfigSyncCheck_AllConfigsPresent(t *testing.T) {
 			}
 		}
 	}`
-	if err := os.WriteFile(filepath.Join(mayorDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -170,8 +170,8 @@ func TestRigConfigSyncCheck_FixDisablesRigAutoExport(t *testing.T) {
 	}
 
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 	rigsJSON := `{
@@ -183,12 +183,12 @@ func TestRigConfigSyncCheck_FixDisablesRigAutoExport(t *testing.T) {
 			}
 		}
 	}`
-	if err := os.WriteFile(filepath.Join(mayorDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	rigDir := filepath.Join(tmpDir, "testrig")
-	beadsDir := filepath.Join(rigDir, "mayor", "rig", ".beads")
+	beadsDir := filepath.Join(rigDir, "overseer", "rig", ".beads")
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -247,8 +247,8 @@ func TestRigConfigSyncCheck_FixCreatesMissingMetadata(t *testing.T) {
 	}
 
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 	rigsJSON := `{
@@ -260,12 +260,12 @@ func TestRigConfigSyncCheck_FixCreatesMissingMetadata(t *testing.T) {
 			}
 		}
 	}`
-	if err := os.WriteFile(filepath.Join(mayorDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	rigDir := filepath.Join(tmpDir, "testrig")
-	beadsDir := filepath.Join(rigDir, "mayor", "rig", ".beads")
+	beadsDir := filepath.Join(rigDir, "overseer", "rig", ".beads")
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -318,8 +318,8 @@ func TestRigConfigSyncCheck_FixCreatesMissingRootMetadata(t *testing.T) {
 	}
 
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 	rigsJSON := `{
@@ -331,7 +331,7 @@ func TestRigConfigSyncCheck_FixCreatesMissingRootMetadata(t *testing.T) {
 			}
 		}
 	}`
-	if err := os.WriteFile(filepath.Join(mayorDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -389,8 +389,8 @@ func TestRigConfigSyncCheck_DoltListErrorDoesNotMeanMissingDB(t *testing.T) {
 	}
 
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 	rigsJSON := `{
@@ -402,7 +402,7 @@ func TestRigConfigSyncCheck_DoltListErrorDoesNotMeanMissingDB(t *testing.T) {
 			}
 		}
 	}`
-	if err := os.WriteFile(filepath.Join(mayorDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -455,8 +455,8 @@ func TestRigConfigSyncCheck_FixMissingDoltDBUsesCanonicalDatabase(t *testing.T) 
 	}
 
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 	rigsJSON := `{
@@ -468,11 +468,11 @@ func TestRigConfigSyncCheck_FixMissingDoltDBUsesCanonicalDatabase(t *testing.T) 
 			}
 		}
 	}`
-	if err := os.WriteFile(filepath.Join(mayorDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
 		t.Fatal(err)
 	}
-	mayorRigDir := filepath.Join(tmpDir, "testrig", "mayor", "rig")
-	if err := os.MkdirAll(mayorRigDir, 0755); err != nil {
+	overseerRigDir := filepath.Join(tmpDir, "testrig", "overseer", "rig")
+	if err := os.MkdirAll(overseerRigDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -511,8 +511,8 @@ exit 0
 	if !strings.Contains(cmds, "env=testrig") {
 		t.Fatalf("bd init did not receive canonical database env; log:\n%s", cmds)
 	}
-	if !strings.Contains(cmds, "beads="+filepath.Join(mayorRigDir, ".beads")) {
-		t.Fatalf("bd init did not receive mayor/rig BEADS_DIR; log:\n%s", cmds)
+	if !strings.Contains(cmds, "beads="+filepath.Join(overseerRigDir, ".beads")) {
+		t.Fatalf("bd init did not receive overseer/rig BEADS_DIR; log:\n%s", cmds)
 	}
 	if strings.Contains(cmds, "wrong_db") || strings.Contains(cmds, "wrong.db") || strings.Contains(cmds, filepath.Join(tmpDir, "wrong", ".beads")) {
 		t.Fatalf("stale BEADS env leaked into bd subprocess; log:\n%s", cmds)
@@ -530,8 +530,8 @@ func TestRigConfigSyncCheck_PrefixNamedDoltDBNoMismatch(t *testing.T) {
 	}
 
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 	// Rig "beads" with prefix "bd"; its DB lives at .dolt-data/bd.
@@ -544,7 +544,7 @@ func TestRigConfigSyncCheck_PrefixNamedDoltDBNoMismatch(t *testing.T) {
 			}
 		}
 	}`
-	if err := os.WriteFile(filepath.Join(mayorDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -620,14 +620,14 @@ func TestRigConfigSyncCheck_PrefixNamedDoltDBNoMismatch(t *testing.T) {
 func TestStaleRuntimeFilesCheck_StalePIDFiles(t *testing.T) {
 	// Create temp town root
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create rigs.json with no rigs
 	rigsJSON := `{"version": 1, "rigs": {}}`
-	if err := os.WriteFile(filepath.Join(mayorDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -641,7 +641,7 @@ func TestStaleRuntimeFilesCheck_StalePIDFiles(t *testing.T) {
 	}
 
 	// Create valid PID file for town agent
-	if err := os.WriteFile(filepath.Join(pidsDir, "hq-deacon.pid"), []byte("12346"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(pidsDir, "hq-supervisor.pid"), []byte("12346"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -661,14 +661,14 @@ func TestStaleRuntimeFilesCheck_StalePIDFiles(t *testing.T) {
 func TestStaleRuntimeFilesCheck_StaleWispConfig(t *testing.T) {
 	// Create temp town root
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create rigs.json with no rigs
 	rigsJSON := `{"version": 1, "rigs": {}}`
-	if err := os.WriteFile(filepath.Join(mayorDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -697,14 +697,14 @@ func TestStaleRuntimeFilesCheck_StaleWispConfig(t *testing.T) {
 func TestStaleRuntimeFilesCheck_Fix(t *testing.T) {
 	// Create temp town root
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create rigs.json with no rigs
 	rigsJSON := `{"version": 1, "rigs": {}}`
-	if err := os.WriteFile(filepath.Join(mayorDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
 		t.Fatal(err)
 	}
 

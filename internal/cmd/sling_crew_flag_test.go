@@ -6,7 +6,7 @@ import (
 )
 
 // TestSlingCrewFlagExpandsTarget verifies that --crew transforms a rig target
-// into a crew member path: "gastown --crew mel" → "gastown/crew/mel".
+// into a crew member path: "excavation --crew mel" → "excavation/crew/mel".
 func TestSlingCrewFlagExpandsTarget(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -17,9 +17,9 @@ func TestSlingCrewFlagExpandsTarget(t *testing.T) {
 	}{
 		{
 			name:     "basic crew expansion",
-			args:     []string{"gt-abc", "gastown"},
+			args:     []string{"gt-abc", "excavation"},
 			crew:     "mel",
-			wantLast: "gastown/crew/mel",
+			wantLast: "excavation/crew/mel",
 		},
 		{
 			name:     "different rig and crew",
@@ -35,9 +35,9 @@ func TestSlingCrewFlagExpandsTarget(t *testing.T) {
 		},
 		{
 			name:     "no crew flag leaves target unchanged",
-			args:     []string{"gt-abc", "gastown"},
+			args:     []string{"gt-abc", "excavation"},
 			crew:     "",
-			wantLast: "gastown",
+			wantLast: "excavation",
 		},
 	}
 

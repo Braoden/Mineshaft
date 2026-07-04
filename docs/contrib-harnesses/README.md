@@ -1,7 +1,7 @@
 # Contributor Harnesses
 
 Reference examples of **role directives** and **formula overlays** that
-contributors and operators can drop into their own Gas Town setup to customize
+contributors and operators can drop into their own Excavation Site setup to customize
 agent behavior — without patching the framework.
 
 These examples are not active by default. They are starting points you copy
@@ -17,7 +17,7 @@ reference is `~/gt/docs/PRIMING.md` § "Role Directives and Formula Overlays".
 
 | Harness | What it does |
 |---------|--------------|
-| [`polecat-pr-flow/`](polecat-pr-flow/) | Makes polecats open a GitHub PR for their branch before running `gt done`. For rigs that use a PR-review workflow instead of the canonical Refinery merge-queue flow. |
+| [`miner-pr-flow/`](miner-pr-flow/) | Makes miners open a GitHub PR for their branch before running `gt done`. For rigs that use a PR-review workflow instead of the canonical Refinery merge-queue flow. |
 
 ## Scope
 

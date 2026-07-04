@@ -3,8 +3,8 @@ package refinery
 import (
 	"fmt"
 
-	"github.com/steveyegge/gastown/internal/bitbucket"
-	"github.com/steveyegge/gastown/internal/git"
+	"github.com/steveyegge/excavation/internal/bitbucket"
+	"github.com/steveyegge/excavation/internal/git"
 )
 
 // bitbucketPRProvider implements PRProvider using the Bitbucket Cloud REST API.

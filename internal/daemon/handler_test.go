@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/dog"
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/dog"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 // testHandlerDaemon creates a minimal Daemon with a logger for handler tests.
@@ -28,7 +28,7 @@ func testHandlerDaemon(t *testing.T, townRoot string) *Daemon {
 func testSetupDogState(t *testing.T, townRoot, name string, state dog.State, lastActive time.Time) {
 	t.Helper()
 
-	kennelDir := filepath.Join(townRoot, "deacon", "dogs", name)
+	kennelDir := filepath.Join(townRoot, "supervisor", "dogs", name)
 	if err := os.MkdirAll(kennelDir, 0755); err != nil {
 		t.Fatalf("Failed to create kennel dir for %s: %v", name, err)
 	}
@@ -53,7 +53,7 @@ func testSetupDogState(t *testing.T, townRoot, name string, state dog.State, las
 
 // testDogExists checks if a dog directory exists in the kennel.
 func testDogExists(townRoot, name string) bool {
-	_, err := os.Stat(filepath.Join(townRoot, "deacon", "dogs", name, ".dog.json"))
+	_, err := os.Stat(filepath.Join(townRoot, "supervisor", "dogs", name, ".dog.json"))
 	return err == nil
 }
 
@@ -61,7 +61,7 @@ func testDogExists(townRoot, name string) bool {
 func testSetupWorkingDogState(t *testing.T, townRoot, name, work string, lastActive time.Time) {
 	t.Helper()
 
-	kennelDir := filepath.Join(townRoot, "deacon", "dogs", name)
+	kennelDir := filepath.Join(townRoot, "supervisor", "dogs", name)
 	if err := os.MkdirAll(kennelDir, 0755); err != nil {
 		t.Fatalf("Failed to create kennel dir for %s: %v", name, err)
 	}
@@ -95,7 +95,7 @@ func TestDetectStaleWorkingDogs_ClearsStaleWorkers(t *testing.T) {
 	sm := dog.NewSessionManager(tm, townRoot, mgr)
 
 	// Dog working for 3 hours with no activity — should be cleared.
-	testSetupWorkingDogState(t, townRoot, "stale", constants.MolConvoyFeed, time.Now().Add(-3*time.Hour))
+	testSetupWorkingDogState(t, townRoot, "stale", constants.MolMinecartFeed, time.Now().Add(-3*time.Hour))
 
 	d.detectStaleWorkingDogs(mgr, sm, &config.DaemonThresholds{})
 
@@ -121,7 +121,7 @@ func TestDetectStaleWorkingDogs_SkipsRecentWorkers(t *testing.T) {
 	sm := dog.NewSessionManager(tm, townRoot, mgr)
 
 	// Dog working for 30 minutes — should NOT be cleared.
-	testSetupWorkingDogState(t, townRoot, "active", constants.MolConvoyFeed, time.Now().Add(-30*time.Minute))
+	testSetupWorkingDogState(t, townRoot, "active", constants.MolMinecartFeed, time.Now().Add(-30*time.Minute))
 
 	d.detectStaleWorkingDogs(mgr, sm, &config.DaemonThresholds{})
 
@@ -132,8 +132,8 @@ func TestDetectStaleWorkingDogs_SkipsRecentWorkers(t *testing.T) {
 	if dg.State != dog.StateWorking {
 		t.Errorf("active dog state = %q, want working", dg.State)
 	}
-	if dg.Work != constants.MolConvoyFeed {
-		t.Errorf("active dog work = %q, want %s", dg.Work, constants.MolConvoyFeed)
+	if dg.Work != constants.MolMinecartFeed {
+		t.Errorf("active dog work = %q, want %s", dg.Work, constants.MolMinecartFeed)
 	}
 }
 

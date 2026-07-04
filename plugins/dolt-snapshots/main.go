@@ -1,6 +1,6 @@
 // Package main implements the dolt-snapshots plugin binary.
 // It creates immutable tags (and optional branches) on Dolt databases
-// at convoy lifecycle boundaries for audit, diff, and rollback.
+// at minecart lifecycle boundaries for audit, diff, and rollback.
 //
 // Fixes from PR #2324 review:
 //   - Parameterized SQL (no shell interpolation / SQL injection)
@@ -37,8 +37,8 @@ type route struct {
 	Path   string `json:"path"`
 }
 
-// convoyRow holds query results for convoys needing snapshots.
-type convoyRow struct {
+// minecartRow holds query results for minecarts needing snapshots.
+type minecartRow struct {
 	ID           string
 	Title        string
 	Status       string
@@ -51,8 +51,8 @@ func main() {
 	port := flag.String("port", "", "Dolt server port (default: GT_DOLT_PORT or 3307)")
 	routesFile := flag.String("routes", "", "Path to routes.jsonl (default: ~/gt/.beads/routes.jsonl)")
 	dryRun := flag.Bool("dry-run", false, "Show what would be done without making changes")
-	cleanup := flag.Bool("cleanup", false, "Also escalate stale convoy branches for review")
-	watch := flag.Bool("watch", false, "Watch events.jsonl and snapshot immediately on convoy events")
+	cleanup := flag.Bool("cleanup", false, "Also escalate stale minecart branches for review")
+	watch := flag.Bool("watch", false, "Watch events.jsonl and snapshot immediately on minecart events")
 	flag.Parse()
 
 	// Resolve defaults
@@ -90,7 +90,7 @@ func main() {
 	routes := loadRoutes(rf)
 
 	// Run snapshot cycle
-	stats, err := snapshotConvoys(db, databases, routes, *dryRun)
+	stats, err := snapshotMinecarts(db, databases, routes, *dryRun)
 	if err != nil {
 		log.Fatalf("Snapshot cycle failed: %v", err)
 	}
@@ -216,7 +216,7 @@ func loadRoutes(path string) map[string]string {
 	return result
 }
 
-// sanitizeName creates a safe tag/branch name from a convoy title and ID.
+// sanitizeName creates a safe tag/branch name from a minecart title and ID.
 func sanitizeName(title, id string) string {
 	slug := strings.ToLower(title)
 	slug = safeNameRe.ReplaceAllString(slug, "-")
@@ -242,37 +242,37 @@ type snapshotStats struct {
 	tagsFailed      int
 }
 
-// snapshotConvoys finds convoys needing snapshots and creates tags/branches.
-func snapshotConvoys(db *sql.DB, databases []string, routes map[string]string, dryRun bool) (snapshotStats, error) {
+// snapshotMinecarts finds minecarts needing snapshots and creates tags/branches.
+func snapshotMinecarts(db *sql.DB, databases []string, routes map[string]string, dryRun bool) (snapshotStats, error) {
 	var stats snapshotStats
 
-	// Query HQ for convoys needing snapshots.
+	// Query HQ for minecarts needing snapshots.
 	// Uses parameterized queries — no string interpolation.
-	convoys, err := findConvoysNeedingSnapshots(db)
+	minecarts, err := findMinecartsNeedingSnapshots(db)
 	if err != nil {
-		return stats, fmt.Errorf("finding convoys: %w", err)
+		return stats, fmt.Errorf("finding minecarts: %w", err)
 	}
 
-	if len(convoys) == 0 {
-		fmt.Println("No convoys need snapshots.")
+	if len(minecarts) == 0 {
+		fmt.Println("No minecarts need snapshots.")
 		return stats, nil
 	}
 
-	fmt.Printf("Found %d convoy(s) needing snapshots.\n", len(convoys))
+	fmt.Printf("Found %d minecart(s) needing snapshots.\n", len(minecarts))
 
-	for _, c := range convoys {
+	for _, c := range minecarts {
 		safeName := sanitizeName(c.Title, c.ID)
-		fmt.Printf("\n--- Convoy: %s (%s) [%s] ---\n", c.Title, c.ID, c.Status)
+		fmt.Printf("\n--- Minecart: %s (%s) [%s] ---\n", c.Title, c.ID, c.Status)
 
-		// Discover which rig databases this convoy touches
-		rigDBs, err := discoverConvoyDatabases(db, c.ID, databases, routes)
+		// Discover which rig databases this minecart touches
+		rigDBs, err := discoverMinecartDatabases(db, c.ID, databases, routes)
 		if err != nil {
-			log.Printf("Warning: cannot discover databases for convoy %s: %v", c.ID, err)
+			log.Printf("Warning: cannot discover databases for minecart %s: %v", c.ID, err)
 			continue
 		}
 
 		if len(rigDBs) == 0 {
-			fmt.Printf("  No rig databases found for convoy %s, skipping.\n", c.ID)
+			fmt.Printf("  No rig databases found for minecart %s, skipping.\n", c.ID)
 			continue
 		}
 
@@ -287,11 +287,11 @@ func snapshotConvoys(db *sql.DB, databases []string, routes map[string]string, d
 			allDBs = append(allDBs, d)
 		}
 
-		// Create open/ tags for convoys that need them
+		// Create open/ tags for minecarts that need them
 		if !c.HasOpenTag {
 			tagName := "open/" + safeName
 			for _, dbName := range allDBs {
-				msg := fmt.Sprintf("Pre-work baseline for convoy %s", c.ID)
+				msg := fmt.Sprintf("Pre-work baseline for minecart %s", c.ID)
 				if dryRun {
 					fmt.Printf("  [dry-run] Would create tag %s on %s\n", tagName, dbName)
 				} else {
@@ -306,12 +306,12 @@ func snapshotConvoys(db *sql.DB, databases []string, routes map[string]string, d
 			}
 		}
 
-		// Create staged/ tags + branches for staged/launched/closed convoys
+		// Create staged/ tags + branches for staged/launched/closed minecarts
 		if !c.HasStagedTag && c.Status != "open" {
 			tagName := "staged/" + safeName
-			branchName := "convoy/" + safeName
+			branchName := "minecart/" + safeName
 			for _, dbName := range allDBs {
-				msg := fmt.Sprintf("Launch baseline for convoy %s", c.ID)
+				msg := fmt.Sprintf("Launch baseline for minecart %s", c.ID)
 				if dryRun {
 					fmt.Printf("  [dry-run] Would create tag %s on %s\n", tagName, dbName)
 					fmt.Printf("  [dry-run] Would create branch %s on %s\n", branchName, dbName)
@@ -338,8 +338,8 @@ func snapshotConvoys(db *sql.DB, databases []string, routes map[string]string, d
 	return stats, nil
 }
 
-// findConvoysNeedingSnapshots queries HQ for convoys that need tags.
-func findConvoysNeedingSnapshots(db *sql.DB) ([]convoyRow, error) {
+// findMinecartsNeedingSnapshots queries HQ for minecarts that need tags.
+func findMinecartsNeedingSnapshots(db *sql.DB) ([]minecartRow, error) {
 	query := `
 		SELECT i.id, i.title, i.status,
 			CASE WHEN EXISTS (SELECT 1 FROM hq.dolt_tags t WHERE t.tag_name LIKE CONCAT('open/%-', i.id))
@@ -347,9 +347,9 @@ func findConvoysNeedingSnapshots(db *sql.DB) ([]convoyRow, error) {
 			CASE WHEN EXISTS (SELECT 1 FROM hq.dolt_tags t WHERE t.tag_name LIKE CONCAT('staged/%-', i.id))
 				 THEN 1 ELSE 0 END AS has_staged_tag
 		FROM hq.issues i
-		WHERE (i.issue_type = 'convoy' OR EXISTS (
+		WHERE (i.issue_type = 'minecart' OR EXISTS (
 				SELECT 1 FROM hq.labels l
-				WHERE l.issue_id = i.id AND l.label = 'gt:convoy'
+				WHERE l.issue_id = i.id AND l.label = 'gt:minecart'
 			))
 			AND (
 				i.status IN ('staged_ready', 'staged_warnings', 'launched', 'open')
@@ -364,28 +364,28 @@ func findConvoysNeedingSnapshots(db *sql.DB) ([]convoyRow, error) {
 
 	rows, err := db.Query(query)
 	if err != nil {
-		return nil, fmt.Errorf("convoy query: %w", err)
+		return nil, fmt.Errorf("minecart query: %w", err)
 	}
 	defer rows.Close()
 
-	var convoys []convoyRow
+	var minecarts []minecartRow
 	for rows.Next() {
-		var c convoyRow
+		var c minecartRow
 		var hasOpen, hasStaged int
 		if err := rows.Scan(&c.ID, &c.Title, &c.Status, &hasOpen, &hasStaged); err != nil {
 			return nil, err
 		}
 		c.HasOpenTag = hasOpen == 1
 		c.HasStagedTag = hasStaged == 1
-		convoys = append(convoys, c)
+		minecarts = append(minecarts, c)
 	}
-	return convoys, rows.Err()
+	return minecarts, rows.Err()
 }
 
-// discoverConvoyDatabases finds which rig databases a convoy touches
+// discoverMinecartDatabases finds which rig databases a minecart touches
 // by looking at its tracked issues' prefixes.
-func discoverConvoyDatabases(db *sql.DB, convoyID string, databases []string, routes map[string]string) ([]string, error) {
-	rows, err := db.Query(convoyDependencyTargetsQuery(), convoyID)
+func discoverMinecartDatabases(db *sql.DB, minecartID string, databases []string, routes map[string]string) ([]string, error) {
+	rows, err := db.Query(minecartDependencyTargetsQuery(), minecartID)
 	if err != nil {
 		return nil, err
 	}
@@ -419,7 +419,7 @@ func discoverConvoyDatabases(db *sql.DB, convoyID string, databases []string, ro
 	return result, rows.Err()
 }
 
-func convoyDependencyTargetsQuery() string {
+func minecartDependencyTargetsQuery() string {
 	return `
 		SELECT DISTINCT COALESCE(d.depends_on_issue_id, d.depends_on_wisp_id, d.depends_on_external) AS depends_on_id
 		FROM hq.dependencies d
@@ -532,7 +532,7 @@ func sanitizeDBName(name string) string {
 	return b.String()
 }
 
-// escalateStale finds convoy branches older than 7 days and reports them.
+// escalateStale finds minecart branches older than 7 days and reports them.
 func escalateStale(db *sql.DB, databases []string, dryRun bool) {
 	fmt.Println("\n=== Stale Branch Review ===")
 
@@ -546,12 +546,12 @@ func escalateStale(db *sql.DB, databases []string, dryRun bool) {
 	for _, dbName := range databases {
 		query := fmt.Sprintf(`
 			SELECT b.name FROM %s.dolt_branches b
-			WHERE b.name LIKE 'convoy/%%'
+			WHERE b.name LIKE 'minecart/%%'
 				AND EXISTS (
 					SELECT 1 FROM hq.issues i
-					WHERE (i.issue_type = 'convoy' OR EXISTS (
+					WHERE (i.issue_type = 'minecart' OR EXISTS (
 							SELECT 1 FROM hq.labels l
-							WHERE l.issue_id = i.id AND l.label = 'gt:convoy'
+							WHERE l.issue_id = i.id AND l.label = 'gt:minecart'
 						))
 						AND b.name LIKE CONCAT('%%-', i.id)
 						AND i.status IN ('closed', 'landed')
@@ -573,11 +573,11 @@ func escalateStale(db *sql.DB, databases []string, dryRun bool) {
 	}
 
 	if len(stale) == 0 {
-		fmt.Println("No stale convoy branches found.")
+		fmt.Println("No stale minecart branches found.")
 		return
 	}
 
-	fmt.Printf("Found %d stale convoy branch(es) (closed >7 days):\n", len(stale))
+	fmt.Printf("Found %d stale minecart branch(es) (closed >7 days):\n", len(stale))
 	for _, s := range stale {
 		fmt.Printf("  %s: %s\n", s.Database, s.Branch)
 	}
@@ -588,15 +588,15 @@ func escalateStale(db *sql.DB, databases []string, dryRun bool) {
 	}
 }
 
-// convoyEvent is the minimal structure we parse from events.jsonl.
-type convoyEvent struct {
+// minecartEvent is the minimal structure we parse from events.jsonl.
+type minecartEvent struct {
 	Type    string                 `json:"type"`
 	Payload map[string]interface{} `json:"payload"`
 }
 
 // watchEvents tails ~/.events.jsonl and runs a snapshot cycle immediately
-// when convoy lifecycle events are detected. This gives sub-second latency
-// compared to the ~60s deacon patrol polling approach.
+// when minecart lifecycle events are detected. This gives sub-second latency
+// compared to the ~60s supervisor patrol polling approach.
 func watchEvents(host, port, routesFile string, cleanup bool) error {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -621,7 +621,7 @@ func watchEvents(host, port, routesFile string, cleanup bool) error {
 
 	dsn := fmt.Sprintf("root@tcp(%s:%s)/information_schema?parseTime=true&timeout=5s&readTimeout=30s&writeTimeout=30s", host, port)
 
-	log.Printf("Watching %s for convoy events...", eventsPath)
+	log.Printf("Watching %s for minecart events...", eventsPath)
 
 	for range ticker.C {
 		for {
@@ -630,15 +630,15 @@ func watchEvents(host, port, routesFile string, cleanup bool) error {
 				break // no more data available
 			}
 
-			var ev convoyEvent
+			var ev minecartEvent
 			if json.Unmarshal([]byte(line), &ev) != nil {
 				continue
 			}
 
 			switch ev.Type {
-			case "convoy.created", "convoy.staged", "convoy.launched", "convoy.closed":
-				convoyID, _ := ev.Payload["convoy_id"].(string)
-				log.Printf("Event: %s (convoy %s) — running snapshot cycle", ev.Type, convoyID)
+			case "minecart.created", "minecart.staged", "minecart.launched", "minecart.closed":
+				minecartID, _ := ev.Payload["minecart_id"].(string)
+				log.Printf("Event: %s (minecart %s) — running snapshot cycle", ev.Type, minecartID)
 
 				db, err := sql.Open("mysql", dsn)
 				if err != nil {
@@ -662,7 +662,7 @@ func watchEvents(host, port, routesFile string, cleanup bool) error {
 				}
 
 				routes := loadRoutes(routesFile)
-				stats, err := snapshotConvoys(db, databases, routes, false)
+				stats, err := snapshotMinecarts(db, databases, routes, false)
 				if err != nil {
 					log.Printf("ERROR in snapshot cycle: %v", err)
 				} else {

@@ -21,8 +21,8 @@ severity = "low"
 
 Polls GitHub for open pull requests, categorizes them by readiness, and creates
 `ci-failure` beads for new failures. Implements the PR Sheriff pattern from the
-[Gas Town User Manual](https://steve-yegge.medium.com/gas-town-emergency-user-manual-cf0e4556d74b)
-as a Deacon plugin.
+[Excavation Site User Manual](https://steve-yegge.medium.com/excavation-site-emergency-user-manual-cf0e4556d74b)
+as a Supervisor plugin.
 
 Categorizes each PR as:
 - **Easy win**: CI passing, small (<200 LOC changed), no merge conflicts

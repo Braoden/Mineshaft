@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/daemon"
+	"github.com/steveyegge/excavation/internal/daemon"
 )
 
 func TestLifecycleDefaultsCheck_NoConfig(t *testing.T) {
@@ -26,12 +26,12 @@ func TestLifecycleDefaultsCheck_NoConfig(t *testing.T) {
 
 func TestLifecycleDefaultsCheck_FullyConfigured(t *testing.T) {
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	os.MkdirAll(mayorDir, 0755)
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	os.MkdirAll(overseerDir, 0755)
 
 	config := daemon.DefaultLifecycleConfig()
 	data, _ := json.MarshalIndent(config, "", "  ")
-	os.WriteFile(filepath.Join(mayorDir, "daemon.json"), data, 0644)
+	os.WriteFile(filepath.Join(overseerDir, "daemon.json"), data, 0644)
 
 	ctx := &CheckContext{TownRoot: tmpDir}
 	check := NewLifecycleDefaultsCheck()
@@ -44,8 +44,8 @@ func TestLifecycleDefaultsCheck_FullyConfigured(t *testing.T) {
 
 func TestLifecycleDefaultsCheck_MissingPatrols(t *testing.T) {
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	os.MkdirAll(mayorDir, 0755)
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	os.MkdirAll(overseerDir, 0755)
 
 	// Only wisp_reaper configured — rest missing
 	config := &daemon.DaemonPatrolConfig{
@@ -56,7 +56,7 @@ func TestLifecycleDefaultsCheck_MissingPatrols(t *testing.T) {
 		},
 	}
 	data, _ := json.MarshalIndent(config, "", "  ")
-	os.WriteFile(filepath.Join(mayorDir, "daemon.json"), data, 0644)
+	os.WriteFile(filepath.Join(overseerDir, "daemon.json"), data, 0644)
 
 	ctx := &CheckContext{TownRoot: tmpDir}
 	check := NewLifecycleDefaultsCheck()
@@ -73,8 +73,8 @@ func TestLifecycleDefaultsCheck_MissingPatrols(t *testing.T) {
 
 func TestLifecycleDefaultsCheck_Fix(t *testing.T) {
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	os.MkdirAll(mayorDir, 0755)
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	os.MkdirAll(overseerDir, 0755)
 
 	// Partial config
 	config := &daemon.DaemonPatrolConfig{
@@ -85,7 +85,7 @@ func TestLifecycleDefaultsCheck_Fix(t *testing.T) {
 		},
 	}
 	data, _ := json.MarshalIndent(config, "", "  ")
-	os.WriteFile(filepath.Join(mayorDir, "daemon.json"), data, 0644)
+	os.WriteFile(filepath.Join(overseerDir, "daemon.json"), data, 0644)
 
 	ctx := &CheckContext{TownRoot: tmpDir}
 	check := NewLifecycleDefaultsCheck()
@@ -123,8 +123,8 @@ func TestLifecycleDefaultsCheck_CanFix(t *testing.T) {
 
 func TestLifecycleDefaultsCheck_NilPatrolsSection(t *testing.T) {
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	os.MkdirAll(mayorDir, 0755)
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	os.MkdirAll(overseerDir, 0755)
 
 	// Config with no patrols section at all
 	config := &daemon.DaemonPatrolConfig{
@@ -132,7 +132,7 @@ func TestLifecycleDefaultsCheck_NilPatrolsSection(t *testing.T) {
 		Version: 1,
 	}
 	data, _ := json.MarshalIndent(config, "", "  ")
-	os.WriteFile(filepath.Join(mayorDir, "daemon.json"), data, 0644)
+	os.WriteFile(filepath.Join(overseerDir, "daemon.json"), data, 0644)
 
 	ctx := &CheckContext{TownRoot: tmpDir}
 	check := NewLifecycleDefaultsCheck()

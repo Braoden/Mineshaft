@@ -1,16 +1,16 @@
 description = """
-Full Gas Town shutdown and restart.
+Full Excavation Site shutdown and restart.
 
 This is an idempotent shutdown - it stops Claude sessions but preserves
-polecat sandboxes and hooks. Polecats can resume their work after restart.
+miner sandboxes and hooks. Miners can resume their work after restart.
 
 Use when you need to:
 - Reset all state for a fresh start
 - Recover from corrupted agent state
 - Prepare for maintenance or upgrades
 
-Sling to Mayor when ready to reboot:
-  gt sling mol-town-shutdown mayor
+Sling to Overseer when ready to reboot:
+  gt sling mol-town-shutdown overseer
 """
 formula = "mol-town-shutdown"
 type = "workflow"
@@ -27,7 +27,7 @@ gt shutdown preflight
 ```
 
 This checks for:
-- **Uncommitted changes**: Polecats with dirty git status
+- **Uncommitted changes**: Miners with dirty git status
 - **Unpushed commits**: Work that hasn't reached remote
 - **Active merges**: Refinery mid-merge (could corrupt state)
 - **Pending CI**: PRs waiting on GitHub Actions
@@ -37,7 +37,7 @@ Output is a report with warnings/blockers:
 | Severity | Condition | Action |
 |----------|-----------|--------|
 | BLOCKER | Active merge in progress | Abort shutdown |
-| WARNING | Uncommitted polecat changes | List affected polecats |
+| WARNING | Uncommitted miner changes | List affected miners |
 | WARNING | Unpushed commits | List repos needing push |
 | INFO | Pending CI runs | Note for awareness |
 
@@ -50,14 +50,14 @@ id = "stop-sessions"
 title = "Stop Claude sessions (preserve sandboxes)"
 needs = ["preflight-check"]
 description = """
-Kill Claude processes but leave polecat sandboxes intact.
+Kill Claude processes but leave miner sandboxes intact.
 
 ```bash
-# Stop all polecat Claude sessions
+# Stop all miner Claude sessions
 gt stop --all --preserve-sandbox
 
 # Verify sandboxes still exist
-gt polecats --all --status
+gt miners --all --status
 ```
 
 What this does:
@@ -67,11 +67,11 @@ What this does:
 - Leaves uncommitted work in place
 
 What this does NOT do:
-- Delete polecat directories
+- Delete miner directories
 - Remove hook attachments
 - Lose any git state
 
-After restart, polecats can be respawned and will resume from their hooks.
+After restart, miners can be respawned and will resume from their hooks.
 
 Note: Crew workers are NOT stopped (they're user-managed).
 """
@@ -90,8 +90,8 @@ for rig in $(gt rigs --names); do
   gt mail clear $rig/refinery --archive
 done
 
-# Clear Mayor inbox
-gt mail clear mayor --archive
+# Clear Overseer inbox
+gt mail clear overseer --archive
 ```
 
 Messages are archived to `.beads/mail-archive/` before deletion.
@@ -103,7 +103,7 @@ id = "stop-daemon"
 title = "Stop the daemon"
 needs = ["clear-inboxes"]
 description = """
-Stop the Gas Town daemon gracefully.
+Stop the Excavation Site daemon gracefully.
 
 ```bash
 gt daemon stop
@@ -146,23 +146,23 @@ Ensure all beads state is persisted.
 bd sync
 ```
 
-Note: We do NOT force-commit polecat work here. Their sandboxes
+Note: We do NOT force-commit miner work here. Their sandboxes
 are preserved with whatever state they had. They'll commit their
 own work when they resume.
 """
 
 [[steps]]
-id = "handoff-mayor"
-title = "Send Mayor handoff"
+id = "handoff-overseer"
+title = "Send Overseer handoff"
 needs = ["sync-state"]
 description = """
-Record shutdown context for the fresh Mayor session.
+Record shutdown context for the fresh Overseer session.
 
 ```bash
-gt mail send mayor -s "🤝 HANDOFF: Town shutdown complete" -m "
+gt mail send overseer -s "🤝 HANDOFF: Town shutdown complete" -m "
 Town shutdown completed. State preserved.
 
-Polecat sandboxes: PRESERVED (will resume from hooks)
+Miner sandboxes: PRESERVED (will resume from hooks)
 Inboxes: ARCHIVED and cleared
 Daemon: STOPPED
 
@@ -170,7 +170,7 @@ Next steps:
 1. gt daemon start
 2. gt prime
 3. gt status (verify health)
-4. Resume operations or respawn polecats
+4. Resume operations or respawn miners
 
 Shutdown reason: {{shutdown_reason}}
 "
@@ -180,7 +180,7 @@ Shutdown reason: {{shutdown_reason}}
 [[steps]]
 id = "restart-daemon"
 title = "Restart daemon"
-needs = ["handoff-mayor"]
+needs = ["handoff-overseer"]
 description = """
 Start the daemon with fresh state.
 
@@ -193,7 +193,7 @@ The daemon will:
 - Watch for pending spawns
 - Resume background coordination
 
-Polecats are NOT auto-respawned. Use `gt sling` or let Witness
+Miners are NOT auto-respawned. Use `gt sling` or let Witness
 restart them based on their preserved hooks.
 """
 

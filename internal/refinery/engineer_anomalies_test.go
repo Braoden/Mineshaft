@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
+	"github.com/steveyegge/excavation/internal/beads"
 )
 
 func TestDetectQueueAnomalies_StaleClaim(t *testing.T) {
@@ -15,7 +15,7 @@ func TestDetectQueueAnomalies_StaleClaim(t *testing.T) {
 			Status:    "open",
 			Assignee:  "rig/refinery-1",
 			UpdatedAt: now.Add(-3 * time.Hour).Format(time.RFC3339),
-			Description: `branch: polecat/warn
+			Description: `branch: miner/warn
 target: main
 worker: nux`,
 		},
@@ -24,7 +24,7 @@ worker: nux`,
 			Status:    "open",
 			Assignee:  "rig/refinery-2",
 			UpdatedAt: now.Add(-7 * time.Hour).Format(time.RFC3339),
-			Description: `branch: polecat/critical
+			Description: `branch: miner/critical
 target: main
 worker: nux`,
 		},
@@ -62,7 +62,7 @@ func TestDetectQueueAnomalies_OrphanedBranch(t *testing.T) {
 			ID:        "gt-orphan",
 			Status:    "open",
 			UpdatedAt: now.Add(-30 * time.Minute).Format(time.RFC3339),
-			Description: `branch: polecat/orphan
+			Description: `branch: miner/orphan
 target: main
 worker: nux`,
 		},
@@ -70,14 +70,14 @@ worker: nux`,
 			ID:        "gt-ok",
 			Status:    "open",
 			UpdatedAt: now.Add(-30 * time.Minute).Format(time.RFC3339),
-			Description: `branch: polecat/ok
+			Description: `branch: miner/ok
 target: main
 worker: nux`,
 		},
 	}
 
 	anomalies := detectQueueAnomalies(issues, now, 2*time.Hour, func(branch string) (bool, bool, error) {
-		if branch == "polecat/orphan" {
+		if branch == "miner/orphan" {
 			return false, false, nil
 		}
 		return false, true, nil

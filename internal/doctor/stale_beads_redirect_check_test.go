@@ -20,7 +20,7 @@ func TestStaleBeadsRedirectCheck_NoStaleFiles(t *testing.T) {
 
 	// Create only redirect file (no stale files)
 	redirectPath := filepath.Join(beadsDir, "redirect")
-	if err := os.WriteFile(redirectPath, []byte("../mayor/rig/.beads\n"), 0644); err != nil {
+	if err := os.WriteFile(redirectPath, []byte("../overseer/rig/.beads\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -52,7 +52,7 @@ func TestStaleBeadsRedirectCheck_WithStaleFiles(t *testing.T) {
 
 	// Create redirect file
 	redirectPath := filepath.Join(beadsDir, "redirect")
-	if err := os.WriteFile(redirectPath, []byte("../mayor/rig/.beads\n"), 0644); err != nil {
+	if err := os.WriteFile(redirectPath, []byte("../overseer/rig/.beads\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -95,7 +95,7 @@ func TestStaleBeadsRedirectCheck_FixRemovesStaleFiles(t *testing.T) {
 
 	// Create redirect file
 	redirectPath := filepath.Join(beadsDir, "redirect")
-	if err := os.WriteFile(redirectPath, []byte("../mayor/rig/.beads\n"), 0644); err != nil {
+	if err := os.WriteFile(redirectPath, []byte("../overseer/rig/.beads\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -159,7 +159,7 @@ func TestStaleBeadsRedirectCheck_FixRemovesStaleFiles(t *testing.T) {
 
 func TestCleanStaleBeadsFiles_RemovesMetadataDriftFromRedirect(t *testing.T) {
 	townRoot := t.TempDir()
-	canonicalBeads := filepath.Join(townRoot, "myrig", "mayor", "rig", ".beads")
+	canonicalBeads := filepath.Join(townRoot, "myrig", "overseer", "rig", ".beads")
 	redirectBeads := filepath.Join(townRoot, "myrig", ".beads")
 	if err := os.MkdirAll(canonicalBeads, 0755); err != nil {
 		t.Fatal(err)
@@ -170,7 +170,7 @@ func TestCleanStaleBeadsFiles_RemovesMetadataDriftFromRedirect(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(canonicalBeads, "metadata.json"), []byte(`{"dolt_database":"myrig"}`), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(redirectBeads, "redirect"), []byte("mayor/rig/.beads\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(redirectBeads, "redirect"), []byte("overseer/rig/.beads\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(redirectBeads, "metadata.json"), []byte(`{"dolt_database":"hq"}`), 0644); err != nil {
@@ -187,7 +187,7 @@ func TestCleanStaleBeadsFiles_RemovesMetadataDriftFromRedirect(t *testing.T) {
 
 func TestCleanStaleBeadsFiles_PreservesMatchingRedirectMetadata(t *testing.T) {
 	townRoot := t.TempDir()
-	canonicalBeads := filepath.Join(townRoot, "myrig", "mayor", "rig", ".beads")
+	canonicalBeads := filepath.Join(townRoot, "myrig", "overseer", "rig", ".beads")
 	redirectBeads := filepath.Join(townRoot, "myrig", ".beads")
 	if err := os.MkdirAll(canonicalBeads, 0755); err != nil {
 		t.Fatal(err)
@@ -199,7 +199,7 @@ func TestCleanStaleBeadsFiles_PreservesMatchingRedirectMetadata(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(canonicalBeads, "metadata.json"), metadata, 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(redirectBeads, "redirect"), []byte("mayor/rig/.beads\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(redirectBeads, "redirect"), []byte("overseer/rig/.beads\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(redirectBeads, "metadata.json"), metadata, 0644); err != nil {
@@ -388,18 +388,18 @@ func TestStaleBeadsRedirectCheck_FixCreatesMissingRedirect(t *testing.T) {
 }
 
 func TestStaleBeadsRedirectCheck_TrackedBeadsArchitecture(t *testing.T) {
-	// Create temp town with tracked beads architecture (mayor/rig/.beads is canonical)
+	// Create temp town with tracked beads architecture (overseer/rig/.beads is canonical)
 	townRoot := t.TempDir()
 	rigDir := filepath.Join(townRoot, "myrig")
-	mayorBeadsDir := filepath.Join(rigDir, "mayor", "rig", ".beads")
+	overseerBeadsDir := filepath.Join(rigDir, "overseer", "rig", ".beads")
 	crewDir := filepath.Join(rigDir, "crew", "worker1")
 
-	// Create mayor beads (canonical location for tracked beads)
-	if err := os.MkdirAll(mayorBeadsDir, 0755); err != nil {
+	// Create overseer beads (canonical location for tracked beads)
+	if err := os.MkdirAll(overseerBeadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 	// Create a marker file
-	if err := os.WriteFile(filepath.Join(mayorBeadsDir, "issues.jsonl"), []byte(""), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerBeadsDir, "issues.jsonl"), []byte(""), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -427,16 +427,16 @@ func TestStaleBeadsRedirectCheck_TrackedBeadsArchitecture(t *testing.T) {
 		t.Fatalf("Fix failed: %v", err)
 	}
 
-	// Verify redirect was created pointing to mayor/rig/.beads
+	// Verify redirect was created pointing to overseer/rig/.beads
 	redirectPath := filepath.Join(crewDir, ".beads", "redirect")
 	data, err := os.ReadFile(redirectPath)
 	if err != nil {
 		t.Fatalf("Redirect file not created: %v", err)
 	}
 
-	// Verify redirect content points to mayor/rig/.beads
+	// Verify redirect content points to overseer/rig/.beads
 	content := string(data)
-	expected := "../../mayor/rig/.beads\n"
+	expected := "../../overseer/rig/.beads\n"
 	if content != expected {
 		t.Errorf("Expected redirect to %q, got %q", expected, content)
 	}
@@ -530,23 +530,23 @@ func TestStaleBeadsRedirectCheck_ValidRedirectNotFlagged(t *testing.T) {
 	}
 }
 
-func TestStaleBeadsRedirectCheck_PolecatWorkspace(t *testing.T) {
-	// Create temp town with polecat workspace missing redirect
+func TestStaleBeadsRedirectCheck_MinerWorkspace(t *testing.T) {
+	// Create temp town with miner workspace missing redirect
 	townRoot := t.TempDir()
 	rigDir := filepath.Join(townRoot, "myrig")
 	rigBeadsDir := filepath.Join(rigDir, ".beads")
-	polecatDir := filepath.Join(rigDir, "polecats", "polecat1")
+	minerDir := filepath.Join(rigDir, "miners", "miner1")
 
 	// Create rig beads (canonical location)
 	if err := os.MkdirAll(rigBeadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
-	// Create polecat workspace WITHOUT redirect (old flat structure with .git)
-	if err := os.MkdirAll(polecatDir, 0755); err != nil {
+	// Create miner workspace WITHOUT redirect (old flat structure with .git)
+	if err := os.MkdirAll(minerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(polecatDir, ".git"), []byte("gitdir: /fake\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(minerDir, ".git"), []byte("gitdir: /fake\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -561,25 +561,25 @@ func TestStaleBeadsRedirectCheck_PolecatWorkspace(t *testing.T) {
 	result := check.Run(ctx)
 
 	if result.Status != StatusWarning {
-		t.Errorf("Expected StatusWarning for polecat missing redirect, got %v: %s", result.Status, result.Message)
+		t.Errorf("Expected StatusWarning for miner missing redirect, got %v: %s", result.Status, result.Message)
 	}
 }
 
-func TestStaleBeadsRedirectCheck_NestedPolecatWorkspace(t *testing.T) {
-	// Polecats with nested structure: polecats/<name>/<rig_name>/
+func TestStaleBeadsRedirectCheck_NestedMinerWorkspace(t *testing.T) {
+	// Miners with nested structure: miners/<name>/<rig_name>/
 	townRoot := t.TempDir()
 	rigDir := filepath.Join(townRoot, "myrig")
 	rigBeadsDir := filepath.Join(rigDir, ".beads")
-	// Nested clone path: polecats/polecat1/myrig/
-	polecatClone := filepath.Join(rigDir, "polecats", "polecat1", "myrig")
+	// Nested clone path: miners/miner1/myrig/
+	minerClone := filepath.Join(rigDir, "miners", "miner1", "myrig")
 
 	// Create rig beads (canonical location)
 	if err := os.MkdirAll(rigBeadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
-	// Create nested polecat workspace WITHOUT redirect
-	if err := os.MkdirAll(polecatClone, 0755); err != nil {
+	// Create nested miner workspace WITHOUT redirect
+	if err := os.MkdirAll(minerClone, 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -594,7 +594,7 @@ func TestStaleBeadsRedirectCheck_NestedPolecatWorkspace(t *testing.T) {
 	result := check.Run(ctx)
 
 	if result.Status != StatusWarning {
-		t.Errorf("Expected StatusWarning for nested polecat missing redirect, got %v: %s", result.Status, result.Message)
+		t.Errorf("Expected StatusWarning for nested miner missing redirect, got %v: %s", result.Status, result.Message)
 	}
 }
 

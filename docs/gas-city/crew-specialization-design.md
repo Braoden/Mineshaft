@@ -2,7 +2,7 @@
 
 **Bead:** hq-q76
 **Date:** 2026-03-10
-**Participants:** Mayor, Overseer
+**Participants:** Overseer, Boss
 **Related:** beads `agent-cost-optimization` branch, w-gc-001, w-gc-002, w-com-005, PR #2518, PR #2527
 
 ## Context
@@ -17,7 +17,7 @@ work be labeled, matched, and routed to specialized workers?
    requirements and executors declare capability profiles.
 
 2. **Gas City role format (w-gc-001, w-gc-002)** — the planned declarative
-   layer that formalizes Gas Town's hardcoded roles into portable, user-definable
+   layer that formalizes Excavation Site's hardcoded roles into portable, user-definable
    schemas. PR #2518 prototypes a TOML parser. PR #2527 adds per-crew agent
    assignment.
 
@@ -48,7 +48,7 @@ Instead of a central planner, each agent is a **mini-town** that:
 - **Makes internal allocation decisions** — with local knowledge
 
 A manager agent's capability is the **transitive closure** of everything beneath
-it. The Mayor doesn't need `native_skills: [security-review]` if it manages a
+it. The Overseer doesn't need `native_skills: [security-review]` if it manages a
 crew member that has it. Each level hides internal delegation decisions behind
 a capability abstraction.
 
@@ -58,10 +58,10 @@ This recurses at every scale:
 
 | Scale | Unit | Advertises | Delegates to |
 |-------|------|-----------|--------------|
-| Federation | Wasteland rig | Stamps, reputation | Its Gas Town |
-| Town | Mayor | Rig capabilities | Crew, polecats |
+| Federation | Wasteland rig | Stamps, reputation | Its Excavation Site |
+| Town | Overseer | Rig capabilities | Crew, miners |
 | Crew | Specialist | Domain expertise | Sub-agents, tools |
-| Worker | Polecat | Task completion | Tools |
+| Worker | Miner | Task completion | Tools |
 | Tool | CLI command | Deterministic output | Nothing |
 
 ### Delegation as Alternative to Cognition
@@ -266,7 +266,7 @@ evidence is expensive to rebuild.
 
 ### Periodic Consolidation
 
-The Mayor (or a dedicated org-design function) periodically reviews the
+The Overseer (or a dedicated org-design function) periodically reviews the
 department landscape:
 
 - Merge dormant departments with significant overlap
@@ -286,7 +286,7 @@ should update its `handles` and `does_not_handle` when:
    the boundary is real and should be documented
 3. **Contested capabilities surface** — if reopened tasks cluster around a
    specific claim, either invest in the capability or explicitly drop it
-4. **Explicit reorganization** — Mayor restructures departments for strategic
+4. **Explicit reorganization** — Overseer restructures departments for strategic
    reasons (entering a security hardening phase, shifting project priorities)
 
 ### Complexity Weighting
@@ -371,9 +371,9 @@ track_record:
 |-----------|--------|--------|
 | Tier system | Beads `agent-cost-optimization` | Implemented on branch |
 | Agent registry | Beads `agent-cost-optimization` | Implemented on branch |
-| TOML role parser | Gastown PR #2518 | Open PR |
-| Per-crew agent assignment | Gastown PR #2527 | Open PR |
-| Agent framework survey | Gastown PR #2581 (w-gc-004) | Merged |
+| TOML role parser | Excavation PR #2518 | Open PR |
+| Per-crew agent assignment | Excavation PR #2527 | Open PR |
+| Agent framework survey | Excavation PR #2581 (w-gc-004) | Merged |
 | Wasteland stamps | HOP federation | Live |
 | Role format design | **w-gc-001** | **This document informs it** |
 
@@ -384,7 +384,7 @@ track_record:
 1. **How deep should delegation recurse?** A crew member managing sub-agents
    that manage sub-sub-agents is powerful but complex. Is 2-3 levels sufficient?
 
-2. **Who writes the initial role definition?** The Mayor? The Overseer? A
+2. **Who writes the initial role definition?** The Overseer? The Boss? A
    dedicated org-design agent? The role author needs cross-cutting visibility to
    avoid duplication.
 
@@ -398,5 +398,5 @@ track_record:
 
 5. **What's the minimum viable version?** The full cellular model with recursive
    sub-agents and dynamic track records is the vision. What's the 80/20 slice
-   that delivers value with the beads tier system and existing Gas Town
+   that delivers value with the beads tier system and existing Excavation Site
    primitives?

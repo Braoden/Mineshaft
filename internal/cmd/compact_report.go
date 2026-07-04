@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/style"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/style"
 )
 
 // beadIDLine matches a bead ID printed on its own line by `bd create`.
@@ -29,7 +29,7 @@ var beadIDLine = regexp.MustCompile(`(?m)^\s*([a-z][a-z0-9-]*-[a-z0-9]+)\s*$`)
 // Returns an error if no bead-ID-shaped line is found.
 //
 // This guards against `bd` emitting startup warnings before the ID — see
-// gastown issue: "Fix compact_report.go beadID capture (corrupts on stdout
+// excavation issue: "Fix compact_report.go beadID capture (corrupts on stdout
 // warnings)". Without this, a noisy stdout poisons `beadID`, the subsequent
 // `bd close <beadID>` silently fails, the audit bead stays open, and the
 // daily-digest idempotency check (filtered by status=closed) never matches —
@@ -98,18 +98,18 @@ type weeklyRollup struct {
 var compactReportCmd = &cobra.Command{
 	Use:   "report",
 	Short: "Generate and send compaction digest report",
-	Long: `Generate a compaction digest and send it to deacon/ (cc mayor/).
+	Long: `Generate a compaction digest and send it to supervisor/ (cc overseer/).
 
 The daily digest shows per-category breakdown of deleted, promoted, and active
 wisps, plus any promotions with reasons and detected anomalies.
 
 The weekly rollup (--weekly) aggregates the past 7 days of compaction event
-beads and sends trend data to mayor/.
+beads and sends trend data to overseer/.
 
 Examples:
   gt compact report              # Run compaction + send daily digest
   gt compact report --dry-run    # Preview the report without sending
-  gt compact report --weekly     # Send weekly rollup to mayor/
+  gt compact report --weekly     # Send weekly rollup to overseer/
   gt compact report --json       # Output report as JSON`,
 	RunE: runCompactReport,
 }
@@ -203,7 +203,7 @@ func runDailyDigest() error {
 		return fmt.Errorf("recording compact report audit bead: %w", err)
 	}
 
-	// Send mail to deacon/, cc mayor/
+	// Send mail to supervisor/, cc overseer/
 	if err := sendCompactDigest(dateStr, markdown); err != nil {
 		return fmt.Errorf("sending digest: %w", err)
 	}
@@ -346,9 +346,9 @@ func formatDailyDigest(report *compactReport) string {
 func sendCompactDigest(dateStr, body string) error {
 	subject := fmt.Sprintf("Wisp Compaction: %s", dateStr)
 
-	// Send to mayor/ only — deacon/ is not a valid mail address (audit bead
-	// serves as the deacon-side record).
-	mailCmd := exec.Command("gt", "mail", "send", "mayor/",
+	// Send to overseer/ only — supervisor/ is not a valid mail address (audit bead
+	// serves as the supervisor-side record).
+	mailCmd := exec.Command("gt", "mail", "send", "overseer/",
 		"-s", subject,
 		"-m", body,
 	)
@@ -469,9 +469,9 @@ func runWeeklyRollup() error {
 		return fmt.Errorf("recording weekly rollup audit bead: %w", beadErr)
 	}
 
-	// Send to mayor/
+	// Send to overseer/
 	subject := fmt.Sprintf("Weekly Wisp Compaction: %s to %s", weekStart, weekEnd)
-	mailCmd := exec.Command("gt", "mail", "send", "mayor/",
+	mailCmd := exec.Command("gt", "mail", "send", "overseer/",
 		"-s", subject,
 		"-m", markdown,
 	)
@@ -481,7 +481,7 @@ func runWeeklyRollup() error {
 		return fmt.Errorf("sending weekly rollup: %w", err)
 	}
 
-	fmt.Printf("%s Weekly compaction rollup sent to mayor/ (%s to %s)\n",
+	fmt.Printf("%s Weekly compaction rollup sent to overseer/ (%s to %s)\n",
 		style.Success.Render("✓"), weekStart, weekEnd)
 	if beadID != "" {
 		fmt.Printf("  Audit bead: %s\n", beadID)

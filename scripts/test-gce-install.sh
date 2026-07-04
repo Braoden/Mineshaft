@@ -1,16 +1,16 @@
 #!/bin/bash
-# test-gce-install.sh - Test Gas Town installation on fresh GCE VM
+# test-gce-install.sh - Test Excavation Site installation on fresh GCE VM
 #
 # Usage:
 #   # Create a fresh Debian/Ubuntu VM on GCE, then:
-#   curl -fsSL https://raw.githubusercontent.com/steveyegge/gastown/main/scripts/test-gce-install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/steveyegge/excavation/main/scripts/test-gce-install.sh | bash
 #
 #   # Or clone and run locally:
 #   ./scripts/test-gce-install.sh
 #
 # This script:
 #   1. Installs all prerequisites (Go, git, tmux, beads, Claude Code)
-#   2. Installs Gas Town
+#   2. Installs Excavation Site
 #   3. Runs verification tests
 #   4. Reports success/failure
 
@@ -28,7 +28,7 @@ fail() { echo -e "${RED}[X]${NC} $1"; exit 1; }
 check() { echo -e "${GREEN}[✓]${NC} $1"; }
 
 echo "================================================"
-echo "  Gas Town GCE Installation Test"
+echo "  Excavation Site GCE Installation Test"
 echo "  $(date)"
 echo "================================================"
 echo
@@ -99,11 +99,11 @@ else
 fi
 
 # ============================================
-# STEP 3: Install Gas Town
+# STEP 3: Install Excavation Site
 # ============================================
-log "Installing Gas Town (gt)..."
+log "Installing Excavation Site (gt)..."
 
-go install github.com/steveyegge/gastown/cmd/gt@latest
+go install github.com/steveyegge/excavation/cmd/gt@latest
 
 if command -v gt &> /dev/null; then
     check "gt installed: $(gt --version 2>/dev/null || echo 'version unknown')"
@@ -196,7 +196,7 @@ if command -v claude &> /dev/null; then
 else
     warn "Claude Code CLI not installed"
     echo "  Install from: https://claude.ai/code"
-    echo "  Gas Town works without it, but agents won't spawn"
+    echo "  Excavation Site works without it, but agents won't spawn"
 fi
 
 # ============================================
@@ -226,7 +226,7 @@ else
     echo "  - Claude Code: NOT INSTALLED (optional for basic usage)"
 fi
 echo
-echo "Gas Town is ready to use!"
+echo "Excavation Site is ready to use!"
 echo "  gt install ~/my-workspace"
 echo "  cd ~/my-workspace"
 echo "  gt rig add myproject --remote=<url>"

@@ -5,9 +5,9 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var notifyCmd = &cobra.Command{
@@ -17,7 +17,7 @@ var notifyCmd = &cobra.Command{
 	Long: `Control the notification level for the current agent.
 
 Notification levels:
-  verbose  All notifications (mail, convoy events, status updates)
+  verbose  All notifications (mail, minecart events, status updates)
   normal   Important notifications only (default)
   muted    Silent/DND mode - batch notifications for later
 
@@ -47,7 +47,7 @@ func runNotify(cmd *cobra.Command, args []string) error {
 
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	roleInfo, err := GetRoleWithContext(cwd, townRoot)
@@ -58,7 +58,7 @@ func runNotify(cmd *cobra.Command, args []string) error {
 	ctx := RoleContext{
 		Role:     roleInfo.Role,
 		Rig:      roleInfo.Rig,
-		Polecat:  roleInfo.Polecat,
+		Miner:  roleInfo.Miner,
 		TownRoot: townRoot,
 		WorkDir:  cwd,
 	}
@@ -122,9 +122,9 @@ func showNotificationLevel(level string) {
 func showNotificationLevelDescription(level string) {
 	switch level {
 	case beads.NotifyVerbose:
-		fmt.Printf("  %s\n", style.Dim.Render("All notifications: mail, convoy events, status updates"))
+		fmt.Printf("  %s\n", style.Dim.Render("All notifications: mail, minecart events, status updates"))
 	case beads.NotifyNormal:
-		fmt.Printf("  %s\n", style.Dim.Render("Important notifications: convoy landed, escalations"))
+		fmt.Printf("  %s\n", style.Dim.Render("Important notifications: minecart landed, escalations"))
 	case beads.NotifyMuted:
 		fmt.Printf("  %s\n", style.Dim.Render("Silent mode: notifications batched for later review"))
 	}

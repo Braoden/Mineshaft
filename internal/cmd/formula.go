@@ -15,11 +15,11 @@ import (
 	"text/template"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/formula"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/formula"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -214,9 +214,9 @@ func runFormulaShow(cmd *cobra.Command, args []string) error {
 	return bdCmd.Run()
 }
 
-// runFormulaRun executes a formula by spawning a convoy of polecats.
-// For convoy-type formulas, it creates a convoy bead, creates leg beads,
-// and slings each leg to a separate polecat with leg-specific prompts.
+// runFormulaRun executes a formula by spawning a minecart of miners.
+// For minecart-type formulas, it creates a minecart bead, creates leg beads,
+// and slings each leg to a separate miner with leg-specific prompts.
 func runFormulaRun(cmd *cobra.Command, args []string) error {
 	// Determine target rig first (needed for default formula lookup)
 	targetRig := formulaRunRig
@@ -233,8 +233,8 @@ func runFormulaRun(cmd *cobra.Command, args []string) error {
 				}
 			}
 			// Still no rig — auto-select when there is exactly one registered rig,
-			// otherwise surface a helpful error (e.g. Deacon at HQ level on
-			// non-default installs where "gastown" rig does not exist).
+			// otherwise surface a helpful error (e.g. Supervisor at HQ level on
+			// non-default installs where "excavation" rig does not exist).
 			if targetRig == "" {
 				name, path, inferErr := autoInferRig(townRoot)
 				if inferErr != nil {
@@ -245,7 +245,7 @@ func runFormulaRun(cmd *cobra.Command, args []string) error {
 			}
 		} else {
 			// No town root found, cannot determine target rig
-			return fmt.Errorf("cannot determine target rig: not in a Gas Town workspace; use --rig=NAME")
+			return fmt.Errorf("cannot determine target rig: not in a Excavation Site workspace; use --rig=NAME")
 		}
 	} else {
 		// If rig specified, construct path
@@ -288,14 +288,14 @@ func runFormulaRun(cmd *cobra.Command, args []string) error {
 	}
 
 	switch f.Type {
-	case formula.TypeConvoy:
-		return executeConvoyFormula(f, formulaName, targetRig)
+	case formula.TypeMinecart:
+		return executeMinecartFormula(f, formulaName, targetRig)
 	case formula.TypeWorkflow:
 		return executeWorkflowFormula(f, formulaName, targetRig)
 	default:
 		fmt.Printf("%s Formula type '%s' not yet supported for execution.\n",
 			style.Dim.Render("Note:"), f.Type)
-		fmt.Printf("Currently only 'convoy' and 'workflow' formulas can be run.\n")
+		fmt.Printf("Currently only 'minecart' and 'workflow' formulas can be run.\n")
 		fmt.Printf("\nTo run '%s' manually:\n", formulaName)
 		fmt.Printf("  1. View formula:   gt formula show %s\n", formulaName)
 		fmt.Printf("  2. Cook to proto:  bd cook %s\n", formulaName)
@@ -332,7 +332,7 @@ func dryRunFormula(f *formula.Formula, formulaName, targetRig string) error {
 		fmt.Println()
 	}
 
-	if f.Type == formula.TypeConvoy && len(f.Legs) > 0 {
+	if f.Type == formula.TypeMinecart && len(f.Legs) > 0 {
 		// Generate review ID for dry-run display
 		reviewID := generateFormulaShortID()
 
@@ -425,9 +425,9 @@ func dryRunFormula(f *formula.Formula, formulaName, targetRig string) error {
 	return nil
 }
 
-// executeConvoyFormula spawns a convoy of polecats to execute a convoy formula
-func executeConvoyFormula(f *formula.Formula, formulaName, targetRig string) error {
-	fmt.Printf("%s Executing convoy formula: %s\n\n",
+// executeMinecartFormula spawns a minecart of miners to execute a minecart formula
+func executeMinecartFormula(f *formula.Formula, formulaName, targetRig string) error {
+	fmt.Printf("%s Executing minecart formula: %s\n\n",
 		style.Bold.Render("🚚"), formulaName)
 
 	// Get town root and resolve rig-scoped bead prefix
@@ -437,9 +437,9 @@ func executeConvoyFormula(f *formula.Formula, formulaName, targetRig string) err
 	}
 	townBeads := filepath.Join(townRoot, ".beads")
 
-	// Resolve the target rig's beads prefix and directory so convoy legs
+	// Resolve the target rig's beads prefix and directory so minecart legs
 	// are created in the correct database. Legs need the rig prefix
-	// (not hq-) so polecats can resolve them via prefix routing.
+	// (not hq-) so miners can resolve them via prefix routing.
 	rigPrefix := beads.GetPrefixForRig(townRoot, targetRig)
 	rigBeadsDir := townBeads // default to town beads
 	if rigPrefix != "hq" {
@@ -454,34 +454,34 @@ func executeConvoyFormula(f *formula.Formula, formulaName, targetRig string) err
 		}
 	}
 
-	// Step 1: Create convoy bead
-	convoyID := fmt.Sprintf("%s-cv-%s", rigPrefix, generateFormulaShortID())
-	convoyTitle := fmt.Sprintf("%s: %s", formulaName, f.Description)
-	if len(convoyTitle) > 80 {
-		convoyTitle = convoyTitle[:77] + "..."
+	// Step 1: Create minecart bead
+	minecartID := fmt.Sprintf("%s-cv-%s", rigPrefix, generateFormulaShortID())
+	minecartTitle := fmt.Sprintf("%s: %s", formulaName, f.Description)
+	if len(minecartTitle) > 80 {
+		minecartTitle = minecartTitle[:77] + "..."
 	}
 
 	// Build description with formula context
-	description := fmt.Sprintf("Formula convoy: %s\n\nLegs: %d\nRig: %s",
+	description := fmt.Sprintf("Formula minecart: %s\n\nLegs: %d\nRig: %s",
 		formulaName, len(f.Legs), targetRig)
 	if formulaRunPR > 0 {
 		description += fmt.Sprintf("\nPR: #%d", formulaRunPR)
 	}
 
-	// Guard against flag-like convoy titles (gt-e0kx5)
-	if beads.IsFlagLikeTitle(convoyTitle) {
-		return fmt.Errorf("refusing to create formula convoy: title %q looks like a CLI flag", convoyTitle)
+	// Guard against flag-like minecart titles (gt-e0kx5)
+	if beads.IsFlagLikeTitle(minecartTitle) {
+		return fmt.Errorf("refusing to create formula minecart: title %q looks like a CLI flag", minecartTitle)
 	}
 
 	createArgs := []string{
 		"create",
 		"--type=task",
-		"--id=" + convoyID,
-		"--title=" + convoyTitle,
+		"--id=" + minecartID,
+		"--title=" + minecartTitle,
 		"--description=" + description,
-		"--labels=gt:convoy",
+		"--labels=gt:minecart",
 	}
-	if beads.NeedsForceForID(convoyID) {
+	if beads.NeedsForceForID(minecartID) {
 		createArgs = append(createArgs, "--force")
 	}
 
@@ -489,12 +489,12 @@ func executeConvoyFormula(f *formula.Formula, formulaName, targetRig string) err
 	createCmd.Dir = townBeads
 	createCmd.Stderr = os.Stderr
 	if err := createCmd.Run(); err != nil {
-		return fmt.Errorf("creating convoy bead: %w", err)
+		return fmt.Errorf("creating minecart bead: %w", err)
 	}
 
-	fmt.Printf("%s Created convoy: %s\n", style.Bold.Render("✓"), convoyID)
+	fmt.Printf("%s Created minecart: %s\n", style.Bold.Render("✓"), minecartID)
 
-	// Generate a unique review ID for this convoy run
+	// Generate a unique review ID for this minecart run
 	reviewID := generateFormulaShortID()
 
 	// Build target description
@@ -590,8 +590,8 @@ func executeConvoyFormula(f *formula.Formula, formulaName, targetRig string) err
 			continue
 		}
 
-		// Track the leg with the convoy
-		if err := addTrackingRelationFn(townBeads, convoyID, legBeadID); err != nil {
+		// Track the leg with the minecart
+		if err := addTrackingRelationFn(townBeads, minecartID, legBeadID); err != nil {
 			fmt.Printf("%s Failed to track leg %s: %v\n",
 				style.Dim.Render("Warning:"), leg.ID, err)
 		}
@@ -640,8 +640,8 @@ func executeConvoyFormula(f *formula.Formula, formulaName, targetRig string) err
 			fmt.Printf("%s Failed to create synthesis bead: %v\n",
 				style.Dim.Render("Warning:"), err)
 		} else {
-			// Track synthesis with convoy
-			_ = addTrackingRelationFn(townBeads, convoyID, synthesisBeadID)
+			// Track synthesis with minecart
+			_ = addTrackingRelationFn(townBeads, minecartID, synthesisBeadID)
 
 			// Add dependencies: synthesis depends on all legs
 			for _, legBeadID := range legBeads {
@@ -655,8 +655,8 @@ func executeConvoyFormula(f *formula.Formula, formulaName, targetRig string) err
 		}
 	}
 
-	// Step 4: Sling each leg to a polecat
-	fmt.Printf("\n%s Dispatching legs to polecats...\n\n", style.Bold.Render("→"))
+	// Step 4: Sling each leg to a miner
+	fmt.Printf("\n%s Dispatching legs to miners...\n\n", style.Bold.Render("→"))
 
 	slingCount := 0
 	for _, leg := range f.Legs {
@@ -665,13 +665,13 @@ func executeConvoyFormula(f *formula.Formula, formulaName, targetRig string) err
 			continue
 		}
 
-		// Build context message for the polecat
-		contextMsg := fmt.Sprintf("Convoy leg: %s\nFocus: %s", leg.Title, leg.Focus)
+		// Build context message for the miner
+		contextMsg := fmt.Sprintf("Minecart leg: %s\nFocus: %s", leg.Title, leg.Focus)
 
 		// Agent precedence (GH#2118): per-leg > CLI --agent > formula-level
 		legAgent := resolveFormulaLegAgent(leg.Agent, formulaRunAgent, f.Agent)
 
-		slingArgs := buildConvoyLegSlingArgs(legBeadID, targetRig, leg.Description, leg.Title, legAgent, leg.ReviewOnly || f.ReviewOnly)
+		slingArgs := buildMinecartLegSlingArgs(legBeadID, targetRig, leg.Description, leg.Title, legAgent, leg.ReviewOnly || f.ReviewOnly)
 
 		slingCmd := exec.Command("gt", slingArgs...)
 		slingCmd.Stdout = os.Stdout
@@ -693,19 +693,19 @@ func executeConvoyFormula(f *formula.Formula, formulaName, targetRig string) err
 	}
 
 	// Summary
-	fmt.Printf("\n%s Convoy dispatched!\n", style.Bold.Render("✓"))
-	fmt.Printf("  Convoy:  %s\n", convoyID)
+	fmt.Printf("\n%s Minecart dispatched!\n", style.Bold.Render("✓"))
+	fmt.Printf("  Minecart:  %s\n", minecartID)
 	fmt.Printf("  Legs:    %d dispatched\n", slingCount)
 	if synthesisBeadID != "" {
 		fmt.Printf("  Synthesis: %s (blocked until legs complete)\n", synthesisBeadID)
 	}
-	fmt.Printf("\n  Track progress: gt convoy status %s\n", convoyID)
+	fmt.Printf("\n  Track progress: gt minecart status %s\n", minecartID)
 
 	return nil
 }
 
 // executeWorkflowFormula creates step beads with dependency wiring and dispatches
-// ready steps (those with no unmet needs) to polecats on the target rig.
+// ready steps (those with no unmet needs) to miners on the target rig.
 // Subsequent steps are auto-dispatched when their dependencies close. (gt-jh68)
 func executeWorkflowFormula(f *formula.Formula, formulaName, targetRig string) error {
 	fmt.Printf("%s Executing workflow formula: %s\n\n",
@@ -754,7 +754,7 @@ func executeWorkflowFormula(f *formula.Formula, formulaName, targetRig string) e
 		"--id=" + workflowID,
 		"--title=" + workflowTitle,
 		"--description=" + description,
-		"--labels=gt:convoy,gt:workflow",
+		"--labels=gt:minecart,gt:workflow",
 	}
 	if beads.NeedsForceForID(workflowID) {
 		createArgs = append(createArgs, "--force")
@@ -830,7 +830,7 @@ func executeWorkflowFormula(f *formula.Formula, formulaName, targetRig string) e
 	}
 
 	// Step 3: Identify and dispatch ready steps (those with no dependencies)
-	// Interactive steps are hooked to the current session; others are slung to polecats.
+	// Interactive steps are hooked to the current session; others are slung to miners.
 	fmt.Printf("\n%s Dispatching ready steps...\n\n", style.Bold.Render("→"))
 
 	// Check if any step in the workflow is interactive — if so, we'll need
@@ -856,7 +856,7 @@ func executeWorkflowFormula(f *formula.Formula, formulaName, targetRig string) e
 		}
 
 		if step.Interactive || hasInteractive {
-			// Interactive step: hook to current session instead of slinging to a polecat.
+			// Interactive step: hook to current session instead of slinging to a miner.
 			// The user will execute this step in their current crew session.
 			_ = BdCmd("update", stepBeadID, "--status=hooked").
 				WithAutoCommit().
@@ -872,7 +872,7 @@ func executeWorkflowFormula(f *formula.Formula, formulaName, targetRig string) e
 		}
 
 		// Non-interactive step: sling to the step's target, or to the rig's
-		// polecat pool by default.
+		// miner pool by default.
 		// Agent precedence: CLI --agent > formula-level
 		stepAgent := formulaRunAgent
 		if stepAgent == "" {
@@ -913,7 +913,7 @@ func executeWorkflowFormula(f *formula.Formula, formulaName, targetRig string) e
 		fmt.Printf("  Steps:    %d total, %d dispatched, %d awaiting dependencies\n",
 			len(f.Steps), slingCount, blockedCount)
 	}
-	fmt.Printf("\n  Track progress: gt convoy status %s\n", workflowID)
+	fmt.Printf("\n  Track progress: gt minecart status %s\n", workflowID)
 
 	return nil
 }
@@ -948,15 +948,15 @@ func truncate(s string, maxLen int) string {
 	return s[:maxLen-3] + "..."
 }
 
-// buildConvoyLegSlingArgs constructs the gt-sling argument list for a convoy leg.
-// --no-convoy is always included: legs are tracked by the parent convoy, so per-leg
-// auto-convoy creation is redundant (closes #3856).
-func buildConvoyLegSlingArgs(beadID, targetRig, description, title, agent string, reviewOnly bool) []string {
+// buildMinecartLegSlingArgs constructs the gt-sling argument list for a minecart leg.
+// --no-minecart is always included: legs are tracked by the parent minecart, so per-leg
+// auto-minecart creation is redundant (closes #3856).
+func buildMinecartLegSlingArgs(beadID, targetRig, description, title, agent string, reviewOnly bool) []string {
 	args := []string{
 		"sling", beadID, targetRig,
 		"-a", description,
 		"-s", title,
-		"--no-convoy",
+		"--no-minecart",
 	}
 	if agent != "" {
 		args = append(args, "--agent", agent)
@@ -968,14 +968,14 @@ func buildConvoyLegSlingArgs(beadID, targetRig, description, title, agent string
 }
 
 // buildWorkflowStepSlingArgs constructs the gt-sling argument list for a workflow step.
-// --no-convoy is always included: steps are tracked by the parent workflow bead, so
-// per-step auto-convoy creation is redundant (closes #3856).
+// --no-minecart is always included: steps are tracked by the parent workflow bead, so
+// per-step auto-minecart creation is redundant (closes #3856).
 func buildWorkflowStepSlingArgs(beadID, targetRig, description, title, agent string) []string {
 	args := []string{
 		"sling", beadID, targetRig,
 		"-a", description,
 		"-s", title,
-		"--no-convoy",
+		"--no-minecart",
 	}
 	if agent != "" {
 		args = append(args, "--agent", agent)
@@ -1376,7 +1376,7 @@ Perform the patrol inspection.
 `, name, title, name)
 }
 
-// resolveFormulaLegAgent returns the effective agent for a convoy leg using
+// resolveFormulaLegAgent returns the effective agent for a minecart leg using
 // the precedence: per-leg > CLI --agent > formula-level. Returns "" if no
 // agent override applies. See GH#2118.
 func resolveFormulaLegAgent(legAgent, cliAgent, formulaAgent string) string {

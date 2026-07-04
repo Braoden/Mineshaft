@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/channelevents"
+	"github.com/steveyegge/excavation/internal/channelevents"
 )
 
 var (
@@ -30,7 +30,7 @@ Creates a JSON file at ~/gt/events/<channel>/<timestamp>.event:
 EXAMPLES:
   # Emit a MERGE_READY event for the refinery
   gt mol step emit-event --channel refinery --type MERGE_READY \
-    --payload polecat=nux --payload branch=polecat/nux/gt-iw7m
+    --payload miner=nux --payload branch=miner/nux/gt-iw7m
 
   # Emit a PATROL_WAKE event
   gt mol step emit-event --channel refinery --type PATROL_WAKE \

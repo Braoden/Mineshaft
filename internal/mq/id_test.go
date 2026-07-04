@@ -15,9 +15,9 @@ func TestGenerateMRIDWithTime(t *testing.T) {
 		want      string
 	}{
 		{
-			name:      "basic gastown MR",
+			name:      "basic excavation MR",
 			prefix:    "gt",
-			branch:    "polecat/Nux/gt-xyz",
+			branch:    "miner/Nux/gt-xyz",
 			timestamp: time.Date(2025, 12, 17, 10, 0, 0, 0, time.UTC),
 			want:      "gt-mr-", // Will verify prefix, actual hash varies
 		},
@@ -74,7 +74,7 @@ func TestGenerateMRIDWithTime(t *testing.T) {
 func TestGenerateMRIDWithTime_Deterministic(t *testing.T) {
 	// Same inputs should produce same output
 	prefix := "gt"
-	branch := "polecat/Nux/gt-xyz"
+	branch := "miner/Nux/gt-xyz"
 	ts := time.Date(2025, 12, 17, 10, 0, 0, 0, time.UTC)
 
 	id1 := GenerateMRIDWithTime(prefix, branch, ts)
@@ -88,7 +88,7 @@ func TestGenerateMRIDWithTime_Deterministic(t *testing.T) {
 func TestGenerateMRIDWithTime_DifferentTimestamps(t *testing.T) {
 	// Different timestamps should produce different IDs
 	prefix := "gt"
-	branch := "polecat/Nux/gt-xyz"
+	branch := "miner/Nux/gt-xyz"
 	ts1 := time.Date(2025, 12, 17, 10, 0, 0, 0, time.UTC)
 	ts2 := time.Date(2025, 12, 17, 10, 0, 0, 1, time.UTC) // 1 nanosecond later
 
@@ -115,7 +115,7 @@ func TestGenerateMRIDWithTime_DifferentBranches(t *testing.T) {
 
 func TestGenerateMRID(t *testing.T) {
 	// GenerateMRID uses current time, so we just verify format
-	id := GenerateMRID("gt", "polecat/Nux/gt-xyz")
+	id := GenerateMRID("gt", "miner/Nux/gt-xyz")
 
 	if !strings.HasPrefix(id, "gt-mr-") {
 		t.Errorf("GenerateMRID() = %q, want prefix gt-mr-", id)

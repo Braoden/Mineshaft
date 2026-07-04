@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/constants"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/constants"
 )
 
 // RunResult represents the outcome of a plugin execution.

@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // findMailWorkDir returns the town root for all mail operations.
@@ -21,8 +21,8 @@ import (
 // This ensures messages are visible to all agents in the town.
 //
 // GT_TOWN_ROOT is preferred over workspace detection because workspace.Find
-// stops at the first mayor/town.json when not in a worktree path. Rigs that
-// have their own mayor/town.json (e.g., gastown/) would be misidentified as
+// stops at the first overseer/town.json when not in a worktree path. Rigs that
+// have their own overseer/town.json (e.g., excavation/) would be misidentified as
 // the town root when running from the rig directory.
 func findMailWorkDir() (string, error) {
 	for _, envName := range []string{"GT_TOWN_ROOT", "GT_ROOT"} {
@@ -39,14 +39,14 @@ func findMailWorkDir() (string, error) {
 // Used for project work (molecules, issue creation) that uses clone beads.
 //
 // Priority:
-//  1. BEADS_DIR environment variable (set by session manager for polecats)
+//  1. BEADS_DIR environment variable (set by session manager for miners)
 //  2. Walk up from CWD looking for .beads directory
 //
-// Polecats use redirect-based beads access, so their worktree doesn't have a full
+// Miners use redirect-based beads access, so their worktree doesn't have a full
 // .beads directory. The session manager sets BEADS_DIR to the correct location.
 func findLocalBeadsDir() (string, error) {
-	// Check BEADS_DIR environment variable first (set by session manager for polecats).
-	// This is important for polecats that use redirect-based beads access.
+	// Check BEADS_DIR environment variable first (set by session manager for miners).
+	// This is important for miners that use redirect-based beads access.
 	if beadsDir := os.Getenv("BEADS_DIR"); beadsDir != "" {
 		// BEADS_DIR points directly to the .beads directory, return its parent
 		if _, err := os.Stat(beadsDir); err == nil {
@@ -79,10 +79,10 @@ func findLocalBeadsDir() (string, error) {
 // detectSender determines the current context's address.
 // Priority:
 //  1. GT_ROLE env var → use the role-based identity (agent session)
-//  2. No GT_ROLE → try cwd-based detection (witness/refinery/polecat/crew directories)
-//  3. No match → return "overseer" (human at terminal)
+//  2. No GT_ROLE → try cwd-based detection (witness/refinery/miner/crew directories)
+//  3. No match → return "boss" (human at terminal)
 //
-// All Gas Town agents run in tmux sessions with GT_ROLE set at spawn.
+// All Excavation Site agents run in tmux sessions with GT_ROLE set at spawn.
 // However, cwd-based detection is also tried to support running commands
 // from agent directories without GT_ROLE set (e.g., debugging sessions).
 func detectSender() string {
@@ -93,16 +93,16 @@ func detectSender() string {
 		return detectSenderFromRole(role)
 	}
 
-	// No GT_ROLE - try cwd-based detection, defaults to overseer if not in agent directory
+	// No GT_ROLE - try cwd-based detection, defaults to boss if not in agent directory
 	return detectSenderFromCwd()
 }
 
 // detectSenderFromRole builds an address from the GT_ROLE and related env vars.
-// GT_ROLE can be either a simple role name ("crew", "polecat") or a full address
+// GT_ROLE can be either a simple role name ("crew", "miner") or a full address
 // ("greenplace/crew/joe") depending on how the session was started.
 //
-// If GT_ROLE is a simple name but required env vars (GT_RIG, GT_POLECAT, etc.)
-// are missing, falls back to cwd-based detection. This could return "overseer"
+// If GT_ROLE is a simple name but required env vars (GT_RIG, GT_MINER, etc.)
+// are missing, falls back to cwd-based detection. This could return "boss"
 // if cwd doesn't match any known agent path - a misconfigured agent session.
 func detectSenderFromRole(role string) string {
 	rig := os.Getenv("GT_RIG")
@@ -115,16 +115,16 @@ func detectSenderFromRole(role string) string {
 
 	// GT_ROLE is a simple role name, build the full address
 	switch role {
-	case constants.RoleMayor:
-		return "mayor/"
-	case constants.RoleDeacon:
-		return "deacon/"
-	case constants.RolePolecat:
-		polecat := os.Getenv("GT_POLECAT")
-		if rig != "" && polecat != "" {
-			return fmt.Sprintf("%s/%s", rig, polecat)
+	case constants.RoleOverseer:
+		return "overseer/"
+	case constants.RoleSupervisor:
+		return "supervisor/"
+	case constants.RoleMiner:
+		miner := os.Getenv("GT_MINER")
+		if rig != "" && miner != "" {
+			return fmt.Sprintf("%s/%s", rig, miner)
 		}
-		// Fallback to cwd detection for polecats
+		// Fallback to cwd detection for miners
 		return detectSenderFromCwd()
 	case constants.RoleCrew:
 		crew := os.Getenv("GT_CREW")
@@ -146,7 +146,7 @@ func detectSenderFromRole(role string) string {
 	case "dog":
 		dogName := os.Getenv("GT_DOG_NAME")
 		if dogName != "" {
-			return fmt.Sprintf("deacon/dogs/%s", dogName)
+			return fmt.Sprintf("supervisor/dogs/%s", dogName)
 		}
 		return detectSenderFromCwd()
 	default:
@@ -159,7 +159,7 @@ func detectSenderFromRole(role string) string {
 func detectSenderFromCwd() string {
 	cwd, err := os.Getwd()
 	if err != nil {
-		return "overseer"
+		return "boss"
 	}
 
 	// Prefer explicit agent identity metadata when available.
@@ -168,23 +168,23 @@ func detectSenderFromCwd() string {
 		return fromFile
 	}
 
-	// If in a rig's polecats directory, extract address (format: rig/polecats/name)
-	if strings.Contains(cwd, "/polecats/") {
-		parts := strings.Split(cwd, "/polecats/")
+	// If in a rig's miners directory, extract address (format: rig/miners/name)
+	if strings.Contains(cwd, "/miners/") {
+		parts := strings.Split(cwd, "/miners/")
 		if len(parts) >= 2 {
 			rigPath := parts[0]
-			polecatPath := strings.Split(parts[1], "/")[0]
+			minerPath := strings.Split(parts[1], "/")[0]
 			rigName := filepath.Base(rigPath)
-			return fmt.Sprintf("%s/polecats/%s", rigName, polecatPath)
+			return fmt.Sprintf("%s/miners/%s", rigName, minerPath)
 		}
 	}
 
-	// If in deacon's dogs directory, extract address (format: deacon/dogs/name)
-	if strings.Contains(cwd, "/deacon/dogs/") {
-		parts := strings.Split(cwd, "/deacon/dogs/")
+	// If in supervisor's dogs directory, extract address (format: supervisor/dogs/name)
+	if strings.Contains(cwd, "/supervisor/dogs/") {
+		parts := strings.Split(cwd, "/supervisor/dogs/")
 		if len(parts) >= 2 {
 			dogName := strings.Split(parts[1], "/")[0]
-			return fmt.Sprintf("deacon/dogs/%s", dogName)
+			return fmt.Sprintf("supervisor/dogs/%s", dogName)
 		}
 	}
 
@@ -217,13 +217,13 @@ func detectSenderFromCwd() string {
 		}
 	}
 
-	// If in the town's mayor directory
-	if strings.Contains(cwd, "/mayor") {
-		return "mayor"
+	// If in the town's overseer directory
+	if strings.Contains(cwd, "/overseer") {
+		return "overseer"
 	}
 
-	// Default to overseer (human)
-	return "overseer"
+	// Default to boss (human)
+	return "boss"
 }
 
 type agentIdentityFile struct {
@@ -260,10 +260,10 @@ func identityFromAgentFile(parsed agentIdentityFile) string {
 	name := strings.TrimSpace(parsed.Name)
 
 	switch role {
-	case constants.RoleMayor:
-		return "mayor/"
-	case constants.RoleDeacon:
-		return "deacon/"
+	case constants.RoleOverseer:
+		return "overseer/"
+	case constants.RoleSupervisor:
+		return "supervisor/"
 	case constants.RoleWitness:
 		if rig != "" {
 			return fmt.Sprintf("%s/witness", rig)
@@ -276,13 +276,13 @@ func identityFromAgentFile(parsed agentIdentityFile) string {
 		if rig != "" && name != "" {
 			return fmt.Sprintf("%s/crew/%s", rig, name)
 		}
-	case constants.RolePolecat:
+	case constants.RoleMiner:
 		if rig != "" && name != "" {
-			return fmt.Sprintf("%s/polecats/%s", rig, name)
+			return fmt.Sprintf("%s/miners/%s", rig, name)
 		}
 	case "dog":
 		if name != "" {
-			return fmt.Sprintf("deacon/dogs/%s", name)
+			return fmt.Sprintf("supervisor/dogs/%s", name)
 		}
 	}
 

@@ -20,7 +20,7 @@ severity = "medium"
 # Compactor Dog
 
 Monitors Dolt commit growth across all production databases and escalates to
-the Mayor when history compaction or flatten is needed. This is a judgment
+the Overseer when history compaction or flatten is needed. This is a judgment
 call, not a hard threshold trigger.
 
 **You are a dog agent (Claude). Gather the data below, then use your judgment
@@ -29,7 +29,7 @@ to decide if maintenance is needed.** Consider:
 - Commit count per DB (absolute size)
 - Growth rate (commits per hour since last check)
 - Time since last flatten or compaction
-- Current swarm activity (more polecats = faster growth)
+- Current swarm activity (more miners = faster growth)
 - Whether growth is "normal busy" or "runaway"
 
 ## Config
@@ -115,20 +115,20 @@ echo "Total commits across all DBs: $TOTAL_COMMITS"
 
 ## Step 3: Check swarm activity
 
-Count active polecats and dogs to gauge expected commit velocity:
+Count active miners and dogs to gauge expected commit velocity:
 
 ```bash
 echo ""
 echo "=== Swarm Activity ==="
 
 # Count active tmux sessions (proxy for agent activity)
-POLECAT_SESSIONS=$(tmux list-sessions -F '#{session_name}' 2>/dev/null \
-  | grep -c 'polecat\|pcat' || echo 0)
+MINER_SESSIONS=$(tmux list-sessions -F '#{session_name}' 2>/dev/null \
+  | grep -c 'miner\|pcat' || echo 0)
 DOG_SESSIONS=$(tmux list-sessions -F '#{session_name}' 2>/dev/null \
   | grep -c 'dog' || echo 0)
 TOTAL_SESSIONS=$(tmux list-sessions 2>/dev/null | wc -l | tr -d ' ')
 
-echo "  Active polecats: $POLECAT_SESSIONS"
+echo "  Active miners: $MINER_SESSIONS"
 echo "  Active dogs: $DOG_SESSIONS"
 echo "  Total sessions: $TOTAL_SESSIONS"
 ```
@@ -182,7 +182,7 @@ cat > "$STATE_FILE" << STATEOF
 {
   "checked_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "total_commits": $TOTAL_COMMITS,
-  "active_polecats": $POLECAT_SESSIONS,
+  "active_miners": $MINER_SESSIONS,
   "active_dogs": $DOG_SESSIONS
 }
 STATEOF
@@ -206,7 +206,7 @@ gathered above and decide whether to escalate.
 | Time since flatten | <2 weeks | 2-4 weeks | >4 weeks |
 
 **But override the table if context warrants it:**
-- 400 commits after a 10-polecat swarm = normal, will settle
+- 400 commits after a 10-miner swarm = normal, will settle
 - 200 commits growing at 50/hr with no swarm = something's wrong
 - Any DB over 1000 commits = escalate regardless
 
@@ -219,7 +219,7 @@ gt escalate "Dolt compaction recommended" \
 $REPORT
 
 Total: $TOTAL_COMMITS commits across all DBs
-Active polecats: $POLECAT_SESSIONS
+Active miners: $MINER_SESSIONS
 Recommendation: Run compaction on databases exceeding comfort threshold.
 See dolt-storage.md for procedure."
 ```
@@ -233,7 +233,7 @@ echo "All databases within comfortable commit ranges. No action needed."
 ## Record Result
 
 ```bash
-SUMMARY="Compactor check: $TOTAL_COMMITS total commits across $(echo "$PROD_DBS" | wc -l | tr -d ' ') DBs, $POLECAT_SESSIONS active polecats"
+SUMMARY="Compactor check: $TOTAL_COMMITS total commits across $(echo "$PROD_DBS" | wc -l | tr -d ' ') DBs, $MINER_SESSIONS active miners"
 echo "=== $SUMMARY ==="
 ```
 
@@ -247,7 +247,7 @@ On escalation:
 ```bash
 gt plugin record-run --plugin compactor-dog --result warning \
   --title "compactor-dog: ESCALATED - $SUMMARY" \
-  --description "Escalated to Mayor for compaction. $SUMMARY" >/dev/null 2>&1 || true
+  --description "Escalated to Overseer for compaction. $SUMMARY" >/dev/null 2>&1 || true
 ```
 
 On failure:

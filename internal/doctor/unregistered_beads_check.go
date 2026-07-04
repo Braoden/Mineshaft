@@ -13,7 +13,7 @@ import (
 // in rigs.json. These orphan directories cause phantom database creation on
 // the Dolt server whenever any bd command probes them.
 //
-// Also checks the deacon's beads config for database mismatches — the deacon
+// Also checks the supervisor's beads config for database mismatches — the supervisor
 // should use the same database as the town-level beads (hq).
 type UnregisteredBeadsDirsCheck struct {
 	BaseCheck
@@ -33,8 +33,8 @@ func NewUnregisteredBeadsDirsCheck() *UnregisteredBeadsDirsCheck {
 // knownSystemDirs are directories at town root that are expected to exist
 // without being registered in rigs.json.
 var knownSystemDirs = map[string]bool{
-	"mayor":     true,
-	"deacon":    true,
+	"overseer":     true,
+	"supervisor":    true,
 	".beads":    true,
 	".dolt-data": true,
 	".runtime":  true,
@@ -47,7 +47,7 @@ func (c *UnregisteredBeadsDirsCheck) Run(ctx *CheckContext) *CheckResult {
 	// Load registered rig names from rigs.json
 	registeredRigs := loadRegisteredRigNames(ctx.TownRoot)
 
-	// Read town-level database name for deacon mismatch detection
+	// Read town-level database name for supervisor mismatch detection
 	townDB := readDoltDatabase(filepath.Join(ctx.TownRoot, ".beads"))
 
 	var details []string
@@ -83,13 +83,13 @@ func (c *UnregisteredBeadsDirsCheck) Run(ctx *CheckContext) *CheckResult {
 		}
 	}
 
-	// Check deacon database mismatch
+	// Check supervisor database mismatch
 	if townDB != "" {
-		deaconDB := readDoltDatabase(filepath.Join(ctx.TownRoot, "deacon", ".beads"))
-		if deaconDB != "" && deaconDB != townDB {
+		supervisorDB := readDoltDatabase(filepath.Join(ctx.TownRoot, "supervisor", ".beads"))
+		if supervisorDB != "" && supervisorDB != townDB {
 			details = append(details, fmt.Sprintf(
-				"deacon/.beads/metadata.json points to %q but town beads uses %q",
-				deaconDB, townDB))
+				"supervisor/.beads/metadata.json points to %q but town beads uses %q",
+				supervisorDB, townDB))
 		}
 	}
 
@@ -111,9 +111,9 @@ func (c *UnregisteredBeadsDirsCheck) Run(ctx *CheckContext) *CheckResult {
 	}
 }
 
-// loadRegisteredRigNames reads rig names from mayor/rigs.json.
+// loadRegisteredRigNames reads rig names from overseer/rigs.json.
 func loadRegisteredRigNames(townRoot string) map[string]bool {
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	data, err := os.ReadFile(rigsPath)
 	if err != nil {
 		return nil

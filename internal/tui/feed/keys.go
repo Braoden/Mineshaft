@@ -16,7 +16,7 @@ type KeyMap struct {
 	Tab         key.Binding
 	ShiftTab    key.Binding
 	FocusTree   key.Binding
-	FocusConvoy key.Binding
+	FocusMinecart key.Binding
 	FocusFeed   key.Binding
 
 	// Actions
@@ -78,9 +78,9 @@ func DefaultKeyMap() KeyMap {
 			key.WithKeys("1"),
 			key.WithHelp("1", "agent tree"),
 		),
-		FocusConvoy: key.NewBinding(
+		FocusMinecart: key.NewBinding(
 			key.WithKeys("2"),
-			key.WithHelp("2", "convoys"),
+			key.WithHelp("2", "minecarts"),
 		),
 		FocusFeed: key.NewBinding(
 			key.WithKeys("3"),
@@ -142,7 +142,7 @@ func (k KeyMap) ShortHelp() []key.Binding {
 func (k KeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Up, k.Down, k.PageUp, k.PageDown, k.Top, k.Bottom},
-		{k.Tab, k.FocusTree, k.FocusConvoy, k.FocusFeed, k.Enter, k.Expand},
+		{k.Tab, k.FocusTree, k.FocusMinecart, k.FocusFeed, k.Enter, k.Expand},
 		{k.ToggleProblems, k.Nudge, k.Handoff},
 		{k.Search, k.Filter, k.ClearFilter, k.Refresh},
 		{k.Help, k.Quit},

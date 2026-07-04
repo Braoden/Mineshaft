@@ -21,14 +21,14 @@ type ProxyConfig struct {
 	// Defaults to ~/gt/.runtime/ca if empty.
 	CADir string `json:"ca_dir"`
 
-	// TownRoot is the Gas Town root directory (e.g. ~/gt).
+	// TownRoot is the Excavation Site root directory (e.g. ~/gt).
 	// Defaults to $GT_TOWN or ~/gt if empty.
 	TownRoot string `json:"town_root"`
 
-	// AllowedCommands is the list of binary names polecats may execute (e.g. ["gt","bd"]).
+	// AllowedCommands is the list of binary names miners may execute (e.g. ["gt","bd"]).
 	AllowedCommands []string `json:"allowed_commands"`
 
-	// AllowedSubcommands maps each allowed command to the subcommands polecats
+	// AllowedSubcommands maps each allowed command to the subcommands miners
 	// may invoke. Subcommands not listed here are rejected with 403.
 	AllowedSubcommands map[string][]string `json:"allowed_subcommands"`
 

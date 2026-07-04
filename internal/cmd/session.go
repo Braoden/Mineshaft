@@ -10,16 +10,16 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/polecat"
-	"github.com/steveyegge/gastown/internal/rig"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/suggest"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/townlog"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/miner"
+	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/suggest"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/townlog"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // Session command flags
@@ -40,11 +40,11 @@ var sessionCmd = &cobra.Command{
 	Use:     "session",
 	Aliases: []string{"sess"},
 	GroupID: GroupAgents,
-	Short:   "Manage polecat sessions",
+	Short:   "Manage miner sessions",
 	RunE:    requireSubcommand,
-	Long: `Manage tmux sessions for polecats.
+	Long: `Manage tmux sessions for miners.
 
-Sessions are tmux sessions running Claude for each polecat.
+Sessions are tmux sessions running Claude for each miner.
 Use the subcommands to start, stop, attach, and monitor sessions.
 
 TIP: To send messages to a running session, use 'gt nudge' (not 'session inject').
@@ -52,11 +52,11 @@ The nudge command uses reliable delivery that works correctly with Claude Code.`
 }
 
 var sessionStartCmd = &cobra.Command{
-	Use:   "start <rig>/<polecat>",
-	Short: "Start a polecat session",
-	Long: `Start a new tmux session for a polecat.
+	Use:   "start <rig>/<miner>",
+	Short: "Start a miner session",
+	Long: `Start a new tmux session for a miner.
 
-Creates a tmux session, navigates to the polecat's working directory,
+Creates a tmux session, navigates to the miner's working directory,
 and launches claude. Optionally inject an initial issue to work on.
 
 Examples:
@@ -67,9 +67,9 @@ Examples:
 }
 
 var sessionStopCmd = &cobra.Command{
-	Use:   "stop <rig>/<polecat>",
-	Short: "Stop a polecat session",
-	Long: `Stop a running polecat session.
+	Use:   "stop <rig>/<miner>",
+	Short: "Stop a miner session",
+	Long: `Stop a running miner session.
 
 Attempts graceful shutdown first (Ctrl-C), then kills the tmux session.
 Use --force to skip graceful shutdown.`,
@@ -78,10 +78,10 @@ Use --force to skip graceful shutdown.`,
 }
 
 var sessionAtCmd = &cobra.Command{
-	Use:     "at <rig>/<polecat>",
+	Use:     "at <rig>/<miner>",
 	Aliases: []string{"attach"},
 	Short:   "Attach to a running session",
-	Long: `Attach to a running polecat session.
+	Long: `Attach to a running miner session.
 
 Attaches the current terminal to the tmux session. Detach with Ctrl-B D.`,
 	Args: cobra.ExactArgs(1),
@@ -91,16 +91,16 @@ Attaches the current terminal to the tmux session. Detach with Ctrl-B D.`,
 var sessionListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all sessions",
-	Long: `List all running polecat sessions.
+	Long: `List all running miner sessions.
 
-Shows session status, rig, and polecat name. Use --rig to filter by rig.`,
+Shows session status, rig, and miner name. Use --rig to filter by rig.`,
 	RunE: runSessionList,
 }
 
 var sessionCaptureCmd = &cobra.Command{
-	Use:   "capture <rig>/<polecat> [count]",
+	Use:   "capture <rig>/<miner> [count]",
 	Short: "Capture recent session output",
-	Long: `Capture recent output from a polecat session.
+	Long: `Capture recent output from a miner session.
 
 Returns the last N lines of terminal output. Useful for checking progress.
 
@@ -113,9 +113,9 @@ Examples:
 }
 
 var sessionInjectCmd = &cobra.Command{
-	Use:   "inject <rig>/<polecat>",
+	Use:   "inject <rig>/<miner>",
 	Short: "Send message to session (prefer 'gt nudge')",
-	Long: `Send a message to a polecat session.
+	Long: `Send a message to a miner session.
 
 NOTE: For sending messages to Claude sessions, use 'gt nudge' instead.
 It uses reliable delivery (literal mode + timing) that works correctly
@@ -132,9 +132,9 @@ Examples:
 }
 
 var sessionRestartCmd = &cobra.Command{
-	Use:   "restart <rig>/<polecat>",
-	Short: "Restart a polecat session",
-	Long: `Restart a polecat session (stop + start).
+	Use:   "restart <rig>/<miner>",
+	Short: "Restart a miner session",
+	Long: `Restart a miner session (stop + start).
 
 Gracefully stops the current session and starts a fresh one.
 Use --force to skip graceful shutdown.`,
@@ -143,9 +143,9 @@ Use --force to skip graceful shutdown.`,
 }
 
 var sessionStatusCmd = &cobra.Command{
-	Use:   "status <rig>/<polecat>",
+	Use:   "status <rig>/<miner>",
 	Short: "Show session status details",
-	Long: `Show detailed status for a polecat session.
+	Long: `Show detailed status for a miner session.
 
 Displays running state, uptime, session info, and activity.`,
 	Args: cobra.ExactArgs(1),
@@ -154,11 +154,11 @@ Displays running state, uptime, session info, and activity.`,
 
 var sessionCheckCmd = &cobra.Command{
 	Use:   "check [rig]",
-	Short: "Check session health for polecats",
-	Long: `Check if polecat tmux sessions are alive and healthy.
+	Short: "Check session health for miners",
+	Long: `Check if miner tmux sessions are alive and healthy.
 
 This command validates that:
-1. Polecats with work-on-hook have running tmux sessions
+1. Miners with work-on-hook have running tmux sessions
 2. Sessions are responsive
 
 Use this for manual health checks or debugging session issues.
@@ -250,9 +250,9 @@ func newSessionHealthReport(session string, status tmux.ZombieStatus, maxInactiv
 	}
 }
 
-// parseAddress parses "rig/polecat" format.
+// parseAddress parses "rig/miner" format.
 // If no "/" is present, attempts to infer rig from current directory.
-func parseAddress(addr string) (rigName, polecatName string, err error) {
+func parseAddress(addr string) (rigName, minerName string, err error) {
 	parts := strings.SplitN(addr, "/", 2)
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 		return parts[0], parts[1], nil
@@ -269,63 +269,63 @@ func parseAddress(addr string) (rigName, polecatName string, err error) {
 		}
 	}
 
-	return "", "", fmt.Errorf("invalid address format: expected 'rig/polecat', got '%s'", addr)
+	return "", "", fmt.Errorf("invalid address format: expected 'rig/miner', got '%s'", addr)
 }
 
 // getSessionManager creates a session manager for the given rig.
-func getSessionManager(rigName string) (*polecat.SessionManager, *rig.Rig, error) {
+func getSessionManager(rigName string) (*miner.SessionManager, *rig.Rig, error) {
 	_, r, err := getRig(rigName)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	t := tmux.NewTmux()
-	polecatMgr := polecat.NewSessionManager(t, r)
+	minerMgr := miner.NewSessionManager(t, r)
 
-	return polecatMgr, r, nil
+	return minerMgr, r, nil
 }
 
 func runSessionStart(cmd *cobra.Command, args []string) error {
-	rigName, polecatName, err := parseAddress(args[0])
+	rigName, minerName, err := parseAddress(args[0])
 	if err != nil {
 		return err
 	}
 
-	polecatMgr, r, err := getSessionManager(rigName)
+	minerMgr, r, err := getSessionManager(rigName)
 	if err != nil {
 		return err
 	}
 
-	// Check polecat exists
+	// Check miner exists
 	found := false
-	for _, p := range r.Polecats {
-		if p == polecatName {
+	for _, p := range r.Miners {
+		if p == minerName {
 			found = true
 			break
 		}
 	}
 	if !found {
-		suggestions := suggest.FindSimilar(polecatName, r.Polecats, 3)
-		hint := fmt.Sprintf("Create with: gt polecat identity add %s %s", rigName, polecatName)
-		return fmt.Errorf("%s", suggest.FormatSuggestion("Polecat", polecatName, suggestions, hint))
+		suggestions := suggest.FindSimilar(minerName, r.Miners, 3)
+		hint := fmt.Sprintf("Create with: gt miner identity add %s %s", rigName, minerName)
+		return fmt.Errorf("%s", suggest.FormatSuggestion("Miner", minerName, suggestions, hint))
 	}
 
-	opts := polecat.SessionStartOptions{
+	opts := miner.SessionStartOptions{
 		Issue: sessionIssue,
 	}
 
-	fmt.Printf("Starting session for %s/%s...\n", rigName, polecatName)
-	if err := polecatMgr.Start(polecatName, opts); err != nil {
+	fmt.Printf("Starting session for %s/%s...\n", rigName, minerName)
+	if err := minerMgr.Start(minerName, opts); err != nil {
 		return fmt.Errorf("starting session: %w", err)
 	}
 
 	fmt.Printf("%s Session started. Attach with: %s\n",
 		style.Bold.Render("✓"),
-		style.Dim.Render(fmt.Sprintf("gt session at %s/%s", rigName, polecatName)))
+		style.Dim.Render(fmt.Sprintf("gt session at %s/%s", rigName, minerName)))
 
 	// Log wake event
 	if townRoot, err := workspace.FindFromCwd(); err == nil && townRoot != "" {
-		agent := fmt.Sprintf("%s/%s", rigName, polecatName)
+		agent := fmt.Sprintf("%s/%s", rigName, minerName)
 		logger := townlog.NewLogger(townRoot)
 		_ = logger.Log(townlog.EventWake, agent, sessionIssue)
 	}
@@ -334,22 +334,22 @@ func runSessionStart(cmd *cobra.Command, args []string) error {
 }
 
 func runSessionStop(cmd *cobra.Command, args []string) error {
-	rigName, polecatName, err := parseAddress(args[0])
+	rigName, minerName, err := parseAddress(args[0])
 	if err != nil {
 		return err
 	}
 
-	polecatMgr, _, err := getSessionManager(rigName)
+	minerMgr, _, err := getSessionManager(rigName)
 	if err != nil {
 		return err
 	}
 
 	if sessionForce {
-		fmt.Printf("Force stopping session for %s/%s...\n", rigName, polecatName)
+		fmt.Printf("Force stopping session for %s/%s...\n", rigName, minerName)
 	} else {
-		fmt.Printf("Stopping session for %s/%s...\n", rigName, polecatName)
+		fmt.Printf("Stopping session for %s/%s...\n", rigName, minerName)
 	}
-	if err := polecatMgr.Stop(polecatName, sessionForce); err != nil {
+	if err := minerMgr.Stop(minerName, sessionForce); err != nil {
 		return fmt.Errorf("stopping session: %w", err)
 	}
 
@@ -357,7 +357,7 @@ func runSessionStop(cmd *cobra.Command, args []string) error {
 
 	// Log kill event
 	if townRoot, err := workspace.FindFromCwd(); err == nil && townRoot != "" {
-		agent := fmt.Sprintf("%s/%s", rigName, polecatName)
+		agent := fmt.Sprintf("%s/%s", rigName, minerName)
 		reason := "gt session stop"
 		if sessionForce {
 			reason = "gt session stop --force"
@@ -370,34 +370,34 @@ func runSessionStop(cmd *cobra.Command, args []string) error {
 }
 
 func runSessionAttach(cmd *cobra.Command, args []string) error {
-	rigName, polecatName, err := parseAddress(args[0])
+	rigName, minerName, err := parseAddress(args[0])
 	if err != nil {
 		return err
 	}
 
-	polecatMgr, _, err := getSessionManager(rigName)
+	minerMgr, _, err := getSessionManager(rigName)
 	if err != nil {
 		return err
 	}
 
-	running, err := polecatMgr.IsRunning(polecatName)
+	running, err := minerMgr.IsRunning(minerName)
 	if err != nil {
 		return fmt.Errorf("checking session: %w", err)
 	}
 	if !running {
-		return polecat.ErrSessionNotFound
+		return miner.ErrSessionNotFound
 	}
 
 	// Hand the terminal off to tmux via syscall.Exec so tmux inherits our
 	// controlling TTY directly. Running tmux as a subprocess with buffered
 	// stdio triggers "open terminal failed: not a terminal".
-	return attachToTmuxSession(polecatMgr.SessionName(polecatName))
+	return attachToTmuxSession(minerMgr.SessionName(minerName))
 }
 
 // SessionListItem represents a session in list output.
 type SessionListItem struct {
 	Rig       string `json:"rig"`
-	Polecat   string `json:"polecat"`
+	Miner   string `json:"miner"`
 	SessionID string `json:"session_id"`
 	Running   bool   `json:"running"`
 }
@@ -406,11 +406,11 @@ func runSessionList(cmd *cobra.Command, args []string) error {
 	// Find town root
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Load rigs config
-	rigsConfigPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsConfigPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsConfigPath)
 	if err != nil {
 		rigsConfig = &config.RigsConfig{Rigs: make(map[string]config.RigEntry)}
@@ -440,8 +440,8 @@ func runSessionList(cmd *cobra.Command, args []string) error {
 	var allSessions []SessionListItem
 
 	for _, r := range rigs {
-		polecatMgr := polecat.NewSessionManager(t, r)
-		infos, err := polecatMgr.List()
+		minerMgr := miner.NewSessionManager(t, r)
+		infos, err := minerMgr.List()
 		if err != nil {
 			continue
 		}
@@ -449,7 +449,7 @@ func runSessionList(cmd *cobra.Command, args []string) error {
 		for _, info := range infos {
 			allSessions = append(allSessions, SessionListItem{
 				Rig:       r.Name,
-				Polecat:   info.Polecat,
+				Miner:   info.Miner,
 				SessionID: info.SessionID,
 				Running:   info.Running,
 			})
@@ -474,7 +474,7 @@ func runSessionList(cmd *cobra.Command, args []string) error {
 		if !s.Running {
 			status = style.Dim.Render("○")
 		}
-		fmt.Printf("  %s %s/%s\n", status, s.Rig, s.Polecat)
+		fmt.Printf("  %s %s/%s\n", status, s.Rig, s.Miner)
 		fmt.Printf("    %s\n", style.Dim.Render(s.SessionID))
 	}
 
@@ -482,12 +482,12 @@ func runSessionList(cmd *cobra.Command, args []string) error {
 }
 
 func runSessionCapture(cmd *cobra.Command, args []string) error {
-	rigName, polecatName, err := parseAddress(args[0])
+	rigName, minerName, err := parseAddress(args[0])
 	if err != nil {
 		return err
 	}
 
-	polecatMgr, _, err := getSessionManager(rigName)
+	minerMgr, _, err := getSessionManager(rigName)
 	if err != nil {
 		return err
 	}
@@ -505,7 +505,7 @@ func runSessionCapture(cmd *cobra.Command, args []string) error {
 		lines = n
 	}
 
-	output, err := polecatMgr.Capture(polecatName, lines)
+	output, err := minerMgr.Capture(minerName, lines)
 	if err != nil {
 		return fmt.Errorf("capturing output: %w", err)
 	}
@@ -515,7 +515,7 @@ func runSessionCapture(cmd *cobra.Command, args []string) error {
 }
 
 func runSessionInject(cmd *cobra.Command, args []string) error {
-	rigName, polecatName, err := parseAddress(args[0])
+	rigName, minerName, err := parseAddress(args[0])
 	if err != nil {
 		return err
 	}
@@ -534,33 +534,33 @@ func runSessionInject(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("no message provided (use -m or -f)")
 	}
 
-	polecatMgr, _, err := getSessionManager(rigName)
+	minerMgr, _, err := getSessionManager(rigName)
 	if err != nil {
 		return err
 	}
 
-	if err := polecatMgr.Inject(polecatName, message); err != nil {
+	if err := minerMgr.Inject(minerName, message); err != nil {
 		return fmt.Errorf("injecting message: %w", err)
 	}
 
 	fmt.Printf("%s Message sent to %s/%s\n",
-		style.Bold.Render("✓"), rigName, polecatName)
+		style.Bold.Render("✓"), rigName, minerName)
 	return nil
 }
 
 func runSessionRestart(cmd *cobra.Command, args []string) error {
-	rigName, polecatName, err := parseAddress(args[0])
+	rigName, minerName, err := parseAddress(args[0])
 	if err != nil {
 		return err
 	}
 
-	polecatMgr, _, err := getSessionManager(rigName)
+	minerMgr, _, err := getSessionManager(rigName)
 	if err != nil {
 		return err
 	}
 
 	// Check if running
-	running, err := polecatMgr.IsRunning(polecatName)
+	running, err := minerMgr.IsRunning(minerName)
 	if err != nil {
 		return fmt.Errorf("checking session: %w", err)
 	}
@@ -568,11 +568,11 @@ func runSessionRestart(cmd *cobra.Command, args []string) error {
 	if running {
 		// Stop first
 		if sessionForce {
-			fmt.Printf("Force stopping session for %s/%s...\n", rigName, polecatName)
+			fmt.Printf("Force stopping session for %s/%s...\n", rigName, minerName)
 		} else {
-			fmt.Printf("Stopping session for %s/%s...\n", rigName, polecatName)
+			fmt.Printf("Stopping session for %s/%s...\n", rigName, minerName)
 		}
-		if err := polecatMgr.Stop(polecatName, sessionForce); err != nil {
+		if err := minerMgr.Stop(minerName, sessionForce); err != nil {
 			return fmt.Errorf("stopping session: %w", err)
 		}
 
@@ -580,7 +580,7 @@ func runSessionRestart(cmd *cobra.Command, args []string) error {
 		// Without this, Start may fail or create a duplicate if the old
 		// session hasn't been cleaned up by tmux yet.
 		for i := 0; i < 10; i++ {
-			still, _ := polecatMgr.IsRunning(polecatName)
+			still, _ := minerMgr.IsRunning(minerName)
 			if !still {
 				break
 			}
@@ -589,30 +589,30 @@ func runSessionRestart(cmd *cobra.Command, args []string) error {
 	}
 
 	// Start fresh session
-	fmt.Printf("Starting session for %s/%s...\n", rigName, polecatName)
-	opts := polecat.SessionStartOptions{}
-	if err := polecatMgr.Start(polecatName, opts); err != nil {
+	fmt.Printf("Starting session for %s/%s...\n", rigName, minerName)
+	opts := miner.SessionStartOptions{}
+	if err := minerMgr.Start(minerName, opts); err != nil {
 		return fmt.Errorf("starting session: %w", err)
 	}
 
 	fmt.Printf("%s Session restarted. Attach with: %s\n",
 		style.Bold.Render("✓"),
-		style.Dim.Render(fmt.Sprintf("gt session at %s/%s", rigName, polecatName)))
+		style.Dim.Render(fmt.Sprintf("gt session at %s/%s", rigName, minerName)))
 	return nil
 }
 
 func runSessionStatus(cmd *cobra.Command, args []string) error {
-	rigName, polecatName, err := parseAddress(args[0])
+	rigName, minerName, err := parseAddress(args[0])
 	if err != nil {
 		return err
 	}
 
-	polecatMgr, _, err := getSessionManager(rigName)
+	minerMgr, _, err := getSessionManager(rigName)
 	if err != nil {
 		return err
 	}
 
-	info, err := polecatMgr.Status(polecatName)
+	info, err := minerMgr.Status(minerName)
 	if err != nil {
 		return fmt.Errorf("getting status: %w", err)
 	}
@@ -623,7 +623,7 @@ func runSessionStatus(cmd *cobra.Command, args []string) error {
 		return enc.Encode(info)
 	}
 
-	fmt.Printf("%s Session: %s/%s\n\n", style.Bold.Render("📺"), rigName, polecatName)
+	fmt.Printf("%s Session: %s/%s\n\n", style.Bold.Render("📺"), rigName, minerName)
 
 	if info.Running {
 		fmt.Printf("  State: %s\n", style.Bold.Render("● running"))
@@ -646,7 +646,7 @@ func runSessionStatus(cmd *cobra.Command, args []string) error {
 		fmt.Printf("  Uptime: %s\n", formatDuration(uptime))
 	}
 
-	fmt.Printf("\nAttach with: %s\n", style.Dim.Render(fmt.Sprintf("gt session at %s/%s", rigName, polecatName)))
+	fmt.Printf("\nAttach with: %s\n", style.Dim.Render(fmt.Sprintf("gt session at %s/%s", rigName, minerName)))
 	return nil
 }
 
@@ -691,11 +691,11 @@ func runSessionCheck(cmd *cobra.Command, args []string) error {
 	// Find town root
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Load rigs config
-	rigsConfigPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsConfigPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsConfigPath)
 	if err != nil {
 		rigsConfig = &config.RigsConfig{Rigs: make(map[string]config.RigEntry)}
@@ -732,10 +732,10 @@ func runSessionCheck(cmd *cobra.Command, args []string) error {
 	totalCrashed := 0
 
 	for _, r := range rigs {
-		polecatsDir := filepath.Join(r.Path, "polecats")
-		entries, err := os.ReadDir(polecatsDir)
+		minersDir := filepath.Join(r.Path, "miners")
+		entries, err := os.ReadDir(minersDir)
 		if err != nil {
-			continue // Rig might not have polecats
+			continue // Rig might not have miners
 		}
 
 		for _, entry := range entries {
@@ -745,23 +745,23 @@ func runSessionCheck(cmd *cobra.Command, args []string) error {
 			if strings.HasPrefix(entry.Name(), ".") {
 				continue
 			}
-			polecatName := entry.Name()
-			sessionName := session.PolecatSessionName(session.PrefixFor(r.Name), polecatName)
+			minerName := entry.Name()
+			sessionName := session.MinerSessionName(session.PrefixFor(r.Name), minerName)
 			totalChecked++
 
 			// Check if session exists
 			running, err := t.HasSession(sessionName)
 			if err != nil {
-				fmt.Printf("  %s %s/%s: %s\n", style.Bold.Render("⚠"), r.Name, polecatName, style.Dim.Render("error checking session"))
+				fmt.Printf("  %s %s/%s: %s\n", style.Bold.Render("⚠"), r.Name, minerName, style.Dim.Render("error checking session"))
 				continue
 			}
 
 			if running {
-				fmt.Printf("  %s %s/%s: %s\n", style.Bold.Render("✓"), r.Name, polecatName, style.Dim.Render("session alive"))
+				fmt.Printf("  %s %s/%s: %s\n", style.Bold.Render("✓"), r.Name, minerName, style.Dim.Render("session alive"))
 				totalHealthy++
 			} else {
-				// Check if polecat has work on hook (would need restart)
-				fmt.Printf("  %s %s/%s: %s\n", style.Bold.Render("✗"), r.Name, polecatName, style.Dim.Render("session not running"))
+				// Check if miner has work on hook (would need restart)
+				fmt.Printf("  %s %s/%s: %s\n", style.Bold.Render("✗"), r.Name, minerName, style.Dim.Render("session not running"))
 				totalCrashed++
 			}
 		}
@@ -772,7 +772,7 @@ func runSessionCheck(cmd *cobra.Command, args []string) error {
 		style.Bold.Render("📊"), totalChecked, totalHealthy, totalCrashed)
 
 	if totalCrashed > 0 {
-		fmt.Printf("\n%s To restart crashed polecats: gt session restart <rig>/<polecat>\n",
+		fmt.Printf("\n%s To restart crashed miners: gt session restart <rig>/<miner>\n",
 			style.Dim.Render("Tip:"))
 	}
 

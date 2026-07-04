@@ -1,7 +1,7 @@
 ---
-description: Run a patrol cycle for the current agent role (witness, deacon, or refinery)
+description: Run a patrol cycle for the current agent role (witness, supervisor, or refinery)
 allowed-tools: Bash(gt patrol:*), Bash(gt hook:*), Bash(gt mail:*), Bash(gt nudge:*), Bash(gt peek:*), Bash(gt escalate:*), Bash(gt dolt status:*), Bash(bd :*), Bash(gt mol:*)
-argument-hint: [witness|deacon|refinery]
+argument-hint: [witness|supervisor|refinery]
 ---
 
 # Patrol
@@ -20,7 +20,7 @@ echo $GT_ROLE
 
 Map to patrol type:
 - `*/witness` → witness patrol (`mol-witness-patrol`)
-- `*/deacon` or `*/deacon/*` → deacon patrol (`mol-deacon-patrol`)
+- `*/supervisor` or `*/supervisor/*` → supervisor patrol (`mol-supervisor-patrol`)
 - `*/refinery` → refinery patrol (`mol-refinery-patrol`)
 - Explicit argument overrides detection
 
@@ -35,17 +35,17 @@ If a patrol is already running (wisp exists on hook), resume it instead.
 
 ## Witness Patrol Steps
 
-The witness is the per-rig polecat supervisor. Execute in order:
+The witness is the per-rig miner supervisor. Execute in order:
 
 ### 1. inbox-check
 ```bash
 gt mail inbox
 ```
-Process any pending messages: POLECAT_DONE, MERGED, HELP, escalations.
+Process any pending messages: MINER_DONE, MERGED, HELP, escalations.
 Read each with `gt mail read <id>` and take appropriate action.
 
 ### 2. process-cleanups
-Check for cleanup wisps (dirty state from dead polecats):
+Check for cleanup wisps (dirty state from dead miners):
 ```bash
 bd list --status=open --label=cleanup --json
 ```
@@ -53,25 +53,25 @@ Process each: verify git state, clean worktrees, close cleanup wisps.
 
 ### 3. check-refinery
 ```bash
-gt peek gastown/refinery
+gt peek excavation/refinery
 ```
 Verify refinery is alive and processing the merge queue.
-If stuck, nudge: `gt nudge gastown/refinery "Health check — are you processing?"`
+If stuck, nudge: `gt nudge excavation/refinery "Health check — are you processing?"`
 
 ### 4. survey-workers
-Check all active polecats in the rig:
+Check all active miners in the rig:
 ```bash
-gt peek gastown/polecats
+gt peek excavation/miners
 ```
-For each active polecat:
+For each active miner:
 - Check if session is alive (has recent activity)
 - Check if work is progressing (commits, bead updates)
 - Detect zombies: session dead but agent_state says working
 - Detect stale spawns: spawning > 10 minutes
 
-Nudge idle polecats:
+Nudge idle miners:
 ```bash
-gt nudge gastown/polecats/<name> "Progress check — what's your status?"
+gt nudge excavation/miners/<name> "Progress check — what's your status?"
 ```
 
 ### 5. check-timer-gates
@@ -81,9 +81,9 @@ bd list --label=gate:timer --status=open --json
 Evaluate any timer-based gates that may have elapsed.
 
 ### 6. check-swarm
-Check for convoy/swarm completion across coordinated work:
+Check for minecart/swarm completion across coordinated work:
 ```bash
-bd list --label=convoy --status=open --json
+bd list --label=minecart --status=open --json
 ```
 
 ### 7. patrol-cleanup
@@ -101,15 +101,15 @@ Report cycle results and spawn next cycle:
 gt patrol report --summary "<cycle summary>" --steps "inbox:OK,cleanup:OK,..."
 ```
 
-## Deacon Patrol Steps
+## Supervisor Patrol Steps
 
-The deacon is the town-wide daemon monitor. Key steps:
+The supervisor is the town-wide daemon monitor. Key steps:
 
-1. **inbox-check** — Process callbacks from witnesses, refineries, polecats
-2. **trigger-pending-spawns** — Launch queued polecat spawns
+1. **inbox-check** — Process callbacks from witnesses, refineries, miners
+2. **trigger-pending-spawns** — Launch queued miner spawns
 3. **gate-evaluation** — Check async gates (timer, dependency)
 4. **dispatch-gated-molecules** — Release molecules whose gates cleared
-5. **check-convoy-completion** — Track multi-rig coordinated work
+5. **check-minecart-completion** — Track multi-rig coordinated work
 6. **health-scan** — Check Dolt health (`gt dolt status`), agent health
 7. **zombie-scan** — Find dead sessions, orphaned wisps
 8. **plugin-run** — Execute enabled plugins (backup, reaper, etc.)

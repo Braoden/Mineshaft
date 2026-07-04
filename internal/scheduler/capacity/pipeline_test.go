@@ -166,7 +166,7 @@ func TestReconstructFromContext(t *testing.T) {
 	ctx := &SlingContextFields{
 		WorkBeadID:  "bead-123",
 		TargetRig:   "prod-rig",
-		Formula:     "mol-polecat-work",
+		Formula:     "mol-miner-work",
 		Args:        "do stuff",
 		Vars:        "x=1\ny=2",
 		Merge:       "mr",
@@ -187,8 +187,8 @@ func TestReconstructFromContext(t *testing.T) {
 	if params.RigName != "prod-rig" {
 		t.Errorf("RigName: got %q, want %q", params.RigName, "prod-rig")
 	}
-	if params.FormulaName != "mol-polecat-work" {
-		t.Errorf("FormulaName: got %q, want %q", params.FormulaName, "mol-polecat-work")
+	if params.FormulaName != "mol-miner-work" {
+		t.Errorf("FormulaName: got %q, want %q", params.FormulaName, "mol-miner-work")
 	}
 	if params.Args != "do stuff" {
 		t.Errorf("Args: got %q, want %q", params.Args, "do stuff")

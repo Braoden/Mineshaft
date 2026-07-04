@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 // legacySocketTmux is the subset of tmux.Tmux used by legacy socket cleanup.
@@ -34,7 +34,7 @@ func newLegacyTmux(socket string) legacySocketTmux {
 	return tmux.NewTmuxWithSocket(socket)
 }
 
-// CleanupLegacyDefaultSocket removes Gas Town sessions left on the "default"
+// CleanupLegacyDefaultSocket removes Excavation Site sessions left on the "default"
 // tmux socket by old binaries. Returns the number of sessions cleaned.
 func CleanupLegacyDefaultSocket() int {
 	currentSocket := getDefaultSocket()
@@ -46,7 +46,7 @@ func CleanupLegacyDefaultSocket() int {
 	return cleanupLegacySessions(legacyTmux)
 }
 
-// CountLegacyDefaultSocketSessions counts Gas Town sessions on the "default"
+// CountLegacyDefaultSocketSessions counts Excavation Site sessions on the "default"
 // tmux socket for dry-run output.
 func CountLegacyDefaultSocketSessions() int {
 	currentSocket := getDefaultSocket()
@@ -69,7 +69,7 @@ func CountLegacyDefaultSocketSessions() int {
 	return count
 }
 
-// CleanupLegacyBaseSocket removes Gas Town sessions left on the old
+// CleanupLegacyBaseSocket removes Excavation Site sessions left on the old
 // basename-only tmux socket by binaries from before path-hashed socket names
 // were introduced. Returns the number of sessions cleaned.
 func CleanupLegacyBaseSocket(townRoot string) int {
@@ -83,7 +83,7 @@ func CleanupLegacyBaseSocket(townRoot string) int {
 	return cleanupLegacySessions(legacyTmux)
 }
 
-// CountLegacyBaseSocketSessions counts Gas Town sessions on the old
+// CountLegacyBaseSocketSessions counts Excavation Site sessions on the old
 // basename-only tmux socket for dry-run output.
 func CountLegacyBaseSocketSessions(townRoot string) int {
 	currentSocket := getDefaultSocket()
@@ -142,9 +142,9 @@ func legacyCleanupTargets(sessions []string) []string {
 
 func legacyCleanupPriority(sess string) int {
 	switch sess {
-	case DeaconSessionName(), BootSessionName():
+	case SupervisorSessionName(), BootSessionName():
 		return 0
-	case MayorSessionName():
+	case OverseerSessionName():
 		return 1
 	}
 	if strings.HasPrefix(sess, HQPrefix+"dog-") {
@@ -161,7 +161,7 @@ func legacyCleanupPriority(sess string) int {
 
 func isLegacyCleanupSession(sess string) bool {
 	switch sess {
-	case MayorSessionName(), DeaconSessionName(), BootSessionName():
+	case OverseerSessionName(), SupervisorSessionName(), BootSessionName():
 		return true
 	}
 	if strings.HasPrefix(sess, HQPrefix+"dog-") && strings.TrimPrefix(sess, HQPrefix+"dog-") != "" {

@@ -9,7 +9,7 @@ import (
 )
 
 func TestPath(t *testing.T) {
-	dir := "/some/polecat/dir"
+	dir := "/some/miner/dir"
 	got := Path(dir)
 	want := filepath.Join(dir, Filename)
 	if got != want {

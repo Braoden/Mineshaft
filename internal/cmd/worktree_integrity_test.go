@@ -7,17 +7,17 @@ import (
 	"strings"
 	"testing"
 
-	worktreeintegrity "github.com/steveyegge/gastown/internal/worktree"
+	worktreeintegrity "github.com/steveyegge/excavation/internal/worktree"
 )
 
-func TestEnsureRoleWorktreeIntegrityRequiresPolecatMetadata(t *testing.T) {
+func TestEnsureRoleWorktreeIntegrityRequiresMinerMetadata(t *testing.T) {
 	townRoot := t.TempDir()
-	cwd := filepath.Join(townRoot, "gastown", "polecats", "deathclaw", "gastown")
+	cwd := filepath.Join(townRoot, "excavation", "miners", "deathclaw", "excavation")
 	if err := os.MkdirAll(cwd, 0755); err != nil {
 		t.Fatal(err)
 	}
 
-	err := ensureRoleWorktreeIntegrity(cwd, townRoot, RolePolecat)
+	err := ensureRoleWorktreeIntegrity(cwd, townRoot, RoleMiner)
 	if !errors.Is(err, worktreeintegrity.ErrIntegrityViolation) {
 		t.Fatalf("ensureRoleWorktreeIntegrity() error = %v, want ErrIntegrityViolation", err)
 	}
@@ -53,10 +53,10 @@ func TestEnsureRoleWorktreeIntegrityRejectsMalformedOptionalMetadata(t *testing.
 func TestRunMoleculeStatusExplicitTargetValidatesCallerWorktree(t *testing.T) {
 	t.Setenv(EnvGTRole, "")
 	townRoot := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	cwd := filepath.Join(townRoot, "gastown", "polecats", "deathclaw")
+	cwd := filepath.Join(townRoot, "excavation", "miners", "deathclaw")
 	if err := os.MkdirAll(cwd, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -72,7 +72,7 @@ func TestRunMoleculeStatusExplicitTargetValidatesCallerWorktree(t *testing.T) {
 		_ = os.Chdir(oldWD)
 	})
 
-	err = runMoleculeStatus(nil, []string{"gastown/polecats/toast"})
+	err = runMoleculeStatus(nil, []string{"excavation/miners/toast"})
 	if !errors.Is(err, worktreeintegrity.ErrIntegrityViolation) {
 		t.Fatalf("runMoleculeStatus() error = %v, want ErrIntegrityViolation", err)
 	}

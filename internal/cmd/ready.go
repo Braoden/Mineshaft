@@ -11,13 +11,13 @@ import (
 	"sync"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/rig"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var readyJSON bool
@@ -30,7 +30,7 @@ var readyCmd = &cobra.Command{
 	Long: `Display all ready work items across the town and all rigs.
 
 Aggregates ready issues from:
-- Town beads (hq-* items: convoys, cross-rig coordination)
+- Town beads (hq-* items: minecarts, cross-rig coordination)
 - Each rig's beads (project-level issues, MRs)
 
 Ready items have no blockers and can be worked immediately.
@@ -39,7 +39,7 @@ Results are sorted by priority (highest first) then by source.
 Examples:
   gt ready              # Show all ready work
   gt ready --json       # Output as JSON
-  gt ready --rig=gastown  # Show only one rig`,
+  gt ready --rig=excavation  # Show only one rig`,
 	RunE: runReady,
 }
 
@@ -78,11 +78,11 @@ func runReady(cmd *cobra.Command, args []string) error {
 	// Find town root
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Load rigs config
-	rigsConfigPath := constants.MayorRigsPath(townRoot)
+	rigsConfigPath := constants.OverseerRigsPath(townRoot)
 	rigsConfig, err := config.LoadRigsConfig(rigsConfigPath)
 	if err != nil {
 		rigsConfig = &config.RigsConfig{Rigs: make(map[string]config.RigEntry)}
@@ -154,7 +154,7 @@ func runReady(cmd *cobra.Command, args []string) error {
 		go func(r *rig.Rig) {
 			defer wg.Done()
 			// Use rig root path where rig-level beads are stored
-			// BeadsPath returns rig root; redirect system handles mayor/rig routing
+			// BeadsPath returns rig root; redirect system handles overseer/rig routing
 			rigBeads := beads.New(r.BeadsPath())
 			issues, err := rigBeads.Ready()
 
@@ -424,7 +424,7 @@ func getWispIDs(beadsPath string) map[string]bool {
 //   - issue_type "agent" (agent lifecycle beads)
 //   - Labels if present (gt:agent, gt:role, gt:rig)
 //   - ID suffix "-role" (role definition beads like hq-crew-role)
-//   - ID prefix matching "<prefix>-rig-" (rig identity beads like gt-rig-gastown)
+//   - ID prefix matching "<prefix>-rig-" (rig identity beads like gt-rig-excavation)
 func filterIdentityBeads(issues []*beads.Issue) []*beads.Issue {
 	identityLabels := map[string]bool{
 		"gt:agent": true,

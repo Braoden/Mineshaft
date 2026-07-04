@@ -189,7 +189,7 @@ func (c *CrewStateCheck) findAllCrewDirs(townRoot string) []crewDir {
 	}
 
 	for _, entry := range entries {
-		if !entry.IsDir() || strings.HasPrefix(entry.Name(), ".") || entry.Name() == "mayor" {
+		if !entry.IsDir() || strings.HasPrefix(entry.Name(), ".") || entry.Name() == "overseer" {
 			continue
 		}
 
@@ -284,9 +284,9 @@ func (c *CrewWorktreeCheck) Fix(ctx *CheckContext) error {
 	var lastErr error
 	for _, wt := range c.staleWorktrees {
 		// Use git worktree remove to properly clean up
-		mayorRigPath := filepath.Join(ctx.TownRoot, wt.rigName, "mayor", "rig")
+		overseerRigPath := filepath.Join(ctx.TownRoot, wt.rigName, "overseer", "rig")
 		removeCmd := exec.Command("git", "worktree", "remove", "--force", wt.path)
-		removeCmd.Dir = mayorRigPath
+		removeCmd.Dir = overseerRigPath
 		if output, err := removeCmd.CombinedOutput(); err != nil {
 			lastErr = fmt.Errorf("%s/crew/%s: %v (%s)", wt.rigName, wt.name, err, strings.TrimSpace(string(output)))
 		}
@@ -307,7 +307,7 @@ func (c *CrewWorktreeCheck) findCrewWorktrees(townRoot string) []staleWorktree {
 	}
 
 	for _, entry := range entries {
-		if !entry.IsDir() || strings.HasPrefix(entry.Name(), ".") || entry.Name() == "mayor" {
+		if !entry.IsDir() || strings.HasPrefix(entry.Name(), ".") || entry.Name() == "overseer" {
 			continue
 		}
 

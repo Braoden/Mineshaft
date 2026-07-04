@@ -11,15 +11,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	gtgit "github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/refinery"
-	"github.com/steveyegge/gastown/internal/rig"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/util"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	gtgit "github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/refinery"
+	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/util"
 )
 
 // BeadsMessage represents a message from gt mail inbox --json.
@@ -39,17 +39,17 @@ type BeadsMessage struct {
 // Configurable via operational.daemon.max_lifecycle_message_age.
 const MaxLifecycleMessageAge = 6 * time.Hour
 
-// ProcessLifecycleRequests checks for and processes lifecycle requests from the deacon inbox.
+// ProcessLifecycleRequests checks for and processes lifecycle requests from the supervisor inbox.
 func (d *Daemon) ProcessLifecycleRequests() {
-	// Get mail for deacon identity (using gt mail, not bd mail)
-	cmd := exec.Command(d.gtPath, "mail", "inbox", "--identity", "deacon/", "--json")
+	// Get mail for supervisor identity (using gt mail, not bd mail)
+	cmd := exec.Command(d.gtPath, "mail", "inbox", "--identity", "supervisor/", "--json")
 	cmd.Dir = d.config.TownRoot
 	cmd.Env = bdReadOnlyPinnedEnv(filepath.Join(d.config.TownRoot, ".beads"))
 	util.SetDetachedProcessGroup(cmd)
 
 	output, err := cmd.Output()
 	if err != nil {
-		d.logger.Printf("Warning: failed to fetch deacon inbox: %v", err)
+		d.logger.Printf("Warning: failed to fetch supervisor inbox: %v", err)
 		return
 	}
 
@@ -222,9 +222,9 @@ func (d *Daemon) executeLifecycleAction(request *LifecycleRequest) error {
 // ParsedIdentity holds the components extracted from an agent identity string.
 // This is used to look up the appropriate role config for lifecycle management.
 type ParsedIdentity struct {
-	RoleType  string // mayor, deacon, witness, refinery, crew, polecat
-	RigName   string // Empty for town-level agents (mayor, deacon)
-	AgentName string // Empty for singletons (mayor, deacon, witness, refinery)
+	RoleType  string // overseer, supervisor, witness, refinery, crew, miner
+	RigName   string // Empty for town-level agents (overseer, supervisor)
+	AgentName string // Empty for singletons (overseer, supervisor, witness, refinery)
 }
 
 // parseIdentity extracts role type, rig name, and agent name from an identity string.
@@ -232,10 +232,10 @@ type ParsedIdentity struct {
 // All other functions should use the extracted components to look up role config.
 func parseIdentity(identity string) (*ParsedIdentity, error) {
 	switch identity {
-	case constants.RoleMayor:
-		return &ParsedIdentity{RoleType: constants.RoleMayor}, nil
-	case constants.RoleDeacon:
-		return &ParsedIdentity{RoleType: constants.RoleDeacon}, nil
+	case constants.RoleOverseer:
+		return &ParsedIdentity{RoleType: constants.RoleOverseer}, nil
+	case constants.RoleSupervisor:
+		return &ParsedIdentity{RoleType: constants.RoleSupervisor}, nil
 	}
 
 	// Pattern: <rig>-witness → witness role
@@ -258,19 +258,19 @@ func parseIdentity(identity string) (*ParsedIdentity, error) {
 		}
 	}
 
-	// Pattern: <rig>-polecat-<name> → polecat role
-	if strings.Contains(identity, "-polecat-") {
-		parts := strings.SplitN(identity, "-polecat-", 2)
+	// Pattern: <rig>-miner-<name> → miner role
+	if strings.Contains(identity, "-miner-") {
+		parts := strings.SplitN(identity, "-miner-", 2)
 		if len(parts) == 2 {
-			return &ParsedIdentity{RoleType: constants.RolePolecat, RigName: parts[0], AgentName: parts[1]}, nil
+			return &ParsedIdentity{RoleType: constants.RoleMiner, RigName: parts[0], AgentName: parts[1]}, nil
 		}
 	}
 
-	// Pattern: <rig>/polecats/<name> → polecat role (slash format)
-	if strings.Contains(identity, "/polecats/") {
-		parts := strings.Split(identity, "/polecats/")
+	// Pattern: <rig>/miners/<name> → miner role (slash format)
+	if strings.Contains(identity, "/miners/") {
+		parts := strings.Split(identity, "/miners/")
 		if len(parts) == 2 {
-			return &ParsedIdentity{RoleType: constants.RolePolecat, RigName: parts[0], AgentName: parts[1]}, nil
+			return &ParsedIdentity{RoleType: constants.RoleMiner, RigName: parts[0], AgentName: parts[1]}, nil
 		}
 	}
 
@@ -321,18 +321,18 @@ func (d *Daemon) identityToSession(identity string) string {
 	}
 
 	switch parsed.RoleType {
-	case constants.RoleMayor:
-		return session.MayorSessionName()
-	case constants.RoleDeacon:
-		return session.DeaconSessionName()
+	case constants.RoleOverseer:
+		return session.OverseerSessionName()
+	case constants.RoleSupervisor:
+		return session.SupervisorSessionName()
 	case constants.RoleWitness:
 		return session.WitnessSessionName(session.PrefixFor(parsed.RigName))
 	case constants.RoleRefinery:
 		return session.RefinerySessionName(session.PrefixFor(parsed.RigName))
 	case constants.RoleCrew:
 		return session.CrewSessionName(session.PrefixFor(parsed.RigName), parsed.AgentName)
-	case constants.RolePolecat:
-		return session.PolecatSessionName(session.PrefixFor(parsed.RigName), parsed.AgentName)
+	case constants.RoleMiner:
+		return session.MinerSessionName(session.PrefixFor(parsed.RigName), parsed.AgentName)
 	default:
 		return ""
 	}
@@ -347,8 +347,8 @@ func (d *Daemon) restartSession(sessionName, identity string) error {
 		return fmt.Errorf("parsing identity: %w", err)
 	}
 
-	// Check rig operational state for rig-level agents (witness, refinery, crew, polecat)
-	// Town-level agents (mayor, deacon) are not affected by rig state
+	// Check rig operational state for rig-level agents (witness, refinery, crew, miner)
+	// Town-level agents (overseer, supervisor) are not affected by rig state
 	if parsed.RigName != "" {
 		if operational, reason := d.isRigOperational(parsed.RigName); !operational {
 			d.logger.Printf("Skipping session restart for %s: %s", identity, reason)
@@ -389,7 +389,7 @@ func (d *Daemon) restartSession(sessionName, identity string) error {
 	// already embeds these via PrependEnv, but -e flags provide defense-in-depth:
 	// they seed the session environment before any shell starts, overriding
 	// global env values (e.g., BD_ACTOR=daemon inherited from the daemon process).
-	// Without this, a polecat session restarted by the daemon could inherit
+	// Without this, a miner session restarted by the daemon could inherit
 	// BD_ACTOR=daemon and have gt done reject it with "you are daemon" (gt-xyr).
 	rigPath := ""
 	if parsed != nil && parsed.RigName != "" {
@@ -446,9 +446,9 @@ func (d *Daemon) getWorkDir(config *beads.RoleConfig, parsed *ParsedIdentity) st
 
 	// Fallback: use default patterns based on role type
 	switch parsed.RoleType {
-	case constants.RoleMayor:
+	case constants.RoleOverseer:
 		return d.config.TownRoot
-	case constants.RoleDeacon:
+	case constants.RoleSupervisor:
 		return d.config.TownRoot
 	case constants.RoleWitness:
 		return filepath.Join(d.config.TownRoot, parsed.RigName)
@@ -456,14 +456,14 @@ func (d *Daemon) getWorkDir(config *beads.RoleConfig, parsed *ParsedIdentity) st
 		return filepath.Join(d.config.TownRoot, parsed.RigName, "refinery", "rig")
 	case constants.RoleCrew:
 		return filepath.Join(d.config.TownRoot, parsed.RigName, "crew", parsed.AgentName)
-	case constants.RolePolecat:
-		// New structure: polecats/<name>/<rigname>/ (for LLM ergonomics)
-		// Old structure: polecats/<name>/ (for backward compat)
-		newPath := filepath.Join(d.config.TownRoot, parsed.RigName, "polecats", parsed.AgentName, parsed.RigName)
+	case constants.RoleMiner:
+		// New structure: miners/<name>/<rigname>/ (for LLM ergonomics)
+		// Old structure: miners/<name>/ (for backward compat)
+		newPath := filepath.Join(d.config.TownRoot, parsed.RigName, "miners", parsed.AgentName, parsed.RigName)
 		if _, err := os.Stat(newPath); err == nil {
 			return newPath
 		}
-		return filepath.Join(d.config.TownRoot, parsed.RigName, "polecats", parsed.AgentName)
+		return filepath.Join(d.config.TownRoot, parsed.RigName, "miners", parsed.AgentName)
 	default:
 		return ""
 	}
@@ -545,8 +545,8 @@ func (d *Daemon) getStartCommand(roleConfig *beads.RoleConfig, parsed *ParsedIde
 		Topic:     "lifecycle-restart",
 	}, "Run `gt prime --hook` and begin work.")
 
-	// Inline AgentEnv into the command for ALL roles, not just polecat/crew.
-	// Without this, daemon-restarted witness/refinery/mayor/deacon sessions
+	// Inline AgentEnv into the command for ALL roles, not just miner/crew.
+	// Without this, daemon-restarted witness/refinery/overseer/supervisor sessions
 	// don't get BEADS_DOLT_PORT, GT_ROLE, GT_RIG, etc. in Claude's env. Their
 	// bd subprocess then falls back to embedded-Dolt auto-discovery instead of
 	// connecting to the central server (gt-neycp).
@@ -574,7 +574,7 @@ func (d *Daemon) getStartCommand(roleConfig *beads.RoleConfig, parsed *ParsedIde
 func (d *Daemon) setSessionEnvironment(sessionName string, roleConfig *beads.RoleConfig, parsed *ParsedIdentity) {
 	// Resolve CLAUDE_CONFIG_DIR from accounts.json so daemon-restarted sessions
 	// use the correct account. Mirrors the crew startup path (start.go).
-	accountsPath := constants.MayorAccountsPath(d.config.TownRoot)
+	accountsPath := constants.OverseerAccountsPath(d.config.TownRoot)
 	runtimeConfigDir, _, _ := config.ResolveAccountConfigDir(accountsPath, "")
 	if runtimeConfigDir == "" {
 		runtimeConfigDir = os.Getenv("CLAUDE_CONFIG_DIR")
@@ -600,7 +600,7 @@ func (d *Daemon) setSessionEnvironment(sessionName string, roleConfig *beads.Rol
 
 	// Set any custom env vars from role config.
 	// Skip keys already set by AgentEnv to prevent TOML [env] from clobbering
-	// canonical qualified values (e.g., GT_ROLE). See: https://github.com/steveyegge/gastown/issues/2492
+	// canonical qualified values (e.g., GT_ROLE). See: https://github.com/steveyegge/excavation/issues/2492
 	if roleConfig != nil {
 		for k, v := range roleConfig.EnvVars {
 			if _, alreadySet := envVars[k]; alreadySet {
@@ -617,12 +617,12 @@ func (d *Daemon) applySessionTheme(sessionName string, parsed *ParsedIdentity) {
 	rigName := parsed.RigName
 	role := parsed.RoleType
 	worker := parsed.RoleType
-	if role == constants.RoleMayor {
+	if role == constants.RoleOverseer {
 		rigName = ""
-		worker = "Mayor"
+		worker = "Overseer"
 	}
 	theme := tmux.ResolveSessionTheme(d.config.TownRoot, rigName, role, parsed.AgentName)
-	_ = d.tmux.ConfigureGasTownSession(sessionName, theme, rigName, worker, role)
+	_ = d.tmux.ConfigureExcavationSession(sessionName, theme, rigName, worker, role)
 }
 
 // syncFailureEscalationThreshold is the default number of consecutive pull failures
@@ -825,11 +825,11 @@ func (d *Daemon) getAgentBeadState(agentBeadID string) (string, error) {
 
 // getAgentBeadInfo fetches and parses an agent bead by ID.
 //
-// Agent beads (gt:agent-labeled, one per polecat/witness/refinery/dog) live
+// Agent beads (gt:agent-labeled, one per miner/witness/refinery/dog) live
 // in the town/hq Dolt DB but their IDs carry the rig prefix (e.g. za-zack-
-// polecat-furiosa). Without forcing BEADS_DIR to the town's .beads, prefix
+// miner-furiosa). Without forcing BEADS_DIR to the town's .beads, prefix
 // routing would send the lookup to the rig's DB and return "issue not found"
-// — which the reaper at daemon.go:2796 interprets as a stale polecat and
+// — which the reaper at daemon.go:2796 interprets as a stale miner and
 // kills mid-work after 3x threshold (hq-3kri). Pin the lookup to the town
 // .beads so the reaper sees the truth.
 func (d *Daemon) getAgentBeadInfo(agentBeadID string) (*AgentBeadInfo, error) {
@@ -922,10 +922,10 @@ func (d *Daemon) identityToAgentBeadID(identity string) string {
 	}
 
 	switch parsed.RoleType {
-	case constants.RoleDeacon:
-		return beads.DeaconBeadIDTown()
-	case constants.RoleMayor:
-		return beads.MayorBeadIDTown()
+	case constants.RoleSupervisor:
+		return beads.SupervisorBeadIDTown()
+	case constants.RoleOverseer:
+		return beads.OverseerBeadIDTown()
 	case constants.RoleWitness:
 		prefix := config.GetRigPrefix(d.config.TownRoot, parsed.RigName)
 		return beads.WitnessBeadIDWithPrefix(prefix, parsed.RigName)
@@ -935,9 +935,9 @@ func (d *Daemon) identityToAgentBeadID(identity string) string {
 	case constants.RoleCrew:
 		prefix := config.GetRigPrefix(d.config.TownRoot, parsed.RigName)
 		return beads.CrewBeadIDWithPrefix(prefix, parsed.RigName, parsed.AgentName)
-	case constants.RolePolecat:
+	case constants.RoleMiner:
 		prefix := config.GetRigPrefix(d.config.TownRoot, parsed.RigName)
-		return beads.PolecatBeadIDWithPrefix(prefix, parsed.RigName, parsed.AgentName)
+		return beads.MinerBeadIDWithPrefix(prefix, parsed.RigName, parsed.AgentName)
 	default:
 		return ""
 	}
@@ -951,7 +951,7 @@ func (d *Daemon) identityToAgentBeadID(identity string) string {
 // Uses parseIdentity to extract components, then builds the slash format.
 func identityToBDActor(identity string) string {
 	// Handle already-slash-formatted identities
-	if strings.Contains(identity, "/polecats/") || strings.Contains(identity, "/crew/") ||
+	if strings.Contains(identity, "/miners/") || strings.Contains(identity, "/crew/") ||
 		strings.Contains(identity, "/witness") || strings.Contains(identity, "/refinery") {
 		return identity
 	}
@@ -962,7 +962,7 @@ func identityToBDActor(identity string) string {
 	}
 
 	switch parsed.RoleType {
-	case constants.RoleMayor, constants.RoleDeacon:
+	case constants.RoleOverseer, constants.RoleSupervisor:
 		return parsed.RoleType
 	case constants.RoleWitness:
 		return parsed.RigName + "/witness"
@@ -970,8 +970,8 @@ func identityToBDActor(identity string) string {
 		return parsed.RigName + "/refinery"
 	case constants.RoleCrew:
 		return parsed.RigName + "/crew/" + parsed.AgentName
-	case constants.RolePolecat:
-		return parsed.RigName + "/polecats/" + parsed.AgentName
+	case constants.RoleMiner:
+		return parsed.RigName + "/miners/" + parsed.AgentName
 	default:
 		return identity
 	}
@@ -1086,10 +1086,10 @@ func (d *Daemon) checkGUPPViolations() {
 	}
 }
 
-// checkRigGUPPViolations checks polecats in a specific rig for GUPP violations.
+// checkRigGUPPViolations checks miners in a specific rig for GUPP violations.
 func (d *Daemon) checkRigGUPPViolations(rigName string) {
-	// List polecat agent beads for this rig (issues + wisps tables)
-	// Pattern: <prefix>-<rig>-polecat-<name> (e.g., gt-gastown-polecat-Toast)
+	// List miner agent beads for this rig (issues + wisps tables)
+	// Pattern: <prefix>-<rig>-miner-<name> (e.g., gt-excavation-miner-Toast)
 	var agents []struct {
 		ID          string   `json:"id"`
 		Description string   `json:"description"`
@@ -1106,12 +1106,12 @@ func (d *Daemon) checkRigGUPPViolations(rigName string) {
 		return
 	}
 
-	// Use the rig's configured prefix (e.g., "gt" for gastown, "bd" for beads)
+	// Use the rig's configured prefix (e.g., "gt" for excavation, "bd" for beads)
 	rigPrefix := config.GetRigPrefix(d.config.TownRoot, rigName)
-	// Pattern: <prefix>-<rig>-polecat-<name>
-	prefix := rigPrefix + "-" + rigName + "-polecat-"
+	// Pattern: <prefix>-<rig>-miner-<name>
+	prefix := rigPrefix + "-" + rigName + "-miner-"
 	for _, agent := range agents {
-		// Only check polecats for this rig
+		// Only check miners for this rig
 		if !strings.HasPrefix(agent.ID, prefix) {
 			continue
 		}
@@ -1131,9 +1131,9 @@ func (d *Daemon) checkRigGUPPViolations(rigName string) {
 		}
 
 		// Per gt-zecmc: derive running state from tmux, not agent_state
-		// Extract polecat name from agent ID (<prefix>-<rig>-polecat-<name> -> <name>)
-		polecatName := strings.TrimPrefix(agent.ID, prefix)
-		sessionName := session.PolecatSessionName(session.PrefixFor(rigName), polecatName)
+		// Extract miner name from agent ID (<prefix>-<rig>-miner-<name> -> <name>)
+		minerName := strings.TrimPrefix(agent.ID, prefix)
+		sessionName := session.MinerSessionName(session.PrefixFor(rigName), minerName)
 
 		// Check if tmux session exists and agent is running
 		if d.tmux.IsAgentAlive(sessionName) {
@@ -1203,9 +1203,9 @@ func (d *Daemon) checkOrphanedWork() {
 	}
 }
 
-// checkRigOrphanedWork checks polecats in a specific rig for orphaned work.
+// checkRigOrphanedWork checks miners in a specific rig for orphaned work.
 func (d *Daemon) checkRigOrphanedWork(rigName string) {
-	// List polecat agent beads (issues + wisps tables)
+	// List miner agent beads (issues + wisps tables)
 	var agents []struct {
 		ID          string   `json:"id"`
 		HookBead    string   `json:"hook_bead"`
@@ -1220,12 +1220,12 @@ func (d *Daemon) checkRigOrphanedWork(rigName string) {
 		return
 	}
 
-	// Use the rig's configured prefix (e.g., "gt" for gastown, "bd" for beads)
+	// Use the rig's configured prefix (e.g., "gt" for excavation, "bd" for beads)
 	rigPrefix := config.GetRigPrefix(d.config.TownRoot, rigName)
-	// Pattern: <prefix>-<rig>-polecat-<name>
-	prefix := rigPrefix + "-" + rigName + "-polecat-"
+	// Pattern: <prefix>-<rig>-miner-<name>
+	prefix := rigPrefix + "-" + rigName + "-miner-"
 	for _, agent := range agents {
-		// Only check polecats for this rig
+		// Only check miners for this rig
 		if !strings.HasPrefix(agent.ID, prefix) {
 			continue
 		}
@@ -1244,8 +1244,8 @@ func (d *Daemon) checkRigOrphanedWork(rigName string) {
 		}
 
 		// Check if tmux session is alive (derive state from tmux, not bead)
-		polecatName := strings.TrimPrefix(agent.ID, prefix)
-		sessionName := session.PolecatSessionName(session.PrefixFor(rigName), polecatName)
+		minerName := strings.TrimPrefix(agent.ID, prefix)
+		sessionName := session.MinerSessionName(session.PrefixFor(rigName), minerName)
 
 		// Session running = not orphaned (work is being processed)
 		if d.tmux.IsAgentAlive(sessionName) {
@@ -1271,13 +1271,13 @@ func (d *Daemon) checkRigOrphanedWork(rigName string) {
 	}
 }
 
-// extractRigFromAgentID extracts the rig name from a polecat agent ID.
-// Example: gt-gastown-polecat-max → gastown
+// extractRigFromAgentID extracts the rig name from a miner agent ID.
+// Example: gt-excavation-miner-max → excavation
 func (d *Daemon) extractRigFromAgentID(agentID string) string {
 	// Use the beads package helper to correctly parse agent bead IDs.
-	// Pattern: <prefix>-<rig>-polecat-<name> (e.g., gt-gastown-polecat-Toast)
+	// Pattern: <prefix>-<rig>-miner-<name> (e.g., gt-excavation-miner-Toast)
 	rig, role, _, ok := beads.ParseAgentBeadID(agentID)
-	if !ok || role != constants.RolePolecat {
+	if !ok || role != constants.RoleMiner {
 		return ""
 	}
 	return rig

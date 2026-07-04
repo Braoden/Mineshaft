@@ -156,7 +156,7 @@ func typeSymbol(eventType string) string {
 		return "\U0001F989" // owl
 	case "patrol_complete":
 		return "\U0001F989" // owl
-	case "polecat_nudged":
+	case "miner_nudged":
 		return "\u26A1" // lightning
 	case "sling":
 		return "\U0001F3AF" // target

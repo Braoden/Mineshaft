@@ -13,8 +13,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/style"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/style"
 )
 
 var rigSettingsCmd = &cobra.Command{
@@ -44,7 +44,7 @@ var rigSettingsShowCmd = &cobra.Command{
 Shows the complete settings/config.json file as formatted JSON.
 
 Example:
-  gt rig settings show gastown`,
+  gt rig settings show excavation`,
 	Args: cobra.ExactArgs(1),
 	RunE: runRigSettingsShow,
 }
@@ -63,12 +63,12 @@ The value type is automatically inferred:
 If the settings file doesn't exist, it will be created with a valid scaffold.
 
 Examples:
-  gt rig settings set gastown agent claude
-  gt rig settings set gastown role_agents.witness gemini
-  gt rig settings set gastown merge_queue.max_concurrent 5
-  gt rig settings set gastown theme.disabled true
-  gt rig settings set gastown theme.name forest
-  gt rig settings set gastown theme.custom '{"bg":"#111111","fg":"#eeeeee"}'`,
+  gt rig settings set excavation agent claude
+  gt rig settings set excavation role_agents.witness gemini
+  gt rig settings set excavation merge_queue.max_concurrent 5
+  gt rig settings set excavation theme.disabled true
+  gt rig settings set excavation theme.name forest
+  gt rig settings set excavation theme.custom '{"bg":"#111111","fg":"#eeeeee"}'`,
 	Args: cobra.ExactArgs(3),
 	RunE: runRigSettingsSet,
 }
@@ -82,8 +82,8 @@ This removes the key from the settings file. For nested keys, only the
 specified key is removed (parent objects remain if they have other keys).
 
 Examples:
-  gt rig settings unset gastown agent
-  gt rig settings unset gastown role_agents.witness`,
+  gt rig settings unset excavation agent
+  gt rig settings unset excavation role_agents.witness`,
 	Args: cobra.ExactArgs(2),
 	RunE: runRigSettingsUnset,
 }

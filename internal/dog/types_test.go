@@ -49,7 +49,7 @@ func TestDogState_JSONMarshaling(t *testing.T) {
 		State:      StateWorking,
 		LastActive: now,
 		Work:       "hq-abc123",
-		Worktrees:  map[string]string{"gastown": "/path/to/worktree"},
+		Worktrees:  map[string]string{"excavation": "/path/to/worktree"},
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	}
@@ -118,7 +118,7 @@ func TestDogState_WithWorktrees(t *testing.T) {
 	dogState := DogState{
 		Name:      "alpha",
 		State:     StateWorking,
-		Worktrees: map[string]string{"gastown": "/path/1", "beads": "/path/2"},
+		Worktrees: map[string]string{"excavation": "/path/1", "beads": "/path/2"},
 	}
 
 	data, err := json.Marshal(dogState)

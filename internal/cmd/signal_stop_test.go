@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/mail"
+	"github.com/steveyegge/excavation/internal/mail"
 )
 
 func TestIsSelfHandoff(t *testing.T) {
@@ -18,37 +18,37 @@ func TestIsSelfHandoff(t *testing.T) {
 		{
 			name: "self handoff",
 			msg: &mail.Message{
-				From:    "gastown/crew/max",
+				From:    "excavation/crew/max",
 				Subject: "🤝 HANDOFF: Session cycling",
 			},
-			address: "gastown/crew/max",
+			address: "excavation/crew/max",
 			want:    true,
 		},
 		{
 			name: "handoff from other",
 			msg: &mail.Message{
-				From:    "gastown/crew/tom",
+				From:    "excavation/crew/tom",
 				Subject: "🤝 HANDOFF: Session cycling",
 			},
-			address: "gastown/crew/max",
+			address: "excavation/crew/max",
 			want:    false,
 		},
 		{
 			name: "non-handoff from self",
 			msg: &mail.Message{
-				From:    "gastown/crew/max",
+				From:    "excavation/crew/max",
 				Subject: "Regular message",
 			},
-			address: "gastown/crew/max",
+			address: "excavation/crew/max",
 			want:    false,
 		},
 		{
 			name: "handoff keyword in subject",
 			msg: &mail.Message{
-				From:    "gastown/crew/max",
+				From:    "excavation/crew/max",
 				Subject: "HANDOFF notes for next session",
 			},
-			address: "gastown/crew/max",
+			address: "excavation/crew/max",
 			want:    true,
 		},
 	}
@@ -80,8 +80,8 @@ func TestOutputStopBlock(t *testing.T) {
 }
 
 func TestStopStateFilePath(t *testing.T) {
-	got := stopStateFilePath("gastown/polecats/nux")
-	want := filepath.Join(os.TempDir(), "gt-signal-stop-gastown_polecats_nux.json")
+	got := stopStateFilePath("excavation/miners/nux")
+	want := filepath.Join(os.TempDir(), "gt-signal-stop-excavation_miners_nux.json")
 	if got != want {
 		t.Errorf("stopStateFilePath() = %q, want %q", got, want)
 	}
@@ -118,7 +118,7 @@ func TestStopStateRoundtrip(t *testing.T) {
 
 func TestStopStateDedupPreventsInfiniteLoop(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "test-state.json")
-	reason := "[gt signal stop] You have 1 unread message(s). Most recent from gastown/witness: \"NUDGE\""
+	reason := "[gt signal stop] You have 1 unread message(s). Most recent from excavation/witness: \"NUDGE\""
 
 	// First call: no saved state, should block
 	state := loadStopState(path)

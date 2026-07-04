@@ -14,7 +14,7 @@ import (
 // These fields track which molecule is attached to a handoff/pinned bead.
 type AttachmentFields struct {
 	AttachedMolecule string   // Root issue ID of the attached molecule
-	AttachedFormula  string   // Formula name (e.g., "mol-polecat-work") for inline step display
+	AttachedFormula  string   // Formula name (e.g., "mol-miner-work") for inline step display
 	AttachedAt       string   // ISO 8601 timestamp when attached
 	AttachedArgs     string   // Natural language args passed via gt sling --args (no-tmux mode)
 	AttachedVars     []string // Formula variables passed via gt sling --var
@@ -22,9 +22,9 @@ type AttachmentFields struct {
 	NoMerge          bool     // If true, gt done skips merge queue (for upstream PRs/human review)
 	ReviewOnly       bool     // If true, assignee must evaluate and report back — no merge/commit/push
 	Mode             string   // Execution mode: "" (normal) or "ralph" (Ralph Wiggum loop)
-	ConvoyID         string   // Convoy bead ID tracking this issue (e.g., "hq-cv-abc")
-	MergeStrategy    string   // Convoy merge strategy: "direct", "mr", "local", or "" (default = mr)
-	ConvoyOwned      bool     // If true, convoy has gt:owned label (caller-managed lifecycle)
+	MinecartID         string   // Minecart bead ID tracking this issue (e.g., "hq-cv-abc")
+	MergeStrategy    string   // Minecart merge strategy: "direct", "mr", "local", or "" (default = mr)
+	MinecartOwned      bool     // If true, minecart has gt:owned label (caller-managed lifecycle)
 	FormulaVars      string   // Newline-separated key=value pairs for formula template substitution
 }
 
@@ -86,14 +86,14 @@ func ParseAttachmentFields(issue *Issue) *AttachmentFields {
 		case "mode":
 			fields.Mode = value
 			hasFields = true
-		case "convoy_id", "convoy-id", "convoyid", "convoy":
-			fields.ConvoyID = value
+		case "minecart_id", "minecart-id", "minecartid", "minecart":
+			fields.MinecartID = value
 			hasFields = true
 		case "merge_strategy", "merge-strategy", "mergestrategy":
 			fields.MergeStrategy = value
 			hasFields = true
-		case "convoy_owned", "convoy-owned", "convoyowned":
-			fields.ConvoyOwned = strings.ToLower(value) == "true"
+		case "minecart_owned", "minecart-owned", "minecartowned":
+			fields.MinecartOwned = strings.ToLower(value) == "true"
 			hasFields = true
 		case "formula_vars", "formula-vars", "formulavars":
 			formulaVars = append(formulaVars, splitFormulaVars(parseFormulaVars(value))...)
@@ -146,14 +146,14 @@ func FormatAttachmentFields(fields *AttachmentFields) string {
 	if fields.Mode != "" {
 		lines = append(lines, "mode: "+fields.Mode)
 	}
-	if fields.ConvoyID != "" {
-		lines = append(lines, "convoy_id: "+fields.ConvoyID)
+	if fields.MinecartID != "" {
+		lines = append(lines, "minecart_id: "+fields.MinecartID)
 	}
 	if fields.MergeStrategy != "" {
 		lines = append(lines, "merge_strategy: "+fields.MergeStrategy)
 	}
-	if fields.ConvoyOwned {
-		lines = append(lines, "convoy_owned: true")
+	if fields.MinecartOwned {
+		lines = append(lines, "minecart_owned: true")
 	}
 	if fields.FormulaVars != "" {
 		if formatted := formatFormulaVars(fields.FormulaVars); formatted != "" {
@@ -195,16 +195,16 @@ func SetAttachmentFields(issue *Issue, fields *AttachmentFields) string {
 		"review-only":       true,
 		"reviewonly":        true,
 		"mode":              true,
-		"convoy_id":         true,
-		"convoy-id":         true,
-		"convoyid":          true,
-		"convoy":            true,
+		"minecart_id":         true,
+		"minecart-id":         true,
+		"minecartid":          true,
+		"minecart":            true,
 		"merge_strategy":    true,
 		"merge-strategy":    true,
 		"mergestrategy":     true,
-		"convoy_owned":      true,
-		"convoy-owned":      true,
-		"convoyowned":       true,
+		"minecart_owned":      true,
+		"minecart-owned":      true,
+		"minecartowned":       true,
 		"formula_vars":      true,
 		"formula-vars":      true,
 		"formulavars":       true,
@@ -258,27 +258,27 @@ func SetAttachmentFields(issue *Issue, fields *AttachmentFields) string {
 	return formatted + "\n\n" + strings.Join(otherLines, "\n")
 }
 
-// ConvoyFields holds the structured fields for a convoy bead.
+// MinecartFields holds the structured fields for a minecart bead.
 // These fields are stored as key: value lines in the issue description.
-type ConvoyFields struct {
-	Owner                string // Convoy owner address (e.g., "mayor/")
+type MinecartFields struct {
+	Owner                string // Minecart owner address (e.g., "overseer/")
 	Notify               string // Additional notification address
 	Molecule             string // Associated molecule/swarm ID
 	Merge                string // Merge strategy
-	BaseBranch           string // Target branch for polecats (e.g., "feat/extraction-review")
-	Watchers             string // Comma-separated mail notification addresses (added via gt convoy watch)
-	NudgeWatchers        string // Comma-separated nudge notification addresses (added via gt convoy watch --nudge)
+	BaseBranch           string // Target branch for miners (e.g., "feat/extraction-review")
+	Watchers             string // Comma-separated mail notification addresses (added via gt minecart watch)
+	NudgeWatchers        string // Comma-separated nudge notification addresses (added via gt minecart watch --nudge)
 	CompletionNotifiedAt string // RFC3339 timestamp when completion notifications were claimed/sent
 }
 
-// ParseConvoyFields extracts convoy fields from an issue's description.
-// Returns nil if no convoy fields found.
-func ParseConvoyFields(issue *Issue) *ConvoyFields {
+// ParseMinecartFields extracts minecart fields from an issue's description.
+// Returns nil if no minecart fields found.
+func ParseMinecartFields(issue *Issue) *MinecartFields {
 	if issue == nil || issue.Description == "" {
 		return nil
 	}
 
-	fields := &ConvoyFields{}
+	fields := &MinecartFields{}
 	hasFields := false
 
 	for _, line := range strings.Split(issue.Description, "\n") {
@@ -332,9 +332,9 @@ func ParseConvoyFields(issue *Issue) *ConvoyFields {
 	return fields
 }
 
-// NotificationAddresses returns deduplicated mail notification addresses from convoy fields.
+// NotificationAddresses returns deduplicated mail notification addresses from minecart fields.
 // Includes Owner, Notify, and all Watchers addresses.
-func (f *ConvoyFields) NotificationAddresses() []string {
+func (f *MinecartFields) NotificationAddresses() []string {
 	if f == nil {
 		return nil
 	}
@@ -355,8 +355,8 @@ func (f *ConvoyFields) NotificationAddresses() []string {
 	return addrs
 }
 
-// NudgeNotificationAddresses returns deduplicated nudge addresses from convoy fields.
-func (f *ConvoyFields) NudgeNotificationAddresses() []string {
+// NudgeNotificationAddresses returns deduplicated nudge addresses from minecart fields.
+func (f *MinecartFields) NudgeNotificationAddresses() []string {
 	if f == nil {
 		return nil
 	}
@@ -373,7 +373,7 @@ func (f *ConvoyFields) NudgeNotificationAddresses() []string {
 
 // AddWatcher adds a mail watcher address to the comma-separated Watchers field.
 // Returns true if the address was added (false if already present).
-func (f *ConvoyFields) AddWatcher(addr string) bool {
+func (f *MinecartFields) AddWatcher(addr string) bool {
 	existing := splitWatchers(f.Watchers)
 	for _, w := range existing {
 		if w == addr {
@@ -387,7 +387,7 @@ func (f *ConvoyFields) AddWatcher(addr string) bool {
 
 // AddNudgeWatcher adds a nudge watcher address to the comma-separated NudgeWatchers field.
 // Returns true if the address was added (false if already present).
-func (f *ConvoyFields) AddNudgeWatcher(addr string) bool {
+func (f *MinecartFields) AddNudgeWatcher(addr string) bool {
 	existing := splitWatchers(f.NudgeWatchers)
 	for _, w := range existing {
 		if w == addr {
@@ -400,7 +400,7 @@ func (f *ConvoyFields) AddNudgeWatcher(addr string) bool {
 }
 
 // RemoveWatcher removes a mail watcher address. Returns true if it was present.
-func (f *ConvoyFields) RemoveWatcher(addr string) bool {
+func (f *MinecartFields) RemoveWatcher(addr string) bool {
 	existing := splitWatchers(f.Watchers)
 	var remaining []string
 	found := false
@@ -418,7 +418,7 @@ func (f *ConvoyFields) RemoveWatcher(addr string) bool {
 }
 
 // RemoveNudgeWatcher removes a nudge watcher address. Returns true if it was present.
-func (f *ConvoyFields) RemoveNudgeWatcher(addr string) bool {
+func (f *MinecartFields) RemoveNudgeWatcher(addr string) bool {
 	existing := splitWatchers(f.NudgeWatchers)
 	var remaining []string
 	found := false
@@ -451,9 +451,9 @@ func splitWatchers(s string) []string {
 	return result
 }
 
-// FormatConvoyFields formats ConvoyFields as a string suitable for an issue description.
+// FormatMinecartFields formats MinecartFields as a string suitable for an issue description.
 // Only non-empty fields are included.
-func FormatConvoyFields(fields *ConvoyFields) string {
+func FormatMinecartFields(fields *MinecartFields) string {
 	if fields == nil {
 		return ""
 	}
@@ -544,16 +544,16 @@ func splitFormulaVars(raw string) []string {
 	return out
 }
 
-// SetConvoyFields updates an issue's description with the given convoy fields.
-// Existing convoy field lines are replaced; other content is preserved.
+// SetMinecartFields updates an issue's description with the given minecart fields.
+// Existing minecart field lines are replaced; other content is preserved.
 // Returns the new description string.
-func SetConvoyFields(issue *Issue, fields *ConvoyFields) string {
+func SetMinecartFields(issue *Issue, fields *MinecartFields) string {
 	if issue == nil {
-		return FormatConvoyFields(fields)
+		return FormatMinecartFields(fields)
 	}
 
-	// Known convoy field keys (lowercase)
-	convoyKeys := map[string]bool{
+	// Known minecart field keys (lowercase)
+	minecartKeys := map[string]bool{
 		"owner":                  true,
 		"notify":                 true,
 		"merge":                  true,
@@ -570,7 +570,7 @@ func SetConvoyFields(issue *Issue, fields *ConvoyFields) string {
 		"completionnotifiedat":   true,
 	}
 
-	// Collect non-convoy lines from existing description
+	// Collect non-minecart lines from existing description
 	var otherLines []string
 	if issue.Description != "" {
 		for _, line := range strings.Split(issue.Description, "\n") {
@@ -587,14 +587,14 @@ func SetConvoyFields(issue *Issue, fields *ConvoyFields) string {
 			}
 
 			key := strings.ToLower(strings.TrimSpace(trimmed[:colonIdx]))
-			if !convoyKeys[key] {
+			if !minecartKeys[key] {
 				otherLines = append(otherLines, line)
 			}
 		}
 	}
 
-	// Build new description: other content first, then convoy fields
-	formatted := FormatConvoyFields(fields)
+	// Build new description: other content first, then minecart fields
+	formatted := FormatMinecartFields(fields)
 
 	// Trim trailing blank lines from other content
 	for len(otherLines) > 0 && strings.TrimSpace(otherLines[len(otherLines)-1]) == "" {
@@ -618,7 +618,7 @@ func SetConvoyFields(issue *Issue, fields *ConvoyFields) string {
 // MRFields holds the structured fields for a merge-request issue.
 // These fields are stored as key: value lines in the issue description.
 type MRFields struct {
-	Branch      string // Source branch name (e.g., "polecat/Nux/gt-xyz")
+	Branch      string // Source branch name (e.g., "miner/Nux/gt-xyz")
 	Target      string // Target branch (e.g., "main" or "integration/gt-epic")
 	SourceIssue string // The work item being merged (e.g., "gt-xyz")
 	Worker      string // Who did the work
@@ -633,14 +633,14 @@ type MRFields struct {
 	LastConflictSHA string // SHA of main when conflict occurred
 	ConflictTaskID  string // Link to conflict-resolution task (if any)
 
-	// Convoy tracking (for priority scoring - convoy starvation prevention)
-	ConvoyID        string // Parent convoy ID if part of a convoy
-	ConvoyCreatedAt string // Convoy creation time (ISO 8601) for starvation prevention
+	// Minecart tracking (for priority scoring - minecart starvation prevention)
+	MinecartID        string // Parent minecart ID if part of a minecart
+	MinecartCreatedAt string // Minecart creation time (ISO 8601) for starvation prevention
 
-	// Pre-verification fields (Phase 3: polecat-owned rebasing)
-	// When a polecat rebases onto the target and runs gates before submission,
+	// Pre-verification fields (Phase 3: miner-owned rebasing)
+	// When a miner rebases onto the target and runs gates before submission,
 	// these fields allow the refinery to fast-path merge without re-running gates.
-	PreVerified     bool   // Polecat ran full gates after rebasing onto target
+	PreVerified     bool   // Miner ran full gates after rebasing onto target
 	PreVerifiedAt   string // ISO 8601 timestamp when verification completed
 	PreVerifiedBase string // Target branch SHA at verification time
 }
@@ -714,11 +714,11 @@ func ParseMRFields(issue *Issue) *MRFields {
 		case "conflict_task_id", "conflict-task-id", "conflicttaskid":
 			fields.ConflictTaskID = value
 			hasFields = true
-		case "convoy_id", "convoy-id", "convoyid", "convoy":
-			fields.ConvoyID = value
+		case "minecart_id", "minecart-id", "minecartid", "minecart":
+			fields.MinecartID = value
 			hasFields = true
-		case "convoy_created_at", "convoy-created-at", "convoycreatedat":
-			fields.ConvoyCreatedAt = value
+		case "minecart_created_at", "minecart-created-at", "minecartcreatedat":
+			fields.MinecartCreatedAt = value
 			hasFields = true
 		case "pre_verified", "pre-verified", "preverified":
 			fields.PreVerified = strings.ToLower(value) == "true"
@@ -790,11 +790,11 @@ func FormatMRFields(fields *MRFields) string {
 	if fields.ConflictTaskID != "" {
 		lines = append(lines, "conflict_task_id: "+fields.ConflictTaskID)
 	}
-	if fields.ConvoyID != "" {
-		lines = append(lines, "convoy_id: "+fields.ConvoyID)
+	if fields.MinecartID != "" {
+		lines = append(lines, "minecart_id: "+fields.MinecartID)
 	}
-	if fields.ConvoyCreatedAt != "" {
-		lines = append(lines, "convoy_created_at: "+fields.ConvoyCreatedAt)
+	if fields.MinecartCreatedAt != "" {
+		lines = append(lines, "minecart_created_at: "+fields.MinecartCreatedAt)
 	}
 	if fields.PreVerified {
 		lines = append(lines, "pre_verified: true")
@@ -847,13 +847,13 @@ func SetMRFields(issue *Issue, fields *MRFields) string {
 		"conflict_task_id":  true,
 		"conflict-task-id":  true,
 		"conflicttaskid":    true,
-		"convoy_id":         true,
-		"convoy-id":         true,
-		"convoyid":          true,
-		"convoy":            true,
-		"convoy_created_at": true,
-		"convoy-created-at": true,
-		"convoycreatedat":   true,
+		"minecart_id":         true,
+		"minecart-id":         true,
+		"minecartid":          true,
+		"minecart":            true,
+		"minecart_created_at": true,
+		"minecart-created-at": true,
+		"minecartcreatedat":   true,
 		"pre_verified":      true,
 		"pre-verified":      true,
 		"preverified":       true,
@@ -920,16 +920,16 @@ func SetMRFields(issue *Issue, fields *MRFields) string {
 type RoleConfig struct {
 	// SessionPattern defines how to derive tmux session name.
 	// Supports placeholders: {rig}, {name}, {role}
-	// Examples: "hq-mayor", "hq-deacon", "gt-{rig}-{role}", "gt-{rig}-{name}"
+	// Examples: "hq-overseer", "hq-supervisor", "gt-{rig}-{role}", "gt-{rig}-{name}"
 	SessionPattern string
 
 	// WorkDirPattern defines the working directory relative to town root.
 	// Supports placeholders: {town}, {rig}, {name}, {role}
-	// Examples: "{town}", "{town}/{rig}", "{town}/{rig}/polecats/{name}"
+	// Examples: "{town}", "{town}/{rig}", "{town}/{rig}/miners/{name}"
 	WorkDirPattern string
 
 	// NeedsPreSync indicates whether workspace needs git sync before starting.
-	// True for agents with persistent clones (refinery, crew, polecat).
+	// True for agents with persistent clones (refinery, crew, miner).
 	NeedsPreSync bool
 
 	// StartCommand is the command to run after creating the session.
@@ -941,7 +941,7 @@ type RoleConfig struct {
 	EnvVars map[string]string
 
 	// Health check thresholds - per ZFC, agents control their own stuck detection.
-	// These allow the Deacon's patrol config to be agent-defined rather than hardcoded.
+	// These allow the Supervisor's patrol config to be agent-defined rather than hardcoded.
 
 	// PingTimeout is how long to wait for a health check response.
 	// Format: duration string (e.g., "30s", "1m"). Default: 30s.

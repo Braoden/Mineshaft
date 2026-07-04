@@ -6,10 +6,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/steveyegge/gastown/internal/atomicfile"
+	"github.com/steveyegge/excavation/internal/atomicfile"
 )
 
-// TownConfigExistsCheck verifies mayor/town.json exists.
+// TownConfigExistsCheck verifies overseer/town.json exists.
 type TownConfigExistsCheck struct {
 	BaseCheck
 }
@@ -19,21 +19,21 @@ func NewTownConfigExistsCheck() *TownConfigExistsCheck {
 	return &TownConfigExistsCheck{
 		BaseCheck: BaseCheck{
 			CheckName:        "town-config-exists",
-			CheckDescription: "Check that mayor/town.json exists",
+			CheckDescription: "Check that overseer/town.json exists",
 			CheckCategory:    CategoryCore,
 		},
 	}
 }
 
-// Run checks if mayor/town.json exists.
+// Run checks if overseer/town.json exists.
 func (c *TownConfigExistsCheck) Run(ctx *CheckContext) *CheckResult {
-	configPath := filepath.Join(ctx.TownRoot, "mayor", "town.json")
+	configPath := filepath.Join(ctx.TownRoot, "overseer", "town.json")
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusError,
-			Message: "mayor/town.json not found",
+			Message: "overseer/town.json not found",
 			FixHint: "Run 'gt install' to initialize workspace",
 		}
 	}
@@ -41,11 +41,11 @@ func (c *TownConfigExistsCheck) Run(ctx *CheckContext) *CheckResult {
 	return &CheckResult{
 		Name:    c.Name(),
 		Status:  StatusOK,
-		Message: "mayor/town.json exists",
+		Message: "overseer/town.json exists",
 	}
 }
 
-// TownConfigValidCheck verifies mayor/town.json is valid JSON with required fields.
+// TownConfigValidCheck verifies overseer/town.json is valid JSON with required fields.
 type TownConfigValidCheck struct {
 	BaseCheck
 }
@@ -55,29 +55,29 @@ func NewTownConfigValidCheck() *TownConfigValidCheck {
 	return &TownConfigValidCheck{
 		BaseCheck: BaseCheck{
 			CheckName:        "town-config-valid",
-			CheckDescription: "Check that mayor/town.json is valid with required fields",
+			CheckDescription: "Check that overseer/town.json is valid with required fields",
 			CheckCategory:    CategoryCore,
 		},
 	}
 }
 
-// townConfig represents the structure of mayor/town.json.
+// townConfig represents the structure of overseer/town.json.
 type townConfig struct {
 	Type    string `json:"type"`
 	Version int    `json:"version"`
 	Name    string `json:"name"`
 }
 
-// Run validates mayor/town.json contents.
+// Run validates overseer/town.json contents.
 func (c *TownConfigValidCheck) Run(ctx *CheckContext) *CheckResult {
-	configPath := filepath.Join(ctx.TownRoot, "mayor", "town.json")
+	configPath := filepath.Join(ctx.TownRoot, "overseer", "town.json")
 
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusError,
-			Message: "Cannot read mayor/town.json",
+			Message: "Cannot read overseer/town.json",
 			Details: []string{err.Error()},
 		}
 	}
@@ -87,9 +87,9 @@ func (c *TownConfigValidCheck) Run(ctx *CheckContext) *CheckResult {
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusError,
-			Message: "mayor/town.json is not valid JSON",
+			Message: "overseer/town.json is not valid JSON",
 			Details: []string{err.Error()},
-			FixHint: "Fix JSON syntax in mayor/town.json",
+			FixHint: "Fix JSON syntax in overseer/town.json",
 		}
 	}
 
@@ -109,20 +109,20 @@ func (c *TownConfigValidCheck) Run(ctx *CheckContext) *CheckResult {
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusError,
-			Message: "mayor/town.json has invalid fields",
+			Message: "overseer/town.json has invalid fields",
 			Details: issues,
-			FixHint: "Fix the field values in mayor/town.json",
+			FixHint: "Fix the field values in overseer/town.json",
 		}
 	}
 
 	return &CheckResult{
 		Name:    c.Name(),
 		Status:  StatusOK,
-		Message: fmt.Sprintf("mayor/town.json valid (name=%s, version=%d)", config.Name, config.Version),
+		Message: fmt.Sprintf("overseer/town.json valid (name=%s, version=%d)", config.Name, config.Version),
 	}
 }
 
-// RigsRegistryExistsCheck verifies mayor/rigs.json exists.
+// RigsRegistryExistsCheck verifies overseer/rigs.json exists.
 type RigsRegistryExistsCheck struct {
 	FixableCheck
 }
@@ -133,22 +133,22 @@ func NewRigsRegistryExistsCheck() *RigsRegistryExistsCheck {
 		FixableCheck: FixableCheck{
 			BaseCheck: BaseCheck{
 				CheckName:        "rigs-registry-exists",
-				CheckDescription: "Check that mayor/rigs.json exists",
+				CheckDescription: "Check that overseer/rigs.json exists",
 				CheckCategory:    CategoryCore,
 			},
 		},
 	}
 }
 
-// Run checks if mayor/rigs.json exists.
+// Run checks if overseer/rigs.json exists.
 func (c *RigsRegistryExistsCheck) Run(ctx *CheckContext) *CheckResult {
-	rigsPath := filepath.Join(ctx.TownRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(ctx.TownRoot, "overseer", "rigs.json")
 
 	if _, err := os.Stat(rigsPath); os.IsNotExist(err) {
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusWarning,
-			Message: "mayor/rigs.json not found (no rigs registered)",
+			Message: "overseer/rigs.json not found (no rigs registered)",
 			FixHint: "Run 'gt doctor --fix' to create empty rigs.json",
 		}
 	}
@@ -156,13 +156,13 @@ func (c *RigsRegistryExistsCheck) Run(ctx *CheckContext) *CheckResult {
 	return &CheckResult{
 		Name:    c.Name(),
 		Status:  StatusOK,
-		Message: "mayor/rigs.json exists",
+		Message: "overseer/rigs.json exists",
 	}
 }
 
 // Fix creates an empty rigs.json file.
 func (c *RigsRegistryExistsCheck) Fix(ctx *CheckContext) error {
-	rigsPath := filepath.Join(ctx.TownRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(ctx.TownRoot, "overseer", "rigs.json")
 
 	emptyRigs := struct {
 		Version int                    `json:"version"`
@@ -180,7 +180,7 @@ func (c *RigsRegistryExistsCheck) Fix(ctx *CheckContext) error {
 	return atomicfile.WriteFile(rigsPath, data, 0644)
 }
 
-// RigsRegistryValidCheck verifies mayor/rigs.json is valid and rigs exist.
+// RigsRegistryValidCheck verifies overseer/rigs.json is valid and rigs exist.
 type RigsRegistryValidCheck struct {
 	FixableCheck
 	missingRigs []string // Cached for Fix
@@ -199,15 +199,15 @@ func NewRigsRegistryValidCheck() *RigsRegistryValidCheck {
 	}
 }
 
-// rigsConfig represents the structure of mayor/rigs.json.
+// rigsConfig represents the structure of overseer/rigs.json.
 type rigsConfig struct {
 	Version int                    `json:"version"`
 	Rigs    map[string]interface{} `json:"rigs"`
 }
 
-// Run validates mayor/rigs.json and checks that registered rigs exist.
+// Run validates overseer/rigs.json and checks that registered rigs exist.
 func (c *RigsRegistryValidCheck) Run(ctx *CheckContext) *CheckResult {
-	rigsPath := filepath.Join(ctx.TownRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(ctx.TownRoot, "overseer", "rigs.json")
 
 	data, err := os.ReadFile(rigsPath)
 	if err != nil {
@@ -221,7 +221,7 @@ func (c *RigsRegistryValidCheck) Run(ctx *CheckContext) *CheckResult {
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusError,
-			Message: "Cannot read mayor/rigs.json",
+			Message: "Cannot read overseer/rigs.json",
 			Details: []string{err.Error()},
 		}
 	}
@@ -231,9 +231,9 @@ func (c *RigsRegistryValidCheck) Run(ctx *CheckContext) *CheckResult {
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusError,
-			Message: "mayor/rigs.json is not valid JSON",
+			Message: "overseer/rigs.json is not valid JSON",
 			Details: []string{err.Error()},
-			FixHint: "Fix JSON syntax in mayor/rigs.json",
+			FixHint: "Fix JSON syntax in overseer/rigs.json",
 		}
 	}
 
@@ -289,7 +289,7 @@ func (c *RigsRegistryValidCheck) Fix(ctx *CheckContext) error {
 		return nil
 	}
 
-	rigsPath := filepath.Join(ctx.TownRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(ctx.TownRoot, "overseer", "rigs.json")
 
 	data, err := os.ReadFile(rigsPath)
 	if err != nil {
@@ -315,32 +315,32 @@ func (c *RigsRegistryValidCheck) Fix(ctx *CheckContext) error {
 	return atomicfile.WriteFile(rigsPath, newData, 0644)
 }
 
-// MayorExistsCheck verifies the mayor/ directory structure.
-type MayorExistsCheck struct {
+// OverseerExistsCheck verifies the overseer/ directory structure.
+type OverseerExistsCheck struct {
 	BaseCheck
 }
 
-// NewMayorExistsCheck creates a new mayor directory check.
-func NewMayorExistsCheck() *MayorExistsCheck {
-	return &MayorExistsCheck{
+// NewOverseerExistsCheck creates a new overseer directory check.
+func NewOverseerExistsCheck() *OverseerExistsCheck {
+	return &OverseerExistsCheck{
 		BaseCheck: BaseCheck{
-			CheckName:        "mayor-exists",
-			CheckDescription: "Check that mayor/ directory exists with required files",
+			CheckName:        "overseer-exists",
+			CheckDescription: "Check that overseer/ directory exists with required files",
 			CheckCategory:    CategoryCore,
 		},
 	}
 }
 
-// Run checks if mayor/ directory exists with expected contents.
-func (c *MayorExistsCheck) Run(ctx *CheckContext) *CheckResult {
-	mayorPath := filepath.Join(ctx.TownRoot, "mayor")
+// Run checks if overseer/ directory exists with expected contents.
+func (c *OverseerExistsCheck) Run(ctx *CheckContext) *CheckResult {
+	overseerPath := filepath.Join(ctx.TownRoot, "overseer")
 
-	info, err := os.Stat(mayorPath)
+	info, err := os.Stat(overseerPath)
 	if os.IsNotExist(err) {
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusError,
-			Message: "mayor/ directory not found",
+			Message: "overseer/ directory not found",
 			FixHint: "Run 'gt install' to initialize workspace",
 		}
 	}
@@ -348,8 +348,8 @@ func (c *MayorExistsCheck) Run(ctx *CheckContext) *CheckResult {
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusError,
-			Message: "mayor exists but is not a directory",
-			FixHint: "Remove mayor file and run 'gt install'",
+			Message: "overseer exists but is not a directory",
+			FixHint: "Remove overseer file and run 'gt install'",
 		}
 	}
 
@@ -358,7 +358,7 @@ func (c *MayorExistsCheck) Run(ctx *CheckContext) *CheckResult {
 	expectedFiles := []string{"town.json"}
 
 	for _, f := range expectedFiles {
-		path := filepath.Join(mayorPath, f)
+		path := filepath.Join(overseerPath, f)
 		if _, err := os.Stat(path); os.IsNotExist(err) {
 			missing = append(missing, f)
 		}
@@ -368,7 +368,7 @@ func (c *MayorExistsCheck) Run(ctx *CheckContext) *CheckResult {
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusWarning,
-			Message: "mayor/ exists but missing expected files",
+			Message: "overseer/ exists but missing expected files",
 			Details: missing,
 		}
 	}
@@ -376,7 +376,7 @@ func (c *MayorExistsCheck) Run(ctx *CheckContext) *CheckResult {
 	return &CheckResult{
 		Name:    c.Name(),
 		Status:  StatusOK,
-		Message: "mayor/ directory exists with required files",
+		Message: "overseer/ directory exists with required files",
 	}
 }
 
@@ -387,6 +387,6 @@ func WorkspaceChecks() []Check {
 		NewTownConfigValidCheck(),
 		NewRigsRegistryExistsCheck(),
 		NewRigsRegistryValidCheck(),
-		NewMayorExistsCheck(),
+		NewOverseerExistsCheck(),
 	}
 }

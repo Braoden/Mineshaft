@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/nudge"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/townlog"
+	"github.com/steveyegge/excavation/internal/nudge"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/townlog"
 )
 
 // acpDebugLogger provides file-based debug logging for ACP when GT_ACP_DEBUG=1.
@@ -112,7 +112,7 @@ func logEvent(townRoot, eventType, context string) {
 		return
 	}
 	logger := townlog.NewLogger(townRoot)
-	_ = logger.Log(townlog.EventType(eventType), "mayor/acp", context)
+	_ = logger.Log(townlog.EventType(eventType), "overseer/acp", context)
 	// Also log to acp.log if debug mode is enabled
 	debugLog(townRoot, "[%s] %s", eventType, context)
 }

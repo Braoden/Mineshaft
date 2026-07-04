@@ -8,17 +8,17 @@ import (
 
 const testRigsJSON = `{
   "rigs": {
-    "gastown": {"beads": {"prefix": "-"}}
+    "excavation": {"beads": {"prefix": "-"}}
   }
 }`
 
 func TestRigsJSONCheck_BothPresent_OK(t *testing.T) {
 	townRoot := t.TempDir()
-	mayorDir := filepath.Join(townRoot, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(townRoot, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(mayorDir, "rigs.json"), []byte(testRigsJSON), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), []byte(testRigsJSON), 0644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(townRoot, "rigs.json"), []byte(testRigsJSON), 0644); err != nil {
@@ -35,11 +35,11 @@ func TestRigsJSONCheck_BothPresent_OK(t *testing.T) {
 
 func TestRigsJSONCheck_CanonicalOnly_Warning(t *testing.T) {
 	townRoot := t.TempDir()
-	mayorDir := filepath.Join(townRoot, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(townRoot, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(mayorDir, "rigs.json"), []byte(testRigsJSON), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), []byte(testRigsJSON), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -99,7 +99,7 @@ func TestRigsJSONCheck_Fix_RestoresCanonicalFromFallback(t *testing.T) {
 	}
 
 	// Canonical should now exist with correct content.
-	canonical := filepath.Join(townRoot, "mayor", "rigs.json")
+	canonical := filepath.Join(townRoot, "overseer", "rigs.json")
 	data, err := os.ReadFile(canonical)
 	if err != nil {
 		t.Fatalf("canonical not created: %v", err)

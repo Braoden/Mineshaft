@@ -104,9 +104,9 @@ func TestDefaultWorkerStatusConfig(t *testing.T) {
 	if hbFresh != 5*time.Minute {
 		t.Errorf("HeartbeatFreshThreshold = %v, want 5m", hbFresh)
 	}
-	mayorActive := ParseDurationOrDefault(cfg.MayorActiveThreshold, 0)
-	if mayorActive != 5*time.Minute {
-		t.Errorf("MayorActiveThreshold = %v, want 5m", mayorActive)
+	overseerActive := ParseDurationOrDefault(cfg.OverseerActiveThreshold, 0)
+	if overseerActive != 5*time.Minute {
+		t.Errorf("OverseerActiveThreshold = %v, want 5m", overseerActive)
 	}
 }
 
@@ -165,7 +165,7 @@ func TestWorkerStatusConfig_JSONRoundTrip(t *testing.T) {
 		StaleThreshold:          "10m",
 		StuckThreshold:          "1h",
 		HeartbeatFreshThreshold: "3m",
-		MayorActiveThreshold:    "8m",
+		OverseerActiveThreshold:    "8m",
 	}
 
 	data, err := json.Marshal(original)
@@ -331,7 +331,7 @@ func TestTownSettings_WithNewFields_RoundTrip(t *testing.T) {
 		StaleThreshold:          "10m",
 		StuckThreshold:          "1h",
 		HeartbeatFreshThreshold: "3m",
-		MayorActiveThreshold:    "8m",
+		OverseerActiveThreshold:    "8m",
 	}
 	original.FeedCurator = &FeedCuratorConfig{
 		DoneDedupeWindow:     "20s",
@@ -384,8 +384,8 @@ func TestTownSettings_WithNewFields_RoundTrip(t *testing.T) {
 	if loaded.WorkerStatus.HeartbeatFreshThreshold != "3m" {
 		t.Errorf("HeartbeatFreshThreshold = %q, want %q", loaded.WorkerStatus.HeartbeatFreshThreshold, "3m")
 	}
-	if loaded.WorkerStatus.MayorActiveThreshold != "8m" {
-		t.Errorf("MayorActiveThreshold = %q, want %q", loaded.WorkerStatus.MayorActiveThreshold, "8m")
+	if loaded.WorkerStatus.OverseerActiveThreshold != "8m" {
+		t.Errorf("OverseerActiveThreshold = %q, want %q", loaded.WorkerStatus.OverseerActiveThreshold, "8m")
 	}
 
 	// Verify FeedCurator

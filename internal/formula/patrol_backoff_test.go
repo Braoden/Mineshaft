@@ -17,7 +17,7 @@ import (
 func TestPatrolFormulasHaveBackoffLogic(t *testing.T) {
 	// Patrol formulas that must have backoff logic.
 	// The loopStepID is the step that contains the await-signal logic;
-	// witness/deacon use "loop-or-exit", refinery uses "burn-or-loop".
+	// witness/supervisor use "loop-or-exit", refinery uses "burn-or-loop".
 	type patrolFormula struct {
 		name       string
 		loopStepID string
@@ -26,7 +26,7 @@ func TestPatrolFormulasHaveBackoffLogic(t *testing.T) {
 
 	patrolFormulas := []patrolFormula{
 		{"mol-witness-patrol.formula.toml", "loop-or-exit", "await-signal"},
-		{"mol-deacon-patrol.formula.toml", "loop-or-exit", "await-signal"},
+		{"mol-supervisor-patrol.formula.toml", "loop-or-exit", "await-signal"},
 		{"mol-refinery-patrol.formula.toml", "burn-or-loop", "await-event"},
 	}
 
@@ -49,7 +49,7 @@ func TestPatrolFormulasHaveBackoffLogic(t *testing.T) {
 			}
 
 			// Verify the formula contains the required backoff patterns.
-			// Witness/deacon use await-signal; refinery uses await-event
+			// Witness/supervisor use await-signal; refinery uses await-event
 			// (file-based event channel system). Both provide backoff logic.
 			requiredPatterns := []string{
 				pf.awaitCmd,
@@ -76,7 +76,7 @@ func TestPatrolFormulasHaveBackoffLogic(t *testing.T) {
 // The patrol report command atomically closes the current patrol wisp and
 // starts a new one, replacing the old squash+new pattern.
 //
-// Regression test: replaces TestPatrolFormulasHaveSquashCycle (steveyegge/gastown#1371).
+// Regression test: replaces TestPatrolFormulasHaveSquashCycle (steveyegge/excavation#1371).
 func TestPatrolFormulasHaveReportCycle(t *testing.T) {
 	type patrolFormula struct {
 		name       string
@@ -85,7 +85,7 @@ func TestPatrolFormulasHaveReportCycle(t *testing.T) {
 
 	patrolFormulas := []patrolFormula{
 		{"mol-witness-patrol.formula.toml", "loop-or-exit"},
-		{"mol-deacon-patrol.formula.toml", "loop-or-exit"},
+		{"mol-supervisor-patrol.formula.toml", "loop-or-exit"},
 		{"mol-refinery-patrol.formula.toml", "burn-or-loop"},
 	}
 
@@ -128,11 +128,11 @@ func TestPatrolFormulasHaveReportCycle(t *testing.T) {
 // Closed-wisp cleanup is safe inside active patrols. Stale open-wisp cleanup
 // belongs to reaper paths that are not running inside the active patrol molecule.
 //
-// Regression test for steveyegge/gastown#1712.
+// Regression test for steveyegge/excavation#1712.
 func TestPatrolFormulasHaveWispGC(t *testing.T) {
 	patrolFormulas := []string{
 		"mol-witness-patrol.formula.toml",
-		"mol-deacon-patrol.formula.toml",
+		"mol-supervisor-patrol.formula.toml",
 		"mol-refinery-patrol.formula.toml",
 	}
 
@@ -164,26 +164,26 @@ func TestPatrolFormulasHaveWispGC(t *testing.T) {
 				t.Errorf("%s inbox-check step missing \"bd mol wisp gc\"\n"+
 					"All patrol formulas must run wisp GC at the start of each cycle\n"+
 					"to clean up stale wisps from abnormal exits.\n"+
-					"See steveyegge/gastown#1712.",
+					"See steveyegge/excavation#1712.",
 					name)
 			}
 		})
 	}
 }
 
-// TestDeaconPatrolDoesNotRunAgeBasedWispGC verifies that the Deacon patrol
+// TestSupervisorPatrolDoesNotRunAgeBasedWispGC verifies that the Supervisor patrol
 // does not reap open step wisps from its own active patrol molecule.
 //
 // Regression test for hq-3pp.
-func TestDeaconPatrolDoesNotRunAgeBasedWispGC(t *testing.T) {
-	content, err := formulasFS.ReadFile("formulas/mol-deacon-patrol.formula.toml")
+func TestSupervisorPatrolDoesNotRunAgeBasedWispGC(t *testing.T) {
+	content, err := formulasFS.ReadFile("formulas/mol-supervisor-patrol.formula.toml")
 	if err != nil {
-		t.Fatalf("reading deacon patrol formula: %v", err)
+		t.Fatalf("reading supervisor patrol formula: %v", err)
 	}
 
 	f, err := Parse(content)
 	if err != nil {
-		t.Fatalf("parsing deacon patrol formula: %v", err)
+		t.Fatalf("parsing supervisor patrol formula: %v", err)
 	}
 
 	var inboxDesc string
@@ -194,14 +194,14 @@ func TestDeaconPatrolDoesNotRunAgeBasedWispGC(t *testing.T) {
 		}
 	}
 	if inboxDesc == "" {
-		t.Fatal("deacon patrol formula: inbox-check step not found or has empty description")
+		t.Fatal("supervisor patrol formula: inbox-check step not found or has empty description")
 	}
 
 	if !strings.Contains(inboxDesc, "bd mol wisp gc --closed --force") {
-		t.Fatal("deacon inbox-check must keep closed-wisp cleanup")
+		t.Fatal("supervisor inbox-check must keep closed-wisp cleanup")
 	}
 	if strings.Contains(inboxDesc, "bd mol wisp gc --age") {
-		t.Fatal("deacon inbox-check must not run age-based wisp GC inside the active patrol")
+		t.Fatal("supervisor inbox-check must not run age-based wisp GC inside the active patrol")
 	}
 }
 
@@ -280,33 +280,33 @@ func TestPatrolFormulasUseDynamicBeadResolution(t *testing.T) {
 	}
 }
 
-// TestDeaconPatrolHasHeartbeatSteps verifies the deacon patrol formula
+// TestSupervisorPatrolHasHeartbeatSteps verifies the supervisor patrol formula
 // includes heartbeat refresh steps to prevent the daemon from killing a
-// healthy Deacon mid-cycle.
+// healthy Supervisor mid-cycle.
 //
 // Without heartbeat refreshes, a patrol cycle that exceeds 20 minutes
-// (HeartbeatVeryStaleThreshold = 20m) causes the daemon to consider the Deacon
-// stuck and kill it, even though the Deacon is actively executing steps.
-func TestDeaconPatrolHasHeartbeatSteps(t *testing.T) {
-	content, err := formulasFS.ReadFile("formulas/mol-deacon-patrol.formula.toml")
+// (HeartbeatVeryStaleThreshold = 20m) causes the daemon to consider the Supervisor
+// stuck and kill it, even though the Supervisor is actively executing steps.
+func TestSupervisorPatrolHasHeartbeatSteps(t *testing.T) {
+	content, err := formulasFS.ReadFile("formulas/mol-supervisor-patrol.formula.toml")
 	if err != nil {
-		t.Fatalf("reading deacon patrol formula: %v", err)
+		t.Fatalf("reading supervisor patrol formula: %v", err)
 	}
 
 	f, err := Parse(content)
 	if err != nil {
-		t.Fatalf("parsing deacon patrol formula: %v", err)
+		t.Fatalf("parsing supervisor patrol formula: %v", err)
 	}
 
 	// The first step must be the heartbeat step (no dependencies)
 	if len(f.Steps) == 0 {
-		t.Fatal("deacon patrol formula has no steps")
+		t.Fatal("supervisor patrol formula has no steps")
 	}
 	if f.Steps[0].ID != "heartbeat" {
 		t.Errorf("first step should be \"heartbeat\", got %q", f.Steps[0].ID)
 	}
-	if !strings.Contains(f.Steps[0].Description, "gt deacon heartbeat") {
-		t.Error("heartbeat step must contain \"gt deacon heartbeat\" command")
+	if !strings.Contains(f.Steps[0].Description, "gt supervisor heartbeat") {
+		t.Error("heartbeat step must contain \"gt supervisor heartbeat\" command")
 	}
 
 	// inbox-check must depend on heartbeat
@@ -333,19 +333,19 @@ func TestDeaconPatrolHasHeartbeatSteps(t *testing.T) {
 	for _, step := range f.Steps {
 		if step.ID == "heartbeat-mid" {
 			foundMid = true
-			if !strings.Contains(step.Description, "gt deacon heartbeat") {
-				t.Error("heartbeat-mid step must contain \"gt deacon heartbeat\" command")
+			if !strings.Contains(step.Description, "gt supervisor heartbeat") {
+				t.Error("heartbeat-mid step must contain \"gt supervisor heartbeat\" command")
 			}
 		}
 		if step.ID == "loop-or-exit" && strings.Contains(step.Description, "pre-await checkpoint") {
 			foundPreAwait = true
-			if !strings.Contains(step.Description, "gt deacon heartbeat") {
+			if !strings.Contains(step.Description, "gt supervisor heartbeat") {
 				t.Error("loop-or-exit step must refresh heartbeat before await-signal")
 			}
 			if strings.Contains(step.Description, "gt handoff -s") && strings.Contains(step.Description, "mandatory") {
 				foundMandatoryHandoff = true
 			}
-			heartbeatPos := strings.Index(step.Description, "gt deacon heartbeat \"pre-await checkpoint\"")
+			heartbeatPos := strings.Index(step.Description, "gt supervisor heartbeat \"pre-await checkpoint\"")
 			awaitPos := strings.Index(step.Description, "gt mol step await-signal")
 			if heartbeatPos == -1 || awaitPos == -1 {
 				t.Error("loop-or-exit step must contain both pre-await heartbeat and await-signal commands")
@@ -355,12 +355,12 @@ func TestDeaconPatrolHasHeartbeatSteps(t *testing.T) {
 		}
 	}
 	if !foundMid {
-		t.Error("deacon patrol formula must have a \"heartbeat-mid\" step for mid-cycle refresh")
+		t.Error("supervisor patrol formula must have a \"heartbeat-mid\" step for mid-cycle refresh")
 	}
 	if !foundPreAwait {
-		t.Error("deacon patrol formula must refresh heartbeat again before await-signal")
+		t.Error("supervisor patrol formula must refresh heartbeat again before await-signal")
 	}
 	if !foundMandatoryHandoff {
-		t.Error("deacon patrol formula must require gt handoff after patrol report")
+		t.Error("supervisor patrol formula must require gt handoff after patrol report")
 	}
 }

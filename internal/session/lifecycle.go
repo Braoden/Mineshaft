@@ -1,4 +1,4 @@
-// Package session provides polecat session lifecycle management.
+// Package session provides miner session lifecycle management.
 package session
 
 import (
@@ -10,17 +10,17 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/runtime"
-	"github.com/steveyegge/gastown/internal/telemetry"
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/runtime"
+	"github.com/steveyegge/excavation/internal/telemetry"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 // SessionConfig describes how to create and start a tmux session.
 // This unifies the common startup pattern that was previously duplicated
-// across polecat, mayor, boot, deacon, witness, refinery, crew, and dog
+// across miner, overseer, boot, supervisor, witness, refinery, crew, and dog
 // session managers. Each of those managers previously had to coordinate
 // 4+ packages (config, runtime, session, tmux) manually.
 //
@@ -29,25 +29,25 @@ import (
 //	result, err := session.StartSession(t, session.SessionConfig{
 //	    SessionID: "gt-myrig-toast",
 //	    WorkDir:   "/path/to/worktree",
-//	    Role:      "polecat",
+//	    Role:      "miner",
 //	    TownRoot:  "/path/to/town",
 //	    Beacon:    session.BeaconConfig{...},
 //	})
 type SessionConfig struct {
-	// SessionID is the tmux session name (e.g., "gt-wyvern-Toast", "hq-mayor").
+	// SessionID is the tmux session name (e.g., "gt-wyvern-Toast", "hq-overseer").
 	SessionID string
 
 	// WorkDir is the working directory for the session.
 	WorkDir string
 
-	// Role is the agent role (e.g., "polecat", "mayor", "boot", "deacon").
+	// Role is the agent role (e.g., "miner", "overseer", "boot", "supervisor").
 	Role string
 
-	// TownRoot is the root of the Gas Town workspace (e.g., ~/gt).
+	// TownRoot is the root of the Excavation Site workspace (e.g., ~/gt).
 	TownRoot string
 
 	// RigPath is the rig directory path for config resolution.
-	// Empty for town-level agents (mayor, deacon, boot).
+	// Empty for town-level agents (overseer, supervisor, boot).
 	RigPath string
 
 	// RigName is the rig name for environment variables and theming.
@@ -55,7 +55,7 @@ type SessionConfig struct {
 	RigName string
 
 	// AgentName is the specific agent name within a rig.
-	// Used for polecats, crew, and dogs. Empty for singletons.
+	// Used for miners, crew, and dogs. Empty for singletons.
 	AgentName string
 
 	// Command is a pre-built startup command. If non-empty, skips command building.
@@ -67,7 +67,7 @@ type SessionConfig struct {
 	Beacon BeaconConfig
 
 	// Instructions are appended after the beacon in the startup prompt.
-	// Used by roles like Boot and Deacon that need explicit instructions.
+	// Used by roles like Boot and Supervisor that need explicit instructions.
 	// Ignored if Command is non-empty.
 	Instructions string
 
@@ -126,7 +126,7 @@ type StartResult struct {
 	RunID string
 }
 
-// StartSession creates a tmux session following the standard Gas Town lifecycle.
+// StartSession creates a tmux session following the standard Excavation Site lifecycle.
 //
 // The lifecycle handles:
 //  1. Resolve runtime config for the role
@@ -228,7 +228,7 @@ func StartSession(t *tmux.Tmux, cfg SessionConfig) (_ *StartResult, retErr error
 
 	// 7. Apply theme.
 	if cfg.Theme != nil {
-		_ = t.ConfigureGasTownSession(cfg.SessionID, cfg.Theme, cfg.RigName, cfg.AgentName, cfg.Role)
+		_ = t.ConfigureExcavationSession(cfg.SessionID, cfg.Theme, cfg.RigName, cfg.AgentName, cfg.Role)
 	}
 
 	// 8. Wait for agent to start.

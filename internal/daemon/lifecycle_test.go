@@ -10,9 +10,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/session"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/session"
 )
 
 // testDaemon creates a minimal Daemon for testing.
@@ -29,12 +29,12 @@ func testDaemonWithTown(t *testing.T, townName string) (*Daemon, func()) {
 	t.Helper()
 	townRoot := t.TempDir()
 
-	// Create mayor directory and town.json
-	mayorDir := filepath.Join(townRoot, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
-		t.Fatalf("failed to create mayor dir: %v", err)
+	// Create overseer directory and town.json
+	overseerDir := filepath.Join(townRoot, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
+		t.Fatalf("failed to create overseer dir: %v", err)
 	}
-	townJSON := filepath.Join(mayorDir, "town.json")
+	townJSON := filepath.Join(overseerDir, "town.json")
 	content := `{"name": "` + townName + `"}`
 	if err := os.WriteFile(townJSON, []byte(content), 0644); err != nil {
 		t.Fatalf("failed to write town.json: %v", err)
@@ -147,8 +147,8 @@ func TestParseLifecycleRequest_UsesFromField(t *testing.T) {
 		sender       string
 		expectedFrom string
 	}{
-		{"LIFECYCLE: action", `{"action": "cycle"}`, "mayor", "mayor"},
-		{"LIFECYCLE: action", "restart", "gastown-witness", "gastown-witness"},
+		{"LIFECYCLE: action", `{"action": "cycle"}`, "overseer", "overseer"},
+		{"LIFECYCLE: action", "restart", "excavation-witness", "excavation-witness"},
 		{"lifecycle: action", "shutdown", "my-rig-refinery", "my-rig-refinery"},
 	}
 
@@ -187,14 +187,14 @@ func TestParseLifecycleRequest_AlwaysUsesFromField(t *testing.T) {
 	}
 }
 
-func TestIdentityToSession_Mayor(t *testing.T) {
+func TestIdentityToSession_Overseer(t *testing.T) {
 	d, cleanup := testDaemonWithTown(t, "ai")
 	defer cleanup()
 
-	// Mayor session name is now fixed (one per machine, uses hq- prefix)
-	result := d.identityToSession("mayor")
-	if result != "hq-mayor" {
-		t.Errorf("identityToSession('mayor') = %q, expected 'hq-mayor'", result)
+	// Overseer session name is now fixed (one per machine, uses hq- prefix)
+	result := d.identityToSession("overseer")
+	if result != "hq-overseer" {
+		t.Errorf("identityToSession('overseer') = %q, expected 'hq-overseer'", result)
 	}
 }
 
@@ -206,7 +206,7 @@ func TestIdentityToSession_Witness(t *testing.T) {
 		identity string
 		expected string
 	}{
-		{"gastown-witness", "gt-witness"},
+		{"excavation-witness", "gt-witness"},
 		{"myrig-witness", "gt-witness"},
 		{"my-rig-name-witness", "gt-witness"},
 	}
@@ -225,7 +225,7 @@ func TestIdentityToSession_WitnessWithPrefix(t *testing.T) {
 	// Register a rig with a distinct prefix to verify prefix differentiation
 	oldRegistry := session.DefaultRegistry()
 	r := session.NewPrefixRegistry()
-	r.Register("gt", "gastown")
+	r.Register("gt", "excavation")
 	r.Register("bd", "beads")
 	session.SetDefaultRegistry(r)
 	defer session.SetDefaultRegistry(oldRegistry)
@@ -234,7 +234,7 @@ func TestIdentityToSession_WitnessWithPrefix(t *testing.T) {
 		identity string
 		expected string
 	}{
-		{"gastown-witness", "gt-witness"},
+		{"excavation-witness", "gt-witness"},
 		{"beads-witness", "bd-witness"},
 		{"unknown-witness", "gt-witness"}, // unknown rig falls back to DefaultPrefix
 	}
@@ -252,9 +252,9 @@ func TestIdentityToSession_Unknown(t *testing.T) {
 
 	tests := []string{
 		"unknown",
-		"polecat",
+		"miner",
 		"refinery",
-		"gastown", // rig name without -witness
+		"excavation", // rig name without -witness
 		"",
 	}
 
@@ -491,8 +491,8 @@ func TestGetStartCommand_NonClaudeAgentBypassesToml(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Create mayor dir (required for TownRoot to be valid).
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor"), 0755); err != nil {
+	// Create overseer dir (required for TownRoot to be valid).
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer"), 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -536,7 +536,7 @@ func TestGetStartCommand_ClaudeAgentFallsThrough(t *testing.T) {
 	if err := os.MkdirAll(settingsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer"), 0755); err != nil {
 		t.Fatal(err)
 	}
 	townSettings := config.NewTownSettings()

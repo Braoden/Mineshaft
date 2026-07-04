@@ -30,14 +30,14 @@ func TestRunMailDirectory_WellKnownAddresses(t *testing.T) {
 	})
 
 	// Should contain well-known addresses
-	for _, addr := range []string{"mayor/", "--human", "--self"} {
+	for _, addr := range []string{"overseer/", "--human", "--self"} {
 		if !strings.Contains(output, addr) {
 			t.Errorf("output should contain %q, got:\n%s", addr, output)
 		}
 	}
 
 	// Should contain special addresses
-	for _, addr := range []string{"@town", "@crew", "@witnesses", "@overseer"} {
+	for _, addr := range []string{"@town", "@crew", "@witnesses", "@boss"} {
 		if !strings.Contains(output, addr) {
 			t.Errorf("output should contain %q, got:\n%s", addr, output)
 		}
@@ -88,7 +88,7 @@ func TestRunMailDirectory_JSONOutput(t *testing.T) {
 }
 
 func TestRunMailDirectory_Deduplication(t *testing.T) {
-	// Verify that mayor/ doesn't appear twice (agent + well-known)
+	// Verify that overseer/ doesn't appear twice (agent + well-known)
 	townRoot := setupTestTownForCrewList(t, map[string][]string{
 		"rig-a": {"alice"},
 	})
@@ -157,7 +157,7 @@ func TestRunMailDirectory_SortOrder(t *testing.T) {
 }
 
 func TestDirectoryEntry_JSONTags(t *testing.T) {
-	e := DirectoryEntry{Address: "mayor/", Type: "well-known"}
+	e := DirectoryEntry{Address: "overseer/", Type: "well-known"}
 	data, err := json.Marshal(e)
 	if err != nil {
 		t.Fatalf("marshal: %v", err)
@@ -168,7 +168,7 @@ func TestDirectoryEntry_JSONTags(t *testing.T) {
 		t.Fatalf("unmarshal: %v", err)
 	}
 
-	if raw["address"] != "mayor/" {
+	if raw["address"] != "overseer/" {
 		t.Errorf("JSON key should be 'address', got: %v", raw)
 	}
 	if raw["type"] != "well-known" {

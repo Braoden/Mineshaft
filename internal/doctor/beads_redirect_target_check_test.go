@@ -115,25 +115,25 @@ func TestBeadsRedirectTargetCheck_TargetNoBeadsSetup(t *testing.T) {
 	}
 }
 
-func TestBeadsRedirectTargetCheck_PolecatBrokenTarget(t *testing.T) {
+func TestBeadsRedirectTargetCheck_MinerBrokenTarget(t *testing.T) {
 	townRoot := t.TempDir()
 	rigDir := filepath.Join(townRoot, "myrig")
-	polecatDir := filepath.Join(rigDir, "polecats", "polecat1")
-	polecatBeadsDir := filepath.Join(polecatDir, ".beads")
+	minerDir := filepath.Join(rigDir, "miners", "miner1")
+	minerBeadsDir := filepath.Join(minerDir, ".beads")
 
 	// Create rig structure but NO beads
 	if err := os.MkdirAll(filepath.Join(rigDir, ".git"), 0755); err != nil {
 		t.Fatal(err)
 	}
 
-	// Create polecat with .git (old flat structure) and redirect to non-existent target
-	if err := os.MkdirAll(polecatBeadsDir, 0755); err != nil {
+	// Create miner with .git (old flat structure) and redirect to non-existent target
+	if err := os.MkdirAll(minerBeadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(polecatDir, ".git"), []byte("gitdir: /fake\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(minerDir, ".git"), []byte("gitdir: /fake\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(polecatBeadsDir, "redirect"), []byte("../../.beads\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(minerBeadsDir, "redirect"), []byte("../../.beads\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -142,7 +142,7 @@ func TestBeadsRedirectTargetCheck_PolecatBrokenTarget(t *testing.T) {
 	result := check.Run(ctx)
 
 	if result.Status != StatusWarning {
-		t.Errorf("Expected StatusWarning for polecat broken target, got %v: %s", result.Status, result.Message)
+		t.Errorf("Expected StatusWarning for miner broken target, got %v: %s", result.Status, result.Message)
 	}
 }
 
@@ -250,15 +250,15 @@ func TestBeadsRedirectTargetCheck_FixRecomputesRedirect(t *testing.T) {
 	}
 }
 
-func TestBeadsRedirectTargetCheck_FixWithMayorBeads(t *testing.T) {
+func TestBeadsRedirectTargetCheck_FixWithOverseerBeads(t *testing.T) {
 	townRoot := t.TempDir()
 	rigDir := filepath.Join(townRoot, "myrig")
-	mayorBeadsDir := filepath.Join(rigDir, "mayor", "rig", ".beads")
+	overseerBeadsDir := filepath.Join(rigDir, "overseer", "rig", ".beads")
 	crewDir := filepath.Join(rigDir, "crew", "worker1")
 	crewBeadsDir := filepath.Join(crewDir, ".beads")
 
-	// Create mayor beads as canonical location
-	if err := os.MkdirAll(filepath.Join(mayorBeadsDir, "dolt"), 0755); err != nil {
+	// Create overseer beads as canonical location
+	if err := os.MkdirAll(filepath.Join(overseerBeadsDir, "dolt"), 0755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.MkdirAll(filepath.Join(rigDir, ".git"), 0755); err != nil {
@@ -282,19 +282,19 @@ func TestBeadsRedirectTargetCheck_FixWithMayorBeads(t *testing.T) {
 		t.Errorf("Expected StatusWarning before fix, got %v: %s", result.Status, result.Message)
 	}
 
-	// Fix should redirect to mayor/rig/.beads
+	// Fix should redirect to overseer/rig/.beads
 	if err := check.Fix(ctx); err != nil {
 		t.Fatalf("Fix failed: %v", err)
 	}
 
-	// Verify redirect now points to mayor/rig/.beads
+	// Verify redirect now points to overseer/rig/.beads
 	data, err := os.ReadFile(filepath.Join(crewBeadsDir, "redirect"))
 	if err != nil {
 		t.Fatalf("Redirect file missing after fix: %v", err)
 	}
 	content := strings.TrimSpace(string(data))
-	if content != "../../mayor/rig/.beads" {
-		t.Errorf("Expected redirect to '../../mayor/rig/.beads', got %q", content)
+	if content != "../../overseer/rig/.beads" {
+		t.Errorf("Expected redirect to '../../overseer/rig/.beads', got %q", content)
 	}
 }
 
@@ -333,25 +333,25 @@ func TestBeadsRedirectTargetCheck_FixUnfixable(t *testing.T) {
 	}
 }
 
-func TestBeadsRedirectTargetCheck_MayorRedirectChain(t *testing.T) {
-	// Test tracked beads architecture: rig/.beads has redirect to mayor/rig/.beads
+func TestBeadsRedirectTargetCheck_OverseerRedirectChain(t *testing.T) {
+	// Test tracked beads architecture: rig/.beads has redirect to overseer/rig/.beads
 	townRoot := t.TempDir()
 	rigDir := filepath.Join(townRoot, "myrig")
 	rigBeadsDir := filepath.Join(rigDir, ".beads")
-	mayorBeadsDir := filepath.Join(rigDir, "mayor", "rig", ".beads")
+	overseerBeadsDir := filepath.Join(rigDir, "overseer", "rig", ".beads")
 	crewDir := filepath.Join(rigDir, "crew", "worker1")
 	crewBeadsDir := filepath.Join(crewDir, ".beads")
 
-	// Create mayor beads (final canonical)
-	if err := os.MkdirAll(filepath.Join(mayorBeadsDir, "dolt"), 0755); err != nil {
+	// Create overseer beads (final canonical)
+	if err := os.MkdirAll(filepath.Join(overseerBeadsDir, "dolt"), 0755); err != nil {
 		t.Fatal(err)
 	}
 
-	// Create rig beads with redirect to mayor
+	// Create rig beads with redirect to overseer
 	if err := os.MkdirAll(rigBeadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(rigBeadsDir, "redirect"), []byte("mayor/rig/.beads\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(rigBeadsDir, "redirect"), []byte("overseer/rig/.beads\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -359,7 +359,7 @@ func TestBeadsRedirectTargetCheck_MayorRedirectChain(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Create crew with redirect to rig beads (which itself redirects to mayor)
+	// Create crew with redirect to rig beads (which itself redirects to overseer)
 	// The redirect target (rig/.beads) exists and has a "redirect" marker, so hasBeadsSetup returns true
 	if err := os.MkdirAll(crewBeadsDir, 0755); err != nil {
 		t.Fatal(err)
@@ -391,7 +391,7 @@ func TestBeadsRedirectTargetCheck_MultipleWorktrees(t *testing.T) {
 	worktrees := []string{
 		filepath.Join(rigDir, "crew", "worker1"),
 		filepath.Join(rigDir, "crew", "worker2"),
-		filepath.Join(rigDir, "polecats", "polecat1"),
+		filepath.Join(rigDir, "miners", "miner1"),
 	}
 
 	for _, wt := range worktrees {
@@ -403,8 +403,8 @@ func TestBeadsRedirectTargetCheck_MultipleWorktrees(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	// Mark polecat as old-style flat worktree (has .git)
-	if err := os.WriteFile(filepath.Join(rigDir, "polecats", "polecat1", ".git"), []byte("gitdir: /fake\n"), 0644); err != nil {
+	// Mark miner as old-style flat worktree (has .git)
+	if err := os.WriteFile(filepath.Join(rigDir, "miners", "miner1", ".git"), []byte("gitdir: /fake\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -511,9 +511,9 @@ func TestExtractRigName(t *testing.T) {
 			want:         "myrig",
 		},
 		{
-			name:         "polecat path",
+			name:         "miner path",
 			townRoot:     "/town",
-			worktreePath: "/town/myrig/polecats/polecat1",
+			worktreePath: "/town/myrig/miners/miner1",
 			want:         "myrig",
 		},
 		{

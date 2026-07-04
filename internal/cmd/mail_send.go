@@ -10,11 +10,11 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/events"
-	"github.com/steveyegge/gastown/internal/mail"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/events"
+	"github.com/steveyegge/excavation/internal/mail"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 func runMailSend(cmd *cobra.Command, args []string) error {
@@ -40,7 +40,7 @@ func runMailSend(cmd *cobra.Command, args []string) error {
 		}
 		townRoot, err := workspace.FindFromCwd()
 		if err != nil || townRoot == "" {
-			return fmt.Errorf("not in a Gas Town workspace")
+			return fmt.Errorf("not in a Excavation Site workspace")
 		}
 		roleInfo, err := GetRoleWithContext(cwd, townRoot)
 		if err != nil {
@@ -49,7 +49,7 @@ func runMailSend(cmd *cobra.Command, args []string) error {
 		ctx := RoleContext{
 			Role:     roleInfo.Role,
 			Rig:      roleInfo.Rig,
-			Polecat:  roleInfo.Polecat,
+			Miner:  roleInfo.Miner,
 			TownRoot: townRoot,
 			WorkDir:  cwd,
 		}
@@ -68,7 +68,7 @@ func runMailSend(cmd *cobra.Command, args []string) error {
 	// All mail uses town beads (two-level architecture)
 	workDir, err := findMailWorkDir()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Determine sender (--from overrides auto-detection, for relay/bridge use)
@@ -159,7 +159,7 @@ func runMailSend(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		// Validation errors are definitive — do not fall back to legacy routing,
 		// which would silently deliver to a dead inbox.
-		// See: https://github.com/steveyegge/gastown/issues/2038
+		// See: https://github.com/steveyegge/excavation/issues/2038
 		if errors.Is(err, mail.ErrUnknownRecipient) {
 			return err
 		}
@@ -276,7 +276,7 @@ func normalizeReplySubject(subject string) string {
 }
 
 // normalizeAddress lowercases an address and trims a trailing slash so that
-// "Mayor/" and "mayor" compare equal. Matches identityVariants behavior in
+// "Overseer/" and "overseer" compare equal. Matches identityVariants behavior in
 // mail.Mailbox without depending on its internals.
 func normalizeAddress(addr string) string {
 	return strings.TrimSuffix(strings.ToLower(strings.TrimSpace(addr)), "/")

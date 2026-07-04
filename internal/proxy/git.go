@@ -30,8 +30,8 @@
 //   - The repository must exist; handlers return 404 before writing any
 //     response body if repoPath is missing (avoids corrupt partial responses).
 //   - git-receive-pack requires a valid mTLS client cert.  The cert CN
-//     (format: "gt-<rig>-<name>") is parsed to extract the polecat name.
-//     Every pushed ref must match refs/heads/polecat/<name>-*; any other
+//     (format: "gt-<rig>-<name>") is parsed to extract the miner name.
+//     Every pushed ref must match refs/heads/miner/<name>-*; any other
 //     ref is rejected with 403 before git ever sees the request body.
 //   - git-upload-pack is unrestricted for any authenticated client (read-only).
 //   - Subprocesses inherit only HOME and PATH from the server environment;
@@ -204,15 +204,15 @@ func (s *Server) handlePack(w http.ResponseWriter, r *http.Request, repoPath, se
 	}
 }
 
-// authorizeReceivePack checks that the push only touches refs/heads/polecat/<cn-name>-*.
+// authorizeReceivePack checks that the push only touches refs/heads/miner/<cn-name>-*.
 // It reads the pkt-line stream to extract ref names, then rewinds the body.
 // It returns (true, refs) on success, or (false, refs) on failure; refs may be
 // non-nil on failure when the body was read but contained a disallowed ref.
 func (s *Server) authorizeReceivePack(w http.ResponseWriter, r *http.Request, clientCN string) (bool, []string) {
-	// Issue 8: Use the shared polecatName helper instead of reimplementing CN parsing.
-	cnName := polecatName(clientCN)
+	// Issue 8: Use the shared minerName helper instead of reimplementing CN parsing.
+	cnName := minerName(clientCN)
 	if cnName == "" {
-		http.Error(w, "cannot determine polecat name from cert CN", http.StatusForbidden)
+		http.Error(w, "cannot determine miner name from cert CN", http.StatusForbidden)
 		return false, nil
 	}
 
@@ -307,13 +307,13 @@ func collectReceivePackRefs(body []byte) []string {
 }
 
 // validateReceivePackRefs parses the git-receive-pack pkt-line stream and validates
-// that all pushed refs are under refs/heads/polecat/<cnName>-* (prefix form only).
+// that all pushed refs are under refs/heads/miner/<cnName>-* (prefix form only).
 func validateReceivePackRefs(body []byte, cnName string) error {
 	// The pkt-line wire format: each record is a 4-hex-digit length (including the
 	// length field itself) followed by that many bytes of payload.  "0000" is a
 	// flush packet that terminates the ref list.  Any binary pack data that follows
 	// the flush packet is never read by this loop.
-	allowed := "refs/heads/polecat/" + cnName + "-"
+	allowed := "refs/heads/miner/" + cnName + "-"
 	offset := 0
 	for offset < len(body) {
 		// Guard: need at least 4 bytes for the length field.
@@ -353,10 +353,10 @@ func validateReceivePackRefs(body []byte, cnName string) error {
 		}
 		ref := string(parts[2])
 
-		// Only allow refs/heads/polecat/<cnName>-* (prefix form).
+		// Only allow refs/heads/miner/<cnName>-* (prefix form).
 		// Exact-name pushes (without timestamp suffix) are not permitted.
 		if !strings.HasPrefix(ref, allowed) {
-			return fmt.Errorf("push to %q denied: only refs/heads/polecat/%s-* allowed", ref, cnName)
+			return fmt.Errorf("push to %q denied: only refs/heads/miner/%s-* allowed", ref, cnName)
 		}
 	}
 	return nil

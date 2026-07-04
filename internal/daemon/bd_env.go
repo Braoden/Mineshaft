@@ -4,8 +4,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	agentconfig "github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/beads"
+	agentconfig "github.com/steveyegge/excavation/internal/config"
 )
 
 // bdReadOnlyEnv returns an environment slice for read-only bd/gt subprocess

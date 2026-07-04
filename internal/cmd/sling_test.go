@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
 )
 
 func writeBDStub(t *testing.T, binDir string, unixScript string, windowsScript string) string {
@@ -42,11 +42,11 @@ func setupMutableBDRawSlingTest(t *testing.T, initialDescription string) (townRo
 	}
 
 	townRoot = t.TempDir()
-	rigPath = filepath.Join(townRoot, "gastown", "mayor", "rig")
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	rigPath = filepath.Join(townRoot, "excavation", "overseer", "rig")
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "mayor", "town.json"), []byte(`{"version":1}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"version":1}`), 0644); err != nil {
 		t.Fatalf("write town marker: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(rigPath, ".beads"), 0755); err != nil {
@@ -55,13 +55,13 @@ func setupMutableBDRawSlingTest(t *testing.T, initialDescription string) (townRo
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir town beads: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(`{"prefix":"gt-","path":"gastown/mayor/rig"}`+"\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(`{"prefix":"gt-","path":"excavation/overseer/rig"}`+"\n"), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
 	rigs := &config.RigsConfig{Version: 1, Rigs: map[string]config.RigEntry{
-		"gastown": {GitURL: "git@github.com:test/gastown.git", AddedAt: time.Now().Truncate(time.Second), BeadsConfig: &config.BeadsConfig{Repo: "local", Prefix: "gt"}},
+		"excavation": {GitURL: "git@github.com:test/excavation.git", AddedAt: time.Now().Truncate(time.Second), BeadsConfig: &config.BeadsConfig{Repo: "local", Prefix: "gt"}},
 	}}
-	if err := config.SaveRigsConfig(filepath.Join(townRoot, "mayor", "rigs.json"), rigs); err != nil {
+	if err := config.SaveRigsConfig(filepath.Join(townRoot, "overseer", "rigs.json"), rigs); err != nil {
 		t.Fatalf("SaveRigsConfig: %v", err)
 	}
 
@@ -128,7 +128,7 @@ exit 0
 	t.Setenv("BD_DESC_FILE", descPath)
 	t.Setenv("BD_STATUS_FILE", statusPath)
 	t.Setenv("BD_ASSIGNEE_FILE", assigneePath)
-	t.Setenv(EnvGTRole, "mayor")
+	t.Setenv(EnvGTRole, "overseer")
 	t.Setenv("GT_TEST_NO_NUDGE", "1")
 	t.Setenv("GT_TEST_ATTACHED_MOLECULE_LOG", "")
 
@@ -137,7 +137,7 @@ exit 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
@@ -273,12 +273,12 @@ func TestSlingNewlyCreatedRigBeadRoutesBDCommandsToTargetRig(t *testing.T) {
 	newBeadID := "gt-new123"
 
 	// Minimal workspace marker so workspace.FindFromCwd() succeeds.
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 
 	// Create a rig path that owns gt-* beads, and a routes.jsonl pointing to it.
-	rigDir := filepath.Join(townRoot, "gastown", "mayor", "rig")
+	rigDir := filepath.Join(townRoot, "excavation", "overseer", "rig")
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
@@ -286,7 +286,7 @@ func TestSlingNewlyCreatedRigBeadRoutesBDCommandsToTargetRig(t *testing.T) {
 		t.Fatalf("mkdir rigDir: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"gastown/mayor/rig"}`,
+		`{"prefix":"gt-","path":"excavation/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
@@ -296,7 +296,7 @@ func TestSlingNewlyCreatedRigBeadRoutesBDCommandsToTargetRig(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "metadata.json"), []byte(`{"dolt_database":"hq","dolt_server_host":"127.0.0.1","dolt_server_port":3307}`), 0644); err != nil {
 		t.Fatalf("write town metadata: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(rigDir, ".beads", "metadata.json"), []byte(`{"dolt_database":"gastown","dolt_server_host":"127.0.0.2","dolt_server_port":4407}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(rigDir, ".beads", "metadata.json"), []byte(`{"dolt_database":"excavation","dolt_server_host":"127.0.0.2","dolt_server_port":4407}`), 0644); err != nil {
 		t.Fatalf("write rig metadata: %v", err)
 	}
 
@@ -312,7 +312,7 @@ set -e
 log_args=""
 for arg in "$@"; do
   case "$arg" in
-    --description=*attached_molecule:*gt-wisp-xyz*attached_formula:*mol-polecat-work*) arg="--description=<attached-molecule-and-formula-fields>" ;;
+    --description=*attached_molecule:*gt-wisp-xyz*attached_formula:*mol-miner-work*) arg="--description=<attached-molecule-and-formula-fields>" ;;
     --description=*no_merge:*true*review_only:*true*) arg="--description=<review-only-fields>" ;;
     --description=*review_only:*true*no_merge:*true*) arg="--description=<review-only-fields>" ;;
     --description=*) arg="--description=<redacted>" ;;
@@ -353,7 +353,7 @@ case "$cmd" in
 			exit 1
 			;;
 		  bond)
-			echo '{"result_id":"gt-abc123","id_mapping":{"mol-polecat-work":"gt-wisp-xyz"}}'
+			echo '{"result_id":"gt-abc123","id_mapping":{"mol-miner-work":"gt-wisp-xyz"}}'
 			;;
 		esac
     ;;
@@ -391,7 +391,7 @@ if "%cmd%"=="mol" (
     exit /b 1
   )
   if "%sub%"=="bond" (
-    echo {"result_id":"gt-abc123","id_mapping":{"mol-polecat-work":"gt-wisp-xyz"}}
+    echo {"result_id":"gt-abc123","id_mapping":{"mol-miner-work":"gt-wisp-xyz"}}
     exit /b 0
   )
 )
@@ -401,8 +401,8 @@ exit /b 0
 
 	t.Setenv("BD_LOG", logPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv(EnvGTRole, "overseer")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("TMUX_PANE", "") // Prevent inheriting real tmux pane from test runner
 
@@ -411,7 +411,7 @@ exit /b 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
@@ -419,7 +419,7 @@ exit /b 0
 	prevOn := slingOnTarget
 	prevVars := slingVars
 	prevDryRun := slingDryRun
-	prevNoConvoy := slingNoConvoy
+	prevNoMinecart := slingNoMinecart
 	prevHookRawBead := slingHookRawBead
 	prevReviewOnly := slingReviewOnly
 	prevNoMerge := slingNoMerge
@@ -428,7 +428,7 @@ exit /b 0
 		slingOnTarget = prevOn
 		slingVars = prevVars
 		slingDryRun = prevDryRun
-		slingNoConvoy = prevNoConvoy
+		slingNoMinecart = prevNoMinecart
 		slingHookRawBead = prevHookRawBead
 		slingReviewOnly = prevReviewOnly
 		slingNoMerge = prevNoMerge
@@ -436,17 +436,17 @@ exit /b 0
 	})
 
 	slingDryRun = false
-	slingNoConvoy = true
+	slingNoMinecart = true
 	slingHookRawBead = false
 	slingReviewOnly = false
 	slingNoMerge = false
 	slingVars = nil
 	slingOnTarget = ""
 	resolveTargetAgentFn = func(target string) (agentID string, pane string, hookRoot string, err error) {
-		if target != "gastown/polecats/toast" {
-			t.Fatalf("resolveTargetAgent target = %q, want gastown/polecats/toast", target)
+		if target != "excavation/miners/toast" {
+			t.Fatalf("resolveTargetAgent target = %q, want excavation/miners/toast", target)
 		}
-		return "gastown/polecats/toast", "", filepath.Join(townRoot, "gastown", "polecats", "toast", "gastown"), nil
+		return "excavation/miners/toast", "", filepath.Join(townRoot, "excavation", "miners", "toast", "excavation"), nil
 	}
 
 	// Prevent real tmux nudge from firing during tests (causes agent self-interruption)
@@ -471,7 +471,7 @@ exit /b 0
 		t.Fatalf("created bead output = %q, want %s", createOut, newBeadID)
 	}
 
-	if err := runSling(nil, []string{newBeadID, "gastown/polecats/toast"}); err != nil {
+	if err := runSling(nil, []string{newBeadID, "excavation/miners/toast"}); err != nil {
 		t.Fatalf("runSling: %v", err)
 	}
 
@@ -486,7 +486,7 @@ exit /b 0
 	slingHookRawBead = true
 	slingReviewOnly = true
 	slingNoMerge = true
-	if err := runSling(nil, []string{newBeadID, "gastown/polecats/toast"}); err != nil {
+	if err := runSling(nil, []string{newBeadID, "excavation/miners/toast"}); err != nil {
 		t.Fatalf("runSling raw review-only: %v", err)
 	}
 
@@ -504,7 +504,7 @@ exit /b 0
 	if resolved, err := filepath.EvalSymlinks(wantBeadsDir); err == nil {
 		wantBeadsDir = resolved
 	}
-	gotPolecatCook := false
+	gotMinerCook := false
 	gotReviewCook := false
 	gotBondCount := 0
 	gotCreate := false
@@ -521,8 +521,8 @@ exit /b 0
 		if beadsDir != wantBeadsDir {
 			t.Fatalf("bd %s used BEADS_DIR %q, want %q (args: %q)", kind, beadsDir, wantBeadsDir, args)
 		}
-		if database != "gastown" {
-			t.Fatalf("bd %s used BEADS_DOLT_SERVER_DATABASE %q, want gastown (args: %q)", kind, database, args)
+		if database != "excavation" {
+			t.Fatalf("bd %s used BEADS_DOLT_SERVER_DATABASE %q, want excavation (args: %q)", kind, database, args)
 		}
 		if beadsDB != "" || bdDB != "" || dataDir != "" {
 			t.Fatalf("bd %s leaked stale DB env BEADS_DB=%q BD_DB=%q BEADS_DOLT_DATA_DIR=%q (args: %q)", kind, beadsDB, bdDB, dataDir, args)
@@ -568,8 +568,8 @@ exit /b 0
 			assertTargetRig("formula show", dir, beadsDir, database, beadsDB, bdDB, dataDir, gtData, args)
 		case strings.Contains(args, "cook "):
 			switch {
-			case strings.Contains(args, "mol-polecat-work"):
-				gotPolecatCook = true
+			case strings.Contains(args, "mol-miner-work"):
+				gotMinerCook = true
 			case strings.Contains(args, "mol-review"):
 				gotReviewCook = true
 			default:
@@ -599,15 +599,15 @@ exit /b 0
 			assertTargetRig("description update", dir, beadsDir, database, beadsDB, bdDB, dataDir, gtData, args)
 		case args == "--version" || strings.HasPrefix(args, "version") || strings.Contains(args, " version") || strings.Contains(args, "show gt-rig-") || strings.Contains(args, "show mol-"):
 			// Explicitly exempt non-target-bead lookups; every gt-new123 operation
-			// above must still prove it is pinned to the gastown database.
+			// above must still prove it is pinned to the excavation database.
 		default:
 			t.Fatalf("unexpected bd command without routing assertion: %q", line)
 		}
 	}
 
-	if !gotCreate || !gotTargetDBCheck || !gotFormulaShow || !gotPolecatCook || !gotReviewCook || gotBondCount < 2 || !gotHook || !gotMetadata || !gotReviewOnlyMetadata {
-		t.Fatalf("missing expected bd commands: create=%v targetDBCheck=%v formulaShow=%v polecatCook=%v reviewCook=%v bondCount=%d hook=%v metadata=%v reviewOnlyMetadata=%v (log: %q)",
-			gotCreate, gotTargetDBCheck, gotFormulaShow, gotPolecatCook, gotReviewCook, gotBondCount, gotHook, gotMetadata, gotReviewOnlyMetadata, string(logBytes))
+	if !gotCreate || !gotTargetDBCheck || !gotFormulaShow || !gotMinerCook || !gotReviewCook || gotBondCount < 2 || !gotHook || !gotMetadata || !gotReviewOnlyMetadata {
+		t.Fatalf("missing expected bd commands: create=%v targetDBCheck=%v formulaShow=%v minerCook=%v reviewCook=%v bondCount=%d hook=%v metadata=%v reviewOnlyMetadata=%v (log: %q)",
+			gotCreate, gotTargetDBCheck, gotFormulaShow, gotMinerCook, gotReviewCook, gotBondCount, gotHook, gotMetadata, gotReviewOnlyMetadata, string(logBytes))
 	}
 	if firstReviewOnlyMetadataIndex == -1 || lastHookIndex == -1 || firstReviewOnlyMetadataIndex > lastHookIndex {
 		t.Fatalf("review-only metadata must be stored before raw hook assignment: metadataIndex=%d hookIndex=%d log: %q", firstReviewOnlyMetadataIndex, lastHookIndex, string(logBytes))
@@ -623,18 +623,18 @@ func TestRoutedBeadReadUsesCanonicalShowWithoutUnsupportedAllowStale(t *testing.
 
 	townRoot := t.TempDir()
 	beadID := "gt-new123"
-	rigDir := filepath.Join(townRoot, "gastown", "mayor", "rig")
+	rigDir := filepath.Join(townRoot, "excavation", "overseer", "rig")
 	rigBeadsDir := filepath.Join(rigDir, ".beads")
-	for _, dir := range []string{filepath.Join(townRoot, "mayor"), filepath.Join(townRoot, ".beads"), rigBeadsDir} {
+	for _, dir := range []string{filepath.Join(townRoot, "overseer"), filepath.Join(townRoot, ".beads"), rigBeadsDir} {
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			t.Fatalf("mkdir %s: %v", dir, err)
 		}
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "mayor", "town.json"), []byte(`{"type":"town","name":"test"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"type":"town","name":"test"}`), 0644); err != nil {
 		t.Fatalf("write town.json: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"gastown/mayor/rig"}`,
+		`{"prefix":"gt-","path":"excavation/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
@@ -680,7 +680,7 @@ esac
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
@@ -718,21 +718,21 @@ esac
 	}
 }
 
-func TestSlingRollsBackSpawnedPolecatOnInstantiateFailure(t *testing.T) {
+func TestSlingRollsBackSpawnedMinerOnInstantiateFailure(t *testing.T) {
 	townRoot := t.TempDir()
 
 	// Minimal workspace marker so workspace.FindFromCwd() succeeds.
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 
-	// Register rig so IsRigName("gastown") succeeds.
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	// Register rig so IsRigName("excavation") succeeds.
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigs := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"gastown": {
-				GitURL:    "git@github.com:test/gastown.git",
+			"excavation": {
+				GitURL:    "git@github.com:test/excavation.git",
 				LocalRepo: "",
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
@@ -745,19 +745,19 @@ func TestSlingRollsBackSpawnedPolecatOnInstantiateFailure(t *testing.T) {
 	if err := config.SaveRigsConfig(rigsPath, rigs); err != nil {
 		t.Fatalf("SaveRigsConfig: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "gastown", "mayor", "rig", ".beads"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir rig beads dir: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "gastown"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "excavation"), 0755); err != nil {
 		t.Fatalf("mkdir rig dir: %v", err)
 	}
 
-	// Routes: gt-* resolves to gastown's rig beads dir.
+	// Routes: gt-* resolves to excavation's rig beads dir.
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"gastown/mayor/rig"}`,
+		`{"prefix":"gt-","path":"excavation/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
@@ -830,8 +830,8 @@ exit /b 0
 	_ = writeBDStub(t, binDir, bdScript, bdScriptWindows)
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv(EnvGTRole, "overseer")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("TMUX_PANE", "")
 	t.Setenv("GT_TEST_NO_NUDGE", "1")
@@ -842,54 +842,54 @@ exit /b 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
 	// Ensure we don't leak global flag/seam state across tests.
-	prevNoConvoy := slingNoConvoy
+	prevNoMinecart := slingNoMinecart
 	prevNoBoot := slingNoBoot
 	prevDryRun := slingDryRun
 	prevHookRaw := slingHookRawBead
-	prevSpawn := spawnPolecatForSling
+	prevSpawn := spawnMinerForSling
 	prevRollback := rollbackSlingArtifactsFn
 	t.Cleanup(func() {
-		slingNoConvoy = prevNoConvoy
+		slingNoMinecart = prevNoMinecart
 		slingNoBoot = prevNoBoot
 		slingDryRun = prevDryRun
 		slingHookRawBead = prevHookRaw
-		spawnPolecatForSling = prevSpawn
+		spawnMinerForSling = prevSpawn
 		rollbackSlingArtifactsFn = prevRollback
 	})
 
 	slingDryRun = false
-	slingNoConvoy = true
+	slingNoMinecart = true
 	slingNoBoot = true
 	slingHookRawBead = false
 
-	spawnPolecatForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedPolecatInfo, error) {
-		return &SpawnedPolecatInfo{
+	spawnMinerForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedMinerInfo, error) {
+		return &SpawnedMinerInfo{
 			RigName:     rigName,
-			PolecatName: "Toast",
-			ClonePath:   filepath.Join(townRoot, "fake-polecat"),
+			MinerName: "Toast",
+			ClonePath:   filepath.Join(townRoot, "fake-miner"),
 		}, nil
 	}
 
 	rollbackCalled := false
-	rollbackSlingArtifactsFn = func(spawnInfo *SpawnedPolecatInfo, beadID, hookWorkDir, convoyID string) {
+	rollbackSlingArtifactsFn = func(spawnInfo *SpawnedMinerInfo, beadID, hookWorkDir, minecartID string) {
 		rollbackCalled = true
-		if spawnInfo == nil || spawnInfo.PolecatName != "Toast" {
+		if spawnInfo == nil || spawnInfo.MinerName != "Toast" {
 			t.Fatalf("unexpected spawnInfo in rollback: %+v", spawnInfo)
 		}
 		if beadID != "gt-abc123" {
 			t.Fatalf("unexpected beadID in rollback: %q", beadID)
 		}
-		if want := filepath.Join(townRoot, "fake-polecat"); hookWorkDir != want {
+		if want := filepath.Join(townRoot, "fake-miner"); hookWorkDir != want {
 			t.Fatalf("unexpected hookWorkDir in rollback: got %q want %q", hookWorkDir, want)
 		}
 	}
 
-	err = runSling(nil, []string{"gt-abc123", "gastown"})
+	err = runSling(nil, []string{"gt-abc123", "excavation"})
 	if err == nil {
 		t.Fatalf("expected error from runSling")
 	}
@@ -898,28 +898,28 @@ exit /b 0
 	}
 }
 
-func TestSlingRollsBackSpawnedPolecatOnHookFailure(t *testing.T) {
+func TestSlingRollsBackSpawnedMinerOnHookFailure(t *testing.T) {
 	townRoot := t.TempDir()
 
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "mayor", "town.json"), []byte(`{"version":1}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"version":1}`), 0644); err != nil {
 		t.Fatalf("write town marker: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "gastown", "mayor", "rig", ".beads"), 0755); err != nil {
-		t.Fatalf("mkdir gastown mayor rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads"), 0755); err != nil {
+		t.Fatalf("mkdir excavation overseer rig: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(`{"prefix":"gt-","path":"gastown/mayor/rig"}`+"\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(`{"prefix":"gt-","path":"excavation/overseer/rig"}`+"\n"), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
 	rigs := &config.RigsConfig{Version: 1, Rigs: map[string]config.RigEntry{
-		"gastown": {GitURL: "git@github.com:test/gastown.git", AddedAt: time.Now().Truncate(time.Second), BeadsConfig: &config.BeadsConfig{Repo: "local", Prefix: "gt-"}},
+		"excavation": {GitURL: "git@github.com:test/excavation.git", AddedAt: time.Now().Truncate(time.Second), BeadsConfig: &config.BeadsConfig{Repo: "local", Prefix: "gt-"}},
 	}}
-	if err := config.SaveRigsConfig(filepath.Join(townRoot, "mayor", "rigs.json"), rigs); err != nil {
+	if err := config.SaveRigsConfig(filepath.Join(townRoot, "overseer", "rigs.json"), rigs); err != nil {
 		t.Fatalf("SaveRigsConfig: %v", err)
 	}
 
@@ -945,7 +945,7 @@ exit /b 0
 `
 	_ = writeBDStub(t, binDir, bdScript, bdScriptWindows)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
+	t.Setenv(EnvGTRole, "overseer")
 	t.Setenv("GT_TEST_NO_NUDGE", "1")
 
 	cwd, err := os.Getwd()
@@ -953,32 +953,32 @@ exit /b 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
-	prevNoConvoy := slingNoConvoy
+	prevNoMinecart := slingNoMinecart
 	prevNoBoot := slingNoBoot
 	prevHookRaw := slingHookRawBead
-	prevSpawn := spawnPolecatForSling
+	prevSpawn := spawnMinerForSling
 	prevResolveTargetAgent := resolveTargetAgentFn
 	prevRollback := rollbackSlingArtifactsFn
 	prevHook := hookBeadWithRetryFn
 	t.Cleanup(func() {
-		slingNoConvoy = prevNoConvoy
+		slingNoMinecart = prevNoMinecart
 		slingNoBoot = prevNoBoot
 		slingHookRawBead = prevHookRaw
-		spawnPolecatForSling = prevSpawn
+		spawnMinerForSling = prevSpawn
 		resolveTargetAgentFn = prevResolveTargetAgent
 		rollbackSlingArtifactsFn = prevRollback
 		hookBeadWithRetryFn = prevHook
 	})
-	slingNoConvoy = true
+	slingNoMinecart = true
 	slingNoBoot = true
 	slingHookRawBead = true
 
-	spawnPolecatForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedPolecatInfo, error) {
-		return &SpawnedPolecatInfo{RigName: rigName, PolecatName: "Toast", ClonePath: filepath.Join(townRoot, "fake-polecat")}, nil
+	spawnMinerForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedMinerInfo, error) {
+		return &SpawnedMinerInfo{RigName: rigName, MinerName: "Toast", ClonePath: filepath.Join(townRoot, "fake-miner")}, nil
 	}
 	resolveTargetAgentFn = func(target string) (agentID string, pane string, hookRoot string, err error) {
 		return "", "", "", errors.New("simulated dead target")
@@ -988,14 +988,14 @@ exit /b 0
 	}
 
 	rollbackCalled := false
-	rollbackSlingArtifactsFn = func(spawnInfo *SpawnedPolecatInfo, beadID, hookWorkDir, convoyID string) {
+	rollbackSlingArtifactsFn = func(spawnInfo *SpawnedMinerInfo, beadID, hookWorkDir, minecartID string) {
 		rollbackCalled = true
-		if spawnInfo == nil || spawnInfo.PolecatName != "Toast" {
+		if spawnInfo == nil || spawnInfo.MinerName != "Toast" {
 			t.Fatalf("unexpected spawnInfo in rollback: %+v", spawnInfo)
 		}
 	}
 
-	err = runSling(nil, []string{"gt-abc123", "gastown/polecats/toast"})
+	err = runSling(nil, []string{"gt-abc123", "excavation/miners/toast"})
 	if err == nil {
 		t.Fatalf("expected hook failure from runSling")
 	}
@@ -1007,15 +1007,15 @@ exit /b 0
 func TestSlingRejectsBeadMissingFromTargetRigBeforeSpawn(t *testing.T) {
 	townRoot := t.TempDir()
 
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigs := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"gastown": {
-				GitURL:  "git@github.com:test/gastown.git",
+			"excavation": {
+				GitURL:  "git@github.com:test/excavation.git",
 				AddedAt: time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
 					Repo:   "local",
@@ -1027,7 +1027,7 @@ func TestSlingRejectsBeadMissingFromTargetRigBeforeSpawn(t *testing.T) {
 	if err := config.SaveRigsConfig(rigsPath, rigs); err != nil {
 		t.Fatalf("SaveRigsConfig: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "gastown", "mayor", "rig", ".beads"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir target rig dir: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
@@ -1035,7 +1035,7 @@ func TestSlingRejectsBeadMissingFromTargetRigBeforeSpawn(t *testing.T) {
 	}
 	routes := strings.Join([]string{
 		`{"prefix":"gt-","path":"."}`,
-		`{"prefix":"zz-","path":"gastown/mayor/rig"}`,
+		`{"prefix":"zz-","path":"excavation/overseer/rig"}`,
 		"",
 	}, "\n")
 	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(routes), 0644); err != nil {
@@ -1087,10 +1087,10 @@ exit /b 0
 	_ = writeBDStub(t, binDir, bdScript, bdScriptWindows)
 
 	t.Setenv("BD_LOG", logPath)
-	t.Setenv("TARGET_BEADS_DIR", filepath.Join(townRoot, "gastown", "mayor", "rig", ".beads"))
+	t.Setenv("TARGET_BEADS_DIR", filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads"))
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv(EnvGTRole, "overseer")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("TMUX_PANE", "")
 	t.Setenv("GT_TEST_NO_NUDGE", "1")
@@ -1101,28 +1101,28 @@ exit /b 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
-	prevNoConvoy := slingNoConvoy
+	prevNoMinecart := slingNoMinecart
 	prevNoBoot := slingNoBoot
-	prevSpawn := spawnPolecatForSling
+	prevSpawn := spawnMinerForSling
 	t.Cleanup(func() {
-		slingNoConvoy = prevNoConvoy
+		slingNoMinecart = prevNoMinecart
 		slingNoBoot = prevNoBoot
-		spawnPolecatForSling = prevSpawn
+		spawnMinerForSling = prevSpawn
 	})
-	slingNoConvoy = true
+	slingNoMinecart = true
 	slingNoBoot = true
 
 	spawnCalled := false
-	spawnPolecatForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedPolecatInfo, error) {
+	spawnMinerForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedMinerInfo, error) {
 		spawnCalled = true
-		return &SpawnedPolecatInfo{RigName: rigName, PolecatName: "toast", ClonePath: filepath.Join(townRoot, "fake-polecat")}, nil
+		return &SpawnedMinerInfo{RigName: rigName, MinerName: "toast", ClonePath: filepath.Join(townRoot, "fake-miner")}, nil
 	}
 
-	err = runSling(nil, []string{"gt-r2405", "gastown"})
+	err = runSling(nil, []string{"gt-r2405", "excavation"})
 	if err == nil {
 		t.Fatal("expected target-rig database validation error")
 	}
@@ -1130,7 +1130,7 @@ exit /b 0
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if spawnCalled {
-		t.Fatal("spawnPolecatForSling was called before target-rig database validation rejected the bead")
+		t.Fatal("spawnMinerForSling was called before target-rig database validation rejected the bead")
 	}
 }
 
@@ -1142,21 +1142,21 @@ func TestTargetRigDatabaseAllowsRouteResolvedGtBead(t *testing.T) {
 	t.Cleanup(beads.ResetBdAllowStaleCacheForTest)
 
 	townRoot := t.TempDir()
-	rigDir := filepath.Join(townRoot, "gastown", "mayor", "rig")
-	for _, dir := range []string{filepath.Join(townRoot, ".beads"), filepath.Join(townRoot, "mayor", "rig"), filepath.Join(rigDir, ".beads")} {
+	rigDir := filepath.Join(townRoot, "excavation", "overseer", "rig")
+	for _, dir := range []string{filepath.Join(townRoot, ".beads"), filepath.Join(townRoot, "overseer", "rig"), filepath.Join(rigDir, ".beads")} {
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			t.Fatalf("mkdir %s: %v", dir, err)
 		}
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"gastown/mayor/rig"}`,
+		`{"prefix":"gt-","path":"excavation/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
 	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(routes), 0644); err != nil {
 		t.Fatalf("write routes.jsonl: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(rigDir, ".beads", "metadata.json"), []byte(`{"dolt_database":"gastown","dolt_server_host":"127.0.0.1","dolt_server_port":3307}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(rigDir, ".beads", "metadata.json"), []byte(`{"dolt_database":"excavation","dolt_server_host":"127.0.0.1","dolt_server_port":3307}`), 0644); err != nil {
 		t.Fatalf("write rig metadata: %v", err)
 	}
 
@@ -1196,7 +1196,7 @@ esac
 	t.Setenv("BEADS_DOLT_DATA_DIR", filepath.Join(townRoot, "wrong-data"))
 	t.Setenv("BEADS_DOLT_SERVER_DATABASE", "hq")
 
-	if err := verifyBeadExistsInTargetRigDatabase("gt-hq-oy83-cleanup", "gastown", townRoot); err != nil {
+	if err := verifyBeadExistsInTargetRigDatabase("gt-hq-oy83-cleanup", "excavation", townRoot); err != nil {
 		t.Fatalf("verifyBeadExistsInTargetRigDatabase: %v", err)
 	}
 
@@ -1221,8 +1221,8 @@ esac
 	if parts[3] != "" {
 		t.Fatalf("BEADS_DOLT_DATA_DIR leaked: %q", parts[3])
 	}
-	if parts[4] != "gastown" {
-		t.Fatalf("BEADS_DOLT_SERVER_DATABASE = %q, want gastown", parts[4])
+	if parts[4] != "excavation" {
+		t.Fatalf("BEADS_DOLT_SERVER_DATABASE = %q, want excavation", parts[4])
 	}
 }
 
@@ -1230,15 +1230,15 @@ func setupCrossDatabaseSlingGuardTest(t *testing.T) (townRoot, logPath string) {
 	t.Helper()
 
 	townRoot = t.TempDir()
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigs := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"gastown": {
-				GitURL:  "git@github.com:test/gastown.git",
+			"excavation": {
+				GitURL:  "git@github.com:test/excavation.git",
 				AddedAt: time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
 					Repo:   "local",
@@ -1250,7 +1250,7 @@ func setupCrossDatabaseSlingGuardTest(t *testing.T) (townRoot, logPath string) {
 	if err := config.SaveRigsConfig(rigsPath, rigs); err != nil {
 		t.Fatalf("SaveRigsConfig: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "gastown", "mayor", "rig", ".beads"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir target rig dir: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
@@ -1258,7 +1258,7 @@ func setupCrossDatabaseSlingGuardTest(t *testing.T) (townRoot, logPath string) {
 	}
 	routes := strings.Join([]string{
 		`{"prefix":"gt-","path":"."}`,
-		`{"prefix":"zz-","path":"gastown/mayor/rig"}`,
+		`{"prefix":"zz-","path":"excavation/overseer/rig"}`,
 		"",
 	}, "\n")
 	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(routes), 0644); err != nil {
@@ -1312,10 +1312,10 @@ exit /b 0
 	_ = writeBDStub(t, binDir, bdScript, bdScriptWindows)
 
 	t.Setenv("BD_LOG", logPath)
-	t.Setenv("TARGET_BEADS_DIR", filepath.Join(townRoot, "gastown", "mayor", "rig", ".beads"))
+	t.Setenv("TARGET_BEADS_DIR", filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads"))
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv(EnvGTRole, "overseer")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("TMUX_PANE", "")
 	t.Setenv("GT_TEST_NO_NUDGE", "1")
@@ -1326,7 +1326,7 @@ exit /b 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
@@ -1336,7 +1336,7 @@ exit /b 0
 func TestScheduleBeadRejectsMissingTargetRigDatabaseBeforeContext(t *testing.T) {
 	_, logPath := setupCrossDatabaseSlingGuardTest(t)
 
-	err := scheduleBead("gt-r2405", "gastown", ScheduleOptions{})
+	err := scheduleBead("gt-r2405", "excavation", ScheduleOptions{})
 	if err == nil {
 		t.Fatal("expected target-rig database validation error")
 	}
@@ -1361,22 +1361,22 @@ func TestBatchSlingRejectsMissingTargetRigDatabaseBeforeSpawn(t *testing.T) {
 
 	prevDryRun := slingDryRun
 	prevForce := slingForce
-	prevSpawn := spawnPolecatForSling
+	prevSpawn := spawnMinerForSling
 	t.Cleanup(func() {
 		slingDryRun = prevDryRun
 		slingForce = prevForce
-		spawnPolecatForSling = prevSpawn
+		spawnMinerForSling = prevSpawn
 	})
 	slingDryRun = false
 	slingForce = false
 
 	spawnCalled := false
-	spawnPolecatForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedPolecatInfo, error) {
+	spawnMinerForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedMinerInfo, error) {
 		spawnCalled = true
-		return &SpawnedPolecatInfo{RigName: rigName, PolecatName: "toast", ClonePath: filepath.Join(townRoot, "fake-polecat")}, nil
+		return &SpawnedMinerInfo{RigName: rigName, MinerName: "toast", ClonePath: filepath.Join(townRoot, "fake-miner")}, nil
 	}
 
-	err := runBatchSling([]string{"gt-r2405"}, "gastown", filepath.Join(townRoot, ".beads"))
+	err := runBatchSling([]string{"gt-r2405"}, "excavation", filepath.Join(townRoot, ".beads"))
 	if err == nil {
 		t.Fatal("expected target-rig database validation error")
 	}
@@ -1384,18 +1384,18 @@ func TestBatchSlingRejectsMissingTargetRigDatabaseBeforeSpawn(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if spawnCalled {
-		t.Fatal("spawnPolecatForSling was called before target-rig database validation rejected the bead")
+		t.Fatal("spawnMinerForSling was called before target-rig database validation rejected the bead")
 	}
 }
 
-func TestSchedulerRejectsReviewOnlyForEpicConvoy(t *testing.T) {
+func TestSchedulerRejectsReviewOnlyForEpicMinecart(t *testing.T) {
 	cmd := &cobra.Command{}
 	cmd.Flags().Bool("review-only", false, "")
 	if err := cmd.Flags().Set("review-only", "true"); err != nil {
 		t.Fatalf("set review-only flag: %v", err)
 	}
 
-	for _, mode := range []string{"epic", "convoy"} {
+	for _, mode := range []string{"epic", "minecart"} {
 		err := validateNoTaskOnlySchedulerFlags(cmd, mode)
 		if err == nil {
 			t.Fatalf("validateNoTaskOnlySchedulerFlags(%s) accepted --review-only", mode)
@@ -1409,18 +1409,18 @@ func TestSchedulerRejectsReviewOnlyForEpicConvoy(t *testing.T) {
 func TestExecuteSlingRejectsMissingTargetRigDatabaseBeforeSpawn(t *testing.T) {
 	townRoot, _ := setupCrossDatabaseSlingGuardTest(t)
 
-	prevSpawn := spawnPolecatForSling
-	t.Cleanup(func() { spawnPolecatForSling = prevSpawn })
+	prevSpawn := spawnMinerForSling
+	t.Cleanup(func() { spawnMinerForSling = prevSpawn })
 
 	spawnCalled := false
-	spawnPolecatForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedPolecatInfo, error) {
+	spawnMinerForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedMinerInfo, error) {
 		spawnCalled = true
-		return &SpawnedPolecatInfo{RigName: rigName, PolecatName: "toast", ClonePath: filepath.Join(townRoot, "fake-polecat")}, nil
+		return &SpawnedMinerInfo{RigName: rigName, MinerName: "toast", ClonePath: filepath.Join(townRoot, "fake-miner")}, nil
 	}
 
 	_, err := executeSling(SlingParams{
 		BeadID:   "gt-r2405",
-		RigName:  "gastown",
+		RigName:  "excavation",
 		TownRoot: townRoot,
 		BeadsDir: filepath.Join(townRoot, ".beads"),
 	})
@@ -1431,20 +1431,20 @@ func TestExecuteSlingRejectsMissingTargetRigDatabaseBeforeSpawn(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if spawnCalled {
-		t.Fatal("spawnPolecatForSling was called before target-rig database validation rejected the bead")
+		t.Fatal("spawnMinerForSling was called before target-rig database validation rejected the bead")
 	}
 }
 
-func TestResolveTargetRejectsLivePolecatMissingTargetRigDatabase(t *testing.T) {
+func TestResolveTargetRejectsLiveMinerMissingTargetRigDatabase(t *testing.T) {
 	townRoot, _ := setupCrossDatabaseSlingGuardTest(t)
 
 	prevResolve := resolveTargetAgentFn
 	t.Cleanup(func() { resolveTargetAgentFn = prevResolve })
 	resolveTargetAgentFn = func(target string) (string, string, string, error) {
-		return "gastown/polecats/toast", "%1", filepath.Join(townRoot, "gastown", "polecats", "toast"), nil
+		return "excavation/miners/toast", "%1", filepath.Join(townRoot, "excavation", "miners", "toast"), nil
 	}
 
-	for _, target := range []string{"gastown/polecats/toast", "gastown/toast", "gt-gastown-polecat-toast"} {
+	for _, target := range []string{"excavation/miners/toast", "excavation/toast", "gt-excavation-miner-toast"} {
 		t.Run(target, func(t *testing.T) {
 			_, err := resolveTarget(target, ResolveTargetOptions{
 				BeadID:   "gt-r2405",
@@ -1460,10 +1460,10 @@ func TestResolveTargetRejectsLivePolecatMissingTargetRigDatabase(t *testing.T) {
 	}
 }
 
-func TestResolveTargetCreateSpawnsPolecatShorthandWhenPaneMissing(t *testing.T) {
+func TestResolveTargetCreateSpawnsMinerShorthandWhenPaneMissing(t *testing.T) {
 	townRoot := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 
 	cwd, err := os.Getwd()
@@ -1471,50 +1471,50 @@ func TestResolveTargetCreateSpawnsPolecatShorthandWhenPaneMissing(t *testing.T) 
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
 	prevResolve := resolveTargetAgentFn
-	prevSpawn := spawnPolecatForSling
+	prevSpawn := spawnMinerForSling
 	t.Cleanup(func() {
 		resolveTargetAgentFn = prevResolve
-		spawnPolecatForSling = prevSpawn
+		spawnMinerForSling = prevSpawn
 	})
 	resolveTargetAgentFn = func(target string) (string, string, string, error) {
 		return "", "", "", errors.New("getting pane for gt-toast: exit status 1")
 	}
 
 	spawnCalled := false
-	spawnPolecatForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedPolecatInfo, error) {
+	spawnMinerForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedMinerInfo, error) {
 		spawnCalled = true
-		if rigName != "gastown" {
-			t.Fatalf("rigName = %q, want gastown", rigName)
+		if rigName != "excavation" {
+			t.Fatalf("rigName = %q, want excavation", rigName)
 		}
 		if !opts.Create {
 			t.Fatal("expected Create option to be preserved")
 		}
-		return &SpawnedPolecatInfo{RigName: rigName, PolecatName: "toast", ClonePath: filepath.Join(townRoot, "fake-polecat")}, nil
+		return &SpawnedMinerInfo{RigName: rigName, MinerName: "toast", ClonePath: filepath.Join(townRoot, "fake-miner")}, nil
 	}
 
-	got, err := resolveTarget("gastown/toast", ResolveTargetOptions{Create: true, NoBoot: true})
+	got, err := resolveTarget("excavation/toast", ResolveTargetOptions{Create: true, NoBoot: true})
 	if err != nil {
 		t.Fatalf("resolveTarget: %v", err)
 	}
 	if !spawnCalled {
-		t.Fatal("expected spawnPolecatForSling to be called")
+		t.Fatal("expected spawnMinerForSling to be called")
 	}
-	if got.Agent != "gastown/polecats/toast" {
-		t.Fatalf("Agent = %q, want gastown/polecats/toast", got.Agent)
+	if got.Agent != "excavation/miners/toast" {
+		t.Fatalf("Agent = %q, want excavation/miners/toast", got.Agent)
 	}
 }
 
 func TestResolveTargetCreateDoesNotSpawnCrewShorthandWhenPaneMissing(t *testing.T) {
 	townRoot := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "gastown", "crew", "toast"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "crew", "toast"), 0755); err != nil {
 		t.Fatalf("mkdir crew: %v", err)
 	}
 
@@ -1523,37 +1523,37 @@ func TestResolveTargetCreateDoesNotSpawnCrewShorthandWhenPaneMissing(t *testing.
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
 	prevResolve := resolveTargetAgentFn
-	prevSpawn := spawnPolecatForSling
+	prevSpawn := spawnMinerForSling
 	t.Cleanup(func() {
 		resolveTargetAgentFn = prevResolve
-		spawnPolecatForSling = prevSpawn
+		spawnMinerForSling = prevSpawn
 	})
 	resolveTargetAgentFn = func(target string) (string, string, string, error) {
 		return "", "", "", errors.New("getting pane for gt-crew-toast: exit status 1")
 	}
 
 	spawnCalled := false
-	spawnPolecatForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedPolecatInfo, error) {
+	spawnMinerForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedMinerInfo, error) {
 		spawnCalled = true
 		return nil, errors.New("unexpected spawn")
 	}
 
-	_, err = resolveTarget("gastown/toast", ResolveTargetOptions{Create: true, NoBoot: true})
+	_, err = resolveTarget("excavation/toast", ResolveTargetOptions{Create: true, NoBoot: true})
 	if err == nil {
 		t.Fatal("expected resolve error for missing crew pane")
 	}
 	if spawnCalled {
-		t.Fatal("crew shorthand must not spawn a polecat")
+		t.Fatal("crew shorthand must not spawn a miner")
 	}
 }
 
 func TestTargetRigDatabaseLookupFailsClosedWithoutTownRoot(t *testing.T) {
-	err := verifyBeadExistsInTargetRigDatabase("gt-r2405", "gastown", "")
+	err := verifyBeadExistsInTargetRigDatabase("gt-r2405", "excavation", "")
 	if err == nil {
 		t.Fatal("expected fail-closed error without town root")
 	}
@@ -1564,8 +1564,8 @@ func TestTargetRigDatabaseLookupFailsClosedWithoutTownRoot(t *testing.T) {
 
 func TestRollbackSlingArtifactsBurnsAttachedMolecules(t *testing.T) {
 	townRoot, _ := filepath.EvalSymlinks(t.TempDir())
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 
 	binDir := filepath.Join(townRoot, "bin")
@@ -1591,14 +1591,14 @@ exit /b 0
 	_ = writeBDStub(t, binDir, bdScript, bdScriptWindows)
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
+	t.Setenv(EnvGTRole, "overseer")
 
 	cwd, err := os.Getwd()
 	if err != nil {
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
@@ -1639,9 +1639,9 @@ exit /b 0
 		return nil
 	}
 
-	rollbackSlingArtifacts(&SpawnedPolecatInfo{
-		RigName:     "gastown",
-		PolecatName: "Toast",
+	rollbackSlingArtifacts(&SpawnedMinerInfo{
+		RigName:     "excavation",
+		MinerName: "Toast",
 	}, "gt-abc123", "", "")
 
 	if !burnCalled {
@@ -1654,21 +1654,21 @@ func TestRollbackSlingArtifactsClearsRawReviewOnlyMetadata(t *testing.T) {
 		"attached_at: 2026-06-30T12:00:00Z",
 		"no_merge: true",
 		"review_only: true",
-		"dispatched_by: mayor/",
+		"dispatched_by: overseer/",
 		"",
 		"Keep this body.",
 	}, "\n")
 	townRoot, _, descPath := setupMutableBDRawSlingTest(t, initial)
 
-	rollbackSlingArtifacts(&SpawnedPolecatInfo{
-		RigName:     "gastown",
-		PolecatName: "toast",
-		ClonePath:   filepath.Join(townRoot, "gastown", "polecats", "toast"),
-	}, "gt-rawrollback", filepath.Join(townRoot, "gastown", "polecats", "toast"), "")
+	rollbackSlingArtifacts(&SpawnedMinerInfo{
+		RigName:     "excavation",
+		MinerName: "toast",
+		ClonePath:   filepath.Join(townRoot, "excavation", "miners", "toast"),
+	}, "gt-rawrollback", filepath.Join(townRoot, "excavation", "miners", "toast"), "")
 
 	desc := readMutableBDDescription(t, descPath)
 	assertNoRawReviewMetadata(t, desc)
-	if !strings.Contains(desc, "dispatched_by: mayor/") {
+	if !strings.Contains(desc, "dispatched_by: overseer/") {
 		t.Fatalf("rollback did not preserve unrelated dispatch metadata:\n%s", desc)
 	}
 	if !strings.Contains(desc, "Keep this body.") {
@@ -1700,11 +1700,11 @@ func TestRollbackSlingArtifactsKeepsMetadataWhenMoleculeBurnFails(t *testing.T) 
 		return errors.New("forced burn failure")
 	}
 
-	rollbackSlingArtifacts(&SpawnedPolecatInfo{
-		RigName:     "gastown",
-		PolecatName: "toast",
-		ClonePath:   filepath.Join(townRoot, "gastown", "polecats", "toast"),
-	}, "gt-rawrollback", filepath.Join(townRoot, "gastown", "polecats", "toast"), "")
+	rollbackSlingArtifacts(&SpawnedMinerInfo{
+		RigName:     "excavation",
+		MinerName: "toast",
+		ClonePath:   filepath.Join(townRoot, "excavation", "miners", "toast"),
+	}, "gt-rawrollback", filepath.Join(townRoot, "excavation", "miners", "toast"), "")
 
 	desc := readMutableBDDescription(t, descPath)
 	if !strings.Contains(desc, "attached_molecule: gt-wisp-stale") {
@@ -1750,11 +1750,11 @@ func TestRollbackSlingArtifactsClearsRawReviewOnlyMetadataAfterMoleculeBurnSucce
 		return nil
 	}
 
-	rollbackSlingArtifacts(&SpawnedPolecatInfo{
-		RigName:     "gastown",
-		PolecatName: "toast",
-		ClonePath:   filepath.Join(townRoot, "gastown", "polecats", "toast"),
-	}, "gt-rawrollback", filepath.Join(townRoot, "gastown", "polecats", "toast"), "")
+	rollbackSlingArtifacts(&SpawnedMinerInfo{
+		RigName:     "excavation",
+		MinerName: "toast",
+		ClonePath:   filepath.Join(townRoot, "excavation", "miners", "toast"),
+	}, "gt-rawrollback", filepath.Join(townRoot, "excavation", "miners", "toast"), "")
 
 	desc := readMutableBDDescription(t, descPath)
 	assertNoRawReviewMetadata(t, desc)
@@ -1770,7 +1770,7 @@ func TestRestoreRollbackRawWorkflowFieldsFromCurrentRestoresOriginalValues(t *te
 	current := strings.Join([]string{
 		"no_merge: true",
 		"review_only: true",
-		"dispatched_by: mayor/",
+		"dispatched_by: overseer/",
 		"",
 		"Keep this body.",
 	}, "\n")
@@ -1781,21 +1781,21 @@ func TestRestoreRollbackRawWorkflowFieldsFromCurrentRestoresOriginalValues(t *te
 		"Original body.",
 	}, "\n")}
 
-	restoreRollbackRawWorkflowFieldsFromCurrent("gt-rawrollback", townRoot, filepath.Join(townRoot, "gastown", "polecats", "toast"), original)
+	restoreRollbackRawWorkflowFieldsFromCurrent("gt-rawrollback", townRoot, filepath.Join(townRoot, "excavation", "miners", "toast"), original)
 
 	desc := readMutableBDDescription(t, descPath)
 	fields := beads.ParseAttachmentFields(&beads.Issue{Description: desc})
 	if fields == nil || !fields.NoMerge || fields.ReviewOnly {
 		t.Fatalf("rollback did not restore original workflow values: %+v\n%s", fields, desc)
 	}
-	if !strings.Contains(desc, "dispatched_by: mayor/") || !strings.Contains(desc, "Keep this body.") {
+	if !strings.Contains(desc, "dispatched_by: overseer/") || !strings.Contains(desc, "Keep this body.") {
 		t.Fatalf("rollback did not preserve current metadata/body:\n%s", desc)
 	}
 }
 
 func TestRunSlingRawReviewOnlyExistingTargetHookFailureClearsPreHookMetadata(t *testing.T) {
 	townRoot, _, descPath := setupMutableBDRawSlingTest(t, "Keep this body.")
-	workDir := filepath.Join(townRoot, "gastown", "crew", "toast")
+	workDir := filepath.Join(townRoot, "excavation", "crew", "toast")
 	if err := os.MkdirAll(workDir, 0755); err != nil {
 		t.Fatalf("mkdir workDir: %v", err)
 	}
@@ -1803,7 +1803,7 @@ func TestRunSlingRawReviewOnlyExistingTargetHookFailureClearsPreHookMetadata(t *
 	prevHookRaw := slingHookRawBead
 	prevNoMerge := slingNoMerge
 	prevReviewOnly := slingReviewOnly
-	prevNoConvoy := slingNoConvoy
+	prevNoMinecart := slingNoMinecart
 	prevDryRun := slingDryRun
 	prevResolve := resolveTargetAgentFn
 	prevHook := hookBeadWithRetryFn
@@ -1811,7 +1811,7 @@ func TestRunSlingRawReviewOnlyExistingTargetHookFailureClearsPreHookMetadata(t *
 		slingHookRawBead = prevHookRaw
 		slingNoMerge = prevNoMerge
 		slingReviewOnly = prevReviewOnly
-		slingNoConvoy = prevNoConvoy
+		slingNoMinecart = prevNoMinecart
 		slingDryRun = prevDryRun
 		resolveTargetAgentFn = prevResolve
 		hookBeadWithRetryFn = prevHook
@@ -1819,17 +1819,17 @@ func TestRunSlingRawReviewOnlyExistingTargetHookFailureClearsPreHookMetadata(t *
 	slingHookRawBead = true
 	slingNoMerge = true
 	slingReviewOnly = true
-	slingNoConvoy = true
+	slingNoMinecart = true
 	slingDryRun = false
 	resolveTargetAgentFn = func(target string) (string, string, string, error) {
-		return "gastown/crew/toast", "", workDir, nil
+		return "excavation/crew/toast", "", workDir, nil
 	}
 	hookBeadWithRetryFn = func(beadID, targetAgent, hookDir string) error {
 		assertHasRawReviewMetadata(t, readMutableBDDescription(t, descPath))
 		return errors.New("forced hook failure")
 	}
 
-	err := runSling(nil, []string{"gt-rawrollback", "gastown/crew/toast"})
+	err := runSling(nil, []string{"gt-rawrollback", "excavation/crew/toast"})
 	if err == nil {
 		t.Fatal("expected hook failure from runSling")
 	}
@@ -1843,17 +1843,17 @@ func TestRunSlingRawReviewOnlyExistingTargetHookFailureClearsPreHookMetadata(t *
 func TestExecuteSlingRawReviewOnlyHookFailureClearsPreHookMetadata(t *testing.T) {
 	townRoot, rigPath, descPath := setupMutableBDRawSlingTest(t, "Keep this body.")
 
-	prevSpawn := spawnPolecatForSling
+	prevSpawn := spawnMinerForSling
 	prevHook := hookBeadWithRetryWithTownRootFn
 	t.Cleanup(func() {
-		spawnPolecatForSling = prevSpawn
+		spawnMinerForSling = prevSpawn
 		hookBeadWithRetryWithTownRootFn = prevHook
 	})
-	spawnPolecatForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedPolecatInfo, error) {
-		return &SpawnedPolecatInfo{
+	spawnMinerForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedMinerInfo, error) {
+		return &SpawnedMinerInfo{
 			RigName:     rigName,
-			PolecatName: "toast",
-			ClonePath:   filepath.Join(townRoot, "gastown", "polecats", "toast"),
+			MinerName: "toast",
+			ClonePath:   filepath.Join(townRoot, "excavation", "miners", "toast"),
 		}, nil
 	}
 	hookBeadWithRetryWithTownRootFn = func(beadID, targetAgent, hookDir, townRoot string) error {
@@ -1863,13 +1863,13 @@ func TestExecuteSlingRawReviewOnlyHookFailureClearsPreHookMetadata(t *testing.T)
 
 	_, err := executeSling(SlingParams{
 		BeadID:      "gt-rawrollback",
-		RigName:     "gastown",
+		RigName:     "excavation",
 		TownRoot:    townRoot,
 		BeadsDir:    filepath.Join(rigPath, ".beads"),
 		HookRawBead: true,
 		NoMerge:     true,
 		ReviewOnly:  true,
-		NoConvoy:    true,
+		NoMinecart:    true,
 		NoBoot:      true,
 	})
 	if err == nil {
@@ -1886,17 +1886,17 @@ func TestExecuteSlingRawReviewOnlyHookFailureRestoresOriginalMetadata(t *testing
 	}, "\n")
 	townRoot, rigPath, descPath := setupMutableBDRawSlingTest(t, initial)
 
-	prevSpawn := spawnPolecatForSling
+	prevSpawn := spawnMinerForSling
 	prevHook := hookBeadWithRetryWithTownRootFn
 	t.Cleanup(func() {
-		spawnPolecatForSling = prevSpawn
+		spawnMinerForSling = prevSpawn
 		hookBeadWithRetryWithTownRootFn = prevHook
 	})
-	spawnPolecatForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedPolecatInfo, error) {
-		return &SpawnedPolecatInfo{
+	spawnMinerForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedMinerInfo, error) {
+		return &SpawnedMinerInfo{
 			RigName:     rigName,
-			PolecatName: "toast",
-			ClonePath:   filepath.Join(townRoot, "gastown", "polecats", "toast"),
+			MinerName: "toast",
+			ClonePath:   filepath.Join(townRoot, "excavation", "miners", "toast"),
 		}, nil
 	}
 	hookBeadWithRetryWithTownRootFn = func(beadID, targetAgent, hookDir, townRoot string) error {
@@ -1906,13 +1906,13 @@ func TestExecuteSlingRawReviewOnlyHookFailureRestoresOriginalMetadata(t *testing
 
 	_, err := executeSling(SlingParams{
 		BeadID:      "gt-rawrollback",
-		RigName:     "gastown",
+		RigName:     "excavation",
 		TownRoot:    townRoot,
 		BeadsDir:    filepath.Join(rigPath, ".beads"),
 		HookRawBead: true,
 		NoMerge:     true,
 		ReviewOnly:  true,
-		NoConvoy:    true,
+		NoMinecart:    true,
 		NoBoot:      true,
 	})
 	if err == nil {
@@ -1931,17 +1931,17 @@ func TestExecuteSlingRawReviewOnlyHookFailureRestoresOriginalMetadata(t *testing
 func TestExecuteSlingRawReviewOnlySuccessKeepsMetadata(t *testing.T) {
 	townRoot, rigPath, descPath := setupMutableBDRawSlingTest(t, "Keep this body.")
 
-	prevSpawn := spawnPolecatForSling
+	prevSpawn := spawnMinerForSling
 	prevHook := hookBeadWithRetryWithTownRootFn
 	t.Cleanup(func() {
-		spawnPolecatForSling = prevSpawn
+		spawnMinerForSling = prevSpawn
 		hookBeadWithRetryWithTownRootFn = prevHook
 	})
-	spawnPolecatForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedPolecatInfo, error) {
-		return &SpawnedPolecatInfo{
+	spawnMinerForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedMinerInfo, error) {
+		return &SpawnedMinerInfo{
 			RigName:     rigName,
-			PolecatName: "toast",
-			ClonePath:   filepath.Join(townRoot, "gastown", "polecats", "toast"),
+			MinerName: "toast",
+			ClonePath:   filepath.Join(townRoot, "excavation", "miners", "toast"),
 			Pane:        "%1",
 		}, nil
 	}
@@ -1952,13 +1952,13 @@ func TestExecuteSlingRawReviewOnlySuccessKeepsMetadata(t *testing.T) {
 
 	result, err := executeSling(SlingParams{
 		BeadID:      "gt-rawrollback",
-		RigName:     "gastown",
+		RigName:     "excavation",
 		TownRoot:    townRoot,
 		BeadsDir:    filepath.Join(rigPath, ".beads"),
 		HookRawBead: true,
 		NoMerge:     true,
 		ReviewOnly:  true,
-		NoConvoy:    true,
+		NoMinecart:    true,
 		NoBoot:      true,
 	})
 	if err != nil {
@@ -1970,21 +1970,21 @@ func TestExecuteSlingRawReviewOnlySuccessKeepsMetadata(t *testing.T) {
 	assertHasRawReviewMetadata(t, readMutableBDDescription(t, descPath))
 }
 
-func TestSlingFormulaRollsBackSpawnedPolecatOnWispFailure(t *testing.T) {
+func TestSlingFormulaRollsBackSpawnedMinerOnWispFailure(t *testing.T) {
 	townRoot := t.TempDir()
 
 	// Minimal workspace marker so workspace.FindFromCwd() succeeds.
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 
-	// Register rig so IsRigName("gastown") succeeds.
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	// Register rig so IsRigName("excavation") succeeds.
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigs := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"gastown": {
-				GitURL:    "git@github.com:test/gastown.git",
+			"excavation": {
+				GitURL:    "git@github.com:test/excavation.git",
 				LocalRepo: "",
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
@@ -1997,10 +1997,10 @@ func TestSlingFormulaRollsBackSpawnedPolecatOnWispFailure(t *testing.T) {
 	if err := config.SaveRigsConfig(rigsPath, rigs); err != nil {
 		t.Fatalf("SaveRigsConfig: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "gastown", "mayor", "rig"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir rig beads dir: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "gastown"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "excavation"), 0755); err != nil {
 		t.Fatalf("mkdir rig dir: %v", err)
 	}
 
@@ -2046,8 +2046,8 @@ exit /b 0
 	_ = writeBDStub(t, binDir, bdScript, bdScriptWindows)
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv(EnvGTRole, "overseer")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("TMUX_PANE", "")
 	t.Setenv("GT_TEST_NO_NUDGE", "1")
@@ -2057,41 +2057,41 @@ exit /b 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
 	// Ensure we don't leak global flag/seam state across tests.
 	prevNoBoot := slingNoBoot
 	prevDryRun := slingDryRun
-	prevSpawn := spawnPolecatForSling
+	prevSpawn := spawnMinerForSling
 	prevRollback := rollbackSlingArtifactsFn
 	t.Cleanup(func() {
 		slingNoBoot = prevNoBoot
 		slingDryRun = prevDryRun
-		spawnPolecatForSling = prevSpawn
+		spawnMinerForSling = prevSpawn
 		rollbackSlingArtifactsFn = prevRollback
 	})
 
 	slingDryRun = false
 	slingNoBoot = true
 
-	fakeWorkDir := filepath.Join(townRoot, "fake-polecat")
+	fakeWorkDir := filepath.Join(townRoot, "fake-miner")
 	if err := os.MkdirAll(fakeWorkDir, 0755); err != nil {
 		t.Fatalf("mkdir fakeWorkDir: %v", err)
 	}
-	spawnPolecatForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedPolecatInfo, error) {
-		return &SpawnedPolecatInfo{
+	spawnMinerForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedMinerInfo, error) {
+		return &SpawnedMinerInfo{
 			RigName:     rigName,
-			PolecatName: "Toast",
+			MinerName: "Toast",
 			ClonePath:   fakeWorkDir,
 		}, nil
 	}
 
 	rollbackCalled := false
-	rollbackSlingArtifactsFn = func(spawnInfo *SpawnedPolecatInfo, beadID, hookWorkDir, convoyID string) {
+	rollbackSlingArtifactsFn = func(spawnInfo *SpawnedMinerInfo, beadID, hookWorkDir, minecartID string) {
 		rollbackCalled = true
-		if spawnInfo == nil || spawnInfo.PolecatName != "Toast" {
+		if spawnInfo == nil || spawnInfo.MinerName != "Toast" {
 			t.Fatalf("unexpected spawnInfo in rollback: %+v", spawnInfo)
 		}
 		if beadID != "" {
@@ -2102,7 +2102,7 @@ exit /b 0
 		}
 	}
 
-	err = runSlingFormula(context.Background(), []string{"mol-anything", "gastown"})
+	err = runSlingFormula(context.Background(), []string{"mol-anything", "excavation"})
 	if err == nil {
 		t.Fatalf("expected error from runSlingFormula")
 	}
@@ -2114,8 +2114,8 @@ exit /b 0
 func TestRunSlingFormulaPersistsVarContext(t *testing.T) {
 	townRoot := t.TempDir()
 
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
@@ -2175,8 +2175,8 @@ exit /b 0
 	t.Setenv("GT_TEST_ATTACHED_MOLECULE_LOG", attachedLogPath)
 	t.Setenv("BD_LOG", logPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv(EnvGTRole, "overseer")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("TMUX_PANE", "")
 	t.Setenv("GT_TEST_NO_NUDGE", "1")
@@ -2187,7 +2187,7 @@ exit /b 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
@@ -2231,8 +2231,8 @@ exit /b 0
 func TestRunSlingFormulaNoOpWhenSameFormulaAlreadyHooked(t *testing.T) {
 	townRoot := t.TempDir()
 
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
@@ -2269,8 +2269,8 @@ exit /b 0
 
 	t.Setenv("BD_LOG", logPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv(EnvGTRole, "overseer")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("TMUX_PANE", "")
 	t.Setenv("GT_TEST_NO_NUDGE", "1")
@@ -2281,7 +2281,7 @@ exit /b 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
@@ -2321,8 +2321,8 @@ exit /b 0
 func TestRunSlingFormulaUpdatesModeWhenSameFormulaAlreadyHooked(t *testing.T) {
 	townRoot := t.TempDir()
 
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
@@ -2343,8 +2343,8 @@ exit /b 0
 	attachedLogPath := filepath.Join(townRoot, "attached-molecule.log")
 	t.Setenv("GT_TEST_ATTACHED_MOLECULE_LOG", attachedLogPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv(EnvGTRole, "overseer")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("TMUX_PANE", "")
 	t.Setenv("GT_TEST_NO_NUDGE", "1")
@@ -2355,7 +2355,7 @@ exit /b 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
@@ -2400,12 +2400,12 @@ func TestSlingFormulaOnBeadPassesFeatureAndIssueVars(t *testing.T) {
 	townRoot := t.TempDir()
 
 	// Minimal workspace marker so workspace.FindFromCwd() succeeds.
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 
 	// Create a rig path that owns gt-* beads, and a routes.jsonl pointing to it.
-	rigDir := filepath.Join(townRoot, "gastown", "mayor", "rig")
+	rigDir := filepath.Join(townRoot, "excavation", "overseer", "rig")
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
@@ -2413,7 +2413,7 @@ func TestSlingFormulaOnBeadPassesFeatureAndIssueVars(t *testing.T) {
 		t.Fatalf("mkdir rigDir: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"gastown/mayor/rig"}`,
+		`{"prefix":"gt-","path":"excavation/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
@@ -2493,8 +2493,8 @@ exit /b 0
 	attachedLogPath := filepath.Join(townRoot, "attached-molecule.log")
 	t.Setenv("GT_TEST_ATTACHED_MOLECULE_LOG", attachedLogPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv(EnvGTRole, "overseer")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("TMUX_PANE", "") // Prevent inheriting real tmux pane from test runner
 
@@ -2503,7 +2503,7 @@ exit /b 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
@@ -2511,16 +2511,16 @@ exit /b 0
 	prevOn := slingOnTarget
 	prevVars := slingVars
 	prevDryRun := slingDryRun
-	prevNoConvoy := slingNoConvoy
+	prevNoMinecart := slingNoMinecart
 	t.Cleanup(func() {
 		slingOnTarget = prevOn
 		slingVars = prevVars
 		slingDryRun = prevDryRun
-		slingNoConvoy = prevNoConvoy
+		slingNoMinecart = prevNoMinecart
 	})
 
 	slingDryRun = false
-	slingNoConvoy = true
+	slingNoMinecart = true
 	slingVars = nil
 	slingOnTarget = "gt-abc123"
 
@@ -2572,8 +2572,8 @@ func TestVerifyBeadExistsAllowStale(t *testing.T) {
 	townRoot := t.TempDir()
 
 	// Create minimal workspace structure
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 
 	// Create a stub bd that always succeeds for "show" commands.
@@ -2646,8 +2646,8 @@ func TestSlingWithAllowStale(t *testing.T) {
 	townRoot := t.TempDir()
 
 	// Create minimal workspace structure
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 
 	// Create stub bd that handles show/update commands.
@@ -2698,7 +2698,7 @@ exit /b 0
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "crew")
 	t.Setenv("GT_CREW", "jv")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("TMUX_PANE", "") // Prevent inheriting real tmux pane from test runner
 
 	cwd, err := os.Getwd()
@@ -2712,14 +2712,14 @@ exit /b 0
 
 	// Save and restore global flags
 	prevDryRun := slingDryRun
-	prevNoConvoy := slingNoConvoy
+	prevNoMinecart := slingNoMinecart
 	t.Cleanup(func() {
 		slingDryRun = prevDryRun
-		slingNoConvoy = prevNoConvoy
+		slingNoMinecart = prevNoMinecart
 	})
 
 	slingDryRun = true
-	slingNoConvoy = true
+	slingNoMinecart = true
 
 	// Prevent real tmux nudge from firing during tests (causes agent self-interruption)
 	t.Setenv("GT_TEST_NO_NUDGE", "1")
@@ -2846,9 +2846,9 @@ func TestLooksLikeBeadID(t *testing.T) {
 
 		// Non-bead strings - should return false
 		{"formula-name", false}, // "formula" is 7 chars (> 5)
-		{"mayor", false},        // no hyphen
-		{"gastown", false},      // no hyphen
-		{"deacon/dogs", false},  // contains slash
+		{"overseer", false},        // no hyphen
+		{"excavation", false},      // no hyphen
+		{"supervisor/dogs", false},  // contains slash
 		{"", false},             // empty
 		{"-abc", false},         // starts with hyphen
 		{"GT-abc", false},       // uppercase prefix
@@ -2894,12 +2894,12 @@ func TestSlingFormulaOnBeadSetsAttachedMolecule(t *testing.T) {
 	townRoot := t.TempDir()
 
 	// Minimal workspace marker so workspace.FindFromCwd() succeeds.
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 
 	// Create a rig path that owns gt-* beads, and a routes.jsonl pointing to it.
-	rigDir := filepath.Join(townRoot, "gastown", "mayor", "rig")
+	rigDir := filepath.Join(townRoot, "excavation", "overseer", "rig")
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
@@ -2907,7 +2907,7 @@ func TestSlingFormulaOnBeadSetsAttachedMolecule(t *testing.T) {
 		t.Fatalf("mkdir rigDir: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"gastown/mayor/rig"}`,
+		`{"prefix":"gt-","path":"excavation/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
@@ -2932,7 +2932,7 @@ case "$cmd" in
     echo '[{"title":"Bug to fix","status":"open","assignee":"","description":""}]'
     ;;
   formula)
-    echo '{"name":"mol-polecat-work"}'
+    echo '{"name":"mol-miner-work"}'
     exit 0
     ;;
   cook)
@@ -2947,7 +2947,7 @@ case "$cmd" in
         exit 1
         ;;
       bond)
-        echo '{"result_id":"gt-abc123","id_mapping":{"mol-polecat-work":"gt-wisp-xyz"}}'
+        echo '{"result_id":"gt-abc123","id_mapping":{"mol-miner-work":"gt-wisp-xyz"}}'
         ;;
     esac
     ;;
@@ -2968,7 +2968,7 @@ if "%cmd%"=="show" (
   exit /b 0
 )
 if "%cmd%"=="formula" (
-  echo {^"name^":^"mol-polecat-work^"}
+  echo {^"name^":^"mol-miner-work^"}
   exit /b 0
 )
 if "%cmd%"=="cook" exit /b 0
@@ -2978,7 +2978,7 @@ if "%cmd%"=="mol" (
     exit /b 1
   )
   if "%sub%"=="bond" (
-    echo {^"result_id^":^"gt-abc123^",^"id_mapping^":{^"mol-polecat-work^":^"gt-wisp-xyz^"}}
+    echo {^"result_id^":^"gt-abc123^",^"id_mapping^":{^"mol-miner-work^":^"gt-wisp-xyz^"}}
     exit /b 0
   )
 )
@@ -2991,8 +2991,8 @@ exit /b 0
 	attachedLogPath := filepath.Join(townRoot, "attached-molecule.log")
 	t.Setenv("GT_TEST_ATTACHED_MOLECULE_LOG", attachedLogPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv(EnvGTRole, "overseer")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("TMUX_PANE", "") // Prevent inheriting real tmux pane from test runner
 
@@ -3001,7 +3001,7 @@ exit /b 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
@@ -3009,16 +3009,16 @@ exit /b 0
 	prevOn := slingOnTarget
 	prevVars := slingVars
 	prevDryRun := slingDryRun
-	prevNoConvoy := slingNoConvoy
+	prevNoMinecart := slingNoMinecart
 	t.Cleanup(func() {
 		slingOnTarget = prevOn
 		slingVars = prevVars
 		slingDryRun = prevDryRun
-		slingNoConvoy = prevNoConvoy
+		slingNoMinecart = prevNoMinecart
 	})
 
 	slingDryRun = false
-	slingNoConvoy = true
+	slingNoMinecart = true
 	slingVars = nil
 	slingOnTarget = "gt-abc123" // The bug bead we're applying formula to
 
@@ -3026,7 +3026,7 @@ exit /b 0
 	t.Setenv("GT_TEST_NO_NUDGE", "1")
 	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1") // Stub bd doesn't track state
 
-	if err := runSling(nil, []string{"mol-polecat-work"}); err != nil {
+	if err := runSling(nil, []string{"mol-miner-work"}); err != nil {
 		t.Fatalf("runSling: %v", err)
 	}
 
@@ -3108,8 +3108,8 @@ func TestSlingNoMergeFlag(t *testing.T) {
 	townRoot := t.TempDir()
 
 	// Minimal workspace marker so workspace.FindFromCwd() succeeds.
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 
 	// Create stub bd that logs update commands
@@ -3155,9 +3155,9 @@ exit /b 0
 
 	t.Setenv("BD_LOG", logPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
+	t.Setenv(EnvGTRole, "overseer")
 	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("TMUX_PANE", "")
 	t.Setenv("GT_TEST_NO_NUDGE", "1")
 	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1") // Stub bd doesn't track state
@@ -3167,22 +3167,22 @@ exit /b 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
 	// Save and restore global flags
 	prevDryRun := slingDryRun
-	prevNoConvoy := slingNoConvoy
+	prevNoMinecart := slingNoMinecart
 	prevNoMerge := slingNoMerge
 	t.Cleanup(func() {
 		slingDryRun = prevDryRun
-		slingNoConvoy = prevNoConvoy
+		slingNoMinecart = prevNoMinecart
 		slingNoMerge = prevNoMerge
 	})
 
 	slingDryRun = false
-	slingNoConvoy = true
+	slingNoMinecart = true
 	slingNoMerge = true // This is what we're testing
 
 	if err := runSling(nil, []string{"gt-test123"}); err != nil {
@@ -3203,8 +3203,8 @@ exit /b 0
 
 func TestSlingRalphFlagStoresMode(t *testing.T) {
 	townRoot := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 
 	binDir := filepath.Join(townRoot, "bin")
@@ -3244,9 +3244,9 @@ exit /b 0
 	t.Setenv("GT_TEST_ATTACHED_MOLECULE_LOG", molLogPath)
 	t.Setenv("BD_LOG", logPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
+	t.Setenv(EnvGTRole, "overseer")
 	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("TMUX_PANE", "")
 	t.Setenv("GT_TEST_NO_NUDGE", "1")
 	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1")
@@ -3256,20 +3256,20 @@ exit /b 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
 	prevDryRun := slingDryRun
-	prevNoConvoy := slingNoConvoy
+	prevNoMinecart := slingNoMinecart
 	prevRalph := slingRalph
 	t.Cleanup(func() {
 		slingDryRun = prevDryRun
-		slingNoConvoy = prevNoConvoy
+		slingNoMinecart = prevNoMinecart
 		slingRalph = prevRalph
 	})
 	slingDryRun = false
-	slingNoConvoy = true
+	slingNoMinecart = true
 	slingRalph = true
 
 	if err := runSling(nil, []string{"gt-test123"}); err != nil {
@@ -3294,7 +3294,7 @@ exit /b 0
 
 // TestCheckCrossRigGuard verifies that cross-rig sling is rejected when a bead's
 // prefix doesn't match the target rig. This prevents slinging beads-codebase issues
-// to gastown polecats, which cannot fix code in a different rig's repo.
+// to excavation miners, which cannot fix code in a different rig's repo.
 // Fixes: gt-myecw
 func TestCheckCrossRigGuard(t *testing.T) {
 	tmpDir := t.TempDir()
@@ -3303,8 +3303,8 @@ func TestCheckCrossRigGuard(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	routesContent := `{"prefix":"gt-","path":"gastown/mayor/rig"}
-{"prefix":"bd-","path":"beads/mayor/rig"}
+	routesContent := `{"prefix":"gt-","path":"excavation/overseer/rig"}
+{"prefix":"bd-","path":"beads/overseer/rig"}
 {"prefix":"hq-","path":"."}
 `
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
@@ -3318,49 +3318,49 @@ func TestCheckCrossRigGuard(t *testing.T) {
 		wantErr     bool
 	}{
 		{
-			name:        "same rig: gt bead to gastown polecat",
+			name:        "same rig: gt bead to excavation miner",
 			beadID:      "gt-abc123",
-			targetAgent: "gastown/polecats/Toast",
+			targetAgent: "excavation/miners/Toast",
 			wantErr:     false,
 		},
 		{
-			name:        "same rig: bd bead to beads polecat",
+			name:        "same rig: bd bead to beads miner",
 			beadID:      "bd-ka761",
-			targetAgent: "beads/polecats/obsidian",
+			targetAgent: "beads/miners/obsidian",
 			wantErr:     false,
 		},
 		{
-			name:        "cross-rig: bd bead to gastown polecat",
+			name:        "cross-rig: bd bead to excavation miner",
 			beadID:      "bd-ka761",
-			targetAgent: "gastown/polecats/Toast",
+			targetAgent: "excavation/miners/Toast",
 			wantErr:     true,
 		},
 		{
-			name:        "cross-rig: gt bead to beads polecat",
+			name:        "cross-rig: gt bead to beads miner",
 			beadID:      "gt-abc123",
-			targetAgent: "beads/polecats/obsidian",
+			targetAgent: "beads/miners/obsidian",
 			wantErr:     true,
 		},
 		{
 			// Known town-root prefix: warn but allow. A crew member with a broken
 			// redirect chain may create hq-* beads that legitimately target a rig
-			// polecat (gt-gbu). Hard-rejecting silently drops all their polecat work.
+			// miner (gt-gbu). Hard-rejecting silently drops all their miner work.
 			name:        "town-level: hq bead to rig (warns but allows — gt-gbu)",
 			beadID:      "hq-abc123",
-			targetAgent: "gastown/polecats/Toast",
+			targetAgent: "excavation/miners/Toast",
 			wantErr:     false,
 		},
 		{
 			// Truly unknown prefix (not in routes.jsonl): hard reject.
 			name:        "unknown prefix: rejected (no route exists at all)",
 			beadID:      "xx-unknown",
-			targetAgent: "gastown/polecats/Toast",
+			targetAgent: "excavation/miners/Toast",
 			wantErr:     true,
 		},
 		{
 			name:        "empty bead prefix: allowed",
 			beadID:      "nohyphen",
-			targetAgent: "gastown/polecats/Toast",
+			targetAgent: "excavation/miners/Toast",
 			wantErr:     false,
 		},
 	}
@@ -3409,8 +3409,8 @@ func TestIsHookedAgentDead_UnknownFormat(t *testing.T) {
 func TestIsHookedAgentDead_NoTmuxSession(t *testing.T) {
 	// For a known assignee format where no tmux session exists,
 	// isHookedAgentDead should return true (session is dead).
-	// Use a highly unlikely polecat name to ensure no collision with real sessions.
-	result := isHookedAgentDead("nonexistent_rig_xyz/polecats/ghost_polecat_999")
+	// Use a highly unlikely miner name to ensure no collision with real sessions.
+	result := isHookedAgentDead("nonexistent_rig_xyz/miners/ghost_miner_999")
 	// This might return true (no session) or false (tmux not available).
 	// We just verify it doesn't panic.
 	_ = result
@@ -3420,8 +3420,8 @@ func TestSlingSetsDoltAutoCommitOff(t *testing.T) {
 	townRoot := t.TempDir()
 
 	// Minimal workspace marker
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 
 	// Create stub bd that logs BD_DOLT_AUTO_COMMIT env var
@@ -3463,9 +3463,9 @@ exit /b 0
 
 	t.Setenv("BD_LOG", logPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
+	t.Setenv(EnvGTRole, "overseer")
 	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("TMUX_PANE", "")
 	t.Setenv("GT_TEST_NO_NUDGE", "1")
 	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1")
@@ -3477,20 +3477,20 @@ exit /b 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
 	// Save and restore global flags
 	prevDryRun := slingDryRun
-	prevNoConvoy := slingNoConvoy
+	prevNoMinecart := slingNoMinecart
 	t.Cleanup(func() {
 		slingDryRun = prevDryRun
-		slingNoConvoy = prevNoConvoy
+		slingNoMinecart = prevNoMinecart
 	})
 
 	slingDryRun = false
-	slingNoConvoy = true
+	slingNoMinecart = true
 
 	if err := runSling(nil, []string{"gt-test456"}); err != nil {
 		t.Fatalf("runSling: %v", err)
@@ -3543,7 +3543,7 @@ exit /b 0
 	t.Setenv("BD_DOLT_AUTO_COMMIT", "off")
 	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1")
 
-	if err := hookBeadWithRetry("gt-test123", "gastown/polecats/toast", townRoot); err != nil {
+	if err := hookBeadWithRetry("gt-test123", "excavation/miners/toast", townRoot); err != nil {
 		t.Fatalf("hookBeadWithRetry: %v", err)
 	}
 
@@ -3557,13 +3557,13 @@ exit /b 0
 	}
 }
 
-func TestBuildSlingFieldUpdatesIncludesConvoyFields(t *testing.T) {
+func TestBuildSlingFieldUpdatesIncludesMinecartFields(t *testing.T) {
 	got := buildSlingFieldUpdates(
-		"mayor",
+		"overseer",
 		"review this",
 		[]string{"feature=test"},
 		"gt-wisp-test",
-		"mol-polecat-work",
+		"mol-miner-work",
 		false,
 		false,
 		"ralph",
@@ -3573,28 +3573,28 @@ func TestBuildSlingFieldUpdatesIncludesConvoyFields(t *testing.T) {
 		true,
 	)
 
-	if got.ConvoyID != "hq-cv-test1" {
-		t.Fatalf("ConvoyID = %q, want %q", got.ConvoyID, "hq-cv-test1")
+	if got.MinecartID != "hq-cv-test1" {
+		t.Fatalf("MinecartID = %q, want %q", got.MinecartID, "hq-cv-test1")
 	}
 	if got.MergeStrategy != "local" {
 		t.Fatalf("MergeStrategy = %q, want %q", got.MergeStrategy, "local")
 	}
-	if !got.ConvoyOwned {
-		t.Fatal("ConvoyOwned = false, want true")
+	if !got.MinecartOwned {
+		t.Fatal("MinecartOwned = false, want true")
 	}
 	if got.Mode == nil || *got.Mode != "ralph" {
 		t.Fatalf("Mode = %v, want ralph", got.Mode)
 	}
 }
 
-func TestStoreFieldsInBeadConvoyFields(t *testing.T) {
+func TestStoreFieldsInBeadMinecartFields(t *testing.T) {
 	t.Setenv("GT_TEST_ATTACHED_MOLECULE_LOG", filepath.Join(t.TempDir(), "mol.log"))
 	logPath := os.Getenv("GT_TEST_ATTACHED_MOLECULE_LOG")
 
 	if err := storeFieldsInBead("gt-test123", beadFieldUpdates{
-		ConvoyID:      "hq-cv-test1",
+		MinecartID:      "hq-cv-test1",
 		MergeStrategy: "local",
-		ConvoyOwned:   true,
+		MinecartOwned:   true,
 	}); err != nil {
 		t.Fatalf("storeFieldsInBead: %v", err)
 	}
@@ -3604,19 +3604,19 @@ func TestStoreFieldsInBeadConvoyFields(t *testing.T) {
 		t.Fatalf("read log: %v", err)
 	}
 	text := string(body)
-	if !strings.Contains(text, "convoy_id: hq-cv-test1") {
-		t.Fatalf("missing convoy_id in description:\n%s", text)
+	if !strings.Contains(text, "minecart_id: hq-cv-test1") {
+		t.Fatalf("missing minecart_id in description:\n%s", text)
 	}
 	if !strings.Contains(text, "merge_strategy: local") {
 		t.Fatalf("missing merge_strategy in description:\n%s", text)
 	}
-	if !strings.Contains(text, "convoy_owned: true") {
-		t.Fatalf("missing convoy_owned in description:\n%s", text)
+	if !strings.Contains(text, "minecart_owned: true") {
+		t.Fatalf("missing minecart_owned in description:\n%s", text)
 	}
 }
 
 func TestBeadFieldModeUpdateCanClearStaleRalphMode(t *testing.T) {
-	issue := &beads.Issue{Description: "attached_formula: mol-polecat-work\nmode: ralph"}
+	issue := &beads.Issue{Description: "attached_formula: mol-miner-work\nmode: ralph"}
 	fields := beads.ParseAttachmentFields(issue)
 	if fields == nil {
 		t.Fatal("expected attachment fields")
@@ -3630,7 +3630,7 @@ func TestBeadFieldModeUpdateCanClearStaleRalphMode(t *testing.T) {
 	if strings.Contains(desc, "mode: ralph") || strings.Contains(desc, "mode:") {
 		t.Fatalf("expected stale ralph mode to be cleared, got:\n%s", desc)
 	}
-	if !strings.Contains(desc, "attached_formula: mol-polecat-work") {
+	if !strings.Contains(desc, "attached_formula: mol-miner-work") {
 		t.Fatalf("expected unrelated attachment fields preserved, got:\n%s", desc)
 	}
 }
@@ -3695,7 +3695,7 @@ func TestStoreFieldsInBeadRawReviewRefreshesAttachedAt(t *testing.T) {
 func TestSlingIdempotentNoOp(t *testing.T) {
 	townRoot := t.TempDir()
 
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
 
@@ -3709,7 +3709,7 @@ cmd="$1"
 shift || true
 case "$cmd" in
   show)
-    echo '[{"title":"Test issue","status":"hooked","assignee":"gastown/polecats/toast","description":""}]'
+    echo '[{"title":"Test issue","status":"hooked","assignee":"excavation/miners/toast","description":""}]'
     ;;
   update)
     exit 0
@@ -3720,7 +3720,7 @@ exit 0
 	bdScriptWindows := `@echo off
 set "cmd=%1"
 if "%cmd%"=="show" (
-  echo [{"title":"Test issue","status":"hooked","assignee":"gastown/polecats/toast","description":""}]
+  echo [{"title":"Test issue","status":"hooked","assignee":"excavation/miners/toast","description":""}]
   exit /b 0
 )
 exit /b 0
@@ -3728,9 +3728,9 @@ exit /b 0
 	_ = writeBDStub(t, binDir, bdScript, bdScriptWindows)
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
+	t.Setenv(EnvGTRole, "overseer")
 	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("TMUX_PANE", "")
 
 	cwd, err := os.Getwd()
@@ -3738,7 +3738,7 @@ exit /b 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
@@ -3748,16 +3748,16 @@ exit /b 0
 	isHookedAgentDeadFn = func(assignee string) bool { return false }
 
 	prevForce := slingForce
-	prevNoConvoy := slingNoConvoy
+	prevNoMinecart := slingNoMinecart
 	t.Cleanup(func() {
 		slingForce = prevForce
-		slingNoConvoy = prevNoConvoy
+		slingNoMinecart = prevNoMinecart
 	})
 	slingForce = false
-	slingNoConvoy = true
+	slingNoMinecart = true
 
 	// Sling to same target — should no-op (return nil, no error)
-	err = runSling(nil, []string{"gt-test123", "gastown/polecats/toast"})
+	err = runSling(nil, []string{"gt-test123", "excavation/miners/toast"})
 	if err != nil {
 		t.Fatalf("expected no-op nil return, got error: %v", err)
 	}
@@ -3768,7 +3768,7 @@ exit /b 0
 func TestSlingIdempotentNoOp_Pinned(t *testing.T) {
 	townRoot := t.TempDir()
 
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
 
@@ -3782,7 +3782,7 @@ cmd="$1"
 shift || true
 case "$cmd" in
   show)
-    echo '[{"title":"Test issue","status":"pinned","assignee":"gastown/polecats/toast","description":""}]'
+    echo '[{"title":"Test issue","status":"pinned","assignee":"excavation/miners/toast","description":""}]'
     ;;
   update)
     exit 0
@@ -3793,7 +3793,7 @@ exit 0
 	bdScriptWindows := `@echo off
 set "cmd=%1"
 if "%cmd%"=="show" (
-  echo [{"title":"Test issue","status":"pinned","assignee":"gastown/polecats/toast","description":""}]
+  echo [{"title":"Test issue","status":"pinned","assignee":"excavation/miners/toast","description":""}]
   exit /b 0
 )
 exit /b 0
@@ -3801,9 +3801,9 @@ exit /b 0
 	_ = writeBDStub(t, binDir, bdScript, bdScriptWindows)
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
+	t.Setenv(EnvGTRole, "overseer")
 	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("TMUX_PANE", "")
 
 	cwd, err := os.Getwd()
@@ -3811,7 +3811,7 @@ exit /b 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
@@ -3821,16 +3821,16 @@ exit /b 0
 	isHookedAgentDeadFn = func(assignee string) bool { return false }
 
 	prevForce := slingForce
-	prevNoConvoy := slingNoConvoy
+	prevNoMinecart := slingNoMinecart
 	t.Cleanup(func() {
 		slingForce = prevForce
-		slingNoConvoy = prevNoConvoy
+		slingNoMinecart = prevNoMinecart
 	})
 	slingForce = false
-	slingNoConvoy = true
+	slingNoMinecart = true
 
 	// Sling pinned bead to same target — should no-op (return nil, no error)
-	err = runSling(nil, []string{"gt-test-pinned", "gastown/polecats/toast"})
+	err = runSling(nil, []string{"gt-test-pinned", "excavation/miners/toast"})
 	if err != nil {
 		t.Fatalf("expected no-op nil return for pinned bead, got error: %v", err)
 	}
@@ -3841,7 +3841,7 @@ exit /b 0
 func TestSlingDeadAgentBypassesIdempotency(t *testing.T) {
 	townRoot := t.TempDir()
 
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
 
@@ -3857,7 +3857,7 @@ cmd="$1"
 shift || true
 case "$cmd" in
   show)
-    echo '[{"title":"Test issue","status":"hooked","assignee":"gastown/polecats/test-dead-polecat-xxxx","description":""}]'
+    echo '[{"title":"Test issue","status":"hooked","assignee":"excavation/miners/test-dead-miner-xxxx","description":""}]'
     ;;
   update)
     exit 0
@@ -3869,7 +3869,7 @@ exit 0
 echo %*>>"%BD_LOG%"
 set "cmd=%1"
 if "%cmd%"=="show" (
-  echo [{"title":"Test issue","status":"hooked","assignee":"gastown/polecats/test-dead-polecat-xxxx","description":""}]
+  echo [{"title":"Test issue","status":"hooked","assignee":"excavation/miners/test-dead-miner-xxxx","description":""}]
   exit /b 0
 )
 exit /b 0
@@ -3878,9 +3878,9 @@ exit /b 0
 
 	t.Setenv("BD_LOG", logPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
+	t.Setenv(EnvGTRole, "overseer")
 	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("TMUX_PANE", "")
 	t.Setenv("GT_TEST_NO_NUDGE", "1")
 	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1")
@@ -3890,7 +3890,7 @@ exit /b 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
@@ -3900,15 +3900,15 @@ exit /b 0
 	isHookedAgentDeadFn = func(assignee string) bool { return true }
 
 	prevForce := slingForce
-	prevNoConvoy := slingNoConvoy
+	prevNoMinecart := slingNoMinecart
 	prevDryRun := slingDryRun
 	t.Cleanup(func() {
 		slingForce = prevForce
-		slingNoConvoy = prevNoConvoy
+		slingNoMinecart = prevNoMinecart
 		slingDryRun = prevDryRun
 	})
 	slingForce = false
-	slingNoConvoy = true
+	slingNoMinecart = true
 	slingDryRun = true // dry-run to avoid side effects from resolveTarget
 
 	// Capture stdout to verify the "auto-forcing re-sling" message is printed.
@@ -3919,9 +3919,9 @@ exit /b 0
 
 	// Sling with matching target but dead agent — should NOT no-op.
 	// The auto-force path proceeds into resolveTarget which will fail
-	// because the polecat doesn't exist in tmux. Use a unique name that
-	// will never collide with a real running polecat session.
-	err = runSling(nil, []string{"gt-test456", "gastown/polecats/test-dead-polecat-xxxx"})
+	// because the miner doesn't exist in tmux. Use a unique name that
+	// will never collide with a real running miner session.
+	err = runSling(nil, []string{"gt-test456", "excavation/miners/test-dead-miner-xxxx"})
 
 	w.Close()
 	os.Stdout = origStdout
@@ -3947,7 +3947,7 @@ exit /b 0
 func TestSlingForceBypassesIdempotency(t *testing.T) {
 	townRoot := t.TempDir()
 
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
 
@@ -3963,7 +3963,7 @@ cmd="$1"
 shift || true
 case "$cmd" in
   show)
-    echo '[{"title":"Test issue","status":"hooked","assignee":"gastown/polecats/toast","description":""}]'
+    echo '[{"title":"Test issue","status":"hooked","assignee":"excavation/miners/toast","description":""}]'
     ;;
   update)
     exit 0
@@ -3975,7 +3975,7 @@ exit 0
 echo %*>>"%BD_LOG%"
 set "cmd=%1"
 if "%cmd%"=="show" (
-  echo [{"title":"Test issue","status":"hooked","assignee":"gastown/polecats/toast","description":""}]
+  echo [{"title":"Test issue","status":"hooked","assignee":"excavation/miners/toast","description":""}]
   exit /b 0
 )
 exit /b 0
@@ -3984,9 +3984,9 @@ exit /b 0
 
 	t.Setenv("BD_LOG", logPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
+	t.Setenv(EnvGTRole, "overseer")
 	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("TMUX_PANE", "")
 	t.Setenv("GT_TEST_NO_NUDGE", "1")
 	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1")
@@ -3999,26 +3999,26 @@ exit /b 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
 	prevForce := slingForce
-	prevNoConvoy := slingNoConvoy
+	prevNoMinecart := slingNoMinecart
 	prevDryRun := slingDryRun
 	t.Cleanup(func() {
 		slingForce = prevForce
-		slingNoConvoy = prevNoConvoy
+		slingNoMinecart = prevNoMinecart
 		slingDryRun = prevDryRun
 	})
 	slingForce = true // --force
-	slingNoConvoy = true
+	slingNoMinecart = true
 	slingDryRun = true
 
 	// --force bypasses the entire pinned/hooked guard including idempotency.
 	// resolveTarget will fail because rig doesn't exist, but the key assertion
 	// is that we don't get an "already hooked" error (idempotency no-op is skipped).
-	err = runSling(nil, []string{"gt-test789", "gastown/polecats/toast"})
+	err = runSling(nil, []string{"gt-test789", "excavation/miners/toast"})
 	if err == nil {
 		// In dry-run + force mode, resolveTarget still runs.
 		// nil is acceptable if resolveTarget succeeded.
@@ -4034,7 +4034,7 @@ exit /b 0
 func TestSlingFormulaOnBeadBypassesIdempotency(t *testing.T) {
 	townRoot := t.TempDir()
 
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
 
@@ -4051,7 +4051,7 @@ cmd="$1"
 shift || true
 case "$cmd" in
   show)
-    echo '[{"title":"Test issue","status":"hooked","assignee":"gastown/polecats/toast","description":""}]'
+    echo '[{"title":"Test issue","status":"hooked","assignee":"excavation/miners/toast","description":""}]'
     ;;
   formula)
     echo '{"name":"test-formula","steps":[]}'
@@ -4065,7 +4065,7 @@ exit 0
 	bdScriptWindows := `@echo off
 set "cmd=%1"
 if "%cmd%"=="show" (
-  echo [{"title":"Test issue","status":"hooked","assignee":"gastown/polecats/toast","description":""}]
+  echo [{"title":"Test issue","status":"hooked","assignee":"excavation/miners/toast","description":""}]
   exit /b 0
 )
 if "%cmd%"=="formula" (
@@ -4077,9 +4077,9 @@ exit /b 0
 	_ = writeBDStub(t, binDir, bdScript, bdScriptWindows)
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
+	t.Setenv(EnvGTRole, "overseer")
 	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("TMUX_PANE", "")
 
 	cwd, err := os.Getwd()
@@ -4087,7 +4087,7 @@ exit /b 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
@@ -4097,22 +4097,22 @@ exit /b 0
 	isHookedAgentDeadFn = func(assignee string) bool { return false }
 
 	prevForce := slingForce
-	prevNoConvoy := slingNoConvoy
+	prevNoMinecart := slingNoMinecart
 	prevOnTarget := slingOnTarget
 	t.Cleanup(func() {
 		slingForce = prevForce
-		slingNoConvoy = prevNoConvoy
+		slingNoMinecart = prevNoMinecart
 		slingOnTarget = prevOnTarget
 	})
 	slingForce = false
-	slingNoConvoy = true
+	slingNoMinecart = true
 	slingOnTarget = "gt-test-formula-on-bead" // --on flag: bead ID
 
 	// Formula-on-bead with matching target. The idempotency guard must NOT
 	// return nil (no-op) or "already hooked" error — it should fall through
 	// to resolveTarget/formula instantiation. The call will fail downstream
 	// (rig doesn't exist in test env) but must get PAST the guard.
-	err = runSling(nil, []string{"test-formula", "gastown/polecats/toast"})
+	err = runSling(nil, []string{"test-formula", "excavation/miners/toast"})
 	if err == nil {
 		t.Fatal("expected error from downstream (resolve), got nil (idempotent no-op was incorrectly triggered)")
 	}
@@ -4128,11 +4128,11 @@ exit /b 0
 
 // TestSlingIdempotentNoOp_PinnedSelfDot verifies that slinging a pinned bead
 // with "." (self-target) returns a no-op when self-resolution matches the assignee.
-// Uses mayor role since polecats cannot sling.
+// Uses overseer role since miners cannot sling.
 func TestSlingIdempotentNoOp_PinnedSelfDot(t *testing.T) {
 	townRoot := t.TempDir()
 
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
 
@@ -4140,14 +4140,14 @@ func TestSlingIdempotentNoOp_PinnedSelfDot(t *testing.T) {
 	if err := os.MkdirAll(binDir, 0755); err != nil {
 		t.Fatalf("mkdir binDir: %v", err)
 	}
-	// Bead is pinned to "mayor/" — matches the mayor self-resolution.
+	// Bead is pinned to "overseer/" — matches the overseer self-resolution.
 	bdScript := `#!/bin/sh
 set -e
 cmd="$1"
 shift || true
 case "$cmd" in
   show)
-    echo '[{"title":"Test issue","status":"pinned","assignee":"mayor/","description":""}]'
+    echo '[{"title":"Test issue","status":"pinned","assignee":"overseer/","description":""}]'
     ;;
   update)
     exit 0
@@ -4158,7 +4158,7 @@ exit 0
 	bdScriptWindows := `@echo off
 set "cmd=%1"
 if "%cmd%"=="show" (
-  echo [{"title":"Test issue","status":"pinned","assignee":"mayor/","description":""}]
+  echo [{"title":"Test issue","status":"pinned","assignee":"overseer/","description":""}]
   exit /b 0
 )
 exit /b 0
@@ -4166,9 +4166,9 @@ exit /b 0
 	_ = writeBDStub(t, binDir, bdScript, bdScriptWindows)
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
+	t.Setenv(EnvGTRole, "overseer")
 	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("TMUX_PANE", "")
 
 	cwd, err := os.Getwd()
@@ -4176,7 +4176,7 @@ exit /b 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
@@ -4186,78 +4186,78 @@ exit /b 0
 	isHookedAgentDeadFn = func(assignee string) bool { return false }
 
 	prevForce := slingForce
-	prevNoConvoy := slingNoConvoy
+	prevNoMinecart := slingNoMinecart
 	t.Cleanup(func() {
 		slingForce = prevForce
-		slingNoConvoy = prevNoConvoy
+		slingNoMinecart = prevNoMinecart
 	})
 	slingForce = false
-	slingNoConvoy = true
+	slingNoMinecart = true
 
-	// Sling pinned bead with dot target — self-resolution as mayor returns
-	// "mayor/" which normalizes to "mayor", matching the assignee. Should no-op.
+	// Sling pinned bead with dot target — self-resolution as overseer returns
+	// "overseer/" which normalizes to "overseer", matching the assignee. Should no-op.
 	err = runSling(nil, []string{"gt-test-pinned-dot", "."})
 	if err != nil {
 		t.Fatalf("expected no-op nil return for pinned bead with dot target, got error: %v", err)
 	}
 }
 
-// TestSlingPolecatEnvCheck verifies that the polecat guard in runSling uses
-// GT_ROLE as the authoritative check, so coordinators with a stale GT_POLECAT
+// TestSlingMinerEnvCheck verifies that the miner guard in runSling uses
+// GT_ROLE as the authoritative check, so coordinators with a stale GT_MINER
 // in their environment are not blocked from slinging (GH #664).
-func TestSlingPolecatEnvCheck(t *testing.T) {
+func TestSlingMinerEnvCheck(t *testing.T) {
 	tests := []struct {
 		name      string
 		role      string
-		polecat   string
+		miner   string
 		wantBlock bool
 	}{
 		{
-			name:      "bare polecat role is blocked",
-			role:      "polecat",
-			polecat:   "alpha",
+			name:      "bare miner role is blocked",
+			role:      "miner",
+			miner:   "alpha",
 			wantBlock: true,
 		},
 		{
-			name:      "compound polecat role is blocked",
-			role:      "gastown/polecats/Toast",
-			polecat:   "Toast",
+			name:      "compound miner role is blocked",
+			role:      "excavation/miners/Toast",
+			miner:   "Toast",
 			wantBlock: true,
 		},
 		{
-			name:      "mayor with stale GT_POLECAT is NOT blocked",
-			role:      "mayor",
-			polecat:   "alpha",
+			name:      "overseer with stale GT_MINER is NOT blocked",
+			role:      "overseer",
+			miner:   "alpha",
 			wantBlock: false,
 		},
 		{
-			name:      "compound witness with stale GT_POLECAT is NOT blocked",
-			role:      "gastown/witness",
-			polecat:   "alpha",
+			name:      "compound witness with stale GT_MINER is NOT blocked",
+			role:      "excavation/witness",
+			miner:   "alpha",
 			wantBlock: false,
 		},
 		{
-			name:      "crew with stale GT_POLECAT is NOT blocked",
+			name:      "crew with stale GT_MINER is NOT blocked",
 			role:      "crew",
-			polecat:   "alpha",
+			miner:   "alpha",
 			wantBlock: false,
 		},
 		{
-			name:      "compound crew with stale GT_POLECAT is NOT blocked",
-			role:      "gastown/crew/den",
-			polecat:   "alpha",
+			name:      "compound crew with stale GT_MINER is NOT blocked",
+			role:      "excavation/crew/den",
+			miner:   "alpha",
 			wantBlock: false,
 		},
 		{
-			name:      "no GT_ROLE with GT_POLECAT set is blocked",
+			name:      "no GT_ROLE with GT_MINER set is blocked",
 			role:      "",
-			polecat:   "alpha",
+			miner:   "alpha",
 			wantBlock: true,
 		},
 		{
-			name:      "no GT_ROLE and no GT_POLECAT is not blocked",
+			name:      "no GT_ROLE and no GT_MINER is not blocked",
 			role:      "",
-			polecat:   "",
+			miner:   "",
 			wantBlock: false,
 		},
 	}
@@ -4265,11 +4265,11 @@ func TestSlingPolecatEnvCheck(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Setenv("GT_ROLE", tt.role)
-			t.Setenv("GT_POLECAT", tt.polecat)
+			t.Setenv("GT_MINER", tt.miner)
 
-			// We only test the polecat guard, so we call runSling with no args.
+			// We only test the miner guard, so we call runSling with no args.
 			// It will either fail at the guard or panic/fail later (missing args).
-			// We only care whether the error is the polecat-block message.
+			// We only care whether the error is the miner-block message.
 			var blocked bool
 			func() {
 				defer func() {
@@ -4279,25 +4279,25 @@ func TestSlingPolecatEnvCheck(t *testing.T) {
 					}
 				}()
 				err := runSling(nil, nil)
-				blocked = err != nil && strings.Contains(err.Error(), "polecats cannot sling")
+				blocked = err != nil && strings.Contains(err.Error(), "miners cannot sling")
 			}()
 
 			if blocked != tt.wantBlock {
 				if tt.wantBlock {
-					t.Errorf("expected polecat block but was not blocked (GT_ROLE=%q GT_POLECAT=%q)", tt.role, tt.polecat)
+					t.Errorf("expected miner block but was not blocked (GT_ROLE=%q GT_MINER=%q)", tt.role, tt.miner)
 				} else {
-					t.Errorf("unexpected polecat block with GT_ROLE=%q GT_POLECAT=%q", tt.role, tt.polecat)
+					t.Errorf("unexpected miner block with GT_ROLE=%q GT_MINER=%q", tt.role, tt.miner)
 				}
 			}
 		})
 	}
 }
 
-// TestSlingNudgeCrewAndMayor verifies that slinging to crew or mayor targets
+// TestSlingNudgeCrewAndOverseer verifies that slinging to crew or overseer targets
 // with an active session includes the nudge (inject start prompt) step.
 // This is a regression test for gt-in7b: the generic resolveTarget + nudge
-// flow handles all target types, not just polecats.
-func TestSlingNudgeCrewAndMayor(t *testing.T) {
+// flow handles all target types, not just miners.
+func TestSlingNudgeCrewAndOverseer(t *testing.T) {
 	tests := []struct {
 		name       string
 		target     string
@@ -4306,14 +4306,14 @@ func TestSlingNudgeCrewAndMayor(t *testing.T) {
 	}{
 		{
 			name:       "crew target gets nudge pane",
-			target:     "gastown/crew/max",
-			wantAgent:  "gastown/crew/max",
+			target:     "excavation/crew/max",
+			wantAgent:  "excavation/crew/max",
 			wantPaneIn: "%99",
 		},
 		{
-			name:       "mayor target gets nudge pane",
-			target:     "mayor",
-			wantAgent:  "mayor/",
+			name:       "overseer target gets nudge pane",
+			target:     "overseer",
+			wantAgent:  "overseer/",
 			wantPaneIn: "%99",
 		},
 	}
@@ -4322,17 +4322,17 @@ func TestSlingNudgeCrewAndMayor(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			townRoot := t.TempDir()
 
-			if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
+			if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 				t.Fatalf("mkdir: %v", err)
 			}
 			if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 				t.Fatalf("mkdir .beads: %v", err)
 			}
-			rigDir := filepath.Join(townRoot, "gastown", "mayor", "rig")
+			rigDir := filepath.Join(townRoot, "excavation", "overseer", "rig")
 			if err := os.MkdirAll(rigDir, 0755); err != nil {
 				t.Fatalf("mkdir rigDir: %v", err)
 			}
-			routes := `{"prefix":"gt-","path":"gastown/mayor/rig"}` + "\n" +
+			routes := `{"prefix":"gt-","path":"excavation/overseer/rig"}` + "\n" +
 				`{"prefix":"hq-","path":"."}` + "\n"
 			if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(routes), 0644); err != nil {
 				t.Fatalf("write routes: %v", err)
@@ -4366,8 +4366,8 @@ exit /b 0
 			_ = writeBDStub(t, binDir, bdScript, bdScriptWindows)
 
 			t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-			t.Setenv(EnvGTRole, "mayor")
-			t.Setenv("GT_POLECAT", "")
+			t.Setenv(EnvGTRole, "overseer")
+			t.Setenv("GT_MINER", "")
 			t.Setenv("GT_CREW", "")
 			t.Setenv("TMUX_PANE", "")
 			t.Setenv("GT_TEST_NO_NUDGE", "1")
@@ -4378,7 +4378,7 @@ exit /b 0
 				t.Fatalf("getwd: %v", err)
 			}
 			t.Cleanup(func() { _ = os.Chdir(cwd) })
-			if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+			if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 				t.Fatalf("chdir: %v", err)
 			}
 
@@ -4390,13 +4390,13 @@ exit /b 0
 			}
 
 			prevDryRun := slingDryRun
-			prevNoConvoy := slingNoConvoy
+			prevNoMinecart := slingNoMinecart
 			t.Cleanup(func() {
 				slingDryRun = prevDryRun
-				slingNoConvoy = prevNoConvoy
+				slingNoMinecart = prevNoMinecart
 			})
 			slingDryRun = true
-			slingNoConvoy = true
+			slingNoMinecart = true
 
 			// Capture stdout
 			origStdout := os.Stdout
@@ -4431,7 +4431,7 @@ exit /b 0
 
 // TestSlingRejectsDeferredBead verifies that gt sling refuses to sling beads
 // with deferred status or deferral keywords in their description (gt-1326mw).
-// This prevents wasting polecat slots on low-priority deferred work.
+// This prevents wasting miner slots on low-priority deferred work.
 func TestSlingRejectsDeferredBead(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -4468,7 +4468,7 @@ func TestSlingRejectsDeferredBead(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			townRoot := t.TempDir()
-			if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
+			if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 				t.Fatalf("mkdir: %v", err)
 			}
 
@@ -4485,7 +4485,7 @@ func TestSlingRejectsDeferredBead(t *testing.T) {
 			t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 			t.Setenv(EnvGTRole, "crew")
 			t.Setenv("GT_CREW", "jv")
-			t.Setenv("GT_POLECAT", "")
+			t.Setenv("GT_MINER", "")
 			t.Setenv("TMUX_PANE", "")
 			t.Setenv("GT_TEST_NO_NUDGE", "1")
 
@@ -4499,15 +4499,15 @@ func TestSlingRejectsDeferredBead(t *testing.T) {
 			}
 
 			prevDryRun := slingDryRun
-			prevNoConvoy := slingNoConvoy
+			prevNoMinecart := slingNoMinecart
 			prevForce := slingForce
 			t.Cleanup(func() {
 				slingDryRun = prevDryRun
-				slingNoConvoy = prevNoConvoy
+				slingNoMinecart = prevNoMinecart
 				slingForce = prevForce
 			})
 			slingDryRun = true
-			slingNoConvoy = true
+			slingNoMinecart = true
 			slingForce = tt.force
 
 			err = runSling(nil, []string{"gt-test123"})
@@ -4562,7 +4562,7 @@ func TestRunSlingResumeFlagValidation(t *testing.T) {
 	}
 
 	t.Setenv(EnvGTRole, "")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("GT_MINER", "")
 
 	prevResumeBranch := slingResumeBranch
 	prevResumePR := slingResumePR
@@ -4592,7 +4592,7 @@ func TestRunSlingResumeFlagValidation(t *testing.T) {
 
 // TestSlingStandaloneFormulaInDeferredMode is a regression test for gh#3917.
 //
-// When scheduler.max_polecats > 0 (deferred dispatch mode), `gt sling <formula> <rig>`
+// When scheduler.max_miners > 0 (deferred dispatch mode), `gt sling <formula> <rig>`
 // was rejected with "standalone formula cannot be scheduled (use --on <bead>)" even
 // though the help text and documented examples explicitly show this usage.
 //
@@ -4601,27 +4601,27 @@ func TestRunSlingResumeFlagValidation(t *testing.T) {
 func TestSlingStandaloneFormulaInDeferredMode(t *testing.T) {
 	townRoot := t.TempDir()
 
-	// Workspace marker: workspace.FindFromCwdOrError needs mayor/town.json
-	mayorDir := filepath.Join(townRoot, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+	// Workspace marker: workspace.FindFromCwdOrError needs overseer/town.json
+	overseerDir := filepath.Join(townRoot, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
+		t.Fatalf("mkdir overseer: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(mayorDir, "town.json"), []byte(`{"name":"test","version":2}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "town.json"), []byte(`{"name":"test","version":2}`), 0644); err != nil {
 		t.Fatalf("write town.json: %v", err)
 	}
 
 	// Rig registry: IsRigName("testrig") requires testrig in rigs.json
 	rigsJSON := `{"version":1,"rigs":{"testrig":{"git_url":"file:///dev/null"}}}`
-	if err := os.WriteFile(filepath.Join(mayorDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
 		t.Fatalf("write rigs.json: %v", err)
 	}
 
-	// Town settings: scheduler.max_polecats > 0 activates deferred dispatch
+	// Town settings: scheduler.max_miners > 0 activates deferred dispatch
 	settingsDir := filepath.Join(townRoot, "settings")
 	if err := os.MkdirAll(settingsDir, 0755); err != nil {
 		t.Fatalf("mkdir settings: %v", err)
 	}
-	settingsJSON := `{"version":1,"scheduler":{"max_polecats":10,"batch_size":3}}`
+	settingsJSON := `{"version":1,"scheduler":{"max_miners":10,"batch_size":3}}`
 	settingsPath := config.TownSettingsPath(townRoot)
 	if err := os.WriteFile(settingsPath, []byte(settingsJSON), 0644); err != nil {
 		t.Fatalf("write settings: %v", err)
@@ -4631,7 +4631,7 @@ func TestSlingStandaloneFormulaInDeferredMode(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	routes := `{"prefix":"gt-","path":"testrig/mayor/rig"}` + "\n" + `{"prefix":"hq-","path":"."}` + "\n"
+	routes := `{"prefix":"gt-","path":"testrig/overseer/rig"}` + "\n" + `{"prefix":"hq-","path":"."}` + "\n"
 	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(routes), 0644); err != nil {
 		t.Fatalf("write routes.jsonl: %v", err)
 	}
@@ -4668,7 +4668,7 @@ exit /b 0
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
 	// chdir into the town so workspace.FindFromCwd() resolves townRoot
-	rigDir := filepath.Join(townRoot, "mayor", "rig")
+	rigDir := filepath.Join(townRoot, "overseer", "rig")
 	if err := os.MkdirAll(rigDir, 0755); err != nil {
 		t.Fatalf("mkdir rig: %v", err)
 	}
@@ -4681,8 +4681,8 @@ exit /b 0
 		t.Fatalf("chdir: %v", err)
 	}
 
-	t.Setenv(EnvGTRole, "mayor")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv(EnvGTRole, "overseer")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("TMUX_PANE", "")
 	t.Setenv("GT_TEST_NO_NUDGE", "1")
@@ -4690,17 +4690,17 @@ exit /b 0
 
 	// Save and restore global sling state
 	prevDryRun := slingDryRun
-	prevNoConvoy := slingNoConvoy
+	prevNoMinecart := slingNoMinecart
 	prevVars := slingVars
 	prevOnTarget := slingOnTarget
 	t.Cleanup(func() {
 		slingDryRun = prevDryRun
-		slingNoConvoy = prevNoConvoy
+		slingNoMinecart = prevNoMinecart
 		slingVars = prevVars
 		slingOnTarget = prevOnTarget
 	})
-	slingDryRun = true // avoid real polecat spawning
-	slingNoConvoy = true
+	slingDryRun = true // avoid real miner spawning
+	slingNoMinecart = true
 	slingVars = nil
 	slingOnTarget = ""
 
@@ -4709,12 +4709,12 @@ exit /b 0
 	if err != nil && strings.Contains(err.Error(), "standalone formula cannot be scheduled") {
 		t.Fatalf("gh#3917 regression: standalone formula rejected in deferred mode: %v", err)
 	}
-	// Any other error (e.g., no polecat to spawn) is acceptable — the guard is what we're testing.
+	// Any other error (e.g., no miner to spawn) is acceptable — the guard is what we're testing.
 }
 
 // TestResolveTargetSelfSlingByPane verifies that a named target resolving to the
 // caller's own tmux pane sets IsSelfSling=true (GH#3839). Without this, gt sling
-// deacon (from the deacon itself) injects the ack prompt into the running agent's
+// supervisor (from the supervisor itself) injects the ack prompt into the running agent's
 // pane, wedging it mid-command.
 func TestResolveTargetSelfSlingByPane(t *testing.T) {
 	const callerPane = "%42"
@@ -4724,11 +4724,11 @@ func TestResolveTargetSelfSlingByPane(t *testing.T) {
 
 	t.Run("named_target_same_pane_is_self_sling", func(t *testing.T) {
 		resolveTargetAgentFn = func(_ string) (string, string, string, error) {
-			return "deacon/", callerPane, "/home/deacon", nil
+			return "supervisor/", callerPane, "/home/supervisor", nil
 		}
 		t.Setenv("TMUX_PANE", callerPane)
 
-		result, err := resolveTarget("deacon", ResolveTargetOptions{})
+		result, err := resolveTarget("supervisor", ResolveTargetOptions{})
 		if err != nil {
 			t.Fatalf("resolveTarget: %v", err)
 		}
@@ -4739,11 +4739,11 @@ func TestResolveTargetSelfSlingByPane(t *testing.T) {
 
 	t.Run("named_target_different_pane_is_not_self_sling", func(t *testing.T) {
 		resolveTargetAgentFn = func(_ string) (string, string, string, error) {
-			return "deacon/", "%99", "/home/deacon", nil
+			return "supervisor/", "%99", "/home/supervisor", nil
 		}
 		t.Setenv("TMUX_PANE", callerPane)
 
-		result, err := resolveTarget("deacon", ResolveTargetOptions{})
+		result, err := resolveTarget("supervisor", ResolveTargetOptions{})
 		if err != nil {
 			t.Fatalf("resolveTarget: %v", err)
 		}
@@ -4754,11 +4754,11 @@ func TestResolveTargetSelfSlingByPane(t *testing.T) {
 
 	t.Run("empty_pane_is_not_self_sling", func(t *testing.T) {
 		resolveTargetAgentFn = func(_ string) (string, string, string, error) {
-			return "deacon/", "", "/home/deacon", nil
+			return "supervisor/", "", "/home/supervisor", nil
 		}
 		t.Setenv("TMUX_PANE", callerPane)
 
-		result, err := resolveTarget("deacon", ResolveTargetOptions{})
+		result, err := resolveTarget("supervisor", ResolveTargetOptions{})
 		if err != nil {
 			t.Fatalf("resolveTarget: %v", err)
 		}

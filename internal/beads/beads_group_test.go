@@ -17,14 +17,14 @@ func TestFormatGroupDescription(t *testing.T) {
 			title: "Group: ops-team",
 			fields: &GroupFields{
 				Name:      "ops-team",
-				Members:   []string{"gastown/crew/max", "gastown/witness"},
+				Members:   []string{"excavation/crew/max", "excavation/witness"},
 				CreatedBy: "human",
 				CreatedAt: "2024-01-15T10:00:00Z",
 			},
 			want: []string{
 				"Group: ops-team",
 				"name: ops-team",
-				"members: gastown/crew/max,gastown/witness",
+				"members: excavation/crew/max,excavation/witness",
 				"created_by: human",
 				"created_at: 2024-01-15T10:00:00Z",
 			},
@@ -85,12 +85,12 @@ func TestParseGroupFields(t *testing.T) {
 			description: `Group: ops-team
 
 name: ops-team
-members: gastown/crew/max,gastown/witness,*/refinery
+members: excavation/crew/max,excavation/witness,*/refinery
 created_by: human
 created_at: 2024-01-15T10:00:00Z`,
 			want: &GroupFields{
 				Name:      "ops-team",
-				Members:   []string{"gastown/crew/max", "gastown/witness", "*/refinery"},
+				Members:   []string{"excavation/crew/max", "excavation/witness", "*/refinery"},
 				CreatedBy: "human",
 				CreatedAt: "2024-01-15T10:00:00Z",
 			},
@@ -111,10 +111,10 @@ created_by: admin`,
 		{
 			name: "single member",
 			description: `name: solo
-members: gastown/crew/max`,
+members: excavation/crew/max`,
 			want: &GroupFields{
 				Name:    "solo",
-				Members: []string{"gastown/crew/max"},
+				Members: []string{"excavation/crew/max"},
 			},
 		},
 		{
@@ -201,7 +201,7 @@ func TestRoundTrip(t *testing.T) {
 	// Test that Format -> Parse preserves data
 	original := &GroupFields{
 		Name:      "test-group",
-		Members:   []string{"gastown/crew/max", "*/witness", "@town"},
+		Members:   []string{"excavation/crew/max", "*/witness", "@town"},
 		CreatedBy: "tester",
 		CreatedAt: "2024-01-15T12:00:00Z",
 	}

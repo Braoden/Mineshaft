@@ -1,4 +1,4 @@
-// Package witness provides the polecat monitoring agent.
+// Package witness provides the miner monitoring agent.
 package witness
 
 import (
@@ -7,18 +7,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
+	"github.com/steveyegge/excavation/internal/beads"
 )
 
 // Protocol message patterns for Witness inbox routing.
 var (
-	// POLECAT_DONE <name> - polecat signaling work completion
-	PatternPolecatDone = regexp.MustCompile(`^POLECAT_DONE\s+(\S+)`)
+	// MINER_DONE <name> - miner signaling work completion
+	PatternMinerDone = regexp.MustCompile(`^MINER_DONE\s+(\S+)`)
 
-	// LIFECYCLE:Shutdown <name> - daemon-triggered polecat shutdown
+	// LIFECYCLE:Shutdown <name> - daemon-triggered miner shutdown
 	PatternLifecycleShutdown = regexp.MustCompile(`^LIFECYCLE:Shutdown\s+(\S+)`)
 
-	// HELP: <topic> - polecat requesting intervention
+	// HELP: <topic> - miner requesting intervention
 	PatternHelp = regexp.MustCompile(`^HELP:\s+(.+)`)
 
 	// MERGED <name> - refinery confirms branch merged
@@ -27,25 +27,25 @@ var (
 	// MERGE_FAILED <name> - refinery reporting merge failure
 	PatternMergeFailed = regexp.MustCompile(`^MERGE_FAILED\s+(\S+)`)
 
-	// MERGE_READY <polecat-name> - witness notifying refinery that work is ready
+	// MERGE_READY <miner-name> - witness notifying refinery that work is ready
 	PatternMergeReady = regexp.MustCompile(`^MERGE_READY\s+(\S+)`)
 
 	// HANDOFF - session continuity message
 	PatternHandoff = regexp.MustCompile(`^🤝\s*HANDOFF`)
 
-	// SWARM_START - mayor initiating batch work
+	// SWARM_START - overseer initiating batch work
 	PatternSwarmStart = regexp.MustCompile(`^SWARM_START`)
 
-	// DISPATCH_ATTEMPT <polecat-name> - witness attempting to dispatch polecat to bead
+	// DISPATCH_ATTEMPT <miner-name> - witness attempting to dispatch miner to bead
 	PatternDispatchAttempt = regexp.MustCompile(`^DISPATCH_ATTEMPT\s+(\S+)`)
 
-	// DISPATCH_OK <polecat-name> - dispatch succeeded
+	// DISPATCH_OK <miner-name> - dispatch succeeded
 	PatternDispatchOK = regexp.MustCompile(`^DISPATCH_OK\s+(\S+)`)
 
-	// DISPATCH_FAIL <polecat-name> - dispatch failed
+	// DISPATCH_FAIL <miner-name> - dispatch failed
 	PatternDispatchFail = regexp.MustCompile(`^DISPATCH_FAIL\s+(\S+)`)
 
-	// IDLE_PASSIVATED <polecat-name> - polecat passivated after idle timeout
+	// IDLE_PASSIVATED <miner-name> - miner passivated after idle timeout
 	PatternIdlePassivated = regexp.MustCompile(`^IDLE_PASSIVATED\s+(\S+)`)
 )
 
@@ -53,7 +53,7 @@ var (
 type ProtocolType string
 
 const (
-	ProtoPolecatDone       ProtocolType = "polecat_done"
+	ProtoMinerDone       ProtocolType = "miner_done"
 	ProtoLifecycleShutdown ProtocolType = "lifecycle_shutdown"
 	ProtoHelp              ProtocolType = "help"
 	ProtoMerged            ProtocolType = "merged"
@@ -84,10 +84,10 @@ const (
 	AgentStateNuked     = beads.AgentStateNuked
 )
 
-// ExitType constants define the completion outcome for polecat work.
+// ExitType constants define the completion outcome for miner work.
 // These match the exit statuses used by `gt done` and are stored on the
 // agent bead's exit_type field so the witness can discover completion
-// outcomes from beads instead of POLECAT_DONE mail.
+// outcomes from beads instead of MINER_DONE mail.
 type ExitType string
 
 const (
@@ -97,9 +97,9 @@ const (
 	ExitTypePhaseComplete ExitType = "PHASE_COMPLETE"
 )
 
-// PolecatDonePayload contains parsed data from a POLECAT_DONE message.
-type PolecatDonePayload struct {
-	PolecatName string
+// MinerDonePayload contains parsed data from a MINER_DONE message.
+type MinerDonePayload struct {
+	MinerName string
 	Exit        string // COMPLETED, ESCALATED, DEFERRED, PHASE_COMPLETE
 	IssueID     string
 	MRID        string
@@ -135,7 +135,7 @@ const (
 type HelpAssessment struct {
 	Category   HelpCategory
 	Severity   HelpSeverity
-	SuggestTo  string // Suggested escalation target (e.g., "deacon", "mayor", "overseer")
+	SuggestTo  string // Suggested escalation target (e.g., "supervisor", "overseer", "boss")
 	Rationale  string // Brief explanation of why this classification was chosen
 }
 
@@ -152,16 +152,16 @@ type HelpPayload struct {
 
 // MergedPayload contains parsed data from a MERGED message.
 type MergedPayload struct {
-	PolecatName string
+	MinerName string
 	Branch      string
 	IssueID     string
 	MergedAt    time.Time
 }
 
 // MergeReadyPayload contains parsed data from a MERGE_READY message.
-// This is sent by Witness to Refinery when a polecat completes work with a pending MR.
+// This is sent by Witness to Refinery when a miner completes work with a pending MR.
 type MergeReadyPayload struct {
-	PolecatName string
+	MinerName string
 	Branch      string
 	IssueID     string
 	MRID        string
@@ -170,7 +170,7 @@ type MergeReadyPayload struct {
 
 // MergeFailedPayload contains parsed data from a MERGE_FAILED message.
 type MergeFailedPayload struct {
-	PolecatName string
+	MinerName string
 	Branch      string
 	IssueID     string
 	FailureType string // "build", "test", "lint", etc.
@@ -188,21 +188,21 @@ type SwarmStartPayload struct {
 
 // DispatchAttemptPayload contains parsed data from a DISPATCH_ATTEMPT message.
 type DispatchAttemptPayload struct {
-	PolecatName string
+	MinerName string
 	BeadID      string
 	AttemptedAt time.Time
 }
 
 // DispatchOKPayload contains parsed data from a DISPATCH_OK message.
 type DispatchOKPayload struct {
-	PolecatName string
+	MinerName string
 	BeadID      string
 	DispatchedAt time.Time
 }
 
 // DispatchFailPayload contains parsed data from a DISPATCH_FAIL message.
 type DispatchFailPayload struct {
-	PolecatName string
+	MinerName string
 	BeadID      string
 	Reason      string
 	FailedAt    time.Time
@@ -210,7 +210,7 @@ type DispatchFailPayload struct {
 
 // IdlePassivatedPayload contains parsed data from an IDLE_PASSIVATED message.
 type IdlePassivatedPayload struct {
-	PolecatName  string
+	MinerName  string
 	IdleDuration string
 	PassivatedAt time.Time
 }
@@ -218,8 +218,8 @@ type IdlePassivatedPayload struct {
 // ClassifyMessage determines the protocol type from a message subject.
 func ClassifyMessage(subject string) ProtocolType {
 	switch {
-	case PatternPolecatDone.MatchString(subject):
-		return ProtoPolecatDone
+	case PatternMinerDone.MatchString(subject):
+		return ProtoMinerDone
 	case PatternLifecycleShutdown.MatchString(subject):
 		return ProtoLifecycleShutdown
 	case PatternHelp.MatchString(subject):
@@ -247,8 +247,8 @@ func ClassifyMessage(subject string) ProtocolType {
 	}
 }
 
-// ParsePolecatDone extracts payload from a POLECAT_DONE message.
-// Subject format: POLECAT_DONE <polecat-name>
+// ParseMinerDone extracts payload from a MINER_DONE message.
+// Subject format: MINER_DONE <miner-name>
 // Body format:
 //
 //	Exit: COMPLETED|ESCALATED|DEFERRED|PHASE_COMPLETE
@@ -256,14 +256,14 @@ func ClassifyMessage(subject string) ProtocolType {
 //	MR: <mr-id>
 //	Gate: <gate-id>
 //	Branch: <branch>
-func ParsePolecatDone(subject, body string) (*PolecatDonePayload, error) {
-	matches := PatternPolecatDone.FindStringSubmatch(subject)
+func ParseMinerDone(subject, body string) (*MinerDonePayload, error) {
+	matches := PatternMinerDone.FindStringSubmatch(subject)
 	if len(matches) < 2 {
-		return nil, fmt.Errorf("invalid POLECAT_DONE subject: %s", subject)
+		return nil, fmt.Errorf("invalid MINER_DONE subject: %s", subject)
 	}
 
-	payload := &PolecatDonePayload{
-		PolecatName: matches[1],
+	payload := &MinerDonePayload{
+		MinerName: matches[1],
 	}
 
 	// Parse body for structured fields
@@ -324,7 +324,7 @@ func ParseHelp(subject, body string) (*HelpPayload, error) {
 }
 
 // ParseMerged extracts payload from a MERGED message.
-// Subject format: MERGED <polecat-name>
+// Subject format: MERGED <miner-name>
 // Body format:
 //
 //	Branch: <branch>
@@ -337,7 +337,7 @@ func ParseMerged(subject, body string) (*MergedPayload, error) {
 	}
 
 	payload := &MergedPayload{
-		PolecatName: matches[1],
+		MinerName: matches[1],
 	}
 
 	// Parse body for structured fields
@@ -359,7 +359,7 @@ func ParseMerged(subject, body string) (*MergedPayload, error) {
 }
 
 // ParseMergeFailed extracts payload from a MERGE_FAILED message.
-// Subject format: MERGE_FAILED <polecat-name>
+// Subject format: MERGE_FAILED <miner-name>
 // Body format:
 //
 //	Branch: <branch>
@@ -373,7 +373,7 @@ func ParseMergeFailed(subject, body string) (*MergeFailedPayload, error) {
 	}
 
 	payload := &MergeFailedPayload{
-		PolecatName: matches[1],
+		MinerName: matches[1],
 		FailedAt:    time.Now(),
 	}
 
@@ -396,7 +396,7 @@ func ParseMergeFailed(subject, body string) (*MergeFailedPayload, error) {
 }
 
 // ParseMergeReady extracts payload from a MERGE_READY message.
-// Subject format: MERGE_READY <polecat-name>
+// Subject format: MERGE_READY <miner-name>
 // Body format:
 //
 //	Branch: <branch>
@@ -410,7 +410,7 @@ func ParseMergeReady(subject, body string) (*MergeReadyPayload, error) {
 	}
 
 	payload := &MergeReadyPayload{
-		PolecatName: matches[1],
+		MinerName: matches[1],
 		ReadyAt:     time.Now(),
 	}
 
@@ -465,7 +465,7 @@ func ParseSwarmStart(body string) (*SwarmStartPayload, error) {
 }
 
 // ParseDispatchAttempt extracts payload from a DISPATCH_ATTEMPT message.
-// Subject format: DISPATCH_ATTEMPT <polecat-name>
+// Subject format: DISPATCH_ATTEMPT <miner-name>
 // Body format:
 //
 //	Bead: <bead-id>
@@ -476,7 +476,7 @@ func ParseDispatchAttempt(subject, body string) (*DispatchAttemptPayload, error)
 	}
 
 	payload := &DispatchAttemptPayload{
-		PolecatName: matches[1],
+		MinerName: matches[1],
 		AttemptedAt: time.Now(),
 	}
 
@@ -491,7 +491,7 @@ func ParseDispatchAttempt(subject, body string) (*DispatchAttemptPayload, error)
 }
 
 // ParseDispatchOK extracts payload from a DISPATCH_OK message.
-// Subject format: DISPATCH_OK <polecat-name>
+// Subject format: DISPATCH_OK <miner-name>
 // Body format:
 //
 //	Bead: <bead-id>
@@ -502,7 +502,7 @@ func ParseDispatchOK(subject, body string) (*DispatchOKPayload, error) {
 	}
 
 	payload := &DispatchOKPayload{
-		PolecatName:  matches[1],
+		MinerName:  matches[1],
 		DispatchedAt: time.Now(),
 	}
 
@@ -517,7 +517,7 @@ func ParseDispatchOK(subject, body string) (*DispatchOKPayload, error) {
 }
 
 // ParseDispatchFail extracts payload from a DISPATCH_FAIL message.
-// Subject format: DISPATCH_FAIL <polecat-name>
+// Subject format: DISPATCH_FAIL <miner-name>
 // Body format:
 //
 //	Bead: <bead-id>
@@ -529,7 +529,7 @@ func ParseDispatchFail(subject, body string) (*DispatchFailPayload, error) {
 	}
 
 	payload := &DispatchFailPayload{
-		PolecatName: matches[1],
+		MinerName: matches[1],
 		FailedAt:    time.Now(),
 	}
 
@@ -547,7 +547,7 @@ func ParseDispatchFail(subject, body string) (*DispatchFailPayload, error) {
 }
 
 // ParseIdlePassivated extracts payload from an IDLE_PASSIVATED message.
-// Subject format: IDLE_PASSIVATED <polecat-name>
+// Subject format: IDLE_PASSIVATED <miner-name>
 // Body format:
 //
 //	IdleDuration: <duration>
@@ -558,7 +558,7 @@ func ParseIdlePassivated(subject, body string) (*IdlePassivatedPayload, error) {
 	}
 
 	payload := &IdlePassivatedPayload{
-		PolecatName:  matches[1],
+		MinerName:  matches[1],
 		PassivatedAt: time.Now(),
 	}
 
@@ -573,10 +573,10 @@ func ParseIdlePassivated(subject, body string) (*IdlePassivatedPayload, error) {
 }
 
 // CleanupWispLabels generates labels for a cleanup wisp.
-func CleanupWispLabels(polecatName, state string) []string {
+func CleanupWispLabels(minerName, state string) []string {
 	return []string{
 		"cleanup",
-		fmt.Sprintf("polecat:%s", polecatName),
+		fmt.Sprintf("miner:%s", minerName),
 		fmt.Sprintf("state:%s", state),
 	}
 }
@@ -664,12 +664,12 @@ var helpKeywords = []struct {
 
 // categoryRoutes maps categories to their default escalation target.
 var categoryRoutes = map[HelpCategory]string{
-	HelpCategoryEmergency: "overseer",
-	HelpCategoryFailed:    "deacon",
-	HelpCategoryBlocked:   "mayor",
-	HelpCategoryDecision:  "deacon",
+	HelpCategoryEmergency: "boss",
+	HelpCategoryFailed:    "supervisor",
+	HelpCategoryBlocked:   "overseer",
+	HelpCategoryDecision:  "supervisor",
 	HelpCategoryLifecycle: "witness",
-	HelpCategoryHelp:      "deacon",
+	HelpCategoryHelp:      "supervisor",
 }
 
 // AssessHelp classifies a help request's category and severity based on
@@ -692,11 +692,11 @@ func AssessHelp(payload *HelpPayload) *HelpAssessment {
 		}
 	}
 
-	// Default: general help, medium severity, route to deacon
+	// Default: general help, medium severity, route to supervisor
 	return &HelpAssessment{
 		Category:  HelpCategoryHelp,
 		Severity:  HelpSeverityMedium,
-		SuggestTo: "deacon",
+		SuggestTo: "supervisor",
 		Rationale: "no specific keywords matched, defaulting to general help",
 	}
 }

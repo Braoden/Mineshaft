@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/estop"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/estop"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var (
@@ -33,7 +33,7 @@ var estopCmd = &cobra.Command{
 This is the factory floor E-stop button. Agent sessions are sent SIGTSTP
 to freeze in place. Context is preserved — no work is lost.
 
-The Mayor and overseer are exempt so they can coordinate recovery.
+The Overseer and boss are exempt so they can coordinate recovery.
 
 Use --rig to freeze a single rig instead of the whole town. Per-rig
 E-stop is useful when traveling or pausing non-critical work while
@@ -44,7 +44,7 @@ To resume: gt thaw [--rig <name>]
 Examples:
   gt estop                              # Freeze everything
   gt estop -r "closing laptop"          # Freeze with reason
-  gt estop --rig gastown                # Freeze only gastown
+  gt estop --rig excavation                # Freeze only excavation
   gt estop --rig beads -r "maintenance" # Freeze beads rig`,
 	// Reject stray operands so `gt estop status` cannot fall through to runEstop.
 	Args: cobra.NoArgs,
@@ -62,7 +62,7 @@ var estopStatusCmd = &cobra.Command{
 func runEstopStatus(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 	if !estop.IsActive(townRoot) {
 		entries, _ := filepath.Glob(filepath.Join(townRoot, "ESTOP.*"))
@@ -95,7 +95,7 @@ and nudges all sessions to alert them that work can continue.
 
 Examples:
   gt thaw                    # Thaw everything
-  gt thaw --rig gastown      # Thaw only gastown`,
+  gt thaw --rig excavation      # Thaw only excavation`,
 	RunE: runThaw,
 }
 
@@ -111,7 +111,7 @@ func init() {
 func runEstop(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Per-rig E-stop
@@ -192,7 +192,7 @@ func runEstopRig(townRoot, rigName string) error {
 func runThaw(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Per-rig thaw
@@ -263,12 +263,12 @@ func runThawRig(townRoot, rigName string) error {
 
 // exemptSessions are sessions that should NOT be frozen during E-stop.
 var exemptSessions = map[string]bool{
-	session.MayorSessionName():    true,
-	session.OverseerSessionName(): true,
+	session.OverseerSessionName():    true,
+	session.BossSessionName(): true,
 }
 
-// freezeAllSessions sends SIGTSTP to all Gas Town agent sessions via
-// process-group signaling. Mayor and overseer sessions are exempt.
+// freezeAllSessions sends SIGTSTP to all Excavation Site agent sessions via
+// process-group signaling. Overseer and boss sessions are exempt.
 // If rigFilter is non-empty, only sessions for that rig are frozen.
 func freezeAllSessions(t *tmux.Tmux, townRoot string, rigFilter string) int {
 	sessions := collectGTSessions(t, townRoot)
@@ -300,7 +300,7 @@ func freezeAllSessions(t *tmux.Tmux, townRoot string, rigFilter string) int {
 	return frozen
 }
 
-// thawAllSessions sends SIGCONT to all Gas Town agent sessions.
+// thawAllSessions sends SIGCONT to all Excavation Site agent sessions.
 // If rigFilter is non-empty, only sessions for that rig are thawed.
 func thawAllSessions(t *tmux.Tmux, townRoot string, rigFilter string) int {
 	sessions := collectGTSessions(t, townRoot)
@@ -358,7 +358,7 @@ func isRigSession(name, rigPrefix string) bool {
 	return strings.HasPrefix(name, rigPrefix+"-") || name == rigPrefix
 }
 
-// collectGTSessions returns all Gas Town tmux sessions.
+// collectGTSessions returns all Excavation Site tmux sessions.
 func collectGTSessions(t *tmux.Tmux, townRoot string) []string {
 	allSessions, err := t.ListSessions()
 	if err != nil {
@@ -380,7 +380,7 @@ func collectGTSessions(t *tmux.Tmux, townRoot string) []string {
 	return gtSessions
 }
 
-// isGTSession checks if a session name belongs to Gas Town.
+// isGTSession checks if a session name belongs to Excavation Site.
 func isGTSession(name string, rigPrefixes map[string]bool) bool {
 	// Town-level sessions (hq-*)
 	if strings.HasPrefix(name, session.HQPrefix) {
@@ -388,7 +388,7 @@ func isGTSession(name string, rigPrefixes map[string]bool) bool {
 	}
 
 	// Rig-level sessions: <prefix>-witness, <prefix>-refinery,
-	// <prefix>-crew-<name>, <prefix>-<polecat-name>
+	// <prefix>-crew-<name>, <prefix>-<miner-name>
 	for prefix := range rigPrefixes {
 		if strings.HasPrefix(name, prefix+"-") || name == prefix {
 			return true

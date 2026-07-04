@@ -55,7 +55,7 @@ func initTownRootSafetyRepo(t *testing.T) string {
 
 	root := initTestRepo(t)
 	g := NewGit(root)
-	cmd := exec.Command("git", "branch", "polecat/safety")
+	cmd := exec.Command("git", "branch", "miner/safety")
 	cmd.Dir = root
 	if out, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("create safety branch: %v\n%s", err, out)
@@ -70,9 +70,9 @@ func initTownRootSafetyRepo(t *testing.T) string {
 		t.Fatalf("git commit tracked: %v", err)
 	}
 
-	writeTownSafetyFile(t, root, "mayor/town.json", `{"name":"test-town"}\n`)
-	writeTownSafetyFile(t, root, "mayor/rigs.json", `{"rigs":[]}\n`)
-	writeTownSafetyFile(t, root, ".dolt-data/gastown/.dolt/noms/manifest", "manifest sentinel\n")
+	writeTownSafetyFile(t, root, "overseer/town.json", `{"name":"test-town"}\n`)
+	writeTownSafetyFile(t, root, "overseer/rigs.json", `{"rigs":[]}\n`)
+	writeTownSafetyFile(t, root, ".dolt-data/excavation/.dolt/noms/manifest", "manifest sentinel\n")
 	writeTownSafetyFile(t, root, ".runtime/sentinel", "runtime sentinel\n")
 	writeTownSafetyFile(t, root, ".beads/metadata.json", `{"prefix":"hq"}\n`)
 	writeTownSafetyFile(t, root, "daemon/daemon.pid", "12345\n")
@@ -122,9 +122,9 @@ func snapshotTownRootSafety(t *testing.T, root string) townRootSafetySnapshot {
 
 func townRootSafetyFiles() []string {
 	return []string{
-		"mayor/town.json",
-		"mayor/rigs.json",
-		".dolt-data/gastown/.dolt/noms/manifest",
+		"overseer/town.json",
+		"overseer/rigs.json",
+		".dolt-data/excavation/.dolt/noms/manifest",
 		".runtime/sentinel",
 		".beads/metadata.json",
 		"daemon/daemon.pid",
@@ -161,10 +161,10 @@ func TestTownRootMutatingGitCommandsAreBlocked(t *testing.T) {
 		name string
 		run  func(*Git) error
 	}{
-		{name: "checkout", run: func(g *Git) error { return g.Checkout("polecat/safety") }},
-		{name: "checkout new branch", run: func(g *Git) error { return g.CheckoutNewBranch("polecat/new", "polecat/safety") }},
-		{name: "checkout reset branch", run: func(g *Git) error { return g.CheckoutResetBranch("polecat/reset", "polecat/safety") }},
-		{name: "reset hard", run: func(g *Git) error { return g.ResetHard("polecat/safety") }},
+		{name: "checkout", run: func(g *Git) error { return g.Checkout("miner/safety") }},
+		{name: "checkout new branch", run: func(g *Git) error { return g.CheckoutNewBranch("miner/new", "miner/safety") }},
+		{name: "checkout reset branch", run: func(g *Git) error { return g.CheckoutResetBranch("miner/reset", "miner/safety") }},
+		{name: "reset hard", run: func(g *Git) error { return g.ResetHard("miner/safety") }},
 		{name: "clean force", run: func(g *Git) error { return g.CleanForce() }},
 	}
 
@@ -192,7 +192,7 @@ func TestTownRootReadOnlyStashListIsAllowed(t *testing.T) {
 
 func TestNestedWorkDirResolvingToTownRootGitIsBlocked(t *testing.T) {
 	root := initTownRootSafetyRepo(t)
-	rigDir := filepath.Join(root, "gastown")
+	rigDir := filepath.Join(root, "excavation")
 	if err := os.MkdirAll(rigDir, 0755); err != nil {
 		t.Fatalf("mkdir rig dir: %v", err)
 	}
@@ -210,8 +210,8 @@ func TestNestedWorkDirResolvingToTownRootGitIsBlocked(t *testing.T) {
 		name string
 		run  func(*Git) error
 	}{
-		{name: "checkout", run: func(g *Git) error { return g.Checkout("polecat/safety") }},
-		{name: "reset hard", run: func(g *Git) error { return g.ResetHard("polecat/safety") }},
+		{name: "checkout", run: func(g *Git) error { return g.Checkout("miner/safety") }},
+		{name: "reset hard", run: func(g *Git) error { return g.ResetHard("miner/safety") }},
 		{name: "clean force", run: func(g *Git) error { return g.CleanForce() }},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
@@ -235,14 +235,14 @@ func TestWorktreeAddCannotTargetTownRootRuntimePaths(t *testing.T) {
 
 	for i, target := range []string{
 		root,
-		filepath.Join(root, "mayor", "bad-worktree"),
+		filepath.Join(root, "overseer", "bad-worktree"),
 		filepath.Join(root, ".dolt-data", "bad-worktree"),
 		filepath.Join(root, ".runtime", "bad-worktree"),
 		filepath.Join(root, ".beads", "bad-worktree"),
 		filepath.Join(root, "daemon", "bad-worktree"),
 	} {
 		t.Run(filepath.Base(filepath.Dir(target))+"/"+filepath.Base(target), func(t *testing.T) {
-			err := NewGitWithDir(bareDir, "").WorktreeAddFromRef(target, fmt.Sprintf("polecat/town-root-%d", i), "HEAD")
+			err := NewGitWithDir(bareDir, "").WorktreeAddFromRef(target, fmt.Sprintf("miner/town-root-%d", i), "HEAD")
 			requireTownRootSafetyError(t, err)
 			assertTownRootSafetyPreserved(t, root, before)
 		})
@@ -252,7 +252,7 @@ func TestWorktreeAddCannotTargetTownRootRuntimePaths(t *testing.T) {
 	if err := os.Symlink(root, link); err != nil {
 		t.Skipf("symlink unavailable: %v", err)
 	}
-	err := NewGitWithDir(bareDir, "").WorktreeAddFromRef(filepath.Join(link, ".runtime", "linked-worktree"), "polecat/town-root-symlink", "HEAD")
+	err := NewGitWithDir(bareDir, "").WorktreeAddFromRef(filepath.Join(link, ".runtime", "linked-worktree"), "miner/town-root-symlink", "HEAD")
 	requireTownRootSafetyError(t, err)
 	assertTownRootSafetyPreserved(t, root, before)
 }
@@ -524,7 +524,7 @@ func TestCheckoutDetachAllowsBranchCheckedOutInAnotherWorktree(t *testing.T) {
 	}
 
 	worktreePath := filepath.Join(t.TempDir(), "worker")
-	runGit(t, dir, "worktree", "add", "-b", "polecat/test-detach", worktreePath, "HEAD")
+	runGit(t, dir, "worktree", "add", "-b", "miner/test-detach", worktreePath, "HEAD")
 	workerGit := NewGit(worktreePath)
 
 	if err := os.WriteFile(filepath.Join(dir, "after-worker.txt"), []byte("new main commit\n"), 0644); err != nil {
@@ -850,7 +850,7 @@ func TestCloneBareHasOriginRefs(t *testing.T) {
 	}
 
 	// Verify WorktreeAddFromRef succeeds with origin/main
-	// This is what polecat creation does
+	// This is what miner creation does
 	worktreePath := filepath.Join(tmp, "worktree")
 	if err := bareGit.WorktreeAddFromRef(worktreePath, "test-branch", originMain); err != nil {
 		t.Errorf("WorktreeAddFromRef(%q) failed: %v", originMain, err)
@@ -1094,11 +1094,11 @@ func TestPruneStaleBranches_MergedBranch(t *testing.T) {
 	localDir, _, mainBranch := initTestRepoWithRemote(t)
 	g := NewGit(localDir)
 
-	// Create a polecat branch, commit, and merge it to main
-	if err := g.CreateBranch("polecat/test-merged"); err != nil {
+	// Create a miner branch, commit, and merge it to main
+	if err := g.CreateBranch("miner/test-merged"); err != nil {
 		t.Fatalf("CreateBranch: %v", err)
 	}
-	if err := g.Checkout("polecat/test-merged"); err != nil {
+	if err := g.Checkout("miner/test-merged"); err != nil {
 		t.Fatalf("Checkout: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(localDir, "feature.txt"), []byte("feature"), 0644); err != nil {
@@ -1111,18 +1111,18 @@ func TestPruneStaleBranches_MergedBranch(t *testing.T) {
 		t.Fatalf("Commit: %v", err)
 	}
 
-	// Push polecat branch to origin
-	cmd := exec.Command("git", "push", "origin", "polecat/test-merged")
+	// Push miner branch to origin
+	cmd := exec.Command("git", "push", "origin", "miner/test-merged")
 	cmd.Dir = localDir
 	if err := cmd.Run(); err != nil {
-		t.Fatalf("push polecat branch: %v", err)
+		t.Fatalf("push miner branch: %v", err)
 	}
 
 	// Merge to main
 	if err := g.Checkout(mainBranch); err != nil {
 		t.Fatalf("Checkout main: %v", err)
 	}
-	if err := g.Merge("polecat/test-merged"); err != nil {
+	if err := g.Merge("miner/test-merged"); err != nil {
 		t.Fatalf("Merge: %v", err)
 	}
 
@@ -1133,8 +1133,8 @@ func TestPruneStaleBranches_MergedBranch(t *testing.T) {
 		t.Fatalf("push main: %v", err)
 	}
 
-	// Delete remote polecat branch (simulating refinery cleanup)
-	cmd = exec.Command("git", "push", "origin", "--delete", "polecat/test-merged")
+	// Delete remote miner branch (simulating refinery cleanup)
+	cmd = exec.Command("git", "push", "origin", "--delete", "miner/test-merged")
 	cmd.Dir = localDir
 	if err := cmd.Run(); err != nil {
 		t.Fatalf("delete remote branch: %v", err)
@@ -1145,32 +1145,32 @@ func TestPruneStaleBranches_MergedBranch(t *testing.T) {
 		t.Fatalf("FetchPrune: %v", err)
 	}
 
-	// Verify polecat branch still exists locally
-	branches, err := g.ListBranches("polecat/*")
+	// Verify miner branch still exists locally
+	branches, err := g.ListBranches("miner/*")
 	if err != nil {
 		t.Fatalf("ListBranches: %v", err)
 	}
 	if len(branches) != 1 {
-		t.Fatalf("expected 1 local polecat branch, got %d", len(branches))
+		t.Fatalf("expected 1 local miner branch, got %d", len(branches))
 	}
 
 	// Prune should remove it
-	pruned, err := g.PruneStaleBranches("polecat/*", false)
+	pruned, err := g.PruneStaleBranches("miner/*", false)
 	if err != nil {
 		t.Fatalf("PruneStaleBranches: %v", err)
 	}
 	if len(pruned) != 1 {
 		t.Fatalf("expected 1 pruned branch, got %d", len(pruned))
 	}
-	if pruned[0].Name != "polecat/test-merged" {
-		t.Errorf("pruned name = %q, want polecat/test-merged", pruned[0].Name)
+	if pruned[0].Name != "miner/test-merged" {
+		t.Errorf("pruned name = %q, want miner/test-merged", pruned[0].Name)
 	}
 	if pruned[0].Reason != "no-remote-merged" {
 		t.Errorf("pruned reason = %q, want no-remote-merged", pruned[0].Reason)
 	}
 
 	// Verify branch is gone
-	branches, err = g.ListBranches("polecat/*")
+	branches, err = g.ListBranches("miner/*")
 	if err != nil {
 		t.Fatalf("ListBranches after prune: %v", err)
 	}
@@ -1183,11 +1183,11 @@ func TestPruneStaleBranches_DryRun(t *testing.T) {
 	localDir, _, mainBranch := initTestRepoWithRemote(t)
 	g := NewGit(localDir)
 
-	// Create and merge a polecat branch (same as above)
-	if err := g.CreateBranch("polecat/test-dryrun"); err != nil {
+	// Create and merge a miner branch (same as above)
+	if err := g.CreateBranch("miner/test-dryrun"); err != nil {
 		t.Fatalf("CreateBranch: %v", err)
 	}
-	if err := g.Checkout("polecat/test-dryrun"); err != nil {
+	if err := g.Checkout("miner/test-dryrun"); err != nil {
 		t.Fatalf("Checkout: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(localDir, "dry.txt"), []byte("dry"), 0644); err != nil {
@@ -1202,7 +1202,7 @@ func TestPruneStaleBranches_DryRun(t *testing.T) {
 	if err := g.Checkout(mainBranch); err != nil {
 		t.Fatalf("Checkout main: %v", err)
 	}
-	if err := g.Merge("polecat/test-dryrun"); err != nil {
+	if err := g.Merge("miner/test-dryrun"); err != nil {
 		t.Fatalf("Merge: %v", err)
 	}
 
@@ -1214,7 +1214,7 @@ func TestPruneStaleBranches_DryRun(t *testing.T) {
 	}
 
 	// Dry run should report but not delete
-	pruned, err := g.PruneStaleBranches("polecat/*", true)
+	pruned, err := g.PruneStaleBranches("miner/*", true)
 	if err != nil {
 		t.Fatalf("PruneStaleBranches dry-run: %v", err)
 	}
@@ -1223,7 +1223,7 @@ func TestPruneStaleBranches_DryRun(t *testing.T) {
 	}
 
 	// Branch should still exist
-	branches, err := g.ListBranches("polecat/*")
+	branches, err := g.ListBranches("miner/*")
 	if err != nil {
 		t.Fatalf("ListBranches: %v", err)
 	}
@@ -1236,16 +1236,16 @@ func TestPruneStaleBranches_SkipsCurrentBranch(t *testing.T) {
 	localDir, _, _ := initTestRepoWithRemote(t)
 	g := NewGit(localDir)
 
-	// Create and checkout a polecat branch (making it the current branch)
-	if err := g.CreateBranch("polecat/current"); err != nil {
+	// Create and checkout a miner branch (making it the current branch)
+	if err := g.CreateBranch("miner/current"); err != nil {
 		t.Fatalf("CreateBranch: %v", err)
 	}
-	if err := g.Checkout("polecat/current"); err != nil {
+	if err := g.Checkout("miner/current"); err != nil {
 		t.Fatalf("Checkout: %v", err)
 	}
 
 	// Prune should not delete the current branch
-	pruned, err := g.PruneStaleBranches("polecat/*", false)
+	pruned, err := g.PruneStaleBranches("miner/*", false)
 	if err != nil {
 		t.Fatalf("PruneStaleBranches: %v", err)
 	}
@@ -1258,11 +1258,11 @@ func TestPruneStaleBranches_SkipsUnmerged(t *testing.T) {
 	localDir, _, mainBranch := initTestRepoWithRemote(t)
 	g := NewGit(localDir)
 
-	// Create a polecat branch with a commit NOT merged to main
-	if err := g.CreateBranch("polecat/unmerged"); err != nil {
+	// Create a miner branch with a commit NOT merged to main
+	if err := g.CreateBranch("miner/unmerged"); err != nil {
 		t.Fatalf("CreateBranch: %v", err)
 	}
-	if err := g.Checkout("polecat/unmerged"); err != nil {
+	if err := g.Checkout("miner/unmerged"); err != nil {
 		t.Fatalf("Checkout: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(localDir, "unmerged.txt"), []byte("unmerged"), 0644); err != nil {
@@ -1276,7 +1276,7 @@ func TestPruneStaleBranches_SkipsUnmerged(t *testing.T) {
 	}
 
 	// Push to remote so it has a remote tracking branch
-	cmd := exec.Command("git", "push", "origin", "polecat/unmerged")
+	cmd := exec.Command("git", "push", "origin", "miner/unmerged")
 	cmd.Dir = localDir
 	if err := cmd.Run(); err != nil {
 		t.Fatalf("push: %v", err)
@@ -1287,7 +1287,7 @@ func TestPruneStaleBranches_SkipsUnmerged(t *testing.T) {
 	}
 
 	// Prune should NOT delete unmerged branch that still has remote
-	pruned, err := g.PruneStaleBranches("polecat/*", false)
+	pruned, err := g.PruneStaleBranches("miner/*", false)
 	if err != nil {
 		t.Fatalf("PruneStaleBranches: %v", err)
 	}
@@ -1299,7 +1299,7 @@ func TestPruneStaleBranches_SkipsUnmerged(t *testing.T) {
 func TestListPushRemoteRefsWithHashesClassifiesRemoteOnlyMergedBranch(t *testing.T) {
 	localDir, _, mainBranch := initTestRepoWithRemote(t)
 	g := NewGit(localDir)
-	branch := "polecat/remote-merged"
+	branch := "miner/remote-merged"
 
 	if err := g.CreateBranch(branch); err != nil {
 		t.Fatalf("CreateBranch: %v", err)
@@ -1334,7 +1334,7 @@ func TestListPushRemoteRefsWithHashesClassifiesRemoteOnlyMergedBranch(t *testing
 	}
 	runGit(t, localDir, "update-ref", "-d", "refs/remotes/origin/"+branch)
 
-	refs, err := g.ListPushRemoteRefsWithHashes("origin", "refs/heads/polecat/")
+	refs, err := g.ListPushRemoteRefsWithHashes("origin", "refs/heads/miner/")
 	if err != nil {
 		t.Fatalf("ListPushRemoteRefsWithHashes: %v", err)
 	}
@@ -1411,10 +1411,10 @@ func TestFetchPrune(t *testing.T) {
 	g := NewGit(localDir)
 
 	// Create and push a branch
-	if err := g.CreateBranch("polecat/prune-test"); err != nil {
+	if err := g.CreateBranch("miner/prune-test"); err != nil {
 		t.Fatalf("CreateBranch: %v", err)
 	}
-	cmd := exec.Command("git", "push", "origin", "polecat/prune-test")
+	cmd := exec.Command("git", "push", "origin", "miner/prune-test")
 	cmd.Dir = localDir
 	if err := cmd.Run(); err != nil {
 		t.Fatalf("push: %v", err)
@@ -1424,7 +1424,7 @@ func TestFetchPrune(t *testing.T) {
 	}
 
 	// Verify remote tracking ref exists
-	exists, err := g.RemoteTrackingBranchExists("origin", "polecat/prune-test")
+	exists, err := g.RemoteTrackingBranchExists("origin", "miner/prune-test")
 	if err != nil {
 		t.Fatalf("RemoteTrackingBranchExists: %v", err)
 	}
@@ -1433,7 +1433,7 @@ func TestFetchPrune(t *testing.T) {
 	}
 
 	// Delete remote branch
-	cmd = exec.Command("git", "push", "origin", "--delete", "polecat/prune-test")
+	cmd = exec.Command("git", "push", "origin", "--delete", "miner/prune-test")
 	cmd.Dir = localDir
 	if err := cmd.Run(); err != nil {
 		t.Fatalf("delete remote: %v", err)
@@ -1444,7 +1444,7 @@ func TestFetchPrune(t *testing.T) {
 		t.Fatalf("FetchPrune: %v", err)
 	}
 
-	exists, err = g.RemoteTrackingBranchExists("origin", "polecat/prune-test")
+	exists, err = g.RemoteTrackingBranchExists("origin", "miner/prune-test")
 	if err != nil {
 		t.Fatalf("RemoteTrackingBranchExists after prune: %v", err)
 	}
@@ -1873,13 +1873,13 @@ func TestStashCount_FiltersByBranch(t *testing.T) {
 
 	// Create a worktree on a different branch
 	wtDir := t.TempDir()
-	cmd = exec.Command("git", "worktree", "add", wtDir, "-b", "polecat-branch")
+	cmd = exec.Command("git", "worktree", "add", wtDir, "-b", "miner-branch")
 	cmd.Dir = dir
 	if err := cmd.Run(); err != nil {
 		t.Fatalf("git worktree add: %v", err)
 	}
 
-	// StashCount from worktree should be 0 (stash belongs to main, not polecat-branch)
+	// StashCount from worktree should be 0 (stash belongs to main, not miner-branch)
 	wtGit := NewGit(wtDir)
 	count, err := wtGit.StashCount()
 	if err != nil {
@@ -2203,7 +2203,7 @@ func TestClearPushURL(t *testing.T) {
 	}
 }
 
-func TestIsGasTownRuntimePath(t *testing.T) {
+func TestIsExcavationRuntimePath(t *testing.T) {
 	tests := []struct {
 		path string
 		want bool
@@ -2216,7 +2216,7 @@ func TestIsGasTownRuntimePath(t *testing.T) {
 		{".runtime/state.json", true},
 		{".runtime", true},
 		{".opencode/", true},
-		{".opencode/plugins/gastown.js", true},
+		{".opencode/plugins/excavation.js", true},
 		{".opencode/commands/handoff.md", true},
 		{".beads/", true},
 		{".beads/db.json", true},
@@ -2246,9 +2246,9 @@ func TestIsGasTownRuntimePath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.path, func(t *testing.T) {
-			got := isGasTownRuntimePath(tt.path)
+			got := isExcavationRuntimePath(tt.path)
 			if got != tt.want {
-				t.Errorf("isGasTownRuntimePath(%q) = %v, want %v", tt.path, got, tt.want)
+				t.Errorf("isExcavationRuntimePath(%q) = %v, want %v", tt.path, got, tt.want)
 			}
 		})
 	}
@@ -2264,7 +2264,7 @@ func TestCleanExcludingRuntime(t *testing.T) {
 			name: "only runtime artifacts",
 			s: UncommittedWorkStatus{
 				HasUncommittedChanges: true,
-				UntrackedFiles:        []string{".claude/", ".opencode/plugins/gastown.js", ".runtime/state.json"},
+				UntrackedFiles:        []string{".claude/", ".opencode/plugins/excavation.js", ".runtime/state.json"},
 			},
 			want: true,
 		},
@@ -2280,7 +2280,7 @@ func TestCleanExcludingRuntime(t *testing.T) {
 			name: "runtime path conflict blocks",
 			s: UncommittedWorkStatus{
 				HasUncommittedChanges: true,
-				UnmergedFiles:         []string{".opencode/plugins/gastown.js"},
+				UnmergedFiles:         []string{".opencode/plugins/excavation.js"},
 			},
 			want: false,
 		},
@@ -2316,7 +2316,7 @@ func TestCleanExcludingRuntime(t *testing.T) {
 			want: true,
 		},
 		{
-			// The primary bug scenario (gas-7vg): polecat commits work (1 unpushed
+			// The primary bug scenario (gas-7vg): miner commits work (1 unpushed
 			// commit) then calls gt done with only infrastructure files untracked.
 			// CleanExcludingRuntime must return true so gt done is not blocked.
 			name: "unpushed commit with only runtime artifacts",
@@ -2350,7 +2350,7 @@ func TestCleanExcludingRuntime(t *testing.T) {
 			want: true,
 		},
 		{
-			// CLAUDE.local.md is a Gas Town overlay file (gt-p35) that must not
+			// CLAUDE.local.md is a Excavation Site overlay file (gt-p35) that must not
 			// block gt done or be auto-committed.
 			name: "CLAUDE.local.md is runtime artifact",
 			s: UncommittedWorkStatus{
@@ -2379,7 +2379,7 @@ func TestRuntimeArtifactPaths(t *testing.T) {
 			"src/handler.go",
 		},
 		UntrackedFiles: []string{
-			".opencode/plugins/gastown.js",
+			".opencode/plugins/excavation.js",
 			"services/cyrus/workflow-cyrus-edge/node_modules/pkg/index.js",
 			"services/cyrus/workflow-cyrus-edge/node_modules/pkg/package.json",
 			"dashboard/public/meridian-dashboard/.vite/vitest/hash/results.json",
@@ -2453,26 +2453,26 @@ func TestParsePorcelainStatusEntryPreservesRenameCopySourceAndConflict(t *testin
 	}{
 		{
 			name:       "rename",
-			line:       "R  README.md -> .opencode/plugins/gastown.js",
+			line:       "R  README.md -> .opencode/plugins/excavation.js",
 			wantCode:   "R ",
 			wantSource: "README.md",
-			wantPath:   ".opencode/plugins/gastown.js",
-			wantPaths:  []string{"README.md", ".opencode/plugins/gastown.js"},
+			wantPath:   ".opencode/plugins/excavation.js",
+			wantPaths:  []string{"README.md", ".opencode/plugins/excavation.js"},
 		},
 		{
 			name:       "copy",
-			line:       "C  README.md -> .opencode/plugins/gastown.js",
+			line:       "C  README.md -> .opencode/plugins/excavation.js",
 			wantCode:   "C ",
 			wantSource: "README.md",
-			wantPath:   ".opencode/plugins/gastown.js",
-			wantPaths:  []string{"README.md", ".opencode/plugins/gastown.js"},
+			wantPath:   ".opencode/plugins/excavation.js",
+			wantPaths:  []string{"README.md", ".opencode/plugins/excavation.js"},
 		},
 		{
 			name:      "unmerged",
-			line:      "UU .opencode/plugins/gastown.js",
+			line:      "UU .opencode/plugins/excavation.js",
 			wantCode:  "UU",
-			wantPath:  ".opencode/plugins/gastown.js",
-			wantPaths: []string{".opencode/plugins/gastown.js"},
+			wantPath:  ".opencode/plugins/excavation.js",
+			wantPaths: []string{".opencode/plugins/excavation.js"},
 			unmerged:  true,
 		},
 	}
@@ -2519,7 +2519,7 @@ func TestCheckUncommittedWorkCapturesPorcelainRenameAndUnmergedPaths(t *testing.
 		if err := os.MkdirAll(filepath.Join(dir, ".opencode", "plugins"), 0755); err != nil {
 			t.Fatalf("mkdir opencode plugins: %v", err)
 		}
-		runGitTestCmd(t, dir, "mv", "README.md", ".opencode/plugins/gastown.js")
+		runGitTestCmd(t, dir, "mv", "README.md", ".opencode/plugins/excavation.js")
 
 		status, err := NewGit(dir).CheckUncommittedWork()
 		if err != nil {
@@ -2546,7 +2546,7 @@ func TestCheckUncommittedWorkCapturesPorcelainRenameAndUnmergedPaths(t *testing.
 		}
 		runGitTestCmd(t, dir, "add", ".opencode/plugins/old.js")
 		runGitTestCmd(t, dir, "commit", "-m", "add tracked runtime source")
-		runGitTestCmd(t, dir, "mv", ".opencode/plugins/old.js", ".opencode/plugins/gastown.js")
+		runGitTestCmd(t, dir, "mv", ".opencode/plugins/old.js", ".opencode/plugins/excavation.js")
 
 		status, err := NewGit(dir).CheckUncommittedWork()
 		if err != nil {
@@ -2569,18 +2569,18 @@ func TestCheckUncommittedWorkCapturesPorcelainRenameAndUnmergedPaths(t *testing.
 		if err := os.MkdirAll(filepath.Join(dir, ".opencode", "plugins"), 0755); err != nil {
 			t.Fatalf("mkdir opencode plugins: %v", err)
 		}
-		if err := os.WriteFile(filepath.Join(dir, ".opencode", "plugins", "gastown.js"), []byte("base\n"), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, ".opencode", "plugins", "excavation.js"), []byte("base\n"), 0644); err != nil {
 			t.Fatalf("write base runtime conflict file: %v", err)
 		}
-		runGitTestCmd(t, dir, "add", ".opencode/plugins/gastown.js")
+		runGitTestCmd(t, dir, "add", ".opencode/plugins/excavation.js")
 		runGitTestCmd(t, dir, "commit", "-m", "add runtime conflict base")
 		runGitTestCmd(t, dir, "switch", "-c", "side")
-		if err := os.WriteFile(filepath.Join(dir, ".opencode", "plugins", "gastown.js"), []byte("side\n"), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, ".opencode", "plugins", "excavation.js"), []byte("side\n"), 0644); err != nil {
 			t.Fatalf("write side runtime conflict file: %v", err)
 		}
 		runGitTestCmd(t, dir, "commit", "-am", "side runtime change")
 		runGitTestCmd(t, dir, "switch", "main")
-		if err := os.WriteFile(filepath.Join(dir, ".opencode", "plugins", "gastown.js"), []byte("main\n"), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, ".opencode", "plugins", "excavation.js"), []byte("main\n"), 0644); err != nil {
 			t.Fatalf("write main runtime conflict file: %v", err)
 		}
 		runGitTestCmd(t, dir, "commit", "-am", "main runtime change")
@@ -2590,8 +2590,8 @@ func TestCheckUncommittedWorkCapturesPorcelainRenameAndUnmergedPaths(t *testing.
 		if err != nil {
 			t.Fatalf("CheckUncommittedWork: %v", err)
 		}
-		if got := status.NonRuntimePaths(); len(got) != 1 || got[0] != ".opencode/plugins/gastown.js" {
-			t.Fatalf("NonRuntimePaths = %v, want [.opencode/plugins/gastown.js]", got)
+		if got := status.NonRuntimePaths(); len(got) != 1 || got[0] != ".opencode/plugins/excavation.js" {
+			t.Fatalf("NonRuntimePaths = %v, want [.opencode/plugins/excavation.js]", got)
 		}
 		if status.CleanExcludingRuntime() {
 			t.Fatal("runtime unmerged conflict must block runtime-excluding clean check")
@@ -2716,7 +2716,7 @@ func TestCheckBranchContamination(t *testing.T) {
 	}
 }
 
-// initTestRepoWithSplitRemote creates a test setup that mirrors the polecat workflow:
+// initTestRepoWithSplitRemote creates a test setup that mirrors the miner workflow:
 // two bare repos (upstream and fork), a local clone whose origin has fetch URL → upstream
 // and push URL → fork. Returns (localDir, upstreamBareDir, forkBareDir, mainBranch).
 func initTestRepoWithSplitRemote(t *testing.T) (string, string, string, string) {
@@ -2862,10 +2862,10 @@ func TestForkBackedDefaultPushGuard_AllowsFeatureBranchPush(t *testing.T) {
 	localDir, _, _, _ := initTestRepoWithSplitRemote(t)
 	g := NewGit(localDir)
 
-	if err := g.CreateBranch("polecat/fork-policy"); err != nil {
+	if err := g.CreateBranch("miner/fork-policy"); err != nil {
 		t.Fatalf("CreateBranch: %v", err)
 	}
-	if err := g.Checkout("polecat/fork-policy"); err != nil {
+	if err := g.Checkout("miner/fork-policy"); err != nil {
 		t.Fatalf("Checkout: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(localDir, "policy.txt"), []byte("policy\n"), 0644); err != nil {
@@ -2877,7 +2877,7 @@ func TestForkBackedDefaultPushGuard_AllowsFeatureBranchPush(t *testing.T) {
 	if err := g.Commit("fork policy feature"); err != nil {
 		t.Fatalf("Commit: %v", err)
 	}
-	if err := g.Push("origin", "polecat/fork-policy:polecat/fork-policy", false); err != nil {
+	if err := g.Push("origin", "miner/fork-policy:miner/fork-policy", false); err != nil {
 		t.Fatalf("feature branch push should remain allowed: %v", err)
 	}
 }
@@ -2890,10 +2890,10 @@ func TestPushRemoteBranchExists_SplitURL(t *testing.T) {
 	g := NewGit(localDir)
 
 	// Create a feature branch and push to origin (goes to fork via push URL)
-	if err := g.CreateBranch("polecat/fix-test"); err != nil {
+	if err := g.CreateBranch("miner/fix-test"); err != nil {
 		t.Fatalf("CreateBranch: %v", err)
 	}
-	if err := g.Checkout("polecat/fix-test"); err != nil {
+	if err := g.Checkout("miner/fix-test"); err != nil {
 		t.Fatalf("Checkout: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(localDir, "fix.go"), []byte("package fix\n"), 0644); err != nil {
@@ -2908,12 +2908,12 @@ func TestPushRemoteBranchExists_SplitURL(t *testing.T) {
 		t.Fatalf("commit: %v", err)
 	}
 
-	if err := g.Push("origin", "polecat/fix-test", false); err != nil {
+	if err := g.Push("origin", "miner/fix-test", false); err != nil {
 		t.Fatalf("Push: %v", err)
 	}
 
 	// RemoteBranchExists checks the fetch URL (upstream) — branch NOT there
-	exists, err := g.RemoteBranchExists("origin", "polecat/fix-test")
+	exists, err := g.RemoteBranchExists("origin", "miner/fix-test")
 	if err != nil {
 		t.Fatalf("RemoteBranchExists: %v", err)
 	}
@@ -2922,7 +2922,7 @@ func TestPushRemoteBranchExists_SplitURL(t *testing.T) {
 	}
 
 	// PushRemoteBranchExists checks the push URL (fork) — branch IS there
-	exists, err = g.PushRemoteBranchExists("origin", "polecat/fix-test")
+	exists, err = g.PushRemoteBranchExists("origin", "miner/fix-test")
 	if err != nil {
 		t.Fatalf("PushRemoteBranchExists: %v", err)
 	}
@@ -2934,7 +2934,7 @@ func TestPushRemoteBranchExists_SplitURL(t *testing.T) {
 func TestListPushRemoteRefsWithHashesUsesPushURLHash(t *testing.T) {
 	localDir, upstream, _, mainBranch := initTestRepoWithSplitRemote(t)
 	g := NewGit(localDir)
-	branch := "polecat/split-classifier"
+	branch := "miner/split-classifier"
 
 	if err := g.CreateBranch(branch); err != nil {
 		t.Fatalf("CreateBranch upstream branch: %v", err)
@@ -2990,7 +2990,7 @@ func TestListPushRemoteRefsWithHashesUsesPushURLHash(t *testing.T) {
 	runGit(t, localDir, "push", "origin", branch)
 	runGit(t, localDir, "update-ref", "refs/remotes/origin/"+branch, upstreamSHA)
 
-	refs, err := g.ListPushRemoteRefsWithHashes("origin", "refs/heads/polecat/")
+	refs, err := g.ListPushRemoteRefsWithHashes("origin", "refs/heads/miner/")
 	if err != nil {
 		t.Fatalf("ListPushRemoteRefsWithHashes: %v", err)
 	}
@@ -3028,7 +3028,7 @@ func TestDeleteRemoteBranchIfAtRejectsChangedBranch(t *testing.T) {
 	localDir, _, mainBranch := initTestRepoWithRemote(t)
 	g := NewGit(localDir)
 
-	branch := "polecat/lease-test"
+	branch := "miner/lease-test"
 	if err := g.CreateBranch(branch); err != nil {
 		t.Fatalf("CreateBranch: %v", err)
 	}
@@ -3123,10 +3123,10 @@ func TestVerifyPushedCommit(t *testing.T) {
 	localDir, _, _ := initTestRepoWithRemote(t)
 	g := NewGit(localDir)
 
-	if err := g.CreateBranch("polecat/verified-push"); err != nil {
+	if err := g.CreateBranch("miner/verified-push"); err != nil {
 		t.Fatalf("CreateBranch: %v", err)
 	}
-	if err := g.Checkout("polecat/verified-push"); err != nil {
+	if err := g.Checkout("miner/verified-push"); err != nil {
 		t.Fatalf("Checkout: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(localDir, "verified.txt"), []byte("v1\n"), 0644); err != nil {
@@ -3142,10 +3142,10 @@ func TestVerifyPushedCommit(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Rev v1: %v", err)
 	}
-	if err := g.Push("origin", "polecat/verified-push", false); err != nil {
+	if err := g.Push("origin", "miner/verified-push", false); err != nil {
 		t.Fatalf("Push v1: %v", err)
 	}
-	if err := g.VerifyPushedCommit("origin", "polecat/verified-push", v1); err != nil {
+	if err := g.VerifyPushedCommit("origin", "miner/verified-push", v1); err != nil {
 		t.Fatalf("VerifyPushedCommit v1: %v", err)
 	}
 
@@ -3162,10 +3162,10 @@ func TestVerifyPushedCommit(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Rev v2: %v", err)
 	}
-	if err := g.VerifyPushedCommit("origin", "polecat/verified-push", v2); err == nil {
+	if err := g.VerifyPushedCommit("origin", "miner/verified-push", v2); err == nil {
 		t.Fatal("VerifyPushedCommit should fail when remote branch is stale")
 	}
-	if err := g.VerifyPushedCommit("origin", "polecat/missing", v2); err == nil {
+	if err := g.VerifyPushedCommit("origin", "miner/missing", v2); err == nil {
 		t.Fatal("VerifyPushedCommit should fail when remote branch is missing")
 	}
 }
@@ -3174,10 +3174,10 @@ func TestVerifyPushedCommitSplitURL(t *testing.T) {
 	localDir, _, _, _ := initTestRepoWithSplitRemote(t)
 	g := NewGit(localDir)
 
-	if err := g.CreateBranch("polecat/verified-split"); err != nil {
+	if err := g.CreateBranch("miner/verified-split"); err != nil {
 		t.Fatalf("CreateBranch: %v", err)
 	}
-	if err := g.Checkout("polecat/verified-split"); err != nil {
+	if err := g.Checkout("miner/verified-split"); err != nil {
 		t.Fatalf("Checkout: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(localDir, "split.txt"), []byte("split\n"), 0644); err != nil {
@@ -3193,18 +3193,18 @@ func TestVerifyPushedCommitSplitURL(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Rev: %v", err)
 	}
-	if err := g.Push("origin", "polecat/verified-split", false); err != nil {
+	if err := g.Push("origin", "miner/verified-split", false); err != nil {
 		t.Fatalf("Push: %v", err)
 	}
 
-	fetchTip, err := g.RemoteBranchTip("origin", "polecat/verified-split")
+	fetchTip, err := g.RemoteBranchTip("origin", "miner/verified-split")
 	if err != nil {
 		t.Fatalf("RemoteBranchTip: %v", err)
 	}
 	if fetchTip != "" {
 		t.Fatalf("fetch remote should not have split push branch, got %s", fetchTip)
 	}
-	if err := g.VerifyPushedCommit("origin", "polecat/verified-split", sha); err != nil {
+	if err := g.VerifyPushedCommit("origin", "miner/verified-split", sha); err != nil {
 		t.Fatalf("VerifyPushedCommit should query push URL: %v", err)
 	}
 }
@@ -3217,10 +3217,10 @@ func TestBranchPushedToRemote_SplitURL(t *testing.T) {
 	g := NewGit(localDir)
 
 	// Create and push a feature branch (goes to fork via push URL)
-	if err := g.CreateBranch("polecat/status-test"); err != nil {
+	if err := g.CreateBranch("miner/status-test"); err != nil {
 		t.Fatalf("CreateBranch: %v", err)
 	}
-	if err := g.Checkout("polecat/status-test"); err != nil {
+	if err := g.Checkout("miner/status-test"); err != nil {
 		t.Fatalf("Checkout: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(localDir, "status.go"), []byte("package status\n"), 0644); err != nil {
@@ -3235,11 +3235,11 @@ func TestBranchPushedToRemote_SplitURL(t *testing.T) {
 		t.Fatalf("commit: %v", err)
 	}
 
-	if err := g.Push("origin", "polecat/status-test", false); err != nil {
+	if err := g.Push("origin", "miner/status-test", false); err != nil {
 		t.Fatalf("Push: %v", err)
 	}
 
-	pushed, unpushed, err := g.BranchPushedToRemote("polecat/status-test", "origin")
+	pushed, unpushed, err := g.BranchPushedToRemote("miner/status-test", "origin")
 	if err != nil {
 		t.Fatalf("BranchPushedToRemote: %v", err)
 	}
@@ -3254,7 +3254,7 @@ func TestBranchPushedToRemote_SplitURL(t *testing.T) {
 func TestUnpushedCommitsPrefersExactRemoteBranchOverUpstream(t *testing.T) {
 	localDir, _, mainBranch := initTestRepoWithRemote(t)
 	g := NewGit(localDir)
-	branch := "polecat/already-pushed"
+	branch := "miner/already-pushed"
 
 	if err := g.CreateBranch(branch); err != nil {
 		t.Fatalf("CreateBranch: %v", err)
@@ -3268,7 +3268,7 @@ func TestUnpushedCommitsPrefersExactRemoteBranchOverUpstream(t *testing.T) {
 	if err := g.Add("work.go"); err != nil {
 		t.Fatalf("Add: %v", err)
 	}
-	if err := g.Commit("polecat work"); err != nil {
+	if err := g.Commit("miner work"); err != nil {
 		t.Fatalf("Commit: %v", err)
 	}
 	if err := g.Push("origin", branch, false); err != nil {
@@ -3312,10 +3312,10 @@ func TestBranchPushedToRemote_NoPushURL(t *testing.T) {
 	}
 
 	// Unpushed branch — should report not pushed
-	if err := g.CreateBranch("polecat/unpushed"); err != nil {
+	if err := g.CreateBranch("miner/unpushed"); err != nil {
 		t.Fatalf("CreateBranch: %v", err)
 	}
-	if err := g.Checkout("polecat/unpushed"); err != nil {
+	if err := g.Checkout("miner/unpushed"); err != nil {
 		t.Fatalf("Checkout: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(localDir, "new.go"), []byte("package main\n"), 0644); err != nil {
@@ -3330,7 +3330,7 @@ func TestBranchPushedToRemote_NoPushURL(t *testing.T) {
 		t.Fatalf("commit: %v", err)
 	}
 
-	pushed, unpushed, err = g.BranchPushedToRemote("polecat/unpushed", "origin")
+	pushed, unpushed, err = g.BranchPushedToRemote("miner/unpushed", "origin")
 	if err != nil {
 		t.Fatalf("BranchPushedToRemote: %v", err)
 	}

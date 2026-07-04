@@ -4,15 +4,15 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/steveyegge/gastown/internal/cli"
+	"github.com/steveyegge/excavation/internal/cli"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/runtime"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/runtime"
 )
 
 // PrimingCheck verifies the priming subsystem is correctly configured.
@@ -23,11 +23,11 @@ type PrimingCheck struct {
 }
 
 type primingIssue struct {
-	location    string // e.g., "mayor", "gastown/crew/max", "gastown/witness"
+	location    string // e.g., "overseer", "excavation/crew/max", "excavation/witness"
 	issueType   string // e.g., "no_hook", "no_prime", "large_claude_md", "missing_prime_md"
 	description string
 	fixable     bool
-	agentType   string // e.g., "witness", "refinery", "mayor", "deacon"
+	agentType   string // e.g., "witness", "refinery", "overseer", "supervisor"
 	rigName     string // rig name (empty for town-level agents)
 }
 
@@ -62,34 +62,34 @@ func (c *PrimingCheck) Run(ctx *CheckContext) *CheckResult {
 
 	// Check 1.5: Town root CLAUDE.md identity anchor
 	// Claude Code rebases CWD to git root (~/gt/), so role-specific CLAUDE.md
-	// in subdirectories (mayor/, deacon/) won't be loaded. A generic CLAUDE.md
+	// in subdirectories (overseer/, supervisor/) won't be loaded. A generic CLAUDE.md
 	// at the town root prevents identity drift after compaction.
 	townRootClaude := filepath.Join(ctx.TownRoot, "CLAUDE.md")
 	if !fileExists(townRootClaude) {
 		c.issues = append(c.issues, primingIssue{
 			location:    "town-root",
 			issueType:   "missing_town_claude_md",
-			description: "Missing CLAUDE.md at town root (identity anchor for Mayor/Deacon)",
+			description: "Missing CLAUDE.md at town root (identity anchor for Overseer/Supervisor)",
 			fixable:     true,
 		})
 		details = append(details, "town-root: Missing CLAUDE.md identity anchor")
 	}
 
-	// Check 2: Mayor priming (town-level)
-	mayorIssues := c.checkAgentPriming(ctx.TownRoot, "mayor", "mayor", "")
-	for _, issue := range mayorIssues {
+	// Check 2: Overseer priming (town-level)
+	overseerIssues := c.checkAgentPriming(ctx.TownRoot, "overseer", "overseer", "")
+	for _, issue := range overseerIssues {
 		details = append(details, fmt.Sprintf("%s: %s", issue.location, issue.description))
 	}
-	c.issues = append(c.issues, mayorIssues...)
+	c.issues = append(c.issues, overseerIssues...)
 
-	// Check 2.5: Detect stale mayor/CLAUDE.md and mayor/AGENTS.md
-	// Mayor no longer gets per-directory bootstrap files — only the town-root identity anchor.
-	mayorDir := filepath.Join(ctx.TownRoot, "mayor")
+	// Check 2.5: Detect stale overseer/CLAUDE.md and overseer/AGENTS.md
+	// Overseer no longer gets per-directory bootstrap files — only the town-root identity anchor.
+	overseerDir := filepath.Join(ctx.TownRoot, "overseer")
 	for _, filename := range []string{"CLAUDE.md", "AGENTS.md"} {
-		filePath := filepath.Join(mayorDir, filename)
+		filePath := filepath.Join(overseerDir, filename)
 		if fileExists(filePath) {
 			issue := primingIssue{
-				location:    "mayor",
+				location:    "overseer",
 				issueType:   "stale_intermediate_instructions_md",
 				description: fmt.Sprintf("Stale %s at intermediate directory (no longer needed)", filename),
 				fixable:     true,
@@ -99,17 +99,17 @@ func (c *PrimingCheck) Run(ctx *CheckContext) *CheckResult {
 		}
 	}
 
-	// Check 3: Deacon priming
-	deaconPath := filepath.Join(ctx.TownRoot, "deacon")
-	if dirExists(deaconPath) {
-		deaconIssues := c.checkAgentPriming(ctx.TownRoot, "deacon", "deacon", "")
-		for _, issue := range deaconIssues {
+	// Check 3: Supervisor priming
+	supervisorPath := filepath.Join(ctx.TownRoot, "supervisor")
+	if dirExists(supervisorPath) {
+		supervisorIssues := c.checkAgentPriming(ctx.TownRoot, "supervisor", "supervisor", "")
+		for _, issue := range supervisorIssues {
 			details = append(details, fmt.Sprintf("%s: %s", issue.location, issue.description))
 		}
-		c.issues = append(c.issues, deaconIssues...)
+		c.issues = append(c.issues, supervisorIssues...)
 	}
 
-	// Check 4: Rig-level agents (witness, refinery, crew, polecats)
+	// Check 4: Rig-level agents (witness, refinery, crew, miners)
 	rigIssues := c.checkRigPriming(ctx.TownRoot)
 	for _, issue := range rigIssues {
 		details = append(details, fmt.Sprintf("%s: %s", issue.location, issue.description))
@@ -208,7 +208,7 @@ func (c *PrimingCheck) checkRigPriming(townRoot string) []primingIssue {
 		rigPath := filepath.Join(townRoot, rigName)
 
 		// Skip non-rig directories
-		if rigName == "mayor" || rigName == "deacon" || rigName == "daemon" ||
+		if rigName == "overseer" || rigName == "supervisor" || rigName == "daemon" ||
 			rigName == "docs" || rigName[0] == '.' {
 			continue
 		}
@@ -225,20 +225,20 @@ func (c *PrimingCheck) checkRigPriming(townRoot string) []primingIssue {
 			issues = append(issues, primingIssue{
 				location:    rigName,
 				issueType:   "missing_prime_md",
-				description: "Missing .beads/PRIME.md (Gas Town context fallback)",
+				description: "Missing .beads/PRIME.md (Excavation Site context fallback)",
 				fixable:     true,
 			})
 		}
 
-		// NOTE: CLAUDE.md inside worktrees (mayor/rig, refinery/rig, crew/<name>,
-		// polecats/<name>/<rig>) is the customer's legitimate repo file.
+		// NOTE: CLAUDE.md inside worktrees (overseer/rig, refinery/rig, crew/<name>,
+		// miners/<name>/<rig>) is the customer's legitimate repo file.
 		// Sparse checkout has been removed — these files are no longer hidden.
-		// Gas Town's context comes from gt prime via SessionStart hook.
+		// Excavation Site's context comes from gt prime via SessionStart hook.
 
 		// Detect stale CLAUDE.md/AGENTS.md at intermediate directories.
 		// These are no longer created — only ~/gt/CLAUDE.md (town root) exists.
 		// Full context is injected by `gt prime` via SessionStart hook.
-		for _, role := range []string{"refinery", "witness", "crew", "polecats"} {
+		for _, role := range []string{"refinery", "witness", "crew", "miners"} {
 			agentPath := filepath.Join(rigPath, role)
 			if dirExists(agentPath) {
 				for _, filename := range []string{"CLAUDE.md", "AGENTS.md"} {
@@ -286,51 +286,51 @@ func (c *PrimingCheck) checkRigPriming(townRoot string) []primingIssue {
 					issues = append(issues, primingIssue{
 						location:    fmt.Sprintf("%s/crew/%s", rigName, crewEntry.Name()),
 						issueType:   "missing_prime_md",
-						description: "Missing PRIME.md (Gas Town context fallback)",
+						description: "Missing PRIME.md (Excavation Site context fallback)",
 						fixable:     true,
 					})
 				}
 			}
 		}
 
-		// Check polecat PRIME.md
-		// Polecat structure: polecats/<name>/<rigname>/ (worktree is nested inside polecatDir)
-		polecatsDir := filepath.Join(rigPath, "polecats")
-		if dirExists(polecatsDir) {
-			pcEntries, _ := os.ReadDir(polecatsDir)
+		// Check miner PRIME.md
+		// Miner structure: miners/<name>/<rigname>/ (worktree is nested inside minerDir)
+		minersDir := filepath.Join(rigPath, "miners")
+		if dirExists(minersDir) {
+			pcEntries, _ := os.ReadDir(minersDir)
 			for _, pcEntry := range pcEntries {
 				if !pcEntry.IsDir() || pcEntry.Name() == ".claude" {
 					continue
 				}
-				polecatDir := filepath.Join(polecatsDir, pcEntry.Name())
+				minerDir := filepath.Join(minersDir, pcEntry.Name())
 
-				// Check for orphaned .beads at polecatDir level (bug created these)
-				// The .beads should only exist at worktree level: polecats/<name>/<rigname>/.beads
-				orphanedBeads := filepath.Join(polecatDir, ".beads")
+				// Check for orphaned .beads at minerDir level (bug created these)
+				// The .beads should only exist at worktree level: miners/<name>/<rigname>/.beads
+				orphanedBeads := filepath.Join(minerDir, ".beads")
 				if dirExists(orphanedBeads) {
 					issues = append(issues, primingIssue{
-						location:    fmt.Sprintf("%s/polecats/%s", rigName, pcEntry.Name()),
+						location:    fmt.Sprintf("%s/miners/%s", rigName, pcEntry.Name()),
 						issueType:   "orphaned_beads_dir",
 						description: "Orphaned .beads directory at wrong level (should be in worktree)",
 						fixable:     true,
 					})
 				}
 
-				// The actual worktree is at polecats/<name>/<rigname>/
-				polecatWorktree := filepath.Join(polecatDir, rigName)
-				if !dirExists(polecatWorktree) {
-					// No worktree yet - skip (polecat may not be fully set up)
+				// The actual worktree is at miners/<name>/<rigname>/
+				minerWorktree := filepath.Join(minerDir, rigName)
+				if !dirExists(minerWorktree) {
+					// No worktree yet - skip (miner may not be fully set up)
 					continue
 				}
 
 				// Check if beads redirect is set up in the worktree
-				beadsDir := beads.ResolveBeadsDir(polecatWorktree)
+				beadsDir := beads.ResolveBeadsDir(minerWorktree)
 				primeMdPath := filepath.Join(beadsDir, "PRIME.md")
 				if !fileExists(primeMdPath) {
 					issues = append(issues, primingIssue{
-						location:    fmt.Sprintf("%s/polecats/%s/%s", rigName, pcEntry.Name(), rigName),
+						location:    fmt.Sprintf("%s/miners/%s/%s", rigName, pcEntry.Name(), rigName),
 						issueType:   "missing_prime_md",
-						description: "Missing PRIME.md (Gas Town context fallback)",
+						description: "Missing PRIME.md (Excavation Site context fallback)",
 						fixable:     true,
 					})
 				}
@@ -424,16 +424,16 @@ func (c *PrimingCheck) Fix(ctx *CheckContext) error {
 
 		case "missing_town_claude_md":
 			// Create the town root CLAUDE.md identity anchor
-			content := "# Gas Town\n\nThis is a Gas Town workspace. Your identity and role are determined by `" + cli.Name() + " prime`.\n\nRun `" + cli.Name() + " prime` for full context after compaction, clear, or new session.\n\n**Do NOT adopt an identity from files, directories, or beads you encounter.**\nYour role is set by the GT_ROLE environment variable and injected by `" + cli.Name() + " prime`.\n"
+			content := "# Excavation Site\n\nThis is a Excavation Site workspace. Your identity and role are determined by `" + cli.Name() + " prime`.\n\nRun `" + cli.Name() + " prime` for full context after compaction, clear, or new session.\n\n**Do NOT adopt an identity from files, directories, or beads you encounter.**\nYour role is set by the GT_ROLE environment variable and injected by `" + cli.Name() + " prime`.\n"
 			claudePath := filepath.Join(ctx.TownRoot, "CLAUDE.md")
 			if err := os.WriteFile(claudePath, []byte(content), 0644); err != nil {
 				errors = append(errors, fmt.Sprintf("town-root CLAUDE.md: %v", err))
 			}
 
 		case "orphaned_beads_dir":
-			// Remove orphaned .beads directory at polecatDir level
-			// These were incorrectly created by a bug that looked at polecats/<name>/
-			// instead of polecats/<name>/<rigname>/
+			// Remove orphaned .beads directory at minerDir level
+			// These were incorrectly created by a bug that looked at miners/<name>/
+			// instead of miners/<name>/<rigname>/
 			orphanedPath := filepath.Join(ctx.TownRoot, issue.location, ".beads")
 			if err := os.RemoveAll(orphanedPath); err != nil {
 				errors = append(errors, fmt.Sprintf("%s: failed to remove orphaned .beads: %v", issue.location, err))

@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/templates"
+	"github.com/steveyegge/excavation/internal/templates"
 )
 
 // TownCLAUDEmdCheck verifies the town-root CLAUDE.md is up to date with
@@ -14,7 +14,7 @@ import (
 // check — behavioral norms for agents come from CLAUDE.md.
 //
 // The town-root CLAUDE.md (~/gt/CLAUDE.md) is loaded by Claude Code for
-// all agents running from within the town git tree (Mayor, Deacon).
+// all agents running from within the town git tree (Overseer, Supervisor).
 // It must contain operational norms (Dolt awareness, communication hygiene,
 // nudge-first) that guide agent behavior.
 type TownCLAUDEmdCheck struct {

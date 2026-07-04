@@ -1,4 +1,4 @@
-// Package nudge provides non-destructive nudge delivery for Gas Town agents.
+// Package nudge provides non-destructive nudge delivery for Excavation Site agents.
 //
 // The nudge queue allows messages to be delivered cooperatively: instead of
 // sending text directly to a tmux session (which cancels in-flight tool calls),
@@ -20,8 +20,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
 )
 
 // Priority levels for nudge delivery.

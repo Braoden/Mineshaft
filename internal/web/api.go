@@ -16,10 +16,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 // CommandRequest is the JSON request body for /api/run.
@@ -686,8 +686,8 @@ type OptionItem struct {
 // OptionsResponse is the JSON response from /api/options.
 type OptionsResponse struct {
 	Rigs        []string     `json:"rigs,omitempty"`
-	Polecats    []string     `json:"polecats,omitempty"`
-	Convoys     []string     `json:"convoys,omitempty"`
+	Miners    []string     `json:"miners,omitempty"`
+	Minecarts     []string     `json:"minecarts,omitempty"`
 	Agents      []OptionItem `json:"agents,omitempty"`
 	Hooks       []string     `json:"hooks,omitempty"`
 	Messages    []string     `json:"messages,omitempty"`
@@ -743,27 +743,27 @@ func (h *APIHandler) handleOptions(w http.ResponseWriter, r *http.Request) {
 		mu.Unlock()
 	}()
 
-	// Fetch polecats
+	// Fetch miners
 	go func() {
 		defer wg.Done()
-		if output, err := h.runGtCommand(r.Context(), 3*time.Second, []string{"polecat", "list", "--all", "--json"}); err == nil {
+		if output, err := h.runGtCommand(r.Context(), 3*time.Second, []string{"miner", "list", "--all", "--json"}); err == nil {
 			mu.Lock()
-			resp.Polecats = parseJSONPaths(output)
+			resp.Miners = parseJSONPaths(output)
 			mu.Unlock()
 		} else {
-			log.Printf("warning: handleOptions: polecat list: %v", err)
+			log.Printf("warning: handleOptions: miner list: %v", err)
 		}
 	}()
 
-	// Fetch convoys
+	// Fetch minecarts
 	go func() {
 		defer wg.Done()
 		if output, err := h.runBdCommand(r.Context(), 3*time.Second, []string{"list", "--json", "--limit=0"}); err == nil {
 			mu.Lock()
-			resp.Convoys = parseConvoyListJSON(output)
+			resp.Minecarts = parseMinecartListJSON(output)
 			mu.Unlock()
 		} else {
-			log.Printf("warning: handleOptions: convoy list: %v", err)
+			log.Printf("warning: handleOptions: minecart list: %v", err)
 		}
 	}()
 
@@ -884,7 +884,7 @@ func findRigsConfigPath(startDir string) (string, error) {
 	}
 
 	for {
-		rigsPath := filepath.Join(dir, "mayor", "rigs.json")
+		rigsPath := filepath.Join(dir, "overseer", "rigs.json")
 		if _, err := os.Stat(rigsPath); err == nil {
 			return rigsPath, nil
 		}
@@ -902,9 +902,9 @@ func findRigsConfigPath(startDir string) (string, error) {
 //
 //	Rigs in /Users/foo/gt:
 //	  claycantrell
-//	    Polecats: 1  Crew: 2
-//	  gastown
-//	    Polecats: 1  Crew: 1
+//	    Miners: 1  Crew: 2
+//	  excavation
+//	    Miners: 1  Crew: 1
 func parseRigListOutput(output string) []string {
 	var rigs []string
 	lines := strings.Split(output, "\n")
@@ -940,20 +940,20 @@ func parseRigListJSON(jsonStr string) []string {
 	return rigs
 }
 
-// parseConvoyListJSON extracts convoy IDs from JSON output of "bd list --json".
-func parseConvoyListJSON(jsonStr string) []string {
-	var convoys []struct {
+// parseMinecartListJSON extracts minecart IDs from JSON output of "bd list --json".
+func parseMinecartListJSON(jsonStr string) []string {
+	var minecarts []struct {
 		ID        string   `json:"id"`
 		IssueType string   `json:"issue_type"`
 		Labels    []string `json:"labels"`
 	}
-	if err := json.Unmarshal([]byte(jsonStr), &convoys); err != nil {
-		log.Printf("warning: parseConvoyListJSON: %v", err)
+	if err := json.Unmarshal([]byte(jsonStr), &minecarts); err != nil {
+		log.Printf("warning: parseMinecartListJSON: %v", err)
 		return nil
 	}
-	ids := make([]string, 0, len(convoys))
-	for _, c := range convoys {
-		if c.ID != "" && (c.IssueType == "convoy" || webAPIHasLabel(c.Labels, "gt:convoy")) {
+	ids := make([]string, 0, len(minecarts))
+	for _, c := range minecarts {
+		if c.ID != "" && (c.IssueType == "minecart" || webAPIHasLabel(c.Labels, "gt:minecart")) {
 			ids = append(ids, c.ID)
 		}
 	}
@@ -1066,7 +1066,7 @@ func parseAgentsFromStatus(jsonStr string) []OptionItem {
 	return agents
 }
 
-// parseJSONPaths extracts rig/name paths from polecat JSON output.
+// parseJSONPaths extracts rig/name paths from miner JSON output.
 func parseJSONPaths(jsonStr string) []string {
 	var items []map[string]interface{}
 	if err := json.Unmarshal([]byte(jsonStr), &items); err != nil {
@@ -1512,7 +1512,7 @@ func parseIssueShowOutput(output string, issueID string) IssueShowResponse {
 		}
 
 		if strings.HasPrefix(line, "Owner:") {
-			// Format: "Owner: mayor · Type: task"
+			// Format: "Owner: overseer · Type: task"
 			ownerLine := strings.TrimPrefix(line, "Owner:")
 			ownerParts := strings.Split(ownerLine, "·")
 			resp.Owner = strings.TrimSpace(ownerParts[0])
@@ -1935,7 +1935,7 @@ func (h *APIHandler) isClaudeRunningInSession(ctx context.Context, sessionName s
 }
 
 // paneCurrentCommandIsAgent returns true if tmux #{pane_current_command} names a known
-// Gas Town agent (claude/codex/opencode/cursor-agent/copilot/node, or cursor-agent as "agent").
+// Excavation Site agent (claude/codex/opencode/cursor-agent/copilot/node, or cursor-agent as "agent").
 func paneCurrentCommandIsAgent(output string) bool {
 	output = strings.ToLower(strings.TrimSpace(output))
 	if output == "" {
@@ -2237,7 +2237,7 @@ func (h *APIHandler) computeDashboardHash(ctx context.Context) string {
 	var wg sync.WaitGroup
 	wg.Add(3)
 
-	// Check worker/polecat state
+	// Check worker/miner state
 	go func() {
 		defer wg.Done()
 		if out, err := h.runGtCommand(ctx, 3*time.Second, []string{"status", "--json"}); err == nil {
@@ -2300,7 +2300,7 @@ func (h *APIHandler) handleRigAdd(w http.ResponseWriter, r *http.Request) {
 	repoURL := req.RepoURL
 	if req.Local || repoURL == "" {
 		// Create a local bare repo with an initial commit
-		localRepoPath := fmt.Sprintf("/tmp/gastown-repos/%s.git", req.Name)
+		localRepoPath := fmt.Sprintf("/tmp/excavation-repos/%s.git", req.Name)
 
 		ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 		defer cancel()
@@ -2320,7 +2320,7 @@ func (h *APIHandler) handleRigAdd(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Clone, create initial commit, push
-		tmpDir := fmt.Sprintf("/tmp/gastown-repos/.tmp-%s", req.Name)
+		tmpDir := fmt.Sprintf("/tmp/excavation-repos/.tmp-%s", req.Name)
 		cloneCmd := exec.CommandContext(ctx, "git", "clone", localRepoPath, tmpDir)
 		if out, err := cloneCmd.CombinedOutput(); err != nil {
 			h.sendError(w, fmt.Sprintf("Failed to clone: %s %v", string(out), err), http.StatusInternalServerError)

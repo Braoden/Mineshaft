@@ -10,14 +10,14 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/dog"
-	"github.com/steveyegge/gastown/internal/mail"
-	"github.com/steveyegge/gastown/internal/plugin"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/dog"
+	"github.com/steveyegge/excavation/internal/mail"
+	"github.com/steveyegge/excavation/internal/plugin"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // Dog command flags
@@ -50,10 +50,10 @@ var dogCmd = &cobra.Command{
 	Long: `Manage dogs - reusable workers for infrastructure and cleanup.
 
 CATS VS DOGS:
-  Polecats (cats) build features. One rig. Ephemeral sessions (one task, then nuked).
+  Miners (cats) build features. One rig. Ephemeral sessions (one task, then nuked).
   Dogs clean up messes. Cross-rig. Reusable (multiple tasks, eventually recycled).
 
-Dogs are managed by the Deacon for town-level work:
+Dogs are managed by the Supervisor for town-level work:
   - Infrastructure tasks (rebuilding, syncing, migrations)
   - Cleanup operations (orphan branches, stale files)
   - Cross-rig work that spans multiple projects
@@ -61,7 +61,7 @@ Dogs are managed by the Deacon for town-level work:
 Each dog has worktrees into every configured rig, enabling cross-project
 operations. Dogs return to idle state after completing work (unlike cats).
 
-The kennel is at ~/gt/deacon/dogs/. The Deacon dispatches work to dogs.`,
+The kennel is at ~/gt/supervisor/dogs/. The Supervisor dispatches work to dogs.`,
 }
 
 var dogAddCmd = &cobra.Command{
@@ -69,8 +69,8 @@ var dogAddCmd = &cobra.Command{
 	Short: "Create a new dog in the kennel",
 	Long: `Create a new dog in the kennel with multi-rig worktrees.
 
-Each dog gets a worktree per configured rig (e.g., gastown, beads).
-The dog starts in idle state, ready to receive work from the Deacon.
+Each dog gets a worktree per configured rig (e.g., excavation, beads).
+The dog starts in idle state, ready to receive work from the Supervisor.
 
 Example:
   gt dog add alpha
@@ -163,7 +163,7 @@ var dogClearCmd = &cobra.Command{
 	Long: `Reset a stuck dog to idle state.
 
 Use this when a dog is stuck in "working" state but its session has died.
-The Deacon uses this during patrol to clear dogs that have timed out.
+The Supervisor uses this during patrol to clear dogs that have timed out.
 
 By default, refuses to clear a dog if its tmux session still exists.
 Use --force to clear even if the session is alive.
@@ -203,7 +203,7 @@ var dogDispatchCmd = &cobra.Command{
 	Short: "Dispatch plugin execution to a dog",
 	Long: `Dispatch a plugin for execution by a dog worker.
 
-This is the formalized command for sending plugin work to dogs. The Deacon
+This is the formalized command for sending plugin work to dogs. The Supervisor
 uses this during patrol cycles to dispatch plugins with open gates.
 
 The command:
@@ -213,11 +213,11 @@ The command:
 4. Returns immediately (non-blocking)
 
 The dog discovers the work via its mail inbox and executes the plugin
-instructions. On completion, the dog sends DOG_DONE mail to deacon/.
+instructions. On completion, the dog sends DOG_DONE mail to supervisor/.
 
 Examples:
   gt dog dispatch --plugin rebuild-gt
-  gt dog dispatch --plugin rebuild-gt --rig gastown
+  gt dog dispatch --plugin rebuild-gt --rig excavation
   gt dog dispatch --plugin rebuild-gt --dog alpha
   gt dog dispatch --plugin rebuild-gt --create
   gt dog dispatch --plugin rebuild-gt --dry-run
@@ -236,7 +236,7 @@ Detects:
   - Orphans: dog idle but tmux session still exists
 
 With --auto-clear, zombies are automatically returned to idle state.
-Hung dogs are reported only (Deacon decides per ZFC principle).
+Hung dogs are reported only (Supervisor decides per ZFC principle).
 
 Exit codes:
   0 = all healthy
@@ -301,9 +301,9 @@ func init() {
 // getDogManager creates a dog.Manager with the current town root.
 //
 // Use FindFromCwdOrError so we honor GT_TOWN_ROOT/GT_ROOT env vars when
-// invoked from a dog worktree (e.g. ~/gt/deacon/dogs/alpha/<rig>/), where
+// invoked from a dog worktree (e.g. ~/gt/supervisor/dogs/alpha/<rig>/), where
 // FindFromCwd alone might walk up to a non-town ancestor or stop at a path
-// without mayor/rigs.json — which previously broke `gt dog done` and
+// without overseer/rigs.json — which previously broke `gt dog done` and
 // blocked DOG_DONE delivery (hq-zyvo).
 func getDogManager() (*dog.Manager, error) {
 	townRoot, err := workspace.FindFromCwdOrError()
@@ -311,7 +311,7 @@ func getDogManager() (*dog.Manager, error) {
 		return nil, fmt.Errorf("finding town root: %w", err)
 	}
 
-	rigsConfigPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsConfigPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsConfigPath)
 	if err != nil {
 		return nil, fmt.Errorf("loading rigs config: %w", err)
@@ -349,7 +349,7 @@ func runDogAdd(cmd *cobra.Command, args []string) error {
 	townRoot, _ := workspace.FindFromCwd()
 	if townRoot != "" {
 		b := beads.New(townRoot)
-		location := filepath.Join("deacon", "dogs", name)
+		location := filepath.Join("supervisor", "dogs", name)
 
 		issue, err := b.CreateDogAgentBead(name, location)
 		if err != nil {
@@ -650,16 +650,16 @@ func runDogDone(cmd *cobra.Command, args []string) error {
 		name = args[0]
 	} else {
 		// Auto-detect dog from cwd
-		// Dog worktrees are at ~/gt/deacon/dogs/<name>/<rig>/
+		// Dog worktrees are at ~/gt/supervisor/dogs/<name>/<rig>/
 		cwd, err := os.Getwd()
 		if err != nil {
 			return fmt.Errorf("getting cwd: %w", err)
 		}
 
-		// Look for /deacon/dogs/<name>/ in path
+		// Look for /supervisor/dogs/<name>/ in path
 		parts := splitPathComponents(cwd)
 		for i := 0; i < len(parts)-1; i++ {
-			if parts[i] == "dogs" && i > 0 && parts[i-1] == "deacon" {
+			if parts[i] == "dogs" && i > 0 && parts[i-1] == "supervisor" {
 				name = parts[i+1]
 				break
 			}
@@ -698,7 +698,7 @@ func runDogDone(cmd *cobra.Command, args []string) error {
 	// The delay lets the agent see the success output before termination.
 	//
 	// We disable remain-on-exit first — otherwise kill-session leaves a
-	// dead pane that the deacon's health-check reports as an orphan.
+	// dead pane that the supervisor's health-check reports as an orphan.
 	sessionID := fmt.Sprintf("hq-dog-%s", name)
 	t := tmux.NewTmux()
 	_ = t.SetRemainOnExit(sessionID, false)
@@ -739,10 +739,10 @@ func splitPathComponents(path string) []string {
 func closePluginMails(dogName string) {
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil {
-		return // not in a Gas Town workspace, skip cleanup
+		return // not in a Excavation Site workspace, skip cleanup
 	}
 
-	dogAddress := fmt.Sprintf("deacon/dogs/%s", dogName)
+	dogAddress := fmt.Sprintf("supervisor/dogs/%s", dogName)
 	router := mail.NewRouterWithTownRoot(townRoot, townRoot)
 	mailbox, err := router.GetMailbox(dogAddress)
 	if err != nil {
@@ -758,7 +758,7 @@ func closePluginMails(dogName string) {
 	for _, msg := range messages {
 		// Archive read AND unread direct plugin dispatch mail. The dog must read
 		// the dispatch mail to execute the plugin, so skipping read mail left
-		// every executed dispatch bead open forever. Keep this scoped to Deacon
+		// every executed dispatch bead open forever. Keep this scoped to Supervisor
 		// dispatches so CC or human messages with a similar subject are preserved.
 		if !strings.HasPrefix(msg.Subject, "Plugin: ") {
 			continue
@@ -767,7 +767,7 @@ func closePluginMails(dogName string) {
 			continue
 		}
 		sender := mail.AddressToIdentity(msg.From)
-		if sender != "deacon/" && sender != "daemon" {
+		if sender != "supervisor/" && sender != "daemon" {
 			continue
 		}
 		if archErr := mailbox.Archive(msg.ID); archErr == nil {
@@ -858,7 +858,7 @@ func showPackStatus(mgr *dog.Manager) error {
 		townRoot, _ := workspace.FindFromCwd()
 		status := PackStatus{
 			Total:     len(dogs),
-			KennelDir: filepath.Join(townRoot, "deacon", "dogs"),
+			KennelDir: filepath.Join(townRoot, "supervisor", "dogs"),
 		}
 		for _, d := range dogs {
 			if d.State == dog.StateIdle {
@@ -1026,7 +1026,7 @@ func runDogDispatch(cmd *cobra.Command, args []string) error {
 	}
 
 	// Get rig names for plugin scanner
-	rigsConfigPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsConfigPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsConfigPath)
 	if err != nil {
 		return fmt.Errorf("loading rigs config: %w", err)
@@ -1087,7 +1087,7 @@ func runDogDispatch(cmd *cobra.Command, args []string) error {
 
 					// Create agent bead for the dog
 					b := beads.New(townRoot)
-					location := filepath.Join("deacon", "dogs", newName)
+					location := filepath.Join("supervisor", "dogs", newName)
 					if _, beadErr := b.CreateDogAgentBead(newName, location); beadErr != nil {
 						// Non-fatal warning
 						if !dogDispatchJSON {
@@ -1138,7 +1138,7 @@ func runDogDispatch(cmd *cobra.Command, args []string) error {
 	// to validate recipients.
 	b := beads.New(townRoot)
 	if existing, _ := b.FindDogAgentBead(targetDog.Name); existing == nil {
-		location := filepath.Join("deacon", "dogs", targetDog.Name)
+		location := filepath.Join("supervisor", "dogs", targetDog.Name)
 		if _, beadErr := b.CreateDogAgentBead(targetDog.Name, location); beadErr != nil {
 			if !dogDispatchJSON {
 				fmt.Printf("  Warning: could not create agent bead: %v\n", beadErr)
@@ -1153,14 +1153,14 @@ func runDogDispatch(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create and send mail message with plugin instructions
-	dogAddress := fmt.Sprintf("deacon/dogs/%s", targetDog.Name)
+	dogAddress := fmt.Sprintf("supervisor/dogs/%s", targetDog.Name)
 	subject := fmt.Sprintf("Plugin: %s", p.Name)
 	body := p.FormatMailBody()
 
 	router := mail.NewRouterWithTownRoot(townRoot, townRoot)
 	defer router.WaitPendingNotifications()
 	msg := &mail.Message{
-		From:      "deacon/",
+		From:      "supervisor/",
 		To:        dogAddress,
 		Subject:   subject,
 		Body:      body,
@@ -1191,7 +1191,7 @@ func runDogDispatch(cmd *cobra.Command, args []string) error {
 		// Roll back the work assignment: without a running session the dog
 		// cannot read its mail, leaving it stuck in StateWorking (zombie).
 		// Clearing work returns it to idle so it can be re-dispatched.
-		// See: github.com/steveyegge/gastown/issues/2748
+		// See: github.com/steveyegge/excavation/issues/2748
 		if clearErr := mgr.ClearWork(targetDog.Name); clearErr != nil {
 			warn := fmt.Sprintf("session start failed AND rollback failed for dog %s — dog stuck in StateWorking, run: gt dog health-check --auto-clear: %v", targetDog.Name, clearErr)
 			result.Warnings = append(result.Warnings, warn)
@@ -1213,7 +1213,7 @@ func runDogDispatch(cmd *cobra.Command, args []string) error {
 
 	// Verify the work state write is readable. A read-back failure here
 	// indicates state corruption, not a timing race.
-	// See: github.com/steveyegge/gastown/issues/2748
+	// See: github.com/steveyegge/excavation/issues/2748
 	result.WorkConfirmed = false
 	if d, getErr := mgr.Get(targetDog.Name); getErr != nil {
 		warn := fmt.Sprintf("dog dispatch: could not verify work assignment for %s: %v", targetDog.Name, getErr)

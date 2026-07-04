@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // Warrant flags
@@ -27,7 +27,7 @@ var (
 // Warrant represents a death warrant for an agent
 type Warrant struct {
 	ID         string     `json:"id"`
-	Target     string     `json:"target"` // e.g., "gastown/polecats/alpha", "deacon/dogs/bravo"
+	Target     string     `json:"target"` // e.g., "excavation/miners/alpha", "supervisor/dogs/bravo"
 	Reason     string     `json:"reason"`
 	FiledBy    string     `json:"filed_by"`
 	FiledAt    time.Time  `json:"filed_at"`
@@ -44,7 +44,7 @@ Death warrants are filed when an agent is stuck, unresponsive, or needs
 forced termination. Boot handles warrant execution during triage cycles.
 
 The warrant system provides a controlled way to terminate agents:
-1. Deacon/Witness files a warrant with a reason
+1. Supervisor/Witness files a warrant with a reason
 2. Boot picks up the warrant during triage
 3. Boot executes the warrant (terminates session, updates state)
 4. Warrant is marked as executed
@@ -58,13 +58,13 @@ var warrantFileCmd = &cobra.Command{
 	Long: `File a death warrant for an agent that needs termination.
 
 The target should be an agent path like:
-  - gastown/polecats/alpha
-  - deacon/dogs/bravo
-  - beads/polecats/charlie
+  - excavation/miners/alpha
+  - supervisor/dogs/bravo
+  - beads/miners/charlie
 
 Examples:
-  gt warrant file gastown/polecats/alpha --reason "Zombie: no session, idle >10m"
-  gt warrant file deacon/dogs/bravo --reason "Stuck: working on task for >2h"`,
+  gt warrant file excavation/miners/alpha --reason "Zombie: no session, idle >10m"
+  gt warrant file supervisor/dogs/bravo --reason "Stuck: working on task for >2h"`,
 	Args: cobra.ExactArgs(1),
 	RunE: runWarrantFile,
 }
@@ -95,8 +95,8 @@ This will:
 Use --force to execute even if no warrant exists.
 
 Examples:
-  gt warrant execute gastown/polecats/alpha
-  gt warrant execute deacon/dogs/bravo --force`,
+  gt warrant execute excavation/miners/alpha
+  gt warrant execute supervisor/dogs/bravo --force`,
 	Args: cobra.ExactArgs(1),
 	RunE: runWarrantExecute,
 }
@@ -374,22 +374,22 @@ func targetToSessionName(target string) (string, error) {
 	parts := strings.Split(target, "/")
 
 	switch {
-	case len(parts) == 3 && parts[1] == "polecats":
-		// gastown/polecats/alpha -> {prefix}-alpha
-		return session.PolecatSessionName(session.PrefixFor(parts[0]), parts[2]), nil
+	case len(parts) == 3 && parts[1] == "miners":
+		// excavation/miners/alpha -> {prefix}-alpha
+		return session.MinerSessionName(session.PrefixFor(parts[0]), parts[2]), nil
 	case len(parts) == 3 && parts[1] == "crew":
-		// gastown/crew/bob -> {prefix}-crew-bob
+		// excavation/crew/bob -> {prefix}-crew-bob
 		return session.CrewSessionName(session.PrefixFor(parts[0]), parts[2]), nil
 	case len(parts) == 2 && parts[1] == "witness":
-		// gastown/witness -> {prefix}-witness
+		// excavation/witness -> {prefix}-witness
 		return session.WitnessSessionName(session.PrefixFor(parts[0])), nil
 	case len(parts) == 2 && parts[1] == "refinery":
-		// gastown/refinery -> {prefix}-refinery
+		// excavation/refinery -> {prefix}-refinery
 		return session.RefinerySessionName(session.PrefixFor(parts[0])), nil
-	case len(parts) == 2 && parts[0] == "deacon" && parts[1] == "dogs":
-		return "", fmt.Errorf("invalid target: need dog name (e.g., deacon/dogs/alpha)")
-	case len(parts) == 3 && parts[0] == "deacon" && parts[1] == "dogs":
-		// deacon/dogs/alpha -> hq-dog-alpha
+	case len(parts) == 2 && parts[0] == "supervisor" && parts[1] == "dogs":
+		return "", fmt.Errorf("invalid target: need dog name (e.g., supervisor/dogs/alpha)")
+	case len(parts) == 3 && parts[0] == "supervisor" && parts[1] == "dogs":
+		// supervisor/dogs/alpha -> hq-dog-alpha
 		return fmt.Sprintf("hq-dog-%s", parts[2]), nil
 	default:
 		prefix := session.DefaultPrefix

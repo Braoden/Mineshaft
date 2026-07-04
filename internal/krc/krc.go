@@ -24,7 +24,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/events"
+	"github.com/steveyegge/excavation/internal/events"
 )
 
 // Config defines TTL settings for ephemeral records.
@@ -56,8 +56,8 @@ func DefaultConfig() *Config {
 		TTLs: map[string]time.Duration{
 			// Patrol events decay fastest - low forensic value after hours
 			"patrol_*":       24 * time.Hour,  // 1 day
-			"polecat_checked": 24 * time.Hour, // 1 day
-			"polecat_nudged":  24 * time.Hour, // 1 day
+			"miner_checked": 24 * time.Hour, // 1 day
+			"miner_nudged":  24 * time.Hour, // 1 day
 
 			// Session heartbeats
 			"session_start": 3 * 24 * time.Hour, // 3 days

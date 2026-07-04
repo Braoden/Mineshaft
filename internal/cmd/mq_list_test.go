@@ -12,14 +12,14 @@ func TestBuildMQListColumns_IncludesTarget(t *testing.T) {
 			name:   "without verify",
 			verify: false,
 			wantColumnSeq: []string{
-				"ID", "SCORE", "PRI", "CONVOY", "BRANCH", "TARGET", "STATUS", "AGE",
+				"ID", "SCORE", "PRI", "MINECART", "BRANCH", "TARGET", "STATUS", "AGE",
 			},
 		},
 		{
 			name:   "with verify",
 			verify: true,
 			wantColumnSeq: []string{
-				"ID", "SCORE", "PRI", "CONVOY", "BRANCH", "TARGET", "STATUS", "GIT", "AGE",
+				"ID", "SCORE", "PRI", "MINECART", "BRANCH", "TARGET", "STATUS", "GIT", "AGE",
 			},
 		},
 	}

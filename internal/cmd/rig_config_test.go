@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/wisp"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/wisp"
 )
 
-// setupTestRigForConfig creates a minimal Gas Town workspace for rig config testing.
+// setupTestRigForConfig creates a minimal Excavation Site workspace for rig config testing.
 // Returns townRoot and rigName.
 func setupTestRigForConfig(t *testing.T) (string, string) {
 	t.Helper()
@@ -19,9 +19,9 @@ func setupTestRigForConfig(t *testing.T) (string, string) {
 	townRoot := t.TempDir()
 	rigName := "testrig"
 
-	mayorDir := filepath.Join(townRoot, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+	overseerDir := filepath.Join(townRoot, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
+		t.Fatalf("mkdir overseer: %v", err)
 	}
 
 	townConfig := &config.TownConfig{
@@ -30,7 +30,7 @@ func setupTestRigForConfig(t *testing.T) (string, string) {
 		Name:      "test-town",
 		CreatedAt: time.Now().Truncate(time.Second),
 	}
-	if err := config.SaveTownConfig(filepath.Join(mayorDir, "town.json"), townConfig); err != nil {
+	if err := config.SaveTownConfig(filepath.Join(overseerDir, "town.json"), townConfig); err != nil {
 		t.Fatalf("save town.json: %v", err)
 	}
 
@@ -43,7 +43,7 @@ func setupTestRigForConfig(t *testing.T) (string, string) {
 			},
 		},
 	}
-	if err := config.SaveRigsConfig(filepath.Join(mayorDir, "rigs.json"), rigsConfig); err != nil {
+	if err := config.SaveRigsConfig(filepath.Join(overseerDir, "rigs.json"), rigsConfig); err != nil {
 		t.Fatalf("save rigs.json: %v", err)
 	}
 
@@ -77,7 +77,7 @@ func TestRigConfigSet_WispLayerWarning(t *testing.T) {
 		rigConfigSetBlock = false
 
 		stderrOut := captureStderr(t, func() {
-			err := runRigConfigSet(rigConfigSetCmd, []string{rigName, "max_polecats", "5"})
+			err := runRigConfigSet(rigConfigSetCmd, []string{rigName, "max_miners", "5"})
 			if err != nil {
 				t.Fatalf("runRigConfigSet: %v", err)
 			}
@@ -92,9 +92,9 @@ func TestRigConfigSet_WispLayerWarning(t *testing.T) {
 
 		// Verify value was actually stored in wisp layer
 		wispCfg := wisp.NewConfig(townRoot, rigName)
-		val := wispCfg.Get("max_polecats")
+		val := wispCfg.Get("max_miners")
 		if val == nil {
-			t.Error("expected max_polecats to be set in wisp layer")
+			t.Error("expected max_miners to be set in wisp layer")
 		}
 	})
 

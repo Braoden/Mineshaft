@@ -176,12 +176,12 @@ func copyFile(src, dst string) error {
 	return err
 }
 
-// FindGastownSource locates the gastown source repo's plugins directory.
+// FindExcavationSource locates the excavation source repo's plugins directory.
 // Search order:
-//  1. Walk up from CWD for a gastown go.mod with plugins/
-//  2. <townRoot>/gastown/crew/den/plugins/
-//  3. <townRoot>/gastown/plugins/
-func FindGastownSource(townRoot string) (string, error) {
+//  1. Walk up from CWD for a excavation go.mod with plugins/
+//  2. <townRoot>/excavation/crew/den/plugins/
+//  3. <townRoot>/excavation/plugins/
+func FindExcavationSource(townRoot string) (string, error) {
 	if cwd, err := os.Getwd(); err == nil {
 		if src := findSourceFromDir(cwd); src != "" {
 			return src, nil
@@ -189,8 +189,8 @@ func FindGastownSource(townRoot string) (string, error) {
 	}
 
 	candidates := []string{
-		filepath.Join(townRoot, "gastown", "crew", "den", "plugins"),
-		filepath.Join(townRoot, "gastown", "plugins"),
+		filepath.Join(townRoot, "excavation", "crew", "den", "plugins"),
+		filepath.Join(townRoot, "excavation", "plugins"),
 	}
 	for _, candidate := range candidates {
 		if hasPlugins(candidate) {
@@ -198,7 +198,7 @@ func FindGastownSource(townRoot string) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("could not locate gastown plugin source; use --source to specify")
+	return "", fmt.Errorf("could not locate excavation plugin source; use --source to specify")
 }
 
 func findSourceFromDir(dir string) string {
@@ -207,7 +207,7 @@ func findSourceFromDir(dir string) string {
 		pluginsDir := filepath.Join(current, "plugins")
 		goMod := filepath.Join(current, "go.mod")
 		if hasPlugins(pluginsDir) {
-			if isGastownModule(goMod) {
+			if isExcavationModule(goMod) {
 				return pluginsDir
 			}
 		}
@@ -220,10 +220,10 @@ func findSourceFromDir(dir string) string {
 	return ""
 }
 
-// isGastownModule checks if a go.mod file declares a gastown module path.
-// Matches "module .../gastown" on the module directive line to avoid
+// isExcavationModule checks if a go.mod file declares a excavation module path.
+// Matches "module .../excavation" on the module directive line to avoid
 // false-positives from comments or dependency names.
-func isGastownModule(goModPath string) bool {
+func isExcavationModule(goModPath string) bool {
 	f, err := os.Open(goModPath) //nolint:gosec // G304: path from traversal
 	if err != nil {
 		return false
@@ -233,7 +233,7 @@ func isGastownModule(goModPath string) bool {
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if strings.HasPrefix(line, "module ") {
-			return strings.HasSuffix(line, "/gastown") || line == "module gastown"
+			return strings.HasSuffix(line, "/excavation") || line == "module excavation"
 		}
 	}
 	return false

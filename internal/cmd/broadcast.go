@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var (
@@ -19,7 +19,7 @@ var (
 
 func init() {
 	broadcastCmd.Flags().StringVar(&broadcastRig, "rig", "", "Only broadcast to workers in this rig")
-	broadcastCmd.Flags().BoolVar(&broadcastAll, "all", false, "Include all agents (mayor, witness, etc.), not just workers")
+	broadcastCmd.Flags().BoolVar(&broadcastAll, "all", false, "Include all agents (overseer, witness, etc.), not just workers")
 	broadcastCmd.Flags().BoolVar(&broadcastDryRun, "dry-run", false, "Show what would be sent without sending")
 	rootCmd.AddCommand(broadcastCmd)
 }
@@ -28,10 +28,10 @@ var broadcastCmd = &cobra.Command{
 	Use:     "broadcast <message>",
 	GroupID: GroupComm,
 	Short:   "Send a nudge message to all workers",
-	Long: `Broadcasts a message to all active workers (polecats and crew).
+	Long: `Broadcasts a message to all active workers (miners and crew).
 
-By default, only workers (polecats and crew) receive the message.
-Use --all to include infrastructure agents (mayor, deacon, witness, refinery).
+By default, only workers (miners and crew) receive the message.
+Use --all to include infrastructure agents (overseer, supervisor, witness, refinery).
 
 The message is sent as a nudge to each worker's Claude Code session.
 
@@ -51,7 +51,7 @@ func runBroadcast(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("message cannot be empty")
 	}
 
-	// Get all agent sessions (including polecats)
+	// Get all agent sessions (including miners)
 	agents, err := getAgentSessions(true)
 	if err != nil {
 		return fmt.Errorf("listing sessions: %w", err)
@@ -68,9 +68,9 @@ func runBroadcast(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		// Unless --all, only include workers (crew + polecats)
+		// Unless --all, only include workers (crew + miners)
 		if !broadcastAll {
-			if agent.Type != AgentCrew && agent.Type != AgentPolecat {
+			if agent.Type != AgentCrew && agent.Type != AgentMiner {
 				continue
 			}
 		}
@@ -160,17 +160,17 @@ func runBroadcast(cmd *cobra.Command, args []string) error {
 // formatAgentName returns a display name for an agent.
 func formatAgentName(agent *AgentSession) string {
 	switch agent.Type {
-	case AgentMayor:
-		return "mayor"
-	case AgentDeacon:
-		return "deacon"
+	case AgentOverseer:
+		return "overseer"
+	case AgentSupervisor:
+		return "supervisor"
 	case AgentWitness:
 		return fmt.Sprintf("%s/witness", agent.Rig)
 	case AgentRefinery:
 		return fmt.Sprintf("%s/refinery", agent.Rig)
 	case AgentCrew:
 		return fmt.Sprintf("%s/crew/%s", agent.Rig, agent.AgentName)
-	case AgentPolecat:
+	case AgentMiner:
 		return fmt.Sprintf("%s/%s", agent.Rig, agent.AgentName)
 	}
 	return agent.Name

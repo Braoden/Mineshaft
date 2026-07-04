@@ -12,7 +12,7 @@ func TestRigRoutesJSONLCheck_Run(t *testing.T) {
 	t.Run("no rigs returns OK", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		// Create minimal town structure
-		if err := os.MkdirAll(filepath.Join(tmpDir, "mayor"), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Join(tmpDir, "overseer"), 0755); err != nil {
 			t.Fatal(err)
 		}
 
@@ -154,8 +154,8 @@ func TestRigRoutesJSONLCheck_FindRigDirectories(t *testing.T) {
 	t.Run("finds rigs from multiple sources", func(t *testing.T) {
 		tmpDir := t.TempDir()
 
-		// Create mayor directory
-		if err := os.MkdirAll(filepath.Join(tmpDir, "mayor"), 0755); err != nil {
+		// Create overseer directory
+		if err := os.MkdirAll(filepath.Join(tmpDir, "overseer"), 0755); err != nil {
 			t.Fatal(err)
 		}
 
@@ -164,7 +164,7 @@ func TestRigRoutesJSONLCheck_FindRigDirectories(t *testing.T) {
 		if err := os.MkdirAll(townBeads, 0755); err != nil {
 			t.Fatal(err)
 		}
-		routes := `{"prefix":"rig1-","path":"rig1/mayor/rig"}` + "\n"
+		routes := `{"prefix":"rig1-","path":"rig1/overseer/rig"}` + "\n"
 		if err := os.WriteFile(filepath.Join(townBeads, "routes.jsonl"), []byte(routes), 0644); err != nil {
 			t.Fatal(err)
 		}
@@ -187,11 +187,11 @@ func TestRigRoutesJSONLCheck_FindRigDirectories(t *testing.T) {
 		}
 	})
 
-	t.Run("excludes mayor and .beads directories", func(t *testing.T) {
+	t.Run("excludes overseer and .beads directories", func(t *testing.T) {
 		tmpDir := t.TempDir()
 
 		// Create directories that should be excluded
-		if err := os.MkdirAll(filepath.Join(tmpDir, "mayor", ".beads"), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Join(tmpDir, "overseer", ".beads"), 0755); err != nil {
 			t.Fatal(err)
 		}
 		if err := os.MkdirAll(filepath.Join(tmpDir, ".beads"), 0755); err != nil {
@@ -202,7 +202,7 @@ func TestRigRoutesJSONLCheck_FindRigDirectories(t *testing.T) {
 		rigs := check.findRigDirectories(tmpDir)
 
 		if len(rigs) != 0 {
-			t.Errorf("expected 0 rigs (mayor and .beads should be excluded), got %d: %v", len(rigs), rigs)
+			t.Errorf("expected 0 rigs (overseer and .beads should be excluded), got %d: %v", len(rigs), rigs)
 		}
 	})
 
@@ -223,21 +223,21 @@ func TestRigRoutesJSONLCheck_FindRigDirectories(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		// Create deacon dir with .beads symlinked to town root .beads
-		deaconDir := filepath.Join(tmpDir, "deacon")
-		if err := os.MkdirAll(deaconDir, 0755); err != nil {
+		// Create supervisor dir with .beads symlinked to town root .beads
+		supervisorDir := filepath.Join(tmpDir, "supervisor")
+		if err := os.MkdirAll(supervisorDir, 0755); err != nil {
 			t.Fatal(err)
 		}
-		if err := os.Symlink(townBeads, filepath.Join(deaconDir, ".beads")); err != nil {
+		if err := os.Symlink(townBeads, filepath.Join(supervisorDir, ".beads")); err != nil {
 			t.Fatal(err)
 		}
 
 		check := NewRigRoutesJSONLCheck()
 		rigs := check.findRigDirectories(tmpDir)
 
-		// Should find realrig but NOT deacon
+		// Should find realrig but NOT supervisor
 		if len(rigs) != 1 {
-			t.Errorf("expected 1 rig (deacon should be excluded), got %d: %v", len(rigs), rigs)
+			t.Errorf("expected 1 rig (supervisor should be excluded), got %d: %v", len(rigs), rigs)
 		}
 		if len(rigs) == 1 && !strings.HasSuffix(rigs[0], "realrig") {
 			t.Errorf("expected realrig, got %s", rigs[0])

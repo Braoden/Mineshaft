@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	beadsdk "github.com/steveyegge/beads"
-	"github.com/steveyegge/gastown/internal/convoy"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/minecart"
+	"github.com/steveyegge/excavation/internal/workspace"
 
 	"github.com/spf13/cobra"
 )
@@ -25,8 +25,8 @@ var closeCmd = &cobra.Command{
 This is a convenience command that passes through to 'bd close' with
 all arguments and flags preserved.
 
-When an issue is closed, any convoys tracking it are checked for
-completion. If all tracked issues in a convoy are closed, the convoy
+When an issue is closed, any minecarts tracking it are checked for
+completion. If all tracked issues in a minecart are closed, the minecart
 is auto-closed.
 
 Examples:
@@ -96,12 +96,12 @@ func runClose(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// After successful close, check convoy completion for each closed issue.
+	// After successful close, check minecart completion for each closed issue.
 	// This is best-effort: failures are silently ignored since the daemon's
-	// event polling and deacon patrol serve as backup mechanisms.
+	// event polling and supervisor patrol serve as backup mechanisms.
 	beadIDs := extractBeadIDs(filteredArgs)
 	if len(beadIDs) > 0 {
-		checkConvoyCompletion(beadIDs)
+		checkMinecartCompletion(beadIDs)
 	}
 
 	return nil
@@ -239,14 +239,14 @@ func extractBeadIDs(args []string) []string {
 	return ids
 }
 
-// checkConvoyCompletion checks if any closed issues are tracked by convoys
-// and triggers convoy completion checks. This implements the ZFC principle:
+// checkMinecartCompletion checks if any closed issues are tracked by minecarts
+// and triggers minecart completion checks. This implements the ZFC principle:
 // the closure event propagates at the source (bd close) rather than relying
 // solely on daemon event polling.
 //
 // This is best-effort. If the workspace or hq store is unavailable, the
-// daemon's event polling and deacon patrol serve as backup mechanisms.
-func checkConvoyCompletion(beadIDs []string) {
+// daemon's event polling and supervisor patrol serve as backup mechanisms.
+func checkMinecartCompletion(beadIDs []string) {
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil || townRoot == "" {
 		return
@@ -270,6 +270,6 @@ func checkConvoyCompletion(beadIDs []string) {
 	}
 
 	for _, beadID := range beadIDs {
-		convoy.CheckConvoysForIssue(ctx, store, townRoot, beadID, "Close", nil, gtPath, nil)
+		minecart.CheckMinecartsForIssue(ctx, store, townRoot, beadID, "Close", nil, gtPath, nil)
 	}
 }

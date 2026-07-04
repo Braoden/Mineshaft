@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/events"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/events"
 )
 
 func TestCurator_FiltersByVisibility(t *testing.T) {
@@ -32,8 +32,8 @@ func TestCurator_FiltersByVisibility(t *testing.T) {
 		Timestamp:  time.Now().UTC().Format(time.RFC3339),
 		Source:     "gt",
 		Type:       events.TypeSling,
-		Actor:      "mayor",
-		Payload:    map[string]interface{}{"bead": "gt-123", "target": "gastown/slit"},
+		Actor:      "overseer",
+		Payload:    map[string]interface{}{"bead": "gt-123", "target": "excavation/slit"},
 		Visibility: events.VisibilityFeed,
 	}
 	feedData, _ := json.Marshal(feedEvent)
@@ -94,8 +94,8 @@ func TestCurator_FiltersByVisibility(t *testing.T) {
 	if writtenEvent.Type != events.TypeSling {
 		t.Errorf("expected type %s, got %s", events.TypeSling, writtenEvent.Type)
 	}
-	if writtenEvent.Actor != "mayor" {
-		t.Errorf("expected actor 'mayor', got %s", writtenEvent.Actor)
+	if writtenEvent.Actor != "overseer" {
+		t.Errorf("expected actor 'overseer', got %s", writtenEvent.Actor)
 	}
 }
 
@@ -130,7 +130,7 @@ func TestCurator_DedupesDoneEvents(t *testing.T) {
 			Timestamp:  time.Now().UTC().Format(time.RFC3339),
 			Source:     "gt",
 			Type:       events.TypeDone,
-			Actor:      "gastown/slit",
+			Actor:      "excavation/slit",
 			Payload:    map[string]interface{}{"bead": "slit-12345"},
 			Visibility: events.VisibilityFeed,
 		}
@@ -352,25 +352,25 @@ func TestCurator_GeneratesSummary(t *testing.T) {
 		{
 			event: &events.Event{
 				Type:    events.TypeSling,
-				Actor:   "mayor",
-				Payload: map[string]interface{}{"bead": "gt-123", "target": "gastown/slit"},
+				Actor:   "overseer",
+				Payload: map[string]interface{}{"bead": "gt-123", "target": "excavation/slit"},
 			},
-			expected: "mayor assigned gt-123 to gastown/slit",
+			expected: "overseer assigned gt-123 to excavation/slit",
 		},
 		{
 			event: &events.Event{
 				Type:    events.TypeDone,
-				Actor:   "gastown/slit",
+				Actor:   "excavation/slit",
 				Payload: map[string]interface{}{"bead": "slit-12345"},
 			},
-			expected: "gastown/slit completed work on slit-12345",
+			expected: "excavation/slit completed work on slit-12345",
 		},
 		{
 			event: &events.Event{
 				Type:  events.TypeHandoff,
-				Actor: "gastown/witness",
+				Actor: "excavation/witness",
 			},
-			expected: "gastown/witness handed off to fresh session",
+			expected: "excavation/witness handed off to fresh session",
 		},
 	}
 
@@ -536,7 +536,7 @@ func TestCurator_DefaultMaxFeedFileSize(t *testing.T) {
 // spawn a separate run() goroutine, causing duplicate event processing
 // and data races on the shared bufio.Reader (if file handles were shared).
 //
-// Regression test for steveyegge/gastown#1230 item 6.
+// Regression test for steveyegge/excavation#1230 item 6.
 func TestCurator_ConcurrentStartIsIdempotent(t *testing.T) {
 	tmpDir := t.TempDir()
 	eventsPath := filepath.Join(tmpDir, events.EventsFile)
@@ -611,7 +611,7 @@ func TestCurator_ConcurrentStartIsIdempotent(t *testing.T) {
 // coordinates goroutines within the same process, while flock coordinates
 // across processes.
 //
-// Regression test for steveyegge/gastown#1230 item 7.
+// Regression test for steveyegge/excavation#1230 item 7.
 func TestCurator_ConcurrentFeedReadWrite(t *testing.T) {
 	tmpDir := t.TempDir()
 	curator := NewCurator(tmpDir)

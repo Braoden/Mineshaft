@@ -11,12 +11,12 @@ if [ -n "$GIT_USER" ] && [ -n "$GIT_EMAIL" ]; then
     dolt config --global --add user.email "$GIT_EMAIL"
 fi
 
-if [ ! -f /gt/mayor/town.json ]; then
-    echo "Initializing Gas Town workspace at /gt..."
-    /app/gastown/gt install /gt --git
+if [ ! -f /gt/overseer/town.json ]; then
+    echo "Initializing Excavation Site workspace at /gt..."
+    /app/excavation/gt install /gt --git
 else
-    echo "Refreshing Gas Town workspace at /gt..."
-    /app/gastown/gt install /gt --git --force
+    echo "Refreshing Excavation Site workspace at /gt..."
+    /app/excavation/gt install /gt --git --force
 fi
 
 exec "$@"

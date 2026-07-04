@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/constants"
-	gtgit "github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/util"
+	"github.com/steveyegge/excavation/internal/constants"
+	gtgit "github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/util"
 )
 
 const (
@@ -40,7 +40,7 @@ func checkpointDogInterval(config *DaemonPatrolConfig) time.Duration {
 	return defaultCheckpointDogInterval
 }
 
-// runCheckpointDog auto-commits WIP changes in active polecat worktrees.
+// runCheckpointDog auto-commits WIP changes in active miner worktrees.
 // This protects against data loss when sessions crash or hit context limits.
 //
 // ## ZFC Exemption
@@ -62,7 +62,7 @@ func (d *Daemon) runCheckpointDog() {
 	totalCheckpointed := 0
 
 	for _, rigName := range rigs {
-		scanned, checkpointed := d.checkpointRigPolecats(rigName)
+		scanned, checkpointed := d.checkpointRigMiners(rigName)
 		totalScanned += scanned
 		totalCheckpointed += checkpointed
 	}
@@ -75,11 +75,11 @@ func (d *Daemon) runCheckpointDog() {
 	mol.closeStep("report")
 }
 
-// checkpointRigPolecats checkpoints dirty polecat worktrees in a single rig.
+// checkpointRigMiners checkpoints dirty miner worktrees in a single rig.
 // Returns (scanned, checkpointed) counts.
-func (d *Daemon) checkpointRigPolecats(rigName string) (int, int) {
-	polecatsDir := filepath.Join(d.config.TownRoot, rigName, "polecats")
-	polecats, err := listPolecatWorktrees(polecatsDir)
+func (d *Daemon) checkpointRigMiners(rigName string) (int, int) {
+	minersDir := filepath.Join(d.config.TownRoot, rigName, "miners")
+	miners, err := listMinerWorktrees(minersDir)
 	if err != nil {
 		return 0, 0
 	}
@@ -87,12 +87,12 @@ func (d *Daemon) checkpointRigPolecats(rigName string) (int, int) {
 	scanned := 0
 	checkpointed := 0
 
-	for _, polecatName := range polecats {
+	for _, minerName := range miners {
 		scanned++
 
 		// Check if tmux session is alive — only checkpoint active sessions.
 		// Dead sessions can't benefit from checkpoints.
-		sessionName := session.PolecatSessionName(session.PrefixFor(rigName), polecatName)
+		sessionName := session.MinerSessionName(session.PrefixFor(rigName), minerName)
 		alive, err := d.tmux.HasSession(sessionName)
 		if err != nil {
 			d.logger.Printf("checkpoint_dog: error checking session %s: %v", sessionName, err)
@@ -102,22 +102,22 @@ func (d *Daemon) checkpointRigPolecats(rigName string) (int, int) {
 			continue
 		}
 
-		// Polecat layout: prefer <polecatsDir>/<name>/<rigName>/ (the new
+		// Miner layout: prefer <minersDir>/<name>/<rigName>/ (the new
 		// nested layout where the outer <name>/ dir is a container with
-		// per-polecat scaffolding and the inner dir is the actual git
-		// worktree). Fall back to <polecatsDir>/<name>/ for the legacy
-		// flat layout still supported by polecat.Manager. Both candidates
+		// per-miner scaffolding and the inner dir is the actual git
+		// worktree). Fall back to <minersDir>/<name>/ for the legacy
+		// flat layout still supported by miner.Manager. Both candidates
 		// must contain `.git` — never fall back to a parent dir, since
 		// the original bug here was exactly that: an empty <name>/
 		// container caused git to walk up to the top-level workspace's
 		// .git and commit "WIP: checkpoint (auto)" on the workspace's
-		// branch (usually main) instead of the polecat's branch.
+		// branch (usually main) instead of the miner's branch.
 		// (gt-checkpoint-workdir fix.)
-		workDir := resolveCheckpointWorkDir(polecatsDir, polecatName, rigName)
+		workDir := resolveCheckpointWorkDir(minersDir, minerName, rigName)
 		if workDir == "" {
 			continue // Neither layout has a usable .git — skip silently.
 		}
-		if d.checkpointWorktree(workDir, rigName, polecatName) {
+		if d.checkpointWorktree(workDir, rigName, minerName) {
 			checkpointed++
 		}
 	}
@@ -127,11 +127,11 @@ func (d *Daemon) checkpointRigPolecats(rigName string) (int, int) {
 
 // checkpointWorktree creates a WIP checkpoint commit for a single worktree.
 // Returns true if a checkpoint was created.
-func (d *Daemon) checkpointWorktree(workDir, rigName, polecatName string) bool {
+func (d *Daemon) checkpointWorktree(workDir, rigName, minerName string) bool {
 	// Check git status (exclude runtime dirs from consideration)
 	statusOut, err := runGitCmd(workDir, "status", "--porcelain")
 	if err != nil {
-		d.logger.Printf("checkpoint_dog: git status failed in %s/%s: %v", rigName, polecatName, err)
+		d.logger.Printf("checkpoint_dog: git status failed in %s/%s: %v", rigName, minerName, err)
 		return false
 	}
 	if strings.TrimSpace(statusOut) == "" {
@@ -140,7 +140,7 @@ func (d *Daemon) checkpointWorktree(workDir, rigName, polecatName string) bool {
 
 	// Stage everything
 	if _, err := runGitCmd(workDir, "add", "-A"); err != nil {
-		d.logger.Printf("checkpoint_dog: git add -A failed in %s/%s: %v", rigName, polecatName, err)
+		d.logger.Printf("checkpoint_dog: git add -A failed in %s/%s: %v", rigName, minerName, err)
 		return false
 	}
 
@@ -149,19 +149,19 @@ func (d *Daemon) checkpointWorktree(workDir, rigName, polecatName string) bool {
 	// git add -A can restage despite ignore rules.
 	stagedOut, err := runGitCmdRaw(workDir, "diff", "--cached", "--name-only", "-z")
 	if err != nil {
-		d.logger.Printf("checkpoint_dog: git diff --cached failed in %s/%s: %v", rigName, polecatName, err)
+		d.logger.Printf("checkpoint_dog: git diff --cached failed in %s/%s: %v", rigName, minerName, err)
 		return false
 	}
 	for _, pathspec := range gtgit.RuntimeArtifactPathspecs(splitNullSeparatedPaths(stagedOut)) {
 		if _, err := runGitCmd(workDir, "reset", "HEAD", "--", pathspec); err != nil {
-			d.logger.Printf("checkpoint_dog: git reset runtime artifact %q failed in %s/%s: %v", pathspec, rigName, polecatName, err)
+			d.logger.Printf("checkpoint_dog: git reset runtime artifact %q failed in %s/%s: %v", pathspec, rigName, minerName, err)
 			return false
 		}
 	}
 
 	// Unstage deletions of tracked files. A checkpoint should preserve work
 	// (additions + modifications), never commit deletions of tracked files.
-	// This prevents the bug where a polecat's working tree has a missing
+	// This prevents the bug where a miner's working tree has a missing
 	// tracked file and the checkpoint commits the deletion (gt-pvx fix).
 	if delOut, err := runGitCmd(workDir, "diff", "--cached", "--name-only", "--diff-filter=D"); err == nil {
 		if dels := strings.TrimSpace(delOut); dels != "" {
@@ -182,11 +182,11 @@ func (d *Daemon) checkpointWorktree(workDir, rigName, polecatName string) bool {
 
 	// Commit the checkpoint
 	if _, err := runGitCmd(workDir, "commit", "-m", "WIP: checkpoint (auto)"); err != nil {
-		d.logger.Printf("checkpoint_dog: git commit failed in %s/%s: %v", rigName, polecatName, err)
+		d.logger.Printf("checkpoint_dog: git commit failed in %s/%s: %v", rigName, minerName, err)
 		return false
 	}
 
-	d.logger.Printf("checkpoint_dog: created WIP checkpoint in %s/%s", rigName, polecatName)
+	d.logger.Printf("checkpoint_dog: created WIP checkpoint in %s/%s", rigName, minerName)
 	return true
 }
 
@@ -201,19 +201,19 @@ func isGitWorktree(dir string) bool {
 }
 
 // resolveCheckpointWorkDir picks the actual git-worktree directory for a
-// polecat, supporting both the new nested layout (polecats/<name>/<rigName>/)
-// and the legacy flat layout (polecats/<name>/) that polecat.Manager still
+// miner, supporting both the new nested layout (miners/<name>/<rigName>/)
+// and the legacy flat layout (miners/<name>/) that miner.Manager still
 // recognizes for backward compatibility. Returns "" if neither candidate is
-// a git worktree, in which case the caller MUST skip the polecat — never
+// a git worktree, in which case the caller MUST skip the miner — never
 // fall back to a parent directory, since git would walk up to the top-level
 // workspace's .git and commit on the wrong branch (this is the bug this
 // helper exists to prevent).
-func resolveCheckpointWorkDir(polecatsDir, polecatName, rigName string) string {
-	nested := filepath.Join(polecatsDir, polecatName, rigName)
+func resolveCheckpointWorkDir(minersDir, minerName, rigName string) string {
+	nested := filepath.Join(minersDir, minerName, rigName)
 	if isGitWorktree(nested) {
 		return nested
 	}
-	flat := filepath.Join(polecatsDir, polecatName)
+	flat := filepath.Join(minersDir, minerName)
 	if isGitWorktree(flat) {
 		return flat
 	}

@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/gofrs/flock"
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 func TestDefaultConfig(t *testing.T) {
@@ -113,9 +113,9 @@ func TestSyncWorkspaceRefusesTownRootWorkDir(t *testing.T) {
 		t.Fatalf("git commit: %v\n%s", err, out)
 	}
 
-	writeDaemonTownFile(t, townRoot, "mayor/town.json", `{"name":"test-town"}\n`)
-	writeDaemonTownFile(t, townRoot, "mayor/rigs.json", `{"rigs":[]}\n`)
-	writeDaemonTownFile(t, townRoot, ".dolt-data/gastown/.dolt/noms/manifest", "manifest\n")
+	writeDaemonTownFile(t, townRoot, "overseer/town.json", `{"name":"test-town"}\n`)
+	writeDaemonTownFile(t, townRoot, "overseer/rigs.json", `{"rigs":[]}\n`)
+	writeDaemonTownFile(t, townRoot, ".dolt-data/excavation/.dolt/noms/manifest", "manifest\n")
 	writeDaemonTownFile(t, townRoot, ".runtime/sentinel", "runtime\n")
 	writeDaemonTownFile(t, townRoot, ".beads/metadata.json", `{"prefix":"hq"}\n`)
 	writeDaemonTownFile(t, townRoot, "daemon/daemon.pid", "12345\n")
@@ -138,7 +138,7 @@ func TestSyncWorkspaceRefusesTownRootWorkDir(t *testing.T) {
 	}
 	assertDaemonTownFilesPreserved(t, townRoot, filesBefore)
 
-	nestedRig := filepath.Join(townRoot, "gastown")
+	nestedRig := filepath.Join(townRoot, "excavation")
 	if err := os.MkdirAll(nestedRig, 0755); err != nil {
 		t.Fatalf("mkdir nested rig: %v", err)
 	}
@@ -158,7 +158,7 @@ func TestEnsureRefineryRunningSafetyStoppedDoesNotSpawn(t *testing.T) {
 		t.Skip("mock bd/tmux scripts use POSIX shell")
 	}
 	townRoot := t.TempDir()
-	writeDaemonTownFile(t, townRoot, "mayor/town.json", `{"name":"test"}`)
+	writeDaemonTownFile(t, townRoot, "overseer/town.json", `{"name":"test"}`)
 	writeDaemonTownFile(t, townRoot, ".beads/metadata.json", `{"prefix":"hq"}`)
 	writeDaemonTownFile(t, townRoot, "events/refinery/pending.event", "{}")
 	if err := os.MkdirAll(filepath.Join(townRoot, "testrig"), 0o755); err != nil {
@@ -259,9 +259,9 @@ func snapshotDaemonTownFiles(t *testing.T, root string) map[string]string {
 	t.Helper()
 	files := make(map[string]string)
 	for _, rel := range []string{
-		"mayor/town.json",
-		"mayor/rigs.json",
-		".dolt-data/gastown/.dolt/noms/manifest",
+		"overseer/town.json",
+		"overseer/rigs.json",
+		".dolt-data/excavation/.dolt/noms/manifest",
 		".runtime/sentinel",
 		".beads/metadata.json",
 		"daemon/daemon.pid",
@@ -469,35 +469,35 @@ func TestSaveLoadState_Roundtrip(t *testing.T) {
 	}
 }
 
-func TestListPolecatWorktrees_SkipsHiddenDirs(t *testing.T) {
+func TestListMinerWorktrees_SkipsHiddenDirs(t *testing.T) {
 	tmpDir := t.TempDir()
-	polecatsDir := filepath.Join(tmpDir, "some-rig", "polecats")
+	minersDir := filepath.Join(tmpDir, "some-rig", "miners")
 
-	if err := os.MkdirAll(filepath.Join(polecatsDir, ".claude"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(minersDir, ".claude"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.MkdirAll(filepath.Join(polecatsDir, "furiosa"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(minersDir, "furiosa"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(polecatsDir, "not-a-dir.txt"), []byte("x"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(minersDir, "not-a-dir.txt"), []byte("x"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
-	polecats, err := listPolecatWorktrees(polecatsDir)
+	miners, err := listMinerWorktrees(minersDir)
 	if err != nil {
-		t.Fatalf("listPolecatWorktrees returned error: %v", err)
+		t.Fatalf("listMinerWorktrees returned error: %v", err)
 	}
 
-	if slices.Contains(polecats, ".claude") {
-		t.Fatalf("expected hidden dir .claude to be ignored, got %v", polecats)
+	if slices.Contains(miners, ".claude") {
+		t.Fatalf("expected hidden dir .claude to be ignored, got %v", miners)
 	}
-	if !slices.Contains(polecats, "furiosa") {
-		t.Fatalf("expected furiosa to be included, got %v", polecats)
+	if !slices.Contains(miners, "furiosa") {
+		t.Fatalf("expected furiosa to be included, got %v", miners)
 	}
 }
 
 // NOTE: TestIsWitnessSession removed - isWitnessSession function was deleted
-// as part of ZFC cleanup. Witness poking is now Deacon's responsibility.
+// as part of ZFC cleanup. Witness poking is now Supervisor's responsibility.
 
 func TestLifecycleAction_Constants(t *testing.T) {
 	// Verify constants have expected string values
@@ -514,7 +514,7 @@ func TestLifecycleAction_Constants(t *testing.T) {
 
 func TestLifecycleRequest_Serialization(t *testing.T) {
 	request := &LifecycleRequest{
-		From:      "mayor",
+		From:      "overseer",
 		Action:    ActionCycle,
 		Timestamp: time.Now().Truncate(time.Second),
 	}
@@ -613,7 +613,7 @@ func TestIsShutdownInProgress_ActiveLock(t *testing.T) {
 	}
 }
 
-// TestDaemon_StartsManagerAndScanner verifies that the convoy manager (event-driven + stranded scan)
+// TestDaemon_StartsManagerAndScanner verifies that the minecart manager (event-driven + stranded scan)
 // starts and stops correctly when used as the daemon does.
 func TestDaemon_StartsManagerAndScanner(t *testing.T) {
 	if runtime.GOOS == "windows" {
@@ -625,14 +625,14 @@ func TestDaemon_StartsManagerAndScanner(t *testing.T) {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 
-	manager := NewConvoyManager(townRoot, func(string, ...interface{}) {}, "gt", 1*time.Hour, nil, nil, nil)
+	manager := NewMinecartManager(townRoot, func(string, ...interface{}) {}, "gt", 1*time.Hour, nil, nil, nil)
 	if err := manager.Start(); err != nil {
 		t.Fatalf("manager Start: %v", err)
 	}
 	manager.Stop()
 }
 
-// TestDaemon_StopsManagerAndScanner verifies that stopping the convoy manager
+// TestDaemon_StopsManagerAndScanner verifies that stopping the minecart manager
 // completes without blocking (e.g. context cancellation works).
 func TestDaemon_StopsManagerAndScanner(t *testing.T) {
 	if runtime.GOOS == "windows" {
@@ -644,7 +644,7 @@ func TestDaemon_StopsManagerAndScanner(t *testing.T) {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 
-	manager := NewConvoyManager(townRoot, func(string, ...interface{}) {}, "gt", 1*time.Hour, nil, nil, nil)
+	manager := NewMinecartManager(townRoot, func(string, ...interface{}) {}, "gt", 1*time.Hour, nil, nil, nil)
 	if err := manager.Start(); err != nil {
 		t.Fatalf("manager Start: %v", err)
 	}
@@ -835,10 +835,10 @@ func TestIsRigOperational_FailSafeOnDoltUnavailable(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Create mayor/rig/.beads directory but NO Dolt database
+	// Create overseer/rig/.beads directory but NO Dolt database
 	// This simulates Dolt being down or database not accessible
-	mayorBeads := filepath.Join(rigPath, "mayor", "rig", ".beads")
-	if err := os.MkdirAll(mayorBeads, 0755); err != nil {
+	overseerBeads := filepath.Join(rigPath, "overseer", "rig", ".beads")
+	if err := os.MkdirAll(overseerBeads, 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -847,7 +847,7 @@ func TestIsRigOperational_FailSafeOnDoltUnavailable(t *testing.T) {
 	if err := os.MkdirAll(townBeads, 0755); err != nil {
 		t.Fatal(err)
 	}
-	routesContent := `{"prefix":"tr-","path":"testrig/mayor/rig"}`
+	routesContent := `{"prefix":"tr-","path":"testrig/overseer/rig"}`
 	if err := os.WriteFile(filepath.Join(townBeads, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -882,7 +882,7 @@ func TestIsRigOperational_DockedRig(t *testing.T) {
 	// Create rig with docked label on rig bead
 	rigName := "dockedrig"
 	rigPath := filepath.Join(tmpDir, rigName)
-	if err := os.MkdirAll(filepath.Join(rigPath, "mayor", "rig", ".beads"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(rigPath, "overseer", "rig", ".beads"), 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -898,7 +898,7 @@ func TestIsRigOperational_DockedRig(t *testing.T) {
 	if err := os.MkdirAll(townBeads, 0755); err != nil {
 		t.Fatal(err)
 	}
-	routesContent := `{"prefix":"dr-","path":"dockedrig/mayor/rig"}`
+	routesContent := `{"prefix":"dr-","path":"dockedrig/overseer/rig"}`
 	if err := os.WriteFile(filepath.Join(townBeads, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
 	}

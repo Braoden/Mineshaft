@@ -8,7 +8,7 @@ package beads
 
 // AgentState represents the lifecycle state of an agent bead.
 // These values are stored in the agent_state field and used by the witness,
-// polecat manager, and sling for lifecycle decisions.
+// miner manager, and sling for lifecycle decisions.
 type AgentState string
 
 const (
@@ -21,14 +21,14 @@ const (
 	AgentStateRunning      AgentState = "running"
 	AgentStateNuked        AgentState = "nuked"
 	AgentStateAwaitingGate AgentState = "awaiting-gate"
-	// Deacon lifecycle states (hq-sa8de Phase A).
+	// Supervisor lifecycle states (hq-sa8de Phase A).
 	// patrolling: mid-cycle. idle (shared): cycle done, awaiting daemon poke.
-	// paused: operator-held standby via `gt deacon pause`.
+	// paused: operator-held standby via `gt supervisor pause`.
 	AgentStatePatrolling AgentState = "patrolling"
 	AgentStatePaused     AgentState = "paused"
 )
 
-// ResolveAgentState returns the agent state Gastown should act on.
+// ResolveAgentState returns the agent state Excavation should act on.
 // bd >= 0.62.0 no longer exposes a supported `bd agent state` writer, so the
 // description's `agent_state:` field is the primary write/read contract.
 // Fall back to the structured column only for legacy beads that do not yet
@@ -41,8 +41,8 @@ func ResolveAgentState(description, structured string) string {
 }
 
 // ProtectsFromCleanup returns true if this agent state indicates an intentional
-// pause that should prevent the polecat from being cleaned up as stale.
-// States like "stuck" and "awaiting-gate" mean the polecat is paused on purpose.
+// pause that should prevent the miner from being cleaned up as stale.
+// States like "stuck" and "awaiting-gate" mean the miner is paused on purpose.
 func (s AgentState) ProtectsFromCleanup() bool {
 	switch s {
 	case AgentStateStuck, AgentStateAwaitingGate, AgentStatePaused:
@@ -82,7 +82,7 @@ const (
 )
 
 // BlocksRemoval returns true if this status should prevent removal of the
-// associated resource (e.g., an MR bead in "open" status blocks polecat removal).
+// associated resource (e.g., an MR bead in "open" status blocks miner removal).
 func (s IssueStatus) BlocksRemoval() bool {
 	return s == StatusOpen
 }

@@ -878,7 +878,7 @@ func TestStoreForceCloseWithReason(t *testing.T) {
 
 	store.CreateIssue(context.Background(), &beadsdk.Issue{Title: "force-close-me"}, "test")
 
-	err := b.ForceCloseWithReason("nuking polecat", "test-1")
+	err := b.ForceCloseWithReason("nuking miner", "test-1")
 	if err != nil {
 		t.Fatalf("ForceCloseWithReason: %v", err)
 	}

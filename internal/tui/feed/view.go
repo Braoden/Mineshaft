@@ -30,9 +30,9 @@ func (m *Model) render() string {
 		treePanel := m.renderTreePanel()
 		sections = append(sections, treePanel)
 
-		// Convoy panel (middle)
-		convoyPanel := m.renderConvoyPanel()
-		sections = append(sections, convoyPanel)
+		// Minecart panel (middle)
+		minecartPanel := m.renderMinecartPanel()
+		sections = append(sections, minecartPanel)
 
 		// Feed panel (bottom)
 		feedPanel := m.renderFeedPanel()
@@ -134,7 +134,7 @@ func (m *Model) renderProblemsContent() string {
 	}
 
 	if len(m.problemAgents) == 0 {
-		return AgentIdleStyle.Render("No agents detected. Run gt feed in a GasTown workspace with active agents.")
+		return AgentIdleStyle.Render("No agents detected. Run gt feed in a Excavation workspace with active agents.")
 	}
 
 	// Count problems
@@ -208,7 +208,7 @@ func (m *Model) renderProblemsContent() string {
 
 // renderProblemAgent renders a single problem agent line
 func (m *Model) renderProblemAgent(agent *ProblemAgent, selected bool) string {
-	// Format: "▶polecat-12  🔥 GUPP!    45m (violation)  gt-xyz89   myproject"
+	// Format: "▶miner-12  🔥 GUPP!    45m (violation)  gt-xyz89   myproject"
 	prefix := "  "
 	if selected {
 		prefix = SelectedStyle.Render("▶ ")
@@ -231,7 +231,7 @@ func (m *Model) renderProblemAgent(agent *ProblemAgent, selected bool) string {
 	// Bead ID (if known)
 	beadPart := ""
 	if agent.CurrentBeadID != "" {
-		beadPart = ConvoyIDStyle.Render(agent.CurrentBeadID)
+		beadPart = MinecartIDStyle.Render(agent.CurrentBeadID)
 	}
 
 	// Rig
@@ -284,7 +284,7 @@ func (m *Model) renderTree() string {
 		byRole := m.groupAgentsByRole(rig.Agents)
 
 		// Render each role group
-		roleOrder := []string{"mayor", "witness", "refinery", "deacon", "crew", "polecat"}
+		roleOrder := []string{"overseer", "witness", "refinery", "supervisor", "crew", "miner"}
 		for _, role := range roleOrder {
 			agents, ok := byRole[role]
 			if !ok || len(agents) == 0 {
@@ -296,11 +296,11 @@ func (m *Model) renderTree() string {
 				icon = "•"
 			}
 
-			// For crew and polecats, show as expandable group
-			if role == "crew" || role == "polecat" {
+			// For crew and miners, show as expandable group
+			if role == "crew" || role == "miner" {
 				lines = append(lines, m.renderAgentGroup(icon, role, agents))
 			} else {
-				// Single agents (mayor, witness, refinery)
+				// Single agents (overseer, witness, refinery)
 				for _, agent := range agents {
 					lines = append(lines, m.renderAgent(icon, agent, 2))
 				}
@@ -332,14 +332,14 @@ func (m *Model) groupAgentsByRole(agents map[string]*Agent) map[string][]*Agent 
 	return result
 }
 
-// renderAgentGroup renders a group of agents (crew or polecats)
+// renderAgentGroup renders a group of agents (crew or miners)
 func (m *Model) renderAgentGroup(icon, role string, agents []*Agent) string {
 	var lines []string
 
 	// Group header
 	plural := role
-	if role == "polecat" {
-		plural = "polecats"
+	if role == "miner" {
+		plural = "miners"
 	}
 	header := fmt.Sprintf("  %s %s/", icon, plural)
 	lines = append(lines, RoleStyle.Render(header))
@@ -441,9 +441,9 @@ func (m *Model) renderEvent(e Event) string {
 		symbolStyle = EventMergeStartedStyle
 	case "merge_skipped":
 		symbolStyle = EventMergeSkippedStyle
-	case "patrol_started", "polecat_checked":
+	case "patrol_started", "miner_checked":
 		symbolStyle = EventUpdateStyle
-	case "polecat_nudged", "escalation_sent", "nudge":
+	case "miner_nudged", "escalation_sent", "nudge":
 		symbolStyle = EventFailStyle // Use red/warning style for nudges and escalations
 	case "sling", "hook", "spawn", "boot":
 		symbolStyle = EventCreateStyle
@@ -498,8 +498,8 @@ func (m *Model) renderStatusBar() string {
 		switch m.focusedPanel {
 		case PanelTree:
 			panelName = "tree"
-		case PanelConvoy:
-			panelName = "convoy"
+		case PanelMinecart:
+			panelName = "minecart"
 		case PanelFeed:
 			panelName = "feed"
 		}

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/version"
+	"github.com/steveyegge/excavation/internal/version"
 )
 
 // TestStaleResult covers the pure info -> CheckResult mapping. Run() itself is

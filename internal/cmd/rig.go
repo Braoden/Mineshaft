@@ -14,23 +14,23 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/crew"
-	"github.com/steveyegge/gastown/internal/deps"
-	"github.com/steveyegge/gastown/internal/doltserver"
-	"github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/hooks"
-	"github.com/steveyegge/gastown/internal/polecat"
-	"github.com/steveyegge/gastown/internal/refinery"
-	"github.com/steveyegge/gastown/internal/rig"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/suggest"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/wisp"
-	"github.com/steveyegge/gastown/internal/witness"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/crew"
+	"github.com/steveyegge/excavation/internal/deps"
+	"github.com/steveyegge/excavation/internal/doltserver"
+	"github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/hooks"
+	"github.com/steveyegge/excavation/internal/miner"
+	"github.com/steveyegge/excavation/internal/refinery"
+	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/suggest"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/wisp"
+	"github.com/steveyegge/excavation/internal/witness"
+	"github.com/steveyegge/excavation/internal/workspace"
 	"golang.org/x/term"
 )
 
@@ -39,14 +39,14 @@ var rigCmd = &cobra.Command{
 	GroupID: GroupWorkspace,
 	Short:   "Manage rigs in the workspace",
 	RunE:    requireSubcommand,
-	Long: `Manage rigs (project containers) in the Gas Town workspace.
+	Long: `Manage rigs (project containers) in the Excavation Site workspace.
 
 A rig is a container for managing a project and its agents:
   - refinery/rig/  Canonical main clone (Refinery's working copy)
-  - mayor/rig/     Mayor's working clone for this rig
+  - overseer/rig/     Overseer's working clone for this rig
   - crew/<name>/   Human workspace(s)
   - witness/       Witness agent (no clone)
-  - polecats/      Worker directories
+  - miners/      Worker directories
   - .beads/        Rig-level issue tracking`,
 }
 
@@ -60,31 +60,31 @@ This creates a rig container with:
   - .beads/               Rig-level issue tracking (initialized)
   - plugins/              Rig-level plugin directory
   - refinery/rig/         Canonical main clone
-  - mayor/rig/            Mayor's working clone
+  - overseer/rig/            Overseer's working clone
   - crew/                 Empty crew directory (add members with 'gt crew add')
   - witness/              Witness agent directory
-  - polecats/             Worker directory (empty)
+  - miners/             Worker directory (empty)
 
 The command also:
-  - Seeds patrol molecules (Deacon, Witness, Refinery)
+  - Seeds patrol molecules (Supervisor, Witness, Refinery)
   - Creates ~/gt/plugins/ (town-level) if it doesn't exist
   - Creates <rig>/plugins/ (rig-level)
 
 Use --adopt to register an existing directory instead of creating new:
   - Reads existing config.json if present
   - Auto-detects git URL from origin remote (git-url argument not required)
-  - Adds entry to mayor/rigs.json
+  - Adds entry to overseer/rigs.json
 
 For a repo you don't own, use fork mode (fetch upstream, push to fork).
 See docs/guides/fork-rig-setup.md for setup, verification, and recovery.
 
 Example:
-  gt rig add gastown https://github.com/steveyegge/gastown
+  gt rig add excavation https://github.com/steveyegge/excavation
   gt rig add my_project git@github.com:user/repo.git --prefix mp
   gt rig add existing_rig --adopt
-  gt rig add gastown https://github.com/gastownhall/gastown \
-    --push-url https://github.com/you/gastown \
-    --upstream-url https://github.com/gastownhall/gastown`,
+  gt rig add excavation https://github.com/excavationhall/excavation \
+    --push-url https://github.com/you/excavation \
+    --upstream-url https://github.com/excavationhall/excavation`,
 	Args: cobra.RangeArgs(1, 2),
 	RunE: runRigAdd,
 }
@@ -92,13 +92,13 @@ Example:
 var rigListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all rigs in the workspace",
-	Long: `List all rigs registered in the Gas Town workspace.
+	Long: `List all rigs registered in the Excavation Site workspace.
 
 For each rig, displays:
   - Rig name and operational state (OPERATIONAL, PARKED, DOCKED)
   - Witness status (running/stopped)
   - Refinery status (running/stopped)
-  - Number of polecats and crew members
+  - Number of miners and crew members
 
 Examples:
   gt rig list          # List all rigs with status
@@ -109,12 +109,12 @@ Examples:
 var rigRemoveCmd = &cobra.Command{
 	Use:   "remove <name>",
 	Short: "Remove a rig from the registry (does not delete files)",
-	Long: `Remove a rig from the Gas Town registry.
+	Long: `Remove a rig from the Excavation Site registry.
 
-This only removes the rig entry from mayor/rigs.json and cleans up
+This only removes the rig entry from overseer/rigs.json and cleans up
 the beads route. The rig's files on disk are NOT deleted.
 
-If the rig has running tmux sessions (witness, refinery, polecats, crew),
+If the rig has running tmux sessions (witness, refinery, miners, crew),
 you must shut them down first with 'gt rig shutdown' or use --force to
 kill them automatically.
 
@@ -153,7 +153,7 @@ This is the inverse of 'gt rig shutdown'. It starts:
 - The witness (if not already running)
 - The refinery (if not already running)
 
-Polecats are NOT started by this command - they are spawned
+Miners are NOT started by this command - they are spawned
 on demand when work is assigned.
 
 Examples:
@@ -172,13 +172,13 @@ For each rig, it starts:
 - The witness (if not already running)
 - The refinery (if not already running)
 
-Polecats are NOT started by this command - they are spawned
+Miners are NOT started by this command - they are spawned
 on demand when work is assigned.
 
 Examples:
-  gt rig start gastown
-  gt rig start gastown beads
-  gt rig start gastown beads myproject`,
+  gt rig start excavation
+  gt rig start excavation beads
+  gt rig start excavation beads myproject`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runRigStart,
 }
@@ -189,7 +189,7 @@ var rigRebootCmd = &cobra.Command{
 	Long: `Restart the patrol agents (witness and refinery) for a rig.
 
 This is equivalent to 'gt rig shutdown' followed by 'gt rig boot'.
-Useful after polecats complete work and land their changes.
+Useful after miners complete work and land their changes.
 
 Examples:
   gt rig reboot greenplace
@@ -204,11 +204,11 @@ var rigShutdownCmd = &cobra.Command{
 	Long: `Stop all agents in a rig.
 
 This command gracefully shuts down:
-- All polecat sessions
+- All miner sessions
 - The refinery (if running)
 - The witness (if running)
 
-Before shutdown, checks all polecats for uncommitted work:
+Before shutdown, checks all miners for uncommitted work:
 - Uncommitted changes (modified/untracked files)
 - Stashes
 - Unpushed commits
@@ -236,12 +236,12 @@ Displays:
 - Rig information (name, path, beads prefix)
 - Witness status (running/stopped, uptime)
 - Refinery status (running/stopped, uptime, queue size)
-- Polecats (name, state, assigned issue, session status)
+- Miners (name, state, assigned issue, session status)
 - Crew members (name, branch, session status, git status)
 
 Examples:
   gt rig status           # Infer rig from current directory
-  gt rig status gastown
+  gt rig status excavation
   gt rig status beads`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runRigStatus,
@@ -254,11 +254,11 @@ var rigStopCmd = &cobra.Command{
 
 This command is similar to 'gt rig shutdown' but supports multiple rigs.
 For each rig, it gracefully shuts down:
-- All polecat sessions
+- All miner sessions
 - The refinery (if running)
 - The witness (if running)
 
-Before shutdown, checks all polecats for uncommitted work:
+Before shutdown, checks all miners for uncommitted work:
 - Uncommitted changes (modified/untracked files)
 - Stashes
 - Unpushed commits
@@ -267,10 +267,10 @@ Use --force to force immediate shutdown (prompts if uncommitted work).
 Use --nuclear to bypass ALL safety checks (will lose work!).
 
 Examples:
-  gt rig stop gastown
-  gt rig stop gastown beads
-  gt rig stop --force gastown beads
-  gt rig stop --nuclear gastown  # DANGER: loses uncommitted work`,
+  gt rig stop excavation
+  gt rig stop excavation beads
+  gt rig stop --force excavation beads
+  gt rig stop --nuclear excavation  # DANGER: loses uncommitted work`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runRigStop,
 }
@@ -281,9 +281,9 @@ var rigRestartCmd = &cobra.Command{
 	Long: `Restart the patrol agents (witness and refinery) for one or more rigs.
 
 This is equivalent to 'gt rig stop' followed by 'gt rig start' for each rig.
-Useful after polecats complete work and land their changes.
+Useful after miners complete work and land their changes.
 
-Before shutdown, checks all polecats for uncommitted work:
+Before shutdown, checks all miners for uncommitted work:
 - Uncommitted changes (modified/untracked files)
 - Stashes
 - Unpushed commits
@@ -292,10 +292,10 @@ Use --force to force immediate shutdown (prompts if uncommitted work).
 Use --nuclear to bypass ALL safety checks (will lose work!).
 
 Examples:
-  gt rig restart gastown
-  gt rig restart gastown beads
-  gt rig restart --force gastown beads
-  gt rig restart --nuclear gastown  # DANGER: loses uncommitted work`,
+  gt rig restart excavation
+  gt rig restart excavation beads
+  gt rig restart --force excavation beads
+  gt rig restart --nuclear excavation  # DANGER: loses uncommitted work`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runRigRestart,
 }
@@ -331,12 +331,12 @@ var (
 
 var (
 	// Test seams for checkUncommittedWork.
-	listPolecatsForWorkCheck = func(r *rig.Rig) ([]*polecat.Polecat, error) {
-		polecatGit := git.NewGit(r.Path)
-		polecatMgr := polecat.NewManager(r, polecatGit, nil) // nil tmux: just listing
-		return polecatMgr.List()
+	listMinersForWorkCheck = func(r *rig.Rig) ([]*miner.Miner, error) {
+		minerGit := git.NewGit(r.Path)
+		minerMgr := miner.NewManager(r, minerGit, nil) // nil tmux: just listing
+		return minerMgr.List()
 	}
-	checkPolecatWorkStatus = func(clonePath string) (*git.UncommittedWorkStatus, error) {
+	checkMinerWorkStatus = func(clonePath string) (*git.UncommittedWorkStatus, error) {
 		pGit := git.NewGit(clonePath)
 		return pGit.CheckUncommittedWork()
 	}
@@ -413,24 +413,24 @@ func confirmUnsafeProceed(force bool) bool {
 	return false
 }
 
-// checkUncommittedWork checks polecats in a rig for uncommitted work.
+// checkUncommittedWork checks miners in a rig for uncommitted work.
 // operation is the verb shown in the warning (e.g. "stop", "shutdown", "restart").
 // Returns true if the caller should proceed, false if it should abort.
 // When force is true and stdin is a TTY, prompts the user to confirm.
 // When force is true but stdin is NOT a TTY, blocks (same as no --force).
 // All user-facing messages are printed internally.
 func checkUncommittedWork(r *rig.Rig, rigName, operation string, force bool) (proceed bool) {
-	polecats, err := listPolecatsForWorkCheck(r)
+	miners, err := listMinersForWorkCheck(r)
 	if err != nil {
-		fmt.Printf("%s Could not check polecats for uncommitted work: %v\n",
+		fmt.Printf("%s Could not check miners for uncommitted work: %v\n",
 			style.Warning.Render("⚠"), err)
 		return confirmUnsafeProceed(force)
 	}
-	if len(polecats) == 0 {
+	if len(miners) == 0 {
 		return true
 	}
 
-	var problemPolecats []struct {
+	var problemMiners []struct {
 		name   string
 		status *git.UncommittedWorkStatus
 	}
@@ -438,8 +438,8 @@ func checkUncommittedWork(r *rig.Rig, rigName, operation string, force bool) (pr
 		name string
 		err  error
 	}
-	for _, p := range polecats {
-		status, err := checkPolecatWorkStatus(p.ClonePath)
+	for _, p := range miners {
+		status, err := checkMinerWorkStatus(p.ClonePath)
 		if err != nil {
 			checkErrors = append(checkErrors, struct {
 				name string
@@ -455,20 +455,20 @@ func checkUncommittedWork(r *rig.Rig, rigName, operation string, force bool) (pr
 			continue
 		}
 		if !status.Clean() {
-			problemPolecats = append(problemPolecats, struct {
+			problemMiners = append(problemMiners, struct {
 				name   string
 				status *git.UncommittedWorkStatus
 			}{p.Name, status})
 		}
 	}
-	if len(problemPolecats) == 0 && len(checkErrors) == 0 {
+	if len(problemMiners) == 0 && len(checkErrors) == 0 {
 		return true
 	}
 
-	if len(problemPolecats) > 0 {
-		fmt.Printf("\n%s Cannot %s %s - polecats have uncommitted work:\n",
+	if len(problemMiners) > 0 {
+		fmt.Printf("\n%s Cannot %s %s - miners have uncommitted work:\n",
 			style.Warning.Render("⚠"), operation, rigName)
-		for _, pp := range problemPolecats {
+		for _, pp := range problemMiners {
 			fmt.Printf("  %s: %s\n", style.Bold.Render(pp.name), pp.status.String())
 		}
 	}
@@ -508,11 +508,11 @@ func runRigAdd(cmd *cobra.Command, args []string) error {
 	// Find workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Load rigs config
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsPath)
 	if err != nil {
 		// Create new if doesn't exist
@@ -592,9 +592,9 @@ func runRigAdd(cmd *cobra.Command, args []string) error {
 	// to avoid "no route found" warnings (#1424). Determine beadsWorkDir for rig identity bead.
 	var beadsWorkDir string
 	if newRig.Config.Prefix != "" {
-		mayorRigBeads := filepath.Join(townRoot, name, "mayor", "rig", ".beads")
-		if _, err := os.Stat(mayorRigBeads); err == nil {
-			beadsWorkDir = filepath.Join(townRoot, name, "mayor", "rig")
+		overseerRigBeads := filepath.Join(townRoot, name, "overseer", "rig", ".beads")
+		if _, err := os.Stat(overseerRigBeads); err == nil {
+			beadsWorkDir = filepath.Join(townRoot, name, "overseer", "rig")
 		} else {
 			beadsWorkDir = filepath.Join(townRoot, name)
 		}
@@ -621,7 +621,7 @@ func runRigAdd(cmd *cobra.Command, args []string) error {
 		prefix := newRig.Config.Prefix
 		witnessID := beads.WitnessBeadIDWithPrefix(prefix, name)
 		if _, err := bd.CreateAgentBead(witnessID,
-			fmt.Sprintf("Witness for %s - monitors polecat health and progress.", name),
+			fmt.Sprintf("Witness for %s - monitors miner health and progress.", name),
 			&beads.AgentFields{RoleType: "witness", Rig: name, AgentState: "idle"},
 		); err != nil {
 			fmt.Printf("  %s Could not create witness agent bead: %v\n", style.Warning.Render("!"), err)
@@ -658,7 +658,7 @@ func runRigAdd(cmd *cobra.Command, args []string) error {
 	// Refresh tmux cycle bindings on all running sessions so the new rig's
 	// prefix is recognized by C-b n/p. Without this, existing sessions have
 	// a stale grep pattern that doesn't include the new prefix.
-	// See: https://github.com/steveyegge/gastown/issues/2299
+	// See: https://github.com/steveyegge/excavation/issues/2299
 	refreshCycleBindingsOnExistingSessions()
 
 	elapsed := time.Since(startTime)
@@ -673,14 +673,14 @@ func runRigAdd(cmd *cobra.Command, args []string) error {
 	fmt.Printf("\nStructure:\n")
 	fmt.Printf("  %s/\n", name)
 	fmt.Printf("  ├── config.json\n")
-	fmt.Printf("  ├── .repo.git/        (shared bare repo for refinery+polecats)\n")
+	fmt.Printf("  ├── .repo.git/        (shared bare repo for refinery+miners)\n")
 	fmt.Printf("  ├── .beads/           (prefix: %s)\n", newRig.Config.Prefix)
 	fmt.Printf("  ├── plugins/          (rig-level plugins)\n")
-	fmt.Printf("  ├── mayor/rig/        (clone: %s)\n", defaultBranch)
-	fmt.Printf("  ├── refinery/rig/     (worktree: %s, sees polecat branches)\n", defaultBranch)
+	fmt.Printf("  ├── overseer/rig/        (clone: %s)\n", defaultBranch)
+	fmt.Printf("  ├── refinery/rig/     (worktree: %s, sees miner branches)\n", defaultBranch)
 	fmt.Printf("  ├── crew/             (empty - add crew with 'gt crew add')\n")
 	fmt.Printf("  ├── witness/\n")
-	fmt.Printf("  └── polecats/         (.claude/ scaffolded for polecat sessions)\n")
+	fmt.Printf("  └── miners/         (.claude/ scaffolded for miner sessions)\n")
 
 	fmt.Printf("\nNext steps:\n")
 	fmt.Printf("  gt crew add <name> --rig %s   # Create your personal workspace\n", name)
@@ -739,11 +739,11 @@ func runRigList(cmd *cobra.Command, args []string) error {
 	// Find workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Load rigs config
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsPath)
 	if err != nil {
 		fmt.Println("No rigs configured.")
@@ -767,7 +767,7 @@ func runRigList(cmd *cobra.Command, args []string) error {
 		Status      string `json:"status"`
 		Witness     string `json:"witness"`
 		Refinery    string `json:"refinery"`
-		Polecats    int    `json:"polecats"`
+		Miners    int    `json:"miners"`
 		Crew        int    `json:"crew"`
 		// sorting fields (not exported to JSON)
 		sortPrio int
@@ -807,7 +807,7 @@ func runRigList(cmd *cobra.Command, args []string) error {
 			Status:      strings.ToLower(opState),
 			Witness:     witnessStatus,
 			Refinery:    refineryStatus,
-			Polecats:    summary.PolecatCount,
+			Miners:    summary.MinerCount,
 			Crew:        summary.CrewCount,
 			sortPrio:    rigStatePriority(witnessRunning, refineryRunning, opState),
 		})
@@ -854,7 +854,7 @@ func runRigList(cmd *cobra.Command, args []string) error {
 
 		fmt.Printf("   Witness: %s %s  Refinery: %s %s\n",
 			witnessIcon, ri.Witness, refineryIcon, ri.Refinery)
-		fmt.Printf("   Polecats: %d  Crew: %d\n", ri.Polecats, ri.Crew)
+		fmt.Printf("   Miners: %d  Crew: %d\n", ri.Miners, ri.Crew)
 		fmt.Println()
 	}
 
@@ -872,10 +872,10 @@ var rigMenuCmd = &cobra.Command{
 func runRigMenu(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsPath)
 	if err != nil || len(rigsConfig.Rigs) == 0 {
 		return fmt.Errorf("no rigs configured")
@@ -990,11 +990,11 @@ func runRigRemove(cmd *cobra.Command, args []string) error {
 	// Find workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Load rigs config
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsPath)
 	if err != nil {
 		return fmt.Errorf("loading rigs config: %w", err)
@@ -1119,11 +1119,11 @@ func runRigAdopt(_ *cobra.Command, args []string) error {
 	// Find workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Load rigs config
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsPath)
 	if err != nil {
 		rigsConfig = &config.RigsConfig{
@@ -1181,9 +1181,9 @@ func runRigAdopt(_ *cobra.Command, args []string) error {
 	// Add route to town-level routes.jsonl for prefix-based routing
 	if result.BeadsPrefix != "" {
 		routePath := name
-		mayorRigBeads := filepath.Join(townRoot, name, "mayor", "rig", ".beads")
-		if _, err := os.Stat(mayorRigBeads); err == nil {
-			routePath = name + "/mayor/rig"
+		overseerRigBeads := filepath.Join(townRoot, name, "overseer", "rig", ".beads")
+		if _, err := os.Stat(overseerRigBeads); err == nil {
+			routePath = name + "/overseer/rig"
 		}
 		route := beads.Route{
 			Prefix: result.BeadsPrefix + "-",
@@ -1202,7 +1202,7 @@ func runRigAdopt(_ *cobra.Command, args []string) error {
 	rigPath := filepath.Join(townRoot, name)
 	beadsDirCandidates := []string{
 		filepath.Join(rigPath, ".beads"),
-		filepath.Join(rigPath, "mayor", "rig", ".beads"),
+		filepath.Join(rigPath, "overseer", "rig", ".beads"),
 	}
 	foundBeadsCandidate := false
 	for _, beadsDir := range beadsDirCandidates {
@@ -1313,10 +1313,10 @@ func runRigAdopt(_ *cobra.Command, args []string) error {
 
 	// Create rig identity bead if prefix is set
 	if result.BeadsPrefix != "" {
-		mayorRigBeads := filepath.Join(rigPath, "mayor", "rig", ".beads")
+		overseerRigBeads := filepath.Join(rigPath, "overseer", "rig", ".beads")
 		beadsWorkDir := rigPath
-		if _, err := os.Stat(mayorRigBeads); err == nil {
-			beadsWorkDir = filepath.Join(rigPath, "mayor", "rig")
+		if _, err := os.Stat(overseerRigBeads); err == nil {
+			beadsWorkDir = filepath.Join(rigPath, "overseer", "rig")
 		}
 
 		bd := beads.New(beadsWorkDir)
@@ -1342,7 +1342,7 @@ func runRigAdopt(_ *cobra.Command, args []string) error {
 		witnessID := beads.WitnessBeadIDWithPrefix(prefix, name)
 		if _, err := bd.Show(witnessID); err != nil {
 			if _, err := bd.CreateAgentBead(witnessID,
-				fmt.Sprintf("Witness for %s - monitors polecat health and progress.", name),
+				fmt.Sprintf("Witness for %s - monitors miner health and progress.", name),
 				&beads.AgentFields{RoleType: "witness", Rig: name, AgentState: "idle"},
 			); err != nil {
 				fmt.Printf("  %s Could not create witness agent bead: %v\n", style.Warning.Render("!"), err)
@@ -1391,7 +1391,7 @@ func runRigReset(cmd *cobra.Command, args []string) error {
 	// Find workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	cwd, err := os.Getwd()
@@ -1555,7 +1555,7 @@ func runResetStale(bd *beads.Beads, dryRun bool) error {
 	return nil
 }
 
-// assigneeToSessionName converts an assignee (rig/name, rig/crew/name, or rig/polecats/name)
+// assigneeToSessionName converts an assignee (rig/name, rig/crew/name, or rig/miners/name)
 // to tmux session name.
 // Returns the session name and whether this is a persistent identity (crew).
 func assigneeToSessionName(assignee string) (sessionName string, isPersistent bool) {
@@ -1563,16 +1563,16 @@ func assigneeToSessionName(assignee string) (sessionName string, isPersistent bo
 
 	switch len(parts) {
 	case 2:
-		// rig/polecatName -> gt-rig-polecatName
-		return session.PolecatSessionName(session.PrefixFor(parts[0]), parts[1]), false
+		// rig/minerName -> gt-rig-minerName
+		return session.MinerSessionName(session.PrefixFor(parts[0]), parts[1]), false
 	case 3:
 		// rig/crew/name -> gt-rig-crew-name
 		if parts[1] == "crew" {
 			return session.CrewSessionName(session.PrefixFor(parts[0]), parts[2]), true
 		}
-		// rig/polecats/name -> gt-rig-name
-		if parts[1] == "polecats" {
-			return session.PolecatSessionName(session.PrefixFor(parts[0]), parts[2]), false
+		// rig/miners/name -> gt-rig-name
+		if parts[1] == "miners" {
+			return session.MinerSessionName(session.PrefixFor(parts[0]), parts[2]), false
 		}
 		// Other 3-part formats not recognized
 		return "", false
@@ -1597,11 +1597,11 @@ func runRigBoot(cmd *cobra.Command, args []string) error {
 	// Find workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Load rigs config and get rig
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsPath)
 	if err != nil {
 		rigsConfig = &config.RigsConfig{Rigs: make(map[string]config.RigEntry)}
@@ -1665,11 +1665,11 @@ func runRigStart(cmd *cobra.Command, args []string) error {
 	// Find workspace once
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Load rigs config
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsPath)
 	if err != nil {
 		rigsConfig = &config.RigsConfig{Rigs: make(map[string]config.RigEntry)}
@@ -1764,11 +1764,11 @@ func runRigShutdown(cmd *cobra.Command, args []string) error {
 	// Find workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Load rigs config and get rig
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsPath)
 	if err != nil {
 		rigsConfig = &config.RigsConfig{Rigs: make(map[string]config.RigEntry)}
@@ -1781,7 +1781,7 @@ func runRigShutdown(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("rig '%s' not found", rigName)
 	}
 
-	// Check all polecats for uncommitted work (unless nuclear)
+	// Check all miners for uncommitted work (unless nuclear)
 	if !rigShutdownNuclear && !checkUncommittedWork(r, rigName, "shutdown", rigShutdownForce) {
 		return fmt.Errorf("refusing to shutdown with uncommitted work")
 	}
@@ -1790,14 +1790,14 @@ func runRigShutdown(cmd *cobra.Command, args []string) error {
 
 	var errors []string
 
-	// 1. Stop all polecat sessions
+	// 1. Stop all miner sessions
 	t := tmux.NewTmux()
-	polecatMgr := polecat.NewSessionManager(t, r)
-	infos, err := polecatMgr.ListPolecats()
+	minerMgr := miner.NewSessionManager(t, r)
+	infos, err := minerMgr.ListMiners()
 	if err == nil && len(infos) > 0 {
-		fmt.Printf("  Stopping %d polecat session(s)...\n", len(infos))
-		if err := polecatMgr.StopAll(rigShutdownForce); err != nil {
-			errors = append(errors, fmt.Sprintf("polecat sessions: %v", err))
+		fmt.Printf("  Stopping %d miner session(s)...\n", len(infos))
+		if err := minerMgr.StopAll(rigShutdownForce); err != nil {
+			errors = append(errors, fmt.Sprintf("miner sessions: %v", err))
 		}
 	}
 
@@ -1928,15 +1928,15 @@ func runRigStatus(cmd *cobra.Command, args []string) error {
 		}
 	}()
 
-	// Polecats list (involves per-polecat beads + git queries)
-	polecatGit := git.NewGit(r.Path)
-	polecatMgr := polecat.NewManager(r, polecatGit, t)
-	var polecats []*polecat.Polecat
-	var polecatsErr error
+	// Miners list (involves per-miner beads + git queries)
+	minerGit := git.NewGit(r.Path)
+	minerMgr := miner.NewManager(r, minerGit, t)
+	var miners []*miner.Miner
+	var minersErr error
 	dataWg.Add(1)
 	go func() {
 		defer dataWg.Done()
-		polecats, polecatsErr = polecatMgr.List()
+		miners, minersErr = minerMgr.List()
 	}()
 
 	// Crew list
@@ -1951,14 +1951,14 @@ func runRigStatus(cmd *cobra.Command, args []string) error {
 
 	dataWg.Wait()
 
-	// --- Polecat + Crew session checks (parallel, after List completes) ---
-	type polecatInfo struct {
+	// --- Miner + Crew session checks (parallel, after List completes) ---
+	type minerInfo struct {
 		name       string
-		state      polecat.State
+		state      miner.State
 		issue      string
 		hasSession bool
 	}
-	var pInfos []polecatInfo
+	var pInfos []minerInfo
 	type crewInfo struct {
 		name       string
 		hasSession bool
@@ -1969,14 +1969,14 @@ func runRigStatus(cmd *cobra.Command, args []string) error {
 
 	var sessionWg sync.WaitGroup
 
-	if polecatsErr == nil && len(polecats) > 0 {
-		pInfos = make([]polecatInfo, len(polecats))
-		for i, p := range polecats {
-			pInfos[i] = polecatInfo{name: p.Name, state: p.State, issue: p.Issue}
+	if minersErr == nil && len(miners) > 0 {
+		pInfos = make([]minerInfo, len(miners))
+		for i, p := range miners {
+			pInfos[i] = minerInfo{name: p.Name, state: p.State, issue: p.Issue}
 			sessionWg.Add(1)
-			go func(idx int, p *polecat.Polecat) {
+			go func(idx int, p *miner.Miner) {
 				defer sessionWg.Done()
-				sessionName := session.PolecatSessionName(session.PrefixFor(rigName), p.Name)
+				sessionName := session.MinerSessionName(session.PrefixFor(rigName), p.Name)
 				pInfos[idx].hasSession = isAgentSessionHealthy(t, sessionName)
 			}(i, p)
 		}
@@ -2026,12 +2026,12 @@ func runRigStatus(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Println()
 
-	// Polecats
-	fmt.Printf("%s", style.Bold.Render("Polecats"))
-	if polecatsErr != nil || len(polecats) == 0 {
+	// Miners
+	fmt.Printf("%s", style.Bold.Render("Miners"))
+	if minersErr != nil || len(miners) == 0 {
 		fmt.Printf(" (none)\n")
 	} else {
-		fmt.Printf(" (%d)\n", len(polecats))
+		fmt.Printf(" (%d)\n", len(miners))
 		for _, pi := range pInfos {
 			sessionIcon := style.Dim.Render("○")
 			if pi.hasSession {
@@ -2040,16 +2040,16 @@ func runRigStatus(cmd *cobra.Command, args []string) error {
 
 			// Reconcile display state with tmux session liveness.
 			// Per gt-zecmc design: tmux is ground truth for observable states.
-			// If session is running but beads says done, the polecat is still alive.
+			// If session is running but beads says done, the miner is still alive.
 			// If session is dead but beads says working, show "stalled" so the
 			// witness can detect unsubmitted work (gt-3071b). Previously this
-			// showed "done" which masked failures where polecats died before
+			// showed "done" which masked failures where miners died before
 			// running gt done, leaving work stranded in worktrees.
 			displayState := pi.state
-			if pi.hasSession && displayState == polecat.StateDone {
-				displayState = polecat.StateWorking
-			} else if !pi.hasSession && displayState == polecat.StateWorking {
-				displayState = polecat.StateStalled
+			if pi.hasSession && displayState == miner.StateDone {
+				displayState = miner.StateWorking
+			} else if !pi.hasSession && displayState == miner.StateWorking {
+				displayState = miner.StateStalled
 			}
 
 			stateStr := string(displayState)
@@ -2090,11 +2090,11 @@ func runRigStop(cmd *cobra.Command, args []string) error {
 	// Find workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Load rigs config
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsPath)
 	if err != nil {
 		rigsConfig = &config.RigsConfig{Rigs: make(map[string]config.RigEntry)}
@@ -2116,7 +2116,7 @@ func runRigStop(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		// Check all polecats for uncommitted work (unless nuclear)
+		// Check all miners for uncommitted work (unless nuclear)
 		if !rigStopNuclear && !checkUncommittedWork(r, rigName, "stop", rigStopForce) {
 			failed = append(failed, rigName)
 			continue
@@ -2126,14 +2126,14 @@ func runRigStop(cmd *cobra.Command, args []string) error {
 
 		var errors []string
 
-		// 1. Stop all polecat sessions
+		// 1. Stop all miner sessions
 		t := tmux.NewTmux()
-		polecatMgr := polecat.NewSessionManager(t, r)
-		infos, err := polecatMgr.ListPolecats()
+		minerMgr := miner.NewSessionManager(t, r)
+		infos, err := minerMgr.ListMiners()
 		if err == nil && len(infos) > 0 {
-			fmt.Printf("  Stopping %d polecat session(s)...\n", len(infos))
-			if err := polecatMgr.StopAll(rigStopForce); err != nil {
-				errors = append(errors, fmt.Sprintf("polecat sessions: %v", err))
+			fmt.Printf("  Stopping %d miner session(s)...\n", len(infos))
+			if err := minerMgr.StopAll(rigStopForce); err != nil {
+				errors = append(errors, fmt.Sprintf("miner sessions: %v", err))
 			}
 		}
 
@@ -2188,11 +2188,11 @@ func runRigRestart(cmd *cobra.Command, args []string) error {
 	// Find workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Load rigs config
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsPath)
 	if err != nil {
 		rigsConfig = &config.RigsConfig{Rigs: make(map[string]config.RigEntry)}
@@ -2215,7 +2215,7 @@ func runRigRestart(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		// Check all polecats for uncommitted work (unless nuclear)
+		// Check all miners for uncommitted work (unless nuclear)
 		if !rigRestartNuclear && !checkUncommittedWork(r, rigName, "restart", rigRestartForce) {
 			failed = append(failed, rigName)
 			continue
@@ -2229,13 +2229,13 @@ func runRigRestart(cmd *cobra.Command, args []string) error {
 		// === STOP PHASE ===
 		fmt.Printf("  Stopping...\n")
 
-		// 1. Stop all polecat sessions
-		polecatMgr := polecat.NewSessionManager(t, r)
-		infos, err := polecatMgr.ListPolecats()
+		// 1. Stop all miner sessions
+		minerMgr := miner.NewSessionManager(t, r)
+		infos, err := minerMgr.ListMiners()
 		if err == nil && len(infos) > 0 {
-			fmt.Printf("    Stopping %d polecat session(s)...\n", len(infos))
-			if err := polecatMgr.StopAll(rigRestartForce); err != nil {
-				stopErrors = append(stopErrors, fmt.Sprintf("polecat sessions: %v", err))
+			fmt.Printf("    Stopping %d miner session(s)...\n", len(infos))
+			if err := minerMgr.StopAll(rigRestartForce); err != nil {
+				stopErrors = append(stopErrors, fmt.Sprintf("miner sessions: %v", err))
 			}
 		}
 
@@ -2364,7 +2364,7 @@ func getRigOperationalState(townRoot, rigName string) (state string, source stri
 	if rigCfg, err := rig.LoadRigConfig(rigPath); err == nil && rigCfg.Beads != nil {
 		prefix = rigCfg.Beads.Prefix
 	} else {
-		// Fall back to registry (mayor/rigs.json) when config.json is missing
+		// Fall back to registry (overseer/rigs.json) when config.json is missing
 		prefix = config.GetRigPrefix(townRoot, rigName)
 	}
 
@@ -2432,7 +2432,7 @@ func syncRigHooks(townRoot, rigName string) error {
 
 // findRigSessions returns all tmux sessions belonging to the given rig.
 // All rig sessions share the "<rigPrefix>-" prefix, so this catches witness,
-// refinery, polecat, and crew sessions in one pass.
+// refinery, miner, and crew sessions in one pass.
 func findRigSessions(t *tmux.Tmux, rigName string) ([]string, error) {
 	prefix := session.PrefixFor(rigName) + "-"
 	all, err := t.ListSessions()
@@ -2456,8 +2456,8 @@ func commitTownConfigChanges(townRoot, rigName string) {
 
 	// Collect the town-level files that rig add/adopt modifies.
 	files := []string{
-		filepath.Join("mayor", "rigs.json"),
-		filepath.Join("mayor", "daemon.json"),
+		filepath.Join("overseer", "rigs.json"),
+		filepath.Join("overseer", "daemon.json"),
 		filepath.Join(".beads", "routes.jsonl"),
 	}
 
@@ -2534,12 +2534,12 @@ func isGitRemoteURL(s string) bool {
 }
 
 // autoAssignNamepoolTheme picks a namepool theme for a new rig that doesn't collide
-// with themes already in use by other rigs. This ensures polecat names are unique
+// with themes already in use by other rigs. This ensures miner names are unique
 // across rigs (gas-21k). If all built-in themes are taken, falls back to hash-based
 // selection where collisions are possible but unavoidable.
 func autoAssignNamepoolTheme(townRoot, rigName string, mgr *rig.Manager) {
-	usedThemes := mgr.UsedNamepoolThemes(polecat.ThemeForRig)
-	chosenTheme := polecat.ThemeForRigAvoiding(rigName, usedThemes)
+	usedThemes := mgr.UsedNamepoolThemes(miner.ThemeForRig)
+	chosenTheme := miner.ThemeForRigAvoiding(rigName, usedThemes)
 	settingsPath := filepath.Join(townRoot, rigName, "settings", "config.json")
 	if err := os.MkdirAll(filepath.Dir(settingsPath), 0755); err != nil {
 		fmt.Printf("  %s Could not create settings directory: %v\n", style.Warning.Render("!"), err)

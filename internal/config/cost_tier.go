@@ -17,12 +17,12 @@ const (
 	// TierBudget uses haiku/sonnet for patrols, sonnet for workers.
 	TierBudget CostTier = "budget"
 	// TierCustomGroqOpus routes patrol/utility roles to Groq Compound (fast +
-	// cheap) while keeping Opus for mayor and crew (quality-critical work).
+	// cheap) while keeping Opus for overseer and crew (quality-critical work).
 	// The groq-compound preset uses the claude CLI as an SDK proxy —
 	// see AgentGroqCompound in agents.go for the full wiring.
 	TierCustomGroqOpus CostTier = "custom-groq-opus"
 	// TierCustomGroqSonnet routes patrol/utility roles to Groq Compound (fast +
-	// cheap) while using Sonnet for mayor (quality-critical work).
+	// cheap) while using Sonnet for overseer (quality-critical work).
 	// The groq-compound preset uses the claude CLI as an SDK proxy —
 	// see AgentGroqCompound in agents.go for the full wiring.
 	TierCustomGroqSonnet CostTier = "custom-groq-sonnet"
@@ -54,7 +54,7 @@ func IsValidTier(tier string) bool {
 // entries (e.g., user-defined roles or non-Claude agents for non-tier roles) are preserved.
 //
 // "boot" and "dog" are utility roles that should always use the cheapest model.
-var TierManagedRoles = []string{"mayor", "deacon", "witness", "refinery", "polecat", "crew", "boot", "dog"}
+var TierManagedRoles = []string{"overseer", "supervisor", "witness", "refinery", "miner", "crew", "boot", "dog"}
 
 // CostTierRoleAgents returns the role_agents mapping for a given tier.
 // All tiers explicitly map every tier-managed role. Standard tier maps roles
@@ -63,11 +63,11 @@ func CostTierRoleAgents(tier CostTier) map[string]string {
 	switch tier {
 	case TierStandard:
 		return map[string]string{
-			"mayor":    "",
-			"deacon":   "",
+			"overseer":    "",
+			"supervisor":   "",
 			"witness":  "",
 			"refinery": "",
-			"polecat":  "",
+			"miner":  "",
 			"crew":     "",
 			"boot":     "claude-haiku",
 			"dog":      "claude-haiku",
@@ -75,11 +75,11 @@ func CostTierRoleAgents(tier CostTier) map[string]string {
 
 	case TierEconomy:
 		return map[string]string{
-			"mayor":    "claude-sonnet",
-			"deacon":   "claude-haiku",
+			"overseer":    "claude-sonnet",
+			"supervisor":   "claude-haiku",
 			"witness":  "claude-sonnet",
 			"refinery": "claude-sonnet",
-			"polecat":  "",
+			"miner":  "",
 			"crew":     "",
 			"boot":     "claude-haiku",
 			"dog":      "claude-haiku",
@@ -87,41 +87,41 @@ func CostTierRoleAgents(tier CostTier) map[string]string {
 
 	case TierBudget:
 		return map[string]string{
-			"mayor":    "claude-sonnet",
-			"deacon":   "claude-haiku",
+			"overseer":    "claude-sonnet",
+			"supervisor":   "claude-haiku",
 			"witness":  "claude-haiku",
 			"refinery": "claude-haiku",
-			"polecat":  "claude-sonnet",
+			"miner":  "claude-sonnet",
 			"crew":     "claude-sonnet",
 			"boot":     "claude-haiku",
 			"dog":      "claude-haiku",
 		}
 
 	case TierCustomGroqOpus:
-		// Mayor and crew keep the default (opus) for highest-quality work.
-		// All patrol and utility roles (deacon, witness, refinery, polecat, boot, dog) use
+		// Overseer and crew keep the default (opus) for highest-quality work.
+		// All patrol and utility roles (supervisor, witness, refinery, miner, boot, dog) use
 		// Groq Compound for fast, low-cost background orchestration.
 		return map[string]string{
-			"mayor":    "", // use default (opus)
-			"deacon":   "groq-compound",
+			"overseer":    "", // use default (opus)
+			"supervisor":   "groq-compound",
 			"witness":  "groq-compound",
 			"refinery": "groq-compound",
-			"polecat":  "groq-compound",
+			"miner":  "groq-compound",
 			"crew":     "", // use default (opus)
 			"boot":     "groq-compound",
 			"dog":      "groq-compound",
 		}
 
 	case TierCustomGroqSonnet:
-		// Mayor uses Sonnet for quality-critical work.
-		// All other roles (crew, deacon, witness, refinery, polecat, boot, dog) use
+		// Overseer uses Sonnet for quality-critical work.
+		// All other roles (crew, supervisor, witness, refinery, miner, boot, dog) use
 		// Groq Compound for fast, low-cost background orchestration.
 		return map[string]string{
-			"mayor":    "claude-sonnet",
-			"deacon":   "groq-compound",
+			"overseer":    "claude-sonnet",
+			"supervisor":   "groq-compound",
 			"witness":  "groq-compound",
 			"refinery": "groq-compound",
-			"polecat":  "groq-compound",
+			"miner":  "groq-compound",
 			"crew":     "groq-compound",
 			"boot":     "groq-compound",
 			"dog":      "groq-compound",
@@ -139,33 +139,33 @@ func CostTierRoleEffort(tier CostTier) map[string]string {
 	switch tier {
 	case TierStandard:
 		return map[string]string{
-			"mayor":    "high",
-			"deacon":   "high",
+			"overseer":    "high",
+			"supervisor":   "high",
 			"witness":  "high",
 			"refinery": "high",
-			"polecat":  "high",
+			"miner":  "high",
 			"crew":     "high",
 			"boot":     "high",
 			"dog":      "high",
 		}
 	case TierEconomy:
 		return map[string]string{
-			"mayor":    "medium",
-			"deacon":   "low",
+			"overseer":    "medium",
+			"supervisor":   "low",
 			"witness":  "low",
 			"refinery": "medium",
-			"polecat":  "high",
+			"miner":  "high",
 			"crew":     "high",
 			"boot":     "low",
 			"dog":      "low",
 		}
 	case TierBudget:
 		return map[string]string{
-			"mayor":    "low",
-			"deacon":   "low",
+			"overseer":    "low",
+			"supervisor":   "low",
 			"witness":  "low",
 			"refinery": "low",
-			"polecat":  "medium",
+			"miner":  "medium",
 			"crew":     "medium",
 			"boot":     "low",
 			"dog":      "low",
@@ -192,7 +192,7 @@ func IsValidEffortLevel(level string) bool {
 
 // CostTierAgents returns the custom agent definitions needed for a given tier.
 // These define the claude-sonnet, claude-haiku, and groq-compound agent presets
-// and are written into TownSettings.Agents so Gas Town can resolve them by name.
+// and are written into TownSettings.Agents so Excavation Site can resolve them by name.
 // Standard tier returns an empty map (no custom agents needed).
 func CostTierAgents(tier CostTier) map[string]*RuntimeConfig {
 	switch tier {
@@ -253,9 +253,9 @@ func claudeHaikuPreset() *RuntimeConfig {
 //	ANTHROPIC_API_KEY   =   (resolved at spawn time from the shell env)
 //
 // This gives you:
-//   - Groq compound-beta reasoning on patrol/utility roles including polecat (low cost, fast)
+//   - Groq compound-beta reasoning on patrol/utility roles including miner (low cost, fast)
 //   - Full Claude SDK hooks / session tracking / tmux detection inherited
-//   - Claude Opus on mayor and crew via the default claude preset
+//   - Claude Opus on overseer and crew via the default claude preset
 //
 // Prerequisite: export GROQ_API_KEY=gsk_... in your shell before starting gt.
 func groqCompoundPreset() *RuntimeConfig {
@@ -375,9 +375,9 @@ func TierDescription(tier CostTier) string {
 	case TierBudget:
 		return "Patrol roles use Haiku, workers use Sonnet"
 	case TierCustomGroqOpus:
-		return "Mayor/Crew → Claude Opus; Deacon/Witness/Refinery/Polecat/Boot/Dog → Groq compound-beta"
+		return "Overseer/Crew → Claude Opus; Supervisor/Witness/Refinery/Miner/Boot/Dog → Groq compound-beta"
 	case TierCustomGroqSonnet:
-		return "Mayor → Claude Sonnet; All other roles → Groq compound-beta"
+		return "Overseer → Claude Sonnet; All other roles → Groq compound-beta"
 	default:
 		return "Unknown tier"
 	}
@@ -391,7 +391,7 @@ func FormatTierRoleTable(tier CostTier) string {
 	}
 	roleEffort := CostTierRoleEffort(tier)
 
-	roles := []string{"mayor", "deacon", "witness", "refinery", "polecat", "crew", "boot", "dog"}
+	roles := []string{"overseer", "supervisor", "witness", "refinery", "miner", "crew", "boot", "dog"}
 	var lines []string
 	for _, role := range roles {
 		agent := roleAgents[role]

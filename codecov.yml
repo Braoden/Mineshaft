@@ -1,4 +1,4 @@
-# Codecov configuration for Gas Town (gt) CLI
+# Codecov configuration for Excavation Site (gt) CLI
 # https://docs.codecov.com/docs/codecovyml-reference
 #
 # Strategy: single upload, no flags. Domain-level views via components.
@@ -54,7 +54,7 @@ component_management:
       paths:
         - internal/rig/**
         - internal/crew/**
-        - internal/polecat/**
+        - internal/miner/**
         - internal/witness/**
         - internal/refinery/**
 

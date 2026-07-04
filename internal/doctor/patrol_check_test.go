@@ -8,16 +8,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/formula"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/formula"
 )
 
-// writeRigsJSON creates a mayor/rigs.json with a single rig entry.
+// writeRigsJSON creates a overseer/rigs.json with a single rig entry.
 func writeRigsJSON(t *testing.T, townRoot, rigName string) {
 	t.Helper()
-	mayorDir := filepath.Join(townRoot, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
-		t.Fatalf("MkdirAll mayor: %v", err)
+	overseerDir := filepath.Join(townRoot, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
+		t.Fatalf("MkdirAll overseer: %v", err)
 	}
 	rigsConfig := config.RigsConfig{
 		Version: 1,
@@ -32,7 +32,7 @@ func writeRigsJSON(t *testing.T, townRoot, rigName string) {
 	if err != nil {
 		t.Fatalf("json.Marshal rigs: %v", err)
 	}
-	rigsPath := filepath.Join(mayorDir, "rigs.json")
+	rigsPath := filepath.Join(overseerDir, "rigs.json")
 	if err := os.WriteFile(rigsPath, data, 0644); err != nil {
 		t.Fatalf("WriteFile rigs.json: %v", err)
 	}
@@ -40,14 +40,14 @@ func writeRigsJSON(t *testing.T, townRoot, rigName string) {
 
 func TestPatrolMoleculesExistCheck_NoRigs(t *testing.T) {
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
-		t.Fatalf("MkdirAll mayor: %v", err)
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
+		t.Fatalf("MkdirAll overseer: %v", err)
 	}
 	// Write rigs.json with no rigs
 	rigsConfig := config.RigsConfig{Version: 1, Rigs: map[string]config.RigEntry{}}
 	data, _ := json.Marshal(rigsConfig)
-	if err := os.WriteFile(filepath.Join(mayorDir, "rigs.json"), data, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), data, 0644); err != nil {
 		t.Fatalf("WriteFile: %v", err)
 	}
 
@@ -61,7 +61,7 @@ func TestPatrolMoleculesExistCheck_NoRigs(t *testing.T) {
 }
 
 func TestPatrolMoleculesExistCheck_RigPathMissing_FallbackToTownRoot(t *testing.T) {
-	// Regression test for: when gt doctor runs from a mayor's canonical clone,
+	// Regression test for: when gt doctor runs from a overseer's canonical clone,
 	// TownRoot/rigName doesn't exist but patrol formulas are accessible from TownRoot.
 	// The check should fall back to TownRoot instead of reporting false missing formulas.
 	tmpDir := t.TempDir()
@@ -72,9 +72,9 @@ func TestPatrolMoleculesExistCheck_RigPathMissing_FallbackToTownRoot(t *testing.
 		t.Fatalf("ProvisionFormulas: %v", err)
 	}
 
-	// Register "gastown" rig but do NOT create TownRoot/gastown directory.
-	// This simulates the mayor's clone scenario where the rig isn't a subdirectory.
-	writeRigsJSON(t, tmpDir, "gastown")
+	// Register "excavation" rig but do NOT create TownRoot/excavation directory.
+	// This simulates the overseer's clone scenario where the rig isn't a subdirectory.
+	writeRigsJSON(t, tmpDir, "excavation")
 
 	check := NewPatrolMoleculesExistCheck()
 	ctx := &CheckContext{TownRoot: tmpDir}
@@ -92,7 +92,7 @@ func TestPatrolMoleculesExistCheck_RigPathExists_FormulasPresent(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Create the rig directory and provision formulas there.
-	rigDir := filepath.Join(tmpDir, "gastown")
+	rigDir := filepath.Join(tmpDir, "excavation")
 	if err := os.MkdirAll(rigDir, 0755); err != nil {
 		t.Fatalf("MkdirAll rig: %v", err)
 	}
@@ -100,7 +100,7 @@ func TestPatrolMoleculesExistCheck_RigPathExists_FormulasPresent(t *testing.T) {
 		t.Fatalf("ProvisionFormulas: %v", err)
 	}
 
-	writeRigsJSON(t, tmpDir, "gastown")
+	writeRigsJSON(t, tmpDir, "excavation")
 
 	check := NewPatrolMoleculesExistCheck()
 	ctx := &CheckContext{TownRoot: tmpDir}
@@ -121,7 +121,7 @@ func TestPatrolMoleculesExistCheck_RigPathExists_TownLevelFormulas(t *testing.T)
 	tmpDir := t.TempDir()
 
 	// Create the rig directory WITHOUT formulas.
-	rigDir := filepath.Join(tmpDir, "gastown")
+	rigDir := filepath.Join(tmpDir, "excavation")
 	if err := os.MkdirAll(rigDir, 0755); err != nil {
 		t.Fatalf("MkdirAll rig: %v", err)
 	}
@@ -131,7 +131,7 @@ func TestPatrolMoleculesExistCheck_RigPathExists_TownLevelFormulas(t *testing.T)
 		t.Fatalf("ProvisionFormulas at town root: %v", err)
 	}
 
-	writeRigsJSON(t, tmpDir, "gastown")
+	writeRigsJSON(t, tmpDir, "excavation")
 
 	check := NewPatrolMoleculesExistCheck()
 	ctx := &CheckContext{TownRoot: tmpDir}
@@ -160,9 +160,9 @@ func TestNewPatrolHooksWiredCheck(t *testing.T) {
 
 func TestPatrolHooksWiredCheck_NoDaemonConfig(t *testing.T) {
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
+		t.Fatalf("mkdir overseer: %v", err)
 	}
 
 	check := NewPatrolHooksWiredCheck()
@@ -249,9 +249,9 @@ func TestPatrolHooksWiredCheck_HeartbeatEnabled(t *testing.T) {
 
 func TestPatrolHooksWiredCheck_Fix(t *testing.T) {
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
+		t.Fatalf("mkdir overseer: %v", err)
 	}
 
 	check := NewPatrolHooksWiredCheck()
@@ -341,9 +341,9 @@ func TestPatrolNotStuckCheck_Run_DoltFailureReportsError(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Create rigs.json
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
+		t.Fatalf("mkdir overseer: %v", err)
 	}
 	rigsConfig := config.RigsConfig{
 		Rigs: map[string]config.RigEntry{
@@ -351,7 +351,7 @@ func TestPatrolNotStuckCheck_Run_DoltFailureReportsError(t *testing.T) {
 		},
 	}
 	rigsData, _ := json.Marshal(rigsConfig)
-	if err := os.WriteFile(filepath.Join(mayorDir, "rigs.json"), rigsData, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), rigsData, 0644); err != nil {
 		t.Fatalf("write rigs.json: %v", err)
 	}
 

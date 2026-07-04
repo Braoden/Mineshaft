@@ -14,11 +14,11 @@ import (
 
 	"github.com/gofrs/flock"
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/events"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/events"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var (
@@ -47,7 +47,7 @@ a predecessor session with full context. You can ask questions directly:
 DISCOVERY:
   gt seance                     # List recent sessions from events
   gt seance --role crew         # Filter by role type
-  gt seance --rig gastown       # Filter by rig
+  gt seance --rig excavation       # Filter by rig
   gt seance --recent 10         # Last N sessions
 
 THE SEANCE (talk to predecessor):
@@ -64,7 +64,7 @@ Sessions are discovered from:
 }
 
 func init() {
-	seanceCmd.Flags().StringVar(&seanceRole, "role", "", "Filter by role (crew, polecat, witness, etc.)")
+	seanceCmd.Flags().StringVar(&seanceRole, "role", "", "Filter by role (crew, miner, witness, etc.)")
 	seanceCmd.Flags().StringVar(&seanceRig, "rig", "", "Filter by rig name")
 	seanceCmd.Flags().IntVarP(&seanceRecent, "recent", "n", 20, "Number of recent sessions to show")
 	seanceCmd.Flags().StringVarP(&seanceTalk, "talk", "t", "", "Session ID to commune with")
@@ -95,7 +95,7 @@ func runSeance(cmd *cobra.Command, args []string) error {
 func runSeanceList() error {
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil || townRoot == "" {
-		return fmt.Errorf("not in a Gas Town workspace")
+		return fmt.Errorf("not in a Excavation Site workspace")
 	}
 
 	// Read session events from our event stream
@@ -407,7 +407,7 @@ type sessionsIndexEntry struct {
 // sessionLocation contains the location info for a session.
 type sessionLocation struct {
 	configDir  string // The account's config directory
-	projectDir string // The project directory name (e.g., "-Users-jv-gt-gastown-crew-propane")
+	projectDir string // The project directory name (e.g., "-Users-jv-gt-excavation-crew-propane")
 }
 
 // sessionsIndexLockTimeout is how long to wait for the index lock.
@@ -447,7 +447,7 @@ func findSessionLocation(townRoot, sessionID string) *sessionLocation {
 	}
 
 	// Load accounts config
-	accountsPath := constants.MayorAccountsPath(townRoot)
+	accountsPath := constants.OverseerAccountsPath(townRoot)
 	cfg, err := config.LoadAccountsConfig(accountsPath)
 	if err == nil {
 		// Search each account's config directory

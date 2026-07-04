@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/config"
 )
 
 // setupTestRigForSettings creates a test rig for settings testing.
@@ -18,10 +18,10 @@ func setupTestRigForSettings(t *testing.T) (string, string) {
 
 	townRoot := t.TempDir()
 
-	// Create mayor directory and town.json (required for workspace detection)
-	mayorDir := filepath.Join(townRoot, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+	// Create overseer directory and town.json (required for workspace detection)
+	overseerDir := filepath.Join(townRoot, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
+		t.Fatalf("mkdir overseer: %v", err)
 	}
 
 	// Create town.json (primary marker for workspace detection)
@@ -31,13 +31,13 @@ func setupTestRigForSettings(t *testing.T) (string, string) {
 		Name:       "test-town",
 		CreatedAt:  time.Now().Truncate(time.Second),
 	}
-	townConfigPath := filepath.Join(mayorDir, "town.json")
+	townConfigPath := filepath.Join(overseerDir, "town.json")
 	if err := config.SaveTownConfig(townConfigPath, townConfig); err != nil {
 		t.Fatalf("save town.json: %v", err)
 	}
 
 	// Create rigs.json
-	rigsPath := filepath.Join(mayorDir, "rigs.json")
+	rigsPath := filepath.Join(overseerDir, "rigs.json")
 	rigsConfig := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
@@ -135,7 +135,7 @@ func TestRigSettingsShow(t *testing.T) {
 		settings.RoleAgents = map[string]string{
 			"witness":  "gemini",
 			"refinery": "claude-sonnet",
-			"polecat":  "claude-haiku",
+			"miner":  "claude-haiku",
 		}
 		if settings.MergeQueue == nil {
 			settings.MergeQueue = config.DefaultMergeQueueConfig()

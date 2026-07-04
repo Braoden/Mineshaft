@@ -13,11 +13,11 @@ import (
 // read and parse the file independently.
 func TestGetKnownRigs_CachedBetweenInvalidations(t *testing.T) {
 	townRoot := t.TempDir()
-	mayorDir := filepath.Join(townRoot, "mayor")
-	if err := os.MkdirAll(mayorDir, 0o755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+	overseerDir := filepath.Join(townRoot, "overseer")
+	if err := os.MkdirAll(overseerDir, 0o755); err != nil {
+		t.Fatalf("mkdir overseer: %v", err)
 	}
-	rigsPath := filepath.Join(mayorDir, "rigs.json")
+	rigsPath := filepath.Join(overseerDir, "rigs.json")
 	if err := os.WriteFile(rigsPath, []byte(`{"rigs":{"alpha":{},"beta":{}}}`), 0o644); err != nil {
 		t.Fatalf("write rigs.json: %v", err)
 	}

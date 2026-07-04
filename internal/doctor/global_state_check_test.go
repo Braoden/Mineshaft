@@ -9,7 +9,7 @@ import (
 func TestHasShellIntegration_DirectMarker(t *testing.T) {
 	dir := t.TempDir()
 	rc := filepath.Join(dir, ".zshrc")
-	os.WriteFile(rc, []byte("# --- Gas Town Integration (managed by gt) ---\nsource hook.sh\n# --- End Gas Town ---\n"), 0644)
+	os.WriteFile(rc, []byte("# --- Excavation Site Integration (managed by gt) ---\nsource hook.sh\n# --- End Excavation Site ---\n"), 0644)
 
 	if !hasShellIntegration(rc) {
 		t.Error("expected integration to be detected with marker in RC file")
@@ -37,7 +37,7 @@ func TestHasShellIntegration_MarkerInSourcedFile(t *testing.T) {
 
 	// Sourced file has the marker
 	sub := filepath.Join(dir, "profile.zsh")
-	os.WriteFile(sub, []byte("# --- Gas Town Integration (managed by gt) ---\n"), 0644)
+	os.WriteFile(sub, []byte("# --- Excavation Site Integration (managed by gt) ---\n"), 0644)
 
 	rc := filepath.Join(dir, ".zshrc")
 	os.WriteFile(rc, []byte("source "+sub+"\n"), 0644)
@@ -52,7 +52,7 @@ func TestHasShellIntegration_HookScriptReferenceInSourcedFile(t *testing.T) {
 	dir := t.TempDir()
 
 	profile := filepath.Join(dir, "home.zsh")
-	os.WriteFile(profile, []byte(`# Gas Town shell integration
+	os.WriteFile(profile, []byte(`# Excavation Site shell integration
 [[ -f "`+dir+`/shell-hook.sh" ]] && source "`+dir+`/shell-hook.sh"
 `), 0644)
 
@@ -69,7 +69,7 @@ func TestHasShellIntegration_VariableExpansion(t *testing.T) {
 
 	sub := filepath.Join(dir, "zsh", "common.zsh")
 	os.MkdirAll(filepath.Dir(sub), 0755)
-	os.WriteFile(sub, []byte("# --- Gas Town Integration (managed by gt) ---\n"), 0644)
+	os.WriteFile(sub, []byte("# --- Excavation Site Integration (managed by gt) ---\n"), 0644)
 
 	rc := filepath.Join(dir, ".zshrc")
 	content := `export DOTFILES_DIR="` + dir + `"
@@ -108,12 +108,12 @@ func TestHasShellIntegration_TildeExpansion(t *testing.T) {
 	home, _ := os.UserHomeDir()
 
 	// Create a file under the actual home dir with the marker
-	testDir := filepath.Join(home, ".gastown-test-"+filepath.Base(dir))
+	testDir := filepath.Join(home, ".excavation-test-"+filepath.Base(dir))
 	os.MkdirAll(testDir, 0755)
 	defer os.RemoveAll(testDir)
 
 	sub := filepath.Join(testDir, "integration.zsh")
-	os.WriteFile(sub, []byte("# --- Gas Town Integration (managed by gt) ---\n"), 0644)
+	os.WriteFile(sub, []byte("# --- Excavation Site Integration (managed by gt) ---\n"), 0644)
 
 	rc := filepath.Join(dir, ".zshrc")
 	os.WriteFile(rc, []byte("source ~/"+filepath.Base(testDir)+"/integration.zsh\n"), 0644)
@@ -131,7 +131,7 @@ func TestHasShellIntegration_DepthLimit(t *testing.T) {
 	for i := 0; i < 8; i++ {
 		f := filepath.Join(dir, "level"+string(rune('0'+i))+".zsh")
 		if i == 7 {
-			os.WriteFile(f, []byte("# --- Gas Town Integration ---\n"), 0644)
+			os.WriteFile(f, []byte("# --- Excavation Site Integration ---\n"), 0644)
 		} else if prev == "" {
 			os.WriteFile(f, []byte("# root\n"), 0644)
 		} else {
@@ -146,7 +146,7 @@ func TestHasShellIntegration_DepthLimit(t *testing.T) {
 	for i := 0; i < 8; i++ {
 		f := filepath.Join(dir, "level"+string(rune('0'+i))+".zsh")
 		if i == 0 {
-			os.WriteFile(f, []byte("# --- Gas Town Integration ---\n"), 0644)
+			os.WriteFile(f, []byte("# --- Excavation Site Integration ---\n"), 0644)
 		} else {
 			prev := filepath.Join(dir, "level"+string(rune('0'+i-1))+".zsh")
 			os.WriteFile(f, []byte("source "+prev+"\n"), 0644)
@@ -191,7 +191,7 @@ func TestHasShellIntegration_ConditionalOrSource(t *testing.T) {
 	dir := t.TempDir()
 
 	sub := filepath.Join(dir, "p10k.zsh")
-	os.WriteFile(sub, []byte("# --- Gas Town Integration ---\n"), 0644)
+	os.WriteFile(sub, []byte("# --- Excavation Site Integration ---\n"), 0644)
 
 	rc := filepath.Join(dir, ".zshrc")
 	os.WriteFile(rc, []byte("[[ ! -f "+sub+" ]] || source "+sub+"\n"), 0644)

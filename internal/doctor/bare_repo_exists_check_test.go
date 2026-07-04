@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/git"
+	"github.com/steveyegge/excavation/internal/git"
 )
 
 func TestBareRepoExistsCheck_Name(t *testing.T) {
@@ -117,13 +117,13 @@ func TestBareRepoExistsCheck_MultipleWorktreesMissing(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Create polecat worktree
-	polecatDir := filepath.Join(rigDir, "polecats", "worker1", rigName)
-	if err := os.MkdirAll(polecatDir, 0755); err != nil {
+	// Create miner worktree
+	minerDir := filepath.Join(rigDir, "miners", "worker1", rigName)
+	if err := os.MkdirAll(minerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	polecatGit := "gitdir: " + filepath.Join(bareRepoTarget, "worktrees", "worker1") + "\n"
-	if err := os.WriteFile(filepath.Join(polecatDir, ".git"), []byte(polecatGit), 0644); err != nil {
+	minerGit := "gitdir: " + filepath.Join(bareRepoTarget, "worktrees", "worker1") + "\n"
+	if err := os.WriteFile(filepath.Join(minerDir, ".git"), []byte(minerGit), 0644); err != nil {
 		t.Fatal(err)
 	}
 

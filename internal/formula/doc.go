@@ -7,7 +7,7 @@
 // tracking, validation, and parallel execution planning. It supports four
 // formula types, each designed for different execution patterns:
 //
-//   - convoy: Parallel execution of independent legs with synthesis
+//   - minecart: Parallel execution of independent legs with synthesis
 //   - workflow: Sequential steps with explicit dependencies
 //   - expansion: Template-based step generation
 //   - aspect: Multi-aspect parallel analysis
@@ -39,10 +39,10 @@
 //
 // # Formula Types
 //
-// Convoy formulas execute legs in parallel, then synthesize results:
+// Minecart formulas execute legs in parallel, then synthesize results:
 //
 //	formula = "security-audit"
-//	type = "convoy"
+//	type = "minecart"
 //
 //	[[legs]]
 //	id = "sast"
@@ -102,7 +102,7 @@
 //	order, err := f.TopologicalSort()
 //	// Returns: ["test", "build", "publish"]
 //
-// For convoy and aspect formulas (which are parallel), TopologicalSort
+// For minecart and aspect formulas (which are parallel), TopologicalSort
 // returns all items in their original order.
 //
 // # Ready Step Computation

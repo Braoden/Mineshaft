@@ -6,7 +6,7 @@ package daemon
 // All patrols are enabled with conservative intervals:
 //   - Wisp Reaper (DECAY): every 30m, delete closed wisps after 7d
 //   - Compactor Dog (COMPACT): every 24h, threshold 2000 commits
-//   - Checkpoint Dog: every 10m, auto-commit dirty polecat worktrees
+//   - Checkpoint Dog: every 10m, auto-commit dirty miner worktrees
 //   - Doctor Dog (health): every 5m
 //   - JSONL Git Backup: every 15m
 //   - Dolt Filesystem Backup: every 15m

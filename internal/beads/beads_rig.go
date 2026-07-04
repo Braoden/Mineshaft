@@ -124,7 +124,7 @@ func (b *Beads) EnsureRigBead(name string, fields *RigFields) (*Issue, error) {
 }
 
 // CreateRigBead creates a rig identity bead for tracking rig metadata.
-// The ID format is: <prefix>-rig-<name> (e.g., gt-rig-gastown)
+// The ID format is: <prefix>-rig-<name> (e.g., gt-rig-excavation)
 // The ID is constructed internally from fields.Prefix and name.
 // The created_by field is populated from BD_ACTOR env var for provenance tracking.
 func (b *Beads) CreateRigBead(name string, fields *RigFields) (*Issue, error) {
@@ -274,13 +274,13 @@ func (b *Beads) ListRigBeads() (map[string]*RigFields, error) {
 }
 
 // RigBeadIDWithPrefix generates a rig identity bead ID using the specified prefix.
-// Format: <prefix>-rig-<name> (e.g., gt-rig-gastown)
+// Format: <prefix>-rig-<name> (e.g., gt-rig-excavation)
 func RigBeadIDWithPrefix(prefix, name string) string {
 	return fmt.Sprintf("%s-rig-%s", prefix, name)
 }
 
 // RigBeadID generates a rig identity bead ID using "gt" prefix.
-// For non-gastown rigs, use RigBeadIDWithPrefix with the rig's configured prefix.
+// For non-excavation rigs, use RigBeadIDWithPrefix with the rig's configured prefix.
 func RigBeadID(name string) string {
 	return RigBeadIDWithPrefix("gt", name)
 }

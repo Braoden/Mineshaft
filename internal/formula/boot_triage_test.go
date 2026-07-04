@@ -13,7 +13,7 @@ func TestBootTriageFormulaUsesNudgeForWake(t *testing.T) {
 
 	formula := string(content)
 	for _, want := range []string{
-		`gt nudge --mode=immediate deacon "Boot wake: please check your inbox and pending work"`,
+		`gt nudge --mode=immediate supervisor "Boot wake: please check your inbox and pending work"`,
 		"Raw tmux send-keys is blocked for Boot",
 	} {
 		if !strings.Contains(formula, want) {
@@ -21,7 +21,7 @@ func TestBootTriageFormulaUsesNudgeForWake(t *testing.T) {
 		}
 	}
 	for _, forbidden := range []string{
-		"tmux send-keys -t hq-deacon",
+		"tmux send-keys -t hq-supervisor",
 		"sleep 1",
 		"escape + message",
 	} {

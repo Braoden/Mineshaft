@@ -25,18 +25,18 @@ func TestRigAdoptBeadsCandidateDetection(t *testing.T) {
 			wantFoundBeads: true,
 		},
 		{
-			name:           "mayor/rig/.beads exists (tracked beads)",
-			setupDirs:      []string{"mayor/rig/.beads"},
+			name:           "overseer/rig/.beads exists (tracked beads)",
+			setupDirs:      []string{"overseer/rig/.beads"},
 			wantFoundBeads: true,
 		},
 		{
 			name:           "both candidates exist",
-			setupDirs:      []string{".beads", "mayor/rig/.beads"},
+			setupDirs:      []string{".beads", "overseer/rig/.beads"},
 			wantFoundBeads: true,
 		},
 		{
 			name:           "unrelated directories dont count",
-			setupDirs:      []string{"src", "docs", "mayor"},
+			setupDirs:      []string{"src", "docs", "overseer"},
 			wantFoundBeads: false,
 		},
 	}
@@ -55,7 +55,7 @@ func TestRigAdoptBeadsCandidateDetection(t *testing.T) {
 			// Replicate the candidate detection logic from runRigAdopt
 			candidates := []string{
 				filepath.Join(rigPath, ".beads"),
-				filepath.Join(rigPath, "mayor", "rig", ".beads"),
+				filepath.Join(rigPath, "overseer", "rig", ".beads"),
 			}
 			found := false
 			for _, candidate := range candidates {

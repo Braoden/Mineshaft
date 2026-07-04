@@ -9,13 +9,13 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/boot"
-	"github.com/steveyegge/gastown/internal/daemon"
-	"github.com/steveyegge/gastown/internal/deacon"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/boot"
+	"github.com/steveyegge/excavation/internal/daemon"
+	"github.com/steveyegge/excavation/internal/supervisor"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var (
@@ -27,12 +27,12 @@ var (
 var bootCmd = &cobra.Command{
 	Use:     "boot",
 	GroupID: GroupAgents,
-	Short:   "Manage Boot (Deacon watchdog)",
-	Long: `Manage Boot - the daemon's watchdog for Deacon triage.
+	Short:   "Manage Boot (Supervisor watchdog)",
+	Long: `Manage Boot - the daemon's watchdog for Supervisor triage.
 
 Boot is a special dog that runs fresh on each daemon tick. It observes
 the system state and decides whether to start/wake/nudge/interrupt the
-Deacon, or do nothing. This centralizes the "when to wake" decision in
+Supervisor, or do nothing. This centralizes the "when to wake" decision in
 an agent that can reason about it.
 
 Boot lifecycle:
@@ -41,7 +41,7 @@ Boot lifecycle:
   3. Boot cleans inbox (discards stale handoffs)
   4. Boot exits (or handoffs in non-degraded mode)
 
-Location: ~/gt/deacon/dogs/boot/
+Location: ~/gt/supervisor/dogs/boot/
 Session: gt-boot`,
 }
 
@@ -65,7 +65,7 @@ var bootSpawnCmd = &cobra.Command{
 
 This is normally called by the daemon. It spawns Boot in a fresh
 tmux session (or subprocess in degraded mode) to observe and decide
-what action to take on the Deacon.
+what action to take on the Supervisor.
 
 Boot runs to completion and exits - it doesn't maintain state
 between invocations.`,
@@ -79,8 +79,8 @@ var bootTriageCmd = &cobra.Command{
 
 This is for degraded mode operation when tmux is unavailable.
 It performs basic observation and takes conservative action:
-  - If Deacon is not running: start it
-  - If Deacon appears stuck: attempt restart
+  - If Supervisor is not running: start it
+  - If Supervisor appears stuck: attempt restart
   - Otherwise: do nothing
 
 Use --degraded flag when running in degraded mode.`,
@@ -274,7 +274,7 @@ func runBootTriage(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// runDegradedTriage performs mechanical Deacon health checks without AI reasoning.
+// runDegradedTriage performs mechanical Supervisor health checks without AI reasoning.
 //
 // ZFC principle: "Agent decides. Go transports." Complex triage decisions
 // (heartbeat staleness, idle detection, backoff awareness, molecule progress)
@@ -283,8 +283,8 @@ func runBootTriage(cmd *cobra.Command, args []string) error {
 // when no AI agent is available.
 func runDegradedTriage(b *boot.Boot) (action, target string, err error) {
 	// Abort triage if a shutdown is in progress. Without this check, Boot could
-	// detect Deacon as "down" during the graceful shutdown window and restart it,
-	// creating a zombie Deacon that survives gt down.
+	// detect Supervisor as "down" during the graceful shutdown window and restart it,
+	// creating a zombie Supervisor that survives gt down.
 	townRoot, _ := workspace.FindFromCwd()
 	if townRoot != "" && daemon.IsShutdownInProgress(townRoot) {
 		return "nothing", "shutdown-in-progress", nil
@@ -299,38 +299,38 @@ func runDegradedTriage(b *boot.Boot) (action, target string, err error) {
 		executeWarrants(filepath.Join(townRoot, "warrants"), tm)
 	}
 
-	// Check if Deacon session exists — the only mechanical check degraded
+	// Check if Supervisor session exists — the only mechanical check degraded
 	// triage needs. All deeper reasoning (staleness, idle, backoff, progress)
 	// is the Boot agent's job via mol-boot-triage.
-	deaconSession := getDeaconSessionName()
-	hasDeacon, err := tm.HasSession(deaconSession)
+	supervisorSession := getSupervisorSessionName()
+	hasSupervisor, err := tm.HasSession(supervisorSession)
 	if err != nil {
-		return "error", "deacon", fmt.Errorf("checking deacon session: %w", err)
+		return "error", "supervisor", fmt.Errorf("checking supervisor session: %w", err)
 	}
 
-	if !hasDeacon {
-		// Deacon not running - start it immediately rather than waiting
+	if !hasSupervisor {
+		// Supervisor not running - start it immediately rather than waiting
 		// for the next daemon heartbeat cycle (up to 3 minutes away).
-		fmt.Println("Deacon session missing - starting Deacon")
+		fmt.Println("Supervisor session missing - starting Supervisor")
 		if townRoot != "" {
-			mgr := deacon.NewManager(townRoot)
-			if err := mgr.Start(""); err != nil && err != deacon.ErrAlreadyRunning {
-				fmt.Printf("Failed to start Deacon: %v\n", err)
-				return "error", "deacon-start-failed", fmt.Errorf("starting deacon: %w", err)
+			mgr := supervisor.NewManager(townRoot)
+			if err := mgr.Start(""); err != nil && err != supervisor.ErrAlreadyRunning {
+				fmt.Printf("Failed to start Supervisor: %v\n", err)
+				return "error", "supervisor-start-failed", fmt.Errorf("starting supervisor: %w", err)
 			}
-			return "start", "deacon-restarted", nil
+			return "start", "supervisor-restarted", nil
 		}
-		return "error", "deacon-missing", fmt.Errorf("cannot find town root to start deacon")
+		return "error", "supervisor-missing", fmt.Errorf("cannot find town root to start supervisor")
 	}
 
-	// Deacon session exists — in degraded mode, that's all we can check
+	// Supervisor session exists — in degraded mode, that's all we can check
 	// mechanically. The Boot agent handles deeper health assessment.
 	return "nothing", "", nil
 }
 
 // executeWarrants scans the warrants directory and executes any pending warrants.
 // It is called as a side effect during degraded triage, before the normal
-// Deacon health decision is made. Errors are non-fatal: a failed execution is
+// Supervisor health decision is made. Errors are non-fatal: a failed execution is
 // logged and skipped rather than aborting triage.
 func executeWarrants(warrantDir string, tm *tmux.Tmux) {
 	entries, err := os.ReadDir(warrantDir)

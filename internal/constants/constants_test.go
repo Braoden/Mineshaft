@@ -9,12 +9,12 @@ func TestRoleEmoji(t *testing.T) {
 		role   string
 		expect string
 	}{
-		{RoleMayor, EmojiMayor},
-		{RoleDeacon, EmojiDeacon},
+		{RoleOverseer, EmojiOverseer},
+		{RoleSupervisor, EmojiSupervisor},
 		{RoleWitness, EmojiWitness},
 		{RoleRefinery, EmojiRefinery},
 		{RoleCrew, EmojiCrew},
-		{RolePolecat, EmojiPolecat},
+		{RoleMiner, EmojiMiner},
 		{"unknown", "❓"},
 		{"", "❓"},
 	}
@@ -30,7 +30,7 @@ func TestRoleEmoji(t *testing.T) {
 
 func TestBeadsCustomTypesList(t *testing.T) {
 	types := BeadsCustomTypesList()
-	expected := []string{"agent", "role", "rig", "convoy", "slot", "queue", "event", "message", "molecule", "gate", "merge-request"}
+	expected := []string{"agent", "role", "rig", "minecart", "slot", "queue", "event", "message", "molecule", "gate", "merge-request"}
 
 	if len(types) != len(expected) {
 		t.Fatalf("BeadsCustomTypesList() returned %d items, want %d", len(types), len(expected))
@@ -42,43 +42,43 @@ func TestBeadsCustomTypesList(t *testing.T) {
 	}
 }
 
-func TestMayorRigsPath(t *testing.T) {
-	got := MayorRigsPath("/town")
-	expect := "/town/mayor/rigs.json"
+func TestOverseerRigsPath(t *testing.T) {
+	got := OverseerRigsPath("/town")
+	expect := "/town/overseer/rigs.json"
 	if got != expect {
-		t.Errorf("MayorRigsPath = %q, want %q", got, expect)
+		t.Errorf("OverseerRigsPath = %q, want %q", got, expect)
 	}
 }
 
-func TestMayorTownPath(t *testing.T) {
-	got := MayorTownPath("/town")
-	expect := "/town/mayor/town.json"
+func TestOverseerTownPath(t *testing.T) {
+	got := OverseerTownPath("/town")
+	expect := "/town/overseer/town.json"
 	if got != expect {
-		t.Errorf("MayorTownPath = %q, want %q", got, expect)
+		t.Errorf("OverseerTownPath = %q, want %q", got, expect)
 	}
 }
 
-func TestRigMayorPath(t *testing.T) {
-	got := RigMayorPath("/rig")
-	expect := "/rig/mayor/rig"
+func TestRigOverseerPath(t *testing.T) {
+	got := RigOverseerPath("/rig")
+	expect := "/rig/overseer/rig"
 	if got != expect {
-		t.Errorf("RigMayorPath = %q, want %q", got, expect)
+		t.Errorf("RigOverseerPath = %q, want %q", got, expect)
 	}
 }
 
 func TestRigBeadsPath(t *testing.T) {
 	got := RigBeadsPath("/rig")
-	expect := "/rig/mayor/rig/.beads"
+	expect := "/rig/overseer/rig/.beads"
 	if got != expect {
 		t.Errorf("RigBeadsPath = %q, want %q", got, expect)
 	}
 }
 
-func TestRigPolecatsPath(t *testing.T) {
-	got := RigPolecatsPath("/rig")
-	expect := "/rig/polecats"
+func TestRigMinersPath(t *testing.T) {
+	got := RigMinersPath("/rig")
+	expect := "/rig/miners"
 	if got != expect {
-		t.Errorf("RigPolecatsPath = %q, want %q", got, expect)
+		t.Errorf("RigMinersPath = %q, want %q", got, expect)
 	}
 }
 
@@ -90,11 +90,11 @@ func TestRigCrewPath(t *testing.T) {
 	}
 }
 
-func TestMayorConfigPath(t *testing.T) {
-	got := MayorConfigPath("/town")
-	expect := "/town/mayor/config.json"
+func TestOverseerConfigPath(t *testing.T) {
+	got := OverseerConfigPath("/town")
+	expect := "/town/overseer/config.json"
 	if got != expect {
-		t.Errorf("MayorConfigPath = %q, want %q", got, expect)
+		t.Errorf("OverseerConfigPath = %q, want %q", got, expect)
 	}
 }
 
@@ -122,18 +122,18 @@ func TestRigSettingsPath(t *testing.T) {
 	}
 }
 
-func TestMayorAccountsPath(t *testing.T) {
-	got := MayorAccountsPath("/town")
-	expect := "/town/mayor/accounts.json"
+func TestOverseerAccountsPath(t *testing.T) {
+	got := OverseerAccountsPath("/town")
+	expect := "/town/overseer/accounts.json"
 	if got != expect {
-		t.Errorf("MayorAccountsPath = %q, want %q", got, expect)
+		t.Errorf("OverseerAccountsPath = %q, want %q", got, expect)
 	}
 }
 
-func TestMayorQuotaPath(t *testing.T) {
-	got := MayorQuotaPath("/town")
-	expect := "/town/mayor/quota.json"
+func TestOverseerQuotaPath(t *testing.T) {
+	got := OverseerQuotaPath("/town")
+	expect := "/town/overseer/quota.json"
 	if got != expect {
-		t.Errorf("MayorQuotaPath = %q, want %q", got, expect)
+		t.Errorf("OverseerQuotaPath = %q, want %q", got, expect)
 	}
 }

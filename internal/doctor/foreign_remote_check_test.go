@@ -59,8 +59,8 @@ func TestForeignRemoteCheck_DetectsForeignRemote(t *testing.T) {
 	foreignDir := initSeparateTestRepo(t)
 	defer os.RemoveAll(foreignDir)
 
-	runGit(t, townDir, "remote", "add", "gastown", foreignDir)
-	runGit(t, townDir, "fetch", "gastown")
+	runGit(t, townDir, "remote", "add", "excavation", foreignDir)
+	runGit(t, townDir, "fetch", "excavation")
 
 	ctx := &CheckContext{TownRoot: townDir}
 	check := NewForeignRemoteCheck()
@@ -74,8 +74,8 @@ func TestForeignRemoteCheck_DetectsForeignRemote(t *testing.T) {
 		t.Errorf("expected 1 foreign remote, got %d", len(check.foreignRemotes))
 	}
 
-	if check.foreignRemotes[0].name != "gastown" {
-		t.Errorf("expected foreign remote name 'gastown', got %q", check.foreignRemotes[0].name)
+	if check.foreignRemotes[0].name != "excavation" {
+		t.Errorf("expected foreign remote name 'excavation', got %q", check.foreignRemotes[0].name)
 	}
 }
 
@@ -118,8 +118,8 @@ func TestForeignRemoteCheck_FixRemovesForeignRemotes(t *testing.T) {
 	foreignDir := initSeparateTestRepo(t)
 	defer os.RemoveAll(foreignDir)
 
-	runGit(t, townDir, "remote", "add", "gastown", foreignDir)
-	runGit(t, townDir, "fetch", "gastown")
+	runGit(t, townDir, "remote", "add", "excavation", foreignDir)
+	runGit(t, townDir, "fetch", "excavation")
 
 	ctx := &CheckContext{TownRoot: townDir}
 	check := NewForeignRemoteCheck()

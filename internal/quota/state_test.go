@@ -8,16 +8,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
 )
 
-// setupTestTown creates a temporary town root with mayor directory.
+// setupTestTown creates a temporary town root with overseer directory.
 func setupTestTown(t *testing.T) string {
 	t.Helper()
 	townRoot := t.TempDir()
-	mayorDir := filepath.Join(townRoot, constants.DirMayor)
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(townRoot, constants.DirOverseer)
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 	return townRoot
@@ -270,7 +270,7 @@ func TestLoadCorruptFile(t *testing.T) {
 	mgr := NewManager(townRoot)
 
 	// Write corrupt JSON
-	path := constants.MayorQuotaPath(townRoot)
+	path := constants.OverseerQuotaPath(townRoot)
 	if err := os.WriteFile(path, []byte("{invalid"), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -367,7 +367,7 @@ func TestSaveUnlocked(t *testing.T) {
 
 func TestSaveCreatesDirectory(t *testing.T) {
 	townRoot := t.TempDir()
-	// Don't create mayor dir — Save should handle it via EnsureDirAndWriteJSON
+	// Don't create overseer dir — Save should handle it via EnsureDirAndWriteJSON
 	mgr := NewManager(townRoot)
 
 	state := &config.QuotaState{
@@ -380,7 +380,7 @@ func TestSaveCreatesDirectory(t *testing.T) {
 	}
 
 	// Verify file exists
-	data, err := os.ReadFile(constants.MayorQuotaPath(townRoot))
+	data, err := os.ReadFile(constants.OverseerQuotaPath(townRoot))
 	if err != nil {
 		t.Fatalf("reading saved file: %v", err)
 	}

@@ -8,12 +8,12 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/scheduler/capacity"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/scheduler/capacity"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var (
@@ -39,14 +39,14 @@ Subcommands:
   gt scheduler clear     # Remove beads from scheduler
 
 Config:
-  gt config set scheduler.max_polecats 5    # Enable deferred dispatch
-  gt config set scheduler.max_polecats -1   # Direct dispatch (default)`,
+  gt config set scheduler.max_miners 5    # Enable deferred dispatch
+  gt config set scheduler.max_miners -1   # Direct dispatch (default)`,
 	RunE: requireSubcommand,
 }
 
 var schedulerStatusCmd = &cobra.Command{
 	Use:   "status",
-	Short: "Show scheduler state: pending, capacity, active polecats",
+	Short: "Show scheduler state: pending, capacity, active miners",
 	RunE:  runSchedulerStatus,
 }
 
@@ -139,9 +139,9 @@ func runSchedulerStatus(cmd *cobra.Command, args []string) error {
 
 	scheduled := listScheduledBeads(townRoot)
 
-	capacitySnapshot, err := polecatCapacitySnapshotForTown(townRoot)
+	capacitySnapshot, err := minerCapacitySnapshotForTown(townRoot)
 	if err != nil {
-		return fmt.Errorf("loading polecat capacity: %w", err)
+		return fmt.Errorf("loading miner capacity: %w", err)
 	}
 
 	if schedulerStatusJSON {
@@ -150,15 +150,15 @@ func runSchedulerStatus(cmd *cobra.Command, args []string) error {
 			PausedBy       string                  `json:"paused_by,omitempty"`
 			ScheduledTotal int                     `json:"queued_total"`
 			ScheduledReady int                     `json:"queued_ready"`
-			ActivePolecats int                     `json:"active_polecats"`
-			Capacity       polecatCapacitySnapshot `json:"capacity"`
+			ActiveMiners int                     `json:"active_miners"`
+			Capacity       minerCapacitySnapshot `json:"capacity"`
 			LastDispatchAt string                  `json:"last_dispatch_at,omitempty"`
 			Beads          []scheduledBeadInfo     `json:"beads"`
 		}{
 			Paused:         state.Paused,
 			PausedBy:       state.PausedBy,
 			ScheduledTotal: len(scheduled),
-			ActivePolecats: capacitySnapshot.ActiveSessions,
+			ActiveMiners: capacitySnapshot.ActiveSessions,
 			Capacity:       capacitySnapshot,
 			LastDispatchAt: state.LastDispatchAt,
 			Beads:          scheduled,
@@ -187,7 +187,7 @@ func runSchedulerStatus(cmd *cobra.Command, args []string) error {
 		fmt.Printf("  State:    active\n")
 	}
 	fmt.Printf("  Scheduled: %d total, %d ready\n", len(scheduled), readyCount)
-	fmt.Printf("  Active:    %d polecats\n", capacitySnapshot.ActiveSessions)
+	fmt.Printf("  Active:    %d miners\n", capacitySnapshot.ActiveSessions)
 	if capacitySnapshot.Max > 0 {
 		fmt.Printf("  Capacity:  %d free of %d (working: %d, recovery: %d, reservations: %d, reusable idle: %d, pending MR: %d)\n",
 			capacitySnapshot.Free,
@@ -199,7 +199,7 @@ func runSchedulerStatus(cmd *cobra.Command, args []string) error {
 			capacitySnapshot.PendingMR,
 		)
 	} else {
-		fmt.Printf("  Capacity:  direct dispatch (scheduler.max_polecats=%d)\n", capacitySnapshot.Max)
+		fmt.Printf("  Capacity:  direct dispatch (scheduler.max_miners=%d)\n", capacitySnapshot.Max)
 	}
 	if state.LastDispatchAt != "" {
 		fmt.Printf("  Last dispatch: %s (%d beads)\n", state.LastDispatchAt, state.LastDispatchCount)
@@ -224,7 +224,7 @@ func runSchedulerList(cmd *cobra.Command, args []string) error {
 
 	if len(scheduled) == 0 {
 		fmt.Println("No beads scheduled.")
-		fmt.Println("Enable deferred dispatch with: gt config set scheduler.max_polecats <N>")
+		fmt.Println("Enable deferred dispatch with: gt config set scheduler.max_miners <N>")
 		return nil
 	}
 
@@ -463,7 +463,7 @@ func beadsSearchDirs(townRoot string) []string {
 		return dirs
 	}
 	for _, e := range entries {
-		if !e.IsDir() || strings.HasPrefix(e.Name(), ".") || e.Name() == "mayor" || e.Name() == "settings" {
+		if !e.IsDir() || strings.HasPrefix(e.Name(), ".") || e.Name() == "overseer" || e.Name() == "settings" {
 			continue
 		}
 		rigDir := filepath.Join(townRoot, e.Name())
@@ -472,20 +472,20 @@ func beadsSearchDirs(townRoot string) []string {
 			dirs = append(dirs, rigDir)
 			seen[rigDir] = true
 		}
-		mayorRigDir := filepath.Join(rigDir, "mayor", "rig")
-		mayorBeadsDir := filepath.Join(mayorRigDir, ".beads")
-		if _, err := os.Stat(mayorBeadsDir); err == nil && !seen[mayorRigDir] {
-			dirs = append(dirs, mayorRigDir)
-			seen[mayorRigDir] = true
+		overseerRigDir := filepath.Join(rigDir, "overseer", "rig")
+		overseerBeadsDir := filepath.Join(overseerRigDir, ".beads")
+		if _, err := os.Stat(overseerBeadsDir); err == nil && !seen[overseerRigDir] {
+			dirs = append(dirs, overseerRigDir)
+			seen[overseerRigDir] = true
 		}
 	}
 	return dirs
 }
 
-// countActivePolecats counts all running polecat tmux sessions across all rigs.
-// Capacity admission uses polecatCapacitySnapshotForTown instead; active sessions
+// countActiveMiners counts all running miner tmux sessions across all rigs.
+// Capacity admission uses minerCapacitySnapshotForTown instead; active sessions
 // are shown for operator context only.
-func countActivePolecats() int {
+func countActiveMiners() int {
 	listCmd := tmux.BuildCommand("list-sessions", "-F", "#{session_name}")
 	out, err := listCmd.Output()
 	if err != nil {
@@ -501,7 +501,7 @@ func countActivePolecats() int {
 		if err != nil {
 			continue
 		}
-		if identity.Role == session.RolePolecat {
+		if identity.Role == session.RoleMiner {
 			count++
 		}
 	}

@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/style"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/style"
 )
 
 var beadCmd = &cobra.Command{
@@ -38,12 +38,12 @@ This creates a copy of the bead in the target repository (with the new prefix)
 and closes the source bead with a reference to the new location.
 
 The target prefix determines which repository receives the bead.
-Common prefixes: gt- (gastown), bd- (beads), hq- (headquarters)
+Common prefixes: gt- (excavation), bd- (beads), hq- (headquarters)
 
 Examples:
   gt bead move gt-abc123 bd-     # Move gt-abc123 to beads repo as bd-*
   gt bead move hq-xyz bd-        # Move hq-xyz to beads repo
-  gt bead move bd-123 gt-        # Move bd-123 to gastown repo`,
+  gt bead move bd-123 gt-        # Move bd-123 to excavation repo`,
 	Args: cobra.ExactArgs(2),
 	RunE: runBeadMove,
 }
@@ -58,7 +58,7 @@ var beadShowCmd = &cobra.Command{
 This is an alias for 'gt show'. All bd show flags are supported.
 
 Examples:
-  gt bead show gt-abc123          # Show a gastown issue
+  gt bead show gt-abc123          # Show a excavation issue
   gt bead show hq-xyz789          # Show a town-level bead
   gt bead show bd-def456          # Show a beads issue
   gt bead show gt-abc123 --json   # Output as JSON`,
@@ -76,7 +76,7 @@ var beadReadCmd = &cobra.Command{
 This is an alias for 'gt bead show'. All bd show flags are supported.
 
 Examples:
-  gt bead read gt-abc123          # Show a gastown issue
+  gt bead read gt-abc123          # Show a excavation issue
   gt bead read hq-xyz789          # Show a town-level bead
   gt bead read bd-def456          # Show a beads issue
   gt bead read gt-abc123 --json   # Output as JSON`,

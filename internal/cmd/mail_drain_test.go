@@ -10,9 +10,9 @@ func TestIsDrainableMessage(t *testing.T) {
 		drainable bool
 	}{
 		// Drainable protocol messages
-		{"CRASHED_POLECAT: furiosa", true},
-		{"POLECAT_DONE furiosa", true},
-		{"POLECAT_STARTED: furiosa", true},
+		{"CRASHED_MINER: furiosa", true},
+		{"MINER_DONE furiosa", true},
+		{"MINER_STARTED: furiosa", true},
 		{"LIFECYCLE:Shutdown furiosa", true},
 		{"LIFECYCLE:Restart furiosa", true},
 		{"MERGED furiosa", true},

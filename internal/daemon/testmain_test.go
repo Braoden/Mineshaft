@@ -7,13 +7,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/testutil"
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/testutil"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 func TestMain(m *testing.M) {
 	// Start an ephemeral Dolt container for this package's tests.
-	// convoy_manager_test.go calls setupTestStore which sets BEADS_TEST_MODE=1,
+	// minecart_manager_test.go calls setupTestStore which sets BEADS_TEST_MODE=1,
 	// causing the beads SDK to create testdb_<hash> databases. By routing
 	// those to an isolated container (via BEADS_DOLT_PORT), the databases are
 	// destroyed when the container is terminated at cleanup —
@@ -28,7 +28,7 @@ func TestMain(m *testing.M) {
 
 	// Isolate tmux sessions on a package-specific socket.
 	// handler_test.go creates tmux.NewTmux() instances that query has-session;
-	// polecat_health_test.go uses fake tmux stubs but still constructs Tmux
+	// miner_health_test.go uses fake tmux stubs but still constructs Tmux
 	// instances. Routing all of these to an isolated socket prevents
 	// interference with the user's tmux and other packages' tests.
 	var tmuxSocket string

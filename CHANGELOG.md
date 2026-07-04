@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the Gas Town project will be documented in this file.
+All notable changes to the Excavation Site project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -12,11 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Shell integration no longer nags in arbitrary shells** — the
-  `gt install --shell` hook prompted `Add '<repo>' to Gas Town? [y/N/never]` in
+  `gt install --shell` hook prompted `Add '<repo>' to Excavation Site? [y/N/never]` in
   any git repo that wasn't a known rig, and on bash it re-prompted before
   *every* command (not just on `cd`). An interrupted prompt (Ctrl-C) never
   recorded the answer and could loop indefinitely across restored terminal
-  sessions. The add-offer is now **opt-in** (set `GASTOWN_OFFER_ADD=1`); by
+  sessions. The add-offer is now **opt-in** (set `EXCAVATION_OFFER_ADD=1`); by
   default the hook stays silent and only exports `GT_TOWN_ROOT`/`GT_RIG` inside
   known rigs. bash now offers only on a real directory change, and the repo is
   recorded before the prompt so an interrupted read can't loop.
@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Clarified Gas Town HQ beads routing documentation (gh#4181).
+- Clarified Excavation Site HQ beads routing documentation (gh#4181).
 - Internal: added a nix flake update CI workflow.
 
 ## [1.2.0] - 2026-05-27
@@ -44,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   leaving an orphan database matching the beads prefix (e.g. `ma` for prefix
   `ma`) alongside the canonical rig database (e.g. `mobile_apps`), because the
   cleanup code only knew the legacy `beads_<prefix>` naming used by bd < 0.62.
-  Beads written from the rig could land in the orphan while the mayor read
+  Beads written from the rig could land in the orphan while the overseer read
   from the canonical DB — a silent data split. Cleanup now removes both
   naming forms and `AddRig` fails loudly if an orphan persists (gh#3562,
   hq-j6hur.4.2).
@@ -54,7 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Convoy completion + cross-rig dep notifications** — Convoy completion and
+- **Minecart completion + cross-rig dep notifications** — Minecart completion and
   cross-rig dependency resolution now fire notifications, surfacing milestone
   events without polling (#3838, gt-wfs-55hsg).
 
@@ -79,17 +79,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   zero-copy fix for routed writes.
 - **Daemon hardening** — Filter messaging beads, guard cross-rig prefix, fail
   prime fast on bad state. `hasAssignedOpenWork` checked via `--repo` (gt-fcw)
-  and before reaping working-bead-lookup-failed polecats. Legacy flat polecat
+  and before reaping working-bead-lookup-failed miners. Legacy flat miner
   layout supported with regression coverage.
-- **Polecat / sling lifecycle** — Auto-burn orphan molecules from beads stuck
+- **Miner / sling lifecycle** — Auto-burn orphan molecules from beads stuck
   in hooked-with-no-assignee (gh-3697); use `IsAgentAlive` in `Start` zombie
   check (hq-k1ot); accept dog pool targets in deferred mode (aa-4yf2);
   CLOSED bead treated as terminal in `check-recovery` (aa-55d8); zombie-scan
-  skips restart if polecat branch already merged (aa-apw); persist convoy
+  skips restart if miner branch already merged (aa-apw); persist minecart
   fields for single-bead dispatch.
-- **Convoy** — `bdListChildren` falls back to deps table when the primary path
+- **Minecart** — `bdListChildren` falls back to deps table when the primary path
   is unavailable (#3700); cross-rig wave staging regression test (hq-mtc).
-- **Doctor** — Role-aware Stop hook check for polecats (#3648); detect and
+- **Doctor** — Role-aware Stop hook check for miners (#3648); detect and
   recover corrupt `.repo.git` bare repos (gt-61twf).
 - **Install / dolt** — Fail fast when Dolt is unavailable during install;
   clamp Dolt idle session `wait_timeout` to prevent connection exhaustion
@@ -98,7 +98,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Hooks / agent config** — Pass agent `Args` to `ResolveProcessNames` at all
   call sites; resolve agent process names through wrapper commands; preserve
   built-in opencode preset fields in overrides; sync opencode hooks in nested
-  polecat worktrees (gt-hii); reject non-bead args before `bd show` (#3701).
+  miner worktrees (gt-hii); reject non-bead args before `bd show` (#3701).
 - **Done / safety nets** — Auto-pop orphaned stashes in gt-pvx safety net;
   auto-save uncommitted implementation work (gt-pvx safety net); honor
   explicit target in done contamination check (gt-nmt); verify pushed commits
@@ -128,7 +128,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   by the daemon to dogs were never closed after execution, causing dog inboxes
   to accumulate hundreds of open "Plugin: X" beads. On every UserPromptSubmit
   hook, `gt mail check --inject` re-injected ALL open mails, ballooning agent
-  context to 60-70% and causing compaction/hook conflicts that froze the deacon.
+  context to 60-70% and causing compaction/hook conflicts that froze the supervisor.
   `gt dog done` now archives all open "Plugin: " mails from the dog's inbox
   before clearing work and terminating the session.
 
@@ -165,13 +165,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   tests for faster CI.
 - **Refinery requires review** — `require_review=true` now blocks merge until PR
   has an approving review.
-- **Mayor approval for scope expansion** — Polecats must get mayor approval
+- **Overseer approval for scope expansion** — Miners must get overseer approval
   before expanding molecule scope.
-- **Polecat PreToolUse guard** — Blocks `sudo` and system package installs in
-  polecat sessions.
+- **Miner PreToolUse guard** — Blocks `sudo` and system package installs in
+  miner sessions.
 - **Patrol formulas use rig-prefixed vars** — Template variables for agent bead
   IDs are now rig-prefixed.
-- **Polecat auto-checkout** — Sessions auto-checkout a fresh branch when started
+- **Miner auto-checkout** — Sessions auto-checkout a fresh branch when started
   on the default branch.
 - **Makefile OOM fixes** — Strip flags and codesign removal to prevent OOM kills
   during builds.
@@ -184,10 +184,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   races.
 - **Witness zombie detection** — Distinguish bead lookup failure from
   closed/reaped beads.
-- **Scheduler capacity counting** — Exclude idle polecats from capacity count.
+- **Scheduler capacity counting** — Exclude idle miners from capacity count.
 - **Nested town root detection** — `FindTownRoot` now returns outermost town
   root for nested rigs.
-- **Convoy +Inf metadata** — Fix detection and flip-flop in convoy metadata.
+- **Minecart +Inf metadata** — Fix detection and flip-flop in minecart metadata.
 - **Carry branch builds** — Support `carry/*` branches in build infrastructure.
 - **Unsigned binary handling** — Refuse to run unsigned binary instead of just
   warning.
@@ -196,20 +196,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   HQ.
 - **Feed timestamps** — Display feed timestamps in local timezone instead of UTC.
 - **Crew status across rigs** — `gt crew status` now shows all rigs.
-- **Polecat CLAUDE.md commit guard** — Prevent polecats from committing Gas Town
+- **Miner CLAUDE.md commit guard** — Prevent miners from committing Excavation Site
   overlay CLAUDE.md.
 - **PR branch deletion guard** — Guard PR branch deletion and add review approval
   check.
 - **Lint fixes** — Resolve unconvert, unparam, and misspell warnings.
-- **Git identity in worktrees** — Propagate global git identity into polecat
+- **Git identity in worktrees** — Propagate global git identity into miner
   worktrees.
 - **Sparse-checkout deletions** — Ignore sparse-checkout deletions in git status.
 - **Beads config parsing** — Ignore `(not set)` in beads config output.
 - **Plugin heartbeat path** — Check `heartbeat.json` instead of legacy
-  `.deacon-heartbeat`.
+  `.supervisor-heartbeat`.
 - **Dog mail race condition** — Send dog mail before session start to prevent
   race.
-- **Polecat dashboard drops** — Use local prefix registry in dashboard
+- **Miner dashboard drops** — Use local prefix registry in dashboard
   FetchWorkers.
 - **Dolt TCP ping fallback** — Always TCP-ping dolt port as last resort in
   IsRunning.
@@ -231,14 +231,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   instruction templates with GitHub API client support.
 - **Merge queue step dependencies** — `gt mq submit` enforces molecule step
   dependency ordering before submission.
-- **Convoy watch/unwatch** — `gt convoy watch` and `gt convoy unwatch` for
-  opt-in completion notifications on convoy progress.
-- **Convoy merge queue panel** — Feed view now shows merge queue status in
-  convoy panels.
-- **Patrol scan CLI** — `gt patrol scan` detects zombie and stalled polecats
+- **Minecart watch/unwatch** — `gt minecart watch` and `gt minecart unwatch` for
+  opt-in completion notifications on minecart progress.
+- **Minecart merge queue panel** — Feed view now shows merge queue status in
+  minecart panels.
+- **Patrol scan CLI** — `gt patrol scan` detects zombie and stalled miners
   from the command line.
 - **Checkpoint dog** — New `checkpoint_dog` auto-commits WIP changes in
-  polecat worktrees periodically.
+  miner worktrees periodically.
 - **Crash recovery on startup** — `gt up` detects and recovers orphaned hooked
   beads left by crashed sessions.
 - **Post-squash gate phase** — Refinery adds a pre-push validation gate after
@@ -248,7 +248,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **PR feedback patrol formula** — `mol-pr-feedback-patrol` formula for
   automated PR review triage.
 - **Configurable tmux theming** — Window tint and `window-style` theming with
-  resolver; Mayor gets terminal-default theme.
+  resolver; Overseer gets terminal-default theme.
 - **`gt changelog` command** — Generate changelogs from the CLI with tests.
 - **Wasteland stamps and pilot cohorts** — `gt wl stamp`, `gt wl stamps`
   commands and `pilot_cohort` column for HOP pilot program.
@@ -263,13 +263,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   failback between primary and replica.
 - **`.no-sync` marker files** — Drop a `.no-sync` file in a database directory
   to exclude it from sync.
-- **`/done` slash command** — Polecats can invoke `/done` with a Stop hook
+- **`/done` slash command** — Miners can invoke `/done` with a Stop hook
   safety net for clean lifecycle exit.
 - **Sling `--review-only` flag** — Prevent assignee from merging; report back
   only.
 - **Copilot agent support** — GitHub Copilot CLI documented and preset updated
   for GA release (Feb 2026).
-- **Unique polecat namepool** — Polecat names are now globally unique across
+- **Unique miner namepool** — Miner names are now globally unique across
   rigs via shared namepool with auto-assigned themes.
 - **Handoff restart prompt** — `gt handoff` now prompts the user before
   restarting the session.
@@ -289,7 +289,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   instead of fixed timeout.
 - **Dolt SIGTERM→SIGKILL timeout** — Increased from 5s to 30s for graceful
   shutdown of large databases.
-- **Polecat CLAUDE.md provisioning** — Lifecycle instructions provisioned on
+- **Miner CLAUDE.md provisioning** — Lifecycle instructions provisioned on
   all spawn paths including worktree reuse, with `gt done` reminders injected
   at startup and after compaction.
 - **Boot and dog cost tiers** — Boot and dog roles now tracked in the cost tier
@@ -303,7 +303,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Daemon beads compatibility guard** — `gt daemon run` now fail-fast checks
-  workspace beads schema compatibility before Convoy polling starts, and
+  workspace beads schema compatibility before Minecart polling starts, and
   `gt daemon start` surfaces the startup mismatch directly instead of only
   telling operators to inspect logs.
 - **Dolt server stability** — Fixed thundering herd in `doltserver.Start()`,
@@ -320,28 +320,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Windows fixes** — Atomic counter in `generateStampID` for timer resolution,
   pipe deadlock prevention in `prime_test`, process group test skips, and
   multiple CI test stabilizations.
-- **Polecat lifecycle** — Skip crash/zombie alerts for done/nuked polecats,
+- **Miner lifecycle** — Skip crash/zombie alerts for done/nuked miners,
   use `IsIdle` instead of `IsAtPrompt` for startup nudge verify, clean dirty
   worktree before reuse, kill session unconditionally when reusing idle
-  polecats, and wire operational config into startup nudge loop.
+  miners, and wire operational config into startup nudge loop.
 - **Refinery fixes** — Use commit SHA instead of branch name for MR dedup,
   supersede MR on same-branch re-submission, check `no_merge` flag before
   merging, close task beads after successful merge, wait for CI in PR mode,
   and filter MR listings by rig to prevent cross-rig contamination.
-- **Convoy fixes** — Use Unix epoch instead of zero time for initial event poll,
+- **Minecart fixes** — Use Unix epoch instead of zero time for initial event poll,
   stranded scan checks completion status, create legs in target rig beads,
   and cross-rig dependency routing uses town root.
 - **Cross-town safety** — Prevent orphan cleanup from killing agents on other
-  towns' sockets, distinguish sibling Gas Town instances from test zombies.
+  towns' sockets, distinguish sibling Excavation Site instances from test zombies.
 - **Dog and daemon** — Clear agent identity env vars at startup, prevent
-  duplicate Mayor spawns during `gt up`, auto-clear hung dogs and orphan
+  duplicate Overseer spawns during `gt up`, auto-clear hung dogs and orphan
   sessions, include dogs in startup retry loop, prevent daemon restart during
   `gt down`, and respect global default agent for dog spawns.
 - **Doctor improvements** — Avoid slow `filepath.Walk` on Docker bind mounts,
   stale `sql-server.info` detection, hooks-sync check detects stale Gemini
   settings, route misclassified wisp fixes by workdir, and repair relocated
   worktree gitdir paths.
-- **Mail and communication** — Drain crashed polecat notifications, prefer
+- **Mail and communication** — Drain crashed miner notifications, prefer
   `GT_TOWN_ROOT` env var for town root detection, fall back to explicit agent
   workspaces for mail delivery.
 - **Dolt plugins** — `dolt-archive` uses `while-read` loops for bash 3.2
@@ -359,7 +359,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `gt costs`, rig prefix pattern refresh when stale, propagate
   `BEADS_DOLT_SERVER_HOST` to subprocesses, and repair PROJECT IDENTITY
   MISMATCH after crash.
-- **Guard and compliance** — Block polecats from pushing directly to main.
+- **Guard and compliance** — Block miners from pushing directly to main.
 - **Misc** — `formatPeriod` returns "Week of" on Mondays instead of "Today",
   sync `agent_state` between column and description on transitions, validate
   git URL before crew clone, `--flat` flag on all `bd list --json` calls to
@@ -384,14 +384,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   communication with propulsion trigger detection and output suppression.
 - **gt mountain** — Stage, label, and launch epic work in one command.
 - **gt assign** — One-shot bead creation + hook for direct agent assignment.
-- **Convoy --from-epic** — `gt convoy create --from-epic` stages epic children
-  into convoy waves with automatic validation bead.
+- **Minecart --from-epic** — `gt minecart create --from-epic` stages epic children
+  into minecart waves with automatic validation bead.
 - **Typed memories** — `gt remember --type feedback/project/user/reference` for
   categorized agent memory storage.
-- **Repo-sourced rig settings** — `.gastown/settings.json` in repos auto-configures
+- **Repo-sourced rig settings** — `.excavation/settings.json` in repos auto-configures
   rig behavior (test gates, merge strategy).
 - **exec-wrapper plugin type** — Plugins can now wrap agent execution.
-- **Prior attempt context** — Polecats receive context from previous failed
+- **Prior attempt context** — Miners receive context from previous failed
   attempts when re-dispatched.
 - **Spider Protocol** — Fraud detection for Wasteland stamp system.
 
@@ -413,7 +413,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dolt server stability** — Fixed stale socket cleanup, server ownership
   detection, rogue process race on restart, idle-monitor orphans on `gt down`.
 - **Cross-rig wisp contamination** — MQ list filtered by rig to prevent leaks.
-- **Polecat lifecycle** — Fixed idle reuse with live sessions, CRASHED_POLECAT
+- **Miner lifecycle** — Fixed idle reuse with live sessions, CRASHED_MINER
   alerts for closed beads, spawn storm dedup.
 - **Session prefix parsing** — Fixed hq- prefix collision and rig-level fallback.
 - **Unicode handling** — Fixed parse errors in `gt compact`.
@@ -421,18 +421,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   nudge startup prompts for Gemini/Codex runtimes.
 - **Test isolation** — 5 tests isolated from live Dolt server; sleep sessions
   used in cleanup tests to avoid .zshrc interference.
-- **Witness completion notifications** — Mayor now notified on polecat completion.
+- **Witness completion notifications** — Overseer now notified on miner completion.
 - **Shell quoting** — Agent args properly quoted, model flags respected.
-- **Exponential backoff** — Convoy event poller backs off on Dolt errors.
+- **Exponential backoff** — Minecart event poller backs off on Dolt errors.
 - **Docker** — Added tini for zombie process reaping in containers.
 
 ## [0.12.0] - 2026-03-11
 
 ### Added
 
-- **Event-driven polecat lifecycle** — Polecats now use FIX_NEEDED feedback loop
+- **Event-driven miner lifecycle** — Miners now use FIX_NEEDED feedback loop
   with awaiting_verdict state, replacing polling-based lifecycle (gt-k0h).
-- **Cross-database convoy resolution** — CLI-side dep resolution for multi-rig
+- **Cross-database minecart resolution** — CLI-side dep resolution for multi-rig
   towns where bd SQL JOINs fail across databases (GH#2624, GH#2625).
 - **Plugin sync** — `gt plugin sync` auto-deploys plugins after build (hq-o9gna).
 - **Compactor dog** — Executable `run.sh` for Dolt database compaction with
@@ -456,7 +456,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Refinery merge strategy** — Configurable direct vs PR mode (gt-fln).
-- **Polecat lifecycle patrol** — Redesigned formula for event-driven model.
+- **Miner lifecycle patrol** — Redesigned formula for event-driven model.
 - **Session hygiene** — Converted from plugin.md to deterministic `run.sh`.
 - **DND auto-reset** — Muted mode auto-resets on `gt up`.
 - **Nudge degradation** — Wait-idle gracefully degrades to queue for agents
@@ -470,20 +470,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   before schema migration.
 - **Boot triage loop** — Removed ZFC-violating decision engine that consumed
   unbounded tokens on failed installs.
-- **Polecat spawn storm** — Two-layer circuit breaker caps respawns and total
-  active polecats (clown show #22).
-- **Standing-order beads** — Protected from AutoClose reaper and polecat
+- **Miner spawn storm** — Two-layer circuit breaker caps respawns and total
+  active miners (clown show #22).
+- **Standing-order beads** — Protected from AutoClose reaper and miner
   removal status reset.
 - **Tmux socket split-brain** — Prevented nudge failures from socket mismatch
   (GH#2442).
 - **Reaper Sprintf bugs** — Fixed format string issues and missing schema guard
   (GH#2469).
 - **bd JSON corruption** — Strip bd stdout warnings before JSON parsing.
-- **Remote branch deletion** — Restricted to polecat branches only (GH#2669).
+- **Remote branch deletion** — Restricted to miner branches only (GH#2669).
 - **EnsureAllMetadata** — Uses rig name and correct DB prefix (GH#2668).
 - **Ephemeral beads** — Auto-purge closed ephemeral beads on session end.
 - **MR back-link** — Source issue linked to MR bead on creation.
-- **Convoy routing** — Town root and BEADS_DIR properly stripped for bd
+- **Minecart routing** — Town root and BEADS_DIR properly stripped for bd
   subprocess calls.
 - **CI stability** — Resolved lint warnings (unparam, misspell) and 5 test
   failures on main.
@@ -493,14 +493,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Docker support** — docker-compose and Dockerfile for containerized deployment.
-- **Cursor hooks** — Polecat agent integration for Cursor IDE sessions.
+- **Cursor hooks** — Miner agent integration for Cursor IDE sessions.
 - **Context-budget guard** — External script to prevent context window overflow (#2008).
 - **Cascade close** — `bd close --cascade` closes parent and all children with cycle
   guard and depth limit (#998).
 - **Schema evolution** — `gt wl sync` supports Wasteland schema changes (gp-c7e).
-- **Dashboard enrichment** — Convoy panel shows progress %, ready/active counts,
+- **Dashboard enrichment** — Minecart panel shows progress %, ready/active counts,
   and assignees.
-- **Polecat slot env** — `POLECAT_SLOT` environment variable for test isolation (#954).
+- **Miner slot env** — `MINER_SLOT` environment variable for test isolation (#954).
 
 ### Changed
 
@@ -523,7 +523,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Serial killer bug** — Removed hung session detection that was killing healthy
   witnesses and refineries (f3d47a96). Stuck agent detection moved to Dog plugin
   (5a5deaac).
-- **Sling race condition** — Hook write visibility ensured before polecat startup
+- **Sling race condition** — Hook write visibility ensured before miner startup
   (GH#2389).
 - **Refinery** — PostMerge now uses `ForceCloseWithReason` for source issue (GH#2321).
 - **Crew mail prefix** — Regression test added for crew mail send prefix mismatch
@@ -533,13 +533,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CI release guards** — Blocks `go.mod` replace directives in releases (gt-qex2).
 - **go vet** — Pre-existing failures on main resolved (gt-77xe).
 - **Branch contamination** — Preflight check added to `gt done` (#2220).
-- **Polecat nuke** — Uses `ClonePath` for best-effort push (hq-9pcb0).
-- **Polecat state** — JSON list state reconciled with session liveness.
-- **Convoy** — External tracked IDs resolved during launch collection.
+- **Miner nuke** — Uses `ClonePath` for best-effort push (hq-9pcb0).
+- **Miner state** — JSON list state reconciled with session liveness.
+- **Minecart** — External tracked IDs resolved during launch collection.
 - **`gt done`** — Correct rig used when Claude Code resets shell cwd. Tolerates
-  Gas Town runtime artifacts in worktrees (#2382).
+  Excavation Site runtime artifacts in worktrees (#2382).
 - **Dolt server** — Server-side timeouts prevent CLOSE_WAIT accumulation (#2287).
-- **Daemon** — 5-minute grace period before auto-closing empty convoys (GH#2303).
+- **Daemon** — 5-minute grace period before auto-closing empty minecarts (GH#2303).
 - **Sling TTL** — Prevents permanent scheduling blocks (GH#2279).
 - **Tmux** — Refresh cycle bindings when prefix pattern is stale (#2300).
 - **Patrol** — Cap stale cleanup and break early on active patrol found (#2285).
@@ -547,11 +547,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   JOIN anti-pattern.
 - **Hook show** — Normalized targets; prefer hooked bead over stale agent hook.
 - **Tmux socket** — Derived from town name instead of defaulting to "default".
-- **Gitignore** — Broadened patterns for Cursor runtime artifacts and Gas Town
+- **Gitignore** — Broadened patterns for Cursor runtime artifacts and Excavation Site
   infrastructure directories.
 - **Rig remove** — Shows actionable guidance for orphaned rig directories.
 - **CI** — Lint errors, Windows test failures, proxy log truncation fixed.
-- **Mayor clone** — Reuses bare repo as reference for faster cloning (#1059).
+- **Overseer clone** — Reuses bare repo as reference for faster cloning (#1059).
 - **Prefix registry** — Reloaded on heartbeat to prevent ghost sessions (#2338).
 - **Dog molecule** — JSON parsing fix for `bd show --children` output.
 - **`--allow-stale`** — Made conditional on bd version support.
@@ -567,7 +567,7 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **Batch-then-bisect merge queue** — Bors-style MQ batches MRs, runs tests on
   the tip, and binary-bisects on failure. GatesParallel runs test + lint
   concurrently per MR.
-- **Persistent polecats** — Polecat identity and sandbox survive across work
+- **Persistent miners** — Miner identity and sandbox survive across work
   assignments. Sessions are ephemeral; identity accumulates forever. `gt done`
   transitions to idle instead of nuking.
 - **Compactor Dog** — Daily Dolt commit history flattening via `DOLT_RESET --soft`.
@@ -588,12 +588,12 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **`gt maintain`** — One-command Dolt maintenance (flatten + gc).
 - **`gt vitals`** — Unified health dashboard command.
 - **`gt upgrade`** — Post-binary migration command for config propagation.
-- **`gt convoy stage`** — Stage convoys with `--title` flag and smart defaults.
+- **`gt minecart stage`** — Stage minecarts with `--title` flag and smart defaults.
 - **`gt mol await-signal`** — Alias for step-level signal awaiting.
 - **`gt daemon clear-backoff`** — Reset exponential backoff on daemon restarts.
 - **`gt mq post-merge`** — Branch cleanup after refinery merge.
 - **`gt mail drain`** — Drain inbox command.
-- **Sandbox sync** — Branch-only polecat reuse with `pool-init`.
+- **Sandbox sync** — Branch-only miner reuse with `pool-init`.
 - **Per-worker agent selection** — `worker_agents` config for crew members.
 - **Dangerous-command guard hook** — Blocks `cp -i`, `mv -i`, `rm -i` in agent sessions.
 - **Log rotation** — Daemon and Dolt server logs now rotate with gzip compression.
@@ -611,7 +611,7 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
   merge notifications) changed from permanent mail to ephemeral wisps or nudges.
   Reduces Dolt commit volume by ~80% for patrol traffic.
 - **Default Dolt log level** changed from debug to info.
-- **Convoy IDs** shortened from 5 chars to 3.
+- **Minecart IDs** shortened from 5 chars to 3.
 - **Mail purge age** reduced from 30 days to 7 days.
 - **Compactor threshold** bumped from 500 to 10,000 commits.
 - **Default max Dolt connections** bumped from 200 to 1,000.
@@ -622,22 +622,22 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **Mail delivery** — Fixed `--id` flag breaking all mail creation paths. Fixed
   recipient validation to include pinned and inactive agents. Added auto-nudge
   on mail delivery to idle agents.
-- **Witness patrol** — Stopped nuking idle polecats. Stopped auto-closing permanent
+- **Witness patrol** — Stopped nuking idle miners. Stopped auto-closing permanent
   issues (ZFC violation). Replaced screen-scraping with structured signals for
-  stalled polecat detection.
-- **Polecat lifecycle** — Prevent sleepwalking completions with zero commits. Normalize
+  stalled miner detection.
+- **Miner lifecycle** — Prevent sleepwalking completions with zero commits. Normalize
   CWD to git root before beads resolution. Preserve remote branches when MR pending.
   Close orphan step wisps before closing root molecule.
 - **Refinery** — Removed dead `findTownRoot` filesystem inference (ZFC). Removed
   hardcoded severity/priority logic. Made stale-claim thresholds config-driven.
-  Extracted typed `ConvoyFields` accessor.
+  Extracted typed `MinecartFields` accessor.
 - **Boot triage** — Removed ZFC-violating decision engine from degraded boot triage.
 - **PID detection** — Replaced PID signal probing with heartbeat-based liveness.
   Replaced ps string matching with nonce-based PID files. Replaced per-PID pgrep
   with single ps-based process tree scan.
 - **tmux** — Use default socket instead of per-town socket. Set `window-size=latest`
   on detached sessions. Auto-dismiss workspace trust dialog blocking agent sessions.
-- **Convoy** — Prevent auto-close of stuck convoys. Recovery sweep after Dolt
+- **Minecart** — Prevent auto-close of stuck minecarts. Recovery sweep after Dolt
   reconnect. Check parked AND docked rigs in dispatch. Prevent double-spawn from
   stale feed. Idempotent close handling.
 - **Doctor** — Fixed silent failure for agent-beads and misclassified-wisps checks.
@@ -648,7 +648,7 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
   servers (7GB RAM).
 - **Rig lifecycle** — Enforce dock/park across all startup, patrol, and sling paths.
   Dogs correctly use plugin lookup. Formula lookup falls back to embedded for
-  non-gastown rigs.
+  non-excavation rigs.
 - **Handoff** — Deterministic git state in handoff context. Fix socket confusion
   using caller socket. Preserve conversation context on PreCompact cycle.
 - **Windows** — Cross-compilation fixes for `syscall.Flock`, `syscall.SIGUSR2`,
@@ -664,7 +664,7 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 #### Work Queue & Dispatch Engine
 - **`gt queue` CLI and dispatch engine** — Enqueue work items for daemon-driven dispatch
 - **`gt queue epic`** — Bulk enqueue of epic children
-- **`gt convoy queue`** — Bulk enqueue of convoy-tracked issues
+- **`gt minecart queue`** — Bulk enqueue of minecart-tracked issues
 - **`gt sling --queue`** — Enqueue path for asynchronous dispatch
 - **Queue daemon heartbeat step** for reliable dispatch processing
 - **Enqueue-time validation** and enhanced metadata on queued items
@@ -678,7 +678,7 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **`gt.* OTEL` resource attributes**, prime context events, and session metadata
 - **Command usage telemetry** and `gt metrics` reader
 
-#### Dog Subsystem (Deacon Workers)
+#### Dog Subsystem (Supervisor Workers)
 - **Handler patrol** for Dog lifecycle and plugin dispatch
 - **Session-hygiene Dog plugin** for zombie tmux cleanup
 - **Idle dog reaping** — Kill stale tmux sessions and trim oversized pools
@@ -691,21 +691,21 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **Agent bead readers updated** to query wisps table
 - **Closed wisp GC** added to patrol cycles to prevent accumulation
 
-#### Convoy & Sling Improvements
-- **`gt convoy stage` and `gt convoy launch`** commands
+#### Minecart & Sling Improvements
+- **`gt minecart stage` and `gt minecart launch`** commands
 - **Auto-resolve rig from bead prefixes** in batch mode
 - **Reject deferred/post-launch beads** at sling time
-- **Auto-check convoy completion** on `bd close`
-- **Deacon feed-stranded command** for auto-feeding stranded convoys
-- **Notify deacon of convoy-eligible merges** for immediate feeding
+- **Auto-check minecart completion** on `bd close`
+- **Supervisor feed-stranded command** for auto-feeding stranded minecarts
+- **Notify supervisor of minecart-eligible merges** for immediate feeding
 
 #### Witness & Refinery
 - **Configurable quality gates** before merge in refinery
 - **MR queue nonempty tracking** in witness check-refinery step
 - **Bead respawn count tracking** for spawn storm detection
 - **Verify MR bead exists** before sending MERGE_READY
-- **Refinery nudges deacon** after merge to check stranded convoys
-- **Auto-close completed convoys** after merge
+- **Refinery nudges supervisor** after merge to check stranded minecarts
+- **Auto-close completed minecarts** after merge
 
 #### Agent Providers & Runtime
 - **Pi agent provider** with unit tests
@@ -714,10 +714,10 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **Ralphcat opt-in loop mode** for multi-step workflows
 
 #### Dashboard & UX
-- **Rename Workers panel to Polecats** in dashboard
+- **Rename Workers panel to Miners** in dashboard
 - **Session terminal preview** in dashboard Sessions panel
 - **Mail threading** in dashboard inbox
-- **Convoy drill-down** — Expand rows to show tracked issues
+- **Minecart drill-down** — Expand rows to show tracked issues
 - **Date+time timestamps** instead of relative ago format
 
 #### CLI & Workflow
@@ -725,7 +725,7 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **`gt handoff --agent`** — Explicit runtime selection
 - **`gt crew start --resume`** — Resume flag for crew sessions
 - **`gt crew at --reset`** — Branch switch opt-in with reset flag
-- **`gt deacon pending`** — AI-based spawn observation command
+- **`gt supervisor pending`** — AI-based spawn observation command
 - **`gt patrol step-drift`** subcommand
 - **`gt up --json`** output flag
 - **`gt migrate-bead-labels`** command
@@ -744,15 +744,15 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **Emit-event command** and nudgeRefinery event wiring
 - **`gt mol step await-event`** for channel-based event subscription
 - **Doctor check** for in_progress beads with NULL assignee
-- **PR creation guard** blocking direct pushes to steveyegge/gastown
-- **Orphan scan** for polecat worktrees with unmerged branches
+- **PR creation guard** blocking direct pushes to steveyegge/excavation
+- **Orphan scan** for miner worktrees with unmerged branches
 - **Wasteland CLI command suite** (`gt wl`)
-- **GitHub Sheriff Deacon plugin** for CI failure monitoring
+- **GitHub Sheriff Supervisor plugin** for CI failure monitoring
 
 ### Changed
 
-- **Removed Dolt branch-per-polecat infrastructure** — Dead code from pre-server-mode era
-- **Removed BD_BRANCH from session manager and polecat spawn** — Server mode eliminates branch isolation
+- **Removed Dolt branch-per-miner infrastructure** — Dead code from pre-server-mode era
+- **Removed BD_BRANCH from session manager and miner spawn** — Server mode eliminates branch isolation
 - **Removed JSONL fallback code** — Dolt is now the sole backend
 - **Removed deprecated role bead TTL layer** from compact
 - **Removed deprecated role bead lookups** that blocked witness startup
@@ -765,7 +765,7 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 
 #### Dolt & Storage Stability
 - **Replace dolthub/dolt with nil-check fork** to fix SEGVs
-- **Prevent polecat spawns from creating orphan databases**
+- **Prevent miner spawns from creating orphan databases**
 - **Drop orphaned `beads_<prefix>` databases** after `bd init`
 - **Isolate Dolt integration tests** from production server
 - **Dynamic port for test Dolt server** to avoid production collision
@@ -774,25 +774,25 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 
 #### Agent & Session Management
 - **LookupEnv for GT_AGENT** to prevent tmux env contamination
-- **KillSession idempotent** + ensureMayorInfra on attach
-- **Detect non-polecat CWD** when Claude Code resets shell to mayor/rig
+- **KillSession idempotent** + ensureOverseerInfra on attach
+- **Detect non-miner CWD** when Claude Code resets shell to overseer/rig
 - **Filter getCurrentWork by assignee** to prevent shared rig beads leaking across sessions
-- **Clean up stale molecules during polecat nuke** to unblock re-sling
+- **Clean up stale molecules during miner nuke** to unblock re-sling
 - **Set GT_PROCESS_NAMES in tmux env** for all session types
-- **Resolve agent config from --agent override** for Codex polecat startup
-- **Tell polecats to close bead explicitly** when nothing to commit
+- **Resolve agent config from --agent override** for Codex miner startup
+- **Tell miners to close bead explicitly** when nothing to commit
 - **Silent costs-record skip** for non-GT sessions
 
 #### Test Infrastructure
 - **Flaky TestFindActivePatrol tests** caused by bd daemon contamination
 - **Isolated patrol tests** from shared Dolt database
-- **Convoy/epic test failures** and TestValidateRecipient resolved
+- **Minecart/epic test failures** and TestValidateRecipient resolved
 - **Extract requireDoltServer** into shared testutil package
 - **gotestsum + JUnit test failure reporting** in CI
 
 #### Patrol & Boot
 - **Remove redundant Status.Running field** (ZFC compliance)
-- **Prefer gastown repo over crew rigs** in stale binary check
+- **Prefer excavation repo over crew rigs** in stale binary check
 - **Session-name-format doctor check** for outdated session names
 - **Handoff warn on uncommitted/unpushed work** before session cycling
 - **Helpful error for `gt mail read` with no args** instead of cobra usage
@@ -801,12 +801,12 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 
 ### Added
 
-#### Convoy Ownership & Merge Strategies
-- **Convoy ownership model** — `--owned` flag for `gt convoy create` and `gt sling`
+#### Minecart Ownership & Merge Strategies
+- **Minecart ownership model** — `--owned` flag for `gt minecart create` and `gt sling`
 - **Merge strategy selection** — `--merge` flag with `direct`, `mr`, and `local` strategies
-- **`gt convoy land`** — New command for owned convoy cleanup and completion
-- **Skip witness/refinery registration** for owned+direct convoys (faster dispatch)
-- **Ownership and merge strategy display** in `gt convoy status` and `gt convoy list`
+- **`gt minecart land`** — New command for owned minecart cleanup and completion
+- **Skip witness/refinery registration** for owned+direct minecarts (faster dispatch)
+- **Ownership and merge strategy display** in `gt minecart status` and `gt minecart list`
 
 #### Agent Resilience & Lifecycle
 - **`gt done` checkpoint-based resilience** — Recovery from session death mid-completion
@@ -814,7 +814,7 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **Gemini CLI integration** — First-class Gemini CLI as runtime adapter
 - **GitHub Copilot CLI integration** — Copilot CLI as runtime adapter
 - **Non-destructive nudge delivery** — Queue and wait-idle modes prevent message loss
-- **Auto-dismiss stalled polecat permission prompts** — Witness detects and clears stuck prompts
+- **Auto-dismiss stalled miner permission prompts** — Witness detects and clears stuck prompts
 - **Dead crew agent detection** — Detect dead crew agents on startup and restart them
 - **Remote hook attach** — `gt hook attach` with remote target support
 
@@ -826,8 +826,8 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 
 #### Witness & Patrol
 - **JSON patrol receipts** for stale/orphan verdicts — Structured patrol output
-- **Orphaned molecule detection** — Detect and close orphaned `mol-polecat-work` molecules
-- **IN_PROGRESS beads assigned to dead polecats** — Automatic detection and recovery
+- **Orphaned molecule detection** — Detect and close orphaned `mol-miner-work` molecules
+- **IN_PROGRESS beads assigned to dead miners** — Automatic detection and recovery
 - **Deterministic stale/orphan receipt ordering** — Consistent patrol results
 
 #### Infrastructure
@@ -835,7 +835,7 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **Merge queue `--verify` flag** — Detect orphaned/missing merge queue entries
 - **Cost digest aggregate-only payload** — Fixes Dolt column overflow
 - **Rig-specific beads prefix for tmux session names** — Better multi-rig session isolation
-- **Mayor GT_ROLE Task tool guard** — Block Task tool for Mayor via GT_ROLE check
+- **Overseer GT_ROLE Task tool guard** — Block Task tool for Overseer via GT_ROLE check
 - **Server-side database creation** during `gt rig add` with issue_prefix setup
 
 ### Changed
@@ -851,7 +851,7 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 #### Reliability & Race Conditions
 - **Options cache and command concurrency** race conditions in web dashboard
 - **Feed curator** race conditions with RWMutex protection
-- **TUI convoy** concurrent access guarded with RWMutex
+- **TUI minecart** concurrent access guarded with RWMutex
 - **TUI feed** concurrent access guarded with RWMutex
 - **Dolt backoff** — Thread-safe jitter using `math/rand/v2`
 - **Concurrent Start()** and feed file access protection
@@ -860,18 +860,18 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 #### Agent & Session Management
 - **Nudge delivery** — Unique claim suffix prevents Windows race in concurrent Drain
 - **Signal stop hook** — Prevent infinite loop with state-based dedup
-- **Polecat zero-commit completion** blocked — Must have at least one commit
+- **Miner zero-commit completion** blocked — Must have at least one commit
 - **Molecule step instructions** — Use `bd mol current` instead of `bd ready`
-- **Role inference** — Don't infer RoleMayor from town root cwd
+- **Role inference** — Don't infer RoleOverseer from town root cwd
 - **Boot role bead ID** — Add RoleBoot case to buildAgentBeadID and ActorString
 - **IsAgentRunning replaced with IsAgentAlive** — More accurate agent status
 - **Stale prime help text** updated with town root regression tests
-- **Sling validation** — Allow polecat/crew shorthand, validate before dispatch fork
+- **Sling validation** — Allow miner/crew shorthand, validate before dispatch fork
 
-#### Convoy & Workflow
-- **Convoy lifecycle guards** — Extended to batch auto-close and synthesis paths
-- **Empty convoy handling** — Auto-close and flag in stranded detection
-- **Formalized lifecycle transition guards** for convoys
+#### Minecart & Workflow
+- **Minecart lifecycle guards** — Extended to batch auto-close and synthesis paths
+- **Empty minecart handling** — Auto-close and flag in stranded detection
+- **Formalized lifecycle transition guards** for minecarts
 
 #### Rig & Infrastructure
 - **Rig remove kills tmux sessions** — Clean up sessions on rig removal
@@ -885,14 +885,14 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **Rig remove** aborts on kill failures, propagates session check errors
 - **Spurious `go build` warning** fixed for Homebrew installs
 
-#### Deacon & Dogs
-- **Deacon scoped zombie/orphan detection** to Gas Town workspace only
-- **Deacon heartbeat** surfaced in `gt deacon status`
-- **Deacon loop-or-exit** step updated with squash/create-wisp/hook cycle
+#### Supervisor & Dogs
+- **Supervisor scoped zombie/orphan detection** to Excavation Site workspace only
+- **Supervisor heartbeat** surfaced in `gt supervisor status`
+- **Supervisor loop-or-exit** step updated with squash/create-wisp/hook cycle
 - **Dog agent beads** — Added description for mail routing
 
 #### Other Fixes
-- **Overflow polecat names** — Remove rig prefix
+- **Overflow miner names** — Remove rig prefix
 - **Witness per-label `--set-labels=` pattern** — Improved tests
 - **Feed auto-disable follow** when stdout is not a TTY
 - **Mail inject** — Improved output wording and test coverage
@@ -909,10 +909,10 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 ### Added
 
 #### Dolt-Native Architecture
-- **Complete SQLite-to-Dolt migration** - Gas Town is now Dolt-native; all SQLite code removed
+- **Complete SQLite-to-Dolt migration** - Excavation Site is now Dolt-native; all SQLite code removed
 - **`gt dolt` command** - Server management (start, stop, status, migrate, rollback, sync, init-rig)
 - **`gt install` consolidation** - Folds Dolt identity, HQ database, and server start into single command
-- **Branch-per-polecat write isolation** - Each polecat gets its own Dolt branch to prevent write conflicts
+- **Branch-per-miner write isolation** - Each miner gets its own Dolt branch to prevent write conflicts
 - **Proactive Dolt health alerting** - Daemon monitors server health with dedicated 30s ticker
 - **Auto-create DoltHub repos and configure remotes** - `gt dolt sync` pushes to DoltHub
 - **Dolt remotes patrol** - Periodic push to git remotes for federation readiness
@@ -922,16 +922,16 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **Comprehensive UX overhaul** - 13 interactive data panels with crew notifications
 - **SSE real-time updates** - Replaces 10s polling with server-sent events
 - **Interactive command palette** - Autocomplete, recent history, contextual suggestions
-- **Interactive convoy management** - Create, close, feed convoys from dashboard
+- **Interactive minecart management** - Create, close, feed minecarts from dashboard
 - **Interactive hook management** - View and manage hooks from dashboard
 - **Issue management actions** - Work panel detail view with sling buttons
-- **Convoy titles alongside IDs** - Better convoy identification
+- **Minecart titles alongside IDs** - Better minecart identification
 
 #### Daemon & Supervision
 - **launchd/systemd supervision support** - OS-native daemon management
 - **Exponential backoff for agent restarts** - Prevents restart storms
-- **Mayor daemon supervision** - Daemon manages Mayor session lifecycle
-- **Boot watchdog** - Ephemeral dog that triages Deacon state on each daemon tick
+- **Overseer daemon supervision** - Daemon manages Overseer session lifecycle
+- **Boot watchdog** - Ephemeral dog that triages Supervisor state on each daemon tick
 
 #### Molecule & Workflow System
 - **DAG visualization** (`gt mol dag`) - Visualize molecule dependency graphs
@@ -947,19 +947,19 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **Hook registry integration** - Hooks wired into `gt rig add` and `gt doctor`
 
 #### Agent Lifecycle
-- **Persistent polecat identity model** - Agent beads survive nuke; identity accumulates forever
-- **Auto re-dispatch recovered beads** - Deacon recovers work from dead polecats
-- **Witness resets abandoned beads** - Dead polecat detection triggers work recovery
-- **Auto-respawn hooks** - Mayor sessions survive tmux detach
+- **Persistent miner identity model** - Agent beads survive nuke; identity accumulates forever
+- **Auto re-dispatch recovered beads** - Supervisor recovers work from dead miners
+- **Witness resets abandoned beads** - Dead miner detection triggers work recovery
+- **Auto-respawn hooks** - Overseer sessions survive tmux detach
 - **Signal stop handler** (`gt signal stop`) - Turn-boundary messaging for clean stops
 - **PID tracking for spawned agents** - Better process management
 
-#### Convoy System
-- **Completion notifications** - Push convoy completion to active Mayor session
-- **Auto-close empty convoys** - Empty 0/0 convoys auto-closed on create
-- **`--merge` and `--owned` flags** for `gt convoy create` and `gt sling`
-- **Safety checks on `gt convoy close`** with `--force` override
-- **Reactive convoy continuation feeding** - Observer auto-feeds convoys
+#### Minecart System
+- **Completion notifications** - Push minecart completion to active Overseer session
+- **Auto-close empty minecarts** - Empty 0/0 minecarts auto-closed on create
+- **`--merge` and `--owned` flags** for `gt minecart create` and `gt sling`
+- **Safety checks on `gt minecart close`** with `--force` override
+- **Reactive minecart continuation feeding** - Observer auto-feeds minecarts
 
 #### CLI Improvements
 - **`--stdin` flag** - Shell-quoting-safe message bodies for mail, nudge, handoff, escalate, sling
@@ -991,7 +991,7 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **Refinery squash merge** - Closed MRs excluded from queue output
 - **Priority-based mail notifications** - Prevents agent derailment from low-priority mail
 - **Compaction reporting** - Automated daily digest and weekly rollup
-- **Formula template rendering** - Go text/template for convoy prompts
+- **Formula template rendering** - Go text/template for minecart prompts
 - **Centralized configuration** - Hardcoded timeouts and thresholds moved to TownSettings
 
 ### Fixed
@@ -1018,7 +1018,7 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **Orphaned database detection and cleanup** in `.dolt-data/`
 
 #### Session & Process Management
-- **Polecat nuke improvements** - Close open MRs, verify worktree removal, handle cd'd shells
+- **Miner nuke improvements** - Close open MRs, verify worktree removal, handle cd'd shells
 - **Zombie detection** - tmux-alive-but-agent-dead detection, cleanup_status handling
 - **Respawn protection** - Prevents destroying unmerged MR work on respawn
 - **Nudge backoff** - Correct cap, reduced timeout, transient error retry
@@ -1028,7 +1028,7 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 #### Cross-Rig Operations
 - **Beads routing fixes** - Correct prefix detection, redirect topology verification
 - **Cross-rig agent bead operations** routed to correct database
-- **Convoy tracking** - Proper external issue status refresh and stranded detection
+- **Minecart tracking** - Proper external issue status refresh and stranded detection
 - **Doctor checks** continue on error in agent/rig bead fix methods
 
 #### Many more fixes
@@ -1061,17 +1061,17 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **ShellQuote helper** - Safe env var escaping for shell commands
 
 #### Infrastructure
-- **Deacon status line display** - Shows deacon icon in mayor status line
-- **Configurable polecat branch naming** - Template-based branch naming
+- **Supervisor status line display** - Shows supervisor icon in overseer status line
+- **Configurable miner branch naming** - Template-based branch naming
 - **Hook registry and install command** - Manage Claude Code hooks via `gt hooks`
 - **Doctor auto-fix capability** - SessionHookCheck can auto-repair
 - **`gt orphans kill` command** - Clean up orphaned Claude processes
-- **Zombie-scan command for deacon** - tmux-verified process cleanup
+- **Zombie-scan command for supervisor** - tmux-verified process cleanup
 - **Initial prompt for autonomous patrol startup** - Better agent priming
 
 #### Refinery & Merging
 - **Squash merge for cleaner history** - Eliminates redundant merge commits
-- **Redundant observers** - Witness and Refinery both watch convoys
+- **Redundant observers** - Witness and Refinery both watch minecarts
 
 ### Fixed
 
@@ -1084,15 +1084,15 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **KillPaneProcesses kills pane process itself** - Not just descendants
 - **Kill pane processes before all RespawnPane calls** - Prevents orphan leaks
 - **Shutdown reliability improvements** - Multiple fixes for clean shutdown
-- **Deacon spawns immediately after killing stuck session**
+- **Supervisor spawns immediately after killing stuck session**
 
-#### Convoy & Routing
-- **Pass convoy ID to convoy check command** - Correct ID propagation
+#### Minecart & Routing
+- **Pass minecart ID to minecart check command** - Correct ID propagation
 - **Multi-repo routing for custom types** - Correct beads routing across repos
 - **Normalize agent ID trailing slash** - Consistent ID handling
 
 #### Miscellaneous
-- **Sling auto-apply mol-polecat-work** - Auto-attach on open polecat beads
+- **Sling auto-apply mol-miner-work** - Auto-attach on open miner beads
 - **Wisp orphan lifecycle bug** - Proper cleanup of abandoned wisps
 - **Misclassified wisp detection** - Defense-in-depth filtering
 - **Cross-account session access in seance** - Talk to predecessors across accounts
@@ -1111,13 +1111,13 @@ _Changelog not documented at release time. See git log v0.3.0..v0.3.1 for change
 ### Added
 
 #### Release Automation
-- **`gastown-release` molecule formula** - Workflow for releases with preflight checks, CHANGELOG/info.go updates, local install, and daemon restart
+- **`excavation-release` molecule formula** - Workflow for releases with preflight checks, CHANGELOG/info.go updates, local install, and daemon restart
 
 #### New Commands
 - **`gt show`** - Inspect bead contents and metadata
 - **`gt cat`** - Display bead content directly
 - **`gt orphans list/kill`** - Detect and clean up orphaned Claude processes
-- **`gt convoy close`** - Manual convoy closure command
+- **`gt minecart close`** - Manual minecart closure command
 - **`gt commit`** - Wrapper for git commit with bead awareness
 - **`gt trail`** - View commit trail for current work
 - **`gt mail ack`** - Alias for mark-read command
@@ -1134,12 +1134,12 @@ _Changelog not documented at release time. See git log v0.3.0..v0.3.1 for change
 - **`gt mail claim`** - Claim messages from queues
 
 #### Agent Identity
-- **`gt polecat identity show`** - Display CV summary for agents
+- **`gt miner identity show`** - Display CV summary for agents
 - **Worktree setup hooks** - Inject local configurations into worktrees
 
 #### Performance & Reliability
 - **Parallel agent startup** - Faster boot with concurrency limit
-- **Event-driven convoy completion** - Deacon checks convoy status on events
+- **Event-driven minecart completion** - Supervisor checks minecart status on events
 - **Automatic orphan cleanup** - Detect and kill orphaned Claude processes
 - **Namepool auto-theming** - Themes selected per rig based on name hash
 
@@ -1147,7 +1147,7 @@ _Changelog not documented at release time. See git log v0.3.0..v0.3.1 for change
 
 - **MR tracking via beads** - Removed mrqueue package, MRs now stored as beads
 - **Desire-path commands** - Added agent ergonomics shortcuts
-- **Explicit escalation in templates** - Polecat templates include escalation instructions
+- **Explicit escalation in templates** - Miner templates include escalation instructions
 - **NamePool state is transient** - InUse state no longer persisted to config
 
 ### Fixed
@@ -1164,7 +1164,7 @@ _Changelog not documented at release time. See git log v0.3.0..v0.3.1 for change
 - **hq- prefix for town-level beads** - Groups, channels use correct prefix
 - **CreatedAt for group/channel beads** - Proper timestamps on creation
 - **Routes.jsonl protection** - Doctor check for rig-level routing issues
-- **Clear BEADS_DIR in auto-convoys** - Prevent prefix inheritance issues
+- **Clear BEADS_DIR in auto-minecarts** - Prevent prefix inheritance issues
 
 #### Mail & Communication
 - **Channel routing in router.Send()** - Mail correctly routes to channels
@@ -1172,10 +1172,10 @@ _Changelog not documented at release time. See git log v0.3.0..v0.3.1 for change
 - **Town root detection** - Use workspace.Find for consistent detection
 
 #### Session & Lifecycle
-- **Idle Polecat Heresy warnings** - Templates warn against idle waiting
-- **Direct push prohibition for polecats** - Explicit in templates
+- **Idle Miner Heresy warnings** - Templates warn against idle waiting
+- **Direct push prohibition for miners** - Explicit in templates
 - **Handoff working directory** - Use correct witness directory
-- **Dead polecat handling in sling** - Detect and handle dead polecats
+- **Dead miner handling in sling** - Detect and handle dead miners
 - **gt done self-cleaning** - Kill tmux session on completion
 
 #### Doctor & Diagnostics
@@ -1189,9 +1189,9 @@ _Changelog not documented at release time. See git log v0.3.0..v0.3.1 for change
 
 ### Documentation
 
-- **Idle Polecat Heresy** - Document the anti-pattern of waiting for work
+- **Idle Miner Heresy** - Document the anti-pattern of waiting for work
 - **Bead ID vs Issue ID** - Clarify terminology in README
-- **Explicit escalation** - Add escalation guidance to polecat templates
+- **Explicit escalation** - Add escalation guidance to miner templates
 - **Getting Started placement** - Fix README section ordering
 
 ## [0.2.6] - 2026-01-12
@@ -1203,8 +1203,8 @@ _Changelog not documented at release time. See git log v0.3.0..v0.3.1 for change
 - **Escalation config schema alignment** - Configuration now matches design doc specifications
 
 #### Agent Identity & Management
-- **`gt polecat identity` subcommand group** - Agent bead management commands for polecat lifecycle
-- **AGENTS.md fallback copy** - Polecats automatically copy AGENTS.md from mayor/rig for context bootstrapping
+- **`gt miner identity` subcommand group** - Agent bead management commands for miner lifecycle
+- **AGENTS.md fallback copy** - Miners automatically copy AGENTS.md from overseer/rig for context bootstrapping
 - **`--debug` flag for `gt crew at`** - Debug mode for crew attachment troubleshooting
 - **Boot role detection in priming** - Proper context injection for boot role agents (#370)
 
@@ -1251,11 +1251,11 @@ _Changelog not documented at release time. See git log v0.3.0..v0.3.1 for change
 
 #### Session & Lifecycle
 - **Fallback instructions in start/restart beacons** - Session beacons now include fallback instructions
-- **Handoff recognizes polecat session pattern** - Correctly handles gt-<rig>-<name> session names (#373)
+- **Handoff recognizes miner session pattern** - Correctly handles gt-<rig>-<name> session names (#373)
 - **gt done resilient to missing agent beads** - No longer fails when agent beads don't exist
 - **MR beads as ephemeral wisps** - Create MR beads as ephemeral wisps for proper cleanup
-- **Auto-detect cleanup status** - Prevents premature polecat nuke (#361)
-- **Delete remote polecat branches after merge** - Refinery cleans up remote branches (#369)
+- **Auto-detect cleanup status** - Prevents premature miner nuke (#361)
+- **Delete remote miner branches after merge** - Refinery cleans up remote branches (#369)
 
 #### Costs & Events
 - **Query all beads locations for session events** - Cost tracking finds events across locations (#374)
@@ -1266,15 +1266,15 @@ _Changelog not documented at release time. See git log v0.3.0..v0.3.1 for change
 
 ### Documentation
 
-- **Polecat three-state model** - Clarified working/stalled/zombie states
-- **Name pool vs polecat pool** - Clarified misconception about pools
+- **Miner three-state model** - Clarified working/stalled/zombie states
+- **Name pool vs miner pool** - Clarified misconception about pools
 - **Plugin and escalation system designs** - Added design documentation
 - **Documentation reorganization** - Concepts, design, and examples structure
 - **gt prime clarification** - Clarified that gt prime is context recovery, not session start (GH #308)
 - **Formula package documentation** - Comprehensive package docs
 - **Various godoc additions** - GenerateMRIDWithTime, isAutonomousRole, formatInt, nil sentinel pattern
 - **Beads issue ID format** - Clarified format in README (gt-uzx2c)
-- **Stale polecat identity description** - Fixed outdated documentation
+- **Stale miner identity description** - Fixed outdated documentation
 
 ### Tests
 
@@ -1284,14 +1284,14 @@ _Changelog not documented at release time. See git log v0.3.0..v0.3.1 for change
 
 ### Deprecated
 
-- **`gt polecat add`** - Added migration warning for deprecated command
+- **`gt miner add`** - Added migration warning for deprecated command
 
 ### Contributors
 
 Thanks to all contributors for this release:
 - @JeremyKalmus - Various contributions (#364)
 - @boshu2 - Formula package documentation (#343), PR documentation (#352)
-- @sauerdaniel - Polecat mail notification fix (#347)
+- @sauerdaniel - Miner mail notification fix (#347)
 - @abhijit360 - Assign model to role (#368)
 - @julianknutsen - Beads path fix (#334)
 
@@ -1299,17 +1299,17 @@ Thanks to all contributors for this release:
 
 ### Added
 - **`gt mail mark-read`** - Mark messages as read without opening them (desire path)
-- **`gt down --polecats`** - Shut down polecats without affecting other components
-- **Self-cleaning polecat model** - Polecats self-nuke on completion, witness tracks leases
+- **`gt down --miners`** - Shut down miners without affecting other components
+- **Self-cleaning miner model** - Miners self-nuke on completion, witness tracks leases
 - **`gt prime --state` validation** - Flag exclusivity checks for cleaner CLI
 
 ### Changed
-- **Removed `gt stop`** - Use `gt down --polecats` instead (cleaner semantics)
+- **Removed `gt stop`** - Use `gt down --miners` instead (cleaner semantics)
 - **Policy-neutral templates** - crew.md.tmpl checks remote origin for PR policy
 - **Refactored prime.go** - Split 1833-line file into logical modules
 
 ### Fixed
-- **Polecat re-spawn** - CreateOrReopenAgentBead handles polecat lifecycle correctly (#333)
+- **Miner re-spawn** - CreateOrReopenAgentBead handles miner lifecycle correctly (#333)
 - **Vim mode compatibility** - tmux sends Escape before Enter for vim users
 - **Worktree default branch** - Uses rig's configured default branch (#325)
 - **Agent bead type** - Sets --type=agent when creating agent beads
@@ -1327,7 +1327,7 @@ Priming subsystem overhaul and Zero Framework Cognition (ZFC) improvements.
 ### Added
 
 #### Priming Subsystem
-- **PRIME.md provisioning** - Auto-provision PRIME.md at rig level so all workers inherit Gas Town context (GUPP, hooks, propulsion) (#hq-5z76w)
+- **PRIME.md provisioning** - Auto-provision PRIME.md at rig level so all workers inherit Excavation Site context (GUPP, hooks, propulsion) (#hq-5z76w)
 - **Post-handoff detection** - `gt prime` detects handoff marker and outputs "HANDOFF COMPLETE" warning to prevent handoff loop bug (#hq-ukjrr)
 - **Priming health checks** - `gt doctor` validates priming subsystem: SessionStart hook, gt prime command, PRIME.md presence, CLAUDE.md size (#hq-5scnt)
 - **`gt prime --dry-run`** - Preview priming without side effects
@@ -1353,12 +1353,12 @@ Priming subsystem overhaul and Zero Framework Cognition (ZFC) improvements.
 - **Remove Go-side computation** - No stderr parsing violations
 
 #### Hooks & Beads
-- **Cross-level hook visibility** - Hooked beads visible to mayor/deacon (#aeb4c0d)
+- **Cross-level hook visibility** - Hooked beads visible to overseer/supervisor (#aeb4c0d)
 - **Warn on closed hooked bead** - Alert when hooked bead already closed (#2f50a59)
 - **Correct agent bead ID format** - Fix bd create flags for agent beads (#c4fcdd8)
 
 #### Formula
-- **rigPath fallback** - Set rigPath when falling back to gastown default (#afb944f)
+- **rigPath fallback** - Set rigPath when falling back to excavation default (#afb944f)
 
 #### Doctor
 - **Full AgentEnv for env-vars check** - Use complete environment for validation (#ce231a3)
@@ -1371,16 +1371,16 @@ Priming subsystem overhaul and Zero Framework Cognition (ZFC) improvements.
 
 Worker safety release - prevents accidental termination of active agents.
 
-> **Note**: The Deacon safety improvements are believed to be correct but have not
+> **Note**: The Supervisor safety improvements are believed to be correct but have not
 > yet been extensively tested in production. We recommend running with
-> `gt deacon pause` initially and monitoring behavior before enabling full patrol.
+> `gt supervisor pause` initially and monitoring behavior before enabling full patrol.
 > Please report any issues. A 0.3.0 release will follow once these changes are
 > battle-tested.
 
 ### Critical Safety Improvements
 
-- **Kill authority removed from Deacon** - Deacon patrol now only detects zombies via `--dry-run`, never kills directly. Death warrants are filed for Boot to handle interrogation/execution. This prevents destruction of worker context, mid-task progress, and unsaved state (#gt-vhaej)
-- **Bulletproof pause mechanism** - Multi-layer pause for Deacon with file-based state, `gt deacon pause/resume` commands, and guards in `gt prime` and heartbeat (#265)
+- **Kill authority removed from Supervisor** - Supervisor patrol now only detects zombies via `--dry-run`, never kills directly. Death warrants are filed for Boot to handle interrogation/execution. This prevents destruction of worker context, mid-task progress, and unsaved state (#gt-vhaej)
+- **Bulletproof pause mechanism** - Multi-layer pause for Supervisor with file-based state, `gt supervisor pause/resume` commands, and guards in `gt prime` and heartbeat (#265)
 - **Doctor warns instead of killing** - `gt doctor` now warns about stale town-root settings rather than killing sessions (#243)
 - **Orphan process check informational** - Doctor's orphan process detection is now informational only, not actionable (#272)
 
@@ -1399,12 +1399,12 @@ Worker safety release - prevents accidental termination of active agents.
 - **`gt prime --hook` recognized** - Doctor now recognizes `gt prime --hook` as valid session hook config (#14)
 - **Integration test reliability** - Improved test stability (#13)
 - **IsClaudeRunning detection** - Now detects 'claude' and version patterns correctly (#273)
-- **Deacon heartbeat restored** - `ensureDeaconRunning` restored to heartbeat using Manager pattern (#271)
-- **Deacon session names** - Correct session name references in formulas (#270)
-- **Hidden directory scanning** - Ignore `.claude` and other dot directories when enumerating polecats (#258, #279)
-- **SetupRedirect tracked beads** - Works correctly with tracked beads architecture where canonical location is `mayor/rig/.beads`
+- **Supervisor heartbeat restored** - `ensureSupervisorRunning` restored to heartbeat using Manager pattern (#271)
+- **Supervisor session names** - Correct session name references in formulas (#270)
+- **Hidden directory scanning** - Ignore `.claude` and other dot directories when enumerating miners (#258, #279)
+- **SetupRedirect tracked beads** - Works correctly with tracked beads architecture where canonical location is `overseer/rig/.beads`
 - **Tmux shell ready** - Wait for shell ready before sending keys (#264)
-- **Gastown prefix derivation** - Correctly derive `gt-` prefix for gastown compound words (gt-m46bb)
+- **Excavation prefix derivation** - Correctly derive `gt-` prefix for excavation compound words (gt-m46bb)
 - **Custom beads types** - Register custom beads types during install (#250)
 
 ### Changed
@@ -1444,13 +1444,13 @@ Rig operational state management, unified agent startup, and extensive stability
 #### Status & Monitoring
 - **`gt status --watch`** - Watch mode with auto-refresh (#231)
 - **Compact status output** - One-line-per-worker format as new default
-- **LED status indicators** - Visual indicators for rigs in Mayor tmux status line
+- **LED status indicators** - Visual indicators for rigs in Overseer tmux status line
 - **Parked/docked indicators** - Pause emoji (⏸) for inactive rigs in statusline
 
 #### Beads & Workflow
 - **Minimum beads version check** - Validates beads CLI compatibility (gt-im3fl)
-- **ZFC convoy auto-close** - `bd close` triggers convoy completion (gt-3qw5s)
-- **Stale hooked bead cleanup** - Deacon clears orphaned hooks (gt-2yls3)
+- **ZFC minecart auto-close** - `bd close` triggers minecart completion (gt-3qw5s)
+- **Stale hooked bead cleanup** - Supervisor clears orphaned hooks (gt-2yls3)
 - **Doctor prefix mismatch detection** - Detect misconfigured rig prefixes (gt-17wdl)
 - **Unified beads redirect** - Single redirect system for tracked and local beads (#222)
 - **Route from rig to town beads** - Cross-level bead routing
@@ -1459,7 +1459,7 @@ Rig operational state management, unified agent startup, and extensive stability
 - **Windows-compatible file locking** - Daemon lock works on Windows
 - **`--purge` flag for crews** - Full crew obliteration option
 - **Debug logging for suppressed errors** - Better visibility into startup issues (gt-6d7eh)
-- **hq- prefix in tmux cycle bindings** - Navigate to Mayor/Deacon sessions
+- **hq- prefix in tmux cycle bindings** - Navigate to Overseer/Supervisor sessions
 - **Wisp config storage layer** - Transient/local settings for ephemeral workflows
 - **Sparse checkout** - Exclude Claude context files from source repos
 
@@ -1467,12 +1467,12 @@ Rig operational state management, unified agent startup, and extensive stability
 
 - **Daemon respects rig operational state** - Parked/docked rigs not auto-started
 - **Agent startup unified** - Manager pattern replaces ad-hoc initialization
-- **Mayor files moved** - Reorganized into `mayor/` subdirectory
+- **Overseer files moved** - Reorganized into `overseer/` subdirectory
 - **Refinery merges local branches** - No longer fetches from origin (gt-cio03)
-- **Polecats start from origin/default-branch** - Consistent recycled state
+- **Miners start from origin/default-branch** - Consistent recycled state
 - **Observable states removed** - Discover agent state from tmux, don't track (gt-zecmc)
 - **mol-town-shutdown v3** - Complete cleanup formula (gt-ux23f)
-- **Witness delays polecat cleanup** - Wait until MR merges (gt-12hwb)
+- **Witness delays miner cleanup** - Wait until MR merges (gt-12hwb)
 - **Nudge on divergence** - Daemon nudges agents instead of silent accept
 - **README rewritten** - Comprehensive guides and architecture docs (#226)
 - **`gt rigs` → `gt rig list`** - Command renamed in templates/docs (#217)
@@ -1481,7 +1481,7 @@ Rig operational state management, unified agent startup, and extensive stability
 
 #### Doctor & Lifecycle
 - **`--restart-sessions` flag required** - Doctor won't cycle sessions without explicit flag (gt-j44ri)
-- **Only cycle patrol roles** - Doctor --fix doesn't restart crew/polecats (hq-qthgye)
+- **Only cycle patrol roles** - Doctor --fix doesn't restart crew/miners (hq-qthgye)
 - **Session-ended events auto-closed** - Prevent accumulation (gt-8tc1v)
 - **GUPP propulsion nudge** - Added to daemon restartSession
 
@@ -1496,21 +1496,21 @@ Rig operational state management, unified agent startup, and extensive stability
 
 #### Agent Sessions
 - **Witness kills tmux on Stop()** - Clean session termination
-- **Deacon uses session package** - Correct hq- session names (gt-r38pj)
+- **Supervisor uses session package** - Correct hq- session names (gt-r38pj)
 - **Honor rig agent for witness/refinery** - Respect per-rig settings
 - **Canonical hq role bead IDs** - Consistent naming
 - **hq- prefix in status display** - Global agents shown correctly (gt-vcvyd)
 - **Restart Claude when dead** - Recover sessions where tmux exists but Claude died
 - **Town session cycling** - Works from any directory
 
-#### Polecat & Crew
+#### Miner & Crew
 - **Nuke not blocked by stale hooks** - Closed beads don't prevent cleanup (gt-jc7bq)
 - **Crew stop dry-run support** - Preview cleanup before executing (gt-kjcx4)
 - **Crew defaults to --all** - `gt crew start <rig>` starts all crew (gt-s8mpt)
-- **Polecat cleanup handlers** - `gt witness process` invokes handlers (gt-h3gzj)
+- **Miner cleanup handlers** - `gt witness process` invokes handlers (gt-h3gzj)
 
 #### Daemon & Configuration
-- **Create mayor/daemon.json** - `gt start` and `gt doctor --fix` initialize daemon state (#225)
+- **Create overseer/daemon.json** - `gt start` and `gt doctor --fix` initialize daemon state (#225)
 - **Initialize git before beads** - Enable repo fingerprint (#180)
 - **Handoff preserves env vars** - Claude Code environment not lost (#216)
 - **Agent settings passed correctly** - Witness and daemon respawn use rigPath
@@ -1526,7 +1526,7 @@ Rig operational state management, unified agent startup, and extensive stability
 - **PATH export in hooks** - Ensure commands find binaries
 - **Replace panic with fallback** - ID generation gracefully degrades (#213)
 - **Removed duplicate WorktreeAddFromRef** - Code cleanup
-- **Town root beads for Deacon** - Use correct beads location (gt-sstg)
+- **Town root beads for Supervisor** - Use correct beads location (gt-sstg)
 
 ### Refactored
 
@@ -1541,7 +1541,7 @@ Rig operational state management, unified agent startup, and extensive stability
 - **Property layers guide** - Implementation documentation
 - **Worktree architecture** - Clarified beads routing
 - **Agent config** - Onboarding docs mention --agent overrides
-- **Polecat Operations section** - Added to Mayor docs (#140)
+- **Miner Operations section** - Added to Overseer docs (#140)
 
 ### Contributors
 
@@ -1558,10 +1558,10 @@ Bug fixes, security hardening, and new `gt config` command.
 ### Added
 
 - **`gt config` command** - Manage agent settings (model, provider) per-rig or globally
-- **`hq-` prefix for patrol sessions** - Mayor and Deacon sessions use town-prefixed names
+- **`hq-` prefix for patrol sessions** - Overseer and Supervisor sessions use town-prefixed names
 - **Doctor hooks-path check** - Verify Git hooks path is configured correctly
 - **Block internal PRs** - Pre-push hook and GitHub Action prevent accidental internal PRs (#117)
-- **Dispatcher notifications** - Notify dispatcher when polecat work completes
+- **Dispatcher notifications** - Notify dispatcher when miner work completes
 - **Unit tests** - Added tests for `formatTrackBeadID` helper, done redirect, hook slot E2E
 
 ### Fixed
@@ -1572,20 +1572,20 @@ Bug fixes, security hardening, and new `gt config` command.
 - **ReDoS prevention** - Escape user input in mail search (gt-qysj9)
 - **Error handling** - Handle crypto/rand.Read errors in ID generation
 
-#### Convoy & Sling
+#### Minecart & Sling
 - **Hook slot initialization** - Set hook slot when creating agent beads during sling (#124)
-- **Cross-rig bead formatting** - Format cross-rig beads as external refs in convoy tracking (#123)
+- **Cross-rig bead formatting** - Format cross-rig beads as external refs in minecart tracking (#123)
 - **Reliable bd calls** - Add `--no-daemon` and `BEADS_DIR` for reliable beads operations
 
 #### Rig Inference
 - **`gt rig status`** - Infer rig name from current working directory
 - **`gt crew start --all`** - Infer rig from cwd for batch crew starts
 - **`gt prime` in crew start** - Pass as initial prompt in crew start commands
-- **Town default_agent** - Honor default agent setting for Mayor and Deacon
+- **Town default_agent** - Honor default agent setting for Overseer and Supervisor
 
 #### Session & Lifecycle
 - **Hook persistence** - Hook persists across session interruption via `in_progress` lookup (gt-ttn3h)
-- **Polecat cleanup** - Clean up stale worktrees and git tracking
+- **Miner cleanup** - Clean up stale worktrees and git tracking
 - **`gt done` redirect** - Use ResolveBeadsDir for redirect file support
 
 #### Build & CI
@@ -1595,19 +1595,19 @@ Bug fixes, security hardening, and new `gt config` command.
 
 ## [0.2.0] - 2026-01-04
 
-Major release featuring the Convoy Dashboard, two-level beads architecture, and significant multi-agent improvements.
+Major release featuring the Minecart Dashboard, two-level beads architecture, and significant multi-agent improvements.
 
 ### Added
 
-#### Convoy Dashboard (Web UI)
-- **`gt dashboard` command** - Launch web-based monitoring UI for Gas Town (#71)
-- **Polecat Workers section** - Real-time activity monitoring with tmux session timestamps
+#### Minecart Dashboard (Web UI)
+- **`gt dashboard` command** - Launch web-based monitoring UI for Excavation Site (#71)
+- **Miner Workers section** - Real-time activity monitoring with tmux session timestamps
 - **Refinery Merge Queue display** - Always-visible MR queue status
-- **Dynamic work status** - Convoy status columns with live updates
+- **Dynamic work status** - Minecart status columns with live updates
 - **HTMX auto-refresh** - 10-second refresh interval for real-time monitoring
 
 #### Two-Level Beads Architecture
-- **Town-level beads** (`~/gt/.beads/`) - `hq-*` prefix for Mayor mail and cross-rig coordination
+- **Town-level beads** (`~/gt/.beads/`) - `hq-*` prefix for Overseer mail and cross-rig coordination
 - **Rig-level beads** - Project-specific issues with rig prefixes (e.g., `gt-*`)
 - **`gt migrate-agents` command** - Migration tool for two-level architecture (#nnub1)
 - **TownBeadsPrefix constant** - Centralized `hq-` prefix handling
@@ -1620,10 +1620,10 @@ Major release featuring the Convoy Dashboard, two-level beads architecture, and 
 - **`spawn` alias** - Alternative to `start` for all role subcommands
 - **Batch slinging** - `gt sling` supports multiple beads to a rig in one command (#l9toz)
 
-#### Ephemeral Polecat Model
-- **Immediate recycling** - Polecats recycled after each work unit (#81)
+#### Ephemeral Miner Model
+- **Immediate recycling** - Miners recycled after each work unit (#81)
 - **Updated patrol formula** - Witness formula adapted for ephemeral model
-- **`mol-polecat-work` formula** - Updated for ephemeral polecat lifecycle (#si8rq.4)
+- **`mol-miner-work` formula** - Updated for ephemeral miner lifecycle (#si8rq.4)
 
 #### Cost Tracking
 - **`gt costs` command** - Session cost tracking and reporting
@@ -1632,16 +1632,16 @@ Major release featuring the Convoy Dashboard, two-level beads architecture, and 
 - **Tmux session auto-detection** - Costs hook finds correct session
 
 #### Conflict Resolution
-- **Conflict resolution workflow** - Formula-based conflict handling for polecats (#si8rq.5)
+- **Conflict resolution workflow** - Formula-based conflict handling for miners (#si8rq.5)
 - **Merge-slot gate** - Refinery integration for ordered conflict resolution
 - **`gt done --phase-complete`** - Gate-based phase handoffs (#si8rq.7)
 
 #### Communication & Coordination
 - **`gt mail archive` multi-ID** - Archive multiple messages at once (#82)
 - **`gt mail --all` flag** - Clear all mail for agent ergonomics (#105q3)
-- **Convoy stranded detection** - Detect and feed stranded convoys (#8otmd)
-- **`gt convoy --tree`** - Show convoy + child status tree
-- **`gt convoy check`** - Cross-rig auto-close for completed convoys (#00qjk)
+- **Minecart stranded detection** - Detect and feed stranded minecarts (#8otmd)
+- **`gt minecart --tree`** - Show minecart + child status tree
+- **`gt minecart check`** - Cross-rig auto-close for completed minecarts (#00qjk)
 
 #### Developer Experience
 - **Shell completion** - Installation instructions for bash/zsh/fish (#pdrh0)
@@ -1651,9 +1651,9 @@ Major release featuring the Convoy Dashboard, two-level beads architecture, and 
 - **Circuit breaker** - Automatic handling for stuck agents (#72cqu)
 
 #### Infrastructure
-- **SessionStart hooks** - Deployed during `gt install` for Mayor role
+- **SessionStart hooks** - Deployed during `gt install` for Overseer role
 - **`hq-dog-role` beads** - Town-level dog role initialization (#2jjry)
-- **Watchdog chain docs** - Boot/Deacon lifecycle documentation (#1847v)
+- **Watchdog chain docs** - Boot/Supervisor lifecycle documentation (#1847v)
 - **Integration tests** - CI workflow for `gt install` and `gt rig add` (#htlmp)
 - **Local repo reference clones** - Save disk space with `--reference` cloning
 
@@ -1661,9 +1661,9 @@ Major release featuring the Convoy Dashboard, two-level beads architecture, and 
 
 - **Handoff migrated to skills** - `gt handoff` now uses skills format (#nqtqp)
 - **Crew workers push to main** - Documentation clarifies no PR workflow for crew
-- **Session names include town** - Mayor/Deacon sessions use town-prefixed names
+- **Session names include town** - Overseer/Supervisor sessions use town-prefixed names
 - **Formula semantics clarified** - Formulas are templates, not instructions
-- **Witness reports stopped** - No more routine Mayor reports (saves tokens)
+- **Witness reports stopped** - No more routine Overseer reports (saves tokens)
 
 ### Fixed
 
@@ -1675,10 +1675,10 @@ Major release featuring the Convoy Dashboard, two-level beads architecture, and 
 - **Health check fallback** - Prevents killing healthy sessions on tmux errors
 
 #### Beads Integration
-- **Mayor/rig path** - Use correct path for beads to prevent prefix mismatch (#38)
+- **Overseer/rig path** - Use correct path for beads to prevent prefix mismatch (#38)
 - **Agent bead creation** - Fixed during `gt rig add` (#32)
 - **bd daemon startup** - Circuit breaker and restart logic (#2f0p3)
-- **BEADS_DIR environment** - Correctly set for polecat hooks and cross-rig work
+- **BEADS_DIR environment** - Correctly set for miner hooks and cross-rig work
 
 #### Agent Workflows
 - **Default branch detection** - `gt done` no longer hardcodes 'main' (#42)
@@ -1696,10 +1696,10 @@ Major release featuring the Convoy Dashboard, two-level beads architecture, and 
 
 Thanks to all contributors for this release:
 - @kiwiupover - README updates (#109)
-- @michaellady - Convoy dashboard (#71), ResolveBeadsDir fix (#54)
+- @michaellady - Minecart dashboard (#71), ResolveBeadsDir fix (#54)
 - @jsamuel1 - Dependency updates (#83)
 - @dannomayernotabot - Witness fixes (#87), daemon race condition (#64)
-- @markov-kernel - Mayor session hooks (#93), daemon init recommendation (#95)
+- @markov-kernel - Overseer session hooks (#93), daemon init recommendation (#95)
 - @rawwerks - Multi-agent support (#107)
 - @jakehemmerle - Daemon orphan race condition (#108)
 - @danshapiro - Install role slots (#106), rig beads dir (#61)
@@ -1712,7 +1712,7 @@ Thanks to all contributors for this release:
 
 ### Fixed
 
-- **Tmux keybindings scoped to Gas Town sessions** - C-b n/p no longer override default tmux behavior in non-GT sessions (#13)
+- **Tmux keybindings scoped to Excavation Site sessions** - C-b n/p no longer override default tmux behavior in non-GT sessions (#13)
 
 ### Added
 
@@ -1726,24 +1726,24 @@ Thanks to all contributors for this release:
 
 ### Added
 
-Initial public release of Gas Town - a multi-agent workspace manager for Claude Code.
+Initial public release of Excavation Site - a multi-agent workspace manager for Claude Code.
 
 #### Core Architecture
-- **Town structure** - Hierarchical workspace with rigs, crews, and polecats
+- **Town structure** - Hierarchical workspace with rigs, crews, and miners
 - **Rig management** - `gt rig add/list/remove` for project containers
 - **Crew workspaces** - `gt crew add` for persistent developer workspaces
-- **Polecat workers** - Transient agent workers managed by Witness
+- **Miner workers** - Transient agent workers managed by Witness
 
 #### Agent Roles
-- **Mayor** - Global coordinator for cross-rig work
-- **Deacon** - Town-level lifecycle patrol and heartbeat
-- **Witness** - Per-rig polecat lifecycle manager
+- **Overseer** - Global coordinator for cross-rig work
+- **Supervisor** - Town-level lifecycle patrol and heartbeat
+- **Witness** - Per-rig miner lifecycle manager
 - **Refinery** - Merge queue processor with code review
 - **Crew** - Persistent developer workspaces
-- **Polecat** - Transient worker agents
+- **Miner** - Transient worker agents
 
 #### Work Management
-- **Convoy system** - `gt convoy create/list/status` for tracking related work
+- **Minecart system** - `gt minecart create/list/status` for tracking related work
 - **Sling workflow** - `gt sling <bead> <rig>` to assign work to agents
 - **Hook mechanism** - Work attached to agent hooks for pickup
 - **Molecule workflows** - Formula-based multi-step task execution

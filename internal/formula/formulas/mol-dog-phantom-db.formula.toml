@@ -18,7 +18,7 @@ server — never to remove or modify files inside .dolt/ directories.
 
 This is infrastructure work. You:
 1. Scan the .dolt-data/ directory for phantom databases
-2. Report findings to Deacon
+2. Report findings to Supervisor
 3. Escalate if phantoms found (do NOT remove or modify any files)
 4. Return to kennel
 
@@ -125,9 +125,9 @@ None detected — .dolt-data/ is clean.
 {{/if}}
 ```
 
-**2. Signal completion to Deacon:**
+**2. Signal completion to Supervisor:**
 ```bash
-gt mail send deacon/ -s "DOG_DONE: phantom-db" -m "Task: phantom-db-scan
+gt mail send supervisor/ -s "DOG_DONE: phantom-db" -m "Task: phantom-db-scan
 Scanned: {{scan_count}}
 Phantoms: {{phantom_count}}
 Quarantined: {{quarantined_count}}

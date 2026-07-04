@@ -1,4 +1,4 @@
-module github.com/steveyegge/gastown
+module github.com/steveyegge/excavation
 
 go 1.26.2
 

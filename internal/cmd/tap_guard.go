@@ -39,9 +39,9 @@ Example hook configuration:
 var tapGuardPRWorkflowCmd = &cobra.Command{
 	Use:   "pr-workflow",
 	Short: "Block PR creation and feature branches",
-	Long: `Block PR workflow operations in Gas Town.
+	Long: `Block PR workflow operations in Excavation Site.
 
-Gas Town workers push directly to main. PRs add friction that breaks
+Excavation Site workers push directly to main. PRs add friction that breaks
 the autonomous execution model (GUPP principle).
 
 This guard blocks:
@@ -50,14 +50,14 @@ This guard blocks:
   - git switch -c (feature branches)
 
 Exit codes:
-  0 - Operation allowed (not in Gas Town agent context, not maintainer origin)
+  0 - Operation allowed (not in Excavation Site agent context, not maintainer origin)
   2 - Operation BLOCKED (in agent context OR maintainer origin)
 
 The guard blocks in two scenarios:
-  1. Running as a Gas Town agent (crew, polecat, witness, etc.)
-  2. Origin remote is steveyegge/gastown (maintainer should push directly)
+  1. Running as a Excavation Site agent (crew, miner, witness, etc.)
+  2. Origin remote is steveyegge/excavation (maintainer should push directly)
 
-Humans running outside Gas Town with a fork origin can still use PRs.`,
+Humans running outside Excavation Site with a fork origin can still use PRs.`,
 	RunE: runTapGuardPRWorkflow,
 }
 
@@ -67,13 +67,13 @@ func init() {
 }
 
 func runTapGuardPRWorkflow(cmd *cobra.Command, args []string) error {
-	// Check if we're in a Gas Town agent context
-	if isGasTownAgentContext() {
+	// Check if we're in a Excavation Site agent context
+	if isExcavationAgentContext() {
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "╔══════════════════════════════════════════════════════════════════╗")
 		fmt.Fprintln(os.Stderr, "║  ❌ PR WORKFLOW BLOCKED                                          ║")
 		fmt.Fprintln(os.Stderr, "╠══════════════════════════════════════════════════════════════════╣")
-		fmt.Fprintln(os.Stderr, "║  Gas Town workers push directly to main. PRs are forbidden.     ║")
+		fmt.Fprintln(os.Stderr, "║  Excavation Site workers push directly to main. PRs are forbidden.     ║")
 		fmt.Fprintln(os.Stderr, "║                                                                  ║")
 		fmt.Fprintln(os.Stderr, "║  Instead of:  gh pr create / git checkout -b / git switch -c    ║")
 		fmt.Fprintln(os.Stderr, "║  Do this:     git add . && git commit && git push origin main   ║")
@@ -85,13 +85,13 @@ func runTapGuardPRWorkflow(cmd *cobra.Command, args []string) error {
 		return NewSilentExit(2) // Exit 2 = BLOCK in Claude Code hooks
 	}
 
-	// Check if origin is the maintainer's repo (steveyegge/gastown)
+	// Check if origin is the maintainer's repo (steveyegge/excavation)
 	if isMaintainerOrigin() {
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "╔══════════════════════════════════════════════════════════════════╗")
 		fmt.Fprintln(os.Stderr, "║  ❌ PR BLOCKED - MAINTAINER ORIGIN                               ║")
 		fmt.Fprintln(os.Stderr, "╠══════════════════════════════════════════════════════════════════╣")
-		fmt.Fprintln(os.Stderr, "║  Your origin is steveyegge/gastown - push directly to main.     ║")
+		fmt.Fprintln(os.Stderr, "║  Your origin is steveyegge/excavation - push directly to main.     ║")
 		fmt.Fprintln(os.Stderr, "║  PRs are for external contributors, not maintainers.            ║")
 		fmt.Fprintln(os.Stderr, "║                                                                  ║")
 		fmt.Fprintln(os.Stderr, "║  Instead of:  gh pr create                                      ║")
@@ -101,20 +101,20 @@ func runTapGuardPRWorkflow(cmd *cobra.Command, args []string) error {
 		return NewSilentExit(2) // Exit 2 = BLOCK in Claude Code hooks
 	}
 
-	// Not in Gas Town context and not maintainer origin - allow PRs
+	// Not in Excavation Site context and not maintainer origin - allow PRs
 	return nil
 }
 
-// isGasTownAgentContext returns true if we're running as a Gas Town managed agent.
-func isGasTownAgentContext() bool {
-	// Check environment variables set by Gas Town session management
+// isExcavationAgentContext returns true if we're running as a Excavation Site managed agent.
+func isExcavationAgentContext() bool {
+	// Check environment variables set by Excavation Site session management
 	envVars := []string{
-		"GT_POLECAT",
+		"GT_MINER",
 		"GT_CREW",
 		"GT_WITNESS",
 		"GT_REFINERY",
-		"GT_MAYOR",
-		"GT_DEACON",
+		"GT_OVERSEER",
+		"GT_SUPERVISOR",
 	}
 	for _, env := range envVars {
 		if os.Getenv(env) != "" {
@@ -122,13 +122,13 @@ func isGasTownAgentContext() bool {
 		}
 	}
 
-	// Also check if we're in a crew or polecat worktree by path
+	// Also check if we're in a crew or miner worktree by path
 	cwd, err := os.Getwd()
 	if err != nil {
 		return false
 	}
 
-	agentPaths := []string{"/crew/", "/polecats/"}
+	agentPaths := []string{"/crew/", "/miners/"}
 	for _, path := range agentPaths {
 		if strings.Contains(cwd, path) {
 			return true
@@ -148,7 +148,7 @@ func isMaintainerOrigin() bool {
 	}
 	url := strings.TrimSpace(string(output))
 	// Match both HTTPS and SSH URL formats:
-	// - https://github.com/steveyegge/gastown.git
-	// - git@github.com:steveyegge/gastown.git
-	return strings.Contains(url, "steveyegge/gastown")
+	// - https://github.com/steveyegge/excavation.git
+	// - git@github.com:steveyegge/excavation.git
+	return strings.Contains(url, "steveyegge/excavation")
 }

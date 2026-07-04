@@ -13,31 +13,31 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/cli"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/events"
-	"github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/mail"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/ui"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/cli"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/events"
+	"github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/mail"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/ui"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var handoffCmd = &cobra.Command{
 	Use:         "handoff [bead-or-role]",
 	GroupID:     GroupWork,
-	Annotations: map[string]string{AnnotationPolecatSafe: "true"},
+	Annotations: map[string]string{AnnotationMinerSafe: "true"},
 	Short:       "Hand off to a fresh session, work continues from hook",
 	Long: `End watch. Hand off to a fresh agent session.
 
 This is the canonical way to end any agent session. It handles all roles:
 
-  - Mayor, Crew, Witness, Refinery, Deacon: Respawns with fresh Claude instance
-  - Polecats: Calls 'gt done --status DEFERRED' (Witness handles lifecycle)
+  - Overseer, Crew, Witness, Refinery, Supervisor: Respawns with fresh Claude instance
+  - Miners: Calls 'gt done --status DEFERRED' (Witness handles lifecycle)
 
 When run without arguments, hands off the current session.
 When given a bead ID (gt-xxx, hq-xxx), hooks that work first, then restarts.
@@ -50,16 +50,16 @@ Examples:
   gt handoff -s "Context" -m "Notes"  # Hand off with custom message
   gt handoff -c                       # Collect state into handoff message
   gt handoff crew                     # Hand off crew session
-  gt handoff mayor                    # Hand off mayor session
+  gt handoff overseer                    # Hand off overseer session
 
 The --collect (-c) flag gathers current state (hooked work, inbox, ready beads,
 in-progress items) and includes it in the handoff mail. This provides context
 for the next session without manual summarization.
 
 The --cycle flag triggers automatic session cycling (used by PreCompact hooks).
-Unlike --auto (state only) or normal handoff (polecat→gt-done redirect), --cycle
+Unlike --auto (state only) or normal handoff (miner→gt-done redirect), --cycle
 always does a full respawn regardless of role. This enables crew workers and
-polecats to get a fresh context window when the current one fills up.
+miners to get a fresh context window when the current one fills up.
 
 Any molecule on the hook will be auto-continued by the new session.
 The SessionStart hook runs 'gt prime' to restore context.`,
@@ -119,7 +119,7 @@ func runHandoff(cmd *cobra.Command, args []string) error {
 
 	// --cycle mode: full session cycling, triggered by PreCompact hook.
 	// Unlike --auto (state only), this replaces the current session with a fresh one.
-	// Unlike normal handoff, this skips the polecat→gt-done redirect because
+	// Unlike normal handoff, this skips the miner→gt-done redirect because
 	// cycling preserves work state (the hook stays attached).
 	//
 	// Flow: collect state → send handoff mail → respawn pane (fresh Claude instance)
@@ -128,31 +128,31 @@ func runHandoff(cmd *cobra.Command, args []string) error {
 		return runHandoffCycle()
 	}
 
-	// Check if we're a polecat - polecats use gt done instead.
-	// Check GT_ROLE first: coordinators (mayor, witness, etc.) may have a stale
-	// GT_POLECAT in their environment from spawning polecats. Only block if the
-	// parsed role is actually polecat (handles compound forms like
-	// "gastown/polecats/Toast"). If GT_ROLE is unset, fall back to GT_POLECAT.
-	isPolecat := false
-	polecatName := ""
+	// Check if we're a miner - miners use gt done instead.
+	// Check GT_ROLE first: coordinators (overseer, witness, etc.) may have a stale
+	// GT_MINER in their environment from spawning miners. Only block if the
+	// parsed role is actually miner (handles compound forms like
+	// "excavation/miners/Toast"). If GT_ROLE is unset, fall back to GT_MINER.
+	isMiner := false
+	minerName := ""
 	if role := os.Getenv("GT_ROLE"); role != "" {
 		parsedRole, _, name := parseRoleString(role)
-		if parsedRole == RolePolecat {
-			isPolecat = true
-			polecatName = name
-			// Bare "polecat" role yields empty name; fall back to GT_POLECAT.
-			if polecatName == "" {
-				polecatName = os.Getenv("GT_POLECAT")
+		if parsedRole == RoleMiner {
+			isMiner = true
+			minerName = name
+			// Bare "miner" role yields empty name; fall back to GT_MINER.
+			if minerName == "" {
+				minerName = os.Getenv("GT_MINER")
 			}
 		}
-	} else if name := os.Getenv("GT_POLECAT"); name != "" {
-		isPolecat = true
-		polecatName = name
+	} else if name := os.Getenv("GT_MINER"); name != "" {
+		isMiner = true
+		minerName = name
 	}
-	if isPolecat {
-		fmt.Printf("%s Polecat detected (%s) - using gt done for handoff\n",
-			style.Bold.Render("🐾"), polecatName)
-		// Polecats don't respawn themselves - Witness handles lifecycle
+	if isMiner {
+		fmt.Printf("%s Miner detected (%s) - using gt done for handoff\n",
+			style.Bold.Render("🐾"), minerName)
+		// Miners don't respawn themselves - Witness handles lifecycle
 		// Call gt done with DEFERRED status to preserve work state
 		doneCmd := exec.Command("gt", "done", "--status", "DEFERRED")
 		doneCmd.Stdout = os.Stdout
@@ -350,7 +350,7 @@ func runHandoff(cmd *cobra.Command, args []string) error {
 	// That would kill the gt handoff process itself before it can call RespawnPane,
 	// leaving the pane dead with no respawn. RespawnPane's -k flag handles killing
 	// atomically - tmux kills the old process and spawns the new one together.
-	// See: https://github.com/steveyegge/gastown/issues/859 (pane is dead bug)
+	// See: https://github.com/steveyegge/excavation/issues/859 (pane is dead bug)
 	//
 	// For orphan prevention, we rely on respawn-pane -k which sends SIGHUP/SIGTERM.
 	// If orphans still occur, the solution is to adjust the restart command to
@@ -427,7 +427,7 @@ func runHandoffAuto() error {
 	// Log handoff event
 	if townRoot, err := workspace.FindFromCwd(); err == nil && townRoot != "" {
 		agent := detectSender()
-		if agent == "" || agent == "overseer" {
+		if agent == "" || agent == "boss" {
 			agent = "unknown"
 		}
 		_ = events.LogFeed(events.TypeHandoff, agent, events.HandoffPayload(subject, false))
@@ -439,9 +439,9 @@ func runHandoffAuto() error {
 // runHandoffCycle performs a full session cycle — save state AND respawn.
 // This is the PreCompact-triggered session succession mechanism (gt-op78).
 //
-// Unlike --auto (state only) or normal handoff (polecat→gt-done redirect),
+// Unlike --auto (state only) or normal handoff (miner→gt-done redirect),
 // --cycle always does a full respawn regardless of role. This enables
-// crew workers (and polecats) to get a fresh context window when the
+// crew workers (and miners) to get a fresh context window when the
 // current one fills up.
 //
 // The flow:
@@ -621,7 +621,7 @@ func getCurrentTmuxSession() (string, error) {
 
 // resolveRoleToSession converts a role name or path to a tmux session name.
 // Accepts:
-//   - Role shortcuts: "crew", "witness", "refinery", "mayor", "deacon"
+//   - Role shortcuts: "crew", "witness", "refinery", "overseer", "supervisor"
 //   - Full paths: "<rig>/crew/<name>", "<rig>/witness", "<rig>/refinery"
 //   - Direct session names (passed through)
 //
@@ -633,11 +633,11 @@ func resolveRoleToSession(role string) (string, error) {
 	}
 
 	switch strings.ToLower(role) {
-	case constants.RoleMayor, "may":
-		return getMayorSessionName(), nil
+	case constants.RoleOverseer, "may":
+		return getOverseerSessionName(), nil
 
-	case constants.RoleDeacon, "dea":
-		return getDeaconSessionName(), nil
+	case constants.RoleSupervisor, "dea":
+		return getSupervisorSessionName(), nil
 
 	case constants.RoleCrew:
 		// Try to get rig and crew name from environment or cwd
@@ -671,7 +671,7 @@ func resolveRoleToSession(role string) (string, error) {
 		return session.RefinerySessionName(session.PrefixFor(rig)), nil
 
 	default:
-		// Assume it's a direct session name (e.g., gt-gastown-crew-max)
+		// Assume it's a direct session name (e.g., gt-excavation-crew-max)
 		return role, nil
 	}
 }
@@ -681,8 +681,8 @@ func resolveRoleToSession(role string) (string, error) {
 //   - <rig>/crew/<name> -> gt-<rig>-crew-<name>
 //   - <rig>/witness -> gt-<rig>-witness
 //   - <rig>/refinery -> gt-<rig>-refinery
-//   - <rig>/polecats/<name> -> gt-<rig>-<name> (explicit polecat)
-//   - <rig>/<name> -> gt-<rig>-<name> (polecat shorthand, if name isn't a known role)
+//   - <rig>/miners/<name> -> gt-<rig>-<name> (explicit miner)
+//   - <rig>/<name> -> gt-<rig>-<name> (miner shorthand, if name isn't a known role)
 func resolvePathToSession(path string) (string, error) {
 	parts := strings.Split(path, "/")
 
@@ -693,14 +693,14 @@ func resolvePathToSession(path string) (string, error) {
 		return session.CrewSessionName(session.PrefixFor(rig), name), nil
 	}
 
-	// Handle <rig>/polecats/<name> format (explicit polecat path)
-	if len(parts) == 3 && parts[1] == "polecats" {
+	// Handle <rig>/miners/<name> format (explicit miner path)
+	if len(parts) == 3 && parts[1] == "miners" {
 		rig := parts[0]
-		name := strings.ToLower(parts[2]) // normalize polecat name
-		return session.PolecatSessionName(session.PrefixFor(rig), name), nil
+		name := strings.ToLower(parts[2]) // normalize miner name
+		return session.MinerSessionName(session.PrefixFor(rig), name), nil
 	}
 
-	// Handle <rig>/<role-or-polecat> format
+	// Handle <rig>/<role-or-miner> format
 	if len(parts) == 2 {
 		rig := parts[0]
 		second := parts[1]
@@ -715,13 +715,13 @@ func resolvePathToSession(path string) (string, error) {
 		case constants.RoleCrew:
 			// Just "<rig>/crew" without a name - need more info
 			return "", fmt.Errorf("crew path requires name: %s/crew/<name>", rig)
-		case "polecats":
-			// Just "<rig>/polecats" without a name - need more info
-			return "", fmt.Errorf("polecats path requires name: %s/polecats/<name>", rig)
+		case "miners":
+			// Just "<rig>/miners" without a name - need more info
+			return "", fmt.Errorf("miners path requires name: %s/miners/<name>", rig)
 		default:
-			// Not a known role - check if it's a crew member before assuming polecat.
+			// Not a known role - check if it's a crew member before assuming miner.
 			// Crew members exist at <townRoot>/<rig>/crew/<name>.
-			// This fixes: gt sling gt-375 gastown/max failing because max is crew, not polecat.
+			// This fixes: gt sling gt-375 excavation/max failing because max is crew, not miner.
 			townRoot := detectTownRootFromCwd()
 			if townRoot != "" {
 				crewPath := filepath.Join(townRoot, rig, "crew", second)
@@ -729,12 +729,12 @@ func resolvePathToSession(path string) (string, error) {
 					return session.CrewSessionName(session.PrefixFor(rig), second), nil
 				}
 			}
-			// Not a crew member - treat as polecat name (e.g., gastown/nux)
-			return session.PolecatSessionName(session.PrefixFor(rig), secondLower), nil
+			// Not a crew member - treat as miner name (e.g., excavation/nux)
+			return session.MinerSessionName(session.PrefixFor(rig), secondLower), nil
 		}
 	}
 
-	return "", fmt.Errorf("cannot parse path '%s' - expected <rig>/<polecat>, <rig>/crew/<name>, <rig>/witness, or <rig>/refinery", path)
+	return "", fmt.Errorf("cannot parse path '%s' - expected <rig>/<miner>, <rig>/crew/<name>, <rig>/witness, or <rig>/refinery", path)
 }
 
 // claudeEnvVars lists the Claude-related environment variables to propagate
@@ -791,7 +791,7 @@ func buildRestartCommandWithOpts(sessionName string, opts buildRestartCommandOpt
 	// Detect town root from current directory
 	townRoot := detectTownRootFromCwd()
 	if townRoot == "" {
-		return "", fmt.Errorf("cannot detect town root - run from within a Gas Town workspace")
+		return "", fmt.Errorf("cannot detect town root - run from within a Excavation Site workspace")
 	}
 
 	// Determine the working directory for this session type
@@ -825,7 +825,7 @@ func buildRestartCommandWithOpts(sessionName string, opts buildRestartCommandOpt
 			beacon = "Your account was rotated to avoid a rate limit. Continue your previous task."
 		}
 	} else if isPatrolRole(simpleRole) {
-		// Patrol roles (refinery, witness, deacon) must re-enter their patrol
+		// Patrol roles (refinery, witness, supervisor) must re-enter their patrol
 		// loop on handoff, not "wait for instructions." Without this, idle
 		// patrol agents cycle through handoff→prime→no-work→handoff burning
 		// CPU and tokens indefinitely. The patrol instruction ensures they
@@ -1049,24 +1049,24 @@ func updateSessionEnvForHandoff(t *tmux.Tmux, sessionName, agentOverride string)
 // This is the canonical home for each role type.
 func sessionWorkDir(sessionName, townRoot string) (string, error) {
 	// Get session names for comparison
-	mayorSession := getMayorSessionName()
-	deaconSession := getDeaconSessionName()
+	overseerSession := getOverseerSessionName()
+	supervisorSession := getSupervisorSessionName()
 
 	bootSession := session.BootSessionName()
 
 	switch {
-	case sessionName == mayorSession:
-		// Mayor runs from ~/gt/mayor/, not town root.
+	case sessionName == overseerSession:
+		// Overseer runs from ~/gt/overseer/, not town root.
 		// Tools use workspace.FindFromCwd() which walks UP to find town root.
-		return townRoot + "/mayor", nil
+		return townRoot + "/overseer", nil
 
 	case sessionName == bootSession:
-		// Boot watchdog runs from ~/gt/deacon/dogs/boot/, not ~/gt/deacon/.
+		// Boot watchdog runs from ~/gt/supervisor/dogs/boot/, not ~/gt/supervisor/.
 		// Boot is ephemeral (fresh each daemon tick) with its own CLAUDE.md.
-		return townRoot + "/deacon/dogs/boot", nil
+		return townRoot + "/supervisor/dogs/boot", nil
 
-	case sessionName == deaconSession:
-		return townRoot + "/deacon", nil
+	case sessionName == supervisorSession:
+		return townRoot + "/supervisor", nil
 
 	case strings.Contains(sessionName, "-crew-"):
 		// gt-<rig>-crew-<name> -> <townRoot>/<rig>/crew/<name>
@@ -1083,20 +1083,20 @@ func sessionWorkDir(sessionName, townRoot string) (string, error) {
 			return "", fmt.Errorf("unknown session type: %s (%w)", sessionName, err)
 		}
 		switch identity.Role {
-		case session.RoleMayor:
-			return townRoot + "/mayor", nil
-		case session.RoleDeacon:
-			return townRoot + "/deacon", nil
 		case session.RoleOverseer:
-			return townRoot + "/deacon", nil
+			return townRoot + "/overseer", nil
+		case session.RoleSupervisor:
+			return townRoot + "/supervisor", nil
+		case session.RoleBoss:
+			return townRoot + "/supervisor", nil
 		case session.RoleWitness:
 			return fmt.Sprintf("%s/%s/witness", townRoot, identity.Rig), nil
 		case session.RoleRefinery:
 			return fmt.Sprintf("%s/%s/refinery/rig", townRoot, identity.Rig), nil
-		case session.RolePolecat:
-			return fmt.Sprintf("%s/%s/polecats/%s", townRoot, identity.Rig, identity.Name), nil
+		case session.RoleMiner:
+			return fmt.Sprintf("%s/%s/miners/%s", townRoot, identity.Rig, identity.Name), nil
 		case session.RoleDog:
-			return fmt.Sprintf("%s/deacon/dogs/%s", townRoot, identity.Name), nil
+			return fmt.Sprintf("%s/supervisor/dogs/%s", townRoot, identity.Name), nil
 		default:
 			return "", fmt.Errorf("unknown session type: %s (role %s, try specifying role explicitly)", sessionName, identity.Role)
 		}
@@ -1116,8 +1116,8 @@ func sessionToGTRole(sessionName string) string {
 // detectTownRootFromCwd walks up from the current directory to find the town root.
 // Falls back to GT_TOWN_ROOT or GT_ROOT env vars if cwd detection fails (broken state recovery).
 func detectTownRootFromCwd() string {
-	// Use workspace.FindFromCwd which handles both primary (mayor/town.json)
-	// and secondary (mayor/ directory) markers
+	// Use workspace.FindFromCwd which handles both primary (overseer/town.json)
+	// and secondary (overseer/ directory) markers
 	townRoot, err := workspace.FindFromCwd()
 	if err == nil && townRoot != "" {
 		return townRoot
@@ -1586,7 +1586,7 @@ func collectGitState() string {
 // cleanupMoleculeOnHandoff closes any in-progress molecule steps before session
 // handoff, preventing orphaned wisps from accumulating. (gt-e26g)
 //
-// Without this, patrol agents (witness, refinery, deacon) that handoff mid-cycle
+// Without this, patrol agents (witness, refinery, supervisor) that handoff mid-cycle
 // leave unfinished molecule steps open forever. The next session pours a new
 // molecule, so the old steps are never completed.
 //
@@ -1610,7 +1610,7 @@ func cleanupMoleculeOnHandoff() {
 	roleCtx := RoleContext{
 		Role:     roleInfo.Role,
 		Rig:      roleInfo.Rig,
-		Polecat:  roleInfo.Polecat,
+		Miner:  roleInfo.Miner,
 		TownRoot: townRoot,
 		WorkDir:  cwd,
 	}
@@ -1678,13 +1678,13 @@ func cleanupMoleculeOnHandoff() {
 // less than MinHandoffCooldown ago, the function sleeps for the remaining
 // time. This ensures at least MinHandoffCooldown passes between handoffs.
 //
-// Crew and mayor roles are exempt — they hand off on human request,
+// Crew and overseer roles are exempt — they hand off on human request,
 // not on patrol loops, so the cooldown just gets in the way.
 func enforceHandoffCooldown() {
 	if role := os.Getenv("GT_ROLE"); role != "" {
 		parsed, _, _ := parseRoleString(role)
 		switch parsed {
-		case RoleMayor, RoleCrew:
+		case RoleOverseer, RoleCrew:
 			return
 		}
 	}
@@ -1726,12 +1726,12 @@ func recordHandoffTime() {
 	_ = os.WriteFile(tsPath, []byte(fmt.Sprintf("%d", time.Now().Unix())), 0644)
 }
 
-// isPatrolRole returns true if the role runs a patrol loop (refinery, witness, deacon).
+// isPatrolRole returns true if the role runs a patrol loop (refinery, witness, supervisor).
 // Patrol roles must re-enter their patrol molecule on handoff rather than
 // "waiting for instructions," which leads to idle CPU burn.
 func isPatrolRole(role string) bool {
 	switch role {
-	case "refinery", "witness", "deacon":
+	case "refinery", "witness", "supervisor":
 		return true
 	}
 	return false

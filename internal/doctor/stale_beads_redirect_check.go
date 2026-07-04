@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/beads"
+	"github.com/steveyegge/excavation/internal/beads"
 )
 
 // StaleBeadsRedirectCheck detects .beads directories that have both a redirect
@@ -17,7 +17,7 @@ import (
 // - SetupRedirect failed or was run before cleanup logic was added
 //
 // Additionally, this check verifies redirect topology:
-// - Worktrees (crew, polecats, refinery) should have redirects
+// - Worktrees (crew, miners, refinery) should have redirects
 // - Redirects should point to the correct canonical location
 // - Redirect targets should exist
 //
@@ -195,15 +195,15 @@ func findRigDirs(townRoot string) ([]string, error) {
 		}
 
 		name := entry.Name()
-		// Skip hidden dirs, mayor, docs
-		if strings.HasPrefix(name, ".") || name == "mayor" || name == "docs" {
+		// Skip hidden dirs, overseer, docs
+		if strings.HasPrefix(name, ".") || name == "overseer" || name == "docs" {
 			continue
 		}
 
 		rigPath := filepath.Join(townRoot, name)
 
 		// A rig should have at least a .git directory (be a git repo)
-		// or have a mayor/rig subdirectory
+		// or have a overseer/rig subdirectory
 		if isLikelyRig(rigPath) {
 			rigs = append(rigs, rigPath)
 		}
@@ -218,8 +218,8 @@ func isLikelyRig(path string) bool {
 	if _, err := os.Stat(filepath.Join(path, ".git")); err == nil {
 		return true
 	}
-	// Check for mayor/rig (has the standard rig structure)
-	if _, err := os.Stat(filepath.Join(path, "mayor", "rig")); err == nil {
+	// Check for overseer/rig (has the standard rig structure)
+	if _, err := os.Stat(filepath.Join(path, "overseer", "rig")); err == nil {
 		return true
 	}
 	// Check for .beads directory (has beads configured)
@@ -259,14 +259,14 @@ func getBeadsDirsToCheck(rigDir string) []string {
 		dirs = append(dirs, refineryBeads)
 	}
 
-	// Polecats .beads directories: <rig>/polecats/*/.beads
-	// Polecats may use nested structure: polecats/<name>/<rig_name>/.beads
-	polecatsDir := filepath.Join(rigDir, "polecats")
-	if entries, err := os.ReadDir(polecatsDir); err == nil {
+	// Miners .beads directories: <rig>/miners/*/.beads
+	// Miners may use nested structure: miners/<name>/<rig_name>/.beads
+	minersDir := filepath.Join(rigDir, "miners")
+	if entries, err := os.ReadDir(minersDir); err == nil {
 		for _, entry := range entries {
 			// Skip hidden directories
 			if entry.IsDir() && !strings.HasPrefix(entry.Name(), ".") {
-				clonePath := polecatClonePath(rigDir, entry.Name())
+				clonePath := minerClonePath(rigDir, entry.Name())
 				beadsDir := filepath.Join(clonePath, ".beads")
 				if _, err := os.Stat(beadsDir); err == nil {
 					dirs = append(dirs, beadsDir)
@@ -393,10 +393,10 @@ func (c *StaleBeadsRedirectCheck) verifyRedirectTopology(ctx *CheckContext, rigD
 
 	// Check if rig has beads configured at all
 	rigBeadsPath := filepath.Join(rigDir, ".beads")
-	mayorBeadsPath := filepath.Join(rigDir, "mayor", "rig", ".beads")
+	overseerBeadsPath := filepath.Join(rigDir, "overseer", "rig", ".beads")
 
 	// If neither location has beads, skip this rig (not configured)
-	if !dirExists(rigBeadsPath) && !dirExists(mayorBeadsPath) {
+	if !dirExists(rigBeadsPath) && !dirExists(overseerBeadsPath) {
 		return nil, nil
 	}
 
@@ -460,16 +460,16 @@ func getWorktreePaths(rigDir string) []string {
 		}
 	}
 
-	// Polecats: <rig>/polecats/*
-	// Polecats may use nested structure: polecats/<name>/<rig_name>/
+	// Miners: <rig>/miners/*
+	// Miners may use nested structure: miners/<name>/<rig_name>/
 	// where <rig_name>/ is the actual git worktree (clone path).
-	polecatsDir := filepath.Join(rigDir, "polecats")
-	if entries, err := os.ReadDir(polecatsDir); err == nil {
+	minersDir := filepath.Join(rigDir, "miners")
+	if entries, err := os.ReadDir(minersDir); err == nil {
 		for _, entry := range entries {
 			name := entry.Name()
 			// Skip hidden directories
 			if entry.IsDir() && !strings.HasPrefix(name, ".") {
-				paths = append(paths, polecatClonePath(rigDir, name))
+				paths = append(paths, minerClonePath(rigDir, name))
 			}
 		}
 	}
@@ -483,23 +483,23 @@ func getWorktreePaths(rigDir string) []string {
 	return paths
 }
 
-// polecatClonePath returns the actual git worktree path for a polecat.
-// Mirrors the logic in polecat/manager.go:clonePath() to handle both:
-//   - New nested structure: polecats/<name>/<rig_name>/ (gives LLMs repo context)
-//   - Old flat structure: polecats/<name>/ (backward compat)
-func polecatClonePath(rigDir, polecatName string) string {
+// minerClonePath returns the actual git worktree path for a miner.
+// Mirrors the logic in miner/manager.go:clonePath() to handle both:
+//   - New nested structure: miners/<name>/<rig_name>/ (gives LLMs repo context)
+//   - Old flat structure: miners/<name>/ (backward compat)
+func minerClonePath(rigDir, minerName string) string {
 	rigName := filepath.Base(rigDir)
-	polecatDir := filepath.Join(rigDir, "polecats", polecatName)
+	minerDir := filepath.Join(rigDir, "miners", minerName)
 
-	// New structure: polecats/<name>/<rig_name>/
-	nestedPath := filepath.Join(polecatDir, rigName)
+	// New structure: miners/<name>/<rig_name>/
+	nestedPath := filepath.Join(minerDir, rigName)
 	if dirExists(nestedPath) {
 		return nestedPath
 	}
 
-	// Old structure: polecats/<name>/ (check for .git to confirm it's a worktree)
-	if _, err := os.Stat(filepath.Join(polecatDir, ".git")); err == nil {
-		return polecatDir
+	// Old structure: miners/<name>/ (check for .git to confirm it's a worktree)
+	if _, err := os.Stat(filepath.Join(minerDir, ".git")); err == nil {
+		return minerDir
 	}
 
 	// Default to new structure (consistent with manager.go)

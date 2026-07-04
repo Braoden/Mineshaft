@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/dog"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/dog"
 )
 
 // =============================================================================
@@ -24,7 +24,7 @@ func testDogManager(t *testing.T) (*dog.Manager, string) {
 	rigsConfig := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"gastown": {GitURL: "git@github.com:test/gastown.git"},
+			"excavation": {GitURL: "git@github.com:test/excavation.git"},
 			"beads":   {GitURL: "git@github.com:test/beads.git"},
 		},
 	}
@@ -37,7 +37,7 @@ func testDogManager(t *testing.T) (*dog.Manager, string) {
 func setupTestDog(t *testing.T, m *dog.Manager, townRoot, name string, state *dog.DogState) {
 	t.Helper()
 
-	dogPath := filepath.Join(townRoot, "deacon", "dogs", name)
+	dogPath := filepath.Join(townRoot, "supervisor", "dogs", name)
 	if err := os.MkdirAll(dogPath, 0755); err != nil {
 		t.Fatalf("Failed to create dog dir: %v", err)
 	}
@@ -68,54 +68,54 @@ func TestDetectDogNameFromPath(t *testing.T) {
 	}{
 		{
 			name:     "dog worktree root",
-			path:     "/Users/user/gt/deacon/dogs/alpha",
+			path:     "/Users/user/gt/supervisor/dogs/alpha",
 			wantName: "alpha",
 			wantOK:   true,
 		},
 		{
 			name:     "dog rig worktree",
-			path:     "/Users/user/gt/deacon/dogs/alpha/gastown",
+			path:     "/Users/user/gt/supervisor/dogs/alpha/excavation",
 			wantName: "alpha",
 			wantOK:   true,
 		},
 		{
 			name:     "deep path in dog worktree",
-			path:     "/Users/user/gt/deacon/dogs/bravo/beads/internal/cmd",
+			path:     "/Users/user/gt/supervisor/dogs/bravo/beads/internal/cmd",
 			wantName: "bravo",
 			wantOK:   true,
 		},
 		{
 			name:     "hyphenated dog name",
-			path:     "/Users/user/gt/deacon/dogs/my-dog/gastown",
+			path:     "/Users/user/gt/supervisor/dogs/my-dog/excavation",
 			wantName: "my-dog",
 			wantOK:   true,
 		},
 		{
 			name:     "numeric dog name",
-			path:     "/Users/user/gt/deacon/dogs/dog123/beads",
+			path:     "/Users/user/gt/supervisor/dogs/dog123/beads",
 			wantName: "dog123",
 			wantOK:   true,
 		},
 		{
-			name:     "not a dog path - polecat",
-			path:     "/Users/user/gt/gastown/polecats/fixer/internal",
+			name:     "not a dog path - miner",
+			path:     "/Users/user/gt/excavation/miners/fixer/internal",
 			wantName: "",
 			wantOK:   false,
 		},
 		{
 			name:     "not a dog path - crew",
-			path:     "/Users/user/gt/gastown/crew/george/internal",
+			path:     "/Users/user/gt/excavation/crew/george/internal",
 			wantName: "",
 			wantOK:   false,
 		},
 		{
-			name:     "deacon but not dogs directory",
-			path:     "/Users/user/gt/deacon/boot",
+			name:     "supervisor but not dogs directory",
+			path:     "/Users/user/gt/supervisor/boot",
 			wantName: "",
 			wantOK:   false,
 		},
 		{
-			name:     "dogs without deacon parent",
+			name:     "dogs without supervisor parent",
 			path:     "/Users/user/gt/some/dogs/alpha",
 			wantName: "",
 			wantOK:   false,
@@ -159,7 +159,7 @@ func detectDogNameFromPath(path string) (string, bool) {
 	parts := splitPathComponents(path)
 
 	for i := 0; i < len(parts)-1; i++ {
-		if parts[i] == "dogs" && i > 0 && parts[i-1] == "deacon" {
+		if parts[i] == "dogs" && i > 0 && parts[i-1] == "supervisor" {
 			return parts[i+1], true
 		}
 	}
@@ -239,7 +239,7 @@ func TestDogDone_WorkingToIdle(t *testing.T) {
 	state := &dog.DogState{
 		Name:       "alpha",
 		State:      dog.StateWorking,
-		Work:       "hq-convoy-xyz",
+		Work:       "hq-minecart-xyz",
 		LastActive: now,
 		CreatedAt:  now,
 		UpdatedAt:  now,
@@ -254,8 +254,8 @@ func TestDogDone_WorkingToIdle(t *testing.T) {
 	if d.State != dog.StateWorking {
 		t.Errorf("Initial State = %q, want %q", d.State, dog.StateWorking)
 	}
-	if d.Work != "hq-convoy-xyz" {
-		t.Errorf("Initial Work = %q, want 'hq-convoy-xyz'", d.Work)
+	if d.Work != "hq-minecart-xyz" {
+		t.Errorf("Initial Work = %q, want 'hq-minecart-xyz'", d.Work)
 	}
 
 	// Clear work
@@ -296,7 +296,7 @@ func TestDogClear_WorkingToIdle(t *testing.T) {
 	state := &dog.DogState{
 		Name:       "alpha",
 		State:      dog.StateWorking,
-		Work:       constants.MolConvoyFeed,
+		Work:       constants.MolMinecartFeed,
 		LastActive: now,
 		CreatedAt:  now,
 		UpdatedAt:  now,
@@ -392,8 +392,8 @@ func TestSplitPath(t *testing.T) {
 		want []string
 	}{
 		{
-			path: "/Users/user/gt/deacon/dogs/alpha",
-			want: []string{"Users", "user", "gt", "deacon", "dogs", "alpha"},
+			path: "/Users/user/gt/supervisor/dogs/alpha",
+			want: []string{"Users", "user", "gt", "supervisor", "dogs", "alpha"},
 		},
 		{
 			path: "/a/b/c",

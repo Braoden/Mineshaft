@@ -1,6 +1,6 @@
 # Dolt Health Guide
 
-This guide covers evidence capture for Dolt outages and Gas Town behavior
+This guide covers evidence capture for Dolt outages and Excavation Site behavior
 mismatches that look like Dolt trouble.
 
 ## When To Use This
@@ -10,7 +10,7 @@ Use this checklist when any of these happen:
 - `bd` commands hang, time out, or return unexpected empty results.
 - `gt dolt status` reports unhealthy server state, high latency, stale PIDs, or
   orphan test databases.
-- A Gas Town command behaves differently from its documented or expected behavior
+- A Excavation Site command behaves differently from its documented or expected behavior
   and Dolt is part of the control path.
 
 Do not restart Dolt before collecting diagnostics. A blind restart can destroy the
@@ -56,7 +56,7 @@ mismatch.
 ## Field Notes
 
 - **Trigger command**: the exact command or agent action that exposed the issue.
-- **Concurrent GT processes**: active mayor, witness, refinery, polecat, dog, or
+- **Concurrent GT processes**: active overseer, witness, refinery, miner, dog, or
   test processes that may share Dolt.
 - **Dolt pid/status**: server PID, health, latency, and port state from
   `gt dolt status` or `gt dolt dump`.

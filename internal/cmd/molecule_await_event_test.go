@@ -194,7 +194,7 @@ func TestReadPendingEvents(t *testing.T) {
 
 	t.Run("single event file", func(t *testing.T) {
 		dir := t.TempDir()
-		content := `{"type":"MERGE_READY","channel":"refinery","timestamp":"2026-02-21T00:00:00Z","payload":{"polecat":"nux"}}`
+		content := `{"type":"MERGE_READY","channel":"refinery","timestamp":"2026-02-21T00:00:00Z","payload":{"miner":"nux"}}`
 		if err := os.WriteFile(filepath.Join(dir, "001.event"), []byte(content), 0644); err != nil {
 			t.Fatal(err)
 		}

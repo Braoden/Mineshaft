@@ -18,7 +18,7 @@ func TestGetIssueDetailsBatch_ReturnsStructuredErrorOnCommandFailure(t *testing.
 		return nil, errors.New("boom")
 	}
 
-	f := &LiveConvoyFetcher{cmdTimeout: 100 * time.Millisecond}
+	f := &LiveMinecartFetcher{cmdTimeout: 100 * time.Millisecond}
 	_, err := f.getIssueDetailsBatch([]string{"gt-1", "gt-2"})
 	if err == nil {
 		t.Fatal("expected error, got nil")
@@ -41,7 +41,7 @@ func TestGetIssueDetailsBatch_ReturnsStructuredErrorOnInvalidJSON(t *testing.T) 
 		return bytes.NewBufferString("{invalid"), nil
 	}
 
-	f := &LiveConvoyFetcher{cmdTimeout: 100 * time.Millisecond}
+	f := &LiveMinecartFetcher{cmdTimeout: 100 * time.Millisecond}
 	_, err := f.getIssueDetailsBatch([]string{"gt-9"})
 	if err == nil {
 		t.Fatal("expected error, got nil")
@@ -62,12 +62,12 @@ func TestGetIssueDetailsBatch_ParsesIssueDetails(t *testing.T) {
 
 	fetcherRunCmd = func(_ time.Duration, _ string, _ ...string) (*bytes.Buffer, error) {
 		return bytes.NewBufferString(`[
-			{"id":"gt-1","title":"One","status":"open","assignee":"rig/polecats/a","updated_at":"2026-02-01T12:00:00Z"},
+			{"id":"gt-1","title":"One","status":"open","assignee":"rig/miners/a","updated_at":"2026-02-01T12:00:00Z"},
 			{"id":"gt-2","title":"Two","status":"closed","assignee":"","updated_at":"2026-02-01T12:01:00Z"}
 		]`), nil
 	}
 
-	f := &LiveConvoyFetcher{cmdTimeout: 100 * time.Millisecond}
+	f := &LiveMinecartFetcher{cmdTimeout: 100 * time.Millisecond}
 	details, err := f.getIssueDetailsBatch([]string{"gt-1", "gt-2"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

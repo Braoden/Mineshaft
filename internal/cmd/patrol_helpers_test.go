@@ -16,11 +16,11 @@ import (
 	"testing"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/refinery"
-	"github.com/steveyegge/gastown/internal/testutil"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/refinery"
+	"github.com/steveyegge/excavation/internal/testutil"
 )
 
 func TestBuildWitnessPatrolVars_NilContext(t *testing.T) {
@@ -126,12 +126,12 @@ func TestAutoSpawnPatrol_RefinerySafetyStoppedSkipsWispCreate(t *testing.T) {
 func setupRefinerySafetyStopTown(t *testing.T) string {
 	t.Helper()
 	townRoot := t.TempDir()
-	for _, dir := range []string{filepath.Join(townRoot, "mayor"), filepath.Join(townRoot, ".beads"), filepath.Join(townRoot, "testrig")} {
+	for _, dir := range []string{filepath.Join(townRoot, "overseer"), filepath.Join(townRoot, ".beads"), filepath.Join(townRoot, "testrig")} {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			t.Fatalf("mkdir %s: %v", dir, err)
 		}
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "mayor", "town.json"), []byte(`{"name":"test"}`), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"name":"test"}`), 0o644); err != nil {
 		t.Fatalf("write town.json: %v", err)
 	}
 	return townRoot
@@ -492,7 +492,7 @@ func TestBuildRefineryPatrolVars_DefaultBranchWithoutMQ(t *testing.T) {
 	// Write rig config with custom default_branch but NO settings/config.json
 	rigConfig := map[string]interface{}{
 		"type": "rig", "version": 1, "name": "testrig",
-		"default_branch": "gastown",
+		"default_branch": "excavation",
 	}
 	rigData, _ := json.Marshal(rigConfig)
 	if err := os.WriteFile(filepath.Join(rigDir, "config.json"), rigData, 0o644); err != nil {
@@ -505,7 +505,7 @@ func TestBuildRefineryPatrolVars_DefaultBranchWithoutMQ(t *testing.T) {
 	}
 	vars := buildRefineryPatrolVars(ctx)
 
-	// target_branch must be "gastown" even without merge_queue settings
+	// target_branch must be "excavation" even without merge_queue settings
 	if len(vars) != 1 {
 		t.Errorf("expected 1 var (target_branch), got %d: %v", len(vars), vars)
 	}
@@ -516,8 +516,8 @@ func TestBuildRefineryPatrolVars_DefaultBranchWithoutMQ(t *testing.T) {
 			varMap[parts[0]] = parts[1]
 		}
 	}
-	if got := varMap["target_branch"]; got != "gastown" {
-		t.Errorf("target_branch = %q, want %q (should read rig config even without MQ settings)", got, "gastown")
+	if got := varMap["target_branch"]; got != "excavation" {
+		t.Errorf("target_branch = %q, want %q (should read rig config even without MQ settings)", got, "excavation")
 	}
 }
 

@@ -7,12 +7,12 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/estop"
-	"github.com/steveyegge/gastown/internal/mail"
-	"github.com/steveyegge/gastown/internal/nudge"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/estop"
+	"github.com/steveyegge/excavation/internal/mail"
+	"github.com/steveyegge/excavation/internal/nudge"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 func runMailCheck(cmd *cobra.Command, args []string) error {
@@ -31,7 +31,7 @@ func runMailCheck(cmd *cobra.Command, args []string) error {
 			fmt.Fprintf(os.Stderr, "gt mail check: workspace lookup failed: %v\n", err)
 			return nil
 		}
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Get mailbox
@@ -83,7 +83,7 @@ func runMailCheck(cmd *cobra.Command, args []string) error {
 				fmt.Print("<system-reminder>\n")
 				fmt.Print("EMERGENCY STOP ACTIVE. All work is paused.\n")
 				fmt.Print("Do NOT start new tasks or tool calls. Checkpoint your current state\n")
-				fmt.Print("(save progress notes) and wait for the overseer to run 'gt thaw'.\n")
+				fmt.Print("(save progress notes) and wait for the boss to run 'gt thaw'.\n")
 				fmt.Print("This is a system-level pause — it may be due to infrastructure failure,\n")
 				fmt.Print("maintenance, or the operator traveling.\n")
 				fmt.Print("</system-reminder>\n")

@@ -1,4 +1,4 @@
-// Package doltserver manages the Dolt SQL server for Gas Town.
+// Package doltserver manages the Dolt SQL server for Excavation Site.
 //
 // The Dolt server provides multi-client access to beads databases,
 // avoiding the single-writer limitation of embedded Dolt mode.
@@ -8,11 +8,11 @@
 //   - User: root (default Dolt user, no password for localhost)
 //   - Data directory: ~/gt/.dolt-data/ (contains all rig databases)
 //
-// Each rig (hq, gastown, beads) has its own database subdirectory:
+// Each rig (hq, excavation, beads) has its own database subdirectory:
 //
 //	~/gt/.dolt-data/
 //	├── hq/        # Town beads (hq-*)
-//	├── gastown/   # Gastown rig (gt-*)
+//	├── excavation/   # Excavation rig (gt-*)
 //	├── beads/     # Beads rig (bd-*)
 //	└── ...        # Other rigs
 //
@@ -48,10 +48,10 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gofrs/flock"
 	beadssdk "github.com/steveyegge/beads"
-	"github.com/steveyegge/gastown/internal/atomicfile"
-	"github.com/steveyegge/gastown/internal/beads"
-	configpkg "github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/style"
+	"github.com/steveyegge/excavation/internal/atomicfile"
+	"github.com/steveyegge/excavation/internal/beads"
+	configpkg "github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/style"
 )
 
 // EnsureDoltIdentity configures dolt global identity (user.name, user.email)
@@ -156,7 +156,7 @@ const (
 
 	// DefaultWaitTimeoutSec is how long Dolt keeps an idle session alive before
 	// closing it. Dolt's MySQL-compat default is 28800s (8 hours). Under Gas
-	// Town load (mayor + deacon + witness + refinery + N polecats + dashboard
+	// Town load (overseer + supervisor + witness + refinery + N miners + dashboard
 	// polling), short-lived `bd` processes leak connections faster than the
 	// default timeout reclaims them, leading to a death spiral at the 1000-
 	// connection cap. 30s is aggressive but matches the documented workaround
@@ -189,7 +189,7 @@ func getMetadataMu(path string) *sync.Mutex {
 
 // Config holds Dolt server configuration.
 type Config struct {
-	// TownRoot is the Gas Town workspace root.
+	// TownRoot is the Excavation Site workspace root.
 	TownRoot string
 
 	// Host is the Dolt server hostname or IP.
@@ -217,8 +217,8 @@ type Config struct {
 	PidFile string
 
 	// MaxConnections is the maximum number of simultaneous connections the server will accept.
-	// Set to 0 to use the Dolt default (1000). Gas Town defaults to 50 to prevent
-	// connection storms during mass polecat slings.
+	// Set to 0 to use the Dolt default (1000). Excavation Site defaults to 50 to prevent
+	// connection storms during mass miner slings.
 	MaxConnections int
 
 	// ReadTimeoutMs is the server-side read timeout in milliseconds.
@@ -254,7 +254,7 @@ type Config struct {
 	LogLevel string
 
 	// EventScheduler controls Dolt's MySQL event scheduler in managed config.
-	// Default is OFF for Gas Town: background SQL events are not part of normal
+	// Default is OFF for Excavation Site: background SQL events are not part of normal
 	// beads operation and add hidden work during outage recovery.
 	EventScheduler string
 
@@ -801,7 +801,7 @@ func HasServerModeMetadata(townRoot string) []string {
 	}
 
 	// Check rig-level beads
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	data, err := os.ReadFile(rigsPath)
 	if err != nil {
 		return serverRigs
@@ -1063,7 +1063,7 @@ func GetDoltDataDirFromProcess(pid int) string {
 }
 
 // getDoltConfigPathFromProcess reads the --config flag value from the running
-// process's command-line arguments. Gas Town starts Dolt via --config, so this
+// process's command-line arguments. Excavation Site starts Dolt via --config, so this
 // is the primary ownership signal when --data-dir is absent.
 func getDoltConfigPathFromProcess(pid int) string {
 	return resolveProcessPath(pid, getDoltFlagFromArgs(getProcessArgs(pid), "--config"))
@@ -1524,8 +1524,8 @@ func checkPortAvailable(port int) error {
 			detail = fmt.Sprintf("\nPort is held by PID %d", pid)
 		}
 		return fmt.Errorf("port %d is already in use.%s\n"+
-			"If you're running multiple Gas Town instances, each needs a unique Dolt port.\n"+
-			"Set GT_DOLT_PORT in mayor/daemon.json env section:\n"+
+			"If you're running multiple Excavation Site instances, each needs a unique Dolt port.\n"+
+			"Set GT_DOLT_PORT in overseer/daemon.json env section:\n"+
 			"  {\"env\": {\"GT_DOLT_PORT\": \"<port>\"}}", port, detail)
 	}
 	_ = ln.Close()
@@ -1587,9 +1587,9 @@ func writeServerConfig(config *Config, configPath string) error {
 		systemVariablesBlock = fmt.Sprintf("\nsystem_variables:\n  dolt_stats_enabled: %s\n", strings.TrimSpace(config.DoltStatsEnabled))
 	}
 
-	content := fmt.Sprintf(`# Dolt SQL server configuration — managed by Gas Town (gt dolt start)
+	content := fmt.Sprintf(`# Dolt SQL server configuration — managed by Excavation Site (gt dolt start)
 # Do not edit manually; changes are overwritten on each server start.
-# To customize, set Gas Town environment variables:
+# To customize, set Excavation Site environment variables:
 #   GT_DOLT_PORT, GT_DOLT_HOST, GT_DOLT_USER, GT_DOLT_PASSWORD, GT_DOLT_LOGLEVEL
 #   GT_DOLT_EVENT_SCHEDULER (OFF, ON, omit), GT_DOLT_STATS_ENABLED (0, 1, omit)
 
@@ -2670,7 +2670,7 @@ var beadsOpenEnvMu sync.Mutex
 
 func openRigStoreFromConfig(ctx context.Context, townRoot, beadsDir, rigName string) (beadssdk.Storage, error) {
 	// bd's public config loader lets BEADS_DOLT_* env override metadata.json.
-	// Polecat/rig processes often carry those env vars for their current database,
+	// Miner/rig processes often carry those env vars for their current database,
 	// so scope them to the database/server being initialized here.
 	beadsOpenEnvMu.Lock()
 	defer beadsOpenEnvMu.Unlock()
@@ -2723,7 +2723,7 @@ func issuePrefixForRigInit(townRoot, rigName string) string {
 		}
 	}
 
-	rigsConfigPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsConfigPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	if rigsConfig, err := configpkg.LoadRigsConfig(rigsConfigPath); err == nil {
 		if entry, ok := rigsConfig.Rigs[rigName]; ok && entry.BeadsConfig != nil {
 			if prefix := strings.TrimSpace(strings.TrimSuffix(entry.BeadsConfig.Prefix, "-")); prefix != "" {
@@ -3023,7 +3023,7 @@ func collectReferencedDatabases(townRoot string) map[string]bool {
 	}
 
 	// Check all rigs from rigs.json
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	data, err := os.ReadFile(rigsPath)
 	if err == nil {
 		var config struct {
@@ -3057,7 +3057,7 @@ func collectReferencedDatabases(townRoot string) map[string]bool {
 			if json.Unmarshal([]byte(line), &route) != nil || route.Path == "" {
 				continue
 			}
-			// route.Path is relative to town root, e.g., "hop", "beads/mayor/rig"
+			// route.Path is relative to town root, e.g., "hop", "beads/overseer/rig"
 			beadsDir := filepath.Join(townRoot, route.Path, ".beads")
 			if db := readExistingDoltDatabase(beadsDir); db != "" {
 				referenced[db] = true
@@ -3069,15 +3069,15 @@ func collectReferencedDatabases(townRoot string) map[string]bool {
 	// This catches rigs that exist on disk but aren't in rigs.json or routes.jsonl.
 	if entries, readErr := os.ReadDir(townRoot); readErr == nil {
 		for _, entry := range entries {
-			if !entry.IsDir() || entry.Name() == ".beads" || entry.Name() == "mayor" {
+			if !entry.IsDir() || entry.Name() == ".beads" || entry.Name() == "overseer" {
 				continue
 			}
 			// Check <rig>/.beads/metadata.json
 			if db := readExistingDoltDatabase(filepath.Join(townRoot, entry.Name(), ".beads")); db != "" {
 				referenced[db] = true
 			}
-			// Check <rig>/mayor/rig/.beads/metadata.json
-			if db := readExistingDoltDatabase(filepath.Join(townRoot, entry.Name(), "mayor", "rig", ".beads")); db != "" {
+			// Check <rig>/overseer/rig/.beads/metadata.json
+			if db := readExistingDoltDatabase(filepath.Join(townRoot, entry.Name(), "overseer", "rig", ".beads")); db != "" {
 				referenced[db] = true
 			}
 		}
@@ -3085,7 +3085,7 @@ func collectReferencedDatabases(townRoot string) map[string]bool {
 
 	// Safety net: also mark all rig prefixes from rigs.json as referenced.
 	// Some rigs use their prefix as the database name (e.g., "lc" for laneassist,
-	// "gt" for gastown). If metadata.json is missing or corrupted, the prefix-named
+	// "gt" for excavation). If metadata.json is missing or corrupted, the prefix-named
 	// DB would appear orphaned without this fallback. (gt-85w7)
 	for _, prefix := range configpkg.AllRigPrefixes(townRoot) {
 		referenced[prefix] = true
@@ -3095,7 +3095,7 @@ func collectReferencedDatabases(townRoot string) map[string]bool {
 }
 
 // CollectDatabaseOwners returns a map from database name to a human-readable
-// owner description (e.g., "gastown rig beads", "town beads"). This is used by
+// owner description (e.g., "excavation rig beads", "town beads"). This is used by
 // gt dolt status to annotate each database with its rig owner, preventing
 // accidental drops of production databases. (GH#2252)
 func CollectDatabaseOwners(townRoot string) map[string]string {
@@ -3108,7 +3108,7 @@ func CollectDatabaseOwners(townRoot string) map[string]string {
 	}
 
 	// Check all rigs from rigs.json
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	data, err := os.ReadFile(rigsPath)
 	if err == nil {
 		var config struct {
@@ -3156,7 +3156,7 @@ func CollectDatabaseOwners(townRoot string) map[string]string {
 	// Scan top-level directories for any .beads/metadata.json
 	if entries, readErr := os.ReadDir(townRoot); readErr == nil {
 		for _, entry := range entries {
-			if !entry.IsDir() || entry.Name() == ".beads" || entry.Name() == "mayor" {
+			if !entry.IsDir() || entry.Name() == ".beads" || entry.Name() == "overseer" {
 				continue
 			}
 			dirName := entry.Name()
@@ -3165,7 +3165,7 @@ func CollectDatabaseOwners(townRoot string) map[string]string {
 					owners[db] = dirName + " rig beads"
 				}
 			}
-			if db := readExistingDoltDatabase(filepath.Join(townRoot, dirName, "mayor", "rig", ".beads")); db != "" {
+			if db := readExistingDoltDatabase(filepath.Join(townRoot, dirName, "overseer", "rig", ".beads")); db != "" {
 				if _, already := owners[db]; !already {
 					owners[db] = dirName + " rig beads"
 				}
@@ -3318,7 +3318,7 @@ func FindBrokenWorkspaces(townRoot string) ([]BrokenWorkspace, string) {
 	}
 
 	// Check rig-level beads via rigs.json
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	data, err := os.ReadFile(rigsPath)
 	if err != nil {
 		return broken, warning
@@ -3433,7 +3433,7 @@ func RepairWorkspace(townRoot string, ws BrokenWorkspace) (string, error) {
 // centralized Dolt server.
 //
 // For the "hq" rig, it writes to <townRoot>/.beads/metadata.json.
-// For other rigs, it writes to mayor/rig/.beads/metadata.json if that path exists,
+// For other rigs, it writes to overseer/rig/.beads/metadata.json if that path exists,
 // otherwise to <townRoot>/<rigName>/.beads/metadata.json.
 // EnsureMetadata ensures that the .beads/metadata.json for a rig has correct
 // Dolt server configuration.  rigName is the rig's directory name (e.g.
@@ -3466,7 +3466,7 @@ func EnsureMetadataForBeadsDir(townRoot, beadsDir, rigName string, doltDatabase 
 	}
 
 	// Determine the Dolt database name to write when the field is absent.
-	// Default: rigName (correct when db-name == rig-dir-name, e.g. "gastown").
+	// Default: rigName (correct when db-name == rig-dir-name, e.g. "excavation").
 	// Callers from EnsureAllMetadata pass the actual DB prefix ("at", "be") so
 	// that rigs with short prefixes get the correct database name, not the full
 	// rig directory name.
@@ -3515,7 +3515,7 @@ func EnsureMetadataForBeadsDir(townRoot, beadsDir, rigName string, doltDatabase 
 	}
 	// Fix wrong dolt_database values (not just empty). After a crash or rig
 	// addition, metadata.json can end up pointing to the wrong database name
-	// (e.g., "beads_gt" instead of "gastown"), causing PROJECT IDENTITY MISMATCH
+	// (e.g., "beads_gt" instead of "excavation"), causing PROJECT IDENTITY MISMATCH
 	// errors that are hard to diagnose and recover from. (gas-tc4)
 	if existing["dolt_database"] == nil || existing["dolt_database"] == "" {
 		existing["dolt_database"] = effectiveDB
@@ -3572,7 +3572,7 @@ func EnsureMetadataForBeadsDir(townRoot, beadsDir, rigName string, doltDatabase 
 // Rigs where the database name equals the directory name are not included.
 func buildRigPrefixMap(townRoot string) map[string]string {
 	result := make(map[string]string)
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	data, err := os.ReadFile(rigsPath)
 	if err != nil {
 		return result
@@ -3602,7 +3602,7 @@ func buildRigPrefixMap(townRoot string) map[string]string {
 //
 // For rigs that use a short DB prefix (e.g. database "be" for the "beads_el"
 // rig), EnsureAllMetadata resolves the rig name from rigs.json and writes the
-// correct dolt_database value ("be") so that convoy event polling connects to
+// correct dolt_database value ("be") so that minecart event polling connects to
 // the right database instead of a non-existent "beads_el" database.
 func EnsureAllMetadata(townRoot string) (updated []string, errs []error) {
 	databases, err := ListDatabases(townRoot)
@@ -3621,7 +3621,7 @@ func EnsureAllMetadata(townRoot string) (updated []string, errs []error) {
 
 	// Group candidate database names by rig. When routes.jsonl and rigs.json
 	// use different prefixes for the same rig (e.g. "gas" vs "gt" both map to
-	// "gastown"), multiple databases may exist for the same rig. Processing
+	// "excavation"), multiple databases may exist for the same rig. Processing
 	// them all causes oscillation: each one overwrites the other's
 	// dolt_database correction on every startup. (gas-ar0)
 	rigCandidates := make(map[string][]string) // rig -> candidate db names
@@ -3681,7 +3681,7 @@ func pickDBForRig(townRoot, rigName string, candidates []string) string {
 
 // buildDatabaseToRigMap loads routes.jsonl and builds a map from database name
 // (prefix without hyphen) to rig name (first component of the path).
-// For example: "bd" -> "beads", "gt" -> "gastown", "sw" -> "sallaWork"
+// For example: "bd" -> "beads", "gt" -> "excavation", "sw" -> "sallaWork"
 func buildDatabaseToRigMap(townRoot string) map[string]string {
 	result := make(map[string]string)
 	beadsDir := filepath.Join(townRoot, ".beads")
@@ -3691,7 +3691,7 @@ func buildDatabaseToRigMap(townRoot string) map[string]string {
 	}
 	for _, route := range routes {
 		// Extract rig name from path (first component before "/")
-		// e.g., "beads/mayor/rig" -> "beads", "gastown/mayor/rig" -> "gastown"
+		// e.g., "beads/overseer/rig" -> "beads", "excavation/overseer/rig" -> "excavation"
 		prefix := strings.TrimSuffix(route.Prefix, "-")
 		parts := strings.Split(route.Path, "/")
 		if len(parts) > 0 && parts[0] != "" && parts[0] != "." {
@@ -3703,9 +3703,9 @@ func buildDatabaseToRigMap(townRoot string) map[string]string {
 
 // FindRigBeadsDir returns the .beads directory path for a rig (read-only lookup).
 // For "hq", returns <townRoot>/.beads.
-// For other rigs, returns <townRoot>/<rigName>/mayor/rig/.beads if it exists,
+// For other rigs, returns <townRoot>/<rigName>/overseer/rig/.beads if it exists,
 // otherwise <townRoot>/<rigName>/.beads if it exists,
-// otherwise <townRoot>/<rigName>/mayor/rig/.beads (for creation by caller).
+// otherwise <townRoot>/<rigName>/overseer/rig/.beads (for creation by caller).
 //
 // WARNING: This function has a TOCTOU race — the returned directory may change
 // state between the Stat check and the caller's operation. For write operations
@@ -3719,10 +3719,10 @@ func FindRigBeadsDir(townRoot, rigName string) string {
 		return filepath.Join(townRoot, ".beads")
 	}
 
-	// Prefer mayor/rig/.beads (canonical location for tracked beads)
-	mayorBeads := filepath.Join(townRoot, rigName, "mayor", "rig", ".beads")
-	if _, err := os.Stat(mayorBeads); err == nil {
-		return mayorBeads
+	// Prefer overseer/rig/.beads (canonical location for tracked beads)
+	overseerBeads := filepath.Join(townRoot, rigName, "overseer", "rig", ".beads")
+	if _, err := os.Stat(overseerBeads); err == nil {
+		return overseerBeads
 	}
 
 	// Fall back to rig-root .beads
@@ -3758,16 +3758,16 @@ func FindOrCreateRigBeadsDir(townRoot, rigName string) (string, error) {
 		return dir, nil
 	}
 
-	// Check mayor/rig/.beads first (canonical location).
+	// Check overseer/rig/.beads first (canonical location).
 	// Use MkdirAll as an idempotent existence check+create to close the
 	// TOCTOU window between os.Stat and the caller's file operations.
-	mayorBeads := filepath.Join(townRoot, rigName, "mayor", "rig", ".beads")
-	if _, err := os.Stat(mayorBeads); err == nil {
+	overseerBeads := filepath.Join(townRoot, rigName, "overseer", "rig", ".beads")
+	if _, err := os.Stat(overseerBeads); err == nil {
 		// Ensure it still exists (no-op if present, recreates if deleted)
-		if err := os.MkdirAll(mayorBeads, 0755); err != nil {
-			return "", fmt.Errorf("ensuring mayor beads dir: %w", err)
+		if err := os.MkdirAll(overseerBeads, 0755); err != nil {
+			return "", fmt.Errorf("ensuring overseer beads dir: %w", err)
 		}
-		return mayorBeads, nil
+		return overseerBeads, nil
 	}
 
 	// Check rig-root .beads
@@ -3779,8 +3779,8 @@ func FindOrCreateRigBeadsDir(townRoot, rigName string) (string, error) {
 		return rigBeads, nil
 	}
 
-	// Neither exists — create rig-root .beads (NOT mayor path).
-	// The mayor/rig/.beads path should only be used when the source repo
+	// Neither exists — create rig-root .beads (NOT overseer path).
+	// The overseer/rig/.beads path should only be used when the source repo
 	// has tracked beads (checked out via git clone). Creating it here would
 	// cause InitBeads to misdetect an untracked repo as having tracked beads,
 	// taking the redirect early-return and skipping config.yaml creation
@@ -4088,7 +4088,7 @@ func RecoverReadOnly(townRoot string) error {
 
 // doltSQLWithRecovery executes a SQL statement with retry logic and, if retries
 // are exhausted due to read-only errors, attempts server restart before a final retry.
-// This is the gt-level recovery path for polecat management operations (spawn, done).
+// This is the gt-level recovery path for miner management operations (spawn, done).
 func doltSQLWithRecovery(townRoot, rigDB, query string) error {
 	err := doltSQLWithRetry(townRoot, rigDB, query)
 	if err == nil {
@@ -4500,8 +4500,8 @@ func isDoltRetryableError(err error) bool {
 // flow where BD_DOLT_AUTO_COMMIT=off leaves writes in working set only.
 //
 // NOTE: This flushes ALL pending working set changes on the target branch, not just
-// those from a specific polecat. In batch sling, polecat B's flush may capture
-// polecat A's writes. This is benign because beads are keyed by unique ID, so
+// those from a specific miner. In batch sling, miner B's flush may capture
+// miner A's writes. This is benign because beads are keyed by unique ID, so
 // duplicate data across branches merges cleanly.
 func CommitServerWorkingSet(townRoot, rigDB, message string) error {
 	if err := doltSQLWithRecovery(townRoot, rigDB, "CALL DOLT_ADD('-A')"); err != nil {

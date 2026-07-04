@@ -10,20 +10,20 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	agentconfig "github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/daemon"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/templates"
-	"github.com/steveyegge/gastown/internal/util"
-	"github.com/steveyegge/gastown/internal/workspace"
+	agentconfig "github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/daemon"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/templates"
+	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var daemonCmd = &cobra.Command{
 	Use:     "daemon",
 	GroupID: GroupServices,
-	Short:   "Manage the Gas Town daemon",
+	Short:   "Manage the Excavation Site daemon",
 	RunE:    requireSubcommand,
-	Long: `Manage the Gas Town background daemon.
+	Long: `Manage the Excavation Site background daemon.
 
 The daemon is a simple Go process that:
 - Pokes agents periodically (heartbeat)
@@ -36,7 +36,7 @@ The daemon is a "dumb scheduler" - all intelligence is in agents.`,
 var daemonStartCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start the daemon",
-	Long: `Start the Gas Town daemon in the background.
+	Long: `Start the Excavation Site daemon in the background.
 
 The daemon will run until stopped with 'gt daemon stop'.`,
 	RunE: runDaemonStart,
@@ -45,7 +45,7 @@ The daemon will run until stopped with 'gt daemon stop'.`,
 var daemonStopCmd = &cobra.Command{
 	Use:   "stop",
 	Short: "Stop the daemon",
-	Long: `Stop the running Gas Town daemon.
+	Long: `Stop the running Excavation Site daemon.
 
 Sends a stop signal to the daemon process and waits for it to exit.
 The daemon must be running or this command returns an error.
@@ -58,7 +58,7 @@ Examples:
 var daemonStatusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Show daemon status",
-	Long: `Show the current status of the Gas Town daemon.
+	Long: `Show the current status of the Excavation Site daemon.
 
 Displays whether the daemon is running, its PID, uptime, heartbeat
 count, and whether the binary has been rebuilt since the daemon started.
@@ -86,7 +86,7 @@ Examples:
 var daemonRunCmd = &cobra.Command{
 	Use:   "run",
 	Short: "Run daemon in foreground (internal)",
-	Long: `Run the Gas Town daemon in the foreground.
+	Long: `Run the Excavation Site daemon in the foreground.
 
 This is called internally by the daemon start process and supervisor
 services (launchd/systemd). Use 'gt daemon start' to start the daemon
@@ -98,7 +98,7 @@ normally in the background.`,
 var daemonEnableSupervisorCmd = &cobra.Command{
 	Use:   "enable-supervisor",
 	Short: "Configure launchd/systemd for daemon auto-restart",
-	Long: `Configure external supervision for the Gas Town daemon.
+	Long: `Configure external supervision for the Excavation Site daemon.
 
 This command creates and enables a supervisor service (launchd on macOS,
 systemd on Linux) that will automatically restart the daemon if it crashes
@@ -136,10 +136,10 @@ When an agent crashes repeatedly, the daemon enters crash loop mode and
 stops restarting it. Use this command to reset the crash loop counter so
 the daemon will resume restarting the agent.
 
-The agent name is the session identity (e.g., "deacon", "mayor").
+The agent name is the session identity (e.g., "supervisor", "overseer").
 
 Examples:
-  gt daemon clear-backoff deacon   # Reset deacon crash loop`,
+  gt daemon clear-backoff supervisor   # Reset supervisor crash loop`,
 	Args: cobra.ExactArgs(1),
 	RunE: runDaemonClearBackoff,
 }
@@ -169,7 +169,7 @@ func init() {
 func runDaemonStart(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Check if already running
@@ -237,7 +237,7 @@ func runDaemonStart(cmd *cobra.Command, args []string) error {
 func runDaemonStop(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	running, pid, err := daemon.IsRunning(townRoot)
@@ -259,7 +259,7 @@ func runDaemonStop(cmd *cobra.Command, args []string) error {
 func runDaemonStatus(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	running, pid, err := daemon.IsRunning(townRoot)
@@ -338,7 +338,7 @@ func readDaemonStartupFailure(townRoot string, pid int) string {
 func runDaemonLogs(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	logFile := filepath.Join(townRoot, "daemon", "daemon.log")
@@ -365,7 +365,7 @@ func runDaemonLogs(cmd *cobra.Command, args []string) error {
 func runDaemonRun(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Clear agent identity env vars inherited from the launch environment.
@@ -390,7 +390,7 @@ func runDaemonRun(cmd *cobra.Command, args []string) error {
 func runDaemonEnableSupervisor(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	msg, err := templates.ProvisionSupervisor(townRoot)
@@ -404,10 +404,10 @@ func runDaemonEnableSupervisor(cmd *cobra.Command, args []string) error {
 	fmt.Println("  - Start automatically on login/boot")
 	fmt.Println("\nTo stop the supervised daemon:")
 	if runtime.GOOS == "darwin" {
-		fmt.Println("  launchctl unload ~/Library/LaunchAgents/com.gastown.daemon.plist")
+		fmt.Println("  launchctl unload ~/Library/LaunchAgents/com.excavation.daemon.plist")
 	} else {
-		fmt.Println("  systemctl --user stop gastown-daemon.service")
-		fmt.Println("  systemctl --user disable gastown-daemon.service")
+		fmt.Println("  systemctl --user stop excavation-daemon.service")
+		fmt.Println("  systemctl --user disable excavation-daemon.service")
 	}
 	return nil
 }
@@ -417,7 +417,7 @@ func runDaemonClearBackoff(cmd *cobra.Command, args []string) error {
 
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Clear the crash loop state on disk
@@ -450,7 +450,7 @@ func runDaemonClearBackoff(cmd *cobra.Command, args []string) error {
 func runDaemonRotateLogs(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	var result *daemon.RotateLogsResult

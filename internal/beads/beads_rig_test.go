@@ -14,21 +14,21 @@ func TestFormatRigDescription(t *testing.T) {
 	}{
 		{
 			name:    "nil fields",
-			rigName: "gastown",
+			rigName: "excavation",
 			fields:  nil,
 			want:    nil, // empty string
 		},
 		{
 			name:    "all fields",
-			rigName: "gastown",
+			rigName: "excavation",
 			fields: &RigFields{
-				Repo:   "git@github.com:user/gastown.git",
+				Repo:   "git@github.com:user/excavation.git",
 				Prefix: "gt",
 				State:  RigStateActive,
 			},
 			want: []string{
-				"Rig identity bead for gastown.",
-				"repo: git@github.com:user/gastown.git",
+				"Rig identity bead for excavation.",
+				"repo: git@github.com:user/excavation.git",
 				"prefix: gt",
 				"state: active",
 			},
@@ -85,13 +85,13 @@ func TestParseRigFields(t *testing.T) {
 		},
 		{
 			name: "full rig description",
-			desc: `Rig identity bead for gastown.
+			desc: `Rig identity bead for excavation.
 
-repo: git@github.com:user/gastown.git
+repo: git@github.com:user/excavation.git
 prefix: gt
 state: active`,
 			want: &RigFields{
-				Repo:   "git@github.com:user/gastown.git",
+				Repo:   "git@github.com:user/excavation.git",
 				Prefix: "gt",
 				State:  RigStateActive,
 			},
@@ -140,12 +140,12 @@ state: active`,
 
 func TestRigFieldsRoundTrip(t *testing.T) {
 	original := &RigFields{
-		Repo:   "git@github.com:user/gastown.git",
+		Repo:   "git@github.com:user/excavation.git",
 		Prefix: "gt",
 		State:  RigStateActive,
 	}
 
-	formatted := FormatRigDescription("gastown", original)
+	formatted := FormatRigDescription("excavation", original)
 	parsed := ParseRigFields(formatted)
 
 	if parsed.Repo != original.Repo {
@@ -164,7 +164,7 @@ func TestRigBeadID(t *testing.T) {
 		name string
 		want string
 	}{
-		{"gastown", "gt-rig-gastown"},
+		{"excavation", "gt-rig-excavation"},
 		{"beads", "gt-rig-beads"},
 		{"my-rig", "gt-rig-my-rig"},
 	}
@@ -184,7 +184,7 @@ func TestRigBeadIDWithPrefix(t *testing.T) {
 		name   string
 		want   string
 	}{
-		{"gt", "gastown", "gt-rig-gastown"},
+		{"gt", "excavation", "gt-rig-excavation"},
 		{"bd", "beads", "bd-rig-beads"},
 		{"hq", "town", "hq-rig-town"},
 	}

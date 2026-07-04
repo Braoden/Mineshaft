@@ -34,9 +34,9 @@ func writeTestEvents(t *testing.T, events []GtEvent) string {
 func TestPrintGtEvents_ReadsAndFormats(t *testing.T) {
 	now := time.Now()
 	townRoot := writeTestEvents(t, []GtEvent{
-		{Timestamp: now.Add(-2 * time.Minute).Format(time.RFC3339), Source: "test", Type: "create", Actor: "gastown/witness", Visibility: "feed", Payload: map[string]interface{}{"message": "created issue"}},
-		{Timestamp: now.Add(-1 * time.Minute).Format(time.RFC3339), Source: "test", Type: "sling", Actor: "gastown/crew/joe", Visibility: "feed", Payload: map[string]interface{}{"bead": "gt-abc", "target": "polecat-1"}},
-		{Timestamp: now.Format(time.RFC3339), Source: "test", Type: "done", Actor: "gastown/crew/joe", Visibility: "feed", Payload: map[string]interface{}{"bead": "gt-abc"}},
+		{Timestamp: now.Add(-2 * time.Minute).Format(time.RFC3339), Source: "test", Type: "create", Actor: "excavation/witness", Visibility: "feed", Payload: map[string]interface{}{"message": "created issue"}},
+		{Timestamp: now.Add(-1 * time.Minute).Format(time.RFC3339), Source: "test", Type: "sling", Actor: "excavation/crew/joe", Visibility: "feed", Payload: map[string]interface{}{"bead": "gt-abc", "target": "miner-1"}},
+		{Timestamp: now.Format(time.RFC3339), Source: "test", Type: "done", Actor: "excavation/crew/joe", Visibility: "feed", Payload: map[string]interface{}{"bead": "gt-abc"}},
 	})
 
 	// Capture stdout
@@ -349,7 +349,7 @@ func TestMatchesFilters(t *testing.T) {
 	event := &Event{
 		Time:    now,
 		Type:    "create",
-		Actor:   "gastown/witness",
+		Actor:   "excavation/witness",
 		Target:  "gt-abc-123",
 		Message: "created issue mol-42",
 		Rig:     "greenplace",

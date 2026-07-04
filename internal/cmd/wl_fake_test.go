@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/steveyegge/gastown/internal/doltserver"
+	"github.com/steveyegge/excavation/internal/doltserver"
 )
 
 // fakeWLCommonsStore is a local in-memory WLCommonsStore for cmd package tests.
 // Duplicated from doltserver's test fake following the codebase convention
-// of per-package private mocks (see mockTmux in deacon, quota, doctor).
+// of per-package private mocks (see mockTmux in supervisor, quota, doctor).
 type fakeWLCommonsStore struct {
 	mu     sync.Mutex
 	items  map[string]*doltserver.WantedItem

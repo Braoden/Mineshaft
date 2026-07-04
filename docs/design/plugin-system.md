@@ -2,12 +2,12 @@
 
 > **Status: Design proposal -- not yet implemented**
 >
-> Design document for the Gas Town plugin system.
+> Design document for the Excavation Site plugin system.
 > Written 2026-01-11, crew/george session.
 
 ## Problem Statement
 
-Gas Town needs extensible, project-specific automation that runs during Deacon patrol cycles. The immediate use case is rebuilding stale binaries (gt, bd, wv), but the pattern generalizes to any periodic maintenance task.
+Excavation Site needs extensible, project-specific automation that runs during Supervisor patrol cycles. The immediate use case is rebuilding stale binaries (gt, bd, wv), but the pattern generalizes to any periodic maintenance task.
 
 Current state:
 - Plugin infrastructure exists conceptually (patrol step mentions it)
@@ -25,7 +25,7 @@ Plugin state (last run, run count, results) lives on the ledger as wisps, not in
 ### ZFC: Zero Framework Cognition
 > Agent decides. Go transports.
 
-The Deacon (agent) evaluates gates and decides whether to dispatch. Go code provides transport (`gt dog dispatch`) but doesn't make decisions.
+The Supervisor (agent) evaluates gates and decides whether to dispatch. Go code provides transport (`gt dog dispatch`) but doesn't make decisions.
 
 ### MEOW Stack Integration
 
@@ -46,7 +46,7 @@ The Deacon (agent) evaluates gates and decides whether to dispatch. Go code prov
 ~/gt/
 ├── plugins/                      # Town-level plugins (universal)
 │   └── README.md
-├── gastown/
+├── excavation/
 │   └── plugins/                  # Rig-level plugins
 │       └── rebuild-gt/
 │           └── plugin.md
@@ -63,16 +63,16 @@ The Deacon (agent) evaluates gates and decides whether to dispatch. Go code prov
 **Town-level** (`~/gt/plugins/`): Universal plugins that apply everywhere.
 **Rig-level** (`<rig>/plugins/`): Project-specific plugins.
 
-The Deacon scans both locations during patrol.
+The Supervisor scans both locations during patrol.
 
 ### Execution Model: Dog Dispatch
 
-**Key insight**: Plugin execution should not block Deacon patrol.
+**Key insight**: Plugin execution should not block Supervisor patrol.
 
 Dogs are reusable workers designed for infrastructure tasks. Plugin execution is dispatched to dogs:
 
 ```
-Deacon Patrol                    Dog Worker
+Supervisor Patrol                    Dog Worker
 ─────────────────               ─────────────────
 1. Scan plugins
 2. Evaluate gates
@@ -86,7 +86,7 @@ Deacon Patrol                    Dog Worker
 ```
 
 Benefits:
-- Deacon stays responsive
+- Supervisor stays responsive
 - Multiple plugins can run concurrently (different dogs)
 - Plugin failures don't stall patrol
 - Consistent with Dogs' purpose (infrastructure work)
@@ -96,7 +96,7 @@ Benefits:
 Each plugin run creates a wisp:
 
 ```bash
-gt plugin record-run --plugin rebuild-gt --result success --rig gastown \
+gt plugin record-run --plugin rebuild-gt --result success --rig excavation \
   --title "Plugin: rebuild-gt [success]" \
   --description "Rebuilt gt: abc123 → def456 (5 commits)"
 ```
@@ -154,7 +154,7 @@ type = "cooldown"
 duration = "1h"
 
 [tracking]
-labels = ["plugin:rebuild-gt", "rig:gastown", "category:maintenance"]
+labels = ["plugin:rebuild-gt", "rig:excavation", "category:maintenance"]
 digest = true
 
 [execution]
@@ -200,7 +200,7 @@ severity = "low"          # Escalation severity if failed
 | `cooldown` | `duration = "1h"` | Query wisps, run if none in window |
 | `cron` | `schedule = "0 9 * * *"` | Run on cron schedule |
 | `condition` | `check = "cmd"` | Run check command, run if exit 0 |
-| `event` | `on = "startup"` | Run on Deacon startup |
+| `event` | `on = "startup"` | Run on Supervisor startup |
 | `manual` | (no gate section) | Never auto-run, dispatch explicitly |
 
 ### Instructions Section
@@ -229,7 +229,7 @@ Standard sections:
 
 1. **`gt stale` command** - Expose CheckStaleBinary() via CLI
 2. **Plugin format spec** - Finalize TOML schema
-3. **Plugin scanning** - Deacon scans town + rig plugin dirs
+3. **Plugin scanning** - Supervisor scans town + rig plugin dirs
 
 ### Phase 2: Execution
 
@@ -251,14 +251,14 @@ Standard sections:
 
 ### Phase 5: First Plugin
 
-13. **`rebuild-gt` plugin** - The actual gastown plugin
+13. **`rebuild-gt` plugin** - The actual excavation plugin
 14. **Documentation** - So Beads/Wyvern can create theirs
 
 ---
 
 ## Open Questions
 
-1. **Plugin discovery in multiple clones**: If gastown has crew/george, crew/max, crew/joe - which clone's plugins/ dir is canonical? Probably: scan all, dedupe by name, prefer rig-root if exists.
+1. **Plugin discovery in multiple clones**: If excavation has crew/george, crew/max, crew/joe - which clone's plugins/ dir is canonical? Probably: scan all, dedupe by name, prefer rig-root if exists.
 
 2. **Dog assignment**: Should specific plugins prefer specific dogs? Or any idle dog?
 
@@ -271,5 +271,5 @@ Standard sections:
 ## References
 
 - PRIMING.md - Core design principles
-- mol-deacon-patrol.formula.toml - Patrol step plugin-run
+- mol-supervisor-patrol.formula.toml - Patrol step plugin-run
 - ~/gt/plugins/README.md - Current plugin stub

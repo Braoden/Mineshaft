@@ -1,0 +1,169 @@
+description = """
+Overseer bootstraps Excavation Site via a verification-gated lifecycle molecule.
+
+## Purpose
+When Overseer executes \"boot up gas town\", this proto provides the workflow.
+Each step has action + verification - steps stay open until outcome is confirmed.
+
+## Key Principles
+1. **Verification-gated steps** - Not \"command ran\" but \"outcome confirmed\"
+2. **gt peek for verification** - Capture session output to detect stalls
+3. **gt nudge for recovery** - Reliable message delivery to unstick agents
+4. **Parallel where possible** - Witnesses and refineries can start in parallel
+5. **Ephemeral execution** - Boot is a wisp, squashed to digest after completion
+
+## Execution
+```bash
+bd mol wisp mol-excavation-boot  # Create wisp
+```"""
+formula = "mol-excavation-boot"
+version = 1
+
+[[steps]]
+description = """
+Verify the Excavation Site daemon is running.
+
+## Action
+```bash
+gt daemon status || gt daemon start
+```
+
+## Verify
+1. Daemon PID file exists: `$GT_TOWN_ROOT/daemon/daemon.pid`
+2. Process is alive: `kill -0 $(cat $GT_TOWN_ROOT/daemon/daemon.pid)`
+3. Daemon responds: `gt daemon status` returns success
+
+## OnFail
+Cannot start daemon. Log error and continue - some commands work without daemon."""
+id = "ensure-daemon"
+title = "Ensure daemon"
+
+[[steps]]
+description = """
+Start the Supervisor and verify patrol mode is active.
+
+## Action
+```bash
+gt supervisor start
+```
+
+## Verify
+1. Session exists: `tmux has-session -t hq-supervisor 2>/dev/null`
+2. Not stalled: `gt peek supervisor/` does NOT show \"> Try\" prompt
+3. Heartbeat fresh: `supervisor/heartbeat.json` modified < 2 min ago
+
+## OnStall
+```bash
+gt nudge supervisor/ \"Start patrol.\"
+sleep 30
+# Re-verify
+```"""
+id = "ensure-supervisor"
+needs = ["ensure-daemon"]
+title = "Ensure supervisor"
+
+[[steps]]
+description = """
+Parallel container: Start all rig witnesses.
+
+Children execute in parallel. Container completes when all children complete."""
+id = "ensure-witnesses"
+needs = ["ensure-supervisor"]
+title = "Ensure witnesses"
+type = "parallel"
+
+[[steps.children]]
+description = """
+Start the excavation rig Witness.
+
+## Action
+```bash
+gt witness start excavation
+```
+
+## Verify
+1. Session exists: `tmux has-session -t excavation-witness 2>/dev/null`
+2. Not stalled: `gt peek excavation/witness` does NOT show \"> Try\" prompt
+3. Heartbeat fresh: Last patrol cycle < 5 min ago"""
+id = "ensure-excavation-witness"
+title = "Ensure excavation witness"
+
+[[steps.children]]
+description = """
+Start the beads rig Witness.
+
+## Action
+```bash
+gt witness start beads
+```
+
+## Verify
+1. Session exists: `tmux has-session -t beads-witness 2>/dev/null`
+2. Not stalled: `gt peek beads/witness` does NOT show \"> Try\" prompt
+3. Heartbeat fresh: Last patrol cycle < 5 min ago"""
+id = "ensure-beads-witness"
+title = "Ensure beads witness"
+
+[[steps]]
+description = """
+Parallel container: Start all rig refineries.
+
+Children execute in parallel. Container completes when all children complete."""
+id = "ensure-refineries"
+needs = ["ensure-supervisor"]
+title = "Ensure refineries"
+type = "parallel"
+
+[[steps.children]]
+description = """
+Start the excavation rig Refinery.
+
+## Action
+```bash
+gt refinery start excavation
+```
+
+## Verify
+1. Session exists: `tmux has-session -t excavation-refinery 2>/dev/null`
+2. Not stalled: `gt peek excavation/refinery` does NOT show \"> Try\" prompt
+3. Queue processing: Refinery can receive merge requests"""
+id = "ensure-excavation-refinery"
+title = "Ensure excavation refinery"
+
+[[steps.children]]
+description = """
+Start the beads rig Refinery.
+
+## Action
+```bash
+gt refinery start beads
+```
+
+## Verify
+1. Session exists: `tmux has-session -t beads-refinery 2>/dev/null`
+2. Not stalled: `gt peek beads/refinery` does NOT show \"> Try\" prompt
+3. Queue processing: Refinery can receive merge requests"""
+id = "ensure-beads-refinery"
+title = "Ensure beads refinery"
+
+[[steps]]
+description = """
+Final verification that Excavation Site is healthy.
+
+## Action
+```bash
+gt status
+```
+
+## Verify
+1. Daemon running: Shows daemon status OK
+2. Supervisor active: Shows supervisor in patrol mode
+3. All witnesses: Each rig witness shows active
+4. All refineries: Each rig refinery shows active
+
+## OnFail
+Log degraded state but consider boot complete. Some agents may need manual recovery.
+Run `gt doctor` for detailed diagnostics."""
+id = "verify-town-health"
+needs = ["ensure-witnesses", "ensure-refineries"]
+title = "Verify town health"

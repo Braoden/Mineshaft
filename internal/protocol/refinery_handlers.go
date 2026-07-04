@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/steveyegge/gastown/internal/mail"
+	"github.com/steveyegge/excavation/internal/mail"
 )
 
 // DefaultRefineryHandler provides the default implementation for Refinery protocol handlers.
@@ -41,24 +41,24 @@ func (h *DefaultRefineryHandler) SetOutput(w io.Writer) {
 }
 
 // HandleMergeReady handles a MERGE_READY message from Witness.
-// When a polecat's work is verified and ready, the Refinery acknowledges receipt.
+// When a miner's work is verified and ready, the Refinery acknowledges receipt.
 //
 // Belt-and-suspenders: if the message indicates this is from an owned+direct
-// convoy, the Refinery skips processing. These MRs shouldn't exist (gt done
+// minecart, the Refinery skips processing. These MRs shouldn't exist (gt done
 // skips MR creation for owned+direct), but this guards against edge cases.
 //
 // NOTE: The merge-request bead is created by `gt done`, so we no longer need
 // to add to the mrqueue here. The Refinery queries beads directly for ready MRs.
 func (h *DefaultRefineryHandler) HandleMergeReady(payload *MergeReadyPayload) error {
-	_, _ = fmt.Fprintf(h.Output, "[Refinery] MERGE_READY received for polecat %s\n", payload.Polecat)
+	_, _ = fmt.Fprintf(h.Output, "[Refinery] MERGE_READY received for miner %s\n", payload.Miner)
 	_, _ = fmt.Fprintf(h.Output, "  Branch: %s\n", payload.Branch)
 	_, _ = fmt.Fprintf(h.Output, "  Issue: %s\n", payload.Issue)
 	_, _ = fmt.Fprintf(h.Output, "  Verified: %s\n", payload.Verified)
 
-	// Belt-and-suspenders: check if this is from an owned+direct convoy.
+	// Belt-and-suspenders: check if this is from an owned+direct minecart.
 	// The Verified field may contain "owned+direct" marker from witness.
 	if payload.Verified == "owned+direct: skip merge" {
-		_, _ = fmt.Fprintf(h.Output, "[Refinery] ⚠ Owned+direct convoy — skipping merge (belt-and-suspenders)\n")
+		_, _ = fmt.Fprintf(h.Output, "[Refinery] ⚠ Owned+direct minecart — skipping merge (belt-and-suspenders)\n")
 		return nil
 	}
 
@@ -72,31 +72,31 @@ func (h *DefaultRefineryHandler) HandleMergeReady(payload *MergeReadyPayload) er
 
 // SendMerged sends a MERGED message to the Witness.
 // Called by the Refinery after successfully merging a branch.
-func (h *DefaultRefineryHandler) SendMerged(polecat, branch, issue, targetBranch, mergeCommit string) error {
-	msg := NewMergedMessage(h.Rig, polecat, branch, issue, targetBranch, mergeCommit)
+func (h *DefaultRefineryHandler) SendMerged(miner, branch, issue, targetBranch, mergeCommit string) error {
+	msg := NewMergedMessage(h.Rig, miner, branch, issue, targetBranch, mergeCommit)
 	return h.Router.Send(msg)
 }
 
 // SendMergeFailed sends a MERGE_FAILED message to the Witness.
-// LEGACY: Prefer SendFixNeeded which sends directly to the polecat.
+// LEGACY: Prefer SendFixNeeded which sends directly to the miner.
 // Called by the Refinery when a merge fails.
-func (h *DefaultRefineryHandler) SendMergeFailed(polecat, branch, issue, targetBranch, failureType, errorMsg string) error {
-	msg := NewMergeFailedMessage(h.Rig, polecat, branch, issue, targetBranch, failureType, errorMsg)
+func (h *DefaultRefineryHandler) SendMergeFailed(miner, branch, issue, targetBranch, failureType, errorMsg string) error {
+	msg := NewMergeFailedMessage(h.Rig, miner, branch, issue, targetBranch, failureType, errorMsg)
 	return h.Router.Send(msg)
 }
 
-// SendFixNeeded sends a FIX_NEEDED message directly to the Polecat.
+// SendFixNeeded sends a FIX_NEEDED message directly to the Miner.
 // Called by the Refinery when a merge fails due to quality checks/tests.
-// The polecat fixes the code in-place and resubmits without losing context.
-func (h *DefaultRefineryHandler) SendFixNeeded(polecat, branch, issue, targetBranch, failureType, errorMsg, mrBeadID string, attemptNumber int) error {
-	msg := NewFixNeededMessage(h.Rig, polecat, branch, issue, targetBranch, failureType, errorMsg, mrBeadID, attemptNumber)
+// The miner fixes the code in-place and resubmits without losing context.
+func (h *DefaultRefineryHandler) SendFixNeeded(miner, branch, issue, targetBranch, failureType, errorMsg, mrBeadID string, attemptNumber int) error {
+	msg := NewFixNeededMessage(h.Rig, miner, branch, issue, targetBranch, failureType, errorMsg, mrBeadID, attemptNumber)
 	return h.Router.Send(msg)
 }
 
 // SendReworkRequest sends a REWORK_REQUEST message to the Witness.
 // Called by the Refinery when a branch has conflicts.
-func (h *DefaultRefineryHandler) SendReworkRequest(polecat, branch, issue, targetBranch string, conflictFiles []string) error {
-	msg := NewReworkRequestMessage(h.Rig, polecat, branch, issue, targetBranch, conflictFiles)
+func (h *DefaultRefineryHandler) SendReworkRequest(miner, branch, issue, targetBranch string, conflictFiles []string) error {
+	msg := NewReworkRequestMessage(h.Rig, miner, branch, issue, targetBranch, conflictFiles)
 	return h.Router.Send(msg)
 }
 
@@ -129,20 +129,20 @@ type MergeOutcome struct {
 }
 
 // NotifyMergeOutcome sends the appropriate protocol message based on the outcome.
-// For failures (non-conflict), sends FIX_NEEDED directly to the polecat
+// For failures (non-conflict), sends FIX_NEEDED directly to the miner
 // so it can fix the code in-place without context loss.
-func (h *DefaultRefineryHandler) NotifyMergeOutcome(polecat, branch, issue, targetBranch string, outcome MergeOutcome) error {
+func (h *DefaultRefineryHandler) NotifyMergeOutcome(miner, branch, issue, targetBranch string, outcome MergeOutcome) error {
 	if outcome.Success {
-		return h.SendMerged(polecat, branch, issue, targetBranch, outcome.MergeCommit)
+		return h.SendMerged(miner, branch, issue, targetBranch, outcome.MergeCommit)
 	}
 
 	if outcome.Conflict {
-		return h.SendReworkRequest(polecat, branch, issue, targetBranch, outcome.ConflictFiles)
+		return h.SendReworkRequest(miner, branch, issue, targetBranch, outcome.ConflictFiles)
 	}
 
-	// Send FIX_NEEDED directly to polecat (event-driven lifecycle).
-	// The polecat stays alive and fixes in-place.
-	return h.SendFixNeeded(polecat, branch, issue, targetBranch, outcome.FailureType, outcome.Error, outcome.MRBeadID, outcome.AttemptNumber)
+	// Send FIX_NEEDED directly to miner (event-driven lifecycle).
+	// The miner stays alive and fixes in-place.
+	return h.SendFixNeeded(miner, branch, issue, targetBranch, outcome.FailureType, outcome.Error, outcome.MRBeadID, outcome.AttemptNumber)
 }
 
 // Ensure DefaultRefineryHandler implements RefineryHandler.

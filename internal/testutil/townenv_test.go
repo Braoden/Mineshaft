@@ -14,9 +14,9 @@ func TestRequireTownEnv_ReturnsRoot(t *testing.T) {
 		t.Fatal("RequireTownEnv returned empty root")
 	}
 
-	// The returned root must contain mayor/rigs.json (the check we just added).
-	rigsPath := filepath.Join(root, "mayor", "rigs.json")
+	// The returned root must contain overseer/rigs.json (the check we just added).
+	rigsPath := filepath.Join(root, "overseer", "rigs.json")
 	if _, err := os.Stat(rigsPath); err != nil {
-		t.Errorf("mayor/rigs.json not found at %s: %v", rigsPath, err)
+		t.Errorf("overseer/rigs.json not found at %s: %v", rigsPath, err)
 	}
 }

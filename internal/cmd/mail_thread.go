@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/mail"
-	"github.com/steveyegge/gastown/internal/style"
+	"github.com/steveyegge/excavation/internal/mail"
+	"github.com/steveyegge/excavation/internal/style"
 )
 
 func runMailThread(cmd *cobra.Command, args []string) error {
@@ -17,7 +17,7 @@ func runMailThread(cmd *cobra.Command, args []string) error {
 	// All mail uses town beads (two-level architecture)
 	workDir, err := findMailWorkDir()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Determine which inbox
@@ -96,7 +96,7 @@ func runMailReply(cmd *cobra.Command, args []string) error {
 	// All mail uses town beads (two-level architecture)
 	workDir, err := findMailWorkDir()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Determine current address

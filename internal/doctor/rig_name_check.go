@@ -99,7 +99,7 @@ func (c *RigNameMismatchCheck) Run(ctx *CheckContext) *CheckResult {
 	}
 
 	// Check 2: config beads prefix vs rigs.json prefix
-	rigsPath := filepath.Join(ctx.TownRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(ctx.TownRoot, "overseer", "rigs.json")
 	rigsConfig, rigsErr := loadRigsConfig(rigsPath)
 	if rigsErr == nil && cfg.Beads != nil && cfg.Beads.Prefix != "" {
 		if entry, ok := rigsConfig.Rigs[ctx.RigName]; ok && entry.BeadsConfig != nil && entry.BeadsConfig.Prefix != "" {
@@ -149,7 +149,7 @@ func (c *RigNameMismatchCheck) Fix(ctx *CheckContext) error {
 	}
 
 	// Fix prefix to match rigs.json
-	rigsPath := filepath.Join(ctx.TownRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(ctx.TownRoot, "overseer", "rigs.json")
 	rigsConfig, rigsErr := loadRigsConfig(rigsPath)
 	if rigsErr == nil && cfg.Beads != nil && cfg.Beads.Prefix != "" {
 		if entry, ok := rigsConfig.Rigs[ctx.RigName]; ok && entry.BeadsConfig != nil && entry.BeadsConfig.Prefix != "" {

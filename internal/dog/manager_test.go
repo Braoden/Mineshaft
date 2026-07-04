@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/config"
 )
 
 // TestDogStateJSON verifies DogState JSON serialization.
@@ -19,7 +19,7 @@ func TestDogStateJSON(t *testing.T) {
 		LastActive: now,
 		Work:       "",
 		Worktrees: map[string]string{
-			"gastown": "/path/to/gastown",
+			"excavation": "/path/to/excavation",
 			"beads":   "/path/to/beads",
 		},
 		CreatedAt: now,
@@ -53,8 +53,8 @@ func TestManagerCreation(t *testing.T) {
 	rigsConfig := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"gastown": {
-				GitURL: "git@github.com:test/gastown.git",
+			"excavation": {
+				GitURL: "git@github.com:test/excavation.git",
 			},
 			"beads": {
 				GitURL: "git@github.com:test/beads.git",
@@ -67,8 +67,8 @@ func TestManagerCreation(t *testing.T) {
 	if filepath.ToSlash(m.townRoot) != "/tmp/test-town" {
 		t.Errorf("expected townRoot '/tmp/test-town', got %q", m.townRoot)
 	}
-	if filepath.ToSlash(m.kennelPath) != "/tmp/test-town/deacon/dogs" {
-		t.Errorf("expected kennelPath '/tmp/test-town/deacon/dogs', got %q", m.kennelPath)
+	if filepath.ToSlash(m.kennelPath) != "/tmp/test-town/supervisor/dogs" {
+		t.Errorf("expected kennelPath '/tmp/test-town/supervisor/dogs', got %q", m.kennelPath)
 	}
 }
 
@@ -81,7 +81,7 @@ func TestDogDir(t *testing.T) {
 	m := NewManager("/home/user/gt", rigsConfig)
 
 	path := m.dogDir("alpha")
-	expected := "/home/user/gt/deacon/dogs/alpha"
+	expected := "/home/user/gt/supervisor/dogs/alpha"
 	if filepath.ToSlash(path) != expected {
 		t.Errorf("expected %q, got %q", expected, path)
 	}

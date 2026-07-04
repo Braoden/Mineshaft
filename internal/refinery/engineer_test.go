@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/rig"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/rig"
 )
 
 func TestDefaultMergeQueueConfig(t *testing.T) {
@@ -41,11 +41,11 @@ func TestDefaultMergeQueueConfig(t *testing.T) {
 }
 
 func TestIsConflictTaskForMR(t *testing.T) {
-	task := &beads.Issue{Description: `Resolve merge conflicts for branch polecat/nux/gt-real
+	task := &beads.Issue{Description: `Resolve merge conflicts for branch miner/nux/gt-real
 
 ## Metadata
 - Original MR: gt-mr1
-- Branch: polecat/nux/gt-real
+- Branch: miner/nux/gt-real
 - Conflict with: main@abc123
 - Original issue: gt-real
 - Retry count: 1`}
@@ -123,14 +123,14 @@ func TestEngineerClearAgentActiveMRUsesTownBeadsDir(t *testing.T) {
 	}
 
 	townRoot := t.TempDir()
-	rigName := "gastown"
+	rigName := "excavation"
 	rigPath := filepath.Join(townRoot, rigName)
-	mayorRig := filepath.Join(rigPath, "mayor", "rig")
+	overseerRig := filepath.Join(rigPath, "overseer", "rig")
 	townBeadsDir := filepath.Join(townRoot, ".beads")
-	rigBeadsDir := filepath.Join(mayorRig, ".beads")
+	rigBeadsDir := filepath.Join(overseerRig, ".beads")
 
 	for _, dir := range []string{
-		filepath.Join(townRoot, "mayor"),
+		filepath.Join(townRoot, "overseer"),
 		townBeadsDir,
 		rigBeadsDir,
 	} {
@@ -138,12 +138,12 @@ func TestEngineerClearAgentActiveMRUsesTownBeadsDir(t *testing.T) {
 			t.Fatalf("mkdir %s: %v", dir, err)
 		}
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "mayor", "town.json"), []byte("{}"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte("{}"), 0644); err != nil {
 		t.Fatalf("write town.json: %v", err)
 	}
 	if err := beads.WriteRoutes(townBeadsDir, []beads.Route{
 		{Prefix: "hq-", Path: "."},
-		{Prefix: "gt-", Path: filepath.Join(rigName, "mayor", "rig")},
+		{Prefix: "gt-", Path: filepath.Join(rigName, "overseer", "rig")},
 	}); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
@@ -170,7 +170,7 @@ case "$cmd" in
     exit 0
     ;;
   show)
-    printf '%%s\n' '[{"id":"gt-gastown-polecat-rust","title":"gt-gastown-polecat-rust","issue_type":"task","labels":["gt:agent"],"status":"open","description":"role_type: polecat\nrig: gastown\nagent_state: idle\nactive_mr: gt-mr"}]'
+    printf '%%s\n' '[{"id":"gt-excavation-miner-rust","title":"gt-excavation-miner-rust","issue_type":"task","labels":["gt:agent"],"status":"open","description":"role_type: miner\nrig: excavation\nagent_state: idle\nactive_mr: gt-mr"}]'
     exit 0
     ;;
   *)
@@ -185,10 +185,10 @@ esac
 
 	e := &Engineer{
 		rig:    &rig.Rig{Name: rigName, Path: rigPath},
-		beads:  beads.NewWithBeadsDir(mayorRig, rigBeadsDir),
+		beads:  beads.NewWithBeadsDir(overseerRig, rigBeadsDir),
 		output: io.Discard,
 	}
-	if err := e.clearAgentActiveMR("gt-gastown-polecat-rust"); err != nil {
+	if err := e.clearAgentActiveMR("gt-excavation-miner-rust"); err != nil {
 		t.Fatalf("clearAgentActiveMR: %v", err)
 	}
 
@@ -853,9 +853,9 @@ func TestEngineer_DeleteMergedBranchesConfig(t *testing.T) {
 	}
 }
 
-func TestPolecatBranchAlwaysDeletedAfterMerge(t *testing.T) {
-	// Polecat branches should be cleaned up regardless of DeleteMergedBranches config.
-	// Non-polecat branches should only be deleted locally, never from the remote,
+func TestMinerBranchAlwaysDeletedAfterMerge(t *testing.T) {
+	// Miner branches should be cleaned up regardless of DeleteMergedBranches config.
+	// Non-miner branches should only be deleted locally, never from the remote,
 	// because the remote may be a contributor's fork with open upstream PRs. (GH#2669)
 	tests := []struct {
 		name                 string
@@ -864,18 +864,18 @@ func TestPolecatBranchAlwaysDeletedAfterMerge(t *testing.T) {
 		wantLocalDelete      bool
 		wantRemoteDelete     bool
 	}{
-		{"polecat branch with config true", "polecat/nux/gt-abc", true, true, true},
-		{"polecat branch with config false", "polecat/nux/gt-abc", false, true, true},
-		{"non-polecat branch with config true", "feature/my-thing", true, true, false},
-		{"non-polecat branch with config false", "feature/my-thing", false, false, false},
+		{"miner branch with config true", "miner/nux/gt-abc", true, true, true},
+		{"miner branch with config false", "miner/nux/gt-abc", false, true, true},
+		{"non-miner branch with config true", "feature/my-thing", true, true, false},
+		{"non-miner branch with config false", "feature/my-thing", false, false, false},
 		{"empty branch", "", false, false, false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			isPolecat := strings.HasPrefix(tt.branch, "polecat/")
-			shouldDeleteLocal := tt.branch != "" && (tt.deleteMergedBranches || isPolecat)
-			shouldDeleteRemote := tt.branch != "" && isPolecat
+			isMiner := strings.HasPrefix(tt.branch, "miner/")
+			shouldDeleteLocal := tt.branch != "" && (tt.deleteMergedBranches || isMiner)
+			shouldDeleteRemote := tt.branch != "" && isMiner
 			if shouldDeleteLocal != tt.wantLocalDelete {
 				t.Errorf("branch=%q deleteMerged=%v: got localDelete=%v, want %v",
 					tt.branch, tt.deleteMergedBranches, shouldDeleteLocal, tt.wantLocalDelete)
@@ -888,9 +888,9 @@ func TestPolecatBranchAlwaysDeletedAfterMerge(t *testing.T) {
 	}
 }
 
-func TestPostMergeConvoyCheck_NoTownBeads(t *testing.T) {
-	// postMergeConvoyCheck should silently return when town-level beads doesn't exist
-	tmpDir, err := os.MkdirTemp("", "engineer-convoy-test-*")
+func TestPostMergeMinecartCheck_NoTownBeads(t *testing.T) {
+	// postMergeMinecartCheck should silently return when town-level beads doesn't exist
+	tmpDir, err := os.MkdirTemp("", "engineer-minecart-test-*")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -915,9 +915,9 @@ func TestPostMergeConvoyCheck_NoTownBeads(t *testing.T) {
 	mr := &MRInfo{
 		ID:          "gt-test",
 		SourceIssue: "gt-src",
-		ConvoyID:    "hq-cv-abc",
+		MinecartID:    "hq-cv-abc",
 	}
-	e.postMergeConvoyCheck(mr)
+	e.postMergeMinecartCheck(mr)
 
 	// Should produce no output (town .beads doesn't exist)
 	if buf.Len() != 0 {
@@ -925,7 +925,7 @@ func TestPostMergeConvoyCheck_NoTownBeads(t *testing.T) {
 	}
 }
 
-func TestCheckAndCloseCompletedConvoys_UsesHardenedBDEnvs(t *testing.T) {
+func TestCheckAndCloseCompletedMinecarts_UsesHardenedBDEnvs(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows - shell stubs")
 	}
@@ -984,7 +984,7 @@ case "$*" in
     ;;
 	  "--allow-stale list --status=open --json --limit=0 --flat"|"list --status=open --json --limit=0 --flat")
 	assert_town_read_env
-	    echo '[{"id":"hq-cv-l9","title":"Cross-rig convoy","status":"open","description":"","issue_type":"convoy"}]'
+	    echo '[{"id":"hq-cv-l9","title":"Cross-rig minecart","status":"open","description":"","issue_type":"minecart"}]'
     ;;
   "--allow-stale dep list hq-cv-l9 --direction=down --type=tracks --json"|"dep list hq-cv-l9 --direction=down --type=tracks --json")
     assert_town_read_env
@@ -1022,17 +1022,17 @@ esac
 		Path: rigDir,
 	})
 
-	closed := e.checkAndCloseCompletedConvoys(tmpDir, townBeads)
+	closed := e.checkAndCloseCompletedMinecarts(tmpDir, townBeads)
 	if len(closed) != 1 {
-		t.Fatalf("expected 1 closed convoy, got %d", len(closed))
+		t.Fatalf("expected 1 closed minecart, got %d", len(closed))
 	}
 	if closed[0].ID != "hq-cv-l9" {
-		t.Fatalf("closed convoy ID = %q, want hq-cv-l9", closed[0].ID)
+		t.Fatalf("closed minecart ID = %q, want hq-cv-l9", closed[0].ID)
 	}
 }
 
-func TestNotifyDeaconConvoyFeeding_SkipsWhenNoConvoyID(t *testing.T) {
-	// notifyDeaconConvoyFeeding should skip when MR has no ConvoyID
+func TestNotifySupervisorMinecartFeeding_SkipsWhenNoMinecartID(t *testing.T) {
+	// notifySupervisorMinecartFeeding should skip when MR has no MinecartID
 	tmpDir, err := os.MkdirTemp("", "engineer-notify-test-*")
 	if err != nil {
 		t.Fatal(err)
@@ -1053,21 +1053,21 @@ func TestNotifyDeaconConvoyFeeding_SkipsWhenNoConvoyID(t *testing.T) {
 	var buf bytes.Buffer
 	e.SetOutput(&buf)
 
-	// MR without ConvoyID — should produce no output
+	// MR without MinecartID — should produce no output
 	mr := &MRInfo{
 		ID:          "gt-test",
 		SourceIssue: "gt-src",
-		ConvoyID:    "", // No convoy
+		MinecartID:    "", // No minecart
 	}
-	e.notifyDeaconConvoyFeeding(mr)
+	e.notifySupervisorMinecartFeeding(mr)
 
 	if buf.Len() != 0 {
-		t.Errorf("expected no output when ConvoyID empty, got: %s", buf.String())
+		t.Errorf("expected no output when MinecartID empty, got: %s", buf.String())
 	}
 }
 
-func TestNotifyDeaconConvoyFeeding_AttemptsWhenConvoyID(t *testing.T) {
-	// notifyDeaconConvoyFeeding should attempt to send mail when ConvoyID is set.
+func TestNotifySupervisorMinecartFeeding_AttemptsWhenMinecartID(t *testing.T) {
+	// notifySupervisorMinecartFeeding should attempt to send mail when MinecartID is set.
 	// The send will fail (no beads setup in tmpdir) but we verify the attempt via output.
 	tmpDir, err := os.MkdirTemp("", "engineer-notify-test-*")
 	if err != nil {
@@ -1092,19 +1092,19 @@ func TestNotifyDeaconConvoyFeeding_AttemptsWhenConvoyID(t *testing.T) {
 	mr := &MRInfo{
 		ID:          "gt-test",
 		SourceIssue: "gt-src",
-		ConvoyID:    "hq-cv-abc",
+		MinecartID:    "hq-cv-abc",
 	}
-	e.notifyDeaconConvoyFeeding(mr)
+	e.notifySupervisorMinecartFeeding(mr)
 
 	output := buf.String()
 	// Should have attempted to send — either success or warning about failure
-	if !strings.Contains(output, "CONVOY_NEEDS_FEEDING") && !strings.Contains(output, "convoy feeding") {
-		t.Errorf("expected output mentioning convoy notification, got: %s", output)
+	if !strings.Contains(output, "MINECART_NEEDS_FEEDING") && !strings.Contains(output, "minecart feeding") {
+		t.Errorf("expected output mentioning minecart notification, got: %s", output)
 	}
 }
 
-func TestConvoyInfoDescriptionParsing(t *testing.T) {
-	// Test that landConvoySwarm correctly parses Molecule from description
+func TestMinecartInfoDescriptionParsing(t *testing.T) {
+	// Test that landMinecartSwarm correctly parses Molecule from description
 	tests := []struct {
 		name        string
 		description string
@@ -1112,12 +1112,12 @@ func TestConvoyInfoDescriptionParsing(t *testing.T) {
 	}{
 		{
 			name:        "with molecule",
-			description: "Convoy tracking 2 issues\nOwner: mayor/\nMolecule: mol-release",
+			description: "Minecart tracking 2 issues\nOwner: overseer/\nMolecule: mol-release",
 			wantMolID:   "mol-release",
 		},
 		{
 			name:        "without molecule",
-			description: "Convoy tracking 2 issues\nOwner: mayor/",
+			description: "Minecart tracking 2 issues\nOwner: overseer/",
 			wantMolID:   "",
 		},
 		{
@@ -1129,7 +1129,7 @@ func TestConvoyInfoDescriptionParsing(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fields := beads.ParseConvoyFields(&beads.Issue{Description: tt.description})
+			fields := beads.ParseMinecartFields(&beads.Issue{Description: tt.description})
 			var moleculeID string
 			if fields != nil {
 				moleculeID = fields.Molecule
@@ -1141,8 +1141,8 @@ func TestConvoyInfoDescriptionParsing(t *testing.T) {
 	}
 }
 
-func TestNotifyConvoyCompletionParsing(t *testing.T) {
-	// Test that ParseConvoyFields.NotificationAddresses correctly extracts Owner/Notify
+func TestNotifyMinecartCompletionParsing(t *testing.T) {
+	// Test that ParseMinecartFields.NotificationAddresses correctly extracts Owner/Notify
 	tests := []struct {
 		name        string
 		description string
@@ -1150,29 +1150,29 @@ func TestNotifyConvoyCompletionParsing(t *testing.T) {
 	}{
 		{
 			name:        "owner and notify",
-			description: "Convoy tracking 2 issues\nOwner: mayor/\nNotify: ops/",
-			wantAddrs:   []string{"mayor/", "ops/"},
+			description: "Minecart tracking 2 issues\nOwner: overseer/\nNotify: ops/",
+			wantAddrs:   []string{"overseer/", "ops/"},
 		},
 		{
 			name:        "owner only",
-			description: "Owner: deacon/",
-			wantAddrs:   []string{"deacon/"},
+			description: "Owner: supervisor/",
+			wantAddrs:   []string{"supervisor/"},
 		},
 		{
 			name:        "no addresses",
-			description: "Convoy tracking 1 issue",
+			description: "Minecart tracking 1 issue",
 			wantAddrs:   nil,
 		},
 		{
 			name:        "duplicate addresses deduped",
-			description: "Owner: mayor/\nNotify: mayor/",
-			wantAddrs:   []string{"mayor/"},
+			description: "Owner: overseer/\nNotify: overseer/",
+			wantAddrs:   []string{"overseer/"},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fields := beads.ParseConvoyFields(&beads.Issue{Description: tt.description})
+			fields := beads.ParseMinecartFields(&beads.Issue{Description: tt.description})
 			addrs := fields.NotificationAddresses()
 
 			if len(addrs) != len(tt.wantAddrs) {
@@ -1188,7 +1188,7 @@ func TestNotifyConvoyCompletionParsing(t *testing.T) {
 	}
 }
 
-func TestEngineerNotifyConvoyCompletion_StampsAndSkipsDuplicate(t *testing.T) {
+func TestEngineerNotifyMinecartCompletion_StampsAndSkipsDuplicate(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows - shell stubs")
 	}
@@ -1221,9 +1221,9 @@ case "$1" in
     ;;
   show)
     if [ -f "$STATE" ]; then
-      printf '%s\n' '[{"id":"hq-cv-ref","description":"Owner: mayor/\ncompletion_notified_at: 2026-05-25T02:30:00Z"}]'
+      printf '%s\n' '[{"id":"hq-cv-ref","description":"Owner: overseer/\ncompletion_notified_at: 2026-05-25T02:30:00Z"}]'
     else
-      printf '%s\n' '[{"id":"hq-cv-ref","description":"Owner: mayor/"}]'
+      printf '%s\n' '[{"id":"hq-cv-ref","description":"Owner: overseer/"}]'
     fi
     exit 0
     ;;
@@ -1250,8 +1250,8 @@ exit 0
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
 	e := NewEngineer(&rig.Rig{Name: "testrig", Path: rigDir})
-	e.notifyConvoyCompletion(townRoot, "hq-cv-ref", "Refinery Duplicate Guard", "Owner: mayor/")
-	e.notifyConvoyCompletion(townRoot, "hq-cv-ref", "Refinery Duplicate Guard", "Owner: mayor/")
+	e.notifyMinecartCompletion(townRoot, "hq-cv-ref", "Refinery Duplicate Guard", "Owner: overseer/")
+	e.notifyMinecartCompletion(townRoot, "hq-cv-ref", "Refinery Duplicate Guard", "Owner: overseer/")
 
 	data, err := os.ReadFile(mailLogPath)
 	if err != nil {

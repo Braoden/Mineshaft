@@ -4,29 +4,29 @@ import (
 	"testing"
 )
 
-func TestMayorSessionName(t *testing.T) {
-	// Mayor session name is now fixed (one per machine), uses HQ prefix
-	want := "hq-mayor"
-	got := MayorSessionName()
-	if got != want {
-		t.Errorf("MayorSessionName() = %q, want %q", got, want)
-	}
-}
-
-func TestDeaconSessionName(t *testing.T) {
-	// Deacon session name is now fixed (one per machine), uses HQ prefix
-	want := "hq-deacon"
-	got := DeaconSessionName()
-	if got != want {
-		t.Errorf("DeaconSessionName() = %q, want %q", got, want)
-	}
-}
-
 func TestOverseerSessionName(t *testing.T) {
+	// Overseer session name is now fixed (one per machine), uses HQ prefix
 	want := "hq-overseer"
 	got := OverseerSessionName()
 	if got != want {
 		t.Errorf("OverseerSessionName() = %q, want %q", got, want)
+	}
+}
+
+func TestSupervisorSessionName(t *testing.T) {
+	// Supervisor session name is now fixed (one per machine), uses HQ prefix
+	want := "hq-supervisor"
+	got := SupervisorSessionName()
+	if got != want {
+		t.Errorf("SupervisorSessionName() = %q, want %q", got, want)
+	}
+}
+
+func TestBossSessionName(t *testing.T) {
+	want := "hq-boss"
+	got := BossSessionName()
+	if got != want {
+		t.Errorf("BossSessionName() = %q, want %q", got, want)
 	}
 }
 
@@ -89,7 +89,7 @@ func TestCrewSessionName(t *testing.T) {
 	}
 }
 
-func TestPolecatSessionName(t *testing.T) {
+func TestMinerSessionName(t *testing.T) {
 	tests := []struct {
 		rigPrefix string
 		name      string
@@ -102,9 +102,9 @@ func TestPolecatSessionName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.rigPrefix+"/"+tt.name, func(t *testing.T) {
-			got := PolecatSessionName(tt.rigPrefix, tt.name)
+			got := MinerSessionName(tt.rigPrefix, tt.name)
 			if got != tt.want {
-				t.Errorf("PolecatSessionName(%q, %q) = %q, want %q", tt.rigPrefix, tt.name, got, tt.want)
+				t.Errorf("MinerSessionName(%q, %q) = %q, want %q", tt.rigPrefix, tt.name, got, tt.want)
 			}
 		})
 	}

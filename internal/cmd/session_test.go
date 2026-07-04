@@ -7,16 +7,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/polecat"
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/miner"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 func TestSessionInfoJSONOutput(t *testing.T) {
-	info := &polecat.SessionInfo{
-		Polecat:   "alpha",
+	info := &miner.SessionInfo{
+		Miner:   "alpha",
 		SessionID: "gt-alpha",
 		Running:   true,
-		RigName:   "gastown",
+		RigName:   "excavation",
 		Attached:  false,
 		Created:   time.Date(2026, 2, 20, 10, 0, 0, 0, time.UTC),
 		Windows:   1,
@@ -32,8 +32,8 @@ func TestSessionInfoJSONOutput(t *testing.T) {
 		t.Fatalf("json.Unmarshal failed: %v", err)
 	}
 
-	if parsed["polecat"] != "alpha" {
-		t.Errorf("polecat = %v, want alpha", parsed["polecat"])
+	if parsed["miner"] != "alpha" {
+		t.Errorf("miner = %v, want alpha", parsed["miner"])
 	}
 	if parsed["session_id"] != "gt-alpha" {
 		t.Errorf("session_id = %v, want gt-alpha", parsed["session_id"])
@@ -41,8 +41,8 @@ func TestSessionInfoJSONOutput(t *testing.T) {
 	if parsed["running"] != true {
 		t.Errorf("running = %v, want true", parsed["running"])
 	}
-	if parsed["rig_name"] != "gastown" {
-		t.Errorf("rig_name = %v, want gastown", parsed["rig_name"])
+	if parsed["rig_name"] != "excavation" {
+		t.Errorf("rig_name = %v, want excavation", parsed["rig_name"])
 	}
 }
 
@@ -160,8 +160,8 @@ func TestRunSessionHealthJSONSessionDead(t *testing.T) {
 }
 
 func TestSessionInfoJSONOutputNotRunning(t *testing.T) {
-	info := &polecat.SessionInfo{
-		Polecat:   "beta",
+	info := &miner.SessionInfo{
+		Miner:   "beta",
 		SessionID: "gt-beta",
 		Running:   false,
 		RigName:   "testrig",

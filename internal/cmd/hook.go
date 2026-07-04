@@ -9,20 +9,20 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/events"
-	"github.com/steveyegge/gastown/internal/nudge"
-	"github.com/steveyegge/gastown/internal/runtime"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/events"
+	"github.com/steveyegge/excavation/internal/nudge"
+	"github.com/steveyegge/excavation/internal/runtime"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var hookCmd = &cobra.Command{
 	Use:         "hook [bead-id] [target]",
 	Aliases:     []string{"work"},
 	GroupID:     GroupWork,
-	Annotations: map[string]string{AnnotationPolecatSafe: "true"},
+	Annotations: map[string]string{AnnotationMinerSafe: "true"},
 	Short:       "Show or attach work on a hook",
 	Long: `Show what's on your hook, or attach new work.
 
@@ -40,7 +40,7 @@ Examples:
   gt hook status                             # Same as above
   gt hook gt-abc                             # Attach issue gt-abc to your hook
   gt hook gt-abc -s "Fix the bug"            # With subject for handoff mail
-  gt hook gt-abc gastown/crew/max            # Attach gt-abc to max's hook
+  gt hook gt-abc excavation/crew/max            # Attach gt-abc to max's hook
 
 Related commands:
   gt sling <bead>    # Hook + start now (keep context)
@@ -75,19 +75,19 @@ var hookShowCmd = &cobra.Command{
 With no argument, shows your own hook status (auto-detected from context).
 
 Use cases:
-- Mayor checking what polecats are working on
-- Witness checking polecat status
+- Overseer checking what miners are working on
+- Witness checking miner status
 - Debugging coordination issues
 - Quick status overview
 
 Examples:
   gt hook show                         # What's on MY hook? (auto-detect)
-  gt hook show gastown/polecats/nux    # What's nux working on?
-  gt hook show gastown/witness         # What's the witness hooked to?
-  gt hook show mayor                   # What's the mayor working on?
+  gt hook show excavation/miners/nux    # What's nux working on?
+  gt hook show excavation/witness         # What's the witness hooked to?
+  gt hook show overseer                   # What's the overseer working on?
 
 Output format (one line):
-  gastown/polecats/nux: gt-abc123 'Fix the widget bug' [in_progress]`,
+  excavation/miners/nux: gt-abc123 'Fix the widget bug' [in_progress]`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runHookShow,
 }
@@ -103,7 +103,7 @@ With a target, attaches to another agent's hook (for remote dispatch).
 
 Examples:
   gt hook attach gt-abc                    # Attach to my hook
-  gt hook attach gt-abc gastown/crew/max   # Attach to max's hook`,
+  gt hook attach gt-abc excavation/crew/max   # Attach to max's hook`,
 	Args: cobra.RangeArgs(1, 2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runHook(cmd, args)
@@ -118,7 +118,7 @@ var hookDetachCmd = &cobra.Command{
 
 Examples:
   gt hook detach gt-abc               # Detach gt-abc from my hook
-  gt hook detach gt-abc gastown/nux   # Detach gt-abc from nux's hook`,
+  gt hook detach gt-abc excavation/nux   # Detach gt-abc from nux's hook`,
 	Args: cobra.RangeArgs(1, 2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runUnslingWith(cmd, args, hookDryRun, hookForce)
@@ -227,18 +227,18 @@ func runHook(_ *cobra.Command, args []string) error {
 		targetAgent = args[1]
 	}
 
-	// Polecats cannot hook - they use gt done for lifecycle.
-	// Check GT_ROLE first: coordinators (mayor, witness, etc.) may have a stale
-	// GT_POLECAT in their environment from spawning polecats. Only block if the
-	// parsed role is actually polecat (handles compound forms like
-	// "gastown/polecats/Toast"). If GT_ROLE is unset, fall back to GT_POLECAT.
+	// Miners cannot hook - they use gt done for lifecycle.
+	// Check GT_ROLE first: coordinators (overseer, witness, etc.) may have a stale
+	// GT_MINER in their environment from spawning miners. Only block if the
+	// parsed role is actually miner (handles compound forms like
+	// "excavation/miners/Toast"). If GT_ROLE is unset, fall back to GT_MINER.
 	if role := os.Getenv("GT_ROLE"); role != "" {
 		parsedRole, _, _ := parseRoleString(role)
-		if parsedRole == RolePolecat {
-			return fmt.Errorf("polecats cannot hook work (use gt done for handoff)")
+		if parsedRole == RoleMiner {
+			return fmt.Errorf("miners cannot hook work (use gt done for handoff)")
 		}
-	} else if polecatName := os.Getenv("GT_POLECAT"); polecatName != "" {
-		return fmt.Errorf("polecats cannot hook work (use gt done for handoff)")
+	} else if minerName := os.Getenv("GT_MINER"); minerName != "" {
+		return fmt.Errorf("miners cannot hook work (use gt done for handoff)")
 	}
 
 	// Verify the bead exists
@@ -279,7 +279,7 @@ func runHook(_ *cobra.Command, args []string) error {
 		}
 		rigName := strings.Split(agentID, "/")[0]
 		var fallbackPath string
-		if rigName == "mayor" || rigName == "deacon" {
+		if rigName == "overseer" || rigName == "supervisor" {
 			fallbackPath = townRoot
 		} else {
 			fallbackPath = filepath.Join(townRoot, rigName)
@@ -369,7 +369,7 @@ func runHook(_ *cobra.Command, args []string) error {
 
 	// Hook the bead using bd update with retry logic (discovery-based approach).
 	// Run from town root so bd can find routes.jsonl for prefix-based routing.
-	// This is essential for hooking convoys (hq-* prefix) stored in town beads.
+	// This is essential for hooking minecarts (hq-* prefix) stored in town beads.
 	// Dolt can fail with concurrency errors (HTTP 400) when multiple agents write
 	// simultaneously. We retry with exponential backoff, matching sling.go behavior.
 	const hookMaxRetries = 5
@@ -394,11 +394,11 @@ func runHook(_ *cobra.Command, args []string) error {
 		break
 	}
 
-	// Emit a propulsion signal if the target is the mayor.
+	// Emit a propulsion signal if the target is the overseer.
 	// This allows the ACP propeller to react to hook changes event-driven.
-	if agentID == "mayor/" {
+	if agentID == "overseer/" {
 		if townRoot, err := workspace.FindFromCwd(); err == nil && townRoot != "" {
-			session := "hq-mayor"
+			session := "hq-overseer"
 			message := fmt.Sprintf("Hook updated: attached bead %s", beadID)
 			_ = nudge.Enqueue(townRoot, session, nudge.QueuedNudge{
 				Sender:   "hook",
@@ -499,7 +499,7 @@ func runHookShow(cmd *cobra.Command, args []string) error {
 		townRoot, townErr := workspace.FindFromCwd()
 		if townErr == nil && townRoot != "" {
 			rigName := strings.Split(target, "/")[0]
-			if rigName != "" && rigName != "mayor" && rigName != "deacon" {
+			if rigName != "" && rigName != "overseer" && rigName != "supervisor" {
 				// Agent beads can be stale or missing during recovery. The source
 				// work assignment is authoritative, so query the target rig DB directly.
 				if rigDir := beads.GetRigDirForName(townRoot, rigName); rigDir != "" {
@@ -533,9 +533,9 @@ func runHookShow(cmd *cobra.Command, args []string) error {
 		hookedBeads = inProgressBeads
 	}
 
-	// If nothing found in local beads, also check town beads for hooked convoys.
-	// Convoys (hq-cv-*) are stored in town beads (~/gt/.beads) and any agent
-	// can hook them for convoy-driver mode.
+	// If nothing found in local beads, also check town beads for hooked minecarts.
+	// Minecarts (hq-cv-*) are stored in town beads (~/gt/.beads) and any agent
+	// can hook them for minecart-driver mode.
 	if len(hookedBeads) == 0 {
 		townRoot, err := findTownRoot()
 		if err == nil && townRoot != "" {
@@ -615,8 +615,8 @@ func ensureCurrentHookWorktreeIntegrity() error {
 
 // normalizeHookShowTarget resolves target aliases/shorthand to canonical agent IDs.
 // Examples:
-//   - "rig/polecat" -> "rig/polecats/polecat"
-//   - "mayor" -> "mayor"
+//   - "rig/miner" -> "rig/miners/miner"
+//   - "overseer" -> "overseer"
 //
 // If resolution fails, it returns the original target unchanged.
 func normalizeHookShowTarget(target string) string {
@@ -639,7 +639,7 @@ func normalizeHookShowTarget(target string) string {
 		return identity.Address()
 	}
 
-	// Direct shorthand expansion: rig/name → rig/polecats/name or rig/crew/name.
+	// Direct shorthand expansion: rig/name → rig/miners/name or rig/crew/name.
 	// This handles the case where the session name roundtrip fails due to
 	// uninitialized prefix registry. See GH#2371.
 	parts := strings.Split(target, "/")
@@ -647,7 +647,7 @@ func normalizeHookShowTarget(target string) string {
 		name := parts[1]
 		// Check for known roles — don't expand those
 		switch strings.ToLower(name) {
-		case "witness", "refinery", "mayor", "deacon":
+		case "witness", "refinery", "overseer", "supervisor":
 			// Already a valid canonical address
 		default:
 			// Check if it's a crew member by looking for the directory
@@ -658,8 +658,8 @@ func normalizeHookShowTarget(target string) string {
 					return parts[0] + "/crew/" + name
 				}
 			}
-			// Default to polecat
-			return parts[0] + "/polecats/" + strings.ToLower(name)
+			// Default to miner
+			return parts[0] + "/miners/" + strings.ToLower(name)
 		}
 	}
 
@@ -667,7 +667,7 @@ func normalizeHookShowTarget(target string) string {
 }
 
 // sessionNameToCanonicalAddress maps a tmux session name to a canonical agent
-// assignee address (e.g., "gastown/polecats/toast").
+// assignee address (e.g., "excavation/miners/toast").
 //
 // targetHint is the original user input and is used to seed a temporary
 // prefix→rig mapping for deterministic parsing in tests or minimal
@@ -694,7 +694,7 @@ func sessionNameToCanonicalAddress(sessionName, targetHint string) (string, bool
 	return canonicalAssigneeAddress(identity), true
 }
 
-// findTownRoot finds the Gas Town root directory.
+// findTownRoot finds the Excavation Site root directory.
 func findTownRoot() (string, error) {
 	return workspace.FindFromCwd()
 }

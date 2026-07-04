@@ -19,7 +19,7 @@ type IntegrityOptions struct {
 	TownRoot string
 
 	// Require reports a missing .git marker as an integrity violation. This is
-	// appropriate for agent worktree roles such as polecats, crew, refinery, and
+	// appropriate for agent worktree roles such as miners, crew, refinery, and
 	// witness.
 	Require bool
 }

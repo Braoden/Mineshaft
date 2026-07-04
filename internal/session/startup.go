@@ -1,8 +1,8 @@
-// Package session provides polecat session lifecycle management.
+// Package session provides miner session lifecycle management.
 package session
 
 import (
-	"github.com/steveyegge/gastown/internal/cli"
+	"github.com/steveyegge/excavation/internal/cli"
 	"fmt"
 	"time"
 )
@@ -10,7 +10,7 @@ import (
 // BeaconRecipient formats a human-readable, non-path-like recipient for the
 // startup beacon. Uses "role name (rig: rigName)" format to prevent LLMs from
 // misinterpreting the recipient as a filesystem path and constructing wrong
-// cd commands. See github.com/steveyegge/gastown/issues/1716.
+// cd commands. See github.com/steveyegge/excavation/issues/1716.
 func BeaconRecipient(role, name, rig string) string {
 	if name != "" && rig != "" {
 		return fmt.Sprintf("%s %s (rig: %s)", role, name, rig)
@@ -29,11 +29,11 @@ func BeaconRecipient(role, name, rig string) string {
 type BeaconConfig struct {
 	// Recipient is the address of the agent being nudged.
 	// Use BeaconRecipient() to format non-path-like addresses.
-	// Examples: "polecat rust (rig: gastown)", "deacon", "witness (rig: gastown)"
+	// Examples: "miner rust (rig: excavation)", "supervisor", "witness (rig: excavation)"
 	Recipient string
 
 	// Sender is the agent initiating the nudge.
-	// Examples: "mayor", "deacon", "self" (for handoff)
+	// Examples: "overseer", "supervisor", "self" (for handoff)
 	Sender string
 
 	// Topic describes why the session was started.
@@ -63,9 +63,9 @@ type BeaconConfig struct {
 // Format: [GAS TOWN] <recipient> <- <sender> • <timestamp> • <topic[:mol-id]>
 //
 // Examples:
-//   - [GAS TOWN] gastown/crew/gus <- deacon • 2025-12-30T15:42 • assigned:gt-abc12
-//   - [GAS TOWN] deacon <- daemon • 2025-12-30T08:00 • patrol
-//   - [GAS TOWN] gastown/witness <- deacon • 2025-12-30T14:00 • patrol
+//   - [GAS TOWN] excavation/crew/gus <- supervisor • 2025-12-30T15:42 • assigned:gt-abc12
+//   - [GAS TOWN] supervisor <- daemon • 2025-12-30T08:00 • patrol
+//   - [GAS TOWN] excavation/witness <- supervisor • 2025-12-30T14:00 • patrol
 func FormatStartupBeacon(cfg BeaconConfig) string {
 	// Use local time in compact format
 	timestamp := time.Now().Format("2006-01-02T15:04")
@@ -116,7 +116,7 @@ func FormatStartupBeacon(cfg BeaconConfig) string {
 
 // BuildStartupPrompt creates the CLI prompt for agent startup.
 //
-// GUPP (Gas Town Universal Propulsion Principle) implementation:
+// GUPP (Excavation Site Universal Propulsion Principle) implementation:
 //   - Beacon identifies session for /resume predecessor discovery
 //   - Instructions tell agent to start working immediately
 //   - SessionStart hook runs `gt prime` which injects full context including

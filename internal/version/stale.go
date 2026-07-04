@@ -8,7 +8,7 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/util"
+	"github.com/steveyegge/excavation/internal/util"
 )
 
 // These variables are set at build time via ldflags in cmd package.
@@ -133,8 +133,8 @@ func CheckStaleBinary(repoDir string) *StaleBinaryInfo {
 
 	// Decide which ref to compare the binary against.
 	//
-	// GetRepoRoot resolves to $GT_ROOT/gastown/mayor/rig, a worktree that
-	// normally sits on a feature branch (that's where the Mayor does git work).
+	// GetRepoRoot resolves to $GT_ROOT/excavation/overseer/rig, a worktree that
+	// normally sits on a feature branch (that's where the Overseer does git work).
 	// Diffing the binary against that worktree's HEAD compares it to unmerged
 	// feature work and produces a false "N commits behind" warning advising a
 	// rebuild from the feature branch (GH#4034). Staleness is only meaningful
@@ -196,7 +196,7 @@ func CheckStaleBinary(repoDir string) *StaleBinaryInfo {
 
 // resolveBuildBranchRef finds a build-branch ref to compare the binary against
 // when the resolved source worktree is parked on a non-build branch (the normal
-// state for $GT_ROOT/gastown/mayor/rig). Without this, staleness would be
+// state for $GT_ROOT/excavation/overseer/rig). Without this, staleness would be
 // computed against unmerged feature work (GH#4034).
 //
 // Candidate refs are fully qualified to avoid branch/tag shadowing. Among refs
@@ -297,15 +297,15 @@ func singleBranchRef(repoDir, pattern string) (buildBranchRef, bool) {
 }
 
 // GetRepoRoot returns the git repository root for the gt source code.
-// The canonical source is the gastown repo itself ($GT_ROOT/gastown).
+// The canonical source is the excavation repo itself ($GT_ROOT/excavation).
 // Crew rigs also contain cmd/gt/main.go but have different HEADs,
-// so we prefer the gastown repo over CWD-based git toplevel detection.
+// so we prefer the excavation repo over CWD-based git toplevel detection.
 func GetRepoRoot() (string, error) {
 	// Check if GT_ROOT environment variable is set (agents always have this)
 	if gtRoot := os.Getenv("GT_ROOT"); gtRoot != "" {
 		candidates := []string{
-			gtRoot + "/gastown",
-			gtRoot + "/gastown/mayor/rig",
+			gtRoot + "/excavation",
+			gtRoot + "/excavation/overseer/rig",
 		}
 		for _, candidate := range candidates {
 			if hasGtSource(candidate) {
@@ -318,12 +318,12 @@ func GetRepoRoot() (string, error) {
 	home := os.Getenv("HOME")
 	if home != "" {
 		candidates := []string{
-			home + "/gt/gastown",
-			home + "/gt/gastown/mayor/rig",
-			home + "/gastown",
-			home + "/gastown/mayor/rig",
-			home + "/src/gastown",
-			home + "/src/gastown/mayor/rig",
+			home + "/gt/excavation",
+			home + "/gt/excavation/overseer/rig",
+			home + "/excavation",
+			home + "/excavation/overseer/rig",
+			home + "/src/excavation",
+			home + "/src/excavation/overseer/rig",
 		}
 		for _, candidate := range candidates {
 			if hasGtSource(candidate) {
@@ -385,7 +385,7 @@ func onlyBeadsChanges(repoDir, binaryCommit, compareRef string) bool {
 //   - main, master: upstream default branches
 //   - carry/*: fork operational branches (e.g., carry/operational)
 //
-// This prevents automated rebuilds from random feature, fix, or polecat branches
+// This prevents automated rebuilds from random feature, fix, or miner branches
 // which could cause downgrades or crash loops.
 func isBuildBranch(branch string) bool {
 	switch branch {

@@ -5,13 +5,13 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var tapGuardBdInitCmd = &cobra.Command{
 	Use:   "bd-init",
 	Short: "Block bd init in wrong directories",
-	Long: `Block beads initialization outside the Gas Town HQ root.
+	Long: `Block beads initialization outside the Excavation Site HQ root.
 
 Running 'bd init' in rig worktrees or arbitrary directories creates
 orphan beads databases that conflict with the centralized HQ database.
@@ -20,7 +20,7 @@ This guard blocks:
   - bd init (in any directory other than the HQ root)
 
 Exit codes:
-  0 - Operation allowed (in HQ root or not in Gas Town context)
+  0 - Operation allowed (in HQ root or not in Excavation Site context)
   2 - Operation BLOCKED (in a rig worktree or other non-HQ directory)`,
 	RunE: runTapGuardBdInit,
 }
@@ -30,7 +30,7 @@ func init() {
 }
 
 func runTapGuardBdInit(cmd *cobra.Command, args []string) error {
-	if !isGasTownAgentContext() {
+	if !isExcavationAgentContext() {
 		return nil
 	}
 
@@ -53,7 +53,7 @@ func runTapGuardBdInit(cmd *cobra.Command, args []string) error {
 	fmt.Fprintln(os.Stderr, "║  ❌ BD INIT BLOCKED                                              ║")
 	fmt.Fprintln(os.Stderr, "╠══════════════════════════════════════════════════════════════════╣")
 	fmt.Fprintln(os.Stderr, "║  Running 'bd init' here would create an orphan beads database.  ║")
-	fmt.Fprintln(os.Stderr, "║  Gas Town uses a centralized DB at the HQ root.                 ║")
+	fmt.Fprintln(os.Stderr, "║  Excavation Site uses a centralized DB at the HQ root.                 ║")
 	fmt.Fprintf(os.Stderr, "║  HQ root: %-53s║\n", townRoot)
 	fmt.Fprintf(os.Stderr, "║  CWD:     %-53s║\n", cwd)
 	fmt.Fprintln(os.Stderr, "║                                                                  ║")

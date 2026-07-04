@@ -1,4 +1,4 @@
-// Package config provides configuration types and serialization for Gas Town.
+// Package config provides configuration types and serialization for Excavation Site.
 package config
 
 import (
@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/scheduler/capacity"
+	"github.com/steveyegge/excavation/internal/scheduler/capacity"
 )
 
-// TownConfig represents the main town identity (mayor/town.json).
+// TownConfig represents the main town identity (overseer/town.json).
 type TownConfig struct {
 	Type       string    `json:"type"`                  // "town"
 	Version    int       `json:"version"`               // schema version
@@ -23,14 +23,14 @@ type TownConfig struct {
 	CreatedAt  time.Time `json:"created_at"`
 }
 
-// MayorConfig represents town-level behavioral configuration (mayor/config.json).
+// OverseerConfig represents town-level behavioral configuration (overseer/config.json).
 // This is separate from TownConfig (identity) to keep configuration concerns distinct.
-type MayorConfig struct {
-	Type            string           `json:"type"`                        // "mayor-config"
+type OverseerConfig struct {
+	Type            string           `json:"type"`                        // "overseer-config"
 	Version         int              `json:"version"`                     // schema version
 	Theme           *TownThemeConfig `json:"theme,omitempty"`             // global theme settings
 	Daemon          *DaemonConfig    `json:"daemon,omitempty"`            // daemon settings
-	Deacon          *DeaconConfig    `json:"deacon,omitempty"`            // deacon settings
+	Supervisor          *SupervisorConfig    `json:"supervisor,omitempty"`            // supervisor settings
 	DefaultCrewName string           `json:"default_crew_name,omitempty"` // default crew name for new rigs
 }
 
@@ -62,10 +62,10 @@ type TownSettings struct {
 	Agents map[string]*RuntimeConfig `json:"agents,omitempty"`
 
 	// RoleAgents maps role names to agent aliases for per-role model selection.
-	// Keys are role names: "mayor", "deacon", "witness", "refinery", "polecat", "crew".
+	// Keys are role names: "overseer", "supervisor", "witness", "refinery", "miner", "crew".
 	// Values are agent names (built-in presets or custom agents defined in Agents).
 	// This allows cost optimization by using different models for different roles.
-	// Example: {"mayor": "claude-opus", "witness": "claude-haiku", "polecat": "claude-sonnet"}
+	// Example: {"overseer": "claude-opus", "witness": "claude-haiku", "miner": "claude-sonnet"}
 	RoleAgents map[string]string `json:"role_agents,omitempty"`
 
 	// CrewAgents maps individual crew worker names to agent aliases at the town level.
@@ -75,8 +75,8 @@ type TownSettings struct {
 	CrewAgents map[string]string `json:"crew_agents,omitempty"`
 
 	// AgentEmailDomain is the domain used for agent git identity emails.
-	// Agent addresses like "gastown/crew/jack" become "gastown.crew.jack@{domain}".
-	// Default: "gastown.local"
+	// Agent addresses like "excavation/crew/jack" become "excavation.crew.jack@{domain}".
+	// Default: "excavation.local"
 	AgentEmailDomain string `json:"agent_email_domain,omitempty"`
 
 	// WebTimeouts configures command execution timeouts for the web dashboard.
@@ -88,11 +88,11 @@ type TownSettings struct {
 	// FeedCurator configures event deduplication and aggregation windows.
 	FeedCurator *FeedCuratorConfig `json:"feed_curator,omitempty"`
 
-	// Convoy configures convoy behavior settings.
-	Convoy *ConvoyConfig `json:"convoy,omitempty"`
+	// Minecart configures minecart behavior settings.
+	Minecart *MinecartConfig `json:"minecart,omitempty"`
 
 	// RoleEffort maps role names to effort levels for per-role effort configuration.
-	// Keys are role names: "mayor", "deacon", "witness", "refinery", "polecat", "crew", "boot", "dog".
+	// Keys are role names: "overseer", "supervisor", "witness", "refinery", "miner", "crew", "boot", "dog".
 	// Values are effort levels: "low", "medium", "high", "max".
 	// Allows cost/speed optimization by using lower effort for simpler roles.
 	// Managed by cost-tier presets alongside RoleAgents.
@@ -103,12 +103,12 @@ type TownSettings struct {
 	// Values: "standard", "economy", "budget", or empty for custom configs.
 	CostTier string `json:"cost_tier,omitempty"`
 
-	// Scheduler configures the capacity scheduler for polecat dispatch.
+	// Scheduler configures the capacity scheduler for miner dispatch.
 	Scheduler *capacity.SchedulerConfig `json:"scheduler,omitempty"`
 
-	// Polecat configures per-polecat behavior (target/ clean hook, etc.).
+	// Miner configures per-miner behavior (target/ clean hook, etc.).
 	// Added for hq-x0v7v.
-	Polecat *PolecatConfig `json:"polecat,omitempty"`
+	Miner *MinerConfig `json:"miner,omitempty"`
 
 	// Operational configures operational thresholds (timeouts, retries, intervals).
 	// These were previously hardcoded as Go constants throughout the codebase.
@@ -117,8 +117,8 @@ type TownSettings struct {
 
 	// DisabledPatrols lists patrol names to disable at the town level.
 	// This provides a simple way to turn off individual daemon patrol dogs
-	// without editing mayor/daemon.json. Patrol names match the keys used
-	// in daemon.json patrols section (e.g., "deacon", "witness", "refinery",
+	// without editing overseer/daemon.json. Patrol names match the keys used
+	// in daemon.json patrols section (e.g., "supervisor", "witness", "refinery",
 	// "doctor_dog", "compactor_dog", "checkpoint_dog", "wisp_reaper",
 	// "dolt_remotes", "dolt_backup", "jsonl_git_backup", "scheduled_maintenance",
 	// "main_branch_test", "handler").
@@ -173,12 +173,12 @@ type WorkerStatusConfig struct {
 	// StuckThreshold is the activity age after which a worker is considered "stuck".
 	// Default: "30m".
 	StuckThreshold string `json:"stuck_threshold,omitempty"`
-	// HeartbeatFreshThreshold is the max age for a Deacon heartbeat to be considered fresh.
+	// HeartbeatFreshThreshold is the max age for a Supervisor heartbeat to be considered fresh.
 	// Default: "5m".
 	HeartbeatFreshThreshold string `json:"heartbeat_fresh_threshold,omitempty"`
-	// MayorActiveThreshold is the max session inactivity for the Mayor to be considered active.
+	// OverseerActiveThreshold is the max session inactivity for the Overseer to be considered active.
 	// Default: "5m".
-	MayorActiveThreshold string `json:"mayor_active_threshold,omitempty"`
+	OverseerActiveThreshold string `json:"overseer_active_threshold,omitempty"`
 }
 
 // DefaultWorkerStatusConfig returns a WorkerStatusConfig with sensible defaults.
@@ -187,7 +187,7 @@ func DefaultWorkerStatusConfig() *WorkerStatusConfig {
 		StaleThreshold:          "5m",
 		StuckThreshold:          "30m",
 		HeartbeatFreshThreshold: "5m",
-		MayorActiveThreshold:    "5m",
+		OverseerActiveThreshold:    "5m",
 	}
 }
 
@@ -226,11 +226,11 @@ type OperationalConfig struct {
 	// Daemon configures daemon lifecycle thresholds.
 	Daemon *DaemonThresholds `json:"daemon,omitempty"`
 
-	// Deacon configures deacon health-check thresholds.
-	Deacon *DeaconThresholds `json:"deacon,omitempty"`
+	// Supervisor configures supervisor health-check thresholds.
+	Supervisor *SupervisorThresholds `json:"supervisor,omitempty"`
 
-	// Polecat configures polecat session thresholds.
-	Polecat *PolecatThresholds `json:"polecat,omitempty"`
+	// Miner configures miner session thresholds.
+	Miner *MinerThresholds `json:"miner,omitempty"`
 
 	// Dolt configures Dolt server operation thresholds.
 	Dolt *DoltThresholds `json:"dolt,omitempty"`
@@ -316,18 +316,18 @@ type DaemonThresholds struct {
 	// DogIdleRemoveTimeout is how long a dog can be idle before removal (default "4h").
 	DogIdleRemoveTimeout string `json:"dog_idle_remove_timeout,omitempty"`
 
-	// PolecatIdleSessionTimeout is how long a polecat can be idle before its session
-	// is killed to prevent API slot burn (default "15m"). Polecats are ephemeral workers;
+	// MinerIdleSessionTimeout is how long a miner can be idle before its session
+	// is killed to prevent API slot burn (default "15m"). Miners are ephemeral workers;
 	// unlike dogs, they should not persist when idle.
-	PolecatIdleSessionTimeout string `json:"polecat_idle_session_timeout,omitempty"`
+	MinerIdleSessionTimeout string `json:"miner_idle_session_timeout,omitempty"`
 
-	// PolecatSelfTerminate controls whether polecats kill their own session after
-	// gt done completes (default false). When true, polecats terminate 3 seconds
+	// MinerSelfTerminate controls whether miners kill their own session after
+	// gt done completes (default false). When true, miners terminate 3 seconds
 	// after work submission instead of transitioning to IDLE. This gives fresh
 	// context windows per task, reduces token waste, and eliminates stale state
-	// issues at scale. Worktree reuse is preserved — ReuseIdlePolecat creates
+	// issues at scale. Worktree reuse is preserved — ReuseIdleMiner creates
 	// a fresh branch on the existing worktree.
-	PolecatSelfTerminate *bool `json:"polecat_self_terminate,omitempty"`
+	MinerSelfTerminate *bool `json:"miner_self_terminate,omitempty"`
 
 	// StaleWorkingTimeout is how long a dog in state=working with no activity
 	// before considered stuck (default "2h").
@@ -353,11 +353,11 @@ type DaemonThresholds struct {
 	BootSpawnCooldown string `json:"boot_spawn_cooldown,omitempty"`
 
 	// BootIdleSuppression is how long to suppress Boot spawns after Boot reported "nothing"
-	// (deacon was healthy). Prevents burning API calls when deacon is running fine (default "15m").
+	// (supervisor was healthy). Prevents burning API calls when supervisor is running fine (default "15m").
 	BootIdleSuppression string `json:"boot_idle_suppression,omitempty"`
 
-	// DeaconGracePeriod is time to wait after starting Deacon before checking heartbeat (default "5m").
-	DeaconGracePeriod string `json:"deacon_grace_period,omitempty"`
+	// SupervisorGracePeriod is time to wait after starting Supervisor before checking heartbeat (default "5m").
+	SupervisorGracePeriod string `json:"supervisor_grace_period,omitempty"`
 
 	// PressureCPUThreshold is the per-core load average above which new
 	// non-infrastructure spawns are deferred. Disabled by default (0).
@@ -374,8 +374,8 @@ type DaemonThresholds struct {
 	PressureMaxSessions *int `json:"pressure_max_sessions,omitempty"`
 }
 
-// DeaconThresholds configures deacon health-check and dispatch thresholds.
-type DeaconThresholds struct {
+// SupervisorThresholds configures supervisor health-check and dispatch thresholds.
+type SupervisorThresholds struct {
 	// PingTimeout is how long to wait for HEALTH_CHECK nudge response (default "30s").
 	PingTimeout string `json:"ping_timeout,omitempty"`
 
@@ -385,7 +385,7 @@ type DeaconThresholds struct {
 	// Cooldown is minimum time between force-kills of same agent (default "5m").
 	Cooldown string `json:"cooldown,omitempty"`
 
-	// HeartbeatStaleThreshold is age at which deacon heartbeat is stale (default "5m").
+	// HeartbeatStaleThreshold is age at which supervisor heartbeat is stale (default "5m").
 	HeartbeatStaleThreshold string `json:"heartbeat_stale_threshold,omitempty"`
 
 	// HeartbeatVeryStaleThreshold is age at which heartbeat is very stale (default "15m").
@@ -397,16 +397,16 @@ type DeaconThresholds struct {
 	// RedispatchCooldown is min time between re-dispatches of same bead (default "5m").
 	RedispatchCooldown string `json:"redispatch_cooldown,omitempty"`
 
-	// MaxFeedsPerCycle is max stranded convoys to feed per invocation (default 3).
+	// MaxFeedsPerCycle is max stranded minecarts to feed per invocation (default 3).
 	MaxFeedsPerCycle *int `json:"max_feeds_per_cycle,omitempty"`
 
-	// FeedCooldown is min time between feeding same convoy (default "10m").
+	// FeedCooldown is min time between feeding same minecart (default "10m").
 	FeedCooldown string `json:"feed_cooldown,omitempty"`
 }
 
-// PolecatThresholds configures polecat session and retry thresholds.
-type PolecatThresholds struct {
-	// HeartbeatStaleThreshold is age at which polecat heartbeat is stale (default "3m").
+// MinerThresholds configures miner session and retry thresholds.
+type MinerThresholds struct {
+	// HeartbeatStaleThreshold is age at which miner heartbeat is stale (default "3m").
 	HeartbeatStaleThreshold string `json:"heartbeat_stale_threshold,omitempty"`
 
 	// DoltMaxRetries is max retries for Dolt operations (default 10).
@@ -483,7 +483,7 @@ type WitnessThresholds struct {
 	StartupActivityGrace string `json:"startup_activity_grace,omitempty"`
 
 	// MaxBeadRespawns is the threshold above which a bead respawn is blocked
-	// and escalated to mayor instead of re-dispatched (default 3).
+	// and escalated to overseer instead of re-dispatched (default 3).
 	MaxBeadRespawns *int `json:"max_bead_respawns,omitempty"`
 
 	// DoneIntentStuckTimeout is how long a done-intent can be active before the
@@ -495,7 +495,7 @@ type WitnessThresholds struct {
 	DoneIntentRecentGrace string `json:"done_intent_recent_grace,omitempty"`
 
 	// HeartbeatStartupGrace is how long after session creation the witness waits
-	// before flagging a live polecat with assigned work but no heartbeat file as
+	// before flagging a live miner with assigned work but no heartbeat file as
 	// possibly stuck at startup (e.g., auth 401 blocking initialization, default "5m").
 	// The witness exposes the signal; patrol formula decides whether to escalate.
 	HeartbeatStartupGrace string `json:"heartbeat_startup_grace,omitempty"`
@@ -506,20 +506,20 @@ func DefaultOperationalConfig() *OperationalConfig {
 	return &OperationalConfig{}
 }
 
-// ConvoyConfig configures convoy behavior settings.
-type ConvoyConfig struct {
-	// NotifyOnComplete controls whether convoy completion pushes a notification
-	// into the active Mayor session (in addition to mail). Opt-in; default false.
+// MinecartConfig configures minecart behavior settings.
+type MinecartConfig struct {
+	// NotifyOnComplete controls whether minecart completion pushes a notification
+	// into the active Overseer session (in addition to mail). Opt-in; default false.
 	NotifyOnComplete bool `json:"notify_on_complete,omitempty"`
 }
 
-// PolecatConfig configures per-polecat behavior. Added for hq-x0v7v
+// MinerConfig configures per-miner behavior. Added for hq-x0v7v
 // (target/ clean hook on reuse).
-type PolecatConfig struct {
-	// TargetCleanPolicy controls when the daemon deletes <polecat>/target/
-	// before reusing an idle polecat for a new bead.
+type MinerConfig struct {
+	// TargetCleanPolicy controls when the daemon deletes <miner>/target/
+	// before reusing an idle miner for a new bead.
 	// Values: "per_bead" (default), "every_n_beads:<N>", "never".
-	// Parsed by polecat.ParseTargetCleanPolicy.
+	// Parsed by miner.ParseTargetCleanPolicy.
 	TargetCleanPolicy string `json:"target_clean_policy,omitempty"`
 }
 
@@ -541,7 +541,7 @@ type DaemonConfig struct {
 	PollInterval      string `json:"poll_interval,omitempty"`      // e.g., "10s"
 }
 
-// DaemonPatrolConfig represents the daemon patrol configuration (mayor/daemon.json).
+// DaemonPatrolConfig represents the daemon patrol configuration (overseer/daemon.json).
 // This configures how patrols are triggered and managed.
 type DaemonPatrolConfig struct {
 	Type      string                  `json:"type"`                // "daemon-patrol-config"
@@ -580,10 +580,10 @@ func NewDaemonPatrolConfig() *DaemonPatrolConfig {
 			Interval: "3m",
 		},
 		Patrols: map[string]PatrolConfig{
-			"deacon": {
+			"supervisor": {
 				Enabled:  true,
 				Interval: "5m",
-				Agent:    "deacon",
+				Agent:    "supervisor",
 			},
 			"witness": {
 				Enabled:  true,
@@ -599,18 +599,18 @@ func NewDaemonPatrolConfig() *DaemonPatrolConfig {
 	}
 }
 
-// DeaconConfig represents deacon process settings.
-type DeaconConfig struct {
+// SupervisorConfig represents supervisor process settings.
+type SupervisorConfig struct {
 	PatrolInterval string `json:"patrol_interval,omitempty"` // e.g., "5m"
 }
 
-// CurrentMayorConfigVersion is the current schema version for MayorConfig.
-const CurrentMayorConfigVersion = 1
+// CurrentOverseerConfigVersion is the current schema version for OverseerConfig.
+const CurrentOverseerConfigVersion = 1
 
 // DefaultCrewName is the default name for crew workspaces when not overridden.
 const DefaultCrewName = "max"
 
-// RigsConfig represents the rigs registry (mayor/rigs.json).
+// RigsConfig represents the rigs registry (overseer/rigs.json).
 type RigsConfig struct {
 	Version int                 `json:"version"`
 	Rigs    map[string]RigEntry `json:"rigs"`
@@ -672,7 +672,7 @@ type RigSettings struct {
 	Version    int               `json:"version"`               // schema version
 	MergeQueue *MergeQueueConfig `json:"merge_queue,omitempty"` // merge queue settings
 	Theme      *ThemeConfig      `json:"theme,omitempty"`       // tmux theme settings
-	Namepool   *NamepoolConfig   `json:"namepool,omitempty"`    // polecat name pool settings
+	Namepool   *NamepoolConfig   `json:"namepool,omitempty"`    // miner name pool settings
 	Crew       *CrewConfig       `json:"crew,omitempty"`        // crew startup settings
 	Workflow   *WorkflowConfig   `json:"workflow,omitempty"`    // workflow settings
 	Runtime    *RuntimeConfig    `json:"runtime,omitempty"`     // LLM runtime settings (deprecated: use Agent)
@@ -686,14 +686,14 @@ type RigSettings struct {
 
 	// Agents defines custom agent configurations or overrides for this rig.
 	// Similar to TownSettings.Agents but applies to this rig only.
-	// Allows per-rig custom agents for polecats and crew members.
+	// Allows per-rig custom agents for miners and crew members.
 	Agents map[string]*RuntimeConfig `json:"agents,omitempty"`
 
 	// RoleAgents maps role names to agent aliases for per-role model selection.
-	// Keys are role names: "witness", "refinery", "polecat", "crew".
+	// Keys are role names: "witness", "refinery", "miner", "crew".
 	// Values are agent names (built-in presets or custom agents).
 	// Overrides TownSettings.RoleAgents for this specific rig.
-	// Example: {"witness": "claude-haiku", "polecat": "claude-sonnet"}
+	// Example: {"witness": "claude-haiku", "miner": "claude-sonnet"}
 	RoleAgents map[string]string `json:"role_agents,omitempty"`
 
 	// WorkerAgents maps individual crew worker names to agent aliases.
@@ -703,7 +703,7 @@ type RigSettings struct {
 	WorkerAgents map[string]string `json:"worker_agents,omitempty"`
 
 	// RoleEffort maps role names to effort levels, overriding TownSettings.RoleEffort for this rig.
-	// Keys are role names: "witness", "refinery", "polecat", "crew".
+	// Keys are role names: "witness", "refinery", "miner", "crew".
 	// Values are effort levels: "low", "medium", "high", "max".
 	// Example: {"crew": "max", "witness": "low"}
 	RoleEffort map[string]string `json:"role_effort,omitempty"`
@@ -774,8 +774,8 @@ type RuntimeConfig struct {
 
 	// ExecWrapper is a command prefix inserted between environment variables
 	// and the agent binary in the startup command. Used for sandboxed execution.
-	// Example: ["exitbox", "run", "--profile=gastown-polecat", "--"]
-	// Produces: exec env VAR=val ... exitbox run --profile=gastown-polecat -- claude ...
+	// Example: ["exitbox", "run", "--profile=excavation-miner", "--"]
+	// Produces: exec env VAR=val ... exitbox run --profile=excavation-miner -- claude ...
 	ExecWrapper []string `json:"exec_wrapper,omitempty"`
 
 	// ResolvedAgent is the agent name that was resolved during config lookup.
@@ -785,7 +785,7 @@ type RuntimeConfig struct {
 	ResolvedAgent string `json:"-"`
 }
 
-// RuntimeSessionConfig configures how Gas Town discovers runtime session IDs.
+// RuntimeSessionConfig configures how Excavation Site discovers runtime session IDs.
 type RuntimeSessionConfig struct {
 	// SessionIDEnv is the environment variable set by the runtime to identify a session.
 	// Default: "CLAUDE_SESSION_ID" for claude, empty for codex/generic.
@@ -808,7 +808,7 @@ type RuntimeHooksConfig struct {
 	SettingsFile string `json:"settings_file,omitempty"`
 
 	// Informational indicates the hooks provider installs instructions files only,
-	// not executable lifecycle hooks. When true, Gas Town sends startup fallback
+	// not executable lifecycle hooks. When true, Excavation Site sends startup fallback
 	// commands (gt prime) via nudge since hooks won't run automatically.
 	// Defaults to false (backwards compatible with claude/opencode which have real hooks).
 	Informational bool `json:"informational,omitempty"`
@@ -879,7 +879,7 @@ func (rc *RuntimeConfig) BuildCommandWithPrompt(prompt string) string {
 			// This commonly happens when a user copies a codex agent entry (which ships
 			// with prompt_mode: "none") to create a claude override, inadvertently
 			// suppressing the daemon's startup beacon injection and causing a crash-loop
-			// that looks like a deacon failure. Warn so misconfiguration is self-diagnosing.
+			// that looks like a supervisor failure. Warn so misconfiguration is self-diagnosing.
 			fmt.Fprintf(os.Stderr, "warning: agent %q has prompt_mode: \"none\" — startup prompt dropped (agent may not bootstrap correctly)\n", resolved.Command)
 		}
 		return base
@@ -1156,7 +1156,7 @@ func defaultHooksFile(provider string) string {
 }
 
 // defaultHooksInformational returns true for providers whose hooks are instructions
-// files only (not executable lifecycle hooks). For these providers, Gas Town sends
+// files only (not executable lifecycle hooks). For these providers, Excavation Site sends
 // startup fallback commands (gt prime) via nudge since hooks won't auto-run.
 func defaultHooksInformational(provider string) bool {
 	if preset := GetAgentPresetByName(provider); preset != nil {
@@ -1229,7 +1229,7 @@ type ThemeConfig struct {
 	CrewThemes map[string]string `json:"crew_themes,omitempty"`
 
 	// RoleThemes overrides themes for specific roles in this rig.
-	// Keys: "witness", "refinery", "crew", "polecat".
+	// Keys: "witness", "refinery", "crew", "miner".
 	// A value of "none" disables tmux theming for that role.
 	RoleThemes map[string]string `json:"role_themes,omitempty"`
 
@@ -1244,7 +1244,7 @@ type CustomTheme struct {
 	FG string `json:"fg"` // Foreground color (hex or tmux color name)
 }
 
-// TownThemeConfig represents global theme settings (mayor/config.json).
+// TownThemeConfig represents global theme settings (overseer/config.json).
 type TownThemeConfig struct {
 	// Disabled skips tmux status/window theming for all sessions unless a rig
 	// theme overrides it.
@@ -1262,7 +1262,7 @@ type TownThemeConfig struct {
 	CrewThemes map[string]string `json:"crew_themes,omitempty"`
 
 	// RoleDefaults sets default themes for roles across all rigs.
-	// Keys: "mayor", "deacon", "witness", "refinery", "crew", "polecat".
+	// Keys: "overseer", "supervisor", "witness", "refinery", "crew", "miner".
 	// A value of "none" disables tmux theming for that role.
 	RoleDefaults map[string]string `json:"role_defaults,omitempty"`
 
@@ -1288,7 +1288,7 @@ type WindowTint struct {
 	Custom *CustomTheme `json:"custom,omitempty"`
 
 	// RoleTints overrides window tint themes for specific roles.
-	// Keys: "witness", "refinery", "crew", "polecat"
+	// Keys: "witness", "refinery", "crew", "miner"
 	RoleTints map[string]string `json:"role_tints,omitempty"`
 
 	// TintFactor controls how much the window background is darkened when
@@ -1305,7 +1305,7 @@ func BuiltinRoleThemes() map[string]string {
 	return map[string]string{
 		"witness":  "rust", // Red/rust - watchful, alert
 		"refinery": "plum", // Purple - processing, refining
-		// crew and polecat use rig theme by default (no override)
+		// crew and miner use rig theme by default (no override)
 	}
 }
 
@@ -1314,10 +1314,10 @@ type MergeQueueConfig struct {
 	// Enabled controls whether the merge queue is active.
 	Enabled bool `json:"enabled"`
 
-	// IntegrationBranchPolecatEnabled controls whether polecats auto-source
+	// IntegrationBranchMinerEnabled controls whether miners auto-source
 	// their worktrees from integration branches when the parent epic has one.
 	// Nil defaults to true.
-	IntegrationBranchPolecatEnabled *bool `json:"integration_branch_polecat_enabled,omitempty"`
+	IntegrationBranchMinerEnabled *bool `json:"integration_branch_miner_enabled,omitempty"`
 
 	// IntegrationBranchRefineryEnabled controls whether mq submit and gt done
 	// auto-detect integration branches as MR targets.
@@ -1408,13 +1408,13 @@ const (
 	OnConflictAutoRebase = "auto_rebase"
 )
 
-// IsPolecatIntegrationEnabled returns whether polecat integration branch
+// IsMinerIntegrationEnabled returns whether miner integration branch
 // sourcing is enabled. Nil-safe, defaults to true.
-func (c *MergeQueueConfig) IsPolecatIntegrationEnabled() bool {
-	if c.IntegrationBranchPolecatEnabled == nil {
+func (c *MergeQueueConfig) IsMinerIntegrationEnabled() bool {
+	if c.IntegrationBranchMinerEnabled == nil {
 		return true
 	}
-	return *c.IntegrationBranchPolecatEnabled
+	return *c.IntegrationBranchMinerEnabled
 }
 
 // IsRefineryIntegrationEnabled returns whether refinery/submit integration
@@ -1490,7 +1490,7 @@ func boolPtr(b bool) *bool {
 func DefaultMergeQueueConfig() *MergeQueueConfig {
 	return &MergeQueueConfig{
 		Enabled:                          true,
-		IntegrationBranchPolecatEnabled:  boolPtr(true),
+		IntegrationBranchMinerEnabled:  boolPtr(true),
 		IntegrationBranchRefineryEnabled: boolPtr(true),
 		OnConflict:                       OnConflictAssignBack,
 		RunTests:                         boolPtr(true),
@@ -1503,7 +1503,7 @@ func DefaultMergeQueueConfig() *MergeQueueConfig {
 	}
 }
 
-// NamepoolConfig represents namepool settings for themed polecat names.
+// NamepoolConfig represents namepool settings for themed miner names.
 type NamepoolConfig struct {
 	// Style picks from a built-in theme (e.g., "mad-max", "minerals", "wasteland").
 	// If empty, defaults to "mad-max".
@@ -1514,7 +1514,7 @@ type NamepoolConfig struct {
 	Names []string `json:"names,omitempty"`
 
 	// MaxBeforeNumbering is when to start appending numbers.
-	// Default is 50. After this many polecats, names become name-01, name-02, etc.
+	// Default is 50. After this many miners, names become name-01, name-02, etc.
 	MaxBeforeNumbering int `json:"max_before_numbering,omitempty"`
 }
 
@@ -1526,8 +1526,8 @@ func DefaultNamepoolConfig() *NamepoolConfig {
 	}
 }
 
-// AccountsConfig represents Claude Code account configuration (mayor/accounts.json).
-// This enables Gas Town to manage multiple Claude Code accounts with easy switching.
+// AccountsConfig represents Claude Code account configuration (overseer/accounts.json).
+// This enables Excavation Site to manage multiple Claude Code accounts with easy switching.
 type AccountsConfig struct {
 	Version  int                `json:"version"`  // schema version
 	Accounts map[string]Account `json:"accounts"` // handle -> account details
@@ -1553,7 +1553,7 @@ func DefaultAccountsConfigDir() (string, error) {
 	return home + "/.claude-accounts", nil
 }
 
-// QuotaState represents the quota management state (mayor/quota.json).
+// QuotaState represents the quota management state (overseer/quota.json).
 // Tracks which accounts are rate-limited and when they were last rotated.
 type QuotaState struct {
 	Version  int                          `json:"version"`  // schema version
@@ -1604,12 +1604,12 @@ type MessagingConfig struct {
 
 	// Lists are static mailing lists. Messages are fanned out to all recipients.
 	// Each recipient gets their own copy of the message.
-	// Example: {"oncall": ["mayor/", "gastown/witness"]}
+	// Example: {"oncall": ["overseer/", "excavation/witness"]}
 	Lists map[string][]string `json:"lists,omitempty"`
 
 	// Queues are shared work queues. Only one copy exists; workers claim messages.
 	// Messages sit in the queue until explicitly claimed by a worker.
-	// Example: {"work/gastown": ["gastown/polecats/*"]}
+	// Example: {"work/excavation": ["excavation/miners/*"]}
 	Queues map[string]QueueConfig `json:"queues,omitempty"`
 
 	// Announces are bulletin boards. One copy exists; anyone can read, no claiming.
@@ -1619,14 +1619,14 @@ type MessagingConfig struct {
 
 	// NudgeChannels are named groups for real-time nudge fan-out.
 	// Like mailing lists but for tmux send-keys instead of durable mail.
-	// Example: {"workers": ["gastown/polecats/*", "gastown/crew/*"], "witnesses": ["*/witness"]}
+	// Example: {"workers": ["excavation/miners/*", "excavation/crew/*"], "witnesses": ["*/witness"]}
 	NudgeChannels map[string][]string `json:"nudge_channels,omitempty"`
 }
 
 // QueueConfig represents a work queue configuration.
 type QueueConfig struct {
 	// Workers lists addresses eligible to claim from this queue.
-	// Supports wildcards: "gastown/polecats/*" matches all polecats in gastown.
+	// Supports wildcards: "excavation/miners/*" matches all miners in excavation.
 	Workers []string `json:"workers"`
 
 	// MaxClaims is the maximum number of concurrent claims (0 = unlimited).
@@ -1636,7 +1636,7 @@ type QueueConfig struct {
 // AnnounceConfig represents a bulletin board configuration.
 type AnnounceConfig struct {
 	// Readers lists addresses eligible to read from this announce channel.
-	// Supports @group syntax: "@town", "@rig/gastown", "@witnesses".
+	// Supports @group syntax: "@town", "@rig/excavation", "@witnesses".
 	Readers []string `json:"readers"`
 
 	// RetainCount is the number of messages to retain (0 = unlimited).
@@ -1668,7 +1668,7 @@ type EscalationConfig struct {
 	// Actions are executed in order for each escalation.
 	// Action formats:
 	//   - "bead"        → Create escalation bead (always first, implicit)
-	//   - "mail:<target>" → Send gt mail to target (e.g., "mail:mayor")
+	//   - "mail:<target>" → Send gt mail to target (e.g., "mail:overseer")
 	//   - "email:human" → Send email to contacts.human_email
 	//   - "sms:human"   → Send SMS to contacts.human_sms
 	//   - "slack"       → Post to contacts.slack_webhook
@@ -1754,9 +1754,9 @@ func NewEscalationConfig() *EscalationConfig {
 		Version: CurrentEscalationVersion,
 		Routes: map[string][]string{
 			SeverityLow:      {"bead"},
-			SeverityMedium:   {"bead", "mail:mayor"},
-			SeverityHigh:     {"bead", "mail:mayor", "email:human"},
-			SeverityCritical: {"bead", "mail:mayor", "email:human", "sms:human"},
+			SeverityMedium:   {"bead", "mail:overseer"},
+			SeverityHigh:     {"bead", "mail:overseer", "email:human"},
+			SeverityCritical: {"bead", "mail:overseer", "email:human", "sms:human"},
 		},
 		Contacts:         EscalationContacts{},
 		StaleThreshold:   "4h",

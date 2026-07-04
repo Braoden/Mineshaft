@@ -8,7 +8,7 @@ import (
 
 // ForeignRemoteCheck detects git remotes in the town repo that point to
 // unrelated repositories. The town repo (~/gt, tracking stevey-gt) should
-// only have its own origin remote. Remotes for rig repos (gastown, beads)
+// only have its own origin remote. Remotes for rig repos (excavation, beads)
 // pollute the ref space with unrelated history and cause confusion — agents
 // comparing branches across unrelated remotes see phantom divergence.
 type ForeignRemoteCheck struct {
@@ -110,7 +110,7 @@ func (c *ForeignRemoteCheck) Run(ctx *CheckContext) *CheckResult {
 	details := []string{
 		"The town repo has remotes pointing to unrelated repositories.",
 		"These pollute the ref space and cause phantom divergence in git status.",
-		"Rig remotes belong in their own clones (mayor/rig, crew worktrees), not here.",
+		"Rig remotes belong in their own clones (overseer/rig, crew worktrees), not here.",
 	}
 	for _, fr := range c.foreignRemotes {
 		details = append(details, fmt.Sprintf("  %s → %s", fr.name, fr.url))

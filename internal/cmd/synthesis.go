@@ -10,11 +10,11 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/formula"
-	"github.com/steveyegge/gastown/internal/runtime"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/formula"
+	"github.com/steveyegge/excavation/internal/runtime"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // Synthesis command flags
@@ -29,37 +29,37 @@ var synthesisCmd = &cobra.Command{
 	Use:     "synthesis",
 	Aliases: []string{"synth"},
 	GroupID: GroupWork,
-	Short:   "Manage convoy synthesis steps",
+	Short:   "Manage minecart synthesis steps",
 	RunE:    requireSubcommand,
-	Long: `Manage synthesis steps for convoy formulas.
+	Long: `Manage synthesis steps for minecart formulas.
 
-Synthesis is the final step in a convoy workflow that combines outputs
+Synthesis is the final step in a minecart workflow that combines outputs
 from all parallel legs into a unified deliverable.
 
 Commands:
-  start     Start synthesis for a convoy (checks all legs complete)
+  start     Start synthesis for a minecart (checks all legs complete)
   status    Show synthesis readiness and leg outputs
-  close     Close convoy after synthesis complete
+  close     Close minecart after synthesis complete
 
 Examples:
   gt synthesis status hq-cv-abc     # Check if ready for synthesis
   gt synthesis start hq-cv-abc      # Start synthesis step
-  gt synthesis close hq-cv-abc      # Close convoy after synthesis`,
+  gt synthesis close hq-cv-abc      # Close minecart after synthesis`,
 }
 
 var synthesisStartCmd = &cobra.Command{
-	Use:   "start <convoy-id>",
-	Short: "Start synthesis for a convoy",
-	Long: `Start the synthesis step for a convoy.
+	Use:   "start <minecart-id>",
+	Short: "Start synthesis for a minecart",
+	Long: `Start the synthesis step for a minecart.
 
 This command:
   1. Verifies all legs are complete
   2. Collects outputs from all legs
   3. Creates a synthesis bead with combined context
-  4. Slings the synthesis to a polecat
+  4. Slings the synthesis to a miner
 
 Options:
-  --rig=NAME      Target rig for synthesis polecat (default: current)
+  --rig=NAME      Target rig for synthesis miner (default: current)
   --review-id=ID  Override review ID for output paths
   --force         Start synthesis even if some legs incomplete
   --dry-run       Show what would happen without executing`,
@@ -68,12 +68,12 @@ Options:
 }
 
 var synthesisStatusCmd = &cobra.Command{
-	Use:   "status <convoy-id>",
+	Use:   "status <minecart-id>",
 	Short: "Show synthesis readiness",
-	Long: `Show whether a convoy is ready for synthesis.
+	Long: `Show whether a minecart is ready for synthesis.
 
 Displays:
-  - Convoy metadata
+  - Minecart metadata
   - Leg completion status
   - Available leg outputs
   - Formula synthesis configuration`,
@@ -82,18 +82,18 @@ Displays:
 }
 
 var synthesisCloseCmd = &cobra.Command{
-	Use:   "close <convoy-id>",
-	Short: "Close convoy after synthesis",
-	Long: `Close a convoy after synthesis is complete.
+	Use:   "close <minecart-id>",
+	Short: "Close minecart after synthesis",
+	Long: `Close a minecart after synthesis is complete.
 
-This marks the convoy as complete and triggers any configured notifications.`,
+This marks the minecart as complete and triggers any configured notifications.`,
 	Args: cobra.ExactArgs(1),
 	RunE: runSynthesisClose,
 }
 
 func init() {
 	// Start flags
-	synthesisStartCmd.Flags().StringVar(&synthesisRig, "rig", "", "Target rig for synthesis polecat")
+	synthesisStartCmd.Flags().StringVar(&synthesisRig, "rig", "", "Target rig for synthesis miner")
 	synthesisStartCmd.Flags().BoolVar(&synthesisDryRun, "dry-run", false, "Preview execution")
 	synthesisStartCmd.Flags().BoolVar(&synthesisForce, "force", false, "Start even if legs incomplete")
 	synthesisStartCmd.Flags().StringVar(&synthesisReviewID, "review-id", "", "Override review ID")
@@ -106,7 +106,7 @@ func init() {
 	rootCmd.AddCommand(synthesisCmd)
 }
 
-// LegOutput represents collected output from a convoy leg.
+// LegOutput represents collected output from a minecart leg.
 type LegOutput struct {
 	LegID    string `json:"leg_id"`
 	Title    string `json:"title"`
@@ -116,8 +116,8 @@ type LegOutput struct {
 	HasFile  bool   `json:"has_file"`
 }
 
-// ConvoyMeta holds metadata about a convoy including its formula.
-type ConvoyMeta struct {
+// MinecartMeta holds metadata about a minecart including its formula.
+type MinecartMeta struct {
 	ID          string   `json:"id"`
 	Title       string   `json:"title"`
 	Status      string   `json:"status"`
@@ -129,15 +129,15 @@ type ConvoyMeta struct {
 
 // runSynthesisStart implements gt synthesis start.
 func runSynthesisStart(cmd *cobra.Command, args []string) error {
-	convoyID := args[0]
+	minecartID := args[0]
 
-	// Get convoy metadata
-	meta, err := getConvoyMeta(convoyID)
+	// Get minecart metadata
+	meta, err := getMinecartMeta(minecartID)
 	if err != nil {
-		return fmt.Errorf("getting convoy metadata: %w", err)
+		return fmt.Errorf("getting minecart metadata: %w", err)
 	}
 
-	fmt.Printf("%s Checking synthesis readiness for %s...\n", style.Bold.Render("🔬"), convoyID)
+	fmt.Printf("%s Checking synthesis readiness for %s...\n", style.Bold.Render("🔬"), minecartID)
 
 	// Load formula if specified
 	var f *formula.Formula
@@ -190,8 +190,8 @@ func runSynthesisStart(cmd *cobra.Command, args []string) error {
 		reviewID = meta.ReviewID
 	}
 	if reviewID == "" {
-		// Extract from convoy ID
-		reviewID = strings.TrimPrefix(convoyID, "hq-cv-")
+		// Extract from minecart ID
+		reviewID = strings.TrimPrefix(minecartID, "hq-cv-")
 	}
 
 	// Determine target rig
@@ -205,13 +205,13 @@ func runSynthesisStart(cmd *cobra.Command, args []string) error {
 			}
 		}
 		if targetRig == "" {
-			targetRig = "gastown"
+			targetRig = "excavation"
 		}
 	}
 
 	if synthesisDryRun {
 		fmt.Printf("\n%s Would start synthesis:\n", style.Dim.Render("[dry-run]"))
-		fmt.Printf("  Convoy:    %s\n", convoyID)
+		fmt.Printf("  Minecart:    %s\n", minecartID)
 		fmt.Printf("  Review ID: %s\n", reviewID)
 		fmt.Printf("  Target:    %s\n", targetRig)
 		fmt.Printf("  Legs:      %d outputs collected\n", len(legOutputs))
@@ -222,7 +222,7 @@ func runSynthesisStart(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create synthesis bead
-	synthesisID, err := createSynthesisBead(convoyID, meta, f, legOutputs, reviewID)
+	synthesisID, err := createSynthesisBead(minecartID, meta, f, legOutputs, reviewID)
 	if err != nil {
 		return fmt.Errorf("creating synthesis bead: %w", err)
 	}
@@ -235,18 +235,18 @@ func runSynthesisStart(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("%s Synthesis started\n", style.Bold.Render("✓"))
-	fmt.Printf("  Monitor: gt convoy status %s\n", convoyID)
+	fmt.Printf("  Monitor: gt minecart status %s\n", minecartID)
 
 	return nil
 }
 
 // runSynthesisStatus implements gt synthesis status.
 func runSynthesisStatus(cmd *cobra.Command, args []string) error {
-	convoyID := args[0]
+	minecartID := args[0]
 
-	meta, err := getConvoyMeta(convoyID)
+	meta, err := getMinecartMeta(minecartID)
 	if err != nil {
-		return fmt.Errorf("getting convoy metadata: %w", err)
+		return fmt.Errorf("getting minecart metadata: %w", err)
 	}
 
 	// Load formula if available
@@ -266,8 +266,8 @@ func runSynthesisStatus(cmd *cobra.Command, args []string) error {
 	}
 
 	// Display status
-	fmt.Printf("🚚 %s %s\n\n", style.Bold.Render(convoyID+":"), meta.Title)
-	fmt.Printf("  Status: %s\n", formatConvoyStatus(meta.Status))
+	fmt.Printf("🚚 %s %s\n\n", style.Bold.Render(minecartID+":"), meta.Title)
+	fmt.Printf("  Status: %s\n", formatMinecartStatus(meta.Status))
 
 	if meta.Formula != "" {
 		fmt.Printf("  Formula: %s\n", meta.Formula)
@@ -290,7 +290,7 @@ func runSynthesisStatus(cmd *cobra.Command, args []string) error {
 	fmt.Printf("\n  %s\n", style.Bold.Render("Synthesis:"))
 	if allComplete {
 		fmt.Printf("    %s Ready - all legs complete\n", style.Success.Render("✓"))
-		fmt.Printf("    Run: gt synthesis start %s\n", convoyID)
+		fmt.Printf("    Run: gt synthesis start %s\n", minecartID)
 	} else {
 		completedCount := 0
 		for _, leg := range legOutputs {
@@ -315,42 +315,42 @@ func runSynthesisStatus(cmd *cobra.Command, args []string) error {
 
 // runSynthesisClose implements gt synthesis close.
 func runSynthesisClose(cmd *cobra.Command, args []string) error {
-	convoyID := args[0]
+	minecartID := args[0]
 
 	townBeads, err := getTownBeadsDir()
 	if err != nil {
 		return err
 	}
 
-	// Read convoy to validate lifecycle state before closing
-	showArgs := []string{"show", convoyID, "--json"}
+	// Read minecart to validate lifecycle state before closing
+	showArgs := []string{"show", minecartID, "--json"}
 	showCmd := exec.Command("bd", showArgs...)
 	showCmd.Dir = townBeads
 	var showOut bytes.Buffer
 	showCmd.Stdout = &showOut
 	if err := showCmd.Run(); err != nil {
-		return fmt.Errorf("reading convoy '%s': %w", convoyID, err)
+		return fmt.Errorf("reading minecart '%s': %w", minecartID, err)
 	}
-	var convoys []struct {
+	var minecarts []struct {
 		Status string `json:"status"`
 	}
-	if err := json.Unmarshal(showOut.Bytes(), &convoys); err != nil || len(convoys) == 0 {
-		return fmt.Errorf("parsing convoy '%s': invalid response", convoyID)
+	if err := json.Unmarshal(showOut.Bytes(), &minecarts); err != nil || len(minecarts) == 0 {
+		return fmt.Errorf("parsing minecart '%s': invalid response", minecartID)
 	}
-	status := convoys[0].Status
+	status := minecarts[0].Status
 
-	if err := ensureKnownConvoyStatus(status); err != nil {
-		return fmt.Errorf("convoy '%s' has invalid lifecycle state: %w", convoyID, err)
+	if err := ensureKnownMinecartStatus(status); err != nil {
+		return fmt.Errorf("minecart '%s' has invalid lifecycle state: %w", minecartID, err)
 	}
 
 	// Idempotent: if already closed, just report it
-	if normalizeConvoyStatus(status) == convoyStatusClosed {
-		fmt.Printf("%s Convoy %s is already closed\n", style.Dim.Render("○"), convoyID)
+	if normalizeMinecartStatus(status) == minecartStatusClosed {
+		fmt.Printf("%s Minecart %s is already closed\n", style.Dim.Render("○"), minecartID)
 		return nil
 	}
 
-	// Close the convoy
-	closeArgs := []string{"close", convoyID, "--reason=synthesis complete"}
+	// Close the minecart
+	closeArgs := []string{"close", minecartID, "--reason=synthesis complete"}
 	if sessionID := runtime.SessionIDFromEnv(); sessionID != "" {
 		closeArgs = append(closeArgs, "--session="+sessionID)
 	}
@@ -359,10 +359,10 @@ func runSynthesisClose(cmd *cobra.Command, args []string) error {
 	closeCmd.Stderr = os.Stderr
 
 	if err := closeCmd.Run(); err != nil {
-		return fmt.Errorf("closing convoy: %w", err)
+		return fmt.Errorf("closing minecart: %w", err)
 	}
 
-	fmt.Printf("%s Convoy closed: %s\n", style.Bold.Render("✓"), convoyID)
+	fmt.Printf("%s Minecart closed: %s\n", style.Bold.Render("✓"), minecartID)
 
 	// TODO: Trigger notification if configured
 	// Parse description for "Notify: <address>" and send mail
@@ -370,23 +370,23 @@ func runSynthesisClose(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// getConvoyMeta retrieves convoy metadata from beads.
-func getConvoyMeta(convoyID string) (*ConvoyMeta, error) {
+// getMinecartMeta retrieves minecart metadata from beads.
+func getMinecartMeta(minecartID string) (*MinecartMeta, error) {
 	townBeads, err := getTownBeadsDir()
 	if err != nil {
 		return nil, err
 	}
 
-	showCmd := exec.Command("bd", "show", convoyID, "--json")
+	showCmd := exec.Command("bd", "show", minecartID, "--json")
 	showCmd.Dir = townBeads
 	var stdout bytes.Buffer
 	showCmd.Stdout = &stdout
 
 	if err := showCmd.Run(); err != nil {
-		return nil, fmt.Errorf("convoy '%s' not found", convoyID)
+		return nil, fmt.Errorf("minecart '%s' not found", minecartID)
 	}
 
-	var convoys []struct {
+	var minecarts []struct {
 		ID          string   `json:"id"`
 		Title       string   `json:"title"`
 		Status      string   `json:"status"`
@@ -394,25 +394,25 @@ func getConvoyMeta(convoyID string) (*ConvoyMeta, error) {
 		Type        string   `json:"issue_type"`
 		Labels      []string `json:"labels"`
 	}
-	if err := json.Unmarshal(stdout.Bytes(), &convoys); err != nil {
-		return nil, fmt.Errorf("parsing convoy data: %w", err)
+	if err := json.Unmarshal(stdout.Bytes(), &minecarts); err != nil {
+		return nil, fmt.Errorf("parsing minecart data: %w", err)
 	}
 
-	if len(convoys) == 0 || !isConvoyIssue(convoys[0].Type, convoys[0].Labels) {
-		return nil, fmt.Errorf("'%s' is not a convoy", convoyID)
+	if len(minecarts) == 0 || !isMinecartIssue(minecarts[0].Type, minecarts[0].Labels) {
+		return nil, fmt.Errorf("'%s' is not a minecart", minecartID)
 	}
 
-	convoy := convoys[0]
+	minecart := minecarts[0]
 
 	// Parse formula and review ID from description
-	meta := &ConvoyMeta{
-		ID:     convoy.ID,
-		Title:  convoy.Title,
-		Status: convoy.Status,
+	meta := &MinecartMeta{
+		ID:     minecart.ID,
+		Title:  minecart.Title,
+		Status: minecart.Status,
 	}
 
 	// Look for structured fields in description
-	for _, line := range strings.Split(convoy.Description, "\n") {
+	for _, line := range strings.Split(minecart.Description, "\n") {
 		line = strings.TrimSpace(line)
 		if colonIdx := strings.Index(line, ":"); colonIdx != -1 {
 			key := strings.ToLower(strings.TrimSpace(line[:colonIdx]))
@@ -429,9 +429,9 @@ func getConvoyMeta(convoyID string) (*ConvoyMeta, error) {
 	}
 
 	// Get tracked leg issues
-	tracked, err := getTrackedIssues(townBeads, convoyID)
+	tracked, err := getTrackedIssues(townBeads, minecartID)
 	if err != nil {
-		return nil, fmt.Errorf("getting tracked issues for convoy %s: %w", convoyID, err)
+		return nil, fmt.Errorf("getting tracked issues for minecart %s: %w", minecartID, err)
 	}
 	for _, t := range tracked {
 		meta.LegIssues = append(meta.LegIssues, t.ID)
@@ -440,8 +440,8 @@ func getConvoyMeta(convoyID string) (*ConvoyMeta, error) {
 	return meta, nil
 }
 
-// collectLegOutputs gathers outputs from all convoy legs.
-func collectLegOutputs(meta *ConvoyMeta, f *formula.Formula) ([]LegOutput, bool, error) { //nolint:unparam // error return kept for future use
+// collectLegOutputs gathers outputs from all minecart legs.
+func collectLegOutputs(meta *MinecartMeta, f *formula.Formula) ([]LegOutput, bool, error) { //nolint:unparam // error return kept for future use
 	var outputs []LegOutput
 	allComplete := true
 
@@ -525,7 +525,7 @@ func expandOutputTemplate(tmplText, reviewID, legID string) string {
 }
 
 // createSynthesisBead creates a bead for the synthesis step.
-func createSynthesisBead(convoyID string, meta *ConvoyMeta, f *formula.Formula,
+func createSynthesisBead(minecartID string, meta *MinecartMeta, f *formula.Formula,
 	legOutputs []LegOutput, reviewID string) (string, error) {
 
 	// Build synthesis title
@@ -536,7 +536,7 @@ func createSynthesisBead(convoyID string, meta *ConvoyMeta, f *formula.Formula,
 
 	// Build synthesis description with leg outputs
 	var desc strings.Builder
-	desc.WriteString(fmt.Sprintf("convoy: %s\n", convoyID))
+	desc.WriteString(fmt.Sprintf("minecart: %s\n", minecartID))
 	desc.WriteString(fmt.Sprintf("review_id: %s\n", reviewID))
 	desc.WriteString("\n")
 
@@ -624,8 +624,8 @@ func createSynthesisBead(convoyID string, meta *ConvoyMeta, f *formula.Formula,
 		return "", fmt.Errorf("parsing created bead: %w", err)
 	}
 
-	// Add tracking relation: convoy tracks synthesis.
-	_ = addTrackingRelationFn(townBeads, convoyID, result.ID) // Non-fatal if this fails
+	// Add tracking relation: minecart tracks synthesis.
+	_ = addTrackingRelationFn(townBeads, minecartID, result.ID) // Non-fatal if this fails
 
 	return result.ID, nil
 }
@@ -675,10 +675,10 @@ func findFormula(name string) (string, error) {
 	return "", fmt.Errorf("formula '%s' not found", name)
 }
 
-// CheckSynthesisReady checks if a convoy is ready for synthesis.
+// CheckSynthesisReady checks if a minecart is ready for synthesis.
 // Returns true if all tracked legs are complete.
-func CheckSynthesisReady(convoyID string) (bool, error) {
-	meta, err := getConvoyMeta(convoyID)
+func CheckSynthesisReady(minecartID string) (bool, error) {
+	meta, err := getMinecartMeta(minecartID)
 	if err != nil {
 		return false, err
 	}
@@ -687,10 +687,10 @@ func CheckSynthesisReady(convoyID string) (bool, error) {
 	return allComplete, err
 }
 
-// TriggerSynthesisIfReady checks convoy status and starts synthesis if ready.
+// TriggerSynthesisIfReady checks minecart status and starts synthesis if ready.
 // This can be called by the witness when a leg completes.
-func TriggerSynthesisIfReady(convoyID, targetRig string) error {
-	ready, err := CheckSynthesisReady(convoyID)
+func TriggerSynthesisIfReady(minecartID, targetRig string) error {
+	ready, err := CheckSynthesisReady(minecartID)
 	if err != nil {
 		return err
 	}
@@ -702,7 +702,7 @@ func TriggerSynthesisIfReady(convoyID, targetRig string) error {
 	// Synthesis is ready - start it
 	fmt.Printf("%s All legs complete, starting synthesis...\n", style.Bold.Render("🔬"))
 
-	meta, err := getConvoyMeta(convoyID)
+	meta, err := getMinecartMeta(minecartID)
 	if err != nil {
 		return err
 	}
@@ -720,10 +720,10 @@ func TriggerSynthesisIfReady(convoyID, targetRig string) error {
 	legOutputs, _, _ := collectLegOutputs(meta, f)
 	reviewID := meta.ReviewID
 	if reviewID == "" {
-		reviewID = strings.TrimPrefix(convoyID, "hq-cv-")
+		reviewID = strings.TrimPrefix(minecartID, "hq-cv-")
 	}
 
-	synthesisID, err := createSynthesisBead(convoyID, meta, f, legOutputs, reviewID)
+	synthesisID, err := createSynthesisBead(minecartID, meta, f, legOutputs, reviewID)
 	if err != nil {
 		return fmt.Errorf("creating synthesis bead: %w", err)
 	}

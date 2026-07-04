@@ -21,7 +21,7 @@ func TestDaemonMetrics_NilReceiver(t *testing.T) {
 
 	// All methods must be nil-safe — no panic expected.
 	dm.recordHeartbeat(ctx)
-	dm.recordRestart(ctx, "deacon")
+	dm.recordRestart(ctx, "supervisor")
 	dm.updateDoltHealth(5, 100, 2.5, 1024, true)
 }
 
@@ -43,7 +43,7 @@ func TestDaemonMetrics_RecordRestart(t *testing.T) {
 	}
 	ctx := context.Background()
 
-	for _, agentType := range []string{"deacon", "witness", "refinery", "polecat"} {
+	for _, agentType := range []string{"supervisor", "witness", "refinery", "miner"} {
 		dm.recordRestart(ctx, agentType)
 	}
 }

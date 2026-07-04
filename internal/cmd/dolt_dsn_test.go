@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/doltserver"
+	"github.com/steveyegge/excavation/internal/doltserver"
 )
 
 // withMockSocket replaces localDoltSocketPath for the duration of the

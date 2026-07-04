@@ -9,8 +9,8 @@ import (
 	"time"
 
 	beadsdk "github.com/steveyegge/beads"
-	"github.com/steveyegge/gastown/internal/beads"
-	gitpkg "github.com/steveyegge/gastown/internal/git"
+	"github.com/steveyegge/excavation/internal/beads"
+	gitpkg "github.com/steveyegge/excavation/internal/git"
 )
 
 type prepushStore struct {
@@ -130,7 +130,7 @@ func prepushMRIssue(id, branch, target, sourceIssue string) *beadsdk.Issue {
 		Branch:      branch,
 		Target:      target,
 		SourceIssue: sourceIssue,
-		Worker:      "polecats/test",
+		Worker:      "miners/test",
 		Rig:         "test-rig",
 	})
 	return prepushIssue(id, desc, "gt:merge-request")

@@ -7,8 +7,8 @@ import (
 var hooksCmd = &cobra.Command{
 	Use:     "hooks",
 	GroupID: GroupConfig,
-	Short:   "Centralized hook management for Gas Town",
-	Long: `Manage Claude Code hooks across the Gas Town workspace.
+	Short:   "Centralized hook management for Excavation Site",
+	Long: `Manage Claude Code hooks across the Excavation Site workspace.
 
 Provides centralized hook configuration with a base config and
 per-role/per-rig overrides. Changes are propagated to all workers

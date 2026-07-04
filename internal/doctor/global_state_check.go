@@ -1,4 +1,4 @@
-// ABOUTME: Doctor check for Gas Town global state configuration.
+// ABOUTME: Doctor check for Excavation Site global state configuration.
 // ABOUTME: Validates that state directories and shell integration are properly configured.
 
 package doctor
@@ -9,8 +9,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/shell"
-	"github.com/steveyegge/gastown/internal/state"
+	"github.com/steveyegge/excavation/internal/shell"
+	"github.com/steveyegge/excavation/internal/state"
 )
 
 type GlobalStateCheck struct {
@@ -21,7 +21,7 @@ func NewGlobalStateCheck() *GlobalStateCheck {
 	return &GlobalStateCheck{
 		BaseCheck: BaseCheck{
 			CheckName:        "global-state",
-			CheckDescription: "Validates Gas Town global state and shell integration",
+			CheckDescription: "Validates Excavation Site global state and shell integration",
 			CheckCategory:    CategoryCore,
 		},
 	}
@@ -52,10 +52,10 @@ func (c *GlobalStateCheck) Run(ctx *CheckContext) *CheckResult {
 	}
 
 	if s.Enabled {
-		details = append(details, "Gas Town: enabled")
+		details = append(details, "Excavation Site: enabled")
 	} else {
-		details = append(details, "Gas Town: disabled")
-		warnings = append(warnings, "Gas Town is disabled globally")
+		details = append(details, "Excavation Site: disabled")
+		warnings = append(warnings, "Excavation Site is disabled globally")
 	}
 
 	if s.Version != "" {
@@ -105,14 +105,14 @@ func (c *GlobalStateCheck) Run(ctx *CheckContext) *CheckResult {
 
 func hasShellIntegration(rcPath string) bool {
 	// Look for official marker (from gt shell install) or manual sourcing of the hook script.
-	markers := []string{"Gas Town Integration", "shell-hook.sh"}
+	markers := []string{"Excavation Site Integration", "shell-hook.sh"}
 	return checkSourceChain(rcPath, markers, make(map[string]bool), 0)
 }
 
 // checkSourceChain reads filePath, checks for any marker string, and
 // recursively follows source/. directives found in the file. This handles
 // users with modular shell configs (e.g. .zshrc sources profile-specific
-// files that source the Gas Town hook script).
+// files that source the Excavation Site hook script).
 func checkSourceChain(filePath string, markers []string, visited map[string]bool, depth int) bool {
 	if depth > 5 {
 		return false

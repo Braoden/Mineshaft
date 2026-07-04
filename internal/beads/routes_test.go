@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/config"
 )
 
 func TestGetPrefixForRig(t *testing.T) {
@@ -17,8 +17,8 @@ func TestGetPrefixForRig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	routesContent := `{"prefix": "gt-", "path": "gastown/mayor/rig"}
-{"prefix": "bd-", "path": "beads/mayor/rig"}
+	routesContent := `{"prefix": "gt-", "path": "excavation/overseer/rig"}
+{"prefix": "bd-", "path": "beads/overseer/rig"}
 {"prefix": "hq-", "path": "."}
 `
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
@@ -29,7 +29,7 @@ func TestGetPrefixForRig(t *testing.T) {
 		rig      string
 		expected string
 	}{
-		{"gastown", "gt"},
+		{"excavation", "gt"},
 		{"beads", "bd"},
 		{"unknown", "gt"}, // default
 		{"", "gt"},        // empty rig -> default
@@ -59,7 +59,7 @@ func TestGetPrefixForRig_RigsConfigFallback(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Write rigs.json with a non-gt prefix
-	rigsPath := filepath.Join(tmpDir, "mayor", "rigs.json")
+	rigsPath := filepath.Join(tmpDir, "overseer", "rigs.json")
 	if err := os.MkdirAll(filepath.Dir(rigsPath), 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -116,8 +116,8 @@ func TestGetRigPathForPrefix(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	routesContent := `{"prefix": "ap-", "path": "ai_platform/mayor/rig"}
-{"prefix": "gt-", "path": "gastown/mayor/rig"}
+	routesContent := `{"prefix": "ap-", "path": "ai_platform/overseer/rig"}
+{"prefix": "gt-", "path": "excavation/overseer/rig"}
 {"prefix": "hq-", "path": "."}
 `
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
@@ -128,8 +128,8 @@ func TestGetRigPathForPrefix(t *testing.T) {
 		prefix   string
 		expected string
 	}{
-		{"ap-", filepath.Join(tmpDir, "ai_platform/mayor/rig")},
-		{"gt-", filepath.Join(tmpDir, "gastown/mayor/rig")},
+		{"ap-", filepath.Join(tmpDir, "ai_platform/overseer/rig")},
+		{"gt-", filepath.Join(tmpDir, "excavation/overseer/rig")},
 		{"hq-", tmpDir},  // Town-level beads return townRoot
 		{"unknown-", ""}, // Unknown prefix returns empty
 		{"", ""},         // Empty prefix returns empty
@@ -163,7 +163,7 @@ func TestResolveHookDir(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	routesContent := `{"prefix": "ap-", "path": "ai_platform/mayor/rig"}
+	routesContent := `{"prefix": "ap-", "path": "ai_platform/overseer/rig"}
 {"prefix": "hq-", "path": "."}
 `
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
@@ -180,13 +180,13 @@ func TestResolveHookDir(t *testing.T) {
 			name:        "prefix resolution takes precedence over hookWorkDir",
 			beadID:      "ap-test",
 			hookWorkDir: "/custom/path",
-			expected:    filepath.Join(tmpDir, "ai_platform/mayor/rig"),
+			expected:    filepath.Join(tmpDir, "ai_platform/overseer/rig"),
 		},
 		{
 			name:        "resolves rig path from prefix",
 			beadID:      "ap-test",
 			hookWorkDir: "",
-			expected:    filepath.Join(tmpDir, "ai_platform/mayor/rig"),
+			expected:    filepath.Join(tmpDir, "ai_platform/overseer/rig"),
 		},
 		{
 			name:        "town-level bead returns townRoot",
@@ -227,12 +227,12 @@ func TestResolveBeadsDirForID(t *testing.T) {
 	}
 
 	// Create rig beads directory for gt- prefix
-	rigBeadsDir := filepath.Join(tmpDir, "gastown/mayor/rig/.beads")
+	rigBeadsDir := filepath.Join(tmpDir, "excavation/overseer/rig/.beads")
 	if err := os.MkdirAll(rigBeadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
-	routesContent := `{"prefix": "gt-", "path": "gastown/mayor/rig"}
+	routesContent := `{"prefix": "gt-", "path": "excavation/overseer/rig"}
 {"prefix": "hq-", "path": "."}
 `
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
@@ -306,22 +306,22 @@ func TestResolveBeadsDirForID_UsesTownRoutesFromWorktreeBeadsDir(t *testing.T) {
 	if err := os.MkdirAll(townBeadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	worktreeBeadsDir := filepath.Join(tmpDir, "gastown", "polecats", "chrome", "gastown", ".beads")
+	worktreeBeadsDir := filepath.Join(tmpDir, "excavation", "miners", "chrome", "excavation", ".beads")
 	if err := os.MkdirAll(worktreeBeadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	rigBeadsDir := filepath.Join(tmpDir, "gastown", "mayor", "rig", ".beads")
+	rigBeadsDir := filepath.Join(tmpDir, "excavation", "overseer", "rig", ".beads")
 	if err := os.MkdirAll(rigBeadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.MkdirAll(filepath.Join(tmpDir, "mayor"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(tmpDir, "overseer"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(tmpDir, "mayor", "town.json"), []byte("{}"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "overseer", "town.json"), []byte("{}"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
-	routesContent := `{"prefix": "gt-", "path": "gastown/mayor/rig"}
+	routesContent := `{"prefix": "gt-", "path": "excavation/overseer/rig"}
 {"prefix": "hq-", "path": "."}
 `
 	if err := os.WriteFile(filepath.Join(townBeadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
@@ -345,8 +345,8 @@ func TestGetRigNameForPrefix(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	routesContent := `{"prefix": "gt-", "path": "gastown/mayor/rig"}
-{"prefix": "bd-", "path": "beads/mayor/rig"}
+	routesContent := `{"prefix": "gt-", "path": "excavation/overseer/rig"}
+{"prefix": "bd-", "path": "beads/overseer/rig"}
 {"prefix": "hq-", "path": "."}
 `
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
@@ -357,7 +357,7 @@ func TestGetRigNameForPrefix(t *testing.T) {
 		prefix   string
 		expected string
 	}{
-		{"gt-", "gastown"},
+		{"gt-", "excavation"},
 		{"bd-", "beads"},
 		{"hq-", ""},      // Town-level, no specific rig
 		{"unknown-", ""}, // Not in routes
@@ -382,7 +382,7 @@ func TestGetRigDirForName(t *testing.T) {
 	}
 
 	routesContent := `{"prefix": "ga-", "path": "gantry"}
-{"prefix": "al-", "path": "algoanki/mayor/rig"}
+{"prefix": "al-", "path": "algoanki/overseer/rig"}
 {"prefix": "hq-", "path": "."}
 `
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
@@ -394,7 +394,7 @@ func TestGetRigDirForName(t *testing.T) {
 		expected string
 	}{
 		{"gantry", filepath.Join(tmpDir, "gantry")},
-		{"algoanki", filepath.Join(tmpDir, "algoanki/mayor/rig")},
+		{"algoanki", filepath.Join(tmpDir, "algoanki/overseer/rig")},
 		{"unknown", ""}, // Not in routes
 		{"", ""},        // Empty rig name
 	}
@@ -430,11 +430,11 @@ func TestGetRigDirForName_TownLevelNotReturned(t *testing.T) {
 func TestResolveRepoAliasBeadsDir(t *testing.T) {
 	townRoot := t.TempDir()
 	townBeads := filepath.Join(townRoot, ".beads")
-	rigRoot := filepath.Join(townRoot, "gastown")
-	canonicalRig := filepath.Join(rigRoot, "mayor", "rig")
+	rigRoot := filepath.Join(townRoot, "excavation")
+	canonicalRig := filepath.Join(rigRoot, "overseer", "rig")
 	canonicalBeads := filepath.Join(canonicalRig, ".beads")
 	decoyBeads := filepath.Join(rigRoot, ".beads")
-	escapeRig := filepath.Join(townRoot, "escape", "mayor", "rig")
+	escapeRig := filepath.Join(townRoot, "escape", "overseer", "rig")
 	escapeBeads := filepath.Join(escapeRig, ".beads")
 	escapeTarget := filepath.Join(townRoot, "..", "outside", ".beads")
 
@@ -445,11 +445,11 @@ func TestResolveRepoAliasBeadsDir(t *testing.T) {
 	}
 	if err := os.WriteFile(filepath.Join(townBeads, "routes.jsonl"), []byte(
 		`{"prefix":"hq-","path":"."}`+"\n"+
-			`{"prefix":"gt-","path":"gastown/mayor/rig"}`+"\n"+
-			`{"prefix":"es-","path":"escape/mayor/rig"}`+"\n"), 0644); err != nil {
+			`{"prefix":"gt-","path":"excavation/overseer/rig"}`+"\n"+
+			`{"prefix":"es-","path":"escape/overseer/rig"}`+"\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(canonicalBeads, "metadata.json"), []byte(`{"dolt_database":"gastown"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(canonicalBeads, "metadata.json"), []byte(`{"dolt_database":"excavation"}`), 0644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(decoyBeads, "metadata.json"), []byte(`{"dolt_database":"hq"}`), 0644); err != nil {
@@ -465,10 +465,10 @@ func TestResolveRepoAliasBeadsDir(t *testing.T) {
 		expected string
 		ok       bool
 	}{
-		{"rig alias uses canonical route", "gastown", canonicalBeads, true},
+		{"rig alias uses canonical route", "excavation", canonicalBeads, true},
 		{"hq alias uses town beads", "hq", townBeads, true},
 		{"town alias uses town beads", "town", townBeads, true},
-		{"path-like remains unresolved", "gastown/mayor/rig", "", false},
+		{"path-like remains unresolved", "excavation/overseer/rig", "", false},
 		{"unknown bare repo remains unresolved", "unknown", "", false},
 		{"redirect outside town rejected", "escape", "", false},
 	}
@@ -489,8 +489,8 @@ func TestResolveRepoAliasBeadsDir(t *testing.T) {
 func TestRewriteBDCreateRepoAlias(t *testing.T) {
 	townRoot := t.TempDir()
 	townBeads := filepath.Join(townRoot, ".beads")
-	canonicalBeads := filepath.Join(townRoot, "gastown", "mayor", "rig", ".beads")
-	decoyBeads := filepath.Join(townRoot, "gastown", ".beads")
+	canonicalBeads := filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads")
+	decoyBeads := filepath.Join(townRoot, "excavation", ".beads")
 	for _, dir := range []string{townBeads, canonicalBeads, decoyBeads} {
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			t.Fatal(err)
@@ -498,7 +498,7 @@ func TestRewriteBDCreateRepoAlias(t *testing.T) {
 	}
 	if err := os.WriteFile(filepath.Join(townBeads, "routes.jsonl"), []byte(
 		`{"prefix":"hq-","path":"."}`+"\n"+
-			`{"prefix":"gt-","path":"gastown/mayor/rig"}`+"\n"), 0644); err != nil {
+			`{"prefix":"gt-","path":"excavation/overseer/rig"}`+"\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -510,13 +510,13 @@ func TestRewriteBDCreateRepoAlias(t *testing.T) {
 	}{
 		{
 			name:    "global flags before create",
-			argv:    []string{"bd", "--allow-stale", "create", "--repo", "gastown", "--title", "x"},
+			argv:    []string{"bd", "--allow-stale", "create", "--repo", "excavation", "--title", "x"},
 			want:    []string{"bd", "--allow-stale", "create", "--title", "x"},
 			wantDir: canonicalBeads,
 		},
 		{
 			name:    "equals form",
-			argv:    []string{"bd", "--json", "create", "--repo=gastown"},
+			argv:    []string{"bd", "--json", "create", "--repo=excavation"},
 			want:    []string{"bd", "--json", "create"},
 			wantDir: canonicalBeads,
 		},
@@ -528,20 +528,20 @@ func TestRewriteBDCreateRepoAlias(t *testing.T) {
 		},
 		{
 			name:    "path-like repo unchanged",
-			argv:    []string{"bd", "create", "--repo", "gastown/mayor/rig", "--title", "x"},
-			want:    []string{"bd", "create", "--repo", "gastown/mayor/rig", "--title", "x"},
+			argv:    []string{"bd", "create", "--repo", "excavation/overseer/rig", "--title", "x"},
+			want:    []string{"bd", "create", "--repo", "excavation/overseer/rig", "--title", "x"},
 			wantDir: "",
 		},
 		{
 			name:    "duplicate repo unchanged",
-			argv:    []string{"bd", "create", "--repo", "gastown", "--repo", "/tmp/other"},
-			want:    []string{"bd", "create", "--repo", "gastown", "--repo", "/tmp/other"},
+			argv:    []string{"bd", "create", "--repo", "excavation", "--repo", "/tmp/other"},
+			want:    []string{"bd", "create", "--repo", "excavation", "--repo", "/tmp/other"},
 			wantDir: "",
 		},
 		{
 			name:    "repo after sentinel unchanged",
-			argv:    []string{"bd", "create", "--", "--repo", "gastown"},
-			want:    []string{"bd", "create", "--", "--repo", "gastown"},
+			argv:    []string{"bd", "create", "--", "--repo", "excavation"},
+			want:    []string{"bd", "create", "--", "--repo", "excavation"},
 			wantDir: "",
 		},
 	}
@@ -566,8 +566,8 @@ func TestCheckPrefixAvailable(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	routesContent := `{"prefix": "gt-", "path": "gastown/mayor/rig"}
-{"prefix": "bd-", "path": "beads/mayor/rig"}
+	routesContent := `{"prefix": "gt-", "path": "excavation/overseer/rig"}
+{"prefix": "bd-", "path": "beads/overseer/rig"}
 {"prefix": "hq-", "path": "."}
 `
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
@@ -589,13 +589,13 @@ func TestCheckPrefixAvailable(t *testing.T) {
 		{
 			name:    "same rig re-registering same prefix",
 			prefix:  "gt-",
-			newPath: "gastown",
+			newPath: "excavation",
 			wantErr: false,
 		},
 		{
 			name:    "same rig different path variant",
 			prefix:  "gt-",
-			newPath: "gastown/mayor/rig",
+			newPath: "excavation/overseer/rig",
 			wantErr: false,
 		},
 		{
@@ -632,7 +632,7 @@ func TestCheckPrefixAvailable(t *testing.T) {
 func TestCheckPrefixAvailable_NoRoutes(t *testing.T) {
 	tmpDir := t.TempDir()
 	// No .beads directory — all prefixes should be available
-	err := CheckPrefixAvailable(tmpDir, "gt-", "gastown")
+	err := CheckPrefixAvailable(tmpDir, "gt-", "excavation")
 	if err != nil {
 		t.Errorf("expected no error with no routes file, got: %v", err)
 	}
@@ -644,12 +644,12 @@ func TestAgentBeadIDsWithPrefix(t *testing.T) {
 		fn       func() string
 		expected string
 	}{
-		{"PolecatBeadIDWithPrefix bd beads obsidian",
-			func() string { return PolecatBeadIDWithPrefix("bd", "beads", "obsidian") },
-			"bd-beads-polecat-obsidian"},
-		{"PolecatBeadIDWithPrefix gt gastown Toast",
-			func() string { return PolecatBeadIDWithPrefix("gt", "gastown", "Toast") },
-			"gt-gastown-polecat-Toast"},
+		{"MinerBeadIDWithPrefix bd beads obsidian",
+			func() string { return MinerBeadIDWithPrefix("bd", "beads", "obsidian") },
+			"bd-beads-miner-obsidian"},
+		{"MinerBeadIDWithPrefix gt excavation Toast",
+			func() string { return MinerBeadIDWithPrefix("gt", "excavation", "Toast") },
+			"gt-excavation-miner-Toast"},
 		{"WitnessBeadIDWithPrefix bd beads",
 			func() string { return WitnessBeadIDWithPrefix("bd", "beads") },
 			"bd-beads-witness"},
@@ -679,8 +679,8 @@ func TestValidateRigPrefix(t *testing.T) {
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	routesContent := `{"prefix": "gt-", "path": "gastown/mayor/rig"}
-{"prefix": "bd-", "path": "beads/mayor/rig"}
+	routesContent := `{"prefix": "gt-", "path": "excavation/overseer/rig"}
+{"prefix": "bd-", "path": "beads/overseer/rig"}
 {"prefix": "hq-", "path": "."}
 `
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
@@ -695,13 +695,13 @@ func TestValidateRigPrefix(t *testing.T) {
 	}{
 		{
 			name:    "same-rig bead: no error",
-			rigName: "gastown",
+			rigName: "excavation",
 			beadID:  "gt-wisp-abc",
 			wantErr: false,
 		},
 		{
-			name:    "cross-rig: hq- bead on gastown rig returns error",
-			rigName: "gastown",
+			name:    "cross-rig: hq- bead on excavation rig returns error",
+			rigName: "excavation",
 			beadID:  "hq-wisp-xyz",
 			wantErr: true,
 		},
@@ -713,7 +713,7 @@ func TestValidateRigPrefix(t *testing.T) {
 		},
 		{
 			name:    "empty bead ID: no error (can't determine prefix)",
-			rigName: "gastown",
+			rigName: "excavation",
 			beadID:  "",
 			wantErr: false,
 		},

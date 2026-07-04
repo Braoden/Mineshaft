@@ -8,17 +8,17 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/beads"
+	"github.com/steveyegge/excavation/internal/beads"
 )
 
 // AgentBeadsCheck verifies that agent beads exist for all agents.
 // This includes:
-// - Global agents (deacon, mayor) - stored in town beads with hq- prefix
+// - Global agents (supervisor, overseer) - stored in town beads with hq- prefix
 // - Per-rig agents (witness, refinery) - stored in each rig's beads
 // - Crew workers - stored in each rig's beads
 //
 // Agent beads are created by gt rig add (see gt-h3hak, gt-pinkq) and gt crew add.
-// Each rig uses its configured prefix (e.g., "gt-" for gastown, "bd-" for beads).
+// Each rig uses its configured prefix (e.g., "gt-" for excavation, "bd-" for beads).
 type AgentBeadsCheck struct {
 	FixableCheck
 }
@@ -56,7 +56,7 @@ func (c *AgentBeadsCheck) Run(ctx *CheckContext) *CheckResult {
 	}
 
 	// Build prefix -> rigInfo map from routes
-	// Routes have format: prefix "gt-" -> path "gastown/mayor/rig" or "my-saas"
+	// Routes have format: prefix "gt-" -> path "excavation/overseer/rig" or "my-saas"
 	prefixToRig := make(map[string]rigInfo) // prefix (without hyphen) -> rigInfo
 	for _, r := range routes {
 		// Extract rig name from path (first component)
@@ -131,12 +131,12 @@ func (c *AgentBeadsCheck) Run(ctx *CheckContext) *CheckResult {
 		checked++
 	}
 
-	// Check global agents (Mayor, Deacon)
-	deaconID := beads.DeaconBeadIDTown()
-	mayorID := beads.MayorBeadIDTown()
+	// Check global agents (Overseer, Supervisor)
+	supervisorID := beads.SupervisorBeadIDTown()
+	overseerID := beads.OverseerBeadIDTown()
 
-	checkAgentBead(deaconID)
-	checkAgentBead(mayorID)
+	checkAgentBead(supervisorID)
+	checkAgentBead(overseerID)
 
 	if len(prefixToRig) == 0 {
 		// No rigs to check, but we still checked global agents
@@ -175,11 +175,11 @@ func (c *AgentBeadsCheck) Run(ctx *CheckContext) *CheckResult {
 			checkAgentBead(crewID)
 		}
 
-		// Check polecat agents
-		polecatWorkers := listPolecats(ctx.TownRoot, rigName)
-		for _, polecatName := range polecatWorkers {
-			polecatID := beads.PolecatBeadIDWithPrefix(prefix, rigName, polecatName)
-			checkAgentBead(polecatID)
+		// Check miner agents
+		minerWorkers := listMiners(ctx.TownRoot, rigName)
+		for _, minerName := range minerWorkers {
+			minerID := beads.MinerBeadIDWithPrefix(prefix, rigName, minerName)
+			checkAgentBead(minerID)
 		}
 	}
 
@@ -221,7 +221,7 @@ func (c *AgentBeadsCheck) Fix(ctx *CheckContext) error {
 	// block fixes for all other rigs.
 	var errs []error
 
-	// Fix global agents (Mayor, Deacon) in town beads
+	// Fix global agents (Overseer, Supervisor) in town beads
 	townBeadsPath := beads.GetTownBeadsPath(ctx.TownRoot)
 	townBd := beads.New(townBeadsPath)
 
@@ -313,18 +313,18 @@ func (c *AgentBeadsCheck) Fix(ctx *CheckContext) error {
 		return nil
 	}
 
-	deaconID := beads.DeaconBeadIDTown()
-	if err := fixAgentBead(townBd, townBeadsPath, deaconID,
-		"Deacon (daemon beacon) - receives mechanical heartbeats, runs town plugins and monitoring.",
-		&beads.AgentFields{RoleType: "deacon", AgentState: "idle"},
+	supervisorID := beads.SupervisorBeadIDTown()
+	if err := fixAgentBead(townBd, townBeadsPath, supervisorID,
+		"Supervisor (daemon beacon) - receives mechanical heartbeats, runs town plugins and monitoring.",
+		&beads.AgentFields{RoleType: "supervisor", AgentState: "idle"},
 	); err != nil {
 		errs = append(errs, err)
 	}
 
-	mayorID := beads.MayorBeadIDTown()
-	if err := fixAgentBead(townBd, townBeadsPath, mayorID,
-		"Mayor - global coordinator, handles cross-rig communication and escalations.",
-		&beads.AgentFields{RoleType: "mayor", AgentState: "idle"},
+	overseerID := beads.OverseerBeadIDTown()
+	if err := fixAgentBead(townBd, townBeadsPath, overseerID,
+		"Overseer - global coordinator, handles cross-rig communication and escalations.",
+		&beads.AgentFields{RoleType: "overseer", AgentState: "idle"},
 	); err != nil {
 		errs = append(errs, err)
 	}
@@ -381,7 +381,7 @@ func (c *AgentBeadsCheck) Fix(ctx *CheckContext) error {
 
 		witnessID := beads.WitnessBeadIDWithPrefix(prefix, rigName)
 		if err := fixAgentBead(bd, rigBeadsPath, witnessID,
-			fmt.Sprintf("Witness for %s - monitors polecat health and progress.", rigName),
+			fmt.Sprintf("Witness for %s - monitors miner health and progress.", rigName),
 			&beads.AgentFields{RoleType: "witness", Rig: rigName, AgentState: "idle"},
 		); err != nil {
 			errs = append(errs, err)
@@ -406,12 +406,12 @@ func (c *AgentBeadsCheck) Fix(ctx *CheckContext) error {
 			}
 		}
 
-		polecatWorkers := listPolecats(ctx.TownRoot, rigName)
-		for _, polecatName := range polecatWorkers {
-			polecatID := beads.PolecatBeadIDWithPrefix(prefix, rigName, polecatName)
-			if err := fixAgentBead(bd, rigBeadsPath, polecatID,
-				fmt.Sprintf("Polecat worker %s in %s - autonomous worker with persistent identity.", polecatName, rigName),
-				&beads.AgentFields{RoleType: "polecat", Rig: rigName, AgentState: "idle"},
+		minerWorkers := listMiners(ctx.TownRoot, rigName)
+		for _, minerName := range minerWorkers {
+			minerID := beads.MinerBeadIDWithPrefix(prefix, rigName, minerName)
+			if err := fixAgentBead(bd, rigBeadsPath, minerID,
+				fmt.Sprintf("Miner worker %s in %s - autonomous worker with persistent identity.", minerName, rigName),
+				&beads.AgentFields{RoleType: "miner", Rig: rigName, AgentState: "idle"},
 			); err != nil {
 				errs = append(errs, err)
 			}
@@ -488,25 +488,25 @@ func verifyLabelAdded(workDir, beadID, label string) bool {
 	return strings.Contains(string(output), "1")
 }
 
-// listPolecats returns the names of canonical polecat directories in a rig.
+// listMiners returns the names of canonical miner directories in a rig.
 // Filters out git worktrees (same logic as listCrewWorkers). See GH#2767.
-func listPolecats(townRoot, rigName string) []string {
-	polecatDir := filepath.Join(townRoot, rigName, "polecats")
-	entries, err := os.ReadDir(polecatDir)
+func listMiners(townRoot, rigName string) []string {
+	minerDir := filepath.Join(townRoot, rigName, "miners")
+	entries, err := os.ReadDir(minerDir)
 	if err != nil {
-		return nil // No polecats directory or can't read it
+		return nil // No miners directory or can't read it
 	}
 
-	var polecats []string
+	var miners []string
 	for _, entry := range entries {
 		if !entry.IsDir() || strings.HasPrefix(entry.Name(), ".") {
 			continue
 		}
-		dotGit := filepath.Join(polecatDir, entry.Name(), ".git")
+		dotGit := filepath.Join(minerDir, entry.Name(), ".git")
 		if info, err := os.Lstat(dotGit); err == nil && !info.IsDir() {
 			continue // worktree — skip
 		}
-		polecats = append(polecats, entry.Name())
+		miners = append(miners, entry.Name())
 	}
-	return polecats
+	return miners
 }

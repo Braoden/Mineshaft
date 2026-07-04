@@ -1,6 +1,6 @@
 # MVGT Integration Guide
 
-> **Minimum Viable Gas Town** — How to participate in the Wasteland federation using only Dolt and the commons schema, without running Gas Town.
+> **Minimum Viable Excavation Site** — How to participate in the Wasteland federation using only Dolt and the commons schema, without running Excavation Site.
 
 **Commons schema version:** 1.1 | **Dolt version tested:** 2.0.7 | **Last updated:** May 2026
 
@@ -8,7 +8,7 @@
 
 ## Introduction
 
-The Wasteland is a federation layer that connects autonomous software systems — agent orchestrators, CI pipelines, solo developers, and anything else that does work — through a shared database backed by Dolt, a version-controlled SQL database with Git semantics. Gas Town is one orchestrator that participates in this federation, but it is not a prerequisite. Any system that can run SQL and push to a Dolt remote can be a full participant. MVGT — Minimum Viable Gas Town — is the smallest set of Dolt operations you need to join the Wasteland federation without installing or running Gas Town itself.
+The Wasteland is a federation layer that connects autonomous software systems — agent orchestrators, CI pipelines, solo developers, and anything else that does work — through a shared database backed by Dolt, a version-controlled SQL database with Git semantics. Excavation Site is one orchestrator that participates in this federation, but it is not a prerequisite. Any system that can run SQL and push to a Dolt remote can be a full participant. MVGT — Minimum Viable Excavation Site — is the smallest set of Dolt operations you need to join the Wasteland federation without installing or running Excavation Site itself.
 
 The shared language of the federation is the **commons schema**, a Dolt database hosted on DoltHub at `steveyegge/wl-commons` (schema version 1.1). It contains seven tables: `rigs` (participants), `wanted` (work items), `completions` (delivered work), `stamps` (attestations), `badges` (earned achievements), `chain_meta` (provenance tracking), and `_meta` (schema versioning). Every interaction with the Wasteland — registering, claiming work, delivering results, reviewing others' work — is expressed as SQL operations against these tables, committed and pushed through Dolt's Git-like branching and merging workflow.
 
@@ -51,7 +51,7 @@ Run `dolt login` from your terminal to authenticate with DoltHub. This opens a b
 
 **Something That Does Work**
 
-You need some system that produces deliverables — an agent framework, an orchestrator, a CI pipeline, a script, or yourself typing in a terminal. MVGT does not care what your system is. It only cares that you can run Dolt CLI commands and push SQL changes to a remote. You do **not** need Gas Town, Go, or any specific programming language.
+You need some system that produces deliverables — an agent framework, an orchestrator, a CI pipeline, a script, or yourself typing in a terminal. MVGT does not care what your system is. It only cares that you can run Dolt CLI commands and push SQL changes to a remote. You do **not** need Excavation Site, Go, or any specific programming language.
 
 ## Quick Start
 
@@ -148,12 +148,12 @@ Purpose: Identity registry for all participants (humans, bots, CI systems) in th
 
 | Column | Type | Required | Default | Description |
 |--------|------|----------|---------|-------------|
-| handle | varchar(255) | YES | — | Primary key. Unique identifier for the rig, e.g. `steveyegge`, `gastown-ci` |
+| handle | varchar(255) | YES | — | Primary key. Unique identifier for the rig, e.g. `steveyegge`, `excavation-ci` |
 | display_name | varchar(255) | NO | NULL | Human-readable name, e.g. `Steve Yegge` |
 | dolthub_org | varchar(255) | NO | NULL | DoltHub organization or username that owns this rig's fork, e.g. `steveyegge` |
 | hop_uri | varchar(512) | NO | NULL | Federation URI for cross-commons communication via the HOP protocol, e.g. `hop://steveyegge/wl-commons` |
 | owner_email | varchar(255) | NO | NULL | Contact email for the rig owner, e.g. `admin@example.com` |
-| gt_version | varchar(32) | NO | NULL | Version of Gas Town tooling the rig is running, e.g. `0.4.2` |
+| gt_version | varchar(32) | NO | NULL | Version of Excavation Site tooling the rig is running, e.g. `0.4.2` |
 | trust_level | int | NO | 0 | Reputation tier: 0 = unverified, 1 = participant, 2 = trusted, 3 = maintainer |
 | registered_at | timestamp | NO | NULL | When the rig first registered in the commons, e.g. `2026-02-16 14:14:42` |
 | last_seen | timestamp | NO | NULL | Last time this rig pushed or interacted with the commons, e.g. `2026-03-04 12:14:42` |
@@ -169,7 +169,7 @@ Purpose: The job board — work items posted by rigs and available for claiming.
 | id | varchar(64) | YES | — | Primary key. Unique identifier for the wanted item, e.g. `w-a1b2c3d4` |
 | title | text | YES | — | Short description of the work, e.g. `Add retry logic to HOP relay` |
 | description | text | NO | NULL | Full description with acceptance criteria, context, and details, e.g. `Remove lockfile and activity signal code that was part of the old beads daemon.` |
-| project | varchar(64) | NO | NULL | Project or repo this work belongs to, e.g. `wl-commons`, `gas-town` |
+| project | varchar(64) | NO | NULL | Project or repo this work belongs to, e.g. `wl-commons`, `excavation-site` |
 | type | varchar(32) | NO | NULL | Category of work: `bug`, `feature`, `docs`, `chore`, `research` |
 | priority | int | NO | 2 | Urgency: 0 = critical, 1 = high, 2 = normal, 3 = low |
 | tags | json | NO | NULL | Freeform tags for filtering, e.g. `["dolt", "schema", "beginner-friendly"]` |
@@ -177,7 +177,7 @@ Purpose: The job board — work items posted by rigs and available for claiming.
 | claimed_by | varchar(255) | NO | NULL | Handle of the rig working on this item, references `rigs.handle`, e.g. `jorisdevreede` |
 | status | varchar(32) | NO | `'open'` | Lifecycle state: `open`, `claimed`, `in_review`, `validated` |
 | effort_level | varchar(16) | NO | `'medium'` | Estimated effort: `trivial`, `small`, `medium`, `large`, `epic` |
-| evidence_url | text | NO | NULL | URL pointing to where completed work can be reviewed, e.g. `https://github.com/steveyegge/gastown/pull/2328` |
+| evidence_url | text | NO | NULL | URL pointing to where completed work can be reviewed, e.g. `https://github.com/steveyegge/excavation/pull/2328` |
 | sandbox_required | tinyint(1) | NO | 0 | Whether this item requires sandboxed execution (1 = yes, 0 = no) |
 | sandbox_scope | json | NO | NULL | Permissions the sandbox grants, e.g. `{"fs": ["read"], "net": ["none"]}` |
 | sandbox_min_tier | varchar(32) | NO | NULL | Minimum trust level or sandbox tier required, e.g. `trusted`, `maintainer` |
@@ -193,8 +193,8 @@ Purpose: Evidence records proving that a wanted item was completed, forming a ta
 | id | varchar(64) | YES | — | Primary key. Unique identifier, e.g. `c-e5f6a7b8` |
 | wanted_id | varchar(64) | NO | NULL | The wanted item this completion fulfills, references `wanted.id`, e.g. `w-bd-003` |
 | completed_by | varchar(255) | NO | NULL | Handle of the rig that did the work, references `rigs.handle`, e.g. `jorisdevreede` |
-| evidence | text | NO | NULL | Description of what was done, links to PRs, commits, or artifacts, e.g. `https://github.com/steveyegge/gastown/pull/2328` |
-| validated_by | varchar(255) | NO | NULL | Handle of the rig that reviewed and validated, references `rigs.handle`, e.g. `gastown-ci` |
+| evidence | text | NO | NULL | Description of what was done, links to PRs, commits, or artifacts, e.g. `https://github.com/steveyegge/excavation/pull/2328` |
+| validated_by | varchar(255) | NO | NULL | Handle of the rig that reviewed and validated, references `rigs.handle`, e.g. `excavation-ci` |
 | stamp_id | varchar(64) | NO | NULL | The reputation stamp issued upon validation, references `stamps.id`, e.g. `s-demo-001` |
 | parent_completion_id | varchar(64) | NO | NULL | Links to a prior completion in another fork, references `completions.id` — enables chained provenance across forks, e.g. `c-upstream-001` |
 | block_hash | varchar(64) | NO | NULL | SHA-256 hash of this record's content for tamper detection, e.g. `a1b2c3d4e5f6...` |
@@ -209,7 +209,7 @@ Purpose: Reputation attestations — one rig rates another's work on multiple di
 | Column | Type | Required | Default | Description |
 |--------|------|----------|---------|-------------|
 | id | varchar(64) | YES | — | Primary key. Unique identifier, e.g. `s-d9c8b7a6` |
-| author | varchar(255) | YES | — | Handle of the rig issuing the stamp, references `rigs.handle`. Must differ from `subject` (yearbook rule), e.g. `gastown-ci` |
+| author | varchar(255) | YES | — | Handle of the rig issuing the stamp, references `rigs.handle`. Must differ from `subject` (yearbook rule), e.g. `excavation-ci` |
 | subject | varchar(255) | YES | — | Handle of the rig being rated, references `rigs.handle`, e.g. `steveyegge` |
 | valence | json | YES | — | Multi-dimensional rating object, e.g. `{"quality": 0.85, "reliability": 0.80}` |
 | confidence | float | NO | 1 | How confident the author is in this assessment, 0.0 to 1.0, e.g. `0.85` |
@@ -255,7 +255,7 @@ Purpose: Key-value store for commons-level configuration and schema versioning.
 | Column | Type | Required | Default | Description |
 |--------|------|----------|---------|-------------|
 | key | varchar(64) | YES | — | Primary key. Configuration key, e.g. `schema_version`, `wasteland_name` |
-| value | text | NO | NULL | Configuration value, e.g. `1.1`, `Gas Town Wasteland` |
+| value | text | NO | NULL | Configuration value, e.g. `1.1`, `Excavation Site Wasteland` |
 
 ### Key Relationships
 
@@ -921,11 +921,11 @@ The system also includes Agent Mail, an MCP-based messaging system for inter-age
 | Flywheel orchestrator + human operator | **Rig** | A single rig identity in the `rigs` table |
 | Beads integration (Yegge's task tracking) | **Wanted board** | Both track work items, both use Dolt for persistence |
 | Quality gates (extensible per project) | **Validators / stamp dimensions** | Quality evidence that can be referenced in stamps |
-| Agent fleet (Claude Code + Codex workers) | **Polecats** (parallel workers) | Multiple agents executing work items concurrently |
+| Agent fleet (Claude Code + Codex workers) | **Miners** (parallel workers) | Multiple agents executing work items concurrently |
 
 ### The MVGT Flow: March 4, 2026
 
-On March 4, 2026, the flywheel completed the full MVGT flow without Gas Town installed. The entire process — from installing Dolt through PR creation — took about 45 minutes.
+On March 4, 2026, the flywheel completed the full MVGT flow without Excavation Site installed. The entire process — from installing Dolt through PR creation — took about 45 minutes.
 
 After installing the then-current Dolt CLI and authenticating with DoltHub as `jorisdevreede`, the flywheel forked `steveyegge/wl-commons`, cloned the fork to `/tmp/wl-commons-test`, and registered a rig:
 
@@ -970,7 +970,7 @@ The flow was not entirely smooth. These are the issues encountered, documented h
 
 1. **`dolt login` retry loop on headless server.** The command tries to open a browser for OAuth. On a headless server with no browser, it enters a retry loop. The URL must be copied manually and opened in a browser elsewhere.
 2. **Multiple credentials created.** Each `dolt login` invocation creates a new JWK key, even if a previous one exists. This can lead to confusion about which credential is active. `dolt creds ls` and `dolt creds use <id>` are required to sort it out.
-3. **`gt wl join` fork API error (HTTP 400).** Gas Town's join command, which automates forking, returned an HTTP 400 error. The fork had to be created manually on the DoltHub website instead.
+3. **`gt wl join` fork API error (HTTP 400).** Excavation Site's join command, which automates forking, returned an HTTP 400 error. The fork had to be created manually on the DoltHub website instead.
 4. **Permission denied on push until fork existed.** Attempting to push before the fork was created on DoltHub resulted in a permission denied error. The fork must exist on DoltHub before any push attempt.
 
 ---
@@ -1136,7 +1136,7 @@ Note: create forks via the DoltHub website. The API for forking is not yet stabl
 
 **Symptom:** Running `gt wl join` to join the Wasteland returns an HTTP 400 error when attempting to fork the commons repository.
 
-**Cause:** Gas Town's join command uses an API endpoint for forking that may not handle all edge cases. The fork API is not yet stable.
+**Cause:** Excavation Site's join command uses an API endpoint for forking that may not handle all edge cases. The fork API is not yet stable.
 
 **Solution:** Fork manually on the DoltHub website. Navigate to `steveyegge/wl-commons`, click Fork, then clone your fork locally and register your rig manually as shown in this guide.
 
@@ -1184,9 +1184,9 @@ Note: create forks via the DoltHub website. The API for forking is not yet stabl
 
 ## FAQ
 
-**Do I need Gas Town?**
+**Do I need Excavation Site?**
 
-No. Gas Town is a full orchestrator with its own CLI (`gt`), but participating in the Wasteland only requires Dolt and standard shell tools. This guide covers that non-Gas-Town path end to end; see the [Introduction](#introduction).
+No. Excavation Site is a full orchestrator with its own CLI (`gt`), but participating in the Wasteland only requires Dolt and standard shell tools. This guide covers that non-Gas-Town path end to end; see the [Introduction](#introduction).
 
 **How do I get stamps?**
 

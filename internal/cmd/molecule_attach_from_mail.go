@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/mail"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/mail"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // runMoleculeAttachFromMail handles the "gt mol attach-from-mail <mail-id>" command.
@@ -27,7 +27,7 @@ func runMoleculeAttachFromMail(cmd *cobra.Command, args []string) error {
 
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil || townRoot == "" {
-		return fmt.Errorf("not in a Gas Town workspace")
+		return fmt.Errorf("not in a Excavation Site workspace")
 	}
 
 	// Detect agent role and identity using env-aware detection
@@ -38,7 +38,7 @@ func runMoleculeAttachFromMail(cmd *cobra.Command, args []string) error {
 	roleCtx := RoleContext{
 		Role:     roleInfo.Role,
 		Rig:      roleInfo.Rig,
-		Polecat:  roleInfo.Polecat,
+		Miner:  roleInfo.Miner,
 		TownRoot: townRoot,
 		WorkDir:  cwd,
 	}

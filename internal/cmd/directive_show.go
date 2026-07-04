@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var directiveShowCmd = &cobra.Command{
@@ -19,7 +19,7 @@ var directiveShowCmd = &cobra.Command{
 Shows which files contribute to the directive (town-level, rig-level, or both).
 
 Examples:
-  gt directive show polecat             # Show polecat directive
+  gt directive show miner             # Show miner directive
   gt directive show witness --rig sky   # Show witness directive for sky rig`,
 	Args: cobra.ExactArgs(1),
 	RunE: runDirectiveShow,
@@ -89,7 +89,7 @@ func runDirectiveShow(cmd *cobra.Command, args []string) error {
 func resolveDirectiveContext(explicitRig string) (townRoot, rigName string, err error) {
 	townRoot, err = workspace.FindFromCwdOrError()
 	if err != nil {
-		return "", "", fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return "", "", fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	rigName = explicitRig

@@ -1,4 +1,4 @@
-// ABOUTME: Shell integration installation and removal for Gas Town.
+// ABOUTME: Shell integration installation and removal for Excavation Site.
 // ABOUTME: Manages the shell hook in RC files with safe block markers.
 
 package shell
@@ -9,12 +9,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/state"
+	"github.com/steveyegge/excavation/internal/state"
 )
 
 const (
-	markerStart = "# --- Gas Town Integration (managed by gt) ---"
-	markerEnd   = "# --- End Gas Town ---"
+	markerStart = "# --- Excavation Site Integration (managed by gt) ---"
+	markerEnd   = "# --- End Excavation Site ---"
 )
 
 func hookSourceLine() string {
@@ -98,7 +98,7 @@ func addToRCFile(path string) error {
 	block := fmt.Sprintf("\n%s\n%s\n%s\n", markerStart, hookSourceLine(), markerEnd)
 
 	if len(data) > 0 {
-		backupPath := path + ".gastown-backup"
+		backupPath := path + ".excavation-backup"
 		if err := os.WriteFile(backupPath, data, 0644); err != nil {
 			return fmt.Errorf("writing backup: %w", err)
 		}
@@ -141,7 +141,7 @@ func updateRCFile(path, content string) error {
 	startIdx := strings.Index(content, markerStart)
 	endIdx := strings.Index(content[startIdx:], markerEnd)
 	if endIdx == -1 {
-		return fmt.Errorf("malformed Gas Town block in %s", path)
+		return fmt.Errorf("malformed Excavation Site block in %s", path)
 	}
 	endIdx += startIdx + len(markerEnd)
 
@@ -152,49 +152,49 @@ func updateRCFile(path, content string) error {
 }
 
 var shellHookScript = `#!/bin/zsh
-# Gas Town Shell Integration
+# Excavation Site Shell Integration
 # Installed by: gt install --shell
-# Location: ~/.config/gastown/shell-hook.sh
+# Location: ~/.config/excavation/shell-hook.sh
 
-_gastown_enabled() {
-    [[ -n "$GASTOWN_DISABLED" ]] && return 1
-    [[ -n "$GASTOWN_ENABLED" ]] && return 0
-    local state_file="$HOME/.local/state/gastown/state.json"
+_excavation_enabled() {
+    [[ -n "$EXCAVATION_DISABLED" ]] && return 1
+    [[ -n "$EXCAVATION_ENABLED" ]] && return 0
+    local state_file="$HOME/.local/state/excavation/state.json"
     [[ -f "$state_file" ]] && grep -q '"enabled":\s*true' "$state_file" 2>/dev/null
 }
 
-_gastown_ignored() {
+_excavation_ignored() {
     local dir="$PWD"
     while [[ "$dir" != "/" ]]; do
-        [[ -f "$dir/.gastown-ignore" ]] && return 0
+        [[ -f "$dir/.excavation-ignore" ]] && return 0
         dir="$(dirname "$dir")"
     done
     return 1
 }
 
-_gastown_already_asked() {
+_excavation_already_asked() {
     local repo_root="$1"
-    local asked_file="$HOME/.cache/gastown/asked-repos"
+    local asked_file="$HOME/.cache/excavation/asked-repos"
     [[ -f "$asked_file" ]] && grep -qF "$repo_root" "$asked_file" 2>/dev/null
 }
 
-_gastown_mark_asked() {
+_excavation_mark_asked() {
     local repo_root="$1"
-    local asked_file="$HOME/.cache/gastown/asked-repos"
+    local asked_file="$HOME/.cache/excavation/asked-repos"
     mkdir -p "$(dirname "$asked_file")"
     echo "$repo_root" >> "$asked_file"
 }
 
-_gastown_offer_add() {
+_excavation_offer_add() {
     local repo_root="$1"
 
-    # Offer-to-add is OPT-IN. By default Gas Town stays silent in your shells
+    # Offer-to-add is OPT-IN. By default Excavation Site stays silent in your shells
     # and only sets GT_TOWN_ROOT/GT_RIG when you are inside a known rig. To be
-    # prompted to add unrecognized git repos, set GASTOWN_OFFER_ADD=1. Add a
+    # prompted to add unrecognized git repos, set EXCAVATION_OFFER_ADD=1. Add a
     # repo any time with 'gt rig quick-add'.
-    [[ "${GASTOWN_OFFER_ADD:-}" == "1" ]] || return 0
-    [[ "${GASTOWN_DISABLE_OFFER_ADD:-}" == "1" ]] && return 0
-    _gastown_already_asked "$repo_root" && return 0
+    [[ "${EXCAVATION_OFFER_ADD:-}" == "1" ]] || return 0
+    [[ "${EXCAVATION_DISABLE_OFFER_ADD:-}" == "1" ]] && return 0
+    _excavation_already_asked "$repo_root" && return 0
 
     [[ -t 0 ]] || return 0
 
@@ -204,15 +204,15 @@ _gastown_offer_add() {
     # Record that we asked BEFORE reading the answer. If the prompt is
     # interrupted (Ctrl-C) we must not re-offer on the next prompt -- otherwise
     # an interrupted read loops forever (e.g. across restored terminal sessions).
-    _gastown_mark_asked "$repo_root"
+    _excavation_mark_asked "$repo_root"
 
     echo ""
-    echo -n "Add '$repo_name' to Gas Town? [y/N/never] "
+    echo -n "Add '$repo_name' to Excavation Site? [y/N/never] "
     read -r response </dev/tty || response=""
 
     case "$response" in
         y|Y|yes)
-            echo "Adding to Gas Town..."
+            echo "Adding to Excavation Site..."
             local output
             output=$(gt rig quick-add "$repo_root" --yes 2>&1)
             local exit_code=$?
@@ -226,13 +226,13 @@ _gastown_offer_add() {
                     echo "Switching to crew workspace..."
                     cd "$crew_path" || true
                     # Re-run hook to set GT_TOWN_ROOT and GT_RIG
-                    _gastown_hook
+                    _excavation_hook
                 fi
             fi
             ;;
         never)
-            touch "$repo_root/.gastown-ignore"
-            echo "Created .gastown-ignore - won't ask again for this repo."
+            touch "$repo_root/.excavation-ignore"
+            echo "Created .excavation-ignore - won't ask again for this repo."
             ;;
         *)
             echo "Skipped. Run 'gt rig quick-add' later to add manually."
@@ -240,15 +240,15 @@ _gastown_offer_add() {
     esac
 }
 
-_gastown_hook() {
+_excavation_hook() {
     local previous_exit_status=$?
 
-    _gastown_enabled || {
+    _excavation_enabled || {
         unset GT_TOWN_ROOT GT_RIG
         return $previous_exit_status
     }
 
-    _gastown_ignored && {
+    _excavation_ignored && {
         unset GT_TOWN_ROOT GT_RIG
         return $previous_exit_status
     }
@@ -264,7 +264,7 @@ _gastown_hook() {
         return $previous_exit_status
     }
 
-    local cache_file="$HOME/.cache/gastown/rigs.cache"
+    local cache_file="$HOME/.cache/excavation/rigs.cache"
     if [[ -f "$cache_file" ]]; then
         local cached
         cached=$(grep "^${repo_root}:" "$cache_file" 2>/dev/null)
@@ -281,9 +281,9 @@ _gastown_hook() {
 
         if [[ -n "$GT_TOWN_ROOT" ]]; then
             (gt rig detect --cache "$repo_root" &>/dev/null &)
-        elif [[ -n "$_GASTOWN_PWD_CHANGED" ]]; then
-            _gastown_offer_add "$repo_root"
-            unset _GASTOWN_PWD_CHANGED
+        elif [[ -n "$_EXCAVATION_PWD_CHANGED" ]]; then
+            _excavation_offer_add "$repo_root"
+            unset _EXCAVATION_PWD_CHANGED
         fi
     fi
 
@@ -291,37 +291,37 @@ _gastown_hook() {
 }
 
 # zsh chpwd hook: fires only when the working directory actually changes.
-_gastown_chpwd_hook() {
-    _GASTOWN_PWD_CHANGED=1
-    _gastown_hook
+_excavation_chpwd_hook() {
+    _EXCAVATION_PWD_CHANGED=1
+    _excavation_hook
 }
 
 # bash has no chpwd; emulate it from PROMPT_COMMAND by tracking $PWD so the
 # add-offer is only considered when the directory actually changed -- not on
 # every prompt redraw (which previously re-prompted on every command).
-_gastown_bash_prompt() {
-    if [[ "$PWD" != "${_GASTOWN_LAST_PWD-}" ]]; then
-        _GASTOWN_LAST_PWD="$PWD"
-        _GASTOWN_PWD_CHANGED=1
+_excavation_bash_prompt() {
+    if [[ "$PWD" != "${_EXCAVATION_LAST_PWD-}" ]]; then
+        _EXCAVATION_LAST_PWD="$PWD"
+        _EXCAVATION_PWD_CHANGED=1
     fi
-    _gastown_hook
+    _excavation_hook
 }
 
 case "${SHELL##*/}" in
     zsh)
         autoload -Uz add-zsh-hook
-        add-zsh-hook chpwd _gastown_chpwd_hook
-        add-zsh-hook precmd _gastown_hook
+        add-zsh-hook chpwd _excavation_chpwd_hook
+        add-zsh-hook precmd _excavation_hook
         ;;
     bash)
         # Seed last-seen PWD so a fresh shell doesn't count its first prompt as
         # a directory change (matches zsh, which only fires chpwd on real cd).
-        _GASTOWN_LAST_PWD="$PWD"
-        if [[ ";${PROMPT_COMMAND[*]:-};" != *";_gastown_bash_prompt;"* ]]; then
-            PROMPT_COMMAND="_gastown_bash_prompt${PROMPT_COMMAND:+;$PROMPT_COMMAND}"
+        _EXCAVATION_LAST_PWD="$PWD"
+        if [[ ";${PROMPT_COMMAND[*]:-};" != *";_excavation_bash_prompt;"* ]]; then
+            PROMPT_COMMAND="_excavation_bash_prompt${PROMPT_COMMAND:+;$PROMPT_COMMAND}"
         fi
         ;;
 esac
 
-_gastown_hook
+_excavation_hook
 `

@@ -8,11 +8,11 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/refinery"
-	"github.com/steveyegge/gastown/internal/rig"
-	"github.com/steveyegge/gastown/internal/style"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/refinery"
+	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/excavation/internal/style"
 )
 
 // MQ command flags
@@ -69,7 +69,7 @@ var mqCmd = &cobra.Command{
 
 Alias: 'gt mr' is equivalent to 'gt mq' (merge request vs merge queue).
 
-The merge queue tracks work branches from polecats waiting to be merged.
+The merge queue tracks work branches from miners waiting to be merged.
 Use these commands to view, submit, retry, and manage merge requests.`,
 }
 
@@ -82,7 +82,7 @@ Creates a merge-request bead that will be processed by the Refinery.
 
 Auto-detection:
   - Branch: current git branch
-  - Issue: parsed from branch name (e.g., polecat/Nux/gp-xyz → gt-xyz)
+  - Issue: parsed from branch name (e.g., miner/Nux/gp-xyz → gt-xyz)
   - Worker: parsed from branch name
   - Rig: detected from current directory
   - Target: automatically determined (see below)
@@ -95,9 +95,9 @@ Target branch auto-detection:
 
 This ensures batch work on epics automatically flows to integration branches.
 
-Polecat auto-cleanup:
-  When run from a polecat work branch (polecat/<worker>/<issue>), this command
-  automatically triggers polecat shutdown after submitting the MR. The polecat
+Miner auto-cleanup:
+  When run from a miner work branch (miner/<worker>/<issue>), this command
+  automatically triggers miner shutdown after submitting the MR. The miner
   sends a lifecycle request to its Witness and waits for termination.
 
   Use --no-cleanup to disable this behavior (e.g., if you want to submit
@@ -136,9 +136,9 @@ Lists all pending merge requests waiting to be processed.
 
 Output format:
   ID          STATUS       PRIORITY  BRANCH                    WORKER  AGE
-  gt-mr-001   ready        P0        polecat/Nux/gp-xyz        Nux     5m
-  gt-mr-002   in_progress  P1        polecat/Toast/gt-abc      Toast   12m
-  gt-mr-003   blocked      P1        polecat/Capable/gt-def    Capable 8m
+  gt-mr-001   ready        P0        miner/Nux/gp-xyz        Nux     5m
+  gt-mr-002   in_progress  P1        miner/Toast/gt-abc      Toast   12m
+  gt-mr-003   blocked      P1        miner/Capable/gt-def    Capable 8m
               (waiting on gt-mr-001)
 
 Examples:
@@ -159,7 +159,7 @@ This closes the MR with a 'rejected' status without merging.
 The source issue is NOT closed (work is not done).
 
 Examples:
-  gt mq reject greenplace polecat/Nux/gp-xyz --reason "Does not meet requirements"
+  gt mq reject greenplace miner/Nux/gp-xyz --reason "Does not meet requirements"
   gt mq reject greenplace mr-Nux-12345 --reason "Superseded by other work" --notify`,
 	Args: cobra.ExactArgs(2),
 	RunE: runMQReject,
@@ -176,14 +176,14 @@ var mqPostMergeCmd = &cobra.Command{
 This command consolidates post-merge steps into a single atomic operation:
   1. Close the MR bead (status: merged)
   2. Close the source issue
-  3. Delete the remote polecat branch (unless --skip-branch-delete)
+  3. Delete the remote miner branch (unless --skip-branch-delete)
 
 Designed for use by the refinery formula after a successful merge to main.
 The branch name is read from the MR bead, so no manual branch argument is needed.
 
 Examples:
-  gt mq post-merge gastown gt-mr-abc123
-  gt mq post-merge gastown gt-mr-abc123 --skip-branch-delete`,
+  gt mq post-merge excavation gt-mr-abc123
+  gt mq post-merge excavation gt-mr-abc123 --skip-branch-delete`,
 	Args: cobra.ExactArgs(2),
 	RunE: runMQPostMerge,
 }
@@ -309,7 +309,7 @@ func init() {
 	mqSubmitCmd.Flags().StringVar(&mqSubmitIssue, "issue", "", "Source issue ID (default: parse from branch name)")
 	mqSubmitCmd.Flags().StringVar(&mqSubmitEpic, "epic", "", "Target epic's integration branch instead of main")
 	mqSubmitCmd.Flags().IntVarP(&mqSubmitPriority, "priority", "p", -1, "Override priority (0-4, default: inherit from issue)")
-	mqSubmitCmd.Flags().BoolVar(&mqSubmitNoCleanup, "no-cleanup", false, "Don't auto-cleanup after submit (for polecats)")
+	mqSubmitCmd.Flags().BoolVar(&mqSubmitNoCleanup, "no-cleanup", false, "Don't auto-cleanup after submit (for miners)")
 	mqSubmitCmd.Flags().BoolVar(&mqSubmitSkipDeps, "skip-deps", false, "Skip molecule step dependency check")
 	mqSubmitCmd.Flags().BoolVar(&mqSubmitResubmit, "resubmit", false, "Resubmit after a fix (skips dependency check)")
 
@@ -395,7 +395,7 @@ func findCurrentRig(townRoot string) (string, *rig.Rig, error) {
 	}
 
 	// Load rig manager and get the rig
-	rigsConfigPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsConfigPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsConfigPath)
 	if err != nil {
 		rigsConfig = &config.RigsConfig{Rigs: make(map[string]config.RigEntry)}

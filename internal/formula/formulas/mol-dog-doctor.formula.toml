@@ -17,7 +17,7 @@ Current behavior (from dolt.go checkHealthLocked):
 This is infrastructure work. You:
 1. Probe Dolt server connectivity and latency
 2. Inspect resource conditions (connections, disk, orphans)
-3. Report findings to Deacon
+3. Report findings to Supervisor
 4. Return to kennel
 
 ## Variables
@@ -157,9 +157,9 @@ None detected.
 gt escalate -s CRITICAL "Dolt: <condition>"
 ```
 
-**3. Signal completion to Deacon:**
+**3. Signal completion to Supervisor:**
 ```bash
-gt mail send deacon/ -s "DOG_DONE: doctor" -m "Task: dolt-doctor
+gt mail send supervisor/ -s "DOG_DONE: doctor" -m "Task: dolt-doctor
 Server: {{server_status}}
 Latency: {{latency}}
 Connections: {{conn_count}}/{{conn_max}}

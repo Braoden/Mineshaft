@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/rig"
+	"github.com/steveyegge/excavation/internal/rig"
 )
 
 // BranchCheck detects persistent infrastructure roles (witness, refinery)
@@ -251,13 +251,13 @@ func (c *BranchCheck) findPersistentRoleDirs(townRoot string) []string {
 		}
 		// Skip non-rig directories
 		name := entry.Name()
-		if name == "mayor" || name == ".beads" || strings.HasPrefix(name, ".") {
+		if name == "overseer" || name == ".beads" || strings.HasPrefix(name, ".") {
 			continue
 		}
 
 		rigPath := filepath.Join(townRoot, name)
 
-		// Check if this looks like a rig (has crew/, polecats/, witness/, or refinery/)
+		// Check if this looks like a rig (has crew/, miners/, witness/, or refinery/)
 		if !c.isRig(rigPath) {
 			continue
 		}
@@ -280,7 +280,7 @@ func (c *BranchCheck) findPersistentRoleDirs(townRoot string) []string {
 
 // isRig checks if a directory looks like a rig.
 func (c *BranchCheck) isRig(path string) bool {
-	markers := []string{"crew", "polecats", "witness", "refinery"}
+	markers := []string{"crew", "miners", "witness", "refinery"}
 	for _, marker := range markers {
 		if _, err := os.Stat(filepath.Join(path, marker)); err == nil {
 			return true
@@ -421,7 +421,7 @@ func (c *CloneDivergenceCheck) findAllClones(townRoot string) []string {
 	}
 
 	for _, entry := range entries {
-		if !entry.IsDir() || strings.HasPrefix(entry.Name(), ".") || entry.Name() == "mayor" || entry.Name() == "docs" {
+		if !entry.IsDir() || strings.HasPrefix(entry.Name(), ".") || entry.Name() == "overseer" || entry.Name() == "docs" {
 			continue
 		}
 
@@ -429,7 +429,7 @@ func (c *CloneDivergenceCheck) findAllClones(townRoot string) []string {
 
 		// Check standard clone locations
 		locations := []string{
-			"mayor/rig",
+			"overseer/rig",
 			"witness/rig",
 			"refinery/rig",
 		}
@@ -454,19 +454,19 @@ func (c *CloneDivergenceCheck) findAllClones(townRoot string) []string {
 			}
 		}
 
-		// Add polecats (handle both new and old structures)
-		// New structure: polecats/<name>/<rigname>/
-		// Old structure: polecats/<name>/
+		// Add miners (handle both new and old structures)
+		// New structure: miners/<name>/<rigname>/
+		// Old structure: miners/<name>/
 		rigName := entry.Name()
-		polecatsPath := filepath.Join(rigPath, "polecats")
-		if polecatEntries, err := os.ReadDir(polecatsPath); err == nil {
-			for _, polecat := range polecatEntries {
-				if polecat.IsDir() && !strings.HasPrefix(polecat.Name(), ".") {
+		minersPath := filepath.Join(rigPath, "miners")
+		if minerEntries, err := os.ReadDir(minersPath); err == nil {
+			for _, miner := range minerEntries {
+				if miner.IsDir() && !strings.HasPrefix(miner.Name(), ".") {
 					// Try new structure first
-					path := filepath.Join(polecatsPath, polecat.Name(), rigName)
+					path := filepath.Join(minersPath, miner.Name(), rigName)
 					if !c.isGitRepo(path) {
 						// Fall back to old structure
-						path = filepath.Join(polecatsPath, polecat.Name())
+						path = filepath.Join(minersPath, miner.Name())
 					}
 					if c.isGitRepo(path) {
 						clones = append(clones, path)

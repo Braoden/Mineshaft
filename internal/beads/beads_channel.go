@@ -452,7 +452,7 @@ func (b *Beads) EnforceChannelRetention(name string) error {
 }
 
 // PruneAllChannels enforces retention on all channels.
-// Called by Deacon patrol as a backup cleanup mechanism.
+// Called by Supervisor patrol as a backup cleanup mechanism.
 // Enforces both count-based (RetentionCount) and time-based (RetentionHours) limits.
 // Uses a 10% buffer for count-based pruning to avoid thrashing.
 func (b *Beads) PruneAllChannels() (int, error) {

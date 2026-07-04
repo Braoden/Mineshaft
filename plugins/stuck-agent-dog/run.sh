@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # stuck-agent-dog/run.sh — Context-aware stuck/crashed agent detection.
 #
-# SCOPE: Only polecats and deacon. NEVER touches crew, mayor, witness, or refinery.
+# SCOPE: Only miners and supervisor. NEVER touches crew, overseer, witness, or refinery.
 # The daemon detects; this plugin inspects context before acting.
 
 set -euo pipefail
@@ -17,8 +17,8 @@ if [ -z "$TOWN_ROOT" ]; then
 fi
 
 RIGS_JSON_PATH="${TOWN_ROOT}/rigs.json"
-if [ ! -f "$RIGS_JSON_PATH" ] && [ -f "$TOWN_ROOT/mayor/rigs.json" ]; then
-  RIGS_JSON_PATH="$TOWN_ROOT/mayor/rigs.json"
+if [ ! -f "$RIGS_JSON_PATH" ] && [ -f "$TOWN_ROOT/overseer/rigs.json" ]; then
+  RIGS_JSON_PATH="$TOWN_ROOT/overseer/rigs.json"
 fi
 
 integer_or_default() {
@@ -31,10 +31,10 @@ integer_or_default() {
   esac
 }
 
-POLECAT_MAX_INACTIVITY="${GT_STUCK_AGENT_DOG_MAX_INACTIVITY:-0s}"
-[ "$POLECAT_MAX_INACTIVITY" = "0" ] && POLECAT_MAX_INACTIVITY="0s"
-DEACON_STALE_SECONDS=$(integer_or_default "${GT_STUCK_AGENT_DOG_DEACON_STALE_SECONDS:-}" 1200)
-ACTIVITY_GRACE_SECONDS=$(integer_or_default "${GT_STUCK_AGENT_DOG_ACTIVITY_GRACE_SECONDS:-}" "$DEACON_STALE_SECONDS")
+MINER_MAX_INACTIVITY="${GT_STUCK_AGENT_DOG_MAX_INACTIVITY:-0s}"
+[ "$MINER_MAX_INACTIVITY" = "0" ] && MINER_MAX_INACTIVITY="0s"
+SUPERVISOR_STALE_SECONDS=$(integer_or_default "${GT_STUCK_AGENT_DOG_SUPERVISOR_STALE_SECONDS:-}" 1200)
+ACTIVITY_GRACE_SECONDS=$(integer_or_default "${GT_STUCK_AGENT_DOG_ACTIVITY_GRACE_SECONDS:-}" "$SUPERVISOR_STALE_SECONDS")
 MASS_DEATH_THRESHOLD=$(integer_or_default "${GT_STUCK_AGENT_DOG_MASS_DEATH_THRESHOLD:-}" 3)
 
 heartbeat_epoch() {
@@ -86,8 +86,8 @@ has_in_progress_work() {
 rig_workdir() {
   local rig="$1"
 
-  if [ -d "$TOWN_ROOT/$rig/mayor/rig" ]; then
-    printf '%s\n' "$TOWN_ROOT/$rig/mayor/rig"
+  if [ -d "$TOWN_ROOT/$rig/overseer/rig" ]; then
+    printf '%s\n' "$TOWN_ROOT/$rig/overseer/rig"
     return 0
   fi
 
@@ -106,7 +106,7 @@ rig_hook_bead() {
     return 0
   fi
 
-  ( cd "$dir" 2>/dev/null && gt hook show "$rig/polecats/$pcat" --json 2>/dev/null ) \
+  ( cd "$dir" 2>/dev/null && gt hook show "$rig/miners/$pcat" --json 2>/dev/null ) \
     | jq -r '.bead_id // empty' 2>/dev/null || true
 }
 
@@ -141,7 +141,7 @@ session_health_status() {
   local health_json=""
   local status=""
 
-  health_json=$(gt session health "$session_name" --json --max-inactivity "$POLECAT_MAX_INACTIVITY" 2>/dev/null) || return 1
+  health_json=$(gt session health "$session_name" --json --max-inactivity "$MINER_MAX_INACTIVITY" 2>/dev/null) || return 1
   status=$(printf '%s' "$health_json" | jq -r '.status // empty' 2>/dev/null || true)
   [ -n "$status" ] || return 1
   printf '%s\n' "$status"
@@ -174,7 +174,7 @@ if [ -z "$RIG_PREFIX_MAP" ]; then
   exit 0
 fi
 
-# --- Check polecat health ----------------------------------------------------
+# --- Check miner health ----------------------------------------------------
 
 CRASHED=()
 STUCK=()
@@ -182,10 +182,10 @@ HEALTHY=0
 
 while IFS='|' read -r RIG PREFIX; do
   [ -z "$RIG" ] && continue
-  POLECAT_DIR="$TOWN_ROOT/$RIG/polecats"
-  [ -d "$POLECAT_DIR" ] || continue
+  MINER_DIR="$TOWN_ROOT/$RIG/miners"
+  [ -d "$MINER_DIR" ] || continue
 
-  for PCAT_PATH in "$POLECAT_DIR"/*/; do
+  for PCAT_PATH in "$MINER_DIR"/*/; do
     [ -d "$PCAT_PATH" ] || continue
     PCAT_NAME=$(basename "$PCAT_PATH")
     SESSION_NAME="${PREFIX}-${PCAT_NAME}"
@@ -206,7 +206,7 @@ while IFS='|' read -r RIG PREFIX; do
         # A live runtime with quiet output can be a long research turn. Do not
         # kill it here; operators can tune the threshold and inspect manually.
         HEALTHY=$((HEALTHY + 1))
-        log "  OBSERVE: $SESSION_NAME runtime alive but inactive beyond $POLECAT_MAX_INACTIVITY; not restarting"
+        log "  OBSERVE: $SESSION_NAME runtime alive but inactive beyond $MINER_MAX_INACTIVITY; not restarting"
         ;;
       session-dead|session_dead)
         HOOK_BEAD=$(rig_hook_bead "$RIG" "$PCAT_NAME")
@@ -223,60 +223,60 @@ while IFS='|' read -r RIG PREFIX; do
 done <<< "$RIG_PREFIX_MAP"
 
 log ""
-log "Polecat health: ${#CRASHED[@]} crashed, ${#STUCK[@]} stuck, $HEALTHY healthy"
+log "Miner health: ${#CRASHED[@]} crashed, ${#STUCK[@]} stuck, $HEALTHY healthy"
 
-# --- Check deacon health -----------------------------------------------------
+# --- Check supervisor health -----------------------------------------------------
 
 log ""
-log "=== Deacon Health ==="
+log "=== Supervisor Health ==="
 
-DEACON_SESSION="hq-deacon"
-DEACON_ISSUE=""
-DEACON_DIVERGENCE=""
-DEACON_PROCESS_ALIVE=0
+SUPERVISOR_SESSION="hq-supervisor"
+SUPERVISOR_ISSUE=""
+SUPERVISOR_DIVERGENCE=""
+SUPERVISOR_PROCESS_ALIVE=0
 
-if ! tmux has-session -t "$DEACON_SESSION" 2>/dev/null; then
-  log "  CRASHED: Deacon session is dead"
-  DEACON_ISSUE="crashed"
+if ! tmux has-session -t "$SUPERVISOR_SESSION" 2>/dev/null; then
+  log "  CRASHED: Supervisor session is dead"
+  SUPERVISOR_ISSUE="crashed"
 else
-  DEACON_PID=$(tmux list-panes -t "$DEACON_SESSION" -F '#{pane_pid}' 2>/dev/null | head -1 || true)
-  DEACON_COMM=$(ps -o comm= -p "$DEACON_PID" 2>/dev/null || true)
-  if [ -z "$DEACON_COMM" ]; then
-    log "  ZOMBIE: Deacon process dead (pid=$DEACON_PID), session alive"
-    DEACON_ISSUE="zombie"
+  SUPERVISOR_PID=$(tmux list-panes -t "$SUPERVISOR_SESSION" -F '#{pane_pid}' 2>/dev/null | head -1 || true)
+  SUPERVISOR_COMM=$(ps -o comm= -p "$SUPERVISOR_PID" 2>/dev/null || true)
+  if [ -z "$SUPERVISOR_COMM" ]; then
+    log "  ZOMBIE: Supervisor process dead (pid=$SUPERVISOR_PID), session alive"
+    SUPERVISOR_ISSUE="zombie"
   else
-    log "  Process alive: pid=$DEACON_PID comm=$DEACON_COMM"
-    DEACON_PROCESS_ALIVE=1
+    log "  Process alive: pid=$SUPERVISOR_PID comm=$SUPERVISOR_COMM"
+    SUPERVISOR_PROCESS_ALIVE=1
   fi
 
-  HEARTBEAT_FILE="$TOWN_ROOT/deacon/heartbeat.json"
-  if [ -z "$DEACON_ISSUE" ] && [ -f "$HEARTBEAT_FILE" ]; then
+  HEARTBEAT_FILE="$TOWN_ROOT/supervisor/heartbeat.json"
+  if [ -z "$SUPERVISOR_ISSUE" ] && [ -f "$HEARTBEAT_FILE" ]; then
     HEARTBEAT_TIME=$(heartbeat_epoch "$HEARTBEAT_FILE" || true)
     NOW=$(date +%s)
     HEARTBEAT_AGE=$(( NOW - ${HEARTBEAT_TIME:-0} ))
 
-    if [ "$HEARTBEAT_AGE" -gt "$DEACON_STALE_SECONDS" ]; then
+    if [ "$HEARTBEAT_AGE" -gt "$SUPERVISOR_STALE_SECONDS" ]; then
       # Cross-check tmux activity before declaring stuck: heartbeat.json is
       # only ONE of three heartbeat stores (hq-qxl9). A live session with
       # recent activity means the file-write path diverged (e.g. a long
       # turn, or the agent refreshing a different store) — not a stuck
-      # Deacon. Escalating that as stuck caused a false-positive storm.
-      ACTIVITY_TIME=$(tmux display-message -t "$DEACON_SESSION" -p '#{window_activity}' 2>/dev/null || true)
+      # Supervisor. Escalating that as stuck caused a false-positive storm.
+      ACTIVITY_TIME=$(tmux display-message -t "$SUPERVISOR_SESSION" -p '#{window_activity}' 2>/dev/null || true)
       case "$ACTIVITY_TIME" in
         ''|*[!0-9]*) ACTIVITY_AGE="" ;;
         *) ACTIVITY_AGE=$(( NOW - ACTIVITY_TIME )) ;;
       esac
       if [ -n "$ACTIVITY_AGE" ] && [ "$ACTIVITY_AGE" -le "$ACTIVITY_GRACE_SECONDS" ]; then
         log "  DIVERGENCE: heartbeat file stale (${HEARTBEAT_AGE}s) but session active ${ACTIVITY_AGE}s ago — write divergence, not stuck"
-        DEACON_DIVERGENCE="heartbeat_write_divergence_${HEARTBEAT_AGE}s_active_${ACTIVITY_AGE}s"
-      elif [ "$DEACON_PROCESS_ALIVE" -eq 1 ] && ! has_in_progress_work; then
-        log "  SKIP: Deacon heartbeat stale (${HEARTBEAT_AGE}s old) but process is alive and no in_progress work exists"
+        SUPERVISOR_DIVERGENCE="heartbeat_write_divergence_${HEARTBEAT_AGE}s_active_${ACTIVITY_AGE}s"
+      elif [ "$SUPERVISOR_PROCESS_ALIVE" -eq 1 ] && ! has_in_progress_work; then
+        log "  SKIP: Supervisor heartbeat stale (${HEARTBEAT_AGE}s old) but process is alive and no in_progress work exists"
       else
-        log "  STUCK: Deacon heartbeat stale (${HEARTBEAT_AGE}s old, >${DEACON_STALE_SECONDS}s threshold), no recent session activity"
-        DEACON_ISSUE="stuck_heartbeat_${HEARTBEAT_AGE}s"
+        log "  STUCK: Supervisor heartbeat stale (${HEARTBEAT_AGE}s old, >${SUPERVISOR_STALE_SECONDS}s threshold), no recent session activity"
+        SUPERVISOR_ISSUE="stuck_heartbeat_${HEARTBEAT_AGE}s"
       fi
     else
-      log "  OK: Deacon heartbeat ${HEARTBEAT_AGE}s old"
+      log "  OK: Supervisor heartbeat ${HEARTBEAT_AGE}s old"
     fi
   fi
 fi
@@ -298,27 +298,27 @@ fi
 if [ "$MASS_DEATH" -eq 1 ]; then
   log "Skipping per-agent restart/kill actions during mass-death escalation"
 else
-  # Crashed polecats: notify witness to restart
+  # Crashed miners: notify witness to restart
   # Note: `"${arr[@]:-}"` expands an empty array to a single empty string under
-  # `set -u`, which would fire a phantom `RESTART_POLECAT: /` notification. The
+  # `set -u`, which would fire a phantom `RESTART_MINER: /` notification. The
   # `${arr[@]+"${arr[@]}"}` form expands to nothing when the array is empty.
   for ENTRY in ${CRASHED[@]+"${CRASHED[@]}"}; do
     IFS='|' read -r SESSION RIG PCAT HOOK <<< "$ENTRY"
-    log "Requesting restart for $RIG/polecats/$PCAT (hook=$HOOK)"
-    gt mail send "$RIG/witness" -s "RESTART_POLECAT: $RIG/$PCAT" --stdin <<BODY || log "  WARN: restart mail failed for $RIG/$PCAT"
-Polecat $PCAT crash confirmed by stuck-agent-dog plugin.
+    log "Requesting restart for $RIG/miners/$PCAT (hook=$HOOK)"
+    gt mail send "$RIG/witness" -s "RESTART_MINER: $RIG/$PCAT" --stdin <<BODY || log "  WARN: restart mail failed for $RIG/$PCAT"
+Miner $PCAT crash confirmed by stuck-agent-dog plugin.
 hook_bead: $HOOK
 action: restart requested
 BODY
   done
 
-  # Zombie polecats: kill zombie session, then request restart
+  # Zombie miners: kill zombie session, then request restart
   for ENTRY in ${STUCK[@]+"${STUCK[@]}"}; do
     IFS='|' read -r SESSION RIG PCAT HOOK REASON <<< "$ENTRY"
     log "Killing zombie session $SESSION and requesting restart"
     tmux kill-session -t "$SESSION" 2>/dev/null || true
-    gt mail send "$RIG/witness" -s "RESTART_POLECAT: $RIG/$PCAT (zombie cleared)" --stdin <<BODY || log "  WARN: restart mail failed for $RIG/$PCAT"
-Polecat $PCAT zombie session cleared by stuck-agent-dog plugin.
+    gt mail send "$RIG/witness" -s "RESTART_MINER: $RIG/$PCAT (zombie cleared)" --stdin <<BODY || log "  WARN: restart mail failed for $RIG/$PCAT"
+Miner $PCAT zombie session cleared by stuck-agent-dog plugin.
 hook_bead: $HOOK
 reason: $REASON
 action: restart requested
@@ -326,28 +326,28 @@ BODY
   done
 fi
 
-# Deacon issues: escalate
-if [ -n "$DEACON_ISSUE" ]; then
-	log "Escalating deacon issue: $DEACON_ISSUE"
-	DEACON_SEVERITY="HIGH"
-	DEACON_FINGERPRINT="stuck-agent-dog:deacon:$DEACON_ISSUE"
-	case "$DEACON_ISSUE" in
+# Supervisor issues: escalate
+if [ -n "$SUPERVISOR_ISSUE" ]; then
+	log "Escalating supervisor issue: $SUPERVISOR_ISSUE"
+	SUPERVISOR_SEVERITY="HIGH"
+	SUPERVISOR_FINGERPRINT="stuck-agent-dog:supervisor:$SUPERVISOR_ISSUE"
+	case "$SUPERVISOR_ISSUE" in
 		stuck_heartbeat_*)
-			DEACON_SEVERITY="MEDIUM"
-			DEACON_FINGERPRINT="stuck-agent-dog:deacon:stuck-heartbeat"
+			SUPERVISOR_SEVERITY="MEDIUM"
+			SUPERVISOR_FINGERPRINT="stuck-agent-dog:supervisor:stuck-heartbeat"
 			;;
 	esac
-	gt escalate "Deacon $DEACON_ISSUE detected by stuck-agent-dog" \
-		-s "$DEACON_SEVERITY" \
+	gt escalate "Supervisor $SUPERVISOR_ISSUE detected by stuck-agent-dog" \
+		-s "$SUPERVISOR_SEVERITY" \
 		--source "plugin:stuck-agent-dog" \
-		--fingerprint "$DEACON_FINGERPRINT" 2>/dev/null || true
+		--fingerprint "$SUPERVISOR_FINGERPRINT" 2>/dev/null || true
 fi
 
 # --- Report -------------------------------------------------------------------
 
 SUMMARY="Agent health: ${#CRASHED[@]} crashed, ${#STUCK[@]} stuck, $HEALTHY healthy"
-[ -n "$DEACON_ISSUE" ] && SUMMARY="$SUMMARY, deacon=$DEACON_ISSUE"
-[ -n "$DEACON_DIVERGENCE" ] && SUMMARY="$SUMMARY, deacon=$DEACON_DIVERGENCE (not escalated)"
+[ -n "$SUPERVISOR_ISSUE" ] && SUMMARY="$SUMMARY, supervisor=$SUPERVISOR_ISSUE"
+[ -n "$SUPERVISOR_DIVERGENCE" ] && SUMMARY="$SUMMARY, supervisor=$SUPERVISOR_DIVERGENCE (not escalated)"
 log ""
 log "=== $SUMMARY ==="
 

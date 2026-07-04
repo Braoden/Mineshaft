@@ -12,27 +12,27 @@ func TestAddressToIdentity(t *testing.T) {
 		expected string
 	}{
 		// Town-level agents keep trailing slash
-		{"mayor", "mayor/"},
-		{"mayor/", "mayor/"},
-		{"deacon", "deacon/"},
-		{"deacon/", "deacon/"},
+		{"overseer", "overseer/"},
+		{"overseer/", "overseer/"},
+		{"supervisor", "supervisor/"},
+		{"supervisor/", "supervisor/"},
 
 		// Rig-scoped town-level roles resolve to canonical form (gt-te23)
-		{"gastown/mayor", "mayor/"},
-		{"gastown/deacon", "deacon/"},
-		{"laser/mayor", "mayor/"},
-		{"laser/deacon", "deacon/"},
+		{"excavation/overseer", "overseer/"},
+		{"excavation/supervisor", "supervisor/"},
+		{"laser/overseer", "overseer/"},
+		{"laser/supervisor", "supervisor/"},
 
-		// Rig-level agents: crew/ and polecats/ normalized to canonical form
-		{"gastown/polecats/Toast", "gastown/Toast"},
-		{"gastown/crew/max", "gastown/max"},
-		{"gastown/Toast", "gastown/Toast"}, // Already canonical
-		{"gastown/max", "gastown/max"},     // Already canonical
-		{"gastown/refinery", "gastown/refinery"},
-		{"gastown/witness", "gastown/witness"},
+		// Rig-level agents: crew/ and miners/ normalized to canonical form
+		{"excavation/miners/Toast", "excavation/Toast"},
+		{"excavation/crew/max", "excavation/max"},
+		{"excavation/Toast", "excavation/Toast"}, // Already canonical
+		{"excavation/max", "excavation/max"},     // Already canonical
+		{"excavation/refinery", "excavation/refinery"},
+		{"excavation/witness", "excavation/witness"},
 
 		// Rig broadcast (trailing slash removed)
-		{"gastown/", "gastown"},
+		{"excavation/", "excavation"},
 	}
 
 	for _, tt := range tests {
@@ -51,20 +51,20 @@ func TestIdentityToAddress(t *testing.T) {
 		expected string
 	}{
 		// Town-level agents
-		{"mayor", "mayor/"},
-		{"mayor/", "mayor/"},
-		{"deacon", "deacon/"},
-		{"deacon/", "deacon/"},
+		{"overseer", "overseer/"},
+		{"overseer/", "overseer/"},
+		{"supervisor", "supervisor/"},
+		{"supervisor/", "supervisor/"},
 
-		// Rig-level agents: crew/ and polecats/ normalized
-		{"gastown/polecats/Toast", "gastown/Toast"},
-		{"gastown/crew/max", "gastown/max"},
-		{"gastown/Toast", "gastown/Toast"}, // Already canonical
-		{"gastown/refinery", "gastown/refinery"},
-		{"gastown/witness", "gastown/witness"},
+		// Rig-level agents: crew/ and miners/ normalized
+		{"excavation/miners/Toast", "excavation/Toast"},
+		{"excavation/crew/max", "excavation/max"},
+		{"excavation/Toast", "excavation/Toast"}, // Already canonical
+		{"excavation/refinery", "excavation/refinery"},
+		{"excavation/witness", "excavation/witness"},
 
 		// Rig name only (no transformation)
-		{"gastown", "gastown"},
+		{"excavation", "excavation"},
 	}
 
 	for _, tt := range tests {
@@ -170,13 +170,13 @@ func TestParseMessageType(t *testing.T) {
 }
 
 func TestNewMessage(t *testing.T) {
-	msg := NewMessage("mayor/", "gastown/Toast", "Test Subject", "Test Body")
+	msg := NewMessage("overseer/", "excavation/Toast", "Test Subject", "Test Body")
 
-	if msg.From != "mayor/" {
-		t.Errorf("From = %q, want 'mayor/'", msg.From)
+	if msg.From != "overseer/" {
+		t.Errorf("From = %q, want 'overseer/'", msg.From)
 	}
-	if msg.To != "gastown/Toast" {
-		t.Errorf("To = %q, want 'gastown/Toast'", msg.To)
+	if msg.To != "excavation/Toast" {
+		t.Errorf("To = %q, want 'excavation/Toast'", msg.To)
 	}
 	if msg.Subject != "Test Subject" {
 		t.Errorf("Subject = %q, want 'Test Subject'", msg.Subject)
@@ -205,12 +205,12 @@ func TestNewReplyMessage(t *testing.T) {
 	original := &Message{
 		ID:       "orig-001",
 		ThreadID: "thread-001",
-		From:     "gastown/Toast",
-		To:       "mayor/",
+		From:     "excavation/Toast",
+		To:       "overseer/",
 		Subject:  "Original Subject",
 	}
 
-	reply := NewReplyMessage("mayor/", "gastown/Toast", "Re: Original Subject", "Reply body", original)
+	reply := NewReplyMessage("overseer/", "excavation/Toast", "Re: Original Subject", "Reply body", original)
 
 	if reply.ThreadID != "thread-001" {
 		t.Errorf("ThreadID = %q, want 'thread-001'", reply.ThreadID)
@@ -218,11 +218,11 @@ func TestNewReplyMessage(t *testing.T) {
 	if reply.ReplyTo != "orig-001" {
 		t.Errorf("ReplyTo = %q, want 'orig-001'", reply.ReplyTo)
 	}
-	if reply.From != "mayor/" {
-		t.Errorf("From = %q, want 'mayor/'", reply.From)
+	if reply.From != "overseer/" {
+		t.Errorf("From = %q, want 'overseer/'", reply.From)
 	}
-	if reply.To != "gastown/Toast" {
-		t.Errorf("To = %q, want 'gastown/Toast'", reply.To)
+	if reply.To != "excavation/Toast" {
+		t.Errorf("To = %q, want 'excavation/Toast'", reply.To)
 	}
 	if reply.Subject != "Re: Original Subject" {
 		t.Errorf("Subject = %q, want 'Re: Original Subject'", reply.Subject)
@@ -236,8 +236,8 @@ func TestBeadsMessageToMessage(t *testing.T) {
 		Title:       "Test Subject",
 		Description: "Test Body",
 		Status:      "open",
-		Assignee:    "gastown/Toast",
-		Labels:      []string{"from:mayor/", "thread:t-001"},
+		Assignee:    "excavation/Toast",
+		Labels:      []string{"from:overseer/", "thread:t-001"},
 		CreatedAt:   now,
 		Priority:    1,
 	}
@@ -253,14 +253,14 @@ func TestBeadsMessageToMessage(t *testing.T) {
 	if msg.Body != "Test Body" {
 		t.Errorf("Body = %q, want 'Test Body'", msg.Body)
 	}
-	if msg.From != "mayor/" {
-		t.Errorf("From = %q, want 'mayor/'", msg.From)
+	if msg.From != "overseer/" {
+		t.Errorf("From = %q, want 'overseer/'", msg.From)
 	}
 	if msg.ThreadID != "t-001" {
 		t.Errorf("ThreadID = %q, want 't-001'", msg.ThreadID)
 	}
-	if msg.To != "gastown/Toast" {
-		t.Errorf("To = %q, want 'gastown/Toast'", msg.To)
+	if msg.To != "excavation/Toast" {
+		t.Errorf("To = %q, want 'excavation/Toast'", msg.To)
 	}
 	if msg.Priority != PriorityHigh {
 		t.Errorf("Priority = %q, want PriorityHigh", msg.Priority)
@@ -273,8 +273,8 @@ func TestBeadsMessageToMessageWithReplyTo(t *testing.T) {
 		Title:       "Reply Subject",
 		Description: "Reply Body",
 		Status:      "open",
-		Assignee:    "gastown/Toast",
-		Labels:      []string{"from:mayor/", "thread:t-002", "reply-to:orig-001", "msg-type:reply"},
+		Assignee:    "excavation/Toast",
+		Labels:      []string{"from:overseer/", "thread:t-002", "reply-to:orig-001", "msg-type:reply"},
 		CreatedAt:   time.Now(),
 		Priority:    2,
 	}
@@ -295,9 +295,9 @@ func TestBeadsMessageToMessageWithEscalationTypeAndLabels(t *testing.T) {
 		Title:       "Escalation subject",
 		Description: "Escalation body",
 		Status:      "open",
-		Assignee:    "mayor",
+		Assignee:    "overseer",
 		Labels: []string{
-			"from:deacon/",
+			"from:supervisor/",
 			"thread:t-esc",
 			"msg-type:escalation",
 			"gt:escalation",
@@ -379,7 +379,7 @@ func TestBeadsMessageToMessageEmptyLabels(t *testing.T) {
 		ID:          "hq-empty",
 		Title:       "Empty Labels",
 		Description: "Test with empty labels",
-		Assignee:    "gastown/Toast",
+		Assignee:    "excavation/Toast",
 		Labels:      []string{}, // No labels
 		Priority:    2,
 	}
@@ -395,10 +395,10 @@ func TestBeadsMessageToMessageEmptyLabels(t *testing.T) {
 }
 
 func TestNewQueueMessage(t *testing.T) {
-	msg := NewQueueMessage("mayor/", "work-requests", "New Task", "Please process this")
+	msg := NewQueueMessage("overseer/", "work-requests", "New Task", "Please process this")
 
-	if msg.From != "mayor/" {
-		t.Errorf("From = %q, want 'mayor/'", msg.From)
+	if msg.From != "overseer/" {
+		t.Errorf("From = %q, want 'overseer/'", msg.From)
 	}
 	if msg.Queue != "work-requests" {
 		t.Errorf("Queue = %q, want 'work-requests'", msg.Queue)
@@ -421,10 +421,10 @@ func TestNewQueueMessage(t *testing.T) {
 }
 
 func TestNewChannelMessage(t *testing.T) {
-	msg := NewChannelMessage("deacon/", "alerts", "System Alert", "System is healthy")
+	msg := NewChannelMessage("supervisor/", "alerts", "System Alert", "System is healthy")
 
-	if msg.From != "deacon/" {
-		t.Errorf("From = %q, want 'deacon/'", msg.From)
+	if msg.From != "supervisor/" {
+		t.Errorf("From = %q, want 'supervisor/'", msg.From)
 	}
 	if msg.Channel != "alerts" {
 		t.Errorf("Channel = %q, want 'alerts'", msg.Channel)
@@ -441,9 +441,9 @@ func TestNewChannelMessage(t *testing.T) {
 }
 
 func TestMessageIsQueueMessage(t *testing.T) {
-	directMsg := NewMessage("mayor/", "gastown/Toast", "Test", "Body")
-	queueMsg := NewQueueMessage("mayor/", "work-requests", "Task", "Body")
-	channelMsg := NewChannelMessage("deacon/", "alerts", "Alert", "Body")
+	directMsg := NewMessage("overseer/", "excavation/Toast", "Test", "Body")
+	queueMsg := NewQueueMessage("overseer/", "work-requests", "Task", "Body")
+	channelMsg := NewChannelMessage("supervisor/", "alerts", "Alert", "Body")
 
 	if directMsg.IsQueueMessage() {
 		t.Error("Direct message should not be a queue message")
@@ -457,9 +457,9 @@ func TestMessageIsQueueMessage(t *testing.T) {
 }
 
 func TestMessageIsChannelMessage(t *testing.T) {
-	directMsg := NewMessage("mayor/", "gastown/Toast", "Test", "Body")
-	queueMsg := NewQueueMessage("mayor/", "work-requests", "Task", "Body")
-	channelMsg := NewChannelMessage("deacon/", "alerts", "Alert", "Body")
+	directMsg := NewMessage("overseer/", "excavation/Toast", "Test", "Body")
+	queueMsg := NewQueueMessage("overseer/", "work-requests", "Task", "Body")
+	channelMsg := NewChannelMessage("supervisor/", "alerts", "Alert", "Body")
 
 	if directMsg.IsChannelMessage() {
 		t.Error("Direct message should not be a channel message")
@@ -473,9 +473,9 @@ func TestMessageIsChannelMessage(t *testing.T) {
 }
 
 func TestMessageIsDirectMessage(t *testing.T) {
-	directMsg := NewMessage("mayor/", "gastown/Toast", "Test", "Body")
-	queueMsg := NewQueueMessage("mayor/", "work-requests", "Task", "Body")
-	channelMsg := NewChannelMessage("deacon/", "alerts", "Alert", "Body")
+	directMsg := NewMessage("overseer/", "excavation/Toast", "Test", "Body")
+	queueMsg := NewQueueMessage("overseer/", "work-requests", "Task", "Body")
+	channelMsg := NewChannelMessage("supervisor/", "alerts", "Alert", "Body")
 
 	if !directMsg.IsDirectMessage() {
 		t.Error("Direct message should be a direct message")
@@ -497,24 +497,24 @@ func TestMessageValidate(t *testing.T) {
 	}{
 		{
 			name:    "valid direct message",
-			msg:     NewMessage("mayor/", "gastown/Toast", "Test", "Body"),
+			msg:     NewMessage("overseer/", "excavation/Toast", "Test", "Body"),
 			wantErr: false,
 		},
 		{
 			name:    "valid queue message",
-			msg:     NewQueueMessage("mayor/", "work-requests", "Task", "Body"),
+			msg:     NewQueueMessage("overseer/", "work-requests", "Task", "Body"),
 			wantErr: false,
 		},
 		{
 			name:    "valid channel message",
-			msg:     NewChannelMessage("deacon/", "alerts", "Alert", "Body"),
+			msg:     NewChannelMessage("supervisor/", "alerts", "Alert", "Body"),
 			wantErr: false,
 		},
 		{
 			name: "missing ID",
 			msg: &Message{
-				From:    "mayor/",
-				To:      "gastown/Toast",
+				From:    "overseer/",
+				To:      "excavation/Toast",
 				Subject: "Test",
 			},
 			wantErr: true,
@@ -524,7 +524,7 @@ func TestMessageValidate(t *testing.T) {
 			name: "missing From",
 			msg: &Message{
 				ID:      "msg-001",
-				To:      "gastown/Toast",
+				To:      "excavation/Toast",
 				Subject: "Test",
 			},
 			wantErr: true,
@@ -534,8 +534,8 @@ func TestMessageValidate(t *testing.T) {
 			name: "missing Subject",
 			msg: &Message{
 				ID:   "msg-001",
-				From: "mayor/",
-				To:   "gastown/Toast",
+				From: "overseer/",
+				To:   "excavation/Toast",
 			},
 			wantErr: true,
 			errMsg:  "must have a Subject",
@@ -544,7 +544,7 @@ func TestMessageValidate(t *testing.T) {
 			name: "no routing target",
 			msg: &Message{
 				ID:      "msg-001",
-				From:    "mayor/",
+				From:    "overseer/",
 				Subject: "Test",
 			},
 			wantErr: true,
@@ -554,8 +554,8 @@ func TestMessageValidate(t *testing.T) {
 			name: "both to and queue",
 			msg: &Message{
 				ID:      "msg-001",
-				From:    "mayor/",
-				To:      "gastown/Toast",
+				From:    "overseer/",
+				To:      "excavation/Toast",
 				Queue:   "work-requests",
 				Subject: "Test",
 			},
@@ -566,8 +566,8 @@ func TestMessageValidate(t *testing.T) {
 			name: "both to and channel",
 			msg: &Message{
 				ID:      "msg-001",
-				From:    "mayor/",
-				To:      "gastown/Toast",
+				From:    "overseer/",
+				To:      "excavation/Toast",
 				Channel: "alerts",
 				Subject: "Test",
 			},
@@ -578,7 +578,7 @@ func TestMessageValidate(t *testing.T) {
 			name: "both queue and channel",
 			msg: &Message{
 				ID:      "msg-001",
-				From:    "mayor/",
+				From:    "overseer/",
 				Queue:   "work-requests",
 				Channel: "alerts",
 				Subject: "Test",
@@ -590,10 +590,10 @@ func TestMessageValidate(t *testing.T) {
 			name: "claimed_by on non-queue message",
 			msg: &Message{
 				ID:        "msg-001",
-				From:      "mayor/",
-				To:        "gastown/Toast",
+				From:      "overseer/",
+				To:        "excavation/Toast",
 				Subject:   "Test",
-				ClaimedBy: "gastown/nux",
+				ClaimedBy: "excavation/nux",
 			},
 			wantErr: true,
 			errMsg:  "claimed_by is only valid for queue messages",
@@ -602,10 +602,10 @@ func TestMessageValidate(t *testing.T) {
 			name: "claimed_by on queue message is valid",
 			msg: &Message{
 				ID:        "msg-001",
-				From:      "mayor/",
+				From:      "overseer/",
 				Queue:     "work-requests",
 				Subject:   "Test",
-				ClaimedBy: "gastown/nux",
+				ClaimedBy: "excavation/nux",
 			},
 			wantErr: false,
 		},
@@ -653,9 +653,9 @@ func TestBeadsMessageParseQueueChannelLabels(t *testing.T) {
 		Description: "Test queue message",
 		Status:      "open",
 		Labels: []string{
-			"from:mayor/",
+			"from:overseer/",
 			"queue:work-requests",
-			"claimed-by:gastown/nux",
+			"claimed-by:excavation/nux",
 			"claimed-at:" + claimedAtStr,
 		},
 		Priority: 2,
@@ -666,8 +666,8 @@ func TestBeadsMessageParseQueueChannelLabels(t *testing.T) {
 	if msg.Queue != "work-requests" {
 		t.Errorf("Queue = %q, want 'work-requests'", msg.Queue)
 	}
-	if msg.ClaimedBy != "gastown/nux" {
-		t.Errorf("ClaimedBy = %q, want 'gastown/nux'", msg.ClaimedBy)
+	if msg.ClaimedBy != "excavation/nux" {
+		t.Errorf("ClaimedBy = %q, want 'excavation/nux'", msg.ClaimedBy)
 	}
 	if msg.ClaimedAt == nil {
 		t.Error("ClaimedAt should not be nil")
@@ -682,7 +682,7 @@ func TestBeadsMessageParseChannelLabel(t *testing.T) {
 		Title:       "Channel Message",
 		Description: "Test channel message",
 		Status:      "open",
-		Labels:      []string{"from:deacon/", "channel:alerts"},
+		Labels:      []string{"from:supervisor/", "channel:alerts"},
 		Priority:    2,
 	}
 
@@ -703,7 +703,7 @@ func TestBeadsMessageIsQueueMessage(t *testing.T) {
 	}
 	directMsg := BeadsMessage{
 		ID:       "hq-direct",
-		Assignee: "gastown/Toast",
+		Assignee: "excavation/Toast",
 	}
 	channelMsg := BeadsMessage{
 		ID:     "hq-channel",
@@ -728,7 +728,7 @@ func TestBeadsMessageIsChannelMessage(t *testing.T) {
 	}
 	directMsg := BeadsMessage{
 		ID:       "hq-direct",
-		Assignee: "gastown/Toast",
+		Assignee: "excavation/Toast",
 	}
 	channelMsg := BeadsMessage{
 		ID:     "hq-channel",
@@ -753,7 +753,7 @@ func TestBeadsMessageIsDirectMessage(t *testing.T) {
 	}
 	directMsg := BeadsMessage{
 		ID:       "hq-direct",
-		Assignee: "gastown/Toast",
+		Assignee: "excavation/Toast",
 	}
 	channelMsg := BeadsMessage{
 		ID:     "hq-channel",
@@ -772,13 +772,13 @@ func TestBeadsMessageIsDirectMessage(t *testing.T) {
 }
 
 func TestMessageIsClaimed(t *testing.T) {
-	unclaimed := NewQueueMessage("mayor/", "work-requests", "Task", "Body")
+	unclaimed := NewQueueMessage("overseer/", "work-requests", "Task", "Body")
 	if unclaimed.IsClaimed() {
 		t.Error("Unclaimed message should not be claimed")
 	}
 
-	claimed := NewQueueMessage("mayor/", "work-requests", "Task", "Body")
-	claimed.ClaimedBy = "gastown/nux"
+	claimed := NewQueueMessage("overseer/", "work-requests", "Task", "Body")
+	claimed.ClaimedBy = "excavation/nux"
 	now := time.Now()
 	claimed.ClaimedAt = &now
 
@@ -792,17 +792,17 @@ func TestParseLabelsIdempotent(t *testing.T) {
 		ID:    "hq-test",
 		Title: "Test",
 		Labels: []string{
-			"from:mayor/",
+			"from:overseer/",
 			"thread:t-001",
 			"reply-to:orig-001",
 			"msg-type:task",
-			"cc:gastown/Toast",
-			"cc:gastown/nux",
+			"cc:excavation/Toast",
+			"cc:excavation/nux",
 			"queue:work-requests",
 			"channel:alerts",
-			"claimed-by:gastown/nux",
+			"claimed-by:excavation/nux",
 			"delivery:pending",
-			"delivery-acked-by:gastown/nux",
+			"delivery-acked-by:excavation/nux",
 			"delivery-acked-at:2026-02-17T12:00:00Z",
 			"delivery:acked",
 		},
@@ -819,8 +819,8 @@ func TestParseLabelsIdempotent(t *testing.T) {
 	}
 
 	// Other fields should remain correct
-	if bm.sender != "mayor/" {
-		t.Errorf("sender = %q, want 'mayor/'", bm.sender)
+	if bm.sender != "overseer/" {
+		t.Errorf("sender = %q, want 'overseer/'", bm.sender)
 	}
 	if bm.threadID != "t-001" {
 		t.Errorf("threadID = %q, want 't-001'", bm.threadID)
@@ -837,14 +837,14 @@ func TestParseLabelsIdempotent(t *testing.T) {
 	if bm.channel != "alerts" {
 		t.Errorf("channel = %q, want 'alerts'", bm.channel)
 	}
-	if bm.claimedBy != "gastown/nux" {
-		t.Errorf("claimedBy = %q, want 'gastown/nux'", bm.claimedBy)
+	if bm.claimedBy != "excavation/nux" {
+		t.Errorf("claimedBy = %q, want 'excavation/nux'", bm.claimedBy)
 	}
 	if bm.deliveryState != DeliveryStateAcked {
 		t.Errorf("deliveryState = %q, want %q", bm.deliveryState, DeliveryStateAcked)
 	}
-	if bm.deliveryAckedBy != "gastown/nux" {
-		t.Errorf("deliveryAckedBy = %q, want %q", bm.deliveryAckedBy, "gastown/nux")
+	if bm.deliveryAckedBy != "excavation/nux" {
+		t.Errorf("deliveryAckedBy = %q, want %q", bm.deliveryAckedBy, "excavation/nux")
 	}
 }
 
@@ -852,11 +852,11 @@ func TestParseLabelsIdempotentViaPublicMethods(t *testing.T) {
 	bm := BeadsMessage{
 		ID:       "hq-test",
 		Title:    "Test",
-		Assignee: "gastown/Toast",
+		Assignee: "excavation/Toast",
 		Labels: []string{
-			"from:mayor/",
-			"cc:gastown/nux",
-			"cc:gastown/slit",
+			"from:overseer/",
+			"cc:excavation/nux",
+			"cc:excavation/slit",
 		},
 	}
 
@@ -876,11 +876,11 @@ func TestToMessage_DeliveryStatePendingOnPartialAck(t *testing.T) {
 	bm := BeadsMessage{
 		ID:       "hq-test",
 		Title:    "Test",
-		Assignee: "gastown/Toast",
+		Assignee: "excavation/Toast",
 		Labels: []string{
-			"from:mayor/",
+			"from:overseer/",
 			"delivery:pending",
-			"delivery-acked-by:gastown/Toast",
+			"delivery-acked-by:excavation/Toast",
 		},
 	}
 
@@ -894,7 +894,7 @@ func TestToMessage_DeliveryStatePendingOnPartialAck(t *testing.T) {
 }
 
 func TestSuppressNotifyNotSerialized(t *testing.T) {
-	msg := NewMessage("mayor/", "gastown/Toast", "Test", "Body")
+	msg := NewMessage("overseer/", "excavation/Toast", "Test", "Body")
 	msg.SuppressNotify = true
 
 	data, err := json.Marshal(msg)
@@ -922,14 +922,14 @@ func TestNewMessageValidatesForCrossRigAddresses(t *testing.T) {
 	// auto-generated ID and pass validation (gt-rud3p).
 	crossRigAddresses := []string{
 		"beads/crew/emma",
-		"gastown/polecats/Toast",
+		"excavation/miners/Toast",
 		"otherrig/witness",
-		"mayor/",
+		"overseer/",
 	}
 
 	for _, addr := range crossRigAddresses {
 		t.Run(addr, func(t *testing.T) {
-			msg := NewMessage("gastown/dag", addr, "Test subject", "Test body")
+			msg := NewMessage("excavation/dag", addr, "Test subject", "Test body")
 
 			if msg.ID == "" {
 				t.Error("NewMessage must generate a non-empty ID")
@@ -948,7 +948,7 @@ func TestNewMessageValidatesForCrossRigAddresses(t *testing.T) {
 func TestNewMessageFanOutCopiesGetUniqueIDs(t *testing.T) {
 	// When fanning out to multiple recipients, copies with cleared IDs
 	// should get unique IDs from sendToSingle (gt-rud3p).
-	msg := NewMessage("gastown/dag", "beads/crew/emma", "Test", "Body")
+	msg := NewMessage("excavation/dag", "beads/crew/emma", "Test", "Body")
 	originalID := msg.ID
 
 	if originalID == "" {

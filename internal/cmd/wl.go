@@ -6,11 +6,11 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/doltserver"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/wasteland"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/doltserver"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/wasteland"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // wl command flags
@@ -26,14 +26,14 @@ var wlCmd = &cobra.Command{
 	RunE:    requireSubcommand,
 	Long: `Manage Wasteland federation — join communities, post work, earn reputation.
 
-The Wasteland is a federation of Gas Towns via DoltHub. Each rig has a
+The Wasteland is a federation of Excavation Sites via DoltHub. Each rig has a
 sovereign fork of a shared commons database containing the wanted board
 (open work), rig registry, and validated completions.
 
 Getting started:
   gt wl join steveyegge/wl-commons   # Join the default wasteland
 
-See https://github.com/steveyegge/gastown for more information.`,
+See https://github.com/steveyegge/excavation for more information.`,
 }
 
 var wlJoinCmd = &cobra.Command{
@@ -93,7 +93,7 @@ func runWlJoin(cmd *cobra.Command, args []string) error {
 	// Find town root
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Fast path: check if already joined before loading town config.

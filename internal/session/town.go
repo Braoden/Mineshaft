@@ -1,29 +1,29 @@
-// Package session provides polecat session lifecycle management.
+// Package session provides miner session lifecycle management.
 package session
 
 import (
 	"fmt"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/events"
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/events"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 // TownSession represents a town-level tmux session.
 type TownSession struct {
-	Name      string // Display name (e.g., "Mayor")
-	SessionID string // Tmux session ID (e.g., "hq-mayor")
+	Name      string // Display name (e.g., "Overseer")
+	SessionID string // Tmux session ID (e.g., "hq-overseer")
 }
 
 // TownSessions returns the list of town-level sessions in shutdown order.
-// Order matters: Boot (Deacon's watchdog) must be stopped before Deacon,
-// otherwise Boot will try to restart Deacon.
+// Order matters: Boot (Supervisor's watchdog) must be stopped before Supervisor,
+// otherwise Boot will try to restart Supervisor.
 func TownSessions() []TownSession {
 	return []TownSession{
-		{"Mayor", MayorSessionName()},
+		{"Overseer", OverseerSessionName()},
 		{"Boot", BootSessionName()},
-		{"Deacon", DeaconSessionName()},
+		{"Supervisor", SupervisorSessionName()},
 	}
 }
 

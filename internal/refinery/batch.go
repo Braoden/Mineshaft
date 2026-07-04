@@ -120,8 +120,8 @@ func (e *Engineer) BuildRebaseStack(ctx context.Context, batch []*MRInfo, target
 		// Check branch exists
 		exists, brErr := e.git.BranchExists(mr.Branch)
 		if brErr != nil || !exists {
-			// Branch not found — escalate to mayor (gas-556)
-			_, _ = fmt.Fprintf(e.output, "[Batch] MR %s: branch %s not found, escalating to mayor\n", mr.ID, mr.Branch)
+			// Branch not found — escalate to overseer (gas-556)
+			_, _ = fmt.Fprintf(e.output, "[Batch] MR %s: branch %s not found, escalating to overseer\n", mr.ID, mr.Branch)
 			e.HandleMRInfoFailure(mr, ProcessResult{BranchNotFound: true})
 			conflicts = append(conflicts, mr)
 			continue
@@ -314,14 +314,14 @@ func (e *Engineer) processSingleMR(ctx context.Context, mr *MRInfo, target strin
 	if processResult.Success {
 		result.Merged = []*MRInfo{mr}
 		result.MergeCommit = processResult.MergeCommit
-		// GH#2321: Run post-merge cleanup (close beads, delete branch, nudge mayor)
+		// GH#2321: Run post-merge cleanup (close beads, delete branch, nudge overseer)
 		e.HandleMRInfoSuccess(mr, processResult)
 	} else if processResult.Conflict {
 		result.Conflicts = []*MRInfo{mr}
 	} else if processResult.TestsFailed {
 		result.Culprits = []*MRInfo{mr}
 	} else if processResult.BranchNotFound {
-		// Branch not found on remote — escalate to mayor via HandleMRInfoFailure (gas-556).
+		// Branch not found on remote — escalate to overseer via HandleMRInfoFailure (gas-556).
 		e.HandleMRInfoFailure(mr, processResult)
 		result.Conflicts = []*MRInfo{mr}
 	} else if processResult.NoMerge {
@@ -448,7 +448,7 @@ func (e *Engineer) fastForwardBatch(ctx context.Context, stacked []*MRInfo, targ
 	result.MergeCommit = tipSHA
 
 	// GH#2321: Run post-merge cleanup for each merged MR — close source beads,
-	// delete branches, nudge mayor, and check convoy completion.
+	// delete branches, nudge overseer, and check minecart completion.
 	// HandleMRInfoSuccess was previously dead code (never called), causing task
 	// beads to remain open after successful merges.
 	for _, mr := range stacked {

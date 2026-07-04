@@ -1,6 +1,6 @@
-# Gas Town
+# Excavation Site
 
-This is a Gas Town workspace. Your identity and role are determined by `{{cmd}} prime`.
+This is a Excavation Site workspace. Your identity and role are determined by `{{cmd}} prime`.
 
 Run `{{cmd}} prime` for full context after compaction, clear, or new session.
 
@@ -46,7 +46,7 @@ verified not to exit on that signal.
 {{cmd}} escalate -s CRITICAL "Dolt: server unreachable"  # Total outage
 ```
 
-The Mayor receives all escalations. Critical ones also notify the Overseer.
+The Overseer receives all escalations. Critical ones also notify the Boss.
 
 ### If you see test pollution
 
@@ -89,5 +89,5 @@ at prime time. Do NOT use Claude Code's filesystem auto-memory (`~/.claude/*/mem
 ```
 
 ### War room
-Active incidents tracked in `mayor/DOLT-WAR-ROOM.md`. Full escalation protocol
-in `gastown/mayor/rig/docs/design/escalation.md`.
+Active incidents tracked in `overseer/DOLT-WAR-ROOM.md`. Full escalation protocol
+in `excavation/overseer/rig/docs/design/escalation.md`.

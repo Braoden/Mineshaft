@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/formula"
-	"github.com/steveyegge/gastown/internal/plugin"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/formula"
+	"github.com/steveyegge/excavation/internal/plugin"
 )
 
 // PatrolMoleculesExistCheck verifies that patrol formulas are accessible.
@@ -66,8 +66,8 @@ func (c *PatrolMoleculesExistCheck) Run(ctx *CheckContext) *CheckResult {
 	for _, rigName := range rigs {
 		rigPath := filepath.Join(ctx.TownRoot, rigName)
 		// If rigPath doesn't exist, fall back to TownRoot. This handles the case
-		// where gt doctor runs from a mayor's canonical clone, where TownRoot
-		// resolves to the clone itself (e.g. gastown/mayor/rig) rather than the
+		// where gt doctor runs from a overseer's canonical clone, where TownRoot
+		// resolves to the clone itself (e.g. excavation/overseer/rig) rather than the
 		// actual town root. The rig directory won't be a subdirectory of the clone,
 		// but patrol formulas are town-level and accessible from TownRoot itself.
 		if _, statErr := os.Stat(rigPath); os.IsNotExist(statErr) {
@@ -446,7 +446,7 @@ func NewPatrolPluginDriftCheck() *PatrolPluginDriftCheck {
 func (c *PatrolPluginDriftCheck) Run(ctx *CheckContext) *CheckResult {
 	c.targetDir = filepath.Join(ctx.TownRoot, "plugins")
 
-	sourceDir, err := plugin.FindGastownSource(ctx.TownRoot)
+	sourceDir, err := plugin.FindExcavationSource(ctx.TownRoot)
 	if err != nil {
 		return &CheckResult{
 			Name:    c.Name(),
@@ -513,7 +513,7 @@ func (c *PatrolPluginDriftCheck) Fix(ctx *CheckContext) error {
 
 // discoverRigs finds all registered rigs.
 func discoverRigs(townRoot string) ([]string, error) {
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	data, err := os.ReadFile(rigsPath)
 	if err != nil {
 		if os.IsNotExist(err) {

@@ -64,7 +64,7 @@ done
 # Restore daemon config
 if [[ -f "$BACKUP_DIR/daemon.json" ]]; then
     log "Restoring daemon.json..."
-    cp "$BACKUP_DIR/daemon.json" "$TOWN_ROOT/mayor/daemon.json"
+    cp "$BACKUP_DIR/daemon.json" "$TOWN_ROOT/overseer/daemon.json"
 fi
 
 # Clear migration artifacts

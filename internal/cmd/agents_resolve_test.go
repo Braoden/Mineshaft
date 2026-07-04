@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/beads"
+	"github.com/steveyegge/excavation/internal/beads"
 )
 
 func TestAgentBeadMatchesDescriptionAndIDFallback(t *testing.T) {
@@ -28,10 +28,10 @@ func TestAgentBeadMatchesDescriptionAndIDFallback(t *testing.T) {
 		{
 			name: "canonical ID fallback matches sparse wisp metadata",
 			issue: &beads.Issue{
-				ID: "gt-gastown-witness",
+				ID: "gt-excavation-witness",
 			},
 			role: "witness",
-			rig:  "gastown",
+			rig:  "excavation",
 			want: true,
 		},
 		{
@@ -46,18 +46,18 @@ func TestAgentBeadMatchesDescriptionAndIDFallback(t *testing.T) {
 		{
 			name: "role mismatch",
 			issue: &beads.Issue{
-				ID:          "gt-gastown-witness",
-				Description: "Agent\n\nrole_type: witness\nrig: gastown",
+				ID:          "gt-excavation-witness",
+				Description: "Agent\n\nrole_type: witness\nrig: excavation",
 			},
 			role: "refinery",
-			rig:  "gastown",
+			rig:  "excavation",
 			want: false,
 		},
 		{
 			name: "rig mismatch",
 			issue: &beads.Issue{
-				ID:          "gt-gastown-refinery",
-				Description: "Agent\n\nrole_type: refinery\nrig: gastown",
+				ID:          "gt-excavation-refinery",
+				Description: "Agent\n\nrole_type: refinery\nrig: excavation",
 			},
 			role: "refinery",
 			rig:  "other",

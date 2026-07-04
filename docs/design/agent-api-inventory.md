@@ -171,7 +171,7 @@ or `POST /telemetry` with rate limit event
 - `internal/session/lifecycle.go` — `StartSession()` (line ~121): 13-step unified
   lifecycle (resolve config → settings → command → session → env → theme → wait →
   dialogs → delay → verify → respawn → PID track)
-- `internal/polecat/session_manager.go` — `Start()` (line ~186): polecat-specific
+- `internal/miner/session_manager.go` — `Start()` (line ~186): miner-specific
   session with zombie kill, worktree, beacon, env injection, pane-died hook
 - `internal/witness/manager.go` — `Start()` (line ~107): witness session with
   zombie grace period, role config, theme, pane-died hook
@@ -198,13 +198,13 @@ or `POST /telemetry` with rate limit event
 
 ## 7. Spawn Admission Control
 
-**What**: GT gates polecat creation with health checks and capacity limits.
+**What**: GT gates miner creation with health checks and capacity limits.
 
 **Code**:
-- `internal/cmd/polecat_spawn.go` — `SpawnPolecatForSling()` (line ~62):
-  Dolt health check, connection capacity, polecat count cap (25), per-bead
-  respawn circuit breaker, per-rig directory cap (30), idle polecat reuse
-- `internal/polecat/manager.go` — `CheckDoltHealth()` (line ~223): retry with
+- `internal/cmd/miner_spawn.go` — `SpawnMinerForSling()` (line ~62):
+  Dolt health check, connection capacity, miner count cap (25), per-bead
+  respawn circuit breaker, per-rig directory cap (30), idle miner reuse
+- `internal/miner/manager.go` — `CheckDoltHealth()` (line ~223): retry with
   exponential backoff + jitter; `CheckDoltServerCapacity()` (line ~276):
   connection count admission gate
 - `internal/witness/spawn_count.go` — `ShouldBlockRespawn()` (line ~74): circuit
@@ -214,7 +214,7 @@ or `POST /telemetry` with rate limit event
 **Flow**: GT internal. Admission decisions don't involve the agent.
 
 **Fragility**:
-- Polecat cap (25) and dir cap (30) are hardcoded
+- Miner cap (25) and dir cap (30) are hardcoded
 - Circuit breaker state in JSON file (`bead-respawn-counts.json`)
 - Dolt health check adds latency to every spawn
 
@@ -228,7 +228,7 @@ or `POST /telemetry` with rate limit event
 
 **Code**:
 - `internal/config/env.go` — `AgentEnv()` (line ~65): generates 30+ env vars
-  including GT_ROLE, GT_RIG, GT_POLECAT, GT_CREW, BD_ACTOR, GIT_AUTHOR_NAME,
+  including GT_ROLE, GT_RIG, GT_MINER, GT_CREW, BD_ACTOR, GIT_AUTHOR_NAME,
   GT_ROOT, GT_AGENT, GT_SESSION, plus OTEL and credential passthrough
 - `internal/config/agents.go` — `builtinPresets` (line ~164): 10 agent presets
   (Claude, Gemini, Codex, Cursor, Auggie, AMP, OpenCode, Copilot, Pi, OMP)
@@ -237,7 +237,7 @@ or `POST /telemetry` with rate limit event
   `ParseAddress()` (line ~30), `SessionName()` (line ~163): identity parsing
   and formatting
 - `internal/constants/constants.go` — role constants (lines ~196-215):
-  `RoleMayor`, `RoleDeacon`, `RoleWitness`, `RoleRefinery`, `RolePolecat`, `RoleCrew`
+  `RoleOverseer`, `RoleSupervisor`, `RoleWitness`, `RoleRefinery`, `RoleMiner`, `RoleCrew`
 
 **Flow**: GT→Agent. GT sets env vars; agent reads them.
 
@@ -259,8 +259,8 @@ or `POST /telemetry` with rate limit event
 **Code**:
 - `internal/cmd/prime.go` — `runPrime()` (line ~101): full prime or compact/resume path
 - `internal/cmd/prime_output.go` — `outputPrimeContext()` (line ~22): role-specific
-  context rendering; role functions: `outputMayorContext()`, `outputWitnessContext()`,
-  `outputRefineryContext()`, `outputPolecatContext()`, `outputCrewContext()`, etc.
+  context rendering; role functions: `outputOverseerContext()`, `outputWitnessContext()`,
+  `outputRefineryContext()`, `outputMinerContext()`, `outputCrewContext()`, etc.
 - `internal/cmd/prime_session.go` — `handlePrimeHookMode()` (line ~266): SessionStart
   hook integration, reads session ID from stdin JSON, persists to disk
 - `internal/cmd/prime_session.go` — `detectSessionState()` (line ~202): returns
@@ -296,14 +296,14 @@ context, checkpoint, startup directive.
   PR-workflow guard, dangerous-command guard, SessionStart → `gt prime --hook`,
   UserPromptSubmit → `gt mail check --inject`, Stop → `gt costs record`
 - `internal/hooks/config.go` — `DefaultOverrides()` (line ~199): role-specific
-  overrides (crew PreCompact → handoff cycle, witness/deacon/refinery patrol guards)
+  overrides (crew PreCompact → handoff cycle, witness/supervisor/refinery patrol guards)
 - `internal/hooks/merge.go` — `MergeHooks()` (line ~24): applies overrides in
   specificity order
 - `internal/cmd/hooks_install.go` — `runHooksInstall()` (line ~48): installs hooks
   from registry to worktrees, `installHookTo()` (line ~245): loads, merges, writes
   settings.json
 - `internal/hooks/config.go` — `DiscoverTargets()` (line ~382): finds all settings
-  files (mayor, deacon, crew, polecats, witness, refinery per rig)
+  files (overseer, supervisor, crew, miners, witness, refinery per rig)
 - `internal/runtime/runtime.go` — hook installer registration for 6 providers:
   claude, gemini, opencode, copilot, omp, pi
 
@@ -327,8 +327,8 @@ context, checkpoint, startup directive.
 
 **Code**:
 - `internal/cmd/tap_guard.go` — `runTapGuardPRWorkflow()` (line ~34): blocks
-  `gh pr create`, `git checkout -b`, `git switch -c` in Gas Town agent contexts;
-  `isGasTownAgentContext()` (line ~103) checks GT_* env vars and CWD paths
+  `gh pr create`, `git checkout -b`, `git switch -c` in Excavation Site agent contexts;
+  `isExcavationAgentContext()` (line ~103) checks GT_* env vars and CWD paths
 - `internal/cmd/tap_guard_dangerous.go` — `runTapGuardDangerous()` (line ~66):
   blocks 5 patterns: `rm -rf /`, `git push --force`, `git push -f`,
   `git reset --hard`, `git clean -f`; `extractCommand()` (line ~104) parses
@@ -468,11 +468,11 @@ returns allow/deny with reason
 **What**: GT uses heartbeat files for liveness detection outside tmux.
 
 **Code**:
-- `internal/polecat/heartbeat.go` — `TouchSessionHeartbeat()` (line ~34): writes JSON
+- `internal/miner/heartbeat.go` — `TouchSessionHeartbeat()` (line ~34): writes JSON
   to `.runtime/heartbeats/<session>.json`, `IsSessionHeartbeatStale()` (line ~74):
   3-minute threshold, `ReadSessionHeartbeat()` (line ~54), `RemoveSessionHeartbeat()`
-- `internal/deacon/heartbeat.go` — `WriteHeartbeat()` (line ~52): deacon heartbeat
-  at `deacon/heartbeat.json` with cycle count, health stats;
+- `internal/supervisor/heartbeat.go` — `WriteHeartbeat()` (line ~52): supervisor heartbeat
+  at `supervisor/heartbeat.json` with cycle count, health stats;
   `IsFresh()` (<5min), `IsStale()` (5-15min), `IsVeryStale()` (>15min)
 
 **Flow**: Agent→GT (implicit). Agent command writes file; GT reads it.
@@ -494,7 +494,7 @@ returns allow/deny with reason
 - `internal/tmux/tmux.go` — `GetPaneWorkDir()` (line ~1676):
   `#{pane_current_path}` via tmux
 - `internal/workspace/find.go` — `Find()` (line ~29): walks up from CWD looking
-  for `mayor/town.json` marker; handles worktree paths (polecats/, crew/);
+  for `overseer/town.json` marker; handles worktree paths (miners/, crew/);
   `FindFromCwdWithFallback()` (line ~113): GT_TOWN_ROOT env fallback for deleted
   worktrees
 - `internal/config/env.go` — GT_ROOT env var set in `AgentEnv()`
@@ -656,14 +656,14 @@ structured data; no need to scrape terminal
 **What**: Agent signals work completion through GT commands and intent files.
 
 **Code**:
-- `internal/cmd/done.go` — `runDone()` (line ~81): persistent polecat model,
+- `internal/cmd/done.go` — `runDone()` (line ~81): persistent miner model,
   transitions to IDLE with sandbox preserved; exit constants: `ExitCompleted`,
   `ExitEscalated`, `ExitDeferred` (line ~65)
 - `internal/cmd/signal_stop.go` — `runSignalStop()` (line ~47): Stop hook handler,
   checks unread mail and hooked work, returns JSON
   `{"decision":"block"|"approve","reason":"..."}`
-- `internal/witness/handlers.go` — `HandlePolecatDone()` (line ~110): processes
-  POLECAT_DONE messages
+- `internal/witness/handlers.go` — `HandleMinerDone()` (line ~110): processes
+  MINER_DONE messages
 
 **Flow**: Agent→GT. Agent calls `gt done`; GT processes exit type.
 
@@ -714,11 +714,11 @@ structured data; no need to scrape terminal
 - `internal/telemetry/recorder.go` — 18 event types:
   `RecordSessionStart()`, `RecordSessionStop()`, `RecordPromptSend()`,
   `RecordPaneRead()`, `RecordPrime()`, `RecordAgentStateChange()`,
-  `RecordPolecatSpawn()`, `RecordPolecatRemove()`, `RecordSling()`,
+  `RecordMinerSpawn()`, `RecordMinerRemove()`, `RecordSling()`,
   `RecordMail()`, `RecordNudge()`, `RecordDone()`, `RecordDaemonRestart()`,
-  `RecordFormulaInstantiate()`, `RecordConvoyCreate()`, `RecordPaneOutput()`,
+  `RecordFormulaInstantiate()`, `RecordMinecartCreate()`, `RecordPaneOutput()`,
   `RecordBDCall()`, `RecordPrimeContext()`
-- 17 OTel Int64Counter metrics (gastown.session.starts.total, etc.)
+- 17 OTel Int64Counter metrics (excavation.session.starts.total, etc.)
 - `internal/telemetry/subprocess.go` — `SetProcessOTELAttrs()`: propagates
   OTEL_RESOURCE_ATTRIBUTES to subprocesses
 
@@ -772,7 +772,7 @@ structured data; no need to scrape terminal
 - `internal/dog/health.go` — `HealthChecker.Check()` (line ~46): dog-specific
   health check using CheckSessionHealth()
 - `internal/witness/spawn_count.go` — spawn storm circuit breaker:
-  `ShouldBlockRespawn()` (line ~74), escalates to mayor after threshold
+  `ShouldBlockRespawn()` (line ~74), escalates to overseer after threshold
 
 **Flow**: GT→GT. Internal monitoring, agent is passive subject.
 

@@ -8,11 +8,11 @@ import (
 	"runtime"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // Worktree command flags
@@ -32,16 +32,16 @@ crew/ directory with a name that identifies your source rig and identity.
 
 The worktree is created at: ~/gt/<target-rig>/crew/<source-rig>-<name>/
 
-For example, if you're gastown/crew/joe and run 'gt worktree beads':
-- Creates worktree at ~/gt/beads/crew/gastown-joe/
+For example, if you're excavation/crew/joe and run 'gt worktree beads':
+- Creates worktree at ~/gt/beads/crew/excavation-joe/
 - The worktree checks out main branch
-- Your identity (BD_ACTOR, GT_ROLE) remains gastown/crew/joe
+- Your identity (BD_ACTOR, GT_ROLE) remains excavation/crew/joe
 
 Use --no-cd to just print the path without printing shell commands.
 
 Examples:
   gt worktree beads         # Create worktree in beads rig
-  gt worktree gastown       # Create worktree in gastown rig (from another rig)
+  gt worktree excavation       # Create worktree in excavation rig (from another rig)
   gt worktree beads --no-cd # Just print the path`,
 	Args: cobra.ExactArgs(1),
 	RunE: runWorktree,
@@ -57,10 +57,10 @@ that belong to the current crew member. Each worktree is shown with
 its git status summary.
 
 Example output:
-  Cross-rig worktrees for gastown/crew/joe:
+  Cross-rig worktrees for excavation/crew/joe:
 
-    beads     ~/gt/beads/crew/gastown-joe/     (clean)
-    mayor     ~/gt/mayor/crew/gastown-joe/     (2 uncommitted)`,
+    beads     ~/gt/beads/crew/excavation-joe/     (clean)
+    overseer     ~/gt/overseer/crew/excavation-joe/     (2 uncommitted)`,
 	RunE: runWorktreeList,
 }
 
@@ -135,9 +135,9 @@ func runWorktree(cmd *cobra.Command, args []string) error {
 
 	// Get the source rig's git repository (the bare repo for worktrees)
 	// For cross-rig work, we need to use the target rig's repository
-	// The target rig's mayor/rig is the main clone we create worktrees from
-	targetMayorRig := constants.RigMayorPath(targetRigInfo.Path)
-	g := git.NewGit(targetMayorRig)
+	// The target rig's overseer/rig is the main clone we create worktrees from
+	targetOverseerRig := constants.RigOverseerPath(targetRigInfo.Path)
+	g := git.NewGit(targetOverseerRig)
 
 	// Ensure crew directory exists in target rig
 	crewDir := constants.RigCrewPath(targetRigInfo.Path)
@@ -153,7 +153,7 @@ func runWorktree(cmd *cobra.Command, args []string) error {
 
 	// Create the worktree on main branch
 	// Use WorktreeAddExistingForce because main may already be checked out
-	// in other worktrees (e.g., mayor/rig). This is safe for cross-rig work.
+	// in other worktrees (e.g., overseer/rig). This is safe for cross-rig work.
 	if err := g.WorktreeAddExistingForce(worktreePath, "main"); err != nil {
 		return fmt.Errorf("creating worktree: %w", err)
 	}
@@ -221,11 +221,11 @@ func runWorktreeList(cmd *cobra.Command, args []string) error {
 	// Find town root
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Load rigs config to list all rigs
-	rigsConfigPath := constants.MayorRigsPath(townRoot)
+	rigsConfigPath := constants.OverseerRigsPath(townRoot)
 	rigsConfig, err := config.LoadRigsConfig(rigsConfigPath)
 	if err != nil {
 		return fmt.Errorf("loading rigs config: %w", err)
@@ -333,9 +333,9 @@ func runWorktreeRemove(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Get the target rig's mayor path (where the main git repo is)
-	targetMayorRig := constants.RigMayorPath(targetRigInfo.Path)
-	g := git.NewGit(targetMayorRig)
+	// Get the target rig's overseer path (where the main git repo is)
+	targetOverseerRig := constants.RigOverseerPath(targetRigInfo.Path)
+	g := git.NewGit(targetOverseerRig)
 
 	// Remove the worktree
 	if err := g.WorktreeRemove(worktreePath, worktreeRemoveForce); err != nil {

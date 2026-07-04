@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/beads"
+	"github.com/steveyegge/excavation/internal/beads"
 )
 
 // HookAttachmentValidCheck verifies that attached molecules exist and are not closed.
@@ -149,8 +149,8 @@ func (c *HookAttachmentValidCheck) findRigBeadsDirs(townRoot string) []string {
 		if line == filepath.Join(townRoot, ".beads") {
 			continue
 		}
-		// Skip mayor directory
-		if strings.Contains(line, "/mayor/") {
+		// Skip overseer directory
+		if strings.Contains(line, "/overseer/") {
 			continue
 		}
 		dirs = append(dirs, line)
@@ -328,7 +328,7 @@ func (c *HookSingletonCheck) Fix(ctx *CheckContext) error {
 }
 
 // OrphanedAttachmentsCheck detects handoff beads for agents that no longer exist.
-// This happens when a polecat worktree is deleted but its handoff bead remains,
+// This happens when a miner worktree is deleted but its handoff bead remains,
 // leaving molecules attached to non-existent agents.
 type OrphanedAttachmentsCheck struct {
 	BaseCheck
@@ -438,11 +438,11 @@ func (c *OrphanedAttachmentsCheck) checkBeadsDir(beadsDir, townRoot string) []or
 
 // agentExists checks if an agent's worktree exists.
 // Agent identities follow patterns like:
-//   - "gastown/nux" → polecat at <townRoot>/gastown/polecats/nux
-//   - "gastown/crew/joe" → crew at <townRoot>/gastown/crew/joe
-//   - "mayor" → mayor at <townRoot>/mayor
-//   - "gastown-witness" → witness at <townRoot>/gastown/witness
-//   - "gastown-refinery" → refinery at <townRoot>/gastown/refinery
+//   - "excavation/nux" → miner at <townRoot>/excavation/miners/nux
+//   - "excavation/crew/joe" → crew at <townRoot>/excavation/crew/joe
+//   - "overseer" → overseer at <townRoot>/overseer
+//   - "excavation-witness" → witness at <townRoot>/excavation/witness
+//   - "excavation-refinery" → refinery at <townRoot>/excavation/refinery
 func (c *OrphanedAttachmentsCheck) agentExists(agent, townRoot string) bool {
 	// Handle special roles with hyphen separator
 	if strings.HasSuffix(agent, "-witness") {
@@ -456,9 +456,9 @@ func (c *OrphanedAttachmentsCheck) agentExists(agent, townRoot string) bool {
 		return dirExists(path)
 	}
 
-	// Handle mayor
-	if agent == "mayor" {
-		return dirExists(filepath.Join(townRoot, "mayor"))
+	// Handle overseer
+	if agent == "overseer" {
+		return dirExists(filepath.Join(townRoot, "overseer"))
 	}
 
 	// Handle crew (rig/crew/name pattern)
@@ -470,11 +470,11 @@ func (c *OrphanedAttachmentsCheck) agentExists(agent, townRoot string) bool {
 		}
 	}
 
-	// Handle polecats (rig/name pattern) - most common case
+	// Handle miners (rig/name pattern) - most common case
 	if strings.Contains(agent, "/") {
 		parts := strings.SplitN(agent, "/", 2)
 		if len(parts) == 2 {
-			path := filepath.Join(townRoot, parts[0], "polecats", parts[1])
+			path := filepath.Join(townRoot, parts[0], "miners", parts[1])
 			return dirExists(path)
 		}
 	}

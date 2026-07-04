@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/mail"
-	"github.com/steveyegge/gastown/internal/style"
+	"github.com/steveyegge/excavation/internal/mail"
+	"github.com/steveyegge/excavation/internal/style"
 )
 
 // runMailSearch searches for messages matching a pattern.
@@ -20,7 +20,7 @@ func runMailSearch(cmd *cobra.Command, args []string) error {
 	// Get workspace for mail operations
 	workDir, err := findMailWorkDir()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Get mailbox

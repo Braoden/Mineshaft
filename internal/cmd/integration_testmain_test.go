@@ -8,7 +8,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/testutil"
+	"github.com/steveyegge/excavation/internal/testutil"
 )
 
 func TestMain(m *testing.M) {

@@ -2,12 +2,12 @@
 #
 # This container provides full isolation for integration tests that require:
 # - No interference from host tmux sessions
-# - Clean filesystem without existing Gas Town installations
+# - Clean filesystem without existing Excavation Site installations
 # - Independent beads daemon and Dolt server
 #
 # Usage:
-#   docker build -f Dockerfile.e2e -t gastown-test .
-#   docker run --rm gastown-test
+#   docker build -f Dockerfile.e2e -t excavation-test .
+#   docker run --rm excavation-test
 
 FROM golang:1.26-alpine
 
@@ -67,7 +67,7 @@ RUN for i in 1 2 3; do \
 COPY . .
 
 # Build gt binary
-RUN go build -ldflags "-X github.com/steveyegge/gastown/internal/cmd.BuiltProperly=1" -o /usr/local/bin/gt ./cmd/gt
+RUN go build -ldflags "-X github.com/steveyegge/excavation/internal/cmd.BuiltProperly=1" -o /usr/local/bin/gt ./cmd/gt
 
 # Run e2e tests (all TestInstall* functions from install_integration_test.go)
 # Note: Using -count=1 to disable test caching, -parallel 1 for sequential execution

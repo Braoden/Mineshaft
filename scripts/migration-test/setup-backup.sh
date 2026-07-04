@@ -43,9 +43,9 @@ for rig_dir in "$TOWN_ROOT"/*/; do
 done
 
 # Backup daemon config
-if [[ -f "$TOWN_ROOT/mayor/daemon.json" ]]; then
+if [[ -f "$TOWN_ROOT/overseer/daemon.json" ]]; then
     log "Backing up daemon.json..."
-    cp "$TOWN_ROOT/mayor/daemon.json" "$BACKUP_DIR/daemon.json"
+    cp "$TOWN_ROOT/overseer/daemon.json" "$BACKUP_DIR/daemon.json"
 fi
 
 # Record backup metadata

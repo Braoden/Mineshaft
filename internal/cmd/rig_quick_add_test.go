@@ -14,9 +14,9 @@ func TestFindOrCreateTown(t *testing.T) {
 	t.Run("respects GT_TOWN_ROOT when set", func(t *testing.T) {
 		// Create a valid town in temp dir
 		tmpTown := t.TempDir()
-		mayorDir := filepath.Join(tmpTown, "mayor")
-		if err := os.MkdirAll(mayorDir, 0755); err != nil {
-			t.Fatalf("mkdir mayor: %v", err)
+		overseerDir := filepath.Join(tmpTown, "overseer")
+		if err := os.MkdirAll(overseerDir, 0755); err != nil {
+			t.Fatalf("mkdir overseer: %v", err)
 		}
 
 		os.Setenv("GT_TOWN_ROOT", tmpTown)
@@ -41,11 +41,11 @@ func TestFindOrCreateTown(t *testing.T) {
 		}
 
 		gtPath := filepath.Join(home, "gt")
-		mayorDir := filepath.Join(gtPath, "mayor")
+		overseerDir := filepath.Join(gtPath, "overseer")
 
 		// Skip if ~/gt doesn't exist (don't want to create it in user's home)
-		if _, err := os.Stat(mayorDir); os.IsNotExist(err) {
-			t.Skip("~/gt/mayor does not exist, skipping fallback test")
+		if _, err := os.Stat(overseerDir); os.IsNotExist(err) {
+			t.Skip("~/gt/overseer does not exist, skipping fallback test")
 		}
 
 		result, err := findOrCreateTown()
@@ -63,11 +63,11 @@ func TestFindOrCreateTown(t *testing.T) {
 		tmpTown1 := t.TempDir()
 		tmpTown2 := t.TempDir()
 
-		if err := os.MkdirAll(filepath.Join(tmpTown1, "mayor"), 0755); err != nil {
-			t.Fatalf("mkdir mayor1: %v", err)
+		if err := os.MkdirAll(filepath.Join(tmpTown1, "overseer"), 0755); err != nil {
+			t.Fatalf("mkdir overseer1: %v", err)
 		}
-		if err := os.MkdirAll(filepath.Join(tmpTown2, "mayor"), 0755); err != nil {
-			t.Fatalf("mkdir mayor2: %v", err)
+		if err := os.MkdirAll(filepath.Join(tmpTown2, "overseer"), 0755); err != nil {
+			t.Fatalf("mkdir overseer2: %v", err)
 		}
 
 		// Set GT_TOWN_ROOT to tmpTown1
@@ -85,10 +85,10 @@ func TestFindOrCreateTown(t *testing.T) {
 }
 
 func TestIsValidTown(t *testing.T) {
-	t.Run("valid town has mayor directory", func(t *testing.T) {
+	t.Run("valid town has overseer directory", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		mayorDir := filepath.Join(tmpDir, "mayor")
-		if err := os.MkdirAll(mayorDir, 0755); err != nil {
+		overseerDir := filepath.Join(tmpDir, "overseer")
+		if err := os.MkdirAll(overseerDir, 0755); err != nil {
 			t.Fatalf("mkdir: %v", err)
 		}
 
@@ -97,7 +97,7 @@ func TestIsValidTown(t *testing.T) {
 		}
 	})
 
-	t.Run("invalid town missing mayor directory", func(t *testing.T) {
+	t.Run("invalid town missing overseer directory", func(t *testing.T) {
 		tmpDir := t.TempDir()
 
 		if isValidTown(tmpDir) {

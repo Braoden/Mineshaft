@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/config"
 )
 
 func TestCheckHelpFlag(t *testing.T) {
@@ -143,13 +143,13 @@ func TestPersistentPreRunLoadsAgentRegistry(t *testing.T) {
 	config.ResetRegistryForTesting()
 	t.Cleanup(config.ResetRegistryForTesting)
 
-	// Build a minimal fake town root with mayor/town.json (PrimaryMarker)
+	// Build a minimal fake town root with overseer/town.json (PrimaryMarker)
 	// and settings/agents.json containing a process_names override.
 	townRoot := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "mayor", "town.json"), []byte("{}"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte("{}"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, "settings"), 0755); err != nil {
@@ -213,10 +213,10 @@ func TestPersistentPreRunMalformedAgentRegistry(t *testing.T) {
 	t.Cleanup(config.ResetRegistryForTesting)
 
 	townRoot := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "mayor", "town.json"), []byte("{}"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte("{}"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, "settings"), 0755); err != nil {

@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/hooks"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/hooks"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var hooksListCmd = &cobra.Command{
@@ -45,7 +45,7 @@ type listTargetInfo struct {
 func runHooksListTargets(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	targets, err := hooks.DiscoverTargets(townRoot)
@@ -53,7 +53,7 @@ func runHooksListTargets(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("discovering targets: %w", err)
 	}
 
-	// Deduplicate targets by key (individual crew/polecat members share a key)
+	// Deduplicate targets by key (individual crew/miner members share a key)
 	// For list display, we show the group-level target, not individual members
 	seen := make(map[string]bool)
 	var uniqueTargets []hooks.Target

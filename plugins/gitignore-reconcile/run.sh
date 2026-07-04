@@ -3,7 +3,7 @@
 #
 # Scans all rig repos for tracked files that now match an active .gitignore
 # rule. On clean main branches: git rm --cached + commit. On dirty branches
-# or active polecat worktrees: creates a chore bead instead.
+# or active miner worktrees: creates a chore bead instead.
 
 set -euo pipefail
 
@@ -53,12 +53,12 @@ while IFS= read -r REPO_PATH; do
 
   CURRENT_BRANCH=$(git -C "$REPO_PATH" branch --show-current 2>/dev/null || true)
   IS_DIRTY=$(git -C "$REPO_PATH" status --porcelain 2>/dev/null | grep -v "^??" | head -1 || true)
-  HAS_POLECATS=$(git -C "$REPO_PATH" branch 2>/dev/null | grep -E "^\+?\s+polecat/" | head -1 || true)
+  HAS_MINERS=$(git -C "$REPO_PATH" branch 2>/dev/null | grep -E "^\+?\s+miner/" | head -1 || true)
 
-  if [ -n "$IS_DIRTY" ] || [ -n "$HAS_POLECATS" ] || [ "$CURRENT_BRANCH" != "main" ]; then
+  if [ -n "$IS_DIRTY" ] || [ -n "$HAS_MINERS" ] || [ "$CURRENT_BRANCH" != "main" ]; then
     REASON=""
     [ -n "$IS_DIRTY" ]       && REASON="dirty working tree"
-    [ -n "$HAS_POLECATS" ]   && REASON="${REASON:+$REASON, }active polecat worktrees"
+    [ -n "$HAS_MINERS" ]   && REASON="${REASON:+$REASON, }active miner worktrees"
     [ "$CURRENT_BRANCH" != "main" ] && REASON="${REASON:+$REASON, }not on main ($CURRENT_BRANCH)"
     log "  SKIP: $REASON — creating chore bead"
     REPO_NAME=$(basename "$REPO_PATH")
@@ -86,7 +86,7 @@ while IFS= read -r REPO_PATH; do
 
 Auto-committed by gitignore-reconcile plugin."
     git -C "$REPO_PATH" commit -m "$COMMIT_MSG" \
-      --author="Gas Town <gastown@local>" 2>/dev/null && \
+      --author="Excavation Site <excavation@local>" 2>/dev/null && \
       log "  Committed untracking of $COUNT file(s)" || \
       log "  WARN: commit failed"
     TOTAL_UNTRACKED=$((TOTAL_UNTRACKED + COUNT))

@@ -3,20 +3,20 @@ package beads
 import (
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/scheduler/capacity"
+	"github.com/steveyegge/excavation/internal/scheduler/capacity"
 )
 
 func TestFormatParseSlingContextRoundTrip(t *testing.T) {
 	original := &capacity.SlingContextFields{
 		Version:          1,
 		WorkBeadID:       "gt-abc123",
-		TargetRig:        "gastown",
-		Formula:          "mol-polecat-work",
+		TargetRig:        "excavation",
+		Formula:          "mol-miner-work",
 		Args:             "implement feature X",
 		Vars:             "a=1\nb=2",
 		EnqueuedAt:       "2026-01-15T10:00:00Z",
 		Merge:            "direct",
-		Convoy:           "hq-cv-test",
+		Minecart:           "hq-cv-test",
 		BaseBranch:       "develop",
 		NoMerge:          true,
 		ReviewOnly:       true,
@@ -60,8 +60,8 @@ func TestFormatParseSlingContextRoundTrip(t *testing.T) {
 	if parsed.Merge != original.Merge {
 		t.Errorf("Merge: got %q, want %q", parsed.Merge, original.Merge)
 	}
-	if parsed.Convoy != original.Convoy {
-		t.Errorf("Convoy: got %q, want %q", parsed.Convoy, original.Convoy)
+	if parsed.Minecart != original.Minecart {
+		t.Errorf("Minecart: got %q, want %q", parsed.Minecart, original.Minecart)
 	}
 	if parsed.BaseBranch != original.BaseBranch {
 		t.Errorf("BaseBranch: got %q, want %q", parsed.BaseBranch, original.BaseBranch)

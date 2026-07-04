@@ -28,10 +28,10 @@ DO NOT:
 
 MONITORING:
 - Progress: Count closed children of the molecule
-- For mega-molecules: Use convoy dashboard when available
+- For mega-molecules: Use minecart dashboard when available
 - Completion: All steps closed = molecule complete
 
-This proves Gas Town can execute arbitrarily long workflows with
+This proves Excavation Site can execute arbitrarily long workflows with
 nondeterministic idempotence - different sessions, same outcome.
 """
 formula = "towers-of-hanoi"

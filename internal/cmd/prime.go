@@ -14,18 +14,18 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/cli"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/lock"
-	"github.com/steveyegge/gastown/internal/refinery"
-	"github.com/steveyegge/gastown/internal/state"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/telemetry"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/util"
-	"github.com/steveyegge/gastown/internal/workspace"
-	worktreeintegrity "github.com/steveyegge/gastown/internal/worktree"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/cli"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/lock"
+	"github.com/steveyegge/excavation/internal/refinery"
+	"github.com/steveyegge/excavation/internal/state"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/telemetry"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/excavation/internal/workspace"
+	worktreeintegrity "github.com/steveyegge/excavation/internal/worktree"
 )
 
 var primeHookMode bool
@@ -52,12 +52,12 @@ var primeHandoffReason string
 type Role string
 
 const (
-	RoleMayor    Role = "mayor"
-	RoleDeacon   Role = "deacon"
+	RoleOverseer    Role = "overseer"
+	RoleSupervisor   Role = "supervisor"
 	RoleBoot     Role = "boot"
 	RoleWitness  Role = "witness"
 	RoleRefinery Role = "refinery"
-	RolePolecat  Role = "polecat"
+	RoleMiner  Role = "miner"
 	RoleCrew     Role = "crew"
 	RoleDog      Role = "dog"
 	RoleUnknown  Role = "unknown"
@@ -66,16 +66,16 @@ const (
 var primeCmd = &cobra.Command{
 	Use:         "prime",
 	GroupID:     GroupDiag,
-	Annotations: map[string]string{AnnotationPolecatSafe: "true"},
+	Annotations: map[string]string{AnnotationMinerSafe: "true"},
 	Short:       "Output role context for current directory",
 	Long: `Detect the agent role from the current directory and output context.
 
 Role detection:
   - Town root → Neutral (no role inferred; use GT_ROLE)
-  - mayor/ or <rig>/mayor/ → Mayor context
+  - overseer/ or <rig>/overseer/ → Overseer context
   - <rig>/witness/rig/ → Witness context
   - <rig>/refinery/rig/ → Refinery context
-  - <rig>/polecats/<name>/ → Polecat context
+  - <rig>/miners/<name>/ → Miner context
 
 This command is typically used in shell prompts or agent initialization.
 
@@ -159,7 +159,7 @@ func runPrime(cmd *cobra.Command, args []string) (retErr error) {
 	ctx := RoleContext{
 		Role:     roleInfo.Role,
 		Rig:      roleInfo.Rig,
-		Polecat:  roleInfo.Polecat,
+		Miner:  roleInfo.Miner,
 		TownRoot: townRoot,
 		WorkDir:  cwd,
 	}
@@ -198,10 +198,10 @@ func runPrime(cmd *cobra.Command, args []string) (retErr error) {
 		if errors.Is(hookErr, ErrHookUnresolvable) {
 			agentID := getAgentIdentity(ctx)
 			fmt.Fprintf(os.Stderr,
-				"polecat prime: hooked bead not resolvable from %s; check rig DB / dispatch routing. err=%v\n",
+				"miner prime: hooked bead not resolvable from %s; check rig DB / dispatch routing. err=%v\n",
 				ctx.WorkDir, hookErr)
-			firePolecatHookUnresolvableEscalation(agentID, hookErr.Error())
-			return fmt.Errorf("polecat prime: hook unresolvable: %w", hookErr)
+			fireMinerHookUnresolvableEscalation(agentID, hookErr.Error())
+			return fmt.Errorf("miner prime: hook unresolvable: %w", hookErr)
 		}
 		// Database error during hook query — NOT the same as "no work assigned".
 		// Emit a loud warning so the agent does NOT run gt done / close the bead.
@@ -210,7 +210,7 @@ func runPrime(cmd *cobra.Command, args []string) (retErr error) {
 		fmt.Fprintf(os.Stderr, "Hook query failed: %v\n", hookErr)
 		fmt.Fprintf(os.Stderr, "This is a database connectivity error, NOT an empty hook.\n")
 		fmt.Fprintf(os.Stderr, "Your work may still be assigned. Do NOT close any beads.\n")
-		fmt.Fprintf(os.Stderr, "Escalate to witness/mayor and wait for resolution.\n\n")
+		fmt.Fprintf(os.Stderr, "Escalate to witness/overseer and wait for resolution.\n\n")
 	}
 	injectWorkContext(ctx, hookedBead)
 
@@ -233,7 +233,7 @@ func runPrime(cmd *cobra.Command, args []string) (retErr error) {
 	outputCheckpointContext(ctx)
 	runPrimeExternalTools(ctx, cwd)
 
-	if ctx.Role == RoleMayor {
+	if ctx.Role == RoleOverseer {
 		checkPendingEscalations(ctx)
 	}
 
@@ -257,7 +257,7 @@ func ensureRoleWorktreeIntegrity(cwd, townRoot string, role Role) error {
 
 func roleRequiresWorktreeIntegrity(role Role) bool {
 	switch role {
-	case RolePolecat, RoleCrew, RoleWitness, RoleRefinery, RoleDog, RoleBoot:
+	case RoleMiner, RoleCrew, RoleWitness, RoleRefinery, RoleDog, RoleBoot:
 		return true
 	default:
 		return false
@@ -290,10 +290,10 @@ func runPrimeCompactResume(ctx RoleContext) {
 	fmt.Println()
 	fmt.Println("**Continue your current task.** If you've lost context, run `gt prime` for full reload.")
 
-	// Remind polecats about gt done — after compaction the agent may have lost
+	// Remind miners about gt done — after compaction the agent may have lost
 	// the formula checklist and forgotten that gt done is required to submit work.
-	// Without this, polecats finish implementation and sit at the prompt forever.
-	if ctx.Role == RolePolecat {
+	// Without this, miners finish implementation and sit at the prompt forever.
+	if ctx.Role == RoleMiner {
 		fmt.Printf("\n**IMPORTANT**: When all work is complete (code committed, tests pass), run `%s done` to submit to the merge queue.\n", cli.Name())
 	}
 }
@@ -328,7 +328,7 @@ func resolvePrimeWorkspace() (cwd, townRoot string, err error) {
 		if !state.IsEnabled() {
 			return cwd, "", nil // Signal caller to exit silently
 		}
-		return "", "", fmt.Errorf("not in a Gas Town workspace")
+		return "", "", fmt.Errorf("not in a Excavation Site workspace")
 	}
 
 	return cwd, townRoot, nil
@@ -382,7 +382,7 @@ func hookSessionBeaconLines(sessionID, source string) []string {
 // WaitForCommand polls for this variable as a ZFC-compliant alternative to
 // probing the process tree via IsAgentAlive.
 // Uses ResolveCurrentSession to find our session on the town socket — raw
-// exec.Command("tmux", ...) would use the default socket and miss the gastown server.
+// exec.Command("tmux", ...) would use the default socket and miss the excavation server.
 func signalAgentReady() {
 	t := tmux.NewTmux()
 	name, err := t.ResolveCurrentSession()
@@ -470,11 +470,11 @@ func repairSessionEnv(ctx RoleContext, roleInfo RoleInfo) {
 	var agentName string
 	switch ctx.Role {
 	case RoleCrew:
-		agentName = roleInfo.Polecat // RoleInfo.Polecat holds crew member name too
-	case RolePolecat:
-		agentName = roleInfo.Polecat
+		agentName = roleInfo.Miner // RoleInfo.Miner holds crew member name too
+	case RoleMiner:
+		agentName = roleInfo.Miner
 	case RoleDog:
-		agentName = roleInfo.Polecat
+		agentName = roleInfo.Miner
 	}
 
 	envVars := config.AgentEnv(config.AgentEnvConfig{
@@ -558,7 +558,7 @@ func runPrimeExternalTools(ctx RoleContext, cwd string) {
 
 func shouldSkipStartupMailInject(role string) bool {
 	switch strings.ToLower(role) {
-	case string(RoleWitness), string(RoleRefinery), string(RoleDeacon), string(RoleBoot):
+	case string(RoleWitness), string(RoleRefinery), string(RoleSupervisor), string(RoleBoot):
 		return true
 	default:
 		return false
@@ -718,7 +718,7 @@ func outputRefinerySafetyStopDirective(ctx RoleContext, stop *refinery.SafetySto
 	fmt.Println()
 	fmt.Printf("%s\n", style.Bold.Render("## REFINERY SAFETY STOP ACTIVE"))
 	fmt.Printf("Refinery %s is %s.\n", ctx.Rig, stop.Reason())
-	fmt.Println("Hooked refinery work remains parked; do not run patrol, MR, or merge workflow until Mayor clears the safety_stop label.")
+	fmt.Println("Hooked refinery work remains parked; do not run patrol, MR, or merge workflow until Overseer clears the safety_stop label.")
 	fmt.Println()
 }
 
@@ -729,9 +729,9 @@ func hasWorkflowAttachment(attachment *beads.AttachmentFields) bool {
 // findAgentWork looks up hooked or in-progress beads assigned to this agent.
 // Primary: reads hook_bead from the agent bead (same strategy as detectSessionState/gt hook).
 // Fallback: queries by assignee for agents without an agent bead.
-// For polecats and crew, retries up to 3 times with 2-second delays to handle
+// For miners and crew, retries up to 3 times with 2-second delays to handle
 // the timing race where hook state hasn't propagated by the time gt prime runs.
-// See: https://github.com/steveyegge/gastown/issues/1438
+// See: https://github.com/steveyegge/excavation/issues/1438
 //
 // Returns (nil, nil) if no work is found.
 // Returns (nil, err) if all attempts failed due to database errors — the caller
@@ -742,18 +742,18 @@ func findAgentWork(ctx RoleContext) (*beads.Issue, error) {
 		return nil, nil
 	}
 
-	// Polecats, crew, and dogs use a retry loop to handle the timing race
+	// Miners, crew, and dogs use a retry loop to handle the timing race
 	// where the hook write (status=hooked + assignee) hasn't propagated to
 	// new Dolt connections by the time gt prime runs on session startup.
 	// Dogs are especially affected since dispatch is fire-and-forget. (GH#2748)
 	// Uses exponential backoff: 500ms, 1s, 2s, 4s, 8s (total ~15.5s max).
-	// See: https://github.com/steveyegge/gastown/issues/2389
+	// See: https://github.com/steveyegge/excavation/issues/2389
 	//
 	// On compact/resume, the agent already has work context in memory.
 	// A single attempt suffices — retries would add ~15s of latency to
 	// compaction hooks, causing non-Claude runtimes to report hook failure.
 	maxAttempts := 1
-	if (ctx.Role == RolePolecat || ctx.Role == RoleCrew || ctx.Role == RoleDog) && !isCompactResume() {
+	if (ctx.Role == RoleMiner || ctx.Role == RoleCrew || ctx.Role == RoleDog) && !isCompactResume() {
 		maxAttempts = 5
 	}
 
@@ -782,7 +782,7 @@ func findAgentWork(ctx RoleContext) (*beads.Issue, error) {
 
 // ErrHookUnresolvable signals that the agent bead points at a hook bead that
 // cannot be resolved from the agent's CWD (e.g., cross-rig dispatch where an
-// `hq-` bead was handed to a `gt-` rig polecat). See gt-el4.
+// `hq-` bead was handed to a `gt-` rig miner). See gt-el4.
 var ErrHookUnresolvable = errors.New("hooked bead not resolvable from this rig")
 
 // isBeadNotFound reports whether an error from beads.Show represents a missing
@@ -798,14 +798,14 @@ func isBeadNotFound(err error) bool {
 		strings.Contains(msg, "issue not found")
 }
 
-// firePolecatHookUnresolvableEscalation fires a HIGH escalation so the witness
+// fireMinerHookUnresolvableEscalation fires a HIGH escalation so the witness
 // sees the dead-with-active-work state immediately. Best effort — logged on
 // failure but does not gate the prime exit.
-var firePolecatHookUnresolvableEscalation = func(agentID, detail string) {
-	msg := fmt.Sprintf("polecat hook unresolvable: agent=%s detail=%s — see gt-el4", agentID, detail)
-	cmd := exec.Command("gt", "escalate", "--severity", "high", "--reason", "polecat-hook-unresolvable", msg)
+var fireMinerHookUnresolvableEscalation = func(agentID, detail string) {
+	msg := fmt.Sprintf("miner hook unresolvable: agent=%s detail=%s — see gt-el4", agentID, detail)
+	cmd := exec.Command("gt", "escalate", "--severity", "high", "--reason", "miner-hook-unresolvable", msg)
 	if err := cmd.Run(); err != nil {
-		fmt.Fprintf(os.Stderr, "polecat prime: escalation failed: %v\n", err)
+		fmt.Fprintf(os.Stderr, "miner prime: escalation failed: %v\n", err)
 	}
 }
 
@@ -814,11 +814,11 @@ var firePolecatHookUnresolvableEscalation = func(agentID, detail string) {
 // Returns (nil, err) when the database query itself failed — the caller must
 // not treat this as "no work assigned". (GH#2638)
 // Returns (nil, ErrHookUnresolvable) when the agent bead points at a hook bead
-// that cannot be resolved — the polecat must fail fast rather than pontificate.
+// that cannot be resolved — the miner must fail fast rather than pontificate.
 func findAgentWorkOnce(ctx RoleContext, agentID string) (*beads.Issue, error) {
-	// Use rig root for beads queries instead of ctx.WorkDir. Polecat worktrees
+	// Use rig root for beads queries instead of ctx.WorkDir. Miner worktrees
 	// rely on .beads/redirect which can fail to resolve in edge cases, causing
-	// polecats to miss hooked work and exit immediately. The rig root directory
+	// miners to miss hooked work and exit immediately. The rig root directory
 	// always has the authoritative .beads/ database. (GH#2503)
 	b := beads.New(rigBeadsRoot(ctx))
 
@@ -840,7 +840,7 @@ func findAgentWorkOnce(ctx RoleContext, agentID string) (*beads.Issue, error) {
 			}
 			// The agent bead names a hook bead but `bd show` cannot find it.
 			// This is the cross-rig dispatch failure mode (gt-el4): an `hq-`
-			// bead was handed to a polecat whose DB only resolves `gt-`. Fail
+			// bead was handed to a miner whose DB only resolves `gt-`. Fail
 			// fast — never pontificate, the witness will clear the hook on
 			// its next sweep and the dispatcher will (or won't) re-issue.
 			if hookBead == nil || isBeadNotFound(showErr) {
@@ -875,7 +875,7 @@ func findAgentWorkOnce(ctx RoleContext, agentID string) (*beads.Issue, error) {
 		}
 	}
 
-	// Town-level fallback: rig-level agents (polecats, crew) may have hooked
+	// Town-level fallback: rig-level agents (miners, crew) may have hooked
 	// HQ beads (hq-* prefix) stored in townRoot/.beads, not the rig's database.
 	// Matches the fallback in molecule_status.go and unsling.go. (gt-dtq7)
 	if len(hookedBeads) == 0 && !isTownLevelRole(agentID) && ctx.TownRoot != "" {
@@ -906,7 +906,7 @@ func findAgentWorkOnce(ctx RoleContext, agentID string) (*beads.Issue, error) {
 }
 
 // rigBeadsRoot returns the route-owned directory to use for beads queries.
-// For rig-level agents (polecats, crew, witness, refinery), prefer the rig DB
+// For rig-level agents (miners, crew, witness, refinery), prefer the rig DB
 // from town routes rather than rig-root metadata, which can be a stale redirect
 // shim during recovery. For town-level agents, returns ctx.WorkDir unchanged.
 func rigBeadsRoot(ctx RoleContext) string {
@@ -927,7 +927,7 @@ func outputAutonomousDirective(ctx RoleContext, hookedBead *beads.Issue, hasMole
 	fmt.Printf("%s\n\n", style.Bold.Render("## 🚨 AUTONOMOUS WORK MODE 🚨"))
 	fmt.Println("Work is on your hook. After announcing your role, begin IMMEDIATELY.")
 	fmt.Println()
-	fmt.Println("This is physics, not politeness. Gas Town is a steam engine - you are a piston.")
+	fmt.Println("This is physics, not politeness. Excavation Site is a steam engine - you are a piston.")
 	fmt.Println("Every moment you wait is a moment the engine stalls. Other agents may be")
 	fmt.Println("blocked waiting on YOUR output. The hook IS your assignment. RUN IT.")
 	fmt.Println()
@@ -946,9 +946,9 @@ func outputAutonomousDirective(ctx RoleContext, hookedBead *beads.Issue, hasMole
 		fmt.Println("3. Begin execution - no waiting for user input")
 	}
 
-	// Polecats MUST call gt done — this is the single most important instruction.
+	// Miners MUST call gt done — this is the single most important instruction.
 	// Without it, work lands but sessions accumulate and the merge queue stalls.
-	if ctx.Role == RolePolecat {
+	if ctx.Role == RoleMiner {
 		fmt.Println()
 		fmt.Printf("**⚠️ MANDATORY: When all work is committed, run `%s done` to submit and exit.**\n", cli.Name())
 		fmt.Printf("Do NOT stop at the prompt. Do NOT push to main directly. `%s done` is your final action.\n", cli.Name())
@@ -963,7 +963,7 @@ func outputAutonomousDirective(ctx RoleContext, hookedBead *beads.Issue, hasMole
 	if hasMolecule {
 		fmt.Println("- Skip molecule steps or work on the base bead directly")
 	}
-	if ctx.Role == RolePolecat {
+	if ctx.Role == RoleMiner {
 		fmt.Printf("- Sit idle after committing (run `%s done`)\n", cli.Name())
 		fmt.Println("- Push directly to main (use the merge queue)")
 	}
@@ -1151,20 +1151,20 @@ func outputBeadPreview(hookedBead *beads.Issue) {
 // buildRoleAnnouncement creates the role announcement string for autonomous mode.
 func buildRoleAnnouncement(ctx RoleContext) string {
 	switch ctx.Role {
-	case RoleMayor:
-		return "Mayor, checking in."
-	case RoleDeacon:
-		return "Deacon, checking in."
+	case RoleOverseer:
+		return "Overseer, checking in."
+	case RoleSupervisor:
+		return "Supervisor, checking in."
 	case RoleBoot:
 		return "Boot, checking in."
 	case RoleWitness:
 		return fmt.Sprintf("%s Witness, checking in.", ctx.Rig)
 	case RoleRefinery:
 		return fmt.Sprintf("%s Refinery, checking in.", ctx.Rig)
-	case RolePolecat:
-		return fmt.Sprintf("%s Polecat %s, checking in.", ctx.Rig, ctx.Polecat)
+	case RoleMiner:
+		return fmt.Sprintf("%s Miner %s, checking in.", ctx.Rig, ctx.Miner)
 	case RoleCrew:
-		return fmt.Sprintf("%s Crew %s, checking in.", ctx.Rig, ctx.Polecat)
+		return fmt.Sprintf("%s Crew %s, checking in.", ctx.Rig, ctx.Miner)
 	default:
 		return "Agent, checking in."
 	}
@@ -1184,13 +1184,13 @@ func getGitRoot() (string, error) {
 func getAgentIdentity(ctx RoleContext) string {
 	switch ctx.Role {
 	case RoleCrew:
-		return fmt.Sprintf("%s/crew/%s", ctx.Rig, ctx.Polecat)
-	case RolePolecat:
-		return fmt.Sprintf("%s/polecats/%s", ctx.Rig, ctx.Polecat)
-	case RoleMayor:
-		return "mayor"
-	case RoleDeacon:
-		return "deacon"
+		return fmt.Sprintf("%s/crew/%s", ctx.Rig, ctx.Miner)
+	case RoleMiner:
+		return fmt.Sprintf("%s/miners/%s", ctx.Rig, ctx.Miner)
+	case RoleOverseer:
+		return "overseer"
+	case RoleSupervisor:
+		return "supervisor"
 	case RoleBoot:
 		return "boot"
 	case RoleWitness:
@@ -1206,10 +1206,10 @@ func getAgentIdentity(ctx RoleContext) string {
 // This prevents multiple agents from claiming the same worker identity.
 // Returns an error if another agent already owns this identity.
 func acquireIdentityLock(ctx RoleContext) error {
-	// Only lock worker roles (polecat, crew)
-	// Infrastructure roles (mayor, witness, refinery, deacon) are singletons
+	// Only lock worker roles (miner, crew)
+	// Infrastructure roles (overseer, witness, refinery, supervisor) are singletons
 	// managed by tmux session names, so they don't need file-based locks
-	if ctx.Role != RolePolecat && ctx.Role != RoleCrew {
+	if ctx.Role != RoleMiner && ctx.Role != RoleCrew {
 		return nil
 	}
 
@@ -1220,7 +1220,7 @@ func acquireIdentityLock(ctx RoleContext) error {
 	sessionID := os.Getenv("TMUX_PANE")
 	if sessionID == "" {
 		// Fall back to a descriptive identifier
-		sessionID = fmt.Sprintf("%s/%s", ctx.Rig, ctx.Polecat)
+		sessionID = fmt.Sprintf("%s/%s", ctx.Rig, ctx.Miner)
 	}
 
 	// Try to acquire the lock
@@ -1245,7 +1245,7 @@ func acquireIdentityLock(ctx RoleContext) error {
 			fmt.Printf("  3. If lock is stale: rm %s/.runtime/agent.lock\n", ctx.WorkDir)
 			fmt.Println()
 
-			return fmt.Errorf("cannot claim identity %s/%s: %w", ctx.Rig, ctx.Polecat, err)
+			return fmt.Errorf("cannot claim identity %s/%s: %w", ctx.Rig, ctx.Miner, err)
 		}
 		return fmt.Errorf("acquiring identity lock: %w", err)
 	}
@@ -1254,17 +1254,17 @@ func acquireIdentityLock(ctx RoleContext) error {
 }
 
 // getAgentBeadID returns the agent bead ID for the current role.
-// Town-level agents (mayor, deacon) use hq- prefix; rig-scoped agents use the rig's prefix.
+// Town-level agents (overseer, supervisor) use hq- prefix; rig-scoped agents use the rig's prefix.
 // Returns empty string for unknown roles.
 func getAgentBeadID(ctx RoleContext) string {
 	switch ctx.Role {
-	case RoleMayor:
-		return beads.MayorBeadIDTown()
-	case RoleDeacon:
-		return beads.DeaconBeadIDTown()
+	case RoleOverseer:
+		return beads.OverseerBeadIDTown()
+	case RoleSupervisor:
+		return beads.SupervisorBeadIDTown()
 	case RoleBoot:
-		// Boot uses deacon's bead since it's a deacon subprocess
-		return beads.DeaconBeadIDTown()
+		// Boot uses supervisor's bead since it's a supervisor subprocess
+		return beads.SupervisorBeadIDTown()
 	case RoleWitness:
 		if ctx.Rig != "" {
 			prefix := beads.GetPrefixForRig(ctx.TownRoot, ctx.Rig)
@@ -1277,16 +1277,16 @@ func getAgentBeadID(ctx RoleContext) string {
 			return beads.RefineryBeadIDWithPrefix(prefix, ctx.Rig)
 		}
 		return ""
-	case RolePolecat:
-		if ctx.Rig != "" && ctx.Polecat != "" {
+	case RoleMiner:
+		if ctx.Rig != "" && ctx.Miner != "" {
 			prefix := beads.GetPrefixForRig(ctx.TownRoot, ctx.Rig)
-			return beads.PolecatBeadIDWithPrefix(prefix, ctx.Rig, ctx.Polecat)
+			return beads.MinerBeadIDWithPrefix(prefix, ctx.Rig, ctx.Miner)
 		}
 		return ""
 	case RoleCrew:
-		if ctx.Rig != "" && ctx.Polecat != "" {
+		if ctx.Rig != "" && ctx.Miner != "" {
 			prefix := beads.GetPrefixForRig(ctx.TownRoot, ctx.Rig)
-			return beads.CrewBeadIDWithPrefix(prefix, ctx.Rig, ctx.Polecat)
+			return beads.CrewBeadIDWithPrefix(prefix, ctx.Rig, ctx.Miner)
 		}
 		return ""
 	default:
@@ -1299,7 +1299,7 @@ func getAgentBeadID(ctx RoleContext) string {
 // Uses the shared SetupRedirect helper which handles both tracked and local beads.
 func ensureBeadsRedirect(ctx RoleContext) {
 	// Only applies to worktree-based roles that use shared beads
-	if ctx.Role != RoleCrew && ctx.Role != RolePolecat && ctx.Role != RoleRefinery && ctx.Role != RoleWitness {
+	if ctx.Role != RoleCrew && ctx.Role != RoleMiner && ctx.Role != RoleRefinery && ctx.Role != RoleWitness {
 		return
 	}
 
@@ -1385,7 +1385,7 @@ func setTmuxWorkContext(workRig, workBead, workMol string) {
 }
 
 // checkPendingEscalations queries for open escalation beads and displays them prominently.
-// This is called on Mayor startup to surface issues needing human attention.
+// This is called on Overseer startup to surface issues needing human attention.
 func checkPendingEscalations(ctx RoleContext) {
 	// Query for open escalations using bd list with tag filter
 	stdout, _, err := runPrimeExternalCommand(ctx.WorkDir, "bd", "list", "--status=open", "--tag=escalation", "--json")

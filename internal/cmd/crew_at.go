@@ -6,14 +6,14 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/crew"
-	"github.com/steveyegge/gastown/internal/runtime"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/crew"
+	"github.com/steveyegge/excavation/internal/runtime"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // crewAtRetried tracks if we've already retried after stale session cleanup
@@ -102,7 +102,7 @@ func runCrewAt(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("finding town root: %w", err)
 	}
-	accountsPath := constants.MayorAccountsPath(townRoot)
+	accountsPath := constants.OverseerAccountsPath(townRoot)
 	claudeConfigDir, accountHandle, err := config.ResolveAccountConfigDir(accountsPath, crewAccount)
 	if err != nil {
 		return fmt.Errorf("resolving account: %w", err)
@@ -204,9 +204,9 @@ func runCrewAt(cmd *cobra.Command, args []string) error {
 		}
 
 		// Apply rig-based theming (non-fatal: theming failure doesn't affect operation)
-		// Note: ConfigureGasTownSession includes cycle bindings
+		// Note: ConfigureExcavationSession includes cycle bindings
 		theme := tmux.ResolveSessionTheme(townRoot, r.Name, "crew", name)
-		_ = t.ConfigureGasTownSession(sessionID, theme, r.Name, name, "crew")
+		_ = t.ConfigureExcavationSession(sessionID, theme, r.Name, name, "crew")
 
 		// Wait for shell to be ready after session creation
 		if err := t.WaitForShellReady(sessionID, constants.ShellReadyTimeout); err != nil {

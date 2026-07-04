@@ -6,7 +6,7 @@ import (
 	"os/exec"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/hooks"
+	"github.com/steveyegge/excavation/internal/hooks"
 )
 
 var hooksBaseCmd = &cobra.Command{

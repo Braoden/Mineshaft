@@ -1,11 +1,11 @@
-# Design Convoy Formula
+# Design Minecart Formula
 #
-# A convoy-style formula that spawns multiple polecats in parallel,
+# A minecart-style formula that spawns multiple miners in parallel,
 # each exploring a different dimension of a design problem. Results
 # are synthesized into a unified design document.
 #
 # Usage:
-#   gt formula run design --set problem="Add notification levels to mayor"
+#   gt formula run design --set problem="Add notification levels to overseer"
 #   gt formula run design --set problem="Redesign the merge queue"
 
 description = """
@@ -23,8 +23,8 @@ are collected and synthesized into a unified design proposal with options.
 - **integration**: How it fits existing system, compatibility
 
 ## Execution Model
-1. Each leg spawns as a separate polecat
-2. Polecats work in parallel
+1. Each leg spawns as a separate miner
+2. Miners work in parallel
 3. Each writes analysis to their designated output
 4. Synthesis step combines all analyses into unified design
 
@@ -34,7 +34,7 @@ A .designs/<review-id>/ directory containing:
 - design-doc.md with unified proposal and decision points
 """
 formula = "design"
-type = "convoy"
+type = "minecart"
 version = 1
 
 # Input variables - provided at runtime
@@ -59,7 +59,7 @@ default = "medium"
 base = """
 # Design Analysis Assignment
 
-You are a specialized design analyst participating in a convoy design exploration.
+You are a specialized design analyst participating in a minecart design exploration.
 
 ## Context
 - **Formula**: {{.formula_name}}
@@ -121,7 +121,7 @@ directory = ".designs/{{.review_id}}"
 leg_pattern = "{{.leg.id}}.md"
 synthesis = "design-doc.md"
 
-# Leg definitions - each spawns a parallel polecat
+# Leg definitions - each spawns a parallel miner
 [[legs]]
 id = "api"
 title = "API & Interface Design"

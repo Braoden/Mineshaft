@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
-	"github.com/steveyegge/gastown/internal/formula"
+	"github.com/steveyegge/excavation/internal/formula"
 )
 
 // OverlayHealthCheck verifies that formula overlay files reference valid step IDs.
@@ -148,7 +148,7 @@ func (c *OverlayHealthCheck) scanOverlays(townRoot string) []overlayFile {
 	results = append(results, scanOverlayDir(townDir)...)
 
 	// Scan rig-level overlays by reading rigs.json.
-	rigNames := loadRigNames(filepath.Join(townRoot, "mayor", "rigs.json"))
+	rigNames := loadRigNames(filepath.Join(townRoot, "overseer", "rigs.json"))
 	for rigName := range rigNames {
 		rigDir := filepath.Join(townRoot, rigName, "formula-overlays")
 		results = append(results, scanOverlayDir(rigDir)...)

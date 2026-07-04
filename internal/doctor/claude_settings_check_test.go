@@ -81,10 +81,10 @@ func createValidSettings(t *testing.T, path string) {
 	}
 }
 
-// createValidPolecatSettings creates a polecat settings file whose Stop hook
-// invokes `gt tap polecat-stop-check`, matching the canonical template in
-// internal/hooks/config.go DefaultOverrides()["polecats"].
-func createValidPolecatSettings(t *testing.T, path string) {
+// createValidMinerSettings creates a miner settings file whose Stop hook
+// invokes `gt tap miner-stop-check`, matching the canonical template in
+// internal/hooks/config.go DefaultOverrides()["miners"].
+func createValidMinerSettings(t *testing.T, path string) {
 	t.Helper()
 
 	settings := map[string]any{
@@ -107,7 +107,7 @@ func createValidPolecatSettings(t *testing.T, path string) {
 					"hooks": []any{
 						map[string]any{
 							"type":    "command",
-							"command": `export PATH="$HOME/go/bin:$HOME/.local/bin:$PATH" && gt tap polecat-stop-check`,
+							"command": `export PATH="$HOME/go/bin:$HOME/.local/bin:$PATH" && gt tap miner-stop-check`,
 						},
 					},
 				},
@@ -200,13 +200,13 @@ func createStaleSettings(t *testing.T, path string, missingElements ...string) {
 	}
 }
 
-func TestClaudeSettingsCheck_ValidMayorSettings(t *testing.T) {
+func TestClaudeSettingsCheck_ValidOverseerSettings(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// Create valid mayor settings at correct location (mayor/.claude/settings.json)
+	// Create valid overseer settings at correct location (overseer/.claude/settings.json)
 	// settings.local.json is now considered stale - only settings.json is valid.
-	mayorSettings := filepath.Join(tmpDir, "mayor", ".claude", "settings.json")
-	createValidSettings(t, mayorSettings)
+	overseerSettings := filepath.Join(tmpDir, "overseer", ".claude", "settings.json")
+	createValidSettings(t, overseerSettings)
 
 	check := NewClaudeSettingsCheck()
 	ctx := &CheckContext{TownRoot: tmpDir}
@@ -218,12 +218,12 @@ func TestClaudeSettingsCheck_ValidMayorSettings(t *testing.T) {
 	}
 }
 
-func TestClaudeSettingsCheck_ValidDeaconSettings(t *testing.T) {
+func TestClaudeSettingsCheck_ValidSupervisorSettings(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// Create valid deacon settings (must be settings.json, not settings.local.json)
-	deaconSettings := filepath.Join(tmpDir, "deacon", ".claude", "settings.json")
-	createValidSettings(t, deaconSettings)
+	// Create valid supervisor settings (must be settings.json, not settings.local.json)
+	supervisorSettings := filepath.Join(tmpDir, "supervisor", ".claude", "settings.json")
+	createValidSettings(t, supervisorSettings)
 
 	check := NewClaudeSettingsCheck()
 	ctx := &CheckContext{TownRoot: tmpDir}
@@ -231,7 +231,7 @@ func TestClaudeSettingsCheck_ValidDeaconSettings(t *testing.T) {
 	result := check.Run(ctx)
 
 	if result.Status != StatusOK {
-		t.Errorf("expected StatusOK for valid deacon settings, got %v: %s", result.Status, result.Message)
+		t.Errorf("expected StatusOK for valid supervisor settings, got %v: %s", result.Status, result.Message)
 	}
 }
 
@@ -292,16 +292,16 @@ func TestClaudeSettingsCheck_ValidCrewSettings(t *testing.T) {
 	}
 }
 
-func TestClaudeSettingsCheck_ValidPolecatSettings(t *testing.T) {
+func TestClaudeSettingsCheck_ValidMinerSettings(t *testing.T) {
 	tmpDir := t.TempDir()
 	rigName := "testrig"
 
-	// Create valid polecat settings in correct location (polecats/.claude/settings.json)
-	// with the polecat-specific Stop hook (`gt tap polecat-stop-check`) — see
-	// internal/hooks/config.go DefaultOverrides()["polecats"]. The check
+	// Create valid miner settings in correct location (miners/.claude/settings.json)
+	// with the miner-specific Stop hook (`gt tap miner-stop-check`) — see
+	// internal/hooks/config.go DefaultOverrides()["miners"]. The check
 	// recognizes role-specific Stop patterns (#3648).
-	pcSettings := filepath.Join(tmpDir, rigName, "polecats", ".claude", "settings.json")
-	createValidPolecatSettings(t, pcSettings)
+	pcSettings := filepath.Join(tmpDir, rigName, "miners", ".claude", "settings.json")
+	createValidMinerSettings(t, pcSettings)
 
 	check := NewClaudeSettingsCheck()
 	ctx := &CheckContext{TownRoot: tmpDir}
@@ -309,22 +309,22 @@ func TestClaudeSettingsCheck_ValidPolecatSettings(t *testing.T) {
 	result := check.Run(ctx)
 
 	if result.Status != StatusOK {
-		t.Errorf("expected StatusOK for valid polecat settings, got %v: %s", result.Status, result.Message)
+		t.Errorf("expected StatusOK for valid miner settings, got %v: %s", result.Status, result.Message)
 	}
 }
 
-// TestClaudeSettingsCheck_PolecatStopHookRecognized is the regression test for
+// TestClaudeSettingsCheck_MinerStopHookRecognized is the regression test for
 // #3648: doctor's claude-settings check used to expect `costs record` in the
-// Stop hook for *all* roles, but the polecat hooks template installs
-// `gt tap polecat-stop-check`. Result: doctor reported polecat settings as
+// Stop hook for *all* roles, but the miner hooks template installs
+// `gt tap miner-stop-check`. Result: doctor reported miner settings as
 // stale, --fix deleted them, the daemon recreated the same file, and the
 // check never converged. The fix recognizes role-specific Stop patterns.
-func TestClaudeSettingsCheck_PolecatStopHookRecognized(t *testing.T) {
+func TestClaudeSettingsCheck_MinerStopHookRecognized(t *testing.T) {
 	tmpDir := t.TempDir()
 	rigName := "testrig"
 
-	pcSettings := filepath.Join(tmpDir, rigName, "polecats", ".claude", "settings.json")
-	createValidPolecatSettings(t, pcSettings)
+	pcSettings := filepath.Join(tmpDir, rigName, "miners", ".claude", "settings.json")
+	createValidMinerSettings(t, pcSettings)
 
 	check := NewClaudeSettingsCheck()
 	ctx := &CheckContext{TownRoot: tmpDir}
@@ -332,7 +332,7 @@ func TestClaudeSettingsCheck_PolecatStopHookRecognized(t *testing.T) {
 	result := check.Run(ctx)
 
 	if result.Status != StatusOK {
-		t.Fatalf("polecat settings with `gt tap polecat-stop-check` should pass; got %v: %s\nDetails: %v",
+		t.Fatalf("miner settings with `gt tap miner-stop-check` should pass; got %v: %s\nDetails: %v",
 			result.Status, result.Message, result.Details)
 	}
 
@@ -357,13 +357,13 @@ func TestExpectedStopPattern(t *testing.T) {
 		role string
 		want string
 	}{
-		{"polecat", "polecat-stop-check"},
-		{"polecats", "polecat-stop-check"}, // both singular and plural in use
+		{"miner", "miner-stop-check"},
+		{"miners", "miner-stop-check"}, // both singular and plural in use
 		{"witness", "costs record"},
 		{"refinery", "costs record"},
 		{"crew", "costs record"},
-		{"mayor", "costs record"},
-		{"deacon", "costs record"},
+		{"overseer", "costs record"},
+		{"supervisor", "costs record"},
 		{"", "costs record"},
 	}
 	for _, c := range cases {
@@ -377,9 +377,9 @@ func TestExpectedStopPattern(t *testing.T) {
 func TestClaudeSettingsCheck_MissingEnabledPlugins(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// Create mayor settings.json missing enabledPlugins (content validation)
-	mayorSettings := filepath.Join(tmpDir, "mayor", ".claude", "settings.json")
-	createStaleSettings(t, mayorSettings, "enabledPlugins")
+	// Create overseer settings.json missing enabledPlugins (content validation)
+	overseerSettings := filepath.Join(tmpDir, "overseer", ".claude", "settings.json")
+	createStaleSettings(t, overseerSettings, "enabledPlugins")
 
 	check := NewClaudeSettingsCheck()
 	ctx := &CheckContext{TownRoot: tmpDir}
@@ -397,9 +397,9 @@ func TestClaudeSettingsCheck_MissingEnabledPlugins(t *testing.T) {
 func TestClaudeSettingsCheck_MissingHooks(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// Create mayor settings.json missing hooks entirely (content validation)
-	mayorSettings := filepath.Join(tmpDir, "mayor", ".claude", "settings.json")
-	createStaleSettings(t, mayorSettings, "hooks")
+	// Create overseer settings.json missing hooks entirely (content validation)
+	overseerSettings := filepath.Join(tmpDir, "overseer", ".claude", "settings.json")
+	createStaleSettings(t, overseerSettings, "hooks")
 
 	check := NewClaudeSettingsCheck()
 	ctx := &CheckContext{TownRoot: tmpDir}
@@ -414,9 +414,9 @@ func TestClaudeSettingsCheck_MissingHooks(t *testing.T) {
 func TestClaudeSettingsCheck_MissingSessionStartPrime(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// Create mayor settings.json missing gt prime in SessionStart (content validation)
-	mayorSettings := filepath.Join(tmpDir, "mayor", ".claude", "settings.json")
-	createStaleSettings(t, mayorSettings, "PATH")
+	// Create overseer settings.json missing gt prime in SessionStart (content validation)
+	overseerSettings := filepath.Join(tmpDir, "overseer", ".claude", "settings.json")
+	createStaleSettings(t, overseerSettings, "PATH")
 
 	check := NewClaudeSettingsCheck()
 	ctx := &CheckContext{TownRoot: tmpDir}
@@ -441,9 +441,9 @@ func TestClaudeSettingsCheck_MissingSessionStartPrime(t *testing.T) {
 func TestClaudeSettingsCheck_MissingStopHook(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// Create mayor settings.json missing Stop hook (content validation)
-	mayorSettings := filepath.Join(tmpDir, "mayor", ".claude", "settings.json")
-	createStaleSettings(t, mayorSettings, "Stop")
+	// Create overseer settings.json missing Stop hook (content validation)
+	overseerSettings := filepath.Join(tmpDir, "overseer", ".claude", "settings.json")
+	createStaleSettings(t, overseerSettings, "Stop")
 
 	check := NewClaudeSettingsCheck()
 	ctx := &CheckContext{TownRoot: tmpDir}
@@ -529,11 +529,11 @@ func TestClaudeSettingsCheck_MultipleStaleFiles(t *testing.T) {
 
 	// Create multiple stale settings files (all using old settings.local.json which is now stale)
 	// settings.local.json is stale - should be settings.json
-	mayorSettings := filepath.Join(tmpDir, "mayor", ".claude", "settings.local.json")
-	createValidSettings(t, mayorSettings) // Valid content but stale filename
+	overseerSettings := filepath.Join(tmpDir, "overseer", ".claude", "settings.local.json")
+	createValidSettings(t, overseerSettings) // Valid content but stale filename
 
-	deaconSettings := filepath.Join(tmpDir, "deacon", ".claude", "settings.local.json")
-	createValidSettings(t, deaconSettings) // Valid content but stale filename
+	supervisorSettings := filepath.Join(tmpDir, "supervisor", ".claude", "settings.local.json")
+	createValidSettings(t, supervisorSettings) // Valid content but stale filename
 
 	// Stale settings.local.json in witness workdir (old location + old filename)
 	// This creates BOTH a stale file AND a missing settings.json issue
@@ -559,11 +559,11 @@ func TestClaudeSettingsCheck_InvalidJSON(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Create invalid JSON file (settings.json for content validation)
-	mayorSettings := filepath.Join(tmpDir, "mayor", ".claude", "settings.json")
-	if err := os.MkdirAll(filepath.Dir(mayorSettings), 0755); err != nil {
+	overseerSettings := filepath.Join(tmpDir, "overseer", ".claude", "settings.json")
+	if err := os.MkdirAll(filepath.Dir(overseerSettings), 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(mayorSettings, []byte("not valid json {"), 0644); err != nil {
+	if err := os.WriteFile(overseerSettings, []byte("not valid json {"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -590,8 +590,8 @@ func TestClaudeSettingsCheck_InvalidJSON(t *testing.T) {
 func TestClaudeSettingsCheck_FixDeletesStaleFile(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// Create stale settings.local.json at mayor (old filename, now stale)
-	staleSettings := filepath.Join(tmpDir, "mayor", ".claude", "settings.local.json")
+	// Create stale settings.local.json at overseer (old filename, now stale)
+	staleSettings := filepath.Join(tmpDir, "overseer", ".claude", "settings.local.json")
 	createValidSettings(t, staleSettings)
 
 	check := NewClaudeSettingsCheck()
@@ -625,7 +625,7 @@ func TestClaudeSettingsCheck_SkipsNonRigDirectories(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Create directories that should be skipped as rigs
-	// Note: don't use mayor/deacon here because those are legitimate town-level agent
+	// Note: don't use overseer/supervisor here because those are legitimate town-level agent
 	// directories - creating subdirs there triggers missing settings detection
 	for _, skipDir := range []string{"daemon", ".git", "docs", ".hidden"} {
 		dir := filepath.Join(tmpDir, skipDir, "witness", ".claude")
@@ -653,9 +653,9 @@ func TestClaudeSettingsCheck_MixedValidAndStale(t *testing.T) {
 	tmpDir := t.TempDir()
 	rigName := "testrig"
 
-	// Create valid mayor settings (settings.json in correct location)
-	mayorSettings := filepath.Join(tmpDir, "mayor", ".claude", "settings.json")
-	createValidSettings(t, mayorSettings)
+	// Create valid overseer settings (settings.json in correct location)
+	overseerSettings := filepath.Join(tmpDir, "overseer", ".claude", "settings.json")
+	createValidSettings(t, overseerSettings)
 
 	// Create stale witness settings (settings.json missing PATH, in correct location)
 	witnessSettings := filepath.Join(tmpDir, rigName, "witness", ".claude", "settings.json")
@@ -711,13 +711,13 @@ func TestClaudeSettingsCheck_WrongLocationCrew(t *testing.T) {
 	}
 }
 
-func TestClaudeSettingsCheck_WrongLocationPolecat(t *testing.T) {
+func TestClaudeSettingsCheck_WrongLocationMiner(t *testing.T) {
 	tmpDir := t.TempDir()
 	rigName := "testrig"
 
-	// Create settings in wrong location (polecats/<name>/.claude/ instead of polecats/.claude/)
-	// Individual polecat intermediate-level settings are stale - should be shared polecats/.claude/settings.json
-	wrongSettings := filepath.Join(tmpDir, rigName, "polecats", "pc1", ".claude", "settings.local.json")
+	// Create settings in wrong location (miners/<name>/.claude/ instead of miners/.claude/)
+	// Individual miner intermediate-level settings are stale - should be shared miners/.claude/settings.json
+	wrongSettings := filepath.Join(tmpDir, rigName, "miners", "pc1", ".claude", "settings.local.json")
 	createValidSettings(t, wrongSettings)
 
 	check := NewClaudeSettingsCheck()
@@ -1052,9 +1052,9 @@ func TestClaudeSettingsCheck_RigRootSettingsFixDeletes(t *testing.T) {
 }
 
 // NOTE: TestClaudeSettingsCheck_DetectsStaleCLAUDEmdAtTownRoot and
-// TestClaudeSettingsCheck_FixMovesCLAUDEmdToMayor were removed because
+// TestClaudeSettingsCheck_FixMovesCLAUDEmdToOverseer were removed because
 // CLAUDE.md at town root is now intentionally created by gt install.
-// It serves as an identity anchor for Mayor/Deacon who run from the town root.
+// It serves as an identity anchor for Overseer/Supervisor who run from the town root.
 // See install.go createTownRootAgentMDs() for details.
 
 func TestClaudeSettingsCheck_GitIgnoredFilesNotFlagged(t *testing.T) {
@@ -1072,7 +1072,7 @@ func TestClaudeSettingsCheck_GitIgnoredFilesNotFlagged(t *testing.T) {
 
 	// Create CLAUDE.md at town root (wrong location but gitignored)
 	claudeMdPath := filepath.Join(tmpDir, "CLAUDE.md")
-	if err := os.WriteFile(claudeMdPath, []byte("# Mayor Context\n"), 0644); err != nil {
+	if err := os.WriteFile(claudeMdPath, []byte("# Overseer Context\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1091,9 +1091,9 @@ func TestClaudeSettingsCheck_GitIgnoredFilesNotFlagged(t *testing.T) {
 func TestClaudeSettingsCheck_TownRootSettingsWarnsInsteadOfKilling(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// Create mayor directory (needed for fix to recreate settings there)
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	// Create overseer directory (needed for fix to recreate settings there)
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1280,13 +1280,13 @@ func TestClaudeSettingsCheck_MissingCrewSettings(t *testing.T) {
 	}
 }
 
-func TestClaudeSettingsCheck_MissingPolecatSettings(t *testing.T) {
+func TestClaudeSettingsCheck_MissingMinerSettings(t *testing.T) {
 	tmpDir := t.TempDir()
 	rigName := "testrig"
 
-	// Create polecats directory but NOT the shared settings.json at polecats/.claude/
-	polecatsDir := filepath.Join(tmpDir, rigName, "polecats")
-	if err := os.MkdirAll(polecatsDir, 0755); err != nil {
+	// Create miners directory but NOT the shared settings.json at miners/.claude/
+	minersDir := filepath.Join(tmpDir, rigName, "miners")
+	if err := os.MkdirAll(minersDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1296,7 +1296,7 @@ func TestClaudeSettingsCheck_MissingPolecatSettings(t *testing.T) {
 	result := check.Run(ctx)
 
 	if result.Status != StatusError {
-		t.Errorf("expected StatusError for missing polecat settings, got %v", result.Status)
+		t.Errorf("expected StatusError for missing miner settings, got %v", result.Status)
 	}
 
 	// Verify the staleSettings entry has missingFile set to true
@@ -1304,10 +1304,10 @@ func TestClaudeSettingsCheck_MissingPolecatSettings(t *testing.T) {
 		t.Fatalf("expected 1 stale setting, got %d", len(check.staleSettings))
 	}
 	if !check.staleSettings[0].missingFile {
-		t.Error("expected missingFile to be true for missing polecat settings")
+		t.Error("expected missingFile to be true for missing miner settings")
 	}
-	if check.staleSettings[0].agentType != "polecat" {
-		t.Errorf("expected agentType 'polecat', got %q", check.staleSettings[0].agentType)
+	if check.staleSettings[0].agentType != "miner" {
+		t.Errorf("expected agentType 'miner', got %q", check.staleSettings[0].agentType)
 	}
 }
 
@@ -1368,9 +1368,9 @@ func TestClaudeSettingsCheck_MixedMissingAndStale(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Create stale settings.local.json (old filename) for mayor
-	mayorStaleSettings := filepath.Join(tmpDir, "mayor", ".claude", "settings.local.json")
-	createValidSettings(t, mayorStaleSettings)
+	// Create stale settings.local.json (old filename) for overseer
+	overseerStaleSettings := filepath.Join(tmpDir, "overseer", ".claude", "settings.local.json")
+	createValidSettings(t, overseerStaleSettings)
 
 	check := NewClaudeSettingsCheck()
 	ctx := &CheckContext{TownRoot: tmpDir}
@@ -1382,8 +1382,8 @@ func TestClaudeSettingsCheck_MixedMissingAndStale(t *testing.T) {
 	}
 
 	// Should have 3 issues:
-	// 1. mayor stale settings.local.json (wrongLocation)
-	// 2. mayor missing settings.json (reported separately from stale)
+	// 1. overseer stale settings.local.json (wrongLocation)
+	// 2. overseer missing settings.json (reported separately from stale)
 	// 3. refinery missing settings.json
 	if len(check.staleSettings) != 3 {
 		t.Errorf("expected 3 stale settings, got %d: %+v", len(check.staleSettings), check.staleSettings)

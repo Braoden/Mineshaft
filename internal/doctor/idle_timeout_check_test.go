@@ -15,23 +15,23 @@ func TestIdleTimeoutCheck_Run(t *testing.T) {
 	if err := os.MkdirAll(townBeads, 0755); err != nil {
 		t.Fatal(err)
 	}
-	routesContent := `{"prefix":"gt-","path":"gastown"}
+	routesContent := `{"prefix":"gt-","path":"excavation"}
 {"prefix":"bd-","path":"beads"}
 `
 	if err := os.WriteFile(filepath.Join(townBeads, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 
-	// Create gastown rig with correct idle-timeout
-	gastownBeads := filepath.Join(townRoot, "gastown", ".beads")
-	if err := os.MkdirAll(gastownBeads, 0755); err != nil {
+	// Create excavation rig with correct idle-timeout
+	excavationBeads := filepath.Join(townRoot, "excavation", ".beads")
+	if err := os.MkdirAll(excavationBeads, 0755); err != nil {
 		t.Fatal(err)
 	}
-	gastownConfig := `prefix: gt
+	excavationConfig := `prefix: gt
 issue-prefix: gt
 dolt.idle-timeout: "0"
 `
-	if err := os.WriteFile(filepath.Join(gastownBeads, "config.yaml"), []byte(gastownConfig), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(excavationBeads, "config.yaml"), []byte(excavationConfig), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -73,22 +73,22 @@ func TestIdleTimeoutCheck_Run_AllCorrect(t *testing.T) {
 	if err := os.MkdirAll(townBeads, 0755); err != nil {
 		t.Fatal(err)
 	}
-	routesContent := `{"prefix":"gt-","path":"gastown"}
+	routesContent := `{"prefix":"gt-","path":"excavation"}
 `
 	if err := os.WriteFile(filepath.Join(townBeads, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 
-	// Create gastown rig with correct idle-timeout
-	gastownBeads := filepath.Join(townRoot, "gastown", ".beads")
-	if err := os.MkdirAll(gastownBeads, 0755); err != nil {
+	// Create excavation rig with correct idle-timeout
+	excavationBeads := filepath.Join(townRoot, "excavation", ".beads")
+	if err := os.MkdirAll(excavationBeads, 0755); err != nil {
 		t.Fatal(err)
 	}
-	gastownConfig := `prefix: gt
+	excavationConfig := `prefix: gt
 issue-prefix: gt
 dolt.idle-timeout: "0"
 `
-	if err := os.WriteFile(filepath.Join(gastownBeads, "config.yaml"), []byte(gastownConfig), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(excavationBeads, "config.yaml"), []byte(excavationConfig), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -112,21 +112,21 @@ func TestIdleTimeoutCheck_Fix(t *testing.T) {
 	if err := os.MkdirAll(townBeads, 0755); err != nil {
 		t.Fatal(err)
 	}
-	routesContent := `{"prefix":"gt-","path":"gastown"}
+	routesContent := `{"prefix":"gt-","path":"excavation"}
 `
 	if err := os.WriteFile(filepath.Join(townBeads, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 
-	// Create gastown rig WITHOUT idle-timeout
-	gastownBeads := filepath.Join(townRoot, "gastown", ".beads")
-	if err := os.MkdirAll(gastownBeads, 0755); err != nil {
+	// Create excavation rig WITHOUT idle-timeout
+	excavationBeads := filepath.Join(townRoot, "excavation", ".beads")
+	if err := os.MkdirAll(excavationBeads, 0755); err != nil {
 		t.Fatal(err)
 	}
-	gastownConfig := `prefix: gt
+	excavationConfig := `prefix: gt
 issue-prefix: gt
 `
-	if err := os.WriteFile(filepath.Join(gastownBeads, "config.yaml"), []byte(gastownConfig), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(excavationBeads, "config.yaml"), []byte(excavationConfig), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -141,7 +141,7 @@ issue-prefix: gt
 	}
 
 	// Verify config was updated
-	data, err := os.ReadFile(filepath.Join(gastownBeads, "config.yaml"))
+	data, err := os.ReadFile(filepath.Join(excavationBeads, "config.yaml"))
 	if err != nil {
 		t.Fatal(err)
 	}

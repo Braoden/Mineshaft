@@ -9,7 +9,7 @@ import (
 func TestDetectSenderFromCwdUsesAgentFileWitnessIdentity(t *testing.T) {
 	t.Setenv("GT_ROLE", "")
 	t.Setenv("GT_RIG", "")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
 
 	tmp := t.TempDir()
@@ -43,7 +43,7 @@ func TestDetectSenderFromCwdUsesAgentFileWitnessIdentity(t *testing.T) {
 func TestDetectSenderFromCwdUsesAgentFileRefineryIdentity(t *testing.T) {
 	t.Setenv("GT_ROLE", "")
 	t.Setenv("GT_RIG", "")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
 
 	tmp := t.TempDir()

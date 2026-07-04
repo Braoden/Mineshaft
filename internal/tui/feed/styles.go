@@ -1,10 +1,10 @@
-// Package feed provides a TUI for the Gas Town activity feed.
+// Package feed provides a TUI for the Excavation Site activity feed.
 package feed
 
 import (
 	"github.com/charmbracelet/lipgloss"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/ui"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/ui"
 )
 
 // Color palette using Ayu theme colors from ui package
@@ -102,12 +102,12 @@ var (
 
 	// Role icons - uses centralized emojis from constants package
 	RoleIcons = map[string]string{
-		constants.RoleMayor:    constants.EmojiMayor,
+		constants.RoleOverseer:    constants.EmojiOverseer,
 		constants.RoleWitness:  constants.EmojiWitness,
 		constants.RoleRefinery: constants.EmojiRefinery,
 		constants.RoleCrew:     constants.EmojiCrew,
-		constants.RolePolecat:  constants.EmojiPolecat,
-		constants.RoleDeacon:   constants.EmojiDeacon,
+		constants.RoleMiner:  constants.EmojiMiner,
+		constants.RoleSupervisor:   constants.EmojiSupervisor,
 	}
 
 	// MQ event styles
@@ -173,8 +173,8 @@ var (
 		// Witness patrol events
 		"patrol_started":  constants.EmojiWitness,
 		"patrol_complete": "✓",
-		"polecat_checked": "·",
-		"polecat_nudged":  "⚡",
+		"miner_checked": "·",
+		"miner_nudged":  "⚡",
 		"escalation_sent": "⬆",
 		// Merge events
 		"merge_started": "⚙",

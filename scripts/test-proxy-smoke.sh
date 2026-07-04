@@ -68,7 +68,7 @@ echo "=== Issuing test certificate via admin API..."
 CERT_RESPONSE=$(curl -sf \
     -X POST \
     -H "Content-Type: application/json" \
-    -d '{"rig":"testrig","name":"testpolecat"}' \
+    -d '{"rig":"testrig","name":"testminer"}' \
     "http://127.0.0.1:${PROXY_ADMIN_PORT}/v1/admin/issue-cert")
 
 if [[ -z "${CERT_RESPONSE}" ]]; then

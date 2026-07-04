@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // Note: Agent field parsing is now in internal/beads/fields.go (AgentFields, ParseAgentFields)
@@ -23,12 +23,12 @@ import (
 // Uses canonical naming: prefix-rig-role-name
 // Town-level agents use hq- prefix; rig-level agents use rig's prefix.
 // Examples:
-//   - "mayor" -> "hq-mayor"
-//   - "deacon" -> "hq-deacon"
-//   - "gastown/witness" -> "gt-gastown-witness"
-//   - "gastown/refinery" -> "gt-gastown-refinery"
-//   - "gastown/nux" (polecat) -> "gt-gastown-polecat-nux"
-//   - "gastown/crew/max" -> "gt-gastown-crew-max"
+//   - "overseer" -> "hq-overseer"
+//   - "supervisor" -> "hq-supervisor"
+//   - "excavation/witness" -> "gt-excavation-witness"
+//   - "excavation/refinery" -> "gt-excavation-refinery"
+//   - "excavation/nux" (miner) -> "gt-excavation-miner-nux"
+//   - "excavation/crew/max" -> "gt-excavation-crew-max"
 //
 // If role is unknown, it tries to infer from the identity string.
 // townRoot is needed to look up the rig's configured prefix.
@@ -43,35 +43,35 @@ func buildAgentBeadID(identity string, role Role, townRoot string) string {
 	// If role is unknown or empty, try to infer from identity
 	if role == RoleUnknown || role == Role("") {
 		switch {
-		case identity == "mayor":
-			return beads.MayorBeadIDTown()
-		case identity == "deacon":
-			return beads.DeaconBeadIDTown()
-		case identity == "deacon-boot":
+		case identity == "overseer":
+			return beads.OverseerBeadIDTown()
+		case identity == "supervisor":
+			return beads.SupervisorBeadIDTown()
+		case identity == "supervisor-boot":
 			return beads.DogBeadIDTown("boot")
 		case len(parts) == 2 && parts[1] == "witness":
 			return beads.WitnessBeadIDWithPrefix(getPrefix(parts[0]), parts[0])
 		case len(parts) == 2 && parts[1] == "refinery":
 			return beads.RefineryBeadIDWithPrefix(getPrefix(parts[0]), parts[0])
 		case len(parts) == 2:
-			// Assume rig/name is a polecat
-			return beads.PolecatBeadIDWithPrefix(getPrefix(parts[0]), parts[0], parts[1])
+			// Assume rig/name is a miner
+			return beads.MinerBeadIDWithPrefix(getPrefix(parts[0]), parts[0], parts[1])
 		case len(parts) == 3 && parts[1] == "crew":
 			// rig/crew/name - crew member
 			return beads.CrewBeadIDWithPrefix(getPrefix(parts[0]), parts[0], parts[2])
-		case len(parts) == 3 && parts[1] == "polecats":
-			// rig/polecats/name - explicit polecat
-			return beads.PolecatBeadIDWithPrefix(getPrefix(parts[0]), parts[0], parts[2])
+		case len(parts) == 3 && parts[1] == "miners":
+			// rig/miners/name - explicit miner
+			return beads.MinerBeadIDWithPrefix(getPrefix(parts[0]), parts[0], parts[2])
 		default:
 			return ""
 		}
 	}
 
 	switch role {
-	case RoleMayor:
-		return beads.MayorBeadIDTown()
-	case RoleDeacon:
-		return beads.DeaconBeadIDTown()
+	case RoleOverseer:
+		return beads.OverseerBeadIDTown()
+	case RoleSupervisor:
+		return beads.SupervisorBeadIDTown()
 	case RoleWitness:
 		if len(parts) >= 1 {
 			return beads.WitnessBeadIDWithPrefix(getPrefix(parts[0]), parts[0])
@@ -82,13 +82,13 @@ func buildAgentBeadID(identity string, role Role, townRoot string) string {
 			return beads.RefineryBeadIDWithPrefix(getPrefix(parts[0]), parts[0])
 		}
 		return ""
-	case RolePolecat:
-		// Handle both 2-part (rig/name) and 3-part (rig/polecats/name) formats
-		if len(parts) == 3 && parts[1] == "polecats" {
-			return beads.PolecatBeadIDWithPrefix(getPrefix(parts[0]), parts[0], parts[2])
+	case RoleMiner:
+		// Handle both 2-part (rig/name) and 3-part (rig/miners/name) formats
+		if len(parts) == 3 && parts[1] == "miners" {
+			return beads.MinerBeadIDWithPrefix(getPrefix(parts[0]), parts[0], parts[2])
 		}
 		if len(parts) >= 2 {
-			return beads.PolecatBeadIDWithPrefix(getPrefix(parts[0]), parts[0], parts[1])
+			return beads.MinerBeadIDWithPrefix(getPrefix(parts[0]), parts[0], parts[1])
 		}
 		return ""
 	case RoleCrew:
@@ -97,7 +97,7 @@ func buildAgentBeadID(identity string, role Role, townRoot string) string {
 		}
 		return ""
 	case RoleBoot:
-		// Boot is a deacon dog — uses town-level dog bead ID
+		// Boot is a supervisor dog — uses town-level dog bead ID
 		return beads.DogBeadIDTown("boot")
 	default:
 		return ""
@@ -327,7 +327,7 @@ func runMoleculeStatus(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("finding workspace: %w", err)
 	}
 	if townRoot == "" {
-		return fmt.Errorf("not in a Gas Town workspace")
+		return fmt.Errorf("not in a Excavation Site workspace")
 	}
 
 	// Determine target agent
@@ -344,7 +344,7 @@ func runMoleculeStatus(cmd *cobra.Command, args []string) error {
 		// Use cwd-based detection for status display
 		// This ensures we show the hook for the agent whose directory we're in,
 		// not the agent from the GT_ROLE env var (which might be different if
-		// we cd'd into another rig's crew/polecat directory)
+		// we cd'd into another rig's crew/miner directory)
 		roleCtx = detectRole(cwd, townRoot)
 		if roleCtx.Role == RoleUnknown {
 			// Fall back to GT_ROLE when cwd doesn't identify an agent
@@ -394,7 +394,7 @@ func runMoleculeStatus(cmd *cobra.Command, args []string) error {
 	}
 
 	// lookupHookedWork performs the full multi-step hook lookup for target.
-	// Called in a retry loop for polecats to handle Dolt propagation lag.
+	// Called in a retry loop for miners to handle Dolt propagation lag.
 	lookupHookedWork := func() *beads.Issue {
 		// Resolve agent bead ID for display purposes only.
 		// Agent bead's hook_bead field is no longer maintained (updateAgentHookBead is
@@ -435,15 +435,15 @@ func runMoleculeStatus(cmd *cobra.Command, args []string) error {
 			hookedBeads = inProgressBeads
 		}
 
-		// For town-level roles (mayor, deacon), scan all rigs if nothing found locally
+		// For town-level roles (overseer, supervisor), scan all rigs if nothing found locally
 		if len(hookedBeads) == 0 && isTownLevelRole(target) {
 			hookedBeads = scanAllRigsForHookedBeads(townRoot, target)
 		}
 
-		// For rig-level agents (polecats, crew), also search town-level beads.
-		// When the Mayor slings an hq-* bead to a polecat, the bead lives in
+		// For rig-level agents (miners, crew), also search town-level beads.
+		// When the Overseer slings an hq-* bead to a miner, the bead lives in
 		// townRoot/.beads, not the rig's .beads database.
-		// See: https://github.com/steveyegge/gastown/issues/1438
+		// See: https://github.com/steveyegge/excavation/issues/1438
 		if len(hookedBeads) == 0 && !isTownLevelRole(target) && townRoot != "" {
 			townB := beads.New(filepath.Join(townRoot, ".beads"))
 			if townHooked, err := townB.List(beads.ListOptions{
@@ -467,18 +467,18 @@ func runMoleculeStatus(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	// Run the lookup. In polecat context, retry with backoff to handle Dolt
+	// Run the lookup. In miner context, retry with backoff to handle Dolt
 	// propagation lag between the sling write and the nudge arriving here.
-	// See: https://github.com/steveyegge/gastown/issues/2389
+	// See: https://github.com/steveyegge/excavation/issues/2389
 	var hookBead *beads.Issue
-	isPolecat := roleCtx.Role == RolePolecat ||
+	isMiner := roleCtx.Role == RoleMiner ||
 		(os.Getenv("GT_ROLE") != "" && func() bool {
 			r, _, _ := parseRoleString(os.Getenv("GT_ROLE"))
-			return r == RolePolecat
+			return r == RoleMiner
 		}())
 
 	hookBead = lookupHookedWork()
-	if hookBead == nil && isPolecat {
+	if hookBead == nil && isMiner {
 		const maxRetries = 5
 		const baseBackoff = 500 * time.Millisecond
 		const maxBackoff = 8 * time.Second
@@ -542,8 +542,8 @@ func runMoleculeStatus(cmd *cobra.Command, args []string) error {
 }
 
 // extractRoleFromIdentity extracts the role name from an agent identity string
-// for handoff bead lookup. Handles trailing slashes (e.g. "mayor/" → "mayor")
-// and compound paths (e.g. "gastown/crew/jack" → "jack").
+// for handoff bead lookup. Handles trailing slashes (e.g. "overseer/" → "overseer")
+// and compound paths (e.g. "excavation/crew/jack" → "jack").
 func extractRoleFromIdentity(target string) string {
 	target = strings.TrimRight(target, "/")
 	parts := strings.Split(target, "/")
@@ -551,29 +551,29 @@ func extractRoleFromIdentity(target string) string {
 }
 
 // buildAgentIdentity constructs the agent identity string from role context.
-// Town-level agents (mayor, deacon) use trailing slash to match the format
+// Town-level agents (overseer, supervisor) use trailing slash to match the format
 // used when setting assignee on hooked beads (see resolveSelfTarget in sling.go).
 func buildAgentIdentity(ctx RoleContext) string {
 	switch ctx.Role {
-	case RoleMayor:
-		return "mayor/"
-	case RoleDeacon:
-		return "deacon/"
+	case RoleOverseer:
+		return "overseer/"
+	case RoleSupervisor:
+		return "supervisor/"
 	case RoleBoot:
-		return "deacon/boot"
+		return "supervisor/boot"
 	case RoleWitness:
 		return ctx.Rig + "/witness"
 	case RoleRefinery:
 		return ctx.Rig + "/refinery"
-	case RolePolecat:
-		return ctx.Rig + "/polecats/" + ctx.Polecat
+	case RoleMiner:
+		return ctx.Rig + "/miners/" + ctx.Miner
 	case RoleCrew:
-		return ctx.Rig + "/crew/" + ctx.Polecat
+		return ctx.Rig + "/crew/" + ctx.Miner
 	case RoleDog:
-		if ctx.Polecat == "" {
+		if ctx.Miner == "" {
 			return ""
 		}
-		return "deacon/dogs/" + ctx.Polecat
+		return "supervisor/dogs/" + ctx.Miner
 	default:
 		return ""
 	}
@@ -845,7 +845,7 @@ func showGitDivergenceWarning() {
 	ahead, aErr := g.CommitsAhead(remote, "HEAD")
 	behind, bErr := g.CountCommitsBehind(remote)
 
-	// Also check divergence from origin/main as a fallback — polecats
+	// Also check divergence from origin/main as a fallback — miners
 	// work on feature branches that may not have a remote tracking branch,
 	// but we still want to warn if they're behind main.
 	if aErr != nil || bErr != nil {
@@ -961,7 +961,7 @@ func runMoleculeCurrent(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("finding workspace: %w", err)
 	}
 	if townRoot == "" {
-		return fmt.Errorf("not in a Gas Town workspace")
+		return fmt.Errorf("not in a Excavation Site workspace")
 	}
 
 	// Determine target agent identity
@@ -975,7 +975,7 @@ func runMoleculeCurrent(cmd *cobra.Command, args []string) error {
 		// Use cwd-based detection for status display
 		// This ensures we show the hook for the agent whose directory we're in,
 		// not the agent from the GT_ROLE env var (which might be different if
-		// we cd'd into another rig's crew/polecat directory)
+		// we cd'd into another rig's crew/miner directory)
 		roleCtx = detectRole(cwd, townRoot)
 		if roleCtx.Role == RoleUnknown {
 			// Fall back to GT_ROLE when cwd doesn't identify an agent
@@ -1176,13 +1176,13 @@ func outputMoleculeCurrent(info MoleculeCurrentInfo) error {
 }
 
 // isTownLevelRole returns true if the agent ID is a town-level role.
-// Town-level roles (Mayor, Deacon) operate from the town root and may have
+// Town-level roles (Overseer, Supervisor) operate from the town root and may have
 // pinned beads in any rig's beads directory.
-// Accepts both "mayor" and "mayor/" formats for compatibility.
+// Accepts both "overseer" and "overseer/" formats for compatibility.
 func isTownLevelRole(agentID string) bool {
-	return agentID == "mayor" || agentID == "mayor/" ||
-		agentID == "deacon" || agentID == "deacon/" ||
-		agentID == "deacon/boot" || agentID == "deacon-boot"
+	return agentID == "overseer" || agentID == "overseer/" ||
+		agentID == "supervisor" || agentID == "supervisor/" ||
+		agentID == "supervisor/boot" || agentID == "supervisor-boot"
 }
 
 // extractMailSender extracts the sender from mail bead labels.

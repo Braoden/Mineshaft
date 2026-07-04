@@ -186,7 +186,7 @@ func (c *StaleDoltPortCheck) findPortFiles(townRoot string) []string {
 	}
 
 	// Rig .beads directories (same discovery pattern as findMetadataFiles)
-	rigsConfig := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsConfig := filepath.Join(townRoot, "overseer", "rigs.json")
 	if data, err := os.ReadFile(rigsConfig); err == nil {
 		var rigs struct {
 			Rigs map[string]struct{} `json:"rigs"`
@@ -194,7 +194,7 @@ func (c *StaleDoltPortCheck) findPortFiles(townRoot string) []string {
 		if json.Unmarshal(data, &rigs) == nil {
 			for rigName := range rigs.Rigs {
 				locations = append(locations,
-					filepath.Join(townRoot, rigName, "mayor", "rig", ".beads", "dolt-server.port"),
+					filepath.Join(townRoot, rigName, "overseer", "rig", ".beads", "dolt-server.port"),
 					filepath.Join(townRoot, rigName, ".beads", "dolt-server.port"),
 				)
 			}
@@ -241,14 +241,14 @@ func (c *StaleDoltPortCheck) findMetadataFiles(townRoot string) []string {
 	}
 
 	// Rig metadata files
-	rigsConfig := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsConfig := filepath.Join(townRoot, "overseer", "rigs.json")
 	if data, err := os.ReadFile(rigsConfig); err == nil {
 		var rigs struct {
 			Rigs map[string]struct{} `json:"rigs"`
 		}
 		if json.Unmarshal(data, &rigs) == nil {
 			for rigName := range rigs.Rigs {
-				rigMeta := filepath.Join(townRoot, rigName, "mayor", "rig", ".beads", "metadata.json")
+				rigMeta := filepath.Join(townRoot, rigName, "overseer", "rig", ".beads", "metadata.json")
 				if _, err := os.Stat(rigMeta); err == nil {
 					files = append(files, rigMeta)
 				}

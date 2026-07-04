@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/beads"
+	"github.com/steveyegge/excavation/internal/beads"
 )
 
-// BeadsRedirectTargetCheck validates that .beads/redirect files in crew/polecat/refinery
+// BeadsRedirectTargetCheck validates that .beads/redirect files in crew/miner/refinery
 // worktrees point to targets that actually exist and have a working beads setup.
 //
 // This catches setup issues when cloning to a new machine where redirects might
@@ -195,13 +195,13 @@ func (c *BeadsRedirectTargetCheck) Fix(ctx *CheckContext) error {
 
 		rigRoot := filepath.Join(ctx.TownRoot, parts[0])
 		rigBeads := filepath.Join(rigRoot, ".beads")
-		mayorBeads := filepath.Join(rigRoot, "mayor", "rig", ".beads")
+		overseerBeads := filepath.Join(rigRoot, "overseer", "rig", ".beads")
 
 		// Check if either canonical location exists and has beads
 		canonicalExists := false
 		if hasBeadsSetup(rigBeads) {
 			canonicalExists = true
-		} else if hasBeadsSetup(mayorBeads) {
+		} else if hasBeadsSetup(overseerBeads) {
 			canonicalExists = true
 		}
 
@@ -268,7 +268,7 @@ func recomputeRedirect(townRoot, worktreePath string) error {
 
 	rigRoot := filepath.Join(townRoot, parts[0])
 	rigBeads := filepath.Join(rigRoot, ".beads")
-	mayorBeads := filepath.Join(rigRoot, "mayor", "rig", ".beads")
+	overseerBeads := filepath.Join(rigRoot, "overseer", "rig", ".beads")
 
 	// Compute depth from worktree to rig root
 	depth := len(parts) - 1
@@ -293,8 +293,8 @@ func recomputeRedirect(townRoot, worktreePath string) error {
 			}
 		}
 		redirectContent = upPath + ".beads"
-	case hasBeadsSetup(mayorBeads):
-		redirectContent = upPath + "mayor/rig/.beads"
+	case hasBeadsSetup(overseerBeads):
+		redirectContent = upPath + "overseer/rig/.beads"
 	default:
 		return fmt.Errorf("no valid beads location found")
 	}

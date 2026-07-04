@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/constants"
+	"github.com/steveyegge/excavation/internal/constants"
 )
 
 // IdentityEnvVars are agent identity env vars that must not leak across
@@ -19,24 +19,24 @@ import (
 // inherited vars), tmux global cleanup, and prime session env repair.
 // See GH#3006.
 var IdentityEnvVars = []string{
-	"GT_ROLE", "GT_RIG", "GT_CREW", "GT_POLECAT", "GT_DOG_NAME",
+	"GT_ROLE", "GT_RIG", "GT_CREW", "GT_MINER", "GT_DOG_NAME",
 	"GT_SESSION", "GT_AGENT", "BD_ACTOR", "GIT_AUTHOR_NAME", "BEADS_AGENT_NAME",
 }
 
 // AgentEnvConfig specifies the configuration for generating agent environment variables.
 // This is the single source of truth for all agent environment configuration.
 type AgentEnvConfig struct {
-	// Role is the agent role: mayor, deacon, witness, refinery, crew, polecat, dog, boot
+	// Role is the agent role: overseer, supervisor, witness, refinery, crew, miner, dog, boot
 	Role string
 
-	// Rig is the rig name (empty for town-level agents like mayor/deacon)
+	// Rig is the rig name (empty for town-level agents like overseer/supervisor)
 	Rig string
 
 	// AgentName is the specific agent name (empty for singletons like witness/refinery)
-	// For polecats, this is the polecat name. For crew, this is the crew member name.
+	// For miners, this is the miner name. For crew, this is the crew member name.
 	AgentName string
 
-	// TownRoot is the root of the Gas Town workspace.
+	// TownRoot is the root of the Excavation Site workspace.
 	// Sets GT_ROOT environment variable.
 	TownRoot string
 
@@ -49,7 +49,7 @@ type AgentEnvConfig struct {
 
 	// Agent is the agent override (e.g., "codex", "gemini").
 	// If set, GT_AGENT is written to the tmux session table via SetEnvironment
-	// so that IsAgentAlive and waitForPolecatReady can read it via GetEnvironment.
+	// so that IsAgentAlive and waitForMinerReady can read it via GetEnvironment.
 	// Without this, GetEnvironment returns empty (tmux show-environment reads the
 	// session table, not the process env set via exec env in the startup command).
 	Agent string
@@ -68,7 +68,7 @@ type AgentEnvConfig struct {
 	// Added as gt.topic to OTEL_RESOURCE_ATTRIBUTES for filtering by work type.
 	Topic string
 
-	// SessionName is the tmux session name for this agent (e.g., "hq-mayor", "gt-witness").
+	// SessionName is the tmux session name for this agent (e.g., "hq-overseer", "gt-witness").
 	// Added as gt.session to OTEL_RESOURCE_ATTRIBUTES so all Claude logs from a
 	// single GT session can be correlated, and as GT_SESSION env var.
 	SessionName string
@@ -81,21 +81,21 @@ func AgentEnv(cfg AgentEnvConfig) map[string]string {
 
 	// Set role-specific variables
 	// GT_ROLE is set in compound format (e.g., "beads/crew/jane") so that
-	// beads can parse it without knowing about Gas Town role types.
+	// beads can parse it without knowing about Excavation Site role types.
 	switch cfg.Role {
-	case constants.RoleMayor:
-		env["GT_ROLE"] = constants.RoleMayor
-		env["BD_ACTOR"] = constants.RoleMayor
-		env["GIT_AUTHOR_NAME"] = constants.RoleMayor
+	case constants.RoleOverseer:
+		env["GT_ROLE"] = constants.RoleOverseer
+		env["BD_ACTOR"] = constants.RoleOverseer
+		env["GIT_AUTHOR_NAME"] = constants.RoleOverseer
 
-	case constants.RoleDeacon:
-		env["GT_ROLE"] = constants.RoleDeacon
-		env["BD_ACTOR"] = constants.RoleDeacon
-		env["GIT_AUTHOR_NAME"] = constants.RoleDeacon
+	case constants.RoleSupervisor:
+		env["GT_ROLE"] = constants.RoleSupervisor
+		env["BD_ACTOR"] = constants.RoleSupervisor
+		env["GIT_AUTHOR_NAME"] = constants.RoleSupervisor
 
 	case "boot":
-		env["GT_ROLE"] = "deacon/boot"
-		env["BD_ACTOR"] = "deacon-boot"
+		env["GT_ROLE"] = "supervisor/boot"
+		env["BD_ACTOR"] = "supervisor-boot"
 		env["GIT_AUTHOR_NAME"] = "boot"
 
 	case constants.RoleWitness:
@@ -110,15 +110,15 @@ func AgentEnv(cfg AgentEnvConfig) map[string]string {
 		env["BD_ACTOR"] = fmt.Sprintf("%s/refinery", cfg.Rig)
 		env["GIT_AUTHOR_NAME"] = fmt.Sprintf("%s/refinery", cfg.Rig)
 
-	case constants.RolePolecat:
-		env["GT_ROLE"] = fmt.Sprintf("%s/polecats/%s", cfg.Rig, cfg.AgentName)
+	case constants.RoleMiner:
+		env["GT_ROLE"] = fmt.Sprintf("%s/miners/%s", cfg.Rig, cfg.AgentName)
 		env["GT_RIG"] = cfg.Rig
-		env["GT_POLECAT"] = cfg.AgentName
-		env["BD_ACTOR"] = fmt.Sprintf("%s/polecats/%s", cfg.Rig, cfg.AgentName)
+		env["GT_MINER"] = cfg.AgentName
+		env["BD_ACTOR"] = fmt.Sprintf("%s/miners/%s", cfg.Rig, cfg.AgentName)
 		env["GIT_AUTHOR_NAME"] = cfg.AgentName
-		// Disable Dolt auto-commit for polecats. With branch-per-polecat,
+		// Disable Dolt auto-commit for miners. With branch-per-miner,
 		// individual commits are pointless — all changes merge at gt done time
-		// via DOLT_MERGE. Without this, concurrent polecats cause manifest
+		// via DOLT_MERGE. Without this, concurrent miners cause manifest
 		// contention leading to Dolt read-only mode (gt-5cc2p).
 		env["BD_DOLT_AUTO_COMMIT"] = "off"
 
@@ -135,7 +135,7 @@ func AgentEnv(cfg AgentEnvConfig) map[string]string {
 		env["GT_ROLE"] = "dog"
 		if cfg.AgentName != "" {
 			env["GT_DOG_NAME"] = cfg.AgentName
-			env["BD_ACTOR"] = fmt.Sprintf("deacon/dogs/%s", cfg.AgentName)
+			env["BD_ACTOR"] = fmt.Sprintf("supervisor/dogs/%s", cfg.AgentName)
 			env["GIT_AUTHOR_NAME"] = cfg.AgentName
 		} else {
 			env["BD_ACTOR"] = "dog"
@@ -149,12 +149,12 @@ func AgentEnv(cfg AgentEnvConfig) map[string]string {
 		env["GT_ROOT"] = cfg.TownRoot
 		// Prevent git from walking up to umbrella repo when running in rig worktrees.
 		// This stops accidental commits to the umbrella when running git commands from
-		// intermediate directories (e.g., polecats/) that don't have their own .git.
+		// intermediate directories (e.g., miners/) that don't have their own .git.
 		env["GIT_CEILING_DIRECTORIES"] = cfg.TownRoot
 	}
 
-	// Set BEADS_AGENT_NAME for polecat/crew (uses same format as BD_ACTOR)
-	if cfg.Role == constants.RolePolecat || cfg.Role == constants.RoleCrew {
+	// Set BEADS_AGENT_NAME for miner/crew (uses same format as BD_ACTOR)
+	if cfg.Role == constants.RoleMiner || cfg.Role == constants.RoleCrew {
 		env["BEADS_AGENT_NAME"] = fmt.Sprintf("%s/%s", cfg.Rig, cfg.AgentName)
 	}
 
@@ -176,15 +176,15 @@ func AgentEnv(cfg AgentEnvConfig) map[string]string {
 
 	// Set GT_AGENT when an agent override is in use.
 	// This makes the override visible via tmux show-environment so that
-	// IsAgentAlive and waitForPolecatReady use the correct process names.
+	// IsAgentAlive and waitForMinerReady use the correct process names.
 	if cfg.Agent != "" {
 		env["GT_AGENT"] = cfg.Agent
 	}
 
-	// Disable bd's per-repo JSONL auto-backup for all Gas Town agents.
+	// Disable bd's per-repo JSONL auto-backup for all Excavation Site agents.
 	// bd auto-enables backup when a git remote exists, then force-adds
 	// .beads/backup/ files (bypassing .gitignore) and commits/pushes them
-	// to the project repo. In Gas Town, Dolt is the persistent data store
+	// to the project repo. In Excavation Site, Dolt is the persistent data store
 	// and the daemon provides centralized backup patrols (dolt_backup,
 	// jsonl_git_backup), making per-repo backup redundant and harmful —
 	// it pollutes rig git history on both main and feature branches.
@@ -217,13 +217,13 @@ func AgentEnv(cfg AgentEnvConfig) map[string]string {
 
 	// Clear CLAUDECODE to prevent nested session detection in Claude Code v2.x.
 	// When gt sling is invoked from within a Claude Code session, CLAUDECODE=1
-	// leaks through tmux's global environment into new polecat sessions, causing
+	// leaks through tmux's global environment into new miner sessions, causing
 	// Claude Code to refuse to start with a "nested sessions" error.
-	// See: https://github.com/steveyegge/gastown/issues/1666
+	// See: https://github.com/steveyegge/excavation/issues/1666
 	env["CLAUDECODE"] = ""
 
 	// Propagate Claude Code's own OTEL telemetry when GT telemetry is enabled.
-	// Reuses the same VictoriaMetrics endpoint as gastown's telemetry so all
+	// Reuses the same VictoriaMetrics endpoint as excavation's telemetry so all
 	// metrics (gt + claude) land in the same store.
 	// Opt-in: only active when GT_OTEL_METRICS_URL is explicitly set.
 	if metricsURL := os.Getenv("GT_OTEL_METRICS_URL"); metricsURL != "" {
@@ -254,7 +254,7 @@ func AgentEnv(cfg AgentEnvConfig) map[string]string {
 		}
 
 		// Attach GT context as OTEL resource attributes so Claude's metrics
-		// can be correlated with gastown's own telemetry in VictoriaMetrics.
+		// can be correlated with excavation's own telemetry in VictoriaMetrics.
 		// Claude Code's Node.js SDK picks up OTEL_RESOURCE_ATTRIBUTES automatically.
 		var attrs []string
 		if v := env["GT_ROLE"]; v != "" {
@@ -302,8 +302,8 @@ func AgentEnv(cfg AgentEnvConfig) map[string]string {
 			setDoltPortEnv(env, v)
 		}
 	}
-	// Suppress bd's Dolt auto-start for all Gas Town agents (GH#2930).
-	// Gas Town manages its own Dolt server (gt dolt start/stop). When the
+	// Suppress bd's Dolt auto-start for all Excavation Site agents (GH#2930).
+	// Excavation Site manages its own Dolt server (gt dolt start/stop). When the
 	// server is momentarily unreachable (restart, journal hiccup), bd's
 	// auto-start tries to launch a shadow server in the agent's .beads/dolt/
 	// directory — which conflicts with the real server on the same port and
@@ -329,7 +329,7 @@ func AgentEnv(cfg AgentEnvConfig) map[string]string {
 		// ANTHROPIC_BASE_URL intentionally excluded — agents that need a custom
 		// base URL (MiniMax, Groq, etc.) get it from their agent config's Env
 		// block, not from the parent process. Passthrough caused cross-provider
-		// contamination: a MiniMax deacon's base URL leaked into Claude polecats.
+		// contamination: a MiniMax supervisor's base URL leaked into Claude miners.
 		"ANTHROPIC_CUSTOM_HEADERS",
 
 		// Model selection
@@ -416,7 +416,7 @@ func sanitizeOTELAttrValue(s string, maxLen int) string {
 // Resolution order:
 //  1. GT_DOLT_PORT environment variable (explicit operator intent)
 //  2. .dolt-data/config.yaml listener.port
-//  3. mayor/daemon.json env.GT_DOLT_PORT
+//  3. overseer/daemon.json env.GT_DOLT_PORT
 //  4. 0 (caller should skip injection — DefaultPort 3307 remains the default)
 func ResolveDoltPort(townRoot string) int {
 	if port := resolveDoltPortFromEnv(); port > 0 {
@@ -445,7 +445,7 @@ func ResolveDoltPort(townRoot string) int {
 // Resolution order:
 //  1. .dolt-data/config.yaml listener.port unless GT_DOLT_IGNORE_CONFIG=1
 //  2. GT_DOLT_PORT environment variable
-//  3. mayor/daemon.json env.GT_DOLT_PORT
+//  3. overseer/daemon.json env.GT_DOLT_PORT
 //  4. 0 (caller should use its default)
 func ResolveConfiguredDoltPort(townRoot string) int {
 	if _, port, ok := ManagedDoltEndpoint(townRoot); ok {
@@ -467,7 +467,7 @@ func ResolveConfiguredDoltPort(townRoot string) int {
 // Resolution order:
 //  1. .dolt-data/config.yaml listener.host unless GT_DOLT_IGNORE_CONFIG=1
 //  2. GT_DOLT_HOST environment variable
-//  3. mayor/daemon.json env.GT_DOLT_HOST
+//  3. overseer/daemon.json env.GT_DOLT_HOST
 //  4. "" (caller should use its default)
 func ResolveConfiguredDoltHost(townRoot string) string {
 	if host, _, ok := ManagedDoltEndpoint(townRoot); ok {
@@ -582,7 +582,7 @@ func resolveDoltPortFromDaemonJSON(townRoot string) int {
 	if townRoot == "" {
 		return 0
 	}
-	daemonJSONPath := filepath.Join(townRoot, "mayor", "daemon.json")
+	daemonJSONPath := filepath.Join(townRoot, "overseer", "daemon.json")
 	data, err := os.ReadFile(daemonJSONPath)
 	if err != nil {
 		return 0
@@ -607,7 +607,7 @@ func resolveDoltPortFromDaemonJSON(townRoot string) int {
 // Resolution order:
 //  1. GT_DOLT_HOST environment variable (explicit operator intent)
 //  2. .dolt-data/config.yaml listener.host unless GT_DOLT_IGNORE_CONFIG=1
-//  3. mayor/daemon.json env.GT_DOLT_HOST
+//  3. overseer/daemon.json env.GT_DOLT_HOST
 //  4. "" (caller should use its default localhost behavior)
 func ResolveDoltHost(townRoot string) string {
 	if host := strings.TrimSpace(os.Getenv("GT_DOLT_HOST")); host != "" {
@@ -638,7 +638,7 @@ func resolveDoltHostFromDaemonJSON(townRoot string) string {
 	if townRoot == "" {
 		return ""
 	}
-	daemonJSONPath := filepath.Join(townRoot, "mayor", "daemon.json")
+	daemonJSONPath := filepath.Join(townRoot, "overseer", "daemon.json")
 	data, err := os.ReadFile(daemonJSONPath)
 	if err != nil {
 		return ""
@@ -748,7 +748,7 @@ func psQuote(s string) string {
 }
 
 // ExportPrefix builds an export statement prefix for shell commands.
-// Returns a string like "export GT_ROLE=mayor BD_ACTOR=mayor && "
+// Returns a string like "export GT_ROLE=overseer BD_ACTOR=overseer && "
 // The keys are sorted for deterministic output.
 // Values containing special characters are properly shell-quoted.
 func ExportPrefix(env map[string]string) string {

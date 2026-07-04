@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/refinery"
-	"github.com/steveyegge/gastown/internal/style"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/refinery"
+	"github.com/steveyegge/excavation/internal/style"
 )
 
 func runMQList(cmd *cobra.Command, args []string) error {
@@ -225,24 +225,24 @@ func runMQList(cmd *cobra.Command, args []string) error {
 		// Get MR fields
 		branch := ""
 		target := ""
-		convoyID := ""
+		minecartID := ""
 		if fields != nil {
 			branch = fields.Branch
 			target = fields.Target
-			convoyID = fields.ConvoyID
+			minecartID = fields.MinecartID
 		}
 		if target == "" {
 			target = style.Dim.Render("(unset)")
 		}
 
-		// Format convoy column
-		convoyDisplay := style.Dim.Render("(none)")
-		if convoyID != "" {
-			// Truncate convoy ID for display
-			if len(convoyID) > 12 {
-				convoyID = convoyID[:12]
+		// Format minecart column
+		minecartDisplay := style.Dim.Render("(none)")
+		if minecartID != "" {
+			// Truncate minecart ID for display
+			if len(minecartID) > 12 {
+				minecartID = minecartID[:12]
 			}
-			convoyDisplay = convoyID
+			minecartDisplay = minecartID
 		}
 
 		// Format priority with color
@@ -279,9 +279,9 @@ func runMQList(cmd *cobra.Command, args []string) error {
 
 		// Build row with conditional GIT column
 		if mqListVerify {
-			table.AddRow(displayID, scoreStr, priority, convoyDisplay, branch, target, styledStatus, gitStatus, style.Dim.Render(age))
+			table.AddRow(displayID, scoreStr, priority, minecartDisplay, branch, target, styledStatus, gitStatus, style.Dim.Render(age))
 		} else {
-			table.AddRow(displayID, scoreStr, priority, convoyDisplay, branch, target, styledStatus, style.Dim.Render(age))
+			table.AddRow(displayID, scoreStr, priority, minecartDisplay, branch, target, styledStatus, style.Dim.Render(age))
 		}
 	}
 
@@ -359,7 +359,7 @@ func buildMQListColumns(verify bool) []style.Column {
 		{Name: "ID", Width: 12},
 		{Name: "SCORE", Width: 7, Align: style.AlignRight},
 		{Name: "PRI", Width: 4},
-		{Name: "CONVOY", Width: 12},
+		{Name: "MINECART", Width: 12},
 		{Name: "BRANCH", Width: 24},
 		{Name: "TARGET", Width: 24},
 		{Name: "STATUS", Width: 10},
@@ -393,10 +393,10 @@ func calculateMRScore(issue *beads.Issue, fields *beads.MRFields, now time.Time)
 	if fields != nil {
 		input.RetryCount = fields.RetryCount
 
-		// Parse convoy created at if available
-		if fields.ConvoyCreatedAt != "" {
-			if convoyTime, err := time.Parse(time.RFC3339, fields.ConvoyCreatedAt); err == nil {
-				input.ConvoyCreatedAt = &convoyTime
+		// Parse minecart created at if available
+		if fields.MinecartCreatedAt != "" {
+			if minecartTime, err := time.Parse(time.RFC3339, fields.MinecartCreatedAt); err == nil {
+				input.MinecartCreatedAt = &minecartTime
 			}
 		}
 	}
@@ -423,7 +423,7 @@ func verifyBranch(verify bool, client branchVerifier, fields *beads.MRFields) (b
 	if localExists {
 		return false, false
 	}
-	// Also check remote-tracking ref (polecats often only have origin refs)
+	// Also check remote-tracking ref (miners often only have origin refs)
 	remoteExists, rerr := client.RemoteTrackingBranchExists("origin", fields.Branch)
 	if rerr != nil {
 		return false, true

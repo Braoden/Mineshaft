@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/rig"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/rig"
 )
 
 func captureStderr(t *testing.T, fn func()) string {
@@ -39,7 +39,7 @@ func captureStderr(t *testing.T, fn func()) string {
 func TestDiscoverRigAgents_UsesRigPrefix(t *testing.T) {
 	townRoot := t.TempDir()
 	writeTestRoutes(t, townRoot, []beads.Route{
-		{Prefix: "bd-", Path: "beads/mayor/rig"},
+		{Prefix: "bd-", Path: "beads/overseer/rig"},
 	})
 
 	r := &rig.Rig{
@@ -78,7 +78,7 @@ func TestDiscoverRigAgents_UsesRigPrefix(t *testing.T) {
 func TestRenderAgentDetails_UsesRigPrefix(t *testing.T) {
 	townRoot := t.TempDir()
 	writeTestRoutes(t, townRoot, []beads.Route{
-		{Prefix: "bd-", Path: "beads/mayor/rig"},
+		{Prefix: "bd-", Path: "beads/overseer/rig"},
 	})
 
 	agent := AgentRuntime{
@@ -102,19 +102,19 @@ func TestDiscoverRigAgents_ZombieSessionNotRunning(t *testing.T) {
 	// agent dead) results in agent.Running=false. This is the core fix for gt-bd6i3.
 	townRoot := t.TempDir()
 	writeTestRoutes(t, townRoot, []beads.Route{
-		{Prefix: "gt-", Path: "gastown/mayor/rig"},
+		{Prefix: "gt-", Path: "excavation/overseer/rig"},
 	})
 
 	r := &rig.Rig{
-		Name:       "gastown",
-		Path:       filepath.Join(townRoot, "gastown"),
+		Name:       "excavation",
+		Path:       filepath.Join(townRoot, "excavation"),
 		HasWitness: true,
 	}
 
 	// allSessions has the witness session but marked as zombie (false).
 	// This simulates a tmux session that exists but whose agent process has died.
 	allSessions := map[string]bool{
-		"gt-gastown-witness": false, // zombie: tmux exists, agent dead
+		"gt-excavation-witness": false, // zombie: tmux exists, agent dead
 	}
 
 	agents := discoverRigAgents(allSessions, r, nil, nil, nil, nil, true)
@@ -133,12 +133,12 @@ func TestDiscoverRigAgents_MissingSessionNotRunning(t *testing.T) {
 	// Verify that a session not in allSessions at all results in agent.Running=false.
 	townRoot := t.TempDir()
 	writeTestRoutes(t, townRoot, []beads.Route{
-		{Prefix: "gt-", Path: "gastown/mayor/rig"},
+		{Prefix: "gt-", Path: "excavation/overseer/rig"},
 	})
 
 	r := &rig.Rig{
-		Name:       "gastown",
-		Path:       filepath.Join(townRoot, "gastown"),
+		Name:       "excavation",
+		Path:       filepath.Join(townRoot, "excavation"),
 		HasWitness: true,
 	}
 
@@ -190,7 +190,7 @@ func TestOutputStatusText_IncludesDNDSection(t *testing.T) {
 		DND: &DNDInfo{
 			Enabled: true,
 			Level:   beads.NotifyMuted,
-			Agent:   "hq-mayor",
+			Agent:   "hq-overseer",
 		},
 	}
 
@@ -352,7 +352,7 @@ func TestParseRuntimeInfo(t *testing.T) {
 		},
 		{
 			name:    "pi with model",
-			cmdline: "pi\x00-e\x00gastown-hooks.js\x00--model\x00google-antigravity/gemini-3-flash",
+			cmdline: "pi\x00-e\x00excavation-hooks.js\x00--model\x00google-antigravity/gemini-3-flash",
 			want:    "pi/google-antigravity/gemini-3-flash",
 		},
 		{
@@ -387,7 +387,7 @@ func TestParseRuntimeInfo_PiBare(t *testing.T) {
 	// Bare pi (no --model flag) calls readPiDefaults() which reads
 	// ~/.pi/agent/settings.json. The result is either "pi" (if no settings)
 	// or "pi/<default-model>" (if settings exist). Both are valid.
-	cmdline := "pi\x00-e\x00gastown-hooks.js"
+	cmdline := "pi\x00-e\x00excavation-hooks.js"
 	got := parseRuntimeInfo(cmdline)
 	if !strings.HasPrefix(got, "pi") {
 		t.Errorf("parseRuntimeInfo(pi bare) = %q, want prefix 'pi'", got)
@@ -480,8 +480,8 @@ func TestCountRunningAgents(t *testing.T) {
 			name: "global agents only",
 			status: TownStatus{
 				Agents: []AgentRuntime{
-					{Name: "mayor", Running: true},
-					{Name: "deacon", Running: false},
+					{Name: "overseer", Running: true},
+					{Name: "supervisor", Running: false},
 				},
 			},
 			want: 1,
@@ -492,7 +492,7 @@ func TestCountRunningAgents(t *testing.T) {
 				Rigs: []RigStatus{
 					{
 						Agents: []AgentRuntime{
-							{Name: "polecat-1", Running: true},
+							{Name: "miner-1", Running: true},
 							{Name: "witness", Running: true},
 						},
 					},
@@ -504,18 +504,18 @@ func TestCountRunningAgents(t *testing.T) {
 			name: "mixed global and rig agents",
 			status: TownStatus{
 				Agents: []AgentRuntime{
-					{Name: "mayor", Running: true},
+					{Name: "overseer", Running: true},
 				},
 				Rigs: []RigStatus{
 					{
 						Agents: []AgentRuntime{
-							{Name: "polecat-1", Running: true},
+							{Name: "miner-1", Running: true},
 							{Name: "witness", Running: false},
 						},
 					},
 					{
 						Agents: []AgentRuntime{
-							{Name: "polecat-2", Running: true},
+							{Name: "miner-2", Running: true},
 						},
 					},
 				},
@@ -526,12 +526,12 @@ func TestCountRunningAgents(t *testing.T) {
 			name: "all not running",
 			status: TownStatus{
 				Agents: []AgentRuntime{
-					{Name: "mayor", Running: false},
+					{Name: "overseer", Running: false},
 				},
 				Rigs: []RigStatus{
 					{
 						Agents: []AgentRuntime{
-							{Name: "polecat-1", Running: false},
+							{Name: "miner-1", Running: false},
 						},
 					},
 				},

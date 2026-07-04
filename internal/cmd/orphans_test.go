@@ -7,13 +7,13 @@ import (
 	"testing"
 )
 
-// TestFindOrphanPolecatBranches verifies that polecat worktrees with unmerged
+// TestFindOrphanMinerBranches verifies that miner worktrees with unmerged
 // branches are detected and reported (GH #1024).
-func TestFindOrphanPolecatBranches(t *testing.T) {
-	// Create a fake rig with a polecat worktree that has unmerged commits.
+func TestFindOrphanMinerBranches(t *testing.T) {
+	// Create a fake rig with a miner worktree that has unmerged commits.
 	rigDir := t.TempDir()
 	rigName := "testrig"
-	polecatsDir := filepath.Join(rigDir, "polecats")
+	minersDir := filepath.Join(rigDir, "miners")
 
 	// Create a bare "origin" repo to serve as a remote
 	originDir := filepath.Join(t.TempDir(), "origin.git")
@@ -22,9 +22,9 @@ func TestFindOrphanPolecatBranches(t *testing.T) {
 	}
 	run(t, originDir, "git", "init", "--bare")
 
-	// Create the polecat worktree with an initial commit on main (legacy flat layout)
-	polecatName := "alpha"
-	worktreePath := filepath.Join(polecatsDir, polecatName)
+	// Create the miner worktree with an initial commit on main (legacy flat layout)
+	minerName := "alpha"
+	worktreePath := filepath.Join(minersDir, minerName)
 	if err := os.MkdirAll(worktreePath, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -39,19 +39,19 @@ func TestFindOrphanPolecatBranches(t *testing.T) {
 	run(t, worktreePath, "git", "branch", "-M", "main")
 	run(t, worktreePath, "git", "push", "-u", "origin", "main")
 
-	// Create a polecat branch with an extra commit
-	run(t, worktreePath, "git", "checkout", "-b", "polecat/alpha-work")
+	// Create a miner branch with an extra commit
+	run(t, worktreePath, "git", "checkout", "-b", "miner/alpha-work")
 	writeFile(t, filepath.Join(worktreePath, "feature.go"), "package feature\n")
 	run(t, worktreePath, "git", "add", ".")
 	run(t, worktreePath, "git", "commit", "-m", "feat: add feature")
 
 	// Scan for orphan branches
-	branches, skipped, err := findOrphanPolecatBranches(rigDir, rigName, "main")
+	branches, skipped, err := findOrphanMinerBranches(rigDir, rigName, "main")
 	if err != nil {
-		t.Fatalf("findOrphanPolecatBranches: %v", err)
+		t.Fatalf("findOrphanMinerBranches: %v", err)
 	}
 	if len(skipped) > 0 {
-		t.Errorf("unexpected skipped polecats: %v", skipped)
+		t.Errorf("unexpected skipped miners: %v", skipped)
 	}
 
 	if len(branches) != 1 {
@@ -59,11 +59,11 @@ func TestFindOrphanPolecatBranches(t *testing.T) {
 	}
 
 	b := branches[0]
-	if b.Polecat != polecatName {
-		t.Errorf("polecat = %q, want %q", b.Polecat, polecatName)
+	if b.Miner != minerName {
+		t.Errorf("miner = %q, want %q", b.Miner, minerName)
 	}
-	if b.Branch != "polecat/alpha-work" {
-		t.Errorf("branch = %q, want %q", b.Branch, "polecat/alpha-work")
+	if b.Branch != "miner/alpha-work" {
+		t.Errorf("branch = %q, want %q", b.Branch, "miner/alpha-work")
 	}
 	if b.AheadCount != 1 {
 		t.Errorf("ahead count = %d, want 1", b.AheadCount)
@@ -79,12 +79,12 @@ func TestFindOrphanPolecatBranches(t *testing.T) {
 	}
 }
 
-// TestFindOrphanPolecatBranches_NewStructure verifies that the new-structure
-// layout (polecats/<name>/<rigname>/) is correctly detected.
-func TestFindOrphanPolecatBranches_NewStructure(t *testing.T) {
+// TestFindOrphanMinerBranches_NewStructure verifies that the new-structure
+// layout (miners/<name>/<rigname>/) is correctly detected.
+func TestFindOrphanMinerBranches_NewStructure(t *testing.T) {
 	rigDir := t.TempDir()
 	rigName := "myrig"
-	polecatsDir := filepath.Join(rigDir, "polecats")
+	minersDir := filepath.Join(rigDir, "miners")
 
 	// Create a bare "origin" repo
 	originDir := filepath.Join(t.TempDir(), "origin.git")
@@ -93,9 +93,9 @@ func TestFindOrphanPolecatBranches_NewStructure(t *testing.T) {
 	}
 	run(t, originDir, "git", "init", "--bare")
 
-	// New structure: polecats/<name>/<rigname>/
-	polecatName := "charlie"
-	worktreePath := filepath.Join(polecatsDir, polecatName, rigName)
+	// New structure: miners/<name>/<rigname>/
+	minerName := "charlie"
+	worktreePath := filepath.Join(minersDir, minerName, rigName)
 	if err := os.MkdirAll(worktreePath, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -109,17 +109,17 @@ func TestFindOrphanPolecatBranches_NewStructure(t *testing.T) {
 	run(t, worktreePath, "git", "branch", "-M", "main")
 	run(t, worktreePath, "git", "push", "-u", "origin", "main")
 
-	run(t, worktreePath, "git", "checkout", "-b", "polecat/charlie-work")
+	run(t, worktreePath, "git", "checkout", "-b", "miner/charlie-work")
 	writeFile(t, filepath.Join(worktreePath, "new.go"), "package new\n")
 	run(t, worktreePath, "git", "add", ".")
 	run(t, worktreePath, "git", "commit", "-m", "feat: new structure work")
 
-	branches, skipped, err := findOrphanPolecatBranches(rigDir, rigName, "main")
+	branches, skipped, err := findOrphanMinerBranches(rigDir, rigName, "main")
 	if err != nil {
-		t.Fatalf("findOrphanPolecatBranches: %v", err)
+		t.Fatalf("findOrphanMinerBranches: %v", err)
 	}
 	if len(skipped) > 0 {
-		t.Errorf("unexpected skipped polecats: %v", skipped)
+		t.Errorf("unexpected skipped miners: %v", skipped)
 	}
 
 	if len(branches) != 1 {
@@ -127,8 +127,8 @@ func TestFindOrphanPolecatBranches_NewStructure(t *testing.T) {
 	}
 
 	b := branches[0]
-	if b.Polecat != polecatName {
-		t.Errorf("polecat = %q, want %q", b.Polecat, polecatName)
+	if b.Miner != minerName {
+		t.Errorf("miner = %q, want %q", b.Miner, minerName)
 	}
 	if b.WorktreePath != worktreePath {
 		t.Errorf("worktree path = %q, want %q", b.WorktreePath, worktreePath)
@@ -138,12 +138,12 @@ func TestFindOrphanPolecatBranches_NewStructure(t *testing.T) {
 	}
 }
 
-// TestFindOrphanPolecatBranches_CustomDefaultBranch verifies that a non-main
+// TestFindOrphanMinerBranches_CustomDefaultBranch verifies that a non-main
 // default branch is respected.
-func TestFindOrphanPolecatBranches_CustomDefaultBranch(t *testing.T) {
+func TestFindOrphanMinerBranches_CustomDefaultBranch(t *testing.T) {
 	rigDir := t.TempDir()
 	rigName := "testrig"
-	polecatsDir := filepath.Join(rigDir, "polecats")
+	minersDir := filepath.Join(rigDir, "miners")
 
 	originDir := filepath.Join(t.TempDir(), "origin.git")
 	if err := os.MkdirAll(originDir, 0755); err != nil {
@@ -151,8 +151,8 @@ func TestFindOrphanPolecatBranches_CustomDefaultBranch(t *testing.T) {
 	}
 	run(t, originDir, "git", "init", "--bare")
 
-	polecatName := "delta"
-	worktreePath := filepath.Join(polecatsDir, polecatName)
+	minerName := "delta"
+	worktreePath := filepath.Join(minersDir, minerName)
 	if err := os.MkdirAll(worktreePath, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -172,35 +172,35 @@ func TestFindOrphanPolecatBranches_CustomDefaultBranch(t *testing.T) {
 	run(t, worktreePath, "git", "commit", "-m", "feat: custom branch work")
 
 	// Scan with defaultBranch="develop"
-	branches, _, err := findOrphanPolecatBranches(rigDir, rigName, "develop")
+	branches, _, err := findOrphanMinerBranches(rigDir, rigName, "develop")
 	if err != nil {
-		t.Fatalf("findOrphanPolecatBranches: %v", err)
+		t.Fatalf("findOrphanMinerBranches: %v", err)
 	}
 	if len(branches) != 1 {
 		t.Fatalf("expected 1 orphan branch, got %d", len(branches))
 	}
 
 	// Scan with defaultBranch="main" should fail to count (no main branch),
-	// and the polecat should be skipped
-	branches2, skipped, err := findOrphanPolecatBranches(rigDir, rigName, "main")
+	// and the miner should be skipped
+	branches2, skipped, err := findOrphanMinerBranches(rigDir, rigName, "main")
 	if err != nil {
-		t.Fatalf("findOrphanPolecatBranches: %v", err)
+		t.Fatalf("findOrphanMinerBranches: %v", err)
 	}
 	if len(branches2) != 0 {
 		t.Errorf("expected 0 branches when scanning with wrong default branch, got %d", len(branches2))
 	}
 	if len(skipped) != 1 {
-		t.Errorf("expected 1 skipped polecat (wrong base branch), got %d", len(skipped))
+		t.Errorf("expected 1 skipped miner (wrong base branch), got %d", len(skipped))
 	}
 }
 
-// TestFindOrphanPolecatBranches_OnMain verifies that polecats on main are not
+// TestFindOrphanMinerBranches_OnMain verifies that miners on main are not
 // reported as orphans.
-func TestFindOrphanPolecatBranches_OnMain(t *testing.T) {
+func TestFindOrphanMinerBranches_OnMain(t *testing.T) {
 	rigDir := t.TempDir()
 	rigName := "testrig"
-	polecatsDir := filepath.Join(rigDir, "polecats")
-	worktreePath := filepath.Join(polecatsDir, "bravo")
+	minersDir := filepath.Join(rigDir, "miners")
+	worktreePath := filepath.Join(minersDir, "bravo")
 	if err := os.MkdirAll(worktreePath, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -211,22 +211,22 @@ func TestFindOrphanPolecatBranches_OnMain(t *testing.T) {
 	run(t, worktreePath, "git", "commit", "-m", "initial commit")
 	run(t, worktreePath, "git", "branch", "-M", "main")
 
-	branches, _, err := findOrphanPolecatBranches(rigDir, rigName, "main")
+	branches, _, err := findOrphanMinerBranches(rigDir, rigName, "main")
 	if err != nil {
-		t.Fatalf("findOrphanPolecatBranches: %v", err)
+		t.Fatalf("findOrphanMinerBranches: %v", err)
 	}
 	if len(branches) != 0 {
-		t.Errorf("expected 0 orphan branches for polecat on main, got %d", len(branches))
+		t.Errorf("expected 0 orphan branches for miner on main, got %d", len(branches))
 	}
 }
 
-// TestFindOrphanPolecatBranches_NoPolecatsDir verifies graceful handling when
-// there is no polecats directory.
-func TestFindOrphanPolecatBranches_NoPolecatsDir(t *testing.T) {
+// TestFindOrphanMinerBranches_NoMinersDir verifies graceful handling when
+// there is no miners directory.
+func TestFindOrphanMinerBranches_NoMinersDir(t *testing.T) {
 	rigDir := t.TempDir()
-	branches, skipped, err := findOrphanPolecatBranches(rigDir, "testrig", "main")
+	branches, skipped, err := findOrphanMinerBranches(rigDir, "testrig", "main")
 	if err != nil {
-		t.Fatalf("expected nil error for missing polecats dir, got: %v", err)
+		t.Fatalf("expected nil error for missing miners dir, got: %v", err)
 	}
 	if len(branches) != 0 {
 		t.Errorf("expected 0 branches, got %d", len(branches))

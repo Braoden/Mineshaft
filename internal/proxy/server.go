@@ -26,12 +26,12 @@ type Config struct {
 	ListenAddr      string
 	AllowedCommands []string
 	// AllowedSubcommands maps each allowed command ("gt", "bd") to the set of
-	// subcommands that polecats may invoke. If a command has an entry here,
+	// subcommands that miners may invoke. If a command has an entry here,
 	// argv[1] must appear in its list; absent argv[1] → 403.
 	// If a command has NO entry, subcommands are unrestricted for that command
 	// (safe for single-subcommand tools, but not intended for gt/bd).
 	AllowedSubcommands map[string][]string
-	// TownRoot is the path to the Gas Town root directory (e.g. ~/gt).
+	// TownRoot is the path to the Excavation Site root directory (e.g. ~/gt).
 	// Populated from the GT_TOWN env var or ~/gt by default.
 	TownRoot string
 	// Logger is the structured logger to use. nil uses slog.Default().
@@ -281,7 +281,7 @@ func (s *Server) Start(ctx context.Context) error {
 
 	// Start the local admin HTTP server if configured. The admin server does not
 	// use TLS because it is intended only for same-host operator tools (witness,
-	// mayor). Binding to 127.0.0.1 keeps it off-network; any process on the same
+	// overseer). Binding to 127.0.0.1 keeps it off-network; any process on the same
 	// host can reach it, which is the intended access model.
 	var adminSrv *http.Server
 	if s.cfg.AdminListenAddr != "" {
@@ -393,7 +393,7 @@ func serverListenIPs(listenAddr string) []net.IP {
 type issueCertRequest struct {
 	// Rig is the rig name (e.g. "MyRig").
 	Rig string `json:"rig"`
-	// Name is the polecat name (e.g. "rust").
+	// Name is the miner name (e.g. "rust").
 	Name string `json:"name"`
 	// TTL is the certificate validity duration (e.g. "720h"). Defaults to 720h (30 days).
 	TTL string `json:"ttl"`
@@ -410,7 +410,7 @@ type issueCertResponse struct {
 }
 
 // handleIssueCert handles POST /v1/admin/issue-cert on the local admin server.
-// It issues a new polecat client certificate signed by the server's CA.
+// It issues a new miner client certificate signed by the server's CA.
 func (s *Server) handleIssueCert(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -447,7 +447,7 @@ func (s *Server) handleIssueCert(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cn := "gt-" + req.Rig + "-" + req.Name
-	certPEM, keyPEM, err := s.ca.IssuePolecat(cn, ttl)
+	certPEM, keyPEM, err := s.ca.IssueMiner(cn, ttl)
 	if err != nil {
 		http.Error(w, "failed to issue certificate: "+err.Error(), http.StatusBadRequest)
 		return

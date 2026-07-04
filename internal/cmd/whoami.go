@@ -5,9 +5,9 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var whoamiCmd = &cobra.Command{
@@ -18,14 +18,14 @@ var whoamiCmd = &cobra.Command{
 
 Identity is determined by:
 1. GT_ROLE env var (if set) - indicates an agent session
-2. No GT_ROLE - you are the overseer (human)
+2. No GT_ROLE - you are the boss (human)
 
 Use --identity flag with mail commands to override.
 
 Examples:
   gt whoami                      # Show current identity
   gt mail inbox                  # Check inbox for current identity
-  gt mail inbox --identity mayor/  # Check Mayor's inbox instead`,
+  gt mail inbox --identity overseer/  # Check Overseer's inbox instead`,
 	RunE: runWhoami,
 }
 
@@ -48,8 +48,8 @@ func runWhoami(cmd *cobra.Command, args []string) error {
 		if rig := os.Getenv("GT_RIG"); rig != "" {
 			fmt.Printf("%s GT_RIG=%s\n", style.Dim.Render("       "), rig)
 		}
-		if polecat := os.Getenv("GT_POLECAT"); polecat != "" {
-			fmt.Printf("%s GT_POLECAT=%s\n", style.Dim.Render("       "), polecat)
+		if miner := os.Getenv("GT_MINER"); miner != "" {
+			fmt.Printf("%s GT_MINER=%s\n", style.Dim.Render("       "), miner)
 		}
 		if crew := os.Getenv("GT_CREW"); crew != "" {
 			fmt.Printf("%s GT_CREW=%s\n", style.Dim.Render("       "), crew)
@@ -57,20 +57,20 @@ func runWhoami(cmd *cobra.Command, args []string) error {
 	} else {
 		fmt.Printf("%s no GT_ROLE set (human at terminal)\n", style.Dim.Render("Source:"))
 
-		// If overseer, show their configured identity
-		if identity == "overseer" {
+		// If boss, show their configured identity
+		if identity == "boss" {
 			townRoot, err := workspace.FindFromCwd()
 			if err == nil && townRoot != "" {
-				if overseerConfig, err := config.LoadOverseerConfig(config.OverseerConfigPath(townRoot)); err == nil {
-					fmt.Printf("\n%s\n", style.Bold.Render("Overseer Identity:"))
-					fmt.Printf("  Name:  %s\n", overseerConfig.Name)
-					if overseerConfig.Email != "" {
-						fmt.Printf("  Email: %s\n", overseerConfig.Email)
+				if bossConfig, err := config.LoadBossConfig(config.BossConfigPath(townRoot)); err == nil {
+					fmt.Printf("\n%s\n", style.Bold.Render("Boss Identity:"))
+					fmt.Printf("  Name:  %s\n", bossConfig.Name)
+					if bossConfig.Email != "" {
+						fmt.Printf("  Email: %s\n", bossConfig.Email)
 					}
-					if overseerConfig.Username != "" {
-						fmt.Printf("  User:  %s\n", overseerConfig.Username)
+					if bossConfig.Username != "" {
+						fmt.Printf("  User:  %s\n", bossConfig.Username)
 					}
-					fmt.Printf("  %s %s\n", style.Dim.Render("(detected via"), style.Dim.Render(overseerConfig.Source+")"))
+					fmt.Printf("  %s %s\n", style.Dim.Render("(detected via"), style.Dim.Render(bossConfig.Source+")"))
 				}
 			}
 		}

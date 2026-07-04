@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/steveyegge/gastown/internal/formula"
+	"github.com/steveyegge/excavation/internal/formula"
 )
 
 func ExampleParse_workflow() {
@@ -130,10 +130,10 @@ needs = ["b", "c"]
 	// After 'b' and 'c': [d]
 }
 
-func ExampleParse_convoy() {
+func ExampleParse_minecart() {
 	toml := `
 formula = "security-audit"
-type = "convoy"
+type = "minecart"
 
 [[legs]]
 id = "sast"

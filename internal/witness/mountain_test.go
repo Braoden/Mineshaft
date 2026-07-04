@@ -108,75 +108,75 @@ func (m *mockBdResponses) toBdCli() *BdCli {
 	}
 }
 
-func TestTrackConvoyFailure_NoConvoy(t *testing.T) {
+func TestTrackMinecartFailure_NoMinecart(t *testing.T) {
 	t.Parallel()
 	mock := newMockBd()
 	// dep list returns empty
 	mock.execResults["dep list gt-abc --direction=up --type=tracks --json"] = mockExecResult{output: "[]"}
 
-	result := TrackConvoyFailure(mock.toBdCli(), "/tmp", "gt-abc")
+	result := TrackMinecartFailure(mock.toBdCli(), "/tmp", "gt-abc")
 	if result != nil {
-		t.Errorf("expected nil for issue with no convoy, got %+v", result)
+		t.Errorf("expected nil for issue with no minecart, got %+v", result)
 	}
 }
 
-func TestTrackConvoyFailure_EmptyIssueID(t *testing.T) {
+func TestTrackMinecartFailure_EmptyIssueID(t *testing.T) {
 	t.Parallel()
 	mock := newMockBd()
-	result := TrackConvoyFailure(mock.toBdCli(), "/tmp", "")
+	result := TrackMinecartFailure(mock.toBdCli(), "/tmp", "")
 	if result != nil {
 		t.Errorf("expected nil for empty issue ID, got %+v", result)
 	}
 }
 
-func TestTrackConvoyFailure_RegularConvoy(t *testing.T) {
+func TestTrackMinecartFailure_RegularMinecart(t *testing.T) {
 	t.Parallel()
 	mock := newMockBd()
 
-	// dep list returns a convoy
+	// dep list returns a minecart
 	deps, _ := json.Marshal([]struct {
 		ID   string `json:"id"`
 		Type string `json:"type"`
 	}{{ID: "hq-cv-abc", Type: "tracks"}})
 	mock.execResults["dep list gt-xyz --direction=up --type=tracks --json"] = mockExecResult{output: string(deps)}
 
-	// Convoy has no mountain label
-	convoyShow, _ := json.Marshal([]struct {
+	// Minecart has no mountain label
+	minecartShow, _ := json.Marshal([]struct {
 		Labels []string `json:"labels"`
-	}{{Labels: []string{"convoy"}}})
-	mock.execResults["show hq-cv-abc --json"] = mockExecResult{output: string(convoyShow)}
+	}{{Labels: []string{"minecart"}}})
+	mock.execResults["show hq-cv-abc --json"] = mockExecResult{output: string(minecartShow)}
 
-	result := TrackConvoyFailure(mock.toBdCli(), "/tmp", "gt-xyz")
+	result := TrackMinecartFailure(mock.toBdCli(), "/tmp", "gt-xyz")
 	if result == nil {
-		t.Fatal("expected non-nil result for convoy-tracked issue")
+		t.Fatal("expected non-nil result for minecart-tracked issue")
 	}
 	if result.IsMountain {
-		t.Error("expected IsMountain=false for regular convoy")
+		t.Error("expected IsMountain=false for regular minecart")
 	}
 	if result.Warning == "" {
-		t.Error("expected warning for regular convoy failure")
+		t.Error("expected warning for regular minecart failure")
 	}
 	if !strings.Contains(result.Warning, "gt-xyz") {
 		t.Errorf("warning should mention issue ID, got: %s", result.Warning)
 	}
 }
 
-func TestTrackConvoyFailure_MountainFirstFailure(t *testing.T) {
+func TestTrackMinecartFailure_MountainFirstFailure(t *testing.T) {
 	t.Parallel()
 	mock := newMockBd()
 
-	// dep list returns a mountain convoy
+	// dep list returns a mountain minecart
 	deps, _ := json.Marshal([]struct {
 		ID   string `json:"id"`
 		Type string `json:"type"`
 	}{{ID: "hq-cv-mtn", Type: "tracks"}})
 	mock.execResults["dep list gt-task1 --direction=up --type=tracks --json"] = mockExecResult{output: string(deps)}
 
-	// Convoy has mountain label
-	convoyShow, _ := json.Marshal([]struct {
+	// Minecart has mountain label
+	minecartShow, _ := json.Marshal([]struct {
 		Labels []string `json:"labels"`
-	}{{Labels: []string{"convoy", "mountain"}}})
-	mock.execResults["show hq-cv-mtn --json"] = mockExecResult{output: string(convoyShow)}
+	}{{Labels: []string{"minecart", "mountain"}}})
+	mock.execResults["show hq-cv-mtn --json"] = mockExecResult{output: string(minecartShow)}
 
 	// Issue has no existing failure labels
 	issueShow, _ := json.Marshal([]struct {
@@ -184,7 +184,7 @@ func TestTrackConvoyFailure_MountainFirstFailure(t *testing.T) {
 	}{{Labels: []string{"task"}}})
 	mock.execResults["show gt-task1 --json"] = mockExecResult{output: string(issueShow)}
 
-	result := TrackConvoyFailure(mock.toBdCli(), "/tmp", "gt-task1")
+	result := TrackMinecartFailure(mock.toBdCli(), "/tmp", "gt-task1")
 	if result == nil {
 		t.Fatal("expected non-nil result")
 	}
@@ -210,22 +210,22 @@ func TestTrackConvoyFailure_MountainFirstFailure(t *testing.T) {
 	}
 }
 
-func TestTrackConvoyFailure_MountainThirdFailure_AutoSkip(t *testing.T) {
+func TestTrackMinecartFailure_MountainThirdFailure_AutoSkip(t *testing.T) {
 	t.Parallel()
 	mock := newMockBd()
 
-	// dep list returns a mountain convoy
+	// dep list returns a mountain minecart
 	deps, _ := json.Marshal([]struct {
 		ID   string `json:"id"`
 		Type string `json:"type"`
 	}{{ID: "hq-cv-mtn", Type: "tracks"}})
 	mock.execResults["dep list gt-task2 --direction=up --type=tracks --json"] = mockExecResult{output: string(deps)}
 
-	// Convoy has mountain label
-	convoyShow, _ := json.Marshal([]struct {
+	// Minecart has mountain label
+	minecartShow, _ := json.Marshal([]struct {
 		Labels []string `json:"labels"`
 	}{{Labels: []string{"mountain"}}})
-	mock.execResults["show hq-cv-mtn --json"] = mockExecResult{output: string(convoyShow)}
+	mock.execResults["show hq-cv-mtn --json"] = mockExecResult{output: string(minecartShow)}
 
 	// Issue already has 2 failures
 	issueShow, _ := json.Marshal([]struct {
@@ -233,7 +233,7 @@ func TestTrackConvoyFailure_MountainThirdFailure_AutoSkip(t *testing.T) {
 	}{{Labels: []string{"mountain:failures:2"}}})
 	mock.execResults["show gt-task2 --json"] = mockExecResult{output: string(issueShow)}
 
-	result := TrackConvoyFailure(mock.toBdCli(), "/tmp", "gt-task2")
+	result := TrackMinecartFailure(mock.toBdCli(), "/tmp", "gt-task2")
 	if result == nil {
 		t.Fatal("expected non-nil result")
 	}
@@ -256,22 +256,22 @@ func TestTrackConvoyFailure_MountainThirdFailure_AutoSkip(t *testing.T) {
 	}
 }
 
-func TestTrackConvoyFailure_MountainSecondFailure_NoSkip(t *testing.T) {
+func TestTrackMinecartFailure_MountainSecondFailure_NoSkip(t *testing.T) {
 	t.Parallel()
 	mock := newMockBd()
 
-	// dep list returns a mountain convoy
+	// dep list returns a mountain minecart
 	deps, _ := json.Marshal([]struct {
 		ID   string `json:"id"`
 		Type string `json:"type"`
 	}{{ID: "hq-cv-mtn", Type: "tracks"}})
 	mock.execResults["dep list gt-task3 --direction=up --type=tracks --json"] = mockExecResult{output: string(deps)}
 
-	// Convoy has mountain label
-	convoyShow, _ := json.Marshal([]struct {
+	// Minecart has mountain label
+	minecartShow, _ := json.Marshal([]struct {
 		Labels []string `json:"labels"`
 	}{{Labels: []string{"mountain"}}})
-	mock.execResults["show hq-cv-mtn --json"] = mockExecResult{output: string(convoyShow)}
+	mock.execResults["show hq-cv-mtn --json"] = mockExecResult{output: string(minecartShow)}
 
 	// Issue already has 1 failure
 	issueShow, _ := json.Marshal([]struct {
@@ -279,7 +279,7 @@ func TestTrackConvoyFailure_MountainSecondFailure_NoSkip(t *testing.T) {
 	}{{Labels: []string{"mountain:failures:1"}}})
 	mock.execResults["show gt-task3 --json"] = mockExecResult{output: string(issueShow)}
 
-	result := TrackConvoyFailure(mock.toBdCli(), "/tmp", "gt-task3")
+	result := TrackMinecartFailure(mock.toBdCli(), "/tmp", "gt-task3")
 	if result == nil {
 		t.Fatal("expected non-nil result")
 	}
@@ -309,36 +309,36 @@ func TestTrackConvoyFailure_MountainSecondFailure_NoSkip(t *testing.T) {
 	}
 }
 
-func TestTrackConvoyFailures_Integration(t *testing.T) {
+func TestTrackMinecartFailures_Integration(t *testing.T) {
 	t.Parallel()
 
-	// Test the trackConvoyFailures function that processes zombie results
+	// Test the trackMinecartFailures function that processes zombie results
 	mock := newMockBd()
 
 	// Set up zombie results
-	result := &DetectZombiePolecatsResult{
+	result := &DetectZombieMinersResult{
 		Checked: 3,
 		Zombies: []ZombieResult{
 			{
-				PolecatName:    "alpha",
+				MinerName:    "alpha",
 				Classification: ZombieSessionDeadActive,
 				HookBead:       "gt-task-a",
 			},
 			{
 				// Completed bead — should NOT be tracked
-				PolecatName:    "beta",
+				MinerName:    "beta",
 				Classification: ZombieBeadClosedStillRunning,
 				HookBead:       "gt-task-b",
 			},
 			{
 				// No hook bead — should NOT be tracked
-				PolecatName:    "gamma",
+				MinerName:    "gamma",
 				Classification: ZombieAgentDeadInSession,
 				HookBead:       "",
 			},
 			{
 				// Submitted/orphan cleanup — should NOT be tracked as a failure
-				PolecatName:    "delta",
+				MinerName:    "delta",
 				Classification: ZombieSubmittedStillRunning,
 				HookBead:       "gt-task-d",
 				WasActive:      false,
@@ -346,48 +346,48 @@ func TestTrackConvoyFailures_Integration(t *testing.T) {
 		},
 	}
 
-	// Only gt-task-a should be checked for convoy tracking
-	// No convoys for it
+	// Only gt-task-a should be checked for minecart tracking
+	// No minecarts for it
 	mock.execResults["dep list gt-task-a --direction=up --type=tracks --json"] = mockExecResult{output: "[]"}
 
-	trackConvoyFailures(mock.toBdCli(), "/tmp", result)
+	trackMinecartFailures(mock.toBdCli(), "/tmp", result)
 
 	// Should have queried only gt-task-a (not gt-task-b, empty, or submitted idle)
 	if len(mock.execCalls) != 1 {
 		t.Errorf("expected 1 exec call, got %d: %v", len(mock.execCalls), mock.execCalls)
 	}
-	if len(result.ConvoyFailures) != 0 {
-		t.Errorf("expected 0 convoy failures for non-tracked issues, got %d", len(result.ConvoyFailures))
+	if len(result.MinecartFailures) != 0 {
+		t.Errorf("expected 0 minecart failures for non-tracked issues, got %d", len(result.MinecartFailures))
 	}
 }
 
-func TestTrackConvoyFailures_MountainZombie(t *testing.T) {
+func TestTrackMinecartFailures_MountainZombie(t *testing.T) {
 	t.Parallel()
 	mock := newMockBd()
 
-	result := &DetectZombiePolecatsResult{
+	result := &DetectZombieMinersResult{
 		Checked: 1,
 		Zombies: []ZombieResult{
 			{
-				PolecatName:    "nux",
+				MinerName:    "nux",
 				Classification: ZombieSessionDeadActive,
 				HookBead:       "gt-mtn-task",
 			},
 		},
 	}
 
-	// dep list returns mountain convoy
+	// dep list returns mountain minecart
 	deps, _ := json.Marshal([]struct {
 		ID   string `json:"id"`
 		Type string `json:"type"`
 	}{{ID: "hq-cv-mtn", Type: "tracks"}})
 	mock.execResults["dep list gt-mtn-task --direction=up --type=tracks --json"] = mockExecResult{output: string(deps)}
 
-	// Convoy has mountain label
-	convoyShow, _ := json.Marshal([]struct {
+	// Minecart has mountain label
+	minecartShow, _ := json.Marshal([]struct {
 		Labels []string `json:"labels"`
 	}{{Labels: []string{"mountain"}}})
-	mock.execResults["show hq-cv-mtn --json"] = mockExecResult{output: string(convoyShow)}
+	mock.execResults["show hq-cv-mtn --json"] = mockExecResult{output: string(minecartShow)}
 
 	// Issue has no existing failures
 	issueShow, _ := json.Marshal([]struct {
@@ -395,13 +395,13 @@ func TestTrackConvoyFailures_MountainZombie(t *testing.T) {
 	}{{Labels: []string{}}})
 	mock.execResults["show gt-mtn-task --json"] = mockExecResult{output: string(issueShow)}
 
-	trackConvoyFailures(mock.toBdCli(), "/tmp", result)
+	trackMinecartFailures(mock.toBdCli(), "/tmp", result)
 
-	if len(result.ConvoyFailures) != 1 {
-		t.Fatalf("expected 1 convoy failure, got %d", len(result.ConvoyFailures))
+	if len(result.MinecartFailures) != 1 {
+		t.Fatalf("expected 1 minecart failure, got %d", len(result.MinecartFailures))
 	}
 
-	cf := result.ConvoyFailures[0]
+	cf := result.MinecartFailures[0]
 	if cf.IssueID != "gt-mtn-task" {
 		t.Errorf("IssueID = %q, want %q", cf.IssueID, "gt-mtn-task")
 	}

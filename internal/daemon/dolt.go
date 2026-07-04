@@ -14,8 +14,8 @@ import (
 	"sync"
 	"time"
 
-	agentconfig "github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/doltserver"
+	agentconfig "github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/doltserver"
 )
 
 const doltCmdTimeout = 15 * time.Second
@@ -522,11 +522,11 @@ func (m *DoltServerManager) restartWithBackoff() error {
 	if len(m.restartTimes) >= maxRestarts {
 		if !m.escalated {
 			m.escalated = true
-			m.logger("Dolt server restart cap reached (%d restarts in %v), escalating to mayor",
+			m.logger("Dolt server restart cap reached (%d restarts in %v), escalating to overseer",
 				len(m.restartTimes), m.config.RestartWindow)
 			m.sendEscalationMail(len(m.restartTimes))
 		}
-		return fmt.Errorf("dolt server restart cap exceeded (%d restarts in %v); escalated to mayor",
+		return fmt.Errorf("dolt server restart cap exceeded (%d restarts in %v); escalated to overseer",
 			len(m.restartTimes), m.config.RestartWindow)
 	}
 
@@ -633,7 +633,7 @@ func (m *DoltServerManager) maybeResetBackoff() {
 	}
 }
 
-// sendEscalationMail sends a mail to the mayor when the Dolt server has
+// sendEscalationMail sends a mail to the overseer when the Dolt server has
 // exceeded its restart cap, indicating a systemic issue.
 // Runs the mail command asynchronously to avoid blocking the mutex.
 func (m *DoltServerManager) sendEscalationMail(restartCount int) {
@@ -667,15 +667,15 @@ Action needed: Investigate and fix the root cause, then restart the daemon or th
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
-		cmd := exec.CommandContext(ctx, "gt", "mail", "send", "mayor/", "-s", subject, "-m", body) //nolint:gosec // G204: args are constructed internally
+		cmd := exec.CommandContext(ctx, "gt", "mail", "send", "overseer/", "-s", subject, "-m", body) //nolint:gosec // G204: args are constructed internally
 		setSysProcAttr(cmd)
 		cmd.Dir = townRoot
 		cmd.Env = os.Environ()
 
 		if err := cmd.Run(); err != nil {
-			logger("Warning: failed to send escalation mail to mayor: %v", err)
+			logger("Warning: failed to send escalation mail to overseer: %v", err)
 		} else {
-			logger("Sent escalation mail to mayor about Dolt server crash-loop")
+			logger("Sent escalation mail to overseer about Dolt server crash-loop")
 		}
 
 		// Also notify all witnesses so they can react to degraded Dolt state
@@ -683,7 +683,7 @@ Action needed: Investigate and fix the root cause, then restart the daemon or th
 	}()
 }
 
-// sendCrashAlert sends a mail to the mayor when the Dolt server is found dead.
+// sendCrashAlert sends a mail to the overseer when the Dolt server is found dead.
 // This is for single crash detection — distinct from crash-loop escalation.
 // Runs asynchronously to avoid blocking.
 func (m *DoltServerManager) sendCrashAlert(deadPID int) {
@@ -708,12 +708,12 @@ Check the log file for crash details. If crashes recur, the daemon will escalate
 	logger := m.logger
 
 	go func() {
-		sendDoltAlertMail(townRoot, "mayor/", subject, body, logger)
+		sendDoltAlertMail(townRoot, "overseer/", subject, body, logger)
 		sendDoltAlertToWitnesses(townRoot, subject, body, logger)
 	}()
 }
 
-// sendUnhealthyAlert sends a mail to the mayor when the Dolt server fails health checks.
+// sendUnhealthyAlert sends a mail to the overseer when the Dolt server fails health checks.
 // The server is running but not responding to queries. Runs asynchronously.
 func (m *DoltServerManager) sendUnhealthyAlert(healthErr error) {
 	if m.unhealthyAlertFn != nil {
@@ -738,7 +738,7 @@ This may indicate high load, connection exhaustion, or internal server errors.`,
 	logger := m.logger
 
 	go func() {
-		sendDoltAlertMail(townRoot, "mayor/", subject, body, logger)
+		sendDoltAlertMail(townRoot, "overseer/", subject, body, logger)
 		sendDoltAlertToWitnesses(townRoot, subject, body, logger)
 	}()
 }
@@ -758,9 +758,9 @@ func sendDoltAlertMail(townRoot, recipient, subject, body string, logger func(fo
 }
 
 // sendDoltAlertToWitnesses sends a Dolt alert to all rig witnesses.
-// Discovers rigs from mayor/rigs.json and sends to each <rig>/witness.
+// Discovers rigs from overseer/rigs.json and sends to each <rig>/witness.
 func sendDoltAlertToWitnesses(townRoot, subject, body string, logger func(format string, v ...interface{})) {
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	data, err := os.ReadFile(rigsPath)
 	if err != nil {
 		return // No rigs.json, nothing to notify
@@ -823,7 +823,7 @@ func (m *DoltServerManager) writeUnhealthySignal(reason, detail string) bool {
 
 // clearUnhealthySignal removes the DOLT_UNHEALTHY signal file when the server is healthy.
 // If the signal file was present (meaning Dolt was previously unhealthy), it fires the
-// onRecoveryFn callback in a goroutine to trigger a convoy recovery sweep.
+// onRecoveryFn callback in a goroutine to trigger a minecart recovery sweep.
 // Must be called with mu held (onRecoveryFn is protected by mu).
 func (m *DoltServerManager) clearUnhealthySignal() {
 	signalFile := m.unhealthySignalFile()
@@ -868,7 +868,7 @@ func writeDaemonDoltConfig(cfg *DoltServerConfig, configPath string) error {
 			systemVariablesBlock = fmt.Sprintf("\nsystem_variables:\n  dolt_stats_enabled: %s\n", strings.TrimSpace(stats))
 		}
 	}
-	content := fmt.Sprintf(`# Dolt SQL server configuration — managed by Gas Town daemon
+	content := fmt.Sprintf(`# Dolt SQL server configuration — managed by Excavation Site daemon
 # Do not edit manually; overwritten on each daemon-managed server start.
 
 log_level: info
@@ -1467,7 +1467,7 @@ Host: %s:%d
 
 This typically occurs under heavy concurrent write load when multiple agents
 contend for the storage manifest. If it recurs frequently, consider reducing
-concurrent polecat count or staggering write-heavy operations.`,
+concurrent miner count or staggering write-heavy operations.`,
 		readOnlyErr,
 		m.config.DataDir, m.config.LogFile,
 		m.config.Host, m.config.Port)
@@ -1476,7 +1476,7 @@ concurrent polecat count or staggering write-heavy operations.`,
 	logger := m.logger
 
 	go func() {
-		sendDoltAlertMail(townRoot, "mayor/", subject, body, logger)
+		sendDoltAlertMail(townRoot, "overseer/", subject, body, logger)
 		sendDoltAlertToWitnesses(townRoot, subject, body, logger)
 	}()
 }

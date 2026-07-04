@@ -6,24 +6,24 @@ import (
 )
 
 // Address represents a parsed agent or rig address.
-// Format: [machine:]rig[/polecat]
+// Format: [machine:]rig[/miner]
 //
 // Examples:
-//   - "gastown/rictus"        -> local machine, gastown rig, rictus polecat
-//   - "vm:gastown/rictus"     -> vm machine, gastown rig, rictus polecat
-//   - "gastown/"              -> local machine, gastown rig, broadcast
-//   - "vm:gastown/"           -> vm machine, gastown rig, broadcast
+//   - "excavation/rictus"        -> local machine, excavation rig, rictus miner
+//   - "vm:excavation/rictus"     -> vm machine, excavation rig, rictus miner
+//   - "excavation/"              -> local machine, excavation rig, broadcast
+//   - "vm:excavation/"           -> vm machine, excavation rig, broadcast
 type Address struct {
 	Machine string // Machine name (empty = local)
 	Rig     string // Rig name (required)
-	Polecat string // Polecat name (empty = broadcast to rig)
+	Miner string // Miner name (empty = broadcast to rig)
 }
 
 // ParseAddress parses an address string into its components.
 // Valid formats:
-//   - rig/polecat
+//   - rig/miner
 //   - rig/
-//   - machine:rig/polecat
+//   - machine:rig/miner
 //   - machine:rig/
 func ParseAddress(s string) (*Address, error) {
 	if s == "" {
@@ -41,7 +41,7 @@ func ParseAddress(s string) (*Address, error) {
 		}
 	}
 
-	// Parse rig/polecat
+	// Parse rig/miner
 	parts := strings.SplitN(s, "/", 2)
 	if len(parts) < 1 || parts[0] == "" {
 		return nil, fmt.Errorf("missing rig name in address")
@@ -50,7 +50,7 @@ func ParseAddress(s string) (*Address, error) {
 	addr.Rig = parts[0]
 
 	if len(parts) == 2 {
-		addr.Polecat = parts[1] // May be empty for broadcast
+		addr.Miner = parts[1] // May be empty for broadcast
 	}
 
 	return addr, nil
@@ -68,8 +68,8 @@ func (a *Address) String() string {
 	sb.WriteString(a.Rig)
 	sb.WriteString("/")
 
-	if a.Polecat != "" {
-		sb.WriteString(a.Polecat)
+	if a.Miner != "" {
+		sb.WriteString(a.Miner)
 	}
 
 	return sb.String()
@@ -80,15 +80,15 @@ func (a *Address) IsLocal() bool {
 	return a.Machine == "" || a.Machine == "local"
 }
 
-// IsBroadcast returns true if the address targets a rig (no specific polecat).
+// IsBroadcast returns true if the address targets a rig (no specific miner).
 func (a *Address) IsBroadcast() bool {
-	return a.Polecat == ""
+	return a.Miner == ""
 }
 
-// RigPath returns the rig/polecat portion without machine prefix.
+// RigPath returns the rig/miner portion without machine prefix.
 func (a *Address) RigPath() string {
-	if a.Polecat != "" {
-		return a.Rig + "/" + a.Polecat
+	if a.Miner != "" {
+		return a.Rig + "/" + a.Miner
 	}
 	return a.Rig + "/"
 }
@@ -124,7 +124,7 @@ func (a *Address) Equal(other *Address) bool {
 		m2 = "local"
 	}
 
-	return m1 == m2 && a.Rig == other.Rig && a.Polecat == other.Polecat
+	return m1 == m2 && a.Rig == other.Rig && a.Miner == other.Miner
 }
 
 // MustParseAddress parses an address and panics on error.

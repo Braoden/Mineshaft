@@ -467,12 +467,12 @@ func TestBdCmd_EnvImmutability(t *testing.T) {
 func TestBdCmd_WithBeadsDir_SetsEnv(t *testing.T) {
 	// WithBeadsDir should set BEADS_DIR in the environment
 	bdc := BdCmd("show", "id").
-		WithBeadsDir("/town/rig/mayor/rig/.beads")
+		WithBeadsDir("/town/rig/overseer/rig/.beads")
 	cmd := bdc.Build()
 	envMap := parseEnv(cmd.Env)
 
-	if envMap["BEADS_DIR"] != "/town/rig/mayor/rig/.beads" {
-		t.Errorf("BEADS_DIR = %q, want %q", envMap["BEADS_DIR"], "/town/rig/mayor/rig/.beads")
+	if envMap["BEADS_DIR"] != "/town/rig/overseer/rig/.beads" {
+		t.Errorf("BEADS_DIR = %q, want %q", envMap["BEADS_DIR"], "/town/rig/overseer/rig/.beads")
 	}
 }
 
@@ -482,16 +482,16 @@ func TestBdCmd_DirPinsResolvedBeadsDir(t *testing.T) {
 	baseEnv := []string{"PATH=/usr/bin", "BEADS_DIR=/town/.beads", "HOME=/home/user"}
 
 	bdc := &bdCmd{
-		args:   []string{"mol", "wisp", "mol-polecat-work"},
+		args:   []string{"mol", "wisp", "mol-miner-work"},
 		env:    baseEnv,
 		stderr: os.Stderr,
 	}
-	bdc.Dir("/town/gastown/mayor/rig")
+	bdc.Dir("/town/excavation/overseer/rig")
 	cmd := bdc.Build()
 	envMap := parseEnv(cmd.Env)
 
-	if envMap["BEADS_DIR"] != "/town/gastown/mayor/rig/.beads" {
-		t.Errorf("BEADS_DIR = %q, want %q", envMap["BEADS_DIR"], "/town/gastown/mayor/rig/.beads")
+	if envMap["BEADS_DIR"] != "/town/excavation/overseer/rig/.beads" {
+		t.Errorf("BEADS_DIR = %q, want %q", envMap["BEADS_DIR"], "/town/excavation/overseer/rig/.beads")
 	}
 
 	count := 0
@@ -511,7 +511,7 @@ func TestBdCmd_DirPinsMetadataDatabaseOverInheritedDefault(t *testing.T) {
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatalf("mkdir beads dir: %v", err)
 	}
-	metadata := []byte(`{"dolt_database":"gastown","dolt_server_host":"127.0.0.2","dolt_server_port":4407}`)
+	metadata := []byte(`{"dolt_database":"excavation","dolt_server_host":"127.0.0.2","dolt_server_port":4407}`)
 	if err := os.WriteFile(filepath.Join(beadsDir, "metadata.json"), metadata, 0644); err != nil {
 		t.Fatalf("write metadata: %v", err)
 	}
@@ -537,8 +537,8 @@ func TestBdCmd_DirPinsMetadataDatabaseOverInheritedDefault(t *testing.T) {
 	if envMap["BEADS_DIR"] != beadsDir {
 		t.Fatalf("BEADS_DIR = %q, want %q in %v", envMap["BEADS_DIR"], beadsDir, cmd.Env)
 	}
-	if envMap["BEADS_DOLT_SERVER_DATABASE"] != "gastown" {
-		t.Fatalf("BEADS_DOLT_SERVER_DATABASE = %q, want gastown in %v", envMap["BEADS_DOLT_SERVER_DATABASE"], cmd.Env)
+	if envMap["BEADS_DOLT_SERVER_DATABASE"] != "excavation" {
+		t.Fatalf("BEADS_DOLT_SERVER_DATABASE = %q, want excavation in %v", envMap["BEADS_DOLT_SERVER_DATABASE"], cmd.Env)
 	}
 	for _, key := range []string{"BEADS_DB", "BD_DB", "BEADS_DOLT_DATA_DIR"} {
 		if value, ok := envMap[key]; ok {
@@ -550,19 +550,19 @@ func TestBdCmd_DirPinsMetadataDatabaseOverInheritedDefault(t *testing.T) {
 func TestBdCmd_WithBeadsDirFollowsRedirectBeforeMetadata(t *testing.T) {
 	rigRoot := t.TempDir()
 	redirectBeadsDir := filepath.Join(rigRoot, ".beads")
-	canonicalBeadsDir := filepath.Join(rigRoot, "mayor", "rig", ".beads")
+	canonicalBeadsDir := filepath.Join(rigRoot, "overseer", "rig", ".beads")
 	for _, dir := range []string{redirectBeadsDir, canonicalBeadsDir} {
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			t.Fatal(err)
 		}
 	}
-	if err := os.WriteFile(filepath.Join(redirectBeadsDir, "redirect"), []byte("mayor/rig/.beads\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(redirectBeadsDir, "redirect"), []byte("overseer/rig/.beads\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(redirectBeadsDir, "metadata.json"), []byte(`{"dolt_database":"hq","dolt_server_host":"wrong-host","dolt_server_port":9999}`), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(canonicalBeadsDir, "metadata.json"), []byte(`{"dolt_database":"gastown","dolt_server_host":"127.0.0.2","dolt_server_port":4407}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(canonicalBeadsDir, "metadata.json"), []byte(`{"dolt_database":"excavation","dolt_server_host":"127.0.0.2","dolt_server_port":4407}`), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -582,8 +582,8 @@ func TestBdCmd_WithBeadsDirFollowsRedirectBeforeMetadata(t *testing.T) {
 	if envMap["BEADS_DIR"] != canonicalBeadsDir {
 		t.Fatalf("BEADS_DIR = %q, want canonical %q in %v", envMap["BEADS_DIR"], canonicalBeadsDir, cmd.Env)
 	}
-	if envMap["BEADS_DOLT_SERVER_DATABASE"] != "gastown" {
-		t.Fatalf("BEADS_DOLT_SERVER_DATABASE = %q, want gastown in %v", envMap["BEADS_DOLT_SERVER_DATABASE"], cmd.Env)
+	if envMap["BEADS_DOLT_SERVER_DATABASE"] != "excavation" {
+		t.Fatalf("BEADS_DOLT_SERVER_DATABASE = %q, want excavation in %v", envMap["BEADS_DOLT_SERVER_DATABASE"], cmd.Env)
 	}
 	if envMap["BEADS_DOLT_SERVER_HOST"] != "127.0.0.2" || envMap["BEADS_DOLT_SERVER_PORT"] != "4407" || envMap["BEADS_DOLT_PORT"] != "4407" {
 		t.Fatalf("connection env used stale redirect metadata: %v", cmd.Env)
@@ -604,12 +604,12 @@ func TestBdCmd_WithBeadsDir_OverridesInherited(t *testing.T) {
 		env:    baseEnv,
 		stderr: os.Stderr,
 	}
-	bdc.WithBeadsDir("/town/rig/mayor/rig/.beads")
+	bdc.WithBeadsDir("/town/rig/overseer/rig/.beads")
 	cmd := bdc.Build()
 	envMap := parseEnv(cmd.Env)
 
-	if envMap["BEADS_DIR"] != "/town/rig/mayor/rig/.beads" {
-		t.Errorf("BEADS_DIR = %q, want %q (should override inherited)", envMap["BEADS_DIR"], "/town/rig/mayor/rig/.beads")
+	if envMap["BEADS_DIR"] != "/town/rig/overseer/rig/.beads" {
+		t.Errorf("BEADS_DIR = %q, want %q (should override inherited)", envMap["BEADS_DIR"], "/town/rig/overseer/rig/.beads")
 	}
 
 	// Verify exactly one BEADS_DIR entry (deduplication)
@@ -730,16 +730,16 @@ func TestBdCmd_StripBeadsDir_RemovesInherited(t *testing.T) {
 		env:    []string{"PATH=/usr/bin", "BEADS_DIR=/town/.beads", "HOME=/home/user"},
 		stderr: os.Stderr,
 	}
-	bdc.Dir("/town/myproject/mayor/rig").StripBeadsDir()
+	bdc.Dir("/town/myproject/overseer/rig").StripBeadsDir()
 	cmd := bdc.Build()
 
 	envMap := parseEnv(cmd.Env)
-	if envMap["BEADS_DIR"] != "/town/myproject/mayor/rig/.beads" {
-		t.Errorf("BEADS_DIR = %q, want %q", envMap["BEADS_DIR"], "/town/myproject/mayor/rig/.beads")
+	if envMap["BEADS_DIR"] != "/town/myproject/overseer/rig/.beads" {
+		t.Errorf("BEADS_DIR = %q, want %q", envMap["BEADS_DIR"], "/town/myproject/overseer/rig/.beads")
 	}
 
-	if cmd.Dir != "/town/myproject/mayor/rig" {
-		t.Errorf("Dir = %q, want %q", cmd.Dir, "/town/myproject/mayor/rig")
+	if cmd.Dir != "/town/myproject/overseer/rig" {
+		t.Errorf("Dir = %q, want %q", cmd.Dir, "/town/myproject/overseer/rig")
 	}
 }
 

@@ -47,7 +47,7 @@ func NewWorktreeGitdirCheck() *WorktreeGitdirCheck {
 	}
 }
 
-// Run scans all rigs and deacon dogs for worktrees with broken gitdir references.
+// Run scans all rigs and supervisor dogs for worktrees with broken gitdir references.
 func (c *WorktreeGitdirCheck) Run(ctx *CheckContext) *CheckResult {
 	c.brokenWorktrees = nil
 	c.townRoot = ctx.TownRoot
@@ -81,9 +81,9 @@ func (c *WorktreeGitdirCheck) Run(ctx *CheckContext) *CheckResult {
 		c.checkRigWorktrees(rigPath, entry.Name())
 	}
 
-	// Scan deacon/dogs for cross-rig worktrees (not covered by rig scan
-	// because deacon/ doesn't have config.json or standard rig subdirs).
-	c.checkDeaconDogs(ctx.TownRoot)
+	// Scan supervisor/dogs for cross-rig worktrees (not covered by rig scan
+	// because supervisor/ doesn't have config.json or standard rig subdirs).
+	c.checkSupervisorDogs(ctx.TownRoot)
 
 	if len(c.brokenWorktrees) == 0 {
 		return &CheckResult{
@@ -117,27 +117,27 @@ func (c *WorktreeGitdirCheck) checkRigWorktrees(rigPath, rigName string) {
 	refineryRig := filepath.Join(rigPath, "refinery", "rig")
 	c.checkWorktree(refineryRig, rigPath)
 
-	// Check polecats (both structures: polecats/<name>/<rigname>/ and polecats/<name>/)
-	polecatsDir := filepath.Join(rigPath, "polecats")
-	polecatEntries, err := os.ReadDir(polecatsDir)
+	// Check miners (both structures: miners/<name>/<rigname>/ and miners/<name>/)
+	minersDir := filepath.Join(rigPath, "miners")
+	minerEntries, err := os.ReadDir(minersDir)
 	if err != nil {
 		return
 	}
 
-	for _, entry := range polecatEntries {
+	for _, entry := range minerEntries {
 		if !entry.IsDir() || strings.HasPrefix(entry.Name(), ".") {
 			continue
 		}
 
-		// Try new structure first: polecats/<name>/<rigname>/
-		newPath := filepath.Join(polecatsDir, entry.Name(), rigName)
+		// Try new structure first: miners/<name>/<rigname>/
+		newPath := filepath.Join(minersDir, entry.Name(), rigName)
 		if c.hasGitFile(newPath) {
 			c.checkWorktree(newPath, rigPath)
 			continue
 		}
 
-		// Fall back to old structure: polecats/<name>/
-		oldPath := filepath.Join(polecatsDir, entry.Name())
+		// Fall back to old structure: miners/<name>/
+		oldPath := filepath.Join(minersDir, entry.Name())
 		if c.hasGitFile(oldPath) {
 			c.checkWorktree(oldPath, rigPath)
 		}
@@ -150,13 +150,13 @@ func (c *WorktreeGitdirCheck) checkRigWorktrees(rigPath, rigName string) {
 	}
 }
 
-// checkDeaconDogs scans deacon/dogs/<dogname>/<rigname>/ for cross-rig worktrees.
+// checkSupervisorDogs scans supervisor/dogs/<dogname>/<rigname>/ for cross-rig worktrees.
 // Each dog directory contains worktrees of various rigs, created by gt sling.
-func (c *WorktreeGitdirCheck) checkDeaconDogs(townRoot string) {
-	dogsDir := filepath.Join(townRoot, "deacon", "dogs")
+func (c *WorktreeGitdirCheck) checkSupervisorDogs(townRoot string) {
+	dogsDir := filepath.Join(townRoot, "supervisor", "dogs")
 	dogEntries, err := os.ReadDir(dogsDir)
 	if err != nil {
-		return // No deacon/dogs — that's fine
+		return // No supervisor/dogs — that's fine
 	}
 
 	for _, dogEntry := range dogEntries {
@@ -370,7 +370,7 @@ func (c *WorktreeGitdirCheck) fixOneWorktree(bw brokenWorktree, repoPath string)
 			bw.worktreePath, err, strings.TrimSpace(string(output)))
 	}
 
-	// Directory already exists with content (common for deacon dogs after rsync).
+	// Directory already exists with content (common for supervisor dogs after rsync).
 	// Manually register the worktree: create the entry in .repo.git/worktrees/
 	// and write a new .git file pointing to it.
 	return c.manualWorktreeRegister(bw.worktreePath, repoPath, branch)
@@ -443,7 +443,7 @@ func isRigDir(path string) bool {
 		return true
 	}
 	// Check for known rig subdirectories
-	markers := []string{"refinery", "witness", "polecats", "mayor"}
+	markers := []string{"refinery", "witness", "miners", "overseer"}
 	for _, marker := range markers {
 		if _, err := os.Stat(filepath.Join(path, marker)); err == nil {
 			return true

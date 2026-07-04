@@ -50,10 +50,10 @@ func (c *RigsJSONCheck) Fix(ctx *CheckContext) error {
 		return fmt.Errorf("reading fallback rigs.json: %w", err)
 	}
 
-	// Ensure mayor directory exists
-	mayorDir := filepath.Dir(c.canonicalPath)
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
-		return fmt.Errorf("creating mayor dir: %w", err)
+	// Ensure overseer directory exists
+	overseerDir := filepath.Dir(c.canonicalPath)
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
+		return fmt.Errorf("creating overseer dir: %w", err)
 	}
 
 	// Write to temp file then rename for atomic operation.
@@ -71,7 +71,7 @@ func (c *RigsJSONCheck) Fix(ctx *CheckContext) error {
 // Run checks that rigs.json exists at the canonical or fallback location.
 func (c *RigsJSONCheck) Run(ctx *CheckContext) *CheckResult {
 	c.townRoot = ctx.TownRoot
-	c.canonicalPath = filepath.Join(ctx.TownRoot, "mayor", "rigs.json")
+	c.canonicalPath = filepath.Join(ctx.TownRoot, "overseer", "rigs.json")
 	c.fallbackPath = filepath.Join(ctx.TownRoot, "rigs.json")
 
 	// Check canonical location
@@ -85,7 +85,7 @@ func (c *RigsJSONCheck) Run(ctx *CheckContext) *CheckResult {
 				Details: []string{
 					fmt.Sprintf("Canonical: %s (exists)", c.canonicalPath),
 					fmt.Sprintf("Fallback: %s (missing)", c.fallbackPath),
-					"Git operations in mayor/ can delete rigs.json",
+					"Git operations in overseer/ can delete rigs.json",
 				},
 				FixHint: fmt.Sprintf("cp %s %s", c.canonicalPath, c.fallbackPath),
 			}
@@ -102,11 +102,11 @@ func (c *RigsJSONCheck) Run(ctx *CheckContext) *CheckResult {
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusWarning,
-			Message: "rigs.json missing from mayor/ (using fallback at town root)",
+			Message: "rigs.json missing from overseer/ (using fallback at town root)",
 			Details: []string{
 				fmt.Sprintf("Canonical: %s (MISSING)", c.canonicalPath),
 				fmt.Sprintf("Fallback: %s (exists)", c.fallbackPath),
-				"Likely deleted by git operation in mayor worktree",
+				"Likely deleted by git operation in overseer worktree",
 			},
 			FixHint: "Run 'gt doctor --fix' to restore from fallback",
 		}

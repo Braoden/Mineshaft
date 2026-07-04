@@ -1,4 +1,4 @@
-// Package config provides role configuration for Gas Town agents.
+// Package config provides role configuration for Excavation Site agents.
 package config
 
 import (
@@ -18,7 +18,7 @@ var defaultRolesFS embed.FS
 // RoleDefinition contains all configuration for a role type.
 // This replaces the role bead system with config files.
 type RoleDefinition struct {
-	// Role is the role identifier (mayor, deacon, witness, refinery, polecat, crew, dog).
+	// Role is the role identifier (overseer, supervisor, witness, refinery, miner, crew, dog).
 	Role string `toml:"role"`
 
 	// Scope is "town" or "rig" - determines where the agent runs.
@@ -44,7 +44,7 @@ type RoleDefinition struct {
 type RoleSessionConfig struct {
 	// Pattern is the tmux session name pattern.
 	// Supports placeholders: {rig}, {name}, {role}
-	// Examples: "hq-mayor", "gt-{rig}-witness", "gt-{rig}-{name}"
+	// Examples: "hq-overseer", "gt-{rig}-witness", "gt-{rig}-{name}"
 	Pattern string `toml:"pattern"`
 
 	// WorkDir is the working directory pattern.
@@ -107,17 +107,17 @@ func (d Duration) String() string {
 
 // AllRoles returns the list of all known role names.
 func AllRoles() []string {
-	return []string{"mayor", "deacon", "dog", "witness", "refinery", "polecat", "crew"}
+	return []string{"overseer", "supervisor", "dog", "witness", "refinery", "miner", "crew"}
 }
 
 // TownRoles returns roles that operate at town scope.
 func TownRoles() []string {
-	return []string{"mayor", "deacon", "dog"}
+	return []string{"overseer", "supervisor", "dog"}
 }
 
 // RigRoles returns roles that operate at rig scope.
 func RigRoles() []string {
-	return []string{"witness", "refinery", "polecat", "crew"}
+	return []string{"witness", "refinery", "miner", "crew"}
 }
 
 // isValidRoleName checks if the given name is a known role.
@@ -217,7 +217,7 @@ func mergeRoleDefinition(base, override *RoleDefinition) {
 	}
 
 	// Role and Scope are immutable
-	// (can't change a witness to a mayor via override)
+	// (can't change a witness to a overseer via override)
 
 	// Session config
 	if override.Session.Pattern != "" {

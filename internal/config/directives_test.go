@@ -16,11 +16,11 @@ func TestLoadRoleDirective(t *testing.T) {
 		if err := os.MkdirAll(townDir, 0755); err != nil {
 			t.Fatal(err)
 		}
-		if err := os.WriteFile(filepath.Join(townDir, "polecat.md"), []byte("town directive"), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(townDir, "miner.md"), []byte("town directive"), 0644); err != nil {
 			t.Fatal(err)
 		}
 
-		got := LoadRoleDirective("polecat", townRoot, "myrig")
+		got := LoadRoleDirective("miner", townRoot, "myrig")
 		if got != "town directive" {
 			t.Errorf("got %q, want %q", got, "town directive")
 		}
@@ -51,7 +51,7 @@ func TestLoadRoleDirective(t *testing.T) {
 		if err := os.MkdirAll(townDir, 0755); err != nil {
 			t.Fatal(err)
 		}
-		if err := os.WriteFile(filepath.Join(townDir, "polecat.md"), []byte("town rules"), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(townDir, "miner.md"), []byte("town rules"), 0644); err != nil {
 			t.Fatal(err)
 		}
 
@@ -59,11 +59,11 @@ func TestLoadRoleDirective(t *testing.T) {
 		if err := os.MkdirAll(rigDir, 0755); err != nil {
 			t.Fatal(err)
 		}
-		if err := os.WriteFile(filepath.Join(rigDir, "polecat.md"), []byte("rig rules"), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(rigDir, "miner.md"), []byte("rig rules"), 0644); err != nil {
 			t.Fatal(err)
 		}
 
-		got := LoadRoleDirective("polecat", townRoot, "myrig")
+		got := LoadRoleDirective("miner", townRoot, "myrig")
 		want := "town rules\nrig rules"
 		if got != want {
 			t.Errorf("got %q, want %q", got, want)
@@ -74,7 +74,7 @@ func TestLoadRoleDirective(t *testing.T) {
 		t.Parallel()
 		townRoot := t.TempDir()
 
-		got := LoadRoleDirective("polecat", townRoot, "myrig")
+		got := LoadRoleDirective("miner", townRoot, "myrig")
 		if got != "" {
 			t.Errorf("got %q, want empty string", got)
 		}
@@ -84,7 +84,7 @@ func TestLoadRoleDirective(t *testing.T) {
 		t.Parallel()
 
 		// Non-existent town root
-		got := LoadRoleDirective("polecat", "/nonexistent/path/xyz", "myrig")
+		got := LoadRoleDirective("miner", "/nonexistent/path/xyz", "myrig")
 		if got != "" {
 			t.Errorf("got %q, want empty string for invalid town root", got)
 		}
@@ -95,7 +95,7 @@ func TestLoadRoleDirective(t *testing.T) {
 		// With empty rigName, this path would be townRoot/directives — same as town-level
 		// Verify it doesn't panic or error
 		_ = rigDir
-		got = LoadRoleDirective("polecat", townRoot, "")
+		got = LoadRoleDirective("miner", townRoot, "")
 		if got != "" {
 			t.Errorf("got %q, want empty string for empty rig", got)
 		}
@@ -108,11 +108,11 @@ func TestLoadRoleDirective(t *testing.T) {
 		if err := os.MkdirAll(townDir, 0755); err != nil {
 			t.Fatal(err)
 		}
-		if err := os.WriteFile(filepath.Join(townDir, "polecat.md"), []byte("  \n\t\n  "), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(townDir, "miner.md"), []byte("  \n\t\n  "), 0644); err != nil {
 			t.Fatal(err)
 		}
 
-		got := LoadRoleDirective("polecat", townRoot, "myrig")
+		got := LoadRoleDirective("miner", townRoot, "myrig")
 		if got != "" {
 			t.Errorf("got %q, want empty string for whitespace-only directive", got)
 		}

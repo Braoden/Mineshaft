@@ -5,14 +5,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/session"
+	"github.com/steveyegge/excavation/internal/session"
 )
 
 // testRegistryForNameCheck returns a PrefixRegistry with a few known rigs
 // suitable for session-name-format tests.
 func testRegistryForNameCheck() *session.PrefixRegistry {
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "gastown")
+	reg.Register("gt", "excavation")
 	reg.Register("nif", "niflheim")
 	reg.Register("wa", "whatsapp_automation")
 	return reg
@@ -25,7 +25,7 @@ func TestNewMalformedSessionNameCheck(t *testing.T) {
 		t.Errorf("expected name 'session-name-format', got %q", check.Name())
 	}
 
-	if check.Description() != "Detect sessions with outdated Gas Town naming format" {
+	if check.Description() != "Detect sessions with outdated Excavation Site naming format" {
 		t.Errorf("unexpected description: %q", check.Description())
 	}
 
@@ -59,8 +59,8 @@ func TestMalformedSessionNameCheck_Run_AllCorrect(t *testing.T) {
 	check := NewMalformedSessionNameCheck()
 	check.registryForTest = reg
 	check.sessionListerForTest = &mockSessionLister{sessions: []string{
-		"hq-mayor",
-		"hq-deacon",
+		"hq-overseer",
+		"hq-supervisor",
 		"gt-witness",
 		"nif-refinery",
 		"wa-crew-batista",
@@ -75,7 +75,7 @@ func TestMalformedSessionNameCheck_Run_AllCorrect(t *testing.T) {
 	}
 }
 
-func TestMalformedSessionNameCheck_Run_NonGasTownSessions(t *testing.T) {
+func TestMalformedSessionNameCheck_Run_NonExcavationSessions(t *testing.T) {
 	check := NewMalformedSessionNameCheck()
 	check.registryForTest = testRegistryForNameCheck()
 	check.sessionListerForTest = &mockSessionLister{sessions: []string{
@@ -88,40 +88,40 @@ func TestMalformedSessionNameCheck_Run_NonGasTownSessions(t *testing.T) {
 	result := check.Run(ctx)
 
 	if result.Status != StatusOK {
-		t.Errorf("expected OK for non-Gas Town sessions, got %v", result.Status)
+		t.Errorf("expected OK for non-Excavation Site sessions, got %v", result.Status)
 	}
 }
 
-// TestMalformedSessionNameCheck_Run_NonGasTownWithRigSubstring verifies that
-// non-Gastown sessions whose names happen to contain a rig name are NOT
-// falsely flagged. The ownership guard requires a known Gastown prefix.
-func TestMalformedSessionNameCheck_Run_NonGasTownWithRigSubstring(t *testing.T) {
+// TestMalformedSessionNameCheck_Run_NonExcavationWithRigSubstring verifies that
+// non-Excavation sessions whose names happen to contain a rig name are NOT
+// falsely flagged. The ownership guard requires a known Excavation prefix.
+func TestMalformedSessionNameCheck_Run_NonExcavationWithRigSubstring(t *testing.T) {
 	check := NewMalformedSessionNameCheck()
 	check.registryForTest = testRegistryForNameCheck()
 	check.sessionListerForTest = &mockSessionLister{sessions: []string{
-		"my-niflheim-witness",       // "my" is not a known Gastown prefix
-		"foo-gastown-refinery",      // "foo" is not a known Gastown prefix
-		"test-whatsapp_automation-witness", // "test" is not a known Gastown prefix
+		"my-niflheim-witness",       // "my" is not a known Excavation prefix
+		"foo-excavation-refinery",      // "foo" is not a known Excavation prefix
+		"test-whatsapp_automation-witness", // "test" is not a known Excavation prefix
 	}}
 
 	ctx := &CheckContext{TownRoot: t.TempDir()}
 	result := check.Run(ctx)
 
 	if result.Status != StatusOK {
-		t.Errorf("expected OK for non-Gastown sessions with rig substrings, got %v: %s\nDetails: %v",
+		t.Errorf("expected OK for non-Excavation sessions with rig substrings, got %v: %s\nDetails: %v",
 			result.Status, result.Message, result.Details)
 	}
 }
 
-// TestMalformedSessionNameCheck_Run_PolecatWithRigSubstring verifies that
-// polecat sessions whose names embed a rig name are NOT falsely flagged.
-// E.g., "gt-fix-gastown-witness" is a polecat named "fix-gastown-witness",
-// not a legacy gastown witness session.
-func TestMalformedSessionNameCheck_Run_PolecatWithRigSubstring(t *testing.T) {
+// TestMalformedSessionNameCheck_Run_MinerWithRigSubstring verifies that
+// miner sessions whose names embed a rig name are NOT falsely flagged.
+// E.g., "gt-fix-excavation-witness" is a miner named "fix-excavation-witness",
+// not a legacy excavation witness session.
+func TestMalformedSessionNameCheck_Run_MinerWithRigSubstring(t *testing.T) {
 	check := NewMalformedSessionNameCheck()
 	check.registryForTest = testRegistryForNameCheck()
 	check.sessionListerForTest = &mockSessionLister{sessions: []string{
-		"gt-fix-gastown-witness",   // polecat "fix-gastown-witness", prefix "gt-fix" is not known
+		"gt-fix-excavation-witness",   // miner "fix-excavation-witness", prefix "gt-fix" is not known
 		"nif-debug-niflheim-refinery", // prefix "nif-debug" is not a known prefix
 	}}
 
@@ -129,7 +129,7 @@ func TestMalformedSessionNameCheck_Run_PolecatWithRigSubstring(t *testing.T) {
 	result := check.Run(ctx)
 
 	if result.Status != StatusOK {
-		t.Errorf("expected OK for polecat sessions with rig substrings, got %v: %s\nDetails: %v",
+		t.Errorf("expected OK for miner sessions with rig substrings, got %v: %s\nDetails: %v",
 			result.Status, result.Message, result.Details)
 	}
 }
@@ -141,7 +141,7 @@ func TestMalformedSessionNameCheck_Run_DetectsMismatch(t *testing.T) {
 	check := NewMalformedSessionNameCheck()
 	check.registryForTest = testRegistryForNameCheck()
 	check.sessionListerForTest = &mockSessionLister{sessions: []string{
-		"hq-mayor",
+		"hq-overseer",
 		"gt-niflheim-witness",   // legacy: should be nif-witness
 		"gt-niflheim-refinery",  // legacy: should be nif-refinery
 		"nif-refinery",          // already canonical — should not be flagged

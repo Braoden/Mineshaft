@@ -21,13 +21,13 @@ import (
 	"go.opentelemetry.io/otel/metric"
 )
 
-// runIDKey is the context key for the GASTOWN run identifier.
+// runIDKey is the context key for the EXCAVATION run identifier.
 type runIDKey struct{}
 
 // WithRunID returns a context carrying the given run ID.
 // The run ID is automatically injected into every telemetry event emitted
 // with that context, enabling waterfall correlation across all events in a
-// single agent session (GASTOWN run).
+// single agent session (EXCAVATION run).
 func WithRunID(ctx context.Context, runID string) context.Context {
 	return context.WithValue(ctx, runIDKey{}, runID)
 }
@@ -42,7 +42,7 @@ func RunIDFromCtx(ctx context.Context) string {
 	return os.Getenv("GT_RUN")
 }
 
-// instanceID derives a human-readable Gastown instance identifier from the
+// instanceID derives a human-readable Excavation instance identifier from the
 // town root path and the machine hostname.
 // Format: "<hostname>:<basename(townRoot)>" (e.g. "laptop:gt").
 // Falls back to basename alone when hostname is unavailable.
@@ -72,8 +72,8 @@ type MailMessageInfo struct {
 }
 
 const (
-	meterRecorderName = "github.com/steveyegge/gastown"
-	loggerName        = "gastown"
+	meterRecorderName = "github.com/steveyegge/excavation"
+	loggerName        = "excavation"
 )
 
 // recorderInstruments holds all lazy-initialized OTel metric instruments.
@@ -88,15 +88,15 @@ type recorderInstruments struct {
 	agentInstantiateTotal metric.Int64Counter
 	primeTotal            metric.Int64Counter
 	agentStateTotal       metric.Int64Counter
-	polecatTotal          metric.Int64Counter
-	polecatRemoveTotal    metric.Int64Counter
+	minerTotal          metric.Int64Counter
+	minerRemoveTotal    metric.Int64Counter
 	slingTotal            metric.Int64Counter
 	mailTotal             metric.Int64Counter
 	nudgeTotal            metric.Int64Counter
 	doneTotal             metric.Int64Counter
 	daemonRestartTotal    metric.Int64Counter
 	formulaTotal          metric.Int64Counter
-	convoyTotal           metric.Int64Counter
+	minecartTotal           metric.Int64Counter
 	molCookTotal          metric.Int64Counter
 	molWispTotal          metric.Int64Counter
 	molSquashTotal        metric.Int64Counter
@@ -147,78 +147,78 @@ func initInstruments() {
 		m := otel.GetMeterProvider().Meter(meterRecorderName)
 
 		// Counters
-		inst.bdTotal, _ = m.Int64Counter("gastown.bd.calls.total",
+		inst.bdTotal, _ = m.Int64Counter("excavation.bd.calls.total",
 			metric.WithDescription("Total bd CLI command invocations"),
 		)
-		inst.sessionTotal, _ = m.Int64Counter("gastown.session.starts.total",
+		inst.sessionTotal, _ = m.Int64Counter("excavation.session.starts.total",
 			metric.WithDescription("Total agent session starts"),
 		)
-		inst.sessionStopTotal, _ = m.Int64Counter("gastown.session.stops.total",
+		inst.sessionStopTotal, _ = m.Int64Counter("excavation.session.stops.total",
 			metric.WithDescription("Total agent session terminations"),
 		)
-		inst.promptTotal, _ = m.Int64Counter("gastown.prompt.sends.total",
+		inst.promptTotal, _ = m.Int64Counter("excavation.prompt.sends.total",
 			metric.WithDescription("Total tmux SendKeys prompt dispatches"),
 		)
-		inst.paneOutputTotal, _ = m.Int64Counter("gastown.pane.output.total",
+		inst.paneOutputTotal, _ = m.Int64Counter("excavation.pane.output.total",
 			metric.WithDescription("Total pane output chunks emitted to VictoriaLogs"),
 		)
-		inst.agentEventTotal, _ = m.Int64Counter("gastown.agent.events.total",
+		inst.agentEventTotal, _ = m.Int64Counter("excavation.agent.events.total",
 			metric.WithDescription("Total agent conversation events emitted to VictoriaLogs"),
 		)
-		inst.agentInstantiateTotal, _ = m.Int64Counter("gastown.agent.instantiations.total",
+		inst.agentInstantiateTotal, _ = m.Int64Counter("excavation.agent.instantiations.total",
 			metric.WithDescription("Total agent session instantiations (one per agent spawn)"),
 		)
-		inst.primeTotal, _ = m.Int64Counter("gastown.prime.total",
+		inst.primeTotal, _ = m.Int64Counter("excavation.prime.total",
 			metric.WithDescription("Total gt prime invocations"),
 		)
-		inst.agentStateTotal, _ = m.Int64Counter("gastown.agent.state_changes.total",
+		inst.agentStateTotal, _ = m.Int64Counter("excavation.agent.state_changes.total",
 			metric.WithDescription("Total agent state transitions"),
 		)
-		inst.polecatTotal, _ = m.Int64Counter("gastown.polecat.spawns.total",
-			metric.WithDescription("Total polecat spawns"),
+		inst.minerTotal, _ = m.Int64Counter("excavation.miner.spawns.total",
+			metric.WithDescription("Total miner spawns"),
 		)
-		inst.polecatRemoveTotal, _ = m.Int64Counter("gastown.polecat.removes.total",
-			metric.WithDescription("Total polecat removals"),
+		inst.minerRemoveTotal, _ = m.Int64Counter("excavation.miner.removes.total",
+			metric.WithDescription("Total miner removals"),
 		)
-		inst.slingTotal, _ = m.Int64Counter("gastown.sling.dispatches.total",
+		inst.slingTotal, _ = m.Int64Counter("excavation.sling.dispatches.total",
 			metric.WithDescription("Total sling work dispatches"),
 		)
-		inst.mailTotal, _ = m.Int64Counter("gastown.mail.operations.total",
+		inst.mailTotal, _ = m.Int64Counter("excavation.mail.operations.total",
 			metric.WithDescription("Total mail/bd SDK operations"),
 		)
-		inst.nudgeTotal, _ = m.Int64Counter("gastown.nudge.total",
+		inst.nudgeTotal, _ = m.Int64Counter("excavation.nudge.total",
 			metric.WithDescription("Total gt nudge invocations"),
 		)
-		inst.doneTotal, _ = m.Int64Counter("gastown.done.total",
-			metric.WithDescription("Total gt done invocations (polecat work completions)"),
+		inst.doneTotal, _ = m.Int64Counter("excavation.done.total",
+			metric.WithDescription("Total gt done invocations (miner work completions)"),
 		)
-		inst.daemonRestartTotal, _ = m.Int64Counter("gastown.daemon.agent_restarts.total",
+		inst.daemonRestartTotal, _ = m.Int64Counter("excavation.daemon.agent_restarts.total",
 			metric.WithDescription("Total daemon-initiated agent session restarts"),
 		)
-		inst.formulaTotal, _ = m.Int64Counter("gastown.formula.instantiations.total",
+		inst.formulaTotal, _ = m.Int64Counter("excavation.formula.instantiations.total",
 			metric.WithDescription("Total formula→wisp instantiations"),
 		)
-		inst.convoyTotal, _ = m.Int64Counter("gastown.convoy.creates.total",
-			metric.WithDescription("Total auto-convoy creations"),
+		inst.minecartTotal, _ = m.Int64Counter("excavation.minecart.creates.total",
+			metric.WithDescription("Total auto-minecart creations"),
 		)
-		inst.molCookTotal, _ = m.Int64Counter("gastown.mol.cooks.total",
+		inst.molCookTotal, _ = m.Int64Counter("excavation.mol.cooks.total",
 			metric.WithDescription("Total formula cook operations (formula → proto)"),
 		)
-		inst.molWispTotal, _ = m.Int64Counter("gastown.mol.wisps.total",
+		inst.molWispTotal, _ = m.Int64Counter("excavation.mol.wisps.total",
 			metric.WithDescription("Total molecule wisp creations (proto → wisp)"),
 		)
-		inst.molSquashTotal, _ = m.Int64Counter("gastown.mol.squashes.total",
+		inst.molSquashTotal, _ = m.Int64Counter("excavation.mol.squashes.total",
 			metric.WithDescription("Total molecule squash operations (mol → digest)"),
 		)
-		inst.molBurnTotal, _ = m.Int64Counter("gastown.mol.burns.total",
+		inst.molBurnTotal, _ = m.Int64Counter("excavation.mol.burns.total",
 			metric.WithDescription("Total molecule burn operations (destroy)"),
 		)
-		inst.beadCreateTotal, _ = m.Int64Counter("gastown.bead.creates.total",
+		inst.beadCreateTotal, _ = m.Int64Counter("excavation.bead.creates.total",
 			metric.WithDescription("Total bead creations from molecule instantiation"),
 		)
 
 		// Histograms
-		inst.bdDurationHist, _ = m.Float64Histogram("gastown.bd.duration_ms",
+		inst.bdDurationHist, _ = m.Float64Histogram("excavation.bd.duration_ms",
 			metric.WithDescription("bd CLI call round-trip latency in milliseconds"),
 			metric.WithUnit("ms"),
 		)
@@ -235,7 +235,7 @@ func statusStr(err error) string {
 
 // addRunID injects the run.id attribute from ctx (or GT_RUN env) into r.
 // Called by emit and RecordAgentEvent so every telemetry event carries the
-// GASTOWN run identifier for waterfall correlation.
+// EXCAVATION run identifier for waterfall correlation.
 func addRunID(ctx context.Context, r *otellog.Record) {
 	if runID := RunIDFromCtx(ctx); runID != "" {
 		r.AddAttributes(otellog.String("run.id", runID))
@@ -383,25 +383,25 @@ func RecordPromptSend(ctx context.Context, session, keys string, debounceMs int,
 // All fields except RunID, AgentType, Role, AgentName, SessionID, and TownRoot
 // are optional; pass empty strings for unknown fields.
 type AgentInstantiateInfo struct {
-	// RunID is the GASTOWN run UUID (GT_RUN), the waterfall primary key.
+	// RunID is the EXCAVATION run UUID (GT_RUN), the waterfall primary key.
 	RunID string
 	// AgentType is the runtime adapter name ("claudecode", "opencode", …).
 	AgentType string
-	// Role is the Gastown agent role ("polecat", "witness", "mayor", "refinery",
-	// "crew", "deacon", "dog", "boot").
+	// Role is the Excavation agent role ("miner", "witness", "overseer", "refinery",
+	// "crew", "supervisor", "dog", "boot").
 	Role string
 	// AgentName is the specific agent name within its role (e.g. "wyvern-Toast").
-	// For singletons (mayor, deacon) this equals the role name.
+	// For singletons (overseer, supervisor) this equals the role name.
 	AgentName string
 	// SessionID is the tmux session name (TIMOX pane).
 	SessionID string
-	// RigName is the rig name; empty for town-level agents (mayor, deacon).
+	// RigName is the rig name; empty for town-level agents (overseer, supervisor).
 	RigName string
-	// TownRoot is the absolute path to the Gastown town root (~/gt); used to
+	// TownRoot is the absolute path to the Excavation town root (~/gt); used to
 	// derive the instance identifier "hostname:basename(townRoot)".
 	TownRoot string
 	// IssueID is the bead ID of the work item assigned to this agent.
-	// Empty for agents not started with an explicit issue (witness, mayor, …).
+	// Empty for agents not started with an explicit issue (witness, overseer, …).
 	IssueID string
 	// GitBranch is the current git branch of the working directory at spawn time.
 	GitBranch string
@@ -410,7 +410,7 @@ type AgentInstantiateInfo struct {
 }
 
 // RecordAgentInstantiate records the creation of a new agent session — the
-// root GASTOWN event that anchors all downstream waterfall telemetry.
+// root EXCAVATION event that anchors all downstream waterfall telemetry.
 func RecordAgentInstantiate(ctx context.Context, info AgentInstantiateInfo) {
 	initInstruments()
 	inst.agentInstantiateTotal.Add(ctx, 1,
@@ -524,28 +524,28 @@ func RecordAgentStateChange(ctx context.Context, agentID, newState string, hookB
 	)
 }
 
-// RecordPolecatSpawn records a polecat spawn attempt (metrics + log event).
-func RecordPolecatSpawn(ctx context.Context, name string, err error) {
+// RecordMinerSpawn records a miner spawn attempt (metrics + log event).
+func RecordMinerSpawn(ctx context.Context, name string, err error) {
 	initInstruments()
 	status := statusStr(err)
-	inst.polecatTotal.Add(ctx, 1,
+	inst.minerTotal.Add(ctx, 1,
 		metric.WithAttributes(attribute.String("status", status)),
 	)
-	emit(ctx, "polecat.spawn", severity(err),
+	emit(ctx, "miner.spawn", severity(err),
 		otellog.String("name", name),
 		otellog.String("status", status),
 		errKV(err),
 	)
 }
 
-// RecordPolecatRemove records a polecat removal (metrics + log event).
-func RecordPolecatRemove(ctx context.Context, name string, err error) {
+// RecordMinerRemove records a miner removal (metrics + log event).
+func RecordMinerRemove(ctx context.Context, name string, err error) {
 	initInstruments()
 	status := statusStr(err)
-	inst.polecatRemoveTotal.Add(ctx, 1,
+	inst.minerRemoveTotal.Add(ctx, 1,
 		metric.WithAttributes(attribute.String("status", status)),
 	)
-	emit(ctx, "polecat.remove", severity(err),
+	emit(ctx, "miner.remove", severity(err),
 		otellog.String("name", name),
 		otellog.String("status", status),
 		errKV(err),
@@ -598,7 +598,7 @@ func RecordNudge(ctx context.Context, target string, err error) {
 	)
 }
 
-// RecordDone records a gt done invocation — polecat work completion (metrics + log event).
+// RecordDone records a gt done invocation — miner work completion (metrics + log event).
 // exitType is one of COMPLETED, ESCALATED, DEFERRED.
 func RecordDone(ctx context.Context, exitType string, err error) {
 	initInstruments()
@@ -617,7 +617,7 @@ func RecordDone(ctx context.Context, exitType string, err error) {
 }
 
 // RecordDaemonRestart records a daemon-initiated agent session restart (metrics + log event).
-// agentType is e.g. "deacon", "witness-myrig", "refinery-myrig".
+// agentType is e.g. "supervisor", "witness-myrig", "refinery-myrig".
 func RecordDaemonRestart(ctx context.Context, agentType string) {
 	initInstruments()
 	inst.daemonRestartTotal.Add(ctx, 1,
@@ -646,14 +646,14 @@ func RecordFormulaInstantiate(ctx context.Context, formulaName, beadID string, e
 	)
 }
 
-// RecordConvoyCreate records an auto-convoy creation (metrics + log event).
-func RecordConvoyCreate(ctx context.Context, beadID string, err error) {
+// RecordMinecartCreate records an auto-minecart creation (metrics + log event).
+func RecordMinecartCreate(ctx context.Context, beadID string, err error) {
 	initInstruments()
 	status := statusStr(err)
-	inst.convoyTotal.Add(ctx, 1,
+	inst.minecartTotal.Add(ctx, 1,
 		metric.WithAttributes(attribute.String("status", status)),
 	)
-	emit(ctx, "convoy.create", severity(err),
+	emit(ctx, "minecart.create", severity(err),
 		otellog.String("bead_id", beadID),
 		otellog.String("status", status),
 		errKV(err),

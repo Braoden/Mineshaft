@@ -6,15 +6,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/estop"
+	"github.com/steveyegge/excavation/internal/estop"
 )
 
 func setupEstopCommandTestTown(t *testing.T) string {
 	t.Helper()
 
 	townRoot := t.TempDir()
-	if err := os.Mkdir(filepath.Join(townRoot, "mayor"), 0755); err != nil {
-		t.Fatalf("create mayor marker: %v", err)
+	if err := os.Mkdir(filepath.Join(townRoot, "overseer"), 0755); err != nil {
+		t.Fatalf("create overseer marker: %v", err)
 	}
 
 	oldWd, err := os.Getwd()
@@ -65,7 +65,7 @@ func TestRunEstopStatusDoesNotCreateSentinel(t *testing.T) {
 
 func TestRunEstopStatusReportsPerRigEstop(t *testing.T) {
 	townRoot := setupEstopCommandTestTown(t)
-	if err := estop.ActivateRig(townRoot, "gastown", estop.TriggerManual, "maintenance"); err != nil {
+	if err := estop.ActivateRig(townRoot, "excavation", estop.TriggerManual, "maintenance"); err != nil {
 		t.Fatalf("ActivateRig: %v", err)
 	}
 
@@ -76,7 +76,7 @@ func TestRunEstopStatusReportsPerRigEstop(t *testing.T) {
 	if runErr != nil {
 		t.Fatalf("runEstopStatus: %v", runErr)
 	}
-	for _, want := range []string{"E-STOP: gastown", "maintenance", "Clear with:"} {
+	for _, want := range []string{"E-STOP: excavation", "maintenance", "Clear with:"} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("status output = %q, want %q", out, want)
 		}

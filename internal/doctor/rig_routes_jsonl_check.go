@@ -6,14 +6,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
 )
 
 // RigRoutesJSONLCheck detects and fixes routes.jsonl files in rig .beads directories.
 //
 // Rig-level routes.jsonl files are problematic because:
-// 1. bd's routing walks up to find town root (via mayor/town.json) and uses town-level routes.jsonl
+// 1. bd's routing walks up to find town root (via overseer/town.json) and uses town-level routes.jsonl
 // 2. If a rig has its own routes.jsonl, bd uses it and never finds town routes, breaking cross-rig routing
 // 3. These files often exist due to a bug where bd's auto-export wrote issue data to routes.jsonl
 //
@@ -125,7 +125,7 @@ func (c *RigRoutesJSONLCheck) findRigDirectories(townRoot string) []string {
 	seen := make(map[string]bool)
 
 	// Source 1: rigs.json registry
-	rigsPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	if rigsConfig, err := config.LoadRigsConfig(rigsPath); err == nil {
 		for rigName := range rigsConfig.Rigs {
 			rigPath := filepath.Join(townRoot, rigName)
@@ -164,7 +164,7 @@ func (c *RigRoutesJSONLCheck) findRigDirectories(townRoot string) []string {
 				continue
 			}
 			// Skip known non-rig directories
-			if entry.Name() == "mayor" || entry.Name() == ".beads" || entry.Name() == ".git" {
+			if entry.Name() == "overseer" || entry.Name() == ".beads" || entry.Name() == ".git" {
 				continue
 			}
 			rigPath := filepath.Join(townRoot, entry.Name())
@@ -174,7 +174,7 @@ func (c *RigRoutesJSONLCheck) findRigDirectories(townRoot string) []string {
 				continue // .beads doesn't exist
 			}
 			// Skip if this dir's .beads resolves to the town root .beads
-			// (e.g. deacon uses a symlinked .beads dir pointing to town beads)
+			// (e.g. supervisor uses a symlinked .beads dir pointing to town beads)
 			if townBeadsErr == nil && os.SameFile(townBeadsInfo, beadsDirInfo) {
 				continue
 			}

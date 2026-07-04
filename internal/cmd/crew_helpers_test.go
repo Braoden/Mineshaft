@@ -10,7 +10,7 @@ func TestCrewSessionName(t *testing.T) {
 		rigName  string
 		crewName string
 	}{
-		{"basic", "gastown", "tester"},
+		{"basic", "excavation", "tester"},
 		{"beads rig", "beads", "emma"},
 	}
 	for _, tt := range tests {
@@ -32,7 +32,7 @@ func TestParseCrewSessionName(t *testing.T) {
 	// a PrefixRegistry to map prefixes to rigs. Without the registry populated,
 	// parsing will fail. We test the roundtrip with the understanding that in
 	// test environment, the registry may not be available.
-	rigName := "gastown"
+	rigName := "excavation"
 	crewName := "tester"
 	sessionName := crewSessionName(rigName, crewName)
 
@@ -57,7 +57,7 @@ func TestParseCrewSessionName_Invalid(t *testing.T) {
 	}{
 		{"empty", ""},
 		{"random", "random-session"},
-		{"no crew marker", "gt-gastown-polecat-alpha"},
+		{"no crew marker", "gt-excavation-miner-alpha"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

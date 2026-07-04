@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // epicScheduleOpts holds options for epic schedule operations.
@@ -127,7 +127,7 @@ func runEpicScheduleByID(epicID string, opts epicScheduleOpts) error {
 			Formula:     formula,
 			Force:       opts.Force,
 			HookRawBead: opts.HookRawBead,
-			NoConvoy:    true, // Epic is the organizing structure
+			NoMinecart:    true, // Epic is the organizing structure
 		})
 		if err != nil {
 			fmt.Printf("  %s %s: %v\n", style.Dim.Render("✗"), c.ID, err)
@@ -150,8 +150,8 @@ func runEpicScheduleByID(epicID string, opts epicScheduleOpts) error {
 }
 
 // runEpicSlingByID immediately dispatches all open children of an epic.
-// Used when max_polecats=-1 (direct dispatch mode). Each child gets its own
-// polecat via executeSling(). Respects --max-concurrent throttling.
+// Used when max_miners=-1 (direct dispatch mode). Each child gets its own
+// miner via executeSling(). Respects --max-concurrent throttling.
 func runEpicSlingByID(epicID string, opts epicScheduleOpts) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
@@ -245,7 +245,7 @@ func runEpicSlingByID(epicID string, opts epicScheduleOpts) error {
 			FormulaName:   formula,
 			Force:         opts.Force,
 			HookRawBead:   opts.HookRawBead,
-			NoConvoy:      true, // Epic is the organizing structure
+			NoMinecart:      true, // Epic is the organizing structure
 			NoBoot:        opts.NoBoot,
 			CallerContext: "epic-sling",
 			TownRoot:      townRoot,

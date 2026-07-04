@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/util"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/util"
 )
 
 var (
@@ -20,8 +20,8 @@ var cleanupCmd = &cobra.Command{
 	Long: `Clean up orphaned Claude processes that survived session termination.
 
 This command finds and kills Claude processes that are not associated with
-any active Gas Town tmux session. These orphans can accumulate when:
-- Polecat sessions are killed without proper cleanup
+any active Excavation Site tmux session. These orphans can accumulate when:
+- Miner sessions are killed without proper cleanup
 - Claude spawns subagent processes that outlive their parent
 - Network or system issues interrupt normal shutdown
 

@@ -16,7 +16,7 @@ var moleculeCmd = &cobra.Command{
 	Use:         "mol",
 	Aliases:     []string{"molecule"},
 	GroupID:     GroupWork,
-	Annotations: map[string]string{AnnotationPolecatSafe: "true"},
+	Annotations: map[string]string{AnnotationMinerSafe: "true"},
 	Short:       "Agent molecule workflow commands",
 	RunE:        requireSubcommand,
 	Long: `Agent-specific molecule workflow operations.
@@ -134,7 +134,7 @@ var moleculeStatusCmd = &cobra.Command{
 	Long: `Show what's slung on an agent's hook.
 
 If no target is specified, shows the current agent's status based on
-the working directory (polecat, crew member, witness, etc.).
+the working directory (miner, crew member, witness, etc.).
 
 Output includes:
 - What's slung (molecule name, associated issue)
@@ -144,7 +144,7 @@ Output includes:
 
 Examples:
   gt mol status                       # Show current agent's hook
-  gt mol status greenplace/nux        # Show specific polecat's hook
+  gt mol status greenplace/nux        # Show specific miner's hook
   gt mol status greenplace/witness    # Show witness's hook`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runMoleculeStatus,
@@ -169,7 +169,7 @@ Output includes:
 Examples:
   gt molecule current                 # Current agent's work
   gt molecule current greenplace/furiosa
-  gt molecule current deacon
+  gt molecule current supervisor
   gt mol current greenplace/witness`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runMoleculeCurrent,
@@ -218,7 +218,7 @@ var moleculeStepCmd = &cobra.Command{
 A molecule is a DAG of steps. Each step is a beads issue with the molecule root
 as its parent. Steps can have dependencies on other steps.
 
-When a polecat is working on a molecule, it processes one step at a time:
+When a miner is working on a molecule, it processes one step at a time:
 1. Work on the current step
 2. When done: gt mol step done <step-id>
 3. System auto-continues to next ready step

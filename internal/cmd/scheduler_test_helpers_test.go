@@ -12,10 +12,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/scheduler/capacity"
-	"github.com/steveyegge/gastown/internal/testutil"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/scheduler/capacity"
+	"github.com/steveyegge/excavation/internal/testutil"
 )
 
 // --- Environment helpers ---
@@ -48,12 +48,12 @@ func writeJSONFile(t *testing.T, path string, v interface{}) {
 // --- Scheduler config helpers ---
 
 // configureScheduler writes a TownSettings file with the given scheduler configuration.
-// maxPolecats > 0 enables deferred dispatch; -1 means direct dispatch.
-func configureScheduler(t *testing.T, hqPath string, maxPolecats, batchSize int) {
+// maxMiners > 0 enables deferred dispatch; -1 means direct dispatch.
+func configureScheduler(t *testing.T, hqPath string, maxMiners, batchSize int) {
 	t.Helper()
 	settings := config.NewTownSettings()
 	settings.Scheduler = &capacity.SchedulerConfig{
-		MaxPolecats: &maxPolecats,
+		MaxMiners: &maxMiners,
 		BatchSize:   &batchSize,
 	}
 	writeJSONFile(t, config.TownSettingsPath(hqPath), settings)
@@ -238,7 +238,7 @@ func addBeadDependencyOfType(t *testing.T, from, to, depType, dir string) {
 }
 
 // createTestBeadOfType creates a bead with the given title and issue type (e.g.,
-// "epic", "convoy", "task") and returns the auto-generated bead ID.
+// "epic", "minecart", "task") and returns the auto-generated bead ID.
 func createTestBeadOfType(t *testing.T, dir, title, issueType string) string {
 	t.Helper()
 	args := []string{"create", "--title=" + title, "--type=" + issueType,
@@ -265,7 +265,7 @@ func createTestBeadOfType(t *testing.T, dir, title, issueType string) string {
 }
 
 // slingToScheduler runs `gt sling <bead> <rig> --hook-raw-bead` in deferred mode.
-// The test setup (configureScheduler) sets max_polecats > 0, so gt sling
+// The test setup (configureScheduler) sets max_miners > 0, so gt sling
 // automatically defers dispatch without a --scheduler flag.
 // Uses --hook-raw-bead to skip formula cooking (no formula infrastructure
 // in integration tests).

@@ -35,7 +35,7 @@ func TestIsInternalBead(t *testing.T) {
 		},
 		{
 			name: "mol prefix is internal",
-			b:    closedBead{ID: "gt-mol-123", Title: "mol-polecat-work", IssueType: "task"},
+			b:    closedBead{ID: "gt-mol-123", Title: "mol-miner-work", IssueType: "task"},
 			want: true,
 		},
 		{
@@ -60,7 +60,7 @@ func TestIsInternalBead(t *testing.T) {
 		},
 		{
 			name: "normal bug bead is not internal",
-			b:    closedBead{ID: "gt-bug1", Title: "Fix nil pointer in convoy", IssueType: "bug"},
+			b:    closedBead{ID: "gt-bug1", Title: "Fix nil pointer in minecart", IssueType: "bug"},
 			want: false,
 		},
 		{
@@ -241,7 +241,7 @@ func TestFetchClosedBeads_DateCutoff(t *testing.T) {
 
 	// Cutoff is 24 hours ago — only the recent bead should pass.
 	cutoff := now.Add(-24 * time.Hour)
-	entries, err := fetchClosedBeads(workDir, "gastown", cutoff)
+	entries, err := fetchClosedBeads(workDir, "excavation", cutoff)
 	if err != nil {
 		t.Fatalf("fetchClosedBeads() error: %v", err)
 	}
@@ -252,8 +252,8 @@ func TestFetchClosedBeads_DateCutoff(t *testing.T) {
 	if entries[0].ID != "gt-new" {
 		t.Errorf("fetchClosedBeads() returned ID %q, want %q", entries[0].ID, "gt-new")
 	}
-	if entries[0].Rig != "gastown" {
-		t.Errorf("fetchClosedBeads() rig = %q, want %q", entries[0].Rig, "gastown")
+	if entries[0].Rig != "excavation" {
+		t.Errorf("fetchClosedBeads() rig = %q, want %q", entries[0].Rig, "excavation")
 	}
 }
 
@@ -282,7 +282,7 @@ func TestFetchClosedBeads_FiltersInternalBeads(t *testing.T) {
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
 	cutoff := now.Add(-24 * time.Hour)
-	entries, err := fetchClosedBeads(workDir, "gastown", cutoff)
+	entries, err := fetchClosedBeads(workDir, "excavation", cutoff)
 	if err != nil {
 		t.Fatalf("fetchClosedBeads() error: %v", err)
 	}

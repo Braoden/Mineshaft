@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/constants"
+	"github.com/steveyegge/excavation/internal/constants"
 )
 
 func installMockBDRecorder(t *testing.T) string {
@@ -54,7 +54,7 @@ switch ($cmd) {
       Write-Output ''
     }
     if ($args.Length -ge 3 -and $args[1] -eq 'get' -and $args[2] -eq 'types.custom') {
-      Write-Output 'agent,role,rig,convoy,slot,queue,event,message,molecule,gate,merge-request'
+      Write-Output 'agent,role,rig,minecart,slot,queue,event,message,molecule,gate,merge-request'
     }
     exit 0
   }
@@ -98,7 +98,7 @@ case "$cmd" in
   config)
     # Return types list for "config get types.custom" verification
     if echo "$*" | grep -q "get types.custom"; then
-      echo "agent,role,rig,convoy,slot,queue,event,message,molecule,gate,merge-request"
+      echo "agent,role,rig,minecart,slot,queue,event,message,molecule,gate,merge-request"
     fi
     exit 0
     ;;
@@ -135,11 +135,11 @@ func readMockBDLog(t *testing.T, logPath string) string {
 func TestFindTownRoot(t *testing.T) {
 	// Create a temporary town structure
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(mayorDir, "town.json"), []byte("{}"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "town.json"), []byte("{}"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -150,13 +150,13 @@ func TestFindTownRoot(t *testing.T) {
 	}
 
 	// Create a nested rig that was originally a standalone town
-	// (has its own mayor/town.json inside the outer town)
-	rigDir := filepath.Join(tmpDir, "myrig", "mayor", "rig")
-	rigMayorDir := filepath.Join(rigDir, "mayor")
-	if err := os.MkdirAll(rigMayorDir, 0755); err != nil {
+	// (has its own overseer/town.json inside the outer town)
+	rigDir := filepath.Join(tmpDir, "myrig", "overseer", "rig")
+	rigOverseerDir := filepath.Join(rigDir, "overseer")
+	if err := os.MkdirAll(rigOverseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(rigMayorDir, "town.json"), []byte("{}"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(rigOverseerDir, "town.json"), []byte("{}"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	rigBeadsDir := filepath.Join(rigDir, ".beads")
@@ -170,7 +170,7 @@ func TestFindTownRoot(t *testing.T) {
 		expected string
 	}{
 		{"from town root", tmpDir, tmpDir},
-		{"from mayor dir", mayorDir, tmpDir},
+		{"from overseer dir", overseerDir, tmpDir},
 		{"from deep nested dir", deepDir, tmpDir},
 		{"from non-town dir", t.TempDir(), ""},
 		{"nested town prefers outermost", rigBeadsDir, tmpDir},
@@ -178,11 +178,11 @@ func TestFindTownRoot(t *testing.T) {
 	}
 
 	// Add nested town test case: inner town inside outer town
-	innerTown := filepath.Join(tmpDir, "imported", "gastown")
-	if err := os.MkdirAll(filepath.Join(innerTown, "mayor"), 0755); err != nil {
+	innerTown := filepath.Join(tmpDir, "imported", "excavation")
+	if err := os.MkdirAll(filepath.Join(innerTown, "overseer"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(innerTown, "mayor", "town.json"), []byte("{}"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(innerTown, "overseer", "town.json"), []byte("{}"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	innerDeepDir := filepath.Join(innerTown, "crew", "worker2")
@@ -213,17 +213,17 @@ func TestResolveRoutingTarget(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Create mayor/town.json for FindTownRoot
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	// Create overseer/town.json for FindTownRoot
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(mayorDir, "town.json"), []byte("{}"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "town.json"), []byte("{}"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create routes.jsonl
-	routesContent := `{"prefix": "gt-", "path": "gastown/mayor/rig"}
+	routesContent := `{"prefix": "gt-", "path": "excavation/overseer/rig"}
 {"prefix": "hq-", "path": "."}
 `
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
@@ -231,7 +231,7 @@ func TestResolveRoutingTarget(t *testing.T) {
 	}
 
 	// Create the rig beads directory
-	rigBeadsDir := filepath.Join(tmpDir, "gastown", "mayor", "rig", ".beads")
+	rigBeadsDir := filepath.Join(tmpDir, "excavation", "overseer", "rig", ".beads")
 	if err := os.MkdirAll(rigBeadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -247,13 +247,13 @@ func TestResolveRoutingTarget(t *testing.T) {
 		{
 			name:     "rig-level bead routes to rig",
 			townRoot: tmpDir,
-			beadID:   "gt-gastown-polecat-Toast",
+			beadID:   "gt-excavation-miner-Toast",
 			expected: rigBeadsDir,
 		},
 		{
 			name:     "town-level bead routes to town",
 			townRoot: tmpDir,
-			beadID:   "hq-mayor",
+			beadID:   "hq-overseer",
 			expected: beadsDir,
 		},
 		{
@@ -265,7 +265,7 @@ func TestResolveRoutingTarget(t *testing.T) {
 		{
 			name:     "empty townRoot falls back",
 			townRoot: "",
-			beadID:   "gt-gastown-polecat-Toast",
+			beadID:   "gt-excavation-miner-Toast",
 			expected: fallback,
 		},
 		{
@@ -589,7 +589,7 @@ func TestEnsureCustomStatuses(t *testing.T) {
 	// Regression for gt-kbi: when `bd config get status.custom` returns the
 	// unset sentinel "status.custom (not set)", EnsureCustomStatuses must NOT
 	// merge that literal string into the value passed to `bd config set` —
-	// bd rejects it via the [a-z][a-z0-9_-]* validator, breaking gt convoy.
+	// bd rejects it via the [a-z][a-z0-9_-]* validator, breaking gt minecart.
 	t.Run("unset sentinel from bd config get is filtered (gt-kbi)", func(t *testing.T) {
 		if runtime.GOOS == "windows" {
 			t.Skip("test uses Unix shell script mock for bd")
@@ -697,9 +697,9 @@ func TestEnsureDatabaseInitialized(t *testing.T) {
 	t.Run("metadata.json with valid db — skip init (server mode)", func(t *testing.T) {
 		// Set up town structure with .dolt-data/<db> so the deep check passes
 		townDir := t.TempDir()
-		mayorDir := filepath.Join(townDir, "mayor")
-		os.MkdirAll(mayorDir, 0755)
-		os.WriteFile(filepath.Join(mayorDir, "town.json"), []byte("{}"), 0644)
+		overseerDir := filepath.Join(townDir, "overseer")
+		os.MkdirAll(overseerDir, 0755)
+		os.WriteFile(filepath.Join(overseerDir, "town.json"), []byte("{}"), 0644)
 
 		rigDir := filepath.Join(townDir, "testrig")
 		beadsDir := filepath.Join(rigDir, ".beads")
@@ -721,9 +721,9 @@ func TestEnsureDatabaseInitialized(t *testing.T) {
 		logPath := installMockBDRecorder(t)
 		// metadata.json references a database that doesn't exist in .dolt-data/
 		townDir := t.TempDir()
-		mayorDir := filepath.Join(townDir, "mayor")
-		os.MkdirAll(mayorDir, 0755)
-		os.WriteFile(filepath.Join(mayorDir, "town.json"), []byte("{}"), 0644)
+		overseerDir := filepath.Join(townDir, "overseer")
+		os.MkdirAll(overseerDir, 0755)
+		os.WriteFile(filepath.Join(overseerDir, "town.json"), []byte("{}"), 0644)
 		os.MkdirAll(filepath.Join(townDir, ".dolt-data"), 0755) // empty .dolt-data
 
 		rigDir := filepath.Join(townDir, "testrig")
@@ -853,13 +853,13 @@ func TestDetectPrefix(t *testing.T) {
 	t.Run("rigs.json authoritative source", func(t *testing.T) {
 		// Create town structure with rigs.json
 		townDir := t.TempDir()
-		mayorDir := filepath.Join(townDir, "mayor")
-		os.MkdirAll(mayorDir, 0755)
-		os.WriteFile(filepath.Join(mayorDir, "town.json"), []byte("{}"), 0644)
+		overseerDir := filepath.Join(townDir, "overseer")
+		os.MkdirAll(overseerDir, 0755)
+		os.WriteFile(filepath.Join(overseerDir, "town.json"), []byte("{}"), 0644)
 
 		// Create rigs.json with a prefix for our rig
 		rigsJSON := `{"rigs": {"testrig": {"prefix": "tr"}}}`
-		os.WriteFile(filepath.Join(mayorDir, "rigs.json"), []byte(rigsJSON), 0644)
+		os.WriteFile(filepath.Join(overseerDir, "rigs.json"), []byte(rigsJSON), 0644)
 
 		// Create rig directory with .beads
 		rigDir := filepath.Join(townDir, "testrig")
@@ -876,15 +876,15 @@ func TestDetectPrefix(t *testing.T) {
 	})
 
 	t.Run("routed path falls back to default", func(t *testing.T) {
-		// Routed beads path: mayor/rig/.beads — filepath.Base(filepath.Dir)
+		// Routed beads path: overseer/rig/.beads — filepath.Base(filepath.Dir)
 		// yields "rig", not the actual rig name. Should fall back to "gt".
 		townDir := t.TempDir()
-		mayorDir := filepath.Join(townDir, "mayor")
-		os.MkdirAll(mayorDir, 0755)
-		os.WriteFile(filepath.Join(mayorDir, "town.json"), []byte("{}"), 0644)
+		overseerDir := filepath.Join(townDir, "overseer")
+		os.MkdirAll(overseerDir, 0755)
+		os.WriteFile(filepath.Join(overseerDir, "town.json"), []byte("{}"), 0644)
 
 		rigDir := filepath.Join(townDir, "myrig")
-		routedDir := filepath.Join(rigDir, "mayor", "rig")
+		routedDir := filepath.Join(rigDir, "overseer", "rig")
 		beadsDir := filepath.Join(routedDir, ".beads")
 		os.MkdirAll(beadsDir, 0755)
 
@@ -920,16 +920,16 @@ func TestStripYAMLQuotes(t *testing.T) {
 func TestBeads_getTownRoot(t *testing.T) {
 	// Create a temporary town
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(mayorDir, "town.json"), []byte("{}"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "town.json"), []byte("{}"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create nested directory
-	rigDir := filepath.Join(tmpDir, "myrig", "mayor", "rig")
+	rigDir := filepath.Join(tmpDir, "myrig", "overseer", "rig")
 	if err := os.MkdirAll(rigDir, 0755); err != nil {
 		t.Fatal(err)
 	}

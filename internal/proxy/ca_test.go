@@ -259,13 +259,13 @@ func TestIssueServer(t *testing.T) {
 	})
 }
 
-func TestIssuePolecat(t *testing.T) {
+func TestIssueMiner(t *testing.T) {
 	dir := t.TempDir()
 	ca, err := GenerateCA(dir)
 	require.NoError(t, err)
 
 	t.Run("cert parses and verifies against CA", func(t *testing.T) {
-		certPEM, _, err := ca.IssuePolecat("gt-gastown-furiosa", time.Hour)
+		certPEM, _, err := ca.IssueMiner("gt-excavation-furiosa", time.Hour)
 		require.NoError(t, err)
 
 		block, _ := pem.Decode(certPEM)
@@ -283,7 +283,7 @@ func TestIssuePolecat(t *testing.T) {
 	})
 
 	t.Run("ExtKeyUsage contains ClientAuth and NOT ServerAuth", func(t *testing.T) {
-		certPEM, _, err := ca.IssuePolecat("gt-gastown-furiosa", time.Hour)
+		certPEM, _, err := ca.IssueMiner("gt-excavation-furiosa", time.Hour)
 		require.NoError(t, err)
 
 		block, _ := pem.Decode(certPEM)
@@ -305,13 +305,13 @@ func TestIssuePolecat(t *testing.T) {
 
 	t.Run("CN matches and hyphenated rig round-trips", func(t *testing.T) {
 		cases := []string{
-			"gt-gastown-furiosa",
-			"gt-gas-town-furiosa", // hyphenated rig name
+			"gt-excavation-furiosa",
+			"gt-excavation-site-furiosa", // hyphenated rig name
 		}
 		for _, cn := range cases {
 			cn := cn
 			t.Run(cn, func(t *testing.T) {
-				certPEM, _, err := ca.IssuePolecat(cn, time.Hour)
+				certPEM, _, err := ca.IssueMiner(cn, time.Hour)
 				require.NoError(t, err)
 
 				block, _ := pem.Decode(certPEM)
@@ -325,7 +325,7 @@ func TestIssuePolecat(t *testing.T) {
 	t.Run("malformed CNs are rejected", func(t *testing.T) {
 		cases := []string{
 			"gt--furiosa",     // empty rig segment
-			"gt-gastown-",     // empty name segment
+			"gt-excavation-",     // empty name segment
 			"gt-",             // no rig or name
 			"notgt-rig-name",  // missing gt- prefix
 			"gt-nodashinrest", // no rig/name separator
@@ -334,7 +334,7 @@ func TestIssuePolecat(t *testing.T) {
 		for _, cn := range cases {
 			cn := cn
 			t.Run(cn, func(t *testing.T) {
-				_, _, err := ca.IssuePolecat(cn, time.Hour)
+				_, _, err := ca.IssueMiner(cn, time.Hour)
 				assert.Error(t, err, "expected error for malformed CN %q", cn)
 			})
 		}
@@ -342,7 +342,7 @@ func TestIssuePolecat(t *testing.T) {
 
 	t.Run("TTL is respected", func(t *testing.T) {
 		ttl := 30 * time.Minute
-		certPEM, _, err := ca.IssuePolecat("gt-gastown-test", ttl)
+		certPEM, _, err := ca.IssueMiner("gt-excavation-test", ttl)
 		require.NoError(t, err)
 
 		block, _ := pem.Decode(certPEM)
@@ -374,9 +374,9 @@ func TestCertEdgeCases(t *testing.T) {
 	})
 
 	t.Run("very long CN does not panic", func(t *testing.T) {
-		longCN := "gt-gastown-" + strings.Repeat("a", 1000)
+		longCN := "gt-excavation-" + strings.Repeat("a", 1000)
 		assert.NotPanics(t, func() {
-			_, _, _ = ca.IssuePolecat(longCN, time.Hour)
+			_, _, _ = ca.IssueMiner(longCN, time.Hour)
 		})
 	})
 }
@@ -445,7 +445,7 @@ func TestLoadOrGenerateCAExpired(t *testing.T) {
 
 	tmpl := &x509.Certificate{
 		SerialNumber:          serial,
-		Subject:               pkix.Name{CommonName: "GasTown CA (expired)"},
+		Subject:               pkix.Name{CommonName: "Excavation CA (expired)"},
 		NotBefore:             time.Now().Add(-2 * time.Hour),
 		NotAfter:              time.Now().Add(-time.Hour), // already expired
 		IsCA:                  true,

@@ -12,9 +12,9 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/testutil"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/testutil"
 )
 
 const parkedLabel = "status:parked"

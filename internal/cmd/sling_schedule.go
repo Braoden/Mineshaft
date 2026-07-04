@@ -7,18 +7,18 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/events"
-	"github.com/steveyegge/gastown/internal/rig"
-	"github.com/steveyegge/gastown/internal/scheduler/capacity"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/events"
+	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/excavation/internal/scheduler/capacity"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // shouldDeferDispatch checks the town config to decide dispatch mode.
-// Returns (true, nil) when max_polecats > 0 (deferred dispatch).
-// Returns (false, nil) when max_polecats <= 0 (direct dispatch).
+// Returns (true, nil) when max_miners > 0 (deferred dispatch).
+// Returns (false, nil) when max_miners <= 0 (direct dispatch).
 func shouldDeferDispatch() (bool, error) {
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil {
@@ -28,7 +28,7 @@ func shouldDeferDispatch() (bool, error) {
 	settingsPath := config.TownSettingsPath(townRoot)
 	settings, err := config.LoadOrCreateTownSettings(settingsPath)
 	if err != nil {
-		return false, fmt.Errorf("loading town settings: %w (dispatch blocked — fix config or use gt config set scheduler.max_polecats -1)", err)
+		return false, fmt.Errorf("loading town settings: %w (dispatch blocked — fix config or use gt config set scheduler.max_miners -1)", err)
 	}
 
 	schedulerCfg := settings.Scheduler
@@ -36,7 +36,7 @@ func shouldDeferDispatch() (bool, error) {
 		return false, nil // No scheduler config — direct dispatch (default)
 	}
 
-	maxPol := schedulerCfg.GetMaxPolecats()
+	maxPol := schedulerCfg.GetMaxMiners()
 	if maxPol > 0 {
 		return true, nil
 	}
@@ -45,14 +45,14 @@ func shouldDeferDispatch() (bool, error) {
 
 // ScheduleOptions holds options for scheduling a bead.
 type ScheduleOptions struct {
-	Formula      string   // Formula to apply at dispatch time (e.g., "mol-polecat-work")
+	Formula      string   // Formula to apply at dispatch time (e.g., "mol-miner-work")
 	Args         string   // Natural language args for executor
 	Vars         []string // Formula variables (key=value)
 	Merge        string   // Merge strategy: direct/mr/local
-	BaseBranch   string   // Override base branch for polecat worktree
+	BaseBranch   string   // Override base branch for miner worktree
 	ResumeBranch string   // Resume an existing branch (gh#3602); mutually exclusive with BaseBranch
-	NoConvoy     bool     // Skip auto-convoy creation
-	Owned        bool     // Mark auto-convoy as caller-managed lifecycle
+	NoMinecart     bool     // Skip auto-minecart creation
+	Owned        bool     // Mark auto-minecart as caller-managed lifecycle
 	DryRun       bool     // Show what would be done without acting
 	Force        bool     // Force schedule even if bead is hooked/in_progress
 	NoMerge      bool     // Skip merge queue on completion
@@ -83,7 +83,7 @@ func scheduleBead(beadID, rigName string, opts ScheduleOptions) error {
 	}
 
 	if !opts.Force {
-		if err := checkCrossRigGuard(beadID, rigName+"/polecats/_", townRoot); err != nil {
+		if err := checkCrossRigGuard(beadID, rigName+"/miners/_", townRoot); err != nil {
 			return err
 		}
 	}
@@ -118,7 +118,7 @@ func scheduleBead(beadID, rigName string, opts ScheduleOptions) error {
 	// Mirrors the closed-bead guards in runSling (sling.go) and executeSling
 	// (sling_dispatch.go). The daemon's stranded scan can route closed cross-prefix
 	// beads through scheduleBead in deferred dispatch mode; without this check, a
-	// fresh ghost convoy is created for already-completed work. Not bypassed by
+	// fresh ghost minecart is created for already-completed work. Not bypassed by
 	// --force — if you need to re-dispatch, reopen the bead first.
 	if info.Status == "closed" || info.Status == "tombstone" {
 		return fmt.Errorf("bead %s is %s (work already completed)", beadID, info.Status)
@@ -137,8 +137,8 @@ func scheduleBead(beadID, rigName string, opts ScheduleOptions) error {
 	if opts.DryRun {
 		fmt.Printf("Would schedule %s → %s\n", beadID, rigName)
 		fmt.Printf("  Would create sling context bead\n")
-		if !opts.NoConvoy {
-			fmt.Printf("  Would create auto-convoy\n")
+		if !opts.NoMinecart {
+			fmt.Printf("  Would create auto-minecart\n")
 		}
 		return nil
 	}
@@ -197,23 +197,23 @@ func scheduleBead(beadID, rigName string, opts ScheduleOptions) error {
 		return fmt.Errorf("creating sling context: %w", err)
 	}
 
-	// Auto-convoy (unless --no-convoy)
-	if !opts.NoConvoy {
-		existingConvoy := isTrackedByConvoy(beadID)
-		if existingConvoy == "" {
-			convoyID, err := createAutoConvoy(beadID, info.Title, opts.Owned, opts.Merge, opts.BaseBranch)
+	// Auto-minecart (unless --no-minecart)
+	if !opts.NoMinecart {
+		existingMinecart := isTrackedByMinecart(beadID)
+		if existingMinecart == "" {
+			minecartID, err := createAutoMinecart(beadID, info.Title, opts.Owned, opts.Merge, opts.BaseBranch)
 			if err != nil {
-				fmt.Printf("%s Could not create auto-convoy: %v\n", style.Dim.Render("Warning:"), err)
+				fmt.Printf("%s Could not create auto-minecart: %v\n", style.Dim.Render("Warning:"), err)
 			} else {
-				fmt.Printf("%s Created convoy %s\n", style.Bold.Render("→"), convoyID)
-				// Update the context bead fields with convoy ID
-				fields.Convoy = convoyID
+				fmt.Printf("%s Created minecart %s\n", style.Bold.Render("→"), minecartID)
+				// Update the context bead fields with minecart ID
+				fields.Minecart = minecartID
 				if updateErr := rigBeads.UpdateSlingContextFields(ctxBead.ID, fields); updateErr != nil {
-					fmt.Printf("%s Could not update context with convoy: %v\n", style.Dim.Render("Warning:"), updateErr)
+					fmt.Printf("%s Could not update context with minecart: %v\n", style.Dim.Render("Warning:"), updateErr)
 				}
 			}
 		} else {
-			fmt.Printf("%s Already tracked by convoy %s\n", style.Dim.Render("○"), existingConvoy)
+			fmt.Printf("%s Already tracked by minecart %s\n", style.Dim.Render("○"), existingMinecart)
 		}
 	}
 
@@ -244,7 +244,7 @@ func runBatchSchedule(beadIDs []string, rigName, townRoot string) error {
 			Formula:      formula,
 			Args:         slingArgs,
 			Vars:         slingVars,
-			NoConvoy:     slingNoConvoy,
+			NoMinecart:     slingNoMinecart,
 			Owned:        slingOwned,
 			Merge:        slingMerge,
 			BaseBranch:   slingBaseBranch,
@@ -284,9 +284,9 @@ func resolveRigForBead(townRoot, beadID string) string {
 // resolveFormula determines the formula name from user flags and rig settings.
 // Resolution order:
 //  1. Explicit --formula flag
-//  2. Rig property layers (wisp → bead → system default "mol-polecat-work")
+//  2. Rig property layers (wisp → bead → system default "mol-miner-work")
 //  3. Rig settings file (workflow.default_formula in settings/config.json)
-//  4. Hardcoded fallback "mol-polecat-work"
+//  4. Hardcoded fallback "mol-miner-work"
 //
 // The property layers are the primary mechanism, supporting:
 //
@@ -316,7 +316,7 @@ func resolveFormula(explicit string, hookRawBead bool, townRoot, rigName string)
 			return df
 		}
 	}
-	return "mol-polecat-work"
+	return "mol-miner-work"
 }
 
 // slingContextTTL is the maximum age of a sling context before it's considered
@@ -388,11 +388,11 @@ func isScheduled(beadID string) bool {
 }
 
 // detectSchedulerIDType determines what kind of ID was passed for scheduling.
-// Returns "convoy", "epic", or "task".
+// Returns "minecart", "epic", or "task".
 func detectSchedulerIDType(id string) (string, error) {
-	// Fast path: hq-cv-* is always a convoy
+	// Fast path: hq-cv-* is always a minecart
 	if strings.HasPrefix(id, "hq-cv-") {
-		return "convoy", nil
+		return "minecart", nil
 	}
 
 	info, err := getBeadInfo(id)
@@ -403,16 +403,16 @@ func detectSchedulerIDType(id string) (string, error) {
 	switch info.IssueType {
 	case "epic":
 		return "epic", nil
-	case "convoy":
-		return "convoy", nil
+	case "minecart":
+		return "minecart", nil
 	}
 
 	for _, label := range info.Labels {
 		switch label {
 		case "gt:epic":
 			return "epic", nil
-		case "gt:convoy":
-			return "convoy", nil
+		case "gt:minecart":
+			return "minecart", nil
 		}
 	}
 
@@ -420,10 +420,10 @@ func detectSchedulerIDType(id string) (string, error) {
 }
 
 // schedulerTaskOnlyFlagNames lists flags that only apply to task bead scheduling,
-// not convoy or epic mode.
+// not minecart or epic mode.
 var schedulerTaskOnlyFlagNames = []string{
 	"account", "agent", "ralph", "args", "var",
-	"merge", "base-branch", "no-convoy", "owned", "no-merge", "review-only",
+	"merge", "base-branch", "no-minecart", "owned", "no-merge", "review-only",
 }
 
 // validateNoTaskOnlySchedulerFlags checks that no task-only flags were set.

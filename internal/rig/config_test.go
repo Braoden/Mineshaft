@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/wisp"
+	"github.com/steveyegge/excavation/internal/wisp"
 )
 
 func TestGetConfig_SystemDefaults(t *testing.T) {
@@ -37,9 +37,9 @@ func TestGetConfig_SystemDefaults(t *testing.T) {
 	}
 
 	// Test int default
-	maxPolecats := rig.GetIntConfig("max_polecats")
-	if maxPolecats != 10 {
-		t.Errorf("expected max_polecats=10, got %d", maxPolecats)
+	maxMiners := rig.GetIntConfig("max_miners")
+	if maxMiners != 10 {
+		t.Errorf("expected max_miners=10, got %d", maxMiners)
 	}
 }
 

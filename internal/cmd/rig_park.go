@@ -4,12 +4,12 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/refinery"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/wisp"
-	"github.com/steveyegge/gastown/internal/witness"
+	"github.com/steveyegge/excavation/internal/refinery"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/wisp"
+	"github.com/steveyegge/excavation/internal/witness"
 )
 
 // RigStatusKey is the wisp config key for rig operational status.
@@ -35,8 +35,8 @@ This is a Level 1 (local/ephemeral) operation:
   - Use 'gt rig unpark' to resume normal operation
 
 Examples:
-  gt rig park gastown
-  gt rig park beads gastown mayor`,
+  gt rig park excavation
+  gt rig park beads excavation overseer`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runRigPark,
 }
@@ -52,8 +52,8 @@ Unparking a rig:
   - Does NOT automatically start agents (use 'gt rig start' for that)
 
 Examples:
-  gt rig unpark gastown
-  gt rig unpark beads gastown mayor`,
+  gt rig unpark excavation
+  gt rig unpark beads excavation overseer`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runRigUnpark,
 }

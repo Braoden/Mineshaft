@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var (
@@ -29,7 +29,7 @@ var changelogCmd = &cobra.Command{
 	Use:     "changelog",
 	GroupID: GroupWork,
 	Short:   "Show completed work across rigs",
-	Long: `Show a changelog of closed beads across all rigs in Gas Town.
+	Long: `Show a changelog of closed beads across all rigs in Excavation Site.
 
 Filters out ephemeral/internal beads (wisps, patrols) to show only real work.
 
@@ -38,7 +38,7 @@ Examples:
   gt changelog --today    # Today's completions
   gt changelog --week     # This week's completions
   gt changelog --since 2026-03-10  # Since a specific date
-  gt changelog --rig gastown       # One rig only
+  gt changelog --rig excavation       # One rig only
   gt changelog --json              # JSON output`,
 	RunE: runChangelog,
 }
@@ -76,7 +76,7 @@ type closedBead struct {
 func runChangelog(_ *cobra.Command, _ []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	since, err := changelogSinceTime()
@@ -130,7 +130,7 @@ func collectChangelogEntries(townRoot string, since time.Time) ([]ChangelogEntry
 	locations := []location{{path: townRoot, rig: "hq"}}
 
 	if changelogRig == "" {
-		rigsConfigPath := filepath.Join(townRoot, constants.DirMayor, constants.FileRigsJSON)
+		rigsConfigPath := filepath.Join(townRoot, constants.DirOverseer, constants.FileRigsJSON)
 		rigsConfig, err := config.LoadRigsConfig(rigsConfigPath)
 		if err == nil && rigsConfig != nil {
 			for rigName := range rigsConfig.Rigs {

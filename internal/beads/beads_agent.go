@@ -14,8 +14,8 @@ import (
 	"github.com/gofrs/flock"
 	beadsdk "github.com/steveyegge/beads"
 
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/telemetry"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/telemetry"
 )
 
 // lockAgentBead acquires an exclusive file lock for a specific agent bead ID.
@@ -38,11 +38,11 @@ func (b *Beads) lockAgentBead(id string) (*flock.Flock, error) {
 // AgentFields holds structured fields for agent beads.
 // These are stored as "key: value" lines in the description.
 type AgentFields struct {
-	RoleType          string // polecat, witness, refinery, deacon, mayor
-	Rig               string // Rig name (empty for global agents like mayor/deacon)
+	RoleType          string // miner, witness, refinery, supervisor, overseer
+	Rig               string // Rig name (empty for global agents like overseer/supervisor)
 	AgentState        string // spawning, working, done, stuck, escalated, idle, running, nuked
 	HookBead          string // Currently pinned work bead ID
-	CleanupStatus     string // ZFC: polecat self-reports git state (clean, has_uncommitted, has_stash, has_unpushed)
+	CleanupStatus     string // ZFC: miner self-reports git state (clean, has_uncommitted, has_stash, has_unpushed)
 	ActiveMR          string // Currently active merge request bead ID (for traceability)
 	NotificationLevel string // DND mode: verbose, normal, muted (default: normal)
 	Mode              string // Execution mode: "" (normal) or "ralph" (Ralph Wiggum loop)
@@ -51,10 +51,10 @@ type AgentFields struct {
 
 	// Completion metadata fields (gt-x7t9).
 	// Written by gt done, read by witness survey-workers to discover
-	// completion state from beads instead of POLECAT_DONE mail.
+	// completion state from beads instead of MINER_DONE mail.
 	ExitType        string // COMPLETED, ESCALATED, DEFERRED, PHASE_COMPLETE (see witness.ExitType*)
 	MRID            string // MR bead ID (if MR was created)
-	Branch          string // Polecat working branch name
+	Branch          string // Miner working branch name
 	LastSourceIssue string // Last source/work bead ID, preserved after hook_bead is cleared
 	MRFailed        bool   // True when MR creation was attempted but failed
 	PushFailed      bool   // True when branch push to origin failed (gas-556)
@@ -63,7 +63,7 @@ type AgentFields struct {
 
 // Notification level constants
 const (
-	NotifyVerbose = "verbose" // All notifications (mail, convoy events, etc.)
+	NotifyVerbose = "verbose" // All notifications (mail, minecart events, etc.)
 	NotifyNormal  = "normal"  // Important events only (default)
 	NotifyMuted   = "muted"   // Silent/DND mode - batch for later
 )
@@ -203,7 +203,7 @@ func ParseAgentFields(description string) *AgentFields {
 }
 
 // CreateAgentBead creates an agent bead for tracking agent lifecycle.
-// The ID format is: <prefix>-<rig>-<role>-<name> (e.g., gt-gastown-polecat-Toast)
+// The ID format is: <prefix>-<rig>-<role>-<name> (e.g., gt-excavation-miner-Toast)
 // Use AgentBeadID() helper to generate correct IDs.
 // The created_by field is populated from BD_ACTOR env var for provenance tracking.
 //
@@ -296,7 +296,7 @@ func (b *Beads) createAgentBeadViaStore(ctx context.Context, id, title, descript
 }
 
 // CreateOrReopenAgentBead creates an agent bead or reopens an existing one.
-// This handles the case where a polecat is nuked and re-spawned with the same name:
+// This handles the case where a miner is nuked and re-spawned with the same name:
 // the old agent bead exists (open or closed), so we update it instead of
 // failing with a UNIQUE constraint error.
 //
@@ -384,7 +384,7 @@ func labelsForAgentBeadReuse(existing []string) []string {
 }
 
 // ResetAgentBeadForReuse clears all mutable fields on an agent bead without closing it.
-// This is the preferred cleanup method during polecat nuke because it avoids the
+// This is the preferred cleanup method during miner nuke because it avoids the
 // close/reopen cycle that fails on Dolt backends (tombstone operations not supported,
 // bd reopen failures). By keeping the bead open with agent_state="nuked",
 // CreateOrReopenAgentBead can simply update it on re-spawn without needing reopen.
@@ -437,7 +437,7 @@ func (b *Beads) ResetAgentBeadForReuse(id, reason string) error {
 
 // UpdateAgentState updates the agent_state field in an agent bead.
 // bd >= 0.62.0 no longer provides a supported `bd agent state` writer, so
-// Gastown writes agent_state through the description field and readers mirror
+// Excavation writes agent_state through the description field and readers mirror
 // that contract with fallback to the legacy structured column via ResolveAgentState.
 //
 // Resolves the concrete target DB first so the update hits the correct database
@@ -552,7 +552,7 @@ func (b *Beads) UpdateAgentDescriptionFields(id string, updates AgentFieldUpdate
 }
 
 // UpdateAgentCleanupStatus updates the cleanup_status field in an agent bead.
-// This is called by the polecat to self-report its git state (ZFC compliance).
+// This is called by the miner to self-report its git state (ZFC compliance).
 // Valid statuses: clean, has_uncommitted, has_stash, has_unpushed
 func (b *Beads) UpdateAgentCleanupStatus(id string, cleanupStatus string) error {
 	return b.UpdateAgentDescriptionFields(id, AgentFieldUpdates{CleanupStatus: &cleanupStatus})
@@ -573,13 +573,13 @@ func (b *Beads) UpdateAgentNotificationLevel(id string, level string) error {
 }
 
 // CompletionMetadata holds the fields written by gt done to record
-// polecat work completion on the agent bead. The witness survey-workers
+// miner work completion on the agent bead. The witness survey-workers
 // step reads these fields to discover completion state from beads
-// instead of POLECAT_DONE mail (nudge-over-mail redesign, gt-x7t9).
+// instead of MINER_DONE mail (nudge-over-mail redesign, gt-x7t9).
 type CompletionMetadata struct {
 	ExitType       string // COMPLETED, ESCALATED, DEFERRED, PHASE_COMPLETE
 	MRID           string // MR bead ID (empty if no MR)
-	Branch         string // Polecat working branch
+	Branch         string // Miner working branch
 	HookBead       string // The work bead ID
 	MRFailed       bool   // True when MR creation was attempted but failed
 	PushFailed     bool   // True when branch push to origin failed (gas-556)
@@ -603,7 +603,7 @@ func (b *Beads) UpdateAgentCompletion(id string, meta *CompletionMetadata) error
 }
 
 // ClearAgentCompletion removes all completion metadata fields from an agent bead.
-// Called when a polecat is re-slung with new work (resets stale completion state).
+// Called when a miner is re-slung with new work (resets stale completion state).
 func (b *Beads) ClearAgentCompletion(id string) error {
 	empty := ""
 	notFailed := false
@@ -741,10 +741,10 @@ func (b *Beads) ListAgentBeadsFromWisps() (map[string]*Issue, error) {
 
 // isAgentBeadByID detects agent beads by their ID naming convention.
 // Agent bead IDs follow two patterns:
-//   - Full form (prefix != rig): prefix-rig-role[-name] (e.g., gt-gastown-witness)
+//   - Full form (prefix != rig): prefix-rig-role[-name] (e.g., gt-excavation-witness)
 //   - Collapsed form (prefix == rig): prefix-role[-name] (e.g., bcc-witness)
 //
-// where role is one of: witness, refinery, crew, polecat, deacon, mayor.
+// where role is one of: witness, refinery, crew, miner, supervisor, overseer.
 // The collapsed form has only 2 parts for role-only IDs, so we must check
 // from parts[1:] not parts[2:].
 func isAgentBeadByID(id string) bool {
@@ -756,7 +756,7 @@ func isAgentBeadByID(id string) bool {
 	// collapsed-form (role at parts[1]) agent bead IDs.
 	for _, part := range parts[1:] {
 		switch part {
-		case constants.RoleWitness, constants.RoleRefinery, constants.RoleCrew, constants.RolePolecat, constants.RoleDeacon, constants.RoleMayor:
+		case constants.RoleWitness, constants.RoleRefinery, constants.RoleCrew, constants.RoleMiner, constants.RoleSupervisor, constants.RoleOverseer:
 			return true
 		}
 	}

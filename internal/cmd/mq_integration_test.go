@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/beads"
+	"github.com/steveyegge/excavation/internal/beads"
 )
 
 // TestLandConflictError_ErrorsAs verifies that callers (notably the refinery
@@ -76,7 +76,7 @@ func TestLandConflictError_NoFiles(t *testing.T) {
 // PR #1226 review: mq_integration.go queries Type: "merge-request" but
 // real MR beads have Type: "task" with label "gt:merge-request".
 func TestMakeTestMR_RealisticFields(t *testing.T) {
-	mr := makeTestMR("mr-1", "polecat/Nux/gt-001", "main", "Nux", "open")
+	mr := makeTestMR("mr-1", "miner/Nux/gt-001", "main", "Nux", "open")
 
 	// Real MR beads have Type: "task", not "merge-request"
 	if mr.Type != "task" {
@@ -95,7 +95,7 @@ func TestMockBeadsList_LabelFilter(t *testing.T) {
 	mock := newMockBeads()
 
 	// Add a realistic MR (Type: "task", Label: "gt:merge-request")
-	mr := makeTestMR("mr-1", "polecat/Nux/gt-001", "main", "Nux", "open")
+	mr := makeTestMR("mr-1", "miner/Nux/gt-001", "main", "Nux", "open")
 	mock.addIssue(mr)
 
 	// Add a plain task (no MR label)
@@ -124,10 +124,10 @@ func TestMockBeadsList_StatusFiltering(t *testing.T) {
 	mock := newMockBeads()
 
 	// Add issues in various statuses
-	mock.addIssue(makeTestMR("mr-open", "polecat/A/gt-001", "integration/test", "A", "open"))
-	mock.addIssue(makeTestMR("mr-progress", "polecat/B/gt-002", "integration/test", "B", "in_progress"))
-	mock.addIssue(makeTestMR("mr-closed", "polecat/C/gt-003", "integration/test", "C", "closed"))
-	mock.addIssue(makeTestMR("mr-blocked", "polecat/D/gt-004", "integration/test", "D", "blocked"))
+	mock.addIssue(makeTestMR("mr-open", "miner/A/gt-001", "integration/test", "A", "open"))
+	mock.addIssue(makeTestMR("mr-progress", "miner/B/gt-002", "integration/test", "B", "in_progress"))
+	mock.addIssue(makeTestMR("mr-closed", "miner/C/gt-003", "integration/test", "C", "closed"))
+	mock.addIssue(makeTestMR("mr-blocked", "miner/D/gt-004", "integration/test", "D", "blocked"))
 
 	tests := []struct {
 		name      string
@@ -309,10 +309,10 @@ func TestResolveEpicBranch_LegacyFallback(t *testing.T) {
 func TestFilterMRsByTarget(t *testing.T) {
 	// Create test MRs with different targets
 	mrs := []*beads.Issue{
-		makeTestMR("mr-1", "polecat/Nux/gt-001", "integration/gt-epic", "Nux", "open"),
-		makeTestMR("mr-2", "polecat/Toast/gt-002", "main", "Toast", "open"),
-		makeTestMR("mr-3", "polecat/Able/gt-003", "integration/gt-epic", "Able", "open"),
-		makeTestMR("mr-4", "polecat/Baker/gt-004", "integration/gt-other", "Baker", "open"),
+		makeTestMR("mr-1", "miner/Nux/gt-001", "integration/gt-epic", "Nux", "open"),
+		makeTestMR("mr-2", "miner/Toast/gt-002", "main", "Toast", "open"),
+		makeTestMR("mr-3", "miner/Able/gt-003", "integration/gt-epic", "Able", "open"),
+		makeTestMR("mr-4", "miner/Baker/gt-004", "integration/gt-other", "Baker", "open"),
 	}
 
 	tests := []struct {
@@ -595,10 +595,10 @@ func TestGetRigGit(t *testing.T) {
 		}
 	})
 
-	t.Run("mayor/rig exists without bare repo", func(t *testing.T) {
+	t.Run("overseer/rig exists without bare repo", func(t *testing.T) {
 		tmp := t.TempDir()
-		mayorRig := filepath.Join(tmp, "mayor", "rig")
-		if err := os.MkdirAll(mayorRig, 0o755); err != nil {
+		overseerRig := filepath.Join(tmp, "overseer", "rig")
+		if err := os.MkdirAll(overseerRig, 0o755); err != nil {
 			t.Fatal(err)
 		}
 
@@ -623,14 +623,14 @@ func TestGetRigGit(t *testing.T) {
 		}
 	})
 
-	t.Run("bare repo takes precedence over mayor/rig", func(t *testing.T) {
+	t.Run("bare repo takes precedence over overseer/rig", func(t *testing.T) {
 		tmp := t.TempDir()
 		bareRepo := filepath.Join(tmp, ".repo.git")
 		if err := os.Mkdir(bareRepo, 0o755); err != nil {
 			t.Fatal(err)
 		}
-		mayorRig := filepath.Join(tmp, "mayor", "rig")
-		if err := os.MkdirAll(mayorRig, 0o755); err != nil {
+		overseerRig := filepath.Join(tmp, "overseer", "rig")
+		if err := os.MkdirAll(overseerRig, 0o755); err != nil {
 			t.Fatal(err)
 		}
 
@@ -653,7 +653,7 @@ func TestGetRigGit(t *testing.T) {
 // Before the fix, the function returned nil on getRigGit failure, giving exit
 // code 0 and causing the refinery to skip retry on branch-delete failures.
 func TestPostMerge_RigGitError(t *testing.T) {
-	// Empty temp dir: no .repo.git, no mayor/rig → getRigGit returns error.
+	// Empty temp dir: no .repo.git, no overseer/rig → getRigGit returns error.
 	tmp := t.TempDir()
 
 	_, err := getRigGit(tmp)
@@ -687,7 +687,7 @@ func TestPostMerge_DeleteRemoteBranchErrorPropagated(t *testing.T) {
 	}
 
 	// No "origin" remote is configured → git push --delete must fail.
-	err = rigGit.DeleteRemoteBranch("origin", "polecat/test/gt-abc")
+	err = rigGit.DeleteRemoteBranch("origin", "miner/test/gt-abc")
 	if err == nil {
 		t.Error("expected error from DeleteRemoteBranch with no remote, got nil")
 	}

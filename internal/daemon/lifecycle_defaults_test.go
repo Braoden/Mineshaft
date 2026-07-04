@@ -186,8 +186,8 @@ func TestEnsureLifecycleDefaults_FullyConfigured(t *testing.T) {
 
 func TestEnsureLifecycleConfigFile_NewFile(t *testing.T) {
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -197,7 +197,7 @@ func TestEnsureLifecycleConfigFile_NewFile(t *testing.T) {
 	}
 
 	// Verify file was created
-	configFile := filepath.Join(mayorDir, "daemon.json")
+	configFile := filepath.Join(overseerDir, "daemon.json")
 	data, err := os.ReadFile(configFile)
 	if err != nil {
 		t.Fatalf("config file not created: %v", err)
@@ -218,8 +218,8 @@ func TestEnsureLifecycleConfigFile_NewFile(t *testing.T) {
 
 func TestEnsureLifecycleConfigFile_ExistingPartial(t *testing.T) {
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -236,7 +236,7 @@ func TestEnsureLifecycleConfigFile_ExistingPartial(t *testing.T) {
 		},
 	}
 	data, _ := json.MarshalIndent(existing, "", "  ")
-	configFile := filepath.Join(mayorDir, "daemon.json")
+	configFile := filepath.Join(overseerDir, "daemon.json")
 	if err := os.WriteFile(configFile, data, 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -274,13 +274,13 @@ func TestEnsureLifecycleConfigFile_ExistingPartial(t *testing.T) {
 }
 
 func TestEnsureLifecycleConfigFile_ProductionScenario(t *testing.T) {
-	// Simulates the actual production daemon.json: has core patrols (deacon,
+	// Simulates the actual production daemon.json: has core patrols (supervisor,
 	// refinery, witness) and explicitly disabled dolt_backup, but is missing
 	// all data maintenance tickers (wisp_reaper, compactor_dog, doctor_dog,
 	// jsonl_git_backup, scheduled_maintenance).
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -288,14 +288,14 @@ func TestEnsureLifecycleConfigFile_ProductionScenario(t *testing.T) {
 		Type:    "daemon-patrol-config",
 		Version: 1,
 		Patrols: &PatrolsConfig{
-			Deacon:   &PatrolConfig{Enabled: true, Interval: "5m", Agent: "deacon"},
+			Supervisor:   &PatrolConfig{Enabled: true, Interval: "5m", Agent: "supervisor"},
 			Refinery: &PatrolConfig{Enabled: true, Interval: "5m", Agent: "refinery"},
 			Witness:  &PatrolConfig{Enabled: true, Interval: "5m", Agent: "witness"},
 			DoltBackup: &DoltBackupConfig{Enabled: false},
 		},
 	}
 	data, _ := json.MarshalIndent(existing, "", "  ")
-	configFile := filepath.Join(mayorDir, "daemon.json")
+	configFile := filepath.Join(overseerDir, "daemon.json")
 	if err := os.WriteFile(configFile, data, 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -311,8 +311,8 @@ func TestEnsureLifecycleConfigFile_ProductionScenario(t *testing.T) {
 	json.Unmarshal(data, &config)
 
 	// Core patrols preserved
-	if config.Patrols.Deacon == nil || !config.Patrols.Deacon.Enabled {
-		t.Error("expected deacon to remain enabled")
+	if config.Patrols.Supervisor == nil || !config.Patrols.Supervisor.Enabled {
+		t.Error("expected supervisor to remain enabled")
 	}
 	if config.Patrols.Refinery == nil || !config.Patrols.Refinery.Enabled {
 		t.Error("expected refinery to remain enabled")
@@ -352,15 +352,15 @@ func TestEnsureLifecycleConfigFile_ProductionScenario(t *testing.T) {
 
 func TestEnsureLifecycleConfigFile_AlreadyComplete(t *testing.T) {
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
 	// Write fully configured file
 	config := DefaultLifecycleConfig()
 	data, _ := json.MarshalIndent(config, "", "  ")
-	configFile := filepath.Join(mayorDir, "daemon.json")
+	configFile := filepath.Join(overseerDir, "daemon.json")
 	if err := os.WriteFile(configFile, data, 0644); err != nil {
 		t.Fatal(err)
 	}

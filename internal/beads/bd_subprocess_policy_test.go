@@ -19,7 +19,7 @@ func TestNoAdHocBdSubprocessesInHardenedPackages(t *testing.T) {
 	}
 	repoRoot := filepath.Clean(filepath.Join(filepath.Dir(thisFile), "..", ".."))
 	packages := []string{
-		"internal/deacon",
+		"internal/supervisor",
 		"internal/plugin",
 		"internal/refinery",
 		"internal/witness",

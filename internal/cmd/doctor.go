@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/doctor"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/doctor"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var (
@@ -23,17 +23,17 @@ var doctorCmd = &cobra.Command{
 	Use:     "doctor",
 	GroupID: GroupDiag,
 	Short:   "Run health checks on the workspace",
-	Long: `Run diagnostic checks on the Gas Town workspace.
+	Long: `Run diagnostic checks on the Excavation Site workspace.
 
 Doctor checks for common configuration issues, missing files,
 and other problems that could affect workspace operation.
 
 Workspace checks:
-  - town-config-exists       Check mayor/town.json exists
-  - town-config-valid        Check mayor/town.json is valid
-  - rigs-registry-exists     Check mayor/rigs.json exists (fixable)
+  - town-config-exists       Check overseer/town.json exists
+  - town-config-valid        Check overseer/town.json is valid
+  - rigs-registry-exists     Check overseer/rigs.json exists (fixable)
   - rigs-registry-valid      Check registered rigs exist (fixable)
-  - mayor-exists             Check mayor/ directory structure
+  - overseer-exists             Check overseer/ directory structure
   - disk-space               Check filesystem has sufficient free space
 
 Town root protection:
@@ -51,7 +51,7 @@ Infrastructure checks:
 
 Cleanup checks (fixable):
   - orphan-sessions          Detect orphaned tmux sessions
-  - stalled-polecats         Detect polecats with dead sessions and unpushed work (fixable)
+  - stalled-miners         Detect miners with dead sessions and unpushed work (fixable)
   - orphan-processes         Detect orphaned Claude processes
   - session-name-format      Detect sessions with outdated naming format (fixable)
   - wisp-gc                  Detect and clean abandoned wisps (>1h)
@@ -74,12 +74,12 @@ Migration checks (fixable):
 
 Rig checks (with --rig flag):
   - rig-is-git-repo          Verify rig is a valid git repository
-  - git-exclude-configured   Check .git/info/exclude has Gas Town dirs (fixable)
+  - git-exclude-configured   Check .git/info/exclude has Excavation Site dirs (fixable)
   - bare-repo-exists         Verify .repo.git exists when worktrees depend on it (fixable)
   - witness-exists           Verify witness/ structure exists (fixable)
   - refinery-exists          Verify refinery/ structure exists (fixable)
-  - mayor-clone-exists       Verify mayor/rig/ clone exists (fixable)
-  - polecat-clones-valid     Verify polecat directories are valid clones
+  - overseer-clone-exists       Verify overseer/rig/ clone exists (fixable)
+  - miner-clones-valid     Verify miner directories are valid clones
   - beads-config-valid       Verify beads configuration (fixable)
 
 Routing checks (fixable):
@@ -137,7 +137,7 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	// Find town root
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Create check context
@@ -158,7 +158,7 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	d.Register(doctor.NewGlobalStateCheck())
 
 	// Disk space check — most fundamental resource check. Low disk space is the
-	// root cause of cascading failures (Dolt data loss, polecat death, lost commits).
+	// root cause of cascading failures (Dolt data loss, miner death, lost commits).
 	// Must run before infrastructure checks that might fail confusingly on full disks.
 	d.Register(doctor.NewDiskSpaceCheck())
 
@@ -207,7 +207,7 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	d.Register(doctor.NewMalformedSessionNameCheck())
 	d.Register(doctor.NewOrphanSessionCheck())
 	d.Register(doctor.NewZombieSessionCheck())
-	d.Register(doctor.NewStalledPolecatCheck())
+	d.Register(doctor.NewStalledMinerCheck())
 	d.Register(doctor.NewOrphanProcessCheck())
 	d.Register(doctor.NewWispGCCheck())
 	d.Register(doctor.NewCheckMisclassifiedWisps())
@@ -236,13 +236,13 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	d.Register(doctor.NewRigBeadsCheck())
 	d.Register(doctor.NewRoleBeadsCheck())
 
-	// NOTE: StaleAttachmentsCheck removed - staleness detection belongs in Deacon molecule
+	// NOTE: StaleAttachmentsCheck removed - staleness detection belongs in Supervisor molecule
 
 	// Config architecture checks
 	d.Register(doctor.NewSettingsCheck())
 	d.Register(doctor.NewSessionHookCheck())
 	d.Register(doctor.NewRuntimeGitignoreCheck())
-	d.Register(doctor.NewLegacyGastownCheck())
+	d.Register(doctor.NewLegacyExcavationCheck())
 	// NOTE: ClaudeSettingsCheck moved before DaemonCheck (gt-99u race fix)
 	d.Register(doctor.NewDeprecatedMergeQueueKeysCheck())
 	d.Register(doctor.NewLandWorktreeGitignoreCheck())

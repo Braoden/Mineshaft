@@ -6,9 +6,9 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/hooks"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/hooks"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var hooksDiffCmd = &cobra.Command{
@@ -26,7 +26,7 @@ Exit codes:
 
 Examples:
   gt hooks diff                    # Show all pending changes
-  gt hooks diff gastown/crew       # Show changes for specific target`,
+  gt hooks diff excavation/crew       # Show changes for specific target`,
 	RunE: runHooksDiff,
 }
 
@@ -43,7 +43,7 @@ var (
 func runHooksDiff(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	targets, err := hooks.DiscoverTargets(townRoot)

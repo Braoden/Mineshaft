@@ -1,0 +1,223 @@
+description = """
+Archive completed minecarts and notify boss.
+
+Dogs work through molecules (poured from this formula) when minecarts complete. The Supervisor detects completed
+minecarts (all tracked issues closed) and slings this work to a dog for:
+- Generating minecart summary
+- Archiving minecart state
+- Notifying the boss (Overseer)
+- Updating activity feed
+
+## Dog Contract
+
+This is infrastructure work. You:
+1. Receive minecart ID via hook_bead
+2. Generate summary of completed work
+3. Archive to appropriate location
+4. Notify stakeholders
+5. Return to kennel
+
+## Variables
+
+| Variable | Source | Description |
+|----------|--------|-------------|
+| minecart | hook_bead | The minecart ID to archive |
+
+## Failure Modes
+
+| Situation | Action |
+|-----------|--------|
+| Minecart not found | Exit with error, notify Supervisor |
+| Archive location full | Create space, retry, or escalate |
+| Mail send fails | Retry once, then proceed anyway |"""
+formula = "mol-minecart-cleanup"
+version = 1
+
+[squash]
+trigger = "on_complete"
+template_type = "work"
+include_metrics = true
+
+[[steps]]
+id = "load-minecart"
+title = "Load minecart and verify completion"
+description = """
+Load the minecart bead and verify it's ready for archival.
+
+**1. Check your assignment:**
+```bash
+gt hook               # Shows hook_bead = minecart ID
+bd show {{minecart}}          # Full minecart details
+```
+
+**2. Verify minecart is complete:**
+- Status should be 'closed' or all tracked issues closed
+- If minecart is still open, exit - Supervisor dispatched too early
+
+```bash
+bd show {{minecart}}
+# Check 'tracks' or 'dependencies' field
+# All tracked issues should be closed
+```
+
+**3. Gather minecart metadata:**
+- Start date (created_at)
+- End date (last closure timestamp)
+- Total issues tracked
+- Contributing miners
+
+**Exit criteria:** Minecart loaded, verified complete, metadata gathered."""
+
+[[steps]]
+id = "generate-summary"
+title = "Generate minecart summary"
+needs = ["load-minecart"]
+description = """
+Create a summary of the minecart's completed work.
+
+**1. Collect tracked issue details:**
+```bash
+# For each tracked issue
+bd show <tracked-id>
+# Extract: title, type, assignee, duration
+```
+
+**2. Calculate statistics:**
+- Total duration (minecart start to finish)
+- Issues by type (task, bug, feature)
+- Contributors (unique assignees)
+- Commits generated (if tracked)
+
+**3. Create summary text:**
+```markdown
+## Minecart Summary: {{minecart.title}}
+
+**Duration**: X days/hours
+**Issues completed**: N
+
+### Work Breakdown
+- Tasks: N
+- Bugs: N
+- Features: N
+
+### Contributors
+- miner-1: N issues
+- miner-2: N issues
+
+### Key Outcomes
+- <notable achievement 1>
+- <notable achievement 2>
+```
+
+**Exit criteria:** Summary text generated and ready for notification."""
+
+[[steps]]
+id = "archive-minecart"
+title = "Close minecart and prepare for archival"
+needs = ["generate-summary"]
+description = """
+Close the minecart to mark it complete. Beads retention handles archival.
+
+**1. Close minecart:**
+```bash
+bd close {{minecart}} --reason="Minecart complete"
+```
+
+**2. Verify closure:**
+```bash
+bd show {{minecart}}
+# Status should be "closed"
+```
+
+**3. Sync to persist:**
+```bash
+bd sync
+```
+
+**Exit criteria:** Minecart closed, changes synced."""
+
+[[steps]]
+id = "notify-boss"
+title = "Send completion notification to boss"
+needs = ["archive-minecart"]
+description = """
+Notify the Overseer (boss) of minecart completion.
+
+**1. Send completion mail:**
+```bash
+gt mail send overseer/ -s "Minecart complete: {{minecart.title}}" -m "$(cat <<EOF
+Minecart {{minecart}} has completed and been closed.
+
+## Summary
+{{generated_summary}}
+
+## Metrics
+- Duration: {{duration}}
+- Issues: {{issue_count}}
+- Contributors: {{contributor_list}}
+
+This minecart has been closed. View details: bd show {{minecart}}
+EOF
+)"
+```
+
+**2. Post to activity feed:**
+The minecart closure already creates a feed entry. Verify:
+```bash
+gt feed --since 5m
+# Should show minecart completion
+```
+
+**Exit criteria:** Boss notified via mail, activity feed updated."""
+
+[[steps]]
+id = "return-to-kennel"
+title = "Signal completion and return to kennel"
+needs = ["notify-boss"]
+description = """
+Signal work complete and return to available pool.
+
+**1. Signal completion to Supervisor:**
+```bash
+gt mail send supervisor/ -s "DOG_DONE $(hostname)" -m "Task: minecart-cleanup
+Minecart: {{minecart}}
+Status: COMPLETE
+Duration: {{work_duration}}
+
+Ready for next assignment."
+```
+
+**2. Clean workspace:**
+- No minecart-specific state to clean
+- Workspace should already be clean
+
+**3. Return to kennel:**
+Dog returns to available state in the pool. Supervisor will assign next work
+or retire the dog if pool is oversized.
+
+**Exit criteria:** Supervisor notified, dog ready for next work or retirement."""
+
+[vars]
+[vars.minecart]
+description = "The minecart ID to archive"
+required = true
+
+[vars.contributor_list]
+description = "List of contributing miners (computed during execution)"
+default = ""
+
+[vars.duration]
+description = "Total minecart duration (computed during execution)"
+default = ""
+
+[vars.generated_summary]
+description = "Generated minecart summary text (computed during execution)"
+default = ""
+
+[vars.issue_count]
+description = "Number of issues in the minecart (computed during execution)"
+default = ""
+
+[vars.work_duration]
+description = "Duration of this dog's work (computed during execution)"
+default = ""

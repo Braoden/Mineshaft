@@ -1,4 +1,4 @@
-// Package townlog provides centralized logging for Gas Town agent lifecycle events.
+// Package townlog provides centralized logging for Excavation Site agent lifecycle events.
 package townlog
 
 import (
@@ -35,8 +35,8 @@ const (
 
 	// Witness patrol events
 	EventPatrolStarted  EventType = "patrol_started"
-	EventPolecatChecked EventType = "polecat_checked"
-	EventPolecatNudged  EventType = "polecat_nudged"
+	EventMinerChecked EventType = "miner_checked"
+	EventMinerNudged  EventType = "miner_nudged"
 	EventEscalationSent EventType = "escalation_sent"
 	EventPatrolComplete EventType = "patrol_complete"
 
@@ -49,7 +49,7 @@ const (
 type Event struct {
 	Timestamp time.Time `json:"timestamp"`
 	Type      EventType `json:"type"`
-	Agent     string    `json:"agent"`            // e.g., "gastown/crew/max" or "gastown/polecats/Toast"
+	Agent     string    `json:"agent"`            // e.g., "excavation/crew/max" or "excavation/miners/Toast"
 	Context   string    `json:"context,omitempty"` // Additional context (issue ID, error message, etc.)
 }
 
@@ -113,7 +113,7 @@ func (l *Logger) Log(eventType EventType, agent, context string) error {
 }
 
 // formatLogLine formats an event as a human-readable log line.
-// Format: 2025-12-26 15:30:45 [spawn] gastown/crew/max spawned for gt-xyz
+// Format: 2025-12-26 15:30:45 [spawn] excavation/crew/max spawned for gt-xyz
 func formatLogLine(e Event) string {
 	ts := e.Timestamp.Format("2006-01-02 15:04:05")
 
@@ -176,17 +176,17 @@ func formatLogLine(e Event) string {
 		} else {
 			detail = "started patrol"
 		}
-	case EventPolecatChecked:
+	case EventMinerChecked:
 		if e.Context != "" {
-			detail = fmt.Sprintf("checked polecat %s", e.Context)
+			detail = fmt.Sprintf("checked miner %s", e.Context)
 		} else {
-			detail = "checked polecat"
+			detail = "checked miner"
 		}
-	case EventPolecatNudged:
+	case EventMinerNudged:
 		if e.Context != "" {
-			detail = fmt.Sprintf("nudged polecat (%s)", e.Context)
+			detail = fmt.Sprintf("nudged miner (%s)", e.Context)
 		} else {
-			detail = "nudged polecat"
+			detail = "nudged miner"
 		}
 	case EventEscalationSent:
 		if e.Context != "" {
@@ -267,7 +267,7 @@ func ParseLogLines(content string) ([]Event, error) {
 }
 
 // parseLogLine parses a single log line into an Event.
-// Format: 2025-12-26 15:30:45 [spawn] gastown/crew/max spawned for gt-xyz
+// Format: 2025-12-26 15:30:45 [spawn] excavation/crew/max spawned for gt-xyz
 func parseLogLine(line string) (Event, error) {
 	var event Event
 

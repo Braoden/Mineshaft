@@ -1,4 +1,4 @@
-// ABOUTME: Command to completely uninstall Gas Town from the system.
+// ABOUTME: Command to completely uninstall Excavation Site from the system.
 // ABOUTME: Removes shell integration, wrappers, state, and optionally workspace.
 
 package cmd
@@ -11,10 +11,10 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/shell"
-	"github.com/steveyegge/gastown/internal/state"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/wrappers"
+	"github.com/steveyegge/excavation/internal/shell"
+	"github.com/steveyegge/excavation/internal/state"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/wrappers"
 )
 
 var (
@@ -25,22 +25,22 @@ var (
 var uninstallCmd = &cobra.Command{
 	Use:     "uninstall",
 	GroupID: GroupConfig,
-	Short:   "Remove Gas Town from the system",
-	Long: `Completely remove Gas Town from the system.
+	Short:   "Remove Excavation Site from the system",
+	Long: `Completely remove Excavation Site from the system.
 
 By default, removes:
   - Shell integration (~/.zshrc or ~/.bashrc)
   - Wrapper scripts (~/bin/gt-codex, ~/bin/gt-gemini, ~/bin/gt-opencode)
-  - State directory (~/.local/state/gastown/)
-  - Config directory (~/.config/gastown/)
-  - Cache directory (~/.cache/gastown/)
+  - State directory (~/.local/state/excavation/)
+  - Config directory (~/.config/excavation/)
+  - Cache directory (~/.cache/excavation/)
 
 The workspace (e.g., ~/gt) is NOT removed unless --workspace is specified.
 
 Use --force to skip confirmation prompts.
 
 Examples:
-  gt uninstall                    # Remove Gas Town, keep workspace
+  gt uninstall                    # Remove Excavation Site, keep workspace
   gt uninstall --workspace        # Also remove workspace directory
   gt uninstall --force            # Skip confirmation`,
 	RunE: runUninstall,
@@ -56,7 +56,7 @@ func init() {
 
 func runUninstall(cmd *cobra.Command, args []string) error {
 	if !uninstallForce {
-		fmt.Println("This will remove Gas Town from your system.")
+		fmt.Println("This will remove Excavation Site from your system.")
 		fmt.Println()
 		fmt.Println("The following will be removed:")
 		fmt.Printf("  • Shell integration (%s)\n", shell.RCFilePath(shell.DetectShell()))
@@ -87,7 +87,7 @@ func runUninstall(cmd *cobra.Command, args []string) error {
 	var errors []string
 
 	fmt.Println()
-	fmt.Println("Removing Gas Town...")
+	fmt.Println("Removing Excavation Site...")
 
 	if err := shell.Remove(); err != nil {
 		errors = append(errors, fmt.Sprintf("shell integration: %v", err))
@@ -140,10 +140,10 @@ func runUninstall(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Println()
-	fmt.Printf("%s Gas Town has been uninstalled\n", style.Success.Render("✓"))
+	fmt.Printf("%s Excavation Site has been uninstalled\n", style.Success.Render("✓"))
 	fmt.Println()
 	fmt.Println("To reinstall, run:")
-	fmt.Printf("  %s\n", style.Dim.Render("go install github.com/steveyegge/gastown/cmd/gt@latest"))
+	fmt.Printf("  %s\n", style.Dim.Render("go install github.com/steveyegge/excavation/cmd/gt@latest"))
 	fmt.Printf("  %s\n", style.Dim.Render("gt install ~/gt --shell"))
 
 	return nil
@@ -157,12 +157,12 @@ func findWorkspaceForUninstall() string {
 
 	candidates := []string{
 		filepath.Join(home, "gt"),
-		filepath.Join(home, "gastown"),
+		filepath.Join(home, "excavation"),
 	}
 
 	for _, path := range candidates {
-		mayorDir := filepath.Join(path, "mayor")
-		if _, err := os.Stat(mayorDir); err == nil {
+		overseerDir := filepath.Join(path, "overseer")
+		if _, err := os.Stat(overseerDir); err == nil {
 			return path
 		}
 	}

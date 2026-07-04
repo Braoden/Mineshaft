@@ -18,7 +18,7 @@ func TestNewStaleAgentBeadsCheck(t *testing.T) {
 		t.Error("expected CanFix to return true")
 	}
 
-	if check.Description() != "Detect agent beads for removed workers (crew and polecats)" {
+	if check.Description() != "Detect agent beads for removed workers (crew and miners)" {
 		t.Errorf("unexpected description: %q", check.Description())
 	}
 
@@ -72,13 +72,13 @@ func TestStaleAgentBeadsCheck_CrewOnDisk(t *testing.T) {
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	routesContent := `{"prefix":"gt-","path":"myrig/mayor/rig"}` + "\n"
+	routesContent := `{"prefix":"gt-","path":"myrig/overseer/rig"}` + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create rig beads directory
-	rigBeadsDir := filepath.Join(tmpDir, "myrig", "mayor", "rig", ".beads")
+	rigBeadsDir := filepath.Join(tmpDir, "myrig", "overseer", "rig", ".beads")
 	if err := os.MkdirAll(rigBeadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -114,13 +114,13 @@ func TestStaleAgentBeadsCheck_Phase2_NoTownBeadsDir(t *testing.T) {
 	}
 	// Routes with one known rig + town-level route
 	routesContent := `{"prefix":"hq-","path":"."}` + "\n" +
-		`{"prefix":"gt-","path":"gastown/mayor/rig"}` + "\n"
+		`{"prefix":"gt-","path":"excavation/overseer/rig"}` + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create the rig beads directory so Phase 1 can attempt to scan
-	rigBeadsDir := filepath.Join(tmpDir, "gastown", "mayor", "rig", ".beads")
+	rigBeadsDir := filepath.Join(tmpDir, "excavation", "overseer", "rig", ".beads")
 	if err := os.MkdirAll(rigBeadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -152,14 +152,14 @@ func TestStaleAgentBeadsCheck_KnownPrefixTracking(t *testing.T) {
 	// Mix of town-level and rig-level routes
 	routesContent := `{"prefix":"hq-","path":"."}` + "\n" +
 		`{"prefix":"hq-cv-","path":"."}` + "\n" +
-		`{"prefix":"gt-","path":"gastown/mayor/rig"}` + "\n" +
-		`{"prefix":"bd-","path":"beads/mayor/rig"}` + "\n"
+		`{"prefix":"gt-","path":"excavation/overseer/rig"}` + "\n" +
+		`{"prefix":"bd-","path":"beads/overseer/rig"}` + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create rig directories
-	for _, rigPath := range []string{"gastown/mayor/rig/.beads", "beads/mayor/rig/.beads"} {
+	for _, rigPath := range []string{"excavation/overseer/rig/.beads", "beads/overseer/rig/.beads"} {
 		if err := os.MkdirAll(filepath.Join(tmpDir, rigPath), 0755); err != nil {
 			t.Fatal(err)
 		}
@@ -174,9 +174,9 @@ func TestStaleAgentBeadsCheck_KnownPrefixTracking(t *testing.T) {
 	t.Logf("Known prefix tracking: status=%v, message=%s", result.Status, result.Message)
 }
 
-// === Tests for parseCrewOrPolecatFromID helper ===
+// === Tests for parseCrewOrMinerFromID helper ===
 
-func TestParseCrewOrPolecatFromID(t *testing.T) {
+func TestParseCrewOrMinerFromID(t *testing.T) {
 	tests := []struct {
 		name       string
 		id         string
@@ -187,18 +187,18 @@ func TestParseCrewOrPolecatFromID(t *testing.T) {
 	}{
 		{
 			name:       "standard crew ID",
-			id:         "gt-gastown-crew-alice",
+			id:         "gt-excavation-crew-alice",
 			prefix:     "gt",
-			rigName:    "gastown",
+			rigName:    "excavation",
 			role:       "crew",
 			wantWorker: "alice",
 		},
 		{
-			name:       "standard polecat ID",
-			id:         "gt-gastown-polecat-nux",
+			name:       "standard miner ID",
+			id:         "gt-excavation-miner-nux",
 			prefix:     "gt",
-			rigName:    "gastown",
-			role:       "polecat",
+			rigName:    "excavation",
+			role:       "miner",
 			wantWorker: "nux",
 		},
 		{
@@ -210,11 +210,11 @@ func TestParseCrewOrPolecatFromID(t *testing.T) {
 			wantWorker: "joe",
 		},
 		{
-			name:       "collapsed polecat (prefix == rigName)",
-			id:         "ff-polecat-toast",
+			name:       "collapsed miner (prefix == rigName)",
+			id:         "ff-miner-toast",
 			prefix:     "ff",
 			rigName:    "ff",
-			role:       "polecat",
+			role:       "miner",
 			wantWorker: "toast",
 		},
 		{
@@ -227,9 +227,9 @@ func TestParseCrewOrPolecatFromID(t *testing.T) {
 		},
 		{
 			name:       "ID does not match pattern",
-			id:         "gt-gastown-witness",
+			id:         "gt-excavation-witness",
 			prefix:     "gt",
-			rigName:    "gastown",
+			rigName:    "excavation",
 			role:       "crew",
 			wantWorker: "",
 		},
@@ -237,15 +237,15 @@ func TestParseCrewOrPolecatFromID(t *testing.T) {
 			name:       "wrong prefix",
 			id:         "bd-beads-crew-human",
 			prefix:     "gt",
-			rigName:    "gastown",
+			rigName:    "excavation",
 			role:       "crew",
 			wantWorker: "",
 		},
 		{
 			name:       "empty worker name after prefix strip",
-			id:         "gt-gastown-crew-",
+			id:         "gt-excavation-crew-",
 			prefix:     "gt",
-			rigName:    "gastown",
+			rigName:    "excavation",
 			role:       "crew",
 			wantWorker: "",
 		},
@@ -253,7 +253,7 @@ func TestParseCrewOrPolecatFromID(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			worker := parseCrewOrPolecatFromID(tt.id, tt.prefix, tt.rigName, tt.role)
+			worker := parseCrewOrMinerFromID(tt.id, tt.prefix, tt.rigName, tt.role)
 			if worker != tt.wantWorker {
 				t.Errorf("worker = %q, want %q", worker, tt.wantWorker)
 			}
@@ -324,12 +324,12 @@ func TestStaleAgentBeadsCheck_FixFallbackToTownBeads(t *testing.T) {
 		t.Fatal(err)
 	}
 	routesContent := `{"prefix":"hq-","path":"."}` + "\n" +
-		`{"prefix":"gt-","path":"gastown/mayor/rig"}` + "\n"
+		`{"prefix":"gt-","path":"excavation/overseer/rig"}` + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 
-	rigBeadsDir := filepath.Join(tmpDir, "gastown", "mayor", "rig", ".beads")
+	rigBeadsDir := filepath.Join(tmpDir, "excavation", "overseer", "rig", ".beads")
 	if err := os.MkdirAll(rigBeadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}

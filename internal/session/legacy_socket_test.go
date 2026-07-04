@@ -53,7 +53,7 @@ func setupLegacyHooks(t *testing.T, currentSocket string, mock *mockLegacyTmux) 
 	legacyTmuxForTest = func(socket string) legacySocketTmux { return mock }
 
 	r := NewPrefixRegistry()
-	r.Register("ga", "gastown")
+	r.Register("ga", "excavation")
 	SetDefaultRegistry(r)
 }
 
@@ -77,9 +77,9 @@ func TestCleanupLegacyDefaultSocketSkipsWhenSocketIsDefault(t *testing.T) {
 	}
 }
 
-func TestCleanupLegacyDefaultSocketCleansGastownSessions(t *testing.T) {
+func TestCleanupLegacyDefaultSocketCleansExcavationSessions(t *testing.T) {
 	mock := &mockLegacyTmux{
-		sessions: []string{"ga-witness", "hq-mayor"},
+		sessions: []string{"ga-witness", "hq-overseer"},
 	}
 	setupLegacyHooks(t, "gt-abc123", mock)
 
@@ -90,7 +90,7 @@ func TestCleanupLegacyDefaultSocketCleansGastownSessions(t *testing.T) {
 	if len(mock.killed) != 2 {
 		t.Fatalf("expected 2 killed, got %d: %v", len(mock.killed), mock.killed)
 	}
-	want := map[string]bool{"ga-witness": true, "hq-mayor": true}
+	want := map[string]bool{"ga-witness": true, "hq-overseer": true}
 	for _, k := range mock.killed {
 		if !want[k] {
 			t.Errorf("unexpected kill: %s", k)
@@ -98,7 +98,7 @@ func TestCleanupLegacyDefaultSocketCleansGastownSessions(t *testing.T) {
 	}
 }
 
-func TestCleanupLegacyDefaultSocketIgnoresNonGastownSessions(t *testing.T) {
+func TestCleanupLegacyDefaultSocketIgnoresNonExcavationSessions(t *testing.T) {
 	mock := &mockLegacyTmux{
 		sessions: []string{"personal-stuff", "hq-notes", "ga-witness"},
 	}
@@ -115,7 +115,7 @@ func TestCleanupLegacyDefaultSocketIgnoresNonGastownSessions(t *testing.T) {
 
 func TestCleanupLegacyDefaultSocketCleansSpecificTownSessions(t *testing.T) {
 	mock := &mockLegacyTmux{
-		sessions: []string{"hq-deacon", "hq-boot", "hq-dog-alpha", "hq-overseer"},
+		sessions: []string{"hq-supervisor", "hq-boot", "hq-dog-alpha", "hq-boss"},
 	}
 	setupLegacyHooks(t, "gt-abc123", mock)
 
@@ -127,8 +127,8 @@ func TestCleanupLegacyDefaultSocketCleansSpecificTownSessions(t *testing.T) {
 		t.Fatalf("expected 3 killed, got %d: %v", len(mock.killed), mock.killed)
 	}
 	for _, killed := range mock.killed {
-		if killed == "hq-overseer" {
-			t.Fatal("did not expect hq-overseer to be killed")
+		if killed == "hq-boss" {
+			t.Fatal("did not expect hq-boss to be killed")
 		}
 	}
 }
@@ -155,7 +155,7 @@ func TestCountLegacyDefaultSocketSkipsWhenOnDefault(t *testing.T) {
 	}
 }
 
-func TestCountLegacyDefaultSocketCountsGastownOnly(t *testing.T) {
+func TestCountLegacyDefaultSocketCountsExcavationOnly(t *testing.T) {
 	mock := &mockLegacyTmux{
 		sessions: []string{"ga-witness", "personal", "hq-notes"},
 	}
@@ -204,7 +204,7 @@ func TestCountLegacyBaseSocketSkipsWhenSame(t *testing.T) {
 
 func TestCountLegacyBaseSocketCountsCorrectly(t *testing.T) {
 	mock := &mockLegacyTmux{
-		sessions: []string{"ga-witness", "hq-deacon", "random-thing"},
+		sessions: []string{"ga-witness", "hq-supervisor", "random-thing"},
 	}
 	setupLegacyHooks(t, "gt-abc123", mock)
 

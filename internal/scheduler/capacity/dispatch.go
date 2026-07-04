@@ -8,8 +8,8 @@ import (
 )
 
 // ErrOnSuccessFailed wraps dispatch-succeeded-but-cleanup-failed errors.
-// Used to distinguish "polecat launched, context close failed" from
-// "polecat never launched" in the OnFailure callback.
+// Used to distinguish "miner launched, context close failed" from
+// "miner never launched" in the OnFailure callback.
 type ErrOnSuccessFailed struct{ Err error }
 
 func (e *ErrOnSuccessFailed) Error() string {
@@ -19,8 +19,8 @@ func (e *ErrOnSuccessFailed) Unwrap() error { return e.Err }
 
 // ErrCrossRigPrefix is returned when a bead's ID prefix does not match the
 // target rig's registered prefix. This protects against cross-rig dispatch
-// where, e.g., an `hq-` bead would be handed to a rig polecat whose DB only
-// resolves `gt-` prefixes (gt-el4 / gastownhall/gastown#3800).
+// where, e.g., an `hq-` bead would be handed to a rig miner whose DB only
+// resolves `gt-` prefixes (gt-el4 / excavationhall/excavation#3800).
 var ErrCrossRigPrefix = errors.New("cross-rig prefix dispatch refused")
 
 // BeadIDPrefix returns the prefix of a bead ID — the substring before the

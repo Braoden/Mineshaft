@@ -13,8 +13,8 @@ gt-desktop
 *.log
 *.tmp
 crew/
-mayor/
+overseer/
 refinery/
-polecats/
+miners/
 witness/
 logs/

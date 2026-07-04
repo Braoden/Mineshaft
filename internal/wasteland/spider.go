@@ -22,7 +22,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/util"
+	"github.com/steveyegge/excavation/internal/util"
 )
 
 // FraudSignalKind identifies the category of suspicious behavior detected.

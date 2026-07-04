@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/session"
+	"github.com/steveyegge/excavation/internal/session"
 )
 
 func TestValidateCommand(t *testing.T) {
@@ -38,8 +38,8 @@ func TestValidateCommand(t *testing.T) {
 			wantSafe: true,
 		},
 		{
-			name:     "convoy list",
-			command:  "convoy list",
+			name:     "minecart list",
+			command:  "minecart list",
 			wantErr:  false,
 			wantSafe: true,
 		},
@@ -58,8 +58,8 @@ func TestValidateCommand(t *testing.T) {
 			wantSafe: false,
 		},
 		{
-			name:     "convoy create",
-			command:  "convoy create myconvoy",
+			name:     "minecart create",
+			command:  "minecart create myminecart",
 			wantErr:  false,
 			wantSafe: false,
 		},
@@ -660,7 +660,7 @@ func TestParseIssueShowOutput_CreatedAndUpdated(t *testing.T) {
 }
 
 func TestParseIssueShowOutput_TitleAndStatus(t *testing.T) {
-	input := "○ gt-abc · Deploy widget   [● P1 · IN PROGRESS]\nType: convoy"
+	input := "○ gt-abc · Deploy widget   [● P1 · IN PROGRESS]\nType: minecart"
 	resp := parseIssueShowOutput(input, "gt-abc")
 	if resp.Title != "Deploy widget" {
 		t.Errorf("Title = %q, want %q", resp.Title, "Deploy widget")
@@ -791,7 +791,7 @@ func TestParseIssueShowJSON_ValidOutput(t *testing.T) {
 		"description": "Detailed plan here",
 		"status": "open",
 		"priority": 1,
-		"issue_type": "convoy",
+		"issue_type": "minecart",
 		"created_at": "2025-01-01T00:00:00Z",
 		"updated_at": "2025-06-15T00:00:00Z",
 		"depends_on": ["gt-dep1"],
@@ -813,8 +813,8 @@ func TestParseIssueShowJSON_ValidOutput(t *testing.T) {
 	if resp.Status != "open" {
 		t.Errorf("Status = %q, want %q", resp.Status, "open")
 	}
-	if resp.Type != "convoy" {
-		t.Errorf("Type = %q, want %q", resp.Type, "convoy")
+	if resp.Type != "minecart" {
+		t.Errorf("Type = %q, want %q", resp.Type, "minecart")
 	}
 	if resp.Description != "Detailed plan here" {
 		t.Errorf("Description = %q, want %q", resp.Description, "Detailed plan here")
@@ -884,7 +884,7 @@ func TestAPIHandler_SSE_ContentType(t *testing.T) {
 // writes don't race. The read lock is held through serialization so a
 // concurrent writer can't replace the cached pointer mid-encode.
 //
-// Regression test for steveyegge/gastown#1230 item 4.
+// Regression test for steveyegge/excavation#1230 item 4.
 func TestOptionsCacheConcurrentAccess(t *testing.T) {
 	h := &APIHandler{
 		gtPath:            "echo", // won't actually be called for cache hits
@@ -996,7 +996,7 @@ case "$*" in
   "rig list --json")
     printf '[{"name":"alpha","status":"operational"},{"name":"greenplace","status":"operational"}]\n'
     ;;
-  "polecat list --all --json")
+  "miner list --all --json")
     printf '[]\n'
     ;;
   "hooks list")
@@ -1020,7 +1020,7 @@ esac
 	bdScript := `#!/usr/bin/env sh
 set -eu
 case "$*" in
-  "list --type=convoy --json")
+  "list --type=minecart --json")
     printf '[]\n'
     ;;
   *)
@@ -1112,19 +1112,19 @@ esac
 	if got, want := resp.Rigs, []string{"bd_symphony"}; len(got) != len(want) || got[0] != want[0] {
 		t.Fatalf("Rigs = %v, want %v", got, want)
 	}
-	if len(resp.Convoys) != 0 || len(resp.Hooks) != 0 || len(resp.Agents) != 0 {
+	if len(resp.Minecarts) != 0 || len(resp.Hooks) != 0 || len(resp.Agents) != 0 {
 		t.Fatalf("type=rigs response included unrelated options: %+v", resp)
 	}
 }
 
 func TestHandleOptionsTypeRigsUsesConfigWithoutCommands(t *testing.T) {
 	workDir := t.TempDir()
-	mayorDir := filepath.Join(workDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0o755); err != nil {
-		t.Fatalf("create mayor dir: %v", err)
+	overseerDir := filepath.Join(workDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0o755); err != nil {
+		t.Fatalf("create overseer dir: %v", err)
 	}
 	rigsJSON := `{"version":1,"rigs":{"zeta":{"git_url":"x","added_at":"2026-01-01T00:00:00Z"},"bd_symphony":{"git_url":"x","added_at":"2026-01-01T00:00:00Z"}}}`
-	if err := os.WriteFile(filepath.Join(mayorDir, "rigs.json"), []byte(rigsJSON), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), []byte(rigsJSON), 0o644); err != nil {
 		t.Fatalf("write rigs.json: %v", err)
 	}
 
@@ -1166,15 +1166,15 @@ func TestHandleOptionsTypeRigsUsesConfigWithoutCommands(t *testing.T) {
 
 func TestHandleOptionsTypeRigsFindsConfigFromSubdir(t *testing.T) {
 	townRoot := t.TempDir()
-	mayorDir := filepath.Join(townRoot, "mayor")
-	if err := os.MkdirAll(mayorDir, 0o755); err != nil {
-		t.Fatalf("create mayor dir: %v", err)
+	overseerDir := filepath.Join(townRoot, "overseer")
+	if err := os.MkdirAll(overseerDir, 0o755); err != nil {
+		t.Fatalf("create overseer dir: %v", err)
 	}
 	rigsJSON := `{"version":1,"rigs":{"bd_symphony":{"git_url":"x","added_at":"2026-01-01T00:00:00Z"}}}`
-	if err := os.WriteFile(filepath.Join(mayorDir, "rigs.json"), []byte(rigsJSON), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), []byte(rigsJSON), 0o644); err != nil {
 		t.Fatalf("write rigs.json: %v", err)
 	}
-	subdir := filepath.Join(townRoot, "bd_symphony", "mayor", "rig")
+	subdir := filepath.Join(townRoot, "bd_symphony", "overseer", "rig")
 	if err := os.MkdirAll(subdir, 0o755); err != nil {
 		t.Fatalf("create subdir: %v", err)
 	}
@@ -1209,15 +1209,15 @@ func TestHandleOptionsTypeRigsFindsConfigFromSubdir(t *testing.T) {
 	}
 }
 
-func TestParseConvoyListJSON(t *testing.T) {
+func TestParseMinecartListJSON(t *testing.T) {
 	tests := []struct {
 		name string
 		json string
 		want []string
 	}{
 		{
-			name: "valid JSON with convoys",
-			json: `[{"id":"hq-cv-abc","title":"Deploy widgets","issue_type":"convoy"},{"id":"hq-cv-def","title":"Fix bugs","issue_type":"task","labels":["gt:convoy"]}]`,
+			name: "valid JSON with minecarts",
+			json: `[{"id":"hq-cv-abc","title":"Deploy widgets","issue_type":"minecart"},{"id":"hq-cv-def","title":"Fix bugs","issue_type":"task","labels":["gt:minecart"]}]`,
 			want: []string{"hq-cv-abc", "hq-cv-def"},
 		},
 		{
@@ -1237,27 +1237,27 @@ func TestParseConvoyListJSON(t *testing.T) {
 		},
 		{
 			name: "skips empty IDs",
-			json: `[{"id":"hq-cv-abc","issue_type":"convoy"},{"id":"","issue_type":"convoy"},{"id":"hq-cv-def","labels":["gt:convoy"]}]`,
+			json: `[{"id":"hq-cv-abc","issue_type":"minecart"},{"id":"","issue_type":"minecart"},{"id":"hq-cv-def","labels":["gt:minecart"]}]`,
 			want: []string{"hq-cv-abc", "hq-cv-def"},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := parseConvoyListJSON(tt.json)
+			got := parseMinecartListJSON(tt.json)
 			if tt.want == nil {
 				if got != nil {
-					t.Errorf("parseConvoyListJSON(%q) = %v, want nil", tt.json, got)
+					t.Errorf("parseMinecartListJSON(%q) = %v, want nil", tt.json, got)
 				}
 				return
 			}
 			if len(got) != len(tt.want) {
-				t.Errorf("parseConvoyListJSON(%q) = %v, want %v", tt.json, got, tt.want)
+				t.Errorf("parseMinecartListJSON(%q) = %v, want %v", tt.json, got, tt.want)
 				return
 			}
 			for i := range got {
 				if got[i] != tt.want[i] {
-					t.Errorf("parseConvoyListJSON(%q)[%d] = %q, want %q", tt.json, i, got[i], tt.want[i])
+					t.Errorf("parseMinecartListJSON(%q)[%d] = %q, want %q", tt.json, i, got[i], tt.want[i])
 				}
 			}
 		})
@@ -1269,7 +1269,7 @@ func TestParseConvoyListJSON(t *testing.T) {
 // each sleeping 0.1s, total time must be >= 0.25s (serialized), proving the
 // semaphore prevents all 3 from running simultaneously (~0.1s).
 //
-// Regression test for steveyegge/gastown#1230 item 5.
+// Regression test for steveyegge/excavation#1230 item 5.
 func TestRunGtCommandSemaphore(t *testing.T) {
 	// Create handler with a 1-slot semaphore — fully serialized execution.
 	h := &APIHandler{
@@ -1304,7 +1304,7 @@ func TestRunGtCommandSemaphore(t *testing.T) {
 // TestRunGtCommandSemaphoreContextCancel verifies that a cancelled context
 // returns immediately instead of blocking on a full semaphore.
 //
-// Regression test for steveyegge/gastown#1230 item 5.
+// Regression test for steveyegge/excavation#1230 item 5.
 func TestRunGtCommandSemaphoreContextCancel(t *testing.T) {
 	h := &APIHandler{
 		gtPath:            "sleep",
@@ -1396,12 +1396,12 @@ func TestHandleSessionPreviewPrefixValidation(t *testing.T) {
 		wantRejected  bool
 		wantErrSubstr string
 	}{
-		{"registered prefix nx", "nx-polecat-alpha", false, ""},
+		{"registered prefix nx", "nx-miner-alpha", false, ""},
 		{"registered prefix myrig", "myrig-crew-bob", false, ""},
-		{"legacy gt- prefix", "gt-polecat-test", false, ""},
+		{"legacy gt- prefix", "gt-miner-test", false, ""},
 		{"legacy bd- prefix", "bd-some-bead", false, ""},
 		{"hq- prefix", "hq-nonexistent-session", false, ""},
-		{"gthq- prefix", "gthq-deacon", false, ""},
+		{"gthq- prefix", "gthq-supervisor", false, ""},
 		{"unknown prefix rejected", "unknown-session-name", true, "must start with a known rig prefix"},
 		{"no prefix rejected", "justsomename", true, "must start with a known rig prefix"},
 		{"invalid characters rejected", "gt-bad_chars!", true, "invalid characters"},

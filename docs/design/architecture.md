@@ -1,33 +1,33 @@
-# Gas Town Architecture
+# Excavation Site Architecture
 
-Technical architecture for Gas Town multi-agent workspace management.
+Technical architecture for Excavation Site multi-agent workspace management.
 
 ## Two-Level Beads Architecture
 
-Gas Town uses a two-level beads architecture to separate organizational coordination
+Excavation Site uses a two-level beads architecture to separate organizational coordination
 from project implementation work.
 
 | Level | Location | Prefix | Purpose |
 |-------|----------|--------|---------|
-| **Town** | `~/gt/.beads/` | `hq-*` | Cross-rig coordination, Mayor mail, agent identity |
-| **Rig** | `<rig>/mayor/rig/.beads/` | project prefix | Implementation work, MRs, project issues |
+| **Town** | `~/gt/.beads/` | `hq-*` | Cross-rig coordination, Overseer mail, agent identity |
+| **Rig** | `<rig>/overseer/rig/.beads/` | project prefix | Implementation work, MRs, project issues |
 
 ### Town-Level Beads (`~/gt/.beads/`)
 
 Organizational chain for cross-rig coordination:
-- Mayor mail and messages
-- Convoy coordination (batch work across rigs)
+- Overseer mail and messages
+- Minecart coordination (batch work across rigs)
 - Strategic issues and decisions
-- **Town-level agent beads** (Mayor, Deacon)
+- **Town-level agent beads** (Overseer, Supervisor)
 - **Role definition beads** (global templates)
 
-### Rig-Level Beads (`<rig>/mayor/rig/.beads/`)
+### Rig-Level Beads (`<rig>/overseer/rig/.beads/`)
 
 Project chain for implementation work:
 - Bugs, features, tasks for the project
 - Merge requests and code reviews
 - Project-specific molecules
-- **Rig-level agent beads** (Witness, Refinery, Polecats)
+- **Rig-level agent beads** (Witness, Refinery, Miners)
 
 ## Agent Bead Storage
 
@@ -36,24 +36,24 @@ the agent's scope.
 
 | Agent Type | Scope | Bead Location | Bead ID Format |
 |------------|-------|---------------|----------------|
-| Mayor | Town | `~/gt/.beads/` | `hq-mayor` |
-| Deacon | Town | `~/gt/.beads/` | `hq-deacon` |
+| Overseer | Town | `~/gt/.beads/` | `hq-overseer` |
+| Supervisor | Town | `~/gt/.beads/` | `hq-supervisor` |
 | Boot | Town | `~/gt/.beads/` | `hq-boot` |
 | Dogs | Town | `~/gt/.beads/` | `hq-dog-<name>` |
 | Witness | Rig | `<rig>/.beads/` | `<prefix>-<rig>-witness` |
 | Refinery | Rig | `<rig>/.beads/` | `<prefix>-<rig>-refinery` |
-| Polecats | Rig | `<rig>/.beads/` | `<prefix>-<rig>-polecat-<name>` |
+| Miners | Rig | `<rig>/.beads/` | `<prefix>-<rig>-miner-<name>` |
 | Crew | Rig | `<rig>/.beads/` | `<prefix>-<rig>-crew-<name>` |
 
 ### Role Beads
 
 Role beads are global templates stored in town beads with `hq-` prefix:
-- `hq-mayor-role` - Mayor role definition
-- `hq-deacon-role` - Deacon role definition
+- `hq-overseer-role` - Overseer role definition
+- `hq-supervisor-role` - Supervisor role definition
 - `hq-boot-role` - Boot role definition
 - `hq-witness-role` - Witness role definition
 - `hq-refinery-role` - Refinery role definition
-- `hq-polecat-role` - Polecat role definition
+- `hq-miner-role` - Miner role definition
 - `hq-crew-role` - Crew role definition
 - `hq-dog-role` - Dog role definition
 
@@ -65,18 +65,18 @@ Each agent bead references its role bead via the `role_bead` field.
 
 | Agent | Role | Persistence |
 |-------|------|-------------|
-| **Mayor** | Global coordinator, handles cross-rig communication and escalations | Persistent |
-| **Deacon** | Daemon beacon — receives heartbeats, runs plugins and monitoring | Persistent |
-| **Boot** | Deacon watchdog — spawned by daemon for triage decisions when Deacon is down | Ephemeral |
+| **Overseer** | Global coordinator, handles cross-rig communication and escalations | Persistent |
+| **Supervisor** | Daemon beacon — receives heartbeats, runs plugins and monitoring | Persistent |
+| **Boot** | Supervisor watchdog — spawned by daemon for triage decisions when Supervisor is down | Ephemeral |
 | **Dogs** | Long-running workers for cross-rig batch work | Variable |
 
 ### Rig-Level Agents (Per-Project)
 
 | Agent | Role | Persistence |
 |-------|------|-------------|
-| **Witness** | Monitors polecat health, handles nudging and cleanup | Persistent |
+| **Witness** | Monitors miner health, handles nudging and cleanup | Persistent |
 | **Refinery** | Processes merge queue, runs verification | Persistent |
-| **Polecats** | Workers with persistent identity, assigned to specific issues | Persistent identity, ephemeral sessions |
+| **Miners** | Workers with persistent identity, assigned to specific issues | Persistent identity, ephemeral sessions |
 | **Crew** | Human workspaces — full git clones, user-managed lifecycle | Persistent |
 
 ## Directory Structure
@@ -88,16 +88,16 @@ Each agent bead references its role bead via the `role_bead` field.
 │   └── routes.jsonl            Prefix → rig routing table
 ├── .dolt-data/                 Centralized Dolt data directory
 │   ├── hq/                     Town beads database (hq-* prefix)
-│   ├── gastown/                Gastown rig database (gt-* prefix)
+│   ├── excavation/                Excavation rig database (gt-* prefix)
 │   ├── beads/                  Beads rig database (bd-* prefix)
 │   └── <other rigs>/           Per-rig databases
 ├── daemon/                     Daemon runtime state
 │   ├── dolt-state.json         Dolt server state (pid, port, databases)
 │   ├── dolt-server.log         Server log
 │   └── dolt.pid                Server PID file
-├── deacon/                     Deacon workspace
+├── supervisor/                     Supervisor workspace
 │   └── dogs/<name>/            Dog worker directories
-├── mayor/                      Mayor agent home
+├── overseer/                      Overseer agent home
 │   ├── town.json               Town configuration
 │   ├── rigs.json               Rig registry
 │   ├── daemon.json             Daemon patrol config
@@ -117,15 +117,15 @@ Each agent bead references its role bead via the `role_bead` field.
     │   └── <role>.md
     ├── formula-overlays/       Rig-level formula overlays (full precedence)
     │   └── <formula>.toml
-    ├── mayor/rig/              Canonical clone (beads live here, NOT an agent)
+    ├── overseer/rig/              Canonical clone (beads live here, NOT an agent)
     │   └── .beads/             Rig-level beads (redirected to Dolt)
     ├── refinery/               Refinery agent home
-    │   └── rig/                Worktree from mayor/rig
+    │   └── rig/                Worktree from overseer/rig
     ├── witness/                Witness agent home (no clone)
     ├── crew/                   Crew parent
     │   └── <name>/             Human workspaces (full clones)
-    └── polecats/               Polecats parent
-        └── <name>/<rigname>/   Worker worktrees from mayor/rig
+    └── miners/               Miners parent
+        └── <name>/<rigname>/   Worker worktrees from overseer/rig
 ```
 
 **Note**: No per-directory CLAUDE.md or AGENTS.md is created. Only `~/gt/CLAUDE.md`
@@ -134,16 +134,16 @@ via SessionStart hook.
 
 ### Worktree Architecture
 
-Polecats and refinery are git worktrees, not full clones. This enables fast spawning
-and shared object storage. The worktree base is `mayor/rig`:
+Miners and refinery are git worktrees, not full clones. This enables fast spawning
+and shared object storage. The worktree base is `overseer/rig`:
 
 ```go
-// From polecat/manager.go - worktrees are based on mayor/rig
-git worktree add -b polecat/<name>-<timestamp> polecats/<name>
+// From miner/manager.go - worktrees are based on overseer/rig
+git worktree add -b miner/<name>-<timestamp> miners/<name>
 ```
 
 Crew workspaces (`crew/<name>/`) are full git clones for human developers who need
-independent repos. Polecat sessions are ephemeral and benefit from worktree efficiency.
+independent repos. Miner sessions are ephemeral and benefit from worktree efficiency.
 
 ## Storage Layer: Dolt SQL Server
 
@@ -160,7 +160,7 @@ error pointing to `gt dolt start`.
            │ MySQL protocol
     ┌──────┼──────┬──────────┐
     │      │      │          │
-  USE hq  USE gastown  USE beads  ...
+  USE hq  USE excavation  USE beads  ...
 ```
 
 Each rig database is a subdirectory under `.dolt-data/`. The daemon monitors
@@ -178,26 +178,26 @@ The `routes.jsonl` file maps issue ID prefixes to rig locations (relative to tow
 
 ```jsonl
 {"prefix":"hq-","path":"."}
-{"prefix":"gt-","path":"gastown/mayor/rig"}
-{"prefix":"bd-","path":"beads/mayor/rig"}
+{"prefix":"gt-","path":"excavation/overseer/rig"}
+{"prefix":"bd-","path":"beads/overseer/rig"}
 ```
 
-Routes point to `mayor/rig` because that's where the canonical `.beads/` lives.
+Routes point to `overseer/rig` because that's where the canonical `.beads/` lives.
 This enables transparent cross-rig beads operations:
 
 ```bash
-bd show hq-mayor    # Routes to town beads (~/.gt/.beads)
-bd show gt-xyz      # Routes to gastown/mayor/rig/.beads
+bd show hq-overseer    # Routes to town beads (~/.gt/.beads)
+bd show gt-xyz      # Routes to excavation/overseer/rig/.beads
 ```
 
 ## Beads Redirects
 
-Worktrees (polecats, refinery, crew) don't have their own beads databases. Instead,
+Worktrees (miners, refinery, crew) don't have their own beads databases. Instead,
 they use a `.beads/redirect` file that points to the canonical beads location:
 
 ```
-polecats/alpha/.beads/redirect → ../../mayor/rig/.beads
-refinery/rig/.beads/redirect   → ../../mayor/rig/.beads
+miners/alpha/.beads/redirect → ../../overseer/rig/.beads
+refinery/rig/.beads/redirect   → ../../overseer/rig/.beads
 ```
 
 `ResolveBeadsDir()` follows redirect chains (max depth 3) with circular detection.
@@ -230,21 +230,21 @@ If FAIL:      Binary bisect → test B (midpoint)
 |-------|------|------|--------|
 | 1: GatesParallel | gt-8b2i | Run test + lint concurrently per MR | In progress |
 | 2: Batch-then-bisect | gt-i2vm | Bors-style batching with binary bisect | Blocked by Phase 1 |
-| 3: Pre-verification | gt-lu84 | Polecats run tests before MR submission | Blocked by Phase 2 |
+| 3: Pre-verification | gt-lu84 | Miners run tests before MR submission | Blocked by Phase 2 |
 
 Gates (test command, lint, etc.) are pluggable. The batching strategy is core.
 
 Design doc: produced by gt-yxx0 review.
 
-## Polecat Lifecycle: Self-Managed Completion
+## Miner Lifecycle: Self-Managed Completion
 
-Polecats manage their own lifecycle end-to-end. The Witness observes but does NOT
+Miners manage their own lifecycle end-to-end. The Witness observes but does NOT
 gate completion. This prevents the Witness from becoming a bottleneck.
 
-### Polecat Completion Flow
+### Miner Completion Flow
 
 ```
-Polecat finishes work
+Miner finishes work
   → Push branch to remote
   → Submit MR (bd update --mr-ready)
   → Update bead status
@@ -252,8 +252,8 @@ Polecat finishes work
   → Go idle (available for next assignment)
 ```
 
-The Witness monitors for stuck/zombie polecats (no activity for extended period)
-and nudges or escalates. It does NOT process completion — that's the polecat's job.
+The Witness monitors for stuck/zombie miners (no activity for extended period)
+and nudges or escalates. It does NOT process completion — that's the miner's job.
 
 Design bead: gt-0wkk.
 
@@ -276,16 +276,16 @@ See [dolt-storage.md](dolt-storage.md) for full details.
 
 ## Deployment Artifacts
 
-Gas Town and Beads are distributed through multiple channels. Tag pushes (`v*`)
+Excavation Site and Beads are distributed through multiple channels. Tag pushes (`v*`)
 trigger GitHub Actions release workflows that build and publish everything.
 
-### Gas Town (`gt`)
+### Excavation Site (`gt`)
 
 | Channel | Artifact | Trigger |
 |---------|----------|---------|
 | **GitHub Releases** | Platform binaries (darwin/linux/windows, amd64/arm64) + checksums | GoReleaser on tag push |
-| **Homebrew** | `brew install steveyegge/gastown/gt` — formula auto-updated on release | `update-homebrew` job pushes to `steveyegge/homebrew-gastown` |
-| **npm** | `npx @gastown/gt` — wrapper that downloads the correct binary | OIDC trusted publishing (no token) |
+| **Homebrew** | `brew install steveyegge/excavation/gt` — formula auto-updated on release | `update-homebrew` job pushes to `steveyegge/homebrew-excavation` |
+| **npm** | `npx @excavation/gt` — wrapper that downloads the correct binary | OIDC trusted publishing (no token) |
 | **Local build** | `go build -o $(go env GOPATH)/bin/gt ./cmd/gt` | Manual |
 
 ### Beads (`bd`)

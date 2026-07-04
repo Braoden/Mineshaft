@@ -12,10 +12,10 @@ import (
 	"time"
 
 	"github.com/gofrs/flock"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
-// Event represents an activity event in Gas Town.
+// Event represents an activity event in Excavation Site.
 type Event struct {
 	Timestamp  string                 `json:"ts"`
 	Source     string                 `json:"source"`
@@ -56,8 +56,8 @@ const (
 
 	// Witness patrol events
 	TypePatrolStarted   = "patrol_started"
-	TypePolecatChecked  = "polecat_checked"
-	TypePolecatNudged   = "polecat_nudged"
+	TypeMinerChecked  = "miner_checked"
+	TypeMinerNudged   = "miner_nudged"
 	TypeEscalationSent   = "escalation_sent"
 	TypeEscalationAcked  = "escalation_acked"
 	TypeEscalationClosed = "escalation_closed"
@@ -111,7 +111,7 @@ func write(event Event) error {
 	// Find town root
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil || townRoot == "" {
-		// Silently ignore - we're not in a Gas Town workspace
+		// Silently ignore - we're not in a Excavation Site workspace
 		return nil
 	}
 
@@ -193,10 +193,10 @@ func MailPayload(to, subject string) map[string]interface{} {
 }
 
 // SpawnPayload creates a payload for spawn events.
-func SpawnPayload(rig, polecat string) map[string]interface{} {
+func SpawnPayload(rig, miner string) map[string]interface{} {
 	return map[string]interface{}{
 		"rig":     rig,
-		"polecat": polecat,
+		"miner": miner,
 	}
 }
 
@@ -210,7 +210,7 @@ func BootPayload(rig string, agents []string) map[string]interface{} {
 
 // MergePayload creates a payload for merge queue events.
 // mrID: merge request ID
-// worker: polecat name that submitted the work
+// worker: miner name that submitted the work
 // branch: source branch being merged
 // reason: failure reason (for merge_failed/merge_skipped events)
 func MergePayload(mrID, worker, branch, reason string) map[string]interface{} {
@@ -226,10 +226,10 @@ func MergePayload(mrID, worker, branch, reason string) map[string]interface{} {
 }
 
 // PatrolPayload creates a payload for patrol start/complete events.
-func PatrolPayload(rig string, polecatCount int, message string) map[string]interface{} {
+func PatrolPayload(rig string, minerCount int, message string) map[string]interface{} {
 	p := map[string]interface{}{
 		"rig":           rig,
-		"polecat_count": polecatCount,
+		"miner_count": minerCount,
 	}
 	if message != "" {
 		p["message"] = message
@@ -237,11 +237,11 @@ func PatrolPayload(rig string, polecatCount int, message string) map[string]inte
 	return p
 }
 
-// PolecatCheckPayload creates a payload for polecat check events.
-func PolecatCheckPayload(rig, polecat, status, issue string) map[string]interface{} {
+// MinerCheckPayload creates a payload for miner check events.
+func MinerCheckPayload(rig, miner, status, issue string) map[string]interface{} {
 	p := map[string]interface{}{
 		"rig":     rig,
-		"polecat": polecat,
+		"miner": miner,
 		"status":  status,
 	}
 	if issue != "" {
@@ -294,7 +294,7 @@ func HaltPayload(services []string) map[string]interface{} {
 
 // SessionDeathPayload creates a payload for session death events.
 // session: tmux session name that died
-// agent: Gas Town agent identity (e.g., "gastown/polecats/Toast")
+// agent: Excavation Site agent identity (e.g., "excavation/miners/Toast")
 // reason: why the session was killed (e.g., "zombie cleanup", "user request", "doctor fix")
 // caller: what initiated the kill (e.g., "daemon", "doctor", "gt down")
 func SessionDeathPayload(session, agent, reason, caller string) map[string]interface{} {
@@ -325,7 +325,7 @@ func MassDeathPayload(count int, window string, sessions []string, possibleCause
 
 // SessionPayload creates a payload for session start/end events.
 // sessionID: Claude Code session UUID
-// role: Gas Town role (e.g., "gastown/crew/joe", "deacon")
+// role: Excavation Site role (e.g., "excavation/crew/joe", "supervisor")
 // topic: What the session is working on
 // cwd: Working directory
 func SessionPayload(sessionID, role, topic, cwd string) map[string]interface{} {
@@ -352,11 +352,11 @@ func SchedulerEnqueuePayload(beadID, rig string) map[string]interface{} {
 }
 
 // SchedulerDispatchPayload creates a payload for scheduler dispatch events.
-func SchedulerDispatchPayload(beadID, rig, polecat string) map[string]interface{} {
+func SchedulerDispatchPayload(beadID, rig, miner string) map[string]interface{} {
 	return map[string]interface{}{
 		"bead":    beadID,
 		"rig":     rig,
-		"polecat": polecat,
+		"miner": miner,
 	}
 }
 

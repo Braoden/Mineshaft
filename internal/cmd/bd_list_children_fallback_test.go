@@ -30,7 +30,7 @@ func TestBdListChildren_FallsBackToDepsTable(t *testing.T) {
 		t.Fatalf("mkdir rig: %v", err)
 	}
 
-	chdirConvoyTest(t, townRoot)
+	chdirMinecartTest(t, townRoot)
 
 	// bd stub:
 	//   list --parent=ha-epic   → []   (the buggy/empty primary path)
@@ -95,7 +95,7 @@ func TestBdListChildren_PrimaryPathStillUsed(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, "happyhour", ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir rig: %v", err)
 	}
-	chdirConvoyTest(t, townRoot)
+	chdirMinecartTest(t, townRoot)
 
 	scriptBody := `
 case "$*" in

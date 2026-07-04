@@ -9,11 +9,11 @@ import (
 
 func TestDoltConfigCheck_DetectsMissingSharedKeys(t *testing.T) {
 	townRoot := t.TempDir()
-	beadsDir := filepath.Join(townRoot, "gastown", "mayor", "rig", ".beads")
+	beadsDir := filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads")
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(beadsDir, "metadata.json"), []byte(`{"dolt_mode":"server","dolt_server_host":"127.0.0.1","dolt_server_port":3307,"dolt_database":"gastown"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(beadsDir, "metadata.json"), []byte(`{"dolt_mode":"server","dolt_server_host":"127.0.0.1","dolt_server_port":3307,"dolt_database":"excavation"}`), 0644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(beadsDir, "config.yaml"), []byte("prefix:\nissue-prefix:\ndolt.idle-timeout: \"0\"\n"), 0644); err != nil {
@@ -30,26 +30,26 @@ func TestDoltConfigCheck_DetectsMissingSharedKeys(t *testing.T) {
 	}
 }
 
-func TestDoltConfigCheck_DetectsPolecatRedirectConfig(t *testing.T) {
+func TestDoltConfigCheck_DetectsMinerRedirectConfig(t *testing.T) {
 	townRoot := t.TempDir()
-	targetBeads := filepath.Join(townRoot, "gastown", "mayor", "rig", ".beads")
-	polecatBeads := filepath.Join(townRoot, "gastown", "polecats", "guzzle", "gastown", ".beads")
+	targetBeads := filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads")
+	minerBeads := filepath.Join(townRoot, "excavation", "miners", "guzzle", "excavation", ".beads")
 	if err := os.MkdirAll(targetBeads, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.MkdirAll(polecatBeads, 0755); err != nil {
+	if err := os.MkdirAll(minerBeads, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(targetBeads, "metadata.json"), []byte(`{"dolt_mode":"server","dolt_server_host":"127.0.0.1","dolt_server_port":3307,"dolt_database":"gastown"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(targetBeads, "metadata.json"), []byte(`{"dolt_mode":"server","dolt_server_host":"127.0.0.1","dolt_server_port":3307,"dolt_database":"excavation"}`), 0644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(targetBeads, "config.yaml"), []byte("storage.backend: dolt\ndolt.server: \"127.0.0.1\"\ndolt.port: 3307\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(polecatBeads, "redirect"), []byte("../../../mayor/rig/.beads\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(minerBeads, "redirect"), []byte("../../../overseer/rig/.beads\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(polecatBeads, "config.yaml"), []byte("prefix:\nissue-prefix:\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(minerBeads, "config.yaml"), []byte("prefix:\nissue-prefix:\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -58,8 +58,8 @@ func TestDoltConfigCheck_DetectsPolecatRedirectConfig(t *testing.T) {
 	if result.Status != StatusError {
 		t.Fatalf("Status = %v, want %v", result.Status, StatusError)
 	}
-	if len(check.targets) != 1 || check.targets[0].beadsDir != polecatBeads {
-		t.Fatalf("targets = %#v, want only polecat beads dir", check.targets)
+	if len(check.targets) != 1 || check.targets[0].beadsDir != minerBeads {
+		t.Fatalf("targets = %#v, want only miner beads dir", check.targets)
 	}
 }
 

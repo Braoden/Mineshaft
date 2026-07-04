@@ -5,8 +5,8 @@ import (
 	"sort"
 
 	"github.com/spf13/cobra"
-	sessionpkg "github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/tmux"
+	sessionpkg "github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 // cycleSession is the --session flag for cycle next/prev commands.
@@ -37,9 +37,9 @@ var cycleCmd = &cobra.Command{
 	Long: `Cycle between related tmux sessions based on the current session type.
 
 Session groups:
-- Town sessions: Mayor ↔ Deacon
+- Town sessions: Overseer ↔ Supervisor
 - Crew sessions: All crew members in the same rig
-- Rig ops sessions: Witness + Refinery + Polecats in the same rig
+- Rig ops sessions: Witness + Refinery + Miners in the same rig
 
 The appropriate cycling is detected automatically from the session name.
 
@@ -54,12 +54,12 @@ var cycleNextCmd = &cobra.Command{
 	Long: `Switch to the next session in the current group.
 
 This command is typically invoked via the C-b n keybinding. It automatically
-detects whether you're in a town-level session (Mayor/Deacon) or a crew session
+detects whether you're in a town-level session (Overseer/Supervisor) or a crew session
 and cycles within the appropriate group.
 
 Examples:
   gt cycle next
-  gt cycle next --session gt-gastown-witness  # Explicit session context`,
+  gt cycle next --session gt-excavation-witness  # Explicit session context`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cycleToSession(1, cycleSession, cycleClient)
 	},
@@ -71,12 +71,12 @@ var cyclePrevCmd = &cobra.Command{
 	Long: `Switch to the previous session in the current group.
 
 This command is typically invoked via the C-b p keybinding. It automatically
-detects whether you're in a town-level session (Mayor/Deacon) or a crew session
+detects whether you're in a town-level session (Overseer/Supervisor) or a crew session
 and cycles within the appropriate group.
 
 Examples:
   gt cycle prev
-  gt cycle prev --session gt-gastown-witness  # Explicit session context`,
+  gt cycle prev --session gt-excavation-witness  # Explicit session context`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cycleToSession(-1, cycleSession, cycleClient)
 	},
@@ -123,7 +123,7 @@ func cycleToSession(direction int, sessionOverride, clientOverride string) error
 		return cycleCrewSession(direction, session)
 	}
 
-	// Check if it's a rig ops session (witness, refinery, or polecat).
+	// Check if it's a rig ops session (witness, refinery, or miner).
 	// These all share one cycle group per rig.
 	if rig := parseRigOpsSession(session); rig != "" {
 		return cycleRigOpsSession(direction, session, rig)
@@ -134,14 +134,14 @@ func cycleToSession(direction int, sessionOverride, clientOverride string) error
 }
 
 // parseRigOpsSession extracts the rig name if this is a witness, refinery, or
-// polecat session. Returns empty string if not a rig ops session.
+// miner session. Returns empty string if not a rig ops session.
 func parseRigOpsSession(sess string) string {
 	identity, err := sessionpkg.ParseSessionName(sess)
 	if err != nil {
 		return ""
 	}
 	switch identity.Role {
-	case sessionpkg.RoleWitness, sessionpkg.RoleRefinery, sessionpkg.RolePolecat:
+	case sessionpkg.RoleWitness, sessionpkg.RoleRefinery, sessionpkg.RoleMiner:
 		return identity.Rig
 	}
 	return ""
@@ -197,7 +197,7 @@ func cycleInGroup(direction int, currentSession string, sessions []string) error
 	return tmux.BuildCommand(args...).Run()
 }
 
-// cycleRigOpsSession cycles between witness, refinery, and polecat sessions for a rig.
+// cycleRigOpsSession cycles between witness, refinery, and miner sessions for a rig.
 func cycleRigOpsSession(direction int, currentSession, rig string) error {
 	allSessions, err := listTmuxSessions()
 	if err != nil {

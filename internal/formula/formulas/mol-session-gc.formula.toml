@@ -2,7 +2,7 @@ description = """
 Clean stale sessions and garbage collect.
 
 Dogs work through molecules (poured from this formula) to clean up dead sessions, orphaned processes, and
-other system cruft. This is the garbage collector for Gas Town's runtime:
+other system cruft. This is the garbage collector for Excavation Site's runtime:
 - Dead tmux sessions (no Claude process)
 - Orphaned Claude processes (no tmux parent)
 - Stale wisps past retention
@@ -64,7 +64,7 @@ gt hook               # Shows mode in hook_bead
 
 **Aggressive additions:**
 - Wisps > 1 hour old
-- Branches with no matching polecat
+- Branches with no matching miner
 - State files > 7 days old
 
 **Exit criteria:** GC mode determined."""
@@ -90,9 +90,9 @@ gt doctor -v
 **3. Additional scans (for aggressive mode):**
 ```bash
 # Old branches
-git branch --list 'polecat/*' | while read branch; do
+git branch --list 'miner/*' | while read branch; do
   last_commit=$(git log -1 --format=%ct "$branch")
-  # If > 7 days old and no matching polecat, candidate for cleanup
+  # If > 7 days old and no matching miner, candidate for cleanup
 done
 
 # Old runtime state files (stored under <rig>/.runtime/ as *.json).
@@ -136,7 +136,7 @@ Record each item actually removed for the report.
 
 **Safety checks:**
 - Never delete active sessions (tmux list-clients)
-- Never delete branches with uncommitted polecat work
+- Never delete branches with uncommitted miner work
 - Never delete wisps < 1 hour old
 
 **Exit criteria:** Garbage collected."""
@@ -213,9 +213,9 @@ None
 ~{{bytes_freed}} bytes
 ```
 
-**2. Send to Deacon:**
+**2. Send to Supervisor:**
 ```bash
-gt mail send deacon/ -s "GC complete: {{total_cleaned}} items" \
+gt mail send supervisor/ -s "GC complete: {{total_cleaned}} items" \
   -m "{{report}}"
 ```
 
@@ -228,9 +228,9 @@ needs = ["report-gc"]
 description = """
 Signal work complete and return to available pool.
 
-**1. Signal completion to Deacon:**
+**1. Signal completion to Supervisor:**
 ```bash
-gt mail send deacon/ -s "DOG_DONE $(hostname)" -m "Task: session-gc
+gt mail send supervisor/ -s "DOG_DONE $(hostname)" -m "Task: session-gc
 Mode: {{mode}}
 Items cleaned: {{total_cleaned}}
 Space recovered: {{bytes_freed}}
@@ -242,7 +242,7 @@ Ready for next assignment."
 **2. Return to kennel:**
 Dog returns to available state in the pool.
 
-**Exit criteria:** Deacon notified, dog ready for next work."""
+**Exit criteria:** Supervisor notified, dog ready for next work."""
 
 [vars]
 [vars.wisp_type]

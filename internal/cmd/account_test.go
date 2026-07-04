@@ -9,19 +9,19 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/config"
 )
 
-// setupTestTownForAccount creates a minimal Gas Town workspace with accounts.
+// setupTestTownForAccount creates a minimal Excavation Site workspace with accounts.
 func setupTestTownForAccount(t *testing.T) (townRoot string, accountsDir string) {
 	t.Helper()
 
 	townRoot = t.TempDir()
 
-	// Create mayor directory with required files
-	mayorDir := filepath.Join(townRoot, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+	// Create overseer directory with required files
+	overseerDir := filepath.Join(townRoot, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
+		t.Fatalf("mkdir overseer: %v", err)
 	}
 
 	// Create town.json
@@ -32,7 +32,7 @@ func setupTestTownForAccount(t *testing.T) (townRoot string, accountsDir string)
 		PublicName: "Test Town",
 		CreatedAt:  time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
 	}
-	townConfigPath := filepath.Join(mayorDir, "town.json")
+	townConfigPath := filepath.Join(overseerDir, "town.json")
 	if err := config.SaveTownConfig(townConfigPath, townConfig); err != nil {
 		t.Fatalf("save town.json: %v", err)
 	}
@@ -42,7 +42,7 @@ func setupTestTownForAccount(t *testing.T) (townRoot string, accountsDir string)
 		Version: 1,
 		Rigs:    make(map[string]config.RigEntry),
 	}
-	rigsPath := filepath.Join(mayorDir, "rigs.json")
+	rigsPath := filepath.Join(overseerDir, "rigs.json")
 	if err := config.SaveRigsConfig(rigsPath, rigsConfig); err != nil {
 		t.Fatalf("save rigs.json: %v", err)
 	}
@@ -98,7 +98,7 @@ func TestAccountSwitch(t *testing.T) {
 		}
 
 		// Create accounts.json with two accounts
-		accountsPath := filepath.Join(townRoot, "mayor", "accounts.json")
+		accountsPath := filepath.Join(townRoot, "overseer", "accounts.json")
 		accountsCfg := config.NewAccountsConfig()
 		accountsCfg.Accounts["work"] = config.Account{
 			Email:     "steve@work.com",
@@ -166,7 +166,7 @@ func TestAccountSwitch(t *testing.T) {
 			t.Fatalf("mkdir work config: %v", err)
 		}
 
-		accountsPath := filepath.Join(townRoot, "mayor", "accounts.json")
+		accountsPath := filepath.Join(townRoot, "overseer", "accounts.json")
 		accountsCfg := config.NewAccountsConfig()
 		accountsCfg.Accounts["work"] = config.Account{
 			Email:     "steve@work.com",
@@ -217,7 +217,7 @@ func TestAccountSwitch(t *testing.T) {
 			t.Fatalf("mkdir work config: %v", err)
 		}
 
-		accountsPath := filepath.Join(townRoot, "mayor", "accounts.json")
+		accountsPath := filepath.Join(townRoot, "overseer", "accounts.json")
 		accountsCfg := config.NewAccountsConfig()
 		accountsCfg.Accounts["work"] = config.Account{
 			Email:     "steve@work.com",
@@ -258,7 +258,7 @@ func TestAccountSwitch(t *testing.T) {
 			t.Fatalf("mkdir personal config: %v", err)
 		}
 
-		accountsPath := filepath.Join(townRoot, "mayor", "accounts.json")
+		accountsPath := filepath.Join(townRoot, "overseer", "accounts.json")
 		accountsCfg := config.NewAccountsConfig()
 		accountsCfg.Accounts["work"] = config.Account{
 			Email:     "steve@work.com",

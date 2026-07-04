@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/dog"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/dog"
 )
 
 func runSlingFormulaSourceForTest(t *testing.T) string {
@@ -94,10 +94,10 @@ func TestCleanupDelayedDogFormulaFailureClearsWorkAfterWispCleanupError(t *testi
 
 func TestRunSlingFormulaSerializesWholeDogPool(t *testing.T) {
 	body := runSlingFormulaSourceForTest(t)
-	if !strings.Contains(body, `tryAcquireSlingAssigneeLock(townRoot, "deacon/dogs")`) {
+	if !strings.Contains(body, `tryAcquireSlingAssigneeLock(townRoot, "supervisor/dogs")`) {
 		t.Fatal("dog-pool formula dispatch must use one pool-wide lock, not a per-formula lock")
 	}
-	if strings.Contains(body, `tryAcquireSlingAssigneeLock(townRoot, "deacon/dogs/"+formulaName)`) {
+	if strings.Contains(body, `tryAcquireSlingAssigneeLock(townRoot, "supervisor/dogs/"+formulaName)`) {
 		t.Fatal("dog-pool formula dispatch still uses per-formula locking")
 	}
 }

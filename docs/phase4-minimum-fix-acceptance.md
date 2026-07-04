@@ -4,7 +4,7 @@ This document freezes the final verification commands and a ready-to-paste PR su
 
 ## Fixed Verification Commands
 
-Run from `gastown-main`:
+Run from `excavation-main`:
 
 ```bash
 # 1) Full container acceptance
@@ -24,7 +24,7 @@ go test ./internal/cmd -tags=integration -run TestRoleHomeCwdDetection\|TestRole
 ### Summary
 
 - Fix scheduler integration JSON pollution by keeping test helper success path stdout-only and surfacing stderr only on failures.
-- Make Dolt metadata writes idempotent to keep mayor worktrees clean (`.beads/metadata.json` no-op when content is unchanged).
+- Make Dolt metadata writes idempotent to keep overseer worktrees clean (`.beads/metadata.json` no-op when content is unchanged).
 - Harden e2e container reliability with pinned toolchain versions (`bd` and `dolt`), retry loops, and docker context optimization.
 - Stabilize install/role integration behavior in noisy environments (formula provisioning resilience, role command pre-run noise suppression, and tolerant online smoke checks where transient Dolt startup races occur).
 

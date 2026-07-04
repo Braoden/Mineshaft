@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/telemetry"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/telemetry"
 )
 
 // injectWorkContextTest is a helper that calls injectWorkContext with OTel
@@ -27,7 +27,7 @@ func TestInjectWorkContext_NoBeadClearsVars(t *testing.T) {
 	t.Setenv("GT_WORK_BEAD", "old-bead")
 	t.Setenv("GT_WORK_MOL", "old-mol")
 
-	ctx := RoleContext{Rig: "gastown"}
+	ctx := RoleContext{Rig: "excavation"}
 	injectWorkContext(ctx, nil)
 
 	if got := os.Getenv("GT_WORK_RIG"); got != "" {
@@ -44,12 +44,12 @@ func TestInjectWorkContext_NoBeadClearsVars(t *testing.T) {
 func TestInjectWorkContext_BeadOnly(t *testing.T) {
 	setupWorkContextTest(t)
 
-	ctx := RoleContext{Rig: "gastown"}
+	ctx := RoleContext{Rig: "excavation"}
 	bead := &beads.Issue{ID: "sg-05iq", Description: ""}
 	injectWorkContext(ctx, bead)
 
-	if got := os.Getenv("GT_WORK_RIG"); got != "gastown" {
-		t.Errorf("GT_WORK_RIG = %q, want %q", got, "gastown")
+	if got := os.Getenv("GT_WORK_RIG"); got != "excavation" {
+		t.Errorf("GT_WORK_RIG = %q, want %q", got, "excavation")
 	}
 	if got := os.Getenv("GT_WORK_BEAD"); got != "sg-05iq" {
 		t.Errorf("GT_WORK_BEAD = %q, want %q", got, "sg-05iq")
@@ -62,7 +62,7 @@ func TestInjectWorkContext_BeadOnly(t *testing.T) {
 func TestInjectWorkContext_BeadWithMolecule(t *testing.T) {
 	setupWorkContextTest(t)
 
-	ctx := RoleContext{Rig: "gastown"}
+	ctx := RoleContext{Rig: "excavation"}
 	// Build a bead description that encodes an AttachedMolecule.
 	desc := beads.FormatAttachmentFields(&beads.AttachmentFields{
 		AttachedMolecule: "mol-abc123",
@@ -78,16 +78,16 @@ func TestInjectWorkContext_BeadWithMolecule(t *testing.T) {
 	}
 }
 
-func TestInjectWorkContext_GenericPolecat_EmptyRig(t *testing.T) {
+func TestInjectWorkContext_GenericMiner_EmptyRig(t *testing.T) {
 	setupWorkContextTest(t)
 
-	// Generic polecats have no fixed rig (ctx.Rig is empty).
+	// Generic miners have no fixed rig (ctx.Rig is empty).
 	ctx := RoleContext{Rig: ""}
 	bead := &beads.Issue{ID: "sg-xyzw"}
 	injectWorkContext(ctx, bead)
 
 	if got := os.Getenv("GT_WORK_RIG"); got != "" {
-		t.Errorf("GT_WORK_RIG = %q, want empty for generic polecat", got)
+		t.Errorf("GT_WORK_RIG = %q, want empty for generic miner", got)
 	}
 	if got := os.Getenv("GT_WORK_BEAD"); got != "sg-xyzw" {
 		t.Errorf("GT_WORK_BEAD = %q, want %q", got, "sg-xyzw")
@@ -102,7 +102,7 @@ func TestInjectWorkContext_NoopWhenOTelDisabled(t *testing.T) {
 	t.Setenv("TMUX", "")
 	primeDryRun = false
 
-	ctx := RoleContext{Rig: "gastown"}
+	ctx := RoleContext{Rig: "excavation"}
 	bead := &beads.Issue{ID: "sg-05iq"}
 	injectWorkContext(ctx, bead)
 
@@ -117,7 +117,7 @@ func TestInjectWorkContext_NoopInDryRun(t *testing.T) {
 	primeDryRun = true
 	t.Cleanup(func() { primeDryRun = false })
 
-	ctx := RoleContext{Rig: "gastown"}
+	ctx := RoleContext{Rig: "excavation"}
 	bead := &beads.Issue{ID: "sg-05iq"}
 	injectWorkContext(ctx, bead)
 

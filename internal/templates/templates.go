@@ -13,7 +13,7 @@ import (
 	"sync"
 	"text/template"
 
-	"github.com/steveyegge/gastown/internal/templates/commands"
+	"github.com/steveyegge/excavation/internal/templates/commands"
 )
 
 var (
@@ -21,7 +21,7 @@ var (
 	cmdNameOnce sync.Once
 )
 
-// CmdName returns the Gas Town CLI command name.
+// CmdName returns the Excavation Site CLI command name.
 // Defaults to "gt", but can be overridden with GT_COMMAND env var.
 // This allows coexistence with other tools that use "gt" (e.g., Graphite).
 func CmdName() string {
@@ -45,8 +45,8 @@ var templateFS embed.FS
 //go:embed launchd/*.plist systemd/*.service
 var supervisorFS embed.FS
 
-//go:embed polecat-CLAUDE.md
-var polecatCLAUDEmd string
+//go:embed miner-CLAUDE.md
+var minerCLAUDEmd string
 
 // Templates manages role and message templates.
 type Templates struct {
@@ -56,19 +56,19 @@ type Templates struct {
 
 // RoleData contains information for rendering role contexts.
 type RoleData struct {
-	Role           string   // mayor, witness, refinery, polecat, crew, deacon
+	Role           string   // overseer, witness, refinery, miner, crew, supervisor
 	RigName        string   // e.g., "greenplace"
 	TownRoot       string   // e.g., "/Users/steve/ai"
 	TownName       string   // e.g., "ai" - the town identifier for session names
 	WorkDir        string   // current working directory
 	DefaultBranch  string   // default branch for merges (e.g., "main", "develop")
-	Polecat        string   // polecat name (for polecat role)
-	Polecats       []string // list of polecats (for witness role)
+	Miner        string   // miner name (for miner role)
+	Miners       []string // list of miners (for witness role)
 	DogName        string   // dog name (for dog role)
 	BeadsDir       string   // BEADS_DIR path
 	IssuePrefix    string   // beads issue prefix
-	MayorSession   string   // e.g., "gt-ai-mayor" - dynamic mayor session name
-	DeaconSession  string   // e.g., "gt-ai-deacon" - dynamic deacon session name
+	OverseerSession   string   // e.g., "gt-ai-overseer" - dynamic overseer session name
+	SupervisorSession  string   // e.g., "gt-ai-supervisor" - dynamic supervisor session name
 }
 
 // SpawnData contains information for spawn assignment messages.
@@ -79,12 +79,12 @@ type SpawnData struct {
 	Description string
 	Branch      string
 	RigName     string
-	Polecat     string
+	Miner     string
 }
 
 // NudgeData contains information for nudge messages.
 type NudgeData struct {
-	Polecat    string
+	Miner    string
 	Reason     string
 	NudgeCount int
 	MaxNudges  int
@@ -94,7 +94,7 @@ type NudgeData struct {
 
 // EscalationData contains information for escalation messages.
 type EscalationData struct {
-	Polecat     string
+	Miner     string
 	Issue       string
 	Reason      string
 	NudgeCount  int
@@ -117,7 +117,7 @@ type HandoffData struct {
 // SupervisorData contains information for rendering supervisor templates.
 type SupervisorData struct {
 	GTPath   string // Path to the gt binary
-	TownRoot string // Path to the Gas Town workspace
+	TownRoot string // Path to the Excavation Site workspace
 }
 
 // New creates a new Templates instance.
@@ -167,7 +167,7 @@ func (t *Templates) RenderMessage(name string, data interface{}) (string, error)
 
 // RoleNames returns the list of available role templates.
 func (t *Templates) RoleNames() []string {
-	return []string{"mayor", "witness", "refinery", "polecat", "crew", "deacon", "boot"}
+	return []string{"overseer", "witness", "refinery", "miner", "crew", "supervisor", "boot"}
 }
 
 // MessageNames returns the list of available message templates.
@@ -175,13 +175,13 @@ func (t *Templates) MessageNames() []string {
 	return []string{"spawn", "nudge", "escalation", "handoff"}
 }
 
-// CreateMayorCLAUDEmd creates the Mayor's CLAUDE.md file at the specified directory.
+// CreateOverseerCLAUDEmd creates the Overseer's CLAUDE.md file at the specified directory.
 // This is used by both gt install and gt doctor --fix.
 //
 // Returns (created bool, error) - created is false if file already exists.
 // Existing files are preserved to respect user customizations.
-func CreateMayorCLAUDEmd(mayorDir, townRoot, townName, mayorSession, deaconSession string) (bool, error) {
-	claudePath := filepath.Join(mayorDir, "CLAUDE.md")
+func CreateOverseerCLAUDEmd(overseerDir, townRoot, townName, overseerSession, supervisorSession string) (bool, error) {
+	claudePath := filepath.Join(overseerDir, "CLAUDE.md")
 
 	// Check if file already exists - preserve user customizations
 	if _, err := os.Stat(claudePath); err == nil {
@@ -196,15 +196,15 @@ func CreateMayorCLAUDEmd(mayorDir, townRoot, townName, mayorSession, deaconSessi
 	}
 
 	data := RoleData{
-		Role:          "mayor",
+		Role:          "overseer",
 		TownRoot:      townRoot,
 		TownName:      townName,
-		WorkDir:       mayorDir,
-		MayorSession:  mayorSession,
-		DeaconSession: deaconSession,
+		WorkDir:       overseerDir,
+		OverseerSession:  overseerSession,
+		SupervisorSession: supervisorSession,
 	}
 
-	content, err := tmpl.RenderRole("mayor", data)
+	content, err := tmpl.RenderRole("overseer", data)
 	if err != nil {
 		return false, err
 	}
@@ -212,46 +212,46 @@ func CreateMayorCLAUDEmd(mayorDir, townRoot, townName, mayorSession, deaconSessi
 	return true, os.WriteFile(claudePath, []byte(content), 0644)
 }
 
-// PolecatLifecycleMarker is a unique string present in the polecat CLAUDE.md
-// template. Used to detect whether a CLAUDE.md file contains the Gas Town
+// MinerLifecycleMarker is a unique string present in the miner CLAUDE.md
+// template. Used to detect whether a CLAUDE.md file contains the Excavation Site
 // overlay (vs. project-specific content). If an existing CLAUDE.md lacks this
-// marker, polecat lifecycle instructions are appended — the agent won't know
+// marker, miner lifecycle instructions are appended — the agent won't know
 // to call `gt done` otherwise.
-const PolecatLifecycleMarker = "IDLE POLECAT HERESY"
+const MinerLifecycleMarker = "IDLE MINER HERESY"
 
-// CreatePolecatCLAUDEmd writes the polecat CLAUDE.md template to the worktree.
-// This is the primary mechanism for polecats to learn about `gt done` and other
+// CreateMinerCLAUDEmd writes the miner CLAUDE.md template to the worktree.
+// This is the primary mechanism for miners to learn about `gt done` and other
 // lifecycle commands — the file persists across compaction and session restarts.
 //
 // If the worktree already has a tracked CLAUDE.md (e.g., from the rig's repo),
-// polecat lifecycle instructions are written to CLAUDE.local.md instead. This
+// miner lifecycle instructions are written to CLAUDE.local.md instead. This
 // avoids creating uncommitted changes in the tracked CLAUDE.md, which the
-// gt done auto-save safety net would otherwise commit onto the polecat's branch,
+// gt done auto-save safety net would otherwise commit onto the miner's branch,
 // polluting the PR diff with hundreds of lines of agent context.
 //
 // If no CLAUDE.md exists, the full template is written to CLAUDE.md.
 //
 // Returns (created bool, error).
-func CreatePolecatCLAUDEmd(worktreePath, rigName, polecatName string) (bool, error) {
+func CreateMinerCLAUDEmd(worktreePath, rigName, minerName string) (bool, error) {
 	claudePath := filepath.Join(worktreePath, "CLAUDE.md")
 	claudeLocalPath := filepath.Join(worktreePath, "CLAUDE.local.md")
 
-	// Render the polecat template with rig/name substitutions
-	content := polecatCLAUDEmd
+	// Render the miner template with rig/name substitutions
+	content := minerCLAUDEmd
 	content = strings.ReplaceAll(content, "{{rig}}", rigName)
-	content = strings.ReplaceAll(content, "{{name}}", polecatName)
+	content = strings.ReplaceAll(content, "{{name}}", minerName)
 
 	// Check if lifecycle instructions are already present in either file.
 	for _, path := range []string{claudePath, claudeLocalPath} {
 		if existing, err := os.ReadFile(path); err == nil {
-			if strings.Contains(string(existing), PolecatLifecycleMarker) {
+			if strings.Contains(string(existing), MinerLifecycleMarker) {
 				return false, nil // Already has our instructions
 			}
 		}
 	}
 
 	// If CLAUDE.md exists (tracked repo file), write to CLAUDE.local.md instead
-	// to avoid polluting the tracked file with polecat context. CLAUDE.local.md
+	// to avoid polluting the tracked file with miner context. CLAUDE.local.md
 	// is gitignored in standard rig repos and is still loaded by Claude Code.
 	if _, err := os.Stat(claudePath); err == nil {
 		existingLocal, readErr := os.ReadFile(claudeLocalPath)
@@ -260,7 +260,7 @@ func CreatePolecatCLAUDEmd(worktreePath, rigName, polecatName string) (bool, err
 			merged := string(existingLocal) + "\n---\n\n" + content
 			return true, os.WriteFile(claudeLocalPath, []byte(merged), 0644)
 		}
-		// Write new CLAUDE.local.md with just polecat context
+		// Write new CLAUDE.local.md with just miner context
 		return true, os.WriteFile(claudeLocalPath, []byte(content), 0644)
 	}
 
@@ -269,7 +269,7 @@ func CreatePolecatCLAUDEmd(worktreePath, rigName, polecatName string) (bool, err
 }
 
 // ProvisionCommands creates the .claude/commands/ directory with standard slash commands.
-// This ensures crew/polecat workspaces have the handoff command and other utilities
+// This ensures crew/miner workspaces have the handoff command and other utilities
 // even if the source repo doesn't have them tracked.
 // If a command already exists, it is skipped (no overwrite).
 func ProvisionCommands(workspacePath string) error {
@@ -343,10 +343,10 @@ func provisionLaunchd(data SupervisorData) (string, error) {
 		return "", fmt.Errorf("creating LaunchAgents directory: %w", err)
 	}
 
-	plistPath := filepath.Join(agentsDir, "com.gastown.daemon.plist")
+	plistPath := filepath.Join(agentsDir, "com.excavation.daemon.plist")
 
 	// Read the template
-	templateContent, err := supervisorFS.ReadFile("launchd/com.gastown.daemon.plist")
+	templateContent, err := supervisorFS.ReadFile("launchd/com.excavation.daemon.plist")
 	if err != nil {
 		return "", fmt.Errorf("reading launchd template: %w", err)
 	}
@@ -375,7 +375,7 @@ func provisionLaunchd(data SupervisorData) (string, error) {
 		return "", fmt.Errorf("loading launchd service: %s", string(output))
 	}
 
-	return "Created and loaded launchd service: com.gastown.daemon", nil
+	return "Created and loaded launchd service: com.excavation.daemon", nil
 }
 
 // provisionSystemd creates and enables a systemd user unit on Linux.
@@ -395,10 +395,10 @@ func provisionSystemd(data SupervisorData) (string, error) {
 		return "", fmt.Errorf("creating systemd user directory: %w", err)
 	}
 
-	servicePath := filepath.Join(systemdDir, "gastown-daemon.service")
+	servicePath := filepath.Join(systemdDir, "excavation-daemon.service")
 
 	// Read the template
-	templateContent, err := supervisorFS.ReadFile("systemd/gastown-daemon.service")
+	templateContent, err := supervisorFS.ReadFile("systemd/excavation-daemon.service")
 	if err != nil {
 		return "", fmt.Errorf("reading systemd template: %w", err)
 	}
@@ -425,14 +425,14 @@ func provisionSystemd(data SupervisorData) (string, error) {
 	}
 
 	// Enable the service
-	if output, err := exec.Command("systemctl", "--user", "enable", "gastown-daemon.service").CombinedOutput(); err != nil {
+	if output, err := exec.Command("systemctl", "--user", "enable", "excavation-daemon.service").CombinedOutput(); err != nil {
 		return "", fmt.Errorf("enabling systemd service: %s", string(output))
 	}
 
 	// Start the service
-	if output, err := exec.Command("systemctl", "--user", "start", "gastown-daemon.service").CombinedOutput(); err != nil {
+	if output, err := exec.Command("systemctl", "--user", "start", "excavation-daemon.service").CombinedOutput(); err != nil {
 		return "", fmt.Errorf("starting systemd service: %s", string(output))
 	}
 
-	return "Created and enabled systemd user service: gastown-daemon.service", nil
+	return "Created and enabled systemd user service: excavation-daemon.service", nil
 }

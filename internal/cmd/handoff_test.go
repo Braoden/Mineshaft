@@ -8,16 +8,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 func setupHandoffTestRegistry(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "gastown")
+	reg.Register("gt", "excavation")
 	old := session.DefaultRegistry()
 	session.SetDefaultRegistry(reg)
 	t.Cleanup(func() { session.SetDefaultRegistry(old) })
@@ -57,33 +57,33 @@ func TestSessionWorkDir(t *testing.T) {
 		wantErr     bool
 	}{
 		{
-			name:        "mayor runs from mayor subdirectory",
-			sessionName: "hq-mayor",
-			wantDir:     townRoot + "/mayor",
+			name:        "overseer runs from overseer subdirectory",
+			sessionName: "hq-overseer",
+			wantDir:     townRoot + "/overseer",
 			wantErr:     false,
 		},
 		{
-			name:        "deacon runs from deacon subdirectory",
-			sessionName: "hq-deacon",
-			wantDir:     townRoot + "/deacon",
+			name:        "supervisor runs from supervisor subdirectory",
+			sessionName: "hq-supervisor",
+			wantDir:     townRoot + "/supervisor",
 			wantErr:     false,
 		},
 		{
 			name:        "crew runs from crew subdirectory",
 			sessionName: "gt-crew-holden",
-			wantDir:     townRoot + "/gastown/crew/holden",
+			wantDir:     townRoot + "/excavation/crew/holden",
 			wantErr:     false,
 		},
 		{
 			name:        "witness runs from witness directory",
 			sessionName: "gt-witness",
-			wantDir:     townRoot + "/gastown/witness",
+			wantDir:     townRoot + "/excavation/witness",
 			wantErr:     false,
 		},
 		{
 			name:        "refinery runs from refinery/rig directory",
 			sessionName: "gt-refinery",
-			wantDir:     townRoot + "/gastown/refinery/rig",
+			wantDir:     townRoot + "/excavation/refinery/rig",
 			wantErr:     false,
 		},
 	}
@@ -122,13 +122,13 @@ func TestBuildRestartCommand_UsesRoleAgentsWhenNoAgentOverride(t *testing.T) {
 		_ = os.Setenv("GT_TOWN_ROOT", origTownRoot)
 		_ = os.Setenv("GT_ROOT", origRoot)
 	})
-	rigPath := filepath.Join(townRoot, "gastown")
+	rigPath := filepath.Join(townRoot, "excavation")
 	witnessDir := filepath.Join(rigPath, "witness")
 
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor"), 0755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer"), 0755); err != nil {
+		t.Fatalf("mkdir overseer: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "mayor", "town.json"), []byte(`{"name":"gastown"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"name":"excavation"}`), 0644); err != nil {
 		t.Fatalf("write town.json: %v", err)
 	}
 	if err := os.MkdirAll(witnessDir, 0755); err != nil {
@@ -196,13 +196,13 @@ func TestBuildRestartCommand_MergesAgentPresetEnv(t *testing.T) {
 		_ = os.Setenv("GT_TOWN_ROOT", origTownRoot)
 		_ = os.Setenv("GT_ROOT", origRoot)
 	})
-	rigPath := filepath.Join(townRoot, "gastown")
+	rigPath := filepath.Join(townRoot, "excavation")
 	witnessDir := filepath.Join(rigPath, "witness")
 
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor"), 0755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer"), 0755); err != nil {
+		t.Fatalf("mkdir overseer: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "mayor", "town.json"), []byte(`{"name":"gastown"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"name":"excavation"}`), 0644); err != nil {
 		t.Fatalf("write town.json: %v", err)
 	}
 	if err := os.MkdirAll(witnessDir, 0755); err != nil {
@@ -272,13 +272,13 @@ func TestBuildRestartCommandWithOpts_ContinuePrompt(t *testing.T) {
 		_ = os.Setenv("GT_TOWN_ROOT", origTownRoot)
 		_ = os.Setenv("GT_ROOT", origRoot)
 	})
-	rigPath := filepath.Join(townRoot, "gastown")
+	rigPath := filepath.Join(townRoot, "excavation")
 	crewDir := filepath.Join(rigPath, "crew", "bear")
 
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor"), 0755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer"), 0755); err != nil {
+		t.Fatalf("mkdir overseer: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "mayor", "town.json"), []byte(`{"name":"gastown"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"name":"excavation"}`), 0644); err != nil {
 		t.Fatalf("write town.json: %v", err)
 	}
 	if err := os.MkdirAll(crewDir, 0755); err != nil {
@@ -354,11 +354,11 @@ func TestDetectTownRootFromCwd_EnvFallback(t *testing.T) {
 
 	// Create a temp directory that looks like a valid town
 	tmpTown := t.TempDir()
-	mayorDir := filepath.Join(tmpTown, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
-		t.Fatalf("creating mayor dir: %v", err)
+	overseerDir := filepath.Join(tmpTown, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
+		t.Fatalf("creating overseer dir: %v", err)
 	}
-	townJSON := filepath.Join(mayorDir, "town.json")
+	townJSON := filepath.Join(overseerDir, "town.json")
 	if err := os.WriteFile(townJSON, []byte(`{"name": "test-town"}`), 0644); err != nil {
 		t.Fatalf("creating town.json: %v", err)
 	}
@@ -402,9 +402,9 @@ func TestDetectTownRootFromCwd_EnvFallback(t *testing.T) {
 	t.Run("prefers GT_TOWN_ROOT over GT_ROOT", func(t *testing.T) {
 		// Create another temp town for GT_ROOT
 		anotherTown := t.TempDir()
-		anotherMayor := filepath.Join(anotherTown, "mayor")
-		os.MkdirAll(anotherMayor, 0755)
-		os.WriteFile(filepath.Join(anotherMayor, "town.json"), []byte(`{"name": "other-town"}`), 0644)
+		anotherOverseer := filepath.Join(anotherTown, "overseer")
+		os.MkdirAll(anotherOverseer, 0755)
+		os.WriteFile(filepath.Join(anotherOverseer, "town.json"), []byte(`{"name": "other-town"}`), 0644)
 
 		// Set both env vars
 		os.Setenv("GT_TOWN_ROOT", tmpTown)
@@ -438,10 +438,10 @@ func TestDetectTownRootFromCwd_EnvFallback(t *testing.T) {
 	})
 
 	t.Run("uses secondary marker when primary missing", func(t *testing.T) {
-		// Create a temp town with only mayor/ directory (no town.json)
+		// Create a temp town with only overseer/ directory (no town.json)
 		secondaryTown := t.TempDir()
-		mayorOnlyDir := filepath.Join(secondaryTown, workspace.SecondaryMarker)
-		os.MkdirAll(mayorOnlyDir, 0755)
+		overseerOnlyDir := filepath.Join(secondaryTown, workspace.SecondaryMarker)
+		os.MkdirAll(overseerOnlyDir, 0755)
 
 		os.Setenv("GT_TOWN_ROOT", secondaryTown)
 		os.Setenv("GT_ROOT", "")
@@ -480,62 +480,62 @@ func makeTestGitRepo(t *testing.T) string {
 	return dir
 }
 
-// TestHandoffPolecatEnvCheck verifies that the polecat guard in runHandoff uses
-// GT_ROLE as the authoritative check, so coordinators with a stale GT_POLECAT
+// TestHandoffMinerEnvCheck verifies that the miner guard in runHandoff uses
+// GT_ROLE as the authoritative check, so coordinators with a stale GT_MINER
 // in their environment are not redirected to gt done (GH #1707).
-func TestHandoffPolecatEnvCheck(t *testing.T) {
+func TestHandoffMinerEnvCheck(t *testing.T) {
 	tests := []struct {
 		name      string
 		role      string
-		polecat   string
+		miner   string
 		wantBlock bool
 	}{
 		{
-			name:      "bare polecat role is redirected",
-			role:      "polecat",
-			polecat:   "alpha",
+			name:      "bare miner role is redirected",
+			role:      "miner",
+			miner:   "alpha",
 			wantBlock: true,
 		},
 		{
-			name:      "compound polecat role is redirected",
-			role:      "gastown/polecats/Toast",
-			polecat:   "Toast",
+			name:      "compound miner role is redirected",
+			role:      "excavation/miners/Toast",
+			miner:   "Toast",
 			wantBlock: true,
 		},
 		{
-			name:      "mayor with stale GT_POLECAT is NOT redirected",
-			role:      "mayor",
-			polecat:   "alpha",
+			name:      "overseer with stale GT_MINER is NOT redirected",
+			role:      "overseer",
+			miner:   "alpha",
 			wantBlock: false,
 		},
 		{
-			name:      "compound witness with stale GT_POLECAT is NOT redirected",
-			role:      "gastown/witness",
-			polecat:   "alpha",
+			name:      "compound witness with stale GT_MINER is NOT redirected",
+			role:      "excavation/witness",
+			miner:   "alpha",
 			wantBlock: false,
 		},
 		{
-			name:      "crew with stale GT_POLECAT is NOT redirected",
+			name:      "crew with stale GT_MINER is NOT redirected",
 			role:      "crew",
-			polecat:   "alpha",
+			miner:   "alpha",
 			wantBlock: false,
 		},
 		{
-			name:      "compound crew with stale GT_POLECAT is NOT redirected",
-			role:      "gastown/crew/den",
-			polecat:   "alpha",
+			name:      "compound crew with stale GT_MINER is NOT redirected",
+			role:      "excavation/crew/den",
+			miner:   "alpha",
 			wantBlock: false,
 		},
 		{
-			name:      "no GT_ROLE with GT_POLECAT set is redirected",
+			name:      "no GT_ROLE with GT_MINER set is redirected",
 			role:      "",
-			polecat:   "alpha",
+			miner:   "alpha",
 			wantBlock: true,
 		},
 		{
-			name:      "no GT_ROLE and no GT_POLECAT is not redirected",
+			name:      "no GT_ROLE and no GT_MINER is not redirected",
 			role:      "",
-			polecat:   "",
+			miner:   "",
 			wantBlock: false,
 		},
 	}
@@ -559,8 +559,8 @@ func TestHandoffPolecatEnvCheck(t *testing.T) {
 			t.Setenv("GT_ROOT", isolatedRoot)
 			t.Chdir(isolatedRoot)
 			t.Setenv("GT_ROLE", tt.role)
-			t.Setenv("GT_POLECAT", tt.polecat)
-			// Ensure deterministic non-tmux execution so the non-polecat
+			t.Setenv("GT_MINER", tt.miner)
+			// Ensure deterministic non-tmux execution so the non-miner
 			// paths fail predictably instead of triggering real side effects.
 			t.Setenv("TMUX", "")
 			t.Setenv("TMUX_PANE", "")
@@ -578,10 +578,10 @@ func TestHandoffPolecatEnvCheck(t *testing.T) {
 			handoffStdin = false
 			handoffAuto = false
 
-			// The polecat path tries to exec "gt done" which will fail in tests.
-			// We capture stdout to detect the "Polecat detected" message, which
-			// confirms the polecat guard triggered. Non-polecat paths will fail
-			// later (missing tmux, etc.) without printing the polecat message.
+			// The miner path tries to exec "gt done" which will fail in tests.
+			// We capture stdout to detect the "Miner detected" message, which
+			// confirms the miner guard triggered. Non-miner paths will fail
+			// later (missing tmux, etc.) without printing the miner message.
 			var blocked bool
 			output := captureStdout(t, func() {
 				defer func() {
@@ -591,13 +591,13 @@ func TestHandoffPolecatEnvCheck(t *testing.T) {
 				}()
 				runHandoff(handoffCmd, nil)
 			})
-			blocked = strings.Contains(output, "Polecat detected")
+			blocked = strings.Contains(output, "Miner detected")
 
 			if blocked != tt.wantBlock {
 				if tt.wantBlock {
-					t.Errorf("expected polecat redirect but was not redirected (GT_ROLE=%q GT_POLECAT=%q)", tt.role, tt.polecat)
+					t.Errorf("expected miner redirect but was not redirected (GT_ROLE=%q GT_MINER=%q)", tt.role, tt.miner)
 				} else {
-					t.Errorf("unexpected polecat redirect with GT_ROLE=%q GT_POLECAT=%q; output: %s", tt.role, tt.polecat, output)
+					t.Errorf("unexpected miner redirect with GT_ROLE=%q GT_MINER=%q; output: %s", tt.role, tt.miner, output)
 				}
 			}
 			gtLogBytes, _ := os.ReadFile(gtLog)
@@ -713,9 +713,9 @@ func TestHandoffProcessNames(t *testing.T) {
 		setupHandoffTestRegistry(t)
 
 		tmpTown := t.TempDir()
-		mayorDir := filepath.Join(tmpTown, "mayor")
-		os.MkdirAll(mayorDir, 0755)
-		os.WriteFile(filepath.Join(mayorDir, "town.json"), []byte(`{"name":"test"}`), 0644)
+		overseerDir := filepath.Join(tmpTown, "overseer")
+		os.MkdirAll(overseerDir, 0755)
+		os.WriteFile(filepath.Join(overseerDir, "town.json"), []byte(`{"name":"test"}`), 0644)
 
 		t.Setenv("GT_ROOT", tmpTown)
 		t.Setenv("GT_AGENT", "claude")
@@ -738,9 +738,9 @@ func TestHandoffProcessNames(t *testing.T) {
 		setupHandoffTestRegistry(t)
 
 		tmpTown := t.TempDir()
-		mayorDir := filepath.Join(tmpTown, "mayor")
-		os.MkdirAll(mayorDir, 0755)
-		os.WriteFile(filepath.Join(mayorDir, "town.json"), []byte(`{"name":"test"}`), 0644)
+		overseerDir := filepath.Join(tmpTown, "overseer")
+		os.MkdirAll(overseerDir, 0755)
+		os.WriteFile(filepath.Join(overseerDir, "town.json"), []byte(`{"name":"test"}`), 0644)
 
 		t.Setenv("GT_ROOT", tmpTown)
 		t.Setenv("GT_AGENT", "claude")
@@ -894,7 +894,7 @@ func TestEnforceHandoffCooldown(t *testing.T) {
 
 	t.Run("cooldown triggers for recent handoff", func(t *testing.T) {
 		// Use a non-exempt role so cooldown applies
-		t.Setenv("GT_ROLE", "gastown/witness")
+		t.Setenv("GT_ROLE", "excavation/witness")
 		tmpDir := t.TempDir()
 		t.Chdir(tmpDir)
 
@@ -921,7 +921,7 @@ func TestEnforceHandoffCooldown(t *testing.T) {
 	})
 
 	t.Run("no cooldown for crew role", func(t *testing.T) {
-		t.Setenv("GT_ROLE", "gastown/crew/max")
+		t.Setenv("GT_ROLE", "excavation/crew/max")
 		tmpDir := t.TempDir()
 		t.Chdir(tmpDir)
 
@@ -940,8 +940,8 @@ func TestEnforceHandoffCooldown(t *testing.T) {
 		}
 	})
 
-	t.Run("no cooldown for mayor role", func(t *testing.T) {
-		t.Setenv("GT_ROLE", "mayor")
+	t.Run("no cooldown for overseer role", func(t *testing.T) {
+		t.Setenv("GT_ROLE", "overseer")
 		tmpDir := t.TempDir()
 		t.Chdir(tmpDir)
 
@@ -956,7 +956,7 @@ func TestEnforceHandoffCooldown(t *testing.T) {
 		elapsed := time.Since(start)
 
 		if elapsed > 1*time.Second {
-			t.Errorf("mayor should be exempt from cooldown, but waited %v", elapsed)
+			t.Errorf("overseer should be exempt from cooldown, but waited %v", elapsed)
 		}
 	})
 }

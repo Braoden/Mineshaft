@@ -1,17 +1,17 @@
 ---
 name: crew-commit
 description: >
-  Canonical commit workflow for Gas Town crew members: pre-flight checks,
+  Canonical commit workflow for Excavation Site crew members: pre-flight checks,
   branch creation, gt commit with agent identity, push, and PR creation.
   Use when ready to commit and submit work for review.
 allowed-tools: "Bash(git *), Bash(gt *), Bash(gh *)"
 version: "1.0.0"
-author: "Gas Town"
+author: "Excavation Site"
 ---
 
 # Crew Commit — Canonical Git Workflow
 
-This skill guides crew members through the standard Gas Town commit workflow:
+This skill guides crew members through the standard Excavation Site commit workflow:
 pre-flight → branch → stage → commit → push → PR.
 
 > **⚠️ NEVER commit directly to `main`.** All crew work goes through branches

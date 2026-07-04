@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	gitpkg "github.com/steveyegge/gastown/internal/git"
+	gitpkg "github.com/steveyegge/excavation/internal/git"
 )
 
 // fakeRebaseGit lets us drive autoRebaseOnTarget without a real git repo for
@@ -161,7 +161,7 @@ func TestAutoRebaseOnTarget_RealRepoSuccess(t *testing.T) {
 	testRunGit(t, repo, "add", ".")
 	testRunGit(t, repo, "commit", "-m", "initial")
 
-	// Branch off and add a polecat commit on a non-conflicting file.
+	// Branch off and add a miner commit on a non-conflicting file.
 	testRunGit(t, repo, "checkout", "-b", "feature")
 	writeRepoFile(t, repo, "feature.txt", "feature work\n")
 	testRunGit(t, repo, "add", ".")
@@ -197,7 +197,7 @@ func TestAutoRebaseOnTarget_RealRepoSuccess(t *testing.T) {
 // TestAutoRebaseOnTarget_RealRepoConflictAborts exercises the conflict path
 // against a real git working tree: feature and main both touch the same file,
 // rebase fails with a CONFLICT, and AbortRebase must restore the working tree
-// so the polecat can address the conflict manually. (gh#3400, scenario (b).)
+// so the miner can address the conflict manually. (gh#3400, scenario (b).)
 func TestAutoRebaseOnTarget_RealRepoConflictAborts(t *testing.T) {
 	tmp := t.TempDir()
 	repo := filepath.Join(tmp, "repo")
@@ -236,7 +236,7 @@ func TestAutoRebaseOnTarget_RealRepoConflictAborts(t *testing.T) {
 	}
 
 	// AbortRebase is required to leave the working tree in a clean state. After
-	// abort, the rebase-merge dir must be gone — otherwise the polecat is stuck
+	// abort, the rebase-merge dir must be gone — otherwise the miner is stuck
 	// in a half-rebased state.
 	if _, statErr := os.Stat(filepath.Join(repo, ".git", "rebase-merge")); !os.IsNotExist(statErr) {
 		t.Errorf(".git/rebase-merge should not exist after abort (stat err: %v)", statErr)

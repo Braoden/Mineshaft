@@ -235,14 +235,14 @@ setup_case() {
   local bin_dir="$TEST_TMP/bin"
 
   mkdir -p "$TEST_STATE/health" "$TEST_STATE/nohook" "$TEST_STATE/sessions" "$TEST_STATE/status" "$bin_dir"
-  mkdir -p "$GT_TOWN_ROOT/gastown/polecats" "$GT_TOWN_ROOT/deacon"
-  printf '{"rigs":{"gastown":{"beads":{"prefix":"gt"}}}}\n' > "$GT_TOWN_ROOT/rigs.json"
+  mkdir -p "$GT_TOWN_ROOT/excavation/miners" "$GT_TOWN_ROOT/supervisor"
+  printf '{"rigs":{"excavation":{"beads":{"prefix":"gt"}}}}\n' > "$GT_TOWN_ROOT/rigs.json"
   : > "$TEST_STATE/mail.log"
   : > "$TEST_STATE/kill.log"
   : > "$TEST_STATE/escalate.log"
   : > "$TEST_STATE/health_calls.log"
   : > "$TEST_STATE/bd.log"
-  touch "$TEST_STATE/sessions/hq-deacon"
+  touch "$TEST_STATE/sessions/hq-supervisor"
 
   write_fake_commands "$bin_dir"
   export PATH="$bin_dir:$ORIGINAL_PATH"
@@ -250,12 +250,12 @@ setup_case() {
   unset GT_STUCK_AGENT_DOG_MASS_DEATH_THRESHOLD
 }
 
-add_polecat() {
+add_miner() {
   local name="$1"
   local status="$2"
   local session="gt-$name"
 
-  mkdir -p "$GT_TOWN_ROOT/gastown/polecats/$name"
+  mkdir -p "$GT_TOWN_ROOT/excavation/miners/$name"
   touch "$TEST_STATE/sessions/$session"
   printf '%s\n' "$status" > "$TEST_STATE/health/$session"
 }
@@ -268,7 +268,7 @@ test_healthy_runtime() {
   local runtime="$1"
 
   setup_case
-  add_polecat "$runtime" healthy
+  add_miner "$runtime" healthy
   run_script
 
   assert_file_empty "$TEST_STATE/kill.log" "$runtime healthy: no session kill"
@@ -280,7 +280,7 @@ test_healthy_runtime() {
 test_long_research_active_pane() {
   setup_case
   export GT_STUCK_AGENT_DOG_MAX_INACTIVITY=30m
-  add_polecat research agent-hung
+  add_miner research agent-hung
   run_script
 
   assert_file_empty "$TEST_STATE/kill.log" "active research: no session kill"
@@ -292,30 +292,30 @@ test_long_research_active_pane() {
 
 test_dead_agent_restarts_one() {
   setup_case
-  add_polecat alpha agent-dead
+  add_miner alpha agent-dead
   run_script
 
   assert_line_count "$TEST_STATE/kill.log" 1 "dead agent: one session kill"
   assert_file_contains "$TEST_STATE/kill.log" "gt-alpha" "dead agent: killed target session"
   assert_line_count "$TEST_STATE/mail.log" 1 "dead agent: one restart mail"
-  assert_file_contains "$TEST_STATE/mail.log" "gastown/witness" "dead agent: mailed rig witness"
+  assert_file_contains "$TEST_STATE/mail.log" "excavation/witness" "dead agent: mailed rig witness"
   assert_file_empty "$TEST_STATE/escalate.log" "dead agent: no mass-death escalation"
 }
 
 test_dead_session_restarts_one() {
   setup_case
-  add_polecat beta session-dead
+  add_miner beta session-dead
   run_script
 
   assert_file_empty "$TEST_STATE/kill.log" "dead session: no session kill"
   assert_line_count "$TEST_STATE/mail.log" 1 "dead session: one restart mail"
-  assert_file_contains "$TEST_STATE/mail.log" "RESTART_POLECAT: gastown/beta" "dead session: restart requested"
+  assert_file_contains "$TEST_STATE/mail.log" "RESTART_MINER: excavation/beta" "dead session: restart requested"
   assert_file_empty "$TEST_STATE/escalate.log" "dead session: no mass-death escalation"
 }
 
 test_closed_hook_skips_restart() {
   setup_case
-  add_polecat alpha agent-dead
+  add_miner alpha agent-dead
   printf 'closed\n' > "$TEST_STATE/status/gt-hook-alpha"
   run_script
 
@@ -326,9 +326,9 @@ test_closed_hook_skips_restart() {
 
 test_mass_death_skips_actions() {
   setup_case
-  add_polecat alpha agent-dead
-  add_polecat beta agent-dead
-  add_polecat gamma agent-dead
+  add_miner alpha agent-dead
+  add_miner beta agent-dead
+  add_miner gamma agent-dead
   run_script
 
   assert_file_empty "$TEST_STATE/kill.log" "mass death: no session kills"

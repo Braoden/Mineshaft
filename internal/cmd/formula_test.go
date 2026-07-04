@@ -9,22 +9,22 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/formula"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/formula"
 )
 
 // TestAutoInferRig verifies the rig auto-selection logic used when --rig is
-// not provided and cwd-based detection finds nothing (e.g. Deacon at HQ level
-// on a non-default install where "gastown" rig does not exist).
+// not provided and cwd-based detection finds nothing (e.g. Supervisor at HQ level
+// on a non-default install where "excavation" rig does not exist).
 func TestAutoInferRig(t *testing.T) {
 	t.Parallel()
 
 	makeWorkspace := func(t *testing.T) (root string) {
 		t.Helper()
 		root = t.TempDir()
-		if err := os.MkdirAll(filepath.Join(root, "mayor"), 0o755); err != nil {
-			t.Fatalf("mkdir mayor: %v", err)
+		if err := os.MkdirAll(filepath.Join(root, "overseer"), 0o755); err != nil {
+			t.Fatalf("mkdir overseer: %v", err)
 		}
 		return root
 	}
@@ -42,7 +42,7 @@ func TestAutoInferRig(t *testing.T) {
 		if err != nil {
 			t.Fatalf("marshal rigs.json: %v", err)
 		}
-		path := filepath.Join(root, "mayor", "rigs.json")
+		path := filepath.Join(root, "overseer", "rigs.json")
 		if err := os.WriteFile(path, data, 0o644); err != nil {
 			t.Fatalf("write rigs.json: %v", err)
 		}
@@ -114,7 +114,7 @@ func TestAutoInferRig(t *testing.T) {
 	t.Run("malformed rigs.json surfaces error", func(t *testing.T) {
 		t.Parallel()
 		root := makeWorkspace(t)
-		path := filepath.Join(root, "mayor", "rigs.json")
+		path := filepath.Join(root, "overseer", "rigs.json")
 		if err := os.WriteFile(path, []byte("not json"), 0o644); err != nil {
 			t.Fatalf("write rigs.json: %v", err)
 		}
@@ -131,7 +131,7 @@ func TestAutoInferRig(t *testing.T) {
 	})
 }
 
-func TestBuildConvoyLegSlingArgs_AlwaysIncludesNoConvoy(t *testing.T) {
+func TestBuildMinecartLegSlingArgs_AlwaysIncludesNoMinecart(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -140,19 +140,19 @@ func TestBuildConvoyLegSlingArgs_AlwaysIncludesNoConvoy(t *testing.T) {
 		reviewOnly bool
 		wantFlags  []string
 	}{
-		{"no agent no review", "", false, []string{"--no-convoy"}},
-		{"with agent", "claude", false, []string{"--no-convoy", "--agent", "claude"}},
-		{"review only", "", true, []string{"--no-convoy", "--review-only"}},
-		{"agent and review", "gemini", true, []string{"--no-convoy", "--agent", "gemini", "--review-only"}},
+		{"no agent no review", "", false, []string{"--no-minecart"}},
+		{"with agent", "claude", false, []string{"--no-minecart", "--agent", "claude"}},
+		{"review only", "", true, []string{"--no-minecart", "--review-only"}},
+		{"agent and review", "gemini", true, []string{"--no-minecart", "--agent", "gemini", "--review-only"}},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got := buildConvoyLegSlingArgs("bead-1", "myrig", "desc", "title", tt.agent, tt.reviewOnly)
+			got := buildMinecartLegSlingArgs("bead-1", "myrig", "desc", "title", tt.agent, tt.reviewOnly)
 			for _, want := range tt.wantFlags {
 				if !slices.Contains(got, want) {
-					t.Errorf("buildConvoyLegSlingArgs() missing %q in %v", want, got)
+					t.Errorf("buildMinecartLegSlingArgs() missing %q in %v", want, got)
 				}
 			}
 			if got[0] != "sling" {
@@ -162,7 +162,7 @@ func TestBuildConvoyLegSlingArgs_AlwaysIncludesNoConvoy(t *testing.T) {
 	}
 }
 
-func TestBuildWorkflowStepSlingArgs_AlwaysIncludesNoConvoy(t *testing.T) {
+func TestBuildWorkflowStepSlingArgs_AlwaysIncludesNoMinecart(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -177,8 +177,8 @@ func TestBuildWorkflowStepSlingArgs_AlwaysIncludesNoConvoy(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			got := buildWorkflowStepSlingArgs("bead-2", "myrig", "desc", "title", tt.agent)
-			if !slices.Contains(got, "--no-convoy") {
-				t.Errorf("buildWorkflowStepSlingArgs() missing --no-convoy in %v", got)
+			if !slices.Contains(got, "--no-minecart") {
+				t.Errorf("buildWorkflowStepSlingArgs() missing --no-minecart in %v", got)
 			}
 			if got[0] != "sling" {
 				t.Errorf("first arg must be 'sling', got %q", got[0])
@@ -255,16 +255,16 @@ func TestWorkflowStepTarget(t *testing.T) {
 		step formula.Step
 		want string
 	}{
-		{name: "default rig", step: formula.Step{}, want: "gastown"},
-		{name: "explicit rig", step: formula.Step{Target: "rig"}, want: "gastown"},
-		{name: "mayor", step: formula.Step{Target: "mayor"}, want: "mayor"},
-		{name: "crew path", step: formula.Step{Target: "gastown/crew/alex"}, want: "gastown/crew/alex"},
+		{name: "default rig", step: formula.Step{}, want: "excavation"},
+		{name: "explicit rig", step: formula.Step{Target: "rig"}, want: "excavation"},
+		{name: "overseer", step: formula.Step{Target: "overseer"}, want: "overseer"},
+		{name: "crew path", step: formula.Step{Target: "excavation/crew/alex"}, want: "excavation/crew/alex"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			if got := workflowStepTarget(tt.step, "gastown"); got != tt.want {
+			if got := workflowStepTarget(tt.step, "excavation"); got != tt.want {
 				t.Fatalf("workflowStepTarget() = %q, want %q", got, tt.want)
 			}
 		})
@@ -275,8 +275,8 @@ func TestWorkflowStepDescriptionAddsTargetMetadata(t *testing.T) {
 	t.Parallel()
 
 	description := "Line one\n\nLine two"
-	got := workflowStepDescription(formula.Step{Target: "mayor"}, description)
-	want := "workflow_target: mayor\n\nLine one\n\nLine two"
+	got := workflowStepDescription(formula.Step{Target: "overseer"}, description)
+	want := "workflow_target: overseer\n\nLine one\n\nLine two"
 	if got != want {
 		t.Fatalf("workflowStepDescription() = %q, want %q", got, want)
 	}
@@ -291,15 +291,15 @@ func TestWorkflowStepTargetFromDescription(t *testing.T) {
 		want        string
 	}{
 		{name: "no metadata", description: "Body only", want: ""},
-		{name: "mayor", description: "workflow_target: mayor\n\nBody", want: "mayor"},
-		{name: "rig alias", description: "workflow_target: rig\n\nBody", want: "gastown"},
-		{name: "path target", description: "workflow_target: gastown/crew/alex\n\nBody", want: "gastown/crew/alex"},
+		{name: "overseer", description: "workflow_target: overseer\n\nBody", want: "overseer"},
+		{name: "rig alias", description: "workflow_target: rig\n\nBody", want: "excavation"},
+		{name: "path target", description: "workflow_target: excavation/crew/alex\n\nBody", want: "excavation/crew/alex"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			if got := workflowStepTargetFromDescription(tt.description, "gastown"); got != tt.want {
+			if got := workflowStepTargetFromDescription(tt.description, "excavation"); got != tt.want {
 				t.Fatalf("workflowStepTargetFromDescription() = %q, want %q", got, tt.want)
 			}
 		})
@@ -324,7 +324,7 @@ func TestAttachmentFormulaVarsRoundTripsPersistedVars(t *testing.T) {
 	t.Parallel()
 
 	desc := beads.SetAttachmentFields(&beads.Issue{Description: "Body"}, &beads.AttachmentFields{
-		AttachedFormula: "mol-polecat-work",
+		AttachedFormula: "mol-miner-work",
 		AttachedVars:    []string{"feature=Attached Feature"},
 		FormulaVars:     "feature=Persisted Feature\nissue=gt-123\nbase_branch=main",
 	})

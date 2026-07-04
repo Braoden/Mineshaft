@@ -63,10 +63,10 @@ func TestBuildCommandWithSocket(t *testing.T) {
 	defer func() { defaultSocket = orig }()
 
 	SetDefaultSocket("mytown")
-	cmd := BuildCommand("has-session", "-t", "hq-mayor")
+	cmd := BuildCommand("has-session", "-t", "hq-overseer")
 	args := cmd.Args
-	// Should be: tmux -u -L mytown has-session -t hq-mayor
-	expected := []string{"tmux", "-u", "-L", "mytown", "has-session", "-t", "hq-mayor"}
+	// Should be: tmux -u -L mytown has-session -t hq-overseer
+	expected := []string{"tmux", "-u", "-L", "mytown", "has-session", "-t", "hq-overseer"}
 	if len(args) != len(expected) {
 		t.Fatalf("args = %v, want %v", args, expected)
 	}

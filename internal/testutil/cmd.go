@@ -52,7 +52,7 @@ func NewGTCommand(args ...string) *exec.Cmd {
 
 // NewIsolatedBDCommand creates an exec.Command for the bd CLI with GT_*/BD_*
 // env stripped except GT_DOLT_PORT and BEADS_DOLT_PORT. Use this when you need
-// to isolate a subprocess from the parent Gas Town workspace but still route
+// to isolate a subprocess from the parent Excavation Site workspace but still route
 // to the test Dolt server.
 func NewIsolatedBDCommand(args ...string) *exec.Cmd {
 	cmd := exec.Command("bd", args...)
@@ -62,7 +62,7 @@ func NewIsolatedBDCommand(args ...string) *exec.Cmd {
 
 // NewIsolatedGTCommand creates an exec.Command for the gt CLI with GT_*/BD_*
 // env stripped except GT_DOLT_PORT and BEADS_DOLT_PORT. Use this when you need
-// to isolate a subprocess from the parent Gas Town workspace but still route
+// to isolate a subprocess from the parent Excavation Site workspace but still route
 // to the test Dolt server.
 func NewIsolatedGTCommand(args ...string) *exec.Cmd {
 	cmd := exec.Command("gt", args...)

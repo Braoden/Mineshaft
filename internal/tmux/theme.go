@@ -1,4 +1,4 @@
-// Package tmux provides theme support for Gas Town tmux sessions.
+// Package tmux provides theme support for Excavation Site tmux sessions.
 package tmux
 
 import (
@@ -46,17 +46,17 @@ var DefaultPalette = []Theme{
 	{Name: "copper", BG: "#6d4c41", FG: "#f5f5dc"},   // Warm brown
 }
 
-// MayorTheme returns the special theme for the Mayor session.
-// Uses "default" to inherit the user's terminal colors — the Mayor
+// OverseerTheme returns the special theme for the Overseer session.
+// Uses "default" to inherit the user's terminal colors — the Overseer
 // session is the primary interactive session, so it should blend in.
-func MayorTheme() Theme {
-	return Theme{Name: "mayor", BG: "default", FG: "default"}
+func OverseerTheme() Theme {
+	return Theme{Name: "overseer", BG: "default", FG: "default"}
 }
 
-// DeaconTheme returns the special theme for the Deacon session.
-// Purple/silver - ecclesiastical, distinct from Mayor's gold.
-func DeaconTheme() Theme {
-	return Theme{Name: "deacon", BG: "#2d1f3d", FG: "#c0b0d0"}
+// SupervisorTheme returns the special theme for the Supervisor session.
+// Purple/silver - ecclesiastical, distinct from Overseer's gold.
+func SupervisorTheme() Theme {
+	return Theme{Name: "supervisor", BG: "#2d1f3d", FG: "#c0b0d0"}
 }
 
 // DogTheme returns the theme for Dog sessions.

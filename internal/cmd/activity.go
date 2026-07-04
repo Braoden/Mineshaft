@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/events"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/events"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // Activity emit command flags
@@ -15,7 +15,7 @@ var (
 	activityEventType string
 	activityActor     string
 	activityRig       string
-	activityPolecat   string
+	activityMiner   string
 	activityTarget    string
 	activityReason    string
 	activityMessage   string
@@ -29,7 +29,7 @@ var activityCmd = &cobra.Command{
 	Use:     "activity",
 	GroupID: GroupDiag,
 	Short:   "Emit and view activity events",
-	Long: `Emit and view activity events for the Gas Town activity feed.
+	Long: `Emit and view activity events for the Excavation Site activity feed.
 
 Events are written to ~/gt/.events.jsonl and can be viewed with 'gt feed'.
 
@@ -40,13 +40,13 @@ Subcommands:
 var activityEmitCmd = &cobra.Command{
 	Use:   "emit <event-type>",
 	Short: "Emit an activity event",
-	Long: `Emit an activity event to the Gas Town activity feed.
+	Long: `Emit an activity event to the Excavation Site activity feed.
 
 Supported event types for witness patrol:
   patrol_started   - When witness begins patrol cycle
-  polecat_checked  - When witness checks a polecat
-  polecat_nudged   - When witness nudges a stuck polecat
-  escalation_sent  - When witness escalates to Mayor/Deacon
+  miner_checked  - When witness checks a miner
+  miner_nudged   - When witness nudges a stuck miner
+  escalation_sent  - When witness escalates to Overseer/Supervisor
   patrol_complete  - When patrol cycle finishes
 
 Supported event types for refinery:
@@ -62,10 +62,10 @@ Common options:
 
 Examples:
   gt activity emit patrol_started --rig greenplace --count 3
-  gt activity emit polecat_checked --rig greenplace --polecat Toast --status working --issue gp-xyz
-  gt activity emit polecat_nudged --rig greenplace --polecat Toast --reason "idle for 10 minutes"
-  gt activity emit escalation_sent --rig greenplace --target Toast --to mayor --reason "unresponsive"
-  gt activity emit patrol_complete --rig greenplace --count 3 --message "All polecats healthy"`,
+  gt activity emit miner_checked --rig greenplace --miner Toast --status working --issue gp-xyz
+  gt activity emit miner_nudged --rig greenplace --miner Toast --reason "idle for 10 minutes"
+  gt activity emit escalation_sent --rig greenplace --target Toast --to overseer --reason "unresponsive"
+  gt activity emit patrol_complete --rig greenplace --count 3 --message "All miners healthy"`,
 	Args: cobra.ExactArgs(1),
 	RunE: runActivityEmit,
 }
@@ -74,14 +74,14 @@ func init() {
 	// Emit command flags
 	activityEmitCmd.Flags().StringVar(&activityActor, "actor", "", "Actor emitting the event (auto-detected if not set)")
 	activityEmitCmd.Flags().StringVar(&activityRig, "rig", "", "Rig the event is about")
-	activityEmitCmd.Flags().StringVar(&activityPolecat, "polecat", "", "Polecat involved (for polecat_checked, polecat_nudged)")
+	activityEmitCmd.Flags().StringVar(&activityMiner, "miner", "", "Miner involved (for miner_checked, miner_nudged)")
 	activityEmitCmd.Flags().StringVar(&activityTarget, "target", "", "Target of the action (for escalation)")
 	activityEmitCmd.Flags().StringVar(&activityReason, "reason", "", "Reason for the action")
 	activityEmitCmd.Flags().StringVar(&activityMessage, "message", "", "Human-readable message")
-	activityEmitCmd.Flags().StringVar(&activityStatus, "status", "", "Status (for polecat_checked: working, idle, stuck)")
-	activityEmitCmd.Flags().StringVar(&activityIssue, "issue", "", "Issue ID (for polecat_checked)")
-	activityEmitCmd.Flags().StringVar(&activityTo, "to", "", "Escalation target (for escalation_sent: mayor, deacon)")
-	activityEmitCmd.Flags().IntVar(&activityCount, "count", 0, "Polecat count (for patrol events)")
+	activityEmitCmd.Flags().StringVar(&activityStatus, "status", "", "Status (for miner_checked: working, idle, stuck)")
+	activityEmitCmd.Flags().StringVar(&activityIssue, "issue", "", "Issue ID (for miner_checked)")
+	activityEmitCmd.Flags().StringVar(&activityTo, "to", "", "Escalation target (for escalation_sent: overseer, supervisor)")
+	activityEmitCmd.Flags().IntVar(&activityCount, "count", 0, "Miner count (for patrol events)")
 
 	activityCmd.AddCommand(activityEmitCmd)
 	rootCmd.AddCommand(activityCmd)
@@ -90,10 +90,10 @@ func init() {
 func runActivityEmit(cmd *cobra.Command, args []string) error {
 	eventType := args[0]
 
-	// Validate we're in a Gas Town workspace
+	// Validate we're in a Excavation Site workspace
 	_, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Auto-detect actor if not provided
@@ -112,20 +112,20 @@ func runActivityEmit(cmd *cobra.Command, args []string) error {
 		}
 		payload = events.PatrolPayload(activityRig, activityCount, activityMessage)
 
-	case events.TypePolecatChecked:
-		if activityRig == "" || activityPolecat == "" {
-			return fmt.Errorf("--rig and --polecat are required for polecat_checked events")
+	case events.TypeMinerChecked:
+		if activityRig == "" || activityMiner == "" {
+			return fmt.Errorf("--rig and --miner are required for miner_checked events")
 		}
 		if activityStatus == "" {
 			activityStatus = "checked"
 		}
-		payload = events.PolecatCheckPayload(activityRig, activityPolecat, activityStatus, activityIssue)
+		payload = events.MinerCheckPayload(activityRig, activityMiner, activityStatus, activityIssue)
 
-	case events.TypePolecatNudged:
-		if activityRig == "" || activityPolecat == "" {
-			return fmt.Errorf("--rig and --polecat are required for polecat_nudged events")
+	case events.TypeMinerNudged:
+		if activityRig == "" || activityMiner == "" {
+			return fmt.Errorf("--rig and --miner are required for miner_nudged events")
 		}
-		payload = events.NudgePayload(activityRig, activityPolecat, activityReason)
+		payload = events.NudgePayload(activityRig, activityMiner, activityReason)
 
 	case events.TypeEscalationSent:
 		if activityRig == "" || activityTarget == "" || activityTo == "" {
@@ -155,8 +155,8 @@ func runActivityEmit(cmd *cobra.Command, args []string) error {
 		if activityRig != "" {
 			payload["rig"] = activityRig
 		}
-		if activityPolecat != "" {
-			payload["polecat"] = activityPolecat
+		if activityMiner != "" {
+			payload["miner"] = activityMiner
 		}
 		if activityTarget != "" {
 			payload["target"] = activityTarget

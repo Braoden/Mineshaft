@@ -1,6 +1,6 @@
-// Package dog manages Dogs - Deacon's helper workers for infrastructure tasks.
-// Dogs are reusable workers with multi-rig worktrees, managed by the Deacon.
-// Unlike polecats (single-rig, ephemeral sessions), dogs handle cross-rig infrastructure work.
+// Package dog manages Dogs - Supervisor's helper workers for infrastructure tasks.
+// Dogs are reusable workers with multi-rig worktrees, managed by the Supervisor.
+// Unlike miners (single-rig, ephemeral sessions), dogs handle cross-rig infrastructure work.
 package dog
 
 import (
@@ -17,11 +17,11 @@ const (
 	StateWorking State = "working"
 )
 
-// Dog represents a Deacon helper worker.
+// Dog represents a Supervisor helper worker.
 type Dog struct {
 	Name          string            // Dog name (e.g., "alpha")
 	State         State             // Current state
-	Path          string            // Path to kennel dir (~/gt/deacon/dogs/<name>)
+	Path          string            // Path to kennel dir (~/gt/supervisor/dogs/<name>)
 	Worktrees     map[string]string // Rig name -> worktree path
 	LastActive    time.Time         // Last activity timestamp
 	Work          string            // Current work assignment (bead ID or molecule)

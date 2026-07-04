@@ -1,10 +1,10 @@
-# Gas Town Escalation Protocol
+# Excavation Site Escalation Protocol
 
-> Reference for the unified escalation system in Gas Town.
+> Reference for the unified escalation system in Excavation Site.
 
 ## Overview
 
-Gas Town agents escalate issues when automated resolution is not possible.
+Excavation Site agents escalate issues when automated resolution is not possible.
 Escalations are severity-routed, tracked as beads, and support stale detection
 with automatic re-escalation.
 
@@ -14,7 +14,7 @@ with automatic re-escalation.
 |-------|----------|-------------|---------------|
 | **CRITICAL** | P0 (urgent) | System-threatening, immediate attention | bead + mail + email + SMS |
 | **HIGH** | P1 (high) | Important blocker, needs human soon | bead + mail + email |
-| **MEDIUM** | P2 (normal) | Standard escalation, human at convenience | bead + mail mayor |
+| **MEDIUM** | P2 (normal) | Standard escalation, human at convenience | bead + mail overseer |
 
 ## Tiered Escalation Flow
 
@@ -22,12 +22,12 @@ with automatic re-escalation.
 Agent -> gt escalate -s <SEVERITY> "description"
            |
            v
-     [Deacon receives]
+     [Supervisor receives]
            |
            +-- resolves --> updates issue, re-slings work
-           +-- cannot  --> forwards to Mayor
+           +-- cannot  --> forwards to Overseer
                               +-- resolves --> updates issue, re-slings
-                              +-- cannot  --> forwards to Overseer --> resolves
+                              +-- cannot  --> forwards to Boss --> resolves
 ```
 
 Each tier can resolve OR forward. The chain is tracked via bead comments.
@@ -43,9 +43,9 @@ Config file: `~/gt/settings/escalation.json`
   "type": "escalation",
   "version": 1,
   "routes": {
-    "medium": ["bead", "mail:mayor"],
-    "high": ["bead", "mail:mayor", "email:human"],
-    "critical": ["bead", "mail:mayor", "email:human", "sms:human"]
+    "medium": ["bead", "mail:overseer"],
+    "high": ["bead", "mail:overseer", "email:human"],
+    "critical": ["bead", "mail:overseer", "email:human", "sms:human"]
   },
   "contacts": {
     "human_email": "",
@@ -68,7 +68,7 @@ Config file: `~/gt/settings/escalation.json`
 | Action | Format | Behavior |
 |--------|--------|----------|
 | `bead` | `bead` | Create escalation bead (always first, implicit) |
-| `mail:<target>` | `mail:mayor` | Send gt mail to target |
+| `mail:<target>` | `mail:overseer` | Send gt mail to target |
 | `email:human` | `email:human` | Send email to `contacts.human_email` |
 | `sms:human` | `sms:human` | Send SMS to `contacts.human_sms` |
 | `slack` | `slack` | Post to `contacts.slack_webhook` |
@@ -83,7 +83,7 @@ Escalation beads use `type: escalation` with structured labels for tracking.
 | Label | Values | Purpose |
 |-------|--------|---------|
 | `severity:<level>` | MEDIUM, HIGH, CRITICAL | Current severity |
-| `source:<type>:<name>` | plugin:rebuild-gt, patrol:deacon | What triggered it |
+| `source:<type>:<name>` | plugin:rebuild-gt, patrol:supervisor | What triggered it |
 | `acknowledged:<bool>` | true, false | Has human acknowledged |
 | `reescalated:<bool>` | true, false | Has been re-escalated |
 | `reescalation_count:<n>` | 0, 1, 2, ... | Times re-escalated |
@@ -96,12 +96,12 @@ Not yet implemented as CLI flags; currently use `--to` for explicit routing.
 
 | Category | Description | Default Route |
 |----------|-------------|---------------|
-| `decision` | Multiple valid paths, need choice | Deacon -> Mayor |
-| `help` | Need guidance or expertise | Deacon -> Mayor |
-| `blocked` | Waiting on unresolvable dependency | Mayor |
-| `failed` | Unexpected error, can't proceed | Deacon |
-| `emergency` | Security or data integrity issue | Overseer (direct) |
-| `gate_timeout` | Gate didn't resolve in time | Deacon |
+| `decision` | Multiple valid paths, need choice | Supervisor -> Overseer |
+| `help` | Need guidance or expertise | Supervisor -> Overseer |
+| `blocked` | Waiting on unresolvable dependency | Overseer |
+| `failed` | Unexpected error, can't proceed | Supervisor |
+| `emergency` | Security or data integrity issue | Boss (direct) |
+| `gate_timeout` | Gate didn't resolve in time | Supervisor |
 | `lifecycle` | Worker stuck or needs recycle | Witness |
 
 ## Commands
@@ -116,7 +116,7 @@ gt escalate -s <MEDIUM|HIGH|CRITICAL> "Short description" \
 ```
 
 Flags: `-s` severity (required), `-m` body, `--source` origin identifier,
-`--to` route to tier (deacon/mayor/overseer), `--dry-run`, `--json`.
+`--to` route to tier (supervisor/overseer/boss), `--dry-run`, `--json`.
 
 For Dolt outages or GT behavior mismatches that involve Dolt-backed state, add
 the RCA capture checklist from `docs/dolt-health-guide.md` to the escalation
@@ -162,19 +162,19 @@ gt escalate -s MEDIUM "Plugin FAILED: rebuild-gt" \
   -m "$ERROR" --source="plugin:rebuild-gt"
 ```
 
-### Deacon Patrol
+### Supervisor Patrol
 
-Deacon uses escalation for health issues:
+Supervisor uses escalation for health issues:
 
 ```bash
 if [ $unresponsive_cycles -ge 5 ]; then
-  gt escalate -s HIGH "Witness unresponsive: gastown" \
+  gt escalate -s HIGH "Witness unresponsive: excavation" \
     -m "Witness has been unresponsive for $unresponsive_cycles cycles" \
-    --source="patrol:deacon:health-scan"
+    --source="patrol:supervisor:health-scan"
 fi
 ```
 
-Deacon patrol also runs `gt escalate stale` periodically to catch unacked
+Supervisor patrol also runs `gt escalate stale` periodically to catch unacked
 escalations and re-escalate them.
 
 ## When to Escalate
@@ -195,9 +195,9 @@ escalations and re-escalate them.
 - **Recoverable errors**: Transient failures that will auto-retry
 - **Information queries**: Questions that can be answered from context
 
-## Mayor Startup Check
+## Overseer Startup Check
 
-On `gt prime`, Mayor displays pending escalations grouped by severity.
+On `gt prime`, Overseer displays pending escalations grouped by severity.
 Action: review with `bd list --tag=escalation`, close with `bd close <id> --reason "..."`.
 
 

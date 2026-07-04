@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/mail"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/witness"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/mail"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/witness"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var (
@@ -24,8 +24,8 @@ var (
 
 var patrolScanCmd = &cobra.Command{
 	Use:   "scan",
-	Short: "Scan polecats for zombies, stalls, and completions",
-	Long: `Run proactive detection across all polecats in a rig.
+	Short: "Scan miners for zombies, stalls, and completions",
+	Long: `Run proactive detection across all miners in a rig.
 
 This command bridges the witness library detection functions to the CLI,
 providing a single command for the survey-workers patrol step.
@@ -47,7 +47,7 @@ remains machine-readable while operators can see where a slow patrol is stuck.
 
 Examples:
   gt patrol scan                    # Scan current rig
-  gt patrol scan --rig gastown      # Scan specific rig
+  gt patrol scan --rig excavation      # Scan specific rig
   gt patrol scan --json             # Machine-readable output
   gt patrol scan --notify           # Send mail on zombie detection`,
 	RunE: runPatrolScan,
@@ -55,7 +55,7 @@ Examples:
 
 func init() {
 	patrolScanCmd.Flags().BoolVar(&patrolScanJSON, "json", false, "Output as JSON")
-	patrolScanCmd.Flags().BoolVar(&patrolScanNotify, "notify", false, "Send mail to witness/mayor when active-work zombies are detected")
+	patrolScanCmd.Flags().BoolVar(&patrolScanNotify, "notify", false, "Send mail to witness/overseer when active-work zombies are detected")
 	patrolScanCmd.Flags().StringVar(&patrolScanRig, "rig", "", "Rig to scan (default: infer from cwd or GT_RIG)")
 	patrolScanCmd.Flags().BoolVarP(&patrolScanVerbose, "verbose", "v", false, "Verbose output")
 
@@ -84,7 +84,7 @@ type PatrolScanZombieOutput struct {
 
 // PatrolScanZombieItem is a single zombie detection in scan output.
 type PatrolScanZombieItem struct {
-	Polecat        string `json:"polecat"`
+	Miner        string `json:"miner"`
 	Classification string `json:"classification"`
 	AgentState     string `json:"agent_state"`
 	HookBead       string `json:"hook_bead,omitempty"`
@@ -103,7 +103,7 @@ type PatrolScanStallOutput struct {
 
 // PatrolScanStallItem is a single stall detection in scan output.
 type PatrolScanStallItem struct {
-	Polecat   string `json:"polecat"`
+	Miner   string `json:"miner"`
 	StallType string `json:"stall_type"`
 	Action    string `json:"action"`
 	Error     string `json:"error,omitempty"`
@@ -118,7 +118,7 @@ type PatrolScanCompleteOutput struct {
 
 // PatrolScanCompleteItem is a single completion discovery in scan output.
 type PatrolScanCompleteItem struct {
-	Polecat        string `json:"polecat"`
+	Miner        string `json:"miner"`
 	ExitType       string `json:"exit_type"`
 	IssueID        string `json:"issue_id,omitempty"`
 	MRID           string `json:"mr_id,omitempty"`
@@ -131,7 +131,7 @@ type PatrolScanCompleteItem struct {
 func runPatrolScan(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Determine rig name
@@ -154,15 +154,15 @@ func runPatrolScan(cmd *cobra.Command, args []string) error {
 	timestamp := time.Now().UTC().Format(time.RFC3339)
 
 	// Run all three detection passes.
-	// Note: DetectZombiePolecats takes a router param but does NOT send mail
+	// Note: DetectZombieMiners takes a router param but does NOT send mail
 	// internally — it only uses the router for workspace context. Notifications
 	// are sent exclusively below via --notify, avoiding double-send.
 	diagnostics := cmd.ErrOrStderr()
-	zombieResult := runPatrolScanPhase(diagnostics, "zombie detection", func() *witness.DetectZombiePolecatsResult {
-		return witness.DetectZombiePolecats(bd, workDir, rigName, router)
+	zombieResult := runPatrolScanPhase(diagnostics, "zombie detection", func() *witness.DetectZombieMinersResult {
+		return witness.DetectZombieMiners(bd, workDir, rigName, router)
 	})
-	stallResult := runPatrolScanPhase(diagnostics, "stall detection", func() *witness.DetectStalledPolecatsResult {
-		return witness.DetectStalledPolecats(workDir, rigName)
+	stallResult := runPatrolScanPhase(diagnostics, "stall detection", func() *witness.DetectStalledMinersResult {
+		return witness.DetectStalledMiners(workDir, rigName)
 	})
 	completionResult := runPatrolScanPhase(diagnostics, "completion discovery", func() *witness.DiscoverCompletionsResult {
 		return witness.DiscoverCompletions(bd, workDir, rigName, router)
@@ -172,7 +172,7 @@ func runPatrolScan(cmd *cobra.Command, args []string) error {
 	receipts := witness.BuildPatrolReceipts(rigName, zombieResult)
 
 	// Notify when zombies with active work are detected.
-	// Always notify the mayor for active-work zombies (dead polecats with hooked
+	// Always notify the overseer for active-work zombies (dead miners with hooked
 	// beads) — this is the primary mechanism for detecting failed work. (GH #3584)
 	// Use --notify=false to suppress (e.g., in dry-run/testing contexts).
 	if zombieResult != nil {
@@ -233,7 +233,7 @@ func formatPatrolScanElapsed(elapsed time.Duration) string {
 	return elapsed.Round(time.Second).String()
 }
 
-func countActiveWorkZombies(result *witness.DetectZombiePolecatsResult) int {
+func countActiveWorkZombies(result *witness.DetectZombieMinersResult) int {
 	count := 0
 	for _, z := range result.Zombies {
 		if z.WasActive {
@@ -243,7 +243,7 @@ func countActiveWorkZombies(result *witness.DetectZombiePolecatsResult) int {
 	return count
 }
 
-func sendZombieNotification(router *mail.Router, rigName string, result *witness.DetectZombiePolecatsResult, activeCount int) {
+func sendZombieNotification(router *mail.Router, rigName string, result *witness.DetectZombieMinersResult, activeCount int) {
 	var lines []string
 	lines = append(lines, fmt.Sprintf("Patrol scan detected %d zombie(s) with active work in rig %s:", activeCount, rigName))
 	lines = append(lines, "")
@@ -252,7 +252,7 @@ func sendZombieNotification(router *mail.Router, rigName string, result *witness
 			continue
 		}
 		line := fmt.Sprintf("- %s: %s (hook=%s, action=%s)",
-			z.PolecatName, string(z.Classification), z.HookBead, z.Action)
+			z.MinerName, string(z.Classification), z.HookBead, z.Action)
 		if z.Error != nil {
 			line += fmt.Sprintf(" [error: %v]", z.Error)
 		}
@@ -271,21 +271,21 @@ func sendZombieNotification(router *mail.Router, rigName string, result *witness
 	}
 	_ = router.Send(witMsg)
 
-	// Also notify the mayor so dead polecats don't go unnoticed. (GH #3584)
-	// The mayor needs to know so work can be reslung.
-	mayorBody := strings.Join(lines, "\n") +
+	// Also notify the overseer so dead miners don't go unnoticed. (GH #3584)
+	// The overseer needs to know so work can be reslung.
+	overseerBody := strings.Join(lines, "\n") +
 		"\n\nResling instructions:\n" +
 		"  gt sling <bead-id> <rig> --create --force"
-	mayorMsg := &mail.Message{
+	overseerMsg := &mail.Message{
 		From:    fmt.Sprintf("%s/witness", rigName),
-		To:      "mayor/",
-		Subject: fmt.Sprintf("POLECAT_DIED: %d polecat(s) died with active work in %s", activeCount, rigName),
-		Body:    mayorBody,
+		To:      "overseer/",
+		Subject: fmt.Sprintf("MINER_DIED: %d miner(s) died with active work in %s", activeCount, rigName),
+		Body:    overseerBody,
 	}
-	_ = router.Send(mayorMsg)
+	_ = router.Send(overseerMsg)
 }
 
-func outputPatrolScanJSON(rigName, timestamp string, zombieResult *witness.DetectZombiePolecatsResult, stallResult *witness.DetectStalledPolecatsResult, completionResult *witness.DiscoverCompletionsResult, receipts []witness.PatrolReceipt) error {
+func outputPatrolScanJSON(rigName, timestamp string, zombieResult *witness.DetectZombieMinersResult, stallResult *witness.DetectStalledMinersResult, completionResult *witness.DiscoverCompletionsResult, receipts []witness.PatrolReceipt) error {
 	output := PatrolScanOutput{
 		Rig:       rigName,
 		Timestamp: timestamp,
@@ -300,7 +300,7 @@ func outputPatrolScanJSON(rigName, timestamp string, zombieResult *witness.Detec
 		}
 		for _, z := range zombieResult.Zombies {
 			item := PatrolScanZombieItem{
-				Polecat:        z.PolecatName,
+				Miner:        z.MinerName,
 				Classification: string(z.Classification),
 				AgentState:     z.AgentState,
 				HookBead:       z.HookBead,
@@ -327,7 +327,7 @@ func outputPatrolScanJSON(rigName, timestamp string, zombieResult *witness.Detec
 		}
 		for _, s := range stallResult.Stalled {
 			item := PatrolScanStallItem{
-				Polecat:   s.PolecatName,
+				Miner:   s.MinerName,
 				StallType: s.StallType,
 				Action:    s.Action,
 			}
@@ -347,7 +347,7 @@ func outputPatrolScanJSON(rigName, timestamp string, zombieResult *witness.Detec
 		}
 		for _, d := range completionResult.Discovered {
 			item := PatrolScanCompleteItem{
-				Polecat:        d.PolecatName,
+				Miner:        d.MinerName,
 				ExitType:       d.ExitType,
 				IssueID:        d.IssueID,
 				MRID:           d.MRID,
@@ -366,12 +366,12 @@ func outputPatrolScanJSON(rigName, timestamp string, zombieResult *witness.Detec
 	return enc.Encode(output)
 }
 
-func outputPatrolScanHuman(rigName string, zombieResult *witness.DetectZombiePolecatsResult, stallResult *witness.DetectStalledPolecatsResult, completionResult *witness.DiscoverCompletionsResult, _ []witness.PatrolReceipt) error {
+func outputPatrolScanHuman(rigName string, zombieResult *witness.DetectZombieMinersResult, stallResult *witness.DetectStalledMinersResult, completionResult *witness.DiscoverCompletionsResult, _ []witness.PatrolReceipt) error {
 	fmt.Printf("%s Patrol scan: %s\n\n", style.Bold.Render("🔍"), rigName)
 
 	// Zombies
 	if zombieResult != nil {
-		fmt.Printf("%s Zombie Detection: checked %d polecat(s)\n",
+		fmt.Printf("%s Zombie Detection: checked %d miner(s)\n",
 			style.Bold.Render("👻"), zombieResult.Checked)
 
 		if len(zombieResult.Zombies) == 0 {
@@ -382,7 +382,7 @@ func outputPatrolScanHuman(rigName string, zombieResult *witness.DetectZombiePol
 				if z.WasActive {
 					icon = "🚨"
 				}
-				fmt.Printf("  %s %s: %s\n", icon, z.PolecatName, z.Classification)
+				fmt.Printf("  %s %s: %s\n", icon, z.MinerName, z.Classification)
 				fmt.Printf("    State: %s", z.AgentState)
 				if z.HookBead != "" {
 					fmt.Printf("  Hook: %s", z.HookBead)
@@ -405,22 +405,22 @@ func outputPatrolScanHuman(rigName string, zombieResult *witness.DetectZombiePol
 			}
 		}
 
-		if len(zombieResult.ConvoyFailures) > 0 {
-			fmt.Printf("  Convoy failures: %d\n", len(zombieResult.ConvoyFailures))
+		if len(zombieResult.MinecartFailures) > 0 {
+			fmt.Printf("  Minecart failures: %d\n", len(zombieResult.MinecartFailures))
 		}
 		fmt.Println()
 	}
 
 	// Stalls
 	if stallResult != nil && (len(stallResult.Stalled) > 0 || patrolScanVerbose) {
-		fmt.Printf("%s Stall Detection: checked %d polecat(s)\n",
+		fmt.Printf("%s Stall Detection: checked %d miner(s)\n",
 			style.Bold.Render("⏳"), stallResult.Checked)
 
 		if len(stallResult.Stalled) == 0 {
 			fmt.Printf("  %s\n", style.Dim.Render("No stalls detected"))
 		} else {
 			for _, s := range stallResult.Stalled {
-				fmt.Printf("  ⚠ %s: %s → %s\n", s.PolecatName, s.StallType, s.Action)
+				fmt.Printf("  ⚠ %s: %s → %s\n", s.MinerName, s.StallType, s.Action)
 				if s.Error != nil {
 					fmt.Printf("    %s\n", style.Dim.Render(fmt.Sprintf("Error: %v", s.Error)))
 				}
@@ -431,14 +431,14 @@ func outputPatrolScanHuman(rigName string, zombieResult *witness.DetectZombiePol
 
 	// Completions
 	if completionResult != nil && (len(completionResult.Discovered) > 0 || patrolScanVerbose) {
-		fmt.Printf("%s Completion Discovery: checked %d polecat(s)\n",
+		fmt.Printf("%s Completion Discovery: checked %d miner(s)\n",
 			style.Bold.Render("✅"), completionResult.Checked)
 
 		if len(completionResult.Discovered) == 0 {
 			fmt.Printf("  %s\n", style.Dim.Render("No completions discovered"))
 		} else {
 			for _, d := range completionResult.Discovered {
-				fmt.Printf("  ● %s: exit=%s", d.PolecatName, d.ExitType)
+				fmt.Printf("  ● %s: exit=%s", d.MinerName, d.ExitType)
 				if d.IssueID != "" {
 					fmt.Printf("  issue=%s", d.IssueID)
 				}

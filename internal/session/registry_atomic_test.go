@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/config"
 )
 
 func TestDefaultRegistrySwapAndPrefixFor(t *testing.T) {
@@ -36,8 +36,8 @@ func TestIsKnownSession_UsesDefaultRegistryAndHQPrefix(t *testing.T) {
 	r.Register("xy", "xrig")
 	SetDefaultRegistry(r)
 
-	if !IsKnownSession("hq-mayor") {
-		t.Fatal("expected hq-mayor to always be known")
+	if !IsKnownSession("hq-overseer") {
+		t.Fatal("expected hq-overseer to always be known")
 	}
 	if !IsKnownSession("xy-worker") {
 		t.Fatal("expected xy-worker to be known via registry prefix")

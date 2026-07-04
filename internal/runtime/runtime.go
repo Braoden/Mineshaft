@@ -8,20 +8,20 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/cli"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/hooks"
-	"github.com/steveyegge/gastown/internal/templates/commands"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/cli"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/hooks"
+	"github.com/steveyegge/excavation/internal/templates/commands"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // EnsureSettingsForRole provisions all agent-specific configuration for a role.
 // settingsDir is where provider settings (e.g., .claude/settings.json) are installed.
 // workDir is the agent's working directory where slash commands are provisioned.
-// For roles like crew/witness/refinery/polecat, settingsDir is a gastown-managed
+// For roles like crew/witness/refinery/miner, settingsDir is a excavation-managed
 // parent directory (passed via --settings flag), while workDir is the customer repo.
-// For mayor/deacon, settingsDir and workDir are the same.
+// For overseer/supervisor, settingsDir and workDir are the same.
 func EnsureSettingsForRole(settingsDir, workDir, role string, rc *config.RuntimeConfig) error {
 	if rc == nil {
 		rc = config.DefaultRuntimeConfig()
@@ -120,8 +120,8 @@ func pointsToAgentsMD(target string) bool {
 
 // commandsInherited reports whether workDir will receive slash commands via
 // Claude Code's path-hierarchy traversal without explicit provisioning.
-// Commands are inherited when workDir is inside a Gas Town workspace root and
-// not separated from it by a nested git repo. Crew and polecat workdirs are
+// Commands are inherited when workDir is inside a Excavation Site workspace root and
+// not separated from it by a nested git repo. Crew and miner workdirs are
 // nested repos, so they still get their own command provisioning.
 func commandsInherited(workDir string) bool {
 	townRoot, err := workspace.Find(workDir)
@@ -196,8 +196,8 @@ func StartupFallbackCommands(role string, rc *config.RuntimeConfig) []string {
 
 	role = strings.ToLower(role)
 	command := "gt prime"
-	// NOTE: session-started nudge to deacon removed — it interrupted
-	// the deacon's await-signal backoff (exponential sleep). The deacon
+	// NOTE: session-started nudge to supervisor removed — it interrupted
+	// the supervisor's await-signal backoff (exponential sleep). The supervisor
 	// already wakes on beads activity via bd activity --follow.
 
 	return []string{command}

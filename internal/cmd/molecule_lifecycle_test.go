@@ -20,13 +20,13 @@ func TestExtractRoleFromIdentity(t *testing.T) {
 		target string
 		want   string
 	}{
-		{"gastown/refinery", "refinery"},
-		{"gastown/witness", "witness"},
-		{"gastown/crew/jack", "jack"},
-		{"gastown/polecats/nux", "nux"},
-		{"mayor/", "mayor"},
-		{"deacon/", "deacon"},
-		{"deacon/boot", "boot"},
+		{"excavation/refinery", "refinery"},
+		{"excavation/witness", "witness"},
+		{"excavation/crew/jack", "jack"},
+		{"excavation/miners/nux", "nux"},
+		{"overseer/", "overseer"},
+		{"supervisor/", "supervisor"},
+		{"supervisor/boot", "boot"},
 		{"refinery", "refinery"},
 	}
 	for _, tc := range tests {
@@ -78,7 +78,7 @@ func TestSquashJitterNegativeDuration(t *testing.T) {
 // TestSquashJitterZeroDuration verifies that --jitter 0s proceeds without
 // sleeping (the jitterMax > 0 guard skips the sleep block).
 // This tests the parse path only — the command will fail at workspace lookup
-// since we run from a temp directory outside any gastown workspace.
+// since we run from a temp directory outside any excavation workspace.
 func TestSquashJitterZeroDuration(t *testing.T) {
 	prev := moleculeJitter
 	t.Cleanup(func() { moleculeJitter = prev })
@@ -164,20 +164,20 @@ func TestSlingFormulaOnBeadHooksBaseBead(t *testing.T) {
 	townRoot := t.TempDir()
 
 	// Minimal workspace marker
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 
 	// Create routes
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	rigDir := filepath.Join(townRoot, "gastown", "mayor", "rig")
+	rigDir := filepath.Join(townRoot, "excavation", "overseer", "rig")
 	if err := os.MkdirAll(rigDir, 0755); err != nil {
 		t.Fatalf("mkdir rigDir: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"gastown/mayor/rig"}`,
+		`{"prefix":"gt-","path":"excavation/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
@@ -205,7 +205,7 @@ case "$cmd" in
     echo '[{"id":"gt-abc123","title":"Bug to fix","status":"open","assignee":"","description":""}]'
     ;;
   formula)
-    echo '{"name":"mol-polecat-work"}'
+    echo '{"name":"mol-miner-work"}'
     ;;
   cook)
     exit 0
@@ -243,7 +243,7 @@ if "%cmd%"=="show" (
   exit /b 0
 )
 if "%cmd%"=="formula" (
-  echo {^"name^":^"mol-polecat-work^"}
+  echo {^"name^":^"mol-miner-work^"}
   exit /b 0
 )
 if "%cmd%"=="cook" exit /b 0
@@ -264,8 +264,8 @@ exit /b 0
 
 	t.Setenv("BD_LOG", logPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv(EnvGTRole, "overseer")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("TMUX_PANE", "")
 	t.Setenv("GT_TEST_NO_NUDGE", "1")
@@ -276,7 +276,7 @@ exit /b 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
@@ -284,20 +284,20 @@ exit /b 0
 	prevOn := slingOnTarget
 	prevVars := slingVars
 	prevDryRun := slingDryRun
-	prevNoConvoy := slingNoConvoy
+	prevNoMinecart := slingNoMinecart
 	t.Cleanup(func() {
 		slingOnTarget = prevOn
 		slingVars = prevVars
 		slingDryRun = prevDryRun
-		slingNoConvoy = prevNoConvoy
+		slingNoMinecart = prevNoMinecart
 	})
 
 	slingDryRun = false
-	slingNoConvoy = true
+	slingNoMinecart = true
 	slingVars = nil
 	slingOnTarget = "gt-abc123" // The base bead
 
-	if err := runSling(nil, []string{"mol-polecat-work"}); err != nil {
+	if err := runSling(nil, []string{"mol-miner-work"}); err != nil {
 		t.Fatalf("runSling: %v", err)
 	}
 
@@ -358,20 +358,20 @@ func TestSlingFormulaOnBeadSetsAttachedMoleculeInBaseBead(t *testing.T) {
 	townRoot := t.TempDir()
 
 	// Minimal workspace marker
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 
 	// Create routes
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	rigDir := filepath.Join(townRoot, "gastown", "mayor", "rig")
+	rigDir := filepath.Join(townRoot, "excavation", "overseer", "rig")
 	if err := os.MkdirAll(rigDir, 0755); err != nil {
 		t.Fatalf("mkdir rigDir: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"gastown/mayor/rig"}`,
+		`{"prefix":"gt-","path":"excavation/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
@@ -399,7 +399,7 @@ case "$cmd" in
     echo '[{"id":"gt-abc123","title":"Bug to fix","status":"open","assignee":"","description":""}]'
     ;;
   formula)
-    echo '{"name":"mol-polecat-work"}'
+    echo '{"name":"mol-miner-work"}'
     ;;
   cook)
     exit 0
@@ -437,7 +437,7 @@ if "%cmd%"=="show" (
   exit /b 0
 )
 if "%cmd%"=="formula" (
-  echo {^"name^":^"mol-polecat-work^"}
+  echo {^"name^":^"mol-miner-work^"}
   exit /b 0
 )
 if "%cmd%"=="cook" exit /b 0
@@ -458,8 +458,8 @@ exit /b 0
 
 	t.Setenv("BD_LOG", logPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv(EnvGTRole, "mayor")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv(EnvGTRole, "overseer")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("TMUX_PANE", "")
 	t.Setenv("GT_TEST_NO_NUDGE", "1")
@@ -470,7 +470,7 @@ exit /b 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "mayor", "rig")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "overseer", "rig")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
@@ -478,20 +478,20 @@ exit /b 0
 	prevOn := slingOnTarget
 	prevVars := slingVars
 	prevDryRun := slingDryRun
-	prevNoConvoy := slingNoConvoy
+	prevNoMinecart := slingNoMinecart
 	t.Cleanup(func() {
 		slingOnTarget = prevOn
 		slingVars = prevVars
 		slingDryRun = prevDryRun
-		slingNoConvoy = prevNoConvoy
+		slingNoMinecart = prevNoMinecart
 	})
 
 	slingDryRun = false
-	slingNoConvoy = true
+	slingNoMinecart = true
 	slingVars = nil
 	slingOnTarget = "gt-abc123" // The base bead
 
-	if err := runSling(nil, []string{"mol-polecat-work"}); err != nil {
+	if err := runSling(nil, []string{"mol-miner-work"}); err != nil {
 		t.Fatalf("runSling: %v", err)
 	}
 
@@ -542,9 +542,9 @@ func TestBurnClosesWispRoot(t *testing.T) {
 
 	townRoot := t.TempDir()
 
-	// Workspace marker: mayor/ directory (SecondaryMarker)
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor"), 0755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+	// Workspace marker: overseer/ directory (SecondaryMarker)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer"), 0755); err != nil {
+		t.Fatalf("mkdir overseer: %v", err)
 	}
 
 	// .beads directory (for findLocalBeadsDir and lockBead)
@@ -596,7 +596,7 @@ exit 0
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "witness")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("GT_RIG", "")
 	t.Setenv("TMUX_PANE", "")
@@ -645,8 +645,8 @@ func TestSquashClosesWispRoot(t *testing.T) {
 	townRoot := t.TempDir()
 
 	// Workspace marker
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor"), 0755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer"), 0755); err != nil {
+		t.Fatalf("mkdir overseer: %v", err)
 	}
 
 	// .beads directory
@@ -696,7 +696,7 @@ exit 0
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "refinery")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("GT_RIG", "")
 	t.Setenv("TMUX_PANE", "")
@@ -757,8 +757,8 @@ func TestSquashClosesDescendantsAndRoot(t *testing.T) {
 
 	townRoot := t.TempDir()
 
-	if err := os.MkdirAll(filepath.Join(townRoot, "mayor"), 0755); err != nil {
-		t.Fatalf("mkdir mayor: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "overseer"), 0755); err != nil {
+		t.Fatalf("mkdir overseer: %v", err)
 	}
 	beadsDir := filepath.Join(townRoot, ".beads")
 	if err := os.MkdirAll(filepath.Join(beadsDir, "locks"), 0755); err != nil {
@@ -806,7 +806,7 @@ exit 0
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "witness")
-	t.Setenv("GT_POLECAT", "")
+	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("GT_RIG", "")
 	t.Setenv("TMUX_PANE", "")
@@ -890,7 +890,7 @@ func TestDoneClosesAttachedMolecule(t *testing.T) {
 	townRoot := t.TempDir()
 
 	// Create rig structure - use simple rig name that matches routes lookup
-	rigPath := filepath.Join(townRoot, "gastown")
+	rigPath := filepath.Join(townRoot, "excavation")
 	if err := os.MkdirAll(rigPath, 0755); err != nil {
 		t.Fatalf("mkdir rig: %v", err)
 	}
@@ -900,7 +900,7 @@ func TestDoneClosesAttachedMolecule(t *testing.T) {
 
 	// Create routes - path first part must match GT_RIG for prefix lookup
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"gastown"}`,
+		`{"prefix":"gt-","path":"excavation"}`,
 		"",
 	}, "\n")
 	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(routes), 0644); err != nil {
@@ -930,14 +930,14 @@ case "$cmd" in
   show)
     beadID="$1"
     case "$beadID" in
-      gt-gastown-polecat-nux)
-        echo '[{"id":"gt-gastown-polecat-nux","title":"Polecat nux","status":"open","hook_bead":"gt-abc123","agent_state":"working"}]'
+      gt-excavation-miner-nux)
+        echo '[{"id":"gt-excavation-miner-nux","title":"Miner nux","status":"open","hook_bead":"gt-abc123","agent_state":"working"}]'
         ;;
       gt-abc123)
         echo '[{"id":"gt-abc123","title":"Bug to fix","status":"hooked","description":"attached_molecule: gt-wisp-xyz"}]'
         ;;
       gt-wisp-xyz)
-        echo '[{"id":"gt-wisp-xyz","title":"mol-polecat-work","status":"open","ephemeral":true}]'
+        echo '[{"id":"gt-wisp-xyz","title":"mol-miner-work","status":"open","ephemeral":true}]'
         ;;
       *)
         echo '[]'
@@ -967,8 +967,8 @@ if "%%cmd%%"=="--allow-stale" (
   goto strip_flags
 )
 if "%%cmd%%"=="show" (
-  if "%%beadID%%"=="gt-gastown-polecat-nux" (
-    echo [{^"id^":^"gt-gastown-polecat-nux^",^"title^":^"Polecat nux^",^"status^":^"open^",^"hook_bead^":^"gt-abc123^",^"agent_state^":^"working^"}]
+  if "%%beadID%%"=="gt-excavation-miner-nux" (
+    echo [{^"id^":^"gt-excavation-miner-nux^",^"title^":^"Miner nux^",^"status^":^"open^",^"hook_bead^":^"gt-abc123^",^"agent_state^":^"working^"}]
     exit /b 0
   )
   if "%%beadID%%"=="gt-abc123" (
@@ -976,7 +976,7 @@ if "%%cmd%%"=="show" (
     exit /b 0
   )
   if "%%beadID%%"=="gt-wisp-xyz" (
-    echo [{^"id^":^"gt-wisp-xyz^",^"title^":^"mol-polecat-work^",^"status^":^"open^",^"ephemeral^":true}]
+    echo [{^"id^":^"gt-wisp-xyz^",^"title^":^"mol-miner-work^",^"status^":^"open^",^"ephemeral^":true}]
     exit /b 0
   )
   echo []
@@ -1005,9 +1005,9 @@ exit /b 0
 	}
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv("GT_ROLE", "polecat")
-	t.Setenv("GT_RIG", "gastown")
-	t.Setenv("GT_POLECAT", "nux")
+	t.Setenv("GT_ROLE", "miner")
+	t.Setenv("GT_RIG", "excavation")
+	t.Setenv("GT_MINER", "nux")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("TMUX_PANE", "")
 

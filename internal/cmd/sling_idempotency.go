@@ -11,8 +11,8 @@ func normalizeAgentID(v string) string {
 // to the existing assignee for idempotent sling behavior.
 //
 // Only matches unambiguous equivalences. Ambiguous shorthand targets
-// (e.g., "rig/name" which could resolve to polecats or crew) and pool
-// targets (e.g., "deacon/dogs" which dispatches to an idle dog) are NOT
+// (e.g., "rig/name" which could resolve to miners or crew) and pool
+// targets (e.g., "supervisor/dogs" which dispatches to an idle dog) are NOT
 // matched — these must go through normal resolution to pick the right agent.
 func matchesSlingTarget(target, assignee, selfAgent string) bool {
 	assigneeNorm := normalizeAgentID(assignee)
@@ -31,22 +31,22 @@ func matchesSlingTarget(target, assignee, selfAgent string) bool {
 		return true
 	}
 
-	// Rig-only target maps to polecat dispatch within that rig.
+	// Rig-only target maps to miner dispatch within that rig.
 	// Intentionally excludes crew/witness/refinery: rig-name targets resolve
-	// exclusively to polecats via IsRigName, so "gastown" + "gastown/crew/alex"
+	// exclusively to miners via IsRigName, so "excavation" + "excavation/crew/alex"
 	// is NOT a match (different dispatch path).
 	parts := strings.Split(targetNorm, "/")
-	if len(parts) == 1 && strings.HasPrefix(assigneeNorm, targetNorm+"/polecats/") {
+	if len(parts) == 1 && strings.HasPrefix(assigneeNorm, targetNorm+"/miners/") {
 		return true
 	}
 
-	// NOTE: Two-segment shorthand targets (e.g., "gastown/alex") and pool
-	// targets (e.g., "deacon/dogs") are intentionally NOT matched here.
+	// NOTE: Two-segment shorthand targets (e.g., "excavation/alex") and pool
+	// targets (e.g., "supervisor/dogs") are intentionally NOT matched here.
 	// - Shorthand: the real resolver has priority logic (prefers crew when
 	//   crew dir exists) that this pure function cannot replicate.
-	// - Pool: "deacon/dogs" means "dispatch to an idle dog", not "keep the
+	// - Pool: "supervisor/dogs" means "dispatch to an idle dog", not "keep the
 	//   current dog". Matching would prevent reassignment to idle workers.
-	// Users can use full paths (e.g., "gastown/polecats/toast") for
+	// Users can use full paths (e.g., "excavation/miners/toast") for
 	// unambiguous idempotent behavior with these targets.
 
 	return false

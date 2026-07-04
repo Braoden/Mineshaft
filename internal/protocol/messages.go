@@ -5,16 +5,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/mail"
+	"github.com/steveyegge/excavation/internal/mail"
 )
 
 // NewMergeReadyMessage creates a MERGE_READY protocol message.
-// Sent by Witness to Refinery when a polecat's work is verified and ready.
-func NewMergeReadyMessage(rig, polecat, branch, issue string) *mail.Message {
+// Sent by Witness to Refinery when a miner's work is verified and ready.
+func NewMergeReadyMessage(rig, miner, branch, issue string) *mail.Message {
 	payload := MergeReadyPayload{
 		Branch:    branch,
 		Issue:     issue,
-		Polecat:   polecat,
+		Miner:   miner,
 		Rig:       rig,
 		Verified:  "clean git state, issue closed",
 		Timestamp: time.Now(),
@@ -25,7 +25,7 @@ func NewMergeReadyMessage(rig, polecat, branch, issue string) *mail.Message {
 	msg := mail.NewMessage(
 		fmt.Sprintf("%s/witness", rig),
 		fmt.Sprintf("%s/refinery", rig),
-		fmt.Sprintf("MERGE_READY %s", polecat),
+		fmt.Sprintf("MERGE_READY %s", miner),
 		body,
 	)
 	msg.Priority = mail.PriorityHigh
@@ -39,7 +39,7 @@ func formatMergeReadyBody(p MergeReadyPayload) string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("Branch: %s\n", p.Branch))
 	sb.WriteString(fmt.Sprintf("Issue: %s\n", p.Issue))
-	sb.WriteString(fmt.Sprintf("Polecat: %s\n", p.Polecat))
+	sb.WriteString(fmt.Sprintf("Miner: %s\n", p.Miner))
 	sb.WriteString(fmt.Sprintf("Rig: %s\n", p.Rig))
 	if p.Verified != "" {
 		sb.WriteString(fmt.Sprintf("Verified: %s\n", p.Verified))
@@ -49,11 +49,11 @@ func formatMergeReadyBody(p MergeReadyPayload) string {
 
 // NewMergedMessage creates a MERGED protocol message.
 // Sent by Refinery to Witness when a branch is successfully merged.
-func NewMergedMessage(rig, polecat, branch, issue, targetBranch, mergeCommit string) *mail.Message {
+func NewMergedMessage(rig, miner, branch, issue, targetBranch, mergeCommit string) *mail.Message {
 	payload := MergedPayload{
 		Branch:       branch,
 		Issue:        issue,
-		Polecat:      polecat,
+		Miner:      miner,
 		Rig:          rig,
 		MergedAt:     time.Now(),
 		MergeCommit:  mergeCommit,
@@ -65,7 +65,7 @@ func NewMergedMessage(rig, polecat, branch, issue, targetBranch, mergeCommit str
 	msg := mail.NewMessage(
 		fmt.Sprintf("%s/refinery", rig),
 		fmt.Sprintf("%s/witness", rig),
-		fmt.Sprintf("MERGED %s", polecat),
+		fmt.Sprintf("MERGED %s", miner),
 		body,
 	)
 	msg.Priority = mail.PriorityHigh
@@ -79,7 +79,7 @@ func formatMergedBody(p MergedPayload) string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("Branch: %s\n", p.Branch))
 	sb.WriteString(fmt.Sprintf("Issue: %s\n", p.Issue))
-	sb.WriteString(fmt.Sprintf("Polecat: %s\n", p.Polecat))
+	sb.WriteString(fmt.Sprintf("Miner: %s\n", p.Miner))
 	sb.WriteString(fmt.Sprintf("Rig: %s\n", p.Rig))
 	sb.WriteString(fmt.Sprintf("Target: %s\n", p.TargetBranch))
 	sb.WriteString(fmt.Sprintf("Merged-At: %s\n", p.MergedAt.Format(time.RFC3339)))
@@ -91,11 +91,11 @@ func formatMergedBody(p MergedPayload) string {
 
 // NewMergeFailedMessage creates a MERGE_FAILED protocol message.
 // Sent by Refinery to Witness when merge fails (tests, build, etc.).
-func NewMergeFailedMessage(rig, polecat, branch, issue, targetBranch, failureType, errorMsg string) *mail.Message {
+func NewMergeFailedMessage(rig, miner, branch, issue, targetBranch, failureType, errorMsg string) *mail.Message {
 	payload := MergeFailedPayload{
 		Branch:       branch,
 		Issue:        issue,
-		Polecat:      polecat,
+		Miner:      miner,
 		Rig:          rig,
 		FailedAt:     time.Now(),
 		FailureType:  failureType,
@@ -108,7 +108,7 @@ func NewMergeFailedMessage(rig, polecat, branch, issue, targetBranch, failureTyp
 	msg := mail.NewMessage(
 		fmt.Sprintf("%s/refinery", rig),
 		fmt.Sprintf("%s/witness", rig),
-		fmt.Sprintf("MERGE_FAILED %s", polecat),
+		fmt.Sprintf("MERGE_FAILED %s", miner),
 		body,
 	)
 	msg.Priority = mail.PriorityHigh
@@ -122,7 +122,7 @@ func formatMergeFailedBody(p MergeFailedPayload) string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("Branch: %s\n", p.Branch))
 	sb.WriteString(fmt.Sprintf("Issue: %s\n", p.Issue))
-	sb.WriteString(fmt.Sprintf("Polecat: %s\n", p.Polecat))
+	sb.WriteString(fmt.Sprintf("Miner: %s\n", p.Miner))
 	sb.WriteString(fmt.Sprintf("Rig: %s\n", p.Rig))
 	sb.WriteString(fmt.Sprintf("Target: %s\n", p.TargetBranch))
 	sb.WriteString(fmt.Sprintf("Failed-At: %s\n", p.FailedAt.Format(time.RFC3339)))
@@ -132,14 +132,14 @@ func formatMergeFailedBody(p MergeFailedPayload) string {
 }
 
 // NewFixNeededMessage creates a FIX_NEEDED protocol message.
-// Sent by Refinery directly to the Polecat when merge fails (tests, build, etc.).
-// Unlike MERGE_FAILED (which goes to Witness), FIX_NEEDED goes to the polecat
+// Sent by Refinery directly to the Miner when merge fails (tests, build, etc.).
+// Unlike MERGE_FAILED (which goes to Witness), FIX_NEEDED goes to the miner
 // so it can fix the code in-place without losing context.
-func NewFixNeededMessage(rig, polecat, branch, issue, targetBranch, failureType, errorMsg, mrBeadID string, attemptNumber int) *mail.Message {
+func NewFixNeededMessage(rig, miner, branch, issue, targetBranch, failureType, errorMsg, mrBeadID string, attemptNumber int) *mail.Message {
 	payload := FixNeededPayload{
 		Branch:        branch,
 		Issue:         issue,
-		Polecat:       polecat,
+		Miner:       miner,
 		Rig:           rig,
 		FailedAt:      time.Now(),
 		FailureType:   failureType,
@@ -153,8 +153,8 @@ func NewFixNeededMessage(rig, polecat, branch, issue, targetBranch, failureType,
 
 	msg := mail.NewMessage(
 		fmt.Sprintf("%s/refinery", rig),
-		fmt.Sprintf("%s/polecats/%s", rig, polecat),
-		fmt.Sprintf("FIX_NEEDED %s", polecat),
+		fmt.Sprintf("%s/miners/%s", rig, miner),
+		fmt.Sprintf("FIX_NEEDED %s", miner),
 		body,
 	)
 	msg.Priority = mail.PriorityHigh
@@ -168,7 +168,7 @@ func formatFixNeededBody(p FixNeededPayload) string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("Branch: %s\n", p.Branch))
 	sb.WriteString(fmt.Sprintf("Issue: %s\n", p.Issue))
-	sb.WriteString(fmt.Sprintf("Polecat: %s\n", p.Polecat))
+	sb.WriteString(fmt.Sprintf("Miner: %s\n", p.Miner))
 	sb.WriteString(fmt.Sprintf("Rig: %s\n", p.Rig))
 	sb.WriteString(fmt.Sprintf("Target: %s\n", p.TargetBranch))
 	sb.WriteString(fmt.Sprintf("Failed-At: %s\n", p.FailedAt.Format(time.RFC3339)))
@@ -182,12 +182,12 @@ func formatFixNeededBody(p FixNeededPayload) string {
 }
 
 // ParseFixNeededPayload parses a FIX_NEEDED message body into a payload.
-// Returns an error if required fields (Branch, Polecat, Rig) are missing.
+// Returns an error if required fields (Branch, Miner, Rig) are missing.
 func ParseFixNeededPayload(body string) (*FixNeededPayload, error) {
 	payload := &FixNeededPayload{
 		Branch:       parseField(body, "Branch"),
 		Issue:        parseField(body, "Issue"),
-		Polecat:      parseField(body, "Polecat"),
+		Miner:      parseField(body, "Miner"),
 		Rig:          parseField(body, "Rig"),
 		TargetBranch: parseField(body, "Target"),
 		FailureType:  parseField(body, "Failure-Type"),
@@ -211,8 +211,8 @@ func ParseFixNeededPayload(body string) (*FixNeededPayload, error) {
 	if payload.Branch == "" {
 		errs = append(errs, "Branch")
 	}
-	if payload.Polecat == "" {
-		errs = append(errs, "Polecat")
+	if payload.Miner == "" {
+		errs = append(errs, "Miner")
 	}
 	if payload.Rig == "" {
 		errs = append(errs, "Rig")
@@ -226,11 +226,11 @@ func ParseFixNeededPayload(body string) (*FixNeededPayload, error) {
 
 // NewReworkRequestMessage creates a REWORK_REQUEST protocol message.
 // Sent by Refinery to Witness when a branch needs rebasing due to conflicts.
-func NewReworkRequestMessage(rig, polecat, branch, issue, targetBranch string, conflictFiles []string) *mail.Message {
+func NewReworkRequestMessage(rig, miner, branch, issue, targetBranch string, conflictFiles []string) *mail.Message {
 	payload := ReworkRequestPayload{
 		Branch:        branch,
 		Issue:         issue,
-		Polecat:       polecat,
+		Miner:       miner,
 		Rig:           rig,
 		RequestedAt:   time.Now(),
 		TargetBranch:  targetBranch,
@@ -243,7 +243,7 @@ func NewReworkRequestMessage(rig, polecat, branch, issue, targetBranch string, c
 	msg := mail.NewMessage(
 		fmt.Sprintf("%s/refinery", rig),
 		fmt.Sprintf("%s/witness", rig),
-		fmt.Sprintf("REWORK_REQUEST %s", polecat),
+		fmt.Sprintf("REWORK_REQUEST %s", miner),
 		body,
 	)
 	msg.Priority = mail.PriorityHigh
@@ -257,7 +257,7 @@ func formatReworkRequestBody(p ReworkRequestPayload) string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("Branch: %s\n", p.Branch))
 	sb.WriteString(fmt.Sprintf("Issue: %s\n", p.Issue))
-	sb.WriteString(fmt.Sprintf("Polecat: %s\n", p.Polecat))
+	sb.WriteString(fmt.Sprintf("Miner: %s\n", p.Miner))
 	sb.WriteString(fmt.Sprintf("Rig: %s\n", p.Rig))
 	sb.WriteString(fmt.Sprintf("Target: %s\n", p.TargetBranch))
 	sb.WriteString(fmt.Sprintf("Requested-At: %s\n", p.RequestedAt.Format(time.RFC3339)))
@@ -284,23 +284,23 @@ func formatRebaseInstructions(targetBranch string) string {
 The Refinery will retry the merge after rebase is complete.`, targetBranch, targetBranch)
 }
 
-// NewConvoyNeedsFeedingMessage creates a CONVOY_NEEDS_FEEDING protocol message.
-// Sent by Refinery to Deacon after a convoy-eligible merge completes, so the
-// deacon can immediately feed the convoy instead of waiting for the next patrol.
-func NewConvoyNeedsFeedingMessage(rig, convoyID, sourceIssue string) *mail.Message {
-	payload := ConvoyNeedsFeedingPayload{
-		ConvoyID:    convoyID,
+// NewMinecartNeedsFeedingMessage creates a MINECART_NEEDS_FEEDING protocol message.
+// Sent by Refinery to Supervisor after a minecart-eligible merge completes, so the
+// supervisor can immediately feed the minecart instead of waiting for the next patrol.
+func NewMinecartNeedsFeedingMessage(rig, minecartID, sourceIssue string) *mail.Message {
+	payload := MinecartNeedsFeedingPayload{
+		MinecartID:    minecartID,
 		SourceIssue: sourceIssue,
 		Rig:         rig,
 		MergedAt:    time.Now(),
 	}
 
-	body := formatConvoyNeedsFeedingBody(payload)
+	body := formatMinecartNeedsFeedingBody(payload)
 
 	msg := mail.NewMessage(
 		fmt.Sprintf("%s/refinery", rig),
-		"deacon/",
-		fmt.Sprintf("CONVOY_NEEDS_FEEDING %s", convoyID),
+		"supervisor/",
+		fmt.Sprintf("MINECART_NEEDS_FEEDING %s", minecartID),
 		body,
 	)
 	msg.Priority = mail.PriorityHigh
@@ -309,21 +309,21 @@ func NewConvoyNeedsFeedingMessage(rig, convoyID, sourceIssue string) *mail.Messa
 	return msg
 }
 
-// formatConvoyNeedsFeedingBody formats the body of a CONVOY_NEEDS_FEEDING message.
-func formatConvoyNeedsFeedingBody(p ConvoyNeedsFeedingPayload) string {
+// formatMinecartNeedsFeedingBody formats the body of a MINECART_NEEDS_FEEDING message.
+func formatMinecartNeedsFeedingBody(p MinecartNeedsFeedingPayload) string {
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("ConvoyID: %s\n", p.ConvoyID))
+	sb.WriteString(fmt.Sprintf("MinecartID: %s\n", p.MinecartID))
 	sb.WriteString(fmt.Sprintf("SourceIssue: %s\n", p.SourceIssue))
 	sb.WriteString(fmt.Sprintf("Rig: %s\n", p.Rig))
 	sb.WriteString(fmt.Sprintf("Merged-At: %s\n", p.MergedAt.Format(time.RFC3339)))
 	return sb.String()
 }
 
-// ParseConvoyNeedsFeedingPayload parses a CONVOY_NEEDS_FEEDING message body.
-// Returns an error if required fields (ConvoyID, Rig) are missing.
-func ParseConvoyNeedsFeedingPayload(body string) (*ConvoyNeedsFeedingPayload, error) {
-	payload := &ConvoyNeedsFeedingPayload{
-		ConvoyID:    parseField(body, "ConvoyID"),
+// ParseMinecartNeedsFeedingPayload parses a MINECART_NEEDS_FEEDING message body.
+// Returns an error if required fields (MinecartID, Rig) are missing.
+func ParseMinecartNeedsFeedingPayload(body string) (*MinecartNeedsFeedingPayload, error) {
+	payload := &MinecartNeedsFeedingPayload{
+		MinecartID:    parseField(body, "MinecartID"),
 		SourceIssue: parseField(body, "SourceIssue"),
 		Rig:         parseField(body, "Rig"),
 	}
@@ -335,26 +335,26 @@ func ParseConvoyNeedsFeedingPayload(body string) (*ConvoyNeedsFeedingPayload, er
 	}
 
 	var errs []string
-	if payload.ConvoyID == "" {
-		errs = append(errs, "ConvoyID")
+	if payload.MinecartID == "" {
+		errs = append(errs, "MinecartID")
 	}
 	if payload.Rig == "" {
 		errs = append(errs, "Rig")
 	}
 	if len(errs) > 0 {
-		return nil, fmt.Errorf("invalid CONVOY_NEEDS_FEEDING payload: missing required fields: %s", strings.Join(errs, ", "))
+		return nil, fmt.Errorf("invalid MINECART_NEEDS_FEEDING payload: missing required fields: %s", strings.Join(errs, ", "))
 	}
 
 	return payload, nil
 }
 
 // ParseMergeReadyPayload parses a MERGE_READY message body into a payload.
-// Returns an error if required fields (Branch, Polecat, Rig) are missing.
+// Returns an error if required fields (Branch, Miner, Rig) are missing.
 func ParseMergeReadyPayload(body string) (*MergeReadyPayload, error) {
 	payload := &MergeReadyPayload{
 		Branch:    parseField(body, "Branch"),
 		Issue:     parseField(body, "Issue"),
-		Polecat:   parseField(body, "Polecat"),
+		Miner:   parseField(body, "Miner"),
 		Rig:       parseField(body, "Rig"),
 		Verified:  parseField(body, "Verified"),
 		Timestamp: time.Now(), // Use current time if not parseable
@@ -364,8 +364,8 @@ func ParseMergeReadyPayload(body string) (*MergeReadyPayload, error) {
 	if payload.Branch == "" {
 		errs = append(errs, "Branch")
 	}
-	if payload.Polecat == "" {
-		errs = append(errs, "Polecat")
+	if payload.Miner == "" {
+		errs = append(errs, "Miner")
 	}
 	if payload.Rig == "" {
 		errs = append(errs, "Rig")
@@ -378,12 +378,12 @@ func ParseMergeReadyPayload(body string) (*MergeReadyPayload, error) {
 }
 
 // ParseMergedPayload parses a MERGED message body into a payload.
-// Returns an error if required fields (Branch, Polecat, Rig) are missing.
+// Returns an error if required fields (Branch, Miner, Rig) are missing.
 func ParseMergedPayload(body string) (*MergedPayload, error) {
 	payload := &MergedPayload{
 		Branch:       parseField(body, "Branch"),
 		Issue:        parseField(body, "Issue"),
-		Polecat:      parseField(body, "Polecat"),
+		Miner:      parseField(body, "Miner"),
 		Rig:          parseField(body, "Rig"),
 		TargetBranch: parseField(body, "Target"),
 		MergeCommit:  parseField(body, "Merge-Commit"),
@@ -400,8 +400,8 @@ func ParseMergedPayload(body string) (*MergedPayload, error) {
 	if payload.Branch == "" {
 		errs = append(errs, "Branch")
 	}
-	if payload.Polecat == "" {
-		errs = append(errs, "Polecat")
+	if payload.Miner == "" {
+		errs = append(errs, "Miner")
 	}
 	if payload.Rig == "" {
 		errs = append(errs, "Rig")
@@ -414,12 +414,12 @@ func ParseMergedPayload(body string) (*MergedPayload, error) {
 }
 
 // ParseMergeFailedPayload parses a MERGE_FAILED message body into a payload.
-// Returns an error if required fields (Branch, Polecat, Rig) are missing.
+// Returns an error if required fields (Branch, Miner, Rig) are missing.
 func ParseMergeFailedPayload(body string) (*MergeFailedPayload, error) {
 	payload := &MergeFailedPayload{
 		Branch:       parseField(body, "Branch"),
 		Issue:        parseField(body, "Issue"),
-		Polecat:      parseField(body, "Polecat"),
+		Miner:      parseField(body, "Miner"),
 		Rig:          parseField(body, "Rig"),
 		TargetBranch: parseField(body, "Target"),
 		FailureType:  parseField(body, "Failure-Type"),
@@ -437,8 +437,8 @@ func ParseMergeFailedPayload(body string) (*MergeFailedPayload, error) {
 	if payload.Branch == "" {
 		errs = append(errs, "Branch")
 	}
-	if payload.Polecat == "" {
-		errs = append(errs, "Polecat")
+	if payload.Miner == "" {
+		errs = append(errs, "Miner")
 	}
 	if payload.Rig == "" {
 		errs = append(errs, "Rig")
@@ -451,12 +451,12 @@ func ParseMergeFailedPayload(body string) (*MergeFailedPayload, error) {
 }
 
 // ParseReworkRequestPayload parses a REWORK_REQUEST message body into a payload.
-// Returns an error if required fields (Branch, Polecat, Rig) are missing.
+// Returns an error if required fields (Branch, Miner, Rig) are missing.
 func ParseReworkRequestPayload(body string) (*ReworkRequestPayload, error) {
 	payload := &ReworkRequestPayload{
 		Branch:       parseField(body, "Branch"),
 		Issue:        parseField(body, "Issue"),
-		Polecat:      parseField(body, "Polecat"),
+		Miner:      parseField(body, "Miner"),
 		Rig:          parseField(body, "Rig"),
 		TargetBranch: parseField(body, "Target"),
 	}
@@ -477,8 +477,8 @@ func ParseReworkRequestPayload(body string) (*ReworkRequestPayload, error) {
 	if payload.Branch == "" {
 		errs = append(errs, "Branch")
 	}
-	if payload.Polecat == "" {
-		errs = append(errs, "Polecat")
+	if payload.Miner == "" {
+		errs = append(errs, "Miner")
 	}
 	if payload.Rig == "" {
 		errs = append(errs, "Rig")
@@ -490,23 +490,23 @@ func ParseReworkRequestPayload(body string) (*ReworkRequestPayload, error) {
 	return payload, nil
 }
 
-// ParsePolecatDonePayload parses a POLECAT_DONE notification body.
-// Unlike formal protocol messages, POLECAT_DONE is a mail convention — no
+// ParseMinerDonePayload parses a MINER_DONE notification body.
+// Unlike formal protocol messages, MINER_DONE is a mail convention — no
 // required fields are enforced. Returns a best-effort parse of available fields.
-func ParsePolecatDonePayload(polecatName, body string) *PolecatDonePayload {
-	payload := &PolecatDonePayload{
-		Polecat:       polecatName,
+func ParseMinerDonePayload(minerName, body string) *MinerDonePayload {
+	payload := &MinerDonePayload{
+		Miner:       minerName,
 		ExitType:      parseField(body, "Exit"),
 		Issue:         parseField(body, "Issue"),
 		Branch:        parseField(body, "Branch"),
 		MR:            parseField(body, "MR"),
-		ConvoyID:      parseField(body, "ConvoyID"),
+		MinecartID:      parseField(body, "MinecartID"),
 		MergeStrategy: parseField(body, "MergeStrategy"),
 		Errors:        parseField(body, "Errors"),
 	}
 
-	if parseField(body, "ConvoyOwned") == "true" {
-		payload.ConvoyOwned = true
+	if parseField(body, "MinecartOwned") == "true" {
+		payload.MinecartOwned = true
 	}
 
 	return payload

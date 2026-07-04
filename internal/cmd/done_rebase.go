@@ -14,7 +14,7 @@ type rebaseGit interface {
 
 // autoRebaseOnTarget rebases the current branch onto base when the branch is
 // behind the target. It is a no-op when there is nothing to rebase, when the
-// polecat ran the formula's pre-verify step (rebasing again would invalidate
+// miner ran the formula's pre-verify step (rebasing again would invalidate
 // the gate results that --pre-verified attests to), or when a prior push
 // checkpoint exists (rebasing after pushing would require a force-push).
 //

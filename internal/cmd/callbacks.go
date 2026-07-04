@@ -7,18 +7,18 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/mail"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/townlog"
-	"github.com/steveyegge/gastown/internal/witness"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/mail"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/townlog"
+	"github.com/steveyegge/excavation/internal/witness"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // Callback message subject patterns for routing.
 var (
-	// POLECAT_DONE <name> - polecat signaled completion
-	patternPolecatDone = regexp.MustCompile(`^POLECAT_DONE\s+(\S+)`)
+	// MINER_DONE <name> - miner signaled completion
+	patternMinerDone = regexp.MustCompile(`^MINER_DONE\s+(\S+)`)
 
 	// Merge Request Rejected: <branch> - refinery rejected MR
 	patternMergeRejected = regexp.MustCompile(`^Merge Request Rejected:\s+(.+)`)
@@ -26,7 +26,7 @@ var (
 	// Merge Request Completed: <branch> - refinery completed MR
 	patternMergeCompleted = regexp.MustCompile(`^Merge Request Completed:\s+(.+)`)
 
-	// HELP: <topic> - polecat requesting help
+	// HELP: <topic> - miner requesting help
 	patternHelp = regexp.MustCompile(`^HELP:\s+(.+)`)
 
 	// ESCALATION: <topic> - witness escalating issue
@@ -44,7 +44,7 @@ var (
 type CallbackType string
 
 const (
-	CallbackPolecatDone    CallbackType = "polecat_done"
+	CallbackMinerDone    CallbackType = "miner_done"
 	CallbackMergeRejected  CallbackType = "merge_rejected"
 	CallbackMergeCompleted CallbackType = "merge_completed"
 	CallbackHelp           CallbackType = "help"
@@ -52,7 +52,7 @@ const (
 	CallbackSling          CallbackType = "sling"
 	CallbackUnknown        CallbackType = "unknown"
 	// NOTE: CallbackWitnessReport and CallbackRefineryReport removed.
-	// Routine status reports are no longer sent to Mayor.
+	// Routine status reports are no longer sent to Overseer.
 )
 
 // CallbackResult tracks the result of processing a callback.
@@ -70,32 +70,32 @@ var callbacksCmd = &cobra.Command{
 	Use:     "callbacks",
 	GroupID: GroupAgents,
 	Short:   "Handle agent callbacks",
-	Long: `Handle callbacks from agents during Deacon patrol.
+	Long: `Handle callbacks from agents during Supervisor patrol.
 
-Callbacks are messages sent to the Mayor from:
-- Witnesses reporting polecat status
+Callbacks are messages sent to the Overseer from:
+- Witnesses reporting miner status
 - Refineries reporting merge results
-- Polecats requesting help or escalation
+- Miners requesting help or escalation
 - External triggers (webhooks, timers)
 
-This command processes the Mayor's inbox and handles each message
+This command processes the Overseer's inbox and handles each message
 appropriately, routing to other agents or updating state as needed.`,
 }
 
 var callbacksProcessCmd = &cobra.Command{
 	Use:   "process",
 	Short: "Process pending callbacks",
-	Long: `Process all pending callbacks in the Mayor's inbox.
+	Long: `Process all pending callbacks in the Overseer's inbox.
 
-Reads unread messages from the Mayor's inbox and handles each based on
+Reads unread messages from the Overseer's inbox and handles each based on
 its type:
 
-  POLECAT_DONE       - Log completion, update stats
+  MINER_DONE       - Log completion, update stats
   MERGE_COMPLETED    - Notify worker, close source issue
   MERGE_REJECTED     - Notify worker of rejection reason
   HELP:              - Route to human or handle if possible
   ESCALATION:        - Log and route to human
-  SLING_REQUEST:     - Spawn polecat for the work
+  SLING_REQUEST:     - Spawn miner for the work
 
 Note: Witnesses and Refineries handle routine operations autonomously.
 They only send escalations for genuine problems, not status reports.
@@ -120,14 +120,14 @@ func init() {
 func runCallbacksProcess(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
-	// Get Mayor's mailbox
+	// Get Overseer's mailbox
 	router := mail.NewRouter(townRoot)
-	mailbox, err := router.GetMailbox("mayor/")
+	mailbox, err := router.GetMailbox("overseer/")
 	if err != nil {
-		return fmt.Errorf("getting mayor mailbox: %w", err)
+		return fmt.Errorf("getting overseer mailbox: %w", err)
 	}
 
 	// Get unread messages
@@ -213,8 +213,8 @@ func processCallback(townRoot string, msg *mail.Message, dryRun bool) CallbackRe
 
 	// Handle based on type
 	switch result.CallbackType {
-	case CallbackPolecatDone:
-		result.Action, result.Error = handlePolecatDone(townRoot, msg, dryRun)
+	case CallbackMinerDone:
+		result.Action, result.Error = handleMinerDone(townRoot, msg, dryRun)
 		result.Handled = result.Error == nil
 
 	case CallbackMergeCompleted:
@@ -245,7 +245,7 @@ func processCallback(townRoot string, msg *mail.Message, dryRun bool) CallbackRe
 	// Archive handled messages (unless dry-run)
 	if result.Handled && !dryRun {
 		router := mail.NewRouter(townRoot)
-		if mailbox, err := router.GetMailbox("mayor/"); err == nil {
+		if mailbox, err := router.GetMailbox("overseer/"); err == nil {
 			_ = mailbox.Delete(msg.ID)
 		}
 	}
@@ -256,8 +256,8 @@ func processCallback(townRoot string, msg *mail.Message, dryRun bool) CallbackRe
 // classifyCallback determines the type of callback from the subject line.
 func classifyCallback(subject string) CallbackType {
 	switch {
-	case patternPolecatDone.MatchString(subject):
-		return CallbackPolecatDone
+	case patternMinerDone.MatchString(subject):
+		return CallbackMinerDone
 	case patternMergeRejected.MatchString(subject):
 		return CallbackMergeRejected
 	case patternMergeCompleted.MatchString(subject):
@@ -273,14 +273,14 @@ func classifyCallback(subject string) CallbackType {
 	}
 }
 
-// handlePolecatDone processes a POLECAT_DONE callback.
-// These come from Witnesses forwarding polecat completion notices.
-func handlePolecatDone(townRoot string, msg *mail.Message, dryRun bool) (string, error) {
-	matches := patternPolecatDone.FindStringSubmatch(msg.Subject)
+// handleMinerDone processes a MINER_DONE callback.
+// These come from Witnesses forwarding miner completion notices.
+func handleMinerDone(townRoot string, msg *mail.Message, dryRun bool) (string, error) {
+	matches := patternMinerDone.FindStringSubmatch(msg.Subject)
 	if len(matches) < 2 {
-		return "", fmt.Errorf("could not parse polecat name from subject: %q", msg.Subject)
+		return "", fmt.Errorf("could not parse miner name from subject: %q", msg.Subject)
 	}
-	polecatName := matches[1]
+	minerName := matches[1]
 
 	// Extract info from body
 	var exitType, issueID string
@@ -296,14 +296,14 @@ func handlePolecatDone(townRoot string, msg *mail.Message, dryRun bool) (string,
 
 	if dryRun {
 		return fmt.Sprintf("would log completion for %s (exit=%s, issue=%s)",
-			polecatName, exitType, issueID), nil
+			minerName, exitType, issueID), nil
 	}
 
 	// Log the completion
-	logCallback(townRoot, fmt.Sprintf("polecat_done: %s completed with %s (issue: %s)",
+	logCallback(townRoot, fmt.Sprintf("miner_done: %s completed with %s (issue: %s)",
 		msg.From, exitType, issueID))
 
-	return fmt.Sprintf("logged completion for %s", polecatName), nil
+	return fmt.Sprintf("logged completion for %s", minerName), nil
 }
 
 // handleMergeCompleted processes a merge completion callback from Refinery.
@@ -384,7 +384,7 @@ func handleMergeRejected(townRoot string, msg *mail.Message, dryRun bool) (strin
 	return fmt.Sprintf("logged rejection for %s", branch), nil
 }
 
-// handleHelp processes a HELP: request from a polecat.
+// handleHelp processes a HELP: request from a miner.
 // Assesses category and severity to determine priority and routing.
 func handleHelp(townRoot string, msg *mail.Message, dryRun bool) (string, error) {
 	// Parse the help payload for structured assessment
@@ -397,7 +397,7 @@ func handleHelp(townRoot string, msg *mail.Message, dryRun bool) (string, error)
 	assessment := witness.AssessHelp(payload)
 
 	if dryRun {
-		return fmt.Sprintf("would forward help request to overseer: %s [%s/%s]",
+		return fmt.Sprintf("would forward help request to boss: %s [%s/%s]",
 			payload.Topic, assessment.Category, assessment.Severity), nil
 	}
 
@@ -412,26 +412,26 @@ func handleHelp(townRoot string, msg *mail.Message, dryRun bool) (string, error)
 		priority = mail.PriorityNormal
 	}
 
-	// Forward to overseer (human) with assessed priority
+	// Forward to boss (human) with assessed priority
 	router := mail.NewRouter(townRoot)
 	defer router.WaitPendingNotifications()
 	fwd := &mail.Message{
-		From:    "mayor/",
-		To:      "overseer",
+		From:    "overseer/",
+		To:      "boss",
 		Subject: fmt.Sprintf("[FWD][%s] HELP: %s", strings.ToUpper(string(assessment.Severity)), payload.Topic),
 		Body: fmt.Sprintf("Forwarded from: %s\nAssessment: category=%s severity=%s (suggest → %s)\nRationale: %s\n\n%s",
 			msg.From, assessment.Category, assessment.Severity, assessment.SuggestTo, assessment.Rationale, msg.Body),
 		Priority: priority,
 	}
 	if err := router.Send(fwd); err != nil {
-		return "", fmt.Errorf("forwarding to overseer: %w", err)
+		return "", fmt.Errorf("forwarding to boss: %w", err)
 	}
 
 	// Log the help request with assessment
 	logCallback(townRoot, fmt.Sprintf("help_request: from %s: %s [%s/%s]",
 		msg.From, payload.Topic, assessment.Category, assessment.Severity))
 
-	return fmt.Sprintf("forwarded help request to overseer: %s [%s/%s]",
+	return fmt.Sprintf("forwarded help request to boss: %s [%s/%s]",
 		payload.Topic, assessment.Category, assessment.Severity), nil
 }
 
@@ -444,15 +444,15 @@ func handleEscalation(townRoot string, msg *mail.Message, dryRun bool) (string, 
 	topic := matches[1]
 
 	if dryRun {
-		return fmt.Sprintf("would forward escalation to overseer: %s", topic), nil
+		return fmt.Sprintf("would forward escalation to boss: %s", topic), nil
 	}
 
-	// Forward to overseer with urgent priority
+	// Forward to boss with urgent priority
 	router := mail.NewRouter(townRoot)
 	defer router.WaitPendingNotifications()
 	fwd := &mail.Message{
-		From:     "mayor/",
-		To:       "overseer",
+		From:     "overseer/",
+		To:       "boss",
 		Subject:  fmt.Sprintf("[ESCALATION] %s", topic),
 		Body:     fmt.Sprintf("Escalated by: %s\n\n%s", msg.From, msg.Body),
 		Priority: mail.PriorityUrgent,
@@ -464,10 +464,10 @@ func handleEscalation(townRoot string, msg *mail.Message, dryRun bool) (string, 
 	// Log the escalation
 	logCallback(townRoot, fmt.Sprintf("escalation: from %s: %s", msg.From, topic))
 
-	return fmt.Sprintf("forwarded escalation to overseer: %s", topic), nil
+	return fmt.Sprintf("forwarded escalation to boss: %s", topic), nil
 }
 
-// handleSling processes a SLING_REQUEST to spawn work on a polecat.
+// handleSling processes a SLING_REQUEST to spawn work on a miner.
 func handleSling(townRoot string, msg *mail.Message, dryRun bool) (string, error) {
 	matches := patternSling.FindStringSubmatch(msg.Subject)
 	if len(matches) < 2 {
@@ -495,7 +495,7 @@ func handleSling(townRoot string, msg *mail.Message, dryRun bool) (string, error
 	// Log the sling (actual spawn happens via gt sling command)
 	logCallback(townRoot, fmt.Sprintf("sling_request: bead %s to rig %s", beadID, targetRig))
 
-	// Note: We don't actually spawn here - that would be done by the Deacon
+	// Note: We don't actually spawn here - that would be done by the Supervisor
 	// executing the sling command based on this request.
 	return fmt.Sprintf("logged sling request: %s to %s (execute with: gt sling %s %s)",
 		beadID, targetRig, beadID, targetRig), nil
@@ -504,5 +504,5 @@ func handleSling(townRoot string, msg *mail.Message, dryRun bool) (string, error
 // logCallback logs a callback processing event to the town log.
 func logCallback(townRoot, context string) {
 	logger := townlog.NewLogger(townRoot)
-	_ = logger.Log(townlog.EventCallback, "mayor/", context)
+	_ = logger.Log(townlog.EventCallback, "overseer/", context)
 }

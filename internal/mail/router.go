@@ -11,14 +11,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/nudge"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/telemetry"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/nudge"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/telemetry"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // ErrUnknownList indicates a mailing list name was not found in configuration.
@@ -36,8 +36,8 @@ const DefaultIdleNotifyTimeout = 3 * time.Second
 
 // Router handles message delivery via beads.
 // It routes messages to the correct beads database based on address:
-// - Town-level (mayor/, deacon/) -> {townRoot}/.beads
-// - Rig-level (rig/polecat) -> {townRoot}/{rig}/.beads
+// - Town-level (overseer/, supervisor/) -> {townRoot}/.beads
+// - Rig-level (rig/miner) -> {townRoot}/{rig}/.beads
 type Router struct {
 	workDir  string // fallback directory to run bd commands in
 	townRoot string // town root directory (e.g., ~/gt)
@@ -193,7 +193,7 @@ func (r *Router) expandAnnounce(announceName string) (*config.AnnounceConfig, er
 // locate a workspace (e.g., running from outside any workspace).
 func detectTownRoot(startDir string) string {
 	// workspace.Find handles nested workspaces correctly: it always searches
-	// to the filesystem root and returns the outermost mayor/town.json match.
+	// to the filesystem root and returns the outermost overseer/town.json match.
 	townRoot, err := workspace.Find(startDir)
 	if err == nil && townRoot != "" {
 		return townRoot
@@ -254,10 +254,10 @@ func (r *Router) buildLabels(msg *Message) []string {
 	return labels
 }
 
-// isTownLevelAddress returns true if the address is for a town-level agent or the overseer.
+// isTownLevelAddress returns true if the address is for a town-level agent or the boss.
 func isTownLevelAddress(address string) bool {
 	addr := strings.TrimSuffix(address, "/")
-	return addr == constants.RoleMayor || addr == constants.RoleDeacon || addr == "overseer"
+	return addr == constants.RoleOverseer || addr == constants.RoleSupervisor || addr == "boss"
 }
 
 // isGroupAddress returns true if the address is a @group address.
@@ -273,14 +273,14 @@ const (
 	GroupTypeRig      GroupType = "rig"      // @rig/<rigname> - all agents in a rig
 	GroupTypeTown     GroupType = "town"     // @town - all town-level agents
 	GroupTypeRole     GroupType = "role"     // @witnesses, @dogs, etc. - all agents of a role
-	GroupTypeRigRole  GroupType = "rig-role" // @crew/<rigname>, @polecats/<rigname> - role in a rig
-	GroupTypeOverseer GroupType = "overseer" // @overseer - human operator
+	GroupTypeRigRole  GroupType = "rig-role" // @crew/<rigname>, @miners/<rigname> - role in a rig
+	GroupTypeBoss GroupType = "boss" // @boss - human operator
 )
 
 // ParsedGroup represents a parsed @group address.
 type ParsedGroup struct {
 	Type     GroupType
-	RoleType string // witness, crew, polecat, dog, etc.
+	RoleType string // witness, crew, miner, dog, etc.
 	Rig      string // rig name for rig-scoped groups
 	Original string // original @group string
 }
@@ -290,12 +290,12 @@ type ParsedGroup struct {
 //
 // Supported patterns:
 //   - @rig/<rigname>: All agents in a rig
-//   - @town: All town-level agents (mayor, deacon)
+//   - @town: All town-level agents (overseer, supervisor)
 //   - @witnesses: All witnesses across rigs
 //   - @crew/<rigname>: Crew workers in a specific rig
-//   - @polecats/<rigname>: Polecats in a specific rig
-//   - @dogs: All Deacon dogs
-//   - @overseer: Human operator (special case)
+//   - @miners/<rigname>: Miners in a specific rig
+//   - @dogs: All Supervisor dogs
+//   - @boss: Human operator (special case)
 func parseGroupAddress(address string) *ParsedGroup {
 	if !isGroupAddress(address) {
 		return nil
@@ -306,8 +306,8 @@ func parseGroupAddress(address string) *ParsedGroup {
 
 	// Special cases that don't require parsing
 	switch group {
-	case "overseer":
-		return &ParsedGroup{Type: GroupTypeOverseer, Original: address}
+	case "boss":
+		return &ParsedGroup{Type: GroupTypeBoss, Original: address}
 	case "town":
 		return &ParsedGroup{Type: GroupTypeTown, Original: address}
 	case "witnesses":
@@ -316,11 +316,11 @@ func parseGroupAddress(address string) *ParsedGroup {
 		return &ParsedGroup{Type: GroupTypeRole, RoleType: "dog", Original: address}
 	case "refineries":
 		return &ParsedGroup{Type: GroupTypeRole, RoleType: constants.RoleRefinery, Original: address}
-	case "deacons":
-		return &ParsedGroup{Type: GroupTypeRole, RoleType: constants.RoleDeacon, Original: address}
+	case "supervisors":
+		return &ParsedGroup{Type: GroupTypeRole, RoleType: constants.RoleSupervisor, Original: address}
 	}
 
-	// Parse patterns with slashes: @rig/<name>, @crew/<rig>, @polecats/<rig>
+	// Parse patterns with slashes: @rig/<name>, @crew/<rig>, @miners/<rig>
 	parts := strings.SplitN(group, "/", 2)
 	if len(parts) != 2 || parts[1] == "" {
 		return nil // Invalid format
@@ -333,8 +333,8 @@ func parseGroupAddress(address string) *ParsedGroup {
 		return &ParsedGroup{Type: GroupTypeRig, Rig: qualifier, Original: address}
 	case constants.RoleCrew:
 		return &ParsedGroup{Type: GroupTypeRigRole, RoleType: constants.RoleCrew, Rig: qualifier, Original: address}
-	case "polecats":
-		return &ParsedGroup{Type: GroupTypeRigRole, RoleType: constants.RolePolecat, Rig: qualifier, Original: address}
+	case "miners":
+		return &ParsedGroup{Type: GroupTypeRigRole, RoleType: constants.RoleMiner, Rig: qualifier, Original: address}
 	default:
 		return nil // Unknown group type
 	}
@@ -353,10 +353,10 @@ type agentBead struct {
 
 // agentBeadToAddress converts an agent bead to a mail address.
 // Handles multiple ID formats:
-//   - hq-mayor → mayor/
-//   - hq-deacon → deacon/
-//   - gt-gastown-crew-max → gastown/max (legacy)
-//   - ppf-pyspark_pipeline_framework-polecat-Toast → pyspark_pipeline_framework/Toast (rig prefix)
+//   - hq-overseer → overseer/
+//   - hq-supervisor → supervisor/
+//   - gt-excavation-crew-max → excavation/max (legacy)
+//   - ppf-pyspark_pipeline_framework-miner-Toast → pyspark_pipeline_framework/Toast (rig prefix)
 func agentBeadToAddress(bead *agentBead) string {
 	if bead == nil {
 		return ""
@@ -367,11 +367,11 @@ func agentBeadToAddress(bead *agentBead) string {
 	// Handle hq- prefixed IDs (town-level format)
 	if strings.HasPrefix(id, "hq-") {
 		// Well-known town-level agents
-		if id == "hq-mayor" {
-			return "mayor/"
+		if id == "hq-overseer" {
+			return "overseer/"
 		}
-		if id == "hq-deacon" {
-			return "deacon/"
+		if id == "hq-supervisor" {
+			return "supervisor/"
 		}
 
 		// For other hq- agents, fall back to description parsing
@@ -393,7 +393,7 @@ func agentBeadToAddress(bead *agentBead) string {
 	parts := strings.Split(rest, "-")
 
 	if len(parts) == 1 {
-		// Town-level: gt-mayor, gt-deacon
+		// Town-level: gt-overseer, gt-supervisor
 		return parts[0] + "/"
 	}
 
@@ -404,7 +404,7 @@ func agentBeadToAddress(bead *agentBead) string {
 			// Singleton role: rig is everything before the role
 			rig := strings.Join(parts[:i], "-")
 			return rig + "/" + parts[i]
-		case constants.RoleCrew, constants.RolePolecat:
+		case constants.RoleCrew, constants.RoleMiner:
 			// Named role: rig is before role, name is after (skip role in address)
 			rig := strings.Join(parts[:i], "-")
 			if i+1 < len(parts) {
@@ -433,7 +433,7 @@ func agentBeadToAddress(bead *agentBead) string {
 // ID format: <prefix>-<rig>-<role>[-<name>]
 // Examples:
 //   - ppf-pyspark_pipeline_framework-witness → pyspark_pipeline_framework/witness
-//   - ppf-pyspark_pipeline_framework-polecat-Toast → pyspark_pipeline_framework/Toast
+//   - ppf-pyspark_pipeline_framework-miner-Toast → pyspark_pipeline_framework/Toast
 //   - bd-beads-crew-beavis → beads/beavis
 func parseRigAgentAddress(bead *agentBead) string {
 	// Parse rig and role_type from description
@@ -450,7 +450,7 @@ func parseRigAgentAddress(bead *agentBead) string {
 	if rig == "" || rig == "null" || roleType == "" || roleType == "null" {
 		// Fallback: parse from bead ID by scanning for known role markers.
 		// ID format: <prefix>-<rig>-<role>[-<name>]
-		// Known rig-level roles: crew, polecat, witness, refinery
+		// Known rig-level roles: crew, miner, witness, refinery
 		return parseRigAgentAddressFromID(bead.ID)
 	}
 
@@ -459,7 +459,7 @@ func parseRigAgentAddress(bead *agentBead) string {
 		return rig + "/" + roleType
 	}
 
-	// For named roles (crew, polecat), extract name from ID
+	// For named roles (crew, miner), extract name from ID
 	// ID pattern: <prefix>-<rig>-<role>-<name>
 	// Find the role in the ID and take everything after it as the name
 	id := bead.ID
@@ -489,7 +489,7 @@ func parseRigAgentAddressFromID(id string) string {
 	// Singleton roles: no name segment allowed
 	singletonRoles := []string{constants.RoleWitness, constants.RoleRefinery}
 	// Named roles: require a name segment
-	namedRoles := []string{constants.RoleCrew, constants.RolePolecat}
+	namedRoles := []string{constants.RoleCrew, constants.RoleMiner}
 
 	for _, role := range namedRoles {
 		marker := "-" + role + "-"
@@ -508,10 +508,10 @@ func parseRigAgentAddressFromID(id string) string {
 			}
 			name := id[idx+len(marker):]
 			if name != "" {
-				// Named role (crew, polecat): address is rig/name
+				// Named role (crew, miner): address is rig/name
 				return rig + "/" + name
 			}
-			// crew/polecat without a name — malformed, skip
+			// crew/miner without a name — malformed, skip
 			continue
 		}
 	}
@@ -583,7 +583,7 @@ func parseAgentAddressFromDescription(desc string) string {
 		return roleType + "/"
 	}
 
-	// Rig-level agents: rig/name (role_type is the agent name for crew/polecat)
+	// Rig-level agents: rig/name (role_type is the agent name for crew/miner)
 	return rig + "/" + roleType
 }
 
@@ -606,8 +606,8 @@ func (r *Router) resolveGroup(group *ParsedGroup) ([]string, error) {
 	}
 
 	switch group.Type {
-	case GroupTypeOverseer:
-		return r.resolveOverseer()
+	case GroupTypeBoss:
+		return r.resolveBoss()
 	case GroupTypeTown:
 		return r.resolveTownAgents()
 	case GroupTypeRole:
@@ -621,25 +621,25 @@ func (r *Router) resolveGroup(group *ParsedGroup) ([]string, error) {
 	}
 }
 
-// resolveOverseer resolves @overseer to the human operator's address.
-// Loads the overseer config and returns "overseer" as the address.
-func (r *Router) resolveOverseer() ([]string, error) {
+// resolveBoss resolves @boss to the human operator's address.
+// Loads the boss config and returns "boss" as the address.
+func (r *Router) resolveBoss() ([]string, error) {
 	if r.townRoot == "" {
-		return nil, errors.New("town root not set, cannot resolve @overseer")
+		return nil, errors.New("town root not set, cannot resolve @boss")
 	}
 
-	// Load overseer config to verify it exists
-	configPath := config.OverseerConfigPath(r.townRoot)
-	_, err := config.LoadOverseerConfig(configPath)
+	// Load boss config to verify it exists
+	configPath := config.BossConfigPath(r.townRoot)
+	_, err := config.LoadBossConfig(configPath)
 	if err != nil {
-		return nil, fmt.Errorf("resolving @overseer: %w", err)
+		return nil, fmt.Errorf("resolving @boss: %w", err)
 	}
 
-	// Return the overseer address
-	return []string{"overseer"}, nil
+	// Return the boss address
+	return []string{"boss"}, nil
 }
 
-// resolveTownAgents resolves @town to all town-level agents (mayor, deacon).
+// resolveTownAgents resolves @town to all town-level agents (overseer, supervisor).
 func (r *Router) resolveTownAgents() ([]string, error) {
 	// Town-level agents have rig=null in their description
 	agents := r.queryAgents("rig: null")
@@ -824,7 +824,7 @@ func (r *Router) queryAgentsFromDir(beadsDir string) ([]*agentBead, error) {
 // shouldBeWisp determines if a message should be stored as a wisp.
 // Returns true if:
 // - Message.Wisp is explicitly set
-// - Subject matches lifecycle message patterns (POLECAT_*, NUDGE, etc.)
+// - Subject matches lifecycle message patterns (MINER_*, NUDGE, etc.)
 func (r *Router) shouldBeWisp(msg *Message) bool {
 	if msg.Wisp {
 		return true
@@ -832,8 +832,8 @@ func (r *Router) shouldBeWisp(msg *Message) bool {
 	// Auto-detect protocol/lifecycle messages by subject prefix
 	subjectLower := strings.ToLower(msg.Subject)
 	wispPrefixes := []string{
-		"polecat_started",
-		"polecat_done",
+		"miner_started",
+		"miner_done",
 		"work_done",
 		"start_work",
 		"nudge",
@@ -928,14 +928,14 @@ func (r *Router) sendToGroup(msg *Message) error {
 // Returns an error if the recipient is invalid or doesn't exist.
 // Queries agents from town-level beads AND all rig-level beads via routes.jsonl.
 func (r *Router) validateRecipient(identity string) error {
-	// Overseer is the human operator, not an agent bead
-	if identity == "overseer" {
+	// Boss is the human operator, not an agent bead
+	if identity == "boss" {
 		return nil
 	}
 
 	// Well-known town-level singletons always valid
 	switch identity {
-	case "mayor", "mayor/", "deacon", "deacon/":
+	case "overseer", "overseer/", "supervisor", "supervisor/":
 		return nil
 	}
 
@@ -1009,27 +1009,27 @@ func (r *Router) validateAgentWorkspace(identity string) bool {
 
 	switch len(parts) {
 	case 1:
-		// Town-level singleton: "mayor", "deacon"
+		// Town-level singleton: "overseer", "supervisor"
 		name := strings.TrimSuffix(parts[0], "/")
 		return dirExists(filepath.Join(r.townRoot, name))
 	case 2:
 		rig, name := parts[0], parts[1]
-		// Singleton role: gastown/witness, gastown/refinery
+		// Singleton role: excavation/witness, excavation/refinery
 		if dirExists(filepath.Join(r.townRoot, rig, name)) {
 			return true
 		}
-		// Named role (identity normalized away crew/polecats): check both
-		for _, role := range []string{"crew", "polecats"} {
+		// Named role (identity normalized away crew/miners): check both
+		for _, role := range []string{"crew", "miners"} {
 			if dirExists(filepath.Join(r.townRoot, rig, role, name)) {
 				return true
 			}
 		}
 	case 3:
-		// Explicit role paths: rig/crew/<name> or rig/polecats/<name>
-		if parts[1] == "crew" || parts[1] == "polecats" {
+		// Explicit role paths: rig/crew/<name> or rig/miners/<name>
+		if parts[1] == "crew" || parts[1] == "miners" {
 			return dirExists(filepath.Join(r.townRoot, parts[0], parts[1], parts[2]))
 		}
-		// Dog addresses: deacon/dogs/<name>
+		// Dog addresses: supervisor/dogs/<name>
 		if dirExists(filepath.Join(r.townRoot, parts[0], parts[1], parts[2])) {
 			return true
 		}
@@ -1044,7 +1044,7 @@ func dirExists(path string) bool {
 	return err == nil && info.IsDir()
 }
 
-// resolveCrewShorthand expands "crew/name" or "polecats/name" shorthand addresses
+// resolveCrewShorthand expands "crew/name" or "miners/name" shorthand addresses
 // to fully-qualified "rig/name" form by scanning the town filesystem.
 //
 // When gt agents displays crew workers, it shows them as "crew/bob" (without rig).
@@ -1064,18 +1064,18 @@ func (r *Router) resolveCrewShorthand(identity string) string {
 	}
 
 	roleDir, name := parts[0], parts[1]
-	// Only handle crew and polecats shorthand (not real rig names)
-	if roleDir != constants.RoleCrew && roleDir != "polecats" {
+	// Only handle crew and miners shorthand (not real rig names)
+	if roleDir != constants.RoleCrew && roleDir != "miners" {
 		return identity
 	}
 
-	// Check if "crew" or "polecats" is actually a real rig directory
+	// Check if "crew" or "miners" is actually a real rig directory
 	if fi, err := os.Stat(filepath.Join(r.townRoot, roleDir)); err == nil && fi.IsDir() {
 		// It's a real rig, not a shorthand - let normal validation handle it
 		return identity
 	}
 
-	// Scan rig directories for a crew/polecats member with this name
+	// Scan rig directories for a crew/miners member with this name
 	entries, err := os.ReadDir(r.townRoot)
 	if err != nil {
 		return identity
@@ -1115,7 +1115,7 @@ func (r *Router) sendToSingle(msg *Message) error {
 
 	// Convert addresses to beads identities
 	toIdentity := AddressToIdentity(msg.To)
-	// Expand crew/polecats shorthand (e.g., "crew/bob" → "pata/bob")
+	// Expand crew/miners shorthand (e.g., "crew/bob" → "pata/bob")
 	toIdentity = r.resolveCrewShorthand(toIdentity)
 
 	// Validate recipient exists
@@ -1567,7 +1567,7 @@ func (r *Router) pruneAnnounce(announceName string, retainCount int) error {
 }
 
 // isSelfMail returns true if sender and recipient are the same identity.
-// Uses AddressToIdentity for canonical normalization (handles crew/, polecats/ paths).
+// Uses AddressToIdentity for canonical normalization (handles crew/, miners/ paths).
 func isSelfMail(from, to string) bool {
 	return AddressToIdentity(from) == AddressToIdentity(to)
 }
@@ -1586,13 +1586,13 @@ func (r *Router) GetMailbox(address string) (*Mailbox, error) {
 //  1. If the session is idle (prompt visible), send an immediate nudge.
 //  2. If the session is busy, enqueue a nudge for cooperative delivery at
 //     the next turn boundary.
-//  3. For the overseer (human operator), always use a visible banner.
+//  3. For the boss (human operator), always use a visible banner.
 //
 // After a successful notification, a deferred reply-reminder nudge is also
 // enqueued (after a configurable delay, default 30s) to prompt the recipient
 // to reply via gt mail send rather than in chat.
 //
-// Supports mayor/, deacon/, rig/crew/name, rig/polecats/name, and rig/name addresses.
+// Supports overseer/, supervisor/, rig/crew/name, rig/miners/name, and rig/name addresses.
 // Respects agent DND/muted state - skips notification if recipient has DND enabled.
 func (r *Router) notifyRecipient(msg *Message) error {
 	sessionIDs := AddressToSessionIDs(msg.To)
@@ -1612,7 +1612,7 @@ func (r *Router) notifyRecipient(msg *Message) error {
 	noTmuxServer := false
 
 	// Try every possible session ID. Canonical aliases (rig/name) can map to both
-	// crew and polecat sessions, and stopping after the first active session makes
+	// crew and miner sessions, and stopping after the first active session makes
 	// mail disappear for the other active alias owner.
 	for _, sessionID := range sessionIDs {
 		if r.isSessionMuted(sessionID) {
@@ -1632,9 +1632,9 @@ func (r *Router) notifyRecipient(msg *Message) error {
 			continue
 		}
 
-		// Overseer is a human operator - use a visible banner instead of NudgeSession
+		// Boss is a human operator - use a visible banner instead of NudgeSession
 		// (which types into Claude's input and would disrupt the human's terminal).
-		if msg.To == "overseer" {
+		if msg.To == "boss" {
 			if err := r.tmux.SendNotificationBanner(sessionID, msg.From, msg.Subject); err != nil {
 				errs = append(errs, fmt.Sprintf("%s: %v", sessionID, err))
 				continue
@@ -1647,7 +1647,7 @@ func (r *Router) notifyRecipient(msg *Message) error {
 		// fall back to cooperative queue if busy. WaitForIdle requires 2
 		// consecutive idle polls (prompt visible + no "esc to interrupt"
 		// in the status bar) to distinguish genuine idle from brief
-		// inter-tool-call gaps. See: https://github.com/steveyegge/gastown/issues/2032
+		// inter-tool-call gaps. See: https://github.com/steveyegge/excavation/issues/2032
 		waitErr := r.tmux.WaitForIdle(sessionID, timeout)
 		if waitErr == nil {
 			// Agent is idle — deliver directly for immediate wakeup.
@@ -1736,7 +1736,7 @@ func (r *Router) notifyRecipient(msg *Message) error {
 }
 
 func (r *Router) isSessionMuted(sessionID string) bool {
-	if r.townRoot == "" || sessionID == "" || sessionID == session.OverseerSessionName() {
+	if r.townRoot == "" || sessionID == "" || sessionID == session.BossSessionName() {
 		return false
 	}
 	bd := beads.New(r.townRoot)
@@ -1863,12 +1863,12 @@ func (r *Router) isRecipientMuted(address string) bool {
 // Returns empty string if the address cannot be converted.
 func addressToAgentBeadID(address string) string {
 	switch {
-	case address == "overseer":
-		return "" // Overseer is a human, no agent bead
-	case strings.HasPrefix(address, constants.RoleMayor):
-		return session.MayorSessionName()
-	case strings.HasPrefix(address, constants.RoleDeacon):
-		return session.DeaconSessionName()
+	case address == "boss":
+		return "" // Boss is a human, no agent bead
+	case strings.HasPrefix(address, constants.RoleOverseer):
+		return session.OverseerSessionName()
+	case strings.HasPrefix(address, constants.RoleSupervisor):
+		return session.SupervisorSessionName()
 	}
 
 	parts := strings.SplitN(address, "/", 2)
@@ -1889,41 +1889,41 @@ func addressToAgentBeadID(address string) string {
 	case strings.HasPrefix(target, "crew/"):
 		crewName := strings.TrimPrefix(target, "crew/")
 		return session.CrewSessionName(rigPrefix, crewName)
-	case strings.HasPrefix(target, "polecat/"):
-		pcName := strings.TrimPrefix(target, "polecat/")
-		return session.PolecatSessionName(rigPrefix, pcName)
-	case strings.HasPrefix(target, "polecats/"):
-		pcName := strings.TrimPrefix(target, "polecats/")
-		return session.PolecatSessionName(rigPrefix, pcName)
+	case strings.HasPrefix(target, "miner/"):
+		pcName := strings.TrimPrefix(target, "miner/")
+		return session.MinerSessionName(rigPrefix, pcName)
+	case strings.HasPrefix(target, "miners/"):
+		pcName := strings.TrimPrefix(target, "miners/")
+		return session.MinerSessionName(rigPrefix, pcName)
 	default:
-		return session.PolecatSessionName(rigPrefix, target)
+		return session.MinerSessionName(rigPrefix, target)
 	}
 }
 
 // AddressToSessionIDs converts a mail address to possible tmux session IDs.
 // Returns multiple candidates since the canonical address format (rig/name)
-// doesn't distinguish between crew workers (gt-rig-crew-name) and polecats
+// doesn't distinguish between crew workers (gt-rig-crew-name) and miners
 // (gt-rig-name). The caller should try each and use the one that exists.
 //
 // This supersedes the approach in PR #896 which only handled slash-to-dash
-// conversion but didn't address the crew/polecat ambiguity.
+// conversion but didn't address the crew/miner ambiguity.
 func AddressToSessionIDs(address string) []string {
-	// Overseer address: "overseer" (human operator)
-	if address == "overseer" {
+	// Boss address: "boss" (human operator)
+	if address == "boss" {
+		return []string{session.BossSessionName()}
+	}
+
+	// Overseer address: "overseer/" or "overseer"
+	if strings.HasPrefix(address, constants.RoleOverseer) {
 		return []string{session.OverseerSessionName()}
 	}
 
-	// Mayor address: "mayor/" or "mayor"
-	if strings.HasPrefix(address, constants.RoleMayor) {
-		return []string{session.MayorSessionName()}
+	// Supervisor address: "supervisor/" or "supervisor"
+	if strings.HasPrefix(address, constants.RoleSupervisor) {
+		return []string{session.SupervisorSessionName()}
 	}
 
-	// Deacon address: "deacon/" or "deacon"
-	if strings.HasPrefix(address, constants.RoleDeacon) {
-		return []string{session.DeaconSessionName()}
-	}
-
-	// Rig-based address: "rig/target" or "rig/crew/name" or "rig/polecats/name"
+	// Rig-based address: "rig/target" or "rig/crew/name" or "rig/miners/name"
 	parts := strings.SplitN(address, "/", 2)
 	if len(parts) != 2 || parts[1] == "" {
 		return nil
@@ -1933,19 +1933,19 @@ func AddressToSessionIDs(address string) []string {
 	target := parts[1]
 	rigPrefix := session.PrefixFor(rig)
 
-	// If target already has crew/, polecat/, or polecats/ prefix, use it directly
-	// e.g., "gastown/crew/holden" → "gt-crew-holden"
+	// If target already has crew/, miner/, or miners/ prefix, use it directly
+	// e.g., "excavation/crew/holden" → "gt-crew-holden"
 	if strings.HasPrefix(target, "crew/") {
 		crewName := strings.TrimPrefix(target, "crew/")
 		return []string{session.CrewSessionName(rigPrefix, crewName)}
 	}
-	if strings.HasPrefix(target, "polecat/") {
-		polecatName := strings.TrimPrefix(target, "polecat/")
-		return []string{session.PolecatSessionName(rigPrefix, polecatName)}
+	if strings.HasPrefix(target, "miner/") {
+		minerName := strings.TrimPrefix(target, "miner/")
+		return []string{session.MinerSessionName(rigPrefix, minerName)}
 	}
-	if strings.HasPrefix(target, "polecats/") {
-		polecatName := strings.TrimPrefix(target, "polecats/")
-		return []string{session.PolecatSessionName(rigPrefix, polecatName)}
+	if strings.HasPrefix(target, "miners/") {
+		minerName := strings.TrimPrefix(target, "miners/")
+		return []string{session.MinerSessionName(rigPrefix, minerName)}
 	}
 
 	// Special cases that don't need crew variant
@@ -1956,12 +1956,12 @@ func AddressToSessionIDs(address string) []string {
 		return []string{session.RefinerySessionName(rigPrefix)}
 	}
 
-	// For normalized addresses like "gastown/holden", try both:
+	// For normalized addresses like "excavation/holden", try both:
 	// 1. Crew format: gt-crew-holden
-	// 2. Polecat format: gt-holden
+	// 2. Miner format: gt-holden
 	// Return crew first since crew workers are more commonly missed.
 	return []string{
 		session.CrewSessionName(rigPrefix, target),    // <prefix>-crew-name
-		session.PolecatSessionName(rigPrefix, target), // <prefix>-name
+		session.MinerSessionName(rigPrefix, target), // <prefix>-name
 	}
 }

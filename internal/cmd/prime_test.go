@@ -14,9 +14,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/checkpoint"
-	"github.com/steveyegge/gastown/internal/constants"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/checkpoint"
+	"github.com/steveyegge/excavation/internal/constants"
 )
 
 // captureStdout redirects os.Stdout to a pipe, calls fn, then returns whatever
@@ -61,7 +61,7 @@ func writeTestRoutes(t *testing.T, townRoot string, routes []beads.Route) {
 func TestGetAgentBeadID_UsesRigPrefix(t *testing.T) {
 	townRoot := t.TempDir()
 	writeTestRoutes(t, townRoot, []beads.Route{
-		{Prefix: "bd-", Path: "beads/mayor/rig"},
+		{Prefix: "bd-", Path: "beads/overseer/rig"},
 	})
 
 	cases := []struct {
@@ -70,20 +70,20 @@ func TestGetAgentBeadID_UsesRigPrefix(t *testing.T) {
 		want string
 	}{
 		{
-			name: "mayor",
+			name: "overseer",
 			ctx: RoleContext{
-				Role:     RoleMayor,
+				Role:     RoleOverseer,
 				TownRoot: townRoot,
 			},
-			want: "hq-mayor",
+			want: "hq-overseer",
 		},
 		{
-			name: "deacon",
+			name: "supervisor",
 			ctx: RoleContext{
-				Role:     RoleDeacon,
+				Role:     RoleSupervisor,
 				TownRoot: townRoot,
 			},
-			want: "hq-deacon",
+			want: "hq-supervisor",
 		},
 		{
 			name: "witness",
@@ -104,21 +104,21 @@ func TestGetAgentBeadID_UsesRigPrefix(t *testing.T) {
 			want: "bd-beads-refinery",
 		},
 		{
-			name: "polecat",
+			name: "miner",
 			ctx: RoleContext{
-				Role:     RolePolecat,
+				Role:     RoleMiner,
 				Rig:      "beads",
-				Polecat:  "lex",
+				Miner:  "lex",
 				TownRoot: townRoot,
 			},
-			want: "bd-beads-polecat-lex",
+			want: "bd-beads-miner-lex",
 		},
 		{
 			name: "crew",
 			ctx: RoleContext{
 				Role:     RoleCrew,
 				Rig:      "beads",
-				Polecat:  "lex",
+				Miner:  "lex",
 				TownRoot: townRoot,
 			},
 			want: "bd-beads-crew-lex",
@@ -138,20 +138,20 @@ func TestGetAgentBeadID_UsesRigPrefix(t *testing.T) {
 func TestRigBeadsRootPrefersRouteResolvedRigDir(t *testing.T) {
 	townRoot := t.TempDir()
 	writeTestRoutes(t, townRoot, []beads.Route{
-		{Prefix: "gt-", Path: "gastown/mayor/rig"},
+		{Prefix: "gt-", Path: "excavation/overseer/rig"},
 		{Prefix: "hq-", Path: "."},
 	})
 
 	ctx := RoleContext{
-		Role:     RolePolecat,
-		Rig:      "gastown",
-		Polecat:  "toast",
+		Role:     RoleMiner,
+		Rig:      "excavation",
+		Miner:  "toast",
 		TownRoot: townRoot,
-		WorkDir:  filepath.Join(townRoot, "gastown", "polecats", "toast", "gastown"),
+		WorkDir:  filepath.Join(townRoot, "excavation", "miners", "toast", "excavation"),
 	}
 
 	got := rigBeadsRoot(ctx)
-	want := filepath.Join(townRoot, "gastown", "mayor", "rig")
+	want := filepath.Join(townRoot, "excavation", "overseer", "rig")
 	if got != want {
 		t.Fatalf("rigBeadsRoot() = %q, want route-resolved %q", got, want)
 	}
@@ -160,14 +160,14 @@ func TestRigBeadsRootPrefersRouteResolvedRigDir(t *testing.T) {
 func TestRigBeadsRootFallsBackWhenRouteMissing(t *testing.T) {
 	townRoot := t.TempDir()
 	ctx := RoleContext{
-		Role:     RolePolecat,
-		Rig:      "gastown",
+		Role:     RoleMiner,
+		Rig:      "excavation",
 		TownRoot: townRoot,
-		WorkDir:  filepath.Join(townRoot, "gastown", "polecats", "toast", "gastown"),
+		WorkDir:  filepath.Join(townRoot, "excavation", "miners", "toast", "excavation"),
 	}
 
 	got := rigBeadsRoot(ctx)
-	want := filepath.Join(townRoot, "gastown")
+	want := filepath.Join(townRoot, "excavation")
 	if got != want {
 		t.Fatalf("rigBeadsRoot() = %q, want fallback %q", got, want)
 	}
@@ -316,7 +316,7 @@ func TestDetectSessionState(t *testing.T) {
 	t.Run("normal_state", func(t *testing.T) {
 		workDir := t.TempDir()
 		ctx := RoleContext{
-			Role:    RoleMayor,
+			Role:    RoleOverseer,
 			WorkDir: workDir,
 		}
 
@@ -325,8 +325,8 @@ func TestDetectSessionState(t *testing.T) {
 		if state.State != "normal" {
 			t.Fatalf("expected state 'normal', got %q", state.State)
 		}
-		if state.Role != RoleMayor {
-			t.Fatalf("expected role Mayor, got %q", state.Role)
+		if state.Role != RoleOverseer {
+			t.Fatalf("expected role Overseer, got %q", state.Role)
 		}
 	})
 
@@ -345,9 +345,9 @@ func TestDetectSessionState(t *testing.T) {
 		}
 
 		ctx := RoleContext{
-			Role:    RolePolecat,
+			Role:    RoleMiner,
 			Rig:     "beads",
-			Polecat: "jade",
+			Miner: "jade",
 			WorkDir: workDir,
 		}
 
@@ -376,9 +376,9 @@ func TestDetectSessionState(t *testing.T) {
 		}
 
 		ctx := RoleContext{
-			Role:    RolePolecat,
+			Role:    RoleMiner,
 			Rig:     "beads",
-			Polecat: "jade",
+			Miner: "jade",
 			WorkDir: workDir,
 		}
 
@@ -406,17 +406,17 @@ func TestDetectSessionState(t *testing.T) {
 			t.Fatalf("write checkpoint: %v", err)
 		}
 
-		// Mayor should NOT enter crash-recovery (only polecat/crew)
+		// Overseer should NOT enter crash-recovery (only miner/crew)
 		ctx := RoleContext{
-			Role:    RoleMayor,
+			Role:    RoleOverseer,
 			WorkDir: workDir,
 		}
 
 		state := detectSessionState(ctx)
 
-		// Mayor should see normal state, not crash-recovery
+		// Overseer should see normal state, not crash-recovery
 		if state.State != "normal" {
-			t.Fatalf("expected Mayor to have 'normal' state despite checkpoint, got %q", state.State)
+			t.Fatalf("expected Overseer to have 'normal' state despite checkpoint, got %q", state.State)
 		}
 	})
 
@@ -448,7 +448,7 @@ func TestDetectSessionState(t *testing.T) {
 			t.Fatalf("write routes: %v", err)
 		}
 
-		// Create a hooked bead assigned to beads/polecats/jade
+		// Create a hooked bead assigned to beads/miners/jade
 		b := beads.New(workDir)
 		issue, err := b.Create(beads.CreateOptions{
 			Title:    "Test hooked bead",
@@ -460,7 +460,7 @@ func TestDetectSessionState(t *testing.T) {
 
 		// Update bead to set status and assignee
 		status := beads.StatusHooked
-		assignee := "beads/polecats/jade"
+		assignee := "beads/miners/jade"
 		if err := b.Update(issue.ID, beads.UpdateOptions{
 			Status:   &status,
 			Assignee: &assignee,
@@ -469,9 +469,9 @@ func TestDetectSessionState(t *testing.T) {
 		}
 
 		ctx := RoleContext{
-			Role:     RolePolecat,
+			Role:     RoleMiner,
 			Rig:      "beads",
-			Polecat:  "jade",
+			Miner:  "jade",
 			WorkDir:  workDir,
 			TownRoot: townRoot,
 		}
@@ -492,7 +492,7 @@ func TestOutputState(t *testing.T) {
 	t.Run("text_output", func(t *testing.T) {
 		workDir := t.TempDir()
 		ctx := RoleContext{
-			Role:    RoleMayor,
+			Role:    RoleOverseer,
 			WorkDir: workDir,
 		}
 
@@ -503,17 +503,17 @@ func TestOutputState(t *testing.T) {
 		if !strings.Contains(output, "state: normal") {
 			t.Fatalf("expected 'state: normal' in output, got: %s", output)
 		}
-		if !strings.Contains(output, "role: mayor") {
-			t.Fatalf("expected 'role: mayor' in output, got: %s", output)
+		if !strings.Contains(output, "role: overseer") {
+			t.Fatalf("expected 'role: overseer' in output, got: %s", output)
 		}
 	})
 
 	t.Run("json_output", func(t *testing.T) {
 		workDir := t.TempDir()
 		ctx := RoleContext{
-			Role:    RolePolecat,
+			Role:    RoleMiner,
 			Rig:     "beads",
-			Polecat: "jade",
+			Miner: "jade",
 			WorkDir: workDir,
 		}
 
@@ -530,8 +530,8 @@ func TestOutputState(t *testing.T) {
 		if state.State != "normal" {
 			t.Fatalf("expected state 'normal', got %q", state.State)
 		}
-		if state.Role != RolePolecat {
-			t.Fatalf("expected role 'polecat', got %q", state.Role)
+		if state.Role != RoleMiner {
+			t.Fatalf("expected role 'miner', got %q", state.Role)
 		}
 	})
 
@@ -550,9 +550,9 @@ func TestOutputState(t *testing.T) {
 		}
 
 		ctx := RoleContext{
-			Role:    RolePolecat,
+			Role:    RoleMiner,
 			Rig:     "beads",
-			Polecat: "jade",
+			Miner: "jade",
 			WorkDir: workDir,
 		}
 
@@ -1055,12 +1055,12 @@ func TestCheckSlungWork_RalphModeUsesLoopDirective(t *testing.T) {
 	}
 }
 
-// TestCompactResumeReminder_PolecatGetsGtDone verifies that polecats get a
+// TestCompactResumeReminder_MinerGetsGtDone verifies that miners get a
 // gt done reminder after context compaction. This is the regression test for
-// the polecats-no-gt-done bug: after long work sessions, compaction drops the
+// the miners-no-gt-done bug: after long work sessions, compaction drops the
 // formula checklist and the agent forgets to call gt done.
-func TestCompactResumeReminder_PolecatGetsGtDone(t *testing.T) {
-	ctx := RoleContext{Role: RolePolecat}
+func TestCompactResumeReminder_MinerGetsGtDone(t *testing.T) {
+	ctx := RoleContext{Role: RoleMiner}
 	// Simulate compact source
 	primeHookSource = "compact"
 	defer func() { primeHookSource = "" }()
@@ -1070,13 +1070,13 @@ func TestCompactResumeReminder_PolecatGetsGtDone(t *testing.T) {
 	})
 
 	if !strings.Contains(output, "gt done") {
-		t.Fatalf("compact/resume for polecat must remind about gt done, got:\n%s", output)
+		t.Fatalf("compact/resume for miner must remind about gt done, got:\n%s", output)
 	}
 }
 
-// TestCompactResumeReminder_NonPolecatNoGtDone verifies that non-polecat roles
-// do NOT get the gt done reminder (it's polecat-specific).
-func TestCompactResumeReminder_NonPolecatNoGtDone(t *testing.T) {
+// TestCompactResumeReminder_NonMinerNoGtDone verifies that non-miner roles
+// do NOT get the gt done reminder (it's miner-specific).
+func TestCompactResumeReminder_NonMinerNoGtDone(t *testing.T) {
 	ctx := RoleContext{Role: RoleCrew}
 	primeHookSource = "compact"
 	defer func() { primeHookSource = "" }()
@@ -1086,7 +1086,7 @@ func TestCompactResumeReminder_NonPolecatNoGtDone(t *testing.T) {
 	})
 
 	if strings.Contains(output, "gt done") {
-		t.Fatalf("compact/resume for non-polecat should NOT mention gt done, got:\n%s", output)
+		t.Fatalf("compact/resume for non-miner should NOT mention gt done, got:\n%s", output)
 	}
 }
 
@@ -1094,12 +1094,12 @@ func TestEnsureBeadsRedirect_WitnessCreatesRedirect(t *testing.T) {
 	townRoot := t.TempDir()
 	rigRoot := filepath.Join(townRoot, "testrig")
 	witnessDir := filepath.Join(rigRoot, "witness")
-	mayorBeadsDir := filepath.Join(rigRoot, "mayor", "rig", ".beads")
+	overseerBeadsDir := filepath.Join(rigRoot, "overseer", "rig", ".beads")
 	if err := os.MkdirAll(witnessDir, 0755); err != nil {
 		t.Fatalf("mkdir witness dir: %v", err)
 	}
-	if err := os.MkdirAll(mayorBeadsDir, 0755); err != nil {
-		t.Fatalf("mkdir mayor beads dir: %v", err)
+	if err := os.MkdirAll(overseerBeadsDir, 0755); err != nil {
+		t.Fatalf("mkdir overseer beads dir: %v", err)
 	}
 
 	ctx := RoleContext{
@@ -1115,7 +1115,7 @@ func TestEnsureBeadsRedirect_WitnessCreatesRedirect(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read redirect: %v", err)
 	}
-	if got, want := string(content), "../mayor/rig/.beads\n"; got != want {
+	if got, want := string(content), "../overseer/rig/.beads\n"; got != want {
 		t.Fatalf("redirect content = %q, want %q", got, want)
 	}
 }
@@ -1124,17 +1124,17 @@ func TestEnsureBeadsRedirect_RepairsExistingRedirectChain(t *testing.T) {
 	townRoot := t.TempDir()
 	rigRoot := filepath.Join(townRoot, "testrig")
 	rigBeadsDir := filepath.Join(rigRoot, ".beads")
-	mayorBeadsDir := filepath.Join(rigRoot, "mayor", "rig", ".beads")
-	workDir := filepath.Join(rigRoot, "polecats", "worker1", "testrig")
+	overseerBeadsDir := filepath.Join(rigRoot, "overseer", "rig", ".beads")
+	workDir := filepath.Join(rigRoot, "miners", "worker1", "testrig")
 	workBeadsDir := filepath.Join(workDir, ".beads")
 
-	if err := os.MkdirAll(mayorBeadsDir, 0755); err != nil {
-		t.Fatalf("mkdir mayor beads dir: %v", err)
+	if err := os.MkdirAll(overseerBeadsDir, 0755); err != nil {
+		t.Fatalf("mkdir overseer beads dir: %v", err)
 	}
 	if err := os.MkdirAll(rigBeadsDir, 0755); err != nil {
 		t.Fatalf("mkdir rig beads dir: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(rigBeadsDir, "redirect"), []byte("mayor/rig/.beads\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(rigBeadsDir, "redirect"), []byte("overseer/rig/.beads\n"), 0644); err != nil {
 		t.Fatalf("write rig redirect: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(rigBeadsDir, "metadata.json"), []byte(`{"dolt_database":"hq","backend":"dolt"}`), 0644); err != nil {
@@ -1144,15 +1144,15 @@ func TestEnsureBeadsRedirect_RepairsExistingRedirectChain(t *testing.T) {
 		t.Fatalf("mkdir work beads dir: %v", err)
 	}
 
-	// Old polecat worktrees can keep this bd-incompatible chain:
-	// worktree/.beads -> rig/.beads -> mayor/rig/.beads.
+	// Old miner worktrees can keep this bd-incompatible chain:
+	// worktree/.beads -> rig/.beads -> overseer/rig/.beads.
 	redirectPath := filepath.Join(workBeadsDir, "redirect")
 	if err := os.WriteFile(redirectPath, []byte("../../../.beads\n"), 0644); err != nil {
 		t.Fatalf("write stale redirect: %v", err)
 	}
 
 	ctx := RoleContext{
-		Role:     RolePolecat,
+		Role:     RoleMiner,
 		WorkDir:  workDir,
 		TownRoot: townRoot,
 	}
@@ -1163,7 +1163,7 @@ func TestEnsureBeadsRedirect_RepairsExistingRedirectChain(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read redirect: %v", err)
 	}
-	if got, want := string(content), "../../../mayor/rig/.beads\n"; got != want {
+	if got, want := string(content), "../../../overseer/rig/.beads\n"; got != want {
 		t.Fatalf("redirect content = %q, want %q", got, want)
 	}
 }
@@ -1171,7 +1171,7 @@ func TestEnsureBeadsRedirect_RepairsExistingRedirectChain(t *testing.T) {
 func TestOutputRalphLoopDirective_PluginInstalled(t *testing.T) {
 	attachment := &beads.AttachmentFields{
 		Mode:            "ralph",
-		AttachedFormula: "mol-polecat-work",
+		AttachedFormula: "mol-miner-work",
 		AttachedArgs:    "Run story audit, fix worst gap, commit, loop",
 		FormulaVars:     "base_branch=main",
 	}

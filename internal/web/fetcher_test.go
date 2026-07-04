@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/activity"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
+	"github.com/steveyegge/excavation/internal/activity"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
 )
 
 func TestCalculateWorkStatus(t *testing.T) {
@@ -291,7 +291,7 @@ func TestDetermineColorClass(t *testing.T) {
 
 func TestGetRefineryStatusHint(t *testing.T) {
 	// Create a minimal fetcher for testing
-	f := &LiveConvoyFetcher{}
+	f := &LiveMinecartFetcher{}
 
 	tests := []struct {
 		name            string
@@ -434,15 +434,15 @@ func TestCalculateWorkerWorkStatus_ZeroThresholds(t *testing.T) {
 	}
 }
 
-// --- NewConvoyHandler timeout ---
+// --- NewMinecartHandler timeout ---
 
-func TestNewConvoyHandler_StoresTimeout(t *testing.T) {
-	mock := &MockConvoyFetcher{}
+func TestNewMinecartHandler_StoresTimeout(t *testing.T) {
+	mock := &MockMinecartFetcher{}
 	timeout := 15 * time.Second
 
-	handler, err := NewConvoyHandler(mock, timeout, "test-token")
+	handler, err := NewMinecartHandler(mock, timeout, "test-token")
 	if err != nil {
-		t.Fatalf("NewConvoyHandler: %v", err)
+		t.Fatalf("NewMinecartHandler: %v", err)
 	}
 
 	if handler.fetchTimeout != timeout {
@@ -450,11 +450,11 @@ func TestNewConvoyHandler_StoresTimeout(t *testing.T) {
 	}
 }
 
-func TestNewConvoyHandler_ZeroTimeout(t *testing.T) {
-	mock := &MockConvoyFetcher{}
-	handler, err := NewConvoyHandler(mock, 0, "test-token")
+func TestNewMinecartHandler_ZeroTimeout(t *testing.T) {
+	mock := &MockMinecartFetcher{}
+	handler, err := NewMinecartHandler(mock, 0, "test-token")
 	if err != nil {
-		t.Fatalf("NewConvoyHandler: %v", err)
+		t.Fatalf("NewMinecartHandler: %v", err)
 	}
 
 	if handler.fetchTimeout != 0 {
@@ -480,7 +480,7 @@ func TestNewAPIHandler_StoresTimeouts(t *testing.T) {
 // --- NewDashboardMux nil config ---
 
 func TestNewDashboardMux_NilConfig(t *testing.T) {
-	mock := &MockConvoyFetcher{}
+	mock := &MockMinecartFetcher{}
 	mux, err := NewDashboardMux(mock, nil)
 	if err != nil {
 		t.Fatalf("NewDashboardMux(nil config): %v", err)
@@ -549,7 +549,7 @@ esac
 	// Use generous 30s timeout — this fetcher tests exit-code behavior, not
 	// timeouts. The 2s value was flaky under CI load (process startup alone
 	// can take >1s under heavy contention).
-	f := &LiveConvoyFetcher{cmdTimeout: 30 * time.Second, bdBin: bdPath}
+	f := &LiveMinecartFetcher{cmdTimeout: 30 * time.Second, bdBin: bdPath}
 
 	t.Run("non-zero exit with stdout returns output", func(t *testing.T) {
 		stdout, err := f.runBdCmd(t.TempDir(), "warn")
@@ -565,7 +565,7 @@ esac
 		// Use 200ms timeout (not 20ms) to avoid flakiness from process startup
 		// overhead under system load. The script sleeps for 10s so the timeout
 		// always fires first with wide margin.
-		tf := &LiveConvoyFetcher{cmdTimeout: 200 * time.Millisecond, bdBin: bdPath}
+		tf := &LiveMinecartFetcher{cmdTimeout: 200 * time.Millisecond, bdBin: bdPath}
 		_, err := tf.runBdCmd(t.TempDir(), "sleep")
 		if err == nil {
 			t.Fatal("expected timeout error")
@@ -576,7 +576,7 @@ esac
 	})
 }
 
-func TestFetchConvoysBreakerBacksOffAfterBdFailures(t *testing.T) {
+func TestFetchMinecartsBreakerBacksOffAfterBdFailures(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("shell-based command test")
 	}
@@ -609,12 +609,12 @@ exit 0
 				t.Fatalf("write fake bd: %v", err)
 			}
 
-			f := &LiveConvoyFetcher{townRoot: t.TempDir(), cmdTimeout: 5 * time.Second, bdBin: bdPath}
-			if _, err := f.FetchConvoys(); err == nil {
-				t.Fatal("expected first FetchConvoys call to fail")
+			f := &LiveMinecartFetcher{townRoot: t.TempDir(), cmdTimeout: 5 * time.Second, bdBin: bdPath}
+			if _, err := f.FetchMinecarts(); err == nil {
+				t.Fatal("expected first FetchMinecarts call to fail")
 			}
 
-			if _, err := f.FetchConvoys(); err != nil {
+			if _, err := f.FetchMinecarts(); err != nil {
 				t.Fatalf("expected immediate retry to be backed off silently, got: %v", err)
 			}
 
@@ -629,7 +629,7 @@ exit 0
 	}
 }
 
-func TestFetchConvoysBreakerPreventsConcurrentStampede(t *testing.T) {
+func TestFetchMinecartsBreakerPreventsConcurrentStampede(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("shell-based command test")
 	}
@@ -645,7 +645,7 @@ exit 0
 		t.Fatalf("write fake bd: %v", err)
 	}
 
-	f := &LiveConvoyFetcher{townRoot: t.TempDir(), cmdTimeout: 5 * time.Second, bdBin: bdPath}
+	f := &LiveMinecartFetcher{townRoot: t.TempDir(), cmdTimeout: 5 * time.Second, bdBin: bdPath}
 	start := make(chan struct{})
 	var wg sync.WaitGroup
 	errCh := make(chan error, 8)
@@ -654,7 +654,7 @@ exit 0
 		go func() {
 			defer wg.Done()
 			<-start
-			_, err := f.FetchConvoys()
+			_, err := f.FetchMinecarts()
 			errCh <- err
 		}()
 	}
@@ -670,7 +670,7 @@ exit 0
 		}
 	}
 	if errCount != 1 {
-		t.Fatalf("FetchConvoys errors = %d, want 1; backed-off callers should return nil", errCount)
+		t.Fatalf("FetchMinecarts errors = %d, want 1; backed-off callers should return nil", errCount)
 	}
 
 	countBytes, err := os.ReadFile(bdPath + ".count")
@@ -682,7 +682,7 @@ exit 0
 	}
 }
 
-func withMayorFetcherHooks(t *testing.T, sessionEnv func(sessionName, key string) (string, error), runCmdFunc func(time.Duration, string, ...string) (*bytes.Buffer, error)) {
+func withOverseerFetcherHooks(t *testing.T, sessionEnv func(sessionName, key string) (string, error), runCmdFunc func(time.Duration, string, ...string) (*bytes.Buffer, error)) {
 	t.Helper()
 
 	originalGetEnv := fetcherGetSessionEnv
@@ -701,7 +701,7 @@ func withMayorFetcherHooks(t *testing.T, sessionEnv func(sessionName, key string
 	}
 }
 
-func TestResolveMayorRuntime(t *testing.T) {
+func TestResolveOverseerRuntime(t *testing.T) {
 	tests := []struct {
 		name        string
 		sessionEnv  func(sessionName, key string) (string, error)
@@ -711,7 +711,7 @@ func TestResolveMayorRuntime(t *testing.T) {
 		{
 			name: "uses session agent env",
 			sessionEnv: func(sessionName, key string) (string, error) {
-				if sessionName != "hq-mayor" || key != "GT_AGENT" {
+				if sessionName != "hq-overseer" || key != "GT_AGENT" {
 					t.Fatalf("unexpected session env lookup: %s %s", sessionName, key)
 				}
 				return "codex", nil
@@ -741,7 +741,7 @@ func TestResolveMayorRuntime(t *testing.T) {
 			setup: func(t *testing.T, townRoot string) {
 				t.Helper()
 				settings := config.NewTownSettings()
-				settings.RoleAgents[constants.RoleMayor] = "claude-sonnet"
+				settings.RoleAgents[constants.RoleOverseer] = "claude-sonnet"
 				settings.Agents["claude-sonnet"] = &config.RuntimeConfig{
 					Command: "claude",
 					Args:    []string{"--dangerously-skip-permissions", "--model", "sonnet"},
@@ -755,18 +755,18 @@ func TestResolveMayorRuntime(t *testing.T) {
 		{
 			name: "uses registry agent from session env",
 			sessionEnv: func(sessionName, key string) (string, error) {
-				if sessionName != "hq-mayor" || key != "GT_AGENT" {
+				if sessionName != "hq-overseer" || key != "GT_AGENT" {
 					t.Fatalf("unexpected session env lookup: %s %s", sessionName, key)
 				}
-				return "mayor-registry", nil
+				return "overseer-registry", nil
 			},
 			setup: func(t *testing.T, townRoot string) {
 				t.Helper()
 				registry := &config.AgentRegistry{
 					Version: config.CurrentAgentRegistryVersion,
 					Agents: map[string]*config.AgentPresetInfo{
-						"mayor-registry": {
-							Name:    "mayor-registry",
+						"overseer-registry": {
+							Name:    "overseer-registry",
 							Command: "opencode",
 							Args:    []string{"run", "--model", "gpt-5"},
 						},
@@ -781,7 +781,7 @@ func TestResolveMayorRuntime(t *testing.T) {
 		{
 			name: "uses ephemeral tier agent from session env",
 			sessionEnv: func(sessionName, key string) (string, error) {
-				if sessionName != "hq-mayor" || key != "GT_AGENT" {
+				if sessionName != "hq-overseer" || key != "GT_AGENT" {
 					t.Fatalf("unexpected session env lookup: %s %s", sessionName, key)
 				}
 				return "claude-sonnet", nil
@@ -803,8 +803,8 @@ func TestResolveMayorRuntime(t *testing.T) {
 			setup: func(t *testing.T, townRoot string) {
 				t.Helper()
 				settings := config.NewTownSettings()
-				settings.RoleAgents[constants.RoleMayor] = "mayor-custom"
-				settings.Agents["mayor-custom"] = &config.RuntimeConfig{
+				settings.RoleAgents[constants.RoleOverseer] = "overseer-custom"
+				settings.Agents["overseer-custom"] = &config.RuntimeConfig{
 					Provider: "codex",
 				}
 				if err := config.SaveTownSettings(config.TownSettingsPath(townRoot), settings); err != nil {
@@ -816,7 +816,7 @@ func TestResolveMayorRuntime(t *testing.T) {
 		{
 			name: "returns unknown alias verbatim when unresolved",
 			sessionEnv: func(sessionName, key string) (string, error) {
-				if sessionName != "hq-mayor" || key != "GT_AGENT" {
+				if sessionName != "hq-overseer" || key != "GT_AGENT" {
 					t.Fatalf("unexpected session env lookup: %s %s", sessionName, key)
 				}
 				return "mystery-agent", nil
@@ -827,16 +827,16 @@ func TestResolveMayorRuntime(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			withMayorFetcherHooks(t, tt.sessionEnv, nil)
+			withOverseerFetcherHooks(t, tt.sessionEnv, nil)
 
 			townRoot := t.TempDir()
 			if tt.setup != nil {
 				tt.setup(t, townRoot)
 			}
 
-			f := &LiveConvoyFetcher{townRoot: townRoot}
-			if got := f.resolveMayorRuntime("hq-mayor"); got != tt.wantRuntime {
-				t.Fatalf("resolveMayorRuntime() = %q, want %q", got, tt.wantRuntime)
+			f := &LiveMinecartFetcher{townRoot: townRoot}
+			if got := f.resolveOverseerRuntime("hq-overseer"); got != tt.wantRuntime {
+				t.Fatalf("resolveOverseerRuntime() = %q, want %q", got, tt.wantRuntime)
 			}
 		})
 	}
@@ -910,11 +910,11 @@ func TestRuntimeLabelFromConfig(t *testing.T) {
 	}
 }
 
-func TestFetchMayor_UsesResolvedRuntime(t *testing.T) {
-	withMayorFetcherHooks(
+func TestFetchOverseer_UsesResolvedRuntime(t *testing.T) {
+	withOverseerFetcherHooks(
 		t,
 		func(sessionName, key string) (string, error) {
-			if sessionName != "hq-mayor" || key != "GT_AGENT" {
+			if sessionName != "hq-overseer" || key != "GT_AGENT" {
 				t.Fatalf("unexpected session env lookup: %s %s", sessionName, key)
 			}
 			return "codex", nil
@@ -923,25 +923,25 @@ func TestFetchMayor_UsesResolvedRuntime(t *testing.T) {
 			if name != "tmux" {
 				t.Fatalf("unexpected command: %s %v", name, args)
 			}
-			return bytes.NewBufferString("hq-mayor:1731328320\nhq-deacon:1731328300\n"), nil
+			return bytes.NewBufferString("hq-overseer:1731328320\nhq-supervisor:1731328300\n"), nil
 		},
 	)
 
-	f := &LiveConvoyFetcher{
+	f := &LiveMinecartFetcher{
 		townRoot:             t.TempDir(),
-		mayorActiveThreshold: 24 * time.Hour,
+		overseerActiveThreshold: 24 * time.Hour,
 		tmuxCmdTimeout:       time.Second,
 	}
 
-	status, err := f.FetchMayor()
+	status, err := f.FetchOverseer()
 	if err != nil {
-		t.Fatalf("FetchMayor: %v", err)
+		t.Fatalf("FetchOverseer: %v", err)
 	}
 	if !status.IsAttached {
-		t.Fatal("expected mayor to be attached")
+		t.Fatal("expected overseer to be attached")
 	}
-	if status.SessionName != "hq-mayor" {
-		t.Fatalf("SessionName = %q, want %q", status.SessionName, "hq-mayor")
+	if status.SessionName != "hq-overseer" {
+		t.Fatalf("SessionName = %q, want %q", status.SessionName, "hq-overseer")
 	}
 	if status.Runtime != "codex" {
 		t.Fatalf("Runtime = %q, want %q", status.Runtime, "codex")
@@ -951,13 +951,13 @@ func TestFetchMayor_UsesResolvedRuntime(t *testing.T) {
 	}
 }
 
-// TestFetchHealth_DeaconHeartbeatFieldName verifies that FetchHealth reads the
+// TestFetchHealth_SupervisorHeartbeatFieldName verifies that FetchHealth reads the
 // "timestamp" field written by heartbeat.go, not the old "last_heartbeat" field
 // that caused dashboard to always show "no timestamp". (GH#2989)
-func TestFetchHealth_DeaconHeartbeatFieldName(t *testing.T) {
+func TestFetchHealth_SupervisorHeartbeatFieldName(t *testing.T) {
 	townRoot := t.TempDir()
-	deaconDir := filepath.Join(townRoot, "deacon")
-	if err := os.MkdirAll(deaconDir, 0755); err != nil {
+	supervisorDir := filepath.Join(townRoot, "supervisor")
+	if err := os.MkdirAll(supervisorDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -965,11 +965,11 @@ func TestFetchHealth_DeaconHeartbeatFieldName(t *testing.T) {
 	now := time.Now().UTC().Truncate(time.Second)
 	heartbeatJSON := fmt.Sprintf(`{"timestamp":%q,"cycle":42,"healthy_agents":3,"unhealthy_agents":1}`,
 		now.Format(time.RFC3339))
-	if err := os.WriteFile(filepath.Join(deaconDir, "heartbeat.json"), []byte(heartbeatJSON), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(supervisorDir, "heartbeat.json"), []byte(heartbeatJSON), 0644); err != nil {
 		t.Fatal(err)
 	}
 
-	f := &LiveConvoyFetcher{
+	f := &LiveMinecartFetcher{
 		townRoot:                townRoot,
 		heartbeatFreshThreshold: 5 * time.Minute,
 	}
@@ -979,17 +979,17 @@ func TestFetchHealth_DeaconHeartbeatFieldName(t *testing.T) {
 		t.Fatalf("FetchHealth: %v", err)
 	}
 
-	// DeaconHeartbeat must NOT be "no timestamp" — the field was read correctly.
-	if health.DeaconHeartbeat == "no timestamp" {
-		t.Fatal("DeaconHeartbeat = \"no timestamp\": JSON field name mismatch (GH#2989)")
+	// SupervisorHeartbeat must NOT be "no timestamp" — the field was read correctly.
+	if health.SupervisorHeartbeat == "no timestamp" {
+		t.Fatal("SupervisorHeartbeat = \"no timestamp\": JSON field name mismatch (GH#2989)")
 	}
-	if health.DeaconHeartbeat == "no heartbeat" {
-		t.Fatal("DeaconHeartbeat = \"no heartbeat\": heartbeat file was not read")
+	if health.SupervisorHeartbeat == "no heartbeat" {
+		t.Fatal("SupervisorHeartbeat = \"no heartbeat\": heartbeat file was not read")
 	}
 
 	// Cycle and agent counts should be populated.
-	if health.DeaconCycle != 42 {
-		t.Errorf("DeaconCycle = %d, want 42", health.DeaconCycle)
+	if health.SupervisorCycle != 42 {
+		t.Errorf("SupervisorCycle = %d, want 42", health.SupervisorCycle)
 	}
 	if health.HealthyAgents != 3 {
 		t.Errorf("HealthyAgents = %d, want 3", health.HealthyAgents)

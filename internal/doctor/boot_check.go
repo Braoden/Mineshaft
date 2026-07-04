@@ -5,8 +5,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/boot"
-	"github.com/steveyegge/gastown/internal/session"
+	"github.com/steveyegge/excavation/internal/boot"
+	"github.com/steveyegge/excavation/internal/session"
 )
 
 // BootHealthCheck verifies Boot watchdog health.

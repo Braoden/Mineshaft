@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/mail"
+	"github.com/steveyegge/excavation/internal/mail"
 )
 
 type fakeInboxLister struct {

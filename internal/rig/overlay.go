@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/style"
+	"github.com/steveyegge/excavation/internal/style"
 )
 
 func gasTownIgnorePatterns() []string {
@@ -73,12 +73,12 @@ func CopyOverlay(rigPath, destPath string) error {
 	return nil
 }
 
-// EnsureGitignorePatterns ensures the .gitignore has required Gas Town patterns.
+// EnsureGitignorePatterns ensures the .gitignore has required Excavation Site patterns.
 // This is called after cloning to add patterns that may be missing from the source repo.
 func EnsureGitignorePatterns(worktreePath string) error {
 	gitignorePath := filepath.Join(worktreePath, ".gitignore")
 
-	// Required patterns for Gas Town worktrees.
+	// Required patterns for Excavation Site worktrees.
 	// DO NOT add ".beads/" here. Beads manages its own .beads/.gitignore
 	// (created by bd init) which selectively ignores runtime files.
 	// Adding .beads/ here overrides that and breaks bd sync.
@@ -86,7 +86,7 @@ func EnsureGitignorePatterns(worktreePath string) error {
 	// #966 re-added it). See overlay_test.go for a regression guard.
 	//
 	// .claude/ is the broad pattern (covers commands/, settings.json, rules/, etc.).
-	// Settings are installed in gastown-managed parent directories via --settings flag,
+	// Settings are installed in excavation-managed parent directories via --settings flag,
 	// but Cursor still creates .claude/ inside worktrees at runtime. The narrow
 	// .claude/commands/ pattern missed other Cursor-created files, causing gt done
 	// to fail with "uncommitted changes would be lost" on untracked .claude/ entries.
@@ -132,7 +132,7 @@ func EnsureGitignorePatterns(worktreePath string) error {
 		}
 	}
 	if existingContent != "" {
-		if _, err := f.WriteString("\n# Gas Town (added by gt)\n"); err != nil {
+		if _, err := f.WriteString("\n# Excavation Site (added by gt)\n"); err != nil {
 			return err
 		}
 	}
@@ -160,7 +160,7 @@ func gasTownLocalExcludePatterns() []string {
 	return append(patterns, ".beads/")
 }
 
-// EnsureLocalExcludePatterns writes the standard Gas Town ignore patterns to the
+// EnsureLocalExcludePatterns writes the standard Excavation Site ignore patterns to the
 // worktree-local git exclude file so the worktree stays clean without mutating a
 // tracked .gitignore.
 func EnsureLocalExcludePatterns(worktreePath string) error {
@@ -211,7 +211,7 @@ func EnsureLocalExcludePatterns(worktreePath string) error {
 		}
 	}
 	if existingContent != "" {
-		if _, err := f.WriteString("\n# Gas Town (added by gt)\n"); err != nil {
+		if _, err := f.WriteString("\n# Excavation Site (added by gt)\n"); err != nil {
 			return err
 		}
 	}

@@ -1,13 +1,13 @@
-# Releasing Gas Town
+# Releasing Excavation Site
 
 ## Distribution Channels
 
 | Channel | Mechanism | Automatic? |
 |---------|-----------|------------|
 | **GitHub Release** | GoReleaser via Actions on tag push | Yes |
-| **Homebrew tap** (`gastownhall/gastown`) | Actions writes an asset-based formula after archives upload | Yes |
+| **Homebrew tap** (`excavationhall/excavation`) | Actions writes an asset-based formula after archives upload | Yes |
 | **Homebrew core** (if listed) | Homebrew bot detects new release | Yes (24-48h delay) |
-| **npm** (`@gastown/gt`) | Actions workflow, OIDC trusted publishing | Yes (when org is set up) |
+| **npm** (`@excavation/gt`) | Actions workflow, OIDC trusted publishing | Yes (when org is set up) |
 
 ## How to Release
 
@@ -16,13 +16,13 @@
 Use the release formula, which handles all steps:
 
 ```bash
-gt mol wisp create gastown-release --var version=X.Y.Z
+gt mol wisp create excavation-release --var version=X.Y.Z
 ```
 
 ### Option B: Bump script
 
 ```bash
-cd gastown/mayor/rig
+cd excavation/overseer/rig
 ./scripts/bump-version.sh X.Y.Z --commit --tag --push --install
 ```
 
@@ -55,10 +55,10 @@ The `release.yml` workflow triggers automatically:
 1. **Verify tag matches Version constant** — runs `make check-version-tag` and
    aborts the release if the pushed tag (`vX.Y.Z`) doesn't match the `Version`
    constant in `internal/cmd/version.go`. Prevents recurrence of
-   [#3459](https://github.com/gastownhall/gastown/issues/3459) where v0.13.0
+   [#3459](https://github.com/excavationhall/excavation/issues/3459) where v0.13.0
    shipped reporting 0.12.1.
 2. **goreleaser** job builds binaries for all platforms and creates the GitHub Release
-3. **update-homebrew-formula** job writes an asset-based formula to `gastownhall/homebrew-gastown` when tap credentials are configured
+3. **update-homebrew-formula** job writes an asset-based formula to `excavationhall/homebrew-excavation` when tap credentials are configured
 4. **publish-npm** job publishes to npm (best-effort, `continue-on-error: true`)
 
 Manual dispatch is only for rerunning a release from a `v*` tag. Publishing jobs are guarded to skip branch refs.
@@ -74,48 +74,48 @@ It only fails when HEAD is tagged `vX.Y.Z` and the `Version` constant doesn't
 match. Run it after `scripts/bump-version.sh` and before pushing the tag if you
 want to catch drift before CI does.
 
-## Homebrew tap (`gastownhall/gastown`)
+## Homebrew tap (`excavationhall/excavation`)
 
-The release workflow automatically overwrites `Formula/gastown.rb` in the `gastownhall/homebrew-gastown` repo on every tag push. It prefers the GitHub App credentials `HOMEBREW_TAP_APP_ID` and `HOMEBREW_TAP_APP_PRIVATE_KEY`, and falls back to `HOMEBREW_TAP_TOKEN` if present.
+The release workflow automatically overwrites `Formula/excavation.rb` in the `excavationhall/homebrew-excavation` repo on every tag push. It prefers the GitHub App credentials `HOMEBREW_TAP_APP_ID` and `HOMEBREW_TAP_APP_PRIVATE_KEY`, and falls back to `HOMEBREW_TAP_TOKEN` if present.
 
 The tap formula installs prebuilt release assets:
 
 ```bash
-brew install gastownhall/gastown/gastown
+brew install excavationhall/excavation/excavation
 ```
 
 The normal user-facing Homebrew path remains homebrew-core:
 
 ```bash
-brew install gastown
+brew install excavation
 ```
 
 ## Homebrew core
 
-If Gastown is listed in **homebrew-core**, the formula lives at:
-`https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/g/gastown.rb`
+If Excavation is listed in **homebrew-core**, the formula lives at:
+`https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/g/excavation.rb`
 
 ### How it updates
 
 Homebrew's `BrewTestBot` automatically detects new GitHub releases and opens
-a PR to homebrew-core. Gastown is on the autobump list — the bot checks
+a PR to homebrew-core. Excavation is on the autobump list — the bot checks
 **every ~3 hours**.
 
 ### If the bot doesn't pick it up
 
-Gastown is on the autobump list, so `brew bump-formula-pr` will refuse to
+Excavation is on the autobump list, so `brew bump-formula-pr` will refuse to
 submit a manual PR. If the bot hasn't updated after 6+ hours, check
-https://github.com/Homebrew/homebrew-core/pulls?q=gastown for stuck PRs.
+https://github.com/Homebrew/homebrew-core/pulls?q=excavation for stuck PRs.
 
 ### Verifying
 
 ```bash
 brew update
-brew info gastown    # Check version
-brew upgrade gastown # Upgrade if installed
+brew info excavation    # Check version
+brew upgrade excavation # Upgrade if installed
 ```
 
-## npm (`@gastown/gt`)
+## npm (`@excavation/gt`)
 
 ### How it works
 
@@ -126,15 +126,15 @@ the npm package.
 
 ### Prerequisites
 
-The `@gastown` npm organization must exist and be linked to this repo:
+The `@excavation` npm organization must exist and be linked to this repo:
 
-1. Go to https://www.npmjs.com and create (or join) the `@gastown` org
+1. Go to https://www.npmjs.com and create (or join) the `@excavation` org
 2. Under org settings, enable "Require 2FA" and configure trusted publishing
-3. Link `gastownhall/gastown` as a trusted publisher for `@gastown/gt`
+3. Link `excavationhall/excavation` as a trusted publisher for `@excavation/gt`
 
 ### Current status (as of 2026-03-06)
 
-The `@gastown` npm org was secured by a community member (Ivan Casco Valero,
+The `@excavation` npm org was secured by a community member (Ivan Casco Valero,
 ivan@ivancasco.com) to prevent scope squatting. Ownership transfer is pending.
 Until the org is transferred, npm publish will fail gracefully without blocking
 the release (`continue-on-error: true` in the workflow).
@@ -142,8 +142,8 @@ the release (`continue-on-error: true` in the workflow).
 ### Verifying
 
 ```bash
-npm view @gastown/gt version
-npm install -g @gastown/gt
+npm view @excavation/gt version
+npm install -g @excavation/gt
 gt version
 ```
 
@@ -156,7 +156,7 @@ gt version
 | `internal/cmd/version.go` | `Version` constant |
 | `npm-package/package.json` | `version` field |
 | `flake.nix` | version + vendorHash (only if `nix` is in PATH) |
-| `gastownhall/homebrew-gastown/Formula/gastown.rb` | asset URLs + `sha256` updated by release workflow |
+| `excavationhall/homebrew-excavation/Formula/excavation.rb` | asset URLs + `sha256` updated by release workflow |
 
 ## Troubleshooting
 
@@ -167,14 +167,14 @@ The workflow rejects `go.mod` files with `replace` directives (they break
 
 ### npm publish returns 404
 
-The `@gastown` npm org doesn't exist or you don't have publish access.
+The `@excavation` npm org doesn't exist or you don't have publish access.
 See the npm section above. The release still succeeds — npm is best-effort.
 
 ### Homebrew shows old version after a release
 
-For the `gastownhall/gastown` tap, check the `update-homebrew-formula` job and
-the tap's `Formula/gastown.rb` commit history. For homebrew-core, check
-https://github.com/Homebrew/homebrew-core/pulls?q=gastown for stuck BrewTestBot
+For the `excavationhall/excavation` tap, check the `update-homebrew-formula` job and
+the tap's `Formula/excavation.rb` commit history. For homebrew-core, check
+https://github.com/Homebrew/homebrew-core/pulls?q=excavation for stuck BrewTestBot
 PRs. Manual `brew bump-formula-pr` is blocked for autobump formulae.
 
 ### `make install` shows `-dirty` suffix

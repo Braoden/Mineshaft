@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/mail"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/style"
+	"github.com/steveyegge/excavation/internal/mail"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/style"
 )
 
 // getMailbox returns the mailbox for the given address.
@@ -20,7 +20,7 @@ func getMailbox(address string) (*mail.Mailbox, error) {
 	// All mail uses town beads (two-level architecture)
 	workDir, err := findMailWorkDir()
 	if err != nil {
-		return nil, fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return nil, fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Get mailbox

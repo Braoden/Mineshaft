@@ -110,8 +110,8 @@ func TestDaemonThresholds_Defaults(t *testing.T) {
 	if got := daemon.BootSpawnCooldownD(); got != DefaultBootSpawnCooldown {
 		t.Errorf("BootSpawnCooldown: got %v, want %v", got, DefaultBootSpawnCooldown)
 	}
-	if got := daemon.DeaconGracePeriodD(); got != DefaultDeaconGracePeriod {
-		t.Errorf("DeaconGracePeriod: got %v, want %v", got, DefaultDeaconGracePeriod)
+	if got := daemon.SupervisorGracePeriodD(); got != DefaultSupervisorGracePeriod {
+		t.Errorf("SupervisorGracePeriod: got %v, want %v", got, DefaultSupervisorGracePeriod)
 	}
 }
 
@@ -146,7 +146,7 @@ func TestDaemonThresholds_NewFieldOverrides(t *testing.T) {
 		Daemon: &DaemonThresholds{
 			RecoveryHeartbeatInterval: "5m",
 			BootSpawnCooldown:         "90s",
-			DeaconGracePeriod:         "10m",
+			SupervisorGracePeriod:         "10m",
 		},
 	}
 
@@ -157,36 +157,36 @@ func TestDaemonThresholds_NewFieldOverrides(t *testing.T) {
 	if got := daemon.BootSpawnCooldownD(); got != 90*time.Second {
 		t.Errorf("BootSpawnCooldown: got %v, want 90s", got)
 	}
-	if got := daemon.DeaconGracePeriodD(); got != 10*time.Minute {
-		t.Errorf("DeaconGracePeriod: got %v, want 10m", got)
+	if got := daemon.SupervisorGracePeriodD(); got != 10*time.Minute {
+		t.Errorf("SupervisorGracePeriod: got %v, want 10m", got)
 	}
 }
 
-func TestDeaconThresholds_Defaults(t *testing.T) {
+func TestSupervisorThresholds_Defaults(t *testing.T) {
 	t.Parallel()
 
 	op := &OperationalConfig{}
-	deacon := op.GetDeaconConfig()
+	supervisor := op.GetSupervisorConfig()
 
-	if got := deacon.PingTimeoutD(); got != DefaultDeaconPingTimeout {
-		t.Errorf("PingTimeout: got %v, want %v", got, DefaultDeaconPingTimeout)
+	if got := supervisor.PingTimeoutD(); got != DefaultSupervisorPingTimeout {
+		t.Errorf("PingTimeout: got %v, want %v", got, DefaultSupervisorPingTimeout)
 	}
-	if got := deacon.ConsecutiveFailuresV(); got != DefaultDeaconConsecutiveFailures {
-		t.Errorf("ConsecutiveFailures: got %v, want %v", got, DefaultDeaconConsecutiveFailures)
+	if got := supervisor.ConsecutiveFailuresV(); got != DefaultSupervisorConsecutiveFailures {
+		t.Errorf("ConsecutiveFailures: got %v, want %v", got, DefaultSupervisorConsecutiveFailures)
 	}
 }
 
-func TestPolecatThresholds_Defaults(t *testing.T) {
+func TestMinerThresholds_Defaults(t *testing.T) {
 	t.Parallel()
 
 	op := &OperationalConfig{}
-	polecat := op.GetPolecatConfig()
+	miner := op.GetMinerConfig()
 
-	if got := polecat.HeartbeatStaleThresholdD(); got != DefaultPolecatHeartbeatStale {
-		t.Errorf("HeartbeatStale: got %v, want %v", got, DefaultPolecatHeartbeatStale)
+	if got := miner.HeartbeatStaleThresholdD(); got != DefaultMinerHeartbeatStale {
+		t.Errorf("HeartbeatStale: got %v, want %v", got, DefaultMinerHeartbeatStale)
 	}
-	if got := polecat.DoltMaxRetriesV(); got != DefaultPolecatDoltMaxRetries {
-		t.Errorf("DoltMaxRetries: got %v, want %v", got, DefaultPolecatDoltMaxRetries)
+	if got := miner.DoltMaxRetriesV(); got != DefaultMinerDoltMaxRetries {
+		t.Errorf("DoltMaxRetries: got %v, want %v", got, DefaultMinerDoltMaxRetries)
 	}
 }
 

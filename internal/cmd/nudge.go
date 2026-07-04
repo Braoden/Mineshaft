@@ -10,17 +10,17 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/events"
-	"github.com/steveyegge/gastown/internal/mayor"
-	"github.com/steveyegge/gastown/internal/nudge"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/telemetry"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/events"
+	"github.com/steveyegge/excavation/internal/overseer"
+	"github.com/steveyegge/excavation/internal/nudge"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/telemetry"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 func hasACPSessionByName(townRoot, sessionName string) bool {
@@ -28,9 +28,9 @@ func hasACPSessionByName(townRoot, sessionName string) bool {
 		return false
 	}
 
-	// Currently only the Mayor supports ACP.
-	if sessionName == session.MayorSessionName() {
-		return mayor.IsACPActive(townRoot)
+	// Currently only the Overseer supports ACP.
+	if sessionName == session.OverseerSessionName() {
+		return overseer.IsACPActive(townRoot)
 	}
 
 	return false
@@ -71,12 +71,12 @@ func init() {
 var nudgeCmd = &cobra.Command{
 	Use:         "nudge <target> [message]",
 	GroupID:     GroupComm,
-	Annotations: map[string]string{AnnotationPolecatSafe: "true"},
-	Short:       "Send a synchronous message to any Gas Town worker",
-	Long: `Universal messaging API for Gas Town worker-to-worker communication.
+	Annotations: map[string]string{AnnotationMinerSafe: "true"},
+	Short:       "Send a synchronous message to any Excavation Site worker",
+	Long: `Universal messaging API for Excavation Site worker-to-worker communication.
 
-Delivers a message to any worker's Claude Code session: polecats, crew,
-witness, refinery, mayor, or deacon.
+Delivers a message to any worker's Claude Code session: miners, crew,
+witness, refinery, overseer, or supervisor.
 
 Delivery modes (--mode):
   wait-idle  Wait for agent to become idle (prompt visible), then deliver
@@ -98,15 +98,15 @@ This is the ONLY way to send messages to Claude sessions.
 Do not use raw tmux send-keys elsewhere.
 
 Role shortcuts (expand to session names):
-  mayor     Maps to gt-mayor
-  deacon    Maps to gt-deacon
+  overseer     Maps to gt-overseer
+  supervisor    Maps to gt-supervisor
   witness   Maps to gt-<rig>-witness (uses current rig)
   refinery  Maps to gt-<rig>-refinery (uses current rig)
 
 Channel syntax:
   channel:<name>  Nudges all members of a named channel defined in
                   ~/gt/config/messaging.json under "nudge_channels".
-                  Patterns like "gastown/polecats/*" are expanded.
+                  Patterns like "excavation/miners/*" are expanded.
 
 DND (Do Not Disturb):
   If the target has DND enabled (gt dnd on), the nudge is skipped.
@@ -115,13 +115,13 @@ DND (Do Not Disturb):
 Examples:
   gt nudge greenplace/furiosa "Check your mail and start working"
   gt nudge greenplace/alpha -m "What's your status?"
-  gt nudge mayor "Status update requested"
-  gt nudge witness "Check polecat health"
-  gt nudge deacon session-started
+  gt nudge overseer "Status update requested"
+  gt nudge witness "Check miner health"
+  gt nudge supervisor session-started
   gt nudge channel:workers "New priority work available"
 
   # Use --stdin for messages with special characters or formatting:
-  gt nudge gastown/alpha --stdin <<'EOF'
+  gt nudge excavation/alpha --stdin <<'EOF'
   Status update:
   - Task 1: complete
   - Task 2: in progress
@@ -157,7 +157,7 @@ var idleWatcherPollInterval = 1 * time.Second
 func deliverNudge(t *tmux.Tmux, sessionName, message, sender string) error {
 	// Test hook: when GT_TEST_NUDGE_LOG is set, log the nudge instead of
 	// delivering through real tmux/queue transport. Prevents test-suite
-	// runs from delivering "test" messages to live agents (mayor reported
+	// runs from delivering "test" messages to live agents (overseer reported
 	// recurring synthetic nudges traced to nudge_test.go invocations).
 	// Mirrors the pattern in sling_helpers.go's nudgeWitness/nudgeRefinery.
 	if logPath := os.Getenv("GT_TEST_NUDGE_LOG"); logPath != "" {
@@ -186,7 +186,7 @@ func deliverNudge(t *tmux.Tmux, sessionName, message, sender string) error {
 	switch mode {
 	case NudgeModeQueue:
 		if townRoot == "" {
-			return fmt.Errorf("--mode=queue requires a Gas Town workspace")
+			return fmt.Errorf("--mode=queue requires a Excavation Site workspace")
 		}
 		return nudge.Enqueue(townRoot, sessionName, nudge.QueuedNudge{
 			Sender:   sender,
@@ -198,7 +198,7 @@ func deliverNudge(t *tmux.Tmux, sessionName, message, sender string) error {
 		if townRoot == "" {
 			// wait-idle needs workspace for queue fallback — fail explicitly
 			// rather than silently degrading to immediate (destructive) delivery.
-			return fmt.Errorf("--mode=wait-idle requires a Gas Town workspace")
+			return fmt.Errorf("--mode=wait-idle requires a Excavation Site workspace")
 		}
 		// Check if the target agent supports prompt-based idle detection.
 		// WaitForIdle uses Claude Code's prompt pattern (❯) and status bar (⏵⏵).
@@ -375,7 +375,7 @@ func runNudge(cmd *cobra.Command, args []string) (retErr error) {
 	}
 
 	// --if-fresh: skip nudge if the caller's tmux session is older than 60s.
-	// This prevents compaction/clear SessionStart hooks from spamming the deacon.
+	// This prevents compaction/clear SessionStart hooks from spamming the supervisor.
 	if nudgeIfFreshFlag {
 		sessionName := tmux.CurrentSessionName()
 		if sessionName != "" {
@@ -393,9 +393,9 @@ func runNudge(cmd *cobra.Command, args []string) (retErr error) {
 
 	target := args[0]
 
-	// Normalize trailing slash: the mail system uses "mayor/" and "deacon/"
+	// Normalize trailing slash: the mail system uses "overseer/" and "supervisor/"
 	// as canonical addresses, but nudge role shortcuts expect bare names.
-	// Without this, "mayor/" falls through to parseAddress which rejects
+	// Without this, "overseer/" falls through to parseAddress which rejects
 	// the empty second component, silently dropping the nudge.
 	target = strings.TrimSuffix(target, "/")
 
@@ -425,18 +425,18 @@ func runNudge(cmd *cobra.Command, args []string) (retErr error) {
 	sender := "unknown"
 	if roleInfo, err := GetRole(); err == nil {
 		switch roleInfo.Role {
-		case RoleMayor:
-			sender = constants.RoleMayor
+		case RoleOverseer:
+			sender = constants.RoleOverseer
 		case RoleCrew:
-			sender = fmt.Sprintf("%s/crew/%s", roleInfo.Rig, roleInfo.Polecat)
-		case RolePolecat:
-			sender = fmt.Sprintf("%s/%s", roleInfo.Rig, roleInfo.Polecat)
+			sender = fmt.Sprintf("%s/crew/%s", roleInfo.Rig, roleInfo.Miner)
+		case RoleMiner:
+			sender = fmt.Sprintf("%s/%s", roleInfo.Rig, roleInfo.Miner)
 		case RoleWitness:
 			sender = fmt.Sprintf("%s/witness", roleInfo.Rig)
 		case RoleRefinery:
 			sender = fmt.Sprintf("%s/refinery", roleInfo.Rig)
-		case RoleDeacon:
-			sender = constants.RoleDeacon
+		case RoleSupervisor:
+			sender = constants.RoleSupervisor
 		default:
 			sender = string(roleInfo.Role)
 		}
@@ -469,10 +469,10 @@ func runNudge(cmd *cobra.Command, args []string) (retErr error) {
 	t := tmux.NewTmux()
 
 	// Expand role shortcuts to session names
-	// These shortcuts let users type "mayor" instead of "gt-mayor"
+	// These shortcuts let users type "overseer" instead of "gt-overseer"
 	switch target {
-	case constants.RoleMayor:
-		target = session.MayorSessionName()
+	case constants.RoleOverseer:
+		target = session.OverseerSessionName()
 	case constants.RoleWitness, constants.RoleRefinery:
 		// These need the current rig
 		roleInfo, err := GetRole()
@@ -490,65 +490,65 @@ func runNudge(cmd *cobra.Command, args []string) (retErr error) {
 		}
 	}
 
-	// Special case: "deacon" target maps to the Deacon session
-	if target == constants.RoleDeacon {
-		deaconSession := session.DeaconSessionName()
-		// Check if Deacon session exists (tmux or ACP)
-		hasACP := hasACPSessionByName(townRoot, deaconSession)
+	// Special case: "supervisor" target maps to the Supervisor session
+	if target == constants.RoleSupervisor {
+		supervisorSession := session.SupervisorSessionName()
+		// Check if Supervisor session exists (tmux or ACP)
+		hasACP := hasACPSessionByName(townRoot, supervisorSession)
 		exists := false
 		if !hasACP {
-			exists, _ = t.HasSession(deaconSession)
+			exists, _ = t.HasSession(supervisorSession)
 		}
 
 		if !hasACP && !exists {
-			// Deacon not running - this is not an error, just log and return
-			fmt.Printf("%s Deacon not running, nudge skipped\n", style.Dim.Render("○"))
+			// Supervisor not running - this is not an error, just log and return
+			fmt.Printf("%s Supervisor not running, nudge skipped\n", style.Dim.Render("○"))
 			return nil
 		}
 
-		if err := deliverNudge(t, deaconSession, message, sender); err != nil {
-			return fmt.Errorf("nudging deacon: %w", err)
+		if err := deliverNudge(t, supervisorSession, message, sender); err != nil {
+			return fmt.Errorf("nudging supervisor: %w", err)
 		}
 
-		fmt.Printf("%s Nudged deacon (%s)\n", style.Bold.Render("✓"), nudgeModeFlag)
+		fmt.Printf("%s Nudged supervisor (%s)\n", style.Bold.Render("✓"), nudgeModeFlag)
 
 		// Log nudge event
 		if townRoot, err := workspace.FindFromCwd(); err == nil && townRoot != "" {
-			_ = LogNudge(townRoot, constants.RoleDeacon, message)
+			_ = LogNudge(townRoot, constants.RoleSupervisor, message)
 		}
-		_ = events.LogFeed(events.TypeNudge, sender, events.NudgePayload("", constants.RoleDeacon, message))
+		_ = events.LogFeed(events.TypeNudge, sender, events.NudgePayload("", constants.RoleSupervisor, message))
 		return nil
 	}
 
-	// Check if target is rig/polecat format or raw session name
+	// Check if target is rig/miner format or raw session name
 	if strings.Contains(target, "/") {
-		// Parse rig/polecat format
-		rigName, polecatName, err := parseAddress(target)
+		// Parse rig/miner format
+		rigName, minerName, err := parseAddress(target)
 		if err != nil {
 			return err
 		}
 
 		var sessionName string
 
-		// Check if this is a crew address (polecatName starts with "crew/")
-		if strings.HasPrefix(polecatName, "crew/") {
+		// Check if this is a crew address (minerName starts with "crew/")
+		if strings.HasPrefix(minerName, "crew/") {
 			// Extract crew name and use crew session naming
-			crewName := strings.TrimPrefix(polecatName, "crew/")
+			crewName := strings.TrimPrefix(minerName, "crew/")
 			sessionName = crewSessionName(rigName, crewName)
-		} else if strings.HasPrefix(polecatName, "polecats/") {
-			// Explicit polecat address (e.g., "vastal/polecats/furiosa").
+		} else if strings.HasPrefix(minerName, "miners/") {
+			// Explicit miner address (e.g., "vastal/miners/furiosa").
 			// Bypasses crew-first resolution for short addresses.
-			pcName := strings.TrimPrefix(polecatName, "polecats/")
+			pcName := strings.TrimPrefix(minerName, "miners/")
 			mgr, _, err := getSessionManager(rigName)
 			if err != nil {
 				return err
 			}
 			sessionName = mgr.SessionName(pcName)
 		} else {
-			// Short address (e.g., "gastown/holden") - could be crew or polecat.
+			// Short address (e.g., "excavation/holden") - could be crew or miner.
 			// Try crew first (matches mail system's addressToSessionIDs pattern),
-			// then fall back to polecat.
-			crewSession := crewSessionName(rigName, polecatName)
+			// then fall back to miner.
+			crewSession := crewSessionName(rigName, minerName)
 			if exists, _ := t.HasSession(crewSession); exists {
 				sessionName = crewSession
 			} else {
@@ -556,7 +556,7 @@ func runNudge(cmd *cobra.Command, args []string) (retErr error) {
 				if err != nil {
 					return err
 				}
-				sessionName = mgr.SessionName(polecatName)
+				sessionName = mgr.SessionName(minerName)
 			}
 		}
 
@@ -579,7 +579,7 @@ func runNudge(cmd *cobra.Command, args []string) (retErr error) {
 			return fmt.Errorf("nudging session: %w", err)
 		}
 
-		fmt.Printf("%s Nudged %s/%s (%s)\n", style.Bold.Render("✓"), rigName, polecatName, nudgeModeFlag)
+		fmt.Printf("%s Nudged %s/%s (%s)\n", style.Bold.Render("✓"), rigName, minerName, nudgeModeFlag)
 
 		// Log nudge event
 		if townRoot, err := workspace.FindFromCwd(); err == nil && townRoot != "" {
@@ -729,21 +729,21 @@ func runNudgeChannel(channelName, message, sender string) error {
 
 // resolveNudgePattern resolves a nudge channel pattern to session names.
 // Patterns can be:
-//   - Literal: "gastown/witness" → gt-gastown-witness
-//   - Wildcard: "gastown/polecats/*" → all polecat sessions in gastown
+//   - Literal: "excavation/witness" → gt-excavation-witness
+//   - Wildcard: "excavation/miners/*" → all miner sessions in excavation
 //   - Role: "*/witness" → all witness sessions
-//   - Special: "mayor", "deacon" → gt-{town}-mayor, gt-{town}-deacon
+//   - Special: "overseer", "supervisor" → gt-{town}-overseer, gt-{town}-supervisor
 //
-// townName is used to generate the correct session names for mayor/deacon.
+// townName is used to generate the correct session names for overseer/supervisor.
 func resolveNudgePattern(pattern string, agents []*AgentSession) []string {
 	var results []string
 
 	// Handle special cases
 	switch pattern {
-	case constants.RoleMayor:
-		return []string{session.MayorSessionName()}
-	case constants.RoleDeacon:
-		return []string{session.DeaconSessionName()}
+	case constants.RoleOverseer:
+		return []string{session.OverseerSessionName()}
+	case constants.RoleSupervisor:
+		return []string{session.SupervisorSessionName()}
 	}
 
 	// Parse pattern
@@ -763,12 +763,12 @@ func resolveNudgePattern(pattern string, agents []*AgentSession) []string {
 		}
 
 		// Match target pattern
-		if strings.HasPrefix(targetPattern, "polecats/") {
-			// polecats/* or polecats/<name>
-			if agent.Type != AgentPolecat {
+		if strings.HasPrefix(targetPattern, "miners/") {
+			// miners/* or miners/<name>
+			if agent.Type != AgentMiner {
 				continue
 			}
-			suffix := strings.TrimPrefix(targetPattern, "polecats/")
+			suffix := strings.TrimPrefix(targetPattern, "miners/")
 			if suffix != "*" && suffix != agent.AgentName {
 				continue
 			}
@@ -790,8 +790,8 @@ func resolveNudgePattern(pattern string, agents []*AgentSession) []string {
 				continue
 			}
 		} else {
-			// Assume it's a polecat name (legacy short format)
-			if agent.Type != AgentPolecat || agent.AgentName != targetPattern {
+			// Assume it's a miner name (legacy short format)
+			if agent.Type != AgentMiner || agent.AgentName != targetPattern {
 				continue
 			}
 		}
@@ -832,30 +832,30 @@ func shouldNudgeTarget(townRoot, targetAddress string, force bool) (bool, string
 // sessionNameToAddress converts a tmux session name back to a mail address
 // for DND lookup. Returns empty string if the format is unrecognized.
 // Examples:
-//   - "gt-gastown-crew-max" -> "gastown/crew/max"
-//   - "gt-gastown-alpha" -> "gastown/alpha"
-//   - "gt-gastown-witness" -> "gastown/witness"
-//   - "hq-mayor" -> "mayor"
-//   - "hq-deacon" -> "deacon"
+//   - "gt-excavation-crew-max" -> "excavation/crew/max"
+//   - "gt-excavation-alpha" -> "excavation/alpha"
+//   - "gt-excavation-witness" -> "excavation/witness"
+//   - "hq-overseer" -> "overseer"
+//   - "hq-supervisor" -> "supervisor"
 func sessionNameToAddress(sessionName string) string {
 	identity, err := session.ParseSessionName(sessionName)
 	if err != nil {
 		return ""
 	}
 
-	// Use short address format: rig/name (not rig/polecats/name)
+	// Use short address format: rig/name (not rig/miners/name)
 	switch identity.Role {
-	case session.RoleMayor:
-		return constants.RoleMayor
-	case session.RoleDeacon:
-		return constants.RoleDeacon
+	case session.RoleOverseer:
+		return constants.RoleOverseer
+	case session.RoleSupervisor:
+		return constants.RoleSupervisor
 	case session.RoleWitness:
 		return fmt.Sprintf("%s/witness", identity.Rig)
 	case session.RoleRefinery:
 		return fmt.Sprintf("%s/refinery", identity.Rig)
 	case session.RoleCrew:
 		return fmt.Sprintf("%s/crew/%s", identity.Rig, identity.Name)
-	case session.RolePolecat:
+	case session.RoleMiner:
 		return fmt.Sprintf("%s/%s", identity.Rig, identity.Name)
 	default:
 		return ""
@@ -864,19 +864,19 @@ func sessionNameToAddress(sessionName string) string {
 
 // addressToAgentBeadID converts a target address to an agent bead ID.
 // Examples:
-//   - "mayor" -> "gt-{town}-mayor"
-//   - "deacon" -> "gt-{town}-deacon"
-//   - "gastown/witness" -> "gt-gastown-witness"
-//   - "gastown/alpha" -> "gt-gastown-polecat-alpha"
+//   - "overseer" -> "gt-{town}-overseer"
+//   - "supervisor" -> "gt-{town}-supervisor"
+//   - "excavation/witness" -> "gt-excavation-witness"
+//   - "excavation/alpha" -> "gt-excavation-miner-alpha"
 //
 // Returns empty string if the address cannot be converted.
 func addressToAgentBeadID(address string) string {
 	// Handle special cases
 	switch address {
-	case constants.RoleMayor:
-		return session.MayorSessionName()
-	case constants.RoleDeacon:
-		return session.DeaconSessionName()
+	case constants.RoleOverseer:
+		return session.OverseerSessionName()
+	case constants.RoleSupervisor:
+		return session.SupervisorSessionName()
 	}
 
 	// Parse rig/role format
@@ -898,15 +898,15 @@ func addressToAgentBeadID(address string) string {
 	case constants.RoleRefinery:
 		return session.RefinerySessionName(session.PrefixFor(rig))
 	default:
-		// Assume polecat
+		// Assume miner
 		if strings.HasPrefix(role, "crew/") {
 			crewName := strings.TrimPrefix(role, "crew/")
 			return session.CrewSessionName(session.PrefixFor(rig), crewName)
 		}
-		if strings.HasPrefix(role, "polecats/") {
-			pcName := strings.TrimPrefix(role, "polecats/")
-			return session.PolecatSessionName(session.PrefixFor(rig), pcName)
+		if strings.HasPrefix(role, "miners/") {
+			pcName := strings.TrimPrefix(role, "miners/")
+			return session.MinerSessionName(session.PrefixFor(rig), pcName)
 		}
-		return session.PolecatSessionName(session.PrefixFor(rig), role)
+		return session.MinerSessionName(session.PrefixFor(rig), role)
 	}
 }

@@ -51,8 +51,8 @@ func TestParseUpstream(t *testing.T) {
 
 func TestConfigSaveLoad(t *testing.T) {
 	tmpDir := t.TempDir()
-	mayorDir := filepath.Join(tmpDir, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -184,7 +184,7 @@ func TestWastelandDir(t *testing.T) {
 
 func TestConfigPath(t *testing.T) {
 	got := ConfigPath("/home/user/gt")
-	want := filepath.Join("/home/user/gt", "mayor", "wasteland.json")
+	want := filepath.Join("/home/user/gt", "overseer", "wasteland.json")
 	if got != want {
 		t.Errorf("ConfigPath = %q, want %q", got, want)
 	}

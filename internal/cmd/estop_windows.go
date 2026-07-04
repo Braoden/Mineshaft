@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"syscall"
 
-	"github.com/steveyegge/gastown/internal/tmux"
+	"github.com/steveyegge/excavation/internal/tmux"
 )
 
 var (

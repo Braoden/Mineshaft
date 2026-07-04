@@ -16,10 +16,10 @@ func TestInstallForRole_RoleAware(t *testing.T) {
 		role     string
 		wantFile string // expected template used
 	}{
-		{"autonomous polecat", "polecat", "settings-autonomous.json"},
+		{"autonomous miner", "miner", "settings-autonomous.json"},
 		{"autonomous witness", "witness", "settings-autonomous.json"},
 		{"interactive crew", "crew", "settings-interactive.json"},
-		{"interactive mayor", "mayor", "settings-interactive.json"},
+		{"interactive overseer", "overseer", "settings-interactive.json"},
 	}
 
 	for _, tt := range tests {
@@ -53,7 +53,7 @@ func TestInstallForRole_ClaudeSettingsSuppressStartupPrompts(t *testing.T) {
 		name string
 		role string
 	}{
-		{"autonomous", "polecat"},
+		{"autonomous", "miner"},
 		{"interactive", "crew"},
 	}
 
@@ -104,7 +104,7 @@ func TestInstallForRole_ClaudeCurrentTemplatePreservesExistingSettings(t *testin
 		name string
 		role string
 	}{
-		{"autonomous", "polecat"},
+		{"autonomous", "miner"},
 		{"interactive", "crew"},
 	}
 
@@ -187,7 +187,7 @@ func TestInstallForRole_BootClaudeSettingsUseManagedHooks(t *testing.T) {
 			if !ok {
 				t.Fatal("boot install did not write managed raw tmux send-keys guard")
 			}
-			if !strings.Contains(entry.Hooks[0].Command, "gt nudge --mode=immediate deacon") {
+			if !strings.Contains(entry.Hooks[0].Command, "gt nudge --mode=immediate supervisor") {
 				t.Fatalf("boot guard command does not point to gt nudge: %s", entry.Hooks[0].Command)
 			}
 			if len(settings.Hooks.UserPromptSubmit) != 0 {
@@ -212,15 +212,15 @@ func TestInstallForRole_RoleAgnostic(t *testing.T) {
 		hooksDir  string
 		hooksFile string
 	}{
-		{"opencode", ".opencode/plugins", "gastown.js"},
-		{"pi", ".pi/extensions", "gastown-hooks.js"},
-		{"omp", ".omp/hooks", "gastown-hook.ts"},
+		{"opencode", ".opencode/plugins", "excavation.js"},
+		{"pi", ".pi/extensions", "excavation-hooks.js"},
+		{"omp", ".omp/hooks", "excavation-hook.ts"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.provider, func(t *testing.T) {
 			dir := t.TempDir()
-			err := InstallForRole(tt.provider, dir, dir, "polecat", tt.hooksDir, tt.hooksFile, false)
+			err := InstallForRole(tt.provider, dir, dir, "miner", tt.hooksDir, tt.hooksFile, false)
 			if err != nil {
 				t.Fatalf("InstallForRole(%s): %v", tt.provider, err)
 			}
@@ -234,7 +234,7 @@ func TestInstallForRole_RoleAgnostic(t *testing.T) {
 }
 
 func TestOpenCodeTemplateFailureDiagnostics(t *testing.T) {
-	template, err := templateFS.ReadFile("templates/opencode/gastown.js")
+	template, err := templateFS.ReadFile("templates/opencode/excavation.js")
 	if err != nil {
 		t.Fatalf("read opencode template: %v", err)
 	}
@@ -257,7 +257,7 @@ func TestOpenCodeTemplateFailureDiagnostics(t *testing.T) {
 }
 
 func TestOpenCodeTemplateUsesHookPrime(t *testing.T) {
-	template, err := templateFS.ReadFile("templates/opencode/gastown.js")
+	template, err := templateFS.ReadFile("templates/opencode/excavation.js")
 	if err != nil {
 		t.Fatalf("read opencode template: %v", err)
 	}
@@ -296,13 +296,13 @@ func TestInstallForRole_SkipsExisting(t *testing.T) {
 
 func TestInstallForRole_UpgradesStaleExportPath(t *testing.T) {
 	dir := t.TempDir()
-	hooksPath := filepath.Join(dir, ".opencode/plugins", "gastown.js")
+	hooksPath := filepath.Join(dir, ".opencode/plugins", "excavation.js")
 	os.MkdirAll(filepath.Dir(hooksPath), 0755)
 
 	// Write a stale file with the legacy "export PATH=" pattern
 	os.WriteFile(hooksPath, []byte(`export PATH=/usr/local/bin:$PATH && gt hook`), 0644)
 
-	err := InstallForRole("opencode", dir, dir, "crew", ".opencode/plugins", "gastown.js", false)
+	err := InstallForRole("opencode", dir, dir, "crew", ".opencode/plugins", "excavation.js", false)
 	if err != nil {
 		t.Fatalf("InstallForRole: %v", err)
 	}
@@ -312,7 +312,7 @@ func TestInstallForRole_UpgradesStaleExportPath(t *testing.T) {
 		t.Error("stale export PATH pattern was not upgraded")
 	}
 	// Should now match the current template after placeholder substitution.
-	template, _ := resolveAndSubstitute("opencode", "gastown.js", "crew")
+	template, _ := resolveAndSubstitute("opencode", "excavation.js", "crew")
 	if string(got) != string(template) {
 		t.Error("upgraded file does not match current template")
 	}
@@ -320,15 +320,15 @@ func TestInstallForRole_UpgradesStaleExportPath(t *testing.T) {
 
 func TestInstallForRole_UpgradesStaleOpenCodePrimeHook(t *testing.T) {
 	dir := t.TempDir()
-	hooksPath := filepath.Join(dir, ".opencode/plugins", "gastown.js")
+	hooksPath := filepath.Join(dir, ".opencode/plugins", "excavation.js")
 	os.MkdirAll(filepath.Dir(hooksPath), 0755)
 
-	os.WriteFile(hooksPath, []byte(`// Gas Town OpenCode plugin: hooks SessionStart/Compaction via events.
-export const GasTown = async ({ $ }) => {
+	os.WriteFile(hooksPath, []byte(`// Excavation Site OpenCode plugin: hooks SessionStart/Compaction via events.
+export const Excavation = async ({ $ }) => {
   await $`+"`"+`gt prime`+"`"+`
 }`), 0644)
 
-	if err := InstallForRole("opencode", dir, dir, "crew", ".opencode/plugins", "gastown.js", false); err != nil {
+	if err := InstallForRole("opencode", dir, dir, "crew", ".opencode/plugins", "excavation.js", false); err != nil {
 		t.Fatalf("InstallForRole: %v", err)
 	}
 
@@ -345,7 +345,7 @@ export const GasTown = async ({ $ }) => {
 }
 
 func TestOpenCodeTemplateUsesHookModeAndCompoundRoles(t *testing.T) {
-	content, err := resolveAndSubstitute("opencode", "gastown.js", "polecat")
+	content, err := resolveAndSubstitute("opencode", "excavation.js", "miner")
 	if err != nil {
 		t.Fatalf("resolveAndSubstitute: %v", err)
 	}
@@ -354,7 +354,7 @@ func TestOpenCodeTemplateUsesHookModeAndCompoundRoles(t *testing.T) {
 		"prime --hook",
 		"GT_HOOK_SOURCE=",
 		"GT_SESSION_ID=",
-		`parts[1] === "polecats"`,
+		`parts[1] === "miners"`,
 	} {
 		if !strings.Contains(s, want) {
 			t.Fatalf("OpenCode template missing %q", want)
@@ -370,11 +370,11 @@ func TestOpenCodeTemplateUsesHookModeAndCompoundRoles(t *testing.T) {
 
 func TestSyncForRole_UpdatesStaleContent(t *testing.T) {
 	dir := t.TempDir()
-	hooksPath := filepath.Join(dir, ".opencode/plugins", "gastown.js")
+	hooksPath := filepath.Join(dir, ".opencode/plugins", "excavation.js")
 	os.MkdirAll(filepath.Dir(hooksPath), 0755)
 	os.WriteFile(hooksPath, []byte("stale-content"), 0644)
 
-	result, err := SyncForRole("opencode", dir, dir, "crew", ".opencode/plugins", "gastown.js", false)
+	result, err := SyncForRole("opencode", dir, dir, "crew", ".opencode/plugins", "excavation.js", false)
 	if err != nil {
 		t.Fatalf("SyncForRole: %v", err)
 	}
@@ -388,7 +388,7 @@ func TestSyncForRole_UpdatesStaleContent(t *testing.T) {
 	}
 
 	// Should match the template after placeholder substitution.
-	template, _ := resolveAndSubstitute("opencode", "gastown.js", "crew")
+	template, _ := resolveAndSubstitute("opencode", "excavation.js", "crew")
 	if string(got) != string(template) {
 		t.Error("updated file does not match current template")
 	}
@@ -396,14 +396,14 @@ func TestSyncForRole_UpdatesStaleContent(t *testing.T) {
 
 func TestSyncForRole_SkipsMatchingContent(t *testing.T) {
 	dir := t.TempDir()
-	hooksPath := filepath.Join(dir, ".opencode/plugins", "gastown.js")
+	hooksPath := filepath.Join(dir, ".opencode/plugins", "excavation.js")
 	os.MkdirAll(filepath.Dir(hooksPath), 0755)
 
 	// Write the actual installed template content — should report unchanged.
-	template, _ := resolveAndSubstitute("opencode", "gastown.js", "crew")
+	template, _ := resolveAndSubstitute("opencode", "excavation.js", "crew")
 	os.WriteFile(hooksPath, template, 0644)
 
-	result, err := SyncForRole("opencode", dir, dir, "crew", ".opencode/plugins", "gastown.js", false)
+	result, err := SyncForRole("opencode", dir, dir, "crew", ".opencode/plugins", "excavation.js", false)
 	if err != nil {
 		t.Fatalf("SyncForRole: %v", err)
 	}
@@ -414,9 +414,9 @@ func TestSyncForRole_SkipsMatchingContent(t *testing.T) {
 
 func TestSyncForRole_CreatesNewFile(t *testing.T) {
 	dir := t.TempDir()
-	hooksPath := filepath.Join(dir, ".opencode/plugins", "gastown.js")
+	hooksPath := filepath.Join(dir, ".opencode/plugins", "excavation.js")
 
-	result, err := SyncForRole("opencode", dir, dir, "polecat", ".opencode/plugins", "gastown.js", false)
+	result, err := SyncForRole("opencode", dir, dir, "miner", ".opencode/plugins", "excavation.js", false)
 	if err != nil {
 		t.Fatalf("SyncForRole: %v", err)
 	}
@@ -431,7 +431,7 @@ func TestSyncForRole_CreatesNewFile(t *testing.T) {
 
 func TestSyncForRole_EmptyProvider(t *testing.T) {
 	dir := t.TempDir()
-	result, err := SyncForRole("", dir, dir, "crew", ".opencode/plugins", "gastown.js", false)
+	result, err := SyncForRole("", dir, dir, "crew", ".opencode/plugins", "excavation.js", false)
 	if err != nil {
 		t.Fatalf("expected nil error for empty provider, got: %v", err)
 	}
@@ -463,7 +463,7 @@ func TestSyncForRole_WriteError(t *testing.T) {
 	os.Chmod(readOnlyDir, 0444)
 	defer os.Chmod(readOnlyDir, 0755) // cleanup
 
-	_, err := SyncForRole("opencode", readOnlyDir, readOnlyDir, "crew", ".opencode/plugins", "gastown.js", false)
+	_, err := SyncForRole("opencode", readOnlyDir, readOnlyDir, "crew", ".opencode/plugins", "excavation.js", false)
 	if err == nil {
 		t.Error("expected error when directory is read-only")
 	}
@@ -557,11 +557,11 @@ func TestInstallForRole_SettingsDirVsWorkDir(t *testing.T) {
 	}
 
 	// OpenCode uses workDir (useSettingsDir=false)
-	err = InstallForRole("opencode", settingsDir, workDir, "polecat", ".opencode/plugins", "gastown.js", false)
+	err = InstallForRole("opencode", settingsDir, workDir, "miner", ".opencode/plugins", "excavation.js", false)
 	if err != nil {
 		t.Fatalf("InstallForRole (opencode): %v", err)
 	}
-	if _, err := os.Stat(filepath.Join(workDir, ".opencode/plugins", "gastown.js")); os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(workDir, ".opencode/plugins", "excavation.js")); os.IsNotExist(err) {
 		t.Error("opencode: file not in workDir")
 	}
 }
@@ -593,11 +593,11 @@ func TestInstallForRole_Permissions(t *testing.T) {
 
 	// Non-JSON files should get 0644
 	dir2 := t.TempDir()
-	err = InstallForRole("pi", dir2, dir2, "polecat", ".pi/extensions", "gastown-hooks.js", false)
+	err = InstallForRole("pi", dir2, dir2, "miner", ".pi/extensions", "excavation-hooks.js", false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	info, _ = os.Stat(filepath.Join(dir2, ".pi/extensions", "gastown-hooks.js"))
+	info, _ = os.Stat(filepath.Join(dir2, ".pi/extensions", "excavation-hooks.js"))
 	if info.Mode().Perm() != 0644 {
 		t.Errorf("JS file perm = %o, want 0644", info.Mode().Perm())
 	}
@@ -606,13 +606,13 @@ func TestInstallForRole_Permissions(t *testing.T) {
 func TestInstallForRole_CursorRoleAware(t *testing.T) {
 	// Cursor uses hooks-autonomous.json / hooks-interactive.json naming
 	dir := t.TempDir()
-	err := InstallForRole("cursor", dir, dir, "polecat", ".cursor", "hooks.json", false)
+	err := InstallForRole("cursor", dir, dir, "miner", ".cursor", "hooks.json", false)
 	if err != nil {
-		t.Fatalf("InstallForRole(cursor, polecat): %v", err)
+		t.Fatalf("InstallForRole(cursor, miner): %v", err)
 	}
 
 	got, _ := os.ReadFile(filepath.Join(dir, ".cursor", "hooks.json"))
-	want, err := resolveAndSubstitute("cursor", "hooks-autonomous.json", "polecat")
+	want, err := resolveAndSubstitute("cursor", "hooks-autonomous.json", "miner")
 	if err != nil {
 		t.Fatalf("resolveAndSubstitute: %v", err)
 	}
@@ -675,13 +675,13 @@ func TestInstallForRole_CodexRoleAware(t *testing.T) {
 	}
 
 	dir2 := t.TempDir()
-	err = InstallForRole("codex", dir2, dir2, "polecat", ".codex", "hooks.json", false)
+	err = InstallForRole("codex", dir2, dir2, "miner", ".codex", "hooks.json", false)
 	if err != nil {
-		t.Fatalf("InstallForRole(codex, polecat): %v", err)
+		t.Fatalf("InstallForRole(codex, miner): %v", err)
 	}
 
 	got, _ = os.ReadFile(filepath.Join(dir2, ".codex", "hooks.json"))
-	want, err = resolveAndSubstitute("codex", "hooks-autonomous.json", "polecat")
+	want, err = resolveAndSubstitute("codex", "hooks-autonomous.json", "miner")
 	if err != nil {
 		t.Fatalf("resolveAndSubstitute: %v", err)
 	}
@@ -694,15 +694,15 @@ func TestInstallForRole_CodexRoleAware(t *testing.T) {
 }
 
 func TestInstallForRole_CopilotRoleAware(t *testing.T) {
-	// Copilot uses gastown-autonomous.json / gastown-interactive.json naming
+	// Copilot uses excavation-autonomous.json / excavation-interactive.json naming
 	dir := t.TempDir()
-	err := InstallForRole("copilot", dir, dir, "polecat", ".github/hooks", "gastown.json", false)
+	err := InstallForRole("copilot", dir, dir, "miner", ".github/hooks", "excavation.json", false)
 	if err != nil {
-		t.Fatalf("InstallForRole(copilot, polecat): %v", err)
+		t.Fatalf("InstallForRole(copilot, miner): %v", err)
 	}
 
-	got, _ := os.ReadFile(filepath.Join(dir, ".github/hooks", "gastown.json"))
-	want, err := resolveAndSubstitute("copilot", "gastown-autonomous.json", "polecat")
+	got, _ := os.ReadFile(filepath.Join(dir, ".github/hooks", "excavation.json"))
+	want, err := resolveAndSubstitute("copilot", "excavation-autonomous.json", "miner")
 	if err != nil {
 		t.Fatalf("resolveAndSubstitute: %v", err)
 	}
@@ -711,13 +711,13 @@ func TestInstallForRole_CopilotRoleAware(t *testing.T) {
 	}
 
 	dir2 := t.TempDir()
-	err = InstallForRole("copilot", dir2, dir2, "crew", ".github/hooks", "gastown.json", false)
+	err = InstallForRole("copilot", dir2, dir2, "crew", ".github/hooks", "excavation.json", false)
 	if err != nil {
 		t.Fatalf("InstallForRole(copilot, crew): %v", err)
 	}
 
-	got, _ = os.ReadFile(filepath.Join(dir2, ".github/hooks", "gastown.json"))
-	want, err = resolveAndSubstitute("copilot", "gastown-interactive.json", "crew")
+	got, _ = os.ReadFile(filepath.Join(dir2, ".github/hooks", "excavation.json"))
+	want, err = resolveAndSubstitute("copilot", "excavation-interactive.json", "crew")
 	if err != nil {
 		t.Fatalf("resolveAndSubstitute: %v", err)
 	}

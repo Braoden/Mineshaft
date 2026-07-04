@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	gitpkg "github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/rig"
+	"github.com/steveyegge/excavation/internal/beads"
+	gitpkg "github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/rig"
 )
 
 func TestEngineer_LoadConfig_MergeStrategyPR(t *testing.T) {
@@ -184,7 +184,7 @@ func TestProcessResult_NeedsApproval(t *testing.T) {
 
 func TestHandleMRInfoFailure_NeedsApproval_StaysInQueue(t *testing.T) {
 	// When NeedsApproval is true, the MR should stay in queue without
-	// sending failure notifications to polecats or mayor.
+	// sending failure notifications to miners or overseer.
 	workDir := t.TempDir()
 	r := &rig.Rig{Name: "test-rig", Path: workDir}
 	e := NewEngineer(r)
@@ -199,10 +199,10 @@ func TestHandleMRInfoFailure_NeedsApproval_StaysInQueue(t *testing.T) {
 
 	mr := &MRInfo{
 		ID:          "gt-test",
-		Branch:      "polecat/test/gt-test",
+		Branch:      "miner/test/gt-test",
 		Target:      "main",
 		SourceIssue: "gt-src",
-		Worker:      "polecats/test",
+		Worker:      "miners/test",
 	}
 	result := ProcessResult{
 		Success:       false,

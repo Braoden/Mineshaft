@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/doltserver"
-	"github.com/steveyegge/gastown/internal/rig"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/doltserver"
+	"github.com/steveyegge/excavation/internal/rig"
 )
 
 // RigConfigSyncCheck verifies that all registered rigs have a config.json file,
@@ -66,7 +66,7 @@ func NewRigConfigSyncCheck() *RigConfigSyncCheck {
 
 // Run checks if all registered rigs have proper configuration.
 func (c *RigConfigSyncCheck) Run(ctx *CheckContext) *CheckResult {
-	rigsConfigPath := filepath.Join(ctx.TownRoot, "mayor", "rigs.json")
+	rigsConfigPath := filepath.Join(ctx.TownRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsConfigPath)
 	if err != nil {
 		return &CheckResult{
@@ -141,7 +141,7 @@ func (c *RigConfigSyncCheck) Run(ctx *CheckContext) *CheckResult {
 			continue
 		}
 
-		// Check required Gas Town defaults in config.yaml.
+		// Check required Excavation Site defaults in config.yaml.
 		configYamlPath := filepath.Join(beadsDir, "config.yaml")
 		if data, err := os.ReadFile(configYamlPath); err == nil {
 			content := string(data)
@@ -305,7 +305,7 @@ func (c *RigConfigSyncCheck) Run(ctx *CheckContext) *CheckResult {
 
 // Fix creates missing config.json files, Dolt databases, and rig identity beads.
 func (c *RigConfigSyncCheck) Fix(ctx *CheckContext) error {
-	rigsConfigPath := filepath.Join(ctx.TownRoot, "mayor", "rigs.json")
+	rigsConfigPath := filepath.Join(ctx.TownRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsConfigPath)
 	if err != nil {
 		return fmt.Errorf("could not load rigs registry: %w", err)
@@ -408,14 +408,14 @@ func (c *RigConfigSyncCheck) Fix(ctx *CheckContext) error {
 		rigPath := filepath.Join(ctx.TownRoot, rigName)
 		beadsDir := doltserver.FindRigBeadsDir(ctx.TownRoot, rigName)
 		cmdDir := rigPath
-		mayorRigPath := filepath.Join(rigPath, "mayor", "rig")
+		overseerRigPath := filepath.Join(rigPath, "overseer", "rig")
 		if _, err := os.Stat(beadsDir); os.IsNotExist(err) {
-			if _, statErr := os.Stat(mayorRigPath); statErr == nil {
-				beadsDir = filepath.Join(mayorRigPath, ".beads")
+			if _, statErr := os.Stat(overseerRigPath); statErr == nil {
+				beadsDir = filepath.Join(overseerRigPath, ".beads")
 			}
 		}
-		if beadsDir == filepath.Join(mayorRigPath, ".beads") {
-			cmdDir = mayorRigPath
+		if beadsDir == filepath.Join(overseerRigPath, ".beads") {
+			cmdDir = overseerRigPath
 		}
 		if exists, err := c.doltDatabaseExists(ctx, rigName); err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: skipping Dolt DB initialization for %s because database status could not be verified: %v\n", rigName, err)

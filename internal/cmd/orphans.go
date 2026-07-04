@@ -13,34 +13,34 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/constants"
-	gitpkg "github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/rig"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/util"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/constants"
+	gitpkg "github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var orphansCmd = &cobra.Command{
 	Use:     "orphans",
 	GroupID: GroupWork,
-	Short:   "Find lost polecat work",
-	Long: `Find orphaned commits and unmerged polecat branches.
+	Short:   "Find lost miner work",
+	Long: `Find orphaned commits and unmerged miner branches.
 
-Polecat work can get lost when:
+Miner work can get lost when:
 - Session killed before merge
 - Refinery fails to process
 - Network issues during push
 
 This command scans for:
 1. Orphaned commits via 'git fsck --unreachable' (filtered by --days/--all)
-2. Unmerged polecat worktree branches (always shown)
+2. Unmerged miner worktree branches (always shown)
 
-Note: --days and --all only apply to orphaned commits, not polecat branches.
+Note: --days and --all only apply to orphaned commits, not miner branches.
 
 Examples:
   gt orphans              # Last 7 days (default), infers rig from cwd
-  gt orphans --rig=gastown # Target a specific rig
+  gt orphans --rig=excavation # Target a specific rig
   gt orphans --days=14    # Last 2 weeks
   gt orphans --all        # Show all orphans (no date filter)`,
 	RunE: runOrphans,
@@ -75,7 +75,7 @@ This command performs a complete orphan cleanup:
 WARNING: This operation is irreversible. Once commits are pruned,
 they cannot be recovered.
 
-Note: This only affects orphaned commits and processes. Unmerged polecat
+Note: This only affects orphaned commits and processes. Unmerged miner
 branches (shown by 'gt orphans') must be recovered or cleaned up manually.
 
 The command will:
@@ -193,7 +193,7 @@ func runOrphans(cmd *cobra.Command, args []string) error {
 	// Find workspace to determine rig root
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Find rig: use --rig flag if provided, otherwise infer from cwd
@@ -212,14 +212,14 @@ func runOrphans(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// We need to run from the mayor's clone (main git repo for the rig)
-	mayorPath := r.Path + "/mayor/rig"
+	// We need to run from the overseer's clone (main git repo for the rig)
+	overseerPath := r.Path + "/overseer/rig"
 	foundAnything := false
 
 	// --- Orphaned commits (git fsck) ---
 	fmt.Printf("Scanning for orphaned commits in %s...\n\n", rigName)
 
-	orphans, err := findOrphanCommits(mayorPath)
+	orphans, err := findOrphanCommits(overseerPath)
 	if err != nil {
 		return fmt.Errorf("finding orphans: %w", err)
 	}
@@ -247,20 +247,20 @@ func runOrphans(cmd *cobra.Command, args []string) error {
 		fmt.Printf("%s\n\n", style.Dim.Render("  git branch rescue <sha>   # Create branch from commit"))
 	}
 
-	// --- Unmerged polecat worktree branches ---
+	// --- Unmerged miner worktree branches ---
 	defaultBranch := r.DefaultBranch()
-	fmt.Printf("Scanning polecat worktrees for unmerged branches...\n\n")
+	fmt.Printf("Scanning miner worktrees for unmerged branches...\n\n")
 
-	polecatBranches, skipped, err := findOrphanPolecatBranches(r.Path, rigName, defaultBranch)
+	minerBranches, skipped, err := findOrphanMinerBranches(r.Path, rigName, defaultBranch)
 	if err != nil {
 		// Non-fatal: report the error but continue
-		fmt.Printf("%s Could not scan polecat worktrees: %v\n\n", style.Dim.Render("ℹ"), err)
-	} else if len(polecatBranches) > 0 {
+		fmt.Printf("%s Could not scan miner worktrees: %v\n\n", style.Dim.Render("ℹ"), err)
+	} else if len(minerBranches) > 0 {
 		foundAnything = true
-		fmt.Printf("%s Found %d unmerged polecat branch(es):\n\n", style.Warning.Render("⚠"), len(polecatBranches))
-		for _, b := range polecatBranches {
+		fmt.Printf("%s Found %d unmerged miner branch(es):\n\n", style.Warning.Render("⚠"), len(minerBranches))
+		for _, b := range minerBranches {
 			fmt.Printf("  %s %s (%d commit(s) ahead of %s)\n",
-				style.Bold.Render(b.Polecat), b.Branch, b.AheadCount, defaultBranch)
+				style.Bold.Render(b.Miner), b.Branch, b.AheadCount, defaultBranch)
 			if b.LatestSubject != "" {
 				fmt.Printf("    %s %s\n", style.Dim.Render("latest:"), b.LatestSubject)
 			}
@@ -270,15 +270,15 @@ func runOrphans(cmd *cobra.Command, args []string) error {
 			fmt.Printf("    %s %s\n", style.Dim.Render("path:"), b.WorktreePath)
 			fmt.Println()
 		}
-		fmt.Printf("%s\n", style.Dim.Render("To recover polecat work:"))
+		fmt.Printf("%s\n", style.Dim.Render("To recover miner work:"))
 		fmt.Printf("  %s\n", style.Dim.Render("cd <path>                   # Enter the worktree (see path above)"))
 		fmt.Printf("  %s\n\n", style.Dim.Render(fmt.Sprintf("git log %s..HEAD        # View unmerged commits", defaultBranch)))
 	}
 
 	if len(skipped) > 0 {
-		fmt.Printf("%s Skipped %d polecat(s) due to errors:\n", style.Warning.Render("⚠"), len(skipped))
+		fmt.Printf("%s Skipped %d miner(s) due to errors:\n", style.Warning.Render("⚠"), len(skipped))
 		for _, s := range skipped {
-			fmt.Printf("  %s: %s\n", s.Polecat, s.Err)
+			fmt.Printf("  %s: %s\n", s.Miner, s.Err)
 		}
 		fmt.Println()
 	}
@@ -295,9 +295,9 @@ func runOrphans(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// OrphanBranch represents a polecat worktree with unmerged work.
+// OrphanBranch represents a miner worktree with unmerged work.
 type OrphanBranch struct {
-	Polecat        string // Polecat name
+	Miner        string // Miner name
 	Branch         string // Branch name
 	AheadCount     int    // Commits ahead of default branch
 	LatestSubject  string // Subject of the latest commit
@@ -305,23 +305,23 @@ type OrphanBranch struct {
 	WorktreePath   string // Actual resolved worktree path
 }
 
-// skippedPolecat records a polecat that was skipped due to errors during scanning.
-type skippedPolecat struct {
-	Polecat string
+// skippedMiner records a miner that was skipped due to errors during scanning.
+type skippedMiner struct {
+	Miner string
 	Err     string
 }
 
-// resolvePolecatWorktree determines the worktree path for a polecat,
-// mirroring the canonical clonePath logic in polecat/session_manager.go.
-func resolvePolecatWorktree(polecatsDir, polecatName, rigName string) string {
-	// New structure: polecats/<name>/<rigname>/
-	newPath := filepath.Join(polecatsDir, polecatName, rigName)
+// resolveMinerWorktree determines the worktree path for a miner,
+// mirroring the canonical clonePath logic in miner/session_manager.go.
+func resolveMinerWorktree(minersDir, minerName, rigName string) string {
+	// New structure: miners/<name>/<rigname>/
+	newPath := filepath.Join(minersDir, minerName, rigName)
 	if info, err := os.Stat(newPath); err == nil && info.IsDir() {
 		return newPath
 	}
 
-	// Old structure: polecats/<name>/ (backward compat)
-	oldPath := filepath.Join(polecatsDir, polecatName)
+	// Old structure: miners/<name>/ (backward compat)
+	oldPath := filepath.Join(minersDir, minerName)
 	if info, err := os.Stat(oldPath); err == nil && info.IsDir() {
 		gitPath := filepath.Join(oldPath, ".git")
 		if _, err := os.Stat(gitPath); err == nil {
@@ -332,29 +332,29 @@ func resolvePolecatWorktree(polecatsDir, polecatName, rigName string) string {
 	return "" // No valid worktree found
 }
 
-// findOrphanPolecatBranches scans polecat worktrees for branches with
+// findOrphanMinerBranches scans miner worktrees for branches with
 // commits that have not been merged to the default branch.
-func findOrphanPolecatBranches(rigPath, rigName, defaultBranch string) ([]OrphanBranch, []skippedPolecat, error) {
-	polecatsDir := filepath.Join(rigPath, constants.DirPolecats)
-	entries, err := os.ReadDir(polecatsDir)
+func findOrphanMinerBranches(rigPath, rigName, defaultBranch string) ([]OrphanBranch, []skippedMiner, error) {
+	minersDir := filepath.Join(rigPath, constants.DirMiners)
+	entries, err := os.ReadDir(minersDir)
 	if os.IsNotExist(err) {
-		return nil, nil, nil // No polecats directory
+		return nil, nil, nil // No miners directory
 	}
 	if err != nil {
-		return nil, nil, fmt.Errorf("reading polecats dir: %w", err)
+		return nil, nil, fmt.Errorf("reading miners dir: %w", err)
 	}
 
 	var branches []OrphanBranch
-	var skipped []skippedPolecat
+	var skipped []skippedMiner
 
 	for _, entry := range entries {
 		if !entry.IsDir() || strings.HasPrefix(entry.Name(), ".") {
 			continue
 		}
 
-		polecatName := entry.Name()
+		minerName := entry.Name()
 
-		worktreePath := resolvePolecatWorktree(polecatsDir, polecatName, rigName)
+		worktreePath := resolveMinerWorktree(minersDir, minerName, rigName)
 		if worktreePath == "" {
 			continue // No valid git worktree
 		}
@@ -364,7 +364,7 @@ func findOrphanPolecatBranches(rigPath, rigName, defaultBranch string) ([]Orphan
 		// Get current branch
 		branch, err := g.CurrentBranch()
 		if err != nil {
-			skipped = append(skipped, skippedPolecat{polecatName, fmt.Sprintf("cannot determine branch: %v", err)})
+			skipped = append(skipped, skippedMiner{minerName, fmt.Sprintf("cannot determine branch: %v", err)})
 			continue
 		}
 		branch = strings.TrimSpace(branch)
@@ -381,7 +381,7 @@ func findOrphanPolecatBranches(rigPath, rigName, defaultBranch string) ([]Orphan
 			revListCmd = exec.Command("git", "-C", worktreePath, "rev-list", "--count", baseRef+"..HEAD")
 			countOut, err = revListCmd.Output()
 			if err != nil {
-				skipped = append(skipped, skippedPolecat{polecatName, fmt.Sprintf("rev-list failed: %v", err)})
+				skipped = append(skipped, skippedMiner{minerName, fmt.Sprintf("rev-list failed: %v", err)})
 				continue
 			}
 		}
@@ -395,7 +395,7 @@ func findOrphanPolecatBranches(rigPath, rigName, defaultBranch string) ([]Orphan
 		logOut, err := logCmd.Output()
 		latestSubject := ""
 		if err != nil {
-			skipped = append(skipped, skippedPolecat{polecatName, fmt.Sprintf("git log failed: %v", err)})
+			skipped = append(skipped, skippedMiner{minerName, fmt.Sprintf("git log failed: %v", err)})
 			continue
 		}
 		latestSubject = strings.TrimSpace(string(logOut))
@@ -404,13 +404,13 @@ func findOrphanPolecatBranches(rigPath, rigName, defaultBranch string) ([]Orphan
 		gitStatus, err := g.Status()
 		hasUncommitted := false
 		if err != nil {
-			skipped = append(skipped, skippedPolecat{polecatName, fmt.Sprintf("git status failed: %v", err)})
+			skipped = append(skipped, skippedMiner{minerName, fmt.Sprintf("git status failed: %v", err)})
 			continue
 		}
 		hasUncommitted = !gitStatus.Clean
 
 		branches = append(branches, OrphanBranch{
-			Polecat:        polecatName,
+			Miner:        minerName,
 			Branch:         branch,
 			AheadCount:     count,
 			LatestSubject:  latestSubject,
@@ -550,7 +550,7 @@ func formatAge(t time.Time) string {
 func runOrphansKill(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Find rig: use --rig flag if provided, otherwise infer from cwd
@@ -569,11 +569,11 @@ func runOrphansKill(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	mayorPath := r.Path + "/mayor/rig"
+	overseerPath := r.Path + "/overseer/rig"
 
 	// Find orphaned commits
 	fmt.Printf("Scanning for orphaned commits in %s...\n", rigName)
-	commitOrphans, err := findOrphanCommits(mayorPath)
+	commitOrphans, err := findOrphanCommits(overseerPath)
 	if err != nil {
 		return fmt.Errorf("finding orphan commits: %w", err)
 	}
@@ -647,7 +647,7 @@ func runOrphansKill(cmd *cobra.Command, args []string) error {
 	if len(filteredCommits) > 0 {
 		fmt.Printf("\nRunning git gc --prune=now...\n")
 		gcCmd := exec.Command("git", "gc", "--prune=now")
-		gcCmd.Dir = mayorPath
+		gcCmd.Dir = overseerPath
 		gcCmd.Stdout = os.Stdout
 		gcCmd.Stderr = os.Stderr
 		if err := gcCmd.Run(); err != nil {

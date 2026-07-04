@@ -1,17 +1,17 @@
 # Dog Infrastructure: Watchdog Chain & Pool Architecture
 
-> Autonomous health monitoring, recovery, and concurrent shutdown dances in Gas Town.
+> Autonomous health monitoring, recovery, and concurrent shutdown dances in Excavation Site.
 
 ## Overview
 
-Gas Town uses a three-tier watchdog chain for autonomous health monitoring:
+Excavation Site uses a three-tier watchdog chain for autonomous health monitoring:
 
 ```
 Daemon (Go process)          <- Dumb transport, 3-min heartbeat
     |
     +-> Boot (AI agent)       <- Intelligent triage, fresh each tick
             |
-            +-> Deacon (AI agent)  <- Continuous patrol, long-running
+            +-> Supervisor (AI agent)  <- Continuous patrol, long-running
                     |
                     +-> Witnesses & Refineries  <- Per-rig agents
 ```
@@ -23,13 +23,13 @@ intelligence (is the agent stuck or just thinking?). Boot bridges this gap.
 
 ### The Problem
 
-The daemon needs to ensure the Deacon is healthy, but:
+The daemon needs to ensure the Supervisor is healthy, but:
 
 1. **Daemon can't reason** - It's Go code following the ZFC principle (don't reason
    about other agents). It can check "is session alive?" but not "is agent stuck?"
 
 2. **Waking costs context** - Each time you spawn an AI agent, you consume context
-   tokens. In idle towns, waking Deacon every 3 minutes wastes resources.
+   tokens. In idle towns, waking Supervisor every 3 minutes wastes resources.
 
 3. **Observation requires intelligence** - Distinguishing "agent composing large
    artifact" from "agent hung on tool prompt" requires reasoning.
@@ -38,18 +38,18 @@ The daemon needs to ensure the Deacon is healthy, but:
 
 Boot is a narrow, ephemeral AI agent that:
 - Runs fresh each daemon tick (no accumulated context debt)
-- Makes a single decision: should Deacon wake?
+- Makes a single decision: should Supervisor wake?
 - Exits immediately after deciding
 
 This gives us intelligent triage without the cost of keeping a full AI running.
 
-### Why Not Merge Boot into Deacon?
+### Why Not Merge Boot into Supervisor?
 
-We could have Deacon handle its own "should I be awake?" logic, but:
+We could have Supervisor handle its own "should I be awake?" logic, but:
 
-1. **Deacon can't observe itself** - A hung Deacon can't detect it's hung
-2. **Context accumulation** - Deacon runs continuously; Boot restarts fresh
-3. **Cost in idle towns** - Boot only costs tokens when it runs; Deacon costs
+1. **Supervisor can't observe itself** - A hung Supervisor can't detect it's hung
+2. **Context accumulation** - Supervisor runs continuously; Boot restarts fresh
+3. **Cost in idle towns** - Boot only costs tokens when it runs; Supervisor costs
    tokens constantly if kept alive
 
 ## Session Ownership
@@ -57,11 +57,11 @@ We could have Deacon handle its own "should I be awake?" logic, but:
 | Agent | Session Name | Location | Lifecycle |
 |-------|--------------|----------|-----------|
 | Daemon | (Go process) | `~/gt/daemon/` | Persistent, auto-restart |
-| Boot | `gt-boot` | `~/gt/deacon/dogs/boot/` | Ephemeral, fresh each tick |
-| Deacon | `hq-deacon` | `~/gt/deacon/` | Long-running, handoff loop |
+| Boot | `gt-boot` | `~/gt/supervisor/dogs/boot/` | Ephemeral, fresh each tick |
+| Supervisor | `hq-supervisor` | `~/gt/supervisor/` | Long-running, handoff loop |
 
-**Critical**: Boot runs in `gt-boot`, NOT `hq-deacon`. This prevents Boot
-from conflicting with a running Deacon session.
+**Critical**: Boot runs in `gt-boot`, NOT `hq-supervisor`. This prevents Boot
+from conflicting with a running Supervisor session.
 
 ## Heartbeat Mechanics
 
@@ -72,7 +72,7 @@ The daemon runs a heartbeat tick every 3 minutes:
 ```go
 func (d *Daemon) heartbeatTick() {
     d.ensureBootRunning()           // 1. Spawn Boot for triage
-    d.checkDeaconHeartbeat()        // 2. Belt-and-suspenders fallback
+    d.checkSupervisorHeartbeat()        // 2. Belt-and-suspenders fallback
     d.ensureWitnessesRunning()      // 3. Witness health (checks tmux directly)
     d.ensureRefineriesRunning()     // 4. Refinery health (checks tmux directly)
     d.processLifecycleRequests()    // 5. Cycle/restart requests
@@ -80,9 +80,9 @@ func (d *Daemon) heartbeatTick() {
 }
 ```
 
-### Deacon Heartbeat (continuous)
+### Supervisor Heartbeat (continuous)
 
-The Deacon updates `~/gt/deacon/heartbeat.json` at the start of each patrol cycle:
+The Supervisor updates `~/gt/supervisor/heartbeat.json` at the start of each patrol cycle:
 
 ```json
 {
@@ -98,32 +98,32 @@ The Deacon updates `~/gt/deacon/heartbeat.json` at the start of each patrol cycl
 
 | Age | State | Boot Action |
 |-----|-------|-------------|
-| < 5 min | Fresh | Nothing (Deacon active) |
+| < 5 min | Fresh | Nothing (Supervisor active) |
 | 5-15 min | Stale | Nudge if pending mail |
-| > 15 min | Very stale | Wake (Deacon may be stuck) |
+| > 15 min | Very stale | Wake (Supervisor may be stuck) |
 
 ## Boot Decision Matrix
 
 When Boot runs, it observes:
-- Is Deacon session alive?
-- How old is Deacon's heartbeat?
-- Is there pending mail for Deacon?
-- What's in Deacon's tmux pane?
+- Is Supervisor session alive?
+- How old is Supervisor's heartbeat?
+- Is there pending mail for Supervisor?
+- What's in Supervisor's tmux pane?
 
 Then decides:
 
 | Condition | Action | Command |
 |-----------|--------|---------|
-| Session dead | START | Exit; daemon calls `ensureDeaconRunning()` |
-| Heartbeat > 15 min | WAKE | `gt nudge deacon "Boot wake: check your inbox"` |
-| Heartbeat 5-15 min + mail | NUDGE | `gt nudge deacon "Boot check-in: pending work"` |
+| Session dead | START | Exit; daemon calls `ensureSupervisorRunning()` |
+| Heartbeat > 15 min | WAKE | `gt nudge supervisor "Boot wake: check your inbox"` |
+| Heartbeat 5-15 min + mail | NUDGE | `gt nudge supervisor "Boot check-in: pending work"` |
 | Heartbeat fresh | NOTHING | Exit silently |
 
 ## Handoff Flow
 
-### Deacon Handoff
+### Supervisor Handoff
 
-The Deacon runs continuous patrol cycles. After N cycles or high context:
+The Supervisor runs continuous patrol cycles. After N cycles or high context:
 
 ```
 End of patrol cycle:
@@ -137,15 +137,15 @@ End of patrol cycle:
 
 Next daemon tick:
 ```
-Daemon -> ensureDeaconRunning()
+Daemon -> ensureSupervisorRunning()
     |
-    +- Spawns fresh Deacon in gt-deacon
+    +- Spawns fresh Supervisor in gt-supervisor
         |
         +- SessionStart hook: gt mail check --inject
             |
             +- Previous handoff mail injected
                 |
-                +- Deacon reads and continues
+                +- Supervisor reads and continues
 ```
 
 ### Boot Handoff (Rare)
@@ -153,14 +153,14 @@ Daemon -> ensureDeaconRunning()
 Boot is ephemeral - it exits after each tick. No persistent handoff needed.
 
 However, Boot uses a marker file to prevent double-spawning:
-- Marker: `~/gt/deacon/dogs/boot/.boot-running` (TTL: 5 minutes)
-- Status: `~/gt/deacon/dogs/boot/.boot-status.json` (last action/result)
+- Marker: `~/gt/supervisor/dogs/boot/.boot-running` (TTL: 5 minutes)
+- Status: `~/gt/supervisor/dogs/boot/.boot-status.json` (last action/result)
 
 If the marker exists and is recent, daemon skips Boot spawn for that tick.
 
 ## Degraded Mode
 
-When tmux is unavailable, Gas Town enters degraded mode:
+When tmux is unavailable, Excavation Site enters degraded mode:
 
 | Capability | Normal | Degraded |
 |------------|--------|----------|
@@ -179,9 +179,9 @@ Degraded Boot triage is purely mechanical:
 Multiple layers ensure recovery:
 
 1. **Boot triage** - Intelligent observation, first line
-2. **Daemon checkDeaconHeartbeat()** - Belt-and-suspenders if Boot fails
+2. **Daemon checkSupervisorHeartbeat()** - Belt-and-suspenders if Boot fails
 3. **Tmux-based discovery** - Daemon checks tmux sessions directly (no bead state)
-4. **Human escalation** - Mail to overseer for unrecoverable states
+4. **Human escalation** - Mail to boss for unrecoverable states
 
 ---
 
@@ -244,7 +244,7 @@ type Dog struct {
     State     ShutdownDanceState
     Attempt   int               // Current interrogation attempt (1-3)
     StartedAt time.Time
-    StateFile string            // Persistent state: ~/gt/deacon/dogs/active/<id>.json
+    StateFile string            // Persistent state: ~/gt/supervisor/dogs/active/<id>.json
 }
 
 type ShutdownDanceState string
@@ -261,7 +261,7 @@ const (
 
 type Warrant struct {
     ID        string    // Bead ID for the warrant
-    Target    string    // Session to interrogate (e.g., "gt-gastown-Toast")
+    Target    string    // Session to interrogate (e.g., "gt-excavation-Toast")
     Reason    string    // Why warrant was issued
     Requester string    // Who filed the warrant
     FiledAt   time.Time
@@ -289,7 +289,7 @@ type DogPool struct {
     dogs     []*Dog           // All dogs in pool
     idle     chan *Dog        // Channel of available dogs
     active   map[string]*Dog  // ID -> Dog for active dogs
-    stateDir string           // ~/gt/deacon/dogs/active/
+    stateDir string           // ~/gt/supervisor/dogs/active/
 }
 ```
 
@@ -363,7 +363,7 @@ Attempt: {attempt}/3
 
 ### Integration with Existing Dogs
 
-The existing `dog` package (`internal/dog/`) manages Deacon's multi-rig helper dogs.
+The existing `dog` package (`internal/dog/`) manages Supervisor's multi-rig helper dogs.
 Those are different from shutdown-dance dogs:
 
 | Aspect          | Helper Dogs (existing)      | Dance Dogs (new)           |
@@ -384,7 +384,7 @@ Those are different from shutdown-dance dogs:
 
 If a dog crashes (Boot process restarts, system crash):
 
-1. State files persist in `~/gt/deacon/dogs/active/`
+1. State files persist in `~/gt/supervisor/dogs/active/`
 2. On Boot restart, scan for orphaned state files
 3. Resume or restart based on state:
 
@@ -422,9 +422,9 @@ for pending warrants.
 ├── daemon/
 │   ├── daemon.log              # Daemon activity log
 │   └── daemon.pid              # Daemon process ID
-├── deacon/
-│   ├── heartbeat.json          # Deacon freshness (updated each patrol cycle)
-│   ├── health-check-state.json # Agent health tracking (gt deacon health-check)
+├── supervisor/
+│   ├── heartbeat.json          # Supervisor freshness (updated each patrol cycle)
+│   ├── health-check-state.json # Agent health tracking (gt supervisor health-check)
 │   └── dogs/
 │       ├── boot/               # Boot's working directory
 │       │   ├── CLAUDE.md       # Boot context
@@ -442,11 +442,11 @@ for pending warrants.
 ## Debugging
 
 ```bash
-# Check Deacon heartbeat
-cat ~/gt/deacon/heartbeat.json | jq .
+# Check Supervisor heartbeat
+cat ~/gt/supervisor/heartbeat.json | jq .
 
 # Check Boot status
-cat ~/gt/deacon/dogs/boot/.boot-status.json | jq .
+cat ~/gt/supervisor/dogs/boot/.boot-status.json | jq .
 
 # View daemon log
 tail -f ~/gt/daemon/daemon.log
@@ -454,8 +454,8 @@ tail -f ~/gt/daemon/daemon.log
 # Manual Boot run
 gt boot triage
 
-# Manual Deacon health check
-gt deacon health-check
+# Manual Supervisor health check
+gt supervisor health-check
 
 # Dog pool status
 gt dog pool status
@@ -471,7 +471,7 @@ gt dog warrants
 
 ### Boot Spawns in Wrong Session
 
-**Symptom**: Boot runs in `hq-deacon` instead of `gt-boot`
+**Symptom**: Boot runs in `hq-supervisor` instead of `gt-boot`
 **Cause**: Session name confusion in spawn code
 **Fix**: Ensure `gt boot triage` specifies `--session=gt-boot`
 
@@ -479,7 +479,7 @@ gt dog warrants
 
 **Symptom**: tmux session exists but Claude is dead
 **Cause**: Daemon checks session existence, not process health
-**Fix**: Kill zombie sessions before recreating: `gt session kill hq-deacon`
+**Fix**: Kill zombie sessions before recreating: `gt session kill hq-supervisor`
 
 ### Status Shows Wrong State
 
@@ -494,10 +494,10 @@ are still stored in beads.
 The watchdog chain provides autonomous recovery:
 
 - **Daemon**: Mechanical heartbeat, spawns Boot
-- **Boot**: Intelligent triage, decides Deacon fate
-- **Deacon**: Continuous patrol, monitors workers
+- **Boot**: Intelligent triage, decides Supervisor fate
+- **Supervisor**: Continuous patrol, monitors workers
 
-Boot exists because the daemon can't reason and Deacon can't observe itself.
+Boot exists because the daemon can't reason and Supervisor can't observe itself.
 The separation costs complexity but enables:
 
 1. **Intelligent triage** without constant AI cost

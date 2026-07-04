@@ -8,8 +8,8 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // HookRegistry represents the hooks/registry.toml structure.
@@ -39,7 +39,7 @@ var hooksRegistryCmd = &cobra.Command{
 	Long: `List all hooks defined in the hook registry.
 
 The registry is at ~/gt/hooks/registry.toml and defines hooks that can be
-installed for different roles (crew, polecat, witness, etc.).
+installed for different roles (crew, miner, witness, etc.).
 
 Examples:
   gt hooks registry           # Show enabled hooks
@@ -76,7 +76,7 @@ func LoadRegistry(townRoot string) (*HookRegistry, error) {
 func runHooksRegistry(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	registry, err := LoadRegistry(townRoot)

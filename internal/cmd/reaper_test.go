@@ -11,9 +11,9 @@ func TestReaperDatabaseNamesTrimsConfiguredList(t *testing.T) {
 	oldDB := reaperDB
 	t.Cleanup(func() { reaperDB = oldDB })
 
-	reaperDB = " hq, gastown ,, beads "
+	reaperDB = " hq, excavation ,, beads "
 	got := reaperDatabaseNames()
-	want := []string{"hq", "gastown", "beads"}
+	want := []string{"hq", "excavation", "beads"}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("reaperDatabaseNames() = %#v, want %#v", got, want)
 	}
@@ -54,11 +54,11 @@ func TestDefaultReaperEndpointIgnoresStaleBeadsAliases(t *testing.T) {
 
 func TestDefaultReaperEndpointUsesTownConfig(t *testing.T) {
 	townRoot := t.TempDir()
-	mayorDir := filepath.Join(townRoot, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(townRoot, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(mayorDir, "town.json"), []byte(`{"name":"test-town"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "town.json"), []byte(`{"name":"test-town"}`), 0644); err != nil {
 		t.Fatal(err)
 	}
 	doltDataDir := filepath.Join(townRoot, ".dolt-data")

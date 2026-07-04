@@ -6,12 +6,12 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/events"
-	"github.com/steveyegge/gastown/internal/nudge"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/events"
+	"github.com/steveyegge/excavation/internal/nudge"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var unslingCmd = &cobra.Command{
@@ -105,11 +105,11 @@ func runUnslingWith(cmd *cobra.Command, args []string, dryRun, force bool) error
 	}
 
 	// Resolve the correct beads directory using prefix-based routing.
-	// Town-level agents (mayor, deacon) fall back to townRoot since their
+	// Town-level agents (overseer, supervisor) fall back to townRoot since their
 	// beads use hq- prefix stored at town level.
 	rigName := strings.Split(agentID, "/")[0]
 	var fallbackPath string
-	if rigName == "mayor" || rigName == "deacon" {
+	if rigName == "overseer" || rigName == "supervisor" {
 		fallbackPath = townRoot
 	} else {
 		fallbackPath = filepath.Join(townRoot, rigName)
@@ -131,7 +131,7 @@ func runUnslingWith(cmd *cobra.Command, args []string, dryRun, force bool) error
 		hookedBeadID = hookedBeads[0].ID
 	}
 
-	// Town-level fallback: rig-level agents (polecats, crew) may have hooked
+	// Town-level fallback: rig-level agents (miners, crew) may have hooked
 	// HQ beads (hq-* prefix) stored in townRoot/.beads, not the rig's database.
 	// Without this, gt unsling can't find or clear these beads, even though
 	// gt mol status / gt hook (display) can see them. (gt-dtq7)
@@ -238,11 +238,11 @@ func runUnslingWith(cmd *cobra.Command, args []string, dryRun, force bool) error
 	// Log unhook event
 	_ = events.LogFeed(events.TypeUnhook, agentID, events.UnhookPayload(hookedBeadID))
 
-	// Emit a propulsion signal if the target is the mayor.
+	// Emit a propulsion signal if the target is the overseer.
 	// This allows the ACP propeller to react to hook changes event-driven.
-	if agentID == "mayor/" {
+	if agentID == "overseer/" {
 		if townRoot, err := workspace.FindFromCwd(); err == nil && townRoot != "" {
-			session := "hq-mayor"
+			session := "hq-overseer"
 			message := fmt.Sprintf("Hook updated: cleared bead %s", hookedBeadID)
 			_ = nudge.Enqueue(townRoot, session, nudge.QueuedNudge{
 				Sender:   "unsling",
@@ -277,7 +277,7 @@ func cleanStaleHookedBeads(cmd *cobra.Command, b *beads.Beads, agentID, targetBe
 
 	// Also search town-level beads for rig-level agents (gt-dtq7).
 	// HQ beads (hq-* prefix) live in townRoot/.beads, not the rig database.
-	// Without this, stale HQ beads hooked to crew/polecats are invisible to cleanup.
+	// Without this, stale HQ beads hooked to crew/miners are invisible to cleanup.
 	if !isTownLevelRole(agentID) && townRoot != "" {
 		townBeadsPath := filepath.Join(townRoot, ".beads")
 		if townBeadsPath != beadsPath {
@@ -354,12 +354,12 @@ func cleanStaleHookedBeads(cmd *cobra.Command, b *beads.Beads, agentID, targetBe
 	return true
 }
 
-// mailNormalizedAgentID normalizes crew/polecats path to the canonical form
+// mailNormalizedAgentID normalizes crew/miners path to the canonical form
 // used by sendHandoffMail (via mail.AddressToIdentity).
-// "rig/crew/name" → "rig/name", "rig/polecats/name" → "rig/name".
+// "rig/crew/name" → "rig/name", "rig/miners/name" → "rig/name".
 func mailNormalizedAgentID(agentID string) string {
 	parts := strings.Split(agentID, "/")
-	if len(parts) == 3 && (parts[1] == "crew" || parts[1] == "polecats") {
+	if len(parts) == 3 && (parts[1] == "crew" || parts[1] == "miners") {
 		return parts[0] + "/" + parts[2]
 	}
 	return agentID
@@ -377,7 +377,7 @@ func isAgentTarget(s string) bool {
 
 	// Known role names
 	switch s {
-	case constants.RoleMayor, constants.RoleDeacon, constants.RoleWitness, constants.RoleRefinery, constants.RoleCrew:
+	case constants.RoleOverseer, constants.RoleSupervisor, constants.RoleWitness, constants.RoleRefinery, constants.RoleCrew:
 		return true
 	}
 

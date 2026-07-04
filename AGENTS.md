@@ -71,13 +71,13 @@ git push              # Push to remote
 
 <!-- end-beads-agent-instructions -->
 
-<!-- gastown-agent-instructions-v1 -->
+<!-- excavation-agent-instructions-v1 -->
 
 ---
 
-## Gas Town Multi-Agent Communication
+## Excavation Site Multi-Agent Communication
 
-This workspace is part of a **Gas Town** multi-agent environment. You communicate
+This workspace is part of a **Excavation Site** multi-agent environment. You communicate
 with other agents using `gt` commands — never by printing text or using raw tmux.
 
 ### Nudging Agents (Immediate Delivery)
@@ -85,15 +85,15 @@ with other agents using `gt` commands — never by printing text or using raw tm
 `gt nudge` sends a message directly to another agent's active session:
 
 ```bash
-gt nudge mayor "Status update: PR review complete"
+gt nudge overseer "Status update: PR review complete"
 gt nudge laneassist/crew/dom "Check your mail — PR ready for review"
-gt nudge witness "Polecat health check needed"
+gt nudge witness "Miner health check needed"
 gt nudge refinery "Merge queue has items"
 ```
 
 **Target formats:**
-- Role shortcuts: `mayor`, `deacon`, `witness`, `refinery`
-- Full path: `<rig>/crew/<name>`, `<rig>/polecats/<name>`
+- Role shortcuts: `overseer`, `supervisor`, `witness`, `refinery`
+- Full path: `<rig>/crew/<name>`, `<rig>/miners/<name>`
 
 **Important:** `gt nudge` is the ONLY way to send text to another agent's session.
 Never print "Hey @name" — the other agent cannot see your terminal output.
@@ -108,12 +108,12 @@ gt mail inbox                    # List messages
 gt mail read <id>                # Read a specific message
 
 # Sending (use --stdin for multi-line content)
-gt mail send mayor/ -s "Subject" -m "Short message"
+gt mail send overseer/ -s "Subject" -m "Short message"
 gt mail send laneassist/crew/dom -s "PR Review" --stdin <<'BODY'
 Multi-line message content here.
 Details about the PR and what to look for.
 BODY
-gt mail send --human -s "Subject" -m "Message to overseer"
+gt mail send --human -s "Subject" -m "Message to boss"
 ```
 
 ### When to Use Which
@@ -135,7 +135,7 @@ gt hook               # Check for assigned work
 gt mail inbox         # Check for messages
 ```
 
-<!-- end-gastown-agent-instructions -->
+<!-- end-excavation-agent-instructions -->
 
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:ca08a54f -->
 ## Beads Issue Tracker

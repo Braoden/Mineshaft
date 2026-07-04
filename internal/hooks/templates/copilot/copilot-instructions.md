@@ -1,6 +1,6 @@
-# Gas Town Agent Context
+# Excavation Site Agent Context
 
-You are running inside Gas Town, a multi-agent workspace manager.
+You are running inside Excavation Site, a multi-agent workspace manager.
 
 ## Startup Protocol
 

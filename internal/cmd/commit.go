@@ -6,12 +6,12 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // DefaultAgentEmailDomain is the default domain for agent git emails.
-const DefaultAgentEmailDomain = "gastown.local"
+const DefaultAgentEmailDomain = "excavation.local"
 
 var commitCmd = &cobra.Command{
 	Use:   "commit [flags] [-- git-commit-args...]",
@@ -24,7 +24,7 @@ When run by an agent (GT_ROLE set), this command:
 3. Runs 'git commit' with the correct identity
 
 The email domain is configurable in town settings (agent_email_domain).
-Default: gastown.local
+Default: excavation.local
 
 Examples:
   gt commit -m "Fix bug"              # Commit as current agent
@@ -32,8 +32,8 @@ Examples:
   gt commit -- --amend                # Amend last commit
 
 Identity mapping:
-  Agent: gastown/crew/jack  →  Name: gastown/crew/jack
-                                Email: gastown.crew.jack@gastown.local
+  Agent: excavation/crew/jack  →  Name: excavation/crew/jack
+                                Email: excavation.crew.jack@excavation.local
 
 When run without GT_ROLE (human), passes through to git commit with no changes.`,
 	RunE:               runCommit,
@@ -54,8 +54,8 @@ func runCommit(cmd *cobra.Command, args []string) error {
 	// Detect agent identity
 	identity := detectSender()
 
-	// If overseer (human), just pass through to git commit
-	if identity == "overseer" {
+	// If boss (human), just pass through to git commit
+	if identity == "boss" {
 		return runGitCommit(args, "", "")
 	}
 
@@ -70,7 +70,7 @@ func runCommit(cmd *cobra.Command, args []string) error {
 	}
 
 	// Convert identity to git-friendly email
-	// "gastown/crew/jack" → "gastown.crew.jack@domain"
+	// "excavation/crew/jack" → "excavation.crew.jack@domain"
 	email := identityToEmail(identity, domain)
 
 	// Use identity as the author name (human-readable)
@@ -79,9 +79,9 @@ func runCommit(cmd *cobra.Command, args []string) error {
 	return runGitCommit(args, name, email)
 }
 
-// identityToEmail converts a Gas Town identity to a git email address.
-// "gastown/crew/jack" → "gastown.crew.jack@domain"
-// "mayor/" → "mayor@domain"
+// identityToEmail converts a Excavation Site identity to a git email address.
+// "excavation/crew/jack" → "excavation.crew.jack@domain"
+// "overseer/" → "overseer@domain"
 func identityToEmail(identity, domain string) string {
 	// Remove trailing slash if present
 	identity = strings.TrimSuffix(identity, "/")

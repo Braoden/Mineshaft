@@ -23,8 +23,8 @@ Works with any bead prefix (gt-, bd-, hq-, etc.) and routes
 to the correct beads database automatically.
 
 Examples:
-  gt show gt-abc123          # Show a gastown issue
-  gt show hq-xyz789          # Show a town-level bead (convoy, mail, etc.)
+  gt show gt-abc123          # Show a excavation issue
+  gt show hq-xyz789          # Show a town-level bead (minecart, mail, etc.)
   gt show bd-def456          # Show a beads issue
   gt show gt-abc123 --json   # Output as JSON
   gt show gt-abc123 -v       # Verbose output`,

@@ -3,17 +3,17 @@ package session
 import (
 	"path/filepath"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // ResolveWindowTint resolves the window tint style for a session.
 // Resolution order mirrors status bar theming:
 //  1. Per-rig role tint (rig/settings/config.json → theme.window_tint.role_tints)
-//  2. Global role tint (mayor/config.json → theme.window_tint.role_tints)
+//  2. Global role tint (overseer/config.json → theme.window_tint.role_tints)
 //  3. Per-rig window tint (rig/settings/config.json → theme.window_tint.name/custom)
-//  4. Global window tint (mayor/config.json → theme.window_tint.name/custom)
+//  4. Global window tint (overseer/config.json → theme.window_tint.name/custom)
 //  5. Fallback: disabled (nil) — no window tinting by default
 //
 // Returns nil if window tinting is disabled or not configured.
@@ -35,10 +35,10 @@ func ResolveWindowTint(rig, role string) *tmux.WindowStyle {
 
 	// Load global window tint config.
 	if townRoot != "" {
-		mayorConfigPath := filepath.Join(townRoot, "mayor", "config.json")
-		if mayorCfg, err := config.LoadMayorConfig(mayorConfigPath); err == nil {
-			if mayorCfg.Theme != nil {
-				globalWindowTint = mayorCfg.Theme.WindowTint
+		overseerConfigPath := filepath.Join(townRoot, "overseer", "config.json")
+		if overseerCfg, err := config.LoadOverseerConfig(overseerConfigPath); err == nil {
+			if overseerCfg.Theme != nil {
+				globalWindowTint = overseerCfg.Theme.WindowTint
 			}
 		}
 	}
@@ -119,10 +119,10 @@ func ResolveTintFactor(rig string) float64 {
 
 	// Check global config.
 	if townRoot != "" {
-		mayorConfigPath := filepath.Join(townRoot, "mayor", "config.json")
-		if mayorCfg, err := config.LoadMayorConfig(mayorConfigPath); err == nil {
-			if mayorCfg.Theme != nil && mayorCfg.Theme.WindowTint != nil && mayorCfg.Theme.WindowTint.TintFactor != nil {
-				return *mayorCfg.Theme.WindowTint.TintFactor
+		overseerConfigPath := filepath.Join(townRoot, "overseer", "config.json")
+		if overseerCfg, err := config.LoadOverseerConfig(overseerConfigPath); err == nil {
+			if overseerCfg.Theme != nil && overseerCfg.Theme.WindowTint != nil && overseerCfg.Theme.WindowTint.TintFactor != nil {
+				return *overseerCfg.Theme.WindowTint.TintFactor
 			}
 		}
 	}
@@ -147,10 +147,10 @@ func IsWindowTintEnabled(rig string) bool {
 
 	// Check global config.
 	if townRoot != "" {
-		mayorConfigPath := filepath.Join(townRoot, "mayor", "config.json")
-		if mayorCfg, err := config.LoadMayorConfig(mayorConfigPath); err == nil {
-			if mayorCfg.Theme != nil && mayorCfg.Theme.WindowTint != nil && mayorCfg.Theme.WindowTint.Enabled != nil {
-				return *mayorCfg.Theme.WindowTint.Enabled
+		overseerConfigPath := filepath.Join(townRoot, "overseer", "config.json")
+		if overseerCfg, err := config.LoadOverseerConfig(overseerConfigPath); err == nil {
+			if overseerCfg.Theme != nil && overseerCfg.Theme.WindowTint != nil && overseerCfg.Theme.WindowTint.Enabled != nil {
+				return *overseerCfg.Theme.WindowTint.Enabled
 			}
 		}
 	}

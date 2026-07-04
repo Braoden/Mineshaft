@@ -52,57 +52,57 @@ func (e errReadCloser) Close() error               { return nil }
 // ---- validateReceivePackRefs ----
 
 func TestValidateReceivePackRefs(t *testing.T) {
-	const polecat = "furiosa"
+	const miner = "furiosa"
 
 	t.Run("empty body returns nil", func(t *testing.T) {
-		assert.NoError(t, validateReceivePackRefs(nil, polecat))
-		assert.NoError(t, validateReceivePackRefs([]byte{}, polecat))
+		assert.NoError(t, validateReceivePackRefs(nil, miner))
+		assert.NoError(t, validateReceivePackRefs([]byte{}, miner))
 	})
 
 	t.Run("flush-only body returns nil", func(t *testing.T) {
-		assert.NoError(t, validateReceivePackRefs([]byte("0000"), polecat))
+		assert.NoError(t, validateReceivePackRefs([]byte("0000"), miner))
 	})
 
 	t.Run("single valid ref returns nil", func(t *testing.T) {
-		body := receivePackBody("refs/heads/polecat/furiosa-abc123")
-		assert.NoError(t, validateReceivePackRefs(body, polecat))
+		body := receivePackBody("refs/heads/miner/furiosa-abc123")
+		assert.NoError(t, validateReceivePackRefs(body, miner))
 	})
 
 	t.Run("multiple valid refs return nil", func(t *testing.T) {
 		body := receivePackBody(
-			"refs/heads/polecat/furiosa-abc123",
-			"refs/heads/polecat/furiosa-def456",
+			"refs/heads/miner/furiosa-abc123",
+			"refs/heads/miner/furiosa-def456",
 		)
-		assert.NoError(t, validateReceivePackRefs(body, polecat))
+		assert.NoError(t, validateReceivePackRefs(body, miner))
 	})
 
 	t.Run("ref to main is denied", func(t *testing.T) {
 		body := receivePackBody("refs/heads/main")
-		err := validateReceivePackRefs(body, polecat)
+		err := validateReceivePackRefs(body, miner)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "main")
 	})
 
-	t.Run("exact polecat ref without dash suffix is denied", func(t *testing.T) {
-		// "refs/heads/polecat/furiosa" has no dash suffix → denied.
-		body := receivePackBody("refs/heads/polecat/furiosa")
-		err := validateReceivePackRefs(body, polecat)
+	t.Run("exact miner ref without dash suffix is denied", func(t *testing.T) {
+		// "refs/heads/miner/furiosa" has no dash suffix → denied.
+		body := receivePackBody("refs/heads/miner/furiosa")
+		err := validateReceivePackRefs(body, miner)
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "refs/heads/polecat/furiosa")
+		assert.Contains(t, err.Error(), "refs/heads/miner/furiosa")
 	})
 
-	t.Run("wrong polecat name is denied", func(t *testing.T) {
-		body := receivePackBody("refs/heads/polecat/otherpolecat-abc")
-		err := validateReceivePackRefs(body, polecat)
+	t.Run("wrong miner name is denied", func(t *testing.T) {
+		body := receivePackBody("refs/heads/miner/otherminer-abc")
+		err := validateReceivePackRefs(body, miner)
 		require.Error(t, err)
 	})
 
 	t.Run("mixed valid and invalid returns error on first invalid", func(t *testing.T) {
 		body := receivePackBody(
-			"refs/heads/polecat/furiosa-ok",
+			"refs/heads/miner/furiosa-ok",
 			"refs/heads/main",
 		)
-		err := validateReceivePackRefs(body, polecat)
+		err := validateReceivePackRefs(body, miner)
 		assert.Error(t, err)
 	})
 
@@ -111,7 +111,7 @@ func TestValidateReceivePackRefs(t *testing.T) {
 		body := []byte("00")
 		var err error
 		assert.NotPanics(t, func() {
-			err = validateReceivePackRefs(body, polecat)
+			err = validateReceivePackRefs(body, miner)
 		})
 		require.Error(t, err, "truncated length field must be rejected (fail-closed)")
 	})
@@ -121,7 +121,7 @@ func TestValidateReceivePackRefs(t *testing.T) {
 		body := []byte("0010hello")
 		var err error
 		assert.NotPanics(t, func() {
-			err = validateReceivePackRefs(body, polecat)
+			err = validateReceivePackRefs(body, miner)
 		})
 		require.Error(t, err, "truncated pkt-line body must be rejected (fail-closed)")
 	})
@@ -130,22 +130,22 @@ func TestValidateReceivePackRefs(t *testing.T) {
 		zeroSHA := strings.Repeat("0", 40)
 		newSHA := strings.Repeat("a", 40)
 		// ref line with NUL-separated capability string
-		line := zeroSHA + " " + newSHA + " refs/heads/polecat/furiosa-abc\x00side-band-64k\n"
+		line := zeroSHA + " " + newSHA + " refs/heads/miner/furiosa-abc\x00side-band-64k\n"
 		body := []byte(pktLine(line) + "0000")
-		assert.NoError(t, validateReceivePackRefs(body, polecat))
+		assert.NoError(t, validateReceivePackRefs(body, miner))
 	})
 
 	t.Run("line with fewer than 3 fields is skipped without error", func(t *testing.T) {
 		line := "onlyone\n"
 		body := []byte(pktLine(line) + "0000")
-		assert.NoError(t, validateReceivePackRefs(body, polecat))
+		assert.NoError(t, validateReceivePackRefs(body, miner))
 	})
 
 	t.Run("pktLen==4 empty payload does not spin", func(t *testing.T) {
 		// "0004" means a packet with only the length field (no payload).
 		body := []byte("0004" + "0000")
 		assert.NotPanics(t, func() {
-			_ = validateReceivePackRefs(body, polecat)
+			_ = validateReceivePackRefs(body, miner)
 		})
 	})
 
@@ -153,7 +153,7 @@ func TestValidateReceivePackRefs(t *testing.T) {
 		// "0000" flush followed by raw binary pack data. Must not panic or error.
 		binaryJunk := []byte("0000\x00\x00\x00\x02\xff\xfe\xfd\xfc PACK binary garbage")
 		assert.NotPanics(t, func() {
-			err := validateReceivePackRefs(binaryJunk, polecat)
+			err := validateReceivePackRefs(binaryJunk, miner)
 			assert.NoError(t, err)
 		})
 	})
@@ -184,18 +184,18 @@ func TestAuthorizeReceivePack(t *testing.T) {
 	})
 
 	t.Run("CN with empty rig segment returns 403", func(t *testing.T) {
-		// gt--furiosa has an empty rig; polecatName now returns "" for this case.
+		// gt--furiosa has an empty rig; minerName now returns "" for this case.
 		rec := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/v1/git/rig/git-receive-pack",
-			bytes.NewReader(receivePackBody("refs/heads/polecat/furiosa-abc")))
+			bytes.NewReader(receivePackBody("refs/heads/miner/furiosa-abc")))
 		ok, _ := srv.authorizeReceivePack(rec, req, "gt--furiosa")
 		assert.False(t, ok)
 		assert.Equal(t, http.StatusForbidden, rec.Code)
 	})
 
 	t.Run("valid CN and valid refs — body is rewound correctly", func(t *testing.T) {
-		cn := "gt-gastown-furiosa"
-		body := receivePackBody("refs/heads/polecat/furiosa-abc123")
+		cn := "gt-excavation-furiosa"
+		body := receivePackBody("refs/heads/miner/furiosa-abc123")
 
 		rec := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/v1/git/rig/git-receive-pack",
@@ -203,7 +203,7 @@ func TestAuthorizeReceivePack(t *testing.T) {
 		ok, refs := srv.authorizeReceivePack(rec, req, cn)
 
 		require.True(t, ok)
-		assert.Equal(t, []string{"refs/heads/polecat/furiosa-abc123"}, refs)
+		assert.Equal(t, []string{"refs/heads/miner/furiosa-abc123"}, refs)
 		// Verify body was rewound so git can re-read it.
 		rewound, err := io.ReadAll(req.Body)
 		require.NoError(t, err)
@@ -211,7 +211,7 @@ func TestAuthorizeReceivePack(t *testing.T) {
 	})
 
 	t.Run("valid CN with invalid refs returns 403 and includes refs", func(t *testing.T) {
-		cn := "gt-gastown-furiosa"
+		cn := "gt-excavation-furiosa"
 		body := receivePackBody("refs/heads/main")
 
 		rec := httptest.NewRecorder()
@@ -226,7 +226,7 @@ func TestAuthorizeReceivePack(t *testing.T) {
 	})
 
 	t.Run("body read error returns 400", func(t *testing.T) {
-		cn := "gt-gastown-furiosa"
+		cn := "gt-excavation-furiosa"
 		rec := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/v1/git/rig/git-receive-pack", nil)
 		req.Body = errReadCloser{err: fmt.Errorf("simulated read error")}
@@ -238,7 +238,7 @@ func TestAuthorizeReceivePack(t *testing.T) {
 	})
 
 	t.Run("oversized body returns 400", func(t *testing.T) {
-		cn := "gt-gastown-furiosa"
+		cn := "gt-excavation-furiosa"
 		rec := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/v1/git/rig/git-receive-pack", nil)
 		req.Body = errReadCloser{err: &http.MaxBytesError{Limit: 32 << 20}}
@@ -306,7 +306,7 @@ func TestHandleGitRouting(t *testing.T) {
 
 	t.Run("git-receive-pack POST with no CN returns 403", func(t *testing.T) {
 		srv, _ := newGitServer(t)
-		body := receivePackBody("refs/heads/polecat/furiosa-abc")
+		body := receivePackBody("refs/heads/miner/furiosa-abc")
 		req := httptest.NewRequest("POST", "/v1/git/testrip/git-receive-pack",
 			bytes.NewReader(body))
 		// r.TLS is nil → clientCN returns "" → authorizeReceivePack returns 403
@@ -376,10 +376,10 @@ func TestClientCN(t *testing.T) {
 		req := httptest.NewRequest("POST", "/", nil)
 		req.TLS = &tls.ConnectionState{
 			PeerCertificates: []*x509.Certificate{
-				{Subject: pkix.Name{CommonName: "gt-gastown-furiosa"}},
+				{Subject: pkix.Name{CommonName: "gt-excavation-furiosa"}},
 			},
 		}
-		assert.Equal(t, "gt-gastown-furiosa", clientCN(req))
+		assert.Equal(t, "gt-excavation-furiosa", clientCN(req))
 	})
 }
 
@@ -497,7 +497,7 @@ func TestHandleGitMissingRepo(t *testing.T) {
 		srv, _ := newGitServer(t)
 		req := httptest.NewRequest("POST",
 			"/v1/git/missingrig/git-receive-pack",
-			bytes.NewReader(receivePackBody("refs/heads/polecat/furiosa-abc")))
+			bytes.NewReader(receivePackBody("refs/heads/miner/furiosa-abc")))
 		w := httptest.NewRecorder()
 		srv.handleGit(w, req)
 		assert.Equal(t, http.StatusNotFound, w.Code)
@@ -535,12 +535,12 @@ func TestHandleGitAuditLog(t *testing.T) {
 	t.Run("fetch info/refs emits INFO with identity and rig", func(t *testing.T) {
 		srv, _, lc := newGitServerWithLog(t)
 		req := fakeGitRequest("GET", "/v1/git/testrip/info/refs?service=git-upload-pack",
-			nil, "gt-gastown-furiosa")
+			nil, "gt-excavation-furiosa")
 		srv.handleGit(httptest.NewRecorder(), req)
 
 		e, ok := lc.findEntry(slog.LevelInfo, "git info/refs")
 		require.True(t, ok, "expected INFO 'git info/refs' log record")
-		assert.Equal(t, "gastown/furiosa", e.attrs["identity"])
+		assert.Equal(t, "excavation/furiosa", e.attrs["identity"])
 		assert.Equal(t, "testrip", e.attrs["rig"])
 		assert.Equal(t, "fetch", e.attrs["op"])
 	})
@@ -548,7 +548,7 @@ func TestHandleGitAuditLog(t *testing.T) {
 	t.Run("push info/refs emits INFO with op=push", func(t *testing.T) {
 		srv, _, lc := newGitServerWithLog(t)
 		req := fakeGitRequest("GET", "/v1/git/testrip/info/refs?service=git-receive-pack",
-			nil, "gt-gastown-furiosa")
+			nil, "gt-excavation-furiosa")
 		srv.handleGit(httptest.NewRecorder(), req)
 
 		e, ok := lc.findEntry(slog.LevelInfo, "git info/refs")
@@ -560,21 +560,21 @@ func TestHandleGitAuditLog(t *testing.T) {
 		srv, _, lc := newGitServerWithLog(t)
 		body := receivePackBody("refs/heads/main") // not allowed
 		req := fakeGitRequest("POST", "/v1/git/testrip/git-receive-pack",
-			body, "gt-gastown-furiosa")
+			body, "gt-excavation-furiosa")
 		rec := httptest.NewRecorder()
 		srv.handleGit(rec, req)
 
 		assert.Equal(t, http.StatusForbidden, rec.Code)
 		e, ok := lc.findEntry(slog.LevelWarn, "git push denied")
 		require.True(t, ok, "expected WARN 'git push denied' log record")
-		assert.Equal(t, "gastown/furiosa", e.attrs["identity"])
+		assert.Equal(t, "excavation/furiosa", e.attrs["identity"])
 		assert.Equal(t, "testrip", e.attrs["rig"])
 		assert.Contains(t, e.attrs["refs"], "refs/heads/main")
 	})
 
 	t.Run("push denied with missing CN emits WARN with empty identity", func(t *testing.T) {
 		srv, _, lc := newGitServerWithLog(t)
-		body := receivePackBody("refs/heads/polecat/furiosa-abc")
+		body := receivePackBody("refs/heads/miner/furiosa-abc")
 		req := fakeGitRequest("POST", "/v1/git/testrip/git-receive-pack", body, "")
 		rec := httptest.NewRecorder()
 		srv.handleGit(rec, req)
@@ -597,13 +597,13 @@ func TestHandleGitAuditLogIntegration(t *testing.T) {
 		makeBareRepo(t, gitPath, townRoot)
 
 		req := fakeGitRequest("POST", "/v1/git/testrip/git-upload-pack",
-			[]byte("0000"), "gt-gastown-furiosa")
+			[]byte("0000"), "gt-excavation-furiosa")
 		req.Header.Set("Content-Type", "application/x-git-upload-pack-request")
 		srv.handleGit(httptest.NewRecorder(), req)
 
 		e, ok := lc.findEntry(slog.LevelInfo, "git fetch")
 		require.True(t, ok, "expected INFO 'git fetch' log record")
-		assert.Equal(t, "gastown/furiosa", e.attrs["identity"])
+		assert.Equal(t, "excavation/furiosa", e.attrs["identity"])
 		assert.Equal(t, "testrip", e.attrs["rig"])
 	})
 }
@@ -611,21 +611,21 @@ func TestHandleGitAuditLogIntegration(t *testing.T) {
 // TestHandleReceivePackIntegration performs a full end-to-end mTLS git push
 // through a live proxy server, verifying branch authorization with a real git binary.
 //
-// The test issues a polecat cert (CN "gt-gastown-raider" → polecat name "raider"),
+// The test issues a miner cert (CN "gt-excavation-raider" → miner name "raider"),
 // starts the proxy with mTLS enabled, creates a local repo with a commit, then:
-//   - Asserts that a push to refs/heads/polecat/raider-* (allowed) succeeds.
+//   - Asserts that a push to refs/heads/miner/raider-* (allowed) succeeds.
 //   - Asserts that a push to refs/heads/main (disallowed) is rejected.
 func TestHandleReceivePackIntegration(t *testing.T) {
 	gitPath := requireGit(t)
 
-	// Generate the CA and issue a polecat client cert.
+	// Generate the CA and issue a miner client cert.
 	ca, err := GenerateCA(t.TempDir())
 	require.NoError(t, err)
 
-	// "raider" is the polecat name extracted from "gt-gastown-raider" by polecatName().
-	// Allowed refs are refs/heads/polecat/raider-*.
-	const polecatCN = "gt-gastown-raider"
-	clientCertPEM, clientKeyPEM, err := ca.IssuePolecat(polecatCN, time.Hour)
+	// "raider" is the miner name extracted from "gt-excavation-raider" by minerName().
+	// Allowed refs are refs/heads/miner/raider-*.
+	const minerCN = "gt-excavation-raider"
+	clientCertPEM, clientKeyPEM, err := ca.IssueMiner(minerCN, time.Hour)
 	require.NoError(t, err)
 
 	// Write cert/key/CA to temp files so git can load them via http.ssl* config.
@@ -671,9 +671,9 @@ func TestHandleReceivePackIntegration(t *testing.T) {
 		"GIT_CONFIG_NOSYSTEM=1",
 		"HOME="+gitHome,
 		"GIT_TERMINAL_PROMPT=0", // suppress any interactive credential prompts
-		"GIT_AUTHOR_NAME=Test Polecat",
+		"GIT_AUTHOR_NAME=Test Miner",
 		"GIT_AUTHOR_EMAIL=test@gt.local",
-		"GIT_COMMITTER_NAME=Test Polecat",
+		"GIT_COMMITTER_NAME=Test Miner",
 		"GIT_COMMITTER_EMAIL=test@gt.local",
 	)
 
@@ -718,8 +718,8 @@ func TestHandleReceivePackIntegration(t *testing.T) {
 		return cmd.CombinedOutput()
 	}
 
-	t.Run("push to allowed polecat ref succeeds", func(t *testing.T) {
-		out, err := pushRef("HEAD:refs/heads/polecat/raider-testpush")
+	t.Run("push to allowed miner ref succeeds", func(t *testing.T) {
+		out, err := pushRef("HEAD:refs/heads/miner/raider-testpush")
 		assert.NoError(t, err, "push to allowed ref should succeed:\n%s", out)
 	})
 
@@ -806,7 +806,7 @@ func TestHandleGitContextCancellation(t *testing.T) {
 	t.Run("handlePack receive-pack subprocess killed on context cancel", func(t *testing.T) {
 		srv, _ := newGitServer(t)
 		ctx, cancel := context.WithCancel(context.Background())
-		body := receivePackBody("refs/heads/polecat/furiosa-abc123")
+		body := receivePackBody("refs/heads/miner/furiosa-abc123")
 		req := httptest.NewRequest("POST",
 			"/v1/git/testrip/git-receive-pack",
 			bytes.NewReader(body))

@@ -16,17 +16,17 @@ func TestLoadBuiltinRoleDefinition(t *testing.T) {
 		wantPreSync   bool
 	}{
 		{
-			name:          "mayor",
-			role:          "mayor",
+			name:          "overseer",
+			role:          "overseer",
 			wantScope:     "town",
-			wantPattern:   "hq-mayor",
+			wantPattern:   "hq-overseer",
 			wantPreSync:   false,
 		},
 		{
-			name:          "deacon",
-			role:          "deacon",
+			name:          "supervisor",
+			role:          "supervisor",
 			wantScope:     "town",
-			wantPattern:   "hq-deacon",
+			wantPattern:   "hq-supervisor",
 			wantPreSync:   false,
 		},
 		{
@@ -44,8 +44,8 @@ func TestLoadBuiltinRoleDefinition(t *testing.T) {
 			wantPreSync:   true,
 		},
 		{
-			name:          "polecat",
-			role:          "polecat",
+			name:          "miner",
+			role:          "miner",
 			wantScope:     "rig",
 			wantPattern:   "{prefix}-{name}",
 			wantPreSync:   false,
@@ -122,12 +122,12 @@ func TestAllRoles(t *testing.T) {
 	}
 
 	expected := map[string]bool{
-		"mayor":    true,
-		"deacon":   true,
+		"overseer":    true,
+		"supervisor":   true,
 		"dog":      true,
 		"witness":  true,
 		"refinery": true,
-		"polecat":  true,
+		"miner":  true,
 		"crew":     true,
 	}
 
@@ -189,20 +189,20 @@ func TestExpandPattern(t *testing.T) {
 		},
 		{
 			pattern:  "{prefix}-witness",
-			rig:      "gastown",
+			rig:      "excavation",
 			prefix:   "gt",
 			expected: "gt-witness",
 		},
 		{
 			pattern:  "{town}/{rig}/crew/{name}",
 			town:     "/home/user/gt",
-			rig:      "gastown",
+			rig:      "excavation",
 			name:     "max",
-			expected: "/home/user/gt/gastown/crew/max",
+			expected: "/home/user/gt/excavation/crew/max",
 		},
 		{
 			pattern:  "{prefix}-{name}",
-			rig:      "gastown",
+			rig:      "excavation",
 			name:     "toast",
 			prefix:   "gt",
 			expected: "gt-toast",
@@ -252,11 +252,11 @@ func TestLoadRoleDefinition_InvalidTownOverride(t *testing.T) {
 	}
 
 	// Write invalid TOML
-	if err := os.WriteFile(rolesDir+"/mayor.toml", []byte("this is not valid [[ toml"), 0o644); err != nil {
+	if err := os.WriteFile(rolesDir+"/overseer.toml", []byte("this is not valid [[ toml"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	_, err := LoadRoleDefinition(townRoot, "", "mayor")
+	_, err := LoadRoleDefinition(townRoot, "", "overseer")
 	if err == nil {
 		t.Fatal("expected error for invalid TOML override, got nil")
 	}
@@ -295,17 +295,17 @@ func TestLoadRoleDefinition_ValidOverride(t *testing.T) {
 	}
 
 	// Write a valid override that changes the nudge
-	override := `nudge = "custom nudge for mayor"` + "\n"
-	if err := os.WriteFile(rolesDir+"/mayor.toml", []byte(override), 0o644); err != nil {
+	override := `nudge = "custom nudge for overseer"` + "\n"
+	if err := os.WriteFile(rolesDir+"/overseer.toml", []byte(override), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	def, err := LoadRoleDefinition(townRoot, "", "mayor")
+	def, err := LoadRoleDefinition(townRoot, "", "overseer")
 	if err != nil {
 		t.Fatalf("unexpected error for valid override: %v", err)
 	}
-	if def.Nudge != "custom nudge for mayor" {
-		t.Errorf("Nudge = %q, want %q", def.Nudge, "custom nudge for mayor")
+	if def.Nudge != "custom nudge for overseer" {
+		t.Errorf("Nudge = %q, want %q", def.Nudge, "custom nudge for overseer")
 	}
 }
 
@@ -314,12 +314,12 @@ func TestLoadRoleDefinition_NoOverrideFiles(t *testing.T) {
 	townRoot := t.TempDir()
 	rigPath := t.TempDir()
 
-	def, err := LoadRoleDefinition(townRoot, rigPath, "polecat")
+	def, err := LoadRoleDefinition(townRoot, rigPath, "miner")
 	if err != nil {
 		t.Fatalf("unexpected error when no override files exist: %v", err)
 	}
-	if def.Role != "polecat" {
-		t.Errorf("Role = %q, want %q", def.Role, "polecat")
+	if def.Role != "miner" {
+		t.Errorf("Role = %q, want %q", def.Role, "miner")
 	}
 }
 

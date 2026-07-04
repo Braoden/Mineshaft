@@ -13,10 +13,10 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/doltserver"
-	"github.com/steveyegge/gastown/internal/health"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/doltserver"
+	"github.com/steveyegge/excavation/internal/health"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var (
@@ -85,7 +85,7 @@ type OrphanDB struct {
 var healthCmd = &cobra.Command{
 	Use:   "health",
 	Short: "Show comprehensive system health",
-	Long: `Display a comprehensive health report for the Gas Town data plane.
+	Long: `Display a comprehensive health report for the Excavation Site data plane.
 
 Sections:
   1. Dolt Server: status, PID, port, latency
@@ -107,7 +107,7 @@ func init() {
 func runHealth(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	report := &HealthReport{

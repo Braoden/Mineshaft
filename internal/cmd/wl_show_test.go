@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/doltserver"
+	"github.com/steveyegge/excavation/internal/doltserver"
 )
 
 func TestShowWantedJSON(t *testing.T) {
@@ -14,7 +14,7 @@ func TestShowWantedJSON(t *testing.T) {
 		ID:          "w-json1",
 		Title:       "Fix auth",
 		Description: "Auth is broken",
-		Project:     "gastown",
+		Project:     "excavation",
 		Type:        "bug",
 		Priority:    1,
 		Tags:        []string{"auth", "urgent"},
@@ -59,7 +59,7 @@ func TestShowWantedText(t *testing.T) {
 		ID:          "w-text1",
 		Title:       "Improve logging",
 		Description: "Add structured logs",
-		Project:     "gastown",
+		Project:     "excavation",
 		Type:        "feature",
 		Priority:    2,
 		Tags:        []string{"logging"},
@@ -81,7 +81,7 @@ func TestShowWantedText(t *testing.T) {
 		"ID:", "w-text1",
 		"Title:", "Improve logging",
 		"Description:", "Add structured logs",
-		"Project:", "gastown",
+		"Project:", "excavation",
 		"Type:", "feature",
 		"Priority:", "P2",
 		"Tags:", "logging",

@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/deacon"
-	"github.com/steveyegge/gastown/internal/polecat"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/supervisor"
+	"github.com/steveyegge/excavation/internal/miner"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var heartbeatCmd = &cobra.Command{
@@ -46,7 +46,7 @@ func init() {
 func runHeartbeat(cmd *cobra.Command, args []string) error {
 	sessionName := os.Getenv("GT_SESSION")
 	if sessionName == "" {
-		return fmt.Errorf("GT_SESSION not set (not running in a Gas Town session)")
+		return fmt.Errorf("GT_SESSION not set (not running in a Excavation Site session)")
 	}
 
 	townRoot, err := workspace.FindFromCwd()
@@ -54,9 +54,9 @@ func runHeartbeat(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("could not find town root: %v", err)
 	}
 
-	state := polecat.HeartbeatState(heartbeatState)
+	state := miner.HeartbeatState(heartbeatState)
 	switch state {
-	case polecat.HeartbeatWorking, polecat.HeartbeatIdle, polecat.HeartbeatExiting, polecat.HeartbeatStuck:
+	case miner.HeartbeatWorking, miner.HeartbeatIdle, miner.HeartbeatExiting, miner.HeartbeatStuck:
 		// valid
 	default:
 		return fmt.Errorf("invalid state %q (must be working, idle, exiting, or stuck)", heartbeatState)
@@ -67,13 +67,13 @@ func runHeartbeat(cmd *cobra.Command, args []string) error {
 		context = strings.Join(args, " ")
 	}
 
-	polecat.TouchSessionHeartbeatWithState(townRoot, sessionName, state, context, "")
+	miner.TouchSessionHeartbeatWithState(townRoot, sessionName, state, context, "")
 
-	// Deacon liveness has extra stores beyond session heartbeat. Keep the
-	// generic heartbeat command and `gt deacon heartbeat` on one shared path.
-	if os.Getenv("GT_ROLE") == "deacon" {
-		if err := syncDeaconHeartbeatStores(townRoot, context); err != nil {
-			fmt.Printf("warning: failed to touch deacon heartbeat file: %v\n", err)
+	// Supervisor liveness has extra stores beyond session heartbeat. Keep the
+	// generic heartbeat command and `gt supervisor heartbeat` on one shared path.
+	if os.Getenv("GT_ROLE") == "supervisor" {
+		if err := syncSupervisorHeartbeatStores(townRoot, context); err != nil {
+			fmt.Printf("warning: failed to touch supervisor heartbeat file: %v\n", err)
 		}
 	}
 
@@ -81,31 +81,31 @@ func runHeartbeat(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// deaconBeadHeartbeatSyncThreshold throttles agent-bead label refreshes from
+// supervisorBeadHeartbeatSyncThreshold throttles agent-bead label refreshes from
 // gt heartbeat: each refresh is a Dolt commit, so only sync when the label is
 // stale enough to matter to watchers.
-const deaconBeadHeartbeatSyncThreshold = deacon.HeartbeatStaleThreshold / 2
+const supervisorBeadHeartbeatSyncThreshold = supervisor.HeartbeatStaleThreshold / 2
 
-func syncDeaconHeartbeatStores(townRoot, action string) error {
+func syncSupervisorHeartbeatStores(townRoot, action string) error {
 	var err error
 	if action != "" {
-		err = deacon.TouchWithAction(townRoot, action, 0, 0)
+		err = supervisor.TouchWithAction(townRoot, action, 0, 0)
 	} else {
-		err = deacon.Touch(townRoot)
+		err = supervisor.Touch(townRoot)
 	}
-	syncDeaconAgentBeadHeartbeat(townRoot)
+	syncSupervisorAgentBeadHeartbeat(townRoot)
 	return err
 }
 
-// syncDeaconAgentBeadHeartbeat refreshes the heartbeat:EPOCH label on the
-// Deacon's agent bead — the third heartbeat store, read by Witness
-// second-order monitoring. Normally await-signal maintains it, but a Deacon
+// syncSupervisorAgentBeadHeartbeat refreshes the heartbeat:EPOCH label on the
+// Supervisor's agent bead — the third heartbeat store, read by Witness
+// second-order monitoring. Normally await-signal maintains it, but a Supervisor
 // session that never reaches await-signal (handoffs, long patrols, session
 // limits) leaves it stale for hours and triggers false stuck escalations
 // (hq-qxl9). Best-effort: failures are silent, liveness is already recorded
 // in the other two stores.
-func syncDeaconAgentBeadHeartbeat(townRoot string) {
-	agentBead := beads.DeaconBeadIDTown()
+func syncSupervisorAgentBeadHeartbeat(townRoot string) {
+	agentBead := beads.SupervisorBeadIDTown()
 	beadsDir := beads.ResolveBeadsDir(townRoot)
 
 	labels, err := getAllAgentLabels(agentBead, beadsDir)
@@ -118,7 +118,7 @@ func syncDeaconAgentBeadHeartbeat(townRoot string) {
 			continue
 		}
 		if epoch, err := strconv.ParseInt(epochStr, 10, 64); err == nil {
-			if time.Since(time.Unix(epoch, 0)) < deaconBeadHeartbeatSyncThreshold {
+			if time.Since(time.Unix(epoch, 0)) < supervisorBeadHeartbeatSyncThreshold {
 				return
 			}
 		}

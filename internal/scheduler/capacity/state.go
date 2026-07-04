@@ -9,7 +9,7 @@ import (
 
 // SchedulerState represents the runtime operational state of the capacity scheduler.
 // Stored at <townRoot>/.runtime/scheduler-state.json.
-// Follows the pattern of deacon/redispatch-state.json for daemon operational state.
+// Follows the pattern of supervisor/redispatch-state.json for daemon operational state.
 type SchedulerState struct {
 	Paused            bool   `json:"paused"`
 	PausedBy          string `json:"paused_by,omitempty"`

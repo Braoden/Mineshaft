@@ -11,14 +11,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/cli"
-	"github.com/steveyegge/gastown/internal/events"
-	"github.com/steveyegge/gastown/internal/formula"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/telemetry"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/cli"
+	"github.com/steveyegge/excavation/internal/events"
+	"github.com/steveyegge/excavation/internal/formula"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/telemetry"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 type wispCreateJSON struct {
@@ -180,7 +180,7 @@ func findHookedFormulaForDogPool(workDir, formulaName string, reusableDog func(*
 }
 
 func reusableHookedDogFormula(hookedBeads []*beads.Issue, formulaName string, reusableDog func(*beads.Issue, string) bool) (*beads.Issue, string) {
-	const dogAssigneePrefix = "deacon/dogs/"
+	const dogAssigneePrefix = "supervisor/dogs/"
 	var newest *beads.Issue
 	var newestDogName string
 	var newestAt time.Time
@@ -300,14 +300,14 @@ func runSlingFormula(ctx context.Context, args []string) (err error) {
 	if len(args) > 1 {
 		target = args[1]
 	}
-	var admission *polecatAdmissionHandle
+	var admission *minerAdmissionHandle
 	if !slingDryRun && target != "" {
 		admissionRig := ""
 		if rigName, isRig := IsRigName(target); isRig {
 			admissionRig = rigName
 		}
 		if admissionRig != "" {
-			admission, _, err = acquirePolecatAdmissionFn(townRoot, admissionRig, formulaName, "formula")
+			admission, _, err = acquireMinerAdmissionFn(townRoot, admissionRig, formulaName, "formula")
 			if err != nil {
 				return err
 			}
@@ -316,7 +316,7 @@ func runSlingFormula(ctx context.Context, args []string) (err error) {
 	}
 	if !slingDryRun {
 		if dogName, isDog := IsDogTarget(target); isDog && dogName == "" {
-			poolUnlock, poolLockErr := tryAcquireSlingAssigneeLock(townRoot, "deacon/dogs")
+			poolUnlock, poolLockErr := tryAcquireSlingAssigneeLock(townRoot, "supervisor/dogs")
 			if poolLockErr != nil {
 				return fmt.Errorf("serializing dog-pool formula sling for %s: %w", formulaName, poolLockErr)
 			}
@@ -332,7 +332,7 @@ func runSlingFormula(ctx context.Context, args []string) (err error) {
 		NoBoot:               slingNoBoot,
 		WorkDesc:             formulaName,
 		TownRoot:             townRoot,
-		SkipPolecatAdmission: admission != nil,
+		SkipMinerAdmission: admission != nil,
 	})
 	if err != nil {
 		return err
@@ -346,11 +346,11 @@ func runSlingFormula(ctx context.Context, args []string) (err error) {
 	fmt.Printf("%s Slinging formula %s to %s...\n", style.Bold.Render("🎯"), formulaName, targetAgent)
 
 	rollbackSpawned := func(beadID string) {
-		if resolved.NewPolecatInfo == nil {
+		if resolved.NewMinerInfo == nil {
 			return
 		}
-		fmt.Printf("%s Rolling back spawned polecat %s...\n", style.Warning.Render("⚠"), resolved.NewPolecatInfo.PolecatName)
-		rollbackSlingArtifactsFn(resolved.NewPolecatInfo, beadID, formulaWorkDir, "")
+		fmt.Printf("%s Rolling back spawned miner %s...\n", style.Warning.Render("⚠"), resolved.NewMinerInfo.MinerName)
+		rollbackSlingArtifactsFn(resolved.NewMinerInfo, beadID, formulaWorkDir, "")
 	}
 
 	// Resolve working directory for bd commands (routes to correct rig beads)
@@ -447,10 +447,10 @@ func runSlingFormula(ctx context.Context, args []string) (err error) {
 			return fmt.Errorf("cleaning stale dog formula wisp %s: %w", existing.ID, err)
 		}
 	}
-	if admission == nil && strings.Contains(targetAgent, "/polecats/") {
+	if admission == nil && strings.Contains(targetAgent, "/miners/") {
 		parts := strings.Split(targetAgent, "/")
 		if len(parts) >= 3 {
-			admission, _, err = acquirePolecatAdmissionFn(townRoot, parts[0], formulaName, "formula")
+			admission, _, err = acquireMinerAdmissionFn(townRoot, parts[0], formulaName, "formula")
 			if err != nil {
 				return err
 			}
@@ -500,7 +500,7 @@ func runSlingFormula(ctx context.Context, args []string) (err error) {
 	fmt.Printf("%s Wisp created: %s\n", style.Bold.Render("✓"), wispRootID)
 
 	// Step 3: Hook the wisp bead with retry and verification.
-	// See: https://github.com/steveyegge/gastown/issues/148.
+	// See: https://github.com/steveyegge/excavation/issues/148.
 	hookDir := beads.ResolveHookDir(townRoot, wispRootID, "")
 	if err := hookBeadWithRetryFn(wispRootID, targetAgent, hookDir); err != nil {
 		return err
@@ -514,7 +514,7 @@ func runSlingFormula(ctx context.Context, args []string) (err error) {
 	_ = events.LogFeed(events.TypeSling, actor, payload)
 
 	// Update agent bead's hook_bead field (ZFC: agents track their current work)
-	// Note: formula slinging uses town root as workDir (no polecat-specific path)
+	// Note: formula slinging uses town root as workDir (no miner-specific path)
 	updateAgentHookBead(targetAgent, wispRootID, "", townBeadsDir)
 
 	// Store all attachment fields in a single read-modify-write cycle.
@@ -550,14 +550,14 @@ func runSlingFormula(ctx context.Context, args []string) (err error) {
 		targetPane = pane
 	}
 
-	// Start spawned polecat session now that hook is set.
-	// This ensures polecat sees the wisp when gt prime runs on session start.
-	if resolved.NewPolecatInfo != nil {
-		pane, err := resolved.NewPolecatInfo.StartSession()
+	// Start spawned miner session now that hook is set.
+	// This ensures miner sees the wisp when gt prime runs on session start.
+	if resolved.NewMinerInfo != nil {
+		pane, err := resolved.NewMinerInfo.StartSession()
 		if err != nil {
-			// Rollback: unhook wisp, delete Dolt branch, clean up polecat worktree/agent bead
-			rollbackSlingArtifactsFn(resolved.NewPolecatInfo, wispRootID, "", "")
-			return fmt.Errorf("starting polecat session: %w", err)
+			// Rollback: unhook wisp, delete Dolt branch, clean up miner worktree/agent bead
+			rollbackSlingArtifactsFn(resolved.NewMinerInfo, wispRootID, "", "")
+			return fmt.Errorf("starting miner session: %w", err)
 		}
 		targetPane = pane
 	}

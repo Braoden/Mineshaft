@@ -144,7 +144,7 @@ func TestRecordAgentInstantiate(t *testing.T) {
 	ctx := context.Background()
 
 	RecordAgentInstantiate(ctx, AgentInstantiateInfo{
-		RunID: "run-id-1", AgentType: "claudecode", Role: "polecat",
+		RunID: "run-id-1", AgentType: "claudecode", Role: "miner",
 		AgentName: "wyvern-Toast", SessionID: "gt-wyvern-Toast", RigName: "wyvern",
 		TownRoot: "/Users/pa/gt", IssueID: "GT-123", GitBranch: "feat/foo", GitCommit: "abc1234",
 	})
@@ -154,8 +154,8 @@ func TestRecordAgentInstantiate(t *testing.T) {
 		TownRoot: "/Users/pa/gt",
 	})
 	RecordAgentInstantiate(ctx, AgentInstantiateInfo{
-		RunID: "run-id-3", AgentType: "claudecode", Role: "mayor",
-		AgentName: "mayor", SessionID: "hq-mayor", TownRoot: "/Users/pa/gt",
+		RunID: "run-id-3", AgentType: "claudecode", Role: "overseer",
+		AgentName: "overseer", SessionID: "hq-overseer", TownRoot: "/Users/pa/gt",
 	})
 }
 
@@ -180,20 +180,20 @@ func TestRecordAgentStateChange(t *testing.T) {
 	RecordAgentStateChange(ctx, "agent-4", "idle", &empty, nil)
 }
 
-func TestRecordPolecatSpawn(t *testing.T) {
+func TestRecordMinerSpawn(t *testing.T) {
 	resetInstruments(t)
 	ctx := context.Background()
 
-	RecordPolecatSpawn(ctx, "furiosa", nil)
-	RecordPolecatSpawn(ctx, "nux", errors.New("spawn error"))
+	RecordMinerSpawn(ctx, "furiosa", nil)
+	RecordMinerSpawn(ctx, "nux", errors.New("spawn error"))
 }
 
-func TestRecordPolecatRemove(t *testing.T) {
+func TestRecordMinerRemove(t *testing.T) {
 	resetInstruments(t)
 	ctx := context.Background()
 
-	RecordPolecatRemove(ctx, "furiosa", nil)
-	RecordPolecatRemove(ctx, "nux", errors.New("remove error"))
+	RecordMinerRemove(ctx, "furiosa", nil)
+	RecordMinerRemove(ctx, "nux", errors.New("remove error"))
 }
 
 func TestRecordSling(t *testing.T) {
@@ -233,9 +233,9 @@ func TestRecordDaemonRestart(t *testing.T) {
 	resetInstruments(t)
 	ctx := context.Background()
 
-	RecordDaemonRestart(ctx, "deacon")
+	RecordDaemonRestart(ctx, "supervisor")
 	RecordDaemonRestart(ctx, "witness")
-	RecordDaemonRestart(ctx, "polecat")
+	RecordDaemonRestart(ctx, "miner")
 }
 
 func TestRecordFormulaInstantiate(t *testing.T) {
@@ -246,19 +246,19 @@ func TestRecordFormulaInstantiate(t *testing.T) {
 	RecordFormulaInstantiate(ctx, "bad-formula", "", errors.New("instantiation error"))
 }
 
-func TestRecordConvoyCreate(t *testing.T) {
+func TestRecordMinecartCreate(t *testing.T) {
 	resetInstruments(t)
 	ctx := context.Background()
 
-	RecordConvoyCreate(ctx, "bead-abc", nil)
-	RecordConvoyCreate(ctx, "bead-def", errors.New("convoy error"))
+	RecordMinecartCreate(ctx, "bead-abc", nil)
+	RecordMinecartCreate(ctx, "bead-def", errors.New("minecart error"))
 }
 
 func TestRecordMolCook(t *testing.T) {
 	resetInstruments(t)
 	ctx := context.Background()
 
-	RecordMolCook(ctx, "mol-polecat-work", nil)
+	RecordMolCook(ctx, "mol-miner-work", nil)
 	RecordMolCook(ctx, "bad-formula", errors.New("cook error"))
 }
 
@@ -266,8 +266,8 @@ func TestRecordMolWisp(t *testing.T) {
 	resetInstruments(t)
 	ctx := context.Background()
 
-	RecordMolWisp(ctx, "mol-polecat-work", "gt-abc12", "bead-456", nil)
-	RecordMolWisp(ctx, "mol-polecat-work", "", "", errors.New("wisp error"))
+	RecordMolWisp(ctx, "mol-miner-work", "gt-abc12", "bead-456", nil)
+	RecordMolWisp(ctx, "mol-miner-work", "", "", errors.New("wisp error"))
 	RecordMolWisp(ctx, "formula-standalone", "gt-abc12", "", nil) // standalone (no bead)
 }
 
@@ -291,6 +291,6 @@ func TestRecordBeadCreate(t *testing.T) {
 	resetInstruments(t)
 	ctx := context.Background()
 
-	RecordBeadCreate(ctx, "gt-abc12.s01", "gt-abc12", "mol-polecat-work")
+	RecordBeadCreate(ctx, "gt-abc12.s01", "gt-abc12", "mol-miner-work")
 	RecordBeadCreate(ctx, "gt-def34.s01", "gt-def34", "mol-review")
 }

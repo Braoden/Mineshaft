@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/constants"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/constants"
 )
 
 func TestGetFormulaNames(t *testing.T) {
@@ -21,7 +21,7 @@ func TestGetFormulaNames(t *testing.T) {
 
 	// Create some formula files
 	formulas := []string{
-		constants.MolDeaconPatrol + ".formula.toml",
+		constants.MolSupervisorPatrol + ".formula.toml",
 		constants.MolWitnessPatrol + ".formula.toml",
 		"shiny.formula.toml",
 	}
@@ -43,7 +43,7 @@ func TestGetFormulaNames(t *testing.T) {
 		t.Fatal("getFormulaNames returned nil")
 	}
 
-	expected := []string{constants.MolDeaconPatrol, constants.MolWitnessPatrol, "shiny"}
+	expected := []string{constants.MolSupervisorPatrol, constants.MolWitnessPatrol, "shiny"}
 	for _, name := range expected {
 		if !names[name] {
 			t.Errorf("expected formula name %q not found", name)
@@ -77,14 +77,14 @@ func TestGetFormulaNames_NonexistentDir(t *testing.T) {
 
 func TestFilterFormulaScaffolds(t *testing.T) {
 	formulaNames := map[string]bool{
-		constants.MolDeaconPatrol:  true,
+		constants.MolSupervisorPatrol:  true,
 		constants.MolWitnessPatrol: true,
 	}
 
 	issues := []*beads.Issue{
-		{ID: constants.MolDeaconPatrol, Title: constants.MolDeaconPatrol},
-		{ID: constants.MolDeaconPatrol + ".inbox-check", Title: "Handle callbacks"},
-		{ID: constants.MolDeaconPatrol + ".health-scan", Title: "Check health"},
+		{ID: constants.MolSupervisorPatrol, Title: constants.MolSupervisorPatrol},
+		{ID: constants.MolSupervisorPatrol + ".inbox-check", Title: "Handle callbacks"},
+		{ID: constants.MolSupervisorPatrol + ".health-scan", Title: "Check health"},
 		{ID: constants.MolWitnessPatrol, Title: constants.MolWitnessPatrol},
 		{ID: constants.MolWitnessPatrol + ".loop-or-exit", Title: "Loop or exit"},
 		{ID: "hq-123", Title: "Real work item"},
@@ -114,7 +114,7 @@ func TestFilterFormulaScaffolds(t *testing.T) {
 func TestFilterFormulaScaffolds_NilFormulaNames(t *testing.T) {
 	issues := []*beads.Issue{
 		{ID: "hq-123", Title: "Real work"},
-		{ID: constants.MolDeaconPatrol, Title: "Would be filtered"},
+		{ID: constants.MolSupervisorPatrol, Title: "Would be filtered"},
 	}
 
 	// With nil formula names, should return all issues unchanged
@@ -127,7 +127,7 @@ func TestFilterFormulaScaffolds_NilFormulaNames(t *testing.T) {
 func TestFilterFormulaScaffolds_EmptyFormulaNames(t *testing.T) {
 	issues := []*beads.Issue{
 		{ID: "hq-123", Title: "Real work"},
-		{ID: constants.MolDeaconPatrol, Title: "Would be filtered"},
+		{ID: constants.MolSupervisorPatrol, Title: "Would be filtered"},
 	}
 
 	// With empty formula names, should return all issues unchanged
@@ -138,7 +138,7 @@ func TestFilterFormulaScaffolds_EmptyFormulaNames(t *testing.T) {
 }
 
 func TestFilterFormulaScaffolds_EmptyIssues(t *testing.T) {
-	formulaNames := map[string]bool{constants.MolDeaconPatrol: true}
+	formulaNames := map[string]bool{constants.MolSupervisorPatrol: true}
 	filtered := filterFormulaScaffolds([]*beads.Issue{}, formulaNames)
 	if len(filtered) != 0 {
 		t.Errorf("got %d issues, want 0", len(filtered))
@@ -176,10 +176,10 @@ exit 1
 
 func TestFilterFormulaScaffolds_DotInNonScaffold(t *testing.T) {
 	// Issue ID has a dot but prefix is not a formula name
-	formulaNames := map[string]bool{constants.MolDeaconPatrol: true}
+	formulaNames := map[string]bool{constants.MolSupervisorPatrol: true}
 
 	issues := []*beads.Issue{
-		{ID: "hq-cv.synthesis-step", Title: "Convoy synthesis"},
+		{ID: "hq-cv.synthesis-step", Title: "Minecart synthesis"},
 		{ID: "some.other.thing", Title: "Random dotted ID"},
 	}
 
@@ -197,8 +197,8 @@ func TestFilterReadyIssuesByRoute(t *testing.T) {
 	routes := strings.Join([]string{
 		`{"prefix":"hq-","path":"."}`,
 		`{"prefix":"hq-cv-","path":"."}`,
-		`{"prefix":"bds-","path":"bd_symphony/mayor/rig"}`,
-		`{"prefix":"gt-","path":"gastown/mayor/rig"}`,
+		`{"prefix":"bds-","path":"bd_symphony/overseer/rig"}`,
+		`{"prefix":"gt-","path":"excavation/overseer/rig"}`,
 	}, "\n") + "\n"
 	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(routes), 0644); err != nil {
 		t.Fatalf("writing routes: %v", err)
@@ -206,7 +206,7 @@ func TestFilterReadyIssuesByRoute(t *testing.T) {
 
 	issues := []*beads.Issue{
 		{ID: "hq-123", Title: "town work"},
-		{ID: "hq-cv-123", Title: "town convoy"},
+		{ID: "hq-cv-123", Title: "town minecart"},
 		{ID: "bds-town-stale", Title: "wrongly-created town bds row"},
 		{ID: "unknown-123", Title: "unknown route"},
 	}

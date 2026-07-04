@@ -8,7 +8,7 @@ import (
 func TestCleanGTEnv_PreservesDoltPort(t *testing.T) {
 	t.Setenv("GT_DOLT_PORT", "13307")
 	t.Setenv("GT_TOWN_ROOT", "/some/town")
-	t.Setenv("BD_ACTOR", "polecat/test")
+	t.Setenv("BD_ACTOR", "miner/test")
 
 	env := CleanGTEnv()
 

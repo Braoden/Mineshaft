@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/util"
+	"github.com/steveyegge/excavation/internal/util"
 )
 
 var errNoComparisonRefs = errors.New("no comparison refs resolved")
@@ -68,8 +68,8 @@ type Git struct {
 }
 
 // ErrUnsafeTownRootGitMutation is returned when a mutating git operation would
-// act on the Gas Town town-root repository or town-root runtime paths.
-var ErrUnsafeTownRootGitMutation = errors.New("unsafe git mutation targets Gas Town town root")
+// act on the Excavation Site town-root repository or town-root runtime paths.
+var ErrUnsafeTownRootGitMutation = errors.New("unsafe git mutation targets Excavation Site town root")
 
 // NewGit creates a new Git wrapper for the given directory.
 func NewGit(workDir string) *Git {
@@ -262,7 +262,7 @@ func gitEffectiveWorkDir(args []string, workDir string) string {
 }
 
 // EnsureSafeMutationWorkDir fails when workDir's effective git worktree is the
-// Gas Town town root. Raw git callsites use this before mutating commands.
+// Excavation Site town root. Raw git callsites use this before mutating commands.
 func EnsureSafeMutationWorkDir(workDir string) error {
 	if workDir == "" {
 		return nil
@@ -297,7 +297,7 @@ func gitTopLevel(workDir string) (string, bool) {
 }
 
 func isTownRoot(path string) bool {
-	return fileExists(filepath.Join(path, "mayor", "town.json")) || fileExists(filepath.Join(path, "mayor", "rigs.json"))
+	return fileExists(filepath.Join(path, "overseer", "town.json")) || fileExists(filepath.Join(path, "overseer", "rigs.json"))
 }
 
 func fileExists(path string) bool {
@@ -548,7 +548,7 @@ func protectedTownRuntimePath(path string) bool {
 				first = rel[:idx]
 			}
 			switch first {
-			case "mayor", ".dolt-data", ".runtime", ".beads", "daemon":
+			case "overseer", ".dolt-data", ".runtime", ".beads", "daemon":
 				return true
 			default:
 				return false
@@ -677,7 +677,7 @@ func (g *Git) cloneInternal(url, dest string, opts cloneOptions) error {
 		// fetching all branches (which would defeat the purpose of --single-branch).
 		return configureRefspec(dest, opts.singleBranch)
 	}
-	// Configure hooks path for Gas Town clones
+	// Configure hooks path for Excavation Site clones
 	if err := configureHooksPath(dest); err != nil {
 		return err
 	}
@@ -753,7 +753,7 @@ func (g *Git) CloneBranchPartial(url, dest, branch, filter string) error {
 }
 
 // configureHooksPath sets core.hooksPath to use the repo's .githooks directory
-// if it exists. This ensures Gas Town agents use the pre-push hook that blocks
+// if it exists. This ensures Excavation Site agents use the pre-push hook that blocks
 // pushes to non-main branches (internal PRs are not allowed).
 func configureHooksPath(repoPath string) error {
 	hooksDir := filepath.Join(repoPath, ".githooks")
@@ -781,7 +781,7 @@ func (g *Git) ConfigureHooksPath() error {
 // Bare clones don't have this set by default, which breaks worktrees that need to
 // fetch and see origin/* refs. Without this, `git fetch` only updates FETCH_HEAD
 // and origin/main never appears in refs/remotes/origin/main.
-// See: https://github.com/anthropics/gastown/issues/286
+// See: https://github.com/anthropics/excavation/issues/286
 //
 // When singleBranch is true, fetches only the default branch's ref instead of all
 // branches. This prevents failures on repos with many branches where a full fetch
@@ -1041,7 +1041,7 @@ func (g *Git) RefuseForkBackedDefaultPush(remote, refspec, defaultBranch string)
 	if destination != defaultBranch || !g.ForkBackedRemote(remote) {
 		return nil
 	}
-	return fmt.Errorf("refusing direct push to %s/%s: fork/upstream rig detected; push a feature branch and use the Mayor-managed fork PR flow to upstream %s (no refs were pushed)", remote, destination, defaultBranch)
+	return fmt.Errorf("refusing direct push to %s/%s: fork/upstream rig detected; push a feature branch and use the Overseer-managed fork PR flow to upstream %s (no refs were pushed)", remote, destination, defaultBranch)
 }
 
 func pushDestinationBranch(refspec string) string {
@@ -1219,7 +1219,7 @@ func (g *Git) Status() (*GitStatus, error) {
 	// Get skip-worktree files once (sparse checkout). These appear as 'D' in
 	// --porcelain output but are not real deletions — they are hidden by the
 	// sparse-checkout cone. Filtering them prevents gt done from blocking on
-	// 897+ phantom deletions in polecat sparse worktrees.
+	// 897+ phantom deletions in miner sparse worktrees.
 	skipWorktree := g.skipWorktreeFiles()
 
 	status.Clean = false
@@ -1732,8 +1732,8 @@ type RemoteRef struct {
 }
 
 // ListRemoteRefsWithHashes returns remote refs matching a prefix using ls-remote.
-// The prefix filters refs (e.g., "refs/heads/polecat/" for all polecat branches).
-// Returns full ref names like "refs/heads/polecat/furiosa-abc123".
+// The prefix filters refs (e.g., "refs/heads/miner/" for all miner branches).
+// Returns full ref names like "refs/heads/miner/furiosa-abc123".
 func (g *Git) ListRemoteRefsWithHashes(remote, prefix string) ([]RemoteRef, error) {
 	out, err := g.run("ls-remote", "--refs", remote, prefix+"*")
 	if err != nil {
@@ -2107,7 +2107,7 @@ func (g *Git) DeleteBranch(name string, force bool) error {
 }
 
 // ListBranches returns all local branches matching a pattern.
-// Pattern uses git's pattern matching (e.g., "polecat/*" matches all polecat branches).
+// Pattern uses git's pattern matching (e.g., "miner/*" matches all miner branches).
 // Returns branch names without the refs/heads/ prefix.
 func (g *Git) ListBranches(pattern string) ([]string, error) {
 	args := []string{"branch", "--list", "--format=%(refname:short)"}
@@ -2125,7 +2125,7 @@ func (g *Git) ListBranches(pattern string) ([]string, error) {
 }
 
 // ResetBranch force-updates a branch to point to a ref.
-// This is useful for resetting stale polecat branches to main.
+// This is useful for resetting stale miner branches to main.
 // NOTE: This uses `git branch -f` which fails on the currently checked-out branch.
 // Use ResetHard instead when the target branch is checked out.
 func (g *Git) ResetBranch(name, ref string) error {
@@ -2235,25 +2235,25 @@ func (g *Git) WorktreeAddExistingForce(path, branch string) error {
 	return InitSubmodules(path, g.submoduleReferencePath())
 }
 
-// submoduleReferencePath returns the mayor/rig path to use as --reference
+// submoduleReferencePath returns the overseer/rig path to use as --reference
 // for submodule init. For bare repos (.repo.git), this resolves to the
-// sibling mayor/rig directory which contains the initialized submodules.
+// sibling overseer/rig directory which contains the initialized submodules.
 // Returns empty string if no suitable reference path exists or if the
 // reference repo is a shallow clone (git rejects shallow references).
 func (g *Git) submoduleReferencePath() string {
 	// For bare repos, the gitDir is <rig>/.repo.git
-	// The reference clone is at <rig>/mayor/rig/
+	// The reference clone is at <rig>/overseer/rig/
 	if g.gitDir != "" {
 		rigDir := filepath.Dir(g.gitDir)
-		mayorRig := filepath.Join(rigDir, "mayor", "rig")
-		if isValidSubmoduleReference(mayorRig) {
-			return mayorRig
+		overseerRig := filepath.Join(rigDir, "overseer", "rig")
+		if isValidSubmoduleReference(overseerRig) {
+			return overseerRig
 		}
 	}
 
-	// For regular clones (workDir-based), the workDir itself could be mayor/rig
+	// For regular clones (workDir-based), the workDir itself could be overseer/rig
 	// but we don't want to reference ourselves. Check for a sibling .repo.git
-	// to find the rig root, then use mayor/rig.
+	// to find the rig root, then use overseer/rig.
 	if g.workDir != "" {
 		dir := g.workDir
 		for i := 0; i < 4; i++ {
@@ -2262,9 +2262,9 @@ func (g *Git) submoduleReferencePath() string {
 				break
 			}
 			if _, err := os.Stat(filepath.Join(parent, ".repo.git")); err == nil {
-				mayorRig := filepath.Join(parent, "mayor", "rig")
-				if mayorRig != g.workDir && isValidSubmoduleReference(mayorRig) {
-					return mayorRig
+				overseerRig := filepath.Join(parent, "overseer", "rig")
+				if overseerRig != g.workDir && isValidSubmoduleReference(overseerRig) {
+					return overseerRig
 				}
 				break
 			}
@@ -2496,8 +2496,8 @@ func (g *Git) CheckBranchContamination(baseRef string) (BranchContamination, err
 
 // StashCount returns the number of stashes belonging to the current branch.
 // Git stashes are stored in the main repo (.git/refs/stash) and shared across
-// all worktrees. Counting all stashes is incorrect for worktree-based polecats:
-// a fresh polecat worktree would inherit stash count from siblings, blocking
+// all worktrees. Counting all stashes is incorrect for worktree-based miners:
+// a fresh miner worktree would inherit stash count from siblings, blocking
 // Remove(force=true) on work it never created. Filter by current branch name
 // to only count stashes that actually belong to this worktree.
 func (g *Git) StashCount() (int, error) {
@@ -2623,7 +2623,7 @@ func (g *Git) StashPop(ref string) error {
 }
 
 // UnpushedCommits returns the number of commits that are not pushed to the remote.
-// It prefers the exact remote branch when one exists, because polecat branches may
+// It prefers the exact remote branch when one exists, because miner branches may
 // track origin/main while pushing work to origin/<current-branch>.
 // Returns 0 if there is no upstream or exact remote branch configured.
 func (g *Git) UnpushedCommits() (int, error) {
@@ -2722,7 +2722,7 @@ func (g *Git) branchPreservationStatus(localBranch, remote string, targets []str
 
 	if upstream, err := g.run("rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"); err == nil && strings.TrimSpace(upstream) != "" {
 		upstream = strings.TrimSpace(upstream)
-		if includeExactBranch || !isPolecatSelfUpstream(localBranch, remote, upstream) {
+		if includeExactBranch || !isMinerSelfUpstream(localBranch, remote, upstream) {
 			hasEvidence = true
 			candidates = append(candidates, upstream)
 		}
@@ -2768,8 +2768,8 @@ func (g *Git) branchPreservationStatus(localBranch, remote string, targets []str
 	return result, fmt.Errorf("no usable comparison refs")
 }
 
-func isPolecatSelfUpstream(localBranch, remote, upstream string) bool {
-	return strings.HasPrefix(localBranch, "polecat/") && upstream == remote+"/"+localBranch
+func isMinerSelfUpstream(localBranch, remote, upstream string) bool {
+	return strings.HasPrefix(localBranch, "miner/") && upstream == remote+"/"+localBranch
 }
 
 func (g *Git) refContainsHead(ref string) (bool, error) {
@@ -2862,7 +2862,7 @@ func (s *UncommittedWorkStatus) Clean() bool {
 }
 
 // CleanExcludingBeads returns true if the only uncommitted changes are .beads/ files.
-// This is useful for polecat stale detection where beads database files are synced
+// This is useful for miner stale detection where beads database files are synced
 // across worktrees and shouldn't block cleanup.
 func (s *UncommittedWorkStatus) CleanExcludingBeads() bool {
 	// Stashes and unpushed commits always count as uncommitted work
@@ -2919,10 +2919,10 @@ func runtimeArtifactRoot(path string) (string, bool) {
 	return "", false
 }
 
-// isGasTownRuntimePath returns true if the path is a runtime artifact that should
+// isExcavationRuntimePath returns true if the path is a runtime artifact that should
 // not block gt done. These paths are managed by tooling or test/build commands,
-// not by the developer, and must not be auto-saved into polecat MRs.
-func isGasTownRuntimePath(path string) bool {
+// not by the developer, and must not be auto-saved into miner MRs.
+func isExcavationRuntimePath(path string) bool {
 	_, ok := runtimeArtifactRoot(path)
 	return ok
 }
@@ -2959,7 +2959,7 @@ func (s *UncommittedWorkStatus) NonRuntimePaths() []string {
 	var paths []string
 	paths = append(paths, s.UnmergedFiles...)
 	for _, f := range append(append([]string{}, s.ModifiedFiles...), s.UntrackedFiles...) {
-		if !isGasTownRuntimePath(f) {
+		if !isExcavationRuntimePath(f) {
 			paths = append(paths, f)
 		}
 	}
@@ -2981,13 +2981,13 @@ func (s *UncommittedWorkStatus) CleanExcludingRuntime() bool {
 	}
 
 	for _, f := range s.ModifiedFiles {
-		if !isGasTownRuntimePath(f) {
+		if !isExcavationRuntimePath(f) {
 			return false
 		}
 	}
 
 	for _, f := range s.UntrackedFiles {
-		if !isGasTownRuntimePath(f) {
+		if !isExcavationRuntimePath(f) {
 			return false
 		}
 	}
@@ -3050,7 +3050,7 @@ func (g *Git) CheckUncommittedWork() (*UncommittedWorkStatus, error) {
 
 // BranchPushedToRemote checks if a branch has been pushed to the remote.
 // Returns (pushed bool, unpushedCount int, err).
-// This handles polecat branches that don't have upstream tracking configured.
+// This handles miner branches that don't have upstream tracking configured.
 func (g *Git) BranchPushedToRemote(localBranch, remote string) (bool, int, error) {
 	status, err := g.BranchPreservationStatus(localBranch, remote, nil)
 	if err != nil {
@@ -3061,7 +3061,7 @@ func (g *Git) BranchPushedToRemote(localBranch, remote string) (bool, int, error
 
 // PrunedBranch represents a local branch that was pruned (or would be pruned in dry-run).
 type PrunedBranch struct {
-	Name   string // Branch name (e.g., "polecat/rictus-mkb0vq9f")
+	Name   string // Branch name (e.g., "miner/rictus-mkb0vq9f")
 	Reason string // Why it was pruned: "merged", "no-remote", "no-remote-merged"
 }
 
@@ -3069,7 +3069,7 @@ type PrunedBranch struct {
 // stale — either fully merged to the default branch or whose remote tracking branch
 // no longer exists (indicating the remote branch was deleted after merge).
 //
-// This addresses cross-clone branch accumulation: when polecats push branches to
+// This addresses cross-clone branch accumulation: when miners push branches to
 // origin, other clones create local tracking branches via git fetch. After the
 // remote branch is deleted (post-merge), git fetch --prune removes the remote
 // tracking ref but the local branch persists indefinitely.
@@ -3078,7 +3078,7 @@ type PrunedBranch struct {
 // Uses git branch -d (not -D), so only fully-merged branches are deleted.
 func (g *Git) PruneStaleBranches(pattern string, dryRun bool) ([]PrunedBranch, error) {
 	if pattern == "" {
-		pattern = "polecat/*"
+		pattern = "miner/*"
 	}
 
 	// Get current branch to avoid deleting it
@@ -3188,7 +3188,7 @@ func InitSubmodules(repoPath string, referencePath ...string) error {
 
 // hasTrackedGitmodules checks whether .gitmodules exists on disk AND is tracked
 // by git. After a submodule-to-monorepo migration, .gitmodules may linger as an
-// untracked file (e.g., in a stale mayor/rig clone or bare repo worktree) even
+// untracked file (e.g., in a stale overseer/rig clone or bare repo worktree) even
 // though it has been removed from the repository. Checking only os.Stat would
 // incorrectly trigger submodule init on these stale artifacts.
 func hasTrackedGitmodules(repoPath string) bool {

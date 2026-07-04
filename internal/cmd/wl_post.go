@@ -5,10 +5,10 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/doltserver"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/wasteland"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/doltserver"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/wasteland"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var (
@@ -33,7 +33,7 @@ The posted_by field is set to the rig's DoltHub org (DOLTHUB_ORG) or
 falls back to the directory name.
 
 Examples:
-  gt wl post --title "Fix auth bug" --project gastown --type bug
+  gt wl post --title "Fix auth bug" --project excavation --type bug
   gt wl post --title "Add federation sync" --type feature --priority 1 --effort large
   gt wl post --title "Update docs" --tags "docs,federation" --effort small`,
 	RunE: runWlPost,
@@ -42,7 +42,7 @@ Examples:
 func init() {
 	wlPostCmd.Flags().StringVar(&wlPostTitle, "title", "", "Title of the wanted item (required)")
 	wlPostCmd.Flags().StringVarP(&wlPostDescription, "description", "d", "", "Detailed description")
-	wlPostCmd.Flags().StringVar(&wlPostProject, "project", "", "Project name (e.g., gastown, beads)")
+	wlPostCmd.Flags().StringVar(&wlPostProject, "project", "", "Project name (e.g., excavation, beads)")
 	wlPostCmd.Flags().StringVar(&wlPostType, "type", "", "Item type: feature, bug, design, rfc, docs")
 	wlPostCmd.Flags().IntVar(&wlPostPriority, "priority", 2, "Priority: 0=critical, 1=high, 2=medium, 3=low, 4=backlog")
 	wlPostCmd.Flags().StringVar(&wlPostEffort, "effort", "medium", "Effort level: trivial, small, medium, large, epic")
@@ -56,7 +56,7 @@ func init() {
 func runWlPost(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	var tags []string

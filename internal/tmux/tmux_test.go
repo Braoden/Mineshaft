@@ -978,7 +978,7 @@ func TestCleanupOrphanedSessions(t *testing.T) {
 	// newTestTmux creates an isolated tmux server (unique socket per test).
 	// CleanupOrphanedSessions operates on the Tmux receiver which carries that
 	// socket, so it can only see sessions on this isolated server — never real
-	// polecats or user sessions.
+	// miners or user sessions.
 	//
 	// History: this test previously used NewTmux() (default server) and killed
 	// 8 production crew sessions during a patrol run. The env-var guard added in
@@ -1529,8 +1529,8 @@ func TestValidateSessionName(t *testing.T) {
 		session string
 		wantErr bool
 	}{
-		{"valid alphanumeric", "gt-gastown-crew-tom", false},
-		{"valid with underscore", "hq_deacon", false},
+		{"valid alphanumeric", "gt-excavation-crew-tom", false},
+		{"valid with underscore", "hq_supervisor", false},
 		{"valid simple", "test123", false},
 		{"empty string", "", true},
 		{"contains dot", "my.session", true},
@@ -1889,7 +1889,7 @@ func TestAdaptiveTextDelay(t *testing.T) {
 // TestMatchesPromptPrefix verifies that prompt matching handles non-breaking
 // spaces (NBSP, U+00A0) correctly. Claude Code uses NBSP after its > prompt
 // character, but the default ReadyPromptPrefix uses a regular space.
-// Regression test for https://github.com/steveyegge/gastown/issues/1387.
+// Regression test for https://github.com/steveyegge/excavation/issues/1387.
 func TestMatchesPromptPrefix(t *testing.T) {
 	t.Parallel()
 	const (
@@ -1993,7 +1993,7 @@ func TestHasBusyIndicator(t *testing.T) {
 
 // TestShouldSendEscapeForLines guards against the regression where a nudge
 // sends the vim-mode Escape keystroke while the agent is actively generating,
-// interrupting its current turn (e.g. the Mayor). When the pane shows the busy
+// interrupting its current turn (e.g. the Overseer). When the pane shows the busy
 // indicator ("esc to interrupt"), the Escape must be suppressed.
 func TestShouldSendEscapeForLines(t *testing.T) {
 	t.Parallel()
@@ -2247,7 +2247,7 @@ func TestGetKeyBinding_CapturesDefaultBinding(t *testing.T) {
 	// Query the default tmux binding for prefix-n (next-window).
 	// This works without a running tmux server because list-keys
 	// returns builtin defaults. Skip if already a GT binding (e.g.,
-	// when running inside an active gastown session).
+	// when running inside an active excavation session).
 	result := tm.getKeyBinding("prefix", "n")
 	if result == "" && tm.isGTBinding("prefix", "n") {
 		t.Skip("prefix-n is already a GT binding in this environment")
@@ -2267,7 +2267,7 @@ func TestGetKeyBinding_CapturesDefaultBindingWithArgs(t *testing.T) {
 	}
 }
 
-func TestGetKeyBinding_SkipsGasTownBindings(t *testing.T) {
+func TestGetKeyBinding_SkipsExcavationBindings(t *testing.T) {
 	tm := newTestTmux(t)
 
 	// Bootstrap the isolated server (bind-key requires a running server)
@@ -2285,7 +2285,7 @@ func TestGetKeyBinding_SkipsGasTownBindings(t *testing.T) {
 
 	result := tm.getKeyBinding("prefix", "F11")
 	if result != "" {
-		t.Errorf("expected empty string for Gas Town binding, got %q", result)
+		t.Errorf("expected empty string for Excavation Site binding, got %q", result)
 	}
 
 	// Clean up
@@ -2317,7 +2317,7 @@ func TestGetKeyBinding_CapturesUserBinding(t *testing.T) {
 	_, _ = tm.run("unbind-key", "-T", "prefix", "F11")
 }
 
-func TestIsGTBinding_DetectsGasTownBindings(t *testing.T) {
+func TestIsGTBinding_DetectsExcavationBindings(t *testing.T) {
 	tm := newTestTmux(t)
 
 	// Bootstrap the isolated server (bind-key requires a running server)

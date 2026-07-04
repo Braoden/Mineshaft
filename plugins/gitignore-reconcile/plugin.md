@@ -21,7 +21,7 @@ severity = "low"
 
 Scans all rig repos for files that are tracked in git but now match an active
 `.gitignore` rule. On clean `main` branches, runs `git rm --cached` to untrack
-them and commits. On dirty branches or active polecat worktrees, creates a
+them and commits. On dirty branches or active miner worktrees, creates a
 chore bead instead to avoid interference.
 
 Root cause: `.gitignore` rules only block NEW files. Files committed before the
@@ -76,13 +76,13 @@ while IFS= read -r REPO_PATH; do
   # Check branch state
   CURRENT_BRANCH=$(git -C "$REPO_PATH" branch --show-current 2>/dev/null)
   IS_DIRTY=$(git -C "$REPO_PATH" status --porcelain 2>/dev/null | grep -v "^??" | head -1)
-  HAS_POLECATS=$(git -C "$REPO_PATH" branch 2>/dev/null | grep -E "^\+?\s+polecat/" | head -1)
+  HAS_MINERS=$(git -C "$REPO_PATH" branch 2>/dev/null | grep -E "^\+?\s+miner/" | head -1)
 
-  if [ -n "$IS_DIRTY" ] || [ -n "$HAS_POLECATS" ] || [ "$CURRENT_BRANCH" != "main" ]; then
+  if [ -n "$IS_DIRTY" ] || [ -n "$HAS_MINERS" ] || [ "$CURRENT_BRANCH" != "main" ]; then
     # Create a chore bead instead of interfering
     REASON=""
     [ -n "$IS_DIRTY" ] && REASON="dirty working tree"
-    [ -n "$HAS_POLECATS" ] && REASON="${REASON:+$REASON, }active polecat worktrees"
+    [ -n "$HAS_MINERS" ] && REASON="${REASON:+$REASON, }active miner worktrees"
     [ "$CURRENT_BRANCH" != "main" ] && REASON="${REASON:+$REASON, }not on main ($CURRENT_BRANCH)"
     echo "  SKIP: $REASON — creating chore bead"
     REPO_NAME=$(basename "$REPO_PATH")
@@ -95,7 +95,7 @@ while IFS= read -r REPO_PATH; do
     continue
   fi
 
-  # Safe to untrack: clean main branch, no active polecats
+  # Safe to untrack: clean main branch, no active miners
   echo "$IGNORED_TRACKED" | while IFS= read -r FILE; do
     [ -z "$FILE" ] && continue
     echo "  Untracking: $FILE"
@@ -111,7 +111,7 @@ while IFS= read -r REPO_PATH; do
 Auto-committed by gitignore-reconcile plugin.
 Files untracked:
 $(echo "$STAGED" | head -10)$([ $(echo "$STAGED" | wc -l) -gt 10 ] && echo "...and more")" \
-      --author="Gas Town <gastown@local>" 2>/dev/null || true
+      --author="Excavation Site <excavation@local>" 2>/dev/null || true
     echo "  Committed untracking of $COUNT file(s)"
     TOTAL_UNTRACKED=$((TOTAL_UNTRACKED + COUNT))
 

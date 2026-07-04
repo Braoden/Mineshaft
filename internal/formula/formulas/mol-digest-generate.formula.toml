@@ -1,8 +1,8 @@
 description = """
-Generate daily digest for overseer (Mayor).
+Generate daily digest for boss (Overseer).
 
 Dogs work through molecules (poured from this formula) on a scheduled basis (daily, or triggered by plugin)
-to create summary digests of Gas Town activity. This aggregates:
+to create summary digests of Excavation Site activity. This aggregates:
 - Work completed across all rigs
 - Issues filed and closed
 - Incidents and escalations
@@ -15,7 +15,7 @@ This is infrastructure work. You:
 1. Receive digest period via hook_bead (e.g., daily, weekly)
 2. Collect data from all rigs you have access to
 3. Generate formatted digest
-4. Send to overseer
+4. Send to boss
 5. Archive digest as bead
 6. Return to kennel
 
@@ -30,7 +30,7 @@ This is infrastructure work. You:
 ## Why Dogs?
 
 Digest generation requires reading from multiple rigs. Dogs have multi-rig
-worktrees. This is also a periodic task that doesn't need a dedicated polecat."""
+worktrees. This is also a periodic task that doesn't need a dedicated miner."""
 formula = "mol-digest-generate"
 version = 1
 
@@ -79,7 +79,7 @@ Gather activity data from each rig in the town.
 **1. List accessible rigs:**
 ```bash
 gt rigs
-# Returns list of rigs: gastown, beads, etc.
+# Returns list of rigs: excavation, beads, etc.
 ```
 
 **2. For each rig, collect:**
@@ -93,7 +93,7 @@ bd list --status=closed --updated-after={{since}}
 
 b) **Agent activity:**
 ```bash
-gt polecats <rig>           # Polecat activity
+gt miners <rig>           # Miner activity
 gt feed --since={{since}}   # Activity feed entries
 ```
 
@@ -135,7 +135,7 @@ Transform collected data into formatted digest.
 
 **3. Generate digest text:**
 ```markdown
-# Gas Town Daily Digest: {{date}}
+# Excavation Site Daily Digest: {{date}}
 
 ## Summary
 - **Issues filed**: N (tasks: X, bugs: Y, features: Z)
@@ -143,21 +143,21 @@ Transform collected data into formatted digest.
 - **Net change**: +/-N
 
 ## By Rig
-| Rig | Filed | Closed | Active Polecats |
+| Rig | Filed | Closed | Active Miners |
 |-----|-------|--------|-----------------|
-| gastown | X | Y | Z |
+| excavation | X | Y | Z |
 | beads | X | Y | Z |
 
 ## Highlights
 ### Completed
-- {{epic or feature}} - completed by {{polecat}}
+- {{epic or feature}} - completed by {{miner}}
 
 ### Incidents
 - {{incident summary if any}}
 
 ## Agent Health
-- Polecats spawned: N
-- Polecats retired: N
+- Miners spawned: N
+- Miners retired: N
 - Average work duration: Xh
 
 ## Trends
@@ -169,14 +169,14 @@ Transform collected data into formatted digest.
 
 [[steps]]
 id = "send-digest"
-title = "Send digest to overseer"
+title = "Send digest to boss"
 needs = ["generate-digest"]
 description = """
-Deliver digest to the Mayor.
+Deliver digest to the Overseer.
 
 **1. Send via mail:**
 ```bash
-gt mail send mayor/ -s "Gas Town Digest: {{date}}" -m "$(cat <<EOF
+gt mail send overseer/ -s "Excavation Site Digest: {{date}}" -m "$(cat <<EOF
 {{formatted_digest}}
 EOF
 )"
@@ -195,7 +195,7 @@ bd create --title="Digest: {{date}}" --type=digest \
 bd sync
 ```
 
-**Exit criteria:** Digest sent to Mayor and archived as bead."""
+**Exit criteria:** Digest sent to Overseer and archived as bead."""
 
 [[steps]]
 id = "return-to-kennel"
@@ -204,21 +204,21 @@ needs = ["send-digest"]
 description = """
 Signal work complete and return to available pool.
 
-**1. Signal completion to Deacon:**
+**1. Signal completion to Supervisor:**
 ```bash
-gt mail send deacon/ -s "DOG_DONE $(hostname)" -m "Task: digest-generate
+gt mail send supervisor/ -s "DOG_DONE $(hostname)" -m "Task: digest-generate
 Period: {{period}}
 Date range: {{since}} to {{until}}
 Status: COMPLETE
 
-Digest sent to Mayor.
+Digest sent to Overseer.
 Ready for next assignment."
 ```
 
 **2. Return to kennel:**
 Dog returns to available state in the pool.
 
-**Exit criteria:** Deacon notified, dog ready for next work."""
+**Exit criteria:** Supervisor notified, dog ready for next work."""
 
 [vars]
 [vars.period]
@@ -234,8 +234,8 @@ default = ""
 description = "The formatted digest text (computed during execution)"
 default = ""
 
-[vars.polecat]
-description = "Polecat name for attribution (computed during execution)"
+[vars.miner]
+description = "Miner name for attribution (computed during execution)"
 default = ""
 
 [vars.since]

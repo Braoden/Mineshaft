@@ -19,8 +19,8 @@ func buildGTResourceAttrs() string {
 	if v := os.Getenv("BD_ACTOR"); v != "" {
 		attrs = append(attrs, "gt.actor="+v)
 	}
-	// Polecat and crew carry their agent name in different vars.
-	if v := os.Getenv("GT_POLECAT"); v != "" {
+	// Miner and crew carry their agent name in different vars.
+	if v := os.Getenv("GT_MINER"); v != "" {
 		attrs = append(attrs, "gt.agent="+v)
 	} else if v := os.Getenv("GT_CREW"); v != "" {
 		attrs = append(attrs, "gt.agent="+v)

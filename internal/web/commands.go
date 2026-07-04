@@ -16,9 +16,9 @@ type CommandMeta struct {
 	Desc string
 	// Category groups commands in the palette UI
 	Category string
-	// Args is a placeholder hint for required arguments (e.g., "<convoy-id>")
+	// Args is a placeholder hint for required arguments (e.g., "<minecart-id>")
 	Args string
-	// ArgType specifies what kind of options to show (rigs, polecats, convoys, agents, hooks)
+	// ArgType specifies what kind of options to show (rigs, miners, minecarts, agents, hooks)
 	ArgType string
 }
 
@@ -28,9 +28,9 @@ var AllowedCommands = map[string]CommandMeta{
 	// === Read-only commands (always safe) ===
 	"status":      {Safe: true, Desc: "Show town status", Category: "Status"},
 	"agents list": {Safe: true, Desc: "List active agents", Category: "Status"},
-	"convoy list": {Safe: true, Desc: "List convoys", Category: "Convoys"},
-	"convoy show":   {Safe: true, Desc: "Show convoy details", Category: "Convoys", Args: "<convoy-id>", ArgType: "convoys"},
-	"convoy status": {Safe: true, Desc: "Show convoy status with tracked issues", Category: "Convoys", Args: "<convoy-id> --json", ArgType: "convoys"},
+	"minecart list": {Safe: true, Desc: "List minecarts", Category: "Minecarts"},
+	"minecart show":   {Safe: true, Desc: "Show minecart details", Category: "Minecarts", Args: "<minecart-id>", ArgType: "minecarts"},
+	"minecart status": {Safe: true, Desc: "Show minecart status with tracked issues", Category: "Minecarts", Args: "<minecart-id> --json", ArgType: "minecarts"},
 	"mail inbox":  {Safe: true, Desc: "Check inbox", Category: "Mail"},
 	"mail check":  {Safe: true, Desc: "Check for new mail", Category: "Mail"},
 	"mail peek":   {Safe: true, Desc: "Peek at message", Category: "Mail", Args: "<message-id>"},
@@ -43,9 +43,9 @@ var AllowedCommands = map[string]CommandMeta{
 	"log":         {Safe: true, Desc: "View logs", Category: "Diagnostics"},
 	"audit":       {Safe: true, Desc: "View audit log", Category: "Diagnostics"},
 
-	// Polecat read-only
-	"polecat list --all": {Safe: true, Desc: "List all polecats", Category: "Polecats"},
-	"polecat show":       {Safe: true, Desc: "Show polecat details", Category: "Polecats", Args: "<rig>/<name>", ArgType: "polecats"},
+	// Miner read-only
+	"miner list --all": {Safe: true, Desc: "List all miners", Category: "Miners"},
+	"miner show":       {Safe: true, Desc: "Show miner details", Category: "Miners", Args: "<rig>/<name>", ArgType: "miners"},
 
 	// Crew read-only
 	"crew list --all": {Safe: true, Desc: "List all crew members", Category: "Crew"},
@@ -64,10 +64,10 @@ var AllowedCommands = map[string]CommandMeta{
 	"escalate resolve":  {Confirm: true, Desc: "Resolve escalation", Category: "Escalations", Args: "<escalation-id>", ArgType: "escalations"},
 	"escalate reassign": {Confirm: true, Desc: "Reassign escalation", Category: "Escalations", Args: "<escalation-id> <agent>", ArgType: "escalations"},
 
-	// Convoy actions
-	"convoy create":  {Confirm: true, Desc: "Create convoy", Category: "Convoys", Args: "<name>"},
-	"convoy refresh": {Confirm: false, Desc: "Refresh convoy", Category: "Convoys", Args: "<convoy-id>", ArgType: "convoys"},
-	"convoy add":     {Confirm: true, Desc: "Add issue to convoy", Category: "Convoys", Args: "<convoy-id> <issue>", ArgType: "convoys"},
+	// Minecart actions
+	"minecart create":  {Confirm: true, Desc: "Create minecart", Category: "Minecarts", Args: "<name>"},
+	"minecart refresh": {Confirm: false, Desc: "Refresh minecart", Category: "Minecarts", Args: "<minecart-id>", ArgType: "minecarts"},
+	"minecart add":     {Confirm: true, Desc: "Add issue to minecart", Category: "Minecarts", Args: "<minecart-id> <issue>", ArgType: "minecarts"},
 
 	// Rig actions
 	"rig add":   {Confirm: true, Desc: "Add rig", Category: "Rigs", Args: "<rig-name> <git-url>"},
@@ -77,12 +77,12 @@ var AllowedCommands = map[string]CommandMeta{
 	// Agent lifecycle (careful)
 	"witness start":  {Confirm: true, Desc: "Start witness", Category: "Agents", Args: "<rig-name>", ArgType: "rigs"},
 	"refinery start": {Confirm: true, Desc: "Start refinery", Category: "Agents", Args: "<rig-name>", ArgType: "rigs"},
-	"mayor attach":   {Confirm: true, Desc: "Attach mayor", Category: "Agents"},
-	"deacon start":   {Confirm: true, Desc: "Start deacon", Category: "Agents"},
+	"overseer attach":   {Confirm: true, Desc: "Attach overseer", Category: "Agents"},
+	"supervisor start":   {Confirm: true, Desc: "Start supervisor", Category: "Agents"},
 
-	// Polecat actions
-	"polecat add":    {Confirm: true, Desc: "Add polecat", Category: "Polecats", Args: "<rig> <name>", ArgType: "rigs"},
-	"polecat remove": {Confirm: true, Desc: "Remove polecat", Category: "Polecats", Args: "<rig>/<name>", ArgType: "polecats"},
+	// Miner actions
+	"miner add":    {Confirm: true, Desc: "Add miner", Category: "Miners", Args: "<rig> <name>", ArgType: "rigs"},
+	"miner remove": {Confirm: true, Desc: "Remove miner", Category: "Miners", Args: "<rig>/<name>", ArgType: "miners"},
 
 	// Work assignment
 	"sling":       {Confirm: true, Desc: "Assign work to agent", Category: "Work", Args: "<bead> <rig>", ArgType: "hooks"},
@@ -138,14 +138,14 @@ func ValidateCommand(rawCommand string) (*CommandMeta, error) {
 // extractBaseCommand gets the command prefix for whitelist matching.
 // "mail send foo bar" -> "mail send"
 // "status --json" -> "status"
-// "polecat list --all" -> "polecat list --all"
+// "miner list --all" -> "miner list --all"
 func extractBaseCommand(cmd string) string {
 	parts := strings.Fields(cmd)
 	if len(parts) == 0 {
 		return ""
 	}
 
-	// Try three-word command first (e.g., "polecat list --all")
+	// Try three-word command first (e.g., "miner list --all")
 	if len(parts) >= 3 {
 		threeWord := parts[0] + " " + parts[1] + " " + parts[2]
 		if _, ok := AllowedCommands[threeWord]; ok {
@@ -153,7 +153,7 @@ func extractBaseCommand(cmd string) string {
 		}
 	}
 
-	// Try two-word command (e.g., "convoy list")
+	// Try two-word command (e.g., "minecart list")
 	if len(parts) >= 2 {
 		twoWord := parts[0] + " " + parts[1]
 		if _, ok := AllowedCommands[twoWord]; ok {

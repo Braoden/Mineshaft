@@ -12,11 +12,11 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/events"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/townlog"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/events"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/townlog"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // Audit command flags
@@ -42,8 +42,8 @@ Shows a unified timeline of work performed by an actor including:
 
 Examples:
   gt audit --actor=greenplace/crew/joe       # Show all work by joe
-  gt audit --actor=greenplace/polecats/toast # Show polecat toast's work
-  gt audit --actor=mayor                  # Show mayor's activity
+  gt audit --actor=greenplace/miners/toast # Show miner toast's work
+  gt audit --actor=overseer                  # Show overseer's activity
   gt audit --since=24h                    # Show all activity in last 24h
   gt audit --actor=joe --since=1h         # Combined filters
   gt audit --json                         # Output as JSON`,
@@ -73,7 +73,7 @@ type AuditEntry struct {
 func runAudit(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Parse since duration if provided
@@ -222,7 +222,7 @@ func collectGitCommits(townRoot, actor string, since time.Time) ([]AuditEntry, e
 // extractAuthorName extracts the likely git author name from an actor address.
 func extractAuthorName(actor string) string {
 	// Actor format: "greenplace/crew/joe" -> "joe"
-	// Or: "mayor" -> "mayor"
+	// Or: "overseer" -> "overseer"
 	parts := strings.Split(actor, "/")
 	if len(parts) > 0 {
 		return parts[len(parts)-1]
@@ -258,9 +258,9 @@ func matchesActor(name, actor string) bool {
 func collectBeadsActivity(townRoot, actor string, since time.Time) ([]AuditEntry, error) {
 	var entries []AuditEntry
 
-	// Find the gastown beads path (where gt- prefix issues live)
-	gastownBeadsPath := filepath.Join(townRoot, "gastown", "mayor", "rig")
-	b := beads.New(gastownBeadsPath)
+	// Find the excavation beads path (where gt- prefix issues live)
+	excavationBeadsPath := filepath.Join(townRoot, "excavation", "overseer", "rig")
+	b := beads.New(excavationBeadsPath)
 
 	// List all issues to filter by created_by and assignee
 	issues, err := b.List(beads.ListOptions{

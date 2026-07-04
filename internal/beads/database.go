@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	agentconfig "github.com/steveyegge/gastown/internal/config"
+	agentconfig "github.com/steveyegge/excavation/internal/config"
 )
 
 var envKeysCaseInsensitive = runtime.GOOS == "windows"
@@ -53,7 +53,7 @@ func DatabaseEnv(beadsDir string) string {
 
 // StripBDTargetEnv removes inherited environment variables that can make a bd
 // subprocess select a database/server other than the .beads directory chosen by
-// Gas Town. Callers re-add the small set of canonical bd env values they need.
+// Excavation Site. Callers re-add the small set of canonical bd env values they need.
 func StripBDTargetEnv(env []string) []string {
 	filtered := make([]string, 0, len(env))
 	for _, entry := range env {
@@ -133,7 +133,7 @@ func BuildMutationRoutingBDEnv(base []string, fallbackBeadsDir string) []string 
 
 // BuildMutationNeutralBDEnv returns env for a mutating bd subprocess whose argv
 // contains an explicit native target such as --repo=<path>. It strips inherited
-// Gas Town target selectors and suppresses side effects without adding BEADS_DIR
+// Excavation Site target selectors and suppresses side effects without adding BEADS_DIR
 // or town Dolt connection metadata that could change native bd path semantics.
 func BuildMutationNeutralBDEnv(base []string) []string {
 	return forceBDMutation(SuppressBDSideEffects(StripBDTargetEnv(base)))
@@ -220,7 +220,7 @@ func hasReadOnlySQLPrefix(query string) bool {
 }
 
 // SuppressBDSideEffects disables Beads JSONL export/backup/push side effects for
-// Gas Town-managed subprocesses. The authoritative data plane is Dolt; exporting
+// Excavation Site-managed subprocesses. The authoritative data plane is Dolt; exporting
 // JSONL from high-frequency gt callers re-invalidates Beads' import freshness
 // checks and can create a self-feeding Dolt load loop.
 func SuppressBDSideEffects(env []string) []string {

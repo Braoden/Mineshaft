@@ -1,8 +1,8 @@
 description = """
-Boot triage cycle - the daemon's watchdog for Deacon health.
+Boot triage cycle - the daemon's watchdog for Supervisor health.
 
 Boot is spawned fresh on each daemon tick to decide whether to start/wake/nudge/interrupt
-the Deacon, or do nothing. This centralizes the "when to wake" decision in an agent that
+the Supervisor, or do nothing. This centralizes the "when to wake" decision in an agent that
 can reason about context rather than relying on mechanical thresholds.
 
 Boot lifecycle:
@@ -24,18 +24,18 @@ title = "Observe system state"
 description = """
 Observe the current system state to inform triage decisions.
 
-**Step 1: Check Deacon state**
+**Step 1: Check Supervisor state**
 ```bash
-# Is Deacon session alive?
-tmux has-session -t hq-deacon 2>/dev/null && echo "alive" || echo "dead"
+# Is Supervisor session alive?
+tmux has-session -t hq-supervisor 2>/dev/null && echo "alive" || echo "dead"
 
 # If alive, what's the pane output showing?
-gt peek deacon --lines 20
+gt peek supervisor --lines 20
 ```
 
 **Step 2: Check agent bead state**
 ```bash
-bd show hq-deacon 2>/dev/null
+bd show hq-supervisor 2>/dev/null
 # Look for:
 # - state: running/working/idle
 # - last_activity: when was last update?
@@ -50,14 +50,14 @@ gt feed --since 10m --plain | head -20
 ls -lt $GT_ROOT/.beads-wisp/*.wisp.json 2>/dev/null | head -5
 ```
 
-**Step 4: Check Deacon mail**
+**Step 4: Check Supervisor mail**
 ```bash
-# Does Deacon have unread mail?
-gt mail inbox deacon 2>/dev/null | head -10
+# Does Supervisor have unread mail?
+gt mail inbox supervisor 2>/dev/null | head -10
 ```
 
 Record observations for the decide step:
-- deacon_alive: true/false
+- supervisor_alive: true/false
 - pane_activity: active/idle/stuck
 - last_activity_age: duration since last activity
 - pending_mail: count of unread messages
@@ -73,7 +73,7 @@ Analyze observations and decide what action to take.
 
 **Decision Matrix**
 
-| Deacon State | Pane Activity | Action |
+| Supervisor State | Pane Activity | Action |
 |--------------|---------------|--------|
 | Dead session | N/A | START |
 | Alive, active output | N/A | NOTHING |
@@ -100,7 +100,7 @@ Signs of working:
 - Recent commits or beads updates
 
 **Output**: Record decision as one of:
-- NOTHING: Let Deacon continue
+- NOTHING: Let Supervisor continue
 - NUDGE: Gentle wake signal (gt nudge)
 - WAKE: Stronger wake (immediate gt nudge)
 - INTERRUPT: Force restart needed
@@ -120,19 +120,19 @@ No action needed. Log observation and exit.
 **NUDGE**
 ```bash
 # Use --mode=queue to avoid interrupting in-flight tool calls
-gt nudge --mode=queue deacon "Boot check-in: you have pending work"
+gt nudge --mode=queue supervisor "Boot check-in: you have pending work"
 ```
 
 **WAKE**
 ```bash
 # Raw tmux send-keys is blocked for Boot; it can leave unsubmitted input staged.
-gt nudge --mode=immediate deacon "Boot wake: please check your inbox and pending work"
+gt nudge --mode=immediate supervisor "Boot wake: please check your inbox and pending work"
 ```
 
 **INTERRUPT**
 ```bash
-# This is more aggressive - signals Deacon to restart
-gt mail send deacon -s "INTERRUPT: Boot detected stuck state" \
+# This is more aggressive - signals Supervisor to restart
+gt mail send supervisor -s "INTERRUPT: Boot detected stuck state" \
   -m "Boot observed stuck state. Please check your context and consider handoff.
 
 Observations:
@@ -143,9 +143,9 @@ If you're making progress, please update your agent bead to reflect activity."
 
 **START**
 ```bash
-# Deacon is dead - start it immediately
-gt deacon start
-echo "Boot started Deacon session"
+# Supervisor is dead - start it immediately
+gt supervisor start
+echo "Boot started Supervisor session"
 ```
 
 Record action taken for status update.
@@ -156,14 +156,14 @@ id = "cleanup"
 title = "Clean stale handoffs"
 needs = ["act"]
 description = """
-Clean up stale handoff messages from Deacon's inbox.
+Clean up stale handoff messages from Supervisor's inbox.
 
 Handoff messages older than 1 hour are likely stale - the intended recipient
 either processed them or crashed before seeing them.
 
-**Step 1: List Deacon inbox**
+**Step 1: List Supervisor inbox**
 ```bash
-gt mail inbox deacon --json 2>/dev/null
+gt mail inbox supervisor --json 2>/dev/null
 ```
 
 **Step 2: Archive stale handoffs**
@@ -216,7 +216,7 @@ Then exit. The next daemon tick will spawn a fresh Boot.
 **Update status file**
 ```bash
 # The gt boot command handles this automatically
-# Status is written to $GT_ROOT/deacon/dogs/boot/.boot-status.json
+# Status is written to $GT_ROOT/supervisor/dogs/boot/.boot-status.json
 ```
 
 Boot is ephemeral by design. Each instance runs fresh.

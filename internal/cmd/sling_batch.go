@@ -7,20 +7,20 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/git"
-	"github.com/steveyegge/gastown/internal/polecat"
-	"github.com/steveyegge/gastown/internal/rig"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/excavation/internal/miner"
+	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // runBatchSling handles slinging multiple beads to a rig.
-// Each bead gets its own freshly spawned polecat.
+// Each bead gets its own freshly spawned miner.
 func runBatchSling(beadIDs []string, rigName string, townBeadsDir string) error {
-	// Validate all beads exist before spawning any polecats
+	// Validate all beads exist before spawning any miners
 	for _, beadID := range beadIDs {
 		if err := verifyBeadExists(beadID); err != nil {
 			return fmt.Errorf("bead '%s' not found", beadID)
@@ -62,7 +62,7 @@ func runBatchSling(beadIDs []string, rigName string, townBeadsDir string) error 
 					strings.Join(others, " "),
 					beadID, beadRig,
 					strings.Join(allArgs, " "))
-			} else if err := checkCrossRigGuard(beadID, rigName+"/polecats/_", townRoot); err != nil {
+			} else if err := checkCrossRigGuard(beadID, rigName+"/miners/_", townRoot); err != nil {
 				// Fall back to generic guard for edge cases (empty prefix, town-level beads)
 				return err
 			}
@@ -81,9 +81,9 @@ func runBatchSling(beadIDs []string, rigName string, townBeadsDir string) error 
 		}
 		for _, beadID := range beadIDs {
 			if formulaName != "" {
-				fmt.Printf("  Would spawn polecat and apply %s to: %s\n", formulaName, beadID)
+				fmt.Printf("  Would spawn miner and apply %s to: %s\n", formulaName, beadID)
 			} else {
-				fmt.Printf("  Would spawn polecat and hook raw: %s\n", beadID)
+				fmt.Printf("  Would spawn miner and hook raw: %s\n", beadID)
 			}
 		}
 		return nil
@@ -112,7 +112,7 @@ func runBatchSling(beadIDs []string, rigName string, townBeadsDir string) error 
 	// Track results for summary
 	type batchResult struct {
 		beadID  string
-		polecat string
+		miner string
 		success bool
 		errMsg  string
 	}
@@ -127,8 +127,8 @@ func runBatchSling(beadIDs []string, rigName string, townBeadsDir string) error 
 	// Dispatch each bead via executeSling
 	for i, beadID := range beadIDs {
 		// Spawn-rate throttle: when --max-concurrent is set, pause between batches
-		// of N spawns. This does NOT limit total concurrent polecats — all spawned
-		// polecats remain running. It only slows down how fast they are created.
+		// of N spawns. This does NOT limit total concurrent miners — all spawned
+		// miners remain running. It only slows down how fast they are created.
 		if slingMaxConcurrent > 0 && activeCount >= slingMaxConcurrent {
 			fmt.Printf("\n%s Spawn batch of %d complete, pausing before next batch...\n",
 				style.Warning.Render("⏳"), slingMaxConcurrent)
@@ -139,7 +139,7 @@ func runBatchSling(beadIDs []string, rigName string, townBeadsDir string) error 
 					break
 				}
 			}
-			// Reset counter after cooldown — polecats become self-sufficient
+			// Reset counter after cooldown — miners become self-sufficient
 			// quickly, so we use time-based batching rather than precise counting
 			activeCount = 0
 		}
@@ -156,7 +156,7 @@ func runBatchSling(beadIDs []string, rigName string, townBeadsDir string) error 
 			BaseBranch:       slingBaseBranch,
 			Account:          slingAccount,
 			Agent:            slingAgent,
-			NoConvoy:         slingNoConvoy,
+			NoMinecart:         slingNoMinecart,
 			Owned:            slingOwned,
 			NoMerge:          slingNoMerge,
 			ReviewOnly:       slingReviewOnly,
@@ -180,17 +180,17 @@ func runBatchSling(beadIDs []string, rigName string, townBeadsDir string) error 
 			if errMsg == "" {
 				errMsg = err.Error()
 			}
-			polecatName := ""
+			minerName := ""
 			if result != nil {
-				polecatName = result.PolecatName
+				minerName = result.MinerName
 			}
-			results = append(results, batchResult{beadID: beadID, polecat: polecatName, success: false, errMsg: errMsg})
+			results = append(results, batchResult{beadID: beadID, miner: minerName, success: false, errMsg: errMsg})
 			fmt.Printf("  %s %s\n", style.Dim.Render("✗"), errMsg)
 			continue
 		}
 
 		activeCount++
-		results = append(results, batchResult{beadID: beadID, polecat: result.PolecatName, success: true})
+		results = append(results, batchResult{beadID: beadID, miner: result.MinerName, success: true})
 
 		// Delay between spawns to prevent Dolt lock contention — sequential
 		// spawns without delay cause database lock timeouts when multiple bd
@@ -227,15 +227,15 @@ func runBatchSling(beadIDs []string, rigName string, townBeadsDir string) error 
 	return nil
 }
 
-// cleanupSpawnedPolecat removes a polecat that was spawned but whose session/hook failed,
-// preventing orphaned polecats from accumulating. Cleans up worktree, agent bead, git branch,
-// and optionally the associated auto-convoy.
-func cleanupSpawnedPolecat(spawnInfo *SpawnedPolecatInfo, rigName, convoyID string) {
+// cleanupSpawnedMiner removes a miner that was spawned but whose session/hook failed,
+// preventing orphaned miners from accumulating. Cleans up worktree, agent bead, git branch,
+// and optionally the associated auto-minecart.
+func cleanupSpawnedMiner(spawnInfo *SpawnedMinerInfo, rigName, minecartID string) {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
 		return
 	}
-	rigsConfigPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsConfigPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := config.LoadRigsConfig(rigsConfigPath)
 	if err != nil {
 		return
@@ -246,26 +246,26 @@ func cleanupSpawnedPolecat(spawnInfo *SpawnedPolecatInfo, rigName, convoyID stri
 	if err != nil {
 		return
 	}
-	polecatGit := git.NewGit(r.Path)
+	minerGit := git.NewGit(r.Path)
 	t := tmux.NewTmux()
-	polecatMgr := polecat.NewManager(r, polecatGit, t)
-	if err := polecatMgr.Remove(spawnInfo.PolecatName, true); err != nil {
-		fmt.Printf("  %s Could not clean up orphaned polecat %s: %v\n",
-			style.Dim.Render("Warning:"), spawnInfo.PolecatName, err)
+	minerMgr := miner.NewManager(r, minerGit, t)
+	if err := minerMgr.Remove(spawnInfo.MinerName, true); err != nil {
+		fmt.Printf("  %s Could not clean up orphaned miner %s: %v\n",
+			style.Dim.Render("Warning:"), spawnInfo.MinerName, err)
 	} else {
-		fmt.Printf("  %s Cleaned up orphaned polecat %s\n",
-			style.Dim.Render("○"), spawnInfo.PolecatName)
+		fmt.Printf("  %s Cleaned up orphaned miner %s\n",
+			style.Dim.Render("○"), spawnInfo.MinerName)
 	}
 
-	// Delete the git branch if we know it (following nukePolecatFull pattern)
+	// Delete the git branch if we know it (following nukeMinerFull pattern)
 	if spawnInfo.Branch != "" {
 		repoGit := getRepoGitForRig(r.Path)
-		deletePolecatBranch(spawnInfo.Branch, repoGit, false)
+		deleteMinerBranch(spawnInfo.Branch, repoGit, false)
 	}
 
-	// Close the auto-convoy if one was created
-	if convoyID != "" {
-		closeConvoy(convoyID, "Sling rollback - hook failed")
+	// Close the auto-minecart if one was created
+	if minecartID != "" {
+		closeMinecart(minecartID, "Sling rollback - hook failed")
 	}
 }
 
@@ -340,19 +340,19 @@ func resolveRigFromBeadIDs(beadIDs []string, townRoot string) (string, error) {
 }
 
 // getRepoGitForRig creates a Git client for the rig's repository.
-// It tries the bare repo first, then falls back to the mayor/rig directory.
+// It tries the bare repo first, then falls back to the overseer/rig directory.
 func getRepoGitForRig(rigPath string) *git.Git {
 	bareRepoPath := filepath.Join(rigPath, ".repo.git")
 	if info, statErr := os.Stat(bareRepoPath); statErr == nil && info.IsDir() {
 		return git.NewGitWithDir(bareRepoPath, "")
 	}
-	return git.NewGit(filepath.Join(rigPath, "mayor", "rig"))
+	return git.NewGit(filepath.Join(rigPath, "overseer", "rig"))
 }
 
-// deletePolecatBranch deletes a local git branch for a polecat.
+// deleteMinerBranch deletes a local git branch for a miner.
 // Remote branch is never deleted during nuke — the refinery owns remote
 // branch cleanup after successful merge (gt mq post-merge). (gt-v5ku)
-func deletePolecatBranch(branchName string, repoGit *git.Git, hasPendingMR bool) {
+func deleteMinerBranch(branchName string, repoGit *git.Git, hasPendingMR bool) {
 	_ = hasPendingMR // preserved for API compat, no longer consulted
 	if err := repoGit.DeleteBranch(branchName, true); err != nil {
 		fmt.Printf("  %s branch delete: %v\n", style.Dim.Render("○"), err)
@@ -362,19 +362,19 @@ func deletePolecatBranch(branchName string, repoGit *git.Git, hasPendingMR bool)
 	fmt.Printf("  %s remote branch preserved for refinery merge\n", style.Dim.Render("○"))
 }
 
-// closeConvoy closes a convoy with the given reason.
+// closeMinecart closes a minecart with the given reason.
 // It is a best-effort operation that logs warnings on failure.
-func closeConvoy(convoyID, reason string) {
+func closeMinecart(minecartID, reason string) {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		fmt.Printf("  %s Could not find workspace to close convoy %s: %v\n", style.Dim.Render("Warning:"), convoyID, err)
+		fmt.Printf("  %s Could not find workspace to close minecart %s: %v\n", style.Dim.Render("Warning:"), minecartID, err)
 		return
 	}
 	townBeads := filepath.Join(townRoot, ".beads")
-	closeArgs := []string{"close", convoyID, "-r", reason}
+	closeArgs := []string{"close", minecartID, "-r", reason}
 	if err := BdCmd(closeArgs...).Dir(townBeads).WithAutoCommit().Run(); err != nil {
-		fmt.Printf("  %s Could not close convoy %s: %v\n", style.Dim.Render("Warning:"), convoyID, err)
+		fmt.Printf("  %s Could not close minecart %s: %v\n", style.Dim.Render("Warning:"), minecartID, err)
 	} else {
-		fmt.Printf("  %s Closed convoy %s\n", style.Dim.Render("○"), convoyID)
+		fmt.Printf("  %s Closed minecart %s\n", style.Dim.Render("○"), minecartID)
 	}
 }

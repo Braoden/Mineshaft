@@ -8,12 +8,12 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/util"
+	"github.com/steveyegge/excavation/internal/util"
 )
 
 func TestPollerPidFile(t *testing.T) {
 	townRoot := t.TempDir()
-	session := "gt-gastown-crew-bear"
+	session := "gt-excavation-crew-bear"
 
 	pidFile := pollerPidFile(townRoot, session)
 	expected := filepath.Join(townRoot, ".runtime", "nudge_poller", session+".pid")
@@ -44,7 +44,7 @@ func TestPollerAlive_NoPidFile(t *testing.T) {
 
 func TestPollerAlive_StalePid(t *testing.T) {
 	townRoot := t.TempDir()
-	session := "gt-gastown-crew-test"
+	session := "gt-excavation-crew-test"
 
 	// Write a PID file with an invalid PID (process doesn't exist).
 	pidDir := pollerPidDir(townRoot)
@@ -70,7 +70,7 @@ func TestPollerAlive_StalePid(t *testing.T) {
 
 func TestPollerAlive_CorruptPidFile(t *testing.T) {
 	townRoot := t.TempDir()
-	session := "gt-gastown-crew-test"
+	session := "gt-excavation-crew-test"
 
 	pidDir := pollerPidDir(townRoot)
 	if err := os.MkdirAll(pidDir, 0755); err != nil {
@@ -97,7 +97,7 @@ func TestStopPoller_NoPidFile(t *testing.T) {
 
 func TestStopPoller_StalePid(t *testing.T) {
 	townRoot := t.TempDir()
-	session := "gt-gastown-crew-test"
+	session := "gt-excavation-crew-test"
 
 	// Write a stale PID file.
 	pidDir := pollerPidDir(townRoot)
@@ -121,7 +121,7 @@ func TestStopPoller_StalePid(t *testing.T) {
 
 func TestPollerAlive_LiveProcess(t *testing.T) {
 	townRoot := t.TempDir()
-	session := "gt-gastown-crew-test"
+	session := "gt-excavation-crew-test"
 
 	// Write our own PID — we're definitely alive.
 	pidDir := pollerPidDir(townRoot)
@@ -148,7 +148,7 @@ func TestBuildPollerCommand_UsesDetachedProcessGroup(t *testing.T) {
 		t.Skip("process group management is not supported on Windows")
 	}
 	townRoot := t.TempDir()
-	cmd := buildPollerCommand("/tmp/fake-gt", townRoot, "gt-gastown-crew-bear")
+	cmd := buildPollerCommand("/tmp/fake-gt", townRoot, "gt-excavation-crew-bear")
 
 	if got, want := cmd.Dir, townRoot; got != want {
 		t.Fatalf("cmd.Dir = %q, want %q", got, want)
@@ -156,7 +156,7 @@ func TestBuildPollerCommand_UsesDetachedProcessGroup(t *testing.T) {
 	if got, want := cmd.Path, "/tmp/fake-gt"; got != want {
 		t.Fatalf("cmd.Path = %q, want %q", got, want)
 	}
-	if len(cmd.Args) != 3 || cmd.Args[1] != "nudge-poller" || cmd.Args[2] != "gt-gastown-crew-bear" {
+	if len(cmd.Args) != 3 || cmd.Args[1] != "nudge-poller" || cmd.Args[2] != "gt-excavation-crew-bear" {
 		t.Fatalf("cmd.Args = %#v, want poller invocation", cmd.Args)
 	}
 	if cmd.Cancel != nil {

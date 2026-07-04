@@ -6,7 +6,7 @@ import (
 	"os/exec"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/hooks"
+	"github.com/steveyegge/excavation/internal/hooks"
 )
 
 var hooksOverrideCmd = &cobra.Command{
@@ -15,8 +15,8 @@ var hooksOverrideCmd = &cobra.Command{
 	Long: `Edit hook overrides for a specific role or rig+role combination.
 
 Valid targets:
-  Role-level:  crew, witness, refinery, polecats, mayor, deacon
-  Rig+role:    gastown/crew, beads/witness, sky/polecats, etc.
+  Role-level:  crew, witness, refinery, miners, overseer, supervisor
+  Rig+role:    excavation/crew, beads/witness, sky/miners, etc.
 
 Overrides are merged on top of the base config during sync.
 Hooks with the same matcher replace the base hook entirely.
@@ -25,8 +25,8 @@ Override files are stored in ~/.gt/hooks-overrides/<target>.json.
 
 Examples:
   gt hooks override crew              # Edit crew role overrides
-  gt hooks override gastown/crew      # Edit gastown rig crew overrides
-  gt hooks override mayor             # Edit mayor overrides
+  gt hooks override excavation/crew      # Edit excavation rig crew overrides
+  gt hooks override overseer             # Edit overseer overrides
   gt hooks override crew --show       # Print current override config`,
 	Args: cobra.ExactArgs(1),
 	RunE: runHooksOverride,
@@ -42,7 +42,7 @@ func init() {
 func runHooksOverride(cmd *cobra.Command, args []string) error {
 	normalized, ok := hooks.NormalizeTarget(args[0])
 	if !ok {
-		return fmt.Errorf("invalid target %q; valid targets are roles (crew, witness, refinery, polecats, mayor, deacon) or rig/role (gastown/crew, etc.)", args[0])
+		return fmt.Errorf("invalid target %q; valid targets are roles (crew, witness, refinery, miners, overseer, supervisor) or rig/role (excavation/crew, etc.)", args[0])
 	}
 	target := normalized
 

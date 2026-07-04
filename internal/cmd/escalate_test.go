@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
 )
 
 func TestGetNextSeverity(t *testing.T) {
@@ -57,13 +57,13 @@ func TestExtractMailTargetsFromActions(t *testing.T) {
 		},
 		{
 			name:    "single mail target",
-			actions: []string{"bead", "mail:mayor"},
-			want:    []string{"mayor"},
+			actions: []string{"bead", "mail:overseer"},
+			want:    []string{"overseer"},
 		},
 		{
 			name:    "multiple mail targets",
-			actions: []string{"bead", "mail:mayor", "mail:gastown/witness", "email:human"},
-			want:    []string{"mayor", "gastown/witness"},
+			actions: []string{"bead", "mail:overseer", "mail:excavation/witness", "email:human"},
+			want:    []string{"overseer", "excavation/witness"},
 		},
 		{
 			name:    "mail prefix with empty target ignored",
@@ -72,8 +72,8 @@ func TestExtractMailTargetsFromActions(t *testing.T) {
 		},
 		{
 			name:    "mixed actions",
-			actions: []string{"bead", "mail:mayor", "sms:human", "slack", "mail:deacon", "log"},
-			want:    []string{"mayor", "deacon"},
+			actions: []string{"bead", "mail:overseer", "sms:human", "slack", "mail:supervisor", "log"},
+			want:    []string{"overseer", "supervisor"},
 		},
 	}
 
@@ -108,7 +108,7 @@ func TestExecuteExternalActionsReportsWarningsAndFailures(t *testing.T) {
 }
 
 func TestDeliveryStatusJSONContainsPartialFailure(t *testing.T) {
-	statuses := []deliveryStatus{{Channel: "bead", Created: true}, {Channel: "mail", Target: "mayor", Error: "notify failed"}}
+	statuses := []deliveryStatus{{Channel: "bead", Created: true}, {Channel: "mail", Target: "overseer", Error: "notify failed"}}
 	hasFailure := false
 	for _, status := range statuses {
 		if status.Error != "" {
@@ -119,8 +119,8 @@ func TestDeliveryStatusJSONContainsPartialFailure(t *testing.T) {
 	result := map[string]interface{}{
 		"id":       "hq-esc1",
 		"severity": "critical",
-		"actions":  []string{"bead", "mail:mayor"},
-		"targets":  []string{"mayor"},
+		"actions":  []string{"bead", "mail:overseer"},
+		"targets":  []string{"overseer"},
 		"delivery": statuses,
 		"status":   map[bool]string{true: "partial_failure", false: "ok"}[hasFailure],
 	}
@@ -137,12 +137,12 @@ func TestDeliveryStatusJSONContainsPartialFailure(t *testing.T) {
 }
 
 func TestDeliveryStatusJSONContainsSuccessfulMailPathDetails(t *testing.T) {
-	statuses := []deliveryStatus{{Channel: "bead", Created: true, Severity: "critical"}, {Channel: "mail", Target: "mayor", Persisted: true, RuntimeNotified: true, Annotated: true, Severity: "critical", NotificationRoute: "mail+nudge"}}
+	statuses := []deliveryStatus{{Channel: "bead", Created: true, Severity: "critical"}, {Channel: "mail", Target: "overseer", Persisted: true, RuntimeNotified: true, Annotated: true, Severity: "critical", NotificationRoute: "mail+nudge"}}
 	result := map[string]interface{}{
 		"id":       "hq-esc2",
 		"severity": "critical",
-		"actions":  []string{"bead", "mail:mayor"},
-		"targets":  []string{"mayor"},
+		"actions":  []string{"bead", "mail:overseer"},
+		"targets":  []string{"overseer"},
 		"delivery": statuses,
 		"status":   "ok",
 	}
@@ -159,8 +159,8 @@ func TestDeliveryStatusJSONContainsSuccessfulMailPathDetails(t *testing.T) {
 }
 
 func TestEscalationFingerprintLabel(t *testing.T) {
-	got := escalationFingerprintLabel(" deacon:await-signal:hq-deacon ")
-	trimmed := escalationFingerprintLabel("deacon:await-signal:hq-deacon")
+	got := escalationFingerprintLabel(" supervisor:await-signal:hq-supervisor ")
+	trimmed := escalationFingerprintLabel("supervisor:await-signal:hq-supervisor")
 	if got != trimmed {
 		t.Fatalf("fingerprint should trim whitespace: %q != %q", got, trimmed)
 	}
@@ -170,7 +170,7 @@ func TestEscalationFingerprintLabel(t *testing.T) {
 	if len(got) != len("escalation-fp:")+12 {
 		t.Fatalf("fingerprint label %q has length %d, want %d", got, len(got), len("escalation-fp:")+12)
 	}
-	if got == escalationFingerprintLabel("deacon:convoy-check:hq-cv-123") {
+	if got == escalationFingerprintLabel("supervisor:minecart-check:hq-cv-123") {
 		t.Fatal("different raw fingerprints should produce different labels")
 	}
 	if escalationFingerprintLabel(" ") != "" {
@@ -282,12 +282,12 @@ func TestFormatEscalationMailBody(t *testing.T) {
 			beadID:   "hq-abc123",
 			severity: "high",
 			reason:   "Build failing",
-			from:     "gastown/witness",
+			from:     "excavation/witness",
 			related:  "",
 			wantIn: []string{
 				"Escalation ID: hq-abc123",
 				"Severity: high",
-				"From: gastown/witness",
+				"From: excavation/witness",
 				"Reason:",
 				"Build failing",
 				"gt escalate ack hq-abc123",
@@ -300,7 +300,7 @@ func TestFormatEscalationMailBody(t *testing.T) {
 			beadID:   "hq-xyz789",
 			severity: "critical",
 			reason:   "Agent stuck",
-			from:     "gastown/deacon",
+			from:     "excavation/supervisor",
 			related:  "gt-stuck42",
 			wantIn: []string{
 				"Escalation ID: hq-xyz789",
@@ -350,13 +350,13 @@ func TestFormatReescalationMailBody(t *testing.T) {
 		ReescalationNum: 2,
 	}
 
-	got := formatReescalationMailBody(result, "gastown/patrol")
+	got := formatReescalationMailBody(result, "excavation/patrol")
 
 	wantIn := []string{
 		"Escalation ID: hq-esc123",
 		"Severity bumped: medium → high",
 		"Reescalation #2",
-		"Reescalated by: gastown/patrol",
+		"Reescalated by: excavation/patrol",
 		"stale threshold",
 		"gt escalate ack hq-esc123",
 		"gt escalate close hq-esc123",
@@ -386,15 +386,15 @@ func TestDetectSenderFallback(t *testing.T) {
 	}{
 		{
 			name:  "BD_ACTOR takes priority",
-			actor: "gastown/polecats/alpha",
-			role:  "gastown/witness",
-			want:  "gastown/polecats/alpha",
+			actor: "excavation/miners/alpha",
+			role:  "excavation/witness",
+			want:  "excavation/miners/alpha",
 		},
 		{
 			name:  "GT_ROLE used when BD_ACTOR empty",
 			actor: "",
-			role:  "gastown/witness",
-			want:  "gastown/witness",
+			role:  "excavation/witness",
+			want:  "excavation/witness",
 		},
 		{
 			name:  "empty when both unset",
@@ -428,7 +428,7 @@ func TestExecuteExternalActions(t *testing.T) {
 	}{
 		{
 			name:    "no external actions",
-			actions: []string{"bead", "mail:mayor"},
+			actions: []string{"bead", "mail:overseer"},
 			cfg:     &config.EscalationConfig{},
 		},
 		{
@@ -584,11 +584,11 @@ func TestRunEscalateValidation(t *testing.T) {
 }
 
 func TestFormatEscalationMailBodyNeutralSubjectStillCarriesStructuredBody(t *testing.T) {
-	body := formatEscalationMailBody("hq-abc123", "high", "Database drift", "deacon/", "gt-xyz")
+	body := formatEscalationMailBody("hq-abc123", "high", "Database drift", "supervisor/", "gt-xyz")
 	for _, want := range []string{
 		"Escalation ID: hq-abc123",
 		"Severity: high",
-		"From: deacon/",
+		"From: supervisor/",
 		"Related: gt-xyz",
 	} {
 		if !strings.Contains(body, want) {

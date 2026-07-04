@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/constants"
+	"github.com/steveyegge/excavation/internal/constants"
 )
 
 func TestNewMailbox(t *testing.T) {
@@ -25,9 +25,9 @@ func TestNewMailbox(t *testing.T) {
 }
 
 func TestNewMailboxBeads(t *testing.T) {
-	m := NewMailboxBeads("gastown/Toast", "/work/dir")
-	if m.identity != "gastown/Toast" {
-		t.Errorf("identity = %q, want %q", m.identity, "gastown/Toast")
+	m := NewMailboxBeads("excavation/Toast", "/work/dir")
+	if m.identity != "excavation/Toast" {
+		t.Errorf("identity = %q, want %q", m.identity, "excavation/Toast")
 	}
 	if m.legacy {
 		t.Error("NewMailboxBeads should not create legacy mailbox")
@@ -40,8 +40,8 @@ func TestMailboxLegacyAppend(t *testing.T) {
 
 	msg := &Message{
 		ID:        "msg-001",
-		From:      "mayor/",
-		To:        "gastown/Toast",
+		From:      "overseer/",
+		To:        "excavation/Toast",
 		Subject:   "Test message",
 		Body:      "Hello world",
 		Timestamp: time.Now(),
@@ -373,7 +373,7 @@ func TestMailboxLegacyEmptyInbox(t *testing.T) {
 }
 
 func TestMailboxBeadsAppendError(t *testing.T) {
-	m := NewMailboxBeads("gastown/Toast", "/work/dir")
+	m := NewMailboxBeads("excavation/Toast", "/work/dir")
 
 	err := m.Append(&Message{})
 	if err == nil {
@@ -392,9 +392,9 @@ func TestMailboxIdentityAndPath(t *testing.T) {
 	}
 
 	// Beads mailbox
-	beads := NewMailboxBeads("gastown/Toast", "/work/dir")
-	if beads.Identity() != "gastown/Toast" {
-		t.Errorf("Beads mailbox identity = %q, want gastown/Toast", beads.Identity())
+	beads := NewMailboxBeads("excavation/Toast", "/work/dir")
+	if beads.Identity() != "excavation/Toast" {
+		t.Errorf("Beads mailbox identity = %q, want excavation/Toast", beads.Identity())
 	}
 	if beads.Path() != "" {
 		t.Errorf("Beads mailbox path = %q, want empty", beads.Path())
@@ -430,9 +430,9 @@ func TestMailboxPersistence(t *testing.T) {
 }
 
 func TestNewMailboxWithBeadsDir(t *testing.T) {
-	m := NewMailboxWithBeadsDir("gastown/Toast", "/work/dir", "/custom/.beads")
-	if m.identity != "gastown/Toast" {
-		t.Errorf("identity = %q, want 'gastown/Toast'", m.identity)
+	m := NewMailboxWithBeadsDir("excavation/Toast", "/work/dir", "/custom/.beads")
+	if m.identity != "excavation/Toast" {
+		t.Errorf("identity = %q, want 'excavation/Toast'", m.identity)
 	}
 	if filepath.ToSlash(m.beadsDir) != "/custom/.beads" {
 		t.Errorf("beadsDir = %q, want '/custom/.beads'", m.beadsDir)
@@ -456,12 +456,12 @@ func TestMailboxListFromDirConvergesWispQueryAndFiltersStatuses(t *testing.T) {
 printf '%s\n' "$*" >> "$BD_LOG"
 if [ "$1" = "list" ]; then
   case "$*" in
-    *"--assignee gastown/synth"*)
-      printf '%s\n' '[{"id":"issue-direct-open","title":"Direct open","description":"","status":"open","priority":2,"assignee":"gastown/synth","created_at":"2026-06-12T12:00:05Z","labels":["gt:message","from:mayor/"]},{"id":"issue-direct-hooked","title":"Direct hooked","description":"","status":"hooked","priority":2,"assignee":"gastown/synth","created_at":"2026-06-12T12:00:04Z","labels":["gt:message","from:mayor/"]},{"id":"issue-direct-closed","title":"Direct closed","description":"","status":"closed","priority":2,"assignee":"gastown/synth","created_at":"2026-06-12T12:00:03Z","labels":["gt:message","from:mayor/"]}]'
+    *"--assignee excavation/synth"*)
+      printf '%s\n' '[{"id":"issue-direct-open","title":"Direct open","description":"","status":"open","priority":2,"assignee":"excavation/synth","created_at":"2026-06-12T12:00:05Z","labels":["gt:message","from:overseer/"]},{"id":"issue-direct-hooked","title":"Direct hooked","description":"","status":"hooked","priority":2,"assignee":"excavation/synth","created_at":"2026-06-12T12:00:04Z","labels":["gt:message","from:overseer/"]},{"id":"issue-direct-closed","title":"Direct closed","description":"","status":"closed","priority":2,"assignee":"excavation/synth","created_at":"2026-06-12T12:00:03Z","labels":["gt:message","from:overseer/"]}]'
       exit 0
       ;;
-    *"--label cc:gastown/synth"*)
-      printf '%s\n' '[{"id":"issue-cc-open","title":"CC open","description":"","status":"open","priority":2,"assignee":"mayor/","created_at":"2026-06-12T12:00:02Z","labels":["gt:message","cc:gastown/synth","from:mayor/"]},{"id":"issue-cc-hooked","title":"CC hooked","description":"","status":"hooked","priority":2,"assignee":"mayor/","created_at":"2026-06-12T12:00:01Z","labels":["gt:message","cc:gastown/synth","from:mayor/"]}]'
+    *"--label cc:excavation/synth"*)
+      printf '%s\n' '[{"id":"issue-cc-open","title":"CC open","description":"","status":"open","priority":2,"assignee":"overseer/","created_at":"2026-06-12T12:00:02Z","labels":["gt:message","cc:excavation/synth","from:overseer/"]},{"id":"issue-cc-hooked","title":"CC hooked","description":"","status":"hooked","priority":2,"assignee":"overseer/","created_at":"2026-06-12T12:00:01Z","labels":["gt:message","cc:excavation/synth","from:overseer/"]}]'
       exit 0
       ;;
   esac
@@ -469,7 +469,7 @@ if [ "$1" = "list" ]; then
   exit 0
 fi
 if [ "$1" = "sql" ]; then
-  printf '%s\n' '[{"id":"wisp-direct-open","title":"Wisp direct open","description":"","status":"open","priority":2,"assignee":"gastown/synth","created_at":"2026-06-12T12:00:00Z","updated_at":"2026-06-12T12:00:00Z","labels_csv":"gt:message,from:mayor/","assignee_match":1,"cc_match":0},{"id":"wisp-direct-hooked","title":"Wisp direct hooked","description":"","status":"hooked","priority":2,"assignee":"gastown/synth","created_at":"2026-06-12T11:59:59Z","updated_at":"2026-06-12T11:59:59Z","labels_csv":"gt:message,from:mayor/","assignee_match":1,"cc_match":0},{"id":"wisp-cc-open","title":"Wisp CC open","description":"","status":"open","priority":2,"assignee":"mayor/","created_at":"2026-06-12T11:59:58Z","updated_at":"2026-06-12T11:59:58Z","labels_csv":"gt:message,cc:gastown/synth,from:mayor/","assignee_match":0,"cc_match":1},{"id":"wisp-cc-hooked","title":"Wisp CC hooked","description":"","status":"hooked","priority":2,"assignee":"mayor/","created_at":"2026-06-12T11:59:57Z","updated_at":"2026-06-12T11:59:57Z","labels_csv":"gt:message,cc:gastown/synth,from:mayor/","assignee_match":0,"cc_match":1},{"id":"issue-direct-open","title":"Duplicate wisp","description":"","status":"open","priority":2,"assignee":"gastown/synth","created_at":"2026-06-12T11:59:56Z","updated_at":"2026-06-12T11:59:56Z","labels_csv":"gt:message,from:mayor/","assignee_match":1,"cc_match":0}]'
+  printf '%s\n' '[{"id":"wisp-direct-open","title":"Wisp direct open","description":"","status":"open","priority":2,"assignee":"excavation/synth","created_at":"2026-06-12T12:00:00Z","updated_at":"2026-06-12T12:00:00Z","labels_csv":"gt:message,from:overseer/","assignee_match":1,"cc_match":0},{"id":"wisp-direct-hooked","title":"Wisp direct hooked","description":"","status":"hooked","priority":2,"assignee":"excavation/synth","created_at":"2026-06-12T11:59:59Z","updated_at":"2026-06-12T11:59:59Z","labels_csv":"gt:message,from:overseer/","assignee_match":1,"cc_match":0},{"id":"wisp-cc-open","title":"Wisp CC open","description":"","status":"open","priority":2,"assignee":"overseer/","created_at":"2026-06-12T11:59:58Z","updated_at":"2026-06-12T11:59:58Z","labels_csv":"gt:message,cc:excavation/synth,from:overseer/","assignee_match":0,"cc_match":1},{"id":"wisp-cc-hooked","title":"Wisp CC hooked","description":"","status":"hooked","priority":2,"assignee":"overseer/","created_at":"2026-06-12T11:59:57Z","updated_at":"2026-06-12T11:59:57Z","labels_csv":"gt:message,cc:excavation/synth,from:overseer/","assignee_match":0,"cc_match":1},{"id":"issue-direct-open","title":"Duplicate wisp","description":"","status":"open","priority":2,"assignee":"excavation/synth","created_at":"2026-06-12T11:59:56Z","updated_at":"2026-06-12T11:59:56Z","labels_csv":"gt:message,from:overseer/","assignee_match":1,"cc_match":0}]'
   exit 0
 fi
 printf 'unexpected bd args: %s\n' "$*" >&2
@@ -481,7 +481,7 @@ exit 1
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv("BD_LOG", logPath)
 
-	m := NewMailboxWithBeadsDir("gastown/synth", t.TempDir(), beadsDir)
+	m := NewMailboxWithBeadsDir("excavation/synth", t.TempDir(), beadsDir)
 	msgs, err := m.listFromDir(beadsDir)
 	if err != nil {
 		t.Fatalf("listFromDir: %v", err)
@@ -555,8 +555,8 @@ exit 1
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv("BD_SQL_LOG", sqlLogPath)
 
-	m := NewMailboxWithBeadsDir("mayor/", t.TempDir(), t.TempDir())
-	_, err := m.queryWispMessages(t.TempDir(), []string{"mayor/", "mayor", `rig/o\'malley`})
+	m := NewMailboxWithBeadsDir("overseer/", t.TempDir(), t.TempDir())
+	_, err := m.queryWispMessages(t.TempDir(), []string{"overseer/", "overseer", `rig/o\'malley`})
 	if err != nil {
 		t.Fatalf("queryWispMessages: %v", err)
 	}
@@ -571,10 +571,10 @@ exit 1
 	}
 	sql := queries[0]
 	for _, want := range []string{
-		`'mayor/'`,
-		`'mayor'`,
-		`'cc:mayor/'`,
-		`'cc:mayor'`,
+		`'overseer/'`,
+		`'overseer'`,
+		`'cc:overseer/'`,
+		`'cc:overseer'`,
 		`'rig/o\\''malley'`,
 		`'cc:rig/o\\''malley'`,
 	} {
@@ -590,12 +590,12 @@ func TestSQLStringListEscapesSQLLiterals(t *testing.T) {
 		values []string
 		want   string
 	}{
-		{name: "plain", values: []string{"mayor"}, want: `'mayor'`},
+		{name: "plain", values: []string{"overseer"}, want: `'overseer'`},
 		{name: "quote", values: []string{"o'brien"}, want: `'o''brien'`},
 		{name: "backslash", values: []string{`rig\agent`}, want: `'rig\\agent'`},
 		{name: "trailing backslash", values: []string{`rig\`}, want: `'rig\\'`},
 		{name: "quote after backslash", values: []string{`rig/o\'malley`}, want: `'rig/o\\''malley'`},
-		{name: "list", values: []string{"mayor/", `rig/o\'malley`}, want: `'mayor/','rig/o\\''malley'`},
+		{name: "list", values: []string{"overseer/", `rig/o\'malley`}, want: `'overseer/','rig/o\\''malley'`},
 	}
 
 	for _, tt := range tests {

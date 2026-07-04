@@ -9,10 +9,10 @@ import (
 	"sync"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // moleculeStepDoneCmd is the "gt mol step done" command.
@@ -21,7 +21,7 @@ var moleculeStepDoneCmd = &cobra.Command{
 	Short: "Complete step and auto-continue to next",
 	Long: `Complete a molecule step and automatically continue to the next ready step.
 
-This command handles the step-to-step transition for polecats:
+This command handles the step-to-step transition for miners:
 
 1. Closes the completed step (bd close <step-id>)
 2. Extracts the molecule ID from the step
@@ -31,7 +31,7 @@ This command handles the step-to-step transition for polecats:
    - Respawns the pane for a fresh session
 5. If molecule complete:
    - Clears the hook
-   - Sends POLECAT_DONE to witness
+   - Sends MINER_DONE to witness
    - Exits the session
 
 IMPORTANT: This is the canonical way to complete molecule steps. Do NOT manually
@@ -78,7 +78,7 @@ func runMoleculeStepDone(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("finding workspace: %w", err)
 	}
 	if townRoot == "" {
-		return fmt.Errorf("not in a Gas Town workspace")
+		return fmt.Errorf("not in a Excavation Site workspace")
 	}
 
 	// Find beads directory
@@ -272,7 +272,7 @@ func handleStepContinue(cwd, townRoot string, nextStep *beads.Issue, dryRun bool
 	roleCtx := RoleContext{
 		Role:     roleInfo.Role,
 		Rig:      roleInfo.Rig,
-		Polecat:  roleInfo.Polecat,
+		Miner:  roleInfo.Miner,
 		TownRoot: townRoot,
 		WorkDir:  cwd,
 	}
@@ -383,7 +383,7 @@ func handleParallelSteps(cwd, townRoot, _ string, steps []*beads.Issue, dryRun b
 
 	// Execute steps concurrently using goroutines
 	// Note: This is simplified - each step's "execution" just marks it complete
-	// In practice, the agent (witness/deacon) needs to actually do the work described in step.Description
+	// In practice, the agent (witness/supervisor) needs to actually do the work described in step.Description
 	// For true parallel execution, this would spawn separate tmux panes or Task subagents
 
 	var wg sync.WaitGroup
@@ -438,7 +438,7 @@ func handleMoleculeComplete(cwd, townRoot, moleculeID string, dryRun bool) error
 	roleCtx := RoleContext{
 		Role:     roleInfo.Role,
 		Rig:      roleInfo.Rig,
-		Polecat:  roleInfo.Polecat,
+		Miner:  roleInfo.Miner,
 		TownRoot: townRoot,
 		WorkDir:  cwd,
 	}
@@ -455,7 +455,7 @@ func handleMoleculeComplete(cwd, townRoot, moleculeID string, dryRun bool) error
 		if roleCtx.Role == RoleDog {
 			fmt.Printf("[dry-run] Would run gt dog done\n")
 		} else {
-			fmt.Printf("[dry-run] Would send POLECAT_DONE to witness\n")
+			fmt.Printf("[dry-run] Would send MINER_DONE to witness\n")
 		}
 		return nil
 	}
@@ -482,8 +482,8 @@ func handleMoleculeComplete(cwd, townRoot, moleculeID string, dryRun bool) error
 		}
 	}
 
-	// For polecats, use gt done to signal completion
-	if roleCtx.Role == RolePolecat {
+	// For miners, use gt done to signal completion
+	if roleCtx.Role == RoleMiner {
 		fmt.Printf("%s Signaling completion to witness...\n", style.Bold.Render("📤"))
 
 		doneCmd := exec.Command("gt", "done", "--status", "DEFERRED")
@@ -500,8 +500,8 @@ func handleMoleculeComplete(cwd, townRoot, moleculeID string, dryRun bool) error
 		fmt.Printf("%s Signaling dog completion...\n", style.Bold.Render("📤"))
 
 		dogDoneArgs := []string{"dog", "done"}
-		if roleCtx.Polecat != "" { // dog name stored in Polecat field
-			dogDoneArgs = append(dogDoneArgs, roleCtx.Polecat)
+		if roleCtx.Miner != "" { // dog name stored in Miner field
+			dogDoneArgs = append(dogDoneArgs, roleCtx.Miner)
 		}
 		dogDoneCmd := exec.Command("gt", dogDoneArgs...)
 		dogDoneCmd.Stdout = os.Stdout

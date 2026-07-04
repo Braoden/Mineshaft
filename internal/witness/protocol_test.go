@@ -12,8 +12,8 @@ func TestClassifyMessage(t *testing.T) {
 		subject  string
 		expected ProtocolType
 	}{
-		{"POLECAT_DONE nux", ProtoPolecatDone},
-		{"POLECAT_DONE ace", ProtoPolecatDone},
+		{"MINER_DONE nux", ProtoMinerDone},
+		{"MINER_DONE ace", ProtoMinerDone},
 		{"LIFECYCLE:Shutdown nux", ProtoLifecycleShutdown},
 		{"HELP: Tests failing", ProtoHelp},
 		{"HELP: Git conflict", ProtoHelp},
@@ -40,21 +40,21 @@ func TestClassifyMessage(t *testing.T) {
 	}
 }
 
-func TestParsePolecatDone(t *testing.T) {
+func TestParseMinerDone(t *testing.T) {
 	t.Parallel()
-	subject := "POLECAT_DONE nux"
+	subject := "MINER_DONE nux"
 	body := `Exit: MERGED
 Issue: gt-abc123
 MR: gt-mr-xyz
 Branch: feature-branch`
 
-	payload, err := ParsePolecatDone(subject, body)
+	payload, err := ParseMinerDone(subject, body)
 	if err != nil {
-		t.Fatalf("ParsePolecatDone() error = %v", err)
+		t.Fatalf("ParseMinerDone() error = %v", err)
 	}
 
-	if payload.PolecatName != "nux" {
-		t.Errorf("PolecatName = %q, want %q", payload.PolecatName, "nux")
+	if payload.MinerName != "nux" {
+		t.Errorf("MinerName = %q, want %q", payload.MinerName, "nux")
 	}
 	if payload.Exit != "MERGED" {
 		t.Errorf("Exit = %q, want %q", payload.Exit, "MERGED")
@@ -70,18 +70,18 @@ Branch: feature-branch`
 	}
 }
 
-func TestParsePolecatDone_MinimalBody(t *testing.T) {
+func TestParseMinerDone_MinimalBody(t *testing.T) {
 	t.Parallel()
-	subject := "POLECAT_DONE ace"
+	subject := "MINER_DONE ace"
 	body := "Exit: DEFERRED"
 
-	payload, err := ParsePolecatDone(subject, body)
+	payload, err := ParseMinerDone(subject, body)
 	if err != nil {
-		t.Fatalf("ParsePolecatDone() error = %v", err)
+		t.Fatalf("ParseMinerDone() error = %v", err)
 	}
 
-	if payload.PolecatName != "ace" {
-		t.Errorf("PolecatName = %q, want %q", payload.PolecatName, "ace")
+	if payload.MinerName != "ace" {
+		t.Errorf("MinerName = %q, want %q", payload.MinerName, "ace")
 	}
 	if payload.Exit != "DEFERRED" {
 		t.Errorf("Exit = %q, want %q", payload.Exit, "DEFERRED")
@@ -91,26 +91,26 @@ func TestParsePolecatDone_MinimalBody(t *testing.T) {
 	}
 }
 
-func TestParsePolecatDone_InvalidSubject(t *testing.T) {
+func TestParseMinerDone_InvalidSubject(t *testing.T) {
 	t.Parallel()
-	_, err := ParsePolecatDone("Invalid subject", "body")
+	_, err := ParseMinerDone("Invalid subject", "body")
 	if err == nil {
-		t.Error("ParsePolecatDone() expected error for invalid subject")
+		t.Error("ParseMinerDone() expected error for invalid subject")
 	}
 }
 
-func TestParsePolecatDone_MRFailed(t *testing.T) {
+func TestParseMinerDone_MRFailed(t *testing.T) {
 	t.Parallel()
-	subject := "POLECAT_DONE nux"
+	subject := "MINER_DONE nux"
 	body := `Exit: COMPLETED
 Issue: gt-abc123
-Branch: polecat/nux-abc123
+Branch: miner/nux-abc123
 MRFailed: true
 Errors: MR bead creation failed: connection refused`
 
-	payload, err := ParsePolecatDone(subject, body)
+	payload, err := ParseMinerDone(subject, body)
 	if err != nil {
-		t.Fatalf("ParsePolecatDone() error = %v", err)
+		t.Fatalf("ParseMinerDone() error = %v", err)
 	}
 
 	if !payload.MRFailed {
@@ -124,18 +124,18 @@ Errors: MR bead creation failed: connection refused`
 	}
 }
 
-func TestParsePolecatDone_MRFailedAbsent(t *testing.T) {
+func TestParseMinerDone_MRFailedAbsent(t *testing.T) {
 	t.Parallel()
 	// When MRFailed is not in the body, it should default to false
-	subject := "POLECAT_DONE nux"
+	subject := "MINER_DONE nux"
 	body := `Exit: COMPLETED
 Issue: gt-abc123
 MR: gt-mr-xyz
-Branch: polecat/nux-abc123`
+Branch: miner/nux-abc123`
 
-	payload, err := ParsePolecatDone(subject, body)
+	payload, err := ParseMinerDone(subject, body)
 	if err != nil {
-		t.Fatalf("ParsePolecatDone() error = %v", err)
+		t.Fatalf("ParseMinerDone() error = %v", err)
 	}
 
 	if payload.MRFailed {
@@ -146,7 +146,7 @@ Branch: polecat/nux-abc123`
 func TestParseHelp(t *testing.T) {
 	t.Parallel()
 	subject := "HELP: Tests failing on CI"
-	body := `Agent: gastown/polecats/nux
+	body := `Agent: excavation/miners/nux
 Issue: gt-abc123
 Problem: Unit tests timeout after 30 seconds
 Tried: Increased timeout, checked for deadlocks`
@@ -159,8 +159,8 @@ Tried: Increased timeout, checked for deadlocks`
 	if payload.Topic != "Tests failing on CI" {
 		t.Errorf("Topic = %q, want %q", payload.Topic, "Tests failing on CI")
 	}
-	if payload.Agent != "gastown/polecats/nux" {
-		t.Errorf("Agent = %q, want %q", payload.Agent, "gastown/polecats/nux")
+	if payload.Agent != "excavation/miners/nux" {
+		t.Errorf("Agent = %q, want %q", payload.Agent, "excavation/miners/nux")
 	}
 	if payload.IssueID != "gt-abc123" {
 		t.Errorf("IssueID = %q, want %q", payload.IssueID, "gt-abc123")
@@ -193,8 +193,8 @@ Merged-At: 2025-12-30T10:30:00Z`
 		t.Fatalf("ParseMerged() error = %v", err)
 	}
 
-	if payload.PolecatName != "nux" {
-		t.Errorf("PolecatName = %q, want %q", payload.PolecatName, "nux")
+	if payload.MinerName != "nux" {
+		t.Errorf("MinerName = %q, want %q", payload.MinerName, "nux")
 	}
 	if payload.Branch != "feature-nux" {
 		t.Errorf("Branch = %q, want %q", payload.Branch, "feature-nux")
@@ -228,8 +228,8 @@ Error: unit tests failed with 3 errors`
 		t.Fatalf("ParseMergeFailed() error = %v", err)
 	}
 
-	if payload.PolecatName != "nux" {
-		t.Errorf("PolecatName = %q, want %q", payload.PolecatName, "nux")
+	if payload.MinerName != "nux" {
+		t.Errorf("MinerName = %q, want %q", payload.MinerName, "nux")
 	}
 	if payload.Branch != "feature-nux" {
 		t.Errorf("Branch = %q, want %q", payload.Branch, "feature-nux")
@@ -258,8 +258,8 @@ func TestParseMergeFailed_MinimalBody(t *testing.T) {
 		t.Fatalf("ParseMergeFailed() error = %v", err)
 	}
 
-	if payload.PolecatName != "ace" {
-		t.Errorf("PolecatName = %q, want %q", payload.PolecatName, "ace")
+	if payload.MinerName != "ace" {
+		t.Errorf("MinerName = %q, want %q", payload.MinerName, "ace")
 	}
 	if payload.FailureType != "build" {
 		t.Errorf("FailureType = %q, want %q", payload.FailureType, "build")
@@ -280,10 +280,10 @@ func TestParseMergeFailed_InvalidSubject(t *testing.T) {
 func TestParseMergeReady(t *testing.T) {
 	t.Parallel()
 	subject := "MERGE_READY nux"
-	body := `Branch: polecat/nux/gt-abc123
+	body := `Branch: miner/nux/gt-abc123
 Issue: gt-abc123
 MR: mr-xyz789
-Polecat: nux
+Miner: nux
 Verified: clean git state`
 
 	payload, err := ParseMergeReady(subject, body)
@@ -291,11 +291,11 @@ Verified: clean git state`
 		t.Fatalf("ParseMergeReady() error = %v", err)
 	}
 
-	if payload.PolecatName != "nux" {
-		t.Errorf("PolecatName = %q, want %q", payload.PolecatName, "nux")
+	if payload.MinerName != "nux" {
+		t.Errorf("MinerName = %q, want %q", payload.MinerName, "nux")
 	}
-	if payload.Branch != "polecat/nux/gt-abc123" {
-		t.Errorf("Branch = %q, want %q", payload.Branch, "polecat/nux/gt-abc123")
+	if payload.Branch != "miner/nux/gt-abc123" {
+		t.Errorf("Branch = %q, want %q", payload.Branch, "miner/nux/gt-abc123")
 	}
 	if payload.IssueID != "gt-abc123" {
 		t.Errorf("IssueID = %q, want %q", payload.IssueID, "gt-abc123")
@@ -318,8 +318,8 @@ func TestParseMergeReady_MinimalBody(t *testing.T) {
 		t.Fatalf("ParseMergeReady() error = %v", err)
 	}
 
-	if payload.PolecatName != "ace" {
-		t.Errorf("PolecatName = %q, want %q", payload.PolecatName, "ace")
+	if payload.MinerName != "ace" {
+		t.Errorf("MinerName = %q, want %q", payload.MinerName, "ace")
 	}
 	if payload.Branch != "feature-ace" {
 		t.Errorf("Branch = %q, want %q", payload.Branch, "feature-ace")
@@ -392,7 +392,7 @@ func TestCleanupWispLabels(t *testing.T) {
 	t.Parallel()
 	labels := CleanupWispLabels("nux", "pending")
 
-	expected := []string{"cleanup", "polecat:nux", "state:pending"}
+	expected := []string{"cleanup", "miner:nux", "state:pending"}
 	if len(labels) != len(expected) {
 		t.Fatalf("CleanupWispLabels() returned %d labels, want %d", len(labels), len(expected))
 	}
@@ -408,7 +408,7 @@ func TestFormatHelpSummary_FullPayload(t *testing.T) {
 	t.Parallel()
 	ts := time.Date(2026, 2, 28, 12, 0, 0, 0, time.UTC)
 	payload := &HelpPayload{
-		Agent:       "gastown/polecats/nux",
+		Agent:       "excavation/miners/nux",
 		IssueID:     "gt-1234",
 		Topic:       "Git conflict",
 		Problem:     "Merge conflict in main.go",
@@ -418,7 +418,7 @@ func TestFormatHelpSummary_FullPayload(t *testing.T) {
 
 	summary := FormatHelpSummary(payload)
 
-	if !strings.Contains(summary, "HELP REQUEST from gastown/polecats/nux") {
+	if !strings.Contains(summary, "HELP REQUEST from excavation/miners/nux") {
 		t.Errorf("summary should contain agent name, got: %s", summary)
 	}
 	if !strings.Contains(summary, "(issue: gt-1234)") {
@@ -441,13 +441,13 @@ func TestFormatHelpSummary_FullPayload(t *testing.T) {
 func TestFormatHelpSummary_MinimalPayload(t *testing.T) {
 	t.Parallel()
 	payload := &HelpPayload{
-		Agent:   "gastown/polecats/furiosa",
+		Agent:   "excavation/miners/furiosa",
 		Problem: "Tests fail on CI",
 	}
 
 	summary := FormatHelpSummary(payload)
 
-	if !strings.Contains(summary, "HELP REQUEST from gastown/polecats/furiosa") {
+	if !strings.Contains(summary, "HELP REQUEST from excavation/miners/furiosa") {
 		t.Errorf("summary should contain agent name, got: %s", summary)
 	}
 	if strings.Contains(summary, "issue:") {
@@ -482,8 +482,8 @@ func TestAssessHelp_Emergency(t *testing.T) {
 	if assessment.Severity != HelpSeverityCritical {
 		t.Errorf("Severity = %q, want %q", assessment.Severity, HelpSeverityCritical)
 	}
-	if assessment.SuggestTo != "overseer" {
-		t.Errorf("SuggestTo = %q, want %q", assessment.SuggestTo, "overseer")
+	if assessment.SuggestTo != "boss" {
+		t.Errorf("SuggestTo = %q, want %q", assessment.SuggestTo, "boss")
 	}
 }
 
@@ -500,8 +500,8 @@ func TestAssessHelp_Failed(t *testing.T) {
 	if assessment.Severity != HelpSeverityHigh {
 		t.Errorf("Severity = %q, want %q", assessment.Severity, HelpSeverityHigh)
 	}
-	if assessment.SuggestTo != "deacon" {
-		t.Errorf("SuggestTo = %q, want %q", assessment.SuggestTo, "deacon")
+	if assessment.SuggestTo != "supervisor" {
+		t.Errorf("SuggestTo = %q, want %q", assessment.SuggestTo, "supervisor")
 	}
 }
 
@@ -518,8 +518,8 @@ func TestAssessHelp_Blocked(t *testing.T) {
 	if assessment.Severity != HelpSeverityHigh {
 		t.Errorf("Severity = %q, want %q", assessment.Severity, HelpSeverityHigh)
 	}
-	if assessment.SuggestTo != "mayor" {
-		t.Errorf("SuggestTo = %q, want %q", assessment.SuggestTo, "mayor")
+	if assessment.SuggestTo != "overseer" {
+		t.Errorf("SuggestTo = %q, want %q", assessment.SuggestTo, "overseer")
 	}
 }
 
@@ -536,15 +536,15 @@ func TestAssessHelp_Decision(t *testing.T) {
 	if assessment.Severity != HelpSeverityMedium {
 		t.Errorf("Severity = %q, want %q", assessment.Severity, HelpSeverityMedium)
 	}
-	if assessment.SuggestTo != "deacon" {
-		t.Errorf("SuggestTo = %q, want %q", assessment.SuggestTo, "deacon")
+	if assessment.SuggestTo != "supervisor" {
+		t.Errorf("SuggestTo = %q, want %q", assessment.SuggestTo, "supervisor")
 	}
 }
 
 func TestAssessHelp_Lifecycle(t *testing.T) {
 	t.Parallel()
 	payload := &HelpPayload{
-		Topic:   "Polecat zombie detected",
+		Topic:   "Miner zombie detected",
 		Problem: "Session dead but bead still in_progress",
 	}
 	assessment := AssessHelp(payload)
@@ -572,8 +572,8 @@ func TestAssessHelp_DefaultHelp(t *testing.T) {
 	if assessment.Severity != HelpSeverityMedium {
 		t.Errorf("Severity = %q, want %q", assessment.Severity, HelpSeverityMedium)
 	}
-	if assessment.SuggestTo != "deacon" {
-		t.Errorf("SuggestTo = %q, want %q", assessment.SuggestTo, "deacon")
+	if assessment.SuggestTo != "supervisor" {
+		t.Errorf("SuggestTo = %q, want %q", assessment.SuggestTo, "supervisor")
 	}
 	if assessment.Rationale == "" {
 		t.Error("Rationale should not be empty")
@@ -608,13 +608,13 @@ func TestAssessHelp_PriorityOrder(t *testing.T) {
 func TestFormatHelpSummary_WithAssessment(t *testing.T) {
 	t.Parallel()
 	payload := &HelpPayload{
-		Agent:   "gastown/polecats/nux",
+		Agent:   "excavation/miners/nux",
 		Topic:   "Merge conflict",
 		Problem: "Cannot rebase",
 		Assessment: &HelpAssessment{
 			Category:  HelpCategoryBlocked,
 			Severity:  HelpSeverityHigh,
-			SuggestTo: "mayor",
+			SuggestTo: "overseer",
 			Rationale: "matched keyword \"merge conflict\"",
 		},
 	}
@@ -628,7 +628,7 @@ func TestFormatHelpSummary_WithAssessment(t *testing.T) {
 	if !strings.Contains(summary, "high") {
 		t.Errorf("summary should contain severity, got: %s", summary)
 	}
-	if !strings.Contains(summary, "mayor") {
+	if !strings.Contains(summary, "overseer") {
 		t.Errorf("summary should contain suggested target, got: %s", summary)
 	}
 }
@@ -671,8 +671,8 @@ func TestParseDispatchAttempt(t *testing.T) {
 		t.Fatalf("ParseDispatchAttempt() error = %v", err)
 	}
 
-	if payload.PolecatName != "nux" {
-		t.Errorf("PolecatName = %q, want %q", payload.PolecatName, "nux")
+	if payload.MinerName != "nux" {
+		t.Errorf("MinerName = %q, want %q", payload.MinerName, "nux")
 	}
 	if payload.BeadID != "gt-abc123" {
 		t.Errorf("BeadID = %q, want %q", payload.BeadID, "gt-abc123")
@@ -700,8 +700,8 @@ func TestParseDispatchOK(t *testing.T) {
 		t.Fatalf("ParseDispatchOK() error = %v", err)
 	}
 
-	if payload.PolecatName != "nux" {
-		t.Errorf("PolecatName = %q, want %q", payload.PolecatName, "nux")
+	if payload.MinerName != "nux" {
+		t.Errorf("MinerName = %q, want %q", payload.MinerName, "nux")
 	}
 	if payload.BeadID != "gt-abc123" {
 		t.Errorf("BeadID = %q, want %q", payload.BeadID, "gt-abc123")
@@ -730,8 +730,8 @@ Reason: bead already claimed`
 		t.Fatalf("ParseDispatchFail() error = %v", err)
 	}
 
-	if payload.PolecatName != "nux" {
-		t.Errorf("PolecatName = %q, want %q", payload.PolecatName, "nux")
+	if payload.MinerName != "nux" {
+		t.Errorf("MinerName = %q, want %q", payload.MinerName, "nux")
 	}
 	if payload.BeadID != "gt-abc123" {
 		t.Errorf("BeadID = %q, want %q", payload.BeadID, "gt-abc123")
@@ -747,21 +747,21 @@ Reason: bead already claimed`
 func TestParseDispatchFail_MinimalBody(t *testing.T) {
 	t.Parallel()
 	subject := "DISPATCH_FAIL ace"
-	body := "Reason: polecat state changed"
+	body := "Reason: miner state changed"
 
 	payload, err := ParseDispatchFail(subject, body)
 	if err != nil {
 		t.Fatalf("ParseDispatchFail() error = %v", err)
 	}
 
-	if payload.PolecatName != "ace" {
-		t.Errorf("PolecatName = %q, want %q", payload.PolecatName, "ace")
+	if payload.MinerName != "ace" {
+		t.Errorf("MinerName = %q, want %q", payload.MinerName, "ace")
 	}
 	if payload.BeadID != "" {
 		t.Errorf("BeadID = %q, want empty", payload.BeadID)
 	}
-	if payload.Reason != "polecat state changed" {
-		t.Errorf("Reason = %q, want %q", payload.Reason, "polecat state changed")
+	if payload.Reason != "miner state changed" {
+		t.Errorf("Reason = %q, want %q", payload.Reason, "miner state changed")
 	}
 }
 
@@ -783,8 +783,8 @@ func TestParseIdlePassivated(t *testing.T) {
 		t.Fatalf("ParseIdlePassivated() error = %v", err)
 	}
 
-	if payload.PolecatName != "nux" {
-		t.Errorf("PolecatName = %q, want %q", payload.PolecatName, "nux")
+	if payload.MinerName != "nux" {
+		t.Errorf("MinerName = %q, want %q", payload.MinerName, "nux")
 	}
 	if payload.IdleDuration != "24h0m0s" {
 		t.Errorf("IdleDuration = %q, want %q", payload.IdleDuration, "24h0m0s")
@@ -804,8 +804,8 @@ func TestParseIdlePassivated_MinimalBody(t *testing.T) {
 		t.Fatalf("ParseIdlePassivated() error = %v", err)
 	}
 
-	if payload.PolecatName != "slit" {
-		t.Errorf("PolecatName = %q, want %q", payload.PolecatName, "slit")
+	if payload.MinerName != "slit" {
+		t.Errorf("MinerName = %q, want %q", payload.MinerName, "slit")
 	}
 	if payload.IdleDuration != "" {
 		t.Errorf("IdleDuration = %q, want empty", payload.IdleDuration)
@@ -844,7 +844,7 @@ func TestAgentStateConstants(t *testing.T) {
 
 func TestExitTypeConstants(t *testing.T) {
 	t.Parallel()
-	// Verify all expected exit types are defined and match PolecatDonePayload.Exit values
+	// Verify all expected exit types are defined and match MinerDonePayload.Exit values
 	types := map[ExitType]string{
 		ExitTypeCompleted:     "COMPLETED",
 		ExitTypeEscalated:     "ESCALATED",
@@ -858,19 +858,19 @@ func TestExitTypeConstants(t *testing.T) {
 	}
 }
 
-func TestExitTypeMatchesPolecatDonePayload(t *testing.T) {
+func TestExitTypeMatchesMinerDonePayload(t *testing.T) {
 	t.Parallel()
-	// The ExitType constants must match values parsed by ParsePolecatDone
-	subject := "POLECAT_DONE nux"
+	// The ExitType constants must match values parsed by ParseMinerDone
+	subject := "MINER_DONE nux"
 
 	for _, exit := range []ExitType{ExitTypeCompleted, ExitTypeEscalated, ExitTypeDeferred, ExitTypePhaseComplete} {
 		body := "Exit: " + string(exit)
-		payload, err := ParsePolecatDone(subject, body)
+		payload, err := ParseMinerDone(subject, body)
 		if err != nil {
-			t.Fatalf("ParsePolecatDone() for exit %q: %v", exit, err)
+			t.Fatalf("ParseMinerDone() for exit %q: %v", exit, err)
 		}
 		if payload.Exit != string(exit) {
-			t.Errorf("ParsePolecatDone Exit = %q, want %q", payload.Exit, string(exit))
+			t.Errorf("ParseMinerDone Exit = %q, want %q", payload.Exit, string(exit))
 		}
 	}
 }

@@ -19,7 +19,7 @@ func TestHasAssignedOpenWork_UsesPinnedBeadsDirInsteadOfRigOrRepoFlag(t *testing
 	}
 	if err := os.WriteFile(
 		filepath.Join(townRoot, ".beads", "routes.jsonl"),
-		[]byte("{\"prefix\":\"gt-\",\"path\":\"gastown/mayor/rig\"}\n"),
+		[]byte("{\"prefix\":\"gt-\",\"path\":\"excavation/overseer/rig\"}\n"),
 		0o644,
 	); err != nil {
 		t.Fatalf("write routes.jsonl: %v", err)
@@ -27,7 +27,7 @@ func TestHasAssignedOpenWork_UsesPinnedBeadsDirInsteadOfRigOrRepoFlag(t *testing
 
 	binDir := t.TempDir()
 	logPath := filepath.Join(binDir, "bd.log")
-	expectedBeadsDir := filepath.Join(townRoot, "gastown", "mayor", "rig", ".beads")
+	expectedBeadsDir := filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads")
 	script := `#!/bin/sh
 for arg in "$@"; do
   case "$arg" in
@@ -58,7 +58,7 @@ printf '[{"id":"gt-123"}]\n'
 		bdPath: bdPath,
 	}
 
-	if !d.hasAssignedOpenWork("gastown", "polecats/rust") {
+	if !d.hasAssignedOpenWork("excavation", "miners/rust") {
 		t.Fatal("expected assigned work lookup to succeed")
 	}
 

@@ -16,30 +16,30 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/crew"
-	"github.com/steveyegge/gastown/internal/daemon"
-	"github.com/steveyegge/gastown/internal/deacon"
-	"github.com/steveyegge/gastown/internal/doltserver"
-	"github.com/steveyegge/gastown/internal/events"
-	"github.com/steveyegge/gastown/internal/mail"
-	"github.com/steveyegge/gastown/internal/mayor"
-	"github.com/steveyegge/gastown/internal/polecat"
-	"github.com/steveyegge/gastown/internal/refinery"
-	"github.com/steveyegge/gastown/internal/rig"
-	"github.com/steveyegge/gastown/internal/session"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/tmux"
-	"github.com/steveyegge/gastown/internal/util"
-	"github.com/steveyegge/gastown/internal/witness"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/crew"
+	"github.com/steveyegge/excavation/internal/daemon"
+	"github.com/steveyegge/excavation/internal/supervisor"
+	"github.com/steveyegge/excavation/internal/doltserver"
+	"github.com/steveyegge/excavation/internal/events"
+	"github.com/steveyegge/excavation/internal/mail"
+	"github.com/steveyegge/excavation/internal/overseer"
+	"github.com/steveyegge/excavation/internal/miner"
+	"github.com/steveyegge/excavation/internal/refinery"
+	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/excavation/internal/witness"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 // agentStartResult holds the result of starting an agent.
 type agentStartResult struct {
-	name   string // Display name like "Witness (gastown)"
+	name   string // Display name like "Witness (excavation)"
 	ok     bool   // Whether start succeeded
 	detail string // Status detail (session name or error)
 }
@@ -54,7 +54,7 @@ type UpOutput struct {
 // ServiceStatus represents the status of a single service.
 type ServiceStatus struct {
 	Name   string `json:"name"`
-	Type   string `json:"type"` // daemon, deacon, mayor, witness, refinery, crew, polecat
+	Type   string `json:"type"` // daemon, supervisor, overseer, witness, refinery, crew, miner
 	Rig    string `json:"rig,omitempty"`
 	OK     bool   `json:"ok"`
 	Detail string `json:"detail"`
@@ -120,25 +120,25 @@ var daemonStartupGrace = func() time.Duration {
 var upCmd = &cobra.Command{
 	Use:     "up",
 	GroupID: GroupServices,
-	Short:   "Bring up all Gas Town services",
-	Long: `Start all Gas Town long-lived services.
+	Short:   "Bring up all Excavation Site services",
+	Long: `Start all Excavation Site long-lived services.
 
-This is the idempotent "boot" command for Gas Town. It ensures all
+This is the idempotent "boot" command for Excavation Site. It ensures all
 infrastructure agents are running:
 
   • Dolt       - Shared SQL database server for beads
   • Daemon     - Go background process that pokes agents
-  • Deacon     - Health orchestrator (monitors Mayor/Witnesses)
-  • Mayor      - Global work coordinator
-  • Witnesses  - Per-rig polecat managers
+  • Supervisor     - Health orchestrator (monitors Overseer/Witnesses)
+  • Overseer      - Global work coordinator
+  • Witnesses  - Per-rig miner managers
   • Refineries - Per-rig merge queue processors
 
-Polecats are NOT started by this command - they are transient workers
-spawned on demand by the Mayor or Witnesses.
+Miners are NOT started by this command - they are transient workers
+spawned on demand by the Overseer or Witnesses.
 
 Use --restore to also start:
   • Crew       - Per rig settings (settings/config.json crew.startup)
-  • Polecats   - Those with pinned beads (work attached)
+  • Miners   - Those with pinned beads (work attached)
 
 Running 'gt up' multiple times is safe - it only starts services that
 aren't already running.`,
@@ -153,7 +153,7 @@ var (
 
 func init() {
 	upCmd.Flags().BoolVarP(&upQuiet, "quiet", "q", false, "Only show errors (ignored with --json)")
-	upCmd.Flags().BoolVar(&upRestore, "restore", false, "Also restore crew (from settings) and polecats (from hooks)")
+	upCmd.Flags().BoolVar(&upRestore, "restore", false, "Also restore crew (from settings) and miners (from hooks)")
 	upCmd.Flags().BoolVar(&upJSON, "json", false, "Output as JSON")
 	rootCmd.AddCommand(upCmd)
 }
@@ -161,11 +161,11 @@ func init() {
 func runUp(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Ensure lifecycle defaults are configured. On first run this creates
-	// mayor/daemon.json with sensible defaults for the six-stage Dolt lifecycle.
+	// overseer/daemon.json with sensible defaults for the six-stage Dolt lifecycle.
 	// On subsequent runs it fills in any newly added patrols without touching
 	// existing config. Errors are non-fatal — the town can run without lifecycle
 	// automation, it just won't have automated maintenance.
@@ -185,7 +185,7 @@ func runUp(cmd *cobra.Command, args []string) error {
 	allOK := true
 	var services []ServiceStatus
 
-	// Discover rigs early so we can prefetch while daemon/deacon/mayor start
+	// Discover rigs early so we can prefetch while daemon/supervisor/overseer start
 	rigs := discoverRigs(townRoot)
 
 	// Safety: bring current agent out of DND on startup so orchestration nudges
@@ -196,10 +196,10 @@ func runUp(cmd *cobra.Command, args []string) error {
 		fmt.Printf("%s DND was enabled; reset to normal for current agent\n", style.SuccessPrefix)
 	}
 
-	// Start daemon, deacon, mayor, and rig prefetch in parallel
+	// Start daemon, supervisor, overseer, and rig prefetch in parallel
 	var daemonErr error
 	var daemonPID int
-	var deaconResult, mayorResult agentStartResult
+	var supervisorResult, overseerResult agentStartResult
 	var prefetchedRigs map[string]*rig.Rig
 	var rigErrors map[string]error
 	var doltOK bool
@@ -244,39 +244,39 @@ func runUp(cmd *cobra.Command, args []string) error {
 		}
 	}()
 
-	// 2. Deacon
+	// 2. Supervisor
 	go func() {
 		defer startupWg.Done()
-		deaconMgr := deacon.NewManager(townRoot)
-		if err := deaconMgr.Start(""); err != nil {
-			if err == deacon.ErrAlreadyRunning {
-				deaconResult = agentStartResult{name: "Deacon", ok: true, detail: deaconMgr.SessionName()}
+		supervisorMgr := supervisor.NewManager(townRoot)
+		if err := supervisorMgr.Start(""); err != nil {
+			if err == supervisor.ErrAlreadyRunning {
+				supervisorResult = agentStartResult{name: "Supervisor", ok: true, detail: supervisorMgr.SessionName()}
 			} else {
-				deaconResult = agentStartResult{name: "Deacon", ok: false, detail: err.Error()}
+				supervisorResult = agentStartResult{name: "Supervisor", ok: false, detail: err.Error()}
 			}
 		} else {
-			deaconResult = agentStartResult{name: "Deacon", ok: true, detail: deaconMgr.SessionName()}
+			supervisorResult = agentStartResult{name: "Supervisor", ok: true, detail: supervisorMgr.SessionName()}
 		}
 	}()
 
-	// 3. Mayor
+	// 3. Overseer
 	go func() {
 		defer startupWg.Done()
-		mayorMgr := mayor.NewManager(townRoot)
-		if err := mayorMgr.Start(""); err != nil {
-			if errors.Is(err, mayor.ErrAlreadyRunning) {
-				mayorResult = agentStartResult{name: "Mayor", ok: true, detail: mayorMgr.SessionName()}
-			} else if errors.Is(err, mayor.ErrACPActive) {
-				mayorResult = agentStartResult{name: "Mayor", ok: true, detail: "ACP active"}
+		overseerMgr := overseer.NewManager(townRoot)
+		if err := overseerMgr.Start(""); err != nil {
+			if errors.Is(err, overseer.ErrAlreadyRunning) {
+				overseerResult = agentStartResult{name: "Overseer", ok: true, detail: overseerMgr.SessionName()}
+			} else if errors.Is(err, overseer.ErrACPActive) {
+				overseerResult = agentStartResult{name: "Overseer", ok: true, detail: "ACP active"}
 			} else {
-				mayorResult = agentStartResult{name: "Mayor", ok: false, detail: err.Error()}
+				overseerResult = agentStartResult{name: "Overseer", ok: false, detail: err.Error()}
 			}
 		} else {
-			mayorResult = agentStartResult{name: "Mayor", ok: true, detail: mayorMgr.SessionName()}
+			overseerResult = agentStartResult{name: "Overseer", ok: true, detail: overseerMgr.SessionName()}
 		}
 	}()
 
-	// 4. Prefetch rig configs (overlaps with daemon/deacon/mayor startup)
+	// 4. Prefetch rig configs (overlaps with daemon/supervisor/overseer startup)
 	go func() {
 		defer startupWg.Done()
 		prefetchedRigs, rigErrors = prefetchRigs(rigs)
@@ -297,7 +297,7 @@ func runUp(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Collect daemon/deacon/mayor results (always append daemon status)
+	// Collect daemon/supervisor/overseer results (always append daemon status)
 	if daemonErr != nil {
 		services = append(services, ServiceStatus{Name: "Daemon", Type: "daemon", OK: false, Detail: daemonErr.Error()})
 		allOK = false
@@ -306,12 +306,12 @@ func runUp(cmd *cobra.Command, args []string) error {
 	} else {
 		services = append(services, ServiceStatus{Name: "Daemon", Type: "daemon", OK: true, Detail: "running (PID unknown)"})
 	}
-	services = append(services, ServiceStatus{Name: deaconResult.name, Type: constants.RoleDeacon, OK: deaconResult.ok, Detail: deaconResult.detail})
-	if !deaconResult.ok {
+	services = append(services, ServiceStatus{Name: supervisorResult.name, Type: constants.RoleSupervisor, OK: supervisorResult.ok, Detail: supervisorResult.detail})
+	if !supervisorResult.ok {
 		allOK = false
 	}
-	services = append(services, ServiceStatus{Name: mayorResult.name, Type: constants.RoleMayor, OK: mayorResult.ok, Detail: mayorResult.detail})
-	if !mayorResult.ok {
+	services = append(services, ServiceStatus{Name: overseerResult.name, Type: constants.RoleOverseer, OK: overseerResult.ok, Detail: overseerResult.detail})
+	if !overseerResult.ok {
 		allOK = false
 	}
 
@@ -340,7 +340,7 @@ func runUp(cmd *cobra.Command, args []string) error {
 	}
 
 	// Orphaned bead recovery: detect beads stuck in hooked/in_progress status
-	// assigned to polecats that no longer exist (session dead + directory gone).
+	// assigned to miners that no longer exist (session dead + directory gone).
 	// After a crash, these beads sit orphaned until someone manually resets them.
 	// Running this before witnesses start avoids duplicate recovery. (gas-udp)
 	if !doltSkipped && doltOK {
@@ -394,22 +394,22 @@ func runUp(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		// 7. Polecats with pinned work (if --restore)
+		// 7. Miners with pinned work (if --restore)
 		for _, rigName := range rigs {
-			polecatsStarted, polecatErrors := startPolecatsWithWork(townRoot, rigName)
-			for _, name := range polecatsStarted {
+			minersStarted, minerErrors := startMinersWithWork(townRoot, rigName)
+			for _, name := range minersStarted {
 				services = append(services, ServiceStatus{
-					Name:   fmt.Sprintf("Polecat (%s/%s)", rigName, name),
-					Type:   constants.RolePolecat,
+					Name:   fmt.Sprintf("Miner (%s/%s)", rigName, name),
+					Type:   constants.RoleMiner,
 					Rig:    rigName,
 					OK:     true,
-					Detail: session.PolecatSessionName(session.PrefixFor(rigName), name),
+					Detail: session.MinerSessionName(session.PrefixFor(rigName), name),
 				})
 			}
-			for name, err := range polecatErrors {
+			for name, err := range minerErrors {
 				services = append(services, ServiceStatus{
-					Name:   fmt.Sprintf("Polecat (%s/%s)", rigName, name),
-					Type:   constants.RolePolecat,
+					Name:   fmt.Sprintf("Miner (%s/%s)", rigName, name),
+					Type:   constants.RoleMiner,
 					Rig:    rigName,
 					OK:     false,
 					Detail: err.Error(),
@@ -421,7 +421,7 @@ func runUp(cmd *cobra.Command, args []string) error {
 
 	// Log boot event for both JSON and text paths
 	if allOK {
-		startedServices := []string{"dolt", "daemon", "deacon", "mayor"}
+		startedServices := []string{"dolt", "daemon", "supervisor", "overseer"}
 		for _, rigName := range rigs {
 			startedServices = append(startedServices, fmt.Sprintf("%s/witness", rigName))
 			startedServices = append(startedServices, fmt.Sprintf("%s/refinery", rigName))
@@ -478,7 +478,7 @@ func disableCurrentAgentDND(townRoot string) (bool, error) {
 	ctx := RoleContext{
 		Role:     roleInfo.Role,
 		Rig:      roleInfo.Rig,
-		Polecat:  roleInfo.Polecat,
+		Miner:  roleInfo.Miner,
 		TownRoot: townRoot,
 		WorkDir:  cwd,
 	}
@@ -771,7 +771,7 @@ func discoverRigs(townRoot string) []string {
 	var rigs []string
 
 	// Try rigs.json first
-	rigsConfigPath := filepath.Join(townRoot, "mayor", "rigs.json")
+	rigsConfigPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	if rigsConfig, err := config.LoadRigsConfig(rigsConfigPath); err == nil {
 		for name := range rigsConfig.Rigs {
 			rigs = append(rigs, name)
@@ -792,7 +792,7 @@ func discoverRigs(townRoot string) []string {
 
 		name := entry.Name()
 		// Skip known non-rig directories
-		if name == "mayor" || name == "daemon" || name == "deacon" ||
+		if name == "overseer" || name == "daemon" || name == "supervisor" ||
 			name == ".git" || name == "docs" || name[0] == '.' {
 			continue
 		}
@@ -806,9 +806,9 @@ func discoverRigs(townRoot string) []string {
 			continue
 		}
 
-		// Check for polecats directory (indicates a rig)
-		polecatsPath := filepath.Join(dirPath, "polecats")
-		if _, err := os.Stat(polecatsPath); err == nil {
+		// Check for miners directory (indicates a rig)
+		minersPath := filepath.Join(dirPath, "miners")
+		if _, err := os.Stat(minersPath); err == nil {
 			rigs = append(rigs, name)
 		}
 	}
@@ -940,29 +940,29 @@ func parseCrewStartupPreference(pref string, available []string) []string {
 	return result
 }
 
-// startPolecatsWithWork starts polecats that have pinned beads (work attached).
-// Returns list of started polecat names and map of errors.
-func startPolecatsWithWork(townRoot, rigName string) ([]string, map[string]error) {
+// startMinersWithWork starts miners that have pinned beads (work attached).
+// Returns list of started miner names and map of errors.
+func startMinersWithWork(townRoot, rigName string) ([]string, map[string]error) {
 	started := []string{}
 	errors := map[string]error{}
 
 	rigPath := filepath.Join(townRoot, rigName)
-	polecatsDir := filepath.Join(rigPath, "polecats")
+	minersDir := filepath.Join(rigPath, "miners")
 
-	// List polecat directories
-	entries, err := os.ReadDir(polecatsDir)
+	// List miner directories
+	entries, err := os.ReadDir(minersDir)
 	if err != nil {
-		// No polecats directory
+		// No miners directory
 		return started, errors
 	}
 
-	// Get polecat session manager
+	// Get miner session manager
 	_, r, err := getRig(rigName)
 	if err != nil {
 		return started, errors
 	}
 	t := tmux.NewTmux()
-	polecatMgr := polecat.NewSessionManager(t, r)
+	minerMgr := miner.NewSessionManager(t, r)
 
 	for _, entry := range entries {
 		if !entry.IsDir() {
@@ -972,12 +972,12 @@ func startPolecatsWithWork(townRoot, rigName string) ([]string, map[string]error
 			continue
 		}
 
-		polecatName := entry.Name()
-		polecatPath := filepath.Join(polecatsDir, polecatName)
+		minerName := entry.Name()
+		minerPath := filepath.Join(minersDir, minerName)
 
-		// Check if this polecat has a pinned bead (work attached)
-		agentID := fmt.Sprintf("%s/polecats/%s", rigName, polecatName)
-		b := beads.New(polecatPath)
+		// Check if this miner has a pinned bead (work attached)
+		agentID := fmt.Sprintf("%s/miners/%s", rigName, minerName)
+		b := beads.New(minerPath)
 		pinnedBeads, err := b.List(beads.ListOptions{
 			Status:   beads.StatusPinned,
 			Assignee: agentID,
@@ -988,15 +988,15 @@ func startPolecatsWithWork(townRoot, rigName string) ([]string, map[string]error
 			continue
 		}
 
-		// This polecat has work - start it using SessionManager
-		if err := polecatMgr.Start(polecatName, polecat.SessionStartOptions{}); err != nil {
-			if err == polecat.ErrSessionRunning {
-				started = append(started, polecatName)
+		// This miner has work - start it using SessionManager
+		if err := minerMgr.Start(minerName, miner.SessionStartOptions{}); err != nil {
+			if err == miner.ErrSessionRunning {
+				started = append(started, minerName)
 			} else {
-				errors[polecatName] = err
+				errors[minerName] = err
 			}
 		} else {
-			started = append(started, polecatName)
+			started = append(started, minerName)
 		}
 	}
 
@@ -1020,12 +1020,12 @@ func waitForDoltReady(townRoot string) {
 }
 
 // recoverOrphanedBeads scans each rig for beads stuck in hooked/in_progress
-// status assigned to polecats that no longer exist (tmux session dead AND
+// status assigned to miners that no longer exist (tmux session dead AND
 // worktree directory removed). For each orphan, the bead is reset to open
-// and the deacon is notified for re-dispatch.
+// and the supervisor is notified for re-dispatch.
 //
 // This runs during gt up after Dolt is ready, before witnesses start their
-// own patrol. It catches the crash-recovery case where polecats die and
+// own patrol. It catches the crash-recovery case where miners die and
 // their beads are never re-slung. (gas-udp)
 func recoverOrphanedBeads(townRoot string, rigs []string, prefetchedRigs map[string]*rig.Rig) []ServiceStatus {
 	var services []ServiceStatus

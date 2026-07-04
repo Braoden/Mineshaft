@@ -11,9 +11,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/doltserver"
-	"github.com/steveyegge/gastown/internal/git"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/doltserver"
+	"github.com/steveyegge/excavation/internal/git"
 )
 
 func setupTestTown(t *testing.T) (string, *config.RigsConfig) {
@@ -76,7 +76,7 @@ func createTestRig(t *testing.T, root, name string) {
 		t.Fatalf("mkdir rig: %v", err)
 	}
 
-	// Create agent dirs (witness, refinery, mayor)
+	// Create agent dirs (witness, refinery, overseer)
 	for _, dir := range AgentDirs {
 		dirPath := filepath.Join(rigPath, dir)
 		if err := os.MkdirAll(dirPath, 0755); err != nil {
@@ -84,16 +84,16 @@ func createTestRig(t *testing.T, root, name string) {
 		}
 	}
 
-	// Create some polecats
-	polecatsDir := filepath.Join(rigPath, "polecats")
-	for _, polecat := range []string{"Toast", "Cheedo"} {
-		if err := os.MkdirAll(filepath.Join(polecatsDir, polecat), 0755); err != nil {
-			t.Fatalf("mkdir polecat: %v", err)
+	// Create some miners
+	minersDir := filepath.Join(rigPath, "miners")
+	for _, miner := range []string{"Toast", "Cheedo"} {
+		if err := os.MkdirAll(filepath.Join(minersDir, miner), 0755); err != nil {
+			t.Fatalf("mkdir miner: %v", err)
 		}
 	}
-	// Create a shared support dir that should not be treated as a polecat worktree.
-	if err := os.MkdirAll(filepath.Join(polecatsDir, ".claude"), 0755); err != nil {
-		t.Fatalf("mkdir polecats/.claude: %v", err)
+	// Create a shared support dir that should not be treated as a miner worktree.
+	if err := os.MkdirAll(filepath.Join(minersDir, ".claude"), 0755); err != nil {
+		t.Fatalf("mkdir miners/.claude: %v", err)
 	}
 }
 
@@ -101,9 +101,9 @@ func TestDiscoverRigs(t *testing.T) {
 	root, rigsConfig := setupTestTown(t)
 
 	// Create test rig
-	createTestRig(t, root, "gastown")
-	rigsConfig.Rigs["gastown"] = config.RigEntry{
-		GitURL: "git@github.com:test/gastown.git",
+	createTestRig(t, root, "excavation")
+	rigsConfig.Rigs["excavation"] = config.RigEntry{
+		GitURL: "git@github.com:test/excavation.git",
 	}
 
 	manager := NewManager(root, rigsConfig, git.NewGit(root))
@@ -118,14 +118,14 @@ func TestDiscoverRigs(t *testing.T) {
 	}
 
 	rig := rigs[0]
-	if rig.Name != "gastown" {
-		t.Errorf("Name = %q, want gastown", rig.Name)
+	if rig.Name != "excavation" {
+		t.Errorf("Name = %q, want excavation", rig.Name)
 	}
-	if len(rig.Polecats) != 2 {
-		t.Errorf("Polecats count = %d, want 2", len(rig.Polecats))
+	if len(rig.Miners) != 2 {
+		t.Errorf("Miners count = %d, want 2", len(rig.Miners))
 	}
-	if slices.Contains(rig.Polecats, ".claude") {
-		t.Errorf("expected polecats/.claude to be ignored, got %v", rig.Polecats)
+	if slices.Contains(rig.Miners, ".claude") {
+		t.Errorf("expected miners/.claude to be ignored, got %v", rig.Miners)
 	}
 	if !rig.HasWitness {
 		t.Error("expected HasWitness = true")
@@ -478,7 +478,7 @@ func TestListRigNames(t *testing.T) {
 func TestRigSummary(t *testing.T) {
 	rig := &Rig{
 		Name:        "test",
-		Polecats:    []string{"a", "b", "c"},
+		Miners:    []string{"a", "b", "c"},
 		HasWitness:  true,
 		HasRefinery: false,
 	}
@@ -488,8 +488,8 @@ func TestRigSummary(t *testing.T) {
 	if summary.Name != "test" {
 		t.Errorf("Name = %q, want test", summary.Name)
 	}
-	if summary.PolecatCount != 3 {
-		t.Errorf("PolecatCount = %d, want 3", summary.PolecatCount)
+	if summary.MinerCount != 3 {
+		t.Errorf("MinerCount = %d, want 3", summary.MinerCount)
 	}
 	if !summary.HasWitness {
 		t.Error("expected HasWitness = true")
@@ -560,19 +560,19 @@ func TestEnsureGitignoreEntry_AppendsToExisting(t *testing.T) {
 
 func TestInitBeads_TrackedBeads_CreatesRedirect(t *testing.T) {
 	t.Parallel()
-	// When the cloned repo has tracked beads (mayor/rig/.beads exists),
+	// When the cloned repo has tracked beads (overseer/rig/.beads exists),
 	// initBeads should create a redirect file at <rig>/.beads/redirect
-	// pointing to mayor/rig/.beads instead of creating a local database.
+	// pointing to overseer/rig/.beads instead of creating a local database.
 	rigPath := t.TempDir()
 
 	// Simulate tracked beads in the cloned repo
-	mayorBeadsDir := filepath.Join(rigPath, "mayor", "rig", ".beads")
-	if err := os.MkdirAll(mayorBeadsDir, 0755); err != nil {
-		t.Fatalf("mkdir mayor beads: %v", err)
+	overseerBeadsDir := filepath.Join(rigPath, "overseer", "rig", ".beads")
+	if err := os.MkdirAll(overseerBeadsDir, 0755); err != nil {
+		t.Fatalf("mkdir overseer beads: %v", err)
 	}
 	// Create a config file to simulate a real beads directory
-	if err := os.WriteFile(filepath.Join(mayorBeadsDir, "config.yaml"), []byte("prefix: gt\n"), 0644); err != nil {
-		t.Fatalf("write mayor config: %v", err)
+	if err := os.WriteFile(filepath.Join(overseerBeadsDir, "config.yaml"), []byte("prefix: gt\n"), 0644); err != nil {
+		t.Fatalf("write overseer config: %v", err)
 	}
 
 	manager := &Manager{}
@@ -587,7 +587,7 @@ func TestInitBeads_TrackedBeads_CreatesRedirect(t *testing.T) {
 		t.Fatalf("reading redirect file: %v", err)
 	}
 
-	expected := "mayor/rig/.beads\n"
+	expected := "overseer/rig/.beads\n"
 	if string(content) != expected {
 		t.Errorf("redirect content = %q, want %q", string(content), expected)
 	}
@@ -601,14 +601,14 @@ func TestInitBeads_TrackedBeads_CreatesRedirect(t *testing.T) {
 
 func TestInitBeads_LocalBeads_CreatesDatabase(t *testing.T) {
 	// Cannot use t.Parallel() due to t.Setenv
-	// When the cloned repo does NOT have tracked beads (no mayor/rig/.beads),
+	// When the cloned repo does NOT have tracked beads (no overseer/rig/.beads),
 	// initBeads should create a local database at <rig>/.beads/
 	rigPath := t.TempDir()
 
-	// Create mayor/rig directory but WITHOUT .beads (no tracked beads)
-	mayorRigDir := filepath.Join(rigPath, "mayor", "rig")
-	if err := os.MkdirAll(mayorRigDir, 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	// Create overseer/rig directory but WITHOUT .beads (no tracked beads)
+	overseerRigDir := filepath.Join(rigPath, "overseer", "rig")
+	if err := os.MkdirAll(overseerRigDir, 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 
 	// Use fake bd that succeeds
@@ -706,10 +706,10 @@ func TestInitBeadsSetsIssuePrefix(t *testing.T) {
 	// when bd init succeeds (Dolt database is available).
 	rigPath := t.TempDir()
 
-	// Create mayor/rig directory WITHOUT .beads (no tracked beads)
-	mayorRigDir := filepath.Join(rigPath, "mayor", "rig")
-	if err := os.MkdirAll(mayorRigDir, 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	// Create overseer/rig directory WITHOUT .beads (no tracked beads)
+	overseerRigDir := filepath.Join(rigPath, "overseer", "rig")
+	if err := os.MkdirAll(overseerRigDir, 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 
 	// Track all commands received by fake bd
@@ -748,8 +748,8 @@ func TestInitBeadsPassesCanonicalDatabase(t *testing.T) {
 	}
 
 	rigPath := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(rigPath, "mayor", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(rigPath, "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 
 	cmdLog := filepath.Join(t.TempDir(), "bd-cmds.log")
@@ -834,11 +834,11 @@ func TestBdSubprocessEnvUsesHardenedBDEnv(t *testing.T) {
 
 func TestBdSubprocessEnvUsesTownConfigBeforeMetadataExists(t *testing.T) {
 	townRoot := t.TempDir()
-	mayorDir := filepath.Join(townRoot, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(townRoot, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(mayorDir, "town.json"), []byte(`{"name":"test-town"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "town.json"), []byte(`{"name":"test-town"}`), 0644); err != nil {
 		t.Fatal(err)
 	}
 	doltDataDir := filepath.Join(townRoot, ".dolt-data")
@@ -874,11 +874,11 @@ func TestBdSubprocessEnvUsesTownConfigBeforeMetadataExists(t *testing.T) {
 
 func TestBdSubprocessEnvClearsStaleHostWhenConfigHasNoHost(t *testing.T) {
 	townRoot := t.TempDir()
-	mayorDir := filepath.Join(townRoot, "mayor")
-	if err := os.MkdirAll(mayorDir, 0755); err != nil {
+	overseerDir := filepath.Join(townRoot, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(mayorDir, "town.json"), []byte(`{"name":"test-town"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "town.json"), []byte(`{"name":"test-town"}`), 0644); err != nil {
 		t.Fatal(err)
 	}
 	doltDataDir := filepath.Join(townRoot, ".dolt-data")
@@ -941,7 +941,7 @@ func TestInitAgentBeadsUsesRigBeadsDir(t *testing.T) {
 	}
 
 	// Rig-level agent beads (witness, refinery) are stored in rig beads.
-	// Town-level agents (mayor, deacon) are created by gt install in town beads.
+	// Town-level agents (overseer, supervisor) are created by gt install in town beads.
 	// This test verifies that rig agent beads are created in the rig directory,
 	// using the resolved rig beads directory for BEADS_DIR.
 	townRoot := t.TempDir()
@@ -1049,7 +1049,7 @@ func TestIsValidBeadsPrefix(t *testing.T) {
 		{"gt", true},
 		{"bd", true},
 		{"hq", true},
-		{"gastown", true},
+		{"excavation", true},
 		{"myProject", true},
 		{"my-project", true},
 		{"a", true},
@@ -1088,7 +1088,7 @@ func TestIsValidBeadsPrefix(t *testing.T) {
 // matches the prefix exactly (e.g. "ma" for prefix=ma) on bd >= 0.62. The rig
 // uses <rigName> as its canonical database, so the prefix-named DB is an
 // orphan that must be removed — otherwise beads created from the rig land in
-// the orphan while the mayor reads from <rigName>, silently splitting the data.
+// the orphan while the overseer reads from <rigName>, silently splitting the data.
 //
 // This test simulates the post-init filesystem state, runs the orphan dropper,
 // and asserts that exactly one rig database remains on disk.
@@ -1161,7 +1161,7 @@ func TestDropRigOrphanDBs_RemovesLegacyBeadsPrefixDB(t *testing.T) {
 
 // TestDropRigOrphanDBs_PreservesRigDB is the safety check that the helper
 // never removes a database whose name happens to match the prefix when the
-// rig itself is named after its prefix (e.g. rig "gastown" with prefix "gt"
+// rig itself is named after its prefix (e.g. rig "excavation" with prefix "gt"
 // where neither candidate is an orphan).
 func TestDropRigOrphanDBs_PreservesRigDB(t *testing.T) {
 	t.Setenv("GT_DOLT_PORT", "1")
@@ -1217,7 +1217,7 @@ func TestDeriveBeadsPrefix(t *testing.T) {
 		want string
 	}{
 		// Compound words with common suffixes should split
-		{"gastown", "gt"},     // gas + town
+		{"excavation", "gt"},     // gas + town
 		{"nashville", "nv"},   // nash + ville
 		{"bridgeport", "bp"},  // bridge + port
 		{"someplace", "sp"},   // some + place
@@ -1228,7 +1228,7 @@ func TestDeriveBeadsPrefix(t *testing.T) {
 
 		// Hyphenated names
 		{"my-project", "mp"},
-		{"gas-town", "gt"},
+		{"excavation-site", "gt"},
 		{"some-long-name", "sln"},
 
 		// Underscored names
@@ -1274,7 +1274,7 @@ func TestSplitCompoundWord(t *testing.T) {
 		want []string
 	}{
 		// Known suffixes
-		{"gastown", []string{"gas", "town"}},
+		{"excavation", []string{"gas", "town"}},
 		{"nashville", []string{"nash", "ville"}},
 		{"bridgeport", []string{"bridge", "port"}},
 		{"someplace", []string{"some", "place"}},
@@ -1328,7 +1328,7 @@ func TestSplitCamelCase(t *testing.T) {
 		{"parseJSON", []string{"parse", "JSON"}},
 
 		// No splits (single word, all lower)
-		{"gastown", []string{"gastown"}},
+		{"excavation", []string{"excavation"}},
 		{"a", []string{"a"}},
 
 		// All uppercase (no lower transition)
@@ -1462,7 +1462,7 @@ func TestDetectBeadsPrefixFromConfig_TrailingDash(t *testing.T) {
 
 func TestDetectBeadsPrefixFromConfig_NoFallbackToJSONL(t *testing.T) {
 	// Verify that detectBeadsPrefixFromConfig does NOT fall back to issues.jsonl.
-	// Gastown requires Dolt server — JSONL is not a supported data source.
+	// Excavation requires Dolt server — JSONL is not a supported data source.
 	dir := t.TempDir()
 
 	// Write config.yaml without a prefix key
@@ -1628,8 +1628,8 @@ func TestRegisterRig_DetectPushURLEmptyWhenPushEqualsFetch(t *testing.T) {
 	}
 }
 
-func TestDetectGitURL_MayorRigFallback(t *testing.T) {
-	// Verify detectGitURL finds the origin remote from mayor/rig when the
+func TestDetectGitURL_OverseerRigFallback(t *testing.T) {
+	// Verify detectGitURL finds the origin remote from overseer/rig when the
 	// root rigPath has no git repo. This exercises the fallback path that
 	// was fixed by switching from NewGitWithDir to NewGit.
 	root, rigsConfig := setupTestTown(t)
@@ -1638,17 +1638,17 @@ func TestDetectGitURL_MayorRigFallback(t *testing.T) {
 	rigName := "detectme"
 	rigPath := filepath.Join(root, rigName)
 
-	// Create mayor/rig as a clone (but do NOT create a git repo at rigPath itself)
+	// Create overseer/rig as a clone (but do NOT create a git repo at rigPath itself)
 	upstreamURL := filepath.Join(root, "detect-upstream.git")
 	cmd := exec.Command("git", "init", "--bare", upstreamURL)
 	if out, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("init bare repo failed: %v\n%s", err, string(out))
 	}
-	mayorRigPath := filepath.Join(rigPath, "mayor", "rig")
-	if err := os.MkdirAll(filepath.Dir(mayorRigPath), 0755); err != nil {
-		t.Fatalf("mkdir mayor dir: %v", err)
+	overseerRigPath := filepath.Join(rigPath, "overseer", "rig")
+	if err := os.MkdirAll(filepath.Dir(overseerRigPath), 0755); err != nil {
+		t.Fatalf("mkdir overseer dir: %v", err)
 	}
-	cloneCmd := exec.Command("git", "clone", upstreamURL, mayorRigPath)
+	cloneCmd := exec.Command("git", "clone", upstreamURL, overseerRigPath)
 	if out, err := cloneCmd.CombinedOutput(); err != nil {
 		t.Fatalf("clone failed: %v\n%s", err, string(out))
 	}
@@ -1659,7 +1659,7 @@ func TestDetectGitURL_MayorRigFallback(t *testing.T) {
 		t.Fatalf("RegisterRig: %v", err)
 	}
 	if result.GitURL != upstreamURL {
-		t.Errorf("GitURL = %q, want %q (should detect from mayor/rig)", result.GitURL, upstreamURL)
+		t.Errorf("GitURL = %q, want %q (should detect from overseer/rig)", result.GitURL, upstreamURL)
 	}
 }
 
@@ -1738,7 +1738,7 @@ func TestEnsureMetadata_SetsRequiredFields(t *testing.T) {
 	rigName := "myrig"
 
 	// Create the beads directory structure that EnsureMetadata expects
-	beadsDir := filepath.Join(townRoot, rigName, "mayor", "rig", ".beads")
+	beadsDir := filepath.Join(townRoot, rigName, "overseer", "rig", ".beads")
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatalf("mkdir beads dir: %v", err)
 	}
@@ -1874,14 +1874,14 @@ func TestAddRig_UpstreamURL(t *testing.T) {
 		}
 	})
 
-	t.Run("mayor clone upstream remote", func(t *testing.T) {
-		mayorGit := git.NewGit(filepath.Join(rigPath, "mayor", "rig"))
-		got, err := mayorGit.GetUpstreamURL()
+	t.Run("overseer clone upstream remote", func(t *testing.T) {
+		overseerGit := git.NewGit(filepath.Join(rigPath, "overseer", "rig"))
+		got, err := overseerGit.GetUpstreamURL()
 		if err != nil {
 			t.Fatalf("GetUpstreamURL: %v", err)
 		}
 		if got != upstreamURL {
-			t.Errorf("mayor upstream = %q, want %q", got, upstreamURL)
+			t.Errorf("overseer upstream = %q, want %q", got, upstreamURL)
 		}
 	})
 
@@ -2151,7 +2151,7 @@ esac
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	configYAML := "prefix: gt\nsync.remote: \"git+https://github.com/steveyegge/gastown.git\"\n"
+	configYAML := "prefix: gt\nsync.remote: \"git+https://github.com/steveyegge/excavation.git\"\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "config.yaml"), []byte(configYAML), 0644); err != nil {
 		t.Fatalf("write config.yaml: %v", err)
 	}

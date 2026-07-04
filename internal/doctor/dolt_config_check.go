@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/doltserver"
+	"github.com/steveyegge/excavation/internal/doltserver"
 )
 
 // DoltConfigCheck verifies shared-server beads dirs have explicit bd config.

@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/beads"
+	"github.com/steveyegge/excavation/internal/beads"
 )
 
 // PrefixConflictCheck detects duplicate prefixes across rigs in routes.jsonl.
@@ -119,7 +119,7 @@ func (c *PrefixMismatchCheck) Run(ctx *CheckContext) *CheckResult {
 	}
 
 	// Load rigs.json
-	rigsPath := filepath.Join(ctx.TownRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(ctx.TownRoot, "overseer", "rigs.json")
 	rigsConfig, err := loadRigsConfig(rigsPath)
 	if err != nil {
 		return &CheckResult{
@@ -200,7 +200,7 @@ func (c *PrefixMismatchCheck) Fix(ctx *CheckContext) error {
 	}
 
 	// Load rigs.json
-	rigsPath := filepath.Join(ctx.TownRoot, "mayor", "rigs.json")
+	rigsPath := filepath.Join(ctx.TownRoot, "overseer", "rigs.json")
 	rigsConfig, err := loadRigsConfig(rigsPath)
 	if err != nil {
 		return nil // Nothing to fix

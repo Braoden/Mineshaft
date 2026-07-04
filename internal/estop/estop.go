@@ -1,10 +1,10 @@
-// Package estop provides emergency stop functionality for Gas Town.
+// Package estop provides emergency stop functionality for Excavation Site.
 //
 // The E-stop is a town-wide mechanism to pause all agent work. It uses a
 // sentinel file (ESTOP) at the town root. When present, all agents should
 // be frozen (SIGTSTP) and the daemon should not restart them.
 //
-// The Mayor is exempt from E-stop so it can coordinate recovery.
+// The Overseer is exempt from E-stop so it can coordinate recovery.
 //
 // Original implementation by outdoorsea (PR #3237).
 package estop

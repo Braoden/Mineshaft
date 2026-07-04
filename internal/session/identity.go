@@ -1,4 +1,4 @@
-// Package session provides polecat session lifecycle management.
+// Package session provides miner session lifecycle management.
 package session
 
 import (
@@ -6,25 +6,25 @@ import (
 	"strings"
 )
 
-// Role represents the type of Gas Town agent.
+// Role represents the type of Excavation Site agent.
 type Role string
 
 const (
-	RoleMayor    Role = "mayor"
-	RoleDeacon   Role = "deacon"
-	RoleOverseer Role = "overseer"
+	RoleOverseer    Role = "overseer"
+	RoleSupervisor   Role = "supervisor"
+	RoleBoss Role = "boss"
 	RoleWitness  Role = "witness"
 	RoleRefinery Role = "refinery"
 	RoleCrew     Role = "crew"
-	RolePolecat  Role = "polecat"
+	RoleMiner  Role = "miner"
 	RoleDog      Role = "dog"
 )
 
-// AgentIdentity represents a parsed Gas Town agent identity.
+// AgentIdentity represents a parsed Excavation Site agent identity.
 type AgentIdentity struct {
-	Role   Role   // mayor, deacon, witness, refinery, crew, polecat, dog
-	Rig    string // rig name (empty for mayor/deacon/dog)
-	Name   string // crew/polecat/dog name (empty for mayor/deacon/witness/refinery)
+	Role   Role   // overseer, supervisor, witness, refinery, crew, miner, dog
+	Rig    string // rig name (empty for overseer/supervisor/dog)
+	Name   string // crew/miner/dog name (empty for overseer/supervisor/witness/refinery)
 	Prefix string // beads prefix for rig-level agents (e.g., "gt", "bd", "hop")
 }
 
@@ -35,14 +35,14 @@ func ParseAddress(address string) (*AgentIdentity, error) {
 		return nil, fmt.Errorf("empty address")
 	}
 
-	if address == string(RoleMayor) || address == string(RoleMayor)+"/" {
-		return &AgentIdentity{Role: RoleMayor}, nil
+	if address == string(RoleOverseer) || address == string(RoleOverseer)+"/" {
+		return &AgentIdentity{Role: RoleOverseer}, nil
 	}
-	if address == string(RoleDeacon) || address == string(RoleDeacon)+"/" {
-		return &AgentIdentity{Role: RoleDeacon}, nil
+	if address == string(RoleSupervisor) || address == string(RoleSupervisor)+"/" {
+		return &AgentIdentity{Role: RoleSupervisor}, nil
 	}
-	if address == "overseer" {
-		return nil, fmt.Errorf("overseer has no session")
+	if address == "boss" {
+		return nil, fmt.Errorf("boss has no session")
 	}
 
 	address = strings.TrimSuffix(address, "/")
@@ -61,10 +61,10 @@ func ParseAddress(address string) (*AgentIdentity, error) {
 			return &AgentIdentity{Role: RoleWitness, Rig: rig, Prefix: prefix}, nil
 		case string(RoleRefinery):
 			return &AgentIdentity{Role: RoleRefinery, Rig: rig, Prefix: prefix}, nil
-		case string(RoleCrew), "polecats":
+		case string(RoleCrew), "miners":
 			return nil, fmt.Errorf("invalid address %q", address)
 		default:
-			return &AgentIdentity{Role: RolePolecat, Rig: rig, Name: name, Prefix: prefix}, nil
+			return &AgentIdentity{Role: RoleMiner, Rig: rig, Name: name, Prefix: prefix}, nil
 		}
 	case 3:
 		role := parts[1]
@@ -72,8 +72,8 @@ func ParseAddress(address string) (*AgentIdentity, error) {
 		switch role {
 		case string(RoleCrew):
 			return &AgentIdentity{Role: RoleCrew, Rig: rig, Name: name, Prefix: prefix}, nil
-		case "polecats":
-			return &AgentIdentity{Role: RolePolecat, Rig: rig, Name: name, Prefix: prefix}, nil
+		case "miners":
+			return &AgentIdentity{Role: RoleMiner, Rig: rig, Name: name, Prefix: prefix}, nil
 		default:
 			return nil, fmt.Errorf("invalid address %q", address)
 		}
@@ -86,15 +86,15 @@ func ParseAddress(address string) (*AgentIdentity, error) {
 // Uses the default PrefixRegistry to resolve rig-level prefixes to rig names.
 //
 // Session name formats:
-//   - hq-mayor → Role: mayor (town-level, one per machine)
-//   - hq-deacon → Role: deacon (town-level, one per machine)
-//   - hq-boot → Role: deacon, Name: boot (boot watchdog)
-//   - <prefix>-witness → Role: witness (e.g., gt-witness for gastown)
-//   - <prefix>-refinery → Role: refinery (e.g., gt-refinery for gastown)
-//   - <prefix>-crew-<name> → Role: crew (e.g., gt-crew-max for gastown)
-//   - <prefix>-<name> → Role: polecat (e.g., gt-furiosa for gastown)
+//   - hq-overseer → Role: overseer (town-level, one per machine)
+//   - hq-supervisor → Role: supervisor (town-level, one per machine)
+//   - hq-boot → Role: supervisor, Name: boot (boot watchdog)
+//   - <prefix>-witness → Role: witness (e.g., gt-witness for excavation)
+//   - <prefix>-refinery → Role: refinery (e.g., gt-refinery for excavation)
+//   - <prefix>-crew-<name> → Role: crew (e.g., gt-crew-max for excavation)
+//   - <prefix>-<name> → Role: miner (e.g., gt-furiosa for excavation)
 //
-// The prefix is the rig's beads prefix (e.g., "gt" for gastown, "dolt" for beads).
+// The prefix is the rig's beads prefix (e.g., "gt" for excavation, "dolt" for beads).
 // The rig name is resolved from the default PrefixRegistry. If the prefix is
 // not in the registry, the prefix itself is used as the rig name.
 func ParseSessionName(session string) (*AgentIdentity, error) {
@@ -111,19 +111,19 @@ func ParseSessionNameWithRegistry(session string, registry *PrefixRegistry) (*Ag
 	// Check for town-level roles (hq- prefix).
 	// Note: "hq" may also be a registered rig prefix (e.g., knjn uses "hq").
 	// Known town-level roles are matched first; unknown suffixes fall through
-	// to rig-level parsing so that hq-witness, hq-refinery, hq-<polecat> etc.
+	// to rig-level parsing so that hq-witness, hq-refinery, hq-<miner> etc.
 	// resolve correctly when "hq" is a rig prefix.
 	if strings.HasPrefix(session, HQPrefix) {
 		suffix := strings.TrimPrefix(session, HQPrefix)
 		switch suffix {
-		case string(RoleMayor):
-			return &AgentIdentity{Role: RoleMayor}, nil
-		case string(RoleDeacon):
-			return &AgentIdentity{Role: RoleDeacon}, nil
-		case "boot":
-			return &AgentIdentity{Role: RoleDeacon, Name: "boot"}, nil
-		case "overseer":
+		case string(RoleOverseer):
 			return &AgentIdentity{Role: RoleOverseer}, nil
+		case string(RoleSupervisor):
+			return &AgentIdentity{Role: RoleSupervisor}, nil
+		case "boot":
+			return &AgentIdentity{Role: RoleSupervisor, Name: "boot"}, nil
+		case "boss":
+			return &AgentIdentity{Role: RoleBoss}, nil
 		default:
 			// Dogs: hq-dog-<name>
 			if strings.HasPrefix(suffix, "dog-") {
@@ -165,34 +165,34 @@ func ParseSessionNameWithRegistry(session string, registry *PrefixRegistry) (*Ag
 		return &AgentIdentity{Role: RoleCrew, Rig: rig, Name: name, Prefix: prefix}, nil
 	}
 
-	// Default: polecat
-	// rest is the polecat name (may contain dashes)
+	// Default: miner
+	// rest is the miner name (may contain dashes)
 	if rest == "" {
-		return nil, fmt.Errorf("invalid session name %q: empty polecat name", session)
+		return nil, fmt.Errorf("invalid session name %q: empty miner name", session)
 	}
-	return &AgentIdentity{Role: RolePolecat, Rig: rig, Name: rest, Prefix: prefix}, nil
+	return &AgentIdentity{Role: RoleMiner, Rig: rig, Name: rest, Prefix: prefix}, nil
 }
 
 // SessionName returns the tmux session name for this identity.
 func (a *AgentIdentity) SessionName() string {
 	switch a.Role {
-	case RoleMayor:
-		return MayorSessionName()
-	case RoleDeacon:
+	case RoleOverseer:
+		return OverseerSessionName()
+	case RoleSupervisor:
 		if a.Name == "boot" {
 			return BootSessionName()
 		}
-		return DeaconSessionName()
-	case RoleOverseer:
-		return OverseerSessionName()
+		return SupervisorSessionName()
+	case RoleBoss:
+		return BossSessionName()
 	case RoleWitness:
 		return WitnessSessionName(a.prefix())
 	case RoleRefinery:
 		return RefinerySessionName(a.prefix())
 	case RoleCrew:
 		return CrewSessionName(a.prefix(), a.Name)
-	case RolePolecat:
-		return PolecatSessionName(a.prefix(), a.Name)
+	case RoleMiner:
+		return MinerSessionName(a.prefix(), a.Name)
 	case RoleDog:
 		return DogSessionName(a.Name)
 	default:
@@ -215,27 +215,27 @@ func (a *AgentIdentity) prefix() string {
 // startup beacons. Unlike Address(), this format prevents LLMs from
 // misinterpreting the recipient as a filesystem path.
 // Examples:
-//   - mayor → "mayor"
-//   - deacon → "deacon"
-//   - witness → "witness (rig: gastown)"
-//   - crew → "crew max (rig: gastown)"
-//   - polecat → "polecat Toast (rig: gastown)"
+//   - overseer → "overseer"
+//   - supervisor → "supervisor"
+//   - witness → "witness (rig: excavation)"
+//   - crew → "crew max (rig: excavation)"
+//   - miner → "miner Toast (rig: excavation)"
 func (a *AgentIdentity) BeaconAddress() string {
 	switch a.Role {
-	case RoleMayor:
-		return "mayor"
-	case RoleDeacon:
-		return "deacon"
 	case RoleOverseer:
 		return "overseer"
+	case RoleSupervisor:
+		return "supervisor"
+	case RoleBoss:
+		return "boss"
 	case RoleWitness:
 		return BeaconRecipient("witness", "", a.Rig)
 	case RoleRefinery:
 		return BeaconRecipient("refinery", "", a.Rig)
 	case RoleCrew:
 		return BeaconRecipient("crew", a.Name, a.Rig)
-	case RolePolecat:
-		return BeaconRecipient("polecat", a.Name, a.Rig)
+	case RoleMiner:
+		return BeaconRecipient("miner", a.Name, a.Rig)
 	case RoleDog:
 		return BeaconRecipient("dog", a.Name, "")
 	default:
@@ -245,30 +245,30 @@ func (a *AgentIdentity) BeaconAddress() string {
 
 // Address returns the mail-style address for this identity.
 // Examples:
-//   - mayor → "mayor"
-//   - deacon → "deacon"
-//   - witness → "gastown/witness"
-//   - refinery → "gastown/refinery"
-//   - crew → "gastown/crew/max"
-//   - polecat → "gastown/polecats/Toast"
+//   - overseer → "overseer"
+//   - supervisor → "supervisor"
+//   - witness → "excavation/witness"
+//   - refinery → "excavation/refinery"
+//   - crew → "excavation/crew/max"
+//   - miner → "excavation/miners/Toast"
 func (a *AgentIdentity) Address() string {
 	switch a.Role {
-	case RoleMayor:
-		return "mayor"
-	case RoleDeacon:
-		return "deacon"
 	case RoleOverseer:
 		return "overseer"
+	case RoleSupervisor:
+		return "supervisor"
+	case RoleBoss:
+		return "boss"
 	case RoleWitness:
 		return fmt.Sprintf("%s/witness", a.Rig)
 	case RoleRefinery:
 		return fmt.Sprintf("%s/refinery", a.Rig)
 	case RoleCrew:
 		return fmt.Sprintf("%s/crew/%s", a.Rig, a.Name)
-	case RolePolecat:
-		return fmt.Sprintf("%s/polecats/%s", a.Rig, a.Name)
+	case RoleMiner:
+		return fmt.Sprintf("%s/miners/%s", a.Rig, a.Name)
 	case RoleDog:
-		return fmt.Sprintf("deacon/dogs/%s", a.Name)
+		return fmt.Sprintf("supervisor/dogs/%s", a.Name)
 	default:
 		return ""
 	}
@@ -276,9 +276,9 @@ func (a *AgentIdentity) Address() string {
 
 // GTRole returns the GT_ROLE environment variable format.
 // This is the same as Address() for most roles, except boot
-// which is a deacon variant with its own role identity.
+// which is a supervisor variant with its own role identity.
 func (a *AgentIdentity) GTRole() string {
-	if a.Role == RoleDeacon && a.Name == "boot" {
+	if a.Role == RoleSupervisor && a.Name == "boot" {
 		return "boot"
 	}
 	return a.Address()

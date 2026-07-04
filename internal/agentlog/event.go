@@ -15,7 +15,7 @@ import (
 // All adapters emit this type so downstream telemetry is agent-agnostic.
 type AgentEvent struct {
 	AgentType       string    // "claudecode", "opencode", …
-	SessionID       string    // Gas Town tmux session name (e.g. "hq-mayor", "gt-wyvern-toast")
+	SessionID       string    // Excavation Site tmux session name (e.g. "hq-overseer", "gt-wyvern-toast")
 	NativeSessionID string    // agent-native session UUID (e.g. Claude Code session UUID from JSONL filename)
 	EventType       string    // "text", "tool_use", "tool_result", "thinking", "usage"
 	Role            string    // "assistant" or "user"
@@ -38,7 +38,7 @@ type AgentAdapter interface {
 
 	// Watch starts watching and returns a channel of events.
 	// The channel is closed when ctx is canceled or a fatal error occurs.
-	// sessionID is the Gas Town tmux session name used as a log tag.
+	// sessionID is the Excavation Site tmux session name used as a log tag.
 	// workDir is the agent's working directory (used to locate log files).
 	// since filters out JSONL files last modified before this time; use zero
 	// to disable filtering (picks up any file regardless of age).

@@ -11,7 +11,7 @@ Formulas currently exist in multiple locations with no clear precedence:
 - `.beads/formulas/` (provisioned at runtime by `gt install`)
 - Crew directories have their own `.beads/formulas/` (diverging copies)
 
-When an agent runs `bd cook mol-polecat-work`, which version do they get?
+When an agent runs `bd cook mol-miner-work`, which version do they get?
 
 ## Design Goals
 
@@ -33,19 +33,19 @@ TIER 1: PROJECT (rig-level)
   Location: <project>/.beads/formulas/
   Source:   Committed to project repo
   Use case: Project-specific workflows (deploy, test, release)
-  Example:  ~/gt/gastown/.beads/formulas/mol-gastown-release.formula.toml
+  Example:  ~/gt/excavation/.beads/formulas/mol-excavation-release.formula.toml
 
 TIER 2: TOWN (user-level)
   Location: ~/gt/.beads/formulas/
   Source:   Mol Mall installs, user customizations
   Use case: Cross-project workflows, personal preferences
-  Example:  ~/gt/.beads/formulas/mol-polecat-work.formula.toml (customized)
+  Example:  ~/gt/.beads/formulas/mol-miner-work.formula.toml (customized)
 
 TIER 3: SYSTEM (embedded)
   Location: Compiled into gt binary
   Source:   internal/formula/formulas/ at build time
   Use case: Defaults, blessed patterns, fallback
-  Example:  mol-polecat-work.formula.toml (factory default)
+  Example:  mol-miner-work.formula.toml (factory default)
 ```
 
 ### Resolution Algorithm
@@ -98,7 +98,7 @@ func ResolveFormula(name string, cwd string) (Formula, Tier, error) {
 ### Current Format
 
 ```toml
-formula = "mol-polecat-work"
+formula = "mol-miner-work"
 version = 4
 description = "..."
 ```
@@ -107,16 +107,16 @@ description = "..."
 
 ```toml
 [formula]
-name = "mol-polecat-work"
+name = "mol-miner-work"
 version = "4.0.0"                          # Semver
-author = "steve@gastown.io"                # Author identity
+author = "steve@excavation.io"                # Author identity
 license = "MIT"
-repository = "https://github.com/steveyegge/gastown"
+repository = "https://github.com/steveyegge/excavation"
 
 [formula.registry]
-uri = "hop://molmall.gastown.io/formulas/mol-polecat-work@4.0.0"
+uri = "hop://molmall.excavation.io/formulas/mol-miner-work@4.0.0"
 checksum = "sha256:abc123..."              # Integrity verification
-signed_by = "steve@gastown.io"             # Optional signing
+signed_by = "steve@excavation.io"             # Optional signing
 
 [formula.capabilities]
 # What capabilities does this formula exercise? Used for agent routing.
@@ -129,19 +129,19 @@ secondary = ["git", "ci-cd"]
 When multiple versions exist:
 
 ```bash
-bd cook mol-polecat-work          # Resolves per tier order
-bd cook mol-polecat-work@4        # Specific major version
-bd cook mol-polecat-work@4.0.0    # Exact version
-bd cook mol-polecat-work@latest   # Explicit latest
+bd cook mol-miner-work          # Resolves per tier order
+bd cook mol-miner-work@4        # Specific major version
+bd cook mol-miner-work@4.0.0    # Exact version
+bd cook mol-miner-work@latest   # Explicit latest
 ```
 
 ## Crew Directory Problem
 
 ### Current State
 
-Crew directories (`gastown/crew/max/`) are git worktrees of the rigged repo. They have:
+Crew directories (`excavation/crew/max/`) are git worktrees of the rigged repo. They have:
 - Their own `.beads/formulas/` (from the worktree)
-- These can diverge from `mayor/rig/.beads/formulas/`
+- These can diverge from `overseer/rig/.beads/formulas/`
 
 ### The Fix
 
@@ -149,7 +149,7 @@ Crew should NOT have their own formula copies. Options:
 
 **Option A: Symlink/Redirect**
 ```bash
-# crew/max/.beads/formulas -> ../../mayor/rig/.beads/formulas
+# crew/max/.beads/formulas -> ../../overseer/rig/.beads/formulas
 ```
 All crew share the rig's formulas.
 
@@ -178,25 +178,25 @@ bd cook <formula>            # Formula → Proto
 ```bash
 # List with tier information
 bd formula list
-  mol-polecat-work          v4    [project]
-  mol-polecat-code-review   v1    [town]
+  mol-miner-work          v4    [project]
+  mol-miner-code-review   v1    [town]
   mol-witness-patrol        v2    [system]
 
 # Show resolution path
-bd formula show mol-polecat-work --resolve
-  Resolving: mol-polecat-work
-  ✓ Found at: ~/gt/gastown/.beads/formulas/mol-polecat-work.formula.toml
+bd formula show mol-miner-work --resolve
+  Resolving: mol-miner-work
+  ✓ Found at: ~/gt/excavation/.beads/formulas/mol-miner-work.formula.toml
   Tier: project
   Version: 4
 
   Resolution path checked:
-  1. [project] ~/gt/gastown/.beads/formulas/ ← FOUND
+  1. [project] ~/gt/excavation/.beads/formulas/ ← FOUND
   2. [town]    ~/gt/.beads/formulas/
   3. [system]  <embedded>
 
 # Override tier for testing
-bd cook mol-polecat-work --tier=system    # Force embedded version
-bd cook mol-polecat-work --tier=town      # Force town version
+bd cook mol-miner-work --tier=system    # Force embedded version
+bd cook mol-miner-work --tier=town      # Force town version
 ```
 
 ### Future (Mol Mall)
@@ -209,8 +209,8 @@ gt formula install hop://acme.corp/formulas/mol-deploy
 
 # Manage installed formulas
 gt formula list --installed              # What's in town-level
-gt formula upgrade mol-polecat-work      # Update to latest
-gt formula pin mol-polecat-work@4.0.0    # Lock version
+gt formula upgrade mol-miner-work      # Update to latest
+gt formula pin mol-miner-work@4.0.0    # Lock version
 gt formula uninstall mol-code-review-strict
 ```
 

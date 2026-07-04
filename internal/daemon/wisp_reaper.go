@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
-	agentconfig "github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/doltserver"
-	"github.com/steveyegge/gastown/internal/reaper"
-	"github.com/steveyegge/gastown/internal/util"
+	agentconfig "github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/doltserver"
+	"github.com/steveyegge/excavation/internal/reaper"
+	"github.com/steveyegge/excavation/internal/util"
 )
 
 const (
@@ -124,7 +124,7 @@ func (d *Daemon) reapWisps() {
 
 // dispatchReaperDog dispatches the mol-dog-reaper formula to a Dog via gt sling.
 func (d *Daemon) dispatchReaperDog(vars map[string]string) error {
-	args := []string{"sling", constants.MolDogReaper, "deacon/dogs"}
+	args := []string{"sling", constants.MolDogReaper, "supervisor/dogs"}
 	for k, v := range vars {
 		args = append(args, "--var", fmt.Sprintf("%s=%s", k, v))
 	}

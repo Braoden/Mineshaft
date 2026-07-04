@@ -7,14 +7,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/dog"
+	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/dog"
 )
 
 func writeDogStateForDispatchTest(t *testing.T, townRoot, name string, state *dog.DogState) {
 	t.Helper()
-	dogPath := filepath.Join(townRoot, "deacon", "dogs", name)
+	dogPath := filepath.Join(townRoot, "supervisor", "dogs", name)
 	if err := os.MkdirAll(dogPath, 0755); err != nil {
 		t.Fatalf("mkdir dog path: %v", err)
 	}
@@ -121,13 +121,13 @@ func TestDogDispatchInfoClearWorkIfMatchesSkipsReusedWork(t *testing.T) {
 
 func TestReusableHookedDogFormulaSkipsStaleDogHooks(t *testing.T) {
 	hooked := []*beads.Issue{
-		{ID: "not-a-dog", Assignee: "gastown/polecats/alpha", Description: "attached_formula: mol-dog-reaper"},
-		{ID: "bad-dog-name", Assignee: "deacon/dogs/nested/name", Description: "attached_formula: mol-dog-reaper"},
-		{ID: "missing-dog", Assignee: "deacon/dogs/missing", Description: "attached_formula: mol-dog-reaper"},
-		{ID: "wrong-work", Assignee: "deacon/dogs/beta", Description: "attached_formula: mol-dog-reaper"},
-		{ID: "wrong-formula", Assignee: "deacon/dogs/alpha", Description: "attached_formula: mol-dog-backup"},
-		{ID: "older-live-match", Assignee: "deacon/dogs/alpha", Description: "attached_formula: mol-dog-reaper\nattached_at: 2026-06-16T20:30:15Z"},
-		{ID: "live-match", Assignee: "deacon/dogs/alpha", Description: "attached_formula: mol-dog-reaper\nattached_at: 2026-06-16T20:30:16Z"},
+		{ID: "not-a-dog", Assignee: "excavation/miners/alpha", Description: "attached_formula: mol-dog-reaper"},
+		{ID: "bad-dog-name", Assignee: "supervisor/dogs/nested/name", Description: "attached_formula: mol-dog-reaper"},
+		{ID: "missing-dog", Assignee: "supervisor/dogs/missing", Description: "attached_formula: mol-dog-reaper"},
+		{ID: "wrong-work", Assignee: "supervisor/dogs/beta", Description: "attached_formula: mol-dog-reaper"},
+		{ID: "wrong-formula", Assignee: "supervisor/dogs/alpha", Description: "attached_formula: mol-dog-backup"},
+		{ID: "older-live-match", Assignee: "supervisor/dogs/alpha", Description: "attached_formula: mol-dog-reaper\nattached_at: 2026-06-16T20:30:15Z"},
+		{ID: "live-match", Assignee: "supervisor/dogs/alpha", Description: "attached_formula: mol-dog-reaper\nattached_at: 2026-06-16T20:30:16Z"},
 	}
 
 	bead, dogName := reusableHookedDogFormula(hooked, "mol-dog-reaper", func(_ *beads.Issue, candidate string) bool {

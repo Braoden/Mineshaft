@@ -15,10 +15,10 @@ type MergeRequest struct {
 	// ID is a unique identifier for this merge request.
 	ID string `json:"id"`
 
-	// Branch is the source branch name (e.g., "polecat/Toast/gt-abc").
+	// Branch is the source branch name (e.g., "miner/Toast/gt-abc").
 	Branch string `json:"branch"`
 
-	// Worker is the polecat that created this branch.
+	// Worker is the miner that created this branch.
 	Worker string `json:"worker"`
 
 	// IssueID is the beads issue being worked on.

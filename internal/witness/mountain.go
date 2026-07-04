@@ -1,12 +1,12 @@
 // Mountain failure tracking for the Mountain-Eater (Layer 1).
 //
-// When a polecat exits without completing its hooked bead, this module checks
-// if the issue belongs to a convoy with the "mountain" label. For mountain
-// convoys, it increments a failure count (stored as mountain:failures:N label).
+// When a miner exits without completing its hooked bead, this module checks
+// if the issue belongs to a minecart with the "mountain" label. For mountain
+// minecarts, it increments a failure count (stored as mountain:failures:N label).
 // After 3 failures, the issue is auto-skipped (marked blocked + mountain:skipped).
-// For regular convoys, a warning is logged.
+// For regular minecarts, a warning is logged.
 //
-// See docs/design/convoy/mountain-eater.md section 5.
+// See docs/design/minecart/mountain-eater.md section 5.
 package witness
 
 import (
@@ -17,26 +17,26 @@ import (
 	"strings"
 )
 
-// MountainMaxFailures is the number of polecat failures before an issue is
-// auto-skipped in a mountain convoy. Exported for testing.
+// MountainMaxFailures is the number of miner failures before an issue is
+// auto-skipped in a mountain minecart. Exported for testing.
 const MountainMaxFailures = 3
 
-// ConvoyFailureResult tracks the result of convoy failure tracking for a single issue.
-type ConvoyFailureResult struct {
+// MinecartFailureResult tracks the result of minecart failure tracking for a single issue.
+type MinecartFailureResult struct {
 	IssueID      string
-	ConvoyID     string // Tracking convoy (if any)
-	IsMountain   bool   // Convoy has "mountain" label
+	MinecartID     string // Tracking minecart (if any)
+	IsMountain   bool   // Minecart has "mountain" label
 	FailureCount int    // New failure count after increment
 	Skipped      bool   // Issue was auto-skipped (count >= MountainMaxFailures)
-	Warning      string // Warning message for regular convoys
+	Warning      string // Warning message for regular minecarts
 	Error        error
 }
 
-// trackConvoyFailures processes zombie detection results for convoy failure tracking.
-// For each zombie that had active work on a hook_bead (polecat failed without
-// completing), checks if the issue belongs to a convoy and tracks the failure.
-// Called from DetectZombiePolecats after all zombies are collected.
-func trackConvoyFailures(bd *BdCli, workDir string, result *DetectZombiePolecatsResult) {
+// trackMinecartFailures processes zombie detection results for minecart failure tracking.
+// For each zombie that had active work on a hook_bead (miner failed without
+// completing), checks if the issue belongs to a minecart and tracks the failure.
+// Called from DetectZombieMiners after all zombies are collected.
+func trackMinecartFailures(bd *BdCli, workDir string, result *DetectZombieMinersResult) {
 	for i := range result.Zombies {
 		zombie := &result.Zombies[i]
 
@@ -48,29 +48,29 @@ func trackConvoyFailures(bd *BdCli, workDir string, result *DetectZombiePolecats
 			continue
 		}
 
-		cfr := TrackConvoyFailure(bd, workDir, zombie.HookBead)
+		cfr := TrackMinecartFailure(bd, workDir, zombie.HookBead)
 		if cfr == nil {
-			continue // Not convoy-tracked
+			continue // Not minecart-tracked
 		}
 
 		if cfr.IsMountain {
 			if cfr.Skipped {
-				fmt.Fprintf(os.Stderr, "witness: Mountain: skipped %s after %d failures (convoy %s)\n",
-					cfr.IssueID, cfr.FailureCount, cfr.ConvoyID)
+				fmt.Fprintf(os.Stderr, "witness: Mountain: skipped %s after %d failures (minecart %s)\n",
+					cfr.IssueID, cfr.FailureCount, cfr.MinecartID)
 			} else {
-				fmt.Fprintf(os.Stderr, "witness: Mountain: %s failure %d/%d (convoy %s)\n",
-					cfr.IssueID, cfr.FailureCount, MountainMaxFailures, cfr.ConvoyID)
+				fmt.Fprintf(os.Stderr, "witness: Mountain: %s failure %d/%d (minecart %s)\n",
+					cfr.IssueID, cfr.FailureCount, MountainMaxFailures, cfr.MinecartID)
 			}
 		} else if cfr.Warning != "" {
 			fmt.Fprintf(os.Stderr, "witness: %s\n", cfr.Warning)
 		}
 
 		if cfr.Error != nil {
-			fmt.Fprintf(os.Stderr, "witness: convoy failure tracking error for %s: %v\n",
+			fmt.Fprintf(os.Stderr, "witness: minecart failure tracking error for %s: %v\n",
 				cfr.IssueID, cfr.Error)
 		}
 
-		result.ConvoyFailures = append(result.ConvoyFailures, *cfr)
+		result.MinecartFailures = append(result.MinecartFailures, *cfr)
 	}
 }
 
@@ -85,41 +85,41 @@ func zombieImpliesActiveFailure(zombie ZombieResult) bool {
 	return zombie.WasActive
 }
 
-// TrackConvoyFailure checks if an issue belongs to a convoy and tracks the
-// polecat failure. For mountain convoys, increments the failure count and
-// auto-skips after MountainMaxFailures. For regular convoys, returns a warning.
+// TrackMinecartFailure checks if an issue belongs to a minecart and tracks the
+// miner failure. For mountain minecarts, increments the failure count and
+// auto-skips after MountainMaxFailures. For regular minecarts, returns a warning.
 //
-// Returns nil if the issue has no tracking convoy.
-func TrackConvoyFailure(bd *BdCli, workDir, issueID string) *ConvoyFailureResult {
+// Returns nil if the issue has no tracking minecart.
+func TrackMinecartFailure(bd *BdCli, workDir, issueID string) *MinecartFailureResult {
 	if issueID == "" {
 		return nil
 	}
 
-	// Find convoys tracking this issue (dependents with type "tracks")
-	convoyIDs := getTrackingConvoysCLI(bd, workDir, issueID)
-	if len(convoyIDs) == 0 {
+	// Find minecarts tracking this issue (dependents with type "tracks")
+	minecartIDs := getTrackingMinecartsCLI(bd, workDir, issueID)
+	if len(minecartIDs) == 0 {
 		return nil
 	}
 
-	// Check each convoy for the "mountain" label
-	for _, convoyID := range convoyIDs {
-		labels := getBeadLabels(bd, workDir, convoyID)
+	// Check each minecart for the "mountain" label
+	for _, minecartID := range minecartIDs {
+		labels := getBeadLabels(bd, workDir, minecartID)
 		isMountain := hasLabel(labels, "mountain")
 
-		result := &ConvoyFailureResult{
+		result := &MinecartFailureResult{
 			IssueID:    issueID,
-			ConvoyID:   convoyID,
+			MinecartID:   minecartID,
 			IsMountain: isMountain,
 		}
 
 		if isMountain {
 			result.Error = trackMountainFailure(bd, workDir, issueID, result)
 		} else {
-			result.Warning = fmt.Sprintf("polecat failure on convoy-tracked issue %s (convoy %s)", issueID, convoyID)
+			result.Warning = fmt.Sprintf("miner failure on minecart-tracked issue %s (minecart %s)", issueID, minecartID)
 		}
 
-		// Return after processing first matching convoy (an issue typically
-		// belongs to at most one active convoy).
+		// Return after processing first matching minecart (an issue typically
+		// belongs to at most one active minecart).
 		return result
 	}
 
@@ -128,7 +128,7 @@ func TrackConvoyFailure(bd *BdCli, workDir, issueID string) *ConvoyFailureResult
 
 // trackMountainFailure increments the failure count for a mountain-tracked
 // issue and auto-skips if the count reaches MountainMaxFailures.
-func trackMountainFailure(bd *BdCli, workDir, issueID string, result *ConvoyFailureResult) error {
+func trackMountainFailure(bd *BdCli, workDir, issueID string, result *MinecartFailureResult) error {
 	// Get current failure count from issue labels
 	issueLabels := getBeadLabels(bd, workDir, issueID)
 	currentCount := getMountainFailureCount(issueLabels)
@@ -151,9 +151,9 @@ func trackMountainFailure(bd *BdCli, workDir, issueID string, result *ConvoyFail
 	return nil
 }
 
-// getTrackingConvoysCLI finds convoy IDs that track a given issue using the bd CLI.
-// Returns convoy IDs (dependents with type "tracks").
-func getTrackingConvoysCLI(bd *BdCli, workDir, issueID string) []string {
+// getTrackingMinecartsCLI finds minecart IDs that track a given issue using the bd CLI.
+// Returns minecart IDs (dependents with type "tracks").
+func getTrackingMinecartsCLI(bd *BdCli, workDir, issueID string) []string {
 	output, err := bd.Exec(workDir, "dep", "list", issueID, "--direction=up", "--type=tracks", "--json")
 	if err != nil || output == "" || output == "[]" || output == "null" {
 		return nil
@@ -226,12 +226,12 @@ func updateMountainFailureCount(bd *BdCli, workDir, issueID string, oldCount, ne
 }
 
 // skipMountainIssue marks an issue as blocked and adds the mountain:skipped label.
-// This removes the issue from the convoy's ready front, allowing the convoy to
+// This removes the issue from the minecart's ready front, allowing the minecart to
 // continue grinding around it.
 func skipMountainIssue(bd *BdCli, workDir, issueID string, failureCount int) error {
 	return bd.Run(workDir, "update", issueID,
 		"--status=blocked",
 		"--add-label", "mountain:skipped",
-		"--notes", fmt.Sprintf("Skipped by Mountain-Eater after %d polecat failures", failureCount),
+		"--notes", fmt.Sprintf("Skipped by Mountain-Eater after %d miner failures", failureCount),
 	)
 }

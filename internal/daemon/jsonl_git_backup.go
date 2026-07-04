@@ -17,8 +17,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/constants"
-	"github.com/steveyegge/gastown/internal/util"
+	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/excavation/internal/util"
 )
 
 const (
@@ -52,7 +52,7 @@ var validDBName = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 // The query selects only durable work product (bugs, features, tasks, epics, chores).
 const scrubWhereClause = ` WHERE (ephemeral IS NULL OR ephemeral != 1)` +
 	` AND status != 'tombstone'` +
-	` AND issue_type NOT IN ('message', 'event', 'agent', 'convoy', 'molecule', 'role', 'merge-request', 'rig')` +
+	` AND issue_type NOT IN ('message', 'event', 'agent', 'minecart', 'molecule', 'role', 'merge-request', 'rig')` +
 	` AND id NOT LIKE '%-wisp-%'` +
 	` AND id NOT LIKE '%-cv-%'` +
 	` AND id NOT LIKE '%-wf-%'` +
@@ -389,7 +389,7 @@ func (d *Daemon) commitAndPushJsonlBackup(gitRepo string, databases []string, co
 
 	// Commit.
 	if err := d.runGitCmd(gitRepo, gitCmdTimeout, "commit", "-m", msg,
-		"--author=Gas Town Daemon <daemon@gastown.local>"); err != nil {
+		"--author=Excavation Site Daemon <daemon@excavation.local>"); err != nil {
 		return fmt.Errorf("git commit: %w", err)
 	}
 
@@ -500,7 +500,7 @@ func (d *Daemon) runGitCmd(dir string, timeout time.Duration, args ...string) er
 	return nil
 }
 
-// escalate sends an escalation message to the mayor via gt escalate.
+// escalate sends an escalation message to the overseer via gt escalate.
 func (d *Daemon) escalate(source, message string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

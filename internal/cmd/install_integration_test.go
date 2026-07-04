@@ -12,8 +12,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/testutil"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/testutil"
 	"gopkg.in/yaml.v3"
 )
 
@@ -43,11 +43,11 @@ func TestInstallCreatesCorrectStructure(t *testing.T) {
 
 	// Verify directory structure
 	assertDirExists(t, hqPath, "HQ root")
-	assertDirExists(t, filepath.Join(hqPath, "mayor"), "mayor/")
+	assertDirExists(t, filepath.Join(hqPath, "overseer"), "overseer/")
 
-	// Verify mayor/town.json
-	townPath := filepath.Join(hqPath, "mayor", "town.json")
-	assertFileExists(t, townPath, "mayor/town.json")
+	// Verify overseer/town.json
+	townPath := filepath.Join(hqPath, "overseer", "town.json")
+	assertFileExists(t, townPath, "overseer/town.json")
 
 	townConfig, err := config.LoadTownConfig(townPath)
 	if err != nil {
@@ -60,9 +60,9 @@ func TestInstallCreatesCorrectStructure(t *testing.T) {
 		t.Errorf("town.json name = %q, want %q", townConfig.Name, "test-town")
 	}
 
-	// Verify mayor/rigs.json
-	rigsPath := filepath.Join(hqPath, "mayor", "rigs.json")
-	assertFileExists(t, rigsPath, "mayor/rigs.json")
+	// Verify overseer/rigs.json
+	rigsPath := filepath.Join(hqPath, "overseer", "rigs.json")
+	assertFileExists(t, rigsPath, "overseer/rigs.json")
 
 	rigsConfig, err := config.LoadRigsConfig(rigsPath)
 	if err != nil {
@@ -72,14 +72,14 @@ func TestInstallCreatesCorrectStructure(t *testing.T) {
 		t.Errorf("rigs.json should be empty, got %d rigs", len(rigsConfig.Rigs))
 	}
 
-	// Verify Claude settings exist in mayor/.claude/ (not town root/.claude/)
-	// Mayor settings go here to avoid polluting child workspaces via directory traversal
-	mayorSettingsPath := filepath.Join(hqPath, "mayor", ".claude", "settings.json")
-	assertFileExists(t, mayorSettingsPath, "mayor/.claude/settings.json")
+	// Verify Claude settings exist in overseer/.claude/ (not town root/.claude/)
+	// Overseer settings go here to avoid polluting child workspaces via directory traversal
+	overseerSettingsPath := filepath.Join(hqPath, "overseer", ".claude", "settings.json")
+	assertFileExists(t, overseerSettingsPath, "overseer/.claude/settings.json")
 
-	// Verify deacon settings exist in deacon/.claude/
-	deaconSettingsPath := filepath.Join(hqPath, "deacon", ".claude", "settings.json")
-	assertFileExists(t, deaconSettingsPath, "deacon/.claude/settings.json")
+	// Verify supervisor settings exist in supervisor/.claude/
+	supervisorSettingsPath := filepath.Join(hqPath, "supervisor", ".claude", "settings.json")
+	assertFileExists(t, supervisorSettingsPath, "supervisor/.claude/settings.json")
 }
 
 // TestInstallBeadsHasCorrectPrefix validates that beads is initialized
@@ -200,8 +200,8 @@ func TestInstallIdempotent(t *testing.T) {
 	if err == nil {
 		t.Fatal("second install should have failed without --force")
 	}
-	if !strings.Contains(string(output), "already a Gas Town HQ") {
-		t.Errorf("expected 'already a Gas Town HQ' error, got: %s", output)
+	if !strings.Contains(string(output), "already a Excavation Site HQ") {
+		t.Errorf("expected 'already a Excavation Site HQ' error, got: %s", output)
 	}
 
 	// Third install with --force should succeed
@@ -228,9 +228,9 @@ func TestInstallForcePreservesConfigs(t *testing.T) {
 	}
 
 	// Inject sentinel values into town.json and rigs.json
-	mayorDir := filepath.Join(hqPath, "mayor")
-	townPath := filepath.Join(mayorDir, "town.json")
-	rigsPath := filepath.Join(mayorDir, "rigs.json")
+	overseerDir := filepath.Join(hqPath, "overseer")
+	townPath := filepath.Join(overseerDir, "town.json")
+	rigsPath := filepath.Join(overseerDir, "rigs.json")
 
 	townData, err := os.ReadFile(townPath)
 	if err != nil {
@@ -325,8 +325,8 @@ func TestInstallForceRejectsNonRegularConfigs(t *testing.T) {
 	}
 
 	// Replace town.json with a directory
-	mayorDir := filepath.Join(hqPath, "mayor")
-	townPath := filepath.Join(mayorDir, "town.json")
+	overseerDir := filepath.Join(hqPath, "overseer")
+	townPath := filepath.Join(overseerDir, "town.json")
 	if err := os.Remove(townPath); err != nil {
 		t.Fatalf("removing town.json: %v", err)
 	}
@@ -375,7 +375,7 @@ func TestInstallFormulasProvisioned(t *testing.T) {
 
 	// Verify at least some expected formulas exist
 	expectedFormulas := []string{
-		"mol-deacon-patrol.formula.toml",
+		"mol-supervisor-patrol.formula.toml",
 		"mol-refinery-patrol.formula.toml",
 		"code-review.formula.toml",
 	}
@@ -424,8 +424,8 @@ func TestInstallWrappersInExistingTown(t *testing.T) {
 	}
 
 	// Verify town.json exists (proves HQ was created)
-	townPath := filepath.Join(hqPath, "mayor", "town.json")
-	assertFileExists(t, townPath, "mayor/town.json")
+	townPath := filepath.Join(hqPath, "overseer", "town.json")
+	assertFileExists(t, townPath, "overseer/town.json")
 
 	// Get modification time of town.json before wrapper install
 	townInfo, err := os.Stat(townPath)
@@ -596,11 +596,11 @@ func TestInstallDoctorClean(t *testing.T) {
 
 	// 2. Verify core structure exists
 	t.Run("verify-structure", func(t *testing.T) {
-		assertDirExists(t, filepath.Join(hqPath, "mayor"), "mayor/")
-		assertDirExists(t, filepath.Join(hqPath, "deacon"), "deacon/")
+		assertDirExists(t, filepath.Join(hqPath, "overseer"), "overseer/")
+		assertDirExists(t, filepath.Join(hqPath, "supervisor"), "supervisor/")
 		assertDirExists(t, filepath.Join(hqPath, ".beads"), ".beads/")
-		assertFileExists(t, filepath.Join(hqPath, "mayor", "town.json"), "mayor/town.json")
-		assertFileExists(t, filepath.Join(hqPath, "mayor", "rigs.json"), "mayor/rigs.json")
+		assertFileExists(t, filepath.Join(hqPath, "overseer", "town.json"), "overseer/town.json")
+		assertFileExists(t, filepath.Join(hqPath, "overseer", "rigs.json"), "overseer/rigs.json")
 	})
 
 	// 3. Verify install bootstrapped dolt (identity, HQ database, server)
@@ -788,7 +788,7 @@ func TestInstallWithDaemon(t *testing.T) {
 	})
 }
 
-// cleanE2EEnv returns os.Environ() with Gas Town and Beads routing variables
+// cleanE2EEnv returns os.Environ() with Excavation Site and Beads routing variables
 // removed. E2E tests add an explicit isolated Dolt port per test instead of
 // inheriting production/default Dolt routing from the developer environment.
 func cleanE2EEnv() []string {

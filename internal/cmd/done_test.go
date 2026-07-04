@@ -10,14 +10,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/beads"
-	gitpkg "github.com/steveyegge/gastown/internal/git"
+	"github.com/steveyegge/excavation/internal/beads"
+	gitpkg "github.com/steveyegge/excavation/internal/git"
 )
 
 // TestDoneUsesResolveBeadsDir verifies that the done command correctly uses
 // beads.ResolveBeadsDir to follow redirect files when initializing beads.
-// This is critical for polecat/crew worktrees that use .beads/redirect to point
-// to the shared mayor/rig/.beads directory.
+// This is critical for miner/crew worktrees that use .beads/redirect to point
+// to the shared overseer/rig/.beads directory.
 //
 // The done.go file has two code paths that initialize beads:
 //   - Line 181: ExitCompleted path - bd := beads.New(beads.ResolveBeadsDir(cwd))
@@ -25,46 +25,46 @@ import (
 //
 // Both must use ResolveBeadsDir to properly handle redirects.
 func TestDoneUsesResolveBeadsDir(t *testing.T) {
-	// Create a temp directory structure simulating polecat worktree with redirect
+	// Create a temp directory structure simulating miner worktree with redirect
 	tmpDir := t.TempDir()
 
 	// Create structure like:
-	//   gastown/
-	//     mayor/rig/.beads/          <- shared beads directory
-	//     polecats/fixer/.beads/     <- polecat with redirect
-	//       redirect -> ../../mayor/rig/.beads
+	//   excavation/
+	//     overseer/rig/.beads/          <- shared beads directory
+	//     miners/fixer/.beads/     <- miner with redirect
+	//       redirect -> ../../overseer/rig/.beads
 
-	mayorRigBeadsDir := filepath.Join(tmpDir, "gastown", "mayor", "rig", ".beads")
-	polecatDir := filepath.Join(tmpDir, "gastown", "polecats", "fixer")
-	polecatBeadsDir := filepath.Join(polecatDir, ".beads")
+	overseerRigBeadsDir := filepath.Join(tmpDir, "excavation", "overseer", "rig", ".beads")
+	minerDir := filepath.Join(tmpDir, "excavation", "miners", "fixer")
+	minerBeadsDir := filepath.Join(minerDir, ".beads")
 
 	// Create directories
-	if err := os.MkdirAll(mayorRigBeadsDir, 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig/.beads: %v", err)
+	if err := os.MkdirAll(overseerRigBeadsDir, 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig/.beads: %v", err)
 	}
-	if err := os.MkdirAll(polecatBeadsDir, 0755); err != nil {
-		t.Fatalf("mkdir polecats/fixer/.beads: %v", err)
+	if err := os.MkdirAll(minerBeadsDir, 0755); err != nil {
+		t.Fatalf("mkdir miners/fixer/.beads: %v", err)
 	}
 
-	// Create redirect file pointing to mayor/rig/.beads
-	redirectContent := "../../mayor/rig/.beads"
-	redirectPath := filepath.Join(polecatBeadsDir, "redirect")
+	// Create redirect file pointing to overseer/rig/.beads
+	redirectContent := "../../overseer/rig/.beads"
+	redirectPath := filepath.Join(minerBeadsDir, "redirect")
 	if err := os.WriteFile(redirectPath, []byte(redirectContent), 0644); err != nil {
 		t.Fatalf("write redirect: %v", err)
 	}
 
-	t.Run("redirect followed from polecat directory", func(t *testing.T) {
+	t.Run("redirect followed from miner directory", func(t *testing.T) {
 		// This mirrors how done.go initializes beads at line 181 and 277
-		resolvedDir := beads.ResolveBeadsDir(polecatDir)
+		resolvedDir := beads.ResolveBeadsDir(minerDir)
 
-		// Should resolve to mayor/rig/.beads
-		if resolvedDir != mayorRigBeadsDir {
-			t.Errorf("ResolveBeadsDir(%s) = %s, want %s", polecatDir, resolvedDir, mayorRigBeadsDir)
+		// Should resolve to overseer/rig/.beads
+		if resolvedDir != overseerRigBeadsDir {
+			t.Errorf("ResolveBeadsDir(%s) = %s, want %s", minerDir, resolvedDir, overseerRigBeadsDir)
 		}
 
 		// Verify the beads instance is created with the resolved path
 		// We use the same pattern as done.go: beads.New(beads.ResolveBeadsDir(cwd))
-		bd := beads.New(beads.ResolveBeadsDir(polecatDir))
+		bd := beads.New(beads.ResolveBeadsDir(minerDir))
 		if bd == nil {
 			t.Error("beads.New returned nil")
 		}
@@ -72,11 +72,11 @@ func TestDoneUsesResolveBeadsDir(t *testing.T) {
 
 	t.Run("redirect not present uses local beads", func(t *testing.T) {
 		// Without redirect, should use local .beads
-		localDir := filepath.Join(tmpDir, "gastown", "mayor", "rig")
+		localDir := filepath.Join(tmpDir, "excavation", "overseer", "rig")
 		resolvedDir := beads.ResolveBeadsDir(localDir)
 
-		if resolvedDir != mayorRigBeadsDir {
-			t.Errorf("ResolveBeadsDir(%s) = %s, want %s", localDir, resolvedDir, mayorRigBeadsDir)
+		if resolvedDir != overseerRigBeadsDir {
+			t.Errorf("ResolveBeadsDir(%s) = %s, want %s", localDir, resolvedDir, overseerRigBeadsDir)
 		}
 	})
 }
@@ -144,7 +144,7 @@ func TestReviewOnlyCloseRejectsNotesAndDesignEvidence(t *testing.T) {
 	issue := &beads.Issue{
 		ID:          "gt-review",
 		Description: "review_only: true\nattached_at: 2026-07-01T12:00:00Z\n",
-		Assignee:    "gastown/polecats/toast",
+		Assignee:    "excavation/miners/toast",
 		Notes:       "FINDINGS: reviewed and no code changes needed",
 		Design:      "PR-SHERIFF-EVIDENCE: pass\nhead_sha: abc123",
 	}
@@ -159,10 +159,10 @@ func TestReviewOnlyCloseAllowsFreshEvidenceComment(t *testing.T) {
 	issue := &beads.Issue{
 		ID:          "gt-review",
 		Description: "review_only: true\nattached_at: 2026-07-01T12:00:00Z\n",
-		Assignee:    "gastown/polecats/toast",
+		Assignee:    "excavation/miners/toast",
 		Comments: []beads.Comment{
 			{
-				Author:    "gastown/polecats/toast",
+				Author:    "excavation/miners/toast",
 				CreatedAt: "2026-07-01T12:05:00Z",
 				Text:      "PR-SHERIFF-EVIDENCE: pass\nhead_sha: abc123",
 			},
@@ -179,10 +179,10 @@ func TestReviewOnlyGeneratedCommentsDoNotCountAsEvidence(t *testing.T) {
 	issue := &beads.Issue{
 		ID:          "gt-review",
 		Description: "review_only: true\nattached_at: 2026-07-01T12:00:00Z\n",
-		Assignee:    "gastown/polecats/toast",
+		Assignee:    "excavation/miners/toast",
 		Comments: []beads.Comment{
-			{Author: "gastown/polecats/toast", CreatedAt: "2026-07-01T12:05:00Z", Text: "verified_push_skipped: --skip-verify on no-MR close\nPR-SHERIFF-EVIDENCE: pass\nhead_sha: abc123"},
-			{Author: "gastown/polecats/toast", CreatedAt: "2026-07-01T12:06:00Z", Text: "MR created: gt-wisp-abc\nPR-SHERIFF-EVIDENCE: pass\nhead_sha: abc123"},
+			{Author: "excavation/miners/toast", CreatedAt: "2026-07-01T12:05:00Z", Text: "verified_push_skipped: --skip-verify on no-MR close\nPR-SHERIFF-EVIDENCE: pass\nhead_sha: abc123"},
+			{Author: "excavation/miners/toast", CreatedAt: "2026-07-01T12:06:00Z", Text: "MR created: gt-wisp-abc\nPR-SHERIFF-EVIDENCE: pass\nhead_sha: abc123"},
 		},
 	}
 
@@ -205,9 +205,9 @@ func TestReviewOnlyCloseRejectsStaleComment(t *testing.T) {
 			issue := &beads.Issue{
 				ID:          "gt-review",
 				Description: "review_only: true\nattached_at: 2026-07-01T12:00:00Z\n",
-				Assignee:    "gastown/polecats/toast",
+				Assignee:    "excavation/miners/toast",
 				Comments: []beads.Comment{{
-					Author:    "gastown/polecats/toast",
+					Author:    "excavation/miners/toast",
 					CreatedAt: tt.createdAt,
 					Text:      "PR-SHERIFF-EVIDENCE: pass\nhead_sha: abc123",
 				}},
@@ -228,9 +228,9 @@ func TestReviewOnlyCloseRejectsWrongAuthorOrHead(t *testing.T) {
 		head    string
 		current string
 	}{
-		{name: "wrong author", author: "gastown/polecats/other", head: "abc123", current: "abc123"},
-		{name: "wrong head", author: "gastown/polecats/toast", head: "def456", current: "abc123"},
-		{name: "missing head", author: "gastown/polecats/toast", head: "", current: "abc123"},
+		{name: "wrong author", author: "excavation/miners/other", head: "abc123", current: "abc123"},
+		{name: "wrong head", author: "excavation/miners/toast", head: "def456", current: "abc123"},
+		{name: "missing head", author: "excavation/miners/toast", head: "", current: "abc123"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -241,7 +241,7 @@ func TestReviewOnlyCloseRejectsWrongAuthorOrHead(t *testing.T) {
 			issue := &beads.Issue{
 				ID:          "gt-review",
 				Description: "review_only: true\nattached_at: 2026-07-01T12:00:00Z\n",
-				Assignee:    "gastown/polecats/toast",
+				Assignee:    "excavation/miners/toast",
 				Comments: []beads.Comment{{
 					Author:    tt.author,
 					CreatedAt: "2026-07-01T12:05:00Z",
@@ -263,7 +263,7 @@ func TestReviewOnlyCloseRejectsMissingAssigneeOrInvalidCommentTime(t *testing.T)
 		createdAt string
 	}{
 		{name: "missing assignee", assignee: "", createdAt: "2026-07-01T12:05:00Z"},
-		{name: "invalid comment time", assignee: "gastown/polecats/toast", createdAt: "not-a-time"},
+		{name: "invalid comment time", assignee: "excavation/miners/toast", createdAt: "not-a-time"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -272,7 +272,7 @@ func TestReviewOnlyCloseRejectsMissingAssigneeOrInvalidCommentTime(t *testing.T)
 				Description: "review_only: true\nattached_at: 2026-07-01T12:00:00Z\n",
 				Assignee:    tt.assignee,
 				Comments: []beads.Comment{{
-					Author:    "gastown/polecats/toast",
+					Author:    "excavation/miners/toast",
 					CreatedAt: tt.createdAt,
 					Text:      "PR-SHERIFF-EVIDENCE: pass\nhead_sha: abc123",
 				}},
@@ -318,7 +318,7 @@ func TestNonReviewOnlyReviewGateDoesNotChangeCriteriaHandling(t *testing.T) {
 func TestDoneBeadsInitWithoutRedirect(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// Create a simple .beads directory without redirect (like mayor/rig)
+	// Create a simple .beads directory without redirect (like overseer/rig)
 	beadsDir := filepath.Join(tmpDir, ".beads")
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
@@ -347,13 +347,13 @@ func TestDoneBeadsInitWithoutRedirect(t *testing.T) {
 func TestDoneBeadsInitBothCodePaths(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// Setup: crew directory with redirect to mayor/rig/.beads
-	mayorRigBeadsDir := filepath.Join(tmpDir, "mayor", "rig", ".beads")
+	// Setup: crew directory with redirect to overseer/rig/.beads
+	overseerRigBeadsDir := filepath.Join(tmpDir, "overseer", "rig", ".beads")
 	crewDir := filepath.Join(tmpDir, "crew", "max")
 	crewBeadsDir := filepath.Join(crewDir, ".beads")
 
-	if err := os.MkdirAll(mayorRigBeadsDir, 0755); err != nil {
-		t.Fatalf("mkdir mayor/rig/.beads: %v", err)
+	if err := os.MkdirAll(overseerRigBeadsDir, 0755); err != nil {
+		t.Fatalf("mkdir overseer/rig/.beads: %v", err)
 	}
 	if err := os.MkdirAll(crewBeadsDir, 0755); err != nil {
 		t.Fatalf("mkdir crew/max/.beads: %v", err)
@@ -361,7 +361,7 @@ func TestDoneBeadsInitBothCodePaths(t *testing.T) {
 
 	// Create redirect
 	redirectPath := filepath.Join(crewBeadsDir, "redirect")
-	if err := os.WriteFile(redirectPath, []byte("../../mayor/rig/.beads"), 0644); err != nil {
+	if err := os.WriteFile(redirectPath, []byte("../../overseer/rig/.beads"), 0644); err != nil {
 		t.Fatalf("write redirect: %v", err)
 	}
 
@@ -369,9 +369,9 @@ func TestDoneBeadsInitBothCodePaths(t *testing.T) {
 		// This simulates the line 181 path in done.go:
 		// bd := beads.New(beads.ResolveBeadsDir(cwd))
 		resolvedDir := beads.ResolveBeadsDir(crewDir)
-		if resolvedDir != mayorRigBeadsDir {
+		if resolvedDir != overseerRigBeadsDir {
 			t.Errorf("ExitCompleted path: ResolveBeadsDir(%s) = %s, want %s",
-				crewDir, resolvedDir, mayorRigBeadsDir)
+				crewDir, resolvedDir, overseerRigBeadsDir)
 		}
 
 		bd := beads.New(beads.ResolveBeadsDir(crewDir))
@@ -384,9 +384,9 @@ func TestDoneBeadsInitBothCodePaths(t *testing.T) {
 		// This simulates the line 277 path in done.go:
 		// bd := beads.New(beads.ResolveBeadsDir(cwd))
 		resolvedDir := beads.ResolveBeadsDir(crewDir)
-		if resolvedDir != mayorRigBeadsDir {
+		if resolvedDir != overseerRigBeadsDir {
 			t.Errorf("ExitPhaseComplete path: ResolveBeadsDir(%s) = %s, want %s",
-				crewDir, resolvedDir, mayorRigBeadsDir)
+				crewDir, resolvedDir, overseerRigBeadsDir)
 		}
 
 		bd := beads.New(beads.ResolveBeadsDir(crewDir))
@@ -487,7 +487,7 @@ func TestDoneCircularRedirectProtection(t *testing.T) {
 
 // TestFindHookedBeadForAgent verifies that findHookedBeadForAgent correctly
 // finds hooked beads by querying status=hooked + assignee (hq-l6mm5).
-// This is critical because branch names like "polecat/furiosa-mkb0vq9f" don't
+// This is critical because branch names like "miner/furiosa-mkb0vq9f" don't
 // contain the actual issue ID (test-845.1), but the status query finds it.
 func TestFindHookedBeadForAgent(t *testing.T) {
 	// Skip: bd CLI 0.47.2 has a bug where database writes don't commit
@@ -503,7 +503,7 @@ func TestFindHookedBeadForAgent(t *testing.T) {
 	}{
 		{
 			name:    "hooked bead assigned to agent returns issue ID",
-			agentID: "testrig/polecats/furiosa",
+			agentID: "testrig/miners/furiosa",
 			setupBeads: func(t *testing.T, bd *beads.Beads) {
 				// Create a task and set it to hooked with assignee
 				_, err := bd.CreateWithID("test-456", beads.CreateOptions{
@@ -514,7 +514,7 @@ func TestFindHookedBeadForAgent(t *testing.T) {
 					t.Fatalf("create task bead: %v", err)
 				}
 				hookedStatus := beads.StatusHooked
-				assignee := "testrig/polecats/furiosa"
+				assignee := "testrig/miners/furiosa"
 				if err := bd.Update("test-456", beads.UpdateOptions{
 					Status:   &hookedStatus,
 					Assignee: &assignee,
@@ -525,13 +525,13 @@ func TestFindHookedBeadForAgent(t *testing.T) {
 			wantIssueID: "test-456",
 		},
 		{
-			// Regression for hq-xa4z: polecats claim their assignment with
+			// Regression for hq-xa4z: miners claim their assignment with
 			// `bd update --status=in_progress` when starting work. A
 			// hooked-only lookup returned empty here, blinding the stale-
 			// branch guard (toast re-wisp-e2q carried source_issue re-k8oa
 			// while the real assignment re-dkf sat in_progress).
 			name:    "in_progress bead assigned to agent returns issue ID",
-			agentID: "testrig/polecats/toast",
+			agentID: "testrig/miners/toast",
 			setupBeads: func(t *testing.T, bd *beads.Beads) {
 				_, err := bd.CreateWithID("test-789", beads.CreateOptions{
 					Title:  "Claimed task",
@@ -541,7 +541,7 @@ func TestFindHookedBeadForAgent(t *testing.T) {
 					t.Fatalf("create task bead: %v", err)
 				}
 				inProgress := "in_progress"
-				assignee := "testrig/polecats/toast"
+				assignee := "testrig/miners/toast"
 				if err := bd.Update("test-789", beads.UpdateOptions{
 					Status:   &inProgress,
 					Assignee: &assignee,
@@ -553,7 +553,7 @@ func TestFindHookedBeadForAgent(t *testing.T) {
 		},
 		{
 			name:        "no hooked beads returns empty",
-			agentID:     "testrig/polecats/idle",
+			agentID:     "testrig/miners/idle",
 			setupBeads:  func(t *testing.T, bd *beads.Beads) {},
 			wantIssueID: "",
 		},
@@ -674,37 +674,37 @@ func TestIsStaleBranchIssue(t *testing.T) {
 	}
 }
 
-// TestIsPolecatActor verifies that isPolecatActor correctly identifies
-// polecat actors vs other roles based on the BD_ACTOR format.
-func TestIsPolecatActor(t *testing.T) {
+// TestIsMinerActor verifies that isMinerActor correctly identifies
+// miner actors vs other roles based on the BD_ACTOR format.
+func TestIsMinerActor(t *testing.T) {
 	tests := []struct {
 		actor string
 		want  bool
 	}{
-		// Polecats: rigname/polecats/polecatname
-		{"testrig/polecats/furiosa", true},
-		{"testrig/polecats/nux", true},
-		{"myrig/polecats/witness", true}, // even if named "witness", still a polecat
+		// Miners: rigname/miners/minername
+		{"testrig/miners/furiosa", true},
+		{"testrig/miners/nux", true},
+		{"myrig/miners/witness", true}, // even if named "witness", still a miner
 
-		// Non-polecats
-		{"gastown/crew/george", false},
-		{"gastown/crew/max", false},
+		// Non-miners
+		{"excavation/crew/george", false},
+		{"excavation/crew/max", false},
 		{"testrig/witness", false},
-		{"testrig/deacon", false},
-		{"testrig/mayor", false},
-		{"gastown/refinery", false},
+		{"testrig/supervisor", false},
+		{"testrig/overseer", false},
+		{"excavation/refinery", false},
 
 		// Edge cases
 		{"", false},
 		{"single", false},
-		{"polecats/name", false}, // needs rig prefix
+		{"miners/name", false}, // needs rig prefix
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.actor, func(t *testing.T) {
-			got := isPolecatActor(tt.actor)
+			got := isMinerActor(tt.actor)
 			if got != tt.want {
-				t.Errorf("isPolecatActor(%q) = %v, want %v", tt.actor, got, tt.want)
+				t.Errorf("isMinerActor(%q) = %v, want %v", tt.actor, got, tt.want)
 			}
 		})
 	}
@@ -748,7 +748,7 @@ func TestDoneIntentLabelFormat(t *testing.T) {
 
 // TestShouldNudgeRefinery locks in the gh#3885 invariant: only COMPLETED
 // exits with a created MR bead may wake the refinery. DEFERRED/ESCALATED
-// exits — used by polecats finishing operational tasks with no code changes —
+// exits — used by miners finishing operational tasks with no code changes —
 // must never emit MQ_SUBMIT, even if an mrID is somehow populated. The
 // "stray MR" cases guard against a regression to a bare `mrID != ""` check.
 func TestShouldNudgeRefinery(t *testing.T) {
@@ -776,7 +776,7 @@ func TestShouldNudgeRefinery(t *testing.T) {
 	}
 }
 
-func TestShouldSyncIdlePolecatWorktree(t *testing.T) {
+func TestShouldSyncIdleMinerWorktree(t *testing.T) {
 	tests := []struct {
 		name          string
 		exitType      string
@@ -799,9 +799,9 @@ func TestShouldSyncIdlePolecatWorktree(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := shouldSyncIdlePolecatWorktree(tt.exitType, tt.mergeStrategy, tt.pushFailed, tt.mrFailed, tt.syncSafe)
+			got := shouldSyncIdleMinerWorktree(tt.exitType, tt.mergeStrategy, tt.pushFailed, tt.mrFailed, tt.syncSafe)
 			if got != tt.want {
-				t.Errorf("shouldSyncIdlePolecatWorktree(%q, %q, %v, %v, %v) = %v, want %v",
+				t.Errorf("shouldSyncIdleMinerWorktree(%q, %q, %v, %v, %v) = %v, want %v",
 					tt.exitType, tt.mergeStrategy, tt.pushFailed, tt.mrFailed, tt.syncSafe, got, tt.want)
 			}
 		})
@@ -878,7 +878,7 @@ func TestClearDoneIntentLabel(t *testing.T) {
 // success but the bead cannot be read back (verification fails), mrFailed
 // is set to true. This is the core fix for GH#1945: without verification,
 // a "successful" bd.Create that didn't actually persist would allow the
-// worktree nuke to proceed, losing the polecat's work.
+// worktree nuke to proceed, losing the miner's work.
 func TestMRVerificationSetsMRFailed(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -946,8 +946,8 @@ func TestMRVerificationSetsMRFailed(t *testing.T) {
 }
 
 // TestMRBeadCreationUsesRig verifies that MR bead creation specifies the rig (gt-7y7).
-// When a polecat works on a cross-rig bead (e.g., hq-xxx on rig "gastown"), the
-// MR bead must be created with Rig set to the polecat's rig so it lands in the
+// When a miner works on a cross-rig bead (e.g., hq-xxx on rig "excavation"), the
+// MR bead must be created with Rig set to the miner's rig so it lands in the
 // rig's database — not the town-level database where the source bead lives.
 // Without this, the refinery never finds the MR and the branch sits unmerged.
 func TestMRBeadCreationUsesRig(t *testing.T) {
@@ -960,20 +960,20 @@ func TestMRBeadCreationUsesRig(t *testing.T) {
 		{
 			name:    "same-rig bead: rig is still set",
 			issueID: "gt-abc",
-			rigName: "gastown",
-			wantRig: "gastown",
+			rigName: "excavation",
+			wantRig: "excavation",
 		},
 		{
-			name:    "cross-rig hq- bead: MR must land in polecat rig",
+			name:    "cross-rig hq- bead: MR must land in miner rig",
 			issueID: "hq-abc",
-			rigName: "gastown",
-			wantRig: "gastown",
+			rigName: "excavation",
+			wantRig: "excavation",
 		},
 		{
-			name:    "cross-rig en- bead: MR must land in polecat rig",
+			name:    "cross-rig en- bead: MR must land in miner rig",
 			issueID: "en-xyz",
-			rigName: "gastown",
-			wantRig: "gastown",
+			rigName: "excavation",
+			wantRig: "excavation",
 		},
 	}
 
@@ -996,11 +996,11 @@ func TestMRBeadCreationUsesRig(t *testing.T) {
 // TestDeferredKillNotOnValidationError verifies that the deferred session kill
 // does NOT trigger when runDone returns early due to validation errors (bad flags,
 // wrong role). The sessionCleanupNeeded flag must only be set after role detection
-// confirms this is a polecat.
+// confirms this is a miner.
 func TestDeferredKillNotOnValidationError(t *testing.T) {
 	// Simulate the flag lifecycle:
 	// 1. sessionCleanupNeeded starts false
-	// 2. Set true only after role detection confirms polecat
+	// 2. Set true only after role detection confirms miner
 	// 3. Early returns (validation) happen before the flag is set
 
 	// Scenario 1: Validation error (bad status) — returns before flag set
@@ -1011,7 +1011,7 @@ func TestDeferredKillNotOnValidationError(t *testing.T) {
 		t.Error("sessionCleanupNeeded should be false for validation errors")
 	}
 
-	// Scenario 2: Polecat confirmed — flag set
+	// Scenario 2: Miner confirmed — flag set
 	sessionCleanupNeeded = true
 	sessionKilled := false
 	// (push fails, returns with error)
@@ -1032,7 +1032,7 @@ func TestDeferredKillNotOnValidationError(t *testing.T) {
 // correctly handles the three states: cwd available, cwd unavailable with GT_BRANCH,
 // and cwd unavailable without GT_BRANCH.
 // This is a regression test for PR #1402 — prevents incorrect main/master detection
-// when the polecat's working directory is deleted.
+// when the miner's working directory is deleted.
 func TestBranchDetectionGuard(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -1051,9 +1051,9 @@ func TestBranchDetectionGuard(t *testing.T) {
 		{
 			name:         "cwd unavailable + GT_BRANCH set - uses env var",
 			cwdAvailable: false,
-			gtBranch:     "polecat/test-worker",
+			gtBranch:     "miner/test-worker",
 			wantError:    false,
-			wantBranch:   "polecat/test-worker",
+			wantBranch:   "miner/test-worker",
 		},
 		{
 			name:         "cwd unavailable + GT_BRANCH empty - returns error",
@@ -1094,12 +1094,12 @@ func TestBranchDetectionGuard(t *testing.T) {
 
 // TestBranchDetectionCleanupOnError verifies that when branch detection fails
 // (cwdAvailable=false + no GT_BRANCH), the session cleanup backstop is armed
-// so the polecat doesn't get stranded.
+// so the miner doesn't get stranded.
 func TestBranchDetectionCleanupOnError(t *testing.T) {
 	// Simulate the cleanup arming logic from runDone's branch detection error path
 	cwdAvailable := false
 	gtBranch := ""
-	gtPolecat := "test-worker"
+	gtMiner := "test-worker"
 	rigName := "test-rig"
 
 	var branch string
@@ -1110,29 +1110,29 @@ func TestBranchDetectionCleanupOnError(t *testing.T) {
 	sessionCleanupNeeded := false
 	if branch == "" && !cwdAvailable {
 		// This mirrors the actual code: arm cleanup before returning error
-		if gtPolecat != "" {
+		if gtMiner != "" {
 			sessionCleanupNeeded = true
 		}
 	}
 
 	if !sessionCleanupNeeded {
-		t.Error("sessionCleanupNeeded should be true when branch detection fails with GT_POLECAT set")
+		t.Error("sessionCleanupNeeded should be true when branch detection fails with GT_MINER set")
 	}
 
 	// Verify the RoleInfo would be constructible from env vars
 	roleInfo := RoleInfo{
-		Role:    RolePolecat,
+		Role:    RoleMiner,
 		Rig:     rigName,
-		Polecat: gtPolecat,
+		Miner: gtMiner,
 	}
-	if roleInfo.Rig != rigName || roleInfo.Polecat != gtPolecat {
+	if roleInfo.Rig != rigName || roleInfo.Miner != gtMiner {
 		t.Error("RoleInfo should be constructible from env vars for cleanup")
 	}
 }
 
-// TestConvoyMergeStrategyBranching verifies that the merge strategy branching
+// TestMinecartMergeStrategyBranching verifies that the merge strategy branching
 // logic in runDone correctly routes to the right code path for each strategy.
-func TestConvoyMergeStrategyBranching(t *testing.T) {
+func TestMinecartMergeStrategyBranching(t *testing.T) {
 	tests := []struct {
 		name          string
 		mergeStrategy string
@@ -1201,9 +1201,9 @@ func TestConvoyMergeStrategyBranching(t *testing.T) {
 	}
 }
 
-// TestConvoyMergeStrategyNotification verifies that the merge strategy
+// TestMinecartMergeStrategyNotification verifies that the merge strategy
 // is included in the witness notification body when set to non-default values.
-func TestConvoyMergeStrategyNotification(t *testing.T) {
+func TestMinecartMergeStrategyNotification(t *testing.T) {
 	tests := []struct {
 		name          string
 		mergeStrategy string
@@ -1235,9 +1235,9 @@ func TestConvoyMergeStrategyNotification(t *testing.T) {
 	}
 }
 
-// TestConvoyMergeFromFields verifies that convoyMergeFromFields correctly
-// extracts the merge strategy from convoy descriptions using typed ConvoyFields.
-func TestConvoyMergeFromFields(t *testing.T) {
+// TestMinecartMergeFromFields verifies that minecartMergeFromFields correctly
+// extracts the merge strategy from minecart descriptions using typed MinecartFields.
+func TestMinecartMergeFromFields(t *testing.T) {
 	tests := []struct {
 		name        string
 		description string
@@ -1245,22 +1245,22 @@ func TestConvoyMergeFromFields(t *testing.T) {
 	}{
 		{
 			name:        "direct strategy",
-			description: "Auto-created convoy tracking gt-abc\nMerge: direct",
+			description: "Auto-created minecart tracking gt-abc\nMerge: direct",
 			want:        "direct",
 		},
 		{
 			name:        "mr strategy",
-			description: "Convoy tracking 3 issues\nOwner: mayor/\nMerge: mr",
+			description: "Minecart tracking 3 issues\nOwner: overseer/\nMerge: mr",
 			want:        "mr",
 		},
 		{
 			name:        "local strategy",
-			description: "Merge: local\nOwner: mayor/",
+			description: "Merge: local\nOwner: overseer/",
 			want:        "local",
 		},
 		{
 			name:        "no merge field",
-			description: "Auto-created convoy tracking gt-abc",
+			description: "Auto-created minecart tracking gt-abc",
 			want:        "",
 		},
 		{
@@ -1270,16 +1270,16 @@ func TestConvoyMergeFromFields(t *testing.T) {
 		},
 		{
 			name:        "merge in middle of description",
-			description: "Convoy tracking 1 issues\nMerge: direct\nNotify: mayor/",
+			description: "Minecart tracking 1 issues\nMerge: direct\nNotify: overseer/",
 			want:        "direct",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := convoyMergeFromFields(tt.description)
+			got := minecartMergeFromFields(tt.description)
 			if got != tt.want {
-				t.Errorf("convoyMergeFromFields() = %q, want %q", got, tt.want)
+				t.Errorf("minecartMergeFromFields() = %q, want %q", got, tt.want)
 			}
 		})
 	}
@@ -1294,7 +1294,7 @@ func TestDoneCheckpointLabelFormat(t *testing.T) {
 		value      string
 		wantPrefix string
 	}{
-		{CheckpointPushed, "polecat/furiosa-abc", "done-cp:pushed:polecat/furiosa-abc:"},
+		{CheckpointPushed, "miner/furiosa-abc", "done-cp:pushed:miner/furiosa-abc:"},
 		{CheckpointMRCreated, "gt-xyz123", "done-cp:mr-created:gt-xyz123:"},
 		{CheckpointWitnessNotified, "ok", "done-cp:witness-notified:ok:"},
 	}
@@ -1340,18 +1340,18 @@ func TestReadDoneCheckpoints(t *testing.T) {
 		},
 		{
 			name:   "push checkpoint only",
-			labels: []string{"gt:agent", "done-cp:pushed:polecat/furiosa-abc:1738972800"},
-			want:   map[DoneCheckpoint]string{CheckpointPushed: "polecat/furiosa-abc"},
+			labels: []string{"gt:agent", "done-cp:pushed:miner/furiosa-abc:1738972800"},
+			want:   map[DoneCheckpoint]string{CheckpointPushed: "miner/furiosa-abc"},
 		},
 		{
 			name: "multiple checkpoints",
 			labels: []string{
 				"gt:agent",
-				"done-cp:pushed:polecat/furiosa-abc:1738972800",
+				"done-cp:pushed:miner/furiosa-abc:1738972800",
 				"done-cp:mr-created:gt-xyz123:1738972801",
 			},
 			want: map[DoneCheckpoint]string{
-				CheckpointPushed:    "polecat/furiosa-abc",
+				CheckpointPushed:    "miner/furiosa-abc",
 				CheckpointMRCreated: "gt-xyz123",
 			},
 		},
@@ -1510,43 +1510,43 @@ func TestCheckpointNilMapSafe(t *testing.T) {
 	}
 }
 
-// TestConvoyInfoFallbackChain verifies that done.go checks attachment fields
-// first, then falls back to dep-based convoy lookup. This is the fix for gt-7b6wf:
-// convoy merge=direct was not propagated because cross-rig dep resolution failed.
-func TestConvoyInfoFallbackChain(t *testing.T) {
+// TestMinecartInfoFallbackChain verifies that done.go checks attachment fields
+// first, then falls back to dep-based minecart lookup. This is the fix for gt-7b6wf:
+// minecart merge=direct was not propagated because cross-rig dep resolution failed.
+func TestMinecartInfoFallbackChain(t *testing.T) {
 	tests := []struct {
 		name           string
-		attachmentInfo *ConvoyInfo // Result from getConvoyInfoFromIssue
-		depInfo        *ConvoyInfo // Result from getConvoyInfoForIssue
-		wantConvoyID   string
+		attachmentInfo *MinecartInfo // Result from getMinecartInfoFromIssue
+		depInfo        *MinecartInfo // Result from getMinecartInfoForIssue
+		wantMinecartID   string
 		wantMerge      string
 		wantNil        bool
 	}{
 		{
-			name:           "attachment fields provide convoy info",
-			attachmentInfo: &ConvoyInfo{ID: "hq-cv-abc", MergeStrategy: "direct"},
+			name:           "attachment fields provide minecart info",
+			attachmentInfo: &MinecartInfo{ID: "hq-cv-abc", MergeStrategy: "direct"},
 			depInfo:        nil, // Not called
-			wantConvoyID:   "hq-cv-abc",
+			wantMinecartID:   "hq-cv-abc",
 			wantMerge:      "direct",
 		},
 		{
 			name:           "attachment fields empty, dep lookup succeeds",
 			attachmentInfo: nil,
-			depInfo:        &ConvoyInfo{ID: "hq-cv-xyz", MergeStrategy: "mr"},
-			wantConvoyID:   "hq-cv-xyz",
+			depInfo:        &MinecartInfo{ID: "hq-cv-xyz", MergeStrategy: "mr"},
+			wantMinecartID:   "hq-cv-xyz",
 			wantMerge:      "mr",
 		},
 		{
-			name:           "both nil - no convoy",
+			name:           "both nil - no minecart",
 			attachmentInfo: nil,
 			depInfo:        nil,
 			wantNil:        true,
 		},
 		{
-			name:           "attachment has convoy, dep also has (attachment wins)",
-			attachmentInfo: &ConvoyInfo{ID: "hq-cv-from-attachment", MergeStrategy: "direct"},
-			depInfo:        &ConvoyInfo{ID: "hq-cv-from-dep", MergeStrategy: "mr"},
-			wantConvoyID:   "hq-cv-from-attachment",
+			name:           "attachment has minecart, dep also has (attachment wins)",
+			attachmentInfo: &MinecartInfo{ID: "hq-cv-from-attachment", MergeStrategy: "direct"},
+			depInfo:        &MinecartInfo{ID: "hq-cv-from-dep", MergeStrategy: "mr"},
+			wantMinecartID:   "hq-cv-from-attachment",
 			wantMerge:      "direct",
 		},
 	}
@@ -1554,26 +1554,26 @@ func TestConvoyInfoFallbackChain(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Simulate the fallback chain from done.go
-			var convoyInfo *ConvoyInfo
-			convoyInfo = tt.attachmentInfo
-			if convoyInfo == nil {
-				convoyInfo = tt.depInfo
+			var minecartInfo *MinecartInfo
+			minecartInfo = tt.attachmentInfo
+			if minecartInfo == nil {
+				minecartInfo = tt.depInfo
 			}
 
 			if tt.wantNil {
-				if convoyInfo != nil {
-					t.Errorf("expected nil, got %+v", convoyInfo)
+				if minecartInfo != nil {
+					t.Errorf("expected nil, got %+v", minecartInfo)
 				}
 				return
 			}
-			if convoyInfo == nil {
-				t.Fatal("expected non-nil convoy info")
+			if minecartInfo == nil {
+				t.Fatal("expected non-nil minecart info")
 			}
-			if convoyInfo.ID != tt.wantConvoyID {
-				t.Errorf("ConvoyID = %q, want %q", convoyInfo.ID, tt.wantConvoyID)
+			if minecartInfo.ID != tt.wantMinecartID {
+				t.Errorf("MinecartID = %q, want %q", minecartInfo.ID, tt.wantMinecartID)
 			}
-			if convoyInfo.MergeStrategy != tt.wantMerge {
-				t.Errorf("MergeStrategy = %q, want %q", convoyInfo.MergeStrategy, tt.wantMerge)
+			if minecartInfo.MergeStrategy != tt.wantMerge {
+				t.Errorf("MergeStrategy = %q, want %q", minecartInfo.MergeStrategy, tt.wantMerge)
 			}
 		})
 	}
@@ -1581,7 +1581,7 @@ func TestConvoyInfoFallbackChain(t *testing.T) {
 
 // TestHookedBeadCloseNotRestrictedToHookedStatus verifies the gt-pftz fix:
 // gt done must close the hooked bead regardless of its current status (hooked,
-// in_progress, open), not only when status == "hooked". Polecats update their
+// in_progress, open), not only when status == "hooked". Miners update their
 // work bead to in_progress during work, so the old exact-match check skipped
 // closing and caused infinite dispatch loops.
 func TestHookedBeadCloseNotRestrictedToHookedStatus(t *testing.T) {
@@ -1752,7 +1752,7 @@ func TestAutoCommitSafetyNet(t *testing.T) {
 	g := gitpkg.NewGit(dir)
 
 	t.Run("detects uncommitted new files", func(t *testing.T) {
-		// Create uncommitted implementation files (simulates polecat forgetting to commit)
+		// Create uncommitted implementation files (simulates miner forgetting to commit)
 		implFile := filepath.Join(dir, "main.go")
 		if err := os.WriteFile(implFile, []byte("package main\n\nfunc main() {}\n"), 0644); err != nil {
 			t.Fatal(err)
@@ -1851,7 +1851,7 @@ func TestAutoCommitSafetyNet(t *testing.T) {
 		}
 
 		writeFile("src/handler.go", "package main\n\nfunc handler() {}\n")
-		writeFile(".opencode/plugins/gastown.js", "// generated\n")
+		writeFile(".opencode/plugins/excavation.js", "// generated\n")
 		writeFile("services/cyrus/workflow-cyrus-edge/node_modules/pkg/index.js", "module.exports = {}\n")
 		writeFile("dashboard/public/meridian-dashboard/.vite/vitest/hash/results.json", "{}\n")
 		writeFile("services/workflows/collateral-internal/execution_log.db", "sqlite\n")
@@ -1915,7 +1915,7 @@ func TestSyncGuardWithUncommittedChanges(t *testing.T) {
 	testRunGit(t, dir, "commit", "-m", "initial")
 
 	// Create feature branch with uncommitted changes
-	testRunGit(t, dir, "checkout", "-b", "polecat/test")
+	testRunGit(t, dir, "checkout", "-b", "miner/test")
 	if err := os.WriteFile(filepath.Join(dir, "impl.go"), []byte("package main\n"), 0644); err != nil {
 		t.Fatal(err)
 	}

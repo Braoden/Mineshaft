@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/hooks"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/hooks"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var (
@@ -47,7 +47,7 @@ func init() {
 type HookInfo struct {
 	Type     string   `json:"type"`     // Hook type (SessionStart, etc.)
 	Location string   `json:"location"` // Path to the settings file
-	Agent    string   `json:"agent"`    // Agent that owns this hook (e.g., "polecat/nux")
+	Agent    string   `json:"agent"`    // Agent that owns this hook (e.g., "miner/nux")
 	Matcher  string   `json:"matcher"`  // Pattern matcher (empty = all)
 	Commands []string `json:"commands"` // Hook commands
 	Status   string   `json:"status"`   // "active" or "disabled"
@@ -63,7 +63,7 @@ type HooksOutput struct {
 func runHooksScan(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	// Find all .claude/settings.json files via DiscoverTargets

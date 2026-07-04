@@ -3,7 +3,7 @@
 // When a beadsdk.Storage is set on a Beads instance (via NewWithStore or
 // SetStore), methods bypass the bd subprocess and use the store directly.
 // This eliminates ~600ms per operation and the ~30ms CPU overhead of process
-// spawning. Follows the pattern established by internal/daemon/convoy_manager.go.
+// spawning. Follows the pattern established by internal/daemon/minecart_manager.go.
 package beads
 
 import (
@@ -39,7 +39,7 @@ func NewWithStore(workDir string, store beadsdk.Storage) *Beads {
 }
 
 // NewWithBeadsDirAndStore creates a Beads wrapper with an explicit BEADS_DIR
-// and an in-process store. Used for cross-database access from polecat worktrees.
+// and an in-process store. Used for cross-database access from miner worktrees.
 func NewWithBeadsDirAndStore(workDir, beadsDir string, store beadsdk.Storage) *Beads {
 	return &Beads{workDir: workDir, beadsDir: beadsDir, store: store}
 }
@@ -79,7 +79,7 @@ func storeCtx() (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), 30*time.Second)
 }
 
-// sdkIssueToIssue converts a beadsdk Issue (types.Issue) to the gastown
+// sdkIssueToIssue converts a beadsdk Issue (types.Issue) to the excavation
 // beads.Issue type used throughout the gt codebase. This handles the type
 // differences between the two representations:
 //   - time.Time → string (RFC3339)
@@ -189,7 +189,7 @@ func sdkDependencyMetadataToIssueDeps(deps []*beadsdk.IssueWithDependencyMetadat
 	return issueDeps
 }
 
-// sdkIssuesToIssues converts a slice of SDK issues to gastown issues.
+// sdkIssuesToIssues converts a slice of SDK issues to excavation issues.
 func sdkIssuesToIssues(sdkIssues []*beadsdk.Issue) []*Issue {
 	if sdkIssues == nil {
 		return nil

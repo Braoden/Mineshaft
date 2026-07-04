@@ -8,7 +8,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/steveyegge/gastown/internal/beads"
+	"github.com/steveyegge/excavation/internal/beads"
 	"golang.org/x/time/rate"
 )
 
@@ -147,7 +147,7 @@ func subForLog(argv []string) string {
 }
 
 // extractIdentity parses the client cert CN "gt-<rig>-<name>" into "<rig>/<name>".
-// Uses LastIndex to correctly handle hyphenated rig names (e.g. "gas-town").
+// Uses LastIndex to correctly handle hyphenated rig names (e.g. "excavation-site").
 func extractIdentity(r *http.Request) string {
 	if r.TLS == nil || len(r.TLS.PeerCertificates) == 0 {
 		return ""
@@ -156,10 +156,10 @@ func extractIdentity(r *http.Request) string {
 	return cnToIdentity(cn)
 }
 
-// polecatName extracts the polecat name from a CN of the form "gt-<rig>-<name>".
+// minerName extracts the miner name from a CN of the form "gt-<rig>-<name>".
 // The last "-" is the rig/name separator, so hyphenated rig names are handled correctly.
 // Returns "" if the CN does not match the expected format, or if rig or name is empty.
-func polecatName(cn string) string {
+func minerName(cn string) string {
 	if !strings.HasPrefix(cn, "gt-") {
 		return ""
 	}
@@ -174,9 +174,9 @@ func polecatName(cn string) string {
 
 // cnToIdentity converts a CN of the form "gt-<rig>-<name>" to "<rig>/<name>".
 // The last "-" is treated as the rig/name separator, so hyphenated rig names
-// (e.g. "gas-town") are handled correctly.
+// (e.g. "excavation-site") are handled correctly.
 func cnToIdentity(cn string) string {
-	name := polecatName(cn)
+	name := minerName(cn)
 	if name == "" {
 		return ""
 	}
@@ -199,7 +199,7 @@ func (s *Server) isAllowed(cmd string) bool {
 // requests for the same identity safely share a single limiter.
 //
 // Note: entries are never evicted; each unique CN accumulates ~200 bytes.
-// Acceptable for typical deployments (dozens of polecats); consider adding a
+// Acceptable for typical deployments (dozens of miners); consider adding a
 // periodic sweep if the server handles thousands of unique certs.
 func (s *Server) limiterFor(identity string) *rate.Limiter {
 	if v, ok := s.rateLimiters.Load(identity); ok {

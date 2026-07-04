@@ -7,13 +7,13 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/gastown/internal/cli"
-	"github.com/steveyegge/gastown/internal/config"
-	"github.com/steveyegge/gastown/internal/doctor"
-	"github.com/steveyegge/gastown/internal/formula"
-	"github.com/steveyegge/gastown/internal/hooks"
-	"github.com/steveyegge/gastown/internal/style"
-	"github.com/steveyegge/gastown/internal/workspace"
+	"github.com/steveyegge/excavation/internal/cli"
+	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/excavation/internal/doctor"
+	"github.com/steveyegge/excavation/internal/formula"
+	"github.com/steveyegge/excavation/internal/hooks"
+	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/excavation/internal/workspace"
 )
 
 var (
@@ -28,7 +28,7 @@ var upgradeCmd = &cobra.Command{
 	Short:   "Run post-install migration and sync workspace state",
 	Long: `Run post-binary-install migrations to bring the workspace up to date.
 
-This is the user-facing entry point for upgrading Gas Town after installing
+This is the user-facing entry point for upgrading Excavation Site after installing
 a new binary. It orchestrates all migration steps in the right order:
 
   1. Structural checks   Run gt doctor --fix to repair workspace structure
@@ -66,7 +66,7 @@ type upgradeResult struct {
 func runUpgrade(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Gas Town workspace: %w", err)
+		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
 	}
 
 	if upgradeDryRun {
@@ -240,9 +240,9 @@ func upgradeCLAUDEMD(townRoot string) upgradeResult {
 // This must match the template in createTownRootAgentMDs (install.go).
 func generateCLAUDEMD() string {
 	cmdName := cli.Name()
-	return `# Gas Town
+	return `# Excavation Site
 
-This is a Gas Town workspace. Your identity and role are determined by ` + "`" + cmdName + " prime`" + `.
+This is a Excavation Site workspace. Your identity and role are determined by ` + "`" + cmdName + " prime`" + `.
 
 Run ` + "`" + cmdName + " prime`" + ` for full context after compaction, clear, or new session.
 

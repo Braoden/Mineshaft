@@ -1,4 +1,4 @@
-// Package daemon provides the town-level background service for Gas Town.
+// Package daemon provides the town-level background service for Excavation Site.
 //
 // The daemon is a simple Go process (not a Claude agent) that:
 // 1. Pokes agents periodically (heartbeat)
@@ -15,8 +15,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/atomicfile"
-	"github.com/steveyegge/gastown/internal/constants"
+	"github.com/steveyegge/excavation/internal/atomicfile"
+	"github.com/steveyegge/excavation/internal/constants"
 )
 
 // Config holds daemon configuration.
@@ -24,7 +24,7 @@ type Config struct {
 	// HeartbeatInterval is how often to poke agents.
 	HeartbeatInterval time.Duration `json:"heartbeat_interval"`
 
-	// TownRoot is the Gas Town workspace root.
+	// TownRoot is the Excavation Site workspace root.
 	TownRoot string `json:"town_root"`
 
 	// LogFile is the path to the daemon log file.
@@ -38,7 +38,7 @@ type Config struct {
 func DefaultConfig(townRoot string) *Config {
 	daemonDir := filepath.Join(townRoot, "daemon")
 	return &Config{
-		HeartbeatInterval: 5 * time.Minute, // Deacon wakes on mail too, no need to poke often
+		HeartbeatInterval: 5 * time.Minute, // Supervisor wakes on mail too, no need to poke often
 		TownRoot:          townRoot,
 		LogFile:           filepath.Join(daemonDir, "daemon.log"),
 		PidFile:           filepath.Join(daemonDir, "daemon.pid"),
@@ -117,7 +117,7 @@ type PatrolConfig struct {
 type PatrolsConfig struct {
 	Refinery       *PatrolConfig          `json:"refinery,omitempty"`
 	Witness        *PatrolConfig          `json:"witness,omitempty"`
-	Deacon         *PatrolConfig          `json:"deacon,omitempty"`
+	Supervisor         *PatrolConfig          `json:"supervisor,omitempty"`
 	Handler        *PatrolConfig          `json:"handler,omitempty"`
 	DoltServer     *DoltServerConfig      `json:"dolt_server,omitempty"`
 	DoltRemotes    *DoltRemotesConfig     `json:"dolt_remotes,omitempty"`
@@ -194,24 +194,24 @@ type JsonlGitBackupConfig struct {
 	SpikeThreshold *float64 `json:"spike_threshold,omitempty"`
 }
 
-// DaemonPatrolConfig is the structure of mayor/daemon.json.
+// DaemonPatrolConfig is the structure of overseer/daemon.json.
 type DaemonPatrolConfig struct {
 	Type      string            `json:"type"`
 	Version   int               `json:"version"`
 	Heartbeat *PatrolConfig     `json:"heartbeat,omitempty"`
 	Patrols   *PatrolsConfig    `json:"patrols,omitempty"`
 	// Env holds environment variables to set at startup.
-	// Propagated to all sessions spawned by the daemon and read by gt up/mayor attach.
+	// Propagated to all sessions spawned by the daemon and read by gt up/overseer attach.
 	// Example: {"GT_DOLT_PORT": "43211"}
 	Env       map[string]string `json:"env,omitempty"`
 }
 
 // PatrolConfigFile returns the path to the patrol config file.
 func PatrolConfigFile(townRoot string) string {
-	return filepath.Join(townRoot, constants.RoleMayor, "daemon.json")
+	return filepath.Join(townRoot, constants.RoleOverseer, "daemon.json")
 }
 
-// LoadPatrolConfig loads patrol configuration from mayor/daemon.json.
+// LoadPatrolConfig loads patrol configuration from overseer/daemon.json.
 // Returns nil if the file doesn't exist or can't be parsed.
 func LoadPatrolConfig(townRoot string) *DaemonPatrolConfig {
 	configFile := PatrolConfigFile(townRoot)
@@ -229,11 +229,11 @@ func LoadPatrolConfig(townRoot string) *DaemonPatrolConfig {
 	return &config
 }
 
-// SavePatrolConfig saves patrol configuration to mayor/daemon.json.
+// SavePatrolConfig saves patrol configuration to overseer/daemon.json.
 func SavePatrolConfig(townRoot string, config *DaemonPatrolConfig) error {
 	configFile := PatrolConfigFile(townRoot)
 
-	// Ensure mayor directory exists
+	// Ensure overseer directory exists
 	if err := os.MkdirAll(filepath.Dir(configFile), 0755); err != nil {
 		return err
 	}
@@ -322,9 +322,9 @@ func IsPatrolEnabled(config *DaemonPatrolConfig, patrol string) bool {
 		if config.Patrols.Witness != nil {
 			return config.Patrols.Witness.Enabled
 		}
-	case constants.RoleDeacon:
-		if config.Patrols.Deacon != nil {
-			return config.Patrols.Deacon.Enabled
+	case constants.RoleSupervisor:
+		if config.Patrols.Supervisor != nil {
+			return config.Patrols.Supervisor.Enabled
 		}
 	case "handler":
 		if config.Patrols.Handler != nil {
@@ -375,7 +375,7 @@ func loadDisabledPatrolsFromTownSettings(townRoot string) map[string]bool {
 }
 
 // isPatrolActive checks whether a patrol should run, combining the
-// daemon patrol config (mayor/daemon.json) with the town-level
+// daemon patrol config (overseer/daemon.json) with the town-level
 // disabled_patrols list (settings/config.json). A patrol is active
 // only if it is enabled in daemon config AND not in the disabled list.
 func (d *Daemon) isPatrolActive(patrol string) bool {
@@ -401,7 +401,7 @@ const (
 
 // LifecycleRequest represents a request from an agent to the daemon.
 type LifecycleRequest struct {
-	// From is the agent requesting the action (e.g., "mayor/", "gastown/witness").
+	// From is the agent requesting the action (e.g., "overseer/", "excavation/witness").
 	From string `json:"from"`
 
 	// Action is what lifecycle action to perform.

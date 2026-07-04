@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/gastown/internal/witness"
+	"github.com/steveyegge/excavation/internal/witness"
 )
 
 type progressDiagnostics struct {
@@ -26,14 +26,14 @@ func (d *progressDiagnostics) Write(p []byte) (int, error) {
 
 func TestPatrolScanOutputJSON(t *testing.T) {
 	output := PatrolScanOutput{
-		Rig:       "gastown",
+		Rig:       "excavation",
 		Timestamp: "2026-03-17T12:00:00Z",
 		Zombies: &PatrolScanZombieOutput{
 			Checked: 3,
 			Found:   1,
 			Zombies: []PatrolScanZombieItem{
 				{
-					Polecat:        "alpha",
+					Miner:        "alpha",
 					Classification: "session-dead-active",
 					AgentState:     "working",
 					HookBead:       "gas-abc",
@@ -44,8 +44,8 @@ func TestPatrolScanOutputJSON(t *testing.T) {
 		},
 		Receipts: []witness.PatrolReceipt{
 			{
-				Rig:               "gastown",
-				Polecat:           "alpha",
+				Rig:               "excavation",
+				Miner:           "alpha",
 				Verdict:           witness.PatrolVerdictStale,
 				RecommendedAction: "restarted",
 				Evidence: witness.PatrolReceiptEvidence{
@@ -67,8 +67,8 @@ func TestPatrolScanOutputJSON(t *testing.T) {
 		t.Fatalf("failed to unmarshal output: %v", err)
 	}
 
-	if parsed.Rig != "gastown" {
-		t.Errorf("Rig = %q, want %q", parsed.Rig, "gastown")
+	if parsed.Rig != "excavation" {
+		t.Errorf("Rig = %q, want %q", parsed.Rig, "excavation")
 	}
 	if parsed.Zombies.Found != 1 {
 		t.Errorf("Zombies.Found = %d, want 1", parsed.Zombies.Found)
@@ -80,8 +80,8 @@ func TestPatrolScanOutputJSON(t *testing.T) {
 		t.Fatalf("len(Zombies) = %d, want 1", len(parsed.Zombies.Zombies))
 	}
 	z := parsed.Zombies.Zombies[0]
-	if z.Polecat != "alpha" {
-		t.Errorf("zombie Polecat = %q, want %q", z.Polecat, "alpha")
+	if z.Miner != "alpha" {
+		t.Errorf("zombie Miner = %q, want %q", z.Miner, "alpha")
 	}
 	if z.Classification != "session-dead-active" {
 		t.Errorf("zombie Classification = %q, want %q", z.Classification, "session-dead-active")
@@ -98,11 +98,11 @@ func TestPatrolScanOutputJSON(t *testing.T) {
 }
 
 func TestCountActiveWorkZombies(t *testing.T) {
-	result := &witness.DetectZombiePolecatsResult{
+	result := &witness.DetectZombieMinersResult{
 		Zombies: []witness.ZombieResult{
-			{PolecatName: "alpha", WasActive: true},
-			{PolecatName: "beta", WasActive: false},
-			{PolecatName: "gamma", WasActive: true},
+			{MinerName: "alpha", WasActive: true},
+			{MinerName: "beta", WasActive: false},
+			{MinerName: "gamma", WasActive: true},
 		},
 	}
 
@@ -113,7 +113,7 @@ func TestCountActiveWorkZombies(t *testing.T) {
 }
 
 func TestCountActiveWorkZombies_Empty(t *testing.T) {
-	result := &witness.DetectZombiePolecatsResult{}
+	result := &witness.DetectZombieMinersResult{}
 	got := countActiveWorkZombies(result)
 	if got != 0 {
 		t.Errorf("countActiveWorkZombies() = %d, want 0", got)
@@ -191,7 +191,7 @@ func TestRunPatrolScanPhaseZeroIntervalSkipsProgressTicks(t *testing.T) {
 
 func TestPatrolScanZombieItemSerialization(t *testing.T) {
 	item := PatrolScanZombieItem{
-		Polecat:        "obsidian",
+		Miner:        "obsidian",
 		Classification: "agent-dead-in-session",
 		AgentState:     "working",
 		HookBead:       "gas-xyz",
@@ -211,8 +211,8 @@ func TestPatrolScanZombieItemSerialization(t *testing.T) {
 		t.Fatalf("failed to unmarshal item: %v", err)
 	}
 
-	if parsed.Polecat != "obsidian" {
-		t.Errorf("Polecat = %q, want %q", parsed.Polecat, "obsidian")
+	if parsed.Miner != "obsidian" {
+		t.Errorf("Miner = %q, want %q", parsed.Miner, "obsidian")
 	}
 	if parsed.CleanupStatus != "has_uncommitted" {
 		t.Errorf("CleanupStatus = %q, want %q", parsed.CleanupStatus, "has_uncommitted")
