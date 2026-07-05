@@ -267,6 +267,7 @@ func TestDoMerge_RechecksSourceFlagsBeforeDirectPush(t *testing.T) {
 				prepushMRIssue("gt-mr", "feature-"+tc.name, "main", "gt-src"),
 			)
 			e := newPrepushEngineer(t, workDir, store)
+			e.config.AutoPush = true // exercise the push path this test guards
 			before := run(t, workDir, "git", "rev-parse", "origin/main")
 
 			mutated := false

@@ -125,6 +125,7 @@ func TestDoMerge_DirectStrategy_BlocksForkBackedDefaultPush(t *testing.T) {
 	addDistinctUpstreamRemote(t, workDir, g)
 	e := newTestEngineer(t, workDir, g)
 	e.config.MergeStrategy = ""
+	e.config.AutoPush = true // exercise the push path this test guards
 
 	createFeatureBranch(t, workDir, "feat/fork-guard", "fork.txt", "hello")
 	before := run(t, workDir, "git", "rev-parse", "origin/main")

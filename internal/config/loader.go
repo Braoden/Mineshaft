@@ -2329,7 +2329,10 @@ func BuildStartupCommand(envVars map[string]string, rigPath, prompt string) stri
 		// Sanitize role for filename (replace / with -)
 		safeRole := strings.ReplaceAll(role, "/", "-")
 		scriptPath := filepath.Join(scriptDir, safeRole+"-startup.ps1")
-		scriptContent := strings.Join(scriptLines, "\n") + "\n"
+		// UTF-8 BOM so Windows PowerShell 5.1 decodes the script as UTF-8;
+		// without it, non-ASCII prompt text is read as ANSI and bytes like
+		// 0x92 (from →) become smart quotes that break string parsing.
+		scriptContent := "\xEF\xBB\xBF" + strings.Join(scriptLines, "\n") + "\n"
 		if err := os.WriteFile(scriptPath, []byte(scriptContent), 0644); err != nil {
 			// Fallback: inline command (may fail if too long)
 			cmd = strings.Join(scriptLines, "; ")
@@ -2581,7 +2584,10 @@ func BuildStartupCommandWithAgentOverride(envVars map[string]string, rigPath, pr
 		}
 		safeRole := strings.ReplaceAll(role, "/", "-")
 		scriptPath := filepath.Join(scriptDir, safeRole+"-startup.ps1")
-		scriptContent := strings.Join(scriptLines, "\n") + "\n"
+		// UTF-8 BOM so Windows PowerShell 5.1 decodes the script as UTF-8;
+		// without it, non-ASCII prompt text is read as ANSI and bytes like
+		// 0x92 (from →) become smart quotes that break string parsing.
+		scriptContent := "\xEF\xBB\xBF" + strings.Join(scriptLines, "\n") + "\n"
 		if err := os.WriteFile(scriptPath, []byte(scriptContent), 0644); err != nil {
 			cmd = strings.Join(scriptLines, "; ")
 		} else {

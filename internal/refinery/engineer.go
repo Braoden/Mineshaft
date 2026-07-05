@@ -155,6 +155,7 @@ type MergeQueueConfig struct {
 	MaxRetryCount int `json:"max_retry_count"`
 
 	// AutoPush controls whether the refinery pushes to origin after merging.
+	// Permanently false: config values of true are ignored (user-only pushes).
 	// When false, the refinery merges locally but does not push — the user
 	// or a separate process handles pushing. Useful to avoid triggering
 	// CI/CD builds (e.g. Vercel) on every merge.
@@ -195,7 +196,7 @@ func DefaultMergeQueueConfig() *MergeQueueConfig {
 		StaleClaimWarningAfter:  2 * time.Hour,
 		StaleClaimCriticalAfter: 6 * time.Hour,
 		MaxRetryCount:           5,
-		AutoPush:                true,
+		AutoPush:                false,
 	}
 }
 
@@ -430,8 +431,10 @@ func (e *Engineer) LoadConfig() error {
 	if mqRaw.GatesParallel != nil {
 		e.config.GatesParallel = *mqRaw.GatesParallel
 	}
-	if mqRaw.AutoPush != nil {
-		e.config.AutoPush = *mqRaw.AutoPush
+	// auto_push is permanently disabled: only the user pushes merged work to origin.
+	// Config values of true are ignored so no rig can re-enable it.
+	if mqRaw.AutoPush != nil && *mqRaw.AutoPush {
+		_, _ = fmt.Fprintln(e.output, "[Engineer] WARNING: merge_queue.auto_push=true is ignored — auto-push is permanently disabled")
 	}
 	if mqRaw.MergeStrategy != nil {
 		e.config.MergeStrategy = *mqRaw.MergeStrategy
