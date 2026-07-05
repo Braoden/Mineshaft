@@ -1,5 +1,7 @@
 # Mineshaft
 
+> Mineshaft is a fork and reskin of [Gastown](https://github.com/gastownhall/gastown).
+
 **Multi-agent orchestration system for Claude Code, GitHub Copilot, and other AI agents with persistent work tracking**
 
 ## Overview
