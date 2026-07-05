@@ -8,7 +8,7 @@ import (
 
 const testRigsJSON = `{
   "rigs": {
-    "excavation": {"beads": {"prefix": "-"}}
+    "mineshaft": {"beads": {"prefix": "-"}}
   }
 }`
 

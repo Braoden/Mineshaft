@@ -11,7 +11,7 @@ var (
 	nameOnce sync.Once
 )
 
-// Name returns the Excavation Site CLI command name.
+// Name returns the Mineshaft CLI command name.
 // Defaults to "gt", but can be overridden with GT_COMMAND env var.
 // This allows coexistence with other tools that use "gt" (e.g., Graphite).
 func Name() string {

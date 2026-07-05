@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/miner"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/miner"
 )
 
 // fakeMRFinder is a test stub for the mrFinder interface used by applyMQCheck.
@@ -361,7 +361,7 @@ func TestReconcileCleanupStatusIfSafe(t *testing.T) {
 				MQStatus:      "submitted",
 			}
 			updater := &fakeCleanupUpdater{}
-			reconcileCleanupStatusIfSafe(status, updater, "gt-excavation-miner-nitro", &miner.Miner{State: miner.StateIdle}, &beads.AgentFields{
+			reconcileCleanupStatusIfSafe(status, updater, "gt-mineshaft-miner-nitro", &miner.Miner{State: miner.StateIdle}, &beads.AgentFields{
 				AgentState:    string(beads.AgentStateIdle),
 				CleanupStatus: string(previous),
 			})
@@ -369,7 +369,7 @@ func TestReconcileCleanupStatusIfSafe(t *testing.T) {
 			if updater.calls != 1 {
 				t.Fatalf("UpdateAgentCleanupStatus calls = %d, want 1", updater.calls)
 			}
-			if updater.id != "gt-excavation-miner-nitro" || updater.status != string(miner.CleanupClean) {
+			if updater.id != "gt-mineshaft-miner-nitro" || updater.status != string(miner.CleanupClean) {
 				t.Fatalf("update = (%q, %q), want clean update for agent", updater.id, updater.status)
 			}
 			if status.CleanupStatus != miner.CleanupClean || !status.Reconciled {
@@ -386,7 +386,7 @@ func TestReconcileCleanupStatusIfSafe_FailsClosed(t *testing.T) {
 		Branch:        "miner/nitro",
 		MQStatus:      "submitted",
 	}
-	reconcileCleanupStatusIfSafe(status, &fakeCleanupUpdater{err: errors.New("bd update failed")}, "gt-excavation-miner-nitro", &miner.Miner{State: miner.StateIdle}, &beads.AgentFields{
+	reconcileCleanupStatusIfSafe(status, &fakeCleanupUpdater{err: errors.New("bd update failed")}, "gt-mineshaft-miner-nitro", &miner.Miner{State: miner.StateIdle}, &beads.AgentFields{
 		AgentState:    string(beads.AgentStateIdle),
 		CleanupStatus: string(miner.CleanupUnpushed),
 	})
@@ -455,7 +455,7 @@ func TestHookBeadSafeForCleanup(t *testing.T) {
 }
 
 func TestPartialSpawnWithoutDurableHook(t *testing.T) {
-	assignee := "excavation/miners/nitro"
+	assignee := "mineshaft/miners/nitro"
 	tests := []struct {
 		name         string
 		fields       *beads.AgentFields
@@ -594,12 +594,12 @@ func TestActiveMRBlocker(t *testing.T) {
 
 func TestFormatSafetyCheckBlockers(t *testing.T) {
 	blocked := []*SafetyCheckResult{
-		{Miner: "excavation/fury", Reasons: []string{"cleanup_status=unknown", "active_mr=hq-wisp-1 status=open"}},
-		{Miner: "excavation/rust", Reasons: []string{"has work on hook (gt-abc)"}},
+		{Miner: "mineshaft/fury", Reasons: []string{"cleanup_status=unknown", "active_mr=hq-wisp-1 status=open"}},
+		{Miner: "mineshaft/rust", Reasons: []string{"has work on hook (gt-abc)"}},
 	}
 
 	got := formatSafetyCheckBlockers(blocked)
-	want := "excavation/fury: cleanup_status=unknown; active_mr=hq-wisp-1 status=open | excavation/rust: has work on hook (gt-abc)"
+	want := "mineshaft/fury: cleanup_status=unknown; active_mr=hq-wisp-1 status=open | mineshaft/rust: has work on hook (gt-abc)"
 	if got != want {
 		t.Errorf("formatSafetyCheckBlockers() = %q, want %q", got, want)
 	}
@@ -608,13 +608,13 @@ func TestFormatSafetyCheckBlockers(t *testing.T) {
 func TestDisplaySafetyCheckBlockedToIncludesPredicates(t *testing.T) {
 	var buf bytes.Buffer
 	displaySafetyCheckBlockedTo(&buf, []*SafetyCheckResult{{
-		Miner: "excavation/fury",
+		Miner: "mineshaft/fury",
 		Reasons: []string{"cleanup_status=unknown", "active_mr=hq-wisp-1 status=open"},
 	}})
 	out := buf.String()
 	for _, want := range []string{
 		"Cannot nuke",
-		"excavation/fury",
+		"mineshaft/fury",
 		"cleanup_status=unknown",
 		"active_mr=hq-wisp-1 status=open",
 		"Force nuke (LOSES WORK)",

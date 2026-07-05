@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 // LinkedPaneCheck detects tmux sessions that share panes,
@@ -28,7 +28,7 @@ func NewLinkedPaneCheck() *LinkedPaneCheck {
 	}
 }
 
-// Run checks for linked panes across Excavation Site tmux sessions.
+// Run checks for linked panes across Mineshaft tmux sessions.
 func (c *LinkedPaneCheck) Run(ctx *CheckContext) *CheckResult {
 	t := tmux.NewTmux()
 
@@ -42,7 +42,7 @@ func (c *LinkedPaneCheck) Run(ctx *CheckContext) *CheckResult {
 		}
 	}
 
-	// Filter to Excavation Site sessions only
+	// Filter to Mineshaft sessions only
 	var gtSessions []string
 	for _, s := range sessions {
 		if session.IsKnownSession(s) {
@@ -98,7 +98,7 @@ func (c *LinkedPaneCheck) Run(ctx *CheckContext) *CheckResult {
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusOK,
-			Message: fmt.Sprintf("All %d Excavation Site sessions have independent panes", len(gtSessions)),
+			Message: fmt.Sprintf("All %d Mineshaft sessions have independent panes", len(gtSessions)),
 		}
 	}
 

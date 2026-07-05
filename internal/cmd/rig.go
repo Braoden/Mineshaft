@@ -14,23 +14,23 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/crew"
-	"github.com/steveyegge/excavation/internal/deps"
-	"github.com/steveyegge/excavation/internal/doltserver"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/hooks"
-	"github.com/steveyegge/excavation/internal/miner"
-	"github.com/steveyegge/excavation/internal/refinery"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/suggest"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/wisp"
-	"github.com/steveyegge/excavation/internal/witness"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/crew"
+	"github.com/steveyegge/mineshaft/internal/deps"
+	"github.com/steveyegge/mineshaft/internal/doltserver"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/hooks"
+	"github.com/steveyegge/mineshaft/internal/miner"
+	"github.com/steveyegge/mineshaft/internal/refinery"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/suggest"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/wisp"
+	"github.com/steveyegge/mineshaft/internal/witness"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 	"golang.org/x/term"
 )
 
@@ -39,7 +39,7 @@ var rigCmd = &cobra.Command{
 	GroupID: GroupWorkspace,
 	Short:   "Manage rigs in the workspace",
 	RunE:    requireSubcommand,
-	Long: `Manage rigs (project containers) in the Excavation Site workspace.
+	Long: `Manage rigs (project containers) in the Mineshaft workspace.
 
 A rig is a container for managing a project and its agents:
   - refinery/rig/  Canonical main clone (Refinery's working copy)
@@ -79,12 +79,12 @@ For a repo you don't own, use fork mode (fetch upstream, push to fork).
 See docs/guides/fork-rig-setup.md for setup, verification, and recovery.
 
 Example:
-  gt rig add excavation https://github.com/steveyegge/excavation
+  gt rig add mineshaft https://github.com/steveyegge/mineshaft
   gt rig add my_project git@github.com:user/repo.git --prefix mp
   gt rig add existing_rig --adopt
-  gt rig add excavation https://github.com/excavationhall/excavation \
-    --push-url https://github.com/you/excavation \
-    --upstream-url https://github.com/excavationhall/excavation`,
+  gt rig add mineshaft https://github.com/mineshafthall/mineshaft \
+    --push-url https://github.com/you/mineshaft \
+    --upstream-url https://github.com/mineshafthall/mineshaft`,
 	Args: cobra.RangeArgs(1, 2),
 	RunE: runRigAdd,
 }
@@ -92,7 +92,7 @@ Example:
 var rigListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all rigs in the workspace",
-	Long: `List all rigs registered in the Excavation Site workspace.
+	Long: `List all rigs registered in the Mineshaft workspace.
 
 For each rig, displays:
   - Rig name and operational state (OPERATIONAL, PARKED, DOCKED)
@@ -109,7 +109,7 @@ Examples:
 var rigRemoveCmd = &cobra.Command{
 	Use:   "remove <name>",
 	Short: "Remove a rig from the registry (does not delete files)",
-	Long: `Remove a rig from the Excavation Site registry.
+	Long: `Remove a rig from the Mineshaft registry.
 
 This only removes the rig entry from overseer/rigs.json and cleans up
 the beads route. The rig's files on disk are NOT deleted.
@@ -176,9 +176,9 @@ Miners are NOT started by this command - they are spawned
 on demand when work is assigned.
 
 Examples:
-  gt rig start excavation
-  gt rig start excavation beads
-  gt rig start excavation beads myproject`,
+  gt rig start mineshaft
+  gt rig start mineshaft beads
+  gt rig start mineshaft beads myproject`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runRigStart,
 }
@@ -241,7 +241,7 @@ Displays:
 
 Examples:
   gt rig status           # Infer rig from current directory
-  gt rig status excavation
+  gt rig status mineshaft
   gt rig status beads`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runRigStatus,
@@ -267,10 +267,10 @@ Use --force to force immediate shutdown (prompts if uncommitted work).
 Use --nuclear to bypass ALL safety checks (will lose work!).
 
 Examples:
-  gt rig stop excavation
-  gt rig stop excavation beads
-  gt rig stop --force excavation beads
-  gt rig stop --nuclear excavation  # DANGER: loses uncommitted work`,
+  gt rig stop mineshaft
+  gt rig stop mineshaft beads
+  gt rig stop --force mineshaft beads
+  gt rig stop --nuclear mineshaft  # DANGER: loses uncommitted work`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runRigStop,
 }
@@ -292,10 +292,10 @@ Use --force to force immediate shutdown (prompts if uncommitted work).
 Use --nuclear to bypass ALL safety checks (will lose work!).
 
 Examples:
-  gt rig restart excavation
-  gt rig restart excavation beads
-  gt rig restart --force excavation beads
-  gt rig restart --nuclear excavation  # DANGER: loses uncommitted work`,
+  gt rig restart mineshaft
+  gt rig restart mineshaft beads
+  gt rig restart --force mineshaft beads
+  gt rig restart --nuclear mineshaft  # DANGER: loses uncommitted work`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runRigRestart,
 }
@@ -508,7 +508,7 @@ func runRigAdd(cmd *cobra.Command, args []string) error {
 	// Find workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Load rigs config
@@ -658,7 +658,7 @@ func runRigAdd(cmd *cobra.Command, args []string) error {
 	// Refresh tmux cycle bindings on all running sessions so the new rig's
 	// prefix is recognized by C-b n/p. Without this, existing sessions have
 	// a stale grep pattern that doesn't include the new prefix.
-	// See: https://github.com/steveyegge/excavation/issues/2299
+	// See: https://github.com/steveyegge/mineshaft/issues/2299
 	refreshCycleBindingsOnExistingSessions()
 
 	elapsed := time.Since(startTime)
@@ -739,7 +739,7 @@ func runRigList(cmd *cobra.Command, args []string) error {
 	// Find workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Load rigs config
@@ -872,7 +872,7 @@ var rigMenuCmd = &cobra.Command{
 func runRigMenu(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
@@ -990,7 +990,7 @@ func runRigRemove(cmd *cobra.Command, args []string) error {
 	// Find workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Load rigs config
@@ -1119,7 +1119,7 @@ func runRigAdopt(_ *cobra.Command, args []string) error {
 	// Find workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Load rigs config
@@ -1391,7 +1391,7 @@ func runRigReset(cmd *cobra.Command, args []string) error {
 	// Find workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	cwd, err := os.Getwd()
@@ -1597,7 +1597,7 @@ func runRigBoot(cmd *cobra.Command, args []string) error {
 	// Find workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Load rigs config and get rig
@@ -1665,7 +1665,7 @@ func runRigStart(cmd *cobra.Command, args []string) error {
 	// Find workspace once
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Load rigs config
@@ -1764,7 +1764,7 @@ func runRigShutdown(cmd *cobra.Command, args []string) error {
 	// Find workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Load rigs config and get rig
@@ -2090,7 +2090,7 @@ func runRigStop(cmd *cobra.Command, args []string) error {
 	// Find workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Load rigs config
@@ -2188,7 +2188,7 @@ func runRigRestart(cmd *cobra.Command, args []string) error {
 	// Find workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Load rigs config

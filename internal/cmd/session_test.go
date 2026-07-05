@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/miner"
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/miner"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 func TestSessionInfoJSONOutput(t *testing.T) {
@@ -16,7 +16,7 @@ func TestSessionInfoJSONOutput(t *testing.T) {
 		Miner:   "alpha",
 		SessionID: "gt-alpha",
 		Running:   true,
-		RigName:   "excavation",
+		RigName:   "mineshaft",
 		Attached:  false,
 		Created:   time.Date(2026, 2, 20, 10, 0, 0, 0, time.UTC),
 		Windows:   1,
@@ -41,8 +41,8 @@ func TestSessionInfoJSONOutput(t *testing.T) {
 	if parsed["running"] != true {
 		t.Errorf("running = %v, want true", parsed["running"])
 	}
-	if parsed["rig_name"] != "excavation" {
-		t.Errorf("rig_name = %v, want excavation", parsed["rig_name"])
+	if parsed["rig_name"] != "mineshaft" {
+		t.Errorf("rig_name = %v, want mineshaft", parsed["rig_name"])
 	}
 }
 

@@ -1,6 +1,6 @@
 # OpenTelemetry Data Model
 
-Complete schema of all telemetry events emitted by Excavation Site. Each event consists of:
+Complete schema of all telemetry events emitted by Mineshaft. Each event consists of:
 
 1. **Log record** (→ any OTLP v1.x+ backend, defaults to VictoriaLogs) with full structured attributes
 2. **Metric counter** (→ any OTLP v1.x+ backend, defaults to VictoriaMetrics) for aggregation
@@ -63,8 +63,8 @@ Resource attributes set at process start via `OTEL_RESOURCE_ATTRIBUTES` (populat
 
 | Attribute | Type | Source | Notes |
 |---|---|---|---|
-| `gt.role` | string | `GT_ROLE` env var | e.g. `"excavation/miners/Toast"` |
-| `gt.rig` | string | `GT_RIG` env var | e.g. `"excavation"` |
+| `gt.role` | string | `GT_ROLE` env var | e.g. `"mineshaft/miners/Toast"` |
+| `gt.rig` | string | `GT_RIG` env var | e.g. `"mineshaft"` |
 | `gt.actor` | string | `BD_ACTOR` env var | bd actor identity |
 | `gt.agent` | string | `GT_MINER` or `GT_CREW` env var | agent name |
 | `gt.session` | string | `GT_SESSION` env var | tmux session name — **PR #2199** |
@@ -87,7 +87,7 @@ tmux session lifecycle events.
 | Attribute | Type | Description |
 |---|---|---|
 | `session_id` | string | tmux pane name |
-| `role` | string | Excavation role |
+| `role` | string | Mineshaft role |
 | `status` | string | `"ok"` · `"error"` |
 | `error` | string | error message; empty when `"ok"` |
 
@@ -100,7 +100,7 @@ separately as `prime.context` (same attributes plus `formula`).
 
 | Attribute | Type | Description |
 |---|---|---|
-| `role` | string | Excavation role |
+| `role` | string | Mineshaft role |
 | `hook_mode` | bool | true when invoked from a hook |
 | `status` | string | `"ok"` · `"error"` |
 | `error` | string | error message; empty when `"ok"` |
@@ -116,7 +116,7 @@ Companion to `prime`, emitted in the same invocation. Carries the full rendered 
 
 | Attribute | Type | Description |
 |---|---|---|
-| `role` | string | Excavation role |
+| `role` | string | Mineshaft role |
 | `hook_mode` | bool | true when invoked from a hook |
 | `formula` | string | full rendered formula text |
 | `status` | string | `"ok"` · `"error"` |
@@ -195,7 +195,7 @@ in a shell.
 
 ### `mail`
 
-All operations on the Excavation mail system. Carries operation and result only;
+All operations on the Mineshaft mail system. Carries operation and result only;
 message payload attributes are not recorded.
 
 | Attribute | Type | Description |
@@ -256,14 +256,14 @@ All carry `status` and `error` fields.
 
 | Event body | Key attributes | Metric |
 |---|---|---|
-| `sling` | `bead`, `target`, `status`, `error` | `excavation.sling.dispatches.total` |
-| `nudge` | `target`, `status`, `error` | `excavation.nudge.total` |
-| `done` | `exit_type` (`COMPLETED` · `ESCALATED` · `DEFERRED`), `status`, `error` | `excavation.done.total` |
-| `miner.spawn` | `name`, `status`, `error` | `excavation.miner.spawns.total` |
-| `miner.remove` | `name`, `status`, `error` | `excavation.miner.removes.total` |
-| `formula.instantiate` | `formula_name`, `bead_id`, `status`, `error` | `excavation.formula.instantiations.total` |
-| `minecart.create` | `bead_id`, `status`, `error` | `excavation.minecart.creates.total` |
-| `daemon.restart` | `agent_type` | `excavation.daemon.agent_restarts.total` |
+| `sling` | `bead`, `target`, `status`, `error` | `mineshaft.sling.dispatches.total` |
+| `nudge` | `target`, `status`, `error` | `mineshaft.nudge.total` |
+| `done` | `exit_type` (`COMPLETED` · `ESCALATED` · `DEFERRED`), `status`, `error` | `mineshaft.done.total` |
+| `miner.spawn` | `name`, `status`, `error` | `mineshaft.miner.spawns.total` |
+| `miner.remove` | `name`, `status`, `error` | `mineshaft.miner.removes.total` |
+| `formula.instantiate` | `formula_name`, `bead_id`, `status`, `error` | `mineshaft.formula.instantiations.total` |
+| `minecart.create` | `bead_id`, `status`, `error` | `mineshaft.minecart.creates.total` |
+| `daemon.restart` | `agent_type` | `mineshaft.daemon.agent_restarts.total` |
 
 ---
 
@@ -279,7 +279,7 @@ Intended to anchor all subsequent events for a run. One span per agent spawn.
 | Attribute | Type | Description |
 |---|---|---|
 | `agent_type` | string | `"claudecode"` · `"opencode"` · … |
-| `role` | string | Excavation role |
+| `role` | string | Mineshaft role |
 | `agent_name` | string | agent name |
 | `session_id` | string | tmux pane name |
 | `rig` | string | allocation rig (empty for generic miners) |
@@ -301,25 +301,25 @@ Per-child-bead event during molecule instantiation. No `RecordBeadCreate` functi
 
 | Metric | Type | Labels | Status |
 |--------|------|--------|--------|
-| `excavation.session.starts.total` | Counter | `status`, `role` | ✅ Main |
-| `excavation.session.stops.total` | Counter | `status` | ✅ Main |
-| `excavation.agent.state_changes.total` | Counter | `status`, `new_state` | ✅ Main |
-| `excavation.bd.calls.total` | Counter | `status`, `subcommand` | ✅ Main |
-| `excavation.bd.duration_ms` | Histogram | `subcommand` | ✅ Main |
-| `excavation.mail.operations.total` | Counter | `status`, `operation` | ✅ Main |
-| `excavation.prime.total` | Counter | `status`, `role`, `hook_mode` | ✅ Main |
-| `excavation.prompt.sends.total` | Counter | `status` | ✅ Main |
-| `excavation.pane.reads.total` | Counter | `status` | ✅ Main |
-| `excavation.pane.output.total` | Counter | `session` | ✅ Main |
-| `excavation.nudge.total` | Counter | `status` | ✅ Main |
-| `excavation.sling.dispatches.total` | Counter | `status` | ✅ Main |
-| `excavation.done.total` | Counter | `status`, `exit_type` | ✅ Main |
-| `excavation.miner.spawns.total` | Counter | `status` | ✅ Main |
-| `excavation.miner.removes.total` | Counter | `status` | ✅ Main |
-| `excavation.daemon.agent_restarts.total` | Counter | `agent_type` | ✅ Main |
-| `excavation.formula.instantiations.total` | Counter | `status`, `formula` | ✅ Main |
-| `excavation.minecart.creates.total` | Counter | `status` | ✅ Main |
-| `excavation.agent.events.total` | Counter | `session`, `event_type`, `role` | 🔲 PR #2199 |
+| `mineshaft.session.starts.total` | Counter | `status`, `role` | ✅ Main |
+| `mineshaft.session.stops.total` | Counter | `status` | ✅ Main |
+| `mineshaft.agent.state_changes.total` | Counter | `status`, `new_state` | ✅ Main |
+| `mineshaft.bd.calls.total` | Counter | `status`, `subcommand` | ✅ Main |
+| `mineshaft.bd.duration_ms` | Histogram | `subcommand` | ✅ Main |
+| `mineshaft.mail.operations.total` | Counter | `status`, `operation` | ✅ Main |
+| `mineshaft.prime.total` | Counter | `status`, `role`, `hook_mode` | ✅ Main |
+| `mineshaft.prompt.sends.total` | Counter | `status` | ✅ Main |
+| `mineshaft.pane.reads.total` | Counter | `status` | ✅ Main |
+| `mineshaft.pane.output.total` | Counter | `session` | ✅ Main |
+| `mineshaft.nudge.total` | Counter | `status` | ✅ Main |
+| `mineshaft.sling.dispatches.total` | Counter | `status` | ✅ Main |
+| `mineshaft.done.total` | Counter | `status`, `exit_type` | ✅ Main |
+| `mineshaft.miner.spawns.total` | Counter | `status` | ✅ Main |
+| `mineshaft.miner.removes.total` | Counter | `status` | ✅ Main |
+| `mineshaft.daemon.agent_restarts.total` | Counter | `agent_type` | ✅ Main |
+| `mineshaft.formula.instantiations.total` | Counter | `status`, `formula` | ✅ Main |
+| `mineshaft.minecart.creates.total` | Counter | `status` | ✅ Main |
+| `mineshaft.agent.events.total` | Counter | `session`, `event_type`, `role` | 🔲 PR #2199 |
 
 ---
 
@@ -379,24 +379,24 @@ Audited against `origin/main` @ `2d8d71ee35fafda3bbdf353683692bfcc9165476`
 | Claim | Source |
 |-------|--------|
 | `initInstruments()` function | `recorder.go:59` |
-| `excavation.bd.calls.total` Counter | `recorder.go:64` |
-| `excavation.session.starts.total` Counter | `recorder.go:67` |
-| `excavation.session.stops.total` Counter | `recorder.go:70` |
-| `excavation.prompt.sends.total` Counter | `recorder.go:73` |
-| `excavation.pane.reads.total` Counter | `recorder.go:76` |
-| `excavation.pane.output.total` Counter | `recorder.go:79` |
-| `excavation.prime.total` Counter | `recorder.go:82` |
-| `excavation.agent.state_changes.total` Counter | `recorder.go:85` |
-| `excavation.miner.spawns.total` Counter | `recorder.go:88` |
-| `excavation.miner.removes.total` Counter | `recorder.go:91` |
-| `excavation.sling.dispatches.total` Counter | `recorder.go:94` |
-| `excavation.mail.operations.total` Counter | `recorder.go:97` |
-| `excavation.nudge.total` Counter | `recorder.go:100` |
-| `excavation.done.total` Counter | `recorder.go:103` |
-| `excavation.daemon.agent_restarts.total` Counter | `recorder.go:106` |
-| `excavation.formula.instantiations.total` Counter | `recorder.go:109` |
-| `excavation.minecart.creates.total` Counter | `recorder.go:112` |
-| `excavation.bd.duration_ms` Histogram | `recorder.go:117` |
+| `mineshaft.bd.calls.total` Counter | `recorder.go:64` |
+| `mineshaft.session.starts.total` Counter | `recorder.go:67` |
+| `mineshaft.session.stops.total` Counter | `recorder.go:70` |
+| `mineshaft.prompt.sends.total` Counter | `recorder.go:73` |
+| `mineshaft.pane.reads.total` Counter | `recorder.go:76` |
+| `mineshaft.pane.output.total` Counter | `recorder.go:79` |
+| `mineshaft.prime.total` Counter | `recorder.go:82` |
+| `mineshaft.agent.state_changes.total` Counter | `recorder.go:85` |
+| `mineshaft.miner.spawns.total` Counter | `recorder.go:88` |
+| `mineshaft.miner.removes.total` Counter | `recorder.go:91` |
+| `mineshaft.sling.dispatches.total` Counter | `recorder.go:94` |
+| `mineshaft.mail.operations.total` Counter | `recorder.go:97` |
+| `mineshaft.nudge.total` Counter | `recorder.go:100` |
+| `mineshaft.done.total` Counter | `recorder.go:103` |
+| `mineshaft.daemon.agent_restarts.total` Counter | `recorder.go:106` |
+| `mineshaft.formula.instantiations.total` Counter | `recorder.go:109` |
+| `mineshaft.minecart.creates.total` Counter | `recorder.go:112` |
+| `mineshaft.bd.duration_ms` Histogram | `recorder.go:117` |
 
 ### Log events (`internal/telemetry/recorder.go`)
 
@@ -446,9 +446,9 @@ Audited against `origin/main` @ `2d8d71ee35fafda3bbdf353683692bfcc9165476`
 | `mol.cook/wisp/squash/burn` — do not exist | `grep -r "mol\.cook\|mol\.wisp\|mol\.squash\|mol\.burn" internal/ → zero matches` |
 | `bead.create` — does not exist | `grep -r "bead\.create\|RecordBeadCreate" internal/ → zero matches` |
 | `RecordMailMessage` — does not exist | `grep -r "RecordMailMessage\|MailMessageInfo" internal/ → zero matches` |
-| `excavation.agent.instantiations.total` — not in `initInstruments()` | `grep -r "agent.instantiations" internal/ → zero matches` |
-| `excavation.mol.cooks.total` etc. — not in `initInstruments()` | `grep -r "mol\.cooks\|mol\.wisps\|mol\.squashes\|mol\.burns" internal/ → zero matches` |
-| `excavation.bead.creates.total` — not in `initInstruments()` | `grep -r "bead\.creates" internal/ → zero matches` |
+| `mineshaft.agent.instantiations.total` — not in `initInstruments()` | `grep -r "agent.instantiations" internal/ → zero matches` |
+| `mineshaft.mol.cooks.total` etc. — not in `initInstruments()` | `grep -r "mol\.cooks\|mol\.wisps\|mol\.squashes\|mol\.burns" internal/ → zero matches` |
+| `mineshaft.bead.creates.total` — not in `initInstruments()` | `grep -r "bead\.creates" internal/ → zero matches` |
 
 ### PR #2199 additions (in `otel-p0-work-context`, not yet on main)
 
@@ -456,7 +456,7 @@ Audited against `origin/main` @ `2d8d71ee35fafda3bbdf353683692bfcc9165476`
 |-------|---------------------------|
 | `RecordAgentEvent` / `agent.event` | `recorder.go` (added in `8b88de15`) |
 | `RecordAgentTokenUsage` / `agent.usage` | `recorder.go` (added in `8b88de15`) |
-| `excavation.agent.events.total` Counter | `recorder.go` (added in `8b88de15`) |
+| `mineshaft.agent.events.total` Counter | `recorder.go` (added in `8b88de15`) |
 | `WithRunID(ctx, runID)` / `RunIDFromCtx(ctx)` | `recorder.go` (added in `8b88de15`) |
 | `addRunID(ctx, *record)` — injects `run.id` into all emit calls | `recorder.go` (added in `8b88de15`) |
 | `gt.session` in `OTEL_RESOURCE_ATTRIBUTES` | `subprocess.go` (updated in `8b88de15`) |

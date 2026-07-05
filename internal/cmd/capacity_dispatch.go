@@ -12,12 +12,12 @@ import (
 	"time"
 
 	"github.com/gofrs/flock"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/doltserver"
-	"github.com/steveyegge/excavation/internal/events"
-	"github.com/steveyegge/excavation/internal/scheduler/capacity"
-	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/doltserver"
+	"github.com/steveyegge/mineshaft/internal/events"
+	"github.com/steveyegge/mineshaft/internal/scheduler/capacity"
+	"github.com/steveyegge/mineshaft/internal/style"
 )
 
 // crossRigEscalationDebounce is the minimum interval between cross-rig prefix
@@ -466,7 +466,7 @@ func getReadySlingContexts(townRoot string) ([]capacity.PendingBead, error) {
 
 	// 2. Batch-fetch work bead labels/status so we can defensively filter messaging
 	// beads (gt:message / gt:handoff / gt:merge-request) that should never be
-	// handed to a miner. See gt-el4 / excavationhall/excavation#3800.
+	// handed to a miner. See gt-el4 / mineshafthall/mineshaft#3800.
 	workBeadIDs := make([]string, 0, len(allContexts))
 	for _, ctx := range allContexts {
 		fields := beads.ParseSlingContextFields(ctx.issue.Description)

@@ -24,8 +24,8 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // Poller tuning defaults (overridable via flags or tests).

@@ -1,4 +1,4 @@
-// ABOUTME: Command to enable Excavation Site system-wide.
+// ABOUTME: Command to enable Mineshaft system-wide.
 // ABOUTME: Sets the global state to enabled for all agentic coding tools.
 
 package cmd
@@ -7,15 +7,15 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/state"
-	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/mineshaft/internal/state"
+	"github.com/steveyegge/mineshaft/internal/style"
 )
 
 var enableCmd = &cobra.Command{
 	Use:     "enable",
 	GroupID: GroupConfig,
-	Short:   "Enable Excavation Site system-wide",
-	Long: `Enable Excavation Site for all agentic coding tools.
+	Short:   "Enable Mineshaft system-wide",
+	Long: `Enable Mineshaft for all agentic coding tools.
 
 When enabled:
   - Shell hooks set GT_TOWN_ROOT and GT_RIG environment variables
@@ -25,8 +25,8 @@ When enabled:
 Use 'gt disable' to turn off. Use 'gt status' to check state.
 
 Environment overrides:
-  EXCAVATION_DISABLED=1  - Disable for current session only
-  EXCAVATION_ENABLED=1   - Enable for current session only`,
+  MINESHAFT_DISABLED=1  - Disable for current session only
+  MINESHAFT_ENABLED=1   - Enable for current session only`,
 	RunE: runEnable,
 }
 
@@ -36,12 +36,12 @@ func init() {
 
 func runEnable(cmd *cobra.Command, args []string) error {
 	if err := state.Enable(Version); err != nil {
-		return fmt.Errorf("enabling Excavation Site: %w", err)
+		return fmt.Errorf("enabling Mineshaft: %w", err)
 	}
 
-	fmt.Printf("%s Excavation Site enabled\n", style.Success.Render("✓"))
+	fmt.Printf("%s Mineshaft enabled\n", style.Success.Render("✓"))
 	fmt.Println()
-	fmt.Println("Excavation Site will now:")
+	fmt.Println("Mineshaft will now:")
 	fmt.Println("  • Inject context into Claude Code sessions")
 	fmt.Println("  • Set GT_TOWN_ROOT and GT_RIG environment variables")
 	fmt.Println("  • Auto-register git repos as rigs (if configured)")

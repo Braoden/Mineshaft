@@ -3,7 +3,7 @@ package doctor
 import (
 	"fmt"
 
-	"github.com/steveyegge/excavation/internal/version"
+	"github.com/steveyegge/mineshaft/internal/version"
 )
 
 // StaleBinaryCheck verifies the installed gt binary is up to date with the repo.

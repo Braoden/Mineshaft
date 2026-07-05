@@ -10,14 +10,14 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/dog"
-	"github.com/steveyegge/excavation/internal/mail"
-	"github.com/steveyegge/excavation/internal/plugin"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/dog"
+	"github.com/steveyegge/mineshaft/internal/mail"
+	"github.com/steveyegge/mineshaft/internal/plugin"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // Dog command flags
@@ -69,7 +69,7 @@ var dogAddCmd = &cobra.Command{
 	Short: "Create a new dog in the kennel",
 	Long: `Create a new dog in the kennel with multi-rig worktrees.
 
-Each dog gets a worktree per configured rig (e.g., excavation, beads).
+Each dog gets a worktree per configured rig (e.g., mineshaft, beads).
 The dog starts in idle state, ready to receive work from the Supervisor.
 
 Example:
@@ -217,7 +217,7 @@ instructions. On completion, the dog sends DOG_DONE mail to supervisor/.
 
 Examples:
   gt dog dispatch --plugin rebuild-gt
-  gt dog dispatch --plugin rebuild-gt --rig excavation
+  gt dog dispatch --plugin rebuild-gt --rig mineshaft
   gt dog dispatch --plugin rebuild-gt --dog alpha
   gt dog dispatch --plugin rebuild-gt --create
   gt dog dispatch --plugin rebuild-gt --dry-run
@@ -739,7 +739,7 @@ func splitPathComponents(path string) []string {
 func closePluginMails(dogName string) {
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil {
-		return // not in a Excavation Site workspace, skip cleanup
+		return // not in a Mineshaft workspace, skip cleanup
 	}
 
 	dogAddress := fmt.Sprintf("supervisor/dogs/%s", dogName)
@@ -1191,7 +1191,7 @@ func runDogDispatch(cmd *cobra.Command, args []string) error {
 		// Roll back the work assignment: without a running session the dog
 		// cannot read its mail, leaving it stuck in StateWorking (zombie).
 		// Clearing work returns it to idle so it can be re-dispatched.
-		// See: github.com/steveyegge/excavation/issues/2748
+		// See: github.com/steveyegge/mineshaft/issues/2748
 		if clearErr := mgr.ClearWork(targetDog.Name); clearErr != nil {
 			warn := fmt.Sprintf("session start failed AND rollback failed for dog %s — dog stuck in StateWorking, run: gt dog health-check --auto-clear: %v", targetDog.Name, clearErr)
 			result.Warnings = append(result.Warnings, warn)
@@ -1213,7 +1213,7 @@ func runDogDispatch(cmd *cobra.Command, args []string) error {
 
 	// Verify the work state write is readable. A read-back failure here
 	// indicates state corruption, not a timing race.
-	// See: github.com/steveyegge/excavation/issues/2748
+	// See: github.com/steveyegge/mineshaft/issues/2748
 	result.WorkConfirmed = false
 	if d, getErr := mgr.Get(targetDog.Name); getErr != nil {
 		warn := fmt.Sprintf("dog dispatch: could not verify work assignment for %s: %v", targetDog.Name, getErr)

@@ -7,14 +7,14 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/version"
+	"github.com/steveyegge/mineshaft/internal/version"
 )
 
 var infoCmd = &cobra.Command{
 	Use:     "info",
 	GroupID: GroupDiag,
-	Short:   "Show Excavation Site information and what's new",
-	Long: `Display information about the current Excavation Site installation.
+	Short:   "Show Mineshaft information and what's new",
+	Long: `Display information about the current Mineshaft installation.
 
 This command shows:
   - Version information
@@ -53,7 +53,7 @@ Examples:
 			return
 		}
 
-		fmt.Printf("Excavation Site v%s (%s)\n", Version, Build)
+		fmt.Printf("Mineshaft v%s (%s)\n", Version, Build)
 		if commit, ok := info["commit"].(string); ok {
 			if branch, ok := info["branch"].(string); ok {
 				fmt.Printf("  %s@%s\n", branch, commit)
@@ -78,7 +78,7 @@ var versionChanges = []VersionChange{
 		Version: "1.2.1",
 		Date:    "2026-06-06",
 		Changes: []string{
-			"CHANGED: Shell integration add-offer is now opt-in (set EXCAVATION_OFFER_ADD=1); by default the hook is silent and only exports GT_TOWN_ROOT/GT_RIG inside known rigs.",
+			"CHANGED: Shell integration add-offer is now opt-in (set MINESHAFT_OFFER_ADD=1); by default the hook is silent and only exports GT_TOWN_ROOT/GT_RIG inside known rigs.",
 			"FIX: bash shell hook no longer re-prompts to add a repo on every command, and an interrupted (Ctrl-C) prompt no longer loops across restored terminal sessions.",
 			"FIX: bd create repo aliases route canonically (gh#4180).",
 			"FIX: mail reply-to is inferred from the inbox so reply-reminders clear (gt-zzob).",
@@ -135,7 +135,7 @@ var versionChanges = []VersionChange{
 			"NEW: gt assign — one-shot bead creation + hook for direct agent assignment",
 			"NEW: minecart --from-epic flag stages epic children into waves",
 			"NEW: Typed memories (--type feedback/project/user/reference)",
-			"NEW: Repo-sourced rig settings via .excavation/settings.json",
+			"NEW: Repo-sourced rig settings via .mineshaft/settings.json",
 			"NEW: Prior attempt context injected when re-dispatching miners",
 			"CHANGED: Reaper fast-tracks plugin receipt cleanup (1h instead of 7d)",
 			"FIX: Idle patrol agents no longer burn CPU/tokens in restart loops",
@@ -381,7 +381,7 @@ var versionChanges = []VersionChange{
 			"NEW: Beads-native messaging - Queue, channel, and group beads",
 			"NEW: gt mail claim - Claim messages from queues",
 			"NEW: gt miner identity show - Display CV summary",
-			"NEW: excavation-release molecule formula - Automated release workflow",
+			"NEW: mineshaft-release molecule formula - Automated release workflow",
 			"NEW: Parallel agent startup - Faster boot with concurrency limit",
 			"NEW: Automatic orphan cleanup - Detect and kill orphaned processes",
 			"NEW: Worktree setup hooks - Inject local configurations",
@@ -399,7 +399,7 @@ var versionChanges = []VersionChange{
 		Version: "0.2.0",
 		Date:    "2026-01-04",
 		Changes: []string{
-			"NEW: Minecart Dashboard - Web UI for monitoring Excavation Site (gt dashboard)",
+			"NEW: Minecart Dashboard - Web UI for monitoring Mineshaft (gt dashboard)",
 			"NEW: Two-level beads architecture - hq-* prefix for town, rig prefixes for projects",
 			"NEW: Multi-agent support with pluggable registry",
 			"NEW: gt rig start/stop/restart/status - Multi-rig management commands",
@@ -429,7 +429,7 @@ var versionChanges = []VersionChange{
 		Version: "0.1.1",
 		Date:    "2026-01-02",
 		Changes: []string{
-			"FIX: Tmux keybindings scoped to Excavation Site sessions only",
+			"FIX: Tmux keybindings scoped to Mineshaft sessions only",
 			"NEW: OSS project files - CHANGELOG.md, .golangci.yml, RELEASING.md",
 			"NEW: Version bump script - scripts/bump-version.sh",
 			"FIX: gt rig add and gt crew add CLI syntax documentation",
@@ -441,7 +441,7 @@ var versionChanges = []VersionChange{
 		Version: "0.1.0",
 		Date:    "2026-01-02",
 		Changes: []string{
-			"Initial public release of Excavation Site",
+			"Initial public release of Mineshaft",
 			"NEW: Town structure - Hierarchical workspace with rigs, crews, and miners",
 			"NEW: Rig management - gt rig add/list/remove",
 			"NEW: Crew workspaces - gt crew add for persistent developer workspaces",
@@ -478,7 +478,7 @@ func showWhatsNew(jsonOutput bool) {
 	}
 
 	// Human-readable output
-	fmt.Printf("\nWhat's New in Excavation Site (Current: v%s)\n", Version)
+	fmt.Printf("\nWhat's New in Mineshaft (Current: v%s)\n", Version)
 	fmt.Println(strings.Repeat("=", 50))
 	fmt.Println()
 

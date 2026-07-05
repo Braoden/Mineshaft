@@ -1,6 +1,6 @@
 # Maintenance Guide
 
-This eval framework is a **snapshot** of Excavation Site patrol protocols. When patrol formulas, role definitions, or infrastructure change, these tests must be updated to stay aligned.
+This eval framework is a **snapshot** of Mineshaft patrol protocols. When patrol formulas, role definitions, or infrastructure change, these tests must be updated to stay aligned.
 
 ## What to Update When
 
@@ -33,7 +33,7 @@ grep -r 'formula_step:' tests/
 
 ### Bead metadata labels change
 
-Shell output in test cases contains bead JSON with labels like `agent_state:running`, `agent_state:idle`. If these label names change in `bd` or Excavation Site agent code, update the simulated shell output in affected tests.
+Shell output in test cases contains bead JSON with labels like `agent_state:running`, `agent_state:idle`. If these label names change in `bd` or Mineshaft agent code, update the simulated shell output in affected tests.
 
 ### Infrastructure paths change
 
@@ -41,7 +41,7 @@ Test shell output hardcodes these paths and naming conventions:
 
 | Pattern | Example | Used In |
 |---------|---------|---------|
-| Miner worktree | `git -C /town/excavation/miners/<name>` | supervisor, witness, dog tests |
+| Miner worktree | `git -C /town/mineshaft/miners/<name>` | supervisor, witness, dog tests |
 | Tmux session | `tmux has-session -t bd-miner-<name>` | supervisor, witness tests |
 | Bead commands | `bd show agent-<name> --json` | all role tests |
 | Mail commands | `gt mail list --to miner-<name>` | witness tests |
@@ -49,7 +49,7 @@ Test shell output hardcodes these paths and naming conventions:
 If directory structure, tmux naming, or CLI interfaces change, search and update:
 
 ```bash
-grep -r '/town/excavation/miners/' tests/
+grep -r '/town/mineshaft/miners/' tests/
 grep -r 'bd-miner-' tests/
 grep -r 'bd show' tests/
 grep -r 'gt mail' tests/

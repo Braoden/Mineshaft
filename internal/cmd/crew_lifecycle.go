@@ -11,16 +11,16 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/crew"
-	"github.com/steveyegge/excavation/internal/mail"
-	"github.com/steveyegge/excavation/internal/runtime"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/townlog"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/crew"
+	"github.com/steveyegge/mineshaft/internal/mail"
+	"github.com/steveyegge/mineshaft/internal/runtime"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/townlog"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 func runCrewRemove(cmd *cobra.Command, args []string) error {

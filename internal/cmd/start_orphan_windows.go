@@ -5,7 +5,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/mineshaft/internal/style"
 )
 
 // cleanupOrphanedClaude is a Windows stub.

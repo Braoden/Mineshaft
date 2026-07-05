@@ -21,7 +21,7 @@ This is a convenience wrapper around 'bd show' that integrates with gt.
 Accepts any bead ID with a recognized prefix (gt-*, bd-*, hq-*, mol-*, etc.).
 
 Examples:
-  gt cat gt-abc123       # Show a excavation bead
+  gt cat gt-abc123       # Show a mineshaft bead
   gt cat bd-abc123       # Show a beads bead
   gt cat hq-xyz789       # Show a town-level bead
   gt cat bd-abc --json   # Output as JSON`,

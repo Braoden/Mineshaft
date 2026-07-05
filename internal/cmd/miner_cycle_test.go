@@ -4,13 +4,13 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/mineshaft/internal/session"
 )
 
 func setupMinerTestRegistry(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "excavation")
+	reg.Register("gt", "mineshaft")
 	reg.Register("gp", "greenplace")
 	reg.Register("bd", "beads")
 	reg.Register("mr", "my-rig")

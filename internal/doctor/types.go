@@ -1,4 +1,4 @@
-// Package doctor provides a framework for running health checks on Excavation Site workspaces.
+// Package doctor provides a framework for running health checks on Mineshaft workspaces.
 package doctor
 
 import (
@@ -6,7 +6,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/ui"
+	"github.com/steveyegge/mineshaft/internal/ui"
 )
 
 // Category constants for grouping checks
@@ -59,7 +59,7 @@ func (s CheckStatus) String() string {
 
 // CheckContext provides context for running checks.
 type CheckContext struct {
-	TownRoot        string // Root directory of the Excavation Site workspace
+	TownRoot        string // Root directory of the Mineshaft workspace
 	RigName         string // Rig name (empty for town-level checks)
 	Verbose         bool   // Enable verbose output
 	RestartSessions bool   // Restart patrol sessions when fixing (requires explicit --restart-sessions flag)

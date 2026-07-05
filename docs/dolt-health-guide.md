@@ -1,6 +1,6 @@
 # Dolt Health Guide
 
-This guide covers evidence capture for Dolt outages and Excavation Site behavior
+This guide covers evidence capture for Dolt outages and Mineshaft behavior
 mismatches that look like Dolt trouble.
 
 ## When To Use This
@@ -10,7 +10,7 @@ Use this checklist when any of these happen:
 - `bd` commands hang, time out, or return unexpected empty results.
 - `gt dolt status` reports unhealthy server state, high latency, stale PIDs, or
   orphan test databases.
-- A Excavation Site command behaves differently from its documented or expected behavior
+- A Mineshaft command behaves differently from its documented or expected behavior
   and Dolt is part of the control path.
 
 Do not restart Dolt before collecting diagnostics. A blind restart can destroy the

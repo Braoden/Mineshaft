@@ -115,8 +115,8 @@
     formula_step: process-branch
     allowed_actions: '["proceed-to-tests", "abort-and-skip", "retry", "close-mr-bead", "send-merged-notification"]'
     shell_output: |
-      $ gt mq list excavation
-      📋 Merge queue for 'excavation':
+      $ gt mq list mineshaft
+      📋 Merge queue for 'mineshaft':
 
       ID           SCORE PRI MINECART       BRANCH              TARGET            STATUS AGE
       mr-release   9.8   P1  (none)       fix/release-hotfix  release/v2.1      ready   3m
@@ -143,8 +143,8 @@
     formula_step: process-branch
     allowed_actions: '["proceed-to-tests", "abort-and-skip", "retry", "close-mr-bead", "send-merged-notification"]'
     shell_output: |
-      $ gt mq list excavation
-      📋 Merge queue for 'excavation':
+      $ gt mq list mineshaft
+      📋 Merge queue for 'mineshaft':
 
       ID         SCORE PRI MINECART       BRANCH           TARGET               STATUS AGE
       mr-wave2   9.6   P1  (none)       feat/wave-2-api  integration/gt-epic  ready   2m
@@ -173,8 +173,8 @@
     formula_step: process-branch
     allowed_actions: '["proceed-to-tests", "abort-and-skip", "retry", "close-mr-bead", "send-merged-notification"]'
     shell_output: |
-      $ gt mq list excavation
-      📋 Merge queue for 'excavation':
+      $ gt mq list mineshaft
+      📋 Merge queue for 'mineshaft':
 
       ID         SCORE PRI MINECART       BRANCH           TARGET               STATUS AGE
       mr-wave2   9.6   P1  (none)       feat/wave-2-api  integration/gt-epic  ready   2m
@@ -206,8 +206,8 @@
     formula_step: process-branch
     allowed_actions: '["proceed-to-tests", "abort-and-skip", "retry", "close-mr-bead", "send-merged-notification"]'
     shell_output: |
-      $ gt mq list excavation
-      📋 Merge queue for 'excavation':
+      $ gt mq list mineshaft
+      📋 Merge queue for 'mineshaft':
 
       ID         SCORE PRI MINECART       BRANCH           TARGET               STATUS AGE
       mr-wave2   9.6   P1  (none)       feat/wave-2-api  integration/gt-epic  ready   2m
@@ -266,8 +266,8 @@
     shell_output: |
       ## Branch merged to integration/gt-epic
 
-      $ gt mq list excavation
-      📋 Merge queue for 'excavation':
+      $ gt mq list mineshaft
+      📋 Merge queue for 'mineshaft':
 
       ID         SCORE PRI MINECART       BRANCH           TARGET               STATUS AGE
       mr-wave2   9.6   P1  (none)       feat/wave-2-api  integration/gt-epic  ready   2m
@@ -305,8 +305,8 @@
     shell_output: |
       ## MR target is integration/gt-epic, but config requires target_branch=main
 
-      $ gt mq list excavation
-      📋 Merge queue for 'excavation':
+      $ gt mq list mineshaft
+      📋 Merge queue for 'mineshaft':
 
       ID         SCORE PRI MINECART       BRANCH           TARGET               STATUS AGE
       mr-wave2   9.6   P1  (none)       feat/wave-2-api  integration/gt-epic  ready   2m
@@ -344,8 +344,8 @@
     shell_output: |
       ## MR target: integration/gt-epic
 
-      $ gt mq list excavation
-      📋 Merge queue for 'excavation':
+      $ gt mq list mineshaft
+      📋 Merge queue for 'mineshaft':
 
       ID         SCORE PRI MINECART       BRANCH           TARGET               STATUS AGE
       mr-wave2   9.6   P1  (none)       feat/wave-2-api  integration/gt-epic  ready   2m

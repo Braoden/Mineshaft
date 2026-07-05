@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 var errNoComparisonRefs = errors.New("no comparison refs resolved")
@@ -68,8 +68,8 @@ type Git struct {
 }
 
 // ErrUnsafeTownRootGitMutation is returned when a mutating git operation would
-// act on the Excavation Site town-root repository or town-root runtime paths.
-var ErrUnsafeTownRootGitMutation = errors.New("unsafe git mutation targets Excavation Site town root")
+// act on the Mineshaft town-root repository or town-root runtime paths.
+var ErrUnsafeTownRootGitMutation = errors.New("unsafe git mutation targets Mineshaft town root")
 
 // NewGit creates a new Git wrapper for the given directory.
 func NewGit(workDir string) *Git {
@@ -262,7 +262,7 @@ func gitEffectiveWorkDir(args []string, workDir string) string {
 }
 
 // EnsureSafeMutationWorkDir fails when workDir's effective git worktree is the
-// Excavation Site town root. Raw git callsites use this before mutating commands.
+// Mineshaft town root. Raw git callsites use this before mutating commands.
 func EnsureSafeMutationWorkDir(workDir string) error {
 	if workDir == "" {
 		return nil
@@ -677,7 +677,7 @@ func (g *Git) cloneInternal(url, dest string, opts cloneOptions) error {
 		// fetching all branches (which would defeat the purpose of --single-branch).
 		return configureRefspec(dest, opts.singleBranch)
 	}
-	// Configure hooks path for Excavation Site clones
+	// Configure hooks path for Mineshaft clones
 	if err := configureHooksPath(dest); err != nil {
 		return err
 	}
@@ -753,7 +753,7 @@ func (g *Git) CloneBranchPartial(url, dest, branch, filter string) error {
 }
 
 // configureHooksPath sets core.hooksPath to use the repo's .githooks directory
-// if it exists. This ensures Excavation Site agents use the pre-push hook that blocks
+// if it exists. This ensures Mineshaft agents use the pre-push hook that blocks
 // pushes to non-main branches (internal PRs are not allowed).
 func configureHooksPath(repoPath string) error {
 	hooksDir := filepath.Join(repoPath, ".githooks")
@@ -781,7 +781,7 @@ func (g *Git) ConfigureHooksPath() error {
 // Bare clones don't have this set by default, which breaks worktrees that need to
 // fetch and see origin/* refs. Without this, `git fetch` only updates FETCH_HEAD
 // and origin/main never appears in refs/remotes/origin/main.
-// See: https://github.com/anthropics/excavation/issues/286
+// See: https://github.com/anthropics/mineshaft/issues/286
 //
 // When singleBranch is true, fetches only the default branch's ref instead of all
 // branches. This prevents failures on repos with many branches where a full fetch
@@ -2919,10 +2919,10 @@ func runtimeArtifactRoot(path string) (string, bool) {
 	return "", false
 }
 
-// isExcavationRuntimePath returns true if the path is a runtime artifact that should
+// isMineshaftRuntimePath returns true if the path is a runtime artifact that should
 // not block gt done. These paths are managed by tooling or test/build commands,
 // not by the developer, and must not be auto-saved into miner MRs.
-func isExcavationRuntimePath(path string) bool {
+func isMineshaftRuntimePath(path string) bool {
 	_, ok := runtimeArtifactRoot(path)
 	return ok
 }
@@ -2959,7 +2959,7 @@ func (s *UncommittedWorkStatus) NonRuntimePaths() []string {
 	var paths []string
 	paths = append(paths, s.UnmergedFiles...)
 	for _, f := range append(append([]string{}, s.ModifiedFiles...), s.UntrackedFiles...) {
-		if !isExcavationRuntimePath(f) {
+		if !isMineshaftRuntimePath(f) {
 			paths = append(paths, f)
 		}
 	}
@@ -2981,13 +2981,13 @@ func (s *UncommittedWorkStatus) CleanExcludingRuntime() bool {
 	}
 
 	for _, f := range s.ModifiedFiles {
-		if !isExcavationRuntimePath(f) {
+		if !isMineshaftRuntimePath(f) {
 			return false
 		}
 	}
 
 	for _, f := range s.UntrackedFiles {
-		if !isExcavationRuntimePath(f) {
+		if !isMineshaftRuntimePath(f) {
 			return false
 		}
 	}

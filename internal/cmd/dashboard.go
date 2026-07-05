@@ -12,10 +12,10 @@ import (
 	"golang.org/x/term"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/doltserver"
-	"github.com/steveyegge/excavation/internal/web"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/doltserver"
+	"github.com/steveyegge/mineshaft/internal/web"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var (
@@ -146,7 +146,7 @@ func runDashboard(cmd *cobra.Command, args []string) error {
 
 `)
 	} else {
-		fmt.Print("\n  WELCOME TO EXCAVATION\n\n")
+		fmt.Print("\n  WELCOME TO MINESHAFT\n\n")
 	}
 	fmt.Printf("  launching dashboard at %s  •  api: %s/api/  •  listening on %s  •  ctrl+c to stop\n", url, url, listenAddr)
 

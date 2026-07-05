@@ -176,12 +176,12 @@ func copyFile(src, dst string) error {
 	return err
 }
 
-// FindExcavationSource locates the excavation source repo's plugins directory.
+// FindMineshaftSource locates the mineshaft source repo's plugins directory.
 // Search order:
-//  1. Walk up from CWD for a excavation go.mod with plugins/
-//  2. <townRoot>/excavation/crew/den/plugins/
-//  3. <townRoot>/excavation/plugins/
-func FindExcavationSource(townRoot string) (string, error) {
+//  1. Walk up from CWD for a mineshaft go.mod with plugins/
+//  2. <townRoot>/mineshaft/crew/den/plugins/
+//  3. <townRoot>/mineshaft/plugins/
+func FindMineshaftSource(townRoot string) (string, error) {
 	if cwd, err := os.Getwd(); err == nil {
 		if src := findSourceFromDir(cwd); src != "" {
 			return src, nil
@@ -189,8 +189,8 @@ func FindExcavationSource(townRoot string) (string, error) {
 	}
 
 	candidates := []string{
-		filepath.Join(townRoot, "excavation", "crew", "den", "plugins"),
-		filepath.Join(townRoot, "excavation", "plugins"),
+		filepath.Join(townRoot, "mineshaft", "crew", "den", "plugins"),
+		filepath.Join(townRoot, "mineshaft", "plugins"),
 	}
 	for _, candidate := range candidates {
 		if hasPlugins(candidate) {
@@ -198,7 +198,7 @@ func FindExcavationSource(townRoot string) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("could not locate excavation plugin source; use --source to specify")
+	return "", fmt.Errorf("could not locate mineshaft plugin source; use --source to specify")
 }
 
 func findSourceFromDir(dir string) string {
@@ -207,7 +207,7 @@ func findSourceFromDir(dir string) string {
 		pluginsDir := filepath.Join(current, "plugins")
 		goMod := filepath.Join(current, "go.mod")
 		if hasPlugins(pluginsDir) {
-			if isExcavationModule(goMod) {
+			if isMineshaftModule(goMod) {
 				return pluginsDir
 			}
 		}
@@ -220,10 +220,10 @@ func findSourceFromDir(dir string) string {
 	return ""
 }
 
-// isExcavationModule checks if a go.mod file declares a excavation module path.
-// Matches "module .../excavation" on the module directive line to avoid
+// isMineshaftModule checks if a go.mod file declares a mineshaft module path.
+// Matches "module .../mineshaft" on the module directive line to avoid
 // false-positives from comments or dependency names.
-func isExcavationModule(goModPath string) bool {
+func isMineshaftModule(goModPath string) bool {
 	f, err := os.Open(goModPath) //nolint:gosec // G304: path from traversal
 	if err != nil {
 		return false
@@ -233,7 +233,7 @@ func isExcavationModule(goModPath string) bool {
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if strings.HasPrefix(line, "module ") {
-			return strings.HasSuffix(line, "/excavation") || line == "module excavation"
+			return strings.HasSuffix(line, "/mineshaft") || line == "module mineshaft"
 		}
 	}
 	return false

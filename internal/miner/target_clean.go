@@ -30,7 +30,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/mineshaft/internal/config"
 )
 
 // TargetCleanPolicy describes when to clean a miner's target/ on reuse.

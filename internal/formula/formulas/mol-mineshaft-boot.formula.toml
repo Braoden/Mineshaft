@@ -1,8 +1,8 @@
 description = """
-Overseer bootstraps Excavation Site via a verification-gated lifecycle molecule.
+Overseer bootstraps Mineshaft via a verification-gated lifecycle molecule.
 
 ## Purpose
-When Overseer executes \"boot up gas town\", this proto provides the workflow.
+When Overseer executes \"boot up mineshaft\", this proto provides the workflow.
 Each step has action + verification - steps stay open until outcome is confirmed.
 
 ## Key Principles
@@ -14,14 +14,14 @@ Each step has action + verification - steps stay open until outcome is confirmed
 
 ## Execution
 ```bash
-bd mol wisp mol-excavation-boot  # Create wisp
+bd mol wisp mol-mineshaft-boot  # Create wisp
 ```"""
-formula = "mol-excavation-boot"
+formula = "mol-mineshaft-boot"
 version = 1
 
 [[steps]]
 description = """
-Verify the Excavation Site daemon is running.
+Verify the Mineshaft daemon is running.
 
 ## Action
 ```bash
@@ -74,19 +74,19 @@ type = "parallel"
 
 [[steps.children]]
 description = """
-Start the excavation rig Witness.
+Start the mineshaft rig Witness.
 
 ## Action
 ```bash
-gt witness start excavation
+gt witness start mineshaft
 ```
 
 ## Verify
-1. Session exists: `tmux has-session -t excavation-witness 2>/dev/null`
-2. Not stalled: `gt peek excavation/witness` does NOT show \"> Try\" prompt
+1. Session exists: `tmux has-session -t mineshaft-witness 2>/dev/null`
+2. Not stalled: `gt peek mineshaft/witness` does NOT show \"> Try\" prompt
 3. Heartbeat fresh: Last patrol cycle < 5 min ago"""
-id = "ensure-excavation-witness"
-title = "Ensure excavation witness"
+id = "ensure-mineshaft-witness"
+title = "Ensure mineshaft witness"
 
 [[steps.children]]
 description = """
@@ -116,19 +116,19 @@ type = "parallel"
 
 [[steps.children]]
 description = """
-Start the excavation rig Refinery.
+Start the mineshaft rig Refinery.
 
 ## Action
 ```bash
-gt refinery start excavation
+gt refinery start mineshaft
 ```
 
 ## Verify
-1. Session exists: `tmux has-session -t excavation-refinery 2>/dev/null`
-2. Not stalled: `gt peek excavation/refinery` does NOT show \"> Try\" prompt
+1. Session exists: `tmux has-session -t mineshaft-refinery 2>/dev/null`
+2. Not stalled: `gt peek mineshaft/refinery` does NOT show \"> Try\" prompt
 3. Queue processing: Refinery can receive merge requests"""
-id = "ensure-excavation-refinery"
-title = "Ensure excavation refinery"
+id = "ensure-mineshaft-refinery"
+title = "Ensure mineshaft refinery"
 
 [[steps.children]]
 description = """
@@ -148,7 +148,7 @@ title = "Ensure beads refinery"
 
 [[steps]]
 description = """
-Final verification that Excavation Site is healthy.
+Final verification that Mineshaft is healthy.
 
 ## Action
 ```bash

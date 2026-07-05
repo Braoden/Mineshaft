@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 // mockGlobalEnvAccessor implements GlobalEnvAccessor for unit tests.

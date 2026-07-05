@@ -8,7 +8,7 @@ import (
 
 const testRigsJSON = `{
   "rigs": {
-    "excavation": {"beads": {"prefix": "-"}},
+    "mineshaft": {"beads": {"prefix": "-"}},
     "beads":   {"beads": {"prefix": "bd-"}}
   }
 }`
@@ -30,8 +30,8 @@ func TestBuildPrefixRegistryFromTown_CanonicalExists_FallbackCreated(t *testing.
 	}
 
 	// Registry should be populated.
-	if rig := r.RigForPrefix("-"); rig != "excavation" {
-		t.Errorf("expected excavation for prefix -, got %q", rig)
+	if rig := r.RigForPrefix("-"); rig != "mineshaft" {
+		t.Errorf("expected mineshaft for prefix -, got %q", rig)
 	}
 
 	// Fallback copy should have been created at town root.
@@ -74,7 +74,7 @@ func TestBuildPrefixRegistryFromTown_BothMissing_EmptyRegistry(t *testing.T) {
 		t.Errorf("expected fallthrough prefix -, got %q", rig)
 	}
 	// Verify no rigs were registered by checking a known rig name returns default.
-	if prefix := r.PrefixForRig("excavation"); prefix != DefaultPrefix {
+	if prefix := r.PrefixForRig("mineshaft"); prefix != DefaultPrefix {
 		t.Errorf("expected default prefix for unknown rig, got %q", prefix)
 	}
 }

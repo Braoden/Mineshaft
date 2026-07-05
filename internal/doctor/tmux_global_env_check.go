@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 // GlobalEnvAccessor abstracts tmux global environment reads/writes for testing.

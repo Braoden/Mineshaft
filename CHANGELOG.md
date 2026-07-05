@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the Excavation Site project will be documented in this file.
+All notable changes to the Mineshaft project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -12,11 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Shell integration no longer nags in arbitrary shells** — the
-  `gt install --shell` hook prompted `Add '<repo>' to Excavation Site? [y/N/never]` in
+  `gt install --shell` hook prompted `Add '<repo>' to Mineshaft? [y/N/never]` in
   any git repo that wasn't a known rig, and on bash it re-prompted before
   *every* command (not just on `cd`). An interrupted prompt (Ctrl-C) never
   recorded the answer and could loop indefinitely across restored terminal
-  sessions. The add-offer is now **opt-in** (set `EXCAVATION_OFFER_ADD=1`); by
+  sessions. The add-offer is now **opt-in** (set `MINESHAFT_OFFER_ADD=1`); by
   default the hook stays silent and only exports `GT_TOWN_ROOT`/`GT_RIG` inside
   known rigs. bash now offers only on a real directory change, and the repo is
   recorded before the prompt so an interrupted read can't loop.
@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Clarified Excavation Site HQ beads routing documentation (gh#4181).
+- Clarified Mineshaft HQ beads routing documentation (gh#4181).
 - Internal: added a nix flake update CI workflow.
 
 ## [1.2.0] - 2026-05-27
@@ -196,7 +196,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   HQ.
 - **Feed timestamps** — Display feed timestamps in local timezone instead of UTC.
 - **Crew status across rigs** — `gt crew status` now shows all rigs.
-- **Miner CLAUDE.md commit guard** — Prevent miners from committing Excavation Site
+- **Miner CLAUDE.md commit guard** — Prevent miners from committing Mineshaft
   overlay CLAUDE.md.
 - **PR branch deletion guard** — Guard PR branch deletion and add review approval
   check.
@@ -332,7 +332,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   stranded scan checks completion status, create legs in target rig beads,
   and cross-rig dependency routing uses town root.
 - **Cross-town safety** — Prevent orphan cleanup from killing agents on other
-  towns' sockets, distinguish sibling Excavation Site instances from test zombies.
+  towns' sockets, distinguish sibling Mineshaft instances from test zombies.
 - **Dog and daemon** — Clear agent identity env vars at startup, prevent
   duplicate Overseer spawns during `gt up`, auto-clear hung dogs and orphan
   sessions, include dogs in startup retry loop, prevent daemon restart during
@@ -388,7 +388,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   into minecart waves with automatic validation bead.
 - **Typed memories** — `gt remember --type feedback/project/user/reference` for
   categorized agent memory storage.
-- **Repo-sourced rig settings** — `.excavation/settings.json` in repos auto-configures
+- **Repo-sourced rig settings** — `.mineshaft/settings.json` in repos auto-configures
   rig behavior (test gates, merge strategy).
 - **exec-wrapper plugin type** — Plugins can now wrap agent execution.
 - **Prior attempt context** — Miners receive context from previous failed
@@ -450,7 +450,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Escalation channels** — Email, Slack, SMS, and log notification channels.
 - **Pressure checks** — Opt-in CPU/memory pressure gating before agent spawns.
 - **MVGT integration guide** — Comprehensive Wasteland federation guide for
-  non-Gas-Town systems.
+  non-Mineshaft systems.
 - **Crew specialization design** — Capability-based dispatch design doc.
 
 ### Changed
@@ -537,7 +537,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Miner state** — JSON list state reconciled with session liveness.
 - **Minecart** — External tracked IDs resolved during launch collection.
 - **`gt done`** — Correct rig used when Claude Code resets shell cwd. Tolerates
-  Excavation Site runtime artifacts in worktrees (#2382).
+  Mineshaft runtime artifacts in worktrees (#2382).
 - **Dolt server** — Server-side timeouts prevent CLOSE_WAIT accumulation (#2287).
 - **Daemon** — 5-minute grace period before auto-closing empty minecarts (GH#2303).
 - **Sling TTL** — Prevents permanent scheduling blocks (GH#2279).
@@ -547,7 +547,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   JOIN anti-pattern.
 - **Hook show** — Normalized targets; prefer hooked bead over stale agent hook.
 - **Tmux socket** — Derived from town name instead of defaulting to "default".
-- **Gitignore** — Broadened patterns for Cursor runtime artifacts and Excavation Site
+- **Gitignore** — Broadened patterns for Cursor runtime artifacts and Mineshaft
   infrastructure directories.
 - **Rig remove** — Shows actionable guidance for orphaned rig directories.
 - **CI** — Lint errors, Windows test failures, proxy log truncation fixed.
@@ -648,7 +648,7 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
   servers (7GB RAM).
 - **Rig lifecycle** — Enforce dock/park across all startup, patrol, and sling paths.
   Dogs correctly use plugin lookup. Formula lookup falls back to embedded for
-  non-excavation rigs.
+  non-mineshaft rigs.
 - **Handoff** — Deterministic git state in handoff context. Fix socket confusion
   using caller socket. Preserve conversation context on PreCompact cycle.
 - **Windows** — Cross-compilation fixes for `syscall.Flock`, `syscall.SIGUSR2`,
@@ -744,7 +744,7 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **Emit-event command** and nudgeRefinery event wiring
 - **`gt mol step await-event`** for channel-based event subscription
 - **Doctor check** for in_progress beads with NULL assignee
-- **PR creation guard** blocking direct pushes to steveyegge/excavation
+- **PR creation guard** blocking direct pushes to steveyegge/mineshaft
 - **Orphan scan** for miner worktrees with unmerged branches
 - **Wasteland CLI command suite** (`gt wl`)
 - **GitHub Sheriff Supervisor plugin** for CI failure monitoring
@@ -792,7 +792,7 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 
 #### Patrol & Boot
 - **Remove redundant Status.Running field** (ZFC compliance)
-- **Prefer excavation repo over crew rigs** in stale binary check
+- **Prefer mineshaft repo over crew rigs** in stale binary check
 - **Session-name-format doctor check** for outdated session names
 - **Handoff warn on uncommitted/unpushed work** before session cycling
 - **Helpful error for `gt mail read` with no args** instead of cobra usage
@@ -886,7 +886,7 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **Spurious `go build` warning** fixed for Homebrew installs
 
 #### Supervisor & Dogs
-- **Supervisor scoped zombie/orphan detection** to Excavation Site workspace only
+- **Supervisor scoped zombie/orphan detection** to Mineshaft workspace only
 - **Supervisor heartbeat** surfaced in `gt supervisor status`
 - **Supervisor loop-or-exit** step updated with squash/create-wisp/hook cycle
 - **Dog agent beads** — Added description for mail routing
@@ -909,7 +909,7 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 ### Added
 
 #### Dolt-Native Architecture
-- **Complete SQLite-to-Dolt migration** - Excavation Site is now Dolt-native; all SQLite code removed
+- **Complete SQLite-to-Dolt migration** - Mineshaft is now Dolt-native; all SQLite code removed
 - **`gt dolt` command** - Server management (start, stop, status, migrate, rollback, sync, init-rig)
 - **`gt install` consolidation** - Folds Dolt identity, HQ database, and server start into single command
 - **Branch-per-miner write isolation** - Each miner gets its own Dolt branch to prevent write conflicts
@@ -1111,7 +1111,7 @@ _Changelog not documented at release time. See git log v0.3.0..v0.3.1 for change
 ### Added
 
 #### Release Automation
-- **`excavation-release` molecule formula** - Workflow for releases with preflight checks, CHANGELOG/info.go updates, local install, and daemon restart
+- **`mineshaft-release` molecule formula** - Workflow for releases with preflight checks, CHANGELOG/info.go updates, local install, and daemon restart
 
 #### New Commands
 - **`gt show`** - Inspect bead contents and metadata
@@ -1327,7 +1327,7 @@ Priming subsystem overhaul and Zero Framework Cognition (ZFC) improvements.
 ### Added
 
 #### Priming Subsystem
-- **PRIME.md provisioning** - Auto-provision PRIME.md at rig level so all workers inherit Excavation Site context (GUPP, hooks, propulsion) (#hq-5z76w)
+- **PRIME.md provisioning** - Auto-provision PRIME.md at rig level so all workers inherit Mineshaft context (GUPP, hooks, propulsion) (#hq-5z76w)
 - **Post-handoff detection** - `gt prime` detects handoff marker and outputs "HANDOFF COMPLETE" warning to prevent handoff loop bug (#hq-ukjrr)
 - **Priming health checks** - `gt doctor` validates priming subsystem: SessionStart hook, gt prime command, PRIME.md presence, CLAUDE.md size (#hq-5scnt)
 - **`gt prime --dry-run`** - Preview priming without side effects
@@ -1358,7 +1358,7 @@ Priming subsystem overhaul and Zero Framework Cognition (ZFC) improvements.
 - **Correct agent bead ID format** - Fix bd create flags for agent beads (#c4fcdd8)
 
 #### Formula
-- **rigPath fallback** - Set rigPath when falling back to excavation default (#afb944f)
+- **rigPath fallback** - Set rigPath when falling back to mineshaft default (#afb944f)
 
 #### Doctor
 - **Full AgentEnv for env-vars check** - Use complete environment for validation (#ce231a3)
@@ -1404,7 +1404,7 @@ Worker safety release - prevents accidental termination of active agents.
 - **Hidden directory scanning** - Ignore `.claude` and other dot directories when enumerating miners (#258, #279)
 - **SetupRedirect tracked beads** - Works correctly with tracked beads architecture where canonical location is `overseer/rig/.beads`
 - **Tmux shell ready** - Wait for shell ready before sending keys (#264)
-- **Excavation prefix derivation** - Correctly derive `gt-` prefix for excavation compound words (gt-m46bb)
+- **Mineshaft prefix derivation** - Correctly derive `gt-` prefix for mineshaft compound words (gt-m46bb)
 - **Custom beads types** - Register custom beads types during install (#250)
 
 ### Changed
@@ -1600,7 +1600,7 @@ Major release featuring the Minecart Dashboard, two-level beads architecture, an
 ### Added
 
 #### Minecart Dashboard (Web UI)
-- **`gt dashboard` command** - Launch web-based monitoring UI for Excavation Site (#71)
+- **`gt dashboard` command** - Launch web-based monitoring UI for Mineshaft (#71)
 - **Miner Workers section** - Real-time activity monitoring with tmux session timestamps
 - **Refinery Merge Queue display** - Always-visible MR queue status
 - **Dynamic work status** - Minecart status columns with live updates
@@ -1712,7 +1712,7 @@ Thanks to all contributors for this release:
 
 ### Fixed
 
-- **Tmux keybindings scoped to Excavation Site sessions** - C-b n/p no longer override default tmux behavior in non-GT sessions (#13)
+- **Tmux keybindings scoped to Mineshaft sessions** - C-b n/p no longer override default tmux behavior in non-GT sessions (#13)
 
 ### Added
 
@@ -1726,7 +1726,7 @@ Thanks to all contributors for this release:
 
 ### Added
 
-Initial public release of Excavation Site - a multi-agent workspace manager for Claude Code.
+Initial public release of Mineshaft - a multi-agent workspace manager for Claude Code.
 
 #### Core Architecture
 - **Town structure** - Hierarchical workspace with rigs, crews, and miners

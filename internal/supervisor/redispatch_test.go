@@ -44,11 +44,11 @@ func TestParseRecoveredBeadBody(t *testing.T) {
 			body: `Recovered abandoned bead from dead miner.
 
 Bead: gt-abc123
-Miner: excavation/max
+Miner: mineshaft/max
 Previous Status: hooked
 
 The bead has been reset to open with no assignee.`,
-			wantRig: "excavation",
+			wantRig: "mineshaft",
 		},
 		{
 			name:    "no miner line",
@@ -92,8 +92,8 @@ func TestRedispatchState_LoadSave(t *testing.T) {
 
 	// Add some state
 	beadState := state.GetBeadState("gt-abc")
-	beadState.RecordAttempt("excavation")
-	beadState.RecordAttempt("excavation")
+	beadState.RecordAttempt("mineshaft")
+	beadState.RecordAttempt("mineshaft")
 
 	if err := SaveRedispatchState(tmpDir, state); err != nil {
 		t.Fatalf("SaveRedispatchState: %v", err)
@@ -109,8 +109,8 @@ func TestRedispatchState_LoadSave(t *testing.T) {
 	if loadedBead.AttemptCount != 2 {
 		t.Errorf("expected 2 attempts, got %d", loadedBead.AttemptCount)
 	}
-	if loadedBead.LastRig != "excavation" {
-		t.Errorf("expected LastRig=excavation, got %q", loadedBead.LastRig)
+	if loadedBead.LastRig != "mineshaft" {
+		t.Errorf("expected LastRig=mineshaft, got %q", loadedBead.LastRig)
 	}
 }
 
@@ -123,7 +123,7 @@ func TestBeadRedispatchState_Cooldown(t *testing.T) {
 	}
 
 	// Record attempt puts in cooldown
-	state.RecordAttempt("excavation")
+	state.RecordAttempt("mineshaft")
 	if !state.IsInCooldown(5 * time.Minute) {
 		t.Error("expected in cooldown after attempt")
 	}
@@ -217,8 +217,8 @@ func TestLoadModelEscalationConfig(t *testing.T) {
 
 	t.Run("loads valid config", func(t *testing.T) {
 		dir := t.TempDir()
-		excavation := filepath.Join(dir, ".excavation")
-		if err := os.MkdirAll(excavation, 0755); err != nil {
+		mineshaft := filepath.Join(dir, ".mineshaft")
+		if err := os.MkdirAll(mineshaft, 0755); err != nil {
 			t.Fatal(err)
 		}
 		content := `{
@@ -233,7 +233,7 @@ func TestLoadModelEscalationConfig(t *testing.T) {
 				}
 			]
 		}`
-		if err := os.WriteFile(filepath.Join(excavation, "model-escalation.json"), []byte(content), 0600); err != nil {
+		if err := os.WriteFile(filepath.Join(mineshaft, "model-escalation.json"), []byte(content), 0600); err != nil {
 			t.Fatal(err)
 		}
 
@@ -260,7 +260,7 @@ func TestResolveAgentForRedispatch(t *testing.T) {
 	// Build a temp town with a fake rig project directory containing escalation config.
 	townDir := t.TempDir()
 	rigName := "myrig"
-	rigProjectDir := filepath.Join(townDir, rigName, "refinery", "rig", ".excavation")
+	rigProjectDir := filepath.Join(townDir, rigName, "refinery", "rig", ".mineshaft")
 	if err := os.MkdirAll(rigProjectDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -322,7 +322,7 @@ func TestResolveAgentForRedispatch_NoConfig(t *testing.T) {
 func TestResolveAgentForRedispatch_HighThreshold(t *testing.T) {
 	townDir := t.TempDir()
 	rigName := "myrig"
-	rigProjectDir := filepath.Join(townDir, rigName, "refinery", "rig", ".excavation")
+	rigProjectDir := filepath.Join(townDir, rigName, "refinery", "rig", ".mineshaft")
 	if err := os.MkdirAll(rigProjectDir, 0755); err != nil {
 		t.Fatal(err)
 	}

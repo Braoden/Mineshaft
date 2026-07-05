@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var directiveShowCmd = &cobra.Command{
@@ -89,7 +89,7 @@ func runDirectiveShow(cmd *cobra.Command, args []string) error {
 func resolveDirectiveContext(explicitRig string) (townRoot, rigName string, err error) {
 	townRoot, err = workspace.FindFromCwdOrError()
 	if err != nil {
-		return "", "", fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return "", "", fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	rigName = explicitRig

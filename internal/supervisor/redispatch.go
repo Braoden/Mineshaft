@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // Default parameters for re-dispatch rate-limiting.
@@ -78,7 +78,7 @@ type ModelEscalationRule struct {
 }
 
 // ModelEscalationConfig defines per-rig agent promotion rules for re-dispatch.
-// Loaded from <rig>/refinery/rig/.excavation/model-escalation.json.
+// Loaded from <rig>/refinery/rig/.mineshaft/model-escalation.json.
 type ModelEscalationConfig struct {
 	Type             string                `json:"type"`
 	Version          int                   `json:"version"`
@@ -91,7 +91,7 @@ type ModelEscalationConfig struct {
 
 // ModelEscalationConfigPath is the path within a rig project directory where
 // the model escalation config is stored.
-const ModelEscalationConfigPath = ".excavation/model-escalation.json"
+const ModelEscalationConfigPath = ".mineshaft/model-escalation.json"
 
 // RedispatchResult describes the outcome of a re-dispatch attempt.
 type RedispatchResult struct {
@@ -210,7 +210,7 @@ func (s *BeadRedispatchState) RecordEscalation() {
 // available miner, or escalating to Overseer if the bead has failed too many times.
 //
 // Parameters:
-//   - townRoot: the Excavation Site workspace root
+//   - townRoot: the Mineshaft workspace root
 //   - beadID: the recovered bead to re-dispatch
 //   - sourceRig: the rig from which the bead was recovered (empty = auto-detect from prefix)
 //   - maxAttempts: max re-dispatches before escalating (0 = use default)

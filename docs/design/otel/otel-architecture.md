@@ -2,7 +2,7 @@
 
 ## Overview
 
-Excavation Site uses OpenTelemetry (OTel) for structured observability of all agent operations. Telemetry is emitted via standard OTLP HTTP to any compatible backend (metrics, logs).
+Mineshaft uses OpenTelemetry (OTel) for structured observability of all agent operations. Telemetry is emitted via standard OTLP HTTP to any compatible backend (metrics, logs).
 
 **Backend-agnostic design**: The system emits standard OpenTelemetry Protocol (OTLP) — any OTLP v1.x+ compatible backend can consume it. You are **not obligated** to use VictoriaMetrics/VictoriaLogs; these are simply development defaults.
 
@@ -42,7 +42,7 @@ docker run -d -p 9428:9428 victoriametrics/victoria-logs
 |---------|--------|-------|
 | Core OTel initialization | ✅ Main | `telemetry.Init()`, providers setup |
 | Metrics export (counters) | ✅ Main | 18 metric instruments |
-| Metrics export (histograms) | ✅ Main | `excavation.bd.duration_ms` histogram |
+| Metrics export (histograms) | ✅ Main | `mineshaft.bd.duration_ms` histogram |
 | Logs export (any OTLP backend) | ✅ Main | OTLP logs exporter |
 | Subprocess correlation | ✅ Main | `OTEL_RESOURCE_ATTRIBUTES` via `SetProcessOTELAttrs()` |
 
@@ -71,7 +71,7 @@ docker run -d -p 9428:9428 victoriametrics/victoria-logs
 | Miner lifecycle telemetry | ✅ Main | `miner.spawn`/`miner.remove` |
 | Agent state telemetry | ✅ Main | `agent.state_change` events |
 | Daemon restart telemetry | ✅ Main | `daemon.restart` events |
-| Miner spawn metric | ✅ Main | `excavation.miner.spawns.total` |
+| Miner spawn metric | ✅ Main | `mineshaft.miner.spawns.total` |
 
 ### Molecule Lifecycle
 
@@ -108,9 +108,9 @@ A single miner session goes through multiple `gt prime` cycles, each on a potent
 
 ```
 session start → rig="" (generic, no work yet)
-gt prime #1   → work_rig="excavation", work_bead="sg-05iq", work_mol="mol-miner-work"
+gt prime #1   → work_rig="mineshaft", work_bead="sg-05iq", work_mol="mol-miner-work"
   bd.call, mail, sling, done  ← carry work context from prime #1
-gt prime #2   → work_rig="sfexcavation", work_bead="sg-g8vs", work_mol="mol-miner-work"
+gt prime #2   → work_rig="sfmineshaft", work_bead="sg-g8vs", work_mol="mol-miner-work"
   bd.call, mail, sling, done  ← carry work context from prime #2
 ```
 
@@ -128,11 +128,11 @@ New attributes emitted on the `prime` event and carried by all events until the 
 
 ### P1 — High value
 
-**Token cost metric (`excavation.token.cost_usd`)**
+**Token cost metric (`mineshaft.token.cost_usd`)**
 
 Compute dollar cost per run from token counts using Claude model pricing. Emit as a Gauge metric at session end. Enables per-rig and per-bead cost dashboards.
 
-New metric: `excavation.token.cost_usd{rig, role, agent_type}` — accumulated cost per session.
+New metric: `mineshaft.token.cost_usd{rig, role, agent_type}` — accumulated cost per session.
 New event attribute on `agent.usage`: `cost_usd` — cost of the current turn.
 
 ---
@@ -151,9 +151,9 @@ The Refinery's merge queue is a central health indicator but currently completel
 
 | Metric | Type | Description |
 |--------|------|-------------|
-| `excavation.refinery.queue_depth` | Gauge | pending items in merge queue |
-| `excavation.refinery.item_age_ms` | Histogram | age of oldest item in queue |
-| `excavation.refinery.dispatch_latency_ms` | Histogram | time between enqueue and dispatch |
+| `mineshaft.refinery.queue_depth` | Gauge | pending items in merge queue |
+| `mineshaft.refinery.item_age_ms` | Histogram | age of oldest item in queue |
+| `mineshaft.refinery.dispatch_latency_ms` | Histogram | time between enqueue and dispatch |
 
 New log event: `refinery.dispatch` with `bead_id`, `queue_depth`, `wait_ms`, `status`.
 
@@ -219,7 +219,7 @@ New event: `witness.patrol` with `duration_ms`, `stale_count`, `restart_count`, 
 
 Dolt issues are only detected at spawn time today. Exposing health metrics continuously:
 
-New metrics: `excavation.dolt.connections`, `excavation.dolt.query_duration_ms` (histogram), `excavation.dolt.replication_lag_ms`.
+New metrics: `mineshaft.dolt.connections`, `mineshaft.dolt.query_duration_ms` (histogram), `mineshaft.dolt.replication_lag_ms`.
 
 ---
 
@@ -242,7 +242,7 @@ New metrics: `excavation.dolt.connections`, `excavation.dolt.query_duration_ms` 
 The `telemetry.Init()` function sets up OTel providers on process startup:
 
 ```go
-provider, err := telemetry.Init(ctx, "excavation", version)
+provider, err := telemetry.Init(ctx, "mineshaft", version)
 if err != nil {
     // Log and continue — telemetry is best-effort
 }
@@ -259,7 +259,7 @@ defer provider.Shutdown(ctx)
 - Metrics: `http://localhost:8428/opentelemetry/api/v1/push`
 - Logs: `http://localhost:9428/insert/opentelemetry/v1/logs`
 
-> **Note**: These defaults target VictoriaMetrics/VictoriaLogs for local development convenience. Excavation Site uses standard OTLP — you can override endpoints to use any OTLP v1.x+ compatible backend (Prometheus, Grafana Mimir, Datadog, New Relic, Grafana Cloud, Loki, OpenTelemetry Collector, etc.).
+> **Note**: These defaults target VictoriaMetrics/VictoriaLogs for local development convenience. Mineshaft uses standard OTLP — you can override endpoints to use any OTLP v1.x+ compatible backend (Prometheus, Grafana Mimir, Datadog, New Relic, Grafana Cloud, Loki, OpenTelemetry Collector, etc.).
 
 **OTLP Compatibility**:
 - Uses standard OpenTelemetry Protocol (OTLP) over HTTP
@@ -270,7 +270,7 @@ defer provider.Shutdown(ctx)
 
 | OTel attribute | Source |
 |---|---|
-| `service.name` | `"excavation"` (hardcoded at call site) |
+| `service.name` | `"mineshaft"` (hardcoded at call site) |
 | `service.version` | GT binary version |
 | `host.name`, `host.arch` | `resource.WithHost()` — OTel SDK reads system hostname |
 | `os.type`, `os.version`, `os.description` | `resource.WithOS()` — OTel SDK reads OS info |
@@ -279,7 +279,7 @@ defer provider.Shutdown(ctx)
 
 | Attribute | Source env var | Notes |
 |---|---|---|
-| `gt.role` | `GT_ROLE` | Agent role (e.g. `excavation/miners/Toast`) |
+| `gt.role` | `GT_ROLE` | Agent role (e.g. `mineshaft/miners/Toast`) |
 | `gt.rig` | `GT_RIG` | Rig name |
 | `gt.actor` | `BD_ACTOR` | BD actor/identity |
 | `gt.agent` | `GT_MINER` or `GT_CREW` | Agent name |
@@ -325,8 +325,8 @@ func RecordSomething(ctx context.Context, args ..., err error) {
 
 | Type | Description | Example |
 |------|-------------|---------|
-| Counters | Total counts per attribute combination | `excavation.miner.spawns.total{status="ok"}` |
-| Histograms | Distribution of measurements (latency, duration) | `excavation.bd.duration_ms` |
+| Counters | Total counts per attribute combination | `mineshaft.miner.spawns.total{status="ok"}` |
+| Histograms | Distribution of measurements (latency, duration) | `mineshaft.bd.duration_ms` |
 | Log records | Structured events with full payload | `prime`, `mail`, `agent.event` (PR #2199) |
 
 ---
@@ -385,7 +385,7 @@ run.id:uuid-1234
 - `agent.usage`: Token usage per assistant turn (input, output, cache stats)
 
 **Session name in telemetry:**
-- `session`: Tmux session name (e.g., `gt-excavation-Toast`)
+- `session`: Tmux session name (e.g., `gt-mineshaft-Toast`)
 - `native_session_id`: Claude Code JSONL filename UUID
 
 ---
@@ -406,10 +406,10 @@ run.id:uuid-1234
 | Variable | Values / Format | Description |
 |----------|-----------------|-------------|
 | `GT_ROLE` | `<rig>/miners/<name>` · `overseer` · `beads/witness` | Agent role for identity parsing |
-| `GT_RIG` | `excavation`, `beads` | Rig name (empty for town-level agents) |
+| `GT_RIG` | `mineshaft`, `beads` | Rig name (empty for town-level agents) |
 | `GT_MINER` | `Toast`, `Shadow`, `Furiosa` | Miner name (rig-specific) |
 | `GT_CREW` | `max`, `jane` | Crew member name |
-| `GT_SESSION` | `gt-excavation-Toast`, `hq-overseer` | Tmux session name |
+| `GT_SESSION` | `gt-mineshaft-Toast`, `hq-overseer` | Tmux session name |
 | `GT_AGENT` | Preset names: `claude`, `gemini`, `codex`, `cursor`, `copilot`, `opencode`, … | Agent override (if specified) |
 | `GT_RUN` | UUID v4 | **PR #2199** — Run identifier, primary waterfall correlation key |
 | `GT_ROOT` | `/Users/pa/gt` | Town root path |
@@ -499,25 +499,25 @@ See [OTel Data Model](otel-data-model.md) for complete schema of all events.
 
 **Total counts by status:**
 ```promql
-sum(rate(excavation_miner_spawns_total[5m])) by (status)
-sum(rate(excavation_bd_calls_total[5m])) by (subcommand, status)
+sum(rate(mineshaft_miner_spawns_total[5m])) by (status)
+sum(rate(mineshaft_bd_calls_total[5m])) by (subcommand, status)
 ```
 
-> **Naming note**: OTel SDK metric names use dot notation (e.g. `excavation.bd.calls.total`).
-> Prometheus-compatible backends export these with underscores (e.g. `excavation_bd_calls_total`).
+> **Naming note**: OTel SDK metric names use dot notation (e.g. `mineshaft.bd.calls.total`).
+> Prometheus-compatible backends export these with underscores (e.g. `mineshaft_bd_calls_total`).
 > Use underscore form in PromQL queries.
 
 **Latency distributions:**
 ```promql
-histogram_quantile(0.5, rate(excavation_bd_duration_ms_bucket[5m])) by (subcommand)
-histogram_quantile(0.95, rate(excavation_bd_duration_ms_bucket[5m])) by (subcommand)
-histogram_quantile(0.99, rate(excavation_bd_duration_ms_bucket[5m])) by (subcommand)
+histogram_quantile(0.5, rate(mineshaft_bd_duration_ms_bucket[5m])) by (subcommand)
+histogram_quantile(0.95, rate(mineshaft_bd_duration_ms_bucket[5m])) by (subcommand)
+histogram_quantile(0.99, rate(mineshaft_bd_duration_ms_bucket[5m])) by (subcommand)
 ```
 
 **Session activity:**
 ```promql
-sum(increase(excavation_session_starts_total[1h])) by (role)
-sum(increase(excavation_done_total[1h])) by (exit_type)
+sum(increase(mineshaft_session_starts_total[1h])) by (role)
+sum(increase(mineshaft_done_total[1h])) by (exit_type)
 ```
 
 ### VictoriaLogs (Structured Logs)
@@ -670,11 +670,11 @@ OTel SDK uses dot notation; Prometheus-compatible backends export with underscor
 
 | SDK name | PromQL / MetricsQL name |
 |----------|------------------------|
-| `excavation.bd.calls.total` | `excavation_bd_calls_total` |
-| `excavation.bd.duration_ms` | `excavation_bd_duration_ms_bucket` / `_sum` / `_count` |
-| `excavation.miner.spawns.total` | `excavation_miner_spawns_total` |
-| `excavation.session.starts.total` | `excavation_session_starts_total` |
-| `excavation.done.total` | `excavation_done_total` |
+| `mineshaft.bd.calls.total` | `mineshaft_bd_calls_total` |
+| `mineshaft.bd.duration_ms` | `mineshaft_bd_duration_ms_bucket` / `_sum` / `_count` |
+| `mineshaft.miner.spawns.total` | `mineshaft_miner_spawns_total` |
+| `mineshaft.session.starts.total` | `mineshaft_session_starts_total` |
+| `mineshaft.done.total` | `mineshaft_done_total` |
 
 ### PR #2199 additions (commit `8b88de15`, not yet on main)
 
@@ -682,7 +682,7 @@ OTel SDK uses dot notation; Prometheus-compatible backends export with underscor
 |-------|--------|
 | `RecordAgentEvent` / `agent.event` | added in `8b88de15` |
 | `RecordAgentTokenUsage` / `agent.usage` | added in `8b88de15` |
-| `excavation.agent.events.total` Counter | added in `8b88de15` |
+| `mineshaft.agent.events.total` Counter | added in `8b88de15` |
 | `WithRunID` / `RunIDFromCtx` / `addRunID` | added in `8b88de15` |
 | `gt.session`, `gt.run_id`, `gt.work_*` in resource attrs | `subprocess.go` updated in `8b88de15` |
 | `GT_RUN` propagation to subprocesses | `subprocess.go` updated in `8b88de15` |

@@ -5,13 +5,13 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/crew"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/crew"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // agentBeadUpserter captures the subset of bead operations needed by crew add.
@@ -57,7 +57,7 @@ func runCrewAdd(cmd *cobra.Command, args []string) error {
 	// Find workspace first (needed for all names)
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Load rigs config

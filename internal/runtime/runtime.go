@@ -8,18 +8,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/cli"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/hooks"
-	"github.com/steveyegge/excavation/internal/templates/commands"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/cli"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/hooks"
+	"github.com/steveyegge/mineshaft/internal/templates/commands"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // EnsureSettingsForRole provisions all agent-specific configuration for a role.
 // settingsDir is where provider settings (e.g., .claude/settings.json) are installed.
 // workDir is the agent's working directory where slash commands are provisioned.
-// For roles like crew/witness/refinery/miner, settingsDir is a excavation-managed
+// For roles like crew/witness/refinery/miner, settingsDir is a mineshaft-managed
 // parent directory (passed via --settings flag), while workDir is the customer repo.
 // For overseer/supervisor, settingsDir and workDir are the same.
 func EnsureSettingsForRole(settingsDir, workDir, role string, rc *config.RuntimeConfig) error {
@@ -120,7 +120,7 @@ func pointsToAgentsMD(target string) bool {
 
 // commandsInherited reports whether workDir will receive slash commands via
 // Claude Code's path-hierarchy traversal without explicit provisioning.
-// Commands are inherited when workDir is inside a Excavation Site workspace root and
+// Commands are inherited when workDir is inside a Mineshaft workspace root and
 // not separated from it by a nested git repo. Crew and miner workdirs are
 // nested repos, so they still get their own command provisioning.
 func commandsInherited(workDir string) bool {

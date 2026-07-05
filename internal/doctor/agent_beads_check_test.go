@@ -113,7 +113,7 @@ func TestAgentBeadsExistCheck_RespectsRigScope(t *testing.T) {
 		t.Fatal(err)
 	}
 	routesContent := strings.Join([]string{
-		`{"prefix":"gs-","path":"excavation/overseer/rig"}`,
+		`{"prefix":"gs-","path":"mineshaft/overseer/rig"}`,
 		`{"prefix":"do-","path":"coder_dotfiles/overseer/rig"}`,
 	}, "\n") + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
@@ -121,7 +121,7 @@ func TestAgentBeadsExistCheck_RespectsRigScope(t *testing.T) {
 	}
 
 	for _, path := range []string{
-		filepath.Join(tmpDir, "excavation", "overseer", "rig", ".beads"),
+		filepath.Join(tmpDir, "mineshaft", "overseer", "rig", ".beads"),
 		filepath.Join(tmpDir, "coder_dotfiles", "overseer", "rig", ".beads"),
 	} {
 		if err := os.MkdirAll(path, 0755); err != nil {
@@ -130,7 +130,7 @@ func TestAgentBeadsExistCheck_RespectsRigScope(t *testing.T) {
 	}
 
 	check := NewAgentBeadsCheck()
-	ctx := &CheckContext{TownRoot: tmpDir, RigName: "excavation"}
+	ctx := &CheckContext{TownRoot: tmpDir, RigName: "mineshaft"}
 
 	result := check.Run(ctx)
 
@@ -142,15 +142,15 @@ func TestAgentBeadsExistCheck_RespectsRigScope(t *testing.T) {
 			t.Fatalf("expected --rig scope to exclude coder_dotfiles agent bead %q, got details: %v", detail, result.Details)
 		}
 	}
-	foundExcavation := false
+	foundMineshaft := false
 	for _, detail := range result.Details {
 		if strings.HasPrefix(detail, "gs-") {
-			foundExcavation = true
+			foundMineshaft = true
 			break
 		}
 	}
-	if !foundExcavation {
-		t.Fatalf("expected scoped result to include excavation agent beads, got details: %v", result.Details)
+	if !foundMineshaft {
+		t.Fatalf("expected scoped result to include mineshaft agent beads, got details: %v", result.Details)
 	}
 }
 
@@ -164,7 +164,7 @@ func TestAgentBeadsExistCheck_FixRespectsRigScope(t *testing.T) {
 		t.Fatal(err)
 	}
 	routesContent := strings.Join([]string{
-		`{"prefix":"gs-","path":"excavation/overseer/rig"}`,
+		`{"prefix":"gs-","path":"mineshaft/overseer/rig"}`,
 		`{"prefix":"do-","path":"coder_dotfiles/overseer/rig"}`,
 	}, "\n") + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
@@ -172,14 +172,14 @@ func TestAgentBeadsExistCheck_FixRespectsRigScope(t *testing.T) {
 	}
 
 	for _, path := range []string{
-		filepath.Join(tmpDir, "excavation", "overseer", "rig", ".beads"),
+		filepath.Join(tmpDir, "mineshaft", "overseer", "rig", ".beads"),
 		filepath.Join(tmpDir, "coder_dotfiles", "overseer", "rig", ".beads"),
 	} {
 		if err := os.MkdirAll(path, 0755); err != nil {
 			t.Fatal(err)
 		}
 	}
-	if err := os.MkdirAll(filepath.Join(tmpDir, "excavation", "crew", "alice", ".git"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(tmpDir, "mineshaft", "crew", "alice", ".git"), 0755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.MkdirAll(filepath.Join(tmpDir, "coder_dotfiles", "crew", "bella", ".git"), 0755); err != nil {
@@ -265,7 +265,7 @@ esac
 	t.Setenv("PATH", fmt.Sprintf("%s%c%s", binDir, os.PathListSeparator, os.Getenv("PATH")))
 
 	check := NewAgentBeadsCheck()
-	ctx := &CheckContext{TownRoot: tmpDir, RigName: "excavation"}
+	ctx := &CheckContext{TownRoot: tmpDir, RigName: "mineshaft"}
 	if err := check.Fix(ctx); err != nil {
 		t.Fatalf("Fix() returned error: %v", err)
 	}
@@ -280,8 +280,8 @@ esac
 			t.Fatalf("expected scoped Fix() to avoid coder_dotfiles beads, got log line %q", line)
 		}
 	}
-	if !strings.Contains(log, "create gs-excavation-witness") {
-		t.Fatalf("expected scoped Fix() to create excavation witness bead, got log: %q", log)
+	if !strings.Contains(log, "create gs-mineshaft-witness") {
+		t.Fatalf("expected scoped Fix() to create mineshaft witness bead, got log: %q", log)
 	}
 }
 
@@ -347,7 +347,7 @@ func TestListCrewWorkers_FiltersWorktrees(t *testing.T) {
 // wisp_labels can find the bead.
 func TestAddWispLabelSQL_ErrorsGracefully(t *testing.T) {
 	tmpDir := t.TempDir()
-	err := addWispLabelSQL(tmpDir, "gt-excavation-witness", "gt:agent")
+	err := addWispLabelSQL(tmpDir, "gt-mineshaft-witness", "gt:agent")
 	// bd sql will fail without a Dolt server — just verify no panic and that the
 	// function returns an error (not silently discarding the failure).
 	if err == nil {

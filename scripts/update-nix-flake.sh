@@ -2,7 +2,7 @@
 set -e
 
 # =============================================================================
-# UPDATE FLAKE VENDOR HASH SCRIPT FOR GAS TOWN
+# UPDATE FLAKE VENDOR HASH SCRIPT FOR MINESHAFT
 # =============================================================================
 #
 # This script computes and updates the vendorHash in flake.nix for the Go module.

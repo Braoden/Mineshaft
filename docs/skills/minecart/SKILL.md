@@ -1,9 +1,9 @@
 ---
 name: minecart
-description: The definitive guide for working with excavation's minecart system -- batch work tracking, event-driven feeding, stage-launch workflow, and dispatch safety guards. Use when writing minecart code, debugging minecart behavior, adding minecart features, testing minecart changes, or answering questions about how minecarts work. Triggers on minecart, minecart manager, minecart feeding, dispatch, stranded minecart, feedFirstReady, feedNextReadyIssue, IsSlingableType, isIssueBlocked, CheckMinecartsForIssue, gt minecart, gt sling, stage, launch, staged, wave.
+description: The definitive guide for working with mineshaft's minecart system -- batch work tracking, event-driven feeding, stage-launch workflow, and dispatch safety guards. Use when writing minecart code, debugging minecart behavior, adding minecart features, testing minecart changes, or answering questions about how minecarts work. Triggers on minecart, minecart manager, minecart feeding, dispatch, stranded minecart, feedFirstReady, feedNextReadyIssue, IsSlingableType, isIssueBlocked, CheckMinecartsForIssue, gt minecart, gt sling, stage, launch, staged, wave.
 ---
 
-# Excavation Minecart System
+# Mineshaft Minecart System
 
 The minecart system tracks batches of work across rigs. A minecart is a bead that `tracks` other beads via dependencies. The daemon monitors close events and feeds the next ready issue when one completes.
 
@@ -163,14 +163,14 @@ gt sling gt-task1 gt-task2 gt-task3
 # -> Created minecart hq-cv-xxxxx tracking 3 beads
 
 # Explicit rig still works but prints deprecation warning
-gt sling gt-task1 gt-task2 gt-task3 excavation
+gt sling gt-task1 gt-task2 gt-task3 mineshaft
 # -> Deprecation: gt sling now auto-resolves the rig from bead prefixes.
 # -> Created minecart hq-cv-xxxxx tracking 3 beads
 ```
 
 ## Stage-launch workflow
 
-> Implemented in [PR #1820](https://github.com/steveyegge/excavation/pull/1820). Depends on the feeder safety guards from [PR #1759](https://github.com/steveyegge/excavation/pull/1759). Design docs: `docs/design/minecart/stage-launch/prd.md`, `docs/design/minecart/stage-launch/testing.md`.
+> Implemented in [PR #1820](https://github.com/steveyegge/mineshaft/pull/1820). Depends on the feeder safety guards from [PR #1759](https://github.com/steveyegge/mineshaft/pull/1759). Design docs: `docs/design/minecart/stage-launch/prd.md`, `docs/design/minecart/stage-launch/testing.md`.
 
 The stage-launch workflow is a two-phase minecart creation path that validates dependencies and computes wave dispatch order **before** any work is dispatched. This is the preferred path for epic delivery.
 

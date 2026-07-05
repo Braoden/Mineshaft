@@ -1,4 +1,4 @@
-// Package townlog provides centralized logging for Excavation Site agent lifecycle events.
+// Package townlog provides centralized logging for Mineshaft agent lifecycle events.
 package townlog
 
 import (
@@ -49,7 +49,7 @@ const (
 type Event struct {
 	Timestamp time.Time `json:"timestamp"`
 	Type      EventType `json:"type"`
-	Agent     string    `json:"agent"`            // e.g., "excavation/crew/max" or "excavation/miners/Toast"
+	Agent     string    `json:"agent"`            // e.g., "mineshaft/crew/max" or "mineshaft/miners/Toast"
 	Context   string    `json:"context,omitempty"` // Additional context (issue ID, error message, etc.)
 }
 
@@ -113,7 +113,7 @@ func (l *Logger) Log(eventType EventType, agent, context string) error {
 }
 
 // formatLogLine formats an event as a human-readable log line.
-// Format: 2025-12-26 15:30:45 [spawn] excavation/crew/max spawned for gt-xyz
+// Format: 2025-12-26 15:30:45 [spawn] mineshaft/crew/max spawned for gt-xyz
 func formatLogLine(e Event) string {
 	ts := e.Timestamp.Format("2006-01-02 15:04:05")
 
@@ -267,7 +267,7 @@ func ParseLogLines(content string) ([]Event, error) {
 }
 
 // parseLogLine parses a single log line into an Event.
-// Format: 2025-12-26 15:30:45 [spawn] excavation/crew/max spawned for gt-xyz
+// Format: 2025-12-26 15:30:45 [spawn] mineshaft/crew/max spawned for gt-xyz
 func parseLogLine(line string) (Event, error) {
 	var event Event
 

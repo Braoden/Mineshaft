@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 // writeFakeTmuxGhost creates a fake tmux that uses environment variables to
@@ -183,9 +183,9 @@ func TestKillDefaultPrefixGhosts_EmptyRegistry(t *testing.T) {
 func TestKillDefaultPrefixGhosts_GTIsLegitimate(t *testing.T) {
 	env := setupGhostTest(t)
 
-	// Register excavation with "gt" prefix — makes gt-* sessions legitimate.
+	// Register mineshaft with "gt" prefix — makes gt-* sessions legitimate.
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "excavation")
+	reg.Register("gt", "mineshaft")
 	session.SetDefaultRegistry(reg)
 
 	// Even if gt-witness exists, it should NOT be killed.
@@ -319,12 +319,12 @@ func TestKillDefaultPrefixGhosts_MinerSkippedWhenRigUsesDefaultPrefix(t *testing
 
 	// If any rig uses "gt", gtIsLegitimate is true and the whole function bails.
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "excavation")
+	reg.Register("gt", "mineshaft")
 	reg.Register("ti", "titanium")
 	session.SetDefaultRegistry(reg)
 
-	writeRigsJSON(t, env.daemon.config.TownRoot, []string{"excavation", "titanium"})
-	if err := os.MkdirAll(filepath.Join(env.daemon.config.TownRoot, "excavation", "miners", "alice"), 0o755); err != nil {
+	writeRigsJSON(t, env.daemon.config.TownRoot, []string{"mineshaft", "titanium"})
+	if err := os.MkdirAll(filepath.Join(env.daemon.config.TownRoot, "mineshaft", "miners", "alice"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.MkdirAll(filepath.Join(env.daemon.config.TownRoot, "titanium", "miners", "bob"), 0o755); err != nil {

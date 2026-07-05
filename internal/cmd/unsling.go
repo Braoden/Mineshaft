@@ -6,12 +6,12 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/events"
-	"github.com/steveyegge/excavation/internal/nudge"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/events"
+	"github.com/steveyegge/mineshaft/internal/nudge"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var unslingCmd = &cobra.Command{

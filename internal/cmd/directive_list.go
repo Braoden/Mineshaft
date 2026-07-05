@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var directiveListCmd = &cobra.Command{
@@ -29,7 +29,7 @@ func init() {
 func runDirectiveList(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	type entry struct {

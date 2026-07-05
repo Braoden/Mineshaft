@@ -13,7 +13,7 @@ import (
 // These are stored as "key: value" lines in the description.
 type QueueFields struct {
 	Name            string // Queue name (human-readable identifier)
-	ClaimPattern    string // Pattern for who can claim from queue (e.g., "excavation/miners/*")
+	ClaimPattern    string // Pattern for who can claim from queue (e.g., "mineshaft/miners/*")
 	Status          string // active, paused, closed
 	MaxConcurrency  int    // Maximum number of concurrent workers (0 = unlimited)
 	ProcessingOrder string // fifo, priority (default: fifo)
@@ -329,7 +329,7 @@ func (b *Beads) LookupQueueByName(name string) (*Issue, *QueueFields, error) {
 // MatchClaimPattern checks if an identity matches a claim pattern.
 // Patterns support:
 //   - "*" matches anyone
-//   - "excavation/miners/*" matches any miner in excavation rig
+//   - "mineshaft/miners/*" matches any miner in mineshaft rig
 //   - "*/witness" matches any witness role across rigs
 //   - Exact match for specific identities
 func MatchClaimPattern(pattern, identity string) bool {
@@ -346,8 +346,8 @@ func MatchClaimPattern(pattern, identity string) bool {
 	// Wildcard pattern matching
 	if strings.Contains(pattern, "*") {
 		// Convert to simple glob matching
-		// "excavation/miners/*" should match "excavation/miners/capable"
-		// "*/witness" should match "excavation/witness"
+		// "mineshaft/miners/*" should match "mineshaft/miners/capable"
+		// "*/witness" should match "mineshaft/witness"
 		parts := strings.Split(pattern, "*")
 		if len(parts) == 2 {
 			prefix := parts[0]

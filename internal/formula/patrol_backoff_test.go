@@ -76,7 +76,7 @@ func TestPatrolFormulasHaveBackoffLogic(t *testing.T) {
 // The patrol report command atomically closes the current patrol wisp and
 // starts a new one, replacing the old squash+new pattern.
 //
-// Regression test: replaces TestPatrolFormulasHaveSquashCycle (steveyegge/excavation#1371).
+// Regression test: replaces TestPatrolFormulasHaveSquashCycle (steveyegge/mineshaft#1371).
 func TestPatrolFormulasHaveReportCycle(t *testing.T) {
 	type patrolFormula struct {
 		name       string
@@ -128,7 +128,7 @@ func TestPatrolFormulasHaveReportCycle(t *testing.T) {
 // Closed-wisp cleanup is safe inside active patrols. Stale open-wisp cleanup
 // belongs to reaper paths that are not running inside the active patrol molecule.
 //
-// Regression test for steveyegge/excavation#1712.
+// Regression test for steveyegge/mineshaft#1712.
 func TestPatrolFormulasHaveWispGC(t *testing.T) {
 	patrolFormulas := []string{
 		"mol-witness-patrol.formula.toml",
@@ -164,7 +164,7 @@ func TestPatrolFormulasHaveWispGC(t *testing.T) {
 				t.Errorf("%s inbox-check step missing \"bd mol wisp gc\"\n"+
 					"All patrol formulas must run wisp GC at the start of each cycle\n"+
 					"to clean up stale wisps from abnormal exits.\n"+
-					"See steveyegge/excavation#1712.",
+					"See steveyegge/mineshaft#1712.",
 					name)
 			}
 		})

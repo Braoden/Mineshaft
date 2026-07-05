@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	gitpkg "github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	gitpkg "github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/rig"
 )
 
 func TestEngineer_LoadConfig_MergeStrategyPR(t *testing.T) {

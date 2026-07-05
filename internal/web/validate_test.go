@@ -262,7 +262,7 @@ func TestExpandHomePath(t *testing.T) {
 // web handler constructs args correctly, but actual -- sentinel behavior depends
 // on cobra/pflag in the target CLI. Both gt and bd use cobra, which respects --
 // natively. Full end-to-end verification requires integration tests with the
-// real binaries (e.g., via excavation-docker).
+// real binaries (e.g., via mineshaft-docker).
 
 func TestHandler_MailRead_InvalidID(t *testing.T) {
 	handler := NewAPIHandler(30*time.Second, 60*time.Second, "test-token")
@@ -625,7 +625,7 @@ func TestHandler_SessionPreview_ValidName(t *testing.T) {
 
 	// A valid session name should pass validation and reach tmux capture-pane.
 	// tmux isn't available in test, so expect 500 (command failed), NOT 400 (validation).
-	req := httptest.NewRequest(http.MethodGet, "/api/session/preview?session=gt-excavation-nux", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/session/preview?session=gt-mineshaft-nux", nil)
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 

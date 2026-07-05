@@ -46,7 +46,7 @@ func TestExtractBeadIDFromArgs(t *testing.T) {
 
 func TestBdShowInvocationPinsRoutedMetadataDatabase(t *testing.T) {
 	townRoot := setupShowInvocationTown(t)
-	rigDir := filepath.Join(townRoot, "excavation", "overseer", "rig")
+	rigDir := filepath.Join(townRoot, "mineshaft", "overseer", "rig")
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -79,10 +79,10 @@ func TestBdShowInvocationPinsRoutedMetadataDatabase(t *testing.T) {
 		wantPort string
 	}{
 		{
-			name:     "gt bead pins excavation despite stale ambient db",
+			name:     "gt bead pins mineshaft despite stale ambient db",
 			args:     []string{"gt-abc", "--json"},
 			wantDir:  rigDir,
-			wantDB:   "excavation",
+			wantDB:   "mineshaft",
 			wantHost: "127.0.0.2",
 			wantPort: "4407",
 		},
@@ -141,7 +141,7 @@ func TestBdShowInvocationPinsRoutedMetadataDatabase(t *testing.T) {
 func setupShowInvocationTown(t *testing.T) string {
 	t.Helper()
 	townRoot := t.TempDir()
-	rigDir := filepath.Join(townRoot, "excavation", "overseer", "rig")
+	rigDir := filepath.Join(townRoot, "mineshaft", "overseer", "rig")
 	for _, dir := range []string{
 		filepath.Join(townRoot, "overseer"),
 		filepath.Join(townRoot, ".beads"),
@@ -155,7 +155,7 @@ func setupShowInvocationTown(t *testing.T) string {
 		t.Fatalf("write town.json: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"excavation/overseer/rig"}`,
+		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
@@ -165,7 +165,7 @@ func setupShowInvocationTown(t *testing.T) string {
 	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "metadata.json"), []byte(`{"dolt_database":"hq","dolt_server_host":"127.0.0.1","dolt_server_port":3307}`), 0644); err != nil {
 		t.Fatalf("write town metadata: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(rigDir, ".beads", "metadata.json"), []byte(`{"dolt_database":"excavation","dolt_server_host":"127.0.0.2","dolt_server_port":4407}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(rigDir, ".beads", "metadata.json"), []byte(`{"dolt_database":"mineshaft","dolt_server_host":"127.0.0.2","dolt_server_port":4407}`), 0644); err != nil {
 		t.Fatalf("write rig metadata: %v", err)
 	}
 	return townRoot

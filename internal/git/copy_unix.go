@@ -5,7 +5,7 @@ package git
 import (
 	"os/exec"
 
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // copyDirPreserving copies a directory using cp -a, which preserves symlinks,

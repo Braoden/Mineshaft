@@ -8,12 +8,12 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/daemon"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/daemon"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var initForce bool
@@ -21,8 +21,8 @@ var initForce bool
 var initCmd = &cobra.Command{
 	Use:     "init",
 	GroupID: GroupWorkspace,
-	Short:   "Initialize current directory as a Excavation Site rig",
-	Long: `Initialize the current directory for use as a Excavation Site rig.
+	Short:   "Initialize current directory as a Mineshaft rig",
+	Long: `Initialize the current directory for use as a Mineshaft rig.
 
 This creates the standard agent directories (miners/, witness/, refinery/,
 overseer/) and updates .git/info/exclude to ignore them.
@@ -55,7 +55,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("rig already initialized (use --force to reinitialize)")
 	}
 
-	fmt.Printf("%s Initializing Excavation Site rig in %s\n\n",
+	fmt.Printf("%s Initializing Mineshaft rig in %s\n\n",
 		style.Bold.Render("⚙️"), style.Dim.Render(cwd))
 
 	// Create agent directories
@@ -84,7 +84,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 		fmt.Printf("   ✓ Updated .git/info/exclude\n")
 	}
 
-	// Register custom beads types for Excavation Site (agent, role, rig, minecart, slot).
+	// Register custom beads types for Mineshaft (agent, role, rig, minecart, slot).
 	// This is best-effort: if beads isn't installed or DB doesn't exist, we skip.
 	// The doctor check will catch missing types later.
 	if err := registerCustomTypes(cwd); err != nil {
@@ -134,15 +134,15 @@ func updateGitExclude(repoPath string) error {
 		return err
 	}
 
-	// Check if already has Excavation Site section
-	if strings.Contains(string(content), "Excavation Site") {
+	// Check if already has Mineshaft section
+	if strings.Contains(string(content), "Mineshaft") {
 		return nil // Already configured
 	}
 
 	// Append agent dirs with leading '/' to anchor at repo root.
 	// Without the anchor, patterns like 'refinery/' match at any depth
 	// and would hide source code directories like 'internal/refinery/'.
-	additions := "\n# Excavation Site agent directories\n"
+	additions := "\n# Mineshaft agent directories\n"
 	for _, dir := range rig.AgentDirs {
 		// Get first component (e.g., "miners" from "miners")
 		// or "refinery" from "refinery/rig"
@@ -157,7 +157,7 @@ func updateGitExclude(repoPath string) error {
 	return os.WriteFile(excludePath, append(content, []byte(additions)...), 0644)
 }
 
-// registerCustomTypes registers Excavation Site custom issue types with beads.
+// registerCustomTypes registers Mineshaft custom issue types with beads.
 // This is best-effort: returns nil if beads isn't available or DB doesn't exist.
 // Handles gracefully: beads not installed, no .beads directory, or config errors.
 func registerCustomTypes(workDir string) error {

@@ -1,10 +1,10 @@
-# Excavation Site Escalation Protocol
+# Mineshaft Escalation Protocol
 
-> Reference for the unified escalation system in Excavation Site.
+> Reference for the unified escalation system in Mineshaft.
 
 ## Overview
 
-Excavation Site agents escalate issues when automated resolution is not possible.
+Mineshaft agents escalate issues when automated resolution is not possible.
 Escalations are severity-routed, tracked as beads, and support stale detection
 with automatic re-escalation.
 
@@ -168,7 +168,7 @@ Supervisor uses escalation for health issues:
 
 ```bash
 if [ $unresponsive_cycles -ge 5 ]; then
-  gt escalate -s HIGH "Witness unresponsive: excavation" \
+  gt escalate -s HIGH "Witness unresponsive: mineshaft" \
     -m "Witness has been unresponsive for $unresponsive_cycles cycles" \
     --source="patrol:supervisor:health-scan"
 fi

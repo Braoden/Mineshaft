@@ -46,9 +46,9 @@ func TestMinecartStageBDHelpersPinRouteMetadataUnderStaleEnv(t *testing.T) {
 	}
 
 	logs := readBDEnvLog(t, logPath)
-	assertBDEnvLog(t, findBDEnvLog(t, logs, "show gt-abc"), rigDir, "excavation", "127.0.0.2", "4407")
-	assertBDEnvLog(t, findBDEnvLog(t, logs, "dep list gt-abc"), rigDir, "excavation", "127.0.0.2", "4407")
-	assertBDEnvLog(t, findBDEnvLog(t, logs, "list --parent=gt-abc"), rigDir, "excavation", "127.0.0.2", "4407")
+	assertBDEnvLog(t, findBDEnvLog(t, logs, "show gt-abc"), rigDir, "mineshaft", "127.0.0.2", "4407")
+	assertBDEnvLog(t, findBDEnvLog(t, logs, "dep list gt-abc"), rigDir, "mineshaft", "127.0.0.2", "4407")
+	assertBDEnvLog(t, findBDEnvLog(t, logs, "list --parent=gt-abc"), rigDir, "mineshaft", "127.0.0.2", "4407")
 	assertBDEnvLog(t, findBDEnvLog(t, logs, "show hq-cv-found"), townRoot, "hq", "127.0.0.1", "3307")
 }
 
@@ -73,7 +73,7 @@ func setupRoutedBDEnvStub(t *testing.T) (townRoot, rigDir, logPath string) {
 	t.Helper()
 
 	townRoot = setupShowInvocationTown(t)
-	rigDir = filepath.Join(townRoot, "excavation", "overseer", "rig")
+	rigDir = filepath.Join(townRoot, "mineshaft", "overseer", "rig")
 	binDir := t.TempDir()
 	logPath = filepath.Join(t.TempDir(), "bd-env.log")
 

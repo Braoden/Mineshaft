@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/telemetry"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/telemetry"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // runMoleculeBurn burns (destroys) the current molecule attachment.
@@ -29,7 +29,7 @@ func runMoleculeBurn(cmd *cobra.Command, args []string) (retErr error) {
 		return fmt.Errorf("finding workspace: %w", err)
 	}
 	if townRoot == "" {
-		return fmt.Errorf("not in a Excavation Site workspace")
+		return fmt.Errorf("not in a Mineshaft workspace")
 	}
 
 	// Determine target agent
@@ -163,7 +163,7 @@ func runMoleculeSquash(cmd *cobra.Command, args []string) (retErr error) {
 		return fmt.Errorf("finding workspace: %w", err)
 	}
 	if townRoot == "" {
-		return fmt.Errorf("not in a Excavation Site workspace")
+		return fmt.Errorf("not in a Mineshaft workspace")
 	}
 
 	// Determine target agent

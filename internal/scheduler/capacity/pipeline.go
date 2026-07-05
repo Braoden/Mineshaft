@@ -54,7 +54,7 @@ const (
 // IsMessagingBead reports whether the bead is an inter-agent communication
 // artifact rather than dispatchable work. Used as a defensive filter in the
 // dispatch pipeline: a bead carrying any of these labels must never be handed
-// to a miner (gt-el4 / excavationhall/excavation#3800).
+// to a miner (gt-el4 / mineshafthall/mineshaft#3800).
 func IsMessagingBead(labels []string) bool {
 	for _, l := range labels {
 		switch l {

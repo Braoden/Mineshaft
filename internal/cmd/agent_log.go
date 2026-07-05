@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/agentlog"
-	"github.com/steveyegge/excavation/internal/telemetry"
+	"github.com/steveyegge/mineshaft/internal/agentlog"
+	"github.com/steveyegge/mineshaft/internal/telemetry"
 )
 
 var (
@@ -27,7 +27,7 @@ var agentLogCmd = &cobra.Command{
 }
 
 func init() {
-	agentLogCmd.Flags().StringVar(&agentLogSession, "session", "", "Excavation Site tmux session name (used as log tag)")
+	agentLogCmd.Flags().StringVar(&agentLogSession, "session", "", "Mineshaft tmux session name (used as log tag)")
 	agentLogCmd.Flags().StringVar(&agentLogWorkDir, "work-dir", "", "Agent working directory (used to locate conversation log files)")
 	agentLogCmd.Flags().StringVar(&agentLogAgentType, "agent", "claudecode", "Agent type (claudecode, opencode)")
 	agentLogCmd.Flags().StringVar(&agentLogSince, "since", "", "Only watch JSONL files modified at or after this RFC3339 timestamp (filters out pre-existing Claude sessions)")
@@ -47,7 +47,7 @@ func runAgentLog(cmd *cobra.Command, args []string) error {
 		ctx = telemetry.WithRunID(ctx, envRunID)
 	}
 
-	provider, err := telemetry.Init(ctx, "excavation", "")
+	provider, err := telemetry.Init(ctx, "mineshaft", "")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "warning: telemetry init failed: %v\n", err)
 	}
@@ -61,8 +61,8 @@ func runAgentLog(cmd *cobra.Command, args []string) error {
 
 	// Parse --since timestamp. When provided by activateAgentLogging, this is
 	// approximately the GT session start time, ensuring we only watch Claude
-	// instances spawned by this Excavation Site session (not pre-existing user sessions
-	// or other Excavation Site rigs running in the same work dir).
+	// instances spawned by this Mineshaft session (not pre-existing user sessions
+	// or other Mineshaft rigs running in the same work dir).
 	var since time.Time
 	if agentLogSince != "" {
 		since, err = time.Parse(time.RFC3339, agentLogSince)

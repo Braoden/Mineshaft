@@ -1,6 +1,6 @@
-# Excavation Site
+# Mineshaft
 
-This is a Excavation Site workspace. Your identity and role are determined by `{{cmd}} prime`.
+This is a Mineshaft workspace. Your identity and role are determined by `{{cmd}} prime`.
 
 Run `{{cmd}} prime` for full context after compaction, clear, or new session.
 
@@ -90,4 +90,4 @@ at prime time. Do NOT use Claude Code's filesystem auto-memory (`~/.claude/*/mem
 
 ### War room
 Active incidents tracked in `overseer/DOLT-WAR-ROOM.md`. Full escalation protocol
-in `excavation/overseer/rig/docs/design/escalation.md`.
+in `mineshaft/overseer/rig/docs/design/escalation.md`.

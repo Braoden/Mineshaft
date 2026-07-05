@@ -76,7 +76,7 @@ single-bead and multi-bead (batch) sling.
 ### Single-bead sling
 
 ```
-gt sling sh-task-1 excavation
+gt sling sh-task-1 mineshaft
 ```
 
 1. Checks if `sh-task-1` is already tracked by an open minecart.
@@ -98,9 +98,9 @@ to the same rig. An explicit rig arg still works but prints a
 deprecation warning:
 
 ```
-gt sling gt-task-1 gt-task-2 gt-task-3 excavation
+gt sling gt-task-1 gt-task-2 gt-task-3 mineshaft
 # Deprecation: gt sling now auto-resolves the rig from bead prefixes.
-#              You no longer need to explicitly specify <excavation>.
+#              You no longer need to explicitly specify <mineshaft>.
 ```
 
 **Batch sling creates one minecart tracking all beads.** Before spawning
@@ -157,7 +157,7 @@ sling **errors** before spawning any miners. It prints:
 Batch sling with `--no-minecart` skips minecart creation entirely:
 
 ```
-gt sling gt-task-1 gt-task-2 gt-task-3 excavation --no-minecart
+gt sling gt-task-1 gt-task-2 gt-task-3 mineshaft --no-minecart
 ```
 
 ---
@@ -245,7 +245,7 @@ belongs to. The rig association is resolved at dispatch time via two lookups:
 
 1. **Extract prefix**: `sh-pb6sa` → `sh-` (string parsing)
 2. **Resolve rig**: look up `sh-` in `~/gt/.beads/routes.jsonl` → finds
-   `{"prefix":"sh-","path":"excavation/.beads"}` → rig name is `excavation`
+   `{"prefix":"sh-","path":"mineshaft/.beads"}` → rig name is `mineshaft`
 
 This happens in `feedFirstReady` (stranded scan path) and `feedNextReadyIssue`
 (event poll path) just before calling `gt sling`. Issues with prefixes that

@@ -11,13 +11,13 @@ import (
 	"sync"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var readyJSON bool
@@ -39,7 +39,7 @@ Results are sorted by priority (highest first) then by source.
 Examples:
   gt ready              # Show all ready work
   gt ready --json       # Output as JSON
-  gt ready --rig=excavation  # Show only one rig`,
+  gt ready --rig=mineshaft  # Show only one rig`,
 	RunE: runReady,
 }
 
@@ -78,7 +78,7 @@ func runReady(cmd *cobra.Command, args []string) error {
 	// Find town root
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Load rigs config
@@ -424,7 +424,7 @@ func getWispIDs(beadsPath string) map[string]bool {
 //   - issue_type "agent" (agent lifecycle beads)
 //   - Labels if present (gt:agent, gt:role, gt:rig)
 //   - ID suffix "-role" (role definition beads like hq-crew-role)
-//   - ID prefix matching "<prefix>-rig-" (rig identity beads like gt-rig-excavation)
+//   - ID prefix matching "<prefix>-rig-" (rig identity beads like gt-rig-mineshaft)
 func filterIdentityBeads(issues []*beads.Issue) []*beads.Issue {
 	identityLabels := map[string]bool{
 		"gt:agent": true,

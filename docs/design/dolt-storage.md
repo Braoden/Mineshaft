@@ -1,14 +1,14 @@
 # Dolt Storage Architecture
 
-> **Status**: Current reference for Excavation Site agents
+> **Status**: Current reference for Mineshaft agents
 > **Updated**: 2026-02-28
-> **Context**: Dolt is the sole storage backend for Beads and Excavation Site
+> **Context**: Dolt is the sole storage backend for Beads and Mineshaft
 
 ---
 
 ## Overview
 
-Excavation Site uses [Dolt](https://github.com/dolthub/dolt), an open-source
+Mineshaft uses [Dolt](https://github.com/dolthub/dolt), an open-source
 SQL database with Git-like versioning (Apache 2.0). One Dolt SQL server
 per town serves all databases via MySQL protocol on port 3307. There is
 no embedded mode and no SQLite. JSONL is used only for disaster-recovery
@@ -23,7 +23,7 @@ every 30s, crash restart with exponential backoff).
 ```
 Dolt SQL Server (one per town, port 3307)
 ├── hq/       town-level beads  (hq-* prefix)
-├── excavation/  rig beads         (gt-* prefix)
+├── mineshaft/  rig beads         (gt-* prefix)
 ├── beads/    rig beads         (bd-* prefix)
 ├── wyvern/   rig beads         (wy-* prefix)
 └── sky/      rig beads         (sky-* prefix)
@@ -39,7 +39,7 @@ accessible via `USE <name>` in SQL.
 gt and bd use separate env vars for Dolt connection. gt automatically
 translates its variables to bd's equivalents when spawning agents.
 
-| gt (Excavation Site) | bd (Beads) | Purpose |
+| gt (Mineshaft) | bd (Beads) | Purpose |
 |---------------|------------|---------|
 | `GT_DOLT_HOST` | `BEADS_DOLT_SERVER_HOST` | Server host (bd defaults to `127.0.0.1` if unset) |
 | `GT_DOLT_PORT` | `BEADS_DOLT_PORT` | Server port (default: `3307`) |
@@ -72,21 +72,21 @@ gt dolt list           # List all databases
 If the server isn't running, `bd` fails fast with a clear message
 pointing to `gt dolt start`.
 
-## Excavation Site Scope vs `bd --global`
+## Mineshaft Scope vs `bd --global`
 
-Excavation Site's town-level beads are the `hq` database. Access them by running
+Mineshaft's town-level beads are the `hq` database. Access them by running
 direct `bd` commands from the town root (`~/gt`) or with `bd -C ~/gt ...`.
 Direct `bd` commands from rig worktrees use that rig's `.beads` redirect and
 database, so do not assume an `hq-*` ID will retarget the command.
 
-Do not use `bd --global` for Excavation Site town beads. In Beads, `--global`
+Do not use `bd --global` for Mineshaft town beads. In Beads, `--global`
 means the standalone shared-server database named `beads_global`; it does
-not mean Excavation Site's `hq` database, and `BEADS_DOLT_DATABASE=hq` does not
+not mean Mineshaft's `hq` database, and `BEADS_DOLT_DATABASE=hq` does not
 retarget `--global`.
 
-For Excavation Site Dolt health, use `gt dolt status`. `bd dolt status` reports
+For Mineshaft Dolt health, use `gt dolt status`. `bd dolt status` reports
 the Beads client/runtime view and can say no Beads-managed server is running
-even when the Excavation Site Dolt server on port 3307 is healthy.
+even when the Mineshaft Dolt server on port 3307 is healthy.
 
 ## Write Concurrency: All-on-Main
 
@@ -184,7 +184,7 @@ issues table — there is no separate mail table. The `sender` field and
 
 ## Dolt-Specific Capabilities
 
-These are available to agents via SQL and used throughout Excavation Site:
+These are available to agents via SQL and used throughout Mineshaft:
 
 | Feature | Usage |
 |---------|-------|
@@ -481,7 +481,7 @@ survive the recipient's session death.**
 ## Standalone Beads Note
 
 The `bd` CLI retains an embedded Dolt option for standalone use (outside
-Excavation Site). Server-only mode applies to Excavation Site exclusively — standalone
+Mineshaft). Server-only mode applies to Mineshaft exclusively — standalone
 users may not have a Dolt server running.
 
 The Dolt team is working on improving embedded mode for single-process
@@ -491,7 +491,7 @@ versioning capabilities.
 
 ## Remote Push (Git Protocol)
 
-Excavation Site pushes Dolt databases to GitHub remotes via `gt dolt sync`. These
+Mineshaft pushes Dolt databases to GitHub remotes via `gt dolt sync`. These
 use git SSH protocol (`git+ssh://git@github.com/...`), not DoltHub's native
 protocol.
 
@@ -504,7 +504,7 @@ stores git objects built from Dolt's internal format. Per the Dolt team
 - **The cache is necessary** — Dolt uses it to build git objects for push/pull
 - **Accumulates garbage** (orphaned refs) and is not cleaned up automatically
 - **Safe to delete** between pushes, but causes a full rebuild on next push
-  (beads: ~20 min rebuild, excavation: even longer)
+  (beads: ~20 min rebuild, mineshaft: even longer)
 - **Orphaned refs** can be pruned without deleting the whole cache — better balance
 - **Grows over time** as the database grows — inherent to git-protocol remotes
 
@@ -548,7 +548,7 @@ require DoltHub accounts and reconfiguring remotes with
 ~/gt/                            Town root
 ├── .dolt-data/                  Centralized Dolt data directory
 │   ├── hq/                      Town beads (hq-*)
-│   ├── excavation/                 Excavation rig (gt-*)
+│   ├── mineshaft/                 Mineshaft rig (gt-*)
 │   ├── beads/                   Beads rig (bd-*)
 │   ├── wyvern/                  Wyvern rig (wy-*)
 │   └── sky/                     Sky rig (sky-*)

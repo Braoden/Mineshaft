@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/mineshaft/internal/config"
 )
 
 //go:embed static

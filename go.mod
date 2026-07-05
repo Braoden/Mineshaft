@@ -1,4 +1,4 @@
-module github.com/steveyegge/excavation
+module github.com/steveyegge/mineshaft
 
 go 1.26.2
 

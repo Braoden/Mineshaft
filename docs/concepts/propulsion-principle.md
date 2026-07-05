@@ -2,7 +2,7 @@
 
 > **If you find something on your hook, YOU RUN IT.**
 
-Excavation Site is a steam engine. Agents are pistons. The entire system's throughput
+Mineshaft is a steam engine. Agents are pistons. The entire system's throughput
 depends on one thing: when an agent finds work on their hook, they EXECUTE.
 
 ## Why This Matters
@@ -74,7 +74,7 @@ Miner restarts with work on hook
   → Miner waits for confirmation
   → Witness assumes work is progressing
   → Nothing happens
-  → Excavation Site stops
+  → Mineshaft stops
 ```
 
 ## Startup Behavior

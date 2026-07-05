@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 // mockTmux implements tmuxOps for testing.
@@ -52,7 +52,7 @@ func (m *mockTmux) NewSessionWithCommandAndEnv(_, _, _ string, _ map[string]stri
 func (m *mockTmux) SetRemainOnExit(_ string, _ bool) error { return nil }
 func (m *mockTmux) SetEnvironment(_, _, _ string) error    { return nil }
 func (m *mockTmux) GetPaneID(_ string) (string, error)     { return "%0", nil }
-func (m *mockTmux) ConfigureExcavationSession(_ string, _ *tmux.Theme, _, _, _ string) error {
+func (m *mockTmux) ConfigureMineshaftSession(_ string, _ *tmux.Theme, _, _, _ string) error {
 	return nil
 }
 

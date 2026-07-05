@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/mail"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/witness"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/mail"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/witness"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var (
@@ -47,7 +47,7 @@ remains machine-readable while operators can see where a slow patrol is stuck.
 
 Examples:
   gt patrol scan                    # Scan current rig
-  gt patrol scan --rig excavation      # Scan specific rig
+  gt patrol scan --rig mineshaft      # Scan specific rig
   gt patrol scan --json             # Machine-readable output
   gt patrol scan --notify           # Send mail on zombie detection`,
 	RunE: runPatrolScan,
@@ -131,7 +131,7 @@ type PatrolScanCompleteItem struct {
 func runPatrolScan(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Determine rig name

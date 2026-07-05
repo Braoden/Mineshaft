@@ -1,6 +1,6 @@
 //go:build integration
 
-// Package doctor provides integration tests for Excavation Site doctor functionality.
+// Package doctor provides integration tests for Mineshaft doctor functionality.
 // These tests verify that:
 // 1. New town setup works correctly
 // 2. Doctor accurately detects problems (no false positives/negatives)
@@ -18,9 +18,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 // TestIntegrationTownSetup verifies that a fresh town setup passes all doctor checks.
@@ -63,8 +63,8 @@ func TestIntegrationOrphanSessionDetection(t *testing.T) {
 
 	townRoot := setupIntegrationTown(t)
 
-	// Create test rigs (excavation → prefix "ga", niflheim → prefix "ni")
-	createTestRig(t, townRoot, "excavation")
+	// Create test rigs (mineshaft → prefix "ga", niflheim → prefix "ni")
+	createTestRig(t, townRoot, "mineshaft")
 	createTestRig(t, townRoot, "niflheim")
 
 	// Initialize the session prefix registry so ParseSessionName can resolve prefixes
@@ -79,7 +79,7 @@ func TestIntegrationOrphanSessionDetection(t *testing.T) {
 		sessionName  string
 		expectOrphan bool
 	}{
-		// Valid Excavation Site sessions should NOT be detected as orphans
+		// Valid Mineshaft sessions should NOT be detected as orphans
 		{"overseer_session", "hq-overseer", false},
 		{"supervisor_session", "hq-supervisor", false},
 		{"witness_session", "ga-witness", false},
@@ -94,7 +94,7 @@ func TestIntegrationOrphanSessionDetection(t *testing.T) {
 		// Invalid sessions SHOULD be detected as orphans
 		{"unknown_prefix", "xx-witness", true},          // Unregistered prefix
 		{"unregistered_prefix", "gt-only-two", true},    // "gt" not in test registry
-		{"non_gt_prefix", "foo-excavation-witness", false}, // Not a GT session, ignored
+		{"non_gt_prefix", "foo-mineshaft-witness", false}, // Not a GT session, ignored
 	}
 
 	check := NewOrphanSessionCheck()
@@ -130,7 +130,7 @@ func TestIntegrationCrewSessionProtection(t *testing.T) {
 	oldRegistry := session.DefaultRegistry()
 	defer session.SetDefaultRegistry(oldRegistry)
 	r := session.NewPrefixRegistry()
-	r.Register("ga", "excavation")
+	r.Register("ga", "mineshaft")
 	r.Register("ni", "niflheim")
 	session.SetDefaultRegistry(r)
 
@@ -165,7 +165,7 @@ func TestIntegrationEnvVarsConsistency(t *testing.T) {
 	}
 
 	townRoot := setupIntegrationTown(t)
-	createTestRig(t, townRoot, "excavation")
+	createTestRig(t, townRoot, "mineshaft")
 
 	// Test that expected env vars are computed correctly for different roles
 	tests := []struct {
@@ -175,9 +175,9 @@ func TestIntegrationEnvVarsConsistency(t *testing.T) {
 	}{
 		{"overseer", "", "overseer"},
 		{"supervisor", "", "supervisor"},
-		{"witness", "excavation", "excavation/witness"},
-		{"refinery", "excavation", "excavation/refinery"},
-		{"crew", "excavation", "excavation/crew/"},
+		{"witness", "mineshaft", "mineshaft/witness"},
+		{"refinery", "mineshaft", "mineshaft/refinery"},
+		{"crew", "mineshaft", "mineshaft/crew/"},
 	}
 
 	for _, tt := range tests {
@@ -196,7 +196,7 @@ func TestIntegrationEnvVarsConsistency(t *testing.T) {
 // operations to use the wrong database (e.g., rig ops used town beads with hq- prefix).
 func TestIntegrationBeadsDirRigLevel(t *testing.T) {
 	townRoot := setupIntegrationTown(t)
-	createTestRig(t, townRoot, "excavation")
+	createTestRig(t, townRoot, "mineshaft")
 	createTestRig(t, townRoot, "niflheim")
 
 	tests := []struct {
@@ -220,8 +220,8 @@ func TestIntegrationBeadsDirRigLevel(t *testing.T) {
 		{
 			name:           "witness_uses_rig_beads",
 			role:           "witness",
-			rig:            "excavation",
-			wantBeadsSuffix: "/excavation/.beads",
+			rig:            "mineshaft",
+			wantBeadsSuffix: "/mineshaft/.beads",
 		},
 		{
 			name:           "refinery_uses_rig_beads",
@@ -232,8 +232,8 @@ func TestIntegrationBeadsDirRigLevel(t *testing.T) {
 		{
 			name:           "crew_uses_rig_beads",
 			role:           "crew",
-			rig:            "excavation",
-			wantBeadsSuffix: "/excavation/.beads",
+			rig:            "mineshaft",
+			wantBeadsSuffix: "/mineshaft/.beads",
 		},
 	}
 
@@ -271,12 +271,12 @@ func TestIntegrationEnvVarsBeadsDirMismatch(t *testing.T) {
 	oldRegistry := session.DefaultRegistry()
 	defer session.SetDefaultRegistry(oldRegistry)
 	r := session.NewPrefixRegistry()
-	r.Register("ga", "excavation")
+	r.Register("ga", "mineshaft")
 	session.SetDefaultRegistry(r)
 
 	townRoot := "/town" // Fixed path for consistent expected values
 	townBeadsDir := townRoot + "/.beads"
-	rigBeadsDir := townRoot + "/excavation/.beads"
+	rigBeadsDir := townRoot + "/mineshaft/.beads"
 
 	// Create mock reader with mismatched BEADS_DIR
 	reader := &mockEnvReaderIntegration{
@@ -284,7 +284,7 @@ func TestIntegrationEnvVarsBeadsDirMismatch(t *testing.T) {
 		sessionEnvs: map[string]map[string]string{
 			"ga-witness": {
 				"GT_ROLE":   "witness",
-				"GT_RIG":    "excavation",
+				"GT_RIG":    "mineshaft",
 				"BEADS_DIR": townBeadsDir, // WRONG: Should be rigBeadsDir
 				"GT_ROOT":   townRoot,
 			},
@@ -324,10 +324,10 @@ func TestIntegrationAgentBeadsExist(t *testing.T) {
 	}
 
 	townRoot := setupIntegrationTown(t)
-	createTestRig(t, townRoot, "excavation")
+	createTestRig(t, townRoot, "mineshaft")
 
 	// Create mock beads for testing
-	setupMockBeads(t, townRoot, "excavation")
+	setupMockBeads(t, townRoot, "mineshaft")
 
 	check := NewAgentBeadsCheck()
 	ctx := &CheckContext{TownRoot: townRoot}
@@ -349,10 +349,10 @@ func TestIntegrationRigBeadsExist(t *testing.T) {
 	}
 
 	townRoot := setupIntegrationTown(t)
-	createTestRig(t, townRoot, "excavation")
+	createTestRig(t, townRoot, "mineshaft")
 
 	// Create mock beads for testing
-	setupMockBeads(t, townRoot, "excavation")
+	setupMockBeads(t, townRoot, "mineshaft")
 
 	check := NewRigBeadsCheck()
 	ctx := &CheckContext{TownRoot: townRoot}
@@ -372,7 +372,7 @@ func TestIntegrationDoctorFixReliability(t *testing.T) {
 	}
 
 	townRoot := setupIntegrationTown(t)
-	createTestRig(t, townRoot, "excavation")
+	createTestRig(t, townRoot, "mineshaft")
 	ctx := &CheckContext{TownRoot: townRoot}
 
 	// Deliberately break something fixable
@@ -414,12 +414,12 @@ func TestIntegrationFixMultipleIssues(t *testing.T) {
 	}
 
 	townRoot := setupIntegrationTown(t)
-	createTestRig(t, townRoot, "excavation")
+	createTestRig(t, townRoot, "mineshaft")
 	ctx := &CheckContext{TownRoot: townRoot}
 
 	// Break multiple things
 	breakRuntimeGitignore(t, townRoot)
-	breakCrewGitignore(t, townRoot, "excavation", "worker1")
+	breakCrewGitignore(t, townRoot, "mineshaft", "worker1")
 
 	d := NewDoctor()
 	d.RegisterAll(NewRuntimeGitignoreCheck())
@@ -445,7 +445,7 @@ func TestIntegrationFixIdempotent(t *testing.T) {
 	}
 
 	townRoot := setupIntegrationTown(t)
-	createTestRig(t, townRoot, "excavation")
+	createTestRig(t, townRoot, "mineshaft")
 	ctx := &CheckContext{TownRoot: townRoot}
 
 	// Break something
@@ -485,7 +485,7 @@ func TestIntegrationFixDoesntBreakWorking(t *testing.T) {
 	}
 
 	townRoot := setupIntegrationTown(t)
-	createTestRig(t, townRoot, "excavation")
+	createTestRig(t, townRoot, "mineshaft")
 	ctx := &CheckContext{TownRoot: townRoot}
 
 	d := NewDoctor()
@@ -523,8 +523,8 @@ func TestIntegrationNoFalsePositives(t *testing.T) {
 	}
 
 	townRoot := setupIntegrationTown(t)
-	createTestRig(t, townRoot, "excavation")
-	setupMockBeads(t, townRoot, "excavation")
+	createTestRig(t, townRoot, "mineshaft")
+	setupMockBeads(t, townRoot, "mineshaft")
 	ctx := &CheckContext{TownRoot: townRoot}
 
 	d := NewDoctor()
@@ -554,7 +554,7 @@ func TestIntegrationSessionNaming(t *testing.T) {
 	oldRegistry := session.DefaultRegistry()
 	defer session.SetDefaultRegistry(oldRegistry)
 	r := session.NewPrefixRegistry()
-	r.Register("ga", "excavation")
+	r.Register("ga", "mineshaft")
 	r.Register("ni", "niflheim")
 	session.SetDefaultRegistry(r)
 
@@ -575,14 +575,14 @@ func TestIntegrationSessionNaming(t *testing.T) {
 		{
 			name:        "witness",
 			sessionName: "ga-witness",
-			wantRig:     "excavation",
+			wantRig:     "mineshaft",
 			wantRole:    "witness",
 			wantName:    "",
 		},
 		{
 			name:        "crew",
 			sessionName: "ga-crew-max",
-			wantRig:     "excavation",
+			wantRig:     "mineshaft",
 			wantRole:    "crew",
 			wantName:    "max",
 		},
@@ -622,8 +622,8 @@ func TestIntegrationMultiTownSocketIsolation(t *testing.T) {
 	townA := setupIntegrationTown(t)
 	townB := setupIntegrationTown(t)
 
-	createTestRig(t, townA, "excavation")
-	createTestRig(t, townB, "excavation")
+	createTestRig(t, townA, "mineshaft")
+	createTestRig(t, townB, "mineshaft")
 
 	// Init townA and capture its socket
 	if err := session.InitRegistry(townA); err != nil {
@@ -685,7 +685,7 @@ func TestIntegrationMultiTownSocketIsolation(t *testing.T) {
 	}
 
 	// Verify the split-brain check passes when the "default" socket has no
-	// Excavation Site sessions.  We mock the default lister to avoid interacting with
+	// Mineshaft sessions.  We mock the default lister to avoid interacting with
 	// the user's real default tmux socket.
 	tmux.SetDefaultSocket(socketA)
 	checkA := NewSocketSplitBrainCheck()
@@ -980,7 +980,7 @@ func setupMockBeads(t *testing.T, townRoot, rigName string) {
 func breakRuntimeGitignore(t *testing.T, townRoot string) {
 	t.Helper()
 	// Create a crew directory without .runtime in gitignore
-	crewDir := filepath.Join(townRoot, "excavation", "crew", "test-worker")
+	crewDir := filepath.Join(townRoot, "mineshaft", "crew", "test-worker")
 	if err := os.MkdirAll(crewDir, 0755); err != nil {
 		t.Fatalf("failed to create crew dir: %v", err)
 	}

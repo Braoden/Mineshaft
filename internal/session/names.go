@@ -24,31 +24,31 @@ func SupervisorSessionName() string {
 }
 
 // WitnessSessionName returns the session name for a rig's Witness agent.
-// rigPrefix is the rig's beads prefix (e.g., "gt" for excavation, "bd" for beads).
+// rigPrefix is the rig's beads prefix (e.g., "gt" for mineshaft, "bd" for beads).
 func WitnessSessionName(rigPrefix string) string {
 	return fmt.Sprintf("%s-witness", rigPrefix)
 }
 
 // RefinerySessionName returns the session name for a rig's Refinery agent.
-// rigPrefix is the rig's beads prefix (e.g., "gt" for excavation, "bd" for beads).
+// rigPrefix is the rig's beads prefix (e.g., "gt" for mineshaft, "bd" for beads).
 func RefinerySessionName(rigPrefix string) string {
 	return fmt.Sprintf("%s-refinery", rigPrefix)
 }
 
 // CrewSessionName returns the session name for a crew worker in a rig.
-// rigPrefix is the rig's beads prefix (e.g., "gt" for excavation, "bd" for beads).
+// rigPrefix is the rig's beads prefix (e.g., "gt" for mineshaft, "bd" for beads).
 func CrewSessionName(rigPrefix, name string) string {
 	return fmt.Sprintf("%s-crew-%s", rigPrefix, name)
 }
 
 // MinerSessionName returns the session name for a miner in a rig.
-// rigPrefix is the rig's beads prefix (e.g., "gt" for excavation, "bd" for beads).
+// rigPrefix is the rig's beads prefix (e.g., "gt" for mineshaft, "bd" for beads).
 func MinerSessionName(rigPrefix, name string) string {
 	return fmt.Sprintf("%s-%s", rigPrefix, name)
 }
 
 // BossSessionName returns the session name for the human operator.
-// The boss is the human who controls Excavation Site, not an AI agent.
+// The boss is the human who controls Mineshaft, not an AI agent.
 func BossSessionName() string {
 	return HQPrefix + "boss"
 }

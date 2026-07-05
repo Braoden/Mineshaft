@@ -2,7 +2,7 @@
 
 Date: 2026-05-26
 
-Scope: audit the Excavation Site Dolt dependency from the previously pinned/released floor (`1.84.0` minimum, `1.83.0` testcontainers image, `1.82.4` E2E Docker build) to Dolt `2.0.7`.
+Scope: audit the Mineshaft Dolt dependency from the previously pinned/released floor (`1.84.0` minimum, `1.83.0` testcontainers image, `1.82.4` E2E Docker build) to Dolt `2.0.7`.
 
 ## Updated References
 
@@ -15,11 +15,11 @@ Scope: audit the Excavation Site Dolt dependency from the previously pinned/rele
 
 ## Compatibility Findings
 
-- Dolt 2.0 is backward compatible with 1.x databases, but databases written by 2.x clients may not be readable by all 1.x clients. Excavation Site now rejects Dolt binaries older than `2.0.7` before install/doctor use, which prevents mixed-client writes to shared `.dolt-data` stores.
-- Dolt 2.0 enables automatic garbage collection, archival storage, and adaptive storage for TEXT, JSON, GEOMETRY, and BLOB types by default. Excavation Site does not parse Dolt storage internals directly, so no migration code is needed beyond the binary floor.
-- Dolt 1.86 changed the `dolt_revert()` result schema. Excavation Site does not call `dolt_revert()` directly, so no command compatibility shim is needed.
-- Dolt 2.0.1 changed `dolt diff -r sql` to return a nonzero exit when schema changes prevent a complete SQL diff. Excavation Site does not depend on that command in production paths.
-- Dolt 2.0.3 fixes an SSH child-process leak from `CALL dolt_fetch` against SSH remotes. This reduces risk for `gt dolt` remote flows; no Excavation Site workaround is needed.
+- Dolt 2.0 is backward compatible with 1.x databases, but databases written by 2.x clients may not be readable by all 1.x clients. Mineshaft now rejects Dolt binaries older than `2.0.7` before install/doctor use, which prevents mixed-client writes to shared `.dolt-data` stores.
+- Dolt 2.0 enables automatic garbage collection, archival storage, and adaptive storage for TEXT, JSON, GEOMETRY, and BLOB types by default. Mineshaft does not parse Dolt storage internals directly, so no migration code is needed beyond the binary floor.
+- Dolt 1.86 changed the `dolt_revert()` result schema. Mineshaft does not call `dolt_revert()` directly, so no command compatibility shim is needed.
+- Dolt 2.0.1 changed `dolt diff -r sql` to return a nonzero exit when schema changes prevent a complete SQL diff. Mineshaft does not depend on that command in production paths.
+- Dolt 2.0.3 fixes an SSH child-process leak from `CALL dolt_fetch` against SSH remotes. This reduces risk for `gt dolt` remote flows; no Mineshaft workaround is needed.
 - Dolt 2.0.7 includes the `go-mysql-server` CachedResults/hash-join leak fix, which is relevant to long-lived `dolt sql-server` processes and is the main reason to require this patch release.
 
 ## Validation Evidence

@@ -14,17 +14,17 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/nudge"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/runtime"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/nudge"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/runtime"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // Common errors
@@ -196,7 +196,7 @@ func (m *Manager) Start(foreground bool, agentOverride string) error {
 		return fmt.Errorf("ensuring runtime settings: %w", err)
 	}
 
-	// Ensure .gitignore has required Excavation Site patterns
+	// Ensure .gitignore has required Mineshaft patterns
 	if err := rig.EnsureGitignorePatterns(refineryRigDir); err != nil {
 		style.PrintWarning("could not update refinery .gitignore: %v", err)
 	}
@@ -241,14 +241,14 @@ func (m *Manager) Start(foreground bool, agentOverride string) error {
 
 	// Create session with command and env vars via -e flags so the initial
 	// shell — and Claude's subprocesses — inherit them from the start.
-	// See: https://github.com/anthropics/excavation/issues/280 (race condition fix)
+	// See: https://github.com/anthropics/mineshaft/issues/280 (race condition fix)
 	if err := t.NewSessionWithCommandAndEnv(sessionID, refineryRigDir, command, envVars); err != nil {
 		return fmt.Errorf("creating tmux session: %w", err)
 	}
 
 	// Apply theme (non-fatal: theming failure doesn't affect operation)
 	theme := tmux.ResolveSessionTheme(townRoot, m.rig.Name, "refinery", "")
-	_ = t.ConfigureExcavationSession(sessionID, theme, m.rig.Name, "refinery", "refinery")
+	_ = t.ConfigureMineshaftSession(sessionID, theme, m.rig.Name, "refinery", "refinery")
 
 	// Accept startup dialogs (workspace trust + bypass permissions) if they appear.
 	// Must be before WaitForRuntimeReady to avoid race where dialog blocks prompt detection.

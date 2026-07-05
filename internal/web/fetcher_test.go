@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/activity"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/activity"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
 )
 
 func TestCalculateWorkStatus(t *testing.T) {

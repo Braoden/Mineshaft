@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/checkpoint"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/checkpoint"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var checkpointCmd = &cobra.Command{
@@ -89,7 +89,7 @@ func runCheckpointWrite(cmd *cobra.Command, args []string) error {
 	// Detect role context
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil || townRoot == "" {
-		return fmt.Errorf("not in a Excavation Site workspace")
+		return fmt.Errorf("not in a Mineshaft workspace")
 	}
 
 	roleInfo, err := GetRoleWithContext(cwd, townRoot)

@@ -2,7 +2,7 @@ description = """
 Generate daily digest for boss (Overseer).
 
 Dogs work through molecules (poured from this formula) on a scheduled basis (daily, or triggered by plugin)
-to create summary digests of Excavation Site activity. This aggregates:
+to create summary digests of Mineshaft activity. This aggregates:
 - Work completed across all rigs
 - Issues filed and closed
 - Incidents and escalations
@@ -79,7 +79,7 @@ Gather activity data from each rig in the town.
 **1. List accessible rigs:**
 ```bash
 gt rigs
-# Returns list of rigs: excavation, beads, etc.
+# Returns list of rigs: mineshaft, beads, etc.
 ```
 
 **2. For each rig, collect:**
@@ -135,7 +135,7 @@ Transform collected data into formatted digest.
 
 **3. Generate digest text:**
 ```markdown
-# Excavation Site Daily Digest: {{date}}
+# Mineshaft Daily Digest: {{date}}
 
 ## Summary
 - **Issues filed**: N (tasks: X, bugs: Y, features: Z)
@@ -145,7 +145,7 @@ Transform collected data into formatted digest.
 ## By Rig
 | Rig | Filed | Closed | Active Miners |
 |-----|-------|--------|-----------------|
-| excavation | X | Y | Z |
+| mineshaft | X | Y | Z |
 | beads | X | Y | Z |
 
 ## Highlights
@@ -176,7 +176,7 @@ Deliver digest to the Overseer.
 
 **1. Send via mail:**
 ```bash
-gt mail send overseer/ -s "Excavation Site Digest: {{date}}" -m "$(cat <<EOF
+gt mail send overseer/ -s "Mineshaft Digest: {{date}}" -m "$(cat <<EOF
 {{formatted_digest}}
 EOF
 )"

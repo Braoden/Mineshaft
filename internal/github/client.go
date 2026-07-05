@@ -1,7 +1,7 @@
 // Package github provides a GitHub API client for PR lifecycle management.
 //
 // It wraps the GitHub REST API v3 and GraphQL API v4 for operations needed
-// by the Excavation Site merge queue: creating draft PRs, managing reviews,
+// by the Mineshaft merge queue: creating draft PRs, managing reviews,
 // converting drafts to ready, and merging.
 //
 // Authentication uses a GITHUB_TOKEN environment variable.

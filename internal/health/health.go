@@ -1,4 +1,4 @@
-// Package health provides reusable health check functions for the Excavation Site data plane.
+// Package health provides reusable health check functions for the Mineshaft data plane.
 // These checks are shared between the Doctor Dog (daemon/doctor_dog.go) and the
 // gt health CLI command (cmd/health.go).
 package health
@@ -16,8 +16,8 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/steveyegge/excavation/internal/doltserver"
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/doltserver"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // TCPCheck performs a TCP connection check to host:port.

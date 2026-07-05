@@ -141,7 +141,7 @@ case "$cmd" in
     exit 0
     ;;
   show)
-    printf '%%s\n' '[{"id":"gt-excavation-miner-nux","title":"Miner nux","issue_type":"agent","labels":["gt:agent"],"description":"role_type: miner\nrig: excavation\nagent_state: idle\nhook_bead: null","agent_state":"idle"}]'
+    printf '%%s\n' '[{"id":"gt-mineshaft-miner-nux","title":"Miner nux","issue_type":"agent","labels":["gt:agent"],"description":"role_type: miner\nrig: mineshaft\nagent_state: idle\nhook_bead: null","agent_state":"idle"}]'
     exit 0
     ;;
   *)
@@ -163,10 +163,10 @@ func TestGetAgentBead_PrefersDescriptionAgentState(t *testing.T) {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 
-	installMockBDFixedShowOutput(t, `[{"id":"gt-excavation-miner-nux","title":"Miner nux","issue_type":"agent","labels":["gt:agent"],"description":"role_type: miner\nrig: excavation\nagent_state: spawning\nhook_bead: null","agent_state":"idle"}]`)
+	installMockBDFixedShowOutput(t, `[{"id":"gt-mineshaft-miner-nux","title":"Miner nux","issue_type":"agent","labels":["gt:agent"],"description":"role_type: miner\nrig: mineshaft\nagent_state: spawning\nhook_bead: null","agent_state":"idle"}]`)
 
 	bd := NewIsolated(tmpDir)
-	issue, fields, err := bd.GetAgentBead("gt-excavation-miner-nux")
+	issue, fields, err := bd.GetAgentBead("gt-mineshaft-miner-nux")
 	if err != nil {
 		t.Fatalf("GetAgentBead: %v", err)
 	}
@@ -192,10 +192,10 @@ func TestGetAgentBead_FallsBackToDescriptionAgentState(t *testing.T) {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 
-	installMockBDFixedShowOutput(t, `[{"id":"gt-excavation-miner-nux","title":"Miner nux","issue_type":"agent","labels":["gt:agent"],"description":"role_type: miner\nrig: excavation\nagent_state: spawning\nhook_bead: null"}]`)
+	installMockBDFixedShowOutput(t, `[{"id":"gt-mineshaft-miner-nux","title":"Miner nux","issue_type":"agent","labels":["gt:agent"],"description":"role_type: miner\nrig: mineshaft\nagent_state: spawning\nhook_bead: null"}]`)
 
 	bd := NewIsolated(tmpDir)
-	_, fields, err := bd.GetAgentBead("gt-excavation-miner-nux")
+	_, fields, err := bd.GetAgentBead("gt-mineshaft-miner-nux")
 	if err != nil {
 		t.Fatalf("GetAgentBead: %v", err)
 	}
@@ -216,18 +216,18 @@ func TestUpdateAgentState_UsesUpdateDescriptionPath(t *testing.T) {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 
-	logPath := installMockBDShowRecorder(t, `[{"id":"gt-excavation-miner-nux","title":"Miner nux","issue_type":"agent","labels":["gt:agent"],"description":"role_type: miner\nrig: excavation\nagent_state: spawning\nhook_bead: null"}]`)
+	logPath := installMockBDShowRecorder(t, `[{"id":"gt-mineshaft-miner-nux","title":"Miner nux","issue_type":"agent","labels":["gt:agent"],"description":"role_type: miner\nrig: mineshaft\nagent_state: spawning\nhook_bead: null"}]`)
 	bd := NewIsolated(tmpDir)
 
-	if err := bd.UpdateAgentState("gt-excavation-miner-nux", "working"); err != nil {
+	if err := bd.UpdateAgentState("gt-mineshaft-miner-nux", "working"); err != nil {
 		t.Fatalf("UpdateAgentState: %v", err)
 	}
 
 	logOutput := readMockBDLog(t, logPath)
-	if !strings.Contains(logOutput, "show gt-excavation-miner-nux --json") {
+	if !strings.Contains(logOutput, "show gt-mineshaft-miner-nux --json") {
 		t.Fatalf("mock bd log %q missing show call", logOutput)
 	}
-	if !strings.Contains(logOutput, "update gt-excavation-miner-nux") {
+	if !strings.Contains(logOutput, "update gt-mineshaft-miner-nux") {
 		t.Fatalf("mock bd log %q missing update call", logOutput)
 	}
 	// Should NOT use the obsolete bd agent state or bd set-state path
@@ -249,7 +249,7 @@ func TestUpdateAgentState_UsesExplicitBeadsDir(t *testing.T) {
 	installMockBDRequireExplicitBeadsDir(t, targetBeadsDir)
 
 	bd := NewWithBeadsDir(workDir, targetBeadsDir)
-	if err := bd.UpdateAgentState("gt-excavation-miner-nux", "spawning"); err != nil {
+	if err := bd.UpdateAgentState("gt-mineshaft-miner-nux", "spawning"); err != nil {
 		t.Fatalf("UpdateAgentState: %v", err)
 	}
 }
@@ -261,10 +261,10 @@ func TestIsAgentBeadByID(t *testing.T) {
 		want bool
 	}{
 		// Full-form IDs (prefix != rig): prefix-rig-role[-name]
-		{name: "full witness", id: "gt-excavation-witness", want: true},
-		{name: "full refinery", id: "gt-excavation-refinery", want: true},
-		{name: "full crew with name", id: "gt-excavation-crew-krystian", want: true},
-		{name: "full miner with name", id: "gt-excavation-miner-Toast", want: true},
+		{name: "full witness", id: "gt-mineshaft-witness", want: true},
+		{name: "full refinery", id: "gt-mineshaft-refinery", want: true},
+		{name: "full crew with name", id: "gt-mineshaft-crew-krystian", want: true},
+		{name: "full miner with name", id: "gt-mineshaft-miner-Toast", want: true},
 		{name: "full supervisor", id: "sh-shippercrm-supervisor", want: true},
 		{name: "full overseer", id: "ax-axon-overseer", want: true},
 
@@ -491,7 +491,7 @@ func TestCreateOrReopenAgentBeadExistingUsesTownBeadsDir(t *testing.T) {
 
 	townRoot, _ := filepath.EvalSymlinks(t.TempDir())
 	townBeadsDir := filepath.Join(townRoot, ".beads")
-	rigDir := filepath.Join(townRoot, "excavation", "overseer", "rig")
+	rigDir := filepath.Join(townRoot, "mineshaft", "overseer", "rig")
 	rigBeadsDir := filepath.Join(rigDir, ".beads")
 	for _, dir := range []string{filepath.Join(townRoot, "overseer"), townBeadsDir, rigBeadsDir} {
 		if err := os.MkdirAll(dir, 0755); err != nil {
@@ -501,7 +501,7 @@ func TestCreateOrReopenAgentBeadExistingUsesTownBeadsDir(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"name":"test"}`), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := WriteRoutes(townBeadsDir, []Route{{Prefix: "hq-", Path: "."}, {Prefix: "gt-", Path: "excavation/overseer/rig"}}); err != nil {
+	if err := WriteRoutes(townBeadsDir, []Route{{Prefix: "hq-", Path: "."}, {Prefix: "gt-", Path: "mineshaft/overseer/rig"}}); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(townBeadsDir, ".gt-types-configured"), []byte("v1\n"), 0644); err != nil {
@@ -534,7 +534,7 @@ case "$cmd" in
     exit 1
     ;;
   show)
-    printf '%%s\n' '[{"id":"gt-excavation-miner-rust","title":"old","issue_type":"task","labels":["gt:agent"],"status":"open","description":"role_type: miner\nrig: excavation\nagent_state: idle\nhook_bead: old"}]'
+    printf '%%s\n' '[{"id":"gt-mineshaft-miner-rust","title":"old","issue_type":"task","labels":["gt:agent"],"status":"open","description":"role_type: miner\nrig: mineshaft\nagent_state: idle\nhook_bead: old"}]'
     exit 0
     ;;
   *)
@@ -548,9 +548,9 @@ esac
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
 	bd := NewWithBeadsDir(rigDir, rigBeadsDir)
-	if _, err := bd.CreateOrReopenAgentBead("gt-excavation-miner-rust", "gt-excavation-miner-rust", &AgentFields{
+	if _, err := bd.CreateOrReopenAgentBead("gt-mineshaft-miner-rust", "gt-mineshaft-miner-rust", &AgentFields{
 		RoleType:   "miner",
-		Rig:        "excavation",
+		Rig:        "mineshaft",
 		AgentState: "spawning",
 	}); err != nil {
 		t.Fatalf("CreateOrReopenAgentBead: %v", err)

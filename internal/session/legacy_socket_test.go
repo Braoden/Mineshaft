@@ -53,7 +53,7 @@ func setupLegacyHooks(t *testing.T, currentSocket string, mock *mockLegacyTmux) 
 	legacyTmuxForTest = func(socket string) legacySocketTmux { return mock }
 
 	r := NewPrefixRegistry()
-	r.Register("ga", "excavation")
+	r.Register("ga", "mineshaft")
 	SetDefaultRegistry(r)
 }
 
@@ -77,7 +77,7 @@ func TestCleanupLegacyDefaultSocketSkipsWhenSocketIsDefault(t *testing.T) {
 	}
 }
 
-func TestCleanupLegacyDefaultSocketCleansExcavationSessions(t *testing.T) {
+func TestCleanupLegacyDefaultSocketCleansMineshaftSessions(t *testing.T) {
 	mock := &mockLegacyTmux{
 		sessions: []string{"ga-witness", "hq-overseer"},
 	}
@@ -98,7 +98,7 @@ func TestCleanupLegacyDefaultSocketCleansExcavationSessions(t *testing.T) {
 	}
 }
 
-func TestCleanupLegacyDefaultSocketIgnoresNonExcavationSessions(t *testing.T) {
+func TestCleanupLegacyDefaultSocketIgnoresNonMineshaftSessions(t *testing.T) {
 	mock := &mockLegacyTmux{
 		sessions: []string{"personal-stuff", "hq-notes", "ga-witness"},
 	}
@@ -155,7 +155,7 @@ func TestCountLegacyDefaultSocketSkipsWhenOnDefault(t *testing.T) {
 	}
 }
 
-func TestCountLegacyDefaultSocketCountsExcavationOnly(t *testing.T) {
+func TestCountLegacyDefaultSocketCountsMineshaftOnly(t *testing.T) {
 	mock := &mockLegacyTmux{
 		sessions: []string{"ga-witness", "personal", "hq-notes"},
 	}

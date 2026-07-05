@@ -20,14 +20,14 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	minecartops "github.com/steveyegge/excavation/internal/minecart"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/tui/minecart"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	minecartops "github.com/steveyegge/mineshaft/internal/minecart"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/tui/minecart"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var minecartIDEntropy io.Reader = rand.Reader
@@ -192,7 +192,7 @@ you can see when it lands and what was included.
 
 WHAT IS A MINECART:
   - Persistent tracking unit with an ID (hq-*)
-  - Tracks issues across rigs (frontend+backend, beads+excavation, etc.)
+  - Tracks issues across rigs (frontend+backend, beads+mineshaft, etc.)
   - Auto-closes when all tracked issues complete → notifies subscribers
   - Can be reopened by adding more issues
 
@@ -443,7 +443,7 @@ func init() {
 func getTownBeadsDir() (string, error) {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return "", fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return "", fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 	return townRoot, nil
 }
@@ -1406,7 +1406,7 @@ func runMinecartLand(cmd *cobra.Command, args []string) error {
 
 // minecartWorktreeInfo holds info about a miner worktree to clean up.
 type minecartWorktreeInfo struct {
-	rigName     string // e.g., "excavation"
+	rigName     string // e.g., "mineshaft"
 	minerName string // e.g., "rictus"
 	townRoot    string // workspace root
 }
@@ -2054,7 +2054,7 @@ func runMinecartStatus(cmd *cobra.Command, args []string) error {
 				status = "?"
 			}
 
-			// Show assignee in brackets (extract short name from path like excavation/miners/goose -> goose)
+			// Show assignee in brackets (extract short name from path like mineshaft/miners/goose -> goose)
 			bracketContent := t.IssueType
 			if t.Assignee != "" {
 				parts := strings.Split(t.Assignee, "/")
@@ -2384,9 +2384,9 @@ type trackedIssueInfo struct {
 	Type      string   `json:"dependency_type"`
 	IssueType string   `json:"issue_type"`
 	Blocked   bool     `json:"blocked,omitempty"`    // True if issue currently has blockers
-	Assignee  string   `json:"assignee,omitempty"`   // Assigned agent (e.g., excavation/miners/goose)
+	Assignee  string   `json:"assignee,omitempty"`   // Assigned agent (e.g., mineshaft/miners/goose)
 	Labels    []string `json:"labels,omitempty"`     // Bead labels (propagated from trackedDependency)
-	Worker    string   `json:"worker,omitempty"`     // Worker currently assigned (e.g., excavation/nux)
+	Worker    string   `json:"worker,omitempty"`     // Worker currently assigned (e.g., mineshaft/nux)
 	WorkerAge string   `json:"worker_age,omitempty"` // How long worker has been on this issue
 }
 
@@ -2705,7 +2705,7 @@ func issueToDetails(issue *beads.Issue) *issueDetails {
 
 // workerInfo holds info about a worker assigned to an issue.
 type workerInfo struct {
-	Worker string // Agent identity (e.g., excavation/nux)
+	Worker string // Agent identity (e.g., mineshaft/nux)
 	Age    string // How long assigned (e.g., "12m")
 }
 
@@ -2827,7 +2827,7 @@ func getWorkersForIssues(issueIDs []string) map[string]*workerInfo {
 }
 
 // parseWorkerFromAgentBead extracts worker identity from agent bead ID.
-// Input: "gt-excavation-miner-nux" -> Output: "excavation/miner/nux"
+// Input: "gt-mineshaft-miner-nux" -> Output: "mineshaft/miner/nux"
 // Input: "gt-beads-crew-amber" -> Output: "beads/crew/amber"
 func parseWorkerFromAgentBead(agentID string) string {
 	rig, role, name, ok := beads.ParseAgentBeadID(agentID)

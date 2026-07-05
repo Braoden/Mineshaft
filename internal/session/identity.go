@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Role represents the type of Excavation Site agent.
+// Role represents the type of Mineshaft agent.
 type Role string
 
 const (
@@ -20,7 +20,7 @@ const (
 	RoleDog      Role = "dog"
 )
 
-// AgentIdentity represents a parsed Excavation Site agent identity.
+// AgentIdentity represents a parsed Mineshaft agent identity.
 type AgentIdentity struct {
 	Role   Role   // overseer, supervisor, witness, refinery, crew, miner, dog
 	Rig    string // rig name (empty for overseer/supervisor/dog)
@@ -89,12 +89,12 @@ func ParseAddress(address string) (*AgentIdentity, error) {
 //   - hq-overseer → Role: overseer (town-level, one per machine)
 //   - hq-supervisor → Role: supervisor (town-level, one per machine)
 //   - hq-boot → Role: supervisor, Name: boot (boot watchdog)
-//   - <prefix>-witness → Role: witness (e.g., gt-witness for excavation)
-//   - <prefix>-refinery → Role: refinery (e.g., gt-refinery for excavation)
-//   - <prefix>-crew-<name> → Role: crew (e.g., gt-crew-max for excavation)
-//   - <prefix>-<name> → Role: miner (e.g., gt-furiosa for excavation)
+//   - <prefix>-witness → Role: witness (e.g., gt-witness for mineshaft)
+//   - <prefix>-refinery → Role: refinery (e.g., gt-refinery for mineshaft)
+//   - <prefix>-crew-<name> → Role: crew (e.g., gt-crew-max for mineshaft)
+//   - <prefix>-<name> → Role: miner (e.g., gt-furiosa for mineshaft)
 //
-// The prefix is the rig's beads prefix (e.g., "gt" for excavation, "dolt" for beads).
+// The prefix is the rig's beads prefix (e.g., "gt" for mineshaft, "dolt" for beads).
 // The rig name is resolved from the default PrefixRegistry. If the prefix is
 // not in the registry, the prefix itself is used as the rig name.
 func ParseSessionName(session string) (*AgentIdentity, error) {
@@ -217,9 +217,9 @@ func (a *AgentIdentity) prefix() string {
 // Examples:
 //   - overseer → "overseer"
 //   - supervisor → "supervisor"
-//   - witness → "witness (rig: excavation)"
-//   - crew → "crew max (rig: excavation)"
-//   - miner → "miner Toast (rig: excavation)"
+//   - witness → "witness (rig: mineshaft)"
+//   - crew → "crew max (rig: mineshaft)"
+//   - miner → "miner Toast (rig: mineshaft)"
 func (a *AgentIdentity) BeaconAddress() string {
 	switch a.Role {
 	case RoleOverseer:
@@ -247,10 +247,10 @@ func (a *AgentIdentity) BeaconAddress() string {
 // Examples:
 //   - overseer → "overseer"
 //   - supervisor → "supervisor"
-//   - witness → "excavation/witness"
-//   - refinery → "excavation/refinery"
-//   - crew → "excavation/crew/max"
-//   - miner → "excavation/miners/Toast"
+//   - witness → "mineshaft/witness"
+//   - refinery → "mineshaft/refinery"
+//   - crew → "mineshaft/crew/max"
+//   - miner → "mineshaft/miners/Toast"
 func (a *AgentIdentity) Address() string {
 	switch a.Role {
 	case RoleOverseer:

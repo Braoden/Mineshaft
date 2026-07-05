@@ -10,26 +10,26 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/doltserver"
-	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/doltserver"
+	"github.com/steveyegge/mineshaft/internal/rig"
 )
 
 func TestAgentStartResult_Fields(t *testing.T) {
 	result := agentStartResult{
-		name:   "Witness (excavation)",
+		name:   "Witness (mineshaft)",
 		ok:     true,
-		detail: "gt-excavation-witness",
+		detail: "gt-mineshaft-witness",
 	}
 
-	if result.name != "Witness (excavation)" {
-		t.Errorf("name = %q, want %q", result.name, "Witness (excavation)")
+	if result.name != "Witness (mineshaft)" {
+		t.Errorf("name = %q, want %q", result.name, "Witness (mineshaft)")
 	}
 	if !result.ok {
 		t.Error("ok should be true")
 	}
-	if result.detail != "gt-excavation-witness" {
-		t.Errorf("detail = %q, want %q", result.detail, "gt-excavation-witness")
+	if result.detail != "gt-mineshaft-witness" {
+		t.Errorf("detail = %q, want %q", result.detail, "gt-mineshaft-witness")
 	}
 }
 

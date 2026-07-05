@@ -8,10 +8,10 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/doltserver"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/wasteland"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/doltserver"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/wasteland"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var (
@@ -35,7 +35,7 @@ to cloning the upstream commons temporarily.
 
 EXAMPLES:
   gt wl browse                          # All open wanted items
-  gt wl browse --project excavation        # Filter by project
+  gt wl browse --project mineshaft        # Filter by project
   gt wl browse --type bug               # Only bugs
   gt wl browse --status claimed         # Claimed items
   gt wl browse --priority 0             # Critical priority only
@@ -44,7 +44,7 @@ EXAMPLES:
 }
 
 func init() {
-	wlBrowseCmd.Flags().StringVar(&wlBrowseProject, "project", "", "Filter by project (e.g., excavation, beads, hop)")
+	wlBrowseCmd.Flags().StringVar(&wlBrowseProject, "project", "", "Filter by project (e.g., mineshaft, beads, hop)")
 	wlBrowseCmd.Flags().StringVar(&wlBrowseStatus, "status", "open", "Filter by status (open, claimed, in_review, completed, withdrawn)")
 	wlBrowseCmd.Flags().StringVar(&wlBrowseType, "type", "", "Filter by type (feature, bug, design, rfc, docs)")
 	wlBrowseCmd.Flags().IntVar(&wlBrowsePriority, "priority", -1, "Filter by priority (0=critical, 2=medium, 4=backlog)")
@@ -57,7 +57,7 @@ func init() {
 func runWLBrowse(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Fast path: query through the Dolt server if the database is registered.

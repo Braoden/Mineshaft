@@ -1,7 +1,7 @@
 {
-  "name": "@excavation/gt",
+  "name": "@mineshaft/gt",
   "version": "1.2.1",
-  "description": "Excavation Site CLI - multi-agent workspace manager with native binary support",
+  "description": "Mineshaft CLI - multi-agent workspace manager with native binary support",
   "main": "bin/gt.js",
   "bin": {
     "gt": "bin/gt.js"
@@ -23,13 +23,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/excavationhall/excavation.git",
+    "url": "https://github.com/mineshafthall/mineshaft.git",
     "directory": "npm-package"
   },
   "bugs": {
-    "url": "https://github.com/excavationhall/excavation/issues"
+    "url": "https://github.com/mineshafthall/mineshaft/issues"
   },
-  "homepage": "https://github.com/excavationhall/excavation#readme",
+  "homepage": "https://github.com/mineshafthall/mineshaft#readme",
   "engines": {
     "node": ">=14.0.0"
   },

@@ -168,7 +168,7 @@ func TestIsSlingableBead(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	routesContent := `{"prefix": "gt-", "path": "excavation/overseer/rig"}
+	routesContent := `{"prefix": "gt-", "path": "mineshaft/overseer/rig"}
 {"prefix": "bd-", "path": "beads/overseer/rig"}
 {"prefix": "hq-", "path": "."}
 `

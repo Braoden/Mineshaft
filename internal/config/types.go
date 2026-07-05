@@ -1,4 +1,4 @@
-// Package config provides configuration types and serialization for Excavation Site.
+// Package config provides configuration types and serialization for Mineshaft.
 package config
 
 import (
@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/scheduler/capacity"
+	"github.com/steveyegge/mineshaft/internal/scheduler/capacity"
 )
 
 // TownConfig represents the main town identity (overseer/town.json).
@@ -75,8 +75,8 @@ type TownSettings struct {
 	CrewAgents map[string]string `json:"crew_agents,omitempty"`
 
 	// AgentEmailDomain is the domain used for agent git identity emails.
-	// Agent addresses like "excavation/crew/jack" become "excavation.crew.jack@{domain}".
-	// Default: "excavation.local"
+	// Agent addresses like "mineshaft/crew/jack" become "mineshaft.crew.jack@{domain}".
+	// Default: "mineshaft.local"
 	AgentEmailDomain string `json:"agent_email_domain,omitempty"`
 
 	// WebTimeouts configures command execution timeouts for the web dashboard.
@@ -774,8 +774,8 @@ type RuntimeConfig struct {
 
 	// ExecWrapper is a command prefix inserted between environment variables
 	// and the agent binary in the startup command. Used for sandboxed execution.
-	// Example: ["exitbox", "run", "--profile=excavation-miner", "--"]
-	// Produces: exec env VAR=val ... exitbox run --profile=excavation-miner -- claude ...
+	// Example: ["exitbox", "run", "--profile=mineshaft-miner", "--"]
+	// Produces: exec env VAR=val ... exitbox run --profile=mineshaft-miner -- claude ...
 	ExecWrapper []string `json:"exec_wrapper,omitempty"`
 
 	// ResolvedAgent is the agent name that was resolved during config lookup.
@@ -785,7 +785,7 @@ type RuntimeConfig struct {
 	ResolvedAgent string `json:"-"`
 }
 
-// RuntimeSessionConfig configures how Excavation Site discovers runtime session IDs.
+// RuntimeSessionConfig configures how Mineshaft discovers runtime session IDs.
 type RuntimeSessionConfig struct {
 	// SessionIDEnv is the environment variable set by the runtime to identify a session.
 	// Default: "CLAUDE_SESSION_ID" for claude, empty for codex/generic.
@@ -808,7 +808,7 @@ type RuntimeHooksConfig struct {
 	SettingsFile string `json:"settings_file,omitempty"`
 
 	// Informational indicates the hooks provider installs instructions files only,
-	// not executable lifecycle hooks. When true, Excavation Site sends startup fallback
+	// not executable lifecycle hooks. When true, Mineshaft sends startup fallback
 	// commands (gt prime) via nudge since hooks won't run automatically.
 	// Defaults to false (backwards compatible with claude/opencode which have real hooks).
 	Informational bool `json:"informational,omitempty"`
@@ -1156,7 +1156,7 @@ func defaultHooksFile(provider string) string {
 }
 
 // defaultHooksInformational returns true for providers whose hooks are instructions
-// files only (not executable lifecycle hooks). For these providers, Excavation Site sends
+// files only (not executable lifecycle hooks). For these providers, Mineshaft sends
 // startup fallback commands (gt prime) via nudge since hooks won't auto-run.
 func defaultHooksInformational(provider string) bool {
 	if preset := GetAgentPresetByName(provider); preset != nil {
@@ -1527,7 +1527,7 @@ func DefaultNamepoolConfig() *NamepoolConfig {
 }
 
 // AccountsConfig represents Claude Code account configuration (overseer/accounts.json).
-// This enables Excavation Site to manage multiple Claude Code accounts with easy switching.
+// This enables Mineshaft to manage multiple Claude Code accounts with easy switching.
 type AccountsConfig struct {
 	Version  int                `json:"version"`  // schema version
 	Accounts map[string]Account `json:"accounts"` // handle -> account details
@@ -1604,12 +1604,12 @@ type MessagingConfig struct {
 
 	// Lists are static mailing lists. Messages are fanned out to all recipients.
 	// Each recipient gets their own copy of the message.
-	// Example: {"oncall": ["overseer/", "excavation/witness"]}
+	// Example: {"oncall": ["overseer/", "mineshaft/witness"]}
 	Lists map[string][]string `json:"lists,omitempty"`
 
 	// Queues are shared work queues. Only one copy exists; workers claim messages.
 	// Messages sit in the queue until explicitly claimed by a worker.
-	// Example: {"work/excavation": ["excavation/miners/*"]}
+	// Example: {"work/mineshaft": ["mineshaft/miners/*"]}
 	Queues map[string]QueueConfig `json:"queues,omitempty"`
 
 	// Announces are bulletin boards. One copy exists; anyone can read, no claiming.
@@ -1619,14 +1619,14 @@ type MessagingConfig struct {
 
 	// NudgeChannels are named groups for real-time nudge fan-out.
 	// Like mailing lists but for tmux send-keys instead of durable mail.
-	// Example: {"workers": ["excavation/miners/*", "excavation/crew/*"], "witnesses": ["*/witness"]}
+	// Example: {"workers": ["mineshaft/miners/*", "mineshaft/crew/*"], "witnesses": ["*/witness"]}
 	NudgeChannels map[string][]string `json:"nudge_channels,omitempty"`
 }
 
 // QueueConfig represents a work queue configuration.
 type QueueConfig struct {
 	// Workers lists addresses eligible to claim from this queue.
-	// Supports wildcards: "excavation/miners/*" matches all miners in excavation.
+	// Supports wildcards: "mineshaft/miners/*" matches all miners in mineshaft.
 	Workers []string `json:"workers"`
 
 	// MaxClaims is the maximum number of concurrent claims (0 = unlimited).
@@ -1636,7 +1636,7 @@ type QueueConfig struct {
 // AnnounceConfig represents a bulletin board configuration.
 type AnnounceConfig struct {
 	// Readers lists addresses eligible to read from this announce channel.
-	// Supports @group syntax: "@town", "@rig/excavation", "@witnesses".
+	// Supports @group syntax: "@town", "@rig/mineshaft", "@witnesses".
 	Readers []string `json:"readers"`
 
 	// RetainCount is the number of messages to retain (0 = unlimited).

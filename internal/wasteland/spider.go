@@ -22,7 +22,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // FraudSignalKind identifies the category of suspicious behavior detected.

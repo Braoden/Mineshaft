@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/events"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/townlog"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/events"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/townlog"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // Log command flags
@@ -33,7 +33,7 @@ var logCmd = &cobra.Command{
 	Use:     "log",
 	GroupID: GroupDiag,
 	Short:   "View town activity log",
-	Long: `View the centralized log of Excavation Site agent lifecycle events.
+	Long: `View the centralized log of Mineshaft agent lifecycle events.
 
 Events logged include:
   spawn   - new agent created
@@ -48,7 +48,7 @@ Examples:
   gt log                     # Show last 20 events
   gt log -n 50               # Show last 50 events
   gt log --type spawn        # Show only spawn events
-  gt log --agent greenplace/    # Show events for excavation rig
+  gt log --agent greenplace/    # Show events for mineshaft rig
   gt log --since 1h          # Show events from last hour
   gt log -f                  # Follow log (like tail -f)`,
 	RunE: runLog,
@@ -74,7 +74,7 @@ Examples:
 func init() {
 	logCmd.Flags().IntVarP(&logTail, "tail", "n", 20, "Number of events to show")
 	logCmd.Flags().StringVarP(&logType, "type", "t", "", "Filter by event type (spawn,wake,nudge,handoff,done,crash,kill)")
-	logCmd.Flags().StringVarP(&logAgent, "agent", "a", "", "Filter by agent prefix (e.g., excavation/, greenplace/crew/max)")
+	logCmd.Flags().StringVarP(&logAgent, "agent", "a", "", "Filter by agent prefix (e.g., mineshaft/, greenplace/crew/max)")
 	logCmd.Flags().StringVar(&logSince, "since", "", "Show events since duration (e.g., 1h, 30m, 24h)")
 	logCmd.Flags().BoolVarP(&logFollow, "follow", "f", false, "Follow log output (like tail -f)")
 	logCmd.Flags().BoolVar(&logAcp, "acp", false, "View ACP debug logs (requires GT_ACP_DEBUG=1)")
@@ -92,7 +92,7 @@ func init() {
 func runLog(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Handle --acp flag to view ACP debug logs

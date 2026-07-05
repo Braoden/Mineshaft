@@ -103,10 +103,10 @@ func TestCreateOptionsRig(t *testing.T) {
 		Title:     "Merge: hq-abc",
 		Labels:    []string{"gt:merge-request"},
 		Ephemeral: true,
-		Rig:       "excavation",
+		Rig:       "mineshaft",
 	}
-	if opts.Rig != "excavation" {
-		t.Errorf("Rig = %q, want %q", opts.Rig, "excavation")
+	if opts.Rig != "mineshaft" {
+		t.Errorf("Rig = %q, want %q", opts.Rig, "mineshaft")
 	}
 
 	// Zero value: Rig is empty string (no --repo flag passed).
@@ -212,7 +212,7 @@ func TestBuildPinnedBDEnvFollowsRedirectBeforeMetadata(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(rigBeadsDir, "metadata.json"), []byte(`{"dolt_database":"hq","dolt_server_host":"wrong-host","dolt_server_port":9999}`), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(canonicalBeadsDir, "metadata.json"), []byte(`{"dolt_database":"excavation","dolt_server_host":"127.0.0.2","dolt_server_port":4407}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(canonicalBeadsDir, "metadata.json"), []byte(`{"dolt_database":"mineshaft","dolt_server_host":"127.0.0.2","dolt_server_port":4407}`), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -227,8 +227,8 @@ func TestBuildPinnedBDEnvFollowsRedirectBeforeMetadata(t *testing.T) {
 	if got["BEADS_DIR"] != canonicalBeadsDir {
 		t.Fatalf("BEADS_DIR = %q, want canonical %q in %v", got["BEADS_DIR"], canonicalBeadsDir, env)
 	}
-	if got["BEADS_DOLT_SERVER_DATABASE"] != "excavation" {
-		t.Fatalf("BEADS_DOLT_SERVER_DATABASE = %q, want excavation in %v", got["BEADS_DOLT_SERVER_DATABASE"], env)
+	if got["BEADS_DOLT_SERVER_DATABASE"] != "mineshaft" {
+		t.Fatalf("BEADS_DOLT_SERVER_DATABASE = %q, want mineshaft in %v", got["BEADS_DOLT_SERVER_DATABASE"], env)
 	}
 	if got["BEADS_DOLT_SERVER_HOST"] != "127.0.0.2" || got["BEADS_DOLT_SERVER_PORT"] != "4407" || got["BEADS_DOLT_PORT"] != "4407" {
 		t.Fatalf("connection env used stale redirect metadata: %v", env)
@@ -571,8 +571,8 @@ func TestDeleteBeadsUseSupportedBdDeleteFlags(t *testing.T) {
 		},
 		{
 			name:   "rig",
-			delete: func() error { return b.DeleteRigBead("excavation") },
-			want:   "delete gt-rig-excavation --force",
+			delete: func() error { return b.DeleteRigBead("mineshaft") },
+			want:   "delete gt-rig-mineshaft --force",
 		},
 	}
 
@@ -632,7 +632,7 @@ func TestArgsAreReadOnlyFailsClosedForMutations(t *testing.T) {
 	cases := [][]string{
 		{"--db", "hq", "show", "gt-123"},
 		{"--directory", "/tmp", "list"},
-		{"--repo", "excavation", "show", "gt-123"},
+		{"--repo", "mineshaft", "show", "gt-123"},
 		{"--unknown", "show", "gt-123"},
 		{"update", "gt-123", "--status=open"},
 		{"close", "gt-123"},
@@ -1093,7 +1093,7 @@ func TestCreateWithUnknownRigErrors(t *testing.T) {
 		t.Fatalf("write routes: %v", err)
 	}
 
-	workerDir := filepath.Join(townRoot, "excavation", "miners", "rust")
+	workerDir := filepath.Join(townRoot, "mineshaft", "miners", "rust")
 	if err := os.MkdirAll(workerDir, 0755); err != nil {
 		t.Fatalf("mkdir worker: %v", err)
 	}
@@ -1735,7 +1735,7 @@ func TestParseMRFields(t *testing.T) {
 target: main
 source_issue: gt-xyz
 worker: Nux
-rig: excavation
+rig: mineshaft
 merge_commit: abc123def
 close_reason: merged`,
 			},
@@ -1744,7 +1744,7 @@ close_reason: merged`,
 				Target:      "main",
 				SourceIssue: "gt-xyz",
 				Worker:      "Nux",
-				Rig:         "excavation",
+				Rig:         "mineshaft",
 				MergeCommit: "abc123def",
 				CloseReason: "merged",
 			},
@@ -1804,13 +1804,13 @@ merge-commit: 789xyz`,
 				Description: `Branch: miner/Furiosa/gt-jkl
 TARGET: main
 Worker: Furiosa
-RIG: excavation`,
+RIG: mineshaft`,
 			},
 			wantFields: &MRFields{
 				Branch: "miner/Furiosa/gt-jkl",
 				Target: "main",
 				Worker: "Furiosa",
-				Rig:    "excavation",
+				Rig:    "mineshaft",
 			},
 		},
 		{
@@ -1844,14 +1844,14 @@ source_issue: gt-pqr`,
 				Description: `branch: miner/nux/es-ixjt@mmw5d6mv
 target: main
 source_issue: es-ixjt
-rig: excavation
+rig: mineshaft
 commit_sha: a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2`,
 			},
 			wantFields: &MRFields{
 				Branch:      "miner/nux/es-ixjt@mmw5d6mv",
 				Target:      "main",
 				SourceIssue: "es-ixjt",
-				Rig:         "excavation",
+				Rig:         "mineshaft",
 				CommitSHA:   "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
 			},
 		},
@@ -1945,7 +1945,7 @@ func TestFormatMRFields(t *testing.T) {
 				Target:      "main",
 				SourceIssue: "gt-xyz",
 				Worker:      "Nux",
-				Rig:         "excavation",
+				Rig:         "mineshaft",
 				MergeCommit: "abc123def",
 				CloseReason: "merged",
 			},
@@ -1953,7 +1953,7 @@ func TestFormatMRFields(t *testing.T) {
 target: main
 source_issue: gt-xyz
 worker: Nux
-rig: excavation
+rig: mineshaft
 merge_commit: abc123def
 close_reason: merged`,
 		},
@@ -1985,13 +1985,13 @@ close_reason: rejected`,
 				Branch:      "miner/nux/es-ixjt@mmw5d6mv",
 				Target:      "main",
 				SourceIssue: "es-ixjt",
-				Rig:         "excavation",
+				Rig:         "mineshaft",
 				CommitSHA:   "a1b2c3d4",
 			},
 			want: `branch: miner/nux/es-ixjt@mmw5d6mv
 target: main
 source_issue: es-ixjt
-rig: excavation
+rig: mineshaft
 commit_sha: a1b2c3d4`,
 		},
 	}
@@ -2123,7 +2123,7 @@ func TestMRFieldsRoundTrip(t *testing.T) {
 		Target:      "main",
 		SourceIssue: "gt-xyz",
 		Worker:      "Nux",
-		Rig:         "excavation",
+		Rig:         "mineshaft",
 		MergeCommit: "abc123def789",
 		CloseReason: "merged",
 	}
@@ -2151,7 +2151,7 @@ func TestParseMRFieldsFromDesignDoc(t *testing.T) {
 target: main
 source_issue: gt-xyz
 worker: Nux
-rig: excavation`
+rig: mineshaft`
 
 	issue := &Issue{Description: description}
 	fields := ParseMRFields(issue)
@@ -2173,8 +2173,8 @@ rig: excavation`
 	if fields.Worker != "Nux" {
 		t.Errorf("Worker = %q, want Nux", fields.Worker)
 	}
-	if fields.Rig != "excavation" {
-		t.Errorf("Rig = %q, want excavation", fields.Rig)
+	if fields.Rig != "mineshaft" {
+		t.Errorf("Rig = %q, want mineshaft", fields.Rig)
 	}
 }
 
@@ -2540,7 +2540,7 @@ func TestNoMergeField(t *testing.T) {
 		original := &AttachmentFields{
 			AttachedMolecule: "mol-test",
 			AttachedAt:       "2026-01-24T12:00:00Z",
-			DispatchedBy:     "excavation/crew/max",
+			DispatchedBy:     "mineshaft/crew/max",
 			NoMerge:          true,
 		}
 
@@ -2643,7 +2643,7 @@ func TestResolveBeadsDir(t *testing.T) {
 	})
 
 	t.Run("absolute path redirect", func(t *testing.T) {
-		// Redirect file contains an absolute path (e.g., /Users/emech/.../excavation/.beads)
+		// Redirect file contains an absolute path (e.g., /Users/emech/.../mineshaft/.beads)
 		// This was the path-doubling bug: filepath.Join(workDir, absPath) produces
 		// workDir/Users/emech/... instead of using absPath directly.
 		workDir := filepath.Join(tmpDir, "miner", "chrome")
@@ -2733,21 +2733,21 @@ func TestParseAgentBeadID(t *testing.T) {
 		{"gt-overseer", "", "overseer", "", true},
 		{"gt-supervisor", "", "supervisor", "", true},
 		// Rig-level singletons
-		{"gt-excavation-witness", "excavation", "witness", "", true},
-		{"gt-excavation-refinery", "excavation", "refinery", "", true},
+		{"gt-mineshaft-witness", "mineshaft", "witness", "", true},
+		{"gt-mineshaft-refinery", "mineshaft", "refinery", "", true},
 		// Rig-level named agents
-		{"gt-excavation-crew-joe", "excavation", "crew", "joe", true},
-		{"gt-excavation-crew-max", "excavation", "crew", "max", true},
-		{"gt-excavation-miner-capable", "excavation", "miner", "capable", true},
+		{"gt-mineshaft-crew-joe", "mineshaft", "crew", "joe", true},
+		{"gt-mineshaft-crew-max", "mineshaft", "crew", "max", true},
+		{"gt-mineshaft-miner-capable", "mineshaft", "miner", "capable", true},
 		// Names with hyphens
-		{"gt-excavation-miner-my-agent", "excavation", "miner", "my-agent", true},
+		{"gt-mineshaft-miner-my-agent", "mineshaft", "miner", "my-agent", true},
 		// Worker name collides with role keyword
-		{"gt-excavation-miner-witness", "excavation", "miner", "witness", true},
-		{"gt-excavation-miner-refinery", "excavation", "miner", "refinery", true},
-		{"gt-excavation-crew-witness", "excavation", "crew", "witness", true},
-		{"gt-excavation-crew-refinery", "excavation", "crew", "refinery", true},
-		{"gt-excavation-miner-crew", "excavation", "miner", "crew", true},
-		{"gt-excavation-crew-miner", "excavation", "crew", "miner", true},
+		{"gt-mineshaft-miner-witness", "mineshaft", "miner", "witness", true},
+		{"gt-mineshaft-miner-refinery", "mineshaft", "miner", "refinery", true},
+		{"gt-mineshaft-crew-witness", "mineshaft", "crew", "witness", true},
+		{"gt-mineshaft-crew-refinery", "mineshaft", "crew", "refinery", true},
+		{"gt-mineshaft-miner-crew", "mineshaft", "miner", "crew", true},
+		{"gt-mineshaft-crew-miner", "mineshaft", "crew", "miner", true},
 		// Worker name collides with role keyword + hyphenated rig
 		{"gt-my-rig-miner-witness", "my-rig", "miner", "witness", true},
 		// Collapsed form: prefix == rig (e.g., rig "ff" with prefix "ff")
@@ -2797,10 +2797,10 @@ func TestIsAgentSessionBead(t *testing.T) {
 		// Agent session beads with gt- prefix (should return true)
 		{"gt-overseer", true},
 		{"gt-supervisor", true},
-		{"gt-excavation-witness", true},
-		{"gt-excavation-refinery", true},
-		{"gt-excavation-crew-joe", true},
-		{"gt-excavation-miner-capable", true},
+		{"gt-mineshaft-witness", true},
+		{"gt-mineshaft-refinery", true},
+		{"gt-mineshaft-crew-joe", true},
+		{"gt-mineshaft-miner-capable", true},
 		// Agent session beads with bd- prefix (should return true)
 		{"bd-overseer", true},
 		{"bd-supervisor", true},
@@ -2979,7 +2979,7 @@ func TestExpandRolePattern(t *testing.T) {
 		{
 			pattern:  "{prefix}-{role}",
 			townRoot: "/Users/stevey/gt",
-			rig:      "excavation",
+			rig:      "mineshaft",
 			role:     "witness",
 			prefix:   "gt",
 			want:     "gt-witness",
@@ -2987,7 +2987,7 @@ func TestExpandRolePattern(t *testing.T) {
 		{
 			pattern:  "{prefix}-{name}",
 			townRoot: "/Users/stevey/gt",
-			rig:      "excavation",
+			rig:      "mineshaft",
 			name:     "toast",
 			prefix:   "gt",
 			want:     "gt-toast",
@@ -2995,23 +2995,23 @@ func TestExpandRolePattern(t *testing.T) {
 		{
 			pattern:  "{town}/{rig}/miners/{name}",
 			townRoot: "/Users/stevey/gt",
-			rig:      "excavation",
+			rig:      "mineshaft",
 			name:     "toast",
-			want:     "/Users/stevey/gt/excavation/miners/toast",
+			want:     "/Users/stevey/gt/mineshaft/miners/toast",
 		},
 		{
 			pattern:  "{town}/{rig}/refinery/rig",
 			townRoot: "/Users/stevey/gt",
-			rig:      "excavation",
-			want:     "/Users/stevey/gt/excavation/refinery/rig",
+			rig:      "mineshaft",
+			want:     "/Users/stevey/gt/mineshaft/refinery/rig",
 		},
 		{
 			pattern:  "export GT_ROLE={role} GT_RIG={rig} BD_ACTOR={rig}/miners/{name}",
 			townRoot: "/Users/stevey/gt",
-			rig:      "excavation",
+			rig:      "mineshaft",
 			name:     "toast",
 			role:     "miner",
-			want:     "export GT_ROLE=miner GT_RIG=excavation BD_ACTOR=excavation/miners/toast",
+			want:     "export GT_ROLE=miner GT_RIG=mineshaft BD_ACTOR=mineshaft/miners/toast",
 		},
 	}
 
@@ -3308,7 +3308,7 @@ func TestDelegationStruct(t *testing.T) {
 			name: "full delegation",
 			delegation: Delegation{
 				Parent:      "hop://accenture.com/eng/proj-123/task-a",
-				Child:       "hop://alice@example.com/main-town/excavation/gt-xyz",
+				Child:       "hop://alice@example.com/main-town/mineshaft/gt-xyz",
 				DelegatedBy: "hop://accenture.com",
 				DelegatedTo: "hop://alice@example.com",
 				Terms: &DelegationTerms{
@@ -3318,7 +3318,7 @@ func TestDelegationStruct(t *testing.T) {
 				},
 				CreatedAt: "2025-01-15T10:00:00Z",
 			},
-			wantJSON: `{"parent":"hop://accenture.com/eng/proj-123/task-a","child":"hop://alice@example.com/main-town/excavation/gt-xyz","delegated_by":"hop://accenture.com","delegated_to":"hop://alice@example.com","terms":{"portion":"backend-api","deadline":"2025-06-01","credit_share":80},"created_at":"2025-01-15T10:00:00Z"}`,
+			wantJSON: `{"parent":"hop://accenture.com/eng/proj-123/task-a","child":"hop://alice@example.com/main-town/mineshaft/gt-xyz","delegated_by":"hop://accenture.com","delegated_to":"hop://alice@example.com","terms":{"portion":"backend-api","deadline":"2025-06-01","credit_share":80},"created_at":"2025-01-15T10:00:00Z"}`,
 		},
 		{
 			name: "minimal delegation",
@@ -4097,7 +4097,7 @@ func TestIsAgentBead(t *testing.T) {
 		{
 			name: "agent with legacy type",
 			issue: &Issue{
-				ID:     "gt-excavation-miner-toast",
+				ID:     "gt-mineshaft-miner-toast",
 				Type:   "agent",
 				Labels: []string{},
 			},
@@ -4106,7 +4106,7 @@ func TestIsAgentBead(t *testing.T) {
 		{
 			name: "agent with gt:agent label",
 			issue: &Issue{
-				ID:     "gt-excavation-miner-toast",
+				ID:     "gt-mineshaft-miner-toast",
 				Type:   "task",
 				Labels: []string{"gt:agent"},
 			},
@@ -4115,7 +4115,7 @@ func TestIsAgentBead(t *testing.T) {
 		{
 			name: "agent with both type and label",
 			issue: &Issue{
-				ID:     "gt-excavation-miner-toast",
+				ID:     "gt-mineshaft-miner-toast",
 				Type:   "agent",
 				Labels: []string{"gt:agent", "other-label"},
 			},
@@ -4142,7 +4142,7 @@ func TestIsAgentBead(t *testing.T) {
 		{
 			name: "agent with gt:agent label and other labels",
 			issue: &Issue{
-				ID:     "gt-excavation-witness",
+				ID:     "gt-mineshaft-witness",
 				Type:   "task",
 				Labels: []string{"priority-high", "gt:agent", "status-running"},
 			},
@@ -4493,7 +4493,7 @@ func TestStripEnvPrefixes_CaseInsensitiveKeys(t *testing.T) {
 // TestFilterBeadsEnv_Integration verifies filterBeadsEnv strips all expected
 // vars from a real os.Environ() with multiple beads vars set.
 func TestFilterBeadsEnv_Integration(t *testing.T) {
-	t.Setenv("BD_ACTOR", "excavation/miners/TestMiner")
+	t.Setenv("BD_ACTOR", "mineshaft/miners/TestMiner")
 	t.Setenv("BEADS_DIR", "/tmp/test-beads")
 	t.Setenv("GT_ROOT", "/tmp/test-gt-root")
 
@@ -4518,7 +4518,7 @@ func TestBdBranch_SystemScenario_FilterBeadsEnvIsolation(t *testing.T) {
 		t.Skip("skipping system test in short mode")
 	}
 
-	t.Setenv("BD_ACTOR", "excavation/miners/FilterTest")
+	t.Setenv("BD_ACTOR", "mineshaft/miners/FilterTest")
 	t.Setenv("BEADS_DIR", "/tmp/filter-test-beads")
 	t.Setenv("GT_ROOT", "/tmp/filter-test-gt")
 
@@ -4728,7 +4728,7 @@ func TestRunEnv_StripsPollutedDoltEnvAndUsesRigMetadata(t *testing.T) {
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	metadata := []byte(`{"backend":"dolt","dolt_mode":"server","dolt_server_host":"127.0.0.1","dolt_server_port":3307,"dolt_database":"excavation"}`)
+	metadata := []byte(`{"backend":"dolt","dolt_mode":"server","dolt_server_host":"127.0.0.1","dolt_server_port":3307,"dolt_database":"mineshaft"}`)
 	if err := os.WriteFile(filepath.Join(beadsDir, "metadata.json"), metadata, 0644); err != nil {
 		t.Fatalf("write metadata.json: %v", err)
 	}
@@ -4798,7 +4798,7 @@ printf 'unknown\n'
 	}
 	for _, want := range []string{
 		"BEADS_DIR=" + beadsDir,
-		"BEADS_DOLT_SERVER_DATABASE=excavation",
+		"BEADS_DOLT_SERVER_DATABASE=mineshaft",
 		"BEADS_DOLT_PORT=3307",
 		"BEADS_DOLT_SERVER_HOST=127.0.0.1",
 	} {

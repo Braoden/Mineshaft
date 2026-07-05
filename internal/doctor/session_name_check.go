@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 // tmuxRenamer is the minimal tmux interface needed by Fix().
@@ -15,7 +15,7 @@ type tmuxRenamer interface {
 	RenameSession(from, to string) error
 }
 
-// MalformedSessionNameCheck detects Excavation Site tmux sessions whose names use the
+// MalformedSessionNameCheck detects Mineshaft tmux sessions whose names use the
 // legacy naming scheme (e.g., "gt-whatsapp_automation-witness") rather than the
 // current short-prefix format (e.g., "wa-witness").
 //
@@ -29,7 +29,7 @@ type tmuxRenamer interface {
 //	{any_prefix}-{registered_rig_name}-{role_suffix}
 //
 // where {registered_rig_name} is a known rig (e.g., "whatsapp_automation") and
-// {role_suffix} is a valid Excavation Site role ("witness", "refinery", "crew-{name}").
+// {role_suffix} is a valid Mineshaft role ("witness", "refinery", "crew-{name}").
 // The canonical name is then: {rig_short_prefix}-{role_suffix}.
 type MalformedSessionNameCheck struct {
 	FixableCheck
@@ -51,7 +51,7 @@ func NewMalformedSessionNameCheck() *MalformedSessionNameCheck {
 		FixableCheck: FixableCheck{
 			BaseCheck: BaseCheck{
 				CheckName:        "session-name-format",
-				CheckDescription: "Detect sessions with outdated Excavation Site naming format",
+				CheckDescription: "Detect sessions with outdated Mineshaft naming format",
 				CheckCategory:    CategoryCleanup,
 			},
 		},
@@ -87,7 +87,7 @@ func (c *MalformedSessionNameCheck) Run(ctx *CheckContext) *CheckResult {
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusOK,
-			Message: "All Excavation Site sessions use current naming format",
+			Message: "All Mineshaft sessions use current naming format",
 		}
 	}
 
@@ -177,7 +177,7 @@ func (c *MalformedSessionNameCheck) Fix(ctx *CheckContext) error {
 }
 
 // knownRoleSuffixes are the simple role keywords that appear at the end of a
-// Excavation Site session name (after the rig prefix).
+// Mineshaft session name (after the rig prefix).
 var knownRoleSuffixes = []string{"witness", "refinery"}
 
 // detectLegacySessionNames scans sessions for the legacy
@@ -195,7 +195,7 @@ func detectLegacySessionNames(sessions []string, reg *session.PrefixRegistry) []
 		return nil
 	}
 
-	// Build set of known Excavation prefixes for ownership gating.
+	// Build set of known Mineshaft prefixes for ownership gating.
 	knownPrefixes := make(map[string]bool)
 	for _, prefix := range rigs {
 		knownPrefixes[prefix] = true
@@ -222,9 +222,9 @@ func detectLegacySessionNames(sessions []string, reg *session.PrefixRegistry) []
 //	{known_prefix}-{rig_name}-{role_suffix}  or  {known_prefix}-{rig_name}-crew-{name}
 //
 // pattern for any known rig, and returns the canonical rename if so.
-// The prefix before the rig name must be a known Excavation prefix to avoid
-// false-positives on non-Excavation sessions (e.g., "my-niflheim-witness")
-// and miner sessions whose names embed rig names (e.g., "gt-fix-excavation-witness").
+// The prefix before the rig name must be a known Mineshaft prefix to avoid
+// false-positives on non-Mineshaft sessions (e.g., "my-niflheim-witness")
+// and miner sessions whose names embed rig names (e.g., "gt-fix-mineshaft-witness").
 func matchLegacyName(sess string, rigs map[string]string, knownPrefixes map[string]bool) (sessionRename, bool) {
 	for rigName, shortPrefix := range rigs {
 		// Look for "-{rigName}-" anywhere in the session name.
@@ -235,7 +235,7 @@ func matchLegacyName(sess string, rigs map[string]string, knownPrefixes map[stri
 		}
 
 		// Ownership guard: the part before the rig name must be a known
-		// Excavation prefix. This prevents matching non-Excavation sessions
+		// Mineshaft prefix. This prevents matching non-Mineshaft sessions
 		// and miner sessions whose names happen to contain a rig name.
 		sessionPrefix := sess[:idx]
 		if !knownPrefixes[sessionPrefix] {
@@ -253,7 +253,7 @@ func matchLegacyName(sess string, rigs map[string]string, knownPrefixes map[stri
 			continue
 		}
 
-		// Validate: must be a known Excavation Site role suffix.
+		// Validate: must be a known Mineshaft role suffix.
 		if !isValidRoleSuffix(roleSuffix) {
 			continue
 		}
@@ -270,7 +270,7 @@ func matchLegacyName(sess string, rigs map[string]string, knownPrefixes map[stri
 	return sessionRename{}, false
 }
 
-// isValidRoleSuffix returns true if suffix is a known Excavation Site role identifier.
+// isValidRoleSuffix returns true if suffix is a known Mineshaft role identifier.
 func isValidRoleSuffix(suffix string) bool {
 	for _, role := range knownRoleSuffixes {
 		if suffix == role {

@@ -3,9 +3,9 @@ package doctor
 import (
 	"fmt"
 
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 // SessionEnvReader abstracts tmux session environment reads for testing.
@@ -77,7 +77,7 @@ func NewEnvVarsCheckWithAccessor(accessor SessionEnvAccessor) *EnvVarsCheck {
 	return c
 }
 
-// Run checks environment variables for all Excavation Site sessions.
+// Run checks environment variables for all Mineshaft sessions.
 func (c *EnvVarsCheck) Run(ctx *CheckContext) *CheckResult {
 	reader := c.reader
 	if reader == nil {
@@ -86,7 +86,7 @@ func (c *EnvVarsCheck) Run(ctx *CheckContext) *CheckResult {
 
 	sessions, err := reader.ListSessions()
 	if err != nil {
-		// No tmux server - treat as success (valid when Excavation Site is down)
+		// No tmux server - treat as success (valid when Mineshaft is down)
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusOK,
@@ -94,7 +94,7 @@ func (c *EnvVarsCheck) Run(ctx *CheckContext) *CheckResult {
 		}
 	}
 
-	// Filter to Excavation Site sessions only (known rig prefixes and hq-*)
+	// Filter to Mineshaft sessions only (known rig prefixes and hq-*)
 	var gtSessions []string
 	for _, sess := range sessions {
 		if session.IsKnownSession(sess) {
@@ -103,11 +103,11 @@ func (c *EnvVarsCheck) Run(ctx *CheckContext) *CheckResult {
 	}
 
 	if len(gtSessions) == 0 {
-		// No Excavation Site sessions - treat as success (valid when Excavation Site is down)
+		// No Mineshaft sessions - treat as success (valid when Mineshaft is down)
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusOK,
-			Message: "No Excavation Site sessions running",
+			Message: "No Mineshaft sessions running",
 		}
 	}
 
@@ -209,7 +209,7 @@ func (c *EnvVarsCheck) Run(ctx *CheckContext) *CheckResult {
 	}
 }
 
-// Fix applies missing or incorrect env vars to all Excavation Site tmux sessions in-place.
+// Fix applies missing or incorrect env vars to all Mineshaft tmux sessions in-place.
 // The running Claude process is unaffected (it already has env vars from startup);
 // this updates the tmux session store so future processes and gt doctor agree.
 func (c *EnvVarsCheck) Fix(ctx *CheckContext) error {

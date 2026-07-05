@@ -173,12 +173,12 @@ For testing the proxy in a containerized environment:
 
 ```bash
 # Build a test container image
-docker build -f Dockerfile.e2e -t excavation-test:latest .
+docker build -f Dockerfile.e2e -t mineshaft-test:latest .
 
 # Run tests in container
 docker run --rm \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  excavation-test:latest \
+  mineshaft-test:latest \
   go test -v ./internal/proxy/...
 ```
 

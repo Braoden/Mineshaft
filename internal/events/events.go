@@ -12,10 +12,10 @@ import (
 	"time"
 
 	"github.com/gofrs/flock"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
-// Event represents an activity event in Excavation Site.
+// Event represents an activity event in Mineshaft.
 type Event struct {
 	Timestamp  string                 `json:"ts"`
 	Source     string                 `json:"source"`
@@ -111,7 +111,7 @@ func write(event Event) error {
 	// Find town root
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil || townRoot == "" {
-		// Silently ignore - we're not in a Excavation Site workspace
+		// Silently ignore - we're not in a Mineshaft workspace
 		return nil
 	}
 
@@ -294,7 +294,7 @@ func HaltPayload(services []string) map[string]interface{} {
 
 // SessionDeathPayload creates a payload for session death events.
 // session: tmux session name that died
-// agent: Excavation Site agent identity (e.g., "excavation/miners/Toast")
+// agent: Mineshaft agent identity (e.g., "mineshaft/miners/Toast")
 // reason: why the session was killed (e.g., "zombie cleanup", "user request", "doctor fix")
 // caller: what initiated the kill (e.g., "daemon", "doctor", "gt down")
 func SessionDeathPayload(session, agent, reason, caller string) map[string]interface{} {
@@ -325,7 +325,7 @@ func MassDeathPayload(count int, window string, sessions []string, possibleCause
 
 // SessionPayload creates a payload for session start/end events.
 // sessionID: Claude Code session UUID
-// role: Excavation Site role (e.g., "excavation/crew/joe", "supervisor")
+// role: Mineshaft role (e.g., "mineshaft/crew/joe", "supervisor")
 // topic: What the session is working on
 // cwd: Working directory
 func SessionPayload(sessionID, role, topic, cwd string) map[string]interface{} {

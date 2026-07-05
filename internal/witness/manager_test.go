@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/rig"
 )
 
 func TestManagerStartForegroundDeprecated(t *testing.T) {
@@ -25,12 +25,12 @@ func TestBuildWitnessStartCommand_UsesRoleConfig(t *testing.T) {
 		StartCommand: "exec run --town {town} --rig {rig} --role {role}",
 	}
 
-	got, err := buildWitnessStartCommand("/town/rig", "excavation", "/town", "", "", roleCfg, "")
+	got, err := buildWitnessStartCommand("/town/rig", "mineshaft", "/town", "", "", roleCfg, "")
 	if err != nil {
 		t.Fatalf("buildWitnessStartCommand: %v", err)
 	}
 
-	want := "exec env -u CLAUDECODE NODE_OPTIONS='' run --town /town --rig excavation --role witness"
+	want := "exec env -u CLAUDECODE NODE_OPTIONS='' run --town /town --rig mineshaft --role witness"
 	if got != want {
 		t.Errorf("buildWitnessStartCommand = %q, want %q", got, want)
 	}
@@ -38,21 +38,21 @@ func TestBuildWitnessStartCommand_UsesRoleConfig(t *testing.T) {
 
 func TestBuildWitnessStartCommand_DefaultsToRuntime(t *testing.T) {
 	t.Parallel()
-	got, err := buildWitnessStartCommand("/town/rig", "excavation", "/town", "", "", nil, "")
+	got, err := buildWitnessStartCommand("/town/rig", "mineshaft", "/town", "", "", nil, "")
 	if err != nil {
 		t.Fatalf("buildWitnessStartCommand: %v", err)
 	}
 
-	if !strings.Contains(got, "GT_ROLE=excavation/witness") {
-		t.Errorf("expected GT_ROLE=excavation/witness in command, got %q", got)
+	if !strings.Contains(got, "GT_ROLE=mineshaft/witness") {
+		t.Errorf("expected GT_ROLE=mineshaft/witness in command, got %q", got)
 	}
-	if !strings.Contains(got, "BD_ACTOR=excavation/witness") {
-		t.Errorf("expected BD_ACTOR=excavation/witness in command, got %q", got)
+	if !strings.Contains(got, "BD_ACTOR=mineshaft/witness") {
+		t.Errorf("expected BD_ACTOR=mineshaft/witness in command, got %q", got)
 	}
 }
 
 // TestRoleConfigEnvVars_ExpandsQualifiedGTRole verifies that the TOML env vars
-// expand GT_ROLE to a qualified value (e.g., "excavation/witness" not "witness").
+// expand GT_ROLE to a qualified value (e.g., "mineshaft/witness" not "witness").
 func TestRoleConfigEnvVars_ExpandsQualifiedGTRole(t *testing.T) {
 	t.Parallel()
 	roleCfg := &beads.RoleConfig{
@@ -62,9 +62,9 @@ func TestRoleConfigEnvVars_ExpandsQualifiedGTRole(t *testing.T) {
 		},
 	}
 
-	got := roleConfigEnvVars(roleCfg, "/town", "excavation")
-	if got["GT_ROLE"] != "excavation/witness" {
-		t.Errorf("GT_ROLE = %q, want %q", got["GT_ROLE"], "excavation/witness")
+	got := roleConfigEnvVars(roleCfg, "/town", "mineshaft")
+	if got["GT_ROLE"] != "mineshaft/witness" {
+		t.Errorf("GT_ROLE = %q, want %q", got["GT_ROLE"], "mineshaft/witness")
 	}
 	if got["GT_SCOPE"] != "rig" {
 		t.Errorf("GT_SCOPE = %q, want %q", got["GT_SCOPE"], "rig")
@@ -74,7 +74,7 @@ func TestRoleConfigEnvVars_ExpandsQualifiedGTRole(t *testing.T) {
 // TestRoleConfigEnvVars_NilConfig verifies nil roleConfig returns nil.
 func TestRoleConfigEnvVars_NilConfig(t *testing.T) {
 	t.Parallel()
-	got := roleConfigEnvVars(nil, "/town", "excavation")
+	got := roleConfigEnvVars(nil, "/town", "mineshaft")
 	if got != nil {
 		t.Errorf("expected nil for nil roleConfig, got %v", got)
 	}
@@ -82,7 +82,7 @@ func TestRoleConfigEnvVars_NilConfig(t *testing.T) {
 
 func TestBuildWitnessStartCommand_IncludesConfigDir(t *testing.T) {
 	t.Parallel()
-	got, err := buildWitnessStartCommand("/town/rig", "excavation", "/town", "", "", nil, "/home/user/.claude-accounts/work")
+	got, err := buildWitnessStartCommand("/town/rig", "mineshaft", "/town", "", "", nil, "/home/user/.claude-accounts/work")
 	if err != nil {
 		t.Fatalf("buildWitnessStartCommand: %v", err)
 	}
@@ -98,14 +98,14 @@ func TestBuildWitnessStartCommand_AgentOverrideWins(t *testing.T) {
 		StartCommand: "exec run --role {role}",
 	}
 
-	got, err := buildWitnessStartCommand("/town/rig", "excavation", "/town", "", "codex", roleCfg, "")
+	got, err := buildWitnessStartCommand("/town/rig", "mineshaft", "/town", "", "codex", roleCfg, "")
 	if err != nil {
 		t.Fatalf("buildWitnessStartCommand: %v", err)
 	}
 	if strings.Contains(got, "exec run") {
 		t.Fatalf("expected agent override to bypass role start_command, got %q", got)
 	}
-	if !strings.Contains(got, "GT_ROLE=excavation/witness") {
-		t.Errorf("expected GT_ROLE=excavation/witness in command, got %q", got)
+	if !strings.Contains(got, "GT_ROLE=mineshaft/witness") {
+		t.Errorf("expected GT_ROLE=mineshaft/witness in command, got %q", got)
 	}
 }

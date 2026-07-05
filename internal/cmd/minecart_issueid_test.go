@@ -3,7 +3,7 @@ package cmd
 import (
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/mineshaft/internal/session"
 )
 
 func TestLooksLikeIssueID(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/beads"
 )
 
 func supervisorReadOnlyRoutingEnv(townRoot string) []string {

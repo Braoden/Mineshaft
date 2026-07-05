@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
 )
 
 // setupTestTown creates a temporary town root with overseer directory.

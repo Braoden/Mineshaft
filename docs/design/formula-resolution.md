@@ -33,7 +33,7 @@ TIER 1: PROJECT (rig-level)
   Location: <project>/.beads/formulas/
   Source:   Committed to project repo
   Use case: Project-specific workflows (deploy, test, release)
-  Example:  ~/gt/excavation/.beads/formulas/mol-excavation-release.formula.toml
+  Example:  ~/gt/mineshaft/.beads/formulas/mol-mineshaft-release.formula.toml
 
 TIER 2: TOWN (user-level)
   Location: ~/gt/.beads/formulas/
@@ -109,14 +109,14 @@ description = "..."
 [formula]
 name = "mol-miner-work"
 version = "4.0.0"                          # Semver
-author = "steve@excavation.io"                # Author identity
+author = "steve@mineshaft.io"                # Author identity
 license = "MIT"
-repository = "https://github.com/steveyegge/excavation"
+repository = "https://github.com/steveyegge/mineshaft"
 
 [formula.registry]
-uri = "hop://molmall.excavation.io/formulas/mol-miner-work@4.0.0"
+uri = "hop://molmall.mineshaft.io/formulas/mol-miner-work@4.0.0"
 checksum = "sha256:abc123..."              # Integrity verification
-signed_by = "steve@excavation.io"             # Optional signing
+signed_by = "steve@mineshaft.io"             # Optional signing
 
 [formula.capabilities]
 # What capabilities does this formula exercise? Used for agent routing.
@@ -139,7 +139,7 @@ bd cook mol-miner-work@latest   # Explicit latest
 
 ### Current State
 
-Crew directories (`excavation/crew/max/`) are git worktrees of the rigged repo. They have:
+Crew directories (`mineshaft/crew/max/`) are git worktrees of the rigged repo. They have:
 - Their own `.beads/formulas/` (from the worktree)
 - These can diverge from `overseer/rig/.beads/formulas/`
 
@@ -185,12 +185,12 @@ bd formula list
 # Show resolution path
 bd formula show mol-miner-work --resolve
   Resolving: mol-miner-work
-  ✓ Found at: ~/gt/excavation/.beads/formulas/mol-miner-work.formula.toml
+  ✓ Found at: ~/gt/mineshaft/.beads/formulas/mol-miner-work.formula.toml
   Tier: project
   Version: 4
 
   Resolution path checked:
-  1. [project] ~/gt/excavation/.beads/formulas/ ← FOUND
+  1. [project] ~/gt/mineshaft/.beads/formulas/ ← FOUND
   2. [town]    ~/gt/.beads/formulas/
   3. [system]  <embedded>
 

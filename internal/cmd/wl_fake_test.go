@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/steveyegge/excavation/internal/doltserver"
+	"github.com/steveyegge/mineshaft/internal/doltserver"
 )
 
 // fakeWLCommonsStore is a local in-memory WLCommonsStore for cmd package tests.

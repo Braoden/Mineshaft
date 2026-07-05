@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/style"
 )
 
 var (
@@ -57,16 +57,16 @@ COMMON LABELS:
 
 EXAMPLES:
   # Check current idle count
-  gt agents state gt-excavation-witness
+  gt agents state gt-mineshaft-witness
 
   # Reset idle counter after finding work
-  gt agents state gt-excavation-witness --set idle=0
+  gt agents state gt-mineshaft-witness --set idle=0
 
   # Increment idle counter on timeout
-  gt agents state gt-excavation-witness --incr idle
+  gt agents state gt-mineshaft-witness --incr idle
 
   # Get state as JSON
-  gt agents state gt-excavation-witness --json`,
+  gt agents state gt-mineshaft-witness --json`,
 	Args: cobra.ExactArgs(1),
 	RunE: runAgentState,
 }

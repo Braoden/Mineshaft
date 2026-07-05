@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/lock"
+	"github.com/steveyegge/mineshaft/internal/lock"
 )
 
 // Issue status constants kept as untyped strings for backward compatibility.

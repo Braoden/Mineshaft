@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/constants"
 )
 
 // Operational constants — timeouts needed to perform checks.

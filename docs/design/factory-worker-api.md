@@ -1,12 +1,12 @@
 # Factory Worker API
 
-Design for the API boundary between Excavation Site and AI agent runtimes.
+Design for the API boundary between Mineshaft and AI agent runtimes.
 
 Ref: gt-5zs8
 
 ## Problem
 
-Excavation Site has no stable interface with AI agents. Every integration is a hack:
+Mineshaft has no stable interface with AI agents. Every integration is a hack:
 
 - **Prompt delivery**: tmux send-keys with 512-byte chunking, ESC+600ms readline
   dance, Enter retries, SIGWINCH wake
@@ -77,7 +77,7 @@ POST /prompt
   "priority": "normal" | "urgent" | "system",
   "source": "nudge" | "mail" | "sling" | "prime",
   "metadata": {
-    "from": "excavation/crew/tom",
+    "from": "mineshaft/crew/tom",
     "bead_id": "gt-abc12"
   }
 }
@@ -134,7 +134,7 @@ POST /authorize
   "input": {"command": "git push --force"},
   "context": {
     "role": "miner",
-    "rig": "excavation",
+    "rig": "mineshaft",
     "bead_id": "gt-abc12"
   }
 }
@@ -202,17 +202,17 @@ POST /identity
 {
   "run_id": "uuid",
   "role": "miner",
-  "rig": "excavation",
+  "rig": "mineshaft",
   "agent_name": "alpha",
-  "session_id": "gt-excavation-alpha",
+  "session_id": "gt-mineshaft-alpha",
   "credentials": {
     "type": "api_key" | "oauth" | "token",
     "value": "sk-ant-...",
     "expires_at": "2026-03-02T00:00:00Z"
   },
   "env": {
-    "GT_ROLE": "excavation/miners/alpha",
-    "BD_ACTOR": "excavation/miners/alpha",
+    "GT_ROLE": "mineshaft/miners/alpha",
+    "BD_ACTOR": "mineshaft/miners/alpha",
     "GT_ROOT": "/Users/stevey/gt"
   }
 }

@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/runtime"
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/runtime"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // Filename is the checkpoint file name within the miner directory.

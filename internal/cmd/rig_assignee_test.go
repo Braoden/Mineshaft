@@ -3,13 +3,13 @@ package cmd
 import (
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/mineshaft/internal/session"
 )
 
 func setupAssigneeTestRegistry(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "excavation")
+	reg.Register("gt", "mineshaft")
 	reg.Register("bd", "beads")
 	reg.Register("st", "schema_tools")
 	old := session.DefaultRegistry()

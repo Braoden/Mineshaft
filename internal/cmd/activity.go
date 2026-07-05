@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/events"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/events"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // Activity emit command flags
@@ -29,7 +29,7 @@ var activityCmd = &cobra.Command{
 	Use:     "activity",
 	GroupID: GroupDiag,
 	Short:   "Emit and view activity events",
-	Long: `Emit and view activity events for the Excavation Site activity feed.
+	Long: `Emit and view activity events for the Mineshaft activity feed.
 
 Events are written to ~/gt/.events.jsonl and can be viewed with 'gt feed'.
 
@@ -40,7 +40,7 @@ Subcommands:
 var activityEmitCmd = &cobra.Command{
 	Use:   "emit <event-type>",
 	Short: "Emit an activity event",
-	Long: `Emit an activity event to the Excavation Site activity feed.
+	Long: `Emit an activity event to the Mineshaft activity feed.
 
 Supported event types for witness patrol:
   patrol_started   - When witness begins patrol cycle
@@ -90,10 +90,10 @@ func init() {
 func runActivityEmit(cmd *cobra.Command, args []string) error {
 	eventType := args[0]
 
-	// Validate we're in a Excavation Site workspace
+	// Validate we're in a Mineshaft workspace
 	_, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Auto-detect actor if not provided

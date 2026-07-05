@@ -158,7 +158,7 @@ func TestFindStrandedMinecarts_MixedMinecarts(t *testing.T) {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 	// Routes needed so isSlingableBead can resolve gt- prefix to a rig
-	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(`{"prefix":"gt-","path":"excavation/overseer/rig"}`+"\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`+"\n"), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
 
@@ -301,7 +301,7 @@ func TestFindStrandedMinecarts_StuckMinecart(t *testing.T) {
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(`{"prefix":"gt-","path":"excavation/overseer/rig"}`+"\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`+"\n"), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
 

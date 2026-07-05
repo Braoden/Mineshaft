@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 func TestParseEtime(t *testing.T) {
@@ -87,7 +87,7 @@ func TestGetProcessCwd(t *testing.T) {
 	}
 }
 
-func TestIsInExcavationWorkspace(t *testing.T) {
+func TestIsInMineshaftWorkspace(t *testing.T) {
 	// NOTE: This test uses os.Chdir on the process-global cwd.
 	// Do NOT add t.Parallel() here or to any test in this file—concurrent
 	// tests sharing the same process would race on the working directory.
@@ -98,7 +98,7 @@ func TestIsInExcavationWorkspace(t *testing.T) {
 	}
 	defer os.Chdir(origDir)
 
-	// Create a temporary directory structure simulating a Excavation Site workspace
+	// Create a temporary directory structure simulating a Mineshaft workspace
 	tmpDir := t.TempDir()
 	overseerDir := filepath.Join(tmpDir, "overseer")
 	if err := os.MkdirAll(overseerDir, 0o755); err != nil {
@@ -117,15 +117,15 @@ func TestIsInExcavationWorkspace(t *testing.T) {
 	}
 
 	// Our process is NOT in the temp workspace, so should return false
-	if isInExcavationWorkspace(os.Getpid()) {
-		t.Error("isInExcavationWorkspace(self) = true, want false (not in a GT workspace)")
+	if isInMineshaftWorkspace(os.Getpid()) {
+		t.Error("isInMineshaftWorkspace(self) = true, want false (not in a GT workspace)")
 	}
 
 	if err := os.Chdir(tmpDir); err != nil {
 		t.Fatal(err)
 	}
-	if !isInExcavationWorkspace(os.Getpid()) {
-		t.Error("isInExcavationWorkspace(self) = false, want true (in GT workspace root)")
+	if !isInMineshaftWorkspace(os.Getpid()) {
+		t.Error("isInMineshaftWorkspace(self) = false, want true (in GT workspace root)")
 	}
 
 	// Test from a subdirectory of the workspace
@@ -136,8 +136,8 @@ func TestIsInExcavationWorkspace(t *testing.T) {
 	if err := os.Chdir(subDir); err != nil {
 		t.Fatal(err)
 	}
-	if !isInExcavationWorkspace(os.Getpid()) {
-		t.Error("isInExcavationWorkspace(self) = false, want true (in GT workspace subdir)")
+	if !isInMineshaftWorkspace(os.Getpid()) {
+		t.Error("isInMineshaftWorkspace(self) = false, want true (in GT workspace subdir)")
 	}
 }
 
@@ -305,7 +305,7 @@ func TestResolveTownRoot(t *testing.T) {
 }
 
 func TestResolveTownRoot_DistinguishesAdjacentTowns(t *testing.T) {
-	// Two sibling towns under the same parent (mirrors ~/excavation and ~/gt-financing)
+	// Two sibling towns under the same parent (mirrors ~/mineshaft and ~/gt-financing)
 	origDir, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
@@ -314,7 +314,7 @@ func TestResolveTownRoot_DistinguishesAdjacentTowns(t *testing.T) {
 
 	parent := realPath(t, t.TempDir())
 
-	townA := filepath.Join(parent, "excavation")
+	townA := filepath.Join(parent, "mineshaft")
 	townB := filepath.Join(parent, "gt-financing")
 	for _, town := range []string{townA, townB} {
 		if err := os.MkdirAll(filepath.Join(town, "overseer"), 0o755); err != nil {

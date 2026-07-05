@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/beads"
 )
 
 type hookShowJSON struct {
@@ -30,7 +30,7 @@ func TestHookShowShorthandResolvesToCanonical(t *testing.T) {
 
 	rigDir := filepath.Join(minerDir, "..", "..", "overseer", "rig")
 	initBeadsDBWithPrefix(t, rigDir, rigPrefix)
-	rigRootBeadsDir := filepath.Join(townRoot, "excavation", ".beads")
+	rigRootBeadsDir := filepath.Join(townRoot, "mineshaft", ".beads")
 	if err := os.MkdirAll(rigRootBeadsDir, 0755); err != nil {
 		t.Fatalf("mkdir stale rig-root beads dir: %v", err)
 	}
@@ -54,7 +54,7 @@ func TestHookShowShorthandResolvesToCanonical(t *testing.T) {
 	}
 
 	hooked := beads.StatusHooked
-	assignee := "excavation/miners/toast"
+	assignee := "mineshaft/miners/toast"
 	if err := b.Update(issue.ID, beads.UpdateOptions{
 		Status:   &hooked,
 		Assignee: &assignee,
@@ -92,27 +92,27 @@ func TestHookShowShorthandResolvesToCanonical(t *testing.T) {
 		return parsed
 	}
 
-	canonical := runShow("excavation/miners/toast")
+	canonical := runShow("mineshaft/miners/toast")
 	if canonical.BeadID != issue.ID || canonical.Status != beads.StatusHooked {
 		t.Fatalf("canonical target mismatch: got bead=%q status=%q, want bead=%q status=%q",
 			canonical.BeadID, canonical.Status, issue.ID, beads.StatusHooked)
 	}
 
-	shorthand := runShow("excavation/toast")
+	shorthand := runShow("mineshaft/toast")
 	if shorthand.BeadID != issue.ID || shorthand.Status != beads.StatusHooked {
 		t.Fatalf("shorthand target mismatch: got bead=%q status=%q, want bead=%q status=%q",
 			shorthand.BeadID, shorthand.Status, issue.ID, beads.StatusHooked)
 	}
-	if shorthand.Agent != "excavation/miners/toast" {
+	if shorthand.Agent != "mineshaft/miners/toast" {
 		t.Fatalf("shorthand target did not normalize: got agent=%q, want %q",
-			shorthand.Agent, "excavation/miners/toast")
+			shorthand.Agent, "mineshaft/miners/toast")
 	}
 
 	inProgress := "in_progress"
 	if err := b.Update(issue.ID, beads.UpdateOptions{Status: &inProgress}); err != nil {
 		t.Fatalf("mark issue in progress: %v", err)
 	}
-	active := runShow("excavation/toast")
+	active := runShow("mineshaft/toast")
 	if active.BeadID != issue.ID || active.Status != "in_progress" {
 		t.Fatalf("in-progress target mismatch: got bead=%q status=%q, want bead=%q status=in_progress",
 			active.BeadID, active.Status, issue.ID)

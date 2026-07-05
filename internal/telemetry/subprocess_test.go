@@ -89,12 +89,12 @@ func TestBuildGTResourceAttrs_WorkContext(t *testing.T) {
 	t.Setenv("BD_ACTOR", "")
 	t.Setenv("GT_MINER", "")
 	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_WORK_RIG", "excavation")
+	t.Setenv("GT_WORK_RIG", "mineshaft")
 	t.Setenv("GT_WORK_BEAD", "sg-05iq")
 	t.Setenv("GT_WORK_MOL", "mol-miner-work")
 
 	result := buildGTResourceAttrs()
-	for _, want := range []string{"gt.work_rig=excavation", "gt.work_bead=sg-05iq", "gt.work_mol=mol-miner-work"} {
+	for _, want := range []string{"gt.work_rig=mineshaft", "gt.work_bead=sg-05iq", "gt.work_mol=mol-miner-work"} {
 		if !strings.Contains(result, want) {
 			t.Errorf("expected %q in result, got %q", want, result)
 		}

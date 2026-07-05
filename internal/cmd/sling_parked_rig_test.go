@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/wisp"
+	"github.com/steveyegge/mineshaft/internal/wisp"
 )
 
 // TestResolveTarget_ParkedRig_InResolveTarget verifies that the parked rig

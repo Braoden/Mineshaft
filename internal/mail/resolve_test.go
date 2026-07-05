@@ -3,7 +3,7 @@ package mail
 import (
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/beads"
 )
 
 func TestMatchPattern(t *testing.T) {
@@ -13,26 +13,26 @@ func TestMatchPattern(t *testing.T) {
 		want    bool
 	}{
 		// Exact matches
-		{"excavation/witness", "excavation/witness", true},
+		{"mineshaft/witness", "mineshaft/witness", true},
 		{"overseer/", "overseer/", true},
 
 		// Wildcard matches
-		{"*/witness", "excavation/witness", true},
+		{"*/witness", "mineshaft/witness", true},
 		{"*/witness", "beads/witness", true},
-		{"excavation/*", "excavation/witness", true},
-		{"excavation/*", "excavation/refinery", true},
-		{"excavation/crew/*", "excavation/crew/max", true},
+		{"mineshaft/*", "mineshaft/witness", true},
+		{"mineshaft/*", "mineshaft/refinery", true},
+		{"mineshaft/crew/*", "mineshaft/crew/max", true},
 
 		// Non-matches
-		{"*/witness", "excavation/refinery", false},
-		{"excavation/*", "beads/witness", false},
-		{"excavation/crew/*", "excavation/miners/Toast", false},
+		{"*/witness", "mineshaft/refinery", false},
+		{"mineshaft/*", "beads/witness", false},
+		{"mineshaft/crew/*", "mineshaft/miners/Toast", false},
 
 		// Different path lengths
-		{"excavation/*", "excavation/crew/max", false},  // * matches single segment
-		{"excavation/*/*", "excavation/crew/max", true}, // Multiple wildcards
-		{"*/*", "excavation/witness", true},          // Both wildcards
-		{"*/*/*", "excavation/crew/max", true},       // Three-level wildcard
+		{"mineshaft/*", "mineshaft/crew/max", false},  // * matches single segment
+		{"mineshaft/*/*", "mineshaft/crew/max", true}, // Multiple wildcards
+		{"*/*", "mineshaft/witness", true},          // Both wildcards
+		{"*/*/*", "mineshaft/crew/max", true},       // Three-level wildcard
 	}
 
 	for _, tt := range tests {
@@ -59,18 +59,18 @@ func TestAgentBeadIDToAddress(t *testing.T) {
 		{"hq-supervisor", "supervisor/"},
 
 		// Rig singletons
-		{"gt-excavation-witness", "excavation/witness"},
-		{"gt-excavation-refinery", "excavation/refinery"},
+		{"gt-mineshaft-witness", "mineshaft/witness"},
+		{"gt-mineshaft-refinery", "mineshaft/refinery"},
 		{"gt-beads-witness", "beads/witness"},
 
 		// Named agents
-		{"gt-excavation-crew-max", "excavation/crew/max"},
-		{"gt-excavation-miner-Toast", "excavation/miners/Toast"},
+		{"gt-mineshaft-crew-max", "mineshaft/crew/max"},
+		{"gt-mineshaft-miner-Toast", "mineshaft/miners/Toast"},
 		{"gt-beads-crew-wolf", "beads/crew/wolf"},
 
 		// Agent with hyphen in name
-		{"gt-excavation-crew-max-v2", "excavation/crew/max-v2"},
-		{"gt-excavation-miner-my-agent", "excavation/miners/my-agent"},
+		{"gt-mineshaft-crew-max-v2", "mineshaft/crew/max-v2"},
+		{"gt-mineshaft-miner-my-agent", "mineshaft/miners/my-agent"},
 
 		// Invalid
 		{"invalid", ""},
@@ -98,8 +98,8 @@ func TestResolverResolve_DirectAddresses(t *testing.T) {
 		wantLen int
 	}{
 		// Direct agent addresses
-		{"direct agent", "excavation/witness", RecipientAgent, 1},
-		{"direct crew", "excavation/crew/max", RecipientAgent, 1},
+		{"direct agent", "mineshaft/witness", RecipientAgent, 1},
+		{"direct crew", "mineshaft/crew/max", RecipientAgent, 1},
 		{"overseer", "overseer/", RecipientAgent, 1},
 
 		// Legacy prefixes (pass-through)
@@ -136,7 +136,7 @@ func TestResolverResolve_AtPatterns(t *testing.T) {
 	}{
 		{"@town"},
 		{"@witnesses"},
-		{"@rig/excavation"},
+		{"@rig/mineshaft"},
 		{"@boss"},
 	}
 
@@ -179,7 +179,7 @@ func TestExpandGroupMembersWithVisited_CycleDetection(t *testing.T) {
 		// Group "A" is already in the visited set — expanding it again should return nil
 		fields := &beads.GroupFields{
 			Name:    "A",
-			Members: []string{"excavation/witness"},
+			Members: []string{"mineshaft/witness"},
 		}
 		visited := map[string]bool{"A": true}
 		got, err := resolver.expandGroupMembersWithVisited(fields, visited)
@@ -194,7 +194,7 @@ func TestExpandGroupMembersWithVisited_CycleDetection(t *testing.T) {
 	t.Run("non-cyclic group expands normally", func(t *testing.T) {
 		fields := &beads.GroupFields{
 			Name:    "ops",
-			Members: []string{"excavation/witness", "excavation/refinery"},
+			Members: []string{"mineshaft/witness", "mineshaft/refinery"},
 		}
 		visited := make(map[string]bool)
 		got, err := resolver.expandGroupMembersWithVisited(fields, visited)
@@ -215,7 +215,7 @@ func TestExpandGroupMembersWithVisited_CycleDetection(t *testing.T) {
 		// but this verifies the visited map is threaded (not recreated).
 		fields := &beads.GroupFields{
 			Name:    "team",
-			Members: []string{"@town", "excavation/witness"},
+			Members: []string{"@town", "mineshaft/witness"},
 		}
 		visited := make(map[string]bool)
 		got, err := resolver.expandGroupMembersWithVisited(fields, visited)
@@ -234,7 +234,7 @@ func TestExpandGroupMembersWithVisited_CycleDetection(t *testing.T) {
 	t.Run("deduplication within group", func(t *testing.T) {
 		fields := &beads.GroupFields{
 			Name:    "dupes",
-			Members: []string{"excavation/witness", "excavation/witness", "excavation/refinery"},
+			Members: []string{"mineshaft/witness", "mineshaft/witness", "mineshaft/refinery"},
 		}
 		visited := make(map[string]bool)
 		got, err := resolver.expandGroupMembersWithVisited(fields, visited)
@@ -270,12 +270,12 @@ func TestResolveMemberWithVisited_ThreadsVisitedMap(t *testing.T) {
 
 	t.Run("slash-containing member uses shared visited map", func(t *testing.T) {
 		visited := map[string]bool{"some-group": true}
-		got, err := resolver.resolveMemberWithVisited("excavation/witness", visited)
+		got, err := resolver.resolveMemberWithVisited("mineshaft/witness", visited)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		if len(got) != 1 || got[0].Address != "excavation/witness" {
-			t.Errorf("expected [excavation/witness], got %v", got)
+		if len(got) != 1 || got[0].Address != "mineshaft/witness" {
+			t.Errorf("expected [mineshaft/witness], got %v", got)
 		}
 		if !visited["some-group"] {
 			t.Error("visited map was replaced instead of threaded")

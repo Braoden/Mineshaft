@@ -1,4 +1,4 @@
-module github.com/steveyegge/excavation/plugins/dolt-snapshots
+module github.com/steveyegge/mineshaft/plugins/dolt-snapshots
 
 go 1.23
 

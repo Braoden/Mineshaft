@@ -1,25 +1,25 @@
-# Excavation Site Hooks Management
+# Mineshaft Hooks Management
 
-Centralized hook management for Excavation Site workspaces.
+Centralized hook management for Mineshaft workspaces.
 
 ## Overview
 
-Excavation Site manages context injection for all supported agents. The mechanism varies by agent:
+Mineshaft manages context injection for all supported agents. The mechanism varies by agent:
 
 | Agent | Hook mechanism | Managed file |
 |-------|---------------|-------------|
 | Claude Code, Gemini | `settings.json` lifecycle hooks | `<role>/.claude/settings.json` |
-| OpenCode | JS plugin | `workDir/.opencode/plugins/excavation.js` |
-| GitHub Copilot | JSON lifecycle hooks | `workDir/.github/hooks/excavation.json` |
+| OpenCode | JS plugin | `workDir/.opencode/plugins/mineshaft.js` |
+| GitHub Copilot | JSON lifecycle hooks | `workDir/.github/hooks/mineshaft.json` |
 | Codex, others | Startup nudge fallback | *(no file — nudge only)* |
 
 > **GitHub Copilot note**: Copilot CLI supports full executable lifecycle hooks
 > (`sessionStart`, `userPromptSubmitted`, `preToolUse`, `sessionEnd`) via
-> `.github/hooks/excavation.json`. This is the same lifecycle coverage as Claude Code,
+> `.github/hooks/mineshaft.json`. This is the same lifecycle coverage as Claude Code,
 > delivered in Copilot's JSON format rather than Claude's `settings.json` format.
 > The `gt hooks` commands below apply to Claude Code (and Gemini) only.
 
-Excavation Site manages `.claude/settings.json` files in excavation-managed parent directories
+Mineshaft manages `.claude/settings.json` files in mineshaft-managed parent directories
 and passes them to Claude Code via the `--settings` flag. This keeps customer repos
 clean while providing role-specific hook configuration. The hooks system provides
 a single source of truth with a base config and per-role/per-rig overrides.
@@ -31,16 +31,16 @@ a single source of truth with a base config and per-role/per-rig overrides.
 ~/.gt/hooks-overrides/
   ├── crew.json                    ← Override for all crew workers
   ├── witness.json                 ← Override for all witnesses
-  ├── excavation__crew.json           ← Override for excavation crew specifically
+  ├── mineshaft__crew.json           ← Override for mineshaft crew specifically
   └── ...
 ```
 
 **Merge strategy:** `base → role → rig+role` (more specific wins)
 
-For a target like `excavation/crew`:
+For a target like `mineshaft/crew`:
 1. Start with base config
 2. Apply `crew` override (if exists)
-3. Apply `excavation/crew` override (if exists)
+3. Apply `mineshaft/crew` override (if exists)
 
 ## Generated targets
 
@@ -96,7 +96,7 @@ Edit overrides for a specific role or rig+role.
 
 ```bash
 gt hooks override crew              # Edit crew override
-gt hooks override excavation/witness   # Edit excavation witness override
+gt hooks override mineshaft/witness   # Edit mineshaft witness override
 gt hooks override crew --show       # Print current override
 ```
 
@@ -158,10 +158,10 @@ The registry (`~/gt/hooks/registry.toml`) defines 7 hooks, 5 enabled by default:
 
 Additional hooks exist in settings.json files but are not yet in the registry:
 
-- **bd init guard** (excavation/crew, beads/crew) - blocks `bd init*` inside `.beads/`
-- **mol patrol guards** (excavation roles) - blocks persistent patrol molecules
-- **tmux clear-history** (excavation root) - clears terminal history on session start
-- **SessionStart .beads/ validation** (excavation/crew, beads/crew) - validates CWD
+- **bd init guard** (mineshaft/crew, beads/crew) - blocks `bd init*` inside `.beads/`
+- **mol patrol guards** (mineshaft roles) - blocks persistent patrol molecules
+- **tmux clear-history** (mineshaft root) - clears terminal history on session start
+- **SessionStart .beads/ validation** (mineshaft/crew, beads/crew) - validates CWD
 
 ## Design Decision: Registry as Catalog vs Source of Truth
 
@@ -194,8 +194,8 @@ Additional hooks exist in settings.json files but are not yet in the registry:
    with empty hooks list), but there is no convenience wrapper yet.
 
 4. **Private hooks (settings.local.json)** — Claude Code supports
-   `settings.local.json` for personal overrides. Excavation Site doesn't manage
-   these yet. Low priority since Excavation Site is primarily agent-operated.
+   `settings.local.json` for personal overrides. Mineshaft doesn't manage
+   these yet. Low priority since Mineshaft is primarily agent-operated.
 
 5. **Hook ordering** — No action needed currently. The merge chain
    (base -> override) produces deterministic order, and per-matcher merge

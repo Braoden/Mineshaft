@@ -1,4 +1,4 @@
-// Package web provides HTTP server and templates for the Excavation Site dashboard.
+// Package web provides HTTP server and templates for the Mineshaft dashboard.
 package web
 
 import (
@@ -7,7 +7,7 @@ import (
 	"io/fs"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/activity"
+	"github.com/steveyegge/mineshaft/internal/activity"
 )
 
 //go:embed templates/*.html
@@ -86,7 +86,7 @@ type QueueRow struct {
 
 // SessionRow represents a tmux session.
 type SessionRow struct {
-	Name     string // Session name (e.g., "gt-excavation-witness")
+	Name     string // Session name (e.g., "gt-mineshaft-witness")
 	Role     string // witness, refinery, miner, crew, supervisor
 	Rig      string // Rig name if applicable
 	Worker   string // Worker name for miners/crew
@@ -98,7 +98,7 @@ type SessionRow struct {
 type HookRow struct {
 	ID       string // Bead ID (e.g., "gt-abc12")
 	Title    string // Work item title
-	Assignee string // Agent address (e.g., "excavation/miners/nux")
+	Assignee string // Agent address (e.g., "mineshaft/miners/nux")
 	Agent    string // Formatted agent name
 	Age      string // Time since hooked
 	IsStale  bool   // True if hooked > 1 hour (potentially stuck)
@@ -131,7 +131,7 @@ type ActivityRow struct {
 	Type         string // Event type (sling, done, mail, etc.)
 	Category     string // Event category for filtering (agent, work, comms, system)
 	Actor        string // Who did it
-	Rig          string // Rig name extracted from actor (e.g., "excavation")
+	Rig          string // Rig name extracted from actor (e.g., "mineshaft")
 	Summary      string // Human-readable description
 	RawTimestamp string // ISO 8601 timestamp for JS sorting/filtering
 }
@@ -159,7 +159,7 @@ type DashboardSummary struct {
 // MailRow represents a mail message in the dashboard.
 type MailRow struct {
 	ID        string // Message ID (e.g., "hq-msg-abc123")
-	From      string // Sender (e.g., "excavation/miners/Toast")
+	From      string // Sender (e.g., "mineshaft/miners/Toast")
 	FromRaw   string // Raw sender address for color hashing
 	To        string // Recipient (e.g., "overseer/")
 	Subject   string // Message subject
@@ -174,7 +174,7 @@ type MailRow struct {
 // WorkerRow represents a worker (miner or refinery) in the dashboard.
 type WorkerRow struct {
 	Name         string        // e.g., "dag", "nux", "refinery"
-	Rig          string        // e.g., "roxas", "excavation"
+	Rig          string        // e.g., "roxas", "mineshaft"
 	SessionID    string        // e.g., "gt-roxas-dag"
 	LastActivity activity.Info // Colored activity display
 	StatusHint   string        // Last line from pane (optional)
@@ -187,7 +187,7 @@ type WorkerRow struct {
 // MergeQueueRow represents a PR in the merge queue.
 type MergeQueueRow struct {
 	Number     int
-	Repo       string // Short repo name (e.g., "roxas", "excavation")
+	Repo       string // Short repo name (e.g., "roxas", "mineshaft")
 	Title      string
 	URL        string
 	CIStatus   string // "pass", "fail", "pending"

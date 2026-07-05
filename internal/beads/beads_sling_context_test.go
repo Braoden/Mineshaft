@@ -3,14 +3,14 @@ package beads
 import (
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/scheduler/capacity"
+	"github.com/steveyegge/mineshaft/internal/scheduler/capacity"
 )
 
 func TestFormatParseSlingContextRoundTrip(t *testing.T) {
 	original := &capacity.SlingContextFields{
 		Version:          1,
 		WorkBeadID:       "gt-abc123",
-		TargetRig:        "excavation",
+		TargetRig:        "mineshaft",
 		Formula:          "mol-miner-work",
 		Args:             "implement feature X",
 		Vars:             "a=1\nb=2",

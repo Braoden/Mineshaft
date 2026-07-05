@@ -86,7 +86,7 @@ while IFS= read -r REPO_PATH; do
 
 Auto-committed by gitignore-reconcile plugin."
     git -C "$REPO_PATH" commit -m "$COMMIT_MSG" \
-      --author="Excavation Site <excavation@local>" 2>/dev/null && \
+      --author="Mineshaft <mineshaft@local>" 2>/dev/null && \
       log "  Committed untracking of $COUNT file(s)" || \
       log "  WARN: commit failed"
     TOTAL_UNTRACKED=$((TOTAL_UNTRACKED + COUNT))

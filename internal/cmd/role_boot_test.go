@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/beads"
 )
 
 func TestParseRoleStringBoot(t *testing.T) {
@@ -64,7 +64,7 @@ func TestIsTownLevelRoleBoot(t *testing.T) {
 		{"overseer/", true},
 		{"supervisor", true},
 		{"supervisor/", true},
-		{"excavation/witness", false},
+		{"mineshaft/witness", false},
 		{"west/boot", false},
 		{"boot", false}, // bare "boot" is not a valid agentID
 	}

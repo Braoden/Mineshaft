@@ -128,7 +128,7 @@ func TestGetGitStateIgnoresOpenCodeRuntimeArtifacts(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(repo, ".opencode", "plugins"), 0755); err != nil {
 		t.Fatalf("mkdir opencode plugins: %v", err)
 	}
-	writeTestFile(t, filepath.Join(repo, ".opencode", "plugins", "excavation.js"), "// generated\n")
+	writeTestFile(t, filepath.Join(repo, ".opencode", "plugins", "mineshaft.js"), "// generated\n")
 	state, err := getGitState(repo)
 	if err != nil {
 		t.Fatalf("getGitState: %v", err)

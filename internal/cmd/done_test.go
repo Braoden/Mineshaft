@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	gitpkg "github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	gitpkg "github.com/steveyegge/mineshaft/internal/git"
 )
 
 // TestDoneUsesResolveBeadsDir verifies that the done command correctly uses
@@ -29,13 +29,13 @@ func TestDoneUsesResolveBeadsDir(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Create structure like:
-	//   excavation/
+	//   mineshaft/
 	//     overseer/rig/.beads/          <- shared beads directory
 	//     miners/fixer/.beads/     <- miner with redirect
 	//       redirect -> ../../overseer/rig/.beads
 
-	overseerRigBeadsDir := filepath.Join(tmpDir, "excavation", "overseer", "rig", ".beads")
-	minerDir := filepath.Join(tmpDir, "excavation", "miners", "fixer")
+	overseerRigBeadsDir := filepath.Join(tmpDir, "mineshaft", "overseer", "rig", ".beads")
+	minerDir := filepath.Join(tmpDir, "mineshaft", "miners", "fixer")
 	minerBeadsDir := filepath.Join(minerDir, ".beads")
 
 	// Create directories
@@ -72,7 +72,7 @@ func TestDoneUsesResolveBeadsDir(t *testing.T) {
 
 	t.Run("redirect not present uses local beads", func(t *testing.T) {
 		// Without redirect, should use local .beads
-		localDir := filepath.Join(tmpDir, "excavation", "overseer", "rig")
+		localDir := filepath.Join(tmpDir, "mineshaft", "overseer", "rig")
 		resolvedDir := beads.ResolveBeadsDir(localDir)
 
 		if resolvedDir != overseerRigBeadsDir {
@@ -144,7 +144,7 @@ func TestReviewOnlyCloseRejectsNotesAndDesignEvidence(t *testing.T) {
 	issue := &beads.Issue{
 		ID:          "gt-review",
 		Description: "review_only: true\nattached_at: 2026-07-01T12:00:00Z\n",
-		Assignee:    "excavation/miners/toast",
+		Assignee:    "mineshaft/miners/toast",
 		Notes:       "FINDINGS: reviewed and no code changes needed",
 		Design:      "PR-SHERIFF-EVIDENCE: pass\nhead_sha: abc123",
 	}
@@ -159,10 +159,10 @@ func TestReviewOnlyCloseAllowsFreshEvidenceComment(t *testing.T) {
 	issue := &beads.Issue{
 		ID:          "gt-review",
 		Description: "review_only: true\nattached_at: 2026-07-01T12:00:00Z\n",
-		Assignee:    "excavation/miners/toast",
+		Assignee:    "mineshaft/miners/toast",
 		Comments: []beads.Comment{
 			{
-				Author:    "excavation/miners/toast",
+				Author:    "mineshaft/miners/toast",
 				CreatedAt: "2026-07-01T12:05:00Z",
 				Text:      "PR-SHERIFF-EVIDENCE: pass\nhead_sha: abc123",
 			},
@@ -179,10 +179,10 @@ func TestReviewOnlyGeneratedCommentsDoNotCountAsEvidence(t *testing.T) {
 	issue := &beads.Issue{
 		ID:          "gt-review",
 		Description: "review_only: true\nattached_at: 2026-07-01T12:00:00Z\n",
-		Assignee:    "excavation/miners/toast",
+		Assignee:    "mineshaft/miners/toast",
 		Comments: []beads.Comment{
-			{Author: "excavation/miners/toast", CreatedAt: "2026-07-01T12:05:00Z", Text: "verified_push_skipped: --skip-verify on no-MR close\nPR-SHERIFF-EVIDENCE: pass\nhead_sha: abc123"},
-			{Author: "excavation/miners/toast", CreatedAt: "2026-07-01T12:06:00Z", Text: "MR created: gt-wisp-abc\nPR-SHERIFF-EVIDENCE: pass\nhead_sha: abc123"},
+			{Author: "mineshaft/miners/toast", CreatedAt: "2026-07-01T12:05:00Z", Text: "verified_push_skipped: --skip-verify on no-MR close\nPR-SHERIFF-EVIDENCE: pass\nhead_sha: abc123"},
+			{Author: "mineshaft/miners/toast", CreatedAt: "2026-07-01T12:06:00Z", Text: "MR created: gt-wisp-abc\nPR-SHERIFF-EVIDENCE: pass\nhead_sha: abc123"},
 		},
 	}
 
@@ -205,9 +205,9 @@ func TestReviewOnlyCloseRejectsStaleComment(t *testing.T) {
 			issue := &beads.Issue{
 				ID:          "gt-review",
 				Description: "review_only: true\nattached_at: 2026-07-01T12:00:00Z\n",
-				Assignee:    "excavation/miners/toast",
+				Assignee:    "mineshaft/miners/toast",
 				Comments: []beads.Comment{{
-					Author:    "excavation/miners/toast",
+					Author:    "mineshaft/miners/toast",
 					CreatedAt: tt.createdAt,
 					Text:      "PR-SHERIFF-EVIDENCE: pass\nhead_sha: abc123",
 				}},
@@ -228,9 +228,9 @@ func TestReviewOnlyCloseRejectsWrongAuthorOrHead(t *testing.T) {
 		head    string
 		current string
 	}{
-		{name: "wrong author", author: "excavation/miners/other", head: "abc123", current: "abc123"},
-		{name: "wrong head", author: "excavation/miners/toast", head: "def456", current: "abc123"},
-		{name: "missing head", author: "excavation/miners/toast", head: "", current: "abc123"},
+		{name: "wrong author", author: "mineshaft/miners/other", head: "abc123", current: "abc123"},
+		{name: "wrong head", author: "mineshaft/miners/toast", head: "def456", current: "abc123"},
+		{name: "missing head", author: "mineshaft/miners/toast", head: "", current: "abc123"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -241,7 +241,7 @@ func TestReviewOnlyCloseRejectsWrongAuthorOrHead(t *testing.T) {
 			issue := &beads.Issue{
 				ID:          "gt-review",
 				Description: "review_only: true\nattached_at: 2026-07-01T12:00:00Z\n",
-				Assignee:    "excavation/miners/toast",
+				Assignee:    "mineshaft/miners/toast",
 				Comments: []beads.Comment{{
 					Author:    tt.author,
 					CreatedAt: "2026-07-01T12:05:00Z",
@@ -263,7 +263,7 @@ func TestReviewOnlyCloseRejectsMissingAssigneeOrInvalidCommentTime(t *testing.T)
 		createdAt string
 	}{
 		{name: "missing assignee", assignee: "", createdAt: "2026-07-01T12:05:00Z"},
-		{name: "invalid comment time", assignee: "excavation/miners/toast", createdAt: "not-a-time"},
+		{name: "invalid comment time", assignee: "mineshaft/miners/toast", createdAt: "not-a-time"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -272,7 +272,7 @@ func TestReviewOnlyCloseRejectsMissingAssigneeOrInvalidCommentTime(t *testing.T)
 				Description: "review_only: true\nattached_at: 2026-07-01T12:00:00Z\n",
 				Assignee:    tt.assignee,
 				Comments: []beads.Comment{{
-					Author:    "excavation/miners/toast",
+					Author:    "mineshaft/miners/toast",
 					CreatedAt: tt.createdAt,
 					Text:      "PR-SHERIFF-EVIDENCE: pass\nhead_sha: abc123",
 				}},
@@ -687,12 +687,12 @@ func TestIsMinerActor(t *testing.T) {
 		{"myrig/miners/witness", true}, // even if named "witness", still a miner
 
 		// Non-miners
-		{"excavation/crew/george", false},
-		{"excavation/crew/max", false},
+		{"mineshaft/crew/george", false},
+		{"mineshaft/crew/max", false},
 		{"testrig/witness", false},
 		{"testrig/supervisor", false},
 		{"testrig/overseer", false},
-		{"excavation/refinery", false},
+		{"mineshaft/refinery", false},
 
 		// Edge cases
 		{"", false},
@@ -946,7 +946,7 @@ func TestMRVerificationSetsMRFailed(t *testing.T) {
 }
 
 // TestMRBeadCreationUsesRig verifies that MR bead creation specifies the rig (gt-7y7).
-// When a miner works on a cross-rig bead (e.g., hq-xxx on rig "excavation"), the
+// When a miner works on a cross-rig bead (e.g., hq-xxx on rig "mineshaft"), the
 // MR bead must be created with Rig set to the miner's rig so it lands in the
 // rig's database — not the town-level database where the source bead lives.
 // Without this, the refinery never finds the MR and the branch sits unmerged.
@@ -960,20 +960,20 @@ func TestMRBeadCreationUsesRig(t *testing.T) {
 		{
 			name:    "same-rig bead: rig is still set",
 			issueID: "gt-abc",
-			rigName: "excavation",
-			wantRig: "excavation",
+			rigName: "mineshaft",
+			wantRig: "mineshaft",
 		},
 		{
 			name:    "cross-rig hq- bead: MR must land in miner rig",
 			issueID: "hq-abc",
-			rigName: "excavation",
-			wantRig: "excavation",
+			rigName: "mineshaft",
+			wantRig: "mineshaft",
 		},
 		{
 			name:    "cross-rig en- bead: MR must land in miner rig",
 			issueID: "en-xyz",
-			rigName: "excavation",
-			wantRig: "excavation",
+			rigName: "mineshaft",
+			wantRig: "mineshaft",
 		},
 	}
 
@@ -1851,7 +1851,7 @@ func TestAutoCommitSafetyNet(t *testing.T) {
 		}
 
 		writeFile("src/handler.go", "package main\n\nfunc handler() {}\n")
-		writeFile(".opencode/plugins/excavation.js", "// generated\n")
+		writeFile(".opencode/plugins/mineshaft.js", "// generated\n")
 		writeFile("services/cyrus/workflow-cyrus-edge/node_modules/pkg/index.js", "module.exports = {}\n")
 		writeFile("dashboard/public/meridian-dashboard/.vite/vitest/hash/results.json", "{}\n")
 		writeFile("services/workflows/collateral-internal/execution_log.db", "sqlite\n")

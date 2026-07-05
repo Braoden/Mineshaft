@@ -1,4 +1,4 @@
-// Package ui provides terminal styling for excavation CLI output.
+// Package ui provides terminal styling for mineshaft CLI output.
 // Uses the Ayu color theme with adaptive light/dark mode support.
 // Design philosophy: semantic colors that communicate meaning at a glance,
 // minimal visual noise, and consistent rendering across all commands.

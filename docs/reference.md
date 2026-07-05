@@ -1,12 +1,12 @@
-# Excavation Site Reference
+# Mineshaft Reference
 
-Technical reference for Excavation Site internals. Read the README first.
+Technical reference for Mineshaft internals. Read the README first.
 
 > For directory structure details, see [architecture.md](design/architecture.md).
 
 ## Beads Routing
 
-Excavation Site `gt` commands route beads work based on issue ID prefix. For direct
+Mineshaft `gt` commands route beads work based on issue ID prefix. For direct
 `bd` commands, run from the owning repository/root so the active `.beads`
 directory matches the database you intend to touch.
 
@@ -27,9 +27,9 @@ prefix maps to its beads location (the overseer's clone in that rig).
 
 Debug routing: `BD_DEBUG_ROUTING=1 bd -C <owning-root> show <id>`
 
-`bd --global` is not Excavation Site's town database. In Beads it targets a separate
+`bd --global` is not Mineshaft's town database. In Beads it targets a separate
 shared-server database named `beads_global`; run `bd -C ~/gt ...` for
-town-level Excavation Site beads.
+town-level Mineshaft beads.
 
 ## Configuration
 
@@ -276,7 +276,7 @@ with = "macro-formula"
 
 ## Environment Variables
 
-Excavation Site sets environment variables for each agent session via `config.AgentEnv()`.
+Mineshaft sets environment variables for each agent session via `config.AgentEnv()`.
 These are set in tmux session environment when agents are spawned.
 
 ### Core Variables (All Agents)
@@ -285,9 +285,9 @@ These are set in tmux session environment when agents are spawned.
 |----------|---------|---------|
 | `GT_ROLE` | Agent role type | `overseer`, `witness`, `miner`, `crew` |
 | `GT_ROOT` | Town root directory | `/home/user/gt` |
-| `BD_ACTOR` | Agent identity for attribution | `excavation/miners/toast` |
-| `GIT_AUTHOR_NAME` | Commit attribution (same as BD_ACTOR) | `excavation/miners/toast` |
-| `BEADS_DIR` | Beads database location | `/home/user/gt/excavation/.beads` |
+| `BD_ACTOR` | Agent identity for attribution | `mineshaft/miners/toast` |
+| `GIT_AUTHOR_NAME` | Commit attribution (same as BD_ACTOR) | `mineshaft/miners/toast` |
+| `BEADS_DIR` | Beads database location | `/home/user/gt/mineshaft/.beads` |
 
 ### Rig-Level Variables
 
@@ -351,7 +351,7 @@ a git clone that holds the canonical `.beads/` database for that rig.
 
 ### Settings File Locations
 
-Settings are installed in excavation-managed parent directories and passed to
+Settings are installed in mineshaft-managed parent directories and passed to
 Claude Code via the `--settings` flag. This keeps customer repos clean:
 
 ```
@@ -371,7 +371,7 @@ additively with any project-level settings in the customer repo.
 ### CLAUDE.md
 
 Only `~/gt/CLAUDE.md` exists on disk — a minimal identity anchor that prevents
-agents from losing their Excavation Site identity after context compaction or new sessions.
+agents from losing their Mineshaft identity after context compaction or new sessions.
 
 Full role context (~300-500 lines per role) is injected ephemerally by `gt prime`
 via the SessionStart hook. No per-directory CLAUDE.md or AGENTS.md files are created.
@@ -383,20 +383,20 @@ via the SessionStart hook. No per-directory CLAUDE.md or AGENTS.md files are cre
 
 ### Customer Repo Files (CLAUDE.md and .claude/)
 
-Excavation Site no longer uses git sparse checkout to hide customer repo files. Customer
+Mineshaft no longer uses git sparse checkout to hide customer repo files. Customer
 repositories can have their own `.claude/` directory and `CLAUDE.md` — these are
 preserved in all worktrees (crew, miners, refinery, overseer/rig).
 
-Excavation Site's context comes from the town-root `CLAUDE.md` identity anchor
+Mineshaft's context comes from the town-root `CLAUDE.md` identity anchor
 (picked up by all agents via Claude Code's upward directory traversal),
 `gt prime` via the SessionStart hook, and the customer repo's own `CLAUDE.md`.
 These coexist safely because:
 
-- **`--settings` flag provides Excavation Site settings** as a separate tier that merges
+- **`--settings` flag provides Mineshaft settings** as a separate tier that merges
   additively with customer project settings, so both coexist cleanly
 - **`gt prime` injects role context** ephemerally via SessionStart hook, which is
   additive with the customer's `CLAUDE.md` — both are loaded
-- Excavation Site settings live in parent directories (not in customer repos), so
+- Mineshaft settings live in parent directories (not in customer repos), so
   customer `.claude/` files are fully preserved
 
 **Doctor check**: `gt doctor` warns if legacy sparse checkout is still configured.
@@ -412,13 +412,13 @@ Claude Code's settings are layered from multiple sources:
 3. `~/.claude/settings.json` (user global settings)
 4. `--settings <path>` flag (loaded as a separate additive tier)
 
-Excavation Site uses the `--settings` flag to inject role-specific settings from
-excavation-managed parent directories. This merges additively with customer
+Mineshaft uses the `--settings` flag to inject role-specific settings from
+mineshaft-managed parent directories. This merges additively with customer
 project settings rather than overriding them.
 
 ### Settings Templates
 
-Excavation Site uses two settings templates based on role type:
+Mineshaft uses two settings templates based on role type:
 
 | Type | Roles | Key Difference |
 |------|-------|----------------|
@@ -464,7 +464,7 @@ gt config default-agent [name]    # Get or set town default agent
 **Built-in agents**: `claude`, `gemini`, `codex`, `cursor`, `auggie`, `amp`, `opencode`, `copilot`
 
 > **Note on GitHub Copilot**: The `copilot` preset uses executable lifecycle hooks in
-> `.github/hooks/excavation.json` (`sessionStart`, `userPromptSubmitted`, `preToolUse`,
+> `.github/hooks/mineshaft.json` (`sessionStart`, `userPromptSubmitted`, `preToolUse`,
 > `sessionEnd`) — the same lifecycle events as Claude Code, in Copilot's JSON format.
 > Copilot uses a 5-second ready delay instead of prompt-based detection. Requires a
 > Copilot seat and org-level CLI policy enabled.
@@ -621,10 +621,10 @@ gt seance --talk <id> -p "Where is X?"  # One-shot question
 in Claude's `/resume` picker:
 
 ```
-[GAS TOWN] recipient <- sender • timestamp • topic[:mol-id]
+[MINESHAFT] recipient <- sender • timestamp • topic[:mol-id]
 ```
 
-Example: `[GAS TOWN] excavation/crew/gus <- human • 2025-12-30T15:42 • restart`
+Example: `[MINESHAFT] mineshaft/crew/gus <- human • 2025-12-30T15:42 • restart`
 
 **IMPORTANT**: Always use `gt nudge` to send messages to Claude sessions.
 Never use raw `tmux send-keys` - it doesn't handle Claude's input correctly.
@@ -728,7 +728,7 @@ Examples: `shiny`, `shiny-enterprise`, `mol-miner-work`
 
 ```bash
 gt sling <formula> --on <bead-id> <target>
-gt sling shiny-enterprise --on gt-abc123 excavation
+gt sling shiny-enterprise --on gt-abc123 mineshaft
 ```
 
 ### Minecart Formulas (parallel legs, multiple miners)

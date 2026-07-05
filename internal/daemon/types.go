@@ -1,4 +1,4 @@
-// Package daemon provides the town-level background service for Excavation Site.
+// Package daemon provides the town-level background service for Mineshaft.
 //
 // The daemon is a simple Go process (not a Claude agent) that:
 // 1. Pokes agents periodically (heartbeat)
@@ -15,8 +15,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/atomicfile"
-	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/atomicfile"
+	"github.com/steveyegge/mineshaft/internal/constants"
 )
 
 // Config holds daemon configuration.
@@ -24,7 +24,7 @@ type Config struct {
 	// HeartbeatInterval is how often to poke agents.
 	HeartbeatInterval time.Duration `json:"heartbeat_interval"`
 
-	// TownRoot is the Excavation Site workspace root.
+	// TownRoot is the Mineshaft workspace root.
 	TownRoot string `json:"town_root"`
 
 	// LogFile is the path to the daemon log file.
@@ -401,7 +401,7 @@ const (
 
 // LifecycleRequest represents a request from an agent to the daemon.
 type LifecycleRequest struct {
-	// From is the agent requesting the action (e.g., "overseer/", "excavation/witness").
+	// From is the agent requesting the action (e.g., "overseer/", "mineshaft/witness").
 	From string `json:"from"`
 
 	// Action is what lifecycle action to perform.

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/estop"
+	"github.com/steveyegge/mineshaft/internal/estop"
 )
 
 func setupEstopCommandTestTown(t *testing.T) string {
@@ -65,7 +65,7 @@ func TestRunEstopStatusDoesNotCreateSentinel(t *testing.T) {
 
 func TestRunEstopStatusReportsPerRigEstop(t *testing.T) {
 	townRoot := setupEstopCommandTestTown(t)
-	if err := estop.ActivateRig(townRoot, "excavation", estop.TriggerManual, "maintenance"); err != nil {
+	if err := estop.ActivateRig(townRoot, "mineshaft", estop.TriggerManual, "maintenance"); err != nil {
 		t.Fatalf("ActivateRig: %v", err)
 	}
 
@@ -76,7 +76,7 @@ func TestRunEstopStatusReportsPerRigEstop(t *testing.T) {
 	if runErr != nil {
 		t.Fatalf("runEstopStatus: %v", runErr)
 	}
-	for _, want := range []string{"E-STOP: excavation", "maintenance", "Clear with:"} {
+	for _, want := range []string{"E-STOP: mineshaft", "maintenance", "Clear with:"} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("status output = %q, want %q", out, want)
 		}

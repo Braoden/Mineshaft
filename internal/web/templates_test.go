@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/activity"
+	"github.com/steveyegge/mineshaft/internal/activity"
 )
 
 func TestMinecartTemplate_RendersMinecartList(t *testing.T) {

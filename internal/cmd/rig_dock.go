@@ -8,15 +8,15 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/miner"
-	"github.com/steveyegge/excavation/internal/refinery"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/witness"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/miner"
+	"github.com/steveyegge/mineshaft/internal/refinery"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/witness"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // RigDockedLabel is the label set on rig identity beads when docked.
@@ -42,7 +42,7 @@ This is a Level 2 (global/persistent) operation:
 Use 'gt rig undock' to resume normal operation.
 
 Examples:
-  gt rig dock excavation
+  gt rig dock mineshaft
   gt rig dock beads`,
 	Args: cobra.ExactArgs(1),
 	RunE: runRigDock,
@@ -60,7 +60,7 @@ Undocking a rig:
   - Does NOT automatically start agents (use 'gt rig start' for that)
 
 Examples:
-  gt rig undock excavation
+  gt rig undock mineshaft
   gt rig undock beads`,
 	Args: cobra.ExactArgs(1),
 	RunE: runRigUndock,

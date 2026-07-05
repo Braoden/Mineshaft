@@ -8,7 +8,7 @@ import (
 
 func TestBuildPatrolReceipt_StaleVerdictFromHookBead(t *testing.T) {
 	t.Parallel()
-	receipt := BuildPatrolReceipt("excavation", ZombieResult{
+	receipt := BuildPatrolReceipt("mineshaft", ZombieResult{
 		MinerName:    "atlas",
 		AgentState:     "idle",
 		Classification: ZombieSessionDeadActive,
@@ -27,7 +27,7 @@ func TestBuildPatrolReceipt_StaleVerdictFromHookBead(t *testing.T) {
 
 func TestBuildPatrolReceipt_OrphanVerdictWithoutHookedWork(t *testing.T) {
 	t.Parallel()
-	receipt := BuildPatrolReceipt("excavation", ZombieResult{
+	receipt := BuildPatrolReceipt("mineshaft", ZombieResult{
 		MinerName:    "echo",
 		AgentState:     "idle",
 		Classification: ZombieIdleDirtySandbox,
@@ -41,7 +41,7 @@ func TestBuildPatrolReceipt_OrphanVerdictWithoutHookedWork(t *testing.T) {
 
 func TestBuildPatrolReceipt_ErrorIncludedInEvidence(t *testing.T) {
 	t.Parallel()
-	receipt := BuildPatrolReceipt("excavation", ZombieResult{
+	receipt := BuildPatrolReceipt("mineshaft", ZombieResult{
 		MinerName:    "nux",
 		AgentState:     "running",
 		Classification: ZombieAgentDeadInSession,
@@ -113,7 +113,7 @@ func TestBuildPatrolReceipts_NilAndEmpty(t *testing.T) {
 
 func TestBuildPatrolReceipts_JSONShape(t *testing.T) {
 	t.Parallel()
-	receipts := BuildPatrolReceipts("excavation", &DetectZombieMinersResult{
+	receipts := BuildPatrolReceipts("mineshaft", &DetectZombieMinersResult{
 		Zombies: []ZombieResult{
 			{
 				MinerName: "atlas",
@@ -155,7 +155,7 @@ func TestBuildPatrolReceipts_JSONShape(t *testing.T) {
 
 func TestBuildPatrolReceipts_DeterministicStaleOrphanOrdering(t *testing.T) {
 	t.Parallel()
-	receipts := BuildPatrolReceipts("excavation", &DetectZombieMinersResult{
+	receipts := BuildPatrolReceipts("mineshaft", &DetectZombieMinersResult{
 		Zombies: []ZombieResult{
 			{
 				MinerName: "atlas",

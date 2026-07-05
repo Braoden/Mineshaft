@@ -10,27 +10,27 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/events"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/miner"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/witness"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/events"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/miner"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/witness"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 const minMinerDirsPerRig = 30
 
 // SpawnedMinerInfo contains info about a spawned miner session.
 type SpawnedMinerInfo struct {
-	RigName     string // Rig name (e.g., "excavation")
+	RigName     string // Rig name (e.g., "mineshaft")
 	MinerName string // Miner name (e.g., "Toast")
 	ClonePath   string // Path to miner's git worktree
-	SessionName string // Tmux session name (e.g., "gt-excavation-p-Toast")
+	SessionName string // Tmux session name (e.g., "gt-mineshaft-p-Toast")
 	Pane        string // Tmux pane ID (empty until StartSession is called)
 	BaseBranch  string // Effective base branch (e.g., "main", "integration/epic-id")
 	Branch      string // Git branch name (for cleanup on rollback)
@@ -40,7 +40,7 @@ type SpawnedMinerInfo struct {
 	agent   string
 }
 
-// AgentID returns the agent identifier (e.g., "excavation/miners/Toast")
+// AgentID returns the agent identifier (e.g., "mineshaft/miners/Toast")
 func (s *SpawnedMinerInfo) AgentID() string {
 	return fmt.Sprintf("%s/miners/%s", s.RigName, s.MinerName)
 }
@@ -52,7 +52,7 @@ func (s *SpawnedMinerInfo) SessionStarted() bool {
 
 // SlingSpawnOptions contains options for spawning a miner via sling.
 type SlingSpawnOptions struct {
-	TownRoot      string // Excavation Site workspace root; falls back to cwd when empty
+	TownRoot      string // Mineshaft workspace root; falls back to cwd when empty
 	Force         bool   // Force spawn even if miner has uncommitted work
 	Account       string // Claude Code account handle to use
 	Create        bool   // Create miner if it doesn't exist (currently always true for sling)
@@ -80,7 +80,7 @@ func SpawnMinerForSling(rigName string, opts SlingSpawnOptions) (*SpawnedMinerIn
 		var err error
 		townRoot, err = workspace.FindFromCwdOrError()
 		if err != nil {
-			return nil, fmt.Errorf("not in a Excavation Site workspace: %w", err)
+			return nil, fmt.Errorf("not in a Mineshaft workspace: %w", err)
 		}
 	}
 
@@ -362,7 +362,7 @@ func (s *SpawnedMinerInfo) StartSession() (string, error) {
 
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return "", fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return "", fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Load rig config

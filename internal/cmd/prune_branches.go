@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	gitpkg "github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/style"
+	gitpkg "github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/style"
 )
 
 var (

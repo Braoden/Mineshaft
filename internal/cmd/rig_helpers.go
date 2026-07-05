@@ -6,13 +6,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/wisp"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/wisp"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // checkRigNotParkedOrDocked checks if a rig is parked or docked and returns
@@ -46,7 +46,7 @@ func checkRigNotParkedOrDocked(rigName string) error {
 func getRig(rigName string) (string, *rig.Rig, error) {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return "", nil, fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return "", nil, fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	rigsConfigPath := constants.OverseerRigsPath(townRoot)
@@ -178,7 +178,7 @@ func discoverRigsForTownRoot(townRoot string) ([]*rig.Rig, error) {
 // autoInferRig returns the sole registered rig for a given townRoot, or an
 // actionable error when the result is ambiguous. Callers use this when no
 // --rig flag was provided and cwd-based detection found nothing (e.g. Supervisor
-// at HQ level on a non-default install where "excavation" rig does not exist).
+// at HQ level on a non-default install where "mineshaft" rig does not exist).
 func autoInferRig(townRoot string) (name, path string, err error) {
 	rigs, err := discoverRigsForTownRoot(townRoot)
 	if err != nil {
@@ -199,12 +199,12 @@ func autoInferRig(townRoot string) (name, path string, err error) {
 	}
 }
 
-// getAllRigs discovers all rigs in the current Excavation Site workspace.
+// getAllRigs discovers all rigs in the current Mineshaft workspace.
 // Returns the list of rigs and any error.
 func getAllRigs() ([]*rig.Rig, error) {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return nil, fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return nil, fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 	return discoverRigsForTownRoot(townRoot)
 }

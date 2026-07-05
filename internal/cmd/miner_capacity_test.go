@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/scheduler/capacity"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/scheduler/capacity"
 )
 
 func setupMinerCapacityTestTown(t *testing.T, maxMiners int) string {
@@ -30,13 +30,13 @@ func setupMinerCapacityRig(t *testing.T, maxMiners int) string {
 	t.Helper()
 	townRoot := t.TempDir()
 	configureScheduler(t, townRoot, maxMiners, 1)
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "miners"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft", "miners"), 0755); err != nil {
 		t.Fatalf("mkdir rig: %v", err)
 	}
 	if err := config.SaveRigsConfig(filepath.Join(townRoot, "overseer", "rigs.json"), &config.RigsConfig{
 		Version: config.CurrentRigsVersion,
 		Rigs: map[string]config.RigEntry{
-			"excavation": {GitURL: "https://example.invalid/excavation.git"},
+			"mineshaft": {GitURL: "https://example.invalid/mineshaft.git"},
 		},
 	}); err != nil {
 		t.Fatalf("SaveRigsConfig: %v", err)
@@ -61,7 +61,7 @@ func TestCapacitySnapshotCleansStaleReservations(t *testing.T) {
 	stale := minerAdmissionReservation{
 		ID:        "stale",
 		PID:       99999999,
-		Rig:       "excavation",
+		Rig:       "mineshaft",
 		Bead:      "gt-stale",
 		Operation: "test",
 		CreatedAt: time.Now().Add(-2 * minerAdmissionReservationTTL),
@@ -118,7 +118,7 @@ func TestCapacitySnapshotRemovesMismatchedReservationFile(t *testing.T) {
 	reservation := minerAdmissionReservation{
 		ID:        "other",
 		PID:       os.Getpid(),
-		Rig:       "excavation",
+		Rig:       "mineshaft",
 		Bead:      "gt-mismatch",
 		Operation: "test",
 		CreatedAt: time.Now(),
@@ -153,7 +153,7 @@ func TestCapacitySnapshotKeepsOldLiveReservation(t *testing.T) {
 	reservation := minerAdmissionReservation{
 		ID:        "live",
 		PID:       os.Getpid(),
-		Rig:       "excavation",
+		Rig:       "mineshaft",
 		Bead:      "gt-live",
 		Operation: "test",
 		CreatedAt: time.Now().Add(-2 * minerAdmissionReservationTTL),
@@ -182,7 +182,7 @@ func TestCapacitySnapshotKeepsOldLiveReservation(t *testing.T) {
 func TestAcquireMinerAdmissionUsesConfiguredCap(t *testing.T) {
 	townRoot := setupMinerCapacityTestTown(t, 1)
 
-	first, snapshot, err := acquireMinerAdmission(townRoot, "excavation", "gt-one", "test")
+	first, snapshot, err := acquireMinerAdmission(townRoot, "mineshaft", "gt-one", "test")
 	if err != nil {
 		t.Fatalf("first admission: %v", err)
 	}
@@ -191,7 +191,7 @@ func TestAcquireMinerAdmissionUsesConfiguredCap(t *testing.T) {
 		t.Fatalf("snapshot after first admission = %+v, want max=1 reservations=1 free=0", snapshot)
 	}
 
-	second, deniedSnapshot, err := acquireMinerAdmission(townRoot, "excavation", "gt-two", "test")
+	second, deniedSnapshot, err := acquireMinerAdmission(townRoot, "mineshaft", "gt-two", "test")
 	if second != nil {
 		defer second.Release()
 	}
@@ -207,7 +207,7 @@ func TestAcquireMinerAdmissionUsesConfiguredCap(t *testing.T) {
 	}
 
 	first.Release()
-	third, snapshot, err := acquireMinerAdmission(townRoot, "excavation", "gt-three", "test")
+	third, snapshot, err := acquireMinerAdmission(townRoot, "mineshaft", "gt-three", "test")
 	if err != nil {
 		t.Fatalf("third admission after release: %v", err)
 	}
@@ -223,7 +223,7 @@ func TestAcquireMinerAdmissionDisabledWhenSchedulerCapNonPositive(t *testing.T) 
 			townRoot := t.TempDir()
 			configureScheduler(t, townRoot, maxMiners, 1)
 
-			handle, snapshot, err := acquireMinerAdmission(townRoot, "excavation", "gt-one", "test")
+			handle, snapshot, err := acquireMinerAdmission(townRoot, "mineshaft", "gt-one", "test")
 			if err != nil {
 				t.Fatalf("admission with max=%d: %v", maxMiners, err)
 			}
@@ -255,7 +255,7 @@ func TestConcurrentMinerAdmissionReservationsDoNotExceedCap(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			<-start
-			handle, _, err := acquireMinerAdmission(townRoot, "excavation", "gt-race", "test")
+			handle, _, err := acquireMinerAdmission(townRoot, "mineshaft", "gt-race", "test")
 			mu.Lock()
 			defer mu.Unlock()
 			if err == nil {
@@ -311,7 +311,7 @@ func TestApplyAgentFieldsToCapacitySnapshotSeparatesPendingMR(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			snapshot := minerCapacitySnapshot{}
-			applyAgentFieldsToCapacitySnapshot(&snapshot, "", "excavation", "synth", tt.fields, nil)
+			applyAgentFieldsToCapacitySnapshot(&snapshot, "", "mineshaft", "synth", tt.fields, nil)
 			if snapshot.Working != tt.want.Working || snapshot.RecoveryBlocked != tt.want.RecoveryBlocked || snapshot.ReusableIdle != tt.want.ReusableIdle || snapshot.PendingMR != tt.want.PendingMR {
 				t.Fatalf("snapshot = %+v, want %+v", snapshot, tt.want)
 			}
@@ -322,7 +322,7 @@ func TestApplyAgentFieldsToCapacitySnapshotSeparatesPendingMR(t *testing.T) {
 func TestPrintDryRunPlanUsesCapacitySnapshot(t *testing.T) {
 	out := captureStdout(t, func() {
 		printDryRunPlan(capacity.DispatchPlan{
-			ToDispatch: []capacity.PendingBead{{ID: "ctx-1", WorkBeadID: "gt-one", TargetRig: "excavation"}},
+			ToDispatch: []capacity.PendingBead{{ID: "ctx-1", WorkBeadID: "gt-one", TargetRig: "mineshaft"}},
 			Skipped:    2,
 			Reason:     "capacity",
 		}, minerCapacitySnapshot{
@@ -349,8 +349,8 @@ func TestResolveTargetRigPassesHeldAdmissionToSpawn(t *testing.T) {
 	called := false
 	spawnMinerForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedMinerInfo, error) {
 		called = true
-		if rigName != "excavation" {
-			t.Fatalf("rigName = %q, want excavation", rigName)
+		if rigName != "mineshaft" {
+			t.Fatalf("rigName = %q, want mineshaft", rigName)
 		}
 		if !opts.SkipAdmission {
 			t.Fatal("spawn should skip admission when caller already holds reservation")
@@ -359,14 +359,14 @@ func TestResolveTargetRigPassesHeldAdmissionToSpawn(t *testing.T) {
 			t.Fatalf("TownRoot = %q, want %q", opts.TownRoot, townRoot)
 		}
 		return &SpawnedMinerInfo{
-			RigName:     "excavation",
+			RigName:     "mineshaft",
 			MinerName: "toast",
-			ClonePath:   filepath.Join(townRoot, "excavation", "miners", "toast", "excavation"),
-			SessionName: "gt-excavation-miner-toast",
+			ClonePath:   filepath.Join(townRoot, "mineshaft", "miners", "toast", "mineshaft"),
+			SessionName: "gt-mineshaft-miner-toast",
 		}, nil
 	}
 
-	resolved, err := resolveTarget("excavation", ResolveTargetOptions{
+	resolved, err := resolveTarget("mineshaft", ResolveTargetOptions{
 		TownRoot:             townRoot,
 		SkipMinerAdmission: true,
 		NoBoot:               true,
@@ -377,8 +377,8 @@ func TestResolveTargetRigPassesHeldAdmissionToSpawn(t *testing.T) {
 	if !called {
 		t.Fatal("spawnMinerForSling was not called")
 	}
-	if resolved.Agent != "excavation/miners/toast" {
-		t.Fatalf("resolved agent = %q, want excavation/miners/toast", resolved.Agent)
+	if resolved.Agent != "mineshaft/miners/toast" {
+		t.Fatalf("resolved agent = %q, want mineshaft/miners/toast", resolved.Agent)
 	}
 }
 
@@ -399,7 +399,7 @@ func TestStandaloneFormulaRigTargetAcquiresSingleAdmission(t *testing.T) {
 	admissions := 0
 	acquireMinerAdmissionFn = func(townRootArg, rigName, beadID, operation string) (*minerAdmissionHandle, minerCapacitySnapshot, error) {
 		admissions++
-		if townRootArg != townRoot || rigName != "excavation" || beadID != "test-formula" || operation != "formula" {
+		if townRootArg != townRoot || rigName != "mineshaft" || beadID != "test-formula" || operation != "formula" {
 			t.Fatalf("admission args = (%q,%q,%q,%q)", townRootArg, rigName, beadID, operation)
 		}
 		return &minerAdmissionHandle{disabled: true}, minerCapacitySnapshot{Max: 1, Free: 0}, nil
@@ -409,17 +409,17 @@ func TestStandaloneFormulaRigTargetAcquiresSingleAdmission(t *testing.T) {
 			t.Fatal("formula rig spawn should use caller-held admission")
 		}
 		return &SpawnedMinerInfo{
-			RigName:     "excavation",
+			RigName:     "mineshaft",
 			MinerName: "toast",
-			ClonePath:   filepath.Join(townRoot, "excavation", "miners", "toast", "excavation"),
-			SessionName: "gt-excavation-miner-toast",
+			ClonePath:   filepath.Join(townRoot, "mineshaft", "miners", "toast", "mineshaft"),
+			SessionName: "gt-mineshaft-miner-toast",
 		}, nil
 	}
 	findHookedFormulaSingletonFn = func(workDir, targetAgent, formulaName string) (*beads.Issue, error) {
 		return &beads.Issue{ID: "gt-wisp-existing"}, nil
 	}
 
-	if err := runSlingFormula(context.Background(), []string{"test-formula", "excavation"}); err != nil {
+	if err := runSlingFormula(context.Background(), []string{"test-formula", "mineshaft"}); err != nil {
 		t.Fatalf("runSlingFormula: %v", err)
 	}
 	if admissions != 1 {
@@ -445,16 +445,16 @@ func TestStandaloneFormulaExistingMinerNoopDoesNotRequireCapacity(t *testing.T) 
 		return nil, minerCapacitySnapshot{}, nil
 	}
 	resolveTargetAgentFn = func(target string) (string, string, string, error) {
-		if target != "excavation/miners/toast" {
-			t.Fatalf("target = %q, want excavation/miners/toast", target)
+		if target != "mineshaft/miners/toast" {
+			t.Fatalf("target = %q, want mineshaft/miners/toast", target)
 		}
-		return "excavation/miners/toast", "%1", filepath.Join(townRoot, "excavation", "miners", "toast", "excavation"), nil
+		return "mineshaft/miners/toast", "%1", filepath.Join(townRoot, "mineshaft", "miners", "toast", "mineshaft"), nil
 	}
 	findHookedFormulaSingletonFn = func(workDir, targetAgent, formulaName string) (*beads.Issue, error) {
 		return &beads.Issue{ID: "gt-wisp-existing"}, nil
 	}
 
-	if err := runSlingFormula(context.Background(), []string{"test-formula", "excavation/miners/toast"}); err != nil {
+	if err := runSlingFormula(context.Background(), []string{"test-formula", "mineshaft/miners/toast"}); err != nil {
 		t.Fatalf("runSlingFormula: %v", err)
 	}
 }

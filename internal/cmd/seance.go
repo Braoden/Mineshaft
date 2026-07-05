@@ -14,11 +14,11 @@ import (
 
 	"github.com/gofrs/flock"
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/events"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/events"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var (
@@ -47,7 +47,7 @@ a predecessor session with full context. You can ask questions directly:
 DISCOVERY:
   gt seance                     # List recent sessions from events
   gt seance --role crew         # Filter by role type
-  gt seance --rig excavation       # Filter by rig
+  gt seance --rig mineshaft       # Filter by rig
   gt seance --recent 10         # Last N sessions
 
 THE SEANCE (talk to predecessor):
@@ -59,7 +59,7 @@ This loads the predecessor's full context without modifying their session.
 
 Sessions are discovered from:
   1. Events emitted by SessionStart hooks (~/gt/.events.jsonl)
-  2. The [GAS TOWN] beacon makes sessions searchable in /resume`,
+  2. The [MINESHAFT] beacon makes sessions searchable in /resume`,
 	RunE: runSeance,
 }
 
@@ -95,7 +95,7 @@ func runSeance(cmd *cobra.Command, args []string) error {
 func runSeanceList() error {
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil || townRoot == "" {
-		return fmt.Errorf("not in a Excavation Site workspace")
+		return fmt.Errorf("not in a Mineshaft workspace")
 	}
 
 	// Read session events from our event stream
@@ -407,7 +407,7 @@ type sessionsIndexEntry struct {
 // sessionLocation contains the location info for a session.
 type sessionLocation struct {
 	configDir  string // The account's config directory
-	projectDir string // The project directory name (e.g., "-Users-jv-gt-excavation-crew-propane")
+	projectDir string // The project directory name (e.g., "-Users-jv-gt-mineshaft-crew-propane")
 }
 
 // sessionsIndexLockTimeout is how long to wait for the index lock.

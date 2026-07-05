@@ -16,30 +16,30 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/crew"
-	"github.com/steveyegge/excavation/internal/daemon"
-	"github.com/steveyegge/excavation/internal/supervisor"
-	"github.com/steveyegge/excavation/internal/doltserver"
-	"github.com/steveyegge/excavation/internal/events"
-	"github.com/steveyegge/excavation/internal/mail"
-	"github.com/steveyegge/excavation/internal/overseer"
-	"github.com/steveyegge/excavation/internal/miner"
-	"github.com/steveyegge/excavation/internal/refinery"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/util"
-	"github.com/steveyegge/excavation/internal/witness"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/crew"
+	"github.com/steveyegge/mineshaft/internal/daemon"
+	"github.com/steveyegge/mineshaft/internal/supervisor"
+	"github.com/steveyegge/mineshaft/internal/doltserver"
+	"github.com/steveyegge/mineshaft/internal/events"
+	"github.com/steveyegge/mineshaft/internal/mail"
+	"github.com/steveyegge/mineshaft/internal/overseer"
+	"github.com/steveyegge/mineshaft/internal/miner"
+	"github.com/steveyegge/mineshaft/internal/refinery"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/util"
+	"github.com/steveyegge/mineshaft/internal/witness"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // agentStartResult holds the result of starting an agent.
 type agentStartResult struct {
-	name   string // Display name like "Witness (excavation)"
+	name   string // Display name like "Witness (mineshaft)"
 	ok     bool   // Whether start succeeded
 	detail string // Status detail (session name or error)
 }
@@ -120,10 +120,10 @@ var daemonStartupGrace = func() time.Duration {
 var upCmd = &cobra.Command{
 	Use:     "up",
 	GroupID: GroupServices,
-	Short:   "Bring up all Excavation Site services",
-	Long: `Start all Excavation Site long-lived services.
+	Short:   "Bring up all Mineshaft services",
+	Long: `Start all Mineshaft long-lived services.
 
-This is the idempotent "boot" command for Excavation Site. It ensures all
+This is the idempotent "boot" command for Mineshaft. It ensures all
 infrastructure agents are running:
 
   • Dolt       - Shared SQL database server for beads
@@ -161,7 +161,7 @@ func init() {
 func runUp(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Ensure lifecycle defaults are configured. On first run this creates

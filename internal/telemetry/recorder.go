@@ -21,13 +21,13 @@ import (
 	"go.opentelemetry.io/otel/metric"
 )
 
-// runIDKey is the context key for the EXCAVATION run identifier.
+// runIDKey is the context key for the MINESHAFT run identifier.
 type runIDKey struct{}
 
 // WithRunID returns a context carrying the given run ID.
 // The run ID is automatically injected into every telemetry event emitted
 // with that context, enabling waterfall correlation across all events in a
-// single agent session (EXCAVATION run).
+// single agent session (MINESHAFT run).
 func WithRunID(ctx context.Context, runID string) context.Context {
 	return context.WithValue(ctx, runIDKey{}, runID)
 }
@@ -42,7 +42,7 @@ func RunIDFromCtx(ctx context.Context) string {
 	return os.Getenv("GT_RUN")
 }
 
-// instanceID derives a human-readable Excavation instance identifier from the
+// instanceID derives a human-readable Mineshaft instance identifier from the
 // town root path and the machine hostname.
 // Format: "<hostname>:<basename(townRoot)>" (e.g. "laptop:gt").
 // Falls back to basename alone when hostname is unavailable.
@@ -72,8 +72,8 @@ type MailMessageInfo struct {
 }
 
 const (
-	meterRecorderName = "github.com/steveyegge/excavation"
-	loggerName        = "excavation"
+	meterRecorderName = "github.com/steveyegge/mineshaft"
+	loggerName        = "mineshaft"
 )
 
 // recorderInstruments holds all lazy-initialized OTel metric instruments.
@@ -147,78 +147,78 @@ func initInstruments() {
 		m := otel.GetMeterProvider().Meter(meterRecorderName)
 
 		// Counters
-		inst.bdTotal, _ = m.Int64Counter("excavation.bd.calls.total",
+		inst.bdTotal, _ = m.Int64Counter("mineshaft.bd.calls.total",
 			metric.WithDescription("Total bd CLI command invocations"),
 		)
-		inst.sessionTotal, _ = m.Int64Counter("excavation.session.starts.total",
+		inst.sessionTotal, _ = m.Int64Counter("mineshaft.session.starts.total",
 			metric.WithDescription("Total agent session starts"),
 		)
-		inst.sessionStopTotal, _ = m.Int64Counter("excavation.session.stops.total",
+		inst.sessionStopTotal, _ = m.Int64Counter("mineshaft.session.stops.total",
 			metric.WithDescription("Total agent session terminations"),
 		)
-		inst.promptTotal, _ = m.Int64Counter("excavation.prompt.sends.total",
+		inst.promptTotal, _ = m.Int64Counter("mineshaft.prompt.sends.total",
 			metric.WithDescription("Total tmux SendKeys prompt dispatches"),
 		)
-		inst.paneOutputTotal, _ = m.Int64Counter("excavation.pane.output.total",
+		inst.paneOutputTotal, _ = m.Int64Counter("mineshaft.pane.output.total",
 			metric.WithDescription("Total pane output chunks emitted to VictoriaLogs"),
 		)
-		inst.agentEventTotal, _ = m.Int64Counter("excavation.agent.events.total",
+		inst.agentEventTotal, _ = m.Int64Counter("mineshaft.agent.events.total",
 			metric.WithDescription("Total agent conversation events emitted to VictoriaLogs"),
 		)
-		inst.agentInstantiateTotal, _ = m.Int64Counter("excavation.agent.instantiations.total",
+		inst.agentInstantiateTotal, _ = m.Int64Counter("mineshaft.agent.instantiations.total",
 			metric.WithDescription("Total agent session instantiations (one per agent spawn)"),
 		)
-		inst.primeTotal, _ = m.Int64Counter("excavation.prime.total",
+		inst.primeTotal, _ = m.Int64Counter("mineshaft.prime.total",
 			metric.WithDescription("Total gt prime invocations"),
 		)
-		inst.agentStateTotal, _ = m.Int64Counter("excavation.agent.state_changes.total",
+		inst.agentStateTotal, _ = m.Int64Counter("mineshaft.agent.state_changes.total",
 			metric.WithDescription("Total agent state transitions"),
 		)
-		inst.minerTotal, _ = m.Int64Counter("excavation.miner.spawns.total",
+		inst.minerTotal, _ = m.Int64Counter("mineshaft.miner.spawns.total",
 			metric.WithDescription("Total miner spawns"),
 		)
-		inst.minerRemoveTotal, _ = m.Int64Counter("excavation.miner.removes.total",
+		inst.minerRemoveTotal, _ = m.Int64Counter("mineshaft.miner.removes.total",
 			metric.WithDescription("Total miner removals"),
 		)
-		inst.slingTotal, _ = m.Int64Counter("excavation.sling.dispatches.total",
+		inst.slingTotal, _ = m.Int64Counter("mineshaft.sling.dispatches.total",
 			metric.WithDescription("Total sling work dispatches"),
 		)
-		inst.mailTotal, _ = m.Int64Counter("excavation.mail.operations.total",
+		inst.mailTotal, _ = m.Int64Counter("mineshaft.mail.operations.total",
 			metric.WithDescription("Total mail/bd SDK operations"),
 		)
-		inst.nudgeTotal, _ = m.Int64Counter("excavation.nudge.total",
+		inst.nudgeTotal, _ = m.Int64Counter("mineshaft.nudge.total",
 			metric.WithDescription("Total gt nudge invocations"),
 		)
-		inst.doneTotal, _ = m.Int64Counter("excavation.done.total",
+		inst.doneTotal, _ = m.Int64Counter("mineshaft.done.total",
 			metric.WithDescription("Total gt done invocations (miner work completions)"),
 		)
-		inst.daemonRestartTotal, _ = m.Int64Counter("excavation.daemon.agent_restarts.total",
+		inst.daemonRestartTotal, _ = m.Int64Counter("mineshaft.daemon.agent_restarts.total",
 			metric.WithDescription("Total daemon-initiated agent session restarts"),
 		)
-		inst.formulaTotal, _ = m.Int64Counter("excavation.formula.instantiations.total",
+		inst.formulaTotal, _ = m.Int64Counter("mineshaft.formula.instantiations.total",
 			metric.WithDescription("Total formula→wisp instantiations"),
 		)
-		inst.minecartTotal, _ = m.Int64Counter("excavation.minecart.creates.total",
+		inst.minecartTotal, _ = m.Int64Counter("mineshaft.minecart.creates.total",
 			metric.WithDescription("Total auto-minecart creations"),
 		)
-		inst.molCookTotal, _ = m.Int64Counter("excavation.mol.cooks.total",
+		inst.molCookTotal, _ = m.Int64Counter("mineshaft.mol.cooks.total",
 			metric.WithDescription("Total formula cook operations (formula → proto)"),
 		)
-		inst.molWispTotal, _ = m.Int64Counter("excavation.mol.wisps.total",
+		inst.molWispTotal, _ = m.Int64Counter("mineshaft.mol.wisps.total",
 			metric.WithDescription("Total molecule wisp creations (proto → wisp)"),
 		)
-		inst.molSquashTotal, _ = m.Int64Counter("excavation.mol.squashes.total",
+		inst.molSquashTotal, _ = m.Int64Counter("mineshaft.mol.squashes.total",
 			metric.WithDescription("Total molecule squash operations (mol → digest)"),
 		)
-		inst.molBurnTotal, _ = m.Int64Counter("excavation.mol.burns.total",
+		inst.molBurnTotal, _ = m.Int64Counter("mineshaft.mol.burns.total",
 			metric.WithDescription("Total molecule burn operations (destroy)"),
 		)
-		inst.beadCreateTotal, _ = m.Int64Counter("excavation.bead.creates.total",
+		inst.beadCreateTotal, _ = m.Int64Counter("mineshaft.bead.creates.total",
 			metric.WithDescription("Total bead creations from molecule instantiation"),
 		)
 
 		// Histograms
-		inst.bdDurationHist, _ = m.Float64Histogram("excavation.bd.duration_ms",
+		inst.bdDurationHist, _ = m.Float64Histogram("mineshaft.bd.duration_ms",
 			metric.WithDescription("bd CLI call round-trip latency in milliseconds"),
 			metric.WithUnit("ms"),
 		)
@@ -235,7 +235,7 @@ func statusStr(err error) string {
 
 // addRunID injects the run.id attribute from ctx (or GT_RUN env) into r.
 // Called by emit and RecordAgentEvent so every telemetry event carries the
-// EXCAVATION run identifier for waterfall correlation.
+// MINESHAFT run identifier for waterfall correlation.
 func addRunID(ctx context.Context, r *otellog.Record) {
 	if runID := RunIDFromCtx(ctx); runID != "" {
 		r.AddAttributes(otellog.String("run.id", runID))
@@ -383,11 +383,11 @@ func RecordPromptSend(ctx context.Context, session, keys string, debounceMs int,
 // All fields except RunID, AgentType, Role, AgentName, SessionID, and TownRoot
 // are optional; pass empty strings for unknown fields.
 type AgentInstantiateInfo struct {
-	// RunID is the EXCAVATION run UUID (GT_RUN), the waterfall primary key.
+	// RunID is the MINESHAFT run UUID (GT_RUN), the waterfall primary key.
 	RunID string
 	// AgentType is the runtime adapter name ("claudecode", "opencode", …).
 	AgentType string
-	// Role is the Excavation agent role ("miner", "witness", "overseer", "refinery",
+	// Role is the Mineshaft agent role ("miner", "witness", "overseer", "refinery",
 	// "crew", "supervisor", "dog", "boot").
 	Role string
 	// AgentName is the specific agent name within its role (e.g. "wyvern-Toast").
@@ -397,7 +397,7 @@ type AgentInstantiateInfo struct {
 	SessionID string
 	// RigName is the rig name; empty for town-level agents (overseer, supervisor).
 	RigName string
-	// TownRoot is the absolute path to the Excavation town root (~/gt); used to
+	// TownRoot is the absolute path to the Mineshaft town root (~/gt); used to
 	// derive the instance identifier "hostname:basename(townRoot)".
 	TownRoot string
 	// IssueID is the bead ID of the work item assigned to this agent.
@@ -410,7 +410,7 @@ type AgentInstantiateInfo struct {
 }
 
 // RecordAgentInstantiate records the creation of a new agent session — the
-// root EXCAVATION event that anchors all downstream waterfall telemetry.
+// root MINESHAFT event that anchors all downstream waterfall telemetry.
 func RecordAgentInstantiate(ctx context.Context, info AgentInstantiateInfo) {
 	initInstruments()
 	inst.agentInstantiateTotal.Add(ctx, 1,

@@ -21,27 +21,27 @@ import (
 
 	"github.com/gofrs/flock"
 	beadsdk "github.com/steveyegge/beads"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/boot"
-	agentconfig "github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/supervisor"
-	"github.com/steveyegge/excavation/internal/deps"
-	"github.com/steveyegge/excavation/internal/doltserver"
-	"github.com/steveyegge/excavation/internal/estop"
-	"github.com/steveyegge/excavation/internal/events"
-	"github.com/steveyegge/excavation/internal/feed"
-	gitpkg "github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/overseer"
-	"github.com/steveyegge/excavation/internal/miner"
-	"github.com/steveyegge/excavation/internal/refinery"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/telemetry"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/util"
-	"github.com/steveyegge/excavation/internal/wisp"
-	"github.com/steveyegge/excavation/internal/witness"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/boot"
+	agentconfig "github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/supervisor"
+	"github.com/steveyegge/mineshaft/internal/deps"
+	"github.com/steveyegge/mineshaft/internal/doltserver"
+	"github.com/steveyegge/mineshaft/internal/estop"
+	"github.com/steveyegge/mineshaft/internal/events"
+	"github.com/steveyegge/mineshaft/internal/feed"
+	gitpkg "github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/overseer"
+	"github.com/steveyegge/mineshaft/internal/miner"
+	"github.com/steveyegge/mineshaft/internal/refinery"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/telemetry"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/util"
+	"github.com/steveyegge/mineshaft/internal/wisp"
+	"github.com/steveyegge/mineshaft/internal/witness"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
@@ -73,7 +73,7 @@ type Daemon struct {
 
 	// Supervisor startup tracking: prevents race condition where newly started
 	// sessions are immediately killed by the heartbeat check.
-	// See: https://github.com/steveyegge/excavation/issues/567
+	// See: https://github.com/steveyegge/mineshaft/issues/567
 	// Note: Only accessed from heartbeat loop goroutine - no sync needed.
 	supervisorLastStarted time.Time
 
@@ -356,7 +356,7 @@ func New(config *Config) (*Daemon, error) {
 
 	// Initialize OpenTelemetry (best-effort — telemetry failure never blocks startup).
 	// Activate by setting GT_OTEL_METRICS_URL and/or GT_OTEL_LOGS_URL.
-	otelProvider, otelErr := telemetry.Init(ctx, "excavation-daemon", "")
+	otelProvider, otelErr := telemetry.Init(ctx, "mineshaft-daemon", "")
 	if otelErr != nil {
 		logger.Printf("Warning: telemetry init failed: %v", otelErr)
 	}
@@ -1088,7 +1088,7 @@ func (d *Daemon) checkAllRigsDolt() error {
 	townBeadsDir := filepath.Join(d.config.TownRoot, ".beads")
 	if backend := readBeadsBackend(townBeadsDir); backend != "" && backend != "dolt" {
 		problems = append(problems, fmt.Sprintf(
-			"Rig %q is using %s backend.\n  Excavation Site requires Dolt. Run: cd %s && bd migrate dolt",
+			"Rig %q is using %s backend.\n  Mineshaft requires Dolt. Run: cd %s && bd migrate dolt",
 			"town-root", backend, d.config.TownRoot))
 	}
 
@@ -1098,7 +1098,7 @@ func (d *Daemon) checkAllRigsDolt() error {
 		if backend := readBeadsBackend(rigBeadsDir); backend != "" && backend != "dolt" {
 			rigPath := filepath.Join(d.config.TownRoot, rigName)
 			problems = append(problems, fmt.Sprintf(
-				"Rig %q is using %s backend.\n  Excavation Site requires Dolt. Run: cd %s && bd migrate dolt",
+				"Rig %q is using %s backend.\n  Mineshaft requires Dolt. Run: cd %s && bd migrate dolt",
 				rigName, backend, rigPath))
 		}
 	}
@@ -1365,7 +1365,7 @@ func (d *Daemon) ensureBootRunning() {
 	// Idle check: run gt-idle-check to see if the system needs waking.
 	// If idle (all rigs parked, no miners, supervisor alive), skip the expensive
 	// Claude Boot session and use degraded mechanical triage instead.
-	// This saves ~480 Claude sessions/day when Excavation Site is not in active use.
+	// This saves ~480 Claude sessions/day when Mineshaft is not in active use.
 	idleCheckBin := filepath.Join(d.config.TownRoot, "bin", "gt-idle-check")
 	if _, err := os.Stat(idleCheckBin); err == nil {
 		//nolint:gosec // G204: path is constructed from config

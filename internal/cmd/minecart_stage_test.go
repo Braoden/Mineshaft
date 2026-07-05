@@ -821,9 +821,9 @@ func TestEpicWalk_CollectsAllDescendants(t *testing.T) {
 	dag := newTestDAG(t).
 		Epic("gt-epic", "Root Epic").
 		Epic("gt-sub", "Sub Epic").ParentOf("gt-epic").
-		Task("gt-task1", "Task 1", withRig("excavation")).ParentOf("gt-epic").
-		Task("gt-task2", "Task 2", withRig("excavation")).ParentOf("gt-sub").
-		Task("gt-task3", "Task 3", withRig("excavation")).ParentOf("gt-sub")
+		Task("gt-task1", "Task 1", withRig("mineshaft")).ParentOf("gt-epic").
+		Task("gt-task2", "Task 2", withRig("mineshaft")).ParentOf("gt-sub").
+		Task("gt-task3", "Task 3", withRig("mineshaft")).ParentOf("gt-sub")
 
 	dag.Setup(t)
 
@@ -862,7 +862,7 @@ func TestEpicWalk_NonexistentBeadErrors(t *testing.T) {
 
 	// Set up a DAG with only one bead so "gt-missing" doesn't exist.
 	dag := newTestDAG(t).
-		Task("gt-exists", "Existing task", withRig("excavation"))
+		Task("gt-exists", "Existing task", withRig("mineshaft"))
 	dag.Setup(t)
 
 	input := &StageInput{Kind: StageInputEpic, IDs: []string{"gt-missing"}}
@@ -879,9 +879,9 @@ func TestTaskListWalk_AnalyzesOnlyGiven(t *testing.T) {
 	}
 
 	dag := newTestDAG(t).
-		Task("gt-a", "Task A", withRig("excavation")).
-		Task("gt-b", "Task B", withRig("excavation")).BlockedBy("gt-a").
-		Task("gt-c", "Task C", withRig("excavation")) // not requested
+		Task("gt-a", "Task A", withRig("mineshaft")).
+		Task("gt-b", "Task B", withRig("mineshaft")).BlockedBy("gt-a").
+		Task("gt-c", "Task C", withRig("mineshaft")) // not requested
 	dag.Setup(t)
 
 	input := &StageInput{Kind: StageInputTasks, IDs: []string{"gt-a", "gt-b"}}
@@ -931,8 +931,8 @@ func TestMinecartWalk_ReadsTrackedBeads(t *testing.T) {
 
 	dag := newTestDAG(t).
 		Minecart("gt-minecart", "Test Minecart").
-		Task("gt-t1", "Tracked 1", withRig("excavation")).TrackedBy("gt-minecart").
-		Task("gt-t2", "Tracked 2", withRig("excavation")).TrackedBy("gt-minecart")
+		Task("gt-t1", "Tracked 1", withRig("mineshaft")).TrackedBy("gt-minecart").
+		Task("gt-t2", "Tracked 2", withRig("mineshaft")).TrackedBy("gt-minecart")
 	dag.Setup(t)
 
 	input := &StageInput{Kind: StageInputMinecart, IDs: []string{"gt-minecart"}}
@@ -967,8 +967,8 @@ func TestEpicWalk_CollectsDeps(t *testing.T) {
 
 	dag := newTestDAG(t).
 		Epic("gt-epic", "Root Epic").
-		Task("gt-t1", "Task 1", withRig("excavation")).ParentOf("gt-epic").
-		Task("gt-t2", "Task 2", withRig("excavation")).ParentOf("gt-epic").BlockedBy("gt-t1")
+		Task("gt-t1", "Task 1", withRig("mineshaft")).ParentOf("gt-epic").
+		Task("gt-t2", "Task 2", withRig("mineshaft")).ParentOf("gt-epic").BlockedBy("gt-t1")
 	dag.Setup(t)
 
 	input := &StageInput{Kind: StageInputEpic, IDs: []string{"gt-epic"}}
@@ -1006,8 +1006,8 @@ func TestEpicWalk_CollectsDeps(t *testing.T) {
 // U-30: Wave table includes blockers column
 func TestRenderWaveTable_IncludesBlockers(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-a": {ID: "gt-a", Title: "Task A", Type: "task", Rig: "excavation", Blocks: []string{"gt-b"}},
-		"gt-b": {ID: "gt-b", Title: "Task B", Type: "task", Rig: "excavation", BlockedBy: []string{"gt-a"}},
+		"gt-a": {ID: "gt-a", Title: "Task A", Type: "task", Rig: "mineshaft", Blocks: []string{"gt-b"}},
+		"gt-b": {ID: "gt-b", Title: "Task B", Type: "task", Rig: "mineshaft", BlockedBy: []string{"gt-a"}},
 	}}
 	waves := []Wave{
 		{Number: 1, Tasks: []string{"gt-a"}},
@@ -1059,15 +1059,15 @@ func TestRenderWaveTable_Empty(t *testing.T) {
 // Test wave table with multiple rigs
 func TestRenderWaveTable_MultipleRigs(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-a": {ID: "gt-a", Title: "Task A", Type: "task", Rig: "excavation"},
+		"gt-a": {ID: "gt-a", Title: "Task A", Type: "task", Rig: "mineshaft"},
 		"bd-b": {ID: "bd-b", Title: "Task B", Type: "task", Rig: "beads"},
 	}}
 	waves := []Wave{
 		{Number: 1, Tasks: []string{"bd-b", "gt-a"}},
 	}
 	output := renderWaveTable(waves, dag)
-	if !strings.Contains(output, "excavation") {
-		t.Error("should show excavation rig")
+	if !strings.Contains(output, "mineshaft") {
+		t.Error("should show mineshaft rig")
 	}
 	if !strings.Contains(output, "beads") {
 		t.Error("should show beads rig")
@@ -1189,8 +1189,8 @@ func TestRenderErrors_IncludesFixAndIDs(t *testing.T) {
 // Test detectErrors with cycle
 func TestErrorDetection_CycleDetected(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"a": {ID: "a", Type: "task", Rig: "excavation", Blocks: []string{"b"}, BlockedBy: []string{"b"}},
-		"b": {ID: "b", Type: "task", Rig: "excavation", BlockedBy: []string{"a"}, Blocks: []string{"a"}},
+		"a": {ID: "a", Type: "task", Rig: "mineshaft", Blocks: []string{"b"}, BlockedBy: []string{"b"}},
+		"b": {ID: "b", Type: "task", Rig: "mineshaft", BlockedBy: []string{"a"}, Blocks: []string{"a"}},
 	}}
 
 	findings := detectErrors(dag)
@@ -1221,8 +1221,8 @@ func TestErrorDetection_NoRig(t *testing.T) {
 // Test detectErrors clean DAG → no errors
 func TestErrorDetection_Clean(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"a": {ID: "a", Type: "task", Rig: "excavation", Blocks: []string{"b"}},
-		"b": {ID: "b", Type: "task", Rig: "excavation", BlockedBy: []string{"a"}},
+		"a": {ID: "a", Type: "task", Rig: "mineshaft", Blocks: []string{"b"}},
+		"b": {ID: "b", Type: "task", Rig: "mineshaft", BlockedBy: []string{"a"}},
 	}}
 	findings := detectErrors(dag)
 	if len(findings) != 0 {
@@ -1237,9 +1237,9 @@ func TestErrorDetection_Clean(t *testing.T) {
 // U-28: Task-list input renders flat list
 func TestRenderDAGTree_TaskListFlat(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-a": {ID: "gt-a", Title: "Task A", Type: "task", Status: "open", Rig: "excavation"},
-		"gt-b": {ID: "gt-b", Title: "Task B", Type: "task", Status: "open", Rig: "excavation"},
-		"gt-c": {ID: "gt-c", Title: "Task C", Type: "bug", Status: "open", Rig: "excavation"},
+		"gt-a": {ID: "gt-a", Title: "Task A", Type: "task", Status: "open", Rig: "mineshaft"},
+		"gt-b": {ID: "gt-b", Title: "Task B", Type: "task", Status: "open", Rig: "mineshaft"},
+		"gt-c": {ID: "gt-c", Title: "Task C", Type: "bug", Status: "open", Rig: "mineshaft"},
 	}}
 	input := &StageInput{Kind: StageInputTasks, IDs: []string{"gt-a", "gt-b", "gt-c"}}
 	output := renderDAGTree(dag, input)
@@ -1265,11 +1265,11 @@ func TestRenderDAGTree_EpicTree(t *testing.T) {
 		"sub-epic": {ID: "sub-epic", Title: "Sub Epic", Type: "epic", Status: "open",
 			Parent: "root-epic", Children: []string{"task-2", "task-3"}},
 		"task-1": {ID: "task-1", Title: "Task One", Type: "task", Status: "open",
-			Rig: "excavation", Parent: "root-epic"},
+			Rig: "mineshaft", Parent: "root-epic"},
 		"task-2": {ID: "task-2", Title: "Task Two", Type: "task", Status: "open",
-			Rig: "excavation", Parent: "sub-epic"},
+			Rig: "mineshaft", Parent: "sub-epic"},
 		"task-3": {ID: "task-3", Title: "Task Three", Type: "task", Status: "open",
-			Rig: "excavation", Parent: "sub-epic"},
+			Rig: "mineshaft", Parent: "sub-epic"},
 	}}
 	input := &StageInput{Kind: StageInputEpic, IDs: []string{"root-epic"}}
 	output := renderDAGTree(dag, input)
@@ -1319,13 +1319,13 @@ func TestRenderDAGTree_EpicTree(t *testing.T) {
 // U-36: Each node shows ID, type, title, rig, status
 func TestRenderDAGTree_NodeInfo(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-abc": {ID: "gt-abc", Title: "My Task", Type: "task", Status: "open", Rig: "excavation"},
+		"gt-abc": {ID: "gt-abc", Title: "My Task", Type: "task", Status: "open", Rig: "mineshaft"},
 	}}
 	input := &StageInput{Kind: StageInputTasks, IDs: []string{"gt-abc"}}
 	output := renderDAGTree(dag, input)
 
 	// Verify all fields appear in the output
-	for _, want := range []string{"gt-abc", "task", "My Task", "excavation", "open"} {
+	for _, want := range []string{"gt-abc", "task", "My Task", "mineshaft", "open"} {
 		if !strings.Contains(output, want) {
 			t.Errorf("output should contain %q, got:\n%s", want, output)
 		}
@@ -1335,9 +1335,9 @@ func TestRenderDAGTree_NodeInfo(t *testing.T) {
 // U-37: Blocked tasks show blockers inline
 func TestRenderDAGTree_BlockedShowsBlockers(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"task-a": {ID: "task-a", Title: "Task A", Type: "task", Status: "open", Rig: "excavation",
+		"task-a": {ID: "task-a", Title: "Task A", Type: "task", Status: "open", Rig: "mineshaft",
 			Blocks: []string{"task-b"}},
-		"task-b": {ID: "task-b", Title: "Task B", Type: "task", Status: "open", Rig: "excavation",
+		"task-b": {ID: "task-b", Title: "Task B", Type: "task", Status: "open", Rig: "mineshaft",
 			BlockedBy: []string{"task-a"}},
 	}}
 	input := &StageInput{Kind: StageInputTasks, IDs: []string{"task-a", "task-b"}}
@@ -1366,7 +1366,7 @@ func TestRenderDAGTree_NestedEpic(t *testing.T) {
 		"sub-sub-epic": {ID: "sub-sub-epic", Title: "SubSub", Type: "epic", Status: "open",
 			Parent: "sub-epic", Children: []string{"deep-task"}},
 		"deep-task": {ID: "deep-task", Title: "Deep Task", Type: "task", Status: "open",
-			Rig: "excavation", Parent: "sub-sub-epic"},
+			Rig: "mineshaft", Parent: "sub-sub-epic"},
 	}}
 	input := &StageInput{Kind: StageInputEpic, IDs: []string{"root-epic"}}
 	output := renderDAGTree(dag, input)
@@ -1407,9 +1407,9 @@ func TestRenderDAGTree_NestedEpic(t *testing.T) {
 // IT-40: Tree displayed before wave table (ordering contract)
 func TestRenderDAGTree_OutputOrdering(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-a": {ID: "gt-a", Title: "Task A", Type: "task", Status: "open", Rig: "excavation",
+		"gt-a": {ID: "gt-a", Title: "Task A", Type: "task", Status: "open", Rig: "mineshaft",
 			Blocks: []string{"gt-b"}},
-		"gt-b": {ID: "gt-b", Title: "Task B", Type: "task", Status: "open", Rig: "excavation",
+		"gt-b": {ID: "gt-b", Title: "Task B", Type: "task", Status: "open", Rig: "mineshaft",
 			BlockedBy: []string{"gt-a"}},
 	}}
 	input := &StageInput{Kind: StageInputTasks, IDs: []string{"gt-a", "gt-b"}}
@@ -1480,7 +1480,7 @@ func TestDetectWarnings_ParkedRig(t *testing.T) {
 
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
 		"gt-a": {ID: "gt-a", Type: "task", Rig: "parkedrig"},
-		"gt-b": {ID: "gt-b", Type: "task", Rig: "excavation"},
+		"gt-b": {ID: "gt-b", Type: "task", Rig: "mineshaft"},
 	}}
 	input := &StageInput{Kind: StageInputTasks, IDs: []string{"gt-a", "gt-b"}}
 	findings := detectWarnings(dag, input)
@@ -1527,7 +1527,7 @@ func TestDetectWarnings_DockedRig(t *testing.T) {
 
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
 		"gt-a": {ID: "gt-a", Type: "task", Rig: "dockedrig"},
-		"gt-b": {ID: "gt-b", Type: "task", Rig: "excavation"},
+		"gt-b": {ID: "gt-b", Type: "task", Rig: "mineshaft"},
 	}}
 	input := &StageInput{Kind: StageInputTasks, IDs: []string{"gt-a", "gt-b"}}
 	findings := detectWarnings(dag, input)
@@ -1561,9 +1561,9 @@ func TestDetectWarnings_OrphanEpicInput(t *testing.T) {
 	// 3 tasks under an epic: A blocks B (connected), C is isolated.
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
 		"epic-1": {ID: "epic-1", Type: "epic", Children: []string{"gt-a", "gt-b", "gt-c"}},
-		"gt-a":   {ID: "gt-a", Type: "task", Rig: "excavation", Parent: "epic-1", Blocks: []string{"gt-b"}},
-		"gt-b":   {ID: "gt-b", Type: "task", Rig: "excavation", Parent: "epic-1", BlockedBy: []string{"gt-a"}},
-		"gt-c":   {ID: "gt-c", Type: "task", Rig: "excavation", Parent: "epic-1"},
+		"gt-a":   {ID: "gt-a", Type: "task", Rig: "mineshaft", Parent: "epic-1", Blocks: []string{"gt-b"}},
+		"gt-b":   {ID: "gt-b", Type: "task", Rig: "mineshaft", Parent: "epic-1", BlockedBy: []string{"gt-a"}},
+		"gt-c":   {ID: "gt-c", Type: "task", Rig: "mineshaft", Parent: "epic-1"},
 	}}
 	input := &StageInput{Kind: StageInputEpic, IDs: []string{"epic-1"}}
 	findings := detectWarnings(dag, input)
@@ -1587,8 +1587,8 @@ func TestDetectWarnings_MissingBranch(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
 		"root-epic": {ID: "root-epic", Type: "epic", Children: []string{"sub-epic"}},
 		"sub-epic":  {ID: "sub-epic", Type: "epic", Parent: "root-epic", Children: []string{"gt-a", "gt-b"}},
-		"gt-a":      {ID: "gt-a", Type: "task", Rig: "excavation", Parent: "sub-epic"},
-		"gt-b":      {ID: "gt-b", Type: "task", Rig: "excavation", Parent: "sub-epic"},
+		"gt-a":      {ID: "gt-a", Type: "task", Rig: "mineshaft", Parent: "sub-epic"},
+		"gt-b":      {ID: "gt-b", Type: "task", Rig: "mineshaft", Parent: "sub-epic"},
 	}}
 	input := &StageInput{Kind: StageInputEpic, IDs: []string{"root-epic"}}
 	findings := detectWarnings(dag, input)
@@ -1617,8 +1617,8 @@ func TestDetectWarnings_MissingBranch(t *testing.T) {
 // U-34: Cross-rig routing mismatch warned
 func TestDetectWarnings_CrossRig(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-a": {ID: "gt-a", Type: "task", Rig: "excavation"},
-		"gt-b": {ID: "gt-b", Type: "task", Rig: "excavation"},
+		"gt-a": {ID: "gt-a", Type: "task", Rig: "mineshaft"},
+		"gt-b": {ID: "gt-b", Type: "task", Rig: "mineshaft"},
 		"bd-c": {ID: "bd-c", Type: "task", Rig: "beads"},
 	}}
 	input := &StageInput{Kind: StageInputTasks, IDs: []string{"gt-a", "gt-b", "bd-c"}}
@@ -1640,8 +1640,8 @@ func TestDetectWarnings_CrossRig(t *testing.T) {
 	if !sliceContains(f.BeadIDs, "bd-c") {
 		t.Errorf("BeadIDs should contain bd-c, got %v", f.BeadIDs)
 	}
-	if !strings.Contains(f.Message, "excavation") {
-		t.Errorf("Message should mention primary rig excavation, got %q", f.Message)
+	if !strings.Contains(f.Message, "mineshaft") {
+		t.Errorf("Message should mention primary rig mineshaft, got %q", f.Message)
 	}
 }
 
@@ -1649,12 +1649,12 @@ func TestDetectWarnings_CrossRig(t *testing.T) {
 func TestDetectWarnings_Capacity(t *testing.T) {
 	// Create a DAG where wave 1 has 6 independent tasks (all in-degree 0).
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"t1": {ID: "t1", Type: "task", Rig: "excavation"},
-		"t2": {ID: "t2", Type: "task", Rig: "excavation"},
-		"t3": {ID: "t3", Type: "task", Rig: "excavation"},
-		"t4": {ID: "t4", Type: "task", Rig: "excavation"},
-		"t5": {ID: "t5", Type: "task", Rig: "excavation"},
-		"t6": {ID: "t6", Type: "task", Rig: "excavation"},
+		"t1": {ID: "t1", Type: "task", Rig: "mineshaft"},
+		"t2": {ID: "t2", Type: "task", Rig: "mineshaft"},
+		"t3": {ID: "t3", Type: "task", Rig: "mineshaft"},
+		"t4": {ID: "t4", Type: "task", Rig: "mineshaft"},
+		"t5": {ID: "t5", Type: "task", Rig: "mineshaft"},
+		"t6": {ID: "t6", Type: "task", Rig: "mineshaft"},
 	}}
 
 	// Verify computeWaves puts them all in wave 1.
@@ -1694,9 +1694,9 @@ func TestDetectWarnings_Capacity(t *testing.T) {
 func TestDetectWarnings_NoOrphansForTaskList(t *testing.T) {
 	// Same DAG as orphan test but with task-list input.
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-a": {ID: "gt-a", Type: "task", Rig: "excavation", Blocks: []string{"gt-b"}},
-		"gt-b": {ID: "gt-b", Type: "task", Rig: "excavation", BlockedBy: []string{"gt-a"}},
-		"gt-c": {ID: "gt-c", Type: "task", Rig: "excavation"}, // isolated
+		"gt-a": {ID: "gt-a", Type: "task", Rig: "mineshaft", Blocks: []string{"gt-b"}},
+		"gt-b": {ID: "gt-b", Type: "task", Rig: "mineshaft", BlockedBy: []string{"gt-a"}},
+		"gt-c": {ID: "gt-c", Type: "task", Rig: "mineshaft"}, // isolated
 	}}
 	input := &StageInput{Kind: StageInputTasks, IDs: []string{"gt-a", "gt-b", "gt-c"}}
 	findings := detectWarnings(dag, input)
@@ -1715,7 +1715,7 @@ func TestRenderWarnings_Format(t *testing.T) {
 			Severity:     "warning",
 			Category:     "blocked-rig",
 			BeadIDs:      []string{"gt-a"},
-			Message:      "task gt-a is assigned to parked rig \"excavation.parked\"",
+			Message:      "task gt-a is assigned to parked rig \"mineshaft.parked\"",
 			SuggestedFix: "reassign gt-a to an active rig",
 		},
 		{
@@ -1728,8 +1728,8 @@ func TestRenderWarnings_Format(t *testing.T) {
 			Severity:     "warning",
 			Category:     "cross-rig",
 			BeadIDs:      []string{"bd-c"},
-			Message:      "task bd-c is on rig \"beads\" (primary rig is \"excavation\")",
-			SuggestedFix: "verify cross-rig routing for bd-c or reassign to excavation",
+			Message:      "task bd-c is on rig \"beads\" (primary rig is \"mineshaft\")",
+			SuggestedFix: "verify cross-rig routing for bd-c or reassign to mineshaft",
 		},
 	}
 
@@ -1775,9 +1775,9 @@ func TestDetectWarnings_Clean(t *testing.T) {
 	// All tasks on same rig, all have deps between them, epic input.
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
 		"epic-1": {ID: "epic-1", Type: "epic", Children: []string{"gt-a", "gt-b", "gt-c"}},
-		"gt-a":   {ID: "gt-a", Type: "task", Rig: "excavation", Parent: "epic-1", Blocks: []string{"gt-b"}},
-		"gt-b":   {ID: "gt-b", Type: "task", Rig: "excavation", Parent: "epic-1", BlockedBy: []string{"gt-a"}, Blocks: []string{"gt-c"}},
-		"gt-c":   {ID: "gt-c", Type: "task", Rig: "excavation", Parent: "epic-1", BlockedBy: []string{"gt-b"}},
+		"gt-a":   {ID: "gt-a", Type: "task", Rig: "mineshaft", Parent: "epic-1", Blocks: []string{"gt-b"}},
+		"gt-b":   {ID: "gt-b", Type: "task", Rig: "mineshaft", Parent: "epic-1", BlockedBy: []string{"gt-a"}, Blocks: []string{"gt-c"}},
+		"gt-c":   {ID: "gt-c", Type: "task", Rig: "mineshaft", Parent: "epic-1", BlockedBy: []string{"gt-b"}},
 	}}
 	input := &StageInput{Kind: StageInputEpic, IDs: []string{"epic-1"}}
 	findings := detectWarnings(dag, input)
@@ -1813,19 +1813,19 @@ func TestCreateStagedMinecart_CleanReady(t *testing.T) {
 
 	// Set up bd stub environment for create/dep add commands.
 	testDAG := newTestDAG(t).
-		Task("gt-a", "Task A", withRig("excavation")).
-		Task("gt-b", "Task B", withRig("excavation")).BlockedBy("gt-a").
-		Task("gt-c", "Task C", withRig("excavation")).BlockedBy("gt-b")
+		Task("gt-a", "Task A", withRig("mineshaft")).
+		Task("gt-b", "Task B", withRig("mineshaft")).BlockedBy("gt-a").
+		Task("gt-c", "Task C", withRig("mineshaft")).BlockedBy("gt-b")
 
 	_, logPath := testDAG.Setup(t)
 
 	// Build the MinecartDAG directly with rigs populated (avoids rigFromBeadID stub).
 	minecartDAG := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-a": {ID: "gt-a", Title: "Task A", Type: "task", Status: "open", Rig: "excavation",
+		"gt-a": {ID: "gt-a", Title: "Task A", Type: "task", Status: "open", Rig: "mineshaft",
 			Blocks: []string{"gt-b"}},
-		"gt-b": {ID: "gt-b", Title: "Task B", Type: "task", Status: "open", Rig: "excavation",
+		"gt-b": {ID: "gt-b", Title: "Task B", Type: "task", Status: "open", Rig: "mineshaft",
 			BlockedBy: []string{"gt-a"}, Blocks: []string{"gt-c"}},
-		"gt-c": {ID: "gt-c", Title: "Task C", Type: "task", Status: "open", Rig: "excavation",
+		"gt-c": {ID: "gt-c", Title: "Task C", Type: "task", Status: "open", Rig: "mineshaft",
 			BlockedBy: []string{"gt-b"}},
 	}}
 
@@ -1890,9 +1890,9 @@ func TestCreateStagedMinecart_TracksOnlySlingable(t *testing.T) {
 
 	dag := newTestDAG(t).
 		Epic("gt-epic", "Root Epic").
-		Task("gt-t1", "Task 1", withRig("excavation")).ParentOf("gt-epic").
-		Bug("gt-b1", "Bug 1", withRig("excavation")).ParentOf("gt-epic").
-		Task("gt-t2", "Task 2", withRig("excavation")).ParentOf("gt-epic").BlockedBy("gt-t1")
+		Task("gt-t1", "Task 1", withRig("mineshaft")).ParentOf("gt-epic").
+		Bug("gt-b1", "Bug 1", withRig("mineshaft")).ParentOf("gt-epic").
+		Task("gt-t2", "Task 2", withRig("mineshaft")).ParentOf("gt-epic").BlockedBy("gt-t1")
 
 	_, logPath := dag.Setup(t)
 
@@ -1945,8 +1945,8 @@ func TestCreateStagedMinecart_DescriptionFormat(t *testing.T) {
 	}
 
 	dag := newTestDAG(t).
-		Task("gt-a", "Task A", withRig("excavation")).
-		Task("gt-b", "Task B", withRig("excavation")).BlockedBy("gt-a")
+		Task("gt-a", "Task A", withRig("mineshaft")).
+		Task("gt-b", "Task B", withRig("mineshaft")).BlockedBy("gt-a")
 
 	_, logPath := dag.Setup(t)
 
@@ -2008,7 +2008,7 @@ func TestCreateStagedMinecart_IDFormat(t *testing.T) {
 	}
 
 	dag := newTestDAG(t).
-		Task("gt-a", "Task A", withRig("excavation"))
+		Task("gt-a", "Task A", withRig("mineshaft"))
 
 	dag.Setup(t)
 
@@ -2066,16 +2066,16 @@ func TestRestageMinecart_UpdatesInPlace(t *testing.T) {
 	// tracking two tasks.
 	testDAG := newTestDAG(t).
 		Minecart("hq-cv-test1", "Staged Minecart").WithStatus("staged_ready").
-		Task("gt-x1", "Task X1", withRig("excavation")).TrackedBy("hq-cv-test1").
-		Task("gt-x2", "Task X2", withRig("excavation")).TrackedBy("hq-cv-test1").BlockedBy("gt-x1")
+		Task("gt-x1", "Task X1", withRig("mineshaft")).TrackedBy("hq-cv-test1").
+		Task("gt-x2", "Task X2", withRig("mineshaft")).TrackedBy("hq-cv-test1").BlockedBy("gt-x1")
 
 	_, logPath := testDAG.Setup(t)
 
 	// Build the MinecartDAG directly (as runMinecartStage would after collectBeads).
 	minecartDAG := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-x1": {ID: "gt-x1", Title: "Task X1", Type: "task", Status: "open", Rig: "excavation",
+		"gt-x1": {ID: "gt-x1", Title: "Task X1", Type: "task", Status: "open", Rig: "mineshaft",
 			Blocks: []string{"gt-x2"}},
-		"gt-x2": {ID: "gt-x2", Title: "Task X2", Type: "task", Status: "open", Rig: "excavation",
+		"gt-x2": {ID: "gt-x2", Title: "Task X2", Type: "task", Status: "open", Rig: "mineshaft",
 			BlockedBy: []string{"gt-x1"}},
 	}}
 
@@ -2141,8 +2141,8 @@ func TestRestageMinecart_DetectionLogic(t *testing.T) {
 
 	testDAG := newTestDAG(t).
 		Minecart("hq-cv-det", "Detection Minecart").WithStatus("staged_ready").
-		Task("gt-d1", "Detection Task 1", withRig("excavation")).TrackedBy("hq-cv-det").
-		Task("gt-d2", "Detection Task 2", withRig("excavation")).TrackedBy("hq-cv-det")
+		Task("gt-d1", "Detection Task 1", withRig("mineshaft")).TrackedBy("hq-cv-det").
+		Task("gt-d2", "Detection Task 2", withRig("mineshaft")).TrackedBy("hq-cv-det")
 
 	testDAG.Setup(t)
 
@@ -2187,14 +2187,14 @@ func TestRestageMinecart_UpdatesStatusToWarnings(t *testing.T) {
 
 	testDAG := newTestDAG(t).
 		Minecart("hq-cv-warn", "Warn Minecart").WithStatus("staged_ready").
-		Task("gt-w1", "Warn Task 1", withRig("excavation")).TrackedBy("hq-cv-warn").
+		Task("gt-w1", "Warn Task 1", withRig("mineshaft")).TrackedBy("hq-cv-warn").
 		Task("bd-w2", "Warn Task 2", withRig("beads")).TrackedBy("hq-cv-warn")
 
 	_, logPath := testDAG.Setup(t)
 
 	// Build a MinecartDAG with cross-rig tasks.
 	minecartDAG := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-w1": {ID: "gt-w1", Title: "Warn Task 1", Type: "task", Status: "open", Rig: "excavation"},
+		"gt-w1": {ID: "gt-w1", Title: "Warn Task 1", Type: "task", Status: "open", Rig: "mineshaft"},
 		"bd-w2": {ID: "bd-w2", Title: "Warn Task 2", Type: "task", Status: "open", Rig: "beads"},
 	}}
 
@@ -2237,9 +2237,9 @@ func TestRestageMinecart_UpdatesStatusToWarnings(t *testing.T) {
 // function, verify valid JSON with all fields.
 func TestJSONOutput_ValidWithAllFields(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-a": {ID: "gt-a", Title: "Task A", Type: "task", Status: "open", Rig: "excavation",
+		"gt-a": {ID: "gt-a", Title: "Task A", Type: "task", Status: "open", Rig: "mineshaft",
 			Blocks: []string{"gt-b"}},
-		"gt-b": {ID: "gt-b", Title: "Task B", Type: "task", Status: "open", Rig: "excavation",
+		"gt-b": {ID: "gt-b", Title: "Task B", Type: "task", Status: "open", Rig: "mineshaft",
 			BlockedBy: []string{"gt-a"}},
 	}}
 	input := &StageInput{Kind: StageInputTasks, IDs: []string{"gt-a", "gt-b"}}
@@ -2299,8 +2299,8 @@ func TestJSONOutput_ValidWithAllFields(t *testing.T) {
 				if task.Title != "Task A" {
 					t.Errorf("gt-a title = %q, want %q", task.Title, "Task A")
 				}
-				if task.Rig != "excavation" {
-					t.Errorf("gt-a rig = %q, want %q", task.Rig, "excavation")
+				if task.Rig != "mineshaft" {
+					t.Errorf("gt-a rig = %q, want %q", task.Rig, "mineshaft")
 				}
 			}
 			if task.ID == "gt-b" {
@@ -2323,9 +2323,9 @@ func TestJSONOutput_ValidWithAllFields(t *testing.T) {
 // Build a DAG with a cycle, verify the errors array has the cycle finding.
 func TestJSONOutput_ErrorsPopulatedOnCycle(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-a": {ID: "gt-a", Type: "task", Rig: "excavation",
+		"gt-a": {ID: "gt-a", Type: "task", Rig: "mineshaft",
 			Blocks: []string{"gt-b"}, BlockedBy: []string{"gt-b"}},
-		"gt-b": {ID: "gt-b", Type: "task", Rig: "excavation",
+		"gt-b": {ID: "gt-b", Type: "task", Rig: "mineshaft",
 			Blocks: []string{"gt-a"}, BlockedBy: []string{"gt-a"}},
 	}}
 	input := &StageInput{Kind: StageInputTasks, IDs: []string{"gt-a", "gt-b"}}
@@ -2532,8 +2532,8 @@ func TestJSONOutput_NoHumanReadableText(t *testing.T) {
 	}
 
 	testDAG := newTestDAG(t).
-		Task("gt-j1", "JSON Task 1", withRig("excavation")).
-		Task("gt-j2", "JSON Task 2", withRig("excavation")).BlockedBy("gt-j1")
+		Task("gt-j1", "JSON Task 1", withRig("mineshaft")).
+		Task("gt-j2", "JSON Task 2", withRig("mineshaft")).BlockedBy("gt-j1")
 
 	testDAG.Setup(t)
 
@@ -2643,9 +2643,9 @@ func TestJSONOutput_FullStructureSnapshot(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
 		"epic-1": {ID: "epic-1", Title: "Root Epic", Type: "epic", Status: "open",
 			Children: []string{"gt-a", "gt-b"}},
-		"gt-a": {ID: "gt-a", Title: "Task A", Type: "task", Status: "open", Rig: "excavation",
+		"gt-a": {ID: "gt-a", Title: "Task A", Type: "task", Status: "open", Rig: "mineshaft",
 			Parent: "epic-1", Blocks: []string{"gt-b"}},
-		"gt-b": {ID: "gt-b", Title: "Task B", Type: "task", Status: "open", Rig: "excavation",
+		"gt-b": {ID: "gt-b", Title: "Task B", Type: "task", Status: "open", Rig: "mineshaft",
 			Parent: "epic-1", BlockedBy: []string{"gt-a"}},
 	}}
 	input := &StageInput{Kind: StageInputEpic, IDs: []string{"epic-1"}}
@@ -2719,8 +2719,8 @@ func TestJSONOutput_FullStructureSnapshot(t *testing.T) {
 	}
 
 	// Children should have rig set.
-	if root.Children[0].Rig != "excavation" {
-		t.Errorf("gt-a rig = %q, want excavation", root.Children[0].Rig)
+	if root.Children[0].Rig != "mineshaft" {
+		t.Errorf("gt-a rig = %q, want mineshaft", root.Children[0].Rig)
 	}
 
 	// Waves should have task details.
@@ -2751,7 +2751,7 @@ func TestJSONOutput_FullStructureSnapshot(t *testing.T) {
 // Test buildTreeJSON for flat (task-list) input.
 func TestBuildTreeJSON_FlatInput(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-x": {ID: "gt-x", Title: "X", Type: "task", Status: "open", Rig: "excavation"},
+		"gt-x": {ID: "gt-x", Title: "X", Type: "task", Status: "open", Rig: "mineshaft"},
 		"gt-y": {ID: "gt-y", Title: "Y", Type: "bug", Status: "open", Rig: "beads"},
 	}}
 	input := &StageInput{Kind: StageInputTasks, IDs: []string{"gt-x", "gt-y"}}
@@ -2783,9 +2783,9 @@ func TestBuildTreeJSON_EpicInput(t *testing.T) {
 		"sub-epic": {ID: "sub-epic", Title: "Sub", Type: "epic", Status: "open",
 			Parent: "epic-1", Children: []string{"task-2"}},
 		"task-1": {ID: "task-1", Title: "T1", Type: "task", Status: "open",
-			Rig: "excavation", Parent: "epic-1"},
+			Rig: "mineshaft", Parent: "epic-1"},
 		"task-2": {ID: "task-2", Title: "T2", Type: "task", Status: "open",
-			Rig: "excavation", Parent: "sub-epic"},
+			Rig: "mineshaft", Parent: "sub-epic"},
 	}}
 	input := &StageInput{Kind: StageInputEpic, IDs: []string{"epic-1"}}
 
@@ -2879,16 +2879,16 @@ func TestAppendValidationWave_CreatesCapstoneWave(t *testing.T) {
 
 	testDAG := newTestDAG(t).
 		Epic("epic-1", "Test Epic").
-		Task("gt-a", "Task A", withRig("excavation")).ParentOf("epic-1").
-		Task("gt-b", "Task B", withRig("excavation")).ParentOf("epic-1").BlockedBy("gt-a")
+		Task("gt-a", "Task A", withRig("mineshaft")).ParentOf("epic-1").
+		Task("gt-b", "Task B", withRig("mineshaft")).ParentOf("epic-1").BlockedBy("gt-a")
 
 	_, logPath := testDAG.Setup(t)
 
 	// Build the MinecartDAG.
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
 		"epic-1": {ID: "epic-1", Title: "Test Epic", Type: "epic", Status: "open"},
-		"gt-a":   {ID: "gt-a", Title: "Task A", Type: "task", Status: "open", Rig: "excavation", Blocks: []string{"gt-b"}},
-		"gt-b":   {ID: "gt-b", Title: "Task B", Type: "task", Status: "open", Rig: "excavation", BlockedBy: []string{"gt-a"}},
+		"gt-a":   {ID: "gt-a", Title: "Task A", Type: "task", Status: "open", Rig: "mineshaft", Blocks: []string{"gt-b"}},
+		"gt-b":   {ID: "gt-b", Title: "Task B", Type: "task", Status: "open", Rig: "mineshaft", BlockedBy: []string{"gt-a"}},
 	}}
 
 	// Compute waves first.

@@ -25,7 +25,7 @@ permissions:
 jobs:
   update-nix-flake:
     name: Update flake.nix
-    if: ${{ github.repository == 'excavationhall/excavation' }}
+    if: ${{ github.repository == 'mineshafthall/mineshaft' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout target branch

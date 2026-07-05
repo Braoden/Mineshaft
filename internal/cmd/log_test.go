@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	gtevents "github.com/steveyegge/excavation/internal/events"
+	gtevents "github.com/steveyegge/mineshaft/internal/events"
 )
 
 func TestRunLogCrashEmitsFeedSessionDeath(t *testing.T) {
@@ -34,8 +34,8 @@ func TestRunLogCrashEmitsFeedSessionDeath(t *testing.T) {
 		crashSession = origSession
 		crashExitCode = origExitCode
 	})
-	crashAgent = "excavation/miners/rust"
-	crashSession = "gt-excavation-rust"
+	crashAgent = "mineshaft/miners/rust"
+	crashSession = "gt-mineshaft-rust"
 	crashExitCode = 42
 
 	if err := runLogCrash(nil, nil); err != nil {
@@ -66,14 +66,14 @@ func TestRunLogCrashEmitsFeedSessionDeath(t *testing.T) {
 	if event.Type != gtevents.TypeSessionDeath {
 		t.Fatalf("event type = %q, want %q", event.Type, gtevents.TypeSessionDeath)
 	}
-	if event.Actor != "excavation/miners/rust" {
+	if event.Actor != "mineshaft/miners/rust" {
 		t.Fatalf("actor = %q", event.Actor)
 	}
 	if event.Visibility != gtevents.VisibilityFeed {
 		t.Fatalf("visibility = %q", event.Visibility)
 	}
-	assertPayloadString(t, event.Payload, "session", "gt-excavation-rust")
-	assertPayloadString(t, event.Payload, "agent", "excavation/miners/rust")
+	assertPayloadString(t, event.Payload, "session", "gt-mineshaft-rust")
+	assertPayloadString(t, event.Payload, "agent", "mineshaft/miners/rust")
 	assertPayloadString(t, event.Payload, "reason", "crashed with exit code 42")
 	assertPayloadString(t, event.Payload, "caller", "gt log crash")
 	if got, ok := event.Payload["exit_code"].(float64); !ok || got != 42 {

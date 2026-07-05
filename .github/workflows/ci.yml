@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   # Guard: go.mod must not contain replace directives — they break `go install`.
-  # See: https://github.com/steveyegge/excavation/issues/2230
+  # See: https://github.com/steveyegge/mineshaft/issues/2230
   check-no-replace-directives:
     name: Reject go.mod replace directives
     runs-on: ubuntu-latest
@@ -24,8 +24,8 @@ jobs:
           if grep -qE '^replace\s' go.mod; then
             echo "ERROR: go.mod contains replace directives."
             echo ""
-            echo "Replace directives break 'go install github.com/steveyegge/excavation/cmd/gt@latest'."
-            echo "See: https://github.com/steveyegge/excavation/issues/2230"
+            echo "Replace directives break 'go install github.com/steveyegge/mineshaft/cmd/gt@latest'."
+            echo "See: https://github.com/steveyegge/mineshaft/issues/2230"
             echo ""
             echo "Found:"
             grep -n '^replace' go.mod
@@ -35,7 +35,7 @@ jobs:
           fi
           echo "OK: no replace directives in go.mod"
 
-  # Guard: excavation no longer supports issues.jsonl — Dolt server is the only backend.
+  # Guard: mineshaft no longer supports issues.jsonl — Dolt server is the only backend.
   check-no-issues-jsonl:
     name: Reject issues.jsonl
     runs-on: ubuntu-latest
@@ -48,7 +48,7 @@ jobs:
           if [ -f .beads/issues.jsonl ]; then
             echo "ERROR: .beads/issues.jsonl must not exist in the repository."
             echo ""
-            echo "Excavation requires a Dolt server — issues.jsonl is no longer supported."
+            echo "Mineshaft requires a Dolt server — issues.jsonl is no longer supported."
             echo ""
             echo "To fix, run:"
             echo "  git rm .beads/issues.jsonl"
@@ -79,7 +79,7 @@ jobs:
       - name: Configure Git
         run: |
           git config --global user.name "CI Bot"
-          git config --global user.email "ci@excavation.test"
+          git config --global user.email "ci@mineshaft.test"
 
       - name: Install Dolt
         run: |
@@ -160,7 +160,7 @@ jobs:
       - name: Configure Git
         run: |
           git config --global user.name "CI Bot"
-          git config --global user.email "ci@excavation.test"
+          git config --global user.email "ci@mineshaft.test"
 
       - name: Install Dolt
         run: |

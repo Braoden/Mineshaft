@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/mail"
+	"github.com/steveyegge/mineshaft/internal/mail"
 )
 
 // NewMergeReadyMessage creates a MERGE_READY protocol message.

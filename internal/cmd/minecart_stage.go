@@ -11,9 +11,9 @@ import (
 	"unicode/utf8"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/minecart"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/minecart"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // minecartStageJSON controls whether output is machine-readable JSON.

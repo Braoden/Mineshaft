@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
 )
 
 func writeBDStub(t *testing.T, binDir string, unixScript string, windowsScript string) string {
@@ -42,7 +42,7 @@ func setupMutableBDRawSlingTest(t *testing.T, initialDescription string) (townRo
 	}
 
 	townRoot = t.TempDir()
-	rigPath = filepath.Join(townRoot, "excavation", "overseer", "rig")
+	rigPath = filepath.Join(townRoot, "mineshaft", "overseer", "rig")
 	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
@@ -55,11 +55,11 @@ func setupMutableBDRawSlingTest(t *testing.T, initialDescription string) (townRo
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir town beads: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(`{"prefix":"gt-","path":"excavation/overseer/rig"}`+"\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`+"\n"), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
 	rigs := &config.RigsConfig{Version: 1, Rigs: map[string]config.RigEntry{
-		"excavation": {GitURL: "git@github.com:test/excavation.git", AddedAt: time.Now().Truncate(time.Second), BeadsConfig: &config.BeadsConfig{Repo: "local", Prefix: "gt"}},
+		"mineshaft": {GitURL: "git@github.com:test/mineshaft.git", AddedAt: time.Now().Truncate(time.Second), BeadsConfig: &config.BeadsConfig{Repo: "local", Prefix: "gt"}},
 	}}
 	if err := config.SaveRigsConfig(filepath.Join(townRoot, "overseer", "rigs.json"), rigs); err != nil {
 		t.Fatalf("SaveRigsConfig: %v", err)
@@ -278,7 +278,7 @@ func TestSlingNewlyCreatedRigBeadRoutesBDCommandsToTargetRig(t *testing.T) {
 	}
 
 	// Create a rig path that owns gt-* beads, and a routes.jsonl pointing to it.
-	rigDir := filepath.Join(townRoot, "excavation", "overseer", "rig")
+	rigDir := filepath.Join(townRoot, "mineshaft", "overseer", "rig")
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
@@ -286,7 +286,7 @@ func TestSlingNewlyCreatedRigBeadRoutesBDCommandsToTargetRig(t *testing.T) {
 		t.Fatalf("mkdir rigDir: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"excavation/overseer/rig"}`,
+		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
@@ -296,7 +296,7 @@ func TestSlingNewlyCreatedRigBeadRoutesBDCommandsToTargetRig(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "metadata.json"), []byte(`{"dolt_database":"hq","dolt_server_host":"127.0.0.1","dolt_server_port":3307}`), 0644); err != nil {
 		t.Fatalf("write town metadata: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(rigDir, ".beads", "metadata.json"), []byte(`{"dolt_database":"excavation","dolt_server_host":"127.0.0.2","dolt_server_port":4407}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(rigDir, ".beads", "metadata.json"), []byte(`{"dolt_database":"mineshaft","dolt_server_host":"127.0.0.2","dolt_server_port":4407}`), 0644); err != nil {
 		t.Fatalf("write rig metadata: %v", err)
 	}
 
@@ -443,10 +443,10 @@ exit /b 0
 	slingVars = nil
 	slingOnTarget = ""
 	resolveTargetAgentFn = func(target string) (agentID string, pane string, hookRoot string, err error) {
-		if target != "excavation/miners/toast" {
-			t.Fatalf("resolveTargetAgent target = %q, want excavation/miners/toast", target)
+		if target != "mineshaft/miners/toast" {
+			t.Fatalf("resolveTargetAgent target = %q, want mineshaft/miners/toast", target)
 		}
-		return "excavation/miners/toast", "", filepath.Join(townRoot, "excavation", "miners", "toast", "excavation"), nil
+		return "mineshaft/miners/toast", "", filepath.Join(townRoot, "mineshaft", "miners", "toast", "mineshaft"), nil
 	}
 
 	// Prevent real tmux nudge from firing during tests (causes agent self-interruption)
@@ -471,7 +471,7 @@ exit /b 0
 		t.Fatalf("created bead output = %q, want %s", createOut, newBeadID)
 	}
 
-	if err := runSling(nil, []string{newBeadID, "excavation/miners/toast"}); err != nil {
+	if err := runSling(nil, []string{newBeadID, "mineshaft/miners/toast"}); err != nil {
 		t.Fatalf("runSling: %v", err)
 	}
 
@@ -486,7 +486,7 @@ exit /b 0
 	slingHookRawBead = true
 	slingReviewOnly = true
 	slingNoMerge = true
-	if err := runSling(nil, []string{newBeadID, "excavation/miners/toast"}); err != nil {
+	if err := runSling(nil, []string{newBeadID, "mineshaft/miners/toast"}); err != nil {
 		t.Fatalf("runSling raw review-only: %v", err)
 	}
 
@@ -521,8 +521,8 @@ exit /b 0
 		if beadsDir != wantBeadsDir {
 			t.Fatalf("bd %s used BEADS_DIR %q, want %q (args: %q)", kind, beadsDir, wantBeadsDir, args)
 		}
-		if database != "excavation" {
-			t.Fatalf("bd %s used BEADS_DOLT_SERVER_DATABASE %q, want excavation (args: %q)", kind, database, args)
+		if database != "mineshaft" {
+			t.Fatalf("bd %s used BEADS_DOLT_SERVER_DATABASE %q, want mineshaft (args: %q)", kind, database, args)
 		}
 		if beadsDB != "" || bdDB != "" || dataDir != "" {
 			t.Fatalf("bd %s leaked stale DB env BEADS_DB=%q BD_DB=%q BEADS_DOLT_DATA_DIR=%q (args: %q)", kind, beadsDB, bdDB, dataDir, args)
@@ -599,7 +599,7 @@ exit /b 0
 			assertTargetRig("description update", dir, beadsDir, database, beadsDB, bdDB, dataDir, gtData, args)
 		case args == "--version" || strings.HasPrefix(args, "version") || strings.Contains(args, " version") || strings.Contains(args, "show gt-rig-") || strings.Contains(args, "show mol-"):
 			// Explicitly exempt non-target-bead lookups; every gt-new123 operation
-			// above must still prove it is pinned to the excavation database.
+			// above must still prove it is pinned to the mineshaft database.
 		default:
 			t.Fatalf("unexpected bd command without routing assertion: %q", line)
 		}
@@ -623,7 +623,7 @@ func TestRoutedBeadReadUsesCanonicalShowWithoutUnsupportedAllowStale(t *testing.
 
 	townRoot := t.TempDir()
 	beadID := "gt-new123"
-	rigDir := filepath.Join(townRoot, "excavation", "overseer", "rig")
+	rigDir := filepath.Join(townRoot, "mineshaft", "overseer", "rig")
 	rigBeadsDir := filepath.Join(rigDir, ".beads")
 	for _, dir := range []string{filepath.Join(townRoot, "overseer"), filepath.Join(townRoot, ".beads"), rigBeadsDir} {
 		if err := os.MkdirAll(dir, 0755); err != nil {
@@ -634,7 +634,7 @@ func TestRoutedBeadReadUsesCanonicalShowWithoutUnsupportedAllowStale(t *testing.
 		t.Fatalf("write town.json: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"excavation/overseer/rig"}`,
+		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
@@ -726,13 +726,13 @@ func TestSlingRollsBackSpawnedMinerOnInstantiateFailure(t *testing.T) {
 		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 
-	// Register rig so IsRigName("excavation") succeeds.
+	// Register rig so IsRigName("mineshaft") succeeds.
 	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigs := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"excavation": {
-				GitURL:    "git@github.com:test/excavation.git",
+			"mineshaft": {
+				GitURL:    "git@github.com:test/mineshaft.git",
 				LocalRepo: "",
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
@@ -745,19 +745,19 @@ func TestSlingRollsBackSpawnedMinerOnInstantiateFailure(t *testing.T) {
 	if err := config.SaveRigsConfig(rigsPath, rigs); err != nil {
 		t.Fatalf("SaveRigsConfig: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft", "overseer", "rig", ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir rig beads dir: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft"), 0755); err != nil {
 		t.Fatalf("mkdir rig dir: %v", err)
 	}
 
-	// Routes: gt-* resolves to excavation's rig beads dir.
+	// Routes: gt-* resolves to mineshaft's rig beads dir.
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"excavation/overseer/rig"}`,
+		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
@@ -889,7 +889,7 @@ exit /b 0
 		}
 	}
 
-	err = runSling(nil, []string{"gt-abc123", "excavation"})
+	err = runSling(nil, []string{"gt-abc123", "mineshaft"})
 	if err == nil {
 		t.Fatalf("expected error from runSling")
 	}
@@ -907,17 +907,17 @@ func TestSlingRollsBackSpawnedMinerOnHookFailure(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"version":1}`), 0644); err != nil {
 		t.Fatalf("write town marker: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads"), 0755); err != nil {
-		t.Fatalf("mkdir excavation overseer rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft", "overseer", "rig", ".beads"), 0755); err != nil {
+		t.Fatalf("mkdir mineshaft overseer rig: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(`{"prefix":"gt-","path":"excavation/overseer/rig"}`+"\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`+"\n"), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
 	rigs := &config.RigsConfig{Version: 1, Rigs: map[string]config.RigEntry{
-		"excavation": {GitURL: "git@github.com:test/excavation.git", AddedAt: time.Now().Truncate(time.Second), BeadsConfig: &config.BeadsConfig{Repo: "local", Prefix: "gt-"}},
+		"mineshaft": {GitURL: "git@github.com:test/mineshaft.git", AddedAt: time.Now().Truncate(time.Second), BeadsConfig: &config.BeadsConfig{Repo: "local", Prefix: "gt-"}},
 	}}
 	if err := config.SaveRigsConfig(filepath.Join(townRoot, "overseer", "rigs.json"), rigs); err != nil {
 		t.Fatalf("SaveRigsConfig: %v", err)
@@ -995,7 +995,7 @@ exit /b 0
 		}
 	}
 
-	err = runSling(nil, []string{"gt-abc123", "excavation/miners/toast"})
+	err = runSling(nil, []string{"gt-abc123", "mineshaft/miners/toast"})
 	if err == nil {
 		t.Fatalf("expected hook failure from runSling")
 	}
@@ -1014,8 +1014,8 @@ func TestSlingRejectsBeadMissingFromTargetRigBeforeSpawn(t *testing.T) {
 	rigs := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"excavation": {
-				GitURL:  "git@github.com:test/excavation.git",
+			"mineshaft": {
+				GitURL:  "git@github.com:test/mineshaft.git",
 				AddedAt: time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
 					Repo:   "local",
@@ -1027,7 +1027,7 @@ func TestSlingRejectsBeadMissingFromTargetRigBeforeSpawn(t *testing.T) {
 	if err := config.SaveRigsConfig(rigsPath, rigs); err != nil {
 		t.Fatalf("SaveRigsConfig: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft", "overseer", "rig", ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir target rig dir: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
@@ -1035,7 +1035,7 @@ func TestSlingRejectsBeadMissingFromTargetRigBeforeSpawn(t *testing.T) {
 	}
 	routes := strings.Join([]string{
 		`{"prefix":"gt-","path":"."}`,
-		`{"prefix":"zz-","path":"excavation/overseer/rig"}`,
+		`{"prefix":"zz-","path":"mineshaft/overseer/rig"}`,
 		"",
 	}, "\n")
 	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(routes), 0644); err != nil {
@@ -1087,7 +1087,7 @@ exit /b 0
 	_ = writeBDStub(t, binDir, bdScript, bdScriptWindows)
 
 	t.Setenv("BD_LOG", logPath)
-	t.Setenv("TARGET_BEADS_DIR", filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads"))
+	t.Setenv("TARGET_BEADS_DIR", filepath.Join(townRoot, "mineshaft", "overseer", "rig", ".beads"))
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "overseer")
 	t.Setenv("GT_MINER", "")
@@ -1122,7 +1122,7 @@ exit /b 0
 		return &SpawnedMinerInfo{RigName: rigName, MinerName: "toast", ClonePath: filepath.Join(townRoot, "fake-miner")}, nil
 	}
 
-	err = runSling(nil, []string{"gt-r2405", "excavation"})
+	err = runSling(nil, []string{"gt-r2405", "mineshaft"})
 	if err == nil {
 		t.Fatal("expected target-rig database validation error")
 	}
@@ -1142,21 +1142,21 @@ func TestTargetRigDatabaseAllowsRouteResolvedGtBead(t *testing.T) {
 	t.Cleanup(beads.ResetBdAllowStaleCacheForTest)
 
 	townRoot := t.TempDir()
-	rigDir := filepath.Join(townRoot, "excavation", "overseer", "rig")
+	rigDir := filepath.Join(townRoot, "mineshaft", "overseer", "rig")
 	for _, dir := range []string{filepath.Join(townRoot, ".beads"), filepath.Join(townRoot, "overseer", "rig"), filepath.Join(rigDir, ".beads")} {
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			t.Fatalf("mkdir %s: %v", dir, err)
 		}
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"excavation/overseer/rig"}`,
+		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
 	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(routes), 0644); err != nil {
 		t.Fatalf("write routes.jsonl: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(rigDir, ".beads", "metadata.json"), []byte(`{"dolt_database":"excavation","dolt_server_host":"127.0.0.1","dolt_server_port":3307}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(rigDir, ".beads", "metadata.json"), []byte(`{"dolt_database":"mineshaft","dolt_server_host":"127.0.0.1","dolt_server_port":3307}`), 0644); err != nil {
 		t.Fatalf("write rig metadata: %v", err)
 	}
 
@@ -1196,7 +1196,7 @@ esac
 	t.Setenv("BEADS_DOLT_DATA_DIR", filepath.Join(townRoot, "wrong-data"))
 	t.Setenv("BEADS_DOLT_SERVER_DATABASE", "hq")
 
-	if err := verifyBeadExistsInTargetRigDatabase("gt-hq-oy83-cleanup", "excavation", townRoot); err != nil {
+	if err := verifyBeadExistsInTargetRigDatabase("gt-hq-oy83-cleanup", "mineshaft", townRoot); err != nil {
 		t.Fatalf("verifyBeadExistsInTargetRigDatabase: %v", err)
 	}
 
@@ -1221,8 +1221,8 @@ esac
 	if parts[3] != "" {
 		t.Fatalf("BEADS_DOLT_DATA_DIR leaked: %q", parts[3])
 	}
-	if parts[4] != "excavation" {
-		t.Fatalf("BEADS_DOLT_SERVER_DATABASE = %q, want excavation", parts[4])
+	if parts[4] != "mineshaft" {
+		t.Fatalf("BEADS_DOLT_SERVER_DATABASE = %q, want mineshaft", parts[4])
 	}
 }
 
@@ -1237,8 +1237,8 @@ func setupCrossDatabaseSlingGuardTest(t *testing.T) (townRoot, logPath string) {
 	rigs := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"excavation": {
-				GitURL:  "git@github.com:test/excavation.git",
+			"mineshaft": {
+				GitURL:  "git@github.com:test/mineshaft.git",
 				AddedAt: time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
 					Repo:   "local",
@@ -1250,7 +1250,7 @@ func setupCrossDatabaseSlingGuardTest(t *testing.T) (townRoot, logPath string) {
 	if err := config.SaveRigsConfig(rigsPath, rigs); err != nil {
 		t.Fatalf("SaveRigsConfig: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft", "overseer", "rig", ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir target rig dir: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
@@ -1258,7 +1258,7 @@ func setupCrossDatabaseSlingGuardTest(t *testing.T) (townRoot, logPath string) {
 	}
 	routes := strings.Join([]string{
 		`{"prefix":"gt-","path":"."}`,
-		`{"prefix":"zz-","path":"excavation/overseer/rig"}`,
+		`{"prefix":"zz-","path":"mineshaft/overseer/rig"}`,
 		"",
 	}, "\n")
 	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(routes), 0644); err != nil {
@@ -1312,7 +1312,7 @@ exit /b 0
 	_ = writeBDStub(t, binDir, bdScript, bdScriptWindows)
 
 	t.Setenv("BD_LOG", logPath)
-	t.Setenv("TARGET_BEADS_DIR", filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads"))
+	t.Setenv("TARGET_BEADS_DIR", filepath.Join(townRoot, "mineshaft", "overseer", "rig", ".beads"))
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "overseer")
 	t.Setenv("GT_MINER", "")
@@ -1336,7 +1336,7 @@ exit /b 0
 func TestScheduleBeadRejectsMissingTargetRigDatabaseBeforeContext(t *testing.T) {
 	_, logPath := setupCrossDatabaseSlingGuardTest(t)
 
-	err := scheduleBead("gt-r2405", "excavation", ScheduleOptions{})
+	err := scheduleBead("gt-r2405", "mineshaft", ScheduleOptions{})
 	if err == nil {
 		t.Fatal("expected target-rig database validation error")
 	}
@@ -1376,7 +1376,7 @@ func TestBatchSlingRejectsMissingTargetRigDatabaseBeforeSpawn(t *testing.T) {
 		return &SpawnedMinerInfo{RigName: rigName, MinerName: "toast", ClonePath: filepath.Join(townRoot, "fake-miner")}, nil
 	}
 
-	err := runBatchSling([]string{"gt-r2405"}, "excavation", filepath.Join(townRoot, ".beads"))
+	err := runBatchSling([]string{"gt-r2405"}, "mineshaft", filepath.Join(townRoot, ".beads"))
 	if err == nil {
 		t.Fatal("expected target-rig database validation error")
 	}
@@ -1420,7 +1420,7 @@ func TestExecuteSlingRejectsMissingTargetRigDatabaseBeforeSpawn(t *testing.T) {
 
 	_, err := executeSling(SlingParams{
 		BeadID:   "gt-r2405",
-		RigName:  "excavation",
+		RigName:  "mineshaft",
 		TownRoot: townRoot,
 		BeadsDir: filepath.Join(townRoot, ".beads"),
 	})
@@ -1441,10 +1441,10 @@ func TestResolveTargetRejectsLiveMinerMissingTargetRigDatabase(t *testing.T) {
 	prevResolve := resolveTargetAgentFn
 	t.Cleanup(func() { resolveTargetAgentFn = prevResolve })
 	resolveTargetAgentFn = func(target string) (string, string, string, error) {
-		return "excavation/miners/toast", "%1", filepath.Join(townRoot, "excavation", "miners", "toast"), nil
+		return "mineshaft/miners/toast", "%1", filepath.Join(townRoot, "mineshaft", "miners", "toast"), nil
 	}
 
-	for _, target := range []string{"excavation/miners/toast", "excavation/toast", "gt-excavation-miner-toast"} {
+	for _, target := range []string{"mineshaft/miners/toast", "mineshaft/toast", "gt-mineshaft-miner-toast"} {
 		t.Run(target, func(t *testing.T) {
 			_, err := resolveTarget(target, ResolveTargetOptions{
 				BeadID:   "gt-r2405",
@@ -1488,8 +1488,8 @@ func TestResolveTargetCreateSpawnsMinerShorthandWhenPaneMissing(t *testing.T) {
 	spawnCalled := false
 	spawnMinerForSling = func(rigName string, opts SlingSpawnOptions) (*SpawnedMinerInfo, error) {
 		spawnCalled = true
-		if rigName != "excavation" {
-			t.Fatalf("rigName = %q, want excavation", rigName)
+		if rigName != "mineshaft" {
+			t.Fatalf("rigName = %q, want mineshaft", rigName)
 		}
 		if !opts.Create {
 			t.Fatal("expected Create option to be preserved")
@@ -1497,15 +1497,15 @@ func TestResolveTargetCreateSpawnsMinerShorthandWhenPaneMissing(t *testing.T) {
 		return &SpawnedMinerInfo{RigName: rigName, MinerName: "toast", ClonePath: filepath.Join(townRoot, "fake-miner")}, nil
 	}
 
-	got, err := resolveTarget("excavation/toast", ResolveTargetOptions{Create: true, NoBoot: true})
+	got, err := resolveTarget("mineshaft/toast", ResolveTargetOptions{Create: true, NoBoot: true})
 	if err != nil {
 		t.Fatalf("resolveTarget: %v", err)
 	}
 	if !spawnCalled {
 		t.Fatal("expected spawnMinerForSling to be called")
 	}
-	if got.Agent != "excavation/miners/toast" {
-		t.Fatalf("Agent = %q, want excavation/miners/toast", got.Agent)
+	if got.Agent != "mineshaft/miners/toast" {
+		t.Fatalf("Agent = %q, want mineshaft/miners/toast", got.Agent)
 	}
 }
 
@@ -1514,7 +1514,7 @@ func TestResolveTargetCreateDoesNotSpawnCrewShorthandWhenPaneMissing(t *testing.
 	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "crew", "toast"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft", "crew", "toast"), 0755); err != nil {
 		t.Fatalf("mkdir crew: %v", err)
 	}
 
@@ -1543,7 +1543,7 @@ func TestResolveTargetCreateDoesNotSpawnCrewShorthandWhenPaneMissing(t *testing.
 		return nil, errors.New("unexpected spawn")
 	}
 
-	_, err = resolveTarget("excavation/toast", ResolveTargetOptions{Create: true, NoBoot: true})
+	_, err = resolveTarget("mineshaft/toast", ResolveTargetOptions{Create: true, NoBoot: true})
 	if err == nil {
 		t.Fatal("expected resolve error for missing crew pane")
 	}
@@ -1553,7 +1553,7 @@ func TestResolveTargetCreateDoesNotSpawnCrewShorthandWhenPaneMissing(t *testing.
 }
 
 func TestTargetRigDatabaseLookupFailsClosedWithoutTownRoot(t *testing.T) {
-	err := verifyBeadExistsInTargetRigDatabase("gt-r2405", "excavation", "")
+	err := verifyBeadExistsInTargetRigDatabase("gt-r2405", "mineshaft", "")
 	if err == nil {
 		t.Fatal("expected fail-closed error without town root")
 	}
@@ -1640,7 +1640,7 @@ exit /b 0
 	}
 
 	rollbackSlingArtifacts(&SpawnedMinerInfo{
-		RigName:     "excavation",
+		RigName:     "mineshaft",
 		MinerName: "Toast",
 	}, "gt-abc123", "", "")
 
@@ -1661,10 +1661,10 @@ func TestRollbackSlingArtifactsClearsRawReviewOnlyMetadata(t *testing.T) {
 	townRoot, _, descPath := setupMutableBDRawSlingTest(t, initial)
 
 	rollbackSlingArtifacts(&SpawnedMinerInfo{
-		RigName:     "excavation",
+		RigName:     "mineshaft",
 		MinerName: "toast",
-		ClonePath:   filepath.Join(townRoot, "excavation", "miners", "toast"),
-	}, "gt-rawrollback", filepath.Join(townRoot, "excavation", "miners", "toast"), "")
+		ClonePath:   filepath.Join(townRoot, "mineshaft", "miners", "toast"),
+	}, "gt-rawrollback", filepath.Join(townRoot, "mineshaft", "miners", "toast"), "")
 
 	desc := readMutableBDDescription(t, descPath)
 	assertNoRawReviewMetadata(t, desc)
@@ -1701,10 +1701,10 @@ func TestRollbackSlingArtifactsKeepsMetadataWhenMoleculeBurnFails(t *testing.T) 
 	}
 
 	rollbackSlingArtifacts(&SpawnedMinerInfo{
-		RigName:     "excavation",
+		RigName:     "mineshaft",
 		MinerName: "toast",
-		ClonePath:   filepath.Join(townRoot, "excavation", "miners", "toast"),
-	}, "gt-rawrollback", filepath.Join(townRoot, "excavation", "miners", "toast"), "")
+		ClonePath:   filepath.Join(townRoot, "mineshaft", "miners", "toast"),
+	}, "gt-rawrollback", filepath.Join(townRoot, "mineshaft", "miners", "toast"), "")
 
 	desc := readMutableBDDescription(t, descPath)
 	if !strings.Contains(desc, "attached_molecule: gt-wisp-stale") {
@@ -1751,10 +1751,10 @@ func TestRollbackSlingArtifactsClearsRawReviewOnlyMetadataAfterMoleculeBurnSucce
 	}
 
 	rollbackSlingArtifacts(&SpawnedMinerInfo{
-		RigName:     "excavation",
+		RigName:     "mineshaft",
 		MinerName: "toast",
-		ClonePath:   filepath.Join(townRoot, "excavation", "miners", "toast"),
-	}, "gt-rawrollback", filepath.Join(townRoot, "excavation", "miners", "toast"), "")
+		ClonePath:   filepath.Join(townRoot, "mineshaft", "miners", "toast"),
+	}, "gt-rawrollback", filepath.Join(townRoot, "mineshaft", "miners", "toast"), "")
 
 	desc := readMutableBDDescription(t, descPath)
 	assertNoRawReviewMetadata(t, desc)
@@ -1781,7 +1781,7 @@ func TestRestoreRollbackRawWorkflowFieldsFromCurrentRestoresOriginalValues(t *te
 		"Original body.",
 	}, "\n")}
 
-	restoreRollbackRawWorkflowFieldsFromCurrent("gt-rawrollback", townRoot, filepath.Join(townRoot, "excavation", "miners", "toast"), original)
+	restoreRollbackRawWorkflowFieldsFromCurrent("gt-rawrollback", townRoot, filepath.Join(townRoot, "mineshaft", "miners", "toast"), original)
 
 	desc := readMutableBDDescription(t, descPath)
 	fields := beads.ParseAttachmentFields(&beads.Issue{Description: desc})
@@ -1795,7 +1795,7 @@ func TestRestoreRollbackRawWorkflowFieldsFromCurrentRestoresOriginalValues(t *te
 
 func TestRunSlingRawReviewOnlyExistingTargetHookFailureClearsPreHookMetadata(t *testing.T) {
 	townRoot, _, descPath := setupMutableBDRawSlingTest(t, "Keep this body.")
-	workDir := filepath.Join(townRoot, "excavation", "crew", "toast")
+	workDir := filepath.Join(townRoot, "mineshaft", "crew", "toast")
 	if err := os.MkdirAll(workDir, 0755); err != nil {
 		t.Fatalf("mkdir workDir: %v", err)
 	}
@@ -1822,14 +1822,14 @@ func TestRunSlingRawReviewOnlyExistingTargetHookFailureClearsPreHookMetadata(t *
 	slingNoMinecart = true
 	slingDryRun = false
 	resolveTargetAgentFn = func(target string) (string, string, string, error) {
-		return "excavation/crew/toast", "", workDir, nil
+		return "mineshaft/crew/toast", "", workDir, nil
 	}
 	hookBeadWithRetryFn = func(beadID, targetAgent, hookDir string) error {
 		assertHasRawReviewMetadata(t, readMutableBDDescription(t, descPath))
 		return errors.New("forced hook failure")
 	}
 
-	err := runSling(nil, []string{"gt-rawrollback", "excavation/crew/toast"})
+	err := runSling(nil, []string{"gt-rawrollback", "mineshaft/crew/toast"})
 	if err == nil {
 		t.Fatal("expected hook failure from runSling")
 	}
@@ -1853,7 +1853,7 @@ func TestExecuteSlingRawReviewOnlyHookFailureClearsPreHookMetadata(t *testing.T)
 		return &SpawnedMinerInfo{
 			RigName:     rigName,
 			MinerName: "toast",
-			ClonePath:   filepath.Join(townRoot, "excavation", "miners", "toast"),
+			ClonePath:   filepath.Join(townRoot, "mineshaft", "miners", "toast"),
 		}, nil
 	}
 	hookBeadWithRetryWithTownRootFn = func(beadID, targetAgent, hookDir, townRoot string) error {
@@ -1863,7 +1863,7 @@ func TestExecuteSlingRawReviewOnlyHookFailureClearsPreHookMetadata(t *testing.T)
 
 	_, err := executeSling(SlingParams{
 		BeadID:      "gt-rawrollback",
-		RigName:     "excavation",
+		RigName:     "mineshaft",
 		TownRoot:    townRoot,
 		BeadsDir:    filepath.Join(rigPath, ".beads"),
 		HookRawBead: true,
@@ -1896,7 +1896,7 @@ func TestExecuteSlingRawReviewOnlyHookFailureRestoresOriginalMetadata(t *testing
 		return &SpawnedMinerInfo{
 			RigName:     rigName,
 			MinerName: "toast",
-			ClonePath:   filepath.Join(townRoot, "excavation", "miners", "toast"),
+			ClonePath:   filepath.Join(townRoot, "mineshaft", "miners", "toast"),
 		}, nil
 	}
 	hookBeadWithRetryWithTownRootFn = func(beadID, targetAgent, hookDir, townRoot string) error {
@@ -1906,7 +1906,7 @@ func TestExecuteSlingRawReviewOnlyHookFailureRestoresOriginalMetadata(t *testing
 
 	_, err := executeSling(SlingParams{
 		BeadID:      "gt-rawrollback",
-		RigName:     "excavation",
+		RigName:     "mineshaft",
 		TownRoot:    townRoot,
 		BeadsDir:    filepath.Join(rigPath, ".beads"),
 		HookRawBead: true,
@@ -1941,7 +1941,7 @@ func TestExecuteSlingRawReviewOnlySuccessKeepsMetadata(t *testing.T) {
 		return &SpawnedMinerInfo{
 			RigName:     rigName,
 			MinerName: "toast",
-			ClonePath:   filepath.Join(townRoot, "excavation", "miners", "toast"),
+			ClonePath:   filepath.Join(townRoot, "mineshaft", "miners", "toast"),
 			Pane:        "%1",
 		}, nil
 	}
@@ -1952,7 +1952,7 @@ func TestExecuteSlingRawReviewOnlySuccessKeepsMetadata(t *testing.T) {
 
 	result, err := executeSling(SlingParams{
 		BeadID:      "gt-rawrollback",
-		RigName:     "excavation",
+		RigName:     "mineshaft",
 		TownRoot:    townRoot,
 		BeadsDir:    filepath.Join(rigPath, ".beads"),
 		HookRawBead: true,
@@ -1978,13 +1978,13 @@ func TestSlingFormulaRollsBackSpawnedMinerOnWispFailure(t *testing.T) {
 		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 
-	// Register rig so IsRigName("excavation") succeeds.
+	// Register rig so IsRigName("mineshaft") succeeds.
 	rigsPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigs := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"excavation": {
-				GitURL:    "git@github.com:test/excavation.git",
+			"mineshaft": {
+				GitURL:    "git@github.com:test/mineshaft.git",
 				LocalRepo: "",
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
@@ -1997,10 +1997,10 @@ func TestSlingFormulaRollsBackSpawnedMinerOnWispFailure(t *testing.T) {
 	if err := config.SaveRigsConfig(rigsPath, rigs); err != nil {
 		t.Fatalf("SaveRigsConfig: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "overseer", "rig"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft", "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir rig beads dir: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft"), 0755); err != nil {
 		t.Fatalf("mkdir rig dir: %v", err)
 	}
 
@@ -2102,7 +2102,7 @@ exit /b 0
 		}
 	}
 
-	err = runSlingFormula(context.Background(), []string{"mol-anything", "excavation"})
+	err = runSlingFormula(context.Background(), []string{"mol-anything", "mineshaft"})
 	if err == nil {
 		t.Fatalf("expected error from runSlingFormula")
 	}
@@ -2405,7 +2405,7 @@ func TestSlingFormulaOnBeadPassesFeatureAndIssueVars(t *testing.T) {
 	}
 
 	// Create a rig path that owns gt-* beads, and a routes.jsonl pointing to it.
-	rigDir := filepath.Join(townRoot, "excavation", "overseer", "rig")
+	rigDir := filepath.Join(townRoot, "mineshaft", "overseer", "rig")
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
@@ -2413,7 +2413,7 @@ func TestSlingFormulaOnBeadPassesFeatureAndIssueVars(t *testing.T) {
 		t.Fatalf("mkdir rigDir: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"excavation/overseer/rig"}`,
+		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
@@ -2847,7 +2847,7 @@ func TestLooksLikeBeadID(t *testing.T) {
 		// Non-bead strings - should return false
 		{"formula-name", false}, // "formula" is 7 chars (> 5)
 		{"overseer", false},        // no hyphen
-		{"excavation", false},      // no hyphen
+		{"mineshaft", false},      // no hyphen
 		{"supervisor/dogs", false},  // contains slash
 		{"", false},             // empty
 		{"-abc", false},         // starts with hyphen
@@ -2899,7 +2899,7 @@ func TestSlingFormulaOnBeadSetsAttachedMolecule(t *testing.T) {
 	}
 
 	// Create a rig path that owns gt-* beads, and a routes.jsonl pointing to it.
-	rigDir := filepath.Join(townRoot, "excavation", "overseer", "rig")
+	rigDir := filepath.Join(townRoot, "mineshaft", "overseer", "rig")
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
@@ -2907,7 +2907,7 @@ func TestSlingFormulaOnBeadSetsAttachedMolecule(t *testing.T) {
 		t.Fatalf("mkdir rigDir: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"excavation/overseer/rig"}`,
+		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
@@ -3294,7 +3294,7 @@ exit /b 0
 
 // TestCheckCrossRigGuard verifies that cross-rig sling is rejected when a bead's
 // prefix doesn't match the target rig. This prevents slinging beads-codebase issues
-// to excavation miners, which cannot fix code in a different rig's repo.
+// to mineshaft miners, which cannot fix code in a different rig's repo.
 // Fixes: gt-myecw
 func TestCheckCrossRigGuard(t *testing.T) {
 	tmpDir := t.TempDir()
@@ -3303,7 +3303,7 @@ func TestCheckCrossRigGuard(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	routesContent := `{"prefix":"gt-","path":"excavation/overseer/rig"}
+	routesContent := `{"prefix":"gt-","path":"mineshaft/overseer/rig"}
 {"prefix":"bd-","path":"beads/overseer/rig"}
 {"prefix":"hq-","path":"."}
 `
@@ -3318,9 +3318,9 @@ func TestCheckCrossRigGuard(t *testing.T) {
 		wantErr     bool
 	}{
 		{
-			name:        "same rig: gt bead to excavation miner",
+			name:        "same rig: gt bead to mineshaft miner",
 			beadID:      "gt-abc123",
-			targetAgent: "excavation/miners/Toast",
+			targetAgent: "mineshaft/miners/Toast",
 			wantErr:     false,
 		},
 		{
@@ -3330,9 +3330,9 @@ func TestCheckCrossRigGuard(t *testing.T) {
 			wantErr:     false,
 		},
 		{
-			name:        "cross-rig: bd bead to excavation miner",
+			name:        "cross-rig: bd bead to mineshaft miner",
 			beadID:      "bd-ka761",
-			targetAgent: "excavation/miners/Toast",
+			targetAgent: "mineshaft/miners/Toast",
 			wantErr:     true,
 		},
 		{
@@ -3347,20 +3347,20 @@ func TestCheckCrossRigGuard(t *testing.T) {
 			// miner (gt-gbu). Hard-rejecting silently drops all their miner work.
 			name:        "town-level: hq bead to rig (warns but allows — gt-gbu)",
 			beadID:      "hq-abc123",
-			targetAgent: "excavation/miners/Toast",
+			targetAgent: "mineshaft/miners/Toast",
 			wantErr:     false,
 		},
 		{
 			// Truly unknown prefix (not in routes.jsonl): hard reject.
 			name:        "unknown prefix: rejected (no route exists at all)",
 			beadID:      "xx-unknown",
-			targetAgent: "excavation/miners/Toast",
+			targetAgent: "mineshaft/miners/Toast",
 			wantErr:     true,
 		},
 		{
 			name:        "empty bead prefix: allowed",
 			beadID:      "nohyphen",
-			targetAgent: "excavation/miners/Toast",
+			targetAgent: "mineshaft/miners/Toast",
 			wantErr:     false,
 		},
 	}
@@ -3543,7 +3543,7 @@ exit /b 0
 	t.Setenv("BD_DOLT_AUTO_COMMIT", "off")
 	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1")
 
-	if err := hookBeadWithRetry("gt-test123", "excavation/miners/toast", townRoot); err != nil {
+	if err := hookBeadWithRetry("gt-test123", "mineshaft/miners/toast", townRoot); err != nil {
 		t.Fatalf("hookBeadWithRetry: %v", err)
 	}
 
@@ -3709,7 +3709,7 @@ cmd="$1"
 shift || true
 case "$cmd" in
   show)
-    echo '[{"title":"Test issue","status":"hooked","assignee":"excavation/miners/toast","description":""}]'
+    echo '[{"title":"Test issue","status":"hooked","assignee":"mineshaft/miners/toast","description":""}]'
     ;;
   update)
     exit 0
@@ -3720,7 +3720,7 @@ exit 0
 	bdScriptWindows := `@echo off
 set "cmd=%1"
 if "%cmd%"=="show" (
-  echo [{"title":"Test issue","status":"hooked","assignee":"excavation/miners/toast","description":""}]
+  echo [{"title":"Test issue","status":"hooked","assignee":"mineshaft/miners/toast","description":""}]
   exit /b 0
 )
 exit /b 0
@@ -3757,7 +3757,7 @@ exit /b 0
 	slingNoMinecart = true
 
 	// Sling to same target — should no-op (return nil, no error)
-	err = runSling(nil, []string{"gt-test123", "excavation/miners/toast"})
+	err = runSling(nil, []string{"gt-test123", "mineshaft/miners/toast"})
 	if err != nil {
 		t.Fatalf("expected no-op nil return, got error: %v", err)
 	}
@@ -3782,7 +3782,7 @@ cmd="$1"
 shift || true
 case "$cmd" in
   show)
-    echo '[{"title":"Test issue","status":"pinned","assignee":"excavation/miners/toast","description":""}]'
+    echo '[{"title":"Test issue","status":"pinned","assignee":"mineshaft/miners/toast","description":""}]'
     ;;
   update)
     exit 0
@@ -3793,7 +3793,7 @@ exit 0
 	bdScriptWindows := `@echo off
 set "cmd=%1"
 if "%cmd%"=="show" (
-  echo [{"title":"Test issue","status":"pinned","assignee":"excavation/miners/toast","description":""}]
+  echo [{"title":"Test issue","status":"pinned","assignee":"mineshaft/miners/toast","description":""}]
   exit /b 0
 )
 exit /b 0
@@ -3830,7 +3830,7 @@ exit /b 0
 	slingNoMinecart = true
 
 	// Sling pinned bead to same target — should no-op (return nil, no error)
-	err = runSling(nil, []string{"gt-test-pinned", "excavation/miners/toast"})
+	err = runSling(nil, []string{"gt-test-pinned", "mineshaft/miners/toast"})
 	if err != nil {
 		t.Fatalf("expected no-op nil return for pinned bead, got error: %v", err)
 	}
@@ -3857,7 +3857,7 @@ cmd="$1"
 shift || true
 case "$cmd" in
   show)
-    echo '[{"title":"Test issue","status":"hooked","assignee":"excavation/miners/test-dead-miner-xxxx","description":""}]'
+    echo '[{"title":"Test issue","status":"hooked","assignee":"mineshaft/miners/test-dead-miner-xxxx","description":""}]'
     ;;
   update)
     exit 0
@@ -3869,7 +3869,7 @@ exit 0
 echo %*>>"%BD_LOG%"
 set "cmd=%1"
 if "%cmd%"=="show" (
-  echo [{"title":"Test issue","status":"hooked","assignee":"excavation/miners/test-dead-miner-xxxx","description":""}]
+  echo [{"title":"Test issue","status":"hooked","assignee":"mineshaft/miners/test-dead-miner-xxxx","description":""}]
   exit /b 0
 )
 exit /b 0
@@ -3921,7 +3921,7 @@ exit /b 0
 	// The auto-force path proceeds into resolveTarget which will fail
 	// because the miner doesn't exist in tmux. Use a unique name that
 	// will never collide with a real running miner session.
-	err = runSling(nil, []string{"gt-test456", "excavation/miners/test-dead-miner-xxxx"})
+	err = runSling(nil, []string{"gt-test456", "mineshaft/miners/test-dead-miner-xxxx"})
 
 	w.Close()
 	os.Stdout = origStdout
@@ -3963,7 +3963,7 @@ cmd="$1"
 shift || true
 case "$cmd" in
   show)
-    echo '[{"title":"Test issue","status":"hooked","assignee":"excavation/miners/toast","description":""}]'
+    echo '[{"title":"Test issue","status":"hooked","assignee":"mineshaft/miners/toast","description":""}]'
     ;;
   update)
     exit 0
@@ -3975,7 +3975,7 @@ exit 0
 echo %*>>"%BD_LOG%"
 set "cmd=%1"
 if "%cmd%"=="show" (
-  echo [{"title":"Test issue","status":"hooked","assignee":"excavation/miners/toast","description":""}]
+  echo [{"title":"Test issue","status":"hooked","assignee":"mineshaft/miners/toast","description":""}]
   exit /b 0
 )
 exit /b 0
@@ -4018,7 +4018,7 @@ exit /b 0
 	// --force bypasses the entire pinned/hooked guard including idempotency.
 	// resolveTarget will fail because rig doesn't exist, but the key assertion
 	// is that we don't get an "already hooked" error (idempotency no-op is skipped).
-	err = runSling(nil, []string{"gt-test789", "excavation/miners/toast"})
+	err = runSling(nil, []string{"gt-test789", "mineshaft/miners/toast"})
 	if err == nil {
 		// In dry-run + force mode, resolveTarget still runs.
 		// nil is acceptable if resolveTarget succeeded.
@@ -4051,7 +4051,7 @@ cmd="$1"
 shift || true
 case "$cmd" in
   show)
-    echo '[{"title":"Test issue","status":"hooked","assignee":"excavation/miners/toast","description":""}]'
+    echo '[{"title":"Test issue","status":"hooked","assignee":"mineshaft/miners/toast","description":""}]'
     ;;
   formula)
     echo '{"name":"test-formula","steps":[]}'
@@ -4065,7 +4065,7 @@ exit 0
 	bdScriptWindows := `@echo off
 set "cmd=%1"
 if "%cmd%"=="show" (
-  echo [{"title":"Test issue","status":"hooked","assignee":"excavation/miners/toast","description":""}]
+  echo [{"title":"Test issue","status":"hooked","assignee":"mineshaft/miners/toast","description":""}]
   exit /b 0
 )
 if "%cmd%"=="formula" (
@@ -4112,7 +4112,7 @@ exit /b 0
 	// return nil (no-op) or "already hooked" error — it should fall through
 	// to resolveTarget/formula instantiation. The call will fail downstream
 	// (rig doesn't exist in test env) but must get PAST the guard.
-	err = runSling(nil, []string{"test-formula", "excavation/miners/toast"})
+	err = runSling(nil, []string{"test-formula", "mineshaft/miners/toast"})
 	if err == nil {
 		t.Fatal("expected error from downstream (resolve), got nil (idempotent no-op was incorrectly triggered)")
 	}
@@ -4220,7 +4220,7 @@ func TestSlingMinerEnvCheck(t *testing.T) {
 		},
 		{
 			name:      "compound miner role is blocked",
-			role:      "excavation/miners/Toast",
+			role:      "mineshaft/miners/Toast",
 			miner:   "Toast",
 			wantBlock: true,
 		},
@@ -4232,7 +4232,7 @@ func TestSlingMinerEnvCheck(t *testing.T) {
 		},
 		{
 			name:      "compound witness with stale GT_MINER is NOT blocked",
-			role:      "excavation/witness",
+			role:      "mineshaft/witness",
 			miner:   "alpha",
 			wantBlock: false,
 		},
@@ -4244,7 +4244,7 @@ func TestSlingMinerEnvCheck(t *testing.T) {
 		},
 		{
 			name:      "compound crew with stale GT_MINER is NOT blocked",
-			role:      "excavation/crew/den",
+			role:      "mineshaft/crew/den",
 			miner:   "alpha",
 			wantBlock: false,
 		},
@@ -4306,8 +4306,8 @@ func TestSlingNudgeCrewAndOverseer(t *testing.T) {
 	}{
 		{
 			name:       "crew target gets nudge pane",
-			target:     "excavation/crew/max",
-			wantAgent:  "excavation/crew/max",
+			target:     "mineshaft/crew/max",
+			wantAgent:  "mineshaft/crew/max",
 			wantPaneIn: "%99",
 		},
 		{
@@ -4328,11 +4328,11 @@ func TestSlingNudgeCrewAndOverseer(t *testing.T) {
 			if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 				t.Fatalf("mkdir .beads: %v", err)
 			}
-			rigDir := filepath.Join(townRoot, "excavation", "overseer", "rig")
+			rigDir := filepath.Join(townRoot, "mineshaft", "overseer", "rig")
 			if err := os.MkdirAll(rigDir, 0755); err != nil {
 				t.Fatalf("mkdir rigDir: %v", err)
 			}
-			routes := `{"prefix":"gt-","path":"excavation/overseer/rig"}` + "\n" +
+			routes := `{"prefix":"gt-","path":"mineshaft/overseer/rig"}` + "\n" +
 				`{"prefix":"hq-","path":"."}` + "\n"
 			if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(routes), 0644); err != nil {
 				t.Fatalf("write routes: %v", err)

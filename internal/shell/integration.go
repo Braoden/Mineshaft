@@ -1,4 +1,4 @@
-// ABOUTME: Shell integration installation and removal for Excavation Site.
+// ABOUTME: Shell integration installation and removal for Mineshaft.
 // ABOUTME: Manages the shell hook in RC files with safe block markers.
 
 package shell
@@ -9,12 +9,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/state"
+	"github.com/steveyegge/mineshaft/internal/state"
 )
 
 const (
-	markerStart = "# --- Excavation Site Integration (managed by gt) ---"
-	markerEnd   = "# --- End Excavation Site ---"
+	markerStart = "# --- Mineshaft Integration (managed by gt) ---"
+	markerEnd   = "# --- End Mineshaft ---"
 )
 
 func hookSourceLine() string {
@@ -98,7 +98,7 @@ func addToRCFile(path string) error {
 	block := fmt.Sprintf("\n%s\n%s\n%s\n", markerStart, hookSourceLine(), markerEnd)
 
 	if len(data) > 0 {
-		backupPath := path + ".excavation-backup"
+		backupPath := path + ".mineshaft-backup"
 		if err := os.WriteFile(backupPath, data, 0644); err != nil {
 			return fmt.Errorf("writing backup: %w", err)
 		}
@@ -141,7 +141,7 @@ func updateRCFile(path, content string) error {
 	startIdx := strings.Index(content, markerStart)
 	endIdx := strings.Index(content[startIdx:], markerEnd)
 	if endIdx == -1 {
-		return fmt.Errorf("malformed Excavation Site block in %s", path)
+		return fmt.Errorf("malformed Mineshaft block in %s", path)
 	}
 	endIdx += startIdx + len(markerEnd)
 
@@ -152,49 +152,49 @@ func updateRCFile(path, content string) error {
 }
 
 var shellHookScript = `#!/bin/zsh
-# Excavation Site Shell Integration
+# Mineshaft Shell Integration
 # Installed by: gt install --shell
-# Location: ~/.config/excavation/shell-hook.sh
+# Location: ~/.config/mineshaft/shell-hook.sh
 
-_excavation_enabled() {
-    [[ -n "$EXCAVATION_DISABLED" ]] && return 1
-    [[ -n "$EXCAVATION_ENABLED" ]] && return 0
-    local state_file="$HOME/.local/state/excavation/state.json"
+_mineshaft_enabled() {
+    [[ -n "$MINESHAFT_DISABLED" ]] && return 1
+    [[ -n "$MINESHAFT_ENABLED" ]] && return 0
+    local state_file="$HOME/.local/state/mineshaft/state.json"
     [[ -f "$state_file" ]] && grep -q '"enabled":\s*true' "$state_file" 2>/dev/null
 }
 
-_excavation_ignored() {
+_mineshaft_ignored() {
     local dir="$PWD"
     while [[ "$dir" != "/" ]]; do
-        [[ -f "$dir/.excavation-ignore" ]] && return 0
+        [[ -f "$dir/.mineshaft-ignore" ]] && return 0
         dir="$(dirname "$dir")"
     done
     return 1
 }
 
-_excavation_already_asked() {
+_mineshaft_already_asked() {
     local repo_root="$1"
-    local asked_file="$HOME/.cache/excavation/asked-repos"
+    local asked_file="$HOME/.cache/mineshaft/asked-repos"
     [[ -f "$asked_file" ]] && grep -qF "$repo_root" "$asked_file" 2>/dev/null
 }
 
-_excavation_mark_asked() {
+_mineshaft_mark_asked() {
     local repo_root="$1"
-    local asked_file="$HOME/.cache/excavation/asked-repos"
+    local asked_file="$HOME/.cache/mineshaft/asked-repos"
     mkdir -p "$(dirname "$asked_file")"
     echo "$repo_root" >> "$asked_file"
 }
 
-_excavation_offer_add() {
+_mineshaft_offer_add() {
     local repo_root="$1"
 
-    # Offer-to-add is OPT-IN. By default Excavation Site stays silent in your shells
+    # Offer-to-add is OPT-IN. By default Mineshaft stays silent in your shells
     # and only sets GT_TOWN_ROOT/GT_RIG when you are inside a known rig. To be
-    # prompted to add unrecognized git repos, set EXCAVATION_OFFER_ADD=1. Add a
+    # prompted to add unrecognized git repos, set MINESHAFT_OFFER_ADD=1. Add a
     # repo any time with 'gt rig quick-add'.
-    [[ "${EXCAVATION_OFFER_ADD:-}" == "1" ]] || return 0
-    [[ "${EXCAVATION_DISABLE_OFFER_ADD:-}" == "1" ]] && return 0
-    _excavation_already_asked "$repo_root" && return 0
+    [[ "${MINESHAFT_OFFER_ADD:-}" == "1" ]] || return 0
+    [[ "${MINESHAFT_DISABLE_OFFER_ADD:-}" == "1" ]] && return 0
+    _mineshaft_already_asked "$repo_root" && return 0
 
     [[ -t 0 ]] || return 0
 
@@ -204,15 +204,15 @@ _excavation_offer_add() {
     # Record that we asked BEFORE reading the answer. If the prompt is
     # interrupted (Ctrl-C) we must not re-offer on the next prompt -- otherwise
     # an interrupted read loops forever (e.g. across restored terminal sessions).
-    _excavation_mark_asked "$repo_root"
+    _mineshaft_mark_asked "$repo_root"
 
     echo ""
-    echo -n "Add '$repo_name' to Excavation Site? [y/N/never] "
+    echo -n "Add '$repo_name' to Mineshaft? [y/N/never] "
     read -r response </dev/tty || response=""
 
     case "$response" in
         y|Y|yes)
-            echo "Adding to Excavation Site..."
+            echo "Adding to Mineshaft..."
             local output
             output=$(gt rig quick-add "$repo_root" --yes 2>&1)
             local exit_code=$?
@@ -226,13 +226,13 @@ _excavation_offer_add() {
                     echo "Switching to crew workspace..."
                     cd "$crew_path" || true
                     # Re-run hook to set GT_TOWN_ROOT and GT_RIG
-                    _excavation_hook
+                    _mineshaft_hook
                 fi
             fi
             ;;
         never)
-            touch "$repo_root/.excavation-ignore"
-            echo "Created .excavation-ignore - won't ask again for this repo."
+            touch "$repo_root/.mineshaft-ignore"
+            echo "Created .mineshaft-ignore - won't ask again for this repo."
             ;;
         *)
             echo "Skipped. Run 'gt rig quick-add' later to add manually."
@@ -240,15 +240,15 @@ _excavation_offer_add() {
     esac
 }
 
-_excavation_hook() {
+_mineshaft_hook() {
     local previous_exit_status=$?
 
-    _excavation_enabled || {
+    _mineshaft_enabled || {
         unset GT_TOWN_ROOT GT_RIG
         return $previous_exit_status
     }
 
-    _excavation_ignored && {
+    _mineshaft_ignored && {
         unset GT_TOWN_ROOT GT_RIG
         return $previous_exit_status
     }
@@ -264,7 +264,7 @@ _excavation_hook() {
         return $previous_exit_status
     }
 
-    local cache_file="$HOME/.cache/excavation/rigs.cache"
+    local cache_file="$HOME/.cache/mineshaft/rigs.cache"
     if [[ -f "$cache_file" ]]; then
         local cached
         cached=$(grep "^${repo_root}:" "$cache_file" 2>/dev/null)
@@ -281,9 +281,9 @@ _excavation_hook() {
 
         if [[ -n "$GT_TOWN_ROOT" ]]; then
             (gt rig detect --cache "$repo_root" &>/dev/null &)
-        elif [[ -n "$_EXCAVATION_PWD_CHANGED" ]]; then
-            _excavation_offer_add "$repo_root"
-            unset _EXCAVATION_PWD_CHANGED
+        elif [[ -n "$_MINESHAFT_PWD_CHANGED" ]]; then
+            _mineshaft_offer_add "$repo_root"
+            unset _MINESHAFT_PWD_CHANGED
         fi
     fi
 
@@ -291,37 +291,37 @@ _excavation_hook() {
 }
 
 # zsh chpwd hook: fires only when the working directory actually changes.
-_excavation_chpwd_hook() {
-    _EXCAVATION_PWD_CHANGED=1
-    _excavation_hook
+_mineshaft_chpwd_hook() {
+    _MINESHAFT_PWD_CHANGED=1
+    _mineshaft_hook
 }
 
 # bash has no chpwd; emulate it from PROMPT_COMMAND by tracking $PWD so the
 # add-offer is only considered when the directory actually changed -- not on
 # every prompt redraw (which previously re-prompted on every command).
-_excavation_bash_prompt() {
-    if [[ "$PWD" != "${_EXCAVATION_LAST_PWD-}" ]]; then
-        _EXCAVATION_LAST_PWD="$PWD"
-        _EXCAVATION_PWD_CHANGED=1
+_mineshaft_bash_prompt() {
+    if [[ "$PWD" != "${_MINESHAFT_LAST_PWD-}" ]]; then
+        _MINESHAFT_LAST_PWD="$PWD"
+        _MINESHAFT_PWD_CHANGED=1
     fi
-    _excavation_hook
+    _mineshaft_hook
 }
 
 case "${SHELL##*/}" in
     zsh)
         autoload -Uz add-zsh-hook
-        add-zsh-hook chpwd _excavation_chpwd_hook
-        add-zsh-hook precmd _excavation_hook
+        add-zsh-hook chpwd _mineshaft_chpwd_hook
+        add-zsh-hook precmd _mineshaft_hook
         ;;
     bash)
         # Seed last-seen PWD so a fresh shell doesn't count its first prompt as
         # a directory change (matches zsh, which only fires chpwd on real cd).
-        _EXCAVATION_LAST_PWD="$PWD"
-        if [[ ";${PROMPT_COMMAND[*]:-};" != *";_excavation_bash_prompt;"* ]]; then
-            PROMPT_COMMAND="_excavation_bash_prompt${PROMPT_COMMAND:+;$PROMPT_COMMAND}"
+        _MINESHAFT_LAST_PWD="$PWD"
+        if [[ ";${PROMPT_COMMAND[*]:-};" != *";_mineshaft_bash_prompt;"* ]]; then
+            PROMPT_COMMAND="_mineshaft_bash_prompt${PROMPT_COMMAND:+;$PROMPT_COMMAND}"
         fi
         ;;
 esac
 
-_excavation_hook
+_mineshaft_hook
 `

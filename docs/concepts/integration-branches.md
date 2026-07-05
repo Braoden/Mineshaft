@@ -3,7 +3,7 @@
 > Group epic work on a shared branch, land to main as a unit.
 
 Integration branches provide end-to-end support for epic-scoped work across
-the Excavation Site pipeline. When you create an integration branch for an epic, it
+the Mineshaft pipeline. When you create an integration branch for an epic, it
 becomes the automatic target for every stage: miners spawn their worktrees
 from the integration branch (so they start with sibling work already present),
 the Refinery merges completed MRs into the integration branch instead of main,
@@ -36,8 +36,8 @@ to final land, without any manual branch targeting.
 4. **Sling the first wave.** Identify children with no blockers and sling them
    to the rig. Use `--no-minecart` since the tracking minecart already exists.
    ```bash
-   gt sling gt-auth-tokens excavation --no-minecart
-   gt sling gt-auth-sessions excavation --no-minecart
+   gt sling gt-auth-tokens mineshaft --no-minecart
+   gt sling gt-auth-sessions mineshaft --no-minecart
    ```
 
 5. **Miners process the work.** Each miner spawns its worktree from the
@@ -58,7 +58,7 @@ to final land, without any manual branch targeting.
    unblock, sling the next batch. Those miners will start from the integration
    branch — which now contains all the work from the preceding wave.
    ```bash
-   gt sling gt-auth-middleware excavation --no-minecart
+   gt sling gt-auth-middleware mineshaft --no-minecart
    ```
 
 9. **Land when complete.** When all children under the epic are closed, the
@@ -153,8 +153,8 @@ This pushes a new branch to origin and records its name on the epic.
 Assign children to miners as normal:
 
 ```bash
-gt sling gt-auth-tokens excavation
-gt sling gt-auth-sessions excavation
+gt sling gt-auth-tokens mineshaft
+gt sling gt-auth-sessions mineshaft
 ```
 
 Miners auto-detect the integration branch when their issue is a child of an

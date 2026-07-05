@@ -112,8 +112,8 @@ These failures are not owned by the `#4110`-`#4114` internal integration PRs. Th
 ## Targeted Validation
 
 - `gh run list --branch integration/gt-1-2-convergence-cleanup --limit 10` returned no runs.
-- `gh api repos/excavationhall/excavation/actions/runs?branch=integration/gt-1-2-convergence-cleanup&per_page=10` returned `total_count: 0`.
-- `gh api repos/excavationhall/excavation/actions/runs?branch=integration/test-beaddolt-hardenning&per_page=10` returned `total_count: 0`.
+- `gh api repos/mineshafthall/mineshaft/actions/runs?branch=integration/gt-1-2-convergence-cleanup&per_page=10` returned `total_count: 0`.
+- `gh api repos/mineshafthall/mineshaft/actions/runs?branch=integration/test-beaddolt-hardenning&per_page=10` returned `total_count: 0`.
 - `gh pr list --search "gt-12 OR gt 1.2"` returned `#4110`-`#4114` and `#4109` as the relevant current `gt-12` PR evidence set.
 - `gh pr view 4080`, `4081`, `4096`, and `4108` verified current replacement-path disposition: `#4081` and `#4096` merged to `main`; `#4080` and `#4108` closed.
 

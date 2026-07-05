@@ -29,7 +29,7 @@ mkdir -p ~/gt/<rig>/formula-overlays
 cp mol-miner-work.toml ~/gt/<rig>/formula-overlays/mol-miner-work.toml
 ```
 
-Replace `<rig>` with your rig's name (e.g. `excavation`, `longeye`). For
+Replace `<rig>` with your rig's name (e.g. `mineshaft`, `longeye`). For
 town-wide installation, drop the `<rig>/` segment — but this is almost
 never what you want, since different rigs legitimately use different flows.
 

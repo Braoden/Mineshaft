@@ -1,4 +1,4 @@
-// Package doltserver manages the Dolt SQL server for Excavation Site.
+// Package doltserver manages the Dolt SQL server for Mineshaft.
 //
 // The Dolt server provides multi-client access to beads databases,
 // avoiding the single-writer limitation of embedded Dolt mode.
@@ -8,11 +8,11 @@
 //   - User: root (default Dolt user, no password for localhost)
 //   - Data directory: ~/gt/.dolt-data/ (contains all rig databases)
 //
-// Each rig (hq, excavation, beads) has its own database subdirectory:
+// Each rig (hq, mineshaft, beads) has its own database subdirectory:
 //
 //	~/gt/.dolt-data/
 //	├── hq/        # Town beads (hq-*)
-//	├── excavation/   # Excavation rig (gt-*)
+//	├── mineshaft/   # Mineshaft rig (gt-*)
 //	├── beads/     # Beads rig (bd-*)
 //	└── ...        # Other rigs
 //
@@ -48,10 +48,10 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gofrs/flock"
 	beadssdk "github.com/steveyegge/beads"
-	"github.com/steveyegge/excavation/internal/atomicfile"
-	"github.com/steveyegge/excavation/internal/beads"
-	configpkg "github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/mineshaft/internal/atomicfile"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	configpkg "github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/style"
 )
 
 // EnsureDoltIdentity configures dolt global identity (user.name, user.email)
@@ -189,7 +189,7 @@ func getMetadataMu(path string) *sync.Mutex {
 
 // Config holds Dolt server configuration.
 type Config struct {
-	// TownRoot is the Excavation Site workspace root.
+	// TownRoot is the Mineshaft workspace root.
 	TownRoot string
 
 	// Host is the Dolt server hostname or IP.
@@ -217,7 +217,7 @@ type Config struct {
 	PidFile string
 
 	// MaxConnections is the maximum number of simultaneous connections the server will accept.
-	// Set to 0 to use the Dolt default (1000). Excavation Site defaults to 50 to prevent
+	// Set to 0 to use the Dolt default (1000). Mineshaft defaults to 50 to prevent
 	// connection storms during mass miner slings.
 	MaxConnections int
 
@@ -254,7 +254,7 @@ type Config struct {
 	LogLevel string
 
 	// EventScheduler controls Dolt's MySQL event scheduler in managed config.
-	// Default is OFF for Excavation Site: background SQL events are not part of normal
+	// Default is OFF for Mineshaft: background SQL events are not part of normal
 	// beads operation and add hidden work during outage recovery.
 	EventScheduler string
 
@@ -1063,7 +1063,7 @@ func GetDoltDataDirFromProcess(pid int) string {
 }
 
 // getDoltConfigPathFromProcess reads the --config flag value from the running
-// process's command-line arguments. Excavation Site starts Dolt via --config, so this
+// process's command-line arguments. Mineshaft starts Dolt via --config, so this
 // is the primary ownership signal when --data-dir is absent.
 func getDoltConfigPathFromProcess(pid int) string {
 	return resolveProcessPath(pid, getDoltFlagFromArgs(getProcessArgs(pid), "--config"))
@@ -1524,7 +1524,7 @@ func checkPortAvailable(port int) error {
 			detail = fmt.Sprintf("\nPort is held by PID %d", pid)
 		}
 		return fmt.Errorf("port %d is already in use.%s\n"+
-			"If you're running multiple Excavation Site instances, each needs a unique Dolt port.\n"+
+			"If you're running multiple Mineshaft instances, each needs a unique Dolt port.\n"+
 			"Set GT_DOLT_PORT in overseer/daemon.json env section:\n"+
 			"  {\"env\": {\"GT_DOLT_PORT\": \"<port>\"}}", port, detail)
 	}
@@ -1587,9 +1587,9 @@ func writeServerConfig(config *Config, configPath string) error {
 		systemVariablesBlock = fmt.Sprintf("\nsystem_variables:\n  dolt_stats_enabled: %s\n", strings.TrimSpace(config.DoltStatsEnabled))
 	}
 
-	content := fmt.Sprintf(`# Dolt SQL server configuration — managed by Excavation Site (gt dolt start)
+	content := fmt.Sprintf(`# Dolt SQL server configuration — managed by Mineshaft (gt dolt start)
 # Do not edit manually; changes are overwritten on each server start.
-# To customize, set Excavation Site environment variables:
+# To customize, set Mineshaft environment variables:
 #   GT_DOLT_PORT, GT_DOLT_HOST, GT_DOLT_USER, GT_DOLT_PASSWORD, GT_DOLT_LOGLEVEL
 #   GT_DOLT_EVENT_SCHEDULER (OFF, ON, omit), GT_DOLT_STATS_ENABLED (0, 1, omit)
 
@@ -3085,7 +3085,7 @@ func collectReferencedDatabases(townRoot string) map[string]bool {
 
 	// Safety net: also mark all rig prefixes from rigs.json as referenced.
 	// Some rigs use their prefix as the database name (e.g., "lc" for laneassist,
-	// "gt" for excavation). If metadata.json is missing or corrupted, the prefix-named
+	// "gt" for mineshaft). If metadata.json is missing or corrupted, the prefix-named
 	// DB would appear orphaned without this fallback. (gt-85w7)
 	for _, prefix := range configpkg.AllRigPrefixes(townRoot) {
 		referenced[prefix] = true
@@ -3095,7 +3095,7 @@ func collectReferencedDatabases(townRoot string) map[string]bool {
 }
 
 // CollectDatabaseOwners returns a map from database name to a human-readable
-// owner description (e.g., "excavation rig beads", "town beads"). This is used by
+// owner description (e.g., "mineshaft rig beads", "town beads"). This is used by
 // gt dolt status to annotate each database with its rig owner, preventing
 // accidental drops of production databases. (GH#2252)
 func CollectDatabaseOwners(townRoot string) map[string]string {
@@ -3466,7 +3466,7 @@ func EnsureMetadataForBeadsDir(townRoot, beadsDir, rigName string, doltDatabase 
 	}
 
 	// Determine the Dolt database name to write when the field is absent.
-	// Default: rigName (correct when db-name == rig-dir-name, e.g. "excavation").
+	// Default: rigName (correct when db-name == rig-dir-name, e.g. "mineshaft").
 	// Callers from EnsureAllMetadata pass the actual DB prefix ("at", "be") so
 	// that rigs with short prefixes get the correct database name, not the full
 	// rig directory name.
@@ -3515,7 +3515,7 @@ func EnsureMetadataForBeadsDir(townRoot, beadsDir, rigName string, doltDatabase 
 	}
 	// Fix wrong dolt_database values (not just empty). After a crash or rig
 	// addition, metadata.json can end up pointing to the wrong database name
-	// (e.g., "beads_gt" instead of "excavation"), causing PROJECT IDENTITY MISMATCH
+	// (e.g., "beads_gt" instead of "mineshaft"), causing PROJECT IDENTITY MISMATCH
 	// errors that are hard to diagnose and recover from. (gas-tc4)
 	if existing["dolt_database"] == nil || existing["dolt_database"] == "" {
 		existing["dolt_database"] = effectiveDB
@@ -3621,7 +3621,7 @@ func EnsureAllMetadata(townRoot string) (updated []string, errs []error) {
 
 	// Group candidate database names by rig. When routes.jsonl and rigs.json
 	// use different prefixes for the same rig (e.g. "gas" vs "gt" both map to
-	// "excavation"), multiple databases may exist for the same rig. Processing
+	// "mineshaft"), multiple databases may exist for the same rig. Processing
 	// them all causes oscillation: each one overwrites the other's
 	// dolt_database correction on every startup. (gas-ar0)
 	rigCandidates := make(map[string][]string) // rig -> candidate db names
@@ -3681,7 +3681,7 @@ func pickDBForRig(townRoot, rigName string, candidates []string) string {
 
 // buildDatabaseToRigMap loads routes.jsonl and builds a map from database name
 // (prefix without hyphen) to rig name (first component of the path).
-// For example: "bd" -> "beads", "gt" -> "excavation", "sw" -> "sallaWork"
+// For example: "bd" -> "beads", "gt" -> "mineshaft", "sw" -> "sallaWork"
 func buildDatabaseToRigMap(townRoot string) map[string]string {
 	result := make(map[string]string)
 	beadsDir := filepath.Join(townRoot, ".beads")
@@ -3691,7 +3691,7 @@ func buildDatabaseToRigMap(townRoot string) map[string]string {
 	}
 	for _, route := range routes {
 		// Extract rig name from path (first component before "/")
-		// e.g., "beads/overseer/rig" -> "beads", "excavation/overseer/rig" -> "excavation"
+		// e.g., "beads/overseer/rig" -> "beads", "mineshaft/overseer/rig" -> "mineshaft"
 		prefix := strings.TrimSuffix(route.Prefix, "-")
 		parts := strings.Split(route.Path, "/")
 		if len(parts) > 0 && parts[0] != "" && parts[0] != "." {

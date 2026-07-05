@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 const (
@@ -136,7 +136,7 @@ func NewCleanupVetoCheckerFromWorkDir(workDir string) (*CleanupVetoChecker, erro
 		return nil, fmt.Errorf("finding town root: %w", err)
 	}
 	if townRoot == "" {
-		return nil, fmt.Errorf("not in a Excavation Site workspace")
+		return nil, fmt.Errorf("not in a Mineshaft workspace")
 	}
 	return NewCleanupVetoChecker(townRoot), nil
 }

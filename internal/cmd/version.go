@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/version"
+	"github.com/steveyegge/mineshaft/internal/version"
 )
 
 // Version information - set at build time via ldflags

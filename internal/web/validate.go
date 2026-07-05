@@ -11,7 +11,7 @@ import (
 // Validation patterns for user input.
 var (
 	// idPattern requires alphanumeric first character, which rejects --flag injection.
-	// All excavation IDs (bead IDs like gt-abc12, message IDs like msg.001, rig names)
+	// All mineshaft IDs (bead IDs like gt-abc12, message IDs like msg.001, rig names)
 	// start with [a-zA-Z0-9].
 	idPattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]*$`)
 	// rigNamePattern matches valid rig names. Rig names must NOT contain hyphens,

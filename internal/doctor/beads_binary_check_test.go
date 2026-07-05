@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/deps"
+	"github.com/steveyegge/mineshaft/internal/deps"
 )
 
 func TestBeadsBinaryCheck_Metadata(t *testing.T) {

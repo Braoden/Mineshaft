@@ -241,7 +241,7 @@ func TestFetchClosedBeads_DateCutoff(t *testing.T) {
 
 	// Cutoff is 24 hours ago — only the recent bead should pass.
 	cutoff := now.Add(-24 * time.Hour)
-	entries, err := fetchClosedBeads(workDir, "excavation", cutoff)
+	entries, err := fetchClosedBeads(workDir, "mineshaft", cutoff)
 	if err != nil {
 		t.Fatalf("fetchClosedBeads() error: %v", err)
 	}
@@ -252,8 +252,8 @@ func TestFetchClosedBeads_DateCutoff(t *testing.T) {
 	if entries[0].ID != "gt-new" {
 		t.Errorf("fetchClosedBeads() returned ID %q, want %q", entries[0].ID, "gt-new")
 	}
-	if entries[0].Rig != "excavation" {
-		t.Errorf("fetchClosedBeads() rig = %q, want %q", entries[0].Rig, "excavation")
+	if entries[0].Rig != "mineshaft" {
+		t.Errorf("fetchClosedBeads() rig = %q, want %q", entries[0].Rig, "mineshaft")
 	}
 }
 
@@ -282,7 +282,7 @@ func TestFetchClosedBeads_FiltersInternalBeads(t *testing.T) {
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
 	cutoff := now.Add(-24 * time.Hour)
-	entries, err := fetchClosedBeads(workDir, "excavation", cutoff)
+	entries, err := fetchClosedBeads(workDir, "mineshaft", cutoff)
 	if err != nil {
 		t.Fatalf("fetchClosedBeads() error: %v", err)
 	}

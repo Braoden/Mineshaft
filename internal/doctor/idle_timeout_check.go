@@ -6,12 +6,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/beads"
 )
 
 // IdleTimeoutCheck verifies that all rigs have dolt.idle-timeout set to "0"
 // to prevent per-rig idle-monitors from spawning duplicate Dolt servers.
-// Excavation Site uses a centralized Dolt server managed by systemd.
+// Mineshaft uses a centralized Dolt server managed by systemd.
 type IdleTimeoutCheck struct {
 	FixableCheck
 }
@@ -67,7 +67,7 @@ func (c *IdleTimeoutCheck) Run(ctx *CheckContext) *CheckResult {
 
 	// Check each rig for idle-timeout config
 	for rigName, beadsPath := range rigSet {
-		// beadsPath from routes is the rig path (e.g., "excavation/overseer/rig" or "excavation")
+		// beadsPath from routes is the rig path (e.g., "mineshaft/overseer/rig" or "mineshaft")
 		// We need to find the .beads directory within that path
 		rigPath := filepath.Join(ctx.TownRoot, beadsPath)
 		// Check for .beads in the rig path
@@ -129,7 +129,7 @@ func (c *IdleTimeoutCheck) Fix(ctx *CheckContext) error {
 
 	// Fix each rig
 	for rigName, beadsPath := range rigSet {
-		// beadsPath from routes is the rig path (e.g., "excavation/overseer/rig" or "excavation")
+		// beadsPath from routes is the rig path (e.g., "mineshaft/overseer/rig" or "mineshaft")
 		rigPath := filepath.Join(ctx.TownRoot, beadsPath)
 		// The .beads directory is within the rig path
 		rigBeadsPath := filepath.Join(rigPath, ".beads")

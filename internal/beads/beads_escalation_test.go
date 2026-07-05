@@ -29,7 +29,7 @@ func TestFormatEscalationDescription(t *testing.T) {
 				Severity:    "high",
 				Reason:      "Build failed 3 times",
 				Source:      "patrol:supervisor",
-				EscalatedBy: "excavation/supervisor",
+				EscalatedBy: "mineshaft/supervisor",
 				EscalatedAt: "2024-01-15T10:00:00Z",
 			},
 			want: []string{
@@ -37,7 +37,7 @@ func TestFormatEscalationDescription(t *testing.T) {
 				"severity: high",
 				"reason: Build failed 3 times",
 				"source: patrol:supervisor",
-				"escalated_by: excavation/supervisor",
+				"escalated_by: mineshaft/supervisor",
 				"escalated_at: 2024-01-15T10:00:00Z",
 			},
 		},
@@ -47,14 +47,14 @@ func TestFormatEscalationDescription(t *testing.T) {
 			fields: &EscalationFields{
 				Severity:    "medium",
 				Reason:      "Agent not responding",
-				EscalatedBy: "excavation/witness",
+				EscalatedBy: "mineshaft/witness",
 				EscalatedAt: "2024-01-15T10:00:00Z",
-				AckedBy:     "excavation/crew/joe",
+				AckedBy:     "mineshaft/crew/joe",
 				AckedAt:     "2024-01-15T10:05:00Z",
 			},
 			want: []string{
 				"severity: medium",
-				"acked_by: excavation/crew/joe",
+				"acked_by: mineshaft/crew/joe",
 				"acked_at: 2024-01-15T10:05:00Z",
 			},
 		},
@@ -64,7 +64,7 @@ func TestFormatEscalationDescription(t *testing.T) {
 			fields: &EscalationFields{
 				Severity:     "critical",
 				Reason:       "Disk >95%",
-				EscalatedBy:  "excavation/supervisor",
+				EscalatedBy:  "mineshaft/supervisor",
 				EscalatedAt:  "2024-01-15T10:00:00Z",
 				ClosedBy:     "human",
 				ClosedReason: "Cleaned up temp files",
@@ -163,9 +163,9 @@ func TestParseEscalationFields(t *testing.T) {
 severity: high
 reason: Build failed 3 times
 source: patrol:supervisor
-escalated_by: excavation/supervisor
+escalated_by: mineshaft/supervisor
 escalated_at: 2024-01-15T10:00:00Z
-acked_by: excavation/crew/joe
+acked_by: mineshaft/crew/joe
 acked_at: 2024-01-15T10:05:00Z
 closed_by: null
 closed_reason: null
@@ -179,9 +179,9 @@ fingerprint: escalation-fp:abc123def456`,
 				Severity:          "high",
 				Reason:            "Build failed 3 times",
 				Source:            "patrol:supervisor",
-				EscalatedBy:       "excavation/supervisor",
+				EscalatedBy:       "mineshaft/supervisor",
 				EscalatedAt:       "2024-01-15T10:00:00Z",
-				AckedBy:           "excavation/crew/joe",
+				AckedBy:           "mineshaft/crew/joe",
 				AckedAt:           "2024-01-15T10:05:00Z",
 				ClosedBy:          "",
 				ClosedReason:      "",
@@ -269,9 +269,9 @@ func TestEscalationFieldsRoundTrip(t *testing.T) {
 		Severity:          "high",
 		Reason:            "Agent stuck for 1h",
 		Source:            "patrol:witness",
-		EscalatedBy:       "excavation/witness",
+		EscalatedBy:       "mineshaft/witness",
 		EscalatedAt:       "2024-06-15T12:00:00Z",
-		AckedBy:           "excavation/crew/joe",
+		AckedBy:           "mineshaft/crew/joe",
 		AckedAt:           "2024-06-15T12:05:00Z",
 		RelatedBead:       "gt-stuck123",
 		OriginalSeverity:  "medium",

@@ -1,5 +1,5 @@
 description = """
-Full Excavation Site shutdown and restart.
+Full Mineshaft shutdown and restart.
 
 This is an idempotent shutdown - it stops Claude sessions but preserves
 miner sandboxes and hooks. Miners can resume their work after restart.
@@ -103,7 +103,7 @@ id = "stop-daemon"
 title = "Stop the daemon"
 needs = ["clear-inboxes"]
 description = """
-Stop the Excavation Site daemon gracefully.
+Stop the Mineshaft daemon gracefully.
 
 ```bash
 gt daemon stop

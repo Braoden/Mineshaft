@@ -48,7 +48,7 @@ Keeping these planes separate is the key to a clean design.
 Host machine
 ┌─────────────────────────────────────────────────────┐
 │                                                     │
-│  Excavation daemon                                     │
+│  Mineshaft daemon                                     │
 │  ┌──────────────────────────────────────────────┐   │
 │  │  SessionManager.Start()                      │   │
 │  │    exec env GT_RIG=... GT_MINER=...        │   │
@@ -76,10 +76,10 @@ is still reachable.
 Host machine
 ┌─────────────────────────────────────────────────────┐
 │                                                     │
-│  Excavation daemon                                     │
+│  Mineshaft daemon                                     │
 │  ┌──────────────────────────────────────────────┐   │
 │  │  exec env GT_RIG=... GT_MINER=...          │   │
-│  │  exitbox run --profile=excavation-miner --    │   │
+│  │  exitbox run --profile=mineshaft-miner --    │   │
 │  │  claude --mode=direct                        │   │
 │  └──────────────┬───────────────────────────────┘   │
 │                 │  tmux new-session                  │
@@ -108,7 +108,7 @@ git fetch, and git push — goes through the host's mTLS proxy. The container ha
 Host machine                      Daytona cloud container
 ┌───────────────────────────┐     ┌──────────────────────────────────────┐
 │                           │     │                                      │
-│  Excavation daemon           │     │  tmux pane: daytona exec <ws>        │
+│  Mineshaft daemon           │     │  tmux pane: daytona exec <ws>        │
 │  ┌──────────────────────┐ │     │  ┌────────────────────────────────┐  │
 │  │ SessionManager       │ │     │  │ claude --mode=direct           │  │
 │  │  - issues cert       │ │     │  │                                │  │
@@ -151,14 +151,14 @@ The startup command builder inserts the wrapper tokens between
 
 ```
 # Local (no wrapper):
-exec env GT_RIG=excavation GT_MINER=furiosa ... claude --mode=direct
+exec env GT_RIG=mineshaft GT_MINER=furiosa ... claude --mode=direct
 
 # exitbox:
-exec env GT_RIG=excavation GT_MINER=furiosa ... \
-    exitbox run --profile=excavation-miner -- claude --mode=direct
+exec env GT_RIG=mineshaft GT_MINER=furiosa ... \
+    exitbox run --profile=mineshaft-miner -- claude --mode=direct
 
 # daytona:
-exec env GT_RIG=excavation GT_MINER=furiosa ... \
+exec env GT_RIG=mineshaft GT_MINER=furiosa ... \
     daytona exec furiosa-ws -- claude --mode=direct
 ```
 
@@ -166,7 +166,7 @@ This wraps the entire session; tmux still manages the pane, and `tmux send-keys`
 still delivers nudges — no changes to the messaging layer.
 
 Exposed as:
-- `settings/config.json`: `agent.exec_wrapper: ["exitbox", "run", "--profile=excavation-miner", "--"]`
+- `settings/config.json`: `agent.exec_wrapper: ["exitbox", "run", "--profile=mineshaft-miner", "--"]`
 - CLI flag: `gt sling <bead> --exec-wrapper "..."`
 
 ### 4.2 mTLS proxy — `gt-proxy-server` and `gt-proxy-client`
@@ -176,7 +176,7 @@ Two new lightweight binaries handle all communication from container → host.
 #### gt-proxy-server (runs on host)
 
 - Listens on a configured address and port (`proxy_listen_addr`, e.g. `0.0.0.0:9876`)
-- Requires mTLS: client cert must be signed by the Excavation CA
+- Requires mTLS: client cert must be signed by the Mineshaft CA
 - **CLI relay model**: forwards argv to `gt`/`bd` on the host and streams stdout/stderr/exitCode back verbatim
 - Injects `--identity <rig>/<name>` (extracted from cert `CN=gt-<rig>-<name>`) for commands that require it
 - Maintains an explicit allowlist of permitted subcommands — no arbitrary shell execution
@@ -226,7 +226,7 @@ Branch-scoped authorization is enforced by cert CN: a miner may only push refs
 under `miner/<cn-name>-*`; attempting to push `main` or another miner's
 branch is rejected (403). Fetch is unrestricted (read-only).
 
-`.repo.git` (the bare repo Excavation already maintains at `~/gt/<rig>/.repo.git`)
+`.repo.git` (the bare repo Mineshaft already maintains at `~/gt/<rig>/.repo.git`)
 is the ideal endpoint:
 - It already has `origin` → GitHub configured on the host side
 - It is a bare repo — can both serve fetches and receive pushes unconditionally
@@ -240,10 +240,10 @@ container clones.
 
 ### 4.3 CA and per-miner certificates
 
-Excavation generates a self-signed CA at daemon startup (`~/gt/.runtime/ca/`). For
+Mineshaft generates a self-signed CA at daemon startup (`~/gt/.runtime/ca/`). For
 each daytona-mode miner, it issues a short-lived leaf certificate:
 
-- **CN**: `gt-<rig>-<name>` (e.g. `gt-excavation-furiosa`)
+- **CN**: `gt-<rig>-<name>` (e.g. `gt-mineshaft-furiosa`)
 - **SAN**: `session:<sessionID>`
 - **TTL**: configurable via `proxy_cert_ttl` (default 24h)
 
@@ -267,7 +267,7 @@ proxy calls from that cert are immediately rejected.
 
 `daytona exec <ws> -- cmd` connects to an already-running workspace container.
 It is analogous to `docker exec` or `ssh user@host cmd` — it requires the
-workspace to already exist and be running. Excavation must own the full workspace
+workspace to already exist and be running. Mineshaft must own the full workspace
 lifecycle:
 
 ```
@@ -278,9 +278,9 @@ daytona create → daytona start → [daytona exec, repeatedly] → daytona stop
    miner)
 ```
 
-#### Workspace states and Excavation actions
+#### Workspace states and Mineshaft actions
 
-| State | daytona CLI | Excavation triggers |
+| State | daytona CLI | Mineshaft triggers |
 |---|---|---|
 | Does not exist | `daytona create <repo> --name <ws>` | `gt sling` (first time for this miner) |
 | Stopped | `daytona start <ws>` | `gt session start` / `gt sling` resume |
@@ -288,7 +288,7 @@ daytona create → daytona start → [daytona exec, repeatedly] → daytona stop
 | Running, miner done | `daytona stop <ws>` | `gt session stop` / TTL expiry |
 | No longer needed | `daytona delete <ws>` | `gt miner remove` / manual |
 
-Excavation stops (not deletes) workspaces on session end, preserving git state for
+Mineshaft stops (not deletes) workspaces on session end, preserving git state for
 the next session. Deletion is an explicit operator action.
 
 #### Full provisioning sequence at `gt sling`
@@ -306,7 +306,7 @@ gt sling <bead> --daytona
   │       daytona create https://<host>:9876/v1/git/<rig>
   │         --name gt-<rig>-<miner>
   │         --branch miner/<name>-<ts>
-  │         --devcontainer-path .devcontainer/excavation-miner
+  │         --devcontainer-path .devcontainer/mineshaft-miner
   │       (clones from proxy → .repo.git; runs onCreateCommand)
   │
   ├─ 4. Inject cert into workspace:
@@ -369,27 +369,27 @@ Host (.repo.git)                     Container
 #### Devcontainer profile
 
 ```json
-// .devcontainer/excavation-miner/devcontainer.json
+// .devcontainer/mineshaft-miner/devcontainer.json
 {
-  "name": "Excavation Miner",
+  "name": "Mineshaft Miner",
   "image": "ubuntu:24.04",
-  "onCreateCommand": "bash .devcontainer/excavation-miner/setup.sh",
+  "onCreateCommand": "bash .devcontainer/mineshaft-miner/setup.sh",
   "remoteUser": "vscode"
 }
 ```
 
 ```bash
-# .devcontainer/excavation-miner/setup.sh
+# .devcontainer/mineshaft-miner/setup.sh
 set -e
 npm install -g @anthropic-ai/claude-code
-curl -fsSL https://releases.excavation.dev/gt-proxy-client/latest/linux-amd64 -o /usr/local/bin/gt
+curl -fsSL https://releases.mineshaft.dev/gt-proxy-client/latest/linux-amd64 -o /usr/local/bin/gt
 chmod +x /usr/local/bin/gt
 ln -sf /usr/local/bin/gt /usr/local/bin/bd
 apt-get install -y git
 ```
 
-Alternatively, Excavation can distribute a pre-built Docker image
-(`ghcr.io/steveyegge/excavation-miner:latest`) and reference it directly,
+Alternatively, Mineshaft can distribute a pre-built Docker image
+(`ghcr.io/steveyegge/mineshaft-miner:latest`) and reference it directly,
 bypassing the setup script. This is more reliable for production use.
 
 The `DaytonaConfig` struct:
@@ -422,7 +422,7 @@ queue.**
 ```
 Host tmux server
 ┌──────────────────────────────────────────────────────────────────┐
-│ session: gt-excavation-furiosa                                      │
+│ session: gt-mineshaft-furiosa                                      │
 │ pane %3                                                          │
 │   process: daytona ◄── tmux send-keys targets this pane         │
 │              │                                                   │
@@ -455,8 +455,8 @@ but more complex.
 Attach to any miner's tmux pane on the host:
 
 ```bash
-tmux attach -t gt-excavation-furiosa        # interactive
-tmux attach -t gt-excavation-furiosa -r     # read-only
+tmux attach -t gt-mineshaft-furiosa        # interactive
+tmux attach -t gt-mineshaft-furiosa -r     # read-only
 ```
 
 The terminal output is the remote Claude TUI rendered through the `daytona exec`
@@ -468,7 +468,7 @@ For remote miners it is ergonomic to group them into one tmux session with
 multiple windows — one window per miner:
 
 ```
-tmux session: gt-excavation (one session per rig)
+tmux session: gt-mineshaft (one session per rig)
   window 0: furiosa    ← daytona exec furiosa-ws -- claude
   window 1: nova       ← daytona exec nova-ws -- claude
   window 2: drake      ← daytona exec drake-ws -- claude
@@ -494,10 +494,10 @@ new window in the existing rig session rather than a new session.
 
 ## 6. Implementation Plan
 
-Deliverables are ordered with standalone work first (no Excavation changes) followed
-by Excavation changes in dependency order.
+Deliverables are ordered with standalone work first (no Mineshaft changes) followed
+by Mineshaft changes in dependency order.
 
-### 6.1 Standalone deliverables (no Excavation changes)
+### 6.1 Standalone deliverables (no Mineshaft changes)
 
 **S1 — exitbox policy profile**
 
@@ -508,12 +508,12 @@ Write the policy file permitting a miner session:
 - Network: loopback only (`127.0.0.1:3307`)
 - Write: heartbeat and nudge queue dirs
 
-Manually test: `exitbox run --profile=excavation-miner -- claude --mode=direct` in
+Manually test: `exitbox run --profile=mineshaft-miner -- claude --mode=direct` in
 a tmux pane. Run `gt prime` → `gt done`.
 
 **S2 — standalone `gt-proxy-server` + `gt-proxy-client`**
 
-Build and test entirely outside Excavation. Spin up any Docker container, inject the
+Build and test entirely outside Mineshaft. Spin up any Docker container, inject the
 cert env vars, run `gt prime` and `gt done` from inside.
 
 Open question answered by this step: does `daytona exec` inherit parent env or
@@ -542,7 +542,7 @@ This step confirms: (a) which host IP/address is reachable from inside a daytona
 container, (b) that `GIT_SSL_*` vars are honoured by the container's git binary,
 (c) whether daytona supports custom git endpoints for cloning.
 
-### 6.2 Excavation code changes
+### 6.2 Mineshaft code changes
 
 | ID | Change | Files | Size |
 |---|---|---|---|
@@ -608,8 +608,8 @@ Out of scope.
 
 ### exitbox
 
-- [ ] `exitbox run --profile=excavation-miner -- gt prime` succeeds inside sandbox (loopback Dolt reachable)
-- [ ] `gt sling <bead> --exec-wrapper "exitbox run --profile=excavation-miner --"` starts a live session
+- [ ] `exitbox run --profile=mineshaft-miner -- gt prime` succeeds inside sandbox (loopback Dolt reachable)
+- [ ] `gt sling <bead> --exec-wrapper "exitbox run --profile=mineshaft-miner --"` starts a live session
 - [ ] Miner receives nudge via `tmux send-keys` into the exitbox pane
 - [ ] `gt done` completes fully inside sandbox: git push to remote + bd update via loopback Dolt
 - [ ] Liveness detection sees the correct process (exitbox or agent, depending on exec behavior)
@@ -653,10 +653,10 @@ Out of scope.
    How often? On-demand triggered by proxy upload-pack, or on a timer?
 
 5. **Workspace warm pool** — First-time `daytona create` takes 30–120s. For
-   low-latency `gt sling`, should Excavation maintain a pool of pre-provisioned warm
+   low-latency `gt sling`, should Mineshaft maintain a pool of pre-provisioned warm
    workspaces? Optional optimisation, not required for initial implementation.
 
-6. **Devcontainer distribution** — Ship `.devcontainer/excavation-miner/` in the
-   Excavation repo, or publish a standalone Docker image
-   (`ghcr.io/steveyegge/excavation-miner:latest`)? The image approach is more
+6. **Devcontainer distribution** — Ship `.devcontainer/mineshaft-miner/` in the
+   Mineshaft repo, or publish a standalone Docker image
+   (`ghcr.io/steveyegge/mineshaft-miner:latest`)? The image approach is more
    reliable for production; devcontainer is more transparent and self-contained.

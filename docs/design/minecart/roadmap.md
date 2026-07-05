@@ -22,10 +22,10 @@ bd create --type=task "Fix auth timeout"       → sh-task-1
 bd create --type=task "Add validation"         → sh-task-2
 bd create --type=task "Integration tests"      → sh-task-3
 bd dep add sh-task-2 sh-task-1 --type=blocks
-gt sling sh-task-1 sh-task-2 sh-task-3 excavation
+gt sling sh-task-1 sh-task-2 sh-task-3 mineshaft
 ```
 
-What happens today (with PR [#1759](https://github.com/steveyegge/excavation/pull/1759)):
+What happens today (with PR [#1759](https://github.com/steveyegge/mineshaft/pull/1759)):
 - Batch sling creates **one minecart** tracking all 3 tasks
 - Rig is auto-resolved from bead prefixes (explicit rig is deprecated)
 - Tasks sling sequentially with 2s delays, sharing 1 minecart
@@ -45,7 +45,7 @@ What people expect:
 → creates: root epic, sub-epics, leaf tasks
 → adds: parent-child deps (organizational hierarchy)
 → adds: blocks deps (execution ordering between tasks)
-gt sling <task1> <task2> <task3> excavation
+gt sling <task1> <task2> <task3> mineshaft
 ```
 
 Same outcome as Workflow A: one shared minecart, blocks deps respected
@@ -57,7 +57,7 @@ blocked tasks wait for their blockers to close).
 
 ```
 gt minecart create "Auth overhaul" sh-task-1 sh-task-2 sh-task-3
-gt sling sh-task-1 excavation
+gt sling sh-task-1 mineshaft
 → witness feeds sh-task-2 when sh-task-1 closes (serial)
 → witness feeds sh-task-3 when sh-task-2 closes (serial)
 → minecart auto-closes when all 3 are done
@@ -119,12 +119,12 @@ Fixing them benefits the entire system.
 
 | # | Failure | Fixed by | Status |
 |---|---------|----------|--------|
-| 7 | Blocked tasks get slung (blocks deps ignored) | `isIssueBlocked` | PR [#1759](https://github.com/steveyegge/excavation/pull/1759) (open) |
-| 8 | Epics get slung to miners (no type filter) | `IsSlingableType` | PR [#1759](https://github.com/steveyegge/excavation/pull/1759) (open) |
+| 7 | Blocked tasks get slung (blocks deps ignored) | `isIssueBlocked` | PR [#1759](https://github.com/steveyegge/mineshaft/pull/1759) (open) |
+| 8 | Epics get slung to miners (no type filter) | `IsSlingableType` | PR [#1759](https://github.com/steveyegge/mineshaft/pull/1759) (open) |
 | 9 | Cross-rig close events invisible to daemon | Multi-rig SDK polling | **Merged** |
 | 10 | Daemon doesn't feed next task after close | Continuation feeding | **Merged** |
 | 11 | Refinery minecart check passes wrong path (never works) | Call removed | **Merged** |
-| 12 | First dispatch failure abandons entire minecart | Dispatch failure iteration | PR [#1759](https://github.com/steveyegge/excavation/pull/1759) (open) |
+| 12 | First dispatch failure abandons entire minecart | Dispatch failure iteration | PR [#1759](https://github.com/steveyegge/mineshaft/pull/1759) (open) |
 | 13 | Stranded scan is reporting-only, doesn't auto-dispatch | `feedFirstReady` | **Merged** |
 
 ---
@@ -359,7 +359,7 @@ more reliable.
 
 ## Summary: what to do next
 
-1. **Now:** Get PR [#1759](https://github.com/steveyegge/excavation/pull/1759) (feeder safety guards) reviewed and merged to
+1. **Now:** Get PR [#1759](https://github.com/steveyegge/mineshaft/pull/1759) (feeder safety guards) reviewed and merged to
    complete Milestone 0.
 
 2. **Next:** Start Milestone 1 (pipeline reliability) and/or Milestone 2

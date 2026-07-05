@@ -9,18 +9,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/checkpoint"
-	"github.com/steveyegge/excavation/internal/cli"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/supervisor"
-	"github.com/steveyegge/excavation/internal/refinery"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/templates"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/checkpoint"
+	"github.com/steveyegge/mineshaft/internal/cli"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/supervisor"
+	"github.com/steveyegge/mineshaft/internal/refinery"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/templates"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // outputPrimeContext outputs the role-specific context using templates or fallback.
@@ -179,7 +179,7 @@ func outputPrimeContextFallback(ctx RoleContext) {
 
 func outputOverseerContext(ctx RoleContext) {
 	fmt.Printf("%s\n\n", style.Bold.Render("# Overseer Context"))
-	fmt.Println("You are the **Overseer** - the global coordinator of Excavation Site.")
+	fmt.Println("You are the **Overseer** - the global coordinator of Mineshaft.")
 	fmt.Println()
 	fmt.Println("## Responsibilities")
 	fmt.Println("- Coordinate work across all rigs")
@@ -289,7 +289,7 @@ func outputCrewContext(ctx RoleContext) {
 	fmt.Println("- Long-lived identity across sessions")
 	fmt.Println()
 	fmt.Println("**Identity**: You are the AI agent. The human sending you messages is the")
-	fmt.Println("**Boss** — the only non-agent role in Excavation Site. Do not confuse your identity with theirs.")
+	fmt.Println("**Boss** — the only non-agent role in Mineshaft. Do not confuse your identity with theirs.")
 	fmt.Println()
 	fmt.Println("## Key Commands")
 	fmt.Println("- `" + cli.Name() + " mail inbox` - Check your inbox")
@@ -325,7 +325,7 @@ func outputBootContext(ctx RoleContext) {
 }
 
 func outputUnknownContext(ctx RoleContext) {
-	fmt.Printf("%s\n\n", style.Bold.Render("# Excavation Site Context"))
+	fmt.Printf("%s\n\n", style.Bold.Render("# Mineshaft Context"))
 	fmt.Println("Could not determine specific role from current directory.")
 	fmt.Println()
 	if ctx.Rig != "" {

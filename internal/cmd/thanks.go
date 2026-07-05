@@ -7,7 +7,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/ui"
+	"github.com/steveyegge/mineshaft/internal/ui"
 )
 
 // Style definitions for thanks output using ui package colors
@@ -40,10 +40,10 @@ func thanksBoxStyle(width int) lipgloss.Style {
 		Align(lipgloss.Center)
 }
 
-// excavationContributors maps HUMAN contributor names to their commit counts.
-// Agent names (excavation/*, beads/*, lowercase single-word names) are excluded.
+// mineshaftContributors maps HUMAN contributor names to their commit counts.
+// Agent names (mineshaft/*, beads/*, lowercase single-word names) are excluded.
 // Generated from: git shortlog -sn --all (then filtered for humans only)
-var excavationContributors = map[string]int{
+var mineshaftContributors = map[string]int{
 	"Steve Yegge":               2056,
 	"Mike Lady":                 19,
 	"Olivier Debeuf De Rijcker": 13,
@@ -75,10 +75,10 @@ var excavationContributors = map[string]int{
 
 var thanksCmd = &cobra.Command{
 	Use:     "thanks",
-	Short:   "Thank the human contributors to Excavation Site",
+	Short:   "Thank the human contributors to Mineshaft",
 	GroupID: GroupDiag,
 	Long: `Display acknowledgments to all the humans who have contributed
-to the Excavation Site project. This command celebrates the collaborative
+to the Mineshaft project. This command celebrates the collaborative
 effort behind the multi-agent workspace manager.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		printThanksPage()
@@ -87,14 +87,14 @@ effort behind the multi-agent workspace manager.`,
 
 // getContributorsSorted returns contributor names sorted by commit count descending
 func getContributorsSorted() []string {
-	names := make([]string, 0, len(excavationContributors))
-	for name := range excavationContributors {
+	names := make([]string, 0, len(mineshaftContributors))
+	for name := range mineshaftContributors {
 		names = append(names, name)
 	}
 
 	slices.SortFunc(names, func(a, b string) int {
 		// sort by commit count descending, then by name ascending for ties
-		countCmp := cmp.Compare(excavationContributors[b], excavationContributors[a])
+		countCmp := cmp.Compare(mineshaftContributors[b], mineshaftContributors[a])
 		if countCmp != 0 {
 			return countCmp
 		}
@@ -126,7 +126,7 @@ func printThanksPage() {
 
 	// build header content
 	title := thanksTitleStyle.Render("THANK YOU!")
-	subtitle := thanksSubtitleStyle.Render("To all the humans who contributed to Excavation Site")
+	subtitle := thanksSubtitleStyle.Render("To all the humans who contributed to Mineshaft")
 	headerContent := title + "\n\n" + subtitle
 
 	// render header in bordered box

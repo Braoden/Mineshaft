@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/constants"
 )
 
 // TestMinecartFeedWorkflow_Integration is a high-level integration test that verifies
@@ -198,7 +198,7 @@ func TestMinerFormulas_CanBeWisped(t *testing.T) {
 }
 
 // TestTownShutdownFormula_CanBeWisped verifies the town shutdown formula passes validation.
-// This formula is used by Overseer to orchestrate full Excavation Site shutdown/restart.
+// This formula is used by Overseer to orchestrate full Mineshaft shutdown/restart.
 func TestTownShutdownFormula_CanBeWisped(t *testing.T) {
 	formulaPath := filepath.Join("formulas", "mol-town-shutdown.formula.toml")
 	data, err := os.ReadFile(formulaPath)

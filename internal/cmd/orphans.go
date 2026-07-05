@@ -13,12 +13,12 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/constants"
-	gitpkg "github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/util"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	gitpkg "github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/util"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var orphansCmd = &cobra.Command{
@@ -40,7 +40,7 @@ Note: --days and --all only apply to orphaned commits, not miner branches.
 
 Examples:
   gt orphans              # Last 7 days (default), infers rig from cwd
-  gt orphans --rig=excavation # Target a specific rig
+  gt orphans --rig=mineshaft # Target a specific rig
   gt orphans --days=14    # Last 2 weeks
   gt orphans --all        # Show all orphans (no date filter)`,
 	RunE: runOrphans,
@@ -193,7 +193,7 @@ func runOrphans(cmd *cobra.Command, args []string) error {
 	// Find workspace to determine rig root
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Find rig: use --rig flag if provided, otherwise infer from cwd
@@ -550,7 +550,7 @@ func formatAge(t time.Time) string {
 func runOrphansKill(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Find rig: use --rig flag if provided, otherwise infer from cwd

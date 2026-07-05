@@ -10,8 +10,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/constants"
 )
 
 // SettingsCheck verifies each rig has a settings/ directory.
@@ -186,54 +186,54 @@ func (c *RuntimeGitignoreCheck) findRigs(townRoot string) []string {
 	return findAllRigs(townRoot)
 }
 
-// LegacyExcavationCheck warns if old .excavation/ directories still exist.
-type LegacyExcavationCheck struct {
+// LegacyMineshaftCheck warns if old .mineshaft/ directories still exist.
+type LegacyMineshaftCheck struct {
 	FixableCheck
 	legacyDirs []string // Cached during Run for use in Fix
 }
 
-// NewLegacyExcavationCheck creates a new legacy excavation check.
-func NewLegacyExcavationCheck() *LegacyExcavationCheck {
-	return &LegacyExcavationCheck{
+// NewLegacyMineshaftCheck creates a new legacy mineshaft check.
+func NewLegacyMineshaftCheck() *LegacyMineshaftCheck {
+	return &LegacyMineshaftCheck{
 		FixableCheck: FixableCheck{
 			BaseCheck: BaseCheck{
-				CheckName:        "legacy-excavation",
-				CheckDescription: "Check for old .excavation/ directories that should be migrated",
+				CheckName:        "legacy-mineshaft",
+				CheckDescription: "Check for old .mineshaft/ directories that should be migrated",
 				CheckCategory:    CategoryConfig,
 			},
 		},
 	}
 }
 
-// Run checks for legacy .excavation/ directories.
-func (c *LegacyExcavationCheck) Run(ctx *CheckContext) *CheckResult {
+// Run checks for legacy .mineshaft/ directories.
+func (c *LegacyMineshaftCheck) Run(ctx *CheckContext) *CheckResult {
 	var found []string
 
-	// Check town-level .excavation/
-	townExcavation := filepath.Join(ctx.TownRoot, ".excavation")
-	if info, err := os.Stat(townExcavation); err == nil && info.IsDir() {
-		found = append(found, ".excavation/ (town root)")
+	// Check town-level .mineshaft/
+	townMineshaft := filepath.Join(ctx.TownRoot, ".mineshaft")
+	if info, err := os.Stat(townMineshaft); err == nil && info.IsDir() {
+		found = append(found, ".mineshaft/ (town root)")
 	}
 
-	// Check each rig for .excavation/
+	// Check each rig for .mineshaft/
 	rigs := c.findRigs(ctx.TownRoot)
 	for _, rig := range rigs {
-		rigExcavation := filepath.Join(rig, ".excavation")
-		if info, err := os.Stat(rigExcavation); err == nil && info.IsDir() {
+		rigMineshaft := filepath.Join(rig, ".mineshaft")
+		if info, err := os.Stat(rigMineshaft); err == nil && info.IsDir() {
 			relPath, _ := filepath.Rel(ctx.TownRoot, rig)
-			found = append(found, fmt.Sprintf("%s/.excavation/", relPath))
+			found = append(found, fmt.Sprintf("%s/.mineshaft/", relPath))
 		}
 	}
 
 	// Cache for Fix
 	c.legacyDirs = nil
-	if info, err := os.Stat(townExcavation); err == nil && info.IsDir() {
-		c.legacyDirs = append(c.legacyDirs, townExcavation)
+	if info, err := os.Stat(townMineshaft); err == nil && info.IsDir() {
+		c.legacyDirs = append(c.legacyDirs, townMineshaft)
 	}
 	for _, rig := range rigs {
-		rigExcavation := filepath.Join(rig, ".excavation")
-		if info, err := os.Stat(rigExcavation); err == nil && info.IsDir() {
-			c.legacyDirs = append(c.legacyDirs, rigExcavation)
+		rigMineshaft := filepath.Join(rig, ".mineshaft")
+		if info, err := os.Stat(rigMineshaft); err == nil && info.IsDir() {
+			c.legacyDirs = append(c.legacyDirs, rigMineshaft)
 		}
 	}
 
@@ -241,21 +241,21 @@ func (c *LegacyExcavationCheck) Run(ctx *CheckContext) *CheckResult {
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusOK,
-			Message: "No legacy .excavation/ directories found",
+			Message: "No legacy .mineshaft/ directories found",
 		}
 	}
 
 	return &CheckResult{
 		Name:    c.Name(),
 		Status:  StatusWarning,
-		Message: fmt.Sprintf("%d legacy .excavation/ directory(ies) found", len(found)),
+		Message: fmt.Sprintf("%d legacy .mineshaft/ directory(ies) found", len(found)),
 		Details: found,
 		FixHint: "Run 'gt doctor --fix' to remove after verifying migration is complete",
 	}
 }
 
-// Fix removes legacy .excavation/ directories.
-func (c *LegacyExcavationCheck) Fix(ctx *CheckContext) error {
+// Fix removes legacy .mineshaft/ directories.
+func (c *LegacyMineshaftCheck) Fix(ctx *CheckContext) error {
 	for _, dir := range c.legacyDirs {
 		if err := os.RemoveAll(dir); err != nil {
 			return fmt.Errorf("failed to remove %s: %w", dir, err)
@@ -265,7 +265,7 @@ func (c *LegacyExcavationCheck) Fix(ctx *CheckContext) error {
 }
 
 // findRigs returns rig directories within the town.
-func (c *LegacyExcavationCheck) findRigs(townRoot string) []string {
+func (c *LegacyMineshaftCheck) findRigs(townRoot string) []string {
 	return findAllRigs(townRoot)
 }
 
@@ -510,7 +510,7 @@ func (c *SessionHookCheck) usesSessionStartScript(content, hookType string) bool
 }
 
 // findSettingsFiles finds all settings.json files in the town.
-// Settings are installed in excavation-managed parent directories and passed via --settings flag.
+// Settings are installed in mineshaft-managed parent directories and passed via --settings flag.
 func (c *SessionHookCheck) findSettingsFiles(townRoot string) []string {
 	var files []string
 
@@ -603,7 +603,7 @@ func containsFlag(s, flag string) bool {
 	return next == '"' || next == ' ' || next == '\'' || next == '\n' || next == '\t'
 }
 
-// CustomTypesCheck verifies Excavation Site custom types are registered with beads.
+// CustomTypesCheck verifies Mineshaft custom types are registered with beads.
 type CustomTypesCheck struct {
 	FixableCheck
 	missingTypes   []string // Cached during Run for use in Fix
@@ -616,7 +616,7 @@ func NewCustomTypesCheck() *CustomTypesCheck {
 		FixableCheck: FixableCheck{
 			BaseCheck: BaseCheck{
 				CheckName:        "beads-custom-types",
-				CheckDescription: "Check that Excavation Site custom types are registered with beads",
+				CheckDescription: "Check that Mineshaft custom types are registered with beads",
 				CheckCategory:    CategoryConfig,
 			},
 		},
@@ -658,7 +658,7 @@ func (c *CustomTypesCheck) Run(ctx *CheckContext) *CheckResult {
 			Status:  StatusWarning,
 			Message: "Custom types not configured",
 			Details: []string{
-				"Excavation Site custom types (agent, role, rig, minecart, slot) are not registered",
+				"Mineshaft custom types (agent, role, rig, minecart, slot) are not registered",
 				"This may cause bead creation/validation errors",
 			},
 			FixHint: "Run 'gt doctor --fix' or 'bd config set types.custom \"" + constants.BeadsCustomTypes + "\"'",
@@ -750,7 +750,7 @@ func (c *CustomTypesCheck) Fix(ctx *CheckContext) error {
 	return nil
 }
 
-// CustomStatusesCheck verifies Excavation Site custom statuses are registered with beads.
+// CustomStatusesCheck verifies Mineshaft custom statuses are registered with beads.
 type CustomStatusesCheck struct {
 	FixableCheck
 	missingStatuses []string // Cached during Run for use in Fix
@@ -763,7 +763,7 @@ func NewCustomStatusesCheck() *CustomStatusesCheck {
 		FixableCheck: FixableCheck{
 			BaseCheck: BaseCheck{
 				CheckName:        "beads-custom-statuses",
-				CheckDescription: "Check that Excavation Site custom statuses are registered with beads",
+				CheckDescription: "Check that Mineshaft custom statuses are registered with beads",
 				CheckCategory:    CategoryConfig,
 			},
 		},
@@ -802,7 +802,7 @@ func (c *CustomStatusesCheck) Run(ctx *CheckContext) *CheckResult {
 			Status:  StatusWarning,
 			Message: "Custom statuses not configured",
 			Details: []string{
-				"Excavation Site custom statuses (staged_ready, staged_warnings) are not registered",
+				"Mineshaft custom statuses (staged_ready, staged_warnings) are not registered",
 				"Minecart staging will fail without these statuses",
 			},
 			FixHint: "Run 'gt doctor --fix' or 'bd config set status.custom \"" + constants.BeadsCustomStatuses + "\"'",

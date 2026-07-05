@@ -212,9 +212,9 @@ func TestInstallForRole_RoleAgnostic(t *testing.T) {
 		hooksDir  string
 		hooksFile string
 	}{
-		{"opencode", ".opencode/plugins", "excavation.js"},
-		{"pi", ".pi/extensions", "excavation-hooks.js"},
-		{"omp", ".omp/hooks", "excavation-hook.ts"},
+		{"opencode", ".opencode/plugins", "mineshaft.js"},
+		{"pi", ".pi/extensions", "mineshaft-hooks.js"},
+		{"omp", ".omp/hooks", "mineshaft-hook.ts"},
 	}
 
 	for _, tt := range tests {
@@ -234,7 +234,7 @@ func TestInstallForRole_RoleAgnostic(t *testing.T) {
 }
 
 func TestOpenCodeTemplateFailureDiagnostics(t *testing.T) {
-	template, err := templateFS.ReadFile("templates/opencode/excavation.js")
+	template, err := templateFS.ReadFile("templates/opencode/mineshaft.js")
 	if err != nil {
 		t.Fatalf("read opencode template: %v", err)
 	}
@@ -257,7 +257,7 @@ func TestOpenCodeTemplateFailureDiagnostics(t *testing.T) {
 }
 
 func TestOpenCodeTemplateUsesHookPrime(t *testing.T) {
-	template, err := templateFS.ReadFile("templates/opencode/excavation.js")
+	template, err := templateFS.ReadFile("templates/opencode/mineshaft.js")
 	if err != nil {
 		t.Fatalf("read opencode template: %v", err)
 	}
@@ -296,13 +296,13 @@ func TestInstallForRole_SkipsExisting(t *testing.T) {
 
 func TestInstallForRole_UpgradesStaleExportPath(t *testing.T) {
 	dir := t.TempDir()
-	hooksPath := filepath.Join(dir, ".opencode/plugins", "excavation.js")
+	hooksPath := filepath.Join(dir, ".opencode/plugins", "mineshaft.js")
 	os.MkdirAll(filepath.Dir(hooksPath), 0755)
 
 	// Write a stale file with the legacy "export PATH=" pattern
 	os.WriteFile(hooksPath, []byte(`export PATH=/usr/local/bin:$PATH && gt hook`), 0644)
 
-	err := InstallForRole("opencode", dir, dir, "crew", ".opencode/plugins", "excavation.js", false)
+	err := InstallForRole("opencode", dir, dir, "crew", ".opencode/plugins", "mineshaft.js", false)
 	if err != nil {
 		t.Fatalf("InstallForRole: %v", err)
 	}
@@ -312,7 +312,7 @@ func TestInstallForRole_UpgradesStaleExportPath(t *testing.T) {
 		t.Error("stale export PATH pattern was not upgraded")
 	}
 	// Should now match the current template after placeholder substitution.
-	template, _ := resolveAndSubstitute("opencode", "excavation.js", "crew")
+	template, _ := resolveAndSubstitute("opencode", "mineshaft.js", "crew")
 	if string(got) != string(template) {
 		t.Error("upgraded file does not match current template")
 	}
@@ -320,15 +320,15 @@ func TestInstallForRole_UpgradesStaleExportPath(t *testing.T) {
 
 func TestInstallForRole_UpgradesStaleOpenCodePrimeHook(t *testing.T) {
 	dir := t.TempDir()
-	hooksPath := filepath.Join(dir, ".opencode/plugins", "excavation.js")
+	hooksPath := filepath.Join(dir, ".opencode/plugins", "mineshaft.js")
 	os.MkdirAll(filepath.Dir(hooksPath), 0755)
 
-	os.WriteFile(hooksPath, []byte(`// Excavation Site OpenCode plugin: hooks SessionStart/Compaction via events.
-export const Excavation = async ({ $ }) => {
+	os.WriteFile(hooksPath, []byte(`// Mineshaft OpenCode plugin: hooks SessionStart/Compaction via events.
+export const Mineshaft = async ({ $ }) => {
   await $`+"`"+`gt prime`+"`"+`
 }`), 0644)
 
-	if err := InstallForRole("opencode", dir, dir, "crew", ".opencode/plugins", "excavation.js", false); err != nil {
+	if err := InstallForRole("opencode", dir, dir, "crew", ".opencode/plugins", "mineshaft.js", false); err != nil {
 		t.Fatalf("InstallForRole: %v", err)
 	}
 
@@ -345,7 +345,7 @@ export const Excavation = async ({ $ }) => {
 }
 
 func TestOpenCodeTemplateUsesHookModeAndCompoundRoles(t *testing.T) {
-	content, err := resolveAndSubstitute("opencode", "excavation.js", "miner")
+	content, err := resolveAndSubstitute("opencode", "mineshaft.js", "miner")
 	if err != nil {
 		t.Fatalf("resolveAndSubstitute: %v", err)
 	}
@@ -370,11 +370,11 @@ func TestOpenCodeTemplateUsesHookModeAndCompoundRoles(t *testing.T) {
 
 func TestSyncForRole_UpdatesStaleContent(t *testing.T) {
 	dir := t.TempDir()
-	hooksPath := filepath.Join(dir, ".opencode/plugins", "excavation.js")
+	hooksPath := filepath.Join(dir, ".opencode/plugins", "mineshaft.js")
 	os.MkdirAll(filepath.Dir(hooksPath), 0755)
 	os.WriteFile(hooksPath, []byte("stale-content"), 0644)
 
-	result, err := SyncForRole("opencode", dir, dir, "crew", ".opencode/plugins", "excavation.js", false)
+	result, err := SyncForRole("opencode", dir, dir, "crew", ".opencode/plugins", "mineshaft.js", false)
 	if err != nil {
 		t.Fatalf("SyncForRole: %v", err)
 	}
@@ -388,7 +388,7 @@ func TestSyncForRole_UpdatesStaleContent(t *testing.T) {
 	}
 
 	// Should match the template after placeholder substitution.
-	template, _ := resolveAndSubstitute("opencode", "excavation.js", "crew")
+	template, _ := resolveAndSubstitute("opencode", "mineshaft.js", "crew")
 	if string(got) != string(template) {
 		t.Error("updated file does not match current template")
 	}
@@ -396,14 +396,14 @@ func TestSyncForRole_UpdatesStaleContent(t *testing.T) {
 
 func TestSyncForRole_SkipsMatchingContent(t *testing.T) {
 	dir := t.TempDir()
-	hooksPath := filepath.Join(dir, ".opencode/plugins", "excavation.js")
+	hooksPath := filepath.Join(dir, ".opencode/plugins", "mineshaft.js")
 	os.MkdirAll(filepath.Dir(hooksPath), 0755)
 
 	// Write the actual installed template content — should report unchanged.
-	template, _ := resolveAndSubstitute("opencode", "excavation.js", "crew")
+	template, _ := resolveAndSubstitute("opencode", "mineshaft.js", "crew")
 	os.WriteFile(hooksPath, template, 0644)
 
-	result, err := SyncForRole("opencode", dir, dir, "crew", ".opencode/plugins", "excavation.js", false)
+	result, err := SyncForRole("opencode", dir, dir, "crew", ".opencode/plugins", "mineshaft.js", false)
 	if err != nil {
 		t.Fatalf("SyncForRole: %v", err)
 	}
@@ -414,9 +414,9 @@ func TestSyncForRole_SkipsMatchingContent(t *testing.T) {
 
 func TestSyncForRole_CreatesNewFile(t *testing.T) {
 	dir := t.TempDir()
-	hooksPath := filepath.Join(dir, ".opencode/plugins", "excavation.js")
+	hooksPath := filepath.Join(dir, ".opencode/plugins", "mineshaft.js")
 
-	result, err := SyncForRole("opencode", dir, dir, "miner", ".opencode/plugins", "excavation.js", false)
+	result, err := SyncForRole("opencode", dir, dir, "miner", ".opencode/plugins", "mineshaft.js", false)
 	if err != nil {
 		t.Fatalf("SyncForRole: %v", err)
 	}
@@ -431,7 +431,7 @@ func TestSyncForRole_CreatesNewFile(t *testing.T) {
 
 func TestSyncForRole_EmptyProvider(t *testing.T) {
 	dir := t.TempDir()
-	result, err := SyncForRole("", dir, dir, "crew", ".opencode/plugins", "excavation.js", false)
+	result, err := SyncForRole("", dir, dir, "crew", ".opencode/plugins", "mineshaft.js", false)
 	if err != nil {
 		t.Fatalf("expected nil error for empty provider, got: %v", err)
 	}
@@ -463,7 +463,7 @@ func TestSyncForRole_WriteError(t *testing.T) {
 	os.Chmod(readOnlyDir, 0444)
 	defer os.Chmod(readOnlyDir, 0755) // cleanup
 
-	_, err := SyncForRole("opencode", readOnlyDir, readOnlyDir, "crew", ".opencode/plugins", "excavation.js", false)
+	_, err := SyncForRole("opencode", readOnlyDir, readOnlyDir, "crew", ".opencode/plugins", "mineshaft.js", false)
 	if err == nil {
 		t.Error("expected error when directory is read-only")
 	}
@@ -557,11 +557,11 @@ func TestInstallForRole_SettingsDirVsWorkDir(t *testing.T) {
 	}
 
 	// OpenCode uses workDir (useSettingsDir=false)
-	err = InstallForRole("opencode", settingsDir, workDir, "miner", ".opencode/plugins", "excavation.js", false)
+	err = InstallForRole("opencode", settingsDir, workDir, "miner", ".opencode/plugins", "mineshaft.js", false)
 	if err != nil {
 		t.Fatalf("InstallForRole (opencode): %v", err)
 	}
-	if _, err := os.Stat(filepath.Join(workDir, ".opencode/plugins", "excavation.js")); os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(workDir, ".opencode/plugins", "mineshaft.js")); os.IsNotExist(err) {
 		t.Error("opencode: file not in workDir")
 	}
 }
@@ -593,11 +593,11 @@ func TestInstallForRole_Permissions(t *testing.T) {
 
 	// Non-JSON files should get 0644
 	dir2 := t.TempDir()
-	err = InstallForRole("pi", dir2, dir2, "miner", ".pi/extensions", "excavation-hooks.js", false)
+	err = InstallForRole("pi", dir2, dir2, "miner", ".pi/extensions", "mineshaft-hooks.js", false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	info, _ = os.Stat(filepath.Join(dir2, ".pi/extensions", "excavation-hooks.js"))
+	info, _ = os.Stat(filepath.Join(dir2, ".pi/extensions", "mineshaft-hooks.js"))
 	if info.Mode().Perm() != 0644 {
 		t.Errorf("JS file perm = %o, want 0644", info.Mode().Perm())
 	}
@@ -694,15 +694,15 @@ func TestInstallForRole_CodexRoleAware(t *testing.T) {
 }
 
 func TestInstallForRole_CopilotRoleAware(t *testing.T) {
-	// Copilot uses excavation-autonomous.json / excavation-interactive.json naming
+	// Copilot uses mineshaft-autonomous.json / mineshaft-interactive.json naming
 	dir := t.TempDir()
-	err := InstallForRole("copilot", dir, dir, "miner", ".github/hooks", "excavation.json", false)
+	err := InstallForRole("copilot", dir, dir, "miner", ".github/hooks", "mineshaft.json", false)
 	if err != nil {
 		t.Fatalf("InstallForRole(copilot, miner): %v", err)
 	}
 
-	got, _ := os.ReadFile(filepath.Join(dir, ".github/hooks", "excavation.json"))
-	want, err := resolveAndSubstitute("copilot", "excavation-autonomous.json", "miner")
+	got, _ := os.ReadFile(filepath.Join(dir, ".github/hooks", "mineshaft.json"))
+	want, err := resolveAndSubstitute("copilot", "mineshaft-autonomous.json", "miner")
 	if err != nil {
 		t.Fatalf("resolveAndSubstitute: %v", err)
 	}
@@ -711,13 +711,13 @@ func TestInstallForRole_CopilotRoleAware(t *testing.T) {
 	}
 
 	dir2 := t.TempDir()
-	err = InstallForRole("copilot", dir2, dir2, "crew", ".github/hooks", "excavation.json", false)
+	err = InstallForRole("copilot", dir2, dir2, "crew", ".github/hooks", "mineshaft.json", false)
 	if err != nil {
 		t.Fatalf("InstallForRole(copilot, crew): %v", err)
 	}
 
-	got, _ = os.ReadFile(filepath.Join(dir2, ".github/hooks", "excavation.json"))
-	want, err = resolveAndSubstitute("copilot", "excavation-interactive.json", "crew")
+	got, _ = os.ReadFile(filepath.Join(dir2, ".github/hooks", "mineshaft.json"))
+	want, err = resolveAndSubstitute("copilot", "mineshaft-interactive.json", "crew")
 	if err != nil {
 		t.Fatalf("resolveAndSubstitute: %v", err)
 	}

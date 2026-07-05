@@ -21,7 +21,7 @@ severity = "low"
 
 Polls GitHub for open pull requests, categorizes them by readiness, and creates
 `ci-failure` beads for new failures. Implements the PR Sheriff pattern from the
-[Excavation Site User Manual](https://steve-yegge.medium.com/excavation-site-emergency-user-manual-cf0e4556d74b)
+[Mineshaft User Manual](https://steve-yegge.medium.com/mineshaft-emergency-user-manual-cf0e4556d74b)
 as a Supervisor plugin.
 
 Categorizes each PR as:

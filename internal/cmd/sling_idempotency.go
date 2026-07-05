@@ -33,20 +33,20 @@ func matchesSlingTarget(target, assignee, selfAgent string) bool {
 
 	// Rig-only target maps to miner dispatch within that rig.
 	// Intentionally excludes crew/witness/refinery: rig-name targets resolve
-	// exclusively to miners via IsRigName, so "excavation" + "excavation/crew/alex"
+	// exclusively to miners via IsRigName, so "mineshaft" + "mineshaft/crew/alex"
 	// is NOT a match (different dispatch path).
 	parts := strings.Split(targetNorm, "/")
 	if len(parts) == 1 && strings.HasPrefix(assigneeNorm, targetNorm+"/miners/") {
 		return true
 	}
 
-	// NOTE: Two-segment shorthand targets (e.g., "excavation/alex") and pool
+	// NOTE: Two-segment shorthand targets (e.g., "mineshaft/alex") and pool
 	// targets (e.g., "supervisor/dogs") are intentionally NOT matched here.
 	// - Shorthand: the real resolver has priority logic (prefers crew when
 	//   crew dir exists) that this pure function cannot replicate.
 	// - Pool: "supervisor/dogs" means "dispatch to an idle dog", not "keep the
 	//   current dog". Matching would prevent reassignment to idle workers.
-	// Users can use full paths (e.g., "excavation/miners/toast") for
+	// Users can use full paths (e.g., "mineshaft/miners/toast") for
 	// unambiguous idempotent behavior with these targets.
 
 	return false

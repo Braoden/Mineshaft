@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/constants"
 )
 
 func installFakeBdForConfigChecks(t *testing.T, townRoot string) {
@@ -574,7 +574,7 @@ func TestCustomStatusesCheck_ParsesOutputWithNotePrefix(t *testing.T) {
 
 func TestCustomTypesCheck_UsesRigScopedBeadsDir(t *testing.T) {
 	townRoot := t.TempDir()
-	rigDir := filepath.Join(townRoot, "excavation")
+	rigDir := filepath.Join(townRoot, "mineshaft")
 	townBeadsDir := filepath.Join(townRoot, ".beads")
 	rigBeadsDir := filepath.Join(rigDir, ".beads")
 
@@ -583,7 +583,7 @@ func TestCustomTypesCheck_UsesRigScopedBeadsDir(t *testing.T) {
 	installFakeBdForConfigChecks(t, townRoot)
 
 	check := NewCustomTypesCheck()
-	ctx := &CheckContext{TownRoot: townRoot, RigName: "excavation"}
+	ctx := &CheckContext{TownRoot: townRoot, RigName: "mineshaft"}
 
 	result := check.Run(ctx)
 	if result.Status != StatusWarning {
@@ -620,7 +620,7 @@ func TestCustomTypesCheck_UsesRigScopedBeadsDir(t *testing.T) {
 
 func TestCustomTypesCheck_FixPreservesExistingRigTypes(t *testing.T) {
 	townRoot := t.TempDir()
-	rigDir := filepath.Join(townRoot, "excavation")
+	rigDir := filepath.Join(townRoot, "mineshaft")
 	townBeadsDir := filepath.Join(townRoot, ".beads")
 	rigBeadsDir := filepath.Join(rigDir, ".beads")
 
@@ -629,7 +629,7 @@ func TestCustomTypesCheck_FixPreservesExistingRigTypes(t *testing.T) {
 	installFakeBdForConfigChecks(t, townRoot)
 
 	check := NewCustomTypesCheck()
-	ctx := &CheckContext{TownRoot: townRoot, RigName: "excavation"}
+	ctx := &CheckContext{TownRoot: townRoot, RigName: "mineshaft"}
 
 	result := check.Run(ctx)
 	if result.Status != StatusWarning {
@@ -655,7 +655,7 @@ func TestCustomTypesCheck_FixPreservesExistingRigTypes(t *testing.T) {
 
 func TestCustomStatusesCheck_UsesRigScopedBeadsDir(t *testing.T) {
 	townRoot := t.TempDir()
-	rigDir := filepath.Join(townRoot, "excavation")
+	rigDir := filepath.Join(townRoot, "mineshaft")
 	townBeadsDir := filepath.Join(townRoot, ".beads")
 	rigBeadsDir := filepath.Join(rigDir, ".beads")
 
@@ -664,7 +664,7 @@ func TestCustomStatusesCheck_UsesRigScopedBeadsDir(t *testing.T) {
 	installFakeBdForConfigChecks(t, townRoot)
 
 	check := NewCustomStatusesCheck()
-	ctx := &CheckContext{TownRoot: townRoot, RigName: "excavation"}
+	ctx := &CheckContext{TownRoot: townRoot, RigName: "mineshaft"}
 
 	result := check.Run(ctx)
 	if result.Status != StatusWarning {

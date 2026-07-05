@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/mineshaft/internal/config"
 )
 
 // =============================================================================
@@ -22,7 +22,7 @@ func testManager(t *testing.T) (*Manager, string) {
 	rigsConfig := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"excavation": {GitURL: "git@github.com:test/excavation.git"},
+			"mineshaft": {GitURL: "git@github.com:test/mineshaft.git"},
 			"beads":   {GitURL: "git@github.com:test/beads.git"},
 		},
 	}
@@ -203,7 +203,7 @@ func TestManager_saveState_loadState_roundtrip(t *testing.T) {
 		LastActive: now,
 		Work:       "hq-abc123",
 		Worktrees: map[string]string{
-			"excavation": "/path/to/excavation",
+			"mineshaft": "/path/to/mineshaft",
 			"beads":   "/path/to/beads",
 		},
 		CreatedAt: now,
@@ -285,7 +285,7 @@ func TestManager_Get_success(t *testing.T) {
 		LastActive: now,
 		Work:       "test-work",
 		Worktrees: map[string]string{
-			"excavation": "/path/excavation",
+			"mineshaft": "/path/mineshaft",
 		},
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -306,8 +306,8 @@ func TestManager_Get_success(t *testing.T) {
 	if dog.Work != "test-work" {
 		t.Errorf("Work = %q, want %q", dog.Work, "test-work")
 	}
-	if dog.Worktrees["excavation"] != "/path/excavation" {
-		t.Errorf("Worktrees[excavation] = %q, want %q", dog.Worktrees["excavation"], "/path/excavation")
+	if dog.Worktrees["mineshaft"] != "/path/mineshaft" {
+		t.Errorf("Worktrees[mineshaft] = %q, want %q", dog.Worktrees["mineshaft"], "/path/mineshaft")
 	}
 }
 
@@ -1027,7 +1027,7 @@ func TestManager_Refresh_notFound(t *testing.T) {
 func TestManager_RefreshRig_notFound(t *testing.T) {
 	m, _ := testManager(t)
 
-	err := m.RefreshRig("nonexistent", "excavation")
+	err := m.RefreshRig("nonexistent", "mineshaft")
 	if err != ErrDogNotFound {
 		t.Errorf("RefreshRig() error = %v, want ErrDogNotFound", err)
 	}
@@ -1076,7 +1076,7 @@ func TestManager_RefreshRig_rejectsWorkingDog(t *testing.T) {
 	}
 	setupDogWithState(t, m, "busy", state)
 
-	err := m.RefreshRig("busy", "excavation")
+	err := m.RefreshRig("busy", "mineshaft")
 	if err != ErrDogWorking {
 		t.Errorf("RefreshRig() error = %v, want ErrDogWorking", err)
 	}

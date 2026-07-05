@@ -1529,7 +1529,7 @@ func TestValidateSessionName(t *testing.T) {
 		session string
 		wantErr bool
 	}{
-		{"valid alphanumeric", "gt-excavation-crew-tom", false},
+		{"valid alphanumeric", "gt-mineshaft-crew-tom", false},
 		{"valid with underscore", "hq_supervisor", false},
 		{"valid simple", "test123", false},
 		{"empty string", "", true},
@@ -1889,7 +1889,7 @@ func TestAdaptiveTextDelay(t *testing.T) {
 // TestMatchesPromptPrefix verifies that prompt matching handles non-breaking
 // spaces (NBSP, U+00A0) correctly. Claude Code uses NBSP after its > prompt
 // character, but the default ReadyPromptPrefix uses a regular space.
-// Regression test for https://github.com/steveyegge/excavation/issues/1387.
+// Regression test for https://github.com/steveyegge/mineshaft/issues/1387.
 func TestMatchesPromptPrefix(t *testing.T) {
 	t.Parallel()
 	const (
@@ -2247,7 +2247,7 @@ func TestGetKeyBinding_CapturesDefaultBinding(t *testing.T) {
 	// Query the default tmux binding for prefix-n (next-window).
 	// This works without a running tmux server because list-keys
 	// returns builtin defaults. Skip if already a GT binding (e.g.,
-	// when running inside an active excavation session).
+	// when running inside an active mineshaft session).
 	result := tm.getKeyBinding("prefix", "n")
 	if result == "" && tm.isGTBinding("prefix", "n") {
 		t.Skip("prefix-n is already a GT binding in this environment")
@@ -2267,7 +2267,7 @@ func TestGetKeyBinding_CapturesDefaultBindingWithArgs(t *testing.T) {
 	}
 }
 
-func TestGetKeyBinding_SkipsExcavationBindings(t *testing.T) {
+func TestGetKeyBinding_SkipsMineshaftBindings(t *testing.T) {
 	tm := newTestTmux(t)
 
 	// Bootstrap the isolated server (bind-key requires a running server)
@@ -2285,7 +2285,7 @@ func TestGetKeyBinding_SkipsExcavationBindings(t *testing.T) {
 
 	result := tm.getKeyBinding("prefix", "F11")
 	if result != "" {
-		t.Errorf("expected empty string for Excavation Site binding, got %q", result)
+		t.Errorf("expected empty string for Mineshaft binding, got %q", result)
 	}
 
 	// Clean up
@@ -2317,7 +2317,7 @@ func TestGetKeyBinding_CapturesUserBinding(t *testing.T) {
 	_, _ = tm.run("unbind-key", "-T", "prefix", "F11")
 }
 
-func TestIsGTBinding_DetectsExcavationBindings(t *testing.T) {
+func TestIsGTBinding_DetectsMineshaftBindings(t *testing.T) {
 	tm := newTestTmux(t)
 
 	// Bootstrap the isolated server (bind-key requires a running server)

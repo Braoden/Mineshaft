@@ -1,4 +1,4 @@
-// Package plugin provides plugin discovery and management for Excavation Site.
+// Package plugin provides plugin discovery and management for Mineshaft.
 //
 // Plugins are periodic automation tasks that run during Supervisor patrol cycles.
 // Each plugin is defined by a plugin.md file with TOML frontmatter.
@@ -122,7 +122,7 @@ const (
 	// ExecTypeExecWrapper wraps session startup commands.
 	// Instead of being dispatched to a dog, the wrapper tokens are inserted
 	// between `exec env VAR=val ...` and the agent binary in the startup command.
-	// Example: ["exitbox", "run", "--profile=excavation-miner", "--"]
+	// Example: ["exitbox", "run", "--profile=mineshaft-miner", "--"]
 	ExecTypeExecWrapper ExecutionType = "exec-wrapper"
 )
 
@@ -142,7 +142,7 @@ type Execution struct {
 
 	// Wrapper is the command tokens for exec-wrapper plugins.
 	// These are inserted between the env vars and the agent command at session startup.
-	// Example: ["exitbox", "run", "--profile=excavation-miner", "--"]
+	// Example: ["exitbox", "run", "--profile=mineshaft-miner", "--"]
 	// Only used when Type is "exec-wrapper".
 	Wrapper []string `json:"wrapper,omitempty" toml:"wrapper,omitempty"`
 }

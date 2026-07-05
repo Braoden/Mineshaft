@@ -8,10 +8,10 @@ import (
 	"sort"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // Account command flags
@@ -26,7 +26,7 @@ var accountCmd = &cobra.Command{
 	GroupID: GroupConfig,
 	Short:   "Manage Claude Code accounts",
 	RunE:    requireSubcommand,
-	Long: `Manage multiple Claude Code accounts for Excavation Site.
+	Long: `Manage multiple Claude Code accounts for Mineshaft.
 
 This enables switching between accounts (e.g., personal vs work) with
 easy account selection per spawn or globally.

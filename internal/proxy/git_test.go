@@ -194,7 +194,7 @@ func TestAuthorizeReceivePack(t *testing.T) {
 	})
 
 	t.Run("valid CN and valid refs — body is rewound correctly", func(t *testing.T) {
-		cn := "gt-excavation-furiosa"
+		cn := "gt-mineshaft-furiosa"
 		body := receivePackBody("refs/heads/miner/furiosa-abc123")
 
 		rec := httptest.NewRecorder()
@@ -211,7 +211,7 @@ func TestAuthorizeReceivePack(t *testing.T) {
 	})
 
 	t.Run("valid CN with invalid refs returns 403 and includes refs", func(t *testing.T) {
-		cn := "gt-excavation-furiosa"
+		cn := "gt-mineshaft-furiosa"
 		body := receivePackBody("refs/heads/main")
 
 		rec := httptest.NewRecorder()
@@ -226,7 +226,7 @@ func TestAuthorizeReceivePack(t *testing.T) {
 	})
 
 	t.Run("body read error returns 400", func(t *testing.T) {
-		cn := "gt-excavation-furiosa"
+		cn := "gt-mineshaft-furiosa"
 		rec := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/v1/git/rig/git-receive-pack", nil)
 		req.Body = errReadCloser{err: fmt.Errorf("simulated read error")}
@@ -238,7 +238,7 @@ func TestAuthorizeReceivePack(t *testing.T) {
 	})
 
 	t.Run("oversized body returns 400", func(t *testing.T) {
-		cn := "gt-excavation-furiosa"
+		cn := "gt-mineshaft-furiosa"
 		rec := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/v1/git/rig/git-receive-pack", nil)
 		req.Body = errReadCloser{err: &http.MaxBytesError{Limit: 32 << 20}}
@@ -376,10 +376,10 @@ func TestClientCN(t *testing.T) {
 		req := httptest.NewRequest("POST", "/", nil)
 		req.TLS = &tls.ConnectionState{
 			PeerCertificates: []*x509.Certificate{
-				{Subject: pkix.Name{CommonName: "gt-excavation-furiosa"}},
+				{Subject: pkix.Name{CommonName: "gt-mineshaft-furiosa"}},
 			},
 		}
-		assert.Equal(t, "gt-excavation-furiosa", clientCN(req))
+		assert.Equal(t, "gt-mineshaft-furiosa", clientCN(req))
 	})
 }
 
@@ -535,12 +535,12 @@ func TestHandleGitAuditLog(t *testing.T) {
 	t.Run("fetch info/refs emits INFO with identity and rig", func(t *testing.T) {
 		srv, _, lc := newGitServerWithLog(t)
 		req := fakeGitRequest("GET", "/v1/git/testrip/info/refs?service=git-upload-pack",
-			nil, "gt-excavation-furiosa")
+			nil, "gt-mineshaft-furiosa")
 		srv.handleGit(httptest.NewRecorder(), req)
 
 		e, ok := lc.findEntry(slog.LevelInfo, "git info/refs")
 		require.True(t, ok, "expected INFO 'git info/refs' log record")
-		assert.Equal(t, "excavation/furiosa", e.attrs["identity"])
+		assert.Equal(t, "mineshaft/furiosa", e.attrs["identity"])
 		assert.Equal(t, "testrip", e.attrs["rig"])
 		assert.Equal(t, "fetch", e.attrs["op"])
 	})
@@ -548,7 +548,7 @@ func TestHandleGitAuditLog(t *testing.T) {
 	t.Run("push info/refs emits INFO with op=push", func(t *testing.T) {
 		srv, _, lc := newGitServerWithLog(t)
 		req := fakeGitRequest("GET", "/v1/git/testrip/info/refs?service=git-receive-pack",
-			nil, "gt-excavation-furiosa")
+			nil, "gt-mineshaft-furiosa")
 		srv.handleGit(httptest.NewRecorder(), req)
 
 		e, ok := lc.findEntry(slog.LevelInfo, "git info/refs")
@@ -560,14 +560,14 @@ func TestHandleGitAuditLog(t *testing.T) {
 		srv, _, lc := newGitServerWithLog(t)
 		body := receivePackBody("refs/heads/main") // not allowed
 		req := fakeGitRequest("POST", "/v1/git/testrip/git-receive-pack",
-			body, "gt-excavation-furiosa")
+			body, "gt-mineshaft-furiosa")
 		rec := httptest.NewRecorder()
 		srv.handleGit(rec, req)
 
 		assert.Equal(t, http.StatusForbidden, rec.Code)
 		e, ok := lc.findEntry(slog.LevelWarn, "git push denied")
 		require.True(t, ok, "expected WARN 'git push denied' log record")
-		assert.Equal(t, "excavation/furiosa", e.attrs["identity"])
+		assert.Equal(t, "mineshaft/furiosa", e.attrs["identity"])
 		assert.Equal(t, "testrip", e.attrs["rig"])
 		assert.Contains(t, e.attrs["refs"], "refs/heads/main")
 	})
@@ -597,13 +597,13 @@ func TestHandleGitAuditLogIntegration(t *testing.T) {
 		makeBareRepo(t, gitPath, townRoot)
 
 		req := fakeGitRequest("POST", "/v1/git/testrip/git-upload-pack",
-			[]byte("0000"), "gt-excavation-furiosa")
+			[]byte("0000"), "gt-mineshaft-furiosa")
 		req.Header.Set("Content-Type", "application/x-git-upload-pack-request")
 		srv.handleGit(httptest.NewRecorder(), req)
 
 		e, ok := lc.findEntry(slog.LevelInfo, "git fetch")
 		require.True(t, ok, "expected INFO 'git fetch' log record")
-		assert.Equal(t, "excavation/furiosa", e.attrs["identity"])
+		assert.Equal(t, "mineshaft/furiosa", e.attrs["identity"])
 		assert.Equal(t, "testrip", e.attrs["rig"])
 	})
 }
@@ -611,7 +611,7 @@ func TestHandleGitAuditLogIntegration(t *testing.T) {
 // TestHandleReceivePackIntegration performs a full end-to-end mTLS git push
 // through a live proxy server, verifying branch authorization with a real git binary.
 //
-// The test issues a miner cert (CN "gt-excavation-raider" → miner name "raider"),
+// The test issues a miner cert (CN "gt-mineshaft-raider" → miner name "raider"),
 // starts the proxy with mTLS enabled, creates a local repo with a commit, then:
 //   - Asserts that a push to refs/heads/miner/raider-* (allowed) succeeds.
 //   - Asserts that a push to refs/heads/main (disallowed) is rejected.
@@ -622,9 +622,9 @@ func TestHandleReceivePackIntegration(t *testing.T) {
 	ca, err := GenerateCA(t.TempDir())
 	require.NoError(t, err)
 
-	// "raider" is the miner name extracted from "gt-excavation-raider" by minerName().
+	// "raider" is the miner name extracted from "gt-mineshaft-raider" by minerName().
 	// Allowed refs are refs/heads/miner/raider-*.
-	const minerCN = "gt-excavation-raider"
+	const minerCN = "gt-mineshaft-raider"
 	clientCertPEM, clientKeyPEM, err := ca.IssueMiner(minerCN, time.Hour)
 	require.NoError(t, err)
 

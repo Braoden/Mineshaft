@@ -1,6 +1,6 @@
-# Installing Excavation Site
+# Installing Mineshaft
 
-Complete setup guide for Excavation Site multi-agent orchestrator.
+Complete setup guide for Mineshaft multi-agent orchestrator.
 
 ## Prerequisites
 
@@ -11,7 +11,7 @@ Complete setup guide for Excavation Site multi-agent orchestrator.
 | **Go** | 1.25.8+ | `go version` | See [golang.org](https://go.dev/doc/install) |
 | **Git** | 2.20+ | `git --version` | See below |
 | **Dolt** | >= 2.0.7 | `dolt version` | macOS: `brew install dolt`; other platforms: see [dolthub/dolt](https://github.com/dolthub/dolt?tab=readme-ov-file#installation) |
-| **Beads** | >= 0.55.4 | `bd version` | Installed by `brew install excavation`, or from source with `go install github.com/steveyegge/beads/cmd/bd@latest` |
+| **Beads** | >= 0.55.4 | `bd version` | Installed by `brew install mineshaft`, or from source with `go install github.com/steveyegge/beads/cmd/bd@latest` |
 
 ### Optional (for Full Stack Mode)
 
@@ -78,13 +78,13 @@ dolt version      # Should show 2.0.7 or higher
 tmux -V           # (Optional) Should show 3.0 or higher
 ```
 
-## Installing Excavation Site
+## Installing Mineshaft
 
 ### Step 1: Install the Binaries
 
 ```bash
-# Install Excavation Site CLI
-brew install excavation
+# Install Mineshaft CLI
+brew install mineshaft
 
 # Verify installation
 gt version
@@ -93,7 +93,7 @@ dolt version
 ```
 
 Homebrew installs the runtime dependencies declared by the core formula. The
-`excavationhall/excavation` tap is reserved for emergency updates. If you build from
+`mineshafthall/mineshaft` tap is reserved for emergency updates. If you build from
 source instead, install `dolt` first, install `bd` with Go, ensure `$GOPATH/bin`
 (usually `~/go/bin`) is in your PATH, and ensure `~/.local/bin` appears before
 older install locations. On macOS, do not install `gt` with `go install`:
@@ -104,15 +104,15 @@ instead.
 brew install dolt
 go install github.com/steveyegge/beads/cmd/bd@latest
 export PATH="$HOME/.local/bin:$PATH:$HOME/go/bin"
-git clone https://github.com/steveyegge/excavation.git
-cd excavation
+git clone https://github.com/steveyegge/mineshaft.git
+cd mineshaft
 make install
 ```
 
 ### Step 2: Create Your Workspace
 
 ```bash
-# Create a Excavation Site workspace (HQ)
+# Create a Mineshaft workspace (HQ)
 gt install ~/gt --shell
 
 # This creates:
@@ -143,7 +143,7 @@ gt rig add myproject https://github.com/you/repo.git
 ```bash
 cd ~/gt
 
-gt enable              # enable Excavation Site system-wide
+gt enable              # enable Mineshaft system-wide
 gt git-init            # initialize a git repo for your HQ
 gt up                  # Start all services. Use gt down or gt shutdown for stopping. 
 
@@ -153,7 +153,7 @@ gt status              # Show workspace status
 
 ### Step 5: Configure Agents (Optional)
 
-Excavation Site supports built-in runtimes (`claude`, `gemini`, `codex`, `cursor`, `auggie`, `amp`, `opencode`, `copilot`) plus custom agent aliases.
+Mineshaft supports built-in runtimes (`claude`, `gemini`, `codex`, `cursor`, `auggie`, `amp`, `opencode`, `copilot`) plus custom agent aliases.
 
 ```bash
 # List available agents
@@ -176,11 +176,11 @@ gt sling gt-abc12 myproject --agent claude-haiku
 
 ## Minimal Mode vs Full Stack Mode
 
-Excavation Site supports two operational modes:
+Mineshaft supports two operational modes:
 
 ### Minimal Mode (No Daemon)
 
-Run individual runtime instances manually. Excavation Site only tracks state.
+Run individual runtime instances manually. Mineshaft only tracks state.
 
 ```bash
 # Create and assign work
@@ -223,7 +223,7 @@ gt witness attach myproject
 
 ### Choosing Roles
 
-Excavation Site is modular. Enable only what you need:
+Mineshaft is modular. Enable only what you need:
 
 | Configuration | Roles | Use Case |
 |--------------|-------|----------|
@@ -236,7 +236,7 @@ Excavation Site is modular. Enable only what you need:
 
 ### `gt: command not found`
 
-The Excavation Site binary directory is not in PATH. Homebrew usually handles this for
+The Mineshaft binary directory is not in PATH. Homebrew usually handles this for
 Homebrew installs. Source installs place `gt` in `~/.local/bin`:
 
 ```bash
@@ -302,12 +302,12 @@ bd doctor                  # Run beads health check
 
 ## Updating
 
-Update Excavation Site through the same channel you used to install it. For the
+Update Mineshaft through the same channel you used to install it. For the
 recommended Homebrew install:
 
 ```bash
 brew update
-brew upgrade excavation
+brew upgrade mineshaft
 command -v gt              # Should be Homebrew's gt, e.g. /opt/homebrew/bin/gt
 gt version
 gt doctor --fix            # Fix any post-update issues

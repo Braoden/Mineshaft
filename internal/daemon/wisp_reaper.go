@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
-	agentconfig "github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/doltserver"
-	"github.com/steveyegge/excavation/internal/reaper"
-	"github.com/steveyegge/excavation/internal/util"
+	agentconfig "github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/doltserver"
+	"github.com/steveyegge/mineshaft/internal/reaper"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 const (

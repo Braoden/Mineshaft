@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/mineshaft/internal/config"
 )
 
-// setupTestTown creates a minimal Excavation Site workspace for testing.
+// setupTestTown creates a minimal Mineshaft workspace for testing.
 func setupTestTownForConfig(t *testing.T) string {
 	t.Helper()
 

@@ -7,11 +7,11 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/runtime"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/runtime"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 // Common errors
@@ -30,7 +30,7 @@ type tmuxOps interface {
 	SetRemainOnExit(pane string, on bool) error
 	SetEnvironment(session, key, value string) error
 	GetPaneID(session string) (string, error)
-	ConfigureExcavationSession(session string, theme *tmux.Theme, rig, worker, role string) error
+	ConfigureMineshaftSession(session string, theme *tmux.Theme, rig, worker, role string) error
 	WaitForCommand(session string, excludeCommands []string, timeout time.Duration) error
 	SetAutoRespawnHook(session string) error
 	AcceptStartupDialogs(session string) error
@@ -135,7 +135,7 @@ func (m *Manager) Start(agentOverride string) error {
 
 	// Create session with command and env vars via -e flags so the initial
 	// shell (and subprocesses Claude spawns) inherit them from the start.
-	// See: https://github.com/anthropics/excavation/issues/280 (race condition fix)
+	// See: https://github.com/anthropics/mineshaft/issues/280 (race condition fix)
 	if err := t.NewSessionWithCommandAndEnv(sessionID, supervisorDir, startupCmd, envVars); err != nil {
 		return fmt.Errorf("creating tmux session: %w", err)
 	}
@@ -152,7 +152,7 @@ func (m *Manager) Start(agentOverride string) error {
 
 	// Apply Supervisor theming (non-fatal: theming failure doesn't affect operation)
 	theme := tmux.ResolveSessionTheme(m.townRoot, "", "supervisor", "")
-	_ = t.ConfigureExcavationSession(sessionID, theme, "", "Supervisor", "health-check")
+	_ = t.ConfigureMineshaftSession(sessionID, theme, "", "Supervisor", "health-check")
 
 	// Wait for Claude to start - fatal if Claude fails to launch
 	if err := t.WaitForCommand(sessionID, constants.SupportedShells, constants.ClaudeStartTimeout); err != nil {

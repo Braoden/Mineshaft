@@ -1,4 +1,4 @@
-# Excavation Site Worker Context
+# Mineshaft Worker Context
 
 > **Context Recovery**: Run `gt prime` for full context after compaction or new session.
 
@@ -7,7 +7,7 @@
 **If you find work on your hook, YOU RUN IT.**
 
 No confirmation. No waiting. No announcements. The hook having work IS the assignment.
-This is physics, not politeness. Excavation Site is a steam engine - you are a piston.
+This is physics, not politeness. Mineshaft is a steam engine - you are a piston.
 
 **Failure mode we're preventing:**
 - Agent starts with work on hook

@@ -14,21 +14,21 @@ func TestFormatRigDescription(t *testing.T) {
 	}{
 		{
 			name:    "nil fields",
-			rigName: "excavation",
+			rigName: "mineshaft",
 			fields:  nil,
 			want:    nil, // empty string
 		},
 		{
 			name:    "all fields",
-			rigName: "excavation",
+			rigName: "mineshaft",
 			fields: &RigFields{
-				Repo:   "git@github.com:user/excavation.git",
+				Repo:   "git@github.com:user/mineshaft.git",
 				Prefix: "gt",
 				State:  RigStateActive,
 			},
 			want: []string{
-				"Rig identity bead for excavation.",
-				"repo: git@github.com:user/excavation.git",
+				"Rig identity bead for mineshaft.",
+				"repo: git@github.com:user/mineshaft.git",
 				"prefix: gt",
 				"state: active",
 			},
@@ -85,13 +85,13 @@ func TestParseRigFields(t *testing.T) {
 		},
 		{
 			name: "full rig description",
-			desc: `Rig identity bead for excavation.
+			desc: `Rig identity bead for mineshaft.
 
-repo: git@github.com:user/excavation.git
+repo: git@github.com:user/mineshaft.git
 prefix: gt
 state: active`,
 			want: &RigFields{
-				Repo:   "git@github.com:user/excavation.git",
+				Repo:   "git@github.com:user/mineshaft.git",
 				Prefix: "gt",
 				State:  RigStateActive,
 			},
@@ -140,12 +140,12 @@ state: active`,
 
 func TestRigFieldsRoundTrip(t *testing.T) {
 	original := &RigFields{
-		Repo:   "git@github.com:user/excavation.git",
+		Repo:   "git@github.com:user/mineshaft.git",
 		Prefix: "gt",
 		State:  RigStateActive,
 	}
 
-	formatted := FormatRigDescription("excavation", original)
+	formatted := FormatRigDescription("mineshaft", original)
 	parsed := ParseRigFields(formatted)
 
 	if parsed.Repo != original.Repo {
@@ -164,7 +164,7 @@ func TestRigBeadID(t *testing.T) {
 		name string
 		want string
 	}{
-		{"excavation", "gt-rig-excavation"},
+		{"mineshaft", "gt-rig-mineshaft"},
 		{"beads", "gt-rig-beads"},
 		{"my-rig", "gt-rig-my-rig"},
 	}
@@ -184,7 +184,7 @@ func TestRigBeadIDWithPrefix(t *testing.T) {
 		name   string
 		want   string
 	}{
-		{"gt", "excavation", "gt-rig-excavation"},
+		{"gt", "mineshaft", "gt-rig-mineshaft"},
 		{"bd", "beads", "bd-rig-beads"},
 		{"hq", "town", "hq-rig-town"},
 	}

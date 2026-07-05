@@ -1,10 +1,10 @@
-# Excavation Site Architecture
+# Mineshaft Architecture
 
-Technical architecture for Excavation Site multi-agent workspace management.
+Technical architecture for Mineshaft multi-agent workspace management.
 
 ## Two-Level Beads Architecture
 
-Excavation Site uses a two-level beads architecture to separate organizational coordination
+Mineshaft uses a two-level beads architecture to separate organizational coordination
 from project implementation work.
 
 | Level | Location | Prefix | Purpose |
@@ -88,7 +88,7 @@ Each agent bead references its role bead via the `role_bead` field.
 │   └── routes.jsonl            Prefix → rig routing table
 ├── .dolt-data/                 Centralized Dolt data directory
 │   ├── hq/                     Town beads database (hq-* prefix)
-│   ├── excavation/                Excavation rig database (gt-* prefix)
+│   ├── mineshaft/                Mineshaft rig database (gt-* prefix)
 │   ├── beads/                  Beads rig database (bd-* prefix)
 │   └── <other rigs>/           Per-rig databases
 ├── daemon/                     Daemon runtime state
@@ -160,7 +160,7 @@ error pointing to `gt dolt start`.
            │ MySQL protocol
     ┌──────┼──────┬──────────┐
     │      │      │          │
-  USE hq  USE excavation  USE beads  ...
+  USE hq  USE mineshaft  USE beads  ...
 ```
 
 Each rig database is a subdirectory under `.dolt-data/`. The daemon monitors
@@ -178,7 +178,7 @@ The `routes.jsonl` file maps issue ID prefixes to rig locations (relative to tow
 
 ```jsonl
 {"prefix":"hq-","path":"."}
-{"prefix":"gt-","path":"excavation/overseer/rig"}
+{"prefix":"gt-","path":"mineshaft/overseer/rig"}
 {"prefix":"bd-","path":"beads/overseer/rig"}
 ```
 
@@ -187,7 +187,7 @@ This enables transparent cross-rig beads operations:
 
 ```bash
 bd show hq-overseer    # Routes to town beads (~/.gt/.beads)
-bd show gt-xyz      # Routes to excavation/overseer/rig/.beads
+bd show gt-xyz      # Routes to mineshaft/overseer/rig/.beads
 ```
 
 ## Beads Redirects
@@ -276,16 +276,16 @@ See [dolt-storage.md](dolt-storage.md) for full details.
 
 ## Deployment Artifacts
 
-Excavation Site and Beads are distributed through multiple channels. Tag pushes (`v*`)
+Mineshaft and Beads are distributed through multiple channels. Tag pushes (`v*`)
 trigger GitHub Actions release workflows that build and publish everything.
 
-### Excavation Site (`gt`)
+### Mineshaft (`gt`)
 
 | Channel | Artifact | Trigger |
 |---------|----------|---------|
 | **GitHub Releases** | Platform binaries (darwin/linux/windows, amd64/arm64) + checksums | GoReleaser on tag push |
-| **Homebrew** | `brew install steveyegge/excavation/gt` — formula auto-updated on release | `update-homebrew` job pushes to `steveyegge/homebrew-excavation` |
-| **npm** | `npx @excavation/gt` — wrapper that downloads the correct binary | OIDC trusted publishing (no token) |
+| **Homebrew** | `brew install steveyegge/mineshaft/gt` — formula auto-updated on release | `update-homebrew` job pushes to `steveyegge/homebrew-mineshaft` |
+| **npm** | `npx @mineshaft/gt` — wrapper that downloads the correct binary | OIDC trusted publishing (no token) |
 | **Local build** | `go build -o $(go env GOPATH)/bin/gt ./cmd/gt` | Manual |
 
 ### Beads (`bd`)

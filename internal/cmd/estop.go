@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/estop"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/estop"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var (
@@ -44,7 +44,7 @@ To resume: gt thaw [--rig <name>]
 Examples:
   gt estop                              # Freeze everything
   gt estop -r "closing laptop"          # Freeze with reason
-  gt estop --rig excavation                # Freeze only excavation
+  gt estop --rig mineshaft                # Freeze only mineshaft
   gt estop --rig beads -r "maintenance" # Freeze beads rig`,
 	// Reject stray operands so `gt estop status` cannot fall through to runEstop.
 	Args: cobra.NoArgs,
@@ -62,7 +62,7 @@ var estopStatusCmd = &cobra.Command{
 func runEstopStatus(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 	if !estop.IsActive(townRoot) {
 		entries, _ := filepath.Glob(filepath.Join(townRoot, "ESTOP.*"))
@@ -95,7 +95,7 @@ and nudges all sessions to alert them that work can continue.
 
 Examples:
   gt thaw                    # Thaw everything
-  gt thaw --rig excavation      # Thaw only excavation`,
+  gt thaw --rig mineshaft      # Thaw only mineshaft`,
 	RunE: runThaw,
 }
 
@@ -111,7 +111,7 @@ func init() {
 func runEstop(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Per-rig E-stop
@@ -192,7 +192,7 @@ func runEstopRig(townRoot, rigName string) error {
 func runThaw(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Per-rig thaw
@@ -267,7 +267,7 @@ var exemptSessions = map[string]bool{
 	session.BossSessionName(): true,
 }
 
-// freezeAllSessions sends SIGTSTP to all Excavation Site agent sessions via
+// freezeAllSessions sends SIGTSTP to all Mineshaft agent sessions via
 // process-group signaling. Overseer and boss sessions are exempt.
 // If rigFilter is non-empty, only sessions for that rig are frozen.
 func freezeAllSessions(t *tmux.Tmux, townRoot string, rigFilter string) int {
@@ -300,7 +300,7 @@ func freezeAllSessions(t *tmux.Tmux, townRoot string, rigFilter string) int {
 	return frozen
 }
 
-// thawAllSessions sends SIGCONT to all Excavation Site agent sessions.
+// thawAllSessions sends SIGCONT to all Mineshaft agent sessions.
 // If rigFilter is non-empty, only sessions for that rig are thawed.
 func thawAllSessions(t *tmux.Tmux, townRoot string, rigFilter string) int {
 	sessions := collectGTSessions(t, townRoot)
@@ -358,7 +358,7 @@ func isRigSession(name, rigPrefix string) bool {
 	return strings.HasPrefix(name, rigPrefix+"-") || name == rigPrefix
 }
 
-// collectGTSessions returns all Excavation Site tmux sessions.
+// collectGTSessions returns all Mineshaft tmux sessions.
 func collectGTSessions(t *tmux.Tmux, townRoot string) []string {
 	allSessions, err := t.ListSessions()
 	if err != nil {
@@ -380,7 +380,7 @@ func collectGTSessions(t *tmux.Tmux, townRoot string) []string {
 	return gtSessions
 }
 
-// isGTSession checks if a session name belongs to Excavation Site.
+// isGTSession checks if a session name belongs to Mineshaft.
 func isGTSession(name string, rigPrefixes map[string]bool) bool {
 	// Town-level sessions (hq-*)
 	if strings.HasPrefix(name, session.HQPrefix) {

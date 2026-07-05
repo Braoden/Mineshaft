@@ -61,7 +61,7 @@ CLAUDE.md
 # Formulas: source of truth is internal/formula/formulas/ (embedded in binary).
 # .beads/formulas/ is provisioned at runtime by gt install / gt doctor fix.
 
-# Excavation Site (added by gt)
+# Mineshaft (added by gt)
 .beads/
 .logs/
 logs/
@@ -80,7 +80,7 @@ result
 # Opencode
 .opencode/
 
-# Excavation Site (added by gt)
+# Mineshaft (added by gt)
 __pycache__/
 
 # Dolt database files (added by bd init)
@@ -90,7 +90,7 @@ __pycache__/
 # Beads / Dolt files (added by bd init)
 .beads-credential-key
 
-# Excavation Site (added by gt)
+# Mineshaft (added by gt)
 .runtime/
 CLAUDE.local.md
 

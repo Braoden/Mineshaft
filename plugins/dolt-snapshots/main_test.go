@@ -58,7 +58,7 @@ func TestSanitizeDBName(t *testing.T) {
 	}{
 		{"hq", "hq"},
 		{"pi_agent_rust", "pi_agent_rust"},
-		{"sf-excavation", "sfexcavation"},          // dashes stripped
+		{"sf-mineshaft", "sfmineshaft"},          // dashes stripped
 		{"db'; DROP TABLE--", "dbDROPTABLE"}, // injection attempt sanitized
 		{"normal_db_123", "normal_db_123"},
 		{"", ""},
@@ -90,7 +90,7 @@ func TestIsSystemDB(t *testing.T) {
 		{"doctest_xyz", true},
 		{"hq", false},
 		{"petals", false},
-		{"sfexcavation", false},
+		{"sfmineshaft", false},
 		{"lora_forge", false},
 		{"node0", false},
 		// Edge cases: names that start with system prefixes but aren't
@@ -117,7 +117,7 @@ func TestLoadRoutes(t *testing.T) {
 {"prefix":"hq-cv-","path":"."}
 {"prefix":"pe-","path":"petals/overseer/rig"}
 {"prefix":"lf-","path":"lora_forge/overseer/rig"}
-{"prefix":"gs-","path":"sfexcavation/overseer/rig"}
+{"prefix":"gs-","path":"sfmineshaft/overseer/rig"}
 {"prefix":"sc-","path":"sf_config"}
 `
 	if err := os.WriteFile(routesFile, []byte(content), 0644); err != nil {
@@ -141,9 +141,9 @@ func TestLoadRoutes(t *testing.T) {
 		t.Errorf("routes[lf] = %q, want 'lora_forge'", got)
 	}
 
-	// gs → sfexcavation
-	if got, ok := routes["gs"]; !ok || got != "sfexcavation" {
-		t.Errorf("routes[gs] = %q, want 'sfexcavation'", got)
+	// gs → sfmineshaft
+	if got, ok := routes["gs"]; !ok || got != "sfmineshaft" {
+		t.Errorf("routes[gs] = %q, want 'sfmineshaft'", got)
 	}
 
 	// sc → sf_config (no slash in path, whole thing is db name)
@@ -226,7 +226,7 @@ func TestResolveDependencyDB(t *testing.T) {
 		"pe": "petals",
 		"lf": "lora_forge",
 		"no": "node0",
-		"gs": "sfexcavation",
+		"gs": "sfmineshaft",
 	}
 
 	tests := []struct {

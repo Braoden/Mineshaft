@@ -4,7 +4,7 @@
 package boot
 
 import (
-	"github.com/steveyegge/excavation/internal/cli"
+	"github.com/steveyegge/mineshaft/internal/cli"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -13,10 +13,10 @@ import (
 	"time"
 
 	"github.com/gofrs/flock"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // MarkerFileName is the lock file for Boot startup coordination.

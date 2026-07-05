@@ -14,7 +14,7 @@ set -euo pipefail
 RESULTS_FILE="${1:?Usage: $0 results.json [--post] [--repo owner/repo]}"
 POST=false
 COMMENT_NUM=""
-REPO="steveyegge/excavation"
+REPO="steveyegge/mineshaft"
 CATEGORY="Ideas"
 
 shift || true

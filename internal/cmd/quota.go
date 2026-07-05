@@ -12,13 +12,13 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/quota"
-	"github.com/steveyegge/excavation/internal/style"
-	ttmux "github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/util"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/quota"
+	"github.com/steveyegge/mineshaft/internal/style"
+	ttmux "github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/util"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // quotaLogger adapts style.PrintWarning to the quota.Logger interface.
@@ -38,7 +38,7 @@ var quotaCmd = &cobra.Command{
 	GroupID: GroupServices,
 	Short:   "Manage account quota rotation",
 	RunE:    requireSubcommand,
-	Long: `Manage Claude Code account quota rotation for Excavation Site.
+	Long: `Manage Claude Code account quota rotation for Mineshaft.
 
 When sessions hit rate limits, quota commands help detect blocked sessions
 and rotate them to available accounts from the pool.
@@ -206,7 +206,7 @@ var (
 var quotaScanCmd = &cobra.Command{
 	Use:   "scan",
 	Short: "Detect rate-limited sessions",
-	Long: `Scan all Excavation Site tmux sessions for rate-limit indicators.
+	Long: `Scan all Mineshaft tmux sessions for rate-limit indicators.
 
 Captures recent pane output from each session and checks for rate-limit
 messages. Reports which sessions are blocked and which account they use.
@@ -369,7 +369,7 @@ it hits its rate limit. This is useful for switching idle sessions while
 it's not disruptive.
 
 The rotation process:
-  1. Scans all Excavation Site sessions for rate-limit indicators
+  1. Scans all Mineshaft sessions for rate-limit indicators
   2. Selects available accounts (LRU order)
   3. Swaps macOS Keychain credentials (same config dir preserved)
   4. Restarts blocked sessions via respawn-pane
@@ -814,7 +814,7 @@ var quotaWatchCmd = &cobra.Command{
 	Short: "Monitor sessions and rotate proactively before hard 429",
 	Long: `Continuously monitor sessions for approaching rate limits and rotate proactively.
 
-Polls all Excavation Site sessions on the specified interval, checking for both
+Polls all Mineshaft sessions on the specified interval, checking for both
 hard rate limits and near-limit warning signals via pane pattern matching.
 
 When a session is detected as approaching its limit, rotation is triggered

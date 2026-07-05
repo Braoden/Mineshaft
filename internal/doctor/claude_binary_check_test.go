@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/deps"
+	"github.com/steveyegge/mineshaft/internal/deps"
 )
 
 func TestClaudeBinaryCheck_Metadata(t *testing.T) {
@@ -18,7 +18,7 @@ func TestClaudeBinaryCheck_Metadata(t *testing.T) {
 	if check.Name() != "claude-binary" {
 		t.Errorf("Name() = %q, want %q", check.Name(), "claude-binary")
 	}
-	if check.Description() != "Check that Claude Code meets minimum version for Excavation Site" {
+	if check.Description() != "Check that Claude Code meets minimum version for Mineshaft" {
 		t.Errorf("Description() = %q", check.Description())
 	}
 	if check.Category() != CategoryInfrastructure {

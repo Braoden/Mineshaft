@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/style"
 )
 
 // MQ next command flags
@@ -31,10 +31,10 @@ The priority scoring function considers:
 Use --strategy=fifo for first-in-first-out ordering instead.
 
 Examples:
-  gt mq next excavation                    # Show highest-priority MR
-  gt mq next excavation --strategy=fifo    # Show oldest MR instead
-  gt mq next excavation --quiet            # Just print the MR ID
-  gt mq next excavation --json             # Output as JSON`,
+  gt mq next mineshaft                    # Show highest-priority MR
+  gt mq next mineshaft --strategy=fifo    # Show oldest MR instead
+  gt mq next mineshaft --quiet            # Just print the MR ID
+  gt mq next mineshaft --json             # Output as JSON`,
 	Args: cobra.ExactArgs(1),
 	RunE: runMQNext,
 }

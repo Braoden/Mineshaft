@@ -3,7 +3,7 @@ package cmd
 import (
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/constants"
 )
 
 // TestIsDogTarget verifies the dog target pattern matching.
@@ -39,7 +39,7 @@ func TestIsDogTarget(t *testing.T) {
 		{"dog", "", false},               // missing colon
 		{"dogs:alpha", "", false},        // wrong prefix
 		{"miner:alpha", "", false},
-		{"excavation/miners/alpha", "", false},
+		{"mineshaft/miners/alpha", "", false},
 		{"overseer", "", false},
 		{"", "", false},
 	}

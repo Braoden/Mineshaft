@@ -31,7 +31,7 @@ type Config struct {
 	// If a command has NO entry, subcommands are unrestricted for that command
 	// (safe for single-subcommand tools, but not intended for gt/bd).
 	AllowedSubcommands map[string][]string
-	// TownRoot is the path to the Excavation Site root directory (e.g. ~/gt).
+	// TownRoot is the path to the Mineshaft root directory (e.g. ~/gt).
 	// Populated from the GT_TOWN env var or ~/gt by default.
 	TownRoot string
 	// Logger is the structured logger to use. nil uses slog.Default().

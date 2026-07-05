@@ -12,22 +12,22 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/crew"
-	"github.com/steveyegge/excavation/internal/daemon"
-	"github.com/steveyegge/excavation/internal/supervisor"
-	"github.com/steveyegge/excavation/internal/doltserver"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/overseer"
-	"github.com/steveyegge/excavation/internal/miner"
-	"github.com/steveyegge/excavation/internal/refinery"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/witness"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/crew"
+	"github.com/steveyegge/mineshaft/internal/daemon"
+	"github.com/steveyegge/mineshaft/internal/supervisor"
+	"github.com/steveyegge/mineshaft/internal/doltserver"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/overseer"
+	"github.com/steveyegge/mineshaft/internal/miner"
+	"github.com/steveyegge/mineshaft/internal/refinery"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/witness"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // defaultOrphanGraceSecs is the grace period (in seconds) between SIGTERM and SIGKILL
@@ -58,8 +58,8 @@ var (
 var startCmd = &cobra.Command{
 	Use:     "start [path]",
 	GroupID: GroupServices,
-	Short:   "Start Excavation Site or a crew workspace",
-	Long: `Start Excavation Site by launching the Supervisor and Overseer.
+	Short:   "Start Mineshaft or a crew workspace",
+	Long: `Start Mineshaft by launching the Supervisor and Overseer.
 
 The Supervisor is the health-check orchestrator that monitors Overseer and Witnesses.
 The Overseer is the global coordinator that dispatches work.
@@ -71,7 +71,7 @@ Crew shortcut:
   If a path like "rig/crew/name" is provided, starts that crew workspace.
   This is equivalent to 'gt start crew rig/name'.
 
-To stop Excavation Site, use 'gt shutdown'.`,
+To stop Mineshaft, use 'gt shutdown'.`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runStart,
 }
@@ -79,8 +79,8 @@ To stop Excavation Site, use 'gt shutdown'.`,
 var shutdownCmd = &cobra.Command{
 	Use:     "shutdown",
 	GroupID: GroupServices,
-	Short:   "Shutdown Excavation Site with cleanup",
-	Long: `Shutdown Excavation Site by stopping agents and cleaning up miners.
+	Short:   "Shutdown Mineshaft with cleanup",
+	Long: `Shutdown Mineshaft by stopping agents and cleaning up miners.
 
 This is the "done for the day" command - it stops everything AND removes
 miner worktrees/branches. For a reversible pause, use 'gt down' instead.
@@ -124,7 +124,7 @@ If not specified, the rig is inferred from the current directory.
 
 Examples:
   gt start crew joe                    # Start joe in current rig
-  gt start crew greenplace/joe            # Start joe in excavation rig
+  gt start crew greenplace/joe            # Start joe in mineshaft rig
   gt start crew joe --rig beads        # Start joe in beads rig`,
 	Args: cobra.ExactArgs(1),
 	RunE: runStartCrew,
@@ -176,10 +176,10 @@ func runStart(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Verify we're in a Excavation Site workspace
+	// Verify we're in a Mineshaft workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Apply ephemeral cost tier if specified
@@ -206,7 +206,7 @@ func runStart(cmd *cobra.Command, args []string) error {
 		fmt.Printf("  %s Cleaned up %d orphaned session(s)\n", style.Bold.Render("✓"), cleaned)
 	}
 
-	fmt.Printf("Starting Excavation Site from %s\n\n", style.Dim.Render(townRoot))
+	fmt.Printf("Starting Mineshaft from %s\n\n", style.Dim.Render(townRoot))
 	fmt.Println("Starting all agents in parallel...")
 	fmt.Println()
 
@@ -286,7 +286,7 @@ func runStart(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Println()
-	fmt.Printf("%s Excavation Site is running\n", style.Bold.Render("✓"))
+	fmt.Printf("%s Mineshaft is running\n", style.Bold.Render("✓"))
 	fmt.Println()
 	fmt.Printf("  Attach to Overseer:  %s\n", style.Dim.Render("gt overseer attach"))
 	fmt.Printf("  Attach to Supervisor: %s\n", style.Dim.Render("gt supervisor attach"))
@@ -513,7 +513,7 @@ func runShutdown(cmd *cobra.Command, args []string) error {
 	toStop, preserved := categorizeSessions(sessions)
 
 	if len(toStop) == 0 {
-		fmt.Printf("%s Excavation Site was not running\n", style.Dim.Render("○"))
+		fmt.Printf("%s Mineshaft was not running\n", style.Dim.Render("○"))
 
 		// Still check for orphaned daemons even if no sessions are running
 		if townRoot != "" {
@@ -560,9 +560,9 @@ func runShutdown(cmd *cobra.Command, args []string) error {
 // categorizeSessions splits sessions into those to stop and those to preserve.
 func categorizeSessions(sessions []string) (toStop, preserved []string) {
 	for _, sess := range sessions {
-		// Excavation Site sessions use rig-specific prefixes or hq- (town-level)
+		// Mineshaft sessions use rig-specific prefixes or hq- (town-level)
 		if !session.IsKnownSession(sess) {
-			continue // Not a Excavation Site session
+			continue // Not a Mineshaft session
 		}
 
 		// Parse session to determine role
@@ -601,7 +601,7 @@ func categorizeSessions(sessions []string) (toStop, preserved []string) {
 }
 
 func runGracefulShutdown(t *tmux.Tmux, gtSessions []string, townRoot string) error {
-	fmt.Printf("Graceful shutdown of Excavation Site (waiting up to %ds)...\n\n", shutdownWait)
+	fmt.Printf("Graceful shutdown of Mineshaft (waiting up to %ds)...\n\n", shutdownWait)
 
 	// Phase 1: Send ESC to all agents to interrupt them
 	fmt.Printf("Phase 1: Sending ESC to %d agent(s)...\n", len(gtSessions))
@@ -612,7 +612,7 @@ func runGracefulShutdown(t *tmux.Tmux, gtSessions []string, townRoot string) err
 
 	// Phase 2: Send shutdown message asking agents to handoff
 	fmt.Printf("\nPhase 2: Requesting handoff from agents...\n")
-	shutdownMsg := "[SHUTDOWN] Excavation Site is shutting down. Please save your state and update your handoff bead, then type /exit or wait to be terminated."
+	shutdownMsg := "[SHUTDOWN] Mineshaft is shutting down. Please save your state and update your handoff bead, then type /exit or wait to be terminated."
 	for _, sess := range gtSessions {
 		// Small delay then send the message
 		time.Sleep(constants.ShutdownNotifyDelay)
@@ -674,7 +674,7 @@ func runGracefulShutdown(t *tmux.Tmux, gtSessions []string, townRoot string) err
 }
 
 func runImmediateShutdown(t *tmux.Tmux, gtSessions []string, townRoot string) error {
-	fmt.Println("Shutting down Excavation Site...")
+	fmt.Println("Shutting down Mineshaft...")
 
 	overseerSession := getOverseerSessionName()
 	supervisorSession := getSupervisorSessionName()
@@ -712,7 +712,7 @@ func runImmediateShutdown(t *tmux.Tmux, gtSessions []string, townRoot string) er
 	verifyNoOrphans()
 
 	fmt.Println()
-	fmt.Printf("%s Excavation Site shutdown complete (%d sessions stopped)\n", style.Bold.Render("✓"), stopped)
+	fmt.Printf("%s Mineshaft shutdown complete (%d sessions stopped)\n", style.Bold.Render("✓"), stopped)
 
 	return nil
 }
@@ -974,7 +974,7 @@ func stopDaemonIfRunning(townRoot string) {
 func runStartCrew(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
-	// Parse rig/name format (e.g., "greenplace/joe" -> rig=excavation, name=joe)
+	// Parse rig/name format (e.g., "greenplace/joe" -> rig=mineshaft, name=joe)
 	rigName := startCrewRig
 	if parsedRig, crewName, ok := parseRigSlashName(name); ok {
 		if rigName == "" {
@@ -986,7 +986,7 @@ func runStartCrew(cmd *cobra.Command, args []string) error {
 	// Find workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// If rig still not specified, try to infer from cwd, then by crew name

@@ -11,23 +11,23 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/daemon"
-	"github.com/steveyegge/excavation/internal/miner"
-	"github.com/steveyegge/excavation/internal/scheduler/capacity"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/daemon"
+	"github.com/steveyegge/mineshaft/internal/miner"
+	"github.com/steveyegge/mineshaft/internal/scheduler/capacity"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var configCmd = &cobra.Command{
 	Use:     "config",
 	GroupID: GroupConfig,
-	Short:   "Manage Excavation Site configuration",
+	Short:   "Manage Mineshaft configuration",
 	RunE:    requireSubcommand,
-	Long: `Manage Excavation Site configuration settings.
+	Long: `Manage Mineshaft configuration settings.
 
 This command allows you to view and modify configuration settings
-for your Excavation Site workspace, including agent aliases and defaults.
+for your Mineshaft workspace, including agent aliases and defaults.
 
 Commands:
   gt config agent list              List all agents (built-in and custom)
@@ -207,17 +207,17 @@ var configAgentEmailDomainCmd = &cobra.Command{
 	Long: `Get or set the domain used for agent git commit emails.
 
 When agents commit code via 'gt commit', their identity is converted
-to a git email address. For example, "excavation/crew/jack" becomes
-"excavation.crew.jack@{domain}".
+to a git email address. For example, "mineshaft/crew/jack" becomes
+"mineshaft.crew.jack@{domain}".
 
 With no arguments, shows the current domain.
 With an argument, sets the domain.
 
-Default: excavation.local
+Default: mineshaft.local
 
 Examples:
   gt config agent-email-domain                 # Show current domain
-  gt config agent-email-domain excavation.local   # Set to excavation.local
+  gt config agent-email-domain mineshaft.local   # Set to mineshaft.local
   gt config agent-email-domain example.com     # Set custom domain`,
 	RunE: runConfigAgentEmailDomain,
 }
@@ -583,7 +583,7 @@ func runConfigAgentEmailDomain(cmd *cobra.Command, args []string) error {
 			domain = DefaultAgentEmailDomain
 		}
 		fmt.Printf("Agent email domain: %s\n", style.Bold.Render(domain))
-		fmt.Printf("\nExample: excavation/crew/jack → excavation.crew.jack@%s\n", domain)
+		fmt.Printf("\nExample: mineshaft/crew/jack → mineshaft.crew.jack@%s\n", domain)
 		return nil
 	}
 
@@ -607,7 +607,7 @@ func runConfigAgentEmailDomain(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("Agent email domain set to '%s'\n", style.Bold.Render(domain))
-	fmt.Printf("\nExample: excavation/crew/jack → excavation.crew.jack@%s\n", domain)
+	fmt.Printf("\nExample: mineshaft/crew/jack → mineshaft.crew.jack@%s\n", domain)
 	return nil
 }
 
@@ -623,7 +623,7 @@ Supported keys:
   cli_theme                   CLI color scheme ("dark", "light", "auto")
   default_agent               Default agent preset name
   dolt.port                   Dolt SQL server port (default: 3307). Set this when
-                              another Excavation Site instance is using the same port.
+                              another Mineshaft instance is using the same port.
                               Writes GT_DOLT_PORT to overseer/daemon.json env section.
   scheduler.max_miners      Dispatch mode: -1 = direct (default), N > 0 = deferred
   scheduler.batch_size        Beads per heartbeat (default: 1)

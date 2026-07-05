@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	gitpkg "github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	gitpkg "github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/rig"
 )
 
 // testGitRepo creates a bare repo + working clone with an initial commit.

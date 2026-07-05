@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/daemon"
+	"github.com/steveyegge/mineshaft/internal/daemon"
 )
 
 // LifecycleDefaultsCheck detects missing lifecycle patrol entries in daemon.json

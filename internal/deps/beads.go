@@ -1,4 +1,4 @@
-// Package deps manages external dependencies for Excavation Site.
+// Package deps manages external dependencies for Mineshaft.
 package deps
 
 import (
@@ -11,11 +11,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
-// MinBeadsVersion is the minimum compatible beads version for this Excavation Site release.
-// Update this when Excavation Site requires new beads features.
+// MinBeadsVersion is the minimum compatible beads version for this Mineshaft release.
+// Update this when Mineshaft requires new beads features.
 const MinBeadsVersion = "0.57.0"
 
 // BeadsInstallPath is the go install path for beads.

@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/daemon"
-	"github.com/steveyegge/excavation/internal/doltserver"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/daemon"
+	"github.com/steveyegge/mineshaft/internal/doltserver"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var doltCmd = &cobra.Command{
@@ -23,7 +23,7 @@ var doltCmd = &cobra.Command{
 	GroupID: GroupServices,
 	Short:   "Manage the Dolt SQL server",
 	RunE:    requireSubcommand,
-	Long: `Manage the Dolt SQL server for Excavation Site beads.
+	Long: `Manage the Dolt SQL server for Mineshaft beads.
 
 The Dolt server provides multi-client access to all rig databases,
 avoiding the single-writer limitation of embedded Dolt mode.
@@ -33,7 +33,7 @@ Server configuration:
   - User: root (default Dolt user, no password for localhost)
   - Data directory: .dolt-data/ (contains all rig databases)
 
-Each rig (hq, excavation, beads) has its own database subdirectory.`,
+Each rig (hq, mineshaft, beads) has its own database subdirectory.`,
 }
 
 var doltInitCmd = &cobra.Command{
@@ -146,12 +146,12 @@ var doltInitRigCmd = &cobra.Command{
 	Short: "Initialize a new rig database",
 	Long: `Initialize a new rig database in the Dolt data directory.
 
-Each rig (e.g., excavation, beads) gets its own database that will be
+Each rig (e.g., mineshaft, beads) gets its own database that will be
 served by the Dolt server. The rig name becomes the database name
 when connecting via MySQL protocol.
 
 Example:
-  gt dolt init-rig excavation
+  gt dolt init-rig mineshaft
   gt dolt init-rig beads`,
 	Args: cobra.ExactArgs(1),
 	RunE: runDoltInitRig,
@@ -238,7 +238,7 @@ Use --gc to purge closed ephemeral beads (wisps, minecarts) before pushing.
 Examples:
   gt dolt sync                # Push all databases with remotes
   gt dolt sync --dry-run      # Preview what would be pushed
-  gt dolt sync --db excavation   # Push only the excavation database
+  gt dolt sync --db mineshaft   # Push only the mineshaft database
   gt dolt sync --force        # Force-push all databases
   gt dolt sync --gc           # Purge closed ephemeral beads, then push
   gt dolt sync --gc --dry-run # Preview purge + push without changes`,
@@ -391,7 +391,7 @@ func init() {
 func runDoltStart(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	config := doltserver.DefaultConfig(townRoot)
@@ -443,7 +443,7 @@ func runDoltStart(cmd *cobra.Command, args []string) error {
 func runDoltKillImposters(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	config := doltserver.DefaultConfig(townRoot)
@@ -477,7 +477,7 @@ func runDoltKillImposters(cmd *cobra.Command, args []string) error {
 func runDoltStop(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	config := doltserver.DefaultConfig(townRoot)
@@ -498,7 +498,7 @@ func runDoltStop(cmd *cobra.Command, args []string) error {
 func runDoltRestart(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	config := doltserver.DefaultConfig(townRoot)
@@ -567,7 +567,7 @@ func runDoltRestart(cmd *cobra.Command, args []string) error {
 func runDoltStatus(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	running, pid, err := doltserver.IsRunning(townRoot)
@@ -796,7 +796,7 @@ func beadsScopeHint(database, townRoot string) string {
 		return ""
 	}
 
-	return fmt.Sprintf("    Excavation Site town beads use database hq. Use `bd -C %s <cmd>` for hq-* beads; do not use `bd --global`, which targets Beads' beads_global database.\n", townRoot)
+	return fmt.Sprintf("    Mineshaft town beads use database hq. Use `bd -C %s <cmd>` for hq-* beads; do not use `bd --global`, which targets Beads' beads_global database.\n", townRoot)
 }
 
 func netJoinHostPort(host string, port int) string {
@@ -806,7 +806,7 @@ func netJoinHostPort(host string, port int) string {
 func runDoltLogs(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	config := doltserver.DefaultConfig(townRoot)
@@ -833,7 +833,7 @@ func runDoltLogs(cmd *cobra.Command, args []string) error {
 func runDoltDump(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	running, pid, err := doltserver.IsRunning(townRoot)
@@ -895,7 +895,7 @@ func runDoltDump(cmd *cobra.Command, args []string) error {
 func runDoltSQL(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	config := doltserver.DefaultConfig(townRoot)
@@ -954,7 +954,7 @@ func runDoltSQL(cmd *cobra.Command, args []string) error {
 func runDoltInitRig(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	rigName := args[0]
@@ -989,7 +989,7 @@ func runDoltInitRig(cmd *cobra.Command, args []string) error {
 func runDoltInit(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Find workspaces with broken Dolt configuration
@@ -1071,7 +1071,7 @@ func runDoltInit(cmd *cobra.Command, args []string) error {
 func runDoltCleanup(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	orphans, err := doltserver.FindOrphanedDatabases(townRoot)
@@ -1171,7 +1171,7 @@ func runDoltCleanup(cmd *cobra.Command, args []string) error {
 func runDoltList(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	config := doltserver.DefaultConfig(townRoot)
@@ -1203,7 +1203,7 @@ func runDoltList(cmd *cobra.Command, args []string) error {
 func runDoltMigrate(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	config := doltserver.DefaultConfig(townRoot)
@@ -1217,7 +1217,7 @@ func runDoltMigrate(cmd *cobra.Command, args []string) error {
 	// old and new backends.
 	daemonRunning, _, _ := daemon.IsRunning(townRoot)
 	if daemonRunning {
-		return fmt.Errorf("Excavation Site daemon is running. Stop it first with: gt daemon stop\n\nThe daemon spawns bd processes that can race with migration.\nStop the daemon, run migration, then restart it.")
+		return fmt.Errorf("Mineshaft daemon is running. Stop it first with: gt daemon stop\n\nThe daemon spawns bd processes that can race with migration.\nStop the daemon, run migration, then restart it.")
 	}
 
 	// Check if Dolt server is running - must stop first
@@ -1326,7 +1326,7 @@ func dirSizeHuman(path string) string {
 func runDoltFixMetadata(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	updated, errs := doltserver.EnsureAllMetadata(townRoot)
@@ -1355,7 +1355,7 @@ func runDoltFixMetadata(cmd *cobra.Command, args []string) error {
 func runDoltRecover(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	config := doltserver.DefaultConfig(townRoot)
@@ -1389,7 +1389,7 @@ func runDoltRecover(cmd *cobra.Command, args []string) error {
 func runDoltRollback(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	config := doltserver.DefaultConfig(townRoot)
@@ -1571,7 +1571,7 @@ func printBackupContents(backupPath, townRoot string) {
 func runDoltSync(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	config := doltserver.DefaultConfig(townRoot)
@@ -1694,7 +1694,7 @@ func runDoltSync(cmd *cobra.Command, args []string) error {
 func runDoltPull(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	config := doltserver.DefaultConfig(townRoot)
@@ -1763,7 +1763,7 @@ func runDoltPull(cmd *cobra.Command, args []string) error {
 func runDoltMigrateWisps(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Determine which rigs to migrate

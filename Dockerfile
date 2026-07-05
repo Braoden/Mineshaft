@@ -1,5 +1,5 @@
 # Run with
-# docker build -t excavation:latest -f Dockerfile .
+# docker build -t mineshaft:latest -f Dockerfile .
 FROM docker/sandbox-templates:claude-code
 
 ARG GO_VERSION=1.25.8
@@ -25,7 +25,7 @@ RUN apt-get update && apt-get install -y \
 # Install Go from official tarball (apt golang-go is too old)
 RUN ARCH=$(dpkg --print-architecture) && \
     curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-${ARCH}.tar.gz" | tar -C /usr/local -xz
-ENV PATH="/app/excavation:/usr/local/go/bin:/home/agent/go/bin:${PATH}"
+ENV PATH="/app/mineshaft:/usr/local/go/bin:/home/agent/go/bin:${PATH}"
 
 # Install beads (bd) and dolt
 RUN curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash
@@ -35,8 +35,8 @@ RUN curl -fsSL https://github.com/dolthub/dolt/releases/download/v${DOLT_VERSION
 RUN mkdir -p /app /gt /gt/.dolt-data && chown -R agent:agent /app /gt
 
 # Environment setup for bash and zsh
-RUN echo 'export PATH="/app/excavation:$PATH"' >> /etc/profile.d/excavation.sh && \
-    echo 'export PATH="/app/excavation:$PATH"' >> /etc/zsh/zshenv
+RUN echo 'export PATH="/app/mineshaft:$PATH"' >> /etc/profile.d/mineshaft.sh && \
+    echo 'export PATH="/app/mineshaft:$PATH"' >> /etc/zsh/zshenv
 RUN echo 'export COLORTERM="truecolor"' >> /etc/profile.d/colorterm.sh && \
     echo 'export COLORTERM="truecolor"' >> /etc/zsh/zshenv
 RUN echo 'export TERM="xterm-256color"' >> /etc/profile.d/term.sh && \
@@ -44,9 +44,9 @@ RUN echo 'export TERM="xterm-256color"' >> /etc/profile.d/term.sh && \
 
 USER agent
 
-COPY --chown=agent:agent . /app/excavation
+COPY --chown=agent:agent . /app/mineshaft
 
-RUN cd /app/excavation && make build
+RUN cd /app/mineshaft && make build
 
 COPY --chown=agent:agent docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh

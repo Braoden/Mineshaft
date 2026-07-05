@@ -6,7 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // SubprocessEnvMode describes how a bd subprocess should target Dolt and
@@ -21,14 +21,14 @@ const (
 	MutationPinned
 )
 
-// Command builds a bd command with the shared Excavation Site bd environment policy.
+// Command builds a bd command with the shared Mineshaft bd environment policy.
 func Command(dir, fallbackBeadsDir string, mode SubprocessEnvMode, args ...string) *exec.Cmd {
 	cmd := exec.Command("bd", args...) //nolint:gosec // G204: args are constructed internally
 	ConfigureCommand(cmd, dir, fallbackBeadsDir, mode)
 	return cmd
 }
 
-// CommandContext builds a context-bound bd command with the shared Excavation Site bd
+// CommandContext builds a context-bound bd command with the shared Mineshaft bd
 // environment policy.
 func CommandContext(ctx context.Context, dir, fallbackBeadsDir string, mode SubprocessEnvMode, args ...string) *exec.Cmd {
 	cmd := exec.CommandContext(ctx, "bd", args...) //nolint:gosec // G204: args are constructed internally
@@ -115,7 +115,7 @@ func BDSubcommandIndex(argv []string) (int, bool) {
 }
 
 // HasBDTargetSelectorFlag reports whether argv contains bd globals that can
-// override the database or working directory selected by Excavation Site. The proxy
+// override the database or working directory selected by Mineshaft. The proxy
 // rejects these even after the subcommand because bd accepts globals anywhere.
 func HasBDTargetSelectorFlag(argv []string) bool {
 	if len(argv) == 0 || argv[0] != "bd" {

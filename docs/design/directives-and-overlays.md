@@ -195,7 +195,7 @@ This is the motivating use case that drove the feature.
 
 The `mol-miner-work` formula has a step called `submit-review` that tells
 miners to post review results to GitHub using `gh pr review --comment`.
-In the excavation rig, the operator wants miners to report findings back in
+In the mineshaft rig, the operator wants miners to report findings back in
 conversation instead.
 
 ### The Solution
@@ -203,10 +203,10 @@ conversation instead.
 **Step 1: Create a rig-level formula overlay.**
 
 ```bash
-mkdir -p ~/gt/excavation/formula-overlays
+mkdir -p ~/gt/mineshaft/formula-overlays
 ```
 
-Create `~/gt/excavation/formula-overlays/mol-miner-work.toml`:
+Create `~/gt/mineshaft/formula-overlays/mol-miner-work.toml`:
 
 ```toml
 [[step-overrides]]
@@ -236,10 +236,10 @@ gt doctor
 
 ```bash
 gt prime --explain
-# Shows: "Formula overlay: applying 1 override(s) for mol-miner-work (rig=excavation)"
+# Shows: "Formula overlay: applying 1 override(s) for mol-miner-work (rig=mineshaft)"
 ```
 
-Now any miner in the excavation rig running `mol-miner-work` will see the
+Now any miner in the mineshaft rig running `mol-miner-work` will see the
 replacement step instead of the original "post to GitHub" instruction.
 
 ### What If the Formula Changes?
@@ -248,7 +248,7 @@ If a future `gt` release renames `submit-review` to `post-results`, the
 overlay's `step_id` becomes stale. On next `gt doctor` run:
 
 ```
-⚠ overlay-health: stale step IDs in excavation/formula-overlays/mol-miner-work.toml:
+⚠ overlay-health: stale step IDs in mineshaft/formula-overlays/mol-miner-work.toml:
   - step_id "submit-review" not found in formula mol-miner-work
 ```
 

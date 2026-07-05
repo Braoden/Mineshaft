@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.excavation.daemon</string>
+    <string>com.mineshaft.daemon</string>
 
     <key>ProgramArguments</key>
     <array>

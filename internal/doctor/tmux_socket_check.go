@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 // socketSessionLister is the minimal interface needed to list and kill sessions
@@ -42,7 +42,7 @@ func NewSocketSplitBrainCheck() *SocketSplitBrainCheck {
 	}
 }
 
-// Run checks for Excavation Site sessions on the "default" socket that duplicate
+// Run checks for Mineshaft sessions on the "default" socket that duplicate
 // sessions on the town socket.
 func (c *SocketSplitBrainCheck) Run(ctx *CheckContext) *CheckResult {
 	townSocket := tmux.GetDefaultSocket()
@@ -91,13 +91,13 @@ func (c *SocketSplitBrainCheck) Run(ctx *CheckContext) *CheckResult {
 		townSet[s] = true
 	}
 
-	// Find Excavation Site sessions on default that are duplicates or orphans
+	// Find Mineshaft sessions on default that are duplicates or orphans
 	var duplicates []string
 	var orphans []string
 
 	for _, s := range defaultSessions {
 		if !session.IsKnownSession(s) {
-			continue // Not a Excavation Site session
+			continue // Not a Mineshaft session
 		}
 		if townSet[s] {
 			duplicates = append(duplicates, s)
@@ -113,7 +113,7 @@ func (c *SocketSplitBrainCheck) Run(ctx *CheckContext) *CheckResult {
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusOK,
-			Message: fmt.Sprintf("No split-brain: all Excavation Site sessions on %q socket", townSocket),
+			Message: fmt.Sprintf("No split-brain: all Mineshaft sessions on %q socket", townSocket),
 		}
 	}
 
@@ -128,13 +128,13 @@ func (c *SocketSplitBrainCheck) Run(ctx *CheckContext) *CheckResult {
 	return &CheckResult{
 		Name:    c.Name(),
 		Status:  StatusError,
-		Message: fmt.Sprintf("Found %d Excavation Site session(s) on wrong socket — nudge/discovery will fail", len(c.staleSessions)),
+		Message: fmt.Sprintf("Found %d Mineshaft session(s) on wrong socket — nudge/discovery will fail", len(c.staleSessions)),
 		Details: details,
 		FixHint: "Run 'gt doctor --fix' to kill stale sessions on wrong socket",
 	}
 }
 
-// Fix kills Excavation Site sessions on the "default" socket that shouldn't be there.
+// Fix kills Mineshaft sessions on the "default" socket that shouldn't be there.
 func (c *SocketSplitBrainCheck) Fix(ctx *CheckContext) error {
 	if len(c.staleSessions) == 0 {
 		return nil

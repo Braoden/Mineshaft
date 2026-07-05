@@ -11,11 +11,11 @@ import (
 
 	"github.com/gofrs/flock"
 
-	"github.com/steveyegge/excavation/internal/atomicfile"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/mineshaft/internal/atomicfile"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/style"
 )
 
 // Common errors
@@ -90,7 +90,7 @@ func (m *Manager) stateFilePath(name string) string {
 }
 
 // Add creates a new dog in the kennel with worktrees into each rig.
-// Each dog gets a worktree per rig (e.g., dogs/alpha/excavation/, dogs/alpha/beads/).
+// Each dog gets a worktree per rig (e.g., dogs/alpha/mineshaft/, dogs/alpha/beads/).
 // Worktrees are created from each rig's bare repo (.repo.git) or overseer/rig.
 func (m *Manager) Add(name string) (*Dog, error) {
 	if err := validateDogName(name); err != nil {

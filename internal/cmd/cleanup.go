@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 var (
@@ -20,7 +20,7 @@ var cleanupCmd = &cobra.Command{
 	Long: `Clean up orphaned Claude processes that survived session termination.
 
 This command finds and kills Claude processes that are not associated with
-any active Excavation Site tmux session. These orphans can accumulate when:
+any active Mineshaft tmux session. These orphans can accumulate when:
 - Miner sessions are killed without proper cleanup
 - Claude spawns subagent processes that outlive their parent
 - Network or system issues interrupt normal shutdown

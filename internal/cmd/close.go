@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	beadsdk "github.com/steveyegge/beads"
-	"github.com/steveyegge/excavation/internal/minecart"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/minecart"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 
 	"github.com/spf13/cobra"
 )

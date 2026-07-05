@@ -9,11 +9,11 @@ import (
 
 func TestDoltConfigCheck_DetectsMissingSharedKeys(t *testing.T) {
 	townRoot := t.TempDir()
-	beadsDir := filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads")
+	beadsDir := filepath.Join(townRoot, "mineshaft", "overseer", "rig", ".beads")
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(beadsDir, "metadata.json"), []byte(`{"dolt_mode":"server","dolt_server_host":"127.0.0.1","dolt_server_port":3307,"dolt_database":"excavation"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(beadsDir, "metadata.json"), []byte(`{"dolt_mode":"server","dolt_server_host":"127.0.0.1","dolt_server_port":3307,"dolt_database":"mineshaft"}`), 0644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(beadsDir, "config.yaml"), []byte("prefix:\nissue-prefix:\ndolt.idle-timeout: \"0\"\n"), 0644); err != nil {
@@ -32,15 +32,15 @@ func TestDoltConfigCheck_DetectsMissingSharedKeys(t *testing.T) {
 
 func TestDoltConfigCheck_DetectsMinerRedirectConfig(t *testing.T) {
 	townRoot := t.TempDir()
-	targetBeads := filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads")
-	minerBeads := filepath.Join(townRoot, "excavation", "miners", "guzzle", "excavation", ".beads")
+	targetBeads := filepath.Join(townRoot, "mineshaft", "overseer", "rig", ".beads")
+	minerBeads := filepath.Join(townRoot, "mineshaft", "miners", "guzzle", "mineshaft", ".beads")
 	if err := os.MkdirAll(targetBeads, 0755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.MkdirAll(minerBeads, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(targetBeads, "metadata.json"), []byte(`{"dolt_mode":"server","dolt_server_host":"127.0.0.1","dolt_server_port":3307,"dolt_database":"excavation"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(targetBeads, "metadata.json"), []byte(`{"dolt_mode":"server","dolt_server_host":"127.0.0.1","dolt_server_port":3307,"dolt_database":"mineshaft"}`), 0644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(targetBeads, "config.yaml"), []byte("storage.backend: dolt\ndolt.server: \"127.0.0.1\"\ndolt.port: 3307\n"), 0644); err != nil {

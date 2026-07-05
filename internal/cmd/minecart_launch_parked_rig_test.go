@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/wisp"
+	"github.com/steveyegge/mineshaft/internal/wisp"
 )
 
 // TestCheckBlockedRigsForLaunch_NoParkedRigs verifies that checkBlockedRigsForLaunch
@@ -18,7 +18,7 @@ func TestCheckBlockedRigsForLaunch_NoParkedRigs(t *testing.T) {
 	}
 
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-a": {ID: "gt-a", Type: "task", Rig: "excavation"},
+		"gt-a": {ID: "gt-a", Type: "task", Rig: "mineshaft"},
 		"gt-b": {ID: "gt-b", Type: "task", Rig: "beads"},
 	}}
 
@@ -53,7 +53,7 @@ func TestCheckBlockedRigsForLaunch_ParkedRig_BlocksWithoutForce(t *testing.T) {
 
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
 		"gt-a": {ID: "gt-a", Type: "task", Rig: rigName},
-		"gt-b": {ID: "gt-b", Type: "task", Rig: "excavation"},
+		"gt-b": {ID: "gt-b", Type: "task", Rig: "mineshaft"},
 	}}
 
 	err := checkBlockedRigsForLaunch(dag, townRoot, false)
@@ -93,7 +93,7 @@ func TestCheckBlockedRigsForLaunch_ParkedRig_AllowedWithForce(t *testing.T) {
 
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
 		"gt-a": {ID: "gt-a", Type: "task", Rig: rigName},
-		"gt-b": {ID: "gt-b", Type: "task", Rig: "excavation"},
+		"gt-b": {ID: "gt-b", Type: "task", Rig: "mineshaft"},
 	}}
 
 	err := checkBlockedRigsForLaunch(dag, townRoot, true)

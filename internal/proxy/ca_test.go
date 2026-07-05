@@ -265,7 +265,7 @@ func TestIssueMiner(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("cert parses and verifies against CA", func(t *testing.T) {
-		certPEM, _, err := ca.IssueMiner("gt-excavation-furiosa", time.Hour)
+		certPEM, _, err := ca.IssueMiner("gt-mineshaft-furiosa", time.Hour)
 		require.NoError(t, err)
 
 		block, _ := pem.Decode(certPEM)
@@ -283,7 +283,7 @@ func TestIssueMiner(t *testing.T) {
 	})
 
 	t.Run("ExtKeyUsage contains ClientAuth and NOT ServerAuth", func(t *testing.T) {
-		certPEM, _, err := ca.IssueMiner("gt-excavation-furiosa", time.Hour)
+		certPEM, _, err := ca.IssueMiner("gt-mineshaft-furiosa", time.Hour)
 		require.NoError(t, err)
 
 		block, _ := pem.Decode(certPEM)
@@ -305,8 +305,8 @@ func TestIssueMiner(t *testing.T) {
 
 	t.Run("CN matches and hyphenated rig round-trips", func(t *testing.T) {
 		cases := []string{
-			"gt-excavation-furiosa",
-			"gt-excavation-site-furiosa", // hyphenated rig name
+			"gt-mineshaft-furiosa",
+			"gt-mineshaft-furiosa", // hyphenated rig name
 		}
 		for _, cn := range cases {
 			cn := cn
@@ -325,7 +325,7 @@ func TestIssueMiner(t *testing.T) {
 	t.Run("malformed CNs are rejected", func(t *testing.T) {
 		cases := []string{
 			"gt--furiosa",     // empty rig segment
-			"gt-excavation-",     // empty name segment
+			"gt-mineshaft-",     // empty name segment
 			"gt-",             // no rig or name
 			"notgt-rig-name",  // missing gt- prefix
 			"gt-nodashinrest", // no rig/name separator
@@ -342,7 +342,7 @@ func TestIssueMiner(t *testing.T) {
 
 	t.Run("TTL is respected", func(t *testing.T) {
 		ttl := 30 * time.Minute
-		certPEM, _, err := ca.IssueMiner("gt-excavation-test", ttl)
+		certPEM, _, err := ca.IssueMiner("gt-mineshaft-test", ttl)
 		require.NoError(t, err)
 
 		block, _ := pem.Decode(certPEM)
@@ -374,7 +374,7 @@ func TestCertEdgeCases(t *testing.T) {
 	})
 
 	t.Run("very long CN does not panic", func(t *testing.T) {
-		longCN := "gt-excavation-" + strings.Repeat("a", 1000)
+		longCN := "gt-mineshaft-" + strings.Repeat("a", 1000)
 		assert.NotPanics(t, func() {
 			_, _, _ = ca.IssueMiner(longCN, time.Hour)
 		})
@@ -445,7 +445,7 @@ func TestLoadOrGenerateCAExpired(t *testing.T) {
 
 	tmpl := &x509.Certificate{
 		SerialNumber:          serial,
-		Subject:               pkix.Name{CommonName: "Excavation CA (expired)"},
+		Subject:               pkix.Name{CommonName: "Mineshaft CA (expired)"},
 		NotBefore:             time.Now().Add(-2 * time.Hour),
 		NotAfter:              time.Now().Add(-time.Hour), // already expired
 		IsCA:                  true,

@@ -15,17 +15,17 @@ import (
 
 	"regexp"
 
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 // PrefixRegistry maps beads prefixes to rig names and vice versa.
 // Used to resolve session names that use rig-specific prefixes.
 type PrefixRegistry struct {
 	mu          sync.RWMutex
-	prefixToRig map[string]string // "gt" → "excavation"
-	rigToPrefix map[string]string // "excavation" → "gt"
+	prefixToRig map[string]string // "gt" → "mineshaft"
+	rigToPrefix map[string]string // "mineshaft" → "gt"
 }
 
 // NewPrefixRegistry creates an empty prefix registry.
@@ -267,7 +267,7 @@ func BuildPrefixRegistryFromFile(path string) (*PrefixRegistry, error) {
 }
 
 // LegacyPrefixes are prefixes accepted as valid even when the registry is empty.
-// gt = default rig, bd = beads, hq = town-level HQ services, gthq = excavation HQ.
+// gt = default rig, bd = beads, hq = town-level HQ services, gthq = mineshaft HQ.
 var LegacyPrefixes = []string{"gt", "bd", "hq", "gthq"}
 
 // HasKnownPrefix returns true if s starts with a registered or legacy prefix
@@ -297,7 +297,7 @@ func (r *PrefixRegistry) HasPrefix(sess string) bool {
 	return false
 }
 
-// IsKnownSession returns true if the session name belongs to Excavation Site.
+// IsKnownSession returns true if the session name belongs to Mineshaft.
 // Checks for HQ prefix and registered rig prefixes from the default registry.
 func IsKnownSession(sess string) bool {
 	if strings.HasPrefix(sess, HQPrefix) {
@@ -310,8 +310,8 @@ func IsKnownSession(sess string) bool {
 // Returns the prefix and the remaining string after the prefix dash.
 // Tries longest prefix match first.
 // Only matches sessions with registered prefixes - does NOT fall back to
-// splitting on dashes, as that would incorrectly match non-excavation sessions
-// (e.g., "gs-1923" or "dotfiles-main" would be parsed as excavation sessions).
+// splitting on dashes, as that would incorrectly match non-mineshaft sessions
+// (e.g., "gs-1923" or "dotfiles-main" would be parsed as mineshaft sessions).
 func (r *PrefixRegistry) matchPrefix(session string) (prefix, rest string, matched bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()

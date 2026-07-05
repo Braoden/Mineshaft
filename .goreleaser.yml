@@ -1,4 +1,4 @@
-# GoReleaser configuration for Excavation Site (gt)
+# GoReleaser configuration for Mineshaft (gt)
 # See https://goreleaser.com for documentation
 
 version: 2
@@ -20,10 +20,10 @@ builds:
       - amd64
     ldflags:
       - -s -w
-      - -X github.com/steveyegge/excavation/internal/cmd.Version={{.Version}}
-      - -X github.com/steveyegge/excavation/internal/cmd.Build={{.ShortCommit}}
-      - -X github.com/steveyegge/excavation/internal/cmd.Commit={{.Commit}}
-      - -X github.com/steveyegge/excavation/internal/cmd.Branch={{.Branch}}
+      - -X github.com/steveyegge/mineshaft/internal/cmd.Version={{.Version}}
+      - -X github.com/steveyegge/mineshaft/internal/cmd.Build={{.ShortCommit}}
+      - -X github.com/steveyegge/mineshaft/internal/cmd.Commit={{.Commit}}
+      - -X github.com/steveyegge/mineshaft/internal/cmd.Branch={{.Branch}}
 
   - id: gt-linux-arm64
     main: ./cmd/gt
@@ -38,10 +38,10 @@ builds:
       - arm64
     ldflags:
       - -s -w
-      - -X github.com/steveyegge/excavation/internal/cmd.Version={{.Version}}
-      - -X github.com/steveyegge/excavation/internal/cmd.Build={{.ShortCommit}}
-      - -X github.com/steveyegge/excavation/internal/cmd.Commit={{.Commit}}
-      - -X github.com/steveyegge/excavation/internal/cmd.Branch={{.Branch}}
+      - -X github.com/steveyegge/mineshaft/internal/cmd.Version={{.Version}}
+      - -X github.com/steveyegge/mineshaft/internal/cmd.Build={{.ShortCommit}}
+      - -X github.com/steveyegge/mineshaft/internal/cmd.Commit={{.Commit}}
+      - -X github.com/steveyegge/mineshaft/internal/cmd.Branch={{.Branch}}
 
   - id: gt-darwin-amd64
     main: ./cmd/gt
@@ -54,10 +54,10 @@ builds:
       - amd64
     ldflags:
       - -s -w
-      - -X github.com/steveyegge/excavation/internal/cmd.Version={{.Version}}
-      - -X github.com/steveyegge/excavation/internal/cmd.Build={{.ShortCommit}}
-      - -X github.com/steveyegge/excavation/internal/cmd.Commit={{.Commit}}
-      - -X github.com/steveyegge/excavation/internal/cmd.Branch={{.Branch}}
+      - -X github.com/steveyegge/mineshaft/internal/cmd.Version={{.Version}}
+      - -X github.com/steveyegge/mineshaft/internal/cmd.Build={{.ShortCommit}}
+      - -X github.com/steveyegge/mineshaft/internal/cmd.Commit={{.Commit}}
+      - -X github.com/steveyegge/mineshaft/internal/cmd.Branch={{.Branch}}
 
   - id: gt-darwin-arm64
     main: ./cmd/gt
@@ -70,10 +70,10 @@ builds:
       - arm64
     ldflags:
       - -s -w
-      - -X github.com/steveyegge/excavation/internal/cmd.Version={{.Version}}
-      - -X github.com/steveyegge/excavation/internal/cmd.Build={{.ShortCommit}}
-      - -X github.com/steveyegge/excavation/internal/cmd.Commit={{.Commit}}
-      - -X github.com/steveyegge/excavation/internal/cmd.Branch={{.Branch}}
+      - -X github.com/steveyegge/mineshaft/internal/cmd.Version={{.Version}}
+      - -X github.com/steveyegge/mineshaft/internal/cmd.Build={{.ShortCommit}}
+      - -X github.com/steveyegge/mineshaft/internal/cmd.Commit={{.Commit}}
+      - -X github.com/steveyegge/mineshaft/internal/cmd.Branch={{.Branch}}
 
   - id: gt-windows-amd64
     main: ./cmd/gt
@@ -88,10 +88,10 @@ builds:
       - amd64
     ldflags:
       - -s -w
-      - -X github.com/steveyegge/excavation/internal/cmd.Version={{.Version}}
-      - -X github.com/steveyegge/excavation/internal/cmd.Build={{.ShortCommit}}
-      - -X github.com/steveyegge/excavation/internal/cmd.Commit={{.Commit}}
-      - -X github.com/steveyegge/excavation/internal/cmd.Branch={{.Branch}}
+      - -X github.com/steveyegge/mineshaft/internal/cmd.Version={{.Version}}
+      - -X github.com/steveyegge/mineshaft/internal/cmd.Build={{.ShortCommit}}
+      - -X github.com/steveyegge/mineshaft/internal/cmd.Commit={{.Commit}}
+      - -X github.com/steveyegge/mineshaft/internal/cmd.Branch={{.Branch}}
       - -buildmode=exe
 
   - id: gt-freebsd-amd64
@@ -105,10 +105,10 @@ builds:
       - amd64
     ldflags:
       - -s -w
-      - -X github.com/steveyegge/excavation/internal/cmd.Version={{.Version}}
-      - -X github.com/steveyegge/excavation/internal/cmd.Build={{.ShortCommit}}
-      - -X github.com/steveyegge/excavation/internal/cmd.Commit={{.Commit}}
-      - -X github.com/steveyegge/excavation/internal/cmd.Branch={{.Branch}}
+      - -X github.com/steveyegge/mineshaft/internal/cmd.Version={{.Version}}
+      - -X github.com/steveyegge/mineshaft/internal/cmd.Build={{.ShortCommit}}
+      - -X github.com/steveyegge/mineshaft/internal/cmd.Commit={{.Commit}}
+      - -X github.com/steveyegge/mineshaft/internal/cmd.Branch={{.Branch}}
 
 
 archives:
@@ -150,14 +150,14 @@ changelog:
 
 release:
   github:
-    owner: excavationhall
-    name: excavation
+    owner: mineshafthall
+    name: mineshaft
   draft: false
   prerelease: auto
   replace_existing_artifacts: true
   name_template: "v{{.Version}}"
   header: |
-    ## Excavation Site v{{.Version}}
+    ## Mineshaft v{{.Version}}
 
     Pre-compiled binaries for Linux, macOS (Intel & Apple Silicon), and Windows.
 
@@ -165,12 +165,12 @@ release:
 
     **Homebrew (macOS/Linux):**
     ```bash
-    brew install excavation
+    brew install mineshaft
     ```
 
     **npm (Node.js):**
     ```bash
-    npm install -g @excavation/gt
+    npm install -g @mineshaft/gt
     ```
 
     **Manual Install:**

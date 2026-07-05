@@ -8,7 +8,7 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // These variables are set at build time via ldflags in cmd package.
@@ -133,7 +133,7 @@ func CheckStaleBinary(repoDir string) *StaleBinaryInfo {
 
 	// Decide which ref to compare the binary against.
 	//
-	// GetRepoRoot resolves to $GT_ROOT/excavation/overseer/rig, a worktree that
+	// GetRepoRoot resolves to $GT_ROOT/mineshaft/overseer/rig, a worktree that
 	// normally sits on a feature branch (that's where the Overseer does git work).
 	// Diffing the binary against that worktree's HEAD compares it to unmerged
 	// feature work and produces a false "N commits behind" warning advising a
@@ -196,7 +196,7 @@ func CheckStaleBinary(repoDir string) *StaleBinaryInfo {
 
 // resolveBuildBranchRef finds a build-branch ref to compare the binary against
 // when the resolved source worktree is parked on a non-build branch (the normal
-// state for $GT_ROOT/excavation/overseer/rig). Without this, staleness would be
+// state for $GT_ROOT/mineshaft/overseer/rig). Without this, staleness would be
 // computed against unmerged feature work (GH#4034).
 //
 // Candidate refs are fully qualified to avoid branch/tag shadowing. Among refs
@@ -297,15 +297,15 @@ func singleBranchRef(repoDir, pattern string) (buildBranchRef, bool) {
 }
 
 // GetRepoRoot returns the git repository root for the gt source code.
-// The canonical source is the excavation repo itself ($GT_ROOT/excavation).
+// The canonical source is the mineshaft repo itself ($GT_ROOT/mineshaft).
 // Crew rigs also contain cmd/gt/main.go but have different HEADs,
-// so we prefer the excavation repo over CWD-based git toplevel detection.
+// so we prefer the mineshaft repo over CWD-based git toplevel detection.
 func GetRepoRoot() (string, error) {
 	// Check if GT_ROOT environment variable is set (agents always have this)
 	if gtRoot := os.Getenv("GT_ROOT"); gtRoot != "" {
 		candidates := []string{
-			gtRoot + "/excavation",
-			gtRoot + "/excavation/overseer/rig",
+			gtRoot + "/mineshaft",
+			gtRoot + "/mineshaft/overseer/rig",
 		}
 		for _, candidate := range candidates {
 			if hasGtSource(candidate) {
@@ -318,12 +318,12 @@ func GetRepoRoot() (string, error) {
 	home := os.Getenv("HOME")
 	if home != "" {
 		candidates := []string{
-			home + "/gt/excavation",
-			home + "/gt/excavation/overseer/rig",
-			home + "/excavation",
-			home + "/excavation/overseer/rig",
-			home + "/src/excavation",
-			home + "/src/excavation/overseer/rig",
+			home + "/gt/mineshaft",
+			home + "/gt/mineshaft/overseer/rig",
+			home + "/mineshaft",
+			home + "/mineshaft/overseer/rig",
+			home + "/src/mineshaft",
+			home + "/src/mineshaft/overseer/rig",
 		}
 		for _, candidate := range candidates {
 			if hasGtSource(candidate) {

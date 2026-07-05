@@ -26,7 +26,7 @@ Resolution: If a rig-level overlay exists, it takes full precedence
 
 Examples:
   gt formula overlay show mol-miner-work
-  gt formula overlay edit mol-miner-work --rig excavation
+  gt formula overlay edit mol-miner-work --rig mineshaft
   gt formula overlay list`,
 	RunE: requireSubcommand,
 }

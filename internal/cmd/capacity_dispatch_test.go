@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/scheduler/capacity"
+	"github.com/steveyegge/mineshaft/internal/scheduler/capacity"
 )
 
 func TestShouldFireCrossRigEscalation_Debounces(t *testing.T) {
@@ -63,7 +63,7 @@ func TestDispatchSingleBeadRawReviewOnlyHookFailureClearsMetadata(t *testing.T) 
 		return &SpawnedMinerInfo{
 			RigName:     rigName,
 			MinerName: "toast",
-			ClonePath:   filepath.Join(townRoot, "excavation", "miners", "toast"),
+			ClonePath:   filepath.Join(townRoot, "mineshaft", "miners", "toast"),
 		}, nil
 	}
 	hookBeadWithRetryWithTownRootFn = func(beadID, targetAgent, hookDir, townRoot string) error {
@@ -74,10 +74,10 @@ func TestDispatchSingleBeadRawReviewOnlyHookFailureClearsMetadata(t *testing.T) 
 	_, err := dispatchSingleBead(capacity.PendingBead{
 		ID:         "gt-context",
 		WorkBeadID: "gt-rawrollback",
-		TargetRig:  "excavation",
+		TargetRig:  "mineshaft",
 		Context: &capacity.SlingContextFields{
 			WorkBeadID:  "gt-rawrollback",
-			TargetRig:   "excavation",
+			TargetRig:   "mineshaft",
 			HookRawBead: true,
 			NoMerge:     true,
 			ReviewOnly:  true,

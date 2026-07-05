@@ -17,25 +17,25 @@ func TestMatchesMRSourceIssue(t *testing.T) {
 	}{
 		{
 			name:        "exact match",
-			description: "branch: miner/furiosa/gt-abc@mm4heq3e\ntarget: main\nsource_issue: gt-abc\nrig: excavation\n",
+			description: "branch: miner/furiosa/gt-abc@mm4heq3e\ntarget: main\nsource_issue: gt-abc\nrig: mineshaft\n",
 			issueID:     "gt-abc",
 			want:        true,
 		},
 		{
 			name:        "no match different issue",
-			description: "branch: miner/furiosa/gt-xyz@mm4heq3e\ntarget: main\nsource_issue: gt-xyz\nrig: excavation\n",
+			description: "branch: miner/furiosa/gt-xyz@mm4heq3e\ntarget: main\nsource_issue: gt-xyz\nrig: mineshaft\n",
 			issueID:     "gt-abc",
 			want:        false,
 		},
 		{
 			name:        "partial ID must not match — prefix",
-			description: "branch: miner/nux/gt-abcdef@mm4heq3e\ntarget: main\nsource_issue: gt-abcdef\nrig: excavation\n",
+			description: "branch: miner/nux/gt-abcdef@mm4heq3e\ntarget: main\nsource_issue: gt-abcdef\nrig: mineshaft\n",
 			issueID:     "gt-abc",
 			want:        false,
 		},
 		{
 			name:        "partial ID must not match — suffix",
-			description: "branch: miner/nux/gt-abc@mm4heq3e\ntarget: main\nsource_issue: gt-abc\nrig: excavation\n",
+			description: "branch: miner/nux/gt-abc@mm4heq3e\ntarget: main\nsource_issue: gt-abc\nrig: mineshaft\n",
 			issueID:     "gt-abcdef",
 			want:        false,
 		},
@@ -224,7 +224,7 @@ func TestListMergeRequestsFiltersRigBeforeHydration(t *testing.T) {
 	installListMergeRequestsRigFilterBDStub(t)
 
 	b := New(t.TempDir())
-	issues, err := b.ListMergeRequests(ListOptions{Label: "gt:merge-request", Status: "open", Priority: -1, Rig: "excavation"})
+	issues, err := b.ListMergeRequests(ListOptions{Label: "gt:merge-request", Status: "open", Priority: -1, Rig: "mineshaft"})
 	if err != nil {
 		t.Fatalf("ListMergeRequests() error = %v", err)
 	}
@@ -240,7 +240,7 @@ func installListMergeRequestsBDStub(t *testing.T, failShow bool) {
 
 	binDir := t.TempDir()
 	showCase := `
-    printf '%s\n' '[{"id":"gt-wisp-mr","title":"Merge: gt-source","description":"branch: miner/test/gt-source@abc\ntarget: main\nsource_issue: gt-source\nrig: excavation\n","status":"open","priority":1,"created_at":"2026-06-29T00:00:00Z","updated_at":"2026-06-29T00:00:00Z","ephemeral":true,"labels":["gt:merge-request"],"dependencies":[{"id":"gt-blocker","title":"Blocker","status":"open","priority":1,"issue_type":"task","dependency_type":"blocks"}],"dependency_count":1}]'
+    printf '%s\n' '[{"id":"gt-wisp-mr","title":"Merge: gt-source","description":"branch: miner/test/gt-source@abc\ntarget: main\nsource_issue: gt-source\nrig: mineshaft\n","status":"open","priority":1,"created_at":"2026-06-29T00:00:00Z","updated_at":"2026-06-29T00:00:00Z","ephemeral":true,"labels":["gt:merge-request"],"dependencies":[{"id":"gt-blocker","title":"Blocker","status":"open","priority":1,"issue_type":"task","dependency_type":"blocks"}],"dependency_count":1}]'
     exit 0
 `
 	if failShow {
@@ -264,7 +264,7 @@ case "${1:-}" in
     exit 0
     ;;
   sql)
-    printf '%s\n' '[{"id":"gt-wisp-mr","title":"Merge: gt-source","description":"branch: miner/test/gt-source@abc\ntarget: main\nsource_issue: gt-source\nrig: excavation\n","status":"open","priority":1,"assignee":"","created_at":"2026-06-29T00:00:00Z","updated_at":"2026-06-29T00:00:00Z","created_by":"tester","labels_csv":"gt:merge-request"}]'
+    printf '%s\n' '[{"id":"gt-wisp-mr","title":"Merge: gt-source","description":"branch: miner/test/gt-source@abc\ntarget: main\nsource_issue: gt-source\nrig: mineshaft\n","status":"open","priority":1,"assignee":"","created_at":"2026-06-29T00:00:00Z","updated_at":"2026-06-29T00:00:00Z","created_by":"tester","labels_csv":"gt:merge-request"}]'
     exit 0
     ;;
   show)` + showCase + `
@@ -301,14 +301,14 @@ case "${1:-}" in
     exit 0
     ;;
   sql)
-    printf '%s\n' '[{"id":"gt-current","title":"Merge: gt-source","description":"branch: miner/test/gt-source@abc\ntarget: main\nsource_issue: gt-source\nrig: excavation\n","status":"open","priority":1,"assignee":"","created_at":"2026-06-29T00:00:00Z","updated_at":"2026-06-29T00:00:00Z","created_by":"tester","labels_csv":"gt:merge-request"},{"id":"gt-other","title":"Merge: gt-other","description":"branch: miner/test/gt-other@abc\ntarget: main\nsource_issue: gt-other-source\nrig: other-rig\n","status":"open","priority":1,"assignee":"","created_at":"2026-06-29T00:00:00Z","updated_at":"2026-06-29T00:00:00Z","created_by":"tester","labels_csv":"gt:merge-request"}]'
+    printf '%s\n' '[{"id":"gt-current","title":"Merge: gt-source","description":"branch: miner/test/gt-source@abc\ntarget: main\nsource_issue: gt-source\nrig: mineshaft\n","status":"open","priority":1,"assignee":"","created_at":"2026-06-29T00:00:00Z","updated_at":"2026-06-29T00:00:00Z","created_by":"tester","labels_csv":"gt:merge-request"},{"id":"gt-other","title":"Merge: gt-other","description":"branch: miner/test/gt-other@abc\ntarget: main\nsource_issue: gt-other-source\nrig: other-rig\n","status":"open","priority":1,"assignee":"","created_at":"2026-06-29T00:00:00Z","updated_at":"2026-06-29T00:00:00Z","created_by":"tester","labels_csv":"gt:merge-request"}]'
     exit 0
     ;;
   show)
     case "$*" in
       *gt-other*) echo 'other rig should not be hydrated' >&2; exit 7 ;;
     esac
-    printf '%s\n' '[{"id":"gt-current","title":"Merge: gt-source","description":"branch: miner/test/gt-source@abc\ntarget: main\nsource_issue: gt-source\nrig: excavation\n","status":"open","priority":1,"created_at":"2026-06-29T00:00:00Z","updated_at":"2026-06-29T00:00:00Z","ephemeral":true,"labels":["gt:merge-request"]}]'
+    printf '%s\n' '[{"id":"gt-current","title":"Merge: gt-source","description":"branch: miner/test/gt-source@abc\ntarget: main\nsource_issue: gt-source\nrig: mineshaft\n","status":"open","priority":1,"created_at":"2026-06-29T00:00:00Z","updated_at":"2026-06-29T00:00:00Z","ephemeral":true,"labels":["gt:merge-request"]}]'
     exit 0
     ;;
   *)

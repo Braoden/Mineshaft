@@ -9,10 +9,10 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // Panel represents which panel has focus
@@ -44,7 +44,7 @@ const (
 type Event struct {
 	Time    time.Time
 	Type    string // create, update, complete, fail, delete
-	Actor   string // who did it (e.g., "excavation/crew/joe")
+	Actor   string // who did it (e.g., "mineshaft/crew/joe")
 	Target  string // what was affected (e.g., "gt-xyz")
 	Message string // human-readable description
 	Rig     string // which rig
@@ -806,7 +806,7 @@ func (m *Model) addEventLocked(e Event) bool {
 	}
 
 	// Filter out noisy agent session updates from the event feed.
-	// Agent session molecules (like gt-excavation-crew-joe) update frequently
+	// Agent session molecules (like gt-mineshaft-crew-joe) update frequently
 	// for status tracking. These updates are visible in the agent tree,
 	// so we don't need to clutter the event feed with them.
 	// We still show create/complete/fail/delete events for agent sessions.

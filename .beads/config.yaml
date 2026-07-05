@@ -39,7 +39,7 @@
 external_projects:
   beads: ../../../beads/overseer/rig
 
-# Custom issue types for Excavation Site (fallback when database is unavailable)
+# Custom issue types for Mineshaft (fallback when database is unavailable)
 types.custom: "agent,role,rig,minecart,slot,queue,event,message,molecule,gate,merge-request"
 
 prefix:
@@ -51,4 +51,4 @@ dolt.idle-timeout: "0"
 # regressions when the bd binary is upgraded. (gt-b48)
 export.auto: "false"
 
-sync.remote: "git+https://github.com/steveyegge/excavation.git"
+sync.remote: "git+https://github.com/steveyegge/mineshaft.git"

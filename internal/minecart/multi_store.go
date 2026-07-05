@@ -6,11 +6,11 @@ import (
 	"strings"
 
 	beadsdk "github.com/steveyegge/beads"
-	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/beads"
 )
 
 // StoreResolver resolves beads issues across multiple stores using prefix-based
-// routing. In multi-rig Excavation Site setups, each rig has its own Dolt database.
+// routing. In multi-rig Mineshaft setups, each rig has its own Dolt database.
 // Minecarts live in the HQ store but may track issues in rig stores (e.g., ds-*
 // in dashboard). Without cross-store resolution, minecart tracking sees 0/0 for
 // cross-database dependencies. See GH #2624.

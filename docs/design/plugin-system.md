@@ -2,12 +2,12 @@
 
 > **Status: Design proposal -- not yet implemented**
 >
-> Design document for the Excavation Site plugin system.
+> Design document for the Mineshaft plugin system.
 > Written 2026-01-11, crew/george session.
 
 ## Problem Statement
 
-Excavation Site needs extensible, project-specific automation that runs during Supervisor patrol cycles. The immediate use case is rebuilding stale binaries (gt, bd, wv), but the pattern generalizes to any periodic maintenance task.
+Mineshaft needs extensible, project-specific automation that runs during Supervisor patrol cycles. The immediate use case is rebuilding stale binaries (gt, bd, wv), but the pattern generalizes to any periodic maintenance task.
 
 Current state:
 - Plugin infrastructure exists conceptually (patrol step mentions it)
@@ -46,7 +46,7 @@ The Supervisor (agent) evaluates gates and decides whether to dispatch. Go code 
 ~/gt/
 ├── plugins/                      # Town-level plugins (universal)
 │   └── README.md
-├── excavation/
+├── mineshaft/
 │   └── plugins/                  # Rig-level plugins
 │       └── rebuild-gt/
 │           └── plugin.md
@@ -96,7 +96,7 @@ Benefits:
 Each plugin run creates a wisp:
 
 ```bash
-gt plugin record-run --plugin rebuild-gt --result success --rig excavation \
+gt plugin record-run --plugin rebuild-gt --result success --rig mineshaft \
   --title "Plugin: rebuild-gt [success]" \
   --description "Rebuilt gt: abc123 → def456 (5 commits)"
 ```
@@ -154,7 +154,7 @@ type = "cooldown"
 duration = "1h"
 
 [tracking]
-labels = ["plugin:rebuild-gt", "rig:excavation", "category:maintenance"]
+labels = ["plugin:rebuild-gt", "rig:mineshaft", "category:maintenance"]
 digest = true
 
 [execution]
@@ -251,14 +251,14 @@ Standard sections:
 
 ### Phase 5: First Plugin
 
-13. **`rebuild-gt` plugin** - The actual excavation plugin
+13. **`rebuild-gt` plugin** - The actual mineshaft plugin
 14. **Documentation** - So Beads/Wyvern can create theirs
 
 ---
 
 ## Open Questions
 
-1. **Plugin discovery in multiple clones**: If excavation has crew/george, crew/max, crew/joe - which clone's plugins/ dir is canonical? Probably: scan all, dedupe by name, prefer rig-root if exists.
+1. **Plugin discovery in multiple clones**: If mineshaft has crew/george, crew/max, crew/joe - which clone's plugins/ dir is canonical? Probably: scan all, dedupe by name, prefer rig-root if exists.
 
 2. **Dog assignment**: Should specific plugins prefer specific dogs? Or any idle dog?
 

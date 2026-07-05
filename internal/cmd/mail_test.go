@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
 )
 
 // TestClaimPatternMatching tests claim pattern matching via the beads package.
@@ -21,40 +21,40 @@ func TestClaimPatternMatching(t *testing.T) {
 		// Exact matches
 		{
 			name:    "exact match",
-			pattern: "excavation/miners/capable",
-			caller:  "excavation/miners/capable",
+			pattern: "mineshaft/miners/capable",
+			caller:  "mineshaft/miners/capable",
 			want:    true,
 		},
 		{
 			name:    "exact match with different name",
-			pattern: "excavation/miners/toast",
-			caller:  "excavation/miners/capable",
+			pattern: "mineshaft/miners/toast",
+			caller:  "mineshaft/miners/capable",
 			want:    false,
 		},
 
 		// Wildcard at end
 		{
 			name:    "wildcard matches miner",
-			pattern: "excavation/miners/*",
-			caller:  "excavation/miners/capable",
+			pattern: "mineshaft/miners/*",
+			caller:  "mineshaft/miners/capable",
 			want:    true,
 		},
 		{
 			name:    "wildcard matches different miner",
-			pattern: "excavation/miners/*",
-			caller:  "excavation/miners/toast",
+			pattern: "mineshaft/miners/*",
+			caller:  "mineshaft/miners/toast",
 			want:    true,
 		},
 		{
 			name:    "wildcard doesn't match wrong rig",
-			pattern: "excavation/miners/*",
+			pattern: "mineshaft/miners/*",
 			caller:  "beads/miners/capable",
 			want:    false,
 		},
 		{
 			name:    "wildcard doesn't match nested path",
-			pattern: "excavation/miners/*",
-			caller:  "excavation/miners/sub/capable",
+			pattern: "mineshaft/miners/*",
+			caller:  "mineshaft/miners/sub/capable",
 			want:    false,
 		},
 
@@ -96,11 +96,11 @@ func TestQueueMessageReleaseValidation(t *testing.T) {
 			msgInfo: &queueMessageInfo{
 				ID:        "hq-test1",
 				Title:     "Test Message",
-				ClaimedBy: "excavation/miners/nux",
+				ClaimedBy: "mineshaft/miners/nux",
 				QueueName: "work-requests",
 				Status:    "open",
 			},
-			caller:  "excavation/miners/nux",
+			caller:  "mineshaft/miners/nux",
 			wantErr: false,
 		},
 		{
@@ -112,7 +112,7 @@ func TestQueueMessageReleaseValidation(t *testing.T) {
 				QueueName: "work-requests",
 				Status:    "open",
 			},
-			caller:      "excavation/miners/nux",
+			caller:      "mineshaft/miners/nux",
 			wantErr:     true,
 			errContains: "not claimed",
 		},
@@ -121,11 +121,11 @@ func TestQueueMessageReleaseValidation(t *testing.T) {
 			msgInfo: &queueMessageInfo{
 				ID:        "hq-test3",
 				Title:     "Test Message",
-				ClaimedBy: "excavation/miners/other",
+				ClaimedBy: "mineshaft/miners/other",
 				QueueName: "work-requests",
 				Status:    "open",
 			},
-			caller:      "excavation/miners/nux",
+			caller:      "mineshaft/miners/nux",
 			wantErr:     true,
 			errContains: "was claimed by",
 		},
@@ -134,11 +134,11 @@ func TestQueueMessageReleaseValidation(t *testing.T) {
 			msgInfo: &queueMessageInfo{
 				ID:        "hq-test4",
 				Title:     "Test Message",
-				ClaimedBy: "excavation/miners/nux",
+				ClaimedBy: "mineshaft/miners/nux",
 				QueueName: "", // No queue label
 				Status:    "open",
 			},
-			caller:      "excavation/miners/nux",
+			caller:      "mineshaft/miners/nux",
 			wantErr:     true,
 			errContains: "not a queue message",
 		},
@@ -265,8 +265,8 @@ func TestAnnounceMessageParsing(t *testing.T) {
 		},
 		{
 			name:   "extracts from with rig path",
-			labels: []string{"announce_channel:alerts", "from:excavation/witness"},
-			want:   "excavation/witness",
+			labels: []string{"announce_channel:alerts", "from:mineshaft/witness"},
+			want:   "mineshaft/witness",
 		},
 		{
 			name:   "no from label",

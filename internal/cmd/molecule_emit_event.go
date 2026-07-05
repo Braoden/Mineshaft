@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/channelevents"
+	"github.com/steveyegge/mineshaft/internal/channelevents"
 )
 
 var (

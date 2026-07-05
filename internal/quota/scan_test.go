@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // setupTestRegistry populates the default session prefix registry for tests.
@@ -14,7 +14,7 @@ import (
 func setupTestRegistry(t *testing.T) {
 	t.Helper()
 	r := session.NewPrefixRegistry()
-	r.Register("gt", "excavation")
+	r.Register("gt", "mineshaft")
 	r.Register("bd", "beads")
 	old := session.DefaultRegistry()
 	session.SetDefaultRegistry(r)
@@ -88,7 +88,7 @@ func TestScanAll_DetectsRateLimited(t *testing.T) {
   Bash: go test ./internal/quota/...
   All tests passed.`,
 			"gt-witness": `You've hit your limit · resets 9pm (America/Los_Angeles)`,
-			"some-other": `This is not a gas town session content`,
+			"some-other": `This is not a mineshaft session content`,
 		},
 		envVars: map[string]map[string]string{
 			"hq-overseer":     {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/work"},
@@ -157,7 +157,7 @@ func TestScanAll_DetectsRateLimited(t *testing.T) {
 	}
 }
 
-func TestScanAll_SkipsNonExcavationSessions(t *testing.T) {
+func TestScanAll_SkipsNonMineshaftSessions(t *testing.T) {
 	setupTestRegistry(t)
 
 	tmux := &mockTmux{
@@ -376,7 +376,7 @@ func TestParseResetTime(t *testing.T) {
 	}
 }
 
-func TestIsExcavationSession(t *testing.T) {
+func TestIsMineshaftSession(t *testing.T) {
 	setupTestRegistry(t)
 
 	tests := []struct {
@@ -396,9 +396,9 @@ func TestIsExcavationSession(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		got := isExcavationSession(tt.session)
+		got := isMineshaftSession(tt.session)
 		if got != tt.expected {
-			t.Errorf("isExcavationSession(%q) = %v, want %v", tt.session, got, tt.expected)
+			t.Errorf("isMineshaftSession(%q) = %v, want %v", tt.session, got, tt.expected)
 		}
 	}
 }

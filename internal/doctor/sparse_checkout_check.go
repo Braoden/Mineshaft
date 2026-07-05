@@ -5,12 +5,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/mineshaft/internal/git"
 )
 
 // SparseCheckoutCheck detects legacy sparse checkout configurations that should be removed.
 // Sparse checkout was previously used to exclude .claude/ from source repos, but this
-// prevented valid .claude/ files in rigged repos from being used. Now that excavation's
+// prevented valid .claude/ files in rigged repos from being used. Now that mineshaft's
 // repo no longer has .claude/ files, sparse checkout is no longer needed.
 //
 // This check runs in both modes:

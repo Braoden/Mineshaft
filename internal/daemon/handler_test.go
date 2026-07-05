@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/dog"
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/dog"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 // testHandlerDaemon creates a minimal Daemon with a logger for handler tests.

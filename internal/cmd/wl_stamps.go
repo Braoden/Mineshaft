@@ -9,10 +9,10 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/doltserver"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/wasteland"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/doltserver"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/wasteland"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var (
@@ -39,13 +39,13 @@ Use --author to filter by who issued the stamp. Use --skill, --type,
 and --severity to narrow results.
 
 EXAMPLES:
-  gt wl stamps excavation                         # All stamps for excavation
-  gt wl stamps excavation --author hop-overseer      # Stamps from a specific validator
-  gt wl stamps excavation --skill go              # Filter by skill tag
-  gt wl stamps excavation --type boot_block       # Boot block stamps only
-  gt wl stamps excavation --severity branch       # Branch-level stamps
-  gt wl stamps excavation --limit 10              # Show 10 stamps
-  gt wl stamps excavation --json                  # JSON output`,
+  gt wl stamps mineshaft                         # All stamps for mineshaft
+  gt wl stamps mineshaft --author hop-overseer      # Stamps from a specific validator
+  gt wl stamps mineshaft --skill go              # Filter by skill tag
+  gt wl stamps mineshaft --type boot_block       # Boot block stamps only
+  gt wl stamps mineshaft --severity branch       # Branch-level stamps
+  gt wl stamps mineshaft --limit 10              # Show 10 stamps
+  gt wl stamps mineshaft --json                  # JSON output`,
 }
 
 func init() {
@@ -113,7 +113,7 @@ func runWLStamps(cmd *cobra.Command, args []string) error {
 
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Fast path: query through the Dolt server if the database is registered.

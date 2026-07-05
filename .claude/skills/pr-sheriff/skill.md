@@ -5,22 +5,22 @@ description: >
   Prints recommendations inline - does NOT post to GitHub.
 allowed-tools: "Bash(gh pr *), Bash(git *), Bash(gt *), Bash(bd *), Bash(cat *)"
 version: "2.0.0"
-author: "Excavation Site"
+author: "Mineshaft"
 ---
 
 # PR Sheriff - Triage and Review Workflow
 
 This skill delegates to the `mol-pr-sheriff-patrol` formula, which lives at
 `$GT_ROOT/.beads/formulas/mol-pr-sheriff-patrol.formula.toml` and is shared
-across all Excavation Site rigs (excavation, beads, etc.).
+across all Mineshaft rigs (mineshaft, beads, etc.).
 
 ## Repo Scope
 
-This rig (excavation/crew/max) is responsible for **steveyegge/excavation only**.
+This rig (mineshaft/crew/max) is responsible for **steveyegge/mineshaft only**.
 The beads repo (steveyegge/beads) is handled by beads/crew/emma.
 Do NOT discover or triage PRs from repos outside your scope.
 
-When loading the shared config, filter the repo list to only `steveyegge/excavation`.
+When loading the shared config, filter the repo list to only `steveyegge/mineshaft`.
 
 ## Usage
 
@@ -29,7 +29,7 @@ When loading the shared config, filter the repo list to only `steveyegge/excavat
 ```
 
 - `repo` - Optional. If provided, overrides the default scope.
-  If omitted, scan only `steveyegge/excavation` (this rig's scope).
+  If omitted, scan only `steveyegge/mineshaft` (this rig's scope).
 
 ## How to Execute
 

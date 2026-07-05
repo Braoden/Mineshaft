@@ -21,7 +21,7 @@ type ProxyConfig struct {
 	// Defaults to ~/gt/.runtime/ca if empty.
 	CADir string `json:"ca_dir"`
 
-	// TownRoot is the Excavation Site root directory (e.g. ~/gt).
+	// TownRoot is the Mineshaft root directory (e.g. ~/gt).
 	// Defaults to $GT_TOWN or ~/gt if empty.
 	TownRoot string `json:"town_root"`
 

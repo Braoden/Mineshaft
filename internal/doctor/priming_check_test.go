@@ -210,7 +210,7 @@ func TestPrimingCheck_AllowsClaudeMdInOverseerRig(t *testing.T) {
 	rigName := "testrig"
 
 	// Create town root CLAUDE.md identity anchor
-	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Excavation Site\nRun gt prime\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Mineshaft\nRun gt prime\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -255,7 +255,7 @@ func TestPrimingCheck_AllowsClaudeMdInRefineryRig(t *testing.T) {
 	rigName := "testrig"
 
 	// Create town root CLAUDE.md identity anchor
-	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Excavation Site\nRun gt prime\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Mineshaft\nRun gt prime\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -301,7 +301,7 @@ func TestPrimingCheck_AllowsClaudeMdInCrewWorktree(t *testing.T) {
 	crewName := "alice"
 
 	// Create town root CLAUDE.md identity anchor
-	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Excavation Site\nRun gt prime\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Mineshaft\nRun gt prime\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -351,7 +351,7 @@ func TestPrimingCheck_AllowsClaudeMdInMinerWorktree(t *testing.T) {
 	minerName := "testpc"
 
 	// Create town root CLAUDE.md identity anchor
-	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Excavation Site\nRun gt prime\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Mineshaft\nRun gt prime\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -401,7 +401,7 @@ func TestPrimingCheck_FixPreservesCustomerClaudeMd(t *testing.T) {
 	rigName := "testrig"
 
 	// Create town root CLAUDE.md identity anchor
-	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Excavation Site\nRun gt prime\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Mineshaft\nRun gt prime\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -447,7 +447,7 @@ func TestPrimingCheck_FlagsStaleAgentLevelFiles(t *testing.T) {
 	rigName := "testrig"
 
 	// Create town root CLAUDE.md identity anchor (required by upstream check)
-	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Excavation Site\nRun gt prime\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Mineshaft\nRun gt prime\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -509,7 +509,7 @@ func TestPrimingCheck_NoIssuesWhenCorrectlyConfigured(t *testing.T) {
 	rigName := "testrig"
 
 	// Create town root CLAUDE.md identity anchor (required by upstream check)
-	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Excavation Site\nRun gt prime\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Mineshaft\nRun gt prime\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -609,7 +609,7 @@ func TestPrimingCheck_DetectsStaleIntermediateFiles(t *testing.T) {
 	rigName := "testrig"
 
 	// Create town root CLAUDE.md identity anchor
-	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Excavation Site\nRun gt prime\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Mineshaft\nRun gt prime\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -674,7 +674,7 @@ func TestPrimingCheck_FixRemovesStaleIntermediateFiles(t *testing.T) {
 	rigName := "testrig"
 
 	// Create town root CLAUDE.md identity anchor
-	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Excavation Site\nRun gt prime\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Mineshaft\nRun gt prime\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -746,7 +746,7 @@ func TestPrimingCheck_DetectsNoPrimeHook(t *testing.T) {
 	rigName := "testrig"
 
 	// Create town root CLAUDE.md identity anchor
-	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Excavation Site\nRun gt prime\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Mineshaft\nRun gt prime\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -828,7 +828,7 @@ func TestPrimingCheck_FixNoPrimeHook(t *testing.T) {
 	rigName := "testrig"
 
 	// Create town root CLAUDE.md identity anchor
-	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Excavation Site\nRun gt prime\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "CLAUDE.md"), []byte("# Mineshaft\nRun gt prime\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 

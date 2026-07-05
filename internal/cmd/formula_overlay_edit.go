@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/formula"
+	"github.com/steveyegge/mineshaft/internal/formula"
 )
 
 var formulaOverlayEditCmd = &cobra.Command{
@@ -22,7 +22,7 @@ Use --town to explicitly edit the town-level overlay.
 
 Examples:
   gt formula overlay edit mol-miner-work
-  gt formula overlay edit mol-miner-work --rig excavation
+  gt formula overlay edit mol-miner-work --rig mineshaft
   gt formula overlay edit mol-miner-work --town`,
 	Args: cobra.ExactArgs(1),
 	RunE: runFormulaOverlayEdit,

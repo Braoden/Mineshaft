@@ -10,11 +10,11 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/formula"
-	"github.com/steveyegge/excavation/internal/runtime"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/formula"
+	"github.com/steveyegge/mineshaft/internal/runtime"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // Synthesis command flags
@@ -205,7 +205,7 @@ func runSynthesisStart(cmd *cobra.Command, args []string) error {
 			}
 		}
 		if targetRig == "" {
-			targetRig = "excavation"
+			targetRig = "mineshaft"
 		}
 	}
 

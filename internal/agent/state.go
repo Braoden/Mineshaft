@@ -1,4 +1,4 @@
-// Package agent provides shared types and utilities for Excavation Site agents
+// Package agent provides shared types and utilities for Mineshaft agents
 // (witness, refinery, supervisor, etc.).
 package agent
 
@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/steveyegge/excavation/internal/atomicfile"
+	"github.com/steveyegge/mineshaft/internal/atomicfile"
 )
 
 // StateManager handles loading and saving agent state to disk.

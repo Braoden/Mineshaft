@@ -1,7 +1,7 @@
 description = """
-Excavation Site release workflow - from version bump to verified release.
+Mineshaft release workflow - from version bump to verified release.
 
-This formula orchestrates a release cycle for Excavation Site:
+This formula orchestrates a release cycle for Mineshaft:
 1. Preflight checks (workspace cleanliness, clean git, up to date)
 2. Documentation updates (CHANGELOG.md, info.go)
 3. Version bump (all components)
@@ -12,12 +12,12 @@ This formula orchestrates a release cycle for Excavation Site:
 ## Usage
 
 ```bash
-gt mol wisp create excavation-release --var version=0.3.0
+gt mol wisp create mineshaft-release --var version=0.3.0
 ```
 
 Or assign to a crew member:
 ```bash
-gt sling excavation/crew/max --formula excavation-release --var version=0.3.0
+gt sling mineshaft/crew/max --formula mineshaft-release --var version=0.3.0
 ```
 
 ## Error Handling
@@ -28,7 +28,7 @@ gt sling excavation/crew/max --formula excavation-release --var version=0.3.0
   unrecoverable errors occur. Do not proceed with a release if workspaces have
   uncommitted work.
 """
-formula = "excavation-release"
+formula = "mineshaft-release"
 type = "workflow"
 version = 1
 
@@ -40,14 +40,14 @@ required = true
 id = "preflight-workspaces"
 title = "Preflight: Check all workspaces for uncommitted work"
 description = """
-Before releasing, ensure no excavation workspaces have uncommitted work that would
+Before releasing, ensure no mineshaft workspaces have uncommitted work that would
 be excluded from the release.
 
 Check all crew workspaces and the overseer rig:
 
 ```bash
 # Check each workspace
-for dir in $GT_ROOT/excavation/crew/* $GT_ROOT/excavation/overseer; do
+for dir in $GT_ROOT/mineshaft/crew/* $GT_ROOT/mineshaft/overseer; do
   if [ -d "$dir/.git" ] || [ -d "$dir" ]; then
     echo "=== Checking $dir ==="
     cd "$dir" 2>/dev/null || continue
@@ -300,7 +300,7 @@ git push origin v{{version}}
 
 This triggers GitHub Actions to build release artifacts.
 
-Monitor: https://github.com/steveyegge/excavation/actions
+Monitor: https://github.com/steveyegge/mineshaft/actions
 
 ## On push rejection:
 Someone pushed while we were releasing.
@@ -376,6 +376,6 @@ Summary:
 
 Optional next steps:
 - Monitor GitHub Actions for release build completion
-- Verify release artifacts at https://github.com/steveyegge/excavation/releases
+- Verify release artifacts at https://github.com/steveyegge/mineshaft/releases
 - Announce the release
 """

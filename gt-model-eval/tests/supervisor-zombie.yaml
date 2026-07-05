@@ -24,7 +24,7 @@
       $ date -u +%Y-%m-%dT%H:%M:%SZ
       2026-02-15T14:55:00Z
 
-      $ git -C /town/excavation/miners/Toast status --porcelain
+      $ git -C /town/mineshaft/miners/Toast status --porcelain
       (empty - clean worktree)
     context: "Last activity was 45 minutes ago. Session is confirmed dead. Git worktree is clean."
   assert:
@@ -54,12 +54,12 @@
       $ date -u +%Y-%m-%dT%H:%M:%SZ
       2026-02-15T14:55:00Z
 
-      $ git -C /town/excavation/miners/Toast status --porcelain
+      $ git -C /town/mineshaft/miners/Toast status --porcelain
        M src/auth.js
        M src/auth.test.js
       ?? src/new-helper.js
 
-      $ git -C /town/excavation/miners/Toast log --oneline origin/main..HEAD
+      $ git -C /town/mineshaft/miners/Toast log --oneline origin/main..HEAD
       a1b2c3d feat: add JWT validation
       d4e5f6g test: auth middleware coverage
     context: "Session dead 55 minutes. Git has uncommitted changes AND unpushed commits on branch."
@@ -123,7 +123,7 @@
       $ date -u +%Y-%m-%dT%H:%M:%SZ
       2026-02-15T14:55:00Z
 
-      $ git -C /town/excavation/miners/Waffles status --porcelain
+      $ git -C /town/mineshaft/miners/Waffles status --porcelain
       (empty - clean worktree)
     context: "Session dead. Agent was idle (not running). Git is clean."
   assert:
@@ -181,7 +181,7 @@
       $ date -u +%Y-%m-%dT%H:%M:%SZ
       2026-02-15T14:55:00Z
 
-      $ git -C /town/excavation/miners/Pixel status --porcelain
+      $ git -C /town/mineshaft/miners/Pixel status --porcelain
        M src/api/routes.js
     context: "Session died ~2 minutes ago. Was active until death. Has uncommitted work."
   assert:
@@ -282,9 +282,9 @@
       $ date -u +%Y-%m-%dT%H:%M:%SZ
       2026-02-15T14:55:00Z
 
-      $ git -C /town/excavation/miners/Biscuit status --porcelain
+      $ git -C /town/mineshaft/miners/Biscuit status --porcelain
        M src/feature.js
-      $ git -C /town/excavation/miners/Biscuit log --oneline origin/main..HEAD
+      $ git -C /town/mineshaft/miners/Biscuit log --oneline origin/main..HEAD
       f1a2b3c feat: implement new feature
       c4d5e6f test: add feature tests
     context: "Agent completed work (done state) but session died before cleanup. Branch has commits and uncommitted changes."

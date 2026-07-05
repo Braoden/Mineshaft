@@ -62,7 +62,7 @@ func ValidateTarget(target string) error {
 	}
 
 	// Path targets: parts[0] = rig, parts[1] = role or shorthand name.
-	// Two-segment paths like "excavation/nux" are miner/crew shorthand —
+	// Two-segment paths like "mineshaft/nux" are miner/crew shorthand —
 	// resolvePathToSession handles these by trying miner then crew lookup.
 	// We only validate when the second segment IS a known role.
 	if len(parts) >= 2 {

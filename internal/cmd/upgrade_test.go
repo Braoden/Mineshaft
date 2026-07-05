@@ -10,12 +10,12 @@ import (
 func TestGenerateCLAUDEMD(t *testing.T) {
 	content := generateCLAUDEMD()
 
-	// Must contain the Excavation Site header
+	// Must contain the Mineshaft header
 	if content == "" {
 		t.Fatal("generateCLAUDEMD returned empty string")
 	}
-	if content[0:10] != "# Excavation Site" {
-		t.Errorf("expected content to start with '# Excavation Site', got: %q", content[:10])
+	if content[0:10] != "# Mineshaft" {
+		t.Errorf("expected content to start with '# Mineshaft', got: %q", content[:10])
 	}
 
 	// Must contain identity anchoring instructions

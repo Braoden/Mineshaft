@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/doltserver"
-	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/doltserver"
+	"github.com/steveyegge/mineshaft/internal/rig"
 )
 
 // RigConfigSyncCheck verifies that all registered rigs have a config.json file,
@@ -141,7 +141,7 @@ func (c *RigConfigSyncCheck) Run(ctx *CheckContext) *CheckResult {
 			continue
 		}
 
-		// Check required Excavation Site defaults in config.yaml.
+		// Check required Mineshaft defaults in config.yaml.
 		configYamlPath := filepath.Join(beadsDir, "config.yaml")
 		if data, err := os.ReadFile(configYamlPath); err == nil {
 			content := string(data)

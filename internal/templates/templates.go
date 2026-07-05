@@ -13,7 +13,7 @@ import (
 	"sync"
 	"text/template"
 
-	"github.com/steveyegge/excavation/internal/templates/commands"
+	"github.com/steveyegge/mineshaft/internal/templates/commands"
 )
 
 var (
@@ -21,7 +21,7 @@ var (
 	cmdNameOnce sync.Once
 )
 
-// CmdName returns the Excavation Site CLI command name.
+// CmdName returns the Mineshaft CLI command name.
 // Defaults to "gt", but can be overridden with GT_COMMAND env var.
 // This allows coexistence with other tools that use "gt" (e.g., Graphite).
 func CmdName() string {
@@ -117,7 +117,7 @@ type HandoffData struct {
 // SupervisorData contains information for rendering supervisor templates.
 type SupervisorData struct {
 	GTPath   string // Path to the gt binary
-	TownRoot string // Path to the Excavation Site workspace
+	TownRoot string // Path to the Mineshaft workspace
 }
 
 // New creates a new Templates instance.
@@ -213,7 +213,7 @@ func CreateOverseerCLAUDEmd(overseerDir, townRoot, townName, overseerSession, su
 }
 
 // MinerLifecycleMarker is a unique string present in the miner CLAUDE.md
-// template. Used to detect whether a CLAUDE.md file contains the Excavation Site
+// template. Used to detect whether a CLAUDE.md file contains the Mineshaft
 // overlay (vs. project-specific content). If an existing CLAUDE.md lacks this
 // marker, miner lifecycle instructions are appended — the agent won't know
 // to call `gt done` otherwise.
@@ -343,10 +343,10 @@ func provisionLaunchd(data SupervisorData) (string, error) {
 		return "", fmt.Errorf("creating LaunchAgents directory: %w", err)
 	}
 
-	plistPath := filepath.Join(agentsDir, "com.excavation.daemon.plist")
+	plistPath := filepath.Join(agentsDir, "com.mineshaft.daemon.plist")
 
 	// Read the template
-	templateContent, err := supervisorFS.ReadFile("launchd/com.excavation.daemon.plist")
+	templateContent, err := supervisorFS.ReadFile("launchd/com.mineshaft.daemon.plist")
 	if err != nil {
 		return "", fmt.Errorf("reading launchd template: %w", err)
 	}
@@ -375,7 +375,7 @@ func provisionLaunchd(data SupervisorData) (string, error) {
 		return "", fmt.Errorf("loading launchd service: %s", string(output))
 	}
 
-	return "Created and loaded launchd service: com.excavation.daemon", nil
+	return "Created and loaded launchd service: com.mineshaft.daemon", nil
 }
 
 // provisionSystemd creates and enables a systemd user unit on Linux.
@@ -395,10 +395,10 @@ func provisionSystemd(data SupervisorData) (string, error) {
 		return "", fmt.Errorf("creating systemd user directory: %w", err)
 	}
 
-	servicePath := filepath.Join(systemdDir, "excavation-daemon.service")
+	servicePath := filepath.Join(systemdDir, "mineshaft-daemon.service")
 
 	// Read the template
-	templateContent, err := supervisorFS.ReadFile("systemd/excavation-daemon.service")
+	templateContent, err := supervisorFS.ReadFile("systemd/mineshaft-daemon.service")
 	if err != nil {
 		return "", fmt.Errorf("reading systemd template: %w", err)
 	}
@@ -425,14 +425,14 @@ func provisionSystemd(data SupervisorData) (string, error) {
 	}
 
 	// Enable the service
-	if output, err := exec.Command("systemctl", "--user", "enable", "excavation-daemon.service").CombinedOutput(); err != nil {
+	if output, err := exec.Command("systemctl", "--user", "enable", "mineshaft-daemon.service").CombinedOutput(); err != nil {
 		return "", fmt.Errorf("enabling systemd service: %s", string(output))
 	}
 
 	// Start the service
-	if output, err := exec.Command("systemctl", "--user", "start", "excavation-daemon.service").CombinedOutput(); err != nil {
+	if output, err := exec.Command("systemctl", "--user", "start", "mineshaft-daemon.service").CombinedOutput(); err != nil {
 		return "", fmt.Errorf("starting systemd service: %s", string(output))
 	}
 
-	return "Created and enabled systemd user service: excavation-daemon.service", nil
+	return "Created and enabled systemd user service: mineshaft-daemon.service", nil
 }

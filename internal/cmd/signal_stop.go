@@ -9,9 +9,9 @@ import (
 	"sync"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/mail"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/mail"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // stopHookResponse is the JSON response for Claude Code's Stop hook.
@@ -55,7 +55,7 @@ func runSignalStop(cmd *cobra.Command, args []string) error {
 	// Find town root for mail and beads operations
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil || townRoot == "" {
-		// Not in a Excavation Site workspace — allow the stop
+		// Not in a Mineshaft workspace — allow the stop
 		return outputStopAllow()
 	}
 

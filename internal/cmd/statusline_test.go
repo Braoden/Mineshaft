@@ -7,13 +7,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/mineshaft/internal/session"
 )
 
 func setupCmdTestRegistry(t *testing.T) {
 	t.Helper()
 	registry := session.NewPrefixRegistry()
-	registry.Register("gt", "excavation")
+	registry.Register("gt", "mineshaft")
 	registry.Register("do", "coder_dotfiles")
 	registry.Register("mr", "myrig")
 	old := session.DefaultRegistry()

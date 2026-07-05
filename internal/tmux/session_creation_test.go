@@ -32,13 +32,13 @@ func TestNewSessionWithCommand_BadWorkDir(t *testing.T) {
 	_ = tm.KillSession(session)
 	defer func() { _ = tm.KillSession(session) }()
 
-	err := tm.NewSessionWithCommand(session, "/tmp/excavation-nonexistent-dir-99999", "echo hello")
+	err := tm.NewSessionWithCommand(session, "/tmp/mineshaft-nonexistent-dir-99999", "echo hello")
 	if err == nil {
 		t.Error("NewSessionWithCommand should return error for non-existent workDir")
 	}
 }
 
-// TestNewSessionWithCommand_ExecEnvBadBinary verifies the exact excavation miner
+// TestNewSessionWithCommand_ExecEnvBadBinary verifies the exact mineshaft miner
 // startup pattern (exec env VAR=val binary) returns an error for missing binaries.
 func TestNewSessionWithCommand_ExecEnvBadBinary(t *testing.T) {
 	tm := newTestTmux(t)

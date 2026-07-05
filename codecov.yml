@@ -1,4 +1,4 @@
-# Codecov configuration for Excavation Site (gt) CLI
+# Codecov configuration for Mineshaft (gt) CLI
 # https://docs.codecov.com/docs/codecovyml-reference
 #
 # Strategy: single upload, no flags. Domain-level views via components.

@@ -16,9 +16,9 @@ import (
 	"time"
 
 	beadsdk "github.com/steveyegge/beads"
-	"github.com/steveyegge/excavation/internal/runtime"
-	"github.com/steveyegge/excavation/internal/telemetry"
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/runtime"
+	"github.com/steveyegge/mineshaft/internal/telemetry"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // Common errors
@@ -394,7 +394,7 @@ type ListOptions struct {
 	Label      string // Label filter (e.g., "gt:agent", "gt:merge-request")
 	Priority   int    // 0-4, -1 for no filter
 	Parent     string // filter by parent ID
-	Assignee   string // filter by assignee (e.g., "excavation/Toast")
+	Assignee   string // filter by assignee (e.g., "mineshaft/Toast")
 	NoAssignee bool   // filter for issues with no assignee
 	Limit      int    // Max results (0 = unlimited, overrides bd default of 50)
 	Ephemeral  bool   // Search wisps table (ephemeral issues) instead of issues table
@@ -535,9 +535,9 @@ func (b *Beads) getActor() string {
 	return os.Getenv("BD_ACTOR")
 }
 
-// getTownRoot returns the Excavation Site root directory, using lazy caching.
+// getTownRoot returns the Mineshaft root directory, using lazy caching.
 // The town root is found by walking up from workDir looking for overseer/town.json.
-// Returns empty string if not in a Excavation Site project.
+// Returns empty string if not in a Mineshaft project.
 // Thread-safe: uses sync.Once to prevent races on concurrent access.
 func (b *Beads) getTownRoot() string {
 	b.townRootOnce.Do(func() {
@@ -1285,7 +1285,7 @@ func normalizeUnresolvedBlockers(issue *Issue) {
 }
 
 // ListByAssignee returns all issues assigned to a specific assignee.
-// The assignee is typically in the format "rig/miners/minerName" (e.g., "excavation/miners/Toast").
+// The assignee is typically in the format "rig/miners/minerName" (e.g., "mineshaft/miners/Toast").
 func (b *Beads) ListByAssignee(assignee string) ([]*Issue, error) {
 	return b.List(ListOptions{
 		Status:   "all", // Include both open and closed for state derivation
@@ -1992,9 +1992,9 @@ func (b *Beads) IsBeadsRepo() bool {
 	return err == nil && info.IsDir()
 }
 
-// primeContent is the Excavation Site PRIME.md content that provides essential context
+// primeContent is the Mineshaft PRIME.md content that provides essential context
 // for crew workers. This is the fallback if the SessionStart hook fails.
-const primeContent = `# Excavation Site Worker Context
+const primeContent = `# Mineshaft Worker Context
 
 > **Context Recovery**: Run ` + "`gt prime`" + ` for full context after compaction or new session.
 
@@ -2003,7 +2003,7 @@ const primeContent = `# Excavation Site Worker Context
 **If you find work on your hook, YOU RUN IT.**
 
 No confirmation. No waiting. No announcements. The hook having work IS the assignment.
-This is physics, not politeness. Excavation Site is a steam engine - you are a piston.
+This is physics, not politeness. Mineshaft is a steam engine - you are a piston.
 
 **Failure mode we're preventing:**
 - Agent starts with work on hook
@@ -2037,8 +2037,8 @@ Before signaling completion:
 **Miners MUST call ` + "`gt done`" + ` - this submits work and exits the session.**
 `
 
-// ProvisionPrimeMD writes the Excavation Site PRIME.md file to the specified beads directory.
-// This provides essential Excavation Site context (GUPP, startup protocol) as a fallback
+// ProvisionPrimeMD writes the Mineshaft PRIME.md file to the specified beads directory.
+// This provides essential Mineshaft context (GUPP, startup protocol) as a fallback
 // if the SessionStart hook fails. The PRIME.md is read by bd prime.
 //
 // The beadsDir should be the actual beads directory (after following any redirect).

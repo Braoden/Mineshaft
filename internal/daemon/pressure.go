@@ -6,8 +6,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 // PressureResult holds the outcome of a pressure check.
@@ -90,7 +90,7 @@ func (d *Daemon) checkPressure(_ string) PressureResult {
 	return result
 }
 
-// countAgentSessions counts active tmux sessions that belong to Excavation Site agents.
+// countAgentSessions counts active tmux sessions that belong to Mineshaft agents.
 // Uses the town's tmux socket so it only counts sessions for this town.
 func (d *Daemon) countAgentSessions() int {
 	t := tmux.NewTmux()
@@ -108,7 +108,7 @@ func (d *Daemon) countAgentSessions() int {
 	return count
 }
 
-// isAgentSession returns true if the tmux session name looks like a Excavation Site agent.
+// isAgentSession returns true if the tmux session name looks like a Mineshaft agent.
 // Agent sessions use prefixed names (e.g., "hq-overseer", "rig-witness", "rig-miner-foo").
 func isAgentSession(name string) bool {
 	// Agent sessions contain role markers

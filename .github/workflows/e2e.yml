@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Build test container
-        run: docker build -f Dockerfile.e2e -t excavation-test .
+        run: docker build -f Dockerfile.e2e -t mineshaft-test .
 
       - name: Run E2E tests
-        run: docker run --rm excavation-test
+        run: docker run --rm mineshaft-test

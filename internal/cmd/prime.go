@@ -14,18 +14,18 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/cli"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/lock"
-	"github.com/steveyegge/excavation/internal/refinery"
-	"github.com/steveyegge/excavation/internal/state"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/telemetry"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/util"
-	"github.com/steveyegge/excavation/internal/workspace"
-	worktreeintegrity "github.com/steveyegge/excavation/internal/worktree"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/cli"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/lock"
+	"github.com/steveyegge/mineshaft/internal/refinery"
+	"github.com/steveyegge/mineshaft/internal/state"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/telemetry"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/util"
+	"github.com/steveyegge/mineshaft/internal/workspace"
+	worktreeintegrity "github.com/steveyegge/mineshaft/internal/worktree"
 )
 
 var primeHookMode bool
@@ -328,7 +328,7 @@ func resolvePrimeWorkspace() (cwd, townRoot string, err error) {
 		if !state.IsEnabled() {
 			return cwd, "", nil // Signal caller to exit silently
 		}
-		return "", "", fmt.Errorf("not in a Excavation Site workspace")
+		return "", "", fmt.Errorf("not in a Mineshaft workspace")
 	}
 
 	return cwd, townRoot, nil
@@ -382,7 +382,7 @@ func hookSessionBeaconLines(sessionID, source string) []string {
 // WaitForCommand polls for this variable as a ZFC-compliant alternative to
 // probing the process tree via IsAgentAlive.
 // Uses ResolveCurrentSession to find our session on the town socket — raw
-// exec.Command("tmux", ...) would use the default socket and miss the excavation server.
+// exec.Command("tmux", ...) would use the default socket and miss the mineshaft server.
 func signalAgentReady() {
 	t := tmux.NewTmux()
 	name, err := t.ResolveCurrentSession()
@@ -731,7 +731,7 @@ func hasWorkflowAttachment(attachment *beads.AttachmentFields) bool {
 // Fallback: queries by assignee for agents without an agent bead.
 // For miners and crew, retries up to 3 times with 2-second delays to handle
 // the timing race where hook state hasn't propagated by the time gt prime runs.
-// See: https://github.com/steveyegge/excavation/issues/1438
+// See: https://github.com/steveyegge/mineshaft/issues/1438
 //
 // Returns (nil, nil) if no work is found.
 // Returns (nil, err) if all attempts failed due to database errors — the caller
@@ -747,7 +747,7 @@ func findAgentWork(ctx RoleContext) (*beads.Issue, error) {
 	// new Dolt connections by the time gt prime runs on session startup.
 	// Dogs are especially affected since dispatch is fire-and-forget. (GH#2748)
 	// Uses exponential backoff: 500ms, 1s, 2s, 4s, 8s (total ~15.5s max).
-	// See: https://github.com/steveyegge/excavation/issues/2389
+	// See: https://github.com/steveyegge/mineshaft/issues/2389
 	//
 	// On compact/resume, the agent already has work context in memory.
 	// A single attempt suffices — retries would add ~15s of latency to
@@ -927,7 +927,7 @@ func outputAutonomousDirective(ctx RoleContext, hookedBead *beads.Issue, hasMole
 	fmt.Printf("%s\n\n", style.Bold.Render("## 🚨 AUTONOMOUS WORK MODE 🚨"))
 	fmt.Println("Work is on your hook. After announcing your role, begin IMMEDIATELY.")
 	fmt.Println()
-	fmt.Println("This is physics, not politeness. Excavation Site is a steam engine - you are a piston.")
+	fmt.Println("This is physics, not politeness. Mineshaft is a steam engine - you are a piston.")
 	fmt.Println("Every moment you wait is a moment the engine stalls. Other agents may be")
 	fmt.Println("blocked waiting on YOUR output. The hook IS your assignment. RUN IT.")
 	fmt.Println()

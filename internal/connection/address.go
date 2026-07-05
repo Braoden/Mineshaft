@@ -9,10 +9,10 @@ import (
 // Format: [machine:]rig[/miner]
 //
 // Examples:
-//   - "excavation/rictus"        -> local machine, excavation rig, rictus miner
-//   - "vm:excavation/rictus"     -> vm machine, excavation rig, rictus miner
-//   - "excavation/"              -> local machine, excavation rig, broadcast
-//   - "vm:excavation/"           -> vm machine, excavation rig, broadcast
+//   - "mineshaft/rictus"        -> local machine, mineshaft rig, rictus miner
+//   - "vm:mineshaft/rictus"     -> vm machine, mineshaft rig, rictus miner
+//   - "mineshaft/"              -> local machine, mineshaft rig, broadcast
+//   - "vm:mineshaft/"           -> vm machine, mineshaft rig, broadcast
 type Address struct {
 	Machine string // Machine name (empty = local)
 	Rig     string // Rig name (required)

@@ -4,7 +4,7 @@ import (
 	_ "embed"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/cli"
+	"github.com/steveyegge/mineshaft/internal/cli"
 )
 
 //go:embed townroot/claude.md

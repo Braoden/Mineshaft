@@ -1,4 +1,4 @@
-// Package config provides configuration types and serialization for Excavation Site.
+// Package config provides configuration types and serialization for Mineshaft.
 package config
 
 import (
@@ -40,7 +40,7 @@ const (
 	// AgentPi is Pi Coding Agent (extension-based lifecycle).
 	AgentPi AgentPreset = "pi"
 	// AgentOmp is Oh My Pi (OMP) — Pi fork with hook-based lifecycle.
-	// Inspired by github.com/ProbabilityEngineer/pi-mono excavation integration.
+	// Inspired by github.com/ProbabilityEngineer/pi-mono mineshaft integration.
 	AgentOmp AgentPreset = "omp"
 	// AgentMistral is Mistral Vibe CLI.
 	AgentMistral AgentPreset = "vibe"
@@ -125,11 +125,11 @@ type AgentPresetInfo struct {
 	// HooksDir is the directory for hooks/settings (e.g., ".claude", ".opencode/plugins").
 	HooksDir string `json:"hooks_dir,omitempty"`
 
-	// HooksSettingsFile is the settings/plugin filename (e.g., "settings.json", "excavation.js").
+	// HooksSettingsFile is the settings/plugin filename (e.g., "settings.json", "mineshaft.js").
 	HooksSettingsFile string `json:"hooks_settings_file,omitempty"`
 
 	// HooksInformational indicates hooks are instructions-only (not executable lifecycle hooks).
-	// For these providers, Excavation Site sends startup fallback commands via nudge.
+	// For these providers, Mineshaft sends startup fallback commands via nudge.
 	HooksInformational bool `json:"hooks_informational,omitempty"`
 
 	// HooksUseSettingsDir indicates the agent supports a separate settings directory
@@ -364,7 +364,7 @@ var builtinPresets = map[AgentPreset]*AgentPresetInfo{
 		SessionIDEnv:        "",                                  // OpenCode manages sessions internally
 		ResumeFlag:          "",                                  // No resume support yet
 		ResumeStyle:         "",
-		SupportsHooks:       true, // Uses .opencode/plugins/excavation.js
+		SupportsHooks:       true, // Uses .opencode/plugins/mineshaft.js
 		SupportsForkSession: false,
 		NonInteractive: &NonInteractiveConfig{
 			Subcommand: "run",
@@ -375,7 +375,7 @@ var builtinPresets = map[AgentPreset]*AgentPresetInfo{
 		ConfigDir:         ".opencode",
 		HooksProvider:     "opencode",
 		HooksDir:          ".opencode/plugins",
-		HooksSettingsFile: "excavation.js",
+		HooksSettingsFile: "mineshaft.js",
 		ReadyDelayMs:      8000,
 		InstructionsFile:  "AGENTS.md",
 		// ACP support
@@ -403,7 +403,7 @@ var builtinPresets = map[AgentPreset]*AgentPresetInfo{
 		ConfigDir:          ".copilot",
 		HooksProvider:      "copilot",
 		HooksDir:           ".github/hooks",
-		HooksSettingsFile:  "excavation.json",
+		HooksSettingsFile:  "mineshaft.json",
 		HooksInformational: false,
 		ReadyPromptPrefix:  "",   // GA: no ❯ prompt; Copilot uses hint text, not a detectable prefix
 		ReadyDelayMs:       5000, // Delay-based readiness detection (no prompt prefix)
@@ -412,15 +412,15 @@ var builtinPresets = map[AgentPreset]*AgentPresetInfo{
 	AgentPi: {
 		Name:                AgentPi,
 		Command:             "pi",
-		Args:                []string{"-e", ".pi/extensions/excavation-hooks.js"},
+		Args:                []string{"-e", ".pi/extensions/mineshaft-hooks.js"},
 		ProcessNames:        []string{"pi", "node", "bun"}, // Pi runs as Node.js
 		SessionIDEnv:        "PI_SESSION_ID",
 		ResumeFlag:          "", // No resume support yet
 		ResumeStyle:         "",
-		SupportsHooks:       true, // Uses .pi/extensions/excavation-hooks.js
+		SupportsHooks:       true, // Uses .pi/extensions/mineshaft-hooks.js
 		HooksProvider:       "pi",
 		HooksDir:            ".pi/extensions",
-		HooksSettingsFile:   "excavation-hooks.js",
+		HooksSettingsFile:   "mineshaft-hooks.js",
 		SupportsForkSession: false,
 		NonInteractive: &NonInteractiveConfig{
 			PromptFlag: "-p",
@@ -435,13 +435,13 @@ var builtinPresets = map[AgentPreset]*AgentPresetInfo{
 	AgentOmp: {
 		Name:                AgentOmp,
 		Command:             "omp",
-		Args:                []string{"--hook", ".omp/hooks/excavation-hook.ts"},
+		Args:                []string{"--hook", ".omp/hooks/mineshaft-hook.ts"},
 		ProcessNames:        []string{"omp", "node", "bun"},
 		SessionIDEnv:        "OMP_SESSION_ID",
 		SupportsHooks:       true,
 		HooksProvider:       "omp",
 		HooksDir:            ".omp/hooks",
-		HooksSettingsFile:   "excavation-hook.ts",
+		HooksSettingsFile:   "mineshaft-hook.ts",
 		SupportsForkSession: false,
 		NonInteractive: &NonInteractiveConfig{
 			PromptFlag: "--prompt",

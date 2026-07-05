@@ -83,8 +83,8 @@ bd blocked --json
 
 Check assignee session if set:
 ```bash
-# If assignee like "excavation/miners/nux"
-tmux has-session -t gt-excavation-miner-nux 2>/dev/null && echo "alive" || echo "dead"
+# If assignee like "mineshaft/miners/nux"
+tmux has-session -t gt-mineshaft-miner-nux 2>/dev/null && echo "alive" || echo "dead"
 ```
 
 **4. Build ready list:**
@@ -128,7 +128,7 @@ If dispatch_count = 0:
 
 **4. Match issues to rigs:**
 For each ready issue, determine target rig from issue prefix:
-- gt-* issues → excavation rig
+- gt-* issues → mineshaft rig
 - bd-* issues → beads rig
 - etc.
 
@@ -149,7 +149,7 @@ Sling each ready issue to an available miner.
 gt sling <issue-id> <rig>
 
 # Example:
-gt sling gt-abc123 excavation
+gt sling gt-abc123 mineshaft
 gt sling bd-xyz789 beads
 ```
 

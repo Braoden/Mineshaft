@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/formula"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/formula"
 )
 
 // writeRigsJSON creates a overseer/rigs.json with a single rig entry.
@@ -72,9 +72,9 @@ func TestPatrolMoleculesExistCheck_RigPathMissing_FallbackToTownRoot(t *testing.
 		t.Fatalf("ProvisionFormulas: %v", err)
 	}
 
-	// Register "excavation" rig but do NOT create TownRoot/excavation directory.
+	// Register "mineshaft" rig but do NOT create TownRoot/mineshaft directory.
 	// This simulates the overseer's clone scenario where the rig isn't a subdirectory.
-	writeRigsJSON(t, tmpDir, "excavation")
+	writeRigsJSON(t, tmpDir, "mineshaft")
 
 	check := NewPatrolMoleculesExistCheck()
 	ctx := &CheckContext{TownRoot: tmpDir}
@@ -92,7 +92,7 @@ func TestPatrolMoleculesExistCheck_RigPathExists_FormulasPresent(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Create the rig directory and provision formulas there.
-	rigDir := filepath.Join(tmpDir, "excavation")
+	rigDir := filepath.Join(tmpDir, "mineshaft")
 	if err := os.MkdirAll(rigDir, 0755); err != nil {
 		t.Fatalf("MkdirAll rig: %v", err)
 	}
@@ -100,7 +100,7 @@ func TestPatrolMoleculesExistCheck_RigPathExists_FormulasPresent(t *testing.T) {
 		t.Fatalf("ProvisionFormulas: %v", err)
 	}
 
-	writeRigsJSON(t, tmpDir, "excavation")
+	writeRigsJSON(t, tmpDir, "mineshaft")
 
 	check := NewPatrolMoleculesExistCheck()
 	ctx := &CheckContext{TownRoot: tmpDir}
@@ -121,7 +121,7 @@ func TestPatrolMoleculesExistCheck_RigPathExists_TownLevelFormulas(t *testing.T)
 	tmpDir := t.TempDir()
 
 	// Create the rig directory WITHOUT formulas.
-	rigDir := filepath.Join(tmpDir, "excavation")
+	rigDir := filepath.Join(tmpDir, "mineshaft")
 	if err := os.MkdirAll(rigDir, 0755); err != nil {
 		t.Fatalf("MkdirAll rig: %v", err)
 	}
@@ -131,7 +131,7 @@ func TestPatrolMoleculesExistCheck_RigPathExists_TownLevelFormulas(t *testing.T)
 		t.Fatalf("ProvisionFormulas at town root: %v", err)
 	}
 
-	writeRigsJSON(t, tmpDir, "excavation")
+	writeRigsJSON(t, tmpDir, "mineshaft")
 
 	check := NewPatrolMoleculesExistCheck()
 	ctx := &CheckContext{TownRoot: tmpDir}

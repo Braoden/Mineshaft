@@ -12,14 +12,14 @@ import (
 func TestEnqueueAndDrain(t *testing.T) {
 	townRoot := t.TempDir()
 
-	session := "gt-excavation-crew-sean"
+	session := "gt-mineshaft-crew-sean"
 	n1 := QueuedNudge{
 		Sender:   "overseer",
 		Message:  "Check your hook",
 		Priority: PriorityNormal,
 	}
 	n2 := QueuedNudge{
-		Sender:   "excavation/witness",
+		Sender:   "mineshaft/witness",
 		Message:  "Miner alpha is stuck",
 		Priority: PriorityUrgent,
 	}
@@ -56,8 +56,8 @@ func TestEnqueueAndDrain(t *testing.T) {
 	if nudges[0].Sender != "overseer" {
 		t.Errorf("nudges[0].Sender = %q, want %q", nudges[0].Sender, "overseer")
 	}
-	if nudges[1].Sender != "excavation/witness" {
-		t.Errorf("nudges[1].Sender = %q, want %q", nudges[1].Sender, "excavation/witness")
+	if nudges[1].Sender != "mineshaft/witness" {
+		t.Errorf("nudges[1].Sender = %q, want %q", nudges[1].Sender, "mineshaft/witness")
 	}
 
 	// After drain, pending should be 0

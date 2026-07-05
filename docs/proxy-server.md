@@ -8,7 +8,7 @@ credentials, or GitHub.
 ## Overview
 
 When a miner runs inside a container or isolated execution environment (such as
-[Daytona](https://www.daytona.io/)), it still needs to interact with Excavation Site's
+[Daytona](https://www.daytona.io/)), it still needs to interact with Mineshaft's
 control plane. Specifically, it needs to:
 
 - Call `gt` and `bd` commands (mail, status, handoff, issue updates, etc.)
@@ -44,8 +44,8 @@ The binaries live alongside `gt` in the same module:
 
 ```bash
 # Build both binaries
-go install github.com/steveyegge/excavation/cmd/gt-proxy-server@latest
-go install github.com/steveyegge/excavation/cmd/gt-proxy-client@latest
+go install github.com/steveyegge/mineshaft/cmd/gt-proxy-server@latest
+go install github.com/steveyegge/mineshaft/cmd/gt-proxy-client@latest
 ```
 
 ---
@@ -89,7 +89,7 @@ gt-proxy-server: listening  addr=0.0.0.0:9876  tls=mTLS
 | `--ca-dir` | `~/gt/.runtime/ca` | Directory that stores `ca.crt` and `ca.key` |
 | `--allowed-cmds` | `gt,bd` | Comma-separated list of binary names containers may invoke |
 | `--allowed-subcmds` | *(auto-discovered)* | Semicolon-separated subcommand allowlists per binary, e.g. `gt:prime,hook,done;bd:create,update` |
-| `--town-root` | `$GT_TOWN` or `~/gt` | Excavation Site root directory; used to locate bare repos |
+| `--town-root` | `$GT_TOWN` or `~/gt` | Mineshaft root directory; used to locate bare repos |
 | `--config` | `~/gt/.runtime/proxy/config.json` | Path to a JSON config file; file values are overridden by explicit CLI flags |
 
 ### Environment variables
@@ -295,7 +295,7 @@ You may mount `ca.crt`, `miner.crt`, and `miner.key` as container secrets
 Inside the container:
 
 ```bash
-gt version           # Should print the Excavation Site version via the proxy
+gt version           # Should print the Mineshaft version via the proxy
 gt status            # Should show town status from the host
 git push origin HEAD # Should push to the miner branch via the proxy
 ```
@@ -333,7 +333,7 @@ always take precedence over file values.
 | `listen_addr` | `string` | TCP address for the mTLS server (default: `0.0.0.0:9876`) |
 | `admin_listen_addr` | `string` | TCP address for the local admin HTTP server (default: `127.0.0.1:9877`); set to `""` to disable |
 | `ca_dir` | `string` | Directory holding `ca.crt` and `ca.key` (default: `~/gt/.runtime/ca`) |
-| `town_root` | `string` | Excavation Site root directory (default: `$GT_TOWN` or `~/gt`) |
+| `town_root` | `string` | Mineshaft root directory (default: `$GT_TOWN` or `~/gt`) |
 | `allowed_commands` | `[]string` | Binary names miners may execute |
 | `allowed_subcommands` | `map[string][]string` | Per-command subcommand allowlists |
 | `extra_san_ips` | `[]string` | Additional IP addresses to include in the server certificate's SAN list |
@@ -592,7 +592,7 @@ but for production always configure the correct SANs or use a hostname.
 | Role | CN format | Example |
 |------|-----------|---------|
 | Server | `gt-proxy-server` | `gt-proxy-server` |
-| Miner client | `gt-<rig>-<name>` | `gt-Excavation-rust` |
+| Miner client | `gt-<rig>-<name>` | `gt-Mineshaft-rust` |
 
 The server derives the miner's identity (`<rig>/<name>`) from the CN at request
 time.  The last `-` in the remainder after stripping `gt-` is the rig/name

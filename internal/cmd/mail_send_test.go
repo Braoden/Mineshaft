@@ -3,7 +3,7 @@ package cmd
 import (
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/mail"
+	"github.com/steveyegge/mineshaft/internal/mail"
 )
 
 func TestHasReplyPrefix(t *testing.T) {
@@ -53,7 +53,7 @@ func TestNormalizeAddress(t *testing.T) {
 	}{
 		{"overseer/", "overseer"},
 		{"Overseer", "overseer"},
-		{"  excavation/Toast/  ", "excavation/toast"},
+		{"  mineshaft/Toast/  ", "mineshaft/toast"},
 		{"", ""},
 	}
 	for _, c := range cases {

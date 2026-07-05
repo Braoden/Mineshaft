@@ -12,10 +12,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/miner"
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/miner"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 type testOverseerEvent struct {
@@ -32,7 +32,7 @@ func setupSlotOpenTestTown(t *testing.T) (string, string) {
 	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"name":"test"}`), 0644); err != nil {
 		t.Fatal(err)
 	}
-	workDir := filepath.Join(townRoot, "excavation", "witness")
+	workDir := filepath.Join(townRoot, "mineshaft", "witness")
 	if err := os.MkdirAll(workDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -63,7 +63,7 @@ func readOverseerEvents(t *testing.T, townRoot string) []testOverseerEvent {
 func TestNotifyOverseerSlotOpen_BlocksNonCompletedExit(t *testing.T) {
 	townRoot, workDir := setupSlotOpenTestTown(t)
 
-	notifyOverseerSlotOpen(workDir, "excavation", "guzzle", string(ExitTypeDeferred))
+	notifyOverseerSlotOpen(workDir, "mineshaft", "guzzle", string(ExitTypeDeferred))
 
 	events := readOverseerEvents(t, townRoot)
 	if len(events) != 1 {
@@ -106,7 +106,7 @@ func TestNotifyOverseerSlotOpen_SchedulerDispatchSuppressesOverseer(t *testing.T
 		return slotOpenSchedulerResult{Dispatched: 1}, nil
 	}
 
-	notifyOverseerSlotOpen(workDir, "excavation", "guzzle", string(ExitTypeCompleted))
+	notifyOverseerSlotOpen(workDir, "mineshaft", "guzzle", string(ExitTypeCompleted))
 
 	if !called {
 		t.Fatal("scheduler trigger was not called")
@@ -145,7 +145,7 @@ func TestNotifyOverseerSlotOpen_DispatchThenEmptyEmitsSchedulerOpen(t *testing.T
 		return result, nil
 	}
 
-	notifyOverseerSlotOpen(workDir, "excavation", "guzzle", string(ExitTypeCompleted))
+	notifyOverseerSlotOpen(workDir, "mineshaft", "guzzle", string(ExitTypeCompleted))
 
 	events := readOverseerEvents(t, townRoot)
 	if len(events) != 1 {
@@ -179,7 +179,7 @@ func TestNotifyOverseerSlotOpen_DispatchWithStatusErrorSuppressesOverseer(t *tes
 		return slotOpenSchedulerResult{Dispatched: 1}, errors.New("status read failed")
 	}
 
-	notifyOverseerSlotOpen(workDir, "excavation", "guzzle", string(ExitTypeCompleted))
+	notifyOverseerSlotOpen(workDir, "mineshaft", "guzzle", string(ExitTypeCompleted))
 
 	if events := readOverseerEvents(t, townRoot); len(events) != 0 {
 		t.Fatalf("events = %+v, want none after confirmed dispatch", events)
@@ -213,7 +213,7 @@ func TestNotifyOverseerSlotOpen_EmitsSchedulerOpenWhenQueueEmpty(t *testing.T) {
 		return result, nil
 	}
 
-	notifyOverseerSlotOpen(workDir, "excavation", "guzzle", string(ExitTypeCompleted))
+	notifyOverseerSlotOpen(workDir, "mineshaft", "guzzle", string(ExitTypeCompleted))
 
 	events := readOverseerEvents(t, townRoot)
 	if len(events) != 1 {
@@ -256,7 +256,7 @@ func TestNotifyOverseerSlotOpen_QueuedReadyWithoutDispatchFallsBack(t *testing.T
 		return result, nil
 	}
 
-	notifyOverseerSlotOpen(workDir, "excavation", "guzzle", string(ExitTypeCompleted))
+	notifyOverseerSlotOpen(workDir, "mineshaft", "guzzle", string(ExitTypeCompleted))
 
 	events := readOverseerEvents(t, townRoot)
 	if len(events) != 1 {
@@ -298,7 +298,7 @@ func TestNotifyOverseerSlotOpen_NoDispatchAfterCapacityFillsSuppressesOverseer(t
 		return result, nil
 	}
 
-	notifyOverseerSlotOpen(workDir, "excavation", "guzzle", string(ExitTypeCompleted))
+	notifyOverseerSlotOpen(workDir, "mineshaft", "guzzle", string(ExitTypeCompleted))
 
 	if events := readOverseerEvents(t, townRoot); len(events) != 0 {
 		t.Fatalf("events = %+v, want none when scheduler no longer has capacity", events)
@@ -369,7 +369,7 @@ func TestShouldNotifyOverseerSlotOpenRequiresSafeRecovery(t *testing.T) {
 				return tt.output, tt.err
 			}
 
-			gotOK, gotMsg := shouldNotifyOverseerSlotOpen("/tmp", "excavation", "nitro")
+			gotOK, gotMsg := shouldNotifyOverseerSlotOpen("/tmp", "mineshaft", "nitro")
 			if gotOK != tt.wantOK {
 				t.Fatalf("ok = %v, want %v (msg=%q)", gotOK, tt.wantOK, gotMsg)
 			}
@@ -866,7 +866,7 @@ func TestHasPendingMRFromSnapshotAssessesMRStatus(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			workDir := setupActiveMRGitSafeWorkDir(t, "excavation", "nux")
+			workDir := setupActiveMRGitSafeWorkDir(t, "mineshaft", "nux")
 			bd, _ := mockBd(
 				func(args []string) (string, error) {
 					if len(args) == 0 {
@@ -883,7 +883,7 @@ func TestHasPendingMRFromSnapshotAssessesMRStatus(t *testing.T) {
 				func(args []string) error { return nil },
 			)
 			snap := &agentBeadSnapshot{ActiveMR: "gt-mr", Fields: &beads.AgentFields{ActiveMR: "gt-mr", LastSourceIssue: "gt-src"}}
-			if got := hasPendingMRFromSnapshot(bd, workDir, "excavation", "nux", snap); got != tt.want {
+			if got := hasPendingMRFromSnapshot(bd, workDir, "mineshaft", "nux", snap); got != tt.want {
 				t.Fatalf("hasPendingMRFromSnapshot() = %v, want %v", got, tt.want)
 			}
 		})
@@ -891,7 +891,7 @@ func TestHasPendingMRFromSnapshotAssessesMRStatus(t *testing.T) {
 }
 
 func TestHasPendingMRUsesAgentLastSourceIssue(t *testing.T) {
-	workDir := setupActiveMRGitSafeWorkDir(t, "excavation", "nux")
+	workDir := setupActiveMRGitSafeWorkDir(t, "mineshaft", "nux")
 	bd, _ := mockBd(
 		func(args []string) (string, error) {
 			if len(args) == 0 {
@@ -915,7 +915,7 @@ func TestHasPendingMRUsesAgentLastSourceIssue(t *testing.T) {
 		func(args []string) error { return nil },
 	)
 
-	if got := hasPendingMR(bd, workDir, "excavation", "nux", "gt-agent"); got {
+	if got := hasPendingMR(bd, workDir, "mineshaft", "nux", "gt-agent"); got {
 		t.Fatalf("hasPendingMR() = true, want false for missing MR with terminal source")
 	}
 }
@@ -940,13 +940,13 @@ func TestHasPendingMRFromSnapshotRequiresGitSafe(t *testing.T) {
 		func(args []string) error { return nil },
 	)
 	snap := &agentBeadSnapshot{ActiveMR: "gt-mr", Fields: &beads.AgentFields{ActiveMR: "gt-mr", LastSourceIssue: "gt-src"}}
-	if got := hasPendingMRFromSnapshot(bd, t.TempDir(), "excavation", "nux", snap); !got {
+	if got := hasPendingMRFromSnapshot(bd, t.TempDir(), "mineshaft", "nux", snap); !got {
 		t.Fatalf("hasPendingMRFromSnapshot() = false, want true when git is unsafe")
 	}
 }
 
 func TestHasPendingMRCleanupWispFailsClosed(t *testing.T) {
-	workDir := setupActiveMRGitSafeWorkDir(t, "excavation", "nux")
+	workDir := setupActiveMRGitSafeWorkDir(t, "mineshaft", "nux")
 	tests := []struct {
 		name string
 		list string
@@ -975,7 +975,7 @@ func TestHasPendingMRCleanupWispFailsClosed(t *testing.T) {
 				},
 				func(args []string) error { return nil },
 			)
-			if got := hasPendingMR(bd, workDir, "excavation", "nux", "gt-agent"); !got {
+			if got := hasPendingMR(bd, workDir, "mineshaft", "nux", "gt-agent"); !got {
 				t.Fatalf("hasPendingMR() = false, want true")
 			}
 		})
@@ -983,7 +983,7 @@ func TestHasPendingMRCleanupWispFailsClosed(t *testing.T) {
 }
 
 func TestTerminalSafeDoneSnapshot(t *testing.T) {
-	workDir := setupActiveMRGitSafeWorkDir(t, "excavation", "nux")
+	workDir := setupActiveMRGitSafeWorkDir(t, "mineshaft", "nux")
 	bd, _ := mockBd(
 		func(args []string) (string, error) {
 			if len(args) == 0 || args[0] != "show" {
@@ -994,11 +994,11 @@ func TestTerminalSafeDoneSnapshot(t *testing.T) {
 		func(args []string) error { return nil },
 	)
 	snap := &agentBeadSnapshot{Fields: &beads.AgentFields{LastSourceIssue: "gt-src"}}
-	if !terminalSafeDoneSnapshot(bd, workDir, "excavation", "nux", snap) {
+	if !terminalSafeDoneSnapshot(bd, workDir, "mineshaft", "nux", snap) {
 		t.Fatalf("terminalSafeDoneSnapshot() = false, want true")
 	}
 	snap.Fields.HookBead = "gt-hook"
-	if terminalSafeDoneSnapshot(bd, workDir, "excavation", "nux", snap) {
+	if terminalSafeDoneSnapshot(bd, workDir, "mineshaft", "nux", snap) {
 		t.Fatalf("terminalSafeDoneSnapshot() = true with hook set, want false")
 	}
 }
@@ -2162,7 +2162,7 @@ func TestCompletionDiscovery_Types(t *testing.T) {
 	// Verify CompletionDiscovery has all expected fields
 	d := CompletionDiscovery{
 		MinerName:    "nux",
-		AgentBeadID:    "gt-excavation-miner-nux",
+		AgentBeadID:    "gt-mineshaft-miner-nux",
 		ExitType:       "COMPLETED",
 		IssueID:        "gt-abc123",
 		MRID:           "gt-mr-xyz",

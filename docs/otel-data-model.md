@@ -1,6 +1,6 @@
-# Excavation OTel Data Model
+# Mineshaft OTel Data Model
 
-All Excavation telemetry events are OTel log records exported via OTLP
+All Mineshaft telemetry events are OTel log records exported via OTLP
 (`GT_OTEL_LOGS_URL`). Every record carries a `run.id` attribute — a UUID
 generated once per agent spawn — so all records from a single agent session
 can be retrieved and correlated.
@@ -49,7 +49,7 @@ Emitted once per agent spawn. Anchors all subsequent events for that run.
 | `instance` | string | `hostname:basename(town_root)` |
 | `town_root` | string | absolute town root path |
 | `agent_type` | string | `"claudecode"` · `"opencode"` · `"copilot"` · … |
-| `role` | string | Excavation role |
+| `role` | string | Mineshaft role |
 | `agent_name` | string | agent name |
 | `session_id` | string | tmux pane name |
 | `rig` | string | rig name (empty = town-level) |
@@ -67,7 +67,7 @@ tmux session lifecycle events.
 |---|---|---|
 | `run.id` | string | run UUID |
 | `session_id` | string | tmux pane name |
-| `role` | string | Excavation role |
+| `role` | string | Mineshaft role |
 | `status` | string | `"ok"` · `"error"` |
 
 ---
@@ -80,7 +80,7 @@ separately as `prime.context` (same attributes plus `formula`).
 | Attribute | Type | Description |
 |---|---|---|
 | `run.id` | string | run UUID |
-| `role` | string | Excavation role |
+| `role` | string | Mineshaft role |
 | `hook_mode` | bool | true when invoked from a hook |
 | `formula` | string | full rendered formula (`prime.context` only) |
 | `status` | string | `"ok"` · `"error"` |
@@ -158,7 +158,7 @@ in a shell.
 
 ### `mail`
 
-All operations on the Excavation mail system.
+All operations on the Mineshaft mail system.
 
 | Attribute | Type | Description |
 |---|---|---|

@@ -26,12 +26,12 @@ gt rig add <name> <upstream-url> \
   --upstream-url <upstream-url>
 ```
 
-Concretely, for a Excavation Site contributor:
+Concretely, for a Mineshaft contributor:
 
 ```bash
-gt rig add excavation https://github.com/excavationhall/excavation \
-  --push-url     https://github.com/<you>/excavation \
-  --upstream-url https://github.com/excavationhall/excavation
+gt rig add mineshaft https://github.com/mineshafthall/mineshaft \
+  --push-url     https://github.com/<you>/mineshaft \
+  --upstream-url https://github.com/mineshafthall/mineshaft
 ```
 
 What each flag does:
@@ -57,10 +57,10 @@ cd <town>/<rig>/overseer/rig    && git remote -v
 Expect (substituting your fork and the canonical repo):
 
 ```
-origin    https://github.com/excavationhall/excavation (fetch)
-origin    https://github.com/<you>/excavation       (push)
-upstream  https://github.com/excavationhall/excavation (fetch)
-upstream  https://github.com/excavationhall/excavation (push)
+origin    https://github.com/mineshafthall/mineshaft (fetch)
+origin    https://github.com/<you>/mineshaft       (push)
+upstream  https://github.com/mineshafthall/mineshaft (fetch)
+upstream  https://github.com/mineshafthall/mineshaft (push)
 ```
 
 The key invariant: **`origin`'s fetch URL is upstream, `origin`'s push URL
@@ -72,10 +72,10 @@ did not take effect — re-add the rig.
 Even a correctly-configured fork rig will, today, have its refinery attempt
 to **merge miner branches into the fork's `main`** rather than open a PR
 to upstream. The foundation flags (`--push-url` / `--upstream-url`) shipped
-in [excavationhall/excavation#2018](https://github.com/excavationhall/excavation/issues/2018),
+in [mineshafthall/mineshaft#2018](https://github.com/mineshafthall/mineshaft/issues/2018),
 but the behavioral half — refinery raising PRs to upstream instead of
 merging to `origin` — is tracked in
-[excavationhall/excavation#1794](https://github.com/excavationhall/excavation/issues/1794)
+[mineshafthall/mineshaft#1794](https://github.com/mineshafthall/mineshaft/issues/1794)
 and is not yet implemented.
 
 Until then, for strict PR-only behavior:
@@ -122,5 +122,5 @@ upstream.
 ## See also
 
 - [CONTRIBUTING.md](../../CONTRIBUTING.md) — "Setting up a rig to contribute
-  to Excavation Site" (Excavation Site-specific worked example)
+  to Mineshaft" (Mineshaft-specific worked example)
 - [Local Rig Bootstrap](local-rig-bootstrap.md) — local/private repo setup

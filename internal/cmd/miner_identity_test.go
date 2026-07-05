@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/mineshaft/internal/style"
 )
 
 func TestExtractWorkType(t *testing.T) {
@@ -141,7 +141,7 @@ func TestFormatWorkTypeStats(t *testing.T) {
 
 func TestSessionToAgentID(t *testing.T) {
 	// Generate known session names and verify the agent ID
-	sessionName := crewSessionName("excavation", "tester")
+	sessionName := crewSessionName("mineshaft", "tester")
 	agentID := sessionToAgentID(sessionName)
 	if agentID == "" {
 		t.Errorf("sessionToAgentID(%q) returned empty", sessionName)

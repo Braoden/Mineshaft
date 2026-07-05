@@ -297,8 +297,8 @@ func TestEnsureGitignorePatterns_AppendsToExisting(t *testing.T) {
 	}
 
 	// Should add header
-	if !containsLine(string(content), "# Excavation Site (added by gt)") {
-		t.Error("Missing Excavation Site header comment")
+	if !containsLine(string(content), "# Mineshaft (added by gt)") {
+		t.Error("Missing Mineshaft header comment")
 	}
 
 	// Should add required patterns (.beads/ intentionally excluded — see overlay.go)
@@ -313,7 +313,7 @@ func TestEnsureGitignorePatterns_AppendsToExisting(t *testing.T) {
 func TestEnsureGitignorePatterns_SkipsExistingPatterns(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// Create existing .gitignore with some Excavation Site patterns already.
+	// Create existing .gitignore with some Mineshaft patterns already.
 	// The broader ".claude/" covers ".claude/commands/", so it should
 	// not add the narrower pattern.
 	existing := ".runtime/\n.claude/\n.opencode/\n"
@@ -423,7 +423,7 @@ func TestEnsureGitignorePatterns_AllPatternsPresent(t *testing.T) {
 	}
 
 	// File should be unchanged (no header added)
-	if containsLine(string(content), "# Excavation Site") {
+	if containsLine(string(content), "# Mineshaft") {
 		t.Error("Should not add header when all patterns already present")
 	}
 
@@ -493,10 +493,10 @@ func TestEnsureGitignorePatterns_OldNarrowClaudeUpgraded(t *testing.T) {
 func TestEnsureGitignorePatterns_UpgradePreservesBroadPattern(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// Simulate an existing installation that has .claude/ plus other Excavation Site
+	// Simulate an existing installation that has .claude/ plus other Mineshaft
 	// patterns but is missing __pycache__/ (added later). After upgrade,
 	// __pycache__/ should be appended.
-	existing := "# Excavation Site (added by gt)\n.runtime/\n.claude/\n.logs/\n"
+	existing := "# Mineshaft (added by gt)\n.runtime/\n.claude/\n.logs/\n"
 	if err := os.WriteFile(filepath.Join(tmpDir, ".gitignore"), []byte(existing), 0644); err != nil {
 		t.Fatalf("Failed to create .gitignore: %v", err)
 	}
@@ -525,11 +525,11 @@ func TestEnsureGitignorePatterns_UpgradePreservesBroadPattern(t *testing.T) {
 	}
 }
 
-// TestExcavationLocalExcludePatterns_IncludesBeads verifies that the local exclude
+// TestMineshaftLocalExcludePatterns_IncludesBeads verifies that the local exclude
 // patterns include .beads/ (defense-in-depth for gas-7vg) while the gitignore
 // patterns do NOT include .beads/ (regression guard).
-func TestExcavationLocalExcludePatterns_IncludesBeads(t *testing.T) {
-	localPatterns := gasTownLocalExcludePatterns()
+func TestMineshaftLocalExcludePatterns_IncludesBeads(t *testing.T) {
+	localPatterns := mineshaftLocalExcludePatterns()
 	found := false
 	for _, p := range localPatterns {
 		if p == ".beads/" {
@@ -538,14 +538,14 @@ func TestExcavationLocalExcludePatterns_IncludesBeads(t *testing.T) {
 		}
 	}
 	if !found {
-		t.Error("gasTownLocalExcludePatterns() must include .beads/ (gas-7vg defense-in-depth)")
+		t.Error("mineshaftLocalExcludePatterns() must include .beads/ (gas-7vg defense-in-depth)")
 	}
 
 	// Regression guard: .gitignore patterns must NOT include .beads/
-	gitignorePatterns := gasTownIgnorePatterns()
+	gitignorePatterns := mineshaftIgnorePatterns()
 	for _, p := range gitignorePatterns {
 		if p == ".beads/" {
-			t.Error("gasTownIgnorePatterns() must NOT include .beads/ - that breaks bd sync (see overlay.go)")
+			t.Error("mineshaftIgnorePatterns() must NOT include .beads/ - that breaks bd sync (see overlay.go)")
 		}
 	}
 }

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 const (
@@ -125,7 +125,7 @@ func (d *Daemon) pushDatabase(dataDir, db, remote, branch string) error {
 	// warnings in dolt.log, which were causing log bloat at ~3/sec (gt-zb8).
 	if d.hasStagedChanges(dataDir, db) {
 		commitQuery := fmt.Sprintf(
-			"USE `%s`; CALL DOLT_COMMIT('-m', 'daemon: auto-commit pending changes', '--author', 'Excavation Site Daemon <daemon@excavation.local>')",
+			"USE `%s`; CALL DOLT_COMMIT('-m', 'daemon: auto-commit pending changes', '--author', 'Mineshaft Daemon <daemon@mineshaft.local>')",
 			db,
 		)
 		if err := d.runDoltSQL(dataDir, commitQuery); err != nil {

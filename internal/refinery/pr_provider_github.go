@@ -1,6 +1,6 @@
 package refinery
 
-import "github.com/steveyegge/excavation/internal/git"
+import "github.com/steveyegge/mineshaft/internal/git"
 
 // githubPRProvider implements PRProvider using the gh CLI via git.Git.
 type githubPRProvider struct {

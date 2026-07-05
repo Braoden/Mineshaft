@@ -1,4 +1,4 @@
-// Package hooks provides centralized Claude Code hook management for Excavation Site.
+// Package hooks provides centralized Claude Code hook management for Mineshaft.
 //
 // It manages a base hook configuration and per-role/per-rig overrides,
 // generating .claude/settings.json files for all agents in the workspace.
@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/atomicfile"
+	"github.com/steveyegge/mineshaft/internal/atomicfile"
 )
 
 // HookEntry represents a single hook matcher with its associated hooks.
@@ -137,7 +137,7 @@ func MarshalSettings(s *SettingsJSON) ([]byte, error) {
 }
 
 // HasClaudePromptDefaults reports whether settings already contain the Claude
-// startup defaults Excavation Site needs for non-interactive agent sessions.
+// startup defaults Mineshaft needs for non-interactive agent sessions.
 func HasClaudePromptDefaults(s *SettingsJSON) bool {
 	if s == nil {
 		return false
@@ -290,7 +290,7 @@ func HooksEqual(a, b *HooksConfig) bool {
 // Target represents a managed settings.json location.
 type Target struct {
 	Path     string // Full path to .claude/settings.json or .gemini/settings.json
-	Key      string // Override key: "excavation/crew", "overseer", etc.
+	Key      string // Override key: "mineshaft/crew", "overseer", etc.
 	Rig      string // Rig name or empty for town-level
 	Role     string // Informational only — does NOT participate in override resolution (Key does). Singular form matching RoleSettingsDir: crew, witness, refinery, miner, overseer, supervisor.
 	Provider string // Hook provider: "claude" (default/empty) or "gemini", etc.
@@ -553,7 +553,7 @@ func ComputeExpected(target string) (*HooksConfig, error) {
 }
 
 // DiscoverTargets finds all managed .claude/settings.json locations in the workspace.
-// Settings are installed in excavation-managed parent directories and passed to Claude Code
+// Settings are installed in mineshaft-managed parent directories and passed to Claude Code
 // via --settings flag. Crew members in a rig share one settings file, as do miners.
 // Returns Target structs with path, override key, rig, and role information.
 func DiscoverTargets(townRoot string) ([]Target, error) {
@@ -719,7 +719,7 @@ func DiscoverRoleLocations(townRoot string) ([]RoleLocation, error) {
 // Skips hidden directories and non-directories.
 //
 // Some roles, especially miners, keep the git worktree one level below the
-// agent slot directory (for example, miners/fury/excavation). When an immediate
+// agent slot directory (for example, miners/fury/mineshaft). When an immediate
 // child contains nested git worktree roots, prefer those nested directories so
 // hooks are synced into the real repo root instead of the slot parent.
 func DiscoverWorktrees(roleDir string) []string {
@@ -906,7 +906,7 @@ func BasePath() string {
 // OverridePath returns the path to the override config for a given target in
 // the primary dir.
 func OverridePath(target string) string {
-	// Replace "/" with "__" for filesystem safety (e.g., "excavation/crew" -> "excavation__crew")
+	// Replace "/" with "__" for filesystem safety (e.g., "mineshaft/crew" -> "mineshaft__crew")
 	safe := strings.ReplaceAll(target, "/", "__")
 	return filepath.Join(gtPrimaryDir(), "hooks-overrides", safe+".json")
 }
@@ -989,7 +989,7 @@ func NormalizeTarget(target string) (string, bool) {
 		return canonical, true
 	}
 
-	// Rig/role target (e.g., "excavation/crew")
+	// Rig/role target (e.g., "mineshaft/crew")
 	parts := strings.SplitN(target, "/", 2)
 	if len(parts) == 2 && parts[0] != "" {
 		role := parts[1]
@@ -1112,7 +1112,7 @@ func DefaultBase() *HooksConfig {
 //
 // Examples:
 //
-//	"excavation/crew" -> ["crew", "excavation/crew"]
+//	"mineshaft/crew" -> ["crew", "mineshaft/crew"]
 //	"overseer"        -> ["overseer"]
 //	"beads/witness" -> ["witness", "beads/witness"]
 func GetApplicableOverrides(target string) []string {

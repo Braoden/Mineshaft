@@ -7,7 +7,7 @@ import (
 
 // TownGitCheck verifies that the town root directory is under version control.
 // Having the town harness in git is optional but recommended for:
-// - Backing up personal Excavation Site configuration and operating history
+// - Backing up personal Mineshaft configuration and operating history
 // - Tracking mail and coordination beads
 // - Easier federation across machines
 type TownGitCheck struct {

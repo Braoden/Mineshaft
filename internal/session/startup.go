@@ -2,7 +2,7 @@
 package session
 
 import (
-	"github.com/steveyegge/excavation/internal/cli"
+	"github.com/steveyegge/mineshaft/internal/cli"
 	"fmt"
 	"time"
 )
@@ -10,7 +10,7 @@ import (
 // BeaconRecipient formats a human-readable, non-path-like recipient for the
 // startup beacon. Uses "role name (rig: rigName)" format to prevent LLMs from
 // misinterpreting the recipient as a filesystem path and constructing wrong
-// cd commands. See github.com/steveyegge/excavation/issues/1716.
+// cd commands. See github.com/steveyegge/mineshaft/issues/1716.
 func BeaconRecipient(role, name, rig string) string {
 	if name != "" && rig != "" {
 		return fmt.Sprintf("%s %s (rig: %s)", role, name, rig)
@@ -29,7 +29,7 @@ func BeaconRecipient(role, name, rig string) string {
 type BeaconConfig struct {
 	// Recipient is the address of the agent being nudged.
 	// Use BeaconRecipient() to format non-path-like addresses.
-	// Examples: "miner rust (rig: excavation)", "supervisor", "witness (rig: excavation)"
+	// Examples: "miner rust (rig: mineshaft)", "supervisor", "witness (rig: mineshaft)"
 	Recipient string
 
 	// Sender is the agent initiating the nudge.
@@ -60,12 +60,12 @@ type BeaconConfig struct {
 // The beacon is injected into the CLI prompt, making sessions identifiable
 // in Claude Code's /resume picker for predecessor discovery.
 //
-// Format: [GAS TOWN] <recipient> <- <sender> • <timestamp> • <topic[:mol-id]>
+// Format: [MINESHAFT] <recipient> <- <sender> • <timestamp> • <topic[:mol-id]>
 //
 // Examples:
-//   - [GAS TOWN] excavation/crew/gus <- supervisor • 2025-12-30T15:42 • assigned:gt-abc12
-//   - [GAS TOWN] supervisor <- daemon • 2025-12-30T08:00 • patrol
-//   - [GAS TOWN] excavation/witness <- supervisor • 2025-12-30T14:00 • patrol
+//   - [MINESHAFT] mineshaft/crew/gus <- supervisor • 2025-12-30T15:42 • assigned:gt-abc12
+//   - [MINESHAFT] supervisor <- daemon • 2025-12-30T08:00 • patrol
+//   - [MINESHAFT] mineshaft/witness <- supervisor • 2025-12-30T14:00 • patrol
 func FormatStartupBeacon(cfg BeaconConfig) string {
 	// Use local time in compact format
 	timestamp := time.Now().Format("2006-01-02T15:04")
@@ -80,8 +80,8 @@ func FormatStartupBeacon(cfg BeaconConfig) string {
 		topic = "ready"
 	}
 
-	// Build the beacon: [GAS TOWN] recipient <- sender • timestamp • topic
-	beacon := fmt.Sprintf("[GAS TOWN] %s <- %s • %s • %s",
+	// Build the beacon: [MINESHAFT] recipient <- sender • timestamp • topic
+	beacon := fmt.Sprintf("[MINESHAFT] %s <- %s • %s • %s",
 		cfg.Recipient, cfg.Sender, timestamp, topic)
 
 	// For non-hook agents, add "Run gt prime" instruction since there's no
@@ -116,7 +116,7 @@ func FormatStartupBeacon(cfg BeaconConfig) string {
 
 // BuildStartupPrompt creates the CLI prompt for agent startup.
 //
-// GUPP (Excavation Site Universal Propulsion Principle) implementation:
+// GUPP (Mineshaft Universal Propulsion Principle) implementation:
 //   - Beacon identifies session for /resume predecessor discovery
 //   - Instructions tell agent to start working immediately
 //   - SessionStart hook runs `gt prime` which injects full context including

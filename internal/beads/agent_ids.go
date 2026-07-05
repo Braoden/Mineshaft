@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/constants"
 )
 
 // TownBeadsPrefix is the prefix used for town-level agent beads stored in ~/gt/.beads/.
@@ -117,7 +117,7 @@ func isNamedRole(s string) bool {
 // Agent IDs have the format: prefix-rig-role-name or prefix-role
 // The prefix is always the part before the first hyphen.
 // Examples:
-//   - "gt-excavation-miner-nux" -> "gt"
+//   - "gt-mineshaft-miner-nux" -> "gt"
 //   - "nx-nexus-miner-nux" -> "nx"
 //   - "gt-overseer" -> "gt"
 //   - "bd-beads-witness" -> "bd"
@@ -134,8 +134,8 @@ func ExtractAgentPrefix(id string) string {
 // Patterns:
 //   - Town-level: <prefix>-<role> (e.g., gt-overseer, bd-supervisor)
 //   - Town-level named: <prefix>-<role>-<name> (e.g., gt-dog-alpha)
-//   - Per-rig singleton: <prefix>-<rig>-<role> (e.g., gt-excavation-witness)
-//   - Per-rig named: <prefix>-<rig>-<role>-<name> (e.g., gt-excavation-miner-nux)
+//   - Per-rig singleton: <prefix>-<rig>-<role> (e.g., gt-mineshaft-witness)
+//   - Per-rig named: <prefix>-<rig>-<role>-<name> (e.g., gt-mineshaft-miner-nux)
 //
 // The prefix can be any rig's configured prefix (gt-, bd-, etc.).
 // Rig names may contain hyphens (e.g., my-project), so we parse by scanning
@@ -179,7 +179,7 @@ func ValidateAgentID(id string) error {
 	}
 
 	// Case 2: Two parts - could be town-level named (dog-alpha), rig-level singleton
-	// (excavation-witness), or collapsed named agent (miner-nux when prefix == rig)
+	// (mineshaft-witness), or collapsed named agent (miner-nux when prefix == rig)
 	if len(parts) == 2 {
 		// Check if first part is a town-level named role
 		if isTownLevelNamedRole(parts[0]) {
@@ -191,7 +191,7 @@ func ValidateAgentID(id string) error {
 		}
 		// Check if second part is a rig-level singleton role
 		if isRigLevelRole(parts[1]) {
-			return nil // Valid rig-level singleton: gt-excavation-witness
+			return nil // Valid rig-level singleton: gt-mineshaft-witness
 		}
 		// Check if second part is a named role (missing name)
 		if isNamedRole(parts[1]) {
@@ -283,10 +283,10 @@ func ValidateAgentID(id string) error {
 // Examples:
 //   - gt-overseer (town-level, no rig)
 //   - gt-supervisor (town-level, no rig)
-//   - gt-excavation-witness (rig-level singleton)
-//   - gt-excavation-refinery (rig-level singleton)
-//   - gt-excavation-crew-max (rig-level named agent)
-//   - gt-excavation-miner-Toast (rig-level named agent)
+//   - gt-mineshaft-witness (rig-level singleton)
+//   - gt-mineshaft-refinery (rig-level singleton)
+//   - gt-mineshaft-crew-max (rig-level named agent)
+//   - gt-mineshaft-miner-Toast (rig-level named agent)
 
 // AgentBeadIDWithPrefix generates an agent bead ID using the specified prefix.
 // The prefix should NOT include the hyphen (e.g., "gt", "bd", not "gt-", "bd-").
@@ -314,7 +314,7 @@ func AgentBeadIDWithPrefix(prefix, rig, role, name string) string {
 }
 
 // AgentBeadID generates the canonical agent bead ID using "gt" prefix.
-// For non-excavation rigs, use AgentBeadIDWithPrefix with the rig's configured prefix.
+// For non-mineshaft rigs, use AgentBeadIDWithPrefix with the rig's configured prefix.
 func AgentBeadID(rig, role, name string) string {
 	return AgentBeadIDWithPrefix("gt", rig, role, name)
 }
@@ -454,7 +454,7 @@ func ParseAgentBeadID(id string) (rig, role, name string, ok bool) {
 }
 
 // IsAgentSessionBead returns true if the bead ID represents an agent session molecule.
-// Agent session beads follow patterns like gt-overseer, bd-beads-witness, gt-excavation-crew-joe.
+// Agent session beads follow patterns like gt-overseer, bd-beads-witness, gt-mineshaft-crew-joe.
 // Supports any valid prefix (e.g., "gt-", "bd-"), not just "gt-".
 // These are used to track agent state and update frequently, which can create noise.
 func IsAgentSessionBead(beadID string) bool {

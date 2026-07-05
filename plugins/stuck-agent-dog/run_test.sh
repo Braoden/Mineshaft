@@ -235,8 +235,8 @@ setup_case() {
   local bin_dir="$TEST_TMP/bin"
 
   mkdir -p "$TEST_STATE/health" "$TEST_STATE/nohook" "$TEST_STATE/sessions" "$TEST_STATE/status" "$bin_dir"
-  mkdir -p "$GT_TOWN_ROOT/excavation/miners" "$GT_TOWN_ROOT/supervisor"
-  printf '{"rigs":{"excavation":{"beads":{"prefix":"gt"}}}}\n' > "$GT_TOWN_ROOT/rigs.json"
+  mkdir -p "$GT_TOWN_ROOT/mineshaft/miners" "$GT_TOWN_ROOT/supervisor"
+  printf '{"rigs":{"mineshaft":{"beads":{"prefix":"gt"}}}}\n' > "$GT_TOWN_ROOT/rigs.json"
   : > "$TEST_STATE/mail.log"
   : > "$TEST_STATE/kill.log"
   : > "$TEST_STATE/escalate.log"
@@ -255,7 +255,7 @@ add_miner() {
   local status="$2"
   local session="gt-$name"
 
-  mkdir -p "$GT_TOWN_ROOT/excavation/miners/$name"
+  mkdir -p "$GT_TOWN_ROOT/mineshaft/miners/$name"
   touch "$TEST_STATE/sessions/$session"
   printf '%s\n' "$status" > "$TEST_STATE/health/$session"
 }
@@ -298,7 +298,7 @@ test_dead_agent_restarts_one() {
   assert_line_count "$TEST_STATE/kill.log" 1 "dead agent: one session kill"
   assert_file_contains "$TEST_STATE/kill.log" "gt-alpha" "dead agent: killed target session"
   assert_line_count "$TEST_STATE/mail.log" 1 "dead agent: one restart mail"
-  assert_file_contains "$TEST_STATE/mail.log" "excavation/witness" "dead agent: mailed rig witness"
+  assert_file_contains "$TEST_STATE/mail.log" "mineshaft/witness" "dead agent: mailed rig witness"
   assert_file_empty "$TEST_STATE/escalate.log" "dead agent: no mass-death escalation"
 }
 
@@ -309,7 +309,7 @@ test_dead_session_restarts_one() {
 
   assert_file_empty "$TEST_STATE/kill.log" "dead session: no session kill"
   assert_line_count "$TEST_STATE/mail.log" 1 "dead session: one restart mail"
-  assert_file_contains "$TEST_STATE/mail.log" "RESTART_MINER: excavation/beta" "dead session: restart requested"
+  assert_file_contains "$TEST_STATE/mail.log" "RESTART_MINER: mineshaft/beta" "dead session: restart requested"
   assert_file_empty "$TEST_STATE/escalate.log" "dead session: no mass-death escalation"
 }
 

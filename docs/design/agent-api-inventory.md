@@ -327,8 +327,8 @@ context, checkpoint, startup directive.
 
 **Code**:
 - `internal/cmd/tap_guard.go` — `runTapGuardPRWorkflow()` (line ~34): blocks
-  `gh pr create`, `git checkout -b`, `git switch -c` in Excavation Site agent contexts;
-  `isExcavationAgentContext()` (line ~103) checks GT_* env vars and CWD paths
+  `gh pr create`, `git checkout -b`, `git switch -c` in Mineshaft agent contexts;
+  `isMineshaftAgentContext()` (line ~103) checks GT_* env vars and CWD paths
 - `internal/cmd/tap_guard_dangerous.go` — `runTapGuardDangerous()` (line ~66):
   blocks 5 patterns: `rm -rf /`, `git push --force`, `git push -f`,
   `git reset --hard`, `git clean -f`; `extractCommand()` (line ~104) parses
@@ -571,7 +571,7 @@ returns allow/deny with reason
 - `internal/cmd/seance.go` — `runSeance()` (line ~85): spawns
   `claude --fork-session --resume <id>` for predecessor recall
 - `internal/session/startup.go` — `FormatStartupBeacon()` (line ~69):
-  `[GAS TOWN] recipient <- sender • timestamp • topic` format
+  `[MINESHAFT] recipient <- sender • timestamp • topic` format
 
 **Flow**: GT→Agent. GT constructs resume command with session ID.
 
@@ -718,7 +718,7 @@ structured data; no need to scrape terminal
   `RecordMail()`, `RecordNudge()`, `RecordDone()`, `RecordDaemonRestart()`,
   `RecordFormulaInstantiate()`, `RecordMinecartCreate()`, `RecordPaneOutput()`,
   `RecordBDCall()`, `RecordPrimeContext()`
-- 17 OTel Int64Counter metrics (excavation.session.starts.total, etc.)
+- 17 OTel Int64Counter metrics (mineshaft.session.starts.total, etc.)
 - `internal/telemetry/subprocess.go` — `SetProcessOTELAttrs()`: propagates
   OTEL_RESOURCE_ATTRIBUTES to subprocesses
 

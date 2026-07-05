@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 // sessionChecker abstracts the tmux health-check methods needed by the

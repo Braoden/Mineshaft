@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var (
@@ -29,7 +29,7 @@ var changelogCmd = &cobra.Command{
 	Use:     "changelog",
 	GroupID: GroupWork,
 	Short:   "Show completed work across rigs",
-	Long: `Show a changelog of closed beads across all rigs in Excavation Site.
+	Long: `Show a changelog of closed beads across all rigs in Mineshaft.
 
 Filters out ephemeral/internal beads (wisps, patrols) to show only real work.
 
@@ -38,7 +38,7 @@ Examples:
   gt changelog --today    # Today's completions
   gt changelog --week     # This week's completions
   gt changelog --since 2026-03-10  # Since a specific date
-  gt changelog --rig excavation       # One rig only
+  gt changelog --rig mineshaft       # One rig only
   gt changelog --json              # JSON output`,
 	RunE: runChangelog,
 }
@@ -76,7 +76,7 @@ type closedBead struct {
 func runChangelog(_ *cobra.Command, _ []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	since, err := changelogSinceTime()

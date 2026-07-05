@@ -1,8 +1,8 @@
 description = """
-Self-test formula run by a miner to validate its own Excavation Site integration.
+Self-test formula run by a miner to validate its own Mineshaft integration.
 
-When slung to a rig, the miner verifies that it received correct Excavation Site
-context injection, has work on its hook, can use Excavation Site CLI tools, confirms
+When slung to a rig, the miner verifies that it received correct Mineshaft
+context injection, has work on its hook, can use Mineshaft CLI tools, confirms
 mail delivery by replying to the overseer, and executes a test task.
 
 ## Prerequisites (Overseer / Boss)
@@ -50,7 +50,7 @@ those up instead of the formula wisps.
 ```bash
 # Check what name will be allocated (or sling and note the name)
 # Then close any stale beads assigned to that miner:
-bd list --status=open --assignee=sfexcavation/miners/<name> 2>/dev/null
+bd list --status=open --assignee=sfmineshaft/miners/<name> 2>/dev/null
 # Close any that appear:
 bd close <stale-id> --reason "stale bead from previous miner session"
 ```
@@ -65,14 +65,14 @@ in dependency order.
 
 ```bash
 # 1. Sling the formula (this cooks it into an epic + child wisps automatically)
-gt sling agent-validation sfexcavation
+gt sling agent-validation sfmineshaft
 # Note the miner name from the output (e.g., "obsidian")
 
 # 2. Wait for miner to boot (~30s for pi, ~15s for claude)
 sleep 30
 
 # 3. Send the miner a test mail
-gt mail send sfexcavation/miners/<name> -s "VALIDATION: mail test" -m "Reply with your identity to confirm you received Excavation Site context."
+gt mail send sfmineshaft/miners/<name> -s "VALIDATION: mail test" -m "Reply with your identity to confirm you received Mineshaft context."
 
 # 4. Wait for the miner's reply (check inbox)
 #    The reply should contain: role, name, rig, agent runtime, hooked bead
@@ -83,7 +83,7 @@ gt mail read <reply-id>
 
 # 6. Wait for the miner to complete and hand off
 #    The miner will run gt done when finished. Check:
-gt miner status sfexcavation/<name>   # Should show "done" or session ended
+gt miner status sfmineshaft/<name>   # Should show "done" or session ended
 gt mail inbox                        # Look for handoff mail
 ```
 
@@ -97,16 +97,16 @@ gt mail inbox                        # Look for handoff mail
 ```bash
 # Set agent, then sling
 # In ~/gt/settings/config.json: "role_agents": {"miner": "pi"}
-gt sling agent-validation sfexcavation
+gt sling agent-validation sfmineshaft
 
 # Or for Claude (default):
 # "role_agents": {"miner": "opus-46"}
-gt sling agent-validation sfexcavation
+gt sling agent-validation sfmineshaft
 ```
 
 ## What it does
 
-1. **Context**: Verifies Excavation Site identity, role, and startup context are present
+1. **Context**: Verifies Mineshaft identity, role, and startup context are present
 2. **Lifecycle**: Checks tmux session for supervisor boot and witness nudge messages
 3. **Hook**: Confirms work is hooked and the bead is accessible
 4. **Tools**: Validates gt and bd CLI tools are functional
@@ -125,9 +125,9 @@ default = "Read the first 5 lines of any source file in this repo and report the
 
 [[steps]]
 id = "verify-context"
-title = "Verify Excavation Site context was injected"
+title = "Verify Mineshaft context was injected"
 description = """
-Check that Excavation Site context is present in your session. You should have received
+Check that Mineshaft context is present in your session. You should have received
 identity and role information during startup.
 
 **1. Check environment variables:**
@@ -144,7 +144,7 @@ At minimum, GT_ROLE should be set (typically "miner").
 Report the following from your injected context:
 - Your role (miner, crew, etc.)
 - The rig you're working in
-- The town name (Excavation Site)
+- The town name (Mineshaft)
 
 **3. Check that gt prime output was captured:**
 ```bash
@@ -153,20 +153,20 @@ gt prime 2>/dev/null | head -5
 
 Record pass/fail for each check.
 
-**Exit criteria:** Excavation Site context is confirmed present in your session."""
+**Exit criteria:** Mineshaft context is confirmed present in your session."""
 
 [[steps]]
 id = "verify-lifecycle"
 title = "Verify supervisor boot and witness nudge were received"
 needs = ["verify-context"]
 description = """
-Confirm that the Excavation Site lifecycle infrastructure (witness and supervisor) fired
+Confirm that the Mineshaft lifecycle infrastructure (witness and supervisor) fired
 correctly during your startup. You should have received these as messages in
 your session before you started working.
 
 **1. Witness nudge:**
 Check if you received a message from the witness during startup. It looks like:
-`[GAS TOWN] <rig>/miners/<name> <- witness • <timestamp> • assigned`
+`[MINESHAFT] <rig>/miners/<name> <- witness • <timestamp> • assigned`
 followed by `Run gt prime --hook and begin work on your hook.`
 
 Report whether you saw this witness nudge in your conversation. PASS if yes.
@@ -181,13 +181,13 @@ Report whether supervisor activity was visible. PASS if yes, SKIP if not seen
 **3. gt prime execution:**
 Confirm that `gt prime` was executed during your startup (either by you, by
 the witness nudge instruction, or by a startup hook). The output should have
-included your Excavation Site role and context.
+included your Mineshaft role and context.
 
 ```bash
 gt prime 2>/dev/null | head -3
 ```
 
-PASS if gt prime output includes your role and `[GAS TOWN]` header.
+PASS if gt prime output includes your role and `[MINESHAFT]` header.
 
 **Exit criteria:** Witness nudge confirmed received. Supervisor boot noted. gt prime ran."""
 
@@ -219,10 +219,10 @@ The hooked bead should be in_progress.
 
 [[steps]]
 id = "verify-tools"
-title = "Verify Excavation Site CLI tools work"
+title = "Verify Mineshaft CLI tools work"
 needs = ["verify-hook"]
 description = """
-Run basic Excavation Site commands to verify the CLI is functional.
+Run basic Mineshaft commands to verify the CLI is functional.
 
 **1. Check gt is available:**
 ```bash
@@ -282,10 +282,10 @@ gt mail read <mail-id>
 ```
 
 **4. Reply to the overseer confirming your identity and receipt:**
-Your reply MUST include identity details extracted from your injected Excavation Site prompt:
+Your reply MUST include identity details extracted from your injected Mineshaft prompt:
 - Your role (e.g., miner)
 - Your name (e.g., obsidian)
-- The rig you're in (e.g., sfexcavation)
+- The rig you're in (e.g., sfmineshaft)
 - The agent runtime you're using (e.g., Claude Opus 4.6, Pi/Gemini, OpenCode)
 - Your hooked bead ID
 
@@ -296,10 +296,10 @@ Name: <your miner name>
 Rig: <your rig>
 Agent: <your agent runtime/model>
 Hooked bead: <bead ID>
-I received your test mail and confirm my Excavation Site identity."
+I received your test mail and confirm my Mineshaft identity."
 ```
 
-This proves the agent actually received and understood its Excavation Site context,
+This proves the agent actually received and understood its Mineshaft context,
 not just that mail delivery works.
 
 **5. Mark the mail as read:**
@@ -321,7 +321,7 @@ Execute the test task to prove agent responsiveness.
 **Task:** {{task}}
 
 Execute the task above and record the output. This proves the agent can
-receive instructions and produce results within the Excavation Site framework.
+receive instructions and produce results within the Mineshaft framework.
 
 **Exit criteria:** Test task executed, output captured."""
 
@@ -336,7 +336,7 @@ Print a summary of all validation checks and complete the bead.
 ```
 === Agent Validation Self-Test ===
 
-Excavation Site context:     [PASS/FAIL]
+Mineshaft context:     [PASS/FAIL]
   - Role awareness:   [PASS/FAIL]
   - Rig identity:     [PASS/FAIL]
   - Startup context:  [PASS/FAIL]

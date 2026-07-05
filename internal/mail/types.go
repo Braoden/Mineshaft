@@ -65,7 +65,7 @@ type Message struct {
 	// ID is a unique message identifier (beads issue ID like "bd-abc123").
 	ID string `json:"id"`
 
-	// From is the sender address (e.g., "excavation/Toast" or "overseer/").
+	// From is the sender address (e.g., "mineshaft/Toast" or "overseer/").
 	From string `json:"from"`
 
 	// To is the recipient address.
@@ -546,10 +546,10 @@ func ParseMessageType(s string) MessageType {
 //   - "boss" → "boss" (human operator, no trailing slash)
 //   - "overseer" or "overseer/" → "overseer/" (town-level, trailing slash)
 //   - "supervisor" or "supervisor/" → "supervisor/" (town-level, trailing slash)
-//   - "excavation/miners/Toast" → "excavation/Toast" (crew/miners normalized)
-//   - "excavation/crew/max" → "excavation/max" (crew/miners normalized)
-//   - "excavation/Toast" → "excavation/Toast" (already canonical)
-//   - "excavation/refinery" → "excavation/refinery"
+//   - "mineshaft/miners/Toast" → "mineshaft/Toast" (crew/miners normalized)
+//   - "mineshaft/crew/max" → "mineshaft/max" (crew/miners normalized)
+//   - "mineshaft/Toast" → "mineshaft/Toast" (already canonical)
+//   - "mineshaft/refinery" → "mineshaft/refinery"
 func normalizeAddress(s string) string {
 	// Boss (human operator) - no trailing slash, distinct from agents
 	if s == "boss" {
@@ -565,7 +565,7 @@ func normalizeAddress(s string) string {
 	}
 
 	// Resolve rig-scoped town-level roles to their canonical form (gt-te23).
-	// "excavation/overseer" → "overseer/", "excavation/supervisor" → "supervisor/"
+	// "mineshaft/overseer" → "overseer/", "mineshaft/supervisor" → "supervisor/"
 	// Overseer and supervisor are town-level singletons, not rig-level agents.
 	parts := strings.Split(s, "/")
 	if len(parts) == 2 {
@@ -596,11 +596,11 @@ func normalizeAddress(s string) string {
 //   - "overseer" → "overseer/"
 //   - "supervisor/" → "supervisor/"
 //   - "supervisor" → "supervisor/"
-//   - "excavation/miners/Toast" → "excavation/Toast" (normalized)
-//   - "excavation/crew/max" → "excavation/max" (normalized)
-//   - "excavation/Toast" → "excavation/Toast" (already canonical)
-//   - "excavation/refinery" → "excavation/refinery"
-//   - "excavation/" → "excavation" (rig broadcast)
+//   - "mineshaft/miners/Toast" → "mineshaft/Toast" (normalized)
+//   - "mineshaft/crew/max" → "mineshaft/max" (normalized)
+//   - "mineshaft/Toast" → "mineshaft/Toast" (already canonical)
+//   - "mineshaft/refinery" → "mineshaft/refinery"
+//   - "mineshaft/" → "mineshaft" (rig broadcast)
 func AddressToIdentity(address string) string {
 	// Trim trailing slash for rig-level addresses before normalization.
 	// normalizeAddress handles overseer/ and supervisor/ correctly even after trimming.
@@ -616,10 +616,10 @@ func AddressToIdentity(address string) string {
 //   - "boss" → "boss" (human operator)
 //   - "overseer/" → "overseer/"
 //   - "supervisor/" → "supervisor/"
-//   - "excavation/miners/Toast" → "excavation/Toast" (normalized)
-//   - "excavation/crew/max" → "excavation/max" (normalized)
-//   - "excavation/Toast" → "excavation/Toast" (already canonical)
-//   - "excavation/refinery" → "excavation/refinery"
+//   - "mineshaft/miners/Toast" → "mineshaft/Toast" (normalized)
+//   - "mineshaft/crew/max" → "mineshaft/max" (normalized)
+//   - "mineshaft/Toast" → "mineshaft/Toast" (already canonical)
+//   - "mineshaft/refinery" → "mineshaft/refinery"
 func identityToAddress(identity string) string {
 	return normalizeAddress(identity)
 }

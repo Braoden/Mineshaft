@@ -7,12 +7,12 @@ import (
 	"strings"
 	"testing"
 
-	worktreeintegrity "github.com/steveyegge/excavation/internal/worktree"
+	worktreeintegrity "github.com/steveyegge/mineshaft/internal/worktree"
 )
 
 func TestEnsureRoleWorktreeIntegrityRequiresMinerMetadata(t *testing.T) {
 	townRoot := t.TempDir()
-	cwd := filepath.Join(townRoot, "excavation", "miners", "deathclaw", "excavation")
+	cwd := filepath.Join(townRoot, "mineshaft", "miners", "deathclaw", "mineshaft")
 	if err := os.MkdirAll(cwd, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -56,7 +56,7 @@ func TestRunMoleculeStatusExplicitTargetValidatesCallerWorktree(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, "overseer"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	cwd := filepath.Join(townRoot, "excavation", "miners", "deathclaw")
+	cwd := filepath.Join(townRoot, "mineshaft", "miners", "deathclaw")
 	if err := os.MkdirAll(cwd, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -72,7 +72,7 @@ func TestRunMoleculeStatusExplicitTargetValidatesCallerWorktree(t *testing.T) {
 		_ = os.Chdir(oldWD)
 	})
 
-	err = runMoleculeStatus(nil, []string{"excavation/miners/toast"})
+	err = runMoleculeStatus(nil, []string{"mineshaft/miners/toast"})
 	if !errors.Is(err, worktreeintegrity.ErrIntegrityViolation) {
 		t.Fatalf("runMoleculeStatus() error = %v, want ErrIntegrityViolation", err)
 	}

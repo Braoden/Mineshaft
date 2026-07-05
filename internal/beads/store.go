@@ -79,7 +79,7 @@ func storeCtx() (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), 30*time.Second)
 }
 
-// sdkIssueToIssue converts a beadsdk Issue (types.Issue) to the excavation
+// sdkIssueToIssue converts a beadsdk Issue (types.Issue) to the mineshaft
 // beads.Issue type used throughout the gt codebase. This handles the type
 // differences between the two representations:
 //   - time.Time → string (RFC3339)
@@ -189,7 +189,7 @@ func sdkDependencyMetadataToIssueDeps(deps []*beadsdk.IssueWithDependencyMetadat
 	return issueDeps
 }
 
-// sdkIssuesToIssues converts a slice of SDK issues to excavation issues.
+// sdkIssuesToIssues converts a slice of SDK issues to mineshaft issues.
 func sdkIssuesToIssues(sdkIssues []*beadsdk.Issue) []*Issue {
 	if sdkIssues == nil {
 		return nil

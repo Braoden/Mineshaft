@@ -64,7 +64,7 @@ All implementation stories in this plan must pass these quality gates:
 
 ### US-001: Subscription-Based Access Configuration
 
-**Description**: As a Excavation Site operator, I want to configure Claude Code subscription so that it is automatically preferred over API keys due to cost reasons.
+**Description**: As a Mineshaft operator, I want to configure Claude Code subscription so that it is automatically preferred over API keys due to cost reasons.
 
 **Acceptance Criteria**:
 - [ ] Environment variable `CLAUDE_CODE_SUBSCRIPTION=active` enables subscription detection
@@ -259,7 +259,7 @@ type RoutingDecision struct {
     SWEScore     float64
 
     // Session resolution (Phase 2) — nil when no live session found
-    SessionID    string   // tmux session name, e.g. "gt-excavation-miner-Toast"
+    SessionID    string   // tmux session name, e.g. "gt-mineshaft-miner-Toast"
     AgentPreset  string   // resolved GT_AGENT value, e.g. "claude", "gemini"
 }
 

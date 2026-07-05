@@ -9,10 +9,10 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // Environment variables for role detection
@@ -90,11 +90,11 @@ This is useful for debugging role detection issues.`,
 var roleListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all known roles",
-	Long: `List all known Excavation Site agent roles and their descriptions.
+	Long: `List all known Mineshaft agent roles and their descriptions.
 
 Roles include overseer, supervisor, witness, refinery, miner, and crew.
 Each role has a specific scope and responsibilities within the
-Excavation Site multi-agent architecture.`,
+Mineshaft multi-agent architecture.`,
 	RunE: runRoleList,
 }
 
@@ -162,7 +162,7 @@ func GetRole() (RoleInfo, error) {
 		return RoleInfo{}, fmt.Errorf("finding workspace: %w", err)
 	}
 	if townRoot == "" {
-		return RoleInfo{}, fmt.Errorf("not in a Excavation Site workspace")
+		return RoleInfo{}, fmt.Errorf("not in a Mineshaft workspace")
 	}
 
 	return GetRoleWithContext(cwd, townRoot)
@@ -185,7 +185,7 @@ func GetRoleWithContext(cwd, townRoot string) (RoleInfo, error) {
 
 	// Determine authoritative role
 	if envRole != "" {
-		// Parse env role - it might be simple ("overseer") or compound ("excavation/witness")
+		// Parse env role - it might be simple ("overseer") or compound ("mineshaft/witness")
 		parsedRole, rig, miner := parseRoleString(envRole)
 		info.Role = parsedRole
 		info.Rig = rig
@@ -335,7 +335,7 @@ func detectRole(cwd, townRoot string) RoleInfo {
 	return ctx
 }
 
-// parseRoleString parses a role string like "overseer", "excavation/witness", or "excavation/miners/alpha".
+// parseRoleString parses a role string like "overseer", "mineshaft/witness", or "mineshaft/miners/alpha".
 func parseRoleString(s string) (Role, string, string) {
 	s = strings.TrimSpace(s)
 
@@ -397,8 +397,8 @@ func parseRoleString(s string) (Role, string, string) {
 // Format matches beads created_by convention:
 //   - Simple roles: "overseer", "supervisor"
 //   - Dog roles: "supervisor-boot" (hyphenated, matching BD_ACTOR)
-//   - Rig-specific: "excavation/witness", "excavation/refinery"
-//   - Workers: "excavation/crew/max", "excavation/miners/Toast"
+//   - Rig-specific: "mineshaft/witness", "mineshaft/refinery"
+//   - Workers: "mineshaft/crew/max", "mineshaft/miners/Toast"
 func (info RoleInfo) ActorString() string {
 	switch info.Role {
 	case RoleOverseer:
@@ -518,7 +518,7 @@ func runRoleHome(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("finding workspace: %w", err)
 	}
 	if townRoot == "" {
-		return fmt.Errorf("not in a Excavation Site workspace")
+		return fmt.Errorf("not in a Mineshaft workspace")
 	}
 
 	// Validate flag combinations: --miner requires --rig to prevent strange merges
@@ -571,7 +571,7 @@ func runRoleDetect(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("finding workspace: %w", err)
 	}
 	if townRoot == "" {
-		return fmt.Errorf("not in a Excavation Site workspace")
+		return fmt.Errorf("not in a Mineshaft workspace")
 	}
 
 	ctx := detectRole(cwd, townRoot)
@@ -633,7 +633,7 @@ func runRoleEnv(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("finding workspace: %w", err)
 	}
 	if townRoot == "" {
-		return fmt.Errorf("not in a Excavation Site workspace")
+		return fmt.Errorf("not in a Mineshaft workspace")
 	}
 
 	// Get current role (read-only - from env vars or cwd)

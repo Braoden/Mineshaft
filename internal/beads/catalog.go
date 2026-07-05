@@ -41,8 +41,8 @@ func NewMoleculeCatalog() *MoleculeCatalog {
 
 // LoadCatalog creates a catalog with all molecule sources loaded.
 // Parameters:
-//   - townRoot: Path to the Excavation Site root (e.g., ~/gt). Empty to skip town-level.
-//   - rigPath: Path to the rig directory (e.g., ~/gt/excavation). Empty to skip rig-level.
+//   - townRoot: Path to the Mineshaft root (e.g., ~/gt). Empty to skip town-level.
+//   - rigPath: Path to the rig directory (e.g., ~/gt/mineshaft). Empty to skip rig-level.
 //   - projectPath: Path to the project directory. Empty to skip project-level.
 //
 // Molecules are loaded from town, rig, and project levels (no builtin molecules).

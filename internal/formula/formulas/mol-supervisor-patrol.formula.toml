@@ -215,12 +215,12 @@ gt supervisor cleanup-orphans
 This command:
 1. Lists all claude/codex processes with `ps -eo pid,tty,comm`
 2. Filters for TTY = "?" (no controlling terminal)
-3. Resolves each candidate's Excavation Site workspace root (shown as `town=` in output)
+3. Resolves each candidate's Mineshaft workspace root (shown as `town=` in output)
 4. Sends SIGTERM to each orphaned process
 5. Reports how many were killed, with their town affiliation
 
 **Multi-town awareness:**
-Multiple Excavation Site instances may share the same machine, each with its own tmux
+Multiple Mineshaft instances may share the same machine, each with its own tmux
 socket and agent processes. `ps` output shows Claude processes from ALL towns,
 but each town's supervisor should only clean up processes belonging to its own town.
 
@@ -515,7 +515,7 @@ gt mail send overseer/ -s "Minecart complete: <minecart-title>" \\
 When a cross-rig dependency resolves, notify the affected rig:
 ```bash
 # Issue bd-xxx closed, unblocking gt-yyy
-gt mail send excavation/witness -s "Dependency resolved: <bd-xxx>" \\
+gt mail send mineshaft/witness -s "Dependency resolved: <bd-xxx>" \\
   -m "External dependency bd-xxx has closed.
       Unblocked: gt-yyy (<title>)
       This issue may now proceed."

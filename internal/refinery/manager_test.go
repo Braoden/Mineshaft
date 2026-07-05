@@ -10,18 +10,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/testutil"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/testutil"
 )
 
 func setupTestRegistry(t *testing.T) {
 	t.Helper()
-	// Use a prefix that won't collide with real excavation sessions.
+	// Use a prefix that won't collide with real mineshaft sessions.
 	// The "tr" prefix conflicts with actual rigs running on the host
 	// (e.g., tr-refinery, tr-witness), causing tests that assert
-	// "no session exists" to fail in excavation workspaces.
+	// "no session exists" to fail in mineshaft workspaces.
 	reg := session.NewPrefixRegistry()
 	reg.Register("xut", "testrig")
 	old := session.DefaultRegistry()

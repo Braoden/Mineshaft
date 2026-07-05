@@ -10,15 +10,15 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/lock"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/lock"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
-// AgentType represents the type of Excavation Site agent.
+// AgentType represents the type of Mineshaft agent.
 type AgentType int
 
 const (
@@ -76,8 +76,8 @@ var agentsCmd = &cobra.Command{
 	Use:     "agents",
 	Aliases: []string{"ag"},
 	GroupID: GroupAgents,
-	Short:   "List Excavation Site agent sessions",
-	Long: `List Excavation Site agent sessions to stdout.
+	Short:   "List Mineshaft agent sessions",
+	Long: `List Mineshaft agent sessions to stdout.
 
 Shows Overseer, Supervisor, Witnesses, Refineries, and Crew workers.
 Miners are hidden (use 'gt miner list' to see them).
@@ -96,7 +96,7 @@ var agentsListCmd = &cobra.Command{
 var agentsMenuCmd = &cobra.Command{
 	Use:   "menu",
 	Short: "Interactive popup menu for session switching",
-	Long:  `Display a tmux popup menu of Excavation Site agent sessions for quick switching.`,
+	Long:  `Display a tmux popup menu of Mineshaft agent sessions for quick switching.`,
 	RunE:  runAgents,
 }
 
@@ -181,7 +181,7 @@ func categorizeSession(name string) *AgentSession {
 	return sess
 }
 
-// getAgentSessions returns all categorized Excavation Site sessions from the town socket.
+// getAgentSessions returns all categorized Mineshaft sessions from the town socket.
 func getAgentSessions(includeMiners bool) ([]*AgentSession, error) {
 	t := tmux.NewTmux()
 	sessions, err := t.ListSessions()
@@ -459,12 +459,12 @@ func runAgents(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	// Group display titles: town socket -> "Excavation Site", default -> "Personal",
+	// Group display titles: town socket -> "Mineshaft", default -> "Personal",
 	// testing -> "Testing".
 	groupTitle := func(socket string) string {
 		switch {
 		case socket == tmux.GetDefaultSocket():
-			return "⚙️  Excavation Site"
+			return "⚙️  Mineshaft"
 		case socket == "default":
 			return "Personal"
 		case socket == "testing":
@@ -601,7 +601,7 @@ type CollisionIssue struct {
 func runAgentsCheck(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	report, err := buildCollisionReport(townRoot)
@@ -642,7 +642,7 @@ func runAgentsCheck(cmd *cobra.Command, args []string) error {
 func runAgentsFix(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Clean stale locks
@@ -693,7 +693,7 @@ func buildCollisionReport(townRoot string) (*CollisionReport, error) {
 		sessions = []string{} // Continue even if tmux not running
 	}
 
-	// Filter to Excavation Site sessions
+	// Filter to Mineshaft sessions
 	var gtSessions []string
 	for _, s := range sessions {
 		if session.IsKnownSession(s) {

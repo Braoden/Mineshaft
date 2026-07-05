@@ -14,8 +14,8 @@ import (
 	"github.com/gofrs/flock"
 	beadsdk "github.com/steveyegge/beads"
 
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/telemetry"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/telemetry"
 )
 
 // lockAgentBead acquires an exclusive file lock for a specific agent bead ID.
@@ -203,7 +203,7 @@ func ParseAgentFields(description string) *AgentFields {
 }
 
 // CreateAgentBead creates an agent bead for tracking agent lifecycle.
-// The ID format is: <prefix>-<rig>-<role>-<name> (e.g., gt-excavation-miner-Toast)
+// The ID format is: <prefix>-<rig>-<role>-<name> (e.g., gt-mineshaft-miner-Toast)
 // Use AgentBeadID() helper to generate correct IDs.
 // The created_by field is populated from BD_ACTOR env var for provenance tracking.
 //
@@ -437,7 +437,7 @@ func (b *Beads) ResetAgentBeadForReuse(id, reason string) error {
 
 // UpdateAgentState updates the agent_state field in an agent bead.
 // bd >= 0.62.0 no longer provides a supported `bd agent state` writer, so
-// Excavation writes agent_state through the description field and readers mirror
+// Mineshaft writes agent_state through the description field and readers mirror
 // that contract with fallback to the legacy structured column via ResolveAgentState.
 //
 // Resolves the concrete target DB first so the update hits the correct database
@@ -741,7 +741,7 @@ func (b *Beads) ListAgentBeadsFromWisps() (map[string]*Issue, error) {
 
 // isAgentBeadByID detects agent beads by their ID naming convention.
 // Agent bead IDs follow two patterns:
-//   - Full form (prefix != rig): prefix-rig-role[-name] (e.g., gt-excavation-witness)
+//   - Full form (prefix != rig): prefix-rig-role[-name] (e.g., gt-mineshaft-witness)
 //   - Collapsed form (prefix == rig): prefix-role[-name] (e.g., bcc-witness)
 //
 // where role is one of: witness, refinery, crew, miner, supervisor, overseer.

@@ -8,11 +8,11 @@ import (
 
 	"github.com/muesli/termenv"
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var (
@@ -27,7 +27,7 @@ var themeCmd = &cobra.Command{
 	Use:     "theme [name]",
 	GroupID: GroupConfig,
 	Short:   "View or set tmux theme for the current rig",
-	Long: `Manage tmux status bar themes for Excavation Site sessions.
+	Long: `Manage tmux status bar themes for Mineshaft sessions.
 
 Without arguments, shows the current theme assignment.
 With a name argument, sets the theme for this rig.
@@ -44,7 +44,7 @@ Examples:
 var themeApplyCmd = &cobra.Command{
 	Use:   "apply",
 	Short: "Apply theme to running sessions",
-	Long: `Apply theme to running Excavation Site sessions.
+	Long: `Apply theme to running Mineshaft sessions.
 
 By default, only applies to sessions in the current rig.
 Use --all to apply to sessions across all rigs.`,
@@ -54,7 +54,7 @@ Use --all to apply to sessions across all rigs.`,
 var themeCLICmd = &cobra.Command{
 	Use:   "cli [mode]",
 	Short: "View or set CLI color scheme (dark/light/auto)",
-	Long: `Manage CLI output color scheme for Excavation Site commands.
+	Long: `Manage CLI output color scheme for Mineshaft commands.
 
 Without arguments, shows the current CLI theme mode and detection.
 With a mode argument, sets the CLI theme preference.
@@ -211,7 +211,7 @@ func runThemeApply(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		if err := t.ConfigureExcavationSession(sess, theme, rig, worker, role); err != nil {
+		if err := t.ConfigureMineshaftSession(sess, theme, rig, worker, role); err != nil {
 			fmt.Printf("  %s: failed (%v)\n", sess, err)
 			continue
 		}
@@ -316,7 +316,7 @@ func saveRigTheme(rigName, themeName string) error {
 		return fmt.Errorf("finding workspace: %w", err)
 	}
 	if townRoot == "" {
-		return fmt.Errorf("not in a Excavation Site workspace")
+		return fmt.Errorf("not in a Mineshaft workspace")
 	}
 
 	settingsPath := filepath.Join(townRoot, rigName, "settings", "config.json")
@@ -361,7 +361,7 @@ func runThemeCLI(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("finding workspace: %w", err)
 	}
 	if townRoot == "" {
-		return fmt.Errorf("not in a Excavation Site workspace")
+		return fmt.Errorf("not in a Mineshaft workspace")
 	}
 
 	settingsPath := config.TownSettingsPath(townRoot)

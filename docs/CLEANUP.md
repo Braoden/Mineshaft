@@ -1,6 +1,6 @@
-# Excavation/Beads Cleanup Commands Reference
+# Mineshaft/Beads Cleanup Commands Reference
 
-A comprehensive catalog of all cleanup-related commands in the excavation/beads ecosystem, organized by scope and severity.
+A comprehensive catalog of all cleanup-related commands in the mineshaft/beads ecosystem, organized by scope and severity.
 
 ---
 
@@ -130,7 +130,7 @@ A comprehensive catalog of all cleanup-related commands in the excavation/beads 
 
 | Command | What it does |
 |---------|-------------|
-| `gt disable --clean` | Disables excavation + removes shell integration |
+| `gt disable --clean` | Disables mineshaft + removes shell integration |
 | `gt shell remove` | Removes shell integration from RC files |
 | `gt config agent remove <name>` | Removes custom agent definition |
 | `gt uninstall` | Full removal: shell integration, wrapper scripts, state/config/cache dirs |

@@ -1,6 +1,6 @@
 # Molecules
 
-Molecules are workflow templates that coordinate multi-step work in Excavation Site.
+Molecules are workflow templates that coordinate multi-step work in Mineshaft.
 
 ## Molecule Lifecycle
 

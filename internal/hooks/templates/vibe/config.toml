@@ -1,5 +1,5 @@
-# Excavation Site Vibe Configuration
-# Provisioned by Excavation Site for agent integration
+# Mineshaft Vibe Configuration
+# Provisioned by Mineshaft for agent integration
 
 # Model configuration
 active_model = "devstral-2"

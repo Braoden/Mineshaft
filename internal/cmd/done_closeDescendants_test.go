@@ -31,11 +31,11 @@ func TestDoneCloseDescendantsWithChildren(t *testing.T) {
 	}
 
 	// Create routes for rig lookup
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation"), 0755); err != nil {
-		t.Fatalf("mkdir excavation: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft"), 0755); err != nil {
+		t.Fatalf("mkdir mineshaft: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"excavation"}`,
+		`{"prefix":"gt-","path":"mineshaft"}`,
 		"",
 	}, "\n")
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routes), 0644); err != nil {
@@ -61,8 +61,8 @@ case "$cmd" in
   show)
     beadID="$1"
     case "$beadID" in
-      gt-excavation-miner-nux)
-        echo '[{"id":"gt-excavation-miner-nux","title":"Miner nux","status":"open","hook_bead":"gt-base-123","agent_state":"working"}]'
+      gt-mineshaft-miner-nux)
+        echo '[{"id":"gt-mineshaft-miner-nux","title":"Miner nux","status":"open","hook_bead":"gt-base-123","agent_state":"working"}]'
         ;;
       gt-base-123)
         echo '[{"id":"gt-base-123","title":"Base bead","status":"hooked","description":"attached_molecule: gt-wisp-xyz"}]'
@@ -101,7 +101,7 @@ exit 0
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv("GT_ROLE", "miner")
-	t.Setenv("GT_RIG", "excavation")
+	t.Setenv("GT_RIG", "mineshaft")
 	t.Setenv("GT_MINER", "nux")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("TMUX_PANE", "")
@@ -111,12 +111,12 @@ exit 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "excavation")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "mineshaft")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
 	// Call updateAgentStateOnDone directly
-	updateAgentStateOnDone(filepath.Join(townRoot, "excavation"), townRoot, ExitCompleted, "gt-base-123")
+	updateAgentStateOnDone(filepath.Join(townRoot, "mineshaft"), townRoot, ExitCompleted, "gt-base-123")
 
 	// Verify close calls
 	closesBytes, err := os.ReadFile(closesLog)
@@ -212,11 +212,11 @@ func TestDoneCloseDescendantsNoChildren(t *testing.T) {
 		t.Fatalf("mkdir .beads/locks: %v", err)
 	}
 
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation"), 0755); err != nil {
-		t.Fatalf("mkdir excavation: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft"), 0755); err != nil {
+		t.Fatalf("mkdir mineshaft: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"excavation"}`,
+		`{"prefix":"gt-","path":"mineshaft"}`,
 		"",
 	}, "\n")
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routes), 0644); err != nil {
@@ -238,8 +238,8 @@ case "$cmd" in
   show)
     beadID="$1"
     case "$beadID" in
-      gt-excavation-miner-nux)
-        echo '[{"id":"gt-excavation-miner-nux","title":"Miner nux","status":"open","hook_bead":"gt-base-123","agent_state":"working"}]'
+      gt-mineshaft-miner-nux)
+        echo '[{"id":"gt-mineshaft-miner-nux","title":"Miner nux","status":"open","hook_bead":"gt-base-123","agent_state":"working"}]'
         ;;
       gt-base-123)
         echo '[{"id":"gt-base-123","title":"Base bead","status":"hooked","description":"attached_molecule: gt-wisp-xyz"}]'
@@ -274,7 +274,7 @@ exit 0
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv("GT_ROLE", "miner")
-	t.Setenv("GT_RIG", "excavation")
+	t.Setenv("GT_RIG", "mineshaft")
 	t.Setenv("GT_MINER", "nux")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("TMUX_PANE", "")
@@ -284,12 +284,12 @@ exit 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "excavation")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "mineshaft")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
 	// Should not error even though molecule has no children
-	updateAgentStateOnDone(filepath.Join(townRoot, "excavation"), townRoot, ExitCompleted, "gt-base-123")
+	updateAgentStateOnDone(filepath.Join(townRoot, "mineshaft"), townRoot, ExitCompleted, "gt-base-123")
 
 	// Verify close calls
 	closesBytes, err := os.ReadFile(closesLog)
@@ -342,11 +342,11 @@ func TestDoneCloseDescendantsSomeAlreadyClosed(t *testing.T) {
 		t.Fatalf("mkdir .beads/locks: %v", err)
 	}
 
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation"), 0755); err != nil {
-		t.Fatalf("mkdir excavation: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft"), 0755); err != nil {
+		t.Fatalf("mkdir mineshaft: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"excavation"}`,
+		`{"prefix":"gt-","path":"mineshaft"}`,
 		"",
 	}, "\n")
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routes), 0644); err != nil {
@@ -368,8 +368,8 @@ case "$cmd" in
   show)
     beadID="$1"
     case "$beadID" in
-      gt-excavation-miner-nux)
-        echo '[{"id":"gt-excavation-miner-nux","title":"Miner nux","status":"open","hook_bead":"gt-base-123","agent_state":"working"}]'
+      gt-mineshaft-miner-nux)
+        echo '[{"id":"gt-mineshaft-miner-nux","title":"Miner nux","status":"open","hook_bead":"gt-base-123","agent_state":"working"}]'
         ;;
       gt-base-123)
         echo '[{"id":"gt-base-123","title":"Base bead","status":"hooked","description":"attached_molecule: gt-wisp-xyz"}]'
@@ -408,7 +408,7 @@ exit 0
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv("GT_ROLE", "miner")
-	t.Setenv("GT_RIG", "excavation")
+	t.Setenv("GT_RIG", "mineshaft")
 	t.Setenv("GT_MINER", "nux")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("TMUX_PANE", "")
@@ -418,11 +418,11 @@ exit 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "excavation")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "mineshaft")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
-	updateAgentStateOnDone(filepath.Join(townRoot, "excavation"), townRoot, ExitCompleted, "gt-base-123")
+	updateAgentStateOnDone(filepath.Join(townRoot, "mineshaft"), townRoot, ExitCompleted, "gt-base-123")
 
 	// Verify close calls
 	closesBytes, err := os.ReadFile(closesLog)
@@ -490,11 +490,11 @@ func TestDoneCloseDescendantsDeeplyNested(t *testing.T) {
 		t.Fatalf("mkdir .beads/locks: %v", err)
 	}
 
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation"), 0755); err != nil {
-		t.Fatalf("mkdir excavation: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft"), 0755); err != nil {
+		t.Fatalf("mkdir mineshaft: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"excavation"}`,
+		`{"prefix":"gt-","path":"mineshaft"}`,
 		"",
 	}, "\n")
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routes), 0644); err != nil {
@@ -516,8 +516,8 @@ case "$cmd" in
   show)
     beadID="$1"
     case "$beadID" in
-      gt-excavation-miner-nux)
-        echo '[{"id":"gt-excavation-miner-nux","title":"Miner nux","status":"open","hook_bead":"gt-base-123","agent_state":"working"}]'
+      gt-mineshaft-miner-nux)
+        echo '[{"id":"gt-mineshaft-miner-nux","title":"Miner nux","status":"open","hook_bead":"gt-base-123","agent_state":"working"}]'
         ;;
       gt-base-123)
         echo '[{"id":"gt-base-123","title":"Base bead","status":"hooked","description":"attached_molecule: gt-wisp-xyz"}]'
@@ -560,7 +560,7 @@ exit 0
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv("GT_ROLE", "miner")
-	t.Setenv("GT_RIG", "excavation")
+	t.Setenv("GT_RIG", "mineshaft")
 	t.Setenv("GT_MINER", "nux")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("TMUX_PANE", "")
@@ -570,11 +570,11 @@ exit 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "excavation")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "mineshaft")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
-	updateAgentStateOnDone(filepath.Join(townRoot, "excavation"), townRoot, ExitCompleted, "gt-base-123")
+	updateAgentStateOnDone(filepath.Join(townRoot, "mineshaft"), townRoot, ExitCompleted, "gt-base-123")
 
 	// Verify close calls
 	closesBytes, err := os.ReadFile(closesLog)
@@ -668,11 +668,11 @@ func TestDoneCloseDescendantsNoMoleculeAttached(t *testing.T) {
 		t.Fatalf("mkdir .beads/locks: %v", err)
 	}
 
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation"), 0755); err != nil {
-		t.Fatalf("mkdir excavation: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft"), 0755); err != nil {
+		t.Fatalf("mkdir mineshaft: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"excavation"}`,
+		`{"prefix":"gt-","path":"mineshaft"}`,
 		"",
 	}, "\n")
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routes), 0644); err != nil {
@@ -694,8 +694,8 @@ case "$cmd" in
   show)
     beadID="$1"
     case "$beadID" in
-      gt-excavation-miner-nux)
-        echo '[{"id":"gt-excavation-miner-nux","title":"Miner nux","status":"open","hook_bead":"gt-base-123","agent_state":"working"}]'
+      gt-mineshaft-miner-nux)
+        echo '[{"id":"gt-mineshaft-miner-nux","title":"Miner nux","status":"open","hook_bead":"gt-base-123","agent_state":"working"}]'
         ;;
       gt-base-123)
         # Hooked bead with NO attached_molecule
@@ -727,7 +727,7 @@ exit 0
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv("GT_ROLE", "miner")
-	t.Setenv("GT_RIG", "excavation")
+	t.Setenv("GT_RIG", "mineshaft")
 	t.Setenv("GT_MINER", "nux")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("TMUX_PANE", "")
@@ -737,12 +737,12 @@ exit 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "excavation")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "mineshaft")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
 	// Should not error even though there's no attached molecule
-	updateAgentStateOnDone(filepath.Join(townRoot, "excavation"), townRoot, ExitCompleted, "gt-base-123")
+	updateAgentStateOnDone(filepath.Join(townRoot, "mineshaft"), townRoot, ExitCompleted, "gt-base-123")
 
 	// Verify close calls - should only close the hooked base bead (no molecule)
 	closesBytes, err := os.ReadFile(closesLog)
@@ -788,11 +788,11 @@ func TestCloseDescendantsHandlesListError(t *testing.T) {
 		t.Fatalf("mkdir .beads/locks: %v", err)
 	}
 
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation"), 0755); err != nil {
-		t.Fatalf("mkdir excavation: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft"), 0755); err != nil {
+		t.Fatalf("mkdir mineshaft: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"excavation"}`,
+		`{"prefix":"gt-","path":"mineshaft"}`,
 		"",
 	}, "\n")
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routes), 0644); err != nil {
@@ -814,8 +814,8 @@ case "$cmd" in
   show)
     beadID="$1"
     case "$beadID" in
-      gt-excavation-miner-nux)
-        echo '[{"id":"gt-excavation-miner-nux","title":"Miner nux","status":"open","hook_bead":"gt-base-123","agent_state":"working"}]'
+      gt-mineshaft-miner-nux)
+        echo '[{"id":"gt-mineshaft-miner-nux","title":"Miner nux","status":"open","hook_bead":"gt-base-123","agent_state":"working"}]'
         ;;
       gt-base-123)
         echo '[{"id":"gt-base-123","title":"Base bead","status":"hooked","description":"attached_molecule: gt-wisp-xyz"}]'
@@ -851,7 +851,7 @@ exit 0
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv("GT_ROLE", "miner")
-	t.Setenv("GT_RIG", "excavation")
+	t.Setenv("GT_RIG", "mineshaft")
 	t.Setenv("GT_MINER", "nux")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("TMUX_PANE", "")
@@ -861,12 +861,12 @@ exit 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "excavation")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "mineshaft")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
 	// Should not error even though list fails - continues with closing molecule and base bead
-	updateAgentStateOnDone(filepath.Join(townRoot, "excavation"), townRoot, ExitCompleted, "gt-base-123")
+	updateAgentStateOnDone(filepath.Join(townRoot, "mineshaft"), townRoot, ExitCompleted, "gt-base-123")
 
 	// Verify close calls - should still close wisp and base even though list failed
 	closesBytes, err := os.ReadFile(closesLog)
@@ -901,11 +901,11 @@ func TestCloseDescendantsMoleculeNotFound(t *testing.T) {
 		t.Fatalf("mkdir .beads/locks: %v", err)
 	}
 
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation"), 0755); err != nil {
-		t.Fatalf("mkdir excavation: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft"), 0755); err != nil {
+		t.Fatalf("mkdir mineshaft: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"excavation"}`,
+		`{"prefix":"gt-","path":"mineshaft"}`,
 		"",
 	}, "\n")
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routes), 0644); err != nil {
@@ -928,8 +928,8 @@ case "$cmd" in
   show)
     beadID="$1"
     case "$beadID" in
-      gt-excavation-miner-nux)
-        echo '[{"id":"gt-excavation-miner-nux","title":"Miner nux","status":"open","hook_bead":"gt-base-123","agent_state":"working"}]'
+      gt-mineshaft-miner-nux)
+        echo '[{"id":"gt-mineshaft-miner-nux","title":"Miner nux","status":"open","hook_bead":"gt-base-123","agent_state":"working"}]'
         ;;
       gt-base-123)
         echo '[{"id":"gt-base-123","title":"Base bead","status":"hooked","description":"attached_molecule: gt-wisp-xyz"}]'
@@ -967,7 +967,7 @@ exit 0
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv("GT_ROLE", "miner")
-	t.Setenv("GT_RIG", "excavation")
+	t.Setenv("GT_RIG", "mineshaft")
 	t.Setenv("GT_MINER", "nux")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("TMUX_PANE", "")
@@ -977,12 +977,12 @@ exit 0
 		t.Fatalf("getwd: %v", err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
-	if err := os.Chdir(filepath.Join(townRoot, "excavation")); err != nil {
+	if err := os.Chdir(filepath.Join(townRoot, "mineshaft")); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
 
 	// Should not error - handles molecule close failure gracefully
-	updateAgentStateOnDone(filepath.Join(townRoot, "excavation"), townRoot, ExitCompleted, "gt-base-123")
+	updateAgentStateOnDone(filepath.Join(townRoot, "mineshaft"), townRoot, ExitCompleted, "gt-base-123")
 
 	// Implementation behavior: when molecule close fails with a generic error
 	// (not beads.ErrNotFound), the function returns early WITHOUT closing the

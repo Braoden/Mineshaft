@@ -11,7 +11,7 @@ import (
 )
 
 // BossConfig represents the human operator's identity (overseer/boss.json).
-// The boss is the human who controls Excavation Site, distinct from AI agents.
+// The boss is the human who controls Mineshaft, distinct from AI agents.
 type BossConfig struct {
 	Type     string `json:"type"`               // "boss"
 	Version  int    `json:"version"`            // schema version

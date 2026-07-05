@@ -72,7 +72,7 @@ func initTownRootSafetyRepo(t *testing.T) string {
 
 	writeTownSafetyFile(t, root, "overseer/town.json", `{"name":"test-town"}\n`)
 	writeTownSafetyFile(t, root, "overseer/rigs.json", `{"rigs":[]}\n`)
-	writeTownSafetyFile(t, root, ".dolt-data/excavation/.dolt/noms/manifest", "manifest sentinel\n")
+	writeTownSafetyFile(t, root, ".dolt-data/mineshaft/.dolt/noms/manifest", "manifest sentinel\n")
 	writeTownSafetyFile(t, root, ".runtime/sentinel", "runtime sentinel\n")
 	writeTownSafetyFile(t, root, ".beads/metadata.json", `{"prefix":"hq"}\n`)
 	writeTownSafetyFile(t, root, "daemon/daemon.pid", "12345\n")
@@ -124,7 +124,7 @@ func townRootSafetyFiles() []string {
 	return []string{
 		"overseer/town.json",
 		"overseer/rigs.json",
-		".dolt-data/excavation/.dolt/noms/manifest",
+		".dolt-data/mineshaft/.dolt/noms/manifest",
 		".runtime/sentinel",
 		".beads/metadata.json",
 		"daemon/daemon.pid",
@@ -192,7 +192,7 @@ func TestTownRootReadOnlyStashListIsAllowed(t *testing.T) {
 
 func TestNestedWorkDirResolvingToTownRootGitIsBlocked(t *testing.T) {
 	root := initTownRootSafetyRepo(t)
-	rigDir := filepath.Join(root, "excavation")
+	rigDir := filepath.Join(root, "mineshaft")
 	if err := os.MkdirAll(rigDir, 0755); err != nil {
 		t.Fatalf("mkdir rig dir: %v", err)
 	}
@@ -2203,7 +2203,7 @@ func TestClearPushURL(t *testing.T) {
 	}
 }
 
-func TestIsExcavationRuntimePath(t *testing.T) {
+func TestIsMineshaftRuntimePath(t *testing.T) {
 	tests := []struct {
 		path string
 		want bool
@@ -2216,7 +2216,7 @@ func TestIsExcavationRuntimePath(t *testing.T) {
 		{".runtime/state.json", true},
 		{".runtime", true},
 		{".opencode/", true},
-		{".opencode/plugins/excavation.js", true},
+		{".opencode/plugins/mineshaft.js", true},
 		{".opencode/commands/handoff.md", true},
 		{".beads/", true},
 		{".beads/db.json", true},
@@ -2246,9 +2246,9 @@ func TestIsExcavationRuntimePath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.path, func(t *testing.T) {
-			got := isExcavationRuntimePath(tt.path)
+			got := isMineshaftRuntimePath(tt.path)
 			if got != tt.want {
-				t.Errorf("isExcavationRuntimePath(%q) = %v, want %v", tt.path, got, tt.want)
+				t.Errorf("isMineshaftRuntimePath(%q) = %v, want %v", tt.path, got, tt.want)
 			}
 		})
 	}
@@ -2264,7 +2264,7 @@ func TestCleanExcludingRuntime(t *testing.T) {
 			name: "only runtime artifacts",
 			s: UncommittedWorkStatus{
 				HasUncommittedChanges: true,
-				UntrackedFiles:        []string{".claude/", ".opencode/plugins/excavation.js", ".runtime/state.json"},
+				UntrackedFiles:        []string{".claude/", ".opencode/plugins/mineshaft.js", ".runtime/state.json"},
 			},
 			want: true,
 		},
@@ -2280,7 +2280,7 @@ func TestCleanExcludingRuntime(t *testing.T) {
 			name: "runtime path conflict blocks",
 			s: UncommittedWorkStatus{
 				HasUncommittedChanges: true,
-				UnmergedFiles:         []string{".opencode/plugins/excavation.js"},
+				UnmergedFiles:         []string{".opencode/plugins/mineshaft.js"},
 			},
 			want: false,
 		},
@@ -2350,7 +2350,7 @@ func TestCleanExcludingRuntime(t *testing.T) {
 			want: true,
 		},
 		{
-			// CLAUDE.local.md is a Excavation Site overlay file (gt-p35) that must not
+			// CLAUDE.local.md is a Mineshaft overlay file (gt-p35) that must not
 			// block gt done or be auto-committed.
 			name: "CLAUDE.local.md is runtime artifact",
 			s: UncommittedWorkStatus{
@@ -2379,7 +2379,7 @@ func TestRuntimeArtifactPaths(t *testing.T) {
 			"src/handler.go",
 		},
 		UntrackedFiles: []string{
-			".opencode/plugins/excavation.js",
+			".opencode/plugins/mineshaft.js",
 			"services/cyrus/workflow-cyrus-edge/node_modules/pkg/index.js",
 			"services/cyrus/workflow-cyrus-edge/node_modules/pkg/package.json",
 			"dashboard/public/meridian-dashboard/.vite/vitest/hash/results.json",
@@ -2453,26 +2453,26 @@ func TestParsePorcelainStatusEntryPreservesRenameCopySourceAndConflict(t *testin
 	}{
 		{
 			name:       "rename",
-			line:       "R  README.md -> .opencode/plugins/excavation.js",
+			line:       "R  README.md -> .opencode/plugins/mineshaft.js",
 			wantCode:   "R ",
 			wantSource: "README.md",
-			wantPath:   ".opencode/plugins/excavation.js",
-			wantPaths:  []string{"README.md", ".opencode/plugins/excavation.js"},
+			wantPath:   ".opencode/plugins/mineshaft.js",
+			wantPaths:  []string{"README.md", ".opencode/plugins/mineshaft.js"},
 		},
 		{
 			name:       "copy",
-			line:       "C  README.md -> .opencode/plugins/excavation.js",
+			line:       "C  README.md -> .opencode/plugins/mineshaft.js",
 			wantCode:   "C ",
 			wantSource: "README.md",
-			wantPath:   ".opencode/plugins/excavation.js",
-			wantPaths:  []string{"README.md", ".opencode/plugins/excavation.js"},
+			wantPath:   ".opencode/plugins/mineshaft.js",
+			wantPaths:  []string{"README.md", ".opencode/plugins/mineshaft.js"},
 		},
 		{
 			name:      "unmerged",
-			line:      "UU .opencode/plugins/excavation.js",
+			line:      "UU .opencode/plugins/mineshaft.js",
 			wantCode:  "UU",
-			wantPath:  ".opencode/plugins/excavation.js",
-			wantPaths: []string{".opencode/plugins/excavation.js"},
+			wantPath:  ".opencode/plugins/mineshaft.js",
+			wantPaths: []string{".opencode/plugins/mineshaft.js"},
 			unmerged:  true,
 		},
 	}
@@ -2519,7 +2519,7 @@ func TestCheckUncommittedWorkCapturesPorcelainRenameAndUnmergedPaths(t *testing.
 		if err := os.MkdirAll(filepath.Join(dir, ".opencode", "plugins"), 0755); err != nil {
 			t.Fatalf("mkdir opencode plugins: %v", err)
 		}
-		runGitTestCmd(t, dir, "mv", "README.md", ".opencode/plugins/excavation.js")
+		runGitTestCmd(t, dir, "mv", "README.md", ".opencode/plugins/mineshaft.js")
 
 		status, err := NewGit(dir).CheckUncommittedWork()
 		if err != nil {
@@ -2546,7 +2546,7 @@ func TestCheckUncommittedWorkCapturesPorcelainRenameAndUnmergedPaths(t *testing.
 		}
 		runGitTestCmd(t, dir, "add", ".opencode/plugins/old.js")
 		runGitTestCmd(t, dir, "commit", "-m", "add tracked runtime source")
-		runGitTestCmd(t, dir, "mv", ".opencode/plugins/old.js", ".opencode/plugins/excavation.js")
+		runGitTestCmd(t, dir, "mv", ".opencode/plugins/old.js", ".opencode/plugins/mineshaft.js")
 
 		status, err := NewGit(dir).CheckUncommittedWork()
 		if err != nil {
@@ -2569,18 +2569,18 @@ func TestCheckUncommittedWorkCapturesPorcelainRenameAndUnmergedPaths(t *testing.
 		if err := os.MkdirAll(filepath.Join(dir, ".opencode", "plugins"), 0755); err != nil {
 			t.Fatalf("mkdir opencode plugins: %v", err)
 		}
-		if err := os.WriteFile(filepath.Join(dir, ".opencode", "plugins", "excavation.js"), []byte("base\n"), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, ".opencode", "plugins", "mineshaft.js"), []byte("base\n"), 0644); err != nil {
 			t.Fatalf("write base runtime conflict file: %v", err)
 		}
-		runGitTestCmd(t, dir, "add", ".opencode/plugins/excavation.js")
+		runGitTestCmd(t, dir, "add", ".opencode/plugins/mineshaft.js")
 		runGitTestCmd(t, dir, "commit", "-m", "add runtime conflict base")
 		runGitTestCmd(t, dir, "switch", "-c", "side")
-		if err := os.WriteFile(filepath.Join(dir, ".opencode", "plugins", "excavation.js"), []byte("side\n"), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, ".opencode", "plugins", "mineshaft.js"), []byte("side\n"), 0644); err != nil {
 			t.Fatalf("write side runtime conflict file: %v", err)
 		}
 		runGitTestCmd(t, dir, "commit", "-am", "side runtime change")
 		runGitTestCmd(t, dir, "switch", "main")
-		if err := os.WriteFile(filepath.Join(dir, ".opencode", "plugins", "excavation.js"), []byte("main\n"), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, ".opencode", "plugins", "mineshaft.js"), []byte("main\n"), 0644); err != nil {
 			t.Fatalf("write main runtime conflict file: %v", err)
 		}
 		runGitTestCmd(t, dir, "commit", "-am", "main runtime change")
@@ -2590,8 +2590,8 @@ func TestCheckUncommittedWorkCapturesPorcelainRenameAndUnmergedPaths(t *testing.
 		if err != nil {
 			t.Fatalf("CheckUncommittedWork: %v", err)
 		}
-		if got := status.NonRuntimePaths(); len(got) != 1 || got[0] != ".opencode/plugins/excavation.js" {
-			t.Fatalf("NonRuntimePaths = %v, want [.opencode/plugins/excavation.js]", got)
+		if got := status.NonRuntimePaths(); len(got) != 1 || got[0] != ".opencode/plugins/mineshaft.js" {
+			t.Fatalf("NonRuntimePaths = %v, want [.opencode/plugins/mineshaft.js]", got)
 		}
 		if status.CleanExcludingRuntime() {
 			t.Fatal("runtime unmerged conflict must block runtime-excluding clean check")

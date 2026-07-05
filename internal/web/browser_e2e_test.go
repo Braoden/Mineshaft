@@ -11,7 +11,7 @@ import (
 
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
-	"github.com/steveyegge/excavation/internal/activity"
+	"github.com/steveyegge/mineshaft/internal/activity"
 )
 
 // =============================================================================
@@ -127,8 +127,8 @@ func TestBrowser_MinecartListLoads(t *testing.T) {
 
 	// Verify page title
 	title := page.MustElement("title").MustText()
-	if !strings.Contains(title, "Excavation Site") {
-		t.Fatalf("Expected title to contain 'Excavation Site', got: %s", title)
+	if !strings.Contains(title, "Mineshaft") {
+		t.Fatalf("Expected title to contain 'Mineshaft', got: %s", title)
 	}
 
 	// Verify minecart IDs are displayed

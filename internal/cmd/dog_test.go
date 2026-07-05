@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/dog"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/dog"
 )
 
 // =============================================================================
@@ -24,7 +24,7 @@ func testDogManager(t *testing.T) (*dog.Manager, string) {
 	rigsConfig := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"excavation": {GitURL: "git@github.com:test/excavation.git"},
+			"mineshaft": {GitURL: "git@github.com:test/mineshaft.git"},
 			"beads":   {GitURL: "git@github.com:test/beads.git"},
 		},
 	}
@@ -74,7 +74,7 @@ func TestDetectDogNameFromPath(t *testing.T) {
 		},
 		{
 			name:     "dog rig worktree",
-			path:     "/Users/user/gt/supervisor/dogs/alpha/excavation",
+			path:     "/Users/user/gt/supervisor/dogs/alpha/mineshaft",
 			wantName: "alpha",
 			wantOK:   true,
 		},
@@ -86,7 +86,7 @@ func TestDetectDogNameFromPath(t *testing.T) {
 		},
 		{
 			name:     "hyphenated dog name",
-			path:     "/Users/user/gt/supervisor/dogs/my-dog/excavation",
+			path:     "/Users/user/gt/supervisor/dogs/my-dog/mineshaft",
 			wantName: "my-dog",
 			wantOK:   true,
 		},
@@ -98,13 +98,13 @@ func TestDetectDogNameFromPath(t *testing.T) {
 		},
 		{
 			name:     "not a dog path - miner",
-			path:     "/Users/user/gt/excavation/miners/fixer/internal",
+			path:     "/Users/user/gt/mineshaft/miners/fixer/internal",
 			wantName: "",
 			wantOK:   false,
 		},
 		{
 			name:     "not a dog path - crew",
-			path:     "/Users/user/gt/excavation/crew/george/internal",
+			path:     "/Users/user/gt/mineshaft/crew/george/internal",
 			wantName: "",
 			wantOK:   false,
 		},

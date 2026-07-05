@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/constants"
 )
 
 // skipIfAgentBinaryMissing skips the test if any of the specified agent binaries
@@ -90,8 +90,8 @@ func TestRigsConfigRoundTrip(t *testing.T) {
 	original := &RigsConfig{
 		Version: 1,
 		Rigs: map[string]RigEntry{
-			"excavation": {
-				GitURL:    "git@github.com:steveyegge/excavation.git",
+			"mineshaft": {
+				GitURL:    "git@github.com:steveyegge/mineshaft.git",
 				LocalRepo: "/tmp/local-repo",
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &BeadsConfig{
@@ -115,9 +115,9 @@ func TestRigsConfigRoundTrip(t *testing.T) {
 		t.Errorf("Rigs count = %d, want 1", len(loaded.Rigs))
 	}
 
-	rig, ok := loaded.Rigs["excavation"]
+	rig, ok := loaded.Rigs["mineshaft"]
 	if !ok {
-		t.Fatal("missing 'excavation' rig")
+		t.Fatal("missing 'mineshaft' rig")
 	}
 	if rig.BeadsConfig == nil || rig.BeadsConfig.Prefix != "gt-" {
 		t.Errorf("BeadsConfig.Prefix = %v, want 'gt-'", rig.BeadsConfig)
@@ -155,7 +155,7 @@ func TestRigConfigRoundTrip(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 
-	original := NewRigConfig("excavation", "git@github.com:test/excavation.git")
+	original := NewRigConfig("mineshaft", "git@github.com:test/mineshaft.git")
 	original.CreatedAt = time.Now().Truncate(time.Second)
 	original.Beads = &BeadsConfig{Prefix: "gt-"}
 	original.LocalRepo = "/tmp/local-repo"
@@ -175,10 +175,10 @@ func TestRigConfigRoundTrip(t *testing.T) {
 	if loaded.Version != CurrentRigConfigVersion {
 		t.Errorf("Version = %d, want %d", loaded.Version, CurrentRigConfigVersion)
 	}
-	if loaded.Name != "excavation" {
-		t.Errorf("Name = %q, want 'excavation'", loaded.Name)
+	if loaded.Name != "mineshaft" {
+		t.Errorf("Name = %q, want 'mineshaft'", loaded.Name)
 	}
-	if loaded.GitURL != "git@github.com:test/excavation.git" {
+	if loaded.GitURL != "git@github.com:test/mineshaft.git" {
 		t.Errorf("GitURL = %q, want expected URL", loaded.GitURL)
 	}
 	if loaded.LocalRepo != "/tmp/local-repo" {
@@ -475,7 +475,7 @@ func TestLoadRepoSettings(t *testing.T) {
 	t.Run("loads valid repo settings", func(t *testing.T) {
 		t.Parallel()
 		dir := t.TempDir()
-		gsDir := filepath.Join(dir, ".excavation")
+		gsDir := filepath.Join(dir, ".mineshaft")
 		if err := os.MkdirAll(gsDir, 0755); err != nil {
 			t.Fatal(err)
 		}
@@ -735,17 +735,17 @@ func TestMessagingConfigRoundTrip(t *testing.T) {
 	path := filepath.Join(dir, "config", "messaging.json")
 
 	original := NewMessagingConfig()
-	original.Lists["oncall"] = []string{"overseer/", "excavation/witness"}
-	original.Lists["cleanup"] = []string{"excavation/witness", "supervisor/"}
-	original.Queues["work/excavation"] = QueueConfig{
-		Workers:   []string{"excavation/miners/*"},
+	original.Lists["oncall"] = []string{"overseer/", "mineshaft/witness"}
+	original.Lists["cleanup"] = []string{"mineshaft/witness", "supervisor/"}
+	original.Queues["work/mineshaft"] = QueueConfig{
+		Workers:   []string{"mineshaft/miners/*"},
 		MaxClaims: 5,
 	}
 	original.Announces["alerts"] = AnnounceConfig{
 		Readers:     []string{"@town"},
 		RetainCount: 100,
 	}
-	original.NudgeChannels["workers"] = []string{"excavation/miners/*", "excavation/crew/*"}
+	original.NudgeChannels["workers"] = []string{"mineshaft/miners/*", "mineshaft/crew/*"}
 	original.NudgeChannels["witnesses"] = []string{"*/witness"}
 
 	if err := SaveMessagingConfig(path, original); err != nil {
@@ -776,7 +776,7 @@ func TestMessagingConfigRoundTrip(t *testing.T) {
 	if len(loaded.Queues) != 1 {
 		t.Errorf("Queues count = %d, want 1", len(loaded.Queues))
 	}
-	if q, ok := loaded.Queues["work/excavation"]; !ok || q.MaxClaims != 5 {
+	if q, ok := loaded.Queues["work/mineshaft"]; !ok || q.MaxClaims != 5 {
 		t.Error("queue not preserved")
 	}
 
@@ -818,7 +818,7 @@ func TestMessagingConfigValidation(t *testing.T) {
 				Type:    "messaging",
 				Version: 1,
 				Lists: map[string][]string{
-					"oncall": {"overseer/", "excavation/witness"},
+					"oncall": {"overseer/", "mineshaft/witness"},
 				},
 			},
 			wantErr: false,
@@ -895,7 +895,7 @@ func TestMessagingConfigValidation(t *testing.T) {
 				Type:    "messaging",
 				Version: 1,
 				NudgeChannels: map[string][]string{
-					"workers": {"excavation/miners/*", "excavation/crew/*"},
+					"workers": {"mineshaft/miners/*", "mineshaft/crew/*"},
 				},
 			},
 			wantErr: false,
@@ -1152,16 +1152,16 @@ func TestBuildAgentStartupCommand(t *testing.T) {
 
 	// Test without rig config (uses defaults)
 	// New signature: (role, rig, townRoot, rigPath, prompt)
-	cmd := BuildAgentStartupCommand("witness", "excavation", "", "", "")
+	cmd := BuildAgentStartupCommand("witness", "mineshaft", "", "", "")
 
 	// Should contain environment variables (via 'exec env') and claude command
 	if !strings.Contains(cmd, "exec env") {
 		t.Error("expected 'exec env' in command")
 	}
-	if !strings.Contains(cmd, "GT_ROLE=excavation/witness") {
-		t.Error("expected GT_ROLE=excavation/witness in command")
+	if !strings.Contains(cmd, "GT_ROLE=mineshaft/witness") {
+		t.Error("expected GT_ROLE=mineshaft/witness in command")
 	}
-	if !strings.Contains(cmd, "BD_ACTOR=excavation/witness") {
+	if !strings.Contains(cmd, "BD_ACTOR=mineshaft/witness") {
 		t.Error("expected BD_ACTOR in command")
 	}
 	parts := strings.Fields(cmd)
@@ -1172,36 +1172,36 @@ func TestBuildAgentStartupCommand(t *testing.T) {
 
 func TestBuildMinerStartupCommand(t *testing.T) {
 	t.Parallel()
-	cmd := BuildMinerStartupCommand("excavation", "toast", "", "")
+	cmd := BuildMinerStartupCommand("mineshaft", "toast", "", "")
 
-	if !strings.Contains(cmd, "GT_ROLE=excavation/miners/toast") {
-		t.Error("expected GT_ROLE=excavation/miners/toast in command")
+	if !strings.Contains(cmd, "GT_ROLE=mineshaft/miners/toast") {
+		t.Error("expected GT_ROLE=mineshaft/miners/toast in command")
 	}
-	if !strings.Contains(cmd, "GT_RIG=excavation") {
-		t.Error("expected GT_RIG=excavation in command")
+	if !strings.Contains(cmd, "GT_RIG=mineshaft") {
+		t.Error("expected GT_RIG=mineshaft in command")
 	}
 	if !strings.Contains(cmd, "GT_MINER=toast") {
 		t.Error("expected GT_MINER=toast in command")
 	}
-	if !strings.Contains(cmd, "BD_ACTOR=excavation/miners/toast") {
+	if !strings.Contains(cmd, "BD_ACTOR=mineshaft/miners/toast") {
 		t.Error("expected BD_ACTOR in command")
 	}
 }
 
 func TestBuildCrewStartupCommand(t *testing.T) {
 	t.Parallel()
-	cmd := BuildCrewStartupCommand("excavation", "max", "", "")
+	cmd := BuildCrewStartupCommand("mineshaft", "max", "", "")
 
-	if !strings.Contains(cmd, "GT_ROLE=excavation/crew/max") {
-		t.Error("expected GT_ROLE=excavation/crew/max in command")
+	if !strings.Contains(cmd, "GT_ROLE=mineshaft/crew/max") {
+		t.Error("expected GT_ROLE=mineshaft/crew/max in command")
 	}
-	if !strings.Contains(cmd, "GT_RIG=excavation") {
-		t.Error("expected GT_RIG=excavation in command")
+	if !strings.Contains(cmd, "GT_RIG=mineshaft") {
+		t.Error("expected GT_RIG=mineshaft in command")
 	}
 	if !strings.Contains(cmd, "GT_CREW=max") {
 		t.Error("expected GT_CREW=max in command")
 	}
-	if !strings.Contains(cmd, "BD_ACTOR=excavation/crew/max") {
+	if !strings.Contains(cmd, "BD_ACTOR=mineshaft/crew/max") {
 		t.Error("expected BD_ACTOR in command")
 	}
 }
@@ -2190,7 +2190,7 @@ func TestDaemonPatrolConfigPath(t *testing.T) {
 		expected string
 	}{
 		{"/home/user/gt", "/home/user/gt/overseer/daemon.json"},
-		{"/var/lib/excavation", "/var/lib/excavation/overseer/daemon.json"},
+		{"/var/lib/mineshaft", "/var/lib/mineshaft/overseer/daemon.json"},
 		{"/tmp/test-workspace", "/tmp/test-workspace/overseer/daemon.json"},
 		{"~/gt", "~/gt/overseer/daemon.json"},
 	}
@@ -2320,8 +2320,8 @@ func TestAddRigToDaemonPatrols(t *testing.T) {
   "version": 1,
   "heartbeat": {"enabled": true, "interval": "3m"},
   "patrols": {
-    "witness": {"enabled": true, "interval": "5m", "agent": "witness", "rigs": ["excavation"]},
-    "refinery": {"enabled": true, "interval": "5m", "agent": "refinery", "rigs": ["excavation"]},
+    "witness": {"enabled": true, "interval": "5m", "agent": "witness", "rigs": ["mineshaft"]},
+    "refinery": {"enabled": true, "interval": "5m", "agent": "refinery", "rigs": ["mineshaft"]},
     "supervisor": {"enabled": true, "interval": "5m", "agent": "supervisor"}
   }
 }`
@@ -2340,13 +2340,13 @@ func TestAddRigToDaemonPatrols(t *testing.T) {
 		}
 
 		witness := cfg.Patrols["witness"]
-		if len(witness.Rigs) != 2 || witness.Rigs[0] != "excavation" || witness.Rigs[1] != "newrig" {
-			t.Errorf("witness rigs = %v, want [excavation newrig]", witness.Rigs)
+		if len(witness.Rigs) != 2 || witness.Rigs[0] != "mineshaft" || witness.Rigs[1] != "newrig" {
+			t.Errorf("witness rigs = %v, want [mineshaft newrig]", witness.Rigs)
 		}
 
 		refinery := cfg.Patrols["refinery"]
-		if len(refinery.Rigs) != 2 || refinery.Rigs[0] != "excavation" || refinery.Rigs[1] != "newrig" {
-			t.Errorf("refinery rigs = %v, want [excavation newrig]", refinery.Rigs)
+		if len(refinery.Rigs) != 2 || refinery.Rigs[0] != "mineshaft" || refinery.Rigs[1] != "newrig" {
+			t.Errorf("refinery rigs = %v, want [mineshaft newrig]", refinery.Rigs)
 		}
 
 		// Supervisor should be untouched
@@ -2368,15 +2368,15 @@ func TestAddRigToDaemonPatrols(t *testing.T) {
   "type": "daemon-patrol-config",
   "version": 1,
   "patrols": {
-    "witness": {"enabled": true, "rigs": ["excavation", "beads"]},
-    "refinery": {"enabled": true, "rigs": ["excavation", "beads"]}
+    "witness": {"enabled": true, "rigs": ["mineshaft", "beads"]},
+    "refinery": {"enabled": true, "rigs": ["mineshaft", "beads"]}
   }
 }`
 		if err := os.WriteFile(filepath.Join(overseerDir, "daemon.json"), []byte(daemonJSON), 0644); err != nil {
 			t.Fatal(err)
 		}
 
-		if err := AddRigToDaemonPatrols(townRoot, "excavation"); err != nil {
+		if err := AddRigToDaemonPatrols(townRoot, "mineshaft"); err != nil {
 			t.Fatalf("AddRigToDaemonPatrols: %v", err)
 		}
 
@@ -2387,7 +2387,7 @@ func TestAddRigToDaemonPatrols(t *testing.T) {
 
 		witness := cfg.Patrols["witness"]
 		if len(witness.Rigs) != 2 {
-			t.Errorf("witness rigs = %v, want [excavation beads] (no duplicate)", witness.Rigs)
+			t.Errorf("witness rigs = %v, want [mineshaft beads] (no duplicate)", witness.Rigs)
 		}
 	})
 
@@ -2404,8 +2404,8 @@ func TestAddRigToDaemonPatrols(t *testing.T) {
   "version": 1,
   "patrols": {
     "dolt_server": {"enabled": true, "port": 3307, "host": "127.0.0.1", "data_dir": "/tmp/dolt"},
-    "witness": {"enabled": true, "rigs": ["excavation"]},
-    "refinery": {"enabled": true, "rigs": ["excavation"]}
+    "witness": {"enabled": true, "rigs": ["mineshaft"]},
+    "refinery": {"enabled": true, "rigs": ["mineshaft"]}
   }
 }`
 		path := filepath.Join(overseerDir, "daemon.json")
@@ -2496,8 +2496,8 @@ func TestRemoveRigFromDaemonPatrols(t *testing.T) {
   "type": "daemon-patrol-config",
   "version": 1,
   "patrols": {
-    "witness": {"enabled": true, "rigs": ["excavation", "beads", "myrig"]},
-    "refinery": {"enabled": true, "rigs": ["excavation", "beads", "myrig"]},
+    "witness": {"enabled": true, "rigs": ["mineshaft", "beads", "myrig"]},
+    "refinery": {"enabled": true, "rigs": ["mineshaft", "beads", "myrig"]},
     "supervisor": {"enabled": true}
   }
 }`
@@ -2515,13 +2515,13 @@ func TestRemoveRigFromDaemonPatrols(t *testing.T) {
 		}
 
 		witness := cfg.Patrols["witness"]
-		if len(witness.Rigs) != 2 || witness.Rigs[0] != "excavation" || witness.Rigs[1] != "myrig" {
-			t.Errorf("witness rigs = %v, want [excavation myrig]", witness.Rigs)
+		if len(witness.Rigs) != 2 || witness.Rigs[0] != "mineshaft" || witness.Rigs[1] != "myrig" {
+			t.Errorf("witness rigs = %v, want [mineshaft myrig]", witness.Rigs)
 		}
 
 		refinery := cfg.Patrols["refinery"]
-		if len(refinery.Rigs) != 2 || refinery.Rigs[0] != "excavation" || refinery.Rigs[1] != "myrig" {
-			t.Errorf("refinery rigs = %v, want [excavation myrig]", refinery.Rigs)
+		if len(refinery.Rigs) != 2 || refinery.Rigs[0] != "mineshaft" || refinery.Rigs[1] != "myrig" {
+			t.Errorf("refinery rigs = %v, want [mineshaft myrig]", refinery.Rigs)
 		}
 	})
 
@@ -2537,8 +2537,8 @@ func TestRemoveRigFromDaemonPatrols(t *testing.T) {
   "type": "daemon-patrol-config",
   "version": 1,
   "patrols": {
-    "witness": {"enabled": true, "rigs": ["excavation"]},
-    "refinery": {"enabled": true, "rigs": ["excavation"]}
+    "witness": {"enabled": true, "rigs": ["mineshaft"]},
+    "refinery": {"enabled": true, "rigs": ["mineshaft"]}
   }
 }`
 		if err := os.WriteFile(filepath.Join(overseerDir, "daemon.json"), []byte(daemonJSON), 0644); err != nil {
@@ -2555,8 +2555,8 @@ func TestRemoveRigFromDaemonPatrols(t *testing.T) {
 		}
 
 		witness := cfg.Patrols["witness"]
-		if len(witness.Rigs) != 1 || witness.Rigs[0] != "excavation" {
-			t.Errorf("witness rigs = %v, want [excavation]", witness.Rigs)
+		if len(witness.Rigs) != 1 || witness.Rigs[0] != "mineshaft" {
+			t.Errorf("witness rigs = %v, want [mineshaft]", witness.Rigs)
 		}
 	})
 
@@ -2573,8 +2573,8 @@ func TestRemoveRigFromDaemonPatrols(t *testing.T) {
   "version": 1,
   "patrols": {
     "dolt_server": {"enabled": true, "port": 3307, "host": "127.0.0.1"},
-    "witness": {"enabled": true, "rigs": ["excavation", "beads"]},
-    "refinery": {"enabled": true, "rigs": ["excavation", "beads"]}
+    "witness": {"enabled": true, "rigs": ["mineshaft", "beads"]},
+    "refinery": {"enabled": true, "rigs": ["mineshaft", "beads"]}
   }
 }`
 		path := filepath.Join(overseerDir, "daemon.json")
@@ -2650,8 +2650,8 @@ func TestRemoveRigFromDaemonPatrols(t *testing.T) {
   "type": "daemon-patrol-config",
   "version": 1,
   "patrols": {
-    "witness": {"enabled": true, "rigs": ["excavation"]},
-    "refinery": {"enabled": true, "rigs": ["excavation"]}
+    "witness": {"enabled": true, "rigs": ["mineshaft"]},
+    "refinery": {"enabled": true, "rigs": ["mineshaft"]}
   }
 }`
 		if err := os.WriteFile(filepath.Join(overseerDir, "daemon.json"), []byte(daemonJSON), 0644); err != nil {
@@ -2674,13 +2674,13 @@ func TestRemoveRigFromDaemonPatrols(t *testing.T) {
 		}
 
 		witness := cfg.Patrols["witness"]
-		if len(witness.Rigs) != 1 || witness.Rigs[0] != "excavation" {
-			t.Errorf("witness rigs = %v, want [excavation]", witness.Rigs)
+		if len(witness.Rigs) != 1 || witness.Rigs[0] != "mineshaft" {
+			t.Errorf("witness rigs = %v, want [mineshaft]", witness.Rigs)
 		}
 
 		refinery := cfg.Patrols["refinery"]
-		if len(refinery.Rigs) != 1 || refinery.Rigs[0] != "excavation" {
-			t.Errorf("refinery rigs = %v, want [excavation]", refinery.Rigs)
+		if len(refinery.Rigs) != 1 || refinery.Rigs[0] != "mineshaft" {
+			t.Errorf("refinery rigs = %v, want [mineshaft]", refinery.Rigs)
 		}
 	})
 }
@@ -3310,8 +3310,8 @@ func TestFillRuntimeDefaults(t *testing.T) {
 		if result.Hooks.Dir != ".pi/extensions" {
 			t.Errorf("Hooks.Dir = %q, want .pi/extensions", result.Hooks.Dir)
 		}
-		if result.Hooks.SettingsFile != "excavation-hooks.js" {
-			t.Errorf("Hooks.SettingsFile = %q, want excavation-hooks.js", result.Hooks.SettingsFile)
+		if result.Hooks.SettingsFile != "mineshaft-hooks.js" {
+			t.Errorf("Hooks.SettingsFile = %q, want mineshaft-hooks.js", result.Hooks.SettingsFile)
 		}
 
 		// Tmux should be auto-filled for pi
@@ -3647,10 +3647,10 @@ func TestBuildCommandWithPromptWarnsOnDroppedPrompt(t *testing.T) {
 
 	var cmd string
 	stderr := captureStderr(t, func() {
-		cmd = rc.BuildCommandWithPrompt("[GAS TOWN] supervisor <- daemon • patrol")
+		cmd = rc.BuildCommandWithPrompt("[MINESHAFT] supervisor <- daemon • patrol")
 	})
 
-	if strings.Contains(cmd, "GAS TOWN") {
+	if strings.Contains(cmd, "MINESHAFT") {
 		t.Errorf("prompt_mode=none should prevent prompt from appearing in command, got: %s", cmd)
 	}
 	if !strings.Contains(stderr, "warning:") {
@@ -3763,11 +3763,11 @@ func TestBuildArgsWithPromptWarnsOnDroppedPrompt(t *testing.T) {
 
 	var args []string
 	stderr := captureStderr(t, func() {
-		args = rc.BuildArgsWithPrompt("[GAS TOWN] supervisor <- daemon • patrol")
+		args = rc.BuildArgsWithPrompt("[MINESHAFT] supervisor <- daemon • patrol")
 	})
 
 	for _, arg := range args {
-		if strings.Contains(arg, "GAS TOWN") {
+		if strings.Contains(arg, "MINESHAFT") {
 			t.Errorf("prompt_mode=none should prevent prompt appearing in args, got: %v", args)
 		}
 	}
@@ -3876,8 +3876,8 @@ func TestRoleAgentConfigWithCustomAgent(t *testing.T) {
 		}
 
 		// Verify startup beacon is NOT added to command
-		cmd := rc.BuildCommandWithPrompt("[GAS TOWN] overseer <- human • cold-start")
-		if strings.Contains(cmd, "GAS TOWN") {
+		cmd := rc.BuildCommandWithPrompt("[MINESHAFT] overseer <- human • cold-start")
+		if strings.Contains(cmd, "MINESHAFT") {
 			t.Errorf("prompt_mode=none should prevent beacon, got: %s", cmd)
 		}
 	})
@@ -4929,7 +4929,7 @@ func TestBuildStartupCommandWithAgentOverride_UsesOverrideWhenNoTownRoot(t *test
 	t.Parallel()
 	ResetRegistryForTesting()
 
-	// Change to a directory that is definitely NOT in a Excavation Site workspace
+	// Change to a directory that is definitely NOT in a Mineshaft workspace
 	// by using a temp directory with no overseer/town.json
 	tmpDir := t.TempDir()
 	oldWd, err := os.Getwd()
@@ -5540,7 +5540,7 @@ func TestBuildStartupCommand_ExecWrapper(t *testing.T) {
 	rigSettings := NewRigSettings()
 	rigSettings.Runtime = &RuntimeConfig{
 		Command:     "claude",
-		ExecWrapper: []string{"exitbox", "run", "--profile=excavation-miner", "--"},
+		ExecWrapper: []string{"exitbox", "run", "--profile=mineshaft-miner", "--"},
 	}
 	if err := SaveRigSettings(RigSettingsPath(rigPath), rigSettings); err != nil {
 		t.Fatalf("SaveRigSettings: %v", err)
@@ -5549,13 +5549,13 @@ func TestBuildStartupCommand_ExecWrapper(t *testing.T) {
 	cmd := BuildStartupCommand(map[string]string{"GT_ROLE": "miner"}, rigPath, "hello")
 
 	// Must contain exec wrapper tokens
-	if !strings.Contains(cmd, "exitbox run --profile=excavation-miner --") {
+	if !strings.Contains(cmd, "exitbox run --profile=mineshaft-miner --") {
 		t.Errorf("expected exec wrapper in command, got: %q", cmd)
 	}
 
 	// The wrapper + agent command should appear as a contiguous sequence
-	// "exitbox run --profile=excavation-miner -- claude"
-	if !strings.Contains(cmd, "exitbox run --profile=excavation-miner -- claude") {
+	// "exitbox run --profile=mineshaft-miner -- claude"
+	if !strings.Contains(cmd, "exitbox run --profile=mineshaft-miner -- claude") {
 		t.Errorf("expected wrapper immediately before claude command, got: %q", cmd)
 	}
 
@@ -5798,7 +5798,7 @@ func TestBuildStartupCommandWithAgentOverrideSetsGTAgentForOpenCode(t *testing.T
 	cmd, err := BuildStartupCommandWithAgentOverride(
 		map[string]string{"GT_ROLE": constants.RoleMiner},
 		rigPath,
-		"[GAS TOWN] test miner beacon",
+		"[MINESHAFT] test miner beacon",
 		"opencode",
 	)
 	if err != nil {

@@ -6,9 +6,9 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/hooks"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/hooks"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var hooksDiffCmd = &cobra.Command{
@@ -26,7 +26,7 @@ Exit codes:
 
 Examples:
   gt hooks diff                    # Show all pending changes
-  gt hooks diff excavation/crew       # Show changes for specific target`,
+  gt hooks diff mineshaft/crew       # Show changes for specific target`,
 	RunE: runHooksDiff,
 }
 
@@ -43,7 +43,7 @@ var (
 func runHooksDiff(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	targets, err := hooks.DiscoverTargets(townRoot)

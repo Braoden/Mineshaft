@@ -8,7 +8,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/beads"
 	"golang.org/x/time/rate"
 )
 
@@ -147,7 +147,7 @@ func subForLog(argv []string) string {
 }
 
 // extractIdentity parses the client cert CN "gt-<rig>-<name>" into "<rig>/<name>".
-// Uses LastIndex to correctly handle hyphenated rig names (e.g. "excavation-site").
+// Uses LastIndex to correctly handle hyphenated rig names (e.g. "mineshaft").
 func extractIdentity(r *http.Request) string {
 	if r.TLS == nil || len(r.TLS.PeerCertificates) == 0 {
 		return ""
@@ -174,7 +174,7 @@ func minerName(cn string) string {
 
 // cnToIdentity converts a CN of the form "gt-<rig>-<name>" to "<rig>/<name>".
 // The last "-" is treated as the rig/name separator, so hyphenated rig names
-// (e.g. "excavation-site") are handled correctly.
+// (e.g. "mineshaft") are handled correctly.
 func cnToIdentity(cn string) string {
 	name := minerName(cn)
 	if name == "" {

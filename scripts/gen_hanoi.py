@@ -12,7 +12,7 @@ Examples:
   python3 gen_hanoi.py 20  # 1048575 moves (~163MB)
 
 The generated formula creates a sequential workflow where each move
-depends on the previous one. This tests Excavation Site's ability to:
+depends on the previous one. This tests Mineshaft's ability to:
 - Create large molecule hierarchies
 - Execute sequential workflows across session boundaries
 - Maintain state through crash recovery (idempotence)
@@ -70,7 +70,7 @@ MONITORING:
 - For mega-molecules: Use minecart dashboard when available
 - Completion: All steps closed = molecule complete
 
-This proves Excavation Site can execute arbitrarily long workflows with
+This proves Mineshaft can execute arbitrarily long workflows with
 nondeterministic idempotence - different sessions, same outcome.
 """
 formula = "towers-of-hanoi-{n_disks}"

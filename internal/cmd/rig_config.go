@@ -9,10 +9,10 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/wisp"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/wisp"
 )
 
 var rigConfigCmd = &cobra.Command{
@@ -40,7 +40,7 @@ By default, shows only the resolved values. Use --layers to see
 which layer each value comes from.
 
 Example output:
-  gt rig config show excavation --layers
+  gt rig config show mineshaft --layers
   Key                 Value        Source
   status              parked       wisp
   priority_adjustment 10           bead
@@ -59,9 +59,9 @@ Use --global to set in the bead layer (persistent, synced globally).
 Use --block to explicitly block a key (prevents inheritance).
 
 Examples:
-  gt rig config set excavation status parked           # Wisp layer
-  gt rig config set excavation status docked --global  # Bead layer
-  gt rig config set excavation auto_restart --block    # Block inheritance`,
+  gt rig config set mineshaft status parked           # Wisp layer
+  gt rig config set mineshaft status docked --global  # Bead layer
+  gt rig config set mineshaft auto_restart --block    # Block inheritance`,
 	Args: cobra.RangeArgs(2, 3),
 	RunE: runRigConfigSet,
 }
@@ -75,7 +75,7 @@ This clears both regular values and blocked markers for the key.
 Values set in the bead layer remain unchanged.
 
 Example:
-  gt rig config unset excavation status`,
+  gt rig config unset mineshaft status`,
 	Args: cobra.ExactArgs(2),
 	RunE: runRigConfigUnset,
 }

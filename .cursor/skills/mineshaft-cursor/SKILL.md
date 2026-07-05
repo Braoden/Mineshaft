@@ -1,11 +1,11 @@
 ---
-name: excavation-site-cursor
+name: mineshaft-cursor
 description: >
-  Develop and operate Excavation Site with the Cursor agent preset (cursor-agent CLI):
+  Develop and operate Mineshaft with the Cursor agent preset (cursor-agent CLI):
   gt flags, hooks at .cursor/hooks.json, session resume, and how this repo differs from README marketing copy.
 ---
 
-# Excavation Site + Cursor Agent CLI
+# Mineshaft + Cursor Agent CLI
 
 Use this skill when working **in this repository** with the **`cursor`** agent preset (CLI binary **`cursor-agent`**, sometimes symlinked as **`agent`**).
 
@@ -13,7 +13,7 @@ Use this skill when working **in this repository** with the **`cursor`** agent p
 
 | Name | Meaning |
 |------|---------|
-| **Preset `cursor`** | Excavation Site agent id (`GT_AGENT=cursor`). Config lives in `internal/config/agents.go` (`AgentCursor`). |
+| **Preset `cursor`** | Mineshaft agent id (`GT_AGENT=cursor`). Config lives in `internal/config/agents.go` (`AgentCursor`). |
 | **Binary `cursor-agent`** | The Cursor Agent CLI process name for pane/detection; install docs may also symlink `agent` → same binary. |
 | **Hooks** | Cursor lifecycle hooks are configured at **`.cursor/hooks.json`** (see preset `HooksSettingsFile`). |
 

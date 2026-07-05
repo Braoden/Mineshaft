@@ -6,14 +6,14 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/mineshaft/internal/session"
 )
 
 // setupTestRegistry sets up a prefix registry for tests and returns a cleanup function.
 func setupTestRegistry(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "excavation")
+	reg.Register("gt", "mineshaft")
 	reg.Register("bd", "beads")
 	reg.Register("nif", "niflheim")
 	reg.Register("grc", "grctool")
@@ -105,7 +105,7 @@ func TestIsCrewSession(t *testing.T) {
 		session string
 		want    bool
 	}{
-		{"gt-crew-joe", true},  // excavation crew (prefix: gt)
+		{"gt-crew-joe", true},  // mineshaft crew (prefix: gt)
 		{"bd-crew-max", true},  // beads crew (prefix: bd)
 		{"nif-crew-a", true},   // niflheim crew (prefix: nif)
 		{"gt-witness", false},  // witness, not crew
@@ -130,7 +130,7 @@ func TestIsCrewSession(t *testing.T) {
 func TestOrphanSessionCheck_IsValidSession(t *testing.T) {
 	setupTestRegistry(t)
 	check := NewOrphanSessionCheck()
-	validRigs := []string{"excavation", "beads"}
+	validRigs := []string{"mineshaft", "beads"}
 	overseerSession := "hq-overseer"
 	supervisorSession := "hq-supervisor"
 
@@ -146,9 +146,9 @@ func TestOrphanSessionCheck_IsValidSession(t *testing.T) {
 		{"hq-boot", true},
 
 		// Valid rig sessions (using rig prefixes)
-		{"gt-witness", true},  // excavation witness (prefix: gt)
-		{"gt-refinery", true}, // excavation refinery
-		{"gt-miner1", true}, // excavation miner
+		{"gt-witness", true},  // mineshaft witness (prefix: gt)
+		{"gt-refinery", true}, // mineshaft refinery
+		{"gt-miner1", true}, // mineshaft miner
 		{"bd-witness", true},  // beads witness (prefix: bd)
 		{"bd-refinery", true}, // beads refinery
 		{"bd-crew-max", true}, // beads crew
@@ -176,7 +176,7 @@ func TestOrphanSessionCheck_IsValidSession(t *testing.T) {
 func TestOrphanSessionCheck_IsValidSession_EdgeCases(t *testing.T) {
 	setupTestRegistry(t)
 	check := NewOrphanSessionCheck()
-	validRigs := []string{"excavation", "niflheim", "grctool", "7thsense", "pulseflow"}
+	validRigs := []string{"mineshaft", "niflheim", "grctool", "7thsense", "pulseflow"}
 	overseerSession := "hq-overseer"
 	supervisorSession := "hq-supervisor"
 
@@ -286,16 +286,16 @@ func TestOrphanSessionCheck_GetValidRigs(t *testing.T) {
 		}
 	}
 
-	createRigDir("excavation", true, true)
+	createRigDir("mineshaft", true, true)
 	createRigDir("niflheim", true, false)
 	createRigDir("grctool", false, true)
 	createRigDir("not-a-rig", false, false) // No crew or miners
 
 	rigs := check.getValidRigs(townRoot)
 
-	// Should find excavation, niflheim, grctool but not "not-a-rig"
+	// Should find mineshaft, niflheim, grctool but not "not-a-rig"
 	expected := map[string]bool{
-		"excavation":  true,
+		"mineshaft":  true,
 		"niflheim": true,
 		"grctool":  true,
 	}
@@ -348,7 +348,7 @@ func TestIsCrewSession_ComprehensivePatterns(t *testing.T) {
 		reason  string
 	}{
 		// Valid crew patterns (new format: <prefix>-crew-<name>)
-		{"gt-crew-joe", true, "excavation crew session"},
+		{"gt-crew-joe", true, "mineshaft crew session"},
 		{"bd-crew-max", true, "beads crew session"},
 		{"nif-crew-codex1", true, "niflheim crew with numbers in name"},
 		{"grc-crew-grc1", true, "grctool crew with alphanumeric name"},
@@ -397,7 +397,7 @@ func TestOrphanSessionCheck_HQSessions(t *testing.T) {
 	if result.Status != StatusOK {
 		t.Fatalf("expected StatusOK for valid hq sessions, got %v: %s", result.Status, result.Message)
 	}
-	if result.Message != "All 2 Excavation Site sessions are valid" {
+	if result.Message != "All 2 Mineshaft sessions are valid" {
 		t.Fatalf("unexpected message: %q", result.Message)
 	}
 	if len(check.orphanSessions) != 0 {
@@ -420,8 +420,8 @@ func TestOrphanSessionCheck_Run_Deterministic(t *testing.T) {
 	}
 
 	// Create rig directories to make them "valid"
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "miners"), 0o755); err != nil {
-		t.Fatalf("create excavation rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft", "miners"), 0o755); err != nil {
+		t.Fatalf("create mineshaft rig: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, "beads", "crew"), 0o755); err != nil {
 		t.Fatalf("create beads rig: %v", err)
@@ -429,14 +429,14 @@ func TestOrphanSessionCheck_Run_Deterministic(t *testing.T) {
 
 	lister := &mockSessionLister{
 		sessions: []string{
-			"gt-witness",     // valid: excavation rig exists (prefix "gt")
-			"gt-miner1",    // valid: excavation rig exists
+			"gt-witness",     // valid: mineshaft rig exists (prefix "gt")
+			"gt-miner1",    // valid: mineshaft rig exists
 			"bd-refinery",    // valid: beads rig exists (prefix "bd")
 			"hq-overseer",       // valid: hq-overseer is recognized
 			"hq-supervisor",      // valid: hq-supervisor is recognized
-			"zz-witness",     // ignored: unknown prefix, not a excavation session
-			"xx-crew-joe",    // ignored: unknown prefix, not a excavation session
-			"random-session", // ignored: unknown prefix, not a excavation session
+			"zz-witness",     // ignored: unknown prefix, not a mineshaft session
+			"xx-crew-joe",    // ignored: unknown prefix, not a mineshaft session
+			"random-session", // ignored: unknown prefix, not a mineshaft session
 		},
 	}
 	check := NewOrphanSessionCheckWithSessionLister(lister)
@@ -460,7 +460,7 @@ func TestArgvHasFlag(t *testing.T) {
 	}
 }
 
-func TestExcavationRuntimeYOLO(t *testing.T) {
+func TestMineshaftRuntimeYOLO(t *testing.T) {
 	tests := []struct {
 		name string
 		cmd  string
@@ -479,8 +479,8 @@ func TestExcavationRuntimeYOLO(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := gasTownRuntimeYOLO(tt.cmd, tt.args); got != tt.want {
-				t.Errorf("gasTownRuntimeYOLO(%q, %q) = %v, want %v", tt.cmd, tt.args, got, tt.want)
+			if got := mineshaftRuntimeYOLO(tt.cmd, tt.args); got != tt.want {
+				t.Errorf("mineshaftRuntimeYOLO(%q, %q) = %v, want %v", tt.cmd, tt.args, got, tt.want)
 			}
 		})
 	}

@@ -17,13 +17,13 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/crew"
-	"github.com/steveyegge/excavation/internal/events"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/mail"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/crew"
+	"github.com/steveyegge/mineshaft/internal/events"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/mail"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // shortSHA returns at most 8 characters of a SHA for display.
@@ -2208,7 +2208,7 @@ func detectQueueAnomalies(
 
 // ClaimMR claims an MR for processing by setting the assignee field.
 // This replaces mrqueue.Claim() for beads-based MRs.
-// The workerID is typically the refinery's identifier (e.g., "excavation/refinery").
+// The workerID is typically the refinery's identifier (e.g., "mineshaft/refinery").
 func (e *Engineer) ClaimMR(mrID, workerID string) error {
 	return e.beads.Update(mrID, beads.UpdateOptions{
 		Assignee: &workerID,

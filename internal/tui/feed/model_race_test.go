@@ -27,10 +27,10 @@ func TestAddEventConcurrentWithView(t *testing.T) {
 			m.addEvent(Event{
 				Time:    time.Now(),
 				Type:    "update",
-				Actor:   "excavation/crew/test",
+				Actor:   "mineshaft/crew/test",
 				Target:  "gt-xyz",
 				Message: "test event",
-				Rig:     "excavation",
+				Rig:     "mineshaft",
 				Role:    "crew",
 			})
 		}
@@ -125,10 +125,10 @@ func TestMultipleWritersConcurrent(t *testing.T) {
 				m.addEvent(Event{
 					Time:    time.Now(),
 					Type:    "create",
-					Actor:   "excavation/crew/test",
+					Actor:   "mineshaft/crew/test",
 					Target:  "gt-test",
 					Message: "concurrent event",
-					Rig:     "excavation",
+					Rig:     "mineshaft",
 					Role:    "crew",
 				})
 			}
@@ -167,10 +167,10 @@ func TestAddEventLocked(t *testing.T) {
 			event: Event{
 				Time:    time.Now(),
 				Type:    "create",
-				Actor:   "excavation/crew/joe",
+				Actor:   "mineshaft/crew/joe",
 				Target:  "gt-abc",
 				Message: "created issue",
-				Rig:     "excavation",
+				Rig:     "mineshaft",
 				Role:    "crew",
 			},
 			wantUpdate: true,
@@ -217,8 +217,8 @@ func TestAddEventLocked(t *testing.T) {
 	}
 
 	// Verify agent tree was populated
-	if _, ok := m.rigs["excavation"]; !ok {
-		t.Error("expected excavation rig in tree")
+	if _, ok := m.rigs["mineshaft"]; !ok {
+		t.Error("expected mineshaft rig in tree")
 	}
 	if _, ok := m.rigs["beads"]; !ok {
 		t.Error("expected beads rig in tree")
@@ -236,10 +236,10 @@ func TestEventsHistoryLimit(t *testing.T) {
 		m.addEventLocked(Event{
 			Time:    time.Now().Add(time.Duration(i) * time.Millisecond),
 			Type:    "create",
-			Actor:   "excavation/crew/test",
+			Actor:   "mineshaft/crew/test",
 			Target:  "gt-test",
 			Message: "event",
-			Rig:     "excavation",
+			Rig:     "mineshaft",
 			Role:    "crew",
 		})
 		m.mu.Unlock()

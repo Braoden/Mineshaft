@@ -1,5 +1,5 @@
 [Unit]
-Description=Excavation Site Daemon
+Description=Mineshaft Daemon
 After=network.target
 
 [Service]

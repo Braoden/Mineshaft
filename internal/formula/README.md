@@ -15,7 +15,7 @@ The formula package parses and validates structured workflow definitions, enabli
 ## Installation
 
 ```go
-import "github.com/steveyegge/excavation/internal/formula"
+import "github.com/steveyegge/mineshaft/internal/formula"
 ```
 
 ## Quick Start
@@ -203,7 +203,7 @@ deps := f.GetDependencies("build")  // Returns ["test"]
 
 ## Embedded Formulas
 
-The package embeds common formulas for Excavation Site workflows:
+The package embeds common formulas for Mineshaft workflows:
 
 ```go
 // Provision embedded formulas to a beads workspace

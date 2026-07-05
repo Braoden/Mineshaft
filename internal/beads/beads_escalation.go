@@ -16,7 +16,7 @@ type EscalationFields struct {
 	Severity          string // critical, high, medium, low
 	Reason            string // Why this was escalated
 	Source            string // Source identifier (e.g., plugin:rebuild-gt, patrol:supervisor)
-	EscalatedBy       string // Agent address that escalated (e.g., "excavation/Toast")
+	EscalatedBy       string // Agent address that escalated (e.g., "mineshaft/Toast")
 	EscalatedAt       string // ISO 8601 timestamp
 	AckedBy           string // Agent that acknowledged (empty if not acked)
 	AckedAt           string // When acknowledged (empty if not acked)

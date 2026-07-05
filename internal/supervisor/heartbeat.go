@@ -1,6 +1,6 @@
 // Package supervisor provides the Supervisor agent infrastructure.
 // The Supervisor is a Claude agent that monitors Overseer and Witnesses,
-// handles lifecycle requests, and keeps Excavation Site running.
+// handles lifecycle requests, and keeps Mineshaft running.
 package supervisor
 
 import (

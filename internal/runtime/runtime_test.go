@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/mineshaft/internal/config"
 )
 
 type fakeStartupPromptSession struct {
@@ -275,7 +275,7 @@ func TestEnsureSettingsForRole_OpenCodeUsesWorkDir(t *testing.T) {
 		Hooks: &config.RuntimeHooksConfig{
 			Provider:     "opencode",
 			Dir:          "plugins",
-			SettingsFile: "excavation.js",
+			SettingsFile: "mineshaft.js",
 		},
 	}
 
@@ -285,10 +285,10 @@ func TestEnsureSettingsForRole_OpenCodeUsesWorkDir(t *testing.T) {
 	}
 
 	// Plugin should be in workDir, not settingsDir
-	if _, err := os.Stat(settingsDir + "/plugins/excavation.js"); err == nil {
+	if _, err := os.Stat(settingsDir + "/plugins/mineshaft.js"); err == nil {
 		t.Error("OpenCode plugin should NOT be in settingsDir")
 	}
-	if _, err := os.Stat(workDir + "/plugins/excavation.js"); err != nil {
+	if _, err := os.Stat(workDir + "/plugins/mineshaft.js"); err != nil {
 		t.Error("OpenCode plugin should be in workDir")
 	}
 }
@@ -943,7 +943,7 @@ func TestCommandsInherited_NestedGitRepoInsideTownRoot(t *testing.T) {
 }
 
 func TestCommandsInherited_WorkDirIsOutsideTownRoot(t *testing.T) {
-	// workDir in a standalone git repo that is NOT a Excavation Site workspace → not inherited
+	// workDir in a standalone git repo that is NOT a Mineshaft workspace → not inherited
 	dir := t.TempDir()
 	if err := os.MkdirAll(dir+"/.git", 0755); err != nil {
 		t.Fatal(err)

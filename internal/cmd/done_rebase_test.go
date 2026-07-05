@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	gitpkg "github.com/steveyegge/excavation/internal/git"
+	gitpkg "github.com/steveyegge/mineshaft/internal/git"
 )
 
 // fakeRebaseGit lets us drive autoRebaseOnTarget without a real git repo for

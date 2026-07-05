@@ -1,11 +1,11 @@
 # Property Layers: Multi-Level Configuration
 
-> Implementation guide for Excavation Site's configuration system.
+> Implementation guide for Mineshaft's configuration system.
 > Created: 2025-01-06
 
 ## Overview
 
-Excavation Site uses a layered property system for configuration. Properties are
+Mineshaft uses a layered property system for configuration. Properties are
 looked up through multiple layers, with earlier layers overriding later ones.
 This enables both local control and global coordination.
 
@@ -84,7 +84,7 @@ This enables temporary adjustments without changing the base value.
 You can explicitly block a property from being inherited:
 
 ```bash
-gt rig config set excavation auto_restart --block
+gt rig config set mineshaft auto_restart --block
 ```
 
 This creates a "blocked" marker in the wisp layer. Even if the rig bead
@@ -95,10 +95,10 @@ or defaults say `auto_restart: true`, the lookup returns nil.
 Each rig has an identity bead for operational state:
 
 ```yaml
-id: gt-rig-excavation
+id: gt-rig-mineshaft
 type: rig
-name: excavation
-repo: git@github.com:steveyegge/excavation.git
+name: mineshaft
+repo: git@github.com:steveyegge/mineshaft.git
 prefix: gt
 
 labels:
@@ -113,8 +113,8 @@ These beads sync via git, so all clones of the rig see the same state.
 ### Level 1: Park (Local, Ephemeral)
 
 ```bash
-gt rig park excavation      # Stop services, daemon won't restart
-gt rig unpark excavation    # Allow services to run
+gt rig park mineshaft      # Stop services, daemon won't restart
+gt rig unpark mineshaft    # Allow services to run
 ```
 
 - Stored in wisp layer (`.beads-wisp/config/`)
@@ -125,8 +125,8 @@ gt rig unpark excavation    # Allow services to run
 ### Level 2: Dock (Global, Persistent)
 
 ```bash
-gt rig dock excavation      # Set status:docked label on rig bead
-gt rig undock excavation    # Remove label
+gt rig dock mineshaft      # Set status:docked label on rig bead
+gt rig undock mineshaft    # Remove label
 ```
 
 - Stored on rig identity bead
@@ -164,36 +164,36 @@ func shouldAutoRestart(rig *Rig) bool {
 ### View Configuration
 
 ```bash
-gt rig config show excavation           # Show effective config (all layers)
-gt rig config show excavation --layer   # Show which layer each value comes from
+gt rig config show mineshaft           # Show effective config (all layers)
+gt rig config show mineshaft --layer   # Show which layer each value comes from
 ```
 
 ### Set Configuration
 
 ```bash
 # Set in wisp layer (local, ephemeral)
-gt rig config set excavation key value
+gt rig config set mineshaft key value
 
 # Set in bead layer (global, permanent)
-gt rig config set excavation key value --global
+gt rig config set mineshaft key value --global
 
 # Block inheritance
-gt rig config set excavation key --block
+gt rig config set mineshaft key --block
 
 # Clear from wisp layer
-gt rig config unset excavation key
+gt rig config unset mineshaft key
 ```
 
 ### Rig Lifecycle
 
 ```bash
-gt rig park excavation          # Local: stop + prevent restart
-gt rig unpark excavation        # Local: allow restart
+gt rig park mineshaft          # Local: stop + prevent restart
+gt rig unpark mineshaft        # Local: allow restart
 
-gt rig dock excavation          # Global: mark as offline
-gt rig undock excavation        # Global: mark as operational
+gt rig dock mineshaft          # Global: mark as offline
+gt rig undock mineshaft        # Global: mark as operational
 
-gt rig status excavation        # Show current state
+gt rig status mineshaft        # Show current state
 ```
 
 ## Examples
@@ -204,36 +204,36 @@ gt rig status excavation        # Show current state
 # Base priority: 0 (from defaults)
 # Give this rig temporary priority boost for urgent work
 
-gt rig config set excavation priority_adjustment 10
+gt rig config set mineshaft priority_adjustment 10
 
 # Effective priority: 0 + 10 = 10
 # When done, clear it:
 
-gt rig config unset excavation priority_adjustment
+gt rig config unset mineshaft priority_adjustment
 ```
 
 ### Local Maintenance
 
 ```bash
 # I'm upgrading the local clone, don't restart services
-gt rig park excavation
+gt rig park mineshaft
 
 # ... do maintenance ...
 
-gt rig unpark excavation
+gt rig unpark mineshaft
 ```
 
 ### Project-Wide Maintenance
 
 ```bash
 # Major refactor in progress, all clones should pause
-gt rig dock excavation
+gt rig dock mineshaft
 
 # Syncs via git - other towns see the rig as docked
 bd sync
 
 # When done:
-gt rig undock excavation
+gt rig undock mineshaft
 bd sync
 ```
 
@@ -243,7 +243,7 @@ bd sync
 # Rig bead says auto_restart: true
 # But I'm debugging and don't want that here
 
-gt rig config set excavation auto_restart --block
+gt rig config set mineshaft auto_restart --block
 
 # Now auto_restart returns nil for this town only
 ```
@@ -256,7 +256,7 @@ Wisp config stored in `.beads-wisp/config/<rig>.json`:
 
 ```json
 {
-  "rig": "excavation",
+  "rig": "mineshaft",
   "values": {
     "status": "parked",
     "priority_adjustment": 10
@@ -270,8 +270,8 @@ Wisp config stored in `.beads-wisp/config/<rig>.json`:
 Rig operational state stored as labels on the rig identity bead:
 
 ```bash
-bd label add gt-rig-excavation status:docked
-bd label remove gt-rig-excavation status:docked
+bd label add gt-rig-mineshaft status:docked
+bd label remove gt-rig-mineshaft status:docked
 ```
 
 ### Daemon Integration

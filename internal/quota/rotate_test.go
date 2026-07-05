@@ -3,7 +3,7 @@ package quota
 import (
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/mineshaft/internal/config"
 )
 
 func TestPlanRotation_NoLimitedSessions(t *testing.T) {

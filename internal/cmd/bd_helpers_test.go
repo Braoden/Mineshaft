@@ -486,12 +486,12 @@ func TestBdCmd_DirPinsResolvedBeadsDir(t *testing.T) {
 		env:    baseEnv,
 		stderr: os.Stderr,
 	}
-	bdc.Dir("/town/excavation/overseer/rig")
+	bdc.Dir("/town/mineshaft/overseer/rig")
 	cmd := bdc.Build()
 	envMap := parseEnv(cmd.Env)
 
-	if envMap["BEADS_DIR"] != "/town/excavation/overseer/rig/.beads" {
-		t.Errorf("BEADS_DIR = %q, want %q", envMap["BEADS_DIR"], "/town/excavation/overseer/rig/.beads")
+	if envMap["BEADS_DIR"] != "/town/mineshaft/overseer/rig/.beads" {
+		t.Errorf("BEADS_DIR = %q, want %q", envMap["BEADS_DIR"], "/town/mineshaft/overseer/rig/.beads")
 	}
 
 	count := 0
@@ -511,7 +511,7 @@ func TestBdCmd_DirPinsMetadataDatabaseOverInheritedDefault(t *testing.T) {
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatalf("mkdir beads dir: %v", err)
 	}
-	metadata := []byte(`{"dolt_database":"excavation","dolt_server_host":"127.0.0.2","dolt_server_port":4407}`)
+	metadata := []byte(`{"dolt_database":"mineshaft","dolt_server_host":"127.0.0.2","dolt_server_port":4407}`)
 	if err := os.WriteFile(filepath.Join(beadsDir, "metadata.json"), metadata, 0644); err != nil {
 		t.Fatalf("write metadata: %v", err)
 	}
@@ -537,8 +537,8 @@ func TestBdCmd_DirPinsMetadataDatabaseOverInheritedDefault(t *testing.T) {
 	if envMap["BEADS_DIR"] != beadsDir {
 		t.Fatalf("BEADS_DIR = %q, want %q in %v", envMap["BEADS_DIR"], beadsDir, cmd.Env)
 	}
-	if envMap["BEADS_DOLT_SERVER_DATABASE"] != "excavation" {
-		t.Fatalf("BEADS_DOLT_SERVER_DATABASE = %q, want excavation in %v", envMap["BEADS_DOLT_SERVER_DATABASE"], cmd.Env)
+	if envMap["BEADS_DOLT_SERVER_DATABASE"] != "mineshaft" {
+		t.Fatalf("BEADS_DOLT_SERVER_DATABASE = %q, want mineshaft in %v", envMap["BEADS_DOLT_SERVER_DATABASE"], cmd.Env)
 	}
 	for _, key := range []string{"BEADS_DB", "BD_DB", "BEADS_DOLT_DATA_DIR"} {
 		if value, ok := envMap[key]; ok {
@@ -562,7 +562,7 @@ func TestBdCmd_WithBeadsDirFollowsRedirectBeforeMetadata(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(redirectBeadsDir, "metadata.json"), []byte(`{"dolt_database":"hq","dolt_server_host":"wrong-host","dolt_server_port":9999}`), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(canonicalBeadsDir, "metadata.json"), []byte(`{"dolt_database":"excavation","dolt_server_host":"127.0.0.2","dolt_server_port":4407}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(canonicalBeadsDir, "metadata.json"), []byte(`{"dolt_database":"mineshaft","dolt_server_host":"127.0.0.2","dolt_server_port":4407}`), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -582,8 +582,8 @@ func TestBdCmd_WithBeadsDirFollowsRedirectBeforeMetadata(t *testing.T) {
 	if envMap["BEADS_DIR"] != canonicalBeadsDir {
 		t.Fatalf("BEADS_DIR = %q, want canonical %q in %v", envMap["BEADS_DIR"], canonicalBeadsDir, cmd.Env)
 	}
-	if envMap["BEADS_DOLT_SERVER_DATABASE"] != "excavation" {
-		t.Fatalf("BEADS_DOLT_SERVER_DATABASE = %q, want excavation in %v", envMap["BEADS_DOLT_SERVER_DATABASE"], cmd.Env)
+	if envMap["BEADS_DOLT_SERVER_DATABASE"] != "mineshaft" {
+		t.Fatalf("BEADS_DOLT_SERVER_DATABASE = %q, want mineshaft in %v", envMap["BEADS_DOLT_SERVER_DATABASE"], cmd.Env)
 	}
 	if envMap["BEADS_DOLT_SERVER_HOST"] != "127.0.0.2" || envMap["BEADS_DOLT_SERVER_PORT"] != "4407" || envMap["BEADS_DOLT_PORT"] != "4407" {
 		t.Fatalf("connection env used stale redirect metadata: %v", cmd.Env)

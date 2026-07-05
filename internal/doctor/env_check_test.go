@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/session"
 )
 
 // mockEnvReader implements SessionEnvReader for testing.
@@ -62,7 +62,7 @@ func testCtx() *CheckContext {
 func setupEnvTestRegistry(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "excavation")
+	reg.Register("gt", "mineshaft")
 	reg.Register("bd", "beads")
 	reg.Register("mr", "myrig")
 	reg.Register("r1", "rig1")
@@ -82,8 +82,8 @@ func TestEnvVarsCheck_NoSessions(t *testing.T) {
 	if result.Status != StatusOK {
 		t.Errorf("Status = %v, want StatusOK", result.Status)
 	}
-	if result.Message != "No Excavation Site sessions running" {
-		t.Errorf("Message = %q, want %q", result.Message, "No Excavation Site sessions running")
+	if result.Message != "No Mineshaft sessions running" {
+		t.Errorf("Message = %q, want %q", result.Message, "No Mineshaft sessions running")
 	}
 }
 
@@ -94,7 +94,7 @@ func TestEnvVarsCheck_ListSessionsError(t *testing.T) {
 	check := NewEnvVarsCheckWithReader(reader)
 	result := check.Run(testCtx())
 
-	// No tmux server is valid (Excavation Site can be down)
+	// No tmux server is valid (Mineshaft can be down)
 	if result.Status != StatusOK {
 		t.Errorf("Status = %v, want StatusOK", result.Status)
 	}
@@ -103,7 +103,7 @@ func TestEnvVarsCheck_ListSessionsError(t *testing.T) {
 	}
 }
 
-func TestEnvVarsCheck_NonExcavationSessions(t *testing.T) {
+func TestEnvVarsCheck_NonMineshaftSessions(t *testing.T) {
 	reader := &mockEnvReader{
 		sessions: []string{"other-session", "my-dev"},
 	}
@@ -113,8 +113,8 @@ func TestEnvVarsCheck_NonExcavationSessions(t *testing.T) {
 	if result.Status != StatusOK {
 		t.Errorf("Status = %v, want StatusOK", result.Status)
 	}
-	if result.Message != "No Excavation Site sessions running" {
-		t.Errorf("Message = %q, want %q", result.Message, "No Excavation Site sessions running")
+	if result.Message != "No Mineshaft sessions running" {
+		t.Errorf("Message = %q, want %q", result.Message, "No Mineshaft sessions running")
 	}
 }
 

@@ -8,11 +8,11 @@ import (
 func TestBuildStampsQuery_SubjectOnly(t *testing.T) {
 	t.Parallel()
 	f := StampsFilter{
-		Subject: "excavation",
+		Subject: "mineshaft",
 		Limit:   50,
 	}
 	got := buildStampsQuery(f)
-	if !strings.Contains(got, "subject = 'excavation'") {
+	if !strings.Contains(got, "subject = 'mineshaft'") {
 		t.Errorf("missing subject filter in %q", got)
 	}
 	if !strings.Contains(got, "ORDER BY created_at DESC") {
@@ -26,7 +26,7 @@ func TestBuildStampsQuery_SubjectOnly(t *testing.T) {
 func TestBuildStampsQuery_AllFilters(t *testing.T) {
 	t.Parallel()
 	f := StampsFilter{
-		Subject:     "excavation",
+		Subject:     "mineshaft",
 		Author:      "hop-overseer",
 		Skill:       "go",
 		ContextType: "boot_block",
@@ -35,7 +35,7 @@ func TestBuildStampsQuery_AllFilters(t *testing.T) {
 	}
 	got := buildStampsQuery(f)
 	for _, substr := range []string{
-		"subject = 'excavation'",
+		"subject = 'mineshaft'",
 		"author = 'hop-overseer'",
 		"context_type = 'boot_block'",
 		"severity = 'branch'",

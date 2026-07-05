@@ -111,7 +111,7 @@ while IFS= read -r REPO_PATH; do
 Auto-committed by gitignore-reconcile plugin.
 Files untracked:
 $(echo "$STAGED" | head -10)$([ $(echo "$STAGED" | wc -l) -gt 10 ] && echo "...and more")" \
-      --author="Excavation Site <excavation@local>" 2>/dev/null || true
+      --author="Mineshaft <mineshaft@local>" 2>/dev/null || true
     echo "  Committed untracking of $COUNT file(s)"
     TOTAL_UNTRACKED=$((TOTAL_UNTRACKED + COUNT))
 

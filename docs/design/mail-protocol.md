@@ -1,10 +1,10 @@
-# Excavation Site Mail Protocol
+# Mineshaft Mail Protocol
 
-> Reference for inter-agent mail communication in Excavation Site
+> Reference for inter-agent mail communication in Mineshaft
 
 ## Overview
 
-Excavation Site agents coordinate via mail messages routed through the beads system.
+Mineshaft agents coordinate via mail messages routed through the beads system.
 Mail uses `type=message` beads with routing handled by `gt mail`.
 
 ## Message Types
@@ -490,8 +490,8 @@ delivers to all members.
 
 **Bead ID format:** `hq-group-<name>`
 
-**Member types:** direct addresses (`excavation/crew/max`), wildcard patterns
-(`*/witness`, `excavation/crew/*`), special patterns (`@town`, `@crew`,
+**Member types:** direct addresses (`mineshaft/crew/max`), wildcard patterns
+(`*/witness`, `mineshaft/crew/*`), special patterns (`@town`, `@crew`,
 `@witnesses`), or nested group names.
 
 ### Queues (`gt:queue`)

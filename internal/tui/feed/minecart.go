@@ -16,9 +16,9 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // minecartIDPattern validates minecart IDs.
@@ -471,7 +471,7 @@ func mqItemToEntry(item mqListItem, rigName string) MQEntry {
 	if miner == "" {
 		miner = item.CreatedBy
 	}
-	// Shorten: "excavation/miners/nux" -> "nux", "excavation/nux" -> "nux"
+	// Shorten: "mineshaft/miners/nux" -> "nux", "mineshaft/nux" -> "nux"
 	if parts := strings.Split(miner, "/"); len(parts) > 0 {
 		miner = parts[len(parts)-1]
 	}

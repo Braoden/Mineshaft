@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# COMMON SHELL FUNCTIONS FOR GAS TOWN SCRIPTS
+# COMMON SHELL FUNCTIONS FOR MINESHAFT SCRIPTS
 # =============================================================================
 #
 # Source this file in other scripts:

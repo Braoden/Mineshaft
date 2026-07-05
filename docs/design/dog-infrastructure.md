@@ -1,10 +1,10 @@
 # Dog Infrastructure: Watchdog Chain & Pool Architecture
 
-> Autonomous health monitoring, recovery, and concurrent shutdown dances in Excavation Site.
+> Autonomous health monitoring, recovery, and concurrent shutdown dances in Mineshaft.
 
 ## Overview
 
-Excavation Site uses a three-tier watchdog chain for autonomous health monitoring:
+Mineshaft uses a three-tier watchdog chain for autonomous health monitoring:
 
 ```
 Daemon (Go process)          <- Dumb transport, 3-min heartbeat
@@ -160,7 +160,7 @@ If the marker exists and is recent, daemon skips Boot spawn for that tick.
 
 ## Degraded Mode
 
-When tmux is unavailable, Excavation Site enters degraded mode:
+When tmux is unavailable, Mineshaft enters degraded mode:
 
 | Capability | Normal | Degraded |
 |------------|--------|----------|
@@ -261,7 +261,7 @@ const (
 
 type Warrant struct {
     ID        string    // Bead ID for the warrant
-    Target    string    // Session to interrogate (e.g., "gt-excavation-Toast")
+    Target    string    // Session to interrogate (e.g., "gt-mineshaft-Toast")
     Reason    string    // Why warrant was issued
     Requester string    // Who filed the warrant
     FiledAt   time.Time

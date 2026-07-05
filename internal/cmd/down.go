@@ -13,19 +13,19 @@ import (
 
 	"github.com/gofrs/flock"
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/crew"
-	"github.com/steveyegge/excavation/internal/daemon"
-	"github.com/steveyegge/excavation/internal/doltserver"
-	"github.com/steveyegge/excavation/internal/events"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/miner"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/crew"
+	"github.com/steveyegge/mineshaft/internal/daemon"
+	"github.com/steveyegge/mineshaft/internal/doltserver"
+	"github.com/steveyegge/mineshaft/internal/events"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/miner"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 const (
@@ -45,8 +45,8 @@ const (
 var downCmd = &cobra.Command{
 	Use:     "down",
 	GroupID: GroupServices,
-	Short:   "Stop all Excavation Site services",
-	Long: `Stop Excavation Site services (reversible pause).
+	Short:   "Stop all Mineshaft services",
+	Long: `Stop Mineshaft services (reversible pause).
 
 Shutdown levels (progressively more aggressive):
   gt down                    Stop infrastructure (default)
@@ -96,7 +96,7 @@ func init() {
 func runDown(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	t := tmux.NewTmux()
@@ -742,7 +742,7 @@ func verifyShutdown(t *tmux.Tmux, townRoot string) []string {
 	return respawned
 }
 
-// findOrphanedClaudeProcesses finds Excavation Site agent processes (claude/codex/opencode/cursor-agent/copilot/node)
+// findOrphanedClaudeProcesses finds Mineshaft agent processes (claude/codex/opencode/cursor-agent/copilot/node)
 // that are running in the town directory but aren't associated with any active tmux session.
 // This can happen when tmux sessions are killed but child processes don't terminate.
 //
@@ -752,7 +752,7 @@ func verifyShutdown(t *tmux.Tmux, townRoot string) []string {
 func findOrphanedClaudeProcesses(townRoot string) []int {
 	// Use ps to get PID, process name, and full command line in a single pass.
 	// Previous implementation used "pgrep -l node" which matched ALL node
-	// processes on the system regardless of whether they belonged to Excavation Site.
+	// processes on the system regardless of whether they belonged to Mineshaft.
 	out, err := exec.Command("ps", "-eo", "pid,comm,args").Output()
 	if err != nil {
 		return nil
@@ -775,18 +775,18 @@ func findOrphanedClaudeProcesses(townRoot string) []int {
 			continue
 		}
 
-		// Only consider known Excavation Site process names
+		// Only consider known Mineshaft process names
 		comm := strings.ToLower(fields[1])
 		switch comm {
 		case "claude", "claude-code", "codex", "opencode", "cursor-agent", "agent", "copilot", "node":
-			// Potential Excavation Site process
+			// Potential Mineshaft process
 		default:
 			continue
 		}
 
 		// Verify the process's command line references the town root.
 		// This filters out unrelated node processes (VS Code, web servers, etc.)
-		// whose command lines won't contain the Excavation Site directory path.
+		// whose command lines won't contain the Mineshaft directory path.
 		args := strings.Join(fields[2:], " ")
 		if strings.Contains(args, townRoot) {
 			orphaned = append(orphaned, pid)
@@ -796,26 +796,26 @@ func findOrphanedClaudeProcesses(townRoot string) []int {
 	return orphaned
 }
 
-// cleanupLegacyDefaultSocket removes Excavation Site sessions left on the "default"
+// cleanupLegacyDefaultSocket removes Mineshaft sessions left on the "default"
 // tmux socket by old binaries. Returns the number of sessions cleaned.
 func cleanupLegacyDefaultSocket() int {
 	return session.CleanupLegacyDefaultSocket()
 }
 
-// countLegacyDefaultSocketSessions counts Excavation Site sessions on the "default"
+// countLegacyDefaultSocketSessions counts Mineshaft sessions on the "default"
 // tmux socket (for dry-run output).
 func countLegacyDefaultSocketSessions() int {
 	return session.CountLegacyDefaultSocketSessions()
 }
 
-// cleanupLegacyBaseSocket removes Excavation Site sessions left on the old basename-only
+// cleanupLegacyBaseSocket removes Mineshaft sessions left on the old basename-only
 // tmux socket (e.g., "gt") by binaries from before path-hashed socket names were
 // introduced (e.g., "gt-a1b2c3"). Returns the number of sessions cleaned.
 func cleanupLegacyBaseSocket(townRoot string) int {
 	return session.CleanupLegacyBaseSocket(townRoot)
 }
 
-// countLegacyBaseSocketSessions counts Excavation Site sessions on the old basename-only
+// countLegacyBaseSocketSessions counts Mineshaft sessions on the old basename-only
 // tmux socket (for dry-run output).
 func countLegacyBaseSocketSessions(townRoot string) int {
 	return session.CountLegacyBaseSocketSessions(townRoot)

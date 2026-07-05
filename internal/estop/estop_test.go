@@ -100,16 +100,16 @@ func TestReadNonExistent(t *testing.T) {
 func TestPerRigActivateAndRead(t *testing.T) {
 	townRoot := t.TempDir()
 
-	if IsRigActive(townRoot, "excavation") {
+	if IsRigActive(townRoot, "mineshaft") {
 		t.Fatal("rig should not be active before activation")
 	}
 
-	if err := ActivateRig(townRoot, "excavation", TriggerManual, "closing laptop"); err != nil {
+	if err := ActivateRig(townRoot, "mineshaft", TriggerManual, "closing laptop"); err != nil {
 		t.Fatalf("ActivateRig: %v", err)
 	}
 
-	if !IsRigActive(townRoot, "excavation") {
-		t.Fatal("excavation should be active after activation")
+	if !IsRigActive(townRoot, "mineshaft") {
+		t.Fatal("mineshaft should be active after activation")
 	}
 	if IsRigActive(townRoot, "beads") {
 		t.Fatal("beads should not be active")
@@ -119,7 +119,7 @@ func TestPerRigActivateAndRead(t *testing.T) {
 		t.Fatal("town-wide should not be active from per-rig activation")
 	}
 
-	info := ReadRig(townRoot, "excavation")
+	info := ReadRig(townRoot, "mineshaft")
 	if info == nil {
 		t.Fatal("ReadRig returned nil")
 	}
@@ -131,28 +131,28 @@ func TestPerRigActivateAndRead(t *testing.T) {
 func TestIsAnyActive(t *testing.T) {
 	townRoot := t.TempDir()
 
-	if IsAnyActive(townRoot, "excavation") {
+	if IsAnyActive(townRoot, "mineshaft") {
 		t.Fatal("nothing should be active")
 	}
 
 	// Per-rig activation
-	if err := ActivateRig(townRoot, "excavation", TriggerManual, ""); err != nil {
+	if err := ActivateRig(townRoot, "mineshaft", TriggerManual, ""); err != nil {
 		t.Fatal(err)
 	}
-	if !IsAnyActive(townRoot, "excavation") {
-		t.Fatal("excavation should be active via per-rig")
+	if !IsAnyActive(townRoot, "mineshaft") {
+		t.Fatal("mineshaft should be active via per-rig")
 	}
 	if IsAnyActive(townRoot, "beads") {
-		t.Fatal("beads should not be affected by excavation per-rig")
+		t.Fatal("beads should not be affected by mineshaft per-rig")
 	}
 
 	// Clean up and test town-wide
-	_ = DeactivateRig(townRoot, "excavation")
+	_ = DeactivateRig(townRoot, "mineshaft")
 	if err := Activate(townRoot, TriggerManual, ""); err != nil {
 		t.Fatal(err)
 	}
-	if !IsAnyActive(townRoot, "excavation") {
-		t.Fatal("excavation should be active via town-wide")
+	if !IsAnyActive(townRoot, "mineshaft") {
+		t.Fatal("mineshaft should be active via town-wide")
 	}
 	if !IsAnyActive(townRoot, "beads") {
 		t.Fatal("beads should be active via town-wide")
@@ -161,14 +161,14 @@ func TestIsAnyActive(t *testing.T) {
 
 func TestPerRigDeactivate(t *testing.T) {
 	townRoot := t.TempDir()
-	if err := ActivateRig(townRoot, "excavation", TriggerManual, ""); err != nil {
+	if err := ActivateRig(townRoot, "mineshaft", TriggerManual, ""); err != nil {
 		t.Fatal(err)
 	}
-	if err := DeactivateRig(townRoot, "excavation"); err != nil {
+	if err := DeactivateRig(townRoot, "mineshaft"); err != nil {
 		t.Fatal(err)
 	}
-	if IsRigActive(townRoot, "excavation") {
-		t.Fatal("excavation should not be active after deactivation")
+	if IsRigActive(townRoot, "mineshaft") {
+		t.Fatal("mineshaft should not be active after deactivation")
 	}
 }
 

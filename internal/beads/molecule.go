@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/telemetry"
+	"github.com/steveyegge/mineshaft/internal/telemetry"
 )
 
 // MoleculeStep represents a parsed step from a molecule definition.

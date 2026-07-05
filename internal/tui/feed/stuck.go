@@ -1,4 +1,4 @@
-// Package feed provides a TUI for the Excavation Site activity feed.
+// Package feed provides a TUI for the Mineshaft activity feed.
 // This file implements stuck detection for agents using structured beads data.
 // Previous approach used tmux pane scraping with regex patterns, which produced
 // false positives (HTML `>`, compiler output matching `error:`). This version
@@ -9,10 +9,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 // HealthDataSource provides structured data for agent health detection.
@@ -24,7 +24,7 @@ type HealthDataSource interface {
 	IsSessionAlive(sessionName string) (bool, error)
 }
 
-// AgentState represents the possible states for a Excavation agent.
+// AgentState represents the possible states for a Mineshaft agent.
 // Ordered by priority (most urgent first) for sorting.
 type AgentState int
 
@@ -166,7 +166,7 @@ func NewStuckDetectorWithSource(source HealthDataSource) *StuckDetector {
 }
 
 // CheckAll analyzes all agent beads and returns their health states.
-// This replaces the old FindExcavationSessions + AnalyzeSession loop.
+// This replaces the old FindMineshaftSessions + AnalyzeSession loop.
 func (d *StuckDetector) CheckAll() ([]*ProblemAgent, error) {
 	agentBeads, err := d.source.ListAgentBeads()
 	if err != nil {
@@ -283,7 +283,7 @@ func isRalphMode(issue *beads.Issue) bool {
 // deriveSessionName maps bead ID components to a tmux session name.
 // Uses the naming conventions from internal/session/.
 // Note: session.*SessionName functions take a rigPrefix (e.g. "gt"),
-// not a rig name (e.g. "excavation"). Use session.PrefixFor(rig) to convert.
+// not a rig name (e.g. "mineshaft"). Use session.PrefixFor(rig) to convert.
 func deriveSessionName(rig, role, name string) string {
 	switch role {
 	case constants.RoleOverseer:

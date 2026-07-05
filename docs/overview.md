@@ -1,9 +1,9 @@
-# Understanding Excavation Site
+# Understanding Mineshaft
 
-This document provides a conceptual overview of Excavation Site's architecture, focusing on
+This document provides a conceptual overview of Mineshaft's architecture, focusing on
 the role taxonomy and how different agents interact.
 
-## Why Excavation Site Exists
+## Why Mineshaft Exists
 
 As AI agents become central to engineering workflows, teams face new challenges:
 
@@ -12,18 +12,18 @@ As AI agents become central to engineering workflows, teams face new challenges:
 - **Efficiency:** How do you route work to the right agent?
 - **Scale:** How do you coordinate agents across repos and teams?
 
-Excavation Site is an orchestration layer that treats AI agent work as structured data.
+Mineshaft is an orchestration layer that treats AI agent work as structured data.
 Every action is attributed. Every agent has a track record. Every piece of work
 has provenance. See [Why These Features](why-these-features.md) for the full rationale,
 and [Glossary](glossary.md) for terminology.
 
 ## Role Taxonomy
 
-Excavation Site has several agent types, each with distinct responsibilities and lifecycles.
+Mineshaft has several agent types, each with distinct responsibilities and lifecycles.
 
 ### Infrastructure Roles
 
-These roles manage the Excavation Site system itself:
+These roles manage the Mineshaft system itself:
 
 | Role | Description | Lifecycle |
 |------|-------------|-----------|
@@ -44,7 +44,7 @@ These roles do actual project work:
 
 ## Minecarts: Tracking Work
 
-A **minecart** (🚚) is how you track batched work in Excavation Site. When you kick off work -
+A **minecart** (🚚) is how you track batched work in Mineshaft. When you kick off work -
 even a single issue - create a minecart to track it.
 
 ```bash
@@ -119,16 +119,16 @@ When a crew member needs to work on another rig:
 Create a worktree in the target rig:
 
 ```bash
-# excavation/crew/joe needs to fix a beads bug
+# mineshaft/crew/joe needs to fix a beads bug
 gt worktree beads
-# Creates ~/gt/beads/crew/excavation-joe/
-# Identity preserved: BD_ACTOR = excavation/crew/joe
+# Creates ~/gt/beads/crew/mineshaft-joe/
+# Identity preserved: BD_ACTOR = mineshaft/crew/joe
 ```
 
 Directory structure:
 ```
-~/gt/beads/crew/excavation-joe/     # joe from excavation working on beads
-~/gt/excavation/crew/beads-wolf/    # wolf from beads working on excavation
+~/gt/beads/crew/mineshaft-joe/     # joe from mineshaft working on beads
+~/gt/mineshaft/crew/beads-wolf/    # wolf from beads working on mineshaft
 ```
 
 ### Option 2: Dispatch to Local Workers
@@ -167,28 +167,28 @@ database (`overseer/rig/.beads/`), and agent directories (`witness/`, `refinery/
 All work is attributed to the actor who performed it:
 
 ```
-Git commits:      Author: excavation/crew/joe <owner@example.com>
-Beads issues:     created_by: excavation/crew/joe
-Events:           actor: excavation/crew/joe
+Git commits:      Author: mineshaft/crew/joe <owner@example.com>
+Beads issues:     created_by: mineshaft/crew/joe
+Events:           actor: mineshaft/crew/joe
 ```
 
 Identity is preserved even when working cross-rig:
-- `excavation/crew/joe` working in `~/gt/beads/crew/excavation-joe/`
-- Commits still attributed to `excavation/crew/joe`
+- `mineshaft/crew/joe` working in `~/gt/beads/crew/mineshaft-joe/`
+- Commits still attributed to `mineshaft/crew/joe`
 - Work appears on joe's CV, not beads rig's workers
 
 ## The Propulsion Principle
 
-All Excavation Site agents follow the same core principle:
+All Mineshaft agents follow the same core principle:
 
 > **If you find something on your hook, YOU RUN IT.**
 
 This applies regardless of role. The hook is your assignment. Execute it immediately
-without waiting for confirmation. Excavation Site is a steam engine - agents are pistons.
+without waiting for confirmation. Mineshaft is a steam engine - agents are pistons.
 
 ## Model Evaluation and A/B Testing
 
-Excavation Site's attribution system enables objective model comparison by tracking
+Mineshaft's attribution system enables objective model comparison by tracking
 completion time, quality signals, and revision count per agent. Deploy different
 models on similar tasks and compare outcomes with `bd stats`.
 
@@ -199,6 +199,6 @@ capability-based routing.
 
 1. **Using dogs for user work**: Dogs are Supervisor infrastructure. Use crew or miners.
 2. **Confusing crew with miners**: Crew is persistent and human-managed. Miners are transient and Witness-managed.
-3. **Working in wrong directory**: Excavation Site uses cwd for identity detection. Stay in your home directory.
+3. **Working in wrong directory**: Mineshaft uses cwd for identity detection. Stay in your home directory.
 4. **Waiting for confirmation when work is hooked**: The hook IS your assignment. Execute immediately.
 5. **Creating worktrees when dispatch is better**: If work should be owned by the target rig, dispatch it instead.

@@ -7,10 +7,10 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/tui/feed"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/tui/feed"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 	"golang.org/x/term"
 )
 
@@ -103,15 +103,15 @@ Examples:
   gt feed --plain               # Plain text output (bd activity)
   gt feed --window              # Open in dedicated tmux window
   gt feed --since 1h            # Events from last hour
-  gt feed --rig greenplace      # Use excavation rig's beads`,
+  gt feed --rig greenplace      # Use mineshaft rig's beads`,
 	RunE: runFeed,
 }
 
 func runFeed(cmd *cobra.Command, args []string) error {
-	// Must be in a Excavation Site workspace
+	// Must be in a Mineshaft workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace (run from ~/gt or a rig directory)")
+		return fmt.Errorf("not in a Mineshaft workspace (run from ~/gt or a rig directory)")
 	}
 
 	// Build feed arguments for window mode
@@ -231,10 +231,10 @@ func runFeedDirect(townRoot string) error {
 
 // runFeedTUI runs the interactive TUI feed.
 func runFeedTUI(workDir string, problemsView bool) error {
-	// Must be in a Excavation Site workspace
+	// Must be in a Mineshaft workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	var sources []feed.EventSource

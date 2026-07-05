@@ -5,8 +5,8 @@ import (
 	"sort"
 
 	"github.com/spf13/cobra"
-	sessionpkg "github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/tmux"
+	sessionpkg "github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 // cycleSession is the --session flag for cycle next/prev commands.
@@ -59,7 +59,7 @@ and cycles within the appropriate group.
 
 Examples:
   gt cycle next
-  gt cycle next --session gt-excavation-witness  # Explicit session context`,
+  gt cycle next --session gt-mineshaft-witness  # Explicit session context`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cycleToSession(1, cycleSession, cycleClient)
 	},
@@ -76,7 +76,7 @@ and cycles within the appropriate group.
 
 Examples:
   gt cycle prev
-  gt cycle prev --session gt-excavation-witness  # Explicit session context`,
+  gt cycle prev --session gt-mineshaft-witness  # Explicit session context`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cycleToSession(-1, cycleSession, cycleClient)
 	},

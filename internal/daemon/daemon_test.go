@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/gofrs/flock"
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 func TestDefaultConfig(t *testing.T) {
@@ -115,7 +115,7 @@ func TestSyncWorkspaceRefusesTownRootWorkDir(t *testing.T) {
 
 	writeDaemonTownFile(t, townRoot, "overseer/town.json", `{"name":"test-town"}\n`)
 	writeDaemonTownFile(t, townRoot, "overseer/rigs.json", `{"rigs":[]}\n`)
-	writeDaemonTownFile(t, townRoot, ".dolt-data/excavation/.dolt/noms/manifest", "manifest\n")
+	writeDaemonTownFile(t, townRoot, ".dolt-data/mineshaft/.dolt/noms/manifest", "manifest\n")
 	writeDaemonTownFile(t, townRoot, ".runtime/sentinel", "runtime\n")
 	writeDaemonTownFile(t, townRoot, ".beads/metadata.json", `{"prefix":"hq"}\n`)
 	writeDaemonTownFile(t, townRoot, "daemon/daemon.pid", "12345\n")
@@ -138,7 +138,7 @@ func TestSyncWorkspaceRefusesTownRootWorkDir(t *testing.T) {
 	}
 	assertDaemonTownFilesPreserved(t, townRoot, filesBefore)
 
-	nestedRig := filepath.Join(townRoot, "excavation")
+	nestedRig := filepath.Join(townRoot, "mineshaft")
 	if err := os.MkdirAll(nestedRig, 0755); err != nil {
 		t.Fatalf("mkdir nested rig: %v", err)
 	}
@@ -261,7 +261,7 @@ func snapshotDaemonTownFiles(t *testing.T, root string) map[string]string {
 	for _, rel := range []string{
 		"overseer/town.json",
 		"overseer/rigs.json",
-		".dolt-data/excavation/.dolt/noms/manifest",
+		".dolt-data/mineshaft/.dolt/noms/manifest",
 		".runtime/sentinel",
 		".beads/metadata.json",
 		"daemon/daemon.pid",

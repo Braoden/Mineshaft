@@ -10,12 +10,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/checkpoint"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/events"
-	"github.com/steveyegge/excavation/internal/runtime"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/checkpoint"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/events"
+	"github.com/steveyegge/mineshaft/internal/runtime"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // hookInput represents the JSON input from LLM runtime hooks.
@@ -238,7 +238,7 @@ func emitSessionEvent(ctx RoleContext) {
 }
 
 // outputSessionMetadata prints a structured metadata line for seance discovery.
-// Format: [GAS TOWN] role:<role> pid:<pid> session:<session_id>
+// Format: [MINESHAFT] role:<role> pid:<pid> session:<session_id>
 // This enables gt seance to discover sessions from gt prime output.
 func outputSessionMetadata(ctx RoleContext) {
 	if ctx.Role == RoleUnknown {
@@ -258,15 +258,15 @@ func outputSessionMetadata(ctx RoleContext) {
 	fmt.Println(formatSessionMetadataLine(actor, sessionID))
 }
 
-// formatSessionMetadataLine keeps the bracketed "[GAS TOWN]" banner for normal
+// formatSessionMetadataLine keeps the bracketed "[MINESHAFT]" banner for normal
 // human-facing output, but removes the leading brackets during structured
 // SessionStart hooks because Codex will see '[' and try to parse the line as
 // JSON instead of treating it as plain text session metadata.
 func formatSessionMetadataLine(actor, sessionID string) string {
 	if primeStructuredSessionStartOutput {
-		return fmt.Sprintf("GAS TOWN role:%s pid:%d session:%s", actor, os.Getpid(), sessionID)
+		return fmt.Sprintf("MINESHAFT role:%s pid:%d session:%s", actor, os.Getpid(), sessionID)
 	}
-	return fmt.Sprintf("[GAS TOWN] role:%s pid:%d session:%s", actor, os.Getpid(), sessionID)
+	return fmt.Sprintf("[MINESHAFT] role:%s pid:%d session:%s", actor, os.Getpid(), sessionID)
 }
 
 // --- Session state detection (merged from prime_state.go) ---

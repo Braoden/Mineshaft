@@ -1,6 +1,6 @@
-// Package wasteland implements the Wasteland federation protocol for Excavation Site.
+// Package wasteland implements the Wasteland federation protocol for Mineshaft.
 //
-// The Wasteland is a federation of Excavation Sites via DoltHub. Each rig has a
+// The Wasteland is a federation of Mineshafts via DoltHub. Each rig has a
 // sovereign fork of a shared commons database. Rigs register by writing
 // to the commons' rigs table, and contribute wanted work items and
 // completions through DoltHub's fork/PR/merge primitives.
@@ -20,7 +20,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // ErrNotJoined indicates the rig has not joined a wasteland.

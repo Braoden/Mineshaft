@@ -14,20 +14,20 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/crew"
-	"github.com/steveyegge/excavation/internal/daemon"
-	"github.com/steveyegge/excavation/internal/doltserver"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/mail"
-	"github.com/steveyegge/excavation/internal/overseer"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/crew"
+	"github.com/steveyegge/mineshaft/internal/daemon"
+	"github.com/steveyegge/mineshaft/internal/doltserver"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/mail"
+	"github.com/steveyegge/mineshaft/internal/overseer"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 	"golang.org/x/term"
 )
 
@@ -43,7 +43,7 @@ var statusCmd = &cobra.Command{
 	GroupID:     GroupDiag,
 	Annotations: map[string]string{AnnotationMinerSafe: "true"},
 	Short:       "Show overall town status",
-	Long: `Display the current status of the Excavation Site workspace.
+	Long: `Display the current status of the Mineshaft workspace.
 
 Shows town name, registered rigs, miners, and witness status.
 
@@ -608,7 +608,7 @@ func gatherStatus() (TownStatus, error) {
 	// Find town root
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return TownStatus{}, fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return TownStatus{}, fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	fast := statusFast
@@ -649,7 +649,7 @@ func gatherStatus() (TownStatus, error) {
 	t := tmux.NewTmux()
 
 	// Pre-fetch all tmux sessions and verify agent liveness for O(1) lookup.
-	// A Excavation Site session is only considered "running" if the agent process is
+	// A Mineshaft session is only considered "running" if the agent process is
 	// alive inside it, not merely if the tmux session exists. This prevents
 	// zombie sessions (tmux alive, agent dead) from showing as running.
 	// See: gt-bd6i3
@@ -1252,7 +1252,7 @@ func renderAgentDetails(w io.Writer, agent AgentRuntime, indent string, hooks []
 	// Build agent bead ID using canonical naming: prefix-rig-role-name
 	agentBeadID := "gt-" + agent.Name
 	if agent.Address != "" && agent.Address != agent.Name {
-		// Use address for full path agents like excavation/crew/joe → gt-excavation-crew-joe
+		// Use address for full path agents like mineshaft/crew/joe → gt-mineshaft-crew-joe
 		addr := strings.TrimSuffix(agent.Address, "/") // Remove trailing slash for global agents
 		parts := strings.Split(addr, "/")
 		if len(parts) == 1 {

@@ -385,7 +385,7 @@ func TestParsePluginMD_GitHubSheriff(t *testing.T) {
 		t.Skipf("github-sheriff plugin not found (expected in plugins/): %v", err)
 	}
 
-	plugin, err := parsePluginMD(content, "/test/github-sheriff", LocationRig, "excavation")
+	plugin, err := parsePluginMD(content, "/test/github-sheriff", LocationRig, "mineshaft")
 	if err != nil {
 		t.Fatalf("parsePluginMD failed: %v", err)
 	}
@@ -428,7 +428,7 @@ func TestParsePluginMD_StuckAgentDogUsesCanonicalHeartbeatPath(t *testing.T) {
 		t.Skipf("stuck-agent-dog plugin not found (expected in plugins/): %v", err)
 	}
 
-	plugin, err := parsePluginMD(content, "/test/stuck-agent-dog", LocationRig, "excavation")
+	plugin, err := parsePluginMD(content, "/test/stuck-agent-dog", LocationRig, "mineshaft")
 	if err != nil {
 		t.Fatalf("parsePluginMD failed: %v", err)
 	}
@@ -506,7 +506,7 @@ Deterministic cleanup plugin with run.sh script.
 		t.Fatalf("reading plugin.md fixture: %v", err)
 	}
 
-	plugin, err := parsePluginMD(content, pluginDir, LocationRig, "excavation")
+	plugin, err := parsePluginMD(content, pluginDir, LocationRig, "mineshaft")
 	if err != nil {
 		t.Fatalf("parsePluginMD failed: %v", err)
 	}
@@ -729,7 +729,7 @@ version = 1
 
 [execution]
 type = "exec-wrapper"
-wrapper = ["exitbox", "run", "--profile=excavation-miner", "--"]
+wrapper = ["exitbox", "run", "--profile=mineshaft-miner", "--"]
 +++
 
 # Exitbox Sandbox
@@ -737,7 +737,7 @@ wrapper = ["exitbox", "run", "--profile=excavation-miner", "--"]
 Wraps miner sessions in an exitbox sandbox for filesystem and network isolation.
 `)
 
-	p, err := parsePluginMD(content, "/test/exitbox-sandbox", LocationRig, "excavation")
+	p, err := parsePluginMD(content, "/test/exitbox-sandbox", LocationRig, "mineshaft")
 	if err != nil {
 		t.Fatalf("parsePluginMD failed: %v", err)
 	}
@@ -789,7 +789,7 @@ func TestPlugin_ExecWrapperSummary(t *testing.T) {
 	p := &Plugin{
 		Name:     "exitbox-sandbox",
 		Location: LocationRig,
-		RigName:  "excavation",
+		RigName:  "mineshaft",
 		Execution: &Execution{
 			Type:    ExecTypeExecWrapper,
 			Wrapper: []string{"exitbox", "run", "--"},

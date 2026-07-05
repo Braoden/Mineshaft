@@ -6,11 +6,11 @@ usage() {
 Usage:
   bootstrap-local-rig.sh --town-root PATH --rig NAME --local-repo PATH [options]
 
-Create a clean Excavation Site rig from a local source repo by using `gt rig add` with
+Create a clean Mineshaft rig from a local source repo by using `gt rig add` with
 `--local-repo` instead of adopting a manually assembled rig directory.
 
 Required:
-  --town-root PATH       Excavation Site town root
+  --town-root PATH       Mineshaft town root
   --rig NAME             New rig name
   --local-repo PATH      Existing local repo to use as the object reference
 

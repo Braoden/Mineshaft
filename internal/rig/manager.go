@@ -17,14 +17,14 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/doltserver"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/hooks"
-	"github.com/steveyegge/excavation/internal/templates/commands"
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/doltserver"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/hooks"
+	"github.com/steveyegge/mineshaft/internal/templates/commands"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // Common errors
@@ -731,9 +731,9 @@ func (m *Manager) AddRig(opts AddRigOptions) (*Rig, error) {
 		}
 	}
 
-	// Provision PRIME.md with Excavation Site context for all workers in this rig.
+	// Provision PRIME.md with Mineshaft context for all workers in this rig.
 	// This is the fallback if SessionStart hook fails - ensures ALL workers
-	// (crew, miners, refinery, witness) have GUPP and essential Excavation Site context.
+	// (crew, miners, refinery, witness) have GUPP and essential Mineshaft context.
 	// PRIME.md is read by bd prime and output to the agent.
 	// Use ResolveBeadsDir to follow redirect (writes to overseer/rig/.beads/ if tracked).
 	resolvedBeadsPath := beads.ResolveBeadsDir(rigPath)
@@ -864,7 +864,7 @@ Use crew for your own workspace. Miners are for batch work dispatch.
 	}
 
 	// Note: we intentionally do NOT seed local rig settings from
-	// .excavation/settings.json here. Repo settings are merged at runtime
+	// .mineshaft/settings.json here. Repo settings are merged at runtime
 	// by loadRigCommandVars (repo defaults → local overrides → --var flags).
 	// Seeding at rig-add time would fork the config, silently shadowing
 	// any future repo-side updates.
@@ -1012,7 +1012,7 @@ func (m *Manager) verifyRigIdentity(rigPath, rigName string) error {
 	}
 
 	// Verify the database name matches what we expect.
-	// The database should be named after the rig (e.g., "excavation") not after
+	// The database should be named after the rig (e.g., "mineshaft") not after
 	// a bd init artifact (e.g., "beads_gt") or a stale value from another rig.
 	if metadata.DoltDatabase != "" && metadata.DoltDatabase != rigName {
 		fmt.Fprintf(os.Stderr, "   ⚠ metadata.json has dolt_database=%q (expected %q) — attempting repair\n",
@@ -1123,7 +1123,7 @@ func dropRigOrphanDBs(townRoot, prefix, rigName string) error {
 // Use `bd doctor --fix` in the project to configure sync-branch if needed.
 // TODO(bd-yaml): beads config should migrate to JSON (see beads issue)
 //
-// rigName is the rig's database name (e.g. "excavation"). When non-empty and
+// rigName is the rig's database name (e.g. "mineshaft"). When non-empty and
 // different from the database that `bd init --prefix` creates (named "<prefix>"
 // on bd >= 0.62 or "beads_<prefix>" on older bd), InitBeads drops the orphan
 // to prevent the silent data split documented in gh#3562.
@@ -1185,7 +1185,7 @@ func (m *Manager) InitBeads(rigPath, prefix, rigName string) error {
 	} else {
 		// bd init succeeded - configure the Dolt database
 
-		// Configure custom types for Excavation Site (agent, role, rig, minecart).
+		// Configure custom types for Mineshaft (agent, role, rig, minecart).
 		// These were extracted from beads core in v0.46.0 and now require explicit config.
 		configCmd := exec.Command("bd", "config", "set", "types.custom", constants.BeadsCustomTypes)
 		configCmd.Dir = rigPath
@@ -1351,7 +1351,7 @@ func (m *Manager) ensureGitignoreEntry(gitignorePath, entry string) error {
 }
 
 // deriveBeadsPrefix generates a beads prefix from a rig name.
-// Examples: "excavation" -> "gt", "my-project" -> "mp", "foo" -> "foo"
+// Examples: "mineshaft" -> "gt", "my-project" -> "mp", "foo" -> "foo"
 func deriveBeadsPrefix(name string) string {
 	// Strip path separators — callers should validate names, but be defensive
 	name = filepath.Base(name)
@@ -1367,7 +1367,7 @@ func deriveBeadsPrefix(name string) string {
 	})
 
 	// If single part, try camelCase splitting first (e.g., "myProject" -> "my" + "Project"),
-	// then fall back to compound word detection (e.g., "excavation" -> "gas" + "town").
+	// then fall back to compound word detection (e.g., "mineshaft" -> "gas" + "town").
 	if len(parts) == 1 {
 		if camelParts := splitCamelCase(parts[0]); len(camelParts) >= 2 {
 			parts = camelParts
@@ -1377,7 +1377,7 @@ func deriveBeadsPrefix(name string) string {
 	}
 
 	if len(parts) >= 2 {
-		// Take first letter of each part: "excavation-site" -> "gt"
+		// Take first letter of each part: "mineshaft" -> "gt"
 		prefix := ""
 		for _, p := range parts {
 			if len(p) > 0 {
@@ -1396,7 +1396,7 @@ func deriveBeadsPrefix(name string) string {
 
 // splitCompoundWord attempts to split a compound word into its components.
 // Common suffixes like "town", "ville", "port" are detected to split
-// compound names (e.g., "excavation" -> ["gas", "town"]).
+// compound names (e.g., "mineshaft" -> ["gas", "town"]).
 func splitCompoundWord(word string) []string {
 	word = strings.ToLower(word)
 
@@ -1930,7 +1930,7 @@ func (m *Manager) createPluginDirectories(rigPath string) error {
 	// Create a README in town plugins if it doesn't exist
 	townReadme := filepath.Join(townPluginsDir, "README.md")
 	if _, err := os.Stat(townReadme); os.IsNotExist(err) {
-		content := `# Excavation Site Plugins
+		content := `# Mineshaft Plugins
 
 This directory contains town-level plugins that run during Supervisor patrol cycles.
 
@@ -1960,7 +1960,7 @@ See docs/supervisor-plugins.md for full documentation.
 		return fmt.Errorf("creating rig plugins directory: %w", err)
 	}
 
-	// Add Excavation Site directories and config files to rig .gitignore so they
+	// Add Mineshaft directories and config files to rig .gitignore so they
 	// don't pollute the project repo. The rig container is not a git repo
 	// itself, but this is a defensive measure against accidental git init
 	// or future architecture changes.

@@ -331,14 +331,14 @@ func (h *SetupAPIHandler) handleCheckWorkspace(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// Check if overseer/ directory exists (indicates a Excavation Site HQ)
+	// Check if overseer/ directory exists (indicates a Mineshaft HQ)
 	overseerDir := filepath.Join(path, "overseer")
 	if _, err := os.Stat(overseerDir); os.IsNotExist(err) {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(CheckWorkspaceResponse{
 			Valid:   false,
 			Path:    path,
-			Message: "Not a Excavation Site workspace (no overseer/ directory)",
+			Message: "Not a Mineshaft workspace (no overseer/ directory)",
 		})
 		return
 	}
@@ -441,7 +441,7 @@ const setupHTML = `<!DOCTYPE html>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="dashboard-token" content="<!--CSRF_TOKEN-->">
-    <title>Excavation Site Setup</title>
+    <title>Mineshaft Setup</title>
     <style>
         :root {
             --bg-dark: #0d1117;
@@ -772,12 +772,12 @@ const setupHTML = `<!DOCTYPE html>
         <div class="setup-card" id="mode-existing">
             <h2>Open Existing Workspace</h2>
             <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem;">
-                Enter the path to an existing Excavation Site workspace.
+                Enter the path to an existing Mineshaft workspace.
             </p>
             <div class="form-group">
                 <label>Workspace Path</label>
                 <input type="text" id="existing-path" placeholder="~/gt" value="~/gt">
-                <div class="hint">Path to your Excavation Site HQ directory</div>
+                <div class="hint">Path to your Mineshaft HQ directory</div>
             </div>
             <button class="btn btn-primary" id="check-btn" onclick="checkWorkspace()">Check Workspace</button>
             <div id="workspace-result"></div>
@@ -789,7 +789,7 @@ const setupHTML = `<!DOCTYPE html>
             <div class="form-group">
                 <label>Workspace Path</label>
                 <input type="text" id="install-path" placeholder="~/gt" value="~/gt">
-                <div class="hint">Where to create your Excavation Site headquarters</div>
+                <div class="hint">Where to create your Mineshaft headquarters</div>
             </div>
             <div class="form-group">
                 <label>Workspace Name (optional)</label>

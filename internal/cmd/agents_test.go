@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 func TestAgentsCmd_DefaultRunE(t *testing.T) {
@@ -71,7 +71,7 @@ func TestAgentsListCmd_StillRegistered(t *testing.T) {
 }
 
 func TestAgentsCmd_ShortDescription(t *testing.T) {
-	if agentsCmd.Short == "Switch between Excavation Site agent sessions" {
+	if agentsCmd.Short == "Switch between Mineshaft agent sessions" {
 		t.Error("agentsCmd.Short still describes popup menu behavior; should describe listing")
 	}
 }
@@ -111,7 +111,7 @@ func TestCategorizeSession_InvalidName(t *testing.T) {
 		name  string
 		input string
 	}{
-		{"random string", "not-a-excavation-session"},
+		{"random string", "not-a-mineshaft-session"},
 		{"bare word", "foobar"},
 	}
 
@@ -180,10 +180,10 @@ func TestDisplayLabel_AllTypes(t *testing.T) {
 	}{
 		{"overseer", AgentSession{Name: "hq-overseer", Type: AgentOverseer}, "Overseer"},
 		{"supervisor", AgentSession{Name: "hq-supervisor", Type: AgentSupervisor}, "Supervisor"},
-		{"witness", AgentSession{Name: "gt-witness", Type: AgentWitness, Rig: "excavation"}, "excavation/witness"},
-		{"refinery", AgentSession{Name: "gt-refinery", Type: AgentRefinery, Rig: "excavation"}, "excavation/refinery"},
-		{"crew", AgentSession{Name: "gt-crew-max", Type: AgentCrew, Rig: "excavation", AgentName: "max"}, "crew/max"},
-		{"miner", AgentSession{Name: "gt-furiosa", Type: AgentMiner, Rig: "excavation", AgentName: "furiosa"}, "furiosa"},
+		{"witness", AgentSession{Name: "gt-witness", Type: AgentWitness, Rig: "mineshaft"}, "mineshaft/witness"},
+		{"refinery", AgentSession{Name: "gt-refinery", Type: AgentRefinery, Rig: "mineshaft"}, "mineshaft/refinery"},
+		{"crew", AgentSession{Name: "gt-crew-max", Type: AgentCrew, Rig: "mineshaft", AgentName: "max"}, "crew/max"},
+		{"miner", AgentSession{Name: "gt-furiosa", Type: AgentMiner, Rig: "mineshaft", AgentName: "furiosa"}, "furiosa"},
 	}
 
 	for _, tt := range tests {
@@ -223,7 +223,7 @@ func TestFilterAndSortSessions_AllFiltered(t *testing.T) {
 	}
 	got := filterAndSortSessions(input, true)
 	if len(got) != 0 {
-		t.Errorf("filterAndSortSessions(non-excavation names) returned %d agents, want 0", len(got))
+		t.Errorf("filterAndSortSessions(non-mineshaft names) returned %d agents, want 0", len(got))
 	}
 }
 
@@ -284,14 +284,14 @@ func TestFilterAndSortSessions_BootSessionFiltered(t *testing.T) {
 func TestFilterAndSortSessions_SortOrder(t *testing.T) {
 	setupCmdTestRegistry(t)
 	input := []string{
-		"gt-crew-zed",   // crew (excavation)
-		"gt-witness",    // witness (excavation)
+		"gt-crew-zed",   // crew (mineshaft)
+		"gt-witness",    // witness (mineshaft)
 		"hq-supervisor",     // supervisor
-		"gt-refinery",   // refinery (excavation)
+		"gt-refinery",   // refinery (mineshaft)
 		"hq-overseer",      // overseer
-		"gt-furiosa",    // miner (excavation)
+		"gt-furiosa",    // miner (mineshaft)
 		"mr-witness",    // witness (myrig)
-		"gt-crew-alpha", // crew (excavation)
+		"gt-crew-alpha", // crew (mineshaft)
 	}
 
 	got := filterAndSortSessions(input, true)
@@ -299,11 +299,11 @@ func TestFilterAndSortSessions_SortOrder(t *testing.T) {
 	// Expected order:
 	// 1. overseer (town-level)
 	// 2. supervisor (town-level)
-	// 3. excavation/refinery (rig "excavation" < "myrig", refinery before witness)
-	// 4. excavation/witness
-	// 5. excavation/crew/alpha (crew after witness, alpha < zed)
-	// 6. excavation/crew/zed
-	// 7. excavation/miner/furiosa (miner last within rig)
+	// 3. mineshaft/refinery (rig "mineshaft" < "myrig", refinery before witness)
+	// 4. mineshaft/witness
+	// 5. mineshaft/crew/alpha (crew after witness, alpha < zed)
+	// 6. mineshaft/crew/zed
+	// 7. mineshaft/miner/furiosa (miner last within rig)
 	// 8. myrig/witness
 	wantOrder := []struct {
 		wantType AgentType
@@ -339,7 +339,7 @@ func TestFilterAndSortSessions_CombinedFiltering(t *testing.T) {
 		"hq-overseer",
 		"hq-boot",        // boot: always filtered
 		"gt-furiosa",     // miner: filtered when includeMiners=false
-		"random-session", // non-excavation: always filtered
+		"random-session", // non-mineshaft: always filtered
 		"gt-witness",
 	}
 
@@ -381,7 +381,7 @@ func TestRunAgentsList_EmptyList_Output(t *testing.T) {
 	}
 
 	// runAgentsList succeeded: output is either the empty-list message
-	// or a real agent listing if excavation sessions happen to be running.
+	// or a real agent listing if mineshaft sessions happen to be running.
 	if !strings.Contains(output, "No agent sessions running.") &&
 		!strings.Contains(output, "Overseer") &&
 		!strings.Contains(output, "Supervisor") &&
@@ -608,14 +608,14 @@ func TestGuessSessionFromWorkerDir(t *testing.T) {
 		workerDir string
 		want      string
 	}{
-		{"crew worker", "/town/excavation/crew/max", "gt-crew-max"},
-		{"miner worker", "/town/excavation/miners/furiosa", "gt-furiosa"},
-		{"witness worker", "/town/excavation/witness/main", "gt-witness"},
-		{"witness worker rig", "/town/excavation/witness/rig", "gt-witness"},
-		{"refinery worker", "/town/excavation/refinery/main", "gt-refinery"},
-		{"refinery worker rig", "/town/excavation/refinery/rig", "gt-refinery"},
-		{"unknown type", "/town/excavation/unknown/thing", ""},
-		{"too few path parts", "/town/excavation", ""},
+		{"crew worker", "/town/mineshaft/crew/max", "gt-crew-max"},
+		{"miner worker", "/town/mineshaft/miners/furiosa", "gt-furiosa"},
+		{"witness worker", "/town/mineshaft/witness/main", "gt-witness"},
+		{"witness worker rig", "/town/mineshaft/witness/rig", "gt-witness"},
+		{"refinery worker", "/town/mineshaft/refinery/main", "gt-refinery"},
+		{"refinery worker rig", "/town/mineshaft/refinery/rig", "gt-refinery"},
+		{"unknown type", "/town/mineshaft/unknown/thing", ""},
+		{"too few path parts", "/town/mineshaft", ""},
 		{"different rig", "/town/myrig/crew/alpha", "mr-crew-alpha"},
 	}
 

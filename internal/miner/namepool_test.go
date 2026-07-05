@@ -101,7 +101,7 @@ func TestNamePool_Overflow(t *testing.T) {
 	}
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
-	pool := NewNamePoolWithConfig(tmpDir, "excavation", "mad-max", nil, 5)
+	pool := NewNamePoolWithConfig(tmpDir, "mineshaft", "mad-max", nil, 5)
 
 	// Exhaust the small pool
 	for i := 0; i < 5; i++ {
@@ -132,7 +132,7 @@ func TestNamePool_OverflowNotReusable(t *testing.T) {
 	}
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
-	pool := NewNamePoolWithConfig(tmpDir, "excavation", "mad-max", nil, 3)
+	pool := NewNamePoolWithConfig(tmpDir, "mineshaft", "mad-max", nil, 3)
 
 	// Exhaust the pool
 	for i := 0; i < 3; i++ {
@@ -467,7 +467,7 @@ func TestNamePool_Reset(t *testing.T) {
 func TestThemeForRig(t *testing.T) {
 	// Different rigs should get different themes (with high probability)
 	themes := make(map[string]bool)
-	for _, rigName := range []string{"excavation", "beads", "myproject", "webapp"} {
+	for _, rigName := range []string{"mineshaft", "beads", "myproject", "webapp"} {
 		themes[ThemeForRig(rigName)] = true
 	}
 	// Should have at least 2 different themes across 4 rigs

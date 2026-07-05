@@ -14,13 +14,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/activity"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/activity"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // runCmd executes a command with a timeout and returns stdout.
@@ -46,7 +46,7 @@ func runCmd(timeout time.Duration, name string, args ...string) (*bytes.Buffer, 
 }
 
 // runTmuxCmd runs a tmux command using the per-town socket.
-// Without -L, tmux queries the default socket which has no Excavation Site sessions.
+// Without -L, tmux queries the default socket which has no Mineshaft sessions.
 func (f *LiveMinecartFetcher) runTmuxCmd(args ...string) (*bytes.Buffer, error) {
 	fullArgs := []string{}
 	if f.tmuxSocket != "" {
@@ -176,7 +176,7 @@ type LiveMinecartFetcher struct {
 
 	// tmuxSocket is the per-town tmux socket name (e.g., "dipgt-651c6b").
 	// All tmux commands must use -L with this socket; the default socket
-	// has no Excavation Site sessions.
+	// has no Mineshaft sessions.
 	tmuxSocket string
 
 	// Circuit breaker for FetchMinecarts — prevents process storms when
@@ -189,7 +189,7 @@ type LiveMinecartFetcher struct {
 func NewLiveMinecartFetcher() (*LiveMinecartFetcher, error) {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return nil, fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return nil, fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	webCfg := config.DefaultWebTimeoutsConfig()
@@ -1167,7 +1167,7 @@ func formatTimestamp(t time.Time) string {
 }
 
 // formatAgentAddress shortens agent addresses for display.
-// "excavation/miners/Toast" -> "Toast (excavation)"
+// "mineshaft/miners/Toast" -> "Toast (mineshaft)"
 // "overseer/" -> "Overseer"
 func formatAgentAddress(addr string) string {
 	if addr == "" {
@@ -1483,7 +1483,7 @@ func (f *LiveMinecartFetcher) FetchSessions() ([]SessionRow, error) {
 		parts := strings.SplitN(line, ":", 2)
 		name := parts[0]
 
-		// Only include Excavation Site sessions
+		// Only include Mineshaft sessions
 		if !session.IsKnownSession(name) {
 			continue
 		}
@@ -1891,7 +1891,7 @@ func eventCategory(eventType string) string {
 	}
 }
 
-// extractRig extracts the rig name from an actor address like "excavation/miners/nux".
+// extractRig extracts the rig name from an actor address like "mineshaft/miners/nux".
 func extractRig(actor string) string {
 	if actor == "" {
 		return ""

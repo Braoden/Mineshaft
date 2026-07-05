@@ -15,12 +15,12 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var (
@@ -46,7 +46,7 @@ var costsCmd = &cobra.Command{
 	Use:     "costs",
 	GroupID: GroupDiag,
 	Short:   "Show costs for running Claude sessions",
-	Long: `Display costs for Claude Code sessions in Excavation Site.
+	Long: `Display costs for Claude Code sessions in Mineshaft.
 
 Costs are calculated from Claude Code transcript files in
 $CLAUDE_CONFIG_DIR/projects/ (defaults to ~/.claude/projects/) by summing
@@ -83,8 +83,8 @@ Session costs are aggregated daily by 'gt costs digest' into a single
 permanent "Cost Report YYYY-MM-DD" bead for audit purposes.
 
 Examples:
-  gt costs record --session gt-excavation-toast
-  gt costs record --session gt-excavation-toast --work-item gt-abc123`,
+  gt costs record --session gt-mineshaft-toast
+  gt costs record --session gt-mineshaft-toast --work-item gt-abc123`,
 	RunE: runCostsRecord,
 }
 
@@ -236,7 +236,7 @@ func runLiveCosts() error {
 	var total float64
 
 	for _, sess := range sessions {
-		// Only process Excavation Site sessions
+		// Only process Mineshaft sessions
 		if !session.IsKnownSession(sess) {
 			continue
 		}
@@ -406,7 +406,7 @@ func querySessionEvents() []CostEntry {
 	// Discover town root for cwd-based bd discovery
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		// Not in a Excavation Site workspace - return empty list
+		// Not in a Mineshaft workspace - return empty list
 		return nil
 	}
 
@@ -841,7 +841,7 @@ func outputCostsJSON(output CostsOutput) error {
 
 func outputCostsHuman(costs []SessionCost, total float64) error {
 	if len(costs) == 0 {
-		fmt.Println(style.Dim.Render("No Excavation Site sessions found"))
+		fmt.Println(style.Dim.Render("No Mineshaft sessions found"))
 		return nil
 	}
 
@@ -952,7 +952,7 @@ func runCostsRecord(cmd *cobra.Command, args []string) error {
 		session = detectCurrentTmuxSession()
 	}
 	if session == "" {
-		// Not a Excavation Site session (e.g., Claude Code launched outside gt agent system).
+		// Not a Mineshaft session (e.g., Claude Code launched outside gt agent system).
 		// Exit silently — no costs to record.
 		if costsVerbose {
 			fmt.Fprintf(os.Stderr, "[costs] no session context found, skipping costs record\n")
@@ -1043,7 +1043,7 @@ func runCostsRecord(cmd *cobra.Command, args []string) error {
 
 // deriveSessionName derives the tmux session name from GT_* environment variables.
 // Uses session.* helpers for canonical naming. Parses GT_ROLE via parseRoleString
-// so compound forms (e.g. "excavation/witness") resolve to their canonical session names.
+// so compound forms (e.g. "mineshaft/witness") resolve to their canonical session names.
 func deriveSessionName() string {
 	role := os.Getenv("GT_ROLE")
 	rig := os.Getenv("GT_RIG")
@@ -1107,7 +1107,7 @@ func detectCurrentTmuxSession() string {
 	}
 
 	session := strings.TrimSpace(string(output))
-	// Only return if it looks like a Excavation Site session
+	// Only return if it looks like a Mineshaft session
 	// Accept both gt- (rig sessions) and hq- (town-level sessions like hq-overseer)
 	if strings.HasPrefix(session, constants.SessionPrefix) || strings.HasPrefix(session, constants.HQSessionPrefix) {
 		return session

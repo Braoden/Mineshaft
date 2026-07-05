@@ -72,7 +72,7 @@ MAIL ROUTING:
   │  └─────────────────────────────────────────────┘   │
   │                                                     │
   │  ┌─────────────────────────────────────────────┐   │
-  │  │           excavation/ (rig mailboxes)          │   │
+  │  │           mineshaft/ (rig mailboxes)          │   │
   │  │  ├── witness      ← greenplace/witness         │   │
   │  │  ├── refinery     ← greenplace/refinery        │   │
   │  │  ├── Toast        ← greenplace/Toast           │   │
@@ -129,7 +129,7 @@ Use --urgent as shortcut for --priority 0.
 Examples:
   gt mail send greenplace/Toast -s "Status check" -m "How's that bug fix going?"
   gt mail send overseer/ -s "Work complete" -m "Finished gt-abc"
-  gt mail send excavation/ -s "All hands" -m "Swarm starting" --notify
+  gt mail send mineshaft/ -s "All hands" -m "Swarm starting" --notify
   gt mail send greenplace/Toast -s "Task" -m "Fix bug" --type task --priority 1
   gt mail send greenplace/Toast -s "Urgent" -m "Help!" --urgent
   gt mail send overseer/ -s "Re: Status" -m "Done" --reply-to msg-abc123
@@ -337,7 +337,7 @@ BEHAVIOR:
 
 ELIGIBILITY:
 The caller must match the queue's claim_pattern (stored in the queue bead).
-Pattern examples: "*" (anyone), "excavation/miners/*" (specific rig crew).
+Pattern examples: "*" (anyone), "mineshaft/miners/*" (specific rig crew).
 
 Examples:
   gt mail claim work-requests   # Claim from specific queue
@@ -390,7 +390,7 @@ Use case: Town quiescence - reset all inboxes across workers efficiently.
 
 Examples:
   gt mail clear                      # Clear your inbox
-  gt mail clear excavation/miners/joe # Clear joe's inbox
+  gt mail clear mineshaft/miners/joe # Clear joe's inbox
   gt mail clear overseer/               # Clear overseer's inbox`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runMailClear,

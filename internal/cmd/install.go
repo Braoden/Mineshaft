@@ -15,21 +15,21 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/cli"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/deps"
-	"github.com/steveyegge/excavation/internal/doltserver"
-	"github.com/steveyegge/excavation/internal/formula"
-	"github.com/steveyegge/excavation/internal/hooks"
-	"github.com/steveyegge/excavation/internal/runtime"
-	"github.com/steveyegge/excavation/internal/shell"
-	"github.com/steveyegge/excavation/internal/state"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/templates"
-	"github.com/steveyegge/excavation/internal/workspace"
-	"github.com/steveyegge/excavation/internal/wrappers"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/cli"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/deps"
+	"github.com/steveyegge/mineshaft/internal/doltserver"
+	"github.com/steveyegge/mineshaft/internal/formula"
+	"github.com/steveyegge/mineshaft/internal/hooks"
+	"github.com/steveyegge/mineshaft/internal/runtime"
+	"github.com/steveyegge/mineshaft/internal/shell"
+	"github.com/steveyegge/mineshaft/internal/state"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/templates"
+	"github.com/steveyegge/mineshaft/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/wrappers"
 )
 
 var (
@@ -50,10 +50,10 @@ var (
 var installCmd = &cobra.Command{
 	Use:     "install [path]",
 	GroupID: GroupWorkspace,
-	Short:   "Create a new Excavation Site HQ (workspace)",
-	Long: `Create a new Excavation Site HQ at the specified path.
+	Short:   "Create a new Mineshaft HQ (workspace)",
+	Long: `Create a new Mineshaft HQ at the specified path.
 
-The HQ (headquarters) is the top-level directory where Excavation Site is installed -
+The HQ (headquarters) is the top-level directory where Mineshaft is installed -
 the root of your workspace where all rigs and agents live. It contains:
   - CLAUDE.md            Overseer role context (Overseer runs from HQ root)
   - overseer/               Overseer config, state, and rig registry
@@ -131,15 +131,15 @@ func runInstall(cmd *cobra.Command, args []string) error {
 			fmt.Printf("✓ Installed gt-codex, gt-gemini, and gt-opencode to %s\n", wrappers.BinDir())
 			return nil
 		}
-		return fmt.Errorf("directory is already a Excavation Site HQ (use --force to reinitialize)")
+		return fmt.Errorf("directory is already a Mineshaft HQ (use --force to reinitialize)")
 	}
 
 	// Check if inside an existing workspace (e.g., crew worktree, rig directory)
 	if existingRoot, _ := workspace.Find(absPath); existingRoot != "" && existingRoot != absPath && !installForce {
-		return fmt.Errorf("cannot create HQ inside existing Excavation Site workspace\n"+
+		return fmt.Errorf("cannot create HQ inside existing Mineshaft workspace\n"+
 			"  Current location: %s\n"+
 			"  Town root: %s\n\n"+
-			"Did you mean to update the binary? Run 'make install' in the excavation repo.\n"+
+			"Did you mean to update the binary? Run 'make install' in the mineshaft repo.\n"+
 			"Use --force to override (not recommended).", absPath, existingRoot)
 	}
 
@@ -184,7 +184,7 @@ func runInstall(cmd *cobra.Command, args []string) error {
 				} else if pid > 0 {
 					msg += fmt.Sprintf("\nPort is held by PID %d", pid)
 				}
-				msg += "\n\nAnother Excavation Site instance is using this port. Specify a free port:"
+				msg += "\n\nAnother Mineshaft instance is using this port. Specify a free port:"
 				origArgs := strings.Join(os.Args[1:], " ")
 				if freePort := doltserver.FindFreePort(port + 1); freePort > 0 {
 					msg += fmt.Sprintf("\n\n  gt %s --dolt-port %d", origArgs, freePort)
@@ -196,7 +196,7 @@ func runInstall(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	fmt.Printf("%s Creating Excavation Site HQ at %s\n\n",
+	fmt.Printf("%s Creating Mineshaft HQ at %s\n\n",
 		style.Bold.Render("🏭"), style.Dim.Render(absPath))
 
 	// Create directory structure
@@ -452,9 +452,9 @@ func runInstall(cmd *cobra.Command, args []string) error {
 			fmt.Printf("   ✓ Installed shell integration (%s)\n", shell.RCFilePath(shell.DetectShell()))
 		}
 		if err := state.Enable(Version); err != nil {
-			fmt.Printf("   %s Could not enable Excavation Site: %v\n", style.Dim.Render("⚠"), err)
+			fmt.Printf("   %s Could not enable Mineshaft: %v\n", style.Dim.Render("⚠"), err)
 		} else {
-			fmt.Printf("   ✓ Enabled Excavation Site globally\n")
+			fmt.Printf("   ✓ Enabled Mineshaft globally\n")
 		}
 	}
 
@@ -617,9 +617,9 @@ func createTownRootAgentMDs(townRoot string) (bool, error) {
 	// Create CLAUDE.md if it doesn't exist.
 	claudePath := filepath.Join(townRoot, "CLAUDE.md")
 	if _, err := os.Stat(claudePath); os.IsNotExist(err) {
-		content := `# Excavation Site
+		content := `# Mineshaft
 
-This is a Excavation Site workspace. Your identity and role are determined by ` + "`" + cli.Name() + " prime`" + `.
+This is a Mineshaft workspace. Your identity and role are determined by ` + "`" + cli.Name() + " prime`" + `.
 
 Run ` + "`" + cli.Name() + " prime`" + ` for full context after compaction, clear, or new session.
 
@@ -682,7 +682,7 @@ func bdInitDoltConfig(townPath string) *doltserver.Config {
 
 // initTownBeads initializes town-level beads database using bd init.
 // Town beads use the "hq-" prefix for overseer mail and cross-rig coordination.
-// Uses Dolt backend in server mode (Excavation Site requires a running Dolt sql-server).
+// Uses Dolt backend in server mode (Mineshaft requires a running Dolt sql-server).
 func initTownBeads(townPath string) error {
 	// Dolt server is required — wait for it to accept queries before proceeding.
 	// The server may have just been started by gt install and TCP reachability
@@ -752,7 +752,7 @@ func initTownBeads(townPath string) error {
 		fmt.Printf("   %s Could not set beads.role: %v\n", style.Dim.Render("⚠"), err)
 	}
 
-	// Configure custom types for Excavation Site before any bd config command can force
+	// Configure custom types for Mineshaft before any bd config command can force
 	// an older bd binary through legacy schema initialization.
 	if err := beads.EnsureCustomTypesConfigYAML(beadsDir); err != nil {
 		return fmt.Errorf("ensuring custom types: %w", err)
@@ -807,9 +807,9 @@ func withBeadsDirEnv(beadsDir string) []string {
 	return beads.BuildMutationPinnedBDEnv(base, beadsDir)
 }
 
-// ensureCustomTypes registers Excavation Site custom issue types with beads.
+// ensureCustomTypes registers Mineshaft custom issue types with beads.
 // Beads core only supports built-in types (bug, feature, task, etc.).
-// Excavation Site needs custom types: agent, role, rig, minecart, slot.
+// Mineshaft needs custom types: agent, role, rig, minecart, slot.
 // This is idempotent - safe to call multiple times.
 func ensureCustomTypes(beadsPath string) error {
 	cmd := exec.Command("bd", "config", "set", "types.custom", constants.BeadsCustomTypes)
@@ -838,7 +838,7 @@ func ensureCustomTypes(beadsPath string) error {
 func initTownAgentBeads(townPath string) error {
 	bd := beads.New(townPath)
 
-	// bd init doesn't enable "custom" issue types by default, but Excavation Site uses
+	// bd init doesn't enable "custom" issue types by default, but Mineshaft uses
 	// agent beads during install and runtime. Ensure these types are enabled
 	// before attempting to create any town-level system beads.
 	if err := beads.EnsureCustomTypesConfigYAML(beads.ResolveBeadsDir(townPath)); err != nil {

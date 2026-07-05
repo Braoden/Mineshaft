@@ -114,13 +114,13 @@ func TestStaleAgentBeadsCheck_Phase2_NoTownBeadsDir(t *testing.T) {
 	}
 	// Routes with one known rig + town-level route
 	routesContent := `{"prefix":"hq-","path":"."}` + "\n" +
-		`{"prefix":"gt-","path":"excavation/overseer/rig"}` + "\n"
+		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}` + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create the rig beads directory so Phase 1 can attempt to scan
-	rigBeadsDir := filepath.Join(tmpDir, "excavation", "overseer", "rig", ".beads")
+	rigBeadsDir := filepath.Join(tmpDir, "mineshaft", "overseer", "rig", ".beads")
 	if err := os.MkdirAll(rigBeadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -152,14 +152,14 @@ func TestStaleAgentBeadsCheck_KnownPrefixTracking(t *testing.T) {
 	// Mix of town-level and rig-level routes
 	routesContent := `{"prefix":"hq-","path":"."}` + "\n" +
 		`{"prefix":"hq-cv-","path":"."}` + "\n" +
-		`{"prefix":"gt-","path":"excavation/overseer/rig"}` + "\n" +
+		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}` + "\n" +
 		`{"prefix":"bd-","path":"beads/overseer/rig"}` + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create rig directories
-	for _, rigPath := range []string{"excavation/overseer/rig/.beads", "beads/overseer/rig/.beads"} {
+	for _, rigPath := range []string{"mineshaft/overseer/rig/.beads", "beads/overseer/rig/.beads"} {
 		if err := os.MkdirAll(filepath.Join(tmpDir, rigPath), 0755); err != nil {
 			t.Fatal(err)
 		}
@@ -187,17 +187,17 @@ func TestParseCrewOrMinerFromID(t *testing.T) {
 	}{
 		{
 			name:       "standard crew ID",
-			id:         "gt-excavation-crew-alice",
+			id:         "gt-mineshaft-crew-alice",
 			prefix:     "gt",
-			rigName:    "excavation",
+			rigName:    "mineshaft",
 			role:       "crew",
 			wantWorker: "alice",
 		},
 		{
 			name:       "standard miner ID",
-			id:         "gt-excavation-miner-nux",
+			id:         "gt-mineshaft-miner-nux",
 			prefix:     "gt",
-			rigName:    "excavation",
+			rigName:    "mineshaft",
 			role:       "miner",
 			wantWorker: "nux",
 		},
@@ -227,9 +227,9 @@ func TestParseCrewOrMinerFromID(t *testing.T) {
 		},
 		{
 			name:       "ID does not match pattern",
-			id:         "gt-excavation-witness",
+			id:         "gt-mineshaft-witness",
 			prefix:     "gt",
-			rigName:    "excavation",
+			rigName:    "mineshaft",
 			role:       "crew",
 			wantWorker: "",
 		},
@@ -237,15 +237,15 @@ func TestParseCrewOrMinerFromID(t *testing.T) {
 			name:       "wrong prefix",
 			id:         "bd-beads-crew-human",
 			prefix:     "gt",
-			rigName:    "excavation",
+			rigName:    "mineshaft",
 			role:       "crew",
 			wantWorker: "",
 		},
 		{
 			name:       "empty worker name after prefix strip",
-			id:         "gt-excavation-crew-",
+			id:         "gt-mineshaft-crew-",
 			prefix:     "gt",
-			rigName:    "excavation",
+			rigName:    "mineshaft",
 			role:       "crew",
 			wantWorker: "",
 		},
@@ -324,12 +324,12 @@ func TestStaleAgentBeadsCheck_FixFallbackToTownBeads(t *testing.T) {
 		t.Fatal(err)
 	}
 	routesContent := `{"prefix":"hq-","path":"."}` + "\n" +
-		`{"prefix":"gt-","path":"excavation/overseer/rig"}` + "\n"
+		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}` + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 
-	rigBeadsDir := filepath.Join(tmpDir, "excavation", "overseer", "rig", ".beads")
+	rigBeadsDir := filepath.Join(tmpDir, "mineshaft", "overseer", "rig", ".beads")
 	if err := os.MkdirAll(rigBeadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}

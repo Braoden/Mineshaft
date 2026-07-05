@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/mineshaft/internal/session"
 )
 
 func TestValidateCommand(t *testing.T) {
@@ -884,7 +884,7 @@ func TestAPIHandler_SSE_ContentType(t *testing.T) {
 // writes don't race. The read lock is held through serialization so a
 // concurrent writer can't replace the cached pointer mid-encode.
 //
-// Regression test for steveyegge/excavation#1230 item 4.
+// Regression test for steveyegge/mineshaft#1230 item 4.
 func TestOptionsCacheConcurrentAccess(t *testing.T) {
 	h := &APIHandler{
 		gtPath:            "echo", // won't actually be called for cache hits
@@ -1269,7 +1269,7 @@ func TestParseMinecartListJSON(t *testing.T) {
 // each sleeping 0.1s, total time must be >= 0.25s (serialized), proving the
 // semaphore prevents all 3 from running simultaneously (~0.1s).
 //
-// Regression test for steveyegge/excavation#1230 item 5.
+// Regression test for steveyegge/mineshaft#1230 item 5.
 func TestRunGtCommandSemaphore(t *testing.T) {
 	// Create handler with a 1-slot semaphore — fully serialized execution.
 	h := &APIHandler{
@@ -1304,7 +1304,7 @@ func TestRunGtCommandSemaphore(t *testing.T) {
 // TestRunGtCommandSemaphoreContextCancel verifies that a cancelled context
 // returns immediately instead of blocking on a full semaphore.
 //
-// Regression test for steveyegge/excavation#1230 item 5.
+// Regression test for steveyegge/mineshaft#1230 item 5.
 func TestRunGtCommandSemaphoreContextCancel(t *testing.T) {
 	h := &APIHandler{
 		gtPath:            "sleep",

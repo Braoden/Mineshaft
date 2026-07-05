@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/mail"
+	"github.com/steveyegge/mineshaft/internal/mail"
 )
 
 func TestFormatInjectOutput(t *testing.T) {
@@ -46,12 +46,12 @@ func TestFormatInjectOutput(t *testing.T) {
 		{
 			name: "high only",
 			messages: []*mail.Message{
-				msg("m2", "excavation/wolf", "Review PR", mail.PriorityHigh),
+				msg("m2", "mineshaft/wolf", "Review PR", mail.PriorityHigh),
 			},
 			wantContains: []string{
 				"<system-reminder>",
 				"1 high-priority message(s)",
-				"m2 from excavation/wolf: Review PR",
+				"m2 from mineshaft/wolf: Review PR",
 				"process these messages",
 				"before going idle",
 			},
@@ -63,12 +63,12 @@ func TestFormatInjectOutput(t *testing.T) {
 		{
 			name: "normal only",
 			messages: []*mail.Message{
-				msg("m3", "excavation/toast", "FYI update", mail.PriorityNormal),
+				msg("m3", "mineshaft/toast", "FYI update", mail.PriorityNormal),
 			},
 			wantContains: []string{
 				"<system-reminder>",
 				"1 unread message(s)",
-				"m3 from excavation/toast: FYI update",
+				"m3 from mineshaft/toast: FYI update",
 				"check these messages",
 				"before going idle",
 			},
@@ -80,11 +80,11 @@ func TestFormatInjectOutput(t *testing.T) {
 		{
 			name: "low priority treated as normal tier",
 			messages: []*mail.Message{
-				msg("m4", "excavation/nux", "Backlog item", mail.PriorityLow),
+				msg("m4", "mineshaft/nux", "Backlog item", mail.PriorityLow),
 			},
 			wantContains: []string{
 				"1 unread message(s)",
-				"m4 from excavation/nux: Backlog item",
+				"m4 from mineshaft/nux: Backlog item",
 				"check these messages",
 			},
 			wantAbsent: []string{
@@ -96,13 +96,13 @@ func TestFormatInjectOutput(t *testing.T) {
 			name: "urgent + high: high listed separately",
 			messages: []*mail.Message{
 				msg("m5", "overseer/", "Emergency", mail.PriorityUrgent),
-				msg("m6", "excavation/wolf", "Important review", mail.PriorityHigh),
+				msg("m6", "mineshaft/wolf", "Important review", mail.PriorityHigh),
 			},
 			wantContains: []string{
 				"URGENT: 1 urgent message(s)",
 				"m5 from overseer/: Emergency",
 				"1 high-priority message(s)",
-				"m6 from excavation/wolf: Important review",
+				"m6 from mineshaft/wolf: Important review",
 				"process before going idle",
 				"gt mail read <id>",
 			},
@@ -115,14 +115,14 @@ func TestFormatInjectOutput(t *testing.T) {
 			name: "urgent + high + normal: all tiers shown",
 			messages: []*mail.Message{
 				msg("m7", "overseer/", "Fire", mail.PriorityUrgent),
-				msg("m8", "excavation/wolf", "Review ASAP", mail.PriorityHigh),
-				msg("m9", "excavation/toast", "Newsletter", mail.PriorityNormal),
+				msg("m8", "mineshaft/wolf", "Review ASAP", mail.PriorityHigh),
+				msg("m9", "mineshaft/toast", "Newsletter", mail.PriorityNormal),
 			},
 			wantContains: []string{
 				"URGENT: 1 urgent message(s)",
 				"m7 from overseer/: Fire",
 				"1 high-priority message(s)",
-				"m8 from excavation/wolf: Review ASAP",
+				"m8 from mineshaft/wolf: Review ASAP",
 				"1 additional message(s)",
 			},
 			wantAbsent: []string{
@@ -134,8 +134,8 @@ func TestFormatInjectOutput(t *testing.T) {
 			name: "urgent + normal (no high): normal shown as additional",
 			messages: []*mail.Message{
 				msg("m10", "overseer/", "Alert", mail.PriorityUrgent),
-				msg("m11", "excavation/nux", "Low item", mail.PriorityLow),
-				msg("m12", "excavation/toast", "Info", mail.PriorityNormal),
+				msg("m11", "mineshaft/nux", "Low item", mail.PriorityLow),
+				msg("m12", "mineshaft/toast", "Info", mail.PriorityNormal),
 			},
 			wantContains: []string{
 				"URGENT: 1 urgent message(s)",
@@ -149,9 +149,9 @@ func TestFormatInjectOutput(t *testing.T) {
 		{
 			name: "high + normal: normal shown as additional",
 			messages: []*mail.Message{
-				msg("m13", "excavation/wolf", "Review", mail.PriorityHigh),
-				msg("m14", "excavation/toast", "FYI", mail.PriorityNormal),
-				msg("m15", "excavation/nux", "Backlog", mail.PriorityLow),
+				msg("m13", "mineshaft/wolf", "Review", mail.PriorityHigh),
+				msg("m14", "mineshaft/toast", "FYI", mail.PriorityNormal),
+				msg("m15", "mineshaft/nux", "Backlog", mail.PriorityLow),
 			},
 			wantContains: []string{
 				"1 high-priority message(s)",

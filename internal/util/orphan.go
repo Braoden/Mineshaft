@@ -13,8 +13,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/lock"
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/lock"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 // minOrphanAge is the minimum age (in seconds) a process must be before
@@ -64,7 +64,7 @@ func addDescendants(parentPID int, childMap map[int][]int, pids map[int]bool) {
 // This prevents killing Claude processes that are running in tmux sessions,
 // even if they temporarily show TTY "?" during startup or session transitions.
 //
-// CRITICAL: We protect ALL tmux sessions on ALL sockets. When multiple Excavation Site
+// CRITICAL: We protect ALL tmux sessions on ALL sockets. When multiple Mineshaft
 // instances run on the same machine, each uses its own tmux socket. A single-socket
 // query would miss processes in other towns' sessions, causing cross-town kills.
 func getTmuxSessionPIDs() map[int]bool {
@@ -74,7 +74,7 @@ func getTmuxSessionPIDs() map[int]bool {
 	childMap := buildChildMap()
 
 	// Scan all tmux sockets in the socket directory.
-	// Each Excavation Site instance (and any personal tmux servers) gets its own socket.
+	// Each Mineshaft instance (and any personal tmux servers) gets its own socket.
 	socketDir := tmux.SocketDir()
 	entries, err := os.ReadDir(socketDir)
 	if err == nil {
@@ -240,7 +240,7 @@ func saveSignalState(filename string, state map[int]signalState) error {
 }
 
 // orphanStateFile is the filename for orphan process tracking state.
-const orphanStateFile = "excavation-orphan-state"
+const orphanStateFile = "mineshaft-orphan-state"
 
 // loadOrphanState reads the orphan state file.
 func loadOrphanState() map[int]signalState {
@@ -274,7 +274,7 @@ func getProcessCwd(pid int) string {
 	// Fails on hardened kernels (ptrace_scope>=1) for non-descendant processes.
 	if target, err := os.Readlink(filepath.Join("/proc", pidStr, "cwd")); err == nil {
 		// Linux appends " (deleted)" when the directory has been removed.
-		// Strip it so the walk-up in isInExcavationWorkspace can still match
+		// Strip it so the walk-up in isInMineshaftWorkspace can still match
 		// the workspace root (the process is definitely orphaned if its
 		// workspace was nuked).
 		return strings.TrimSuffix(target, " (deleted)")
@@ -297,7 +297,7 @@ func getProcessCwd(pid int) string {
 	return ""
 }
 
-// resolveTownRoot returns the Excavation Site workspace root for a process, identified
+// resolveTownRoot returns the Mineshaft workspace root for a process, identified
 // by walking up from its CWD looking for the overseer/town.json marker.
 // Returns the workspace root path, or "" if the process is not in any workspace
 // or its CWD cannot be determined.
@@ -325,9 +325,9 @@ func resolveTownRootFromDir(dir string) string {
 	}
 }
 
-// isInExcavationWorkspace checks whether a process's working directory is inside
-// a Excavation Site workspace (identified by the overseer/town.json marker).
-func isInExcavationWorkspace(pid int) bool {
+// isInMineshaftWorkspace checks whether a process's working directory is inside
+// a Mineshaft workspace (identified by the overseer/town.json marker).
+func isInMineshaftWorkspace(pid int) bool {
 	return resolveTownRoot(pid) != ""
 }
 
@@ -421,10 +421,10 @@ type OrphanedProcess struct {
 	PID      int
 	Cmd      string
 	Age      int    // Age in seconds
-	TownRoot string // Excavation Site workspace root, or "" if not in any workspace
+	TownRoot string // Mineshaft workspace root, or "" if not in any workspace
 }
 
-// FindOrphanedClaudeProcesses finds Excavation Site agent processes (claude/codex/opencode/cursor-agent/copilot, etc.)
+// FindOrphanedClaudeProcesses finds Mineshaft agent processes (claude/codex/opencode/cursor-agent/copilot, etc.)
 // without a controlling terminal.
 // These are typically subagent processes spawned by Claude Code's Task tool that didn't
 // clean up properly after completion.
@@ -438,7 +438,7 @@ type OrphanedProcess struct {
 // Additionally, processes must be older than minOrphanAge seconds to be considered
 // orphaned. This prevents race conditions with newly spawned processes.
 func FindOrphanedClaudeProcesses() ([]OrphanedProcess, error) {
-	// Get PIDs belonging to valid Excavation Site tmux sessions.
+	// Get PIDs belonging to valid Mineshaft tmux sessions.
 	// These should not be killed even if they show TTY "?" during startup.
 	protectedPIDs := getTmuxSessionPIDs()
 
@@ -485,7 +485,7 @@ func FindOrphanedClaudeProcesses() ([]OrphanedProcess, error) {
 			continue
 		}
 
-		// Skip processes that belong to valid Excavation Site tmux sessions.
+		// Skip processes that belong to valid Mineshaft tmux sessions.
 		// This prevents killing witnesses/refineries/supervisor during startup
 		// when they may temporarily show TTY "?".
 		if protectedPIDs[pid] {
@@ -508,8 +508,8 @@ func FindOrphanedClaudeProcesses() ([]OrphanedProcess, error) {
 			continue
 		}
 
-		// Skip processes NOT in a Excavation Site workspace.
-		// Only kill orphaned Claude processes whose cwd is under a Excavation Site
+		// Skip processes NOT in a Mineshaft workspace.
+		// Only kill orphaned Claude processes whose cwd is under a Mineshaft
 		// workspace root. This prevents killing user's Claude Code instances
 		// running in repos outside ~/gt/ (or wherever the workspace is).
 		townRoot := resolveTownRoot(pid)
@@ -541,7 +541,7 @@ type ZombieProcess struct {
 	Cmd      string
 	Age      int    // Age in seconds
 	TTY      string // TTY column from ps (may be "?" or a session like "s024")
-	TownRoot string // Excavation Site workspace root, or "" if not in any workspace
+	TownRoot string // Mineshaft workspace root, or "" if not in any workspace
 }
 
 // FindZombieClaudeProcesses finds Claude processes with no TTY that are NOT in
@@ -599,7 +599,7 @@ func FindZombieClaudeProcesses() ([]ZombieProcess, error) {
 			continue
 		}
 
-		// Skip processes that belong to valid Excavation Site tmux sessions
+		// Skip processes that belong to valid Mineshaft tmux sessions
 		if validPIDs[pid] {
 			continue
 		}
@@ -626,8 +626,8 @@ func FindZombieClaudeProcesses() ([]ZombieProcess, error) {
 			continue
 		}
 
-		// Skip processes NOT in a Excavation Site workspace.
-		// Only kill zombie Claude processes whose cwd is under a Excavation Site
+		// Skip processes NOT in a Mineshaft workspace.
+		// Only kill zombie Claude processes whose cwd is under a Mineshaft
 		// workspace root. This prevents killing user's Claude Code instances
 		// running in repos outside ~/gt/.
 		townRoot := resolveTownRoot(pid)
@@ -649,7 +649,7 @@ func FindZombieClaudeProcesses() ([]ZombieProcess, error) {
 }
 
 // zombieStateFile is the filename for zombie process tracking state.
-const zombieStateFile = "excavation-zombie-state"
+const zombieStateFile = "mineshaft-zombie-state"
 
 // loadZombieState reads the zombie state file.
 func loadZombieState() map[int]signalState {

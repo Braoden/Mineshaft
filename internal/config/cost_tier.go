@@ -192,7 +192,7 @@ func IsValidEffortLevel(level string) bool {
 
 // CostTierAgents returns the custom agent definitions needed for a given tier.
 // These define the claude-sonnet, claude-haiku, and groq-compound agent presets
-// and are written into TownSettings.Agents so Excavation Site can resolve them by name.
+// and are written into TownSettings.Agents so Mineshaft can resolve them by name.
 // Standard tier returns an empty map (no custom agents needed).
 func CostTierAgents(tier CostTier) map[string]*RuntimeConfig {
 	switch tier {

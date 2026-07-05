@@ -17,9 +17,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/telemetry"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/telemetry"
 )
 
 // sessionNudgeLocks serializes nudges to the same session.
@@ -219,7 +219,7 @@ func NewTmuxWithSocket(socket string) *Tmux {
 
 // run executes a tmux command and returns stdout.
 // All commands include -u flag for UTF-8 support regardless of locale settings.
-// See: https://github.com/steveyegge/excavation/issues/1219
+// See: https://github.com/steveyegge/mineshaft/issues/1219
 func (t *Tmux) run(args ...string) (string, error) {
 	// Prepend global flags: -u (UTF-8 mode, PATCH-004) and optionally -L (socket).
 	// The -L flag must come before the subcommand, so it goes in the prefix.
@@ -294,7 +294,7 @@ func (t *Tmux) NewSession(name, workDir string) error {
 // Validates workDir (if non-empty) exists and is a directory. After creation, performs
 // a brief health check to catch immediate command failures (binary not found, syntax
 // errors, etc.) so callers get an error instead of a silently dead session.
-// See: https://github.com/anthropics/excavation/issues/280
+// See: https://github.com/anthropics/mineshaft/issues/280
 func (t *Tmux) NewSessionWithCommand(name, workDir, command string) error {
 	if err := validateSessionName(name); err != nil {
 		return err
@@ -1012,7 +1012,7 @@ func (t *Tmux) KillServer() error {
 // When on (default), the server exits when there are no sessions.
 // When off, the server stays running even with no sessions.
 // This is useful during shutdown to prevent the server from exiting
-// when all Excavation Site sessions are killed but the user has no other sessions.
+// when all Mineshaft sessions are killed but the user has no other sessions.
 func (t *Tmux) SetExitEmpty(on bool) error {
 	value := "on"
 	if !on {
@@ -1747,7 +1747,7 @@ func (t *Tmux) NudgeSessionWithOpts(session, message string, opts NudgeOpts) err
 
 	if sendEscape {
 		// 5. Send Escape to exit vim INSERT mode if enabled (harmless in normal mode)
-		// See: https://github.com/anthropics/excavation/issues/307
+		// See: https://github.com/anthropics/mineshaft/issues/307
 		_, _ = t.run("send-keys", "-t", target, "Escape")
 
 		// 6. Wait 600ms — must exceed bash readline's keyseq-timeout (500ms default)
@@ -1828,7 +1828,7 @@ func (t *Tmux) NudgePane(pane, message string) error {
 
 	if sendEscape {
 		// 5. Send Escape to exit vim INSERT mode if enabled (harmless in normal mode)
-		// See: https://github.com/anthropics/excavation/issues/307
+		// See: https://github.com/anthropics/mineshaft/issues/307
 		_, _ = t.run("send-keys", "-t", pane, "Escape")
 
 		// 6. Wait 600ms — must exceed bash readline's keyseq-timeout (500ms default)
@@ -2963,7 +2963,7 @@ func (t *Tmux) WaitForShellReady(session string, timeout time.Duration) error {
 // configured ready-prompt prefix. It normalizes non-breaking spaces
 // (U+00A0) to regular spaces before matching, because Claude Code uses
 // NBSP after its ❯ prompt character while the default ReadyPromptPrefix
-// uses a regular space. See https://github.com/steveyegge/excavation/issues/1387.
+// uses a regular space. See https://github.com/steveyegge/mineshaft/issues/1387.
 func matchesPromptPrefix(line, readyPromptPrefix string) bool {
 	if readyPromptPrefix == "" {
 		return false
@@ -2999,7 +2999,7 @@ func hasBusyIndicator(line string) bool {
 // "esc to interrupt" while generating (via hasBusyIndicator — the same
 // assumption IsIdle/WaitForIdle already make). If that upstream status text
 // changes, the gate fails open and silently: the Escape is sent again and
-// nudges can resume interrupting the agent. Tracked in excavationhall/excavation#4240.
+// nudges can resume interrupting the agent. Tracked in mineshafthall/mineshaft#4240.
 func shouldSendEscapeForLines(lines []string) bool {
 	for _, line := range lines {
 		if hasBusyIndicator(line) {
@@ -3280,7 +3280,7 @@ func (t *Tmux) ApplyTheme(session string, theme Theme) error {
 	return err
 }
 
-// ClearTheme removes Excavation Site tmux styling from a session.
+// ClearTheme removes Mineshaft tmux styling from a session.
 func (t *Tmux) ClearTheme(session string) error {
 	if _, err := t.run("set-option", "-t", session, "-u", "status-style"); err != nil {
 		return err
@@ -3324,8 +3324,8 @@ func (t *Tmux) SetStatusFormat(session, rig, worker, role string) error {
 
 	// Compact format - icon already identifies role
 	// Overseer: 🎩 Overseer
-	// Crew:  👷 excavation/crew/max (full path)
-	// Miner: 😺 excavation/Toast
+	// Crew:  👷 mineshaft/crew/max (full path)
+	// Miner: 😺 mineshaft/Toast
 	var left string
 	if rig == "" {
 		// Town-level agent (Overseer, Supervisor) - keep as-is
@@ -3373,13 +3373,13 @@ func (t *Tmux) SetDynamicStatus(session string) error {
 	return err
 }
 
-// ConfigureExcavationSession applies Excavation Site status configuration to a session.
+// ConfigureMineshaftSession applies Mineshaft status configuration to a session.
 // A nil theme disables tmux styling while still applying status/bindings.
 //
 // Window background is controlled by theme.Window:
 //   - non-nil: apply Window's colors as the window background
 //   - nil: reset window background to terminal defaults (disabled)
-func (t *Tmux) ConfigureExcavationSession(session string, theme *Theme, rig, worker, role string) error {
+func (t *Tmux) ConfigureMineshaftSession(session string, theme *Theme, rig, worker, role string) error {
 	if theme != nil {
 		if err := t.ApplyTheme(session, *theme); err != nil {
 			return fmt.Errorf("applying theme: %w", err)
@@ -3451,10 +3451,10 @@ func IsInsideTmux() bool {
 // SetMailClickBinding configures left-click on status-right to show mail preview.
 // This creates a popup showing the first unread message when clicking the mail icon area.
 //
-// The binding is conditional: it only activates in Excavation Site sessions (those matching
+// The binding is conditional: it only activates in Mineshaft sessions (those matching
 // a registered rig prefix or "hq-"). In non-GT sessions, the user's original
 // MouseDown1StatusRight binding (if any) is preserved.
-// See: https://github.com/steveyegge/excavation/issues/1548
+// See: https://github.com/steveyegge/mineshaft/issues/1548
 func (t *Tmux) SetMailClickBinding(session string) error {
 	// Skip if already configured — preserves user's original fallback from first call
 	if t.isGTBinding("root", "MouseDown1StatusRight") {
@@ -3566,8 +3566,8 @@ func (t *Tmux) SetTownCycleBindings(session string) error {
 	return t.SetCycleBindings(session)
 }
 
-// isGTBinding checks if the given key already has a Excavation Site binding.
-// Used to skip redundant re-binding on repeated ConfigureExcavationSession /
+// isGTBinding checks if the given key already has a Mineshaft binding.
+// Used to skip redundant re-binding on repeated ConfigureMineshaftSession /
 // EnsureBindingsOnSocket calls, preserving the user's original fallback.
 //
 // Two forms are recognized:
@@ -3621,7 +3621,7 @@ func (t *Tmux) isGTBindingCurrent(table, key, currentPattern string) bool {
 // The returned string is a tmux command (e.g., "next-window", "run-shell 'lazygit'")
 // suitable for use as a command argument to bind-key or if-shell.
 //
-// If the existing binding is already a Excavation Site if-shell binding (detected by
+// If the existing binding is already a Mineshaft if-shell binding (detected by
 // the presence of both "if-shell" and "gt " in the output), it is treated as
 // no prior binding to avoid recursive wrapping on repeated calls.
 func (t *Tmux) getKeyBinding(table, key string) string {
@@ -3688,14 +3688,14 @@ func (t *Tmux) getKeyBinding(table, key string) string {
 var safePrefixRe = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9-]{0,19}$`)
 
 // sessionPrefixPattern returns a grep -Eq pattern that matches any registered
-// Excavation Site session name.  The pattern is built dynamically from rigs.json
-// (via config.AllRigPrefixes) so that rigs beyond excavation/hq are recognized.
+// Mineshaft session name.  The pattern is built dynamically from rigs.json
+// (via config.AllRigPrefixes) so that rigs beyond mineshaft/hq are recognized.
 // "hq" is always included because it lives outside the rig registry
 // (town-level services).
 //
 // Example output: "^(bd|db|fa|gl|gt|hq|la|lc)-"
 func sessionPrefixPattern() string {
-	seen := map[string]bool{"hq": true, "gt": true} // always include HQ + excavation fallback
+	seen := map[string]bool{"hq": true, "gt": true} // always include HQ + mineshaft fallback
 	townRoot := os.Getenv("GT_ROOT")
 	if townRoot == "" {
 		townRoot = os.Getenv("GT_TOWN_ROOT")
@@ -3723,12 +3723,12 @@ func sessionPrefixPattern() string {
 // - Rig ops sessions: Witness + Refinery + Miners in the same rig
 //
 // IMPORTANT: These bindings are conditional - they only run gt cycle for
-// Excavation Site sessions (those matching a registered rig prefix or "hq-").
+// Mineshaft sessions (those matching a registered rig prefix or "hq-").
 // For non-GT sessions, the user's original binding is preserved. If no
 // prior binding existed, the tmux defaults (next-window/previous-window)
 // are used.
-// See: https://github.com/steveyegge/excavation/issues/13
-// See: https://github.com/steveyegge/excavation/issues/1548
+// See: https://github.com/steveyegge/mineshaft/issues/13
+// See: https://github.com/steveyegge/mineshaft/issues/1548
 //
 // IMPORTANT: We pass #{session_name} to the command because run-shell doesn't
 // reliably preserve the session context. tmux expands #{session_name} at binding
@@ -3739,7 +3739,7 @@ func (t *Tmux) SetCycleBindings(session string) error {
 	// 2. Has the current prefix pattern (not stale from before a gt rig add)
 	// We must re-bind if an older GT binding exists without --client, or if the
 	// prefix pattern is stale (missing newly added rig prefixes).
-	// See: https://github.com/steveyegge/excavation/issues/2299
+	// See: https://github.com/steveyegge/mineshaft/issues/2299
 	pattern := sessionPrefixPattern()
 	if t.isGTBindingWithClient("prefix", "n") && t.isGTBindingCurrent("prefix", "n", pattern) {
 		return nil
@@ -3756,16 +3756,16 @@ func (t *Tmux) SetCycleBindings(session string) error {
 		prevFallback = "previous-window"
 	}
 
-	// C-b n → gt cycle next for Excavation Site sessions, original binding otherwise
+	// C-b n → gt cycle next for Mineshaft sessions, original binding otherwise
 	// Pass --client #{client_tty} so switch-client targets the correct client
-	// when multiple tmux clients are attached (e.g., excavation + beads rigs).
+	// when multiple tmux clients are attached (e.g., mineshaft + beads rigs).
 	if _, err := t.run("bind-key", "-T", "prefix", "n",
 		"if-shell", ifShell,
 		"run-shell 'gt cycle next --session #{session_name} --client #{client_tty}'",
 		nextFallback); err != nil {
 		return err
 	}
-	// C-b p → gt cycle prev for Excavation Site sessions, original binding otherwise
+	// C-b p → gt cycle prev for Mineshaft sessions, original binding otherwise
 	if _, err := t.run("bind-key", "-T", "prefix", "p",
 		"if-shell", ifShell,
 		"run-shell 'gt cycle prev --session #{session_name} --client #{client_tty}'",
@@ -3779,12 +3779,12 @@ func (t *Tmux) SetCycleBindings(session string) error {
 // This creates the feed window if it doesn't exist, or switches to it if it does.
 // Uses `gt feed --window` which handles both creation and switching.
 //
-// IMPORTANT: This binding is conditional - it only runs for Excavation Site sessions
+// IMPORTANT: This binding is conditional - it only runs for Mineshaft sessions
 // (those matching a registered rig prefix or "hq-"). For non-GT sessions, the
 // user's original binding is preserved. If no prior binding existed, the key
 // press is silently ignored.
-// See: https://github.com/steveyegge/excavation/issues/13
-// See: https://github.com/steveyegge/excavation/issues/1548
+// See: https://github.com/steveyegge/mineshaft/issues/13
+// See: https://github.com/steveyegge/mineshaft/issues/1548
 func (t *Tmux) SetFeedBinding(session string) error {
 	pattern := sessionPrefixPattern()
 	// Skip if already configured with the current rig prefix pattern.
@@ -3806,13 +3806,13 @@ func (t *Tmux) SetFeedBinding(session string) error {
 }
 
 // SetAgentsBinding configures C-b g to open the agent switcher popup menu.
-// This runs `gt agents menu` which displays a tmux popup with all Excavation Site agents.
+// This runs `gt agents menu` which displays a tmux popup with all Mineshaft agents.
 //
-// IMPORTANT: This binding is conditional - it only runs for Excavation Site sessions
+// IMPORTANT: This binding is conditional - it only runs for Mineshaft sessions
 // (those matching a registered rig prefix or "hq-"). For non-GT sessions, the
 // user's original binding is preserved. If no prior binding existed, the key
 // press is silently ignored.
-// See: https://github.com/steveyegge/excavation/issues/1548
+// See: https://github.com/steveyegge/mineshaft/issues/1548
 func (t *Tmux) SetAgentsBinding(session string) error {
 	pattern := sessionPrefixPattern()
 	// Skip if already configured with the current rig prefix pattern.
@@ -3986,11 +3986,11 @@ func CurrentSessionName() string {
 	return strings.TrimSpace(string(out))
 }
 
-// CleanupOrphanedSessions scans for zombie Excavation Site sessions and kills them.
+// CleanupOrphanedSessions scans for zombie Mineshaft sessions and kills them.
 // A zombie session is one where tmux is alive but the Claude process has died.
 // This runs at `gt start` time to prevent session name conflicts and resource accumulation.
 //
-// The isGTSession predicate identifies Excavation Site sessions (e.g. session.IsKnownSession).
+// The isGTSession predicate identifies Mineshaft sessions (e.g. session.IsKnownSession).
 // It is passed as a parameter to avoid a circular import from tmux → session.
 //
 // Returns:
@@ -4003,7 +4003,7 @@ func (t *Tmux) CleanupOrphanedSessions(isGTSession func(string) bool) (cleaned i
 	}
 
 	for _, sess := range sessions {
-		// Only process Excavation Site sessions
+		// Only process Mineshaft sessions
 		if !isGTSession(sess) {
 			continue
 		}
@@ -4025,7 +4025,7 @@ func (t *Tmux) CleanupOrphanedSessions(isGTSession func(string) bool) (cleaned i
 
 // SetPaneDiedHook sets a pane-died hook on a session to detect crashes.
 // When the pane exits, tmux runs the hook command with exit status info.
-// The agentID is used to identify the agent in crash logs (e.g., "excavation/Toast").
+// The agentID is used to identify the agent in crash logs (e.g., "mineshaft/Toast").
 func (t *Tmux) SetPaneDiedHook(session, agentID string) error {
 	if err := validateSessionName(session); err != nil {
 		return err

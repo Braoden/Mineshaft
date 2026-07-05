@@ -10,17 +10,17 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/events"
-	"github.com/steveyegge/excavation/internal/overseer"
-	"github.com/steveyegge/excavation/internal/nudge"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/telemetry"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/events"
+	"github.com/steveyegge/mineshaft/internal/overseer"
+	"github.com/steveyegge/mineshaft/internal/nudge"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/telemetry"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 func hasACPSessionByName(townRoot, sessionName string) bool {
@@ -72,8 +72,8 @@ var nudgeCmd = &cobra.Command{
 	Use:         "nudge <target> [message]",
 	GroupID:     GroupComm,
 	Annotations: map[string]string{AnnotationMinerSafe: "true"},
-	Short:       "Send a synchronous message to any Excavation Site worker",
-	Long: `Universal messaging API for Excavation Site worker-to-worker communication.
+	Short:       "Send a synchronous message to any Mineshaft worker",
+	Long: `Universal messaging API for Mineshaft worker-to-worker communication.
 
 Delivers a message to any worker's Claude Code session: miners, crew,
 witness, refinery, overseer, or supervisor.
@@ -106,7 +106,7 @@ Role shortcuts (expand to session names):
 Channel syntax:
   channel:<name>  Nudges all members of a named channel defined in
                   ~/gt/config/messaging.json under "nudge_channels".
-                  Patterns like "excavation/miners/*" are expanded.
+                  Patterns like "mineshaft/miners/*" are expanded.
 
 DND (Do Not Disturb):
   If the target has DND enabled (gt dnd on), the nudge is skipped.
@@ -121,7 +121,7 @@ Examples:
   gt nudge channel:workers "New priority work available"
 
   # Use --stdin for messages with special characters or formatting:
-  gt nudge excavation/alpha --stdin <<'EOF'
+  gt nudge mineshaft/alpha --stdin <<'EOF'
   Status update:
   - Task 1: complete
   - Task 2: in progress
@@ -186,7 +186,7 @@ func deliverNudge(t *tmux.Tmux, sessionName, message, sender string) error {
 	switch mode {
 	case NudgeModeQueue:
 		if townRoot == "" {
-			return fmt.Errorf("--mode=queue requires a Excavation Site workspace")
+			return fmt.Errorf("--mode=queue requires a Mineshaft workspace")
 		}
 		return nudge.Enqueue(townRoot, sessionName, nudge.QueuedNudge{
 			Sender:   sender,
@@ -198,7 +198,7 @@ func deliverNudge(t *tmux.Tmux, sessionName, message, sender string) error {
 		if townRoot == "" {
 			// wait-idle needs workspace for queue fallback — fail explicitly
 			// rather than silently degrading to immediate (destructive) delivery.
-			return fmt.Errorf("--mode=wait-idle requires a Excavation Site workspace")
+			return fmt.Errorf("--mode=wait-idle requires a Mineshaft workspace")
 		}
 		// Check if the target agent supports prompt-based idle detection.
 		// WaitForIdle uses Claude Code's prompt pattern (❯) and status bar (⏵⏵).
@@ -545,7 +545,7 @@ func runNudge(cmd *cobra.Command, args []string) (retErr error) {
 			}
 			sessionName = mgr.SessionName(pcName)
 		} else {
-			// Short address (e.g., "excavation/holden") - could be crew or miner.
+			// Short address (e.g., "mineshaft/holden") - could be crew or miner.
 			// Try crew first (matches mail system's addressToSessionIDs pattern),
 			// then fall back to miner.
 			crewSession := crewSessionName(rigName, minerName)
@@ -729,8 +729,8 @@ func runNudgeChannel(channelName, message, sender string) error {
 
 // resolveNudgePattern resolves a nudge channel pattern to session names.
 // Patterns can be:
-//   - Literal: "excavation/witness" → gt-excavation-witness
-//   - Wildcard: "excavation/miners/*" → all miner sessions in excavation
+//   - Literal: "mineshaft/witness" → gt-mineshaft-witness
+//   - Wildcard: "mineshaft/miners/*" → all miner sessions in mineshaft
 //   - Role: "*/witness" → all witness sessions
 //   - Special: "overseer", "supervisor" → gt-{town}-overseer, gt-{town}-supervisor
 //
@@ -832,9 +832,9 @@ func shouldNudgeTarget(townRoot, targetAddress string, force bool) (bool, string
 // sessionNameToAddress converts a tmux session name back to a mail address
 // for DND lookup. Returns empty string if the format is unrecognized.
 // Examples:
-//   - "gt-excavation-crew-max" -> "excavation/crew/max"
-//   - "gt-excavation-alpha" -> "excavation/alpha"
-//   - "gt-excavation-witness" -> "excavation/witness"
+//   - "gt-mineshaft-crew-max" -> "mineshaft/crew/max"
+//   - "gt-mineshaft-alpha" -> "mineshaft/alpha"
+//   - "gt-mineshaft-witness" -> "mineshaft/witness"
 //   - "hq-overseer" -> "overseer"
 //   - "hq-supervisor" -> "supervisor"
 func sessionNameToAddress(sessionName string) string {
@@ -866,8 +866,8 @@ func sessionNameToAddress(sessionName string) string {
 // Examples:
 //   - "overseer" -> "gt-{town}-overseer"
 //   - "supervisor" -> "gt-{town}-supervisor"
-//   - "excavation/witness" -> "gt-excavation-witness"
-//   - "excavation/alpha" -> "gt-excavation-miner-alpha"
+//   - "mineshaft/witness" -> "gt-mineshaft-witness"
+//   - "mineshaft/alpha" -> "gt-mineshaft-miner-alpha"
 //
 // Returns empty string if the address cannot be converted.
 func addressToAgentBeadID(address string) string {

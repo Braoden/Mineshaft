@@ -7,13 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/mineshaft/internal/session"
 )
 
 func setupCostsTestRegistry(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "excavation")
+	reg.Register("gt", "mineshaft")
 	reg.Register("bd", "beads")
 	old := session.DefaultRegistry()
 	session.SetDefaultRegistry(reg)
@@ -31,7 +31,7 @@ func TestDeriveSessionName(t *testing.T) {
 			name: "miner session",
 			envVars: map[string]string{
 				"GT_ROLE":    "miner",
-				"GT_RIG":     "excavation",
+				"GT_RIG":     "mineshaft",
 				"GT_MINER": "toast",
 			},
 			expected: "gt-toast",
@@ -40,7 +40,7 @@ func TestDeriveSessionName(t *testing.T) {
 			name: "crew session",
 			envVars: map[string]string{
 				"GT_ROLE": "crew",
-				"GT_RIG":  "excavation",
+				"GT_RIG":  "mineshaft",
 				"GT_CREW": "max",
 			},
 			expected: "gt-crew-max",
@@ -49,7 +49,7 @@ func TestDeriveSessionName(t *testing.T) {
 			name: "witness session",
 			envVars: map[string]string{
 				"GT_ROLE": "witness",
-				"GT_RIG":  "excavation",
+				"GT_RIG":  "mineshaft",
 			},
 			expected: "gt-witness",
 		},
@@ -57,7 +57,7 @@ func TestDeriveSessionName(t *testing.T) {
 			name: "refinery session",
 			envVars: map[string]string{
 				"GT_ROLE": "refinery",
-				"GT_RIG":  "excavation",
+				"GT_RIG":  "mineshaft",
 			},
 			expected: "gt-refinery",
 		},
@@ -95,7 +95,7 @@ func TestDeriveSessionName(t *testing.T) {
 			name: "overseer with stale GT_MINER is NOT miner session",
 			envVars: map[string]string{
 				"GT_ROLE":    "overseer",
-				"GT_RIG":     "excavation",
+				"GT_RIG":     "mineshaft",
 				"GT_MINER": "toast",
 				"GT_TOWN":    "ai",
 			},
@@ -104,8 +104,8 @@ func TestDeriveSessionName(t *testing.T) {
 		{
 			name: "compound witness with stale GT_MINER is NOT miner session",
 			envVars: map[string]string{
-				"GT_ROLE":    "excavation/witness",
-				"GT_RIG":     "excavation",
+				"GT_ROLE":    "mineshaft/witness",
+				"GT_RIG":     "mineshaft",
 				"GT_MINER": "toast",
 			},
 			expected: "gt-witness",
@@ -113,8 +113,8 @@ func TestDeriveSessionName(t *testing.T) {
 		{
 			name: "compound refinery with stale GT_MINER is NOT miner session",
 			envVars: map[string]string{
-				"GT_ROLE":    "excavation/refinery",
-				"GT_RIG":     "excavation",
+				"GT_ROLE":    "mineshaft/refinery",
+				"GT_RIG":     "mineshaft",
 				"GT_MINER": "toast",
 			},
 			expected: "gt-refinery",
@@ -122,8 +122,8 @@ func TestDeriveSessionName(t *testing.T) {
 		{
 			name: "compound crew with stale GT_MINER is NOT miner session",
 			envVars: map[string]string{
-				"GT_ROLE":    "excavation/crew/alice",
-				"GT_RIG":     "excavation",
+				"GT_ROLE":    "mineshaft/crew/alice",
+				"GT_RIG":     "mineshaft",
 				"GT_MINER": "toast",
 			},
 			expected: "gt-crew-alice",
@@ -131,8 +131,8 @@ func TestDeriveSessionName(t *testing.T) {
 		{
 			name: "compound miner role uses GT_MINER for session name",
 			envVars: map[string]string{
-				"GT_ROLE":    "excavation/miners/toast",
-				"GT_RIG":     "excavation",
+				"GT_ROLE":    "mineshaft/miners/toast",
+				"GT_RIG":     "mineshaft",
 				"GT_MINER": "toast",
 			},
 			expected: "gt-toast",
@@ -216,7 +216,7 @@ func TestCostDigestPayload_ExcludesSessions(t *testing.T) {
 			"overseer":   94.25,
 		},
 		ByRig: map[string]float64{
-			"excavation": 600.0,
+			"mineshaft": 600.0,
 			"beads":   94.25,
 		},
 	}
@@ -226,7 +226,7 @@ func TestCostDigestPayload_ExcludesSessions(t *testing.T) {
 		digest.Sessions[i] = CostEntry{
 			SessionID: "gt-session-" + time.Now().Format("150405"),
 			Role:      "miner",
-			Rig:       "excavation",
+			Rig:       "mineshaft",
 			Worker:    "toast",
 			CostUSD:   0.24,
 			EndedAt:   time.Now(),

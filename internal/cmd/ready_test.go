@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/constants"
 )
 
 func TestGetFormulaNames(t *testing.T) {
@@ -198,7 +198,7 @@ func TestFilterReadyIssuesByRoute(t *testing.T) {
 		`{"prefix":"hq-","path":"."}`,
 		`{"prefix":"hq-cv-","path":"."}`,
 		`{"prefix":"bds-","path":"bd_symphony/overseer/rig"}`,
-		`{"prefix":"gt-","path":"excavation/overseer/rig"}`,
+		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`,
 	}, "\n") + "\n"
 	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(routes), 0644); err != nil {
 		t.Fatalf("writing routes: %v", err)

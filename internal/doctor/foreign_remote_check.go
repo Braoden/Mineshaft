@@ -8,7 +8,7 @@ import (
 
 // ForeignRemoteCheck detects git remotes in the town repo that point to
 // unrelated repositories. The town repo (~/gt, tracking stevey-gt) should
-// only have its own origin remote. Remotes for rig repos (excavation, beads)
+// only have its own origin remote. Remotes for rig repos (mineshaft, beads)
 // pollute the ref space with unrelated history and cause confusion — agents
 // comparing branches across unrelated remotes see phantom divergence.
 type ForeignRemoteCheck struct {

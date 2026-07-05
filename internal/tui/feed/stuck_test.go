@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/beads"
 )
 
 // mockHealthSource is a test double for HealthDataSource
@@ -241,8 +241,8 @@ func TestThresholdConstants(t *testing.T) {
 // TestCheckAll_GUPPViolation tests that agents with hook + >30min stale are detected as GUPP
 func TestCheckAll_GUPPViolation(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-excavation-miner-Toast"] = &beads.Issue{
-		ID:        "gt-excavation-miner-Toast",
+	mock.agents["gt-mineshaft-miner-Toast"] = &beads.Issue{
+		ID:        "gt-mineshaft-miner-Toast",
 		HookBead:  "gt-abc12",
 		UpdatedAt: time.Now().Add(-45 * time.Minute).Format(time.RFC3339),
 	}
@@ -271,8 +271,8 @@ func TestCheckAll_GUPPViolation(t *testing.T) {
 // TestCheckAll_Stalled tests that agents with hook + >15min stale are detected as stalled
 func TestCheckAll_Stalled(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-excavation-miner-Pearl"] = &beads.Issue{
-		ID:        "gt-excavation-miner-Pearl",
+	mock.agents["gt-mineshaft-miner-Pearl"] = &beads.Issue{
+		ID:        "gt-mineshaft-miner-Pearl",
 		HookBead:  "gt-def34",
 		UpdatedAt: time.Now().Add(-20 * time.Minute).Format(time.RFC3339),
 	}
@@ -295,8 +295,8 @@ func TestCheckAll_Stalled(t *testing.T) {
 // TestCheckAll_Working tests that agents with hook + recent update are working
 func TestCheckAll_Working(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-excavation-miner-Max"] = &beads.Issue{
-		ID:        "gt-excavation-miner-Max",
+	mock.agents["gt-mineshaft-miner-Max"] = &beads.Issue{
+		ID:        "gt-mineshaft-miner-Max",
 		HookBead:  "gt-xyz89",
 		UpdatedAt: time.Now().Add(-2 * time.Minute).Format(time.RFC3339),
 	}
@@ -319,8 +319,8 @@ func TestCheckAll_Working(t *testing.T) {
 // TestCheckAll_Idle tests that agents with no hook are idle
 func TestCheckAll_Idle(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-excavation-miner-Joe"] = &beads.Issue{
-		ID:        "gt-excavation-miner-Joe",
+	mock.agents["gt-mineshaft-miner-Joe"] = &beads.Issue{
+		ID:        "gt-mineshaft-miner-Joe",
 		HookBead:  "", // no hooked work
 		UpdatedAt: time.Now().Add(-5 * time.Minute).Format(time.RFC3339),
 	}
@@ -343,8 +343,8 @@ func TestCheckAll_Idle(t *testing.T) {
 // TestCheckAll_Zombie tests that agents with dead sessions are zombies
 func TestCheckAll_Zombie(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-excavation-miner-Dead"] = &beads.Issue{
-		ID:        "gt-excavation-miner-Dead",
+	mock.agents["gt-mineshaft-miner-Dead"] = &beads.Issue{
+		ID:        "gt-mineshaft-miner-Dead",
 		HookBead:  "gt-work1",
 		UpdatedAt: time.Now().Add(-10 * time.Minute).Format(time.RFC3339),
 	}
@@ -370,24 +370,24 @@ func TestCheckAll_MultipleAgents(t *testing.T) {
 	now := time.Now()
 
 	// GUPP violation agent
-	mock.agents["gt-excavation-miner-Stuck"] = &beads.Issue{
-		ID:        "gt-excavation-miner-Stuck",
+	mock.agents["gt-mineshaft-miner-Stuck"] = &beads.Issue{
+		ID:        "gt-mineshaft-miner-Stuck",
 		HookBead:  "gt-work1",
 		UpdatedAt: now.Add(-40 * time.Minute).Format(time.RFC3339),
 	}
 	mock.sessions["gt-Stuck"] = true
 
 	// Working agent
-	mock.agents["gt-excavation-miner-Happy"] = &beads.Issue{
-		ID:        "gt-excavation-miner-Happy",
+	mock.agents["gt-mineshaft-miner-Happy"] = &beads.Issue{
+		ID:        "gt-mineshaft-miner-Happy",
 		HookBead:  "gt-work2",
 		UpdatedAt: now.Add(-2 * time.Minute).Format(time.RFC3339),
 	}
 	mock.sessions["gt-Happy"] = true
 
 	// Idle agent
-	mock.agents["gt-excavation-miner-Lazy"] = &beads.Issue{
-		ID:        "gt-excavation-miner-Lazy",
+	mock.agents["gt-mineshaft-miner-Lazy"] = &beads.Issue{
+		ID:        "gt-mineshaft-miner-Lazy",
 		HookBead:  "",
 		UpdatedAt: now.Add(-5 * time.Minute).Format(time.RFC3339),
 	}
@@ -475,8 +475,8 @@ func TestCheckAll_TownLevelAgent(t *testing.T) {
 // TestCheckAll_RigSingleton tests detection of rig-level singletons (witness, refinery)
 func TestCheckAll_RigSingleton(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-excavation-witness"] = &beads.Issue{
-		ID:        "gt-excavation-witness",
+	mock.agents["gt-mineshaft-witness"] = &beads.Issue{
+		ID:        "gt-mineshaft-witness",
 		HookBead:  "",
 		UpdatedAt: time.Now().Add(-1 * time.Minute).Format(time.RFC3339),
 	}
@@ -494,8 +494,8 @@ func TestCheckAll_RigSingleton(t *testing.T) {
 	if agents[0].Role != "witness" {
 		t.Errorf("expected role 'witness', got %q", agents[0].Role)
 	}
-	if agents[0].Rig != "excavation" {
-		t.Errorf("expected rig 'excavation', got %q", agents[0].Rig)
+	if agents[0].Rig != "mineshaft" {
+		t.Errorf("expected rig 'mineshaft', got %q", agents[0].Rig)
 	}
 	if agents[0].SessionID != "gt-witness" {
 		t.Errorf("expected session 'gt-witness', got %q", agents[0].SessionID)
@@ -505,8 +505,8 @@ func TestCheckAll_RigSingleton(t *testing.T) {
 // TestCheckAll_CrewAgent tests detection of crew agents
 func TestCheckAll_CrewAgent(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-excavation-crew-joe"] = &beads.Issue{
-		ID:        "gt-excavation-crew-joe",
+	mock.agents["gt-mineshaft-crew-joe"] = &beads.Issue{
+		ID:        "gt-mineshaft-crew-joe",
 		HookBead:  "gt-task1",
 		UpdatedAt: time.Now().Add(-5 * time.Minute).Format(time.RFC3339),
 	}
@@ -543,10 +543,10 @@ func TestDeriveSessionName(t *testing.T) {
 	}{
 		{"overseer", "", "overseer", "", "hq-overseer"},
 		{"supervisor", "", "supervisor", "", "hq-supervisor"},
-		{"witness", "excavation", "witness", "", "gt-witness"},
-		{"refinery", "excavation", "refinery", "", "gt-refinery"},
-		{"crew", "excavation", "crew", "joe", "gt-crew-joe"},
-		{"miner", "excavation", "miner", "Toast", "gt-Toast"},
+		{"witness", "mineshaft", "witness", "", "gt-witness"},
+		{"refinery", "mineshaft", "refinery", "", "gt-refinery"},
+		{"crew", "mineshaft", "crew", "joe", "gt-crew-joe"},
+		{"miner", "mineshaft", "miner", "Toast", "gt-Toast"},
 	}
 
 	for _, tt := range tests {
@@ -584,8 +584,8 @@ func TestCheckAll_InvalidBeadID(t *testing.T) {
 // TestCheckAll_SessionError tests that IsSessionAlive errors don't cause false zombies
 func TestCheckAll_SessionError(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-excavation-miner-Alpha"] = &beads.Issue{
-		ID:        "gt-excavation-miner-Alpha",
+	mock.agents["gt-mineshaft-miner-Alpha"] = &beads.Issue{
+		ID:        "gt-mineshaft-miner-Alpha",
 		HookBead:  "gt-work1",
 		UpdatedAt: time.Now().Add(-5 * time.Minute).Format(time.RFC3339),
 	}
@@ -614,13 +614,13 @@ func TestCheckAll_SessionError(t *testing.T) {
 // (would be stalled for a normal miner at the 15min threshold)
 func TestCheckAll_RalphcatNotStalled(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-excavation-miner-Ralph"] = &beads.Issue{
-		ID:       "gt-excavation-miner-Ralph",
+	mock.agents["gt-mineshaft-miner-Ralph"] = &beads.Issue{
+		ID:       "gt-mineshaft-miner-Ralph",
 		HookBead: "gt-abc12",
 		// 45 minutes idle — stalled for normal miner, but fine for ralphcat
 		UpdatedAt: time.Now().Add(-45 * time.Minute).Format(time.RFC3339),
 		// Description contains mode: ralph (agent fields)
-		Description: "Miner Ralph\n\nrole_type: miner\nrig: excavation\nagent_state: working\nhook_bead: gt-abc12\ncleanup_status: null\nactive_mr: null\nnotification_level: null\nmode: ralph",
+		Description: "Miner Ralph\n\nrole_type: miner\nrig: mineshaft\nagent_state: working\nhook_bead: gt-abc12\ncleanup_status: null\nactive_mr: null\nnotification_level: null\nmode: ralph",
 	}
 	mock.sessions["gt-Ralph"] = true // session alive
 
@@ -643,11 +643,11 @@ func TestCheckAll_RalphcatNotStalled(t *testing.T) {
 // TestCheckAll_RalphcatStalled tests that a ralphcat IS stalled after 2+ hours
 func TestCheckAll_RalphcatStalled(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-excavation-miner-Ralph2"] = &beads.Issue{
-		ID:          "gt-excavation-miner-Ralph2",
+	mock.agents["gt-mineshaft-miner-Ralph2"] = &beads.Issue{
+		ID:          "gt-mineshaft-miner-Ralph2",
 		HookBead:    "gt-def34",
 		UpdatedAt:   time.Now().Add(-150 * time.Minute).Format(time.RFC3339), // 2.5 hours
-		Description: "Miner Ralph2\n\nrole_type: miner\nrig: excavation\nagent_state: working\nhook_bead: gt-def34\ncleanup_status: null\nactive_mr: null\nnotification_level: null\nmode: ralph",
+		Description: "Miner Ralph2\n\nrole_type: miner\nrig: mineshaft\nagent_state: working\nhook_bead: gt-def34\ncleanup_status: null\nactive_mr: null\nnotification_level: null\nmode: ralph",
 	}
 	mock.sessions["gt-Ralph2"] = true
 
@@ -669,11 +669,11 @@ func TestCheckAll_RalphcatStalled(t *testing.T) {
 // TestCheckAll_RalphcatGUPP tests that a ralphcat with 5h idle IS in GUPP violation
 func TestCheckAll_RalphcatGUPP(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-excavation-miner-Ralph3"] = &beads.Issue{
-		ID:          "gt-excavation-miner-Ralph3",
+	mock.agents["gt-mineshaft-miner-Ralph3"] = &beads.Issue{
+		ID:          "gt-mineshaft-miner-Ralph3",
 		HookBead:    "gt-ghi56",
 		UpdatedAt:   time.Now().Add(-300 * time.Minute).Format(time.RFC3339), // 5 hours
-		Description: "Miner Ralph3\n\nrole_type: miner\nrig: excavation\nagent_state: working\nhook_bead: gt-ghi56\ncleanup_status: null\nactive_mr: null\nnotification_level: null\nmode: ralph",
+		Description: "Miner Ralph3\n\nrole_type: miner\nrig: mineshaft\nagent_state: working\nhook_bead: gt-ghi56\ncleanup_status: null\nactive_mr: null\nnotification_level: null\nmode: ralph",
 	}
 	mock.sessions["gt-Ralph3"] = true
 
@@ -711,7 +711,7 @@ func TestIsRalphMode(t *testing.T) {
 		},
 		{
 			name:     "no mode field",
-			issue:    &beads.Issue{Description: "role_type: miner\nrig: excavation"},
+			issue:    &beads.Issue{Description: "role_type: miner\nrig: mineshaft"},
 			expected: false,
 		},
 		{
@@ -754,23 +754,23 @@ func TestNudgeTarget(t *testing.T) {
 		},
 		{
 			name:     "witness",
-			agent:    &ProblemAgent{Role: "witness", Name: "witness", Rig: "excavation"},
-			expected: "excavation/witness",
+			agent:    &ProblemAgent{Role: "witness", Name: "witness", Rig: "mineshaft"},
+			expected: "mineshaft/witness",
 		},
 		{
 			name:     "refinery",
-			agent:    &ProblemAgent{Role: "refinery", Name: "refinery", Rig: "excavation"},
-			expected: "excavation/refinery",
+			agent:    &ProblemAgent{Role: "refinery", Name: "refinery", Rig: "mineshaft"},
+			expected: "mineshaft/refinery",
 		},
 		{
 			name:     "crew",
-			agent:    &ProblemAgent{Role: "crew", Name: "joe", Rig: "excavation"},
-			expected: "excavation/crew/joe",
+			agent:    &ProblemAgent{Role: "crew", Name: "joe", Rig: "mineshaft"},
+			expected: "mineshaft/crew/joe",
 		},
 		{
 			name:     "miner",
-			agent:    &ProblemAgent{Role: "miner", Name: "Toast", Rig: "excavation"},
-			expected: "excavation/Toast",
+			agent:    &ProblemAgent{Role: "miner", Name: "Toast", Rig: "mineshaft"},
+			expected: "mineshaft/Toast",
 		},
 		{
 			name:     "unknown role falls back to session ID",

@@ -2,7 +2,7 @@
 
 > **Bead:** gt-0wkk
 > **Date:** 2026-02-28
-> **Author:** rictus (excavation miner)
+> **Author:** rictus (mineshaft miner)
 > **Status:** Design proposal
 > **Related:** gt-4ac (persistent miner model), gt-a6gp (nudge-over-mail),
 > gt-6a9d (nuke safety), gt-w0br (bead-based discovery)

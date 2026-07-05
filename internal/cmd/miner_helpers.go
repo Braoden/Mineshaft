@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/miner"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/miner"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/style"
 )
 
 // minerTarget represents a miner to operate on.
@@ -58,7 +58,7 @@ func resolveMinerTargets(args []string, useAll bool) ([]minerTarget, error) {
 		for _, arg := range args {
 			// Validate format: must contain "/" to avoid misinterpreting rig names as miner names
 			if !strings.Contains(arg, "/") {
-				return nil, fmt.Errorf("invalid address '%s': must be in 'rig/miner' format (e.g., 'excavation/Toast')", arg)
+				return nil, fmt.Errorf("invalid address '%s': must be in 'rig/miner' format (e.g., 'mineshaft/Toast')", arg)
 			}
 
 			rigName, minerName, err := parseAddress(arg)

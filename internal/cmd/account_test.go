@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/mineshaft/internal/config"
 )
 
-// setupTestTownForAccount creates a minimal Excavation Site workspace with accounts.
+// setupTestTownForAccount creates a minimal Mineshaft workspace with accounts.
 func setupTestTownForAccount(t *testing.T) (townRoot string, accountsDir string) {
 	t.Helper()
 

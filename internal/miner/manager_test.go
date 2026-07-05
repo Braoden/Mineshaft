@@ -14,12 +14,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/testutil"
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/testutil"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 // installMockBd places a fake bd binary in PATH that handles the commands
@@ -565,7 +565,7 @@ func TestClearIssueWithoutAssignment(t *testing.T) {
 }
 
 // NOTE: TestInstallCLAUDETemplate tests were removed.
-// We no longer write CLAUDE.md to worktrees - Excavation Site context is injected
+// We no longer write CLAUDE.md to worktrees - Mineshaft context is injected
 // ephemerally via SessionStart hook (gt prime) to prevent leaking internal
 // architecture into project repos.
 
@@ -983,7 +983,7 @@ func TestIsDoltConfigError(t *testing.T) {
 		{"server may not be running", fmt.Errorf("Dolt server may not be running"), true},
 		{"configure custom types", fmt.Errorf("configure custom types in /path: exit 1"), true},
 		{"identity mismatch", fmt.Errorf("identity mismatch: local project_id != database project_id"), true},
-		{"Unknown database", fmt.Errorf("Unknown database 'excavation'"), true},
+		{"Unknown database", fmt.Errorf("Unknown database 'mineshaft'"), true},
 		{"generic error", fmt.Errorf("something else failed"), false},
 		{"wrapped not initialized", fmt.Errorf("bd create failed: %w", fmt.Errorf("database not initialized")), true},
 	}
@@ -1581,7 +1581,7 @@ func TestAddWithOptions_NoFilesAddedToRepo(t *testing.T) {
 
 	// Create .gitignore with .claude/ and .beads/ (standard practice)
 	// .claude/ - Claude Code local state
-	// .beads/ - Excavation Site local state (redirect file)
+	// .beads/ - Mineshaft local state (redirect file)
 	gitignorePath := filepath.Join(overseerRig, ".gitignore")
 	if err := os.WriteFile(gitignorePath, []byte(".claude/\n.beads/\n"), 0644); err != nil {
 		t.Fatalf("write .gitignore: %v", err)
@@ -2173,7 +2173,7 @@ func TestManagerAgentLifecycleUsesTownBeadsDir(t *testing.T) {
 	}
 
 	townRoot := t.TempDir()
-	rigName := "excavation"
+	rigName := "mineshaft"
 	rigPath := filepath.Join(townRoot, rigName)
 	overseerRig := filepath.Join(rigPath, "overseer", "rig")
 	townBeadsDir := filepath.Join(townRoot, ".beads")
@@ -2227,11 +2227,11 @@ case "$cmd" in
     exit 0
     ;;
   create)
-    printf '%%s\n' '{"id":"gt-excavation-miner-rust","title":"gt-excavation-miner-rust","status":"open","description":"role_type: miner\nrig: excavation\nagent_state: spawning\nhook_bead: gt-work"}'
+    printf '%%s\n' '{"id":"gt-mineshaft-miner-rust","title":"gt-mineshaft-miner-rust","status":"open","description":"role_type: miner\nrig: mineshaft\nagent_state: spawning\nhook_bead: gt-work"}'
     exit 0
     ;;
   show)
-    printf '%%s\n' '[{"id":"gt-excavation-miner-rust","title":"gt-excavation-miner-rust","issue_type":"task","labels":["gt:agent"],"status":"open","description":"role_type: miner\nrig: excavation\nagent_state: working\nhook_bead: gt-work\nactive_mr: gt-mr\ncleanup_status: has_unpushed"}]'
+    printf '%%s\n' '[{"id":"gt-mineshaft-miner-rust","title":"gt-mineshaft-miner-rust","issue_type":"task","labels":["gt:agent"],"status":"open","description":"role_type: miner\nrig: mineshaft\nagent_state: working\nhook_bead: gt-work\nactive_mr: gt-mr\ncleanup_status: has_unpushed"}]'
     exit 0
     ;;
   *)

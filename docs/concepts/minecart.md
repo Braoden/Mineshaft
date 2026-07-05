@@ -32,7 +32,7 @@ so you can see when it lands and what was included.
             ▼            ▼            ▼
        ┌─────────┐  ┌─────────┐  ┌─────────┐
        │ gt-xyz  │  │ gt-def  │  │ bd-abc  │
-       │ excavation │  │ excavation │  │  beads  │
+       │ mineshaft │  │ mineshaft │  │  beads  │
        └────┬────┘  └────┬────┘  └────┬────┘
             │            │            │
             ▼            ▼            ▼
@@ -82,7 +82,7 @@ Adding issues to a closed minecart reopens it automatically.
 
 ```bash
 # Track multiple issues across rigs
-gt minecart create "Deploy v2.0" gt-abc bd-xyz --notify excavation/joe
+gt minecart create "Deploy v2.0" gt-abc bd-xyz --notify mineshaft/joe
 
 # Track a single issue (still creates minecart for dashboard visibility)
 gt minecart create "Fix auth bug" gt-auth-fix
@@ -160,7 +160,7 @@ When a minecart lands (all tracked issues closed), subscribers are notified:
 
 ```bash
 # Explicit subscriber
-gt minecart create "Feature X" gt-abc --notify excavation/joe
+gt minecart create "Feature X" gt-abc --notify mineshaft/joe
 
 # Multiple subscribers
 gt minecart create "Feature X" gt-abc --notify overseer/ --notify --human

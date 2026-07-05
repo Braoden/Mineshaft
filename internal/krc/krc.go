@@ -24,7 +24,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/events"
+	"github.com/steveyegge/mineshaft/internal/events"
 )
 
 // Config defines TTL settings for ephemeral records.

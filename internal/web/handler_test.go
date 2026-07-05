@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/activity"
+	"github.com/steveyegge/mineshaft/internal/activity"
 )
 
 // Test error for simulating fetch failures
@@ -297,7 +297,7 @@ func TestMinecartHandler_MergeQueueRendering(t *testing.T) {
 			},
 			{
 				Number:     456,
-				Repo:       "excavation",
+				Repo:       "mineshaft",
 				Title:      "Add dashboard feature",
 				URL:        "https://github.com/test/repo/pull/456",
 				CIStatus:   "pending",
@@ -927,7 +927,7 @@ func TestE2E_Server_HTMLStructure(t *testing.T) {
 		"<!DOCTYPE html>",
 		"<html",
 		"<head>",
-		"<title>Excavation Site Control Center</title>",
+		"<title>Mineshaft Control Center</title>",
 		"htmx.org",
 		"<body>",
 		"</body>",

@@ -146,7 +146,7 @@ func TestSyncForRole_AtomicWriteErrorPropagates(t *testing.T) {
 	if err := os.MkdirAll(pluginsDir, 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
-	target := filepath.Join(pluginsDir, "excavation.js")
+	target := filepath.Join(pluginsDir, "mineshaft.js")
 	// Seed with content that differs from the template so SyncForRole takes
 	// the write path (not the "content equal" early-return).
 	if err := os.WriteFile(target, []byte("// stale\n"), 0644); err != nil {
@@ -157,7 +157,7 @@ func TestSyncForRole_AtomicWriteErrorPropagates(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chmod(pluginsDir, 0755) })
 
-	_, err := SyncForRole("opencode", dir, dir, "miner", ".opencode/plugins", "excavation.js", false)
+	_, err := SyncForRole("opencode", dir, dir, "miner", ".opencode/plugins", "mineshaft.js", false)
 	if err == nil {
 		t.Fatal("expected error from read-only directory, got nil")
 	}

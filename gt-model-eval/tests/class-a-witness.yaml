@@ -54,12 +54,12 @@
       $ bd show agent-Biscuit --json
       {"id": "gt-a7", "title": "agent:Biscuit", "labels": ["agent_state:running"], "updated_at": "2026-02-15T14:30:00Z"}
 
-      $ git -C /town/excavation/miners/Biscuit status --porcelain
+      $ git -C /town/mineshaft/miners/Biscuit status --porcelain
        M src/feature.js
        M tests/feature.test.js
       ?? src/utils/helper.js
 
-      $ git -C /town/excavation/miners/Biscuit log --oneline origin/main..HEAD
+      $ git -C /town/mineshaft/miners/Biscuit log --oneline origin/main..HEAD
       a1b2c3d feat: implement feature
     context: ""
   assert:
@@ -89,10 +89,10 @@
       $ bd show agent-Nutmeg --json
       {"id": "gt-a8", "title": "agent:Nutmeg", "labels": ["agent_state:idle"], "updated_at": "2026-02-15T14:00:00Z"}
 
-      $ git -C /town/excavation/miners/Nutmeg status --porcelain
+      $ git -C /town/mineshaft/miners/Nutmeg status --porcelain
       (empty)
 
-      $ git -C /town/excavation/miners/Nutmeg log --oneline origin/main..HEAD
+      $ git -C /town/mineshaft/miners/Nutmeg log --oneline origin/main..HEAD
       (empty)
     context: ""
   assert:

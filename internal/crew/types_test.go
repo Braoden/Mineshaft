@@ -10,7 +10,7 @@ func TestCrewWorker_Summary(t *testing.T) {
 	now := time.Now()
 	worker := &CrewWorker{
 		Name:      "test-worker",
-		Rig:       "excavation",
+		Rig:       "mineshaft",
 		ClonePath: "/path/to/clone",
 		Branch:    "main",
 		CreatedAt: now,
@@ -31,7 +31,7 @@ func TestCrewWorker_JSONMarshaling(t *testing.T) {
 	now := time.Now().Round(time.Second) // Round for JSON precision
 	worker := &CrewWorker{
 		Name:      "test-worker",
-		Rig:       "excavation",
+		Rig:       "mineshaft",
 		ClonePath: "/path/to/clone",
 		Branch:    "feature-branch",
 		CreatedAt: now,

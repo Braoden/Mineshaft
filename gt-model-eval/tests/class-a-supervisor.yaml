@@ -28,7 +28,7 @@
       $ date -u +%Y-%m-%dT%H:%M:%SZ
       2026-02-15T14:55:00Z
 
-      $ git -C /town/excavation/miners/Toast status --porcelain
+      $ git -C /town/mineshaft/miners/Toast status --porcelain
       (empty - clean worktree)
     context: ""
   assert:
@@ -94,7 +94,7 @@
       $ date -u +%Y-%m-%dT%H:%M:%SZ
       2026-02-15T14:55:00Z
 
-      $ git -C /town/excavation/miners/Waffles status --porcelain
+      $ git -C /town/mineshaft/miners/Waffles status --porcelain
       (empty - clean worktree)
     context: ""
   assert:

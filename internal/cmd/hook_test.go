@@ -25,7 +25,7 @@ func TestHookMinerEnvCheck(t *testing.T) {
 		},
 		{
 			name:      "compound miner role is blocked",
-			role:      "excavation/miners/Toast",
+			role:      "mineshaft/miners/Toast",
 			miner:   "Toast",
 			wantBlock: true,
 		},
@@ -37,7 +37,7 @@ func TestHookMinerEnvCheck(t *testing.T) {
 		},
 		{
 			name:      "compound witness with stale GT_MINER is NOT blocked",
-			role:      "excavation/witness",
+			role:      "mineshaft/witness",
 			miner:   "alpha",
 			wantBlock: false,
 		},
@@ -49,7 +49,7 @@ func TestHookMinerEnvCheck(t *testing.T) {
 		},
 		{
 			name:      "compound crew with stale GT_MINER is NOT blocked",
-			role:      "excavation/crew/den",
+			role:      "mineshaft/crew/den",
 			miner:   "alpha",
 			wantBlock: false,
 		},
@@ -132,13 +132,13 @@ func TestNormalizeHookShowTarget(t *testing.T) {
 	}{
 		{
 			name:   "shorthand miner path resolves",
-			target: "excavation/toast",
-			want:   "excavation/miners/toast",
+			target: "mineshaft/toast",
+			want:   "mineshaft/miners/toast",
 		},
 		{
 			name:   "canonical miner path stays canonical",
-			target: "excavation/miners/toast",
-			want:   "excavation/miners/toast",
+			target: "mineshaft/miners/toast",
+			want:   "mineshaft/miners/toast",
 		},
 		{
 			name:   "unknown target stays unchanged",

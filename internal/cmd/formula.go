@@ -15,11 +15,11 @@ import (
 	"text/template"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/formula"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/formula"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -234,7 +234,7 @@ func runFormulaRun(cmd *cobra.Command, args []string) error {
 			}
 			// Still no rig — auto-select when there is exactly one registered rig,
 			// otherwise surface a helpful error (e.g. Supervisor at HQ level on
-			// non-default installs where "excavation" rig does not exist).
+			// non-default installs where "mineshaft" rig does not exist).
 			if targetRig == "" {
 				name, path, inferErr := autoInferRig(townRoot)
 				if inferErr != nil {
@@ -245,7 +245,7 @@ func runFormulaRun(cmd *cobra.Command, args []string) error {
 			}
 		} else {
 			// No town root found, cannot determine target rig
-			return fmt.Errorf("cannot determine target rig: not in a Excavation Site workspace; use --rig=NAME")
+			return fmt.Errorf("cannot determine target rig: not in a Mineshaft workspace; use --rig=NAME")
 		}
 	} else {
 		// If rig specified, construct path

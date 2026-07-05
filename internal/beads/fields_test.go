@@ -148,7 +148,7 @@ func TestSetAttachmentFieldsPreservesAdjacentKeyValueLines(t *testing.T) {
 func TestAgentFieldsModeRoundTrip(t *testing.T) {
 	original := &AgentFields{
 		RoleType:   "miner",
-		Rig:        "excavation",
+		Rig:        "mineshaft",
 		AgentState: "working",
 		HookBead:   "gt-abc",
 		Mode:       "ralph",
@@ -171,7 +171,7 @@ func TestAgentFieldsModeRoundTrip(t *testing.T) {
 func TestAgentFieldsModeOmittedWhenEmpty(t *testing.T) {
 	fields := &AgentFields{
 		RoleType:   "miner",
-		Rig:        "excavation",
+		Rig:        "mineshaft",
 		AgentState: "working",
 		// Mode intentionally empty
 	}
@@ -472,13 +472,13 @@ func TestSetMinecartFieldsWithMixedContent(t *testing.T) {
 // --- ParseAgentFields (not covered in beads_test.go) ---
 
 func TestParseAgentFields_AllFields(t *testing.T) {
-	desc := "role_type: miner\nrig: excavation\nagent_state: working\nhook_bead: gt-abc\ncleanup_status: clean\nactive_mr: gt-mr1\nlast_source_issue: gt-src\nnotification_level: verbose"
+	desc := "role_type: miner\nrig: mineshaft\nagent_state: working\nhook_bead: gt-abc\ncleanup_status: clean\nactive_mr: gt-mr1\nlast_source_issue: gt-src\nnotification_level: verbose"
 	got := ParseAgentFields(desc)
 	if got.RoleType != "miner" {
 		t.Errorf("RoleType = %q, want %q", got.RoleType, "miner")
 	}
-	if got.Rig != "excavation" {
-		t.Errorf("Rig = %q, want %q", got.Rig, "excavation")
+	if got.Rig != "mineshaft" {
+		t.Errorf("Rig = %q, want %q", got.Rig, "mineshaft")
 	}
 	if got.AgentState != "working" {
 		t.Errorf("AgentState = %q, want %q", got.AgentState, "working")
@@ -505,7 +505,7 @@ func TestParseAgentFields_AllFields(t *testing.T) {
 func TestAgentFieldsCompletionMetadataRoundTrip(t *testing.T) {
 	original := &AgentFields{
 		RoleType:        "miner",
-		Rig:             "excavation",
+		Rig:             "mineshaft",
 		AgentState:      "done",
 		HookBead:        "gt-abc",
 		ExitType:        "COMPLETED",
@@ -571,7 +571,7 @@ func TestAgentFieldsCompletionMetadataRoundTrip(t *testing.T) {
 func TestAgentFieldsMRFailedTrue(t *testing.T) {
 	fields := &AgentFields{
 		RoleType:   "miner",
-		Rig:        "excavation",
+		Rig:        "mineshaft",
 		AgentState: "done",
 		ExitType:   "COMPLETED",
 		MRFailed:   true,
@@ -591,7 +591,7 @@ func TestAgentFieldsMRFailedTrue(t *testing.T) {
 func TestAgentFieldsCompletionOmittedWhenEmpty(t *testing.T) {
 	fields := &AgentFields{
 		RoleType:   "miner",
-		Rig:        "excavation",
+		Rig:        "mineshaft",
 		AgentState: "working",
 		// All completion fields intentionally empty
 	}
@@ -605,7 +605,7 @@ func TestAgentFieldsCompletionOmittedWhenEmpty(t *testing.T) {
 }
 
 func TestParseAgentFields_WithCompletionMetadata(t *testing.T) {
-	desc := "role_type: miner\nrig: excavation\nagent_state: done\nhook_bead: gt-abc\nexit_type: ESCALATED\nbranch: miner/nux/gt-abc@hash\nlast_source_issue: gt-abc\nmr_failed: true\ncompletion_time: 2026-02-28T02:00:00Z"
+	desc := "role_type: miner\nrig: mineshaft\nagent_state: done\nhook_bead: gt-abc\nexit_type: ESCALATED\nbranch: miner/nux/gt-abc@hash\nlast_source_issue: gt-abc\nmr_failed: true\ncompletion_time: 2026-02-28T02:00:00Z"
 	got := ParseAgentFields(desc)
 	if got.ExitType != "ESCALATED" {
 		t.Errorf("ExitType = %q, want %q", got.ExitType, "ESCALATED")
@@ -633,8 +633,8 @@ func TestMinecartFieldsWatchersRoundTrip(t *testing.T) {
 	original := &MinecartFields{
 		Owner:         "overseer/",
 		Notify:        "witness/",
-		Watchers:      "excavation/crew/mel,excavation/crew/tom",
-		NudgeWatchers: "excavation/crew/joe",
+		Watchers:      "mineshaft/crew/mel,mineshaft/crew/tom",
+		NudgeWatchers: "mineshaft/crew/joe",
 	}
 	formatted := FormatMinecartFields(original)
 	parsed := ParseMinecartFields(&Issue{Description: formatted})
@@ -653,23 +653,23 @@ func TestMinecartFieldsAddWatcher(t *testing.T) {
 	f := &MinecartFields{}
 
 	// First add
-	if !f.AddWatcher("excavation/crew/mel") {
+	if !f.AddWatcher("mineshaft/crew/mel") {
 		t.Error("AddWatcher should return true for new address")
 	}
-	if f.Watchers != "excavation/crew/mel" {
-		t.Errorf("Watchers = %q, want %q", f.Watchers, "excavation/crew/mel")
+	if f.Watchers != "mineshaft/crew/mel" {
+		t.Errorf("Watchers = %q, want %q", f.Watchers, "mineshaft/crew/mel")
 	}
 
 	// Second add
-	if !f.AddWatcher("excavation/crew/tom") {
+	if !f.AddWatcher("mineshaft/crew/tom") {
 		t.Error("AddWatcher should return true for new address")
 	}
-	if f.Watchers != "excavation/crew/mel,excavation/crew/tom" {
-		t.Errorf("Watchers = %q, want %q", f.Watchers, "excavation/crew/mel,excavation/crew/tom")
+	if f.Watchers != "mineshaft/crew/mel,mineshaft/crew/tom" {
+		t.Errorf("Watchers = %q, want %q", f.Watchers, "mineshaft/crew/mel,mineshaft/crew/tom")
 	}
 
 	// Duplicate add
-	if f.AddWatcher("excavation/crew/mel") {
+	if f.AddWatcher("mineshaft/crew/mel") {
 		t.Error("AddWatcher should return false for duplicate")
 	}
 }
@@ -719,12 +719,12 @@ func TestNotificationAddressesIncludesWatchers(t *testing.T) {
 	f := &MinecartFields{
 		Owner:    "overseer/",
 		Notify:   "witness/",
-		Watchers: "excavation/crew/mel,overseer/", // overseer/ overlaps with Owner
+		Watchers: "mineshaft/crew/mel,overseer/", // overseer/ overlaps with Owner
 	}
 	addrs := f.NotificationAddresses()
 
-	// Should be deduplicated: overseer/, witness/, excavation/crew/mel
-	want := map[string]bool{"overseer/": true, "witness/": true, "excavation/crew/mel": true}
+	// Should be deduplicated: overseer/, witness/, mineshaft/crew/mel
+	want := map[string]bool{"overseer/": true, "witness/": true, "mineshaft/crew/mel": true}
 	got := make(map[string]bool)
 	for _, a := range addrs {
 		got[a] = true
@@ -741,7 +741,7 @@ func TestNotificationAddressesIncludesWatchers(t *testing.T) {
 
 func TestNudgeNotificationAddresses(t *testing.T) {
 	f := &MinecartFields{
-		NudgeWatchers: "excavation/crew/mel,excavation/crew/tom",
+		NudgeWatchers: "mineshaft/crew/mel,mineshaft/crew/tom",
 	}
 	addrs := f.NudgeNotificationAddresses()
 	if len(addrs) != 2 {

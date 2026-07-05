@@ -6,14 +6,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/nudge"
-	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/mineshaft/internal/nudge"
+	"github.com/steveyegge/mineshaft/internal/session"
 )
 
 func setupNudgeTestRegistry(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "excavation")
+	reg.Register("gt", "mineshaft")
 	reg.Register("bd", "beads")
 	old := session.DefaultRegistry()
 	session.SetDefaultRegistry(reg)
@@ -33,7 +33,7 @@ func TestNudgeStdinConflict(t *testing.T) {
 	nudgeStdinFlag = true
 	nudgeMessageFlag = "some message"
 
-	err := runNudge(nudgeCmd, []string{"excavation/alpha"})
+	err := runNudge(nudgeCmd, []string{"mineshaft/alpha"})
 	if err == nil {
 		t.Fatal("expected error when --stdin and --message are both set")
 	}
@@ -48,12 +48,12 @@ func TestResolveNudgePattern(t *testing.T) {
 	agents := []*AgentSession{
 		{Name: "hq-overseer", Type: AgentOverseer},
 		{Name: "hq-supervisor", Type: AgentSupervisor},
-		{Name: "gt-witness", Type: AgentWitness, Rig: "excavation"},
-		{Name: "gt-refinery", Type: AgentRefinery, Rig: "excavation"},
-		{Name: "gt-crew-max", Type: AgentCrew, Rig: "excavation", AgentName: "max"},
-		{Name: "gt-crew-jack", Type: AgentCrew, Rig: "excavation", AgentName: "jack"},
-		{Name: "gt-alpha", Type: AgentMiner, Rig: "excavation", AgentName: "alpha"},
-		{Name: "gt-beta", Type: AgentMiner, Rig: "excavation", AgentName: "beta"},
+		{Name: "gt-witness", Type: AgentWitness, Rig: "mineshaft"},
+		{Name: "gt-refinery", Type: AgentRefinery, Rig: "mineshaft"},
+		{Name: "gt-crew-max", Type: AgentCrew, Rig: "mineshaft", AgentName: "max"},
+		{Name: "gt-crew-jack", Type: AgentCrew, Rig: "mineshaft", AgentName: "jack"},
+		{Name: "gt-alpha", Type: AgentMiner, Rig: "mineshaft", AgentName: "alpha"},
+		{Name: "gt-beta", Type: AgentMiner, Rig: "mineshaft", AgentName: "beta"},
 		{Name: "bd-witness", Type: AgentWitness, Rig: "beads"},
 		{Name: "bd-gamma", Type: AgentMiner, Rig: "beads", AgentName: "gamma"},
 	}
@@ -75,7 +75,7 @@ func TestResolveNudgePattern(t *testing.T) {
 		},
 		{
 			name:     "specific witness",
-			pattern:  "excavation/witness",
+			pattern:  "mineshaft/witness",
 			expected: []string{"gt-witness"},
 		},
 		{
@@ -85,32 +85,32 @@ func TestResolveNudgePattern(t *testing.T) {
 		},
 		{
 			name:     "specific refinery",
-			pattern:  "excavation/refinery",
+			pattern:  "mineshaft/refinery",
 			expected: []string{"gt-refinery"},
 		},
 		{
 			name:     "all miners in rig",
-			pattern:  "excavation/miners/*",
+			pattern:  "mineshaft/miners/*",
 			expected: []string{"gt-alpha", "gt-beta"},
 		},
 		{
 			name:     "specific miner",
-			pattern:  "excavation/miners/alpha",
+			pattern:  "mineshaft/miners/alpha",
 			expected: []string{"gt-alpha"},
 		},
 		{
 			name:     "all crew in rig",
-			pattern:  "excavation/crew/*",
+			pattern:  "mineshaft/crew/*",
 			expected: []string{"gt-crew-max", "gt-crew-jack"},
 		},
 		{
 			name:     "specific crew member",
-			pattern:  "excavation/crew/max",
+			pattern:  "mineshaft/crew/max",
 			expected: []string{"gt-crew-max"},
 		},
 		{
 			name:     "legacy miner format",
-			pattern:  "excavation/alpha",
+			pattern:  "mineshaft/alpha",
 			expected: []string{"gt-alpha"},
 		},
 		{
@@ -170,22 +170,22 @@ func TestSessionNameToAddress(t *testing.T) {
 		{
 			name:        "witness",
 			sessionName: "gt-witness",
-			expected:    "excavation/witness",
+			expected:    "mineshaft/witness",
 		},
 		{
 			name:        "refinery",
 			sessionName: "gt-refinery",
-			expected:    "excavation/refinery",
+			expected:    "mineshaft/refinery",
 		},
 		{
 			name:        "crew member",
 			sessionName: "gt-crew-max",
-			expected:    "excavation/crew/max",
+			expected:    "mineshaft/crew/max",
 		},
 		{
 			name:        "miner",
 			sessionName: "gt-alpha",
-			expected:    "excavation/alpha",
+			expected:    "mineshaft/alpha",
 		},
 		{
 			name:        "unrecognized format",
@@ -238,7 +238,7 @@ func TestNudgeInvalidMode(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			nudgeModeFlag = tt.mode
 			nudgePriorityFlag = "normal"
-			err := runNudge(nudgeCmd, []string{"excavation/alpha", "hello"})
+			err := runNudge(nudgeCmd, []string{"mineshaft/alpha", "hello"})
 			if err == nil {
 				t.Fatal("expected error for invalid mode")
 			}
@@ -278,7 +278,7 @@ func TestNudgeInvalidPriority(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			nudgePriorityFlag = tt.priority
-			err := runNudge(nudgeCmd, []string{"excavation/alpha", "hello"})
+			err := runNudge(nudgeCmd, []string{"mineshaft/alpha", "hello"})
 			if err == nil {
 				t.Fatal("expected error for invalid priority")
 			}
@@ -319,7 +319,7 @@ func TestNudgeValidModesAccepted(t *testing.T) {
 	for _, mode := range []string{NudgeModeImmediate, NudgeModeQueue, NudgeModeWaitIdle} {
 		t.Run(mode, func(t *testing.T) {
 			nudgeModeFlag = mode
-			err := runNudge(nudgeCmd, []string{"excavation/alpha", "hello"})
+			err := runNudge(nudgeCmd, []string{"mineshaft/alpha", "hello"})
 			// The error should NOT be about invalid mode — it will fail on
 			// tmux or workspace, which is fine.
 			if err != nil && strings.Contains(err.Error(), "invalid --mode") {

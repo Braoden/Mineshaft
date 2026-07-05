@@ -118,7 +118,7 @@ case "$*" in
 	      echo "stale Dolt database leaked" >&2
 	      exit 1
 	    fi
-	    echo '[{"id":"ws-rig","title":"Rig task","status":"closed","issue_type":"task","assignee":"excavation/miners/chrome","labels":["cleanup"],"dependencies":[{"id":"ws-blocker","status":"open","dependency_type":"blocks"}]}]'
+	    echo '[{"id":"ws-rig","title":"Rig task","status":"closed","issue_type":"task","assignee":"mineshaft/miners/chrome","labels":["cleanup"],"dependencies":[{"id":"ws-blocker","status":"open","dependency_type":"blocks"}]}]'
 	    ;;
 	  *"show hq-town ws-rig --json"*|*"show ws-rig hq-town --json"*|*"show --json hq-town ws-rig"*|*"show --json ws-rig hq-town"*)
     echo "mixed-prefix batch should not be used" >&2

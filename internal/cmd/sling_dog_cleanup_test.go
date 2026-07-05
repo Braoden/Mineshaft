@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/dog"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/dog"
 )
 
 func writeDogStateForDispatchTest(t *testing.T, townRoot, name string, state *dog.DogState) {
@@ -121,7 +121,7 @@ func TestDogDispatchInfoClearWorkIfMatchesSkipsReusedWork(t *testing.T) {
 
 func TestReusableHookedDogFormulaSkipsStaleDogHooks(t *testing.T) {
 	hooked := []*beads.Issue{
-		{ID: "not-a-dog", Assignee: "excavation/miners/alpha", Description: "attached_formula: mol-dog-reaper"},
+		{ID: "not-a-dog", Assignee: "mineshaft/miners/alpha", Description: "attached_formula: mol-dog-reaper"},
 		{ID: "bad-dog-name", Assignee: "supervisor/dogs/nested/name", Description: "attached_formula: mol-dog-reaper"},
 		{ID: "missing-dog", Assignee: "supervisor/dogs/missing", Description: "attached_formula: mol-dog-reaper"},
 		{ID: "wrong-work", Assignee: "supervisor/dogs/beta", Description: "attached_formula: mol-dog-reaper"},

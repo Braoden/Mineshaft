@@ -10,7 +10,7 @@ import (
 // randomAcyclicDAG generates a random DAG guaranteed to be acyclic.
 // Nodes are numbered 0..n-1. Edges only go from lower to higher numbered nodes,
 // ensuring acyclicity by construction. Then edges are randomly selected.
-// All nodes are type "task" with rig "excavation".
+// All nodes are type "task" with rig "mineshaft".
 func randomAcyclicDAG(seed int64, nodes, maxEdges int) *MinecartDAG {
 	rng := rand.New(rand.NewSource(seed))
 	dag := &MinecartDAG{Nodes: make(map[string]*MinecartDAGNode)}
@@ -22,7 +22,7 @@ func randomAcyclicDAG(seed int64, nodes, maxEdges int) *MinecartDAG {
 			ID:    id,
 			Title: fmt.Sprintf("Task %d", i),
 			Type:  "task",
-			Rig:   "excavation",
+			Rig:   "mineshaft",
 		}
 	}
 
@@ -411,7 +411,7 @@ func TestProperty_ParentChildDoesNotAffectWaves(t *testing.T) {
 				ID:    epicID,
 				Title: fmt.Sprintf("Epic %d", i),
 				Type:  "epic",
-				Rig:   "excavation",
+				Rig:   "mineshaft",
 			}
 		}
 

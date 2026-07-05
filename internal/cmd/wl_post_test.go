@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/doltserver"
+	"github.com/steveyegge/mineshaft/internal/doltserver"
 )
 
 func TestPostWanted_Success(t *testing.T) {
@@ -15,7 +15,7 @@ func TestPostWanted_Success(t *testing.T) {
 		ID:          "w-test123",
 		Title:       "Fix auth bug",
 		Description: "Auth is broken",
-		Project:     "excavation",
+		Project:     "mineshaft",
 		Type:        "bug",
 		Priority:    1,
 		Tags:        []string{"auth", "urgent"},

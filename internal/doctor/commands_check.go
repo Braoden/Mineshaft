@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/templates"
+	"github.com/steveyegge/mineshaft/internal/templates"
 )
 
 // CommandsCheck validates that town-level .claude/commands/ is provisioned.

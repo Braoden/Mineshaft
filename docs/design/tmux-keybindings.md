@@ -1,8 +1,8 @@
 # Tmux Keybindings
 
-Excavation Site overrides several tmux keybindings to provide session navigation
+Mineshaft overrides several tmux keybindings to provide session navigation
 and operational shortcuts. All bindings are conditional — they only activate
-in Excavation Site sessions (those matching a registered rig prefix or `hq-`).
+in Mineshaft sessions (those matching a registered rig prefix or `hq-`).
 Non-GT sessions retain the user's original bindings.
 
 ## Session Cycle Groups (prefix+n / prefix+p)
@@ -16,7 +16,7 @@ They cycle within groups based on the current session type:
 | **Crew** | All crew in the same rig | `gt-crew-max` ↔ `gt-crew-joe` |
 | **Rig ops** | Witness + Refinery + Miners in the same rig | `gt-witness` ↔ `gt-refinery` ↔ `gt-furiosa` ↔ `gt-nux` |
 
-Groups are per-rig: `gt-witness` cycles with `gt-refinery` and excavation
+Groups are per-rig: `gt-witness` cycles with `gt-refinery` and mineshaft
 miners, but NOT with `bd-witness` or `bd-refinery`.
 
 If a group has only one session, prefix+n/p is a no-op.
@@ -30,11 +30,11 @@ If a group has only one session, prefix+n/p is a no-op.
 
 ## How Bindings Are Set Up
 
-Bindings are configured by `ConfigureExcavationSession()` in the tmux package,
+Bindings are configured by `ConfigureMineshaftSession()` in the tmux package,
 which is called whenever a session is created (by the daemon for patrol
 agents, by the witness for miners, by `gt crew at` for crew). This means:
 
-- Bindings are set on the **first** Excavation Site session created on a tmux server
+- Bindings are set on the **first** Mineshaft session created on a tmux server
 - They apply server-wide (tmux keybindings are global, not per-session)
 - The `if-shell` guard scopes them to GT sessions at press time
 - Subsequent calls are no-ops (idempotent)

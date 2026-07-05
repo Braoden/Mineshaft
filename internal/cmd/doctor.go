@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/doctor"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/doctor"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var (
@@ -23,7 +23,7 @@ var doctorCmd = &cobra.Command{
 	Use:     "doctor",
 	GroupID: GroupDiag,
 	Short:   "Run health checks on the workspace",
-	Long: `Run diagnostic checks on the Excavation Site workspace.
+	Long: `Run diagnostic checks on the Mineshaft workspace.
 
 Doctor checks for common configuration issues, missing files,
 and other problems that could affect workspace operation.
@@ -74,7 +74,7 @@ Migration checks (fixable):
 
 Rig checks (with --rig flag):
   - rig-is-git-repo          Verify rig is a valid git repository
-  - git-exclude-configured   Check .git/info/exclude has Excavation Site dirs (fixable)
+  - git-exclude-configured   Check .git/info/exclude has Mineshaft dirs (fixable)
   - bare-repo-exists         Verify .repo.git exists when worktrees depend on it (fixable)
   - witness-exists           Verify witness/ structure exists (fixable)
   - refinery-exists          Verify refinery/ structure exists (fixable)
@@ -137,7 +137,7 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	// Find town root
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Create check context
@@ -242,7 +242,7 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	d.Register(doctor.NewSettingsCheck())
 	d.Register(doctor.NewSessionHookCheck())
 	d.Register(doctor.NewRuntimeGitignoreCheck())
-	d.Register(doctor.NewLegacyExcavationCheck())
+	d.Register(doctor.NewLegacyMineshaftCheck())
 	// NOTE: ClaudeSettingsCheck moved before DaemonCheck (gt-99u race fix)
 	d.Register(doctor.NewDeprecatedMergeQueueKeysCheck())
 	d.Register(doctor.NewLandWorktreeGitignoreCheck())

@@ -136,7 +136,7 @@ Entry point when Dog is allocated from pool.
 **1. Read warrant from allocation:**
 The Dog receives a Warrant struct containing:
 - ID: Bead ID of the warrant
-- Target: Session name (e.g., "gt-excavation-Toast")
+- Target: Session name (e.g., "gt-mineshaft-Toast")
 - Reason: Why termination requested
 - Requester: Who filed (supervisor, witness, overseer)
 - FiledAt: Timestamp
@@ -506,7 +506,7 @@ description = "Bead ID of the death warrant being processed"
 required = true
 
 [vars.target]
-description = "Session name to interrogate (e.g., gt-excavation-Toast)"
+description = "Session name to interrogate (e.g., gt-mineshaft-Toast)"
 required = true
 
 [vars.reason]

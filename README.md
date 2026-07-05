@@ -1,14 +1,14 @@
-# Excavation Site
+# Mineshaft
 
 **Multi-agent orchestration system for Claude Code, GitHub Copilot, and other AI agents with persistent work tracking**
 
 ## Overview
 
-Excavation Site is a workspace manager that lets you coordinate multiple AI coding agents (Claude Code, GitHub Copilot, Codex, Gemini, and others) working on different tasks. Instead of losing context when agents restart, Excavation Site persists work state in git-backed hooks, enabling reliable multi-agent workflows.
+Mineshaft is a workspace manager that lets you coordinate multiple AI coding agents (Claude Code, GitHub Copilot, Codex, Gemini, and others) working on different tasks. Instead of losing context when agents restart, Mineshaft persists work state in git-backed hooks, enabling reliable multi-agent workflows.
 
 ### What Problem Does This Solve?
 
-| Challenge                       | Excavation Site Solution                            |
+| Challenge                       | Mineshaft Solution                            |
 | ------------------------------- | -------------------------------------------- |
 | Agents lose context on restart  | Work persists in git-backed hooks            |
 | Manual agent coordination       | Built-in mailboxes, identities, and handoffs |
@@ -114,9 +114,9 @@ gt seance --talk <id> -p "What did you find?"  # One-shot question
 
 ### Wasteland 🏜️
 
-Federated work coordination network linking Excavation Sites through DoltHub. Rigs post wanted items, claim work from other towns, submit completion evidence, and earn portable reputation via multi-dimensional stamps. See [Wasteland](docs/WASTELAND.md).
+Federated work coordination network linking Mineshafts through DoltHub. Rigs post wanted items, claim work from other towns, submit completion evidence, and earn portable reputation via multi-dimensional stamps. See [Wasteland](docs/WASTELAND.md).
 
-> **New to Excavation Site?** See the [Glossary](docs/glossary.md) for a complete guide to terminology and concepts.
+> **New to Mineshaft?** See the [Glossary](docs/glossary.md) for a complete guide to terminology and concepts.
 
 ## Installation
 
@@ -125,7 +125,7 @@ Federated work coordination network linking Excavation Sites through DoltHub. Ri
 - **Go 1.25+** - [go.dev/dl](https://go.dev/dl/)
 - **Git 2.25+** - for worktree support
 - **Dolt 2.0.7+** - `brew install dolt` on macOS, or see [github.com/dolthub/dolt](https://github.com/dolthub/dolt)
-- **beads (bd) 0.55.4+** - installed by `brew install excavation`, or see [github.com/steveyegge/beads](https://github.com/steveyegge/beads)
+- **beads (bd) 0.55.4+** - installed by `brew install mineshaft`, or see [github.com/steveyegge/beads](https://github.com/steveyegge/beads)
 - **sqlite3** - for minecart database queries (usually pre-installed on macOS/Linux)
 - **tmux 3.0+** - recommended for full experience
 - **Claude Code CLI** (default runtime) - [claude.ai/code](https://claude.ai/code)
@@ -135,21 +135,21 @@ Federated work coordination network linking Excavation Sites through DoltHub. Ri
 ### Setup (Docker-Compose below)
 
 ```bash
-# Install Excavation Site
-$ brew install excavation                                    # Homebrew (recommended)
-$ npm install -g @excavation/gt                              # npm
-$ go install github.com/steveyegge/excavation/cmd/gt@latest  # From source (Linux only)
+# Install Mineshaft
+$ brew install mineshaft                                    # Homebrew (recommended)
+$ npm install -g @mineshaft/gt                              # npm
+$ go install github.com/steveyegge/mineshaft/cmd/gt@latest  # From source (Linux only)
 
 # macOS: go install produces unsigned binaries that macOS will SIGKILL.
 # Use brew install (above) or install Dolt and clone/build with make:
 $ brew install dolt
-$ git clone https://github.com/steveyegge/excavation.git && cd excavation
+$ git clone https://github.com/steveyegge/mineshaft.git && cd mineshaft
 $ make build && mv gt $HOME/go/bin/
 
 # Windows (or if go install fails): clone and build manually
-$ git clone https://github.com/steveyegge/excavation.git && cd excavation
+$ git clone https://github.com/steveyegge/mineshaft.git && cd mineshaft
 $ go build -o gt.exe ./cmd/gt
-$ mv gt.exe $HOME/go/bin/  # or add excavation to PATH
+$ mv gt.exe $HOME/go/bin/  # or add mineshaft to PATH
 
 # If using go install, add Go binaries to PATH (add to ~/.zshrc or ~/.bashrc)
 export PATH="$PATH:$HOME/go/bin"
@@ -180,7 +180,7 @@ export DASHBOARD_PORT=8080  # optional, host port for the web dashboard
 docker compose build              # only needed on first run or after code changes
 docker compose up -d
 
-docker compose exec excavation zsh   # or bash
+docker compose exec mineshaft zsh   # or bash
 
 gt up
 
@@ -272,7 +272,7 @@ gt minecart list
 
 ### Minimal Mode (No Tmux)
 
-Run individual runtime instances manually. Excavation Site just tracks state.
+Run individual runtime instances manually. Mineshaft just tracks state.
 
 ```bash
 gt minecart create "Fix bugs" gt-abc12   # Create minecart (sling auto-creates if skipped)
@@ -362,7 +362,7 @@ gt minecart show
 
 ## Runtime Configuration
 
-Excavation Site supports multiple AI coding runtimes. Per-rig runtime settings are in `settings/config.json`.
+Mineshaft supports multiple AI coding runtimes. Per-rig runtime settings are in `settings/config.json`.
 
 ```json
 {
@@ -380,11 +380,11 @@ Excavation Site supports multiple AI coding runtimes. Per-rig runtime settings a
 - Claude uses hooks in `.claude/settings.json` (managed via `--settings` flag) for mail injection and startup.
 - For Codex, set `project_doc_fallback_filenames = ["CLAUDE.md"]` in
   `~/.codex/config.toml` so role instructions are picked up.
-- For runtimes without hooks (e.g., Codex), Excavation Site sends a startup fallback
+- For runtimes without hooks (e.g., Codex), Mineshaft sends a startup fallback
   after the session is ready: `gt prime`, optional `gt mail check --inject`
   for autonomous roles, and `gt nudge supervisor session-started`.
 - **GitHub Copilot** (`copilot`) is a built-in preset using `--yolo` for autonomous
-  mode. It uses executable lifecycle hooks in `.github/hooks/excavation.json` (same events
+  mode. It uses executable lifecycle hooks in `.github/hooks/mineshaft.json` (same events
   as Claude: `sessionStart`, `userPromptSubmitted`, `preToolUse`, `sessionEnd`). Uses a
   5-second ready delay instead of prompt detection. Requires a Copilot seat and org-level
   CLI policy. See [docs/INSTALLING.md](docs/INSTALLING.md).
@@ -465,7 +465,7 @@ gt wl done <id> --evidence <url>  # Submit completion
 
 ## Cooking Formulas
 
-Excavation Site includes built-in formulas for common workflows. See `internal/formula/formulas/` for available recipes.
+Mineshaft includes built-in formulas for common workflows. See `internal/formula/formulas/` for available recipes.
 
 ## Activity Feed
 
@@ -503,8 +503,8 @@ Press `p` in `gt feed` (or start with `gt feed --problems`) to toggle the proble
 
 ## Dashboard
 
-Excavation Site includes a web dashboard for monitoring your workspace. The dashboard
-must be run from inside a Excavation Site workspace (HQ) directory.
+Mineshaft includes a web dashboard for monitoring your workspace. The dashboard
+must be run from inside a Mineshaft workspace (HQ) directory.
 
 ```bash
 # Start dashboard (default port 8080)
@@ -524,7 +524,7 @@ directly from the browser.
 
 ## Monitoring & Health
 
-Excavation Site uses a three-tier watchdog chain to keep agents healthy at scale:
+Mineshaft uses a three-tier watchdog chain to keep agents healthy at scale:
 
 ```
 Daemon (Go process) ← heartbeat every 3 min
@@ -592,7 +592,7 @@ Seance discovers sessions via `.events.jsonl` logs, enabling agents to recover c
 
 ## Wasteland Federation
 
-The Wasteland is a federated work coordination network linking multiple Excavation Sites through DoltHub:
+The Wasteland is a federated work coordination network linking multiple Mineshafts through DoltHub:
 
 ```bash
 gt wl join hop/wl-commons              # Join a wasteland
@@ -606,7 +606,7 @@ Completions earn portable reputation via multi-dimensional stamps (quality, spee
 
 ## Telemetry (OpenTelemetry)
 
-Excavation Site emits all agent operations as structured logs and metrics to any OTLP-compatible backend (VictoriaMetrics/VictoriaLogs by default):
+Mineshaft emits all agent operations as structured logs and metrics to any OTLP-compatible backend (VictoriaMetrics/VictoriaLogs by default):
 
 ```bash
 # Configure OTLP endpoints
@@ -616,7 +616,7 @@ export GT_OTEL_METRICS_URL="http://localhost:8428/api/v1/write"
 
 **Events emitted:** session lifecycle, agent state changes, bd calls with duration, mail operations, sling/nudge/done workflows, miner spawn/remove, formula instantiation, minecart creation, daemon restarts, and more.
 
-**Metrics include:** `excavation.session.starts.total`, `excavation.bd.calls.total`, `excavation.miner.spawns.total`, `excavation.done.total`, `excavation.minecart.creates.total`, and others.
+**Metrics include:** `mineshaft.session.starts.total`, `mineshaft.bd.calls.total`, `mineshaft.miner.spawns.total`, `mineshaft.done.total`, `mineshaft.minecart.creates.total`, and others.
 
 See [OTEL data model](docs/otel-data-model.md) and [OTEL architecture](docs/design/otel/) for the complete event schema.
 
@@ -624,7 +624,7 @@ See [OTEL data model](docs/otel-data-model.md) and [OTEL architecture](docs/desi
 
 ### The Propulsion Principle
 
-Excavation Site uses git hooks as a propulsion mechanism. Each hook is a git worktree with:
+Mineshaft uses git hooks as a propulsion mechanism. Each hook is a git worktree with:
 
 1. **Persistent state** - Work survives agent restarts
 2. **Version control** - All changes tracked in git

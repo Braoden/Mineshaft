@@ -13,18 +13,18 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/cli"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/events"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/mail"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/ui"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/cli"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/events"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/mail"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/ui"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var handoffCmd = &cobra.Command{
@@ -132,7 +132,7 @@ func runHandoff(cmd *cobra.Command, args []string) error {
 	// Check GT_ROLE first: coordinators (overseer, witness, etc.) may have a stale
 	// GT_MINER in their environment from spawning miners. Only block if the
 	// parsed role is actually miner (handles compound forms like
-	// "excavation/miners/Toast"). If GT_ROLE is unset, fall back to GT_MINER.
+	// "mineshaft/miners/Toast"). If GT_ROLE is unset, fall back to GT_MINER.
 	isMiner := false
 	minerName := ""
 	if role := os.Getenv("GT_ROLE"); role != "" {
@@ -350,7 +350,7 @@ func runHandoff(cmd *cobra.Command, args []string) error {
 	// That would kill the gt handoff process itself before it can call RespawnPane,
 	// leaving the pane dead with no respawn. RespawnPane's -k flag handles killing
 	// atomically - tmux kills the old process and spawns the new one together.
-	// See: https://github.com/steveyegge/excavation/issues/859 (pane is dead bug)
+	// See: https://github.com/steveyegge/mineshaft/issues/859 (pane is dead bug)
 	//
 	// For orphan prevention, we rely on respawn-pane -k which sends SIGHUP/SIGTERM.
 	// If orphans still occur, the solution is to adjust the restart command to
@@ -671,7 +671,7 @@ func resolveRoleToSession(role string) (string, error) {
 		return session.RefinerySessionName(session.PrefixFor(rig)), nil
 
 	default:
-		// Assume it's a direct session name (e.g., gt-excavation-crew-max)
+		// Assume it's a direct session name (e.g., gt-mineshaft-crew-max)
 		return role, nil
 	}
 }
@@ -721,7 +721,7 @@ func resolvePathToSession(path string) (string, error) {
 		default:
 			// Not a known role - check if it's a crew member before assuming miner.
 			// Crew members exist at <townRoot>/<rig>/crew/<name>.
-			// This fixes: gt sling gt-375 excavation/max failing because max is crew, not miner.
+			// This fixes: gt sling gt-375 mineshaft/max failing because max is crew, not miner.
 			townRoot := detectTownRootFromCwd()
 			if townRoot != "" {
 				crewPath := filepath.Join(townRoot, rig, "crew", second)
@@ -729,7 +729,7 @@ func resolvePathToSession(path string) (string, error) {
 					return session.CrewSessionName(session.PrefixFor(rig), second), nil
 				}
 			}
-			// Not a crew member - treat as miner name (e.g., excavation/nux)
+			// Not a crew member - treat as miner name (e.g., mineshaft/nux)
 			return session.MinerSessionName(session.PrefixFor(rig), secondLower), nil
 		}
 	}
@@ -791,7 +791,7 @@ func buildRestartCommandWithOpts(sessionName string, opts buildRestartCommandOpt
 	// Detect town root from current directory
 	townRoot := detectTownRootFromCwd()
 	if townRoot == "" {
-		return "", fmt.Errorf("cannot detect town root - run from within a Excavation Site workspace")
+		return "", fmt.Errorf("cannot detect town root - run from within a Mineshaft workspace")
 	}
 
 	// Determine the working directory for this session type

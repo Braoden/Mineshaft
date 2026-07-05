@@ -6,10 +6,10 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // ScanResult holds the result of scanning a single tmux session.
@@ -95,8 +95,8 @@ const scanLines = 30
 // rate-limit messages lingering higher in the scroll buffer.
 const checkLines = 20
 
-// ScanAll scans all Excavation Site tmux sessions for rate-limit and near-limit indicators.
-// Returns results for all Excavation Site sessions.
+// ScanAll scans all Mineshaft tmux sessions for rate-limit and near-limit indicators.
+// Returns results for all Mineshaft sessions.
 func (s *Scanner) ScanAll() ([]ScanResult, error) {
 	sessions, err := s.tmux.ListSessions()
 	if err != nil {
@@ -105,7 +105,7 @@ func (s *Scanner) ScanAll() ([]ScanResult, error) {
 
 	var results []ScanResult
 	for _, sess := range sessions {
-		if !isExcavationSession(sess) {
+		if !isMineshaftSession(sess) {
 			continue
 		}
 
@@ -223,10 +223,10 @@ func (s *Scanner) resolveAccountHandle(session string) string {
 	return "" // CLAUDE_CONFIG_DIR doesn't match any registered account
 }
 
-// isExcavationSession returns true if the session name belongs to Excavation Site.
+// isMineshaftSession returns true if the session name belongs to Mineshaft.
 // Uses the prefix registry to check for known rig prefixes (gt-, bd-, etc.)
 // and the hq- prefix for town-level services.
-func isExcavationSession(sess string) bool {
+func isMineshaftSession(sess string) bool {
 	return session.IsKnownSession(sess)
 }
 

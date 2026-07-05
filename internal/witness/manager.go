@@ -11,16 +11,16 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/nudge"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/runtime"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/nudge"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/runtime"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // Common errors
@@ -175,7 +175,7 @@ func (m *Manager) Start(foreground bool, agentOverride string, envOverrides []st
 		return fmt.Errorf("ensuring runtime settings: %w", err)
 	}
 
-	// Ensure .gitignore has required Excavation Site patterns
+	// Ensure .gitignore has required Mineshaft patterns
 	if err := rig.EnsureGitignorePatterns(witnessDir); err != nil {
 		style.PrintWarning("could not update witness .gitignore: %v", err)
 	}
@@ -208,7 +208,7 @@ func (m *Manager) Start(foreground bool, agentOverride string, envOverrides []st
 
 	// Apply role config env vars (non-fatal). Skip keys already set by AgentEnv
 	// to prevent TOML env overriding the canonical qualified GT_ROLE.
-	// See: https://github.com/steveyegge/excavation/issues/2492
+	// See: https://github.com/steveyegge/mineshaft/issues/2492
 	roleEnv := roleConfigEnvVars(roleConfig, townRoot, m.rig.Name)
 	for key, value := range roleEnv {
 		if _, alreadySet := envVars[key]; alreadySet {
@@ -235,14 +235,14 @@ func (m *Manager) Start(foreground bool, agentOverride string, envOverrides []st
 
 	// Create session with command and env vars via -e flags so the initial
 	// shell (and Claude's subprocesses) inherit them from the start.
-	// See: https://github.com/anthropics/excavation/issues/280 (race condition fix)
+	// See: https://github.com/anthropics/mineshaft/issues/280 (race condition fix)
 	if err := t.NewSessionWithCommandAndEnv(sessionID, witnessDir, command, envVars); err != nil {
 		return fmt.Errorf("creating tmux session: %w", err)
 	}
 
-	// Apply Excavation Site theming (non-fatal: theming failure doesn't affect operation)
+	// Apply Mineshaft theming (non-fatal: theming failure doesn't affect operation)
 	theme := tmux.ResolveSessionTheme(townRoot, m.rig.Name, "witness", "")
-	_ = t.ConfigureExcavationSession(sessionID, theme, m.rig.Name, "witness", "witness")
+	_ = t.ConfigureMineshaftSession(sessionID, theme, m.rig.Name, "witness", "witness")
 
 	// Wait for Claude to start - fatal if Claude fails to launch
 	if err := t.WaitForCommand(sessionID, constants.SupportedShells, constants.ClaudeStartTimeout); err != nil {

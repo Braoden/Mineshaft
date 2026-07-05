@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	gitpkg "github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	gitpkg "github.com/steveyegge/mineshaft/internal/git"
 )
 
 func TestResolveMQSubmitCommitSHAUsesSubmittedBranch(t *testing.T) {

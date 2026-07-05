@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/rig"
 )
 
 func TestDefaultMergeQueueConfig(t *testing.T) {
@@ -123,7 +123,7 @@ func TestEngineerClearAgentActiveMRUsesTownBeadsDir(t *testing.T) {
 	}
 
 	townRoot := t.TempDir()
-	rigName := "excavation"
+	rigName := "mineshaft"
 	rigPath := filepath.Join(townRoot, rigName)
 	overseerRig := filepath.Join(rigPath, "overseer", "rig")
 	townBeadsDir := filepath.Join(townRoot, ".beads")
@@ -170,7 +170,7 @@ case "$cmd" in
     exit 0
     ;;
   show)
-    printf '%%s\n' '[{"id":"gt-excavation-miner-rust","title":"gt-excavation-miner-rust","issue_type":"task","labels":["gt:agent"],"status":"open","description":"role_type: miner\nrig: excavation\nagent_state: idle\nactive_mr: gt-mr"}]'
+    printf '%%s\n' '[{"id":"gt-mineshaft-miner-rust","title":"gt-mineshaft-miner-rust","issue_type":"task","labels":["gt:agent"],"status":"open","description":"role_type: miner\nrig: mineshaft\nagent_state: idle\nactive_mr: gt-mr"}]'
     exit 0
     ;;
   *)
@@ -188,7 +188,7 @@ esac
 		beads:  beads.NewWithBeadsDir(overseerRig, rigBeadsDir),
 		output: io.Discard,
 	}
-	if err := e.clearAgentActiveMR("gt-excavation-miner-rust"); err != nil {
+	if err := e.clearAgentActiveMR("gt-mineshaft-miner-rust"); err != nil {
 		t.Fatalf("clearAgentActiveMR: %v", err)
 	}
 

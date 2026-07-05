@@ -190,8 +190,8 @@ func TestLaunchAsAlias_EpicInput(t *testing.T) {
 	// Build a DAG with an epic and two child tasks.
 	td := newTestDAG(t).
 		Epic("gt-epic-1", "Test Epic").
-		Task("gt-task-1", "First task", withRig("excavation")).ParentOf("gt-epic-1").
-		Task("gt-task-2", "Second task", withRig("excavation")).ParentOf("gt-epic-1")
+		Task("gt-task-1", "First task", withRig("mineshaft")).ParentOf("gt-epic-1").
+		Task("gt-task-2", "Second task", withRig("mineshaft")).ParentOf("gt-epic-1")
 
 	_, logPath := td.Setup(t)
 
@@ -245,8 +245,8 @@ func TestLaunchAsAlias_TaskListInput(t *testing.T) {
 
 	// Build a DAG with two independent tasks.
 	td := newTestDAG(t).
-		Task("gt-t1", "Task One", withRig("excavation")).
-		Task("gt-t2", "Task Two", withRig("excavation"))
+		Task("gt-t1", "Task One", withRig("mineshaft")).
+		Task("gt-t2", "Task Two", withRig("mineshaft"))
 
 	_, logPath := td.Setup(t)
 
@@ -334,8 +334,8 @@ func TestTransitionMinecartToOpen_SkipsReanalysis(t *testing.T) {
 func TestDispatchWave1_AllDispatched(t *testing.T) {
 	// Build a DAG directly (no bd stub needed — dispatchWave1 is pure logic).
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"task-a": {ID: "task-a", Type: "task", Rig: "excavation", Blocks: []string{"task-b"}},
-		"task-b": {ID: "task-b", Type: "task", Rig: "excavation", BlockedBy: []string{"task-a"}},
+		"task-a": {ID: "task-a", Type: "task", Rig: "mineshaft", Blocks: []string{"task-b"}},
+		"task-b": {ID: "task-b", Type: "task", Rig: "mineshaft", BlockedBy: []string{"task-a"}},
 		"task-c": {ID: "task-c", Type: "task", Rig: "beads"},
 	}}
 
@@ -392,7 +392,7 @@ func TestDispatchWave1_AllDispatched(t *testing.T) {
 // Stub fails for task-a but succeeds for task-c. Both must be attempted.
 func TestDispatchWave1_ContinuesOnFailure(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"task-a": {ID: "task-a", Type: "task", Rig: "excavation"},
+		"task-a": {ID: "task-a", Type: "task", Rig: "mineshaft"},
 		"task-c": {ID: "task-c", Type: "task", Rig: "beads"},
 	}}
 
@@ -457,7 +457,7 @@ func TestDispatchWave1_ContinuesOnFailure(t *testing.T) {
 // IT-29: Output contains minecart ID and gt minecart status <id> command.
 func TestRenderLaunchOutput_MinecartIDAndMonitor(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-task-1": {ID: "gt-task-1", Title: "Task One", Type: "task", Rig: "excavation"},
+		"gt-task-1": {ID: "gt-task-1", Title: "Task One", Type: "task", Rig: "mineshaft"},
 	}}
 
 	waves, _, err := computeWaves(dag)
@@ -466,7 +466,7 @@ func TestRenderLaunchOutput_MinecartIDAndMonitor(t *testing.T) {
 	}
 
 	results := []DispatchResult{
-		{BeadID: "gt-task-1", Rig: "excavation", Success: true},
+		{BeadID: "gt-task-1", Rig: "mineshaft", Success: true},
 	}
 
 	output := renderLaunchOutput("hq-cv-abc12", waves, results, dag)
@@ -482,7 +482,7 @@ func TestRenderLaunchOutput_MinecartIDAndMonitor(t *testing.T) {
 // IT-30: Each dispatched task shows bead ID, title, and rig.
 func TestRenderLaunchOutput_DispatchedTasksWithRig(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-task-1": {ID: "gt-task-1", Title: "Task One", Type: "task", Rig: "excavation"},
+		"gt-task-1": {ID: "gt-task-1", Title: "Task One", Type: "task", Rig: "mineshaft"},
 		"gt-task-2": {ID: "gt-task-2", Title: "Task Two", Type: "task", Rig: "beads"},
 	}}
 
@@ -492,7 +492,7 @@ func TestRenderLaunchOutput_DispatchedTasksWithRig(t *testing.T) {
 	}
 
 	results := []DispatchResult{
-		{BeadID: "gt-task-1", Rig: "excavation", Success: true},
+		{BeadID: "gt-task-1", Rig: "mineshaft", Success: true},
 		{BeadID: "gt-task-2", Rig: "beads", Success: true},
 	}
 
@@ -516,7 +516,7 @@ func TestRenderLaunchOutput_DispatchedTasksWithRig(t *testing.T) {
 // IT-31: Output contains gt minecart -i TUI hint.
 func TestRenderLaunchOutput_TUIHint(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-task-1": {ID: "gt-task-1", Title: "Task One", Type: "task", Rig: "excavation"},
+		"gt-task-1": {ID: "gt-task-1", Title: "Task One", Type: "task", Rig: "mineshaft"},
 	}}
 
 	waves, _, err := computeWaves(dag)
@@ -525,7 +525,7 @@ func TestRenderLaunchOutput_TUIHint(t *testing.T) {
 	}
 
 	results := []DispatchResult{
-		{BeadID: "gt-task-1", Rig: "excavation", Success: true},
+		{BeadID: "gt-task-1", Rig: "mineshaft", Success: true},
 	}
 
 	output := renderLaunchOutput("hq-cv-test", waves, results, dag)
@@ -538,8 +538,8 @@ func TestRenderLaunchOutput_TUIHint(t *testing.T) {
 // IT-32: Output contains daemon explanation about automatic subsequent wave dispatch.
 func TestRenderLaunchOutput_DaemonExplanation(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-task-1": {ID: "gt-task-1", Title: "Task One", Type: "task", Rig: "excavation"},
-		"gt-task-2": {ID: "gt-task-2", Title: "Task Two", Type: "task", Rig: "excavation", BlockedBy: []string{"gt-task-1"}},
+		"gt-task-1": {ID: "gt-task-1", Title: "Task One", Type: "task", Rig: "mineshaft"},
+		"gt-task-2": {ID: "gt-task-2", Title: "Task Two", Type: "task", Rig: "mineshaft", BlockedBy: []string{"gt-task-1"}},
 	}}
 	dag.Nodes["gt-task-1"].Blocks = []string{"gt-task-2"}
 
@@ -549,7 +549,7 @@ func TestRenderLaunchOutput_DaemonExplanation(t *testing.T) {
 	}
 
 	results := []DispatchResult{
-		{BeadID: "gt-task-1", Rig: "excavation", Success: true},
+		{BeadID: "gt-task-1", Rig: "mineshaft", Success: true},
 	}
 
 	output := renderLaunchOutput("hq-cv-test", waves, results, dag)
@@ -565,8 +565,8 @@ func TestRenderLaunchOutput_DaemonExplanation(t *testing.T) {
 // SN-03: Full output snapshot test with 2 waves, 3 tasks, some failed dispatches.
 func TestRenderLaunchOutput_Snapshot(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-task-1": {ID: "gt-task-1", Title: "Task One", Type: "task", Rig: "excavation", Blocks: []string{"gt-task-3"}},
-		"gt-task-2": {ID: "gt-task-2", Title: "Task Two", Type: "task", Rig: "excavation"},
+		"gt-task-1": {ID: "gt-task-1", Title: "Task One", Type: "task", Rig: "mineshaft", Blocks: []string{"gt-task-3"}},
+		"gt-task-2": {ID: "gt-task-2", Title: "Task Two", Type: "task", Rig: "mineshaft"},
 		"gt-task-3": {ID: "gt-task-3", Title: "Task Three", Type: "task", Rig: "beads", BlockedBy: []string{"gt-task-1"}},
 	}}
 
@@ -581,8 +581,8 @@ func TestRenderLaunchOutput_Snapshot(t *testing.T) {
 	}
 
 	results := []DispatchResult{
-		{BeadID: "gt-task-1", Rig: "excavation", Success: true},
-		{BeadID: "gt-task-2", Rig: "excavation", Success: false, Error: fmt.Errorf("connection failed")},
+		{BeadID: "gt-task-1", Rig: "mineshaft", Success: true},
+		{BeadID: "gt-task-2", Rig: "mineshaft", Success: false, Error: fmt.Errorf("connection failed")},
 	}
 
 	output := renderLaunchOutput("hq-cv-abc12", waves, results, dag)
@@ -655,9 +655,9 @@ func TestDispatchWave1_EndToEnd(t *testing.T) {
 	// Wave 1 = [A, C], Wave 2 = [B].
 	td := newTestDAG(t).
 		Minecart("hq-cv-e2e", "E2E Launch").WithStatus("staged_ready").
-		Task("hq-task-a", "Task A", withRig("excavation")).TrackedBy("hq-cv-e2e").
-		Task("hq-task-b", "Task B", withRig("excavation")).TrackedBy("hq-cv-e2e").BlockedBy("hq-task-a").
-		Task("hq-task-c", "Task C", withRig("excavation")).TrackedBy("hq-cv-e2e")
+		Task("hq-task-a", "Task A", withRig("mineshaft")).TrackedBy("hq-cv-e2e").
+		Task("hq-task-b", "Task B", withRig("mineshaft")).TrackedBy("hq-cv-e2e").BlockedBy("hq-task-a").
+		Task("hq-task-c", "Task C", withRig("mineshaft")).TrackedBy("hq-cv-e2e")
 
 	td.Setup(t)
 

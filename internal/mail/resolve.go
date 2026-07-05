@@ -14,10 +14,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/constants"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
 )
 
 // ErrUnknownRecipient indicates the address does not match any known agent.
@@ -36,7 +36,7 @@ const (
 
 // Recipient represents a resolved message recipient.
 type Recipient struct {
-	Address      string        // The resolved address (e.g., "excavation/crew/max")
+	Address      string        // The resolved address (e.g., "mineshaft/crew/max")
 	Type         RecipientType // Type of recipient (agent, queue, channel)
 	OriginalName string        // Original name before resolution (for queues/channels)
 }
@@ -112,7 +112,7 @@ func (r *Resolver) resolveAgentAddress(address string) ([]Recipient, error) {
 	// Validate that the address refers to a known agent before accepting.
 	// Without this check, typos like "laser/overseer" (instead of "overseer/")
 	// silently deliver to a dead inbox with no error.
-	// See: https://github.com/steveyegge/excavation/issues/2038
+	// See: https://github.com/steveyegge/mineshaft/issues/2038
 	if err := r.validateAgentAddress(address); err != nil {
 		return nil, err
 	}
@@ -176,7 +176,7 @@ func (r *Resolver) validateAgentAddress(address string) error {
 		switch len(parts) {
 		case 2:
 			rig, name := parts[0], parts[1]
-			// Singleton role: rig/name (e.g., excavation/witness)
+			// Singleton role: rig/name (e.g., mineshaft/witness)
 			if dirExistsAt(filepath.Join(r.townRoot, rig, name)) {
 				return nil
 			}
@@ -204,7 +204,7 @@ func dirExistsAt(path string) bool {
 }
 
 // resolvePattern expands a wildcard pattern to matching agents.
-// Patterns like "*/witness" or "excavation/*" are expanded.
+// Patterns like "*/witness" or "mineshaft/*" are expanded.
 func (r *Resolver) resolvePattern(pattern string) ([]Recipient, error) {
 	if r.beads == nil {
 		return nil, fmt.Errorf("beads not available for pattern resolution")
@@ -462,7 +462,7 @@ func (r *Resolver) resolveChannel(name string) ([]Recipient, error) {
 // Handles both gt- (rig agents) and hq- (town agents) prefixes:
 //   - hq-overseer → overseer/
 //   - hq-supervisor → supervisor/
-//   - gt-excavation-crew-max → excavation/crew/max
+//   - gt-mineshaft-crew-max → mineshaft/crew/max
 func AgentBeadIDToAddress(id string) string {
 	var rest string
 

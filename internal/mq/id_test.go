@@ -15,7 +15,7 @@ func TestGenerateMRIDWithTime(t *testing.T) {
 		want      string
 	}{
 		{
-			name:      "basic excavation MR",
+			name:      "basic mineshaft MR",
 			prefix:    "gt",
 			branch:    "miner/Nux/gt-xyz",
 			timestamp: time.Date(2025, 12, 17, 10, 0, 0, 0, time.UTC),

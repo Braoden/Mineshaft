@@ -2,7 +2,7 @@
 package rig
 
 import (
-	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/mineshaft/internal/config"
 )
 
 // Rig represents a managed repository in the workspace.

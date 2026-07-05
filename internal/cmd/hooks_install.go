@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/hooks"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/hooks"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var (
@@ -50,7 +50,7 @@ func runHooksInstall(cmd *cobra.Command, args []string) error {
 
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Load registry
@@ -267,7 +267,7 @@ func installHookTo(worktreePath string, hookDef HookDefinition, dryRun bool) err
 		settings.Hooks.AddEntry(hookDef.Event, entry)
 	}
 
-	// Ensure beads plugin is disabled (standard for Excavation Site)
+	// Ensure beads plugin is disabled (standard for Mineshaft)
 	settings.EnabledPlugins["beads@beads-marketplace"] = false
 
 	// Pretty print relative path

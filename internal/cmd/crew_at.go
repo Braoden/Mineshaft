@@ -6,14 +6,14 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/crew"
-	"github.com/steveyegge/excavation/internal/runtime"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/crew"
+	"github.com/steveyegge/mineshaft/internal/runtime"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // crewAtRetried tracks if we've already retried after stale session cleanup
@@ -204,9 +204,9 @@ func runCrewAt(cmd *cobra.Command, args []string) error {
 		}
 
 		// Apply rig-based theming (non-fatal: theming failure doesn't affect operation)
-		// Note: ConfigureExcavationSession includes cycle bindings
+		// Note: ConfigureMineshaftSession includes cycle bindings
 		theme := tmux.ResolveSessionTheme(townRoot, r.Name, "crew", name)
-		_ = t.ConfigureExcavationSession(sessionID, theme, r.Name, name, "crew")
+		_ = t.ConfigureMineshaftSession(sessionID, theme, r.Name, name, "crew")
 
 		// Wait for shell to be ready after session creation
 		if err := t.WaitForShellReady(sessionID, constants.ShellReadyTimeout); err != nil {

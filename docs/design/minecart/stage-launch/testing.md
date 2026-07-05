@@ -260,9 +260,9 @@ Assessment of existing test infrastructure for stage/launch needs.
 ```go
 dag := newTestDAG(t).
     Epic("epic-1", "Root Epic").
-    Task("task-1", "First task", rig("excavation")).ParentOf("epic-1").
-    Task("task-2", "Second task", rig("excavation")).ParentOf("epic-1").BlockedBy("task-1").
-    Task("task-3", "Third task", rig("excavation")).ParentOf("epic-1").BlockedBy("task-2")
+    Task("task-1", "First task", rig("mineshaft")).ParentOf("epic-1").
+    Task("task-2", "Second task", rig("mineshaft")).ParentOf("epic-1").BlockedBy("task-1").
+    Task("task-3", "Third task", rig("mineshaft")).ParentOf("epic-1").BlockedBy("task-2")
 // dag.BdStubScript() -> shell script
 // dag.RoutesJSONL() -> routes file content
 // dag.Populate(store) -> creates issues + deps in real Dolt store

@@ -16,10 +16,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 // CommandRequest is the JSON request body for /api/run.
@@ -903,7 +903,7 @@ func findRigsConfigPath(startDir string) (string, error) {
 //	Rigs in /Users/foo/gt:
 //	  claycantrell
 //	    Miners: 1  Crew: 2
-//	  excavation
+//	  mineshaft
 //	    Miners: 1  Crew: 1
 func parseRigListOutput(output string) []string {
 	var rigs []string
@@ -1935,7 +1935,7 @@ func (h *APIHandler) isClaudeRunningInSession(ctx context.Context, sessionName s
 }
 
 // paneCurrentCommandIsAgent returns true if tmux #{pane_current_command} names a known
-// Excavation Site agent (claude/codex/opencode/cursor-agent/copilot/node, or cursor-agent as "agent").
+// Mineshaft agent (claude/codex/opencode/cursor-agent/copilot/node, or cursor-agent as "agent").
 func paneCurrentCommandIsAgent(output string) bool {
 	output = strings.ToLower(strings.TrimSpace(output))
 	if output == "" {
@@ -2300,7 +2300,7 @@ func (h *APIHandler) handleRigAdd(w http.ResponseWriter, r *http.Request) {
 	repoURL := req.RepoURL
 	if req.Local || repoURL == "" {
 		// Create a local bare repo with an initial commit
-		localRepoPath := fmt.Sprintf("/tmp/excavation-repos/%s.git", req.Name)
+		localRepoPath := fmt.Sprintf("/tmp/mineshaft-repos/%s.git", req.Name)
 
 		ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 		defer cancel()
@@ -2320,7 +2320,7 @@ func (h *APIHandler) handleRigAdd(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Clone, create initial commit, push
-		tmpDir := fmt.Sprintf("/tmp/excavation-repos/.tmp-%s", req.Name)
+		tmpDir := fmt.Sprintf("/tmp/mineshaft-repos/.tmp-%s", req.Name)
 		cloneCmd := exec.CommandContext(ctx, "git", "clone", localRepoPath, tmpDir)
 		if out, err := cloneCmd.CombinedOutput(); err != nil {
 			h.sendError(w, fmt.Sprintf("Failed to clone: %s %v", string(out), err), http.StatusInternalServerError)

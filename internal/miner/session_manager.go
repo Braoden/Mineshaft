@@ -14,16 +14,16 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/runtime"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/runtime"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // debugSession logs non-fatal errors during session startup when GT_DEBUG_SESSION=1.
@@ -107,7 +107,7 @@ type SessionInfo struct {
 
 // SessionName generates the tmux session name for a miner.
 // Validates that the miner name doesn't contain the rig prefix to prevent
-// double-prefix bugs (e.g., "gt-excavation_manager-excavation_manager-142").
+// double-prefix bugs (e.g., "gt-mineshaft_manager-mineshaft_manager-142").
 func (m *SessionManager) SessionName(miner string) string {
 	sessionName := session.MinerSessionName(session.PrefixFor(m.rig.Name), miner)
 
@@ -123,7 +123,7 @@ func (m *SessionManager) SessionName(miner string) string {
 
 // validateSessionName checks for double-prefix session names.
 // Returns an error if the session name has the rig prefix duplicated.
-// Example bad name: "gt-excavation_manager-excavation_manager-142"
+// Example bad name: "gt-mineshaft_manager-mineshaft_manager-142"
 func validateSessionName(sessionName, rigName string) error {
 	// Expected format: gt-<rig>-<name>
 	// Check if the name part starts with the rig prefix (indicates double-prefix bug)
@@ -499,7 +499,7 @@ func (m *SessionManager) Start(miner string, opts SessionStartOptions) error {
 
 	// Create session with command and env vars via -e flags so the initial
 	// shell — and Claude's subprocesses (notably bd) — inherit them from the start.
-	// See: https://github.com/anthropics/excavation/issues/280 (race condition fix)
+	// See: https://github.com/anthropics/mineshaft/issues/280 (race condition fix)
 	if err := m.tmux.NewSessionWithCommandAndEnv(sessionID, workDir, command, envVars); err != nil {
 		return fmt.Errorf("creating session: %w", err)
 	}
@@ -521,7 +521,7 @@ func (m *SessionManager) Start(miner string, opts SessionStartOptions) error {
 
 	// Apply theme (non-fatal)
 	theme := tmux.ResolveSessionTheme(townRoot, m.rig.Name, "miner", miner)
-	debugSession("ConfigureExcavationSession", m.tmux.ConfigureExcavationSession(sessionID, theme, m.rig.Name, miner, "miner"))
+	debugSession("ConfigureMineshaftSession", m.tmux.ConfigureMineshaftSession(sessionID, theme, m.rig.Name, miner, "miner"))
 
 	// Set pane-died hook for crash detection (non-fatal)
 	agentID := fmt.Sprintf("%s/%s", m.rig.Name, miner)

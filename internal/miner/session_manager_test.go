@@ -11,18 +11,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/rig"
-	gtruntime "github.com/steveyegge/excavation/internal/runtime"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	gtruntime "github.com/steveyegge/mineshaft/internal/runtime"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 func setupTestRegistryForSession(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "excavation")
+	reg.Register("gt", "mineshaft")
 	reg.Register("bd", "beads")
 	old := session.DefaultRegistry()
 	session.SetDefaultRegistry(reg)
@@ -83,7 +83,7 @@ func TestSessionName(t *testing.T) {
 	setupTestRegistryForSession(t)
 
 	r := &rig.Rig{
-		Name:     "excavation",
+		Name:     "mineshaft",
 		Miners: []string{"Toast"},
 	}
 	m := NewSessionManager(tmux.NewTmux(), r)
@@ -96,14 +96,14 @@ func TestSessionName(t *testing.T) {
 
 func TestSessionManagerMinerDir(t *testing.T) {
 	r := &rig.Rig{
-		Name:     "excavation",
-		Path:     "/home/user/ai/excavation",
+		Name:     "mineshaft",
+		Path:     "/home/user/ai/mineshaft",
 		Miners: []string{"Toast"},
 	}
 	m := NewSessionManager(tmux.NewTmux(), r)
 
 	dir := m.minerDir("Toast")
-	expected := "/home/user/ai/excavation/miners/Toast"
+	expected := "/home/user/ai/mineshaft/miners/Toast"
 	if filepath.ToSlash(dir) != expected {
 		t.Errorf("minerDir = %q, want %q", dir, expected)
 	}
@@ -119,7 +119,7 @@ func TestHasMiner(t *testing.T) {
 	}
 
 	r := &rig.Rig{
-		Name:     "excavation",
+		Name:     "mineshaft",
 		Path:     root,
 		Miners: []string{"Toast", "Cheedo"},
 	}
@@ -138,7 +138,7 @@ func TestHasMiner(t *testing.T) {
 
 func TestStartMinerNotFound(t *testing.T) {
 	r := &rig.Rig{
-		Name:     "excavation",
+		Name:     "mineshaft",
 		Miners: []string{"Toast"},
 	}
 	m := NewSessionManager(tmux.NewTmux(), r)
@@ -153,7 +153,7 @@ func TestIsRunningNoSession(t *testing.T) {
 	requireTmux(t)
 
 	r := &rig.Rig{
-		Name:     "excavation",
+		Name:     "mineshaft",
 		Miners: []string{"Toast"},
 	}
 	m := NewSessionManager(tmux.NewTmux(), r)
@@ -171,7 +171,7 @@ func TestSessionManagerListEmpty(t *testing.T) {
 	requireTmux(t)
 
 	// Register a unique prefix so List() won't match real sessions.
-	// Without this, PrefixFor returns "gt" (default) and matches running excavation sessions.
+	// Without this, PrefixFor returns "gt" (default) and matches running mineshaft sessions.
 	reg := session.NewPrefixRegistry()
 	reg.Register("xz", "test-rig-unlikely-name")
 	old := session.DefaultRegistry()
@@ -247,9 +247,9 @@ func TestMinerCommandFormat(t *testing.T) {
 	// The actual command is built in Start() but we test the format here
 	// to document and verify the expected behavior.
 
-	rigName := "excavation"
+	rigName := "mineshaft"
 	minerName := "Toast"
-	expectedBdActor := "excavation/miners/Toast"
+	expectedBdActor := "mineshaft/miners/Toast"
 	// GT_ROLE uses compound format: rig/miners/name
 	expectedGtRole := rigName + "/miners/" + minerName
 
@@ -289,7 +289,7 @@ func TestMinerCommandFormat(t *testing.T) {
 // the branch and path without a working directory.
 // Regression test for PR #1402.
 func TestMinerStartInjectsFallbackEnvVars(t *testing.T) {
-	rigName := "excavation"
+	rigName := "mineshaft"
 	minerName := "Toast"
 	workDir := "/tmp/fake-worktree"
 
@@ -360,7 +360,7 @@ func TestEnsureCanonicalSessionBranch_UsesOriginDefaultBranch(t *testing.T) {
 		t.Fatalf("resolve stale HEAD: %v", err)
 	}
 
-	sm := NewSessionManager(tmux.NewTmux(), &rig.Rig{Name: "excavation", Path: workDir})
+	sm := NewSessionManager(tmux.NewTmux(), &rig.Rig{Name: "mineshaft", Path: workDir})
 	branch := sm.ensureCanonicalSessionBranch(repoGit, "toast", SessionStartOptions{Issue: "gt-9qb"})
 	if !strings.Contains(branch, "/gt-9qb@") {
 		t.Fatalf("fresh session branch = %q, want issue-scoped branch", branch)
@@ -391,7 +391,7 @@ func TestEnsureCanonicalSessionBranch_KeepsCurrentIssueBranch(t *testing.T) {
 		t.Fatalf("checkout current issue branch: %v", err)
 	}
 
-	sm := NewSessionManager(tmux.NewTmux(), &rig.Rig{Name: "excavation", Path: workDir})
+	sm := NewSessionManager(tmux.NewTmux(), &rig.Rig{Name: "mineshaft", Path: workDir})
 	branch := sm.ensureCanonicalSessionBranch(repoGit, "toast", SessionStartOptions{Issue: "gt-9qb"})
 	if branch != currentBranch {
 		t.Fatalf("ensureCanonicalSessionBranch changed active issue branch: got %q want %q", branch, currentBranch)
@@ -413,7 +413,7 @@ func TestSessionManager_resolveBeadsDir(t *testing.T) {
 	}
 
 	// Create routes.jsonl with cross-rig routing
-	routesContent := `{"prefix": "gt-", "path": "excavation/overseer/rig"}
+	routesContent := `{"prefix": "gt-", "path": "mineshaft/overseer/rig"}
 {"prefix": "bd-", "path": "beads/overseer/rig"}
 {"prefix": "hq-", "path": "."}
 `
@@ -421,15 +421,15 @@ func TestSessionManager_resolveBeadsDir(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Create a rig inside the town (simulating excavation rig)
-	rigPath := filepath.Join(townRoot, "excavation")
+	// Create a rig inside the town (simulating mineshaft rig)
+	rigPath := filepath.Join(townRoot, "mineshaft")
 	if err := os.MkdirAll(rigPath, 0755); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create SessionManager with the rig
 	r := &rig.Rig{
-		Name: "excavation",
+		Name: "mineshaft",
 		Path: rigPath,
 	}
 	m := NewSessionManager(tmux.NewTmux(), r)
@@ -444,7 +444,7 @@ func TestSessionManager_resolveBeadsDir(t *testing.T) {
 		{
 			name:        "same-rig bead resolves to rig path",
 			issueID:     "gt-abc123",
-			expectedDir: filepath.Join(townRoot, "excavation/overseer/rig"),
+			expectedDir: filepath.Join(townRoot, "mineshaft/overseer/rig"),
 		},
 		{
 			name:        "cross-rig bead (beads) resolves to beads rig path",
@@ -520,7 +520,7 @@ func TestAgentEnvOmitsGTAgent_FallbackRequired(t *testing.T) {
 			t.Parallel()
 			env := config.AgentEnv(config.AgentEnvConfig{
 				Role:      "miner",
-				Rig:       "excavation",
+				Rig:       "mineshaft",
 				AgentName: "Toast",
 				TownRoot:  "/tmp/town",
 				Agent:     tc.agent,
@@ -732,7 +732,7 @@ func TestModeAStartupVerifyIsNonBlocking(t *testing.T) {
 
 	launchStart := time.Now()
 	go func() {
-		m.verifyStartupNudgeDelivery(sessionName, rc, "[GAS TOWN] test ← witness / Run `gt prime --hook`")
+		m.verifyStartupNudgeDelivery(sessionName, rc, "[MINESHAFT] test ← witness / Run `gt prime --hook`")
 		close(goroutineDone)
 	}()
 	callerReturned <- time.Since(launchStart)
@@ -755,8 +755,8 @@ func TestModeAStartupVerifyIsNonBlocking(t *testing.T) {
 func TestValidateSessionName(t *testing.T) {
 	// Register prefixes so validateSessionName can resolve them correctly.
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "excavation")
-	reg.Register("gm", "excavation_manager")
+	reg.Register("gt", "mineshaft")
+	reg.Register("gm", "mineshaft_manager")
 	old := session.DefaultRegistry()
 	session.SetDefaultRegistry(reg)
 	t.Cleanup(func() { session.SetDefaultRegistry(old) })
@@ -770,31 +770,31 @@ func TestValidateSessionName(t *testing.T) {
 		{
 			name:        "valid themed name",
 			sessionName: "gm-furiosa",
-			rigName:     "excavation_manager",
+			rigName:     "mineshaft_manager",
 			wantErr:     false,
 		},
 		{
 			name:        "valid overflow name (new format)",
 			sessionName: "gm-51",
-			rigName:     "excavation_manager",
+			rigName:     "mineshaft_manager",
 			wantErr:     false,
 		},
 		{
 			name:        "malformed double-prefix (bug)",
-			sessionName: "gm-excavation_manager-51",
-			rigName:     "excavation_manager",
+			sessionName: "gm-mineshaft_manager-51",
+			rigName:     "mineshaft_manager",
 			wantErr:     true,
 		},
 		{
-			name:        "malformed double-prefix excavation",
-			sessionName: "gt-excavation-142",
-			rigName:     "excavation",
+			name:        "malformed double-prefix mineshaft",
+			sessionName: "gt-mineshaft-142",
+			rigName:     "mineshaft",
 			wantErr:     true,
 		},
 		{
 			name:        "different rig (can't validate)",
 			sessionName: "gt-other-rig-name",
-			rigName:     "excavation_manager",
+			rigName:     "mineshaft_manager",
 			wantErr:     false,
 		},
 	}

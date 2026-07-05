@@ -13,8 +13,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/atomicfile"
-	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/atomicfile"
+	"github.com/steveyegge/mineshaft/internal/constants"
 )
 
 // resolveConfigMu serializes agent config resolution across all callers.
@@ -300,12 +300,12 @@ func NewRigSettings() *RigSettings {
 }
 
 // RepoSettingsPath is the conventional path within a repository where
-// excavation rig settings can be stored. This file is committed to git and
+// mineshaft rig settings can be stored. This file is committed to git and
 // provides durable defaults that survive rig re-scaffolding.
-const RepoSettingsPath = ".excavation/settings.json"
+const RepoSettingsPath = ".mineshaft/settings.json"
 
-// LoadRepoSettings loads rig settings from a repository's .excavation/settings.json.
-// Returns nil, nil if the file does not exist (repo has no excavation settings).
+// LoadRepoSettings loads rig settings from a repository's .mineshaft/settings.json.
+// Returns nil, nil if the file does not exist (repo has no mineshaft settings).
 func LoadRepoSettings(repoRoot string) (*RigSettings, error) {
 	path := filepath.Join(repoRoot, RepoSettingsPath)
 	data, err := os.ReadFile(path) //nolint:gosec // G304: path is constructed internally
@@ -1124,7 +1124,7 @@ func SaveTownSettings(path string, settings *TownSettings) error {
 //  4. Fall back to claude defaults
 //
 // townRoot is the path to the town directory (e.g., ~/gt).
-// rigPath is the path to the rig directory (e.g., ~/gt/excavation).
+// rigPath is the path to the rig directory (e.g., ~/gt/mineshaft).
 func ResolveAgentConfig(townRoot, rigPath string) *RuntimeConfig {
 	resolveConfigMu.Lock()
 	defer resolveConfigMu.Unlock()
@@ -1347,7 +1347,7 @@ func lookupAgentConfigIfExists(name string, townSettings *TownSettings, rigSetti
 //
 // role is one of: "overseer", "supervisor", "witness", "refinery", "miner", "crew", "boot".
 // townRoot is the path to the town directory (e.g., ~/gt).
-// rigPath is the path to the rig directory (e.g., ~/gt/excavation), or empty for town-level roles.
+// rigPath is the path to the rig directory (e.g., ~/gt/mineshaft), or empty for town-level roles.
 func ResolveRoleAgentConfig(role, townRoot, rigPath string) *RuntimeConfig {
 	resolveConfigMu.Lock()
 	defer resolveConfigMu.Unlock()
@@ -2403,7 +2403,7 @@ func SanitizeAgentEnv(resolvedEnv, callerEnv map[string]string) {
 	// inherits this variable into its global environment, causing new miner sessions
 	// to fail with "Nested sessions share runtime resources and will crash all active
 	// sessions." Clear it unless the caller explicitly provides it.
-	// See: https://github.com/steveyegge/excavation/issues/1666
+	// See: https://github.com/steveyegge/mineshaft/issues/1666
 	if _, ok := callerEnv["CLAUDECODE"]; !ok {
 		resolvedEnv["CLAUDECODE"] = ""
 	}
@@ -2748,7 +2748,7 @@ func ExpectedPaneCommands(rc *RuntimeConfig) []string {
 
 // GetDefaultFormula returns the default formula for a rig from settings/config.json.
 // Returns empty string if no default is configured.
-// rigPath is the path to the rig directory (e.g., ~/gt/excavation).
+// rigPath is the path to the rig directory (e.g., ~/gt/mineshaft).
 func GetDefaultFormula(rigPath string) string {
 	settingsPath := RigSettingsPath(rigPath)
 	settings, err := LoadRigSettings(settingsPath)

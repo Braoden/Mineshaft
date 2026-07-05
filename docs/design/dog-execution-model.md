@@ -5,7 +5,7 @@ Created: 2026-02-27
 
 ## Problem Statement
 
-Excavation Site dogs (daemon patrol routines) use two execution models:
+Mineshaft dogs (daemon patrol routines) use two execution models:
 
 1. **Imperative Go** (ticker fires → Go code runs): Doctor, Reaper, JSONL backup, Dolt backup
 2. **Formula-only** (ticker fires → molecule poured → ... nothing): Compactor (was stub), ~~Janitor~~ (removed)

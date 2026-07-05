@@ -11,8 +11,8 @@ Enable deferred dispatch and schedule some work:
 gt config set scheduler.max_miners 5
 
 # 2. Schedule work via gt sling (auto-defers when max_miners > 0)
-gt sling gt-abc excavation              # Single task bead
-gt sling gt-abc gt-def gt-ghi excavation  # Batch task beads
+gt sling gt-abc mineshaft              # Single task bead
+gt sling gt-abc gt-def gt-ghi mineshaft  # Batch task beads
 gt sling hq-cv-abc                   # Minecart (schedules all tracked issues)
 gt sling gt-epic-123                 # Epic (schedules all children)
 
@@ -56,7 +56,7 @@ No per-invocation flag needed. The same `gt sling` command adapts automatically.
 
 ```bash
 gt config set scheduler.max_miners 5
-gt sling gt-abc excavation              # Defers: creates sling context bead
+gt sling gt-abc mineshaft              # Defers: creates sling context bead
 gt scheduler status                  # "Queued: 1 total, 1 ready"
 gt scheduler run                     # Dispatches -> spawns miner -> closes context
 ```

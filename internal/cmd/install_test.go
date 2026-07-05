@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/deps"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/deps"
 )
 
 func TestBuildBdInitArgs_AlwaysIncludesServerPortWithoutReinit(t *testing.T) {
@@ -528,11 +528,11 @@ func installTestEnv(t *testing.T, homeDir string, includeDolt bool) []string {
 	if includeDolt {
 		doltName := "dolt"
 		doltMode := os.FileMode(0755)
-		doltContent := "#!/bin/sh\nif [ \"$1\" = \"version\" ]; then\n  echo 'dolt version 999.0.0'\n  exit 0\nfi\nif [ \"$1\" = \"config\" ] && [ \"$2\" = \"--global\" ] && [ \"$3\" = \"--get\" ]; then\n  case \"$4\" in\n    user.name) echo 'Excavation Site Test'; exit 0 ;;\n    user.email) echo 'excavation-test@example.com'; exit 0 ;;\n  esac\nfi\necho 'fake dolt only supports version and config --global --get' >&2\nexit 1\n"
+		doltContent := "#!/bin/sh\nif [ \"$1\" = \"version\" ]; then\n  echo 'dolt version 999.0.0'\n  exit 0\nfi\nif [ \"$1\" = \"config\" ] && [ \"$2\" = \"--global\" ] && [ \"$3\" = \"--get\" ]; then\n  case \"$4\" in\n    user.name) echo 'Mineshaft Test'; exit 0 ;;\n    user.email) echo 'mineshaft-test@example.com'; exit 0 ;;\n  esac\nfi\necho 'fake dolt only supports version and config --global --get' >&2\nexit 1\n"
 		if runtime.GOOS == "windows" {
 			doltName = "dolt.bat"
 			doltMode = 0644
-			doltContent = "@echo off\r\nif \"%1\"==\"version\" (\r\n  echo dolt version 999.0.0\r\n  exit /b 0\r\n)\r\nif \"%1\"==\"config\" if \"%2\"==\"--global\" if \"%3\"==\"--get\" (\r\n  if \"%4\"==\"user.name\" (\r\n    echo Excavation Site Test\r\n    exit /b 0\r\n  )\r\n  if \"%4\"==\"user.email\" (\r\n    echo excavation-test@example.com\r\n    exit /b 0\r\n  )\r\n)\r\necho fake dolt only supports version and config --global --get 1>&2\r\nexit /b 1\r\n"
+			doltContent = "@echo off\r\nif \"%1\"==\"version\" (\r\n  echo dolt version 999.0.0\r\n  exit /b 0\r\n)\r\nif \"%1\"==\"config\" if \"%2\"==\"--global\" if \"%3\"==\"--get\" (\r\n  if \"%4\"==\"user.name\" (\r\n    echo Mineshaft Test\r\n    exit /b 0\r\n  )\r\n  if \"%4\"==\"user.email\" (\r\n    echo mineshaft-test@example.com\r\n    exit /b 0\r\n  )\r\n)\r\necho fake dolt only supports version and config --global --get 1>&2\r\nexit /b 1\r\n"
 		}
 		if err := os.WriteFile(filepath.Join(binDir, doltName), []byte(doltContent), doltMode); err != nil {
 			t.Fatalf("write fake dolt: %v", err)

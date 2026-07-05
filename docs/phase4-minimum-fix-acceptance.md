@@ -4,7 +4,7 @@ This document freezes the final verification commands and a ready-to-paste PR su
 
 ## Fixed Verification Commands
 
-Run from `excavation-main`:
+Run from `mineshaft-main`:
 
 ```bash
 # 1) Full container acceptance

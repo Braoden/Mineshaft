@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // Peek command flags
@@ -74,7 +74,7 @@ func runPeek(cmd *cobra.Command, args []string) error {
 	if sessionName, ok := townAgentSessions[address]; ok {
 		_, err := workspace.FindFromCwdOrError()
 		if err != nil {
-			return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+			return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 		}
 		t := tmux.NewTmux()
 		output, err := t.CapturePane(sessionName, lines)

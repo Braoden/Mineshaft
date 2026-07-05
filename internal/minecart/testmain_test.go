@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/testutil"
+	"github.com/steveyegge/mineshaft/internal/testutil"
 )
 
 func TestMain(m *testing.M) {

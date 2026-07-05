@@ -122,7 +122,7 @@ git -C <git_repo> diff --cached --quiet
 **3. Commit with counts:**
 ```bash
 git -C <git_repo> commit -m "backup <timestamp>: <db>=<count> ..." \
-  --author="Excavation Site Daemon <daemon@excavation.local>"
+  --author="Mineshaft Daemon <daemon@mineshaft.local>"
 ```
 
 Include failed databases in commit message so staleness is visible.

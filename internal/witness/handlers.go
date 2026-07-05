@@ -15,19 +15,19 @@ import (
 	"sync"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/channelevents"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/mail"
-	"github.com/steveyegge/excavation/internal/overseer"
-	"github.com/steveyegge/excavation/internal/miner"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/util"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/channelevents"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/mail"
+	"github.com/steveyegge/mineshaft/internal/overseer"
+	"github.com/steveyegge/mineshaft/internal/miner"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/util"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // HungSessionThresholdMinutes is the number of minutes of tmux inactivity
@@ -46,7 +46,7 @@ func initRegistryFromWorkDir(workDir string) {
 	}
 }
 
-// workDirToTownRoot resolves a workDir to the Excavation Site root directory.
+// workDirToTownRoot resolves a workDir to the Mineshaft root directory.
 // Falls back to workDir itself if workspace.Find fails.
 func workDirToTownRoot(workDir string) string {
 	if townRoot, err := workspace.Find(workDir); err == nil && townRoot != "" {
@@ -1403,7 +1403,7 @@ func AutoNukeIfClean(workDir, rigName, minerName string) *NukeMinerResult {
 // This prevents nuking a miner whose work wasn't actually merged.
 //
 // In multi-remote setups, the code may live on a remote other than "origin"
-// (e.g., "excavation" for excavation.git). This function checks ALL remotes to find
+// (e.g., "mineshaft" for mineshaft.git). This function checks ALL remotes to find
 // the one containing the default branch with the merged commit.
 //
 // Returns:
@@ -2902,7 +2902,7 @@ Please re-dispatch to an available miner.`,
 // OrphanedBeadResult contains a single detected orphaned bead.
 type OrphanedBeadResult struct {
 	BeadID        string
-	Assignee      string // Original assignee (e.g. "excavation/miners/alpha")
+	Assignee      string // Original assignee (e.g. "mineshaft/miners/alpha")
 	MinerName   string // Extracted miner name
 	BeadRecovered bool
 }
@@ -3056,7 +3056,7 @@ type DetectOrphanedMoleculesResult struct {
 // by scanning FROM beads. Once a miner is nuked and its directory removed,
 // DetectZombieMiners can't see it — but the orphaned molecules remain.
 //
-// See: https://github.com/steveyegge/excavation/issues/1381
+// See: https://github.com/steveyegge/mineshaft/issues/1381
 func DetectOrphanedMolecules(bd *BdCli, workDir, rigName string, router *mail.Router) *DetectOrphanedMoleculesResult {
 	result := &DetectOrphanedMoleculesResult{}
 

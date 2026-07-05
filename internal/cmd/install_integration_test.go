@@ -12,8 +12,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/testutil"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/testutil"
 	"gopkg.in/yaml.v3"
 )
 
@@ -200,8 +200,8 @@ func TestInstallIdempotent(t *testing.T) {
 	if err == nil {
 		t.Fatal("second install should have failed without --force")
 	}
-	if !strings.Contains(string(output), "already a Excavation Site HQ") {
-		t.Errorf("expected 'already a Excavation Site HQ' error, got: %s", output)
+	if !strings.Contains(string(output), "already a Mineshaft HQ") {
+		t.Errorf("expected 'already a Mineshaft HQ' error, got: %s", output)
 	}
 
 	// Third install with --force should succeed
@@ -788,7 +788,7 @@ func TestInstallWithDaemon(t *testing.T) {
 	})
 }
 
-// cleanE2EEnv returns os.Environ() with Excavation Site and Beads routing variables
+// cleanE2EEnv returns os.Environ() with Mineshaft and Beads routing variables
 // removed. E2E tests add an explicit isolated Dolt port per test instead of
 // inheriting production/default Dolt routing from the developer environment.
 func cleanE2EEnv() []string {

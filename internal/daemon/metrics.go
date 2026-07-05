@@ -9,7 +9,7 @@ import (
 	"go.opentelemetry.io/otel/metric"
 )
 
-const meterName = "github.com/steveyegge/excavation/daemon"
+const meterName = "github.com/steveyegge/mineshaft/daemon"
 
 // daemonMetrics holds OTel instruments for the daemon.
 // All methods are nil-safe so callers don't need to guard against disabled telemetry.
@@ -41,21 +41,21 @@ func newDaemonMetrics() (*daemonMetrics, error) {
 
 	var err error
 
-	dm.heartbeatTotal, err = m.Int64Counter("excavation.daemon.heartbeat.total",
+	dm.heartbeatTotal, err = m.Int64Counter("mineshaft.daemon.heartbeat.total",
 		metric.WithDescription("Total number of daemon heartbeat cycles"),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	dm.restartTotal, err = m.Int64Counter("excavation.daemon.restart.total",
+	dm.restartTotal, err = m.Int64Counter("mineshaft.daemon.restart.total",
 		metric.WithDescription("Total number of agent session restarts"),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	dm.minerSpawns, err = m.Int64Counter("excavation.miner.spawns.total",
+	dm.minerSpawns, err = m.Int64Counter("mineshaft.miner.spawns.total",
 		metric.WithDescription("Total number of miner session spawns"),
 	)
 	if err != nil {
@@ -64,21 +64,21 @@ func newDaemonMetrics() (*daemonMetrics, error) {
 
 	// Dolt observable gauges — values are updated by health checks and
 	// collected by the SDK on each export interval.
-	connGauge, err := m.Int64ObservableGauge("excavation.dolt.connections",
+	connGauge, err := m.Int64ObservableGauge("mineshaft.dolt.connections",
 		metric.WithDescription("Active Dolt server connections"),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	maxConnGauge, err := m.Int64ObservableGauge("excavation.dolt.max_connections",
+	maxConnGauge, err := m.Int64ObservableGauge("mineshaft.dolt.max_connections",
 		metric.WithDescription("Configured maximum Dolt server connections"),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	latencyGauge, err := m.Float64ObservableGauge("excavation.dolt.query_latency_ms",
+	latencyGauge, err := m.Float64ObservableGauge("mineshaft.dolt.query_latency_ms",
 		metric.WithDescription("Dolt health probe round-trip latency in milliseconds"),
 		metric.WithUnit("ms"),
 	)
@@ -86,7 +86,7 @@ func newDaemonMetrics() (*daemonMetrics, error) {
 		return nil, err
 	}
 
-	diskGauge, err := m.Int64ObservableGauge("excavation.dolt.disk_usage_bytes",
+	diskGauge, err := m.Int64ObservableGauge("mineshaft.dolt.disk_usage_bytes",
 		metric.WithDescription("Dolt data directory disk usage"),
 		metric.WithUnit("By"),
 	)
@@ -94,7 +94,7 @@ func newDaemonMetrics() (*daemonMetrics, error) {
 		return nil, err
 	}
 
-	healthyGauge, err := m.Int64ObservableGauge("excavation.dolt.healthy",
+	healthyGauge, err := m.Int64ObservableGauge("mineshaft.dolt.healthy",
 		metric.WithDescription("Dolt server health (1=healthy, 0=unhealthy)"),
 	)
 	if err != nil {

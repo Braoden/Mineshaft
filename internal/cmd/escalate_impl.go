@@ -13,12 +13,12 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/events"
-	"github.com/steveyegge/excavation/internal/mail"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/events"
+	"github.com/steveyegge/mineshaft/internal/mail"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 func runEscalate(cmd *cobra.Command, args []string) error {
@@ -50,7 +50,7 @@ func runEscalate(cmd *cobra.Command, args []string) error {
 	// Find workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Load escalation config
@@ -271,7 +271,7 @@ type deliveryStatus struct {
 func runEscalateList(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	bd := beads.New(beads.ResolveBeadsDir(townRoot))
@@ -358,7 +358,7 @@ func runEscalateAck(cmd *cobra.Command, args []string) error {
 
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Detect who is acknowledging
@@ -387,7 +387,7 @@ func runEscalateClose(cmd *cobra.Command, args []string) error {
 
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Detect who is closing
@@ -416,7 +416,7 @@ func runEscalateClose(cmd *cobra.Command, args []string) error {
 func runEscalateStale(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Load escalation config for threshold and max reescalations
@@ -607,7 +607,7 @@ func runEscalateShow(cmd *cobra.Command, args []string) error {
 
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	bd := beads.New(beads.ResolveBeadsDir(townRoot))
@@ -765,13 +765,13 @@ func sendEscalationEmail(cfg *config.EscalationConfig, beadID, severity, descrip
 	}
 	from := cfg.Contacts.SMTPFrom
 	if from == "" {
-		from = "excavation@localhost"
+		from = "mineshaft@localhost"
 	}
 	to := cfg.Contacts.HumanEmail
-	subject := fmt.Sprintf("[Excavation Site %s] %s", strings.ToUpper(severity), description)
+	subject := fmt.Sprintf("[Mineshaft %s] %s", strings.ToUpper(severity), description)
 
 	body := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n"+
-		"Excavation Site Escalation\r\n"+
+		"Mineshaft Escalation\r\n"+
 		"====================\r\n"+
 		"Bead: %s\r\n"+
 		"Severity: %s\r\n"+
@@ -827,7 +827,7 @@ func sendEscalationSlack(cfg *config.EscalationConfig, beadID, severity, descrip
 func sendEscalationSMS(cfg *config.EscalationConfig, beadID, severity, description string) error {
 	payload := map[string]string{
 		"to":   cfg.Contacts.HumanSMS,
-		"body": fmt.Sprintf("[Excavation Site %s] %s (bead: %s)", strings.ToUpper(severity), description, beadID),
+		"body": fmt.Sprintf("[Mineshaft %s] %s (bead: %s)", strings.ToUpper(severity), description, beadID),
 	}
 	body, err := json.Marshal(payload)
 	if err != nil {

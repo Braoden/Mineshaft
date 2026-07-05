@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/style"
 )
 
 // beadIDLine matches a bead ID printed on its own line by `bd create`.
@@ -29,7 +29,7 @@ var beadIDLine = regexp.MustCompile(`(?m)^\s*([a-z][a-z0-9-]*-[a-z0-9]+)\s*$`)
 // Returns an error if no bead-ID-shaped line is found.
 //
 // This guards against `bd` emitting startup warnings before the ID — see
-// excavation issue: "Fix compact_report.go beadID capture (corrupts on stdout
+// mineshaft issue: "Fix compact_report.go beadID capture (corrupts on stdout
 // warnings)". Without this, a noisy stdout poisons `beadID`, the subsequent
 // `bd close <beadID>` silently fails, the audit bead stays open, and the
 // daily-digest idempotency check (filtered by status=closed) never matches —

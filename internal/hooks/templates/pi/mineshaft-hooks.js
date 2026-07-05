@@ -1,4 +1,4 @@
-// Excavation Site Pi Extension — Enhanced (with per-prompt mail check)
+// Mineshaft Pi Extension — Enhanced (with per-prompt mail check)
 // Deploys the same lifecycle hooks as Claude's settings-autonomous.json
 // but using pi's extension API.
 //
@@ -11,7 +11,7 @@
 // Enhancement over upstream: mail is checked on every prompt (throttled to
 // 30s) via before_agent_start, matching Claude's UserPromptSubmit behavior.
 //
-// Loaded via: pi -e excavation-hooks.js
+// Loaded via: pi -e mineshaft-hooks.js
 
 export default (pi) => {
   const role = (process.env.GT_ROLE || "").toLowerCase();
@@ -28,12 +28,12 @@ export default (pi) => {
       const result = await pi.exec("gt", ["prime", "--hook"]);
       if (result.code === 0 && result.stdout.trim()) {
         primeContext = result.stdout.trim();
-        console.error("[excavation] gt prime captured (" + primeContext.length + " chars)");
+        console.error("[mineshaft] gt prime captured (" + primeContext.length + " chars)");
       } else {
-        console.error("[excavation] gt prime returned no output (code=" + result.code + ")");
+        console.error("[mineshaft] gt prime returned no output (code=" + result.code + ")");
       }
     } catch (e) {
-      console.error("[excavation] gt prime failed:", e.message);
+      console.error("[mineshaft] gt prime failed:", e.message);
     }
 
   });
@@ -50,20 +50,20 @@ export default (pi) => {
         const mailResult = await pi.exec("gt", ["mail", "check", "--inject"]);
         if (mailResult.code === 0 && mailResult.stdout.trim()) {
           mailContext = mailResult.stdout.trim();
-          console.error("[excavation] mail check: new mail found");
+          console.error("[mineshaft] mail check: new mail found");
         }
       } catch (e) {
-        console.error("[excavation] per-prompt mail check failed:", e.message);
+        console.error("[mineshaft] per-prompt mail check failed:", e.message);
       }
     }
 
     // Inject prime context on first prompt
     if (primeContext && !contextInjected) {
       contextInjected = true;
-      console.error("[excavation] injecting prime context into session");
+      console.error("[mineshaft] injecting prime context into session");
       const result = {
         message: {
-          customType: "excavation-prime",
+          customType: "mineshaft-prime",
           content: primeContext,
           display: false,
         },
@@ -80,7 +80,7 @@ export default (pi) => {
     if (mailContext) {
       return {
         message: {
-          customType: "excavation-mail",
+          customType: "mineshaft-mail",
           content: mailContext,
           display: false,
         },
@@ -104,7 +104,7 @@ export default (pi) => {
             return { block: true, reason: result.stderr || "gt tap guard rejected this operation" };
           }
         } catch (e) {
-          console.error("[excavation] gt tap guard failed:", e.message);
+          console.error("[mineshaft] gt tap guard failed:", e.message);
         }
       }
     }
@@ -115,7 +115,7 @@ export default (pi) => {
     try {
       await pi.exec("gt", ["costs", "record"]);
     } catch (e) {
-      console.error("[excavation] gt costs record failed:", e.message);
+      console.error("[mineshaft] gt costs record failed:", e.message);
     }
   });
 };

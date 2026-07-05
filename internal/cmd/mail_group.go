@@ -9,8 +9,8 @@ import (
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // Group command flags
@@ -26,16 +26,16 @@ var mailGroupCmd = &cobra.Command{
 
 Groups are named collections of addresses used for mail distribution.
 Members can be:
-  - Direct addresses (excavation/crew/max)
-  - Patterns (*/witness, excavation/*)
+  - Direct addresses (mineshaft/crew/max)
+  - Patterns (*/witness, mineshaft/*)
   - Other group names (nested groups)
 
 Examples:
   gt mail group list                              # List all groups
   gt mail group show ops-team                     # Show group members
-  gt mail group create ops-team excavation/witness excavation/crew/max
+  gt mail group create ops-team mineshaft/witness mineshaft/crew/max
   gt mail group add ops-team supervisor/
-  gt mail group remove ops-team excavation/witness
+  gt mail group remove ops-team mineshaft/witness
   gt mail group delete ops-team`,
 	RunE: requireSubcommand,
 }
@@ -64,8 +64,8 @@ var groupCreateCmd = &cobra.Command{
 Members can be specified as positional arguments or with --member flags.
 
 Examples:
-  gt mail group create ops-team excavation/witness excavation/crew/max
-  gt mail group create ops-team --member excavation/witness --member excavation/crew/max`,
+  gt mail group create ops-team mineshaft/witness mineshaft/crew/max
+  gt mail group create ops-team --member mineshaft/witness --member mineshaft/crew/max`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runGroupCreate,
 }
@@ -118,7 +118,7 @@ func init() {
 func runGroupList(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	b := beads.New(townRoot)
@@ -156,7 +156,7 @@ func runGroupShow(cmd *cobra.Command, args []string) error {
 
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	b := beads.New(townRoot)
@@ -211,7 +211,7 @@ func runGroupCreate(cmd *cobra.Command, args []string) error {
 
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Detect creator
@@ -253,7 +253,7 @@ func runGroupAdd(cmd *cobra.Command, args []string) error {
 
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	b := beads.New(townRoot)
@@ -271,7 +271,7 @@ func runGroupRemove(cmd *cobra.Command, args []string) error {
 
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	b := beads.New(townRoot)
@@ -288,7 +288,7 @@ func runGroupDelete(cmd *cobra.Command, args []string) error {
 
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	b := beads.New(townRoot)
@@ -327,8 +327,8 @@ func isValidGroupName(name string) bool {
 
 // isValidMemberPattern checks if a member pattern is syntactically valid.
 // Valid patterns include:
-// - Direct addresses: excavation/crew/max, overseer/, supervisor/
-// - Wildcards: */witness, excavation/*, excavation/crew/*
+// - Direct addresses: mineshaft/crew/max, overseer/, supervisor/
+// - Wildcards: */witness, mineshaft/*, mineshaft/crew/*
 // - Special patterns: @town, @crew, @witnesses
 // - Group names: ops-team
 func isValidMemberPattern(pattern string) bool {

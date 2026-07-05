@@ -1,11 +1,11 @@
-# @excavation/gt
+# @mineshaft/gt
 
-Excavation Site CLI - multi-agent workspace manager for coordinating AI coding agents.
+Mineshaft CLI - multi-agent workspace manager for coordinating AI coding agents.
 
 ## Installation
 
 ```bash
-npm install -g @excavation/gt
+npm install -g @mineshaft/gt
 ```
 
 This will download the appropriate native binary for your platform during installation.
@@ -35,7 +35,7 @@ gt rig list
 ## Manual Installation
 
 If npm installation fails, you can download binaries directly from:
-https://github.com/steveyegge/excavation/releases
+https://github.com/steveyegge/mineshaft/releases
 
 ## License
 

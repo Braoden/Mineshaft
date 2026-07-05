@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/formula"
-	"github.com/steveyegge/excavation/internal/plugin"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/formula"
+	"github.com/steveyegge/mineshaft/internal/plugin"
 )
 
 // PatrolMoleculesExistCheck verifies that patrol formulas are accessible.
@@ -67,7 +67,7 @@ func (c *PatrolMoleculesExistCheck) Run(ctx *CheckContext) *CheckResult {
 		rigPath := filepath.Join(ctx.TownRoot, rigName)
 		// If rigPath doesn't exist, fall back to TownRoot. This handles the case
 		// where gt doctor runs from a overseer's canonical clone, where TownRoot
-		// resolves to the clone itself (e.g. excavation/overseer/rig) rather than the
+		// resolves to the clone itself (e.g. mineshaft/overseer/rig) rather than the
 		// actual town root. The rig directory won't be a subdirectory of the clone,
 		// but patrol formulas are town-level and accessible from TownRoot itself.
 		if _, statErr := os.Stat(rigPath); os.IsNotExist(statErr) {
@@ -446,7 +446,7 @@ func NewPatrolPluginDriftCheck() *PatrolPluginDriftCheck {
 func (c *PatrolPluginDriftCheck) Run(ctx *CheckContext) *CheckResult {
 	c.targetDir = filepath.Join(ctx.TownRoot, "plugins")
 
-	sourceDir, err := plugin.FindExcavationSource(ctx.TownRoot)
+	sourceDir, err := plugin.FindMineshaftSource(ctx.TownRoot)
 	if err != nil {
 		return &CheckResult{
 			Name:    c.Name(),

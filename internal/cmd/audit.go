@@ -12,11 +12,11 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/events"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/townlog"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/events"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/townlog"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // Audit command flags
@@ -73,7 +73,7 @@ type AuditEntry struct {
 func runAudit(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Parse since duration if provided
@@ -258,9 +258,9 @@ func matchesActor(name, actor string) bool {
 func collectBeadsActivity(townRoot, actor string, since time.Time) ([]AuditEntry, error) {
 	var entries []AuditEntry
 
-	// Find the excavation beads path (where gt- prefix issues live)
-	excavationBeadsPath := filepath.Join(townRoot, "excavation", "overseer", "rig")
-	b := beads.New(excavationBeadsPath)
+	// Find the mineshaft beads path (where gt- prefix issues live)
+	mineshaftBeadsPath := filepath.Join(townRoot, "mineshaft", "overseer", "rig")
+	b := beads.New(mineshaftBeadsPath)
 
 	// List all issues to filter by created_by and assignee
 	issues, err := b.List(beads.ListOptions{

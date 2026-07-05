@@ -1,5 +1,5 @@
-// ABOUTME: Quick-add command for adding a repo to Excavation Site with minimal friction.
-// ABOUTME: Used by shell hook for automatic "add to Excavation Site?" prompts.
+// ABOUTME: Quick-add command for adding a repo to Mineshaft with minimal friction.
+// ABOUTME: Used by shell hook for automatic "add to Mineshaft?" prompts.
 
 package cmd
 
@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var (
@@ -23,11 +23,11 @@ var (
 
 var rigQuickAddCmd = &cobra.Command{
 	Use:    "quick-add [path]",
-	Short:  "Quickly add current repo to Excavation Site",
+	Short:  "Quickly add current repo to Mineshaft",
 	Hidden: true,
-	Long: `Quickly add a git repository to Excavation Site with minimal interaction.
+	Long: `Quickly add a git repository to Mineshaft with minimal interaction.
 
-This command is designed for the shell hook's "Add to Excavation Site?" prompt.
+This command is designed for the shell hook's "Add to Mineshaft?" prompt.
 It infers the rig name from the directory and git URL from the remote.
 
 Examples:
@@ -57,7 +57,7 @@ func runRigQuickAdd(cmd *cobra.Command, args []string) error {
 	}
 
 	if townRoot, err := workspace.Find(absPath); err == nil && townRoot != "" {
-		return fmt.Errorf("already part of a Excavation Site workspace: %s", townRoot)
+		return fmt.Errorf("already part of a Mineshaft workspace: %s", townRoot)
 	}
 
 	gitRoot, err := findGitRoot(absPath)
@@ -74,7 +74,7 @@ func runRigQuickAdd(cmd *cobra.Command, args []string) error {
 
 	townRoot, err := findOrCreateTown()
 	if err != nil {
-		return fmt.Errorf("finding Excavation Site: %w", err)
+		return fmt.Errorf("finding Mineshaft: %w", err)
 	}
 
 	rigPath := filepath.Join(townRoot, rigName)
@@ -88,7 +88,7 @@ func runRigQuickAdd(cmd *cobra.Command, args []string) error {
 	}
 
 	if !quickAddQuiet {
-		fmt.Printf("Adding %s to Excavation Site...\n", style.Bold.Render(rigName))
+		fmt.Printf("Adding %s to Mineshaft...\n", style.Bold.Render(rigName))
 		fmt.Printf("  Repository: %s\n", gitURL)
 		fmt.Printf("  Town: %s\n", townRoot)
 	}
@@ -128,7 +128,7 @@ func runRigQuickAdd(cmd *cobra.Command, args []string) error {
 
 	crewPath := filepath.Join(townRoot, rigName, "crew", user)
 	if !quickAddQuiet {
-		fmt.Printf("\n%s Added to Excavation Site!\n", style.Success.Render("✓"))
+		fmt.Printf("\n%s Added to Mineshaft!\n", style.Success.Render("✓"))
 		fmt.Printf("\nYour workspace: %s\n", style.Bold.Render(crewPath))
 	}
 
@@ -185,7 +185,7 @@ func findOrCreateTown() (string, error) {
 
 	candidates := []string{
 		filepath.Join(home, "gt"),
-		filepath.Join(home, "excavation"),
+		filepath.Join(home, "mineshaft"),
 	}
 
 	for _, path := range candidates {
@@ -194,10 +194,10 @@ func findOrCreateTown() (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("no Excavation Site found - run 'gt install ~/gt' first")
+	return "", fmt.Errorf("no Mineshaft found - run 'gt install ~/gt' first")
 }
 
-// isValidTown checks if a path is a valid Excavation Site installation.
+// isValidTown checks if a path is a valid Mineshaft installation.
 func isValidTown(path string) bool {
 	overseerDir := filepath.Join(path, "overseer")
 	_, err := os.Stat(overseerDir)

@@ -53,15 +53,15 @@ Process each: verify git state, clean worktrees, close cleanup wisps.
 
 ### 3. check-refinery
 ```bash
-gt peek excavation/refinery
+gt peek mineshaft/refinery
 ```
 Verify refinery is alive and processing the merge queue.
-If stuck, nudge: `gt nudge excavation/refinery "Health check — are you processing?"`
+If stuck, nudge: `gt nudge mineshaft/refinery "Health check — are you processing?"`
 
 ### 4. survey-workers
 Check all active miners in the rig:
 ```bash
-gt peek excavation/miners
+gt peek mineshaft/miners
 ```
 For each active miner:
 - Check if session is alive (has recent activity)
@@ -71,7 +71,7 @@ For each active miner:
 
 Nudge idle miners:
 ```bash
-gt nudge excavation/miners/<name> "Progress check — what's your status?"
+gt nudge mineshaft/miners/<name> "Progress check — what's your status?"
 ```
 
 ### 5. check-timer-gates

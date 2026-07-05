@@ -1,6 +1,6 @@
 # Heartbeats
 
-Excavation Site has **three distinct heartbeat stores**. They have different readers
+Mineshaft has **three distinct heartbeat stores**. They have different readers
 and thresholds, so Supervisor heartbeat commands refresh the Supervisor-specific stores
 together to avoid false "stuck agent" escalations (see hq-qxl9: a Supervisor
 refreshed its session heartbeat while the file store aged past threshold).

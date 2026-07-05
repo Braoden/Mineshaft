@@ -11,15 +11,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	gtgit "github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/refinery"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	gtgit "github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/refinery"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // BeadsMessage represents a message from gt mail inbox --json.
@@ -600,7 +600,7 @@ func (d *Daemon) setSessionEnvironment(sessionName string, roleConfig *beads.Rol
 
 	// Set any custom env vars from role config.
 	// Skip keys already set by AgentEnv to prevent TOML [env] from clobbering
-	// canonical qualified values (e.g., GT_ROLE). See: https://github.com/steveyegge/excavation/issues/2492
+	// canonical qualified values (e.g., GT_ROLE). See: https://github.com/steveyegge/mineshaft/issues/2492
 	if roleConfig != nil {
 		for k, v := range roleConfig.EnvVars {
 			if _, alreadySet := envVars[k]; alreadySet {
@@ -622,7 +622,7 @@ func (d *Daemon) applySessionTheme(sessionName string, parsed *ParsedIdentity) {
 		worker = "Overseer"
 	}
 	theme := tmux.ResolveSessionTheme(d.config.TownRoot, rigName, role, parsed.AgentName)
-	_ = d.tmux.ConfigureExcavationSession(sessionName, theme, rigName, worker, role)
+	_ = d.tmux.ConfigureMineshaftSession(sessionName, theme, rigName, worker, role)
 }
 
 // syncFailureEscalationThreshold is the default number of consecutive pull failures
@@ -1089,7 +1089,7 @@ func (d *Daemon) checkGUPPViolations() {
 // checkRigGUPPViolations checks miners in a specific rig for GUPP violations.
 func (d *Daemon) checkRigGUPPViolations(rigName string) {
 	// List miner agent beads for this rig (issues + wisps tables)
-	// Pattern: <prefix>-<rig>-miner-<name> (e.g., gt-excavation-miner-Toast)
+	// Pattern: <prefix>-<rig>-miner-<name> (e.g., gt-mineshaft-miner-Toast)
 	var agents []struct {
 		ID          string   `json:"id"`
 		Description string   `json:"description"`
@@ -1106,7 +1106,7 @@ func (d *Daemon) checkRigGUPPViolations(rigName string) {
 		return
 	}
 
-	// Use the rig's configured prefix (e.g., "gt" for excavation, "bd" for beads)
+	// Use the rig's configured prefix (e.g., "gt" for mineshaft, "bd" for beads)
 	rigPrefix := config.GetRigPrefix(d.config.TownRoot, rigName)
 	// Pattern: <prefix>-<rig>-miner-<name>
 	prefix := rigPrefix + "-" + rigName + "-miner-"
@@ -1220,7 +1220,7 @@ func (d *Daemon) checkRigOrphanedWork(rigName string) {
 		return
 	}
 
-	// Use the rig's configured prefix (e.g., "gt" for excavation, "bd" for beads)
+	// Use the rig's configured prefix (e.g., "gt" for mineshaft, "bd" for beads)
 	rigPrefix := config.GetRigPrefix(d.config.TownRoot, rigName)
 	// Pattern: <prefix>-<rig>-miner-<name>
 	prefix := rigPrefix + "-" + rigName + "-miner-"
@@ -1272,10 +1272,10 @@ func (d *Daemon) checkRigOrphanedWork(rigName string) {
 }
 
 // extractRigFromAgentID extracts the rig name from a miner agent ID.
-// Example: gt-excavation-miner-max → excavation
+// Example: gt-mineshaft-miner-max → mineshaft
 func (d *Daemon) extractRigFromAgentID(agentID string) string {
 	// Use the beads package helper to correctly parse agent bead IDs.
-	// Pattern: <prefix>-<rig>-miner-<name> (e.g., gt-excavation-miner-Toast)
+	// Pattern: <prefix>-<rig>-miner-<name> (e.g., gt-mineshaft-miner-Toast)
 	rig, role, _, ok := beads.ParseAgentBeadID(agentID)
 	if !ok || role != constants.RoleMiner {
 		return ""

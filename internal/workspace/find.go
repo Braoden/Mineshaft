@@ -7,13 +7,13 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/mineshaft/internal/config"
 )
 
 // ErrNotFound indicates no workspace was found.
-var ErrNotFound = errors.New("not in a Excavation Site workspace")
+var ErrNotFound = errors.New("not in a Mineshaft workspace")
 
-// Markers used to detect a Excavation Site workspace.
+// Markers used to detect a Mineshaft workspace.
 const (
 	// PrimaryMarker is the main config file that identifies a workspace.
 	// The town.json file lives in overseer/ along with other overseer config.
@@ -136,7 +136,7 @@ func FindFromCwdWithFallback() (townRoot string, cwd string, err error) {
 	return townRoot, cwd, nil
 }
 
-// IsWorkspace checks if the given directory is a Excavation Site workspace root.
+// IsWorkspace checks if the given directory is a Mineshaft workspace root.
 // A directory is a workspace if it has a primary marker (overseer/town.json)
 // or a secondary marker (overseer/ directory).
 func IsWorkspace(dir string) (bool, error) {
@@ -163,7 +163,7 @@ func IsWorkspace(dir string) (bool, error) {
 
 // GetTownName loads the town name from the workspace's town.json config.
 // This is used for generating unique tmux session names that avoid collisions
-// when running multiple Excavation Site instances.
+// when running multiple Mineshaft instances.
 func GetTownName(townRoot string) (string, error) {
 	townConfigPath := filepath.Join(townRoot, PrimaryMarker)
 	townConfig, err := config.LoadTownConfig(townConfigPath)

@@ -5,12 +5,12 @@ import (
 )
 
 func TestSlingPayload(t *testing.T) {
-	p := SlingPayload("gt-123", "excavation")
+	p := SlingPayload("gt-123", "mineshaft")
 	if p["bead"] != "gt-123" {
 		t.Errorf("bead = %v, want gt-123", p["bead"])
 	}
-	if p["target"] != "excavation" {
-		t.Errorf("target = %v, want excavation", p["target"])
+	if p["target"] != "mineshaft" {
+		t.Errorf("target = %v, want mineshaft", p["target"])
 	}
 }
 
@@ -72,9 +72,9 @@ func TestMailPayload(t *testing.T) {
 }
 
 func TestSpawnPayload(t *testing.T) {
-	p := SpawnPayload("excavation", "alpha")
-	if p["rig"] != "excavation" {
-		t.Errorf("rig = %v, want excavation", p["rig"])
+	p := SpawnPayload("mineshaft", "alpha")
+	if p["rig"] != "mineshaft" {
+		t.Errorf("rig = %v, want mineshaft", p["rig"])
 	}
 	if p["miner"] != "alpha" {
 		t.Errorf("miner = %v, want alpha", p["miner"])
@@ -83,9 +83,9 @@ func TestSpawnPayload(t *testing.T) {
 
 func TestBootPayload(t *testing.T) {
 	agents := []string{"witness", "refinery"}
-	p := BootPayload("excavation", agents)
-	if p["rig"] != "excavation" {
-		t.Errorf("rig = %v, want excavation", p["rig"])
+	p := BootPayload("mineshaft", agents)
+	if p["rig"] != "mineshaft" {
+		t.Errorf("rig = %v, want mineshaft", p["rig"])
 	}
 	gotAgents, ok := p["agents"].([]string)
 	if !ok {
@@ -114,9 +114,9 @@ func TestMergePayload_NoReason(t *testing.T) {
 }
 
 func TestPatrolPayload_WithMessage(t *testing.T) {
-	p := PatrolPayload("excavation", 3, "all healthy")
-	if p["rig"] != "excavation" {
-		t.Errorf("rig = %v, want excavation", p["rig"])
+	p := PatrolPayload("mineshaft", 3, "all healthy")
+	if p["rig"] != "mineshaft" {
+		t.Errorf("rig = %v, want mineshaft", p["rig"])
 	}
 	if p["miner_count"] != 3 {
 		t.Errorf("miner_count = %v, want 3", p["miner_count"])
@@ -127,30 +127,30 @@ func TestPatrolPayload_WithMessage(t *testing.T) {
 }
 
 func TestPatrolPayload_NoMessage(t *testing.T) {
-	p := PatrolPayload("excavation", 0, "")
+	p := PatrolPayload("mineshaft", 0, "")
 	if _, ok := p["message"]; ok {
 		t.Error("expected no message key when empty")
 	}
 }
 
 func TestMinerCheckPayload_WithIssue(t *testing.T) {
-	p := MinerCheckPayload("excavation", "alpha", "working", "gt-123")
+	p := MinerCheckPayload("mineshaft", "alpha", "working", "gt-123")
 	if p["issue"] != "gt-123" {
 		t.Errorf("issue = %v, want gt-123", p["issue"])
 	}
 }
 
 func TestMinerCheckPayload_NoIssue(t *testing.T) {
-	p := MinerCheckPayload("excavation", "alpha", "working", "")
+	p := MinerCheckPayload("mineshaft", "alpha", "working", "")
 	if _, ok := p["issue"]; ok {
 		t.Error("expected no issue key when empty")
 	}
 }
 
 func TestNudgePayload(t *testing.T) {
-	p := NudgePayload("excavation", "alpha", "stuck")
-	if p["rig"] != "excavation" {
-		t.Errorf("rig = %v, want excavation", p["rig"])
+	p := NudgePayload("mineshaft", "alpha", "stuck")
+	if p["rig"] != "mineshaft" {
+		t.Errorf("rig = %v, want mineshaft", p["rig"])
 	}
 	if p["target"] != "alpha" {
 		t.Errorf("target = %v, want alpha", p["target"])
@@ -161,7 +161,7 @@ func TestNudgePayload(t *testing.T) {
 }
 
 func TestEscalationPayload(t *testing.T) {
-	p := EscalationPayload("excavation", "alpha", "overseer", "unresponsive")
+	p := EscalationPayload("mineshaft", "alpha", "overseer", "unresponsive")
 	if p["to"] != "overseer" {
 		t.Errorf("to = %v, want overseer", p["to"])
 	}
@@ -171,9 +171,9 @@ func TestEscalationPayload(t *testing.T) {
 }
 
 func TestKillPayload(t *testing.T) {
-	p := KillPayload("excavation", "alpha", "zombie")
-	if p["rig"] != "excavation" {
-		t.Errorf("rig = %v, want excavation", p["rig"])
+	p := KillPayload("mineshaft", "alpha", "zombie")
+	if p["rig"] != "mineshaft" {
+		t.Errorf("rig = %v, want mineshaft", p["rig"])
 	}
 	if p["target"] != "alpha" {
 		t.Errorf("target = %v, want alpha", p["target"])
@@ -196,11 +196,11 @@ func TestHaltPayload(t *testing.T) {
 }
 
 func TestSessionDeathPayload(t *testing.T) {
-	p := SessionDeathPayload("gt-excavation-alpha", "excavation/miners/alpha", "zombie cleanup", "daemon")
-	if p["session"] != "gt-excavation-alpha" {
-		t.Errorf("session = %v, want gt-excavation-alpha", p["session"])
+	p := SessionDeathPayload("gt-mineshaft-alpha", "mineshaft/miners/alpha", "zombie cleanup", "daemon")
+	if p["session"] != "gt-mineshaft-alpha" {
+		t.Errorf("session = %v, want gt-mineshaft-alpha", p["session"])
 	}
-	if p["agent"] != "excavation/miners/alpha" {
+	if p["agent"] != "mineshaft/miners/alpha" {
 		t.Errorf("agent = %v", p["agent"])
 	}
 	if p["reason"] != "zombie cleanup" {
@@ -233,11 +233,11 @@ func TestMassDeathPayload_NoCause(t *testing.T) {
 }
 
 func TestSessionPayload_Full(t *testing.T) {
-	p := SessionPayload("uuid-123", "excavation/crew/tester", "fixing bugs", "/some/dir")
+	p := SessionPayload("uuid-123", "mineshaft/crew/tester", "fixing bugs", "/some/dir")
 	if p["session_id"] != "uuid-123" {
 		t.Errorf("session_id = %v", p["session_id"])
 	}
-	if p["role"] != "excavation/crew/tester" {
+	if p["role"] != "mineshaft/crew/tester" {
 		t.Errorf("role = %v", p["role"])
 	}
 	if p["topic"] != "fixing bugs" {

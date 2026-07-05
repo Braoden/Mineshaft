@@ -26,7 +26,7 @@ jobs:
             const body = [
               '**Internal PRs are not allowed.**',
               '',
-              'Excavation Site agents push directly to main. PRs are for external contributors only.',
+              'Mineshaft agents push directly to main. PRs are for external contributors only.',
               '',
               'To land your changes:',
               '```bash',

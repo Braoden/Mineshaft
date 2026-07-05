@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/doltserver"
+	"github.com/steveyegge/mineshaft/internal/doltserver"
 )
 
 func TestReadBeadsRuntimeConfigServerMetadata(t *testing.T) {
@@ -20,7 +20,7 @@ func TestReadBeadsRuntimeConfigServerMetadata(t *testing.T) {
   "dolt_mode": "server",
   "dolt_server_host": "192.0.2.10",
   "dolt_server_port": 4311,
-  "dolt_database": "excavation"
+  "dolt_database": "mineshaft"
 }`
 	if err := os.WriteFile(filepath.Join(beadsDir, "metadata.json"), []byte(metadata), 0600); err != nil {
 		t.Fatalf("write metadata: %v", err)
@@ -30,8 +30,8 @@ func TestReadBeadsRuntimeConfigServerMetadata(t *testing.T) {
 	if !ok {
 		t.Fatal("readBeadsRuntimeConfig did not detect server metadata")
 	}
-	if cfg.Database != "excavation" {
-		t.Fatalf("Database = %q, want excavation", cfg.Database)
+	if cfg.Database != "mineshaft" {
+		t.Fatalf("Database = %q, want mineshaft", cfg.Database)
 	}
 	if cfg.Host != "192.0.2.10" {
 		t.Fatalf("Host = %q, want 192.0.2.10", cfg.Host)
@@ -108,7 +108,7 @@ func TestReadBeadsRuntimeConfigIgnoresEmbeddedMetadata(t *testing.T) {
 	metadata := `{
   "backend": "dolt",
   "dolt_mode": "embedded",
-  "dolt_database": "excavation"
+  "dolt_database": "mineshaft"
 }`
 	if err := os.WriteFile(filepath.Join(beadsDir, "metadata.json"), []byte(metadata), 0600); err != nil {
 		t.Fatalf("write metadata: %v", err)
@@ -134,7 +134,7 @@ func TestBeadsScopeHint_HQWarnsAgainstGlobal(t *testing.T) {
 }
 
 func TestBeadsScopeHint_NonHQEmpty(t *testing.T) {
-	if hint := beadsScopeHint("excavation", "/custom/town"); hint != "" {
+	if hint := beadsScopeHint("mineshaft", "/custom/town"); hint != "" {
 		t.Fatalf("beadsScopeHint() = %q, want empty", hint)
 	}
 }

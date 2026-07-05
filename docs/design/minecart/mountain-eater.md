@@ -10,7 +10,7 @@
 
 ## 1. Problem Statement
 
-Excavation Site has all the pieces for autonomous epic execution:
+Mineshaft has all the pieces for autonomous epic execution:
 - MinecartManager feeds ready issues as blocking deps close (event-driven, 5s)
 - Stranded scan catches missed feeding (periodic, 30s)
 - Stage-launch validates DAGs and computes waves (Kahn's algorithm)
@@ -47,7 +47,7 @@ The Mountain-Eater sidesteps this entirely:
 - **Dogs bring fresh context every time.** Zero hysteresis by construction.
 - **The label triggers patrol behavior.** No persistent coordinator needed.
 
-This aligns with core Excavation Site principles:
+This aligns with core Mineshaft principles:
 - **ZFC**: Agents decide, Go transports. MinecartManager is transport; Dogs make judgment calls.
 - **NDI**: Any Dog can check any mountain. Different agents, same outcome.
 - **Discover, Don't Track**: `bd ready --epic=X` and minecart status derive state.
@@ -373,10 +373,10 @@ Creating minecart...
   Label: mountain
 
 Launching Wave 1 (4 tasks)...
-  Slung gt-foundation-types → excavation
-  Slung gt-config-schema → excavation
-  Slung gt-test-fixtures → excavation
-  Slung gt-error-types → excavation
+  Slung gt-foundation-types → mineshaft
+  Slung gt-config-schema → mineshaft
+  Slung gt-test-fixtures → mineshaft
+  Slung gt-error-types → mineshaft
 
 Mountain active. MinecartManager will feed subsequent waves.
 Supervisor will audit progress every ~10 minutes.
@@ -419,9 +419,9 @@ Completed (23):
   ✓ gt-foundation-types, gt-config-schema, gt-test-fixtures, ...
 
 Active (3):
-  ⟳ gt-session-handler (miner: excavation/nux, 12m)
-  ⟳ gt-middleware-chain (miner: excavation/furiosa, 8m)
-  ⟳ gt-rate-limiter (miner: excavation/max, 3m)
+  ⟳ gt-session-handler (miner: mineshaft/nux, 12m)
+  ⟳ gt-middleware-chain (miner: mineshaft/furiosa, 8m)
+  ⟳ gt-rate-limiter (miner: mineshaft/max, 3m)
 
 Ready (1):
   ○ gt-cache-layer (unblocked, waiting for miner)

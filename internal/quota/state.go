@@ -1,4 +1,4 @@
-// Package quota manages Claude Code account quota rotation for Excavation Site.
+// Package quota manages Claude Code account quota rotation for Mineshaft.
 //
 // When sessions hit rate limits, the boss can scan for blocked sessions
 // and rotate them to available accounts. State is persisted to overseer/quota.json
@@ -15,10 +15,10 @@ import (
 	"time"
 
 	"github.com/gofrs/flock"
-	"github.com/steveyegge/excavation/internal/atomicfile"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/atomicfile"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // Manager handles quota state persistence with file locking.

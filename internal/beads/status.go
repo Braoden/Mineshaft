@@ -28,7 +28,7 @@ const (
 	AgentStatePaused     AgentState = "paused"
 )
 
-// ResolveAgentState returns the agent state Excavation should act on.
+// ResolveAgentState returns the agent state Mineshaft should act on.
 // bd >= 0.62.0 no longer exposes a supported `bd agent state` writer, so the
 // description's `agent_state:` field is the primary write/read contract.
 // Fall back to the structured column only for legacy beads that do not yet

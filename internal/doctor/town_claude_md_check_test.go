@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/templates"
+	"github.com/steveyegge/mineshaft/internal/templates"
 )
 
 func TestTownCLAUDEmdCheck_Missing(t *testing.T) {
@@ -48,9 +48,9 @@ func TestTownCLAUDEmdCheck_MissingSections(t *testing.T) {
 	ctx := &CheckContext{TownRoot: tmpDir}
 
 	// Write only the identity anchor (no Dolt or communication sections)
-	content := `# Excavation Site
+	content := `# Mineshaft
 
-This is a Excavation Site workspace. Your identity and role are determined by ` + "`gt prime`" + `.
+This is a Mineshaft workspace. Your identity and role are determined by ` + "`gt prime`" + `.
 
 Run ` + "`gt prime`" + ` for full context after compaction, clear, or new session.
 `
@@ -75,9 +75,9 @@ func TestTownCLAUDEmdCheck_PartialSections(t *testing.T) {
 	ctx := &CheckContext{TownRoot: tmpDir}
 
 	// Write identity anchor + Dolt section but no communication hygiene
-	content := `# Excavation Site
+	content := `# Mineshaft
 
-This is a Excavation Site workspace.
+This is a Mineshaft workspace.
 
 ## Dolt Server — Operational Awareness
 
@@ -137,9 +137,9 @@ func TestTownCLAUDEmdCheck_Fix_AppendSections(t *testing.T) {
 	ctx := &CheckContext{TownRoot: tmpDir}
 
 	// Write minimal anchor + a user custom section
-	original := `# Excavation Site
+	original := `# Mineshaft
 
-This is a Excavation Site workspace.
+This is a Mineshaft workspace.
 
 ## My Custom Section
 
@@ -274,7 +274,7 @@ func TestIsIdentityAnchor_MinimalAnchor(t *testing.T) {
 	tmpDir := t.TempDir()
 	path := filepath.Join(tmpDir, "CLAUDE.md")
 
-	content := `# Excavation Site
+	content := `# Mineshaft
 
 Run ` + "`gt prime`" + ` for full context.
 `
@@ -301,19 +301,19 @@ func TestIsIdentityAnchor_ExpandedCLAUDEmd(t *testing.T) {
 	}
 }
 
-func TestIsIdentityAnchor_NonExcavationFile(t *testing.T) {
+func TestIsIdentityAnchor_NonMineshaftFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	path := filepath.Join(tmpDir, "CLAUDE.md")
 
 	content := `# My Project
 
-This is a regular project CLAUDE.md, not Excavation Site.
+This is a regular project CLAUDE.md, not Mineshaft.
 `
 	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	if isIdentityAnchor(path) {
-		t.Error("non-Excavation Site file should not be recognized as identity anchor")
+		t.Error("non-Mineshaft file should not be recognized as identity anchor")
 	}
 }

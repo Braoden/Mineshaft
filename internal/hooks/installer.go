@@ -14,8 +14,8 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/steveyegge/excavation/internal/atomicfile"
-	"github.com/steveyegge/excavation/internal/hookutil"
+	"github.com/steveyegge/mineshaft/internal/atomicfile"
+	"github.com/steveyegge/mineshaft/internal/hookutil"
 )
 
 //go:embed templates/*
@@ -32,9 +32,9 @@ var templateFS embed.FS
 //
 // Parameters:
 //   - provider: the preset's HooksProvider (e.g., "claude", "gemini").
-//   - settingsDir: the excavation-managed parent (used by agents with --settings flag).
+//   - settingsDir: the mineshaft-managed parent (used by agents with --settings flag).
 //   - workDir: the agent's working directory.
-//   - role: the Excavation Site role (e.g., "miner", "crew", "witness").
+//   - role: the Mineshaft role (e.g., "miner", "crew", "witness").
 //   - hooksDir/hooksFile: from the preset's HooksDir and HooksSettingsFile.
 //
 // Template resolution:
@@ -81,7 +81,7 @@ func needsUpgrade(content []byte) bool {
 	if bytes.Contains(content, []byte(`export PATH=`)) {
 		return true
 	}
-	if bytes.Contains(content, []byte(`Excavation Site OpenCode plugin`)) {
+	if bytes.Contains(content, []byte(`Mineshaft OpenCode plugin`)) {
 		return bytes.Contains(content, []byte(`captureRun("gt prime")`)) ||
 			bytes.Contains(content, []byte("$`gt prime`")) ||
 			!bytes.Contains(content, []byte(`prime --hook`))

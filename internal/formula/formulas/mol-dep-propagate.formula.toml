@@ -111,7 +111,7 @@ description = """
 Send notifications to Witnesses of affected rigs.
 
 **1. Group dependents by rig:**
-- excavation/witness: for gt-* issues
+- mineshaft/witness: for gt-* issues
 - beads/witness: for bd-* issues
 - etc.
 

@@ -463,7 +463,7 @@ func TestIntegration_StartupPromptInjection(t *testing.T) {
 	defer cancel()
 
 	p := NewProxy()
-	testPrompt := "GAS TOWN INTEGRATION TEST PROMPT"
+	testPrompt := "MINESHAFT INTEGRATION TEST PROMPT"
 	p.SetStartupPrompt(testPrompt)
 
 	tmpDir := t.TempDir()
@@ -501,7 +501,7 @@ func TestIntegration_PropulsionNotificationFormat(t *testing.T) {
 
 	propulsionParams := map[string]any{
 		"role":    "miner",
-		"rig":     "excavation",
+		"rig":     "mineshaft",
 		"message": "Miner nux checking in",
 	}
 

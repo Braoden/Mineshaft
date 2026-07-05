@@ -116,20 +116,20 @@ func TestLoadSaveOverrideRigRole(t *testing.T) {
 
 	cfg := &HooksConfig{
 		SessionStart: []HookEntry{
-			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "echo excavation-crew"}}},
+			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "echo mineshaft-crew"}}},
 		},
 	}
 
-	if err := SaveOverride("excavation/crew", cfg); err != nil {
+	if err := SaveOverride("mineshaft/crew", cfg); err != nil {
 		t.Fatalf("SaveOverride failed: %v", err)
 	}
 
-	expectedPath := filepath.Join(tmpDir, ".gt", "hooks-overrides", "excavation__crew.json")
+	expectedPath := filepath.Join(tmpDir, ".gt", "hooks-overrides", "mineshaft__crew.json")
 	if _, err := os.Stat(expectedPath); err != nil {
 		t.Fatalf("expected override file at %s: %v", expectedPath, err)
 	}
 
-	loaded, err := LoadOverride("excavation/crew")
+	loaded, err := LoadOverride("mineshaft/crew")
 	if err != nil {
 		t.Fatalf("LoadOverride failed: %v", err)
 	}
@@ -167,16 +167,16 @@ func TestValidTarget(t *testing.T) {
 		{"overseer", true},
 		{"supervisor", true},
 		{"rig", false},
-		{"excavation/rig", false},
-		{"excavation/crew", true},
+		{"mineshaft/rig", false},
+		{"mineshaft/crew", true},
 		{"beads/witness", true},
 		{"sky/miners", true},
 		{"wyvern/refinery", true},
 		{"", false},
 		{"invalid", false},
-		{"excavation/invalid", false},
+		{"mineshaft/invalid", false},
 		{"/crew", false},
-		{"excavation/", false},
+		{"mineshaft/", false},
 	}
 
 	for _, tt := range tests {
@@ -197,11 +197,11 @@ func TestNormalizeTarget(t *testing.T) {
 		{"crew", "crew", true},
 		{"miners", "miners", true},
 		{"miner", "miners", true},
-		{"excavation/miners", "excavation/miners", true},
-		{"excavation/miner", "excavation/miners", true},
+		{"mineshaft/miners", "mineshaft/miners", true},
+		{"mineshaft/miner", "mineshaft/miners", true},
 		{"overseer", "overseer", true},
 		{"invalid", "", false},
-		{"excavation/invalid", "", false},
+		{"mineshaft/invalid", "", false},
 	}
 
 	for _, tt := range tests {
@@ -224,7 +224,7 @@ func TestGetApplicableOverrides(t *testing.T) {
 	}{
 		{"overseer", []string{"overseer"}},
 		{"crew", []string{"crew"}},
-		{"excavation/crew", []string{"crew", "excavation/crew"}},
+		{"mineshaft/crew", []string{"crew", "mineshaft/crew"}},
 		{"beads/witness", []string{"witness", "beads/witness"}},
 	}
 
@@ -429,20 +429,20 @@ func TestComputeExpected(t *testing.T) {
 
 	gcOverride := &HooksConfig{
 		SessionStart: []HookEntry{
-			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "excavation-crew-session"}}},
+			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "mineshaft-crew-session"}}},
 		},
 	}
-	if err := SaveOverride("excavation/crew", gcOverride); err != nil {
-		t.Fatalf("SaveOverride excavation/crew failed: %v", err)
+	if err := SaveOverride("mineshaft/crew", gcOverride); err != nil {
+		t.Fatalf("SaveOverride mineshaft/crew failed: %v", err)
 	}
 
-	expected, err := ComputeExpected("excavation/crew")
+	expected, err := ComputeExpected("mineshaft/crew")
 	if err != nil {
 		t.Fatalf("ComputeExpected failed: %v", err)
 	}
 
-	if len(expected.SessionStart) != 1 || expected.SessionStart[0].Hooks[0].Command != "excavation-crew-session" {
-		t.Errorf("expected excavation/crew SessionStart, got %v", expected.SessionStart)
+	if len(expected.SessionStart) != 1 || expected.SessionStart[0].Hooks[0].Command != "mineshaft-crew-session" {
+		t.Errorf("expected mineshaft/crew SessionStart, got %v", expected.SessionStart)
 	}
 	// On-disk base has no PreToolUse, so DefaultBase's 3 pr-workflow guards are
 	// backfilled. The crew override adds Bash(git*), making 4 total.
@@ -487,7 +487,7 @@ func TestComputeExpectedBackfillsSessionStart(t *testing.T) {
 	}
 
 	// All targets should get SessionStart backfilled from DefaultBase
-	for _, target := range []string{"overseer", "crew", "witness", "excavation/crew"} {
+	for _, target := range []string{"overseer", "crew", "witness", "mineshaft/crew"} {
 		expected, err := ComputeExpected(target)
 		if err != nil {
 			t.Fatalf("ComputeExpected(%s) failed: %v", target, err)
@@ -1156,7 +1156,7 @@ func TestDiscoverWorktrees_EmptyDir(t *testing.T) {
 func TestDiscoverWorktrees_PrefersNestedGitWorktreeRoots(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	worktree := filepath.Join(tmpDir, "fury", "excavation")
+	worktree := filepath.Join(tmpDir, "fury", "mineshaft")
 	if err := os.MkdirAll(filepath.Join(worktree, ".git"), 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -1203,7 +1203,7 @@ func TestTargetDisplayKey(t *testing.T) {
 		expected string
 	}{
 		{Target{Key: "overseer", Role: "overseer"}, "overseer"},
-		{Target{Key: "excavation/crew", Rig: "excavation", Role: "crew"}, "excavation/crew"},
+		{Target{Key: "mineshaft/crew", Rig: "mineshaft", Role: "crew"}, "mineshaft/crew"},
 		{Target{Key: "beads/witness", Rig: "beads", Role: "witness"}, "beads/witness"},
 	}
 

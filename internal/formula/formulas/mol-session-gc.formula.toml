@@ -2,7 +2,7 @@ description = """
 Clean stale sessions and garbage collect.
 
 Dogs work through molecules (poured from this formula) to clean up dead sessions, orphaned processes, and
-other system cruft. This is the garbage collector for Excavation Site's runtime:
+other system cruft. This is the garbage collector for Mineshaft's runtime:
 - Dead tmux sessions (no Claude process)
 - Orphaned Claude processes (no tmux parent)
 - Stale wisps past retention

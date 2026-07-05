@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/beads"
 )
 
 // TestFixWorkDir_HQ verifies that Fix() resolves the "hq" rig name to the
@@ -65,7 +65,7 @@ func TestNoHeuristicClassification(t *testing.T) {
 
 func TestRunIgnoresJSONLWhenDoltUnavailable(t *testing.T) {
 	townRoot := t.TempDir()
-	beadsDir := filepath.Join(townRoot, "excavation", ".beads")
+	beadsDir := filepath.Join(townRoot, "mineshaft", ".beads")
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -104,7 +104,7 @@ func TestGetRigPathForPrefix_RoutesResolution(t *testing.T) {
 	// Create routes.jsonl with custom rig paths
 	routesContent := `{"prefix":"hq-","path":"."}
 {"prefix":"sw-","path":"sallaWork/overseer/rig"}
-{"prefix":"gt-","path":"excavation/overseer/rig"}
+{"prefix":"gt-","path":"mineshaft/overseer/rig"}
 `
 	routesPath := filepath.Join(beadsDir, "routes.jsonl")
 	if err := os.WriteFile(routesPath, []byte(routesContent), 0644); err != nil {
@@ -129,7 +129,7 @@ func TestGetRigPathForPrefix_RoutesResolution(t *testing.T) {
 		{
 			name:     "gt prefix resolves to custom path",
 			prefix:   "gt-",
-			wantPath: filepath.Join(tmpDir, "excavation/overseer/rig"),
+			wantPath: filepath.Join(tmpDir, "mineshaft/overseer/rig"),
 		},
 		{
 			name:     "unknown prefix returns empty",

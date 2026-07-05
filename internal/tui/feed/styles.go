@@ -1,10 +1,10 @@
-// Package feed provides a TUI for the Excavation Site activity feed.
+// Package feed provides a TUI for the Mineshaft activity feed.
 package feed
 
 import (
 	"github.com/charmbracelet/lipgloss"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/ui"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/ui"
 )
 
 // Color palette using Ayu theme colors from ui package

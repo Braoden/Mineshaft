@@ -12,8 +12,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/steveyegge/excavation/internal/atomicfile"
-	"github.com/steveyegge/excavation/internal/lock"
+	"github.com/steveyegge/mineshaft/internal/atomicfile"
+	"github.com/steveyegge/mineshaft/internal/lock"
 )
 
 const (
@@ -52,7 +52,7 @@ var BuiltinThemes = map[string][]string{
 		"immortan", "bullet", "toecutter", "goose", "nightrider",
 		"glory", "scrotus", "chumbucket", "corpus", "dinki",
 		"prime", "vuvalini", "rockryder", "wretched", "buzzard",
-		"excavation", "bullet-farmer", "citadel", "wasteland", "fury",
+		"mineshaft", "bullet-farmer", "citadel", "wasteland", "fury",
 		"road-warrior", "interceptor", "blackfinger", "wraith", "witness",
 		"chrome", "shiny", "mediocre", "guzzoline", "aqua-cola",
 	},
@@ -373,7 +373,7 @@ func (p *NamePool) Reconcile(existingMiners []string) {
 
 // formatOverflowName formats an overflow sequence number as a name.
 // Returns just the number (e.g., "51") since SessionName will add the rig prefix.
-// This prevents double-prefix bugs like "gt-excavation_manager-excavation_manager-51".
+// This prevents double-prefix bugs like "gt-mineshaft_manager-mineshaft_manager-51".
 func (p *NamePool) formatOverflowName(seq int) string {
 	return fmt.Sprintf("%d", seq)
 }

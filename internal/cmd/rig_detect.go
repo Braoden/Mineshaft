@@ -11,9 +11,9 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/state"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/state"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var rigDetectCache string
@@ -25,9 +25,9 @@ var rigDetectCmd = &cobra.Command{
 	Long: `Detect rig from a repository path and optionally cache the result.
 
 This is an internal command used by shell integration. It checks if the given
-path is inside a Excavation Site rig and outputs shell variable assignments.
+path is inside a Mineshaft rig and outputs shell variable assignments.
 
-When --cache is specified, the result is written to ~/.cache/excavation/rigs.cache
+When --cache is specified, the result is written to ~/.cache/mineshaft/rigs.cache
 for fast lookups by the shell hook.
 
 Output format (to stdout):

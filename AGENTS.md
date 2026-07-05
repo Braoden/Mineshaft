@@ -71,13 +71,13 @@ git push              # Push to remote
 
 <!-- end-beads-agent-instructions -->
 
-<!-- excavation-agent-instructions-v1 -->
+<!-- mineshaft-agent-instructions-v1 -->
 
 ---
 
-## Excavation Site Multi-Agent Communication
+## Mineshaft Multi-Agent Communication
 
-This workspace is part of a **Excavation Site** multi-agent environment. You communicate
+This workspace is part of a **Mineshaft** multi-agent environment. You communicate
 with other agents using `gt` commands — never by printing text or using raw tmux.
 
 ### Nudging Agents (Immediate Delivery)
@@ -135,7 +135,7 @@ gt hook               # Check for assigned work
 gt mail inbox         # Check for messages
 ```
 
-<!-- end-excavation-agent-instructions -->
+<!-- end-mineshaft-agent-instructions -->
 
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:ca08a54f -->
 ## Beads Issue Tracker

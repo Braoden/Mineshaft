@@ -158,20 +158,20 @@ func TestMergeHooksRigRoleLayering(t *testing.T) {
 				{Matcher: "", Hooks: []Hook{{Type: "command", Command: "crew-prime"}}},
 			},
 		},
-		"excavation/crew": {
+		"mineshaft/crew": {
 			SessionStart: []HookEntry{
-				{Matcher: "", Hooks: []Hook{{Type: "command", Command: "excavation-crew-prime"}}},
+				{Matcher: "", Hooks: []Hook{{Type: "command", Command: "mineshaft-crew-prime"}}},
 			},
 		},
 	}
 
-	result := MergeHooks(base, overrides, "excavation/crew")
+	result := MergeHooks(base, overrides, "mineshaft/crew")
 
 	// rig+role override should win (applied last)
 	if len(result.SessionStart) != 1 {
 		t.Fatalf("expected 1 SessionStart, got %d", len(result.SessionStart))
 	}
-	if result.SessionStart[0].Hooks[0].Command != "excavation-crew-prime" {
+	if result.SessionStart[0].Hooks[0].Command != "mineshaft-crew-prime" {
 		t.Errorf("expected rig+role override, got %q", result.SessionStart[0].Hooks[0].Command)
 	}
 }
@@ -240,11 +240,11 @@ func TestLoadAllOverrides(t *testing.T) {
 
 	gasCrewOverride := &HooksConfig{
 		SessionStart: []HookEntry{
-			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "excavation-prime"}}},
+			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "mineshaft-prime"}}},
 		},
 	}
-	if err := SaveOverride("excavation/crew", gasCrewOverride); err != nil {
-		t.Fatalf("SaveOverride excavation/crew: %v", err)
+	if err := SaveOverride("mineshaft/crew", gasCrewOverride); err != nil {
+		t.Fatalf("SaveOverride mineshaft/crew: %v", err)
 	}
 
 	overrides, err := LoadAllOverrides()
@@ -259,8 +259,8 @@ func TestLoadAllOverrides(t *testing.T) {
 	if _, ok := overrides["crew"]; !ok {
 		t.Error("missing 'crew' override")
 	}
-	if _, ok := overrides["excavation/crew"]; !ok {
-		t.Error("missing 'excavation/crew' override")
+	if _, ok := overrides["mineshaft/crew"]; !ok {
+		t.Error("missing 'mineshaft/crew' override")
 	}
 }
 

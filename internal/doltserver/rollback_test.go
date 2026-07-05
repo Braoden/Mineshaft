@@ -85,7 +85,7 @@ func TestFindBackups_IgnoresNonBackupDirs(t *testing.T) {
 	townRoot := t.TempDir()
 
 	// Create some non-backup directories
-	for _, name := range []string{"excavation", ".beads", "migration-backup-", "not-a-backup"} {
+	for _, name := range []string{"mineshaft", ".beads", "migration-backup-", "not-a-backup"} {
 		if err := os.MkdirAll(filepath.Join(townRoot, name), 0755); err != nil {
 			t.Fatal(err)
 		}
@@ -121,7 +121,7 @@ func TestRestoreFromBackup_FormulaStyle(t *testing.T) {
 	}
 
 	// Rig-level backup
-	rigBackupBeads := filepath.Join(backupDir, "excavation-beads")
+	rigBackupBeads := filepath.Join(backupDir, "mineshaft-beads")
 	if err := os.MkdirAll(rigBackupBeads, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -140,7 +140,7 @@ func TestRestoreFromBackup_FormulaStyle(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	rigBeads := filepath.Join(townRoot, "excavation", ".beads")
+	rigBeads := filepath.Join(townRoot, "mineshaft", ".beads")
 	if err := os.MkdirAll(rigBeads, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -159,8 +159,8 @@ func TestRestoreFromBackup_FormulaStyle(t *testing.T) {
 	if !result.RestoredTown {
 		t.Error("expected RestoredTown to be true")
 	}
-	if len(result.RestoredRigs) != 1 || result.RestoredRigs[0] != "excavation" {
-		t.Errorf("RestoredRigs = %v, want [excavation]", result.RestoredRigs)
+	if len(result.RestoredRigs) != 1 || result.RestoredRigs[0] != "mineshaft" {
+		t.Errorf("RestoredRigs = %v, want [mineshaft]", result.RestoredRigs)
 	}
 
 	// Verify metadata.json was reset to pre-migration state
@@ -177,7 +177,7 @@ func TestRestoreFromBackup_FormulaStyle(t *testing.T) {
 	}
 
 	// Verify rig metadata was reset
-	data, err = os.ReadFile(filepath.Join(townRoot, "excavation", ".beads", "metadata.json"))
+	data, err = os.ReadFile(filepath.Join(townRoot, "mineshaft", ".beads", "metadata.json"))
 	if err != nil {
 		t.Fatalf("reading restored rig metadata: %v", err)
 	}
@@ -206,7 +206,7 @@ func TestRestoreFromBackup_TestBackupStyle(t *testing.T) {
 	}
 
 	// Rig-level backup in rigs/ subdirectory
-	rigBackup := filepath.Join(backupDir, "rigs", "excavation", ".beads")
+	rigBackup := filepath.Join(backupDir, "rigs", "mineshaft", ".beads")
 	if err := os.MkdirAll(rigBackup, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -219,7 +219,7 @@ func TestRestoreFromBackup_TestBackupStyle(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", ".beads"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft", ".beads"), 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -231,8 +231,8 @@ func TestRestoreFromBackup_TestBackupStyle(t *testing.T) {
 	if !result.RestoredTown {
 		t.Error("expected RestoredTown to be true")
 	}
-	if len(result.RestoredRigs) != 1 || result.RestoredRigs[0] != "excavation" {
-		t.Errorf("RestoredRigs = %v, want [excavation]", result.RestoredRigs)
+	if len(result.RestoredRigs) != 1 || result.RestoredRigs[0] != "mineshaft" {
+		t.Errorf("RestoredRigs = %v, want [mineshaft]", result.RestoredRigs)
 	}
 }
 

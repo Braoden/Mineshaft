@@ -8,7 +8,7 @@ type OrphanedProcess struct {
 	PID      int
 	Cmd      string
 	Age      int    // Age in seconds
-	TownRoot string // Excavation Site workspace root, or "" if not in any workspace
+	TownRoot string // Mineshaft workspace root, or "" if not in any workspace
 }
 
 // CleanupResult describes what happened to an orphaned process.
@@ -26,7 +26,7 @@ type ZombieProcess struct {
 	Cmd      string
 	Age      int    // Age in seconds
 	TTY      string // TTY column from ps
-	TownRoot string // Excavation Site workspace root, or "" if not in any workspace
+	TownRoot string // Mineshaft workspace root, or "" if not in any workspace
 }
 
 // ZombieCleanupResult describes what happened to a zombie process.

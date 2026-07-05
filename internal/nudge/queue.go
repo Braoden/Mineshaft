@@ -1,4 +1,4 @@
-// Package nudge provides non-destructive nudge delivery for Excavation Site agents.
+// Package nudge provides non-destructive nudge delivery for Mineshaft agents.
 //
 // The nudge queue allows messages to be delivered cooperatively: instead of
 // sending text directly to a tmux session (which cancels in-flight tool calls),
@@ -20,8 +20,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
 )
 
 // Priority levels for nudge delivery.

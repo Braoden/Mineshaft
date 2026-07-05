@@ -11,14 +11,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/nudge"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/telemetry"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/nudge"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/telemetry"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // ErrUnknownList indicates a mailing list name was not found in configuration.
@@ -355,7 +355,7 @@ type agentBead struct {
 // Handles multiple ID formats:
 //   - hq-overseer → overseer/
 //   - hq-supervisor → supervisor/
-//   - gt-excavation-crew-max → excavation/max (legacy)
+//   - gt-mineshaft-crew-max → mineshaft/max (legacy)
 //   - ppf-pyspark_pipeline_framework-miner-Toast → pyspark_pipeline_framework/Toast (rig prefix)
 func agentBeadToAddress(bead *agentBead) string {
 	if bead == nil {
@@ -1014,7 +1014,7 @@ func (r *Router) validateAgentWorkspace(identity string) bool {
 		return dirExists(filepath.Join(r.townRoot, name))
 	case 2:
 		rig, name := parts[0], parts[1]
-		// Singleton role: excavation/witness, excavation/refinery
+		// Singleton role: mineshaft/witness, mineshaft/refinery
 		if dirExists(filepath.Join(r.townRoot, rig, name)) {
 			return true
 		}
@@ -1647,7 +1647,7 @@ func (r *Router) notifyRecipient(msg *Message) error {
 		// fall back to cooperative queue if busy. WaitForIdle requires 2
 		// consecutive idle polls (prompt visible + no "esc to interrupt"
 		// in the status bar) to distinguish genuine idle from brief
-		// inter-tool-call gaps. See: https://github.com/steveyegge/excavation/issues/2032
+		// inter-tool-call gaps. See: https://github.com/steveyegge/mineshaft/issues/2032
 		waitErr := r.tmux.WaitForIdle(sessionID, timeout)
 		if waitErr == nil {
 			// Agent is idle — deliver directly for immediate wakeup.
@@ -1934,7 +1934,7 @@ func AddressToSessionIDs(address string) []string {
 	rigPrefix := session.PrefixFor(rig)
 
 	// If target already has crew/, miner/, or miners/ prefix, use it directly
-	// e.g., "excavation/crew/holden" → "gt-crew-holden"
+	// e.g., "mineshaft/crew/holden" → "gt-crew-holden"
 	if strings.HasPrefix(target, "crew/") {
 		crewName := strings.TrimPrefix(target, "crew/")
 		return []string{session.CrewSessionName(rigPrefix, crewName)}
@@ -1956,7 +1956,7 @@ func AddressToSessionIDs(address string) []string {
 		return []string{session.RefinerySessionName(rigPrefix)}
 	}
 
-	// For normalized addresses like "excavation/holden", try both:
+	// For normalized addresses like "mineshaft/holden", try both:
 	// 1. Crew format: gt-crew-holden
 	// 2. Miner format: gt-holden
 	// Return crew first since crew workers are more commonly missed.

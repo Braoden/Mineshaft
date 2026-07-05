@@ -175,11 +175,11 @@ description = "Require at least one approving GitHub review before merging (only
 default = "false"
 
 [vars.rig]
-description = "Name of the rig this refinery belongs to (e.g., excavation, laser)"
+description = "Name of the rig this refinery belongs to (e.g., mineshaft, laser)"
 default = "UNSET_RIG"
 
 [vars.prefix]
-description = "Beads prefix for this rig (e.g., gt for excavation, la for laser)"
+description = "Beads prefix for this rig (e.g., gt for mineshaft, la for laser)"
 default = "gt"
 
 [[steps]]
@@ -648,7 +648,7 @@ Automated merge from miner branch.
 - **Tests**: Passed (verified by refinery)
 
 ---
-*Created by Excavation Site Refinery*")
+*Created by Mineshaft Refinery*")
 echo "PR created: $PR_URL"
 ```
 

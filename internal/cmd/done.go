@@ -13,19 +13,19 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/events"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/mail"
-	"github.com/steveyegge/excavation/internal/miner"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/telemetry"
-	"github.com/steveyegge/excavation/internal/templates"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/events"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/mail"
+	"github.com/steveyegge/mineshaft/internal/miner"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/telemetry"
+	"github.com/steveyegge/mineshaft/internal/templates"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var doneCmd = &cobra.Command{
@@ -375,7 +375,7 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 	// getcwd will fail. We fall back to GT_TOWN_ROOT env var in that case.
 	townRoot, cwd, err := workspace.FindFromCwdWithFallback()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Track if cwd is available - affects which operations we can do
@@ -614,7 +614,7 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 			if addErr := g.Add("-A"); addErr != nil {
 				style.PrintWarning("auto-commit: git add failed: %v — uncommitted work may be at risk", addErr)
 			} else {
-				// Unstage Excavation Site overlay files that git add -A picked up.
+				// Unstage Mineshaft overlay files that git add -A picked up.
 				// These are runtime artifacts that must not be committed to repos.
 				_ = g.ResetFiles("CLAUDE.local.md")
 				// Only unstage CLAUDE.md if it contains the overlay marker
@@ -838,7 +838,7 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 		// If no commits ahead, work was likely already merged or is a legitimate
 		// report-only completion. Fork-backed rigs must not infer success from fork main.
 		// For miners, zero commits usually means the miner sleepwalked through
-		// implementation without writing code (excavation#1484, beads#emma).
+		// implementation without writing code (mineshaft#1484, beads#emma).
 		// The --cleanup-status=clean escape is preserved for legitimate report-only
 		// tasks (audits, reviews) that the formula explicitly directs to use it.
 		// no_merge/review_only tasks (GH#2496, gt-kvf) also bypass: non-code work has no commits by design.
@@ -988,7 +988,7 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 			}
 		}
 
-		// Strip Excavation Site overlay from CLAUDE.md / CLAUDE.local.md (gt-p35).
+		// Strip Mineshaft overlay from CLAUDE.md / CLAUDE.local.md (gt-p35).
 		// Miners commit the overlay (miner lifecycle boilerplate) into repos,
 		// overwriting project-specific CLAUDE.md content. Detect and revert before push.
 		if stripped := stripOverlayCLAUDEmd(g, defaultBranch, baseRef); stripped {
@@ -2484,13 +2484,13 @@ func parseCleanupStatus(s string) miner.CleanupStatus {
 
 // isMinerActor checks if a BD_ACTOR value represents a miner.
 // Miner actors have format: rigname/miners/minername
-// Non-miner actors have formats like: excavation/crew/name, rigname/witness, etc.
+// Non-miner actors have formats like: mineshaft/crew/name, rigname/witness, etc.
 func isMinerActor(actor string) bool {
 	parts := strings.Split(actor, "/")
 	return len(parts) >= 2 && parts[1] == "miners"
 }
 
-// stripOverlayCLAUDEmd detects and removes Excavation Site overlay content from CLAUDE.md
+// stripOverlayCLAUDEmd detects and removes Mineshaft overlay content from CLAUDE.md
 // and CLAUDE.local.md before the branch is pushed. Miners were committing the
 // overlay (which contains miner lifecycle boilerplate like "Idle Miner Heresy",
 // "gt done" protocol, etc.) into actual repos, overwriting project-specific CLAUDE.md
@@ -2547,7 +2547,7 @@ func stripOverlayCLAUDEmd(g *git.Git, defaultBranch, baseRef string) bool {
 				if coErr := g.CheckoutFileFromRef(baseRef, "CLAUDE.md"); coErr == nil {
 					if addErr := g.Add("CLAUDE.md"); addErr == nil {
 						needsCommit = true
-						fmt.Printf("%s Restored original CLAUDE.md (stripped Excavation Site overlay)\n",
+						fmt.Printf("%s Restored original CLAUDE.md (stripped Mineshaft overlay)\n",
 							style.Bold.Render("→"))
 					}
 				}
@@ -2559,7 +2559,7 @@ func stripOverlayCLAUDEmd(g *git.Git, defaultBranch, baseRef string) bool {
 	if claudeLocalChanged {
 		if rmErr := g.RmCached("CLAUDE.local.md"); rmErr == nil {
 			needsCommit = true
-			fmt.Printf("%s Removed CLAUDE.local.md from branch (Excavation Site overlay)\n",
+			fmt.Printf("%s Removed CLAUDE.local.md from branch (Mineshaft overlay)\n",
 				style.Bold.Render("→"))
 		}
 	}
@@ -2569,12 +2569,12 @@ func stripOverlayCLAUDEmd(g *git.Git, defaultBranch, baseRef string) bool {
 	}
 
 	// Create cleanup commit
-	if commitErr := g.Commit("chore: strip Excavation Site overlay from CLAUDE.md (gt-p35)"); commitErr != nil {
+	if commitErr := g.Commit("chore: strip Mineshaft overlay from CLAUDE.md (gt-p35)"); commitErr != nil {
 		style.PrintWarning("failed to create overlay cleanup commit: %v", commitErr)
 		return false
 	}
 
-	fmt.Printf("%s Created cleanup commit to remove Excavation Site overlay files\n",
+	fmt.Printf("%s Created cleanup commit to remove Mineshaft overlay files\n",
 		style.Bold.Render("✓"))
 	return true
 }

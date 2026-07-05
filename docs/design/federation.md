@@ -2,11 +2,11 @@
 
 > **Status: Partially implemented** -- Infrastructure (Dolt remotes) exists. Core federation features (URI scheme, cross-workspace queries, delegation) are not yet implemented.
 
-Multi-workspace coordination for Excavation Site and Beads.
+Multi-workspace coordination for Mineshaft and Beads.
 
 ## Overview
 
-Federation enables multiple Excavation Site instances to reference each other's work,
+Federation enables multiple Mineshaft instances to reference each other's work,
 coordinate across organizations, and track distributed projects.
 
 ## Entity Model
@@ -114,7 +114,7 @@ Town-level Dolt databases have remotes configured pointing to DoltHub:
 ```bash
 # Check configured remotes for town database
 cd ~/gt/.dolt-data/town && dolt remote -v
-# origin https://doltremoteapi.dolthub.com/steveyegge/excavation-town {}
+# origin https://doltremoteapi.dolthub.com/steveyegge/mineshaft-town {}
 # local  http://localhost:8000/town {}
 ```
 
@@ -122,10 +122,10 @@ cd ~/gt/.dolt-data/town && dolt remote -v
 
 | Database | Remote Name | URL | Purpose |
 |----------|-------------|-----|---------|
-| town | origin | `steveyegge/excavation-town` | DoltHub public federation |
+| town | origin | `steveyegge/mineshaft-town` | DoltHub public federation |
 | town | local | `http://localhost:8000/town` | Local development/testing |
-| excavation | origin | `steveyegge/excavation-rig` | DoltHub public federation |
-| beads | origin | `steveyegge/excavation-beads` | DoltHub public federation |
+| mineshaft | origin | `steveyegge/mineshaft-rig` | DoltHub public federation |
+| beads | origin | `steveyegge/mineshaft-beads` | DoltHub public federation |
 
 ### Federation Endpoint Options
 
@@ -161,7 +161,7 @@ For private federation within an organization:
 
 **4. Direct Town-to-Town (Advanced)**
 
-Two Excavation Site instances federating directly:
+Two Mineshaft instances federating directly:
 - Town A runs remotesapi on accessible endpoint
 - Town B adds Town A as remote: `dolt remote add town-a http://town-a.example.com:8000/town`
 
@@ -178,7 +178,7 @@ To push/pull from configured remotes:
 
 2. **Create DoltHub Repository:**
    - Visit https://www.dolthub.com
-   - Create repository matching remote name (e.g., `steveyegge/excavation-town`)
+   - Create repository matching remote name (e.g., `steveyegge/mineshaft-town`)
 
 3. **Initial Push:**
    ```bash

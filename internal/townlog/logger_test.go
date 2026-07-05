@@ -21,27 +21,27 @@ func TestFormatLogLine(t *testing.T) {
 			event: Event{
 				Timestamp: ts,
 				Type:      EventSpawn,
-				Agent:     "excavation/crew/max",
+				Agent:     "mineshaft/crew/max",
 				Context:   "gt-xyz",
 			},
-			contains: []string{"2025-12-26 15:30:45", "[spawn]", "excavation/crew/max", "spawned for gt-xyz"},
+			contains: []string{"2025-12-26 15:30:45", "[spawn]", "mineshaft/crew/max", "spawned for gt-xyz"},
 		},
 		{
 			name: "nudge event",
 			event: Event{
 				Timestamp: ts,
 				Type:      EventNudge,
-				Agent:     "excavation/crew/max",
+				Agent:     "mineshaft/crew/max",
 				Context:   "start work",
 			},
-			contains: []string{"[nudge]", "excavation/crew/max", "nudged with"},
+			contains: []string{"[nudge]", "mineshaft/crew/max", "nudged with"},
 		},
 		{
 			name: "done event",
 			event: Event{
 				Timestamp: ts,
 				Type:      EventDone,
-				Agent:     "excavation/crew/max",
+				Agent:     "mineshaft/crew/max",
 				Context:   "gt-abc",
 			},
 			contains: []string{"[done]", "completed gt-abc"},
@@ -51,7 +51,7 @@ func TestFormatLogLine(t *testing.T) {
 			event: Event{
 				Timestamp: ts,
 				Type:      EventCrash,
-				Agent:     "excavation/miners/Toast",
+				Agent:     "mineshaft/miners/Toast",
 				Context:   "signal 9",
 			},
 			contains: []string{"[crash]", "exited unexpectedly", "signal 9"},
@@ -61,7 +61,7 @@ func TestFormatLogLine(t *testing.T) {
 			event: Event{
 				Timestamp: ts,
 				Type:      EventKill,
-				Agent:     "excavation/miners/Toast",
+				Agent:     "mineshaft/miners/Toast",
 				Context:   "gt stop",
 			},
 			contains: []string{"[kill]", "killed", "gt stop"},
@@ -89,16 +89,16 @@ func TestParseLogLine(t *testing.T) {
 	}{
 		{
 			name: "valid spawn line",
-			line: "2025-12-26 15:30:45 [spawn] excavation/crew/max spawned for gt-xyz",
+			line: "2025-12-26 15:30:45 [spawn] mineshaft/crew/max spawned for gt-xyz",
 			check: func(e Event) bool {
-				return e.Type == EventSpawn && e.Agent == "excavation/crew/max"
+				return e.Type == EventSpawn && e.Agent == "mineshaft/crew/max"
 			},
 		},
 		{
 			name: "valid nudge line",
-			line: "2025-12-26 15:31:02 [nudge] excavation/crew/max nudged with \"start\"",
+			line: "2025-12-26 15:31:02 [nudge] mineshaft/crew/max nudged with \"start\"",
 			check: func(e Event) bool {
-				return e.Type == EventNudge && e.Agent == "excavation/crew/max"
+				return e.Type == EventNudge && e.Agent == "mineshaft/crew/max"
 			},
 		},
 		{
@@ -108,7 +108,7 @@ func TestParseLogLine(t *testing.T) {
 		},
 		{
 			name:    "missing bracket",
-			line:    "2025-12-26 15:30:45 spawn excavation/crew/max",
+			line:    "2025-12-26 15:30:45 spawn mineshaft/crew/max",
 			wantErr: true,
 		},
 	}
@@ -144,7 +144,7 @@ func TestLoggerLogEvent(t *testing.T) {
 	logger := NewLogger(tmpDir)
 
 	// Log an event
-	err = logger.Log(EventSpawn, "excavation/crew/max", "gt-xyz")
+	err = logger.Log(EventSpawn, "mineshaft/crew/max", "gt-xyz")
 	if err != nil {
 		t.Fatalf("Log() error: %v", err)
 	}
@@ -159,7 +159,7 @@ func TestLoggerLogEvent(t *testing.T) {
 	if !strings.Contains(string(content), "[spawn]") {
 		t.Errorf("log file should contain [spawn], got: %s", content)
 	}
-	if !strings.Contains(string(content), "excavation/crew/max") {
+	if !strings.Contains(string(content), "mineshaft/crew/max") {
 		t.Errorf("log file should contain agent name, got: %s", content)
 	}
 }
@@ -167,9 +167,9 @@ func TestLoggerLogEvent(t *testing.T) {
 func TestFilterEvents(t *testing.T) {
 	now := time.Now()
 	events := []Event{
-		{Timestamp: now.Add(-2 * time.Hour), Type: EventSpawn, Agent: "excavation/crew/max", Context: "gt-1"},
-		{Timestamp: now.Add(-1 * time.Hour), Type: EventNudge, Agent: "excavation/crew/max", Context: "hi"},
-		{Timestamp: now.Add(-30 * time.Minute), Type: EventDone, Agent: "excavation/miners/Toast", Context: "gt-2"},
+		{Timestamp: now.Add(-2 * time.Hour), Type: EventSpawn, Agent: "mineshaft/crew/max", Context: "gt-1"},
+		{Timestamp: now.Add(-1 * time.Hour), Type: EventNudge, Agent: "mineshaft/crew/max", Context: "hi"},
+		{Timestamp: now.Add(-30 * time.Minute), Type: EventDone, Agent: "mineshaft/miners/Toast", Context: "gt-2"},
 		{Timestamp: now.Add(-10 * time.Minute), Type: EventSpawn, Agent: "wyvern/crew/joe", Context: "gt-3"},
 	}
 
@@ -190,7 +190,7 @@ func TestFilterEvents(t *testing.T) {
 		},
 		{
 			name:      "filter by agent prefix",
-			filter:    Filter{Agent: "excavation/"},
+			filter:    Filter{Agent: "mineshaft/"},
 			wantCount: 3,
 		},
 		{
@@ -200,7 +200,7 @@ func TestFilterEvents(t *testing.T) {
 		},
 		{
 			name:      "combined filters",
-			filter:    Filter{Type: EventSpawn, Agent: "excavation/"},
+			filter:    Filter{Type: EventSpawn, Agent: "mineshaft/"},
 			wantCount: 1,
 		},
 	}
@@ -239,7 +239,7 @@ func TestTruncate(t *testing.T) {
 func TestEventHandoffNoPersist_Format(t *testing.T) {
 	e := Event{
 		Type:    EventHandoffNoPersist,
-		Agent:   "excavation/crew/max",
+		Agent:   "mineshaft/crew/max",
 		Context: "session cycling — error: connection refused",
 	}
 	line := formatLogLine(e)
@@ -267,7 +267,7 @@ func TestEventHandoffNoPersist_ParseRoundTrip(t *testing.T) {
 	logPath := filepath.Join(tmpDir, "town.log")
 	logger := &Logger{logPath: logPath}
 
-	if err := logger.Log(EventHandoffNoPersist, "excavation/crew/max", "test failure"); err != nil {
+	if err := logger.Log(EventHandoffNoPersist, "mineshaft/crew/max", "test failure"); err != nil {
 		t.Fatal(err)
 	}
 

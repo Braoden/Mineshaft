@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest a new feature for Excavation Site
+about: Suggest a new feature for Mineshaft
 title: ''
 labels: enhancement
 assignees: ''

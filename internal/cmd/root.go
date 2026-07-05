@@ -11,20 +11,20 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/cli"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/miner"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/telemetry"
-	"github.com/steveyegge/excavation/internal/ui"
-	"github.com/steveyegge/excavation/internal/version"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/cli"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/miner"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/telemetry"
+	"github.com/steveyegge/mineshaft/internal/ui"
+	"github.com/steveyegge/mineshaft/internal/version"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var rootCmd = &cobra.Command{
 	Use:               "gt", // Updated in init() based on GT_COMMAND
-	Short:             "Excavation Site - Multi-agent workspace manager",
+	Short:             "Mineshaft - Multi-agent workspace manager",
 	Version:           Version,
 	Long:              "", // Updated in init() based on GT_COMMAND
 	PersistentPreRunE: persistentPreRun,
@@ -34,7 +34,7 @@ func init() {
 	// Update command name based on GT_COMMAND env var
 	cmdName := cli.Name()
 	rootCmd.Use = cmdName
-	rootCmd.Long = fmt.Sprintf(`Excavation Site (%s) manages multi-agent workspaces called rigs.
+	rootCmd.Long = fmt.Sprintf(`Mineshaft (%s) manages multi-agent workspaces called rigs.
 
 It coordinates agent spawning, work distribution, and communication
 across distributed teams of AI agents working on shared codebases.`, cmdName)
@@ -292,7 +292,7 @@ func checkStaleBinaryWarning() {
 		msg := info.Describe("gt binary")
 		fmt.Fprintf(os.Stderr, "%s %s\n", style.WarningPrefix, msg)
 		if info.IsForward && info.OnMainBranch {
-			fmt.Fprintf(os.Stderr, "    %s Run 'make install' in excavation repo to update\n", style.ArrowPrefix)
+			fmt.Fprintf(os.Stderr, "    %s Run 'make install' in mineshaft repo to update\n", style.ArrowPrefix)
 		} else {
 			fmt.Fprintf(os.Stderr, "    %s Run 'gt stale' for details; switch to a build branch before rebuilding\n", style.ArrowPrefix)
 		}
@@ -303,7 +303,7 @@ func checkStaleBinaryWarning() {
 // The caller (main) should call os.Exit with this code.
 func Execute() int {
 	ctx := context.Background()
-	provider, err := telemetry.Init(ctx, "excavation", Version)
+	provider, err := telemetry.Init(ctx, "mineshaft", Version)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "warning: telemetry init: %v\n", err)
 	}

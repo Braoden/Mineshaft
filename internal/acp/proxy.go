@@ -14,7 +14,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/mineshaft/internal/style"
 )
 
 type handshakeState int
@@ -756,7 +756,7 @@ func (p *Proxy) trackPromptResponse(msg *JSONRPCMessage) {
 			p.propulsionBuffer = ""
 		}
 
-		if idStr == "excavation-startup-prompt" {
+		if idStr == "mineshaft-startup-prompt" {
 			p.setStartupPromptState(startupPromptStateComplete)
 		}
 	}
@@ -806,7 +806,7 @@ func (p *Proxy) injectStartupPrompt() error {
 
 	req := JSONRPCMessage{
 		JSONRPC: "2.0",
-		ID:      "excavation-startup-prompt",
+		ID:      "mineshaft-startup-prompt",
 		Method:  "session/prompt",
 		Params:  paramsBytes,
 	}

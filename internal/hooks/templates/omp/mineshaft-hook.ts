@@ -1,6 +1,6 @@
-// Excavation Site oh-my-pi (omp) hook — lifecycle integration for Excavation Site agents.
-// Mirrors the same events as Claude's settings-autonomous.json and pi-mono's excavation-hooks.js.
-// Inspired by ProbabilityEngineer/pi-mono excavation integration:
+// Mineshaft oh-my-pi (omp) hook — lifecycle integration for Mineshaft agents.
+// Mirrors the same events as Claude's settings-autonomous.json and pi-mono's mineshaft-hooks.js.
+// Inspired by ProbabilityEngineer/pi-mono mineshaft integration:
 // https://github.com/ProbabilityEngineer/pi-mono
 //
 // Events mapped:
@@ -10,7 +10,7 @@
 //   tool_call           → gt tap guard pr-workflow (on git push/pr create)
 //   session_shutdown    → gt costs record
 //
-// Loaded via: omp --hook excavation-hook.ts
+// Loaded via: omp --hook mineshaft-hook.ts
 
 export default function (pi) {
   const role = (process.env.GT_ROLE || "").toLowerCase();
@@ -26,12 +26,12 @@ export default function (pi) {
       const result = await pi.exec("gt", ["prime", "--hook"]);
       if (result.code === 0 && result.stdout?.trim()) {
         primeContext = result.stdout.trim();
-        console.error("[excavation] gt prime captured (" + primeContext.length + " chars)");
+        console.error("[mineshaft] gt prime captured (" + primeContext.length + " chars)");
       } else {
-        console.error("[excavation] gt prime returned no output (code=" + result.code + ")");
+        console.error("[mineshaft] gt prime returned no output (code=" + result.code + ")");
       }
     } catch (e) {
-      console.error("[excavation] gt prime failed:", e.message);
+      console.error("[mineshaft] gt prime failed:", e.message);
     }
 
   });
@@ -49,10 +49,10 @@ export default function (pi) {
           const mailResult = await pi.exec("gt", ["mail", "check", "--inject"]);
           if (mailResult.code === 0 && mailResult.stdout?.trim()) {
             mailContext = mailResult.stdout.trim();
-            console.error("[excavation] mail check: new mail found");
+            console.error("[mineshaft] mail check: new mail found");
           }
         } catch (e) {
-          console.error("[excavation] per-prompt mail check failed:", e.message);
+          console.error("[mineshaft] per-prompt mail check failed:", e.message);
         }
       }
     }
@@ -60,10 +60,10 @@ export default function (pi) {
     // Inject prime context on first prompt.
     if (primeContext && !contextInjected) {
       contextInjected = true;
-      console.error("[excavation] injecting prime context into session");
+      console.error("[mineshaft] injecting prime context into session");
       const result = {
         message: {
-          customType: "excavation-prime",
+          customType: "mineshaft-prime",
           content: primeContext,
           display: false,
         },
@@ -80,7 +80,7 @@ export default function (pi) {
     if (mailContext) {
       return {
         message: {
-          customType: "excavation-mail",
+          customType: "mineshaft-mail",
           content: mailContext,
           display: false,
         },
@@ -97,10 +97,10 @@ export default function (pi) {
       const result = await pi.exec("gt", ["prime", "--hook"]);
       if (result.code === 0 && result.stdout?.trim()) {
         primeContext = result.stdout.trim();
-        console.error("[excavation] prime context refreshed after compaction");
+        console.error("[mineshaft] prime context refreshed after compaction");
       }
     } catch (e) {
-      console.error("[excavation] gt prime refresh failed:", e.message);
+      console.error("[mineshaft] gt prime refresh failed:", e.message);
     }
   });
 
@@ -119,7 +119,7 @@ export default function (pi) {
             return { block: true, reason: result.stderr || "gt tap guard rejected this operation" };
           }
         } catch (e) {
-          console.error("[excavation] gt tap guard failed:", e.message);
+          console.error("[mineshaft] gt tap guard failed:", e.message);
         }
       }
     }
@@ -130,7 +130,7 @@ export default function (pi) {
     try {
       await pi.exec("gt", ["costs", "record"]);
     } catch (e) {
-      console.error("[excavation] gt costs record failed:", e.message);
+      console.error("[mineshaft] gt costs record failed:", e.message);
     }
   });
 }

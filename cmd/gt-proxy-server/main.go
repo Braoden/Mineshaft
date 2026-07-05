@@ -15,8 +15,8 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/steveyegge/excavation/internal/proxy"
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/proxy"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // defaultAllowedSubcmds lists the safe subcommands for gt and bd.
@@ -34,7 +34,7 @@ func main() {
 		allowedCmds    = flag.String("allowed-cmds", "gt,bd", "comma-separated list of allowed commands")
 		allowedSubcmds = flag.String("allowed-subcmds", discoverAllowedSubcmds(),
 			`semicolon-separated list of "cmd:sub1,sub2,..." subcommand allowlists`)
-		townRoot = flag.String("town-root", "", "Excavation Site root directory (default: $GT_TOWN or ~/gt)")
+		townRoot = flag.String("town-root", "", "Mineshaft root directory (default: $GT_TOWN or ~/gt)")
 	)
 	flag.Parse()
 

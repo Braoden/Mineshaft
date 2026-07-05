@@ -1,4 +1,4 @@
-// Package util provides common utilities for Excavation Site.
+// Package util provides common utilities for Mineshaft.
 package util
 
 // RemoveFromSlice removes all occurrences of an item from a string slice.

@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/session"
 )
 
 func TestBuildUpSummary(t *testing.T) {
@@ -128,19 +128,19 @@ func TestEmitUpJSON_SuccessDerivesFromServices(t *testing.T) {
 }
 
 func TestEmitUpJSON_SessionNames(t *testing.T) {
-	rigName := "excavation"
+	rigName := "mineshaft"
 	prefix := session.PrefixFor(rigName)
 
 	services := []ServiceStatus{
 		{
-			Name:   "Crew (excavation/max)",
+			Name:   "Crew (mineshaft/max)",
 			Type:   constants.RoleCrew,
 			Rig:    rigName,
 			OK:     true,
 			Detail: session.CrewSessionName(prefix, "max"),
 		},
 		{
-			Name:   "Miner (excavation/alpha)",
+			Name:   "Miner (mineshaft/alpha)",
 			Type:   constants.RoleMiner,
 			Rig:    rigName,
 			OK:     true,

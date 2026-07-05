@@ -1,6 +1,6 @@
-# Contributing to Excavation Site
+# Contributing to Mineshaft
 
-Thanks for your interest in contributing! Excavation Site is experimental software, and we welcome contributions that help explore these ideas.
+Thanks for your interest in contributing! Mineshaft is experimental software, and we welcome contributions that help explore these ideas.
 
 ## Getting Started
 
@@ -9,37 +9,37 @@ Thanks for your interest in contributing! Excavation Site is experimental softwa
 3. Install prerequisites (see README.md)
 4. Build and test: `go build -o gt ./cmd/gt && go test ./...`
 
-## Setting up a rig to contribute to Excavation Site
+## Setting up a rig to contribute to Mineshaft
 
-If you run a Excavation Site rig against this repo, you don't own the canonical
+If you run a Mineshaft rig against this repo, you don't own the canonical
 repository, so the rig must **fetch from upstream but push to your fork**.
 `gt rig add` has first-class support for this through `--push-url` and
 `--upstream-url`.
 
-1. Fork `excavationhall/excavation` on GitHub (gives you
-   `https://github.com/<you>/excavation`).
+1. Fork `mineshafthall/mineshaft` on GitHub (gives you
+   `https://github.com/<you>/mineshaft`).
 2. Add the rig with fork routing:
 
    ```bash
-   gt rig add excavation https://github.com/excavationhall/excavation \
-     --push-url     https://github.com/<you>/excavation \
-     --upstream-url https://github.com/excavationhall/excavation
+   gt rig add mineshaft https://github.com/mineshafthall/mineshaft \
+     --push-url     https://github.com/<you>/mineshaft \
+     --upstream-url https://github.com/mineshafthall/mineshaft
    ```
 
 What each flag does at the git-remote level:
 
-- The positional `<git-url>` (`https://github.com/excavationhall/excavation`)
+- The positional `<git-url>` (`https://github.com/mineshafthall/mineshaft`)
   becomes `origin`'s **fetch** URL — the rig pulls canonical history from
   upstream.
 - `--push-url` sets `origin`'s **push** URL to your fork, so all pushes land
-  on `https://github.com/<you>/excavation` and never on the canonical repo.
+  on `https://github.com/<you>/mineshaft` and never on the canonical repo.
 - `--upstream-url` adds a separate named `upstream` remote pointing at the
   canonical repo, so rebases against `upstream/main` work without juggling
   URLs.
 
 > **Current limitation — the refinery is not yet fork-aware.** Until the
 > behavioral half of
-> [excavationhall/excavation#1794](https://github.com/excavationhall/excavation/issues/1794)
+> [mineshafthall/mineshaft#1794](https://github.com/mineshafthall/mineshaft/issues/1794)
 > ships, even a correctly-configured fork rig will have its refinery attempt
 > to **merge miner branches into the fork's `main`**, diverging it from
 > upstream. If you want strict PR-only behavior, do not start the refinery
@@ -94,14 +94,14 @@ Branch naming conventions:
 
 ## Design Philosophy
 
-Excavation Site follows two core principles that shape every contribution. Understanding
+Mineshaft follows two core principles that shape every contribution. Understanding
 these will save you (and reviewers) time.
 
 ### Zero Framework Cognition (ZFC)
 
 **Go provides transport. Agents provide cognition.**
 
-Excavation Site's Go code handles plumbing: tmux sessions, message delivery, hooks,
+Mineshaft's Go code handles plumbing: tmux sessions, message delivery, hooks,
 nudges, file transport, and observability primitives (like `bd show --json`).
 All reasoning, judgment calls, and decision-making happen in the AI agents via
 molecule formulas and role templates.
@@ -123,7 +123,7 @@ For the full rationale, see
 
 ### Bitter Lesson Alignment
 
-Excavation Site bets on models getting smarter, not on hand-crafted heuristics getting
+Mineshaft bets on models getting smarter, not on hand-crafted heuristics getting
 more elaborate. If an AI agent can observe data and reason about it, we expose
 the data (transport) rather than encoding the reasoning (cognition). Today's
 clumsy heuristic is tomorrow's technical debt — but a clean observability
@@ -178,7 +178,7 @@ that may not be available in every environment. Use the helpers in
 |--------|-------------|
 | `testutil.RequireDoltContainer(t)` | Test needs a running Dolt SQL server (starts a Docker container) |
 | `testutil.StartIsolatedDoltContainer(t)` | Test needs its own isolated Dolt instance (per-test container) |
-| `testutil.RequireTownEnv(t)` | Test needs a live Excavation Site workspace (checks `workspace.FindFromCwd` + `rigs.json`); returns root path |
+| `testutil.RequireTownEnv(t)` | Test needs a live Mineshaft workspace (checks `workspace.FindFromCwd` + `rigs.json`); returns root path |
 
 **`requireDoltServer`** (in `internal/cmd`) is a local wrapper around
 `testutil.RequireDoltContainer` used by the `cmd` package's integration tests.
@@ -187,7 +187,7 @@ that may not be available in every environment. Use the helpers in
 
 - Tests that connect to Dolt (create databases, run SQL) →
   `RequireDoltContainer` or `StartIsolatedDoltContainer`
-- Tests that need a real Excavation Site directory tree (shell out to `gt`/`bd` with
+- Tests that need a real Mineshaft directory tree (shell out to `gt`/`bd` with
   workspace detection) → `RequireTownEnv`
 - Tests that create their own temporary town via `t.TempDir()` → no guard needed
   (they are self-contained)
@@ -204,7 +204,7 @@ for the full workflow. One guardrail to know about:
 - `make check-version-tag` verifies the `Version` constant in
   `internal/cmd/version.go` matches the tag at HEAD. The release workflow runs
   this before GoReleaser and fails the release on mismatch. Prevents recurrence
-  of [#3459](https://github.com/steveyegge/excavation/issues/3459). Run it locally
+  of [#3459](https://github.com/steveyegge/mineshaft/issues/3459). Run it locally
   after bumping if you want to catch drift before pushing the tag.
 
 ## Questions?

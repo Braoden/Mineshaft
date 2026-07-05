@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // Warrant flags
@@ -27,7 +27,7 @@ var (
 // Warrant represents a death warrant for an agent
 type Warrant struct {
 	ID         string     `json:"id"`
-	Target     string     `json:"target"` // e.g., "excavation/miners/alpha", "supervisor/dogs/bravo"
+	Target     string     `json:"target"` // e.g., "mineshaft/miners/alpha", "supervisor/dogs/bravo"
 	Reason     string     `json:"reason"`
 	FiledBy    string     `json:"filed_by"`
 	FiledAt    time.Time  `json:"filed_at"`
@@ -58,12 +58,12 @@ var warrantFileCmd = &cobra.Command{
 	Long: `File a death warrant for an agent that needs termination.
 
 The target should be an agent path like:
-  - excavation/miners/alpha
+  - mineshaft/miners/alpha
   - supervisor/dogs/bravo
   - beads/miners/charlie
 
 Examples:
-  gt warrant file excavation/miners/alpha --reason "Zombie: no session, idle >10m"
+  gt warrant file mineshaft/miners/alpha --reason "Zombie: no session, idle >10m"
   gt warrant file supervisor/dogs/bravo --reason "Stuck: working on task for >2h"`,
 	Args: cobra.ExactArgs(1),
 	RunE: runWarrantFile,
@@ -95,7 +95,7 @@ This will:
 Use --force to execute even if no warrant exists.
 
 Examples:
-  gt warrant execute excavation/miners/alpha
+  gt warrant execute mineshaft/miners/alpha
   gt warrant execute supervisor/dogs/bravo --force`,
 	Args: cobra.ExactArgs(1),
 	RunE: runWarrantExecute,
@@ -375,16 +375,16 @@ func targetToSessionName(target string) (string, error) {
 
 	switch {
 	case len(parts) == 3 && parts[1] == "miners":
-		// excavation/miners/alpha -> {prefix}-alpha
+		// mineshaft/miners/alpha -> {prefix}-alpha
 		return session.MinerSessionName(session.PrefixFor(parts[0]), parts[2]), nil
 	case len(parts) == 3 && parts[1] == "crew":
-		// excavation/crew/bob -> {prefix}-crew-bob
+		// mineshaft/crew/bob -> {prefix}-crew-bob
 		return session.CrewSessionName(session.PrefixFor(parts[0]), parts[2]), nil
 	case len(parts) == 2 && parts[1] == "witness":
-		// excavation/witness -> {prefix}-witness
+		// mineshaft/witness -> {prefix}-witness
 		return session.WitnessSessionName(session.PrefixFor(parts[0])), nil
 	case len(parts) == 2 && parts[1] == "refinery":
-		// excavation/refinery -> {prefix}-refinery
+		// mineshaft/refinery -> {prefix}-refinery
 		return session.RefinerySessionName(session.PrefixFor(parts[0])), nil
 	case len(parts) == 2 && parts[0] == "supervisor" && parts[1] == "dogs":
 		return "", fmt.Errorf("invalid target: need dog name (e.g., supervisor/dogs/alpha)")

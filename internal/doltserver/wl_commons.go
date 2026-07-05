@@ -205,7 +205,7 @@ CREATE TABLE IF NOT EXISTS _meta (
 );
 
 INSERT IGNORE INTO _meta (%s, value) VALUES ('schema_version', '1.0');
-INSERT IGNORE INTO _meta (%s, value) VALUES ('wasteland_name', 'Excavation Site Wasteland');
+INSERT IGNORE INTO _meta (%s, value) VALUES ('wasteland_name', 'Mineshaft Wasteland');
 
 CREATE TABLE IF NOT EXISTS rigs (
     handle VARCHAR(255) PRIMARY KEY,

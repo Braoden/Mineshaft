@@ -20,11 +20,11 @@ func TestName_DefaultIsGt(t *testing.T) {
 func TestName_RespectsGT_COMMAND(t *testing.T) {
 	nameOnce = sync.Once{}
 	name = ""
-	t.Setenv("GT_COMMAND", "excavation")
+	t.Setenv("GT_COMMAND", "mineshaft")
 
 	got := Name()
-	if got != "excavation" {
-		t.Errorf("Name() = %q, want %q", got, "excavation")
+	if got != "mineshaft" {
+		t.Errorf("Name() = %q, want %q", got, "mineshaft")
 	}
 }
 

@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/beads"
 )
 
 func TestBdError_Error(t *testing.T) {
@@ -403,11 +403,11 @@ func TestRunBdCommandUsesCentralEnvPolicy(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	if _, err := runBdCommand(ctx, []string{"list", "--json"}, workDir, beadsDir, "BD_IDENTITY=excavation/chrome", "BD_READONLY=false", "BD_DOLT_AUTO_COMMIT=on"); err != nil {
+	if _, err := runBdCommand(ctx, []string{"list", "--json"}, workDir, beadsDir, "BD_IDENTITY=mineshaft/chrome", "BD_READONLY=false", "BD_DOLT_AUTO_COMMIT=on"); err != nil {
 		t.Fatalf("run read bd command: %v", err)
 	}
 	readLog := readStubLog(t, logPath)
-	for _, want := range []string{"args:[list][--json][--flat]", "BD_READONLY=true", "BD_DOLT_AUTO_COMMIT=off", "BEADS_NO_AUTO_IMPORT=1", "BD_IDENTITY=excavation/chrome", "BEADS_DIR=" + beadsDir, "BEADS_DOLT_SERVER_DATABASE=maildb"} {
+	for _, want := range []string{"args:[list][--json][--flat]", "BD_READONLY=true", "BD_DOLT_AUTO_COMMIT=off", "BEADS_NO_AUTO_IMPORT=1", "BD_IDENTITY=mineshaft/chrome", "BEADS_DIR=" + beadsDir, "BEADS_DOLT_SERVER_DATABASE=maildb"} {
 		if !strings.Contains(readLog, want) {
 			t.Fatalf("read command log missing %q:\n%s", want, readLog)
 		}
@@ -416,11 +416,11 @@ func TestRunBdCommandUsesCentralEnvPolicy(t *testing.T) {
 	if err := os.WriteFile(logPath, nil, 0644); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := runBdCommand(ctx, []string{"label", "add", "hq-msg", "read"}, workDir, beadsDir, "BD_IDENTITY=excavation/chrome", "BD_READONLY=true", "BD_DOLT_AUTO_COMMIT=off"); err != nil {
+	if _, err := runBdCommand(ctx, []string{"label", "add", "hq-msg", "read"}, workDir, beadsDir, "BD_IDENTITY=mineshaft/chrome", "BD_READONLY=true", "BD_DOLT_AUTO_COMMIT=off"); err != nil {
 		t.Fatalf("run write bd command: %v", err)
 	}
 	writeLog := readStubLog(t, logPath)
-	for _, want := range []string{"args:[label][add][hq-msg][read]", "\nBD_READONLY=\n", "BD_DOLT_AUTO_COMMIT=on", "BEADS_NO_AUTO_IMPORT=1", "BD_IDENTITY=excavation/chrome", "BEADS_DIR=" + beadsDir, "BEADS_DOLT_SERVER_DATABASE=maildb"} {
+	for _, want := range []string{"args:[label][add][hq-msg][read]", "\nBD_READONLY=\n", "BD_DOLT_AUTO_COMMIT=on", "BEADS_NO_AUTO_IMPORT=1", "BD_IDENTITY=mineshaft/chrome", "BEADS_DIR=" + beadsDir, "BEADS_DOLT_SERVER_DATABASE=maildb"} {
 		if !strings.Contains(writeLog, want) {
 			t.Fatalf("write command log missing %q:\n%s", want, writeLog)
 		}

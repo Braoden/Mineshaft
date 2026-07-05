@@ -4,15 +4,15 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/mineshaft/internal/config"
 )
 
 func TestResolveSessionTheme_AutoRigTheme(t *testing.T) {
 	t.Parallel()
 
 	townRoot := t.TempDir()
-	got := ResolveSessionTheme(townRoot, "excavation", "crew", "")
-	want := AssignTheme("excavation")
+	got := ResolveSessionTheme(townRoot, "mineshaft", "crew", "")
+	want := AssignTheme("mineshaft")
 
 	if got == nil {
 		t.Fatal("ResolveSessionTheme returned nil, want auto theme")
@@ -28,12 +28,12 @@ func TestResolveSessionTheme_DisabledRigTheme(t *testing.T) {
 	townRoot := t.TempDir()
 	settings := config.NewRigSettings()
 	settings.Theme = &config.ThemeConfig{Disabled: true}
-	rigPath := filepath.Join(townRoot, "excavation")
+	rigPath := filepath.Join(townRoot, "mineshaft")
 	if err := config.SaveRigSettings(config.RigSettingsPath(rigPath), settings); err != nil {
 		t.Fatalf("SaveRigSettings: %v", err)
 	}
 
-	if got := ResolveSessionTheme(townRoot, "excavation", "crew", ""); got != nil {
+	if got := ResolveSessionTheme(townRoot, "mineshaft", "crew", ""); got != nil {
 		t.Fatalf("ResolveSessionTheme = %+v, want nil", *got)
 	}
 }
@@ -44,12 +44,12 @@ func TestResolveSessionTheme_NamedRigTheme(t *testing.T) {
 	townRoot := t.TempDir()
 	settings := config.NewRigSettings()
 	settings.Theme = &config.ThemeConfig{Name: "forest"}
-	rigPath := filepath.Join(townRoot, "excavation")
+	rigPath := filepath.Join(townRoot, "mineshaft")
 	if err := config.SaveRigSettings(config.RigSettingsPath(rigPath), settings); err != nil {
 		t.Fatalf("SaveRigSettings: %v", err)
 	}
 
-	got := ResolveSessionTheme(townRoot, "excavation", "crew", "")
+	got := ResolveSessionTheme(townRoot, "mineshaft", "crew", "")
 	if got == nil || got.Name != "forest" {
 		t.Fatalf("ResolveSessionTheme = %+v, want forest", got)
 	}
@@ -63,12 +63,12 @@ func TestResolveSessionTheme_CustomRigTheme(t *testing.T) {
 	settings.Theme = &config.ThemeConfig{
 		Custom: &config.CustomTheme{BG: "#111111", FG: "#eeeeee"},
 	}
-	rigPath := filepath.Join(townRoot, "excavation")
+	rigPath := filepath.Join(townRoot, "mineshaft")
 	if err := config.SaveRigSettings(config.RigSettingsPath(rigPath), settings); err != nil {
 		t.Fatalf("SaveRigSettings: %v", err)
 	}
 
-	got := ResolveSessionTheme(townRoot, "excavation", "crew", "")
+	got := ResolveSessionTheme(townRoot, "mineshaft", "crew", "")
 	if got == nil {
 		t.Fatal("ResolveSessionTheme returned nil, want custom theme")
 	}
@@ -88,12 +88,12 @@ func TestResolveSessionTheme_RoleOverrideNoneWins(t *testing.T) {
 			"witness": "none",
 		},
 	}
-	rigPath := filepath.Join(townRoot, "excavation")
+	rigPath := filepath.Join(townRoot, "mineshaft")
 	if err := config.SaveRigSettings(config.RigSettingsPath(rigPath), settings); err != nil {
 		t.Fatalf("SaveRigSettings: %v", err)
 	}
 
-	if got := ResolveSessionTheme(townRoot, "excavation", "witness", ""); got != nil {
+	if got := ResolveSessionTheme(townRoot, "mineshaft", "witness", ""); got != nil {
 		t.Fatalf("ResolveSessionTheme = %+v, want nil", *got)
 	}
 }
@@ -136,30 +136,30 @@ func TestResolveSessionTheme_CrewMemberOverride(t *testing.T) {
 			"mallory": "ember",
 		},
 	}
-	rigPath := filepath.Join(townRoot, "excavation")
+	rigPath := filepath.Join(townRoot, "mineshaft")
 	if err := config.SaveRigSettings(config.RigSettingsPath(rigPath), settings); err != nil {
 		t.Fatalf("SaveRigSettings: %v", err)
 	}
 
 	// Named crew member gets their specific theme.
-	krieger := ResolveSessionTheme(townRoot, "excavation", "crew", "krieger")
+	krieger := ResolveSessionTheme(townRoot, "mineshaft", "crew", "krieger")
 	if krieger == nil || krieger.Name != "teal" {
 		t.Fatalf("krieger theme = %+v, want teal", krieger)
 	}
 
-	mallory := ResolveSessionTheme(townRoot, "excavation", "crew", "mallory")
+	mallory := ResolveSessionTheme(townRoot, "mineshaft", "crew", "mallory")
 	if mallory == nil || mallory.Name != "ember" {
 		t.Fatalf("mallory theme = %+v, want ember", mallory)
 	}
 
 	// Unlisted crew member falls back to rig theme.
-	other := ResolveSessionTheme(townRoot, "excavation", "crew", "cyril")
+	other := ResolveSessionTheme(townRoot, "mineshaft", "crew", "cyril")
 	if other == nil || other.Name != "ocean" {
 		t.Fatalf("cyril theme = %+v, want ocean (rig fallback)", other)
 	}
 
 	// Empty crew member also falls back to rig theme.
-	empty := ResolveSessionTheme(townRoot, "excavation", "crew", "")
+	empty := ResolveSessionTheme(townRoot, "mineshaft", "crew", "")
 	if empty == nil || empty.Name != "ocean" {
 		t.Fatalf("empty member theme = %+v, want ocean (rig fallback)", empty)
 	}
@@ -176,13 +176,13 @@ func TestResolveSessionTheme_CrewMemberNoneDisables(t *testing.T) {
 			"krieger": "none",
 		},
 	}
-	rigPath := filepath.Join(townRoot, "excavation")
+	rigPath := filepath.Join(townRoot, "mineshaft")
 	if err := config.SaveRigSettings(config.RigSettingsPath(rigPath), settings); err != nil {
 		t.Fatalf("SaveRigSettings: %v", err)
 	}
 
 	// "none" disables theming for that member.
-	if got := ResolveSessionTheme(townRoot, "excavation", "crew", "krieger"); got != nil {
+	if got := ResolveSessionTheme(townRoot, "mineshaft", "crew", "krieger"); got != nil {
 		t.Fatalf("krieger theme = %+v, want nil (disabled)", *got)
 	}
 }
@@ -203,7 +203,7 @@ func TestResolveSessionTheme_CrewMemberTownFallback(t *testing.T) {
 		t.Fatalf("SaveOverseerConfig: %v", err)
 	}
 
-	got := ResolveSessionTheme(townRoot, "excavation", "crew", "krieger")
+	got := ResolveSessionTheme(townRoot, "mineshaft", "crew", "krieger")
 	if got == nil || got.Name != "wine" {
 		t.Fatalf("krieger town theme = %+v, want wine", got)
 	}
@@ -221,7 +221,7 @@ func TestResolveSessionTheme_CrewMemberRigOverridesTown(t *testing.T) {
 			"krieger": "teal",
 		},
 	}
-	rigPath := filepath.Join(townRoot, "excavation")
+	rigPath := filepath.Join(townRoot, "mineshaft")
 	if err := config.SaveRigSettings(config.RigSettingsPath(rigPath), settings); err != nil {
 		t.Fatalf("SaveRigSettings: %v", err)
 	}
@@ -238,7 +238,7 @@ func TestResolveSessionTheme_CrewMemberRigOverridesTown(t *testing.T) {
 	}
 
 	// Rig-level should win.
-	got := ResolveSessionTheme(townRoot, "excavation", "crew", "krieger")
+	got := ResolveSessionTheme(townRoot, "mineshaft", "crew", "krieger")
 	if got == nil || got.Name != "teal" {
 		t.Fatalf("krieger theme = %+v, want teal (rig override)", got)
 	}

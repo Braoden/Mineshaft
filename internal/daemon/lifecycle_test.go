@@ -10,9 +10,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/session"
 )
 
 // testDaemon creates a minimal Daemon for testing.
@@ -148,7 +148,7 @@ func TestParseLifecycleRequest_UsesFromField(t *testing.T) {
 		expectedFrom string
 	}{
 		{"LIFECYCLE: action", `{"action": "cycle"}`, "overseer", "overseer"},
-		{"LIFECYCLE: action", "restart", "excavation-witness", "excavation-witness"},
+		{"LIFECYCLE: action", "restart", "mineshaft-witness", "mineshaft-witness"},
 		{"lifecycle: action", "shutdown", "my-rig-refinery", "my-rig-refinery"},
 	}
 
@@ -206,7 +206,7 @@ func TestIdentityToSession_Witness(t *testing.T) {
 		identity string
 		expected string
 	}{
-		{"excavation-witness", "gt-witness"},
+		{"mineshaft-witness", "gt-witness"},
 		{"myrig-witness", "gt-witness"},
 		{"my-rig-name-witness", "gt-witness"},
 	}
@@ -225,7 +225,7 @@ func TestIdentityToSession_WitnessWithPrefix(t *testing.T) {
 	// Register a rig with a distinct prefix to verify prefix differentiation
 	oldRegistry := session.DefaultRegistry()
 	r := session.NewPrefixRegistry()
-	r.Register("gt", "excavation")
+	r.Register("gt", "mineshaft")
 	r.Register("bd", "beads")
 	session.SetDefaultRegistry(r)
 	defer session.SetDefaultRegistry(oldRegistry)
@@ -234,7 +234,7 @@ func TestIdentityToSession_WitnessWithPrefix(t *testing.T) {
 		identity string
 		expected string
 	}{
-		{"excavation-witness", "gt-witness"},
+		{"mineshaft-witness", "gt-witness"},
 		{"beads-witness", "bd-witness"},
 		{"unknown-witness", "gt-witness"}, // unknown rig falls back to DefaultPrefix
 	}
@@ -254,7 +254,7 @@ func TestIdentityToSession_Unknown(t *testing.T) {
 		"unknown",
 		"miner",
 		"refinery",
-		"excavation", // rig name without -witness
+		"mineshaft", // rig name without -witness
 		"",
 	}
 

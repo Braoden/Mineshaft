@@ -16,7 +16,7 @@ func TestMatchClaimPattern(t *testing.T) {
 		{
 			name:     "wildcard matches anyone",
 			pattern:  "*",
-			identity: "excavation/crew/max",
+			identity: "mineshaft/crew/max",
 			want:     true,
 		},
 		{
@@ -29,39 +29,39 @@ func TestMatchClaimPattern(t *testing.T) {
 		// Exact match
 		{
 			name:     "exact match",
-			pattern:  "excavation/crew/max",
-			identity: "excavation/crew/max",
+			pattern:  "mineshaft/crew/max",
+			identity: "mineshaft/crew/max",
 			want:     true,
 		},
 		{
 			name:     "exact match fails on different identity",
-			pattern:  "excavation/crew/max",
-			identity: "excavation/crew/nux",
+			pattern:  "mineshaft/crew/max",
+			identity: "mineshaft/crew/nux",
 			want:     false,
 		},
 
 		// Suffix wildcard
 		{
 			name:     "suffix wildcard matches",
-			pattern:  "excavation/miners/*",
-			identity: "excavation/miners/capable",
+			pattern:  "mineshaft/miners/*",
+			identity: "mineshaft/miners/capable",
 			want:     true,
 		},
 		{
 			name:     "suffix wildcard matches different name",
-			pattern:  "excavation/miners/*",
-			identity: "excavation/miners/nux",
+			pattern:  "mineshaft/miners/*",
+			identity: "mineshaft/miners/nux",
 			want:     true,
 		},
 		{
 			name:     "suffix wildcard doesn't match nested path",
-			pattern:  "excavation/miners/*",
-			identity: "excavation/miners/sub/capable",
+			pattern:  "mineshaft/miners/*",
+			identity: "mineshaft/miners/sub/capable",
 			want:     false,
 		},
 		{
 			name:     "suffix wildcard doesn't match different rig",
-			pattern:  "excavation/miners/*",
+			pattern:  "mineshaft/miners/*",
 			identity: "bartertown/miners/capable",
 			want:     false,
 		},
@@ -70,7 +70,7 @@ func TestMatchClaimPattern(t *testing.T) {
 		{
 			name:     "prefix wildcard matches",
 			pattern:  "*/witness",
-			identity: "excavation/witness",
+			identity: "mineshaft/witness",
 			want:     true,
 		},
 		{
@@ -82,21 +82,21 @@ func TestMatchClaimPattern(t *testing.T) {
 		{
 			name:     "prefix wildcard doesn't match different role",
 			pattern:  "*/witness",
-			identity: "excavation/refinery",
+			identity: "mineshaft/refinery",
 			want:     false,
 		},
 
 		// Crew patterns
 		{
 			name:     "crew wildcard",
-			pattern:  "excavation/crew/*",
-			identity: "excavation/crew/max",
+			pattern:  "mineshaft/crew/*",
+			identity: "mineshaft/crew/max",
 			want:     true,
 		},
 		{
 			name:     "crew wildcard matches any crew member",
-			pattern:  "excavation/crew/*",
-			identity: "excavation/crew/jack",
+			pattern:  "mineshaft/crew/*",
+			identity: "mineshaft/crew/jack",
 			want:     true,
 		},
 
@@ -110,7 +110,7 @@ func TestMatchClaimPattern(t *testing.T) {
 		{
 			name:     "empty pattern doesn't match",
 			pattern:  "",
-			identity: "excavation/crew/max",
+			identity: "mineshaft/crew/max",
 			want:     false,
 		},
 	}
@@ -138,13 +138,13 @@ func TestFormatQueueDescription(t *testing.T) {
 			title: "Queue: work-requests",
 			fields: &QueueFields{
 				Name:         "work-requests",
-				ClaimPattern: "excavation/crew/*",
+				ClaimPattern: "mineshaft/crew/*",
 				Status:       QueueStatusActive,
 			},
 			want: []string{
 				"Queue: work-requests",
 				"name: work-requests",
-				"claim_pattern: excavation/crew/*",
+				"claim_pattern: mineshaft/crew/*",
 				"status: active",
 			},
 		},
@@ -215,10 +215,10 @@ func TestParseQueueFields(t *testing.T) {
 			description: `Queue: work-requests
 
 name: work-requests
-claim_pattern: excavation/crew/*
+claim_pattern: mineshaft/crew/*
 status: active`,
 			wantName:    "work-requests",
-			wantPattern: "excavation/crew/*",
+			wantPattern: "mineshaft/crew/*",
 			wantStatus:  QueueStatusActive,
 		},
 		{

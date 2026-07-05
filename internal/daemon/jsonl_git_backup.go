@@ -17,8 +17,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 const (
@@ -389,7 +389,7 @@ func (d *Daemon) commitAndPushJsonlBackup(gitRepo string, databases []string, co
 
 	// Commit.
 	if err := d.runGitCmd(gitRepo, gitCmdTimeout, "commit", "-m", msg,
-		"--author=Excavation Site Daemon <daemon@excavation.local>"); err != nil {
+		"--author=Mineshaft Daemon <daemon@mineshaft.local>"); err != nil {
 		return fmt.Errorf("git commit: %w", err)
 	}
 

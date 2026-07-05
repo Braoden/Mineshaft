@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
 )
 
 func TestGetNextSeverity(t *testing.T) {
@@ -62,8 +62,8 @@ func TestExtractMailTargetsFromActions(t *testing.T) {
 		},
 		{
 			name:    "multiple mail targets",
-			actions: []string{"bead", "mail:overseer", "mail:excavation/witness", "email:human"},
-			want:    []string{"overseer", "excavation/witness"},
+			actions: []string{"bead", "mail:overseer", "mail:mineshaft/witness", "email:human"},
+			want:    []string{"overseer", "mineshaft/witness"},
 		},
 		{
 			name:    "mail prefix with empty target ignored",
@@ -282,12 +282,12 @@ func TestFormatEscalationMailBody(t *testing.T) {
 			beadID:   "hq-abc123",
 			severity: "high",
 			reason:   "Build failing",
-			from:     "excavation/witness",
+			from:     "mineshaft/witness",
 			related:  "",
 			wantIn: []string{
 				"Escalation ID: hq-abc123",
 				"Severity: high",
-				"From: excavation/witness",
+				"From: mineshaft/witness",
 				"Reason:",
 				"Build failing",
 				"gt escalate ack hq-abc123",
@@ -300,7 +300,7 @@ func TestFormatEscalationMailBody(t *testing.T) {
 			beadID:   "hq-xyz789",
 			severity: "critical",
 			reason:   "Agent stuck",
-			from:     "excavation/supervisor",
+			from:     "mineshaft/supervisor",
 			related:  "gt-stuck42",
 			wantIn: []string{
 				"Escalation ID: hq-xyz789",
@@ -350,13 +350,13 @@ func TestFormatReescalationMailBody(t *testing.T) {
 		ReescalationNum: 2,
 	}
 
-	got := formatReescalationMailBody(result, "excavation/patrol")
+	got := formatReescalationMailBody(result, "mineshaft/patrol")
 
 	wantIn := []string{
 		"Escalation ID: hq-esc123",
 		"Severity bumped: medium → high",
 		"Reescalation #2",
-		"Reescalated by: excavation/patrol",
+		"Reescalated by: mineshaft/patrol",
 		"stale threshold",
 		"gt escalate ack hq-esc123",
 		"gt escalate close hq-esc123",
@@ -386,15 +386,15 @@ func TestDetectSenderFallback(t *testing.T) {
 	}{
 		{
 			name:  "BD_ACTOR takes priority",
-			actor: "excavation/miners/alpha",
-			role:  "excavation/witness",
-			want:  "excavation/miners/alpha",
+			actor: "mineshaft/miners/alpha",
+			role:  "mineshaft/witness",
+			want:  "mineshaft/miners/alpha",
 		},
 		{
 			name:  "GT_ROLE used when BD_ACTOR empty",
 			actor: "",
-			role:  "excavation/witness",
-			want:  "excavation/witness",
+			role:  "mineshaft/witness",
+			want:  "mineshaft/witness",
 		},
 		{
 			name:  "empty when both unset",

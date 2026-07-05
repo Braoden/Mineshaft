@@ -16,8 +16,8 @@ func TestSlingTrimsTrailingSlash(t *testing.T) {
 	}{
 		{"rig with trailing slash", "slingshot/", "slingshot"},
 		{"rig without slash", "slingshot", "slingshot"},
-		{"path with trailing slash", "excavation/crew/", "excavation/crew"},
-		{"path without slash", "excavation/crew", "excavation/crew"},
+		{"path with trailing slash", "mineshaft/crew/", "mineshaft/crew"},
+		{"path without slash", "mineshaft/crew", "mineshaft/crew"},
 		{"multiple trailing slashes", "slingshot///", "slingshot"},
 		{"just slashes", "///", ""},
 		{"empty string", "", ""},

@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
-// MinDoltVersion is the minimum compatible dolt version for this Excavation Site release.
-// Update this when Excavation Site requires new dolt features.
+// MinDoltVersion is the minimum compatible dolt version for this Mineshaft release.
+// Update this when Mineshaft requires new dolt features.
 const MinDoltVersion = "2.0.7"
 
 // DoltInstallURL is the installation page for dolt.

@@ -136,7 +136,7 @@ All three sessions are the **same miner**. The sandbox persists throughout.
 The sandbox is the **git worktree**—the miner's working directory:
 
 ```
-~/gt/excavation/miners/Toast/
+~/gt/mineshaft/miners/Toast/
 ```
 
 This worktree:
@@ -180,8 +180,8 @@ The slot is the **name allocation** from the miner pool:
 
 The slot:
 - Determines the sandbox path (`miners/Toast/`)
-- Maps to a tmux session (`gt-excavation-Toast`)
-- Appears in attribution (`excavation/miners/Toast`)
+- Maps to a tmux session (`gt-mineshaft-Toast`)
+- Appears in attribution (`mineshaft/miners/Toast`)
 - Persists until explicit nuke
 
 ## Correct Lifecycle
@@ -244,7 +244,7 @@ gt handoff  # Session cycles, miner continues
 **Sandbox repair**: On reuse. `gt sling` resets the worktree to a fresh branch.
 
 ```bash
-gt sling gt-xyz excavation  # Reuses idle Toast, repairs worktree
+gt sling gt-xyz mineshaft  # Reuses idle Toast, repairs worktree
 ```
 
 Session cycling happens constantly. Sandbox repair happens between assignments.
@@ -285,7 +285,7 @@ A **stalled** miner has a hook but no session — this is a **failure**:
 # Witness respawns the session in the existing sandbox
 # Or, if unrecoverable:
 gt miner nuke Toast        # Clean up the stalled miner
-gt sling gt-abc excavation      # Respawn with fresh miner
+gt sling gt-abc mineshaft      # Respawn with fresh miner
 ```
 
 ### Confusing Session with Sandbox

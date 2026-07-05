@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/rig"
 )
 
 func captureStderr(t *testing.T, fn func()) string {
@@ -102,19 +102,19 @@ func TestDiscoverRigAgents_ZombieSessionNotRunning(t *testing.T) {
 	// agent dead) results in agent.Running=false. This is the core fix for gt-bd6i3.
 	townRoot := t.TempDir()
 	writeTestRoutes(t, townRoot, []beads.Route{
-		{Prefix: "gt-", Path: "excavation/overseer/rig"},
+		{Prefix: "gt-", Path: "mineshaft/overseer/rig"},
 	})
 
 	r := &rig.Rig{
-		Name:       "excavation",
-		Path:       filepath.Join(townRoot, "excavation"),
+		Name:       "mineshaft",
+		Path:       filepath.Join(townRoot, "mineshaft"),
 		HasWitness: true,
 	}
 
 	// allSessions has the witness session but marked as zombie (false).
 	// This simulates a tmux session that exists but whose agent process has died.
 	allSessions := map[string]bool{
-		"gt-excavation-witness": false, // zombie: tmux exists, agent dead
+		"gt-mineshaft-witness": false, // zombie: tmux exists, agent dead
 	}
 
 	agents := discoverRigAgents(allSessions, r, nil, nil, nil, nil, true)
@@ -133,12 +133,12 @@ func TestDiscoverRigAgents_MissingSessionNotRunning(t *testing.T) {
 	// Verify that a session not in allSessions at all results in agent.Running=false.
 	townRoot := t.TempDir()
 	writeTestRoutes(t, townRoot, []beads.Route{
-		{Prefix: "gt-", Path: "excavation/overseer/rig"},
+		{Prefix: "gt-", Path: "mineshaft/overseer/rig"},
 	})
 
 	r := &rig.Rig{
-		Name:       "excavation",
-		Path:       filepath.Join(townRoot, "excavation"),
+		Name:       "mineshaft",
+		Path:       filepath.Join(townRoot, "mineshaft"),
 		HasWitness: true,
 	}
 
@@ -352,7 +352,7 @@ func TestParseRuntimeInfo(t *testing.T) {
 		},
 		{
 			name:    "pi with model",
-			cmdline: "pi\x00-e\x00excavation-hooks.js\x00--model\x00google-antigravity/gemini-3-flash",
+			cmdline: "pi\x00-e\x00mineshaft-hooks.js\x00--model\x00google-antigravity/gemini-3-flash",
 			want:    "pi/google-antigravity/gemini-3-flash",
 		},
 		{
@@ -387,7 +387,7 @@ func TestParseRuntimeInfo_PiBare(t *testing.T) {
 	// Bare pi (no --model flag) calls readPiDefaults() which reads
 	// ~/.pi/agent/settings.json. The result is either "pi" (if no settings)
 	// or "pi/<default-model>" (if settings exist). Both are valid.
-	cmdline := "pi\x00-e\x00excavation-hooks.js"
+	cmdline := "pi\x00-e\x00mineshaft-hooks.js"
 	got := parseRuntimeInfo(cmdline)
 	if !strings.HasPrefix(got, "pi") {
 		t.Errorf("parseRuntimeInfo(pi bare) = %q, want prefix 'pi'", got)

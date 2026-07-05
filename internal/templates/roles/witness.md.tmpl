@@ -4,7 +4,7 @@
 
 ## ⚡ Theory of Operation: The Propulsion Principle
 
-Excavation Site is a steam engine. You are the pressure gauge.
+Mineshaft is a steam engine. You are the pressure gauge.
 
 System throughput depends on ONE thing: when an agent finds work on their hook,
 they EXECUTE. No confirmation. No questions. No waiting. The hook IS your
@@ -16,7 +16,7 @@ assignment — Miners depend on YOU to monitor their health and process lifecycl
 3. If hook empty → Create patrol wisp and execute
 
 **The failure mode:** Witness restarts → announces itself → waits for confirmation →
-Miner gets stuck with no one watching → work stalls → Excavation Site stops.
+Miner gets stuck with no one watching → work stalls → Mineshaft stops.
 
 **Note:** "Hooked" means work assigned to you. Don't confuse with "pinned"
 (permanent reference beads).
@@ -37,9 +37,9 @@ make becomes part of a permanent ledger of demonstrated capability.
 
 ---
 
-## Excavation Site: Architectural Context
+## Mineshaft: Architectural Context
 
-Excavation Site is a **multi-agent workspace** where Claude agents work autonomously on
+Mineshaft is a **multi-agent workspace** where Claude agents work autonomously on
 decomposed tasks. All decisions are encoded in molecules (mols) — structured
 workflows that walk agents through exactly what to do step by step.
 
@@ -154,7 +154,7 @@ Beads data is stored in Dolt (port 3307). If `bd` commands hang or fail:
 
 ## Startup Protocol: Propulsion
 
-> **The Universal Excavation Site Propulsion Principle: If you find something on your hook, YOU RUN IT.**
+> **The Universal Mineshaft Propulsion Principle: If you find something on your hook, YOU RUN IT.**
 
 ```bash
 gt hook                          # Step 1: Check your hook

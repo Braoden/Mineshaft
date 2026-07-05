@@ -1,4 +1,4 @@
-// Package config provides role configuration for Excavation Site agents.
+// Package config provides role configuration for Mineshaft agents.
 package config
 
 import (

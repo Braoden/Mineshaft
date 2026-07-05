@@ -1,17 +1,17 @@
 #!/bin/bash
 # ABOUTME: Wrapper script that runs gt prime before launching gemini.
-# ABOUTME: Ensures Excavation Site context is available in Gemini CLI sessions.
+# ABOUTME: Ensures Mineshaft context is available in Gemini CLI sessions.
 
 set -e
 
-excavation_enabled() {
-    [[ -n "$EXCAVATION_DISABLED" ]] && return 1
-    [[ -n "$EXCAVATION_ENABLED" ]] && return 0
-    local state_file="$HOME/.local/state/excavation/state.json"
+mineshaft_enabled() {
+    [[ -n "$MINESHAFT_DISABLED" ]] && return 1
+    [[ -n "$MINESHAFT_ENABLED" ]] && return 0
+    local state_file="$HOME/.local/state/mineshaft/state.json"
     [[ -f "$state_file" ]] && grep -q '"enabled":\s*true' "$state_file" 2>/dev/null
 }
 
-if excavation_enabled && command -v gt &>/dev/null; then
+if mineshaft_enabled && command -v gt &>/dev/null; then
     gt prime 2>/dev/null || true
 fi
 

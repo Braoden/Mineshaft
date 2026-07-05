@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/nudge"
+	"github.com/steveyegge/mineshaft/internal/nudge"
 )
 
 func TestNewPropeller(t *testing.T) {
@@ -193,8 +193,8 @@ func TestNotifyWithMetaInjectsEscalationMetadataToUI(t *testing.T) {
 func TestACPAttachedOverseerEscalationPath_MetadataAndUrgencyEndToEnd(t *testing.T) {
 	townRoot := t.TempDir()
 	if err := nudge.Enqueue(townRoot, "hq-overseer", nudge.QueuedNudge{
-		Sender:   "excavation/witness",
-		Message:  "Escalation mail from excavation/witness. ID: hq-esc-end2end. Severity: critical. Run 'gt mail read hq-esc-end2end' or 'gt escalate ack hq-esc-end2end'.",
+		Sender:   "mineshaft/witness",
+		Message:  "Escalation mail from mineshaft/witness. ID: hq-esc-end2end. Severity: critical. Run 'gt mail read hq-esc-end2end' or 'gt escalate ack hq-esc-end2end'.",
 		Priority: nudge.PriorityUrgent,
 		Kind:     "escalation",
 		ThreadID: "hq-esc-end2end",

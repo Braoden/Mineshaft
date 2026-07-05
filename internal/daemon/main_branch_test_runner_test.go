@@ -64,13 +64,13 @@ func TestMainBranchTestRigs(t *testing.T) {
 		Patrols: &PatrolsConfig{
 			MainBranchTest: &MainBranchTestConfig{
 				Enabled: true,
-				Rigs:    []string{"excavation", "beads"},
+				Rigs:    []string{"mineshaft", "beads"},
 			},
 		},
 	}
 	got := mainBranchTestRigs(config)
-	if len(got) != 2 || got[0] != "excavation" || got[1] != "beads" {
-		t.Errorf("expected [excavation beads], got %v", got)
+	if len(got) != 2 || got[0] != "mineshaft" || got[1] != "beads" {
+		t.Errorf("expected [mineshaft beads], got %v", got)
 	}
 }
 

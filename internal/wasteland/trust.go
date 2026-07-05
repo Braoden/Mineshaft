@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // TrustTier represents a rig's trust level in the Wasteland.

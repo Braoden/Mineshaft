@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/mineshaft/internal/config"
 )
 
 func TestDiscoverHooksSkipsMinerDotDirs(t *testing.T) {
 	townRoot := setupTestTownForDotDir(t)
-	rigPath := filepath.Join(townRoot, "excavation")
+	rigPath := filepath.Join(townRoot, "mineshaft")
 
 	settingsPath := filepath.Join(rigPath, "miners", ".claude", ".claude", "settings.json")
 	if err := os.MkdirAll(filepath.Dir(settingsPath), 0755); err != nil {
@@ -38,7 +38,7 @@ func TestDiscoverHooksSkipsMinerDotDirs(t *testing.T) {
 
 func TestStartMinersWithWorkSkipsDotDirs(t *testing.T) {
 	townRoot := setupTestTownForDotDir(t)
-	rigName := "excavation"
+	rigName := "mineshaft"
 	rigPath := filepath.Join(townRoot, rigName)
 
 	addRigEntry(t, townRoot, rigName)
@@ -101,7 +101,7 @@ exit 0
 
 func TestRunSessionCheckSkipsDotDirs(t *testing.T) {
 	townRoot := setupTestTownForDotDir(t)
-	rigName := "excavation"
+	rigName := "mineshaft"
 	rigPath := filepath.Join(townRoot, rigName)
 
 	addRigEntry(t, townRoot, rigName)

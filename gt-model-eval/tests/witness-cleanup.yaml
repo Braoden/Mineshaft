@@ -18,10 +18,10 @@
       $ bd show agent-Toast --json
       {"id": "gt-a1", "labels": ["agent_state:idle"]}
 
-      $ git -C /town/excavation/miners/Toast status --porcelain
+      $ git -C /town/mineshaft/miners/Toast status --porcelain
       (empty)
 
-      $ git -C /town/excavation/miners/Toast log --oneline origin/main..HEAD
+      $ git -C /town/mineshaft/miners/Toast log --oneline origin/main..HEAD
       (empty)
 
       $ bd list --assignee miner-Toast --status hooked --json
@@ -48,10 +48,10 @@
       $ bd show gt-work1 --json
       {"id": "gt-work1", "title": "Fix auth bug", "status": "closed", "assignee": "miner-Crispy"}
 
-      $ git -C /town/excavation/miners/Crispy status --porcelain
+      $ git -C /town/mineshaft/miners/Crispy status --porcelain
       (empty)
 
-      $ git -C /town/excavation/miners/Crispy log --oneline origin/main..HEAD
+      $ git -C /town/mineshaft/miners/Crispy log --oneline origin/main..HEAD
       (empty)
     context: "Session dead. Bead is closed (work merged). Git clean. Safe to nuke."
   assert:
@@ -72,7 +72,7 @@
       $ tmux has-session -t bd-miner-Waffles 2>/dev/null; echo $?
       1
 
-      $ git -C /town/excavation/miners/Waffles status --porcelain
+      $ git -C /town/mineshaft/miners/Waffles status --porcelain
        M src/auth.js
        M src/auth.test.js
       ?? src/new-helper.js
@@ -102,15 +102,15 @@
       $ tmux has-session -t bd-miner-Mango 2>/dev/null; echo $?
       1
 
-      $ git -C /town/excavation/miners/Mango status --porcelain
+      $ git -C /town/mineshaft/miners/Mango status --porcelain
       (empty)
 
-      $ git -C /town/excavation/miners/Mango log --oneline origin/main..HEAD
+      $ git -C /town/mineshaft/miners/Mango log --oneline origin/main..HEAD
       a1b2c3d feat: add JWT validation
       d4e5f6g test: auth middleware coverage
       h7i8j9k refactor: extract token parser
 
-      $ git -C /town/excavation/miners/Mango branch -vv | grep '*'
+      $ git -C /town/mineshaft/miners/Mango branch -vv | grep '*'
       * feat/jwt-auth a1b2c3d [no remote] feat: add JWT validation
     context: "Session dead. Working tree clean but 3 unpushed commits on branch with no remote tracking. Work must be preserved."
   assert:
@@ -131,13 +131,13 @@
       $ tmux has-session -t bd-miner-Hazel 2>/dev/null; echo $?
       1
 
-      $ git -C /town/excavation/miners/Hazel status --porcelain
+      $ git -C /town/mineshaft/miners/Hazel status --porcelain
       (empty)
 
-      $ git -C /town/excavation/miners/Hazel log --oneline origin/main..HEAD
+      $ git -C /town/mineshaft/miners/Hazel log --oneline origin/main..HEAD
       (empty)
 
-      $ git -C /town/excavation/miners/Hazel stash list
+      $ git -C /town/mineshaft/miners/Hazel stash list
       stash@{0}: WIP on feat/cache: a1b2c3d work in progress
     context: "Session dead. Working tree and branch clean, but there's a stash containing work."
   assert:
@@ -158,12 +158,12 @@
       $ tmux has-session -t bd-miner-Pixel 2>/dev/null; echo $?
       1
 
-      $ git -C /town/excavation/miners/Pixel status --porcelain
+      $ git -C /town/mineshaft/miners/Pixel status --porcelain
       UU src/api/routes.js
       UU src/config.ts
       M  src/auth.js
 
-      $ git -C /town/excavation/miners/Pixel status
+      $ git -C /town/mineshaft/miners/Pixel status
       interactive rebase in progress; onto abc1234
       You have unmerged paths.
         (fix conflicts and run "git rebase --continue")
@@ -186,7 +186,7 @@
       $ tmux has-session -t bd-miner-Biscuit 2>/dev/null; echo $?
       1
 
-      $ git -C /town/excavation/miners/Biscuit status
+      $ git -C /town/mineshaft/miners/Biscuit status
       HEAD detached at abc1234
       Changes not staged for commit:
         modified:   src/feature.js
@@ -210,14 +210,14 @@
       $ tmux has-session -t bd-miner-Nutmeg 2>/dev/null; echo $?
       1
 
-      $ git -C /town/excavation/miners/Nutmeg status --porcelain
+      $ git -C /town/mineshaft/miners/Nutmeg status --porcelain
       (empty)
 
-      $ git -C /town/excavation/miners/Nutmeg log --oneline origin/main..HEAD
+      $ git -C /town/mineshaft/miners/Nutmeg log --oneline origin/main..HEAD
       a1b2c3d feat: add search
       d4e5f6g test: search tests
 
-      $ git -C /town/excavation/miners/Nutmeg branch -vv | grep '*'
+      $ git -C /town/mineshaft/miners/Nutmeg branch -vv | grep '*'
       * feat/search a1b2c3d [origin/feat/search] feat: add search
 
       $ gh pr list --head feat/search --json number,title,state
@@ -240,21 +240,21 @@
     allowed_actions: '["nuke", "create-cleanup-wisp", "escalate", "no-op"]'
     shell_output: |
       ## Miner 1: Toast (CLEAN)
-      $ git -C /town/excavation/miners/Toast status --porcelain
+      $ git -C /town/mineshaft/miners/Toast status --porcelain
       (empty)
-      $ git -C /town/excavation/miners/Toast log --oneline origin/main..HEAD
+      $ git -C /town/mineshaft/miners/Toast log --oneline origin/main..HEAD
       (empty)
       Agent state: idle. No hooked bead.
 
       ## Miner 2: Crispy (DIRTY)
-      $ git -C /town/excavation/miners/Crispy status --porcelain
+      $ git -C /town/mineshaft/miners/Crispy status --porcelain
        M src/feature.js
-      $ git -C /town/excavation/miners/Crispy log --oneline origin/main..HEAD
+      $ git -C /town/mineshaft/miners/Crispy log --oneline origin/main..HEAD
       a1b2c3d work in progress
       Agent state: running. Hooked bead: gt-work3.
 
       ## Miner 3: Waffles (CONFLICT)
-      $ git -C /town/excavation/miners/Waffles status
+      $ git -C /town/mineshaft/miners/Waffles status
       interactive rebase in progress
       UU src/api.js
       Agent state: running. Hooked bead: gt-work4.
@@ -278,10 +278,10 @@
       $ tmux has-session -t bd-miner-Crispy 2>/dev/null; echo $?
       1
 
-      $ git -C /town/excavation/miners/Crispy status --porcelain
+      $ git -C /town/mineshaft/miners/Crispy status --porcelain
        M src/feature.js
 
-      $ git -C /town/excavation/miners/Crispy log --oneline origin/main..HEAD
+      $ git -C /town/mineshaft/miners/Crispy log --oneline origin/main..HEAD
       a1b2c3d work in progress
 
       $ bd show gt-work3 --json

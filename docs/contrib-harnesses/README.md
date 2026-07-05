@@ -1,7 +1,7 @@
 # Contributor Harnesses
 
 Reference examples of **role directives** and **formula overlays** that
-contributors and operators can drop into their own Excavation Site setup to customize
+contributors and operators can drop into their own Mineshaft setup to customize
 agent behavior — without patching the framework.
 
 These examples are not active by default. They are starting points you copy

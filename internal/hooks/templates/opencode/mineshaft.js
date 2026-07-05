@@ -1,6 +1,6 @@
-// Excavation Site OpenCode plugin: hooks SessionStart/Compaction via events.
+// Mineshaft OpenCode plugin: hooks SessionStart/Compaction via events.
 // Injects gt prime context into the system prompt via experimental.chat.system.transform.
-export const Excavation = async ({ $, directory }) => {
+export const Mineshaft = async ({ $, directory }) => {
   const role = (process.env.GT_ROLE || "").toLowerCase();
   const gtBin = process.env.GT_BIN || "gt";
   let didInit = false;
@@ -65,7 +65,7 @@ export const Excavation = async ({ $, directory }) => {
       ? "yes (exit code 124 / timeout)"
       : "not indicated";
     const lines = [
-      "[excavation] command failed",
+      "[mineshaft] command failed",
       `command: ${cmd}`,
       `exit_code: ${code ?? "unknown"}`,
       `timeout: ${timeout}`,
@@ -151,7 +151,7 @@ export const Excavation = async ({ $, directory }) => {
     "experimental.session.compacting": async ({ sessionID }, output) => {
       const roleDisplay = simpleRole(role) || "unknown";
       output.context.push(`
-## Excavation Site Multi-Agent System
+## Mineshaft Multi-Agent System
 
 **After Compaction:** Run \`gt prime --hook\` to restore full context.
 **Check Hook:** \`gt hook\` - if work present, execute immediately (GUPP).

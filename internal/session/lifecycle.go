@@ -10,12 +10,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/runtime"
-	"github.com/steveyegge/excavation/internal/telemetry"
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/runtime"
+	"github.com/steveyegge/mineshaft/internal/telemetry"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 // SessionConfig describes how to create and start a tmux session.
@@ -43,7 +43,7 @@ type SessionConfig struct {
 	// Role is the agent role (e.g., "miner", "overseer", "boot", "supervisor").
 	Role string
 
-	// TownRoot is the root of the Excavation Site workspace (e.g., ~/gt).
+	// TownRoot is the root of the Mineshaft workspace (e.g., ~/gt).
 	TownRoot string
 
 	// RigPath is the rig directory path for config resolution.
@@ -126,7 +126,7 @@ type StartResult struct {
 	RunID string
 }
 
-// StartSession creates a tmux session following the standard Excavation Site lifecycle.
+// StartSession creates a tmux session following the standard Mineshaft lifecycle.
 //
 // The lifecycle handles:
 //  1. Resolve runtime config for the role
@@ -228,7 +228,7 @@ func StartSession(t *tmux.Tmux, cfg SessionConfig) (_ *StartResult, retErr error
 
 	// 7. Apply theme.
 	if cfg.Theme != nil {
-		_ = t.ConfigureExcavationSession(cfg.SessionID, cfg.Theme, cfg.RigName, cfg.AgentName, cfg.Role)
+		_ = t.ConfigureMineshaftSession(cfg.SessionID, cfg.Theme, cfg.RigName, cfg.AgentName, cfg.Role)
 	}
 
 	// 8. Wait for agent to start.

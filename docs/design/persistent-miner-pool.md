@@ -28,17 +28,17 @@ Consequences:
 ```
 IDENTITY (persistent)
   Name: "furiosa"
-  Agent bead: gt-excavation-miner-furiosa
+  Agent bead: gt-mineshaft-miner-furiosa
   CV: work history, languages, completion rate
   Lifecycle: created once, never destroyed (unless explicitly retired)
 
 SANDBOX (per-assignment, reusable)
-  Worktree: miners/furiosa/excavation/
+  Worktree: miners/furiosa/mineshaft/
   Branch: miner/furiosa/<issue>@<timestamp>
   Lifecycle: synced to main between assignments, not destroyed
 
 SESSION (ephemeral)
-  Tmux: gt-excavation-furiosa
+  Tmux: gt-mineshaft-furiosa
   Claude context: cycles on compaction/handoff
   Lifecycle: independent of identity and sandbox
 ```

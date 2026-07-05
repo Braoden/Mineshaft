@@ -1,4 +1,4 @@
-// ABOUTME: Global state management for Excavation Site enable/disable toggle.
+// ABOUTME: Global state management for Mineshaft enable/disable toggle.
 // ABOUTME: Uses XDG-compliant paths for per-machine state storage.
 
 package state
@@ -9,11 +9,11 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/atomicfile"
+	"github.com/steveyegge/mineshaft/internal/atomicfile"
 	"github.com/google/uuid"
 )
 
-// State represents the global Excavation Site state.
+// State represents the global Mineshaft state.
 type State struct {
 	Enabled          bool      `json:"enabled"`
 	Version          string    `json:"version"`
@@ -25,34 +25,34 @@ type State struct {
 }
 
 // StateDir returns the XDG-compliant state directory.
-// Uses ~/.local/state/excavation/ (per XDG Base Directory Specification).
+// Uses ~/.local/state/mineshaft/ (per XDG Base Directory Specification).
 func StateDir() string {
 	// Check XDG_STATE_HOME first
 	if xdg := os.Getenv("XDG_STATE_HOME"); xdg != "" {
-		return filepath.Join(xdg, "excavation")
+		return filepath.Join(xdg, "mineshaft")
 	}
 	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".local", "state", "excavation")
+	return filepath.Join(home, ".local", "state", "mineshaft")
 }
 
 // ConfigDir returns the XDG-compliant config directory.
-// Uses ~/.config/excavation/
+// Uses ~/.config/mineshaft/
 func ConfigDir() string {
 	if xdg := os.Getenv("XDG_CONFIG_HOME"); xdg != "" {
-		return filepath.Join(xdg, "excavation")
+		return filepath.Join(xdg, "mineshaft")
 	}
 	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".config", "excavation")
+	return filepath.Join(home, ".config", "mineshaft")
 }
 
 // CacheDir returns the XDG-compliant cache directory.
-// Uses ~/.cache/excavation/
+// Uses ~/.cache/mineshaft/
 func CacheDir() string {
 	if xdg := os.Getenv("XDG_CACHE_HOME"); xdg != "" {
-		return filepath.Join(xdg, "excavation")
+		return filepath.Join(xdg, "mineshaft")
 	}
 	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".cache", "excavation")
+	return filepath.Join(home, ".cache", "mineshaft")
 }
 
 // StatePath returns the path to state.json.
@@ -60,14 +60,14 @@ func StatePath() string {
 	return filepath.Join(StateDir(), "state.json")
 }
 
-// IsEnabled checks if Excavation Site is globally enabled.
+// IsEnabled checks if Mineshaft is globally enabled.
 // Priority: env override > state file > default (false)
 func IsEnabled() bool {
 	// Environment overrides take priority
-	if os.Getenv("EXCAVATION_DISABLED") == "1" {
+	if os.Getenv("MINESHAFT_DISABLED") == "1" {
 		return false
 	}
-	if os.Getenv("EXCAVATION_ENABLED") == "1" {
+	if os.Getenv("MINESHAFT_ENABLED") == "1" {
 		return true
 	}
 
@@ -108,7 +108,7 @@ func Save(s *State) error {
 	return atomicfile.WriteJSONWithPerm(StatePath(), s, 0600)
 }
 
-// Enable enables Excavation Site globally.
+// Enable enables Mineshaft globally.
 func Enable(version string) error {
 	s, err := Load()
 	if err != nil {
@@ -124,7 +124,7 @@ func Enable(version string) error {
 	return Save(s)
 }
 
-// Disable disables Excavation Site globally.
+// Disable disables Mineshaft globally.
 func Disable() error {
 	s, err := Load()
 	if err != nil {

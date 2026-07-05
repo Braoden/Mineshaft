@@ -13,12 +13,12 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/miner"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/miner"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 // Miner identity command flags
@@ -54,8 +54,8 @@ The identity bead tracks:
   - Cleanup status
 
 Example:
-  gt miner identity add excavation Toast
-  gt miner identity add excavation  # auto-generate name`,
+  gt miner identity add mineshaft Toast
+  gt miner identity add mineshaft  # auto-generate name`,
 	Args: cobra.RangeArgs(1, 2),
 	RunE: runMinerIdentityAdd,
 }
@@ -72,8 +72,8 @@ Shows:
   - Whether worktree exists
 
 Example:
-  gt miner identity list excavation
-  gt miner identity list excavation --json`,
+  gt miner identity list mineshaft
+  gt miner identity list mineshaft --json`,
 	Args: cobra.ExactArgs(1),
 	RunE: runMinerIdentityList,
 }
@@ -92,8 +92,8 @@ Displays:
   - Recent work list with relative timestamps
 
 Examples:
-  gt miner identity show excavation Toast
-  gt miner identity show excavation Toast --json`,
+  gt miner identity show mineshaft Toast
+  gt miner identity show mineshaft Toast --json`,
 	Args: cobra.ExactArgs(2),
 	RunE: runMinerIdentityShow,
 }
@@ -114,7 +114,7 @@ Safety checks:
   - Miner session must not be running
 
 Example:
-  gt miner identity rename excavation Toast Imperator`,
+  gt miner identity rename mineshaft Toast Imperator`,
 	Args: cobra.ExactArgs(3),
 	RunE: runMinerIdentityRename,
 }
@@ -132,8 +132,8 @@ Safety checks:
 Use --force to bypass safety checks.
 
 Example:
-  gt miner identity remove excavation Toast
-  gt miner identity remove excavation Toast --force`,
+  gt miner identity remove mineshaft Toast
+  gt miner identity remove mineshaft Toast --force`,
 	Args: cobra.ExactArgs(2),
 	RunE: runMinerIdentityRemove,
 }

@@ -1,6 +1,6 @@
 +++
 name = "rebuild-gt"
-description = "Rebuild stale gt binary from excavation source"
+description = "Rebuild stale gt binary from mineshaft source"
 version = 2
 
 [gate]
@@ -8,7 +8,7 @@ type = "cooldown"
 duration = "1h"
 
 [tracking]
-labels = ["plugin:rebuild-gt", "rig:excavation", "category:maintenance"]
+labels = ["plugin:rebuild-gt", "rig:mineshaft", "category:maintenance"]
 digest = true
 
 [execution]
@@ -47,7 +47,7 @@ Parse the JSON output and check these fields:
 
 If `safe_to_rebuild` is false, record a skip wisp:
 ```bash
-gt plugin record-run --plugin rebuild-gt --result skipped --rig excavation \
+gt plugin record-run --plugin rebuild-gt --result skipped --rig mineshaft \
   --title "Plugin: rebuild-gt [skipped]" \
   --description "Skipped: not safe to rebuild (forward=$FORWARD, main=$ON_MAIN)" >/dev/null 2>&1 || true
 ```
@@ -57,7 +57,7 @@ gt plugin record-run --plugin rebuild-gt --result skipped --rig excavation \
 Before building, verify the source repo is clean and on main:
 
 ```bash
-cd ~/gt/excavation/overseer/rig
+cd ~/gt/mineshaft/overseer/rig
 git status --porcelain  # Must be clean
 git branch --show-current  # Must be "main"
 ```
@@ -69,7 +69,7 @@ If either check fails, skip the rebuild and record a wisp.
 Rebuild from source (the overseer/rig directory is the canonical source):
 
 ```bash
-cd ~/gt/excavation/overseer/rig && make build && make safe-install
+cd ~/gt/mineshaft/overseer/rig && make build && make safe-install
 ```
 
 **IMPORTANT**: Use `make safe-install` (not `make install`) to avoid restarting
@@ -80,14 +80,14 @@ NOT restart the daemon — sessions will pick up the new binary on their next cy
 
 On success:
 ```bash
-gt plugin record-run --plugin rebuild-gt --result success --rig excavation \
+gt plugin record-run --plugin rebuild-gt --result success --rig mineshaft \
   --title "Plugin: rebuild-gt [success]" \
   --description "Rebuilt gt: $OLD → $NEW ($N commits)" >/dev/null 2>&1 || true
 ```
 
 On failure:
 ```bash
-gt plugin record-run --plugin rebuild-gt --result failure --rig excavation \
+gt plugin record-run --plugin rebuild-gt --result failure --rig mineshaft \
   --title "Plugin: rebuild-gt [failure]" \
   --description "Build failed: $ERROR" >/dev/null 2>&1 || true
 

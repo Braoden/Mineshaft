@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/supervisor"
-	"github.com/steveyegge/excavation/internal/miner"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/supervisor"
+	"github.com/steveyegge/mineshaft/internal/miner"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var heartbeatCmd = &cobra.Command{
@@ -46,7 +46,7 @@ func init() {
 func runHeartbeat(cmd *cobra.Command, args []string) error {
 	sessionName := os.Getenv("GT_SESSION")
 	if sessionName == "" {
-		return fmt.Errorf("GT_SESSION not set (not running in a Excavation Site session)")
+		return fmt.Errorf("GT_SESSION not set (not running in a Mineshaft session)")
 	}
 
 	townRoot, err := workspace.FindFromCwd()

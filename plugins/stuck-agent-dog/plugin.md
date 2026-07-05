@@ -36,7 +36,7 @@ Reference: WAR-ROOM-SERIAL-KILLER.md, commit f3d47a96.
 - Supervisor session (`hq-supervisor`)
 
 **OUT OF SCOPE — NEVER touch these, under any circumstances:**
-- **Crew sessions** (`<rig>-crew-<name>`, e.g. `excavation-crew-bear`). Crew lifecycle
+- **Crew sessions** (`<rig>-crew-<name>`, e.g. `mineshaft-crew-bear`). Crew lifecycle
   is managed by the boss (human), not dogs. Crew members are persistent,
   long-lived, and user-managed. A crew session that looks idle is NOT stuck — it
   is waiting for its human. Killing a crew session destroys the boss's active

@@ -46,7 +46,7 @@ func TestTryAcquireSlingAssigneeLock_Serialization(t *testing.T) {
 	t.Parallel()
 
 	townRoot := t.TempDir()
-	agent := "excavation/miners/testcat"
+	agent := "mineshaft/miners/testcat"
 
 	// First acquire should succeed immediately.
 	release1, err := tryAcquireSlingAssigneeLock(townRoot, agent)
@@ -97,7 +97,7 @@ func TestTryAcquireSlingAssigneeLock_Contention(t *testing.T) {
 	t.Parallel()
 
 	townRoot := t.TempDir()
-	agent := "excavation/miners/racecat"
+	agent := "mineshaft/miners/racecat"
 
 	// Acquire lock in a goroutine and hold it briefly.
 	var wg sync.WaitGroup
@@ -139,7 +139,7 @@ func TestTryAcquireSlingAssigneeLock_AgentNameSanitization(t *testing.T) {
 
 	// Agent names with slashes and colons should be sanitized for filesystem safety.
 	agents := []string{
-		"excavation/miners/dementus",
+		"mineshaft/miners/dementus",
 		"rig:with:colons",
 		"overseer/",
 	}

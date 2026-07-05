@@ -14,16 +14,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/testutil"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/testutil"
 )
 
 // hookTestCounter generates unique prefixes for each hook test to isolate
 // Dolt databases on the shared server.
 var hookTestCounter atomic.Int32
 
-// setupHookTestTown creates a minimal Excavation Site with a miner for testing hooks.
+// setupHookTestTown creates a minimal Mineshaft with a miner for testing hooks.
 // Uses requireDoltServer for ephemeral port and unique prefixes per test to
 // isolate Dolt databases.
 // Returns townRoot, the path to the miner's worktree, and the beads prefix.
@@ -60,29 +60,29 @@ func setupHookTestTown(t *testing.T) (townRoot, minerDir, rigPrefix string) {
 	// Create routes.jsonl
 	routes := []beads.Route{
 		{Prefix: "hq-", Path: "."},                           // Town-level beads
-		{Prefix: rigPrefix + "-", Path: "excavation/overseer/rig"}, // Excavation rig
+		{Prefix: rigPrefix + "-", Path: "mineshaft/overseer/rig"}, // Mineshaft rig
 	}
 	if err := beads.WriteRoutes(townBeadsDir, routes); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
 
-	// Create excavation rig structure
-	gasRigPath := filepath.Join(townRoot, "excavation", "overseer", "rig")
+	// Create mineshaft rig structure
+	gasRigPath := filepath.Join(townRoot, "mineshaft", "overseer", "rig")
 	if err := os.MkdirAll(gasRigPath, 0755); err != nil {
-		t.Fatalf("mkdir excavation: %v", err)
+		t.Fatalf("mkdir mineshaft: %v", err)
 	}
 
-	// Create excavation .beads directory with its own config
+	// Create mineshaft .beads directory with its own config
 	gasBeadsDir := filepath.Join(gasRigPath, ".beads")
 	if err := os.MkdirAll(gasBeadsDir, 0755); err != nil {
-		t.Fatalf("mkdir excavation .beads: %v", err)
+		t.Fatalf("mkdir mineshaft .beads: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(gasBeadsDir, "config.yaml"), []byte("prefix: "+rigPrefix+"\n"), 0644); err != nil {
-		t.Fatalf("write excavation config: %v", err)
+		t.Fatalf("write mineshaft config: %v", err)
 	}
 
 	// Create miner worktree with redirect
-	minerDir = filepath.Join(townRoot, "excavation", "miners", "toast")
+	minerDir = filepath.Join(townRoot, "mineshaft", "miners", "toast")
 	if err := os.MkdirAll(minerDir, 0755); err != nil {
 		t.Fatalf("mkdir miners: %v", err)
 	}
@@ -147,7 +147,7 @@ func TestHookSlot_BasicHook(t *testing.T) {
 	t.Logf("Created bead: %s", issue.ID)
 
 	// Hook the bead to the miner
-	agentID := "excavation/miners/toast"
+	agentID := "mineshaft/miners/toast"
 	status := beads.StatusHooked
 	if err := b.Update(issue.ID, beads.UpdateOptions{
 		Status:   &status,
@@ -188,7 +188,7 @@ func TestHookSlot_Singleton(t *testing.T) {
 	initBeadsDBWithPrefix(t, rigDir, rigPrefix)
 
 	b := beads.New(rigDir)
-	agentID := "excavation/miners/toast"
+	agentID := "mineshaft/miners/toast"
 	status := beads.StatusHooked
 
 	// Create and hook first bead
@@ -262,7 +262,7 @@ func TestHookSlot_Unhook(t *testing.T) {
 	initBeadsDBWithPrefix(t, rigDir, rigPrefix)
 
 	b := beads.New(rigDir)
-	agentID := "excavation/miners/toast"
+	agentID := "mineshaft/miners/toast"
 
 	// Create and hook a bead
 	issue, err := b.Create(beads.CreateOptions{
@@ -314,7 +314,7 @@ func TestHookSlot_DifferentAgents(t *testing.T) {
 	townRoot, minerDir, rigPrefix := setupHookTestTown(t)
 
 	// Create second miner directory
-	miner2Dir := filepath.Join(townRoot, "excavation", "miners", "nux")
+	miner2Dir := filepath.Join(townRoot, "mineshaft", "miners", "nux")
 	if err := os.MkdirAll(miner2Dir, 0755); err != nil {
 		t.Fatalf("mkdir miner2: %v", err)
 	}
@@ -323,8 +323,8 @@ func TestHookSlot_DifferentAgents(t *testing.T) {
 	initBeadsDBWithPrefix(t, rigDir, rigPrefix)
 
 	b := beads.New(rigDir)
-	agent1 := "excavation/miners/toast"
-	agent2 := "excavation/miners/nux"
+	agent1 := "mineshaft/miners/toast"
+	agent2 := "mineshaft/miners/nux"
 	status := beads.StatusHooked
 
 	// Create and hook bead to first agent
@@ -408,7 +408,7 @@ func TestHookSlot_HookPersistence(t *testing.T) {
 	rigDir := filepath.Join(minerDir, "..", "..", "overseer", "rig")
 	initBeadsDBWithPrefix(t, rigDir, rigPrefix)
 
-	agentID := "excavation/miners/toast"
+	agentID := "mineshaft/miners/toast"
 	status := beads.StatusHooked
 
 	// Create first beads instance and hook a bead
@@ -464,7 +464,7 @@ func TestHookSlot_StatusTransitions(t *testing.T) {
 	initBeadsDBWithPrefix(t, rigDir, rigPrefix)
 
 	b := beads.New(rigDir)
-	agentID := "excavation/miners/toast"
+	agentID := "mineshaft/miners/toast"
 
 	// Create a bead
 	issue, err := b.Create(beads.CreateOptions{

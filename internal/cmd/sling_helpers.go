@@ -13,19 +13,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/channelevents"
-	"github.com/steveyegge/excavation/internal/cli"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/daemon"
-	"github.com/steveyegge/excavation/internal/formula"
-	rigpkg "github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/telemetry"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/channelevents"
+	"github.com/steveyegge/mineshaft/internal/cli"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/daemon"
+	"github.com/steveyegge/mineshaft/internal/formula"
+	rigpkg "github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/telemetry"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // resolveBeadDir returns the directory to run bd commands for a given bead ID.
@@ -38,7 +38,7 @@ import (
 // (and stripping BEADS_DIR). This function reads routes.jsonl from the town-level
 // .beads directory and resolves the bead's prefix to the owning rig.
 //
-// PR #3166 (steveyegge/excavation) will replace bd shell-outs with the Go module
+// PR #3166 (steveyegge/mineshaft) will replace bd shell-outs with the Go module
 // Storage API, making this function unnecessary. Until then, this is the
 // routing bridge between gt and the routing-free bd CLI.
 func resolveBeadDir(beadID string) string {
@@ -57,7 +57,7 @@ func resolveBeadDirFromTownRoot(townRoot, beadID string) string {
 	resolved := beads.ResolveBeadsDirForID(townBeadsDir, beadID)
 	// Return the parent of the .beads directory so bd discovers it naturally.
 	// For town-level beads this returns townRoot; for rig beads it returns
-	// the rig's overseer/rig directory (e.g., excavation/overseer/rig).
+	// the rig's overseer/rig directory (e.g., mineshaft/overseer/rig).
 	return filepath.Dir(resolved)
 }
 
@@ -1027,7 +1027,7 @@ func InstantiateFormulaOnBead(ctx context.Context, formulaName, beadID, title, h
 
 	// Step 1: Cook the formula (ensures proto exists)
 	// If cook fails, retry with the embedded formula extracted to a temp file.
-	// This handles non-excavation rigs that don't have formulas provisioned on disk.
+	// This handles non-mineshaft rigs that don't have formulas provisioned on disk.
 	// See gt-oir.
 	resolvedFormula := formulaName
 	var formulaCleanup func()
@@ -1263,7 +1263,7 @@ func isHookedAgentDead(assignee string) bool {
 // hookBeadWithRetry hooks a bead to a target agent with exponential backoff retry
 // and post-hook verification. This ensures the hook sticks even under Dolt concurrency.
 // Fails fast on configuration/initialization errors (gt-2ra).
-// See: https://github.com/steveyegge/excavation/issues/148
+// See: https://github.com/steveyegge/mineshaft/issues/148
 func hookBeadWithRetry(beadID, targetAgent, hookDir string) error {
 	return hookBeadWithRetryWithTownRoot(beadID, targetAgent, hookDir, "")
 }
@@ -1382,7 +1382,7 @@ func isSlingConfigError(err error) bool {
 // and the default branch (base_branch). Only non-empty values are included.
 //
 // Settings are resolved in priority order:
-//  1. Repository defaults: <rig>/overseer/rig/.excavation/settings.json (committed to git)
+//  1. Repository defaults: <rig>/overseer/rig/.mineshaft/settings.json (committed to git)
 //  2. Rig-local overrides: <rig>/settings/config.json (operator tuning)
 //  3. User --var flags (handled by caller, not here)
 func loadRigCommandVars(townRoot, rig string) []string {

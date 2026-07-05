@@ -12,9 +12,9 @@ import (
 	"time"
 
 	beadsdk "github.com/steveyegge/beads"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/minecart"
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/minecart"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 const (
@@ -60,7 +60,7 @@ type MinecartManager struct {
 
 	// stores maps store names to beads stores for event polling.
 	// Key "hq" is the town-level store (used for minecart lookups).
-	// Other keys are rig names (e.g., "excavation", "beads", "shippercrm").
+	// Other keys are rig names (e.g., "mineshaft", "beads", "shippercrm").
 	// Populated lazily via openStores if nil at startup (e.g., Dolt not ready).
 	// Protected by storesMu.
 	stores   map[string]beadsdk.Storage
@@ -92,7 +92,7 @@ type MinecartManager struct {
 	scanMu sync.Mutex
 
 	// lastEventIDs tracks per-store high-water marks for event polling.
-	// Key matches stores map keys ("hq", "excavation", etc.).
+	// Key matches stores map keys ("hq", "mineshaft", etc.).
 	lastEventIDs sync.Map // map[string]time.Time
 
 	// seeded is true once the first poll cycle has run (warm-up).

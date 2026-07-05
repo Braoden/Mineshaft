@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/constants"
 )
 
 // ---------------------------------------------------------------------------
@@ -23,7 +23,7 @@ type testBead struct {
 	Title  string
 	Type   string // "epic", "task", "bug", etc.
 	Status string // default "open"
-	Rig    string // e.g. "excavation"
+	Rig    string // e.g. "mineshaft"
 	Prefix string // e.g. "gt-"
 	Parent string // parent bead ID
 }
@@ -646,9 +646,9 @@ func TestDagBuilder_BasicSetup(t *testing.T) {
 	}
 
 	dag := newTestDAG(t).
-		Task("task-1", "First task", withRig("excavation")).
-		Task("task-2", "Second task", withRig("excavation")).BlockedBy("task-1").
-		Task("task-3", "Third task", withRig("excavation")).BlockedBy("task-2")
+		Task("task-1", "First task", withRig("mineshaft")).
+		Task("task-2", "Second task", withRig("mineshaft")).BlockedBy("task-1").
+		Task("task-3", "Third task", withRig("mineshaft")).BlockedBy("task-2")
 
 	_, logPath := dag.Setup(t)
 
@@ -732,8 +732,8 @@ func TestDagBuilder_EpicWithChildren(t *testing.T) {
 
 	dag := newTestDAG(t).
 		Epic("epic-1", "Root Epic").
-		Task("task-1", "First task", withRig("excavation")).ParentOf("epic-1").
-		Task("task-2", "Second task", withRig("excavation")).ParentOf("epic-1")
+		Task("task-1", "First task", withRig("mineshaft")).ParentOf("epic-1").
+		Task("task-2", "Second task", withRig("mineshaft")).ParentOf("epic-1")
 
 	dag.Setup(t)
 

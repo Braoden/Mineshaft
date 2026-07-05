@@ -146,7 +146,7 @@ Branch: miner/nux-abc123`
 func TestParseHelp(t *testing.T) {
 	t.Parallel()
 	subject := "HELP: Tests failing on CI"
-	body := `Agent: excavation/miners/nux
+	body := `Agent: mineshaft/miners/nux
 Issue: gt-abc123
 Problem: Unit tests timeout after 30 seconds
 Tried: Increased timeout, checked for deadlocks`
@@ -159,8 +159,8 @@ Tried: Increased timeout, checked for deadlocks`
 	if payload.Topic != "Tests failing on CI" {
 		t.Errorf("Topic = %q, want %q", payload.Topic, "Tests failing on CI")
 	}
-	if payload.Agent != "excavation/miners/nux" {
-		t.Errorf("Agent = %q, want %q", payload.Agent, "excavation/miners/nux")
+	if payload.Agent != "mineshaft/miners/nux" {
+		t.Errorf("Agent = %q, want %q", payload.Agent, "mineshaft/miners/nux")
 	}
 	if payload.IssueID != "gt-abc123" {
 		t.Errorf("IssueID = %q, want %q", payload.IssueID, "gt-abc123")
@@ -408,7 +408,7 @@ func TestFormatHelpSummary_FullPayload(t *testing.T) {
 	t.Parallel()
 	ts := time.Date(2026, 2, 28, 12, 0, 0, 0, time.UTC)
 	payload := &HelpPayload{
-		Agent:       "excavation/miners/nux",
+		Agent:       "mineshaft/miners/nux",
 		IssueID:     "gt-1234",
 		Topic:       "Git conflict",
 		Problem:     "Merge conflict in main.go",
@@ -418,7 +418,7 @@ func TestFormatHelpSummary_FullPayload(t *testing.T) {
 
 	summary := FormatHelpSummary(payload)
 
-	if !strings.Contains(summary, "HELP REQUEST from excavation/miners/nux") {
+	if !strings.Contains(summary, "HELP REQUEST from mineshaft/miners/nux") {
 		t.Errorf("summary should contain agent name, got: %s", summary)
 	}
 	if !strings.Contains(summary, "(issue: gt-1234)") {
@@ -441,13 +441,13 @@ func TestFormatHelpSummary_FullPayload(t *testing.T) {
 func TestFormatHelpSummary_MinimalPayload(t *testing.T) {
 	t.Parallel()
 	payload := &HelpPayload{
-		Agent:   "excavation/miners/furiosa",
+		Agent:   "mineshaft/miners/furiosa",
 		Problem: "Tests fail on CI",
 	}
 
 	summary := FormatHelpSummary(payload)
 
-	if !strings.Contains(summary, "HELP REQUEST from excavation/miners/furiosa") {
+	if !strings.Contains(summary, "HELP REQUEST from mineshaft/miners/furiosa") {
 		t.Errorf("summary should contain agent name, got: %s", summary)
 	}
 	if strings.Contains(summary, "issue:") {
@@ -608,7 +608,7 @@ func TestAssessHelp_PriorityOrder(t *testing.T) {
 func TestFormatHelpSummary_WithAssessment(t *testing.T) {
 	t.Parallel()
 	payload := &HelpPayload{
-		Agent:   "excavation/miners/nux",
+		Agent:   "mineshaft/miners/nux",
 		Topic:   "Merge conflict",
 		Problem: "Cannot rebase",
 		Assessment: &HelpAssessment{

@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/miner"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/miner"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var (
@@ -23,7 +23,7 @@ var namepoolCmd = &cobra.Command{
 	Use:     "namepool",
 	GroupID: GroupWorkspace,
 	Short:   "Manage miner name pools",
-	Long: `Manage themed name pools for miners in Excavation Site.
+	Long: `Manage themed name pools for miners in Mineshaft.
 
 By default, miners get themed names from the Mad Max universe
 (furiosa, nux, slit, etc.). You can change the theme or add custom names.

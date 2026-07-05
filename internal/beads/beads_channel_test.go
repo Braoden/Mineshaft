@@ -17,7 +17,7 @@ func TestFormatChannelDescription(t *testing.T) {
 			title: "Channel: alerts",
 			fields: &ChannelFields{
 				Name:        "alerts",
-				Subscribers: []string{"excavation/crew/max", "excavation/witness"},
+				Subscribers: []string{"mineshaft/crew/max", "mineshaft/witness"},
 				Status:      ChannelStatusActive,
 				CreatedBy:   "human",
 				CreatedAt:   "2024-01-15T10:00:00Z",
@@ -25,7 +25,7 @@ func TestFormatChannelDescription(t *testing.T) {
 			want: []string{
 				"Channel: alerts",
 				"name: alerts",
-				"subscribers: excavation/crew/max,excavation/witness",
+				"subscribers: mineshaft/crew/max,mineshaft/witness",
 				"status: active",
 				"created_by: human",
 				"created_at: 2024-01-15T10:00:00Z",
@@ -103,7 +103,7 @@ func TestParseChannelFields(t *testing.T) {
 			description: `Channel: alerts
 
 name: alerts
-subscribers: excavation/crew/max,excavation/witness,*/refinery
+subscribers: mineshaft/crew/max,mineshaft/witness,*/refinery
 status: active
 retention_count: 50
 retention_hours: 48
@@ -111,7 +111,7 @@ created_by: human
 created_at: 2024-01-15T10:00:00Z`,
 			want: &ChannelFields{
 				Name:           "alerts",
-				Subscribers:    []string{"excavation/crew/max", "excavation/witness", "*/refinery"},
+				Subscribers:    []string{"mineshaft/crew/max", "mineshaft/witness", "*/refinery"},
 				Status:         ChannelStatusActive,
 				RetentionCount: 50,
 				RetentionHours: 48,
@@ -137,11 +137,11 @@ created_by: admin`,
 		{
 			name: "single subscriber",
 			description: `name: solo
-subscribers: excavation/crew/max
+subscribers: mineshaft/crew/max
 status: active`,
 			want: &ChannelFields{
 				Name:        "solo",
-				Subscribers: []string{"excavation/crew/max"},
+				Subscribers: []string{"mineshaft/crew/max"},
 				Status:      ChannelStatusActive,
 			},
 		},
@@ -231,7 +231,7 @@ func TestChannelRoundTrip(t *testing.T) {
 	// Test that Format -> Parse preserves data
 	original := &ChannelFields{
 		Name:           "test-channel",
-		Subscribers:    []string{"excavation/crew/max", "*/witness", "@town"},
+		Subscribers:    []string{"mineshaft/crew/max", "*/witness", "@town"},
 		Status:         ChannelStatusActive,
 		RetentionCount: 100,
 		RetentionHours: 72,

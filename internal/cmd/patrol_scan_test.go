@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/witness"
+	"github.com/steveyegge/mineshaft/internal/witness"
 )
 
 type progressDiagnostics struct {
@@ -26,7 +26,7 @@ func (d *progressDiagnostics) Write(p []byte) (int, error) {
 
 func TestPatrolScanOutputJSON(t *testing.T) {
 	output := PatrolScanOutput{
-		Rig:       "excavation",
+		Rig:       "mineshaft",
 		Timestamp: "2026-03-17T12:00:00Z",
 		Zombies: &PatrolScanZombieOutput{
 			Checked: 3,
@@ -44,7 +44,7 @@ func TestPatrolScanOutputJSON(t *testing.T) {
 		},
 		Receipts: []witness.PatrolReceipt{
 			{
-				Rig:               "excavation",
+				Rig:               "mineshaft",
 				Miner:           "alpha",
 				Verdict:           witness.PatrolVerdictStale,
 				RecommendedAction: "restarted",
@@ -67,8 +67,8 @@ func TestPatrolScanOutputJSON(t *testing.T) {
 		t.Fatalf("failed to unmarshal output: %v", err)
 	}
 
-	if parsed.Rig != "excavation" {
-		t.Errorf("Rig = %q, want %q", parsed.Rig, "excavation")
+	if parsed.Rig != "mineshaft" {
+		t.Errorf("Rig = %q, want %q", parsed.Rig, "mineshaft")
 	}
 	if parsed.Zombies.Found != 1 {
 		t.Errorf("Zombies.Found = %d, want 1", parsed.Zombies.Found)

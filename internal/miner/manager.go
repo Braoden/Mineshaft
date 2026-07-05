@@ -18,18 +18,18 @@ import (
 
 	"github.com/gofrs/flock"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/doltserver"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/runtime"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/telemetry"
-	"github.com/steveyegge/excavation/internal/templates"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/doltserver"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/runtime"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/telemetry"
+	"github.com/steveyegge/mineshaft/internal/templates"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // Retry constants for Dolt operations (matching hook update pattern in sling.go).
@@ -390,13 +390,13 @@ func (m *Manager) SetAgentStateWithRetry(name string, state string) error {
 }
 
 // assigneeID returns the beads assignee identifier for a miner.
-// Format: "rig/miners/minerName" (e.g., "excavation/miners/Toast")
+// Format: "rig/miners/minerName" (e.g., "mineshaft/miners/Toast")
 func (m *Manager) assigneeID(name string) string {
 	return fmt.Sprintf("%s/miners/%s", m.rig.Name, name)
 }
 
 // agentBeadID returns the agent bead ID for a miner.
-// Format: "<prefix>-<rig>-miner-<name>" (e.g., "gt-excavation-miner-Toast", "bd-beads-miner-obsidian")
+// Format: "<prefix>-<rig>-miner-<name>" (e.g., "gt-mineshaft-miner-Toast", "bd-beads-miner-obsidian")
 // The prefix is looked up from routes.jsonl to support rigs with custom prefixes.
 // Uses the town root computed at Manager construction for deterministic IDs
 // regardless of call site (gt-lph).
@@ -1035,9 +1035,9 @@ func (m *Manager) AddWithOptions(name string, opts AddOptions) (_ *Miner, retErr
 		return nil, fmt.Errorf("setting up shared beads: %w (miner cannot submit MRs without shared beads)", err)
 	}
 
-	// Provision PRIME.md with Excavation Site context for this worker.
+	// Provision PRIME.md with Mineshaft context for this worker.
 	// This is the fallback if SessionStart hook fails - ensures miners
-	// always have GUPP and essential Excavation Site context.
+	// always have GUPP and essential Mineshaft context.
 	if err := beads.ProvisionPrimeMDForWorktree(clonePath); err != nil {
 		// Non-fatal - miner can still work via hook, warn but don't fail
 		style.PrintWarning("could not provision PRIME.md: %v", err)
@@ -1211,7 +1211,7 @@ func (m *Manager) RemoveWithOptions(name string, force, nuclear, selfNuke bool) 
 	// This check runs unless selfNuke=true (miner deleting its own worktree).
 	// When a miner calls `gt done`, it's inside its worktree by design - the session
 	// will be killed immediately after, so breaking the shell is expected and harmless.
-	// See: https://github.com/steveyegge/excavation/issues/942
+	// See: https://github.com/steveyegge/mineshaft/issues/942
 	if !selfNuke {
 		cwd, cwdErr := os.Getwd()
 		if cwdErr == nil {
@@ -1297,7 +1297,7 @@ func (m *Manager) RemoveWithOptions(name string, force, nuclear, selfNuke bool) 
 	// Verify removal succeeded (fixes #618)
 	// The above removal attempts may fail silently on permissions, symlinks, or busy files
 	if err := verifyRemovalComplete(minerDir, clonePath); err != nil {
-		// Log warning but don't fail - the miner is effectively "removed" from Excavation Site's perspective
+		// Log warning but don't fail - the miner is effectively "removed" from Mineshaft's perspective
 		style.PrintWarning("incomplete removal for %s: %v", name, err)
 	}
 

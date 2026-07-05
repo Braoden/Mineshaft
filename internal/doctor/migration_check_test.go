@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/doltserver"
+	"github.com/steveyegge/mineshaft/internal/doltserver"
 )
 
 // setupDoltDB creates a fake Dolt database directory under .dolt-data/.
@@ -219,9 +219,9 @@ func TestDoltServerReachableCheck_FailsWhenExpectedRigDatabaseMissing(t *testing
 	check := NewDoltServerReachableCheck()
 	townRoot := t.TempDir()
 
-	setupRigsJSON(t, townRoot, []string{"excavation"})
+	setupRigsJSON(t, townRoot, []string{"mineshaft"})
 	setupRigMetadata(t, townRoot, "hq", "hq")
-	setupRigMetadata(t, townRoot, "excavation", "excavation")
+	setupRigMetadata(t, townRoot, "mineshaft", "mineshaft")
 
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
@@ -232,19 +232,19 @@ func TestDoltServerReachableCheck_FailsWhenExpectedRigDatabaseMissing(t *testing
 	if err != nil {
 		t.Fatal(err)
 	}
-	beadsDir := filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads")
+	beadsDir := filepath.Join(townRoot, "mineshaft", "overseer", "rig", ".beads")
 	setupServerMetadata(t, beadsDir, host, mustAtoi(t, portStr))
-	writeServerMetadata(t, beadsDir, "excavation", host, mustAtoi(t, portStr))
+	writeServerMetadata(t, beadsDir, "mineshaft", host, mustAtoi(t, portStr))
 	hqBeadsDir := filepath.Join(townRoot, ".beads")
 	setupServerMetadata(t, hqBeadsDir, host, mustAtoi(t, portStr))
 	writeServerMetadata(t, hqBeadsDir, "hq", host, mustAtoi(t, portStr))
 
 	origVerify := verifyExpectedDatabasesAtConfig
 	verifyExpectedDatabasesAtConfig = func(_ *doltserver.Config, expected []string) ([]string, []string, error) {
-		if len(expected) != 2 || expected[0] != "hq" || expected[1] != "excavation" {
+		if len(expected) != 2 || expected[0] != "hq" || expected[1] != "mineshaft" {
 			t.Fatalf("unexpected expected database list: %#v", expected)
 		}
-		return []string{"hq"}, []string{"excavation"}, nil
+		return []string{"hq"}, []string{"mineshaft"}, nil
 	}
 	defer func() { verifyExpectedDatabasesAtConfig = origVerify }()
 
@@ -255,8 +255,8 @@ func TestDoltServerReachableCheck_FailsWhenExpectedRigDatabaseMissing(t *testing
 	if !strings.Contains(result.Message, "expected rig database") {
 		t.Fatalf("expected missing database message, got %q", result.Message)
 	}
-	if len(result.Details) != 1 || result.Details[0] != "excavation (excavation)" {
-		t.Fatalf("expected excavation missing detail, got %#v", result.Details)
+	if len(result.Details) != 1 || result.Details[0] != "mineshaft (mineshaft)" {
+		t.Fatalf("expected mineshaft missing detail, got %#v", result.Details)
 	}
 }
 
@@ -264,9 +264,9 @@ func TestDoltServerReachableCheck_FailsWhenDatabaseVerificationErrors(t *testing
 	check := NewDoltServerReachableCheck()
 	townRoot := t.TempDir()
 
-	setupRigsJSON(t, townRoot, []string{"excavation"})
+	setupRigsJSON(t, townRoot, []string{"mineshaft"})
 	setupRigMetadata(t, townRoot, "hq", "hq")
-	setupRigMetadata(t, townRoot, "excavation", "excavation")
+	setupRigMetadata(t, townRoot, "mineshaft", "mineshaft")
 
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
@@ -277,16 +277,16 @@ func TestDoltServerReachableCheck_FailsWhenDatabaseVerificationErrors(t *testing
 	if err != nil {
 		t.Fatal(err)
 	}
-	beadsDir := filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads")
+	beadsDir := filepath.Join(townRoot, "mineshaft", "overseer", "rig", ".beads")
 	setupServerMetadata(t, beadsDir, host, mustAtoi(t, portStr))
-	writeServerMetadata(t, beadsDir, "excavation", host, mustAtoi(t, portStr))
+	writeServerMetadata(t, beadsDir, "mineshaft", host, mustAtoi(t, portStr))
 	hqBeadsDir := filepath.Join(townRoot, ".beads")
 	setupServerMetadata(t, hqBeadsDir, host, mustAtoi(t, portStr))
 	writeServerMetadata(t, hqBeadsDir, "hq", host, mustAtoi(t, portStr))
 
 	origVerify := verifyExpectedDatabasesAtConfig
 	verifyExpectedDatabasesAtConfig = func(_ *doltserver.Config, expected []string) ([]string, []string, error) {
-		if len(expected) != 2 || expected[0] != "hq" || expected[1] != "excavation" {
+		if len(expected) != 2 || expected[0] != "hq" || expected[1] != "mineshaft" {
 			t.Fatalf("unexpected expected database list: %#v", expected)
 		}
 		return nil, nil, fmt.Errorf("panic from sibling db")
@@ -373,11 +373,11 @@ func TestDoltOrphanedDatabaseCheck_NoOrphans(t *testing.T) {
 	townRoot := t.TempDir()
 
 	setupDoltDB(t, townRoot, "hq")
-	setupDoltDB(t, townRoot, "excavation")
+	setupDoltDB(t, townRoot, "mineshaft")
 
-	setupRigsJSON(t, townRoot, []string{"excavation"})
+	setupRigsJSON(t, townRoot, []string{"mineshaft"})
 	setupRigMetadata(t, townRoot, "hq", "hq")
-	setupRigMetadata(t, townRoot, "excavation", "excavation")
+	setupRigMetadata(t, townRoot, "mineshaft", "mineshaft")
 
 	check := NewDoltOrphanedDatabaseCheck()
 	ctx := &CheckContext{TownRoot: townRoot}

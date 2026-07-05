@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/mineshaft/internal/config"
 )
 
 // =============================================================================
@@ -23,7 +23,7 @@ func skipIfNoGit(t *testing.T) {
 }
 
 // testTownWithGitRigs creates a complete test town with git repositories.
-// Sets up bare repos and overseer worktrees to simulate real Excavation Site structure.
+// Sets up bare repos and overseer worktrees to simulate real Mineshaft structure.
 func testTownWithGitRigs(t *testing.T) (*Manager, string) {
 	t.Helper()
 	skipIfNoGit(t)

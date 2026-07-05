@@ -14,13 +14,13 @@ func TestAssigneeToSessionName(t *testing.T) {
 	}{
 		{"supervisor", "hq-supervisor"},
 		{"overseer", "hq-overseer"},
-		{"excavation/witness", "gt-witness"},
-		{"excavation/refinery", "gt-refinery"},
-		{"excavation/miners/max", "gt-max"},
-		{"excavation/crew/joe", "gt-crew-joe"},
+		{"mineshaft/witness", "gt-witness"},
+		{"mineshaft/refinery", "gt-refinery"},
+		{"mineshaft/miners/max", "gt-max"},
+		{"mineshaft/crew/joe", "gt-crew-joe"},
 		{"", ""},
 		{"unknown", ""},
-		{"excavation/unknown/agent", ""},
+		{"mineshaft/unknown/agent", ""},
 		{"a/b/c/d", ""},
 	}
 
@@ -43,9 +43,9 @@ func TestAssigneeToWorktreePath_InvalidFormats(t *testing.T) {
 	}{
 		{"empty", ""},
 		{"single part", "supervisor"},
-		{"two parts", "excavation/witness"},
+		{"two parts", "mineshaft/witness"},
 		{"four parts", "a/b/c/d"},
-		{"unknown agent type", "excavation/unknown/agent"},
+		{"unknown agent type", "mineshaft/unknown/agent"},
 	}
 
 	for _, tt := range tests {
@@ -255,7 +255,7 @@ func TestStaleHookResult_PartialWorkFields(t *testing.T) {
 	result := &StaleHookResult{
 		BeadID:        "gt-abc",
 		Title:         "test bead",
-		Assignee:      "excavation/miners/max",
+		Assignee:      "mineshaft/miners/max",
 		PartialWork:   true,
 		WorktreeDirty: true,
 		UnpushedCount: 3,

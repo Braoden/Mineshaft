@@ -1,4 +1,4 @@
-// Package tmux provides theme support for Excavation Site tmux sessions.
+// Package tmux provides theme support for Mineshaft tmux sessions.
 package tmux
 
 import (

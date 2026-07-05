@@ -31,7 +31,7 @@ MONITORING:
 - For mega-molecules: Use minecart dashboard when available
 - Completion: All steps closed = molecule complete
 
-This proves Excavation Site can execute arbitrarily long workflows with
+This proves Mineshaft can execute arbitrarily long workflows with
 nondeterministic idempotence - different sessions, same outcome.
 """
 formula = "towers-of-hanoi"

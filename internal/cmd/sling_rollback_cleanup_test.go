@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/mineshaft/internal/config"
 )
 
 func writeRollbackCleanupBDStub(t *testing.T, binDir, unixScript, windowsScript string) {
@@ -41,8 +41,8 @@ func TestCleanupSpawnedMiner_DeletesBranch(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "overseer", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir excavation/overseer/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft", "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir mineshaft/overseer/rig: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
@@ -53,8 +53,8 @@ func TestCleanupSpawnedMiner_DeletesBranch(t *testing.T) {
 	rigs := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"excavation": {
-				GitURL:    "git@github.com:test/excavation.git",
+			"mineshaft": {
+				GitURL:    "git@github.com:test/mineshaft.git",
 				LocalRepo: "",
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
@@ -69,7 +69,7 @@ func TestCleanupSpawnedMiner_DeletesBranch(t *testing.T) {
 	}
 
 	// Create bare repo directory (even though it's not a real git repo)
-	bareRepoPath := filepath.Join(townRoot, "excavation", ".repo.git")
+	bareRepoPath := filepath.Join(townRoot, "mineshaft", ".repo.git")
 	if err := os.MkdirAll(bareRepoPath, 0755); err != nil {
 		t.Fatalf("mkdir bare repo: %v", err)
 	}
@@ -100,14 +100,14 @@ exit 0
 	// This test verifies that cleanupSpawnedMiner properly attempts branch deletion
 	// The actual deletion will fail due to no real git repo, but we verify the code path runs
 	spawnInfo := &SpawnedMinerInfo{
-		RigName:     "excavation",
+		RigName:     "mineshaft",
 		MinerName: "Toast",
-		ClonePath:   filepath.Join(townRoot, "excavation", "miners", "Toast"),
+		ClonePath:   filepath.Join(townRoot, "mineshaft", "miners", "Toast"),
 		Branch:      "p-toast-123",
 	}
 
 	// This should not panic and should attempt to delete the branch
-	cleanupSpawnedMiner(spawnInfo, "excavation", "")
+	cleanupSpawnedMiner(spawnInfo, "mineshaft", "")
 
 	// If we get here without panic, the test passes for the basic code path
 	t.Logf("cleanupSpawnedMiner with Branch completed without panic")
@@ -121,8 +121,8 @@ func TestCleanupSpawnedMiner_WithEmptyBranch(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "overseer", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir excavation/overseer/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft", "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir mineshaft/overseer/rig: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
@@ -133,8 +133,8 @@ func TestCleanupSpawnedMiner_WithEmptyBranch(t *testing.T) {
 	rigs := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"excavation": {
-				GitURL:    "git@github.com:test/excavation.git",
+			"mineshaft": {
+				GitURL:    "git@github.com:test/mineshaft.git",
 				LocalRepo: "",
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
@@ -172,14 +172,14 @@ exit 0
 
 	// Call cleanupSpawnedMiner with EMPTY branch
 	spawnInfo := &SpawnedMinerInfo{
-		RigName:     "excavation",
+		RigName:     "mineshaft",
 		MinerName: "Toast",
-		ClonePath:   filepath.Join(townRoot, "excavation", "miners", "Toast"),
+		ClonePath:   filepath.Join(townRoot, "mineshaft", "miners", "Toast"),
 		Branch:      "", // Empty branch
 	}
 
 	// This should complete without attempting branch deletion
-	cleanupSpawnedMiner(spawnInfo, "excavation", "")
+	cleanupSpawnedMiner(spawnInfo, "mineshaft", "")
 
 	// If we get here, the empty branch check works
 	t.Logf("cleanupSpawnedMiner with empty Branch completed without panic")
@@ -200,7 +200,7 @@ func TestCleanupSpawnedMiner_WithNilSpawnInfo(t *testing.T) {
 		}
 	}()
 
-	cleanupSpawnedMiner(nil, "excavation", "")
+	cleanupSpawnedMiner(nil, "mineshaft", "")
 }
 
 // TestCloseMinecart_ClosesMinecart verifies that the minecart is closed
@@ -212,8 +212,8 @@ func TestCloseMinecart_ClosesMinecart(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "overseer", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir excavation/overseer/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft", "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir mineshaft/overseer/rig: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
@@ -224,8 +224,8 @@ func TestCloseMinecart_ClosesMinecart(t *testing.T) {
 	rigs := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"excavation": {
-				GitURL:    "git@github.com:test/excavation.git",
+			"mineshaft": {
+				GitURL:    "git@github.com:test/mineshaft.git",
 				LocalRepo: "",
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
@@ -285,13 +285,13 @@ exit 0
 
 	// Call cleanupSpawnedMiner with a minecartID
 	spawnInfo := &SpawnedMinerInfo{
-		RigName:     "excavation",
+		RigName:     "mineshaft",
 		MinerName: "Toast",
-		ClonePath:   filepath.Join(townRoot, "excavation", "miners", "Toast"),
+		ClonePath:   filepath.Join(townRoot, "mineshaft", "miners", "Toast"),
 		Branch:      "p-toast-123",
 	}
 
-	cleanupSpawnedMiner(spawnInfo, "excavation", "minecart-test-123")
+	cleanupSpawnedMiner(spawnInfo, "mineshaft", "minecart-test-123")
 
 	// Check if close command was logged
 	logContent, err := os.ReadFile(filepath.Join(townRoot, "bd_close.log"))
@@ -319,8 +319,8 @@ func TestCloseMinecart_EmptyMinecartID(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "overseer", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir excavation/overseer/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft", "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir mineshaft/overseer/rig: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
@@ -331,8 +331,8 @@ func TestCloseMinecart_EmptyMinecartID(t *testing.T) {
 	rigs := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"excavation": {
-				GitURL:    "git@github.com:test/excavation.git",
+			"mineshaft": {
+				GitURL:    "git@github.com:test/mineshaft.git",
 				LocalRepo: "",
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
@@ -392,13 +392,13 @@ exit 0
 
 	// Call cleanupSpawnedMiner with EMPTY minecartID
 	spawnInfo := &SpawnedMinerInfo{
-		RigName:     "excavation",
+		RigName:     "mineshaft",
 		MinerName: "Toast",
-		ClonePath:   filepath.Join(townRoot, "excavation", "miners", "Toast"),
+		ClonePath:   filepath.Join(townRoot, "mineshaft", "miners", "Toast"),
 		Branch:      "p-toast-123",
 	}
 
-	cleanupSpawnedMiner(spawnInfo, "excavation", "")
+	cleanupSpawnedMiner(spawnInfo, "mineshaft", "")
 	// Do NOT call closeMinecart — this test verifies empty minecartID path
 
 	// Check if close command was logged (should NOT be)
@@ -420,8 +420,8 @@ func TestRollbackSlingArtifacts_WithMinecartID(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "overseer", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir excavation/overseer/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft", "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir mineshaft/overseer/rig: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
@@ -432,8 +432,8 @@ func TestRollbackSlingArtifacts_WithMinecartID(t *testing.T) {
 	rigs := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"excavation": {
-				GitURL:    "git@github.com:test/excavation.git",
+			"mineshaft": {
+				GitURL:    "git@github.com:test/mineshaft.git",
 				LocalRepo: "",
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
@@ -516,9 +516,9 @@ exit 0
 
 	// Call rollbackSlingArtifacts with a minecartID
 	spawnInfo := &SpawnedMinerInfo{
-		RigName:     "excavation",
+		RigName:     "mineshaft",
 		MinerName: "Toast",
-		ClonePath:   filepath.Join(townRoot, "excavation", "miners", "Toast"),
+		ClonePath:   filepath.Join(townRoot, "mineshaft", "miners", "Toast"),
 		Branch:      "p-toast-123",
 	}
 
@@ -547,8 +547,8 @@ func TestRollbackSlingArtifacts_EmptyMinecartID(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "overseer", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir excavation/overseer/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft", "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir mineshaft/overseer/rig: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
@@ -559,8 +559,8 @@ func TestRollbackSlingArtifacts_EmptyMinecartID(t *testing.T) {
 	rigs := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"excavation": {
-				GitURL:    "git@github.com:test/excavation.git",
+			"mineshaft": {
+				GitURL:    "git@github.com:test/mineshaft.git",
 				LocalRepo: "",
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
@@ -633,9 +633,9 @@ exit 0
 
 	// Call rollbackSlingArtifacts with EMPTY minecartID
 	spawnInfo := &SpawnedMinerInfo{
-		RigName:     "excavation",
+		RigName:     "mineshaft",
 		MinerName: "Toast",
-		ClonePath:   filepath.Join(townRoot, "excavation", "miners", "Toast"),
+		ClonePath:   filepath.Join(townRoot, "mineshaft", "miners", "Toast"),
 		Branch:      "p-toast-123",
 	}
 
@@ -661,8 +661,8 @@ func TestRollbackSlingArtifacts_CallsCleanupSpawnedMiner(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "overseer", "rig"), 0755); err != nil {
-		t.Fatalf("mkdir excavation/overseer/rig: %v", err)
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft", "overseer", "rig"), 0755); err != nil {
+		t.Fatalf("mkdir mineshaft/overseer/rig: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
@@ -673,8 +673,8 @@ func TestRollbackSlingArtifacts_CallsCleanupSpawnedMiner(t *testing.T) {
 	rigs := &config.RigsConfig{
 		Version: 1,
 		Rigs: map[string]config.RigEntry{
-			"excavation": {
-				GitURL:    "git@github.com:test/excavation.git",
+			"mineshaft": {
+				GitURL:    "git@github.com:test/mineshaft.git",
 				LocalRepo: "",
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
@@ -753,9 +753,9 @@ exit 0
 
 	// Call rollbackSlingArtifacts
 	spawnInfo := &SpawnedMinerInfo{
-		RigName:     "excavation",
+		RigName:     "mineshaft",
 		MinerName: "Toast",
-		ClonePath:   filepath.Join(townRoot, "excavation", "miners", "Toast"),
+		ClonePath:   filepath.Join(townRoot, "mineshaft", "miners", "Toast"),
 		Branch:      "p-toast-123",
 	}
 

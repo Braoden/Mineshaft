@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/hooks"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/hooks"
 )
 
 func TestSyncTargetCreatesNew(t *testing.T) {
@@ -494,13 +494,13 @@ func TestRunHooksSyncNonClaudeAgent(t *testing.T) {
 	}
 
 	// Verify OpenCode plugin was synced to the worktree (not the parent)
-	pluginPath := filepath.Join(townRoot, "myrig", "crew", "alice", ".opencode", "plugins", "excavation.js")
+	pluginPath := filepath.Join(townRoot, "myrig", "crew", "alice", ".opencode", "plugins", "mineshaft.js")
 	if _, err := os.Stat(pluginPath); os.IsNotExist(err) {
 		t.Error("opencode plugin not created in worktree alice")
 	}
 
 	// Verify it was NOT created in the parent (crew/) since useSettingsDir=false
-	parentPlugin := filepath.Join(townRoot, "myrig", "crew", ".opencode", "plugins", "excavation.js")
+	parentPlugin := filepath.Join(townRoot, "myrig", "crew", ".opencode", "plugins", "mineshaft.js")
 	if _, err := os.Stat(parentPlugin); !os.IsNotExist(err) {
 		t.Error("opencode plugin should not be in the parent crew/ directory")
 	}
@@ -564,7 +564,7 @@ func TestRunHooksSyncNonClaudeAgentDryRun(t *testing.T) {
 	}
 
 	// Dry run should NOT create the file
-	pluginPath := filepath.Join(townRoot, "myrig", "crew", "alice", ".opencode", "plugins", "excavation.js")
+	pluginPath := filepath.Join(townRoot, "myrig", "crew", "alice", ".opencode", "plugins", "mineshaft.js")
 	if _, err := os.Stat(pluginPath); !os.IsNotExist(err) {
 		t.Error("dry-run should not create opencode plugin file")
 	}
@@ -590,7 +590,7 @@ func TestRunHooksSyncNonClaudeAgentNestedMinerWorktree(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, "supervisor"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	worktree := filepath.Join(townRoot, "myrig", "miners", "fury", "excavation")
+	worktree := filepath.Join(townRoot, "myrig", "miners", "fury", "mineshaft")
 	if err := os.MkdirAll(filepath.Join(worktree, ".git"), 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -641,12 +641,12 @@ func TestRunHooksSyncNonClaudeAgentNestedMinerWorktree(t *testing.T) {
 		t.Fatalf("runHooksSync failed: %v", err)
 	}
 
-	pluginPath := filepath.Join(worktree, ".opencode", "plugins", "excavation.js")
+	pluginPath := filepath.Join(worktree, ".opencode", "plugins", "mineshaft.js")
 	if _, err := os.Stat(pluginPath); os.IsNotExist(err) {
 		t.Fatalf("opencode plugin not created in nested miner worktree %s", pluginPath)
 	}
 
-	wrongParentPath := filepath.Join(townRoot, "myrig", "miners", "fury", ".opencode", "plugins", "excavation.js")
+	wrongParentPath := filepath.Join(townRoot, "myrig", "miners", "fury", ".opencode", "plugins", "mineshaft.js")
 	if _, err := os.Stat(wrongParentPath); !os.IsNotExist(err) {
 		t.Fatalf("opencode plugin should not be created in miner slot parent %s", wrongParentPath)
 	}

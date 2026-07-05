@@ -1425,7 +1425,7 @@ func TestStop_ClosesMultipleStores(t *testing.T) {
 
 	stores := map[string]beadsdk.Storage{
 		"hq":      hqStore,
-		"excavation": rigStore,
+		"mineshaft": rigStore,
 	}
 
 	m := NewMinecartManager(t.TempDir(), logger, "gt", 10*time.Minute, stores, nil, nil)
@@ -1438,7 +1438,7 @@ func TestStop_ClosesMultipleStores(t *testing.T) {
 		if strings.Contains(s, "closed beads store") && strings.Contains(s, "hq") {
 			closedHq = true
 		}
-		if strings.Contains(s, "closed beads store") && strings.Contains(s, "excavation") {
+		if strings.Contains(s, "closed beads store") && strings.Contains(s, "mineshaft") {
 			closedRig = true
 		}
 	}
@@ -1446,7 +1446,7 @@ func TestStop_ClosesMultipleStores(t *testing.T) {
 		t.Errorf("expected hq store closed in logs, got: %v", logged)
 	}
 	if !closedRig {
-		t.Errorf("expected excavation store closed in logs, got: %v", logged)
+		t.Errorf("expected mineshaft store closed in logs, got: %v", logged)
 	}
 	if m.stores != nil {
 		t.Error("stores should be nil after Stop()")
@@ -1557,7 +1557,7 @@ func TestPollAllStores_MultiRig_BothStoresPolled(t *testing.T) {
 
 	stores := map[string]beadsdk.Storage{
 		"hq":      hqStore,
-		"excavation": rigStore,
+		"mineshaft": rigStore,
 	}
 
 	m := NewMinecartManager(t.TempDir(), logger, "gt", 10*time.Minute, stores, nil, nil)
@@ -1630,7 +1630,7 @@ func TestPollAllStores_SkipsParkedRigs(t *testing.T) {
 
 	stores := map[string]beadsdk.Storage{
 		"hq":         hqStore,
-		"excavation":    activeStore,
+		"mineshaft":    activeStore,
 		"shippercrm": parkedStore,
 	}
 
@@ -1650,7 +1650,7 @@ func TestPollAllStores_SkipsParkedRigs(t *testing.T) {
 		}
 	}
 	if !foundActive {
-		t.Errorf("expected close event from active rig (excavation) for %s, got: %v", activeID, logged)
+		t.Errorf("expected close event from active rig (mineshaft) for %s, got: %v", activeID, logged)
 	}
 
 	// Parked rig store should not be polled (verified via high-water mark).
@@ -1661,8 +1661,8 @@ func TestPollAllStores_SkipsParkedRigs(t *testing.T) {
 		t.Errorf("parked rig (shippercrm) should not have been polled, but has a high-water mark")
 	}
 	// Active rig should have been polled
-	if _, hasHW := m.lastEventIDs.Load("excavation"); !hasHW {
-		t.Errorf("active rig (excavation) should have been polled, but has no high-water mark")
+	if _, hasHW := m.lastEventIDs.Load("mineshaft"); !hasHW {
+		t.Errorf("active rig (mineshaft) should have been polled, but has no high-water mark")
 	}
 }
 
@@ -1937,7 +1937,7 @@ func TestPollAllStores_CrossStoreDedup(t *testing.T) {
 
 	stores := map[string]beadsdk.Storage{
 		"hq":      hqStore,
-		"excavation": rigStore,
+		"mineshaft": rigStore,
 	}
 	m := NewMinecartManager(t.TempDir(), logger, "gt", 10*time.Minute, stores, nil, nil)
 	m.seeded.Store(true)
@@ -1986,7 +1986,7 @@ func TestPollAllStores_PerStoreHighWaterMarks(t *testing.T) {
 
 	stores := map[string]beadsdk.Storage{
 		"hq":      hqStore,
-		"excavation": rigStore,
+		"mineshaft": rigStore,
 	}
 
 	m := NewMinecartManager(t.TempDir(), logger, "gt", 10*time.Minute, stores, nil, nil)
@@ -1994,7 +1994,7 @@ func TestPollAllStores_PerStoreHighWaterMarks(t *testing.T) {
 	// First poll: only hq has a close event
 	m.pollStoresSnapshot(m.stores)
 
-	// Now add a close event to excavation AFTER the first poll
+	// Now add a close event to mineshaft AFTER the first poll
 	rigIssue := &beadsdk.Issue{
 		ID: "gt-hw2", Title: "Rig HW", Status: beadsdk.StatusOpen,
 		Priority: 2, IssueType: beadsdk.TypeTask, CreatedAt: now, UpdatedAt: now,
@@ -2006,7 +2006,7 @@ func TestPollAllStores_PerStoreHighWaterMarks(t *testing.T) {
 		t.Fatalf("CloseIssue rig: %v", err)
 	}
 
-	// Second poll: excavation's new event should be detected, hq's old event should NOT
+	// Second poll: mineshaft's new event should be detected, hq's old event should NOT
 	logged = nil // reset
 	m.pollStoresSnapshot(m.stores)
 
@@ -2114,7 +2114,7 @@ func TestPollStore_NilHqStore_LogsWarningAndSkips(t *testing.T) {
 
 	// stores map has a rig but no "hq" key
 	stores := map[string]beadsdk.Storage{
-		"excavation": rigStore,
+		"mineshaft": rigStore,
 	}
 
 	m := NewMinecartManager(t.TempDir(), logger, "gt", 10*time.Minute, stores, nil, nil)

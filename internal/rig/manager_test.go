@@ -11,9 +11,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/doltserver"
-	"github.com/steveyegge/excavation/internal/git"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/doltserver"
+	"github.com/steveyegge/mineshaft/internal/git"
 )
 
 func setupTestTown(t *testing.T) (string, *config.RigsConfig) {
@@ -101,9 +101,9 @@ func TestDiscoverRigs(t *testing.T) {
 	root, rigsConfig := setupTestTown(t)
 
 	// Create test rig
-	createTestRig(t, root, "excavation")
-	rigsConfig.Rigs["excavation"] = config.RigEntry{
-		GitURL: "git@github.com:test/excavation.git",
+	createTestRig(t, root, "mineshaft")
+	rigsConfig.Rigs["mineshaft"] = config.RigEntry{
+		GitURL: "git@github.com:test/mineshaft.git",
 	}
 
 	manager := NewManager(root, rigsConfig, git.NewGit(root))
@@ -118,8 +118,8 @@ func TestDiscoverRigs(t *testing.T) {
 	}
 
 	rig := rigs[0]
-	if rig.Name != "excavation" {
-		t.Errorf("Name = %q, want excavation", rig.Name)
+	if rig.Name != "mineshaft" {
+		t.Errorf("Name = %q, want mineshaft", rig.Name)
 	}
 	if len(rig.Miners) != 2 {
 		t.Errorf("Miners count = %d, want 2", len(rig.Miners))
@@ -1049,7 +1049,7 @@ func TestIsValidBeadsPrefix(t *testing.T) {
 		{"gt", true},
 		{"bd", true},
 		{"hq", true},
-		{"excavation", true},
+		{"mineshaft", true},
 		{"myProject", true},
 		{"my-project", true},
 		{"a", true},
@@ -1161,7 +1161,7 @@ func TestDropRigOrphanDBs_RemovesLegacyBeadsPrefixDB(t *testing.T) {
 
 // TestDropRigOrphanDBs_PreservesRigDB is the safety check that the helper
 // never removes a database whose name happens to match the prefix when the
-// rig itself is named after its prefix (e.g. rig "excavation" with prefix "gt"
+// rig itself is named after its prefix (e.g. rig "mineshaft" with prefix "gt"
 // where neither candidate is an orphan).
 func TestDropRigOrphanDBs_PreservesRigDB(t *testing.T) {
 	t.Setenv("GT_DOLT_PORT", "1")
@@ -1217,7 +1217,7 @@ func TestDeriveBeadsPrefix(t *testing.T) {
 		want string
 	}{
 		// Compound words with common suffixes should split
-		{"excavation", "gt"},     // gas + town
+		{"mineshaft", "gt"},     // gas + town
 		{"nashville", "nv"},   // nash + ville
 		{"bridgeport", "bp"},  // bridge + port
 		{"someplace", "sp"},   // some + place
@@ -1228,7 +1228,7 @@ func TestDeriveBeadsPrefix(t *testing.T) {
 
 		// Hyphenated names
 		{"my-project", "mp"},
-		{"excavation-site", "gt"},
+		{"mineshaft", "gt"},
 		{"some-long-name", "sln"},
 
 		// Underscored names
@@ -1274,7 +1274,7 @@ func TestSplitCompoundWord(t *testing.T) {
 		want []string
 	}{
 		// Known suffixes
-		{"excavation", []string{"gas", "town"}},
+		{"mineshaft", []string{"gas", "town"}},
 		{"nashville", []string{"nash", "ville"}},
 		{"bridgeport", []string{"bridge", "port"}},
 		{"someplace", []string{"some", "place"}},
@@ -1328,7 +1328,7 @@ func TestSplitCamelCase(t *testing.T) {
 		{"parseJSON", []string{"parse", "JSON"}},
 
 		// No splits (single word, all lower)
-		{"excavation", []string{"excavation"}},
+		{"mineshaft", []string{"mineshaft"}},
 		{"a", []string{"a"}},
 
 		// All uppercase (no lower transition)
@@ -1462,7 +1462,7 @@ func TestDetectBeadsPrefixFromConfig_TrailingDash(t *testing.T) {
 
 func TestDetectBeadsPrefixFromConfig_NoFallbackToJSONL(t *testing.T) {
 	// Verify that detectBeadsPrefixFromConfig does NOT fall back to issues.jsonl.
-	// Excavation requires Dolt server — JSONL is not a supported data source.
+	// Mineshaft requires Dolt server — JSONL is not a supported data source.
 	dir := t.TempDir()
 
 	// Write config.yaml without a prefix key
@@ -2151,7 +2151,7 @@ esac
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	configYAML := "prefix: gt\nsync.remote: \"git+https://github.com/steveyegge/excavation.git\"\n"
+	configYAML := "prefix: gt\nsync.remote: \"git+https://github.com/steveyegge/mineshaft.git\"\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "config.yaml"), []byte(configYAML), 0644); err != nil {
 		t.Fatalf("write config.yaml: %v", err)
 	}

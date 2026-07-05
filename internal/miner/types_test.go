@@ -30,7 +30,7 @@ func TestMiner_Summary(t *testing.T) {
 	now := time.Now()
 	p := &Miner{
 		Name:      "alpha",
-		Rig:       "excavation",
+		Rig:       "mineshaft",
 		State:     StateWorking,
 		ClonePath: "/some/path",
 		Branch:    "miner/alpha",

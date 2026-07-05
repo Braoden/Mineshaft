@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/constants"
 )
 
 // IdentityEnvVars are agent identity env vars that must not leak across
@@ -36,7 +36,7 @@ type AgentEnvConfig struct {
 	// For miners, this is the miner name. For crew, this is the crew member name.
 	AgentName string
 
-	// TownRoot is the root of the Excavation Site workspace.
+	// TownRoot is the root of the Mineshaft workspace.
 	// Sets GT_ROOT environment variable.
 	TownRoot string
 
@@ -81,7 +81,7 @@ func AgentEnv(cfg AgentEnvConfig) map[string]string {
 
 	// Set role-specific variables
 	// GT_ROLE is set in compound format (e.g., "beads/crew/jane") so that
-	// beads can parse it without knowing about Excavation Site role types.
+	// beads can parse it without knowing about Mineshaft role types.
 	switch cfg.Role {
 	case constants.RoleOverseer:
 		env["GT_ROLE"] = constants.RoleOverseer
@@ -181,10 +181,10 @@ func AgentEnv(cfg AgentEnvConfig) map[string]string {
 		env["GT_AGENT"] = cfg.Agent
 	}
 
-	// Disable bd's per-repo JSONL auto-backup for all Excavation Site agents.
+	// Disable bd's per-repo JSONL auto-backup for all Mineshaft agents.
 	// bd auto-enables backup when a git remote exists, then force-adds
 	// .beads/backup/ files (bypassing .gitignore) and commits/pushes them
-	// to the project repo. In Excavation Site, Dolt is the persistent data store
+	// to the project repo. In Mineshaft, Dolt is the persistent data store
 	// and the daemon provides centralized backup patrols (dolt_backup,
 	// jsonl_git_backup), making per-repo backup redundant and harmful —
 	// it pollutes rig git history on both main and feature branches.
@@ -219,11 +219,11 @@ func AgentEnv(cfg AgentEnvConfig) map[string]string {
 	// When gt sling is invoked from within a Claude Code session, CLAUDECODE=1
 	// leaks through tmux's global environment into new miner sessions, causing
 	// Claude Code to refuse to start with a "nested sessions" error.
-	// See: https://github.com/steveyegge/excavation/issues/1666
+	// See: https://github.com/steveyegge/mineshaft/issues/1666
 	env["CLAUDECODE"] = ""
 
 	// Propagate Claude Code's own OTEL telemetry when GT telemetry is enabled.
-	// Reuses the same VictoriaMetrics endpoint as excavation's telemetry so all
+	// Reuses the same VictoriaMetrics endpoint as mineshaft's telemetry so all
 	// metrics (gt + claude) land in the same store.
 	// Opt-in: only active when GT_OTEL_METRICS_URL is explicitly set.
 	if metricsURL := os.Getenv("GT_OTEL_METRICS_URL"); metricsURL != "" {
@@ -254,7 +254,7 @@ func AgentEnv(cfg AgentEnvConfig) map[string]string {
 		}
 
 		// Attach GT context as OTEL resource attributes so Claude's metrics
-		// can be correlated with excavation's own telemetry in VictoriaMetrics.
+		// can be correlated with mineshaft's own telemetry in VictoriaMetrics.
 		// Claude Code's Node.js SDK picks up OTEL_RESOURCE_ATTRIBUTES automatically.
 		var attrs []string
 		if v := env["GT_ROLE"]; v != "" {
@@ -302,8 +302,8 @@ func AgentEnv(cfg AgentEnvConfig) map[string]string {
 			setDoltPortEnv(env, v)
 		}
 	}
-	// Suppress bd's Dolt auto-start for all Excavation Site agents (GH#2930).
-	// Excavation Site manages its own Dolt server (gt dolt start/stop). When the
+	// Suppress bd's Dolt auto-start for all Mineshaft agents (GH#2930).
+	// Mineshaft manages its own Dolt server (gt dolt start/stop). When the
 	// server is momentarily unreachable (restart, journal hiccup), bd's
 	// auto-start tries to launch a shadow server in the agent's .beads/dolt/
 	// directory — which conflicts with the real server on the same port and

@@ -15,7 +15,7 @@ import (
 // Merge rules:
 //  1. Start with base hooks
 //  2. Apply role override (crew, witness, refinery, miners, overseer, supervisor)
-//  3. Apply rig+role override if exists (excavation/crew, beads/witness, etc.)
+//  3. Apply rig+role override if exists (mineshaft/crew, beads/witness, etc.)
 //
 // For each hook type (SessionStart, PreToolUse, etc.):
 //   - Hooks with same matcher: override replaces base entirely
@@ -58,7 +58,7 @@ func LoadAllOverrides() (map[string]*HooksConfig, error) {
 		if entry.IsDir() || !strings.HasSuffix(name, ".json") {
 			continue
 		}
-		// Convert filename back to target key (excavation__crew.json -> excavation/crew)
+		// Convert filename back to target key (mineshaft__crew.json -> mineshaft/crew)
 		key := strings.TrimSuffix(name, ".json")
 		key = strings.ReplaceAll(key, "__", "/")
 

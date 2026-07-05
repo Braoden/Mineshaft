@@ -7,13 +7,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // cleanupOrphanedClaude finds and kills orphaned Claude processes with a grace period.
 // This is a simpler synchronous implementation that:
-// 1. Finds orphaned processes (TTY-less, older than 60s, not in Excavation Site sessions)
+// 1. Finds orphaned processes (TTY-less, older than 60s, not in Mineshaft sessions)
 // 2. Sends SIGTERM to all of them
 // 3. Waits for the grace period
 // 4. Sends SIGKILL to any that are still alive

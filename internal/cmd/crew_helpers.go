@@ -6,12 +6,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/crew"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/crew"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // getCrewManagerForMember returns a crew manager, inferring the rig from the
@@ -21,7 +21,7 @@ func getCrewManagerForMember(rigName, crewName string) (*crew.Manager, *rig.Rig,
 	if rigName == "" {
 		townRoot, err := workspace.FindFromCwdOrError()
 		if err != nil {
-			return nil, nil, fmt.Errorf("not in a Excavation Site workspace: %w", err)
+			return nil, nil, fmt.Errorf("not in a Mineshaft workspace: %w", err)
 		}
 		rigName, err = inferRigFromCwd(townRoot)
 		if err != nil && crewName != "" {
@@ -40,7 +40,7 @@ func getCrewManager(rigName string) (*crew.Manager, *rig.Rig, error) {
 	if rigName == "" {
 		townRoot, err := workspace.FindFromCwdOrError()
 		if err != nil {
-			return nil, nil, fmt.Errorf("not in a Excavation Site workspace: %w", err)
+			return nil, nil, fmt.Errorf("not in a Mineshaft workspace: %w", err)
 		}
 		rigName, err = inferRigFromCwd(townRoot)
 		if err != nil {
@@ -81,10 +81,10 @@ func detectCrewFromCwd() (*crewDetection, error) {
 	// Find town root
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil {
-		return nil, fmt.Errorf("not in Excavation Site workspace: %w", err)
+		return nil, fmt.Errorf("not in Mineshaft workspace: %w", err)
 	}
 	if townRoot == "" {
-		return nil, fmt.Errorf("not in Excavation Site workspace")
+		return nil, fmt.Errorf("not in Mineshaft workspace")
 	}
 
 	// Get relative path from town root
@@ -100,7 +100,7 @@ func detectCrewFromCwd() (*crewDetection, error) {
 	// Look for pattern: <rig>/crew/<name>/...
 	// Minimum: rig, crew, name = 3 parts
 	if len(parts) < 3 {
-		return nil, fmt.Errorf("not inside a crew workspace - specify the crew name or cd into a crew directory (e.g., excavation/crew/max)")
+		return nil, fmt.Errorf("not inside a crew workspace - specify the crew name or cd into a crew directory (e.g., mineshaft/crew/max)")
 	}
 
 	rigName := parts[0]

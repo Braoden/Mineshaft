@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/beads"
 )
 
 // SyncOptions controls the behavior of SyncDatabases.
@@ -342,7 +342,7 @@ func PushDatabaseSQL(townRoot, db, remote string, force bool) error {
 
 	// Commit working set
 	commitQuery := fmt.Sprintf(
-		"USE `%s`; CALL DOLT_COMMIT('-m', 'gt dolt sync: auto-commit working changes', '--allow-empty', '--author', 'Excavation Site Sync <sync@excavation.local>')",
+		"USE `%s`; CALL DOLT_COMMIT('-m', 'gt dolt sync: auto-commit working changes', '--allow-empty', '--author', 'Mineshaft Sync <sync@mineshaft.local>')",
 		db,
 	)
 	if err := serverExecSQL(townRoot, commitQuery); err != nil {

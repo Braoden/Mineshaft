@@ -17,10 +17,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/rig"
 )
 
 // =============================================================================
@@ -36,7 +36,7 @@ import (
 // All agents also implicitly allow .beads/ or .beads/redirect (added in checkWorktreeClean).
 //
 // IMPORTANT: Be very conservative about adding files here. Each entry represents
-// a file that Excavation Site creates inside the user's repo, which could be accidentally
+// a file that Mineshaft creates inside the user's repo, which could be accidentally
 // committed and pushed upstream. Prefer ephemeral context injection (gt prime) over
 // on-disk files.
 var agentAllowlist = map[string][]string{
@@ -53,7 +53,7 @@ var agentAllowlist = map[string][]string{
 
 	// Crew workers are user-managed worktrees for human developers.
 	"crew": {
-		"?? state.json", // crew/manager.go: Excavation Site metadata (TODO: migrate to beads like miners)
+		"?? state.json", // crew/manager.go: Mineshaft metadata (TODO: migrate to beads like miners)
 		"?? .gitignore", // EnsureGitignorePatterns: adds .claude/, .runtime/, .logs/, __pycache__/ patterns
 	},
 
@@ -152,7 +152,7 @@ func createTestGitRepoAt(t *testing.T, repoDir string) {
 	}
 }
 
-// setupTestTown creates a minimal Excavation Site workspace for testing.
+// setupTestTown creates a minimal Mineshaft workspace for testing.
 // Returns townRoot and a cleanup function.
 func setupTestTown(t *testing.T) string {
 	t.Helper()
@@ -1089,10 +1089,10 @@ func TestAgentBeadIDs(t *testing.T) {
 }
 
 // TestAgentWorktreesStayClean verifies that after gt install, gt rig add, and
-// agent creation, all agent worktrees have no unexpected Excavation Site files.
+// agent creation, all agent worktrees have no unexpected Mineshaft files.
 //
 // This is a critical invariant: user repos should stay clean. The only allowed
-// Excavation Site file is .beads/redirect which points to the shared rig-level beads.
+// Mineshaft file is .beads/redirect which points to the shared rig-level beads.
 //
 // Agents tested:
 // - Overseer: overseer/rig/ (clone, created by gt rig add)
@@ -1104,7 +1104,7 @@ func TestAgentBeadIDs(t *testing.T) {
 // - Extra files in .beads/ beyond redirect (e.g., PRIME.md, databases)
 // - AGENTS.md being copied/created in worktrees
 // - CLAUDE.md being created in non-miner worktrees (miners need it for gt done)
-// - Any other Excavation Site artifacts polluting the repo
+// - Any other Mineshaft artifacts polluting the repo
 //
 // Tests two scenarios:
 // - Repo WITHOUT tracked .beads/ (clean repo)

@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/mineshaft/internal/config"
 )
 
-// setupTestTownForTheme creates a minimal Excavation Site workspace for theme tests.
+// setupTestTownForTheme creates a minimal Mineshaft workspace for theme tests.
 // Returns the town root directory. Caller should chdir into it and restore afterwards.
 func setupTestTownForTheme(t *testing.T) string {
 	t.Helper()

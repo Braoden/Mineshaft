@@ -8,11 +8,11 @@ import (
 	"runtime"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // Worktree command flags
@@ -32,16 +32,16 @@ crew/ directory with a name that identifies your source rig and identity.
 
 The worktree is created at: ~/gt/<target-rig>/crew/<source-rig>-<name>/
 
-For example, if you're excavation/crew/joe and run 'gt worktree beads':
-- Creates worktree at ~/gt/beads/crew/excavation-joe/
+For example, if you're mineshaft/crew/joe and run 'gt worktree beads':
+- Creates worktree at ~/gt/beads/crew/mineshaft-joe/
 - The worktree checks out main branch
-- Your identity (BD_ACTOR, GT_ROLE) remains excavation/crew/joe
+- Your identity (BD_ACTOR, GT_ROLE) remains mineshaft/crew/joe
 
 Use --no-cd to just print the path without printing shell commands.
 
 Examples:
   gt worktree beads         # Create worktree in beads rig
-  gt worktree excavation       # Create worktree in excavation rig (from another rig)
+  gt worktree mineshaft       # Create worktree in mineshaft rig (from another rig)
   gt worktree beads --no-cd # Just print the path`,
 	Args: cobra.ExactArgs(1),
 	RunE: runWorktree,
@@ -57,10 +57,10 @@ that belong to the current crew member. Each worktree is shown with
 its git status summary.
 
 Example output:
-  Cross-rig worktrees for excavation/crew/joe:
+  Cross-rig worktrees for mineshaft/crew/joe:
 
-    beads     ~/gt/beads/crew/excavation-joe/     (clean)
-    overseer     ~/gt/overseer/crew/excavation-joe/     (2 uncommitted)`,
+    beads     ~/gt/beads/crew/mineshaft-joe/     (clean)
+    overseer     ~/gt/overseer/crew/mineshaft-joe/     (2 uncommitted)`,
 	RunE: runWorktreeList,
 }
 
@@ -221,7 +221,7 @@ func runWorktreeList(cmd *cobra.Command, args []string) error {
 	// Find town root
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Load rigs config to list all rigs

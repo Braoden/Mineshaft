@@ -1,4 +1,4 @@
-// Package estop provides emergency stop functionality for Excavation Site.
+// Package estop provides emergency stop functionality for Mineshaft.
 //
 // The E-stop is a town-wide mechanism to pause all agent work. It uses a
 // sentinel file (ESTOP) at the town root. When present, all agents should

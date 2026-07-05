@@ -1,6 +1,6 @@
-# Excavation Site Agent Context
+# Mineshaft Agent Context
 
-You are running inside Excavation Site, a multi-agent workspace manager.
+You are running inside Mineshaft, a multi-agent workspace manager.
 
 ## Startup Protocol
 

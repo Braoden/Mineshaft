@@ -1,13 +1,13 @@
-# Excavation Site Glossary
+# Mineshaft Glossary
 
-Excavation Site is an agentic development environment for managing multiple Claude Code instances simultaneously using the `gt` and `bd` (Beads) binaries, coordinated with tmux in git-managed directories.
+Mineshaft is an agentic development environment for managing multiple Claude Code instances simultaneously using the `gt` and `bd` (Beads) binaries, coordinated with tmux in git-managed directories.
 
 ## Core Principles
 
 ### MEOW (Molecular Expression of Work)
 Breaking large goals into detailed instructions for agents. Supported by Beads, Epics, Formulas, and Molecules. MEOW ensures work is decomposed into trackable, atomic units that agents can execute autonomously.
 
-### GUPP (Excavation Site Universal Propulsion Principle)
+### GUPP (Mineshaft Universal Propulsion Principle)
 "If there is work on your Hook, YOU MUST RUN IT." This principle ensures agents autonomously proceed with available work without waiting for external input. GUPP is the heartbeat of autonomous operation.
 
 ### NDI (Nondeterministic Idempotence)
@@ -19,7 +19,7 @@ The overarching goal ensuring useful outcomes through orchestration of potential
 The management headquarters (e.g., `~/gt/`). The Town coordinates all workers across multiple Rigs and houses town-level agents like Overseer and Supervisor.
 
 ### Rig
-A project-specific Git repository under Excavation Site management. Each Rig has its own Miners, Refinery, Witness, and Crew members. Rigs are where actual development work happens.
+A project-specific Git repository under Mineshaft management. Each Rig has its own Miners, Refinery, Witness, and Crew members. Rigs are where actual development work happens.
 
 ## Town-Level Roles
 
@@ -52,7 +52,7 @@ Long-lived, named agents for persistent collaboration. Unlike ephemeral Miners, 
 ## Work Units
 
 ### Bead
-Git-backed atomic work unit stored in Dolt. Beads are the fundamental unit of work tracking in Excavation Site. They can represent issues, tasks, epics, or any trackable work item.
+Git-backed atomic work unit stored in Dolt. Beads are the fundamental unit of work tracking in Mineshaft. They can represent issues, tasks, epics, or any trackable work item.
 
 ### Formula
 TOML-based workflow source template. Formulas define reusable patterns for common operations like patrol cycles, code review, or deployment.
@@ -91,4 +91,4 @@ Ephemeral loop maintaining system heartbeat. Patrol agents (Supervisor, Witness)
 
 ---
 
-*This glossary was contributed by [Clay Shirky](https://github.com/cshirky) in [Issue #80](https://github.com/steveyegge/excavation/issues/80).*
+*This glossary was contributed by [Clay Shirky](https://github.com/cshirky) in [Issue #80](https://github.com/steveyegge/mineshaft/issues/80).*

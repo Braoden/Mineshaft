@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a bug in Excavation Site
+about: Report a bug in Mineshaft
 title: ''
 labels: bug
 assignees: ''
@@ -23,7 +23,7 @@ assignees: ''
 ## Environment
 - **OS**:
 - **Go version**:
-- **Excavation Site version**: (`gt version`)
+- **Mineshaft version**: (`gt version`)
 - **tmux version** (if applicable):
 
 ## Logs / Error Output

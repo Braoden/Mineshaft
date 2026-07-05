@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/beads"
 )
 
 func TestWispTypeToCategory(t *testing.T) {
@@ -201,7 +201,7 @@ func TestFormatDailyDigest(t *testing.T) {
 		Promotions: []compactAction{
 			{ID: "gt-wisp-abc", Title: "Miner crash during minecart", Reason: "has comments"},
 		},
-		Anomalies: []string{"excavation: 3x normal heartbeat volume (possible restart loop)"},
+		Anomalies: []string{"mineshaft: 3x normal heartbeat volume (possible restart loop)"},
 	}
 
 	md := formatDailyDigest(report)

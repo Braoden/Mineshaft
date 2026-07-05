@@ -844,7 +844,7 @@ func TestAgentEnv_IncludesClaudeCodeClearing(t *testing.T) {
 func TestAgentEnv_DisablesBdBackup(t *testing.T) {
 	t.Parallel()
 	// Verify AgentEnv always includes BD_BACKUP_ENABLED=false regardless of role.
-	// In Excavation Site, Dolt is the persistent data store and the daemon provides
+	// In Mineshaft, Dolt is the persistent data store and the daemon provides
 	// centralized backup patrols (dolt_backup, jsonl_git_backup). bd's per-repo
 	// auto-backup is redundant and pollutes rig git history via git add -f.
 	// See: https://github.com/steveyegge/beads/issues/2241
@@ -999,9 +999,9 @@ func TestSanitizeOTELAttrValue(t *testing.T) {
 		},
 		{
 			name:   "beacon first line",
-			input:  "[GAS TOWN] miner rust (rig: excavation) <- witness • 2025-12-30T15:42 • assigned:gt-abc12\n\nRun `gt prime --hook`",
+			input:  "[MINESHAFT] miner rust (rig: mineshaft) <- witness • 2025-12-30T15:42 • assigned:gt-abc12\n\nRun `gt prime --hook`",
 			maxLen: 120,
-			want:   "[GAS TOWN] miner rust (rig: excavation) <- witness • 2025-12-30T15:42 • assigned:gt-abc12",
+			want:   "[MINESHAFT] miner rust (rig: mineshaft) <- witness • 2025-12-30T15:42 • assigned:gt-abc12",
 		},
 		{
 			name:   "trims leading/trailing space",
@@ -1030,10 +1030,10 @@ func TestAgentEnv_OTELPromptAndTown(t *testing.T) {
 	t.Setenv("GT_OTEL_METRICS_URL", "http://localhost:8428/opentelemetry/api/v1/push")
 	t.Setenv("GT_OTEL_LOGS_URL", "http://localhost:9428/insert/opentelemetry/v1/logs")
 
-	beacon := "[GAS TOWN] miner rust (rig: excavation) <- witness • 2025-12-30T15:42 • assigned:gt-abc12\n\nRun `gt prime --hook`"
+	beacon := "[MINESHAFT] miner rust (rig: mineshaft) <- witness • 2025-12-30T15:42 • assigned:gt-abc12\n\nRun `gt prime --hook`"
 	env := AgentEnv(AgentEnvConfig{
 		Role:      "miner",
-		Rig:       "excavation",
+		Rig:       "mineshaft",
 		AgentName: "rust",
 		TownRoot:  "/home/user/mytown",
 		Prompt:    beacon,
@@ -1050,7 +1050,7 @@ func TestAgentEnv_OTELPromptAndTown(t *testing.T) {
 	}
 
 	// gt.prompt should be the first line of the beacon (no newlines, commas replaced)
-	wantPromptPrefix := "gt.prompt=[GAS TOWN] miner rust"
+	wantPromptPrefix := "gt.prompt=[MINESHAFT] miner rust"
 	if !contains(attrs, wantPromptPrefix) {
 		t.Errorf("OTEL_RESOURCE_ATTRIBUTES missing %q, got: %s", wantPromptPrefix, attrs)
 	}

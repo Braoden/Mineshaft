@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/steveyegge/excavation/internal/atomicfile"
+	"github.com/steveyegge/mineshaft/internal/atomicfile"
 )
 
 // TownConfigExistsCheck verifies overseer/town.json exists.

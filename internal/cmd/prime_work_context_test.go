@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/telemetry"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/telemetry"
 )
 
 // injectWorkContextTest is a helper that calls injectWorkContext with OTel
@@ -27,7 +27,7 @@ func TestInjectWorkContext_NoBeadClearsVars(t *testing.T) {
 	t.Setenv("GT_WORK_BEAD", "old-bead")
 	t.Setenv("GT_WORK_MOL", "old-mol")
 
-	ctx := RoleContext{Rig: "excavation"}
+	ctx := RoleContext{Rig: "mineshaft"}
 	injectWorkContext(ctx, nil)
 
 	if got := os.Getenv("GT_WORK_RIG"); got != "" {
@@ -44,12 +44,12 @@ func TestInjectWorkContext_NoBeadClearsVars(t *testing.T) {
 func TestInjectWorkContext_BeadOnly(t *testing.T) {
 	setupWorkContextTest(t)
 
-	ctx := RoleContext{Rig: "excavation"}
+	ctx := RoleContext{Rig: "mineshaft"}
 	bead := &beads.Issue{ID: "sg-05iq", Description: ""}
 	injectWorkContext(ctx, bead)
 
-	if got := os.Getenv("GT_WORK_RIG"); got != "excavation" {
-		t.Errorf("GT_WORK_RIG = %q, want %q", got, "excavation")
+	if got := os.Getenv("GT_WORK_RIG"); got != "mineshaft" {
+		t.Errorf("GT_WORK_RIG = %q, want %q", got, "mineshaft")
 	}
 	if got := os.Getenv("GT_WORK_BEAD"); got != "sg-05iq" {
 		t.Errorf("GT_WORK_BEAD = %q, want %q", got, "sg-05iq")
@@ -62,7 +62,7 @@ func TestInjectWorkContext_BeadOnly(t *testing.T) {
 func TestInjectWorkContext_BeadWithMolecule(t *testing.T) {
 	setupWorkContextTest(t)
 
-	ctx := RoleContext{Rig: "excavation"}
+	ctx := RoleContext{Rig: "mineshaft"}
 	// Build a bead description that encodes an AttachedMolecule.
 	desc := beads.FormatAttachmentFields(&beads.AttachmentFields{
 		AttachedMolecule: "mol-abc123",
@@ -102,7 +102,7 @@ func TestInjectWorkContext_NoopWhenOTelDisabled(t *testing.T) {
 	t.Setenv("TMUX", "")
 	primeDryRun = false
 
-	ctx := RoleContext{Rig: "excavation"}
+	ctx := RoleContext{Rig: "mineshaft"}
 	bead := &beads.Issue{ID: "sg-05iq"}
 	injectWorkContext(ctx, bead)
 
@@ -117,7 +117,7 @@ func TestInjectWorkContext_NoopInDryRun(t *testing.T) {
 	primeDryRun = true
 	t.Cleanup(func() { primeDryRun = false })
 
-	ctx := RoleContext{Rig: "excavation"}
+	ctx := RoleContext{Rig: "mineshaft"}
 	bead := &beads.Issue{ID: "sg-05iq"}
 	injectWorkContext(ctx, bead)
 

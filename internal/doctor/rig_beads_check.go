@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/rig"
 )
 
 // RigBeadsCheck verifies that rig identity beads exist for all rigs.
@@ -44,7 +44,7 @@ func (c *RigBeadsCheck) Run(ctx *CheckContext) *CheckResult {
 	}
 
 	// Build unique rig list from routes
-	// Routes have format: prefix "gt-" -> path "excavation/overseer/rig"
+	// Routes have format: prefix "gt-" -> path "mineshaft/overseer/rig"
 	rigSet := make(map[string]struct {
 		prefix    string
 		beadsPath string

@@ -39,9 +39,9 @@ Example hook configuration:
 var tapGuardPRWorkflowCmd = &cobra.Command{
 	Use:   "pr-workflow",
 	Short: "Block PR creation and feature branches",
-	Long: `Block PR workflow operations in Excavation Site.
+	Long: `Block PR workflow operations in Mineshaft.
 
-Excavation Site workers push directly to main. PRs add friction that breaks
+Mineshaft workers push directly to main. PRs add friction that breaks
 the autonomous execution model (GUPP principle).
 
 This guard blocks:
@@ -50,14 +50,14 @@ This guard blocks:
   - git switch -c (feature branches)
 
 Exit codes:
-  0 - Operation allowed (not in Excavation Site agent context, not maintainer origin)
+  0 - Operation allowed (not in Mineshaft agent context, not maintainer origin)
   2 - Operation BLOCKED (in agent context OR maintainer origin)
 
 The guard blocks in two scenarios:
-  1. Running as a Excavation Site agent (crew, miner, witness, etc.)
-  2. Origin remote is steveyegge/excavation (maintainer should push directly)
+  1. Running as a Mineshaft agent (crew, miner, witness, etc.)
+  2. Origin remote is steveyegge/mineshaft (maintainer should push directly)
 
-Humans running outside Excavation Site with a fork origin can still use PRs.`,
+Humans running outside Mineshaft with a fork origin can still use PRs.`,
 	RunE: runTapGuardPRWorkflow,
 }
 
@@ -67,13 +67,13 @@ func init() {
 }
 
 func runTapGuardPRWorkflow(cmd *cobra.Command, args []string) error {
-	// Check if we're in a Excavation Site agent context
-	if isExcavationAgentContext() {
+	// Check if we're in a Mineshaft agent context
+	if isMineshaftAgentContext() {
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "╔══════════════════════════════════════════════════════════════════╗")
 		fmt.Fprintln(os.Stderr, "║  ❌ PR WORKFLOW BLOCKED                                          ║")
 		fmt.Fprintln(os.Stderr, "╠══════════════════════════════════════════════════════════════════╣")
-		fmt.Fprintln(os.Stderr, "║  Excavation Site workers push directly to main. PRs are forbidden.     ║")
+		fmt.Fprintln(os.Stderr, "║  Mineshaft workers push directly to main. PRs are forbidden.     ║")
 		fmt.Fprintln(os.Stderr, "║                                                                  ║")
 		fmt.Fprintln(os.Stderr, "║  Instead of:  gh pr create / git checkout -b / git switch -c    ║")
 		fmt.Fprintln(os.Stderr, "║  Do this:     git add . && git commit && git push origin main   ║")
@@ -85,13 +85,13 @@ func runTapGuardPRWorkflow(cmd *cobra.Command, args []string) error {
 		return NewSilentExit(2) // Exit 2 = BLOCK in Claude Code hooks
 	}
 
-	// Check if origin is the maintainer's repo (steveyegge/excavation)
+	// Check if origin is the maintainer's repo (steveyegge/mineshaft)
 	if isMaintainerOrigin() {
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "╔══════════════════════════════════════════════════════════════════╗")
 		fmt.Fprintln(os.Stderr, "║  ❌ PR BLOCKED - MAINTAINER ORIGIN                               ║")
 		fmt.Fprintln(os.Stderr, "╠══════════════════════════════════════════════════════════════════╣")
-		fmt.Fprintln(os.Stderr, "║  Your origin is steveyegge/excavation - push directly to main.     ║")
+		fmt.Fprintln(os.Stderr, "║  Your origin is steveyegge/mineshaft - push directly to main.     ║")
 		fmt.Fprintln(os.Stderr, "║  PRs are for external contributors, not maintainers.            ║")
 		fmt.Fprintln(os.Stderr, "║                                                                  ║")
 		fmt.Fprintln(os.Stderr, "║  Instead of:  gh pr create                                      ║")
@@ -101,13 +101,13 @@ func runTapGuardPRWorkflow(cmd *cobra.Command, args []string) error {
 		return NewSilentExit(2) // Exit 2 = BLOCK in Claude Code hooks
 	}
 
-	// Not in Excavation Site context and not maintainer origin - allow PRs
+	// Not in Mineshaft context and not maintainer origin - allow PRs
 	return nil
 }
 
-// isExcavationAgentContext returns true if we're running as a Excavation Site managed agent.
-func isExcavationAgentContext() bool {
-	// Check environment variables set by Excavation Site session management
+// isMineshaftAgentContext returns true if we're running as a Mineshaft managed agent.
+func isMineshaftAgentContext() bool {
+	// Check environment variables set by Mineshaft session management
 	envVars := []string{
 		"GT_MINER",
 		"GT_CREW",
@@ -148,7 +148,7 @@ func isMaintainerOrigin() bool {
 	}
 	url := strings.TrimSpace(string(output))
 	// Match both HTTPS and SSH URL formats:
-	// - https://github.com/steveyegge/excavation.git
-	// - git@github.com:steveyegge/excavation.git
-	return strings.Contains(url, "steveyegge/excavation")
+	// - https://github.com/steveyegge/mineshaft.git
+	// - git@github.com:steveyegge/mineshaft.git
+	return strings.Contains(url, "steveyegge/mineshaft")
 }

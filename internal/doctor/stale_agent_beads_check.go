@@ -7,8 +7,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/constants"
 )
 
 // StaleAgentBeadsCheck detects agent beads that exist in the database but have

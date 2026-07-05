@@ -501,7 +501,7 @@ TESTS_RUN=$((TESTS_RUN + 1))
 
 reset_to_v050
 
-# Migrate only the FIRST rig (excavation), simulating crash before second rig
+# Migrate only the FIRST rig (mineshaft), simulating crash before second rig
 RIGS=()
 for rig_dir in "$TOWN_ROOT"/*/; do
     rig_name=$(basename "$rig_dir")

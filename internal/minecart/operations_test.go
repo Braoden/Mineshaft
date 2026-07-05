@@ -111,9 +111,9 @@ func TestReadyIssueFilterLogic_SkipsNonOpenIssues(t *testing.T) {
 	// real store. Integration coverage lives in minecart_manager_integration_test.go.
 	tracked := []trackedIssue{
 		{ID: "gt-closed", Status: "closed", Assignee: ""},
-		{ID: "gt-inprog", Status: "in_progress", Assignee: "excavation/miners/alpha"},
-		{ID: "gt-hooked", Status: "hooked", Assignee: "excavation/miners/beta"},
-		{ID: "gt-assigned", Status: "open", Assignee: "excavation/miners/gamma"},
+		{ID: "gt-inprog", Status: "in_progress", Assignee: "mineshaft/miners/alpha"},
+		{ID: "gt-hooked", Status: "hooked", Assignee: "mineshaft/miners/beta"},
+		{ID: "gt-assigned", Status: "open", Assignee: "mineshaft/miners/gamma"},
 	}
 
 	// None of these should be considered "ready"
@@ -130,7 +130,7 @@ func TestReadyIssueFilterLogic_FindsReadyIssue(t *testing.T) {
 	// why this tests the predicate inline rather than calling feedNextReadyIssue.
 	tracked := []trackedIssue{
 		{ID: "gt-closed", Status: "closed", Assignee: ""},
-		{ID: "gt-inprog", Status: "in_progress", Assignee: "excavation/miners/alpha"},
+		{ID: "gt-inprog", Status: "in_progress", Assignee: "mineshaft/miners/alpha"},
 		{ID: "gt-ready", Status: "open", Assignee: ""},
 		{ID: "gt-also-ready", Status: "open", Assignee: ""},
 	}
@@ -594,15 +594,15 @@ func TestRigForIssue_ValidPrefix(t *testing.T) {
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatalf("MkdirAll: %v", err)
 	}
-	routesContent := `{"prefix":"gt-","path":"excavation/.beads"}` + "\n" +
+	routesContent := `{"prefix":"gt-","path":"mineshaft/.beads"}` + "\n" +
 		`{"prefix":"bd-","path":"beads/.beads"}` + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatalf("WriteFile routes.jsonl: %v", err)
 	}
 
 	rig := rigForIssue(townRoot, "gt-abc123")
-	if rig != "excavation" {
-		t.Errorf("rigForIssue(townRoot, 'gt-abc123') = %q, want 'excavation'", rig)
+	if rig != "mineshaft" {
+		t.Errorf("rigForIssue(townRoot, 'gt-abc123') = %q, want 'mineshaft'", rig)
 	}
 
 	rig = rigForIssue(townRoot, "bd-xyz")
@@ -638,7 +638,7 @@ func TestRigForIssue_UnknownPrefix(t *testing.T) {
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatalf("MkdirAll: %v", err)
 	}
-	routesContent := `{"prefix":"gt-","path":"excavation/.beads"}` + "\n"
+	routesContent := `{"prefix":"gt-","path":"mineshaft/.beads"}` + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatalf("WriteFile routes.jsonl: %v", err)
 	}
@@ -765,7 +765,7 @@ func TestFeedNextReadyIssue_DispatchesFirstReadyIssue(t *testing.T) {
 		ID:        "test-assigned1",
 		Title:     "Assigned Task",
 		Status:    beadsdk.StatusOpen,
-		Assignee:  "excavation/miners/alpha",
+		Assignee:  "mineshaft/miners/alpha",
 		Priority:  2,
 		IssueType: beadsdk.TypeTask,
 		CreatedAt: now,
@@ -1592,7 +1592,7 @@ func TestGetMinecartTrackedIssues_CrossRigFallback(t *testing.T) {
 
 	// Set up town root with cross-rig routes and bd stub returning "closed"
 	townRoot, _ := setupTownRootWithCrossRig(t, 0,
-		`[{"id":"oag-19dd9","status":"closed","assignee":"excavation/miners/alpha","priority":2,"issue_type":"task"}]`)
+		`[{"id":"oag-19dd9","status":"closed","assignee":"mineshaft/miners/alpha","priority":2,"issue_type":"task"}]`)
 
 	tracked := getMinecartTrackedIssues(ctx, store, minecart.ID, townRoot, nil)
 
@@ -1614,8 +1614,8 @@ func TestGetMinecartTrackedIssues_CrossRigFallback(t *testing.T) {
 	if found.Status != "closed" {
 		t.Errorf("cross-rig bead status = %q, want %q (stale metadata was used instead of fresh bd show)", found.Status, "closed")
 	}
-	if found.Assignee != "excavation/miners/alpha" {
-		t.Errorf("cross-rig bead assignee = %q, want %q", found.Assignee, "excavation/miners/alpha")
+	if found.Assignee != "mineshaft/miners/alpha" {
+		t.Errorf("cross-rig bead assignee = %q, want %q", found.Assignee, "mineshaft/miners/alpha")
 	}
 }
 
@@ -1625,7 +1625,7 @@ func TestFetchCrossRigBeadStatus(t *testing.T) {
 	}
 
 	townRoot, bdLogPath := setupTownRootWithCrossRig(t, 0,
-		`[{"id":"oag-abc","status":"closed","assignee":"","priority":1,"issue_type":"task"},{"id":"oag-xyz","status":"open","assignee":"excavation/miners/beta","priority":3,"issue_type":"bug"}]`)
+		`[{"id":"oag-abc","status":"closed","assignee":"","priority":1,"issue_type":"task"},{"id":"oag-xyz","status":"open","assignee":"mineshaft/miners/beta","priority":3,"issue_type":"bug"}]`)
 
 	result := fetchCrossRigBeadStatus(townRoot, []string{"oag-abc", "oag-xyz"})
 
@@ -1648,8 +1648,8 @@ func TestFetchCrossRigBeadStatus(t *testing.T) {
 	if string(xyz.Status) != "open" {
 		t.Errorf("oag-xyz status = %q, want %q", xyz.Status, "open")
 	}
-	if xyz.Assignee != "excavation/miners/beta" {
-		t.Errorf("oag-xyz assignee = %q, want %q", xyz.Assignee, "excavation/miners/beta")
+	if xyz.Assignee != "mineshaft/miners/beta" {
+		t.Errorf("oag-xyz assignee = %q, want %q", xyz.Assignee, "mineshaft/miners/beta")
 	}
 
 	// Verify bd was called
@@ -1709,7 +1709,7 @@ func TestFireCrossRigDepNotifications_NotifiesWitnessOnCrossRigBlocker(t *testin
 		t.Skip("skipping on windows")
 	}
 
-	// Set up a real store that simulates the "excavation" rig.
+	// Set up a real store that simulates the "mineshaft" rig.
 	// In it we create gt-dep which is blocked by external:bd:bd-closed.
 	store, cleanup := setupTestStore(t)
 	defer cleanup()
@@ -1742,13 +1742,13 @@ func TestFireCrossRigDepNotifications_NotifiesWitnessOnCrossRigBlocker(t *testin
 		t.Fatalf("AddDependency: %v", err)
 	}
 
-	// Set up town root with routes: gt- → excavation, bd- → beads.
+	// Set up town root with routes: gt- → mineshaft, bd- → beads.
 	townRoot := t.TempDir()
 	beadsDir := filepath.Join(townRoot, ".beads")
 	if err := os.MkdirAll(beadsDir, 0o755); err != nil {
 		t.Fatalf("MkdirAll .beads: %v", err)
 	}
-	routesContent := `{"prefix":"gt-","path":"excavation/.beads"}` + "\n" +
+	routesContent := `{"prefix":"gt-","path":"mineshaft/.beads"}` + "\n" +
 		`{"prefix":"bd-","path":"beads/.beads"}` + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0o644); err != nil {
 		t.Fatalf("WriteFile routes.jsonl: %v", err)
@@ -1770,10 +1770,10 @@ exit 0
 	}
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
-	// stores: "excavation" → store (has gt-dep1 blocked by external:bd:bd-closed)
+	// stores: "mineshaft" → store (has gt-dep1 blocked by external:bd:bd-closed)
 	//         "beads"   → (closed issue's home store, skipped by FireCrossRigDepNotifications)
 	stores := map[string]beadsdk.Storage{
-		"excavation": store,
+		"mineshaft": store,
 	}
 
 	var logged []string
@@ -1783,13 +1783,13 @@ exit 0
 
 	FireCrossRigDepNotifications(ctx, "bd-closed", townRoot, stores, logger)
 
-	// Verify gt nudge was called for excavation/witness.
+	// Verify gt nudge was called for mineshaft/witness.
 	logData, err := os.ReadFile(gtLogPath)
 	if err != nil {
 		t.Skipf("gt stub not called (no log): %v", err)
 	}
 	logStr := string(logData)
-	if !strings.Contains(logStr, "nudge") || !strings.Contains(logStr, "excavation/witness") {
-		t.Errorf("expected gt nudge excavation/witness in log, got: %q\nlogger output: %v", logStr, logged)
+	if !strings.Contains(logStr, "nudge") || !strings.Contains(logStr, "mineshaft/witness") {
+		t.Errorf("expected gt nudge mineshaft/witness in log, got: %q\nlogger output: %v", logStr, logged)
 	}
 }

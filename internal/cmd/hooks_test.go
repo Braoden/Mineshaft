@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/hooks"
+	"github.com/steveyegge/mineshaft/internal/hooks"
 )
 
 func TestParseHooksFile(t *testing.T) {
@@ -178,7 +178,7 @@ func TestParseHooksFileEmptyHooks(t *testing.T) {
 }
 
 func TestDiscoverHooksCrewLevel(t *testing.T) {
-	// Create a temp directory structure simulating a Excavation Site workspace
+	// Create a temp directory structure simulating a Mineshaft workspace
 	tmpDir := t.TempDir()
 
 	// Create rig structure with shared crew and miners settings at the parent level.

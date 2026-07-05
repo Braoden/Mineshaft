@@ -1,4 +1,4 @@
-# Excavation Site Model Comparison Framework
+# Mineshaft Model Comparison Framework
 # Compare Claude Opus, Sonnet, and Haiku on patrol agent decisions.
 #
 # Usage:
@@ -9,7 +9,7 @@
 #
 # Requires: ANTHROPIC_API_KEY environment variable
 
-description: "Excavation Site patrol agent model comparison"
+description: "Mineshaft patrol agent model comparison"
 
 prompts:
   - file://prompts/patrol-decision.txt

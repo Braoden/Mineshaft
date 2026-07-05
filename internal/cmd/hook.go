@@ -9,13 +9,13 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/events"
-	"github.com/steveyegge/excavation/internal/nudge"
-	"github.com/steveyegge/excavation/internal/runtime"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/events"
+	"github.com/steveyegge/mineshaft/internal/nudge"
+	"github.com/steveyegge/mineshaft/internal/runtime"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 var hookCmd = &cobra.Command{
@@ -40,7 +40,7 @@ Examples:
   gt hook status                             # Same as above
   gt hook gt-abc                             # Attach issue gt-abc to your hook
   gt hook gt-abc -s "Fix the bug"            # With subject for handoff mail
-  gt hook gt-abc excavation/crew/max            # Attach gt-abc to max's hook
+  gt hook gt-abc mineshaft/crew/max            # Attach gt-abc to max's hook
 
 Related commands:
   gt sling <bead>    # Hook + start now (keep context)
@@ -82,12 +82,12 @@ Use cases:
 
 Examples:
   gt hook show                         # What's on MY hook? (auto-detect)
-  gt hook show excavation/miners/nux    # What's nux working on?
-  gt hook show excavation/witness         # What's the witness hooked to?
+  gt hook show mineshaft/miners/nux    # What's nux working on?
+  gt hook show mineshaft/witness         # What's the witness hooked to?
   gt hook show overseer                   # What's the overseer working on?
 
 Output format (one line):
-  excavation/miners/nux: gt-abc123 'Fix the widget bug' [in_progress]`,
+  mineshaft/miners/nux: gt-abc123 'Fix the widget bug' [in_progress]`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runHookShow,
 }
@@ -103,7 +103,7 @@ With a target, attaches to another agent's hook (for remote dispatch).
 
 Examples:
   gt hook attach gt-abc                    # Attach to my hook
-  gt hook attach gt-abc excavation/crew/max   # Attach to max's hook`,
+  gt hook attach gt-abc mineshaft/crew/max   # Attach to max's hook`,
 	Args: cobra.RangeArgs(1, 2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runHook(cmd, args)
@@ -118,7 +118,7 @@ var hookDetachCmd = &cobra.Command{
 
 Examples:
   gt hook detach gt-abc               # Detach gt-abc from my hook
-  gt hook detach gt-abc excavation/nux   # Detach gt-abc from nux's hook`,
+  gt hook detach gt-abc mineshaft/nux   # Detach gt-abc from nux's hook`,
 	Args: cobra.RangeArgs(1, 2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runUnslingWith(cmd, args, hookDryRun, hookForce)
@@ -231,7 +231,7 @@ func runHook(_ *cobra.Command, args []string) error {
 	// Check GT_ROLE first: coordinators (overseer, witness, etc.) may have a stale
 	// GT_MINER in their environment from spawning miners. Only block if the
 	// parsed role is actually miner (handles compound forms like
-	// "excavation/miners/Toast"). If GT_ROLE is unset, fall back to GT_MINER.
+	// "mineshaft/miners/Toast"). If GT_ROLE is unset, fall back to GT_MINER.
 	if role := os.Getenv("GT_ROLE"); role != "" {
 		parsedRole, _, _ := parseRoleString(role)
 		if parsedRole == RoleMiner {
@@ -667,7 +667,7 @@ func normalizeHookShowTarget(target string) string {
 }
 
 // sessionNameToCanonicalAddress maps a tmux session name to a canonical agent
-// assignee address (e.g., "excavation/miners/toast").
+// assignee address (e.g., "mineshaft/miners/toast").
 //
 // targetHint is the original user input and is used to seed a temporary
 // prefix→rig mapping for deterministic parsing in tests or minimal
@@ -694,7 +694,7 @@ func sessionNameToCanonicalAddress(sessionName, targetHint string) (string, bool
 	return canonicalAssigneeAddress(identity), true
 }
 
-// findTownRoot finds the Excavation Site root directory.
+// findTownRoot finds the Mineshaft root directory.
 func findTownRoot() (string, error) {
 	return workspace.FindFromCwd()
 }

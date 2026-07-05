@@ -2,7 +2,7 @@
 
 > **Bead:** gt-t6muy
 > **Date:** 2026-02-20
-> **Author:** capable (excavation miner)
+> **Author:** capable (mineshaft miner)
 > **Status:** Implemented — core lifecycle shipped, branch cleanup shipped, overseer notify pending
 > **Updated:** 2026-03-07 (gt-o8g8 implementation audit by bear)
 > **Related:** gt-dtw9u (Witness monitoring), gt-qpwv4 (Completion detection),
@@ -14,7 +14,7 @@
 ## 1. Overview
 
 This document formalizes how Supervisor, Witness, Refinery, and Miners coordinate
-to move work through the Excavation Site propulsion system. It captures the
+to move work through the Mineshaft propulsion system. It captures the
 session-per-step model, defines the two cleanup stages, designs the per-rig
 lifecycle channel, and resolves open design questions about step granularity,
 recycling, and spawning.
@@ -182,9 +182,9 @@ Each stage can fail independently. Recovery is handled by the next patrol cycle:
 The per-rig miner channel is implemented using the existing `gt mail` system.
 This was chosen over beads-based queues or state files because:
 
-1. **Consistency:** Mail is already the coordination primitive for all Excavation Site agents
+1. **Consistency:** Mail is already the coordination primitive for all Mineshaft agents
 2. **Persistence:** Messages survive process crashes and session cycles
-3. **Routing:** Mail addresses (`excavation/witness`) already map to rig-level agents
+3. **Routing:** Mail addresses (`mineshaft/witness`) already map to rig-level agents
 4. **Audit trail:** Mail creates beads entries (observable, discoverable)
 5. **No new infrastructure:** No new Dolt tables, no file-based queues
 
@@ -331,7 +331,7 @@ The system prioritizes **liveness** (work eventually completes) over strict safe
 
 ### 6.1 The Four Patrol Agents
 
-Excavation Site has four agents that perform patrol (periodic health monitoring):
+Mineshaft has four agents that perform patrol (periodic health monitoring):
 
 | Agent | Scope | Frequency | Key Checks |
 |-------|-------|-----------|-----------|

@@ -17,7 +17,7 @@ work be labeled, matched, and routed to specialized workers?
    requirements and executors declare capability profiles.
 
 2. **Gas City role format (w-gc-001, w-gc-002)** — the planned declarative
-   layer that formalizes Excavation Site's hardcoded roles into portable, user-definable
+   layer that formalizes Mineshaft's hardcoded roles into portable, user-definable
    schemas. PR #2518 prototypes a TOML parser. PR #2527 adds per-crew agent
    assignment.
 
@@ -58,7 +58,7 @@ This recurses at every scale:
 
 | Scale | Unit | Advertises | Delegates to |
 |-------|------|-----------|--------------|
-| Federation | Wasteland rig | Stamps, reputation | Its Excavation Site |
+| Federation | Wasteland rig | Stamps, reputation | Its Mineshaft |
 | Town | Overseer | Rig capabilities | Crew, miners |
 | Crew | Specialist | Domain expertise | Sub-agents, tools |
 | Worker | Miner | Task completion | Tools |
@@ -371,9 +371,9 @@ track_record:
 |-----------|--------|--------|
 | Tier system | Beads `agent-cost-optimization` | Implemented on branch |
 | Agent registry | Beads `agent-cost-optimization` | Implemented on branch |
-| TOML role parser | Excavation PR #2518 | Open PR |
-| Per-crew agent assignment | Excavation PR #2527 | Open PR |
-| Agent framework survey | Excavation PR #2581 (w-gc-004) | Merged |
+| TOML role parser | Mineshaft PR #2518 | Open PR |
+| Per-crew agent assignment | Mineshaft PR #2527 | Open PR |
+| Agent framework survey | Mineshaft PR #2581 (w-gc-004) | Merged |
 | Wasteland stamps | HOP federation | Live |
 | Role format design | **w-gc-001** | **This document informs it** |
 
@@ -398,5 +398,5 @@ track_record:
 
 5. **What's the minimum viable version?** The full cellular model with recursive
    sub-agents and dynamic track records is the vision. What's the 80/20 slice
-   that delivers value with the beads tier system and existing Excavation Site
+   that delivers value with the beads tier system and existing Mineshaft
    primitives?

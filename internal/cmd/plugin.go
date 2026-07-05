@@ -9,11 +9,11 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/plugin"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/plugin"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // Plugin command flags
@@ -111,10 +111,10 @@ Examples:
 var pluginSyncCmd = &cobra.Command{
 	Use:   "sync",
 	Short: "Sync plugins from source repo to runtime directories",
-	Long: `Copy plugins from the excavation source repository to runtime plugin directories.
+	Long: `Copy plugins from the mineshaft source repository to runtime plugin directories.
 
 By default, auto-detects the source by walking up from the current directory
-looking for a excavation repo, or checks known locations within the town.
+looking for a mineshaft repo, or checks known locations within the town.
 
 Syncs to town-level plugins (~/gt/plugins/) so all rigs see the latest plugins.
 
@@ -195,7 +195,7 @@ func init() {
 func getPluginScanner() (*plugin.Scanner, string, error) {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return nil, "", fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return nil, "", fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Load rigs config to get rig names
@@ -518,13 +518,13 @@ func runPluginRun(cmd *cobra.Command, args []string) error {
 func runPluginSync(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Determine source directory
 	sourceDir := pluginSyncSource
 	if sourceDir == "" {
-		sourceDir, err = plugin.FindExcavationSource(townRoot)
+		sourceDir, err = plugin.FindMineshaftSource(townRoot)
 		if err != nil {
 			return err
 		}
@@ -665,7 +665,7 @@ func runPluginRecordRun(cmd *cobra.Command, args []string) error {
 
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	recorder := plugin.NewRecorder(townRoot)

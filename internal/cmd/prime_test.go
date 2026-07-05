@@ -14,9 +14,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/checkpoint"
-	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/checkpoint"
+	"github.com/steveyegge/mineshaft/internal/constants"
 )
 
 // captureStdout redirects os.Stdout to a pipe, calls fn, then returns whatever
@@ -138,20 +138,20 @@ func TestGetAgentBeadID_UsesRigPrefix(t *testing.T) {
 func TestRigBeadsRootPrefersRouteResolvedRigDir(t *testing.T) {
 	townRoot := t.TempDir()
 	writeTestRoutes(t, townRoot, []beads.Route{
-		{Prefix: "gt-", Path: "excavation/overseer/rig"},
+		{Prefix: "gt-", Path: "mineshaft/overseer/rig"},
 		{Prefix: "hq-", Path: "."},
 	})
 
 	ctx := RoleContext{
 		Role:     RoleMiner,
-		Rig:      "excavation",
+		Rig:      "mineshaft",
 		Miner:  "toast",
 		TownRoot: townRoot,
-		WorkDir:  filepath.Join(townRoot, "excavation", "miners", "toast", "excavation"),
+		WorkDir:  filepath.Join(townRoot, "mineshaft", "miners", "toast", "mineshaft"),
 	}
 
 	got := rigBeadsRoot(ctx)
-	want := filepath.Join(townRoot, "excavation", "overseer", "rig")
+	want := filepath.Join(townRoot, "mineshaft", "overseer", "rig")
 	if got != want {
 		t.Fatalf("rigBeadsRoot() = %q, want route-resolved %q", got, want)
 	}
@@ -161,13 +161,13 @@ func TestRigBeadsRootFallsBackWhenRouteMissing(t *testing.T) {
 	townRoot := t.TempDir()
 	ctx := RoleContext{
 		Role:     RoleMiner,
-		Rig:      "excavation",
+		Rig:      "mineshaft",
 		TownRoot: townRoot,
-		WorkDir:  filepath.Join(townRoot, "excavation", "miners", "toast", "excavation"),
+		WorkDir:  filepath.Join(townRoot, "mineshaft", "miners", "toast", "mineshaft"),
 	}
 
 	got := rigBeadsRoot(ctx)
-	want := filepath.Join(townRoot, "excavation")
+	want := filepath.Join(townRoot, "mineshaft")
 	if got != want {
 		t.Fatalf("rigBeadsRoot() = %q, want fallback %q", got, want)
 	}
@@ -770,7 +770,7 @@ func TestFormatSessionMetadataLine(t *testing.T) {
 	defer func() { primeStructuredSessionStartOutput = origStructured }()
 
 	primeStructuredSessionStartOutput = false
-	if got := formatSessionMetadataLine("crew/quick", "sess-1"); !strings.HasPrefix(got, "[GAS TOWN] ") {
+	if got := formatSessionMetadataLine("crew/quick", "sess-1"); !strings.HasPrefix(got, "[MINESHAFT] ") {
 		t.Fatalf("formatSessionMetadataLine() = %q, want bracketed prefix", got)
 	}
 
@@ -799,7 +799,7 @@ func TestStructuredOutputOnlyForSessionStart(t *testing.T) {
 	}
 
 	// Verify metadata line retains brackets for non-SessionStart
-	if got := formatSessionMetadataLine("crew/quick", "sess-1"); !strings.HasPrefix(got, "[GAS TOWN]") {
+	if got := formatSessionMetadataLine("crew/quick", "sess-1"); !strings.HasPrefix(got, "[MINESHAFT]") {
 		t.Fatalf("formatSessionMetadataLine() for non-SessionStart = %q, want bracketed prefix", got)
 	}
 }

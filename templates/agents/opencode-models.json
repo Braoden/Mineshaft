@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "description": "OpenCode model presets with recommended delay settings for excavation integration",
+  "description": "OpenCode model presets with recommended delay settings for mineshaft integration",
   "usage": "Use ready_delay_ms values when configuring runtime.tmux.ready_delay_ms in agents.json",
   "models_api": "https://models.dev/api.json",
-  "models_api_note": "LLMs should fetch current model list from models_api. The 'models' below are fallback examples with excavation-specific delay recommendations.",
+  "models_api_note": "LLMs should fetch current model list from models_api. The 'models' below are fallback examples with mineshaft-specific delay recommendations.",
   "models": {
     "openai": {
       "gpt-5.2": {

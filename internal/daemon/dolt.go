@@ -14,8 +14,8 @@ import (
 	"sync"
 	"time"
 
-	agentconfig "github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/doltserver"
+	agentconfig "github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/doltserver"
 )
 
 const doltCmdTimeout = 15 * time.Second
@@ -868,7 +868,7 @@ func writeDaemonDoltConfig(cfg *DoltServerConfig, configPath string) error {
 			systemVariablesBlock = fmt.Sprintf("\nsystem_variables:\n  dolt_stats_enabled: %s\n", strings.TrimSpace(stats))
 		}
 	}
-	content := fmt.Sprintf(`# Dolt SQL server configuration — managed by Excavation Site daemon
+	content := fmt.Sprintf(`# Dolt SQL server configuration — managed by Mineshaft daemon
 # Do not edit manually; overwritten on each daemon-managed server start.
 
 log_level: info

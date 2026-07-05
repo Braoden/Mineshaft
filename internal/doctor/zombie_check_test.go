@@ -60,8 +60,8 @@ func TestZombieSessionCheck_FixProtectsCrewSessions(t *testing.T) {
 
 	// Manually set zombies including a crew session (simulating a bug)
 	check.zombieSessions = []string{
-		"gt-excavation-crew-joe", // Should be skipped
-		"gt-excavation-witness",  // Would be killed (if real)
+		"gt-mineshaft-crew-joe", // Should be skipped
+		"gt-mineshaft-witness",  // Would be killed (if real)
 	}
 
 	ctx := &CheckContext{TownRoot: t.TempDir()}

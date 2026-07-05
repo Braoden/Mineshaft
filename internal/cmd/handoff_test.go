@@ -8,16 +8,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 func setupHandoffTestRegistry(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "excavation")
+	reg.Register("gt", "mineshaft")
 	old := session.DefaultRegistry()
 	session.SetDefaultRegistry(reg)
 	t.Cleanup(func() { session.SetDefaultRegistry(old) })
@@ -71,19 +71,19 @@ func TestSessionWorkDir(t *testing.T) {
 		{
 			name:        "crew runs from crew subdirectory",
 			sessionName: "gt-crew-holden",
-			wantDir:     townRoot + "/excavation/crew/holden",
+			wantDir:     townRoot + "/mineshaft/crew/holden",
 			wantErr:     false,
 		},
 		{
 			name:        "witness runs from witness directory",
 			sessionName: "gt-witness",
-			wantDir:     townRoot + "/excavation/witness",
+			wantDir:     townRoot + "/mineshaft/witness",
 			wantErr:     false,
 		},
 		{
 			name:        "refinery runs from refinery/rig directory",
 			sessionName: "gt-refinery",
-			wantDir:     townRoot + "/excavation/refinery/rig",
+			wantDir:     townRoot + "/mineshaft/refinery/rig",
 			wantErr:     false,
 		},
 	}
@@ -122,13 +122,13 @@ func TestBuildRestartCommand_UsesRoleAgentsWhenNoAgentOverride(t *testing.T) {
 		_ = os.Setenv("GT_TOWN_ROOT", origTownRoot)
 		_ = os.Setenv("GT_ROOT", origRoot)
 	})
-	rigPath := filepath.Join(townRoot, "excavation")
+	rigPath := filepath.Join(townRoot, "mineshaft")
 	witnessDir := filepath.Join(rigPath, "witness")
 
 	if err := os.MkdirAll(filepath.Join(townRoot, "overseer"), 0755); err != nil {
 		t.Fatalf("mkdir overseer: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"name":"excavation"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"name":"mineshaft"}`), 0644); err != nil {
 		t.Fatalf("write town.json: %v", err)
 	}
 	if err := os.MkdirAll(witnessDir, 0755); err != nil {
@@ -196,13 +196,13 @@ func TestBuildRestartCommand_MergesAgentPresetEnv(t *testing.T) {
 		_ = os.Setenv("GT_TOWN_ROOT", origTownRoot)
 		_ = os.Setenv("GT_ROOT", origRoot)
 	})
-	rigPath := filepath.Join(townRoot, "excavation")
+	rigPath := filepath.Join(townRoot, "mineshaft")
 	witnessDir := filepath.Join(rigPath, "witness")
 
 	if err := os.MkdirAll(filepath.Join(townRoot, "overseer"), 0755); err != nil {
 		t.Fatalf("mkdir overseer: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"name":"excavation"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"name":"mineshaft"}`), 0644); err != nil {
 		t.Fatalf("write town.json: %v", err)
 	}
 	if err := os.MkdirAll(witnessDir, 0755); err != nil {
@@ -272,13 +272,13 @@ func TestBuildRestartCommandWithOpts_ContinuePrompt(t *testing.T) {
 		_ = os.Setenv("GT_TOWN_ROOT", origTownRoot)
 		_ = os.Setenv("GT_ROOT", origRoot)
 	})
-	rigPath := filepath.Join(townRoot, "excavation")
+	rigPath := filepath.Join(townRoot, "mineshaft")
 	crewDir := filepath.Join(rigPath, "crew", "bear")
 
 	if err := os.MkdirAll(filepath.Join(townRoot, "overseer"), 0755); err != nil {
 		t.Fatalf("mkdir overseer: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"name":"excavation"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"name":"mineshaft"}`), 0644); err != nil {
 		t.Fatalf("write town.json: %v", err)
 	}
 	if err := os.MkdirAll(crewDir, 0755); err != nil {
@@ -498,7 +498,7 @@ func TestHandoffMinerEnvCheck(t *testing.T) {
 		},
 		{
 			name:      "compound miner role is redirected",
-			role:      "excavation/miners/Toast",
+			role:      "mineshaft/miners/Toast",
 			miner:   "Toast",
 			wantBlock: true,
 		},
@@ -510,7 +510,7 @@ func TestHandoffMinerEnvCheck(t *testing.T) {
 		},
 		{
 			name:      "compound witness with stale GT_MINER is NOT redirected",
-			role:      "excavation/witness",
+			role:      "mineshaft/witness",
 			miner:   "alpha",
 			wantBlock: false,
 		},
@@ -522,7 +522,7 @@ func TestHandoffMinerEnvCheck(t *testing.T) {
 		},
 		{
 			name:      "compound crew with stale GT_MINER is NOT redirected",
-			role:      "excavation/crew/den",
+			role:      "mineshaft/crew/den",
 			miner:   "alpha",
 			wantBlock: false,
 		},
@@ -894,7 +894,7 @@ func TestEnforceHandoffCooldown(t *testing.T) {
 
 	t.Run("cooldown triggers for recent handoff", func(t *testing.T) {
 		// Use a non-exempt role so cooldown applies
-		t.Setenv("GT_ROLE", "excavation/witness")
+		t.Setenv("GT_ROLE", "mineshaft/witness")
 		tmpDir := t.TempDir()
 		t.Chdir(tmpDir)
 
@@ -921,7 +921,7 @@ func TestEnforceHandoffCooldown(t *testing.T) {
 	})
 
 	t.Run("no cooldown for crew role", func(t *testing.T) {
-		t.Setenv("GT_ROLE", "excavation/crew/max")
+		t.Setenv("GT_ROLE", "mineshaft/crew/max")
 		tmpDir := t.TempDir()
 		t.Chdir(tmpDir)
 

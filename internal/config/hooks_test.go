@@ -1,6 +1,6 @@
 // Test Hook Configuration Validation
 //
-// These tests ensure Claude Code hook configurations are correct across Excavation Site.
+// These tests ensure Claude Code hook configurations are correct across Mineshaft.
 // Specifically, they validate that:
 // - All SessionStart hooks with `gt prime` include the `--hook` flag
 // - The registry.toml includes all required roles for session-prime
@@ -50,7 +50,7 @@ type RegistryHook struct {
 	Enabled     bool     `toml:"enabled"`
 }
 
-// findTownRoot walks up from cwd to find the Excavation Site root.
+// findTownRoot walks up from cwd to find the Mineshaft root.
 // We look for hooks/registry.toml as the unique marker (overseer/ exists at multiple levels).
 func findTownRoot() (string, error) {
 	dir, err := os.Getwd()
@@ -79,7 +79,7 @@ func findTownRoot() (string, error) {
 func TestSessionStartHooksHaveHookFlag(t *testing.T) {
 	townRoot, err := findTownRoot()
 	if err != nil {
-		t.Skip("Not running inside Excavation Site directory structure")
+		t.Skip("Not running inside Mineshaft directory structure")
 	}
 
 	var settingsFiles []string
@@ -146,7 +146,7 @@ func TestSessionStartHooksHaveHookFlag(t *testing.T) {
 func TestRegistrySessionPrimeIncludesAllRoles(t *testing.T) {
 	townRoot, err := findTownRoot()
 	if err != nil {
-		t.Skip("Not running inside Excavation Site directory structure")
+		t.Skip("Not running inside Mineshaft directory structure")
 	}
 
 	registryPath := filepath.Join(townRoot, "hooks", "registry.toml")
@@ -226,7 +226,7 @@ var knownAgentPatterns = []agentSettingsPattern{
 	{".claude", "settings.json", "json"},
 	{".gemini", "settings.json", "json"},
 	// copilot uses .copilot/copilot-instructions.md (markdown, not JSON hooks)
-	// opencode uses .opencode/plugin/excavation.js (JS, not JSON hooks)
+	// opencode uses .opencode/plugin/mineshaft.js (JS, not JSON hooks)
 }
 
 // TestAllAgentSessionStartHooksHaveHookFlag validates that across all agent
@@ -236,7 +236,7 @@ var knownAgentPatterns = []agentSettingsPattern{
 func TestAllAgentSessionStartHooksHaveHookFlag(t *testing.T) {
 	townRoot, err := findTownRoot()
 	if err != nil {
-		t.Skip("Not running inside Excavation Site directory structure")
+		t.Skip("Not running inside Mineshaft directory structure")
 	}
 
 	var failures []string

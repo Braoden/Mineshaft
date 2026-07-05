@@ -7,13 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/mineshaft/internal/session"
 )
 
 func setupWarrantTestRegistry(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "excavation")
+	reg.Register("gt", "mineshaft")
 	reg.Register("bd", "beads")
 	old := session.DefaultRegistry()
 	session.SetDefaultRegistry(reg)
@@ -34,7 +34,7 @@ func TestWarrantFile_NewWarrant(t *testing.T) {
 		t.Fatalf("MkdirAll() error = %v", err)
 	}
 
-	target := "excavation/miners/alpha"
+	target := "mineshaft/miners/alpha"
 	reason := "Zombie detected: no session, idle >10m"
 
 	warrant := Warrant{
@@ -51,7 +51,7 @@ func TestWarrantFile_NewWarrant(t *testing.T) {
 		t.Fatalf("json.MarshalIndent() error = %v", err)
 	}
 
-	warrantPath := filepath.Join(warrantDir, "excavation_miners_alpha.warrant.json")
+	warrantPath := filepath.Join(warrantDir, "mineshaft_miners_alpha.warrant.json")
 	if err := os.WriteFile(warrantPath, data, 0644); err != nil {
 		t.Fatalf("WriteFile() error = %v", err)
 	}
@@ -88,7 +88,7 @@ func TestWarrantFile_DuplicateWarrant(t *testing.T) {
 		t.Fatalf("MkdirAll() error = %v", err)
 	}
 
-	target := "excavation/miners/alpha"
+	target := "mineshaft/miners/alpha"
 	originalReason := "First reason"
 
 	// Create first warrant
@@ -101,7 +101,7 @@ func TestWarrantFile_DuplicateWarrant(t *testing.T) {
 		Executed: false,
 	}
 
-	warrantPath := filepath.Join(warrantDir, "excavation_miners_alpha.warrant.json")
+	warrantPath := filepath.Join(warrantDir, "mineshaft_miners_alpha.warrant.json")
 	data, _ := json.MarshalIndent(warrant, "", "  ")
 	if err := os.WriteFile(warrantPath, data, 0644); err != nil {
 		t.Fatalf("WriteFile() error = %v", err)
@@ -133,7 +133,7 @@ func TestWarrantExecute_MarksExecuted(t *testing.T) {
 		t.Fatalf("MkdirAll() error = %v", err)
 	}
 
-	target := "excavation/miners/alpha"
+	target := "mineshaft/miners/alpha"
 
 	// Create pending warrant
 	warrant := Warrant{
@@ -145,7 +145,7 @@ func TestWarrantExecute_MarksExecuted(t *testing.T) {
 		Executed: false,
 	}
 
-	warrantPath := filepath.Join(warrantDir, "excavation_miners_alpha.warrant.json")
+	warrantPath := filepath.Join(warrantDir, "mineshaft_miners_alpha.warrant.json")
 	data, _ := json.MarshalIndent(warrant, "", "  ")
 	if err := os.WriteFile(warrantPath, data, 0644); err != nil {
 		t.Fatalf("WriteFile() error = %v", err)
@@ -183,13 +183,13 @@ func TestTargetToSessionName(t *testing.T) {
 		wantErr bool
 		want    string
 	}{
-		{"excavation/miners/alpha", false, "gt-alpha"},
+		{"mineshaft/miners/alpha", false, "gt-alpha"},
 		{"beads/miners/charlie", false, "bd-charlie"},
 		{"supervisor/dogs", true, ""},
 		{"supervisor/dogs/alpha", false, "hq-dog-alpha"},
-		{"excavation/crew/bob", false, "gt-crew-bob"},
-		{"excavation/witness", false, "gt-witness"},
-		{"excavation/refinery", false, "gt-refinery"},
+		{"mineshaft/crew/bob", false, "gt-crew-bob"},
+		{"mineshaft/witness", false, "gt-witness"},
+		{"mineshaft/refinery", false, "gt-refinery"},
 		{"beads/witness", false, "bd-witness"},
 		{"beads/refinery", false, "bd-refinery"},
 		{"unknownrig/something/else", false, "gt-unknownrig-something-else"},
@@ -218,8 +218,8 @@ func TestWarrantFilePath(t *testing.T) {
 	}{
 		{
 			dir:    filepath.Join("/tmp", "warrants"),
-			target: "excavation/miners/alpha",
-			want:   filepath.Join("/tmp", "warrants", "excavation_miners_alpha.warrant.json"),
+			target: "mineshaft/miners/alpha",
+			want:   filepath.Join("/tmp", "warrants", "mineshaft_miners_alpha.warrant.json"),
 		},
 		{
 			dir:    filepath.Join("/home", "user", "gt", "warrants"),

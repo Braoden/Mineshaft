@@ -59,7 +59,7 @@ cd ~/gt/.dolt-data/<name> && dolt backup
 ```
 
 If the output contains `<name>-backup`, include it in the backup list.
-Expected databases: `hq`, `beads`, `excavation`.
+Expected databases: `hq`, `beads`, `mineshaft`.
 
 ### Step 3: Check each DB for changes and sync
 

@@ -5,7 +5,7 @@ description: >
   --author, --label. Use for PR review workflows and sheriff duties.
 allowed-tools: "Bash(gh pr list:*)"
 version: "1.0.0"
-author: "Excavation Site"
+author: "Mineshaft"
 ---
 
 # PR List - Formatted Pull Request Table

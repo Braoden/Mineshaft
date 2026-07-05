@@ -11,9 +11,9 @@ func TestReaperDatabaseNamesTrimsConfiguredList(t *testing.T) {
 	oldDB := reaperDB
 	t.Cleanup(func() { reaperDB = oldDB })
 
-	reaperDB = " hq, excavation ,, beads "
+	reaperDB = " hq, mineshaft ,, beads "
 	got := reaperDatabaseNames()
-	want := []string{"hq", "excavation", "beads"}
+	want := []string{"hq", "mineshaft", "beads"}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("reaperDatabaseNames() = %#v, want %#v", got, want)
 	}

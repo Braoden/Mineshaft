@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	beadspkg "github.com/steveyegge/excavation/internal/beads"
+	beadspkg "github.com/steveyegge/mineshaft/internal/beads"
 )
 
 // TestFindRemote_NoRemote verifies FindRemote returns empty when no remote is configured.
@@ -115,7 +115,7 @@ func TestSyncDatabasesSQL_FilterSkipsOthers(t *testing.T) {
 
 // TestValidSQLName verifies the defense-in-depth name validation.
 func TestValidSQLName(t *testing.T) {
-	valid := []string{"mydb", "beads_excavation", "my-db", "db.v2", "ABC123"}
+	valid := []string{"mydb", "beads_mineshaft", "my-db", "db.v2", "ABC123"}
 	for _, name := range valid {
 		if !validSQLName(name) {
 			t.Errorf("validSQLName(%q) = false, want true", name)
@@ -138,11 +138,11 @@ func TestPurgeClosedEphemeralsUsesHardenedBDEnv(t *testing.T) {
 	t.Cleanup(beadspkg.ResetBdAllowStaleCacheForTest)
 
 	townRoot := t.TempDir()
-	beadsDir := filepath.Join(townRoot, "excavation", ".beads")
+	beadsDir := filepath.Join(townRoot, "mineshaft", ".beads")
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	metadata := []byte(`{"dolt_database":"excavation","dolt_server_host":"metadata-host","dolt_server_port":3307}`)
+	metadata := []byte(`{"dolt_database":"mineshaft","dolt_server_host":"metadata-host","dolt_server_port":3307}`)
 	if err := os.WriteFile(filepath.Join(beadsDir, "metadata.json"), metadata, 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -188,7 +188,7 @@ exit 2
 	t.Setenv("BEADS_DOLT_SERVER_PORT", "9999")
 	t.Setenv("BEADS_DOLT_PORT", "9999")
 
-	purged, err := PurgeClosedEphemerals(townRoot, "excavation", false)
+	purged, err := PurgeClosedEphemerals(townRoot, "mineshaft", false)
 	if err != nil {
 		t.Fatalf("PurgeClosedEphemerals: %v", err)
 	}
@@ -205,7 +205,7 @@ exit 2
 		"args=--allow-stale version",
 		"args=--allow-stale purge --json",
 		"BEADS_DIR=" + beadsDir,
-		"BEADS_DOLT_SERVER_DATABASE=excavation",
+		"BEADS_DOLT_SERVER_DATABASE=mineshaft",
 		"BEADS_DOLT_SERVER_HOST=127.0.0.2",
 		"BEADS_DOLT_SERVER_PORT=5507",
 		"BEADS_DOLT_PORT=5507",

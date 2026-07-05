@@ -12,16 +12,16 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/supervisor"
-	"github.com/steveyegge/excavation/internal/runtime"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/util"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/supervisor"
+	"github.com/steveyegge/mineshaft/internal/runtime"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/util"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // getSupervisorSessionName returns the Supervisor session name.
@@ -35,7 +35,7 @@ var supervisorCmd = &cobra.Command{
 	GroupID: GroupAgents,
 	Short:   "Manage the Supervisor (town-level watchdog)",
 	RunE:    requireSubcommand,
-	Long: `Manage the Supervisor - the town-level watchdog for Excavation Site.
+	Long: `Manage the Supervisor - the town-level watchdog for Mineshaft.
 
 The Supervisor ("daemon beacon") is the only agent that receives mechanical
 heartbeats from the daemon. It monitors system health across all rigs:
@@ -139,8 +139,8 @@ Exit codes:
   2 - Agent should be force-killed (consecutive failures exceeded)
 
 Examples:
-  gt supervisor health-check excavation/miners/max
-  gt supervisor health-check excavation/witness --timeout=60s
+  gt supervisor health-check mineshaft/miners/max
+  gt supervisor health-check mineshaft/witness --timeout=60s
   gt supervisor health-check supervisor --failures=5`,
 	Args: cobra.ExactArgs(1),
 	RunE: runSupervisorHealthCheck,
@@ -166,8 +166,8 @@ After force-kill, the agent is 'asleep'. Normal wake mechanisms apply:
 This respects the cooldown period - won't kill if recently killed.
 
 Examples:
-  gt supervisor force-kill excavation/miners/max
-  gt supervisor force-kill excavation/witness --reason="unresponsive for 90s"`,
+  gt supervisor force-kill mineshaft/miners/max
+  gt supervisor force-kill mineshaft/witness --reason="unresponsive for 90s"`,
 	Args: cobra.ExactArgs(1),
 	RunE: runSupervisorForceKill,
 }
@@ -267,7 +267,7 @@ A process is a zombie if:
 - It's older than 60 seconds
 
 This catches "ghost" processes that have a TTY (from a dead tmux session)
-but are no longer part of any active Excavation Site session.
+but are no longer part of any active Mineshaft session.
 
 Examples:
   gt supervisor zombie-scan           # Find and kill zombies
@@ -297,7 +297,7 @@ Exit codes:
 
 Examples:
   gt supervisor redispatch gt-abc123                    # Auto-detect rig from prefix
-  gt supervisor redispatch gt-abc123 --rig excavation      # Explicit target rig
+  gt supervisor redispatch gt-abc123 --rig mineshaft      # Explicit target rig
   gt supervisor redispatch gt-abc123 --max-attempts 5   # Allow 5 attempts before escalation
   gt supervisor redispatch gt-abc123 --cooldown 10m     # 10 minute cooldown between attempts`,
 	Args: cobra.ExactArgs(1),
@@ -497,7 +497,7 @@ func startSupervisorSession(t *tmux.Tmux, sessionName, agentOverride string) err
 	// Find workspace root
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Supervisor runs from its own directory (for correct role detection by gt prime)
@@ -551,7 +551,7 @@ func startSupervisorSession(t *tmux.Tmux, sessionName, agentOverride string) err
 
 	// Create session with command and env vars via -e flags so the initial
 	// shell (and subprocesses Claude spawns) inherit them from the start.
-	// See: https://github.com/anthropics/excavation/issues/280 (race condition fix)
+	// See: https://github.com/anthropics/mineshaft/issues/280 (race condition fix)
 	fmt.Println("Starting Supervisor session...")
 	if err := t.NewSessionWithCommandAndEnv(sessionName, supervisorDir, startupCmd, envVars); err != nil {
 		return fmt.Errorf("creating session: %w", err)
@@ -563,9 +563,9 @@ func startSupervisorSession(t *tmux.Tmux, sessionName, agentOverride string) err
 	}
 
 	// Apply Supervisor theme (non-fatal: theming failure doesn't affect operation)
-	// Note: ConfigureExcavationSession includes cycle bindings
+	// Note: ConfigureMineshaftSession includes cycle bindings
 	theme := tmux.ResolveSessionTheme(townRoot, "", "supervisor", "")
-	_ = t.ConfigureExcavationSession(sessionName, theme, "", "Supervisor", "health-check")
+	_ = t.ConfigureMineshaftSession(sessionName, theme, "", "Supervisor", "health-check")
 
 	// Wait for Claude to start
 	if err := t.WaitForCommand(sessionName, constants.SupportedShells, constants.ClaudeStartTimeout); err != nil {
@@ -806,7 +806,7 @@ func runSupervisorRestart(cmd *cobra.Command, args []string) error {
 func runSupervisorHeartbeat(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Check if Supervisor is paused - if so, refuse to update heartbeat
@@ -846,7 +846,7 @@ func runSupervisorHealthCheck(cmd *cobra.Command, args []string) error {
 
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Load health check state
@@ -986,7 +986,7 @@ func runSupervisorForceKill(cmd *cobra.Command, args []string) error {
 
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Load health check state
@@ -1068,7 +1068,7 @@ func runSupervisorForceKill(cmd *cobra.Command, args []string) error {
 func runSupervisorHealthState(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	state, err := supervisor.LoadHealthCheckState(townRoot)
@@ -1112,7 +1112,7 @@ func runSupervisorHealthState(cmd *cobra.Command, args []string) error {
 }
 
 // agentAddressToIDs converts an agent address to bead ID and session name.
-// Supports formats: "excavation/miners/max", "excavation/witness", "supervisor", "overseer"
+// Supports formats: "mineshaft/miners/max", "mineshaft/witness", "supervisor", "overseer"
 // Note: Town-level agents (Overseer, Supervisor) use hq- prefix bead IDs stored in town beads.
 func agentAddressToIDs(address string) (beadID, sessionName string, err error) {
 	switch address {
@@ -1125,7 +1125,7 @@ func agentAddressToIDs(address string) (beadID, sessionName string, err error) {
 	parts := strings.Split(address, "/")
 	switch len(parts) {
 	case 2:
-		// rig/role: "excavation/witness", "excavation/refinery"
+		// rig/role: "mineshaft/witness", "mineshaft/refinery"
 		rig, role := parts[0], parts[1]
 		switch role {
 		case constants.RoleWitness:
@@ -1136,7 +1136,7 @@ func agentAddressToIDs(address string) (beadID, sessionName string, err error) {
 			return "", "", fmt.Errorf("unknown role: %s", role)
 		}
 	case 3:
-		// rig/type/name: "excavation/miners/max", "excavation/crew/alpha"
+		// rig/type/name: "mineshaft/miners/max", "mineshaft/crew/alpha"
 		rig, agentType, name := parts[0], parts[1], parts[2]
 		switch agentType {
 		case "miners":
@@ -1196,7 +1196,7 @@ func updateAgentBeadState(townRoot, agent, state, _ string) { // reason unused b
 func runSupervisorStaleHooks(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	cfg := &supervisor.StaleHookConfig{
@@ -1290,7 +1290,7 @@ func runSupervisorStaleHooks(cmd *cobra.Command, args []string) error {
 func runSupervisorPause(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Check if already paused
@@ -1334,7 +1334,7 @@ func runSupervisorPause(cmd *cobra.Command, args []string) error {
 func runSupervisorResume(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	// Check if paused
@@ -1498,7 +1498,7 @@ func runSupervisorRedispatch(cmd *cobra.Command, args []string) error {
 
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	result := supervisor.Redispatch(townRoot, beadID, redispatchRig, redispatchMaxAttempts, redispatchCooldown)
@@ -1542,7 +1542,7 @@ func runSupervisorRedispatch(cmd *cobra.Command, args []string) error {
 func runSupervisorRedispatchState(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	state, err := supervisor.LoadRedispatchState(townRoot)
@@ -1588,7 +1588,7 @@ func runSupervisorRedispatchState(cmd *cobra.Command, args []string) error {
 func runSupervisorFeedStranded(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	result := supervisor.FeedStranded(townRoot, feedStrandedMaxFeeds, feedStrandedCooldown)
@@ -1638,7 +1638,7 @@ func runSupervisorFeedStranded(cmd *cobra.Command, args []string) error {
 func runSupervisorFeedStrandedState(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Excavation Site workspace: %w", err)
+		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
 	state, err := supervisor.LoadFeedStrandedState(townRoot)

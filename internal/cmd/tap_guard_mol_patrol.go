@@ -17,14 +17,14 @@ agent session risks killing sibling agents or even the caller's own
 molecule.
 
 This guard blocks:
-  - gt mol patrol (when called from within a Excavation Site agent)
+  - gt mol patrol (when called from within a Mineshaft agent)
 
 Exit codes:
-  0 - Operation allowed (not in Excavation Site agent context, or Overseer)
+  0 - Operation allowed (not in Mineshaft agent context, or Overseer)
   2 - Operation BLOCKED (in agent context)
 
 Mol patrol should only be run by the Overseer or by humans from outside
-the Excavation Site agent tree.`,
+the Mineshaft agent tree.`,
 	RunE: runTapGuardMolPatrol,
 }
 
@@ -33,7 +33,7 @@ func init() {
 }
 
 func runTapGuardMolPatrol(cmd *cobra.Command, args []string) error {
-	if !isExcavationAgentContext() {
+	if !isMineshaftAgentContext() {
 		return nil
 	}
 

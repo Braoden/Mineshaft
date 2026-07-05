@@ -3,7 +3,7 @@ package session
 import (
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/config"
+	"github.com/steveyegge/mineshaft/internal/config"
 )
 
 func TestStartSession_RequiresSessionID(t *testing.T) {
@@ -57,7 +57,7 @@ func TestBuildPrompt_BeaconOnly(t *testing.T) {
 	if prompt == "" {
 		t.Fatal("expected non-empty prompt")
 	}
-	if !contains(prompt, "[GAS TOWN]") {
+	if !contains(prompt, "[MINESHAFT]") {
 		t.Errorf("prompt should contain beacon: %s", prompt)
 	}
 }
@@ -75,7 +75,7 @@ func TestBuildPrompt_WithInstructions(t *testing.T) {
 	if !contains(prompt, "Run gt boot triage now.") {
 		t.Errorf("prompt should contain instructions: %s", prompt)
 	}
-	if !contains(prompt, "[GAS TOWN]") {
+	if !contains(prompt, "[MINESHAFT]") {
 		t.Errorf("prompt should contain beacon: %s", prompt)
 	}
 }

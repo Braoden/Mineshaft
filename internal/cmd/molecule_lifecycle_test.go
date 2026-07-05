@@ -20,10 +20,10 @@ func TestExtractRoleFromIdentity(t *testing.T) {
 		target string
 		want   string
 	}{
-		{"excavation/refinery", "refinery"},
-		{"excavation/witness", "witness"},
-		{"excavation/crew/jack", "jack"},
-		{"excavation/miners/nux", "nux"},
+		{"mineshaft/refinery", "refinery"},
+		{"mineshaft/witness", "witness"},
+		{"mineshaft/crew/jack", "jack"},
+		{"mineshaft/miners/nux", "nux"},
 		{"overseer/", "overseer"},
 		{"supervisor/", "supervisor"},
 		{"supervisor/boot", "boot"},
@@ -78,7 +78,7 @@ func TestSquashJitterNegativeDuration(t *testing.T) {
 // TestSquashJitterZeroDuration verifies that --jitter 0s proceeds without
 // sleeping (the jitterMax > 0 guard skips the sleep block).
 // This tests the parse path only — the command will fail at workspace lookup
-// since we run from a temp directory outside any excavation workspace.
+// since we run from a temp directory outside any mineshaft workspace.
 func TestSquashJitterZeroDuration(t *testing.T) {
 	prev := moleculeJitter
 	t.Cleanup(func() { moleculeJitter = prev })
@@ -172,12 +172,12 @@ func TestSlingFormulaOnBeadHooksBaseBead(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	rigDir := filepath.Join(townRoot, "excavation", "overseer", "rig")
+	rigDir := filepath.Join(townRoot, "mineshaft", "overseer", "rig")
 	if err := os.MkdirAll(rigDir, 0755); err != nil {
 		t.Fatalf("mkdir rigDir: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"excavation/overseer/rig"}`,
+		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
@@ -366,12 +366,12 @@ func TestSlingFormulaOnBeadSetsAttachedMoleculeInBaseBead(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	rigDir := filepath.Join(townRoot, "excavation", "overseer", "rig")
+	rigDir := filepath.Join(townRoot, "mineshaft", "overseer", "rig")
 	if err := os.MkdirAll(rigDir, 0755); err != nil {
 		t.Fatalf("mkdir rigDir: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"excavation/overseer/rig"}`,
+		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
@@ -890,7 +890,7 @@ func TestDoneClosesAttachedMolecule(t *testing.T) {
 	townRoot := t.TempDir()
 
 	// Create rig structure - use simple rig name that matches routes lookup
-	rigPath := filepath.Join(townRoot, "excavation")
+	rigPath := filepath.Join(townRoot, "mineshaft")
 	if err := os.MkdirAll(rigPath, 0755); err != nil {
 		t.Fatalf("mkdir rig: %v", err)
 	}
@@ -900,7 +900,7 @@ func TestDoneClosesAttachedMolecule(t *testing.T) {
 
 	// Create routes - path first part must match GT_RIG for prefix lookup
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"excavation"}`,
+		`{"prefix":"gt-","path":"mineshaft"}`,
 		"",
 	}, "\n")
 	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(routes), 0644); err != nil {
@@ -930,8 +930,8 @@ case "$cmd" in
   show)
     beadID="$1"
     case "$beadID" in
-      gt-excavation-miner-nux)
-        echo '[{"id":"gt-excavation-miner-nux","title":"Miner nux","status":"open","hook_bead":"gt-abc123","agent_state":"working"}]'
+      gt-mineshaft-miner-nux)
+        echo '[{"id":"gt-mineshaft-miner-nux","title":"Miner nux","status":"open","hook_bead":"gt-abc123","agent_state":"working"}]'
         ;;
       gt-abc123)
         echo '[{"id":"gt-abc123","title":"Bug to fix","status":"hooked","description":"attached_molecule: gt-wisp-xyz"}]'
@@ -967,8 +967,8 @@ if "%%cmd%%"=="--allow-stale" (
   goto strip_flags
 )
 if "%%cmd%%"=="show" (
-  if "%%beadID%%"=="gt-excavation-miner-nux" (
-    echo [{^"id^":^"gt-excavation-miner-nux^",^"title^":^"Miner nux^",^"status^":^"open^",^"hook_bead^":^"gt-abc123^",^"agent_state^":^"working^"}]
+  if "%%beadID%%"=="gt-mineshaft-miner-nux" (
+    echo [{^"id^":^"gt-mineshaft-miner-nux^",^"title^":^"Miner nux^",^"status^":^"open^",^"hook_bead^":^"gt-abc123^",^"agent_state^":^"working^"}]
     exit /b 0
   )
   if "%%beadID%%"=="gt-abc123" (
@@ -1006,7 +1006,7 @@ exit /b 0
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv("GT_ROLE", "miner")
-	t.Setenv("GT_RIG", "excavation")
+	t.Setenv("GT_RIG", "mineshaft")
 	t.Setenv("GT_MINER", "nux")
 	t.Setenv("GT_CREW", "")
 	t.Setenv("TMUX_PANE", "")

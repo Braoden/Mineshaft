@@ -25,12 +25,12 @@
         },
         "pi": {
             "command": "pi",
-            "args": ["-e", "/path/to/excavation-hooks.js"],
+            "args": ["-e", "/path/to/mineshaft-hooks.js"],
             "prompt_mode": "arg",
             "hooks": {
                 "provider": "pi",
                 "dir": ".pi/extensions",
-                "settings_file": "excavation-hooks.js"
+                "settings_file": "mineshaft-hooks.js"
             },
             "tmux": {
                 "process_names": ["pi", "node", "bun"],
@@ -74,7 +74,7 @@
 
     "cli_theme": "dark",
 
-    "agent_email_domain": "excavation.local",
+    "agent_email_domain": "mineshaft.local",
 
     "web_timeouts": {
         "cmd_timeout": "15s",

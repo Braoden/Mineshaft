@@ -7,13 +7,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/events"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/events"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 // OrphanSessionCheck detects orphaned tmux sessions that don't match
-// the expected Excavation Site session naming patterns.
+// the expected Mineshaft session naming patterns.
 type OrphanSessionCheck struct {
 	FixableCheck
 	sessionLister  SessionLister
@@ -53,7 +53,7 @@ func NewOrphanSessionCheckWithSessionLister(lister SessionLister) *OrphanSession
 	return check
 }
 
-// Run checks for orphaned Excavation Site tmux sessions.
+// Run checks for orphaned Mineshaft tmux sessions.
 func (c *OrphanSessionCheck) Run(ctx *CheckContext) *CheckResult {
 	lister := c.sessionLister
 	if lister == nil {
@@ -94,7 +94,7 @@ func (c *OrphanSessionCheck) Run(ctx *CheckContext) *CheckResult {
 			continue
 		}
 
-		// Only check sessions that parse as Excavation Site sessions
+		// Only check sessions that parse as Mineshaft sessions
 		if _, err := session.ParseSessionName(sess); err != nil {
 			continue
 		}
@@ -113,7 +113,7 @@ func (c *OrphanSessionCheck) Run(ctx *CheckContext) *CheckResult {
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusOK,
-			Message: fmt.Sprintf("All %d Excavation Site sessions are valid", validCount),
+			Message: fmt.Sprintf("All %d Mineshaft sessions are valid", validCount),
 		}
 	}
 
@@ -196,7 +196,7 @@ func (c *OrphanSessionCheck) getValidRigs(townRoot string) []string {
 	return rigs
 }
 
-// isValidSession checks if a session name matches expected Excavation Site patterns.
+// isValidSession checks if a session name matches expected Mineshaft patterns.
 // Valid patterns:
 //   - hq-overseer (headquarters overseer session)
 //   - hq-supervisor (headquarters supervisor session)
@@ -276,9 +276,9 @@ func (c *OrphanSessionCheck) isValidSession(sess string, validRigs []string, ove
 
 // OrphanProcessCheck detects runtime processes that are not
 // running inside a tmux session. These may be user's personal sessions
-// or legitimately orphaned processes from crashed Excavation Site sessions.
+// or legitimately orphaned processes from crashed Mineshaft sessions.
 // This check is informational only - it does not auto-fix since we cannot
-// distinguish user sessions from orphaned Excavation Site processes.
+// distinguish user sessions from orphaned Mineshaft processes.
 type OrphanProcessCheck struct {
 	BaseCheck
 }
@@ -347,7 +347,7 @@ func (c *OrphanProcessCheck) Run(ctx *CheckContext) *CheckResult {
 	}
 
 	details := make([]string, 0, len(outsideTmux)+2)
-	details = append(details, "These may be your personal sessions or orphaned Excavation Site processes.")
+	details = append(details, "These may be your personal sessions or orphaned Mineshaft processes.")
 	details = append(details, "Verify these are expected before manually killing any:")
 	for _, proc := range outsideTmux {
 		details = append(details, fmt.Sprintf("  PID %d: %s (parent: %d)", proc.pid, proc.cmd, proc.ppid))
@@ -419,9 +419,9 @@ func argvHasFlag(args, flag string) bool {
 	return false
 }
 
-// gasTownRuntimeYOLO returns true when argv matches a Excavation Site-managed agent (YOLO / auto-approve),
+// mineshaftRuntimeYOLO returns true when argv matches a Mineshaft-managed agent (YOLO / auto-approve),
 // excluding personal interactive sessions that omit these flags.
-func gasTownRuntimeYOLO(cmdName, args string) bool {
+func mineshaftRuntimeYOLO(cmdName, args string) bool {
 	cmdName = strings.ToLower(filepath.Base(cmdName))
 	switch cmdName {
 	case "claude", "claude-code", "codex":
@@ -439,13 +439,13 @@ func gasTownRuntimeYOLO(cmdName, args string) bool {
 	}
 }
 
-// findRuntimeProcesses finds Excavation Site agent processes by per-provider YOLO / launch signatures
+// findRuntimeProcesses finds Mineshaft agent processes by per-provider YOLO / launch signatures
 // in argv (not comm name alone): claude/codex --dangerously-skip-permissions, cursor-agent -f,
 // copilot --yolo, etc.
 func (c *OrphanProcessCheck) findRuntimeProcesses() ([]processInfo, error) {
 	var procs []processInfo
 
-	// Use ps with args to get full command line (needed to check for Excavation Site signature)
+	// Use ps with args to get full command line (needed to check for Mineshaft signature)
 	out, err := exec.Command("ps", "-eo", "pid,ppid,args").Output()
 	if err != nil {
 		return nil, err
@@ -466,7 +466,7 @@ func (c *OrphanProcessCheck) findRuntimeProcesses() ([]processInfo, error) {
 		// Get full args
 		args := strings.Join(fields[2:], " ")
 
-		if !gasTownRuntimeYOLO(cmd, args) {
+		if !mineshaftRuntimeYOLO(cmd, args) {
 			continue
 		}
 

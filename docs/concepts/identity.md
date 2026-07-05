@@ -1,6 +1,6 @@
 # Agent Identity and Attribution
 
-> Canonical format for agent identity in Excavation Site
+> Canonical format for agent identity in Mineshaft
 
 ## Why Identity Matters
 
@@ -11,7 +11,7 @@ When you deploy AI agents at scale, anonymous work creates real problems:
 - **Compliance:** Auditors ask "who approved this code?" - you need an answer.
 - **Performance management:** Some agents are better than others at certain tasks.
 
-Excavation Site solves this with **universal attribution**: every action, every commit,
+Mineshaft solves this with **universal attribution**: every action, every commit,
 every bead update is linked to a specific agent identity. This enables work
 history tracking, capability-based routing, and objective quality measurement.
 
@@ -26,37 +26,37 @@ This is set automatically when agents are spawned and used for all attribution.
 |-----------|--------|---------|
 | **Overseer** | `overseer` | `overseer` |
 | **Supervisor** | `supervisor` | `supervisor` |
-| **Witness** | `{rig}/witness` | `excavation/witness` |
-| **Refinery** | `{rig}/refinery` | `excavation/refinery` |
-| **Crew** | `{rig}/crew/{name}` | `excavation/crew/joe` |
-| **Miner** | `{rig}/miners/{name}` | `excavation/miners/toast` |
+| **Witness** | `{rig}/witness` | `mineshaft/witness` |
+| **Refinery** | `{rig}/refinery` | `mineshaft/refinery` |
+| **Crew** | `{rig}/crew/{name}` | `mineshaft/crew/joe` |
+| **Miner** | `{rig}/miners/{name}` | `mineshaft/miners/toast` |
 
 ### Why Slashes?
 
 The slash format mirrors filesystem paths and enables:
 - Hierarchical parsing (extract rig, role, name)
-- Consistent mail addressing (`gt mail send excavation/witness`)
+- Consistent mail addressing (`gt mail send mineshaft/witness`)
 - Path-like routing in beads operations
 - Visual clarity about agent location
 
 ## Attribution Model
 
-Excavation Site uses three fields for complete provenance:
+Mineshaft uses three fields for complete provenance:
 
 ### Git Commits
 
 ```bash
-GIT_AUTHOR_NAME="excavation/crew/joe"      # Who did the work (agent)
+GIT_AUTHOR_NAME="mineshaft/crew/joe"      # Who did the work (agent)
 GIT_AUTHOR_EMAIL="steve@example.com"    # Who owns the work (boss)
 ```
 
 Result in git log:
 ```
-abc123 Fix bug (excavation/crew/joe <steve@example.com>)
+abc123 Fix bug (mineshaft/crew/joe <steve@example.com>)
 ```
 
 **Interpretation**:
-- The agent `excavation/crew/joe` authored the change
+- The agent `mineshaft/crew/joe` authored the change
 - The work belongs to the workspace owner (`steve@example.com`)
 - Both are preserved in git history forever
 
@@ -65,8 +65,8 @@ abc123 Fix bug (excavation/crew/joe <steve@example.com>)
 ```json
 {
   "id": "gt-xyz",
-  "created_by": "excavation/crew/joe",
-  "updated_by": "excavation/witness"
+  "created_by": "mineshaft/crew/joe",
+  "updated_by": "mineshaft/witness"
 }
 ```
 
@@ -81,42 +81,42 @@ All events include actor attribution:
 {
   "ts": "2025-01-15T10:30:00Z",
   "type": "sling",
-  "actor": "excavation/crew/joe",
-  "payload": { "bead": "gt-xyz", "target": "excavation/miners/toast" }
+  "actor": "mineshaft/crew/joe",
+  "payload": { "bead": "gt-xyz", "target": "mineshaft/miners/toast" }
 }
 ```
 
 ## Environment Setup
 
-Excavation Site uses a centralized `config.AgentEnv()` function to set environment
+Mineshaft uses a centralized `config.AgentEnv()` function to set environment
 variables consistently across all agent spawn paths (managers, daemon, boot).
 
 ### Example: Miner Environment
 
 ```bash
-# Set automatically for miner 'toast' in rig 'excavation'
+# Set automatically for miner 'toast' in rig 'mineshaft'
 export GT_ROLE="miner"
-export GT_RIG="excavation"
+export GT_RIG="mineshaft"
 export GT_MINER="toast"
-export BD_ACTOR="excavation/miners/toast"
-export GIT_AUTHOR_NAME="excavation/miners/toast"
+export BD_ACTOR="mineshaft/miners/toast"
+export GIT_AUTHOR_NAME="mineshaft/miners/toast"
 export GT_ROOT="/home/user/gt"
-export BEADS_DIR="/home/user/gt/excavation/.beads"
-export BEADS_AGENT_NAME="excavation/toast"
+export BEADS_DIR="/home/user/gt/mineshaft/.beads"
+export BEADS_AGENT_NAME="mineshaft/toast"
 ```
 
 ### Example: Crew Environment
 
 ```bash
-# Set automatically for crew member 'joe' in rig 'excavation'
+# Set automatically for crew member 'joe' in rig 'mineshaft'
 export GT_ROLE="crew"
-export GT_RIG="excavation"
+export GT_RIG="mineshaft"
 export GT_CREW="joe"
-export BD_ACTOR="excavation/crew/joe"
-export GIT_AUTHOR_NAME="excavation/crew/joe"
+export BD_ACTOR="mineshaft/crew/joe"
+export GIT_AUTHOR_NAME="mineshaft/crew/joe"
 export GT_ROOT="/home/user/gt"
-export BEADS_DIR="/home/user/gt/excavation/.beads"
-export BEADS_AGENT_NAME="excavation/joe"
+export BEADS_DIR="/home/user/gt/mineshaft/.beads"
+export BEADS_AGENT_NAME="mineshaft/joe"
 ```
 
 ### Manual Override
@@ -124,8 +124,8 @@ export BEADS_AGENT_NAME="excavation/joe"
 For local testing or debugging:
 
 ```bash
-export BD_ACTOR="excavation/crew/debug"
-bd create --title="Test issue"  # Will show created_by: excavation/crew/debug
+export BD_ACTOR="mineshaft/crew/debug"
+bd create --title="Test issue"  # Will show created_by: mineshaft/crew/debug
 ```
 
 See [reference.md](reference.md#environment-variables) for the complete
@@ -146,10 +146,10 @@ The format supports programmatic parsing:
 |-------|-------------------|
 | `overseer` | role=overseer |
 | `supervisor` | role=supervisor |
-| `excavation/witness` | rig=excavation, role=witness |
-| `excavation/refinery` | rig=excavation, role=refinery |
-| `excavation/crew/joe` | rig=excavation, role=crew, name=joe |
-| `excavation/miners/toast` | rig=excavation, role=miner, name=toast |
+| `mineshaft/witness` | rig=mineshaft, role=witness |
+| `mineshaft/refinery` | rig=mineshaft, role=refinery |
+| `mineshaft/crew/joe` | rig=mineshaft, role=crew, name=joe |
+| `mineshaft/miners/toast` | rig=mineshaft, role=miner, name=toast |
 
 ## Audit Queries
 
@@ -157,16 +157,16 @@ Attribution enables powerful audit queries:
 
 ```bash
 # All work by an agent
-bd audit --actor=excavation/crew/joe
+bd audit --actor=mineshaft/crew/joe
 
 # All work in a rig
-bd audit --actor=excavation/*
+bd audit --actor=mineshaft/*
 
 # All miner work
 bd audit --actor=*/miners/*
 
 # Git history by agent
-git log --author="excavation/crew/joe"
+git log --author="mineshaft/crew/joe"
 ```
 
 ## Design Principles
@@ -186,8 +186,8 @@ The global identifier is your **email** - it's already in every git commit. No s
 ```
 steve@example.com                ← global identity (from git author)
 ├── Town A (home)                ← workspace
-│   ├── excavation/crew/joe         ← agent executor
-│   └── excavation/miners/toast   ← agent executor
+│   ├── mineshaft/crew/joe         ← agent executor
+│   └── mineshaft/miners/toast   ← agent executor
 └── Town B (work)                ← workspace
     └── acme/miners/nux        ← agent executor
 ```
@@ -201,7 +201,7 @@ steve@example.com                ← global identity (from git author)
 | `created_by` | Local | Who created the bead |
 | `owner` | Global | Who owns the work |
 
-**Agents execute. Humans own.** The miner name in `completed-by: excavation/miners/toast` is executor attribution. The CV credits the human owner (`steve@example.com`).
+**Agents execute. Humans own.** The miner name in `completed-by: mineshaft/miners/toast` is executor attribution. The CV credits the human owner (`steve@example.com`).
 
 ### Miners Have Persistent Identities
 
@@ -256,7 +256,7 @@ See `~/gt/docs/hop/decisions/008-identity-model.md` for architectural rationale.
 git log --since="90 days ago" -- path/to/sensitive/file.go
 
 # All changes by a specific agent
-bd audit --actor=excavation/miners/toast --since=2025-01-01
+bd audit --actor=mineshaft/miners/toast --since=2025-01-01
 ```
 
 ### Performance Tracking
@@ -266,7 +266,7 @@ bd audit --actor=excavation/miners/toast --since=2025-01-01
 bd stats --group-by=actor
 
 # Average time to completion
-bd stats --actor=excavation/miners/* --metric=cycle-time
+bd stats --actor=mineshaft/miners/* --metric=cycle-time
 ```
 
 ### Model Comparison
@@ -275,12 +275,12 @@ When agents use different underlying models, attribution enables A/B comparison:
 
 ```bash
 # Tag agents by model
-# excavation/miners/claude-1 uses Claude
-# excavation/miners/gpt-1 uses GPT-4
+# mineshaft/miners/claude-1 uses Claude
+# mineshaft/miners/gpt-1 uses GPT-4
 
 # Compare quality signals
-bd stats --actor=excavation/miners/claude-* --metric=revision-count
-bd stats --actor=excavation/miners/gpt-* --metric=revision-count
+bd stats --actor=mineshaft/miners/claude-* --metric=revision-count
+bd stats --actor=mineshaft/miners/gpt-* --metric=revision-count
 ```
 
 Lower revision counts suggest higher first-pass quality.

@@ -1887,17 +1887,17 @@ func TestEnsureMetadata_RepairsStalePort(t *testing.T) {
 
 // TestEnsureMetadata_RepairsWrongDoltDatabase verifies that EnsureMetadata
 // corrects a metadata.json where dolt_database points to the wrong database
-// (e.g., "beads_gt" instead of "excavation"). This is the primary fix for the
+// (e.g., "beads_gt" instead of "mineshaft"). This is the primary fix for the
 // PROJECT IDENTITY MISMATCH bug (gas-tc4).
 func TestEnsureMetadata_RepairsWrongDoltDatabase(t *testing.T) {
 	townRoot := t.TempDir()
 
-	beadsDir := filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads")
+	beadsDir := filepath.Join(townRoot, "mineshaft", "overseer", "rig", ".beads")
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
-	// Simulate wrong database name (bd init wrote "beads_gt" instead of "excavation")
+	// Simulate wrong database name (bd init wrote "beads_gt" instead of "mineshaft")
 	wrong := map[string]interface{}{
 		"backend":          "dolt",
 		"database":         "dolt",
@@ -1912,7 +1912,7 @@ func TestEnsureMetadata_RepairsWrongDoltDatabase(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := EnsureMetadata(townRoot, "excavation"); err != nil {
+	if err := EnsureMetadata(townRoot, "mineshaft"); err != nil {
 		t.Fatalf("EnsureMetadata failed: %v", err)
 	}
 
@@ -1925,9 +1925,9 @@ func TestEnsureMetadata_RepairsWrongDoltDatabase(t *testing.T) {
 		t.Fatalf("parsing metadata: %v", err)
 	}
 
-	// dolt_database should now be "excavation", not "beads_gt"
-	if meta["dolt_database"] != "excavation" {
-		t.Errorf("dolt_database = %v, want %q", meta["dolt_database"], "excavation")
+	// dolt_database should now be "mineshaft", not "beads_gt"
+	if meta["dolt_database"] != "mineshaft" {
+		t.Errorf("dolt_database = %v, want %q", meta["dolt_database"], "mineshaft")
 	}
 }
 
@@ -3113,7 +3113,7 @@ func TestDoltSQLScriptWithRetry_NonRetryableError(t *testing.T) {
 // =============================================================================
 
 func TestParseShowDatabases_JSON(t *testing.T) {
-	input := `{"rows":[{"Database":"hq"},{"Database":"excavation"},{"Database":"information_schema"},{"Database":"mysql"},{"Database":"dolt_cluster"}]}`
+	input := `{"rows":[{"Database":"hq"},{"Database":"mineshaft"},{"Database":"information_schema"},{"Database":"mysql"},{"Database":"dolt_cluster"}]}`
 	got, err := parseShowDatabases([]byte(input))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -3127,13 +3127,13 @@ func TestParseShowDatabases_JSON(t *testing.T) {
 			t.Errorf("system database %q should be filtered out", db)
 		}
 	}
-	// Both hq and excavation should be present.
+	// Both hq and mineshaft should be present.
 	found := map[string]bool{}
 	for _, db := range got {
 		found[db] = true
 	}
-	if !found["hq"] || !found["excavation"] {
-		t.Errorf("expected hq and excavation, got %v", got)
+	if !found["hq"] || !found["mineshaft"] {
+		t.Errorf("expected hq and mineshaft, got %v", got)
 	}
 }
 
@@ -3199,7 +3199,7 @@ func TestParseShowDatabases_LineFallback(t *testing.T) {
 | Database           |
 +--------------------+
 | hq                 |
-| excavation            |
+| mineshaft            |
 | information_schema |
 +--------------------+`
 	_, err := parseShowDatabases([]byte(input))
@@ -3213,7 +3213,7 @@ func TestParseShowDatabases_LineFallback(t *testing.T) {
 
 func TestParseShowDatabases_PlainText(t *testing.T) {
 	// Plain-text output (no JSON, no table formatting).
-	input := "hq\nexcavation\ninformation_schema\nmysql\ndolt_cluster\n"
+	input := "hq\nmineshaft\ninformation_schema\nmysql\ndolt_cluster\n"
 	got, err := parseShowDatabases([]byte(input))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -3225,8 +3225,8 @@ func TestParseShowDatabases_PlainText(t *testing.T) {
 	for _, db := range got {
 		found[db] = true
 	}
-	if !found["hq"] || !found["excavation"] {
-		t.Errorf("expected hq and excavation, got %v", got)
+	if !found["hq"] || !found["mineshaft"] {
+		t.Errorf("expected hq and mineshaft, got %v", got)
 	}
 }
 
@@ -3241,7 +3241,7 @@ func TestIsSystemDatabase(t *testing.T) {
 		{"INFORMATION_SCHEMA", true}, // case-insensitive
 		{"MySQL", true},
 		{"hq", false},
-		{"excavation", false},
+		{"mineshaft", false},
 		{"beads", false},
 		{"", false},
 	}
@@ -3254,7 +3254,7 @@ func TestIsSystemDatabase(t *testing.T) {
 
 func TestFindMissingDatabases_NoneServed(t *testing.T) {
 	served := []string{}
-	fs := []string{"hq", "excavation"}
+	fs := []string{"hq", "mineshaft"}
 	missing := findMissingDatabases(served, fs)
 	if len(missing) != 2 {
 		t.Errorf("expected 2 missing, got %d: %v", len(missing), missing)
@@ -3262,8 +3262,8 @@ func TestFindMissingDatabases_NoneServed(t *testing.T) {
 }
 
 func TestFindMissingDatabases_AllServed(t *testing.T) {
-	served := []string{"hq", "excavation", "beads"}
-	fs := []string{"hq", "excavation"}
+	served := []string{"hq", "mineshaft", "beads"}
+	fs := []string{"hq", "mineshaft"}
 	missing := findMissingDatabases(served, fs)
 	if len(missing) != 0 {
 		t.Errorf("expected 0 missing, got %d: %v", len(missing), missing)
@@ -3272,7 +3272,7 @@ func TestFindMissingDatabases_AllServed(t *testing.T) {
 
 func TestFindMissingDatabases_PartialMissing(t *testing.T) {
 	served := []string{"hq"}
-	fs := []string{"hq", "excavation", "beads"}
+	fs := []string{"hq", "mineshaft", "beads"}
 	missing := findMissingDatabases(served, fs)
 	if len(missing) != 2 {
 		t.Fatalf("expected 2 missing, got %d: %v", len(missing), missing)
@@ -3281,8 +3281,8 @@ func TestFindMissingDatabases_PartialMissing(t *testing.T) {
 	for _, db := range missing {
 		found[db] = true
 	}
-	if !found["excavation"] || !found["beads"] {
-		t.Errorf("expected excavation and beads missing, got %v", missing)
+	if !found["mineshaft"] || !found["beads"] {
+		t.Errorf("expected mineshaft and beads missing, got %v", missing)
 	}
 }
 
@@ -3387,12 +3387,12 @@ func TestFindOrphanedDatabases_NoOrphans(t *testing.T) {
 
 	// Create databases that are all referenced
 	setupDoltDB(t, dataDir, "hq")
-	setupDoltDB(t, dataDir, "excavation")
+	setupDoltDB(t, dataDir, "mineshaft")
 
 	// Set up rigs and metadata
-	setupRigsJSON(t, townRoot, []string{"excavation"})
+	setupRigsJSON(t, townRoot, []string{"mineshaft"})
 	setupRigMetadata(t, townRoot, "hq", "hq")
-	setupRigMetadata(t, townRoot, "excavation", "excavation")
+	setupRigMetadata(t, townRoot, "mineshaft", "mineshaft")
 
 	orphans, err := FindOrphanedDatabases(townRoot)
 	if err != nil {
@@ -3462,15 +3462,15 @@ func TestFindOrphanedDatabases_MultipleOrphans(t *testing.T) {
 	dataDir := filepath.Join(townRoot, ".dolt-data")
 
 	// One referenced database
-	setupDoltDB(t, dataDir, "excavation")
+	setupDoltDB(t, dataDir, "mineshaft")
 
 	// Multiple orphans
 	setupDoltDB(t, dataDir, "old_setup")
 	setupDoltDB(t, dataDir, "beads_gt")
 	setupDoltDB(t, dataDir, "stale_backup")
 
-	setupRigsJSON(t, townRoot, []string{"excavation"})
-	setupRigMetadata(t, townRoot, "excavation", "excavation")
+	setupRigsJSON(t, townRoot, []string{"mineshaft"})
+	setupRigMetadata(t, townRoot, "mineshaft", "mineshaft")
 
 	orphans, err := FindOrphanedDatabases(townRoot)
 	if err != nil {
@@ -3547,14 +3547,14 @@ func TestCollectReferencedDatabases_HQOnly(t *testing.T) {
 func TestCollectReferencedDatabases_MultipleRigs(t *testing.T) {
 	townRoot := t.TempDir()
 
-	setupRigsJSON(t, townRoot, []string{"excavation", "beads", "wyvern"})
+	setupRigsJSON(t, townRoot, []string{"mineshaft", "beads", "wyvern"})
 	setupRigMetadata(t, townRoot, "hq", "hq")
-	setupRigMetadata(t, townRoot, "excavation", "excavation")
+	setupRigMetadata(t, townRoot, "mineshaft", "mineshaft")
 	setupRigMetadata(t, townRoot, "beads", "beads")
 	setupRigMetadata(t, townRoot, "wyvern", "wyvern")
 
 	referenced := collectReferencedDatabases(townRoot)
-	for _, want := range []string{"hq", "excavation", "beads", "wyvern"} {
+	for _, want := range []string{"hq", "mineshaft", "beads", "wyvern"} {
 		if !referenced[want] {
 			t.Errorf("expected %q to be referenced", want)
 		}
@@ -3582,8 +3582,8 @@ func TestCollectReferencedDatabases_CustomDatabaseName(t *testing.T) {
 
 func TestCollectReferencedDatabases_NoMetadata(t *testing.T) {
 	townRoot := t.TempDir()
-	setupRigsJSON(t, townRoot, []string{"excavation"})
-	// No metadata.json for excavation — should not crash
+	setupRigsJSON(t, townRoot, []string{"mineshaft"})
+	// No metadata.json for mineshaft — should not crash
 
 	referenced := collectReferencedDatabases(townRoot)
 	if len(referenced) != 0 {
@@ -4332,17 +4332,17 @@ func TestCollectDatabaseOwners_HQOnly(t *testing.T) {
 func TestCollectDatabaseOwners_MultipleRigs(t *testing.T) {
 	townRoot := t.TempDir()
 
-	setupRigsJSON(t, townRoot, []string{"excavation", "beads"})
+	setupRigsJSON(t, townRoot, []string{"mineshaft", "beads"})
 	setupRigMetadata(t, townRoot, "hq", "hq")
-	setupRigMetadata(t, townRoot, "excavation", "gt")
+	setupRigMetadata(t, townRoot, "mineshaft", "gt")
 	setupRigMetadata(t, townRoot, "beads", "beads")
 
 	owners := CollectDatabaseOwners(townRoot)
 	if owners["hq"] != "town beads" {
 		t.Errorf("expected 'hq' owner 'town beads', got %q", owners["hq"])
 	}
-	if owners["gt"] != "excavation rig beads" {
-		t.Errorf("expected 'gt' owner 'excavation rig beads', got %q", owners["gt"])
+	if owners["gt"] != "mineshaft rig beads" {
+		t.Errorf("expected 'gt' owner 'mineshaft rig beads', got %q", owners["gt"])
 	}
 	if owners["beads"] != "beads rig beads" {
 		t.Errorf("expected 'beads' owner 'beads rig beads', got %q", owners["beads"])
@@ -4355,7 +4355,7 @@ func TestCollectDatabaseOwners_MultipleRigs(t *testing.T) {
 func TestCollectDatabaseOwners_CustomDatabaseName(t *testing.T) {
 	townRoot := t.TempDir()
 
-	// Rig name differs from dolt_database name (like excavation → gt)
+	// Rig name differs from dolt_database name (like mineshaft → gt)
 	setupRigsJSON(t, townRoot, []string{"myrig"})
 	setupRigMetadata(t, townRoot, "myrig", "custom_db")
 
@@ -4662,7 +4662,7 @@ func TestBuildDatabaseToRigMap(t *testing.T) {
 	// Test with typical routes.jsonl
 	routesContent := `{"prefix":"hq-","path":"."}
 {"prefix":"bd-","path":"beads/overseer/rig"}
-{"prefix":"gt-","path":"excavation/overseer/rig"}
+{"prefix":"gt-","path":"mineshaft/overseer/rig"}
 {"prefix":"sw-","path":"sallaWork/overseer/rig"}
 {"prefix":"hq-cv-","path":"."}
 `
@@ -4675,7 +4675,7 @@ func TestBuildDatabaseToRigMap(t *testing.T) {
 	// Check expected mappings
 	expected := map[string]string{
 		"bd": "beads",
-		"gt": "excavation",
+		"gt": "mineshaft",
 		"sw": "sallaWork",
 	}
 
@@ -4698,7 +4698,7 @@ func TestBuildDatabaseToRigMap(t *testing.T) {
 // maps database names to rig names using routes.jsonl.
 // This is a regression test for the bug where databases named "bd", "gt", "sw"
 // were incorrectly used as rig names, creating stub directories at /gt/bd/, /gt/gt/, /gt/sw/
-// instead of the correct /gt/beads/, /gt/excavation/, /gt/sallaWork/.
+// instead of the correct /gt/beads/, /gt/mineshaft/, /gt/sallaWork/.
 func TestEnsureAllMetadata_UsesRigNames(t *testing.T) {
 	townRoot := t.TempDir()
 
@@ -4715,7 +4715,7 @@ func TestEnsureAllMetadata_UsesRigNames(t *testing.T) {
 	}
 	routesContent := `{"prefix":"hq-","path":"."}
 {"prefix":"bd-","path":"beads/overseer/rig"}
-{"prefix":"gt-","path":"excavation/overseer/rig"}
+{"prefix":"gt-","path":"mineshaft/overseer/rig"}
 `
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
@@ -4725,7 +4725,7 @@ func TestEnsureAllMetadata_UsesRigNames(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, "beads", "overseer", "rig", ".beads"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft", "overseer", "rig", ".beads"), 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -4738,7 +4738,7 @@ func TestEnsureAllMetadata_UsesRigNames(t *testing.T) {
 	// Verify metadata was created in correct locations
 	hqMeta := filepath.Join(townRoot, ".beads", "metadata.json")
 	beadsMeta := filepath.Join(townRoot, "beads", "overseer", "rig", ".beads", "metadata.json")
-	excavationMeta := filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads", "metadata.json")
+	mineshaftMeta := filepath.Join(townRoot, "mineshaft", "overseer", "rig", ".beads", "metadata.json")
 
 	// Buggy paths that should NOT exist
 	buggyBdMeta := filepath.Join(townRoot, "bd", ".beads", "metadata.json")
@@ -4750,8 +4750,8 @@ func TestEnsureAllMetadata_UsesRigNames(t *testing.T) {
 	if _, err := os.Stat(beadsMeta); os.IsNotExist(err) {
 		t.Error("beads metadata.json should exist in correct path")
 	}
-	if _, err := os.Stat(excavationMeta); os.IsNotExist(err) {
-		t.Error("excavation metadata.json should exist in correct path")
+	if _, err := os.Stat(mineshaftMeta); os.IsNotExist(err) {
+		t.Error("mineshaft metadata.json should exist in correct path")
 	}
 
 	// Verify buggy paths were NOT created
@@ -4807,26 +4807,26 @@ func TestEnsureAllMetadata_FallbackToDbName(t *testing.T) {
 }
 
 // TestEnsureAllMetadata_NoOscillation verifies that when two databases map to
-// the same rig (e.g. "excavation" and "gt" both map to rig "excavation" via
+// the same rig (e.g. "mineshaft" and "gt" both map to rig "mineshaft" via
 // conflicting routes.jsonl/rigs.json entries), EnsureAllMetadata does not
 // oscillate the dolt_database value on repeated calls. (gas-ar0)
 func TestEnsureAllMetadata_NoOscillation(t *testing.T) {
 	townRoot := t.TempDir()
 	dataDir := filepath.Join(townRoot, ".dolt-data")
 
-	// Simulate two databases that both map to "excavation":
-	//   "excavation" — matched by default (db name == rig name)
+	// Simulate two databases that both map to "mineshaft":
+	//   "mineshaft" — matched by default (db name == rig name)
 	//   "gt"      — matched via rigs.json prefix "gt"
-	setupDoltDB(t, dataDir, "excavation")
+	setupDoltDB(t, dataDir, "mineshaft")
 	setupDoltDB(t, dataDir, "gt")
 	setupDoltDB(t, dataDir, "hq")
 
-	// rigs.json: excavation rig uses prefix "gt"
+	// rigs.json: mineshaft rig uses prefix "gt"
 	overseerDir := filepath.Join(townRoot, "overseer")
 	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	rigsData := `{"version":1,"rigs":{"excavation":{"beads":{"prefix":"gt"}}}}`
+	rigsData := `{"version":1,"rigs":{"mineshaft":{"beads":{"prefix":"gt"}}}}`
 	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), []byte(rigsData), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -4835,7 +4835,7 @@ func TestEnsureAllMetadata_NoOscillation(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.MkdirAll(filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(townRoot, "mineshaft", "overseer", "rig", ".beads"), 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -4846,7 +4846,7 @@ func TestEnsureAllMetadata_NoOscillation(t *testing.T) {
 	}
 
 	// Read the value that was written
-	metaPath := filepath.Join(townRoot, "excavation", "overseer", "rig", ".beads", "metadata.json")
+	metaPath := filepath.Join(townRoot, "mineshaft", "overseer", "rig", ".beads", "metadata.json")
 	readDB := func() string {
 		data, err := os.ReadFile(metaPath)
 		if err != nil {
@@ -4933,7 +4933,7 @@ func TestCountDoltDatabases(t *testing.T) {
 
 	// Directory with Dolt databases (subdirs containing .dolt).
 	dataDir := filepath.Join(tmpDir, "data")
-	for _, name := range []string{"hq", "excavation", "beads"} {
+	for _, name := range []string{"hq", "mineshaft", "beads"} {
 		if err := os.MkdirAll(filepath.Join(dataDir, name, ".dolt"), 0755); err != nil {
 			t.Fatal(err)
 		}

@@ -8,11 +8,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/runtime"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/runtime"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 // gitFileStatus represents the git status of a file.
@@ -83,13 +83,13 @@ func (c *ClaudeSettingsCheck) Run(ctx *CheckContext) *CheckResult {
 			// Check git status to determine safe deletion strategy
 			sf.gitStatus = c.getGitFileStatus(sf.path)
 
-			// Skip gitignored files that aren't excavation-generated settings.
-			// Excavation settings (settings.json, settings.local.json) must always
-			// be detected even when gitignored, since excavation itself previously
+			// Skip gitignored files that aren't mineshaft-generated settings.
+			// Mineshaft settings (settings.json, settings.local.json) must always
+			// be detected even when gitignored, since mineshaft itself previously
 			// added the gitignore patterns and stale files must be cleaned up.
 			baseName := filepath.Base(sf.path)
-			isExcavationSettings := baseName == "settings.json" || baseName == "settings.local.json"
-			if sf.gitStatus == gitStatusIgnored && !isExcavationSettings {
+			isMineshaftSettings := baseName == "settings.json" || baseName == "settings.local.json"
+			if sf.gitStatus == gitStatusIgnored && !isMineshaftSettings {
 				continue
 			}
 
@@ -166,7 +166,7 @@ func (c *ClaudeSettingsCheck) Run(ctx *CheckContext) *CheckResult {
 }
 
 // findSettingsFiles locates all .claude/settings.json files and identifies their agent type.
-// Settings are now installed in excavation-managed parent directories (crew/, miners/,
+// Settings are now installed in mineshaft-managed parent directories (crew/, miners/,
 // witness/, refinery/) and passed via --settings flag. Old settings.local.json files
 // in working directories are detected as stale.
 func (c *ClaudeSettingsCheck) findSettingsFiles(townRoot string) []staleSettingsInfo {
@@ -488,7 +488,7 @@ func (c *ClaudeSettingsCheck) findSettingsFiles(townRoot string) []staleSettings
 				if !pcEntry.IsDir() || pcEntry.Name() == ".claude" {
 					continue
 				}
-				// Intermediate-level (miners/<name>/) — always Excavation Site artifacts
+				// Intermediate-level (miners/<name>/) — always Mineshaft artifacts
 				for _, staleFile := range []string{"settings.json", "settings.local.json"} {
 					stalePath := filepath.Join(minersDir, pcEntry.Name(), ".claude", staleFile)
 					if fileExists(stalePath) {
@@ -834,14 +834,14 @@ func fileExists(path string) bool {
 	return !info.IsDir()
 }
 
-// isIdentityAnchor checks if a CLAUDE.md file is the Excavation Site town-root
+// isIdentityAnchor checks if a CLAUDE.md file is the Mineshaft town-root
 // identity file. This includes both the minimal bootstrap anchor (<20 lines)
 // and the expanded version with operational norms (Dolt awareness,
-// communication hygiene, etc.). Both formats are intentional Excavation Site files
+// communication hygiene, etc.). Both formats are intentional Mineshaft files
 // and should NOT be flagged as "wrong location".
 //
-// A Excavation Site CLAUDE.md is identified by:
-// - Starting with "# Excavation Site" (the standard header)
+// A Mineshaft CLAUDE.md is identified by:
+// - Starting with "# Mineshaft" (the standard header)
 // - Containing "prime" (the recovery instruction)
 func isIdentityAnchor(path string) bool {
 	data, err := os.ReadFile(path)
@@ -849,5 +849,5 @@ func isIdentityAnchor(path string) bool {
 		return false
 	}
 	content := string(data)
-	return strings.HasPrefix(content, "# Excavation Site") && strings.Contains(content, "prime")
+	return strings.HasPrefix(content, "# Mineshaft") && strings.Contains(content, "prime")
 }

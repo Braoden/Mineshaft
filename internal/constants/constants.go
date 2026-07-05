@@ -1,4 +1,4 @@
-// Package constants defines shared constant values used throughout Excavation Site.
+// Package constants defines shared constant values used throughout Mineshaft.
 // Centralizing these magic strings improves maintainability and consistency.
 package constants
 
@@ -92,7 +92,7 @@ const (
 	MinHandoffCooldown = 2 * time.Minute
 
 	// GUPPViolationTimeout is how long an agent can have work on hook without
-	// progressing before it's considered a GUPP (Excavation Site Universal Propulsion
+	// progressing before it's considered a GUPP (Mineshaft Universal Propulsion
 	// Principle) violation. GUPP states: if you have work on your hook, you run it.
 	//
 	// Single source of truth — referenced by daemon lifecycle patrol,
@@ -106,7 +106,7 @@ const (
 	HungSessionThreshold = 30 * time.Minute
 )
 
-// Directory names within a Excavation Site workspace.
+// Directory names within a Mineshaft workspace.
 const (
 	// DirOverseer is the directory containing overseer configuration and state.
 	DirOverseer = "overseer"
@@ -167,7 +167,7 @@ const (
 // Beads configuration constants.
 const (
 	// BeadsCustomTypes is the comma-separated list of custom issue types that
-	// Excavation Site registers with beads. These types were extracted from beads core
+	// Mineshaft registers with beads. These types were extracted from beads core
 	// in v0.46.0 and now require explicit configuration.
 	//
 	// Type origins:
@@ -193,7 +193,7 @@ func BeadsCustomTypesList() []string {
 // Beads custom status configuration constants.
 const (
 	// BeadsCustomStatuses is the comma-separated list of custom issue statuses
-	// that Excavation Site registers with beads. Minecart staging uses staged_ready and
+	// that Mineshaft registers with beads. Minecart staging uses staged_ready and
 	// staged_warnings to track minecart readiness before launch.
 	//
 	// Status origins:
@@ -227,7 +227,7 @@ const (
 // Rig-level services use gt- prefix: gt-<rig>-witness, gt-<rig>-refinery, etc.
 // Use session.OverseerSessionName() and session.SupervisorSessionName().
 const (
-	// SessionPrefix is the prefix for rig-level Excavation Site tmux sessions.
+	// SessionPrefix is the prefix for rig-level Mineshaft tmux sessions.
 	SessionPrefix = "gt-"
 
 	// HQSessionPrefix is the prefix for town-level services (Overseer, Supervisor).
@@ -259,7 +259,7 @@ const (
 )
 
 // Role emojis - centralized for easy customization.
-// These match the Excavation Site visual identity (see ~/Desktop/Excavation Site/ prompts).
+// These match the Mineshaft visual identity (see ~/Desktop/Mineshaft/ prompts).
 const (
 	// EmojiOverseer is the overseer emoji (pickaxe).
 	EmojiOverseer = "⛏️"
@@ -348,7 +348,7 @@ func RoleEmoji(role string) string {
 	}
 }
 
-// SupportedShells lists shell binaries that Excavation Site can detect and work with.
+// SupportedShells lists shell binaries that Mineshaft can detect and work with.
 // Used to identify if a tmux pane is at a shell prompt vs running a command.
 var SupportedShells = []string{"bash", "zsh", "sh", "fish", "tcsh", "ksh", "pwsh", "powershell"}
 

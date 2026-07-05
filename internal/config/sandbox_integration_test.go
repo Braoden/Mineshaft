@@ -16,7 +16,7 @@ import (
 // macOS sandbox-exec actually enforce filesystem and network restrictions.
 //
 // These tests use sandbox-exec directly (the underlying mechanism that
-// exitbox wraps) to validate that the excavation-miner sandbox profile
+// exitbox wraps) to validate that the mineshaft-miner sandbox profile
 // enforces the intended security boundaries:
 //
 //   - File writes restricted to PROJECT_DIR and /private/tmp
@@ -25,7 +25,7 @@ import (
 //   - External network access denied
 
 // testSandboxProfile is a sandbox-exec SBPL profile modeled after the
-// excavation-miner profile described in docs/design/sandboxed-miner-execution.md.
+// mineshaft-miner profile described in docs/design/sandboxed-miner-execution.md.
 //
 // Key restrictions:
 //   - Writes: only PROJECT_DIR + /private/tmp + /dev devices

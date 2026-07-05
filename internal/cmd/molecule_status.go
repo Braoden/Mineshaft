@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // Note: Agent field parsing is now in internal/beads/fields.go (AgentFields, ParseAgentFields)
@@ -25,10 +25,10 @@ import (
 // Examples:
 //   - "overseer" -> "hq-overseer"
 //   - "supervisor" -> "hq-supervisor"
-//   - "excavation/witness" -> "gt-excavation-witness"
-//   - "excavation/refinery" -> "gt-excavation-refinery"
-//   - "excavation/nux" (miner) -> "gt-excavation-miner-nux"
-//   - "excavation/crew/max" -> "gt-excavation-crew-max"
+//   - "mineshaft/witness" -> "gt-mineshaft-witness"
+//   - "mineshaft/refinery" -> "gt-mineshaft-refinery"
+//   - "mineshaft/nux" (miner) -> "gt-mineshaft-miner-nux"
+//   - "mineshaft/crew/max" -> "gt-mineshaft-crew-max"
 //
 // If role is unknown, it tries to infer from the identity string.
 // townRoot is needed to look up the rig's configured prefix.
@@ -327,7 +327,7 @@ func runMoleculeStatus(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("finding workspace: %w", err)
 	}
 	if townRoot == "" {
-		return fmt.Errorf("not in a Excavation Site workspace")
+		return fmt.Errorf("not in a Mineshaft workspace")
 	}
 
 	// Determine target agent
@@ -443,7 +443,7 @@ func runMoleculeStatus(cmd *cobra.Command, args []string) error {
 		// For rig-level agents (miners, crew), also search town-level beads.
 		// When the Overseer slings an hq-* bead to a miner, the bead lives in
 		// townRoot/.beads, not the rig's .beads database.
-		// See: https://github.com/steveyegge/excavation/issues/1438
+		// See: https://github.com/steveyegge/mineshaft/issues/1438
 		if len(hookedBeads) == 0 && !isTownLevelRole(target) && townRoot != "" {
 			townB := beads.New(filepath.Join(townRoot, ".beads"))
 			if townHooked, err := townB.List(beads.ListOptions{
@@ -469,7 +469,7 @@ func runMoleculeStatus(cmd *cobra.Command, args []string) error {
 
 	// Run the lookup. In miner context, retry with backoff to handle Dolt
 	// propagation lag between the sling write and the nudge arriving here.
-	// See: https://github.com/steveyegge/excavation/issues/2389
+	// See: https://github.com/steveyegge/mineshaft/issues/2389
 	var hookBead *beads.Issue
 	isMiner := roleCtx.Role == RoleMiner ||
 		(os.Getenv("GT_ROLE") != "" && func() bool {
@@ -543,7 +543,7 @@ func runMoleculeStatus(cmd *cobra.Command, args []string) error {
 
 // extractRoleFromIdentity extracts the role name from an agent identity string
 // for handoff bead lookup. Handles trailing slashes (e.g. "overseer/" → "overseer")
-// and compound paths (e.g. "excavation/crew/jack" → "jack").
+// and compound paths (e.g. "mineshaft/crew/jack" → "jack").
 func extractRoleFromIdentity(target string) string {
 	target = strings.TrimRight(target, "/")
 	parts := strings.Split(target, "/")
@@ -961,7 +961,7 @@ func runMoleculeCurrent(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("finding workspace: %w", err)
 	}
 	if townRoot == "" {
-		return fmt.Errorf("not in a Excavation Site workspace")
+		return fmt.Errorf("not in a Mineshaft workspace")
 	}
 
 	// Determine target agent identity

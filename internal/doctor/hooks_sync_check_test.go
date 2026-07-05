@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/hooks"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/hooks"
 )
 
 // scaffoldWorkspace creates a minimal town workspace in a temp directory with
@@ -184,7 +184,7 @@ func TestHooksSyncCheck_TemplateAgent_InSync(t *testing.T) {
 	syncAllClaudeTargets(t, townRoot)
 
 	// Install the correct OpenCode template file
-	expectedContent, err := hooks.ComputeExpectedTemplate("opencode", "excavation.js", "crew")
+	expectedContent, err := hooks.ComputeExpectedTemplate("opencode", "mineshaft.js", "crew")
 	if err != nil {
 		t.Fatalf("ComputeExpectedTemplate: %v", err)
 	}
@@ -192,7 +192,7 @@ func TestHooksSyncCheck_TemplateAgent_InSync(t *testing.T) {
 	if err := os.MkdirAll(pluginDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(pluginDir, "excavation.js"), expectedContent, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(pluginDir, "mineshaft.js"), expectedContent, 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -217,7 +217,7 @@ func TestHooksSyncCheck_TemplateAgent_OutOfSync(t *testing.T) {
 	if err := os.MkdirAll(pluginDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(pluginDir, "excavation.js"), []byte("// old stale content"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(pluginDir, "mineshaft.js"), []byte("// old stale content"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -263,7 +263,7 @@ func TestHooksSyncCheck_Fix_TemplateAgent(t *testing.T) {
 	if err := os.MkdirAll(pluginDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(pluginDir, "excavation.js"), []byte("// stale"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(pluginDir, "mineshaft.js"), []byte("// stale"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -285,12 +285,12 @@ func TestHooksSyncCheck_Fix_TemplateAgent(t *testing.T) {
 	}
 
 	// Verify file now matches expected template
-	pluginPath := filepath.Join(pluginDir, "excavation.js")
+	pluginPath := filepath.Join(pluginDir, "mineshaft.js")
 	actual, err := os.ReadFile(pluginPath)
 	if err != nil {
 		t.Fatalf("reading fixed file: %v", err)
 	}
-	expected, err := hooks.ComputeExpectedTemplate("opencode", "excavation.js", "crew")
+	expected, err := hooks.ComputeExpectedTemplate("opencode", "mineshaft.js", "crew")
 	if err != nil {
 		t.Fatalf("ComputeExpectedTemplate: %v", err)
 	}
@@ -302,14 +302,14 @@ func TestHooksSyncCheck_Fix_TemplateAgent(t *testing.T) {
 func TestHooksSyncCheck_MinerNestedWorktree_InSync(t *testing.T) {
 	townRoot := scaffoldWorkspace(t, map[string]string{"miner": "opencode"})
 
-	worktree := filepath.Join(townRoot, "myrig", "miners", "fury", "excavation")
+	worktree := filepath.Join(townRoot, "myrig", "miners", "fury", "mineshaft")
 	if err := os.MkdirAll(filepath.Join(worktree, ".git"), 0755); err != nil {
 		t.Fatal(err)
 	}
 
 	syncAllClaudeTargets(t, townRoot)
 
-	expectedContent, err := hooks.ComputeExpectedTemplate("opencode", "excavation.js", "miner")
+	expectedContent, err := hooks.ComputeExpectedTemplate("opencode", "mineshaft.js", "miner")
 	if err != nil {
 		t.Fatalf("ComputeExpectedTemplate: %v", err)
 	}
@@ -317,7 +317,7 @@ func TestHooksSyncCheck_MinerNestedWorktree_InSync(t *testing.T) {
 	if err := os.MkdirAll(pluginDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(pluginDir, "excavation.js"), expectedContent, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(pluginDir, "mineshaft.js"), expectedContent, 0644); err != nil {
 		t.Fatal(err)
 	}
 

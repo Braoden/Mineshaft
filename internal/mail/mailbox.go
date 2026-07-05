@@ -17,9 +17,9 @@ import (
 
 	"github.com/gofrs/flock"
 	beadsdk "github.com/steveyegge/beads"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/runtime"
-	"github.com/steveyegge/excavation/internal/telemetry"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/runtime"
+	"github.com/steveyegge/mineshaft/internal/telemetry"
 )
 
 // timeNow is a function that returns the current time. It can be overridden in tests.
@@ -35,7 +35,7 @@ var (
 // When store is non-nil, beads-mode methods use the in-process beadsdk.Storage
 // directly instead of shelling out to the bd CLI.
 type Mailbox struct {
-	identity string // beads identity (e.g., "excavation/miners/Toast")
+	identity string // beads identity (e.g., "mineshaft/miners/Toast")
 	workDir  string // directory to run bd commands in
 	beadsDir string // explicit .beads directory path (set via BEADS_DIR)
 	path     string // for legacy JSONL mode (crew workers)
@@ -398,7 +398,7 @@ func parseWispTimestamp(value string) (time.Time, bool) {
 	for _, layout := range []string{
 		time.RFC3339,
 		"2006-01-02 15:04:05 -0700 MST",
-		// Dolt/MySQL DATETIME values are emitted without a zone; Excavation Site runs
+		// Dolt/MySQL DATETIME values are emitted without a zone; Mineshaft runs
 		// managed Dolt servers in UTC, so treat bare timestamps as UTC.
 		"2006-01-02 15:04:05",
 	} {

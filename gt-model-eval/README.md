@@ -1,12 +1,12 @@
 # gt-model-eval
 
-Promptfoo-based model comparison framework for Excavation Site patrol agents. Compare Claude Opus, Sonnet, and Haiku on patrol decision tasks to find where cheaper models match Opus quality.
+Promptfoo-based model comparison framework for Mineshaft patrol agents. Compare Claude Opus, Sonnet, and Haiku on patrol decision tasks to find where cheaper models match Opus quality.
 
 ## Why
 
-Excavation Site multi-agent setups burn through Opus budget on patrol agents (supervisor, witness, dogs) that follow prescriptive formulas. These agents parse shell output and make rule-based decisions — they may not need Opus-level reasoning. This framework provides **evidence** for safely downgrading roles to Sonnet or Haiku.
+Mineshaft multi-agent setups burn through Opus budget on patrol agents (supervisor, witness, dogs) that follow prescriptive formulas. These agents parse shell output and make rule-based decisions — they may not need Opus-level reasoning. This framework provides **evidence** for safely downgrading roles to Sonnet or Haiku.
 
-See [Discussion #1542](https://github.com/steveyegge/excavation/discussions/1542) and [Issue #1545](https://github.com/steveyegge/excavation/issues/1545).
+See [Discussion #1542](https://github.com/steveyegge/mineshaft/discussions/1542) and [Issue #1545](https://github.com/steveyegge/mineshaft/issues/1545).
 
 ## Quick Start
 
@@ -80,7 +80,7 @@ Promptfoo runs the same test across all three models and compares results.
 ./scripts/results-to-discussion.sh results.json --post
 
 # Post to a different repo
-./scripts/results-to-discussion.sh results.json --post --repo your-org/excavation
+./scripts/results-to-discussion.sh results.json --post --repo your-org/mineshaft
 ```
 
 ## Contributing Test Cases

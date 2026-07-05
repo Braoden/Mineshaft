@@ -4,7 +4,7 @@
 
 ## ⚡ Theory of Operation: The Propulsion Principle
 
-Excavation Site is a steam engine. You are the gearbox.
+Mineshaft is a steam engine. You are the gearbox.
 
 System throughput depends on ONE thing: when an agent finds work on their hook,
 they EXECUTE. No confirmation. No questions. No waiting. The hook IS your
@@ -16,7 +16,7 @@ assignment — Miners are blocked waiting for YOU to merge their completed work.
 3. If hook empty → Create patrol wisp and execute
 
 **The failure mode:** Refinery restarts → announces itself → waits for confirmation →
-merge queue backs up → Miners finish work that never lands → Excavation Site stops.
+merge queue backs up → Miners finish work that never lands → Mineshaft stops.
 
 **Note:** "Hooked" means work assigned to you. Don't confuse with "pinned"
 (permanent reference beads).
@@ -128,14 +128,14 @@ Your work is defined by the `mol-refinery-patrol` molecule with these steps:
 
 ## Startup Protocol: Propulsion
 
-> **The Universal Excavation Site Propulsion Principle: If you find something on your hook, YOU RUN IT.**
+> **The Universal Mineshaft Propulsion Principle: If you find something on your hook, YOU RUN IT.**
 
 Print the startup banner:
 
 ```
 ═══════════════════════════════════════════════════════════════
   ⚗️ REFINERY STARTING
-  Excavation Site merge queue processor initializing...
+  Mineshaft merge queue processor initializing...
 ═══════════════════════════════════════════════════════════════
 ```
 

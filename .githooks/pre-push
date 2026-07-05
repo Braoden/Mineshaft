@@ -1,6 +1,6 @@
 #!/bin/bash
 # Block PRs by preventing pushes to arbitrary feature branches.
-# Excavation Site agents push to main (crew) or miner/* branches (miners).
+# Mineshaft agents push to main (crew) or miner/* branches (miners).
 # PRs are for external contributors only.
 #
 # Also enforces integration branch landing guardrails: pushes to the default
@@ -69,7 +69,7 @@ while read local_ref local_sha remote_ref remote_sha; do
       # If an 'upstream' remote exists, this is a contribution setup where
       # feature branches are needed for PRs. See: #848
       if ! git remote get-url upstream &>/dev/null; then
-        echo "ERROR: Invalid branch for Excavation Site agents."
+        echo "ERROR: Invalid branch for Mineshaft agents."
         echo ""
         echo "Blocked push to: $branch"
         echo ""

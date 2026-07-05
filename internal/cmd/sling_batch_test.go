@@ -73,7 +73,7 @@ exit 0
 	}
 
 	beadIDs := []string{"gt-aaa", "gt-bbb", "gt-ccc"}
-	minecartID, _, err := createBatchMinecart(beadIDs, "excavation", false, "mr", "")
+	minecartID, _, err := createBatchMinecart(beadIDs, "mineshaft", false, "mr", "")
 	if err != nil {
 		t.Fatalf("createBatchMinecart() error: %v", err)
 	}
@@ -167,7 +167,7 @@ exit 0
 		t.Fatalf("chdir: %v", err)
 	}
 
-	_, _, err = createBatchMinecart([]string{"gt-aaa"}, "excavation", true, "direct", "")
+	_, _, err = createBatchMinecart([]string{"gt-aaa"}, "mineshaft", true, "direct", "")
 	if err != nil {
 		t.Fatalf("createBatchMinecart() error: %v", err)
 	}
@@ -226,7 +226,7 @@ exit 0
 		t.Fatalf("chdir: %v", err)
 	}
 
-	_, _, err = createBatchMinecart([]string{"gt-aaa", "gt-bbb"}, "excavation", false, "direct", "")
+	_, _, err = createBatchMinecart([]string{"gt-aaa", "gt-bbb"}, "mineshaft", false, "direct", "")
 	if err != nil {
 		t.Fatalf("createBatchMinecart() error: %v", err)
 	}
@@ -247,7 +247,7 @@ exit 0
 // TestCreateBatchMinecart_EmptyBeadIDs verifies that createBatchMinecart returns
 // an error when called with no bead IDs.
 func TestCreateBatchMinecart_EmptyBeadIDs(t *testing.T) {
-	_, _, err := createBatchMinecart(nil, "excavation", false, "", "")
+	_, _, err := createBatchMinecart(nil, "mineshaft", false, "", "")
 	if err == nil {
 		t.Fatal("expected error for empty bead IDs, got nil")
 	}
@@ -382,7 +382,7 @@ exit 0
 	}
 
 	// Should NOT return error — partial tracking is acceptable
-	minecartID, tracked, err := createBatchMinecart([]string{"gt-aaa", "gt-bbb", "gt-ccc"}, "excavation", false, "", "")
+	minecartID, tracked, err := createBatchMinecart([]string{"gt-aaa", "gt-bbb", "gt-ccc"}, "mineshaft", false, "", "")
 	if err != nil {
 		t.Fatalf("createBatchMinecart() should not error on partial dep failure: %v", err)
 	}
@@ -565,10 +565,10 @@ func TestAllBeadIDs_TrueWhenAllBeadIDs(t *testing.T) {
 		{"all beads", []string{"gt-abc", "gt-def", "gt-ghi"}, true},
 		{"mixed prefixes", []string{"gt-abc", "bd-def", "hq-ghi"}, true},
 		{"single bead", []string{"gt-abc"}, true},
-		{"last is rig name", []string{"gt-abc", "gt-def", "excavation"}, false},
+		{"last is rig name", []string{"gt-abc", "gt-def", "mineshaft"}, false},
 		{"empty list", []string{}, false},
-		{"contains path", []string{"gt-abc", "excavation/miners/foo"}, false},
-		{"contains bare word no hyphen", []string{"gt-abc", "excavation"}, false},
+		{"contains path", []string{"gt-abc", "mineshaft/miners/foo"}, false},
+		{"contains bare word no hyphen", []string{"gt-abc", "mineshaft"}, false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -589,8 +589,8 @@ func TestResolveRigFromBeadIDs_AllSamePrefix(t *testing.T) {
 		t.Fatalf("mkdir: %v", err)
 	}
 
-	// Write routes.jsonl mapping gt- to excavation
-	routesContent := `{"prefix":"gt-","path":"excavation/.beads"}` + "\n"
+	// Write routes.jsonl mapping gt- to mineshaft
+	routesContent := `{"prefix":"gt-","path":"mineshaft/.beads"}` + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
@@ -599,8 +599,8 @@ func TestResolveRigFromBeadIDs_AllSamePrefix(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if rigName != "excavation" {
-		t.Errorf("rigName = %q, want %q", rigName, "excavation")
+	if rigName != "mineshaft" {
+		t.Errorf("rigName = %q, want %q", rigName, "mineshaft")
 	}
 }
 
@@ -613,7 +613,7 @@ func TestResolveRigFromBeadIDs_MixedPrefixes_Errors(t *testing.T) {
 		t.Fatalf("mkdir: %v", err)
 	}
 
-	routesContent := `{"prefix":"gt-","path":"excavation/.beads"}
+	routesContent := `{"prefix":"gt-","path":"mineshaft/.beads"}
 {"prefix":"bd-","path":"beads/.beads"}
 `
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
@@ -628,7 +628,7 @@ func TestResolveRigFromBeadIDs_MixedPrefixes_Errors(t *testing.T) {
 	if !strings.Contains(errMsg, "different rigs") {
 		t.Errorf("error should mention 'different rigs', got: %s", errMsg)
 	}
-	if !strings.Contains(errMsg, "excavation") || !strings.Contains(errMsg, "beads") {
+	if !strings.Contains(errMsg, "mineshaft") || !strings.Contains(errMsg, "beads") {
 		t.Errorf("error should mention both rig names, got: %s", errMsg)
 	}
 	if !strings.Contains(errMsg, "Options") {
@@ -646,7 +646,7 @@ func TestResolveRigFromBeadIDs_UnmappedPrefix_Errors(t *testing.T) {
 	}
 
 	// Only gt- is mapped; zz- is not
-	routesContent := `{"prefix":"gt-","path":"excavation/.beads"}` + "\n"
+	routesContent := `{"prefix":"gt-","path":"mineshaft/.beads"}` + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
@@ -738,7 +738,7 @@ exit 0
 
 	t.Setenv("PATH", binDir+":"+os.Getenv("PATH"))
 	t.Setenv("BEADS_DIR", filepath.Join(townRoot, "wrong", ".beads"))
-	t.Setenv("BEADS_DOLT_SERVER_DATABASE", "excavation")
+	t.Setenv("BEADS_DOLT_SERVER_DATABASE", "mineshaft")
 	t.Setenv("BEADS_DB", filepath.Join(townRoot, "wrong.db"))
 	t.Setenv("BD_DB", filepath.Join(townRoot, "wrong.bd"))
 	t.Setenv("BEADS_DOLT_DATA_DIR", filepath.Join(townRoot, "wrong-data"))
@@ -1177,8 +1177,8 @@ func TestBatchSling_CrossRigGuardRejectsPrefix(t *testing.T) {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 
-	// Routes: gt- -> excavation, bd- -> beads
-	routesContent := `{"prefix":"gt-","path":"excavation/.beads"}
+	// Routes: gt- -> mineshaft, bd- -> beads
+	routesContent := `{"prefix":"gt-","path":"mineshaft/.beads"}
 {"prefix":"bd-","path":"beads/.beads"}
 `
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
@@ -1227,9 +1227,9 @@ exit 0
 	slingForce = false
 
 	// Directly test the cross-rig guard logic from runBatchSling lines 32-61.
-	// A bd- bead targeting "excavation" should be rejected.
+	// A bd- bead targeting "mineshaft" should be rejected.
 	beadIDs := []string{"gt-aaa", "bd-bbb"}
-	rigName := "excavation"
+	rigName := "mineshaft"
 	townBeadsDir := beadsDir
 
 	var guardErr error
@@ -1253,8 +1253,8 @@ exit 0
 	if !strings.Contains(guardErr.Error(), "beads") {
 		t.Errorf("error should mention rig 'beads', got: %v", guardErr)
 	}
-	if !strings.Contains(guardErr.Error(), "excavation") {
-		t.Errorf("error should mention target rig 'excavation', got: %v", guardErr)
+	if !strings.Contains(guardErr.Error(), "mineshaft") {
+		t.Errorf("error should mention target rig 'mineshaft', got: %v", guardErr)
 	}
 }
 
@@ -1358,7 +1358,7 @@ exit 0
 		t.Fatalf("chdir: %v", err)
 	}
 
-	minecartID, tracked, err := createBatchMinecart([]string{"gt-aaa", "gt-bbb", "gt-ccc"}, "excavation", false, "", "")
+	minecartID, tracked, err := createBatchMinecart([]string{"gt-aaa", "gt-bbb", "gt-ccc"}, "mineshaft", false, "", "")
 	if err != nil {
 		t.Fatalf("createBatchMinecart() error: %v", err)
 	}
@@ -1396,7 +1396,7 @@ func TestResolveRigFromBeadIDs_MixedPrefixes_DoesNotSuggestForce(t *testing.T) {
 		t.Fatalf("mkdir: %v", err)
 	}
 
-	routesContent := `{"prefix":"gt-","path":"excavation/.beads"}
+	routesContent := `{"prefix":"gt-","path":"mineshaft/.beads"}
 {"prefix":"bd-","path":"beads/.beads"}
 `
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
@@ -1453,20 +1453,20 @@ func TestBatchSling_MinecartCreationFailureIsHardError(t *testing.T) {
 // Review finding: append(beadIDs, rigName) mutates shared backing array.
 func TestBatchSling_SliceAliasingInCrossRigGuard(t *testing.T) {
 	// Simulate the slice aliasing scenario:
-	// args = ["gt-aaa", "bd-bbb", "excavation"]
+	// args = ["gt-aaa", "bd-bbb", "mineshaft"]
 	// beadIDs = args[:2] → shares backing array with args
 	// append(beadIDs, rigName) writes into args[2]
-	args := []string{"gt-aaa", "bd-bbb", "excavation"}
+	args := []string{"gt-aaa", "bd-bbb", "mineshaft"}
 	beadIDs := args[:len(args)-1] // beadIDs = ["gt-aaa", "bd-bbb"], shares backing
 	rigName := "resolved-rig"
 
-	// Before the fix, this would mutate args[2] from "excavation" to "resolved-rig"
+	// Before the fix, this would mutate args[2] from "mineshaft" to "resolved-rig"
 	_ = strings.Join(append([]string{}, beadIDs...), " ") // safe copy
 	_ = rigName
 
 	// Verify the original args are not mutated
-	if args[2] != "excavation" {
-		t.Errorf("args[2] was mutated from 'excavation' to %q — slice aliasing bug", args[2])
+	if args[2] != "mineshaft" {
+		t.Errorf("args[2] was mutated from 'mineshaft' to %q — slice aliasing bug", args[2])
 	}
 }
 

@@ -56,8 +56,8 @@ func TestAgentBeadIDWithPrefix(t *testing.T) {
 	}{
 		// Normal cases (prefix != rig)
 		{"town-level overseer", "gt", "", "overseer", "", "gt-overseer"},
-		{"rig witness", "gt", "excavation", "witness", "", "gt-excavation-witness"},
-		{"rig miner", "gt", "excavation", "miner", "nux", "gt-excavation-miner-nux"},
+		{"rig witness", "gt", "mineshaft", "witness", "", "gt-mineshaft-witness"},
+		{"rig miner", "gt", "mineshaft", "miner", "nux", "gt-mineshaft-miner-nux"},
 		{"rig crew", "bd", "beads", "crew", "dave", "bd-beads-crew-dave"},
 
 		// Collapsed cases (prefix == rig) — should NOT stutter
@@ -96,13 +96,13 @@ func TestValidateAgentID(t *testing.T) {
 		{"valid dog with hyphen", "gt-dog-war-boy", false, ""},
 
 		// Per-rig agents (canonical format: gt-<rig>-<role>)
-		{"valid witness excavation", "gt-excavation-witness", false, ""},
+		{"valid witness mineshaft", "gt-mineshaft-witness", false, ""},
 		{"valid refinery beads", "gt-beads-refinery", false, ""},
 
 		// Named agents (canonical format: gt-<rig>-<role>-<name>)
-		{"valid miner", "gt-excavation-miner-nux", false, ""},
+		{"valid miner", "gt-mineshaft-miner-nux", false, ""},
 		{"valid crew", "gt-beads-crew-dave", false, ""},
-		{"valid miner with complex name", "gt-excavation-miner-war-boy-1", false, ""},
+		{"valid miner with complex name", "gt-mineshaft-miner-war-boy-1", false, ""},
 
 		// Valid: alternative prefixes (beads uses bd-)
 		{"valid bd-overseer", "bd-overseer", false, ""},
@@ -124,10 +124,10 @@ func TestValidateAgentID(t *testing.T) {
 		{"empty id", "", true, "agent ID is required"},
 
 		// Invalid: unknown role in position 2
-		{"unknown role", "gt-excavation-admin", true, "invalid agent format"},
+		{"unknown role", "gt-mineshaft-admin", true, "invalid agent format"},
 
 		// Invalid: town-level with rig (put role first)
-		{"overseer with rig suffix", "gt-excavation-overseer", true, "cannot have rig/name suffixes"},
+		{"overseer with rig suffix", "gt-mineshaft-overseer", true, "cannot have rig/name suffixes"},
 		{"supervisor with rig suffix", "gt-beads-supervisor", true, "cannot have rig/name suffixes"},
 
 		// Collapsed form: rig-level role without rig (prefix == rig)
@@ -138,19 +138,19 @@ func TestValidateAgentID(t *testing.T) {
 
 		// Invalid: named agent without name
 		{"crew no name", "gt-beads-crew", true, "requires name"},
-		{"miner no name", "gt-excavation-miner", true, "requires name"},
+		{"miner no name", "gt-mineshaft-miner", true, "requires name"},
 		{"dog no name", "gt-dog", true, "requires name"},
 
 		// Valid: worker name collides with role keyword
-		{"miner named witness", "gt-excavation-miner-witness", false, ""},
-		{"miner named refinery", "gt-excavation-miner-refinery", false, ""},
-		{"crew named witness", "gt-excavation-crew-witness", false, ""},
-		{"crew named refinery", "gt-excavation-crew-refinery", false, ""},
-		{"miner named crew", "gt-excavation-miner-crew", false, ""},
-		{"crew named miner", "gt-excavation-crew-miner", false, ""},
+		{"miner named witness", "gt-mineshaft-miner-witness", false, ""},
+		{"miner named refinery", "gt-mineshaft-miner-refinery", false, ""},
+		{"crew named witness", "gt-mineshaft-crew-witness", false, ""},
+		{"crew named refinery", "gt-mineshaft-crew-refinery", false, ""},
+		{"miner named crew", "gt-mineshaft-miner-crew", false, ""},
+		{"crew named miner", "gt-mineshaft-crew-miner", false, ""},
 
 		// Invalid: witness/refinery with extra parts (no named role to the left)
-		{"witness with name", "gt-excavation-witness-extra", true, "cannot have name suffix"},
+		{"witness with name", "gt-mineshaft-witness-extra", true, "cannot have name suffix"},
 		{"refinery with name", "gt-beads-refinery-extra", true, "cannot have name suffix"},
 
 		// Invalid: empty components
@@ -190,12 +190,12 @@ func TestExtractAgentPrefix(t *testing.T) {
 		{"dog hyphen name", "gt-dog-war-boy", "gt"},
 
 		// Per-rig agents
-		{"witness", "gt-excavation-witness", "gt"},
+		{"witness", "gt-mineshaft-witness", "gt"},
 		{"refinery", "bd-beads-refinery", "bd"},
 
 		// Named agents - the bug case
 		{"miner 3-char name", "nx-nexus-miner-nux", "nx"},
-		{"miner regular", "gt-excavation-miner-phoenix", "gt"},
+		{"miner regular", "gt-mineshaft-miner-phoenix", "gt"},
 		{"crew", "gt-beads-crew-dave", "gt"},
 
 		// Hyphenated rig names
@@ -229,8 +229,8 @@ func TestAgentBeadIDRoundTrip(t *testing.T) {
 		wname  string
 	}{
 		// Normal cases
-		{"normal witness", "gt", "excavation", "witness", ""},
-		{"normal miner", "gt", "excavation", "miner", "nux"},
+		{"normal witness", "gt", "mineshaft", "witness", ""},
+		{"normal miner", "gt", "mineshaft", "miner", "nux"},
 		{"normal crew", "bd", "beads", "crew", "dave"},
 
 		// Collapsed cases (prefix == rig)

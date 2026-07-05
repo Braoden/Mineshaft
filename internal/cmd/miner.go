@@ -10,14 +10,14 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/git"
-	"github.com/steveyegge/excavation/internal/miner"
-	"github.com/steveyegge/excavation/internal/rig"
-	"github.com/steveyegge/excavation/internal/style"
-	"github.com/steveyegge/excavation/internal/tmux"
-	"github.com/steveyegge/excavation/internal/util"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/git"
+	"github.com/steveyegge/mineshaft/internal/miner"
+	"github.com/steveyegge/mineshaft/internal/rig"
+	"github.com/steveyegge/mineshaft/internal/style"
+	"github.com/steveyegge/mineshaft/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/util"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // Miner command flags
@@ -317,9 +317,9 @@ Existing miners are preserved — only new ones are created
 to reach the target pool size.
 
 Examples:
-  gt miner pool-init excavation
-  gt miner pool-init excavation --size 6
-  gt miner pool-init excavation --dry-run`,
+  gt miner pool-init mineshaft
+  gt miner pool-init mineshaft --size 6
+  gt miner pool-init mineshaft --dry-run`,
 	Args: cobra.ExactArgs(1),
 	RunE: runMinerPoolInit,
 }

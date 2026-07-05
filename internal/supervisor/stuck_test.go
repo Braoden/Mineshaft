@@ -50,8 +50,8 @@ func TestSaveAndLoadHealthCheckState(t *testing.T) {
 	// Create state with some data
 	state := &HealthCheckState{
 		Agents: map[string]*AgentHealthState{
-			"excavation/miners/max": {
-				AgentID:             "excavation/miners/max",
+			"mineshaft/miners/max": {
+				AgentID:             "mineshaft/miners/max",
 				ConsecutiveFailures: 2,
 				ForceKillCount:      1,
 			},
@@ -76,7 +76,7 @@ func TestSaveAndLoadHealthCheckState(t *testing.T) {
 	}
 
 	// Verify loaded data
-	agent := loaded.Agents["excavation/miners/max"]
+	agent := loaded.Agents["mineshaft/miners/max"]
 	if agent == nil {
 		t.Fatal("Agent not found in loaded state")
 	}

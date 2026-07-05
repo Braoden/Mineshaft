@@ -16,11 +16,11 @@ import (
 	"testing"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/refinery"
-	"github.com/steveyegge/excavation/internal/testutil"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/refinery"
+	"github.com/steveyegge/mineshaft/internal/testutil"
 )
 
 func TestBuildWitnessPatrolVars_NilContext(t *testing.T) {
@@ -492,7 +492,7 @@ func TestBuildRefineryPatrolVars_DefaultBranchWithoutMQ(t *testing.T) {
 	// Write rig config with custom default_branch but NO settings/config.json
 	rigConfig := map[string]interface{}{
 		"type": "rig", "version": 1, "name": "testrig",
-		"default_branch": "excavation",
+		"default_branch": "mineshaft",
 	}
 	rigData, _ := json.Marshal(rigConfig)
 	if err := os.WriteFile(filepath.Join(rigDir, "config.json"), rigData, 0o644); err != nil {
@@ -505,7 +505,7 @@ func TestBuildRefineryPatrolVars_DefaultBranchWithoutMQ(t *testing.T) {
 	}
 	vars := buildRefineryPatrolVars(ctx)
 
-	// target_branch must be "excavation" even without merge_queue settings
+	// target_branch must be "mineshaft" even without merge_queue settings
 	if len(vars) != 1 {
 		t.Errorf("expected 1 var (target_branch), got %d: %v", len(vars), vars)
 	}
@@ -516,8 +516,8 @@ func TestBuildRefineryPatrolVars_DefaultBranchWithoutMQ(t *testing.T) {
 			varMap[parts[0]] = parts[1]
 		}
 	}
-	if got := varMap["target_branch"]; got != "excavation" {
-		t.Errorf("target_branch = %q, want %q (should read rig config even without MQ settings)", got, "excavation")
+	if got := varMap["target_branch"]; got != "mineshaft" {
+		t.Errorf("target_branch = %q, want %q (should read rig config even without MQ settings)", got, "mineshaft")
 	}
 }
 

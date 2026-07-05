@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // EventSource represents a source of events
@@ -177,7 +177,7 @@ func parseSimpleLine(line string) *Event {
 
 // parseBeadContext extracts actor/rig/role from a bead ID
 // Uses canonical naming: prefix-rig-role-name
-// Examples: gt-excavation-crew-joe, gt-excavation-witness, gt-overseer
+// Examples: gt-mineshaft-crew-joe, gt-mineshaft-witness, gt-overseer
 func parseBeadContext(beadID string) (actor, rig, role string) {
 	if beadID == "" {
 		return
@@ -371,7 +371,7 @@ func parseGtEventLine(line string) *Event {
 		}
 	}
 	if rig == "" && ge.Actor != "" {
-		// Extract rig from actor like "excavation/witness"
+		// Extract rig from actor like "mineshaft/witness"
 		parts := strings.Split(ge.Actor, "/")
 		if len(parts) > 0 && parts[0] != constants.RoleOverseer && parts[0] != constants.RoleSupervisor {
 			rig = parts[0]

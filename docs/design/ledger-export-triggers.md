@@ -569,7 +569,7 @@ Ledger tables are the input to HOP skill queries. Example:
 -- "What Go work has agent X done?"
 SELECT lc.title, lc.files_touched, lc.duration_days
 FROM ledger_completions lc
-WHERE lc.assignee = 'excavation/crew/mel'
+WHERE lc.assignee = 'mineshaft/crew/mel'
   AND JSON_CONTAINS(lc.files_touched, '"*.go"')
 ORDER BY lc.closed_at DESC;
 

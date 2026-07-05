@@ -22,12 +22,12 @@ func TestInstantiateFormulaOnBead(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	rigDir := filepath.Join(townRoot, "excavation", "overseer", "rig")
+	rigDir := filepath.Join(townRoot, "mineshaft", "overseer", "rig")
 	if err := os.MkdirAll(rigDir, 0755); err != nil {
 		t.Fatalf("mkdir rigDir: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"excavation/overseer/rig"}`,
+		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
@@ -299,28 +299,28 @@ func TestAutoApplyLogic(t *testing.T) {
 			name:          "bare bead to miner - should auto-apply",
 			formulaName:   "",
 			hookRawBead:   false,
-			targetAgent:   "excavation/miners/Toast",
+			targetAgent:   "mineshaft/miners/Toast",
 			wantAutoApply: true,
 		},
 		{
 			name:          "bare bead with --hook-raw-bead - should not auto-apply",
 			formulaName:   "",
 			hookRawBead:   true,
-			targetAgent:   "excavation/miners/Toast",
+			targetAgent:   "mineshaft/miners/Toast",
 			wantAutoApply: false,
 		},
 		{
 			name:          "formula already specified - should not auto-apply",
 			formulaName:   "mol-review",
 			hookRawBead:   false,
-			targetAgent:   "excavation/miners/Toast",
+			targetAgent:   "mineshaft/miners/Toast",
 			wantAutoApply: false,
 		},
 		{
 			name:          "non-miner target - should not auto-apply",
 			formulaName:   "",
 			hookRawBead:   false,
-			targetAgent:   "excavation/witness",
+			targetAgent:   "mineshaft/witness",
 			wantAutoApply: false,
 		},
 		{

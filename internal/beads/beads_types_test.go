@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/constants"
 )
 
 func installMockBDRecorder(t *testing.T) string {
@@ -178,7 +178,7 @@ func TestFindTownRoot(t *testing.T) {
 	}
 
 	// Add nested town test case: inner town inside outer town
-	innerTown := filepath.Join(tmpDir, "imported", "excavation")
+	innerTown := filepath.Join(tmpDir, "imported", "mineshaft")
 	if err := os.MkdirAll(filepath.Join(innerTown, "overseer"), 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -223,7 +223,7 @@ func TestResolveRoutingTarget(t *testing.T) {
 	}
 
 	// Create routes.jsonl
-	routesContent := `{"prefix": "gt-", "path": "excavation/overseer/rig"}
+	routesContent := `{"prefix": "gt-", "path": "mineshaft/overseer/rig"}
 {"prefix": "hq-", "path": "."}
 `
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
@@ -231,7 +231,7 @@ func TestResolveRoutingTarget(t *testing.T) {
 	}
 
 	// Create the rig beads directory
-	rigBeadsDir := filepath.Join(tmpDir, "excavation", "overseer", "rig", ".beads")
+	rigBeadsDir := filepath.Join(tmpDir, "mineshaft", "overseer", "rig", ".beads")
 	if err := os.MkdirAll(rigBeadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -247,7 +247,7 @@ func TestResolveRoutingTarget(t *testing.T) {
 		{
 			name:     "rig-level bead routes to rig",
 			townRoot: tmpDir,
-			beadID:   "gt-excavation-miner-Toast",
+			beadID:   "gt-mineshaft-miner-Toast",
 			expected: rigBeadsDir,
 		},
 		{
@@ -265,7 +265,7 @@ func TestResolveRoutingTarget(t *testing.T) {
 		{
 			name:     "empty townRoot falls back",
 			townRoot: "",
-			beadID:   "gt-excavation-miner-Toast",
+			beadID:   "gt-mineshaft-miner-Toast",
 			expected: fallback,
 		},
 		{

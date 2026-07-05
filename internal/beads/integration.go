@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/util"
+	"github.com/steveyegge/mineshaft/internal/util"
 )
 
 // Integration branch template constants

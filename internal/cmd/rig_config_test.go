@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/wisp"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/wisp"
 )
 
-// setupTestRigForConfig creates a minimal Excavation Site workspace for rig config testing.
+// setupTestRigForConfig creates a minimal Mineshaft workspace for rig config testing.
 // Returns townRoot and rigName.
 func setupTestRigForConfig(t *testing.T) (string, string) {
 	t.Helper()

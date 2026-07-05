@@ -12,11 +12,11 @@ if [ -n "$GIT_USER" ] && [ -n "$GIT_EMAIL" ]; then
 fi
 
 if [ ! -f /gt/overseer/town.json ]; then
-    echo "Initializing Excavation Site workspace at /gt..."
-    /app/excavation/gt install /gt --git
+    echo "Initializing Mineshaft workspace at /gt..."
+    /app/mineshaft/gt install /gt --git
 else
-    echo "Refreshing Excavation Site workspace at /gt..."
-    /app/excavation/gt install /gt --git --force
+    echo "Refreshing Mineshaft workspace at /gt..."
+    /app/mineshaft/gt install /gt --git --force
 fi
 
 exec "$@"

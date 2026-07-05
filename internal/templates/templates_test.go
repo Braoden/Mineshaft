@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/constants"
 )
 
 func TestNew(t *testing.T) {
@@ -420,7 +420,7 @@ func TestRenderRole_TownRootInOutput(t *testing.T) {
 		t.Fatalf("New() error = %v", err)
 	}
 
-	const customRoot = "/Users/pa/dev/excavation-tests/my-instance"
+	const customRoot = "/Users/pa/dev/mineshaft-tests/my-instance"
 
 	roles := []struct {
 		role string
@@ -493,13 +493,13 @@ func TestRenderRole_Miner_CwdInstruction(t *testing.T) {
 		t.Fatalf("New() error = %v", err)
 	}
 
-	const customRoot = "/srv/excavation-ci"
+	const customRoot = "/srv/mineshaft-ci"
 
 	data := RoleData{
 		Role: "miner", RigName: "rig1", Miner: "Worker",
-		TownRoot: customRoot, TownName: "excavation-ci",
+		TownRoot: customRoot, TownName: "mineshaft-ci",
 		WorkDir: customRoot + "/rig1/miners/Worker", DefaultBranch: "main",
-		OverseerSession: "gt-excavation-ci-overseer", SupervisorSession: "gt-excavation-ci-supervisor",
+		OverseerSession: "gt-mineshaft-ci-overseer", SupervisorSession: "gt-mineshaft-ci-supervisor",
 	}
 
 	output, err := tmpl.RenderRole("miner", data)

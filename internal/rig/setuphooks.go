@@ -10,7 +10,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/style"
+	"github.com/steveyegge/mineshaft/internal/style"
 )
 
 // RunSetupHooks executes setup hooks found in <rigPath>/.runtime/setup-hooks/.

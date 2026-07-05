@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 func TestBootSpawnAgentFlag(t *testing.T) {
@@ -63,14 +63,14 @@ func TestExecuteWarrants_MarksPendingAsExecuted(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping warrant execution test on Windows (no tmux)")
 	}
-	// Register prefixes so targetToSessionName can resolve "excavation" → "gt"
+	// Register prefixes so targetToSessionName can resolve "mineshaft" → "gt"
 	setupWarrantTestRegistry(t)
 
 	warrantDir := t.TempDir()
 
 	pending := Warrant{
 		ID:       "warrant-test-pending",
-		Target:   "excavation/miners/test-nonexistent-x7q",
+		Target:   "mineshaft/miners/test-nonexistent-x7q",
 		Reason:   "Zombie: no session, idle >10m",
 		FiledBy:  "test",
 		FiledAt:  time.Now().Add(-5 * time.Minute),
@@ -100,7 +100,7 @@ func TestExecuteWarrants_SkipsAlreadyExecuted(t *testing.T) {
 	executedAt := time.Now().Add(-time.Hour)
 	done := Warrant{
 		ID:         "warrant-already-done",
-		Target:     "excavation/miners/already-done-x7q",
+		Target:     "mineshaft/miners/already-done-x7q",
 		Reason:     "Already executed",
 		FiledBy:    "test",
 		FiledAt:    time.Now().Add(-2 * time.Hour),

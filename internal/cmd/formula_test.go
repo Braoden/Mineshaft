@@ -9,14 +9,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/beads"
-	"github.com/steveyegge/excavation/internal/config"
-	"github.com/steveyegge/excavation/internal/formula"
+	"github.com/steveyegge/mineshaft/internal/beads"
+	"github.com/steveyegge/mineshaft/internal/config"
+	"github.com/steveyegge/mineshaft/internal/formula"
 )
 
 // TestAutoInferRig verifies the rig auto-selection logic used when --rig is
 // not provided and cwd-based detection finds nothing (e.g. Supervisor at HQ level
-// on a non-default install where "excavation" rig does not exist).
+// on a non-default install where "mineshaft" rig does not exist).
 func TestAutoInferRig(t *testing.T) {
 	t.Parallel()
 
@@ -255,16 +255,16 @@ func TestWorkflowStepTarget(t *testing.T) {
 		step formula.Step
 		want string
 	}{
-		{name: "default rig", step: formula.Step{}, want: "excavation"},
-		{name: "explicit rig", step: formula.Step{Target: "rig"}, want: "excavation"},
+		{name: "default rig", step: formula.Step{}, want: "mineshaft"},
+		{name: "explicit rig", step: formula.Step{Target: "rig"}, want: "mineshaft"},
 		{name: "overseer", step: formula.Step{Target: "overseer"}, want: "overseer"},
-		{name: "crew path", step: formula.Step{Target: "excavation/crew/alex"}, want: "excavation/crew/alex"},
+		{name: "crew path", step: formula.Step{Target: "mineshaft/crew/alex"}, want: "mineshaft/crew/alex"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			if got := workflowStepTarget(tt.step, "excavation"); got != tt.want {
+			if got := workflowStepTarget(tt.step, "mineshaft"); got != tt.want {
 				t.Fatalf("workflowStepTarget() = %q, want %q", got, tt.want)
 			}
 		})
@@ -292,14 +292,14 @@ func TestWorkflowStepTargetFromDescription(t *testing.T) {
 	}{
 		{name: "no metadata", description: "Body only", want: ""},
 		{name: "overseer", description: "workflow_target: overseer\n\nBody", want: "overseer"},
-		{name: "rig alias", description: "workflow_target: rig\n\nBody", want: "excavation"},
-		{name: "path target", description: "workflow_target: excavation/crew/alex\n\nBody", want: "excavation/crew/alex"},
+		{name: "rig alias", description: "workflow_target: rig\n\nBody", want: "mineshaft"},
+		{name: "path target", description: "workflow_target: mineshaft/crew/alex\n\nBody", want: "mineshaft/crew/alex"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			if got := workflowStepTargetFromDescription(tt.description, "excavation"); got != tt.want {
+			if got := workflowStepTargetFromDescription(tt.description, "mineshaft"); got != tt.want {
 				t.Fatalf("workflowStepTargetFromDescription() = %q, want %q", got, tt.want)
 			}
 		})

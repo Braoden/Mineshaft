@@ -148,7 +148,7 @@ func TestBuildBrowseQuery_AllFilters(t *testing.T) {
 	t.Parallel()
 	f := BrowseFilter{
 		Status:   "open",
-		Project:  "excavation",
+		Project:  "mineshaft",
 		Type:     "bug",
 		Priority: 0,
 		Limit:    5,
@@ -157,7 +157,7 @@ func TestBuildBrowseQuery_AllFilters(t *testing.T) {
 	// All four conditions should be present
 	for _, substr := range []string{
 		"status = 'open'",
-		"project = 'excavation'",
+		"project = 'mineshaft'",
 		"type = 'bug'",
 		"priority = 0",
 		"LIMIT 5",

@@ -7,7 +7,7 @@
 
 > **Bead:** gt-ky4jf
 > **Date:** 2026-02-08
-> **Author:** furiosa (excavation miner)
+> **Author:** furiosa (mineshaft miner)
 > **Depends on:** AT spike report (gt-3nqoz), AT integration design (agent-teams-integration.md)
 > **Status:** Phase 1 implementation spec
 
@@ -44,7 +44,7 @@ and syncs completions to beads at task boundaries.
 | Teammate cycling | WORKAROUND | Handoff + respawn pattern |
 | Token cost acceptable | CONDITIONAL | Sonnet teammates reduce cost |
 | gt/bd command access | GO | PATH via SessionStart hook |
-| Task list with dependencies | GO | Native match to Excavation Site workflow |
+| Task list with dependencies | GO | Native match to Mineshaft workflow |
 
 5/8 clear GO. 2 require workarounds (viable mitigations). 1 conditional on Phase 1 cost validation.
 
@@ -248,7 +248,7 @@ Task({
 ```yaml
 ---
 name: miner
-description: Excavation Site miner worker agent (persistent identity, ephemeral sessions)
+description: Mineshaft miner worker agent (persistent identity, ephemeral sessions)
 model: sonnet
 hooks:
   SessionStart:
@@ -271,7 +271,7 @@ hooks:
           command: "gt signal stop"
 ---
 
-You are a Excavation Site miner (persistent identity, ephemeral sessions).
+You are a Mineshaft miner (persistent identity, ephemeral sessions).
 
 ## Startup
 1. `cd` to your assigned worktree (given in your spawn prompt)
@@ -571,7 +571,7 @@ exit 0
 
 ### The Natural Mapping
 
-| Excavation Site | AT Equivalent |
+| Mineshaft | AT Equivalent |
 |----------|--------------|
 | Minecart | AT team lifecycle |
 | Minecart issues | AT tasks |
@@ -585,9 +585,9 @@ exit 0
 A minecart arrives at a rig. The Witness creates an AT team for that minecart:
 
 ```
-Minecart hq-abc arrives at excavation
+Minecart hq-abc arrives at mineshaft
     │
-    ├── Witness creates team: "excavation-minecart-abc"
+    ├── Witness creates team: "mineshaft-minecart-abc"
     │
     ├── For each issue in minecart:
     │   ├── Create AT task (with bead_id in metadata)
@@ -699,13 +699,13 @@ Teammate completes final task
     │
     └── Witness detects all tasks done
         │
-        ├── gt mail send excavation/refinery -s "MERGE_READY: <branch>"
+        ├── gt mail send mineshaft/refinery -s "MERGE_READY: <branch>"
         │   └── Refinery processes merge queue
         │
         ├── gt mail send overseer/ -s "MINECART COMPLETE: hq-abc"
         │   └── Overseer updates minecart tracking
         │
-        └── gt mail send excavation/witness -s "MINER_DONE: <name>"
+        └── gt mail send mineshaft/witness -s "MINER_DONE: <name>"
             └── (Self-mail for beads record)
 ```
 
@@ -779,7 +779,7 @@ sync lag), and the Witness can relay immediately.
 ```yaml
 ---
 name: witness-lead
-description: Excavation Site Witness operating as AT team lead
+description: Mineshaft Witness operating as AT team lead
 model: opus
 permissionMode: delegate
 hooks:
@@ -798,7 +798,7 @@ hooks:
           command: "gt signal stop"
 ---
 
-You are the Excavation Site Witness for this rig.
+You are the Mineshaft Witness for this rig.
 
 ## Role
 You coordinate miner workers. You NEVER implement code directly.
@@ -960,7 +960,7 @@ The transition is additive: AT runs alongside existing infrastructure during
 validation. The Witness can fall back to tmux-based management if AT fails.
 
 ```
-Step 1: Enable AT feature flag in excavation .claude/settings.json
+Step 1: Enable AT feature flag in mineshaft .claude/settings.json
 Step 2: Create .claude/agents/miner.md and .claude/agents/witness-lead.md
 Step 3: Implement hook scripts (task-completed-sync, teammate-idle, teammate-stopped)
 Step 4: Implement gt witness-bash-guard

@@ -5,14 +5,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/session"
+	"github.com/steveyegge/mineshaft/internal/session"
 )
 
 // testRegistryForNameCheck returns a PrefixRegistry with a few known rigs
 // suitable for session-name-format tests.
 func testRegistryForNameCheck() *session.PrefixRegistry {
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "excavation")
+	reg.Register("gt", "mineshaft")
 	reg.Register("nif", "niflheim")
 	reg.Register("wa", "whatsapp_automation")
 	return reg
@@ -25,7 +25,7 @@ func TestNewMalformedSessionNameCheck(t *testing.T) {
 		t.Errorf("expected name 'session-name-format', got %q", check.Name())
 	}
 
-	if check.Description() != "Detect sessions with outdated Excavation Site naming format" {
+	if check.Description() != "Detect sessions with outdated Mineshaft naming format" {
 		t.Errorf("unexpected description: %q", check.Description())
 	}
 
@@ -75,7 +75,7 @@ func TestMalformedSessionNameCheck_Run_AllCorrect(t *testing.T) {
 	}
 }
 
-func TestMalformedSessionNameCheck_Run_NonExcavationSessions(t *testing.T) {
+func TestMalformedSessionNameCheck_Run_NonMineshaftSessions(t *testing.T) {
 	check := NewMalformedSessionNameCheck()
 	check.registryForTest = testRegistryForNameCheck()
 	check.sessionListerForTest = &mockSessionLister{sessions: []string{
@@ -88,40 +88,40 @@ func TestMalformedSessionNameCheck_Run_NonExcavationSessions(t *testing.T) {
 	result := check.Run(ctx)
 
 	if result.Status != StatusOK {
-		t.Errorf("expected OK for non-Excavation Site sessions, got %v", result.Status)
+		t.Errorf("expected OK for non-Mineshaft sessions, got %v", result.Status)
 	}
 }
 
-// TestMalformedSessionNameCheck_Run_NonExcavationWithRigSubstring verifies that
-// non-Excavation sessions whose names happen to contain a rig name are NOT
-// falsely flagged. The ownership guard requires a known Excavation prefix.
-func TestMalformedSessionNameCheck_Run_NonExcavationWithRigSubstring(t *testing.T) {
+// TestMalformedSessionNameCheck_Run_NonMineshaftWithRigSubstring verifies that
+// non-Mineshaft sessions whose names happen to contain a rig name are NOT
+// falsely flagged. The ownership guard requires a known Mineshaft prefix.
+func TestMalformedSessionNameCheck_Run_NonMineshaftWithRigSubstring(t *testing.T) {
 	check := NewMalformedSessionNameCheck()
 	check.registryForTest = testRegistryForNameCheck()
 	check.sessionListerForTest = &mockSessionLister{sessions: []string{
-		"my-niflheim-witness",       // "my" is not a known Excavation prefix
-		"foo-excavation-refinery",      // "foo" is not a known Excavation prefix
-		"test-whatsapp_automation-witness", // "test" is not a known Excavation prefix
+		"my-niflheim-witness",       // "my" is not a known Mineshaft prefix
+		"foo-mineshaft-refinery",      // "foo" is not a known Mineshaft prefix
+		"test-whatsapp_automation-witness", // "test" is not a known Mineshaft prefix
 	}}
 
 	ctx := &CheckContext{TownRoot: t.TempDir()}
 	result := check.Run(ctx)
 
 	if result.Status != StatusOK {
-		t.Errorf("expected OK for non-Excavation sessions with rig substrings, got %v: %s\nDetails: %v",
+		t.Errorf("expected OK for non-Mineshaft sessions with rig substrings, got %v: %s\nDetails: %v",
 			result.Status, result.Message, result.Details)
 	}
 }
 
 // TestMalformedSessionNameCheck_Run_MinerWithRigSubstring verifies that
 // miner sessions whose names embed a rig name are NOT falsely flagged.
-// E.g., "gt-fix-excavation-witness" is a miner named "fix-excavation-witness",
-// not a legacy excavation witness session.
+// E.g., "gt-fix-mineshaft-witness" is a miner named "fix-mineshaft-witness",
+// not a legacy mineshaft witness session.
 func TestMalformedSessionNameCheck_Run_MinerWithRigSubstring(t *testing.T) {
 	check := NewMalformedSessionNameCheck()
 	check.registryForTest = testRegistryForNameCheck()
 	check.sessionListerForTest = &mockSessionLister{sessions: []string{
-		"gt-fix-excavation-witness",   // miner "fix-excavation-witness", prefix "gt-fix" is not known
+		"gt-fix-mineshaft-witness",   // miner "fix-mineshaft-witness", prefix "gt-fix" is not known
 		"nif-debug-niflheim-refinery", // prefix "nif-debug" is not a known prefix
 	}}
 

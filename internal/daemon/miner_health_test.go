@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/steveyegge/excavation/internal/miner"
-	"github.com/steveyegge/excavation/internal/session"
-	"github.com/steveyegge/excavation/internal/tmux"
+	"github.com/steveyegge/mineshaft/internal/miner"
+	"github.com/steveyegge/mineshaft/internal/session"
+	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
 // writeFakeTestTmux creates a shell script in dir named "tmux" that simulates
@@ -178,7 +178,7 @@ func TestCheckMinerHealth_SpawningGuardExpires(t *testing.T) {
 // TestCheckMinerHealth_DescriptionStateOverridesLegacyDBColumn verifies that
 // daemon lifecycle reads the description's agent_state first. bd >= 0.62.0 no
 // longer has a supported structured agent_state writer, so the description is
-// Excavation's active contract and the DB column is legacy fallback only.
+// Mineshaft's active contract and the DB column is legacy fallback only.
 func TestCheckMinerHealth_DescriptionStateOverridesLegacyDBColumn(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("test uses Unix shell script mocks for tmux and bd")
@@ -186,7 +186,7 @@ func TestCheckMinerHealth_DescriptionStateOverridesLegacyDBColumn(t *testing.T) 
 	binDir := t.TempDir()
 	writeFakeTestTmux(t, binDir)
 	recentTime := time.Now().UTC().Format(time.RFC3339)
-	// Description says "spawning" (current Excavation contract) while the legacy
+	// Description says "spawning" (current Mineshaft contract) while the legacy
 	// structured column still says "working".
 	bdPath := writeFakeTestBD(t, binDir, "spawning", "working", "gt-xyz", recentTime)
 

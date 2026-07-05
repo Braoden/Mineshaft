@@ -13,28 +13,28 @@ func TestParseAddress(t *testing.T) {
 	}{
 		{
 			name:  "rig/miner",
-			input: "excavation/rictus",
-			want:  &Address{Rig: "excavation", Miner: "rictus"},
+			input: "mineshaft/rictus",
+			want:  &Address{Rig: "mineshaft", Miner: "rictus"},
 		},
 		{
 			name:  "rig/ broadcast",
-			input: "excavation/",
-			want:  &Address{Rig: "excavation"},
+			input: "mineshaft/",
+			want:  &Address{Rig: "mineshaft"},
 		},
 		{
 			name:  "machine:rig/miner",
-			input: "vm:excavation/rictus",
-			want:  &Address{Machine: "vm", Rig: "excavation", Miner: "rictus"},
+			input: "vm:mineshaft/rictus",
+			want:  &Address{Machine: "vm", Rig: "mineshaft", Miner: "rictus"},
 		},
 		{
 			name:  "machine:rig/ broadcast",
-			input: "vm:excavation/",
-			want:  &Address{Machine: "vm", Rig: "excavation"},
+			input: "vm:mineshaft/",
+			want:  &Address{Machine: "vm", Rig: "mineshaft"},
 		},
 		{
 			name:  "rig only (no slash)",
-			input: "excavation",
-			want:  &Address{Rig: "excavation"},
+			input: "mineshaft",
+			want:  &Address{Rig: "mineshaft"},
 		},
 		{
 			name:    "empty string",
@@ -43,7 +43,7 @@ func TestParseAddress(t *testing.T) {
 		},
 		{
 			name:    "empty machine",
-			input:   ":excavation/rictus",
+			input:   ":mineshaft/rictus",
 			wantErr: true,
 		},
 		{
@@ -85,20 +85,20 @@ func TestAddressString(t *testing.T) {
 		want string
 	}{
 		{
-			addr: &Address{Rig: "excavation", Miner: "rictus"},
-			want: "excavation/rictus",
+			addr: &Address{Rig: "mineshaft", Miner: "rictus"},
+			want: "mineshaft/rictus",
 		},
 		{
-			addr: &Address{Rig: "excavation"},
-			want: "excavation/",
+			addr: &Address{Rig: "mineshaft"},
+			want: "mineshaft/",
 		},
 		{
-			addr: &Address{Machine: "vm", Rig: "excavation", Miner: "rictus"},
-			want: "vm:excavation/rictus",
+			addr: &Address{Machine: "vm", Rig: "mineshaft", Miner: "rictus"},
+			want: "vm:mineshaft/rictus",
 		},
 		{
-			addr: &Address{Machine: "vm", Rig: "excavation"},
-			want: "vm:excavation/",
+			addr: &Address{Machine: "vm", Rig: "mineshaft"},
+			want: "vm:mineshaft/",
 		},
 	}
 
@@ -117,10 +117,10 @@ func TestAddressIsLocal(t *testing.T) {
 		addr *Address
 		want bool
 	}{
-		{&Address{Rig: "excavation"}, true},
-		{&Address{Machine: "", Rig: "excavation"}, true},
-		{&Address{Machine: "local", Rig: "excavation"}, true},
-		{&Address{Machine: "vm", Rig: "excavation"}, false},
+		{&Address{Rig: "mineshaft"}, true},
+		{&Address{Machine: "", Rig: "mineshaft"}, true},
+		{&Address{Machine: "local", Rig: "mineshaft"}, true},
+		{&Address{Machine: "vm", Rig: "mineshaft"}, false},
 	}
 
 	for _, tt := range tests {
@@ -137,9 +137,9 @@ func TestAddressIsBroadcast(t *testing.T) {
 		addr *Address
 		want bool
 	}{
-		{&Address{Rig: "excavation"}, true},
-		{&Address{Rig: "excavation", Miner: ""}, true},
-		{&Address{Rig: "excavation", Miner: "rictus"}, false},
+		{&Address{Rig: "mineshaft"}, true},
+		{&Address{Rig: "mineshaft", Miner: ""}, true},
+		{&Address{Rig: "mineshaft", Miner: "rictus"}, false},
 	}
 
 	for _, tt := range tests {
@@ -157,22 +157,22 @@ func TestAddressEqual(t *testing.T) {
 		want bool
 	}{
 		{
-			&Address{Rig: "excavation", Miner: "rictus"},
-			&Address{Rig: "excavation", Miner: "rictus"},
+			&Address{Rig: "mineshaft", Miner: "rictus"},
+			&Address{Rig: "mineshaft", Miner: "rictus"},
 			true,
 		},
 		{
-			&Address{Machine: "", Rig: "excavation"},
-			&Address{Machine: "local", Rig: "excavation"},
+			&Address{Machine: "", Rig: "mineshaft"},
+			&Address{Machine: "local", Rig: "mineshaft"},
 			true,
 		},
 		{
-			&Address{Rig: "excavation", Miner: "rictus"},
-			&Address{Rig: "excavation", Miner: "nux"},
+			&Address{Rig: "mineshaft", Miner: "rictus"},
+			&Address{Rig: "mineshaft", Miner: "nux"},
 			false,
 		},
 		{
-			&Address{Rig: "excavation"},
+			&Address{Rig: "mineshaft"},
 			nil,
 			false,
 		},
@@ -422,16 +422,16 @@ func TestAddressRigPath(t *testing.T) {
 		want string
 	}{
 		{
-			addr: &Address{Rig: "excavation", Miner: "rictus"},
-			want: "excavation/rictus",
+			addr: &Address{Rig: "mineshaft", Miner: "rictus"},
+			want: "mineshaft/rictus",
 		},
 		{
-			addr: &Address{Rig: "excavation"},
-			want: "excavation/",
+			addr: &Address{Rig: "mineshaft"},
+			want: "mineshaft/",
 		},
 		{
-			addr: &Address{Machine: "vm", Rig: "excavation", Miner: "rictus"},
-			want: "excavation/rictus",
+			addr: &Address{Machine: "vm", Rig: "mineshaft", Miner: "rictus"},
+			want: "mineshaft/rictus",
 		},
 		{
 			addr: &Address{Rig: "a", Miner: "b/c/d"},

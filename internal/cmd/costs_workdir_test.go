@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/steveyegge/excavation/internal/testutil"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/testutil"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // TestQuerySessionEvents_FindsEventsFromAllLocations verifies that querySessionEvents
@@ -37,11 +37,11 @@ func TestQuerySessionEvents_FindsEventsFromAllLocations(t *testing.T) {
 		t.Skip("bd not installed, skipping integration test")
 	}
 
-	// Skip when running inside a Excavation Site workspace - this integration test
+	// Skip when running inside a Mineshaft workspace - this integration test
 	// creates a separate workspace and the subprocesses can interact with
 	// the parent workspace's daemon, causing hangs.
 	if os.Getenv("GT_TOWN_ROOT") != "" || os.Getenv("BD_ACTOR") != "" {
-		t.Skip("skipping integration test inside Excavation Site workspace (use 'go test' outside workspace)")
+		t.Skip("skipping integration test inside Mineshaft workspace (use 'go test' outside workspace)")
 	}
 
 	// Create a temporary directory structure

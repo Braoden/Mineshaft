@@ -18,9 +18,9 @@ func TestFormatOverrides(t *testing.T) {
 	}
 
 	// Multiple overrides
-	got = formatOverridesPlain([]string{"crew", "excavation/crew"})
-	if got != "[crew, excavation/crew]" {
-		t.Errorf("multiple overrides: got %q, want %q", got, "[crew, excavation/crew]")
+	got = formatOverridesPlain([]string{"crew", "mineshaft/crew"})
+	if got != "[crew, mineshaft/crew]" {
+		t.Errorf("multiple overrides: got %q, want %q", got, "[crew, mineshaft/crew]")
 	}
 }
 

@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/steveyegge/excavation/internal/constants"
-	"github.com/steveyegge/excavation/internal/workspace"
+	"github.com/steveyegge/mineshaft/internal/constants"
+	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
 // findMailWorkDir returns the town root for all mail operations.
@@ -22,7 +22,7 @@ import (
 //
 // GT_TOWN_ROOT is preferred over workspace detection because workspace.Find
 // stops at the first overseer/town.json when not in a worktree path. Rigs that
-// have their own overseer/town.json (e.g., excavation/) would be misidentified as
+// have their own overseer/town.json (e.g., mineshaft/) would be misidentified as
 // the town root when running from the rig directory.
 func findMailWorkDir() (string, error) {
 	for _, envName := range []string{"GT_TOWN_ROOT", "GT_ROOT"} {
@@ -82,7 +82,7 @@ func findLocalBeadsDir() (string, error) {
 //  2. No GT_ROLE → try cwd-based detection (witness/refinery/miner/crew directories)
 //  3. No match → return "boss" (human at terminal)
 //
-// All Excavation Site agents run in tmux sessions with GT_ROLE set at spawn.
+// All Mineshaft agents run in tmux sessions with GT_ROLE set at spawn.
 // However, cwd-based detection is also tried to support running commands
 // from agent directories without GT_ROLE set (e.g., debugging sessions).
 func detectSender() string {
