@@ -3,10 +3,10 @@
 // but using pi's extension API.
 //
 // Events mapped:
-//   session_start       → gt prime --hook (capture context)
+//   session_start       → ms prime --hook (capture context)
 //   before_agent_start  → inject captured context + check mail every prompt
-//   tool_call           → gt tap guard pr-workflow (on git push/pr create)
-//   session_shutdown    → gt costs record
+//   tool_call           → ms tap guard pr-workflow (on git push/pr create)
+//   session_shutdown    → ms costs record
 //
 // Enhancement over upstream: mail is checked on every prompt (throttled to
 // 30s) via before_agent_start, matching Claude's UserPromptSubmit behavior.
@@ -14,7 +14,7 @@
 // Loaded via: pi -e mineshaft-hooks.js
 
 export default (pi) => {
-  const role = (process.env.GT_ROLE || "").toLowerCase();
+  const role = (process.env.MS_ROLE || "").toLowerCase();
   let primeContext = null;
   let contextInjected = false;
   let lastMailCheck = 0;
@@ -22,18 +22,18 @@ export default (pi) => {
   const shouldCheckMail = () =>
     !role.includes("witness") && !role.includes("refinery") && !role.startsWith("supervisor") && !role.includes("boot");
 
-  // SessionStart — run gt prime and capture context for injection
+  // SessionStart — run ms prime and capture context for injection
   pi.on("session_start", async (event, context) => {
     try {
-      const result = await pi.exec("gt", ["prime", "--hook"]);
+      const result = await pi.exec("ms", ["prime", "--hook"]);
       if (result.code === 0 && result.stdout.trim()) {
         primeContext = result.stdout.trim();
-        console.error("[mineshaft] gt prime captured (" + primeContext.length + " chars)");
+        console.error("[mineshaft] ms prime captured (" + primeContext.length + " chars)");
       } else {
-        console.error("[mineshaft] gt prime returned no output (code=" + result.code + ")");
+        console.error("[mineshaft] ms prime returned no output (code=" + result.code + ")");
       }
     } catch (e) {
-      console.error("[mineshaft] gt prime failed:", e.message);
+      console.error("[mineshaft] ms prime failed:", e.message);
     }
 
   });
@@ -47,7 +47,7 @@ export default (pi) => {
     if (shouldCheckMail() && now - lastMailCheck >= 30000) {
       lastMailCheck = now;
       try {
-        const mailResult = await pi.exec("gt", ["mail", "check", "--inject"]);
+        const mailResult = await pi.exec("ms", ["mail", "check", "--inject"]);
         if (mailResult.code === 0 && mailResult.stdout.trim()) {
           mailContext = mailResult.stdout.trim();
           console.error("[mineshaft] mail check: new mail found");
@@ -99,12 +99,12 @@ export default (pi) => {
         cmd.includes("git checkout -b")
       ) {
         try {
-          const result = await pi.exec("gt", ["tap", "guard", "pr-workflow"]);
+          const result = await pi.exec("ms", ["tap", "guard", "pr-workflow"]);
           if (result.code !== 0) {
-            return { block: true, reason: result.stderr || "gt tap guard rejected this operation" };
+            return { block: true, reason: result.stderr || "ms tap guard rejected this operation" };
           }
         } catch (e) {
-          console.error("[mineshaft] gt tap guard failed:", e.message);
+          console.error("[mineshaft] ms tap guard failed:", e.message);
         }
       }
     }
@@ -113,9 +113,9 @@ export default (pi) => {
   // Stop equivalent — record API costs
   pi.on("session_shutdown", async (event, context) => {
     try {
-      await pi.exec("gt", ["costs", "record"]);
+      await pi.exec("ms", ["costs", "record"]);
     } catch (e) {
-      console.error("[mineshaft] gt costs record failed:", e.message);
+      console.error("[mineshaft] ms costs record failed:", e.message);
     }
   });
 };

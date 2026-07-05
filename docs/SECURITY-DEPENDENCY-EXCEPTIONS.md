@@ -11,8 +11,8 @@ security review.
 
 Scope:
 
-- `gt-model-eval/package.json`
-- `gt-model-eval/package-lock.json`
+- `ms-model-eval/package.json`
+- `ms-model-eval/package-lock.json`
 - `promptfoo` and transitive local evaluation dependencies
 
 Status:
@@ -25,18 +25,18 @@ Status:
 
 Risk decision:
 
-`gt-model-eval` is a private local evaluation harness. It is not packaged into
-the `gt` release archives, not published by the npm package, and not used by the
+`ms-model-eval` is a private local evaluation harness. It is not packaged into
+the `ms` release archives, not published by the npm package, and not used by the
 runtime CLI. The remaining findings require a breaking `promptfoo` change or an
 upstream transitive fix, so they are accepted for the local eval harness only.
 
 Required controls:
 
-- `npm audit --omit=dev` for `gt-model-eval/` must remain clean.
+- `npm audit --omit=dev` for `ms-model-eval/` must remain clean.
 - Do not expose `promptfoo view` or other eval servers on a public interface.
 - Do not commit generated eval result artifacts containing prompts, credentials,
   or model responses.
-- Renovate must include `gt-model-eval/package.json` so promptfoo updates are
+- Renovate must include `ms-model-eval/package.json` so promptfoo updates are
   proposed automatically.
 - Re-test and remove this exception when a compatible promptfoo update clears
   the remaining `uuid` advisory chain.
@@ -51,21 +51,21 @@ Scope:
 
 Status:
 
-- `govulncheck ./cmd/gt` is clean.
-- A repository scan excluding `gt-model-eval/node_modules` reports
+- `govulncheck ./cmd/ms` is clean.
+- A repository scan excluding `ms-model-eval/node_modules` reports
   `GO-2026-4887` and `GO-2026-4883` in Docker/Moby via the testcontainer
   graph. The advisories currently report no fixed Docker/Moby module version.
 
 Risk decision:
 
 The vulnerable Docker client dependency is in the testcontainer path used by
-test helpers. It is not in the production `cmd/gt` dependency graph. The
+test helpers. It is not in the production `cmd/ms` dependency graph. The
 affected Moby advisories concern Docker plugin behavior and are accepted for
 local testcontainer usage while no fixed module version is available.
 
 Required controls:
 
-- `govulncheck ./cmd/gt` must remain clean for release builds.
+- `govulncheck ./cmd/ms` must remain clean for release builds.
 - Do not import `internal/testutil` or testcontainer packages from production
   code.
 - Run testcontainer tests only against trusted local Docker daemons.

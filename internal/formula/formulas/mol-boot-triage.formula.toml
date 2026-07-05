@@ -30,7 +30,7 @@ Observe the current system state to inform triage decisions.
 tmux has-session -t hq-supervisor 2>/dev/null && echo "alive" || echo "dead"
 
 # If alive, what's the pane output showing?
-gt peek supervisor --lines 20
+ms peek supervisor --lines 20
 ```
 
 **Step 2: Check agent bead state**
@@ -44,16 +44,16 @@ bd show hq-supervisor 2>/dev/null
 **Step 3: Check recent activity**
 ```bash
 # Recent feed events
-gt feed --since 10m --plain | head -20
+ms feed --since 10m --plain | head -20
 
 # Recent wisps (operational state)
-ls -lt $GT_ROOT/.beads-wisp/*.wisp.json 2>/dev/null | head -5
+ls -lt $MS_ROOT/.beads-wisp/*.wisp.json 2>/dev/null | head -5
 ```
 
 **Step 4: Check Supervisor mail**
 ```bash
 # Does Supervisor have unread mail?
-gt mail inbox supervisor 2>/dev/null | head -10
+ms mail inbox supervisor 2>/dev/null | head -10
 ```
 
 Record observations for the decide step:
@@ -101,8 +101,8 @@ Signs of working:
 
 **Output**: Record decision as one of:
 - NOTHING: Let Supervisor continue
-- NUDGE: Gentle wake signal (gt nudge)
-- WAKE: Stronger wake (immediate gt nudge)
+- NUDGE: Gentle wake signal (ms nudge)
+- WAKE: Stronger wake (immediate ms nudge)
 - INTERRUPT: Force restart needed
 - START: Session is dead, start fresh
 """
@@ -120,19 +120,19 @@ No action needed. Log observation and exit.
 **NUDGE**
 ```bash
 # Use --mode=queue to avoid interrupting in-flight tool calls
-gt nudge --mode=queue supervisor "Boot check-in: you have pending work"
+ms nudge --mode=queue supervisor "Boot check-in: you have pending work"
 ```
 
 **WAKE**
 ```bash
 # Raw tmux send-keys is blocked for Boot; it can leave unsubmitted input staged.
-gt nudge --mode=immediate supervisor "Boot wake: please check your inbox and pending work"
+ms nudge --mode=immediate supervisor "Boot wake: please check your inbox and pending work"
 ```
 
 **INTERRUPT**
 ```bash
 # This is more aggressive - signals Supervisor to restart
-gt mail send supervisor -s "INTERRUPT: Boot detected stuck state" \
+ms mail send supervisor -s "INTERRUPT: Boot detected stuck state" \
   -m "Boot observed stuck state. Please check your context and consider handoff.
 
 Observations:
@@ -144,7 +144,7 @@ If you're making progress, please update your agent bead to reflect activity."
 **START**
 ```bash
 # Supervisor is dead - start it immediately
-gt supervisor start
+ms supervisor start
 echo "Boot started Supervisor session"
 ```
 
@@ -163,7 +163,7 @@ either processed them or crashed before seeing them.
 
 **Step 1: List Supervisor inbox**
 ```bash
-gt mail inbox supervisor --json 2>/dev/null
+ms mail inbox supervisor --json 2>/dev/null
 ```
 
 **Step 2: Archive stale handoffs**
@@ -174,13 +174,13 @@ For each message:
 
 ```bash
 # For each stale handoff:
-gt mail archive <message-id>
+ms mail archive <message-id>
 ```
 
 **Step 3: Archive Boot's own old mail**
 Boot doesn't need persistent inbox. Archive anything processed:
 ```bash
-gt mail inbox boot --json 2>/dev/null
+ms mail inbox boot --json 2>/dev/null
 # Archive any messages older than current session
 ```
 
@@ -194,7 +194,7 @@ needs = ["cleanup"]
 description = """
 Complete this Boot cycle.
 
-**In degraded mode (GT_DEGRADED=true)**
+**In degraded mode (MS_DEGRADED=true)**
 Exit directly - no handoff needed:
 ```bash
 # Log completion
@@ -205,7 +205,7 @@ exit 0
 **In normal mode**
 Write brief handoff for next Boot instance:
 ```bash
-gt mail send boot -s "Boot handoff" -m "Completed triage cycle.
+ms mail send boot -s "Boot handoff" -m "Completed triage cycle.
 Action: <action taken>
 Observations: <brief summary>
 Time: $(date)"
@@ -215,8 +215,8 @@ Then exit. The next daemon tick will spawn a fresh Boot.
 
 **Update status file**
 ```bash
-# The gt boot command handles this automatically
-# Status is written to $GT_ROOT/supervisor/dogs/boot/.boot-status.json
+# The ms boot command handles this automatically
+# Status is written to $MS_ROOT/supervisor/dogs/boot/.boot-status.json
 ```
 
 Boot is ephemeral by design. Each instance runs fresh.

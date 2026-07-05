@@ -134,12 +134,12 @@ func TestExecute_Success(t *testing.T) {
 
 	tmuxClient := &mockTmux{
 		envVars: map[string]map[string]string{
-			"gt-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/work"},
+			"ms-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/work"},
 		},
 	}
 
 	exec := newMockExecutor()
-	exec.paneIDs["gt-crew-bear"] = "%0"
+	exec.paneIDs["ms-crew-bear"] = "%0"
 
 	accounts := &config.AccountsConfig{
 		Accounts: map[string]config.Account{
@@ -157,11 +157,11 @@ func TestExecute_Success(t *testing.T) {
 
 	plan := &RotatePlan{
 		Assignments: map[string]string{
-			"gt-crew-bear": "personal",
+			"ms-crew-bear": "personal",
 		},
 	}
 
-	results := rotator.Execute(plan, []string{"gt-crew-bear"})
+	results := rotator.Execute(plan, []string{"ms-crew-bear"})
 
 	if len(results) != 1 {
 		t.Fatalf("expected 1 result, got %d", len(results))
@@ -181,7 +181,7 @@ func TestExecute_Success(t *testing.T) {
 	}
 
 	// Verify tmux operations occurred
-	if env, ok := exec.envSets["gt-crew-bear"]; !ok || env["CLAUDE_CONFIG_DIR"] != "/home/user/.claude-accounts/personal" {
+	if env, ok := exec.envSets["ms-crew-bear"]; !ok || env["CLAUDE_CONFIG_DIR"] != "/home/user/.claude-accounts/personal" {
 		t.Errorf("expected CLAUDE_CONFIG_DIR set to personal config dir")
 	}
 	if _, ok := exec.respawned["%0"]; !ok {
@@ -218,13 +218,13 @@ func TestExecute_MultiSession(t *testing.T) {
 	tmuxClient := &mockTmux{
 		envVars: map[string]map[string]string{
 			"hq-overseer":     {"CLAUDE_CONFIG_DIR": "/home/.claude/alpha"},
-			"gt-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/.claude/alpha"},
+			"ms-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/.claude/alpha"},
 		},
 	}
 
 	exec := newMockExecutor()
 	exec.paneIDs["hq-overseer"] = "%0"
-	exec.paneIDs["gt-crew-bear"] = "%1"
+	exec.paneIDs["ms-crew-bear"] = "%1"
 
 	accounts := &config.AccountsConfig{
 		Accounts: map[string]config.Account{
@@ -241,12 +241,12 @@ func TestExecute_MultiSession(t *testing.T) {
 
 	plan := &RotatePlan{
 		Assignments: map[string]string{
-			"gt-crew-bear": "beta",
+			"ms-crew-bear": "beta",
 			"hq-overseer":     "gamma",
 		},
 	}
 
-	results := rotator.Execute(plan, []string{"gt-crew-bear", "hq-overseer"})
+	results := rotator.Execute(plan, []string{"ms-crew-bear", "hq-overseer"})
 
 	rotated := 0
 	for _, r := range results {
@@ -288,11 +288,11 @@ func TestExecute_AccountNotFound(t *testing.T) {
 
 	plan := &RotatePlan{
 		Assignments: map[string]string{
-			"gt-test": "nonexistent",
+			"ms-test": "nonexistent",
 		},
 	}
 
-	results := rotator.Execute(plan, []string{"gt-test"})
+	results := rotator.Execute(plan, []string{"ms-test"})
 
 	if len(results) != 1 {
 		t.Fatalf("expected 1 result, got %d", len(results))
@@ -323,8 +323,8 @@ func TestExecute_SetEnvironmentFailure(t *testing.T) {
 	tmuxClient := &mockTmux{envVars: map[string]map[string]string{}}
 
 	exec := newMockExecutor()
-	exec.paneIDs["gt-test"] = "%0"
-	exec.setEnvErr["gt-test"] = fmt.Errorf("tmux set-env: session not found")
+	exec.paneIDs["ms-test"] = "%0"
+	exec.setEnvErr["ms-test"] = fmt.Errorf("tmux set-env: session not found")
 
 	accounts := &config.AccountsConfig{
 		Accounts: map[string]config.Account{
@@ -338,10 +338,10 @@ func TestExecute_SetEnvironmentFailure(t *testing.T) {
 	)
 
 	plan := &RotatePlan{
-		Assignments: map[string]string{"gt-test": "work"},
+		Assignments: map[string]string{"ms-test": "work"},
 	}
 
-	results := rotator.Execute(plan, []string{"gt-test"})
+	results := rotator.Execute(plan, []string{"ms-test"})
 
 	if len(results) != 1 {
 		t.Fatalf("expected 1 result, got %d", len(results))
@@ -372,7 +372,7 @@ func TestExecute_RespawnFailure(t *testing.T) {
 	tmuxClient := &mockTmux{envVars: map[string]map[string]string{}}
 
 	exec := newMockExecutor()
-	exec.paneIDs["gt-test"] = "%0"
+	exec.paneIDs["ms-test"] = "%0"
 	exec.respawnErr["%0"] = fmt.Errorf("respawn-pane failed")
 
 	accounts := &config.AccountsConfig{
@@ -387,10 +387,10 @@ func TestExecute_RespawnFailure(t *testing.T) {
 	)
 
 	plan := &RotatePlan{
-		Assignments: map[string]string{"gt-test": "work"},
+		Assignments: map[string]string{"ms-test": "work"},
 	}
 
-	results := rotator.Execute(plan, []string{"gt-test"})
+	results := rotator.Execute(plan, []string{"ms-test"})
 
 	if len(results) != 1 {
 		t.Fatalf("expected 1 result, got %d", len(results))
@@ -421,7 +421,7 @@ func TestExecute_RestartCommandFailure(t *testing.T) {
 	tmuxClient := &mockTmux{envVars: map[string]map[string]string{}}
 
 	exec := newMockExecutor()
-	exec.paneIDs["gt-test"] = "%0"
+	exec.paneIDs["ms-test"] = "%0"
 
 	accounts := &config.AccountsConfig{
 		Accounts: map[string]config.Account{
@@ -435,10 +435,10 @@ func TestExecute_RestartCommandFailure(t *testing.T) {
 	)
 
 	plan := &RotatePlan{
-		Assignments: map[string]string{"gt-test": "work"},
+		Assignments: map[string]string{"ms-test": "work"},
 	}
 
-	results := rotator.Execute(plan, []string{"gt-test"})
+	results := rotator.Execute(plan, []string{"ms-test"})
 
 	if len(results) != 1 {
 		t.Fatalf("expected 1 result, got %d", len(results))
@@ -470,7 +470,7 @@ func TestExecute_NonCriticalWarnings(t *testing.T) {
 
 	// Create an executor where non-critical ops fail
 	exec := &failingNonCriticalExecutor{
-		paneIDs: map[string]string{"gt-test": "%0"},
+		paneIDs: map[string]string{"ms-test": "%0"},
 	}
 
 	accounts := &config.AccountsConfig{
@@ -487,10 +487,10 @@ func TestExecute_NonCriticalWarnings(t *testing.T) {
 	)
 
 	plan := &RotatePlan{
-		Assignments: map[string]string{"gt-test": "work"},
+		Assignments: map[string]string{"ms-test": "work"},
 	}
 
-	results := rotator.Execute(plan, []string{"gt-test"})
+	results := rotator.Execute(plan, []string{"ms-test"})
 
 	// Should still succeed despite non-critical failures
 	if len(results) != 1 {
@@ -579,12 +579,12 @@ func TestExecute_TildeExpansion(t *testing.T) {
 
 	tmuxClient := &mockTmux{
 		envVars: map[string]map[string]string{
-			"gt-test": {"CLAUDE_CONFIG_DIR": "/home/user/.claude/work"},
+			"ms-test": {"CLAUDE_CONFIG_DIR": "/home/user/.claude/work"},
 		},
 	}
 
 	exec := newMockExecutor()
-	exec.paneIDs["gt-test"] = "%0"
+	exec.paneIDs["ms-test"] = "%0"
 
 	// Account uses tilde path
 	accounts := &config.AccountsConfig{
@@ -599,10 +599,10 @@ func TestExecute_TildeExpansion(t *testing.T) {
 	)
 
 	plan := &RotatePlan{
-		Assignments: map[string]string{"gt-test": "work"},
+		Assignments: map[string]string{"ms-test": "work"},
 	}
 
-	results := rotator.Execute(plan, []string{"gt-test"})
+	results := rotator.Execute(plan, []string{"ms-test"})
 
 	if len(results) != 1 {
 		t.Fatalf("expected 1 result, got %d", len(results))
@@ -612,7 +612,7 @@ func TestExecute_TildeExpansion(t *testing.T) {
 	}
 
 	// Verify the CLAUDE_CONFIG_DIR was set with expanded path (not tilde)
-	env := exec.envSets["gt-test"]
+	env := exec.envSets["ms-test"]
 	if configDir, ok := env["CLAUDE_CONFIG_DIR"]; ok {
 		if strings.HasPrefix(configDir, "~") {
 			t.Errorf("expected expanded path, got tilde path: %s", configDir)
@@ -675,7 +675,7 @@ func TestExecute_SaveUnlockedFailure(t *testing.T) {
 
 	tmuxClient := &mockTmux{envVars: map[string]map[string]string{}}
 	exec := newMockExecutor()
-	exec.paneIDs["gt-test"] = "%0"
+	exec.paneIDs["ms-test"] = "%0"
 
 	accounts := &config.AccountsConfig{
 		Accounts: map[string]config.Account{
@@ -689,7 +689,7 @@ func TestExecute_SaveUnlockedFailure(t *testing.T) {
 	)
 
 	plan := &RotatePlan{
-		Assignments: map[string]string{"gt-test": "work"},
+		Assignments: map[string]string{"ms-test": "work"},
 	}
 
 	// Pre-create the runtime directory (for lock file) then make the
@@ -704,7 +704,7 @@ func TestExecute_SaveUnlockedFailure(t *testing.T) {
 	}
 	t.Cleanup(func() { os.Chmod(overseerDir, 0755) })
 
-	results := rotator.Execute(plan, []string{"gt-test"})
+	results := rotator.Execute(plan, []string{"ms-test"})
 
 	// The pane was respawned (mutation succeeded) but SaveUnlocked failed.
 	// Expect: the successful rotation result + a lifecycle error result.
@@ -744,10 +744,10 @@ func TestExecute_CorruptStateFile(t *testing.T) {
 	)
 
 	plan := &RotatePlan{
-		Assignments: map[string]string{"gt-test": "work"},
+		Assignments: map[string]string{"ms-test": "work"},
 	}
 
-	results := rotator.Execute(plan, []string{"gt-test"})
+	results := rotator.Execute(plan, []string{"ms-test"})
 
 	// Should get a single lifecycle error (Load failed inside WithLock)
 	if len(results) != 1 {
@@ -779,7 +779,7 @@ func TestExecute_WithResume(t *testing.T) {
 
 	tmuxClient := &mockTmux{
 		envVars: map[string]map[string]string{
-			"gt-crew-bear": {
+			"ms-crew-bear": {
 				"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/work",
 				"CLAUDE_SESSION_ID": "test-session-abc123",
 			},
@@ -787,7 +787,7 @@ func TestExecute_WithResume(t *testing.T) {
 	}
 
 	exec := newMockExecutor()
-	exec.paneIDs["gt-crew-bear"] = "%0"
+	exec.paneIDs["ms-crew-bear"] = "%0"
 
 	accounts := &config.AccountsConfig{
 		Accounts: map[string]config.Account{
@@ -818,11 +818,11 @@ func TestExecute_WithResume(t *testing.T) {
 
 	plan := &RotatePlan{
 		Assignments: map[string]string{
-			"gt-crew-bear": "personal",
+			"ms-crew-bear": "personal",
 		},
 	}
 
-	results := rotator.Execute(plan, []string{"gt-crew-bear"})
+	results := rotator.Execute(plan, []string{"ms-crew-bear"})
 
 	if len(results) != 1 {
 		t.Fatalf("expected 1 result, got %d", len(results))
@@ -869,7 +869,7 @@ func TestExecute_ResumeSymlinkFails_FallsBack(t *testing.T) {
 
 	tmuxClient := &mockTmux{
 		envVars: map[string]map[string]string{
-			"gt-test": {
+			"ms-test": {
 				"CLAUDE_CONFIG_DIR": "/home/.claude/work",
 				"CLAUDE_SESSION_ID": "session-xyz",
 			},
@@ -877,7 +877,7 @@ func TestExecute_ResumeSymlinkFails_FallsBack(t *testing.T) {
 	}
 
 	exec := newMockExecutor()
-	exec.paneIDs["gt-test"] = "%0"
+	exec.paneIDs["ms-test"] = "%0"
 
 	accounts := &config.AccountsConfig{
 		Accounts: map[string]config.Account{
@@ -899,10 +899,10 @@ func TestExecute_ResumeSymlinkFails_FallsBack(t *testing.T) {
 	)
 
 	plan := &RotatePlan{
-		Assignments: map[string]string{"gt-test": "personal"},
+		Assignments: map[string]string{"ms-test": "personal"},
 	}
 
-	results := rotator.Execute(plan, []string{"gt-test"})
+	results := rotator.Execute(plan, []string{"ms-test"})
 
 	if len(results) != 1 {
 		t.Fatalf("expected 1 result, got %d", len(results))

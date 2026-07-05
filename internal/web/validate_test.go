@@ -11,10 +11,10 @@ import (
 	"time"
 )
 
-// newFastAPIHandler returns an APIHandler using "false" as the gt binary,
-// so command execution fails instantly instead of searching PATH for "gt".
+// newFastAPIHandler returns an APIHandler using "false" as the ms binary,
+// so command execution fails instantly instead of searching PATH for "ms".
 // Use in tests that verify validation wiring (expect 400 vs non-400) where
-// the gt binary is not needed.
+// the ms binary is not needed.
 func newFastAPIHandler(t *testing.T) *APIHandler {
 	t.Helper()
 	return &APIHandler{
@@ -35,7 +35,7 @@ func TestIsValidID(t *testing.T) {
 	}{
 		{"empty", "", false},
 		{"valid simple", "abc", true},
-		{"valid bead ID", "gt-abc12", true},
+		{"valid bead ID", "ms-abc12", true},
 		{"valid message ID", "msg.001", true},
 		{"alphanumeric start", "x7k2m", true},
 		{"leading dash", "-flag", false},
@@ -257,10 +257,10 @@ func TestExpandHomePath(t *testing.T) {
 // not just that the helper functions work.
 //
 // Limitation: these tests cannot verify that the -- sentinel prevents argument
-// injection end-to-end because gt/bd binaries are not available in the test
+// injection end-to-end because ms/bd binaries are not available in the test
 // environment. Tests that pass validation (expect 500, not 400) confirm the
 // web handler constructs args correctly, but actual -- sentinel behavior depends
-// on cobra/pflag in the target CLI. Both gt and bd use cobra, which respects --
+// on cobra/pflag in the target CLI. Both ms and bd use cobra, which respects --
 // natively. Full end-to-end verification requires integration tests with the
 // real binaries (e.g., via mineshaft-docker).
 
@@ -295,7 +295,7 @@ func TestHandler_MailSend_ValidAgentPath(t *testing.T) {
 	handler := newFastAPIHandler(t)
 
 	// rig/agent is a valid mail address — should NOT be rejected by validation.
-	// gt isn't available in test, so expect 500 (command failed), NOT 400 (validation).
+	// ms isn't available in test, so expect 500 (command failed), NOT 400 (validation).
 	body := `{"to": "myrig/agent", "subject": "test"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/mail/send", bytes.NewBufferString(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -311,7 +311,7 @@ func TestHandler_MailSend_ValidAgentPath(t *testing.T) {
 	if err := json.NewDecoder(w.Body).Decode(&resp); err == nil {
 		if errMsg, ok := resp["error"].(string); ok {
 			if strings.Contains(errMsg, "Invalid recipient") {
-				t.Errorf("expected gt execution error, got validation error: %s", errMsg)
+				t.Errorf("expected ms execution error, got validation error: %s", errMsg)
 			}
 		}
 	}
@@ -377,7 +377,7 @@ func TestHandler_IssueShow_ExternalPrefixID(t *testing.T) {
 
 	// external:prefix:id format should pass validation (unwrapped to raw ID).
 	// Expect 500 (bd not available), NOT 400 (validation failure).
-	req := httptest.NewRequest(http.MethodGet, "/api/issues/show?id=external:gt-mol:gt-mol-abc123", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/issues/show?id=external:ms-mol:ms-mol-abc123", nil)
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
@@ -421,8 +421,8 @@ func TestSetupHandler_Install_FlagPathInjection(t *testing.T) {
 	handler := NewSetupAPIHandler("test-token")
 
 	// Validates the validation layer: "--help" passes expandHomePath (it's a
-	// relative path) and reaches gt install. The -- sentinel in the args
-	// ensures gt install sees it as a path, not a flag — but that's verified
+	// relative path) and reaches ms install. The -- sentinel in the args
+	// ensures ms install sees it as a path, not a flag — but that's verified
 	// by the args construction, not by this HTTP-level test.
 	body := `{"path": "--help"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/install", bytes.NewBufferString(body))
@@ -431,8 +431,8 @@ func TestSetupHandler_Install_FlagPathInjection(t *testing.T) {
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
-	// Should get past validation to gt execution (not 400).
-	// The -- sentinel ensures gt install sees "--help" as a path, not a flag.
+	// Should get past validation to ms execution (not 400).
+	// The -- sentinel ensures ms install sees "--help" as a path, not a flag.
 	if w.Code == http.StatusBadRequest {
 		t.Errorf("POST /api/install with path=--help rejected as bad request (-- sentinel should protect)")
 	}
@@ -603,7 +603,7 @@ func TestHandler_SessionPreview_InvalidPrefix(t *testing.T) {
 	handler.ServeHTTP(w, req)
 
 	if w.Code != http.StatusBadRequest {
-		t.Errorf("GET /api/session/preview (no gt- prefix) status = %d, want %d", w.Code, http.StatusBadRequest)
+		t.Errorf("GET /api/session/preview (no ms- prefix) status = %d, want %d", w.Code, http.StatusBadRequest)
 	}
 }
 
@@ -611,7 +611,7 @@ func TestHandler_SessionPreview_InvalidChars(t *testing.T) {
 	handler := NewAPIHandler(30*time.Second, 60*time.Second, "test-token")
 
 	// Session name with shell metacharacters should be rejected
-	req := httptest.NewRequest(http.MethodGet, "/api/session/preview?session=gt-evil;rm+-rf+/", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/session/preview?session=ms-evil;rm+-rf+/", nil)
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
@@ -625,7 +625,7 @@ func TestHandler_SessionPreview_ValidName(t *testing.T) {
 
 	// A valid session name should pass validation and reach tmux capture-pane.
 	// tmux isn't available in test, so expect 500 (command failed), NOT 400 (validation).
-	req := httptest.NewRequest(http.MethodGet, "/api/session/preview?session=gt-mineshaft-nux", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/session/preview?session=ms-mineshaft-nux", nil)
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 

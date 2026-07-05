@@ -12,7 +12,7 @@ import (
 // down after all tests complete. This prevents test sessions from appearing on
 // the user's interactive tmux and avoids socket conflicts with other packages.
 func TestMain(m *testing.M) {
-	socket := fmt.Sprintf("gt-test-%d", os.Getpid())
+	socket := fmt.Sprintf("ms-test-%d", os.Getpid())
 
 	// Set defaultSocket so NewTmux() connects to the test server, not the
 	// user's personal server or the sentinel that indicates "no town context".
@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 	// The sentinel uses a name no individual test touches, so it outlives all
 	// per-test sessions. TestMain kills the whole server at the end.
 	if _, err := exec.LookPath("tmux"); err == nil {
-		_ = exec.Command("tmux", "-u", "-L", socket, "new-session", "-d", "-s", "gt-test-sentinel").Run()
+		_ = exec.Command("tmux", "-u", "-L", socket, "new-session", "-d", "-s", "ms-test-sentinel").Run()
 	}
 
 	code := m.Run()

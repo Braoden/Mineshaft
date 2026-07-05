@@ -32,8 +32,8 @@ The --steps flag records which patrol steps were executed vs skipped,
 making shortcutting visible in the ledger.
 
 Examples:
-  gt patrol report --summary "All clear, no issues" --steps "heartbeat:OK,inbox-check:OK,health-scan:OK"
-  gt patrol report --summary "Dolt latency elevated, filed escalation"`,
+  ms patrol report --summary "All clear, no issues" --steps "heartbeat:OK,inbox-check:OK,health-scan:OK"
+  ms patrol report --summary "Dolt latency elevated, filed escalation"`,
 	RunE: runPatrolReport,
 }
 
@@ -109,7 +109,7 @@ func runPatrolReport(cmd *cobra.Command, args []string) error {
 
 	// Close all descendant wisps first (recursive), then the patrol root.
 	// Without this, every patrol cycle leaks ~10 orphan wisps into the DB.
-	// If descendants can't be closed, abort so patrol retries next cycle (gt-7lx3).
+	// If descendants can't be closed, abort so patrol retries next cycle (ms-7lx3).
 	closed, closeDescErr := forceCloseDescendants(b, patrolID)
 	if closeDescErr != nil {
 		return fmt.Errorf("closing descendants of patrol %s (closed %d): %w", patrolID, closed, closeDescErr)

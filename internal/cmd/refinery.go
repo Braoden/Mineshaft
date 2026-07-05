@@ -35,13 +35,13 @@ var refineryCmd = &cobra.Command{
 	Long: `Manage the Refinery - the per-rig merge queue processor.
 
 The Refinery serializes all merges to main for a rig:
-  - Receives MRs submitted by miners (via gt done)
+  - Receives MRs submitted by miners (via ms done)
   - Rebases work branches onto latest main
   - Runs validation (tests, builds, checks)
   - Merges to main when clear
   - If conflict: spawns FRESH miner to re-implement (original is gone)
 
-Work flows: Miner completes → gt done → MR in queue → Refinery merges.
+Work flows: Miner completes → ms done → MR in queue → Refinery merges.
 The miner is already nuked by the time the Refinery processes.
 
 One Refinery per rig. Persistent agent that processes work as it arrives.
@@ -61,8 +61,8 @@ and merges them to the appropriate target branches.
 If rig is not specified, infers it from the current directory.
 
 Examples:
-  gt refinery start greenplace
-  gt refinery start              # infer rig from cwd`,
+  ms refinery start greenplace
+  ms refinery start              # infer rig from cwd`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runRefineryStart,
 }
@@ -111,8 +111,8 @@ or manual intervention.
 If rig is not specified, infers it from the current directory.
 
 Examples:
-  gt refinery attach greenplace
-  gt refinery attach          # infer rig from cwd`,
+  ms refinery attach greenplace
+  ms refinery attach          # infer rig from cwd`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runRefineryAttach,
 }
@@ -126,8 +126,8 @@ Stops the current session (if running) and starts a fresh one.
 If rig is not specified, infers it from the current directory.
 
 Examples:
-  gt refinery restart greenplace
-  gt refinery restart          # infer rig from cwd`,
+  ms refinery restart greenplace
+  ms refinery restart          # infer rig from cwd`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runRefineryRestart,
 }
@@ -141,12 +141,12 @@ When running multiple refinery workers in parallel, each worker must claim
 an MR before processing to prevent double-processing. Claims expire after
 10 minutes if not processed (for crash recovery).
 
-The worker ID is automatically determined from the GT_REFINERY_WORKER
+The worker ID is automatically determined from the MS_REFINERY_WORKER
 environment variable, or defaults to "refinery-1".
 
 Examples:
-  gt refinery claim gt-abc123
-  GT_REFINERY_WORKER=refinery-2 gt refinery claim gt-abc123`,
+  ms refinery claim ms-abc123
+  MS_REFINERY_WORKER=refinery-2 ms refinery claim ms-abc123`,
 	Args: cobra.ExactArgs(1),
 	RunE: runRefineryClaim,
 }
@@ -160,7 +160,7 @@ Called when processing fails and the MR should be retried by another worker.
 This clears the claim so other workers can pick up the MR.
 
 Examples:
-  gt refinery release gt-abc123`,
+  ms refinery release ms-abc123`,
 	Args: cobra.ExactArgs(1),
 	RunE: runRefineryRelease,
 }
@@ -175,8 +175,8 @@ claims (worker may have crashed). Useful for parallel refinery workers
 to find work.
 
 Examples:
-  gt refinery unclaimed
-  gt refinery unclaimed --json`,
+  ms refinery unclaimed
+  ms refinery unclaimed --json`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runRefineryUnclaimed,
 }
@@ -199,9 +199,9 @@ including timestamps, assignees, and branch existence. Designed for
 agent-side queue health analysis.
 
 Examples:
-  gt refinery ready
-  gt refinery ready --json
-  gt refinery ready --all --json`,
+  ms refinery ready
+  ms refinery ready --json
+  ms refinery ready --all --json`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runRefineryReady,
 }
@@ -218,8 +218,8 @@ Shows MRs waiting for conflict resolution or other blocking tasks to complete.
 When the blocking task closes, the MR will appear in 'ready'.
 
 Examples:
-  gt refinery blocked
-  gt refinery blocked --json`,
+  ms refinery blocked
+  ms refinery blocked --json`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runRefineryBlocked,
 }
@@ -281,7 +281,7 @@ func getRefineryManager(rigName string) (*refinery.Manager, *rig.Rig, string, er
 		}
 		rigName, err = inferRigFromCwd(townRoot)
 		if err != nil {
-			return nil, nil, "", fmt.Errorf("could not determine rig: %w\nUsage: gt refinery <command> <rig>", err)
+			return nil, nil, "", fmt.Errorf("could not determine rig: %w\nUsage: ms refinery <command> <rig>", err)
 		}
 	}
 
@@ -323,7 +323,7 @@ func runRefineryStart(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("%s Refinery started for %s\n", style.Bold.Render("✓"), rigName)
-	fmt.Printf("  %s\n", style.Dim.Render("Use 'gt refinery status' to check progress"))
+	fmt.Printf("  %s\n", style.Dim.Render("Use 'ms refinery status' to check progress"))
 	return nil
 }
 
@@ -571,13 +571,13 @@ func runRefineryRestart(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("%s Refinery restarted for %s\n", style.Bold.Render("✓"), rigName)
-	fmt.Printf("  %s\n", style.Dim.Render("Use 'gt refinery attach' to connect"))
+	fmt.Printf("  %s\n", style.Dim.Render("Use 'ms refinery attach' to connect"))
 	return nil
 }
 
 // getWorkerID returns the refinery worker ID from environment or default.
 func getWorkerID() string {
-	if id := os.Getenv("GT_REFINERY_WORKER"); id != "" {
+	if id := os.Getenv("MS_REFINERY_WORKER"); id != "" {
 		return id
 	}
 	return "refinery-1"
@@ -653,7 +653,7 @@ func runRefineryUnclaimed(cmd *cobra.Command, args []string) error {
 	b := beads.New(r.Path)
 	issues, err := b.ListMergeRequests(beads.ListOptions{
 		Status:   "open",
-		Label:    "gt:merge-request",
+		Label:    "ms:merge-request",
 		Priority: -1,
 		Rig:      rigName,
 	})

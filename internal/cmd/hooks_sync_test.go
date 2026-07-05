@@ -340,8 +340,8 @@ func TestSyncTargetCreatesClaudePromptDefaults(t *testing.T) {
 	if strings.Contains(string(data), "export PATH=") {
 		t.Fatal("synced settings contain stale export PATH marker")
 	}
-	if strings.Contains(string(data), "{{GT_BIN}}") {
-		t.Fatal("synced settings contain unresolved {{GT_BIN}} placeholder")
+	if strings.Contains(string(data), "{{MS_BIN}}") {
+		t.Fatal("synced settings contain unresolved {{MS_BIN}} placeholder")
 	}
 
 	var settings map[string]any

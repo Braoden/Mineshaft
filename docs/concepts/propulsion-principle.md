@@ -17,7 +17,7 @@ depends on one thing: when an agent finds work on their hook, they EXECUTE.
 When you were spawned, work was hooked for you. The system trusts that:
 
 1. You will find it on your hook
-2. You will understand what it is (`bd show` / `gt hook`)
+2. You will understand what it is (`bd show` / `ms hook`)
 3. You will BEGIN IMMEDIATELY
 
 This isn't about being a good worker. This is physics. Steam engines don't
@@ -31,8 +31,8 @@ memorize steps or wait for instructions - discover them:
 ### Orientation Commands
 
 ```bash
-gt hook              # What's on my hook?
-gt prime             # Shows inline formula checklist
+ms hook              # What's on my hook?
+ms prime             # Shows inline formula checklist
 bd show <issue-id>   # What's my assigned issue?
 ```
 
@@ -41,17 +41,17 @@ bd show <issue-id>   # What's my assigned issue?
 Formula steps are shown inline at prime time — no step beads to manage:
 
 ```bash
-gt prime             # See your checklist
+ms prime             # See your checklist
 # Work through each step in order
-gt done              # Submit and self-clean (miners)
-gt patrol report     # Close + next cycle (patrol agents)
+ms done              # Submit and self-clean (miners)
+ms patrol report     # Close + next cycle (patrol agents)
 ```
 
 No step closures, no `bd mol current`, no momentum-killing transitions.
 
 **The new workflow (propulsion):**
 ```bash
-bd close gt-abc.3 --continue
+bd close ms-abc.3 --continue
 ```
 
 One command. Auto-advance. Momentum preserved.
@@ -59,7 +59,7 @@ One command. Auto-advance. Momentum preserved.
 ### The Propulsion Loop
 
 ```
-1. gt hook                   # What's hooked?
+1. ms hook                   # What's hooked?
 2. bd mol current             # Where am I?
 3. Execute step
 4. bd close <step> --continue # Close and advance
@@ -79,7 +79,7 @@ Miner restarts with work on hook
 
 ## Startup Behavior
 
-1. Check hook (`gt hook`)
+1. Check hook (`ms hook`)
 2. Work hooked → EXECUTE immediately
 3. Hook empty → Check mail for attached work
 4. Nothing anywhere → ERROR: escalate to Witness

@@ -38,7 +38,7 @@ func TestDefaultConfig(t *testing.T) {
 
 func TestDaemonPathCandidatesIncludesLaunchdToolDirs(t *testing.T) {
 	home := filepath.Join("Users", "alice")
-	exePath := filepath.Join("opt", "homebrew", "bin", "gt")
+	exePath := filepath.Join("opt", "homebrew", "bin", "ms")
 
 	got := daemonPathCandidates(home, exePath)
 	for _, want := range []string{
@@ -203,7 +203,7 @@ case "$cmd" in
     echo "bd test"
     ;;
   show)
-    printf '%s\n' '[{"id":"gt-testrig-refinery","title":"Refinery","issue_type":"task","labels":["gt:agent","safety_stop:hq-vmrwr"],"status":"open","description":"role_type: refinery\nrig: testrig\nagent_state: idle"}]'
+    printf '%s\n' '[{"id":"ms-testrig-refinery","title":"Refinery","issue_type":"task","labels":["ms:agent","safety_stop:hq-vmrwr"],"status":"open","description":"role_type: refinery\nrig: testrig\nagent_state: idle"}]'
     ;;
   *)
     exit 0
@@ -625,7 +625,7 @@ func TestDaemon_StartsManagerAndScanner(t *testing.T) {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 
-	manager := NewMinecartManager(townRoot, func(string, ...interface{}) {}, "gt", 1*time.Hour, nil, nil, nil)
+	manager := NewMinecartManager(townRoot, func(string, ...interface{}) {}, "ms", 1*time.Hour, nil, nil, nil)
 	if err := manager.Start(); err != nil {
 		t.Fatalf("manager Start: %v", err)
 	}
@@ -644,7 +644,7 @@ func TestDaemon_StopsManagerAndScanner(t *testing.T) {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 
-	manager := NewMinecartManager(townRoot, func(string, ...interface{}) {}, "gt", 1*time.Hour, nil, nil, nil)
+	manager := NewMinecartManager(townRoot, func(string, ...interface{}) {}, "ms", 1*time.Hour, nil, nil, nil)
 	if err := manager.Start(); err != nil {
 		t.Fatalf("manager Start: %v", err)
 	}
@@ -664,7 +664,7 @@ func TestDaemon_StopsManagerAndScanner(t *testing.T) {
 
 // TestIsRunningFromPID_StalePIDReturnsNoError verifies that isRunningFromPID
 // returns (false, 0, nil) — not an error — when it finds and removes a stale
-// PID file. This is the fix for GH#2107: `gt daemon start` was treating the
+// PID file. This is the fix for GH#2107: `ms daemon start` was treating the
 // stale cleanup as an error, showing help text instead of starting the daemon.
 func TestIsRunningFromPID_StalePIDReturnsNoError(t *testing.T) {
 	t.Parallel()

@@ -81,7 +81,7 @@ func TestOutputStopBlock(t *testing.T) {
 
 func TestStopStateFilePath(t *testing.T) {
 	got := stopStateFilePath("mineshaft/miners/nux")
-	want := filepath.Join(os.TempDir(), "gt-signal-stop-mineshaft_miners_nux.json")
+	want := filepath.Join(os.TempDir(), "ms-signal-stop-mineshaft_miners_nux.json")
 	if got != want {
 		t.Errorf("stopStateFilePath() = %q, want %q", got, want)
 	}
@@ -118,7 +118,7 @@ func TestStopStateRoundtrip(t *testing.T) {
 
 func TestStopStateDedupPreventsInfiniteLoop(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "test-state.json")
-	reason := "[gt signal stop] You have 1 unread message(s). Most recent from mineshaft/witness: \"NUDGE\""
+	reason := "[ms signal stop] You have 1 unread message(s). Most recent from mineshaft/witness: \"NUDGE\""
 
 	// First call: no saved state, should block
 	state := loadStopState(path)
@@ -134,7 +134,7 @@ func TestStopStateDedupPreventsInfiniteLoop(t *testing.T) {
 	}
 
 	// Condition changes: different reason, should block again
-	newReason := "[gt signal stop] Work slung to you: gt-abc — \"Fix bug\""
+	newReason := "[ms signal stop] Work slung to you: ms-abc — \"Fix bug\""
 	if state.LastReason == newReason {
 		t.Fatal("different reason should not match")
 	}

@@ -8,7 +8,7 @@ mismatches that look like Dolt trouble.
 Use this checklist when any of these happen:
 
 - `bd` commands hang, time out, or return unexpected empty results.
-- `gt dolt status` reports unhealthy server state, high latency, stale PIDs, or
+- `ms dolt status` reports unhealthy server state, high latency, stale PIDs, or
   orphan test databases.
 - A Mineshaft command behaves differently from its documented or expected behavior
   and Dolt is part of the control path.
@@ -21,14 +21,14 @@ state needed to explain the incident.
 Capture non-fatal diagnostics first:
 
 ```bash
-gt dolt dump 2>&1 | tee /tmp/dolt-hang-$(date +%s).log
-gt dolt status 2>&1 | tee /tmp/dolt-status-$(date +%s).log
+ms dolt dump 2>&1 | tee /tmp/dolt-hang-$(date +%s).log
+ms dolt status 2>&1 | tee /tmp/dolt-status-$(date +%s).log
 ```
 
 Then escalate with the evidence path:
 
 ```bash
-gt escalate -s HIGH "Dolt: <symptom>" -m "Evidence: /tmp/dolt-status-..."
+ms escalate -s HIGH "Dolt: <symptom>" -m "Evidence: /tmp/dolt-status-..."
 ```
 
 ## RCA Capture Checklist
@@ -41,11 +41,11 @@ mismatch.
 ### RCA Capture
 
 - Trigger command:
-- Concurrent GT processes:
+- Concurrent MS processes:
 - Dolt pid/status:
 - Stale pid status:
 - Orphan test server status:
-- Suspected GT code path:
+- Suspected MS code path:
 - Expected behavior:
 - Observed behavior:
 - Evidence source:
@@ -56,14 +56,14 @@ mismatch.
 ## Field Notes
 
 - **Trigger command**: the exact command or agent action that exposed the issue.
-- **Concurrent GT processes**: active overseer, witness, refinery, miner, dog, or
+- **Concurrent MS processes**: active overseer, witness, refinery, miner, dog, or
   test processes that may share Dolt.
 - **Dolt pid/status**: server PID, health, latency, and port state from
-  `gt dolt status` or `gt dolt dump`.
+  `ms dolt status` or `ms dolt dump`.
 - **Stale pid status**: whether pid files point at missing or unrelated processes.
 - **Orphan test server status**: orphan database or test-server count, especially
   `testdb_*`, `beads_t*`, `beads_pt*`, or `doctest_*`.
-- **Suspected GT code path**: command, package, plugin, or template that most
+- **Suspected MS code path**: command, package, plugin, or template that most
   likely drove the behavior.
 - **Expected behavior**: what the command or workflow should have done.
 - **Observed behavior**: what actually happened, including errors and timings.

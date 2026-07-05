@@ -155,8 +155,8 @@ func (b *Beads) CreateChannelBead(name string, subscribers []string, createdBy s
 		"--id=" + id,
 		"--title=" + title,
 		"--description=" + description,
-		"--type=task", // Channels use task type with gt:channel label
-		"--labels=gt:channel",
+		"--type=task", // Channels use task type with ms:channel label
+		"--labels=ms:channel",
 		"--force", // Override prefix check (town beads may have mixed prefixes)
 	}
 
@@ -191,8 +191,8 @@ func (b *Beads) GetChannelBead(name string) (*Issue, *ChannelFields, error) {
 		return nil, nil, err
 	}
 
-	if !HasLabel(issue, "gt:channel") {
-		return nil, nil, fmt.Errorf("bead %s is not a channel bead (missing gt:channel label)", id)
+	if !HasLabel(issue, "ms:channel") {
+		return nil, nil, fmt.Errorf("bead %s is not a channel bead (missing ms:channel label)", id)
 	}
 
 	fields := ParseChannelFields(issue.Description)
@@ -210,8 +210,8 @@ func (b *Beads) GetChannelByID(id string) (*Issue, *ChannelFields, error) {
 		return nil, nil, err
 	}
 
-	if !HasLabel(issue, "gt:channel") {
-		return nil, nil, fmt.Errorf("bead %s is not a channel bead (missing gt:channel label)", id)
+	if !HasLabel(issue, "ms:channel") {
+		return nil, nil, fmt.Errorf("bead %s is not a channel bead (missing ms:channel label)", id)
 	}
 
 	fields := ParseChannelFields(issue.Description)
@@ -327,7 +327,7 @@ func (b *Beads) DeleteChannelBead(name string) error {
 
 // ListChannelBeads returns all channel beads.
 func (b *Beads) ListChannelBeads() (map[string]*ChannelFields, error) {
-	out, err := b.run("list", "--label=gt:channel", "--json")
+	out, err := b.run("list", "--label=ms:channel", "--json")
 	if err != nil {
 		return nil, err
 	}
@@ -399,7 +399,7 @@ func (b *Beads) EnforceChannelRetention(name string) error {
 
 	// Query messages in this channel (oldest first)
 	out, err := b.run("list",
-		"--label=gt:message",
+		"--label=ms:message",
 		"--label=channel:"+name,
 		"--json",
 		"--limit=0",
@@ -470,7 +470,7 @@ func (b *Beads) PruneAllChannels() (int, error) {
 
 		// Get messages with timestamps
 		out, err := b.run("list",
-			"--label=gt:message",
+			"--label=ms:message",
 			"--label=channel:"+name,
 			"--json",
 			"--limit=0",

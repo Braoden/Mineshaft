@@ -36,10 +36,10 @@ Use --all to include infrastructure agents (overseer, supervisor, witness, refin
 The message is sent as a nudge to each worker's Claude Code session.
 
 Examples:
-  gt broadcast "Check your mail"
-  gt broadcast --rig greenplace "New priority work available"
-  gt broadcast --all "System maintenance in 5 minutes"
-  gt broadcast --dry-run "Test message"`,
+  ms broadcast "Check your mail"
+  ms broadcast --rig greenplace "New priority work available"
+  ms broadcast --all "System maintenance in 5 minutes"
+  ms broadcast --dry-run "Test message"`,
 	Args: cobra.ExactArgs(1),
 	RunE: runBroadcast,
 }

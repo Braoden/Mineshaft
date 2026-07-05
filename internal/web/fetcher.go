@@ -207,7 +207,7 @@ func NewLiveMinecartFetcher() (*LiveMinecartFetcher, error) {
 
 	// Build a local prefix registry from the town's rigs.json so session
 	// name parsing works regardless of whether the package-level
-	// DefaultRegistry was initialized (gt-y24).
+	// DefaultRegistry was initialized (ms-y24).
 	registry, regErr := session.BuildPrefixRegistryFromTown(townRoot)
 	if regErr != nil {
 		log.Printf("dashboard: failed to build prefix registry: %v (falling back to default)", regErr)
@@ -260,7 +260,7 @@ func (f *LiveMinecartFetcher) FetchMinecarts() ([]MinecartRow, error) {
 	// Build minecart rows with activity data
 	rows := make([]MinecartRow, 0, len(minecarts))
 	for _, c := range minecarts {
-		if c.IssueType != "minecart" && !webMinecartHasLabel(c.Labels, "gt:minecart") {
+		if c.IssueType != "minecart" && !webMinecartHasLabel(c.Labels, "ms:minecart") {
 			continue
 		}
 		row := MinecartRow{
@@ -501,7 +501,7 @@ type workerDetail struct {
 }
 
 // getWorkersFromAssignees gets worker activity from tmux sessions based on issue assignees.
-// Assignees are in format "rigname/miners/minername" which maps to tmux session "gt-rigname-minername".
+// Assignees are in format "rigname/miners/minername" which maps to tmux session "ms-rigname-minername".
 func (f *LiveMinecartFetcher) getWorkersFromAssignees(details map[string]*issueDetail) map[string]*workerDetail {
 	result := make(map[string]*workerDetail)
 
@@ -538,7 +538,7 @@ func (f *LiveMinecartFetcher) getWorkersFromAssignees(details map[string]*issueD
 }
 
 // getSessionActivityForAssignee looks up tmux session activity for an assignee.
-// Assignee format: "rigname/miners/minername" -> session "gt-rigname-minername"
+// Assignee format: "rigname/miners/minername" -> session "ms-rigname-minername"
 func (f *LiveMinecartFetcher) getSessionActivityForAssignee(assignee string) *time.Time {
 	// Parse assignee: "roxas/miners/dag" -> rig="roxas", miner="dag"
 	parts := strings.Split(assignee, "/")
@@ -564,7 +564,7 @@ func (f *LiveMinecartFetcher) getSessionActivityForAssignee(assignee string) *ti
 		return nil
 	}
 
-	// Parse output: "gt-roxas-dag|1704312345"
+	// Parse output: "ms-roxas-dag|1704312345"
 	outputParts := strings.Split(output, "|")
 	if len(outputParts) < 2 {
 		return nil
@@ -583,8 +583,8 @@ func (f *LiveMinecartFetcher) getSessionActivityForAssignee(assignee string) *ti
 // This is used as a fallback when no specific assignee activity can be determined.
 // Returns nil if no miner sessions are running.
 func (f *LiveMinecartFetcher) getAllMinerActivity() *time.Time {
-	// List all tmux sessions matching gt-*-* pattern (miner sessions)
-	// Format: gt-{rig}-{miner}
+	// List all tmux sessions matching ms-*-* pattern (miner sessions)
+	// Format: ms-{rig}-{miner}
 	stdout, err := f.runTmuxCmd("list-sessions", "-F", "#{session_name}|#{session_activity}")
 	if err != nil {
 		return nil
@@ -605,7 +605,7 @@ func (f *LiveMinecartFetcher) getAllMinerActivity() *time.Time {
 		sessionName := parts[0]
 		// Check if it's a miner or crew session (skip infrastructure roles).
 		// Use the fetcher's own registry to avoid dependency on global
-		// DefaultRegistry initialization (gt-y24).
+		// DefaultRegistry initialization (ms-y24).
 		identity, err := session.ParseSessionNameWithRegistry(sessionName, f.registry)
 		if err != nil {
 			continue
@@ -870,7 +870,7 @@ func (f *LiveMinecartFetcher) FetchWorkers() ([]WorkerRow, error) {
 		sessionName := parts[0]
 
 		// Parse session name using the fetcher's own registry to avoid
-		// dependency on global DefaultRegistry initialization (gt-y24).
+		// dependency on global DefaultRegistry initialization (ms-y24).
 		identity, err := session.ParseSessionNameWithRegistry(sessionName, f.registry)
 		if err != nil {
 			log.Printf("dashboard: FetchWorkers: skipping session %q: %v", sessionName, err)
@@ -1061,7 +1061,7 @@ func parseActivityTimestamp(s string) (int64, bool) {
 // FetchMail fetches recent mail messages from the beads database.
 func (f *LiveMinecartFetcher) FetchMail() ([]MailRow, error) {
 	// List all message issues (mail)
-	stdout, err := f.runBdCmd(f.townRoot, "list", "--label=gt:message", "--json", "--limit=50")
+	stdout, err := f.runBdCmd(f.townRoot, "list", "--label=ms:message", "--json", "--limit=50")
 	if err != nil {
 		return nil, fmt.Errorf("listing mail: %w", err)
 	}
@@ -1311,7 +1311,7 @@ func (f *LiveMinecartFetcher) FetchDogs() ([]DogRow, error) {
 // FetchEscalations returns open escalations needing attention.
 func (f *LiveMinecartFetcher) FetchEscalations() ([]EscalationRow, error) {
 	// List open escalations
-	stdout, err := f.runBdCmd(f.townRoot, "list", "--label=gt:escalation", "--status=open", "--json")
+	stdout, err := f.runBdCmd(f.townRoot, "list", "--label=ms:escalation", "--status=open", "--json")
 	if err != nil {
 		return nil, nil // No escalations or bd not available
 	}
@@ -1415,7 +1415,7 @@ func (f *LiveMinecartFetcher) FetchHealth() (*HealthRow, error) {
 // FetchQueues returns work queues and their status.
 func (f *LiveMinecartFetcher) FetchQueues() ([]QueueRow, error) {
 	// List queue beads
-	stdout, err := f.runBdCmd(f.townRoot, "list", "--label=gt:queue", "--json")
+	stdout, err := f.runBdCmd(f.townRoot, "list", "--label=ms:queue", "--json")
 	if err != nil {
 		return nil, nil // No queues or bd not available
 	}
@@ -1500,7 +1500,7 @@ func (f *LiveMinecartFetcher) FetchSessions() ([]SessionRow, error) {
 			}
 		}
 
-		// Detect role from session name using fetcher's own registry (gt-y24)
+		// Detect role from session name using fetcher's own registry (ms-y24)
 		if identity, err := session.ParseSessionNameWithRegistry(name, f.registry); err == nil {
 			row.Rig = identity.Rig
 			row.Role = string(identity.Role)
@@ -1619,7 +1619,7 @@ func (f *LiveMinecartFetcher) FetchOverseer() (*OverseerStatus, error) {
 }
 
 func (f *LiveMinecartFetcher) resolveOverseerRuntime(sessionName string) string {
-	if agentName, err := fetcherGetSessionEnv(sessionName, "GT_AGENT"); err == nil && strings.TrimSpace(agentName) != "" {
+	if agentName, err := fetcherGetSessionEnv(sessionName, "MS_AGENT"); err == nil && strings.TrimSpace(agentName) != "" {
 		agentName = strings.TrimSpace(agentName)
 		rc, _, resolveErr := config.ResolveAgentConfigWithOverride(f.townRoot, "", agentName)
 		if resolveErr == nil {
@@ -1741,7 +1741,7 @@ func (f *LiveMinecartFetcher) FetchIssues() ([]IssueRow, error) {
 	var rows []IssueRow
 	for _, bead := range beads {
 		// Skip internal types (messages, minecarts, queues, merge-requests, wisps)
-		// Check both legacy type field and gt: labels
+		// Check both legacy type field and ms: labels
 		isInternal := false
 		switch bead.Type {
 		case "message", "minecart", "queue", "merge-request", "wisp", "agent":
@@ -1749,7 +1749,7 @@ func (f *LiveMinecartFetcher) FetchIssues() ([]IssueRow, error) {
 		}
 		for _, l := range bead.Labels {
 			switch l {
-			case "gt:message", "gt:minecart", "gt:queue", "gt:merge-request", "gt:wisp", "gt:agent":
+			case "ms:message", "ms:minecart", "ms:queue", "ms:merge-request", "ms:wisp", "ms:agent":
 				isInternal = true
 			}
 		}
@@ -1769,7 +1769,7 @@ func (f *LiveMinecartFetcher) FetchIssues() ([]IssueRow, error) {
 		// Format labels (skip internal labels)
 		var displayLabels []string
 		for _, label := range bead.Labels {
-			if !strings.HasPrefix(label, "gt:") && !strings.HasPrefix(label, "internal:") {
+			if !strings.HasPrefix(label, "ms:") && !strings.HasPrefix(label, "internal:") {
 				displayLabels = append(displayLabels, label)
 			}
 		}

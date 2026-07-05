@@ -6,9 +6,9 @@ import (
 	"github.com/steveyegge/mineshaft/internal/hooks"
 )
 
-// HooksBaseCheck warns when ~/.gt/hooks-base.json is missing.
-// Without this file, gt hooks diff has no reference point and cannot detect
-// drift when gt's default hook configuration changes after initial setup.
+// HooksBaseCheck warns when ~/.ms/hooks-base.json is missing.
+// Without this file, ms hooks diff has no reference point and cannot detect
+// drift when ms's default hook configuration changes after initial setup.
 type HooksBaseCheck struct {
 	FixableCheck
 }
@@ -19,7 +19,7 @@ func NewHooksBaseCheck() *HooksBaseCheck {
 		FixableCheck: FixableCheck{
 			BaseCheck: BaseCheck{
 				CheckName:        "hooks-base-missing",
-				CheckDescription: "Check that ~/.gt/hooks-base.json exists for drift detection",
+				CheckDescription: "Check that ~/.ms/hooks-base.json exists for drift detection",
 				CheckCategory:    CategoryHooks,
 			},
 		},
@@ -39,12 +39,12 @@ func (c *HooksBaseCheck) Run(ctx *CheckContext) *CheckResult {
 	return &CheckResult{
 		Name:    c.Name(),
 		Status:  StatusWarning,
-		Message: "hooks-base.json is missing — gt hooks diff cannot detect drift",
+		Message: "hooks-base.json is missing — ms hooks diff cannot detect drift",
 		Details: []string{
 			fmt.Sprintf("Expected at: %s", hooks.BasePath()),
 			"Without this file, hooks sync works but drift detection is unavailable.",
 		},
-		FixHint: "Run 'gt doctor --fix hooks-base-missing' or 'gt hooks base --show' to create it",
+		FixHint: "Run 'ms doctor --fix hooks-base-missing' or 'ms hooks base --show' to create it",
 	}
 }
 

@@ -42,7 +42,7 @@ const branchProtectionMarker = "Mineshaft branch protection"
 // It auto-reverts to main if a non-main branch was checked out in the town root.
 const branchProtectionScript = `# Mineshaft branch protection
 # Auto-reverts to main if a non-main branch is checked out in the town root.
-# The town root must stay on main to avoid breaking gt commands.
+# The town root must stay on main to avoid breaking ms commands.
 # NOTE: Git does NOT support pre-checkout hooks, so we auto-revert after.
 
 # Only check branch checkouts (not file checkouts)
@@ -104,7 +104,7 @@ func (c *BranchProtectionCheck) Run(ctx *CheckContext) *CheckResult {
 					"The pre-checkout hook was installed but git doesn't support it",
 					"Branch protection needs to be in post-checkout instead",
 				},
-				FixHint: "Run 'gt doctor --fix' to migrate to post-checkout",
+				FixHint: "Run 'ms doctor --fix' to migrate to post-checkout",
 			}
 		}
 	}
@@ -121,10 +121,10 @@ func (c *BranchProtectionCheck) Run(ctx *CheckContext) *CheckResult {
 			Message: "Post-checkout hook not installed",
 			Details: []string{
 				"Branch protection prevents accidental branch switches in the town root",
-				"Without it, a git checkout in ~/gt could switch to a miner branch",
-				"This can break gt commands (missing rigs.json, wrong configs)",
+				"Without it, a git checkout in ~/ms could switch to a miner branch",
+				"This can break ms commands (missing rigs.json, wrong configs)",
 			},
-			FixHint: "Run 'gt doctor --fix' to install branch protection",
+			FixHint: "Run 'ms doctor --fix' to install branch protection",
 		}
 	}
 
@@ -147,7 +147,7 @@ func (c *BranchProtectionCheck) Run(ctx *CheckContext) *CheckResult {
 				"Post-checkout hook exists but doesn't include branch protection",
 				"Branch protection auto-reverts if non-main branch is checked out",
 			},
-			FixHint: "Run 'gt doctor --fix' to add branch protection",
+			FixHint: "Run 'ms doctor --fix' to add branch protection",
 		}
 	}
 

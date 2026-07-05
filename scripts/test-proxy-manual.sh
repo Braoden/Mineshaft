@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Comprehensive manual test for gt-proxy-server and gt-proxy-client
+# Comprehensive manual test for ms-proxy-server and ms-proxy-client
 # Tests: server startup, admin API cert issuance, mTLS exec, client e2e, rate limiting
 
 set -e
@@ -15,8 +15,8 @@ NC='\033[0m' # No Color
 # Configuration
 PROXY_PORT=${PROXY_PORT:-9876}
 PROXY_ADMIN_PORT=${PROXY_ADMIN_PORT:-9877}
-TOWN_ROOT=${TOWN_ROOT:-${HOME}/gt}
-PROXY_DIR=${PROXY_DIR:-/tmp/gt-proxy-test}
+TOWN_ROOT=${TOWN_ROOT:-${HOME}/ms}
+PROXY_DIR=${PROXY_DIR:-/tmp/ms-proxy-test}
 TEST_RIG="testrig"
 TEST_MINER="testminer"
 FAILURES=0
@@ -49,8 +49,8 @@ log_section "Step 1: Building proxy binaries"
 rm -rf "${PROXY_DIR}"
 mkdir -p "${PROXY_DIR}/ca" "${PROXY_DIR}/bin" "${PROXY_DIR}/logs"
 
-go build -o "${PROXY_DIR}/bin/gt-proxy-server" ./cmd/gt-proxy-server && log_ok "gt-proxy-server" || log_fail "gt-proxy-server build"
-go build -o "${PROXY_DIR}/bin/gt-proxy-client" ./cmd/gt-proxy-client && log_ok "gt-proxy-client" || log_fail "gt-proxy-client build"
+go build -o "${PROXY_DIR}/bin/ms-proxy-server" ./cmd/ms-proxy-server && log_ok "ms-proxy-server" || log_fail "ms-proxy-server build"
+go build -o "${PROXY_DIR}/bin/ms-proxy-client" ./cmd/ms-proxy-client && log_ok "ms-proxy-client" || log_fail "ms-proxy-client build"
 
 # =============================================================================
 # STEP 2: Start proxy server
@@ -59,7 +59,7 @@ log_section "Step 2: Starting proxy server"
 
 log_info "Listening on 127.0.0.1:${PROXY_PORT}, admin on 127.0.0.1:${PROXY_ADMIN_PORT}"
 
-"${PROXY_DIR}/bin/gt-proxy-server" \
+"${PROXY_DIR}/bin/ms-proxy-server" \
     --listen "127.0.0.1:${PROXY_PORT}" \
     --admin-listen "127.0.0.1:${PROXY_ADMIN_PORT}" \
     --ca-dir "${PROXY_DIR}/ca" \
@@ -150,16 +150,16 @@ proxy_curl() {
         --cert "${CERT_FILE}" \
         --key "${KEY_FILE}" \
         --cacert "${CA_FILE}" \
-        --resolve "gt-proxy-server:${PROXY_PORT}:127.0.0.1" \
+        --resolve "ms-proxy-server:${PROXY_PORT}:127.0.0.1" \
         --max-time 10 \
         -X POST \
         -H "Content-Type: application/json" \
         "$@" \
-        "https://gt-proxy-server:${PROXY_PORT}/v1/exec"
+        "https://ms-proxy-server:${PROXY_PORT}/v1/exec"
 }
 
 # =============================================================================
-# STEP 5: Test mTLS exec — gt version
+# STEP 5: Test mTLS exec — ms version
 # =============================================================================
 log_section "Step 5: Testing mTLS exec"
 
@@ -172,12 +172,12 @@ test_exec() {
         --cert "${CERT_FILE}" \
         --key "${KEY_FILE}" \
         --cacert "${CA_FILE}" \
-        --resolve "gt-proxy-server:${PROXY_PORT}:127.0.0.1" \
+        --resolve "ms-proxy-server:${PROXY_PORT}:127.0.0.1" \
         --max-time 10 \
         -X POST \
         -H "Content-Type: application/json" \
         -d "${json_body}" \
-        "https://gt-proxy-server:${PROXY_PORT}/v1/exec" 2>/dev/null || echo "000")
+        "https://ms-proxy-server:${PROXY_PORT}/v1/exec" 2>/dev/null || echo "000")
 
     if [[ "${HTTP_CODE}" == "000" ]]; then
         log_fail "${desc}: TLS connection failed"
@@ -197,9 +197,9 @@ test_exec() {
     fi
 }
 
-test_exec "gt version"         '{"argv":["gt","version"]}'
-test_exec "gt status"          '{"argv":["gt","status"]}'
-test_exec "gt minecart --help"   '{"argv":["gt","minecart","--help"]}'
+test_exec "ms version"         '{"argv":["ms","version"]}'
+test_exec "ms status"          '{"argv":["ms","status"]}'
+test_exec "ms minecart --help"   '{"argv":["ms","minecart","--help"]}'
 test_exec "bd list --status=open" '{"argv":["bd","list","--status=open"]}'
 
 # =============================================================================
@@ -211,36 +211,36 @@ test_exec "forbidden: rm" '{"argv":["rm","-rf","/"]}' "403"
 test_exec "forbidden: bash" '{"argv":["bash","-c","id"]}' "403"
 
 # =============================================================================
-# STEP 7: gt-proxy-client end-to-end
+# STEP 7: ms-proxy-client end-to-end
 # =============================================================================
-log_section "Step 7: gt-proxy-client end-to-end (symlinked as gt)"
+log_section "Step 7: ms-proxy-client end-to-end (symlinked as ms)"
 
-# Create a symlink so toolNameFromArg0 returns "gt"
-ln -sf "${PROXY_DIR}/bin/gt-proxy-client" "${PROXY_DIR}/bin/gt"
-ln -sf "${PROXY_DIR}/bin/gt-proxy-client" "${PROXY_DIR}/bin/bd"
+# Create a symlink so toolNameFromArg0 returns "ms"
+ln -sf "${PROXY_DIR}/bin/ms-proxy-client" "${PROXY_DIR}/bin/ms"
+ln -sf "${PROXY_DIR}/bin/ms-proxy-client" "${PROXY_DIR}/bin/bd"
 
 # The server cert has 127.0.0.1 as an IP SAN, so the Go TLS client
 # can verify it when connecting by IP.
-export GT_PROXY_URL="https://127.0.0.1:${PROXY_PORT}"
-export GT_PROXY_CERT="${CERT_FILE}"
-export GT_PROXY_KEY="${KEY_FILE}"
-export GT_PROXY_CA="${CA_FILE}"
+export MS_PROXY_URL="https://127.0.0.1:${PROXY_PORT}"
+export MS_PROXY_CERT="${CERT_FILE}"
+export MS_PROXY_KEY="${KEY_FILE}"
+export MS_PROXY_CA="${CA_FILE}"
 
-log_info "GT_PROXY_URL=${GT_PROXY_URL}"
+log_info "MS_PROXY_URL=${MS_PROXY_URL}"
 
-# Test gt version
-E2E_OUT=$("${PROXY_DIR}/bin/gt" version 2>"${PROXY_DIR}/e2e_gt_err.log" || true)
+# Test ms version
+E2E_OUT=$("${PROXY_DIR}/bin/ms" version 2>"${PROXY_DIR}/e2e_gt_err.log" || true)
 E2E_ERR=$(cat "${PROXY_DIR}/e2e_gt_err.log" 2>/dev/null)
 
 if [[ -n "${E2E_OUT}" ]]; then
-    log_ok "gt version via proxy-client"
+    log_ok "ms version via proxy-client"
     log_info "stdout: ${E2E_OUT:0:120}"
 elif echo "${E2E_ERR}" | grep -q "proxy request failed"; then
-    log_fail "gt-proxy-client could not connect to proxy"
+    log_fail "ms-proxy-client could not connect to proxy"
     log_info "stderr: ${E2E_ERR:0:200}"
 else
-    # Connected but gt may exit non-zero (e.g. no town configured)
-    log_ok "gt version via proxy-client (non-zero exit expected without town)"
+    # Connected but ms may exit non-zero (e.g. no town configured)
+    log_ok "ms version via proxy-client (non-zero exit expected without town)"
     log_info "stderr: ${E2E_ERR:0:200}"
 fi
 
@@ -260,7 +260,7 @@ else
 fi
 
 # Unset proxy env vars for remaining tests
-unset GT_PROXY_URL GT_PROXY_CERT GT_PROXY_KEY GT_PROXY_CA
+unset MS_PROXY_URL MS_PROXY_CERT MS_PROXY_KEY MS_PROXY_CA
 
 # =============================================================================
 # STEP 8: Rate limiting test
@@ -276,12 +276,12 @@ for i in $(seq 1 25); do
         --cert "${CERT_FILE}" \
         --key "${KEY_FILE}" \
         --cacert "${CA_FILE}" \
-        --resolve "gt-proxy-server:${PROXY_PORT}:127.0.0.1" \
+        --resolve "ms-proxy-server:${PROXY_PORT}:127.0.0.1" \
         --max-time 5 \
         -X POST \
         -H "Content-Type: application/json" \
-        -d '{"argv":["gt","version"]}' \
-        "https://gt-proxy-server:${PROXY_PORT}/v1/exec" 2>/dev/null || echo "000")
+        -d '{"argv":["ms","version"]}' \
+        "https://ms-proxy-server:${PROXY_PORT}/v1/exec" 2>/dev/null || echo "000")
 
     if [[ "${HTTP_CODE}" == "200" ]]; then
         SUCCESS_COUNT=$((SUCCESS_COUNT + 1))

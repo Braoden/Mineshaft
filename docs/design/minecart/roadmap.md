@@ -22,7 +22,7 @@ bd create --type=task "Fix auth timeout"       → sh-task-1
 bd create --type=task "Add validation"         → sh-task-2
 bd create --type=task "Integration tests"      → sh-task-3
 bd dep add sh-task-2 sh-task-1 --type=blocks
-gt sling sh-task-1 sh-task-2 sh-task-3 mineshaft
+ms sling sh-task-1 sh-task-2 sh-task-3 mineshaft
 ```
 
 What happens today (with PR [#1759](https://github.com/steveyegge/mineshaft/pull/1759)):
@@ -45,7 +45,7 @@ What people expect:
 → creates: root epic, sub-epics, leaf tasks
 → adds: parent-child deps (organizational hierarchy)
 → adds: blocks deps (execution ordering between tasks)
-gt sling <task1> <task2> <task3> mineshaft
+ms sling <task1> <task2> <task3> mineshaft
 ```
 
 Same outcome as Workflow A: one shared minecart, blocks deps respected
@@ -56,8 +56,8 @@ blocked tasks wait for their blockers to close).
 ### Workflow C: Manual minecart creation
 
 ```
-gt minecart create "Auth overhaul" sh-task-1 sh-task-2 sh-task-3
-gt sling sh-task-1 mineshaft
+ms minecart create "Auth overhaul" sh-task-1 sh-task-2 sh-task-3
+ms sling sh-task-1 mineshaft
 → witness feeds sh-task-2 when sh-task-1 closes (serial)
 → witness feeds sh-task-3 when sh-task-2 closes (serial)
 → minecart auto-closes when all 3 are done
@@ -78,11 +78,11 @@ The ideal experience, achievable at the end of this roadmap:
 → adds: parent-child (hierarchy) + blocks (ordering) deps
 → sub-epics get integration branches
 
-gt minecart stage <epic-id>
+ms minecart stage <epic-id>
 → walks DAG, validates structure, displays route plan (tree + waves)
 → creates staged minecart tracking all beads
 
-gt minecart launch <minecart-id>
+ms minecart launch <minecart-id>
 → activates minecart, dispatches Wave 1 tasks
 → daemon feeds subsequent waves as tasks close
 → sub-epic status auto-managed (open → in_progress → closed)
@@ -155,18 +155,18 @@ can't deliver if the underlying pipeline drops tasks.
 **This milestone is independent of minecart work.** It can be done in
 parallel by a different contributor, or sequenced after Milestone 0.
 
-### Milestone 2: Stage and launch (`gt minecart stage`, `gt minecart launch`)
+### Milestone 2: Stage and launch (`ms minecart stage`, `ms minecart launch`)
 
-**Goal:** Enable the `/design-to-beads → gt minecart stage → gt minecart
+**Goal:** Enable the `/design-to-beads → ms minecart stage → ms minecart
 launch` workflow.
 
 **Depends on:** Milestone 0 (the feeder must respect blocks deps and
 filter types for staged minecarts to work correctly).
 
 **What ships (from Phase 2 PRD):**
-- `gt minecart stage <bead-id>` — DAG walking, validation, wave computation,
+- `ms minecart stage <bead-id>` — DAG walking, validation, wave computation,
   tree + wave route plan display
-- `gt minecart launch <minecart-id>` — activates minecart, dispatches Wave 1
+- `ms minecart launch <minecart-id>` — activates minecart, dispatches Wave 1
 - Epic status management (open → in_progress → closed)
 - Integration branch awareness (warnings when missing)
 - Staged status transitions (staged_ready ↔ staged_warnings → open)
@@ -183,10 +183,10 @@ filter types for staged minecarts to work correctly).
 **What this enables for Workflow B:**
 ```
 /design-to-beads PRD.md
-gt minecart stage <root-epic-id>
+ms minecart stage <root-epic-id>
 → see tree view + wave view
 → see warnings (missing integration branch, parked rigs, etc.)
-gt minecart launch <minecart-id>
+ms minecart launch <minecart-id>
 → Wave 1 tasks dispatched automatically
 → subsequent waves fed by daemon as tasks close
 → epic statuses update as children progress
@@ -227,7 +227,7 @@ step that examines the combined diff.
      - Missing tests for combined functionality
      - Merge conflict residue
    - Produces a review report
-   - If approved: runs `gt mq integration land <sub-epic-id>`
+   - If approved: runs `ms mq integration land <sub-epic-id>`
    - If rejected: creates a fix task, blocks the sub-epic on it
 
 3. **Minecart awareness**: The minecart stays open while the review runs.
@@ -238,7 +238,7 @@ step that examines the combined diff.
 **Integration points:**
 - `internal/minecart/operations.go` — after closing an epic, check if it
   has an integration branch. If yes, sling with review formula instead of
-  calling `gt mq integration land`.
+  calling `ms mq integration land`.
 - `internal/daemon/minecart_manager.go` — the event poll detects the
   review miner's bead close, feeds the next sub-epic or closes the
   root epic.
@@ -246,7 +246,7 @@ step that examines the combined diff.
 
 **design-to-beads changes needed:**
 - Ensure sub-epics get integration branches (either design-to-beads
-  creates them, or `gt minecart stage` creates them at stage time)
+  creates them, or `ms minecart stage` creates them at stage time)
 - Ensure `blocks` deps exist between sub-epics if sequential ordering
   is desired
 
@@ -258,7 +258,7 @@ step that examines the combined diff.
 - `FeederStrategy` interface
 - Hierarchy depth validation (opt-in)
 - Auto-generate `blocks` deps from hierarchy (`--infer-blocks`)
-- Auto-formula detection in `gt sling` (epic → coordinator formula)
+- Auto-formula detection in `ms sling` (epic → coordinator formula)
 - Coordinator miner strategy
 - Dynamic DAG decomposition
 
@@ -272,7 +272,7 @@ AI-driven task selection outperforms static dependency ordering.
 **Goal:** Layer agent-driven judgment on top of the mechanical
 MinecartManager so that large epics grind to completion autonomously.
 
-**Depends on:** Milestone 2 (stage-launch) for the `gt minecart stage/launch`
+**Depends on:** Milestone 2 (stage-launch) for the `ms minecart stage/launch`
 pipeline that mountains build on.
 
 **Design doc:** [mountain-eater.md](mountain-eater.md)
@@ -281,14 +281,14 @@ pipeline that mountains build on.
 
 | Component | Description |
 |-----------|-------------|
-| `gt mountain <epic>` | CLI: validate + stage + label + launch |
-| `gt mountain status` | CLI: rich progress view (active, ready, blocked, skipped) |
-| `gt mountain pause/resume/cancel` | CLI: lifecycle management |
+| `ms mountain <epic>` | CLI: validate + stage + label + launch |
+| `ms mountain status` | CLI: rich progress view (active, ready, blocked, skipped) |
+| `ms mountain pause/resume/cancel` | CLI: lifecycle management |
 | Witness failure tracking | Patrol step: count miner failures per minecart issue, auto-skip after 3 |
 | Supervisor mountain-audit | Patrol step: periodic progress check, dispatch Dog on stall |
 | `mol-mountain-dog` formula | Dog formula: investigate stall, sling orphaned issues, escalate |
 | MinecartManager skip-after-N | Global: stranded scan stops re-slinging repeatedly-failed issues |
-| Enhanced minecart status | Global: `gt minecart status` shows active miners, ready front, blocked issues |
+| Enhanced minecart status | Global: `ms minecart status` shows active miners, ready front, blocked issues |
 
 **Key insight:** No agent holds the thread. The `mountain` label on a
 minecart triggers patrol behavior in Witness (failure tracking) and Supervisor
@@ -299,7 +299,7 @@ layers handle the 20% that gets stuck.
 **Global improvements (benefit all minecarts):**
 - Miner failure tracking (Witness)
 - Skip-after-N-failures in stranded scan (MinecartManager)
-- Enhanced `gt minecart status` output
+- Enhanced `ms minecart status` output
 
 ---
 
@@ -312,7 +312,7 @@ Milestone 0: Foundation  ← MERGED
   │                          │
   v                          v
 Milestone 1: Pipeline    Milestone 2: Stage/Launch
-  (done/refinery fixes)    (gt minecart stage/launch)
+  (done/refinery fixes)    (ms minecart stage/launch)
   │                          │
   │                          ├───────────────────────┐
   │                          v                       v
@@ -341,15 +341,15 @@ workflow, it needs:
 | Change | When needed | Who |
 |--------|------------|-----|
 | Create `blocks` deps between sub-epics (not just between tasks) | Milestone 2 | design-to-beads plugin |
-| Create integration branches for sub-epics | Milestone 3 | design-to-beads plugin or `gt minecart stage` |
-| Output the root epic ID for `gt minecart stage` input | Milestone 2 | design-to-beads plugin |
+| Create integration branches for sub-epics | Milestone 3 | design-to-beads plugin or `ms minecart stage` |
+| Output the root epic ID for `ms minecart stage` input | Milestone 2 | design-to-beads plugin |
 
 The current plugin already creates blocks deps between tasks. The gap is
 inter-sub-epic ordering: if Sub-Epic A should complete before Sub-Epic B
 starts, a `blocks` dep between them (or between A's last task and B's
 first task) must exist.
 
-If design-to-beads doesn't create inter-sub-epic blocks deps, `gt minecart
+If design-to-beads doesn't create inter-sub-epic blocks deps, `ms minecart
 stage` will show them dispatching in parallel (Wave 1), which may or may
 not be desired. The `--infer-blocks` flag (Milestone 4) can auto-generate
 these from creation order, but explicit deps from the PRD structure are

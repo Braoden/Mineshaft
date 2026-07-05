@@ -30,19 +30,19 @@ var uninstallCmd = &cobra.Command{
 
 By default, removes:
   - Shell integration (~/.zshrc or ~/.bashrc)
-  - Wrapper scripts (~/bin/gt-codex, ~/bin/gt-gemini, ~/bin/gt-opencode)
+  - Wrapper scripts (~/bin/ms-codex, ~/bin/ms-gemini, ~/bin/ms-opencode)
   - State directory (~/.local/state/mineshaft/)
   - Config directory (~/.config/mineshaft/)
   - Cache directory (~/.cache/mineshaft/)
 
-The workspace (e.g., ~/gt) is NOT removed unless --workspace is specified.
+The workspace (e.g., ~/ms) is NOT removed unless --workspace is specified.
 
 Use --force to skip confirmation prompts.
 
 Examples:
-  gt uninstall                    # Remove Mineshaft, keep workspace
-  gt uninstall --workspace        # Also remove workspace directory
-  gt uninstall --force            # Skip confirmation`,
+  ms uninstall                    # Remove Mineshaft, keep workspace
+  ms uninstall --workspace        # Also remove workspace directory
+  ms uninstall --force            # Skip confirmation`,
 	RunE: runUninstall,
 }
 
@@ -143,8 +143,8 @@ func runUninstall(cmd *cobra.Command, args []string) error {
 	fmt.Printf("%s Mineshaft has been uninstalled\n", style.Success.Render("✓"))
 	fmt.Println()
 	fmt.Println("To reinstall, run:")
-	fmt.Printf("  %s\n", style.Dim.Render("go install github.com/steveyegge/mineshaft/cmd/gt@latest"))
-	fmt.Printf("  %s\n", style.Dim.Render("gt install ~/gt --shell"))
+	fmt.Printf("  %s\n", style.Dim.Render("go install github.com/steveyegge/mineshaft/cmd/ms@latest"))
+	fmt.Printf("  %s\n", style.Dim.Render("ms install ~/ms --shell"))
 
 	return nil
 }
@@ -156,7 +156,7 @@ func findWorkspaceForUninstall() string {
 	}
 
 	candidates := []string{
-		filepath.Join(home, "gt"),
+		filepath.Join(home, "ms"),
 		filepath.Join(home, "mineshaft"),
 	}
 

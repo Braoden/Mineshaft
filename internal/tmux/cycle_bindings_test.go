@@ -7,12 +7,12 @@ import (
 
 // TestIsGTBindingCurrent_DetectsStalePattern verifies that isGTBindingCurrent
 // returns false when the baked-in pattern doesn't match the current pattern.
-// This is the core of the gt rig add fix: after adding a rig, the prefix
+// This is the core of the ms rig add fix: after adding a rig, the prefix
 // pattern changes and existing bindings become stale.
 func TestIsGTBindingCurrent_DetectsStalePattern(t *testing.T) {
 	tm := newTestTmux(t)
 
-	session := "gt-test-stale-" + t.Name()
+	session := "ms-test-stale-" + t.Name()
 	_ = tm.KillSession(session)
 	defer func() { _ = tm.KillSession(session) }()
 
@@ -21,11 +21,11 @@ func TestIsGTBindingCurrent_DetectsStalePattern(t *testing.T) {
 	}
 
 	// Install a binding with an OLD pattern (missing a hypothetical "qu" prefix)
-	oldPattern := "^(gt|hq)-"
+	oldPattern := "^(ms|hq)-"
 	oldIfShell := "echo '#{session_name}' | grep -Eq '" + oldPattern + "'"
 	if _, err := tm.run("bind-key", "-T", "prefix", "n",
 		"if-shell", oldIfShell,
-		"run-shell 'gt cycle next --session #{session_name} --client #{client_tty}'",
+		"run-shell 'ms cycle next --session #{session_name} --client #{client_tty}'",
 		"next-window"); err != nil {
 		t.Fatalf("installing old binding: %v", err)
 	}
@@ -36,7 +36,7 @@ func TestIsGTBindingCurrent_DetectsStalePattern(t *testing.T) {
 	}
 
 	// But the pattern is stale — a new pattern with "qu" should not match
-	newPattern := "^(gt|hq|qu)-"
+	newPattern := "^(ms|hq|qu)-"
 	if tm.isGTBindingCurrent("prefix", "n", newPattern) {
 		t.Error("expected isGTBindingCurrent to return false for stale pattern")
 	}
@@ -53,7 +53,7 @@ func TestIsGTBindingCurrent_DetectsStalePattern(t *testing.T) {
 func TestSetCycleBindings_RefreshesStalePattern(t *testing.T) {
 	tm := newTestTmux(t)
 
-	session := "gt-test-refresh-" + t.Name()
+	session := "ms-test-refresh-" + t.Name()
 	_ = tm.KillSession(session)
 	defer func() { _ = tm.KillSession(session) }()
 
@@ -61,18 +61,18 @@ func TestSetCycleBindings_RefreshesStalePattern(t *testing.T) {
 		t.Fatalf("session creation: %v", err)
 	}
 
-	// Install a binding with a STALE pattern (only gt|hq, missing other prefixes)
-	stalePattern := "^(gt|hq)-"
+	// Install a binding with a STALE pattern (only ms|hq, missing other prefixes)
+	stalePattern := "^(ms|hq)-"
 	staleIfShell := "echo '#{session_name}' | grep -Eq '" + stalePattern + "'"
 	if _, err := tm.run("bind-key", "-T", "prefix", "n",
 		"if-shell", staleIfShell,
-		"run-shell 'gt cycle next --session #{session_name} --client #{client_tty}'",
+		"run-shell 'ms cycle next --session #{session_name} --client #{client_tty}'",
 		"next-window"); err != nil {
 		t.Fatalf("installing stale binding: %v", err)
 	}
 	if _, err := tm.run("bind-key", "-T", "prefix", "p",
 		"if-shell", staleIfShell,
-		"run-shell 'gt cycle prev --session #{session_name} --client #{client_tty}'",
+		"run-shell 'ms cycle prev --session #{session_name} --client #{client_tty}'",
 		"previous-window"); err != nil {
 		t.Fatalf("installing stale binding for p: %v", err)
 	}

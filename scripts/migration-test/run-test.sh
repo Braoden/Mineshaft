@@ -10,7 +10,7 @@
 #   4. Validate results
 #   5. Reset to v0.5.0 state (optional, for re-runs)
 #
-# This script is designed for the GCE migration test lab VM (gt-mtte).
+# This script is designed for the GCE migration test lab VM (ms-mtte).
 # It can also be run locally for development.
 
 set -e
@@ -139,11 +139,11 @@ else
     # Consolidate Dolt databases
     log "Consolidating Dolt databases..."
     cd "$TOWN_ROOT"
-    gt dolt migrate 2>&1 || warn "gt dolt migrate returned non-zero"
+    ms dolt migrate 2>&1 || warn "ms dolt migrate returned non-zero"
 
     # Start Dolt server
     log "Starting Dolt server..."
-    gt dolt start 2>&1 || warn "gt dolt start returned non-zero"
+    ms dolt start 2>&1 || warn "ms dolt start returned non-zero"
 
     log "Phase 4 complete"
 fi

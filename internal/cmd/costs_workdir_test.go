@@ -26,12 +26,12 @@ import (
 func TestQuerySessionEvents_FindsEventsFromAllLocations(t *testing.T) {
 	// Skip: bd CLI 0.47.2 has a bug where database writes don't commit
 	// ("sql: database is closed" during auto-flush). This affects all tests
-	// that create issues via bd create. See gt-lnn1xn for tracking.
+	// that create issues via bd create. See ms-lnn1xn for tracking.
 	t.Skip("bd CLI 0.47.2 bug: database writes don't commit")
 
-	// Skip if gt and bd are not installed
-	if _, err := exec.LookPath("gt"); err != nil {
-		t.Skip("gt not installed, skipping integration test")
+	// Skip if ms and bd are not installed
+	if _, err := exec.LookPath("ms"); err != nil {
+		t.Skip("ms not installed, skipping integration test")
 	}
 	if _, err := exec.LookPath("bd"); err != nil {
 		t.Skip("bd not installed, skipping integration test")
@@ -40,7 +40,7 @@ func TestQuerySessionEvents_FindsEventsFromAllLocations(t *testing.T) {
 	// Skip when running inside a Mineshaft workspace - this integration test
 	// creates a separate workspace and the subprocesses can interact with
 	// the parent workspace's daemon, causing hangs.
-	if os.Getenv("GT_TOWN_ROOT") != "" || os.Getenv("BD_ACTOR") != "" {
+	if os.Getenv("MS_TOWN_ROOT") != "" || os.Getenv("BD_ACTOR") != "" {
 		t.Skip("skipping integration test inside Mineshaft workspace (use 'go test' outside workspace)")
 	}
 
@@ -53,20 +53,20 @@ func TestQuerySessionEvents_FindsEventsFromAllLocations(t *testing.T) {
 		t.Fatalf("creating town directory: %v", err)
 	}
 
-	// Initialize a git repo (required for gt install)
+	// Initialize a git repo (required for ms install)
 	gitInitCmd := exec.Command("git", "init")
 	gitInitCmd.Dir = townRoot
 	if out, err := gitInitCmd.CombinedOutput(); err != nil {
 		t.Fatalf("git init: %v\n%s", err, out)
 	}
 
-	// Use gt install to set up the town
-	// Clear GT environment variables to isolate test from parent workspace
-	gtInstallCmd := exec.Command("gt", "install")
+	// Use ms install to set up the town
+	// Clear MS environment variables to isolate test from parent workspace
+	gtInstallCmd := exec.Command("ms", "install")
 	gtInstallCmd.Dir = townRoot
 	gtInstallCmd.Env = testutil.CleanGTEnv()
 	if out, err := gtInstallCmd.CombinedOutput(); err != nil {
-		t.Fatalf("gt install: %v\n%s", err, out)
+		t.Fatalf("ms install: %v\n%s", err, out)
 	}
 
 	// Create a bare repo to use as the rig source
@@ -100,12 +100,12 @@ func TestQuerySessionEvents_FindsEventsFromAllLocations(t *testing.T) {
 		}
 	}
 
-	// Add rig using gt rig add
-	rigAddCmd := exec.Command("gt", "rig", "add", "testrig", bareRepo, "--prefix=tr")
+	// Add rig using ms rig add
+	rigAddCmd := exec.Command("ms", "rig", "add", "testrig", bareRepo, "--prefix=tr")
 	rigAddCmd.Dir = townRoot
 	rigAddCmd.Env = testutil.CleanGTEnv()
 	if out, err := rigAddCmd.CombinedOutput(); err != nil {
-		t.Fatalf("gt rig add: %v\n%s", err, out)
+		t.Fatalf("ms rig add: %v\n%s", err, out)
 	}
 
 	// Find the rig path
@@ -135,7 +135,7 @@ func TestQuerySessionEvents_FindsEventsFromAllLocations(t *testing.T) {
 	t.Logf("Created town event: %s", string(townOut))
 
 	// Create a session.ended event in RIG beads (simulating miner)
-	rigEventPayload := `{"cost_usd":2.50,"session_id":"gt-testrig-toast","role":"miner","rig":"testrig","worker":"toast","ended_at":"2026-01-12T11:00:00Z"}`
+	rigEventPayload := `{"cost_usd":2.50,"session_id":"ms-testrig-toast","role":"miner","rig":"testrig","worker":"toast","ended_at":"2026-01-12T11:00:00Z"}`
 	rigEventCmd := exec.Command("bd", "create",
 		"--type=event",
 		"--title=Rig session ended",

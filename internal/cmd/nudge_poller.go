@@ -39,7 +39,7 @@ This command runs as a long-lived background process. It exits when:
   - It receives SIGTERM (from StopPoller or session teardown)
   - The poll loop encounters an unrecoverable error
 
-Normally launched automatically by 'gt crew start' for non-Claude agents.
+Normally launched automatically by 'ms crew start' for non-Claude agents.
 Not intended for direct user invocation.`,
 	Args: cobra.ExactArgs(1),
 	RunE: runNudgePoller,
@@ -72,11 +72,11 @@ func runNudgePoller(cmd *cobra.Command, args []string) error {
 
 	// Resolve nudge options once at startup: if the target agent uses Escape
 	// as cancel (e.g., Gemini CLI), skip the Escape keystroke during delivery
-	// to avoid canceling in-flight generation. (GH#gt-wasn)
+	// to avoid canceling in-flight generation. (GH#ms-wasn)
 	nudgeOpts := tmux.NudgeOpts{}
 	agentName := ""
 	hasPromptDetection := false
-	if name, err := t.GetEnvironment(sessionName, "GT_AGENT"); err == nil && name != "" {
+	if name, err := t.GetEnvironment(sessionName, "MS_AGENT"); err == nil && name != "" {
 		agentName = name
 		if preset := config.GetAgentPresetByName(agentName); preset != nil {
 			hasPromptDetection = preset.ReadyPromptPrefix != ""

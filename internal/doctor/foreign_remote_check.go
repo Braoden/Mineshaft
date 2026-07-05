@@ -7,7 +7,7 @@ import (
 )
 
 // ForeignRemoteCheck detects git remotes in the town repo that point to
-// unrelated repositories. The town repo (~/gt, tracking stevey-gt) should
+// unrelated repositories. The town repo (~/ms, tracking stevey-ms) should
 // only have its own origin remote. Remotes for rig repos (mineshaft, beads)
 // pollute the ref space with unrelated history and cause confusion — agents
 // comparing branches across unrelated remotes see phantom divergence.
@@ -126,7 +126,7 @@ func (c *ForeignRemoteCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:  StatusWarning,
 		Message: fmt.Sprintf("Found %d foreign remote(s): %s", len(c.foreignRemotes), strings.Join(names, ", ")),
 		Details: details,
-		FixHint: "Run 'gt doctor --fix' to remove foreign remotes",
+		FixHint: "Run 'ms doctor --fix' to remove foreign remotes",
 	}
 }
 

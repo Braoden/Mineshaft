@@ -9,7 +9,7 @@ mail delivery by replying to the overseer, and executes a test task.
 
 Before slinging this formula, configure the target agent:
 
-**1. Set the miner agent in town settings** (`~/gt/settings/config.json`):
+**1. Set the miner agent in town settings** (`~/ms/settings/config.json`):
 ```json
 {
     "role_agents": {
@@ -18,7 +18,7 @@ Before slinging this formula, configure the target agent:
 }
 ```
 
-Or override at rig level (`~/gt/<rig>/settings/config.json`):
+Or override at rig level (`~/ms/<rig>/settings/config.json`):
 ```json
 {
     "role_agents": {
@@ -57,7 +57,7 @@ bd close <stale-id> --reason "stale bead from previous miner session"
 
 **5. Sling and run the overseer-side validation protocol:**
 
-`gt sling` "cooks" the formula: it reads the [[steps]] below, creates a parent
+`ms sling` "cooks" the formula: it reads the [[steps]] below, creates a parent
 epic bead (the formula itself) with one child wisp per step, wires up the
 dependency chain from the `needs` fields, hooks the epic to a fresh miner,
 and nudges it to start. The miner then autonomously works through the wisps
@@ -65,43 +65,43 @@ in dependency order.
 
 ```bash
 # 1. Sling the formula (this cooks it into an epic + child wisps automatically)
-gt sling agent-validation sfmineshaft
+ms sling agent-validation sfmineshaft
 # Note the miner name from the output (e.g., "obsidian")
 
 # 2. Wait for miner to boot (~30s for pi, ~15s for claude)
 sleep 30
 
 # 3. Send the miner a test mail
-gt mail send sfmineshaft/miners/<name> -s "VALIDATION: mail test" -m "Reply with your identity to confirm you received Mineshaft context."
+ms mail send sfmineshaft/miners/<name> -s "VALIDATION: mail test" -m "Reply with your identity to confirm you received Mineshaft context."
 
 # 4. Wait for the miner's reply (check inbox)
 #    The reply should contain: role, name, rig, agent runtime, hooked bead
-gt mail inbox   # Look for "VALIDATION: identity confirmed"
-gt mail read <reply-id>
+ms mail inbox   # Look for "VALIDATION: identity confirmed"
+ms mail read <reply-id>
 
 # 5. Verify the reply contains VALIDATION_MAIL_OK and correct identity info
 
 # 6. Wait for the miner to complete and hand off
-#    The miner will run gt done when finished. Check:
-gt miner status sfmineshaft/<name>   # Should show "done" or session ended
-gt mail inbox                        # Look for handoff mail
+#    The miner will run ms done when finished. Check:
+ms miner status sfmineshaft/<name>   # Should show "done" or session ended
+ms mail inbox                        # Look for handoff mail
 ```
 
 **Validation is complete when:**
 - Miner replied with correct identity (role, rig, agent runtime)
 - Miner completed all formula steps
-- Miner handed off via gt done
+- Miner handed off via ms done
 
 ## Usage
 
 ```bash
 # Set agent, then sling
-# In ~/gt/settings/config.json: "role_agents": {"miner": "pi"}
-gt sling agent-validation sfmineshaft
+# In ~/ms/settings/config.json: "role_agents": {"miner": "pi"}
+ms sling agent-validation sfmineshaft
 
 # Or for Claude (default):
 # "role_agents": {"miner": "opus-46"}
-gt sling agent-validation sfmineshaft
+ms sling agent-validation sfmineshaft
 ```
 
 ## What it does
@@ -109,7 +109,7 @@ gt sling agent-validation sfmineshaft
 1. **Context**: Verifies Mineshaft identity, role, and startup context are present
 2. **Lifecycle**: Checks tmux session for supervisor boot and witness nudge messages
 3. **Hook**: Confirms work is hooked and the bead is accessible
-4. **Tools**: Validates gt and bd CLI tools are functional
+4. **Tools**: Validates ms and bd CLI tools are functional
 5. **Mail**: Waits for mail from the overseer, reads it, and replies to confirm receipt
 6. **Task**: Executes an optional test task to prove agent responsiveness
 7. **Report**: Prints pass/fail summary and completes the bead
@@ -132,13 +132,13 @@ identity and role information during startup.
 
 **1. Check environment variables:**
 ```bash
-echo "GT_ROLE=$GT_ROLE"
-echo "GT_RIG=$GT_RIG"
-echo "GT_MINER=$GT_MINER"
-echo "GT_ROOT=$GT_ROOT"
+echo "MS_ROLE=$MS_ROLE"
+echo "MS_RIG=$MS_RIG"
+echo "MS_MINER=$MS_MINER"
+echo "MS_ROOT=$MS_ROOT"
 ```
 
-At minimum, GT_ROLE should be set (typically "miner").
+At minimum, MS_ROLE should be set (typically "miner").
 
 **2. Verify you know your identity:**
 Report the following from your injected context:
@@ -146,9 +146,9 @@ Report the following from your injected context:
 - The rig you're working in
 - The town name (Mineshaft)
 
-**3. Check that gt prime output was captured:**
+**3. Check that ms prime output was captured:**
 ```bash
-gt prime 2>/dev/null | head -5
+ms prime 2>/dev/null | head -5
 ```
 
 Record pass/fail for each check.
@@ -167,7 +167,7 @@ your session before you started working.
 **1. Witness nudge:**
 Check if you received a message from the witness during startup. It looks like:
 `[MINESHAFT] <rig>/miners/<name> <- witness • <timestamp> • assigned`
-followed by `Run gt prime --hook and begin work on your hook.`
+followed by `Run ms prime --hook and begin work on your hook.`
 
 Report whether you saw this witness nudge in your conversation. PASS if yes.
 
@@ -178,18 +178,18 @@ your session before you started. The supervisor handles initial session setup.
 Report whether supervisor activity was visible. PASS if yes, SKIP if not seen
 (the supervisor may run silently or be disabled).
 
-**3. gt prime execution:**
-Confirm that `gt prime` was executed during your startup (either by you, by
+**3. ms prime execution:**
+Confirm that `ms prime` was executed during your startup (either by you, by
 the witness nudge instruction, or by a startup hook). The output should have
 included your Mineshaft role and context.
 
 ```bash
-gt prime 2>/dev/null | head -3
+ms prime 2>/dev/null | head -3
 ```
 
-PASS if gt prime output includes your role and `[MINESHAFT]` header.
+PASS if ms prime output includes your role and `[MINESHAFT]` header.
 
-**Exit criteria:** Witness nudge confirmed received. Supervisor boot noted. gt prime ran."""
+**Exit criteria:** Witness nudge confirmed received. Supervisor boot noted. ms prime ran."""
 
 [[steps]]
 id = "verify-hook"
@@ -200,17 +200,17 @@ Confirm that this validation bead is hooked to you.
 
 **1. Check your hook:**
 ```bash
-gt hook
+ms hook
 ```
 
 The output should show a hooked bead (the validation bead that triggered this formula).
 
 **2. Verify the bead is accessible:**
 ```bash
-bd show $(gt hook --id 2>/dev/null || echo "unknown")
+bd show $(ms hook --id 2>/dev/null || echo "unknown")
 ```
 
-If `gt hook --id` isn't available, check `gt hook` output for the bead ID and use that.
+If `ms hook --id` isn't available, check `ms hook` output for the bead ID and use that.
 
 **3. Verify bead status:**
 The hooked bead should be in_progress.
@@ -224,9 +224,9 @@ needs = ["verify-hook"]
 description = """
 Run basic Mineshaft commands to verify the CLI is functional.
 
-**1. Check gt is available:**
+**1. Check ms is available:**
 ```bash
-gt --version
+ms --version
 ```
 
 **2. Check bd is available:**
@@ -236,7 +236,7 @@ bd --version
 
 **3. Check rig status:**
 ```bash
-gt rig list
+ms rig list
 ```
 
 **4. Check beads access:**
@@ -246,7 +246,7 @@ bd stats
 
 Record pass/fail for each tool check.
 
-**Exit criteria:** Core CLI tools (gt, bd) are functional."""
+**Exit criteria:** Core CLI tools (ms, bd) are functional."""
 
 [[steps]]
 id = "verify-mail"
@@ -258,13 +258,13 @@ reply to confirm receipt. This validates the full mail round-trip.
 
 **1. Check your inbox for mail from the overseer:**
 ```bash
-gt mail inbox
+ms mail inbox
 ```
 
 **2. If no mail yet, poll for up to 90 seconds:**
 ```bash
 for i in $(seq 1 18); do
-    count=$(gt mail inbox 2>/dev/null | grep -c "VALIDATION" || true)
+    count=$(ms mail inbox 2>/dev/null | grep -c "VALIDATION" || true)
     if [ "$count" -gt 0 ]; then
         echo "Mail received"
         break
@@ -276,9 +276,9 @@ done
 
 **3. Read the mail:**
 ```bash
-gt mail inbox
+ms mail inbox
 # Find the VALIDATION mail and read it:
-gt mail read <mail-id>
+ms mail read <mail-id>
 ```
 
 **4. Reply to the overseer confirming your identity and receipt:**
@@ -290,7 +290,7 @@ Your reply MUST include identity details extracted from your injected Mineshaft 
 - Your hooked bead ID
 
 ```bash
-gt mail send overseer/ -s "VALIDATION: identity confirmed" -m "VALIDATION_MAIL_OK
+ms mail send overseer/ -s "VALIDATION: identity confirmed" -m "VALIDATION_MAIL_OK
 Role: <your role from prompt>
 Name: <your miner name>
 Rig: <your rig>
@@ -304,7 +304,7 @@ not just that mail delivery works.
 
 **5. Mark the mail as read:**
 ```bash
-gt mail mark-read <mail-id>
+ms mail mark-read <mail-id>
 ```
 
 Record pass/fail. If no mail arrives within 90 seconds, record FAIL but continue.
@@ -343,12 +343,12 @@ Mineshaft context:     [PASS/FAIL]
 Lifecycle:            [PASS/FAIL]
   - Witness nudge:    [PASS/FAIL]
   - Supervisor boot:      [PASS/FAIL/SKIP]
-  - gt prime fired:   [PASS/FAIL]
+  - ms prime fired:   [PASS/FAIL]
 Hook assignment:      [PASS/FAIL]
   - Work hooked:      [PASS/FAIL]
   - Bead accessible:  [PASS/FAIL]
 CLI tools:            [PASS/FAIL]
-  - gt available:     [PASS/FAIL]
+  - ms available:     [PASS/FAIL]
   - bd available:     [PASS/FAIL]
   - Rig list:         [PASS/FAIL]
 Mail round-trip:      [PASS/FAIL]
@@ -367,6 +367,6 @@ bd update <bead-id> --notes "Validation complete. All checks passed."
 ```
 
 **3. Complete the bead:**
-The bead will be closed when you finish (via gt done or bd close).
+The bead will be closed when you finish (via ms done or bd close).
 
 **Exit criteria:** Results summarized, bead completed."""

@@ -1,10 +1,10 @@
 {
-  "name": "@mineshaft/gt",
+  "name": "@mineshaft/ms",
   "version": "1.2.1",
   "description": "Mineshaft CLI - multi-agent workspace manager with native binary support",
-  "main": "bin/gt.js",
+  "main": "bin/ms.js",
   "bin": {
-    "gt": "bin/gt.js"
+    "ms": "bin/ms.js"
   },
   "scripts": {
     "postinstall": "node scripts/postinstall.js",

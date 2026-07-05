@@ -191,7 +191,7 @@ func (m *Manager) Start(foreground bool, agentOverride string, envOverrides []st
 	// tmux via -e flags. This ensures the initial shell — and any subprocesses
 	// Claude spawns (notably bd) — inherit BEADS_DOLT_PORT and friends.
 	// Setting env after session creation via SetEnvironment only affects newly
-	// spawned panes, not the subprocess tree of the already-running pane (gt-neycp).
+	// spawned panes, not the subprocess tree of the already-running pane (ms-neycp).
 	envVars := config.AgentEnv(config.AgentEnvConfig{
 		Role:             "witness",
 		Rig:              m.rig.Name,
@@ -204,10 +204,10 @@ func (m *Manager) Start(foreground bool, agentOverride string, envOverrides []st
 
 	// Generate the GASTA run ID for this witness session.
 	runID := uuid.New().String()
-	envVars["GT_RUN"] = runID
+	envVars["MS_RUN"] = runID
 
 	// Apply role config env vars (non-fatal). Skip keys already set by AgentEnv
-	// to prevent TOML env overriding the canonical qualified GT_ROLE.
+	// to prevent TOML env overriding the canonical qualified MS_ROLE.
 	// See: https://github.com/steveyegge/mineshaft/issues/2492
 	roleEnv := roleConfigEnvVars(roleConfig, townRoot, m.rig.Name)
 	for key, value := range roleEnv {
@@ -226,7 +226,7 @@ func (m *Manager) Start(foreground bool, agentOverride string, envOverrides []st
 
 	// Build startup command. The command also embeds env vars via 'exec env'
 	// for WaitForCommand detection — belt-and-suspenders alongside -e flags.
-	// NOTE: No gt prime injection needed - SessionStart hook handles it automatically.
+	// NOTE: No ms prime injection needed - SessionStart hook handles it automatically.
 	// Pass m.rig.Path so rig agent settings are honored (not town-level defaults)
 	command, err := buildWitnessStartCommand(m.rig.Path, m.rig.Name, townRoot, sessionID, agentOverride, roleConfig, runtimeConfigDir)
 	if err != nil {
@@ -261,7 +261,7 @@ func (m *Manager) Start(foreground bool, agentOverride string, envOverrides []st
 		log.Printf("warning: tracking session PID for %s: %v", sessionID, err)
 	}
 
-	// Start nudge-queue poller (gt-dgf). Claude's UserPromptSubmit hook only
+	// Start nudge-queue poller (ms-dgf). Claude's UserPromptSubmit hook only
 	// drains when the agent submits a prompt. Idle agents never submit, so
 	// queued nudges deadlock. The poller breaks the cycle by polling every 10s.
 	if _, pollerErr := nudge.StartPoller(townRoot, sessionID); pollerErr != nil {
@@ -273,11 +273,11 @@ func (m *Manager) Start(foreground bool, agentOverride string, envOverrides []st
 		Recipient: session.BeaconRecipient("witness", "", m.rig.Name),
 		Sender:    "supervisor",
 		Topic:     "patrol",
-	}, "Run `gt prime --hook` and begin patrol.")
+	}, "Run `ms prime --hook` and begin patrol.")
 	_ = runtime.DeliverStartupPromptFallback(t, sessionID, initialPrompt, runtimeConfig, constants.ClaudeStartTimeout)
 
 	// Stream witness's Claude Code JSONL conversation log to VictoriaLogs (opt-in).
-	if os.Getenv("GT_LOG_AGENT_OUTPUT") == "true" && os.Getenv("GT_OTEL_LOGS_URL") != "" {
+	if os.Getenv("MS_LOG_AGENT_OUTPUT") == "true" && os.Getenv("MS_OTEL_LOGS_URL") != "" {
 		if err := session.ActivateAgentLogging(sessionID, witnessDir, runID); err != nil {
 			log.Printf("warning: agent log watcher setup failed for %s: %v", sessionID, err)
 		}
@@ -356,7 +356,7 @@ func buildWitnessStartCommand(rigPath, rigName, townRoot, sessionName, agentOver
 		Recipient: session.BeaconRecipient("witness", "", rigName),
 		Sender:    "supervisor",
 		Topic:     "patrol",
-	}, "Run `gt prime --hook` and begin patrol.")
+	}, "Run `ms prime --hook` and begin patrol.")
 	command, err := config.BuildStartupCommandFromConfig(config.AgentEnvConfig{
 		Role:             "witness",
 		Rig:              rigName,

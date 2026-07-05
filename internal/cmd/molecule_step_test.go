@@ -15,18 +15,18 @@ func TestExtractMoleculeIDFromStep(t *testing.T) {
 	}{
 		{
 			name:     "simple step",
-			stepID:   "gt-abc.1",
-			expected: "gt-abc",
+			stepID:   "ms-abc.1",
+			expected: "ms-abc",
 		},
 		{
 			name:     "multi-digit step number",
-			stepID:   "gt-xyz.12",
-			expected: "gt-xyz",
+			stepID:   "ms-xyz.12",
+			expected: "ms-xyz",
 		},
 		{
 			name:     "molecule with dash",
-			stepID:   "gt-my-mol.3",
-			expected: "gt-my-mol",
+			stepID:   "ms-my-mol.3",
+			expected: "ms-my-mol",
 		},
 		{
 			name:     "bd prefix",
@@ -35,12 +35,12 @@ func TestExtractMoleculeIDFromStep(t *testing.T) {
 		},
 		{
 			name:     "complex id",
-			stepID:   "gt-some-complex-id.99",
-			expected: "gt-some-complex-id",
+			stepID:   "ms-some-complex-id.99",
+			expected: "ms-some-complex-id",
 		},
 		{
 			name:     "not a step - no suffix",
-			stepID:   "gt-5gq8r",
+			stepID:   "ms-5gq8r",
 			expected: "",
 		},
 		{
@@ -50,12 +50,12 @@ func TestExtractMoleculeIDFromStep(t *testing.T) {
 		},
 		{
 			name:     "not a step - non-numeric suffix",
-			stepID:   "gt-abc.xyz",
+			stepID:   "ms-abc.xyz",
 			expected: "",
 		},
 		{
 			name:     "not a step - mixed suffix",
-			stepID:   "gt-abc.1a",
+			stepID:   "ms-abc.1a",
 			expected: "",
 		},
 		{
@@ -70,7 +70,7 @@ func TestExtractMoleculeIDFromStep(t *testing.T) {
 		},
 		{
 			name:     "trailing dot",
-			stepID:   "gt-abc.",
+			stepID:   "ms-abc.",
 			expected: "",
 		},
 	}
@@ -195,43 +195,43 @@ func TestStepDoneScenarios(t *testing.T) {
 	}{
 		{
 			name:   "complete step, continue to next",
-			stepID: "gt-mol.1",
+			stepID: "ms-mol.1",
 			setupFunc: func(m *mockBeadsForStep) {
-				m.addIssue(makeStepIssue("gt-mol.1", "Step 1", "gt-mol", "open", nil))
-				m.addIssue(makeStepIssue("gt-mol.2", "Step 2", "gt-mol", "open", []string{"gt-mol.1"}))
+				m.addIssue(makeStepIssue("ms-mol.1", "Step 1", "ms-mol", "open", nil))
+				m.addIssue(makeStepIssue("ms-mol.2", "Step 2", "ms-mol", "open", []string{"ms-mol.1"}))
 			},
 			wantAction:   "continue",
-			wantNextStep: "gt-mol.2",
+			wantNextStep: "ms-mol.2",
 		},
 		{
 			name:   "complete final step, molecule done",
-			stepID: "gt-mol.2",
+			stepID: "ms-mol.2",
 			setupFunc: func(m *mockBeadsForStep) {
-				m.addIssue(makeStepIssue("gt-mol.1", "Step 1", "gt-mol", "closed", nil))
-				m.addIssue(makeStepIssue("gt-mol.2", "Step 2", "gt-mol", "open", []string{"gt-mol.1"}))
+				m.addIssue(makeStepIssue("ms-mol.1", "Step 1", "ms-mol", "closed", nil))
+				m.addIssue(makeStepIssue("ms-mol.2", "Step 2", "ms-mol", "open", []string{"ms-mol.1"}))
 			},
 			wantAction: "done",
 		},
 		{
 			name:   "complete step, remaining blocked",
-			stepID: "gt-mol.1",
+			stepID: "ms-mol.1",
 			setupFunc: func(m *mockBeadsForStep) {
-				m.addIssue(makeStepIssue("gt-mol.1", "Step 1", "gt-mol", "open", nil))
-				m.addIssue(makeStepIssue("gt-mol.2", "Step 2", "gt-mol", "in_progress", nil)) // another parallel task
-				m.addIssue(makeStepIssue("gt-mol.3", "Synthesis", "gt-mol", "open", []string{"gt-mol.1", "gt-mol.2"}))
+				m.addIssue(makeStepIssue("ms-mol.1", "Step 1", "ms-mol", "open", nil))
+				m.addIssue(makeStepIssue("ms-mol.2", "Step 2", "ms-mol", "in_progress", nil)) // another parallel task
+				m.addIssue(makeStepIssue("ms-mol.3", "Synthesis", "ms-mol", "open", []string{"ms-mol.1", "ms-mol.2"}))
 			},
 			wantAction: "no_more_ready", // .2 is in_progress, .3 blocked
 		},
 		{
 			name:   "parallel workflow - complete one, next ready",
-			stepID: "gt-mol.1",
+			stepID: "ms-mol.1",
 			setupFunc: func(m *mockBeadsForStep) {
-				m.addIssue(makeStepIssue("gt-mol.1", "Parallel A", "gt-mol", "open", nil))
-				m.addIssue(makeStepIssue("gt-mol.2", "Parallel B", "gt-mol", "open", nil))
-				m.addIssue(makeStepIssue("gt-mol.3", "Synthesis", "gt-mol", "open", []string{"gt-mol.1", "gt-mol.2"}))
+				m.addIssue(makeStepIssue("ms-mol.1", "Parallel A", "ms-mol", "open", nil))
+				m.addIssue(makeStepIssue("ms-mol.2", "Parallel B", "ms-mol", "open", nil))
+				m.addIssue(makeStepIssue("ms-mol.3", "Synthesis", "ms-mol", "open", []string{"ms-mol.1", "ms-mol.2"}))
 			},
 			wantAction:   "continue",
-			wantNextStep: "gt-mol.2", // B is still ready
+			wantNextStep: "ms-mol.2", // B is still ready
 		},
 	}
 
@@ -410,19 +410,19 @@ func TestDepTypeBlockingSemantics(t *testing.T) {
 			m := newMockBeadsForStep()
 
 			// Step 1: no deps (always ready)
-			m.addIssue(makeStepIssueWithDepType("gt-mol.1", "Ensure labels", "gt-mol", "open", nil))
+			m.addIssue(makeStepIssueWithDepType("ms-mol.1", "Ensure labels", "ms-mol", "open", nil))
 
 			// Step 2: depends on step 1 via the test dep type
-			m.addIssue(makeStepIssueWithDepType("gt-mol.2", "Split and file", "gt-mol", "open", []beads.IssueDep{
-				{ID: "gt-mol.1", Title: "Ensure labels", DependencyType: tt.depType},
+			m.addIssue(makeStepIssueWithDepType("ms-mol.2", "Split and file", "ms-mol", "open", []beads.IssueDep{
+				{ID: "ms-mol.1", Title: "Ensure labels", DependencyType: tt.depType},
 			}))
 
 			// Step 3: depends on step 2 via the test dep type
-			m.addIssue(makeStepIssueWithDepType("gt-mol.3", "Finalize", "gt-mol", "open", []beads.IssueDep{
-				{ID: "gt-mol.2", Title: "Split and file", DependencyType: tt.depType},
+			m.addIssue(makeStepIssueWithDepType("ms-mol.3", "Finalize", "ms-mol", "open", []beads.IssueDep{
+				{ID: "ms-mol.2", Title: "Split and file", DependencyType: tt.depType},
 			}))
 
-			children, _ := m.List(beads.ListOptions{Parent: "gt-mol", Status: "all"})
+			children, _ := m.List(beads.ListOptions{Parent: "ms-mol", Status: "all"})
 			closedIDs := make(map[string]bool)
 			var openStepIDs []string
 			for _, child := range children {
@@ -470,14 +470,14 @@ func TestReadyStepOrderReversed(t *testing.T) {
 	m := newMockBeadsForStep()
 
 	// Add issues in REVERSE order to simulate bd list's reverse-creation ordering.
-	m.addIssue(makeStepIssueWithDepType("gt-mol.5", "Finalize", "gt-mol", "open", nil))
-	m.addIssue(makeStepIssueWithDepType("gt-mol.4", "Queue validity", "gt-mol", "open", nil))
-	m.addIssue(makeStepIssueWithDepType("gt-mol.3", "Dedup", "gt-mol", "open", nil))
-	m.addIssue(makeStepIssueWithDepType("gt-mol.2", "Split and file", "gt-mol", "open", nil))
-	m.addIssue(makeStepIssueWithDepType("gt-mol.1", "Ensure labels", "gt-mol", "open", nil))
+	m.addIssue(makeStepIssueWithDepType("ms-mol.5", "Finalize", "ms-mol", "open", nil))
+	m.addIssue(makeStepIssueWithDepType("ms-mol.4", "Queue validity", "ms-mol", "open", nil))
+	m.addIssue(makeStepIssueWithDepType("ms-mol.3", "Dedup", "ms-mol", "open", nil))
+	m.addIssue(makeStepIssueWithDepType("ms-mol.2", "Split and file", "ms-mol", "open", nil))
+	m.addIssue(makeStepIssueWithDepType("ms-mol.1", "Ensure labels", "ms-mol", "open", nil))
 
 	// Run the algorithm - all steps have no deps so all are "ready"
-	children, _ := m.List(beads.ListOptions{Parent: "gt-mol", Status: "all"})
+	children, _ := m.List(beads.ListOptions{Parent: "ms-mol", Status: "all"})
 	closedIDs := make(map[string]bool)
 	var openStepIDs []string
 	for _, child := range children {
@@ -518,13 +518,13 @@ func TestReadyStepOrderReversed(t *testing.T) {
 	}
 
 	// Verify first ready step is step 1, not step 5
-	if readySteps[0].ID != "gt-mol.1" {
-		t.Errorf("first ready step is %s, want gt-mol.1", readySteps[0].ID)
+	if readySteps[0].ID != "ms-mol.1" {
+		t.Errorf("first ready step is %s, want ms-mol.1", readySteps[0].ID)
 	}
 
 	// Verify full sequential ordering
 	for i, step := range readySteps {
-		expectedID := fmt.Sprintf("gt-mol.%d", i+1)
+		expectedID := fmt.Sprintf("ms-mol.%d", i+1)
 		if step.ID != expectedID {
 			t.Errorf("readySteps[%d] = %s, want %s", i, step.ID, expectedID)
 		}
@@ -540,29 +540,29 @@ func TestMoleculeDepTypeFilterMixed(t *testing.T) {
 
 	// Root molecule
 	m.addIssue(&beads.Issue{
-		ID:     "gt-mol",
+		ID:     "ms-mol",
 		Title:  "intake",
 		Type:   "epic",
 		Status: "open",
 	})
 
 	// Step 1: no deps
-	m.addIssue(makeStepIssueWithDepType("gt-mol.1", "Ensure labels", "gt-mol", "open", nil))
+	m.addIssue(makeStepIssueWithDepType("ms-mol.1", "Ensure labels", "ms-mol", "open", nil))
 
 	// Step 2: blocked by step 1 via "blocks" type, parent-child ignored
-	m.addIssue(makeStepIssueWithDepType("gt-mol.2", "Split and file", "gt-mol", "open", []beads.IssueDep{
-		{ID: "gt-mol.1", Title: "Ensure labels", DependencyType: "blocks"},
-		{ID: "gt-mol", Title: "intake", DependencyType: "parent-child"},
+	m.addIssue(makeStepIssueWithDepType("ms-mol.2", "Split and file", "ms-mol", "open", []beads.IssueDep{
+		{ID: "ms-mol.1", Title: "Ensure labels", DependencyType: "blocks"},
+		{ID: "ms-mol", Title: "intake", DependencyType: "parent-child"},
 	}))
 
 	// Step 3: depends on step 2 via "blocks", also has non-blocking parent-child
-	m.addIssue(makeStepIssueWithDepType("gt-mol.3", "Finalize", "gt-mol", "open", []beads.IssueDep{
-		{ID: "gt-mol.2", Title: "Split and file", DependencyType: "blocks"},
-		{ID: "gt-mol", Title: "intake", DependencyType: "parent-child"},
+	m.addIssue(makeStepIssueWithDepType("ms-mol.3", "Finalize", "ms-mol", "open", []beads.IssueDep{
+		{ID: "ms-mol.2", Title: "Split and file", DependencyType: "blocks"},
+		{ID: "ms-mol", Title: "intake", DependencyType: "parent-child"},
 	}))
 
 	// Run algorithm using isBlockingDepType
-	children, _ := m.List(beads.ListOptions{Parent: "gt-mol", Status: "all"})
+	children, _ := m.List(beads.ListOptions{Parent: "ms-mol", Status: "all"})
 	closedIDs := make(map[string]bool)
 	var openStepIDs []string
 	for _, child := range children {
@@ -601,8 +601,8 @@ func TestMoleculeDepTypeFilterMixed(t *testing.T) {
 	}
 
 	// Only step 1 should be ready; steps 2 and 3 are blocked by "blocks" deps
-	if len(readySteps) != 1 || readySteps[0] != "gt-mol.1" {
-		t.Errorf("readySteps=%v, want [gt-mol.1]", readySteps)
+	if len(readySteps) != 1 || readySteps[0] != "ms-mol.1" {
+		t.Errorf("readySteps=%v, want [ms-mol.1]", readySteps)
 	}
 	if len(blockedSteps) != 2 {
 		t.Errorf("blockedSteps=%v, want 2 blocked steps", blockedSteps)

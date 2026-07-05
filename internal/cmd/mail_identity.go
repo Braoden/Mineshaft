@@ -14,18 +14,18 @@ import (
 // findMailWorkDir returns the town root for all mail operations.
 //
 // Two-level beads architecture:
-// - Town beads (~/gt/.beads/): ALL mail and coordination
+// - Town beads (~/ms/.beads/): ALL mail and coordination
 // - Clone beads (<rig>/crew/*/.beads/): Project issues only
 //
 // Mail ALWAYS uses town beads, regardless of sender or recipient address.
 // This ensures messages are visible to all agents in the town.
 //
-// GT_TOWN_ROOT is preferred over workspace detection because workspace.Find
+// MS_TOWN_ROOT is preferred over workspace detection because workspace.Find
 // stops at the first overseer/town.json when not in a worktree path. Rigs that
 // have their own overseer/town.json (e.g., mineshaft/) would be misidentified as
 // the town root when running from the rig directory.
 func findMailWorkDir() (string, error) {
-	for _, envName := range []string{"GT_TOWN_ROOT", "GT_ROOT"} {
+	for _, envName := range []string{"MS_TOWN_ROOT", "MS_ROOT"} {
 		if townRoot := os.Getenv(envName); townRoot != "" {
 			if ok, _ := workspace.IsWorkspace(townRoot); ok {
 				return townRoot, nil
@@ -78,56 +78,56 @@ func findLocalBeadsDir() (string, error) {
 
 // detectSender determines the current context's address.
 // Priority:
-//  1. GT_ROLE env var → use the role-based identity (agent session)
-//  2. No GT_ROLE → try cwd-based detection (witness/refinery/miner/crew directories)
+//  1. MS_ROLE env var → use the role-based identity (agent session)
+//  2. No MS_ROLE → try cwd-based detection (witness/refinery/miner/crew directories)
 //  3. No match → return "boss" (human at terminal)
 //
-// All Mineshaft agents run in tmux sessions with GT_ROLE set at spawn.
+// All Mineshaft agents run in tmux sessions with MS_ROLE set at spawn.
 // However, cwd-based detection is also tried to support running commands
-// from agent directories without GT_ROLE set (e.g., debugging sessions).
+// from agent directories without MS_ROLE set (e.g., debugging sessions).
 func detectSender() string {
-	// Check GT_ROLE first (authoritative for agent sessions)
-	role := os.Getenv("GT_ROLE")
+	// Check MS_ROLE first (authoritative for agent sessions)
+	role := os.Getenv("MS_ROLE")
 	if role != "" {
 		// Agent session - build address from role and context
 		return detectSenderFromRole(role)
 	}
 
-	// No GT_ROLE - try cwd-based detection, defaults to boss if not in agent directory
+	// No MS_ROLE - try cwd-based detection, defaults to boss if not in agent directory
 	return detectSenderFromCwd()
 }
 
-// detectSenderFromRole builds an address from the GT_ROLE and related env vars.
-// GT_ROLE can be either a simple role name ("crew", "miner") or a full address
+// detectSenderFromRole builds an address from the MS_ROLE and related env vars.
+// MS_ROLE can be either a simple role name ("crew", "miner") or a full address
 // ("greenplace/crew/joe") depending on how the session was started.
 //
-// If GT_ROLE is a simple name but required env vars (GT_RIG, GT_MINER, etc.)
+// If MS_ROLE is a simple name but required env vars (MS_RIG, MS_MINER, etc.)
 // are missing, falls back to cwd-based detection. This could return "boss"
 // if cwd doesn't match any known agent path - a misconfigured agent session.
 func detectSenderFromRole(role string) string {
-	rig := os.Getenv("GT_RIG")
+	rig := os.Getenv("MS_RIG")
 
 	// Check if role is already a full address (contains /)
 	if strings.Contains(role, "/") {
-		// GT_ROLE is already a full address, use it directly
+		// MS_ROLE is already a full address, use it directly
 		return role
 	}
 
-	// GT_ROLE is a simple role name, build the full address
+	// MS_ROLE is a simple role name, build the full address
 	switch role {
 	case constants.RoleOverseer:
 		return "overseer/"
 	case constants.RoleSupervisor:
 		return "supervisor/"
 	case constants.RoleMiner:
-		miner := os.Getenv("GT_MINER")
+		miner := os.Getenv("MS_MINER")
 		if rig != "" && miner != "" {
 			return fmt.Sprintf("%s/%s", rig, miner)
 		}
 		// Fallback to cwd detection for miners
 		return detectSenderFromCwd()
 	case constants.RoleCrew:
-		crew := os.Getenv("GT_CREW")
+		crew := os.Getenv("MS_CREW")
 		if rig != "" && crew != "" {
 			return fmt.Sprintf("%s/crew/%s", rig, crew)
 		}
@@ -144,7 +144,7 @@ func detectSenderFromRole(role string) string {
 		}
 		return detectSenderFromCwd()
 	case "dog":
-		dogName := os.Getenv("GT_DOG_NAME")
+		dogName := os.Getenv("MS_DOG_NAME")
 		if dogName != "" {
 			return fmt.Sprintf("supervisor/dogs/%s", dogName)
 		}
@@ -235,7 +235,7 @@ type agentIdentityFile struct {
 func detectSenderFromAgentFile(startDir string) string {
 	path := startDir
 	for {
-		agentPath := filepath.Join(path, ".gt-agent")
+		agentPath := filepath.Join(path, ".ms-agent")
 		data, err := os.ReadFile(agentPath)
 		if err == nil {
 			var parsed agentIdentityFile

@@ -150,16 +150,16 @@ func TestSquashJitterContextCancellation(t *testing.T) {
 }
 
 // TestSlingFormulaOnBeadHooksBaseBead verifies that when using
-// "gt sling <formula> --on <bead>", the BASE bead is hooked (not the wisp).
+// "ms sling <formula> --on <bead>", the BASE bead is hooked (not the wisp).
 //
 // Current bug: The code hooks the wisp (compound root) instead of the base bead.
 // This causes lifecycle issues:
 // - Base bead stays open after wisp completes
-// - gt done closes wisp, not the actual work item
+// - ms done closes wisp, not the actual work item
 // - Orphaned base beads accumulate
 //
 // Expected behavior: Hook the base bead, store attached_molecule pointing to wisp.
-// gt hook/gt prime can follow attached_molecule to find the workflow steps.
+// ms hook/ms prime can follow attached_molecule to find the workflow steps.
 func TestSlingFormulaOnBeadHooksBaseBead(t *testing.T) {
 	townRoot := t.TempDir()
 
@@ -177,7 +177,7 @@ func TestSlingFormulaOnBeadHooksBaseBead(t *testing.T) {
 		t.Fatalf("mkdir rigDir: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`,
+		`{"prefix":"ms-","path":"mineshaft/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
@@ -202,7 +202,7 @@ shift || true
 case "$cmd" in
   show)
     # Return the base bead info
-    echo '[{"id":"gt-abc123","title":"Bug to fix","status":"open","assignee":"","description":""}]'
+    echo '[{"id":"ms-abc123","title":"Bug to fix","status":"open","assignee":"","description":""}]'
     ;;
   formula)
     echo '{"name":"mol-miner-work"}'
@@ -215,10 +215,10 @@ case "$cmd" in
     shift || true
     case "$sub" in
       wisp)
-        echo '{"new_epic_id":"gt-wisp-xyz"}'
+        echo '{"new_epic_id":"ms-wisp-xyz"}'
         ;;
       bond)
-        echo '{"root_id":"gt-wisp-xyz"}'
+        echo '{"root_id":"ms-wisp-xyz"}'
         ;;
     esac
     ;;
@@ -239,7 +239,7 @@ if "%cmd%"=="--allow-stale" (
   set "sub=%3"
 )
 if "%cmd%"=="show" (
-  echo [{^"id^":^"gt-abc123^",^"title^":^"Bug to fix^",^"status^":^"open^",^"assignee^":^"^",^"description^":^"^"}]
+  echo [{^"id^":^"ms-abc123^",^"title^":^"Bug to fix^",^"status^":^"open^",^"assignee^":^"^",^"description^":^"^"}]
   exit /b 0
 )
 if "%cmd%"=="formula" (
@@ -249,11 +249,11 @@ if "%cmd%"=="formula" (
 if "%cmd%"=="cook" exit /b 0
 if "%cmd%"=="mol" (
   if "%sub%"=="wisp" (
-    echo {^"new_epic_id^":^"gt-wisp-xyz^"}
+    echo {^"new_epic_id^":^"ms-wisp-xyz^"}
     exit /b 0
   )
   if "%sub%"=="bond" (
-    echo {^"root_id^":^"gt-wisp-xyz^"}
+    echo {^"root_id^":^"ms-wisp-xyz^"}
     exit /b 0
   )
 )
@@ -265,11 +265,11 @@ exit /b 0
 	t.Setenv("BD_LOG", logPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "overseer")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
 	t.Setenv("TMUX_PANE", "")
-	t.Setenv("GT_TEST_NO_NUDGE", "1")
-	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1") // Stub bd doesn't track state
+	t.Setenv("MS_TEST_NO_NUDGE", "1")
+	t.Setenv("MS_TEST_SKIP_HOOK_VERIFY", "1") // Stub bd doesn't track state
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -295,7 +295,7 @@ exit /b 0
 	slingDryRun = false
 	slingNoMinecart = true
 	slingVars = nil
-	slingOnTarget = "gt-abc123" // The base bead
+	slingOnTarget = "ms-abc123" // The base bead
 
 	if err := runSling(nil, []string{"mol-miner-work"}); err != nil {
 		t.Fatalf("runSling: %v", err)
@@ -307,8 +307,8 @@ exit /b 0
 	}
 
 	// Find the update command that sets status=hooked
-	// Expected: should hook gt-abc123 (base bead)
-	// Current bug: hooks gt-wisp-xyz (wisp)
+	// Expected: should hook ms-abc123 (base bead)
+	// Current bug: hooks ms-wisp-xyz (wisp)
 	logLines := strings.Split(string(logBytes), "\n")
 	var hookedBeadID string
 	for _, line := range logLines {
@@ -330,17 +330,17 @@ exit /b 0
 		t.Fatalf("no hooked bead found in log:\n%s", string(logBytes))
 	}
 
-	// The BASE bead (gt-abc123) should be hooked, not the wisp (gt-wisp-xyz)
-	if hookedBeadID != "gt-abc123" {
+	// The BASE bead (ms-abc123) should be hooked, not the wisp (ms-wisp-xyz)
+	if hookedBeadID != "ms-abc123" {
 		t.Errorf("wrong bead hooked: got %q, want %q (base bead)\n"+
 			"Current behavior hooks the wisp instead of the base bead.\n"+
-			"This causes orphaned base beads when gt done closes only the wisp.\n"+
-			"Log:\n%s", hookedBeadID, "gt-abc123", string(logBytes))
+			"This causes orphaned base beads when ms done closes only the wisp.\n"+
+			"Log:\n%s", hookedBeadID, "ms-abc123", string(logBytes))
 	}
 }
 
 // TestSlingFormulaOnBeadSetsAttachedMoleculeInBaseBead verifies that when using
-// "gt sling <formula> --on <bead>", the attached_molecule field is set in the
+// "ms sling <formula> --on <bead>", the attached_molecule field is set in the
 // BASE bead's description (pointing to the wisp), not in the wisp itself.
 //
 // Current bug: attached_molecule is stored as a self-reference in the wisp.
@@ -350,7 +350,7 @@ exit /b 0
 // Expected behavior: Store attached_molecule in the base bead pointing to wisp.
 // This enables:
 // - Compound resolution: base bead -> attached_molecule -> wisp
-// - gt hook/gt prime: read base bead, follow attached_molecule to show wisp steps
+// - ms hook/ms prime: read base bead, follow attached_molecule to show wisp steps
 func TestSlingFormulaOnBeadSetsAttachedMoleculeInBaseBead(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Windows batch script JSON output causes storeAttachedMoleculeInBead to fail silently")
@@ -371,7 +371,7 @@ func TestSlingFormulaOnBeadSetsAttachedMoleculeInBaseBead(t *testing.T) {
 		t.Fatalf("mkdir rigDir: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`,
+		`{"prefix":"ms-","path":"mineshaft/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
@@ -396,7 +396,7 @@ shift || true
 case "$cmd" in
   show)
     # Return bead info without attached_molecule initially
-    echo '[{"id":"gt-abc123","title":"Bug to fix","status":"open","assignee":"","description":""}]'
+    echo '[{"id":"ms-abc123","title":"Bug to fix","status":"open","assignee":"","description":""}]'
     ;;
   formula)
     echo '{"name":"mol-miner-work"}'
@@ -409,10 +409,10 @@ case "$cmd" in
     shift || true
     case "$sub" in
       wisp)
-        echo '{"new_epic_id":"gt-wisp-xyz"}'
+        echo '{"new_epic_id":"ms-wisp-xyz"}'
         ;;
       bond)
-        echo '{"root_id":"gt-wisp-xyz"}'
+        echo '{"root_id":"ms-wisp-xyz"}'
         ;;
     esac
     ;;
@@ -433,7 +433,7 @@ if "%cmd%"=="--allow-stale" (
   set "sub=%3"
 )
 if "%cmd%"=="show" (
-  echo [{^"id^":^"gt-abc123^",^"title^":^"Bug to fix^",^"status^":^"open^",^"assignee^":^"^",^"description^":^"^"}]
+  echo [{^"id^":^"ms-abc123^",^"title^":^"Bug to fix^",^"status^":^"open^",^"assignee^":^"^",^"description^":^"^"}]
   exit /b 0
 )
 if "%cmd%"=="formula" (
@@ -443,11 +443,11 @@ if "%cmd%"=="formula" (
 if "%cmd%"=="cook" exit /b 0
 if "%cmd%"=="mol" (
   if "%sub%"=="wisp" (
-    echo {^"new_epic_id^":^"gt-wisp-xyz^"}
+    echo {^"new_epic_id^":^"ms-wisp-xyz^"}
     exit /b 0
   )
   if "%sub%"=="bond" (
-    echo {^"root_id^":^"gt-wisp-xyz^"}
+    echo {^"root_id^":^"ms-wisp-xyz^"}
     exit /b 0
   )
 )
@@ -459,11 +459,11 @@ exit /b 0
 	t.Setenv("BD_LOG", logPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "overseer")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
 	t.Setenv("TMUX_PANE", "")
-	t.Setenv("GT_TEST_NO_NUDGE", "1")
-	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1") // Stub bd doesn't track state
+	t.Setenv("MS_TEST_NO_NUDGE", "1")
+	t.Setenv("MS_TEST_SKIP_HOOK_VERIFY", "1") // Stub bd doesn't track state
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -489,7 +489,7 @@ exit /b 0
 	slingDryRun = false
 	slingNoMinecart = true
 	slingVars = nil
-	slingOnTarget = "gt-abc123" // The base bead
+	slingOnTarget = "ms-abc123" // The base bead
 
 	if err := runSling(nil, []string{"mol-miner-work"}); err != nil {
 		t.Fatalf("runSling: %v", err)
@@ -501,8 +501,8 @@ exit /b 0
 	}
 
 	// Find update commands that set attached_molecule
-	// Expected: "update gt-abc123 --description=...attached_molecule: gt-wisp-xyz..."
-	// Current bug: "update gt-wisp-xyz --description=...attached_molecule: gt-wisp-xyz..."
+	// Expected: "update ms-abc123 --description=...attached_molecule: ms-wisp-xyz..."
+	// Current bug: "update ms-wisp-xyz --description=...attached_molecule: ms-wisp-xyz..."
 	logLines := strings.Split(string(logBytes), "\n")
 	var attachedMoleculeTarget string
 	for _, line := range logLines {
@@ -524,11 +524,11 @@ exit /b 0
 	}
 
 	// attached_molecule should be set on the BASE bead, not the wisp
-	if attachedMoleculeTarget != "gt-abc123" {
+	if attachedMoleculeTarget != "ms-abc123" {
 		t.Errorf("attached_molecule set on wrong bead: got %q, want %q (base bead)\n"+
 			"Current behavior stores attached_molecule in the wisp as a self-reference.\n"+
 			"This breaks compound resolution (base bead has no pointer to wisp).\n"+
-			"Log:\n%s", attachedMoleculeTarget, "gt-abc123", string(logBytes))
+			"Log:\n%s", attachedMoleculeTarget, "ms-abc123", string(logBytes))
 	}
 }
 
@@ -559,7 +559,7 @@ func TestBurnClosesWispRoot(t *testing.T) {
 		t.Fatalf("mkdir bin: %v", err)
 	}
 	closesLog := filepath.Join(townRoot, "closes.log")
-	// The handoff bead has attached_molecule: gt-wisp-mol1
+	// The handoff bead has attached_molecule: ms-wisp-mol1
 	bdScript := fmt.Sprintf(`#!/bin/sh
 # Strip --allow-stale
 while [ "$1" = "--allow-stale" ]; do shift; done
@@ -568,7 +568,7 @@ case "$cmd" in
   list)
     # FindHandoffBead: list --json --status=pinned --limit=0
     if echo "$*" | grep -q "status=pinned"; then
-      echo '[{"id":"gt-handoff-1","title":"witness Handoff","status":"pinned","description":"attached_molecule: gt-wisp-mol1"}]'
+      echo '[{"id":"ms-handoff-1","title":"witness Handoff","status":"pinned","description":"attached_molecule: ms-wisp-mol1"}]'
     else
       # closeDescendants: list --json --parent=... --status=all
       echo '[]'
@@ -576,7 +576,7 @@ case "$cmd" in
     ;;
   show)
     # DetachMoleculeWithAudit calls Show twice
-    echo '[{"id":"gt-handoff-1","title":"witness Handoff","status":"pinned","description":"attached_molecule: gt-wisp-mol1"}]'
+    echo '[{"id":"ms-handoff-1","title":"witness Handoff","status":"pinned","description":"attached_molecule: ms-wisp-mol1"}]'
     ;;
   update)
     exit 0
@@ -596,9 +596,9 @@ exit 0
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "witness")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_RIG", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
+	t.Setenv("MS_RIG", "")
 	t.Setenv("TMUX_PANE", "")
 	t.Setenv("BEADS_DIR", "")
 
@@ -627,8 +627,8 @@ exit 0
 		t.Fatalf("no close calls logged (closes.log not found): bd close was never called")
 	}
 	closes := string(closesBytes)
-	if !strings.Contains(closes, "gt-wisp-mol1") {
-		t.Errorf("molecule root gt-wisp-mol1 was NOT closed.\n"+
+	if !strings.Contains(closes, "ms-wisp-mol1") {
+		t.Errorf("molecule root ms-wisp-mol1 was NOT closed.\n"+
 			"ForceCloseWithReason should be called after DetachMoleculeWithAudit.\n"+
 			"Close calls: %s", closes)
 	}
@@ -667,20 +667,20 @@ cmd="$1"; shift
 case "$cmd" in
   list)
     if echo "$*" | grep -q "status=pinned"; then
-      echo '[{"id":"gt-handoff-1","title":"refinery Handoff","status":"pinned","description":"attached_molecule: gt-wisp-patrol1"}]'
+      echo '[{"id":"ms-handoff-1","title":"refinery Handoff","status":"pinned","description":"attached_molecule: ms-wisp-patrol1"}]'
     else
       echo '[]'
     fi
     ;;
   show)
-    echo '[{"id":"gt-handoff-1","title":"refinery Handoff","status":"pinned","description":"attached_molecule: gt-wisp-patrol1"}]'
+    echo '[{"id":"ms-handoff-1","title":"refinery Handoff","status":"pinned","description":"attached_molecule: ms-wisp-patrol1"}]'
     ;;
   update)
     exit 0
     ;;
   create)
     # Digest creation
-    echo '{"id":"gt-digest-1","title":"Digest"}'
+    echo '{"id":"ms-digest-1","title":"Digest"}'
     ;;
   close)
     echo "$*" >> "%s"
@@ -696,9 +696,9 @@ exit 0
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "refinery")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_RIG", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
+	t.Setenv("MS_RIG", "")
 	t.Setenv("TMUX_PANE", "")
 	t.Setenv("BEADS_DIR", "")
 
@@ -741,8 +741,8 @@ exit 0
 		t.Fatalf("no close calls logged (closes.log not found): bd close was never called")
 	}
 	closes := string(closesBytes)
-	if !strings.Contains(closes, "gt-wisp-patrol1") {
-		t.Errorf("molecule root gt-wisp-patrol1 was NOT closed.\n"+
+	if !strings.Contains(closes, "ms-wisp-patrol1") {
+		t.Errorf("molecule root ms-wisp-patrol1 was NOT closed.\n"+
 			"ForceCloseWithReason should be called after DetachMoleculeWithAudit.\n"+
 			"Close calls: %s", closes)
 	}
@@ -777,17 +777,17 @@ cmd="$1"; shift
 case "$cmd" in
   list)
     if echo "$*" | grep -q "status=pinned"; then
-      echo '[{"id":"gt-handoff-1","title":"witness Handoff","status":"pinned","description":"attached_molecule: gt-wisp-mol2"}]'
-    elif echo "$*" | grep -q "parent=gt-wisp-mol2"; then
-      echo '[{"id":"gt-step-1","title":"Step 1","status":"open"},{"id":"gt-step-2","title":"Step 2","status":"closed"}]'
-    elif echo "$*" | grep -q "parent=gt-step"; then
+      echo '[{"id":"ms-handoff-1","title":"witness Handoff","status":"pinned","description":"attached_molecule: ms-wisp-mol2"}]'
+    elif echo "$*" | grep -q "parent=ms-wisp-mol2"; then
+      echo '[{"id":"ms-step-1","title":"Step 1","status":"open"},{"id":"ms-step-2","title":"Step 2","status":"closed"}]'
+    elif echo "$*" | grep -q "parent=ms-step"; then
       echo '[]'
     else
       echo '[]'
     fi
     ;;
   show)
-    echo '[{"id":"gt-handoff-1","title":"witness Handoff","status":"pinned","description":"attached_molecule: gt-wisp-mol2"}]'
+    echo '[{"id":"ms-handoff-1","title":"witness Handoff","status":"pinned","description":"attached_molecule: ms-wisp-mol2"}]'
     ;;
   update)
     exit 0
@@ -806,9 +806,9 @@ exit 0
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "witness")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_RIG", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
+	t.Setenv("MS_RIG", "")
 	t.Setenv("TMUX_PANE", "")
 	t.Setenv("BEADS_DIR", "")
 
@@ -837,33 +837,33 @@ exit 0
 	closes := string(closesBytes)
 	closeLines := strings.Split(strings.TrimSpace(closes), "\n")
 
-	// Verify: gt-step-1 is closed (open child), gt-step-2 is NOT closed (already closed)
+	// Verify: ms-step-1 is closed (open child), ms-step-2 is NOT closed (already closed)
 	foundStep1 := false
 	foundRoot := false
 	for _, line := range closeLines {
-		if strings.Contains(line, "gt-step-1") {
+		if strings.Contains(line, "ms-step-1") {
 			foundStep1 = true
 		}
-		if strings.Contains(line, "gt-wisp-mol2") {
+		if strings.Contains(line, "ms-wisp-mol2") {
 			foundRoot = true
 		}
 	}
 
 	if !foundStep1 {
-		t.Errorf("open child gt-step-1 was NOT closed.\nClose calls:\n%s", closes)
+		t.Errorf("open child ms-step-1 was NOT closed.\nClose calls:\n%s", closes)
 	}
 	if !foundRoot {
-		t.Errorf("molecule root gt-wisp-mol2 was NOT closed.\nClose calls:\n%s", closes)
+		t.Errorf("molecule root ms-wisp-mol2 was NOT closed.\nClose calls:\n%s", closes)
 	}
 
 	// Verify root is closed AFTER children (root should appear in a later close call)
 	step1Idx := -1
 	rootIdx := -1
 	for i, line := range closeLines {
-		if strings.Contains(line, "gt-step-1") {
+		if strings.Contains(line, "ms-step-1") {
 			step1Idx = i
 		}
-		if strings.Contains(line, "gt-wisp-mol2") {
+		if strings.Contains(line, "ms-wisp-mol2") {
 			rootIdx = i
 		}
 	}
@@ -874,13 +874,13 @@ exit 0
 	}
 }
 
-// TestDoneClosesAttachedMolecule verifies that gt done closes both the hooked
+// TestDoneClosesAttachedMolecule verifies that ms done closes both the hooked
 // bead AND its attached molecule (wisp).
 //
-// Current bug: gt done only closes the hooked bead. If base bead is hooked
+// Current bug: ms done only closes the hooked bead. If base bead is hooked
 // with attached_molecule pointing to wisp, the wisp becomes orphaned.
 //
-// Expected behavior: gt done should:
+// Expected behavior: ms done should:
 // 1. Check for attached_molecule in hooked bead
 // 2. Close the attached molecule (wisp) first
 // 3. Close the hooked bead (base bead)
@@ -898,9 +898,9 @@ func TestDoneClosesAttachedMolecule(t *testing.T) {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 
-	// Create routes - path first part must match GT_RIG for prefix lookup
+	// Create routes - path first part must match MS_RIG for prefix lookup
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"mineshaft"}`,
+		`{"prefix":"ms-","path":"mineshaft"}`,
 		"",
 	}, "\n")
 	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(routes), 0644); err != nil {
@@ -915,9 +915,9 @@ func TestDoneClosesAttachedMolecule(t *testing.T) {
 	closesPath := filepath.Join(townRoot, "closes.log")
 
 	// The stub simulates:
-	// - Agent bead gt-agent-nux with hook_bead = gt-abc123 (base bead)
-	// - Base bead gt-abc123 with attached_molecule: gt-wisp-xyz, status=hooked
-	// - Wisp gt-wisp-xyz (the attached molecule)
+	// - Agent bead ms-agent-nux with hook_bead = ms-abc123 (base bead)
+	// - Base bead ms-abc123 with attached_molecule: ms-wisp-xyz, status=hooked
+	// - Wisp ms-wisp-xyz (the attached molecule)
 	bdScript := fmt.Sprintf(`#!/bin/sh
 echo "$*" >> "%s/bd.log"
 # Strip --allow-stale
@@ -930,14 +930,14 @@ case "$cmd" in
   show)
     beadID="$1"
     case "$beadID" in
-      gt-mineshaft-miner-nux)
-        echo '[{"id":"gt-mineshaft-miner-nux","title":"Miner nux","status":"open","hook_bead":"gt-abc123","agent_state":"working"}]'
+      ms-mineshaft-miner-nux)
+        echo '[{"id":"ms-mineshaft-miner-nux","title":"Miner nux","status":"open","hook_bead":"ms-abc123","agent_state":"working"}]'
         ;;
-      gt-abc123)
-        echo '[{"id":"gt-abc123","title":"Bug to fix","status":"hooked","description":"attached_molecule: gt-wisp-xyz"}]'
+      ms-abc123)
+        echo '[{"id":"ms-abc123","title":"Bug to fix","status":"hooked","description":"attached_molecule: ms-wisp-xyz"}]'
         ;;
-      gt-wisp-xyz)
-        echo '[{"id":"gt-wisp-xyz","title":"mol-miner-work","status":"open","ephemeral":true}]'
+      ms-wisp-xyz)
+        echo '[{"id":"ms-wisp-xyz","title":"mol-miner-work","status":"open","ephemeral":true}]'
         ;;
       *)
         echo '[]'
@@ -967,16 +967,16 @@ if "%%cmd%%"=="--allow-stale" (
   goto strip_flags
 )
 if "%%cmd%%"=="show" (
-  if "%%beadID%%"=="gt-mineshaft-miner-nux" (
-    echo [{^"id^":^"gt-mineshaft-miner-nux^",^"title^":^"Miner nux^",^"status^":^"open^",^"hook_bead^":^"gt-abc123^",^"agent_state^":^"working^"}]
+  if "%%beadID%%"=="ms-mineshaft-miner-nux" (
+    echo [{^"id^":^"ms-mineshaft-miner-nux^",^"title^":^"Miner nux^",^"status^":^"open^",^"hook_bead^":^"ms-abc123^",^"agent_state^":^"working^"}]
     exit /b 0
   )
-  if "%%beadID%%"=="gt-abc123" (
-    echo [{^"id^":^"gt-abc123^",^"title^":^"Bug to fix^",^"status^":^"hooked^",^"description^":^"attached_molecule: gt-wisp-xyz^"}]
+  if "%%beadID%%"=="ms-abc123" (
+    echo [{^"id^":^"ms-abc123^",^"title^":^"Bug to fix^",^"status^":^"hooked^",^"description^":^"attached_molecule: ms-wisp-xyz^"}]
     exit /b 0
   )
-  if "%%beadID%%"=="gt-wisp-xyz" (
-    echo [{^"id^":^"gt-wisp-xyz^",^"title^":^"mol-miner-work^",^"status^":^"open^",^"ephemeral^":true}]
+  if "%%beadID%%"=="ms-wisp-xyz" (
+    echo [{^"id^":^"ms-wisp-xyz^",^"title^":^"mol-miner-work^",^"status^":^"open^",^"ephemeral^":true}]
     exit /b 0
   )
   echo []
@@ -1005,10 +1005,10 @@ exit /b 0
 	}
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv("GT_ROLE", "miner")
-	t.Setenv("GT_RIG", "mineshaft")
-	t.Setenv("GT_MINER", "nux")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_ROLE", "miner")
+	t.Setenv("MS_RIG", "mineshaft")
+	t.Setenv("MS_MINER", "nux")
+	t.Setenv("MS_CREW", "")
 	t.Setenv("TMUX_PANE", "")
 
 	cwd, err := os.Getwd()
@@ -1023,7 +1023,7 @@ exit /b 0
 	// Call the unexported function directly (same package)
 	// updateAgentStateOnDone(cwd, townRoot, exitType, issueID)
 	// Pass issueID directly — hq-l6mm5 removed agent bead hook slot lookup
-	updateAgentStateOnDone(rigPath, townRoot, ExitCompleted, "gt-abc123")
+	updateAgentStateOnDone(rigPath, townRoot, ExitCompleted, "ms-abc123")
 
 	// Read the close log to see what got closed
 	closesBytes, err := os.ReadFile(closesPath)
@@ -1034,27 +1034,27 @@ exit /b 0
 	closes := string(closesBytes)
 	closeLines := strings.Split(strings.TrimSpace(closes), "\n")
 
-	// Check that attached molecule gt-wisp-xyz was closed
+	// Check that attached molecule ms-wisp-xyz was closed
 	foundWisp := false
 	foundBase := false
 	for _, line := range closeLines {
-		if strings.Contains(line, "gt-wisp-xyz") {
+		if strings.Contains(line, "ms-wisp-xyz") {
 			foundWisp = true
 		}
-		if strings.Contains(line, "gt-abc123") {
+		if strings.Contains(line, "ms-abc123") {
 			foundBase = true
 		}
 	}
 
 	if !foundWisp {
-		t.Errorf("attached molecule gt-wisp-xyz was NOT closed\n"+
-			"gt done should close the attached_molecule before closing the hooked bead.\n"+
+		t.Errorf("attached molecule ms-wisp-xyz was NOT closed\n"+
+			"ms done should close the attached_molecule before closing the hooked bead.\n"+
 			"This leaves orphaned wisps after work completes.\n"+
 			"Beads closed: %v", closeLines)
 	}
 
 	if !foundBase {
-		t.Errorf("hooked bead gt-abc123 was NOT closed\n"+
+		t.Errorf("hooked bead ms-abc123 was NOT closed\n"+
 			"Beads closed: %v", closeLines)
 	}
 }

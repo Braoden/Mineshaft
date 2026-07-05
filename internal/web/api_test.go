@@ -609,9 +609,9 @@ func TestAPIHandler_IssueCreate_InvalidJSON(t *testing.T) {
 // --- parseIssueShowOutput edge-case tests (issue #1228: panic-safe string indexing) ---
 
 func TestParseIssueShowOutput_EmptyOutput(t *testing.T) {
-	resp := parseIssueShowOutput("", "gt-123")
-	if resp.ID != "gt-123" {
-		t.Errorf("ID = %q, want %q", resp.ID, "gt-123")
+	resp := parseIssueShowOutput("", "ms-123")
+	if resp.ID != "ms-123" {
+		t.Errorf("ID = %q, want %q", resp.ID, "ms-123")
 	}
 	if resp.Title != "" {
 		t.Errorf("Title = %q, want empty", resp.Title)
@@ -620,8 +620,8 @@ func TestParseIssueShowOutput_EmptyOutput(t *testing.T) {
 
 func TestParseIssueShowOutput_NoBracket(t *testing.T) {
 	// First line without bracket section — title extraction is skipped
-	input := "○ gt-abc · My title without status\nType: issue\nCreated: 2025-01-01"
-	resp := parseIssueShowOutput(input, "gt-abc")
+	input := "○ ms-abc · My title without status\nType: issue\nCreated: 2025-01-01"
+	resp := parseIssueShowOutput(input, "ms-abc")
 	if resp.Title != "" {
 		t.Errorf("Title = %q, want empty (no bracket means no title extraction)", resp.Title)
 	}
@@ -635,8 +635,8 @@ func TestParseIssueShowOutput_NoBracket(t *testing.T) {
 
 func TestParseIssueShowOutput_NoDotSeparator(t *testing.T) {
 	// Created line without "·" separator — should not panic on parts[0]
-	input := "○ gt-abc · My title   [● P2 · OPEN]\nCreated: 2025-01-01"
-	resp := parseIssueShowOutput(input, "gt-abc")
+	input := "○ ms-abc · My title   [● P2 · OPEN]\nCreated: 2025-01-01"
+	resp := parseIssueShowOutput(input, "ms-abc")
 	if resp.Created != "2025-01-01" {
 		t.Errorf("Created = %q, want %q", resp.Created, "2025-01-01")
 	}
@@ -649,8 +649,8 @@ func TestParseIssueShowOutput_CreatedAndUpdated(t *testing.T) {
 	// No space around "·" here so TrimPrefix strips "Updated:" cleanly.
 	// Real bd output may have spaces around "·", but this test validates
 	// the bounds-check safety of the split, not the TrimPrefix edge case.
-	input := "○ gt-abc · My title   [● P2 · OPEN]\nCreated: 2025-01-01·Updated: 2025-06-15"
-	resp := parseIssueShowOutput(input, "gt-abc")
+	input := "○ ms-abc · My title   [● P2 · OPEN]\nCreated: 2025-01-01·Updated: 2025-06-15"
+	resp := parseIssueShowOutput(input, "ms-abc")
 	if resp.Created != "2025-01-01" {
 		t.Errorf("Created = %q, want %q", resp.Created, "2025-01-01")
 	}
@@ -660,8 +660,8 @@ func TestParseIssueShowOutput_CreatedAndUpdated(t *testing.T) {
 }
 
 func TestParseIssueShowOutput_TitleAndStatus(t *testing.T) {
-	input := "○ gt-abc · Deploy widget   [● P1 · IN PROGRESS]\nType: minecart"
-	resp := parseIssueShowOutput(input, "gt-abc")
+	input := "○ ms-abc · Deploy widget   [● P1 · IN PROGRESS]\nType: minecart"
+	resp := parseIssueShowOutput(input, "ms-abc")
 	if resp.Title != "Deploy widget" {
 		t.Errorf("Title = %q, want %q", resp.Title, "Deploy widget")
 	}
@@ -786,7 +786,7 @@ func TestGroupIntoThreads_ReSubjectStrip(t *testing.T) {
 
 func TestParseIssueShowJSON_ValidOutput(t *testing.T) {
 	input := `[{
-		"id": "gt-abc",
+		"id": "ms-abc",
 		"title": "Deploy widget",
 		"description": "Detailed plan here",
 		"status": "open",
@@ -794,15 +794,15 @@ func TestParseIssueShowJSON_ValidOutput(t *testing.T) {
 		"issue_type": "minecart",
 		"created_at": "2025-01-01T00:00:00Z",
 		"updated_at": "2025-06-15T00:00:00Z",
-		"depends_on": ["gt-dep1"],
-		"blocks": ["gt-blk1", "gt-blk2"]
+		"depends_on": ["ms-dep1"],
+		"blocks": ["ms-blk1", "ms-blk2"]
 	}]`
 	resp, ok := parseIssueShowJSON(input)
 	if !ok {
 		t.Fatal("parseIssueShowJSON returned ok=false for valid input")
 	}
-	if resp.ID != "gt-abc" {
-		t.Errorf("ID = %q, want %q", resp.ID, "gt-abc")
+	if resp.ID != "ms-abc" {
+		t.Errorf("ID = %q, want %q", resp.ID, "ms-abc")
 	}
 	if resp.Title != "Deploy widget" {
 		t.Errorf("Title = %q, want %q", resp.Title, "Deploy widget")
@@ -819,8 +819,8 @@ func TestParseIssueShowJSON_ValidOutput(t *testing.T) {
 	if resp.Description != "Detailed plan here" {
 		t.Errorf("Description = %q, want %q", resp.Description, "Detailed plan here")
 	}
-	if len(resp.DependsOn) != 1 || resp.DependsOn[0] != "gt-dep1" {
-		t.Errorf("DependsOn = %v, want [gt-dep1]", resp.DependsOn)
+	if len(resp.DependsOn) != 1 || resp.DependsOn[0] != "ms-dep1" {
+		t.Errorf("DependsOn = %v, want [ms-dep1]", resp.DependsOn)
 	}
 	if len(resp.Blocks) != 2 {
 		t.Errorf("Blocks = %v, want 2 elements", resp.Blocks)
@@ -828,7 +828,7 @@ func TestParseIssueShowJSON_ValidOutput(t *testing.T) {
 }
 
 func TestParseIssueShowJSON_ZeroPriority(t *testing.T) {
-	input := `[{"id": "gt-abc", "title": "No priority", "priority": 0}]`
+	input := `[{"id": "ms-abc", "title": "No priority", "priority": 0}]`
 	resp, ok := parseIssueShowJSON(input)
 	if !ok {
 		t.Fatal("parseIssueShowJSON returned ok=false")
@@ -987,7 +987,7 @@ func TestParseRigListJSON(t *testing.T) {
 
 func TestHandleOptionsUsesRigListJSON(t *testing.T) {
 	binDir := t.TempDir()
-	gtPath := filepath.Join(binDir, "gt")
+	gtPath := filepath.Join(binDir, "ms")
 	bdPath := filepath.Join(binDir, "bd")
 
 	gtScript := `#!/usr/bin/env sh
@@ -1012,7 +1012,7 @@ case "$*" in
     printf '{"agents":[]}\n'
     ;;
   *)
-    printf 'unexpected gt args: %s\n' "$*" >&2
+    printf 'unexpected ms args: %s\n' "$*" >&2
     exit 2
     ;;
 esac
@@ -1031,7 +1031,7 @@ esac
 `
 
 	if err := os.WriteFile(gtPath, []byte(gtScript), 0o755); err != nil {
-		t.Fatalf("write fake gt: %v", err)
+		t.Fatalf("write fake ms: %v", err)
 	}
 	if err := os.WriteFile(bdPath, []byte(bdScript), 0o755); err != nil {
 		t.Fatalf("write fake bd: %v", err)
@@ -1070,7 +1070,7 @@ esac
 
 func TestHandleOptionsTypeRigsOnlyFetchesRigs(t *testing.T) {
 	binDir := t.TempDir()
-	gtPath := filepath.Join(binDir, "gt")
+	gtPath := filepath.Join(binDir, "ms")
 
 	gtScript := `#!/usr/bin/env sh
 set -eu
@@ -1079,14 +1079,14 @@ case "$*" in
     printf '[{"name":"bd_symphony","status":"operational"}]\n'
     ;;
   *)
-    printf 'unexpected gt args: %s\n' "$*" >&2
+    printf 'unexpected ms args: %s\n' "$*" >&2
     exit 2
     ;;
 esac
 `
 
 	if err := os.WriteFile(gtPath, []byte(gtScript), 0o755); err != nil {
-		t.Fatalf("write fake gt: %v", err)
+		t.Fatalf("write fake ms: %v", err)
 	}
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
@@ -1129,9 +1129,9 @@ func TestHandleOptionsTypeRigsUsesConfigWithoutCommands(t *testing.T) {
 	}
 
 	binDir := t.TempDir()
-	gtPath := filepath.Join(binDir, "gt")
+	gtPath := filepath.Join(binDir, "ms")
 	if err := os.WriteFile(gtPath, []byte("#!/usr/bin/env sh\nexit 23\n"), 0o755); err != nil {
-		t.Fatalf("write fake gt: %v", err)
+		t.Fatalf("write fake ms: %v", err)
 	}
 
 	h := &APIHandler{
@@ -1180,9 +1180,9 @@ func TestHandleOptionsTypeRigsFindsConfigFromSubdir(t *testing.T) {
 	}
 
 	binDir := t.TempDir()
-	gtPath := filepath.Join(binDir, "gt")
+	gtPath := filepath.Join(binDir, "ms")
 	if err := os.WriteFile(gtPath, []byte("#!/usr/bin/env sh\nexit 23\n"), 0o755); err != nil {
-		t.Fatalf("write fake gt: %v", err)
+		t.Fatalf("write fake ms: %v", err)
 	}
 
 	h := &APIHandler{
@@ -1217,7 +1217,7 @@ func TestParseMinecartListJSON(t *testing.T) {
 	}{
 		{
 			name: "valid JSON with minecarts",
-			json: `[{"id":"hq-cv-abc","title":"Deploy widgets","issue_type":"minecart"},{"id":"hq-cv-def","title":"Fix bugs","issue_type":"task","labels":["gt:minecart"]}]`,
+			json: `[{"id":"hq-cv-abc","title":"Deploy widgets","issue_type":"minecart"},{"id":"hq-cv-def","title":"Fix bugs","issue_type":"task","labels":["ms:minecart"]}]`,
 			want: []string{"hq-cv-abc", "hq-cv-def"},
 		},
 		{
@@ -1237,7 +1237,7 @@ func TestParseMinecartListJSON(t *testing.T) {
 		},
 		{
 			name: "skips empty IDs",
-			json: `[{"id":"hq-cv-abc","issue_type":"minecart"},{"id":"","issue_type":"minecart"},{"id":"hq-cv-def","labels":["gt:minecart"]}]`,
+			json: `[{"id":"hq-cv-abc","issue_type":"minecart"},{"id":"","issue_type":"minecart"},{"id":"hq-cv-def","labels":["ms:minecart"]}]`,
 			want: []string{"hq-cv-abc", "hq-cv-def"},
 		},
 	}
@@ -1398,13 +1398,13 @@ func TestHandleSessionPreviewPrefixValidation(t *testing.T) {
 	}{
 		{"registered prefix nx", "nx-miner-alpha", false, ""},
 		{"registered prefix myrig", "myrig-crew-bob", false, ""},
-		{"legacy gt- prefix", "gt-miner-test", false, ""},
+		{"legacy ms- prefix", "ms-miner-test", false, ""},
 		{"legacy bd- prefix", "bd-some-bead", false, ""},
 		{"hq- prefix", "hq-nonexistent-session", false, ""},
 		{"gthq- prefix", "gthq-supervisor", false, ""},
 		{"unknown prefix rejected", "unknown-session-name", true, "must start with a known rig prefix"},
 		{"no prefix rejected", "justsomename", true, "must start with a known rig prefix"},
-		{"invalid characters rejected", "gt-bad_chars!", true, "invalid characters"},
+		{"invalid characters rejected", "ms-bad_chars!", true, "invalid characters"},
 		{"missing session parameter", "", true, "Missing session parameter"},
 	}
 

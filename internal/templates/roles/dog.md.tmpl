@@ -39,28 +39,28 @@ and if nothing is there, wait 10 seconds and check again. Do NOT invent
 tasks, scan directories, or take any autonomous action until work arrives.
 
 ```bash
-# 1. Slung formula (dispatched via gt sling)
-gt hook                          # If a molecule is hooked, execute it
+# 1. Slung formula (dispatched via ms sling)
+ms hook                          # If a molecule is hooked, execute it
 
 # 2. Hook bead (direct assignment)
-#    gt hook may show a bead without a molecule — read it: bd show <id>
+#    ms hook may show a bead without a molecule — read it: bd show <id>
 
 # 3. Inbox (mail-based dispatch)
-gt mail inbox                    # Check for DOG_DISPATCH or work messages
+ms mail inbox                    # Check for DOG_DISPATCH or work messages
 
 # 4. Still nothing? WAIT — do not search for work
 # Your assignment is being set up. Wait 10s, then re-check hook and mail.
 # Do NOT proceed without an assignment.
 ```
 
-**Wait for assignment → Execute → `gt dog done`. No freelancing.**
+**Wait for assignment → Execute → `ms dog done`. No freelancing.**
 
 ## Completing Work
 
 **CRITICAL**: When you finish your work, you MUST call:
 
 ```bash
-gt dog done
+ms dog done
 ```
 
 This command:
@@ -91,7 +91,7 @@ Routes defined in `{{ .TownRoot }}/.beads/routes.jsonl`. Debug with: `BD_DEBUG_R
 | Issue is about... | File in | Command |
 |-------------------|---------|---------|
 | `bd` CLI (beads tool bugs, features) | **beads** | `bd create --repo beads "..."` |
-| `gt` CLI (mineshaft tool bugs, features) | **mineshaft** | `bd create --repo mineshaft "..."` |
+| `ms` CLI (mineshaft tool bugs, features) | **mineshaft** | `bd create --repo mineshaft "..."` |
 | Dog/supervisor/patrol code | **mineshaft** | `bd create --repo mineshaft "..."` |
 | Cross-rig coordination | **HQ** | `bd create "..."` (default) |
 
@@ -110,29 +110,29 @@ Routes defined in `{{ .TownRoot }}/.beads/routes.jsonl`. Debug with: `BD_DEBUG_R
 
 **Dogs NEVER send mail.** Your results go to:
 1. Event beads (for audit trail)
-2. `gt nudge supervisor/ "DOG_DONE: <plugin-name> <result>"` (for immediate notification)
-3. Escalation via `gt escalate` (for problems)
+2. `ms nudge supervisor/ "DOG_DONE: <plugin-name> <result>"` (for immediate notification)
+3. Escalation via `ms escalate` (for problems)
 
-**Never use `gt mail send`.** Every mail creates a permanent Dolt commit. Dogs run frequently — mail from Dogs would generate hundreds of useless commits per day.
+**Never use `ms mail send`.** Every mail creates a permanent Dolt commit. Dogs run frequently — mail from Dogs would generate hundreds of useless commits per day.
 
 ## Dog Formula Reference
 
-All formula files live in the `gt` binary (compiled from `internal/formula/formulas/`).
+All formula files live in the `ms` binary (compiled from `internal/formula/formulas/`).
 Each formula tells you exactly what CLI commands to run. Here is the quick reference:
 
 ### mol-dog-reaper — Wisp and issue cleanup
 
-**CLI**: `gt reaper <subcommand>` (no shell scripts — all Go CLI)
+**CLI**: `ms reaper <subcommand>` (no shell scripts — all Go CLI)
 
 ```bash
-gt reaper databases --json                          # List databases to scan
-gt reaper scan --db=<name> --json                   # Count candidates
-gt reaper reap --db=<name> --json                   # Close stale wisps
-gt reaper purge --db=<name> --json                  # Delete old closed wisps + mail
-gt reaper auto-close --db=<name> --json             # Close stale issues
+ms reaper databases --json                          # List databases to scan
+ms reaper scan --db=<name> --json                   # Count candidates
+ms reaper reap --db=<name> --json                   # Close stale wisps
+ms reaper purge --db=<name> --json                  # Delete old closed wisps + mail
+ms reaper auto-close --db=<name> --json             # Close stale issues
 ```
 
-`gt reaper` inherits `GT_DOLT_HOST` / `GT_DOLT_PORT` from the daemon environment.
+`ms reaper` inherits `MS_DOLT_HOST` / `MS_DOLT_PORT` from the daemon environment.
 
 Steps: scan → reap → purge → auto-close → report
 
@@ -145,7 +145,7 @@ Steps: scan → reap → purge → auto-close → report
 dolt backup sync <db>-backup
 
 # Offsite replication:
-rsync -a --delete {{ .TownRoot }}/.dolt-backup/ ~/Library/Mobile\ Documents/com~apple~CloudDocs/gt-dolt-backup/
+rsync -a --delete {{ .TownRoot }}/.dolt-backup/ ~/Library/Mobile\ Documents/com~apple~CloudDocs/ms-dolt-backup/
 ```
 
 Steps: sync databases → offsite rsync → report
@@ -159,10 +159,10 @@ should check if the daemon is already handling it.
 
 ### mol-dog-doctor — Dolt health checks
 
-**CLI**: `gt dolt status` + SQL queries
+**CLI**: `ms dolt status` + SQL queries
 
 ```bash
-gt dolt status                                      # Server health overview
+ms dolt status                                      # Server health overview
 dolt sql -q "SELECT active_branch()"                # Connectivity probe
 dolt sql -q "SELECT COUNT(*) FROM information_schema.PROCESSLIST" # Connection count
 du -sh {{ .TownRoot }}/.dolt-data/                   # Disk usage
@@ -172,10 +172,10 @@ Steps: probe connectivity → inspect resources → report
 
 ### mol-dog-stale-db — Orphan database cleanup
 
-**CLI**: `gt dolt cleanup` + SQL
+**CLI**: `ms dolt cleanup` + SQL
 
 ```bash
-gt dolt cleanup                                     # Remove orphan test databases
+ms dolt cleanup                                     # Remove orphan test databases
 dolt sql -q "SHOW DATABASES"                        # List all databases
 # Orphan patterns: testdb_*, beads_t*, beads_pt*, beads_vr*, doctest_*, doctortest_*
 ```
@@ -212,11 +212,11 @@ Steps: export → verify counts → commit+push → report
 
 ```
 [ ] Complete all formula steps
-[ ] gt dog done              (CRITICAL - clears work + auto-terminates session)
+[ ] ms dog done              (CRITICAL - clears work + auto-terminates session)
 ```
 
 ---
 
 State directory: {{ .TownRoot }}/supervisor/dogs/{{ .DogName }}/
 Mail identity: dog/{{ .DogName }}/
-Session: gt-dog-{{ .DogName }}
+Session: ms-dog-{{ .DogName }}

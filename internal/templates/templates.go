@@ -22,13 +22,13 @@ var (
 )
 
 // CmdName returns the Mineshaft CLI command name.
-// Defaults to "gt", but can be overridden with GT_COMMAND env var.
-// This allows coexistence with other tools that use "gt" (e.g., Graphite).
+// Defaults to "ms", but can be overridden with MS_COMMAND env var.
+// This allows coexistence with other tools that use "ms" (e.g., Graphite).
 func CmdName() string {
 	cmdNameOnce.Do(func() {
-		cmdName = os.Getenv("GT_COMMAND")
+		cmdName = os.Getenv("MS_COMMAND")
 		if cmdName == "" {
-			cmdName = "gt"
+			cmdName = "ms"
 		}
 	})
 	return cmdName
@@ -67,8 +67,8 @@ type RoleData struct {
 	DogName        string   // dog name (for dog role)
 	BeadsDir       string   // BEADS_DIR path
 	IssuePrefix    string   // beads issue prefix
-	OverseerSession   string   // e.g., "gt-ai-overseer" - dynamic overseer session name
-	SupervisorSession  string   // e.g., "gt-ai-supervisor" - dynamic supervisor session name
+	OverseerSession   string   // e.g., "ms-ai-overseer" - dynamic overseer session name
+	SupervisorSession  string   // e.g., "ms-ai-supervisor" - dynamic supervisor session name
 }
 
 // SpawnData contains information for spawn assignment messages.
@@ -116,7 +116,7 @@ type HandoffData struct {
 
 // SupervisorData contains information for rendering supervisor templates.
 type SupervisorData struct {
-	GTPath   string // Path to the gt binary
+	GTPath   string // Path to the ms binary
 	TownRoot string // Path to the Mineshaft workspace
 }
 
@@ -176,7 +176,7 @@ func (t *Templates) MessageNames() []string {
 }
 
 // CreateOverseerCLAUDEmd creates the Overseer's CLAUDE.md file at the specified directory.
-// This is used by both gt install and gt doctor --fix.
+// This is used by both ms install and ms doctor --fix.
 //
 // Returns (created bool, error) - created is false if file already exists.
 // Existing files are preserved to respect user customizations.
@@ -216,17 +216,17 @@ func CreateOverseerCLAUDEmd(overseerDir, townRoot, townName, overseerSession, su
 // template. Used to detect whether a CLAUDE.md file contains the Mineshaft
 // overlay (vs. project-specific content). If an existing CLAUDE.md lacks this
 // marker, miner lifecycle instructions are appended — the agent won't know
-// to call `gt done` otherwise.
+// to call `ms done` otherwise.
 const MinerLifecycleMarker = "IDLE MINER HERESY"
 
 // CreateMinerCLAUDEmd writes the miner CLAUDE.md template to the worktree.
-// This is the primary mechanism for miners to learn about `gt done` and other
+// This is the primary mechanism for miners to learn about `ms done` and other
 // lifecycle commands — the file persists across compaction and session restarts.
 //
 // If the worktree already has a tracked CLAUDE.md (e.g., from the rig's repo),
 // miner lifecycle instructions are written to CLAUDE.local.md instead. This
 // avoids creating uncommitted changes in the tracked CLAUDE.md, which the
-// gt done auto-save safety net would otherwise commit onto the miner's branch,
+// ms done auto-save safety net would otherwise commit onto the miner's branch,
 // polluting the PR diff with hundreds of lines of agent context.
 //
 // If no CLAUDE.md exists, the full template is written to CLAUDE.md.
@@ -313,7 +313,7 @@ func MissingCommandsFor(workspacePath, agent string) []string {
 func ProvisionSupervisor(townRoot string) (string, error) {
 	gtPath, err := os.Executable()
 	if err != nil {
-		return "", fmt.Errorf("finding gt executable: %w", err)
+		return "", fmt.Errorf("finding ms executable: %w", err)
 	}
 
 	data := SupervisorData{

@@ -50,31 +50,31 @@ func TestAgentBeadIDToAddress(t *testing.T) {
 		id   string
 		want string
 	}{
-		// Town-level agents (gt- prefix)
-		{"gt-overseer", "overseer/"},
-		{"gt-supervisor", "supervisor/"},
+		// Town-level agents (ms- prefix)
+		{"ms-overseer", "overseer/"},
+		{"ms-supervisor", "supervisor/"},
 
 		// Town-level agents (hq- prefix)
 		{"hq-overseer", "overseer/"},
 		{"hq-supervisor", "supervisor/"},
 
 		// Rig singletons
-		{"gt-mineshaft-witness", "mineshaft/witness"},
-		{"gt-mineshaft-refinery", "mineshaft/refinery"},
-		{"gt-beads-witness", "beads/witness"},
+		{"ms-mineshaft-witness", "mineshaft/witness"},
+		{"ms-mineshaft-refinery", "mineshaft/refinery"},
+		{"ms-beads-witness", "beads/witness"},
 
 		// Named agents
-		{"gt-mineshaft-crew-max", "mineshaft/crew/max"},
-		{"gt-mineshaft-miner-Toast", "mineshaft/miners/Toast"},
-		{"gt-beads-crew-wolf", "beads/crew/wolf"},
+		{"ms-mineshaft-crew-max", "mineshaft/crew/max"},
+		{"ms-mineshaft-miner-Toast", "mineshaft/miners/Toast"},
+		{"ms-beads-crew-wolf", "beads/crew/wolf"},
 
 		// Agent with hyphen in name
-		{"gt-mineshaft-crew-max-v2", "mineshaft/crew/max-v2"},
-		{"gt-mineshaft-miner-my-agent", "mineshaft/miners/my-agent"},
+		{"ms-mineshaft-crew-max-v2", "mineshaft/crew/max-v2"},
+		{"ms-mineshaft-miner-my-agent", "mineshaft/miners/my-agent"},
 
 		// Invalid
 		{"invalid", ""},
-		{"not-gt-prefix", ""},
+		{"not-ms-prefix", ""},
 		{"", ""},
 	}
 
@@ -167,7 +167,7 @@ func TestResolverResolve_UnknownName(t *testing.T) {
 	}
 }
 
-// Regression test for gt-64wh5: cycle detection bypassed through Resolve fallback.
+// Regression test for ms-64wh5: cycle detection bypassed through Resolve fallback.
 // Before the fix, resolveMemberWithVisited called r.Resolve() for @-prefixed and
 // /-containing members, which created a fresh visited map and lost cycle detection.
 // Now it calls resolveWithVisited to thread the visited map through all paths.

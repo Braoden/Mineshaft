@@ -99,10 +99,10 @@ func TestRenderAgentDetails_UsesRigPrefix(t *testing.T) {
 
 func TestDiscoverRigAgents_ZombieSessionNotRunning(t *testing.T) {
 	// Verify that a session in allSessions with value=false (zombie: tmux alive,
-	// agent dead) results in agent.Running=false. This is the core fix for gt-bd6i3.
+	// agent dead) results in agent.Running=false. This is the core fix for ms-bd6i3.
 	townRoot := t.TempDir()
 	writeTestRoutes(t, townRoot, []beads.Route{
-		{Prefix: "gt-", Path: "mineshaft/overseer/rig"},
+		{Prefix: "ms-", Path: "mineshaft/overseer/rig"},
 	})
 
 	r := &rig.Rig{
@@ -114,7 +114,7 @@ func TestDiscoverRigAgents_ZombieSessionNotRunning(t *testing.T) {
 	// allSessions has the witness session but marked as zombie (false).
 	// This simulates a tmux session that exists but whose agent process has died.
 	allSessions := map[string]bool{
-		"gt-mineshaft-witness": false, // zombie: tmux exists, agent dead
+		"ms-mineshaft-witness": false, // zombie: tmux exists, agent dead
 	}
 
 	agents := discoverRigAgents(allSessions, r, nil, nil, nil, nil, true)
@@ -133,7 +133,7 @@ func TestDiscoverRigAgents_MissingSessionNotRunning(t *testing.T) {
 	// Verify that a session not in allSessions at all results in agent.Running=false.
 	townRoot := t.TempDir()
 	writeTestRoutes(t, townRoot, []beads.Route{
-		{Prefix: "gt-", Path: "mineshaft/overseer/rig"},
+		{Prefix: "ms-", Path: "mineshaft/overseer/rig"},
 	})
 
 	r := &rig.Rig{
@@ -185,8 +185,8 @@ func TestBuildStatusIndicator_DNDMutedShowsBadge(t *testing.T) {
 
 func TestOutputStatusText_IncludesDNDSection(t *testing.T) {
 	status := TownStatus{
-		Name:     "gt",
-		Location: "/tmp/gt",
+		Name:     "ms",
+		Location: "/tmp/ms",
 		DND: &DNDInfo{
 			Enabled: true,
 			Level:   beads.NotifyMuted,

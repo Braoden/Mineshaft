@@ -21,7 +21,7 @@ func TestStartSession_RequiresSessionID(t *testing.T) {
 
 func TestStartSession_RequiresWorkDir(t *testing.T) {
 	_, err := StartSession(nil, SessionConfig{
-		SessionID: "gt-test",
+		SessionID: "ms-test",
 		Role:      "miner",
 	})
 	if err == nil {
@@ -34,7 +34,7 @@ func TestStartSession_RequiresWorkDir(t *testing.T) {
 
 func TestStartSession_RequiresRole(t *testing.T) {
 	_, err := StartSession(nil, SessionConfig{
-		SessionID: "gt-test",
+		SessionID: "ms-test",
 		WorkDir:   "/tmp",
 	})
 	if err == nil {
@@ -69,10 +69,10 @@ func TestBuildPrompt_WithInstructions(t *testing.T) {
 			Sender:    "daemon",
 			Topic:     "triage",
 		},
-		Instructions: "Run gt boot triage now.",
+		Instructions: "Run ms boot triage now.",
 	}
 	prompt := buildPrompt(cfg)
-	if !contains(prompt, "Run gt boot triage now.") {
+	if !contains(prompt, "Run ms boot triage now.") {
 		t.Errorf("prompt should contain instructions: %s", prompt)
 	}
 	if !contains(prompt, "[MINESHAFT]") {
@@ -118,12 +118,12 @@ func TestKillExistingSession_NoSession(t *testing.T) {
 
 func TestMapKeysSorted(t *testing.T) {
 	got := mapKeysSorted(map[string]string{
-		"GT_SESSION": "1",
-		"GT_ROLE":    "miner",
-		"GT_RIG":     "alpha",
+		"MS_SESSION": "1",
+		"MS_ROLE":    "miner",
+		"MS_RIG":     "alpha",
 	})
 
-	want := []string{"GT_RIG", "GT_ROLE", "GT_SESSION"}
+	want := []string{"MS_RIG", "MS_ROLE", "MS_SESSION"}
 	if len(got) != len(want) {
 		t.Fatalf("mapKeysSorted() length = %d, want %d", len(got), len(want))
 	}
@@ -136,7 +136,7 @@ func TestMapKeysSorted(t *testing.T) {
 
 func TestMergeRuntimeLivenessEnv_SetsResolvedAgentAndProcessNames(t *testing.T) {
 	env := map[string]string{
-		"GT_ROLE": "miner",
+		"MS_ROLE": "miner",
 	}
 	rc := &config.RuntimeConfig{
 		Command:       "claude",
@@ -145,18 +145,18 @@ func TestMergeRuntimeLivenessEnv_SetsResolvedAgentAndProcessNames(t *testing.T) 
 
 	got := MergeRuntimeLivenessEnv(env, rc)
 
-	if got["GT_AGENT"] != "claude" {
-		t.Fatalf("GT_AGENT = %q, want %q", got["GT_AGENT"], "claude")
+	if got["MS_AGENT"] != "claude" {
+		t.Fatalf("MS_AGENT = %q, want %q", got["MS_AGENT"], "claude")
 	}
-	if got["GT_PROCESS_NAMES"] != "node,claude" {
-		t.Fatalf("GT_PROCESS_NAMES = %q, want %q", got["GT_PROCESS_NAMES"], "node,claude")
+	if got["MS_PROCESS_NAMES"] != "node,claude" {
+		t.Fatalf("MS_PROCESS_NAMES = %q, want %q", got["MS_PROCESS_NAMES"], "node,claude")
 	}
 }
 
 func TestMergeRuntimeLivenessEnv_RespectsExistingValues(t *testing.T) {
 	env := map[string]string{
-		"GT_AGENT":         "explicit-agent",
-		"GT_PROCESS_NAMES": "custom-bin,custom-agent",
+		"MS_AGENT":         "explicit-agent",
+		"MS_PROCESS_NAMES": "custom-bin,custom-agent",
 	}
 	rc := &config.RuntimeConfig{
 		Command:       "bun",
@@ -165,20 +165,20 @@ func TestMergeRuntimeLivenessEnv_RespectsExistingValues(t *testing.T) {
 
 	got := MergeRuntimeLivenessEnv(env, rc)
 
-	if got["GT_AGENT"] != "explicit-agent" {
-		t.Fatalf("GT_AGENT = %q, want %q", got["GT_AGENT"], "explicit-agent")
+	if got["MS_AGENT"] != "explicit-agent" {
+		t.Fatalf("MS_AGENT = %q, want %q", got["MS_AGENT"], "explicit-agent")
 	}
-	if got["GT_PROCESS_NAMES"] != "custom-bin,custom-agent" {
-		t.Fatalf("GT_PROCESS_NAMES = %q, want %q", got["GT_PROCESS_NAMES"], "custom-bin,custom-agent")
+	if got["MS_PROCESS_NAMES"] != "custom-bin,custom-agent" {
+		t.Fatalf("MS_PROCESS_NAMES = %q, want %q", got["MS_PROCESS_NAMES"], "custom-bin,custom-agent")
 	}
 }
 
 func TestMergeRuntimeLivenessEnv_UsesEffectiveAgentForProcessNames(t *testing.T) {
-	// When AgentOverride sets GT_AGENT to a different agent than
+	// When AgentOverride sets MS_AGENT to a different agent than
 	// runtimeConfig.ResolvedAgent, process names must be resolved from
-	// the effective agent (GT_AGENT), not the workspace-default resolved agent.
+	// the effective agent (MS_AGENT), not the workspace-default resolved agent.
 	env := map[string]string{
-		"GT_AGENT": "codex", // set by AgentEnv from AgentOverride
+		"MS_AGENT": "codex", // set by AgentEnv from AgentOverride
 	}
 	rc := &config.RuntimeConfig{
 		Command:       "claude",
@@ -187,11 +187,11 @@ func TestMergeRuntimeLivenessEnv_UsesEffectiveAgentForProcessNames(t *testing.T)
 
 	got := MergeRuntimeLivenessEnv(env, rc)
 
-	if got["GT_AGENT"] != "codex" {
-		t.Fatalf("GT_AGENT = %q, want %q", got["GT_AGENT"], "codex")
+	if got["MS_AGENT"] != "codex" {
+		t.Fatalf("MS_AGENT = %q, want %q", got["MS_AGENT"], "codex")
 	}
-	if got["GT_PROCESS_NAMES"] != "codex" {
-		t.Fatalf("GT_PROCESS_NAMES = %q, want %q (should resolve from effective agent, not runtimeConfig)", got["GT_PROCESS_NAMES"], "codex")
+	if got["MS_PROCESS_NAMES"] != "codex" {
+		t.Fatalf("MS_PROCESS_NAMES = %q, want %q (should resolve from effective agent, not runtimeConfig)", got["MS_PROCESS_NAMES"], "codex")
 	}
 }
 

@@ -78,7 +78,7 @@ func TestCleanupDelayedDogFormulaFailureClearsWorkAfterWispCleanupError(t *testi
 		rigsConfig:    rigsConfig,
 	}
 
-	err := cleanupDelayedDogFormulaFailure(errors.New("start failed"), dispatch, "gt-wisp", townRoot)
+	err := cleanupDelayedDogFormulaFailure(errors.New("start failed"), dispatch, "ms-wisp", townRoot)
 	if err == nil || !strings.Contains(err.Error(), "start failed") || !strings.Contains(err.Error(), "close failed") {
 		t.Fatalf("cleanup error = %v, want joined start and close errors", err)
 	}

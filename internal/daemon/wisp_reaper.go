@@ -22,7 +22,7 @@ const (
 	// Closed wisps older than this are permanently deleted. Formula var: purge_age.
 	defaultWispDeleteAge = 7 * 24 * time.Hour
 	// Alert threshold: if open wisp count exceeds this, the Dog should escalate.
-	// Shared with `gt reaper run` warning. See reaper.DefaultAlertThreshold.
+	// Shared with `ms reaper run` warning. See reaper.DefaultAlertThreshold.
 	wispAlertThreshold = reaper.DefaultAlertThreshold
 	// Closed mail older than this is permanently deleted. Formula var: mail_delete_age.
 	defaultMailDeleteAge = 7 * 24 * time.Hour
@@ -78,7 +78,7 @@ func wispDeleteAge(config *DaemonPatrolConfig) time.Duration {
 
 // reapWisps is the thin orchestrator for the wisp_reaper patrol.
 // It pours a mol-dog-reaper molecule, then dispatches a Dog to execute it.
-// The Dog reads the formula steps and calls `gt reaper` CLI helpers.
+// The Dog reads the formula steps and calls `ms reaper` CLI helpers.
 // Falls back to inline execution if Dog dispatch fails.
 func (d *Daemon) reapWisps() {
 	if !d.isPatrolActive("wisp_reaper") {
@@ -122,7 +122,7 @@ func (d *Daemon) reapWisps() {
 	d.logger.Printf("wisp_reaper: dispatched to Dog for formula-driven execution")
 }
 
-// dispatchReaperDog dispatches the mol-dog-reaper formula to a Dog via gt sling.
+// dispatchReaperDog dispatches the mol-dog-reaper formula to a Dog via ms sling.
 func (d *Daemon) dispatchReaperDog(vars map[string]string) error {
 	args := []string{"sling", constants.MolDogReaper, "supervisor/dogs"}
 	for k, v := range vars {
@@ -131,12 +131,12 @@ func (d *Daemon) dispatchReaperDog(vars map[string]string) error {
 
 	cmd := exec.Command(d.gtPath, args...) //nolint:gosec // G204: d.gtPath resolved at daemon init via LookPath
 	cmd.Dir = d.config.TownRoot
-	// gt sling performs writes, so use mutation routing env: it preserves PATH
+	// ms sling performs writes, so use mutation routing env: it preserves PATH
 	// while stripping stale bd target selectors and derived Beads endpoint aliases.
 	cmd.Env = bdMutationRoutingEnv(d.config.TownRoot)
 	util.SetDetachedProcessGroup(cmd)
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("gt sling: %w", err)
+		return fmt.Errorf("ms sling: %w", err)
 	}
 	return nil
 }

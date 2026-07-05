@@ -14,7 +14,7 @@ import (
 
 // TestE2EEchoThroughProxy is an end-to-end integration test that provisions a
 // CA, starts the mTLS proxy server with "echo" allowed, builds the
-// gt-proxy-client binary (symlinked as "echo"), and verifies that running the
+// ms-proxy-client binary (symlinked as "echo"), and verifies that running the
 // aliased echo command routes through the proxy and returns the expected output.
 func TestE2EEchoThroughProxy(t *testing.T) {
 	if testing.Short() {
@@ -50,14 +50,14 @@ func TestE2EEchoThroughProxy(t *testing.T) {
 	}, 5*time.Second, 10*time.Millisecond)
 	waitForServer(t, addr, 5*time.Second)
 
-	// --- Build gt-proxy-client and symlink as "echo" ---
+	// --- Build ms-proxy-client and symlink as "echo" ---
 	binDir := t.TempDir()
-	clientBin := filepath.Join(binDir, "gt-proxy-client")
+	clientBin := filepath.Join(binDir, "ms-proxy-client")
 
-	buildCmd := exec.Command("go", "build", "-o", clientBin, "./cmd/gt-proxy-client")
+	buildCmd := exec.Command("go", "build", "-o", clientBin, "./cmd/ms-proxy-client")
 	buildCmd.Dir = filepath.Join("..", "..") // repo root from internal/proxy/
 	buildOut, err := buildCmd.CombinedOutput()
-	require.NoError(t, err, "go build gt-proxy-client failed:\n%s", buildOut)
+	require.NoError(t, err, "go build ms-proxy-client failed:\n%s", buildOut)
 
 	// Symlink client binary as "echo" so toolNameFromArg0 returns "echo".
 	echoLink := filepath.Join(binDir, "echo")
@@ -65,7 +65,7 @@ func TestE2EEchoThroughProxy(t *testing.T) {
 
 	// --- Issue client certificate ---
 	certDir := t.TempDir()
-	certPEM, keyPEM, err := ca.IssueMiner("gt-mineshaft-e2etest", time.Hour)
+	certPEM, keyPEM, err := ca.IssueMiner("ms-mineshaft-e2etest", time.Hour)
 	require.NoError(t, err)
 
 	certFile := filepath.Join(certDir, "client.crt")
@@ -77,10 +77,10 @@ func TestE2EEchoThroughProxy(t *testing.T) {
 	require.NoError(t, os.WriteFile(caFile, ca.CertPEM, 0644))
 
 	proxyEnv := []string{
-		"GT_PROXY_URL=https://" + addr,
-		"GT_PROXY_CERT=" + certFile,
-		"GT_PROXY_KEY=" + keyFile,
-		"GT_PROXY_CA=" + caFile,
+		"MS_PROXY_URL=https://" + addr,
+		"MS_PROXY_CERT=" + certFile,
+		"MS_PROXY_KEY=" + keyFile,
+		"MS_PROXY_CA=" + caFile,
 	}
 
 	// --- Run echo through the proxy ---
@@ -90,7 +90,7 @@ func TestE2EEchoThroughProxy(t *testing.T) {
 		cmd.Env = proxyEnv
 		output, err := cmd.CombinedOutput()
 		require.NoError(t, err, "echo through proxy failed: %s", output)
-		// Identity is passed via GT_PROXY_IDENTITY env var, not injected into argv.
+		// Identity is passed via MS_PROXY_IDENTITY env var, not injected into argv.
 		assert.Equal(t, "hello world\n", string(output))
 	})
 
@@ -114,7 +114,7 @@ func TestE2EEchoThroughProxy(t *testing.T) {
 		// Issue a cert from a completely different CA.
 		otherCA, err := GenerateCA(t.TempDir())
 		require.NoError(t, err)
-		wrongCertPEM, wrongKeyPEM, err := otherCA.IssueMiner("gt-mineshaft-evil", time.Hour)
+		wrongCertPEM, wrongKeyPEM, err := otherCA.IssueMiner("ms-mineshaft-evil", time.Hour)
 		require.NoError(t, err)
 
 		wrongDir := t.TempDir()
@@ -125,10 +125,10 @@ func TestE2EEchoThroughProxy(t *testing.T) {
 
 		cmd := exec.Command(echoLink, "should", "fail")
 		cmd.Env = []string{
-			"GT_PROXY_URL=https://" + addr,
-			"GT_PROXY_CERT=" + wrongCertFile,
-			"GT_PROXY_KEY=" + wrongKeyFile,
-			"GT_PROXY_CA=" + caFile, // still trust the real server cert
+			"MS_PROXY_URL=https://" + addr,
+			"MS_PROXY_CERT=" + wrongCertFile,
+			"MS_PROXY_KEY=" + wrongKeyFile,
+			"MS_PROXY_CA=" + caFile, // still trust the real server cert
 		}
 		output, err := cmd.CombinedOutput()
 		assert.Error(t, err, "wrong cert should cause TLS rejection")
@@ -137,10 +137,10 @@ func TestE2EEchoThroughProxy(t *testing.T) {
 
 	t.Run("missing proxy env falls back and fails without real binary", func(t *testing.T) {
 		cmd := exec.Command(echoLink, "should", "fail")
-		// No GT_PROXY_* vars → client falls back to execReal.
-		cmd.Env = []string{"GT_REAL_BIN=/nonexistent/binary/xyzzy"}
+		// No MS_PROXY_* vars → client falls back to execReal.
+		cmd.Env = []string{"MS_REAL_BIN=/nonexistent/binary/xyzzy"}
 		output, err := cmd.CombinedOutput()
 		assert.Error(t, err, "should fail when falling back to nonexistent real binary")
-		assert.Contains(t, string(output), "gt-proxy-client: exec")
+		assert.Contains(t, string(output), "ms-proxy-client: exec")
 	})
 }

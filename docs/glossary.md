@@ -1,6 +1,6 @@
 # Mineshaft Glossary
 
-Mineshaft is an agentic development environment for managing multiple Claude Code instances simultaneously using the `gt` and `bd` (Beads) binaries, coordinated with tmux in git-managed directories.
+Mineshaft is an agentic development environment for managing multiple Claude Code instances simultaneously using the `ms` and `bd` (Beads) binaries, coordinated with tmux in git-managed directories.
 
 ## Core Principles
 
@@ -16,7 +16,7 @@ The overarching goal ensuring useful outcomes through orchestration of potential
 ## Environments
 
 ### Town
-The management headquarters (e.g., `~/gt/`). The Town coordinates all workers across multiple Rigs and houses town-level agents like Overseer and Supervisor.
+The management headquarters (e.g., `~/ms/`). The Town coordinates all workers across multiple Rigs and houses town-level agents like Overseer and Supervisor.
 
 ### Rig
 A project-specific Git repository under Mineshaft management. Each Rig has its own Miners, Refinery, Witness, and Crew members. Rigs are where actual development work happens.
@@ -72,19 +72,19 @@ A special pinned Bead for each agent. The Hook is an agent's primary work queue 
 ## Workflow Commands
 
 ### Minecart
-Primary work-order wrapping related Beads. Minecarts group related tasks together and can be assigned to multiple workers. Created with `gt minecart create`.
+Primary work-order wrapping related Beads. Minecarts group related tasks together and can be assigned to multiple workers. Created with `ms minecart create`.
 
 ### Slinging
-Assigning work to agents via `gt sling`. When you sling work to a Miner or Crew member, you're putting it on their Hook for execution.
+Assigning work to agents via `ms sling`. When you sling work to a Miner or Crew member, you're putting it on their Hook for execution.
 
 ### Nudging
-Real-time messaging between agents with `gt nudge`. Nudges allow immediate communication without going through the mail system.
+Real-time messaging between agents with `ms nudge`. Nudges allow immediate communication without going through the mail system.
 
 ### Handoff
 Agent session refresh via `/handoff`. When context gets full or an agent needs a fresh start, handoff transfers work state to a new session.
 
 ### Seance
-Communicating with previous sessions via `gt seance`. Allows agents to query their predecessors for context and decisions from earlier work.
+Communicating with previous sessions via `ms seance`. Allows agents to query their predecessors for context and decisions from earlier work.
 
 ### Patrol
 Ephemeral loop maintaining system heartbeat. Patrol agents (Supervisor, Witness) continuously cycle through health checks and trigger actions as needed.

@@ -290,7 +290,7 @@ func Redispatch(townRoot, beadID, sourceRig string, maxAttempts int, cooldown ti
 	// Verify bead is still open (not already claimed or closed).
 	// Only proceed when status is explicitly "open". Empty status (query
 	// failure) is treated as "not open" to avoid re-dispatching closed
-	// beads when bd show fails. (gt-sy8)
+	// beads when bd show fails. (ms-sy8)
 	beadStatus := getBeadStatusForRedispatch(townRoot, beadID)
 	if beadStatus != "open" {
 		result.Action = "skipped"
@@ -305,7 +305,7 @@ func Redispatch(townRoot, beadID, sourceRig string, maxAttempts int, cooldown ti
 	// Determine agent override from model escalation config (if any).
 	escalationAgent := resolveAgentForRedispatch(townRoot, targetRig, beadState)
 
-	// Re-dispatch via gt sling
+	// Re-dispatch via ms sling
 	err = slingBead(townRoot, beadID, targetRig, escalationAgent)
 	if err != nil {
 		result.Action = "error"
@@ -442,14 +442,14 @@ func resolveAgentForRedispatch(townRoot, targetRig string, beadState *BeadRedisp
 	return ""
 }
 
-// slingBead dispatches a bead to a rig via gt sling.
+// slingBead dispatches a bead to a rig via ms sling.
 // If agent is non-empty, passes --agent <agent> to override the rig's default.
 func slingBead(townRoot, beadID, rig, agent string) error {
 	args := []string{"sling", beadID, rig, "--force", "--no-minecart"}
 	if agent != "" {
 		args = append(args, "--agent", agent)
 	}
-	cmd := exec.Command("gt", args...)
+	cmd := exec.Command("ms", args...)
 	cmd.Dir = townRoot
 	cmd.Env = supervisorMutationRoutingEnv(townRoot)
 	util.SetDetachedProcessGroup(cmd)
@@ -481,7 +481,7 @@ Please investigate and either:
 		beadState.LastAttemptTime.Format(time.RFC3339),
 	)
 
-	cmd := exec.Command("gt", "mail", "send", "overseer/", "-s", subject, "-m", body)
+	cmd := exec.Command("ms", "mail", "send", "overseer/", "-s", subject, "-m", body)
 	cmd.Dir = townRoot
 	cmd.Env = supervisorMutationRoutingEnv(townRoot)
 	util.SetDetachedProcessGroup(cmd)

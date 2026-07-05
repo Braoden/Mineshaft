@@ -12,7 +12,7 @@ import (
 
 // RigBeadsCheck verifies that rig identity beads exist for all rigs.
 // Rig identity beads track rig metadata like git URL, prefix, and operational state.
-// They are created by gt rig add (see gt-zmznh) but may be missing for legacy rigs.
+// They are created by ms rig add (see ms-zmznh) but may be missing for legacy rigs.
 type RigBeadsCheck struct {
 	FixableCheck
 }
@@ -44,7 +44,7 @@ func (c *RigBeadsCheck) Run(ctx *CheckContext) *CheckResult {
 	}
 
 	// Build unique rig list from routes
-	// Routes have format: prefix "gt-" -> path "mineshaft/overseer/rig"
+	// Routes have format: prefix "ms-" -> path "mineshaft/overseer/rig"
 	rigSet := make(map[string]struct {
 		prefix    string
 		beadsPath string
@@ -103,7 +103,7 @@ func (c *RigBeadsCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:  StatusError,
 		Message: fmt.Sprintf("%d rig identity bead(s) missing", len(missing)),
 		Details: missing,
-		FixHint: "Run 'gt doctor --fix' to create missing rig identity beads",
+		FixHint: "Run 'ms doctor --fix' to create missing rig identity beads",
 	}
 }
 

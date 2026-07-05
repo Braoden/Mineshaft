@@ -24,14 +24,14 @@ Available guards:
   mol-patrol         - Block mol patrol from agent contexts
   dangerous-command  - Block rm -rf, force push, hard reset, git clean
 
-External guards (standalone scripts, not compiled into gt):
+External guards (standalone scripts, not compiled into ms):
   context-budget   - scripts/guards/context-budget-guard.sh
 
 Example hook configuration:
   {
     "PreToolUse": [{
       "matcher": "Bash(gh pr create*)",
-      "hooks": [{"command": "gt tap guard pr-workflow"}]
+      "hooks": [{"command": "ms tap guard pr-workflow"}]
     }]
   }`,
 }
@@ -79,7 +79,7 @@ func runTapGuardPRWorkflow(cmd *cobra.Command, args []string) error {
 		fmt.Fprintln(os.Stderr, "║  Do this:     git add . && git commit && git push origin main   ║")
 		fmt.Fprintln(os.Stderr, "║                                                                  ║")
 		fmt.Fprintln(os.Stderr, "║  Why? PRs add friction that breaks autonomous execution.        ║")
-		fmt.Fprintln(os.Stderr, "║  See: ~/gt/docs/PRIMING.md (GUPP principle)                     ║")
+		fmt.Fprintln(os.Stderr, "║  See: ~/ms/docs/PRIMING.md (GUPP principle)                     ║")
 		fmt.Fprintln(os.Stderr, "╚══════════════════════════════════════════════════════════════════╝")
 		fmt.Fprintln(os.Stderr, "")
 		return NewSilentExit(2) // Exit 2 = BLOCK in Claude Code hooks
@@ -109,12 +109,12 @@ func runTapGuardPRWorkflow(cmd *cobra.Command, args []string) error {
 func isMineshaftAgentContext() bool {
 	// Check environment variables set by Mineshaft session management
 	envVars := []string{
-		"GT_MINER",
-		"GT_CREW",
-		"GT_WITNESS",
-		"GT_REFINERY",
-		"GT_OVERSEER",
-		"GT_SUPERVISOR",
+		"MS_MINER",
+		"MS_CREW",
+		"MS_WITNESS",
+		"MS_REFINERY",
+		"MS_OVERSEER",
+		"MS_SUPERVISOR",
 	}
 	for _, env := range envVars {
 		if os.Getenv(env) != "" {

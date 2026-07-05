@@ -1,7 +1,7 @@
 # Binaries
-/gt
-/gt-proxy-server
-/gt-proxy-client
+/ms
+/ms-proxy-server
+/ms-proxy-client
 *.exe
 
 # Build
@@ -33,7 +33,7 @@ internal/events/*/
 config.toml
 !config.example.toml
 !internal/hooks/templates/vibe/config.toml
-gt
+ms
 
 # Runtime state (ignore contents, but allow setup-hooks to be tracked)
 state.json
@@ -55,13 +55,13 @@ state.json
 
 # Clone-specific CLAUDE.md (regenerated locally per clone)
 CLAUDE.md
-# But keep the embedded template for gt doctor version checks
+# But keep the embedded template for ms doctor version checks
 !internal/templates/townroot/claude.md
 
 # Formulas: source of truth is internal/formula/formulas/ (embedded in binary).
-# .beads/formulas/ is provisioned at runtime by gt install / gt doctor fix.
+# .beads/formulas/ is provisioned at runtime by ms install / ms doctor fix.
 
-# Mineshaft (added by gt)
+# Mineshaft (added by ms)
 .beads/
 .logs/
 logs/
@@ -80,7 +80,7 @@ result
 # Opencode
 .opencode/
 
-# Mineshaft (added by gt)
+# Mineshaft (added by ms)
 __pycache__/
 
 # Dolt database files (added by bd init)
@@ -90,7 +90,7 @@ __pycache__/
 # Beads / Dolt files (added by bd init)
 .beads-credential-key
 
-# Mineshaft (added by gt)
+# Mineshaft (added by ms)
 .runtime/
 CLAUDE.local.md
 

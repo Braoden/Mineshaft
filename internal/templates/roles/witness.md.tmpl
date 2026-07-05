@@ -79,7 +79,7 @@ Your job:
 
 Wisp lifecycle management (close, delete, gc) for non-witness wisps is the
 **reaper Dog's responsibility**, NOT yours. Formula wisps, miner work wisps,
-and any wisps created by `gt sling` or other agents are OFF LIMITS.
+and any wisps created by `ms sling` or other agents are OFF LIMITS.
 
 If you see wisps that look orphaned but were NOT created by your patrol,
 **report them to Supervisor — do NOT close them.** Closing foreign wisps kills
@@ -87,7 +87,7 @@ active miner work molecules.
 
 **Evidence**: bd-wisp-bvc4xp and bd-wisp-f4xh8n were closed by witness patrol
 with reason 'Orphaned wisps from previous patrol cycles' seconds after being
-created by `gt sling` for active miners — killing their work in progress.
+created by `ms sling` for active miners — killing their work in progress.
 
 ## Working Directory
 
@@ -99,23 +99,23 @@ Identity detection (for mail, mol status, etc.) depends on your current working 
 
 ### Miner Inspection
 ```bash
-gt miner list {{ .RigName }}           # List miners in this rig
-gt peek {{ .RigName }}/<name> 50         # View last 50 lines of session output
-gt session status {{ .RigName }}/<name>  # Check session health
+ms miner list {{ .RigName }}           # List miners in this rig
+ms peek {{ .RigName }}/<name> 50         # View last 50 lines of session output
+ms session status {{ .RigName }}/<name>  # Check session health
 ```
 
 ### Miner Actions
 ```bash
-gt nudge {{ .RigName }}/<name> "message" # Send message reliably
-gt session stop {{ .RigName }}/<name>    # Stop a session
-gt miner remove {{ .RigName }}/<name>  # Remove miner worktree
+ms nudge {{ .RigName }}/<name> "message" # Send message reliably
+ms session stop {{ .RigName }}/<name>    # Stop a session
+ms miner remove {{ .RigName }}/<name>  # Remove miner worktree
 ```
 
 ### Communication
 ```bash
-gt mail inbox                            # Check your messages
-gt mail read <id>                        # Read a specific message
-gt mail send overseer/ -s "Subject" -m "Message"  # Send to Overseer
+ms mail inbox                            # Check your messages
+ms mail read <id>                        # Read a specific message
+ms mail send overseer/ -s "Subject" -m "Message"  # Send to Overseer
 ```
 
 ### Git Verification (for cleanup)
@@ -127,7 +127,7 @@ git log origin/main..HEAD                # Check for unpushed commits
 
 ### Beads CLI Reference
 ```bash
-bd show <id>                             # Issue details (e.g., bd show gt-abc)
+bd show <id>                             # Issue details (e.g., bd show ms-abc)
 bd list --status=in_progress             # Active work in rig
 bd list --status=open                    # Unassigned work
 bd update <id> --status=in_progress      # Claim work
@@ -140,7 +140,7 @@ bd create --title="..." --type=bug       # File discovered work
 **Valid statuses:** `open`, `in_progress`, `blocked`, `deferred`, `closed`, `pinned`, `hooked`
 (there is NO `done` or `complete` status — use `bd close`)
 
-**Prefix-based routing:** `bd show gt-xyz` works from anywhere — routes via `{{ .TownRoot }}/.beads/routes.jsonl`.
+**Prefix-based routing:** `bd show ms-xyz` works from anywhere — routes via `{{ .TownRoot }}/.beads/routes.jsonl`.
 
 ### Dolt Connectivity
 
@@ -157,11 +157,11 @@ Beads data is stored in Dolt (port 3307). If `bd` commands hang or fail:
 > **The Universal Mineshaft Propulsion Principle: If you find something on your hook, YOU RUN IT.**
 
 ```bash
-gt hook                          # Step 1: Check your hook
+ms hook                          # Step 1: Check your hook
 # Work hooked? → Execute mol steps one by one.
 # Hook empty? ↓
-gt mail inbox                    # Step 2: Check mail
-gt mol attach-from-mail <mail-id> # Hook attached work
+ms mail inbox                    # Step 2: Check mail
+ms mol attach-from-mail <mail-id> # Hook attached work
 # Still nothing? ↓
 {{ cmd }} patrol new                  # Step 3: Create patrol (root-only wisp)
 ```
@@ -184,7 +184,7 @@ content, interpret the prose instructions, and execute them.
 **This is the most important section.**
 
 Your patrol (mol-witness-patrol) walks you through every step. Steps are shown
-inline when you run `gt prime` — work through the checklist in order.
+inline when you run `ms prime` — work through the checklist in order.
 
 **THE RULE**: Execute one step at a time. Verify completion. Move to next.
 Do NOT skip ahead. Do NOT summarize multiple steps as "done" without doing them.
@@ -196,7 +196,7 @@ actually doing it, the entire system breaks. Each step is mechanical and verifia
 
 ## 📡 Communication Hygiene: Nudge First, Mail Rarely
 
-**Default to `gt nudge` for all routine communication. Only use `gt mail send` for structured protocol messages.**
+**Default to `ms nudge` for all routine communication. Only use `ms mail send` for structured protocol messages.**
 
 | Use nudge for | Use mail for |
 |---------------|-------------|
@@ -261,7 +261,7 @@ patrols (30s base, exponential backoff to 15m max).
 For patrol work, **no explicit handoff is needed** — patrol is idempotent, wisps are ephemeral.
 If you have important context (rare), use mail:
 ```bash
-gt mail send {{ .RigName }}/witness -s "🤝 HANDOFF: ..." -m "Context for next session"
+ms mail send {{ .RigName }}/witness -s "🤝 HANDOFF: ..." -m "Context for next session"
 ```
 
 ---
@@ -324,10 +324,10 @@ Never use `tmux has-session -t supervisor` — that session does not exist.
 | Want to... | Correct command | Common mistake |
 |------------|----------------|----------------|
 | Message a miner | `{{ cmd }} nudge {{ .RigName }}/<name> "msg"` | ~~tmux send-keys~~ (unreliable) |
-| Kill stuck miner | `{{ cmd }} miner nuke {{ .RigName }}/<name> --force` | ~~gt miner kill~~ (not a command) |
+| Kill stuck miner | `{{ cmd }} miner nuke {{ .RigName }}/<name> --force` | ~~ms miner kill~~ (not a command) |
 | View miner output | `{{ cmd }} peek {{ .RigName }}/<name> 50` | |
 | Close/complete a bead | `bd close <id>` | ~~bd complete~~ (not a command), ~~bd update --status done~~ (invalid status) |
-| Create issues | `bd create "title"` | ~~gt issue create~~ (not a command) |
+| Create issues | `bd create "title"` | ~~ms issue create~~ (not a command) |
 
 **Rig lifecycle commands (for reference):**
 - `park/unpark` — Temporary pause. Daemon skips parked rigs.

@@ -46,7 +46,7 @@ Detect the repo from the rig's git remote. Fall back to explicit config if
 detection fails:
 
 ```bash
-REPO=$(git -C "$GT_RIG_ROOT" remote get-url origin 2>/dev/null \
+REPO=$(git -C "$MS_RIG_ROOT" remote get-url origin 2>/dev/null \
   | sed -E 's|.*github\.com[:/]||; s|\.git$||')
 
 if [ -z "$REPO" ]; then
@@ -152,17 +152,17 @@ echo "$SUMMARY"
 
 On success:
 ```bash
-gt plugin record-run --plugin github-sheriff --result success \
+ms plugin record-run --plugin github-sheriff --result success \
   --title "github-sheriff: $SUMMARY" --description "$SUMMARY" >/dev/null 2>&1 || true
 ```
 
 On failure:
 ```bash
-gt plugin record-run --plugin github-sheriff --result failure \
+ms plugin record-run --plugin github-sheriff --result failure \
   --title "github-sheriff: FAILED" \
   --description "GitHub sheriff failed: $ERROR" >/dev/null 2>&1 || true
 
-gt escalate "Plugin FAILED: github-sheriff" \
+ms escalate "Plugin FAILED: github-sheriff" \
   --severity low \
   --reason "$ERROR"
 ```

@@ -22,7 +22,7 @@ import (
 	"github.com/steveyegge/mineshaft/internal/util"
 )
 
-// BeadsMessage represents a message from gt mail inbox --json.
+// BeadsMessage represents a message from ms mail inbox --json.
 type BeadsMessage struct {
 	ID        string `json:"id"`
 	From      string `json:"from"`
@@ -41,7 +41,7 @@ const MaxLifecycleMessageAge = 6 * time.Hour
 
 // ProcessLifecycleRequests checks for and processes lifecycle requests from the supervisor inbox.
 func (d *Daemon) ProcessLifecycleRequests() {
-	// Get mail for supervisor identity (using gt mail, not bd mail)
+	// Get mail for supervisor identity (using ms mail, not bd mail)
 	cmd := exec.Command(d.gtPath, "mail", "inbox", "--identity", "supervisor/", "--json")
 	cmd.Dir = d.config.TownRoot
 	cmd.Env = bdReadOnlyPinnedEnv(filepath.Join(d.config.TownRoot, ".beads"))
@@ -169,7 +169,7 @@ func (d *Daemon) executeLifecycleAction(request *LifecycleRequest) error {
 
 	d.logger.Printf("Executing %s for session %s", request.Action, sessionName)
 
-	// Check agent bead state (ZFC: trust what agent reports) - gt-39ttg
+	// Check agent bead state (ZFC: trust what agent reports) - ms-39ttg
 	agentBeadID := d.identityToAgentBeadID(request.From)
 	if agentBeadID != "" {
 		if beadState, err := d.getAgentBeadState(agentBeadID); err == nil {
@@ -313,7 +313,7 @@ func (d *Daemon) getRoleConfigForIdentity(identity string) (*beads.RoleConfig, *
 }
 
 // identityToSession converts a beads identity to a tmux session name.
-// Always uses session.*SessionName() functions for consistency with gt up and daemon heartbeat.
+// Always uses session.*SessionName() functions for consistency with ms up and daemon heartbeat.
 func (d *Daemon) identityToSession(identity string) string {
 	parsed, err := parseIdentity(identity)
 	if err != nil {
@@ -390,7 +390,7 @@ func (d *Daemon) restartSession(sessionName, identity string) error {
 	// they seed the session environment before any shell starts, overriding
 	// global env values (e.g., BD_ACTOR=daemon inherited from the daemon process).
 	// Without this, a miner session restarted by the daemon could inherit
-	// BD_ACTOR=daemon and have gt done reject it with "you are daemon" (gt-xyr).
+	// BD_ACTOR=daemon and have ms done reject it with "you are daemon" (ms-xyr).
 	rigPath := ""
 	if parsed != nil && parsed.RigName != "" {
 		rigPath = filepath.Join(d.config.TownRoot, parsed.RigName)
@@ -411,7 +411,7 @@ func (d *Daemon) restartSession(sessionName, identity string) error {
 
 	// Create session with command as initial process (replaces EnsureSessionFresh + SendKeys).
 	// EnsureSessionFreshWithCommandAndEnv kills zombie sessions and creates a new one atomically,
-	// seeding env via -e flags before the shell starts (gt-xyr defense-in-depth).
+	// seeding env via -e flags before the shell starts (ms-xyr defense-in-depth).
 	if err := d.tmux.EnsureSessionFreshWithCommandAndEnv(sessionName, workDir, startCmd, envVars); err != nil {
 		if errors.Is(err, tmux.ErrSessionRunning) {
 			d.logger.Printf("Session %s already running with healthy agent, skipping restart", sessionName)
@@ -543,13 +543,13 @@ func (d *Daemon) getStartCommand(roleConfig *beads.RoleConfig, parsed *ParsedIde
 		Recipient: recipient,
 		Sender:    "daemon",
 		Topic:     "lifecycle-restart",
-	}, "Run `gt prime --hook` and begin work.")
+	}, "Run `ms prime --hook` and begin work.")
 
 	// Inline AgentEnv into the command for ALL roles, not just miner/crew.
 	// Without this, daemon-restarted witness/refinery/overseer/supervisor sessions
-	// don't get BEADS_DOLT_PORT, GT_ROLE, GT_RIG, etc. in Claude's env. Their
+	// don't get BEADS_DOLT_PORT, MS_ROLE, MS_RIG, etc. in Claude's env. Their
 	// bd subprocess then falls back to embedded-Dolt auto-discovery instead of
-	// connecting to the central server (gt-neycp).
+	// connecting to the central server (ms-neycp).
 	//
 	// PrependEnv produces "export K=V ... && exec cmd" which is safe for
 	// WaitForCommand/pane_current_command detection: exec replaces the shell,
@@ -593,14 +593,14 @@ func (d *Daemon) setSessionEnvironment(sessionName string, roleConfig *beads.Rol
 		_ = d.tmux.SetEnvironment(sessionName, k, v)
 	}
 
-	// Record agent's pane_id for ZFC-compliant liveness checks (gt-qmsx).
+	// Record agent's pane_id for ZFC-compliant liveness checks (ms-qmsx).
 	if paneID, err := d.tmux.GetPaneID(sessionName); err == nil {
-		_ = d.tmux.SetEnvironment(sessionName, "GT_PANE_ID", paneID)
+		_ = d.tmux.SetEnvironment(sessionName, "MS_PANE_ID", paneID)
 	}
 
 	// Set any custom env vars from role config.
 	// Skip keys already set by AgentEnv to prevent TOML [env] from clobbering
-	// canonical qualified values (e.g., GT_ROLE). See: https://github.com/steveyegge/mineshaft/issues/2492
+	// canonical qualified values (e.g., MS_ROLE). See: https://github.com/steveyegge/mineshaft/issues/2492
 	if roleConfig != nil {
 		for k, v := range roleConfig.EnvVars {
 			if _, alreadySet := envVars[k]; alreadySet {
@@ -782,18 +782,18 @@ func (d *Daemon) resetSyncFailures(workDir string) {
 }
 
 // closeMessage removes a lifecycle mail message after processing.
-// We use delete instead of read because gt mail read intentionally
+// We use delete instead of read because ms mail read intentionally
 // doesn't mark messages as read (to preserve handoff messages).
 func (d *Daemon) closeMessage(id string) error {
-	// Use gt mail delete to actually remove the message
+	// Use ms mail delete to actually remove the message
 	cmd := exec.Command(d.gtPath, "mail", "delete", id)
 	cmd.Dir = d.config.TownRoot
-	cmd.Env = os.Environ() // Inherit PATH to find gt executable
+	cmd.Env = os.Environ() // Inherit PATH to find ms executable
 	util.SetDetachedProcessGroup(cmd)
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("gt mail delete %s: %v (output: %s)", id, err, string(output))
+		return fmt.Errorf("ms mail delete %s: %v (output: %s)", id, err, string(output))
 	}
 	d.logger.Printf("Deleted lifecycle message: %s", id)
 	return nil
@@ -812,7 +812,7 @@ type AgentBeadInfo struct {
 }
 
 // getAgentBeadState reads non-observable agent state from an agent bead.
-// Per gt-zecmc: Observable states (running, dead, idle) are derived from tmux.
+// Per ms-zecmc: Observable states (running, dead, idle) are derived from tmux.
 // Only non-observable states (stuck, awaiting-gate, muted, paused) are stored in beads.
 // Returns the agent_state field value or empty string if not found.
 func (d *Daemon) getAgentBeadState(agentBeadID string) (string, error) {
@@ -825,7 +825,7 @@ func (d *Daemon) getAgentBeadState(agentBeadID string) (string, error) {
 
 // getAgentBeadInfo fetches and parses an agent bead by ID.
 //
-// Agent beads (gt:agent-labeled, one per miner/witness/refinery/dog) live
+// Agent beads (ms:agent-labeled, one per miner/witness/refinery/dog) live
 // in the town/hq Dolt DB but their IDs carry the rig prefix (e.g. za-zack-
 // miner-furiosa). Without forcing BEADS_DIR to the town's .beads, prefix
 // routing would send the lookup to the rig's DB and return "issue not found"
@@ -943,7 +943,7 @@ func (d *Daemon) identityToAgentBeadID(identity string) string {
 	}
 }
 
-// NOTE: checkStaleAgents() and markAgentDead() were removed in gt-zecmc.
+// NOTE: checkStaleAgents() and markAgentDead() were removed in ms-zecmc.
 // Agent liveness is now discovered from tmux, not recorded in beads.
 // "Discover, don't track" principle: observable state should not be recorded.
 
@@ -986,7 +986,7 @@ const GUPPViolationTimeout = constants.GUPPViolationTimeout
 // The wisps query is best-effort (gracefully ignored if table doesn't exist).
 func (d *Daemon) listAgentBeadsJSON(dest interface{}) error {
 	// Query issues table (backward compat during migration)
-	cmd := exec.Command(d.bdPath, "list", "--label=gt:agent", "--json", "--flat") //nolint:gosec // G204: bd is a trusted internal tool
+	cmd := exec.Command(d.bdPath, "list", "--label=ms:agent", "--json", "--flat") //nolint:gosec // G204: bd is a trusted internal tool
 	cmd.Dir = d.config.TownRoot
 	cmd.Env = bdReadOnlyPinnedEnv(filepath.Join(d.config.TownRoot, ".beads"))
 	util.SetDetachedProcessGroup(cmd)
@@ -1015,7 +1015,7 @@ func (d *Daemon) listAgentBeadsJSON(dest interface{}) error {
 
 // mergeAgentBeadJSON merges JSON arrays from wisps and issues queries.
 // Returns a combined JSON array with wisps taking precedence for duplicate IDs.
-// Filters wisps to only include agent beads (type=agent or label gt:agent).
+// Filters wisps to only include agent beads (type=agent or label ms:agent).
 func mergeAgentBeadJSON(wispJSON, issuesJSON []byte) []byte {
 	type agentEntry struct {
 		ID     string   `json:"id"`
@@ -1089,7 +1089,7 @@ func (d *Daemon) checkGUPPViolations() {
 // checkRigGUPPViolations checks miners in a specific rig for GUPP violations.
 func (d *Daemon) checkRigGUPPViolations(rigName string) {
 	// List miner agent beads for this rig (issues + wisps tables)
-	// Pattern: <prefix>-<rig>-miner-<name> (e.g., gt-mineshaft-miner-Toast)
+	// Pattern: <prefix>-<rig>-miner-<name> (e.g., ms-mineshaft-miner-Toast)
 	var agents []struct {
 		ID          string   `json:"id"`
 		Description string   `json:"description"`
@@ -1106,7 +1106,7 @@ func (d *Daemon) checkRigGUPPViolations(rigName string) {
 		return
 	}
 
-	// Use the rig's configured prefix (e.g., "gt" for mineshaft, "bd" for beads)
+	// Use the rig's configured prefix (e.g., "ms" for mineshaft, "bd" for beads)
 	rigPrefix := config.GetRigPrefix(d.config.TownRoot, rigName)
 	// Pattern: <prefix>-<rig>-miner-<name>
 	prefix := rigPrefix + "-" + rigName + "-miner-"
@@ -1130,7 +1130,7 @@ func (d *Daemon) checkRigGUPPViolations(rigName string) {
 			continue
 		}
 
-		// Per gt-zecmc: derive running state from tmux, not agent_state
+		// Per ms-zecmc: derive running state from tmux, not agent_state
 		// Extract miner name from agent ID (<prefix>-<rig>-miner-<name> -> <name>)
 		minerName := strings.TrimPrefix(agent.ID, prefix)
 		sessionName := session.MinerSessionName(session.PrefixFor(rigName), minerName)
@@ -1169,7 +1169,7 @@ Action needed: Check if agent is alive and responsive. Consider restarting if st
 
 	cmd := exec.Command(d.gtPath, "mail", "send", witnessAddr, "-s", subject, "-m", body)
 	cmd.Dir = d.config.TownRoot
-	cmd.Env = os.Environ() // Inherit PATH to find gt executable
+	cmd.Env = os.Environ() // Inherit PATH to find ms executable
 	util.SetDetachedProcessGroup(cmd)
 
 	if err := cmd.Run(); err != nil {
@@ -1181,7 +1181,7 @@ Action needed: Check if agent is alive and responsive. Consider restarting if st
 
 // checkOrphanedWork looks for work assigned to dead agents.
 // Orphaned work needs to be reassigned or the agent needs to be restarted.
-// Per gt-zecmc: derive agent liveness from tmux, not agent_state.
+// Per ms-zecmc: derive agent liveness from tmux, not agent_state.
 func (d *Daemon) checkOrphanedWork() {
 	// Check if any rigs are operational before querying agent beads
 	rigs := d.getKnownRigs()
@@ -1220,7 +1220,7 @@ func (d *Daemon) checkRigOrphanedWork(rigName string) {
 		return
 	}
 
-	// Use the rig's configured prefix (e.g., "gt" for mineshaft, "bd" for beads)
+	// Use the rig's configured prefix (e.g., "ms" for mineshaft, "bd" for beads)
 	rigPrefix := config.GetRigPrefix(d.config.TownRoot, rigName)
 	// Pattern: <prefix>-<rig>-miner-<name>
 	prefix := rigPrefix + "-" + rigName + "-miner-"
@@ -1272,10 +1272,10 @@ func (d *Daemon) checkRigOrphanedWork(rigName string) {
 }
 
 // extractRigFromAgentID extracts the rig name from a miner agent ID.
-// Example: gt-mineshaft-miner-max → mineshaft
+// Example: ms-mineshaft-miner-max → mineshaft
 func (d *Daemon) extractRigFromAgentID(agentID string) string {
 	// Use the beads package helper to correctly parse agent bead IDs.
-	// Pattern: <prefix>-<rig>-miner-<name> (e.g., gt-mineshaft-miner-Toast)
+	// Pattern: <prefix>-<rig>-miner-<name> (e.g., ms-mineshaft-miner-Toast)
 	rig, role, _, ok := beads.ParseAgentBeadID(agentID)
 	if !ok || role != constants.RoleMiner {
 		return ""
@@ -1296,7 +1296,7 @@ Action needed: Either restart the agent or reassign the work.`,
 
 	cmd := exec.Command(d.gtPath, "mail", "send", witnessAddr, "-s", subject, "-m", body)
 	cmd.Dir = d.config.TownRoot
-	cmd.Env = os.Environ() // Inherit PATH to find gt executable
+	cmd.Env = os.Environ() // Inherit PATH to find ms executable
 	util.SetDetachedProcessGroup(cmd)
 
 	if err := cmd.Run(); err != nil {

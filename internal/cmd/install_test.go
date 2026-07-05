@@ -17,7 +17,7 @@ import (
 
 func TestBuildBdInitArgs_AlwaysIncludesServerPortWithoutReinit(t *testing.T) {
 	townDir := t.TempDir()
-	t.Setenv("GT_DOLT_PORT", "")
+	t.Setenv("MS_DOLT_PORT", "")
 	t.Setenv("BEADS_DOLT_PORT", "")
 
 	args := buildBdInitArgs(townDir)
@@ -41,18 +41,18 @@ func TestBuildBdInitArgs_AlwaysIncludesServerPortWithoutReinit(t *testing.T) {
 func TestBuildBdInitArgs_RespectsGTDoltPortEnv(t *testing.T) {
 	townDir := t.TempDir()
 
-	t.Setenv("GT_DOLT_PORT", "4400")
+	t.Setenv("MS_DOLT_PORT", "4400")
 
 	args := buildBdInitArgs(townDir)
 
 	if args[5] != "4400" {
-		t.Fatalf("expected port 4400 from GT_DOLT_PORT, got %q", args[5])
+		t.Fatalf("expected port 4400 from MS_DOLT_PORT, got %q", args[5])
 	}
 }
 
 func TestBuildBdInitArgs_ConfigYAMLTakesPrecedence(t *testing.T) {
 	townDir := t.TempDir()
-	t.Setenv("GT_DOLT_IGNORE_CONFIG", "")
+	t.Setenv("MS_DOLT_IGNORE_CONFIG", "")
 	doltDataDir := filepath.Join(townDir, ".dolt-data")
 	if err := os.MkdirAll(doltDataDir, 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
@@ -62,7 +62,7 @@ func TestBuildBdInitArgs_ConfigYAMLTakesPrecedence(t *testing.T) {
 		t.Fatalf("write config.yaml: %v", err)
 	}
 
-	t.Setenv("GT_DOLT_PORT", "4400")
+	t.Setenv("MS_DOLT_PORT", "4400")
 
 	args := buildBdInitArgs(townDir)
 
@@ -73,8 +73,8 @@ func TestBuildBdInitArgs_ConfigYAMLTakesPrecedence(t *testing.T) {
 
 func TestBdInitDoltConfig_ConfigYAMLHostTakesPrecedence(t *testing.T) {
 	townDir := t.TempDir()
-	t.Setenv("GT_DOLT_IGNORE_CONFIG", "")
-	t.Setenv("GT_DOLT_HOST", "stale-host")
+	t.Setenv("MS_DOLT_IGNORE_CONFIG", "")
+	t.Setenv("MS_DOLT_HOST", "stale-host")
 	doltDataDir := filepath.Join(townDir, ".dolt-data")
 	if err := os.MkdirAll(doltDataDir, 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
@@ -92,8 +92,8 @@ func TestBdInitDoltConfig_ConfigYAMLHostTakesPrecedence(t *testing.T) {
 
 func TestBuildBdInitArgs_IgnoresTransientRunningState(t *testing.T) {
 	townDir := t.TempDir()
-	t.Setenv("GT_DOLT_PORT", "")
-	t.Setenv("GT_DOLT_IGNORE_CONFIG", "")
+	t.Setenv("MS_DOLT_PORT", "")
+	t.Setenv("MS_DOLT_IGNORE_CONFIG", "")
 	daemonDir := filepath.Join(townDir, "daemon")
 	if err := os.MkdirAll(daemonDir, 0755); err != nil {
 		t.Fatalf("mkdir daemon: %v", err)
@@ -127,9 +127,9 @@ func TestWithBeadsDirEnvUsesHardenedBDEnv(t *testing.T) {
 	t.Setenv("BEADS_DOLT_PORT", "9999")
 	t.Setenv("BEADS_DOLT_DATA_DIR", "/wrong/data")
 	t.Setenv("BEADS_DOLT_AUTO_START", "1")
-	t.Setenv("GT_DOLT_DATA", "/wrong/gt-data")
-	t.Setenv("GT_DOLT_HOST", "127.0.0.2")
-	t.Setenv("GT_DOLT_PORT", "5507")
+	t.Setenv("MS_DOLT_DATA", "/wrong/ms-data")
+	t.Setenv("MS_DOLT_HOST", "127.0.0.2")
+	t.Setenv("MS_DOLT_PORT", "5507")
 
 	env := withBeadsDirEnv(beadsDir)
 	got := installEnvMap(env)
@@ -148,7 +148,7 @@ func TestWithBeadsDirEnvUsesHardenedBDEnv(t *testing.T) {
 	if got["BEADS_DOLT_AUTO_START"] != "0" || got["BD_DOLT_AUTO_COMMIT"] != "on" {
 		t.Fatalf("bd mutation guardrails missing in %v", env)
 	}
-	for _, key := range []string{"BEADS_DB", "BD_DB", "BEADS_DOLT_DATA_DIR", "GT_DOLT_DATA"} {
+	for _, key := range []string{"BEADS_DB", "BD_DB", "BEADS_DOLT_DATA_DIR", "MS_DOLT_DATA"} {
 		if value, ok := got[key]; ok {
 			t.Fatalf("%s leaked as %q in %v", key, value, env)
 		}
@@ -175,9 +175,9 @@ func TestWithBeadsDirEnvUsesTownConfigBeforeMetadataExists(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(doltDataDir, "config.yaml"), []byte("listener:\n  host: 127.0.0.2\n  port: 5507\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("GT_DOLT_IGNORE_CONFIG", "")
-	t.Setenv("GT_DOLT_HOST", "stale-host")
-	t.Setenv("GT_DOLT_PORT", "4400")
+	t.Setenv("MS_DOLT_IGNORE_CONFIG", "")
+	t.Setenv("MS_DOLT_HOST", "stale-host")
+	t.Setenv("MS_DOLT_PORT", "4400")
 	t.Setenv("BEADS_DOLT_SERVER_HOST", "stale-host")
 	t.Setenv("BEADS_DOLT_SERVER_PORT", "9999")
 	t.Setenv("BEADS_DOLT_PORT", "9999")
@@ -190,8 +190,8 @@ func TestWithBeadsDirEnvUsesTownConfigBeforeMetadataExists(t *testing.T) {
 	if got["BEADS_DOLT_SERVER_PORT"] != "5507" || got["BEADS_DOLT_PORT"] != "5507" {
 		t.Fatalf("ports = server:%q legacy:%q, want config port in %v", got["BEADS_DOLT_SERVER_PORT"], got["BEADS_DOLT_PORT"], env)
 	}
-	if got["GT_DOLT_HOST"] != "127.0.0.2" || got["GT_DOLT_PORT"] != "5507" {
-		t.Fatalf("GT endpoint = %q:%q, want config endpoint in %v", got["GT_DOLT_HOST"], got["GT_DOLT_PORT"], env)
+	if got["MS_DOLT_HOST"] != "127.0.0.2" || got["MS_DOLT_PORT"] != "5507" {
+		t.Fatalf("MS endpoint = %q:%q, want config endpoint in %v", got["MS_DOLT_HOST"], got["MS_DOLT_PORT"], env)
 	}
 }
 
@@ -215,21 +215,21 @@ func TestWithBeadsDirEnvClearsStaleHostWhenConfigHasNoHost(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(doltDataDir, "config.yaml"), []byte("listener:\n  port: 5507\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("GT_DOLT_IGNORE_CONFIG", "")
-	t.Setenv("GT_DOLT_HOST", "stale-host")
+	t.Setenv("MS_DOLT_IGNORE_CONFIG", "")
+	t.Setenv("MS_DOLT_HOST", "stale-host")
 	t.Setenv("BEADS_DOLT_SERVER_HOST", "stale-host")
-	t.Setenv("GT_DOLT_PORT", "9999")
+	t.Setenv("MS_DOLT_PORT", "9999")
 
 	env := withBeadsDirEnv(beadsDir)
 	got := installEnvMap(env)
-	if _, ok := got["GT_DOLT_HOST"]; ok {
-		t.Fatalf("GT_DOLT_HOST leaked from config without host: %v", env)
+	if _, ok := got["MS_DOLT_HOST"]; ok {
+		t.Fatalf("MS_DOLT_HOST leaked from config without host: %v", env)
 	}
 	if _, ok := got["BEADS_DOLT_SERVER_HOST"]; ok {
 		t.Fatalf("BEADS_DOLT_SERVER_HOST leaked from config without host: %v", env)
 	}
-	if got["GT_DOLT_PORT"] != "5507" || got["BEADS_DOLT_SERVER_PORT"] != "5507" {
-		t.Fatalf("ports = GT:%q server:%q, want 5507 in %v", got["GT_DOLT_PORT"], got["BEADS_DOLT_SERVER_PORT"], env)
+	if got["MS_DOLT_PORT"] != "5507" || got["BEADS_DOLT_SERVER_PORT"] != "5507" {
+		t.Fatalf("ports = MS:%q server:%q, want 5507 in %v", got["MS_DOLT_PORT"], got["BEADS_DOLT_SERVER_PORT"], env)
 	}
 }
 
@@ -330,11 +330,11 @@ func TestInstallFailsBeforeMutationWhenDoltMissing(t *testing.T) {
 	cmd.Env = installTestEnvWithFakeBD(t, tmpDir)
 	output, err := cmd.CombinedOutput()
 	if err == nil {
-		t.Fatalf("gt install should fail when dolt is missing; output:\n%s", output)
+		t.Fatalf("ms install should fail when dolt is missing; output:\n%s", output)
 	}
 
 	out := string(output)
-	if !strings.Contains(out, "dolt is required for gt install with beads enabled") {
+	if !strings.Contains(out, "dolt is required for ms install with beads enabled") {
 		t.Fatalf("expected missing-dolt preflight error, got:\n%s", out)
 	}
 	if !strings.Contains(out, "--no-beads") {
@@ -354,7 +354,7 @@ func TestInstallNoBeadsAllowsMissingDolt(t *testing.T) {
 	cmd.Env = installTestEnvWithFakeBD(t, tmpDir)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("gt install --no-beads should succeed without dolt: %v\nOutput:\n%s", err, output)
+		t.Fatalf("ms install --no-beads should succeed without dolt: %v\nOutput:\n%s", err, output)
 	}
 
 	if info, statErr := os.Stat(hqPath); statErr != nil {
@@ -381,7 +381,7 @@ func TestInstallFailsBeforeMutationWhenDoltPortOccupiedByNonDolt(t *testing.T) {
 	cmd.Env = installTestEnvWithFakeBDAndDolt(t, tmpDir)
 	output, err := cmd.CombinedOutput()
 	if err == nil {
-		t.Fatalf("gt install should fail when a non-Dolt process owns the Dolt port; output:\n%s", output)
+		t.Fatalf("ms install should fail when a non-Dolt process owns the Dolt port; output:\n%s", output)
 	}
 
 	out := string(output)
@@ -543,7 +543,7 @@ func installTestEnv(t *testing.T, homeDir string, includeDolt bool) []string {
 	for _, entry := range os.Environ() {
 		key, _, _ := strings.Cut(entry, "=")
 		switch strings.ToUpper(key) {
-		case "HOME", "PATH", "BEADS_DIR", "BEADS_DB", "BEADS_DOLT_SERVER_DATABASE", "GT_DOLT_PORT":
+		case "HOME", "PATH", "BEADS_DIR", "BEADS_DB", "BEADS_DOLT_SERVER_DATABASE", "MS_DOLT_PORT":
 			continue
 		default:
 			env = append(env, entry)
@@ -556,6 +556,6 @@ func installTestEnv(t *testing.T, homeDir string, includeDolt bool) []string {
 		"BEADS_DIR=",
 		"BEADS_DB=",
 		"BEADS_DOLT_SERVER_DATABASE=",
-		"GT_DOLT_PORT=",
+		"MS_DOLT_PORT=",
 	)
 }

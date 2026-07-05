@@ -48,7 +48,7 @@ Establish what to scan for orphans.
 
 **1. Check assignment:**
 ```bash
-gt hook               # Shows scope in hook_bead
+ms hook               # Shows scope in hook_bead
 ```
 
 **2. Resolve scope:**
@@ -57,7 +57,7 @@ gt hook               # Shows scope in hook_bead
 
 ```bash
 # If town-wide
-gt rigs                     # Get list of all rigs
+ms rigs                     # Get list of all rigs
 
 # If specific rig
 # Just use that rig
@@ -90,13 +90,13 @@ Parse the assignee field to extract rig and miner name:
 - Extract: rig and name from the path
 
 ```bash
-# Check session liveness using gt session status (handles prefix derivation)
-gt session status <rig>/<name> --json | jq -r '.running' | grep -q true && echo ALIVE || echo DEAD
+# Check session liveness using ms session status (handles prefix derivation)
+ms session status <rig>/<name> --json | jq -r '.running' | grep -q true && echo ALIVE || echo DEAD
 ```
 
 If the assignee is NOT a miner (e.g., witness, refinery), use:
 ```bash
-gt session status <rig>/<role> --json | jq -r '.running' | grep -q true && echo ALIVE || echo DEAD
+ms session status <rig>/<role> --json | jq -r '.running' | grep -q true && echo ALIVE || echo DEAD
 ```
 
 **4. Identify orphans:**
@@ -134,8 +134,8 @@ Parse the owner/agent field to extract rig and name:
 - Owner format: `<rig>/miners/<name>` or `<rig>/<role>`
 
 ```bash
-# Check session liveness using gt session status (handles prefix derivation)
-gt session status <rig>/<name> --json | jq -r '.running' | grep -q true && echo ALIVE || echo DEAD
+# Check session liveness using ms session status (handles prefix derivation)
+ms session status <rig>/<name> --json | jq -r '.running' | grep -q true && echo ALIVE || echo DEAD
 ```
 
 **4. Identify orphans:**
@@ -220,7 +220,7 @@ bd update <issue> --status=open --assignee=""
 **2. REASSIGN orphans:**
 ```bash
 # Notify Witness to handle assignment
-gt mail send <rig>/witness -s "Orphan needs assignment: <issue>" \
+ms mail send <rig>/witness -s "Orphan needs assignment: <issue>" \
   -m "Issue <id> was orphaned. Has partial work. Needs reassignment."
 ```
 
@@ -235,7 +235,7 @@ bd update <issue> --status=open \
 
 **4. ESCALATE orphans:**
 ```bash
-gt mail send overseer/ -s "Orphan requires escalation: <issue>" \
+ms mail send overseer/ -s "Orphan requires escalation: <issue>" \
   -m "Issue <id> orphaned with possible data loss.
 Details: ...
 Recommended action: ..."
@@ -283,14 +283,14 @@ Create summary report of orphan scan and actions.
 
 **2. Send to Supervisor (for logs):**
 ```bash
-gt mail send supervisor/ -s "Orphan scan complete: {{total_count}} found" \
+ms mail send supervisor/ -s "Orphan scan complete: {{total_count}} found" \
   -m "{{report}}"
 ```
 
 **3. Send to Overseer (if escalations):**
 ```bash
 # Only if there were escalations
-gt mail send overseer/ -s "Orphan scan: {{escalate_count}} escalations" \
+ms mail send overseer/ -s "Orphan scan: {{escalate_count}} escalations" \
   -m "{{escalations_section}}"
 ```
 
@@ -305,7 +305,7 @@ Signal work complete and return to available pool.
 
 **1. Signal completion to Supervisor:**
 ```bash
-gt mail send supervisor/ -s "DOG_DONE $(hostname)" -m "Task: orphan-scan
+ms mail send supervisor/ -s "DOG_DONE $(hostname)" -m "Task: orphan-scan
 Scope: {{scope}}
 Orphans found: {{total_count}}
 Actions taken: {{action_summary}}

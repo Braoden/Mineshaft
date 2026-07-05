@@ -81,7 +81,7 @@ func (c *ThemeCheck) Run(ctx *CheckContext) *CheckResult {
 			Status:  StatusWarning,
 			Message: fmt.Sprintf("%d session(s) have outdated theme format", len(needsUpdate)),
 			Details: details,
-			FixHint: "Run 'gt theme apply --all' or 'gt doctor --fix'",
+			FixHint: "Run 'ms theme apply --all' or 'ms doctor --fix'",
 		}
 	}
 
@@ -94,7 +94,7 @@ func (c *ThemeCheck) Run(ctx *CheckContext) *CheckResult {
 
 // Fix applies themes to all sessions.
 func (c *ThemeCheck) Fix(ctx *CheckContext) error {
-	cmd := exec.Command("gt", "theme", "apply", "--all")
+	cmd := exec.Command("ms", "theme", "apply", "--all")
 	cmd.Dir = ctx.TownRoot
 	return cmd.Run()
 }

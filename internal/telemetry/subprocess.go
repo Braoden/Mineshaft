@@ -5,42 +5,42 @@ import (
 	"strings"
 )
 
-// buildGTResourceAttrs builds the OTEL_RESOURCE_ATTRIBUTES value from GT context
+// buildGTResourceAttrs builds the OTEL_RESOURCE_ATTRIBUTES value from MS context
 // vars present in the current process environment.
-// Returns "" when no GT vars are found.
+// Returns "" when no MS vars are found.
 func buildGTResourceAttrs() string {
 	var attrs []string
-	if v := os.Getenv("GT_ROLE"); v != "" {
-		attrs = append(attrs, "gt.role="+v)
+	if v := os.Getenv("MS_ROLE"); v != "" {
+		attrs = append(attrs, "ms.role="+v)
 	}
-	if v := os.Getenv("GT_RIG"); v != "" {
-		attrs = append(attrs, "gt.rig="+v)
+	if v := os.Getenv("MS_RIG"); v != "" {
+		attrs = append(attrs, "ms.rig="+v)
 	}
 	if v := os.Getenv("BD_ACTOR"); v != "" {
-		attrs = append(attrs, "gt.actor="+v)
+		attrs = append(attrs, "ms.actor="+v)
 	}
 	// Miner and crew carry their agent name in different vars.
-	if v := os.Getenv("GT_MINER"); v != "" {
-		attrs = append(attrs, "gt.agent="+v)
-	} else if v := os.Getenv("GT_CREW"); v != "" {
-		attrs = append(attrs, "gt.agent="+v)
+	if v := os.Getenv("MS_MINER"); v != "" {
+		attrs = append(attrs, "ms.agent="+v)
+	} else if v := os.Getenv("MS_CREW"); v != "" {
+		attrs = append(attrs, "ms.agent="+v)
 	}
-	if v := os.Getenv("GT_SESSION"); v != "" {
-		attrs = append(attrs, "gt.session="+v)
+	if v := os.Getenv("MS_SESSION"); v != "" {
+		attrs = append(attrs, "ms.session="+v)
 	}
-	if v := os.Getenv("GT_RUN"); v != "" {
-		attrs = append(attrs, "gt.run_id="+v)
+	if v := os.Getenv("MS_RUN"); v != "" {
+		attrs = append(attrs, "ms.run_id="+v)
 	}
-	// Work context — set by gt prime via injectWorkContext; identifies the rig,
+	// Work context — set by ms prime via injectWorkContext; identifies the rig,
 	// bead, and molecule the agent is currently processing.
-	if v := os.Getenv("GT_WORK_RIG"); v != "" {
-		attrs = append(attrs, "gt.work_rig="+v)
+	if v := os.Getenv("MS_WORK_RIG"); v != "" {
+		attrs = append(attrs, "ms.work_rig="+v)
 	}
-	if v := os.Getenv("GT_WORK_BEAD"); v != "" {
-		attrs = append(attrs, "gt.work_bead="+v)
+	if v := os.Getenv("MS_WORK_BEAD"); v != "" {
+		attrs = append(attrs, "ms.work_bead="+v)
 	}
-	if v := os.Getenv("GT_WORK_MOL"); v != "" {
-		attrs = append(attrs, "gt.work_mol="+v)
+	if v := os.Getenv("MS_WORK_MOL"); v != "" {
+		attrs = append(attrs, "ms.work_mol="+v)
 	}
 	return strings.Join(attrs, ",")
 }
@@ -50,12 +50,12 @@ func buildGTResourceAttrs() string {
 // them automatically — no per-call injection needed.
 //
 // Sets:
-//   - OTEL_RESOURCE_ATTRIBUTES — GT context labels (gt.role, gt.rig, …)
-//   - BD_OTEL_METRICS_URL      — bd's own metrics var (mirrors GT_OTEL_METRICS_URL)
-//   - BD_OTEL_LOGS_URL         — bd's own logs var   (mirrors GT_OTEL_LOGS_URL)
+//   - OTEL_RESOURCE_ATTRIBUTES — MS context labels (ms.role, ms.rig, …)
+//   - BD_OTEL_METRICS_URL      — bd's own metrics var (mirrors MS_OTEL_METRICS_URL)
+//   - BD_OTEL_LOGS_URL         — bd's own logs var   (mirrors MS_OTEL_LOGS_URL)
 //
-// Called once at gt startup (Execute) when telemetry is active.
-// No-op when GT_OTEL_METRICS_URL is not set.
+// Called once at ms startup (Execute) when telemetry is active.
+// No-op when MS_OTEL_METRICS_URL is not set.
 func SetProcessOTELAttrs() {
 	metricsURL := os.Getenv(EnvMetricsURL)
 	if metricsURL == "" {
@@ -64,7 +64,7 @@ func SetProcessOTELAttrs() {
 	if attrs := buildGTResourceAttrs(); attrs != "" {
 		_ = os.Setenv("OTEL_RESOURCE_ATTRIBUTES", attrs)
 	}
-	// Mirror GT vars into bd's own var names so bd subprocesses
+	// Mirror MS vars into bd's own var names so bd subprocesses
 	// emit their metrics to the same VictoriaMetrics instance.
 	_ = os.Setenv("BD_OTEL_METRICS_URL", metricsURL)
 	if logsURL := os.Getenv(EnvLogsURL); logsURL != "" {
@@ -79,7 +79,7 @@ func SetProcessOTELAttrs() {
 // (beads.go run, mail/bd.go runBdCommand) so the vars aren't lost when the
 // explicit env slice is built from scratch instead of os.Environ().
 //
-// Returns nil when GT telemetry is not active (GT_OTEL_METRICS_URL not set).
+// Returns nil when MS telemetry is not active (MS_OTEL_METRICS_URL not set).
 func OTELEnvForSubprocess() []string {
 	metricsURL := os.Getenv(EnvMetricsURL)
 	if metricsURL == "" {
@@ -93,8 +93,8 @@ func OTELEnvForSubprocess() []string {
 	if logsURL := os.Getenv(EnvLogsURL); logsURL != "" {
 		env = append(env, "BD_OTEL_LOGS_URL="+logsURL)
 	}
-	if runID := os.Getenv("GT_RUN"); runID != "" {
-		env = append(env, "GT_RUN="+runID)
+	if runID := os.Getenv("MS_RUN"); runID != "" {
+		env = append(env, "MS_RUN="+runID)
 	}
 	return env
 }

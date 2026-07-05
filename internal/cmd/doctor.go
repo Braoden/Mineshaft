@@ -43,7 +43,7 @@ Town root protection:
   - pre-checkout-hook        Verify pre-checkout hook prevents branch switches (fixable)
 
 Infrastructure checks:
-  - stale-binary             Check if gt binary is up to date with repo
+  - stale-binary             Check if ms binary is up to date with repo
   - beads-binary             Check that beads (bd) is installed and meets minimum version
   - daemon                   Check if daemon is running (fixable)
   - boot-health              Check Boot watchdog health (vet mode)
@@ -164,7 +164,7 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 
 	// Infrastructure prerequisites — these must pass before any check that
 	// shells out to bd/dolt or queries the database. Order matters:
-	// 1. gt binary freshness
+	// 1. ms binary freshness
 	// 2. bd binary exists
 	// 3. dolt binary exists
 	// 4. Dolt server is reachable (everything downstream depends on this)
@@ -182,7 +182,7 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	// Claude settings must be fixed BEFORE the daemon starts, so sessions
 	// launched by the daemon find correct settings files. If daemon runs first,
 	// its EnsureSettingsForRole sees stale files → returns early → sessions
-	// start with missing PATH exports. See gt-99u.
+	// start with missing PATH exports. See ms-99u.
 	d.Register(doctor.NewClaudeSettingsCheck())
 	d.Register(doctor.NewDaemonCheck())
 	d.Register(doctor.NewTmuxGlobalEnvCheck())
@@ -243,7 +243,7 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	d.Register(doctor.NewSessionHookCheck())
 	d.Register(doctor.NewRuntimeGitignoreCheck())
 	d.Register(doctor.NewLegacyMineshaftCheck())
-	// NOTE: ClaudeSettingsCheck moved before DaemonCheck (gt-99u race fix)
+	// NOTE: ClaudeSettingsCheck moved before DaemonCheck (ms-99u race fix)
 	d.Register(doctor.NewDeprecatedMergeQueueKeysCheck())
 	d.Register(doctor.NewLandWorktreeGitignoreCheck())
 	d.Register(doctor.NewHooksPathAllRigsCheck())

@@ -133,7 +133,7 @@ func prepushMRIssue(id, branch, target, sourceIssue string) *beadsdk.Issue {
 		Worker:      "miners/test",
 		Rig:         "test-rig",
 	})
-	return prepushIssue(id, desc, "gt:merge-request")
+	return prepushIssue(id, desc, "ms:merge-request")
 }
 
 func newPrepushEngineer(t *testing.T, workDir string, store *prepushStore) *Engineer {
@@ -169,14 +169,14 @@ func assertOriginMainUnchangedAndReset(t *testing.T, workDir, before string) {
 func TestRecheckMRStillMergeable_RejectsMissingSourceField(t *testing.T) {
 	workDir, _, cleanup := testGitRepo(t)
 	defer cleanup()
-	store := newPrepushStore(prepushMRIssue("gt-mr", "feature", "main", ""))
+	store := newPrepushStore(prepushMRIssue("ms-mr", "feature", "main", ""))
 	e := newPrepushEngineer(t, workDir, store)
 
-	result := e.recheckMRStillMergeable(&MRInfo{ID: "gt-mr", Branch: "feature", Target: "main"}, "main")
+	result := e.recheckMRStillMergeable(&MRInfo{ID: "ms-mr", Branch: "feature", Target: "main"}, "main")
 	if result.Success || !result.NoMerge {
 		t.Fatalf("missing source_issue should be rejected, got: %+v", result)
 	}
-	if got := store.closeReasons["gt-mr"]; got != "rejected: MR has missing source_issue" {
+	if got := store.closeReasons["ms-mr"]; got != "rejected: MR has missing source_issue" {
 		t.Fatalf("MR close reason = %q, want missing source rejection", got)
 	}
 }
@@ -184,15 +184,15 @@ func TestRecheckMRStillMergeable_RejectsMissingSourceField(t *testing.T) {
 func TestRecheckMRStillMergeable_RejectsMissingSourceIssue(t *testing.T) {
 	workDir, _, cleanup := testGitRepo(t)
 	defer cleanup()
-	store := newPrepushStore(prepushMRIssue("gt-mr", "feature", "main", "gt-missing"))
+	store := newPrepushStore(prepushMRIssue("ms-mr", "feature", "main", "ms-missing"))
 	e := newPrepushEngineer(t, workDir, store)
 
-	mr := &MRInfo{ID: "gt-mr", Branch: "feature", Target: "main", SourceIssue: "gt-missing"}
+	mr := &MRInfo{ID: "ms-mr", Branch: "feature", Target: "main", SourceIssue: "ms-missing"}
 	result := e.recheckMRStillMergeable(mr, "main")
 	if result.Success || !result.NoMerge {
 		t.Fatalf("missing source issue should be rejected, got: %+v", result)
 	}
-	if got := store.closeReasons["gt-mr"]; got != "rejected: source_issue gt-missing is missing" {
+	if got := store.closeReasons["ms-mr"]; got != "rejected: source_issue ms-missing is missing" {
 		t.Fatalf("MR close reason = %q, want missing source issue", got)
 	}
 }
@@ -202,26 +202,26 @@ func TestRecheckMRStillMergeable_RejectsNonConcreteSource(t *testing.T) {
 		name  string
 		label string
 	}{
-		{name: "merge_request", label: "gt:merge-request"},
-		{name: "handoff", label: "gt:handoff"},
+		{name: "merge_request", label: "ms:merge-request"},
+		{name: "handoff", label: "ms:handoff"},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			workDir, _, cleanup := testGitRepo(t)
 			defer cleanup()
 			store := newPrepushStore(
-				prepushIssue("gt-src", "", tc.label),
-				prepushMRIssue("gt-mr", "feature", "main", "gt-src"),
+				prepushIssue("ms-src", "", tc.label),
+				prepushMRIssue("ms-mr", "feature", "main", "ms-src"),
 			)
 			e := newPrepushEngineer(t, workDir, store)
 
-			mr := &MRInfo{ID: "gt-mr", Branch: "feature", Target: "main", SourceIssue: "gt-src"}
+			mr := &MRInfo{ID: "ms-mr", Branch: "feature", Target: "main", SourceIssue: "ms-src"}
 			result := e.recheckMRStillMergeable(mr, "main")
 			if result.Success || !result.NoMerge {
 				t.Fatalf("non-concrete source should be rejected, got: %+v", result)
 			}
-			if !strings.Contains(store.closeReasons["gt-mr"], "not concrete") {
-				t.Fatalf("MR close reason = %q, want non-concrete rejection", store.closeReasons["gt-mr"])
+			if !strings.Contains(store.closeReasons["ms-mr"], "not concrete") {
+				t.Fatalf("MR close reason = %q, want non-concrete rejection", store.closeReasons["ms-mr"])
 			}
 		})
 	}
@@ -230,19 +230,19 @@ func TestRecheckMRStillMergeable_RejectsNonConcreteSource(t *testing.T) {
 func TestRecheckMRStillMergeable_RejectsClosedSource(t *testing.T) {
 	workDir, _, cleanup := testGitRepo(t)
 	defer cleanup()
-	source := prepushIssue("gt-src", "")
+	source := prepushIssue("ms-src", "")
 	now := time.Now()
 	source.Status = beadsdk.StatusClosed
 	source.ClosedAt = &now
-	store := newPrepushStore(source, prepushMRIssue("gt-mr", "feature", "main", "gt-src"))
+	store := newPrepushStore(source, prepushMRIssue("ms-mr", "feature", "main", "ms-src"))
 	e := newPrepushEngineer(t, workDir, store)
 
-	mr := &MRInfo{ID: "gt-mr", Branch: "feature", Target: "main", SourceIssue: "gt-src"}
+	mr := &MRInfo{ID: "ms-mr", Branch: "feature", Target: "main", SourceIssue: "ms-src"}
 	result := e.recheckMRStillMergeable(mr, "main")
 	if result.Success || !result.NoMerge {
 		t.Fatalf("closed source should be rejected, got: %+v", result)
 	}
-	if got := store.closeReasons["gt-mr"]; got != "rejected: source_issue gt-src status is closed" {
+	if got := store.closeReasons["ms-mr"]; got != "rejected: source_issue ms-src status is closed" {
 		t.Fatalf("MR close reason = %q, want closed source rejection", got)
 	}
 }
@@ -263,8 +263,8 @@ func TestDoMerge_RechecksSourceFlagsBeforeDirectPush(t *testing.T) {
 			defer cleanup()
 			createFeatureBranch(t, workDir, "feature-"+tc.name, tc.name+".txt", tc.name+"\n")
 			store := newPrepushStore(
-				prepushIssue("gt-src", ""),
-				prepushMRIssue("gt-mr", "feature-"+tc.name, "main", "gt-src"),
+				prepushIssue("ms-src", ""),
+				prepushMRIssue("ms-mr", "feature-"+tc.name, "main", "ms-src"),
 			)
 			e := newPrepushEngineer(t, workDir, store)
 			e.config.AutoPush = true // exercise the push path this test guards
@@ -273,14 +273,14 @@ func TestDoMerge_RechecksSourceFlagsBeforeDirectPush(t *testing.T) {
 			mutated := false
 			e.mergeSlotAcquire = func(holder string, addWaiter bool) (*beads.MergeSlotStatus, error) {
 				if !mutated {
-					store.issues["gt-src"].Description = tc.description
-					store.issues["gt-src"].UpdatedAt = time.Now()
+					store.issues["ms-src"].Description = tc.description
+					store.issues["ms-src"].UpdatedAt = time.Now()
 					mutated = true
 				}
 				return &beads.MergeSlotStatus{Available: true, Holder: holder}, nil
 			}
 
-			mr := &MRInfo{ID: "gt-mr", Branch: "feature-" + tc.name, Target: "main", SourceIssue: "gt-src"}
+			mr := &MRInfo{ID: "ms-mr", Branch: "feature-" + tc.name, Target: "main", SourceIssue: "ms-src"}
 			result := e.doMerge(context.Background(), mr)
 			if result.Success || !result.NoMerge {
 				t.Fatalf("expected clean policy rejection before direct push, got: %+v", result)
@@ -326,21 +326,21 @@ func TestDoMerge_RechecksBeforeSubmodulePush(t *testing.T) {
 	run(t, workDir, "git", "commit", "-m", "feat: update submodule")
 	run(t, workDir, "git", "checkout", "main")
 
-	store := newPrepushStore(prepushIssue("gt-src", ""), prepushMRIssue("gt-mr", "feature-submodule", "main", "gt-src"))
+	store := newPrepushStore(prepushIssue("ms-src", ""), prepushMRIssue("ms-mr", "feature-submodule", "main", "ms-src"))
 	sourceReads := 0
 	store.beforeGet = func(id string) {
-		if id != "gt-src" {
+		if id != "ms-src" {
 			return
 		}
 		sourceReads++
 		if sourceReads == 2 {
-			store.issues["gt-src"].Description = "no_merge: true"
-			store.issues["gt-src"].UpdatedAt = time.Now()
+			store.issues["ms-src"].Description = "no_merge: true"
+			store.issues["ms-src"].UpdatedAt = time.Now()
 		}
 	}
 	e := newPrepushEngineer(t, workDir, store)
 
-	mr := &MRInfo{ID: "gt-mr", Branch: "feature-submodule", Target: "main", SourceIssue: "gt-src"}
+	mr := &MRInfo{ID: "ms-mr", Branch: "feature-submodule", Target: "main", SourceIssue: "ms-src"}
 	result := e.doMerge(context.Background(), mr)
 	if result.Success || !result.NoMerge {
 		t.Fatalf("expected clean policy rejection before submodule push, got: %+v", result)
@@ -357,17 +357,17 @@ func TestDoMerge_RechecksBeforeSubmodulePush(t *testing.T) {
 func TestDoMergePR_RechecksSourceBeforeMergeAPI(t *testing.T) {
 	workDir, _, cleanup := testGitRepo(t)
 	defer cleanup()
-	store := newPrepushStore(prepushIssue("gt-src", ""), prepushMRIssue("gt-mr-pr", "feature-pr", "main", "gt-src"))
+	store := newPrepushStore(prepushIssue("ms-src", ""), prepushMRIssue("ms-mr-pr", "feature-pr", "main", "ms-src"))
 	e := newPrepushEngineer(t, workDir, store)
 	requireReview := true
 	e.config.RequireReview = &requireReview
 	provider := &prepushPRProvider{beforeMerge: func() {
-		store.issues["gt-src"].Description = "no_merge: true"
-		store.issues["gt-src"].UpdatedAt = time.Now()
+		store.issues["ms-src"].Description = "no_merge: true"
+		store.issues["ms-src"].UpdatedAt = time.Now()
 	}}
 	e.prProvider = provider
 
-	mr := &MRInfo{ID: "gt-mr-pr", Branch: "feature-pr", Target: "main", SourceIssue: "gt-src"}
+	mr := &MRInfo{ID: "ms-mr-pr", Branch: "feature-pr", Target: "main", SourceIssue: "ms-src"}
 	result := e.doMergePR(context.Background(), mr)
 	if result.Success || !result.NoMerge {
 		t.Fatalf("expected clean policy rejection before PR merge API, got: %+v", result)
@@ -383,10 +383,10 @@ func TestProcessBatch_RechecksBatchBeforePush(t *testing.T) {
 	createFeatureBranch(t, workDir, "feature-a", "a.txt", "a\n")
 	createFeatureBranch(t, workDir, "feature-b", "b.txt", "b\n")
 	store := newPrepushStore(
-		prepushIssue("gt-src-a", ""),
-		prepushIssue("gt-src-b", ""),
-		prepushMRIssue("gt-mr-a", "feature-a", "main", "gt-src-a"),
-		prepushMRIssue("gt-mr-b", "feature-b", "main", "gt-src-b"),
+		prepushIssue("ms-src-a", ""),
+		prepushIssue("ms-src-b", ""),
+		prepushMRIssue("ms-mr-a", "feature-a", "main", "ms-src-a"),
+		prepushMRIssue("ms-mr-b", "feature-b", "main", "ms-src-b"),
 	)
 	e := newPrepushEngineer(t, workDir, store)
 	before := run(t, workDir, "git", "rev-parse", "origin/main")
@@ -394,16 +394,16 @@ func TestProcessBatch_RechecksBatchBeforePush(t *testing.T) {
 	mutated := false
 	e.mergeSlotAcquire = func(holder string, addWaiter bool) (*beads.MergeSlotStatus, error) {
 		if !mutated {
-			store.issues["gt-src-b"].Description = "no_merge: true"
-			store.issues["gt-src-b"].UpdatedAt = time.Now()
+			store.issues["ms-src-b"].Description = "no_merge: true"
+			store.issues["ms-src-b"].UpdatedAt = time.Now()
 			mutated = true
 		}
 		return &beads.MergeSlotStatus{Available: true, Holder: holder}, nil
 	}
 
 	batch := []*MRInfo{
-		{ID: "gt-mr-a", Branch: "feature-a", Target: "main", SourceIssue: "gt-src-a"},
-		{ID: "gt-mr-b", Branch: "feature-b", Target: "main", SourceIssue: "gt-src-b"},
+		{ID: "ms-mr-a", Branch: "feature-a", Target: "main", SourceIssue: "ms-src-a"},
+		{ID: "ms-mr-b", Branch: "feature-b", Target: "main", SourceIssue: "ms-src-b"},
 	}
 	result := e.ProcessBatch(context.Background(), batch, "main", DefaultBatchConfig())
 	if len(result.Merged) != 0 {
@@ -416,10 +416,10 @@ func TestProcessBatch_RechecksBatchBeforePush(t *testing.T) {
 		t.Fatal("expected merge slot hook to mutate batch source before push")
 	}
 	assertOriginMainUnchangedAndReset(t, workDir, before)
-	if got := store.issues["gt-mr-b"].Status; got != beadsdk.StatusClosed {
+	if got := store.issues["ms-mr-b"].Status; got != beadsdk.StatusClosed {
 		t.Fatalf("invalidated MR status = %s, want closed", got)
 	}
-	if got := store.issues["gt-mr-a"].Status; got != beadsdk.StatusOpen {
+	if got := store.issues["ms-mr-a"].Status; got != beadsdk.StatusOpen {
 		t.Fatalf("unaffected MR status = %s, want open", got)
 	}
 }
@@ -430,18 +430,18 @@ func TestProcessBatch_RechecksBatchBeforeGates(t *testing.T) {
 	createFeatureBranch(t, workDir, "feature-a", "a.txt", "a\n")
 	createFeatureBranch(t, workDir, "feature-b", "b.txt", "b\n")
 	store := newPrepushStore(
-		prepushIssue("gt-src-a", ""),
-		prepushIssue("gt-src-b", "no_merge: true"),
-		prepushMRIssue("gt-mr-a", "feature-a", "main", "gt-src-a"),
-		prepushMRIssue("gt-mr-b", "feature-b", "main", "gt-src-b"),
+		prepushIssue("ms-src-a", ""),
+		prepushIssue("ms-src-b", "no_merge: true"),
+		prepushMRIssue("ms-mr-a", "feature-a", "main", "ms-src-a"),
+		prepushMRIssue("ms-mr-b", "feature-b", "main", "ms-src-b"),
 	)
 	e := newPrepushEngineer(t, workDir, store)
 	e.config.Gates = map[string]*GateConfig{"fail": {Cmd: "false"}}
 	before := run(t, workDir, "git", "rev-parse", "origin/main")
 
 	batch := []*MRInfo{
-		{ID: "gt-mr-a", Branch: "feature-a", Target: "main", SourceIssue: "gt-src-a"},
-		{ID: "gt-mr-b", Branch: "feature-b", Target: "main", SourceIssue: "gt-src-b"},
+		{ID: "ms-mr-a", Branch: "feature-a", Target: "main", SourceIssue: "ms-src-a"},
+		{ID: "ms-mr-b", Branch: "feature-b", Target: "main", SourceIssue: "ms-src-b"},
 	}
 	result := e.ProcessBatch(context.Background(), batch, "main", DefaultBatchConfig())
 	if result.Error != nil {
@@ -451,10 +451,10 @@ func TestProcessBatch_RechecksBatchBeforeGates(t *testing.T) {
 		t.Fatalf("expected no gate culprits for policy-ineligible MR, got %d", len(result.Culprits))
 	}
 	assertOriginMainUnchangedAndReset(t, workDir, before)
-	if got := store.issues["gt-mr-b"].Status; got != beadsdk.StatusClosed {
+	if got := store.issues["ms-mr-b"].Status; got != beadsdk.StatusClosed {
 		t.Fatalf("invalidated MR status = %s, want closed", got)
 	}
-	if got := store.issues["gt-mr-a"].Status; got != beadsdk.StatusOpen {
+	if got := store.issues["ms-mr-a"].Status; got != beadsdk.StatusOpen {
 		t.Fatalf("unaffected MR status = %s, want open", got)
 	}
 }
@@ -465,10 +465,10 @@ func TestProcessBatch_RechecksMRCloseReasonBeforePush(t *testing.T) {
 	createFeatureBranch(t, workDir, "feature-a", "a.txt", "a\n")
 	createFeatureBranch(t, workDir, "feature-b", "b.txt", "b\n")
 	store := newPrepushStore(
-		prepushIssue("gt-src-a", ""),
-		prepushIssue("gt-src-b", ""),
-		prepushMRIssue("gt-mr-a", "feature-a", "main", "gt-src-a"),
-		prepushMRIssue("gt-mr-b", "feature-b", "main", "gt-src-b"),
+		prepushIssue("ms-src-a", ""),
+		prepushIssue("ms-src-b", ""),
+		prepushMRIssue("ms-mr-a", "feature-a", "main", "ms-src-a"),
+		prepushMRIssue("ms-mr-b", "feature-b", "main", "ms-src-b"),
 	)
 	e := newPrepushEngineer(t, workDir, store)
 	before := run(t, workDir, "git", "rev-parse", "origin/main")
@@ -476,16 +476,16 @@ func TestProcessBatch_RechecksMRCloseReasonBeforePush(t *testing.T) {
 	mutated := false
 	e.mergeSlotAcquire = func(holder string, addWaiter bool) (*beads.MergeSlotStatus, error) {
 		if !mutated {
-			store.issues["gt-mr-b"].Description += "\nclose_reason: rejected"
-			store.issues["gt-mr-b"].UpdatedAt = time.Now()
+			store.issues["ms-mr-b"].Description += "\nclose_reason: rejected"
+			store.issues["ms-mr-b"].UpdatedAt = time.Now()
 			mutated = true
 		}
 		return &beads.MergeSlotStatus{Available: true, Holder: holder}, nil
 	}
 
 	batch := []*MRInfo{
-		{ID: "gt-mr-a", Branch: "feature-a", Target: "main", SourceIssue: "gt-src-a"},
-		{ID: "gt-mr-b", Branch: "feature-b", Target: "main", SourceIssue: "gt-src-b"},
+		{ID: "ms-mr-a", Branch: "feature-a", Target: "main", SourceIssue: "ms-src-a"},
+		{ID: "ms-mr-b", Branch: "feature-b", Target: "main", SourceIssue: "ms-src-b"},
 	}
 	result := e.ProcessBatch(context.Background(), batch, "main", DefaultBatchConfig())
 	if len(result.Merged) != 0 {
@@ -498,13 +498,13 @@ func TestProcessBatch_RechecksMRCloseReasonBeforePush(t *testing.T) {
 		t.Fatal("expected merge slot hook to mutate batch MR before push")
 	}
 	assertOriginMainUnchangedAndReset(t, workDir, before)
-	if got := store.issues["gt-mr-b"].Status; got != beadsdk.StatusClosed {
+	if got := store.issues["ms-mr-b"].Status; got != beadsdk.StatusClosed {
 		t.Fatalf("invalidated MR status = %s, want closed", got)
 	}
-	if got := store.closeReasons["gt-mr-b"]; got != "rejected: MR close_reason is rejected" {
+	if got := store.closeReasons["ms-mr-b"]; got != "rejected: MR close_reason is rejected" {
 		t.Fatalf("invalidated MR close reason = %q, want rejected close_reason", got)
 	}
-	if got := store.issues["gt-mr-a"].Status; got != beadsdk.StatusOpen {
+	if got := store.issues["ms-mr-a"].Status; got != beadsdk.StatusOpen {
 		t.Fatalf("unaffected MR status = %s, want open", got)
 	}
 }

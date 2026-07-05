@@ -29,10 +29,10 @@ By default, installs to the current worktree. Use --role to install
 to all worktrees of a specific role in the current rig.
 
 Examples:
-  gt hooks install pr-workflow-guard              # Install to current worktree
-  gt hooks install pr-workflow-guard --role crew  # Install to all crew in current rig
-  gt hooks install session-prime --role crew --all-rigs  # Install to all crew everywhere
-  gt hooks install pr-workflow-guard --dry-run    # Preview what would be installed`,
+  ms hooks install pr-workflow-guard              # Install to current worktree
+  ms hooks install pr-workflow-guard --role crew  # Install to all crew in current rig
+  ms hooks install session-prime --role crew --all-rigs  # Install to all crew everywhere
+  ms hooks install pr-workflow-guard --dry-run    # Preview what would be installed`,
 	Args: cobra.ExactArgs(1),
 	RunE: runHooksInstall,
 }

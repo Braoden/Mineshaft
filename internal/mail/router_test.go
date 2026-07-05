@@ -23,10 +23,10 @@ import (
 )
 
 func TestDetectTownRoot(t *testing.T) {
-	// Unset GT_TOWN_ROOT/GT_ROOT so tests exercise workspace.Find fallback.
+	// Unset MS_TOWN_ROOT/MS_ROOT so tests exercise workspace.Find fallback.
 	// (The real session always has these set; this tests the detection logic itself.)
-	t.Setenv("GT_TOWN_ROOT", "")
-	t.Setenv("GT_ROOT", "")
+	t.Setenv("MS_TOWN_ROOT", "")
+	t.Setenv("MS_ROOT", "")
 
 	// Create temp directory structure
 	tmpDir := t.TempDir()
@@ -82,7 +82,7 @@ func TestDetectTownRoot(t *testing.T) {
 	}
 }
 
-// TestDetectTownRoot_PrefersEnvVar verifies that GT_TOWN_ROOT takes priority
+// TestDetectTownRoot_PrefersEnvVar verifies that MS_TOWN_ROOT takes priority
 // over workspace detection, preventing rig-level overseer/town.json from being
 // mistaken for the town root.
 func TestDetectTownRoot_PrefersEnvVar(t *testing.T) {
@@ -106,27 +106,27 @@ func TestDetectTownRoot_PrefersEnvVar(t *testing.T) {
 	}
 
 	t.Run("env var overrides nested workspace detection", func(t *testing.T) {
-		t.Setenv("GT_TOWN_ROOT", outerTown)
+		t.Setenv("MS_TOWN_ROOT", outerTown)
 		// Starting from the nested rig would normally find the rig's own
-		// overseer/town.json first. With GT_TOWN_ROOT set, we get the outer town.
+		// overseer/town.json first. With MS_TOWN_ROOT set, we get the outer town.
 		got := detectTownRoot(nestedRig)
 		if got != outerTown {
 			t.Errorf("detectTownRoot(%q) = %q, want %q (outer town root via env var)", nestedRig, got, outerTown)
 		}
 	})
 
-	t.Run("GT_ROOT also works", func(t *testing.T) {
-		t.Setenv("GT_TOWN_ROOT", "")
-		t.Setenv("GT_ROOT", outerTown)
+	t.Run("MS_ROOT also works", func(t *testing.T) {
+		t.Setenv("MS_TOWN_ROOT", "")
+		t.Setenv("MS_ROOT", outerTown)
 		got := detectTownRoot(nestedRig)
 		if got != outerTown {
-			t.Errorf("detectTownRoot(%q) = %q, want %q (outer town root via GT_ROOT)", nestedRig, got, outerTown)
+			t.Errorf("detectTownRoot(%q) = %q, want %q (outer town root via MS_ROOT)", nestedRig, got, outerTown)
 		}
 	})
 
 	t.Run("falls back to workspace.Find without env vars", func(t *testing.T) {
-		t.Setenv("GT_TOWN_ROOT", "")
-		t.Setenv("GT_ROOT", "")
+		t.Setenv("MS_TOWN_ROOT", "")
+		t.Setenv("MS_ROOT", "")
 		// Without env vars, starting from the nested rig finds the nested
 		// overseer/town.json (the bug this fix addresses — documenting current behavior).
 		got := detectTownRoot(nestedRig)
@@ -166,7 +166,7 @@ func TestIsTownLevelAddress(t *testing.T) {
 func TestAddressToSessionIDs(t *testing.T) {
 	// Set up prefix registry for test
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "mineshaft")
+	reg.Register("ms", "mineshaft")
 	reg.Register("bd", "beads")
 	old := session.DefaultRegistry()
 	session.SetDefaultRegistry(reg)
@@ -185,17 +185,17 @@ func TestAddressToSessionIDs(t *testing.T) {
 		{"supervisor", []string{"hq-supervisor"}},
 
 		// Rig singletons - single session (no crew/miner ambiguity)
-		{"mineshaft/refinery", []string{"gt-refinery"}},
+		{"mineshaft/refinery", []string{"ms-refinery"}},
 		{"beads/witness", []string{"bd-witness"}},
 
 		// Ambiguous addresses - try both crew and miner variants
-		{"mineshaft/Toast", []string{"gt-crew-Toast", "gt-Toast"}},
+		{"mineshaft/Toast", []string{"ms-crew-Toast", "ms-Toast"}},
 		{"beads/ruby", []string{"bd-crew-ruby", "bd-ruby"}},
 
 		// Explicit crew/miner - single session
-		{"mineshaft/crew/max", []string{"gt-crew-max"}},
-		{"mineshaft/miner/nux", []string{"gt-nux"}},
-		{"mineshaft/miners/nux", []string{"gt-nux"}},
+		{"mineshaft/crew/max", []string{"ms-crew-max"}},
+		{"mineshaft/miner/nux", []string{"ms-nux"}},
+		{"mineshaft/miners/nux", []string{"ms-nux"}},
 
 		// Invalid addresses - empty result
 		{"mineshaft/", nil}, // Empty target
@@ -281,7 +281,7 @@ func TestShouldBeWisp(t *testing.T) {
 		},
 		{
 			name: "START_WORK subject",
-			msg:  &Message{Subject: "START_WORK: gt-123"},
+			msg:  &Message{Subject: "START_WORK: ms-123"},
 			want: true,
 		},
 		{
@@ -333,9 +333,9 @@ func TestShouldBeWisp(t *testing.T) {
 
 func TestResolveBeadsDir(t *testing.T) {
 	// With town root set
-	r := NewRouterWithTownRoot("/work/dir", "/home/user/gt")
+	r := NewRouterWithTownRoot("/work/dir", "/home/user/ms")
 	got := r.resolveBeadsDir()
-	want := "/home/user/gt/.beads"
+	want := "/home/user/ms/.beads"
 	if filepath.ToSlash(got) != want {
 		t.Errorf("resolveBeadsDir with townRoot = %q, want %q", got, want)
 	}
@@ -375,7 +375,7 @@ func TestSendFromCrewWorkspace_AvoidsEphemeralPrefixMismatch(t *testing.T) {
 
 	// Write sentinel files so beads.EnsureCustomTypes skips bd config calls.
 	typesList := strings.Join(constants.BeadsCustomTypesList(), ",")
-	if err := os.WriteFile(filepath.Join(townBeadsDir, ".gt-types-configured"), []byte(typesList+"\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townBeadsDir, ".ms-types-configured"), []byte(typesList+"\n"), 0644); err != nil {
 		t.Fatalf("write types sentinel: %v", err)
 	}
 
@@ -454,12 +454,12 @@ exit 1
 }
 
 func TestNewRouterWithTownRoot(t *testing.T) {
-	r := NewRouterWithTownRoot("/work/rig", "/home/gt")
+	r := NewRouterWithTownRoot("/work/rig", "/home/ms")
 	if filepath.ToSlash(r.workDir) != "/work/rig" {
 		t.Errorf("workDir = %q, want '/work/rig'", r.workDir)
 	}
-	if filepath.ToSlash(r.townRoot) != "/home/gt" {
-		t.Errorf("townRoot = %q, want '/home/gt'", r.townRoot)
+	if filepath.ToSlash(r.townRoot) != "/home/ms" {
+		t.Errorf("townRoot = %q, want '/home/ms'", r.townRoot)
 	}
 }
 
@@ -908,41 +908,41 @@ func TestAgentBeadToAddress(t *testing.T) {
 		},
 		{
 			name: "town-level overseer",
-			bead: &agentBead{ID: "gt-overseer"},
+			bead: &agentBead{ID: "ms-overseer"},
 			want: "overseer/",
 		},
 		{
 			name: "town-level supervisor",
-			bead: &agentBead{ID: "gt-supervisor"},
+			bead: &agentBead{ID: "ms-supervisor"},
 			want: "supervisor/",
 		},
 		{
 			name: "rig singleton witness",
-			bead: &agentBead{ID: "gt-mineshaft-witness"},
+			bead: &agentBead{ID: "ms-mineshaft-witness"},
 			want: "mineshaft/witness",
 		},
 		{
 			name: "rig singleton refinery",
-			bead: &agentBead{ID: "gt-mineshaft-refinery"},
+			bead: &agentBead{ID: "ms-mineshaft-refinery"},
 			want: "mineshaft/refinery",
 		},
 		{
 			name: "rig crew worker",
-			bead: &agentBead{ID: "gt-mineshaft-crew-max"},
+			bead: &agentBead{ID: "ms-mineshaft-crew-max"},
 			want: "mineshaft/max",
 		},
 		{
 			name: "rig miner worker",
-			bead: &agentBead{ID: "gt-mineshaft-miner-Toast"},
+			bead: &agentBead{ID: "ms-mineshaft-miner-Toast"},
 			want: "mineshaft/Toast",
 		},
 		{
 			name: "rig miner with hyphenated name",
-			bead: &agentBead{ID: "gt-mineshaft-miner-my-agent"},
+			bead: &agentBead{ID: "ms-mineshaft-miner-my-agent"},
 			want: "mineshaft/my-agent",
 		},
 		{
-			name: "non-gt prefix with description",
+			name: "non-ms prefix with description",
 			bead: &agentBead{
 				ID:          "bd-beads-crew-beavis",
 				Description: "Crew worker beavis in beads.\n\nrole_type: crew\nrig: beads\nagent_state: idle",
@@ -950,7 +950,7 @@ func TestAgentBeadToAddress(t *testing.T) {
 			want: "beads/beavis",
 		},
 		{
-			name: "non-gt prefix singleton with description",
+			name: "non-ms prefix singleton with description",
 			bead: &agentBead{
 				ID:          "bd-beads-witness",
 				Description: "Witness for beads.\n\nrole_type: witness\nrig: beads\nagent_state: idle",
@@ -958,22 +958,22 @@ func TestAgentBeadToAddress(t *testing.T) {
 			want: "beads/witness",
 		},
 		{
-			name: "non-gt prefix no description fallback crew",
+			name: "non-ms prefix no description fallback crew",
 			bead: &agentBead{ID: "bd-beads-crew-beavis"},
 			want: "beads/beavis",
 		},
 		{
-			name: "non-gt prefix no description fallback witness",
+			name: "non-ms prefix no description fallback witness",
 			bead: &agentBead{ID: "bd-beads-witness"},
 			want: "beads/witness",
 		},
 		{
-			name: "non-gt prefix no description fallback refinery",
+			name: "non-ms prefix no description fallback refinery",
 			bead: &agentBead{ID: "db-debt_buying-refinery"},
 			want: "debt_buying/refinery",
 		},
 		{
-			name: "non-gt prefix no description fallback miner",
+			name: "non-ms prefix no description fallback miner",
 			bead: &agentBead{ID: "ppf-pyspark_pipeline_framework-miner-Toast"},
 			want: "pyspark_pipeline_framework/Toast",
 		},
@@ -1192,9 +1192,9 @@ func TestValidateRecipient(t *testing.T) {
 	}
 
 	// Use beads.NewIsolatedWithPort with a unique random prefix to avoid Dolt
-	// primary key collisions with production beads (e.g., gt-overseer).
+	// primary key collisions with production beads (e.g., ms-overseer).
 	// NewIsolatedWithPort directs bd init to the ephemeral server via
-	// --server-port and GT_DOLT_PORT, and uses --db flag for subsequent
+	// --server-port and MS_DOLT_PORT, and uses --db flag for subsequent
 	// commands (bypassing Dolt). We set BEADS_DB so that the Router's
 	// external bd calls also use the same isolated SQLite database.
 	var buf [4]byte
@@ -1217,20 +1217,20 @@ func TestValidateRecipient(t *testing.T) {
 		t.Fatalf("config set types.custom: %v", err)
 	}
 
-	// Create test agent beads with gt:agent label.
-	// Safe to use "gt-" prefixed IDs since both NewIsolated (--db) and the
+	// Create test agent beads with ms:agent label.
+	// Safe to use "ms-" prefixed IDs since both NewIsolated (--db) and the
 	// Router (BEADS_DB env) point to the same local SQLite database.
 	createAgent := func(id, title string) {
-		if _, err := b.Run("create", title, "--labels=gt:agent", "--id="+id, "--force"); err != nil {
+		if _, err := b.Run("create", title, "--labels=ms:agent", "--id="+id, "--force"); err != nil {
 			t.Fatalf("creating agent %s: %v", id, err)
 		}
 	}
 
-	createAgent("gt-overseer", "Overseer agent")
-	createAgent("gt-supervisor", "Supervisor agent")
-	createAgent("gt-testrig-witness", "Test witness")
-	createAgent("gt-testrig-crew-alice", "Test crew alice")
-	createAgent("gt-testrig-miner-bob", "Test miner bob")
+	createAgent("ms-overseer", "Overseer agent")
+	createAgent("ms-supervisor", "Supervisor agent")
+	createAgent("ms-testrig-witness", "Test witness")
+	createAgent("ms-testrig-crew-alice", "Test crew alice")
+	createAgent("ms-testrig-miner-bob", "Test miner bob")
 
 	// Create dog directory for workspace fallback validation (supervisor/dogs/fido).
 	// The workspace fallback handles cases where agent beads are missing or
@@ -1322,7 +1322,7 @@ func TestValidateAgentWorkspaceDog(t *testing.T) {
 func setupTestRegistryForAddressTest(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "mineshaft")
+	reg.Register("ms", "mineshaft")
 	reg.Register("bd", "beads")
 	old := session.DefaultRegistry()
 	session.SetDefaultRegistry(reg)
@@ -1360,27 +1360,27 @@ func TestAddressToAgentBeadID(t *testing.T) {
 		{
 			name:     "witness",
 			address:  "mineshaft/witness",
-			expected: "gt-witness",
+			expected: "ms-witness",
 		},
 		{
 			name:     "refinery",
 			address:  "mineshaft/refinery",
-			expected: "gt-refinery",
+			expected: "ms-refinery",
 		},
 		{
 			name:     "crew member",
 			address:  "mineshaft/crew/max",
-			expected: "gt-crew-max",
+			expected: "ms-crew-max",
 		},
 		{
 			name:     "miner (default)",
 			address:  "mineshaft/alpha",
-			expected: "gt-alpha",
+			expected: "ms-alpha",
 		},
 		{
 			name:     "explicit miner with miners/ prefix",
 			address:  "mineshaft/miners/alpha",
-			expected: "gt-alpha",
+			expected: "ms-alpha",
 		},
 		{
 			name:     "empty address",
@@ -1591,7 +1591,7 @@ func requireNotifyTestSocket(t *testing.T) string {
 	// Use test name for unique socket per test to prevent cleanup interference.
 	// Sanitize: tmux socket names cannot contain slashes or dots.
 	safe := strings.NewReplacer("/", "-", ".", "-").Replace(t.Name())
-	socket := fmt.Sprintf("gt-test-%s-%d", safe, os.Getpid())
+	socket := fmt.Sprintf("ms-test-%s-%d", safe, os.Getpid())
 	// Pre-kill any stale server on this socket (e.g., from a crashed prior run).
 	_ = exec.Command("tmux", "-L", socket, "kill-server").Run()
 	t.Cleanup(func() {
@@ -1623,7 +1623,7 @@ func createNotifyTestSession(t *testing.T, socket, sessionName, command string) 
 // receives a direct nudge instead of a queued one.
 func TestNotifyRecipient_IdleAgent(t *testing.T) {
 	socket := requireNotifyTestSocket(t)
-	sessionName := "gt-crew-idletest"
+	sessionName := "ms-crew-idletest"
 
 	// Create a session that displays the Claude Code prompt prefix, simulating idle.
 	// "printf" prints the prompt, then "cat" blocks keeping the session alive.
@@ -1673,7 +1673,7 @@ func TestNotifyRecipient_IdleAgent(t *testing.T) {
 // gets a queued nudge instead of an immediate one.
 func TestNotifyRecipient_BusyAgent(t *testing.T) {
 	socket := requireNotifyTestSocket(t)
-	sessionName := "gt-crew-busytest"
+	sessionName := "ms-crew-busytest"
 
 	// Create a session running sleep — no prompt visible, simulating busy agent.
 	createNotifyTestSession(t, socket, sessionName, "sleep 300")
@@ -1726,8 +1726,8 @@ func TestNotifyRecipient_BusyAgent(t *testing.T) {
 
 func TestNotifyRecipient_CanonicalAliasFansOutToBusyCandidates(t *testing.T) {
 	socket := requireNotifyTestSocket(t)
-	crewSession := "gt-crew-aliasfanout"
-	minerSession := "gt-aliasfanout"
+	crewSession := "ms-crew-aliasfanout"
+	minerSession := "ms-aliasfanout"
 	createNotifyTestSession(t, socket, crewSession, "sleep 300")
 	createNotifyTestSession(t, socket, minerSession, "sleep 300")
 
@@ -1777,7 +1777,7 @@ func TestNotifyRecipient_CanonicalAliasQueuesAllHeadlessCandidates(t *testing.T)
 	r := &Router{
 		workDir:  t.TempDir(),
 		townRoot: townRoot,
-		tmux:     tmux.NewTmuxWithSocket("gt-test-missing-socket"),
+		tmux:     tmux.NewTmuxWithSocket("ms-test-missing-socket"),
 	}
 
 	msg := &Message{
@@ -1791,7 +1791,7 @@ func TestNotifyRecipient_CanonicalAliasQueuesAllHeadlessCandidates(t *testing.T)
 		t.Fatalf("notifyRecipient returned error: %v", err)
 	}
 
-	for _, sessionID := range []string{"gt-crew-headless", "gt-headless"} {
+	for _, sessionID := range []string{"ms-crew-headless", "ms-headless"} {
 		nudges, err := nudge.Drain(townRoot, sessionID)
 		if err != nil {
 			t.Fatalf("Drain(%s): %v", sessionID, err)
@@ -1807,7 +1807,7 @@ func TestNotifyRecipient_CanonicalAliasQueuesAllHeadlessCandidates(t *testing.T)
 
 func TestNotifyRecipient_BusyAgentEscalationUsesUrgentQueuedNudge(t *testing.T) {
 	socket := requireNotifyTestSocket(t)
-	sessionName := "gt-crew-busy-escalation"
+	sessionName := "ms-crew-busy-escalation"
 	createNotifyTestSession(t, socket, sessionName, "sleep 300")
 
 	townRoot := t.TempDir()
@@ -1841,7 +1841,7 @@ func TestNotifyRecipient_BusyAgentEscalationUsesUrgentQueuedNudge(t *testing.T) 
 	if nudges[0].Priority != nudge.PriorityUrgent {
 		t.Fatalf("queued escalation priority = %q, want %q", nudges[0].Priority, nudge.PriorityUrgent)
 	}
-	for _, want := range []string{"Escalation mail from mineshaft/witness", "ID: hq-esc123", "Severity: critical", "gt mail read hq-esc123", "gt escalate ack hq-esc123"} {
+	for _, want := range []string{"Escalation mail from mineshaft/witness", "ID: hq-esc123", "Severity: critical", "ms mail read hq-esc123", "ms escalate ack hq-esc123"} {
 		if !strings.Contains(nudges[0].Message, want) {
 			t.Fatalf("queued escalation message missing %q: %s", want, nudges[0].Message)
 		}
@@ -1863,7 +1863,7 @@ func TestFormatNotificationMessageForEscalation(t *testing.T) {
 	}
 
 	notification := formatNotificationMessage(msg)
-	for _, want := range []string{"Escalation mail from mineshaft/witness", "ID: hq-esc456", "Severity: high", "gt mail read hq-esc456", "gt escalate ack hq-esc456"} {
+	for _, want := range []string{"Escalation mail from mineshaft/witness", "ID: hq-esc456", "Severity: high", "ms mail read hq-esc456", "ms escalate ack hq-esc456"} {
 		if !strings.Contains(notification, want) {
 			t.Fatalf("escalation notification missing %q: %s", want, notification)
 		}
@@ -1874,7 +1874,7 @@ func TestRouterSendEscalationAddsStructuredLabels(t *testing.T) {
 	r := &Router{}
 	msg := &Message{From: "supervisor/", Type: TypeEscalation, ThreadID: "hq-abc123"}
 	labels := r.buildLabels(msg)
-	for _, want := range []string{"gt:message", "gt:escalation", "msg-type:escalation", "from:supervisor/", "thread:hq-abc123"} {
+	for _, want := range []string{"ms:message", "ms:escalation", "msg-type:escalation", "from:supervisor/", "thread:hq-abc123"} {
 		if !containsLabel(labels, want) {
 			t.Fatalf("labels %v missing %q", labels, want)
 		}
@@ -1906,7 +1906,7 @@ func TestEnqueueReplyReminder_Basic(t *testing.T) {
 		Subject: "status check",
 		Type:    TypeNotification,
 	}
-	sessionID := "gt-mineshaft-crew-alice"
+	sessionID := "ms-mineshaft-crew-alice"
 
 	before := time.Now()
 	r.enqueueReplyReminder(msg, sessionID)
@@ -1957,8 +1957,8 @@ func TestEnqueueReplyReminder_Basic(t *testing.T) {
 	if !strings.Contains(q.Message, msg.From) {
 		t.Errorf("reminder message should mention sender %q, got %q", msg.From, q.Message)
 	}
-	if !strings.Contains(q.Message, "gt mail send") {
-		t.Errorf("reminder message should mention 'gt mail send', got %q", q.Message)
+	if !strings.Contains(q.Message, "ms mail send") {
+		t.Errorf("reminder message should mention 'ms mail send', got %q", q.Message)
 	}
 	if q.Kind != "reply-reminder" {
 		t.Errorf("Kind = %q, want %q", q.Kind, "reply-reminder")
@@ -2014,9 +2014,9 @@ func TestEnqueueReplyReminder_SkipsReply(t *testing.T) {
 		Subject: "re: status",
 		Type:    TypeReply,
 	}
-	r.enqueueReplyReminder(msg, "gt-mineshaft-crew-alice")
+	r.enqueueReplyReminder(msg, "ms-mineshaft-crew-alice")
 
-	pending, _ := nudge.Pending(townRoot, "gt-mineshaft-crew-alice")
+	pending, _ := nudge.Pending(townRoot, "ms-mineshaft-crew-alice")
 	if pending != 0 {
 		t.Errorf("TypeReply should not enqueue a reminder, got %d", pending)
 	}
@@ -2028,7 +2028,7 @@ func TestEnqueueReplyReminder_NoTownRoot(t *testing.T) {
 	r := &Router{workDir: t.TempDir(), townRoot: ""}
 	msg := &Message{From: "overseer/", To: "mineshaft/crew/bob", Subject: "task"}
 	// Should not panic or error — just silently skip.
-	r.enqueueReplyReminder(msg, "gt-mineshaft-crew-bob")
+	r.enqueueReplyReminder(msg, "ms-mineshaft-crew-bob")
 }
 
 // TestEnqueueReplyReminder_DisabledByConfig verifies that setting
@@ -2055,9 +2055,9 @@ func TestEnqueueReplyReminder_DisabledByConfig(t *testing.T) {
 		Subject: "task",
 		Type:    TypeTask,
 	}
-	r.enqueueReplyReminder(msg, "gt-mineshaft-crew-bob")
+	r.enqueueReplyReminder(msg, "ms-mineshaft-crew-bob")
 
-	pending, _ := nudge.Pending(townRoot, "gt-mineshaft-crew-bob")
+	pending, _ := nudge.Pending(townRoot, "ms-mineshaft-crew-bob")
 	if pending != 0 {
 		t.Errorf("reply_reminder_delay=0s should disable reminders, got %d pending", pending)
 	}

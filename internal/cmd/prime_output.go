@@ -336,7 +336,7 @@ func outputUnknownContext(ctx RoleContext) {
 	fmt.Println("- `<rig>/witness/rig/` - Witness role")
 	fmt.Println("- `<rig>/refinery/rig/` - Refinery role")
 	fmt.Println("- `overseer/` or `<rig>/overseer/` - Overseer role")
-	fmt.Println("- Town root is neutral (set GT_ROLE or cd into a role directory)")
+	fmt.Println("- Town root is neutral (set MS_ROLE or cd into a role directory)")
 	fmt.Println()
 	fmt.Printf("Town root: %s\n", style.Dim.Render(ctx.TownRoot))
 }
@@ -355,22 +355,22 @@ func outputCommandQuickReference(ctx RoleContext) {
 		fmt.Println("| Want to... | Correct command | Common mistake |")
 		fmt.Println("|------------|----------------|----------------|")
 		fmt.Println("| Close/complete a bead | `bd close <id>` | ~~bd complete~~ (not a command), ~~bd update --status done~~ (invalid status) |")
-		fmt.Printf("| Dispatch work to miner | `%s sling <bead> <rig>` | ~~gt miner spawn~~ (not a command) |\n", c)
+		fmt.Printf("| Dispatch work to miner | `%s sling <bead> <rig>` | ~~ms miner spawn~~ (not a command) |\n", c)
 		fmt.Printf("| Message another agent | `%s nudge <target> \"msg\"` | ~~tmux send-keys~~ (unreliable) |\n", c)
-		fmt.Printf("| Kill stuck miner | `%s miner nuke <rig>/<name> --force` | ~~gt miner kill~~ (not a command) |\n", c)
-		fmt.Printf("| Pause rig (daemon won't restart) | `%s rig park <rig>` | ~~gt rig stop~~ (daemon will restart it) |\n", c)
-		fmt.Printf("| Permanently disable rig | `%s rig dock <rig>` | ~~gt rig park~~ (temporary only) |\n", c)
-		fmt.Println("| Create issues | `bd create \"title\"` | ~~gt issue create~~ (not a command) |")
+		fmt.Printf("| Kill stuck miner | `%s miner nuke <rig>/<name> --force` | ~~ms miner kill~~ (not a command) |\n", c)
+		fmt.Printf("| Pause rig (daemon won't restart) | `%s rig park <rig>` | ~~ms rig stop~~ (daemon will restart it) |\n", c)
+		fmt.Printf("| Permanently disable rig | `%s rig dock <rig>` | ~~ms rig park~~ (temporary only) |\n", c)
+		fmt.Println("| Create issues | `bd create \"title\"` | ~~ms issue create~~ (not a command) |")
 
 	case RoleCrew:
 		fmt.Println("| Want to... | Correct command | Common mistake |")
 		fmt.Println("|------------|----------------|----------------|")
 		fmt.Println("| Close/complete a bead | `bd close <id>` | ~~bd complete~~ (not a command), ~~bd update --status done~~ (invalid status) |")
 		fmt.Printf("| Message another agent | `%s nudge <target> \"msg\"` | ~~tmux send-keys~~ (unreliable) |\n", c)
-		fmt.Printf("| Dispatch work to miner | `%s sling <bead> <rig>` | ~~gt miner spawn~~ (not a command) |\n", c)
-		fmt.Printf("| Stop my session | `%s crew stop %s` | ~~gt rig stop~~ (stops rig agents, not crew) |\n", c, ctx.Miner)
-		fmt.Printf("| Pause rig (daemon won't restart) | `%s rig park <rig>` | ~~gt rig stop~~ (daemon will restart it) |\n", c)
-		fmt.Printf("| Permanently disable rig | `%s rig dock <rig>` | ~~gt rig park~~ (temporary only) |\n", c)
+		fmt.Printf("| Dispatch work to miner | `%s sling <bead> <rig>` | ~~ms miner spawn~~ (not a command) |\n", c)
+		fmt.Printf("| Stop my session | `%s crew stop %s` | ~~ms rig stop~~ (stops rig agents, not crew) |\n", c, ctx.Miner)
+		fmt.Printf("| Pause rig (daemon won't restart) | `%s rig park <rig>` | ~~ms rig stop~~ (daemon will restart it) |\n", c)
+		fmt.Printf("| Permanently disable rig | `%s rig dock <rig>` | ~~ms rig park~~ (temporary only) |\n", c)
 
 	case RoleMiner:
 		fmt.Println("| Want to... | Correct command | Common mistake |")
@@ -379,7 +379,7 @@ func outputCommandQuickReference(ctx RoleContext) {
 		fmt.Println("| Close a sub-issue | `bd close <id>` | ~~bd complete~~ (not a command), ~~bd update --status done~~ (invalid status) |")
 		fmt.Printf("| Message another agent | `%s nudge <target> \"msg\"` | ~~tmux send-keys~~ (unreliable) |\n", c)
 		fmt.Println("| Check workflow steps | `bd mol current` | ~~bd ready~~ (excludes molecule steps) |")
-		fmt.Println("| Create issues | `bd create \"title\"` | ~~gt issue create~~ (not a command) |")
+		fmt.Println("| Create issues | `bd create \"title\"` | ~~ms issue create~~ (not a command) |")
 		fmt.Printf("| Escalate blocker | `%s escalate \"desc\" -s HIGH` | ~~waiting for human~~ (never wait) |\n", c)
 
 	case RoleWitness:
@@ -387,30 +387,30 @@ func outputCommandQuickReference(ctx RoleContext) {
 		fmt.Println("|------------|----------------|----------------|")
 		fmt.Println("| Close/complete a bead | `bd close <id>` | ~~bd complete~~ (not a command), ~~bd update --status done~~ (invalid status) |")
 		fmt.Printf("| Message a miner | `%s nudge %s/<name> \"msg\"` | ~~tmux send-keys~~ (unreliable) |\n", c, ctx.Rig)
-		fmt.Printf("| Kill stuck miner | `%s miner nuke %s/<name> --force` | ~~gt miner kill~~ (not a command) |\n", c, ctx.Rig)
+		fmt.Printf("| Kill stuck miner | `%s miner nuke %s/<name> --force` | ~~ms miner kill~~ (not a command) |\n", c, ctx.Rig)
 		fmt.Printf("| View miner output | `%s peek %s/<name> 50` | |\n", c, ctx.Rig)
-		fmt.Println("| Create issues | `bd create \"title\"` | ~~gt issue create~~ (not a command) |")
+		fmt.Println("| Create issues | `bd create \"title\"` | ~~ms issue create~~ (not a command) |")
 
 	case RoleRefinery:
 		fmt.Println("| Want to... | Correct command | Common mistake |")
 		fmt.Println("|------------|----------------|----------------|")
 		fmt.Printf("| Check merge queue | `%s mq list %s` | ~~git branch -r \\| grep miner~~ (misses MRs) |\n", c, ctx.Rig)
 		fmt.Printf("| Message a miner | `%s nudge %s/<name> \"msg\"` | ~~tmux send-keys~~ (unreliable) |\n", c, ctx.Rig)
-		fmt.Println("| Create issues | `bd create \"title\"` | ~~gt issue create~~ (not a command) |")
+		fmt.Println("| Create issues | `bd create \"title\"` | ~~ms issue create~~ (not a command) |")
 
 	case RoleSupervisor:
 		fmt.Println("| Want to... | Correct command | Common mistake |")
 		fmt.Println("|------------|----------------|----------------|")
-		fmt.Printf("| Start rig agents | `%s rig start <rig>` | ~~gt rig boot~~ (starts without patrol) |\n", c)
-		fmt.Printf("| Pause rig (daemon won't restart) | `%s rig park <rig>` | ~~gt rig stop~~ (daemon will restart it) |\n", c)
-		fmt.Printf("| Permanently disable rig | `%s rig dock <rig>` | ~~gt rig park~~ (temporary only) |\n", c)
+		fmt.Printf("| Start rig agents | `%s rig start <rig>` | ~~ms rig boot~~ (starts without patrol) |\n", c)
+		fmt.Printf("| Pause rig (daemon won't restart) | `%s rig park <rig>` | ~~ms rig stop~~ (daemon will restart it) |\n", c)
+		fmt.Printf("| Permanently disable rig | `%s rig dock <rig>` | ~~ms rig park~~ (temporary only) |\n", c)
 		fmt.Printf("| Message another agent | `%s nudge <target> \"msg\"` | ~~tmux send-keys~~ (unreliable) |\n", c)
 
 	case RoleBoot:
 		fmt.Println("| Want to... | Correct command | Common mistake |")
 		fmt.Println("|------------|----------------|----------------|")
-		fmt.Printf("| Run triage | `%s boot triage` | ~~gt supervisor heartbeat~~ (that's Supervisor's job) |\n", c)
-		fmt.Printf("| Check Supervisor health | `%s supervisor status` | ~~gt status~~ (town-wide, not Supervisor-specific) |\n", c)
+		fmt.Printf("| Run triage | `%s boot triage` | ~~ms supervisor heartbeat~~ (that's Supervisor's job) |\n", c)
+		fmt.Printf("| Check Supervisor health | `%s supervisor status` | ~~ms status~~ (town-wide, not Supervisor-specific) |\n", c)
 		fmt.Printf("| Nudge the Supervisor | `%s nudge supervisor \"msg\"` | ~~tmux send-keys~~ (blocked; can stage unsubmitted input) |\n", c)
 	}
 
@@ -463,7 +463,7 @@ func outputHandoffContent(ctx RoleContext) {
 	fmt.Printf("%s\n\n", style.Bold.Render("## 🤝 Handoff from Previous Session"))
 	fmt.Println(issue.Description)
 	fmt.Println()
-	fmt.Println(style.Dim.Render("(Clear with: gt rig reset --handoff)"))
+	fmt.Println(style.Dim.Render("(Clear with: ms rig reset --handoff)"))
 }
 
 // outputStartupDirective outputs role-specific instructions for the agent.

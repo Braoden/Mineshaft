@@ -12,7 +12,7 @@ import (
 )
 
 // startIsolatedDoltContainer starts a containerized Dolt server and returns
-// a townRoot directory suitable for DefaultConfig. GT_DOLT_PORT is set
+// a townRoot directory suitable for DefaultConfig. MS_DOLT_PORT is set
 // automatically by the container helper.
 func startIsolatedDoltContainer(t *testing.T) string {
 	t.Helper()

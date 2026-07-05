@@ -24,7 +24,7 @@ func EnsureDoltConfigValue(beadsDir, key, value string) error {
 	meta := readDoltMetadata(beadsDir)
 	host := meta.Host
 	if host == "" {
-		host = os.Getenv("GT_DOLT_HOST")
+		host = os.Getenv("MS_DOLT_HOST")
 	}
 	if host == "" {
 		host = "127.0.0.1"
@@ -37,7 +37,7 @@ func EnsureDoltConfigValue(beadsDir, key, value string) error {
 		port = os.Getenv("BEADS_DOLT_PORT")
 	}
 	if port == "" {
-		port = os.Getenv("GT_DOLT_PORT")
+		port = os.Getenv("MS_DOLT_PORT")
 	}
 	if port == "" {
 		port = "3307"

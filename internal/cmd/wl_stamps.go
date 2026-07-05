@@ -39,13 +39,13 @@ Use --author to filter by who issued the stamp. Use --skill, --type,
 and --severity to narrow results.
 
 EXAMPLES:
-  gt wl stamps mineshaft                         # All stamps for mineshaft
-  gt wl stamps mineshaft --author hop-overseer      # Stamps from a specific validator
-  gt wl stamps mineshaft --skill go              # Filter by skill tag
-  gt wl stamps mineshaft --type boot_block       # Boot block stamps only
-  gt wl stamps mineshaft --severity branch       # Branch-level stamps
-  gt wl stamps mineshaft --limit 10              # Show 10 stamps
-  gt wl stamps mineshaft --json                  # JSON output`,
+  ms wl stamps mineshaft                         # All stamps for mineshaft
+  ms wl stamps mineshaft --author hop-overseer      # Stamps from a specific validator
+  ms wl stamps mineshaft --skill go              # Filter by skill tag
+  ms wl stamps mineshaft --type boot_block       # Boot block stamps only
+  ms wl stamps mineshaft --severity branch       # Branch-level stamps
+  ms wl stamps mineshaft --limit 10              # Show 10 stamps
+  ms wl stamps mineshaft --json                  # JSON output`,
 }
 
 func init() {
@@ -192,7 +192,7 @@ func runWLStamps(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("dolt not found in PATH — install from https://docs.dolthub.com/introduction/installation")
 	}
 
-	// Try wasteland config first (set by gt wl join).
+	// Try wasteland config first (set by ms wl join).
 	var cloneDir string
 	if cfg, cfgErr := wasteland.LoadConfig(townRoot); cfgErr == nil && cfg.LocalDir != "" {
 		if _, statErr := os.Stat(filepath.Join(cfg.LocalDir, ".dolt")); statErr == nil {

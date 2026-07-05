@@ -41,7 +41,7 @@ func (c *GlobalStateCheck) Run(ctx *CheckContext) *CheckResult {
 	if err != nil {
 		if os.IsNotExist(err) {
 			result.Message = "Global state not initialized"
-			result.FixHint = "Run: gt enable"
+			result.FixHint = "Run: ms enable"
 			result.Status = StatusWarning
 			return result
 		}
@@ -87,14 +87,14 @@ func (c *GlobalStateCheck) Run(ctx *CheckContext) *CheckResult {
 	if len(errors) > 0 {
 		result.Status = StatusError
 		result.Message = errors[0]
-		result.FixHint = "Run: gt shell install"
+		result.FixHint = "Run: ms shell install"
 	} else if len(warnings) > 0 {
 		result.Status = StatusWarning
 		result.Message = warnings[0]
 		if !s.Enabled {
-			result.FixHint = "Run: gt enable"
+			result.FixHint = "Run: ms enable"
 		} else {
-			result.FixHint = "Run: gt shell install"
+			result.FixHint = "Run: ms shell install"
 		}
 	} else {
 		result.Message = "Global state healthy"
@@ -104,7 +104,7 @@ func (c *GlobalStateCheck) Run(ctx *CheckContext) *CheckResult {
 }
 
 func hasShellIntegration(rcPath string) bool {
-	// Look for official marker (from gt shell install) or manual sourcing of the hook script.
+	// Look for official marker (from ms shell install) or manual sourcing of the hook script.
 	markers := []string{"Mineshaft Integration", "shell-hook.sh"}
 	return checkSourceChain(rcPath, markers, make(map[string]bool), 0)
 }

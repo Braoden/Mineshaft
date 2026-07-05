@@ -269,7 +269,7 @@ func (d *Daemon) dispatchPlugins(mgr *dog.Manager, sm *dog.SessionManager, rigsC
 		// mgr.List() returns dogs in directory order, GetIdleDog would always
 		// pick the same first idle dog — infinite-looping the same failed
 		// dispatch instead of advancing to the next idle dog in the pack.
-		// See gt-o24.
+		// See ms-o24.
 		idleDog := findDispatchableDog(mgr, sm, d.logger)
 		if idleDog == nil {
 			d.logger.Printf("Handler: no dispatchable idle dogs available, deferring remaining plugins")
@@ -333,11 +333,11 @@ func (d *Daemon) dispatchPlugins(mgr *dog.Manager, sm *dog.SessionManager, rigsC
 // state is idle AND whose tmux session is NOT currently running. Returns nil
 // when no dog satisfies both conditions.
 //
-// This exists because a dog can be marked idle (via gt dog done or the reaper)
+// This exists because a dog can be marked idle (via ms dog done or the reaper)
 // before its tmux session fully terminates, producing a transient window where
 // sm.Start would fail with "session already running". Picking that dog every
 // dispatch tick infinite-loops the same failed dispatch instead of advancing
-// to another genuinely-free dog in the pack. See gt-o24.
+// to another genuinely-free dog in the pack. See ms-o24.
 //
 // IsRunning errors are logged and treated as "not dispatchable" so a flaky
 // tmux check can't wedge the whole dispatch cycle.

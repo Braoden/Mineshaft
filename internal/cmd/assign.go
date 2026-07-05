@@ -20,22 +20,22 @@ var assignCmd = &cobra.Command{
 	Short:   "Create a bead and hook it to a crew member",
 	Long: `Create a new bead and immediately hook it to a crew member.
 
-This is a shortcut for "bd create" + "gt hook". The crew member name
+This is a shortcut for "bd create" + "ms hook". The crew member name
 is short-form (just the name), and the rig is resolved in order:
 --rig flag, current directory, or by scanning all rigs for the crew
-member name. This means "gt assign dave ..." works from anywhere in
+member name. This means "ms assign dave ..." works from anywhere in
 the town if dave exists in exactly one rig.
 
 The crew member must exist (the directory <rig>/crew/<name> must be
 present) or the command will error.
 
 Examples:
-  gt assign monet "Fix the auth token refresh bug"
-  gt assign monet "Review error handling" -d "The retry logic looks wrong"
-  gt assign monet "Fix auth bug" --type bug --priority 1
-  gt assign monet "Fix auth bug" --nudge
-  gt assign monet "Fix auth bug" --label important
-  gt assign monet "Fix auth bug" --rig beads   # Explicit rig override`,
+  ms assign monet "Fix the auth token refresh bug"
+  ms assign monet "Review error handling" -d "The retry logic looks wrong"
+  ms assign monet "Fix auth bug" --type bug --priority 1
+  ms assign monet "Fix auth bug" --nudge
+  ms assign monet "Fix auth bug" --label important
+  ms assign monet "Fix auth bug" --rig beads   # Explicit rig override`,
 	Args: cobra.MinimumNArgs(2),
 	RunE: runAssign,
 }
@@ -177,7 +177,7 @@ func runAssign(_ *cobra.Command, args []string) error {
 		fmt.Printf("  %s Agent won't be notified (use --nudge to wake them)\n", style.Dim.Render("ℹ"))
 	} else {
 		nudgeMsg := fmt.Sprintf("New work on your hook: %s", title)
-		nudgeCmd := exec.Command("gt", "nudge", agentID, "-m", nudgeMsg)
+		nudgeCmd := exec.Command("ms", "nudge", agentID, "-m", nudgeMsg)
 		nudgeCmd.Stderr = os.Stderr
 		if out, err := nudgeCmd.Output(); err != nil {
 			fmt.Fprintf(os.Stderr, "%s Warning: nudge failed: %v\n", style.Warning.Render("⚠"), err)

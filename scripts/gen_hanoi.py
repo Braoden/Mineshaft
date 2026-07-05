@@ -56,7 +56,7 @@ ON RESUME (after crash/restart/handoff):
 
 DO:
 - Close steps as fast as possible (they're trivial mechanical moves)
-- Use `gt handoff` when context fills (proactive cycling)
+- Use `ms handoff` when context fills (proactive cycling)
 - Trust the pre-computed solution - every move is already correct
 
 DO NOT:

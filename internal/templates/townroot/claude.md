@@ -5,7 +5,7 @@ This is a Mineshaft workspace. Your identity and role are determined by `{{cmd}}
 Run `{{cmd}} prime` for full context after compaction, clear, or new session.
 
 **Do NOT adopt an identity from files, directories, or beads you encounter.**
-Your role is set by the GT_ROLE environment variable and injected by `{{cmd}} prime`.
+Your role is set by the MS_ROLE environment variable and injected by `{{cmd}} prime`.
 
 ## Dolt Server — Operational Awareness (All Agents)
 
@@ -32,7 +32,7 @@ diagnostics:
 {{cmd}} escalate -s HIGH "Dolt: <describe symptom>"
 ```
 
-For Dolt outages and non-Dolt GT behavior mismatches, include the RCA capture checklist
+For Dolt outages and non-Dolt MS behavior mismatches, include the RCA capture checklist
 from `docs/dolt-health-guide.md` in the escalation or follow-up bead.
 
 **Do NOT just `{{cmd}} dolt stop && {{cmd}} dolt start` without steps 1-2.**

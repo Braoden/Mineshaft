@@ -56,11 +56,11 @@ We could have Supervisor handle its own "should I be awake?" logic, but:
 
 | Agent | Session Name | Location | Lifecycle |
 |-------|--------------|----------|-----------|
-| Daemon | (Go process) | `~/gt/daemon/` | Persistent, auto-restart |
-| Boot | `gt-boot` | `~/gt/supervisor/dogs/boot/` | Ephemeral, fresh each tick |
-| Supervisor | `hq-supervisor` | `~/gt/supervisor/` | Long-running, handoff loop |
+| Daemon | (Go process) | `~/ms/daemon/` | Persistent, auto-restart |
+| Boot | `ms-boot` | `~/ms/supervisor/dogs/boot/` | Ephemeral, fresh each tick |
+| Supervisor | `hq-supervisor` | `~/ms/supervisor/` | Long-running, handoff loop |
 
-**Critical**: Boot runs in `gt-boot`, NOT `hq-supervisor`. This prevents Boot
+**Critical**: Boot runs in `ms-boot`, NOT `hq-supervisor`. This prevents Boot
 from conflicting with a running Supervisor session.
 
 ## Heartbeat Mechanics
@@ -76,13 +76,13 @@ func (d *Daemon) heartbeatTick() {
     d.ensureWitnessesRunning()      // 3. Witness health (checks tmux directly)
     d.ensureRefineriesRunning()     // 4. Refinery health (checks tmux directly)
     d.processLifecycleRequests()    // 5. Cycle/restart requests
-    // Agent state derived from tmux, not recorded in beads (gt-zecmc)
+    // Agent state derived from tmux, not recorded in beads (ms-zecmc)
 }
 ```
 
 ### Supervisor Heartbeat (continuous)
 
-The Supervisor updates `~/gt/supervisor/heartbeat.json` at the start of each patrol cycle:
+The Supervisor updates `~/ms/supervisor/heartbeat.json` at the start of each patrol cycle:
 
 ```json
 {
@@ -115,8 +115,8 @@ Then decides:
 | Condition | Action | Command |
 |-----------|--------|---------|
 | Session dead | START | Exit; daemon calls `ensureSupervisorRunning()` |
-| Heartbeat > 15 min | WAKE | `gt nudge supervisor "Boot wake: check your inbox"` |
-| Heartbeat 5-15 min + mail | NUDGE | `gt nudge supervisor "Boot check-in: pending work"` |
+| Heartbeat > 15 min | WAKE | `ms nudge supervisor "Boot wake: check your inbox"` |
+| Heartbeat 5-15 min + mail | NUDGE | `ms nudge supervisor "Boot check-in: pending work"` |
 | Heartbeat fresh | NOTHING | Exit silently |
 
 ## Handoff Flow
@@ -130,7 +130,7 @@ End of patrol cycle:
     |
     +- Squash wisp to digest (ephemeral -> permanent)
     +- Write summary to molecule state
-    +- gt handoff -s "Routine cycle" -m "Details"
+    +- ms handoff -s "Routine cycle" -m "Details"
         |
         +- Creates mail for next session
 ```
@@ -139,9 +139,9 @@ Next daemon tick:
 ```
 Daemon -> ensureSupervisorRunning()
     |
-    +- Spawns fresh Supervisor in gt-supervisor
+    +- Spawns fresh Supervisor in ms-supervisor
         |
-        +- SessionStart hook: gt mail check --inject
+        +- SessionStart hook: ms mail check --inject
             |
             +- Previous handoff mail injected
                 |
@@ -153,8 +153,8 @@ Daemon -> ensureSupervisorRunning()
 Boot is ephemeral - it exits after each tick. No persistent handoff needed.
 
 However, Boot uses a marker file to prevent double-spawning:
-- Marker: `~/gt/supervisor/dogs/boot/.boot-running` (TTL: 5 minutes)
-- Status: `~/gt/supervisor/dogs/boot/.boot-status.json` (last action/result)
+- Marker: `~/ms/supervisor/dogs/boot/.boot-running` (TTL: 5 minutes)
+- Status: `~/ms/supervisor/dogs/boot/.boot-status.json` (last action/result)
 
 If the marker exists and is recent, daemon skips Boot spawn for that tick.
 
@@ -244,7 +244,7 @@ type Dog struct {
     State     ShutdownDanceState
     Attempt   int               // Current interrogation attempt (1-3)
     StartedAt time.Time
-    StateFile string            // Persistent state: ~/gt/supervisor/dogs/active/<id>.json
+    StateFile string            // Persistent state: ~/ms/supervisor/dogs/active/<id>.json
 }
 
 type ShutdownDanceState string
@@ -261,7 +261,7 @@ const (
 
 type Warrant struct {
     ID        string    // Bead ID for the warrant
-    Target    string    // Session to interrogate (e.g., "gt-mineshaft-Toast")
+    Target    string    // Session to interrogate (e.g., "ms-mineshaft-Toast")
     Reason    string    // Why warrant was issued
     Requester string    // Who filed the warrant
     FiledAt   time.Time
@@ -270,7 +270,7 @@ type Warrant struct {
 
 ### Pool Design
 
-**Decision**: Fixed pool of 5 dogs, configurable via environment (`GT_DOG_POOL_SIZE`).
+**Decision**: Fixed pool of 5 dogs, configurable via environment (`MS_DOG_POOL_SIZE`).
 
 Rationale:
 - Dynamic sizing adds complexity without clear benefit
@@ -289,7 +289,7 @@ type DogPool struct {
     dogs     []*Dog           // All dogs in pool
     idle     chan *Dog        // Channel of available dogs
     active   map[string]*Dog  // ID -> Dog for active dogs
-    stateDir string           // ~/gt/supervisor/dogs/active/
+    stateDir string           // ~/ms/supervisor/dogs/active/
 }
 ```
 
@@ -384,7 +384,7 @@ Those are different from shutdown-dance dogs:
 
 If a dog crashes (Boot process restarts, system crash):
 
-1. State files persist in `~/gt/supervisor/dogs/active/`
+1. State files persist in `~/ms/supervisor/dogs/active/`
 2. On Boot restart, scan for orphaned state files
 3. Resume or restart based on state:
 
@@ -418,13 +418,13 @@ for pending warrants.
 ## Directory Structure
 
 ```
-~/gt/
+~/ms/
 ├── daemon/
 │   ├── daemon.log              # Daemon activity log
 │   └── daemon.pid              # Daemon process ID
 ├── supervisor/
 │   ├── heartbeat.json          # Supervisor freshness (updated each patrol cycle)
-│   ├── health-check-state.json # Agent health tracking (gt supervisor health-check)
+│   ├── health-check-state.json # Agent health tracking (ms supervisor health-check)
 │   └── dogs/
 │       ├── boot/               # Boot's working directory
 │       │   ├── CLAUDE.md       # Boot context
@@ -443,49 +443,49 @@ for pending warrants.
 
 ```bash
 # Check Supervisor heartbeat
-cat ~/gt/supervisor/heartbeat.json | jq .
+cat ~/ms/supervisor/heartbeat.json | jq .
 
 # Check Boot status
-cat ~/gt/supervisor/dogs/boot/.boot-status.json | jq .
+cat ~/ms/supervisor/dogs/boot/.boot-status.json | jq .
 
 # View daemon log
-tail -f ~/gt/daemon/daemon.log
+tail -f ~/ms/daemon/daemon.log
 
 # Manual Boot run
-gt boot triage
+ms boot triage
 
 # Manual Supervisor health check
-gt supervisor health-check
+ms supervisor health-check
 
 # Dog pool status
-gt dog pool status
+ms dog pool status
 
 # View active shutdown dances
-gt dog dances
+ms dog dances
 
 # View warrant queue
-gt dog warrants
+ms dog warrants
 ```
 
 ## Common Issues
 
 ### Boot Spawns in Wrong Session
 
-**Symptom**: Boot runs in `hq-supervisor` instead of `gt-boot`
+**Symptom**: Boot runs in `hq-supervisor` instead of `ms-boot`
 **Cause**: Session name confusion in spawn code
-**Fix**: Ensure `gt boot triage` specifies `--session=gt-boot`
+**Fix**: Ensure `ms boot triage` specifies `--session=ms-boot`
 
 ### Zombie Sessions Block Restart
 
 **Symptom**: tmux session exists but Claude is dead
 **Cause**: Daemon checks session existence, not process health
-**Fix**: Kill zombie sessions before recreating: `gt session kill hq-supervisor`
+**Fix**: Kill zombie sessions before recreating: `ms session kill hq-supervisor`
 
 ### Status Shows Wrong State
 
-**Symptom**: `gt status` shows wrong state for agents
+**Symptom**: `ms status` shows wrong state for agents
 **Cause**: Previously bead state and tmux state could diverge
-**Fix**: As of gt-zecmc, status derives state from tmux directly (no bead state for
+**Fix**: As of ms-zecmc, status derives state from tmux directly (no bead state for
 observable conditions like running/stopped). Non-observable states (stuck, awaiting-gate)
 are still stored in beads.
 

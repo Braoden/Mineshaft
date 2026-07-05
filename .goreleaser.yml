@@ -1,4 +1,4 @@
-# GoReleaser configuration for Mineshaft (gt)
+# GoReleaser configuration for Mineshaft (ms)
 # See https://goreleaser.com for documentation
 
 version: 2
@@ -9,9 +9,9 @@ before:
     - go mod tidy
 
 builds:
-  - id: gt-linux-amd64
-    main: ./cmd/gt
-    binary: gt
+  - id: ms-linux-amd64
+    main: ./cmd/ms
+    binary: ms
     env:
       - CGO_ENABLED=1
     goos:
@@ -25,9 +25,9 @@ builds:
       - -X github.com/steveyegge/mineshaft/internal/cmd.Commit={{.Commit}}
       - -X github.com/steveyegge/mineshaft/internal/cmd.Branch={{.Branch}}
 
-  - id: gt-linux-arm64
-    main: ./cmd/gt
-    binary: gt
+  - id: ms-linux-arm64
+    main: ./cmd/ms
+    binary: ms
     env:
       - CGO_ENABLED=1
       - CC=aarch64-linux-gnu-gcc
@@ -43,9 +43,9 @@ builds:
       - -X github.com/steveyegge/mineshaft/internal/cmd.Commit={{.Commit}}
       - -X github.com/steveyegge/mineshaft/internal/cmd.Branch={{.Branch}}
 
-  - id: gt-darwin-amd64
-    main: ./cmd/gt
-    binary: gt
+  - id: ms-darwin-amd64
+    main: ./cmd/ms
+    binary: ms
     env:
       - CGO_ENABLED=1
     goos:
@@ -59,9 +59,9 @@ builds:
       - -X github.com/steveyegge/mineshaft/internal/cmd.Commit={{.Commit}}
       - -X github.com/steveyegge/mineshaft/internal/cmd.Branch={{.Branch}}
 
-  - id: gt-darwin-arm64
-    main: ./cmd/gt
-    binary: gt
+  - id: ms-darwin-arm64
+    main: ./cmd/ms
+    binary: ms
     env:
       - CGO_ENABLED=1
     goos:
@@ -75,9 +75,9 @@ builds:
       - -X github.com/steveyegge/mineshaft/internal/cmd.Commit={{.Commit}}
       - -X github.com/steveyegge/mineshaft/internal/cmd.Branch={{.Branch}}
 
-  - id: gt-windows-amd64
-    main: ./cmd/gt
-    binary: gt
+  - id: ms-windows-amd64
+    main: ./cmd/ms
+    binary: ms
     env:
       - CGO_ENABLED=1
       - CC=x86_64-w64-mingw32-gcc
@@ -94,9 +94,9 @@ builds:
       - -X github.com/steveyegge/mineshaft/internal/cmd.Branch={{.Branch}}
       - -buildmode=exe
 
-  - id: gt-freebsd-amd64
-    main: ./cmd/gt
-    binary: gt
+  - id: ms-freebsd-amd64
+    main: ./cmd/ms
+    binary: ms
     env:
       - CGO_ENABLED=0
     goos:
@@ -112,7 +112,7 @@ builds:
 
 
 archives:
-  - id: gt-archive
+  - id: ms-archive
     formats: [tar.gz]
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
@@ -170,7 +170,7 @@ release:
 
     **npm (Node.js):**
     ```bash
-    npm install -g @mineshaft/gt
+    npm install -g @mineshaft/ms
     ```
 
     **Manual Install:**

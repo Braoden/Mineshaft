@@ -39,7 +39,7 @@ func writeFakeTestBD(t *testing.T, dir, descState, dbState, hookBead, updatedAt 
 	t.Helper()
 	desc := "agent_state: " + descState
 	// JSON matches the structure that getAgentBeadInfo expects from bd show --json
-	bdJSON := fmt.Sprintf(`[{"id":"gt-myr-miner-mycat","issue_type":"agent","labels":["gt:agent"],"description":"%s","hook_bead":"%s","agent_state":"%s","updated_at":"%s"}]`,
+	bdJSON := fmt.Sprintf(`[{"id":"ms-myr-miner-mycat","issue_type":"agent","labels":["ms:agent"],"description":"%s","hook_bead":"%s","agent_state":"%s","updated_at":"%s"}]`,
 		desc, hookBead, dbState, updatedAt)
 	// Return agent bead JSON for "show", empty array for "list" (so
 	// hasAssignedOpenWork doesn't false-positive on the agent bead).
@@ -57,13 +57,13 @@ func writeFakeTestBD(t *testing.T, dir, descState, dbState, hookBead, updatedAt 
 // beads have independent lifecycles (e.g., agent done/nuked while hook_bead open).
 func writeFakeBDWithHookBead(t *testing.T, dir, agentState, hookBeadID, hookBeadStatus, updatedAt string) string {
 	t.Helper()
-	agentJSON := fmt.Sprintf(`[{"id":"gt-myr-miner-mycat","issue_type":"agent","labels":["gt:agent"],"description":"agent_state: %s","hook_bead":"%s","agent_state":"%s","updated_at":"%s"}]`,
+	agentJSON := fmt.Sprintf(`[{"id":"ms-myr-miner-mycat","issue_type":"agent","labels":["ms:agent"],"description":"agent_state: %s","hook_bead":"%s","agent_state":"%s","updated_at":"%s"}]`,
 		agentState, hookBeadID, agentState, updatedAt)
 	hookJSON := fmt.Sprintf(`[{"id":"%s","status":"%s"}]`, hookBeadID, hookBeadStatus)
 	script := fmt.Sprintf("#!/bin/sh\n"+
 		"if [ \"$1\" = \"list\" ]; then echo '[]'; exit 0; fi\n"+
 		"case \"$2\" in\n"+
-		"  gt-myr-miner-mycat) echo '%s';;\n"+
+		"  ms-myr-miner-mycat) echo '%s';;\n"+
 		"  %s) echo '%s';;\n"+
 		"  *) echo '[]'; exit 1;;\n"+
 		"esac\n", agentJSON, hookBeadID, hookJSON)
@@ -78,7 +78,7 @@ func writeFakeBDWithHookBead(t *testing.T, dir, agentState, hookBeadID, hookBead
 // attempt to restart a miner in agent_state=spawning when recently updated.
 // This is the regression test for the double-spawn bug (issue #1752): the daemon
 // heartbeat fires during the window between bead creation (hook_bead set atomically
-// by gt sling) and the actual tmux session launch, causing a second Claude process.
+// by ms sling) and the actual tmux session launch, causing a second Claude process.
 func TestCheckMinerHealth_SkipsSpawning(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("test uses Unix shell script mocks for tmux and bd")
@@ -87,7 +87,7 @@ func TestCheckMinerHealth_SkipsSpawning(t *testing.T) {
 	writeFakeTestTmux(t, binDir)
 	// Use a recent timestamp so the spawning guard's time-bound is satisfied
 	recentTime := time.Now().UTC().Format(time.RFC3339)
-	bdPath := writeFakeTestBD(t, binDir, "spawning", "spawning", "gt-xyz", recentTime)
+	bdPath := writeFakeTestBD(t, binDir, "spawning", "spawning", "ms-xyz", recentTime)
 
 	t.Setenv("PATH", binDir+":"+os.Getenv("PATH"))
 
@@ -121,7 +121,7 @@ func TestCheckMinerHealth_DetectsCrashedMiner(t *testing.T) {
 	binDir := t.TempDir()
 	writeFakeTestTmux(t, binDir)
 	recentTime := time.Now().UTC().Format(time.RFC3339)
-	bdPath := writeFakeTestBD(t, binDir, "working", "working", "gt-xyz", recentTime)
+	bdPath := writeFakeTestBD(t, binDir, "working", "working", "ms-xyz", recentTime)
 
 	t.Setenv("PATH", binDir+":"+os.Getenv("PATH"))
 
@@ -143,7 +143,7 @@ func TestCheckMinerHealth_DetectsCrashedMiner(t *testing.T) {
 
 // TestCheckMinerHealth_SpawningGuardExpires verifies that the spawning guard
 // has a time-bound: miners stuck in agent_state=spawning for more than 5 minutes
-// are treated as crashed (gt sling may have failed during spawn).
+// are treated as crashed (ms sling may have failed during spawn).
 func TestCheckMinerHealth_SpawningGuardExpires(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("test uses Unix shell script mocks for tmux and bd")
@@ -152,7 +152,7 @@ func TestCheckMinerHealth_SpawningGuardExpires(t *testing.T) {
 	writeFakeTestTmux(t, binDir)
 	// Use a timestamp >5 minutes ago to expire the spawning guard
 	oldTime := time.Now().UTC().Add(-10 * time.Minute).Format(time.RFC3339)
-	bdPath := writeFakeTestBD(t, binDir, "spawning", "spawning", "gt-xyz", oldTime)
+	bdPath := writeFakeTestBD(t, binDir, "spawning", "spawning", "ms-xyz", oldTime)
 
 	t.Setenv("PATH", binDir+":"+os.Getenv("PATH"))
 
@@ -188,7 +188,7 @@ func TestCheckMinerHealth_DescriptionStateOverridesLegacyDBColumn(t *testing.T) 
 	recentTime := time.Now().UTC().Format(time.RFC3339)
 	// Description says "spawning" (current Mineshaft contract) while the legacy
 	// structured column still says "working".
-	bdPath := writeFakeTestBD(t, binDir, "spawning", "working", "gt-xyz", recentTime)
+	bdPath := writeFakeTestBD(t, binDir, "spawning", "working", "ms-xyz", recentTime)
 
 	t.Setenv("PATH", binDir+":"+os.Getenv("PATH"))
 
@@ -248,7 +248,7 @@ func TestCheckMinerHealth_SkipsClosedHookBead(t *testing.T) {
 
 // TestCheckMinerHealth_NotifiesWitnessOnCrash verifies that when a miner
 // crash is detected, the daemon sends a notification to the witness via
-// `gt mail send` with a CRASHED_MINER subject. Restart is deferred to the
+// `ms mail send` with a CRASHED_MINER subject. Restart is deferred to the
 // stuck-agent-dog plugin for context-aware recovery.
 func TestCheckMinerHealth_NotifiesWitnessOnCrash(t *testing.T) {
 	if runtime.GOOS == "windows" {
@@ -257,14 +257,14 @@ func TestCheckMinerHealth_NotifiesWitnessOnCrash(t *testing.T) {
 	binDir := t.TempDir()
 	writeFakeTestTmux(t, binDir)
 	recentTime := time.Now().UTC().Format(time.RFC3339)
-	bdPath := writeFakeTestBD(t, binDir, "working", "working", "gt-xyz", recentTime)
+	bdPath := writeFakeTestBD(t, binDir, "working", "working", "ms-xyz", recentTime)
 
-	// Create a fake gt script that logs invocations to a file
-	gtLog := filepath.Join(t.TempDir(), "gt-invocations.log")
-	fakeGt := filepath.Join(binDir, "gt")
+	// Create a fake ms script that logs invocations to a file
+	gtLog := filepath.Join(t.TempDir(), "ms-invocations.log")
+	fakeGt := filepath.Join(binDir, "ms")
 	gtScript := fmt.Sprintf("#!/bin/sh\necho \"$@\" >> %s\n", gtLog)
 	if err := os.WriteFile(fakeGt, []byte(gtScript), 0755); err != nil {
-		t.Fatalf("writing fake gt: %v", err)
+		t.Fatalf("writing fake ms: %v", err)
 	}
 
 	t.Setenv("PATH", binDir+":"+os.Getenv("PATH"))
@@ -286,14 +286,14 @@ func TestCheckMinerHealth_NotifiesWitnessOnCrash(t *testing.T) {
 		t.Fatalf("expected CRASH DETECTED, got: %q", got)
 	}
 
-	// Verify gt mail send was called with CRASHED_MINER subject
+	// Verify ms mail send was called with CRASHED_MINER subject
 	logData, err := os.ReadFile(gtLog)
 	if err != nil {
-		t.Fatalf("reading gt invocation log: %v", err)
+		t.Fatalf("reading ms invocation log: %v", err)
 	}
 	invocations := string(logData)
 	if !strings.Contains(invocations, "mail send") {
-		t.Errorf("expected gt mail send invocation, got: %q", invocations)
+		t.Errorf("expected ms mail send invocation, got: %q", invocations)
 	}
 	if !strings.Contains(invocations, "CRASHED_MINER") {
 		t.Errorf("expected CRASHED_MINER in mail subject, got: %q", invocations)
@@ -306,7 +306,7 @@ func TestCheckMinerHealth_NotifiesWitnessOnCrash(t *testing.T) {
 // TestCheckMinerHealth_SkipsDoneMiner verifies that checkMinerHealth does
 // NOT fire CRASH DETECTED when a miner has agent_state=done (completed normally)
 // even if its hook_bead is still open. This is the race-window regression test for
-// bug #2795 part 2: between gt done setting agent_state=done and the hook_bead
+// bug #2795 part 2: between ms done setting agent_state=done and the hook_bead
 // being closed, the daemon heartbeat fires on the dead session + open hook_bead
 // combination, causing repeated false CRASHED_MINER alerts to the witness.
 func TestCheckMinerHealth_SkipsDoneMiner(t *testing.T) {
@@ -316,7 +316,7 @@ func TestCheckMinerHealth_SkipsDoneMiner(t *testing.T) {
 	binDir := t.TempDir()
 	writeFakeTestTmux(t, binDir)
 	recentTime := time.Now().UTC().Format(time.RFC3339)
-	bdPath := writeFakeBDWithHookBead(t, binDir, "done", "gt-xyz", "open", recentTime)
+	bdPath := writeFakeBDWithHookBead(t, binDir, "done", "ms-xyz", "open", recentTime)
 
 	t.Setenv("PATH", binDir+":"+os.Getenv("PATH"))
 
@@ -345,7 +345,7 @@ func TestCheckMinerHealth_SkipsDoneMiner(t *testing.T) {
 // TestCheckMinerHealth_SkipsNukedMiner verifies that checkMinerHealth does
 // NOT fire CRASH DETECTED when a miner has been nuked (agent_state=nuked) even
 // if its hook_bead (work bead) is still open. This is the regression test for
-// bug #2795: `gt miner nuke --force` sets agent_state=nuked on the agent bead
+// bug #2795: `ms miner nuke --force` sets agent_state=nuked on the agent bead
 // but leaves the work bead open, causing repeated false RECOVERY_NEEDED alerts
 // on every heartbeat cycle.
 func TestCheckMinerHealth_SkipsNukedMiner(t *testing.T) {
@@ -355,7 +355,7 @@ func TestCheckMinerHealth_SkipsNukedMiner(t *testing.T) {
 	binDir := t.TempDir()
 	writeFakeTestTmux(t, binDir)
 	recentTime := time.Now().UTC().Format(time.RFC3339)
-	bdPath := writeFakeBDWithHookBead(t, binDir, "nuked", "gt-xyz", "open", recentTime)
+	bdPath := writeFakeBDWithHookBead(t, binDir, "nuked", "ms-xyz", "open", recentTime)
 
 	t.Setenv("PATH", binDir+":"+os.Getenv("PATH"))
 
@@ -522,7 +522,7 @@ func TestReapIdleMiner_ReapsWhenBeadLookupFailsAndNoWork(t *testing.T) {
 
 // TestReapIdleMiner_SkipsActiveAgent verifies that reapIdleMiner does NOT kill
 // a miner whose hook_bead is missing but whose agent process is still running.
-// This is the regression test for GH#3342: a failed gt sling rollback can clear
+// This is the regression test for GH#3342: a failed ms sling rollback can clear
 // the hook while the agent is actively working, causing the daemon to incorrectly
 // reap the session.
 func TestReapIdleMiner_SkipsActiveAgent(t *testing.T) {

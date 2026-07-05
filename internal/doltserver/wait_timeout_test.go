@@ -9,7 +9,7 @@ import (
 // applies the gh-3623 idle-session timeout.
 func TestDefaultConfig_WaitTimeoutDefault(t *testing.T) {
 	townRoot := t.TempDir()
-	t.Setenv("GT_DOLT_WAIT_TIMEOUT", "")
+	t.Setenv("MS_DOLT_WAIT_TIMEOUT", "")
 
 	config := DefaultConfig(townRoot)
 
@@ -18,11 +18,11 @@ func TestDefaultConfig_WaitTimeoutDefault(t *testing.T) {
 	}
 }
 
-// TestDefaultConfig_WaitTimeoutEnvOverride verifies the GT_DOLT_WAIT_TIMEOUT
+// TestDefaultConfig_WaitTimeoutEnvOverride verifies the MS_DOLT_WAIT_TIMEOUT
 // env var raises or lowers the configured timeout.
 func TestDefaultConfig_WaitTimeoutEnvOverride(t *testing.T) {
 	townRoot := t.TempDir()
-	t.Setenv("GT_DOLT_WAIT_TIMEOUT", "120")
+	t.Setenv("MS_DOLT_WAIT_TIMEOUT", "120")
 
 	config := DefaultConfig(townRoot)
 
@@ -35,7 +35,7 @@ func TestDefaultConfig_WaitTimeoutEnvOverride(t *testing.T) {
 // value opts out of the override, leaving Dolt's default in place.
 func TestDefaultConfig_WaitTimeoutNegativeDisables(t *testing.T) {
 	townRoot := t.TempDir()
-	t.Setenv("GT_DOLT_WAIT_TIMEOUT", "-1")
+	t.Setenv("MS_DOLT_WAIT_TIMEOUT", "-1")
 
 	config := DefaultConfig(townRoot)
 
@@ -48,7 +48,7 @@ func TestDefaultConfig_WaitTimeoutNegativeDisables(t *testing.T) {
 // env value falls back to the default rather than zeroing the timeout.
 func TestDefaultConfig_WaitTimeoutInvalidIgnored(t *testing.T) {
 	townRoot := t.TempDir()
-	t.Setenv("GT_DOLT_WAIT_TIMEOUT", "not-a-number")
+	t.Setenv("MS_DOLT_WAIT_TIMEOUT", "not-a-number")
 
 	config := DefaultConfig(townRoot)
 

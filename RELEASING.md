@@ -7,7 +7,7 @@
 | **GitHub Release** | GoReleaser via Actions on tag push | Yes |
 | **Homebrew tap** (`mineshafthall/mineshaft`) | Actions writes an asset-based formula after archives upload | Yes |
 | **Homebrew core** (if listed) | Homebrew bot detects new release | Yes (24-48h delay) |
-| **npm** (`@mineshaft/gt`) | Actions workflow, OIDC trusted publishing | Yes (when org is set up) |
+| **npm** (`@mineshaft/ms`) | Actions workflow, OIDC trusted publishing | Yes (when org is set up) |
 
 ## How to Release
 
@@ -16,7 +16,7 @@
 Use the release formula, which handles all steps:
 
 ```bash
-gt mol wisp create mineshaft-release --var version=X.Y.Z
+ms mol wisp create mineshaft-release --var version=X.Y.Z
 ```
 
 ### Option B: Bump script
@@ -45,7 +45,7 @@ git push origin vX.Y.Z
 
 ```bash
 make install        # builds, codesigns, installs to ~/.local/bin
-gt daemon stop && gt daemon start
+ms daemon stop && ms daemon start
 ```
 
 ## What Happens After Tag Push
@@ -115,7 +115,7 @@ brew info mineshaft    # Check version
 brew upgrade mineshaft # Upgrade if installed
 ```
 
-## npm (`@mineshaft/gt`)
+## npm (`@mineshaft/ms`)
 
 ### How it works
 
@@ -130,7 +130,7 @@ The `@mineshaft` npm organization must exist and be linked to this repo:
 
 1. Go to https://www.npmjs.com and create (or join) the `@mineshaft` org
 2. Under org settings, enable "Require 2FA" and configure trusted publishing
-3. Link `mineshafthall/mineshaft` as a trusted publisher for `@mineshaft/gt`
+3. Link `mineshafthall/mineshaft` as a trusted publisher for `@mineshaft/ms`
 
 ### Current status (as of 2026-03-06)
 
@@ -142,9 +142,9 @@ the release (`continue-on-error: true` in the workflow).
 ### Verifying
 
 ```bash
-npm view @mineshaft/gt version
-npm install -g @mineshaft/gt
-gt version
+npm view @mineshaft/ms version
+npm install -g @mineshaft/ms
+ms version
 ```
 
 ## Files Updated During Release
@@ -152,7 +152,7 @@ gt version
 | File | What changes |
 |------|-------------|
 | `CHANGELOG.md` | New version section with date |
-| `internal/cmd/info.go` | `versionChanges` entry for `gt info --whats-new` |
+| `internal/cmd/info.go` | `versionChanges` entry for `ms info --whats-new` |
 | `internal/cmd/version.go` | `Version` constant |
 | `npm-package/package.json` | `version` field |
 | `flake.nix` | version + vendorHash (only if `nix` is in PATH) |

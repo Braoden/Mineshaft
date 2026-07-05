@@ -124,7 +124,7 @@ func checkSchemaEvolution(doltPath, forkDir string, upgrade bool) error {
 			return fmt.Errorf(
 				"upstream schema version %s is a MAJOR upgrade from your local %s\n\n"+
 					"This may require manual data migration. To proceed:\n\n"+
-					"  gt wl sync --upgrade\n\n"+
+					"  ms wl sync --upgrade\n\n"+
 					"Review the upstream CHANGELOG before upgrading.",
 				upstreamVer, localVer,
 			)

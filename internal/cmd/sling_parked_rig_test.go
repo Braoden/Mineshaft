@@ -20,7 +20,7 @@ import (
 // workspace structure. The executeSling check covers the critical path.
 
 // TestExecuteSling_ParkedRig verifies that executeSling fails when the target
-// rig is parked (gt-4owfd.1).
+// rig is parked (ms-4owfd.1).
 func TestExecuteSling_ParkedRig(t *testing.T) {
 	// Set up a temp dir as town root
 	townRoot := t.TempDir()

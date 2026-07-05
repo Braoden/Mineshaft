@@ -187,24 +187,24 @@ type Tmux struct {
 // noTownSocket is a sentinel socket name used when no town socket is configured.
 // Using a non-existent socket causes tmux operations to fail with a clear
 // "no server running" error instead of silently connecting to the wrong server.
-const noTownSocket = "gt-no-town-socket"
+const noTownSocket = "ms-no-town-socket"
 
 // EnvAgentReady is the tmux session environment variable set by the agent's
-// SessionStart hook (gt prime --hook) to signal that the agent has started.
+// SessionStart hook (ms prime --hook) to signal that the agent has started.
 // Used by WaitForCommand as a ZFC-compliant fallback for detecting wrapped
-// agents (where pane_current_command remains a shell). See gt-sk5u.
-const EnvAgentReady = "GT_AGENT_READY"
+// agents (where pane_current_command remains a shell). See ms-sk5u.
+const EnvAgentReady = "MS_AGENT_READY"
 
 // NewTmux creates a new Tmux wrapper using the initialized town socket.
-// Falls back to GT_TOWN_SOCKET env var (set by cross-socket tmux bindings).
+// Falls back to MS_TOWN_SOCKET env var (set by cross-socket tmux bindings).
 // Empty socket means use the default tmux server.
 func NewTmux() *Tmux {
 	sock := GetDefaultSocket()
 	if sock == "" {
-		// GT_TOWN_SOCKET is embedded in tmux bindings created by EnsureBindingsOnSocket
-		// so that "gt agents menu" / "gt feed" invoked from a personal terminal still
+		// MS_TOWN_SOCKET is embedded in tmux bindings created by EnsureBindingsOnSocket
+		// so that "ms agents menu" / "ms feed" invoked from a personal terminal still
 		// target the correct town server even when InitRegistry was not called.
-		sock = os.Getenv("GT_TOWN_SOCKET")
+		sock = os.Getenv("MS_TOWN_SOCKET")
 	}
 	return &Tmux{socketName: sock}
 }
@@ -316,11 +316,11 @@ func (t *Tmux) NewSessionWithCommand(name, workDir, command string) error {
 	// tmux server's global environment so new sessions don't inherit them.
 	// CLAUDECODE: Claude Code sets this on startup; causes nested-session
 	// detection failures if inherited (GH#1666).
-	// IdentityEnvVars (GT_ROLE, BD_ACTOR, GIT_AUTHOR_NAME, etc.): the daemon
+	// IdentityEnvVars (MS_ROLE, BD_ACTOR, GIT_AUTHOR_NAME, etc.): the daemon
 	// process sets BD_ACTOR=daemon; if the tmux server was started from the
 	// daemon's context the global env inherits that value. Miner sessions
-	// then inherit BD_ACTOR=daemon and gt done rejects them with "you are daemon"
-	// (gt-xyr). Clearing these here ensures every session gets identity vars
+	// then inherit BD_ACTOR=daemon and ms done rejects them with "you are daemon"
+	// (ms-xyr). Clearing these here ensures every session gets identity vars
 	// only from its own startup command / -e flags, not from a stale global.
 	_, _ = t.run("set-environment", "-g", "-u", "CLAUDECODE")
 	for _, k := range config.IdentityEnvVars {
@@ -372,7 +372,7 @@ func (t *Tmux) NewSessionWithCommand(name, workDir, command string) error {
 // variables set via -e flags. This ensures the initial shell process inherits the
 // correct environment from the session, rather than inheriting from the tmux server
 // or parent process. The -e flags set session-level environment before the shell
-// starts, preventing stale env vars (e.g., GT_ROLE from a parent overseer session)
+// starts, preventing stale env vars (e.g., MS_ROLE from a parent overseer session)
 // from leaking into crew/miner shells.
 //
 // The command should still use 'exec env' for WaitForCommand detection compatibility,
@@ -574,7 +574,7 @@ func (t *Tmux) EnsureSessionFreshWithCommand(name, workDir, command string) erro
 // session-level env BEFORE the shell starts, so the initial pane (and any
 // subprocesses the agent spawns, e.g. bd) inherit it. SetEnvironment after
 // creation only affects newly spawned panes — not the running pane's
-// subprocess tree (gt-neycp).
+// subprocess tree (ms-neycp).
 //
 // If an existing session has a healthy agent, returns ErrSessionRunning.
 func (t *Tmux) EnsureSessionFreshWithCommandAndEnv(name, workDir, command string, env map[string]string) error {
@@ -703,7 +703,7 @@ func (t *Tmux) KillSessionWithProcesses(name string) error {
 
 // KillSessionWithProcessesExcluding is like KillSessionWithProcesses but excludes
 // specified PIDs from being killed. This is essential for self-kill scenarios where
-// the calling process (e.g., gt done) is running inside the session it's terminating.
+// the calling process (e.g., ms done) is running inside the session it's terminating.
 // Without exclusion, the caller would be killed before completing the cleanup.
 func (t *Tmux) KillSessionWithProcessesExcluding(name string, excludePIDs []string) error {
 	// Disarm auto-respawn BEFORE killing anything (same as KillSessionWithProcesses).
@@ -931,7 +931,7 @@ func (t *Tmux) KillPaneProcesses(pane string) error {
 
 // KillPaneProcessesExcluding is like KillPaneProcesses but excludes specified PIDs
 // from being killed. This is essential for self-handoff scenarios where the calling
-// process (e.g., gt handoff running inside Claude Code) needs to survive long enough
+// process (e.g., ms handoff running inside Claude Code) needs to survive long enough
 // to call RespawnPane. Without exclusion, the caller would be killed before completing.
 //
 // The excluded PIDs should include the calling process and any ancestors that must
@@ -1034,7 +1034,7 @@ func (t *Tmux) IsAvailable() bool {
 
 // HasSession checks if a session exists (exact match).
 // Uses "=" prefix for exact matching, preventing prefix matches
-// (e.g., "gt-supervisor-boot" won't match when checking for "gt-supervisor").
+// (e.g., "ms-supervisor-boot" won't match when checking for "ms-supervisor").
 func (t *Tmux) HasSession(name string) (bool, error) {
 	// psmux (Windows tmux alternative) doesn't support the "=" exact-match
 	// prefix for session targets. Use the bare name on Windows.
@@ -1647,7 +1647,7 @@ type NudgeOpts struct {
 	SkipEscape bool
 
 	// TownRoot, if set, enables flock-based cross-process serialization of
-	// nudge delivery. Each `gt nudge` CLI invocation is a separate OS process,
+	// nudge delivery. Each `ms nudge` CLI invocation is a separate OS process,
 	// so the in-process channel semaphore alone cannot prevent interleaving.
 	// When TownRoot is provided, a filesystem lock is acquired at
 	// <townRoot>/.runtime/nudge_queue/<session>/.lock before delivery.
@@ -1678,10 +1678,10 @@ func (t *Tmux) canonicalPaneTarget(session, pane string) string {
 // See NudgeOpts for available options.
 func (t *Tmux) NudgeSessionWithOpts(session, message string, opts NudgeOpts) error {
 	// Cross-process lock: serialize nudges across OS processes via flock(2).
-	// Each `gt nudge` CLI invocation is a separate process, so the in-process
+	// Each `ms nudge` CLI invocation is a separate process, so the in-process
 	// channel semaphore below provides no cross-process protection. Without
 	// this, concurrent nudges interleave send-keys/Enter and produce garbled
-	// or empty input. (GH#gt-ukl8)
+	// or empty input. (GH#ms-ukl8)
 	if opts.TownRoot != "" {
 		lockPath := nudgeFlockPath(opts.TownRoot, session)
 		unlock, err := acquireFlockLock(lockPath, nudgeLockTimeout)
@@ -1707,7 +1707,7 @@ func (t *Tmux) NudgeSessionWithOpts(session, message string, opts NudgeOpts) err
 	// 0. Pre-delivery: dismiss Rewind menu if the session is stuck in it.
 	// A previous nudge or user action may have triggered Claude Code's
 	// double-Escape Rewind UI, which captures all input. Dismiss it first
-	// so the nudge can be delivered normally. (GH#gt-8el)
+	// so the nudge can be delivered normally. (GH#ms-8el)
 	if t.isInRewindMode(target) {
 		t.dismissRewindMode(target)
 	}
@@ -1726,7 +1726,7 @@ func (t *Tmux) NudgeSessionWithOpts(session, message string, opts NudgeOpts) err
 		// Auto-skip Escape for Copilot CLI sessions. Escape cancels in-flight
 		// generation in Copilot CLI (like Gemini), leaving the nudge text
 		// stranded in the input field without Enter being processed. (hq-isz)
-		agentType, _ := t.GetEnvironment(session, "GT_AGENT")
+		agentType, _ := t.GetEnvironment(session, "MS_AGENT")
 		if agentType == "copilot" {
 			opts.SkipEscape = true
 		}
@@ -1742,7 +1742,7 @@ func (t *Tmux) NudgeSessionWithOpts(session, message string, opts NudgeOpts) err
 	}
 
 	// 4. Adaptive post-text delay: scales with message length to give tmux
-	// enough time to process all chunks under load. (GH#gt-0b5)
+	// enough time to process all chunks under load. (GH#ms-0b5)
 	time.Sleep(adaptiveTextDelay(len(sanitized)))
 
 	if sendEscape {
@@ -1761,7 +1761,7 @@ func (t *Tmux) NudgeSessionWithOpts(session, message string, opts NudgeOpts) err
 		// combining with ours to form the double-Escape that activates Rewind.
 		// If triggered, dismiss Rewind and re-send the message (Rewind
 		// consumed the original input). Skip the second Escape to avoid
-		// re-triggering. (GH#gt-8el)
+		// re-triggering. (GH#ms-8el)
 		if t.isInRewindMode(target) {
 			t.dismissRewindMode(target)
 			// Re-send message text — Rewind consumed the original input.
@@ -1771,7 +1771,7 @@ func (t *Tmux) NudgeSessionWithOpts(session, message string, opts NudgeOpts) err
 	}
 
 	// 7. Send Enter with verification — polls pane content to confirm Enter
-	// was processed, retrying with exponential backoff under load. (GH#gt-0b5)
+	// was processed, retrying with exponential backoff under load. (GH#ms-0b5)
 	if err := t.sendEnterVerified(target); err != nil {
 		return fmt.Errorf("nudge to session %q: %w", session, err)
 	}
@@ -1780,7 +1780,7 @@ func (t *Tmux) NudgeSessionWithOpts(session, message string, opts NudgeOpts) err
 	// Use the resolved target (session:window.pane) rather than the bare
 	// session name. resize-window on a bare session name resizes the
 	// session's *active* window — in a multi-window session (e.g. one with a
-	// `gt feed -w` window open and focused) that is not the agent's window,
+	// `ms feed -w` window open and focused) that is not the agent's window,
 	// so the agent's pane never receives SIGWINCH and stays idle despite the
 	// delivered nudge. Targeting the resolved pane wakes the correct window.
 	t.WakePaneIfDetached(target)
@@ -1799,7 +1799,7 @@ func (t *Tmux) NudgePane(pane, message string) error {
 	}
 	defer releaseNudgeLock(pane)
 
-	// 0. Pre-delivery: dismiss Rewind menu if active. (GH#gt-8el)
+	// 0. Pre-delivery: dismiss Rewind menu if active. (GH#ms-8el)
 	if t.isInRewindMode(pane) {
 		t.dismissRewindMode(pane)
 	}
@@ -1823,7 +1823,7 @@ func (t *Tmux) NudgePane(pane, message string) error {
 		return err
 	}
 
-	// 4. Adaptive post-text delay: scales with message length. (GH#gt-0b5)
+	// 4. Adaptive post-text delay: scales with message length. (GH#ms-0b5)
 	time.Sleep(adaptiveTextDelay(len(sanitized)))
 
 	if sendEscape {
@@ -1834,7 +1834,7 @@ func (t *Tmux) NudgePane(pane, message string) error {
 		// 6. Wait 600ms — must exceed bash readline's keyseq-timeout (500ms default)
 		time.Sleep(600 * time.Millisecond)
 
-		// 6.5. Post-Escape: check if our Escape triggered Rewind mode. (GH#gt-8el)
+		// 6.5. Post-Escape: check if our Escape triggered Rewind mode. (GH#ms-8el)
 		if t.isInRewindMode(pane) {
 			t.dismissRewindMode(pane)
 			_ = t.sendMessageToTarget(pane, sanitized)
@@ -1843,7 +1843,7 @@ func (t *Tmux) NudgePane(pane, message string) error {
 	}
 
 	// 7. Send Enter with verification — polls pane content to confirm Enter
-	// was processed, retrying with exponential backoff under load. (GH#gt-0b5)
+	// was processed, retrying with exponential backoff under load. (GH#ms-0b5)
 	if err := t.sendEnterVerified(pane); err != nil {
 		return fmt.Errorf("nudge to pane %q: %w", pane, err)
 	}
@@ -2139,15 +2139,15 @@ func (t *Tmux) GetPaneCommand(session string) (string, error) {
 // active/focused pane, which may not be the agent pane. This method returns
 // the pane ID (e.g., "%5") of the one running the agent.
 //
-// ZFC (gt-qmsx): Reads declared GT_PANE_ID from session environment first.
-// Falls back to scanning all panes for legacy sessions without GT_PANE_ID.
+// ZFC (ms-qmsx): Reads declared MS_PANE_ID from session environment first.
+// Falls back to scanning all panes for legacy sessions without MS_PANE_ID.
 //
 // Returns ("", nil) if the session has only one pane (no disambiguation needed),
 // or if no agent pane can be identified (caller should fall back to session targeting).
 func (t *Tmux) FindAgentPane(session string) (string, error) {
-	// ZFC: read declared pane identity set at session startup (gt-qmsx).
-	// This replaces process-tree inference for sessions that record GT_PANE_ID.
-	if declaredPane, err := t.GetEnvironment(session, "GT_PANE_ID"); err == nil && declaredPane != "" {
+	// ZFC: read declared pane identity set at session startup (ms-qmsx).
+	// This replaces process-tree inference for sessions that record MS_PANE_ID.
+	if declaredPane, err := t.GetEnvironment(session, "MS_PANE_ID"); err == nil && declaredPane != "" {
 		targetSession := session
 		if sessionOut, sessionErr := t.run("display-message", "-t", session, "-p", "#{session_name}"); sessionErr == nil {
 			if resolved := strings.TrimSpace(sessionOut); resolved != "" {
@@ -2156,20 +2156,20 @@ func (t *Tmux) FindAgentPane(session string) (string, error) {
 		}
 
 		// Verify the pane still exists in the target session. Pane IDs are tmux-global,
-		// so a stale GT_PANE_ID may still resolve in a different restarted session.
+		// so a stale MS_PANE_ID may still resolve in a different restarted session.
 		if paneSession, verifyErr := t.run("display-message", "-t", declaredPane, "-p", "#{session_name}"); verifyErr == nil && strings.TrimSpace(paneSession) == targetSession {
 			return declaredPane, nil
 		}
 		// Declared pane is gone or belongs to another session — fall through to scan.
 	}
 
-	// Fallback: scan all panes for legacy sessions without GT_PANE_ID.
+	// Fallback: scan all panes for legacy sessions without MS_PANE_ID.
 	return t.findAgentPaneByScan(session)
 }
 
 // findAgentPaneByScan enumerates all panes across all windows (-s) and returns
 // the pane ID of the one running the agent. This is the legacy path for sessions
-// that predate GT_PANE_ID (gt-qmsx).
+// that predate MS_PANE_ID (ms-qmsx).
 func (t *Tmux) findAgentPaneByScan(session string) (string, error) {
 	out, err := t.run("list-panes", "-s", "-t", session, "-F", "#{pane_id}\t#{pane_current_command}\t#{pane_pid}")
 	if err != nil {
@@ -2679,7 +2679,7 @@ func (t *Tmux) SendNotificationBanner(session, from, subject string) error {
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📬 NEW MAIL from %s
 Subject: %s
-Run: gt mail inbox
+Run: ms mail inbox
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 '`, from, subject)
 
@@ -2716,16 +2716,16 @@ func (t *Tmux) IsAgentRunning(session string, expectedPaneCommands ...string) bo
 
 // IsRuntimeRunning checks if a runtime appears to be running in the session.
 //
-// ZFC (gt-qmsx): Reads declared GT_PANE_ID from session environment first,
+// ZFC (ms-qmsx): Reads declared MS_PANE_ID from session environment first,
 // then checks only that pane. Falls back to scanning all panes for legacy
-// sessions without GT_PANE_ID.
+// sessions without MS_PANE_ID.
 func (t *Tmux) IsRuntimeRunning(session string, processNames []string) bool {
 	if len(processNames) == 0 {
 		return false
 	}
 
-	// ZFC: check declared pane identity set at session startup (gt-qmsx).
-	if declaredPane, err := t.GetEnvironment(session, "GT_PANE_ID"); err == nil && declaredPane != "" {
+	// ZFC: check declared pane identity set at session startup (ms-qmsx).
+	if declaredPane, err := t.GetEnvironment(session, "MS_PANE_ID"); err == nil && declaredPane != "" {
 		if t.checkTargetPaneForRuntime(session, declaredPane, processNames) {
 			return true
 		}
@@ -2758,7 +2758,7 @@ func (t *Tmux) IsRuntimeRunning(session string, processNames []string) bool {
 }
 
 // checkTargetPaneForRuntime checks if a specific pane (by ID, e.g., "%5") is
-// running a matching process. Used by the ZFC path when GT_PANE_ID is declared.
+// running a matching process. Used by the ZFC path when MS_PANE_ID is declared.
 func (t *Tmux) checkTargetPaneForRuntime(session, paneID string, processNames []string) bool {
 	cmd, err := t.run("display-message", "-t", paneID, "-p", "#{pane_current_command}")
 	if err != nil {
@@ -2781,17 +2781,17 @@ func (t *Tmux) checkPaneForRuntime(session string, processNames []string) bool {
 // cursorAgentSessionDeclaresCursor reports whether tmux session env identifies the Cursor
 // runtime (preset "cursor"). Used to disambiguate the generic process name "agent" (Cursor's
 // install script symlinks `agent` to the same binary as cursor-agent) from unrelated binaries
-// named `agent`. The most reliable signal is GT_AGENT=cursor together with GT_PROCESS_NAMES
+// named `agent`. The most reliable signal is MS_AGENT=cursor together with MS_PROCESS_NAMES
 // set at session startup (see internal/session/lifecycle.go).
 func cursorAgentSessionDeclaresCursor(t *Tmux, session string) bool {
 	if t == nil || session == "" {
 		return false
 	}
-	agent, err := t.GetEnvironment(session, "GT_AGENT")
+	agent, err := t.GetEnvironment(session, "MS_AGENT")
 	if err == nil && agent == string(config.AgentCursor) {
 		return true
 	}
-	if names, err := t.GetEnvironment(session, "GT_PROCESS_NAMES"); err == nil && names != "" {
+	if names, err := t.GetEnvironment(session, "MS_PROCESS_NAMES"); err == nil && names != "" {
 		for _, n := range strings.Split(names, ",") {
 			if strings.TrimSpace(n) == "cursor-agent" {
 				return true
@@ -2853,23 +2853,23 @@ func (t *Tmux) matchesPaneRuntime(session, cmd, pid string, processNames []strin
 }
 
 // IsAgentAlive checks if an agent is running in the session using agent-agnostic detection.
-// It reads GT_PROCESS_NAMES from the session environment for accurate process detection,
-// falling back to GT_AGENT-based lookup for legacy sessions.
+// It reads MS_PROCESS_NAMES from the session environment for accurate process detection,
+// falling back to MS_AGENT-based lookup for legacy sessions.
 // This is the preferred method for zombie detection across all agent types.
 func (t *Tmux) IsAgentAlive(session string) bool {
 	return t.IsRuntimeRunning(session, t.resolveSessionProcessNames(session))
 }
 
 // resolveSessionProcessNames returns the process names to check for a session.
-// Prefers GT_PROCESS_NAMES (set at startup, handles custom agents that shadow
-// built-in presets). Falls back to GT_AGENT-based lookup for legacy sessions.
+// Prefers MS_PROCESS_NAMES (set at startup, handles custom agents that shadow
+// built-in presets). Falls back to MS_AGENT-based lookup for legacy sessions.
 func (t *Tmux) resolveSessionProcessNames(session string) []string {
 	// Prefer explicit process names set at startup (handles custom agents correctly)
-	if names, err := t.GetEnvironment(session, "GT_PROCESS_NAMES"); err == nil && names != "" {
+	if names, err := t.GetEnvironment(session, "MS_PROCESS_NAMES"); err == nil && names != "" {
 		return strings.Split(names, ",")
 	}
 	// Fallback: resolve from agent name (built-in presets only)
-	agentName, _ := t.GetEnvironment(session, "GT_AGENT")
+	agentName, _ := t.GetEnvironment(session, "MS_AGENT")
 	return config.GetProcessNames(agentName) // Returns Claude defaults if empty
 }
 
@@ -2878,13 +2878,13 @@ func (t *Tmux) resolveSessionProcessNames(session string) []string {
 // Returns nil when a non-excluded command is detected, or error on timeout.
 //
 // ZFC fallback: when the pane command IS a shell (e.g., bash), checks for the
-// GT_AGENT_READY env var set by the agent's SessionStart hook (gt prime --hook).
+// MS_AGENT_READY env var set by the agent's SessionStart hook (ms prime --hook).
 // This handles agents wrapped in shell scripts (e.g., c2claude wrapping
 // claude-original) where exec env does not replace the shell as the pane
-// foreground process. Replaces process-tree probing (IsAgentAlive) per gt-sk5u.
+// foreground process. Replaces process-tree probing (IsAgentAlive) per ms-sk5u.
 func (t *Tmux) WaitForCommand(session string, excludeCommands []string, timeout time.Duration) error {
 	// ZFC: Clear agent-ready sentinel to prevent stale values from previous
-	// agent runs. The agent's SessionStart hook (gt prime --hook) sets this
+	// agent runs. The agent's SessionStart hook (ms prime --hook) sets this
 	// to "1" once the agent is running. Unsetting here ensures we only detect
 	// the NEW agent, not a leftover from a previous run.
 	_, _ = t.run("set-environment", "-u", "-t", session, EnvAgentReady)
@@ -2956,8 +2956,8 @@ func (t *Tmux) WaitForShellReady(session string, timeout time.Duration) error {
 //
 //	Once any AI agent is running, observation should be AI-to-AI:
 //	- Supervisor monitoring miners → use patrol formula + AI analysis
-//	- Supervisor restarting → Overseer watches via 'gt peek'
-//	- Overseer restarting → Supervisor watches via 'gt peek'
+//	- Supervisor restarting → Overseer watches via 'ms peek'
+//	- Overseer restarting → Supervisor watches via 'ms peek'
 
 // matchesPromptPrefix reports whether a captured pane line matches the
 // configured ready-prompt prefix. It normalizes non-breaking spaces
@@ -3026,7 +3026,7 @@ func (t *Tmux) shouldSendEscape(target string) bool {
 
 func readyPromptPrefixForSession(t *Tmux, session string) string {
 	promptPrefix := DefaultReadyPromptPrefix
-	agentName, err := t.GetEnvironment(session, "GT_AGENT")
+	agentName, err := t.GetEnvironment(session, "MS_AGENT")
 	if err != nil || agentName == "" {
 		return promptPrefix
 	}
@@ -3331,7 +3331,7 @@ func (t *Tmux) SetStatusFormat(session, rig, worker, role string) error {
 		// Town-level agent (Overseer, Supervisor) - keep as-is
 		left = fmt.Sprintf("%s %s ", icon, worker)
 	} else {
-		// Rig agents - use session name (already in prefix format: gt-crew-gus)
+		// Rig agents - use session name (already in prefix format: ms-crew-gus)
 		left = fmt.Sprintf("%s %s ", icon, session)
 	}
 
@@ -3350,7 +3350,7 @@ func (t *Tmux) SetDynamicStatus(session string) error {
 	}
 
 	// tmux calls this command every status-interval seconds
-	// gt status-line reads env vars and mail to build the status
+	// ms status-line reads env vars and mail to build the status
 	//
 	// On Windows, tmux #() spawns a visible cmd.exe + conhost.exe window on
 	// every invocation, causing rapid screen flashing. Fall back to a static
@@ -3359,7 +3359,7 @@ func (t *Tmux) SetDynamicStatus(session string) error {
 	if runtime.GOOS == "windows" {
 		right = `%H:%M`
 	} else {
-		right = fmt.Sprintf(`#(gt status-line --session=%s 2>/dev/null) %%H:%%M`, session)
+		right = fmt.Sprintf(`#(ms status-line --session=%s 2>/dev/null) %%H:%%M`, session)
 	}
 
 	if _, err := t.run("set-option", "-t", session, "status-right-length", "80"); err != nil {
@@ -3452,7 +3452,7 @@ func IsInsideTmux() bool {
 // This creates a popup showing the first unread message when clicking the mail icon area.
 //
 // The binding is conditional: it only activates in Mineshaft sessions (those matching
-// a registered rig prefix or "hq-"). In non-GT sessions, the user's original
+// a registered rig prefix or "hq-"). In non-MS sessions, the user's original
 // MouseDown1StatusRight binding (if any) is preserved.
 // See: https://github.com/steveyegge/mineshaft/issues/1548
 func (t *Tmux) SetMailClickBinding(session string) error {
@@ -3463,12 +3463,12 @@ func (t *Tmux) SetMailClickBinding(session string) error {
 	ifShell := fmt.Sprintf("echo '#{session_name}' | grep -Eq '%s'", sessionPrefixPattern())
 	fallback := t.getKeyBinding("root", "MouseDown1StatusRight")
 	if fallback == "" {
-		// No prior binding — do nothing in non-GT sessions
+		// No prior binding — do nothing in non-MS sessions
 		fallback = ":"
 	}
 	_, err := t.run("bind-key", "-T", "root", "MouseDown1StatusRight",
 		"if-shell", ifShell,
-		"display-popup -E -w 60 -h 15 'gt mail peek || echo No unread mail'",
+		"display-popup -E -w 60 -h 15 'ms mail peek || echo No unread mail'",
 		fallback)
 	return err
 }
@@ -3572,39 +3572,39 @@ func (t *Tmux) SetTownCycleBindings(session string) error {
 //
 // Two forms are recognized:
 //  1. Guarded form (set by SetAgentsBinding/SetFeedBinding): uses if-shell
-//     with a "gt " command — detects both old and new guarded bindings.
+//     with a "ms " command — detects both old and new guarded bindings.
 //  2. Unguarded form (set by EnsureBindingsOnSocket): direct run-shell
-//     invoking "gt agents menu" or "gt feed --window".
+//     invoking "ms agents menu" or "ms feed --window".
 func (t *Tmux) isGTBinding(table, key string) bool {
 	output, err := t.run("list-keys", "-T", table, key)
 	if err != nil || output == "" {
 		return false
 	}
-	// Guarded form: if-shell + "gt ".
-	if strings.Contains(output, "if-shell") && strings.Contains(output, "gt ") {
+	// Guarded form: if-shell + "ms ".
+	if strings.Contains(output, "if-shell") && strings.Contains(output, "ms ") {
 		return true
 	}
-	// Unguarded form: direct GT commands set by EnsureBindingsOnSocket.
-	return strings.Contains(output, "gt agents menu") ||
-		strings.Contains(output, "gt feed --window") ||
-		strings.Contains(output, "gt rig menu")
+	// Unguarded form: direct MS commands set by EnsureBindingsOnSocket.
+	return strings.Contains(output, "ms agents menu") ||
+		strings.Contains(output, "ms feed --window") ||
+		strings.Contains(output, "ms rig menu")
 }
 
-// isGTBindingWithClient checks if the given key has a GT binding that includes
-// --client for multi-client support. Older GT bindings without --client cause
+// isGTBindingWithClient checks if the given key has a MS binding that includes
+// --client for multi-client support. Older MS bindings without --client cause
 // switch-client to target the wrong client when multiple clients are attached.
 func (t *Tmux) isGTBindingWithClient(table, key string) bool {
 	output, err := t.run("list-keys", "-T", table, key)
 	if err != nil || output == "" {
 		return false
 	}
-	return strings.Contains(output, "if-shell") && strings.Contains(output, "gt ") &&
+	return strings.Contains(output, "if-shell") && strings.Contains(output, "ms ") &&
 		strings.Contains(output, "--client")
 }
 
-// isGTBindingCurrent checks whether the existing GT cycle binding has the
+// isGTBindingCurrent checks whether the existing MS cycle binding has the
 // current prefix pattern. Returns false if the binding is stale (e.g., after
-// gt rig add introduces a new prefix not yet in the grep pattern).
+// ms rig add introduces a new prefix not yet in the grep pattern).
 func (t *Tmux) isGTBindingCurrent(table, key, currentPattern string) bool {
 	output, err := t.run("list-keys", "-T", table, key)
 	if err != nil || output == "" {
@@ -3622,11 +3622,11 @@ func (t *Tmux) isGTBindingCurrent(table, key, currentPattern string) bool {
 // suitable for use as a command argument to bind-key or if-shell.
 //
 // If the existing binding is already a Mineshaft if-shell binding (detected by
-// the presence of both "if-shell" and "gt " in the output), it is treated as
+// the presence of both "if-shell" and "ms " in the output), it is treated as
 // no prior binding to avoid recursive wrapping on repeated calls.
 func (t *Tmux) getKeyBinding(table, key string) string {
 	// tmux list-keys -T <table> <key> outputs a line like:
-	//   bind-key -T prefix g if-shell "..." "run-shell 'gt agents menu'" ":"
+	//   bind-key -T prefix g if-shell "..." "run-shell 'ms agents menu'" ":"
 	// We need to extract just the command portion.
 	//
 	// Assumed format (tested with tmux 3.3+):
@@ -3638,14 +3638,14 @@ func (t *Tmux) getKeyBinding(table, key string) string {
 		return ""
 	}
 
-	// Don't capture existing GT bindings as "user bindings to preserve" —
+	// Don't capture existing MS bindings as "user bindings to preserve" —
 	// that would wrap our own command in another layer.
 	// Check both guarded (if-shell) and unguarded (direct run-shell) forms.
-	if strings.Contains(output, "if-shell") && strings.Contains(output, "gt ") {
+	if strings.Contains(output, "if-shell") && strings.Contains(output, "ms ") {
 		return ""
 	}
-	if strings.Contains(output, "gt agents menu") ||
-		strings.Contains(output, "gt feed --window") {
+	if strings.Contains(output, "ms agents menu") ||
+		strings.Contains(output, "ms feed --window") {
 		return ""
 	}
 
@@ -3693,12 +3693,12 @@ var safePrefixRe = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9-]{0,19}$`)
 // "hq" is always included because it lives outside the rig registry
 // (town-level services).
 //
-// Example output: "^(bd|db|fa|gl|gt|hq|la|lc)-"
+// Example output: "^(bd|db|fa|gl|ms|hq|la|lc)-"
 func sessionPrefixPattern() string {
-	seen := map[string]bool{"hq": true, "gt": true} // always include HQ + mineshaft fallback
-	townRoot := os.Getenv("GT_ROOT")
+	seen := map[string]bool{"hq": true, "ms": true} // always include HQ + mineshaft fallback
+	townRoot := os.Getenv("MS_ROOT")
 	if townRoot == "" {
-		townRoot = os.Getenv("GT_TOWN_ROOT")
+		townRoot = os.Getenv("MS_TOWN_ROOT")
 	}
 	if townRoot != "" {
 		for _, p := range config.AllRigPrefixes(townRoot) {
@@ -3716,15 +3716,15 @@ func sessionPrefixPattern() string {
 }
 
 // SetCycleBindings sets up C-b n/p to cycle through related sessions.
-// The gt cycle command automatically detects the session type and cycles
+// The ms cycle command automatically detects the session type and cycles
 // within the appropriate group:
 // - Town sessions: Overseer ↔ Supervisor
 // - Crew sessions: All crew members in the same rig
 // - Rig ops sessions: Witness + Refinery + Miners in the same rig
 //
-// IMPORTANT: These bindings are conditional - they only run gt cycle for
+// IMPORTANT: These bindings are conditional - they only run ms cycle for
 // Mineshaft sessions (those matching a registered rig prefix or "hq-").
-// For non-GT sessions, the user's original binding is preserved. If no
+// For non-MS sessions, the user's original binding is preserved. If no
 // prior binding existed, the tmux defaults (next-window/previous-window)
 // are used.
 // See: https://github.com/steveyegge/mineshaft/issues/13
@@ -3736,8 +3736,8 @@ func sessionPrefixPattern() string {
 func (t *Tmux) SetCycleBindings(session string) error {
 	// Skip if already correctly configured:
 	// 1. Has --client for multi-client support
-	// 2. Has the current prefix pattern (not stale from before a gt rig add)
-	// We must re-bind if an older GT binding exists without --client, or if the
+	// 2. Has the current prefix pattern (not stale from before a ms rig add)
+	// We must re-bind if an older MS binding exists without --client, or if the
 	// prefix pattern is stale (missing newly added rig prefixes).
 	// See: https://github.com/steveyegge/mineshaft/issues/2299
 	pattern := sessionPrefixPattern()
@@ -3756,19 +3756,19 @@ func (t *Tmux) SetCycleBindings(session string) error {
 		prevFallback = "previous-window"
 	}
 
-	// C-b n → gt cycle next for Mineshaft sessions, original binding otherwise
+	// C-b n → ms cycle next for Mineshaft sessions, original binding otherwise
 	// Pass --client #{client_tty} so switch-client targets the correct client
 	// when multiple tmux clients are attached (e.g., mineshaft + beads rigs).
 	if _, err := t.run("bind-key", "-T", "prefix", "n",
 		"if-shell", ifShell,
-		"run-shell 'gt cycle next --session #{session_name} --client #{client_tty}'",
+		"run-shell 'ms cycle next --session #{session_name} --client #{client_tty}'",
 		nextFallback); err != nil {
 		return err
 	}
-	// C-b p → gt cycle prev for Mineshaft sessions, original binding otherwise
+	// C-b p → ms cycle prev for Mineshaft sessions, original binding otherwise
 	if _, err := t.run("bind-key", "-T", "prefix", "p",
 		"if-shell", ifShell,
-		"run-shell 'gt cycle prev --session #{session_name} --client #{client_tty}'",
+		"run-shell 'ms cycle prev --session #{session_name} --client #{client_tty}'",
 		prevFallback); err != nil {
 		return err
 	}
@@ -3777,10 +3777,10 @@ func (t *Tmux) SetCycleBindings(session string) error {
 
 // SetFeedBinding configures C-b a to jump to the activity feed window.
 // This creates the feed window if it doesn't exist, or switches to it if it does.
-// Uses `gt feed --window` which handles both creation and switching.
+// Uses `ms feed --window` which handles both creation and switching.
 //
 // IMPORTANT: This binding is conditional - it only runs for Mineshaft sessions
-// (those matching a registered rig prefix or "hq-"). For non-GT sessions, the
+// (those matching a registered rig prefix or "hq-"). For non-MS sessions, the
 // user's original binding is preserved. If no prior binding existed, the key
 // press is silently ignored.
 // See: https://github.com/steveyegge/mineshaft/issues/13
@@ -3788,53 +3788,53 @@ func (t *Tmux) SetCycleBindings(session string) error {
 func (t *Tmux) SetFeedBinding(session string) error {
 	pattern := sessionPrefixPattern()
 	// Skip if already configured with the current rig prefix pattern.
-	// Must re-bind if the pattern is stale (e.g., after gt rig add adds a new prefix).
+	// Must re-bind if the pattern is stale (e.g., after ms rig add adds a new prefix).
 	if t.isGTBinding("prefix", "a") && t.isGTBindingCurrent("prefix", "a", pattern) {
 		return nil
 	}
 	ifShell := fmt.Sprintf("echo '#{session_name}' | grep -Eq '%s'", pattern)
 	fallback := t.getKeyBinding("prefix", "a")
 	if fallback == "" {
-		// No prior binding — do nothing in non-GT sessions
+		// No prior binding — do nothing in non-MS sessions
 		fallback = ":"
 	}
 	_, err := t.run("bind-key", "-T", "prefix", "a",
 		"if-shell", ifShell,
-		"run-shell 'gt feed --window'",
+		"run-shell 'ms feed --window'",
 		fallback)
 	return err
 }
 
 // SetAgentsBinding configures C-b g to open the agent switcher popup menu.
-// This runs `gt agents menu` which displays a tmux popup with all Mineshaft agents.
+// This runs `ms agents menu` which displays a tmux popup with all Mineshaft agents.
 //
 // IMPORTANT: This binding is conditional - it only runs for Mineshaft sessions
-// (those matching a registered rig prefix or "hq-"). For non-GT sessions, the
+// (those matching a registered rig prefix or "hq-"). For non-MS sessions, the
 // user's original binding is preserved. If no prior binding existed, the key
 // press is silently ignored.
 // See: https://github.com/steveyegge/mineshaft/issues/1548
 func (t *Tmux) SetAgentsBinding(session string) error {
 	pattern := sessionPrefixPattern()
 	// Skip if already configured with the current rig prefix pattern.
-	// Must re-bind if the pattern is stale (e.g., after gt rig add adds a new prefix).
+	// Must re-bind if the pattern is stale (e.g., after ms rig add adds a new prefix).
 	if t.isGTBinding("prefix", "g") && t.isGTBindingCurrent("prefix", "g", pattern) {
 		return nil
 	}
 	ifShell := fmt.Sprintf("echo '#{session_name}' | grep -Eq '%s'", pattern)
 	fallback := t.getKeyBinding("prefix", "g")
 	if fallback == "" {
-		// No prior binding — do nothing in non-GT sessions
+		// No prior binding — do nothing in non-MS sessions
 		fallback = ":"
 	}
 	_, err := t.run("bind-key", "-T", "prefix", "g",
 		"if-shell", ifShell,
-		"run-shell 'gt agents menu'",
+		"run-shell 'ms agents menu'",
 		fallback)
 	return err
 }
 
 // SetRigMenuBinding configures C-b r to open the rig menu popup.
-// This runs `gt rig menu` which displays a tmux display-menu with all rigs
+// This runs `ms rig menu` which displays a tmux display-menu with all rigs
 // and per-rig actions (start, stop, park, etc.).
 func (t *Tmux) SetRigMenuBinding(session string) error {
 	if t.isGTBinding("prefix", "r") {
@@ -3847,40 +3847,40 @@ func (t *Tmux) SetRigMenuBinding(session string) error {
 	}
 	_, err := t.run("bind-key", "-T", "prefix", "r",
 		"if-shell", ifShell,
-		"run-shell 'gt rig menu'",
+		"run-shell 'ms rig menu'",
 		fallback)
 	return err
 }
 
-// EnsureBindingsOnSocket sets the gt agents menu and feed keybindings on a
-// specific tmux socket. This is used during gt up to ensure the bindings work
+// EnsureBindingsOnSocket sets the ms agents menu and feed keybindings on a
+// specific tmux socket. This is used during ms up to ensure the bindings work
 // even when the user is on a different socket than the town socket.
 //
-// townSocket is the socket name where GT agents live (e.g. "gt-a1b2c3"). When
-// non-empty it is embedded in the binding command as GT_TOWN_SOCKET=<name>
-// so that gt agents menu can locate agent sessions even when invoked from a
+// townSocket is the socket name where MS agents live (e.g. "ms-a1b2c3"). When
+// non-empty it is embedded in the binding command as MS_TOWN_SOCKET=<name>
+// so that ms agents menu can locate agent sessions even when invoked from a
 // directory outside the town root (e.g. a personal tmux session where
 // workspace.FindFromCwd fails and InitRegistry is never called).
 // Pass "" for test-socket use where InitRegistry is already called.
 //
-// Unlike SetAgentsBinding/SetFeedBinding (called during gt prime), this method:
+// Unlike SetAgentsBinding/SetFeedBinding (called during ms prime), this method:
 //   - Targets a specific socket regardless of the Tmux instance's default
 //   - Skips the session-name guard when there is no pre-existing user binding,
-//     since the user may be in a personal session (not matching GT prefixes)
+//     since the user may be in a personal session (not matching MS prefixes)
 //     and still wants the agent menu for cross-socket navigation
 //
 // Safe to call multiple times; skips if bindings already exist.
 func EnsureBindingsOnSocket(socket, townSocket string) error {
 	t := NewTmuxWithSocket(socket)
 
-	// Build the command strings, optionally prefixed with GT_TOWN_SOCKET so
-	// gt agents menu / gt feed can find the right tmux server even when called
+	// Build the command strings, optionally prefixed with MS_TOWN_SOCKET so
+	// ms agents menu / ms feed can find the right tmux server even when called
 	// from a non-town directory.
-	agentsCmd := "gt agents menu"
-	feedCmd := "gt feed --window"
+	agentsCmd := "ms agents menu"
+	feedCmd := "ms feed --window"
 	if townSocket != "" {
-		agentsCmd = fmt.Sprintf("GT_TOWN_SOCKET=%s gt agents menu", townSocket)
-		feedCmd = fmt.Sprintf("GT_TOWN_SOCKET=%s gt feed --window", townSocket)
+		agentsCmd = fmt.Sprintf("MS_TOWN_SOCKET=%s ms agents menu", townSocket)
+		feedCmd = fmt.Sprintf("MS_TOWN_SOCKET=%s ms feed --window", townSocket)
 	}
 
 	// Agents binding (prefix + g)
@@ -3888,14 +3888,14 @@ func EnsureBindingsOnSocket(socket, townSocket string) error {
 		ifShell := fmt.Sprintf("echo '#{session_name}' | grep -Eq '%s'", sessionPrefixPattern())
 		fallback := t.getKeyBinding("prefix", "g")
 		if fallback == "" || fallback == ":" {
-			// No user binding to preserve — always show the GT agent menu.
+			// No user binding to preserve — always show the MS agent menu.
 			// This is critical for cross-socket use: on the default socket,
-			// no session names match GT prefixes, so an if-shell guard would
+			// no session names match MS prefixes, so an if-shell guard would
 			// prevent the menu from ever appearing.
 			_, _ = t.run("bind-key", "-T", "prefix", "g",
 				"run-shell", agentsCmd)
 		} else {
-			// User has a custom binding — guard with GT pattern, preserve theirs.
+			// User has a custom binding — guard with MS pattern, preserve theirs.
 			_, _ = t.run("bind-key", "-T", "prefix", "g",
 				"if-shell", ifShell,
 				"run-shell '"+agentsCmd+"'",
@@ -3919,9 +3919,9 @@ func EnsureBindingsOnSocket(socket, townSocket string) error {
 	}
 
 	// Rig menu binding (prefix + r)
-	rigMenuCmd := "gt rig menu"
+	rigMenuCmd := "ms rig menu"
 	if townSocket != "" {
-		rigMenuCmd = fmt.Sprintf("GT_TOWN_SOCKET=%s gt rig menu", townSocket)
+		rigMenuCmd = fmt.Sprintf("MS_TOWN_SOCKET=%s ms rig menu", townSocket)
 	}
 	if !t.isGTBinding("prefix", "r") {
 		ifShell := fmt.Sprintf("echo '#{session_name}' | grep -Eq '%s'", sessionPrefixPattern())
@@ -3956,7 +3956,7 @@ func (t *Tmux) GetSessionCreatedUnix(session string) (int64, error) {
 
 // SocketFromEnv extracts the tmux socket name from the TMUX environment variable.
 // TMUX format: /path/to/socket,server_pid,session_index
-// Returns the basename of the socket path (e.g., "default", "gt"), or empty if
+// Returns the basename of the socket path (e.g., "default", "ms"), or empty if
 // not in tmux or the env variable is not set.
 func SocketFromEnv() string {
 	tmuxEnv := os.Getenv("TMUX")
@@ -3988,7 +3988,7 @@ func CurrentSessionName() string {
 
 // CleanupOrphanedSessions scans for zombie Mineshaft sessions and kills them.
 // A zombie session is one where tmux is alive but the Claude process has died.
-// This runs at `gt start` time to prevent session name conflicts and resource accumulation.
+// This runs at `ms start` time to prevent session name conflicts and resource accumulation.
 //
 // The isGTSession predicate identifies Mineshaft sessions (e.g. session.IsKnownSession).
 // It is passed as a parameter to avoid a circular import from tmux → session.
@@ -4036,8 +4036,8 @@ func (t *Tmux) SetPaneDiedHook(session, agentID string) error {
 
 	// Hook command logs the crash with exit status
 	// #{pane_dead_status} is the exit code of the process that died
-	// We run gt log crash which records to the town log
-	hookCmd := fmt.Sprintf(`run-shell "gt log crash --agent '%s' --session '%s' --exit-code #{pane_dead_status}"`,
+	// We run ms log crash which records to the town log
+	hookCmd := fmt.Sprintf(`run-shell "ms log crash --agent '%s' --session '%s' --exit-code #{pane_dead_status}"`,
 		agentID, session)
 
 	// Set the hook on this specific session
@@ -4094,7 +4094,7 @@ func (t *Tmux) SetAutoRespawnHook(session string) error {
 }
 
 // buildAutoRespawnHookCmd builds the pane-died hook command string for auto-respawn.
-// The tmuxCmd parameter is the tmux binary invocation (e.g., "tmux -L gt" or "tmux").
+// The tmuxCmd parameter is the tmux binary invocation (e.g., "tmux -L ms" or "tmux").
 // The session parameter is the already-sanitized session name.
 //
 // The command has three safety measures:

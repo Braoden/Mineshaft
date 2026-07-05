@@ -39,10 +39,10 @@ This command scans for:
 Note: --days and --all only apply to orphaned commits, not miner branches.
 
 Examples:
-  gt orphans              # Last 7 days (default), infers rig from cwd
-  gt orphans --rig=mineshaft # Target a specific rig
-  gt orphans --days=14    # Last 2 weeks
-  gt orphans --all        # Show all orphans (no date filter)`,
+  ms orphans              # Last 7 days (default), infers rig from cwd
+  ms orphans --rig=mineshaft # Target a specific rig
+  ms orphans --days=14    # Last 2 weeks
+  ms orphans --all        # Show all orphans (no date filter)`,
 	RunE: runOrphans,
 }
 
@@ -76,21 +76,21 @@ WARNING: This operation is irreversible. Once commits are pruned,
 they cannot be recovered.
 
 Note: This only affects orphaned commits and processes. Unmerged miner
-branches (shown by 'gt orphans') must be recovered or cleaned up manually.
+branches (shown by 'ms orphans') must be recovered or cleaned up manually.
 
 The command will:
-1. Find orphaned commits (same as 'gt orphans')
-2. Find orphaned Claude processes (same as 'gt orphans procs')
+1. Find orphaned commits (same as 'ms orphans')
+2. Find orphaned Claude processes (same as 'ms orphans procs')
 3. Show what will be removed/killed
 4. Ask for confirmation (unless --force)
 5. Run git gc and kill processes
 
 Examples:
-  gt orphans kill              # Kill orphans from last 7 days (default)
-  gt orphans kill --days=14    # Kill orphans from last 2 weeks
-  gt orphans kill --all        # Kill all orphans
-  gt orphans kill --dry-run    # Preview without deleting
-  gt orphans kill --force      # Skip confirmation prompt`,
+  ms orphans kill              # Kill orphans from last 7 days (default)
+  ms orphans kill --days=14    # Kill orphans from last 2 weeks
+  ms orphans kill --all        # Kill all orphans
+  ms orphans kill --dry-run    # Preview without deleting
+  ms orphans kill --force      # Skip confirmation prompt`,
 	RunE: runOrphansKill,
 }
 
@@ -104,15 +104,15 @@ These are processes that survived session termination and are now
 parented to init/launchd. They consume resources and should be killed.
 
 Use --aggressive to detect ALL orphaned Claude processes by cross-referencing
-against active tmux sessions. Any Claude process NOT in a gt-* or hq-* session
+against active tmux sessions. Any Claude process NOT in a ms-* or hq-* session
 is considered an orphan. This catches processes that have been reparented to
 something other than init (PPID != 1).
 
 Examples:
-  gt orphans procs              # List orphaned Claude processes (PPID=1 only)
-  gt orphans procs list         # Same as above
-  gt orphans procs --aggressive # List ALL orphaned processes (tmux verification)
-  gt orphans procs kill         # Kill orphaned processes`,
+  ms orphans procs              # List orphaned Claude processes (PPID=1 only)
+  ms orphans procs list         # Same as above
+  ms orphans procs --aggressive # List ALL orphaned processes (tmux verification)
+  ms orphans procs kill         # Kill orphaned processes`,
 	RunE: runOrphansListProcesses, // Default to list
 }
 
@@ -125,7 +125,7 @@ These are processes that survived session termination and are now
 parented to init/launchd. They consume resources and should be killed.
 
 Use --aggressive to detect ALL orphaned Claude processes by cross-referencing
-against active tmux sessions. Any Claude process NOT in a gt-* or hq-* session
+against active tmux sessions. Any Claude process NOT in a ms-* or hq-* session
 is considered an orphan.
 
 Excludes:
@@ -133,8 +133,8 @@ Excludes:
 - Claude.app desktop application processes
 
 Examples:
-  gt orphans procs list             # Show orphans with PPID=1
-  gt orphans procs list --aggressive # Show ALL orphans (tmux verification)`,
+  ms orphans procs list             # Show orphans with PPID=1
+  ms orphans procs list --aggressive # Show ALL orphans (tmux verification)`,
 	RunE: runOrphansListProcesses,
 }
 
@@ -148,9 +148,9 @@ Use -f/--force to kill without confirmation.
 Use --aggressive to kill ALL orphaned processes (not just PPID=1).
 
 Examples:
-  gt orphans procs kill             # Kill with confirmation
-  gt orphans procs kill -f          # Force kill without confirmation
-  gt orphans procs kill --aggressive # Kill ALL orphans (tmux verification)`,
+  ms orphans procs kill             # Kill with confirmation
+  ms orphans procs kill -f          # Force kill without confirmation
+  ms orphans procs kill --aggressive # Kill ALL orphans (tmux verification)`,
 	RunE: runOrphansKillProcesses,
 }
 
@@ -821,14 +821,14 @@ func runOrphansListProcesses(cmd *cobra.Command, args []string) error {
 		fmt.Printf("  %s %s\n", style.Bold.Render(fmt.Sprintf("PID %d", o.PID)), displayArgs)
 	}
 
-	fmt.Printf("\n%s\n", style.Dim.Render("Use 'gt orphans procs kill' to terminate these processes"))
+	fmt.Printf("\n%s\n", style.Dim.Render("Use 'ms orphans procs kill' to terminate these processes"))
 	fmt.Printf("%s\n", style.Dim.Render("Use --aggressive to find more orphans via tmux session verification"))
 
 	return nil
 }
 
 // runOrphansListProcessesAggressive lists orphans using tmux session verification.
-// This finds ALL Claude processes not in any gt-* or hq-* tmux session.
+// This finds ALL Claude processes not in any ms-* or hq-* tmux session.
 func runOrphansListProcessesAggressive() error {
 	zombies, err := util.FindZombieClaudeProcesses()
 	if err != nil {
@@ -851,7 +851,7 @@ func runOrphansListProcessesAggressive() error {
 			z.TTY)
 	}
 
-	fmt.Printf("\n%s\n", style.Dim.Render("Use 'gt orphans procs kill --aggressive' to terminate these processes"))
+	fmt.Printf("\n%s\n", style.Dim.Render("Use 'ms orphans procs kill --aggressive' to terminate these processes"))
 
 	return nil
 }
@@ -950,7 +950,7 @@ func runOrphansKillProcesses(cmd *cobra.Command, args []string) error {
 }
 
 // runOrphansKillProcessesAggressive kills orphans using tmux session verification.
-// This kills ALL Claude processes not in any gt-* or hq-* tmux session.
+// This kills ALL Claude processes not in any ms-* or hq-* tmux session.
 func runOrphansKillProcessesAggressive() error {
 	zombies, err := util.FindZombieClaudeProcesses()
 	if err != nil {

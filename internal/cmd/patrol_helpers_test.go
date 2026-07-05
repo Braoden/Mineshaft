@@ -56,8 +56,8 @@ func TestBuildWitnessPatrolVars_InjectsRigAndPrefix(t *testing.T) {
 	if got := varMap["rig"]; got != "testrig" {
 		t.Errorf("rig = %q, want %q", got, "testrig")
 	}
-	if got := varMap["prefix"]; got != "gt" {
-		t.Errorf("prefix = %q, want %q (default fallback)", got, "gt")
+	if got := varMap["prefix"]; got != "ms" {
+		t.Errorf("prefix = %q, want %q (default fallback)", got, "ms")
 	}
 }
 
@@ -155,7 +155,7 @@ case "$cmd" in
     echo "bd test"
     ;;
   show)
-    printf '%s\n' '[{"id":"gt-testrig-refinery","title":"Refinery","issue_type":"task","labels":["gt:agent","safety_stop:hq-vmrwr"],"status":"open","description":"role_type: refinery\nrig: testrig\nagent_state: idle"}]'
+    printf '%s\n' '[{"id":"ms-testrig-refinery","title":"Refinery","issue_type":"task","labels":["ms:agent","safety_stop:hq-vmrwr"],"status":"open","description":"role_type: refinery\nrig: testrig\nagent_state: idle"}]'
     ;;
   *)
     exit 0
@@ -916,7 +916,7 @@ func TestFindActivePatrolMultiple(t *testing.T) {
 
 	// Stale patrol cleanup is not guaranteed when an active patrol is found —
 	// findActivePatrol breaks early on active discovery to prevent N+1 Dolt queries
-	// (gt-18dzn6p). Remaining stale beads are cleaned by burnPreviousPatrolWisps
+	// (ms-18dzn6p). Remaining stale beads are cleaned by burnPreviousPatrolWisps
 	// when the patrol cycle ends. Verify stale beads are either closed or still hooked
 	// (not left in an intermediate broken state).
 	for _, id := range []string{stale1, stale2} {
@@ -932,7 +932,7 @@ func TestFindActivePatrolMultiple(t *testing.T) {
 
 // TestFindActivePatrol_StaleCleanupCapped verifies that when many stale patrols
 // accumulate with no active patrol, cleanup is capped at maxStalePurgePerRun per call
-// to prevent overwhelming Dolt with sequential write queries (gt-18dzn6p).
+// to prevent overwhelming Dolt with sequential write queries (ms-18dzn6p).
 func TestFindActivePatrol_StaleCleanupCapped(t *testing.T) {
 	requireBd(t)
 	tmpDir, b := setupPatrolTestDB(t)

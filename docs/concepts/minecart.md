@@ -6,16 +6,16 @@ Minecarts are the primary unit for tracking batched work across rigs.
 
 ```bash
 # Create a minecart tracking some issues
-gt minecart create "Feature X" gt-abc gt-def --notify boss
+ms minecart create "Feature X" ms-abc ms-def --notify boss
 
 # Check progress
-gt minecart status hq-cv-abc
+ms minecart status hq-cv-abc
 
 # List active minecarts (the dashboard)
-gt minecart list
+ms minecart list
 
 # See all minecarts including landed ones
-gt minecart list --all
+ms minecart list --all
 ```
 
 ## Concept
@@ -31,7 +31,7 @@ so you can see when it lands and what was included.
             │            │            │
             ▼            ▼            ▼
        ┌─────────┐  ┌─────────┐  ┌─────────┐
-       │ gt-xyz  │  │ gt-def  │  │ bd-abc  │
+       │ ms-xyz  │  │ ms-def  │  │ bd-abc  │
        │ mineshaft │  │ mineshaft │  │  beads  │
        └────┬────┘  └────┬────┘  └────┬────┘
             │            │            │
@@ -82,35 +82,35 @@ Adding issues to a closed minecart reopens it automatically.
 
 ```bash
 # Track multiple issues across rigs
-gt minecart create "Deploy v2.0" gt-abc bd-xyz --notify mineshaft/joe
+ms minecart create "Deploy v2.0" ms-abc bd-xyz --notify mineshaft/joe
 
 # Track a single issue (still creates minecart for dashboard visibility)
-gt minecart create "Fix auth bug" gt-auth-fix
+ms minecart create "Fix auth bug" ms-auth-fix
 
 # With default notification (from config)
-gt minecart create "Feature X" gt-a gt-b gt-c
+ms minecart create "Feature X" ms-a ms-b ms-c
 ```
 
 ### Add Issues
 
 ```bash
 # Add issues to existing minecart
-gt minecart add hq-cv-abc gt-new-issue
-gt minecart add hq-cv-abc gt-issue1 gt-issue2 gt-issue3
+ms minecart add hq-cv-abc ms-new-issue
+ms minecart add hq-cv-abc ms-issue1 ms-issue2 ms-issue3
 
 # Adding to closed minecart requires reopening first
 bd update hq-cv-abc --status=open
-gt minecart add hq-cv-abc gt-followup-fix
+ms minecart add hq-cv-abc ms-followup-fix
 ```
 
 ### Check Status
 
 ```bash
 # Show issues and active workers (the swarm)
-gt minecart status hq-abc
+ms minecart status hq-abc
 
 # All active minecarts (the dashboard)
-gt minecart status
+ms minecart status
 ```
 
 Example output:
@@ -122,26 +122,26 @@ Example output:
   Created:   2025-12-30T10:15:00-08:00
 
   Tracked Issues:
-    ✓ gt-xyz: Update API endpoint [task]
+    ✓ ms-xyz: Update API endpoint [task]
     ✓ bd-abc: Fix validation [bug]
     ○ bd-ghi: Update docs [task]
-    ○ gt-jkl: Deploy to prod [task]
+    ○ ms-jkl: Deploy to prod [task]
 ```
 
 ### List Minecarts (Dashboard)
 
 ```bash
 # Active minecarts (default) - the primary attention view
-gt minecart list
+ms minecart list
 
 # All minecarts including landed
-gt minecart list --all
+ms minecart list --all
 
 # Only landed minecarts
-gt minecart list --status=closed
+ms minecart list --status=closed
 
 # JSON output
-gt minecart list --json
+ms minecart list --json
 ```
 
 Example output:
@@ -151,7 +151,7 @@ Minecarts
   🚚 hq-cv-w3nm6: Feature X ●
   🚚 hq-cv-abc12: Bug fixes ●
 
-Use 'gt minecart status <id>' for detailed view.
+Use 'ms minecart status <id>' for detailed view.
 ```
 
 ## Notifications
@@ -160,10 +160,10 @@ When a minecart lands (all tracked issues closed), subscribers are notified:
 
 ```bash
 # Explicit subscriber
-gt minecart create "Feature X" gt-abc --notify mineshaft/joe
+ms minecart create "Feature X" ms-abc --notify mineshaft/joe
 
 # Multiple subscribers
-gt minecart create "Feature X" gt-abc --notify overseer/ --notify --human
+ms minecart create "Feature X" ms-abc --notify overseer/ --notify --human
 ```
 
 Notification content:
@@ -171,8 +171,8 @@ Notification content:
 🚚 Minecart Landed: Deploy v2.0 (hq-cv-abc)
 
 Issues (3):
-  ✓ gt-xyz: Update API endpoint
-  ✓ gt-def: Add validation
+  ✓ ms-xyz: Update API endpoint
+  ✓ ms-def: Add validation
   ✓ bd-abc: Update docs
 
 Duration: 2h 15m
@@ -186,13 +186,13 @@ child implementation beads.
 
 ```bash
 # Auto-discover children from epic
-gt minecart create --from-epic gt-epic-abc
+ms minecart create --from-epic ms-epic-abc
 
 # Override the minecart name (defaults to epic title)
-gt minecart create --from-epic gt-epic-abc "Custom minecart name"
+ms minecart create --from-epic ms-epic-abc "Custom minecart name"
 
 # Combine with other flags
-gt minecart create --from-epic gt-epic-abc --owned --merge=direct
+ms minecart create --from-epic ms-epic-abc --owned --merge=direct
 ```
 
 **How it works:**
@@ -208,7 +208,7 @@ tracked directly. Only leaf work items appear in the minecart.
 When you sling a single issue without an existing minecart:
 
 ```bash
-gt sling bd-xyz beads/amber
+ms sling bd-xyz beads/amber
 ```
 
 This auto-creates a minecart so all work appears in the dashboard:
@@ -224,23 +224,23 @@ Minecarts live in town-level beads (`hq-cv-*` prefix) and can track issues from 
 
 ```bash
 # Track issues from multiple rigs
-gt minecart create "Full-stack feature" \
-  gt-frontend-abc \
-  gt-backend-def \
+ms minecart create "Full-stack feature" \
+  ms-frontend-abc \
+  ms-backend-def \
   bd-docs-xyz
 ```
 
 The `tracks` relation is:
 - **Non-blocking**: doesn't affect issue workflow
 - **Additive**: can add issues anytime
-- **Cross-rig**: minecart in hq-*, issues in gt-*, bd-*, etc.
+- **Cross-rig**: minecart in hq-*, issues in ms-*, bd-*, etc.
 
 ## Minecart vs Rig Status
 
 | View | Scope | Shows |
 |------|-------|-------|
-| `gt minecart status [id]` | Cross-rig | Issues tracked by minecart + workers |
-| `gt rig status <rig>` | Single rig | All workers in rig + their minecart membership |
+| `ms minecart status [id]` | Cross-rig | Issues tracked by minecart + workers |
+| `ms rig status <rig>` | Single rig | All workers in rig + their minecart membership |
 
 Use minecarts for "what's the status of this batch of work?"
 Use rig status for "what's everyone in this rig working on?"

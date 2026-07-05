@@ -13,8 +13,8 @@ needs_pre_sync = false
 start_command = "exec claude --dangerously-skip-permissions"
 
 [env]
-GT_ROLE = "overseer"
-GT_SCOPE = "town"
+MS_ROLE = "overseer"
+MS_SCOPE = "town"
 
 [health]
 ping_timeout = "30s"

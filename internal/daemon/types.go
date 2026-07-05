@@ -201,8 +201,8 @@ type DaemonPatrolConfig struct {
 	Heartbeat *PatrolConfig     `json:"heartbeat,omitempty"`
 	Patrols   *PatrolsConfig    `json:"patrols,omitempty"`
 	// Env holds environment variables to set at startup.
-	// Propagated to all sessions spawned by the daemon and read by gt up/overseer attach.
-	// Example: {"GT_DOLT_PORT": "43211"}
+	// Propagated to all sessions spawned by the daemon and read by ms up/overseer attach.
+	// Example: {"MS_DOLT_PORT": "43211"}
 	Env       map[string]string `json:"env,omitempty"`
 }
 

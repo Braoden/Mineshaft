@@ -53,7 +53,7 @@ exit 0
 	}
 }
 
-// Regression test for gt-d61:
+// Regression test for ms-d61:
 // even when Supervisor is in crash-loop state, stale-heartbeat fallback still kills session.
 func TestCheckSupervisorHeartbeat_RespectsCrashLoopGuard(t *testing.T) {
 	if runtime.GOOS == "windows" {

@@ -17,7 +17,7 @@ function getPlatformInfo() {
 
   let platformName;
   let archName;
-  let binaryName = 'gt';
+  let binaryName = 'ms';
 
   // Map Node.js platform names to GitHub release names
   switch (platform) {
@@ -29,7 +29,7 @@ function getPlatformInfo() {
       break;
     case 'win32':
       platformName = 'windows';
-      binaryName = 'gt.exe';
+      binaryName = 'ms.exe';
       break;
     default:
       throw new Error(`Unsupported platform: ${platform}`);
@@ -157,7 +157,7 @@ async function install() {
   try {
     const { platformName, archName, binaryName } = getPlatformInfo();
 
-    console.log(`Installing gt v${VERSION} for ${platformName}-${archName}...`);
+    console.log(`Installing ms v${VERSION} for ${platformName}-${archName}...`);
 
     // Construct download URL
     // Format: https://github.com/steveyegge/mineshaft/releases/download/v0.1.0/mineshaft_0.1.0_darwin_amd64.tar.gz
@@ -177,7 +177,7 @@ async function install() {
     }
 
     // Download the archive
-    console.log(`Downloading gt binary...`);
+    console.log(`Downloading ms binary...`);
     await downloadFile(downloadUrl, archivePath);
 
     // Extract the archive based on platform
@@ -193,13 +193,13 @@ async function install() {
     // Verify the binary works
     try {
       const output = execSync(`"${binaryPath}" version`, { encoding: 'utf8' });
-      console.log(`gt installed successfully: ${output.trim()}`);
+      console.log(`ms installed successfully: ${output.trim()}`);
     } catch (err) {
       console.warn('Warning: Could not verify binary version');
     }
 
   } catch (err) {
-    console.error(`Error installing gt: ${err.message}`);
+    console.error(`Error installing ms: ${err.message}`);
     console.error('');
     console.error('Installation failed. You can try:');
     console.error('1. Installing manually from: https://github.com/steveyegge/mineshaft/releases');

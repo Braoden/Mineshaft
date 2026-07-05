@@ -9,7 +9,7 @@ import (
 func TestHasShellIntegration_DirectMarker(t *testing.T) {
 	dir := t.TempDir()
 	rc := filepath.Join(dir, ".zshrc")
-	os.WriteFile(rc, []byte("# --- Mineshaft Integration (managed by gt) ---\nsource hook.sh\n# --- End Mineshaft ---\n"), 0644)
+	os.WriteFile(rc, []byte("# --- Mineshaft Integration (managed by ms) ---\nsource hook.sh\n# --- End Mineshaft ---\n"), 0644)
 
 	if !hasShellIntegration(rc) {
 		t.Error("expected integration to be detected with marker in RC file")
@@ -37,7 +37,7 @@ func TestHasShellIntegration_MarkerInSourcedFile(t *testing.T) {
 
 	// Sourced file has the marker
 	sub := filepath.Join(dir, "profile.zsh")
-	os.WriteFile(sub, []byte("# --- Mineshaft Integration (managed by gt) ---\n"), 0644)
+	os.WriteFile(sub, []byte("# --- Mineshaft Integration (managed by ms) ---\n"), 0644)
 
 	rc := filepath.Join(dir, ".zshrc")
 	os.WriteFile(rc, []byte("source "+sub+"\n"), 0644)
@@ -69,7 +69,7 @@ func TestHasShellIntegration_VariableExpansion(t *testing.T) {
 
 	sub := filepath.Join(dir, "zsh", "common.zsh")
 	os.MkdirAll(filepath.Dir(sub), 0755)
-	os.WriteFile(sub, []byte("# --- Mineshaft Integration (managed by gt) ---\n"), 0644)
+	os.WriteFile(sub, []byte("# --- Mineshaft Integration (managed by ms) ---\n"), 0644)
 
 	rc := filepath.Join(dir, ".zshrc")
 	content := `export DOTFILES_DIR="` + dir + `"
@@ -113,7 +113,7 @@ func TestHasShellIntegration_TildeExpansion(t *testing.T) {
 	defer os.RemoveAll(testDir)
 
 	sub := filepath.Join(testDir, "integration.zsh")
-	os.WriteFile(sub, []byte("# --- Mineshaft Integration (managed by gt) ---\n"), 0644)
+	os.WriteFile(sub, []byte("# --- Mineshaft Integration (managed by ms) ---\n"), 0644)
 
 	rc := filepath.Join(dir, ".zshrc")
 	os.WriteFile(rc, []byte("source ~/"+filepath.Base(testDir)+"/integration.zsh\n"), 0644)

@@ -54,9 +54,9 @@ func (m *Model) render() string {
 func (m *Model) renderHeader() string {
 	var title string
 	if m.viewMode == ViewProblems {
-		title = TitleStyle.Render("GT Feed") + " " + ProblemsModeStyle.Render("[PROBLEMS]")
+		title = TitleStyle.Render("MS Feed") + " " + ProblemsModeStyle.Render("[PROBLEMS]")
 	} else {
-		title = TitleStyle.Render("GT Feed")
+		title = TitleStyle.Render("MS Feed")
 	}
 
 	// Show summary stats on the right
@@ -134,7 +134,7 @@ func (m *Model) renderProblemsContent() string {
 	}
 
 	if len(m.problemAgents) == 0 {
-		return AgentIdleStyle.Render("No agents detected. Run gt feed in a Mineshaft workspace with active agents.")
+		return AgentIdleStyle.Render("No agents detected. Run ms feed in a Mineshaft workspace with active agents.")
 	}
 
 	// Count problems
@@ -208,7 +208,7 @@ func (m *Model) renderProblemsContent() string {
 
 // renderProblemAgent renders a single problem agent line
 func (m *Model) renderProblemAgent(agent *ProblemAgent, selected bool) string {
-	// Format: "▶miner-12  🔥 GUPP!    45m (violation)  gt-xyz89   myproject"
+	// Format: "▶miner-12  🔥 GUPP!    45m (violation)  ms-xyz89   myproject"
 	prefix := "  "
 	if selected {
 		prefix = SelectedStyle.Render("▶ ")

@@ -157,8 +157,8 @@ func TestFindStrandedMinecarts_MixedMinecarts(t *testing.T) {
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	// Routes needed so isSlingableBead can resolve gt- prefix to a rig
-	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`+"\n"), 0644); err != nil {
+	// Routes needed so isSlingableBead can resolve ms- prefix to a rig
+	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(`{"prefix":"ms-","path":"mineshaft/overseer/rig"}`+"\n"), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
 
@@ -188,7 +188,7 @@ case "$pos0" in
         echo '[]'
         ;;
       *"issue_id = 'hq-feed-mix'"*)
-        echo '[{"depends_on_id":"gt-ready1"}]'
+        echo '[{"depends_on_id":"ms-ready1"}]'
         ;;
       *)
         echo '[]'
@@ -203,7 +203,7 @@ case "$pos0" in
         echo '[]'
         ;;
       hq-feed-mix)
-        echo '[{"id":"gt-ready1","title":"Ready issue","status":"open","issue_type":"task","assignee":"","dependency_type":"tracks"}]'
+        echo '[{"id":"ms-ready1","title":"Ready issue","status":"open","issue_type":"task","assignee":"","dependency_type":"tracks"}]'
         ;;
       *)
         echo '[]'
@@ -213,7 +213,7 @@ case "$pos0" in
     ;;
   show)
     # Return issue details for any show query
-    echo '[{"id":"gt-ready1","title":"Ready issue","status":"open","issue_type":"task","assignee":"","blocked_by":[],"blocked_by_count":0,"dependencies":[]}]'
+    echo '[{"id":"ms-ready1","title":"Ready issue","status":"open","issue_type":"task","assignee":"","blocked_by":[],"blocked_by_count":0,"dependencies":[]}]'
     exit 0
     ;;
   *)
@@ -268,8 +268,8 @@ esac
 	if feedable.TrackedCount != 1 {
 		t.Errorf("feedable minecart TrackedCount = %d, want 1", feedable.TrackedCount)
 	}
-	if len(feedable.ReadyIssues) != 1 || feedable.ReadyIssues[0] != "gt-ready1" {
-		t.Errorf("feedable minecart ReadyIssues = %v, want [gt-ready1]", feedable.ReadyIssues)
+	if len(feedable.ReadyIssues) != 1 || feedable.ReadyIssues[0] != "ms-ready1" {
+		t.Errorf("feedable minecart ReadyIssues = %v, want [ms-ready1]", feedable.ReadyIssues)
 	}
 
 	// Verify JSON encoding shape — empty slice encodes as [] not null
@@ -301,7 +301,7 @@ func TestFindStrandedMinecarts_StuckMinecart(t *testing.T) {
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`+"\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(`{"prefix":"ms-","path":"mineshaft/overseer/rig"}`+"\n"), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
 
@@ -324,17 +324,17 @@ case "$pos0" in
     ;;
   sql)
     # bdDepListRawIDs: return tracked bead IDs for hq-stuck1
-    echo '[{"depends_on_id":"gt-busy1"},{"depends_on_id":"gt-busy2"}]'
+    echo '[{"depends_on_id":"ms-busy1"},{"depends_on_id":"ms-busy2"}]'
     exit 0
     ;;
   dep)
     # All tracked issues are open but blocked — none are ready
-    echo '[{"id":"gt-busy1","title":"Blocked issue 1","status":"open","issue_type":"task","assignee":"","dependency_type":"tracks"},{"id":"gt-busy2","title":"Blocked issue 2","status":"open","issue_type":"task","assignee":"","dependency_type":"tracks"}]'
+    echo '[{"id":"ms-busy1","title":"Blocked issue 1","status":"open","issue_type":"task","assignee":"","dependency_type":"tracks"},{"id":"ms-busy2","title":"Blocked issue 2","status":"open","issue_type":"task","assignee":"","dependency_type":"tracks"}]'
     exit 0
     ;;
   show)
     # Both issues have blockers so isReadyIssue returns false
-    echo '[{"id":"gt-busy1","title":"Blocked issue 1","status":"open","issue_type":"task","assignee":"","blocked_by":["gt-blocker1"],"blocked_by_count":1,"dependencies":[]},{"id":"gt-busy2","title":"Blocked issue 2","status":"open","issue_type":"task","assignee":"","blocked_by":["gt-blocker1"],"blocked_by_count":1,"dependencies":[]}]'
+    echo '[{"id":"ms-busy1","title":"Blocked issue 1","status":"open","issue_type":"task","assignee":"","blocked_by":["ms-blocker1"],"blocked_by_count":1,"dependencies":[]},{"id":"ms-busy2","title":"Blocked issue 2","status":"open","issue_type":"task","assignee":"","blocked_by":["ms-blocker1"],"blocked_by_count":1,"dependencies":[]}]'
     exit 0
     ;;
   *)

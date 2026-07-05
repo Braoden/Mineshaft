@@ -14,10 +14,10 @@ func TestAssigneeToSessionName(t *testing.T) {
 	}{
 		{"supervisor", "hq-supervisor"},
 		{"overseer", "hq-overseer"},
-		{"mineshaft/witness", "gt-witness"},
-		{"mineshaft/refinery", "gt-refinery"},
-		{"mineshaft/miners/max", "gt-max"},
-		{"mineshaft/crew/joe", "gt-crew-joe"},
+		{"mineshaft/witness", "ms-witness"},
+		{"mineshaft/refinery", "ms-refinery"},
+		{"mineshaft/miners/max", "ms-max"},
+		{"mineshaft/crew/joe", "ms-crew-joe"},
 		{"", ""},
 		{"unknown", ""},
 		{"mineshaft/unknown/agent", ""},
@@ -253,7 +253,7 @@ func TestDefaultStaleHookConfig(t *testing.T) {
 
 func TestStaleHookResult_PartialWorkFields(t *testing.T) {
 	result := &StaleHookResult{
-		BeadID:        "gt-abc",
+		BeadID:        "ms-abc",
 		Title:         "test bead",
 		Assignee:      "mineshaft/miners/max",
 		PartialWork:   true,

@@ -17,7 +17,7 @@ import (
 //
 // Session existence is controlled via env vars: TMUX_HAS_<name> = "1"
 // where <name> has dashes replaced with underscores. For example,
-// TMUX_HAS_gt_witness=1 makes "gt-witness" appear to exist.
+// TMUX_HAS_gt_witness=1 makes "ms-witness" appear to exist.
 func writeFakeTmuxGhost(t *testing.T, dir string) {
 	t.Helper()
 	script := `#!/usr/bin/env bash
@@ -183,35 +183,35 @@ func TestKillDefaultPrefixGhosts_EmptyRegistry(t *testing.T) {
 func TestKillDefaultPrefixGhosts_GTIsLegitimate(t *testing.T) {
 	env := setupGhostTest(t)
 
-	// Register mineshaft with "gt" prefix — makes gt-* sessions legitimate.
+	// Register mineshaft with "ms" prefix — makes ms-* sessions legitimate.
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "mineshaft")
+	reg.Register("ms", "mineshaft")
 	session.SetDefaultRegistry(reg)
 
-	// Even if gt-witness exists, it should NOT be killed.
-	env.addSessions(t, "gt-witness", "gt-refinery")
+	// Even if ms-witness exists, it should NOT be killed.
+	env.addSessions(t, "ms-witness", "ms-refinery")
 
 	env.daemon.killDefaultPrefixGhosts()
 
 	kills := readKills(t, env.tmuxLog)
 	if len(kills) > 0 {
-		t.Errorf("expected no kills when gt is legitimate, got: %v", kills)
+		t.Errorf("expected no kills when ms is legitimate, got: %v", kills)
 	}
 	if strings.Contains(env.logBuf.String(), "Killing") {
-		t.Error("should not kill anything when a rig owns the gt prefix")
+		t.Error("should not kill anything when a rig owns the ms prefix")
 	}
 }
 
 func TestKillDefaultPrefixGhosts_KillsGhostPatrolSessions(t *testing.T) {
 	env := setupGhostTest(t)
 
-	// Register a rig with non-gt prefix. No rig owns "gt".
+	// Register a rig with non-ms prefix. No rig owns "ms".
 	reg := session.NewPrefixRegistry()
 	reg.Register("ti", "titanium")
 	session.SetDefaultRegistry(reg)
 
-	// Ghost sessions exist with default "gt" prefix.
-	env.addSessions(t, "gt-witness", "gt-refinery")
+	// Ghost sessions exist with default "ms" prefix.
+	env.addSessions(t, "ms-witness", "ms-refinery")
 
 	env.daemon.killDefaultPrefixGhosts()
 
@@ -223,18 +223,18 @@ func TestKillDefaultPrefixGhosts_KillsGhostPatrolSessions(t *testing.T) {
 	for _, k := range kills {
 		killSet[k] = true
 	}
-	if !killSet["gt-witness"] {
-		t.Error("expected gt-witness to be killed")
+	if !killSet["ms-witness"] {
+		t.Error("expected ms-witness to be killed")
 	}
-	if !killSet["gt-refinery"] {
-		t.Error("expected gt-refinery to be killed")
+	if !killSet["ms-refinery"] {
+		t.Error("expected ms-refinery to be killed")
 	}
 }
 
 func TestKillDefaultPrefixGhosts_NoKillWhenGhostsAbsent(t *testing.T) {
 	env := setupGhostTest(t)
 
-	// Non-gt registry but no ghost sessions exist.
+	// Non-ms registry but no ghost sessions exist.
 	reg := session.NewPrefixRegistry()
 	reg.Register("ti", "titanium")
 	session.SetDefaultRegistry(reg)
@@ -252,7 +252,7 @@ func TestKillDefaultPrefixGhosts_NoKillWhenGhostsAbsent(t *testing.T) {
 func TestKillDefaultPrefixGhosts_MinerDuplicate_Killed(t *testing.T) {
 	env := setupGhostTest(t)
 
-	// Register rig with non-gt prefix.
+	// Register rig with non-ms prefix.
 	reg := session.NewPrefixRegistry()
 	reg.Register("ti", "titanium")
 	session.SetDefaultRegistry(reg)
@@ -264,21 +264,21 @@ func TestKillDefaultPrefixGhosts_MinerDuplicate_Killed(t *testing.T) {
 	}
 
 	// Both ghost and correct sessions exist → ghost is a confirmed duplicate.
-	env.addSessions(t, "gt-furiosa", "ti-furiosa")
+	env.addSessions(t, "ms-furiosa", "ti-furiosa")
 
 	env.daemon.killDefaultPrefixGhosts()
 
 	kills := readKills(t, env.tmuxLog)
 	found := false
 	for _, k := range kills {
-		if k == "gt-furiosa" {
+		if k == "ms-furiosa" {
 			found = true
 		}
 	}
 	if !found {
-		t.Errorf("expected gt-furiosa to be killed (duplicate), kills: %v", kills)
+		t.Errorf("expected ms-furiosa to be killed (duplicate), kills: %v", kills)
 	}
-	if !strings.Contains(env.logBuf.String(), "Killing duplicate ghost miner session gt-furiosa") {
+	if !strings.Contains(env.logBuf.String(), "Killing duplicate ghost miner session ms-furiosa") {
 		t.Errorf("expected duplicate kill log message, got: %s", env.logBuf.String())
 	}
 }
@@ -286,7 +286,7 @@ func TestKillDefaultPrefixGhosts_MinerDuplicate_Killed(t *testing.T) {
 func TestKillDefaultPrefixGhosts_MinerSolo_NotKilled(t *testing.T) {
 	env := setupGhostTest(t)
 
-	// Register rig with non-gt prefix.
+	// Register rig with non-ms prefix.
 	reg := session.NewPrefixRegistry()
 	reg.Register("ti", "titanium")
 	session.SetDefaultRegistry(reg)
@@ -299,14 +299,14 @@ func TestKillDefaultPrefixGhosts_MinerSolo_NotKilled(t *testing.T) {
 
 	// Only ghost session exists — correct one is absent.
 	// Should log warning but NOT kill (may have active work).
-	env.addSessions(t, "gt-furiosa")
+	env.addSessions(t, "ms-furiosa")
 
 	env.daemon.killDefaultPrefixGhosts()
 
 	kills := readKills(t, env.tmuxLog)
 	for _, k := range kills {
-		if k == "gt-furiosa" {
-			t.Error("should NOT kill solo ghost miner gt-furiosa (may have active work)")
+		if k == "ms-furiosa" {
+			t.Error("should NOT kill solo ghost miner ms-furiosa (may have active work)")
 		}
 	}
 	if !strings.Contains(env.logBuf.String(), "not killing") {
@@ -317,9 +317,9 @@ func TestKillDefaultPrefixGhosts_MinerSolo_NotKilled(t *testing.T) {
 func TestKillDefaultPrefixGhosts_MinerSkippedWhenRigUsesDefaultPrefix(t *testing.T) {
 	env := setupGhostTest(t)
 
-	// If any rig uses "gt", gtIsLegitimate is true and the whole function bails.
+	// If any rig uses "ms", gtIsLegitimate is true and the whole function bails.
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "mineshaft")
+	reg.Register("ms", "mineshaft")
 	reg.Register("ti", "titanium")
 	session.SetDefaultRegistry(reg)
 
@@ -331,13 +331,13 @@ func TestKillDefaultPrefixGhosts_MinerSkippedWhenRigUsesDefaultPrefix(t *testing
 		t.Fatal(err)
 	}
 
-	env.addSessions(t, "gt-alice", "gt-bob")
+	env.addSessions(t, "ms-alice", "ms-bob")
 
 	env.daemon.killDefaultPrefixGhosts()
 
 	// gtIsLegitimate should cause early return — nothing killed.
 	kills := readKills(t, env.tmuxLog)
 	if len(kills) > 0 {
-		t.Errorf("expected no kills when a rig owns gt prefix, got: %v", kills)
+		t.Errorf("expected no kills when a rig owns ms prefix, got: %v", kills)
 	}
 }

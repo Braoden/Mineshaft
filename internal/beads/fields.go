@@ -16,15 +16,15 @@ type AttachmentFields struct {
 	AttachedMolecule string   // Root issue ID of the attached molecule
 	AttachedFormula  string   // Formula name (e.g., "mol-miner-work") for inline step display
 	AttachedAt       string   // ISO 8601 timestamp when attached
-	AttachedArgs     string   // Natural language args passed via gt sling --args (no-tmux mode)
-	AttachedVars     []string // Formula variables passed via gt sling --var
+	AttachedArgs     string   // Natural language args passed via ms sling --args (no-tmux mode)
+	AttachedVars     []string // Formula variables passed via ms sling --var
 	DispatchedBy     string   // Agent ID that dispatched this work (for completion notification)
-	NoMerge          bool     // If true, gt done skips merge queue (for upstream PRs/human review)
+	NoMerge          bool     // If true, ms done skips merge queue (for upstream PRs/human review)
 	ReviewOnly       bool     // If true, assignee must evaluate and report back — no merge/commit/push
 	Mode             string   // Execution mode: "" (normal) or "ralph" (Ralph Wiggum loop)
 	MinecartID         string   // Minecart bead ID tracking this issue (e.g., "hq-cv-abc")
 	MergeStrategy    string   // Minecart merge strategy: "direct", "mr", "local", or "" (default = mr)
-	MinecartOwned      bool     // If true, minecart has gt:owned label (caller-managed lifecycle)
+	MinecartOwned      bool     // If true, minecart has ms:owned label (caller-managed lifecycle)
 	FormulaVars      string   // Newline-separated key=value pairs for formula template substitution
 }
 
@@ -266,8 +266,8 @@ type MinecartFields struct {
 	Molecule             string // Associated molecule/swarm ID
 	Merge                string // Merge strategy
 	BaseBranch           string // Target branch for miners (e.g., "feat/extraction-review")
-	Watchers             string // Comma-separated mail notification addresses (added via gt minecart watch)
-	NudgeWatchers        string // Comma-separated nudge notification addresses (added via gt minecart watch --nudge)
+	Watchers             string // Comma-separated mail notification addresses (added via ms minecart watch)
+	NudgeWatchers        string // Comma-separated nudge notification addresses (added via ms minecart watch --nudge)
 	CompletionNotifiedAt string // RFC3339 timestamp when completion notifications were claimed/sent
 }
 
@@ -618,9 +618,9 @@ func SetMinecartFields(issue *Issue, fields *MinecartFields) string {
 // MRFields holds the structured fields for a merge-request issue.
 // These fields are stored as key: value lines in the issue description.
 type MRFields struct {
-	Branch      string // Source branch name (e.g., "miner/Nux/gt-xyz")
-	Target      string // Target branch (e.g., "main" or "integration/gt-epic")
-	SourceIssue string // The work item being merged (e.g., "gt-xyz")
+	Branch      string // Source branch name (e.g., "miner/Nux/ms-xyz")
+	Target      string // Target branch (e.g., "main" or "integration/ms-epic")
+	SourceIssue string // The work item being merged (e.g., "ms-xyz")
 	Worker      string // Who did the work
 	Rig         string // Which rig
 	CommitSHA   string // HEAD commit SHA at submission time (GH#3032: dedup key)
@@ -920,7 +920,7 @@ func SetMRFields(issue *Issue, fields *MRFields) string {
 type RoleConfig struct {
 	// SessionPattern defines how to derive tmux session name.
 	// Supports placeholders: {rig}, {name}, {role}
-	// Examples: "hq-overseer", "hq-supervisor", "gt-{rig}-{role}", "gt-{rig}-{name}"
+	// Examples: "hq-overseer", "hq-supervisor", "ms-{rig}-{role}", "ms-{rig}-{name}"
 	SessionPattern string
 
 	// WorkDirPattern defines the working directory relative to town root.

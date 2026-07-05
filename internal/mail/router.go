@@ -40,7 +40,7 @@ const DefaultIdleNotifyTimeout = 3 * time.Second
 // - Rig-level (rig/miner) -> {townRoot}/{rig}/.beads
 type Router struct {
 	workDir  string // fallback directory to run bd commands in
-	townRoot string // town root directory (e.g., ~/gt)
+	townRoot string // town root directory (e.g., ~/ms)
 	tmux     *tmux.Tmux
 
 	// IdleNotifyTimeout controls how long to wait for a session to become
@@ -189,7 +189,7 @@ func (r *Router) expandAnnounce(announceName string) (*config.AnnounceConfig, er
 //
 // Uses workspace.Find which correctly handles nested workspaces by always
 // searching to the filesystem root and returning the outermost workspace.
-// Falls back to GT_TOWN_ROOT/GT_ROOT env vars when workspace.Find cannot
+// Falls back to MS_TOWN_ROOT/MS_ROOT env vars when workspace.Find cannot
 // locate a workspace (e.g., running from outside any workspace).
 func detectTownRoot(startDir string) string {
 	// workspace.Find handles nested workspaces correctly: it always searches
@@ -199,9 +199,9 @@ func detectTownRoot(startDir string) string {
 		return townRoot
 	}
 
-	// Fallback: try GT_TOWN_ROOT or GT_ROOT env vars when workspace detection
+	// Fallback: try MS_TOWN_ROOT or MS_ROOT env vars when workspace detection
 	// fails (e.g., running from outside any workspace directory).
-	for _, envName := range []string{"GT_TOWN_ROOT", "GT_ROOT"} {
+	for _, envName := range []string{"MS_TOWN_ROOT", "MS_ROOT"} {
 		if envRoot := os.Getenv(envName); envRoot != "" {
 			if ok, _ := workspace.IsWorkspace(envRoot); ok {
 				return envRoot
@@ -234,9 +234,9 @@ func (r *Router) ensureCustomTypes(beadsDir string) error {
 
 func (r *Router) buildLabels(msg *Message) []string {
 	var labels []string
-	labels = append(labels, "gt:message")
+	labels = append(labels, "ms:message")
 	if msg.Type == TypeEscalation {
-		labels = append(labels, "gt:escalation")
+		labels = append(labels, "ms:escalation")
 	}
 	labels = append(labels, "from:"+msg.From)
 	labels = append(labels, "msg-type:"+string(msg.Type))
@@ -340,7 +340,7 @@ func parseGroupAddress(address string) *ParsedGroup {
 	}
 }
 
-// agentBead represents an agent bead as returned by bd list --label=gt:agent.
+// agentBead represents an agent bead as returned by bd list --label=ms:agent.
 type agentBead struct {
 	ID          string   `json:"id"`
 	Title       string   `json:"title"`
@@ -355,7 +355,7 @@ type agentBead struct {
 // Handles multiple ID formats:
 //   - hq-overseer → overseer/
 //   - hq-supervisor → supervisor/
-//   - gt-mineshaft-crew-max → mineshaft/max (legacy)
+//   - ms-mineshaft-crew-max → mineshaft/max (legacy)
 //   - ppf-pyspark_pipeline_framework-miner-Toast → pyspark_pipeline_framework/Toast (rig prefix)
 func agentBeadToAddress(bead *agentBead) string {
 	if bead == nil {
@@ -378,22 +378,22 @@ func agentBeadToAddress(bead *agentBead) string {
 		return parseAgentAddressFromDescription(bead.Description)
 	}
 
-	// Handle gt- prefixed IDs (legacy format)
+	// Handle ms- prefixed IDs (legacy format)
 	// Also handle rig-prefixed IDs (e.g., ppf-) by extracting rig from description
 	var rest string
-	if strings.HasPrefix(id, "gt-") {
-		rest = strings.TrimPrefix(id, "gt-")
+	if strings.HasPrefix(id, "ms-") {
+		rest = strings.TrimPrefix(id, "ms-")
 	} else {
 		// For rig-prefixed IDs, extract rig and role from description
 		return parseRigAgentAddress(bead)
 	}
 
-	// Agent bead IDs include the role explicitly: gt-<rig>-<role>[-<name>]
+	// Agent bead IDs include the role explicitly: ms-<rig>-<role>[-<name>]
 	// Scan from right for known role markers to handle hyphenated rig names.
 	parts := strings.Split(rest, "-")
 
 	if len(parts) == 1 {
-		// Town-level: gt-overseer, gt-supervisor
+		// Town-level: ms-overseer, ms-supervisor
 		return parts[0] + "/"
 	}
 
@@ -413,7 +413,7 @@ func agentBeadToAddress(bead *agentBead) string {
 			}
 			return rig + "/"
 		case "dog":
-			// Town-level named: gt-dog-alpha
+			// Town-level named: ms-dog-alpha
 			if i+1 < len(parts) {
 				name := strings.Join(parts[i+1:], "-")
 				return "dog/" + name
@@ -496,7 +496,7 @@ func parseRigAgentAddressFromID(id string) string {
 		if idx := strings.Index(id, marker); idx >= 0 {
 			// Everything between prefix- and -role- is the rig name.
 			// The prefix ends at the first hyphen: <prefix>-<rig>-...
-			// But prefix could be multi-char (bd, gt, ppf), so we find
+			// But prefix could be multi-char (bd, ms, ppf), so we find
 			// the rig as the substring between the first hyphen and the role marker.
 			firstHyphen := strings.Index(id, "-")
 			if firstHyphen < 0 || firstHyphen >= idx {
@@ -744,7 +744,7 @@ func (r *Router) queryAgents(descContains string) []*agentBead {
 // queryAgentsInDir queries agent beads in a specific beads directory with optional description filtering.
 // Queries both the issues and wisps tables, merging results.
 func (r *Router) queryAgentsInDir(beadsDir, descContains string) ([]*agentBead, error) {
-	args := []string{"list", "--label=gt:agent", "--json", "--flat", "--limit=0"}
+	args := []string{"list", "--label=ms:agent", "--json", "--flat", "--limit=0"}
 
 	if descContains != "" {
 		args = append(args, "--desc-contains="+descContains)
@@ -809,7 +809,7 @@ func isAgentBeadEntry(a *agentBead) bool {
 		return true
 	}
 	for _, l := range a.Labels {
-		if l == "gt:agent" {
+		if l == "ms:agent" {
 			return true
 		}
 	}
@@ -1047,8 +1047,8 @@ func dirExists(path string) bool {
 // resolveCrewShorthand expands "crew/name" or "miners/name" shorthand addresses
 // to fully-qualified "rig/name" form by scanning the town filesystem.
 //
-// When gt agents displays crew workers, it shows them as "crew/bob" (without rig).
-// This function enables "gt mail send crew/bob" to work by finding the rig.
+// When ms agents displays crew workers, it shows them as "crew/bob" (without rig).
+// This function enables "ms mail send crew/bob" to work by finding the rig.
 //
 // Returns the normalized identity if exactly one rig contains the crew member,
 // or the original identity unchanged if zero or multiple rigs match (to let
@@ -1126,7 +1126,7 @@ func (r *Router) sendToSingle(msg *Message) error {
 	// Build labels for type, from/thread/reply-to/cc
 	labels := r.buildLabels(msg)
 
-	// Build command: bd create --assignee=<recipient> -d <body> --labels=gt:message,... -- <subject>
+	// Build command: bd create --assignee=<recipient> -d <body> --labels=ms:message,... -- <subject>
 	// Flags go first, then -- to end flag parsing, then the positional subject.
 	// This prevents subjects like "--help" from being parsed as flags (see web/api.go).
 	// Let bd auto-generate the ID with the correct database prefix.
@@ -1255,7 +1255,7 @@ func (r *Router) sendToQueue(msg *Message) error {
 
 	// Build labels for type, from/thread/reply-to/cc plus queue metadata
 	var labels []string
-	labels = append(labels, "gt:message")
+	labels = append(labels, "ms:message")
 	labels = append(labels, "from:"+msg.From)
 	labels = append(labels, "queue:"+queueName)
 	labels = append(labels, DeliverySendLabels()...)
@@ -1340,7 +1340,7 @@ func (r *Router) sendToAnnounce(msg *Message) error {
 	// broadcast messages have no single recipient to ack against. Subscriber
 	// fan-out copies go through sendToSingle which adds delivery tracking.
 	var labels []string
-	labels = append(labels, "gt:message")
+	labels = append(labels, "ms:message")
 	labels = append(labels, "from:"+msg.From)
 	labels = append(labels, "announce:"+announceName)
 	if msg.ThreadID != "" {
@@ -1426,7 +1426,7 @@ func (r *Router) sendToChannel(msg *Message) error {
 	// copy — it has no single recipient to ack. Subscriber fan-out copies go
 	// through sendToSingle which adds delivery tracking.
 	var labels []string
-	labels = append(labels, "gt:message")
+	labels = append(labels, "ms:message")
 	labels = append(labels, "from:"+msg.From)
 	labels = append(labels, "channel:"+channelName)
 	if msg.ThreadID != "" {
@@ -1522,9 +1522,9 @@ func (r *Router) pruneAnnounce(announceName string, retainCount int) error {
 	}
 
 	// Query existing messages in this announce channel
-	// Use bd list with labels filter to find messages with gt:message and announce:<name> labels
+	// Use bd list with labels filter to find messages with ms:message and announce:<name> labels
 	args := []string{"list",
-		"--labels=gt:message,announce:" + announceName,
+		"--labels=ms:message,announce:" + announceName,
 		"--json",
 		"--limit=0", // Get all
 		"--sort=created",
@@ -1590,7 +1590,7 @@ func (r *Router) GetMailbox(address string) (*Mailbox, error) {
 //
 // After a successful notification, a deferred reply-reminder nudge is also
 // enqueued (after a configurable delay, default 30s) to prompt the recipient
-// to reply via gt mail send rather than in chat.
+// to reply via ms mail send rather than in chat.
 //
 // Supports overseer/, supervisor/, rig/crew/name, rig/miners/name, and rig/name addresses.
 // Respects agent DND/muted state - skips notification if recipient has DND enabled.
@@ -1765,9 +1765,9 @@ func nudgePriorityForMailPriority(priority Priority) string {
 
 func formatNotificationMessage(msg *Message) string {
 	if msg.Type == TypeEscalation {
-		return fmt.Sprintf("🚨 Escalation mail from %s. ID: %s. Severity: %s. Subject: %s. Run 'gt mail read %s' or 'gt escalate ack %s'.", msg.From, msg.ThreadID, prioritySeverityLabel(msg.Priority), msg.Subject, msg.ThreadID, msg.ThreadID)
+		return fmt.Sprintf("🚨 Escalation mail from %s. ID: %s. Severity: %s. Subject: %s. Run 'ms mail read %s' or 'ms escalate ack %s'.", msg.From, msg.ThreadID, prioritySeverityLabel(msg.Priority), msg.Subject, msg.ThreadID, msg.ThreadID)
 	}
-	return fmt.Sprintf("📬 You have new mail from %s. Subject: %s. Run 'gt mail inbox' to read.", msg.From, msg.Subject)
+	return fmt.Sprintf("📬 You have new mail from %s. Subject: %s. Run 'ms mail inbox' to read.", msg.From, msg.Subject)
 }
 
 func prioritySeverityLabel(priority Priority) string {
@@ -1784,7 +1784,7 @@ func prioritySeverityLabel(priority Priority) string {
 }
 
 // enqueueReplyReminder queues a deferred nudge reminding the recipient to reply
-// via gt mail send rather than in chat. Best-effort: errors are logged, not returned.
+// via ms mail send rather than in chat. Best-effort: errors are logged, not returned.
 //
 // Skipped when:
 //   - No town root (can't use nudge queue)
@@ -1803,7 +1803,7 @@ func (r *Router) enqueueReplyReminder(msg *Message, sessionID string) {
 	}
 	reminder := nudge.QueuedNudge{
 		Sender:       "system",
-		Message:      fmt.Sprintf("Remember to reply to %s (subject: %q) via `gt mail send %s` — not in chat.", msg.From, msg.Subject, msg.From),
+		Message:      fmt.Sprintf("Remember to reply to %s (subject: %q) via `ms mail send %s` — not in chat.", msg.From, msg.Subject, msg.From),
 		Priority:     nudge.PriorityNormal,
 		Kind:         "reply-reminder",
 		ThreadID:     msg.ThreadID,
@@ -1902,8 +1902,8 @@ func addressToAgentBeadID(address string) string {
 
 // AddressToSessionIDs converts a mail address to possible tmux session IDs.
 // Returns multiple candidates since the canonical address format (rig/name)
-// doesn't distinguish between crew workers (gt-rig-crew-name) and miners
-// (gt-rig-name). The caller should try each and use the one that exists.
+// doesn't distinguish between crew workers (ms-rig-crew-name) and miners
+// (ms-rig-name). The caller should try each and use the one that exists.
 //
 // This supersedes the approach in PR #896 which only handled slash-to-dash
 // conversion but didn't address the crew/miner ambiguity.
@@ -1934,7 +1934,7 @@ func AddressToSessionIDs(address string) []string {
 	rigPrefix := session.PrefixFor(rig)
 
 	// If target already has crew/, miner/, or miners/ prefix, use it directly
-	// e.g., "mineshaft/crew/holden" → "gt-crew-holden"
+	// e.g., "mineshaft/crew/holden" → "ms-crew-holden"
 	if strings.HasPrefix(target, "crew/") {
 		crewName := strings.TrimPrefix(target, "crew/")
 		return []string{session.CrewSessionName(rigPrefix, crewName)}
@@ -1957,8 +1957,8 @@ func AddressToSessionIDs(address string) []string {
 	}
 
 	// For normalized addresses like "mineshaft/holden", try both:
-	// 1. Crew format: gt-crew-holden
-	// 2. Miner format: gt-holden
+	// 1. Crew format: ms-crew-holden
+	// 2. Miner format: ms-holden
 	// Return crew first since crew workers are more commonly missed.
 	return []string{
 		session.CrewSessionName(rigPrefix, target),    // <prefix>-crew-name

@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-// TestDoneCloseDescendantsWithChildren verifies that when gt done is called
+// TestDoneCloseDescendantsWithChildren verifies that when ms done is called
 // with a molecule that has children, closeDescendants closes the children
 // before the root molecule (edge case #1).
 func TestDoneCloseDescendantsWithChildren(t *testing.T) {
@@ -35,7 +35,7 @@ func TestDoneCloseDescendantsWithChildren(t *testing.T) {
 		t.Fatalf("mkdir mineshaft: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"mineshaft"}`,
+		`{"prefix":"ms-","path":"mineshaft"}`,
 		"",
 	}, "\n")
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routes), 0644); err != nil {
@@ -61,21 +61,21 @@ case "$cmd" in
   show)
     beadID="$1"
     case "$beadID" in
-      gt-mineshaft-miner-nux)
-        echo '[{"id":"gt-mineshaft-miner-nux","title":"Miner nux","status":"open","hook_bead":"gt-base-123","agent_state":"working"}]'
+      ms-mineshaft-miner-nux)
+        echo '[{"id":"ms-mineshaft-miner-nux","title":"Miner nux","status":"open","hook_bead":"ms-base-123","agent_state":"working"}]'
         ;;
-      gt-base-123)
-        echo '[{"id":"gt-base-123","title":"Base bead","status":"hooked","description":"attached_molecule: gt-wisp-xyz"}]'
+      ms-base-123)
+        echo '[{"id":"ms-base-123","title":"Base bead","status":"hooked","description":"attached_molecule: ms-wisp-xyz"}]'
         ;;
-      gt-wisp-xyz)
-        echo '[{"id":"gt-wisp-xyz","title":"mol-miner-work","status":"open","ephemeral":true}]'
+      ms-wisp-xyz)
+        echo '[{"id":"ms-wisp-xyz","title":"mol-miner-work","status":"open","ephemeral":true}]'
         ;;
     esac
     ;;
   list)
-    # Return children when listing with parent=gt-wisp-xyz
-    if echo "$*" | grep -q "parent=gt-wisp-xyz"; then
-      echo '[{"id":"gt-step-1","title":"Step 1","status":"open"},{"id":"gt-step-2","title":"Step 2","status":"open"}]'
+    # Return children when listing with parent=ms-wisp-xyz
+    if echo "$*" | grep -q "parent=ms-wisp-xyz"; then
+      echo '[{"id":"ms-step-1","title":"Step 1","status":"open"},{"id":"ms-step-2","title":"Step 2","status":"open"}]'
     else
       echo '[]'
     fi
@@ -100,10 +100,10 @@ exit 0
 	}
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv("GT_ROLE", "miner")
-	t.Setenv("GT_RIG", "mineshaft")
-	t.Setenv("GT_MINER", "nux")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_ROLE", "miner")
+	t.Setenv("MS_RIG", "mineshaft")
+	t.Setenv("MS_MINER", "nux")
+	t.Setenv("MS_CREW", "")
 	t.Setenv("TMUX_PANE", "")
 
 	cwd, err := os.Getwd()
@@ -116,7 +116,7 @@ exit 0
 	}
 
 	// Call updateAgentStateOnDone directly
-	updateAgentStateOnDone(filepath.Join(townRoot, "mineshaft"), townRoot, ExitCompleted, "gt-base-123")
+	updateAgentStateOnDone(filepath.Join(townRoot, "mineshaft"), townRoot, ExitCompleted, "ms-base-123")
 
 	// Verify close calls
 	closesBytes, err := os.ReadFile(closesLog)
@@ -133,31 +133,31 @@ exit 0
 	foundBase := false
 
 	for _, line := range closeLines {
-		if strings.Contains(line, "gt-step-1") {
+		if strings.Contains(line, "ms-step-1") {
 			foundStep1 = true
 		}
-		if strings.Contains(line, "gt-step-2") {
+		if strings.Contains(line, "ms-step-2") {
 			foundStep2 = true
 		}
-		if strings.Contains(line, "gt-wisp-xyz") {
+		if strings.Contains(line, "ms-wisp-xyz") {
 			foundWisp = true
 		}
-		if strings.Contains(line, "gt-base-123") {
+		if strings.Contains(line, "ms-base-123") {
 			foundBase = true
 		}
 	}
 
 	if !foundStep1 {
-		t.Errorf("child gt-step-1 was NOT closed\nClose calls:\n%s", closes)
+		t.Errorf("child ms-step-1 was NOT closed\nClose calls:\n%s", closes)
 	}
 	if !foundStep2 {
-		t.Errorf("child gt-step-2 was NOT closed\nClose calls:\n%s", closes)
+		t.Errorf("child ms-step-2 was NOT closed\nClose calls:\n%s", closes)
 	}
 	if !foundWisp {
-		t.Errorf("attached molecule gt-wisp-xyz was NOT closed\nClose calls:\n%s", closes)
+		t.Errorf("attached molecule ms-wisp-xyz was NOT closed\nClose calls:\n%s", closes)
 	}
 	if !foundBase {
-		t.Errorf("hooked bead gt-base-123 was NOT closed\nClose calls:\n%s", closes)
+		t.Errorf("hooked bead ms-base-123 was NOT closed\nClose calls:\n%s", closes)
 	}
 
 	// Verify order: children should be closed before wisp, wisp before base
@@ -167,16 +167,16 @@ exit 0
 	baseIdx := -1
 
 	for i, line := range closeLines {
-		if strings.Contains(line, "gt-step-1") {
+		if strings.Contains(line, "ms-step-1") {
 			step1Idx = i
 		}
-		if strings.Contains(line, "gt-step-2") {
+		if strings.Contains(line, "ms-step-2") {
 			step2Idx = i
 		}
-		if strings.Contains(line, "gt-wisp-xyz") {
+		if strings.Contains(line, "ms-wisp-xyz") {
 			wispIdx = i
 		}
-		if strings.Contains(line, "gt-base-123") {
+		if strings.Contains(line, "ms-base-123") {
 			baseIdx = i
 		}
 	}
@@ -194,7 +194,7 @@ exit 0
 	}
 }
 
-// TestDoneCloseDescendantsNoChildren verifies that gt done works correctly
+// TestDoneCloseDescendantsNoChildren verifies that ms done works correctly
 // when the molecule has no children - it should just close the molecule and
 // hooked bead without errors (edge case #2).
 func TestDoneCloseDescendantsNoChildren(t *testing.T) {
@@ -216,7 +216,7 @@ func TestDoneCloseDescendantsNoChildren(t *testing.T) {
 		t.Fatalf("mkdir mineshaft: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"mineshaft"}`,
+		`{"prefix":"ms-","path":"mineshaft"}`,
 		"",
 	}, "\n")
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routes), 0644); err != nil {
@@ -238,14 +238,14 @@ case "$cmd" in
   show)
     beadID="$1"
     case "$beadID" in
-      gt-mineshaft-miner-nux)
-        echo '[{"id":"gt-mineshaft-miner-nux","title":"Miner nux","status":"open","hook_bead":"gt-base-123","agent_state":"working"}]'
+      ms-mineshaft-miner-nux)
+        echo '[{"id":"ms-mineshaft-miner-nux","title":"Miner nux","status":"open","hook_bead":"ms-base-123","agent_state":"working"}]'
         ;;
-      gt-base-123)
-        echo '[{"id":"gt-base-123","title":"Base bead","status":"hooked","description":"attached_molecule: gt-wisp-xyz"}]'
+      ms-base-123)
+        echo '[{"id":"ms-base-123","title":"Base bead","status":"hooked","description":"attached_molecule: ms-wisp-xyz"}]'
         ;;
-      gt-wisp-xyz)
-        echo '[{"id":"gt-wisp-xyz","title":"mol-miner-work","status":"open","ephemeral":true}]'
+      ms-wisp-xyz)
+        echo '[{"id":"ms-wisp-xyz","title":"mol-miner-work","status":"open","ephemeral":true}]'
         ;;
     esac
     ;;
@@ -273,10 +273,10 @@ exit 0
 	}
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv("GT_ROLE", "miner")
-	t.Setenv("GT_RIG", "mineshaft")
-	t.Setenv("GT_MINER", "nux")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_ROLE", "miner")
+	t.Setenv("MS_RIG", "mineshaft")
+	t.Setenv("MS_MINER", "nux")
+	t.Setenv("MS_CREW", "")
 	t.Setenv("TMUX_PANE", "")
 
 	cwd, err := os.Getwd()
@@ -289,7 +289,7 @@ exit 0
 	}
 
 	// Should not error even though molecule has no children
-	updateAgentStateOnDone(filepath.Join(townRoot, "mineshaft"), townRoot, ExitCompleted, "gt-base-123")
+	updateAgentStateOnDone(filepath.Join(townRoot, "mineshaft"), townRoot, ExitCompleted, "ms-base-123")
 
 	// Verify close calls
 	closesBytes, err := os.ReadFile(closesLog)
@@ -304,19 +304,19 @@ exit 0
 	foundBase := false
 
 	for _, line := range closeLines {
-		if strings.Contains(line, "gt-wisp-xyz") {
+		if strings.Contains(line, "ms-wisp-xyz") {
 			foundWisp = true
 		}
-		if strings.Contains(line, "gt-base-123") {
+		if strings.Contains(line, "ms-base-123") {
 			foundBase = true
 		}
 	}
 
 	if !foundWisp {
-		t.Errorf("attached molecule gt-wisp-xyz was NOT closed\nClose calls:\n%s", closes)
+		t.Errorf("attached molecule ms-wisp-xyz was NOT closed\nClose calls:\n%s", closes)
 	}
 	if !foundBase {
-		t.Errorf("hooked bead gt-base-123 was NOT closed\nClose calls:\n%s", closes)
+		t.Errorf("hooked bead ms-base-123 was NOT closed\nClose calls:\n%s", closes)
 	}
 
 	// Should only have 2 close calls (wisp and base)
@@ -346,7 +346,7 @@ func TestDoneCloseDescendantsSomeAlreadyClosed(t *testing.T) {
 		t.Fatalf("mkdir mineshaft: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"mineshaft"}`,
+		`{"prefix":"ms-","path":"mineshaft"}`,
 		"",
 	}, "\n")
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routes), 0644); err != nil {
@@ -368,21 +368,21 @@ case "$cmd" in
   show)
     beadID="$1"
     case "$beadID" in
-      gt-mineshaft-miner-nux)
-        echo '[{"id":"gt-mineshaft-miner-nux","title":"Miner nux","status":"open","hook_bead":"gt-base-123","agent_state":"working"}]'
+      ms-mineshaft-miner-nux)
+        echo '[{"id":"ms-mineshaft-miner-nux","title":"Miner nux","status":"open","hook_bead":"ms-base-123","agent_state":"working"}]'
         ;;
-      gt-base-123)
-        echo '[{"id":"gt-base-123","title":"Base bead","status":"hooked","description":"attached_molecule: gt-wisp-xyz"}]'
+      ms-base-123)
+        echo '[{"id":"ms-base-123","title":"Base bead","status":"hooked","description":"attached_molecule: ms-wisp-xyz"}]'
         ;;
-      gt-wisp-xyz)
-        echo '[{"id":"gt-wisp-xyz","title":"mol-miner-work","status":"open","ephemeral":true}]'
+      ms-wisp-xyz)
+        echo '[{"id":"ms-wisp-xyz","title":"mol-miner-work","status":"open","ephemeral":true}]'
         ;;
     esac
     ;;
   list)
     # Return one open child and one already-closed child
-    if echo "$*" | grep -q "parent=gt-wisp-xyz"; then
-      echo '[{"id":"gt-step-open","title":"Step Open","status":"open"},{"id":"gt-step-closed","title":"Step Closed","status":"closed"}]'
+    if echo "$*" | grep -q "parent=ms-wisp-xyz"; then
+      echo '[{"id":"ms-step-open","title":"Step Open","status":"open"},{"id":"ms-step-closed","title":"Step Closed","status":"closed"}]'
     else
       echo '[]'
     fi
@@ -407,10 +407,10 @@ exit 0
 	}
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv("GT_ROLE", "miner")
-	t.Setenv("GT_RIG", "mineshaft")
-	t.Setenv("GT_MINER", "nux")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_ROLE", "miner")
+	t.Setenv("MS_RIG", "mineshaft")
+	t.Setenv("MS_MINER", "nux")
+	t.Setenv("MS_CREW", "")
 	t.Setenv("TMUX_PANE", "")
 
 	cwd, err := os.Getwd()
@@ -422,7 +422,7 @@ exit 0
 		t.Fatalf("chdir: %v", err)
 	}
 
-	updateAgentStateOnDone(filepath.Join(townRoot, "mineshaft"), townRoot, ExitCompleted, "gt-base-123")
+	updateAgentStateOnDone(filepath.Join(townRoot, "mineshaft"), townRoot, ExitCompleted, "ms-base-123")
 
 	// Verify close calls
 	closesBytes, err := os.ReadFile(closesLog)
@@ -432,38 +432,38 @@ exit 0
 	closes := string(closesBytes)
 	closeLines := strings.Split(strings.TrimSpace(closes), "\n")
 
-	// Should have closed: gt-step-open (not gt-step-closed since it's already closed), wisp, base
+	// Should have closed: ms-step-open (not ms-step-closed since it's already closed), wisp, base
 	foundOpen := false
 	foundClosed := false
 	foundWisp := false
 	foundBase := false
 
 	for _, line := range closeLines {
-		if strings.Contains(line, "gt-step-open") {
+		if strings.Contains(line, "ms-step-open") {
 			foundOpen = true
 		}
-		if strings.Contains(line, "gt-step-closed") {
+		if strings.Contains(line, "ms-step-closed") {
 			foundClosed = true
 		}
-		if strings.Contains(line, "gt-wisp-xyz") {
+		if strings.Contains(line, "ms-wisp-xyz") {
 			foundWisp = true
 		}
-		if strings.Contains(line, "gt-base-123") {
+		if strings.Contains(line, "ms-base-123") {
 			foundBase = true
 		}
 	}
 
 	if !foundOpen {
-		t.Errorf("open child gt-step-open was NOT closed\nClose calls:\n%s", closes)
+		t.Errorf("open child ms-step-open was NOT closed\nClose calls:\n%s", closes)
 	}
 	if foundClosed {
-		t.Errorf("already-closed child gt-step-closed SHOULD NOT have been closed again\nClose calls:\n%s", closes)
+		t.Errorf("already-closed child ms-step-closed SHOULD NOT have been closed again\nClose calls:\n%s", closes)
 	}
 	if !foundWisp {
-		t.Errorf("attached molecule gt-wisp-xyz was NOT closed\nClose calls:\n%s", closes)
+		t.Errorf("attached molecule ms-wisp-xyz was NOT closed\nClose calls:\n%s", closes)
 	}
 	if !foundBase {
-		t.Errorf("hooked bead gt-base-123 was NOT closed\nClose calls:\n%s", closes)
+		t.Errorf("hooked bead ms-base-123 was NOT closed\nClose calls:\n%s", closes)
 	}
 
 	// Should have exactly 3 close calls
@@ -494,7 +494,7 @@ func TestDoneCloseDescendantsDeeplyNested(t *testing.T) {
 		t.Fatalf("mkdir mineshaft: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"mineshaft"}`,
+		`{"prefix":"ms-","path":"mineshaft"}`,
 		"",
 	}, "\n")
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routes), 0644); err != nil {
@@ -516,25 +516,25 @@ case "$cmd" in
   show)
     beadID="$1"
     case "$beadID" in
-      gt-mineshaft-miner-nux)
-        echo '[{"id":"gt-mineshaft-miner-nux","title":"Miner nux","status":"open","hook_bead":"gt-base-123","agent_state":"working"}]'
+      ms-mineshaft-miner-nux)
+        echo '[{"id":"ms-mineshaft-miner-nux","title":"Miner nux","status":"open","hook_bead":"ms-base-123","agent_state":"working"}]'
         ;;
-      gt-base-123)
-        echo '[{"id":"gt-base-123","title":"Base bead","status":"hooked","description":"attached_molecule: gt-wisp-xyz"}]'
+      ms-base-123)
+        echo '[{"id":"ms-base-123","title":"Base bead","status":"hooked","description":"attached_molecule: ms-wisp-xyz"}]'
         ;;
-      gt-wisp-xyz)
-        echo '[{"id":"gt-wisp-xyz","title":"mol-miner-work","status":"open","ephemeral":true}]'
+      ms-wisp-xyz)
+        echo '[{"id":"ms-wisp-xyz","title":"mol-miner-work","status":"open","ephemeral":true}]'
         ;;
     esac
     ;;
   list)
     # Return children based on parent
-    if echo "$*" | grep -q "parent=gt-wisp-xyz"; then
+    if echo "$*" | grep -q "parent=ms-wisp-xyz"; then
       # Wisp has one child
-      echo '[{"id":"gt-child","title":"Child","status":"open"}]'
-    elif echo "$*" | grep -q "parent=gt-child"; then
+      echo '[{"id":"ms-child","title":"Child","status":"open"}]'
+    elif echo "$*" | grep -q "parent=ms-child"; then
       # Child has one grandchild
-      echo '[{"id":"gt-grandchild","title":"Grandchild","status":"open"}]'
+      echo '[{"id":"ms-grandchild","title":"Grandchild","status":"open"}]'
     else
       echo '[]'
     fi
@@ -559,10 +559,10 @@ exit 0
 	}
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv("GT_ROLE", "miner")
-	t.Setenv("GT_RIG", "mineshaft")
-	t.Setenv("GT_MINER", "nux")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_ROLE", "miner")
+	t.Setenv("MS_RIG", "mineshaft")
+	t.Setenv("MS_MINER", "nux")
+	t.Setenv("MS_CREW", "")
 	t.Setenv("TMUX_PANE", "")
 
 	cwd, err := os.Getwd()
@@ -574,7 +574,7 @@ exit 0
 		t.Fatalf("chdir: %v", err)
 	}
 
-	updateAgentStateOnDone(filepath.Join(townRoot, "mineshaft"), townRoot, ExitCompleted, "gt-base-123")
+	updateAgentStateOnDone(filepath.Join(townRoot, "mineshaft"), townRoot, ExitCompleted, "ms-base-123")
 
 	// Verify close calls
 	closesBytes, err := os.ReadFile(closesLog)
@@ -591,31 +591,31 @@ exit 0
 	foundBase := false
 
 	for _, line := range closeLines {
-		if strings.Contains(line, "gt-grandchild") {
+		if strings.Contains(line, "ms-grandchild") {
 			foundGrandchild = true
 		}
-		if strings.Contains(line, "gt-child") {
+		if strings.Contains(line, "ms-child") {
 			foundChild = true
 		}
-		if strings.Contains(line, "gt-wisp-xyz") {
+		if strings.Contains(line, "ms-wisp-xyz") {
 			foundWisp = true
 		}
-		if strings.Contains(line, "gt-base-123") {
+		if strings.Contains(line, "ms-base-123") {
 			foundBase = true
 		}
 	}
 
 	if !foundGrandchild {
-		t.Errorf("grandchild gt-grandchild was NOT closed\nClose calls:\n%s", closes)
+		t.Errorf("grandchild ms-grandchild was NOT closed\nClose calls:\n%s", closes)
 	}
 	if !foundChild {
-		t.Errorf("child gt-child was NOT closed\nClose calls:\n%s", closes)
+		t.Errorf("child ms-child was NOT closed\nClose calls:\n%s", closes)
 	}
 	if !foundWisp {
-		t.Errorf("attached molecule gt-wisp-xyz was NOT closed\nClose calls:\n%s", closes)
+		t.Errorf("attached molecule ms-wisp-xyz was NOT closed\nClose calls:\n%s", closes)
 	}
 	if !foundBase {
-		t.Errorf("hooked bead gt-base-123 was NOT closed\nClose calls:\n%s", closes)
+		t.Errorf("hooked bead ms-base-123 was NOT closed\nClose calls:\n%s", closes)
 	}
 
 	// Should have exactly 4 close calls
@@ -630,16 +630,16 @@ exit 0
 	baseIdx := -1
 
 	for i, line := range closeLines {
-		if strings.Contains(line, "gt-grandchild") {
+		if strings.Contains(line, "ms-grandchild") {
 			grandchildIdx = i
 		}
-		if strings.Contains(line, "gt-child") {
+		if strings.Contains(line, "ms-child") {
 			childIdx = i
 		}
-		if strings.Contains(line, "gt-wisp-xyz") {
+		if strings.Contains(line, "ms-wisp-xyz") {
 			wispIdx = i
 		}
-		if strings.Contains(line, "gt-base-123") {
+		if strings.Contains(line, "ms-base-123") {
 			baseIdx = i
 		}
 	}
@@ -651,7 +651,7 @@ exit 0
 	}
 }
 
-// TestDoneCloseDescendantsNoMoleculeAttached verifies that gt done handles
+// TestDoneCloseDescendantsNoMoleculeAttached verifies that ms done handles
 // the case where there is no molecule attached gracefully (edge case #5).
 func TestDoneCloseDescendantsNoMoleculeAttached(t *testing.T) {
 	if runtime.GOOS == "windows" {
@@ -672,7 +672,7 @@ func TestDoneCloseDescendantsNoMoleculeAttached(t *testing.T) {
 		t.Fatalf("mkdir mineshaft: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"mineshaft"}`,
+		`{"prefix":"ms-","path":"mineshaft"}`,
 		"",
 	}, "\n")
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routes), 0644); err != nil {
@@ -694,12 +694,12 @@ case "$cmd" in
   show)
     beadID="$1"
     case "$beadID" in
-      gt-mineshaft-miner-nux)
-        echo '[{"id":"gt-mineshaft-miner-nux","title":"Miner nux","status":"open","hook_bead":"gt-base-123","agent_state":"working"}]'
+      ms-mineshaft-miner-nux)
+        echo '[{"id":"ms-mineshaft-miner-nux","title":"Miner nux","status":"open","hook_bead":"ms-base-123","agent_state":"working"}]'
         ;;
-      gt-base-123)
+      ms-base-123)
         # Hooked bead with NO attached_molecule
-        echo '[{"id":"gt-base-123","title":"Base bead","status":"hooked","description":"no molecule attached"}]'
+        echo '[{"id":"ms-base-123","title":"Base bead","status":"hooked","description":"no molecule attached"}]'
         ;;
     esac
     ;;
@@ -726,10 +726,10 @@ exit 0
 	}
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv("GT_ROLE", "miner")
-	t.Setenv("GT_RIG", "mineshaft")
-	t.Setenv("GT_MINER", "nux")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_ROLE", "miner")
+	t.Setenv("MS_RIG", "mineshaft")
+	t.Setenv("MS_MINER", "nux")
+	t.Setenv("MS_CREW", "")
 	t.Setenv("TMUX_PANE", "")
 
 	cwd, err := os.Getwd()
@@ -742,7 +742,7 @@ exit 0
 	}
 
 	// Should not error even though there's no attached molecule
-	updateAgentStateOnDone(filepath.Join(townRoot, "mineshaft"), townRoot, ExitCompleted, "gt-base-123")
+	updateAgentStateOnDone(filepath.Join(townRoot, "mineshaft"), townRoot, ExitCompleted, "ms-base-123")
 
 	// Verify close calls - should only close the hooked base bead (no molecule)
 	closesBytes, err := os.ReadFile(closesLog)
@@ -756,13 +756,13 @@ exit 0
 	foundBase := false
 
 	for _, line := range closeLines {
-		if strings.Contains(line, "gt-base-123") {
+		if strings.Contains(line, "ms-base-123") {
 			foundBase = true
 		}
 	}
 
 	if !foundBase {
-		t.Errorf("hooked bead gt-base-123 was NOT closed\nClose calls:\n%s", closes)
+		t.Errorf("hooked bead ms-base-123 was NOT closed\nClose calls:\n%s", closes)
 	}
 
 	// Should have exactly 1 close call
@@ -792,7 +792,7 @@ func TestCloseDescendantsHandlesListError(t *testing.T) {
 		t.Fatalf("mkdir mineshaft: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"mineshaft"}`,
+		`{"prefix":"ms-","path":"mineshaft"}`,
 		"",
 	}, "\n")
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routes), 0644); err != nil {
@@ -814,14 +814,14 @@ case "$cmd" in
   show)
     beadID="$1"
     case "$beadID" in
-      gt-mineshaft-miner-nux)
-        echo '[{"id":"gt-mineshaft-miner-nux","title":"Miner nux","status":"open","hook_bead":"gt-base-123","agent_state":"working"}]'
+      ms-mineshaft-miner-nux)
+        echo '[{"id":"ms-mineshaft-miner-nux","title":"Miner nux","status":"open","hook_bead":"ms-base-123","agent_state":"working"}]'
         ;;
-      gt-base-123)
-        echo '[{"id":"gt-base-123","title":"Base bead","status":"hooked","description":"attached_molecule: gt-wisp-xyz"}]'
+      ms-base-123)
+        echo '[{"id":"ms-base-123","title":"Base bead","status":"hooked","description":"attached_molecule: ms-wisp-xyz"}]'
         ;;
-      gt-wisp-xyz)
-        echo '[{"id":"gt-wisp-xyz","title":"mol-miner-work","status":"open","ephemeral":true}]'
+      ms-wisp-xyz)
+        echo '[{"id":"ms-wisp-xyz","title":"mol-miner-work","status":"open","ephemeral":true}]'
         ;;
     esac
     ;;
@@ -850,10 +850,10 @@ exit 0
 	}
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv("GT_ROLE", "miner")
-	t.Setenv("GT_RIG", "mineshaft")
-	t.Setenv("GT_MINER", "nux")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_ROLE", "miner")
+	t.Setenv("MS_RIG", "mineshaft")
+	t.Setenv("MS_MINER", "nux")
+	t.Setenv("MS_CREW", "")
 	t.Setenv("TMUX_PANE", "")
 
 	cwd, err := os.Getwd()
@@ -866,7 +866,7 @@ exit 0
 	}
 
 	// Should not error even though list fails - continues with closing molecule and base bead
-	updateAgentStateOnDone(filepath.Join(townRoot, "mineshaft"), townRoot, ExitCompleted, "gt-base-123")
+	updateAgentStateOnDone(filepath.Join(townRoot, "mineshaft"), townRoot, ExitCompleted, "ms-base-123")
 
 	// Verify close calls - should still close wisp and base even though list failed
 	closesBytes, err := os.ReadFile(closesLog)
@@ -876,11 +876,11 @@ exit 0
 	closes := string(closesBytes)
 
 	// Should have closed: wisp, base (list error doesn't prevent molecule close)
-	if !strings.Contains(closes, "gt-wisp-xyz") {
-		t.Errorf("attached molecule gt-wisp-xyz was NOT closed after list error\nClose calls:\n%s", closes)
+	if !strings.Contains(closes, "ms-wisp-xyz") {
+		t.Errorf("attached molecule ms-wisp-xyz was NOT closed after list error\nClose calls:\n%s", closes)
 	}
-	if !strings.Contains(closes, "gt-base-123") {
-		t.Errorf("hooked bead gt-base-123 was NOT closed after list error\nClose calls:\n%s", closes)
+	if !strings.Contains(closes, "ms-base-123") {
+		t.Errorf("hooked bead ms-base-123 was NOT closed after list error\nClose calls:\n%s", closes)
 	}
 }
 
@@ -905,7 +905,7 @@ func TestCloseDescendantsMoleculeNotFound(t *testing.T) {
 		t.Fatalf("mkdir mineshaft: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"mineshaft"}`,
+		`{"prefix":"ms-","path":"mineshaft"}`,
 		"",
 	}, "\n")
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routes), 0644); err != nil {
@@ -928,13 +928,13 @@ case "$cmd" in
   show)
     beadID="$1"
     case "$beadID" in
-      gt-mineshaft-miner-nux)
-        echo '[{"id":"gt-mineshaft-miner-nux","title":"Miner nux","status":"open","hook_bead":"gt-base-123","agent_state":"working"}]'
+      ms-mineshaft-miner-nux)
+        echo '[{"id":"ms-mineshaft-miner-nux","title":"Miner nux","status":"open","hook_bead":"ms-base-123","agent_state":"working"}]'
         ;;
-      gt-base-123)
-        echo '[{"id":"gt-base-123","title":"Base bead","status":"hooked","description":"attached_molecule: gt-wisp-xyz"}]'
+      ms-base-123)
+        echo '[{"id":"ms-base-123","title":"Base bead","status":"hooked","description":"attached_molecule: ms-wisp-xyz"}]'
         ;;
-      gt-wisp-xyz)
+      ms-wisp-xyz)
         # Molecule doesn't exist
         echo '[]'
         exit 1
@@ -946,8 +946,8 @@ case "$cmd" in
     ;;
   close)
     echo "$1" >> "%s"
-    # Simulate not found error for gt-wisp-xyz
-    if [ "$1" = "gt-wisp-xyz" ]; then
+    # Simulate not found error for ms-wisp-xyz
+    if [ "$1" = "ms-wisp-xyz" ]; then
       echo "close_attempt: $1 (not found)" >> "%s"
       exit 1
     fi
@@ -966,10 +966,10 @@ exit 0
 	}
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv("GT_ROLE", "miner")
-	t.Setenv("GT_RIG", "mineshaft")
-	t.Setenv("GT_MINER", "nux")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_ROLE", "miner")
+	t.Setenv("MS_RIG", "mineshaft")
+	t.Setenv("MS_MINER", "nux")
+	t.Setenv("MS_CREW", "")
 	t.Setenv("TMUX_PANE", "")
 
 	cwd, err := os.Getwd()
@@ -982,7 +982,7 @@ exit 0
 	}
 
 	// Should not error - handles molecule close failure gracefully
-	updateAgentStateOnDone(filepath.Join(townRoot, "mineshaft"), townRoot, ExitCompleted, "gt-base-123")
+	updateAgentStateOnDone(filepath.Join(townRoot, "mineshaft"), townRoot, ExitCompleted, "ms-base-123")
 
 	// Implementation behavior: when molecule close fails with a generic error
 	// (not beads.ErrNotFound), the function returns early WITHOUT closing the
@@ -992,8 +992,8 @@ exit 0
 	if len(attemptBytes) > 0 {
 		attempts := string(attemptBytes)
 		// Verify that molecule close was attempted (and failed 3 times)
-		if !strings.Contains(attempts, "gt-wisp-xyz") {
-			t.Errorf("molecule gt-wisp-xyz close was NOT attempted\nAttempts:\n%s", attempts)
+		if !strings.Contains(attempts, "ms-wisp-xyz") {
+			t.Errorf("molecule ms-wisp-xyz close was NOT attempted\nAttempts:\n%s", attempts)
 		}
 		// Note: base bead close is NOT attempted when molecule close fails
 		// This is correct behavior - the molecule blocks the base bead closure

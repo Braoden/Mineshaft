@@ -22,11 +22,11 @@ func runMoleculeAttach(cmd *cobra.Command, args []string) error {
 	b := beads.New(workDir)
 
 	if len(args) == 2 {
-		// Explicit: gt mol attach <pinned-bead-id> <molecule-id>
+		// Explicit: ms mol attach <pinned-bead-id> <molecule-id>
 		pinnedBeadID = args[0]
 		moleculeID = args[1]
 	} else {
-		// Auto-detect: gt mol attach <molecule-id>
+		// Auto-detect: ms mol attach <molecule-id>
 		// Find the agent's pinned handoff bead (same pattern as mol burn/squash)
 		moleculeID = args[0]
 
@@ -180,7 +180,7 @@ func runMoleculeAttachment(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// detectCurrentAgent returns the current agent identity based on GT_ROLE or working directory.
+// detectCurrentAgent returns the current agent identity based on MS_ROLE or working directory.
 // Returns empty string if identity cannot be determined.
 func detectCurrentAgent() string {
 	cwd, err := os.Getwd()

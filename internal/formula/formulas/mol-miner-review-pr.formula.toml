@@ -10,10 +10,10 @@ standards, then approves, requests changes, or files followup beads.
 You are a self-cleaning worker. You:
 1. Receive work via your hook (pinned molecule + PR reference)
 2. Work through molecule steps using `bd mol current` / `bd close <step>`
-3. Complete and self-clean via `gt done` (submit findings + nuke yourself)
+3. Complete and self-clean via `ms done` (submit findings + nuke yourself)
 4. You are GONE - your review is recorded in beads
 
-**Self-cleaning:** When you run `gt done`, you submit your findings, nuke your
+**Self-cleaning:** When you run `ms done`, you submit your findings, nuke your
 sandbox, and exit. There is no idle state. Done means gone.
 
 **Important:** This formula defines the template. Your molecule already has step
@@ -50,13 +50,13 @@ Initialize your session and understand the PR you're reviewing.
 
 **1. Prime your environment:**
 ```bash
-gt prime                    # Load role context
+ms prime                    # Load role context
 bd prime                    # Load beads context
 ```
 
 **2. Check your hook:**
 ```bash
-gt hook               # Shows your pinned molecule and hook_bead
+ms hook               # Shows your pinned molecule and hook_bead
 ```
 
 The hook_bead references the PR to review. Read the tracking issue:
@@ -175,14 +175,14 @@ The contributor should be able to act on your feedback.
 
 **3. If NEEDS_DISCUSSION:**
 ```bash
-gt mail send {{rig}}/witness -s "PR review needs discussion" -m "PR: {{pr_url}}
+ms mail send {{rig}}/witness -s "PR review needs discussion" -m "PR: {{pr_url}}
 Issue: {{issue}}
 Question: <what needs clarification>"
 ```
 
 **4. If BLOCK (security):**
 ```bash
-gt mail send {{rig}}/witness -s "SECURITY: PR blocked" -m "PR: {{pr_url}}
+ms mail send {{rig}}/witness -s "SECURITY: PR blocked" -m "PR: {{pr_url}}
 Issue: {{issue}}
 Concern: <security issue found>"
 ```
@@ -258,15 +258,15 @@ description = """
 Signal completion and clean up. You cease to exist after this step.
 
 **Self-Cleaning Model:**
-Once you run `gt done`, you're gone. The command:
+Once you run `ms done`, you're gone. The command:
 1. Syncs beads
 2. Nukes your sandbox
 3. Exits your session immediately
 
-**Run gt done:**
+**Run ms done:**
 ```bash
 bd sync
-gt done
+ms done
 ```
 
 **What happens next (not your concern):**

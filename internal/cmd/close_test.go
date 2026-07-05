@@ -13,53 +13,53 @@ func TestExtractBeadIDs(t *testing.T) {
 	}{
 		{
 			name: "single bead ID",
-			args: []string{"gt-abc"},
-			want: []string{"gt-abc"},
+			args: []string{"ms-abc"},
+			want: []string{"ms-abc"},
 		},
 		{
 			name: "multiple bead IDs",
-			args: []string{"gt-abc", "gt-def"},
-			want: []string{"gt-abc", "gt-def"},
+			args: []string{"ms-abc", "ms-def"},
+			want: []string{"ms-abc", "ms-def"},
 		},
 		{
 			name: "bead ID with boolean flags",
-			args: []string{"--force", "gt-abc", "--suggest-next"},
-			want: []string{"gt-abc"},
+			args: []string{"--force", "ms-abc", "--suggest-next"},
+			want: []string{"ms-abc"},
 		},
 		{
 			name: "bead ID with short boolean flag",
-			args: []string{"-f", "gt-abc"},
-			want: []string{"gt-abc"},
+			args: []string{"-f", "ms-abc"},
+			want: []string{"ms-abc"},
 		},
 		{
 			name: "bead ID with reason flag (separate value)",
-			args: []string{"gt-abc", "--reason", "Done"},
-			want: []string{"gt-abc"},
+			args: []string{"ms-abc", "--reason", "Done"},
+			want: []string{"ms-abc"},
 		},
 		{
 			name: "bead ID with reason flag (= form)",
-			args: []string{"gt-abc", "--reason=Done"},
-			want: []string{"gt-abc"},
+			args: []string{"ms-abc", "--reason=Done"},
+			want: []string{"ms-abc"},
 		},
 		{
 			name: "bead ID with short reason flag",
-			args: []string{"-r", "Done", "gt-abc"},
-			want: []string{"gt-abc"},
+			args: []string{"-r", "Done", "ms-abc"},
+			want: []string{"ms-abc"},
 		},
 		{
 			name: "bead ID with comment alias",
-			args: []string{"--comment", "Finished", "gt-abc"},
-			want: []string{"gt-abc"},
+			args: []string{"--comment", "Finished", "ms-abc"},
+			want: []string{"ms-abc"},
 		},
 		{
 			name: "bead ID with session flag",
-			args: []string{"gt-abc", "--session", "sess-123"},
-			want: []string{"gt-abc"},
+			args: []string{"ms-abc", "--session", "sess-123"},
+			want: []string{"ms-abc"},
 		},
 		{
 			name: "bead ID with db flag",
-			args: []string{"--db", "/path/to/db", "gt-abc"},
-			want: []string{"gt-abc"},
+			args: []string{"--db", "/path/to/db", "ms-abc"},
+			want: []string{"ms-abc"},
 		},
 		{
 			name: "no bead IDs (flags only)",
@@ -73,8 +73,8 @@ func TestExtractBeadIDs(t *testing.T) {
 		},
 		{
 			name: "multiple IDs with mixed flags",
-			args: []string{"--force", "gt-abc", "--reason", "Done", "hq-cv-xyz", "-v"},
-			want: []string{"gt-abc", "hq-cv-xyz"},
+			args: []string{"--force", "ms-abc", "--reason", "Done", "hq-cv-xyz", "-v"},
+			want: []string{"ms-abc", "hq-cv-xyz"},
 		},
 	}
 
@@ -102,21 +102,21 @@ func TestExtractCascadeFlag(t *testing.T) {
 	}{
 		{
 			name:        "no cascade flag",
-			args:        []string{"gt-abc", "--force"},
+			args:        []string{"ms-abc", "--force"},
 			wantCascade: false,
-			wantArgs:    []string{"gt-abc", "--force"},
+			wantArgs:    []string{"ms-abc", "--force"},
 		},
 		{
 			name:        "cascade flag present",
-			args:        []string{"gt-abc", "--cascade"},
+			args:        []string{"ms-abc", "--cascade"},
 			wantCascade: true,
-			wantArgs:    []string{"gt-abc"},
+			wantArgs:    []string{"ms-abc"},
 		},
 		{
 			name:        "cascade flag with other flags",
-			args:        []string{"--cascade", "gt-abc", "--reason", "Done"},
+			args:        []string{"--cascade", "ms-abc", "--reason", "Done"},
 			wantCascade: true,
-			wantArgs:    []string{"gt-abc", "--reason", "Done"},
+			wantArgs:    []string{"ms-abc", "--reason", "Done"},
 		},
 		{
 			name:        "empty args",
@@ -145,7 +145,7 @@ func TestExtractCascadeFlag(t *testing.T) {
 }
 
 func TestChildBeadUnmarshal(t *testing.T) {
-	jsonData := `[{"id":"gt-abc","status":"open"},{"id":"gt-def","status":"closed"}]`
+	jsonData := `[{"id":"ms-abc","status":"open"},{"id":"ms-def","status":"closed"}]`
 	var children []childBead
 	if err := json.Unmarshal([]byte(jsonData), &children); err != nil {
 		t.Fatalf("unmarshal failed: %v", err)
@@ -153,10 +153,10 @@ func TestChildBeadUnmarshal(t *testing.T) {
 	if len(children) != 2 {
 		t.Fatalf("got %d children, want 2", len(children))
 	}
-	if children[0].ID != "gt-abc" || children[0].Status != "open" {
-		t.Errorf("child[0] = %+v, want {ID:gt-abc Status:open}", children[0])
+	if children[0].ID != "ms-abc" || children[0].Status != "open" {
+		t.Errorf("child[0] = %+v, want {ID:ms-abc Status:open}", children[0])
 	}
-	if children[1].ID != "gt-def" || children[1].Status != "closed" {
-		t.Errorf("child[1] = %+v, want {ID:gt-def Status:closed}", children[1])
+	if children[1].ID != "ms-def" || children[1].Status != "closed" {
+		t.Errorf("child[1] = %+v, want {ID:ms-def Status:closed}", children[1])
 	}
 }

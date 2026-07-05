@@ -90,7 +90,7 @@ its session name. The Supervisor is the town-level watchdog that
 receives heartbeats from the daemon.
 
 Examples:
-  gt supervisor status`,
+  ms supervisor status`,
 	RunE: runSupervisorStatus,
 }
 
@@ -114,8 +114,8 @@ The heartbeat signals to the daemon that the Supervisor is alive and working.
 Call this at the start of each wake cycle to prevent daemon pokes.
 
 Examples:
-  gt supervisor heartbeat                    # Touch heartbeat with timestamp
-  gt supervisor heartbeat "checking overseer"   # Touch with action description`,
+  ms supervisor heartbeat                    # Touch heartbeat with timestamp
+  ms supervisor heartbeat "checking overseer"   # Touch with action description`,
 	RunE: runSupervisorHeartbeat,
 }
 
@@ -139,9 +139,9 @@ Exit codes:
   2 - Agent should be force-killed (consecutive failures exceeded)
 
 Examples:
-  gt supervisor health-check mineshaft/miners/max
-  gt supervisor health-check mineshaft/witness --timeout=60s
-  gt supervisor health-check supervisor --failures=5`,
+  ms supervisor health-check mineshaft/miners/max
+  ms supervisor health-check mineshaft/witness --timeout=60s
+  ms supervisor health-check supervisor --failures=5`,
 	Args: cobra.ExactArgs(1),
 	RunE: runSupervisorHealthCheck,
 }
@@ -160,14 +160,14 @@ It performs the force-kill protocol:
 4. Notify overseer (optional, for visibility)
 
 After force-kill, the agent is 'asleep'. Normal wake mechanisms apply:
-- gt rig boot restarts it
+- ms rig boot restarts it
 - Or stays asleep until next activity trigger
 
 This respects the cooldown period - won't kill if recently killed.
 
 Examples:
-  gt supervisor force-kill mineshaft/miners/max
-  gt supervisor force-kill mineshaft/witness --reason="unresponsive for 90s"`,
+  ms supervisor force-kill mineshaft/miners/max
+  ms supervisor force-kill mineshaft/witness --reason="unresponsive for 90s"`,
 	Args: cobra.ExactArgs(1),
 	RunE: runSupervisorForceKill,
 }
@@ -194,9 +194,9 @@ This command finds hooked beads older than the threshold (default: 1 hour),
 checks if the assignee agent is still alive, and unhooks them if not.
 
 Examples:
-  gt supervisor stale-hooks                 # Find and unhook stale beads
-  gt supervisor stale-hooks --dry-run       # Preview what would be unhooked
-  gt supervisor stale-hooks --max-age=30m   # Use 30 minute threshold`,
+  ms supervisor stale-hooks                 # Find and unhook stale beads
+  ms supervisor stale-hooks --dry-run       # Preview what would be unhooked
+  ms supervisor stale-hooks --max-age=30m   # Use 30 minute threshold`,
 	RunE: runSupervisorStaleHooks,
 }
 
@@ -211,12 +211,12 @@ When paused, the Supervisor:
 - Will not take any autonomous actions
 - Will display a PAUSED message on startup
 
-The pause state persists across session restarts. Use 'gt supervisor resume'
+The pause state persists across session restarts. Use 'ms supervisor resume'
 to allow the Supervisor to work again.
 
 Examples:
-  gt supervisor pause                           # Pause with no reason
-  gt supervisor pause --reason="testing"        # Pause with a reason`,
+  ms supervisor pause                           # Pause with no reason
+  ms supervisor pause --reason="testing"        # Pause with a reason`,
 	RunE: runSupervisorPause,
 }
 
@@ -246,7 +246,7 @@ This is safe because:
 - These orphans are children of the tmux server with no TTY
 
 Example:
-  gt supervisor cleanup-orphans`,
+  ms supervisor cleanup-orphans`,
 	RunE: runSupervisorCleanupOrphans,
 }
 
@@ -270,8 +270,8 @@ This catches "ghost" processes that have a TTY (from a dead tmux session)
 but are no longer part of any active Mineshaft session.
 
 Examples:
-  gt supervisor zombie-scan           # Find and kill zombies
-  gt supervisor zombie-scan --dry-run # Just list zombies, don't kill`,
+  ms supervisor zombie-scan           # Find and kill zombies
+  ms supervisor zombie-scan --dry-run # Just list zombies, don't kill`,
 	RunE: runSupervisorZombieScan,
 }
 
@@ -286,7 +286,7 @@ handles the re-dispatch:
 
 1. Checks re-dispatch state (how many times this bead has been re-dispatched)
 2. Rate-limits to prevent thrashing (cooldown between re-dispatches)
-3. If under the limit: runs 'gt sling <bead> <rig>' to re-dispatch
+3. If under the limit: runs 'ms sling <bead> <rig>' to re-dispatch
 4. If over the limit: escalates to Overseer instead of re-slinging
 
 Exit codes:
@@ -296,10 +296,10 @@ Exit codes:
   3 - Bead skipped (already claimed or non-open status)
 
 Examples:
-  gt supervisor redispatch gt-abc123                    # Auto-detect rig from prefix
-  gt supervisor redispatch gt-abc123 --rig mineshaft      # Explicit target rig
-  gt supervisor redispatch gt-abc123 --max-attempts 5   # Allow 5 attempts before escalation
-  gt supervisor redispatch gt-abc123 --cooldown 10m     # 10 minute cooldown between attempts`,
+  ms supervisor redispatch ms-abc123                    # Auto-detect rig from prefix
+  ms supervisor redispatch ms-abc123 --rig mineshaft      # Explicit target rig
+  ms supervisor redispatch ms-abc123 --max-attempts 5   # Allow 5 attempts before escalation
+  ms supervisor redispatch ms-abc123 --cooldown 10m     # 10 minute cooldown between attempts`,
 	Args: cobra.ExactArgs(1),
 	RunE: runSupervisorRedispatch,
 }
@@ -327,9 +327,9 @@ A minecart is "stranded" when it is open AND either:
 - Has tracked issues but none are ready (needs agent review)
 
 This command:
-1. Runs 'gt minecart stranded --json' to find stranded minecarts
-2. For feedable minecarts (ready_count > 0): dispatches a dog via gt sling
-3. For empty minecarts (tracked_count == 0): auto-closes via gt minecart check
+1. Runs 'ms minecart stranded --json' to find stranded minecarts
+2. For feedable minecarts (ready_count > 0): dispatches a dog via ms sling
+3. For empty minecarts (tracked_count == 0): auto-closes via ms minecart check
 4. For tracked-but-not-ready minecarts: surfaces raw data for supervisor review
 5. Rate limits to avoid spawning too many dogs at once
 
@@ -340,10 +340,10 @@ Rate limiting:
 This is called by the Supervisor during patrol. Run manually for debugging.
 
 Examples:
-  gt supervisor feed-stranded                  # Feed stranded minecarts
-  gt supervisor feed-stranded --max-feeds 5    # Allow up to 5 feeds per cycle
-  gt supervisor feed-stranded --cooldown 5m    # 5 minute per-minecart cooldown
-  gt supervisor feed-stranded --json           # Machine-readable output`,
+  ms supervisor feed-stranded                  # Feed stranded minecarts
+  ms supervisor feed-stranded --max-feeds 5    # Allow up to 5 feeds per cycle
+  ms supervisor feed-stranded --cooldown 5m    # 5 minute per-minecart cooldown
+  ms supervisor feed-stranded --json           # Machine-readable output`,
 	RunE: runSupervisorFeedStranded,
 }
 
@@ -478,7 +478,7 @@ func runSupervisorStart(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("checking session: %w", err)
 	}
 	if running {
-		return fmt.Errorf("Supervisor session already running. Attach with: gt supervisor attach")
+		return fmt.Errorf("Supervisor session already running. Attach with: ms supervisor attach")
 	}
 
 	if err := startSupervisorSession(t, sessionName, supervisorAgentOverride); err != nil {
@@ -487,7 +487,7 @@ func runSupervisorStart(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("%s Supervisor session started. Attach with: %s\n",
 		style.Bold.Render("✓"),
-		style.Dim.Render("gt supervisor attach"))
+		style.Dim.Render("ms supervisor attach"))
 
 	return nil
 }
@@ -500,7 +500,7 @@ func startSupervisorSession(t *tmux.Tmux, sessionName, agentOverride string) err
 		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
 	}
 
-	// Supervisor runs from its own directory (for correct role detection by gt prime)
+	// Supervisor runs from its own directory (for correct role detection by ms prime)
 	supervisorDir := filepath.Join(townRoot, "supervisor")
 
 	// Ensure supervisor directory exists
@@ -526,7 +526,7 @@ func startSupervisorSession(t *tmux.Tmux, sessionName, agentOverride string) err
 		Recipient: "supervisor",
 		Sender:    "daemon",
 		Topic:     "patrol",
-	}, "I am Supervisor. First run `gt supervisor heartbeat`. Then check gt hook, and if it is empty run `gt sling mol-supervisor-patrol supervisor`, then execute the hook it creates.")
+	}, "I am Supervisor. First run `ms supervisor heartbeat`. Then check ms hook, and if it is empty run `ms sling mol-supervisor-patrol supervisor`, then execute the hook it creates.")
 	startupCmd, err := config.BuildStartupCommandFromConfig(config.AgentEnvConfig{
 		Role:             "supervisor",
 		TownRoot:         townRoot,
@@ -541,7 +541,7 @@ func startSupervisorSession(t *tmux.Tmux, sessionName, agentOverride string) err
 
 	// Compute env vars BEFORE creating the session so they reach the agent's
 	// subprocesses (e.g., bd) via tmux -e flags. SetEnvironment after creation
-	// only affects newly spawned panes, not the running pane's tree (gt-neycp).
+	// only affects newly spawned panes, not the running pane's tree (ms-neycp).
 	envVars := config.AgentEnv(config.AgentEnvConfig{
 		Role:             "supervisor",
 		TownRoot:         townRoot,
@@ -557,9 +557,9 @@ func startSupervisorSession(t *tmux.Tmux, sessionName, agentOverride string) err
 		return fmt.Errorf("creating session: %w", err)
 	}
 
-	// Record agent's pane_id for ZFC-compliant liveness checks (gt-qmsx).
+	// Record agent's pane_id for ZFC-compliant liveness checks (ms-qmsx).
 	if paneID, err := t.GetPaneID(sessionName); err == nil {
-		_ = t.SetEnvironment(sessionName, "GT_PANE_ID", paneID)
+		_ = t.SetEnvironment(sessionName, "MS_PANE_ID", paneID)
 	}
 
 	// Apply Supervisor theme (non-fatal: theming failure doesn't affect operation)
@@ -716,7 +716,7 @@ func runSupervisorStatus(cmd *cobra.Command, args []string) error {
 		fmt.Printf("  Paused at: %s\n", pauseState.PausedAt.Format(time.RFC3339))
 		fmt.Printf("  Paused by: %s\n", pauseState.PausedBy)
 		fmt.Println()
-		fmt.Printf("Resume with: %s\n", style.Dim.Render("gt supervisor resume"))
+		fmt.Printf("Resume with: %s\n", style.Dim.Render("ms supervisor resume"))
 		fmt.Println()
 	}
 
@@ -742,7 +742,7 @@ func runSupervisorStatus(cmd *cobra.Command, args []string) error {
 		fmt.Printf("%s Supervisor session is %s\n",
 			style.Dim.Render("○"),
 			"not running")
-		fmt.Printf("\nStart with: %s\n", style.Dim.Render("gt supervisor start"))
+		fmt.Printf("\nStart with: %s\n", style.Dim.Render("ms supervisor start"))
 	}
 
 	// Heartbeat info (shown after session status)
@@ -767,7 +767,7 @@ func runSupervisorStatus(cmd *cobra.Command, args []string) error {
 	}
 
 	if running {
-		fmt.Printf("\nAttach with: %s\n", style.Dim.Render("gt supervisor attach"))
+		fmt.Printf("\nAttach with: %s\n", style.Dim.Render("ms supervisor attach"))
 	}
 
 	return nil
@@ -799,7 +799,7 @@ func runSupervisorRestart(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("%s Supervisor restarted\n", style.Bold.Render("✓"))
-	fmt.Printf("  %s\n", style.Dim.Render("Use 'gt supervisor attach' to connect"))
+	fmt.Printf("  %s\n", style.Dim.Render("Use 'ms supervisor attach' to connect"))
 	return nil
 }
 
@@ -815,7 +815,7 @@ func runSupervisorHeartbeat(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("checking pause state: %w", err)
 	}
 	if paused {
-		fmt.Printf("%s Supervisor is paused. Use 'gt supervisor resume' to unpause.\n", style.Bold.Render("⏸️"))
+		fmt.Printf("%s Supervisor is paused. Use 'ms supervisor resume' to unpause.\n", style.Bold.Render("⏸️"))
 		if state.Reason != "" {
 			fmt.Printf("  Reason: %s\n", state.Reason)
 		}
@@ -1059,7 +1059,7 @@ func runSupervisorForceKill(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("%s Force-killed agent %s (total kills: %d)\n",
 		style.Bold.Render("✓"), agent, agentState.ForceKillCount)
-	fmt.Printf("  %s\n", style.Dim.Render("Agent is now 'asleep'. Use 'gt rig boot' to restart."))
+	fmt.Printf("  %s\n", style.Dim.Render("Agent is now 'asleep'. Use 'ms rig boot' to restart."))
 
 	return nil
 }
@@ -1175,9 +1175,9 @@ func getAgentBeadUpdateTime(townRoot, beadID string) (time.Time, error) {
 	return time.Parse(time.RFC3339, issues[0].UpdatedAt)
 }
 
-// sendMail sends a mail message using gt mail send.
+// sendMail sends a mail message using ms mail send.
 func sendMail(townRoot, to, subject, body string) {
-	cmd := exec.Command("gt", "mail", "send", to, "-s", subject, "-m", body)
+	cmd := exec.Command("ms", "mail", "send", to, "-s", subject, "-m", body)
 	cmd.Dir = townRoot
 	_ = cmd.Run() // Best effort
 }
@@ -1325,7 +1325,7 @@ func runSupervisorPause(cmd *cobra.Command, args []string) error {
 	fmt.Printf("  Pause file: %s\n", supervisor.GetPauseFile(townRoot))
 	fmt.Println()
 	fmt.Printf("The Supervisor will not perform any patrol actions until resumed.\n")
-	fmt.Printf("Resume with: %s\n", style.Dim.Render("gt supervisor resume"))
+	fmt.Printf("Resume with: %s\n", style.Dim.Render("ms supervisor resume"))
 
 	return nil
 }

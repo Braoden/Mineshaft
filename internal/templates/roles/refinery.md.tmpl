@@ -106,7 +106,7 @@ git rebase origin/<rebase-target>
 git status                    # See what conflicted
 # Trivial? → fix, git add, git rebase --continue
 # Complex? → git rebase --abort, reopen source issue, notify witness
-gt mail send {{ .RigName }}/witness -s "MERGE_FAILED" -m "Branch miner/rictus-12345 has unresolvable conflicts. Source issue reopened."
+ms mail send {{ .RigName }}/witness -s "MERGE_FAILED" -m "Branch miner/rictus-12345 has unresolvable conflicts. Source issue reopened."
 ```
 
 ## Patrol Molecule: mol-refinery-patrol
@@ -140,7 +140,7 @@ Print the startup banner:
 ```
 
 ```bash
-gt hook                          # Check for hooked patrol
+ms hook                          # Check for hooked patrol
 bd list --status=in_progress --assignee=refinery
 # If no patrol:
 {{ cmd }} patrol new                  # Creates root-only wisp with config vars and hooks it
@@ -199,7 +199,7 @@ When you see MERGE_READY, proceed directly to queue-scan.
 **queue-scan**: Check beads merge queue (ONLY source of truth)
 ```bash
 git fetch --prune origin
-gt mq list {{ .RigName }}
+ms mq list {{ .RigName }}
 ```
 ⚠️ **CRITICAL**: `{{ cmd }} mq list` is the ONLY source of truth. NEVER use `git branch -r | grep miner`.
 If queue empty, skip to context-check.
@@ -269,10 +269,10 @@ RSS_MB=$(( $(ps -o rss= -p $$) / 1024 ))
 # Option A: Continue (healthy) → report closes current, starts next cycle
 {{ cmd }} patrol report --summary "Merged 3 branches, no issues"
 
-# Option B: Hand off (heavy) → gt handoff -s "Patrol complete" -m "RSS: ${RSS_MB}MB"
+# Option B: Hand off (heavy) → ms handoff -s "Patrol complete" -m "RSS: ${RSS_MB}MB"
 ```
 
-**NEVER sleep-poll manually.** Use `gt mol step await-signal`.
+**NEVER sleep-poll manually.** Use `ms mol step await-signal`.
 
 ## CRITICAL: Sequential Rebase Protocol
 
@@ -305,8 +305,8 @@ git rebase --continue
 git rebase --abort
 # Reopen source issue, close MR, notify witness (NOT the miner — it's dead)
 bd update <source-issue> --status=open
-gt mq close <mr-id> --reason="Unresolvable conflicts"
-gt mail send {{ .RigName }}/witness -s "MERGE_FAILED" \
+ms mq close <mr-id> --reason="Unresolvable conflicts"
+ms mail send {{ .RigName }}/witness -s "MERGE_FAILED" \
   -m "Branch miner/<worker> has unresolvable conflicts with target. Source issue reopened for re-slinging."
 ```
 
@@ -326,7 +326,7 @@ gt mail send {{ .RigName }}/witness -s "MERGE_FAILED" \
 
 ### Beads CLI Reference
 ```bash
-bd show <id>                             # Issue details (e.g., bd show gt-abc)
+bd show <id>                             # Issue details (e.g., bd show ms-abc)
 bd update <id> --status=open             # Reopen source issue
 bd update <id> --notes "..."             # Persist findings
 bd close <id>                            # Close issue
@@ -359,7 +359,7 @@ Beads data is stored in Dolt (port 3307). If `bd` commands hang or fail:
 |------------|----------------|----------------|
 | Check merge queue | `{{ cmd }} mq list {{ .RigName }}` | ~~git branch -r \| grep miner~~ (misses MRs) |
 | Message a miner | `{{ cmd }} nudge {{ .RigName }}/<name> "msg"` | ~~tmux send-keys~~ (unreliable) |
-| Create issues | `bd create "title"` | ~~gt issue create~~ (not a command) |
+| Create issues | `bd create "title"` | ~~ms issue create~~ (not a command) |
 
 **Rig lifecycle commands (for reference):**
 - `park/unpark` — Temporary pause. Daemon skips parked rigs.

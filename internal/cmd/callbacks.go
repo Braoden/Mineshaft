@@ -492,12 +492,12 @@ func handleSling(townRoot string, msg *mail.Message, dryRun bool) (string, error
 		return fmt.Sprintf("would sling %s to %s", beadID, targetRig), nil
 	}
 
-	// Log the sling (actual spawn happens via gt sling command)
+	// Log the sling (actual spawn happens via ms sling command)
 	logCallback(townRoot, fmt.Sprintf("sling_request: bead %s to rig %s", beadID, targetRig))
 
 	// Note: We don't actually spawn here - that would be done by the Supervisor
 	// executing the sling command based on this request.
-	return fmt.Sprintf("logged sling request: %s to %s (execute with: gt sling %s %s)",
+	return fmt.Sprintf("logged sling request: %s to %s (execute with: ms sling %s %s)",
 		beadID, targetRig, beadID, targetRig), nil
 }
 

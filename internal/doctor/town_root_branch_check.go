@@ -7,7 +7,7 @@ import (
 )
 
 // TownRootBranchCheck verifies that the town root directory is on the main branch.
-// The town root should always stay on main to avoid confusion and broken gt commands.
+// The town root should always stay on main to avoid confusion and broken ms commands.
 // Accidental branch switches can happen when git commands run in the wrong directory.
 type TownRootBranchCheck struct {
 	FixableCheck
@@ -53,14 +53,14 @@ func (c *TownRootBranchCheck) Run(ctx *CheckContext) *CheckResult {
 			Message: "Town root is in detached HEAD state",
 			Details: []string{
 				"The town root should be on the main branch",
-				"Detached HEAD can cause gt commands to fail",
+				"Detached HEAD can cause ms commands to fail",
 			},
-			FixHint: "Run 'gt doctor --fix' or manually: cd ~/gt && git checkout main",
+			FixHint: "Run 'ms doctor --fix' or manually: cd ~/ms && git checkout main",
 		}
 	}
 
 	// Accept main or master
-	if branch == "main" || branch == "master" || branch == "gt_managed" {
+	if branch == "main" || branch == "master" || branch == "ms_managed" {
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusOK,
@@ -74,19 +74,19 @@ func (c *TownRootBranchCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:  StatusError,
 		Message: fmt.Sprintf("Town root is on wrong branch: %s", branch),
 		Details: []string{
-			"The town root (~/gt) must stay on main branch",
+			"The town root (~/ms) must stay on main branch",
 			fmt.Sprintf("Currently on: %s", branch),
-			"This can cause gt commands to fail (missing rigs.json, etc.)",
+			"This can cause ms commands to fail (missing rigs.json, etc.)",
 			"The branch switch was likely accidental (git command in wrong dir)",
 		},
-		FixHint: "Run 'gt doctor --fix' or manually: cd ~/gt && git checkout main",
+		FixHint: "Run 'ms doctor --fix' or manually: cd ~/ms && git checkout main",
 	}
 }
 
 // Fix switches the town root back to main branch.
 func (c *TownRootBranchCheck) Fix(ctx *CheckContext) error {
 	// Only fix if we're not already on main
-	if c.currentBranch == "main" || c.currentBranch == "master" || c.currentBranch == "gt_managed" {
+	if c.currentBranch == "main" || c.currentBranch == "master" || c.currentBranch == "ms_managed" {
 		return nil
 	}
 

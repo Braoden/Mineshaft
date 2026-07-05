@@ -43,10 +43,10 @@ The watcher list is stored in the minecart's description fields and processed
 by notifyMinecartCompletion when the minecart closes.
 
 Examples:
-  gt minecart watch hq-cv-abc                    # Mail notification to caller
-  gt minecart watch hq-cv-abc --nudge            # Nudge notification to caller
-  gt minecart watch hq-cv-abc --addr mineshaft/crew/mel  # Mail notification to mel
-  gt minecart watch hq-cv-abc --nudge --addr overseer/    # Nudge overseer on completion`,
+  ms minecart watch hq-cv-abc                    # Mail notification to caller
+  ms minecart watch hq-cv-abc --nudge            # Nudge notification to caller
+  ms minecart watch hq-cv-abc --addr mineshaft/crew/mel  # Mail notification to mel
+  ms minecart watch hq-cv-abc --nudge --addr overseer/    # Nudge overseer on completion`,
 	Args:         cobra.ExactArgs(1),
 	SilenceUsage: true,
 	RunE:         runMinecartWatch,
@@ -60,8 +60,8 @@ var minecartUnwatchCmd = &cobra.Command{
 Removes from both mail and nudge watcher lists.
 
 Examples:
-  gt minecart unwatch hq-cv-abc                        # Remove caller from watchers
-  gt minecart unwatch hq-cv-abc --addr mineshaft/crew/mel # Remove mel from watchers`,
+  ms minecart unwatch hq-cv-abc                        # Remove caller from watchers
+  ms minecart unwatch hq-cv-abc --addr mineshaft/crew/mel # Remove mel from watchers`,
 	Args:         cobra.ExactArgs(1),
 	SilenceUsage: true,
 	RunE:         runMinecartUnwatch,

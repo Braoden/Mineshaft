@@ -28,7 +28,7 @@ func TestAgentBeadMatchesDescriptionAndIDFallback(t *testing.T) {
 		{
 			name: "canonical ID fallback matches sparse wisp metadata",
 			issue: &beads.Issue{
-				ID: "gt-mineshaft-witness",
+				ID: "ms-mineshaft-witness",
 			},
 			role: "witness",
 			rig:  "mineshaft",
@@ -46,7 +46,7 @@ func TestAgentBeadMatchesDescriptionAndIDFallback(t *testing.T) {
 		{
 			name: "role mismatch",
 			issue: &beads.Issue{
-				ID:          "gt-mineshaft-witness",
+				ID:          "ms-mineshaft-witness",
 				Description: "Agent\n\nrole_type: witness\nrig: mineshaft",
 			},
 			role: "refinery",
@@ -56,7 +56,7 @@ func TestAgentBeadMatchesDescriptionAndIDFallback(t *testing.T) {
 		{
 			name: "rig mismatch",
 			issue: &beads.Issue{
-				ID:          "gt-mineshaft-refinery",
+				ID:          "ms-mineshaft-refinery",
 				Description: "Agent\n\nrole_type: refinery\nrig: mineshaft",
 			},
 			role: "refinery",

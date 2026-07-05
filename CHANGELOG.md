@@ -12,18 +12,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Shell integration no longer nags in arbitrary shells** — the
-  `gt install --shell` hook prompted `Add '<repo>' to Mineshaft? [y/N/never]` in
+  `ms install --shell` hook prompted `Add '<repo>' to Mineshaft? [y/N/never]` in
   any git repo that wasn't a known rig, and on bash it re-prompted before
   *every* command (not just on `cd`). An interrupted prompt (Ctrl-C) never
   recorded the answer and could loop indefinitely across restored terminal
   sessions. The add-offer is now **opt-in** (set `MINESHAFT_OFFER_ADD=1`); by
-  default the hook stays silent and only exports `GT_TOWN_ROOT`/`GT_RIG` inside
+  default the hook stays silent and only exports `MS_TOWN_ROOT`/`MS_RIG` inside
   known rigs. bash now offers only on a real directory change, and the repo is
   recorded before the prompt so an interrupted read can't loop.
 - **`bd create` repo aliases route canonically** (gh#4180).
 - **Mail reply-to is inferred from the inbox** so reply-reminders clear
-  correctly (gt-zzob).
-- **`gt doctor` rig-config-sync accepts prefix-named Dolt databases** (gt-5hd2).
+  correctly (ms-zzob).
+- **`ms doctor` rig-config-sync accepts prefix-named Dolt databases** (ms-5hd2).
 
 ### Changed
 
@@ -40,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`PauseBackoff`, default 60s) and don't count toward the crash-loop fault
   budget, letting `quota_dog` rotate accounts instead of burning the budget on
   transient API limits (gh#3398, hq-j6hur.4.1).
-- **Rig init no longer creates duplicate Dolt databases** — `gt rig add` was
+- **Rig init no longer creates duplicate Dolt databases** — `ms rig add` was
   leaving an orphan database matching the beads prefix (e.g. `ma` for prefix
   `ma`) alongside the canonical rig database (e.g. `mobile_apps`), because the
   cleanup code only knew the legacy `beads_<prefix>` naming used by bd < 0.62.
@@ -48,7 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   from the canonical DB — a silent data split. Cleanup now removes both
   naming forms and `AddRig` fails loudly if an orphan persists (gh#3562,
   hq-j6hur.4.2).
-- **Stale hooked mail beads** — `sendHandoffMail()` now closes any `gt:message` beads left in `status=hooked` from previous sessions before creating a new handoff bead, preventing indefinite accumulation across sessions (#3859).
+- **Stale hooked mail beads** — `sendHandoffMail()` now closes any `ms:message` beads left in `status=hooked` from previous sessions before creating a new handoff bead, preventing indefinite accumulation across sessions (#3859).
 
 ## [1.1.0] - 2026-05-06
 
@@ -56,7 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Minecart completion + cross-rig dep notifications** — Minecart completion and
   cross-rig dependency resolution now fire notifications, surfacing milestone
-  events without polling (#3838, gt-wfs-55hsg).
+  events without polling (#3838, ms-wfs-55hsg).
 
 ### Fixed
 
@@ -64,13 +64,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   preventing wasted dispatch attempts and "no such bead" errors (hq-ki2,
   #3840). Mirrors the existing `runSling` / `executeSling` guards.
 - **Mail inbox Dolt churn** — Reduced repeated Dolt commits on inbox reads
-  (gt-05ld, #3830).
+  (ms-05ld, #3830).
 - **Polish** — Rename `DeliveryAckLabelSequenceIdempotent` to clarify intent
-  (gt-ekuh).
+  (ms-ekuh).
 - **`jsonl_git_backup` plugin** — Forward `USER`, `LOGNAME`, and `HOME` env to
-  git children so the plugin can run under uid-501 wrapper contexts (gt-zt1w).
+  git children so the plugin can run under uid-501 wrapper contexts (ms-zt1w).
 - **Resilience under Dolt memory pressure** — Subprocess timeout and parallel
-  rig scan so `gt status` and related commands degrade gracefully when Dolt is
+  rig scan so `ms status` and related commands degrade gracefully when Dolt is
   under load instead of hanging.
 - **`bd` 1.0+ compatibility** — `bd init --prefix <X>` now persists the prefix
   directly (previously relied on the removed `bd config set issue_prefix` call).
@@ -78,7 +78,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Create routes via BEADS_DIR instead of `--repo` to prevent pthread deadlock;
   zero-copy fix for routed writes.
 - **Daemon hardening** — Filter messaging beads, guard cross-rig prefix, fail
-  prime fast on bad state. `hasAssignedOpenWork` checked via `--repo` (gt-fcw)
+  prime fast on bad state. `hasAssignedOpenWork` checked via `--repo` (ms-fcw)
   and before reaping working-bead-lookup-failed miners. Legacy flat miner
   layout supported with regression coverage.
 - **Miner / sling lifecycle** — Auto-burn orphan molecules from beads stuck
@@ -90,7 +90,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Minecart** — `bdListChildren` falls back to deps table when the primary path
   is unavailable (#3700); cross-rig wave staging regression test (hq-mtc).
 - **Doctor** — Role-aware Stop hook check for miners (#3648); detect and
-  recover corrupt `.repo.git` bare repos (gt-61twf).
+  recover corrupt `.repo.git` bare repos (ms-61twf).
 - **Install / dolt** — Fail fast when Dolt is unavailable during install;
   clamp Dolt idle session `wait_timeout` to prevent connection exhaustion
   (gh-3623); switch remaining DDL call sites to server connection (#3641);
@@ -98,23 +98,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Hooks / agent config** — Pass agent `Args` to `ResolveProcessNames` at all
   call sites; resolve agent process names through wrapper commands; preserve
   built-in opencode preset fields in overrides; sync opencode hooks in nested
-  miner worktrees (gt-hii); reject non-bead args before `bd show` (#3701).
-- **Done / safety nets** — Auto-pop orphaned stashes in gt-pvx safety net;
-  auto-save uncommitted implementation work (gt-pvx safety net); honor
-  explicit target in done contamination check (gt-nmt); verify pushed commits
+  miner worktrees (ms-hii); reject non-bead args before `bd show` (#3701).
+- **Done / safety nets** — Auto-pop orphaned stashes in ms-pvx safety net;
+  auto-save uncommitted implementation work (ms-pvx safety net); honor
+  explicit target in done contamination check (ms-nmt); verify pushed commits
   before bead closure.
 - **Mail / archive** — Tolerate GC'd bead IDs in archive and `archive --stale`
-  (aa-6hv); clear satisfied mail reply reminders (gt-niu2); isolate
+  (aa-6hv); clear satisfied mail reply reminders (ms-niu2); isolate
   `NotifyMergeOutcome` tests from production mail.
 - **Plugin runner** — Explicit `gate=manual` skip in `dispatchPlugins`
-  (hq-suin); dispatcher skips idle dogs with leaked tmux sessions (gt-o24);
-  `stuck-agent-dog` uses `gt hook show` to inspect other agents' hooks.
+  (hq-suin); dispatcher skips idle dogs with leaked tmux sessions (ms-o24);
+  `stuck-agent-dog` uses `ms hook show` to inspect other agents' hooks.
 - **Test infrastructure** — Don't skip non-Dolt daemon tests when Docker is
-  unavailable (gt-kw4449); enforce standalone formula singleton at sling
-  boundary (gt-3kir); `gt prime` renders formula steps for both town- and
+  unavailable (ms-kw4449); enforce standalone formula singleton at sling
+  boundary (ms-3kir); `ms prime` renders formula steps for both town- and
   rig-level formulas; nightly integration test failures fixed for wl-commons
   (closes antns1/fergus#336).
-- **Lint** — Correct British spellings to American English; `gt status` no
+- **Lint** — Correct British spellings to American English; `ms status` no
   longer hangs in `bd` probe.
 - **Plugin portability** — `dolt-archive` and `dolt-backup` no longer rely on
   the bash 4 `mapfile` builtin, restoring production DB discovery on macOS
@@ -124,12 +124,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **`gt dog done` closes accumulated plugin mails** — Plugin dispatch mails sent
+- **`ms dog done` closes accumulated plugin mails** — Plugin dispatch mails sent
   by the daemon to dogs were never closed after execution, causing dog inboxes
   to accumulate hundreds of open "Plugin: X" beads. On every UserPromptSubmit
-  hook, `gt mail check --inject` re-injected ALL open mails, ballooning agent
+  hook, `ms mail check --inject` re-injected ALL open mails, ballooning agent
   context to 60-70% and causing compaction/hook conflicts that froze the supervisor.
-  `gt dog done` now archives all open "Plugin: " mails from the dog's inbox
+  `ms dog done` now archives all open "Plugin: " mails from the dog's inbox
   before clearing work and terminating the session.
 
 ## [1.0.0] - 2026-04-02
@@ -139,17 +139,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Windows platform support** — Cherry-picked Windows support: platform-specific
   signal handling, process management, tmux descendant tracking, and estop split
   into OS-specific files.
-- **Workflow formula type** — `gt formula run` now supports `type = "workflow"`
+- **Workflow formula type** — `ms formula run` now supports `type = "workflow"`
   formulas with interactive step execution.
 - **Refinery PR merge strategy** — New `merge_strategy=pr` option uses `gh pr merge`
   instead of direct push, enabling GitHub's native merge queue.
 - **`/crew-commit` skill** — Canonical crew commit workflow as a Claude skill.
 - **Rate-limit watchdog plugin** — Auto-estop on API 429 rate limit errors.
-- **`gt mail send --from` flag** — Relay/bridge use case for mail forwarding.
-- **`gt mail mark-read --all`** — Mark all inbox messages as read at once.
+- **`ms mail send --from` flag** — Relay/bridge use case for mail forwarding.
+- **`ms mail mark-read --all`** — Mark all inbox messages as read at once.
 - **`RequireTownEnv` test helper** — Integration test guard with documentation
   for GH#2717.
-- **Prefix collision checking** — `gt rig add` and `gt rig adopt` now detect
+- **Prefix collision checking** — `ms rig add` and `ms rig adopt` now detect
   prefix collisions before creation.
 - **Bead description in PR body** — PR body now includes bead description and
   diff stat for richer context.
@@ -157,7 +157,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   freshness monitoring.
 - **Default effort level config** — `CLAUDE_CODE_EFFORT_LEVEL` configurable for
   all agents.
-- **`gt dolt pull`** — New command for pulling Dolt remotes.
+- **`ms dolt pull`** — New command for pulling Dolt remotes.
 
 ### Changed
 
@@ -195,7 +195,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Sling context routing** — Route sling-context wisp to target rig instead of
   HQ.
 - **Feed timestamps** — Display feed timestamps in local timezone instead of UTC.
-- **Crew status across rigs** — `gt crew status` now shows all rigs.
+- **Crew status across rigs** — `ms crew status` now shows all rigs.
 - **Miner CLAUDE.md commit guard** — Prevent miners from committing Mineshaft
   overlay CLAUDE.md.
 - **PR branch deletion guard** — Guard PR branch deletion and add review approval
@@ -217,29 +217,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `set -u`.
 - **Claude project dir path encoding** — Encode underscores as hyphens in
   project directory path.
-- **Hook template PATH export** — Replace `export PATH` with `{{GT_BIN}}` in all
+- **Hook template PATH export** — Replace `export PATH` with `{{MS_BIN}}` in all
   hook templates.
 
 ## [0.13.0] - 2026-03-29
 
 ### Added
 
-- **Directives and overlays** — New `gt prime` directive loader and overlay
-  system with CLI commands (`gt directive`, `gt overlay`), formula overlay
+- **Directives and overlays** — New `ms prime` directive loader and overlay
+  system with CLI commands (`ms directive`, `ms overlay`), formula overlay
   support, and doctor health check for overlay integrity.
 - **Gate bead instruction template** — Gate beads now carry structured
   instruction templates with GitHub API client support.
-- **Merge queue step dependencies** — `gt mq submit` enforces molecule step
+- **Merge queue step dependencies** — `ms mq submit` enforces molecule step
   dependency ordering before submission.
-- **Minecart watch/unwatch** — `gt minecart watch` and `gt minecart unwatch` for
+- **Minecart watch/unwatch** — `ms minecart watch` and `ms minecart unwatch` for
   opt-in completion notifications on minecart progress.
 - **Minecart merge queue panel** — Feed view now shows merge queue status in
   minecart panels.
-- **Patrol scan CLI** — `gt patrol scan` detects zombie and stalled miners
+- **Patrol scan CLI** — `ms patrol scan` detects zombie and stalled miners
   from the command line.
 - **Checkpoint dog** — New `checkpoint_dog` auto-commits WIP changes in
   miner worktrees periodically.
-- **Crash recovery on startup** — `gt up` detects and recovers orphaned hooked
+- **Crash recovery on startup** — `ms up` detects and recovers orphaned hooked
   beads left by crashed sessions.
 - **Post-squash gate phase** — Refinery adds a pre-push validation gate after
   squash merging.
@@ -249,14 +249,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   automated PR review triage.
 - **Configurable tmux theming** — Window tint and `window-style` theming with
   resolver; Overseer gets terminal-default theme.
-- **`gt changelog` command** — Generate changelogs from the CLI with tests.
-- **Wasteland stamps and pilot cohorts** — `gt wl stamp`, `gt wl stamps`
+- **`ms changelog` command** — Generate changelogs from the CLI with tests.
+- **Wasteland stamps and pilot cohorts** — `ms wl stamp`, `ms wl stamps`
   commands and `pilot_cohort` column for HOP pilot program.
 - **Wasteland scorekeeper** — Charsheet, scorekeeper, and stamp loop
   integration tests.
-- **`gt wl show <work-id>`** — Structured work-item detail view with
+- **`ms wl show <work-id>`** — Structured work-item detail view with
   auto-fetch.
-- **`gt default-agent list`** — New subcommand to list available agent presets.
+- **`ms default-agent list`** — New subcommand to list available agent presets.
 - **Disabled patrols setting** — `disabled_patrols` town config to suppress
   patrols without editing daemon.json.
 - **Dolt failover/failback** — Multi-host Dolt setups can failover and
@@ -271,7 +271,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   for GA release (Feb 2026).
 - **Unique miner namepool** — Miner names are now globally unique across
   rigs via shared namepool with auto-assigned themes.
-- **Handoff restart prompt** — `gt handoff` now prompts the user before
+- **Handoff restart prompt** — `ms handoff` now prompts the user before
   restarting the session.
 - **Patrol effort tuning** — Idle patrol cycles now run at reduced reasoning
   effort; configurable per-formula with `effort_idle` and `effort_active`.
@@ -290,7 +290,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dolt SIGTERM→SIGKILL timeout** — Increased from 5s to 30s for graceful
   shutdown of large databases.
 - **Miner CLAUDE.md provisioning** — Lifecycle instructions provisioned on
-  all spawn paths including worktree reuse, with `gt done` reminders injected
+  all spawn paths including worktree reuse, with `ms done` reminders injected
   at startup and after compaction.
 - **Boot and dog cost tiers** — Boot and dog roles now tracked in the cost tier
   system.
@@ -302,9 +302,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Daemon beads compatibility guard** — `gt daemon run` now fail-fast checks
+- **Daemon beads compatibility guard** — `ms daemon run` now fail-fast checks
   workspace beads schema compatibility before Minecart polling starts, and
-  `gt daemon start` surfaces the startup mismatch directly instead of only
+  `ms daemon start` surfaces the startup mismatch directly instead of only
   telling operators to inspect logs.
 - **Dolt server stability** — Fixed thundering herd in `doltserver.Start()`,
   port-squatter detection and kill on startup, `cmd.Dir` set on all CLI/SQL
@@ -334,36 +334,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Cross-town safety** — Prevent orphan cleanup from killing agents on other
   towns' sockets, distinguish sibling Mineshaft instances from test zombies.
 - **Dog and daemon** — Clear agent identity env vars at startup, prevent
-  duplicate Overseer spawns during `gt up`, auto-clear hung dogs and orphan
+  duplicate Overseer spawns during `ms up`, auto-clear hung dogs and orphan
   sessions, include dogs in startup retry loop, prevent daemon restart during
-  `gt down`, and respect global default agent for dog spawns.
+  `ms down`, and respect global default agent for dog spawns.
 - **Doctor improvements** — Avoid slow `filepath.Walk` on Docker bind mounts,
   stale `sql-server.info` detection, hooks-sync check detects stale Gemini
   settings, route misclassified wisp fixes by workdir, and repair relocated
   worktree gitdir paths.
 - **Mail and communication** — Drain crashed miner notifications, prefer
-  `GT_TOWN_ROOT` env var for town root detection, fall back to explicit agent
+  `MS_TOWN_ROOT` env var for town root detection, fall back to explicit agent
   workspaces for mail delivery.
 - **Dolt plugins** — `dolt-archive` uses `while-read` loops for bash 3.2
-  compatibility (macOS), `dolt-backup` uses `$HOME/gt` as `GT_ROOT` fallback,
+  compatibility (macOS), `dolt-backup` uses `$HOME/ms` as `MS_ROOT` fallback,
   named Docker volume prevents journal corruption on macOS, and `grep -v`
   exit code handled under `pipefail`.
 - **Formula and molecule** — Cap backoff before overflow in `await-event` and
   `await-signal`, inject `merge_strategy` from rig settings into formula vars,
-  propagate `base_branch` to MR target in `gt done` and `gt mq submit`.
+  propagate `base_branch` to MR target in `ms done` and `ms mq submit`.
 - **Sling** — Serialize concurrent hook writes with per-assignee flock,
   `--dry-run` detects tmux session collision before spawn, guard `sha[:8]`
   slice against short hashes.
 - **Config and identity** — Dog sessions inherit env vars from base agent, custom
   agents inherit Session/Tmux from preset, `CLAUDE_CONFIG_DIR` respected in
-  `gt costs`, rig prefix pattern refresh when stale, propagate
+  `ms costs`, rig prefix pattern refresh when stale, propagate
   `BEADS_DOLT_SERVER_HOST` to subprocesses, and repair PROJECT IDENTITY
   MISMATCH after crash.
 - **Guard and compliance** — Block miners from pushing directly to main.
 - **Misc** — `formatPeriod` returns "Week of" on Mondays instead of "Today",
   sync `agent_state` between column and description on transitions, validate
   git URL before crew clone, `--flat` flag on all `bd list --json` calls to
-  guarantee JSON output, `gt upgrade` repairs missing identity beads, and
+  guarantee JSON output, `ms upgrade` repairs missing identity beads, and
   `CLAUDE.local.md` added to gitignore patterns.
 
 ### Removed
@@ -374,7 +374,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   proper ephemeral bead support.
 - **Hardcoded database lists** — Reaper and plugin database discovery replaced
   with dynamic `DiscoverDatabases`.
-- **Legacy `gt` database** — Removed from reaper fallback list.
+- **Legacy `ms` database** — Removed from reaper fallback list.
 
 ## [0.12.1] - 2026-03-15
 
@@ -382,11 +382,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Agent Client Protocol (ACP)** — New protocol for structured agent
   communication with propulsion trigger detection and output suppression.
-- **gt mountain** — Stage, label, and launch epic work in one command.
-- **gt assign** — One-shot bead creation + hook for direct agent assignment.
-- **Minecart --from-epic** — `gt minecart create --from-epic` stages epic children
+- **ms mountain** — Stage, label, and launch epic work in one command.
+- **ms assign** — One-shot bead creation + hook for direct agent assignment.
+- **Minecart --from-epic** — `ms minecart create --from-epic` stages epic children
   into minecart waves with automatic validation bead.
-- **Typed memories** — `gt remember --type feedback/project/user/reference` for
+- **Typed memories** — `ms remember --type feedback/project/user/reference` for
   categorized agent memory storage.
 - **Repo-sourced rig settings** — `.mineshaft/settings.json` in repos auto-configures
   rig behavior (test gates, merge strategy).
@@ -411,12 +411,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Compactor-dog false positives** — Fixed concurrent write detection and hash
   validation for Dolt base32 format.
 - **Dolt server stability** — Fixed stale socket cleanup, server ownership
-  detection, rogue process race on restart, idle-monitor orphans on `gt down`.
+  detection, rogue process race on restart, idle-monitor orphans on `ms down`.
 - **Cross-rig wisp contamination** — MQ list filtered by rig to prevent leaks.
 - **Miner lifecycle** — Fixed idle reuse with live sessions, CRASHED_MINER
   alerts for closed beads, spawn storm dedup.
 - **Session prefix parsing** — Fixed hq- prefix collision and rig-level fallback.
-- **Unicode handling** — Fixed parse errors in `gt compact`.
+- **Unicode handling** — Fixed parse errors in `ms compact`.
 - **Non-Claude agent support** — Liveness env vars, idle-wait instructions, and
   nudge startup prompts for Gemini/Codex runtimes.
 - **Test isolation** — 5 tests isolated from live Dolt server; sleep sessions
@@ -431,18 +431,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Event-driven miner lifecycle** — Miners now use FIX_NEEDED feedback loop
-  with awaiting_verdict state, replacing polling-based lifecycle (gt-k0h).
+  with awaiting_verdict state, replacing polling-based lifecycle (ms-k0h).
 - **Cross-database minecart resolution** — CLI-side dep resolution for multi-rig
   towns where bd SQL JOINs fail across databases (GH#2624, GH#2625).
-- **Plugin sync** — `gt plugin sync` auto-deploys plugins after build (hq-o9gna).
+- **Plugin sync** — `ms plugin sync` auto-deploys plugins after build (hq-o9gna).
 - **Compactor dog** — Executable `run.sh` for Dolt database compaction with
   DoltHub remote sync, validation, and dry-run support.
 - **GitHub sheriff v2** — Single API call PR categorization with structured output.
 - **Mail reply reminders** — Deferred nudge delivery for unanswered mail.
-- **Git hygiene dog** — Automated repo cleanup plugin (gt-cdm).
+- **Git hygiene dog** — Automated repo cleanup plugin (ms-cdm).
 - **Crew agent assignment** — Town-level `crew_agents` config for per-crew
   agent runtime selection.
-- **Partial clones** — `gt rig add` supports `--reference` for submodule init
+- **Partial clones** — `ms rig add` supports `--reference` for submodule init
   and sparse checkout.
 - **Formula composition** — `extends` and `compose/expand` support for formulas.
 - **Background nudge poller** — Queue-based nudge delivery for non-Claude agents.
@@ -455,16 +455,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Refinery merge strategy** — Configurable direct vs PR mode (gt-fln).
+- **Refinery merge strategy** — Configurable direct vs PR mode (ms-fln).
 - **Miner lifecycle patrol** — Redesigned formula for event-driven model.
 - **Session hygiene** — Converted from plugin.md to deterministic `run.sh`.
-- **DND auto-reset** — Muted mode auto-resets on `gt up`.
+- **DND auto-reset** — Muted mode auto-resets on `ms up`.
 - **Nudge degradation** — Wait-idle gracefully degrades to queue for agents
   without prompt detection.
 
 ### Fixed
 
-- **Install bootstrap** — `gt install` now waits for MySQL readiness and always
+- **Install bootstrap** — `ms install` now waits for MySQL readiness and always
   passes `--server-port` to `bd init` (GH#2572, GH#2573).
 - **Rig add database creation** — `InitRig` runs CREATE DATABASE on live server
   before schema migration.
@@ -497,7 +497,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Context-budget guard** — External script to prevent context window overflow (#2008).
 - **Cascade close** — `bd close --cascade` closes parent and all children with cycle
   guard and depth limit (#998).
-- **Schema evolution** — `gt wl sync` supports Wasteland schema changes (gp-c7e).
+- **Schema evolution** — `ms wl sync` supports Wasteland schema changes (gp-c7e).
 - **Dashboard enrichment** — Minecart panel shows progress %, ready/active counts,
   and assignees.
 - **Miner slot env** — `MINER_SLOT` environment variable for test isolation (#954).
@@ -506,15 +506,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Beads dependency** upgraded from v0.57.0 to v0.59.0.
 - **Hook installers consolidated** — Per-agent hook installer packages replaced with
-  generic declarative system (gt-071h).
+  generic declarative system (ms-071h).
 - **Agent preset registry** — Hardcoded `isKnownAgent` switch replaced with
-  `config.IsKnownPreset` (gt-7r3c).
+  `config.IsKnownPreset` (ms-7r3c).
 - **Reaper TTLs shortened** — Auto-close 7d, purge 3d (previously longer).
 - **`CreateOptions.Type` deprecated** in favor of Labels.
 
 ### Removed
 
-- **`gt swarm` command** — Deprecated command and `internal/swarm` package removed (#1170).
+- **`ms swarm` command** — Deprecated command and `internal/swarm` package removed (#1170).
 - **Beads Classic legacy code** — Remaining SQLite/JSONL/sync code paths removed.
 - **Vestigial `sync.mode` plumbing** — Dead config removed.
 
@@ -527,16 +527,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (GH#2389).
 - **Refinery** — PostMerge now uses `ForceCloseWithReason` for source issue (GH#2321).
 - **Crew mail prefix** — Regression test added for crew mail send prefix mismatch
-  (gt-brip).
+  (ms-brip).
 - **bd JSON guard** — Non-JSON output from bd v0.58.0 handled in remaining parsers
-  (gt-ac0i).
-- **CI release guards** — Blocks `go.mod` replace directives in releases (gt-qex2).
-- **go vet** — Pre-existing failures on main resolved (gt-77xe).
-- **Branch contamination** — Preflight check added to `gt done` (#2220).
+  (ms-ac0i).
+- **CI release guards** — Blocks `go.mod` replace directives in releases (ms-qex2).
+- **go vet** — Pre-existing failures on main resolved (ms-77xe).
+- **Branch contamination** — Preflight check added to `ms done` (#2220).
 - **Miner nuke** — Uses `ClonePath` for best-effort push (hq-9pcb0).
 - **Miner state** — JSON list state reconciled with session liveness.
 - **Minecart** — External tracked IDs resolved during launch collection.
-- **`gt done`** — Correct rig used when Claude Code resets shell cwd. Tolerates
+- **`ms done`** — Correct rig used when Claude Code resets shell cwd. Tolerates
   Mineshaft runtime artifacts in worktrees (#2382).
 - **Dolt server** — Server-side timeouts prevent CLOSE_WAIT accumulation (#2287).
 - **Daemon** — 5-minute grace period before auto-closing empty minecarts (GH#2303).
@@ -568,7 +568,7 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
   the tip, and binary-bisects on failure. GatesParallel runs test + lint
   concurrently per MR.
 - **Persistent miners** — Miner identity and sandbox survive across work
-  assignments. Sessions are ephemeral; identity accumulates forever. `gt done`
+  assignments. Sessions are ephemeral; identity accumulates forever. `ms done`
   transitions to idle instead of nuking.
 - **Compactor Dog** — Daily Dolt commit history flattening via `DOLT_RESET --soft`.
   Runs on live server, no downtime. Configurable threshold. Includes surgical
@@ -585,21 +585,21 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **Six-stage data lifecycle** — CREATE, LIVE, CLOSE, DECAY, COMPACT, FLATTEN,
   all automated via Dogs. `EnsureLifecycleDefaults()` auto-populates daemon.json
   on startup.
-- **`gt maintain`** — One-command Dolt maintenance (flatten + gc).
-- **`gt vitals`** — Unified health dashboard command.
-- **`gt upgrade`** — Post-binary migration command for config propagation.
-- **`gt minecart stage`** — Stage minecarts with `--title` flag and smart defaults.
-- **`gt mol await-signal`** — Alias for step-level signal awaiting.
-- **`gt daemon clear-backoff`** — Reset exponential backoff on daemon restarts.
-- **`gt mq post-merge`** — Branch cleanup after refinery merge.
-- **`gt mail drain`** — Drain inbox command.
+- **`ms maintain`** — One-command Dolt maintenance (flatten + gc).
+- **`ms vitals`** — Unified health dashboard command.
+- **`ms upgrade`** — Post-binary migration command for config propagation.
+- **`ms minecart stage`** — Stage minecarts with `--title` flag and smart defaults.
+- **`ms mol await-signal`** — Alias for step-level signal awaiting.
+- **`ms daemon clear-backoff`** — Reset exponential backoff on daemon restarts.
+- **`ms mq post-merge`** — Branch cleanup after refinery merge.
+- **`ms mail drain`** — Drain inbox command.
 - **Sandbox sync** — Branch-only miner reuse with `pool-init`.
 - **Per-worker agent selection** — `worker_agents` config for crew members.
 - **Dangerous-command guard hook** — Blocks `cp -i`, `mv -i`, `rm -i` in agent sessions.
 - **Log rotation** — Daemon and Dolt server logs now rotate with gzip compression.
 - **Did-you-mean suggestions** — Unknown subcommands suggest closest match.
-- **`gt version --verbose/--short`** — Version display options.
-- **Town-root CLAUDE.md version check** — `gt doctor` detects stale CLAUDE.md files.
+- **`ms version --verbose/--short`** — Version display options.
+- **Town-root CLAUDE.md version check** — `ms doctor` detects stale CLAUDE.md files.
 - **Lifecycle defaults doctor check** — Detects missing daemon.json patrol entries.
 
 ### Changed
@@ -662,21 +662,21 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 ### Added
 
 #### Work Queue & Dispatch Engine
-- **`gt queue` CLI and dispatch engine** — Enqueue work items for daemon-driven dispatch
-- **`gt queue epic`** — Bulk enqueue of epic children
-- **`gt minecart queue`** — Bulk enqueue of minecart-tracked issues
-- **`gt sling --queue`** — Enqueue path for asynchronous dispatch
+- **`ms queue` CLI and dispatch engine** — Enqueue work items for daemon-driven dispatch
+- **`ms queue epic`** — Bulk enqueue of epic children
+- **`ms minecart queue`** — Bulk enqueue of minecart-tracked issues
+- **`ms sling --queue`** — Enqueue path for asynchronous dispatch
 - **Queue daemon heartbeat step** for reliable dispatch processing
 - **Enqueue-time validation** and enhanced metadata on queued items
 - **Config-driven capacity scheduler** with sling context beads
 
 #### Telemetry & Observability (OTEL)
-- **Full OpenTelemetry instrumentation** across gt, bd, and Claude Code
+- **Full OpenTelemetry instrumentation** across ms, bd, and Claude Code
 - **VictoriaMetrics and VictoriaLogs integration** for metrics and log export
 - **Lifecycle events, duration histograms, and operation traces**
 - **Claude Code tool content and user prompt logging** via OTLP
-- **`gt.* OTEL` resource attributes**, prime context events, and session metadata
-- **Command usage telemetry** and `gt metrics` reader
+- **`ms.* OTEL` resource attributes**, prime context events, and session metadata
+- **Command usage telemetry** and `ms metrics` reader
 
 #### Dog Subsystem (Supervisor Workers)
 - **Handler patrol** for Dog lifecycle and plugin dispatch
@@ -692,7 +692,7 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **Closed wisp GC** added to patrol cycles to prevent accumulation
 
 #### Minecart & Sling Improvements
-- **`gt minecart stage` and `gt minecart launch`** commands
+- **`ms minecart stage` and `ms minecart launch`** commands
 - **Auto-resolve rig from bead prefixes** in batch mode
 - **Reject deferred/post-launch beads** at sling time
 - **Auto-check minecart completion** on `bd close`
@@ -721,20 +721,20 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **Date+time timestamps** instead of relative ago format
 
 #### CLI & Workflow
-- **`gt handoff --cycle`** — Full session replacement flag
-- **`gt handoff --agent`** — Explicit runtime selection
-- **`gt crew start --resume`** — Resume flag for crew sessions
-- **`gt crew at --reset`** — Branch switch opt-in with reset flag
-- **`gt supervisor pending`** — AI-based spawn observation command
-- **`gt patrol step-drift`** subcommand
-- **`gt up --json`** output flag
-- **`gt migrate-bead-labels`** command
+- **`ms handoff --cycle`** — Full session replacement flag
+- **`ms handoff --agent`** — Explicit runtime selection
+- **`ms crew start --resume`** — Resume flag for crew sessions
+- **`ms crew at --reset`** — Branch switch opt-in with reset flag
+- **`ms supervisor pending`** — AI-based spawn observation command
+- **`ms patrol step-drift`** subcommand
+- **`ms up --json`** output flag
+- **`ms migrate-bead-labels`** command
 - **Desire-path fixes** for rig settings, crew list, mail directory
 - **Idle-aware notification** in mail router with auto-nudge on send
 
 #### Infrastructure
 - **WorktreeCreate/WorktreeRemove hook event support**
-- **Remote Dolt server support** (`gt dolt`)
+- **Remote Dolt server support** (`ms dolt`)
 - **Dolt server identity verification and restart command**
 - **Orphaned Dolt branch cleanup**
 - **Nix flake** and integration with bump-version script
@@ -742,11 +742,11 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **Beads-redirect-target doctor check**
 - **Unified zombie session detection** with 3-level health check
 - **Emit-event command** and nudgeRefinery event wiring
-- **`gt mol step await-event`** for channel-based event subscription
+- **`ms mol step await-event`** for channel-based event subscription
 - **Doctor check** for in_progress beads with NULL assignee
 - **PR creation guard** blocking direct pushes to steveyegge/mineshaft
 - **Orphan scan** for miner worktrees with unmerged branches
-- **Wasteland CLI command suite** (`gt wl`)
+- **Wasteland CLI command suite** (`ms wl`)
 - **GitHub Sheriff Supervisor plugin** for CI failure monitoring
 
 ### Changed
@@ -773,15 +773,15 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **Strip BD_BRANCH from wisp creation and cook steps**
 
 #### Agent & Session Management
-- **LookupEnv for GT_AGENT** to prevent tmux env contamination
+- **LookupEnv for MS_AGENT** to prevent tmux env contamination
 - **KillSession idempotent** + ensureOverseerInfra on attach
 - **Detect non-miner CWD** when Claude Code resets shell to overseer/rig
 - **Filter getCurrentWork by assignee** to prevent shared rig beads leaking across sessions
 - **Clean up stale molecules during miner nuke** to unblock re-sling
-- **Set GT_PROCESS_NAMES in tmux env** for all session types
+- **Set MS_PROCESS_NAMES in tmux env** for all session types
 - **Resolve agent config from --agent override** for Codex miner startup
 - **Tell miners to close bead explicitly** when nothing to commit
-- **Silent costs-record skip** for non-GT sessions
+- **Silent costs-record skip** for non-MS sessions
 
 #### Test Infrastructure
 - **Flaky TestFindActivePatrol tests** caused by bd daemon contamination
@@ -795,28 +795,28 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **Prefer mineshaft repo over crew rigs** in stale binary check
 - **Session-name-format doctor check** for outdated session names
 - **Handoff warn on uncommitted/unpushed work** before session cycling
-- **Helpful error for `gt mail read` with no args** instead of cobra usage
+- **Helpful error for `ms mail read` with no args** instead of cobra usage
 
 ## [0.7.0] - 2026-02-15
 
 ### Added
 
 #### Minecart Ownership & Merge Strategies
-- **Minecart ownership model** — `--owned` flag for `gt minecart create` and `gt sling`
+- **Minecart ownership model** — `--owned` flag for `ms minecart create` and `ms sling`
 - **Merge strategy selection** — `--merge` flag with `direct`, `mr`, and `local` strategies
-- **`gt minecart land`** — New command for owned minecart cleanup and completion
+- **`ms minecart land`** — New command for owned minecart cleanup and completion
 - **Skip witness/refinery registration** for owned+direct minecarts (faster dispatch)
-- **Ownership and merge strategy display** in `gt minecart status` and `gt minecart list`
+- **Ownership and merge strategy display** in `ms minecart status` and `ms minecart list`
 
 #### Agent Resilience & Lifecycle
-- **`gt done` checkpoint-based resilience** — Recovery from session death mid-completion
+- **`ms done` checkpoint-based resilience** — Recovery from session death mid-completion
 - **Agent factory** — Data-driven preset registry replaces provider switch statements
 - **Gemini CLI integration** — First-class Gemini CLI as runtime adapter
 - **GitHub Copilot CLI integration** — Copilot CLI as runtime adapter
 - **Non-destructive nudge delivery** — Queue and wait-idle modes prevent message loss
 - **Auto-dismiss stalled miner permission prompts** — Witness detects and clears stuck prompts
 - **Dead crew agent detection** — Detect dead crew agents on startup and restart them
-- **Remote hook attach** — `gt hook attach` with remote target support
+- **Remote hook attach** — `ms hook attach` with remote target support
 
 #### Dashboard & Web UI
 - **Rich activity timeline** — Chronological view with filtering
@@ -835,14 +835,14 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **Merge queue `--verify` flag** — Detect orphaned/missing merge queue entries
 - **Cost digest aggregate-only payload** — Fixes Dolt column overflow
 - **Rig-specific beads prefix for tmux session names** — Better multi-rig session isolation
-- **Overseer GT_ROLE Task tool guard** — Block Task tool for Overseer via GT_ROLE check
-- **Server-side database creation** during `gt rig add` with issue_prefix setup
+- **Overseer MS_ROLE Task tool guard** — Block Task tool for Overseer via MS_ROLE check
+- **Server-side database creation** during `ms rig add` with issue_prefix setup
 
 ### Changed
 
 - **Beads Classic dead code removed** — -924 lines of SQLite/JSONL/sync code eliminated
 - **Agent provider consolidated** — Data-driven preset registry replaces switch statements
-- **Session prefix renamed** — Registry-based prefixes replace hardcoded `gt-*` patterns
+- **Session prefix renamed** — Registry-based prefixes replace hardcoded `ms-*` patterns
 - **Agent config resolution** — Moved mutex to package config for thread safety
 - **Molecule step readiness** — Delegated to `bd ready --mol` instead of custom logic
 
@@ -878,7 +878,7 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **Rig adopt** — Init `.beads/` when no existing database found
 - **Revert shared-DB for untracked-beads rigs** — Fixes bead creation breakage
 - **Install preserves existing configs** — `town.json` and `rigs.json` kept on re-install
-- **Orphaned dolt server** detected and stopped during `gt install`
+- **Orphaned dolt server** detected and stopped during `ms install`
 - **Doctor dolt check** — Uses platform-appropriate mock binaries, adds dolt binary check
 - **Doctor dolt-server-reachable** reads host/port from metadata instead of hardcoding
 - **IPv6 safety** and accurate rig count in doctor
@@ -887,7 +887,7 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 
 #### Supervisor & Dogs
 - **Supervisor scoped zombie/orphan detection** to Mineshaft workspace only
-- **Supervisor heartbeat** surfaced in `gt supervisor status`
+- **Supervisor heartbeat** surfaced in `ms supervisor status`
 - **Supervisor loop-or-exit** step updated with squash/create-wisp/hook cycle
 - **Dog agent beads** — Added description for mail routing
 
@@ -901,7 +901,7 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **Tmux `-u` flag** added to remaining client-side callsites
 - **JSON output** — Return `[]` instead of `null` for empty slices
 - **Windows CI** cut from ~13 min to ~4 min
-- **Dolt server auto-start** in `gt start`
+- **Dolt server auto-start** in `ms start`
 - 50+ additional bug fixes from community contributions
 
 ## [0.6.0] - 2026-02-15
@@ -910,11 +910,11 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 
 #### Dolt-Native Architecture
 - **Complete SQLite-to-Dolt migration** - Mineshaft is now Dolt-native; all SQLite code removed
-- **`gt dolt` command** - Server management (start, stop, status, migrate, rollback, sync, init-rig)
-- **`gt install` consolidation** - Folds Dolt identity, HQ database, and server start into single command
+- **`ms dolt` command** - Server management (start, stop, status, migrate, rollback, sync, init-rig)
+- **`ms install` consolidation** - Folds Dolt identity, HQ database, and server start into single command
 - **Branch-per-miner write isolation** - Each miner gets its own Dolt branch to prevent write conflicts
 - **Proactive Dolt health alerting** - Daemon monitors server health with dedicated 30s ticker
-- **Auto-create DoltHub repos and configure remotes** - `gt dolt sync` pushes to DoltHub
+- **Auto-create DoltHub repos and configure remotes** - `ms dolt sync` pushes to DoltHub
 - **Dolt remotes patrol** - Periodic push to git remotes for federation readiness
 - **Max-connections and admission control** - Prevents connection storms on Dolt server
 
@@ -934,44 +934,44 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **Boot watchdog** - Ephemeral dog that triages Supervisor state on each daemon tick
 
 #### Molecule & Workflow System
-- **DAG visualization** (`gt mol dag`) - Visualize molecule dependency graphs
+- **DAG visualization** (`ms mol dag`) - Visualize molecule dependency graphs
 - **Fan-out/gather pattern** - Parallel steps in patrol workflows
-- **Wisp compaction** (`gt compact`) - TTL-based wisp lifecycle management
+- **Wisp compaction** (`ms compact`) - TTL-based wisp lifecycle management
 - **Key Record Chronicle (KRC)** - Forensic value decay model for ephemeral data
 - **Wisp promotion criteria** - Helpers for squash-to-persistent decisions
 - **Formula variable declarations** - Proper `[vars]` sections in all formulas
 
 #### Hooks Management
-- **Centralized hook management** - `gt hooks sync`, `gt hooks diff`, `gt hooks list`
+- **Centralized hook management** - `ms hooks sync`, `ms hooks diff`, `ms hooks list`
 - **Per-matcher merge logic** - Fine-grained hook configuration
-- **Hook registry integration** - Hooks wired into `gt rig add` and `gt doctor`
+- **Hook registry integration** - Hooks wired into `ms rig add` and `ms doctor`
 
 #### Agent Lifecycle
 - **Persistent miner identity model** - Agent beads survive nuke; identity accumulates forever
 - **Auto re-dispatch recovered beads** - Supervisor recovers work from dead miners
 - **Witness resets abandoned beads** - Dead miner detection triggers work recovery
 - **Auto-respawn hooks** - Overseer sessions survive tmux detach
-- **Signal stop handler** (`gt signal stop`) - Turn-boundary messaging for clean stops
+- **Signal stop handler** (`ms signal stop`) - Turn-boundary messaging for clean stops
 - **PID tracking for spawned agents** - Better process management
 
 #### Minecart System
 - **Completion notifications** - Push minecart completion to active Overseer session
 - **Auto-close empty minecarts** - Empty 0/0 minecarts auto-closed on create
-- **`--merge` and `--owned` flags** for `gt minecart create` and `gt sling`
-- **Safety checks on `gt minecart close`** with `--force` override
+- **`--merge` and `--owned` flags** for `ms minecart create` and `ms sling`
+- **Safety checks on `ms minecart close`** with `--force` override
 - **Reactive minecart continuation feeding** - Observer auto-feeds minecarts
 
 #### CLI Improvements
 - **`--stdin` flag** - Shell-quoting-safe message bodies for mail, nudge, handoff, escalate, sling
 - **`--auto` flag for handoff** - PreCompact auto-handoff support
-- **`gt hook clear`** - Alias for `gt unhook`
-- **`gt dog clear` and `gt warrant`** - Dog management commands
-- **`gt rig settings`** - Interactive rig settings management
-- **`--adopt` flag for `gt rig add`** - Register existing directories
+- **`ms hook clear`** - Alias for `ms unhook`
+- **`ms dog clear` and `ms warrant`** - Dog management commands
+- **`ms rig settings`** - Interactive rig settings management
+- **`--adopt` flag for `ms rig add`** - Register existing directories
 - **Enhanced `--help` text** - Long descriptions added to 30+ commands
 - **Dark mode CLI theme support** - Configurable terminal themes
 - **Agent switcher keybinding** - `C-b g` for tmux agent switching
-- **`gt prime` compact/resume detection** - Lighter post-compaction priming
+- **`ms prime` compact/resume detection** - Lighter post-compaction priming
 - **Command quick-reference in CLAUDE.md** - Auto-generated per role
 
 #### Community Contributions
@@ -980,14 +980,14 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 - **Stale claim timeout in refinery** - Prevents stuck MRs
 - **Serialize main pushes with merge slot** - Prevents push conflicts
 - **Agent-agnostic zombie detection** - Works with any AI agent, not just Claude
-- **Configurable CLI name** (`GT_COMMAND` env var) - For custom installations
+- **Configurable CLI name** (`MS_COMMAND` env var) - For custom installations
 - **Compaction reporting** - Daily digest and weekly rollup
 
 ### Changed
 
 - **Dolt is the only backend** - All SQLite code removed; `--no-daemon` flag deprecated
 - **Settings moved to `settings.local.json`** - Cleaner separation from repo config
-- **`gt status --fast` optimized** - From ~5s to ~2s
+- **`ms status --fast` optimized** - From ~5s to ~2s
 - **Refinery squash merge** - Closed MRs excluded from queue output
 - **Priority-based mail notifications** - Prevents agent derailment from low-priority mail
 - **Compaction reporting** - Automated daily digest and weekly rollup
@@ -1040,22 +1040,22 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 ### Added
 
 #### Mail Improvements
-- **Numeric index support for `gt mail read`** - Read messages by inbox position (e.g., `gt mail read 1`)
-- **`gt mail hook` alias** - Shortcut for `gt hook attach` from mail context
-- **`--body` alias for `--message`** - More intuitive flag in `gt mail send` and `gt mail reply`
-- **Multiple message IDs in delete** - `gt mail delete msg1 msg2 msg3`
-- **Positional message arg in reply** - `gt mail reply <id> "message"` without --message flag
+- **Numeric index support for `ms mail read`** - Read messages by inbox position (e.g., `ms mail read 1`)
+- **`ms mail hook` alias** - Shortcut for `ms hook attach` from mail context
+- **`--body` alias for `--message`** - More intuitive flag in `ms mail send` and `ms mail reply`
+- **Multiple message IDs in delete** - `ms mail delete msg1 msg2 msg3`
+- **Positional message arg in reply** - `ms mail reply <id> "message"` without --message flag
 - **`--all` flag for inbox** - Show all messages including read
 - **Parallel inbox queries** - ~6x speedup for mail inbox
 
 #### Command Aliases
-- **`gt bd`** - Alias for `gt bead`
-- **`gt work`** - Alias for `gt hook`
-- **`--comment` alias for `--reason`** - In `gt close`
-- **`read` alias for `show`** - In `gt bead`
+- **`ms bd`** - Alias for `ms bead`
+- **`ms work`** - Alias for `ms hook`
+- **`--comment` alias for `--reason`** - In `ms close`
+- **`read` alias for `show`** - In `ms bead`
 
 #### Configuration & Agents
-- **OpenCode as built-in agent preset** - Configure with `gt config set agent opencode`
+- **OpenCode as built-in agent preset** - Configure with `ms config set agent opencode`
 - **Config-based role definition system** - Roles defined in config, not beads
 - **Env field in RuntimeConfig** - Custom environment variables for agent presets
 - **ShellQuote helper** - Safe env var escaping for shell commands
@@ -1063,9 +1063,9 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 #### Infrastructure
 - **Supervisor status line display** - Shows supervisor icon in overseer status line
 - **Configurable miner branch naming** - Template-based branch naming
-- **Hook registry and install command** - Manage Claude Code hooks via `gt hooks`
+- **Hook registry and install command** - Manage Claude Code hooks via `ms hooks`
 - **Doctor auto-fix capability** - SessionHookCheck can auto-repair
-- **`gt orphans kill` command** - Clean up orphaned Claude processes
+- **`ms orphans kill` command** - Clean up orphaned Claude processes
 - **Zombie-scan command for supervisor** - tmux-verified process cleanup
 - **Initial prompt for autonomous patrol startup** - Better agent priming
 
@@ -1078,7 +1078,7 @@ _Release contained incremental fixes between v0.9.0 and v0.10.0. See git log for
 #### Crew & Session Stability
 - **Don't kill pane processes on new sessions** - Prevents destroying fresh shells
 - **Auto-recover from stale tmux pane references** - Recreates sessions automatically
-- **Preserve GT_AGENT across session restarts** - Handoff maintains identity
+- **Preserve MS_AGENT across session restarts** - Handoff maintains identity
 
 #### Process Management
 - **KillPaneProcesses kills pane process itself** - Not just descendants
@@ -1114,27 +1114,27 @@ _Changelog not documented at release time. See git log v0.3.0..v0.3.1 for change
 - **`mineshaft-release` molecule formula** - Workflow for releases with preflight checks, CHANGELOG/info.go updates, local install, and daemon restart
 
 #### New Commands
-- **`gt show`** - Inspect bead contents and metadata
-- **`gt cat`** - Display bead content directly
-- **`gt orphans list/kill`** - Detect and clean up orphaned Claude processes
-- **`gt minecart close`** - Manual minecart closure command
-- **`gt commit`** - Wrapper for git commit with bead awareness
-- **`gt trail`** - View commit trail for current work
-- **`gt mail ack`** - Alias for mark-read command
+- **`ms show`** - Inspect bead contents and metadata
+- **`ms cat`** - Display bead content directly
+- **`ms orphans list/kill`** - Detect and clean up orphaned Claude processes
+- **`ms minecart close`** - Manual minecart closure command
+- **`ms commit`** - Wrapper for git commit with bead awareness
+- **`ms trail`** - View commit trail for current work
+- **`ms mail ack`** - Alias for mark-read command
 
 #### Plugin System
-- **Plugin discovery and management** - `gt plugin run`, `gt plugin history`
-- **`gt dispatch --plugin`** - Execute plugins via dispatch command
+- **Plugin discovery and management** - `ms plugin run`, `ms plugin history`
+- **`ms dispatch --plugin`** - Execute plugins via dispatch command
 
 #### Messaging Infrastructure (Beads-Native)
 - **Queue beads** - New bead type for message queues
 - **Channel beads** - Pub/sub messaging with retention
 - **Group beads** - Group management for messaging
 - **Address resolution** - Resolve agent addresses for mail routing
-- **`gt mail claim`** - Claim messages from queues
+- **`ms mail claim`** - Claim messages from queues
 
 #### Agent Identity
-- **`gt miner identity show`** - Display CV summary for agents
+- **`ms miner identity show`** - Display CV summary for agents
 - **Worktree setup hooks** - Inject local configurations into worktrees
 
 #### Performance & Reliability
@@ -1156,8 +1156,8 @@ _Changelog not documented at release time. See git log v0.3.0..v0.3.1 for change
 - **Kill process tree on shutdown** - Prevents orphaned Claude processes
 - **Explicit pane process kill** - Prevents setsid orphans in tmux
 - **Session survival verification** - Verify session survives startup before returning
-- **Batch session queries** - Improved performance in `gt down`
-- **Prevent tmux server exit** - `gt down` no longer kills tmux server
+- **Batch session queries** - Improved performance in `ms down`
+- **Prevent tmux server exit** - `ms down` no longer kills tmux server
 
 #### Beads & Routing
 - **Agent bead prefix alignment** - Force multi-hyphen IDs for consistency
@@ -1176,7 +1176,7 @@ _Changelog not documented at release time. See git log v0.3.0..v0.3.1 for change
 - **Direct push prohibition for miners** - Explicit in templates
 - **Handoff working directory** - Use correct witness directory
 - **Dead miner handling in sling** - Detect and handle dead miners
-- **gt done self-cleaning** - Kill tmux session on completion
+- **ms done self-cleaning** - Kill tmux session on completion
 
 #### Doctor & Diagnostics
 - **Zombie session detection** - Detect dead Claude processes in tmux
@@ -1199,13 +1199,13 @@ _Changelog not documented at release time. See git log v0.3.0..v0.3.1 for change
 ### Added
 
 #### Escalation System
-- **Unified escalation system** - Complete escalation implementation with severity levels, routing, and tracking (gt-i9r20)
+- **Unified escalation system** - Complete escalation implementation with severity levels, routing, and tracking (ms-i9r20)
 - **Escalation config schema alignment** - Configuration now matches design doc specifications
 
 #### Agent Identity & Management
-- **`gt miner identity` subcommand group** - Agent bead management commands for miner lifecycle
+- **`ms miner identity` subcommand group** - Agent bead management commands for miner lifecycle
 - **AGENTS.md fallback copy** - Miners automatically copy AGENTS.md from overseer/rig for context bootstrapping
-- **`--debug` flag for `gt crew at`** - Debug mode for crew attachment troubleshooting
+- **`--debug` flag for `ms crew at`** - Debug mode for crew attachment troubleshooting
 - **Boot role detection in priming** - Proper context injection for boot role agents (#370)
 
 #### Statusline Improvements
@@ -1213,10 +1213,10 @@ _Changelog not documented at release time. See git log v0.3.0..v0.3.1 for change
 - **Visual rig grouping** - Rigs sorted by activity with visual grouping in tmux statusline (#337)
 
 #### Mail & Communication
-- **`gt mail show` alias** - Alternative command for reading mail (#340)
+- **`ms mail show` alias** - Alternative command for reading mail (#340)
 
 #### Developer Experience
-- **`gt stale` command** - Check for stale binaries and version mismatches
+- **`ms stale` command** - Check for stale binaries and version mismatches
 
 ### Changed
 
@@ -1227,7 +1227,7 @@ _Changelog not documented at release time. See git log v0.3.0..v0.3.1 for change
 ### Fixed
 
 #### Configuration & Environment
-- **Empty GT_ROOT/BEADS_DIR not exported** - AgentEnv no longer exports empty environment variables (#385)
+- **Empty MS_ROOT/BEADS_DIR not exported** - AgentEnv no longer exports empty environment variables (#385)
 - **Inherited BEADS_DIR prefix mismatch** - Prevent inherited BEADS_DIR from causing prefix mismatches (#321)
 
 #### Beads & Routing
@@ -1245,14 +1245,14 @@ _Changelog not documented at release time. See git log v0.3.0..v0.3.1 for change
 - **Filter bd "Note:" messages** - Custom types check no longer confused by bd informational output (#381)
 
 #### Installation & Setup
-- **gt:role label on role beads** - Role beads now properly labeled during creation (#383)
+- **ms:role label on role beads** - Role beads now properly labeled during creation (#383)
 - **Fetch origin after refspec config** - Bare clones now fetch after configuring refspec (#384)
 - **Allow --wrappers in existing town** - No longer recreates HQ unnecessarily (#366)
 
 #### Session & Lifecycle
 - **Fallback instructions in start/restart beacons** - Session beacons now include fallback instructions
-- **Handoff recognizes miner session pattern** - Correctly handles gt-<rig>-<name> session names (#373)
-- **gt done resilient to missing agent beads** - No longer fails when agent beads don't exist
+- **Handoff recognizes miner session pattern** - Correctly handles ms-<rig>-<name> session names (#373)
+- **ms done resilient to missing agent beads** - No longer fails when agent beads don't exist
 - **MR beads as ephemeral wisps** - Create MR beads as ephemeral wisps for proper cleanup
 - **Auto-detect cleanup status** - Prevents premature miner nuke (#361)
 - **Delete remote miner branches after merge** - Refinery cleans up remote branches (#369)
@@ -1270,10 +1270,10 @@ _Changelog not documented at release time. See git log v0.3.0..v0.3.1 for change
 - **Name pool vs miner pool** - Clarified misconception about pools
 - **Plugin and escalation system designs** - Added design documentation
 - **Documentation reorganization** - Concepts, design, and examples structure
-- **gt prime clarification** - Clarified that gt prime is context recovery, not session start (GH #308)
+- **ms prime clarification** - Clarified that ms prime is context recovery, not session start (GH #308)
 - **Formula package documentation** - Comprehensive package docs
 - **Various godoc additions** - GenerateMRIDWithTime, isAutonomousRole, formatInt, nil sentinel pattern
-- **Beads issue ID format** - Clarified format in README (gt-uzx2c)
+- **Beads issue ID format** - Clarified format in README (ms-uzx2c)
 - **Stale miner identity description** - Fixed outdated documentation
 
 ### Tests
@@ -1284,7 +1284,7 @@ _Changelog not documented at release time. See git log v0.3.0..v0.3.1 for change
 
 ### Deprecated
 
-- **`gt miner add`** - Added migration warning for deprecated command
+- **`ms miner add`** - Added migration warning for deprecated command
 
 ### Contributors
 
@@ -1298,13 +1298,13 @@ Thanks to all contributors for this release:
 ## [0.2.5] - 2026-01-11
 
 ### Added
-- **`gt mail mark-read`** - Mark messages as read without opening them (desire path)
-- **`gt down --miners`** - Shut down miners without affecting other components
+- **`ms mail mark-read`** - Mark messages as read without opening them (desire path)
+- **`ms down --miners`** - Shut down miners without affecting other components
 - **Self-cleaning miner model** - Miners self-nuke on completion, witness tracks leases
-- **`gt prime --state` validation** - Flag exclusivity checks for cleaner CLI
+- **`ms prime --state` validation** - Flag exclusivity checks for cleaner CLI
 
 ### Changed
-- **Removed `gt stop`** - Use `gt down --miners` instead (cleaner semantics)
+- **Removed `ms stop`** - Use `ms down --miners` instead (cleaner semantics)
 - **Policy-neutral templates** - crew.md.tmpl checks remote origin for PR policy
 - **Refactored prime.go** - Split 1833-line file into logical modules
 
@@ -1328,11 +1328,11 @@ Priming subsystem overhaul and Zero Framework Cognition (ZFC) improvements.
 
 #### Priming Subsystem
 - **PRIME.md provisioning** - Auto-provision PRIME.md at rig level so all workers inherit Mineshaft context (GUPP, hooks, propulsion) (#hq-5z76w)
-- **Post-handoff detection** - `gt prime` detects handoff marker and outputs "HANDOFF COMPLETE" warning to prevent handoff loop bug (#hq-ukjrr)
-- **Priming health checks** - `gt doctor` validates priming subsystem: SessionStart hook, gt prime command, PRIME.md presence, CLAUDE.md size (#hq-5scnt)
-- **`gt prime --dry-run`** - Preview priming without side effects
-- **`gt prime --state`** - Output session state (normal, post-handoff, crash-recovery, autonomous)
-- **`gt prime --explain`** - Add [EXPLAIN] tags for debugging priming decisions
+- **Post-handoff detection** - `ms prime` detects handoff marker and outputs "HANDOFF COMPLETE" warning to prevent handoff loop bug (#hq-ukjrr)
+- **Priming health checks** - `ms doctor` validates priming subsystem: SessionStart hook, ms prime command, PRIME.md presence, CLAUDE.md size (#hq-5scnt)
+- **`ms prime --dry-run`** - Preview priming without side effects
+- **`ms prime --state`** - Output session state (normal, post-handoff, crash-recovery, autonomous)
+- **`ms prime --explain`** - Add [EXPLAIN] tags for debugging priming decisions
 
 #### Formula & Configuration
 - **Rig-level default formulas** - Configure default formula at rig level (#297)
@@ -1373,30 +1373,30 @@ Worker safety release - prevents accidental termination of active agents.
 
 > **Note**: The Supervisor safety improvements are believed to be correct but have not
 > yet been extensively tested in production. We recommend running with
-> `gt supervisor pause` initially and monitoring behavior before enabling full patrol.
+> `ms supervisor pause` initially and monitoring behavior before enabling full patrol.
 > Please report any issues. A 0.3.0 release will follow once these changes are
 > battle-tested.
 
 ### Critical Safety Improvements
 
-- **Kill authority removed from Supervisor** - Supervisor patrol now only detects zombies via `--dry-run`, never kills directly. Death warrants are filed for Boot to handle interrogation/execution. This prevents destruction of worker context, mid-task progress, and unsaved state (#gt-vhaej)
-- **Bulletproof pause mechanism** - Multi-layer pause for Supervisor with file-based state, `gt supervisor pause/resume` commands, and guards in `gt prime` and heartbeat (#265)
-- **Doctor warns instead of killing** - `gt doctor` now warns about stale town-root settings rather than killing sessions (#243)
+- **Kill authority removed from Supervisor** - Supervisor patrol now only detects zombies via `--dry-run`, never kills directly. Death warrants are filed for Boot to handle interrogation/execution. This prevents destruction of worker context, mid-task progress, and unsaved state (#ms-vhaej)
+- **Bulletproof pause mechanism** - Multi-layer pause for Supervisor with file-based state, `ms supervisor pause/resume` commands, and guards in `ms prime` and heartbeat (#265)
+- **Doctor warns instead of killing** - `ms doctor` now warns about stale town-root settings rather than killing sessions (#243)
 - **Orphan process check informational** - Doctor's orphan process detection is now informational only, not actionable (#272)
 
 ### Added
 
-- **`gt account switch` command** - Switch between Claude Code accounts with `gt account switch <handle>`. Manages `~/.claude` symlinks and updates default account
-- **`gt crew list --all`** - Show all crew members across all rigs (#276)
+- **`ms account switch` command** - Switch between Claude Code accounts with `ms account switch <handle>`. Manages `~/.claude` symlinks and updates default account
+- **`ms crew list --all`** - Show all crew members across all rigs (#276)
 - **Rig-level custom agent support** - Configure different agents per-rig (#12)
 - **Rig identity beads check** - Doctor validates rig identity beads exist
-- **GT_ROOT env var** - Set for all agent sessions for consistent environment
+- **MS_ROOT env var** - Set for all agent sessions for consistent environment
 - **New agent presets** - Added Cursor, Auggie (Augment Code), and Sourcegraph AMP as built-in agent presets (#247)
-- **Context Management docs** - Added to Witness template for better context handling (gt-jjama)
+- **Context Management docs** - Added to Witness template for better context handling (ms-jjama)
 
 ### Fixed
 
-- **`gt prime --hook` recognized** - Doctor now recognizes `gt prime --hook` as valid session hook config (#14)
+- **`ms prime --hook` recognized** - Doctor now recognizes `ms prime --hook` as valid session hook config (#14)
 - **Integration test reliability** - Improved test stability (#13)
 - **IsClaudeRunning detection** - Now detects 'claude' and version patterns correctly (#273)
 - **Supervisor heartbeat restored** - `ensureSupervisorRunning` restored to heartbeat using Manager pattern (#271)
@@ -1404,7 +1404,7 @@ Worker safety release - prevents accidental termination of active agents.
 - **Hidden directory scanning** - Ignore `.claude` and other dot directories when enumerating miners (#258, #279)
 - **SetupRedirect tracked beads** - Works correctly with tracked beads architecture where canonical location is `overseer/rig/.beads`
 - **Tmux shell ready** - Wait for shell ready before sending keys (#264)
-- **Mineshaft prefix derivation** - Correctly derive `gt-` prefix for mineshaft compound words (gt-m46bb)
+- **Mineshaft prefix derivation** - Correctly derive `ms-` prefix for mineshaft compound words (ms-m46bb)
 - **Custom beads types** - Register custom beads types during install (#250)
 
 ### Changed
@@ -1418,7 +1418,7 @@ Worker safety release - prevents accidental termination of active agents.
 ### Contributors
 
 Thanks to all contributors for this release:
-- @julianknutsen - Doctor fixes (#14, #271, #272, #273), formula fixes (#270), GT_ROOT env (#268)
+- @julianknutsen - Doctor fixes (#14, #271, #272, #273), formula fixes (#270), MS_ROOT env (#268)
 - @joshuavial - Hidden directory scanning (#258, #279), crew list --all (#276)
 
 ## [0.2.2] - 2026-01-07
@@ -1428,12 +1428,12 @@ Rig operational state management, unified agent startup, and extensive stability
 ### Added
 
 #### Rig Operational State Management
-- **`gt rig park/unpark` commands** - Level 1 rig control: pause daemon auto-start while preserving sessions
-- **`gt rig dock/undock` commands** - Level 2 rig control: stop all sessions and prevent auto-start (gt-9gm9n)
-- **`gt rig config` commands** - Per-rig configuration management (gt-hhmkq)
-- **Rig identity beads** - Schema and creation for rig identity tracking (gt-zmznh)
-- **Property layer lookup** - Hierarchical configuration resolution (gt-emh1c)
-- **Operational state in status** - `gt rig status` shows park/dock state
+- **`ms rig park/unpark` commands** - Level 1 rig control: pause daemon auto-start while preserving sessions
+- **`ms rig dock/undock` commands** - Level 2 rig control: stop all sessions and prevent auto-start (ms-9gm9n)
+- **`ms rig config` commands** - Per-rig configuration management (ms-hhmkq)
+- **Rig identity beads** - Schema and creation for rig identity tracking (ms-zmznh)
+- **Property layer lookup** - Hierarchical configuration resolution (ms-emh1c)
+- **Operational state in status** - `ms rig status` shows park/dock state
 
 #### Agent Configuration & Startup
 - **`--agent` overrides** - Override agent for start/attach/sling commands
@@ -1442,23 +1442,23 @@ Rig operational state management, unified agent startup, and extensive stability
 - **Runtime-aware tmux checks** - Detect actual agent state from tmux sessions
 
 #### Status & Monitoring
-- **`gt status --watch`** - Watch mode with auto-refresh (#231)
+- **`ms status --watch`** - Watch mode with auto-refresh (#231)
 - **Compact status output** - One-line-per-worker format as new default
 - **LED status indicators** - Visual indicators for rigs in Overseer tmux status line
 - **Parked/docked indicators** - Pause emoji (⏸) for inactive rigs in statusline
 
 #### Beads & Workflow
-- **Minimum beads version check** - Validates beads CLI compatibility (gt-im3fl)
-- **ZFC minecart auto-close** - `bd close` triggers minecart completion (gt-3qw5s)
-- **Stale hooked bead cleanup** - Supervisor clears orphaned hooks (gt-2yls3)
-- **Doctor prefix mismatch detection** - Detect misconfigured rig prefixes (gt-17wdl)
+- **Minimum beads version check** - Validates beads CLI compatibility (ms-im3fl)
+- **ZFC minecart auto-close** - `bd close` triggers minecart completion (ms-3qw5s)
+- **Stale hooked bead cleanup** - Supervisor clears orphaned hooks (ms-2yls3)
+- **Doctor prefix mismatch detection** - Detect misconfigured rig prefixes (ms-17wdl)
 - **Unified beads redirect** - Single redirect system for tracked and local beads (#222)
 - **Route from rig to town beads** - Cross-level bead routing
 
 #### Infrastructure
 - **Windows-compatible file locking** - Daemon lock works on Windows
 - **`--purge` flag for crews** - Full crew obliteration option
-- **Debug logging for suppressed errors** - Better visibility into startup issues (gt-6d7eh)
+- **Debug logging for suppressed errors** - Better visibility into startup issues (ms-6d7eh)
 - **hq- prefix in tmux cycle bindings** - Navigate to Overseer/Supervisor sessions
 - **Wisp config storage layer** - Transient/local settings for ephemeral workflows
 - **Sparse checkout** - Exclude Claude context files from source repos
@@ -1468,21 +1468,21 @@ Rig operational state management, unified agent startup, and extensive stability
 - **Daemon respects rig operational state** - Parked/docked rigs not auto-started
 - **Agent startup unified** - Manager pattern replaces ad-hoc initialization
 - **Overseer files moved** - Reorganized into `overseer/` subdirectory
-- **Refinery merges local branches** - No longer fetches from origin (gt-cio03)
+- **Refinery merges local branches** - No longer fetches from origin (ms-cio03)
 - **Miners start from origin/default-branch** - Consistent recycled state
-- **Observable states removed** - Discover agent state from tmux, don't track (gt-zecmc)
-- **mol-town-shutdown v3** - Complete cleanup formula (gt-ux23f)
-- **Witness delays miner cleanup** - Wait until MR merges (gt-12hwb)
+- **Observable states removed** - Discover agent state from tmux, don't track (ms-zecmc)
+- **mol-town-shutdown v3** - Complete cleanup formula (ms-ux23f)
+- **Witness delays miner cleanup** - Wait until MR merges (ms-12hwb)
 - **Nudge on divergence** - Daemon nudges agents instead of silent accept
 - **README rewritten** - Comprehensive guides and architecture docs (#226)
-- **`gt rigs` → `gt rig list`** - Command renamed in templates/docs (#217)
+- **`ms rigs` → `ms rig list`** - Command renamed in templates/docs (#217)
 
 ### Fixed
 
 #### Doctor & Lifecycle
-- **`--restart-sessions` flag required** - Doctor won't cycle sessions without explicit flag (gt-j44ri)
+- **`--restart-sessions` flag required** - Doctor won't cycle sessions without explicit flag (ms-j44ri)
 - **Only cycle patrol roles** - Doctor --fix doesn't restart crew/miners (hq-qthgye)
-- **Session-ended events auto-closed** - Prevent accumulation (gt-8tc1v)
+- **Session-ended events auto-closed** - Prevent accumulation (ms-8tc1v)
 - **GUPP propulsion nudge** - Added to daemon restartSession
 
 #### Sling & Beads
@@ -1490,51 +1490,51 @@ Rig operational state management, unified agent startup, and extensive stability
 - **Sling parses wisp JSON correctly** - Handle `new_epic_id` field
 - **Sling resolves rig path** - Cross-rig bead hooking works
 - **Sling waits for Claude ready** - Don't nudge until session responsive (#146)
-- **Correct beads database for sling** - Rig-level beads used (gt-n5gga)
-- **Close hooked beads before clearing** - Proper cleanup order (gt-vwjz6)
+- **Correct beads database for sling** - Rig-level beads used (ms-n5gga)
+- **Close hooked beads before clearing** - Proper cleanup order (ms-vwjz6)
 - **Removed dead sling flags** - `--molecule` and `--quality` cleaned up
 
 #### Agent Sessions
 - **Witness kills tmux on Stop()** - Clean session termination
-- **Supervisor uses session package** - Correct hq- session names (gt-r38pj)
+- **Supervisor uses session package** - Correct hq- session names (ms-r38pj)
 - **Honor rig agent for witness/refinery** - Respect per-rig settings
 - **Canonical hq role bead IDs** - Consistent naming
-- **hq- prefix in status display** - Global agents shown correctly (gt-vcvyd)
+- **hq- prefix in status display** - Global agents shown correctly (ms-vcvyd)
 - **Restart Claude when dead** - Recover sessions where tmux exists but Claude died
 - **Town session cycling** - Works from any directory
 
 #### Miner & Crew
-- **Nuke not blocked by stale hooks** - Closed beads don't prevent cleanup (gt-jc7bq)
-- **Crew stop dry-run support** - Preview cleanup before executing (gt-kjcx4)
-- **Crew defaults to --all** - `gt crew start <rig>` starts all crew (gt-s8mpt)
-- **Miner cleanup handlers** - `gt witness process` invokes handlers (gt-h3gzj)
+- **Nuke not blocked by stale hooks** - Closed beads don't prevent cleanup (ms-jc7bq)
+- **Crew stop dry-run support** - Preview cleanup before executing (ms-kjcx4)
+- **Crew defaults to --all** - `ms crew start <rig>` starts all crew (ms-s8mpt)
+- **Miner cleanup handlers** - `ms witness process` invokes handlers (ms-h3gzj)
 
 #### Daemon & Configuration
-- **Create overseer/daemon.json** - `gt start` and `gt doctor --fix` initialize daemon state (#225)
+- **Create overseer/daemon.json** - `ms start` and `ms doctor --fix` initialize daemon state (#225)
 - **Initialize git before beads** - Enable repo fingerprint (#180)
 - **Handoff preserves env vars** - Claude Code environment not lost (#216)
 - **Agent settings passed correctly** - Witness and daemon respawn use rigPath
-- **Log rig discovery errors** - Don't silently swallow (gt-rsnj9)
+- **Log rig discovery errors** - Don't silently swallow (ms-rsnj9)
 
 #### Refinery & Merge Queue
 - **Use rig's default_branch** - Not hardcoded 'main'
 - **MERGE_FAILED sent to Witness** - Proper failure notification
-- **Removed BranchPushedToRemote checks** - Local-only workflow support (gt-dymy5)
+- **Removed BranchPushedToRemote checks** - Local-only workflow support (ms-dymy5)
 
 #### Misc Fixes
-- **BeadsSetupRedirect preserves tracked files** - Don't clobber existing files (gt-fj0ol)
+- **BeadsSetupRedirect preserves tracked files** - Don't clobber existing files (ms-fj0ol)
 - **PATH export in hooks** - Ensure commands find binaries
 - **Replace panic with fallback** - ID generation gracefully degrades (#213)
 - **Removed duplicate WorktreeAddFromRef** - Code cleanup
-- **Town root beads for Supervisor** - Use correct beads location (gt-sstg)
+- **Town root beads for Supervisor** - Use correct beads location (ms-sstg)
 
 ### Refactored
 
-- **AgentStateManager pattern** - Shared state management extracted (gt-gaw8e)
-- **CleanupStatus type** - Replace raw strings (gt-77gq7)
-- **ExecWithOutput utility** - Common command execution (gt-vurfr)
-- **runBdCommand helper** - DRY mail package (gt-8i6bg)
-- **Config expansion helper** - Generic DRY config (gt-i85sg)
+- **AgentStateManager pattern** - Shared state management extracted (ms-gaw8e)
+- **CleanupStatus type** - Replace raw strings (ms-77gq7)
+- **ExecWithOutput utility** - Common command execution (ms-vurfr)
+- **runBdCommand helper** - DRY mail package (ms-8i6bg)
+- **Config expansion helper** - Generic DRY config (ms-i85sg)
 
 ### Documentation
 
@@ -1553,11 +1553,11 @@ Thanks to all contributors for this release:
 
 ## [0.2.1] - 2026-01-05
 
-Bug fixes, security hardening, and new `gt config` command.
+Bug fixes, security hardening, and new `ms config` command.
 
 ### Added
 
-- **`gt config` command** - Manage agent settings (model, provider) per-rig or globally
+- **`ms config` command** - Manage agent settings (model, provider) per-rig or globally
 - **`hq-` prefix for patrol sessions** - Overseer and Supervisor sessions use town-prefixed names
 - **Doctor hooks-path check** - Verify Git hooks path is configured correctly
 - **Block internal PRs** - Pre-push hook and GitHub Action prevent accidental internal PRs (#117)
@@ -1567,9 +1567,9 @@ Bug fixes, security hardening, and new `gt config` command.
 ### Fixed
 
 #### Security
-- **Command injection prevention** - Validate beads prefix to prevent injection (gt-l1xsa)
-- **Path traversal prevention** - Validate crew names to prevent traversal (gt-wzxwm)
-- **ReDoS prevention** - Escape user input in mail search (gt-qysj9)
+- **Command injection prevention** - Validate beads prefix to prevent injection (ms-l1xsa)
+- **Path traversal prevention** - Validate crew names to prevent traversal (ms-wzxwm)
+- **ReDoS prevention** - Escape user input in mail search (ms-qysj9)
 - **Error handling** - Handle crypto/rand.Read errors in ID generation
 
 #### Minecart & Sling
@@ -1578,15 +1578,15 @@ Bug fixes, security hardening, and new `gt config` command.
 - **Reliable bd calls** - Add `--no-daemon` and `BEADS_DIR` for reliable beads operations
 
 #### Rig Inference
-- **`gt rig status`** - Infer rig name from current working directory
-- **`gt crew start --all`** - Infer rig from cwd for batch crew starts
-- **`gt prime` in crew start** - Pass as initial prompt in crew start commands
+- **`ms rig status`** - Infer rig name from current working directory
+- **`ms crew start --all`** - Infer rig from cwd for batch crew starts
+- **`ms prime` in crew start** - Pass as initial prompt in crew start commands
 - **Town default_agent** - Honor default agent setting for Overseer and Supervisor
 
 #### Session & Lifecycle
-- **Hook persistence** - Hook persists across session interruption via `in_progress` lookup (gt-ttn3h)
+- **Hook persistence** - Hook persists across session interruption via `in_progress` lookup (ms-ttn3h)
 - **Miner cleanup** - Clean up stale worktrees and git tracking
-- **`gt done` redirect** - Use ResolveBeadsDir for redirect file support
+- **`ms done` redirect** - Use ResolveBeadsDir for redirect file support
 
 #### Build & CI
 - **Embedded formulas** - Sync and commit formulas for `go install @latest`
@@ -1600,25 +1600,25 @@ Major release featuring the Minecart Dashboard, two-level beads architecture, an
 ### Added
 
 #### Minecart Dashboard (Web UI)
-- **`gt dashboard` command** - Launch web-based monitoring UI for Mineshaft (#71)
+- **`ms dashboard` command** - Launch web-based monitoring UI for Mineshaft (#71)
 - **Miner Workers section** - Real-time activity monitoring with tmux session timestamps
 - **Refinery Merge Queue display** - Always-visible MR queue status
 - **Dynamic work status** - Minecart status columns with live updates
 - **HTMX auto-refresh** - 10-second refresh interval for real-time monitoring
 
 #### Two-Level Beads Architecture
-- **Town-level beads** (`~/gt/.beads/`) - `hq-*` prefix for Overseer mail and cross-rig coordination
-- **Rig-level beads** - Project-specific issues with rig prefixes (e.g., `gt-*`)
-- **`gt migrate-agents` command** - Migration tool for two-level architecture (#nnub1)
+- **Town-level beads** (`~/ms/.beads/`) - `hq-*` prefix for Overseer mail and cross-rig coordination
+- **Rig-level beads** - Project-specific issues with rig prefixes (e.g., `ms-*`)
+- **`ms migrate-agents` command** - Migration tool for two-level architecture (#nnub1)
 - **TownBeadsPrefix constant** - Centralized `hq-` prefix handling
 - **Prefix-based routing** - Commands auto-route to correct rig via `routes.jsonl`
 
 #### Multi-Agent Support
 - **Pluggable agent registry** - Multi-agent support with configurable providers (#107)
-- **Multi-rig management** - `gt rig start/stop/restart/status` for batch operations (#11z8l)
-- **`gt crew stop` command** - Stop crew sessions cleanly
+- **Multi-rig management** - `ms rig start/stop/restart/status` for batch operations (#11z8l)
+- **`ms crew stop` command** - Stop crew sessions cleanly
 - **`spawn` alias** - Alternative to `start` for all role subcommands
-- **Batch slinging** - `gt sling` supports multiple beads to a rig in one command (#l9toz)
+- **Batch slinging** - `ms sling` supports multiple beads to a rig in one command (#l9toz)
 
 #### Ephemeral Miner Model
 - **Immediate recycling** - Miners recycled after each work unit (#81)
@@ -1626,7 +1626,7 @@ Major release featuring the Minecart Dashboard, two-level beads architecture, an
 - **`mol-miner-work` formula** - Updated for ephemeral miner lifecycle (#si8rq.4)
 
 #### Cost Tracking
-- **`gt costs` command** - Session cost tracking and reporting
+- **`ms costs` command** - Session cost tracking and reporting
 - **Beads-based storage** - Costs stored in beads instead of JSONL (#f7jxr)
 - **Stop hook integration** - Auto-record costs on session end
 - **Tmux session auto-detection** - Costs hook finds correct session
@@ -1634,32 +1634,32 @@ Major release featuring the Minecart Dashboard, two-level beads architecture, an
 #### Conflict Resolution
 - **Conflict resolution workflow** - Formula-based conflict handling for miners (#si8rq.5)
 - **Merge-slot gate** - Refinery integration for ordered conflict resolution
-- **`gt done --phase-complete`** - Gate-based phase handoffs (#si8rq.7)
+- **`ms done --phase-complete`** - Gate-based phase handoffs (#si8rq.7)
 
 #### Communication & Coordination
-- **`gt mail archive` multi-ID** - Archive multiple messages at once (#82)
-- **`gt mail --all` flag** - Clear all mail for agent ergonomics (#105q3)
+- **`ms mail archive` multi-ID** - Archive multiple messages at once (#82)
+- **`ms mail --all` flag** - Clear all mail for agent ergonomics (#105q3)
 - **Minecart stranded detection** - Detect and feed stranded minecarts (#8otmd)
-- **`gt minecart --tree`** - Show minecart + child status tree
-- **`gt minecart check`** - Cross-rig auto-close for completed minecarts (#00qjk)
+- **`ms minecart --tree`** - Show minecart + child status tree
+- **`ms minecart check`** - Cross-rig auto-close for completed minecarts (#00qjk)
 
 #### Developer Experience
 - **Shell completion** - Installation instructions for bash/zsh/fish (#pdrh0)
-- **`gt prime --hook`** - LLM runtime session handling flag
-- **`gt doctor` enhancements** - Session-hooks check, repo-fingerprint validation (#nrgm5)
-- **Binary age detection** - `gt status` shows stale binary warnings (#42whv)
+- **`ms prime --hook`** - LLM runtime session handling flag
+- **`ms doctor` enhancements** - Session-hooks check, repo-fingerprint validation (#nrgm5)
+- **Binary age detection** - `ms status` shows stale binary warnings (#42whv)
 - **Circuit breaker** - Automatic handling for stuck agents (#72cqu)
 
 #### Infrastructure
-- **SessionStart hooks** - Deployed during `gt install` for Overseer role
+- **SessionStart hooks** - Deployed during `ms install` for Overseer role
 - **`hq-dog-role` beads** - Town-level dog role initialization (#2jjry)
 - **Watchdog chain docs** - Boot/Supervisor lifecycle documentation (#1847v)
-- **Integration tests** - CI workflow for `gt install` and `gt rig add` (#htlmp)
+- **Integration tests** - CI workflow for `ms install` and `ms rig add` (#htlmp)
 - **Local repo reference clones** - Save disk space with `--reference` cloning
 
 ### Changed
 
-- **Handoff migrated to skills** - `gt handoff` now uses skills format (#nqtqp)
+- **Handoff migrated to skills** - `ms handoff` now uses skills format (#nqtqp)
 - **Crew workers push to main** - Documentation clarifies no PR workflow for crew
 - **Session names include town** - Overseer/Supervisor sessions use town-prefixed names
 - **Formula semantics clarified** - Formulas are templates, not instructions
@@ -1676,12 +1676,12 @@ Major release featuring the Minecart Dashboard, two-level beads architecture, an
 
 #### Beads Integration
 - **Overseer/rig path** - Use correct path for beads to prevent prefix mismatch (#38)
-- **Agent bead creation** - Fixed during `gt rig add` (#32)
+- **Agent bead creation** - Fixed during `ms rig add` (#32)
 - **bd daemon startup** - Circuit breaker and restart logic (#2f0p3)
 - **BEADS_DIR environment** - Correctly set for miner hooks and cross-rig work
 
 #### Agent Workflows
-- **Default branch detection** - `gt done` no longer hardcodes 'main' (#42)
+- **Default branch detection** - `ms done` no longer hardcodes 'main' (#42)
 - **Enter key retry** - Reliable Enter key delivery with retry logic (#53)
 - **SendKeys debounce** - Increased to 500ms for reliability
 - **MR bead closure** - Close beads after successful merge from queue (#52)
@@ -1712,13 +1712,13 @@ Thanks to all contributors for this release:
 
 ### Fixed
 
-- **Tmux keybindings scoped to Mineshaft sessions** - C-b n/p no longer override default tmux behavior in non-GT sessions (#13)
+- **Tmux keybindings scoped to Mineshaft sessions** - C-b n/p no longer override default tmux behavior in non-MS sessions (#13)
 
 ### Added
 
 - **OSS project files** - CHANGELOG.md, .golangci.yml, RELEASING.md
 - **Version bump script** - `scripts/bump-version.sh` for releases
-- **Documentation fixes** - Corrected `gt rig add` and `gt crew add` CLI syntax (#6)
+- **Documentation fixes** - Corrected `ms rig add` and `ms crew add` CLI syntax (#6)
 - **Rig prefix routing** - Agent beads now use correct rig-specific prefixes (#11)
 - **Beads init fix** - Rig beads initialization targets correct database (#9)
 
@@ -1730,8 +1730,8 @@ Initial public release of Mineshaft - a multi-agent workspace manager for Claude
 
 #### Core Architecture
 - **Town structure** - Hierarchical workspace with rigs, crews, and miners
-- **Rig management** - `gt rig add/list/remove` for project containers
-- **Crew workspaces** - `gt crew add` for persistent developer workspaces
+- **Rig management** - `ms rig add/list/remove` for project containers
+- **Crew workspaces** - `ms crew add` for persistent developer workspaces
 - **Miner workers** - Transient agent workers managed by Witness
 
 #### Agent Roles
@@ -1743,15 +1743,15 @@ Initial public release of Mineshaft - a multi-agent workspace manager for Claude
 - **Miner** - Transient worker agents
 
 #### Work Management
-- **Minecart system** - `gt minecart create/list/status` for tracking related work
-- **Sling workflow** - `gt sling <bead> <rig>` to assign work to agents
+- **Minecart system** - `ms minecart create/list/status` for tracking related work
+- **Sling workflow** - `ms sling <bead> <rig>` to assign work to agents
 - **Hook mechanism** - Work attached to agent hooks for pickup
 - **Molecule workflows** - Formula-based multi-step task execution
 
 #### Communication
-- **Mail system** - `gt mail inbox/send/read` for agent messaging
-- **Escalation protocol** - `gt escalate` with severity levels
-- **Handoff mechanism** - `gt handoff` for context-preserving session cycling
+- **Mail system** - `ms mail inbox/send/read` for agent messaging
+- **Escalation protocol** - `ms escalate` with severity levels
+- **Handoff mechanism** - `ms handoff` for context-preserving session cycling
 
 #### Integration
 - **Beads integration** - Issue tracking via beads (`bd` commands)
@@ -1759,10 +1759,10 @@ Initial public release of Mineshaft - a multi-agent workspace manager for Claude
 - **GitHub CLI** - PR creation and merge queue via `gh`
 
 #### Developer Experience
-- **Status dashboard** - `gt status` for town overview
+- **Status dashboard** - `ms status` for town overview
 - **Session cycling** - `C-b n/p` to navigate between agents
-- **Activity feed** - `gt feed` for real-time event stream
-- **Nudge system** - `gt nudge` for reliable message delivery to sessions
+- **Activity feed** - `ms feed` for real-time event stream
+- **Nudge system** - `ms nudge` for reliable message delivery to sessions
 
 ### Infrastructure
 - **Daemon mode** - Background lifecycle management

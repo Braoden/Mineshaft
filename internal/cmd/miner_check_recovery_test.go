@@ -197,7 +197,7 @@ func TestIsMQNotRequiredSource(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := isMQNotRequiredSource(fakeIssueShower{issue: tt.issue, err: tt.err}, "gt-test")
+			got := isMQNotRequiredSource(fakeIssueShower{issue: tt.issue, err: tt.err}, "ms-test")
 			if got != tt.want {
 				t.Errorf("isMQNotRequiredSource() = %v, want %v", got, tt.want)
 			}
@@ -361,7 +361,7 @@ func TestReconcileCleanupStatusIfSafe(t *testing.T) {
 				MQStatus:      "submitted",
 			}
 			updater := &fakeCleanupUpdater{}
-			reconcileCleanupStatusIfSafe(status, updater, "gt-mineshaft-miner-nitro", &miner.Miner{State: miner.StateIdle}, &beads.AgentFields{
+			reconcileCleanupStatusIfSafe(status, updater, "ms-mineshaft-miner-nitro", &miner.Miner{State: miner.StateIdle}, &beads.AgentFields{
 				AgentState:    string(beads.AgentStateIdle),
 				CleanupStatus: string(previous),
 			})
@@ -369,7 +369,7 @@ func TestReconcileCleanupStatusIfSafe(t *testing.T) {
 			if updater.calls != 1 {
 				t.Fatalf("UpdateAgentCleanupStatus calls = %d, want 1", updater.calls)
 			}
-			if updater.id != "gt-mineshaft-miner-nitro" || updater.status != string(miner.CleanupClean) {
+			if updater.id != "ms-mineshaft-miner-nitro" || updater.status != string(miner.CleanupClean) {
 				t.Fatalf("update = (%q, %q), want clean update for agent", updater.id, updater.status)
 			}
 			if status.CleanupStatus != miner.CleanupClean || !status.Reconciled {
@@ -386,7 +386,7 @@ func TestReconcileCleanupStatusIfSafe_FailsClosed(t *testing.T) {
 		Branch:        "miner/nitro",
 		MQStatus:      "submitted",
 	}
-	reconcileCleanupStatusIfSafe(status, &fakeCleanupUpdater{err: errors.New("bd update failed")}, "gt-mineshaft-miner-nitro", &miner.Miner{State: miner.StateIdle}, &beads.AgentFields{
+	reconcileCleanupStatusIfSafe(status, &fakeCleanupUpdater{err: errors.New("bd update failed")}, "ms-mineshaft-miner-nitro", &miner.Miner{State: miner.StateIdle}, &beads.AgentFields{
 		AgentState:    string(beads.AgentStateIdle),
 		CleanupStatus: string(miner.CleanupUnpushed),
 	})
@@ -436,9 +436,9 @@ func TestHookBeadSafeForCleanup(t *testing.T) {
 		wantBlocker  string
 	}{
 		{name: "empty hook", wantSafe: true},
-		{name: "terminal hook", hookBead: "gt-work", bd: fakeIssueShower{issue: &beads.Issue{Status: "closed"}}, wantSafe: true, wantTerminal: true},
-		{name: "open hook blocks", hookBead: "gt-work", bd: fakeIssueShower{issue: &beads.Issue{Status: "open"}}, wantBlocker: "hook_bead=gt-work status=open"},
-		{name: "lookup error blocks", hookBead: "gt-work", bd: fakeIssueShower{err: errors.New("bd exploded")}, wantBlocker: "lookup_error"},
+		{name: "terminal hook", hookBead: "ms-work", bd: fakeIssueShower{issue: &beads.Issue{Status: "closed"}}, wantSafe: true, wantTerminal: true},
+		{name: "open hook blocks", hookBead: "ms-work", bd: fakeIssueShower{issue: &beads.Issue{Status: "open"}}, wantBlocker: "hook_bead=ms-work status=open"},
+		{name: "lookup error blocks", hookBead: "ms-work", bd: fakeIssueShower{err: errors.New("bd exploded")}, wantBlocker: "lookup_error"},
 	}
 
 	for _, tt := range tests {
@@ -465,25 +465,25 @@ func TestPartialSpawnWithoutDurableHook(t *testing.T) {
 	}{
 		{
 			name:        "spawning legacy hook points to open unassigned bead",
-			fields:      &beads.AgentFields{AgentState: "spawning", HookBead: "gt-work"},
-			issue:       &beads.Issue{ID: "gt-work", Status: "open"},
+			fields:      &beads.AgentFields{AgentState: "spawning", HookBead: "ms-work"},
+			issue:       &beads.Issue{ID: "ms-work", Status: "open"},
 			wantPartial: true,
 		},
 		{
 			name:   "durably hooked bead is not partial",
-			fields: &beads.AgentFields{AgentState: "spawning", HookBead: "gt-work"},
-			issue:  &beads.Issue{ID: "gt-work", Status: beads.StatusHooked, Assignee: assignee},
+			fields: &beads.AgentFields{AgentState: "spawning", HookBead: "ms-work"},
+			issue:  &beads.Issue{ID: "ms-work", Status: beads.StatusHooked, Assignee: assignee},
 		},
 		{
 			name:         "current issue already found is not partial",
-			fields:       &beads.AgentFields{AgentState: "spawning", HookBead: "gt-work"},
-			currentIssue: "gt-work",
-			issue:        &beads.Issue{ID: "gt-work", Status: "open"},
+			fields:       &beads.AgentFields{AgentState: "spawning", HookBead: "ms-work"},
+			currentIssue: "ms-work",
+			issue:        &beads.Issue{ID: "ms-work", Status: "open"},
 		},
 		{
 			name:   "working state is not partial spawn",
-			fields: &beads.AgentFields{AgentState: "working", HookBead: "gt-work"},
-			issue:  &beads.Issue{ID: "gt-work", Status: "open"},
+			fields: &beads.AgentFields{AgentState: "working", HookBead: "ms-work"},
+			issue:  &beads.Issue{ID: "ms-work", Status: "open"},
 		},
 	}
 
@@ -572,10 +572,10 @@ func TestActiveMRBlocker(t *testing.T) {
 		want       string
 	}{
 		{name: "empty", want: ""},
-		{name: "closed terminal source", mrID: "mr-1", sourceHint: "gt-closed", bd: fakeIssueMapShower{issues: map[string]*beads.Issue{"mr-1": &beads.Issue{ID: "mr-1", Status: "closed"}, "gt-closed": &beads.Issue{ID: "gt-closed", Status: "closed"}}}, want: ""},
+		{name: "closed terminal source", mrID: "mr-1", sourceHint: "ms-closed", bd: fakeIssueMapShower{issues: map[string]*beads.Issue{"mr-1": &beads.Issue{ID: "mr-1", Status: "closed"}, "ms-closed": &beads.Issue{ID: "ms-closed", Status: "closed"}}}, want: ""},
 		{name: "closed unknown source", mrID: "mr-1", bd: fakeIssueMapShower{issues: map[string]*beads.Issue{"mr-1": &beads.Issue{ID: "mr-1", Status: "closed"}}}, want: "active_mr=mr-1 status=closed source_issue=<missing>"},
 		{name: "open", mrID: "mr-1", bd: fakeIssueShower{issue: &beads.Issue{ID: "mr-1", Status: "open"}}, want: "active_mr=mr-1 status=open"},
-		{name: "missing terminal source", mrID: "mr-1", sourceHint: "gt-closed", bd: fakeIssueMapShower{issues: map[string]*beads.Issue{"gt-closed": &beads.Issue{ID: "gt-closed", Status: "closed"}}}, want: ""},
+		{name: "missing terminal source", mrID: "mr-1", sourceHint: "ms-closed", bd: fakeIssueMapShower{issues: map[string]*beads.Issue{"ms-closed": &beads.Issue{ID: "ms-closed", Status: "closed"}}}, want: ""},
 		{name: "missing unknown source", mrID: "mr-1", bd: fakeIssueMapShower{}, want: "active_mr=mr-1 status=missing source_issue=<missing>"},
 		{name: "nil issue unknown source", mrID: "mr-1", bd: fakeIssueShower{issue: nil}, want: "active_mr=mr-1 status=missing source_issue=<missing>"},
 		{name: "nil reader", mrID: "mr-1", bd: nil, want: "active_mr=mr-1 status=unverified"},
@@ -595,11 +595,11 @@ func TestActiveMRBlocker(t *testing.T) {
 func TestFormatSafetyCheckBlockers(t *testing.T) {
 	blocked := []*SafetyCheckResult{
 		{Miner: "mineshaft/fury", Reasons: []string{"cleanup_status=unknown", "active_mr=hq-wisp-1 status=open"}},
-		{Miner: "mineshaft/rust", Reasons: []string{"has work on hook (gt-abc)"}},
+		{Miner: "mineshaft/rust", Reasons: []string{"has work on hook (ms-abc)"}},
 	}
 
 	got := formatSafetyCheckBlockers(blocked)
-	want := "mineshaft/fury: cleanup_status=unknown; active_mr=hq-wisp-1 status=open | mineshaft/rust: has work on hook (gt-abc)"
+	want := "mineshaft/fury: cleanup_status=unknown; active_mr=hq-wisp-1 status=open | mineshaft/rust: has work on hook (ms-abc)"
 	if got != want {
 		t.Errorf("formatSafetyCheckBlockers() = %q, want %q", got, want)
 	}

@@ -32,13 +32,13 @@ func (f *fakeStartupPromptSession) WaitForRuntimeReady(_ string, rc *config.Runt
 
 func TestSessionIDFromEnv_Default(t *testing.T) {
 	// Clear all environment variables
-	oldGSEnv := os.Getenv("GT_SESSION_ID_ENV")
+	oldGSEnv := os.Getenv("MS_SESSION_ID_ENV")
 	oldClaudeID := os.Getenv("CLAUDE_SESSION_ID")
 	defer func() {
 		if oldGSEnv != "" {
-			os.Setenv("GT_SESSION_ID_ENV", oldGSEnv)
+			os.Setenv("MS_SESSION_ID_ENV", oldGSEnv)
 		} else {
-			os.Unsetenv("GT_SESSION_ID_ENV")
+			os.Unsetenv("MS_SESSION_ID_ENV")
 		}
 		if oldClaudeID != "" {
 			os.Setenv("CLAUDE_SESSION_ID", oldClaudeID)
@@ -46,7 +46,7 @@ func TestSessionIDFromEnv_Default(t *testing.T) {
 			os.Unsetenv("CLAUDE_SESSION_ID")
 		}
 	}()
-	os.Unsetenv("GT_SESSION_ID_ENV")
+	os.Unsetenv("MS_SESSION_ID_ENV")
 	os.Unsetenv("CLAUDE_SESSION_ID")
 
 	result := SessionIDFromEnv()
@@ -56,13 +56,13 @@ func TestSessionIDFromEnv_Default(t *testing.T) {
 }
 
 func TestSessionIDFromEnv_ClaudeSessionID(t *testing.T) {
-	oldGSEnv := os.Getenv("GT_SESSION_ID_ENV")
+	oldGSEnv := os.Getenv("MS_SESSION_ID_ENV")
 	oldClaudeID := os.Getenv("CLAUDE_SESSION_ID")
 	defer func() {
 		if oldGSEnv != "" {
-			os.Setenv("GT_SESSION_ID_ENV", oldGSEnv)
+			os.Setenv("MS_SESSION_ID_ENV", oldGSEnv)
 		} else {
-			os.Unsetenv("GT_SESSION_ID_ENV")
+			os.Unsetenv("MS_SESSION_ID_ENV")
 		}
 		if oldClaudeID != "" {
 			os.Setenv("CLAUDE_SESSION_ID", oldClaudeID)
@@ -71,7 +71,7 @@ func TestSessionIDFromEnv_ClaudeSessionID(t *testing.T) {
 		}
 	}()
 
-	os.Unsetenv("GT_SESSION_ID_ENV")
+	os.Unsetenv("MS_SESSION_ID_ENV")
 	os.Setenv("CLAUDE_SESSION_ID", "test-session-123")
 
 	result := SessionIDFromEnv()
@@ -81,14 +81,14 @@ func TestSessionIDFromEnv_ClaudeSessionID(t *testing.T) {
 }
 
 func TestSessionIDFromEnv_CustomEnvVar(t *testing.T) {
-	oldGSEnv := os.Getenv("GT_SESSION_ID_ENV")
+	oldGSEnv := os.Getenv("MS_SESSION_ID_ENV")
 	oldCustomID := os.Getenv("CUSTOM_SESSION_ID")
 	oldClaudeID := os.Getenv("CLAUDE_SESSION_ID")
 	defer func() {
 		if oldGSEnv != "" {
-			os.Setenv("GT_SESSION_ID_ENV", oldGSEnv)
+			os.Setenv("MS_SESSION_ID_ENV", oldGSEnv)
 		} else {
-			os.Unsetenv("GT_SESSION_ID_ENV")
+			os.Unsetenv("MS_SESSION_ID_ENV")
 		}
 		if oldCustomID != "" {
 			os.Setenv("CUSTOM_SESSION_ID", oldCustomID)
@@ -102,7 +102,7 @@ func TestSessionIDFromEnv_CustomEnvVar(t *testing.T) {
 		}
 	}()
 
-	os.Setenv("GT_SESSION_ID_ENV", "CUSTOM_SESSION_ID")
+	os.Setenv("MS_SESSION_ID_ENV", "CUSTOM_SESSION_ID")
 	os.Setenv("CUSTOM_SESSION_ID", "custom-session-456")
 	os.Setenv("CLAUDE_SESSION_ID", "claude-session-789")
 
@@ -165,8 +165,8 @@ func TestStartupFallbackCommands_AutonomousRole(t *testing.T) {
 				t.Error("StartupFallbackCommands() should return commands for autonomous role")
 			}
 			for _, cmd := range commands {
-				if cmd != "gt prime" {
-					t.Fatalf("Commands for %s = %q, want gt prime", role, cmd)
+				if cmd != "ms prime" {
+					t.Fatalf("Commands for %s = %q, want ms prime", role, cmd)
 				}
 			}
 		})
@@ -355,7 +355,7 @@ func TestGetStartupFallbackInfo_HooksNoPrompt(t *testing.T) {
 		t.Error("Hooks+NoPrompt should need startup nudge (no prompt to include it)")
 	}
 	if info.StartupNudgeDelayMs != 0 {
-		t.Error("Hooks+NoPrompt should NOT wait (hooks already ran gt prime)")
+		t.Error("Hooks+NoPrompt should NOT wait (hooks already ran ms prime)")
 	}
 }
 
@@ -376,7 +376,7 @@ func TestGetStartupFallbackInfo_NoHooksWithPrompt(t *testing.T) {
 		t.Error("NoHooks+Prompt should need startup nudge")
 	}
 	if info.StartupNudgeDelayMs <= 0 {
-		t.Error("NoHooks+Prompt should wait for gt prime to complete")
+		t.Error("NoHooks+Prompt should wait for ms prime to complete")
 	}
 }
 
@@ -397,7 +397,7 @@ func TestGetStartupFallbackInfo_NoHooksNoPrompt(t *testing.T) {
 		t.Error("NoHooks+NoPrompt should need startup nudge")
 	}
 	if info.StartupNudgeDelayMs <= 0 {
-		t.Error("NoHooks+NoPrompt should wait for gt prime to complete")
+		t.Error("NoHooks+NoPrompt should wait for ms prime to complete")
 	}
 	if !info.SendBeaconNudge {
 		t.Error("NoHooks+NoPrompt should send beacon via nudge (no prompt)")
@@ -420,8 +420,8 @@ func TestStartupNudgeContent(t *testing.T) {
 	if content == "" {
 		t.Error("StartupNudgeContent should return non-empty string")
 	}
-	if !contains(content, "gt hook") {
-		t.Error("StartupNudgeContent should mention gt hook")
+	if !contains(content, "ms hook") {
+		t.Error("StartupNudgeContent should mention ms hook")
 	}
 }
 
@@ -438,7 +438,7 @@ func TestGetStartupPromptFallback_NoHooksNoPrompt(t *testing.T) {
 		t.Error("NoHooks+NoPrompt should nudge the startup prompt")
 	}
 	if fallback.DelayMs <= 0 {
-		t.Error("NoHooks+NoPrompt should wait for gt prime before nudging the startup prompt")
+		t.Error("NoHooks+NoPrompt should wait for ms prime before nudging the startup prompt")
 	}
 }
 
@@ -918,7 +918,7 @@ func TestCommandsInherited_WorkDirIsTownRoot(t *testing.T) {
 }
 
 func TestCommandsInherited_WorkDirNestedInTownRootBeforeGitInit(t *testing.T) {
-	// gt install creates overseer/supervisor settings before it initializes town .git.
+	// ms install creates overseer/supervisor settings before it initializes town .git.
 	// Those role dirs still inherit town-level commands once install provisions them.
 	root := makeTownRoot(t)
 	overseerDir := root + "/overseer"

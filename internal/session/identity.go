@@ -25,7 +25,7 @@ type AgentIdentity struct {
 	Role   Role   // overseer, supervisor, witness, refinery, crew, miner, dog
 	Rig    string // rig name (empty for overseer/supervisor/dog)
 	Name   string // crew/miner/dog name (empty for overseer/supervisor/witness/refinery)
-	Prefix string // beads prefix for rig-level agents (e.g., "gt", "bd", "hop")
+	Prefix string // beads prefix for rig-level agents (e.g., "ms", "bd", "hop")
 }
 
 // ParseAddress parses a mail-style address into an AgentIdentity.
@@ -89,12 +89,12 @@ func ParseAddress(address string) (*AgentIdentity, error) {
 //   - hq-overseer → Role: overseer (town-level, one per machine)
 //   - hq-supervisor → Role: supervisor (town-level, one per machine)
 //   - hq-boot → Role: supervisor, Name: boot (boot watchdog)
-//   - <prefix>-witness → Role: witness (e.g., gt-witness for mineshaft)
-//   - <prefix>-refinery → Role: refinery (e.g., gt-refinery for mineshaft)
-//   - <prefix>-crew-<name> → Role: crew (e.g., gt-crew-max for mineshaft)
-//   - <prefix>-<name> → Role: miner (e.g., gt-furiosa for mineshaft)
+//   - <prefix>-witness → Role: witness (e.g., ms-witness for mineshaft)
+//   - <prefix>-refinery → Role: refinery (e.g., ms-refinery for mineshaft)
+//   - <prefix>-crew-<name> → Role: crew (e.g., ms-crew-max for mineshaft)
+//   - <prefix>-<name> → Role: miner (e.g., ms-furiosa for mineshaft)
 //
-// The prefix is the rig's beads prefix (e.g., "gt" for mineshaft, "dolt" for beads).
+// The prefix is the rig's beads prefix (e.g., "ms" for mineshaft, "dolt" for beads).
 // The rig name is resolved from the default PrefixRegistry. If the prefix is
 // not in the registry, the prefix itself is used as the rig name.
 func ParseSessionName(session string) (*AgentIdentity, error) {
@@ -274,7 +274,7 @@ func (a *AgentIdentity) Address() string {
 	}
 }
 
-// GTRole returns the GT_ROLE environment variable format.
+// GTRole returns the MS_ROLE environment variable format.
 // This is the same as Address() for most roles, except boot
 // which is a supervisor variant with its own role identity.
 func (a *AgentIdentity) GTRole() string {

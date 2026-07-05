@@ -44,8 +44,8 @@ Session groups:
 The appropriate cycling is detected automatically from the session name.
 
 Examples:
-  gt cycle next    # Switch to next session in group
-  gt cycle prev    # Switch to previous session in group`,
+  ms cycle next    # Switch to next session in group
+  ms cycle prev    # Switch to previous session in group`,
 }
 
 var cycleNextCmd = &cobra.Command{
@@ -58,8 +58,8 @@ detects whether you're in a town-level session (Overseer/Supervisor) or a crew s
 and cycles within the appropriate group.
 
 Examples:
-  gt cycle next
-  gt cycle next --session gt-mineshaft-witness  # Explicit session context`,
+  ms cycle next
+  ms cycle next --session ms-mineshaft-witness  # Explicit session context`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cycleToSession(1, cycleSession, cycleClient)
 	},
@@ -75,8 +75,8 @@ detects whether you're in a town-level session (Overseer/Supervisor) or a crew s
 and cycles within the appropriate group.
 
 Examples:
-  gt cycle prev
-  gt cycle prev --session gt-mineshaft-witness  # Explicit session context`,
+  ms cycle prev
+  ms cycle prev --session ms-mineshaft-witness  # Explicit session context`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cycleToSession(-1, cycleSession, cycleClient)
 	},
@@ -88,7 +88,7 @@ Examples:
 // clientOverride: if non-empty, pass as -c flag to tmux switch-client
 func cycleToSession(direction int, sessionOverride, clientOverride string) error {
 	// Override the default tmux socket to match the calling tmux server.
-	// PersistentPreRunE sets the socket to the town path hash (e.g., "gt-a1b2c3"), but
+	// PersistentPreRunE sets the socket to the town path hash (e.g., "ms-a1b2c3"), but
 	// cycle is invoked from tmux run-shell which may be on a different socket
 	// (e.g., "default"). Without this, switch-client silently fails because
 	// the sessions aren't on the town-named socket.

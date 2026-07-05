@@ -80,7 +80,7 @@ func createTrackedBeadsRepoWithIssues(t *testing.T, path, prefix string, numIssu
 
 	// Run bd init (pass --server for bd v1.0.0+ which defaults to embedded mode)
 	bdInitArgs := []string{"init", "--prefix", prefix}
-	if p := os.Getenv("GT_DOLT_PORT"); p != "" {
+	if p := os.Getenv("MS_DOLT_PORT"); p != "" {
 		bdInitArgs = append(bdInitArgs, "--server", "--server-port", p)
 	}
 	cmd := exec.Command("bd", bdInitArgs...)
@@ -130,7 +130,7 @@ func TestBeadsDbInitAfterClone(t *testing.T) {
 		t.Skip("bd not installed, skipping test")
 	}
 	// Dolt server required: bd init auto-detects server on 3307,
-	// and gt rig add --adopt uses --server mode for re-initialization.
+	// and ms rig add --adopt uses --server mode for re-initialization.
 	requireDoltServer(t)
 
 	tmpDir := t.TempDir()
@@ -138,7 +138,7 @@ func TestBeadsDbInitAfterClone(t *testing.T) {
 	gtBinary := buildGT(t)
 
 	t.Run("TrackedRepoWithExistingPrefix", func(t *testing.T) {
-		// GitHub Issue #72: gt rig add --adopt should detect existing prefix and init database.
+		// GitHub Issue #72: ms rig add --adopt should detect existing prefix and init database.
 		// When a tracked beads repo has config.yaml with a prefix, adopt should detect it.
 
 		townRoot := filepath.Join(tmpDir, "town-prefix-test")
@@ -147,7 +147,7 @@ func TestBeadsDbInitAfterClone(t *testing.T) {
 		cmd := exec.Command(gtBinary, "install", townRoot, "--name", "prefix-test")
 		cmd.Env = append(os.Environ(), "HOME="+tmpDir)
 		if output, err := cmd.CombinedOutput(); err != nil {
-			t.Fatalf("gt install failed: %v\nOutput: %s", err, output)
+			t.Fatalf("ms install failed: %v\nOutput: %s", err, output)
 		}
 
 		// Bridge test Dolt server PID so subsequent AddRig/IsRunning checks pass.
@@ -164,7 +164,7 @@ func TestBeadsDbInitAfterClone(t *testing.T) {
 		cmd.Dir = townRoot
 		cmd.Env = append(os.Environ(), "HOME="+tmpDir)
 		if output, err := cmd.CombinedOutput(); err != nil {
-			t.Fatalf("gt rig add failed: %v\nOutput: %s", err, output)
+			t.Fatalf("ms rig add failed: %v\nOutput: %s", err, output)
 		}
 
 		// Verify routes.jsonl has the prefix
@@ -201,7 +201,7 @@ func TestBeadsDbInitAfterClone(t *testing.T) {
 
 	t.Run("TrackedRepoWithNoIssuesRequiresPrefix", func(t *testing.T) {
 		// Regression test: When a tracked beads repo has NO issues (fresh init),
-		// gt rig add must use the --prefix flag since there's nothing to detect from.
+		// ms rig add must use the --prefix flag since there's nothing to detect from.
 
 		townRoot := filepath.Join(tmpDir, "town-no-issues")
 
@@ -209,7 +209,7 @@ func TestBeadsDbInitAfterClone(t *testing.T) {
 		cmd := exec.Command(gtBinary, "install", townRoot, "--name", "no-issues-test")
 		cmd.Env = append(os.Environ(), "HOME="+tmpDir)
 		if output, err := cmd.CombinedOutput(); err != nil {
-			t.Fatalf("gt install failed: %v\nOutput: %s", err, output)
+			t.Fatalf("ms install failed: %v\nOutput: %s", err, output)
 		}
 
 		// Bridge test Dolt server PID so subsequent AddRig/IsRunning checks pass.
@@ -224,7 +224,7 @@ func TestBeadsDbInitAfterClone(t *testing.T) {
 		cmd.Dir = townRoot
 		cmd.Env = append(os.Environ(), "HOME="+tmpDir)
 		if output, err := cmd.CombinedOutput(); err != nil {
-			t.Fatalf("gt rig add with --prefix failed: %v\nOutput: %s", err, output)
+			t.Fatalf("ms rig add with --prefix failed: %v\nOutput: %s", err, output)
 		}
 
 		// Verify routes.jsonl has the prefix
@@ -260,7 +260,7 @@ func TestBeadsDbInitAfterClone(t *testing.T) {
 
 	t.Run("TrackedRepoWithPrefixMismatchErrors", func(t *testing.T) {
 		// Test that when --prefix is explicitly provided but doesn't match
-		// the prefix detected from the database, gt rig add fails with an error.
+		// the prefix detected from the database, ms rig add fails with an error.
 		// Prefix detection uses config.yaml (not metadata.json), which survives
 		// clones since it is tracked by git.
 
@@ -270,10 +270,10 @@ func TestBeadsDbInitAfterClone(t *testing.T) {
 		cmd := exec.Command(gtBinary, "install", townRoot, "--name", "mismatch-test")
 		cmd.Env = append(os.Environ(), "HOME="+tmpDir)
 		if output, err := cmd.CombinedOutput(); err != nil {
-			t.Fatalf("gt install failed: %v\nOutput: %s", err, output)
+			t.Fatalf("ms install failed: %v\nOutput: %s", err, output)
 		}
 
-		// Bridge test Dolt server PID so gt rig add can verify the prefix.
+		// Bridge test Dolt server PID so ms rig add can verify the prefix.
 		bridgeDoltPidToTown(t, townRoot)
 
 		// Create a repo with existing beads prefix "real-prefix" with issues
@@ -288,7 +288,7 @@ func TestBeadsDbInitAfterClone(t *testing.T) {
 
 		// Should fail
 		if err == nil {
-			t.Fatalf("gt rig add should have failed with prefix mismatch, but succeeded.\nOutput: %s", output)
+			t.Fatalf("ms rig add should have failed with prefix mismatch, but succeeded.\nOutput: %s", output)
 		}
 
 		// Verify error message mentions the mismatch
@@ -306,7 +306,7 @@ func TestBeadsDbInitAfterClone(t *testing.T) {
 
 	t.Run("TrackedRepoWithNoIssuesFallsBackToDerivedPrefix", func(t *testing.T) {
 		// Test the fallback behavior: when a tracked beads repo has NO issues
-		// and NO --prefix is provided, gt rig add should derive prefix from rig name.
+		// and NO --prefix is provided, ms rig add should derive prefix from rig name.
 
 		townRoot := filepath.Join(tmpDir, "town-derived")
 
@@ -314,7 +314,7 @@ func TestBeadsDbInitAfterClone(t *testing.T) {
 		cmd := exec.Command(gtBinary, "install", townRoot, "--name", "derived-test")
 		cmd.Env = append(os.Environ(), "HOME="+tmpDir)
 		if output, err := cmd.CombinedOutput(); err != nil {
-			t.Fatalf("gt install failed: %v\nOutput: %s", err, output)
+			t.Fatalf("ms install failed: %v\nOutput: %s", err, output)
 		}
 
 		// Bridge test Dolt server PID so subsequent AddRig/IsRunning checks pass.
@@ -330,7 +330,7 @@ func TestBeadsDbInitAfterClone(t *testing.T) {
 		cmd.Env = append(os.Environ(), "HOME="+tmpDir)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
-			t.Fatalf("gt rig add (no --prefix) failed: %v\nOutput: %s", err, output)
+			t.Fatalf("ms rig add (no --prefix) failed: %v\nOutput: %s", err, output)
 		}
 
 		// Verify bd operations work - the key test is that the database was initialized
@@ -359,7 +359,7 @@ func TestBeadsDbInitAfterClone(t *testing.T) {
 
 	t.Run("MissingMetadataTriggersReInit", func(t *testing.T) {
 		// Exercises the rig.go:691 code path where metadata.json is missing
-		// and gt rig add --adopt must re-initialize the database.
+		// and ms rig add --adopt must re-initialize the database.
 		// This simulates an edge case (e.g., legacy repo, manual deletion)
 		// where dolt/ and metadata.json are absent despite .beads/ existing.
 
@@ -369,7 +369,7 @@ func TestBeadsDbInitAfterClone(t *testing.T) {
 		cmd := exec.Command(gtBinary, "install", townRoot, "--name", "reinit-test")
 		cmd.Env = append(os.Environ(), "HOME="+tmpDir)
 		if output, err := cmd.CombinedOutput(); err != nil {
-			t.Fatalf("gt install failed: %v\nOutput: %s", err, output)
+			t.Fatalf("ms install failed: %v\nOutput: %s", err, output)
 		}
 
 		// Bridge test Dolt server PID so subsequent AddRig/IsRunning checks pass.
@@ -396,7 +396,7 @@ func TestBeadsDbInitAfterClone(t *testing.T) {
 		cmd.Env = append(os.Environ(), "HOME="+tmpDir)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
-			t.Fatalf("gt rig add failed: %v\nOutput: %s", err, output)
+			t.Fatalf("ms rig add failed: %v\nOutput: %s", err, output)
 		}
 
 		// Verify the re-init path was triggered: adopt output should confirm init
@@ -471,7 +471,7 @@ func createTrackedBeadsRepoWithNoIssues(t *testing.T, path, prefix string) {
 
 	// Run bd init (creates database but no issues; pass --server for bd v1.0.0+)
 	bdInitArgs2 := []string{"init", "--prefix", prefix}
-	if p := os.Getenv("GT_DOLT_PORT"); p != "" {
+	if p := os.Getenv("MS_DOLT_PORT"); p != "" {
 		bdInitArgs2 = append(bdInitArgs2, "--server", "--server-port", p)
 	}
 	cmd := exec.Command("bd", bdInitArgs2...)

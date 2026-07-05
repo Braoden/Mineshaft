@@ -137,12 +137,12 @@ func checkUnreadMail(townRoot, address string) string {
 	// Build the block reason with the most important message
 	msg := relevant[0]
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("[gt signal stop] You have %d unread message(s). ", len(relevant)))
+	sb.WriteString(fmt.Sprintf("[ms signal stop] You have %d unread message(s). ", len(relevant)))
 	sb.WriteString(fmt.Sprintf("Most recent from %s: \"%s\"", msg.From, msg.Subject))
 	if len(relevant) > 1 {
 		sb.WriteString(fmt.Sprintf(" (+%d more)", len(relevant)-1))
 	}
-	sb.WriteString("\n\nRun `gt mail inbox` to read your messages, then continue working.")
+	sb.WriteString("\n\nRun `ms mail inbox` to read your messages, then continue working.")
 	return sb.String()
 }
 
@@ -178,8 +178,8 @@ func checkStopSlungWork(townRoot string) string {
 		if err == nil && hookBead != nil {
 			// Only block if the hooked work is in "hooked" status (not yet claimed)
 			if hookBead.Status == beads.StatusHooked {
-				return fmt.Sprintf("[gt signal stop] Work slung to you: %s — \"%s\"\n\n"+
-					"Run `gt hook` to see details, then execute the work.",
+				return fmt.Sprintf("[ms signal stop] Work slung to you: %s — \"%s\"\n\n"+
+					"Run `ms hook` to see details, then execute the work.",
 					hookBead.ID, hookBead.Title)
 			}
 		}
@@ -197,8 +197,8 @@ func checkStopSlungWork(townRoot string) string {
 	})
 	if err == nil && len(hookedBeads) > 0 {
 		bead := hookedBeads[0]
-		return fmt.Sprintf("[gt signal stop] Work slung to you: %s — \"%s\"\n\n"+
-			"Run `gt hook` to see details, then execute the work.",
+		return fmt.Sprintf("[ms signal stop] Work slung to you: %s — \"%s\"\n\n"+
+			"Run `ms hook` to see details, then execute the work.",
 			bead.ID, bead.Title)
 	}
 
@@ -218,7 +218,7 @@ type stopState struct {
 // State files are stored in the OS temp directory and scoped per-agent.
 func stopStateFilePath(address string) string {
 	safe := strings.ReplaceAll(address, "/", "_")
-	return filepath.Join(os.TempDir(), "gt-signal-stop-"+safe+".json")
+	return filepath.Join(os.TempDir(), "ms-signal-stop-"+safe+".json")
 }
 
 // loadStopState loads the saved state for this agent.

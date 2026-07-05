@@ -58,13 +58,13 @@ Commands:
 Search paths (in order):
   1. .beads/formulas/ (project)
   2. ~/.beads/formulas/ (user)
-  3. $GT_ROOT/.beads/formulas/ (orchestrator)
+  3. $MS_ROOT/.beads/formulas/ (orchestrator)
 
 Examples:
-  gt formula list                    # List all formulas
-  gt formula show shiny              # Show formula details
-  gt formula run shiny --pr=123      # Run formula on PR #123
-  gt formula create my-workflow      # Create new formula template`,
+  ms formula list                    # List all formulas
+  ms formula show shiny              # Show formula details
+  ms formula run shiny --pr=123      # Run formula on PR #123
+  ms formula create my-workflow      # Create new formula template`,
 }
 
 var formulaListCmd = &cobra.Command{
@@ -75,11 +75,11 @@ var formulaListCmd = &cobra.Command{
 Searches for formula files (.formula.toml, .formula.json) in:
   1. .beads/formulas/ (project)
   2. ~/.beads/formulas/ (user)
-  3. $GT_ROOT/.beads/formulas/ (orchestrator)
+  3. $MS_ROOT/.beads/formulas/ (orchestrator)
 
 Examples:
-  gt formula list            # List all formulas
-  gt formula list --json     # JSON output`,
+  ms formula list            # List all formulas
+  ms formula list --json     # JSON output`,
 	RunE: runFormulaList,
 }
 
@@ -95,8 +95,8 @@ Shows:
   - Composition rules (extends, aspects)
 
 Examples:
-  gt formula show shiny
-  gt formula show rule-of-five --json`,
+  ms formula show shiny
+  ms formula show rule-of-five --json`,
 	Args: cobra.ExactArgs(1),
 	RunE: runFormulaShow,
 }
@@ -129,12 +129,12 @@ Agent precedence (highest to lowest):
   4. Rig/town default agent (fallback)
 
 Examples:
-  gt formula run shiny                    # Run formula in current rig
-  gt formula run                          # Run default formula from rig config
-  gt formula run shiny --pr=123           # Run on PR #123
-  gt formula run security-audit --rig=beads  # Run in specific rig
-  gt formula run release --dry-run        # Preview execution
-  gt formula run code-review --agent=gemini  # All legs use gemini`,
+  ms formula run shiny                    # Run formula in current rig
+  ms formula run                          # Run default formula from rig config
+  ms formula run shiny --pr=123           # Run on PR #123
+  ms formula run security-audit --rig=beads  # Run in specific rig
+  ms formula run release --dry-run        # Preview execution
+  ms formula run code-review --agent=gemini  # All legs use gemini`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runFormulaRun,
 }
@@ -153,9 +153,9 @@ Formula types:
   patrol    Repeating patrol cycle (for wisps)
 
 Examples:
-  gt formula create my-task                  # Create task formula
-  gt formula create my-workflow --type=workflow
-  gt formula create nightly-check --type=patrol`,
+  ms formula create my-task                  # Create task formula
+  ms formula create my-workflow --type=workflow
+  ms formula create nightly-check --type=patrol`,
 	Args: cobra.ExactArgs(1),
 	RunE: runFormulaCreate,
 }
@@ -297,10 +297,10 @@ func runFormulaRun(cmd *cobra.Command, args []string) error {
 			style.Dim.Render("Note:"), f.Type)
 		fmt.Printf("Currently only 'minecart' and 'workflow' formulas can be run.\n")
 		fmt.Printf("\nTo run '%s' manually:\n", formulaName)
-		fmt.Printf("  1. View formula:   gt formula show %s\n", formulaName)
+		fmt.Printf("  1. View formula:   ms formula show %s\n", formulaName)
 		fmt.Printf("  2. Cook to proto:  bd cook %s\n", formulaName)
 		fmt.Printf("  3. Pour molecule:  bd pour %s\n", formulaName)
-		fmt.Printf("  4. Sling to rig:   gt sling <mol-id> %s\n", targetRig)
+		fmt.Printf("  4. Sling to rig:   ms sling <mol-id> %s\n", targetRig)
 		return nil
 	}
 }
@@ -468,7 +468,7 @@ func executeMinecartFormula(f *formula.Formula, formulaName, targetRig string) e
 		description += fmt.Sprintf("\nPR: #%d", formulaRunPR)
 	}
 
-	// Guard against flag-like minecart titles (gt-e0kx5)
+	// Guard against flag-like minecart titles (ms-e0kx5)
 	if beads.IsFlagLikeTitle(minecartTitle) {
 		return fmt.Errorf("refusing to create formula minecart: title %q looks like a CLI flag", minecartTitle)
 	}
@@ -479,7 +479,7 @@ func executeMinecartFormula(f *formula.Formula, formulaName, targetRig string) e
 		"--id=" + minecartID,
 		"--title=" + minecartTitle,
 		"--description=" + description,
-		"--labels=gt:minecart",
+		"--labels=ms:minecart",
 	}
 	if beads.NeedsForceForID(minecartID) {
 		createArgs = append(createArgs, "--force")
@@ -673,7 +673,7 @@ func executeMinecartFormula(f *formula.Formula, formulaName, targetRig string) e
 
 		slingArgs := buildMinecartLegSlingArgs(legBeadID, targetRig, leg.Description, leg.Title, legAgent, leg.ReviewOnly || f.ReviewOnly)
 
-		slingCmd := exec.Command("gt", slingArgs...)
+		slingCmd := exec.Command("ms", slingArgs...)
 		slingCmd.Stdout = os.Stdout
 		slingCmd.Stderr = os.Stderr
 
@@ -699,14 +699,14 @@ func executeMinecartFormula(f *formula.Formula, formulaName, targetRig string) e
 	if synthesisBeadID != "" {
 		fmt.Printf("  Synthesis: %s (blocked until legs complete)\n", synthesisBeadID)
 	}
-	fmt.Printf("\n  Track progress: gt minecart status %s\n", minecartID)
+	fmt.Printf("\n  Track progress: ms minecart status %s\n", minecartID)
 
 	return nil
 }
 
 // executeWorkflowFormula creates step beads with dependency wiring and dispatches
 // ready steps (those with no unmet needs) to miners on the target rig.
-// Subsequent steps are auto-dispatched when their dependencies close. (gt-jh68)
+// Subsequent steps are auto-dispatched when their dependencies close. (ms-jh68)
 func executeWorkflowFormula(f *formula.Formula, formulaName, targetRig string) error {
 	fmt.Printf("%s Executing workflow formula: %s\n\n",
 		style.Bold.Render("📋"), formulaName)
@@ -754,7 +754,7 @@ func executeWorkflowFormula(f *formula.Formula, formulaName, targetRig string) e
 		"--id=" + workflowID,
 		"--title=" + workflowTitle,
 		"--description=" + description,
-		"--labels=gt:minecart,gt:workflow",
+		"--labels=ms:minecart,ms:workflow",
 	}
 	if beads.NeedsForceForID(workflowID) {
 		createArgs = append(createArgs, "--force")
@@ -883,7 +883,7 @@ func executeWorkflowFormula(f *formula.Formula, formulaName, targetRig string) e
 
 		slingArgs := buildWorkflowStepSlingArgs(stepBeadID, stepTarget, stepDescription, step.Title, stepAgent)
 
-		slingCmd := exec.Command("gt", slingArgs...)
+		slingCmd := exec.Command("ms", slingArgs...)
 		slingCmd.Stdout = os.Stdout
 		slingCmd.Stderr = os.Stderr
 
@@ -913,7 +913,7 @@ func executeWorkflowFormula(f *formula.Formula, formulaName, targetRig string) e
 		fmt.Printf("  Steps:    %d total, %d dispatched, %d awaiting dependencies\n",
 			len(f.Steps), slingCount, blockedCount)
 	}
-	fmt.Printf("\n  Track progress: gt minecart status %s\n", workflowID)
+	fmt.Printf("\n  Track progress: ms minecart status %s\n", workflowID)
 
 	return nil
 }
@@ -948,7 +948,7 @@ func truncate(s string, maxLen int) string {
 	return s[:maxLen-3] + "..."
 }
 
-// buildMinecartLegSlingArgs constructs the gt-sling argument list for a minecart leg.
+// buildMinecartLegSlingArgs constructs the ms-sling argument list for a minecart leg.
 // --no-minecart is always included: legs are tracked by the parent minecart, so per-leg
 // auto-minecart creation is redundant (closes #3856).
 func buildMinecartLegSlingArgs(beadID, targetRig, description, title, agent string, reviewOnly bool) []string {
@@ -967,7 +967,7 @@ func buildMinecartLegSlingArgs(beadID, targetRig, description, title, agent stri
 	return args
 }
 
-// buildWorkflowStepSlingArgs constructs the gt-sling argument list for a workflow step.
+// buildWorkflowStepSlingArgs constructs the ms-sling argument list for a workflow step.
 // --no-minecart is always included: steps are tracked by the parent workflow bead, so
 // per-step auto-minecart creation is redundant (closes #3856).
 func buildWorkflowStepSlingArgs(beadID, targetRig, description, title, agent string) []string {
@@ -1200,8 +1200,8 @@ func runFormulaCreate(cmd *cobra.Command, args []string) error {
 	fmt.Printf("%s Created formula: %s\n", style.Bold.Render("✓"), filename)
 	fmt.Printf("\nNext steps:\n")
 	fmt.Printf("  1. Edit the formula: %s\n", filename)
-	fmt.Printf("  2. View it:          gt formula show %s\n", formulaName)
-	fmt.Printf("  3. Run it:           gt formula run %s\n", formulaName)
+	fmt.Printf("  2. View it:          ms formula show %s\n", formulaName)
+	fmt.Printf("  3. Run it:           ms formula run %s\n", formulaName)
 
 	return nil
 }
@@ -1213,7 +1213,7 @@ func generateTaskTemplate(name string) string {
 
 	return fmt.Sprintf(`# Formula: %s
 # Type: task
-# Created by: gt formula create
+# Created by: ms formula create
 
 description = """%s task.
 
@@ -1252,7 +1252,7 @@ func generateWorkflowTemplate(name string) string {
 
 	return fmt.Sprintf(`# Formula: %s
 # Type: workflow
-# Created by: gt formula create
+# Created by: ms formula create
 #
 # pour = true  — Steps materialized as sub-wisps (checkpoint recovery on crash)
 # pour = false — Steps read inline (root-only, restart on failure) [DEFAULT]
@@ -1330,7 +1330,7 @@ func generatePatrolTemplate(name string) string {
 
 	return fmt.Sprintf(`# Formula: %s
 # Type: patrol
-# Created by: gt formula create
+# Created by: ms formula create
 #
 # Patrol formulas are for repeating cycles (wisps).
 # They run continuously and are NOT synced to git.

@@ -22,9 +22,9 @@ rig-level directive (if a rig is detected) or the town-level directive.
 Use --town to explicitly edit the town-level directive.
 
 Examples:
-  gt directive edit miner             # Edit rig-level miner directive
-  gt directive edit crew --rig sky      # Edit sky rig crew directive
-  gt directive edit witness --town      # Edit town-level witness directive`,
+  ms directive edit miner             # Edit rig-level miner directive
+  ms directive edit crew --rig sky      # Edit sky rig crew directive
+  ms directive edit witness --town      # Edit town-level witness directive`,
 	Args: cobra.ExactArgs(1),
 	RunE: runDirectiveEdit,
 }
@@ -90,6 +90,6 @@ func runDirectiveEdit(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("Directive updated: %s\n", path)
-	fmt.Println("Changes take effect at next 'gt prime'.")
+	fmt.Println("Changes take effect at next 'ms prime'.")
 	return nil
 }

@@ -10,13 +10,13 @@ func TestParseWispID(t *testing.T) {
 	}{
 		{
 			name:   "standard wisp output",
-			input:  "✓ Spawned wisp: gt-wisp-abc123 — Reap stale wisps",
-			wantID: "gt-wisp-abc123",
+			input:  "✓ Spawned wisp: ms-wisp-abc123 — Reap stale wisps",
+			wantID: "ms-wisp-abc123",
 		},
 		{
 			name:   "wisp ID with ANSI codes",
 			input:  "\033[32m✓\033[0m Spawned wisp: \033[1mgt-wisp-xyz789\033[0m — Title",
-			wantID: "gt-wisp-xyz789",
+			wantID: "ms-wisp-xyz789",
 		},
 		{
 			name:   "empty output",
@@ -30,8 +30,8 @@ func TestParseWispID(t *testing.T) {
 		},
 		{
 			name:   "wisp ID at end of line",
-			input:  "Created gt-wisp-def456",
-			wantID: "gt-wisp-def456",
+			input:  "Created ms-wisp-def456",
+			wantID: "ms-wisp-def456",
 		},
 	}
 

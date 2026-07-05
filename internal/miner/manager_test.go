@@ -220,7 +220,7 @@ func TestMinerSummary(t *testing.T) {
 	p := &Miner{
 		Name:  "Toast",
 		State: StateWorking,
-		Issue: "gt-abc",
+		Issue: "ms-abc",
 	}
 
 	summary := p.Summary()
@@ -230,8 +230,8 @@ func TestMinerSummary(t *testing.T) {
 	if summary.State != StateWorking {
 		t.Errorf("State = %v, want StateWorking", summary.State)
 	}
-	if summary.Issue != "gt-abc" {
-		t.Errorf("Issue = %q, want gt-abc", summary.Issue)
+	if summary.Issue != "ms-abc" {
+		t.Errorf("Issue = %q, want ms-abc", summary.Issue)
 	}
 }
 
@@ -287,7 +287,7 @@ func TestActiveWorkBeadsForCleanupFiltersAssignedIssues(t *testing.T) {
 		{ID: "hooked-work", Status: beads.StatusHooked, Type: "task"},
 		{ID: "closed-work", Status: "closed", Type: "task"},
 		{ID: "agent", Status: "open", Type: "agent"},
-		{ID: "protected", Status: "open", Type: "task", Labels: []string{"gt:keep"}},
+		{ID: "protected", Status: "open", Type: "task", Labels: []string{"ms:keep"}},
 		{ID: "deferred", Status: "deferred", Type: "task"},
 		nil,
 	}
@@ -344,7 +344,7 @@ func TestAssigneeID(t *testing.T) {
 
 // TestAgentBeadID_Deterministic verifies that agentBeadID returns the same string
 // on repeated calls regardless of process working directory. Regression test for
-// gt-lph: the old implementation called workspace.Find on each invocation, which
+// ms-lph: the old implementation called workspace.Find on each invocation, which
 // could resolve differently depending on cwd, causing non-deterministic IDs across
 // Manager instances for the same rig path.
 func TestAgentBeadID_Deterministic(t *testing.T) {
@@ -566,7 +566,7 @@ func TestClearIssueWithoutAssignment(t *testing.T) {
 
 // NOTE: TestInstallCLAUDETemplate tests were removed.
 // We no longer write CLAUDE.md to worktrees - Mineshaft context is injected
-// ephemerally via SessionStart hook (gt prime) to prevent leaking internal
+// ephemerally via SessionStart hook (ms prime) to prevent leaking internal
 // architecture into project repos.
 
 func TestAddWithOptions_HasAgentsMD(t *testing.T) {
@@ -816,7 +816,7 @@ func TestReconcilePoolWith_KeepsDirBackedStaleSession(t *testing.T) {
 
 	townRoot := t.TempDir()
 	rigPath := filepath.Join(townRoot, "myrig")
-	tm := tmux.NewTmuxWithSocket(fmt.Sprintf("gt-test-reconcile-%d", time.Now().UnixNano()))
+	tm := tmux.NewTmuxWithSocket(fmt.Sprintf("ms-test-reconcile-%d", time.Now().UnixNano()))
 	t.Cleanup(func() { _ = tm.KillServer() })
 
 	m := NewManager(&rig.Rig{Name: "myrig", Path: rigPath}, nil, tm)
@@ -1096,8 +1096,8 @@ func TestBuildBranchName(t *testing.T) {
 		{
 			name:     "default_with_issue",
 			template: "", // Empty template = default behavior
-			issue:    "gt-123",
-			want:     "miner/alpha/gt-123@", // timestamp suffix varies
+			issue:    "ms-123",
+			want:     "miner/alpha/ms-123@", // timestamp suffix varies
 		},
 		{
 			name:     "default_without_issue",
@@ -1120,7 +1120,7 @@ func TestBuildBranchName(t *testing.T) {
 		{
 			name:     "custom_template_with_issue",
 			template: "work/{issue}",
-			issue:    "gt-456",
+			issue:    "ms-456",
 			want:     "work/456",
 		},
 		{
@@ -1213,13 +1213,13 @@ func TestAddWithOptions_NoPrimeMDCreatedLocally(t *testing.T) {
 		testutil.RequireDoltContainer(t)
 		port, _ := strconv.Atoi(testutil.DoltContainerPort())
 		bd := beads.NewIsolatedWithPort(overseerRig, port)
-		if err := bd.Init("gt"); err != nil {
+		if err := bd.Init("ms"); err != nil {
 			t.Fatalf("bd init: %v", err)
 		}
 	} else {
 		installMockBd(t)
 		// Write the custom-types sentinel so EnsureCustomTypes is a no-op.
-		_ = os.WriteFile(filepath.Join(overseerBeads, ".gt-types-configured"), []byte("v1\n"), 0644)
+		_ = os.WriteFile(filepath.Join(overseerBeads, ".ms-types-configured"), []byte("v1\n"), 0644)
 	}
 
 	// Initialize git repo in overseer/rig WITHOUT any .beads/PRIME.md
@@ -1368,7 +1368,7 @@ func TestReuseIdleMiner_RunsSetupCommand(t *testing.T) {
 	_ = git.NewGit(miner.ClonePath).CleanForce()
 	writeWispSetupCommand(t, mgr, setupCommandWriteMarker("reuse-setup-marker"))
 
-	reused, err := mgr.ReuseIdleMiner("toast", AddOptions{HookBead: "gt-next"})
+	reused, err := mgr.ReuseIdleMiner("toast", AddOptions{HookBead: "ms-next"})
 	if err != nil {
 		t.Fatalf("ReuseIdleMiner: %v", err)
 	}
@@ -1395,7 +1395,7 @@ func TestReuseIdleMiner_SetupCommandFailureCleansWorktree(t *testing.T) {
 	_ = git.NewGit(miner.ClonePath).CleanForce()
 	writeWispSetupCommand(t, mgr, setupCommandWriteMarkerAndFail("dirty-setup-marker"))
 
-	_, err = mgr.ReuseIdleMiner("toast", AddOptions{HookBead: "gt-next"})
+	_, err = mgr.ReuseIdleMiner("toast", AddOptions{HookBead: "ms-next"})
 	if err == nil {
 		t.Fatal("ReuseIdleMiner should fail when setup_command fails")
 	}
@@ -1460,7 +1460,7 @@ func TestReuseIdleMiner_UsesCanonicalOriginDefaultBranch(t *testing.T) {
 
 	staleSHA := createStaleMinerCommit(t, miner.ClonePath, "HEAD", "miner/toast-stale")
 
-	_, err = mgr.ReuseIdleMiner("toast", AddOptions{HookBead: "gt-next"})
+	_, err = mgr.ReuseIdleMiner("toast", AddOptions{HookBead: "ms-next"})
 	if !errors.Is(err, ErrMinerNeedsRecovery) {
 		t.Fatalf("ReuseIdleMiner error = %v, want ErrMinerNeedsRecovery", err)
 	}
@@ -1479,7 +1479,7 @@ func TestReuseIdleMiner_UsesCanonicalOriginDefaultBranch(t *testing.T) {
 
 // TestAddWithOptions_ResumeBranch verifies gh#3602: when ResumeBranch is set,
 // AddWithOptions checks out the named existing branch instead of creating a
-// fresh miner/<name>/<bead>@<ts> branch. This lets `gt sling --branch/--pr`
+// fresh miner/<name>/<bead>@<ts> branch. This lets `ms sling --branch/--pr`
 // resume work on an existing PR branch without creating duplicates.
 func TestAddWithOptions_ResumeBranch(t *testing.T) {
 	mgr, overseerRig := setupCanonicalBranchManagerTest(t)
@@ -1563,13 +1563,13 @@ func TestAddWithOptions_NoFilesAddedToRepo(t *testing.T) {
 		testutil.RequireDoltContainer(t)
 		port, _ := strconv.Atoi(testutil.DoltContainerPort())
 		bd := beads.NewIsolatedWithPort(overseerRig, port)
-		if err := bd.Init("gt"); err != nil {
+		if err := bd.Init("ms"); err != nil {
 			t.Fatalf("bd init: %v", err)
 		}
 	} else {
 		installMockBd(t)
 		// Write the custom-types sentinel so EnsureCustomTypes is a no-op.
-		_ = os.WriteFile(filepath.Join(overseerBeads, ".gt-types-configured"), []byte("v1\n"), 0644)
+		_ = os.WriteFile(filepath.Join(overseerBeads, ".ms-types-configured"), []byte("v1\n"), 0644)
 	}
 
 	// Initialize a CLEAN git repo with known files only
@@ -1663,7 +1663,7 @@ func TestAddWithOptions_NoFilesAddedToRepo(t *testing.T) {
 		if strings.Contains(line, ".beads") {
 			continue
 		}
-		// CLAUDE.md is expected - provisioned by CreateMinerCLAUDEmd for gt done instructions
+		// CLAUDE.md is expected - provisioned by CreateMinerCLAUDEmd for ms done instructions
 		if strings.Contains(line, "CLAUDE.md") {
 			continue
 		}
@@ -1709,13 +1709,13 @@ func TestAddWithOptions_SettingsInstalledInMinersDir(t *testing.T) {
 		testutil.RequireDoltContainer(t)
 		port, _ := strconv.Atoi(testutil.DoltContainerPort())
 		bd := beads.NewIsolatedWithPort(overseerRig, port)
-		if err := bd.Init("gt"); err != nil {
+		if err := bd.Init("ms"); err != nil {
 			t.Fatalf("bd init: %v", err)
 		}
 	} else {
 		installMockBd(t)
 		// Write the custom-types sentinel so EnsureCustomTypes is a no-op.
-		_ = os.WriteFile(filepath.Join(overseerBeads, ".gt-types-configured"), []byte("v1\n"), 0644)
+		_ = os.WriteFile(filepath.Join(overseerBeads, ".ms-types-configured"), []byte("v1\n"), 0644)
 	}
 
 	// Initialize a git repo
@@ -1843,7 +1843,7 @@ func TestOverflowNameSessionFormat(t *testing.T) {
 
 // TestPendingMarkerBlocksReallocation verifies that a .pending reservation file
 // written by AllocateName prevents a concurrent reconcile from treating the name
-// as available (the TOCTOU fix: hq-ypvza / gt-601kx).
+// as available (the TOCTOU fix: hq-ypvza / ms-601kx).
 func TestPendingMarkerBlocksReallocation(t *testing.T) {
 	t.Parallel()
 
@@ -1928,7 +1928,7 @@ func TestStalePendingMarkerIsCleanedUp(t *testing.T) {
 
 // TestAddWithOptions_RollbackReleasesName verifies that when AddWithOptions fails,
 // the allocated name is released back to the pool and the miner directory is cleaned up.
-// Regression test for gt-2vs22: cleanupOnError previously only removed the directory,
+// Regression test for ms-2vs22: cleanupOnError previously only removed the directory,
 // leaking pool names on spawn failure.
 func TestAddWithOptions_RollbackReleasesName(t *testing.T) {
 	root := t.TempDir()
@@ -1973,7 +1973,7 @@ func TestAddWithOptions_RollbackReleasesName(t *testing.T) {
 	}
 	m := NewManager(r, git.NewGit(root), nil)
 
-	// Allocate a name (simulates what gt sling does before AddWithOptions)
+	// Allocate a name (simulates what ms sling does before AddWithOptions)
 	name, err := m.AllocateName()
 	if err != nil {
 		t.Fatalf("AllocateName: %v", err)
@@ -1991,7 +1991,7 @@ func TestAddWithOptions_RollbackReleasesName(t *testing.T) {
 		t.Fatal("AddWithOptions should have failed without origin/main ref")
 	}
 
-	// Verify name was released back to pool (gt-2vs22 fix)
+	// Verify name was released back to pool (ms-2vs22 fix)
 	activeNames := m.namePool.ActiveNames()
 	for _, n := range activeNames {
 		if n == name {
@@ -2015,7 +2015,7 @@ func TestAddWithOptions_RollbackReleasesName(t *testing.T) {
 // TestAddWithOptions_RollbackCleansWorktree verifies that when AddWithOptions fails
 // AFTER the worktree is created (e.g., agent bead creation fails), the worktree
 // registration is cleaned up along with the directory and pool name.
-// Regression test for gt-2vs22.
+// Regression test for ms-2vs22.
 func TestAddWithOptions_RollbackCleansWorktree(t *testing.T) {
 	root := t.TempDir()
 
@@ -2117,7 +2117,7 @@ esac
 		t.Fatalf("write redirect: %v", err)
 	}
 	// Write custom-types sentinel so EnsureCustomTypes is a no-op
-	_ = os.WriteFile(filepath.Join(overseerBeads, ".gt-types-configured"), []byte("v1\n"), 0644)
+	_ = os.WriteFile(filepath.Join(overseerBeads, ".ms-types-configured"), []byte("v1\n"), 0644)
 
 	r := &rig.Rig{
 		Name: "rig",
@@ -2197,11 +2197,11 @@ func TestManagerAgentLifecycleUsesTownBeadsDir(t *testing.T) {
 	}
 	if err := beads.WriteRoutes(townBeadsDir, []beads.Route{
 		{Prefix: "hq-", Path: "."},
-		{Prefix: "gt-", Path: filepath.Join(rigName, "overseer", "rig")},
+		{Prefix: "ms-", Path: filepath.Join(rigName, "overseer", "rig")},
 	}); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townBeadsDir, ".gt-types-configured"), []byte("v1\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townBeadsDir, ".ms-types-configured"), []byte("v1\n"), 0644); err != nil {
 		t.Fatalf("write types sentinel: %v", err)
 	}
 
@@ -2227,11 +2227,11 @@ case "$cmd" in
     exit 0
     ;;
   create)
-    printf '%%s\n' '{"id":"gt-mineshaft-miner-rust","title":"gt-mineshaft-miner-rust","status":"open","description":"role_type: miner\nrig: mineshaft\nagent_state: spawning\nhook_bead: gt-work"}'
+    printf '%%s\n' '{"id":"ms-mineshaft-miner-rust","title":"ms-mineshaft-miner-rust","status":"open","description":"role_type: miner\nrig: mineshaft\nagent_state: spawning\nhook_bead: ms-work"}'
     exit 0
     ;;
   show)
-    printf '%%s\n' '[{"id":"gt-mineshaft-miner-rust","title":"gt-mineshaft-miner-rust","issue_type":"task","labels":["gt:agent"],"status":"open","description":"role_type: miner\nrig: mineshaft\nagent_state: working\nhook_bead: gt-work\nactive_mr: gt-mr\ncleanup_status: has_unpushed"}]'
+    printf '%%s\n' '[{"id":"ms-mineshaft-miner-rust","title":"ms-mineshaft-miner-rust","issue_type":"task","labels":["ms:agent"],"status":"open","description":"role_type: miner\nrig: mineshaft\nagent_state: working\nhook_bead: ms-work\nactive_mr: ms-mr\ncleanup_status: has_unpushed"}]'
     exit 0
     ;;
   *)
@@ -2347,7 +2347,7 @@ func TestAllocateAndAdd_NoDuplicateNames(t *testing.T) {
 // an existing live (non-stale) tmux session instead of returning ErrSessionRunning.
 // This is the regression test for the sling-reuse-stale-session bug: idle miners
 // with a live Claude session at a dead ❯ prompt must have their session killed so
-// StartSession can create a fresh session with a proper gt prime --hook cycle.
+// StartSession can create a fresh session with a proper ms prime --hook cycle.
 func TestReuseIdleMiner_KillsLiveSession(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("tmux not supported on Windows")
@@ -2369,7 +2369,7 @@ func TestReuseIdleMiner_KillsLiveSession(t *testing.T) {
 
 	// Register a unique prefix for session naming
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", rigName)
+	reg.Register("ms", rigName)
 	old := session.DefaultRegistry()
 	session.SetDefaultRegistry(reg)
 	t.Cleanup(func() { session.SetDefaultRegistry(old) })
@@ -2378,7 +2378,7 @@ func TestReuseIdleMiner_KillsLiveSession(t *testing.T) {
 	r := &rig.Rig{Name: rigName, Path: rigPath}
 	mgr := NewManager(r, git.NewGit(rigPath), tm)
 
-	// Create a live tmux session (simulates Claude sitting at ❯ after gt done)
+	// Create a live tmux session (simulates Claude sitting at ❯ after ms done)
 	sessMgr := NewSessionManager(tm, r)
 	sessionName := sessMgr.SessionName(minerName)
 	if err := tm.NewSessionWithCommand(sessionName, townRoot, "sleep 300"); err != nil {
@@ -2386,7 +2386,7 @@ func TestReuseIdleMiner_KillsLiveSession(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = tm.KillSessionWithProcesses(sessionName) })
 
-	// Write a fresh heartbeat (simulating a session that just finished gt done
+	// Write a fresh heartbeat (simulating a session that just finished ms done
 	// but hasn't gone stale yet — this is the exact scenario that previously
 	// caused ReuseIdleMiner to return ErrSessionRunning)
 	TouchSessionHeartbeat(townRoot, sessionName)
@@ -2491,7 +2491,7 @@ func TestRepairWorktreeWithOptions_KillsLiveSession(t *testing.T) {
 	}
 
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", rigName)
+	reg.Register("ms", rigName)
 	old := session.DefaultRegistry()
 	session.SetDefaultRegistry(reg)
 	t.Cleanup(func() { session.SetDefaultRegistry(old) })
@@ -2505,7 +2505,7 @@ func TestRepairWorktreeWithOptions_KillsLiveSession(t *testing.T) {
 	TouchSessionHeartbeat(townRoot, sessionName)
 
 	mgr := NewManager(&rig.Rig{Name: rigName, Path: rigPath}, git.NewGit(rigPath), tm)
-	if _, err := mgr.RepairWorktreeWithOptions(minerName, true, AddOptions{HookBead: "gt-next"}); err != nil {
+	if _, err := mgr.RepairWorktreeWithOptions(minerName, true, AddOptions{HookBead: "ms-next"}); err != nil {
 		t.Fatalf("RepairWorktreeWithOptions: %v", err)
 	}
 
@@ -2540,7 +2540,7 @@ func TestReuseIdleMiner_KillsStaleSession(t *testing.T) {
 	}
 
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", rigName)
+	reg.Register("ms", rigName)
 	old := session.DefaultRegistry()
 	session.SetDefaultRegistry(reg)
 	t.Cleanup(func() { session.SetDefaultRegistry(old) })
@@ -2608,7 +2608,7 @@ func TestReuseIdleMiner_NoSessionNoop(t *testing.T) {
 	}
 
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", rigName)
+	reg.Register("ms", rigName)
 	old := session.DefaultRegistry()
 	session.SetDefaultRegistry(reg)
 	t.Cleanup(func() { session.SetDefaultRegistry(old) })

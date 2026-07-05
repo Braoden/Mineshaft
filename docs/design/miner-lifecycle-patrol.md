@@ -1,13 +1,13 @@
 # Miner Lifecycle and Patrol Coordination
 
-> **Bead:** gt-t6muy
+> **Bead:** ms-t6muy
 > **Date:** 2026-02-20
 > **Author:** capable (mineshaft miner)
 > **Status:** Implemented — core lifecycle shipped, branch cleanup shipped, overseer notify pending
-> **Updated:** 2026-03-07 (gt-o8g8 implementation audit by bear)
-> **Related:** gt-dtw9u (Witness monitoring), gt-qpwv4 (Completion detection),
-> gt-6qyt1 (Refinery queue), gt-budeb (Auto-nuke), gt-5j3ia (Swarm aggregation),
-> gt-1dbcp (Miner auto-start), w-gt-004 (Wasteland lifecycle item)
+> **Updated:** 2026-03-07 (ms-o8g8 implementation audit by bear)
+> **Related:** ms-dtw9u (Witness monitoring), ms-qpwv4 (Completion detection),
+> ms-6qyt1 (Refinery queue), ms-budeb (Auto-nuke), ms-5j3ia (Swarm aggregation),
+> ms-1dbcp (Miner auto-start), w-ms-004 (Wasteland lifecycle item)
 
 ---
 
@@ -49,10 +49,10 @@ hard constraint.
 
 | Trigger | Who Initiates | What Happens |
 |---------|--------------|-------------|
-| Step completion | Miner | `bd close <step>` then `gt handoff` for next step |
+| Step completion | Miner | `bd close <step>` then `ms handoff` for next step |
 | Context filling | Claude Code | Auto-compaction; PreCompact hook saves state |
 | Crash/timeout | Infrastructure | Witness detects, respawns session |
-| `gt done` | Miner | Final step; submit to MQ, go idle (sandbox preserved) |
+| `ms done` | Miner | Final step; submit to MQ, go idle (sandbox preserved) |
 
 ### 2.4 State Continuity
 
@@ -66,7 +66,7 @@ Between sessions, state is preserved through:
 The new session discovers its position via:
 
 ```bash
-gt prime --hook    # Loads role context, reads hook
+ms prime --hook    # Loads role context, reads hook
 bd mol current     # Discovers which step is next
 bd show <step-id>  # Reads step instructions
 ```
@@ -84,13 +84,13 @@ Triggered when a step completes but more steps remain in the molecule.
 | Action | Result |
 |--------|--------|
 | Close step bead | `bd close <step-id>` |
-| Session cycles | `gt handoff` (voluntary) or crash recovery |
+| Session cycles | `ms handoff` (voluntary) or crash recovery |
 | Sandbox persists | Branch, worktree, uncommitted work all survive |
 | Molecule persists | Remaining steps still open, hook still set |
 | Identity persists | Agent bead unchanged, CV accumulates |
 
 **Who handles it:**
-- Miner initiates via `gt handoff`
+- Miner initiates via `ms handoff`
 - Witness respawns if crash (via `SessionManager.Start`)
 - Daemon triggers if session is dead (`LIFECYCLE:Shutdown` → witness)
 
@@ -100,7 +100,7 @@ Triggered when the molecule's final step completes and work is submitted.
 
 | Action | Result |
 |--------|--------|
-| Miner runs `gt done` | Pushes branch, submits MR, sets `cleanup_status=clean` |
+| Miner runs `ms done` | Pushes branch, submits MR, sets `cleanup_status=clean` |
 | Miner sets agent state | `agent_state=idle`, `hook_bead` cleared |
 | Miner kills session | Session terminated, sandbox preserved |
 | Witness receives `MINER_DONE` | Acknowledges idle transition |
@@ -125,11 +125,11 @@ STEP CLEANUP (intermediate)          MOLECULE CLEANUP (final)
 The cleanup pipeline is a chain of handoffs, not a monolithic operation:
 
 ```
-Miner calls gt done
+Miner calls ms done
     │
     ├── Sets cleanup_status=clean on agent bead
     ├── Pushes branch to origin
-    ├── Creates MR bead (label: gt:merge-request)
+    ├── Creates MR bead (label: ms:merge-request)
     ├── Sends MINER_DONE mail to witness
     └── Session exits
          │
@@ -167,7 +167,7 @@ Each stage can fail independently. Recovery is handled by the next patrol cycle:
 
 | Failure | Detection | Recovery |
 |---------|-----------|---------|
-| `gt done` fails mid-execution | Zombie state: session alive, done-intent label | Witness `DetectZombieMiners()` finds stuck-in-done, recovers |
+| `ms done` fails mid-execution | Zombie state: session alive, done-intent label | Witness `DetectZombieMiners()` finds stuck-in-done, recovers |
 | `MINER_DONE` mail lost | Witness patrol: finds dead session with `hook_bead` | `DetectZombieMiners()` with agent-dead-in-session |
 | Merge conflict | Refinery `doMerge()` detects | Creates conflict resolution task, blocks MR |
 | `MERGED` mail lost | Refinery closed the bead; witness patrol finds closed bead with live session | `DetectZombieMiners()` bead-closed-still-running |
@@ -179,7 +179,7 @@ Each stage can fail independently. Recovery is handled by the next patrol cycle:
 
 ### 4.1 Design Decision: Mail-Based Channel
 
-The per-rig miner channel is implemented using the existing `gt mail` system.
+The per-rig miner channel is implemented using the existing `ms mail` system.
 This was chosen over beads-based queues or state files because:
 
 1. **Consistency:** Mail is already the coordination primitive for all Mineshaft agents
@@ -224,7 +224,7 @@ first-come-first-served within each cycle. The patrol pattern:
 ```
 Witness patrol cycle:
     │
-    ├── 1. Check inbox (gt mail inbox)
+    ├── 1. Check inbox (ms mail inbox)
     │   └── Process lifecycle messages in order
     │
     ├── 2. Detect zombie miners
@@ -281,7 +281,7 @@ provides resurrection. Together, these guarantee eventual completion.
 ┌─────────────────────────────────────────────┐
 │              COMPLETION LOOP                 │
 │                                              │
-│   Session spawns → gt prime → discovers hook │
+│   Session spawns → ms prime → discovers hook │
 │        │                                     │
 │        ▼                                     │
 │   GUPP fires → execute current step          │
@@ -295,7 +295,7 @@ provides resurrection. Together, these guarantee eventual completion.
 │        no                                │   │
 │        │                                 │   │
 │        ▼                                 │   │
-│   gt done → merge → nuke                 │   │
+│   ms done → merge → nuke                 │   │
 │                                          │   │
 │   Session crashes? ──▶ Witness respawns ─┘   │
 │                                              │
@@ -448,9 +448,9 @@ safety net.
 
 ```
 AGENT-DRIVEN (preferred)              MECHANICAL (safety net)
-├── gt done (miner goes idle)       ├── Daemon detects dead session
-├── gt handoff (miner self-cycles)  ├── Daemon detects GUPP violation
-├── gt escalate (miner asks help)   ├── Witness zombie sweep
+├── ms done (miner goes idle)       ├── Daemon detects dead session
+├── ms handoff (miner self-cycles)  ├── Daemon detects GUPP violation
+├── ms escalate (miner asks help)   ├── Witness zombie sweep
 └── HELP mail (miner signals)       └── Supervisor restart on stale heartbeat
 ```
 
@@ -506,7 +506,7 @@ request.
 Miner completes step
     │
     ├── Closes step bead
-    ├── Calls gt handoff (creates handoff mail)
+    ├── Calls ms handoff (creates handoff mail)
     └── Session exits
          │
          ▼
@@ -520,8 +520,8 @@ Daemon heartbeat tick
 SessionManager.Start()
     │
     ├── Creates new tmux session in existing worktree
-    ├── Injects env vars (GT_MINER, GT_RIG)
-    ├── SessionStart hook fires: gt prime --hook
+    ├── Injects env vars (MS_MINER, MS_RIG)
+    ├── SessionStart hook fires: ms prime --hook
     └── New session discovers next step via bd mol current
 ```
 
@@ -530,7 +530,7 @@ this. When a session dies but the hook is still set, the daemon either sends a
 `LIFECYCLE:` message to the witness or directly restarts the session (depending
 on configuration). Miner startup is handled end-to-end by the GUPP/beacon
 flow (SessionManager → StartupNudge → BuildStartupPrompt → SessionStart hook
-→ gt prime).
+→ ms prime).
 
 **Future (AT integration):** The witness spawns replacement teammates directly
 via `Teammate({ operation: "spawn" })`. The SubagentStop hook detects teammate
@@ -542,7 +542,7 @@ death and triggers respawn. See `docs/design/witness-at-team-lead.md` for detail
 
 ### 8.1 The Stuck-in-Done Zombie
 
-A miner runs `gt done` but the session hangs before cleanup completes.
+A miner runs `ms done` but the session hangs before cleanup completes.
 
 **Detection:** Witness `DetectZombieMiners()` checks for `done-intent` label
 older than 60 seconds with a live session.
@@ -601,13 +601,13 @@ changes the transport layer but preserves the lifecycle model:
 | Session management | tmux sessions | AT teammates |
 | Spawning | `SessionManager.Start()` | `Teammate({ operation: "spawn" })` |
 | Health monitoring | tmux liveness + pane output | AT lifecycle hooks (SubagentStop) |
-| Messaging | `gt nudge` (tmux send-keys) | AT messaging |
+| Messaging | `ms nudge` (tmux send-keys) | AT messaging |
 | Cleanup | Session kill (sandbox preserved) | `Teammate({ operation: "requestShutdown" })` (sandbox preserved) |
 
 **What stays the same:**
 - Beads as the durable ledger
 - Molecules as workflow templates
-- `gt done` as the miner idle signal
+- `ms done` as the miner idle signal
 - Two-stage cleanup (step vs molecule)
 - Mail for cross-rig communication
 - The completion guarantee (GUPP + pinned work + respawn)
@@ -620,7 +620,7 @@ changes the transport layer but preserves the lifecycle model:
 
 ---
 
-## 10. Implementation Status (gt-o8g8 audit, 2026-03-07)
+## 10. Implementation Status (ms-o8g8 audit, 2026-03-07)
 
 ### Shipped
 
@@ -628,12 +628,12 @@ All core lifecycle operations are implemented and running in production:
 
 | Operation | Command/Component | Key Implementation |
 |-----------|------------------|-------------------|
-| Spawn/assign | `gt sling` | `sling.go`, `miner_spawn.go` — finds idle miner or allocates new slot |
-| Work execution | `gt prime --hook` | Session discovers hook via `bd mol current`, GUPP fires |
-| Session cycling | `gt handoff` | `handoff.go` — all roles, preserves sandbox and identity |
-| Step completion | `bd close` + `gt handoff` | Step cleanup: session dies, sandbox lives |
-| Work submission | `gt done` | `done.go` — push, MR, sandbox sync, set idle |
-| Idle miner reuse | `gt sling` | `miner/manager.go`: `FindIdleMiner()` + `ReuseIdleMiner()` — branch-only repair |
+| Spawn/assign | `ms sling` | `sling.go`, `miner_spawn.go` — finds idle miner or allocates new slot |
+| Work execution | `ms prime --hook` | Session discovers hook via `bd mol current`, GUPP fires |
+| Session cycling | `ms handoff` | `handoff.go` — all roles, preserves sandbox and identity |
+| Step completion | `bd close` + `ms handoff` | Step cleanup: session dies, sandbox lives |
+| Work submission | `ms done` | `done.go` — push, MR, sandbox sync, set idle |
+| Idle miner reuse | `ms sling` | `miner/manager.go`: `FindIdleMiner()` + `ReuseIdleMiner()` — branch-only repair |
 | Zombie detection | Witness patrol | `witness/handlers.go`: `DetectZombieMiners()` — restart-first, no auto-nuke |
 | Stale detection | Witness patrol | `miner/manager.go`: `DetectStaleMiners()` — tmux-based, protects paused states |
 | Orphan recovery | Witness patrol | `witness/handlers.go`: `DetectOrphanedBeads()` — reset and re-dispatch |
@@ -651,7 +651,7 @@ All core lifecycle operations are implemented and running in production:
 | Feature | Rationale for deferral |
 |---------|----------------------|
 | Pool size enforcement | On-demand allocation works; fixed pool is optimization, not correctness |
-| `gt miner pool init` | Miners created naturally by first `gt sling`; pre-allocation unnecessary |
+| `ms miner pool init` | Miners created naturally by first `ms sling`; pre-allocation unnecessary |
 | `ReconcilePool()` | Witness patrol already detects state drift via zombie/stale/orphan checks |
 
 ---

@@ -61,7 +61,7 @@ func TestPatrolMoleculesExistCheck_NoRigs(t *testing.T) {
 }
 
 func TestPatrolMoleculesExistCheck_RigPathMissing_FallbackToTownRoot(t *testing.T) {
-	// Regression test for: when gt doctor runs from a overseer's canonical clone,
+	// Regression test for: when ms doctor runs from a overseer's canonical clone,
 	// TownRoot/rigName doesn't exist but patrol formulas are accessible from TownRoot.
 	// The check should fall back to TownRoot instead of reporting false missing formulas.
 	tmpDir := t.TempDir()

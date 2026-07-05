@@ -21,7 +21,7 @@ func TestMain(m *testing.M) {
 	//
 	// When Docker is unavailable, Dolt-needing tests self-skip via
 	// setupTestStore → beadsdk.Open failure. Non-Dolt tests (e.g.
-	// boot_spawn_frequency_test.go) still run. (fixes gt-kw4449)
+	// boot_spawn_frequency_test.go) still run. (fixes ms-kw4449)
 	if err := testutil.EnsureDoltContainerForTestMain(); err != nil {
 		fmt.Fprintf(os.Stderr, "daemon TestMain: Dolt container unavailable (%v), Dolt-dependent tests will skip\n", err)
 	}
@@ -33,7 +33,7 @@ func TestMain(m *testing.M) {
 	// interference with the user's tmux and other packages' tests.
 	var tmuxSocket string
 	if _, err := exec.LookPath("tmux"); err == nil {
-		tmuxSocket = fmt.Sprintf("gt-test-daemon-%d", os.Getpid())
+		tmuxSocket = fmt.Sprintf("ms-test-daemon-%d", os.Getpid())
 		tmux.SetDefaultSocket(tmuxSocket)
 	}
 

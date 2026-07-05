@@ -62,7 +62,7 @@ func runIssueSet(cmd *cobra.Command, args []string) error {
 	// Get current tmux session
 	session := os.Getenv("TMUX_PANE")
 	if session == "" {
-		// Try to detect from GT env vars
+		// Try to detect from MS env vars
 		session = detectCurrentSession()
 		if session == "" {
 			return fmt.Errorf("not in a tmux session")
@@ -70,7 +70,7 @@ func runIssueSet(cmd *cobra.Command, args []string) error {
 	}
 
 	t := tmux.NewTmux()
-	if err := t.SetEnvironment(session, "GT_ISSUE", issueID); err != nil {
+	if err := t.SetEnvironment(session, "MS_ISSUE", issueID); err != nil {
 		return fmt.Errorf("setting issue: %w", err)
 	}
 
@@ -89,7 +89,7 @@ func runIssueClear(cmd *cobra.Command, args []string) error {
 
 	t := tmux.NewTmux()
 	// Set to empty string to clear
-	if err := t.SetEnvironment(session, "GT_ISSUE", ""); err != nil {
+	if err := t.SetEnvironment(session, "MS_ISSUE", ""); err != nil {
 		return fmt.Errorf("clearing issue: %w", err)
 	}
 
@@ -107,7 +107,7 @@ func runIssueShow(cmd *cobra.Command, args []string) error {
 	}
 
 	t := tmux.NewTmux()
-	issue, err := t.GetEnvironment(session, "GT_ISSUE")
+	issue, err := t.GetEnvironment(session, "MS_ISSUE")
 	if err != nil {
 		return fmt.Errorf("getting issue: %w", err)
 	}
@@ -122,13 +122,13 @@ func runIssueShow(cmd *cobra.Command, args []string) error {
 
 // detectCurrentSession tries to find the tmux session name from env.
 func detectCurrentSession() string {
-	// Try to build session name from GT env vars
-	role := os.Getenv("GT_ROLE")
-	rig := os.Getenv("GT_RIG")
-	miner := os.Getenv("GT_MINER")
-	crew := os.Getenv("GT_CREW")
+	// Try to build session name from MS env vars
+	role := os.Getenv("MS_ROLE")
+	rig := os.Getenv("MS_RIG")
+	miner := os.Getenv("MS_MINER")
+	crew := os.Getenv("MS_CREW")
 
-	// Gate miner path on GT_ROLE: coordinators may have stale GT_MINER.
+	// Gate miner path on MS_ROLE: coordinators may have stale MS_MINER.
 	if rig != "" {
 		if miner != "" {
 			parsedRole, _, _ := parseRoleString(role)

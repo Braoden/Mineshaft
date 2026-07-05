@@ -51,7 +51,7 @@ func getTrackedIssueStatus(beadsDir, minecartID string) []trackedStatus {
 
 	// Refresh status via cross-rig lookup. bd dep list returns status from
 	// the dependency record in HQ beads which is never updated when cross-rig
-	// issues (e.g., gt-* tracked by hq-* minecarts) are closed in their rig.
+	// issues (e.g., ms-* tracked by hq-* minecarts) are closed in their rig.
 	freshStatus := refreshTrackedStatus(ctx, deps)
 
 	var tracked []trackedStatus

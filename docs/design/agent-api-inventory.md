@@ -1,18 +1,18 @@
 # Agent API Touch-Point Inventory
 
-Complete catalog of all GT↔agent integration points, mapped to source code
+Complete catalog of all MS↔agent integration points, mapped to source code
 and the proposed Factory Worker API endpoints.
 
-Ref: gt-5zs8 | Companion: [factory-worker-api.md](factory-worker-api.md)
+Ref: ms-5zs8 | Companion: [factory-worker-api.md](factory-worker-api.md)
 
 ---
 
 ## How to Read This Document
 
 Each touch point lists:
-- **What**: What GT does through this touch point
+- **What**: What MS does through this touch point
 - **Code**: Source files and key functions (line numbers approximate after edits)
-- **Flow**: What information moves and in which direction (GT→Agent or Agent→GT)
+- **Flow**: What information moves and in which direction (MS→Agent or Agent→MS)
 - **Fragility**: What breaks and why
 - **API mapping**: Which Factory Worker API endpoint replaces it
 
@@ -20,7 +20,7 @@ Each touch point lists:
 
 ## 1. Prompt Delivery (tmux send-keys)
 
-**What**: GT sends text to agent sessions via tmux terminal injection.
+**What**: MS sends text to agent sessions via tmux terminal injection.
 
 **Code**:
 - `internal/tmux/tmux.go` — `NudgeSession()` (line ~1300): 8-step protocol
@@ -37,14 +37,14 @@ Each touch point lists:
 - `internal/cmd/nudge.go` — `runNudge()` (line ~196), `deliverNudge()` (line ~129):
   CLI entry point, routes by mode (immediate/queue/wait-idle)
 
-**Flow**: GT→Agent. Text string in, no structured response.
+**Flow**: MS→Agent. Text string in, no structured response.
 
 **Fragility**:
 - 600ms ESC delay must exceed bash readline's 500ms keyseq-timeout; otherwise
   ESC+Enter becomes M-Enter (meta-return) = no submit
 - 512-byte chunk size is empirical; tmux send-keys has undocumented limits
 - Sanitization strips control chars but cannot handle all edge cases
-- No delivery confirmation — GT has no way to know the agent received the message
+- No delivery confirmation — MS has no way to know the agent received the message
 - Per-session channel semaphore (30s timeout) serializes concurrent nudges
 
 **API mapping**: `POST /prompt` — structured JSON delivery with accepted/queued response
@@ -53,7 +53,7 @@ Each touch point lists:
 
 ## 2. Three Delivery Modes (immediate, wait-idle, queue)
 
-**What**: GT routes prompt delivery through three modes depending on urgency.
+**What**: MS routes prompt delivery through three modes depending on urgency.
 
 **Code**:
 - `internal/cmd/nudge.go` — mode constants: `NudgeModeImmediate`, `NudgeModeQueue`,
@@ -69,7 +69,7 @@ Each touch point lists:
 - `internal/mail/router.go` — `NotifyRecipient()` (line ~1568): wait-idle-first
   strategy with 3s timeout, queue fallback
 
-**Flow**: GT→Agent. Immediate: terminal injection. Queue: file→hook→injection.
+**Flow**: MS→Agent. Immediate: terminal injection. Queue: file→hook→injection.
 
 **Fragility**:
 - Queue drain depends on UserPromptSubmit hook — non-Claude agents never drain
@@ -83,7 +83,7 @@ Each touch point lists:
 
 ## 3. Idle Detection (prompt prefix + status bar)
 
-**What**: GT determines if an agent is idle (waiting for input) or busy.
+**What**: MS determines if an agent is idle (waiting for input) or busy.
 
 **Code**:
 - `internal/tmux/tmux.go` — `matchesPromptPrefix()` (line ~2261): NBSP normalization
@@ -97,7 +97,7 @@ Each touch point lists:
 - `internal/tmux/tmux.go` — `promptSuffixes` (line ~1478):
   `[">", "$", "%", "#", "❯"]` for dialog detection
 
-**Flow**: Agent→GT (inferred). GT scrapes terminal output; agent doesn't know.
+**Flow**: Agent→MS (inferred). MS scrapes terminal output; agent doesn't know.
 
 **Fragility**:
 - Prompt prefix `❯` is a Claude Code UI string — any change breaks detection
@@ -112,7 +112,7 @@ Each touch point lists:
 
 ## 4. Rate Limit Detection (pane content scanning)
 
-**What**: GT scans terminal output to detect rate-limited sessions for account rotation.
+**What**: MS scans terminal output to detect rate-limited sessions for account rotation.
 
 **Code**:
 - `internal/quota/scan.go` — `Scanner` struct, `ScanAll()` (line ~77),
@@ -121,7 +121,7 @@ Each touch point lists:
 - `internal/constants/constants.go` — `DefaultRateLimitPatterns`: regex patterns
   for rate limit messages
 
-**Flow**: Agent→GT (inferred). GT reads pane; agent doesn't participate.
+**Flow**: Agent→MS (inferred). MS reads pane; agent doesn't participate.
 
 **Fragility**:
 - Regex patterns must match exact rate limit error messages
@@ -136,7 +136,7 @@ or `POST /telemetry` with rate limit event
 
 ## 5. Account/Quota Management (keychain token swapping)
 
-**What**: GT rotates API credentials across sessions when accounts hit rate limits.
+**What**: MS rotates API credentials across sessions when accounts hit rate limits.
 
 **Code**:
 - `internal/quota/keychain.go` — Darwin-only (289 lines):
@@ -150,7 +150,7 @@ or `POST /telemetry` with rate limit event
 - `internal/quota/executor.go` — `Rotator.Execute()` (line ~81): atomic execution
   with flock, concurrent on independent sessions
 
-**Flow**: GT→Agent. GT swaps credentials; agent is restarted with new token.
+**Flow**: MS→Agent. MS swaps credentials; agent is restarted with new token.
 
 **Fragility**:
 - macOS-only — entire keychain subsystem is darwin-only, no Linux/Windows
@@ -165,7 +165,7 @@ or `POST /telemetry` with rate limit event
 
 ## 6. Session Lifecycle (creation, restart, teardown)
 
-**What**: GT creates, restarts, and tears down agent tmux sessions.
+**What**: MS creates, restarts, and tears down agent tmux sessions.
 
 **Code**:
 - `internal/session/lifecycle.go` — `StartSession()` (line ~121): 13-step unified
@@ -182,7 +182,7 @@ or `POST /telemetry` with rate limit event
 - `internal/tmux/tmux.go` — `KillSessionWithProcesses()` (line ~499): 8-step teardown
   (process group → tree walk → SIGTERM → 2s grace → SIGKILL → pane → session)
 
-**Flow**: GT→Agent. GT controls entire lifecycle; agent is passive.
+**Flow**: MS→Agent. MS controls entire lifecycle; agent is passive.
 
 **Fragility**:
 - 13-step creation has many failure points (tmux, dialogs, readiness)
@@ -192,13 +192,13 @@ or `POST /telemetry` with rate limit event
 - Session creation takes 5-60s depending on agent startup time
 
 **API mapping**: `POST /lifecycle` (agent reports transitions),
-`POST /identity` (GT assigns identity at creation)
+`POST /identity` (MS assigns identity at creation)
 
 ---
 
 ## 7. Spawn Admission Control
 
-**What**: GT gates miner creation with health checks and capacity limits.
+**What**: MS gates miner creation with health checks and capacity limits.
 
 **Code**:
 - `internal/cmd/miner_spawn.go` — `SpawnMinerForSling()` (line ~62):
@@ -211,25 +211,25 @@ or `POST /telemetry` with rate limit event
   breaker after 3 respawns per bead, `RecordBeadRespawn()` (line ~104): flock'd
   cross-process counter
 
-**Flow**: GT internal. Admission decisions don't involve the agent.
+**Flow**: MS internal. Admission decisions don't involve the agent.
 
 **Fragility**:
 - Miner cap (25) and dir cap (30) are hardcoded
 - Circuit breaker state in JSON file (`bead-respawn-counts.json`)
 - Dolt health check adds latency to every spawn
 
-**API mapping**: Internal to GT orchestration — not part of agent-facing API
+**API mapping**: Internal to MS orchestration — not part of agent-facing API
 
 ---
 
 ## 8. Agent Identity (env vars + preset registry)
 
-**What**: GT assigns identity to agents via environment variables and a preset registry.
+**What**: MS assigns identity to agents via environment variables and a preset registry.
 
 **Code**:
 - `internal/config/env.go` — `AgentEnv()` (line ~65): generates 30+ env vars
-  including GT_ROLE, GT_RIG, GT_MINER, GT_CREW, BD_ACTOR, GIT_AUTHOR_NAME,
-  GT_ROOT, GT_AGENT, GT_SESSION, plus OTEL and credential passthrough
+  including MS_ROLE, MS_RIG, MS_MINER, MS_CREW, BD_ACTOR, GIT_AUTHOR_NAME,
+  MS_ROOT, MS_AGENT, MS_SESSION, plus OTEL and credential passthrough
 - `internal/config/agents.go` — `builtinPresets` (line ~164): 10 agent presets
   (Claude, Gemini, Codex, Cursor, Auggie, AMP, OpenCode, Copilot, Pi, OMP)
   with 21 fields each (Command, Args, ProcessNames, SessionIDEnv, etc.)
@@ -239,13 +239,13 @@ or `POST /telemetry` with rate limit event
 - `internal/constants/constants.go` — role constants (lines ~196-215):
   `RoleOverseer`, `RoleSupervisor`, `RoleWitness`, `RoleRefinery`, `RoleMiner`, `RoleCrew`
 
-**Flow**: GT→Agent. GT sets env vars; agent reads them.
+**Flow**: MS→Agent. MS sets env vars; agent reads them.
 
 **Fragility**:
 - 30+ env vars must be kept in sync across tmux SetEnvironment and exec-env
 - Three propagation mechanisms (tmux SetEnvironment, PrependEnv inline, cmd.Env)
   can diverge
-- Agent preset discovery relies on GT_AGENT or GT_PROCESS_NAMES env vars
+- Agent preset discovery relies on MS_AGENT or MS_PROCESS_NAMES env vars
 - Role detection hierarchy (env → CWD → fallback) can produce mismatches
 
 **API mapping**: `POST /identity` — structured identity assignment with all fields
@@ -254,7 +254,7 @@ or `POST /telemetry` with rate limit event
 
 ## 9. Priming (context injection)
 
-**What**: GT injects role context, work assignments, and system state at session start.
+**What**: MS injects role context, work assignments, and system state at session start.
 
 **Code**:
 - `internal/cmd/prime.go` — `runPrime()` (line ~101): full prime or compact/resume path
@@ -270,7 +270,7 @@ or `POST /telemetry` with rate limit event
 - `internal/cmd/prime_molecule.go` — `outputMoleculeContext()` (line ~182): molecule
   progress and step display
 
-**Flow**: GT→Agent. 10-section output: beacon, handoff warning, role context,
+**Flow**: MS→Agent. 10-section output: beacon, handoff warning, role context,
 CONTEXT.md, handoff content, attachment status, autonomous directive, molecule
 context, checkpoint, startup directive.
 
@@ -286,15 +286,15 @@ context, checkpoint, startup directive.
 
 ## 10. Hooks (settings.json installation)
 
-**What**: GT installs hook configurations into agent runtime settings files.
+**What**: MS installs hook configurations into agent runtime settings files.
 
 **Code**:
 - `internal/hooks/config.go` — `HooksConfig` (line ~28): 8 event types
   (PreToolUse, PostToolUse, SessionStart, Stop, PreCompact, UserPromptSubmit,
   WorktreeCreate, WorktreeRemove)
 - `internal/hooks/config.go` — `DefaultBase()` (line ~711): base hooks including
-  PR-workflow guard, dangerous-command guard, SessionStart → `gt prime --hook`,
-  UserPromptSubmit → `gt mail check --inject`, Stop → `gt costs record`
+  PR-workflow guard, dangerous-command guard, SessionStart → `ms prime --hook`,
+  UserPromptSubmit → `ms mail check --inject`, Stop → `ms costs record`
 - `internal/hooks/config.go` — `DefaultOverrides()` (line ~199): role-specific
   overrides (crew PreCompact → handoff cycle, witness/supervisor/refinery patrol guards)
 - `internal/hooks/merge.go` — `MergeHooks()` (line ~24): applies overrides in
@@ -307,7 +307,7 @@ context, checkpoint, startup directive.
 - `internal/runtime/runtime.go` — hook installer registration for 6 providers:
   claude, gemini, opencode, copilot, omp, pi
 
-**Flow**: GT→Agent (at install time). Agent reads settings.json; GT wrote it.
+**Flow**: MS→Agent (at install time). Agent reads settings.json; MS wrote it.
 
 **Fragility**:
 - Each agent vendor has different hook formats (settings.json, plugins, extensions)
@@ -323,19 +323,19 @@ context, checkpoint, startup directive.
 
 ## 11. Guard Scripts (command blocking)
 
-**What**: GT blocks dangerous or policy-violating commands via PreToolUse hooks.
+**What**: MS blocks dangerous or policy-violating commands via PreToolUse hooks.
 
 **Code**:
 - `internal/cmd/tap_guard.go` — `runTapGuardPRWorkflow()` (line ~34): blocks
   `gh pr create`, `git checkout -b`, `git switch -c` in Mineshaft agent contexts;
-  `isMineshaftAgentContext()` (line ~103) checks GT_* env vars and CWD paths
+  `isMineshaftAgentContext()` (line ~103) checks MS_* env vars and CWD paths
 - `internal/cmd/tap_guard_dangerous.go` — `runTapGuardDangerous()` (line ~66):
   blocks 5 patterns: `rm -rf /`, `git push --force`, `git push -f`,
   `git reset --hard`, `git clean -f`; `extractCommand()` (line ~104) parses
   Claude Code JSON hook input
 - Exit code convention: 2 = BLOCK
 
-**Flow**: Agent→GT→Agent. Agent calls hook → GT evaluates → exit 0 (allow) or 2 (block).
+**Flow**: Agent→MS→Agent. Agent calls hook → MS evaluates → exit 0 (allow) or 2 (block).
 
 **Fragility**:
 - Guards read hook input from stdin in Claude Code's JSON format — format change breaks
@@ -343,14 +343,14 @@ context, checkpoint, startup directive.
 - Guards fail-open on stdin errors (can't parse = allow)
 - Only 3 guard scripts; coverage is incomplete
 
-**API mapping**: `POST /authorize` — GT evaluates tool calls with full context,
+**API mapping**: `POST /authorize` — MS evaluates tool calls with full context,
 returns allow/deny with reason
 
 ---
 
 ## 12. Conversation Log Access (JSONL scraping)
 
-**What**: GT reads Claude Code's conversation transcripts for cost and session data.
+**What**: MS reads Claude Code's conversation transcripts for cost and session data.
 
 **Code**:
 - `internal/cmd/costs.go` — `getClaudeProjectDir()` (line ~704): maps workdir to
@@ -363,7 +363,7 @@ returns allow/deny with reason
   `Message.Usage.{InputTokens, CacheCreationInputTokens, CacheReadInputTokens,
   OutputTokens}`
 
-**Flow**: Agent→GT (inferred). Claude Code writes JSONL; GT scrapes filesystem.
+**Flow**: Agent→MS (inferred). Claude Code writes JSONL; MS scrapes filesystem.
 
 **Fragility**:
 - Path encoding convention (slashes→dashes) is undocumented Claude Code internal
@@ -378,13 +378,13 @@ returns allow/deny with reason
 
 ## 13. Token Usage & Cost Tracking
 
-**What**: GT computes session costs from transcript token counts and hardcoded pricing.
+**What**: MS computes session costs from transcript token counts and hardcoded pricing.
 
 **Code**:
 - `internal/cmd/costs.go` — 1516 lines total:
   `calculateCost()` (line ~801): token→USD using `modelPricing` map,
   `extractCostFromWorkDir()` (line ~823): extract from Claude transcript,
-  `runCostsRecord()` (line ~956): Stop hook appends to `~/.gt/costs.jsonl`,
+  `runCostsRecord()` (line ~956): Stop hook appends to `~/.ms/costs.jsonl`,
   `runCostsDigest()` (line ~1155): daily digest bead from costs.jsonl
 - `internal/cmd/costs.go` — `modelPricing` (line ~222): hardcoded table
   (Opus: $15/$75, Sonnet: $3/$15, Haiku: $1/$5 per million tokens,
@@ -392,7 +392,7 @@ returns allow/deny with reason
 - `internal/config/cost_tier.go` — `CostTierRoleAgents()` (line ~44): maps roles to
   models per cost tier (standard/economy/budget)
 
-**Flow**: Agent→GT (inferred). GT reads transcripts at session end.
+**Flow**: Agent→MS (inferred). MS reads transcripts at session end.
 
 **Fragility**:
 - Pricing table is hardcoded — must be updated when Anthropic changes pricing
@@ -407,13 +407,13 @@ returns allow/deny with reason
 
 ## 14. Process Liveness Detection
 
-**What**: GT checks if an agent process is actually running inside a tmux session.
+**What**: MS checks if an agent process is actually running inside a tmux session.
 
 **Code**:
 - `internal/tmux/tmux.go` — `IsAgentAlive()` (line ~2157): preferred method,
   delegates to `IsRuntimeRunning()` (line ~2091) with session process names
 - `internal/tmux/tmux.go` — `resolveSessionProcessNames()` (line ~2164): priority
-  GT_PROCESS_NAMES env → GT_AGENT env → config fallback
+  MS_PROCESS_NAMES env → MS_AGENT env → config fallback
 - `internal/tmux/tmux.go` — `GetPaneCommand()` (line ~1579): `#{pane_current_command}`
   via tmux format
 - `internal/tmux/tmux.go` — `hasDescendantWithNames()` (line ~1823): recursive
@@ -426,7 +426,7 @@ returns allow/deny with reason
 - `internal/config/agents.go` — `ProcessNames` per preset: Claude=`["node","claude"]`,
   Gemini=`["gemini"]`, etc.
 
-**Flow**: Agent→GT (inferred). GT walks process tree; agent doesn't know.
+**Flow**: Agent→MS (inferred). MS walks process tree; agent doesn't know.
 
 **Fragility**:
 - Process name detection relies on exact binary names
@@ -440,7 +440,7 @@ returns allow/deny with reason
 
 ## 15. Three-Level Health Check
 
-**What**: GT performs a 3-level health assessment of agent sessions.
+**What**: MS performs a 3-level health assessment of agent sessions.
 
 **Code**:
 - `internal/tmux/tmux.go` — `CheckSessionHealth()` (line ~1771):
@@ -451,7 +451,7 @@ returns allow/deny with reason
   `SessionHealthy`, `SessionDead`, `AgentDead`, `AgentHung`;
   `IsZombie()` returns true for AgentDead or AgentHung
 
-**Flow**: GT→GT (internal health assessment).
+**Flow**: MS→MS (internal health assessment).
 
 **Fragility**:
 - HungSessionThreshold = 30 minutes (hardcoded default)
@@ -465,7 +465,7 @@ returns allow/deny with reason
 
 ## 16. Heartbeat Files
 
-**What**: GT uses heartbeat files for liveness detection outside tmux.
+**What**: MS uses heartbeat files for liveness detection outside tmux.
 
 **Code**:
 - `internal/miner/heartbeat.go` — `TouchSessionHeartbeat()` (line ~34): writes JSON
@@ -475,12 +475,12 @@ returns allow/deny with reason
   at `supervisor/heartbeat.json` with cycle count, health stats;
   `IsFresh()` (<5min), `IsStale()` (5-15min), `IsVeryStale()` (>15min)
 
-**Flow**: Agent→GT (implicit). Agent command writes file; GT reads it.
+**Flow**: Agent→MS (implicit). Agent command writes file; MS reads it.
 
 **Fragility**:
 - File-based — no notification on write, must poll
 - Stale threshold (3min) chosen empirically
-- Heartbeat touch depends on GT commands being called (not agent-initiated)
+- Heartbeat touch depends on MS commands being called (not agent-initiated)
 
 **API mapping**: `GET /health` — agent reports liveness directly; no files needed
 
@@ -488,31 +488,31 @@ returns allow/deny with reason
 
 ## 17. Working Directory Detection
 
-**What**: GT determines an agent's working directory through multiple methods.
+**What**: MS determines an agent's working directory through multiple methods.
 
 **Code**:
 - `internal/tmux/tmux.go` — `GetPaneWorkDir()` (line ~1676):
   `#{pane_current_path}` via tmux
 - `internal/workspace/find.go` — `Find()` (line ~29): walks up from CWD looking
   for `overseer/town.json` marker; handles worktree paths (miners/, crew/);
-  `FindFromCwdWithFallback()` (line ~113): GT_TOWN_ROOT env fallback for deleted
+  `FindFromCwdWithFallback()` (line ~113): MS_TOWN_ROOT env fallback for deleted
   worktrees
-- `internal/config/env.go` — GT_ROOT env var set in `AgentEnv()`
+- `internal/config/env.go` — MS_ROOT env var set in `AgentEnv()`
 
-**Flow**: GT→GT (detection) and GT→Agent (env var).
+**Flow**: MS→MS (detection) and MS→Agent (env var).
 
 **Fragility**:
 - 5 detection methods can disagree (tmux CWD, env vars, path parsing, git worktree)
 - Worktree deletion leaves agent with no valid CWD
-- GT_TOWN_ROOT fallback exists specifically because worktree cleanup breaks CWD
+- MS_TOWN_ROOT fallback exists specifically because worktree cleanup breaks CWD
 
-**API mapping**: Part of `POST /identity` — GT assigns working directory
+**API mapping**: Part of `POST /identity` — MS assigns working directory
 
 ---
 
 ## 18. Permission Bypass (YOLO flags)
 
-**What**: GT starts all agents with vendor-specific permission bypass flags.
+**What**: MS starts all agents with vendor-specific permission bypass flags.
 
 **Code**:
 - `internal/config/agents.go` — per-preset Args:
@@ -528,7 +528,7 @@ returns allow/deny with reason
   polls for "Bypass Permissions mode" dialog, sends Down+Enter;
   `DismissStartupDialogsBlind()` (line ~1558): blind key sequence fallback
 
-**Flow**: GT→Agent (at startup). Always-on, no per-role granularity.
+**Flow**: MS→Agent (at startup). Always-on, no per-role granularity.
 
 **Fragility**:
 - 10 different flag names across 10 agents — each is a different string
@@ -542,7 +542,7 @@ returns allow/deny with reason
 
 ## 19. Non-Interactive Mode
 
-**What**: GT runs agents in non-interactive mode for specific tasks.
+**What**: MS runs agents in non-interactive mode for specific tasks.
 
 **Code**:
 - `internal/config/agents.go` — `NonInteractiveConfig` (line ~92):
@@ -550,7 +550,7 @@ returns allow/deny with reason
   `OutputFormatFlag` (e.g., "--output-format json")
 - `internal/config/agents.go` — `PromptMode` (line ~98): "arg" or "none"
 
-**Flow**: GT→Agent. GT constructs CLI invocation with flags.
+**Flow**: MS→Agent. MS constructs CLI invocation with flags.
 
 **Fragility**:
 - Exec subcommand and flag names differ per agent
@@ -563,7 +563,7 @@ returns allow/deny with reason
 
 ## 20. Session Resume/Fork
 
-**What**: GT resumes prior sessions or forks them for conversation recall.
+**What**: MS resumes prior sessions or forks them for conversation recall.
 
 **Code**:
 - `internal/config/agents.go` — `ResumeFlag`, `ContinueFlag`, `ResumeStyle`
@@ -573,7 +573,7 @@ returns allow/deny with reason
 - `internal/session/startup.go` — `FormatStartupBeacon()` (line ~69):
   `[MINESHAFT] recipient <- sender • timestamp • topic` format
 
-**Flow**: GT→Agent. GT constructs resume command with session ID.
+**Flow**: MS→Agent. MS constructs resume command with session ID.
 
 **Fragility**:
 - Resume semantics differ per agent (flag vs subcommand)
@@ -587,7 +587,7 @@ returns allow/deny with reason
 
 ## 21. Config Directory Isolation
 
-**What**: GT isolates agent configuration per account to support credential rotation.
+**What**: MS isolates agent configuration per account to support credential rotation.
 
 **Code**:
 - `internal/config/agents.go` — `ConfigDirEnv` (e.g., "CLAUDE_CONFIG_DIR"),
@@ -597,7 +597,7 @@ returns allow/deny with reason
   of config dir for per-account keychain isolation
 - Account directory pattern: `~/.claude-accounts/<handle>/`
 
-**Flow**: GT→Agent. GT sets config dir env; agent uses it for all settings.
+**Flow**: MS→Agent. MS sets config dir env; agent uses it for all settings.
 
 **Fragility**:
 - Config dir layout is Claude Code internal
@@ -610,26 +610,26 @@ returns allow/deny with reason
 
 ## 22. Theme/Display (tmux status bar)
 
-**What**: GT applies role-specific tmux status bar themes.
+**What**: MS applies role-specific tmux status bar themes.
 
 **Code**:
 - `internal/cmd/theme.go` — `runTheme()`: applies role/rig-specific tmux status
   line formatting
 - Applied during `StartSession()` step in `internal/session/lifecycle.go`
 
-**Flow**: GT→tmux. Display-only, doesn't affect agent behavior.
+**Flow**: MS→tmux. Display-only, doesn't affect agent behavior.
 
 **Fragility**:
 - Purely cosmetic — but theme strings used in idle detection (⏵⏵)
 - Theme depends on tmux being the terminal multiplexer
 
-**API mapping**: Not part of agent API — display concern stays in GT
+**API mapping**: Not part of agent API — display concern stays in MS
 
 ---
 
 ## 23. Agent Output Capture (tmux capture-pane)
 
-**What**: GT reads agent terminal output for various purposes.
+**What**: MS reads agent terminal output for various purposes.
 
 **Code**:
 - `internal/tmux/tmux.go` — `CapturePaneTrimmed()`, `CapturePaneLines()`:
@@ -639,7 +639,7 @@ returns allow/deny with reason
 - `internal/telemetry/recorder.go` — `RecordPaneRead()` (line ~266): OTel event
   for every capture-pane call
 
-**Flow**: Agent→GT (inferred). GT reads terminal; agent doesn't know.
+**Flow**: Agent→MS (inferred). MS reads terminal; agent doesn't know.
 
 **Fragility**:
 - Terminal content is unstructured text — parsing is always regex/heuristic
@@ -653,7 +653,7 @@ structured data; no need to scrape terminal
 
 ## 24. Done/Exit Signaling
 
-**What**: Agent signals work completion through GT commands and intent files.
+**What**: Agent signals work completion through MS commands and intent files.
 
 **Code**:
 - `internal/cmd/done.go` — `runDone()` (line ~81): persistent miner model,
@@ -665,10 +665,10 @@ structured data; no need to scrape terminal
 - `internal/witness/handlers.go` — `HandleMinerDone()` (line ~110): processes
   MINER_DONE messages
 
-**Flow**: Agent→GT. Agent calls `gt done`; GT processes exit type.
+**Flow**: Agent→MS. Agent calls `ms done`; MS processes exit type.
 
 **Fragility**:
-- Done detection relies on agent calling `gt done` (a GT CLI command)
+- Done detection relies on agent calling `ms done` (a MS CLI command)
 - Stop hook must parse Claude Code's expected JSON format
 - 4 exit types but no structured error reporting
 - Stop state tracking (in /tmp) to prevent infinite block loops
@@ -679,11 +679,11 @@ structured data; no need to scrape terminal
 
 ## 25. Environment Variable Injection
 
-**What**: GT injects 30+ env vars into agent sessions via tmux.
+**What**: MS injects 30+ env vars into agent sessions via tmux.
 
 **Code**:
 - `internal/config/env.go` — `AgentEnv()` (line ~65): generates full env map
-  (GT_*, BD_*, GIT_*, CLAUDE_*, OTEL_*, credential passthrough)
+  (MS_*, BD_*, GIT_*, CLAUDE_*, OTEL_*, credential passthrough)
 - Three propagation mechanisms:
   1. `tmux.SetEnvironment()` — session-level via `set-environment`
   2. `config.PrependEnv()` — inline `export K=V &&` before command
@@ -692,7 +692,7 @@ structured data; no need to scrape terminal
   (prevents nested session detection)
 - Credential passthrough: 40+ cloud API vars (Anthropic, AWS, Google, proxy, mTLS)
 
-**Flow**: GT→Agent. GT sets env; agent inherits.
+**Flow**: MS→Agent. MS sets env; agent inherits.
 
 **Fragility**:
 - Three propagation mechanisms can diverge
@@ -706,7 +706,7 @@ structured data; no need to scrape terminal
 
 ## 26. Telemetry (OTel integration)
 
-**What**: GT emits OpenTelemetry metrics and logs for all agent operations.
+**What**: MS emits OpenTelemetry metrics and logs for all agent operations.
 
 **Code**:
 - `internal/telemetry/telemetry.go` — `Init()` (line ~104): OTel provider setup,
@@ -722,7 +722,7 @@ structured data; no need to scrape terminal
 - `internal/telemetry/subprocess.go` — `SetProcessOTELAttrs()`: propagates
   OTEL_RESOURCE_ATTRIBUTES to subprocesses
 
-**Flow**: GT→Metrics backend. Agent operations tracked by GT, not agent.
+**Flow**: MS→Metrics backend. Agent operations tracked by MS, not agent.
 
 **Fragility**:
 - OTel export depends on VictoriaMetrics/Logs being available
@@ -735,7 +735,7 @@ structured data; no need to scrape terminal
 
 ## 27. Event Logging (.events.jsonl)
 
-**What**: GT logs all significant events to a JSONL file.
+**What**: MS logs all significant events to a JSONL file.
 
 **Code**:
 - `internal/events/events.go` — `Log()` (line ~85), `LogFeed()` (line ~98),
@@ -746,24 +746,24 @@ structured data; no need to scrape terminal
 - `internal/tui/feed/events.go` — `GtEventsSource` (line ~216): tails .events.jsonl
   for TUI feed display
 
-**Flow**: GT→File. Events from GT operations, not agent-reported.
+**Flow**: MS→File. Events from MS operations, not agent-reported.
 
 **Fragility**:
 - Single JSONL file for all events — no rotation or size management
 - flock serialization can contend under high concurrency
 - No correlation ID linking events to specific agent runs
 
-**API mapping**: `POST /telemetry` events supersede GT-side logging for agent-reported data
+**API mapping**: `POST /telemetry` events supersede MS-side logging for agent-reported data
 
 ---
 
 ## 28. Zombie Detection & Recovery
 
-**What**: GT detects and recovers from zombie sessions (tmux alive, agent dead).
+**What**: MS detects and recovers from zombie sessions (tmux alive, agent dead).
 
 **Code**:
 - `internal/doctor/zombie_check.go` — `ZombieSessionCheck.Run()` (line ~33):
-  filters known GT sessions, excludes crew, calls `IsAgentAlive()`;
+  filters known MS sessions, excludes crew, calls `IsAgentAlive()`;
   `ZombieSessionCheck.Fix()` (line ~113): re-verifies before kill (TOCTOU guard),
   never kills crew sessions
 - `internal/daemon/wisp_reaper.go` — wisp reaper for stale wisp cleanup
@@ -774,7 +774,7 @@ structured data; no need to scrape terminal
 - `internal/witness/spawn_count.go` — spawn storm circuit breaker:
   `ShouldBlockRespawn()` (line ~74), escalates to overseer after threshold
 
-**Flow**: GT→GT. Internal monitoring, agent is passive subject.
+**Flow**: MS→MS. Internal monitoring, agent is passive subject.
 
 **Fragility**:
 - Zombie detection depends on process tree walking (platform-specific)
@@ -811,9 +811,9 @@ Non-Claude agents lose:
 The Factory Worker API eliminates this — one API, all agents.
 
 ### Push vs Scrape
-Current: GT scrapes 6+ sources (tmux pane, JSONL files, process tree, heartbeat
+Current: MS scrapes 6+ sources (tmux pane, JSONL files, process tree, heartbeat
 files, keychain, config dirs).
-Proposed: Agent pushes lifecycle events, telemetry, and health — GT never scrapes.
+Proposed: Agent pushes lifecycle events, telemetry, and health — MS never scrapes.
 
 ---
 
@@ -844,9 +844,9 @@ Proposed: Agent pushes lifecycle events, telemetry, and health — GT never scra
 | 21 | Config dir isolation | CLAUDE_CONFIG_DIR env | `POST /identity` |
 | 22 | Theme/display | tmux status bar | Not agent-facing |
 | 23 | Output capture | tmux capture-pane | Eliminated |
-| 24 | Done/exit signaling | gt done CLI call | `POST /lifecycle` |
+| 24 | Done/exit signaling | ms done CLI call | `POST /lifecycle` |
 | 25 | Env var injection | 3 propagation mechanisms | `POST /identity` |
-| 26 | OTel telemetry | GT-side recording | `POST /telemetry` |
+| 26 | OTel telemetry | MS-side recording | `POST /telemetry` |
 | 27 | Event logging | .events.jsonl append | `POST /telemetry` |
 | 28 | Zombie detection | process tree + thresholds | `GET /health` |
 

@@ -162,7 +162,7 @@ func (m *Manager) exists(name string) bool {
 }
 
 // lockCrew acquires an exclusive file lock for a specific crew worker.
-// This prevents concurrent gt processes from racing on the same crew worker's
+// This prevents concurrent ms processes from racing on the same crew worker's
 // filesystem operations (Add, Remove, Rename, Start).
 // Caller must defer fl.Unlock().
 func (m *Manager) lockCrew(name string) (*flock.Flock, error) {
@@ -315,11 +315,11 @@ func (m *Manager) addLocked(name string, createBranch bool) (*CrewWorker, error)
 		style.PrintWarning("could not install runtime settings: %v", err)
 	}
 
-	// NOTE: Slash commands (.claude/commands/) are provisioned at town level by gt install.
+	// NOTE: Slash commands (.claude/commands/) are provisioned at town level by ms install.
 	// All agents inherit them via Claude's directory traversal - no per-workspace copies needed.
 
 	// NOTE: We intentionally do NOT write to CLAUDE.md here.
-	// Mineshaft context is injected ephemerally via SessionStart hook (gt prime).
+	// Mineshaft context is injected ephemerally via SessionStart hook (ms prime).
 	// Writing to CLAUDE.md would overwrite project instructions and leak
 	// Mineshaft internals into the project repo when workers commit/push.
 
@@ -723,7 +723,7 @@ func (m *Manager) Start(name string, opts StartOptions) error {
 
 	// Compute environment variables BEFORE creating the session.
 	// These are passed via tmux -e flags so the initial shell inherits the correct
-	// env from the start, preventing parent env (e.g., GT_ROLE=overseer) from leaking
+	// env from the start, preventing parent env (e.g., MS_ROLE=overseer) from leaking
 	// into crew sessions. See: https://github.com/steveyegge/mineshaft/issues/1289
 	envVars := config.AgentEnv(config.AgentEnvConfig{
 		Role:             "crew",
@@ -737,7 +737,7 @@ func (m *Manager) Start(name string, opts StartOptions) error {
 
 	// Build startup command (also includes env vars via 'exec env' for
 	// WaitForCommand detection — belt and suspenders with -e flags)
-	// SessionStart hook handles context loading (gt prime --hook)
+	// SessionStart hook handles context loading (ms prime --hook)
 	//
 	// IMPORTANT: All validation and command building happens BEFORE killing
 	// any existing session, so a validation failure cannot leave the user
@@ -836,16 +836,16 @@ func (m *Manager) Start(name string, opts StartOptions) error {
 
 	// Create session with command and env vars via -e flags.
 	// The -e flags set session-level env BEFORE the shell starts, ensuring the
-	// initial shell inherits the correct GT_ROLE (not the parent's).
+	// initial shell inherits the correct MS_ROLE (not the parent's).
 	// See: https://github.com/anthropics/mineshaft/issues/280 (race condition fix)
 	// See: https://github.com/steveyegge/mineshaft/issues/1289 (env inheritance fix)
 	if err := t.NewSessionWithCommandAndEnv(sessionID, worker.ClonePath, claudeCmd, envVars); err != nil {
 		return fmt.Errorf("creating session: %w", err)
 	}
 
-	// Record agent's pane_id for ZFC-compliant liveness checks (gt-qmsx).
+	// Record agent's pane_id for ZFC-compliant liveness checks (ms-qmsx).
 	if paneID, err := t.GetPaneID(sessionID); err == nil {
-		_ = t.SetEnvironment(sessionID, "GT_PANE_ID", paneID)
+		_ = t.SetEnvironment(sessionID, "MS_PANE_ID", paneID)
 	}
 
 	// Apply rig-based theming (non-fatal: theming failure doesn't affect operation)
@@ -889,7 +889,7 @@ func (m *Manager) Start(name string, opts StartOptions) error {
 			_ = t.AcceptStartupDialogs(sessionID)
 		}
 
-		// Start background nudge-queue poller for ALL agents (gt-dgf).
+		// Start background nudge-queue poller for ALL agents (ms-dgf).
 		// Claude drains its queue via UserPromptSubmit hook, but that hook only
 		// fires when the agent submits a prompt. Idle agents (waiting at prompt
 		// for work) never submit, so queued nudges deadlock: agent waits for

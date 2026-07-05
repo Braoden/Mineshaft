@@ -297,7 +297,7 @@ func TestEnsureGitignorePatterns_AppendsToExisting(t *testing.T) {
 	}
 
 	// Should add header
-	if !containsLine(string(content), "# Mineshaft (added by gt)") {
+	if !containsLine(string(content), "# Mineshaft (added by ms)") {
 		t.Error("Missing Mineshaft header comment")
 	}
 
@@ -496,7 +496,7 @@ func TestEnsureGitignorePatterns_UpgradePreservesBroadPattern(t *testing.T) {
 	// Simulate an existing installation that has .claude/ plus other Mineshaft
 	// patterns but is missing __pycache__/ (added later). After upgrade,
 	// __pycache__/ should be appended.
-	existing := "# Mineshaft (added by gt)\n.runtime/\n.claude/\n.logs/\n"
+	existing := "# Mineshaft (added by ms)\n.runtime/\n.claude/\n.logs/\n"
 	if err := os.WriteFile(filepath.Join(tmpDir, ".gitignore"), []byte(existing), 0644); err != nil {
 		t.Fatalf("Failed to create .gitignore: %v", err)
 	}

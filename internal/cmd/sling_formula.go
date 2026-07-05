@@ -109,7 +109,7 @@ func nudgeFormulaDog(delayedDogInfo *DogDispatchInfo, prompt string) {
 	dogSession := fmt.Sprintf("hq-dog-%s", delayedDogInfo.DogName)
 	t := tmux.NewTmux()
 	if err := t.NudgeSession(dogSession, prompt); err != nil {
-		fmt.Printf("%s Could not nudge dog %s: %v (will discover work via gt prime)\n",
+		fmt.Printf("%s Could not nudge dog %s: %v (will discover work via ms prime)\n",
 			style.Dim.Render("○"), delayedDogInfo.DogName, err)
 	} else {
 		fmt.Printf("%s Nudged dog %s\n", style.Bold.Render("▶"), delayedDogInfo.DogName)
@@ -433,7 +433,7 @@ func runSlingFormula(ctx context.Context, args []string) (err error) {
 				return fmt.Errorf("starting delayed dog session for existing formula: %w", err)
 			}
 			delayedDogComplete = true
-			if os.Getenv("GT_TEST_NO_NUDGE") == "" {
+			if os.Getenv("MS_TEST_NO_NUDGE") == "" {
 				nudgeFormulaDog(delayedDogInfo, formulaSlingPrompt(formulaName))
 			}
 		}
@@ -540,7 +540,7 @@ func runSlingFormula(ctx context.Context, args []string) (err error) {
 	}
 
 	// Start delayed dog session now that hook is set
-	// This ensures dog sees the hook when gt prime runs on session start
+	// This ensures dog sees the hook when ms prime runs on session start
 	if delayedDogInfo != nil {
 		pane, err := delayedDogInfo.StartDelayedSession()
 		if err != nil {
@@ -551,7 +551,7 @@ func runSlingFormula(ctx context.Context, args []string) (err error) {
 	}
 
 	// Start spawned miner session now that hook is set.
-	// This ensures miner sees the wisp when gt prime runs on session start.
+	// This ensures miner sees the wisp when ms prime runs on session start.
 	if resolved.NewMinerInfo != nil {
 		pane, err := resolved.NewMinerInfo.StartSession()
 		if err != nil {
@@ -571,7 +571,7 @@ func runSlingFormula(ctx context.Context, args []string) (err error) {
 	}
 
 	// Skip nudge during tests to prevent agent self-interruption
-	if os.Getenv("GT_TEST_NO_NUDGE") != "" {
+	if os.Getenv("MS_TEST_NO_NUDGE") != "" {
 		return nil
 	}
 
@@ -580,14 +580,14 @@ func runSlingFormula(ctx context.Context, args []string) (err error) {
 	// Dog sessions need a nudge sent to their session (not to the bare pane ID
 	// from StartDelayedSession, which is ambiguous on platforms where tmux pane
 	// IDs are not globally unique). Use NudgeSession which qualifies the target
-	// with the session name. (gt-etc)
+	// with the session name. (ms-etc)
 	if delayedDogInfo != nil {
 		nudgeFormulaDog(delayedDogInfo, prompt)
 		return nil
 	}
 
 	if targetPane == "" {
-		fmt.Printf("%s No pane to nudge (agent will discover work via gt prime)\n", style.Dim.Render("○"))
+		fmt.Printf("%s No pane to nudge (agent will discover work via ms prime)\n", style.Dim.Render("○"))
 		return nil
 	}
 
@@ -595,7 +595,7 @@ func runSlingFormula(ctx context.Context, args []string) (err error) {
 	if err := t.NudgePane(targetPane, prompt); err != nil {
 		// Graceful fallback for no-tmux mode
 		fmt.Printf("%s Could not nudge (no tmux?): %v\n", style.Dim.Render("○"), err)
-		fmt.Printf("  Agent will discover work via gt prime / bd show\n")
+		fmt.Printf("  Agent will discover work via ms prime / bd show\n")
 	} else {
 		fmt.Printf("%s Nudged to start\n", style.Bold.Render("▶"))
 	}

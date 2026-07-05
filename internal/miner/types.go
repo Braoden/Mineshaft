@@ -12,7 +12,7 @@ import "time"
 //   - Idle: Work completed, session killed, sandbox preserved for reuse
 //   - ReviewNeeded: Session is live but no active work bead is attached
 //   - Stalled: Session stopped unexpectedly, was never nudged back to life
-//   - Zombie: Session called 'gt done' but cleanup failed - tried to die but couldn't
+//   - Zombie: Session called 'ms done' but cleanup failed - tried to die but couldn't
 //
 // The distinction matters: idle miners completed their work successfully and
 // are ready for new assignments. Stalled miners failed mid-work. Zombies
@@ -34,12 +34,12 @@ const (
 
 	// StateIdle means the miner completed its work and the session was killed,
 	// but the sandbox (worktree) is preserved for reuse. An idle miner has no
-	// hook_bead and no active session. It can be reassigned via gt sling without
+	// hook_bead and no active session. It can be reassigned via ms sling without
 	// creating a new worktree.
 	StateIdle State = "idle"
 
 	// StateDone means the miner has completed its assigned work and called
-	// 'gt done'. This is normally a transient state - the session should exit
+	// 'ms done'. This is normally a transient state - the session should exit
 	// immediately after. If a miner remains in StateDone, it's a "zombie":
 	// the cleanup failed and the session is stuck.
 	StateDone State = "done"

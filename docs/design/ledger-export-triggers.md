@@ -1,6 +1,6 @@
 # Ledger Export Triggers
 
-> **Status**: Design — addresses gt-ayk
+> **Status**: Design — addresses ms-ayk
 > **Author**: mel (crew)
 > **Date**: 2026-02-07
 > **Related**: dolt-storage.md (Three Data Planes), WISP-COMPACTION-POLICY.md (Level 0-1),
@@ -247,9 +247,9 @@ minecart membership, cross-rig references, or worktree usage).
 | Field | Source | Notes |
 |-------|--------|-------|
 | `rigs_involved` | bead refs | Which rigs were touched |
-| `worktrees_used` | gt worktree | Cross-rig work sessions |
+| `worktrees_used` | ms worktree | Cross-rig work sessions |
 | `coordination_pattern` | analysis | Serial vs parallel, delegation vs direct |
-| `mail_thread` | gt mail | Inter-agent communication for this work |
+| `mail_thread` | ms mail | Inter-agent communication for this work |
 | `minecart_structure` | bead graph | How work was decomposed |
 
 **Why this matters for HOP**: Cross-rig work demonstrates architectural
@@ -309,12 +309,12 @@ refinery merge → Trigger 3 (enriches existing Level 2 record)
 
 ### Boundary 4: Session Handoff
 
-An agent cycles via `gt handoff`. Not a direct export trigger, but a
+An agent cycles via `ms handoff`. Not a direct export trigger, but a
 **checkpoint opportunity**: any pending exports from prior triggers should
 flush before the session ends.
 
 ```
-gt handoff → flush pending exports
+ms handoff → flush pending exports
            → Trigger 4 if period boundary crossed
 ```
 
@@ -556,7 +556,7 @@ Level 1 (operational) ──[this design]──> Level 2/3 (ledger)
 Refinery merge events fire Trigger 3. Implementation: the Refinery's merge
 completion hook calls `bd ledger export <bead-id> --trigger merge`.
 
-### With `gt handoff`
+### With `ms handoff`
 
 Handoff flushes pending exports. Implementation: add export flush to the
 handoff checklist (after git push, before session end).

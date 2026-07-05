@@ -26,17 +26,17 @@ if that specific bead is currently hooked. With a target, operates on
 another agent's hook.
 
 Examples:
-  gt unsling                        # Clear my hook (whatever's there)
-  gt unsling gt-abc                 # Only unsling if gt-abc is hooked
-  gt unsling greenplace/joe            # Clear joe's hook
-  gt unsling gt-abc greenplace/joe     # Unsling gt-abc from joe
+  ms unsling                        # Clear my hook (whatever's there)
+  ms unsling ms-abc                 # Only unsling if ms-abc is hooked
+  ms unsling greenplace/joe            # Clear joe's hook
+  ms unsling ms-abc greenplace/joe     # Unsling ms-abc from joe
 
 The bead's status changes from 'hooked' back to 'open'.
 
 Related commands:
-  gt sling <bead>    # Hook + start (inverse of unsling)
-  gt hook <bead>     # Hook without starting
-  gt hook      # See what's on your hook`,
+  ms sling <bead>    # Hook + start (inverse of unsling)
+  ms hook <bead>     # Hook without starting
+  ms hook      # See what's on your hook`,
 	Args: cobra.MaximumNArgs(2),
 	RunE: runUnsling,
 }
@@ -133,8 +133,8 @@ func runUnslingWith(cmd *cobra.Command, args []string, dryRun, force bool) error
 
 	// Town-level fallback: rig-level agents (miners, crew) may have hooked
 	// HQ beads (hq-* prefix) stored in townRoot/.beads, not the rig's database.
-	// Without this, gt unsling can't find or clear these beads, even though
-	// gt mol status / gt hook (display) can see them. (gt-dtq7)
+	// Without this, ms unsling can't find or clear these beads, even though
+	// ms mol status / ms hook (display) can see them. (ms-dtq7)
 	if hookedBeadID == "" && !isTownLevelRole(agentID) && townRoot != "" {
 		townB := beads.New(filepath.Join(townRoot, ".beads"))
 		// Search with the exact agent ID
@@ -162,7 +162,7 @@ func runUnslingWith(cmd *cobra.Command, args []string, dryRun, force bool) error
 	if hookedBeadID == "" {
 		// hook_bead is empty, but there may be stale beads with status "hooked"
 		// still assigned to this agent (e.g., hook_bead was cleared but bead status
-		// wasn't updated). Clean them up so gt hook and gt unsling stay consistent.
+		// wasn't updated). Clean them up so ms hook and ms unsling stay consistent.
 		cleaned := cleanStaleHookedBeads(cmd, b, agentID, targetBeadID, townRoot, beadsPath, dryRun)
 		if !cleaned {
 			if targetAgent != "" {
@@ -261,8 +261,8 @@ func runUnslingWith(cmd *cobra.Command, args []string, dryRun, force bool) error
 // cleanStaleHookedBeads finds and cleans up beads with status "hooked" assigned to
 // agentID when the agent bead's hook_bead field is already null. This handles the
 // inconsistency where hook_bead was cleared (e.g., by another process) but the
-// bead's status wasn't updated back to "open". Without this, gt hook shows the
-// stale hook (via fallback query) but gt unsling says "Nothing on your hook".
+// bead's status wasn't updated back to "open". Without this, ms hook shows the
+// stale hook (via fallback query) but ms unsling says "Nothing on your hook".
 // Returns true if any stale beads were cleaned up.
 func cleanStaleHookedBeads(cmd *cobra.Command, b *beads.Beads, agentID, targetBeadID, townRoot, beadsPath string, dryRun bool) bool {
 	// Collect stale beads from local rig beads
@@ -275,7 +275,7 @@ func cleanStaleHookedBeads(cmd *cobra.Command, b *beads.Beads, agentID, targetBe
 		staleBeads = nil
 	}
 
-	// Also search town-level beads for rig-level agents (gt-dtq7).
+	// Also search town-level beads for rig-level agents (ms-dtq7).
 	// HQ beads (hq-* prefix) live in townRoot/.beads, not the rig database.
 	// Without this, stale HQ beads hooked to crew/miners are invisible to cleanup.
 	if !isTownLevelRole(agentID) && townRoot != "" {

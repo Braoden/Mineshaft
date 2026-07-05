@@ -22,10 +22,10 @@ var disableCmd = &cobra.Command{
 
 When disabled:
   - Shell hooks become no-ops
-  - Claude Code SessionStart hooks skip 'gt prime'
+  - Claude Code SessionStart hooks skip 'ms prime'
   - Tools work 100% vanilla (no Mineshaft behavior)
 
-The workspace (~/gt) is preserved. Use 'gt enable' to re-enable.
+The workspace (~/ms) is preserved. Use 'ms enable' to re-enable.
 
 Flags:
   --clean  Also remove shell integration from ~/.zshrc/~/.bashrc
@@ -60,9 +60,9 @@ func runDisable(cmd *cobra.Command, args []string) error {
 	fmt.Println("All agentic coding tools now work vanilla.")
 	if !disableClean {
 		fmt.Printf("Use %s to also remove shell hooks\n",
-			style.Dim.Render("gt disable --clean"))
+			style.Dim.Render("ms disable --clean"))
 	}
-	fmt.Printf("Use %s to re-enable\n", style.Dim.Render("gt enable"))
+	fmt.Printf("Use %s to re-enable\n", style.Dim.Render("ms enable"))
 
 	return nil
 }

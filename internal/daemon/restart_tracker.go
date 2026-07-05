@@ -291,7 +291,7 @@ func (rt *RestartTracker) ClearCrashLoop(agentID string) {
 }
 
 // ClearAgentBackoff clears the crash loop and backoff state for an agent on disk.
-// Used by 'gt daemon clear-backoff' to reset an agent stuck in crash loop.
+// Used by 'ms daemon clear-backoff' to reset an agent stuck in crash loop.
 // The daemon reloads this on next heartbeat (or immediately on SIGUSR2).
 func ClearAgentBackoff(townRoot, agentID string) error {
 	rt := NewRestartTracker(townRoot, RestartTrackerConfig{})

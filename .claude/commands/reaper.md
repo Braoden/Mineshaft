@@ -1,6 +1,6 @@
 ---
 description: Run the wisp reaper — scan, reap, purge, and auto-close stale beads across all Dolt databases
-allowed-tools: Bash(gt reaper:*), Bash(gt escalate:*), Bash(gt dolt status:*)
+allowed-tools: Bash(ms reaper:*), Bash(ms escalate:*), Bash(ms dolt status:*)
 argument-hint: [--dry-run]
 ---
 
@@ -28,18 +28,18 @@ If `--dry-run` is passed, report counts without making changes.
 ### Step 1: Verify Dolt server health
 
 ```bash
-gt dolt status
+ms dolt status
 ```
 
 If the server is unhealthy or unreachable, STOP and escalate:
 ```bash
-gt escalate "Reaper blocked: Dolt server unhealthy" -s HIGH
+ms escalate "Reaper blocked: Dolt server unhealthy" -s HIGH
 ```
 
 ### Step 2: Discover databases
 
 ```bash
-gt reaper databases --json
+ms reaper databases --json
 ```
 
 This lists all production databases on the Dolt server.
@@ -50,7 +50,7 @@ Expected databases: `hq`, `beads`, `mineshaft` (and any rig-specific DBs).
 For each database returned in Step 2:
 
 ```bash
-gt reaper scan --db=<name> --port=3307 \
+ms reaper scan --db=<name> --port=3307 \
   --max-age=24h --purge-age=72h \
   --mail-age=72h --stale-age=168h \
   --json
@@ -70,7 +70,7 @@ If no candidates found across all databases, report "nothing to reap" and stop.
 For each database with reap candidates:
 
 ```bash
-gt reaper reap --db=<name> --port=3307 --max-age=24h [--dry-run] --json
+ms reaper reap --db=<name> --port=3307 --max-age=24h [--dry-run] --json
 ```
 
 **IMPORTANT**: Scan/reap count mismatch is NORMAL (witness closes wisps concurrently).
@@ -81,7 +81,7 @@ Do NOT escalate scan > reap mismatches. Only escalate actual errors.
 For each database with purge candidates:
 
 ```bash
-gt reaper purge --db=<name> --port=3307 \
+ms reaper purge --db=<name> --port=3307 \
   --purge-age=72h --mail-age=72h [--dry-run] --json
 ```
 
@@ -92,7 +92,7 @@ Watch for `dolt_commit_failed` anomalies — purged data may not persist.
 For each database with stale candidates:
 
 ```bash
-gt reaper auto-close --db=<name> --port=3307 \
+ms reaper auto-close --db=<name> --port=3307 \
   --stale-age=168h [--dry-run] --json
 ```
 
@@ -116,5 +116,5 @@ Print a summary in this format:
 
 If anomalies were found:
 ```bash
-gt escalate "Reaper anomalies detected" -s MEDIUM -m "<anomaly details>"
+ms escalate "Reaper anomalies detected" -s MEDIUM -m "<anomaly details>"
 ```

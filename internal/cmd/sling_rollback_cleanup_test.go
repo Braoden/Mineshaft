@@ -59,7 +59,7 @@ func TestCleanupSpawnedMiner_DeletesBranch(t *testing.T) {
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
 					Repo:   "local",
-					Prefix: "gt-",
+					Prefix: "ms-",
 				},
 			},
 		},
@@ -139,7 +139,7 @@ func TestCleanupSpawnedMiner_WithEmptyBranch(t *testing.T) {
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
 					Repo:   "local",
-					Prefix: "gt-",
+					Prefix: "ms-",
 				},
 			},
 		},
@@ -230,7 +230,7 @@ func TestCloseMinecart_ClosesMinecart(t *testing.T) {
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
 					Repo:   "local",
-					Prefix: "gt-",
+					Prefix: "ms-",
 				},
 			},
 		},
@@ -337,7 +337,7 @@ func TestCloseMinecart_EmptyMinecartID(t *testing.T) {
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
 					Repo:   "local",
-					Prefix: "gt-",
+					Prefix: "ms-",
 				},
 			},
 		},
@@ -438,7 +438,7 @@ func TestRollbackSlingArtifacts_WithMinecartID(t *testing.T) {
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
 					Repo:   "local",
-					Prefix: "gt-",
+					Prefix: "ms-",
 				},
 			},
 		},
@@ -522,7 +522,7 @@ exit 0
 		Branch:      "p-toast-123",
 	}
 
-	rollbackSlingArtifacts(spawnInfo, "gt-abc123", "", "minecart-rollback-123")
+	rollbackSlingArtifacts(spawnInfo, "ms-abc123", "", "minecart-rollback-123")
 
 	// Check if close command was logged
 	logContent, err := os.ReadFile(filepath.Join(townRoot, "bd_close.log"))
@@ -565,7 +565,7 @@ func TestRollbackSlingArtifacts_EmptyMinecartID(t *testing.T) {
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
 					Repo:   "local",
-					Prefix: "gt-",
+					Prefix: "ms-",
 				},
 			},
 		},
@@ -639,7 +639,7 @@ exit 0
 		Branch:      "p-toast-123",
 	}
 
-	rollbackSlingArtifacts(spawnInfo, "gt-abc123", "", "") // Empty minecartID
+	rollbackSlingArtifacts(spawnInfo, "ms-abc123", "", "") // Empty minecartID
 
 	// Check if close command was logged (should NOT be)
 	_, err = os.ReadFile(filepath.Join(townRoot, "bd_close.log"))
@@ -679,7 +679,7 @@ func TestRollbackSlingArtifacts_CallsCleanupSpawnedMiner(t *testing.T) {
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
 					Repo:   "local",
-					Prefix: "gt-",
+					Prefix: "ms-",
 				},
 			},
 		},
@@ -759,7 +759,7 @@ exit 0
 		Branch:      "p-toast-123",
 	}
 
-	rollbackSlingArtifacts(spawnInfo, "gt-abc123", "", "")
+	rollbackSlingArtifacts(spawnInfo, "ms-abc123", "", "")
 
 	// The test passes if we get here without panic
 	// cleanupSpawnedMiner is called internally and will fail to find the miner,

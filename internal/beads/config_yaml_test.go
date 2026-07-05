@@ -113,7 +113,7 @@ func TestEnsureConfigYAML_DisablesAutoExport(t *testing.T) {
 		t.Fatalf("write config.yaml: %v", err)
 	}
 
-	if err := EnsureConfigYAML(beadsDir, "gt"); err != nil {
+	if err := EnsureConfigYAML(beadsDir, "ms"); err != nil {
 		t.Fatalf("EnsureConfigYAML: %v", err)
 	}
 
@@ -123,8 +123,8 @@ func TestEnsureConfigYAML_DisablesAutoExport(t *testing.T) {
 	}
 	got := string(data)
 	for _, want := range []string{
-		"prefix: gt\n",
-		"issue-prefix: gt\n",
+		"prefix: ms\n",
+		"issue-prefix: ms\n",
 		"dolt.idle-timeout: \"0\"\n",
 		"export.auto: \"false\"\n",
 		"sync.mode: dolt-native\n",

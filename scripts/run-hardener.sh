@@ -3,7 +3,7 @@
 #
 # Usage: ./scripts/run-hardener.sh
 #
-# Launches claude in a tmux session, then uses gt nudge to send the initial
+# Launches claude in a tmux session, then uses ms nudge to send the initial
 # prompt (tmux send-keys + Enter doesn't work with Claude Code TUI).
 set -euo pipefail
 
@@ -13,7 +13,7 @@ SESSION_NAME="migration-hardener"
 # Kill existing session if any
 tmux kill-session -t "$SESSION_NAME" 2>/dev/null || true
 
-# Launch claude (skip project hooks — gt prime --hook hangs without GT_ROLE)
+# Launch claude (skip project hooks — ms prime --hook hangs without MS_ROLE)
 tmux new-session -d -s "$SESSION_NAME" -c "$REPO_ROOT" \
     "claude --dangerously-skip-permissions --setting-sources user"
 
@@ -35,7 +35,7 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
     fi
 
     # Attempt to deliver the initial prompt
-    if gt nudge "$SESSION_NAME" "$INITIAL_PROMPT" 2>/dev/null; then
+    if ms nudge "$SESSION_NAME" "$INITIAL_PROMPT" 2>/dev/null; then
         echo ""
         echo "Migration hardener launched in tmux session: $SESSION_NAME"
         echo "  Monitor: tmux attach -t $SESSION_NAME"

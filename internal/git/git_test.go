@@ -1365,14 +1365,14 @@ func TestPushWithEnv(t *testing.T) {
 	localDir, _, mainBranch := initTestRepoWithRemote(t)
 	g := NewGit(localDir)
 
-	// Set up a pre-push hook that blocks unless GT_INTEGRATION_LAND=1
+	// Set up a pre-push hook that blocks unless MS_INTEGRATION_LAND=1
 	hooksDir := filepath.Join(localDir, ".git", "hooks")
 	if err := os.MkdirAll(hooksDir, 0755); err != nil {
 		t.Fatalf("mkdir hooks: %v", err)
 	}
 	hookScript := `#!/bin/bash
-if [[ "$GT_INTEGRATION_LAND" != "1" ]]; then
-  echo "BLOCKED: GT_INTEGRATION_LAND not set"
+if [[ "$MS_INTEGRATION_LAND" != "1" ]]; then
+  echo "BLOCKED: MS_INTEGRATION_LAND not set"
   exit 1
 fi
 exit 0
@@ -1396,13 +1396,13 @@ exit 0
 	// Regular Push should fail (hook blocks without env var)
 	err := g.Push("origin", mainBranch, false)
 	if err == nil {
-		t.Fatal("expected Push to fail without GT_INTEGRATION_LAND")
+		t.Fatal("expected Push to fail without MS_INTEGRATION_LAND")
 	}
 
-	// PushWithEnv with GT_INTEGRATION_LAND=1 should succeed
-	err = g.PushWithEnv("origin", mainBranch, false, []string{"GT_INTEGRATION_LAND=1"})
+	// PushWithEnv with MS_INTEGRATION_LAND=1 should succeed
+	err = g.PushWithEnv("origin", mainBranch, false, []string{"MS_INTEGRATION_LAND=1"})
 	if err != nil {
-		t.Fatalf("PushWithEnv with GT_INTEGRATION_LAND=1 should succeed: %v", err)
+		t.Fatalf("PushWithEnv with MS_INTEGRATION_LAND=1 should succeed: %v", err)
 	}
 }
 
@@ -1706,7 +1706,7 @@ func TestPushSubmoduleCommit(t *testing.T) {
 func TestPushSubmoduleCommit_ShortSHA(t *testing.T) {
 	// Verify that PushSubmoduleCommit doesn't panic when given a short SHA
 	// that triggers an error path. The error message formats sha[:8] which
-	// panics if len(sha) < 8. (gt-dg7)
+	// panics if len(sha) < 8. (ms-dg7)
 	dir := initTestRepo(t)
 	g := NewGit(dir)
 
@@ -1724,7 +1724,7 @@ func TestSubmoduleChanges_SkipsClaudeWorktrees(t *testing.T) {
 	// Verify that SubmoduleChanges filters out .claude/ paths.
 	// Claude Code creates worktrees under .claude/worktrees/ which have .git
 	// files that git may report as gitlinks (mode 160000). These are not
-	// real submodules and should be skipped. (gt-dg7)
+	// real submodules and should be skipped. (ms-dg7)
 	tmp := t.TempDir()
 
 	// Create a bare remote for the .claude submodule
@@ -2114,7 +2114,7 @@ func TestStashListForBranch(t *testing.T) {
 }
 
 // TestStashPop verifies StashPop applies and drops a stash, leaving the
-// working tree dirty (so the gt-pvx auto-commit path catches it).
+// working tree dirty (so the ms-pvx auto-commit path catches it).
 func TestStashPop(t *testing.T) {
 	t.Parallel()
 	dir := initTestRepo(t)
@@ -2308,7 +2308,7 @@ func TestCleanExcludingRuntime(t *testing.T) {
 		{
 			// Unpushed commits alone do not affect CleanExcludingRuntime — this
 			// function only evaluates uncommitted file changes. Unpushed commits
-			// are handled separately by the CommitsAhead check in gt done (gas-7vg).
+			// are handled separately by the CommitsAhead check in ms done (gas-7vg).
 			name: "unpushed commits alone do not block",
 			s: UncommittedWorkStatus{
 				UnpushedCommits: 2,
@@ -2317,8 +2317,8 @@ func TestCleanExcludingRuntime(t *testing.T) {
 		},
 		{
 			// The primary bug scenario (gas-7vg): miner commits work (1 unpushed
-			// commit) then calls gt done with only infrastructure files untracked.
-			// CleanExcludingRuntime must return true so gt done is not blocked.
+			// commit) then calls ms done with only infrastructure files untracked.
+			// CleanExcludingRuntime must return true so ms done is not blocked.
 			name: "unpushed commit with only runtime artifacts",
 			s: UncommittedWorkStatus{
 				HasUncommittedChanges: true,
@@ -2350,8 +2350,8 @@ func TestCleanExcludingRuntime(t *testing.T) {
 			want: true,
 		},
 		{
-			// CLAUDE.local.md is a Mineshaft overlay file (gt-p35) that must not
-			// block gt done or be auto-committed.
+			// CLAUDE.local.md is a Mineshaft overlay file (ms-p35) that must not
+			// block ms done or be auto-committed.
 			name: "CLAUDE.local.md is runtime artifact",
 			s: UncommittedWorkStatus{
 				HasUncommittedChanges: true,
@@ -2817,8 +2817,8 @@ func TestForkBackedDefaultPushGuard_SplitPushURL(t *testing.T) {
 			t.Fatalf("RefuseForkBackedDefaultPush(%q) returned nil, want refusal", refspec)
 		}
 	}
-	if err := g.PushWithEnv("origin", "HEAD:"+mainBranch, false, []string{"GT_INTEGRATION_LAND=1"}); err == nil {
-		t.Fatal("PushWithEnv should not let GT_INTEGRATION_LAND bypass fork default-branch guard")
+	if err := g.PushWithEnv("origin", "HEAD:"+mainBranch, false, []string{"MS_INTEGRATION_LAND=1"}); err == nil {
+		t.Fatal("PushWithEnv should not let MS_INTEGRATION_LAND bypass fork default-branch guard")
 	}
 }
 

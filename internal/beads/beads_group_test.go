@@ -165,7 +165,7 @@ func TestGroupBeadIDWithPrefix(t *testing.T) {
 		want   string
 	}{
 		{"hq", "ops-team", "hq-group-ops-team"},
-		{"gt", "ops-team", "gt-group-ops-team"},
+		{"ms", "ops-team", "ms-group-ops-team"},
 		{"bd", "all", "bd-group-all"},
 	}
 

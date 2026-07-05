@@ -67,7 +67,7 @@ jobs:
 
           git switch -C "$PR_BRANCH"
 
-          perl -0pi -e 's/(pname = "gt";\n\s*version = ")[^"]+(";)/$1$ENV{VERSION}$2/s' flake.nix
+          perl -0pi -e 's/(pname = "ms";\n\s*version = ")[^"]+(";)/$1$ENV{VERSION}$2/s' flake.nix
 
           tmp_dir=".tmp-nix-vendor"
           rm -rf "$tmp_dir"

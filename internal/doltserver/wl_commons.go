@@ -213,7 +213,7 @@ CREATE TABLE IF NOT EXISTS rigs (
     dolthub_org VARCHAR(255),
     hop_uri VARCHAR(512),
     owner_email VARCHAR(255),
-    gt_version VARCHAR(32),
+    ms_version VARCHAR(32),
     trust_level INT DEFAULT 0,
     registered_at TIMESTAMP,
     last_seen TIMESTAMP,

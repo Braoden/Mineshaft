@@ -122,7 +122,7 @@ func (d *Daemon) pushDatabase(dataDir, db, remote, branch string) error {
 
 	// Step 2: Commit staged changes only if dolt_status shows pending work.
 	// Skipping DOLT_COMMIT when nothing is staged avoids "nothing to commit"
-	// warnings in dolt.log, which were causing log bloat at ~3/sec (gt-zb8).
+	// warnings in dolt.log, which were causing log bloat at ~3/sec (ms-zb8).
 	if d.hasStagedChanges(dataDir, db) {
 		commitQuery := fmt.Sprintf(
 			"USE `%s`; CALL DOLT_COMMIT('-m', 'daemon: auto-commit pending changes', '--author', 'Mineshaft Daemon <daemon@mineshaft.local>')",

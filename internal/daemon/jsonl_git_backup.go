@@ -500,12 +500,12 @@ func (d *Daemon) runGitCmd(dir string, timeout time.Duration, args ...string) er
 	return nil
 }
 
-// escalate sends an escalation message to the overseer via gt escalate.
+// escalate sends an escalation message to the overseer via ms escalate.
 func (d *Daemon) escalate(source, message string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, "gt", "escalate", "-s", "HIGH",
+	cmd := exec.CommandContext(ctx, "ms", "escalate", "-s", "HIGH",
 		fmt.Sprintf("%s: %s", source, message))
 	cmd.Dir = d.config.TownRoot
 	cmd.Env = append(os.Environ(), "BD_ACTOR=daemon")

@@ -16,8 +16,8 @@ type socketSessionLister interface {
 }
 
 // SocketSplitBrainCheck detects tmux sessions that exist on both the town
-// socket (e.g., "gt-a1b2c3") and the "default" socket. This split-brain causes
-// gt nudge and other session-discovery commands to fail because they only
+// socket (e.g., "ms-a1b2c3") and the "default" socket. This split-brain causes
+// ms nudge and other session-discovery commands to fail because they only
 // search the town socket.
 type SocketSplitBrainCheck struct {
 	FixableCheck
@@ -130,7 +130,7 @@ func (c *SocketSplitBrainCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:  StatusError,
 		Message: fmt.Sprintf("Found %d Mineshaft session(s) on wrong socket — nudge/discovery will fail", len(c.staleSessions)),
 		Details: details,
-		FixHint: "Run 'gt doctor --fix' to kill stale sessions on wrong socket",
+		FixHint: "Run 'ms doctor --fix' to kill stale sessions on wrong socket",
 	}
 }
 

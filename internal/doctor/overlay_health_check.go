@@ -86,7 +86,7 @@ func (c *OverlayHealthCheck) Run(ctx *CheckContext) *CheckResult {
 			Status:  StatusWarning,
 			Message: fmt.Sprintf("%d overlay(s) with stale step IDs", stale),
 			Details: details,
-			FixHint: "Run 'gt doctor --fix' to remove stale step overrides",
+			FixHint: "Run 'ms doctor --fix' to remove stale step overrides",
 		}
 	}
 

@@ -399,7 +399,7 @@ func outputRefineryPatrolContext(ctx RoleContext) {
 
 // buildWitnessPatrolVars returns --var key=value strings for the witness
 // patrol formula. Injects rig name and prefix so the formula can construct
-// agent bead IDs without hardcoding the "gt" prefix (gt-48ay).
+// agent bead IDs without hardcoding the "ms" prefix (ms-48ay).
 func buildWitnessPatrolVars(ctx RoleContext) []string {
 	var vars []string
 	if ctx.TownRoot == "" || ctx.Rig == "" {
@@ -467,7 +467,7 @@ func buildRefineryPatrolVars(ctx RoleContext) []string {
 	}
 
 	// Fallback: read command vars from rig identity bead labels.
-	// This is the path for rigs using `gt rig config set --global` (bead layer).
+	// This is the path for rigs using `ms rig config set --global` (bead layer).
 	// We use native bd routing (no explicit BEADS_DIR) to avoid dolt database
 	// name mismatches that occur when bypassing the routing system.
 	if rigCfg != nil && rigCfg.Beads != nil && rigCfg.Beads.Prefix != "" {

@@ -66,7 +66,7 @@ func Deactivate(townRoot string, onlyAuto bool) error {
 	if onlyAuto {
 		info := Read(townRoot)
 		if info != nil && info.Trigger == TriggerManual {
-			return fmt.Errorf("E-stop was manually triggered — use 'gt thaw' to clear")
+			return fmt.Errorf("E-stop was manually triggered — use 'ms thaw' to clear")
 		}
 	}
 	err := os.Remove(FilePath(townRoot))

@@ -9,7 +9,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	stubDir, err := os.MkdirTemp("", "gt-agent-bin-*")
+	stubDir, err := os.MkdirTemp("", "ms-agent-bin-*")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "create stub dir: %v\n", err)
 		os.Exit(1)
@@ -43,12 +43,12 @@ func TestMain(m *testing.M) {
 	_ = os.Setenv("PATH", stubDir+string(os.PathListSeparator)+originalPath)
 	// cursor_agent_cli_test.go skips this directory when resolving a real cursor-agent
 	// (must stay in sync — do not rename without updating that resolver).
-	_ = os.Setenv("GT_AGENT_STUB_BIN_DIR", stubDir)
+	_ = os.Setenv("MS_AGENT_STUB_BIN_DIR", stubDir)
 
 	code := m.Run()
 
 	_ = os.Setenv("PATH", originalPath)
-	_ = os.Unsetenv("GT_AGENT_STUB_BIN_DIR")
+	_ = os.Unsetenv("MS_AGENT_STUB_BIN_DIR")
 	_ = os.RemoveAll(stubDir)
 	os.Exit(code)
 }

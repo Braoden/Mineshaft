@@ -124,7 +124,7 @@ func (g *Git) run(args ...string) (string, error) {
 }
 
 // pushTimeout is the maximum time a git push is allowed to run before being
-// killed. This prevents gt done from hanging indefinitely when the remote
+// killed. This prevents ms done from hanging indefinitely when the remote
 // (e.g. GitLab) is unreachable or slow.
 const pushTimeout = 60 * time.Second
 
@@ -619,7 +619,7 @@ func (g *Git) cloneInternal(url, dest string, opts cloneOptions) error {
 	}
 	// Run clone from a temporary directory to completely isolate from any
 	// git repo at the process cwd. Then move the result to the destination.
-	tmpDir, err := os.MkdirTemp("", "gt-clone-*")
+	tmpDir, err := os.MkdirTemp("", "ms-clone-*")
 	if err != nil {
 		return fmt.Errorf("creating temp dir: %w", err)
 	}
@@ -1092,7 +1092,7 @@ func (g *Git) Push(remote, branch string, force bool) error {
 }
 
 // PushWithEnv pushes with additional environment variables.
-// Used by gt mq integration land to set GT_INTEGRATION_LAND=1, which the
+// Used by ms mq integration land to set MS_INTEGRATION_LAND=1, which the
 // pre-push hook checks to allow integration branch content landing on main.
 func (g *Git) PushWithEnv(remote, branch string, force bool, env []string) error {
 	if err := g.RefuseForkBackedDefaultPush(remote, branch, g.RemoteDefaultBranch()); err != nil {
@@ -1218,7 +1218,7 @@ func (g *Git) Status() (*GitStatus, error) {
 
 	// Get skip-worktree files once (sparse checkout). These appear as 'D' in
 	// --porcelain output but are not real deletions — they are hidden by the
-	// sparse-checkout cone. Filtering them prevents gt done from blocking on
+	// sparse-checkout cone. Filtering them prevents ms done from blocking on
 	// 897+ phantom deletions in miner sparse worktrees.
 	skipWorktree := g.skipWorktreeFiles()
 
@@ -2036,7 +2036,7 @@ func (g *Git) PushRemoteBranchTip(remote, branch string) (string, error) {
 }
 
 // VerifyPushedCommit verifies that the push target branch tip is exactly commit.
-// gt/refinery callers invoke this immediately after a push, before closing beads
+// ms/refinery callers invoke this immediately after a push, before closing beads
 // or creating downstream merge artifacts. Exact-tip verification catches the
 // dangerous case where git push exits 0 but leaves the remote branch stale.
 func (g *Git) VerifyPushedCommit(remote, branch, commit string) error {
@@ -2920,7 +2920,7 @@ func runtimeArtifactRoot(path string) (string, bool) {
 }
 
 // isMineshaftRuntimePath returns true if the path is a runtime artifact that should
-// not block gt done. These paths are managed by tooling or test/build commands,
+// not block ms done. These paths are managed by tooling or test/build commands,
 // not by the developer, and must not be auto-saved into miner MRs.
 func isMineshaftRuntimePath(path string) bool {
 	_, ok := runtimeArtifactRoot(path)
@@ -2968,7 +2968,7 @@ func (s *UncommittedWorkStatus) NonRuntimePaths() []string {
 
 // CleanExcludingRuntime returns true if the only uncommitted changes are
 // runtime artifacts covered by the centralized exclusion policy.
-// Used by gt done to avoid blocking completion on toolchain-managed files.
+// Used by ms done to avoid blocking completion on toolchain-managed files.
 //
 // Note: UnpushedCommits and StashCount are intentionally NOT checked here. This
 // function only evaluates whether uncommitted *file* changes are runtime artifacts.
@@ -3259,7 +3259,7 @@ func (g *Git) SubmoduleChanges(base, head string) ([]SubmoduleChange, error) {
 		path := strings.TrimSpace(parts[1])
 		// Skip .claude/ paths — Claude Code creates worktrees under
 		// .claude/worktrees/ with .git files (worktree pointers) that git
-		// reports as gitlinks. These are not real submodules. (gt-dg7)
+		// reports as gitlinks. These are not real submodules. (ms-dg7)
 		if strings.HasPrefix(path, ".claude/") {
 			continue
 		}

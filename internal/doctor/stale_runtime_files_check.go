@@ -10,7 +10,7 @@ import (
 )
 
 // buildPrefixSet builds a set of all known rig prefixes from rigs.json.
-// This maps prefix→true for efficient lookup. (gt-85w7)
+// This maps prefix→true for efficient lookup. (ms-85w7)
 func buildPrefixSet(registeredRigs map[string]bool, townRoot string) map[string]bool {
 	prefixes := make(map[string]bool)
 	for rigName := range registeredRigs {
@@ -69,7 +69,7 @@ func (c *StaleRuntimeFilesCheck) Run(ctx *CheckContext) *CheckResult {
 	}
 
 	// Build prefix set that includes both rig names and their beads prefixes.
-	// Some rigs use prefix as DB/PID name (e.g., "lc" for laneassist). (gt-85w7)
+	// Some rigs use prefix as DB/PID name (e.g., "lc" for laneassist). (ms-85w7)
 	knownPrefixes := buildPrefixSet(registeredRigs, ctx.TownRoot)
 
 	var details []string
@@ -85,8 +85,8 @@ func (c *StaleRuntimeFilesCheck) Run(ctx *CheckContext) *CheckResult {
 			// PID files are named like: sw-witness.pid, pir-witness.pid, hq-supervisor.pid
 			// Extract the rig prefix (first part before the hyphen or underscore)
 			rigPrefix := extractRigPrefix(name)
-			if rigPrefix == "" || rigPrefix == "hq" || rigPrefix == "gt" {
-				// Town-level agents (hq, gt) are always valid
+			if rigPrefix == "" || rigPrefix == "hq" || rigPrefix == "ms" {
+				// Town-level agents (hq, ms) are always valid
 				continue
 			}
 			// Check if this rig is registered (by name or prefix)
@@ -142,7 +142,7 @@ func (c *StaleRuntimeFilesCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:  StatusWarning,
 		Message: msg,
 		Details: details,
-		FixHint: "Run 'gt doctor --fix' to remove stale runtime files",
+		FixHint: "Run 'ms doctor --fix' to remove stale runtime files",
 	}
 }
 

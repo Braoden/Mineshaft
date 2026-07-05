@@ -30,7 +30,7 @@ This enables both local control and global coordination.
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
 │ 3. TOWN DEFAULTS                                            │
-│    Location: ~/gt/config.json or ~/gt/.beads/               │
+│    Location: ~/ms/config.json or ~/ms/.beads/               │
 │    Synced: N/A (per-town)                                   │
 │    Use: Town-wide policies                                  │
 └─────────────────────────────┬───────────────────────────────┘
@@ -84,7 +84,7 @@ This enables temporary adjustments without changing the base value.
 You can explicitly block a property from being inherited:
 
 ```bash
-gt rig config set mineshaft auto_restart --block
+ms rig config set mineshaft auto_restart --block
 ```
 
 This creates a "blocked" marker in the wisp layer. Even if the rig bead
@@ -95,11 +95,11 @@ or defaults say `auto_restart: true`, the lookup returns nil.
 Each rig has an identity bead for operational state:
 
 ```yaml
-id: gt-rig-mineshaft
+id: ms-rig-mineshaft
 type: rig
 name: mineshaft
 repo: git@github.com:steveyegge/mineshaft.git
-prefix: gt
+prefix: ms
 
 labels:
   - status:operational
@@ -113,8 +113,8 @@ These beads sync via git, so all clones of the rig see the same state.
 ### Level 1: Park (Local, Ephemeral)
 
 ```bash
-gt rig park mineshaft      # Stop services, daemon won't restart
-gt rig unpark mineshaft    # Allow services to run
+ms rig park mineshaft      # Stop services, daemon won't restart
+ms rig unpark mineshaft    # Allow services to run
 ```
 
 - Stored in wisp layer (`.beads-wisp/config/`)
@@ -125,8 +125,8 @@ gt rig unpark mineshaft    # Allow services to run
 ### Level 2: Dock (Global, Persistent)
 
 ```bash
-gt rig dock mineshaft      # Set status:docked label on rig bead
-gt rig undock mineshaft    # Remove label
+ms rig dock mineshaft      # Set status:docked label on rig bead
+ms rig undock mineshaft    # Remove label
 ```
 
 - Stored on rig identity bead
@@ -164,36 +164,36 @@ func shouldAutoRestart(rig *Rig) bool {
 ### View Configuration
 
 ```bash
-gt rig config show mineshaft           # Show effective config (all layers)
-gt rig config show mineshaft --layer   # Show which layer each value comes from
+ms rig config show mineshaft           # Show effective config (all layers)
+ms rig config show mineshaft --layer   # Show which layer each value comes from
 ```
 
 ### Set Configuration
 
 ```bash
 # Set in wisp layer (local, ephemeral)
-gt rig config set mineshaft key value
+ms rig config set mineshaft key value
 
 # Set in bead layer (global, permanent)
-gt rig config set mineshaft key value --global
+ms rig config set mineshaft key value --global
 
 # Block inheritance
-gt rig config set mineshaft key --block
+ms rig config set mineshaft key --block
 
 # Clear from wisp layer
-gt rig config unset mineshaft key
+ms rig config unset mineshaft key
 ```
 
 ### Rig Lifecycle
 
 ```bash
-gt rig park mineshaft          # Local: stop + prevent restart
-gt rig unpark mineshaft        # Local: allow restart
+ms rig park mineshaft          # Local: stop + prevent restart
+ms rig unpark mineshaft        # Local: allow restart
 
-gt rig dock mineshaft          # Global: mark as offline
-gt rig undock mineshaft        # Global: mark as operational
+ms rig dock mineshaft          # Global: mark as offline
+ms rig undock mineshaft        # Global: mark as operational
 
-gt rig status mineshaft        # Show current state
+ms rig status mineshaft        # Show current state
 ```
 
 ## Examples
@@ -204,36 +204,36 @@ gt rig status mineshaft        # Show current state
 # Base priority: 0 (from defaults)
 # Give this rig temporary priority boost for urgent work
 
-gt rig config set mineshaft priority_adjustment 10
+ms rig config set mineshaft priority_adjustment 10
 
 # Effective priority: 0 + 10 = 10
 # When done, clear it:
 
-gt rig config unset mineshaft priority_adjustment
+ms rig config unset mineshaft priority_adjustment
 ```
 
 ### Local Maintenance
 
 ```bash
 # I'm upgrading the local clone, don't restart services
-gt rig park mineshaft
+ms rig park mineshaft
 
 # ... do maintenance ...
 
-gt rig unpark mineshaft
+ms rig unpark mineshaft
 ```
 
 ### Project-Wide Maintenance
 
 ```bash
 # Major refactor in progress, all clones should pause
-gt rig dock mineshaft
+ms rig dock mineshaft
 
 # Syncs via git - other towns see the rig as docked
 bd sync
 
 # When done:
-gt rig undock mineshaft
+ms rig undock mineshaft
 bd sync
 ```
 
@@ -243,7 +243,7 @@ bd sync
 # Rig bead says auto_restart: true
 # But I'm debugging and don't want that here
 
-gt rig config set mineshaft auto_restart --block
+ms rig config set mineshaft auto_restart --block
 
 # Now auto_restart returns nil for this town only
 ```
@@ -270,8 +270,8 @@ Wisp config stored in `.beads-wisp/config/<rig>.json`:
 Rig operational state stored as labels on the rig identity bead:
 
 ```bash
-bd label add gt-rig-mineshaft status:docked
-bd label remove gt-rig-mineshaft status:docked
+bd label add ms-rig-mineshaft status:docked
+bd label remove ms-rig-mineshaft status:docked
 ```
 
 ### Daemon Integration
@@ -315,7 +315,7 @@ trail. Labels cache the current state for fast queries.
 # Create operational event
 bd create --type=event --event-type=patrol.muted \
   --actor=human:boss --target=agent:supervisor \
-  --payload='{"reason":"fixing minecart deadlock","until":"gt-abc1"}'
+  --payload='{"reason":"fixing minecart deadlock","until":"ms-abc1"}'
 
 # Query recent events for an agent
 bd list --type=event --target=agent:supervisor --limit=10
@@ -367,10 +367,10 @@ Per-role Markdown files that modify agent behavior at prime time:
 SYSTEM LAYER:   Embedded role template (compiled in)
                         │ if directive exists
                         ▼
-TOWN LAYER:     ~/gt/directives/<role>.md
+TOWN LAYER:     ~/ms/directives/<role>.md
                         │ concatenated with
                         ▼
-RIG LAYER:      ~/gt/<rig>/directives/<role>.md
+RIG LAYER:      ~/ms/<rig>/directives/<role>.md
 ```
 
 Both town and rig directives concatenate. Rig content appears last and wins
@@ -384,10 +384,10 @@ Per-formula TOML files that modify individual steps:
 SYSTEM LAYER:   Embedded formula (compiled in)
                         │ if overlay exists
                         ▼
-TOWN LAYER:     ~/gt/formula-overlays/<formula>.toml
+TOWN LAYER:     ~/ms/formula-overlays/<formula>.toml
                         │ rig replaces town entirely
                         ▼
-RIG LAYER:      ~/gt/<rig>/formula-overlays/<formula>.toml
+RIG LAYER:      ~/ms/<rig>/formula-overlays/<formula>.toml
 ```
 
 Unlike directives, overlays use **full replacement** at the rig level — if a
@@ -404,11 +404,11 @@ conflicting step modifications from merging unpredictably.
 | Formula overlays | Rig replaces town | Step mods can conflict; full replacement is safer |
 
 See [directives-and-overlays.md](directives-and-overlays.md) for the full
-reference with TOML format, examples, and `gt doctor` integration.
+reference with TOML format, examples, and `ms doctor` integration.
 
 ## Related Documents
 
-- `~/gt/docs/hop/PROPERTY-LAYERS.md` - Strategic architecture
+- `~/ms/docs/hop/PROPERTY-LAYERS.md` - Strategic architecture
 - `wisp-architecture.md` - Wisp system design
 - `agent-as-bead.md` - Agent identity beads (similar pattern)
 - [directives-and-overlays.md](directives-and-overlays.md) - Full reference

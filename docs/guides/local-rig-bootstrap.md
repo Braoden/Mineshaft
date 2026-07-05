@@ -1,6 +1,6 @@
 # Local Rig Bootstrap
 
-For a NightRider-style local setup, prefer a clean bootstrap over `gt rig add --adopt`.
+For a NightRider-style local setup, prefer a clean bootstrap over `ms rig add --adopt`.
 
 `--adopt` is meant for registering an already-assembled rig directory. It trusts the
 existing shape, which makes it a poor fit for manually assembled local rigs where
@@ -10,9 +10,9 @@ Use the bootstrap script instead:
 
 ```bash
 ./scripts/bootstrap-local-rig.sh \
-  --town-root /gt \
+  --town-root /ms \
   --rig nightrider_local \
-  --local-repo /gt/nightRider \
+  --local-repo /ms/nightRider \
   --prefix nr \
   --miner-agent claude \
   --witness-agent codex \
@@ -25,7 +25,7 @@ Mineshaft container, where the upstream remote may not be reachable or authentic
 
 What this does:
 
-- Uses `gt rig add <name> <git-url> --local-repo <path>` so Mineshaft creates a fresh,
+- Uses `ms rig add <name> <git-url> --local-repo <path>` so Mineshaft creates a fresh,
   standard rig container instead of inheriting a hand-built one.
 - Reuses objects from the local repo, so bootstrap stays fast and does not modify the
   source repo.

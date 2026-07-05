@@ -20,52 +20,52 @@ func TestIsInternalBead(t *testing.T) {
 	}{
 		{
 			name: "ephemeral bead is internal",
-			b:    closedBead{ID: "gt-xyz", Title: "some bead", Ephemeral: true},
+			b:    closedBead{ID: "ms-xyz", Title: "some bead", Ephemeral: true},
 			want: true,
 		},
 		{
 			name: "event type is internal",
-			b:    closedBead{ID: "gt-abc", Title: "some event", IssueType: "event"},
+			b:    closedBead{ID: "ms-abc", Title: "some event", IssueType: "event"},
 			want: true,
 		},
 		{
 			name: "wisp prefix is internal",
-			b:    closedBead{ID: "gt-wisp-abc", Title: "wisp-abc: cleanup", IssueType: "task"},
+			b:    closedBead{ID: "ms-wisp-abc", Title: "wisp-abc: cleanup", IssueType: "task"},
 			want: true,
 		},
 		{
 			name: "mol prefix is internal",
-			b:    closedBead{ID: "gt-mol-123", Title: "mol-miner-work", IssueType: "task"},
+			b:    closedBead{ID: "ms-mol-123", Title: "mol-miner-work", IssueType: "task"},
 			want: true,
 		},
 		{
 			name: "plugin run prefix is internal",
-			b:    closedBead{ID: "gt-p1", Title: "plugin run: backup", IssueType: "task"},
+			b:    closedBead{ID: "ms-p1", Title: "plugin run: backup", IssueType: "task"},
 			want: true,
 		},
 		{
 			name: "cost report prefix is internal",
-			b:    closedBead{ID: "gt-c1", Title: "cost report 2026-03-17", IssueType: "task"},
+			b:    closedBead{ID: "ms-c1", Title: "cost report 2026-03-17", IssueType: "task"},
 			want: true,
 		},
 		{
 			name: "prefix match is case-insensitive",
-			b:    closedBead{ID: "gt-w1", Title: "Wisp-cleanup", IssueType: "task"},
+			b:    closedBead{ID: "ms-w1", Title: "Wisp-cleanup", IssueType: "task"},
 			want: true,
 		},
 		{
 			name: "normal task bead is not internal",
-			b:    closedBead{ID: "gt-5jf", Title: "Add tests for gt changelog", IssueType: "task"},
+			b:    closedBead{ID: "ms-5jf", Title: "Add tests for ms changelog", IssueType: "task"},
 			want: false,
 		},
 		{
 			name: "normal bug bead is not internal",
-			b:    closedBead{ID: "gt-bug1", Title: "Fix nil pointer in minecart", IssueType: "bug"},
+			b:    closedBead{ID: "ms-bug1", Title: "Fix nil pointer in minecart", IssueType: "bug"},
 			want: false,
 		},
 		{
 			name: "non-ephemeral feature bead is not internal",
-			b:    closedBead{ID: "gt-f1", Title: "Add changelog command", IssueType: "feature", Ephemeral: false},
+			b:    closedBead{ID: "ms-f1", Title: "Add changelog command", IssueType: "feature", Ephemeral: false},
 			want: false,
 		},
 	}
@@ -232,8 +232,8 @@ func TestFetchClosedBeads_DateCutoff(t *testing.T) {
 
 	// Build JSON with one recent and one old bead.
 	bdOutput := fmt.Sprintf(`[
-		{"id":"gt-new","title":"Recent fix","issue_type":"bug","ephemeral":false,"closed_at":"%s","close_reason":"done"},
-		{"id":"gt-old","title":"Old task","issue_type":"task","ephemeral":false,"closed_at":"%s","close_reason":"done"}
+		{"id":"ms-new","title":"Recent fix","issue_type":"bug","ephemeral":false,"closed_at":"%s","close_reason":"done"},
+		{"id":"ms-old","title":"Old task","issue_type":"task","ephemeral":false,"closed_at":"%s","close_reason":"done"}
 	]`, recentTime.Format(time.RFC3339), oldTime.Format(time.RFC3339))
 
 	writeFakeBD(t, binDir, bdOutput)
@@ -249,8 +249,8 @@ func TestFetchClosedBeads_DateCutoff(t *testing.T) {
 	if len(entries) != 1 {
 		t.Fatalf("fetchClosedBeads() returned %d entries, want 1; entries: %v", len(entries), entries)
 	}
-	if entries[0].ID != "gt-new" {
-		t.Errorf("fetchClosedBeads() returned ID %q, want %q", entries[0].ID, "gt-new")
+	if entries[0].ID != "ms-new" {
+		t.Errorf("fetchClosedBeads() returned ID %q, want %q", entries[0].ID, "ms-new")
 	}
 	if entries[0].Rig != "mineshaft" {
 		t.Errorf("fetchClosedBeads() rig = %q, want %q", entries[0].Rig, "mineshaft")
@@ -267,10 +267,10 @@ func TestFetchClosedBeads_FiltersInternalBeads(t *testing.T) {
 	recentTime := now.Add(-1 * time.Hour)
 
 	bdOutput := fmt.Sprintf(`[
-		{"id":"gt-real","title":"Real work item","issue_type":"task","ephemeral":false,"closed_at":"%s","close_reason":"done"},
-		{"id":"gt-wisp-x","title":"wisp-cleanup","issue_type":"task","ephemeral":false,"closed_at":"%s","close_reason":"done"},
-		{"id":"gt-ev","title":"An event","issue_type":"event","ephemeral":false,"closed_at":"%s","close_reason":"done"},
-		{"id":"gt-eph","title":"Ephemeral thing","issue_type":"task","ephemeral":true,"closed_at":"%s","close_reason":"done"}
+		{"id":"ms-real","title":"Real work item","issue_type":"task","ephemeral":false,"closed_at":"%s","close_reason":"done"},
+		{"id":"ms-wisp-x","title":"wisp-cleanup","issue_type":"task","ephemeral":false,"closed_at":"%s","close_reason":"done"},
+		{"id":"ms-ev","title":"An event","issue_type":"event","ephemeral":false,"closed_at":"%s","close_reason":"done"},
+		{"id":"ms-eph","title":"Ephemeral thing","issue_type":"task","ephemeral":true,"closed_at":"%s","close_reason":"done"}
 	]`,
 		recentTime.Format(time.RFC3339),
 		recentTime.Format(time.RFC3339),
@@ -290,8 +290,8 @@ func TestFetchClosedBeads_FiltersInternalBeads(t *testing.T) {
 	if len(entries) != 1 {
 		t.Fatalf("fetchClosedBeads() returned %d entries, want 1; entries: %v", len(entries), entries)
 	}
-	if entries[0].ID != "gt-real" {
-		t.Errorf("fetchClosedBeads() returned ID %q, want %q", entries[0].ID, "gt-real")
+	if entries[0].ID != "ms-real" {
+		t.Errorf("fetchClosedBeads() returned ID %q, want %q", entries[0].ID, "ms-real")
 	}
 }
 

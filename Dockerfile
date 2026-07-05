@@ -32,7 +32,7 @@ RUN curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/i
 RUN curl -fsSL https://github.com/dolthub/dolt/releases/download/v${DOLT_VERSION}/install.sh | bash
 
 # Set up directories
-RUN mkdir -p /app /gt /gt/.dolt-data && chown -R agent:agent /app /gt
+RUN mkdir -p /app /ms /ms/.dolt-data && chown -R agent:agent /app /ms
 
 # Environment setup for bash and zsh
 RUN echo 'export PATH="/app/mineshaft:$PATH"' >> /etc/profile.d/mineshaft.sh && \
@@ -51,7 +51,7 @@ RUN cd /app/mineshaft && make build
 COPY --chown=agent:agent docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh
 
-WORKDIR /gt
+WORKDIR /ms
 
 ENTRYPOINT ["tini", "--", "/app/docker-entrypoint.sh"]
 CMD ["sleep", "infinity"]

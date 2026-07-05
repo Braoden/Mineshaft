@@ -30,7 +30,7 @@ Requires: `gh` CLI installed and authenticated (`gh auth status`).
 Iterate all undocked rigs to find their repo paths:
 
 ```bash
-RIG_JSON=$(gt rig list --json 2>/dev/null)
+RIG_JSON=$(ms rig list --json 2>/dev/null)
 if [ $? -ne 0 ] || [ -z "$RIG_JSON" ]; then
   echo "SKIP: could not get rig list"
   exit 0
@@ -207,17 +207,17 @@ echo "$SUMMARY"
 
 On success:
 ```bash
-gt plugin record-run --plugin git-hygiene --result success \
+ms plugin record-run --plugin git-hygiene --result success \
   --title "git-hygiene: $SUMMARY" --description "$SUMMARY" >/dev/null 2>&1 || true
 ```
 
 On failure:
 ```bash
-gt plugin record-run --plugin git-hygiene --result failure \
+ms plugin record-run --plugin git-hygiene --result failure \
   --title "git-hygiene: FAILED" \
   --description "Git hygiene failed: $ERROR" >/dev/null 2>&1 || true
 
-gt escalate "Plugin FAILED: git-hygiene" \
+ms escalate "Plugin FAILED: git-hygiene" \
   --severity low \
   --reason "$ERROR"
 ```

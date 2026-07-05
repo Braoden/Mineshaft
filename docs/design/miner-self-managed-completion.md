@@ -1,18 +1,18 @@
 # Miner Self-Managed Completion
 
-> **Bead:** gt-0wkk
+> **Bead:** ms-0wkk
 > **Date:** 2026-02-28
 > **Author:** rictus (mineshaft miner)
 > **Status:** Design proposal
-> **Related:** gt-4ac (persistent miner model), gt-a6gp (nudge-over-mail),
-> gt-6a9d (nuke safety), gt-w0br (bead-based discovery)
+> **Related:** ms-4ac (persistent miner model), ms-a6gp (nudge-over-mail),
+> ms-6a9d (nuke safety), ms-w0br (bead-based discovery)
 
 ---
 
 ## 1. Problem Statement
 
 Miners currently depend on the witness to complete their lifecycle. When a
-miner runs `gt done`, it performs most of the work (push branch, create MR
+miner runs `ms done`, it performs most of the work (push branch, create MR
 bead, write completion metadata, nudge witness) but then **stops and waits for
 the witness** to:
 
@@ -38,11 +38,11 @@ With N miners completing simultaneously:
 
 The witness dependency crept in through two well-intentioned changes:
 
-1. **Persistent miner model (gt-4ac):** Preserved sandboxes for reuse,
+1. **Persistent miner model (ms-4ac):** Preserved sandboxes for reuse,
    requiring someone to manage the idle→reuse lifecycle. The witness became
    that someone because it was already monitoring miners.
 
-2. **Nudge-over-mail (gt-a6gp):** Moved completion discovery from
+2. **Nudge-over-mail (ms-a6gp):** Moved completion discovery from
    miner-sent mail to witness scanning agent beads. This reduced Dolt
    pressure (nudges are free vs mail creating beads) but centralized
    discovery in the witness patrol loop.
@@ -55,11 +55,11 @@ the witness became a mandatory checkpoint in every completion.
 ## 2. Current Flow (What Happens Today)
 
 ```
-Miner runs gt done
+Miner runs ms done
     │
     ├── 1. Validate clean state (no uncommitted changes)
     ├── 2. Push branch to origin
-    ├── 3. Create MR bead (type: merge-request, label: gt:merge-request)
+    ├── 3. Create MR bead (type: merge-request, label: ms:merge-request)
     ├── 4. Write completion metadata to agent bead:
     │      exit_type, mr_id, branch, mr_failed, completion_time
     ├── 5. Set agent_state = "done" (NOT idle)
@@ -96,11 +96,11 @@ cycle timing and how many other miners completed simultaneously.
 ## 3. Proposed Flow (Self-Managed Completion)
 
 ```
-Miner runs gt done
+Miner runs ms done
     │
     ├── 1. Validate clean state (no uncommitted changes)
     ├── 2. Push branch to origin
-    ├── 3. Create MR bead (type: merge-request, label: gt:merge-request)
+    ├── 3. Create MR bead (type: merge-request, label: ms:merge-request)
     ├── 4. Write completion metadata to agent bead (for audit)
     ├── 5. Nudge refinery directly: "MERGE_READY <mr-id>"     ← NEW
     ├── 6. Set agent_state = "idle"                           ← CHANGED
@@ -146,10 +146,10 @@ Currently, agent state transitions are split between miner and witness:
 
 | Transition | Current Owner | Proposed Owner |
 |-----------|--------------|---------------|
-| → working | Miner (gt sling) | Miner (no change) |
-| → done | Miner (gt done) | **REMOVED** (skip to idle) |
-| done → idle | Witness (patrol) | Miner (gt done) |
-| → stuck | Miner (gt done --status=ESCALATED) | Miner (no change) |
+| → working | Miner (ms sling) | Miner (no change) |
+| → done | Miner (ms done) | **REMOVED** (skip to idle) |
+| done → idle | Witness (patrol) | Miner (ms done) |
+| → stuck | Miner (ms done --status=ESCALATED) | Miner (no change) |
 | → running | Witness (restart) | Witness (no change — safety net) |
 
 **Elimination of "done" state:** The intermediate `done` state exists solely as
@@ -163,7 +163,7 @@ Currently, the witness creates a cleanup wisp and nudges refinery when it
 discovers a completion. The miner can do this directly:
 
 ```go
-// In gt done, after creating MR bead:
+// In ms done, after creating MR bead:
 if mrID != "" {
     // Nudge refinery directly (already implemented, but currently
     // only as fallback alongside witness notification)
@@ -181,7 +181,7 @@ notification idempotent and loss-tolerant.
 ```go
 issues, err := e.beads.List(beads.ListOptions{
     Status:   "open",
-    Label:    "gt:merge-request",
+    Label:    "ms:merge-request",
     Priority: -1,
 })
 ```
@@ -222,7 +222,7 @@ is still written by the miner. This serves two purposes:
 The metadata is NOT used as a handoff signal anymore. The witness reads it
 during patrol for observability, not for action routing.
 
-### 4.5 What Changes in `gt done`
+### 4.5 What Changes in `ms done`
 
 ```diff
  func runDone(ctx context.Context, exitType ExitType, ...) error {
@@ -282,18 +282,18 @@ completion-processing responsibility. Net effect: faster patrol cycles
 
 ## 5. Edge Cases and Failure Modes
 
-### 5.1 Miner Crashes During `gt done`
+### 5.1 Miner Crashes During `ms done`
 
 **Current:** Witness detects `done-intent` label + live session = stuck-in-done.
 Witness kills session and continues cleanup pipeline.
 
 **Proposed:** Same mechanism. The `done-intent` label is set at the start of
-`gt done` (before any state changes). If the miner crashes mid-done:
+`ms done` (before any state changes). If the miner crashes mid-done:
 - Agent state is still `working` (not yet transitioned to idle)
 - `done-intent` label is set
 - Witness zombie detection finds: dead session + done-intent = crashed in done
-- Witness restarts session (restart-first policy, gt-dsgp)
-- New session discovers done-intent, resumes `gt done`
+- Witness restarts session (restart-first policy, ms-dsgp)
+- New session discovers done-intent, resumes `ms done`
 
 **No change needed.** The done-intent safety mechanism is independent of who
 manages the idle transition.
@@ -302,8 +302,8 @@ manages the idle transition.
 
 **Current:** Not possible — push happens before witness processing.
 
-**Proposed:** Same. The push happens early in `gt done`, before the idle
-transition. If push fails, `gt done` errors out and the miner remains in
+**Proposed:** Same. The push happens early in `ms done`, before the idle
+transition. If push fails, `ms done` errors out and the miner remains in
 `working` state. The witness detects this as a zombie (dead session but
 agent_state=working) and restarts.
 
@@ -338,11 +338,11 @@ only needed for anomaly recovery (zombies, dirty state), which can wait.
 
 ### Phase 1: Dual-Signal (Low Risk)
 
-Add direct refinery nudge to `gt done` alongside existing witness notification.
+Add direct refinery nudge to `ms done` alongside existing witness notification.
 Miner still sets `agent_state=done` (witness still processes).
 
 ```go
-// gt done sends BOTH signals
+// ms done sends BOTH signals
 nudgeWitness(rigName, fmt.Sprintf("MINER_DONE %s", name))
 nudgeRefinery(rigName, fmt.Sprintf("MERGE_READY %s", mrID))  // NEW
 ```
@@ -356,7 +356,7 @@ Miner sets `agent_state=idle` directly. Witness patrol skips completion
 processing (no `done` state to discover). Witness nudge becomes optional.
 
 ```go
-// gt done: self-manage
+// ms done: self-manage
 setAgentState(agentBeadID, "idle")
 nudgeRefinery(rigName, fmt.Sprintf("MERGE_READY %s", mrID))
 // Witness nudge: optional, for observability only
@@ -411,7 +411,7 @@ dirty state, stale MRs). The "discover, don't track" principle is maintained.
 ### Complexity
 
 **Reduced:** Eliminates cleanup wisps, completion discovery code, and the
-done→idle state machine in the witness. The `gt done` command becomes the
+done→idle state machine in the witness. The `ms done` command becomes the
 single source of truth for completion lifecycle.
 
 ---
@@ -426,15 +426,15 @@ single source of truth for completion lifecycle.
 | **Self-recycling preferred** | From miner-lifecycle-patrol.md Q2: "Prefer explicit self-recycling. Use mechanical intervention only as a safety net." This design delivers on that stated preference |
 | **Persistent miner model** | Fully compatible — sandbox preservation and identity persistence are unchanged |
 
-### The Missed Implication of gt-4ac
+### The Missed Implication of ms-4ac
 
-The persistent miner model (gt-4ac) was designed so miners survive and
+The persistent miner model (ms-4ac) was designed so miners survive and
 get reused. But the witness was inserted as a gatekeeper for the idle
 transition, defeating part of the benefit. A miner that completes work
 but can't accept new work for 3 minutes because the witness hasn't processed
 it is effectively dead capacity.
 
-This design completes the promise of gt-4ac: persistent miners that
+This design completes the promise of ms-4ac: persistent miners that
 self-manage their full lifecycle, with the witness as a safety net rather
 than a required checkpoint.
 

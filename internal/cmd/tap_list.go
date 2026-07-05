@@ -20,8 +20,8 @@ var tapListCmd = &cobra.Command{
 Shows both registered (from registry.toml) and built-in tap commands.
 
 Examples:
-  gt tap list               # Show all available handlers
-  gt tap list --guards      # Show only guard handlers`,
+  ms tap list               # Show all available handlers
+  ms tap list --guards      # Show only guard handlers`,
 	RunE: runTapList,
 }
 

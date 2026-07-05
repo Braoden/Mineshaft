@@ -88,7 +88,7 @@ func getTmuxSessionPIDs() map[int]bool {
 	}
 
 	// Also query the current town's socket via BuildCommand as a fallback.
-	// This handles non-standard socket locations (e.g. GT_TMUX_SOCKET override).
+	// This handles non-standard socket locations (e.g. MS_TMUX_SOCKET override).
 	out, err := tmux.BuildCommand("list-panes", "-a", "-F", "#{pane_pid}").Output()
 	if err == nil {
 		for _, pidStr := range strings.Split(strings.TrimSpace(string(out)), "\n") {
@@ -124,7 +124,7 @@ func getACPSessionPIDs() map[int]bool {
 	pids := make(map[int]bool)
 
 	// Find all town roots by looking for overseer-acp.pid files
-	// Common locations: ~/gt, ~/town-*, etc.
+	// Common locations: ~/ms, ~/town-*, etc.
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return pids
@@ -133,8 +133,8 @@ func getACPSessionPIDs() map[int]bool {
 	// Build process tree once
 	childMap := buildChildMap()
 
-	// Check the primary town root (~/gt)
-	pidPath := filepath.Join(homeDir, "gt", "overseer", "overseer-acp.pid")
+	// Check the primary town root (~/ms)
+	pidPath := filepath.Join(homeDir, "ms", "overseer", "overseer-acp.pid")
 	if data, err := os.ReadFile(pidPath); err == nil {
 		if pid, err := strconv.Atoi(strings.TrimSpace(string(data))); err == nil {
 			// Check if process is still alive
@@ -511,7 +511,7 @@ func FindOrphanedClaudeProcesses() ([]OrphanedProcess, error) {
 		// Skip processes NOT in a Mineshaft workspace.
 		// Only kill orphaned Claude processes whose cwd is under a Mineshaft
 		// workspace root. This prevents killing user's Claude Code instances
-		// running in repos outside ~/gt/ (or wherever the workspace is).
+		// running in repos outside ~/ms/ (or wherever the workspace is).
 		townRoot := resolveTownRoot(pid)
 		if townRoot == "" {
 			continue
@@ -566,7 +566,7 @@ func FindZombieClaudeProcesses() ([]ZombieProcess, error) {
 		if err := tmux.BuildCommand("list-sessions").Run(); err != nil {
 			return nil, fmt.Errorf("tmux not available: %w", err)
 		}
-		// tmux is running but no gt-*/hq-* sessions - that's a valid state,
+		// tmux is running but no ms-*/hq-* sessions - that's a valid state,
 		// but we can't safely determine zombies without reference sessions.
 		// Return empty rather than marking everything as zombie.
 		return nil, nil
@@ -629,7 +629,7 @@ func FindZombieClaudeProcesses() ([]ZombieProcess, error) {
 		// Skip processes NOT in a Mineshaft workspace.
 		// Only kill zombie Claude processes whose cwd is under a Mineshaft
 		// workspace root. This prevents killing user's Claude Code instances
-		// running in repos outside ~/gt/.
+		// running in repos outside ~/ms/.
 		townRoot := resolveTownRoot(pid)
 		if townRoot == "" {
 			continue

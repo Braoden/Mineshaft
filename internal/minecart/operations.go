@@ -1,5 +1,5 @@
 // Package minecart provides minecart tracking operations: finding tracking minecarts,
-// checking completion, feeding ready issues, and dispatching via gt sling.
+// checking completion, feeding ready issues, and dispatching via ms sling.
 package minecart
 
 import (
@@ -22,7 +22,7 @@ import (
 // polling-based patrol cycles.
 //
 // The check is idempotent - running it multiple times for the same issue is safe.
-// The underlying `gt minecart check` handles already-closed minecarts gracefully.
+// The underlying `ms minecart check` handles already-closed minecarts gracefully.
 //
 // Parameters:
 //   - ctx: context for storage operations
@@ -31,7 +31,7 @@ import (
 //   - issueID: the issue ID that was just closed
 //   - caller: identifier for logging (e.g., "Minecart")
 //   - logger: optional logger function (can be nil)
-//   - gtPath: resolved path to the gt binary (e.g. from exec.LookPath or daemon config)
+//   - gtPath: resolved path to the ms binary (e.g. from exec.LookPath or daemon config)
 //   - resolver: optional StoreResolver for cross-database issue resolution (nil falls back to subprocess)
 //
 // Returns the minecart IDs that were checked (may be empty if issue isn't tracked).
@@ -61,7 +61,7 @@ func CheckMinecartsForIssue(ctx context.Context, store beadsdk.Storage, townRoot
 	logger("%s: %s tracked by %d minecart(s): %v", caller, issueID, len(minecartIDs), minecartIDs)
 
 	// Run minecart check for each tracking minecart
-	// Note: gt minecart check is idempotent and handles already-closed minecarts
+	// Note: ms minecart check is idempotent and handles already-closed minecarts
 	for _, minecartID := range minecartIDs {
 		if isMinecartClosed(ctx, store, minecartID) {
 			logger("%s: minecart %s already closed, skipping", caller, minecartID)
@@ -129,10 +129,10 @@ func isMinecartStaged(ctx context.Context, store beadsdk.Storage, minecartID str
 	return strings.HasPrefix(string(issue.Status), "staged_")
 }
 
-// runMinecartCheck runs `gt minecart check <minecart-id>` to check a specific minecart.
+// runMinecartCheck runs `ms minecart check <minecart-id>` to check a specific minecart.
 // This is idempotent and handles already-closed minecarts gracefully.
 // The context parameter enables cancellation on daemon shutdown.
-// gtPath is the resolved path to the gt binary.
+// gtPath is the resolved path to the ms binary.
 func runMinecartCheck(ctx context.Context, townRoot, minecartID, gtPath string) error {
 	cmd := exec.CommandContext(ctx, gtPath, "minecart", "check", minecartID)
 	cmd.Dir = townRoot
@@ -156,7 +156,7 @@ type trackedIssue struct {
 	IssueType string `json:"issue_type"`
 }
 
-// slingableTypes are bead types that can be dispatched via gt sling.
+// slingableTypes are bead types that can be dispatched via ms sling.
 // Only leaf work items are slingable — containers (epic) and non-work types
 // (decision, message, event) are excluded. Unknown/empty types are treated
 // as slingable (beads default to "task" when IssueType is empty).
@@ -168,7 +168,7 @@ var slingableTypes = map[string]bool{
 	"":        true, // Empty type defaults to task
 }
 
-// IsSlingableType reports whether a bead type can be dispatched via gt sling.
+// IsSlingableType reports whether a bead type can be dispatched via ms sling.
 // Exported for use by cmd/minecart.go stranded scan path.
 func IsSlingableType(issueType string) bool {
 	return slingableTypes[issueType]
@@ -275,13 +275,13 @@ func isIssueBlocked(ctx context.Context, store beadsdk.Storage, issueID string, 
 }
 
 // feedNextReadyIssue finds the next ready issue in a minecart and dispatches it
-// via gt sling. A ready issue is one that is open, with no assignee, and not
+// via ms sling. A ready issue is one that is open, with no assignee, and not
 // blocked by unclosed dependencies. This provides reactive (event-driven)
 // minecart feeding instead of waiting for polling-based patrol cycles.
 //
 // Only one issue is dispatched per call. When that issue completes, the
 // next close event triggers another feed cycle.
-// gtPath is the resolved path to the gt binary.
+// gtPath is the resolved path to the ms binary.
 func feedNextReadyIssue(ctx context.Context, store beadsdk.Storage, townRoot, minecartID, caller string, logger func(format string, args ...interface{}), gtPath string, isRigParked func(string) bool, resolver *StoreResolver) {
 	tracked := getMinecartTrackedIssues(ctx, store, minecartID, townRoot, resolver)
 	if len(tracked) == 0 {
@@ -597,7 +597,7 @@ func FireCrossRigDepNotifications(ctx context.Context, closedIssueID, townRoot s
 
 			msg := fmt.Sprintf("Dependency resolved: %s — External dependency %s has closed. Unblocked: %s (%s). This issue may now proceed.",
 				closedIssueID, closedIssueID, depID, depTitle)
-			nudgeCmd := exec.Command("gt", "nudge", depRig+"/witness", "-m", msg)
+			nudgeCmd := exec.Command("ms", "nudge", depRig+"/witness", "-m", msg)
 			nudgeCmd.Dir = townRoot
 			if err := nudgeCmd.Run(); err != nil {
 				logger("CrossRig: nudge %s/witness failed: %v", depRig, err)
@@ -606,9 +606,9 @@ func FireCrossRigDepNotifications(ctx context.Context, closedIssueID, townRoot s
 	}
 }
 
-// dispatchIssue dispatches an issue to a rig via gt sling.
+// dispatchIssue dispatches an issue to a rig via ms sling.
 // The context parameter enables cancellation on daemon shutdown.
-// gtPath is the resolved path to the gt binary.
+// gtPath is the resolved path to the ms binary.
 func dispatchIssue(ctx context.Context, townRoot, issueID, rig, gtPath, baseBranch string) error {
 	args := []string{"sling", issueID, rig, "--no-boot"}
 	if baseBranch != "" {

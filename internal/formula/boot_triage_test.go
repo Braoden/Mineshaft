@@ -13,7 +13,7 @@ func TestBootTriageFormulaUsesNudgeForWake(t *testing.T) {
 
 	formula := string(content)
 	for _, want := range []string{
-		`gt nudge --mode=immediate supervisor "Boot wake: please check your inbox and pending work"`,
+		`ms nudge --mode=immediate supervisor "Boot wake: please check your inbox and pending work"`,
 		"Raw tmux send-keys is blocked for Boot",
 	} {
 		if !strings.Contains(formula, want) {

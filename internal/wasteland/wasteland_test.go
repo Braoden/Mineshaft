@@ -167,24 +167,24 @@ func TestForkDoltHubRepo(t *testing.T) {
 }
 
 func TestLocalCloneDir(t *testing.T) {
-	got := LocalCloneDir("/home/user/gt", "steveyegge", "wl-commons")
-	want := filepath.Join("/home/user/gt", ".wasteland", "steveyegge", "wl-commons")
+	got := LocalCloneDir("/home/user/ms", "steveyegge", "wl-commons")
+	want := filepath.Join("/home/user/ms", ".wasteland", "steveyegge", "wl-commons")
 	if got != want {
 		t.Errorf("LocalCloneDir = %q, want %q", got, want)
 	}
 }
 
 func TestWastelandDir(t *testing.T) {
-	got := WastelandDir("/home/user/gt")
-	want := filepath.Join("/home/user/gt", ".wasteland")
+	got := WastelandDir("/home/user/ms")
+	want := filepath.Join("/home/user/ms", ".wasteland")
 	if got != want {
 		t.Errorf("WastelandDir = %q, want %q", got, want)
 	}
 }
 
 func TestConfigPath(t *testing.T) {
-	got := ConfigPath("/home/user/gt")
-	want := filepath.Join("/home/user/gt", "overseer", "wasteland.json")
+	got := ConfigPath("/home/user/ms")
+	want := filepath.Join("/home/user/ms", "overseer", "wasteland.json")
 	if got != want {
 		t.Errorf("ConfigPath = %q, want %q", got, want)
 	}

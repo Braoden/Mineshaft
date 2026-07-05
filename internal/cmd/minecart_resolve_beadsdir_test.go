@@ -15,9 +15,9 @@ import (
 // hq-dt4: "Minecart add command reports success but issues don't appear in
 // minecart progress."
 //
-// Root cause: getTownBeadsDir() returns the workspace root (e.g., /gt), but
+// Root cause: getTownBeadsDir() returns the workspace root (e.g., /ms), but
 // EnsureCustomTypes and EnsureCustomStatuses expect the .beads directory path
-// (e.g., /gt/.beads). Without ResolveBeadsDir, the sentinel files and bd
+// (e.g., /ms/.beads). Without ResolveBeadsDir, the sentinel files and bd
 // config commands target the wrong directory, so custom types (including
 // "minecart") are never registered in the correct database — making all minecarts
 // appear empty.
@@ -88,13 +88,13 @@ func TestMinecartResolveBeadsDir_RegressionEmptyMinecart(t *testing.T) {
 
 		// Put sentinel ONLY in .beads (the correct location).
 		currentTypes := strings.Join(constants.BeadsCustomTypesList(), ",")
-		correctSentinel := filepath.Join(beadsDir, ".gt-types-configured")
+		correctSentinel := filepath.Join(beadsDir, ".ms-types-configured")
 		if err := os.WriteFile(correctSentinel, []byte(currentTypes+"\n"), 0644); err != nil {
 			t.Fatal(err)
 		}
 
 		// Calling EnsureCustomTypes(townRoot) — the buggy path — would
-		// look for sentinel at townRoot/.gt-types-configured (wrong place),
+		// look for sentinel at townRoot/.ms-types-configured (wrong place),
 		// not find it, and either error or run bd config in the wrong dir.
 		//
 		// The fix is to always call ResolveBeadsDir first, which
@@ -114,7 +114,7 @@ func TestMinecartResolveBeadsDir_RegressionEmptyMinecart(t *testing.T) {
 		}
 
 		// Verify sentinel remains only in .beads, not workspace root.
-		wrongSentinel := filepath.Join(townRoot, ".gt-types-configured")
+		wrongSentinel := filepath.Join(townRoot, ".ms-types-configured")
 		if _, statErr := os.Stat(wrongSentinel); statErr == nil {
 			t.Error("sentinel leaked to workspace root")
 		}
@@ -132,7 +132,7 @@ func TestMinecartResolveBeadsDir_RegressionEmptyMinecart(t *testing.T) {
 
 		// Pre-populate sentinel in .beads so we don't need a real bd.
 		currentTypes := strings.Join(constants.BeadsCustomTypesList(), ",")
-		if err := os.WriteFile(filepath.Join(beadsDir, ".gt-types-configured"), []byte(currentTypes+"\n"), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(beadsDir, ".ms-types-configured"), []byte(currentTypes+"\n"), 0644); err != nil {
 			t.Fatal(err)
 		}
 
@@ -158,7 +158,7 @@ func TestMinecartResolveBeadsDir_RegressionEmptyMinecart(t *testing.T) {
 		}
 
 		currentStatuses := strings.Join(constants.BeadsCustomStatusesList(), ",")
-		if err := os.WriteFile(filepath.Join(beadsDir, ".gt-statuses-configured"), []byte(currentStatuses+"\n"), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(beadsDir, ".ms-statuses-configured"), []byte(currentStatuses+"\n"), 0644); err != nil {
 			t.Fatal(err)
 		}
 
@@ -272,11 +272,11 @@ func TestMinecartCreate_SentinelPlacement(t *testing.T) {
 
 	// Pre-populate sentinels to avoid needing a real bd binary.
 	currentTypes := strings.Join(constants.BeadsCustomTypesList(), ",")
-	if err := os.WriteFile(filepath.Join(beadsDir, ".gt-types-configured"), []byte(currentTypes+"\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(beadsDir, ".ms-types-configured"), []byte(currentTypes+"\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	currentStatuses := strings.Join(constants.BeadsCustomStatusesList(), ",")
-	if err := os.WriteFile(filepath.Join(beadsDir, ".gt-statuses-configured"), []byte(currentStatuses+"\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(beadsDir, ".ms-statuses-configured"), []byte(currentStatuses+"\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -289,7 +289,7 @@ func TestMinecartCreate_SentinelPlacement(t *testing.T) {
 	}
 
 	// Verify sentinels are in .beads/, NOT in the workspace root.
-	for _, sentinel := range []string{".gt-types-configured", ".gt-statuses-configured"} {
+	for _, sentinel := range []string{".ms-types-configured", ".ms-statuses-configured"} {
 		correctPath := filepath.Join(beadsDir, sentinel)
 		wrongPath := filepath.Join(townRoot, sentinel)
 

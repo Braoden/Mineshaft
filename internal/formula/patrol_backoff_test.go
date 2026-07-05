@@ -12,8 +12,8 @@ import (
 // await-signal logic was accidentally removed by subsequent commits,
 // causing a tight loop when the rig was idle.
 //
-// See: PR #1052 (original fix), gt-tjm9q (regression report)
-// See: gt-0hzeo (refinery stall bug — missing await-signal)
+// See: PR #1052 (original fix), ms-tjm9q (regression report)
+// See: ms-0hzeo (refinery stall bug — missing await-signal)
 func TestPatrolFormulasHaveBackoffLogic(t *testing.T) {
 	// Patrol formulas that must have backoff logic.
 	// The loopStepID is the step that contains the await-signal logic;
@@ -54,7 +54,7 @@ func TestPatrolFormulasHaveBackoffLogic(t *testing.T) {
 			requiredPatterns := []string{
 				pf.awaitCmd,
 				"backoff",
-				"gt mol step " + pf.awaitCmd,
+				"ms mol step " + pf.awaitCmd,
 			}
 
 			for _, pattern := range requiredPatterns {
@@ -71,7 +71,7 @@ func TestPatrolFormulasHaveBackoffLogic(t *testing.T) {
 }
 
 // TestPatrolFormulasHaveReportCycle verifies that all three patrol formulas
-// include `gt patrol report` in their loop step.
+// include `ms patrol report` in their loop step.
 //
 // The patrol report command atomically closes the current patrol wisp and
 // starts a new one, replacing the old squash+new pattern.
@@ -112,10 +112,10 @@ func TestPatrolFormulasHaveReportCycle(t *testing.T) {
 				t.Fatalf("%s: %s step not found or has empty description", pf.name, pf.loopStepID)
 			}
 
-			// The loop step must use gt patrol report to close current and start next cycle
-			if !strings.Contains(loopDesc, "gt patrol report") {
-				t.Errorf("%s %s step missing \"gt patrol report\" (close current patrol and start next cycle)\n"+
-					"All patrol formulas must use gt patrol report in their loop step.",
+			// The loop step must use ms patrol report to close current and start next cycle
+			if !strings.Contains(loopDesc, "ms patrol report") {
+				t.Errorf("%s %s step missing \"ms patrol report\" (close current patrol and start next cycle)\n"+
+					"All patrol formulas must use ms patrol report in their loop step.",
 					pf.name, pf.loopStepID)
 			}
 		})
@@ -206,11 +206,11 @@ func TestSupervisorPatrolDoesNotRunAgeBasedWispGC(t *testing.T) {
 }
 
 // TestPatrolFormulasUseDynamicBeadResolution verifies that patrol formulas
-// resolve their agent bead ID dynamically at runtime via `gt agents resolve`,
-// rather than hardcoding a prefix like `gt-<rig>-refinery`.
+// resolve their agent bead ID dynamically at runtime via `ms agents resolve`,
+// rather than hardcoding a prefix like `ms-<rig>-refinery`.
 //
 // Hardcoded IDs break when AgentBeadIDWithPrefix collapses the rig component
-// (prefix == rig), producing e.g. "cp-refinery" instead of "gt-cp-refinery".
+// (prefix == rig), producing e.g. "cp-refinery" instead of "ms-cp-refinery".
 //
 // Regression test for hq-9xs.
 func TestPatrolFormulasUseDynamicBeadResolution(t *testing.T) {
@@ -219,8 +219,8 @@ func TestPatrolFormulasUseDynamicBeadResolution(t *testing.T) {
 		"mol-refinery-patrol.formula.toml",
 	}
 	expectedResolver := map[string]string{
-		"mol-witness-patrol.formula.toml":  "YOUR_AGENT_BEAD=$(gt agents resolve --role witness --rig {{rig}})",
-		"mol-refinery-patrol.formula.toml": "YOUR_AGENT_BEAD=$(gt agents resolve --role refinery --rig {{rig}})",
+		"mol-witness-patrol.formula.toml":  "YOUR_AGENT_BEAD=$(ms agents resolve --role witness --rig {{rig}})",
+		"mol-refinery-patrol.formula.toml": "YOUR_AGENT_BEAD=$(ms agents resolve --role refinery --rig {{rig}})",
 	}
 
 	for _, name := range patrolFormulas {
@@ -251,7 +251,7 @@ func TestPatrolFormulasUseDynamicBeadResolution(t *testing.T) {
 			// bd-list query only sees one table in one DB and misses wisp-backed
 			// or town-stranded agent beads.
 			if !strings.Contains(loopDesc, expectedResolver[name]) {
-				t.Errorf("%s loop step missing dynamic agent bead resolution via gt agents resolve.\n"+
+				t.Errorf("%s loop step missing dynamic agent bead resolution via ms agents resolve.\n"+
 					"Agent bead IDs must be resolved at runtime, not hardcoded.\n"+
 					"See hq-9xs.",
 					name)
@@ -259,16 +259,16 @@ func TestPatrolFormulasUseDynamicBeadResolution(t *testing.T) {
 			if !strings.Contains(loopDesc, `--agent-bead "$YOUR_AGENT_BEAD"`) {
 				t.Errorf("%s loop step must pass the resolved agent bead to await", name)
 			}
-			if !strings.Contains(loopDesc, `gt agents state "$YOUR_AGENT_BEAD" --set idle=0`) {
+			if !strings.Contains(loopDesc, `ms agents state "$YOUR_AGENT_BEAD" --set idle=0`) {
 				t.Errorf("%s loop step must reset state on the resolved agent bead", name)
 			}
-			if strings.Contains(loopDesc, "bd list --label=gt:agent") {
+			if strings.Contains(loopDesc, "bd list --label=ms:agent") {
 				t.Errorf("%s loop step still uses legacy bd-list agent resolution", name)
 			}
 
-			// Must NOT hardcode gt-<rig> prefix pattern
-			if strings.Contains(loopDesc, "gt-<rig>") {
-				t.Errorf("%s loop step hardcodes gt-<rig> prefix.\n"+
+			// Must NOT hardcode ms-<rig> prefix pattern
+			if strings.Contains(loopDesc, "ms-<rig>") {
+				t.Errorf("%s loop step hardcodes ms-<rig> prefix.\n"+
 					"This breaks when AgentBeadIDWithPrefix collapses the ID (prefix == rig).\n"+
 					"See hq-9xs.",
 					name)
@@ -305,8 +305,8 @@ func TestSupervisorPatrolHasHeartbeatSteps(t *testing.T) {
 	if f.Steps[0].ID != "heartbeat" {
 		t.Errorf("first step should be \"heartbeat\", got %q", f.Steps[0].ID)
 	}
-	if !strings.Contains(f.Steps[0].Description, "gt supervisor heartbeat") {
-		t.Error("heartbeat step must contain \"gt supervisor heartbeat\" command")
+	if !strings.Contains(f.Steps[0].Description, "ms supervisor heartbeat") {
+		t.Error("heartbeat step must contain \"ms supervisor heartbeat\" command")
 	}
 
 	// inbox-check must depend on heartbeat
@@ -333,20 +333,20 @@ func TestSupervisorPatrolHasHeartbeatSteps(t *testing.T) {
 	for _, step := range f.Steps {
 		if step.ID == "heartbeat-mid" {
 			foundMid = true
-			if !strings.Contains(step.Description, "gt supervisor heartbeat") {
-				t.Error("heartbeat-mid step must contain \"gt supervisor heartbeat\" command")
+			if !strings.Contains(step.Description, "ms supervisor heartbeat") {
+				t.Error("heartbeat-mid step must contain \"ms supervisor heartbeat\" command")
 			}
 		}
 		if step.ID == "loop-or-exit" && strings.Contains(step.Description, "pre-await checkpoint") {
 			foundPreAwait = true
-			if !strings.Contains(step.Description, "gt supervisor heartbeat") {
+			if !strings.Contains(step.Description, "ms supervisor heartbeat") {
 				t.Error("loop-or-exit step must refresh heartbeat before await-signal")
 			}
-			if strings.Contains(step.Description, "gt handoff -s") && strings.Contains(step.Description, "mandatory") {
+			if strings.Contains(step.Description, "ms handoff -s") && strings.Contains(step.Description, "mandatory") {
 				foundMandatoryHandoff = true
 			}
-			heartbeatPos := strings.Index(step.Description, "gt supervisor heartbeat \"pre-await checkpoint\"")
-			awaitPos := strings.Index(step.Description, "gt mol step await-signal")
+			heartbeatPos := strings.Index(step.Description, "ms supervisor heartbeat \"pre-await checkpoint\"")
+			awaitPos := strings.Index(step.Description, "ms mol step await-signal")
 			if heartbeatPos == -1 || awaitPos == -1 {
 				t.Error("loop-or-exit step must contain both pre-await heartbeat and await-signal commands")
 			} else if heartbeatPos > awaitPos {
@@ -361,6 +361,6 @@ func TestSupervisorPatrolHasHeartbeatSteps(t *testing.T) {
 		t.Error("supervisor patrol formula must refresh heartbeat again before await-signal")
 	}
 	if !foundMandatoryHandoff {
-		t.Error("supervisor patrol formula must require gt handoff after patrol report")
+		t.Error("supervisor patrol formula must require ms handoff after patrol report")
 	}
 }

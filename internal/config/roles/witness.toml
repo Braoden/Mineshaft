@@ -3,7 +3,7 @@
 
 role = "witness"
 scope = "rig"
-nudge = "Run 'gt prime' to check worker status and begin patrol cycle."
+nudge = "Run 'ms prime' to check worker status and begin patrol cycle."
 prompt_template = "witness.md.tmpl"
 
 [session]
@@ -13,8 +13,8 @@ needs_pre_sync = false
 start_command = "exec claude --dangerously-skip-permissions"
 
 [env]
-GT_ROLE = "{rig}/witness"
-GT_SCOPE = "rig"
+MS_ROLE = "{rig}/witness"
+MS_SCOPE = "rig"
 
 [health]
 ping_timeout = "30s"

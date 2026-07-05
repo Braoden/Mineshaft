@@ -206,7 +206,7 @@ func (m *Mailbox) queryIssueMessagesByAssignee(beadsDir string, identities []str
 	var messages []BeadsMessage
 	for _, id := range identities {
 		args := []string{"list",
-			"--label", "gt:message",
+			"--label", "ms:message",
 			"--assignee", id,
 			"--json",
 			"--limit", "0",
@@ -231,7 +231,7 @@ func (m *Mailbox) queryIssueMessagesByCC(beadsDir string, identities []string) [
 	var messages []BeadsMessage
 	for _, id := range identities {
 		args := []string{"list",
-			"--label", "gt:message",
+			"--label", "ms:message",
 			"--label", "cc:" + id,
 			"--json",
 			"--limit", "0",
@@ -326,7 +326,7 @@ func (m *Mailbox) queryWispMessages(beadsDir string, identities []string) ([]wis
 			"MAX(CASE WHEN w.assignee IN (%s) THEN 1 ELSE 0 END) as assignee_match, "+
 			"MAX(CASE WHEN cc.label IS NOT NULL THEN 1 ELSE 0 END) as cc_match "+
 			"FROM wisps w "+
-			"JOIN wisp_labels msg_label ON w.id = msg_label.issue_id AND msg_label.label = 'gt:message' "+
+			"JOIN wisp_labels msg_label ON w.id = msg_label.issue_id AND msg_label.label = 'ms:message' "+
 			"JOIN wisp_labels al ON w.id = al.issue_id "+
 			"LEFT JOIN wisp_labels cc ON w.id = cc.issue_id AND cc.label IN (%s) "+
 			"WHERE w.status IN ('open', 'hooked') AND (w.assignee IN (%s) OR cc.label IS NOT NULL) "+

@@ -10,7 +10,7 @@ import (
 	"github.com/steveyegge/mineshaft/internal/doltserver"
 )
 
-// dsnOpts captures the optional MySQL DSN query parameters used by gt's
+// dsnOpts captures the optional MySQL DSN query parameters used by ms's
 // internal Dolt-server connections. Empty / zero values are omitted from
 // the resulting query string.
 type dsnOpts struct {
@@ -83,15 +83,15 @@ func formatDoltDSN(user, network, address, dbName string, opts dsnOpts) string {
 // otherwise. The dbName, user, port, and query options are substituted
 // into both forms.
 //
-// Rationale: short-lived gt-CLI subcommands over TCP loopback create a
+// Rationale: short-lived ms-CLI subcommands over TCP loopback create a
 // TIME_WAIT entry per close that lingers ~30s on macOS (2*MSL with
-// MSL=15s). On busy rigs (background daemons, cron, periodic gt
+// MSL=15s). On busy rigs (background daemons, cron, periodic ms
 // health/doctor/maintain invocations) the count climbs past
 // port-monitor alert thresholds and risks port exhaustion. Unix-socket
 // transport bypasses TIME_WAIT entirely.
 //
 // dc-fsue's metadata.json fix only covered the `bd` CLI side. wa-d6f
-// tracks the remaining gt-CLI callsites that build their own DSNs
+// tracks the remaining ms-CLI callsites that build their own DSNs
 // inline (internal/cmd/health.go, maintain.go, dolt_flatten.go,
 // dolt_rebase.go, install.go). This helper is the unified migration
 // point so future callsites get socket-first transport for free.

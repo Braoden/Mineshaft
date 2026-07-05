@@ -199,16 +199,16 @@ func resolveTarget(target string, opts ResolveTargetOptions) (*ResolvedTarget, e
 
 	// Rig target (auto-spawn miner)
 	if rigName, isRig := IsRigName(target); isRig {
-		// Check if rig is parked or docked before dispatching (gt-4owfd.1, gt-11y)
+		// Check if rig is parked or docked before dispatching (ms-4owfd.1, ms-11y)
 		townRoot := opts.TownRoot
 		if townRoot == "" {
 			townRoot, _ = workspace.FindFromCwd()
 		}
 		if townRoot != "" {
 			if blocked, reason := IsRigParkedOrDocked(townRoot, rigName); blocked {
-				undoCmd := "gt rig unpark"
+				undoCmd := "ms rig unpark"
 				if reason == "docked" {
-					undoCmd = "gt rig undock"
+					undoCmd = "ms rig undock"
 				}
 				return nil, fmt.Errorf("cannot sling to %s rig %q\n%s %s", reason, rigName, undoCmd, rigName)
 			}
@@ -258,7 +258,7 @@ func resolveTarget(target string, opts ResolveTargetOptions) (*ResolvedTarget, e
 
 	// Existing agent (with dead miner fallback).
 	// Uses resolveTargetAgentFn seam — crew, overseer, and all existing agents
-	// resolve here, getting their pane for nudge delivery (gt-in7b).
+	// resolve here, getting their pane for nudge delivery (ms-in7b).
 	agentID, pane, workDir, err := resolveTargetAgentFn(target)
 	if err != nil {
 		if rigName, ok := missingMinerTargetRig(target, opts.Create, opts.TownRoot); ok {

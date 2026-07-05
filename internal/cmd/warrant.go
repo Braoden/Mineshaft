@@ -49,7 +49,7 @@ The warrant system provides a controlled way to terminate agents:
 3. Boot executes the warrant (terminates session, updates state)
 4. Warrant is marked as executed
 
-Warrants are stored in ~/gt/warrants/ as JSON files.`,
+Warrants are stored in ~/ms/warrants/ as JSON files.`,
 }
 
 var warrantFileCmd = &cobra.Command{
@@ -63,8 +63,8 @@ The target should be an agent path like:
   - beads/miners/charlie
 
 Examples:
-  gt warrant file mineshaft/miners/alpha --reason "Zombie: no session, idle >10m"
-  gt warrant file supervisor/dogs/bravo --reason "Stuck: working on task for >2h"`,
+  ms warrant file mineshaft/miners/alpha --reason "Zombie: no session, idle >10m"
+  ms warrant file supervisor/dogs/bravo --reason "Stuck: working on task for >2h"`,
 	Args: cobra.ExactArgs(1),
 	RunE: runWarrantFile,
 }
@@ -77,8 +77,8 @@ var warrantListCmd = &cobra.Command{
 Use --all to include executed warrants.
 
 Examples:
-  gt warrant list
-  gt warrant list --all`,
+  ms warrant list
+  ms warrant list --all`,
 	RunE: runWarrantList,
 }
 
@@ -95,8 +95,8 @@ This will:
 Use --force to execute even if no warrant exists.
 
 Examples:
-  gt warrant execute mineshaft/miners/alpha
-  gt warrant execute supervisor/dogs/bravo --force`,
+  ms warrant execute mineshaft/miners/alpha
+  ms warrant execute supervisor/dogs/bravo --force`,
 	Args: cobra.ExactArgs(1),
 	RunE: runWarrantExecute,
 }

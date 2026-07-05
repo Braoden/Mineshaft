@@ -44,7 +44,7 @@ func initBeadsDBForServer(t *testing.T, dir, prefix, homeDir string) {
 	initSchedulerGitRepo(t, dir, homeDir)
 
 	args := []string{"init", "--quiet", "--non-interactive", "--skip-hooks", "--skip-agents", "--prefix", prefix}
-	// Forward GT_DOLT_PORT so bd connects to the ephemeral test server
+	// Forward MS_DOLT_PORT so bd connects to the ephemeral test server
 	// instead of defaulting to port 3307.
 	// bd v1.0.0+ defaults to embedded mode; --server is required to use an
 	// external server (v0.57.0 defaulted to server mode and ignored --server).
@@ -85,14 +85,14 @@ func initSchedulerGitRepo(t *testing.T, dir, homeDir string) {
 func schedulerBDInitEnv(homeDir, beadsDir string) []string {
 	env := cleanSchedulerTestEnv(homeDir)
 	if p := schedulerDoltPort(); p != "" {
-		env = beads.StripEnvKey(env, "GT_DOLT_PORT")
-		env = append(env, "GT_DOLT_PORT="+p)
+		env = beads.StripEnvKey(env, "MS_DOLT_PORT")
+		env = append(env, "MS_DOLT_PORT="+p)
 	}
 	return beads.BuildMutationPinnedBDEnv(env, beadsDir)
 }
 
 func schedulerDoltPort() string {
-	for _, key := range []string{"GT_DOLT_PORT", "BEADS_DOLT_SERVER_PORT", "BEADS_DOLT_PORT"} {
+	for _, key := range []string{"MS_DOLT_PORT", "BEADS_DOLT_SERVER_PORT", "BEADS_DOLT_PORT"} {
 		if p := os.Getenv(key); p != "" {
 			return p
 		}
@@ -171,7 +171,7 @@ func installSchedulerTestFormula(t *testing.T, rigPath string) {
 
 // setupSchedulerIntegrationTown creates a minimal town filesystem for scheduler tests.
 // Uses the shared Dolt test server (managed by requireDoltServer)
-// for beads databases. No gt install, no Claude credentials, no agent sessions.
+// for beads databases. No ms install, no Claude credentials, no agent sessions.
 //
 // Returns (hqPath, rigPath, gtBinary, env).
 func setupSchedulerIntegrationTown(t *testing.T) (hqPath, rigPath, gtBinary string, env []string) {
@@ -244,7 +244,7 @@ func setupSchedulerIntegrationTown(t *testing.T) (hqPath, rigPath, gtBinary stri
 		{Prefix: hqPrefix + "-", Path: "."},
 		{Prefix: rigPrefix + "-", Path: "testrig/overseer/rig"},
 		// Minecart beads use a literal "hq-cv-" prefix (see install.go — registered
-		// on real towns during `gt install`). Route them to HQ so tests that
+		// on real towns during `ms install`). Route them to HQ so tests that
 		// look up auto-minecarts via `bd show` resolve correctly.
 		{Prefix: "hq-cv-", Path: "."},
 	}
@@ -362,7 +362,7 @@ func TestSchedulerCircuitBreakerExclusion(t *testing.T) {
 	}
 }
 
-// TestSchedulerAutoMinecartCreation verifies that gt sling deferred dispatch (max_miners > 0)
+// TestSchedulerAutoMinecartCreation verifies that ms sling deferred dispatch (max_miners > 0)
 // creates an auto-minecart, stores the minecart ID in the sling context, and the
 // minecart is resolvable via bd show.
 func TestSchedulerAutoMinecartCreation(t *testing.T) {
@@ -370,9 +370,9 @@ func TestSchedulerAutoMinecartCreation(t *testing.T) {
 
 	beadID := createTestBead(t, rigPath, "Auto minecart test")
 
-	// Schedule via gt sling deferred dispatch (max_miners > 0)
+	// Schedule via ms sling deferred dispatch (max_miners > 0)
 	slingOut := slingToScheduler(t, gtBinary, hqPath, env, beadID, "testrig")
-	t.Logf("gt sling output: %s", slingOut)
+	t.Logf("ms sling output: %s", slingOut)
 
 	// Verify: bead should have a sling context
 	fields := findSlingContext(t, hqPath, beadID)
@@ -408,8 +408,8 @@ func TestSchedulerAutoMinecartCreation(t *testing.T) {
 	if len(minecarts) == 0 {
 		t.Fatalf("minecart %s not found via bd show", fields.Minecart)
 	}
-	if minecarts[0].IssueType != "task" || !hasLabel(minecarts[0].Labels, "gt:minecart") {
-		t.Errorf("minecart identity = type %q labels %v, want task with gt:minecart", minecarts[0].IssueType, minecarts[0].Labels)
+	if minecarts[0].IssueType != "task" || !hasLabel(minecarts[0].Labels, "ms:minecart") {
+		t.Errorf("minecart identity = type %q labels %v, want task with ms:minecart", minecarts[0].IssueType, minecarts[0].Labels)
 	}
 
 	// Verify: minecart has a "tracks" dependency pointing to the rig bead.
@@ -451,7 +451,7 @@ func TestSchedulerBlockedStatusReporting(t *testing.T) {
 	blockedID := createTestBead(t, rigPath, "Blocked bead")
 	blockerID := createTestBead(t, rigPath, "Blocker bead")
 
-	// Schedule ready and blocked beads via gt sling deferred dispatch (max_miners > 0)
+	// Schedule ready and blocked beads via ms sling deferred dispatch (max_miners > 0)
 	slingToScheduler(t, gtBinary, hqPath, env, readyID, "testrig")
 	slingToScheduler(t, gtBinary, hqPath, env, blockedID, "testrig")
 
@@ -551,7 +551,7 @@ func TestSchedulerBlockedStatusReporting(t *testing.T) {
 	}
 }
 
-// TestSchedulerSlingDryRun verifies that gt sling deferred dispatch (max_miners > 0) --dry-run
+// TestSchedulerSlingDryRun verifies that ms sling deferred dispatch (max_miners > 0) --dry-run
 // has no side effects: no sling context created, no minecart created.
 func TestSchedulerSlingDryRun(t *testing.T) {
 	hqPath, rigPath, gtBinary, env := setupSchedulerIntegrationTown(t)
@@ -576,7 +576,7 @@ func TestSchedulerSlingDryRun(t *testing.T) {
 	}
 
 	// Verify: no minecart created (HQ beads DB should have no minecart issues)
-	listArgs := beads.MaybePrependAllowStale([]string{"list", "--label=gt:minecart", "--json"})
+	listArgs := beads.MaybePrependAllowStale([]string{"list", "--label=ms:minecart", "--json"})
 	cmd := exec.Command("bd", listArgs...)
 	cmd.Dir = hqPath
 	out, err := cmd.Output()
@@ -831,12 +831,12 @@ func TestSchedulerMultiRigDispatch(t *testing.T) {
 // --------------------------------------------------------------------------
 // Cross-rig container tests
 //
-// These tests verify that gt sling deferred dispatch (max_miners > 0) correctly auto-resolves
+// These tests verify that ms sling deferred dispatch (max_miners > 0) correctly auto-resolves
 // each child's target rig from its bead ID prefix, enabling multi-rig epics
 // and minecarts.
 // --------------------------------------------------------------------------
 
-// TestSchedulerMultiRigEpicAutoResolve verifies that gt sling <epic> deferred dispatch (max_miners > 0)
+// TestSchedulerMultiRigEpicAutoResolve verifies that ms sling <epic> deferred dispatch (max_miners > 0)
 // auto-resolves each child's target rig from its prefix. An epic in rig1 with
 // children in rig1 and rig2 should schedule each child to its respective rig.
 func TestSchedulerMultiRigEpicAutoResolve(t *testing.T) {
@@ -875,7 +875,7 @@ func TestSchedulerMultiRigEpicAutoResolve(t *testing.T) {
 	}
 
 	// Non-dry-run: actually schedule each child to its auto-resolved rig.
-	// Use gt sling per-child (with --hook-raw-bead to skip formula) to verify
+	// Use ms sling per-child (with --hook-raw-bead to skip formula) to verify
 	// end-to-end scheduling works for beads from different rigs.
 	slingToScheduler(t, gtBinary, hqPath, env, child1, "rig1")
 	slingToScheduler(t, gtBinary, hqPath, env, child2, "rig2")
@@ -906,7 +906,7 @@ func TestSchedulerMultiRigEpicAutoResolve(t *testing.T) {
 }
 
 // TestSchedulerMinecartFlagRejection verifies that task-only flags are rejected
-// when gt sling deferred dispatch (max_miners > 0) auto-detects a minecart ID.
+// when ms sling deferred dispatch (max_miners > 0) auto-detects a minecart ID.
 func TestSchedulerMinecartFlagRejection(t *testing.T) {
 	hqPath, _, _, gtBinary, env := setupMultiRigSchedulerTown(t)
 
@@ -916,7 +916,7 @@ func TestSchedulerMinecartFlagRejection(t *testing.T) {
 	// Attempt to schedule minecart with task-only flag --ralph.
 	out, err := runGTCmdMayFail(t, gtBinary, hqPath, env, "sling", minecartID, "--ralph")
 	if err == nil {
-		t.Fatalf("gt sling %s deferred dispatch (max_miners > 0) --ralph should fail, but succeeded:\n%s", minecartID, out)
+		t.Fatalf("ms sling %s deferred dispatch (max_miners > 0) --ralph should fail, but succeeded:\n%s", minecartID, out)
 	}
 	if !strings.Contains(out, "minecart mode does not support") {
 		t.Errorf("expected 'minecart mode does not support' error, got:\n%s", out)
@@ -927,7 +927,7 @@ func TestSchedulerMinecartFlagRejection(t *testing.T) {
 }
 
 // TestSchedulerEpicFlagRejection verifies that task-only flags are rejected
-// when gt sling deferred dispatch (max_miners > 0) auto-detects an epic ID.
+// when ms sling deferred dispatch (max_miners > 0) auto-detects an epic ID.
 func TestSchedulerEpicFlagRejection(t *testing.T) {
 	hqPath, rig1Path, _, gtBinary, env := setupMultiRigSchedulerTown(t)
 
@@ -940,7 +940,7 @@ func TestSchedulerEpicFlagRejection(t *testing.T) {
 	// Attempt to schedule epic with task-only flag --account.
 	out, err := runGTCmdMayFail(t, gtBinary, hqPath, env, "sling", epicID, "--account", "foo")
 	if err == nil {
-		t.Fatalf("gt sling %s deferred dispatch (max_miners > 0) --account foo should fail, but succeeded:\n%s", epicID, out)
+		t.Fatalf("ms sling %s deferred dispatch (max_miners > 0) --account foo should fail, but succeeded:\n%s", epicID, out)
 	}
 	if !strings.Contains(out, "epic mode does not support") {
 		t.Errorf("expected 'epic mode does not support' error, got:\n%s", out)
@@ -950,7 +950,7 @@ func TestSchedulerEpicFlagRejection(t *testing.T) {
 	}
 }
 
-// TestSchedulerEpicDetection verifies that gt sling <epic-id> deferred dispatch (max_miners > 0)
+// TestSchedulerEpicDetection verifies that ms sling <epic-id> deferred dispatch (max_miners > 0)
 // auto-detects the epic and routes to the epic handler (dry-run).
 func TestSchedulerEpicDetection(t *testing.T) {
 	hqPath, rig1Path, rig2Path, gtBinary, env := setupMultiRigSchedulerTown(t)
@@ -964,7 +964,7 @@ func TestSchedulerEpicDetection(t *testing.T) {
 	child2ExtRef := fmt.Sprintf("external:%s:%s", child2Prefix, child2)
 	addBeadDependencyOfType(t, epicID, child2ExtRef, "depends_on", rig1Path)
 
-	// gt sling <epic-id> deferred dispatch (max_miners > 0) --dry-run should auto-detect epic and list children.
+	// ms sling <epic-id> deferred dispatch (max_miners > 0) --dry-run should auto-detect epic and list children.
 	out := runGTCmdOutput(t, gtBinary, hqPath, env, "sling", epicID, "--dry-run")
 
 	// Should show both children with rig resolution.
@@ -979,7 +979,7 @@ func TestSchedulerEpicDetection(t *testing.T) {
 	}
 }
 
-// TestSchedulerMixedBatchRejection verifies that gt sling with a task + epic
+// TestSchedulerMixedBatchRejection verifies that ms sling with a task + epic
 // (without a rig target) fails. The epic ID is not a valid target, so the
 // command rejects it. With deferred dispatch, the 2-arg case expects a rig
 // as the second argument.
@@ -994,11 +994,11 @@ func TestSchedulerMixedBatchRejection(t *testing.T) {
 	// Should fail because the epic ID is not a valid rig target.
 	_, err := runGTCmdMayFail(t, gtBinary, hqPath, env, "sling", taskID, epicID, "--dry-run")
 	if err == nil {
-		t.Fatalf("gt sling %s %s should fail (epic is not a rig target), but succeeded", taskID, epicID)
+		t.Fatalf("ms sling %s %s should fail (epic is not a rig target), but succeeded", taskID, epicID)
 	}
 }
 
-// TestSchedulerMultiRigMinecartAutoResolve verifies that gt sling <minecart> deferred dispatch (max_miners > 0)
+// TestSchedulerMultiRigMinecartAutoResolve verifies that ms sling <minecart> deferred dispatch (max_miners > 0)
 // auto-resolves each tracked issue's target rig from its prefix. A minecart in HQ
 // tracking beads in rig1 and rig2 should schedule each bead to its respective rig.
 func TestSchedulerMultiRigMinecartAutoResolve(t *testing.T) {
@@ -1082,7 +1082,7 @@ func TestSchedulerDisabledMode(t *testing.T) {
 
 	beadID := createTestBead(t, rigPath, "Disabled mode test")
 
-	// gt sling --dry-run should succeed (direct dispatch, not deferred)
+	// ms sling --dry-run should succeed (direct dispatch, not deferred)
 	out := runGTCmdOutput(t, gtBinary, hqPath, env, "sling", beadID, "testrig", "--hook-raw-bead", "--dry-run")
 	if strings.Contains(out, "scheduler is disabled") {
 		t.Errorf("max_miners=0 should act as direct dispatch, not error:\n%s", out)
@@ -1120,16 +1120,16 @@ func TestSchedulerDirectModeNoQueue(t *testing.T) {
 }
 
 // TestSchedulerDeferredTaskWithoutRig verifies that in deferred mode (max_miners > 0),
-// gt sling <task-bead> (without a rig) returns an error requiring a rig target.
+// ms sling <task-bead> (without a rig) returns an error requiring a rig target.
 func TestSchedulerDeferredTaskWithoutRig(t *testing.T) {
 	hqPath, rigPath, gtBinary, env := setupSchedulerIntegrationTown(t)
 
 	beadID := createTestBead(t, rigPath, "No rig test")
 
-	// gt sling <bead> (no rig) in deferred mode should error
+	// ms sling <bead> (no rig) in deferred mode should error
 	out, err := runGTCmdMayFail(t, gtBinary, hqPath, env, "sling", beadID, "--hook-raw-bead")
 	if err == nil {
-		t.Fatalf("gt sling %s without rig in deferred mode should fail, but succeeded:\n%s", beadID, out)
+		t.Fatalf("ms sling %s without rig in deferred mode should fail, but succeeded:\n%s", beadID, out)
 	}
 	if !strings.Contains(out, "deferred dispatch requires a rig target") {
 		t.Errorf("expected 'deferred dispatch requires a rig target' error, got:\n%s", out)
@@ -1137,26 +1137,26 @@ func TestSchedulerDeferredTaskWithoutRig(t *testing.T) {
 }
 
 // TestSchedulerDeferredNonRigRejection verifies that in deferred mode (max_miners > 0),
-// gt sling <bead> <non-rig> is rejected rather than falling through to direct dispatch.
+// ms sling <bead> <non-rig> is rejected rather than falling through to direct dispatch.
 func TestSchedulerDeferredNonRigRejection(t *testing.T) {
 	hqPath, rigPath, gtBinary, env := setupSchedulerIntegrationTown(t)
 
 	beadID := createTestBead(t, rigPath, "Non-rig rejection test")
 	otherBead := createTestBead(t, rigPath, "Not a rig target")
 
-	// gt sling <bead> <non-rig-bead> in deferred mode should error
+	// ms sling <bead> <non-rig-bead> in deferred mode should error
 	out, err := runGTCmdMayFail(t, gtBinary, hqPath, env, "sling", beadID, otherBead, "--hook-raw-bead")
 	if err == nil {
-		t.Fatalf("gt sling %s %s (non-rig) in deferred mode should fail, but succeeded:\n%s", beadID, otherBead, out)
+		t.Fatalf("ms sling %s %s (non-rig) in deferred mode should fail, but succeeded:\n%s", beadID, otherBead, out)
 	}
 	if !strings.Contains(out, "deferred dispatch requires a rig target") {
 		t.Errorf("expected 'deferred dispatch requires a rig target' error, got:\n%s", out)
 	}
 
-	// gt sling <bead> . in deferred mode should also be rejected
+	// ms sling <bead> . in deferred mode should also be rejected
 	out, err = runGTCmdMayFail(t, gtBinary, hqPath, env, "sling", beadID, ".", "--hook-raw-bead")
 	if err == nil {
-		t.Fatalf("gt sling %s . in deferred mode should fail, but succeeded:\n%s", beadID, out)
+		t.Fatalf("ms sling %s . in deferred mode should fail, but succeeded:\n%s", beadID, out)
 	}
 	if !strings.Contains(out, "deferred dispatch requires a rig target") {
 		t.Errorf("expected 'deferred dispatch requires a rig target' error for '.', got:\n%s", out)
@@ -1210,7 +1210,7 @@ func TestSchedulerDeferredAcceptsDogTarget(t *testing.T) {
 	}
 }
 
-// TestSchedulerDirectEpicDispatch verifies that gt sling <epic-id> --dry-run
+// TestSchedulerDirectEpicDispatch verifies that ms sling <epic-id> --dry-run
 // with max_miners=-1 (direct mode) routes to the direct dispatch path.
 func TestSchedulerDirectEpicDispatch(t *testing.T) {
 	hqPath, rig1Path, rig2Path, gtBinary, env := setupMultiRigSchedulerTown(t)
@@ -1227,7 +1227,7 @@ func TestSchedulerDirectEpicDispatch(t *testing.T) {
 	child2ExtRef := fmt.Sprintf("external:%s:%s", child2Prefix, child2)
 	addBeadDependencyOfType(t, epicID, child2ExtRef, "depends_on", rig1Path)
 
-	// gt sling <epic-id> --dry-run in direct mode should show direct dispatch, not scheduling
+	// ms sling <epic-id> --dry-run in direct mode should show direct dispatch, not scheduling
 	out := runGTCmdOutput(t, gtBinary, hqPath, env, "sling", epicID, "--dry-run")
 
 	// Should mention children
@@ -1244,7 +1244,7 @@ func TestSchedulerDirectEpicDispatch(t *testing.T) {
 }
 
 // TestSchedulerBatchEpicRejection verifies that in deferred mode (max_miners > 0),
-// gt sling <epic-id> <task-id> <rig> rejects the epic ID rather than scheduling it as a task.
+// ms sling <epic-id> <task-id> <rig> rejects the epic ID rather than scheduling it as a task.
 func TestSchedulerBatchEpicRejection(t *testing.T) {
 	hqPath, rig1Path, _, gtBinary, env := setupMultiRigSchedulerTown(t)
 
@@ -1252,10 +1252,10 @@ func TestSchedulerBatchEpicRejection(t *testing.T) {
 	epicID := createTestBeadOfType(t, rig1Path, "Batch epic", "epic")
 	taskID := createTestBead(t, rig1Path, "Batch task")
 
-	// gt sling <epic> <task> <rig> in deferred mode should reject the epic
+	// ms sling <epic> <task> <rig> in deferred mode should reject the epic
 	out, err := runGTCmdMayFail(t, gtBinary, hqPath, env, "sling", epicID, taskID, "rig1", "--hook-raw-bead")
 	if err == nil {
-		t.Fatalf("gt sling %s %s rig1 should reject epic in batch, but succeeded:\n%s", epicID, taskID, out)
+		t.Fatalf("ms sling %s %s rig1 should reject epic in batch, but succeeded:\n%s", epicID, taskID, out)
 	}
 	if !strings.Contains(out, "cannot be batch-scheduled") {
 		t.Errorf("expected 'cannot be batch-scheduled' error, got:\n%s", out)
@@ -1490,7 +1490,7 @@ func TestSchedulerDispatchFailureRecordedInContextSourceDB(t *testing.T) {
 	}
 }
 
-// TestSchedulerDirectMinecartDispatch verifies that gt sling <minecart-id> --dry-run
+// TestSchedulerDirectMinecartDispatch verifies that ms sling <minecart-id> --dry-run
 // with max_miners=-1 (direct mode) routes to the direct dispatch path.
 func TestSchedulerDirectMinecartDispatch(t *testing.T) {
 	hqPath, rig1Path, rig2Path, gtBinary, env := setupMultiRigSchedulerTown(t)
@@ -1515,7 +1515,7 @@ func TestSchedulerDirectMinecartDispatch(t *testing.T) {
 	// and Dolt import straddle a second boundary.
 	time.Sleep(2 * time.Second)
 
-	// gt sling <minecart-id> --dry-run in direct mode
+	// ms sling <minecart-id> --dry-run in direct mode
 	out := runGTCmdOutput(t, gtBinary, hqPath, env, "sling", minecartID, "--dry-run")
 
 	// Should mention tracked beads
@@ -1554,7 +1554,7 @@ func TestScheduleBead_RefusesClosed(t *testing.T) {
 	out, err := runGTCmdMayFail(t, gtBinary, hqPath, env,
 		"sling", beadID, "testrig", "--hook-raw-bead")
 	if err == nil {
-		t.Fatalf("expected gt sling to fail for closed bead, got success\noutput: %s", out)
+		t.Fatalf("expected ms sling to fail for closed bead, got success\noutput: %s", out)
 	}
 	if !strings.Contains(out, "closed") || !strings.Contains(out, "work already completed") {
 		t.Errorf("expected error to mention closed/work already completed, got: %s", out)
@@ -1578,7 +1578,7 @@ func TestScheduleBead_RefusesTombstone(t *testing.T) {
 	out, err := runGTCmdMayFail(t, gtBinary, hqPath, env,
 		"sling", beadID, "testrig", "--hook-raw-bead")
 	if err == nil {
-		t.Fatalf("expected gt sling to fail for tombstone bead, got success\noutput: %s", out)
+		t.Fatalf("expected ms sling to fail for tombstone bead, got success\noutput: %s", out)
 	}
 	if !strings.Contains(out, "tombstone") || !strings.Contains(out, "work already completed") {
 		t.Errorf("expected error to mention tombstone/work already completed, got: %s", out)
@@ -1606,7 +1606,7 @@ func TestScheduleBead_ClosedForceDoesNotBypass(t *testing.T) {
 	out, err := runGTCmdMayFail(t, gtBinary, hqPath, env,
 		"sling", beadID, "testrig", "--hook-raw-bead", "--force")
 	if err == nil {
-		t.Fatalf("expected gt sling --force to still fail for closed bead, got success\noutput: %s", out)
+		t.Fatalf("expected ms sling --force to still fail for closed bead, got success\noutput: %s", out)
 	}
 	if !strings.Contains(out, "closed") || !strings.Contains(out, "work already completed") {
 		t.Errorf("--force should not bypass closed guard; got: %s", out)

@@ -26,7 +26,7 @@ type branchInfo struct {
 	Worker string // Worker name (miner name)
 }
 
-// issuePattern matches issue IDs in branch names (e.g., "gt-xyz" or "gt-abc.1")
+// issuePattern matches issue IDs in branch names (e.g., "ms-xyz" or "ms-abc.1")
 var issuePattern = regexp.MustCompile(`([a-z]+-[a-z0-9]+(?:\.[0-9]+)?)`)
 
 // parseBranchName extracts issue ID and worker from a branch name.
@@ -42,7 +42,7 @@ func parseBranchName(branch string) branchInfo {
 		parts := strings.SplitN(branch, "/", 3)
 		if len(parts) == 3 {
 			info.Worker = parts[1]
-			// Strip @timestamp suffix if present (e.g., "gt-abc@mk123" -> "gt-abc")
+			// Strip @timestamp suffix if present (e.g., "ms-abc@mk123" -> "ms-abc")
 			issue := parts[2]
 			if atIdx := strings.Index(issue, "@"); atIdx > 0 {
 				issue = issue[:atIdx]
@@ -52,7 +52,7 @@ func parseBranchName(branch string) branchInfo {
 		}
 		// Modern miner branch format: miner/<worker>-<timestamp>
 		// The second part is "worker-timestamp", not an issue ID.
-		// Don't try to extract an issue ID - gt done will use hook_bead fallback.
+		// Don't try to extract an issue ID - ms done will use hook_bead fallback.
 		if len(parts) == 2 {
 			// Extract worker name from "worker-timestamp" format
 			workerPart := parts[1]
@@ -94,18 +94,18 @@ func runMqSubmit(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("getting current directory: %w", err)
 	}
 
-	// When gt is invoked via shell alias (cd ~/gt && gt), cwd is the town
+	// When ms is invoked via shell alias (cd ~/ms && ms), cwd is the town
 	// root, not the miner's worktree. Reconstruct actual path.
 	if cwd == townRoot {
-		// Gate miner cwd switch on GT_ROLE: coordinators may have stale GT_MINER.
+		// Gate miner cwd switch on MS_ROLE: coordinators may have stale MS_MINER.
 		isMiner := false
-		if role := os.Getenv("GT_ROLE"); role != "" {
+		if role := os.Getenv("MS_ROLE"); role != "" {
 			parsedRole, _, _ := parseRoleString(role)
 			isMiner = parsedRole == RoleMiner
 		} else {
-			isMiner = os.Getenv("GT_MINER") != ""
+			isMiner = os.Getenv("MS_MINER") != ""
 		}
-		if minerName := os.Getenv("GT_MINER"); minerName != "" && rigName != "" && isMiner {
+		if minerName := os.Getenv("MS_MINER"); minerName != "" && rigName != "" && isMiner {
 			minerClone := filepath.Join(townRoot, rigName, "miners", minerName, rigName)
 			if _, err := os.Stat(minerClone); err == nil {
 				cwd = minerClone
@@ -115,7 +115,7 @@ func runMqSubmit(cmd *cobra.Command, args []string) error {
 					cwd = minerClone
 				}
 			}
-		} else if crewName := os.Getenv("GT_CREW"); crewName != "" && rigName != "" {
+		} else if crewName := os.Getenv("MS_CREW"); crewName != "" && rigName != "" {
 			crewClone := filepath.Join(townRoot, rigName, "crew", crewName)
 			if _, err := os.Stat(crewClone); err == nil {
 				cwd = crewClone
@@ -170,9 +170,9 @@ func runMqSubmit(cmd *cobra.Command, args []string) error {
 		target = resolveIntegrationBranchName(bd, rigPath, mqSubmitEpic)
 	} else {
 		// Check for explicit --base-branch override in formula vars on the source issue.
-		// When gt sling dispatches with --base-branch, the value is persisted in
+		// When ms sling dispatches with --base-branch, the value is persisted in
 		// the bead's formula_vars field. Without this check, MRs created via
-		// gt mq submit always target the rig's default branch (usually main),
+		// ms mq submit always target the rig's default branch (usually main),
 		// even when the miner was working against a feature branch.
 		if sourceIssue, showErr := bd.Show(issueID); showErr == nil {
 			if af := beads.ParseAttachmentFields(sourceIssue); af != nil {
@@ -277,19 +277,19 @@ func runMqSubmit(cmd *cobra.Command, args []string) error {
 		// Create MR bead (ephemeral wisp - will be cleaned up after merge)
 		mrIssue, err = bd.Create(beads.CreateOptions{
 			Title:       title,
-			Labels:      []string{"gt:merge-request"},
+			Labels:      []string{"ms:merge-request"},
 			Priority:    priority,
 			Description: description,
 			Ephemeral:   true,
-			Rig:         rigName, // Ensure MR bead is created in the rig's database (gt-7y7)
+			Rig:         rigName, // Ensure MR bead is created in the rig's database (ms-7y7)
 		})
 		if err != nil {
 			return fmt.Errorf("creating merge request bead: %w", err)
 		}
 
-		// gt-gpy: Validate MR bead landed in the rig's database (warning only).
+		// ms-gpy: Validate MR bead landed in the rig's database (warning only).
 		if prefixErr := beads.ValidateRigPrefix(townRoot, rigName, mrIssue.ID); prefixErr != nil {
-			style.PrintWarning("MR bead prefix mismatch: %v\nThe refinery may not find this MR — check 'gt mq list %s'", prefixErr, rigName)
+			style.PrintWarning("MR bead prefix mismatch: %v\nThe refinery may not find this MR — check 'ms mq list %s'", prefixErr, rigName)
 		}
 
 		// Nudge refinery to pick up the new MR
@@ -355,7 +355,7 @@ func runMqSubmit(cmd *cobra.Command, args []string) error {
 		if err := minerCleanup(rigName, worker, townRoot); err != nil {
 			// Non-fatal: warn but return success (MR was created)
 			style.PrintWarning("Could not auto-cleanup: %v", err)
-			fmt.Println(style.Dim.Render("  You may need to run 'gt handoff --shutdown' manually"))
+			fmt.Println(style.Dim.Render("  You may need to run 'ms handoff --shutdown' manually"))
 			return nil
 		}
 		// minerCleanup may timeout while waiting, but MR was already created
@@ -371,17 +371,17 @@ func resolveMQSubmitCommitSHA(g *git.Git, branch string) (string, error) {
 func verifyMQSubmitPushedBranch(g *git.Git, branch, commitSHA string) error {
 	if commitSHA != "" {
 		if err := g.VerifyPushedCommit("origin", branch, commitSHA); err != nil {
-			return fmt.Errorf("%w\n\nHint: run 'git push origin %s' first (or 'gt done'), then re-run 'gt mq submit'", err, branch)
+			return fmt.Errorf("%w\n\nHint: run 'git push origin %s' first (or 'ms done'), then re-run 'ms mq submit'", err, branch)
 		}
 		return nil
 	}
 
 	exists, err := g.PushRemoteBranchExists("origin", branch)
 	if err != nil {
-		return fmt.Errorf("verify branch on origin: %w\n\nHint: run 'git push origin %s' first (or 'gt done'), then re-run 'gt mq submit'", err, branch)
+		return fmt.Errorf("verify branch on origin: %w\n\nHint: run 'git push origin %s' first (or 'ms done'), then re-run 'ms mq submit'", err, branch)
 	}
 	if !exists {
-		return fmt.Errorf("branch %q not found on origin\n\nHint: run 'git push origin %s' first (or 'gt done'), then re-run 'gt mq submit'", branch, branch)
+		return fmt.Errorf("branch %q not found on origin\n\nHint: run 'git push origin %s' first (or 'ms done'), then re-run 'ms mq submit'", branch, branch)
 	}
 	return nil
 }
@@ -484,8 +484,8 @@ Time: %s
 Please verify state and execute lifecycle action.
 `, worker, time.Now().Format(time.RFC3339))
 
-	// Send via gt mail
-	cmd := exec.Command("gt", "mail", "send", manager,
+	// Send via ms mail
+	cmd := exec.Command("ms", "mail", "send", manager,
 		"-s", subject,
 		"-m", body,
 	)
@@ -516,13 +516,13 @@ Please verify state and execute lifecycle action.
 			fmt.Printf("%s Still waiting (%v elapsed)...\n", style.Dim.Render("◌"), elapsed)
 			if elapsed >= 2*time.Minute {
 				fmt.Println(style.Dim.Render("  Hint: If witness isn't responding, you may need to:"))
-				fmt.Println(style.Dim.Render("  - Check if witness is running: gt rig status"))
+				fmt.Println(style.Dim.Render("  - Check if witness is running: ms rig status"))
 				fmt.Println(style.Dim.Render("  - Use Ctrl+C to abort and manually exit"))
 			}
 		case <-timeout:
 			fmt.Printf("%s Timeout waiting for miner retirement\n", style.WarningPrefix)
 			fmt.Println(style.Dim.Render("  The miner may have already terminated, or witness is unresponsive."))
-			fmt.Println(style.Dim.Render("  You can verify with: gt miner status"))
+			fmt.Println(style.Dim.Render("  You can verify with: ms miner status"))
 			return nil // Don't fail the MR submission just because cleanup timed out
 		}
 	}

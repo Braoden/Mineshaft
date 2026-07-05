@@ -164,7 +164,7 @@
     var cachedOptions = null;  // Cached options from /api/options
     var recentCommands = [];   // Recently executed commands (from localStorage)
     var MAX_RECENT = 10;
-    var RECENT_STORAGE_KEY = 'gt-palette-recent';
+    var RECENT_STORAGE_KEY = 'ms-palette-recent';
 
     // Load recent commands from localStorage
     function loadRecentCommands() {
@@ -275,7 +275,7 @@
 
     // Output panel
     function showOutput(cmd, output) {
-        outputCmd.textContent = 'gt ' + cmd;
+        outputCmd.textContent = 'ms ' + cmd;
         outputContent.textContent = output;
         outputPanel.classList.add('open');
     }
@@ -376,7 +376,7 @@
             var argFields = parseArgsTemplate(pendingCommand.args);
 
             var formHtml = '<div class="command-args-prompt">' +
-                '<div class="command-args-header">gt ' + escapeHtml(pendingCommand.name) + '</div>';
+                '<div class="command-args-header">ms ' + escapeHtml(pendingCommand.name) + '</div>';
 
             // Build form fields for each argument
             for (var i = 0; i < argFields.length; i++) {
@@ -472,7 +472,7 @@
                 var cmd = visibleCommands[i];
                 var cls = 'command-item' + (i === selectedIdx ? ' selected' : '');
                 var argsHint = cmd.args ? ' <span class="command-args">' + escapeHtml(cmd.args) + '</span>' : '';
-                var nameHtml = highlightMatch('gt ' + cmd.name, currentQuery);
+                var nameHtml = highlightMatch('ms ' + cmd.name, currentQuery);
                 html += '<div class="' + cls + '" data-cmd-name="' + escapeHtml(cmd.name) + '" data-cmd-args="' + escapeHtml(cmd.args || '') + '">' +
                     '<span class="command-name">' + nameHtml + argsHint + '</span>' +
                     '<span class="command-desc">' + escapeHtml(cmd.desc) + '</span>' +
@@ -494,7 +494,7 @@
                 var icon = item._recent ? '<span class="command-recent-icon">&#8635;</span>' : '';
                 html += '<div class="' + cls2 + '" data-cmd-name="' + escapeHtml(item.name) + '" data-cmd-args="' + escapeHtml(item.args || '') + '">' +
                     icon +
-                    '<span class="command-name">gt ' + escapeHtml(item.name) + argsHint2 + '</span>' +
+                    '<span class="command-name">ms ' + escapeHtml(item.name) + argsHint2 + '</span>' +
                     '<span class="command-desc">' + escapeHtml(item.desc) + '</span>' +
                     '<span class="command-category">' + escapeHtml(item.category) + '</span>' +
                     '</div>';
@@ -685,7 +685,7 @@
         executionLock = true;
         console.log('Running command:', cmdName);
 
-        showToast('info', 'Running...', 'gt ' + cmdName);
+        showToast('info', 'Running...', 'ms ' + cmdName);
 
         var payload = { command: cmdName };
         // Include confirmed flag if the command requires server-side confirmation
@@ -701,7 +701,7 @@
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (data.success) {
-                showToast('success', 'Success', 'gt ' + cmdName);
+                showToast('success', 'Success', 'ms ' + cmdName);
                 if (data.output && data.output.trim()) {
                     showOutput(cmdName, data.output);
                 }
@@ -1067,13 +1067,13 @@
                         }
 
                         // Build the attach command based on the crew member's role
-                        var attachCmd = 'gt crew at ' + member.name;
+                        var attachCmd = 'ms crew at ' + member.name;
                         if (member.name === 'overseer') {
-                            attachCmd = 'gt overseer attach';
+                            attachCmd = 'ms overseer attach';
                         } else if (member.name === 'supervisor') {
-                            attachCmd = 'gt supervisor attach';
+                            attachCmd = 'ms supervisor attach';
                         } else if (member.name === 'witness' || member.name.startsWith('witness-')) {
-                            attachCmd = 'gt witness attach';
+                            attachCmd = 'ms witness attach';
                         }
 
                         tr.innerHTML =
@@ -2750,7 +2750,7 @@
     });
 
     function runEscalationAction(cmdName, btn, action) {
-        showToast('info', 'Running...', 'gt ' + cmdName);
+        showToast('info', 'Running...', 'ms ' + cmdName);
 
         fetch('/api/run', {
             method: 'POST',
@@ -2760,7 +2760,7 @@
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (data.success) {
-                showToast('success', 'Success', 'gt ' + cmdName);
+                showToast('success', 'Success', 'ms ' + cmdName);
                 // Remove ack button or fade row on resolve
                 var row = btn.closest('.escalation-row');
                 if (action === 'resolve' && row) {
@@ -2836,7 +2836,7 @@
             btn.disabled = true;
             btn.textContent = 'Reassigning...';
 
-            showToast('info', 'Running...', 'gt ' + cmdName);
+            showToast('info', 'Running...', 'ms ' + cmdName);
 
             fetch('/api/run', {
                 method: 'POST',

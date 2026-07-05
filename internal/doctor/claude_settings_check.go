@@ -139,20 +139,20 @@ func (c *ClaudeSettingsCheck) Run(ctx *CheckContext) *CheckResult {
 
 	if hasMissingFiles && !hasStaleFiles {
 		message = fmt.Sprintf("Found %d agent(s) missing settings.json", len(c.staleSettings))
-		fixHint = "Run 'gt up --restore' to restart agents and create settings"
+		fixHint = "Run 'ms up --restore' to restart agents and create settings"
 	} else if hasStaleFiles && !hasMissingFiles {
 		message = fmt.Sprintf("Found %d stale Claude config file(s)", len(c.staleSettings))
 		if hasModifiedFiles {
-			fixHint = "Run 'gt doctor --fix' to fix safe issues. Files with local modifications require manual review."
+			fixHint = "Run 'ms doctor --fix' to fix safe issues. Files with local modifications require manual review."
 		} else {
-			fixHint = "Run 'gt doctor --fix' to delete stale files, then 'gt up --restore' to create new settings"
+			fixHint = "Run 'ms doctor --fix' to delete stale files, then 'ms up --restore' to create new settings"
 		}
 	} else {
 		message = fmt.Sprintf("Found %d Claude settings issue(s)", len(c.staleSettings))
 		if hasModifiedFiles {
-			fixHint = "Run 'gt doctor --fix' to fix safe issues, then 'gt up --restore'. Files with local modifications require manual review."
+			fixHint = "Run 'ms doctor --fix' to fix safe issues, then 'ms up --restore'. Files with local modifications require manual review."
 		} else {
-			fixHint = "Run 'gt doctor --fix' to delete stale files, then 'gt up --restore' to create new settings"
+			fixHint = "Run 'ms doctor --fix' to delete stale files, then 'ms up --restore' to create new settings"
 		}
 	}
 
@@ -172,7 +172,7 @@ func (c *ClaudeSettingsCheck) Run(ctx *CheckContext) *CheckResult {
 func (c *ClaudeSettingsCheck) findSettingsFiles(townRoot string) []staleSettingsInfo {
 	var files []staleSettingsInfo
 
-	// Check for STALE settings at town root (~/gt/.claude/settings.json)
+	// Check for STALE settings at town root (~/ms/.claude/settings.json)
 	// This is WRONG - settings here pollute ALL child workspaces via directory traversal.
 	staleTownRootSettings := filepath.Join(townRoot, ".claude", "settings.json")
 	if fileExists(staleTownRootSettings) {
@@ -198,10 +198,10 @@ func (c *ClaudeSettingsCheck) findSettingsFiles(townRoot string) []staleSettings
 		})
 	}
 
-	// Check for STALE CLAUDE.md at town root (~/gt/CLAUDE.md)
+	// Check for STALE CLAUDE.md at town root (~/ms/CLAUDE.md)
 	// This is WRONG if it contains Overseer-specific instructions that would be inherited
 	// by ALL agents via directory traversal. However, a short identity anchor file
-	// (created by priming) that just says "run gt prime" is intentional and safe.
+	// (created by priming) that just says "run ms prime" is intentional and safe.
 	staleTownRootCLAUDEmd := filepath.Join(townRoot, "CLAUDE.md")
 	if fileExists(staleTownRootCLAUDEmd) && !isIdentityAnchor(staleTownRootCLAUDEmd) {
 		files = append(files, staleSettingsInfo{
@@ -551,8 +551,8 @@ func (c *ClaudeSettingsCheck) findSettingsFiles(townRoot string) []staleSettings
 // Returns a list of what's missing. Stop-hook expectations are role-specific
 // to match the canonical hook templates in internal/hooks/config.go (#3648):
 //
-//   - miner → `gt tap miner-stop-check` (idle-miner catcher)
-//   - everyone else → `gt costs record` (autonomous cost accounting)
+//   - miner → `ms tap miner-stop-check` (idle-miner catcher)
+//   - everyone else → `ms costs record` (autonomous cost accounting)
 //
 // Without this, doctor never converged for miners: hooks sync wrote
 // miner-stop-check, doctor demanded costs record, fix deleted the file,
@@ -587,7 +587,7 @@ func (c *ClaudeSettingsCheck) checkSettings(path, agentType string) []string {
 		return append(missing, "hooks")
 	}
 
-	// Check SessionStart hook has prime --hook (either via PATH export or resolved {{GT_BIN}})
+	// Check SessionStart hook has prime --hook (either via PATH export or resolved {{MS_BIN}})
 	if !c.hookHasPattern(hooks, "SessionStart", "prime --hook") {
 		missing = append(missing, "SessionStart hook (prime --hook)")
 	}
@@ -732,7 +732,7 @@ func (c *ClaudeSettingsCheck) Fix(ctx *CheckContext) error {
 		// Only remove the parent .claude directory for wrong-location files.
 		// For correct-location stale files, the directory is the RIGHT place —
 		// removing it creates a race window where the daemon could recreate
-		// settings before the fix does (gt-99u).
+		// settings before the fix does (ms-99u).
 		if sf.wrongLocation {
 			_ = os.Remove(claudeDir) // Best-effort, will fail if not empty
 		}
@@ -760,9 +760,9 @@ func (c *ClaudeSettingsCheck) Fix(ctx *CheckContext) error {
 
 			// Town-root files were inherited by ALL agents via directory traversal.
 			// Warn user to restart agents - don't auto-kill sessions as that's too disruptive,
-			// especially since supervisor runs gt doctor automatically which would create a loop.
+			// especially since supervisor runs ms doctor automatically which would create a loop.
 			fmt.Printf("\n  %s Town-root settings were moved. Restart agents to pick up new config:\n", style.Warning.Render("⚠"))
-			fmt.Printf("      gt up --restore\n\n")
+			fmt.Printf("      ms up --restore\n\n")
 			continue
 		}
 
@@ -797,7 +797,7 @@ func (c *ClaudeSettingsCheck) Fix(ctx *CheckContext) error {
 				sf.agentType == "supervisor" || sf.agentType == "overseer" {
 				running, _ := t.HasSession(sf.sessionName)
 				if running {
-					// Cycle the agent by killing and letting gt up restart it.
+					// Cycle the agent by killing and letting ms up restart it.
 					// Use KillSessionWithProcesses to ensure all descendant processes are killed.
 					_ = t.KillSessionWithProcesses(sf.sessionName)
 				}
@@ -815,8 +815,8 @@ func (c *ClaudeSettingsCheck) Fix(ctx *CheckContext) error {
 	// Tell user to restart agents so they create correct settings
 	if needsRestart && !ctx.RestartSessions {
 		fmt.Printf("\n  %s Restart agents to create new settings:\n", style.Warning.Render("⚠"))
-		fmt.Printf("      gt up --restore\n")
-		fmt.Printf("\n  If you had custom Claude settings edits, re-apply them via 'gt hooks override <role>'.\n\n")
+		fmt.Printf("      ms up --restore\n")
+		fmt.Printf("\n  If you had custom Claude settings edits, re-apply them via 'ms hooks override <role>'.\n\n")
 	}
 
 	if len(errors) > 0 {

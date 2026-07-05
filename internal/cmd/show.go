@@ -19,15 +19,15 @@ var showCmd = &cobra.Command{
 	Long: `Displays the full details of a bead by ID.
 
 Delegates to 'bd show' - all bd show flags are supported.
-Works with any bead prefix (gt-, bd-, hq-, etc.) and routes
+Works with any bead prefix (ms-, bd-, hq-, etc.) and routes
 to the correct beads database automatically.
 
 Examples:
-  gt show gt-abc123          # Show a mineshaft issue
-  gt show hq-xyz789          # Show a town-level bead (minecart, mail, etc.)
-  gt show bd-def456          # Show a beads issue
-  gt show gt-abc123 --json   # Output as JSON
-  gt show gt-abc123 -v       # Verbose output`,
+  ms show ms-abc123          # Show a mineshaft issue
+  ms show hq-xyz789          # Show a town-level bead (minecart, mail, etc.)
+  ms show bd-def456          # Show a beads issue
+  ms show ms-abc123 --json   # Output as JSON
+  ms show ms-abc123 -v       # Verbose output`,
 	DisableFlagParsing: true, // Pass all flags through to bd show
 	RunE:               runShow,
 }
@@ -39,7 +39,7 @@ func runShow(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(args) == 0 {
-		return fmt.Errorf("bead ID required\n\nUsage: gt show <bead-id> [flags]")
+		return fmt.Errorf("bead ID required\n\nUsage: ms show <bead-id> [flags]")
 	}
 
 	return execBdShow(args)

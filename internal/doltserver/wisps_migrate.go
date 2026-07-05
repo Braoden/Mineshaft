@@ -11,7 +11,7 @@
 //
 // The migration uses `bd sql` for beads-side operations (copying agent beads between
 // the issues and wisps tables in bd's own database). Additionally, it ensures that
-// the wisps tables exist on the gt Dolt server (port 3307), since the reaper connects
+// the wisps tables exist on the ms Dolt server (port 3307), since the reaper connects
 // directly to that server. Without this, `bd sql` creates the tables on bd's Dolt
 // instance (a separate process/port), and the reaper fails with "table not found".
 package doltserver
@@ -72,8 +72,8 @@ func MigrateAgentBeadsToWisps(townRoot, workDir string, dryRun bool) (*MigrateWi
 		return nil, fmt.Errorf("updating wisp dependency schema: %w", err)
 	}
 
-	// Step 3b: Ensure wisps tables also exist on the gt Dolt server.
-	// The reaper connects directly to the gt Dolt server (port 3307), which is
+	// Step 3b: Ensure wisps tables also exist on the ms Dolt server.
+	// The reaper connects directly to the ms Dolt server (port 3307), which is
 	// a separate process from bd's Dolt instance. Without this step, bd creates
 	// the tables on its own server but the reaper fails with "table not found".
 	gtConfig := DefaultConfig(townRoot)
@@ -81,15 +81,15 @@ func MigrateAgentBeadsToWisps(townRoot, workDir string, dryRun bool) (*MigrateWi
 	if dbName != "" {
 		gtCreated, gtAux, err := ensureWispsOnGTServer(gtConfig.Host, gtConfig.Port, dbName)
 		if err != nil {
-			fmt.Printf("  Note: gt Dolt server table creation failed: %v\n", err)
+			fmt.Printf("  Note: ms Dolt server table creation failed: %v\n", err)
 		} else {
 			if gtCreated {
 				result.WispsTableCreated = true
-				fmt.Printf("  ✓ Created wisps table on gt Dolt server (%s:%d/%s)\n", gtConfig.Host, gtConfig.Port, dbName)
+				fmt.Printf("  ✓ Created wisps table on ms Dolt server (%s:%d/%s)\n", gtConfig.Host, gtConfig.Port, dbName)
 			}
 			for _, t := range gtAux {
-				result.AuxTablesCreated = append(result.AuxTablesCreated, t+" (gt server)")
-				fmt.Printf("  ✓ Created %s on gt Dolt server\n", t)
+				result.AuxTablesCreated = append(result.AuxTablesCreated, t+" (ms server)")
+				fmt.Printf("  ✓ Created %s on ms Dolt server\n", t)
 			}
 		}
 	}
@@ -378,7 +378,7 @@ func deriveDBName(townRoot, workDir string) string {
 }
 
 // ensureWispsOnGTServer creates the wisps and auxiliary tables directly on the
-// gt Dolt server via MySQL protocol. This is needed because the reaper connects
+// ms Dolt server via MySQL protocol. This is needed because the reaper connects
 // to this server, not to bd's separate Dolt instance.
 func ensureWispsOnGTServer(host string, port int, dbName string) (wispsCreated bool, auxCreated []string, err error) {
 	if host == "" {
@@ -387,7 +387,7 @@ func ensureWispsOnGTServer(host string, port int, dbName string) (wispsCreated b
 	dsn := fmt.Sprintf("root@tcp(%s:%d)/%s?parseTime=true&timeout=10s", host, port, dbName)
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
-		return false, nil, fmt.Errorf("connect to gt Dolt server: %w", err)
+		return false, nil, fmt.Errorf("connect to ms Dolt server: %w", err)
 	}
 	defer db.Close()
 
@@ -428,7 +428,7 @@ func ensureWispsOnGTServer(host string, port int, dbName string) (wispsCreated b
 	return wispsCreated, auxCreated, nil
 }
 
-// gtTableExists checks if a table exists on the gt Dolt server.
+// gtTableExists checks if a table exists on the ms Dolt server.
 func gtTableExists(ctx context.Context, db *sql.DB, dbName, tableName string) bool {
 	var dummy int
 	// Use information_schema for a safe, parameterized check.

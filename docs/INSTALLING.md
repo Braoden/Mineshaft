@@ -87,7 +87,7 @@ tmux -V           # (Optional) Should show 3.0 or higher
 brew install mineshaft
 
 # Verify installation
-gt version
+ms version
 bd version
 dolt version
 ```
@@ -96,7 +96,7 @@ Homebrew installs the runtime dependencies declared by the core formula. The
 `mineshafthall/mineshaft` tap is reserved for emergency updates. If you build from
 source instead, install `dolt` first, install `bd` with Go, ensure `$GOPATH/bin`
 (usually `~/go/bin`) is in your PATH, and ensure `~/.local/bin` appears before
-older install locations. On macOS, do not install `gt` with `go install`:
+older install locations. On macOS, do not install `ms` with `go install`:
 unsigned binaries may be killed by the OS. Clone the repository and use `make`
 instead.
 
@@ -113,11 +113,11 @@ make install
 
 ```bash
 # Create a Mineshaft workspace (HQ)
-gt install ~/gt --shell
+ms install ~/ms --shell
 
 # This creates:
-#   ~/gt/
-#   ├── CLAUDE.md          # Identity anchor (run gt prime)
+#   ~/ms/
+#   ├── CLAUDE.md          # Identity anchor (run ms prime)
 #   ├── overseer/             # Overseer config and state
 #   ├── rigs/              # Project containers (initially empty)
 #   └── .beads/            # Town-level issue tracking
@@ -127,10 +127,10 @@ gt install ~/gt --shell
 
 ```bash
 # Add your first project
-gt rig add myproject https://github.com/you/repo.git
+ms rig add myproject https://github.com/you/repo.git
 
 # This clones the repo and sets up:
-#   ~/gt/myproject/
+#   ~/ms/myproject/
 #   ├── .beads/            # Project issue tracking
 #   ├── overseer/rig/         # Overseer's clone (canonical)
 #   ├── refinery/rig/      # Merge queue processor
@@ -141,14 +141,14 @@ gt rig add myproject https://github.com/you/repo.git
 ### Step 4: Verify Installation
 
 ```bash
-cd ~/gt
+cd ~/ms
 
-gt enable              # enable Mineshaft system-wide
-gt git-init            # initialize a git repo for your HQ
-gt up                  # Start all services. Use gt down or gt shutdown for stopping. 
+ms enable              # enable Mineshaft system-wide
+ms git-init            # initialize a git repo for your HQ
+ms up                  # Start all services. Use ms down or ms shutdown for stopping. 
 
-gt doctor              # Run health checks
-gt status              # Show workspace status
+ms doctor              # Run health checks
+ms status              # Show workspace status
 ```
 
 ### Step 5: Configure Agents (Optional)
@@ -157,21 +157,21 @@ Mineshaft supports built-in runtimes (`claude`, `gemini`, `codex`, `cursor`, `au
 
 ```bash
 # List available agents
-gt config agent list
+ms config agent list
 
 # Create an alias (aliases can encode model/thinking flags)
-gt config agent set codex-low "codex --thinking low"
-gt config agent set claude-haiku "claude --model haiku --dangerously-skip-permissions"
+ms config agent set codex-low "codex --thinking low"
+ms config agent set claude-haiku "claude --model haiku --dangerously-skip-permissions"
 
 # Set the town default agent (used when a rig doesn't specify one)
-gt config default-agent codex-low
+ms config default-agent codex-low
 ```
 
 You can also override the agent per command without changing defaults:
 
 ```bash
-gt start --agent codex-low
-gt sling gt-abc12 myproject --agent claude-haiku
+ms start --agent codex-low
+ms sling ms-abc12 myproject --agent claude-haiku
 ```
 
 ## Minimal Mode vs Full Stack Mode
@@ -184,16 +184,16 @@ Run individual runtime instances manually. Mineshaft only tracks state.
 
 ```bash
 # Create and assign work
-gt minecart create "Fix bugs" gt-abc12
-gt sling gt-abc12 myproject
+ms minecart create "Fix bugs" ms-abc12
+ms sling ms-abc12 myproject
 
 # Run runtime manually
-cd ~/gt/myproject/miners/<worker>
+cd ~/ms/myproject/miners/<worker>
 claude --resume          # Claude Code
 # or: codex              # Codex CLI
 
 # Check progress
-gt minecart list
+ms minecart list
 ```
 
 **When to use**: Testing, simple workflows, or when you prefer manual control.
@@ -204,19 +204,19 @@ Agents run in tmux sessions. Daemon manages lifecycle automatically.
 
 ```bash
 # Start the daemon
-gt daemon start
+ms daemon start
 
 # Create and assign work (workers spawn automatically)
-gt minecart create "Feature X" gt-abc12 gt-def34
-gt sling gt-abc12 myproject
-gt sling gt-def34 myproject
+ms minecart create "Feature X" ms-abc12 ms-def34
+ms sling ms-abc12 myproject
+ms sling ms-def34 myproject
 
 # Monitor on dashboard
-gt minecart list
+ms minecart list
 
 # Attach to any agent session
-gt overseer attach
-gt witness attach myproject
+ms overseer attach
+ms witness attach myproject
 ```
 
 **When to use**: Production workflows with multiple concurrent agents.
@@ -234,10 +234,10 @@ Mineshaft is modular. Enable only what you need:
 
 ## Troubleshooting
 
-### `gt: command not found`
+### `ms: command not found`
 
 The Mineshaft binary directory is not in PATH. Homebrew usually handles this for
-Homebrew installs. Source installs place `gt` in `~/.local/bin`:
+Homebrew installs. Source installs place `ms` in `~/.local/bin`:
 
 ```bash
 # Add to your shell config (~/.bashrc, ~/.zshrc)
@@ -255,18 +255,18 @@ Beads CLI not installed:
 go install github.com/steveyegge/beads/cmd/bd@latest
 ```
 
-### `gt doctor` shows errors
+### `ms doctor` shows errors
 
 Run with `--fix` to auto-repair common issues:
 
 ```bash
-gt doctor --fix
+ms doctor --fix
 ```
 
 For persistent issues, check specific errors:
 
 ```bash
-gt doctor --verbose
+ms doctor --verbose
 ```
 
 ### Daemon not starting
@@ -295,7 +295,7 @@ git config --global credential.helper cache
 If experiencing beads problems:
 
 ```bash
-cd ~/gt/myproject/overseer/rig
+cd ~/ms/myproject/overseer/rig
 bd status                  # Check database health
 bd doctor                  # Run beads health check
 ```
@@ -308,20 +308,20 @@ recommended Homebrew install:
 ```bash
 brew update
 brew upgrade mineshaft
-command -v gt              # Should be Homebrew's gt, e.g. /opt/homebrew/bin/gt
-gt version
-gt doctor --fix            # Fix any post-update issues
+command -v ms              # Should be Homebrew's ms, e.g. /opt/homebrew/bin/ms
+ms version
+ms doctor --fix            # Fix any post-update issues
 ```
 
 If you installed from source, update the checkout and rebuild with `make` rather
-than installing `gt` with `go install` on macOS:
+than installing `ms` with `go install` on macOS:
 
 ```bash
 git pull --ff-only
 make install
-command -v gt              # Should be ~/.local/bin/gt
-gt version
-gt doctor --fix
+command -v ms              # Should be ~/.local/bin/ms
+ms version
+ms doctor --fix
 ```
 
 If you maintain Beads separately from Homebrew, update `bd` from its own source:
@@ -330,20 +330,20 @@ If you maintain Beads separately from Homebrew, update `bd` from its own source:
 go install github.com/steveyegge/beads/cmd/bd@latest
 ```
 
-Run the `command -v gt` and `gt version` checks before `gt doctor --fix` so a
+Run the `command -v ms` and `ms version` checks before `ms doctor --fix` so a
 stale shadow binary does not run the repair step first.
 
-If `command -v gt` points at a different install channel than the one you just
+If `command -v ms` points at a different install channel than the one you just
 updated, fix your PATH before continuing.
 
 ## Uninstalling
 
 ```bash
 # Remove binaries
-rm $(which gt) $(which bd)
+rm $(which ms) $(which bd)
 
 # Remove workspace (CAUTION: deletes all work)
-rm -rf ~/gt
+rm -rf ~/ms
 ```
 
 ## Next Steps
@@ -351,7 +351,7 @@ rm -rf ~/gt
 After installation:
 
 1. **Read the README** - Core concepts and workflows
-2. **Try a simple workflow** - `bd create "Test task"` then `gt minecart create "Test" <bead-id>`
+2. **Try a simple workflow** - `bd create "Test task"` then `ms minecart create "Test" <bead-id>`
 3. **Explore docs** - `docs/reference.md` for command reference
-4. **Run doctor regularly** - `gt doctor` catches problems early
-5. **Join the Wasteland** - `gt wl join hop/wl-commons` to browse and claim federated work (see [WASTELAND.md](WASTELAND.md))
+4. **Run doctor regularly** - `ms doctor` catches problems early
+5. **Join the Wasteland** - `ms wl join hop/wl-commons` to browse and claim federated work (see [WASTELAND.md](WASTELAND.md))

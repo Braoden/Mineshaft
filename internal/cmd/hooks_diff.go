@@ -14,7 +14,7 @@ import (
 var hooksDiffCmd = &cobra.Command{
 	Use:   "diff [target]",
 	Short: "Show what sync would change",
-	Long: `Show what 'gt hooks sync' would change without applying.
+	Long: `Show what 'ms hooks sync' would change without applying.
 
 Compares the current .claude/settings.json files against what would
 be generated from base + overrides. Uses color to highlight additions
@@ -25,8 +25,8 @@ Exit codes:
   1 - Changes would be applied
 
 Examples:
-  gt hooks diff                    # Show all pending changes
-  gt hooks diff mineshaft/crew       # Show changes for specific target`,
+  ms hooks diff                    # Show all pending changes
+  ms hooks diff mineshaft/crew       # Show changes for specific target`,
 	RunE: runHooksDiff,
 }
 

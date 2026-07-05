@@ -34,7 +34,7 @@ Detections:
   - Zombies: Dead sessions with active agent state, dead agent processes,
     stuck done-intent, closed beads with live sessions
   - Stalls: Agents stuck at startup prompts
-  - Completions: Agent bead metadata indicating gt done was called
+  - Completions: Agent bead metadata indicating ms done was called
 
 Actions taken automatically:
   - Zombie restart: Sessions are restarted (not nuked) to preserve worktrees
@@ -46,17 +46,17 @@ Long-running scan phases emit progress diagnostics to stderr so JSON stdout
 remains machine-readable while operators can see where a slow patrol is stuck.
 
 Examples:
-  gt patrol scan                    # Scan current rig
-  gt patrol scan --rig mineshaft      # Scan specific rig
-  gt patrol scan --json             # Machine-readable output
-  gt patrol scan --notify           # Send mail on zombie detection`,
+  ms patrol scan                    # Scan current rig
+  ms patrol scan --rig mineshaft      # Scan specific rig
+  ms patrol scan --json             # Machine-readable output
+  ms patrol scan --notify           # Send mail on zombie detection`,
 	RunE: runPatrolScan,
 }
 
 func init() {
 	patrolScanCmd.Flags().BoolVar(&patrolScanJSON, "json", false, "Output as JSON")
 	patrolScanCmd.Flags().BoolVar(&patrolScanNotify, "notify", false, "Send mail to witness/overseer when active-work zombies are detected")
-	patrolScanCmd.Flags().StringVar(&patrolScanRig, "rig", "", "Rig to scan (default: infer from cwd or GT_RIG)")
+	patrolScanCmd.Flags().StringVar(&patrolScanRig, "rig", "", "Rig to scan (default: infer from cwd or MS_RIG)")
 	patrolScanCmd.Flags().BoolVarP(&patrolScanVerbose, "verbose", "v", false, "Verbose output")
 
 	patrolCmd.AddCommand(patrolScanCmd)
@@ -137,8 +137,8 @@ func runPatrolScan(cmd *cobra.Command, args []string) error {
 	// Determine rig name
 	rigName := patrolScanRig
 	if rigName == "" {
-		// Try GT_RIG env, then infer from cwd
-		rigName = os.Getenv("GT_RIG")
+		// Try MS_RIG env, then infer from cwd
+		rigName = os.Getenv("MS_RIG")
 		if rigName == "" {
 			rigName, err = inferRigFromCwd(townRoot)
 			if err != nil {
@@ -192,7 +192,7 @@ func runPatrolScan(cmd *cobra.Command, args []string) error {
 func runPatrolScanPhase[T any](diagnostics io.Writer, name string, fn func() T) T {
 	start := time.Now()
 	if diagnostics != nil {
-		fmt.Fprintf(diagnostics, "gt patrol scan: starting %s\n", name)
+		fmt.Fprintf(diagnostics, "ms patrol scan: starting %s\n", name)
 	}
 
 	done := make(chan T, 1)
@@ -203,7 +203,7 @@ func runPatrolScanPhase[T any](diagnostics io.Writer, name string, fn func() T) 
 	if patrolScanProgressInterval <= 0 {
 		result := <-done
 		if diagnostics != nil {
-			fmt.Fprintf(diagnostics, "gt patrol scan: finished %s in %s\n", name, formatPatrolScanElapsed(time.Since(start)))
+			fmt.Fprintf(diagnostics, "ms patrol scan: finished %s in %s\n", name, formatPatrolScanElapsed(time.Since(start)))
 		}
 		return result
 	}
@@ -215,12 +215,12 @@ func runPatrolScanPhase[T any](diagnostics io.Writer, name string, fn func() T) 
 		select {
 		case result := <-done:
 			if diagnostics != nil {
-				fmt.Fprintf(diagnostics, "gt patrol scan: finished %s in %s\n", name, formatPatrolScanElapsed(time.Since(start)))
+				fmt.Fprintf(diagnostics, "ms patrol scan: finished %s in %s\n", name, formatPatrolScanElapsed(time.Since(start)))
 			}
 			return result
 		case <-ticker.C:
 			if diagnostics != nil {
-				fmt.Fprintf(diagnostics, "gt patrol scan: still running %s after %s\n", name, formatPatrolScanElapsed(time.Since(start)))
+				fmt.Fprintf(diagnostics, "ms patrol scan: still running %s after %s\n", name, formatPatrolScanElapsed(time.Since(start)))
 			}
 		}
 	}
@@ -275,7 +275,7 @@ func sendZombieNotification(router *mail.Router, rigName string, result *witness
 	// The overseer needs to know so work can be reslung.
 	overseerBody := strings.Join(lines, "\n") +
 		"\n\nResling instructions:\n" +
-		"  gt sling <bead-id> <rig> --create --force"
+		"  ms sling <bead-id> <rig> --create --force"
 	overseerMsg := &mail.Message{
 		From:    fmt.Sprintf("%s/witness", rigName),
 		To:      "overseer/",

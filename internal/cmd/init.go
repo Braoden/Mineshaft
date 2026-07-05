@@ -112,9 +112,9 @@ func runInit(cmd *cobra.Command, args []string) error {
 	fmt.Println()
 	fmt.Println("Next steps:")
 	fmt.Printf("  1. Add this rig to a town: %s\n",
-		style.Dim.Render("gt rig add <name> <git-url>"))
+		style.Dim.Render("ms rig add <name> <git-url>"))
 	fmt.Printf("  2. Create a miner: %s\n",
-		style.Dim.Render("gt miner identity add <rig> <name>"))
+		style.Dim.Render("ms miner identity add <rig> <name>"))
 
 	return nil
 }

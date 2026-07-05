@@ -1,5 +1,5 @@
-// Package cmd provides CLI commands for the gt tool.
-// This file implements the gt rig config commands for viewing and manipulating
+// Package cmd provides CLI commands for the ms tool.
+// This file implements the ms rig config commands for viewing and manipulating
 // rig configuration across property layers.
 package cmd
 
@@ -23,7 +23,7 @@ var rigConfigCmd = &cobra.Command{
 Configuration is looked up through multiple layers:
 1. Wisp layer (transient, local) - .beads-wisp/config/
 2. Bead layer (persistent, synced) - rig identity bead labels
-3. Town defaults - ~/gt/settings/config.json
+3. Town defaults - ~/ms/settings/config.json
 4. System defaults - compiled-in fallbacks
 
 Most properties use override semantics (first non-nil wins).
@@ -40,7 +40,7 @@ By default, shows only the resolved values. Use --layers to see
 which layer each value comes from.
 
 Example output:
-  gt rig config show mineshaft --layers
+  ms rig config show mineshaft --layers
   Key                 Value        Source
   status              parked       wisp
   priority_adjustment 10           bead
@@ -59,9 +59,9 @@ Use --global to set in the bead layer (persistent, synced globally).
 Use --block to explicitly block a key (prevents inheritance).
 
 Examples:
-  gt rig config set mineshaft status parked           # Wisp layer
-  gt rig config set mineshaft status docked --global  # Bead layer
-  gt rig config set mineshaft auto_restart --block    # Block inheritance`,
+  ms rig config set mineshaft status parked           # Wisp layer
+  ms rig config set mineshaft status docked --global  # Bead layer
+  ms rig config set mineshaft auto_restart --block    # Block inheritance`,
 	Args: cobra.RangeArgs(2, 3),
 	RunE: runRigConfigSet,
 }
@@ -75,7 +75,7 @@ This clears both regular values and blocked markers for the key.
 Values set in the bead layer remain unchanged.
 
 Example:
-  gt rig config unset mineshaft status`,
+  ms rig config unset mineshaft status`,
 	Args: cobra.ExactArgs(2),
 	RunE: runRigConfigUnset,
 }
@@ -235,7 +235,7 @@ func getConfigKeys(townRoot string, r *rig.Rig) []string {
 	}
 
 	// Bead labels (from rig identity bead)
-	prefix := "gt"
+	prefix := "ms"
 	if r.Config != nil && r.Config.Prefix != "" {
 		prefix = r.Config.Prefix
 	}
@@ -266,7 +266,7 @@ func getConfigKeys(townRoot string, r *rig.Rig) []string {
 
 // setBeadLabel sets a label on the rig identity bead.
 func setBeadLabel(townRoot string, r *rig.Rig, key, value string) error {
-	prefix := "gt"
+	prefix := "ms"
 	if r.Config != nil && r.Config.Prefix != "" {
 		prefix = r.Config.Prefix
 	}
@@ -278,7 +278,7 @@ func setBeadLabel(townRoot string, r *rig.Rig, key, value string) error {
 	// Check if bead exists
 	issue, err := bd.Show(rigBeadID)
 	if err != nil {
-		return fmt.Errorf("rig identity bead %s not found (run 'gt rig add' to create it)", rigBeadID)
+		return fmt.Errorf("rig identity bead %s not found (run 'ms rig add' to create it)", rigBeadID)
 	}
 
 	// Build new labels list: remove existing key:* and add new key:value

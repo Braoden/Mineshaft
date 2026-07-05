@@ -54,8 +54,8 @@ The identity bead tracks:
   - Cleanup status
 
 Example:
-  gt miner identity add mineshaft Toast
-  gt miner identity add mineshaft  # auto-generate name`,
+  ms miner identity add mineshaft Toast
+  ms miner identity add mineshaft  # auto-generate name`,
 	Args: cobra.RangeArgs(1, 2),
 	RunE: runMinerIdentityAdd,
 }
@@ -72,8 +72,8 @@ Shows:
   - Whether worktree exists
 
 Example:
-  gt miner identity list mineshaft
-  gt miner identity list mineshaft --json`,
+  ms miner identity list mineshaft
+  ms miner identity list mineshaft --json`,
 	Args: cobra.ExactArgs(1),
 	RunE: runMinerIdentityList,
 }
@@ -92,8 +92,8 @@ Displays:
   - Recent work list with relative timestamps
 
 Examples:
-  gt miner identity show mineshaft Toast
-  gt miner identity show mineshaft Toast --json`,
+  ms miner identity show mineshaft Toast
+  ms miner identity show mineshaft Toast --json`,
 	Args: cobra.ExactArgs(2),
 	RunE: runMinerIdentityShow,
 }
@@ -114,7 +114,7 @@ Safety checks:
   - Miner session must not be running
 
 Example:
-  gt miner identity rename mineshaft Toast Imperator`,
+  ms miner identity rename mineshaft Toast Imperator`,
 	Args: cobra.ExactArgs(3),
 	RunE: runMinerIdentityRename,
 }
@@ -132,8 +132,8 @@ Safety checks:
 Use --force to bypass safety checks.
 
 Example:
-  gt miner identity remove mineshaft Toast
-  gt miner identity remove mineshaft Toast --force`,
+  ms miner identity remove mineshaft Toast
+  ms miner identity remove mineshaft Toast --force`,
 	Args: cobra.ExactArgs(2),
 	RunE: runMinerIdentityRemove,
 }
@@ -699,7 +699,7 @@ func runMinerIdentityRemove(cmd *cobra.Command, args []string) error {
 	}
 
 	// Close the identity bead
-	if err := bd.CloseWithReason("removed via gt miner identity remove", beadID); err != nil {
+	if err := bd.CloseWithReason("removed via ms miner identity remove", beadID); err != nil {
 		return fmt.Errorf("closing identity bead: %w", err)
 	}
 

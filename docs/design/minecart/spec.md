@@ -11,7 +11,7 @@
 ## 1. Problem Statement
 
 Minecarts group work but don't drive it. Completion depends on a single
-poll-based Supervisor patrol cycle running `gt minecart check`. When Supervisor is down
+poll-based Supervisor patrol cycle running `ms minecart check`. When Supervisor is down
 or slow, minecarts stall. Work finishes but the loop never lands:
 
 ```
@@ -29,12 +29,12 @@ The gap needs three capabilities:
 
 ### 2.1 MinecartManager (daemon-resident)
 
-Two goroutines inside `gt daemon`:
+Two goroutines inside `ms daemon`:
 
 | Goroutine | Trigger | What it does |
 |-----------|---------|--------------|
 | **Event poll** | `GetAllEventsSince` every 5s, all rig stores + hq | Detects `EventClosed` / `EventStatusChanged(closed)`, calls `CheckMinecartsForIssue` |
-| **Stranded scan** | `gt minecart stranded --json` every 30s | Feeds first ready issue via `gt sling`, auto-closes empty minecarts via `gt minecart check` |
+| **Stranded scan** | `ms minecart stranded --json` every 30s | Feeds first ready issue via `ms sling`, auto-closes empty minecarts via `ms minecart check` |
 
 Both goroutines are context-cancellable and coordinate shutdown via `sync.WaitGroup`.
 
@@ -54,8 +54,8 @@ Shared function called by the daemon's event poll:
 The shared function:
 1. Finds minecarts tracking the closed issue (SDK `GetDependentsWithMetadata` on hq store, filtered by `tracks` type)
 2. Skips already-closed minecarts
-3. Runs `gt minecart check <id>` for open minecarts
-4. If minecart remains open after check, feeds next ready issue via `gt sling`
+3. Runs `ms minecart check <id>` for open minecarts
+4. If minecart remains open after check, feeds next ready issue via `ms sling`
 5. Idempotent -- safe to call multiple times for the same event
 
 ### 2.3 Key Design Decisions
@@ -67,7 +67,7 @@ The shared function:
 | One issue fed per minecart per scan | Prevents batch overflow; next issue fed on next close event |
 | Stranded scan as safety net | Catches minecarts missed by event-driven path (crash recovery) |
 | Nil store disables event poll only | Stranded scan still works without beads SDK (degraded mode) |
-| Resolved binary paths (PATCH-006) | MinecartManager resolves `gt`/`bd` at startup to avoid PATH issues |
+| Resolved binary paths (PATCH-006) | MinecartManager resolves `ms`/`bd` at startup to avoid PATH issues |
 
 ---
 
@@ -128,9 +128,9 @@ empty). Feed ready work or auto-close empties.
 
 **Acceptance criteria**:
 - [x] Runs immediately on start, then every `scanInterval`
-- [x] Calls `gt minecart stranded --json` and parses output
-- [x] For minecarts with `ready_count > 0`: dispatches first ready issue via `gt sling <id> <rig> --no-boot`
-- [x] For minecarts with `ready_count == 0`: runs `gt minecart check <id>` to auto-close
+- [x] Calls `ms minecart stranded --json` and parses output
+- [x] For minecarts with `ready_count > 0`: dispatches first ready issue via `ms sling <id> <rig> --no-boot`
+- [x] For minecarts with `ready_count == 0`: runs `ms minecart check <id>` to auto-close
 - [x] Resolves issue prefix to rig name via `beads.ExtractPrefix` + `beads.GetRigNameForPrefix`
 - [x] Skips issues with unknown prefix (logged)
 - [x] Skips issues with unknown rig (logged)
@@ -139,8 +139,8 @@ empty). Feed ready work or auto-close empties.
 - [x] Scan interval defaults to 30s when 0 or negative
 
 **Tests**:
-- [x] `TestScanStranded_FeedsReadyIssues` -- mock gt, verify sling log file
-- [x] `TestScanStranded_ClosesEmptyMinecarts` -- mock gt, verify check log file
+- [x] `TestScanStranded_FeedsReadyIssues` -- mock ms, verify sling log file
+- [x] `TestScanStranded_ClosesEmptyMinecarts` -- mock ms, verify check log file
 - [x] `TestScanStranded_NoStrandedMinecarts` -- empty list: asserts sling log absent, check log absent, no minecart activity in logs
 - [x] `TestScanStranded_DispatchFailure` -- first sling fails, scan continues
 - [x] `TestMinecartManager_ScanInterval_Configurable` -- 0 -> default, custom preserved
@@ -159,8 +159,8 @@ the next ready issue, callable from any observer.
 - [x] Finds tracking minecarts via `GetDependentsWithMetadata` filtered by `tracks` type
 - [x] Filters out `blocks` dependencies
 - [x] Skips already-closed minecarts
-- [x] Runs `gt minecart check <id>` for open minecarts
-- [x] After check, if still open: feeds next ready issue via `gt sling`
+- [x] Runs `ms minecart check <id>` for open minecarts
+- [x] After check, if still open: feeds next ready issue via `ms sling`
 - [x] Ready = open status + no assignee
 - [x] Feeds one issue at a time (first match)
 - [x] Handles `external:prefix:id` wrapper format via `extractIssueID`
@@ -275,7 +275,7 @@ orphaned child processes.
 **Acceptance criteria**:
 - [x] All `exec.Command` calls in MinecartManager use `exec.CommandContext(m.ctx, ...)` (`minecart_manager.go:200,241,257`)
 - [x] All `exec.Command` calls in operations.go accept and use a context parameter
-- [x] Daemon shutdown completes within bounded time even if `gt` subprocess hangs (`minecart_manager_integration_test.go:154-206`)
+- [x] Daemon shutdown completes within bounded time even if `ms` subprocess hangs (`minecart_manager_integration_test.go:154-206`)
 - [x] Killed subprocesses do not leave orphaned child processes (`minecart_manager.go`, `operations.go`)
 
 ---
@@ -283,17 +283,17 @@ orphaned child processes.
 ### S-10: Resolved binary paths in operations.go [DONE]
 
 **Description**: Observer subprocess calls use resolved binary paths instead
-of bare `"gt"` to avoid PATH-dependent behavior drift.
+of bare `"ms"` to avoid PATH-dependent behavior drift.
 
-**Implementation**: `CheckMinecartsForIssue` resolves via `exec.LookPath("gt")`
-with fallback to bare `"gt"`. Threads `gtPath` parameter to `runMinecartCheck`
+**Implementation**: `CheckMinecartsForIssue` resolves via `exec.LookPath("ms")`
+with fallback to bare `"ms"`. Threads `gtPath` parameter to `runMinecartCheck`
 and `dispatchIssue` in `operations.go`.
 
 **Acceptance criteria**:
 - [x] `runMinecartCheck` and `dispatchIssue` accept a `gtPath` parameter
 - [x] `CheckMinecartsForIssue` threads resolved path
 - [x] All callers updated: daemon (resolved `m.gtPath`)
-- [x] Fallback to bare `"gt"` if resolution fails
+- [x] Fallback to bare `"ms"` if resolution fails
 
 ---
 
@@ -326,8 +326,8 @@ plan analysis.
 
 | Test | What it proves |
 |------|---------------|
-| `TestFindStranded_GtFailure_ReturnsError` | `gt minecart stranded` exits non-zero -> error returned |
-| `TestFindStranded_InvalidJSON_ReturnsError` | `gt` returns non-JSON stdout -> parse error returned |
+| `TestFindStranded_GtFailure_ReturnsError` | `ms minecart stranded` exits non-zero -> error returned |
+| `TestFindStranded_InvalidJSON_ReturnsError` | `ms` returns non-JSON stdout -> parse error returned |
 | `TestScan_FindStrandedError_LogsAndContinues` | `scan()` doesn't panic when `findStranded` fails |
 | `TestPollEvents_GetAllEventsSinceError` | `GetAllEventsSince` returns error -> logged, retried next interval |
 
@@ -387,7 +387,7 @@ plan analysis.
 | `docs/design/minecart/testing.md` | Row "Stream failure triggers backoff + retry loop" is stale (no stream) |
 | `docs/design/minecart/testing.md` | `TestDoubleStop_Idempotent` listed as gap but now exists |
 | `docs/design/minecart/minecart-lifecycle.md` | Observer table lists Supervisor as primary third observer; implementation uses Refinery |
-| `docs/design/minecart/minecart-lifecycle.md` | "No manual close" claim is stale; `gt minecart close --force` exists |
+| `docs/design/minecart/minecart-lifecycle.md` | "No manual close" claim is stale; `ms minecart close --force` exists |
 | `docs/design/minecart/minecart-lifecycle.md` | Relative link to minecart concepts doc is broken (`../concepts/...`) |
 | `docs/design/minecart/spec.md` | File map test counts drifted from current suite |
 
@@ -525,13 +525,13 @@ before calling `CheckMinecartsForIssueWithAutoStore`, matching the witness patte
 
 | Failure | Likelihood | Recovery | Tested? |
 |---------|------------|----------|---------|
-| `gt minecart stranded` error | Low | Logged, skip cycle | Yes (`TestFindStranded_GtFailure_ReturnsError`) |
-| Invalid JSON from `gt` | Low | Logged, skip cycle | Yes (`TestFindStranded_InvalidJSON_ReturnsError`) |
-| `gt sling` dispatch fails | Medium | Logged, continue to next minecart | Yes |
-| `gt minecart check` fails | Low | Logged, continue to next minecart | No |
+| `ms minecart stranded` error | Low | Logged, skip cycle | Yes (`TestFindStranded_GtFailure_ReturnsError`) |
+| Invalid JSON from `ms` | Low | Logged, skip cycle | Yes (`TestFindStranded_InvalidJSON_ReturnsError`) |
+| `ms sling` dispatch fails | Medium | Logged, continue to next minecart | Yes |
+| `ms minecart check` fails | Low | Logged, continue to next minecart | No |
 | Unknown prefix for issue | Low | Logged, skip issue | Yes (`TestFeedFirstReady_UnknownPrefix_Skips`) |
 | Unknown rig for prefix | Low | Logged, skip issue | Yes (`TestFeedFirstReady_UnknownRig_Skips`) |
-| `gt` subprocess hangs | Low | Context cancellation kills process group | Yes (`TestMinecartManager_ShutdownKillsHangingSubprocess`) |
+| `ms` subprocess hangs | Low | Context cancellation kills process group | Yes (`TestMinecartManager_ShutdownKillsHangingSubprocess`) |
 
 ### Lifecycle
 
@@ -562,8 +562,8 @@ before calling `CheckMinecartsForIssueWithAutoStore`, matching the witness patte
 | `internal/daemon/daemon.go` | Opens multi-rig beads stores, creates MinecartManager in `Run()`, stops in `shutdown()` |
 | `internal/witness/handlers.go` | Minecart observer removed (S-04 REMOVED) |
 | `internal/refinery/engineer.go` | Minecart observer removed (S-05 REMOVED) |
-| `internal/cmd/minecart.go` | CLI: `gt minecart create/status/list/add/check/stranded/close/land` |
-| `internal/cmd/sling_minecart.go` | Auto-minecart creation during `gt sling` |
+| `internal/cmd/minecart.go` | CLI: `ms minecart create/status/list/add/check/stranded/close/land` |
+| `internal/cmd/sling_minecart.go` | Auto-minecart creation during `ms sling` |
 | `internal/cmd/formula.go` | `executeMinecartFormula` for minecart-type formulas |
 
 ### Tests

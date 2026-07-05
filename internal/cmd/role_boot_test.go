@@ -45,7 +45,7 @@ func TestParseRoleStringBoot(t *testing.T) {
 }
 
 func TestGetRoleHomeBoot(t *testing.T) {
-	townRoot := "/tmp/gt"
+	townRoot := "/tmp/ms"
 	got := getRoleHome(RoleBoot, "", "", townRoot)
 	want := filepath.Join(townRoot, "supervisor", "dogs", "boot")
 	if got != want {
@@ -104,13 +104,13 @@ func TestBuildAgentBeadIDBoot(t *testing.T) {
 	want := beads.DogBeadIDTown("boot")
 
 	// Explicit role path
-	got := buildAgentBeadID("supervisor-boot", RoleBoot, "/tmp/gt")
+	got := buildAgentBeadID("supervisor-boot", RoleBoot, "/tmp/ms")
 	if got != want {
 		t.Errorf("buildAgentBeadID(RoleBoot) = %q, want %q", got, want)
 	}
 
 	// Identity inference path (RoleUnknown + "supervisor-boot" identity)
-	got = buildAgentBeadID("supervisor-boot", RoleUnknown, "/tmp/gt")
+	got = buildAgentBeadID("supervisor-boot", RoleUnknown, "/tmp/ms")
 	if got != want {
 		t.Errorf("buildAgentBeadID(RoleUnknown, \"supervisor-boot\") = %q, want %q", got, want)
 	}

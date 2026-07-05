@@ -38,7 +38,7 @@ where losing progress would be costly (e.g., release workflows).
 ## How Agents See Steps
 
 Agents do NOT use `bd mol current` or `bd close <step-id>` for formula workflows.
-Instead, formula steps are rendered inline when the agent runs `gt prime`:
+Instead, formula steps are rendered inline when the agent runs `ms prime`:
 
 ```
 **Formula Checklist** (10 steps from mol-miner-work):
@@ -50,8 +50,8 @@ Initialize your session and understand your assignment...
 Ensure you're on a clean feature branch...
 ```
 
-The agent works through the checklist and runs `gt done` (miners) or
-`gt patrol report` (patrol agents) when complete.
+The agent works through the checklist and runs `ms done` (miners) or
+`ms patrol report` (patrol agents) when complete.
 
 ## Molecule Commands
 
@@ -70,34 +70,34 @@ bd mol wisp <proto>          # Create wisp (root-only by default)
 bd mol bond <proto> <parent> # Attach to existing mol
 ```
 
-### Agent Operations (gt)
+### Agent Operations (ms)
 
 ```bash
 # Hook management
-gt hook                    # What's on MY hook?
-gt prime                   # Shows inline formula checklist
-gt mol attach <bead> <mol>   # Pin molecule to bead
-gt mol detach <bead>         # Unpin molecule from bead
+ms hook                    # What's on MY hook?
+ms prime                   # Shows inline formula checklist
+ms mol attach <bead> <mol>   # Pin molecule to bead
+ms mol detach <bead>         # Unpin molecule from bead
 
 # Patrol lifecycle
-gt patrol new              # Create patrol wisp and hook it
-gt patrol report --summary "..."  # Close current patrol, start next cycle
+ms patrol new              # Create patrol wisp and hook it
+ms patrol report --summary "..."  # Close current patrol, start next cycle
 ```
 
 ## Miner Workflow
 
 Miners receive work via their hook — a root wisp attached to an issue.
-They see the formula checklist inline when they run `gt prime` and work
+They see the formula checklist inline when they run `ms prime` and work
 through each step in order.
 
 ### Miner Workflow Summary
 
 ```
 1. Spawn with work on hook
-2. gt prime               # Shows formula checklist inline
+2. ms prime               # Shows formula checklist inline
 3. Work through each step
 4. Persist findings: bd update <issue> --notes "..."
-5. gt done                # Submit, nuke sandbox, exit
+5. ms done                # Submit, nuke sandbox, exit
 ```
 
 ### Molecule Types
@@ -115,18 +115,18 @@ High frequency + cheap steps = inline (default). Low frequency + expensive steps
 Patrol agents (Supervisor, Witness, Refinery) cycle through patrol formulas:
 
 ```
-1. gt patrol new          # Create root-only patrol wisp
-2. gt prime               # Shows patrol checklist inline
+1. ms patrol new          # Create root-only patrol wisp
+2. ms prime               # Shows patrol checklist inline
 3. Work through each step
-4. gt patrol report --summary "..."  # Close + start next cycle
+4. ms patrol report --summary "..."  # Close + start next cycle
 ```
 
-`gt patrol report` atomically closes the current patrol root and spawns
+`ms patrol report` atomically closes the current patrol root and spawns
 a new one for the next cycle.
 
 ## Best Practices
 
 1. **Persist findings early** — `bd update <issue> --notes "..."` before session death
-2. **Run `gt done` when complete** — mandatory for miners (pushes, submits to MQ, nukes)
-3. **Use `gt patrol report`** — for patrol agents to cycle (replaces squash+new pattern)
+2. **Run `ms done` when complete** — mandatory for miners (pushes, submits to MQ, nukes)
+3. **Use `ms patrol report`** — for patrol agents to cycle (replaces squash+new pattern)
 4. **File discovered work** — `bd create` for bugs found, don't fix them yourself

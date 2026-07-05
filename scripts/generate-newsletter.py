@@ -215,7 +215,7 @@ def extract_new_commands(from_version: str, to_version: str) -> list[dict]:
         # Try with v prefix first, then without
         for prefix in ['v', '']:
             result = subprocess.run(
-                ["git", "diff", f"{prefix}{from_ver}..{prefix}{to_ver}", "--name-only", "--", "cmd/gt"],
+                ["git", "diff", f"{prefix}{from_ver}..{prefix}{to_ver}", "--name-only", "--", "cmd/ms"],
                 capture_output=True,
                 text=True,
                 check=False
@@ -318,7 +318,7 @@ def find_docs_for_command(command_name: str) -> str:
         try:
             content = file_path.read_text()
             # Look for command mention with context
-            pattern = rf'`{re.escape(command_name)}`|gt\s+{re.escape(command_name)}'
+            pattern = rf'`{re.escape(command_name)}`|ms\s+{re.escape(command_name)}'
             if re.search(pattern, content, re.IGNORECASE):
                 # Find the paragraph/section containing this command
                 matches = re.finditer(rf'[^\n]*{re.escape(command_name)}[^\n]*', content, re.IGNORECASE)

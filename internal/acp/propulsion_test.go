@@ -111,7 +111,7 @@ func TestPropeller_NotifyReturnsErrorWithoutSessionID(t *testing.T) {
 	proxy := NewProxy()
 	prop := NewPropeller(proxy, t.TempDir(), "hq-overseer")
 
-	err := prop.notify("test message", map[string]string{"gt/eventType": "nudge"}, true)
+	err := prop.notify("test message", map[string]string{"ms/eventType": "nudge"}, true)
 	if err == nil {
 		t.Fatal("expected notify to fail when sessionID is unavailable")
 	}
@@ -145,7 +145,7 @@ func TestEscalationMetaFromNudges_IgnoresHeuristicText(t *testing.T) {
 func TestBuildSessionUpdateMetaAddsEscalationFields(t *testing.T) {
 	nudges := []nudge.QueuedNudge{{Sender: "witness", Message: "neutral", Priority: nudge.PriorityUrgent, Kind: "escalation", ThreadID: "hq-esc999", Severity: "critical"}}
 	meta := buildSessionUpdateMeta(nudges, "hq-overseer")
-	if meta["gt/escalation"] != "true" || meta["gt/threadID"] != "hq-esc999" || meta["gt/severity"] != "critical" || meta["gt/kind"] != "escalation" {
+	if meta["ms/escalation"] != "true" || meta["ms/threadID"] != "hq-esc999" || meta["ms/severity"] != "critical" || meta["ms/kind"] != "escalation" {
 		t.Fatalf("unexpected meta: %#v", meta)
 	}
 }
@@ -163,7 +163,7 @@ func TestNotifyWithMetaInjectsEscalationMetadataToUI(t *testing.T) {
 	p.sessionMux.Unlock()
 
 	prop := NewPropeller(p, t.TempDir(), "hq-overseer")
-	meta := map[string]string{"gt/eventType": "nudge", "gt/escalation": "true", "gt/threadID": "hq-esc777", "gt/severity": "high"}
+	meta := map[string]string{"ms/eventType": "nudge", "ms/escalation": "true", "ms/threadID": "hq-esc777", "ms/severity": "high"}
 
 	go func() {
 		prop.notifyWithMeta("Escalation text", meta)
@@ -185,7 +185,7 @@ func TestNotifyWithMetaInjectsEscalationMetadataToUI(t *testing.T) {
 	}
 	update := params["update"].(map[string]any)
 	metaAny := update["_meta"].(map[string]any)
-	if metaAny["gt/escalation"] != "true" || metaAny["gt/threadID"] != "hq-esc777" || metaAny["gt/severity"] != "high" {
+	if metaAny["ms/escalation"] != "true" || metaAny["ms/threadID"] != "hq-esc777" || metaAny["ms/severity"] != "high" {
 		t.Fatalf("unexpected injected _meta: %#v", metaAny)
 	}
 }
@@ -194,7 +194,7 @@ func TestACPAttachedOverseerEscalationPath_MetadataAndUrgencyEndToEnd(t *testing
 	townRoot := t.TempDir()
 	if err := nudge.Enqueue(townRoot, "hq-overseer", nudge.QueuedNudge{
 		Sender:   "mineshaft/witness",
-		Message:  "Escalation mail from mineshaft/witness. ID: hq-esc-end2end. Severity: critical. Run 'gt mail read hq-esc-end2end' or 'gt escalate ack hq-esc-end2end'.",
+		Message:  "Escalation mail from mineshaft/witness. ID: hq-esc-end2end. Severity: critical. Run 'ms mail read hq-esc-end2end' or 'ms escalate ack hq-esc-end2end'.",
 		Priority: nudge.PriorityUrgent,
 		Kind:     "escalation",
 		ThreadID: "hq-esc-end2end",
@@ -241,7 +241,7 @@ func TestACPAttachedOverseerEscalationPath_MetadataAndUrgencyEndToEnd(t *testing
 		t.Fatalf("session/update content missing escalation id: %#v", content)
 	}
 	meta := update["_meta"].(map[string]any)
-	for key, want := range map[string]string{"gt/escalation": "true", "gt/threadID": "hq-esc-end2end", "gt/severity": "critical", "gt/kind": "escalation", "gt/urgent": "1"} {
+	for key, want := range map[string]string{"ms/escalation": "true", "ms/threadID": "hq-esc-end2end", "ms/severity": "critical", "ms/kind": "escalation", "ms/urgent": "1"} {
 		if meta[key] != want {
 			t.Fatalf("_meta[%s] = %#v, want %q", key, meta[key], want)
 		}

@@ -48,7 +48,7 @@ type MinecartFeedState struct {
 	LastFeedTime time.Time `json:"last_feed_time,omitempty"`
 }
 
-// StrandedMinecart holds info about a stranded minecart from `gt minecart stranded --json`.
+// StrandedMinecart holds info about a stranded minecart from `ms minecart stranded --json`.
 type StrandedMinecart struct {
 	ID           string   `json:"id"`
 	Title        string   `json:"title"`
@@ -180,16 +180,16 @@ func (s *MinecartFeedState) RecordFeed() {
 	s.LastFeedTime = time.Now().UTC()
 }
 
-// FindStrandedMinecarts runs `gt minecart stranded --json` and parses the output.
+// FindStrandedMinecarts runs `ms minecart stranded --json` and parses the output.
 func FindStrandedMinecarts(townRoot string) ([]StrandedMinecart, error) {
-	cmd := exec.Command("gt", "minecart", "stranded", "--json")
+	cmd := exec.Command("ms", "minecart", "stranded", "--json")
 	cmd.Dir = townRoot
 	cmd.Env = supervisorReadOnlyRoutingEnv(townRoot)
 	util.SetDetachedProcessGroup(cmd)
 
 	output, err := cmd.Output()
 	if err != nil {
-		return nil, fmt.Errorf("running gt minecart stranded: %w", err)
+		return nil, fmt.Errorf("running ms minecart stranded: %w", err)
 	}
 
 	var stranded []StrandedMinecart
@@ -335,9 +335,9 @@ func FeedStranded(townRoot string, maxPerCycle int, cooldown time.Duration) *Fee
 	return result
 }
 
-// closeEmptyMinecart runs `gt minecart check <id>` to auto-close an empty minecart.
+// closeEmptyMinecart runs `ms minecart check <id>` to auto-close an empty minecart.
 func closeEmptyMinecart(townRoot, minecartID string) error {
-	cmd := exec.Command("gt", "minecart", "check", minecartID)
+	cmd := exec.Command("ms", "minecart", "check", minecartID)
 	cmd.Dir = townRoot
 	cmd.Env = supervisorMutationRoutingEnv(townRoot)
 	util.SetDetachedProcessGroup(cmd)
@@ -346,9 +346,9 @@ func closeEmptyMinecart(townRoot, minecartID string) error {
 	return cmd.Run()
 }
 
-// dispatchFeedDog dispatches a dog to feed a stranded minecart via gt sling.
+// dispatchFeedDog dispatches a dog to feed a stranded minecart via ms sling.
 func dispatchFeedDog(townRoot, minecartID string) error {
-	cmd := exec.Command("gt", "sling", constants.MolMinecartFeed, "supervisor/dogs",
+	cmd := exec.Command("ms", "sling", constants.MolMinecartFeed, "supervisor/dogs",
 		"--var", fmt.Sprintf("minecart=%s", minecartID))
 	cmd.Dir = townRoot
 	cmd.Env = supervisorMutationRoutingEnv(townRoot)

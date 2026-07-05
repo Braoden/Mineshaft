@@ -50,9 +50,9 @@ func TestBdReadOnlyPinnedEnvUsesSelectedBeadsDir(t *testing.T) {
 	t.Setenv("BEADS_DIR", "/wrong")
 	t.Setenv("BEADS_DOLT_SERVER_DATABASE", "hq")
 	t.Setenv("BEADS_DOLT_SERVER_PORT", "9999")
-	t.Setenv("GT_DOLT_HOST", "")
-	t.Setenv("GT_DOLT_PORT", "")
-	t.Setenv("GT_DOLT_DATA", filepath.Join(t.TempDir(), "wrong-data"))
+	t.Setenv("MS_DOLT_HOST", "")
+	t.Setenv("MS_DOLT_PORT", "")
+	t.Setenv("MS_DOLT_DATA", filepath.Join(t.TempDir(), "wrong-data"))
 	t.Setenv("BD_DOLT_AUTO_COMMIT", "on")
 
 	env := bdReadOnlyPinnedEnv(beadsDir)
@@ -64,7 +64,7 @@ func TestBdReadOnlyPinnedEnvUsesSelectedBeadsDir(t *testing.T) {
 	assertSingleEnvValue(t, env, "BD_READONLY", "true")
 	assertSingleEnvValue(t, env, "BD_EXPORT_AUTO", "false")
 	assertEnvAbsent(t, env, "BEADS_DOLT_DATA_DIR")
-	assertEnvAbsent(t, env, "GT_DOLT_DATA")
+	assertEnvAbsent(t, env, "MS_DOLT_DATA")
 }
 
 func TestBdReadOnlyRoutingEnvDoesNotPinDatabase(t *testing.T) {
@@ -79,9 +79,9 @@ func TestBdReadOnlyRoutingEnvDoesNotPinDatabase(t *testing.T) {
 	}
 	t.Setenv("BEADS_DIR", "/wrong")
 	t.Setenv("BEADS_DOLT_SERVER_DATABASE", "wrong")
-	t.Setenv("GT_DOLT_HOST", "")
-	t.Setenv("GT_DOLT_PORT", "")
-	t.Setenv("GT_DOLT_DATA", filepath.Join(t.TempDir(), "wrong-data"))
+	t.Setenv("MS_DOLT_HOST", "")
+	t.Setenv("MS_DOLT_PORT", "")
+	t.Setenv("MS_DOLT_DATA", filepath.Join(t.TempDir(), "wrong-data"))
 
 	env := bdReadOnlyRoutingEnv(townRoot)
 	assertEnvAbsent(t, env, "BEADS_DIR")
@@ -90,7 +90,7 @@ func TestBdReadOnlyRoutingEnvDoesNotPinDatabase(t *testing.T) {
 	assertSingleEnvValue(t, env, "BD_DOLT_AUTO_COMMIT", "off")
 	assertSingleEnvValue(t, env, "BD_READONLY", "true")
 	assertEnvAbsent(t, env, "BEADS_DOLT_DATA_DIR")
-	assertEnvAbsent(t, env, "GT_DOLT_DATA")
+	assertEnvAbsent(t, env, "MS_DOLT_DATA")
 }
 
 func assertSingleEnvValue(t *testing.T, env []string, key, want string) {

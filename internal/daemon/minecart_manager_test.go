@@ -41,7 +41,7 @@ func setupTestStore(t *testing.T) (beadsdk.Storage, func()) {
 
 // scanTestOpts configures the mockGtForScanTest helper.
 type scanTestOpts struct {
-	strandedJSON  string // JSON for `gt minecart stranded --json`; default "[]"
+	strandedJSON  string // JSON for `ms minecart stranded --json`; default "[]"
 	slingFailOnce bool   // first sling invocation exits 1, subsequent succeed
 	routes        string // routes.jsonl content; empty = no routes file
 }
@@ -54,7 +54,7 @@ type scanTestPaths struct {
 	checkLogPath string // minecart check call log; absent if check was never called
 }
 
-// mockGtForScanTest creates a mock gt binary and directory layout for scan tests.
+// mockGtForScanTest creates a mock ms binary and directory layout for scan tests.
 // All mock scripts write call logs so tests can make both positive and negative assertions.
 func mockGtForScanTest(t *testing.T, opts scanTestOpts) scanTestPaths {
 	t.Helper()
@@ -105,8 +105,8 @@ fi
 exit 0
 `
 
-	if err := os.WriteFile(filepath.Join(binDir, "gt"), []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write mock gt: %v", err)
+	if err := os.WriteFile(filepath.Join(binDir, "ms"), []byte(gtScript), 0755); err != nil {
+		t.Fatalf("write mock ms: %v", err)
 	}
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
@@ -128,7 +128,7 @@ func TestEventPoll_DetectsCloseEvents(t *testing.T) {
 	ctx := context.Background()
 	now := time.Now().UTC()
 	issue := &beadsdk.Issue{
-		ID:        "gt-close1",
+		ID:        "ms-close1",
 		Title:     "To Close",
 		Status:    beadsdk.StatusOpen,
 		Priority:  2,
@@ -149,7 +149,7 @@ func TestEventPoll_DetectsCloseEvents(t *testing.T) {
 		logged = append(logged, fmt.Sprintf(format, args...))
 	}
 
-	m := NewMinecartManager(townRoot, logger, "gt", 10*time.Minute, map[string]beadsdk.Storage{"hq": store}, nil, nil)
+	m := NewMinecartManager(townRoot, logger, "ms", 10*time.Minute, map[string]beadsdk.Storage{"hq": store}, nil, nil)
 	m.seeded.Store(true)
 	m.pollStoresSnapshot(m.stores)
 
@@ -176,7 +176,7 @@ func TestEventPoll_SkipsNonCloseEvents(t *testing.T) {
 	ctx := context.Background()
 	now := time.Now().UTC()
 	issue := &beadsdk.Issue{
-		ID:        "gt-open1",
+		ID:        "ms-open1",
 		Title:     "Stays Open",
 		Status:    beadsdk.StatusOpen,
 		Priority:  2,
@@ -195,7 +195,7 @@ func TestEventPoll_SkipsNonCloseEvents(t *testing.T) {
 		logged = append(logged, fmt.Sprintf(format, args...))
 	}
 
-	m := NewMinecartManager(townRoot, logger, "gt", 10*time.Minute, map[string]beadsdk.Storage{"hq": store}, nil, nil)
+	m := NewMinecartManager(townRoot, logger, "ms", 10*time.Minute, map[string]beadsdk.Storage{"hq": store}, nil, nil)
 	m.pollStoresSnapshot(m.stores)
 
 	// Should NOT have logged any close detection
@@ -214,7 +214,7 @@ func TestManagerLifecycle_StartStop(t *testing.T) {
 	binDir := t.TempDir()
 	townRoot := t.TempDir()
 	bdScript := `#!/bin/sh
-echo '{"type":"status","issue_id":"gt-x","new_status":"closed"}'
+echo '{"type":"status","issue_id":"ms-x","new_status":"closed"}'
 sleep 999
 `
 	if err := os.WriteFile(filepath.Join(binDir, "bd"), []byte(bdScript), 0755); err != nil {
@@ -223,12 +223,12 @@ sleep 999
 	gtScript := `#!/bin/sh
 exit 0
 `
-	if err := os.WriteFile(filepath.Join(binDir, "gt"), []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write mock gt: %v", err)
+	if err := os.WriteFile(filepath.Join(binDir, "ms"), []byte(gtScript), 0755); err != nil {
+		t.Fatalf("write mock ms: %v", err)
 	}
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
-	m := NewMinecartManager(townRoot, func(string, ...interface{}) {}, "gt", 10*time.Minute, nil, nil, nil)
+	m := NewMinecartManager(townRoot, func(string, ...interface{}) {}, "ms", 10*time.Minute, nil, nil, nil)
 	if err := m.Start(); err != nil {
 		t.Fatalf("Start: %v", err)
 	}
@@ -241,11 +241,11 @@ func TestScanStranded_FeedsReadyIssues(t *testing.T) {
 	}
 
 	paths := mockGtForScanTest(t, scanTestOpts{
-		strandedJSON: `[{"id":"hq-cv1","title":"Test","ready_count":1,"ready_issues":["gt-issue1"]}]`,
-		routes:       `{"prefix":"gt-","path":"gt/.beads"}` + "\n",
+		strandedJSON: `[{"id":"hq-cv1","title":"Test","ready_count":1,"ready_issues":["ms-issue1"]}]`,
+		routes:       `{"prefix":"ms-","path":"ms/.beads"}` + "\n",
 	})
 
-	m := NewMinecartManager(paths.townRoot, func(string, ...interface{}) {}, "gt", 10*time.Minute, nil, nil, nil)
+	m := NewMinecartManager(paths.townRoot, func(string, ...interface{}) {}, "ms", 10*time.Minute, nil, nil, nil)
 	m.scan()
 
 	data, err := os.ReadFile(paths.slingLogPath)
@@ -253,8 +253,8 @@ func TestScanStranded_FeedsReadyIssues(t *testing.T) {
 		t.Fatalf("read sling log: %v", err)
 	}
 	logContent := string(data)
-	if !strings.Contains(logContent, "sling") || !strings.Contains(logContent, "gt-issue1") {
-		t.Errorf("expected gt sling to be invoked for gt-issue1, got: %q", logContent)
+	if !strings.Contains(logContent, "sling") || !strings.Contains(logContent, "ms-issue1") {
+		t.Errorf("expected ms sling to be invoked for ms-issue1, got: %q", logContent)
 	}
 }
 
@@ -267,7 +267,7 @@ func TestScanStranded_ClosesEmptyMinecarts(t *testing.T) {
 		strandedJSON: `[{"id":"hq-empty1","title":"Empty","ready_count":0,"ready_issues":[]}]`,
 	})
 
-	m := NewMinecartManager(paths.townRoot, func(string, ...interface{}) {}, "gt", 10*time.Minute, nil, nil, nil)
+	m := NewMinecartManager(paths.townRoot, func(string, ...interface{}) {}, "ms", 10*time.Minute, nil, nil, nil)
 	m.scan()
 
 	data, err := os.ReadFile(paths.checkLogPath)
@@ -275,7 +275,7 @@ func TestScanStranded_ClosesEmptyMinecarts(t *testing.T) {
 		t.Fatalf("read check log: %v", err)
 	}
 	if !strings.Contains(string(data), "hq-empty1") {
-		t.Errorf("expected gt minecart check for hq-empty1, got: %q", data)
+		t.Errorf("expected ms minecart check for hq-empty1, got: %q", data)
 	}
 }
 
@@ -297,7 +297,7 @@ func TestScanStranded_GracePeriodSkipsRecentMinecart(t *testing.T) {
 		logged = append(logged, fmt.Sprintf(format, args...))
 	}
 
-	m := NewMinecartManager(paths.townRoot, logger, "gt", 10*time.Minute, nil, nil, nil)
+	m := NewMinecartManager(paths.townRoot, logger, "ms", 10*time.Minute, nil, nil, nil)
 	m.scan()
 
 	// Minecart check must NOT have been called — grace period should protect it.
@@ -332,7 +332,7 @@ func TestScanStranded_GracePeriodAllowsOldMinecart(t *testing.T) {
 		strandedJSON: strandedJSON,
 	})
 
-	m := NewMinecartManager(paths.townRoot, func(string, ...interface{}) {}, "gt", 10*time.Minute, nil, nil, nil)
+	m := NewMinecartManager(paths.townRoot, func(string, ...interface{}) {}, "ms", 10*time.Minute, nil, nil, nil)
 	m.scan()
 
 	data, err := os.ReadFile(paths.checkLogPath)
@@ -340,7 +340,7 @@ func TestScanStranded_GracePeriodAllowsOldMinecart(t *testing.T) {
 		t.Fatalf("read check log: %v", err)
 	}
 	if !strings.Contains(string(data), "hq-old1") {
-		t.Errorf("expected gt minecart check for hq-old1 (past grace period), got: %q", data)
+		t.Errorf("expected ms minecart check for hq-old1 (past grace period), got: %q", data)
 	}
 }
 
@@ -358,7 +358,7 @@ func TestScanStranded_NoStrandedMinecarts(t *testing.T) {
 		logged = append(logged, fmt.Sprintf(format, args...))
 	}
 
-	m := NewMinecartManager(paths.townRoot, logger, "gt", 10*time.Minute, nil, nil, nil)
+	m := NewMinecartManager(paths.townRoot, logger, "ms", 10*time.Minute, nil, nil, nil)
 	m.scan()
 
 	// Negative: sling must not have been called
@@ -385,9 +385,9 @@ func TestScanStranded_DispatchFailure(t *testing.T) {
 	}
 
 	paths := mockGtForScanTest(t, scanTestOpts{
-		strandedJSON:  `[{"id":"hq-cv1","title":"Test","ready_count":1,"ready_issues":["gt-issue1"]},{"id":"hq-cv2","title":"Test2","ready_count":1,"ready_issues":["gt-issue2"]}]`,
+		strandedJSON:  `[{"id":"hq-cv1","title":"Test","ready_count":1,"ready_issues":["ms-issue1"]},{"id":"hq-cv2","title":"Test2","ready_count":1,"ready_issues":["ms-issue2"]}]`,
 		slingFailOnce: true,
-		routes:        `{"prefix":"gt-","path":"gt/.beads"}` + "\n",
+		routes:        `{"prefix":"ms-","path":"ms/.beads"}` + "\n",
 	})
 
 	var logMu sync.Mutex
@@ -398,7 +398,7 @@ func TestScanStranded_DispatchFailure(t *testing.T) {
 		logMu.Unlock()
 	}
 
-	m := NewMinecartManager(paths.townRoot, logger, "gt", 10*time.Minute, nil, nil, nil)
+	m := NewMinecartManager(paths.townRoot, logger, "ms", 10*time.Minute, nil, nil, nil)
 	m.scan()
 
 	logMu.Lock()
@@ -407,13 +407,13 @@ func TestScanStranded_DispatchFailure(t *testing.T) {
 	// Verify the failure was logged with the correct minecart and issue IDs
 	hasFailure := false
 	for _, l := range logged {
-		if strings.Contains(l, "gt-issue1") && strings.Contains(l, "failed") {
+		if strings.Contains(l, "ms-issue1") && strings.Contains(l, "failed") {
 			hasFailure = true
 			break
 		}
 	}
 	if !hasFailure {
-		t.Errorf("expected sling failure log mentioning gt-issue1, got: %v", logged)
+		t.Errorf("expected sling failure log mentioning ms-issue1, got: %v", logged)
 	}
 
 	// Verify scan continued: second minecart's issue was dispatched
@@ -421,8 +421,8 @@ func TestScanStranded_DispatchFailure(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read sling log: %v", err)
 	}
-	if !strings.Contains(string(data), "gt-issue2") {
-		t.Errorf("expected sling for gt-issue2 (scan should continue after failure), got: %q", data)
+	if !strings.Contains(string(data), "ms-issue2") {
+		t.Errorf("expected sling for ms-issue2 (scan should continue after failure), got: %q", data)
 	}
 }
 
@@ -435,8 +435,8 @@ func TestMinecartManager_DoubleStop_Idempotent(t *testing.T) {
 if [ "$1" = "minecart" ] && [ "$2" = "stranded" ]; then echo '[]'; fi
 exit 0
 `
-	if err := os.WriteFile(filepath.Join(binDir, "gt"), []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write mock gt: %v", err)
+	if err := os.WriteFile(filepath.Join(binDir, "ms"), []byte(gtScript), 0755); err != nil {
+		t.Fatalf("write mock ms: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(binDir, "bd"), []byte("#!/bin/sh\nexit 0"), 0755); err != nil {
 		t.Fatalf("write mock bd: %v", err)
@@ -444,7 +444,7 @@ exit 0
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
 	townRoot := t.TempDir()
-	m := NewMinecartManager(townRoot, func(string, ...interface{}) {}, "gt", 10*time.Minute, nil, nil, nil)
+	m := NewMinecartManager(townRoot, func(string, ...interface{}) {}, "ms", 10*time.Minute, nil, nil, nil)
 	if err := m.Start(); err != nil {
 		t.Fatalf("Start: %v", err)
 	}
@@ -460,7 +460,7 @@ func TestStart_DoubleCall_Guarded(t *testing.T) {
 	binDir := t.TempDir()
 	townRoot := t.TempDir()
 
-	// Mock gt that returns empty stranded list and logs sling/check calls
+	// Mock ms that returns empty stranded list and logs sling/check calls
 	slingLogPath := filepath.Join(binDir, "sling.log")
 	gtScript := `#!/bin/sh
 if [ "$1" = "minecart" ] && [ "$2" = "stranded" ]; then
@@ -473,8 +473,8 @@ if [ "$1" = "sling" ]; then
 fi
 exit 0
 `
-	if err := os.WriteFile(filepath.Join(binDir, "gt"), []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write mock gt: %v", err)
+	if err := os.WriteFile(filepath.Join(binDir, "ms"), []byte(gtScript), 0755); err != nil {
+		t.Fatalf("write mock ms: %v", err)
 	}
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
@@ -486,7 +486,7 @@ exit 0
 		logMu.Unlock()
 	}
 
-	m := NewMinecartManager(townRoot, logger, "gt", 10*time.Minute, nil, nil, nil)
+	m := NewMinecartManager(townRoot, logger, "ms", 10*time.Minute, nil, nil, nil)
 
 	// First Start should succeed
 	if err := m.Start(); err != nil {
@@ -549,7 +549,7 @@ func TestEventPoll_LazyStoreOpening(t *testing.T) {
 	}
 
 	// Start with nil stores but with an opener — should NOT exit immediately
-	m := NewMinecartManager(t.TempDir(), logger, "gt", 10*time.Minute, nil, opener, nil)
+	m := NewMinecartManager(t.TempDir(), logger, "ms", 10*time.Minute, nil, opener, nil)
 
 	// Before any poll ticks, stores should be nil
 	if m.stores != nil {
@@ -584,20 +584,20 @@ func TestEventPoll_LazyStoreOpening(t *testing.T) {
 
 func TestMinecartManager_ScanInterval_Configurable(t *testing.T) {
 	noop := func(string, ...interface{}) {}
-	m := NewMinecartManager("/tmp", noop, "gt", 0, nil, nil, nil)
+	m := NewMinecartManager("/tmp", noop, "ms", 0, nil, nil, nil)
 	if m.scanInterval != defaultStrandedScanInterval {
 		t.Errorf("interval 0 should use default %v, got %v", defaultStrandedScanInterval, m.scanInterval)
 	}
 
 	custom := 5 * time.Minute
-	m2 := NewMinecartManager("/tmp", noop, "gt", custom, nil, nil, nil)
+	m2 := NewMinecartManager("/tmp", noop, "ms", custom, nil, nil, nil)
 	if m2.scanInterval != custom {
 		t.Errorf("interval should be %v, got %v", custom, m2.scanInterval)
 	}
 }
 
 func TestStrandedMinecartInfo_JSONParsing(t *testing.T) {
-	jsonStr := `[{"id":"hq-cv1","title":"My Minecart","ready_count":2,"ready_issues":["gt-a","gt-b"]}]`
+	jsonStr := `[{"id":"hq-cv1","title":"My Minecart","ready_count":2,"ready_issues":["ms-a","ms-b"]}]`
 	var result []strandedMinecartInfo
 	if err := json.Unmarshal([]byte(jsonStr), &result); err != nil {
 		t.Fatalf("unmarshal: %v", err)
@@ -609,7 +609,7 @@ func TestStrandedMinecartInfo_JSONParsing(t *testing.T) {
 	if c.ID != "hq-cv1" || c.Title != "My Minecart" || c.ReadyCount != 2 {
 		t.Errorf("unexpected minecart: %+v", c)
 	}
-	if len(c.ReadyIssues) != 2 || c.ReadyIssues[0] != "gt-a" || c.ReadyIssues[1] != "gt-b" {
+	if len(c.ReadyIssues) != 2 || c.ReadyIssues[0] != "ms-a" || c.ReadyIssues[1] != "ms-b" {
 		t.Errorf("unexpected ready_issues: %v", c.ReadyIssues)
 	}
 }
@@ -624,7 +624,7 @@ func TestFeedFirstReady_MultipleReadyIssues_DispatchesOnlyFirst(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	routes := `{"prefix":"gt-","path":"gt/.beads"}` + "\n"
+	routes := `{"prefix":"ms-","path":"ms/.beads"}` + "\n"
 	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(routes), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
@@ -637,8 +637,8 @@ if [ "$1" = "sling" ]; then
 fi
 exit 0
 `
-	if err := os.WriteFile(filepath.Join(binDir, "gt"), []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write mock gt: %v", err)
+	if err := os.WriteFile(filepath.Join(binDir, "ms"), []byte(gtScript), 0755); err != nil {
+		t.Fatalf("write mock ms: %v", err)
 	}
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
@@ -647,13 +647,13 @@ exit 0
 		logged = append(logged, fmt.Sprintf(format, args...))
 	}
 
-	m := NewMinecartManager(townRoot, logger, "gt", 10*time.Minute, nil, nil, nil)
+	m := NewMinecartManager(townRoot, logger, "ms", 10*time.Minute, nil, nil, nil)
 
 	c := strandedMinecartInfo{
 		ID:          "hq-cv1",
 		Title:       "Multi Ready",
 		ReadyCount:  3,
-		ReadyIssues: []string{"gt-issue1", "gt-issue2", "gt-issue3"},
+		ReadyIssues: []string{"ms-issue1", "ms-issue2", "ms-issue3"},
 	}
 	m.feedFirstReady(c)
 
@@ -663,14 +663,14 @@ exit 0
 	}
 	logContent := string(data)
 
-	if !strings.Contains(logContent, "gt-issue1") {
-		t.Errorf("expected sling for gt-issue1, got: %q", logContent)
+	if !strings.Contains(logContent, "ms-issue1") {
+		t.Errorf("expected sling for ms-issue1, got: %q", logContent)
 	}
-	if strings.Contains(logContent, "gt-issue2") {
-		t.Errorf("unexpected dispatch of gt-issue2: %q", logContent)
+	if strings.Contains(logContent, "ms-issue2") {
+		t.Errorf("unexpected dispatch of ms-issue2: %q", logContent)
 	}
-	if strings.Contains(logContent, "gt-issue3") {
-		t.Errorf("unexpected dispatch of gt-issue3: %q", logContent)
+	if strings.Contains(logContent, "ms-issue3") {
+		t.Errorf("unexpected dispatch of ms-issue3: %q", logContent)
 	}
 
 	lines := strings.Split(strings.TrimSpace(logContent), "\n")
@@ -680,13 +680,13 @@ exit 0
 
 	feedLogged := false
 	for _, s := range logged {
-		if strings.Contains(s, "feeding") && strings.Contains(s, "gt-issue1") {
+		if strings.Contains(s, "feeding") && strings.Contains(s, "ms-issue1") {
 			feedLogged = true
 			break
 		}
 	}
 	if !feedLogged {
-		t.Errorf("expected 'feeding gt-issue1' in logs, got: %v", logged)
+		t.Errorf("expected 'feeding ms-issue1' in logs, got: %v", logged)
 	}
 }
 
@@ -702,7 +702,7 @@ func TestFeedFirstReady_IteratesPastDispatchFailure(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	routes := `{"prefix":"gt-","path":"gt/.beads"}` + "\n"
+	routes := `{"prefix":"ms-","path":"ms/.beads"}` + "\n"
 	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(routes), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
@@ -722,8 +722,8 @@ if [ "$1" = "sling" ]; then
 fi
 exit 0
 `
-	if err := os.WriteFile(filepath.Join(binDir, "gt"), []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write mock gt: %v", err)
+	if err := os.WriteFile(filepath.Join(binDir, "ms"), []byte(gtScript), 0755); err != nil {
+		t.Fatalf("write mock ms: %v", err)
 	}
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
@@ -732,13 +732,13 @@ exit 0
 		logged = append(logged, fmt.Sprintf(format, args...))
 	}
 
-	m := NewMinecartManager(townRoot, logger, "gt", 10*time.Minute, nil, nil, nil)
+	m := NewMinecartManager(townRoot, logger, "ms", 10*time.Minute, nil, nil, nil)
 
 	c := strandedMinecartInfo{
 		ID:          "hq-cv1",
 		Title:       "Iterate Past Failure",
 		ReadyCount:  3,
-		ReadyIssues: []string{"gt-fail1", "gt-succeed2", "gt-notreached3"},
+		ReadyIssues: []string{"ms-fail1", "ms-succeed2", "ms-notreached3"},
 	}
 	m.feedFirstReady(c)
 
@@ -749,28 +749,28 @@ exit 0
 	logContent := string(data)
 
 	// First issue was attempted (and failed)
-	if !strings.Contains(logContent, "gt-fail1") {
-		t.Errorf("expected sling attempt for gt-fail1, got: %q", logContent)
+	if !strings.Contains(logContent, "ms-fail1") {
+		t.Errorf("expected sling attempt for ms-fail1, got: %q", logContent)
 	}
 	// Second issue should succeed
-	if !strings.Contains(logContent, "gt-succeed2") {
-		t.Errorf("expected sling for gt-succeed2 (iterate past failure), got: %q", logContent)
+	if !strings.Contains(logContent, "ms-succeed2") {
+		t.Errorf("expected sling for ms-succeed2 (iterate past failure), got: %q", logContent)
 	}
 	// Third issue should NOT be reached (second succeeded)
-	if strings.Contains(logContent, "gt-notreached3") {
-		t.Errorf("unexpected dispatch of gt-notreached3 (should stop after first success): %q", logContent)
+	if strings.Contains(logContent, "ms-notreached3") {
+		t.Errorf("unexpected dispatch of ms-notreached3 (should stop after first success): %q", logContent)
 	}
 
 	// Verify failure was logged
 	hasFailure := false
 	for _, l := range logged {
-		if strings.Contains(l, "gt-fail1") && strings.Contains(l, "failed") {
+		if strings.Contains(l, "ms-fail1") && strings.Contains(l, "failed") {
 			hasFailure = true
 			break
 		}
 	}
 	if !hasFailure {
-		t.Errorf("expected sling failure log for gt-fail1, got: %v", logged)
+		t.Errorf("expected sling failure log for ms-fail1, got: %v", logged)
 	}
 }
 
@@ -785,7 +785,7 @@ func TestFeedFirstReady_AllIssuesFail_LogsNoneDispatchable(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	routes := `{"prefix":"gt-","path":"gt/.beads"}` + "\n"
+	routes := `{"prefix":"ms-","path":"ms/.beads"}` + "\n"
 	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(routes), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
@@ -797,8 +797,8 @@ if [ "$1" = "sling" ]; then
 fi
 exit 0
 `
-	if err := os.WriteFile(filepath.Join(binDir, "gt"), []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write mock gt: %v", err)
+	if err := os.WriteFile(filepath.Join(binDir, "ms"), []byte(gtScript), 0755); err != nil {
+		t.Fatalf("write mock ms: %v", err)
 	}
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
@@ -807,13 +807,13 @@ exit 0
 		logged = append(logged, fmt.Sprintf(format, args...))
 	}
 
-	m := NewMinecartManager(townRoot, logger, "gt", 10*time.Minute, nil, nil, nil)
+	m := NewMinecartManager(townRoot, logger, "ms", 10*time.Minute, nil, nil, nil)
 
 	c := strandedMinecartInfo{
 		ID:          "hq-cv1",
 		Title:       "All Fail",
 		ReadyCount:  2,
-		ReadyIssues: []string{"gt-fail1", "gt-fail2"},
+		ReadyIssues: []string{"ms-fail1", "ms-fail2"},
 	}
 	m.feedFirstReady(c)
 
@@ -839,7 +839,7 @@ func TestFeedFirstReady_UnknownPrefix_Skips(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	routes := `{"prefix":"gt-","path":"gt/.beads"}` + "\n"
+	routes := `{"prefix":"ms-","path":"ms/.beads"}` + "\n"
 	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(routes), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
@@ -852,8 +852,8 @@ if [ "$1" = "sling" ]; then
 fi
 exit 0
 `
-	if err := os.WriteFile(filepath.Join(binDir, "gt"), []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write mock gt: %v", err)
+	if err := os.WriteFile(filepath.Join(binDir, "ms"), []byte(gtScript), 0755); err != nil {
+		t.Fatalf("write mock ms: %v", err)
 	}
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
@@ -862,7 +862,7 @@ exit 0
 		logged = append(logged, fmt.Sprintf(format, args...))
 	}
 
-	m := NewMinecartManager(townRoot, logger, "gt", 10*time.Minute, nil, nil, nil)
+	m := NewMinecartManager(townRoot, logger, "ms", 10*time.Minute, nil, nil, nil)
 
 	c := strandedMinecartInfo{
 		ID:          "hq-cv1",
@@ -904,11 +904,11 @@ if [ "$1" = "minecart" ] && [ "$2" = "stranded" ]; then
 fi
 exit 0
 `
-	if err := os.WriteFile(filepath.Join(binDir, "gt"), []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write mock gt: %v", err)
+	if err := os.WriteFile(filepath.Join(binDir, "ms"), []byte(gtScript), 0755); err != nil {
+		t.Fatalf("write mock ms: %v", err)
 	}
 
-	m := NewMinecartManager(townRoot, func(string, ...interface{}) {}, filepath.Join(binDir, "gt"), 10*time.Minute, nil, nil, nil)
+	m := NewMinecartManager(townRoot, func(string, ...interface{}) {}, filepath.Join(binDir, "ms"), 10*time.Minute, nil, nil, nil)
 
 	result, err := m.findStranded()
 	if err == nil {
@@ -934,11 +934,11 @@ if [ "$1" = "minecart" ] && [ "$2" = "stranded" ]; then
 fi
 exit 0
 `
-	if err := os.WriteFile(filepath.Join(binDir, "gt"), []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write mock gt: %v", err)
+	if err := os.WriteFile(filepath.Join(binDir, "ms"), []byte(gtScript), 0755); err != nil {
+		t.Fatalf("write mock ms: %v", err)
 	}
 
-	m := NewMinecartManager(townRoot, func(string, ...interface{}) {}, filepath.Join(binDir, "gt"), 10*time.Minute, nil, nil, nil)
+	m := NewMinecartManager(townRoot, func(string, ...interface{}) {}, filepath.Join(binDir, "ms"), 10*time.Minute, nil, nil, nil)
 
 	result, err := m.findStranded()
 	if err == nil {
@@ -964,8 +964,8 @@ if [ "$1" = "minecart" ] && [ "$2" = "stranded" ]; then
 fi
 exit 0
 `
-	if err := os.WriteFile(filepath.Join(binDir, "gt"), []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write mock gt: %v", err)
+	if err := os.WriteFile(filepath.Join(binDir, "ms"), []byte(gtScript), 0755); err != nil {
+		t.Fatalf("write mock ms: %v", err)
 	}
 
 	var logged []string
@@ -973,7 +973,7 @@ exit 0
 		logged = append(logged, fmt.Sprintf(format, args...))
 	}
 
-	m := NewMinecartManager(townRoot, logger, filepath.Join(binDir, "gt"), 10*time.Minute, nil, nil, nil)
+	m := NewMinecartManager(townRoot, logger, filepath.Join(binDir, "ms"), 10*time.Minute, nil, nil, nil)
 
 	// scan() should not panic even when findStranded fails
 	m.scan()
@@ -1004,7 +1004,7 @@ func TestPollEvents_GetAllEventsSinceError(t *testing.T) {
 	}
 
 	townRoot := t.TempDir()
-	m := NewMinecartManager(townRoot, logger, "gt", 10*time.Minute, map[string]beadsdk.Storage{"hq": store}, nil, nil)
+	m := NewMinecartManager(townRoot, logger, "ms", 10*time.Minute, map[string]beadsdk.Storage{"hq": store}, nil, nil)
 
 	// Cancel the manager's context so GetAllEventsSince receives a cancelled context
 	m.cancel()
@@ -1049,8 +1049,8 @@ if [ "$1" = "sling" ]; then
 fi
 exit 0
 `
-	if err := os.WriteFile(filepath.Join(binDir, "gt"), []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write mock gt: %v", err)
+	if err := os.WriteFile(filepath.Join(binDir, "ms"), []byte(gtScript), 0755); err != nil {
+		t.Fatalf("write mock ms: %v", err)
 	}
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
@@ -1059,7 +1059,7 @@ exit 0
 		logged = append(logged, fmt.Sprintf(format, args...))
 	}
 
-	m := NewMinecartManager(townRoot, logger, "gt", 10*time.Minute, nil, nil, nil)
+	m := NewMinecartManager(townRoot, logger, "ms", 10*time.Minute, nil, nil, nil)
 
 	c := strandedMinecartInfo{
 		ID:          "hq-cv1",
@@ -1109,8 +1109,8 @@ if [ "$1" = "sling" ]; then
 fi
 exit 0
 `
-	if err := os.WriteFile(filepath.Join(binDir, "gt"), []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write mock gt: %v", err)
+	if err := os.WriteFile(filepath.Join(binDir, "ms"), []byte(gtScript), 0755); err != nil {
+		t.Fatalf("write mock ms: %v", err)
 	}
 
 	var logged []string
@@ -1120,7 +1120,7 @@ exit 0
 
 	// isRigParked returns true for "shippercrm"
 	parked := func(rig string) bool { return rig == "shippercrm" }
-	m := NewMinecartManager(townRoot, logger, filepath.Join(binDir, "gt"), 10*time.Minute, nil, nil, parked)
+	m := NewMinecartManager(townRoot, logger, filepath.Join(binDir, "ms"), 10*time.Minute, nil, nil, parked)
 
 	c := strandedMinecartInfo{
 		ID:          "hq-cv-park1",
@@ -1160,13 +1160,13 @@ func TestFeedFirstReady_EmptyReadyIssues_NoOp(t *testing.T) {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 
-	callLogPath := filepath.Join(binDir, "gt-calls.log")
+	callLogPath := filepath.Join(binDir, "ms-calls.log")
 	gtScript := `#!/bin/sh
 echo "$@" >> "` + callLogPath + `"
 exit 0
 `
-	if err := os.WriteFile(filepath.Join(binDir, "gt"), []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write mock gt: %v", err)
+	if err := os.WriteFile(filepath.Join(binDir, "ms"), []byte(gtScript), 0755); err != nil {
+		t.Fatalf("write mock ms: %v", err)
 	}
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
@@ -1175,7 +1175,7 @@ exit 0
 		logged = append(logged, fmt.Sprintf(format, args...))
 	}
 
-	m := NewMinecartManager(townRoot, logger, "gt", 10*time.Minute, nil, nil, nil)
+	m := NewMinecartManager(townRoot, logger, "ms", 10*time.Minute, nil, nil, nil)
 
 	c := strandedMinecartInfo{
 		ID:          "hq-cv1",
@@ -1187,7 +1187,7 @@ exit 0
 
 	if _, err := os.Stat(callLogPath); err == nil {
 		data, _ := os.ReadFile(callLogPath)
-		t.Errorf("gt was called unexpectedly: %s", data)
+		t.Errorf("ms was called unexpectedly: %s", data)
 	}
 
 	for _, s := range logged {
@@ -1203,7 +1203,7 @@ func TestScan_ContextCancelled_MidIteration(t *testing.T) {
 	}
 
 	// Build a stranded list with 5 minecarts, all with ready issues.
-	// The mock gt will block on sling calls so we can cancel mid-iteration.
+	// The mock ms will block on sling calls so we can cancel mid-iteration.
 	type minecart struct {
 		ID          string   `json:"id"`
 		Title       string   `json:"title"`
@@ -1216,7 +1216,7 @@ func TestScan_ContextCancelled_MidIteration(t *testing.T) {
 			ID:          fmt.Sprintf("hq-cv%d", i+1),
 			Title:       fmt.Sprintf("Minecart %d", i+1),
 			ReadyCount:  1,
-			ReadyIssues: []string{fmt.Sprintf("gt-issue%d", i+1)},
+			ReadyIssues: []string{fmt.Sprintf("ms-issue%d", i+1)},
 		}
 	}
 	jsonBytes, err := json.Marshal(minecarts)
@@ -1229,14 +1229,14 @@ func TestScan_ContextCancelled_MidIteration(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	routes := `{"prefix":"gt-","path":"gt/.beads"}` + "\n"
+	routes := `{"prefix":"ms-","path":"ms/.beads"}` + "\n"
 	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(routes), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
 
 	slingLogPath := filepath.Join(binDir, "sling.log")
 
-	// Mock gt: stranded returns list; sling sleeps 10s (simulates slow dispatch)
+	// Mock ms: stranded returns list; sling sleeps 10s (simulates slow dispatch)
 	gtScript := `#!/bin/sh
 if [ "$1" = "minecart" ] && [ "$2" = "stranded" ]; then
   echo '` + strings.ReplaceAll(string(jsonBytes), "'", "'\\''") + `'
@@ -1249,8 +1249,8 @@ if [ "$1" = "sling" ]; then
 fi
 exit 0
 `
-	if err := os.WriteFile(filepath.Join(binDir, "gt"), []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write mock gt: %v", err)
+	if err := os.WriteFile(filepath.Join(binDir, "ms"), []byte(gtScript), 0755); err != nil {
+		t.Fatalf("write mock ms: %v", err)
 	}
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
@@ -1262,7 +1262,7 @@ exit 0
 		logMu.Unlock()
 	}
 
-	m := NewMinecartManager(townRoot, logger, "gt", 10*time.Minute, nil, nil, nil)
+	m := NewMinecartManager(townRoot, logger, "ms", 10*time.Minute, nil, nil, nil)
 
 	// Run scan in a goroutine and cancel context after a brief delay
 	done := make(chan struct{})
@@ -1304,12 +1304,12 @@ func TestScanStranded_MixedReadyAndEmpty(t *testing.T) {
 
 	paths := mockGtForScanTest(t, scanTestOpts{
 		strandedJSON: `[
-			{"id":"hq-ready1","title":"Ready One","ready_count":1,"ready_issues":["gt-issue1"]},
+			{"id":"hq-ready1","title":"Ready One","ready_count":1,"ready_issues":["ms-issue1"]},
 			{"id":"hq-empty1","title":"Empty One","ready_count":0,"ready_issues":[]},
-			{"id":"hq-ready2","title":"Ready Two","ready_count":2,"ready_issues":["gt-issue2","gt-issue3"]},
+			{"id":"hq-ready2","title":"Ready Two","ready_count":2,"ready_issues":["ms-issue2","ms-issue3"]},
 			{"id":"hq-empty2","title":"Empty Two","ready_count":0,"ready_issues":[]}
 		]`,
-		routes: `{"prefix":"gt-","path":"gt/.beads"}` + "\n",
+		routes: `{"prefix":"ms-","path":"ms/.beads"}` + "\n",
 	})
 
 	var logMu sync.Mutex
@@ -1320,7 +1320,7 @@ func TestScanStranded_MixedReadyAndEmpty(t *testing.T) {
 		logMu.Unlock()
 	}
 
-	m := NewMinecartManager(paths.townRoot, logger, "gt", 10*time.Minute, nil, nil, nil)
+	m := NewMinecartManager(paths.townRoot, logger, "ms", 10*time.Minute, nil, nil, nil)
 	m.scan()
 
 	// Verify ready minecarts were dispatched via sling
@@ -1329,11 +1329,11 @@ func TestScanStranded_MixedReadyAndEmpty(t *testing.T) {
 		t.Fatalf("read sling log: %v (sling was never called)", err)
 	}
 	slingContent := string(slingData)
-	if !strings.Contains(slingContent, "gt-issue1") {
-		t.Errorf("expected sling for gt-issue1 (ready minecart), got: %q", slingContent)
+	if !strings.Contains(slingContent, "ms-issue1") {
+		t.Errorf("expected sling for ms-issue1 (ready minecart), got: %q", slingContent)
 	}
-	if !strings.Contains(slingContent, "gt-issue2") {
-		t.Errorf("expected sling for gt-issue2 (ready minecart), got: %q", slingContent)
+	if !strings.Contains(slingContent, "ms-issue2") {
+		t.Errorf("expected sling for ms-issue2 (ready minecart), got: %q", slingContent)
 	}
 
 	// Verify empty minecarts were routed to minecart check
@@ -1381,7 +1381,7 @@ func TestStop_ClosesLazilyOpenedStores(t *testing.T) {
 		logged = append(logged, fmt.Sprintf(format, args...))
 	}
 
-	m := NewMinecartManager(t.TempDir(), logger, "gt", 10*time.Minute, nil, opener, nil)
+	m := NewMinecartManager(t.TempDir(), logger, "ms", 10*time.Minute, nil, opener, nil)
 
 	// Simulate lazy opening (as runEventPoll does when stores are nil)
 	m.stores = m.openStores()
@@ -1428,7 +1428,7 @@ func TestStop_ClosesMultipleStores(t *testing.T) {
 		"mineshaft": rigStore,
 	}
 
-	m := NewMinecartManager(t.TempDir(), logger, "gt", 10*time.Minute, stores, nil, nil)
+	m := NewMinecartManager(t.TempDir(), logger, "ms", 10*time.Minute, stores, nil, nil)
 	m.Stop()
 
 	// Both stores should have been closed
@@ -1497,7 +1497,7 @@ func TestPollAllStores_MultiRig_DetectsCloseFromNonHqStore(t *testing.T) {
 		"shippercrm": rigStore,
 	}
 
-	m := NewMinecartManager(t.TempDir(), logger, "gt", 10*time.Minute, stores, nil, nil)
+	m := NewMinecartManager(t.TempDir(), logger, "ms", 10*time.Minute, stores, nil, nil)
 	m.seeded.Store(true)
 	m.pollStoresSnapshot(m.stores)
 
@@ -1540,7 +1540,7 @@ func TestPollAllStores_MultiRig_BothStoresPolled(t *testing.T) {
 
 	// Close event in rig store
 	rigIssue := &beadsdk.Issue{
-		ID: "gt-task1", Title: "Rig Task", Status: beadsdk.StatusOpen,
+		ID: "ms-task1", Title: "Rig Task", Status: beadsdk.StatusOpen,
 		Priority: 2, IssueType: beadsdk.TypeTask, CreatedAt: now, UpdatedAt: now,
 	}
 	if err := rigStore.CreateIssue(ctx, rigIssue, "test"); err != nil {
@@ -1560,7 +1560,7 @@ func TestPollAllStores_MultiRig_BothStoresPolled(t *testing.T) {
 		"mineshaft": rigStore,
 	}
 
-	m := NewMinecartManager(t.TempDir(), logger, "gt", 10*time.Minute, stores, nil, nil)
+	m := NewMinecartManager(t.TempDir(), logger, "ms", 10*time.Minute, stores, nil, nil)
 	m.seeded.Store(true)
 	m.pollStoresSnapshot(m.stores)
 
@@ -1571,7 +1571,7 @@ func TestPollAllStores_MultiRig_BothStoresPolled(t *testing.T) {
 		if strings.Contains(s, "close detected") && strings.Contains(s, "hq-task1") {
 			foundHq = true
 		}
-		if strings.Contains(s, "close detected") && strings.Contains(s, "gt-task1") {
+		if strings.Contains(s, "close detected") && strings.Contains(s, "ms-task1") {
 			foundRig = true
 		}
 	}
@@ -1600,7 +1600,7 @@ func TestPollAllStores_SkipsParkedRigs(t *testing.T) {
 	now := time.Now().UTC()
 
 	// Use unique IDs to avoid cross-test contamination from shared Dolt server
-	activeID := fmt.Sprintf("gt-active-park-%d", time.Now().UnixNano())
+	activeID := fmt.Sprintf("ms-active-park-%d", time.Now().UnixNano())
 	parkedID := fmt.Sprintf("sh-parked-park-%d", time.Now().UnixNano())
 
 	// Close events in both rig stores
@@ -1638,7 +1638,7 @@ func TestPollAllStores_SkipsParkedRigs(t *testing.T) {
 		return rig == "shippercrm"
 	}
 
-	m := NewMinecartManager(t.TempDir(), logger, "gt", 10*time.Minute, stores, nil, isParked)
+	m := NewMinecartManager(t.TempDir(), logger, "ms", 10*time.Minute, stores, nil, isParked)
 	m.seeded.Store(true)
 	m.pollStoresSnapshot(m.stores)
 
@@ -1695,7 +1695,7 @@ func TestPollAllStores_HqNeverSkippedEvenIfParkedCallbackReturnsTrue(t *testing.
 	// because the code checks `name != "hq" && m.isRigParked(name)`
 	alwaysParked := func(string) bool { return true }
 
-	m := NewMinecartManager(t.TempDir(), logger, "gt", 10*time.Minute,
+	m := NewMinecartManager(t.TempDir(), logger, "ms", 10*time.Minute,
 		map[string]beadsdk.Storage{"hq": store}, nil, alwaysParked)
 	m.seeded.Store(true)
 	m.pollStoresSnapshot(m.stores)
@@ -1724,7 +1724,7 @@ func TestPollAllStores_HighWaterMark_NoReprocessing(t *testing.T) {
 	ctx := context.Background()
 	now := time.Now().UTC()
 	// Use unique ID to avoid cross-test contamination from shared Dolt server
-	issueID := fmt.Sprintf("gt-hw-%d", time.Now().UnixNano())
+	issueID := fmt.Sprintf("ms-hw-%d", time.Now().UnixNano())
 	issue := &beadsdk.Issue{
 		ID: issueID, Title: "High Water Test", Status: beadsdk.StatusOpen,
 		Priority: 2, IssueType: beadsdk.TypeTask, CreatedAt: now, UpdatedAt: now,
@@ -1741,7 +1741,7 @@ func TestPollAllStores_HighWaterMark_NoReprocessing(t *testing.T) {
 		logged = append(logged, fmt.Sprintf(format, args...))
 	}
 
-	m := NewMinecartManager(t.TempDir(), logger, "gt", 10*time.Minute,
+	m := NewMinecartManager(t.TempDir(), logger, "ms", 10*time.Minute,
 		map[string]beadsdk.Storage{"hq": store}, nil, nil)
 
 	// First poll: should detect our close event
@@ -1778,7 +1778,7 @@ func TestPollAllStores_ReopenClearsCloseDedupAcrossPolls(t *testing.T) {
 
 	ctx := context.Background()
 	now := time.Now().UTC()
-	issueID := fmt.Sprintf("gt-reclose-%d", time.Now().UnixNano())
+	issueID := fmt.Sprintf("ms-reclose-%d", time.Now().UnixNano())
 	issue := &beadsdk.Issue{
 		ID: issueID, Title: "Reclose Test", Status: beadsdk.StatusOpen,
 		Priority: 2, IssueType: beadsdk.TypeTask, CreatedAt: now, UpdatedAt: now,
@@ -1795,7 +1795,7 @@ func TestPollAllStores_ReopenClearsCloseDedupAcrossPolls(t *testing.T) {
 		logged = append(logged, fmt.Sprintf(format, args...))
 	}
 
-	m := NewMinecartManager(t.TempDir(), logger, "gt", 10*time.Minute,
+	m := NewMinecartManager(t.TempDir(), logger, "ms", 10*time.Minute,
 		map[string]beadsdk.Storage{"hq": store}, nil, nil)
 	m.seeded.Store(true)
 	m.pollStoresSnapshot(m.stores)
@@ -1855,7 +1855,7 @@ func TestPollAllStores_ReopenResetsPerCycleDedup(t *testing.T) {
 
 	ctx := context.Background()
 	now := time.Now().UTC()
-	issueID := fmt.Sprintf("gt-reclose-same-poll-%d", time.Now().UnixNano())
+	issueID := fmt.Sprintf("ms-reclose-same-poll-%d", time.Now().UnixNano())
 	issue := &beadsdk.Issue{
 		ID: issueID, Title: "Reclose Same Poll Test", Status: beadsdk.StatusOpen,
 		Priority: 2, IssueType: beadsdk.TypeTask, CreatedAt: now, UpdatedAt: now,
@@ -1885,7 +1885,7 @@ func TestPollAllStores_ReopenResetsPerCycleDedup(t *testing.T) {
 		logged = append(logged, fmt.Sprintf(format, args...))
 	}
 
-	m := NewMinecartManager(t.TempDir(), logger, "gt", 10*time.Minute,
+	m := NewMinecartManager(t.TempDir(), logger, "ms", 10*time.Minute,
 		map[string]beadsdk.Storage{"hq": store}, nil, nil)
 	m.seeded.Store(true)
 	m.pollStoresSnapshot(m.stores)
@@ -1914,7 +1914,7 @@ func TestPollAllStores_CrossStoreDedup(t *testing.T) {
 
 	ctx := context.Background()
 	now := time.Now().UTC()
-	issueID := fmt.Sprintf("gt-dedup-%d", time.Now().UnixNano())
+	issueID := fmt.Sprintf("ms-dedup-%d", time.Now().UnixNano())
 
 	// Create and close the same issue in BOTH stores (simulating replication)
 	for _, store := range []beadsdk.Storage{hqStore, rigStore} {
@@ -1939,7 +1939,7 @@ func TestPollAllStores_CrossStoreDedup(t *testing.T) {
 		"hq":      hqStore,
 		"mineshaft": rigStore,
 	}
-	m := NewMinecartManager(t.TempDir(), logger, "gt", 10*time.Minute, stores, nil, nil)
+	m := NewMinecartManager(t.TempDir(), logger, "ms", 10*time.Minute, stores, nil, nil)
 	m.seeded.Store(true)
 	m.pollStoresSnapshot(m.stores)
 
@@ -1989,14 +1989,14 @@ func TestPollAllStores_PerStoreHighWaterMarks(t *testing.T) {
 		"mineshaft": rigStore,
 	}
 
-	m := NewMinecartManager(t.TempDir(), logger, "gt", 10*time.Minute, stores, nil, nil)
+	m := NewMinecartManager(t.TempDir(), logger, "ms", 10*time.Minute, stores, nil, nil)
 
 	// First poll: only hq has a close event
 	m.pollStoresSnapshot(m.stores)
 
 	// Now add a close event to mineshaft AFTER the first poll
 	rigIssue := &beadsdk.Issue{
-		ID: "gt-hw2", Title: "Rig HW", Status: beadsdk.StatusOpen,
+		ID: "ms-hw2", Title: "Rig HW", Status: beadsdk.StatusOpen,
 		Priority: 2, IssueType: beadsdk.TypeTask, CreatedAt: now, UpdatedAt: now,
 	}
 	if err := rigStore.CreateIssue(ctx, rigIssue, "test"); err != nil {
@@ -2013,7 +2013,7 @@ func TestPollAllStores_PerStoreHighWaterMarks(t *testing.T) {
 	foundNewRig := false
 	foundOldHq := false
 	for _, s := range logged {
-		if strings.Contains(s, "close detected") && strings.Contains(s, "gt-hw2") {
+		if strings.Contains(s, "close detected") && strings.Contains(s, "ms-hw2") {
 			foundNewRig = true
 		}
 		if strings.Contains(s, "close detected") && strings.Contains(s, "hq-hw1") {
@@ -2021,7 +2021,7 @@ func TestPollAllStores_PerStoreHighWaterMarks(t *testing.T) {
 		}
 	}
 	if !foundNewRig {
-		t.Errorf("expected new rig close event (gt-hw2) on second poll, got: %v", logged)
+		t.Errorf("expected new rig close event (ms-hw2) on second poll, got: %v", logged)
 	}
 	if foundOldHq {
 		t.Errorf("hq close event (hq-hw1) should NOT be reprocessed on second poll (per-store high-water marks), got: %v", logged)
@@ -2038,7 +2038,7 @@ func TestEventPoll_SkipsNonCloseEvents_NegativeAssertion(t *testing.T) {
 	ctx := context.Background()
 	now := time.Now().UTC()
 	// Use unique ID to avoid cross-test contamination from shared Dolt server
-	issueID := fmt.Sprintf("gt-open2-%d", time.Now().UnixNano())
+	issueID := fmt.Sprintf("ms-open2-%d", time.Now().UnixNano())
 	issue := &beadsdk.Issue{
 		ID:        issueID,
 		Title:     "Stays Open",
@@ -2055,13 +2055,13 @@ func TestEventPoll_SkipsNonCloseEvents_NegativeAssertion(t *testing.T) {
 	binDir := t.TempDir()
 	townRoot := t.TempDir()
 
-	callLogPath := filepath.Join(binDir, "gt-calls.log")
+	callLogPath := filepath.Join(binDir, "ms-calls.log")
 	gtScript := `#!/bin/sh
 echo "$@" >> "` + callLogPath + `"
 exit 0
 `
-	if err := os.WriteFile(filepath.Join(binDir, "gt"), []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write mock gt: %v", err)
+	if err := os.WriteFile(filepath.Join(binDir, "ms"), []byte(gtScript), 0755); err != nil {
+		t.Fatalf("write mock ms: %v", err)
 	}
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
@@ -2070,7 +2070,7 @@ exit 0
 		logged = append(logged, fmt.Sprintf(format, args...))
 	}
 
-	m := NewMinecartManager(townRoot, logger, filepath.Join(binDir, "gt"), 10*time.Minute, map[string]beadsdk.Storage{"hq": store}, nil, nil)
+	m := NewMinecartManager(townRoot, logger, filepath.Join(binDir, "ms"), 10*time.Minute, map[string]beadsdk.Storage{"hq": store}, nil, nil)
 	m.seeded.Store(true)
 	m.pollStoresSnapshot(m.stores)
 
@@ -2097,7 +2097,7 @@ func TestPollStore_NilHqStore_LogsWarningAndSkips(t *testing.T) {
 	ctx := context.Background()
 	now := time.Now().UTC()
 	issue := &beadsdk.Issue{
-		ID: "gt-nohq1", Title: "No HQ Store", Status: beadsdk.StatusOpen,
+		ID: "ms-nohq1", Title: "No HQ Store", Status: beadsdk.StatusOpen,
 		Priority: 2, IssueType: beadsdk.TypeTask, CreatedAt: now, UpdatedAt: now,
 	}
 	if err := rigStore.CreateIssue(ctx, issue, "test"); err != nil {
@@ -2117,7 +2117,7 @@ func TestPollStore_NilHqStore_LogsWarningAndSkips(t *testing.T) {
 		"mineshaft": rigStore,
 	}
 
-	m := NewMinecartManager(t.TempDir(), logger, "gt", 10*time.Minute, stores, nil, nil)
+	m := NewMinecartManager(t.TempDir(), logger, "ms", 10*time.Minute, stores, nil, nil)
 	m.seeded.Store(true)
 	m.pollStoresSnapshot(m.stores)
 
@@ -2158,7 +2158,7 @@ func TestRecoveryMode_SetOnPollError(t *testing.T) {
 	}
 
 	// Use a broken store that returns errors
-	m := NewMinecartManager(townRoot, logger, "gt", 10*time.Minute, nil, nil, nil)
+	m := NewMinecartManager(townRoot, logger, "ms", 10*time.Minute, nil, nil, nil)
 
 	// recoveryMode should start false
 	if m.recoveryMode.Load() {
@@ -2172,7 +2172,7 @@ func TestRecoveryMode_SetOnPollError(t *testing.T) {
 		t.Fatal("recoveryMode should be true after Store(true)")
 	}
 
-	// scan() should clear it (scan will fail on findStranded since no gt binary, but
+	// scan() should clear it (scan will fail on findStranded since no ms binary, but
 	// that's OK — the test verifies the flag is cleared on success path only)
 	m.recoveryMode.Store(false)
 	if m.recoveryMode.Load() {
@@ -2193,7 +2193,7 @@ func TestRecoveryMode_ClearedAfterSuccessfulScan(t *testing.T) {
 		logged = append(logged, fmt.Sprintf(format, args...))
 	}
 
-	m := NewMinecartManager(paths.townRoot, logger, filepath.Join(paths.binDir, "gt"), 10*time.Minute, nil, nil, nil)
+	m := NewMinecartManager(paths.townRoot, logger, filepath.Join(paths.binDir, "ms"), 10*time.Minute, nil, nil, nil)
 
 	// Set recovery mode
 	m.recoveryMode.Store(true)
@@ -2201,7 +2201,7 @@ func TestRecoveryMode_ClearedAfterSuccessfulScan(t *testing.T) {
 		t.Fatal("expected recoveryMode true before scan")
 	}
 
-	// scan() should clear it (mock gt returns empty stranded list = success)
+	// scan() should clear it (mock ms returns empty stranded list = success)
 	m.scan()
 
 	if m.recoveryMode.Load() {
@@ -2219,7 +2219,7 @@ func TestScanMu_PreventsConcurrentScans(t *testing.T) {
 	stranded := []strandedMinecartInfo{{
 		ID:          "minecart-race",
 		ReadyCount:  1,
-		ReadyIssues: []string{"gt-race1"},
+		ReadyIssues: []string{"ms-race1"},
 	}}
 	data, _ := json.Marshal(stranded)
 
@@ -2232,7 +2232,7 @@ func TestScanMu_PreventsConcurrentScans(t *testing.T) {
 		mu.Unlock()
 	}
 
-	m := NewMinecartManager(paths.townRoot, logger, filepath.Join(paths.binDir, "gt"), 10*time.Minute, nil, nil, nil)
+	m := NewMinecartManager(paths.townRoot, logger, filepath.Join(paths.binDir, "ms"), 10*time.Minute, nil, nil, nil)
 
 	// Launch multiple concurrent scans
 	var wg sync.WaitGroup
@@ -2247,7 +2247,7 @@ func TestScanMu_PreventsConcurrentScans(t *testing.T) {
 
 	// Verify sling was called (at least once) — the key is no panics or races
 	if _, err := os.Stat(paths.slingLogPath); err != nil {
-		t.Log("sling was never called (mock gt may not have been reached) — acceptable for race test")
+		t.Log("sling was never called (mock ms may not have been reached) — acceptable for race test")
 	}
 }
 
@@ -2271,7 +2271,7 @@ func TestStartupSweep_RunsAfterDelay(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	m := NewMinecartManager(paths.townRoot, logger, filepath.Join(paths.binDir, "gt"), 10*time.Minute, nil, nil, nil)
+	m := NewMinecartManager(paths.townRoot, logger, filepath.Join(paths.binDir, "ms"), 10*time.Minute, nil, nil, nil)
 	m.ctx = ctx
 
 	// Run startup sweep directly (it waits 10s normally, but we can test the
@@ -2407,7 +2407,7 @@ func TestPollStore_InfNaNError_AdvancesHWMAndReturnsNil(t *testing.T) {
 			}
 
 			before := time.Now()
-			m := NewMinecartManager(t.TempDir(), logger, "gt", 10*time.Minute, stores, nil, nil)
+			m := NewMinecartManager(t.TempDir(), logger, "ms", 10*time.Minute, stores, nil, nil)
 
 			hadError := m.pollStoresSnapshot(m.stores)
 			after := time.Now()

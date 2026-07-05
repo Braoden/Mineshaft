@@ -36,7 +36,7 @@ switch ($cmd) {
       $target = Join-Path (Get-Location) '.beads'
     }
 
-    $prefix = 'gt'
+    $prefix = 'ms'
     for ($i = 0; $i -lt $args.Length; $i++) {
       if ($args[$i] -like '--prefix=*') {
         $prefix = $args[$i].Substring(9)
@@ -85,7 +85,7 @@ done
 case "$cmd" in
   init)
     target="${BEADS_DIR:-$(pwd)/.beads}"
-    prefix="gt"
+    prefix="ms"
     for arg in "$@"; do
       case "$arg" in
         --prefix=*) prefix="${arg#--prefix=}" ;;
@@ -223,7 +223,7 @@ func TestResolveRoutingTarget(t *testing.T) {
 	}
 
 	// Create routes.jsonl
-	routesContent := `{"prefix": "gt-", "path": "mineshaft/overseer/rig"}
+	routesContent := `{"prefix": "ms-", "path": "mineshaft/overseer/rig"}
 {"prefix": "hq-", "path": "."}
 `
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
@@ -247,7 +247,7 @@ func TestResolveRoutingTarget(t *testing.T) {
 		{
 			name:     "rig-level bead routes to rig",
 			townRoot: tmpDir,
-			beadID:   "gt-mineshaft-miner-Toast",
+			beadID:   "ms-mineshaft-miner-Toast",
 			expected: rigBeadsDir,
 		},
 		{
@@ -265,7 +265,7 @@ func TestResolveRoutingTarget(t *testing.T) {
 		{
 			name:     "empty townRoot falls back",
 			townRoot: "",
-			beadID:   "gt-mineshaft-miner-Toast",
+			beadID:   "ms-mineshaft-miner-Toast",
 			expected: fallback,
 		},
 		{
@@ -337,7 +337,7 @@ func TestEnsureCustomTypes(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		// Create sentinel file with old/legacy content (gt-zmy, gt-26f)
+		// Create sentinel file with old/legacy content (ms-zmy, ms-26f)
 		sentinelPath := filepath.Join(beadsDir, typesSentinel)
 		if err := os.WriteFile(sentinelPath, []byte("v1\n"), 0644); err != nil {
 			t.Fatal(err)
@@ -412,7 +412,7 @@ case "$cmd" in
   init)
     target="${BEADS_DIR:-$(pwd)/.beads}"
     mkdir -p "$target/dolt"
-    printf 'prefix: gt\nissue-prefix: gt-\n' > "$target/config.yaml"
+    printf 'prefix: ms\nissue-prefix: ms-\n' > "$target/config.yaml"
     exit 0
     ;;
   config)
@@ -586,11 +586,11 @@ func TestEnsureCustomStatuses(t *testing.T) {
 		}
 	})
 
-	// Regression for gt-kbi: when `bd config get status.custom` returns the
+	// Regression for ms-kbi: when `bd config get status.custom` returns the
 	// unset sentinel "status.custom (not set)", EnsureCustomStatuses must NOT
 	// merge that literal string into the value passed to `bd config set` —
-	// bd rejects it via the [a-z][a-z0-9_-]* validator, breaking gt minecart.
-	t.Run("unset sentinel from bd config get is filtered (gt-kbi)", func(t *testing.T) {
+	// bd rejects it via the [a-z][a-z0-9_-]* validator, breaking ms minecart.
+	t.Run("unset sentinel from bd config get is filtered (ms-kbi)", func(t *testing.T) {
 		if runtime.GOOS == "windows" {
 			t.Skip("test uses Unix shell script mock for bd")
 		}
@@ -613,7 +613,7 @@ case "$cmd" in
   init)
     target="${BEADS_DIR:-$(pwd)/.beads}"
     mkdir -p "$target/dolt"
-    printf 'prefix: gt\nissue-prefix: gt-\n' > "$target/config.yaml"
+    printf 'prefix: ms\nissue-prefix: ms-\n' > "$target/config.yaml"
     exit 0
     ;;
   config)
@@ -738,7 +738,7 @@ func TestEnsureDatabaseInitialized(t *testing.T) {
 		}
 
 		logOutput := readMockBDLog(t, logPath)
-		for _, want := range []string{"init --prefix gt --server", "config set issue_prefix", "migrate --yes"} {
+		for _, want := range []string{"init --prefix ms --server", "config set issue_prefix", "migrate --yes"} {
 			if !strings.Contains(logOutput, want) {
 				t.Fatalf("mock bd log %q missing %q", logOutput, want)
 			}
@@ -755,7 +755,7 @@ func TestEnsureDatabaseInitialized(t *testing.T) {
 		}
 
 		logOutput := readMockBDLog(t, logPath)
-		for _, want := range []string{"init --prefix gt --server", "config set issue_prefix", "migrate --yes"} {
+		for _, want := range []string{"init --prefix ms --server", "config set issue_prefix", "migrate --yes"} {
 			if !strings.Contains(logOutput, want) {
 				t.Fatalf("mock bd log %q missing %q", logOutput, want)
 			}
@@ -835,8 +835,8 @@ func TestDetectPrefix(t *testing.T) {
 		os.WriteFile(filepath.Join(beadsDir, "config.yaml"), []byte("prefix: 123-invalid\n"), 0644)
 
 		got := detectPrefix(beadsDir)
-		if got != "gt" {
-			t.Errorf("detectPrefix() = %q, want %q", got, "gt")
+		if got != "ms" {
+			t.Errorf("detectPrefix() = %q, want %q", got, "ms")
 		}
 	})
 
@@ -845,8 +845,8 @@ func TestDetectPrefix(t *testing.T) {
 		os.MkdirAll(beadsDir, 0755)
 
 		got := detectPrefix(beadsDir)
-		if got != "gt" {
-			t.Errorf("detectPrefix() = %q, want %q", got, "gt")
+		if got != "ms" {
+			t.Errorf("detectPrefix() = %q, want %q", got, "ms")
 		}
 	})
 
@@ -869,15 +869,15 @@ func TestDetectPrefix(t *testing.T) {
 		got := detectPrefix(beadsDir)
 		// GetRigPrefix should find "testrig" in rigs.json and return "tr".
 		// If the town structure isn't recognized (e.g., GetRigPrefix expects
-		// additional files), it falls back to "gt" — both are valid prefixes.
-		if got != "tr" && got != "gt" {
-			t.Errorf("detectPrefix() = %q, want %q or %q", got, "tr", "gt")
+		// additional files), it falls back to "ms" — both are valid prefixes.
+		if got != "tr" && got != "ms" {
+			t.Errorf("detectPrefix() = %q, want %q or %q", got, "tr", "ms")
 		}
 	})
 
 	t.Run("routed path falls back to default", func(t *testing.T) {
 		// Routed beads path: overseer/rig/.beads — filepath.Base(filepath.Dir)
-		// yields "rig", not the actual rig name. Should fall back to "gt".
+		// yields "rig", not the actual rig name. Should fall back to "ms".
 		townDir := t.TempDir()
 		overseerDir := filepath.Join(townDir, "overseer")
 		os.MkdirAll(overseerDir, 0755)
@@ -889,9 +889,9 @@ func TestDetectPrefix(t *testing.T) {
 		os.MkdirAll(beadsDir, 0755)
 
 		got := detectPrefix(beadsDir)
-		// "rig" won't be found in rigs.json → falls to "gt" default
-		if got != "gt" {
-			t.Errorf("detectPrefix() for routed path = %q, want %q", got, "gt")
+		// "rig" won't be found in rigs.json → falls to "ms" default
+		if got != "ms" {
+			t.Errorf("detectPrefix() for routed path = %q, want %q", got, "ms")
 		}
 	})
 }

@@ -13,7 +13,7 @@ import (
 // but the referenced path doesn't exist, all git operations in that worktree fail.
 //
 // This detects two scenarios:
-//   - gt-fmnml: a rig's .repo.git was missing, causing worktrees to break
+//   - ms-fmnml: a rig's .repo.git was missing, causing worktrees to break
 //   - hq-c6u: rsync/move between machines changes the path prefix (e.g.
 //     /Users/bob -> /home/bob), breaking all absolute gitdir references
 //
@@ -26,11 +26,11 @@ type WorktreeGitdirCheck struct {
 }
 
 type brokenWorktree struct {
-	worktreePath      string // e.g., /home/bob/gt/wyvern/refinery/rig
-	gitdirTarget      string // e.g., /Users/bob/gt/wyvern/.repo.git/worktrees/rig (stale)
-	rigPath           string // e.g., /home/bob/gt/wyvern
-	bareRepoPath      string // e.g., /Users/bob/gt/wyvern/.repo.git (from gitdir, may be stale)
-	correctedBareRepo string // e.g., /home/bob/gt/wyvern/.repo.git (inferred from town root)
+	worktreePath      string // e.g., /home/bob/ms/wyvern/refinery/rig
+	gitdirTarget      string // e.g., /Users/bob/ms/wyvern/.repo.git/worktrees/rig (stale)
+	rigPath           string // e.g., /home/bob/ms/wyvern
+	bareRepoPath      string // e.g., /Users/bob/ms/wyvern/.repo.git (from gitdir, may be stale)
+	correctedBareRepo string // e.g., /home/bob/ms/wyvern/.repo.git (inferred from town root)
 	reason            string // what's broken
 }
 
@@ -107,7 +107,7 @@ func (c *WorktreeGitdirCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:  StatusError,
 		Message: fmt.Sprintf("%d worktree(s) with broken gitdir references", len(c.brokenWorktrees)),
 		Details: details,
-		FixHint: "Run 'gt doctor --fix' to re-create broken worktrees from .repo.git",
+		FixHint: "Run 'ms doctor --fix' to re-create broken worktrees from .repo.git",
 	}
 }
 
@@ -151,7 +151,7 @@ func (c *WorktreeGitdirCheck) checkRigWorktrees(rigPath, rigName string) {
 }
 
 // checkSupervisorDogs scans supervisor/dogs/<dogname>/<rigname>/ for cross-rig worktrees.
-// Each dog directory contains worktrees of various rigs, created by gt sling.
+// Each dog directory contains worktrees of various rigs, created by ms sling.
 func (c *WorktreeGitdirCheck) checkSupervisorDogs(townRoot string) {
 	dogsDir := filepath.Join(townRoot, "supervisor", "dogs")
 	dogEntries, err := os.ReadDir(dogsDir)
@@ -260,7 +260,7 @@ func (c *WorktreeGitdirCheck) checkWorktree(worktreePath, rigPath string) {
 // inferCorrectedBareRepo tries to find the correct .repo.git path by extracting
 // the rig name from the stale path and looking it up under the current town root.
 func (c *WorktreeGitdirCheck) inferCorrectedBareRepo(staleBareRepoPath string) string {
-	// staleBareRepoPath looks like: /Users/bob/gt/testAnt/.repo.git
+	// staleBareRepoPath looks like: /Users/bob/ms/testAnt/.repo.git
 	// We need to extract "testAnt" and check <townRoot>/testAnt/.repo.git
 
 	// Get the parent of .repo.git — that's the rig directory (with old prefix)
@@ -288,8 +288,8 @@ func (c *WorktreeGitdirCheck) buildReason(gitdirTarget, bareRepoPath, correctedB
 
 	// Stale .repo.git path doesn't exist — is this a relocation?
 	if correctedBareRepo != "" {
-		oldPrefix := filepath.Dir(filepath.Dir(bareRepoPath))     // e.g., /Users/bob/gt
-		newPrefix := filepath.Dir(filepath.Dir(correctedBareRepo)) // e.g., /home/bob/gt
+		oldPrefix := filepath.Dir(filepath.Dir(bareRepoPath))     // e.g., /Users/bob/ms
+		newPrefix := filepath.Dir(filepath.Dir(correctedBareRepo)) // e.g., /home/bob/ms
 		return fmt.Sprintf("relocated (%s -> %s), needs worktree re-creation", oldPrefix, newPrefix)
 	}
 
@@ -323,7 +323,7 @@ func (c *WorktreeGitdirCheck) Fix(ctx *CheckContext) error {
 
 		// Check if .repo.git exists
 		if _, err := os.Stat(repoPath); os.IsNotExist(err) {
-			errs = append(errs, fmt.Sprintf("%s: cannot fix (.repo.git does not exist at %s, needs re-clone via 'gt rig install')", bw.worktreePath, repoPath))
+			errs = append(errs, fmt.Sprintf("%s: cannot fix (.repo.git does not exist at %s, needs re-clone via 'ms rig install')", bw.worktreePath, repoPath))
 			continue
 		}
 

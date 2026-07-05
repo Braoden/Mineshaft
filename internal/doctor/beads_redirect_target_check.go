@@ -153,7 +153,7 @@ func (c *BeadsRedirectTargetCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:  StatusWarning,
 		Message: fmt.Sprintf("%d broken redirect target(s)", len(broken)),
 		Details: details,
-		FixHint: "Run 'gt doctor --fix' to repair redirects, or 'bd init' to initialize beads",
+		FixHint: "Run 'ms doctor --fix' to repair redirects, or 'bd init' to initialize beads",
 	}
 }
 
@@ -169,7 +169,7 @@ func (c *BeadsRedirectTargetCheck) Fix(ctx *CheckContext) error {
 	for _, bt := range c.brokenTargets {
 		// If the redirect target directory exists but lacks beads setup,
 		// try to create config.yaml from metadata.json before giving up.
-		// This handles the case where gt rig add partially completed: the
+		// This handles the case where ms rig add partially completed: the
 		// dolt database and metadata.json exist but config.yaml was never
 		// written (e.g., due to a crash or interrupted setup).
 		if strings.Contains(bt.reason, "no beads setup") && dirExists(bt.resolvedPath) {

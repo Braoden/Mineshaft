@@ -33,7 +33,7 @@
 # - github.org
 # - github.repo
 
-# Cross-project dependencies (gt-o3is)
+# Cross-project dependencies (ms-o3is)
 # Maps project names to paths for external dependency resolution
 # Format: external:<project>:<capability> in bd dep commands
 external_projects:
@@ -46,9 +46,9 @@ prefix:
 issue-prefix:
 dolt.idle-timeout: "0"
 
-# Molecules are internal GT scaffolding (patrol instances etc.) and must never
+# Molecules are internal MS scaffolding (patrol instances etc.) and must never
 # reach the GitHub issue tracker. Disabling auto-export prevents silent
-# regressions when the bd binary is upgraded. (gt-b48)
+# regressions when the bd binary is upgraded. (ms-b48)
 export.auto: "false"
 
 sync.remote: "git+https://github.com/steveyegge/mineshaft.git"

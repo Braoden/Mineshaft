@@ -130,8 +130,8 @@ else
 
         # Consolidate and start
         cd "$TOWN_ROOT"
-        gt dolt migrate 2>&1 || true
-        gt dolt start 2>&1 || true
+        ms dolt migrate 2>&1 || true
+        ms dolt start 2>&1 || true
 
         # Validate all migrated
         final_count=$(count_dolt_rigs)
@@ -233,8 +233,8 @@ for rig_name in "${RIGS[@]}"; do
     fi
 done
 cd "$TOWN_ROOT"
-gt dolt migrate 2>&1 || true
-gt dolt start 2>&1 || true
+ms dolt migrate 2>&1 || true
+ms dolt start 2>&1 || true
 
 # Now corrupt metadata.json files
 CORRUPT_RIG="${RIGS[0]}"
@@ -251,7 +251,7 @@ if [[ -f "$CORRUPT_META" ]]; then
 
     # Run fix-metadata
     cd "$TOWN_ROOT"
-    if gt dolt fix-metadata 2>&1; then
+    if ms dolt fix-metadata 2>&1; then
         log "fix-metadata completed"
     else
         warn "fix-metadata returned non-zero"
@@ -273,7 +273,7 @@ if [[ -f "$CORRUPT_META" ]]; then
     log "Testing wrong backend value..."
     echo '{"backend": "sqlite", "database": "beads.db"}' > "$CORRUPT_META"
     cd "$TOWN_ROOT"
-    gt dolt fix-metadata 2>&1 || true
+    ms dolt fix-metadata 2>&1 || true
 
     backend=$(python3 -c "import json; print(json.load(open('$CORRUPT_META')).get('backend', 'unknown'))" 2>/dev/null || echo "parse-error")
     if [[ "$backend" == "dolt" ]]; then
@@ -286,7 +286,7 @@ if [[ -f "$CORRUPT_META" ]]; then
     log "Testing empty metadata.json..."
     > "$CORRUPT_META"
     cd "$TOWN_ROOT"
-    gt dolt fix-metadata 2>&1 || true
+    ms dolt fix-metadata 2>&1 || true
 
     backend=$(python3 -c "import json; print(json.load(open('$CORRUPT_META')).get('backend', 'unknown'))" 2>/dev/null || echo "parse-error")
     if [[ "$backend" == "dolt" ]]; then
@@ -320,9 +320,9 @@ for rig_name in "${RIGS[@]}"; do
     fi
 done
 cd "$TOWN_ROOT"
-gt dolt stop 2>/dev/null || true
-gt dolt migrate 2>&1 || true
-gt dolt start 2>&1 || true
+ms dolt stop 2>/dev/null || true
+ms dolt migrate 2>&1 || true
+ms dolt start 2>&1 || true
 
 # Record counts after first pass
 declare -A PASS1_COUNTS
@@ -350,17 +350,17 @@ for rig_name in "${RIGS[@]}"; do
 done
 
 cd "$TOWN_ROOT"
-gt dolt stop 2>/dev/null || true
-output=$(gt dolt migrate 2>&1) || true
+ms dolt stop 2>/dev/null || true
+output=$(ms dolt migrate 2>&1) || true
 if echo "$output" | grep -qi "fatal\|panic\|corrupt"; then
-    warn "gt dolt migrate had unexpected error in pass 2"
+    warn "ms dolt migrate had unexpected error in pass 2"
     PASS2_ERRORS=$((PASS2_ERRORS + 1))
 fi
-gt dolt start 2>&1 || true
+ms dolt start 2>&1 || true
 
 # Run fix-metadata twice (must be harmless)
-gt dolt fix-metadata 2>&1 || true
-gt dolt fix-metadata 2>&1 || true
+ms dolt fix-metadata 2>&1 || true
+ms dolt fix-metadata 2>&1 || true
 
 # Verify counts match
 count_mismatch=false

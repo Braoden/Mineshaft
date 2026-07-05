@@ -43,8 +43,8 @@ func TestBuildWitnessStartCommand_DefaultsToRuntime(t *testing.T) {
 		t.Fatalf("buildWitnessStartCommand: %v", err)
 	}
 
-	if !strings.Contains(got, "GT_ROLE=mineshaft/witness") {
-		t.Errorf("expected GT_ROLE=mineshaft/witness in command, got %q", got)
+	if !strings.Contains(got, "MS_ROLE=mineshaft/witness") {
+		t.Errorf("expected MS_ROLE=mineshaft/witness in command, got %q", got)
 	}
 	if !strings.Contains(got, "BD_ACTOR=mineshaft/witness") {
 		t.Errorf("expected BD_ACTOR=mineshaft/witness in command, got %q", got)
@@ -52,22 +52,22 @@ func TestBuildWitnessStartCommand_DefaultsToRuntime(t *testing.T) {
 }
 
 // TestRoleConfigEnvVars_ExpandsQualifiedGTRole verifies that the TOML env vars
-// expand GT_ROLE to a qualified value (e.g., "mineshaft/witness" not "witness").
+// expand MS_ROLE to a qualified value (e.g., "mineshaft/witness" not "witness").
 func TestRoleConfigEnvVars_ExpandsQualifiedGTRole(t *testing.T) {
 	t.Parallel()
 	roleCfg := &beads.RoleConfig{
 		EnvVars: map[string]string{
-			"GT_ROLE":  "{rig}/witness",
-			"GT_SCOPE": "rig",
+			"MS_ROLE":  "{rig}/witness",
+			"MS_SCOPE": "rig",
 		},
 	}
 
 	got := roleConfigEnvVars(roleCfg, "/town", "mineshaft")
-	if got["GT_ROLE"] != "mineshaft/witness" {
-		t.Errorf("GT_ROLE = %q, want %q", got["GT_ROLE"], "mineshaft/witness")
+	if got["MS_ROLE"] != "mineshaft/witness" {
+		t.Errorf("MS_ROLE = %q, want %q", got["MS_ROLE"], "mineshaft/witness")
 	}
-	if got["GT_SCOPE"] != "rig" {
-		t.Errorf("GT_SCOPE = %q, want %q", got["GT_SCOPE"], "rig")
+	if got["MS_SCOPE"] != "rig" {
+		t.Errorf("MS_SCOPE = %q, want %q", got["MS_SCOPE"], "rig")
 	}
 }
 
@@ -105,7 +105,7 @@ func TestBuildWitnessStartCommand_AgentOverrideWins(t *testing.T) {
 	if strings.Contains(got, "exec run") {
 		t.Fatalf("expected agent override to bypass role start_command, got %q", got)
 	}
-	if !strings.Contains(got, "GT_ROLE=mineshaft/witness") {
-		t.Errorf("expected GT_ROLE=mineshaft/witness in command, got %q", got)
+	if !strings.Contains(got, "MS_ROLE=mineshaft/witness") {
+		t.Errorf("expected MS_ROLE=mineshaft/witness in command, got %q", got)
 	}
 }

@@ -7,9 +7,9 @@
 ```mermaid
 flowchart TB
     %% ---- Creation ----
-    create_manual(["gt minecart create"])
-    create_sling(["gt sling<br/>(auto-minecart)"])
-    create_formula(["gt formula run<br/>(minecart type)"])
+    create_manual(["ms minecart create"])
+    create_sling(["ms sling<br/>(auto-minecart)"])
+    create_formula(["ms formula run<br/>(minecart type)"])
 
     create_manual --> minecart["Minecart bead created<br/>(hq-cv-*)"]
     create_sling --> minecart
@@ -18,11 +18,11 @@ flowchart TB
     minecart --> track["Track issues<br/>via dep add --type=tracks"]
 
     %% ---- Dispatch ----
-    track --> dispatch["gt sling dispatches<br/>work to miners"]
+    track --> dispatch["ms sling dispatches<br/>work to miners"]
     dispatch --> working["Miners execute<br/>tracked issues"]
 
     %% ---- Completion detection ----
-    working --> issue_close["Issue closes<br/>(gt done / bd close)"]
+    working --> issue_close["Issue closes<br/>(ms done / bd close)"]
 
     issue_close --> check{"All tracked<br/>issues closed?"}
 
@@ -38,8 +38,8 @@ flowchart TB
     obs_daemon -.-> check
 
     %% ---- Manual overrides ----
-    force_close(["gt minecart close --force"]) -.-> close
-    land(["gt minecart land<br/>(owned minecarts)"]) -.-> close
+    force_close(["ms minecart close --force"]) -.-> close
+    land(["ms minecart land<br/>(owned minecarts)"]) -.-> close
 
     classDef successNode fill:#27ae60,color:#fff,stroke:none
     classDef extNode fill:#34495e,color:#ecf0f1,stroke:none
@@ -55,7 +55,7 @@ via the daemon's `MinecartManager`, which runs two goroutines:
   `GetAllEventsSince`, detects close events, and calls
   `minecart.CheckMinecartsForIssue` — which both checks completion *and* feeds
   the next ready issue to a miner.
-- **Stranded scan** (every 30s): Runs `gt minecart stranded --json` to catch
+- **Stranded scan** (every 30s): Runs `ms minecart stranded --json` to catch
   minecarts missed by the event-driven path (e.g. after crash/restart). Feeds
   ready work or auto-closes empty minecarts.
 
@@ -67,16 +67,16 @@ Manual overrides (`close --force`, `land`) bypass the check entirely.
 
 ---
 
-## Auto-minecart creation: what `gt sling` actually does
+## Auto-minecart creation: what `ms sling` actually does
 
-`gt sling` auto-creates a minecart for every bead it dispatches, unless
+`ms sling` auto-creates a minecart for every bead it dispatches, unless
 `--no-minecart` is passed. The behavior differs significantly between
 single-bead and multi-bead (batch) sling.
 
 ### Single-bead sling
 
 ```
-gt sling sh-task-1 mineshaft
+ms sling sh-task-1 mineshaft
 ```
 
 1. Checks if `sh-task-1` is already tracked by an open minecart.
@@ -89,7 +89,7 @@ Result: 1 bead, 1 minecart, 1 miner.
 ### Batch sling (3+ args, rig auto-resolved)
 
 ```
-gt sling gt-task-1 gt-task-2 gt-task-3
+ms sling ms-task-1 ms-task-2 ms-task-3
 ```
 
 The rig is auto-resolved from the beads' prefixes via `routes.jsonl`
@@ -98,8 +98,8 @@ to the same rig. An explicit rig arg still works but prints a
 deprecation warning:
 
 ```
-gt sling gt-task-1 gt-task-2 gt-task-3 mineshaft
-# Deprecation: gt sling now auto-resolves the rig from bead prefixes.
+ms sling ms-task-1 ms-task-2 ms-task-3 mineshaft
+# Deprecation: ms sling now auto-resolves the rig from bead prefixes.
 #              You no longer need to explicitly specify <mineshaft>.
 ```
 
@@ -113,9 +113,9 @@ Result: 3 beads, **1 minecart**, 3 miners -- all dispatched in parallel
 with 2-second delays between spawns.
 
 The minecart ID and merge strategy are stored on each bead via
-`beadFieldUpdates`, so `gt done` can find the minecart via the fast path.
+`beadFieldUpdates`, so `ms done` can find the minecart via the fast path.
 
-There is no upper limit on the number of beads. `gt sling <10 beads>`
+There is no upper limit on the number of beads. `ms sling <10 beads>`
 spawns 10 miners sharing 1 minecart. The only throttle is
 `--max-concurrent` (default 0 = unlimited).
 
@@ -144,8 +144,8 @@ sling **errors** before spawning any miners. It prints:
 
 - **Initial dispatch is parallel.** All beads get miners sequentially
   with 2-second delays between spawns, but they all dispatch in the same
-  batch sling call regardless of deps. Even if `gt-task-2` has a `blocks`
-  dep on `gt-task-1`, both get slung. The `isIssueBlocked` check only
+  batch sling call regardless of deps. Even if `ms-task-2` has a `blocks`
+  dep on `ms-task-1`, both get slung. The `isIssueBlocked` check only
   applies to daemon-driven minecart feeding (after a close event), not to
   the initial batch sling dispatch.
 - **Subsequent feeding respects deps.** When a task closes, the daemon's
@@ -157,7 +157,7 @@ sling **errors** before spawning any miners. It prints:
 Batch sling with `--no-minecart` skips minecart creation entirely:
 
 ```
-gt sling gt-task-1 gt-task-2 gt-task-3 mineshaft --no-minecart
+ms sling ms-task-1 ms-task-2 ms-task-3 mineshaft --no-minecart
 ```
 
 ---
@@ -171,7 +171,7 @@ loop has a structural gap:
 Create → Assign → Execute → Issues close → ??? → Minecart closes
 ```
 
-The `???` is "Supervisor patrol runs `gt minecart check`" - a poll-based single point of
+The `???` is "Supervisor patrol runs `ms minecart check`" - a poll-based single point of
 failure. When Supervisor is down, minecarts don't close. Work completes but the loop
 never lands.
 
@@ -179,14 +179,14 @@ never lands.
 
 ### What Works
 - Minecart creation and issue tracking
-- `gt minecart status` shows progress
-- `gt minecart stranded` finds unassigned work
-- `gt minecart check` auto-closes completed minecarts
+- `ms minecart status` shows progress
+- `ms minecart stranded` finds unassigned work
+- `ms minecart check` auto-closes completed minecarts
 
 ### What Breaks
-1. **Poll-based completion**: Only Supervisor runs `gt minecart check`
+1. **Poll-based completion**: Only Supervisor runs `ms minecart check`
 2. **No event-driven trigger**: Issue close doesn't propagate to minecart
-3. **Manual close is inconsistent across docs**: `gt minecart close --force` exists, but some docs still describe it as missing
+3. **Manual close is inconsistent across docs**: `ms minecart close --force` exists, but some docs still describe it as missing
 4. **Single observer**: No redundant completion detection
 5. **Weak notification**: Minecart owner not always clear
 
@@ -207,7 +207,7 @@ When an issue closes, check if it's tracked by a minecart:
 flowchart TD
     close["Issue closes"] --> tracked{"Tracked by minecart?"}
     tracked -->|No| done1(["Done"])
-    tracked -->|Yes| check["Run gt minecart check"]
+    tracked -->|Yes| check["Run ms minecart check"]
     check --> all{"All tracked<br/>issues closed?"}
     all -->|No| done2(["Done"])
     all -->|Yes| notify["Close minecart +<br/>send notifications"]
@@ -225,7 +225,7 @@ independent goroutines:
 | Loop | Trigger | What it does |
 |------|---------|--------------|
 | **Event poll** | `GetAllEventsSince` every 5s (all rig stores + hq) | Detects close events, calls `CheckMinecartsForIssue` |
-| **Stranded scan** | `gt minecart stranded --json` every 30s | Feeds first ready issue via `gt sling`, auto-closes empty minecarts |
+| **Stranded scan** | `ms minecart stranded --json` every 30s | Feeds first ready issue via `ms sling`, auto-closes empty minecarts |
 
 Both loops are context-cancellable. The shared `CheckMinecartsForIssue` function
 is idempotent — closing an already-closed minecart is a no-op.
@@ -244,11 +244,11 @@ tracks issue IDs like `sh-pb6sa` — but it doesn't store which rig that issue
 belongs to. The rig association is resolved at dispatch time via two lookups:
 
 1. **Extract prefix**: `sh-pb6sa` → `sh-` (string parsing)
-2. **Resolve rig**: look up `sh-` in `~/gt/.beads/routes.jsonl` → finds
+2. **Resolve rig**: look up `sh-` in `~/ms/.beads/routes.jsonl` → finds
    `{"prefix":"sh-","path":"mineshaft/.beads"}` → rig name is `mineshaft`
 
 This happens in `feedFirstReady` (stranded scan path) and `feedNextReadyIssue`
-(event poll path) just before calling `gt sling`. Issues with prefixes that
+(event poll path) just before calling `ms sling`. Issues with prefixes that
 don't appear in `routes.jsonl` (or that map to `path="."` like `hq-*`) are
 skipped — see `isSlingableBead()`.
 
@@ -257,17 +257,17 @@ parked rigs are logged and skipped rather than dispatched.
 
 ### Manual Close Command
 
-`gt minecart close` is implemented, including `--force` for abandoned minecarts.
+`ms minecart close` is implemented, including `--force` for abandoned minecarts.
 
 ```bash
 # Close a completed minecart
-gt minecart close hq-cv-abc
+ms minecart close hq-cv-abc
 
 # Force-close an abandoned minecart
-gt minecart close hq-cv-xyz --reason="work done differently"
+ms minecart close hq-cv-xyz --reason="work done differently"
 
 # Close with explicit notification
-gt minecart close hq-cv-abc --notify overseer/
+ms minecart close hq-cv-abc --notify overseer/
 ```
 
 Use cases:
@@ -280,7 +280,7 @@ Use cases:
 Track who requested the minecart for targeted notifications:
 
 ```bash
-gt minecart create "Feature X" gt-abc --owner overseer/ --notify boss
+ms minecart create "Feature X" ms-abc --owner overseer/ --notify boss
 ```
 
 | Field | Purpose |
@@ -317,17 +317,17 @@ OPEN ──► CLOSED (completed)
 Optional `due_at` field for minecart deadline:
 
 ```bash
-gt minecart create "Sprint work" gt-abc --due="2026-01-15"
+ms minecart create "Sprint work" ms-abc --due="2026-01-15"
 ```
 
-Overdue minecarts surface in `gt minecart stranded --overdue`.
+Overdue minecarts surface in `ms minecart stranded --overdue`.
 
 ## Commands
 
-### Current: `gt minecart close`
+### Current: `ms minecart close`
 
 ```bash
-gt minecart close <minecart-id> [--reason=<reason>] [--notify=<agent>]
+ms minecart close <minecart-id> [--reason=<reason>] [--notify=<agent>]
 ```
 
 - Verifies tracked issues are complete by default
@@ -336,23 +336,23 @@ gt minecart close <minecart-id> [--reason=<reason>] [--notify=<agent>]
 - Sends notification to owner and subscribers
 - Idempotent - closing closed minecart is no-op
 
-### Enhanced: `gt minecart check`
+### Enhanced: `ms minecart check`
 
 ```bash
 # Check all minecarts (current behavior)
-gt minecart check
+ms minecart check
 
 # Check specific minecart (new)
-gt minecart check <minecart-id>
+ms minecart check <minecart-id>
 
 # Dry-run mode
-gt minecart check --dry-run
+ms minecart check --dry-run
 ```
 
-### Future: `gt minecart reopen`
+### Future: `ms minecart reopen`
 
 ```bash
-gt minecart reopen <minecart-id>
+ms minecart reopen <minecart-id>
 ```
 
 Explicit reopen for clarity (currently implicit via add).

@@ -35,7 +35,7 @@ func TestInstallForRole_RoleAware(t *testing.T) {
 				t.Fatal("settings.json not created")
 			}
 
-			// Verify content matches resolved template (with {{GT_BIN}} substituted)
+			// Verify content matches resolved template (with {{MS_BIN}} substituted)
 			got, _ := os.ReadFile(path)
 			want, err := resolveAndSubstitute("claude", tt.wantFile, tt.role)
 			if err != nil {
@@ -71,8 +71,8 @@ func TestInstallForRole_ClaudeSettingsSuppressStartupPrompts(t *testing.T) {
 			if strings.Contains(string(data), "export PATH=") {
 				t.Fatal("claude settings contain stale export PATH marker")
 			}
-			if strings.Contains(string(data), "{{GT_BIN}}") {
-				t.Fatal("claude settings contain unresolved {{GT_BIN}} placeholder")
+			if strings.Contains(string(data), "{{MS_BIN}}") {
+				t.Fatal("claude settings contain unresolved {{MS_BIN}} placeholder")
 			}
 
 			var settings map[string]any
@@ -187,8 +187,8 @@ func TestInstallForRole_BootClaudeSettingsUseManagedHooks(t *testing.T) {
 			if !ok {
 				t.Fatal("boot install did not write managed raw tmux send-keys guard")
 			}
-			if !strings.Contains(entry.Hooks[0].Command, "gt nudge --mode=immediate supervisor") {
-				t.Fatalf("boot guard command does not point to gt nudge: %s", entry.Hooks[0].Command)
+			if !strings.Contains(entry.Hooks[0].Command, "ms nudge --mode=immediate supervisor") {
+				t.Fatalf("boot guard command does not point to ms nudge: %s", entry.Hooks[0].Command)
 			}
 			if len(settings.Hooks.UserPromptSubmit) != 0 {
 				t.Fatalf("boot managed settings should disable UserPromptSubmit, got %+v", settings.Hooks.UserPromptSubmit)
@@ -263,17 +263,17 @@ func TestOpenCodeTemplateUsesHookPrime(t *testing.T) {
 	}
 	content := string(template)
 	for _, want := range []string{
-		"GT_HOOK_SOURCE=",
-		"GT_SESSION_ID=",
+		"MS_HOOK_SOURCE=",
+		"MS_SESSION_ID=",
 		"prime --hook",
-		"gt prime --hook",
+		"ms prime --hook",
 	} {
 		if !strings.Contains(content, want) {
 			t.Fatalf("opencode template missing hook prime field %q", want)
 		}
 	}
-	if strings.Contains(content, "gt mail check --inject") {
-		t.Fatal("opencode template should let gt prime --hook handle mail injection")
+	if strings.Contains(content, "ms mail check --inject") {
+		t.Fatal("opencode template should let ms prime --hook handle mail injection")
 	}
 }
 
@@ -300,7 +300,7 @@ func TestInstallForRole_UpgradesStaleExportPath(t *testing.T) {
 	os.MkdirAll(filepath.Dir(hooksPath), 0755)
 
 	// Write a stale file with the legacy "export PATH=" pattern
-	os.WriteFile(hooksPath, []byte(`export PATH=/usr/local/bin:$PATH && gt hook`), 0644)
+	os.WriteFile(hooksPath, []byte(`export PATH=/usr/local/bin:$PATH && ms hook`), 0644)
 
 	err := InstallForRole("opencode", dir, dir, "crew", ".opencode/plugins", "mineshaft.js", false)
 	if err != nil {
@@ -325,7 +325,7 @@ func TestInstallForRole_UpgradesStaleOpenCodePrimeHook(t *testing.T) {
 
 	os.WriteFile(hooksPath, []byte(`// Mineshaft OpenCode plugin: hooks SessionStart/Compaction via events.
 export const Mineshaft = async ({ $ }) => {
-  await $`+"`"+`gt prime`+"`"+`
+  await $`+"`"+`ms prime`+"`"+`
 }`), 0644)
 
 	if err := InstallForRole("opencode", dir, dir, "crew", ".opencode/plugins", "mineshaft.js", false); err != nil {
@@ -336,8 +336,8 @@ export const Mineshaft = async ({ $ }) => {
 	if err != nil {
 		t.Fatalf("read upgraded hook: %v", err)
 	}
-	if strings.Contains(string(got), "captureRun(\"gt prime\")") || strings.Contains(string(got), "$`gt prime`") {
-		t.Fatal("stale bare gt prime was not upgraded")
+	if strings.Contains(string(got), "captureRun(\"ms prime\")") || strings.Contains(string(got), "$`ms prime`") {
+		t.Fatal("stale bare ms prime was not upgraded")
 	}
 	if !strings.Contains(string(got), "prime --hook") {
 		t.Fatal("upgraded OpenCode hook does not run prime --hook")
@@ -352,16 +352,16 @@ func TestOpenCodeTemplateUsesHookModeAndCompoundRoles(t *testing.T) {
 	s := string(content)
 	for _, want := range []string{
 		"prime --hook",
-		"GT_HOOK_SOURCE=",
-		"GT_SESSION_ID=",
+		"MS_HOOK_SOURCE=",
+		"MS_SESSION_ID=",
 		`parts[1] === "miners"`,
 	} {
 		if !strings.Contains(s, want) {
 			t.Fatalf("OpenCode template missing %q", want)
 		}
 	}
-	if strings.Contains(s, "{{GT_BIN}}") {
-		t.Fatal("OpenCode template contains unresolved {{GT_BIN}}")
+	if strings.Contains(s, "{{MS_BIN}}") {
+		t.Fatal("OpenCode template contains unresolved {{MS_BIN}}")
 	}
 	if strings.Contains(s, "mail check --inject") {
 		t.Fatal("OpenCode template should not duplicate startup mail injection")
@@ -528,15 +528,15 @@ func TestSyncForRole_GeminiWithGTBinSubstitution(t *testing.T) {
 	}
 
 	got, _ := os.ReadFile(filepath.Join(dir, ".gemini", "settings.json"))
-	// Verify {{GT_BIN}} was substituted (should not appear in output)
-	if strings.Contains(string(got), "{{GT_BIN}}") {
-		t.Error("{{GT_BIN}} placeholder was not substituted")
+	// Verify {{MS_BIN}} was substituted (should not appear in output)
+	if strings.Contains(string(got), "{{MS_BIN}}") {
+		t.Error("{{MS_BIN}} placeholder was not substituted")
 	}
 	// Verify the resolved binary path is present (JSON-escaped for Windows compatibility).
 	gtBin := resolveGTBinary()
 	gtBinJSON := strings.ReplaceAll(gtBin, `\`, `\\`)
 	if !strings.Contains(string(got), gtBinJSON) {
-		t.Errorf("expected resolved gt binary %q in output", gtBin)
+		t.Errorf("expected resolved ms binary %q in output", gtBin)
 	}
 }
 
@@ -645,11 +645,11 @@ func TestInstallForRole_GeminiRoleAware(t *testing.T) {
 
 	got, _ := os.ReadFile(filepath.Join(dir, ".gemini", "settings.json"))
 	want, _ := templateFS.ReadFile("templates/gemini/settings-autonomous.json")
-	// Gemini templates contain {{GT_BIN}} which gets resolved at install time.
+	// Gemini templates contain {{MS_BIN}} which gets resolved at install time.
 	// Apply the same substitution (with JSON escaping) to the expected content for comparison.
 	gtBin := resolveGTBinary()
 	gtBinJSON := strings.ReplaceAll(gtBin, `\`, `\\`)
-	wantResolved := strings.ReplaceAll(string(want), "{{GT_BIN}}", gtBinJSON)
+	wantResolved := strings.ReplaceAll(string(want), "{{MS_BIN}}", gtBinJSON)
 	if string(got) != wantResolved {
 		t.Error("gemini autonomous: content mismatch")
 	}
@@ -671,7 +671,7 @@ func TestInstallForRole_CodexRoleAware(t *testing.T) {
 		t.Error("codex interactive: content mismatch")
 	}
 	if !strings.Contains(string(got), "costs record >/dev/null 2>&1 &") {
-		t.Error("codex interactive: stop hook should silence gt costs record output")
+		t.Error("codex interactive: stop hook should silence ms costs record output")
 	}
 
 	dir2 := t.TempDir()
@@ -689,7 +689,7 @@ func TestInstallForRole_CodexRoleAware(t *testing.T) {
 		t.Error("codex autonomous: content mismatch")
 	}
 	if !strings.Contains(string(got), "costs record >/dev/null 2>&1 &") {
-		t.Error("codex autonomous: stop hook should silence gt costs record output")
+		t.Error("codex autonomous: stop hook should silence ms costs record output")
 	}
 }
 
@@ -733,14 +733,14 @@ func TestComputeExpectedTemplate_Gemini(t *testing.T) {
 		t.Fatalf("ComputeExpectedTemplate: %v", err)
 	}
 
-	// Should contain resolved gt binary path, not {{GT_BIN}}
-	if strings.Contains(string(content), "{{GT_BIN}}") {
-		t.Error("expected {{GT_BIN}} to be resolved")
+	// Should contain resolved ms binary path, not {{MS_BIN}}
+	if strings.Contains(string(content), "{{MS_BIN}}") {
+		t.Error("expected {{MS_BIN}} to be resolved")
 	}
 
-	// Should contain GT_HOOK_SOURCE=compact (from autonomous template)
-	if !strings.Contains(string(content), "GT_HOOK_SOURCE=compact") {
-		t.Error("expected GT_HOOK_SOURCE=compact in autonomous template")
+	// Should contain MS_HOOK_SOURCE=compact (from autonomous template)
+	if !strings.Contains(string(content), "MS_HOOK_SOURCE=compact") {
+		t.Error("expected MS_HOOK_SOURCE=compact in autonomous template")
 	}
 
 	if strings.Contains(string(content), `"context"`) || strings.Contains(string(content), `"fileName"`) {
@@ -753,9 +753,9 @@ func TestComputeExpectedTemplate_Gemini(t *testing.T) {
 		t.Fatalf("ComputeExpectedTemplate(crew): %v", err)
 	}
 
-	// Interactive template should NOT contain GT_HOOK_SOURCE=compact
-	if strings.Contains(string(interactiveContent), "GT_HOOK_SOURCE=compact") {
-		t.Error("interactive template should not contain GT_HOOK_SOURCE=compact")
+	// Interactive template should NOT contain MS_HOOK_SOURCE=compact
+	if strings.Contains(string(interactiveContent), "MS_HOOK_SOURCE=compact") {
+		t.Error("interactive template should not contain MS_HOOK_SOURCE=compact")
 	}
 }
 

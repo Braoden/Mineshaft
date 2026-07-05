@@ -60,7 +60,7 @@ fi
 CHECKS=$((CHECKS + 1))
 echo
 echo "--- Check 2: Dolt server status ---"
-if gt dolt status 2>/dev/null | grep -q "running"; then
+if ms dolt status 2>/dev/null | grep -q "running"; then
     pass "Dolt server is running"
 else
     fail_check "Dolt server is not running"
@@ -256,16 +256,16 @@ else
 fi
 
 # ============================================
-# CHECK 9: gt doctor passes
+# CHECK 9: ms doctor passes
 # ============================================
 CHECKS=$((CHECKS + 1))
 echo
-echo "--- Check 9: gt doctor ---"
+echo "--- Check 9: ms doctor ---"
 cd "$TOWN_ROOT"
-if gt doctor 2>&1 | tail -1 | grep -qi "pass\|healthy\|ok"; then
-    pass "gt doctor reports healthy"
+if ms doctor 2>&1 | tail -1 | grep -qi "pass\|healthy\|ok"; then
+    pass "ms doctor reports healthy"
 else
-    warn "gt doctor may have warnings (review output above)"
+    warn "ms doctor may have warnings (review output above)"
 fi
 
 # ============================================

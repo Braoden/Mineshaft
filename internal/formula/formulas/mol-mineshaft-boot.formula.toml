@@ -7,8 +7,8 @@ Each step has action + verification - steps stay open until outcome is confirmed
 
 ## Key Principles
 1. **Verification-gated steps** - Not \"command ran\" but \"outcome confirmed\"
-2. **gt peek for verification** - Capture session output to detect stalls
-3. **gt nudge for recovery** - Reliable message delivery to unstick agents
+2. **ms peek for verification** - Capture session output to detect stalls
+3. **ms nudge for recovery** - Reliable message delivery to unstick agents
 4. **Parallel where possible** - Witnesses and refineries can start in parallel
 5. **Ephemeral execution** - Boot is a wisp, squashed to digest after completion
 
@@ -25,13 +25,13 @@ Verify the Mineshaft daemon is running.
 
 ## Action
 ```bash
-gt daemon status || gt daemon start
+ms daemon status || ms daemon start
 ```
 
 ## Verify
-1. Daemon PID file exists: `$GT_TOWN_ROOT/daemon/daemon.pid`
-2. Process is alive: `kill -0 $(cat $GT_TOWN_ROOT/daemon/daemon.pid)`
-3. Daemon responds: `gt daemon status` returns success
+1. Daemon PID file exists: `$MS_TOWN_ROOT/daemon/daemon.pid`
+2. Process is alive: `kill -0 $(cat $MS_TOWN_ROOT/daemon/daemon.pid)`
+3. Daemon responds: `ms daemon status` returns success
 
 ## OnFail
 Cannot start daemon. Log error and continue - some commands work without daemon."""
@@ -44,17 +44,17 @@ Start the Supervisor and verify patrol mode is active.
 
 ## Action
 ```bash
-gt supervisor start
+ms supervisor start
 ```
 
 ## Verify
 1. Session exists: `tmux has-session -t hq-supervisor 2>/dev/null`
-2. Not stalled: `gt peek supervisor/` does NOT show \"> Try\" prompt
+2. Not stalled: `ms peek supervisor/` does NOT show \"> Try\" prompt
 3. Heartbeat fresh: `supervisor/heartbeat.json` modified < 2 min ago
 
 ## OnStall
 ```bash
-gt nudge supervisor/ \"Start patrol.\"
+ms nudge supervisor/ \"Start patrol.\"
 sleep 30
 # Re-verify
 ```"""
@@ -78,12 +78,12 @@ Start the mineshaft rig Witness.
 
 ## Action
 ```bash
-gt witness start mineshaft
+ms witness start mineshaft
 ```
 
 ## Verify
 1. Session exists: `tmux has-session -t mineshaft-witness 2>/dev/null`
-2. Not stalled: `gt peek mineshaft/witness` does NOT show \"> Try\" prompt
+2. Not stalled: `ms peek mineshaft/witness` does NOT show \"> Try\" prompt
 3. Heartbeat fresh: Last patrol cycle < 5 min ago"""
 id = "ensure-mineshaft-witness"
 title = "Ensure mineshaft witness"
@@ -94,12 +94,12 @@ Start the beads rig Witness.
 
 ## Action
 ```bash
-gt witness start beads
+ms witness start beads
 ```
 
 ## Verify
 1. Session exists: `tmux has-session -t beads-witness 2>/dev/null`
-2. Not stalled: `gt peek beads/witness` does NOT show \"> Try\" prompt
+2. Not stalled: `ms peek beads/witness` does NOT show \"> Try\" prompt
 3. Heartbeat fresh: Last patrol cycle < 5 min ago"""
 id = "ensure-beads-witness"
 title = "Ensure beads witness"
@@ -120,12 +120,12 @@ Start the mineshaft rig Refinery.
 
 ## Action
 ```bash
-gt refinery start mineshaft
+ms refinery start mineshaft
 ```
 
 ## Verify
 1. Session exists: `tmux has-session -t mineshaft-refinery 2>/dev/null`
-2. Not stalled: `gt peek mineshaft/refinery` does NOT show \"> Try\" prompt
+2. Not stalled: `ms peek mineshaft/refinery` does NOT show \"> Try\" prompt
 3. Queue processing: Refinery can receive merge requests"""
 id = "ensure-mineshaft-refinery"
 title = "Ensure mineshaft refinery"
@@ -136,12 +136,12 @@ Start the beads rig Refinery.
 
 ## Action
 ```bash
-gt refinery start beads
+ms refinery start beads
 ```
 
 ## Verify
 1. Session exists: `tmux has-session -t beads-refinery 2>/dev/null`
-2. Not stalled: `gt peek beads/refinery` does NOT show \"> Try\" prompt
+2. Not stalled: `ms peek beads/refinery` does NOT show \"> Try\" prompt
 3. Queue processing: Refinery can receive merge requests"""
 id = "ensure-beads-refinery"
 title = "Ensure beads refinery"
@@ -152,7 +152,7 @@ Final verification that Mineshaft is healthy.
 
 ## Action
 ```bash
-gt status
+ms status
 ```
 
 ## Verify
@@ -163,7 +163,7 @@ gt status
 
 ## OnFail
 Log degraded state but consider boot complete. Some agents may need manual recovery.
-Run `gt doctor` for detailed diagnostics."""
+Run `ms doctor` for detailed diagnostics."""
 id = "verify-town-health"
 needs = ["ensure-witnesses", "ensure-refineries"]
 title = "Verify town health"

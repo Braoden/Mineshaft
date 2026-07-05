@@ -3,7 +3,7 @@
 
 role = "refinery"
 scope = "rig"
-nudge = "Run 'gt prime' to check merge queue and begin processing."
+nudge = "Run 'ms prime' to check merge queue and begin processing."
 prompt_template = "refinery.md.tmpl"
 
 [session]
@@ -13,8 +13,8 @@ needs_pre_sync = true
 start_command = "exec claude --dangerously-skip-permissions"
 
 [env]
-GT_ROLE = "{rig}/refinery"
-GT_SCOPE = "rig"
+MS_ROLE = "{rig}/refinery"
+MS_SCOPE = "rig"
 
 [health]
 ping_timeout = "30s"

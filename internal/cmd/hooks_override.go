@@ -21,13 +21,13 @@ Valid targets:
 Overrides are merged on top of the base config during sync.
 Hooks with the same matcher replace the base hook entirely.
 
-Override files are stored in ~/.gt/hooks-overrides/<target>.json.
+Override files are stored in ~/.ms/hooks-overrides/<target>.json.
 
 Examples:
-  gt hooks override crew              # Edit crew role overrides
-  gt hooks override mineshaft/crew      # Edit mineshaft rig crew overrides
-  gt hooks override overseer             # Edit overseer overrides
-  gt hooks override crew --show       # Print current override config`,
+  ms hooks override crew              # Edit crew role overrides
+  ms hooks override mineshaft/crew      # Edit mineshaft rig crew overrides
+  ms hooks override overseer             # Edit overseer overrides
+  ms hooks override crew --show       # Print current override config`,
 	Args: cobra.ExactArgs(1),
 	RunE: runHooksOverride,
 }
@@ -88,6 +88,6 @@ func runHooksOverride(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("warning: override config has errors after editing: %w", err)
 	}
 
-	fmt.Printf("Override config for %s updated. Run 'gt hooks sync' to propagate changes.\n", target)
+	fmt.Printf("Override config for %s updated. Run 'ms hooks sync' to propagate changes.\n", target)
 	return nil
 }

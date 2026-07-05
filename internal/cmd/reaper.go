@@ -44,7 +44,7 @@ func reaperDatabaseNames() []string {
 func defaultReaperEndpoint() (string, int) {
 	host := agentconfig.ResolveDoltHost("")
 	port := 0
-	if p := os.Getenv("GT_DOLT_PORT"); p != "" {
+	if p := os.Getenv("MS_DOLT_PORT"); p != "" {
 		if v, err := strconv.Atoi(p); err == nil && v > 0 {
 			port = v
 		}
@@ -91,10 +91,10 @@ formula. They execute SQL operations but leave eligibility decisions to the
 Dog agent or daemon orchestrator.
 
 When run by a Dog:
-  gt reaper scan --db=mineshaft          # Discover candidates
-  gt reaper reap --db=mineshaft          # Close stale wisps
-  gt reaper purge --db=mineshaft         # Delete old closed wisps + mail
-  gt reaper auto-close --db=mineshaft    # Close stale issues`,
+  ms reaper scan --db=mineshaft          # Discover candidates
+  ms reaper reap --db=mineshaft          # Close stale wisps
+  ms reaper purge --db=mineshaft         # Delete old closed wisps + mail
+  ms reaper auto-close --db=mineshaft    # Close stale issues`,
 	RunE: requireSubcommand,
 }
 
@@ -599,15 +599,15 @@ Normally the daemon dispatches a Dog to execute the mol-dog-reaper formula.`,
 
 func init() {
 	// Shared flags
-	// GH#2601: Default host/port from GT/town config for non-localhost setups.
+	// GH#2601: Default host/port from MS/town config for non-localhost setups.
 	// BEADS_DOLT_* aliases are intentionally ignored because they are derived bd
 	// client outputs, not endpoint authority.
 	defaultHost, defaultPort := defaultReaperEndpoint()
 
 	for _, cmd := range []*cobra.Command{reaperScanCmd, reaperReapCmd, reaperPurgeCmd, reaperAutoCloseCmd, reaperRunCmd, reaperDatabasesCmd} {
 		cmd.Flags().StringVar(&reaperDB, "db", "", "Database name (required for single-db commands)")
-		cmd.Flags().StringVar(&reaperHost, "host", defaultHost, "Dolt server host (env: GT_DOLT_HOST)")
-		cmd.Flags().IntVar(&reaperPort, "port", defaultPort, "Dolt server port (env: GT_DOLT_PORT)")
+		cmd.Flags().StringVar(&reaperHost, "host", defaultHost, "Dolt server host (env: MS_DOLT_HOST)")
+		cmd.Flags().IntVar(&reaperPort, "port", defaultPort, "Dolt server port (env: MS_DOLT_PORT)")
 		cmd.Flags().BoolVar(&reaperDryRun, "dry-run", false, "Report what would happen without acting")
 	}
 	for _, cmd := range []*cobra.Command{reaperScanCmd, reaperReapCmd, reaperPurgeCmd, reaperAutoCloseCmd, reaperRunCmd} {

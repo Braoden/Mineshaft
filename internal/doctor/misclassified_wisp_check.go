@@ -90,7 +90,7 @@ func (c *CheckMisclassifiedWisps) Run(ctx *CheckContext) *CheckResult {
 			Status:  StatusWarning,
 			Message: fmt.Sprintf("%d ephemeral bead(s) misplaced in issues table", total),
 			Details: details,
-			FixHint: "Run 'gt doctor --fix' to migrate to wisps table",
+			FixHint: "Run 'ms doctor --fix' to migrate to wisps table",
 		}
 	}
 
@@ -287,7 +287,7 @@ func (c *CheckMisclassifiedWisps) purgeRigBatch(ctx *CheckContext, workDir, rigN
 	}
 
 	// Step 5: Commit to Dolt history.
-	commitMsg := "fix: migrate misplaced ephemeral beads to wisps table (gt doctor)"
+	commitMsg := "fix: migrate misplaced ephemeral beads to wisps table (ms doctor)"
 	if err := doltserver.CommitServerWorkingSet(ctx.TownRoot, rigName, commitMsg); err != nil {
 		_ = err // Non-fatal
 	}

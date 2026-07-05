@@ -19,7 +19,7 @@ import (
 const (
 	// DefaultPoolSize is the number of name slots in the pool.
 	// Names are allocated when a miner is first created. In the persistent
-	// miner model (gt-4ac), miners cycle IDLE → WORKING → DONE → IDLE,
+	// miner model (ms-4ac), miners cycle IDLE → WORKING → DONE → IDLE,
 	// keeping their name, identity, and sandbox across assignments.
 	DefaultPoolSize = 50
 
@@ -84,12 +84,12 @@ var BuiltinThemes = map[string][]string{
 
 // NamePool manages a bounded pool of reusable miner names.
 // Names are allocated once per miner and persist across assignments in the
-// persistent miner model (gt-4ac). A name slot is only freed when a miner
+// persistent miner model (ms-4ac). A name slot is only freed when a miner
 // is explicitly nuked.
 //
 // Names are drawn from a themed pool (mad-max by default).
 // When the pool is exhausted, overflow names use N format (just numbers).
-// The rig prefix is added by SessionName to create session names like "gt-<rig>-N".
+// The rig prefix is added by SessionName to create session names like "ms-<rig>-N".
 type NamePool struct {
 	mu sync.RWMutex
 
@@ -373,7 +373,7 @@ func (p *NamePool) Reconcile(existingMiners []string) {
 
 // formatOverflowName formats an overflow sequence number as a name.
 // Returns just the number (e.g., "51") since SessionName will add the rig prefix.
-// This prevents double-prefix bugs like "gt-mineshaft_manager-mineshaft_manager-51".
+// This prevents double-prefix bugs like "ms-mineshaft_manager-mineshaft_manager-51".
 func (p *NamePool) formatOverflowName(seq int) string {
 	return fmt.Sprintf("%d", seq)
 }
@@ -402,7 +402,7 @@ func (p *NamePool) SetTheme(theme string) error {
 		}
 		newNames = resolved
 	} else {
-		return fmt.Errorf("unknown theme: %s (use 'gt namepool themes' to list available themes)", theme)
+		return fmt.Errorf("unknown theme: %s (use 'ms namepool themes' to list available themes)", theme)
 	}
 
 	// Preserve names that exist in both themes

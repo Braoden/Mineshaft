@@ -84,7 +84,7 @@ func TestNewManager_PathConstruction(t *testing.T) {
 	}{
 		{
 			name:     "standard path",
-			townRoot: "/home/user/gt",
+			townRoot: "/home/user/ms",
 		},
 		{
 			name:     "path with trailing slash",

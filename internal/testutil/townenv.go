@@ -15,7 +15,7 @@ import (
 //
 // Returns the workspace root path for use by the caller.
 //
-// Use this guard for integration tests that shell out to gt/bd or otherwise
+// Use this guard for integration tests that shell out to ms/bd or otherwise
 // depend on a live Mineshaft directory tree being present. Tests that create
 // their own temporary town structure (via t.TempDir) do NOT need this guard.
 func RequireTownEnv(t *testing.T) string {

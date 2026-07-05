@@ -31,12 +31,12 @@ Members can be:
   - Other group names (nested groups)
 
 Examples:
-  gt mail group list                              # List all groups
-  gt mail group show ops-team                     # Show group members
-  gt mail group create ops-team mineshaft/witness mineshaft/crew/max
-  gt mail group add ops-team supervisor/
-  gt mail group remove ops-team mineshaft/witness
-  gt mail group delete ops-team`,
+  ms mail group list                              # List all groups
+  ms mail group show ops-team                     # Show group members
+  ms mail group create ops-team mineshaft/witness mineshaft/crew/max
+  ms mail group add ops-team supervisor/
+  ms mail group remove ops-team mineshaft/witness
+  ms mail group delete ops-team`,
 	RunE: requireSubcommand,
 }
 
@@ -64,8 +64,8 @@ var groupCreateCmd = &cobra.Command{
 Members can be specified as positional arguments or with --member flags.
 
 Examples:
-  gt mail group create ops-team mineshaft/witness mineshaft/crew/max
-  gt mail group create ops-team --member mineshaft/witness --member mineshaft/crew/max`,
+  ms mail group create ops-team mineshaft/witness mineshaft/crew/max
+  ms mail group create ops-team --member mineshaft/witness --member mineshaft/crew/max`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runGroupCreate,
 }

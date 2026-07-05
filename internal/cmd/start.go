@@ -69,9 +69,9 @@ Use --all to start Witnesses and Refineries for all registered rigs immediately.
 
 Crew shortcut:
   If a path like "rig/crew/name" is provided, starts that crew workspace.
-  This is equivalent to 'gt start crew rig/name'.
+  This is equivalent to 'ms start crew rig/name'.
 
-To stop Mineshaft, use 'gt shutdown'.`,
+To stop Mineshaft, use 'ms shutdown'.`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runStart,
 }
@@ -83,11 +83,11 @@ var shutdownCmd = &cobra.Command{
 	Long: `Shutdown Mineshaft by stopping agents and cleaning up miners.
 
 This is the "done for the day" command - it stops everything AND removes
-miner worktrees/branches. For a reversible pause, use 'gt down' instead.
+miner worktrees/branches. For a reversible pause, use 'ms down' instead.
 
 Comparison:
-  gt down      - Pause (stop processes, keep worktrees) - reversible
-  gt shutdown  - Done (stop + cleanup worktrees) - permanent cleanup
+  ms down      - Pause (stop processes, keep worktrees) - reversible
+  ms shutdown  - Done (stop + cleanup worktrees) - permanent cleanup
 
 After killing sessions, miners are cleaned up:
   - Worktrees are removed
@@ -116,16 +116,16 @@ var startCrewCmd = &cobra.Command{
 	Short: "Start a crew workspace (creates if needed)",
 	Long: `Start a crew workspace, creating it if it doesn't exist.
 
-This is a convenience command that combines 'gt crew add' and 'gt crew at --detached'.
+This is a convenience command that combines 'ms crew add' and 'ms crew at --detached'.
 The crew session starts in the background with Claude running and ready.
 
 The name can include the rig in slash format (e.g., greenplace/joe).
 If not specified, the rig is inferred from the current directory.
 
 Examples:
-  gt start crew joe                    # Start joe in current rig
-  gt start crew greenplace/joe            # Start joe in mineshaft rig
-  gt start crew joe --rig beads        # Start joe in beads rig`,
+  ms start crew joe                    # Start joe in current rig
+  ms start crew greenplace/joe            # Start joe in mineshaft rig
+  ms start crew joe --rig beads        # Start joe in beads rig`,
 	Args: cobra.ExactArgs(1),
 	RunE: runStartCrew,
 }
@@ -187,7 +187,7 @@ func runStart(cmd *cobra.Command, args []string) error {
 		if !config.IsValidTier(startCostTier) {
 			return fmt.Errorf("invalid cost tier %q (valid: %s)", startCostTier, strings.Join(config.ValidCostTiers(), ", "))
 		}
-		os.Setenv("GT_COST_TIER", startCostTier)
+		os.Setenv("MS_COST_TIER", startCostTier)
 		fmt.Printf("Using ephemeral cost tier: %s\n", style.Bold.Render(startCostTier))
 	}
 
@@ -218,9 +218,9 @@ func runStart(cmd *cobra.Command, args []string) error {
 	}
 
 	// Phase 1: Start Dolt server BEFORE agents.
-	// Agents run bd commands on startup (via gt prime → patrol_helpers) that
+	// Agents run bd commands on startup (via ms prime → patrol_helpers) that
 	// connect to the Dolt SQL server. Without this sequencing, they race the
-	// server and bd auto-spawns orphan embedded servers. (gt-t2zf)
+	// server and bd auto-spawns orphan embedded servers. (ms-t2zf)
 	var doltOK bool
 	cfg := doltserver.DefaultConfig(townRoot)
 	if _, err := os.Stat(cfg.DataDir); os.IsNotExist(err) {
@@ -288,9 +288,9 @@ func runStart(cmd *cobra.Command, args []string) error {
 	fmt.Println()
 	fmt.Printf("%s Mineshaft is running\n", style.Bold.Render("✓"))
 	fmt.Println()
-	fmt.Printf("  Attach to Overseer:  %s\n", style.Dim.Render("gt overseer attach"))
-	fmt.Printf("  Attach to Supervisor: %s\n", style.Dim.Render("gt supervisor attach"))
-	fmt.Printf("  Check status:     %s\n", style.Dim.Render("gt status"))
+	fmt.Printf("  Attach to Overseer:  %s\n", style.Dim.Render("ms overseer attach"))
+	fmt.Printf("  Attach to Supervisor: %s\n", style.Dim.Render("ms supervisor attach"))
+	fmt.Printf("  Check status:     %s\n", style.Dim.Render("ms status"))
 
 	return nil
 }
@@ -365,7 +365,7 @@ func startCoreAgents(townRoot string, agentOverride string, mu *sync.Mutex) erro
 }
 
 // startRigAgents starts witness and refinery for all rigs in parallel.
-// Called when --all flag is passed to gt start.
+// Called when --all flag is passed to ms start.
 func startRigAgents(rigs []*rig.Rig, mu *sync.Mutex) {
 	var wg sync.WaitGroup
 
@@ -717,7 +717,7 @@ func runImmediateShutdown(t *tmux.Tmux, gtSessions []string, townRoot string) er
 	return nil
 }
 
-// killSessionsInOrder stops sessions in the correct shutdown order, matching gt down:
+// killSessionsInOrder stops sessions in the correct shutdown order, matching ms down:
 //  1. Miners and crew (workers - stop before monitors can restart them)
 //  2. Refineries (work processors)
 //  3. Witnesses (monitors - stop before supervisor so they can't restart workers)
@@ -886,7 +886,7 @@ func cleanupMiners(townRoot string) {
 			}
 
 			// Clean: remove worktree and branch
-			// selfNuke=false because this is gt start --shutdown cleanup, not miner self-deleting
+			// selfNuke=false because this is ms start --shutdown cleanup, not miner self-deleting
 			if err := minerMgr.RemoveWithOptions(p.Name, true, shutdownNuclear, false); err != nil {
 				fmt.Printf("  %s %s/%s: cleanup failed: %v\n",
 					style.Dim.Render("○"), r.Name, p.Name, err)
@@ -970,7 +970,7 @@ func stopDaemonIfRunning(townRoot string) {
 }
 
 // runStartCrew starts a crew workspace, creating it if it doesn't exist.
-// This combines the functionality of 'gt crew add' and 'gt crew at --detached'.
+// This combines the functionality of 'ms crew add' and 'ms crew at --detached'.
 func runStartCrew(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
@@ -1046,7 +1046,7 @@ func runStartCrew(cmd *cobra.Command, args []string) error {
 			style.Bold.Render("✓"), rigName, name)
 	}
 
-	fmt.Printf("Attach with: %s\n", style.Dim.Render(fmt.Sprintf("gt crew at %s", name)))
+	fmt.Printf("Attach with: %s\n", style.Dim.Render(fmt.Sprintf("ms crew at %s", name)))
 	return nil
 }
 

@@ -23,12 +23,12 @@ board, claiming your first task, and submitting evidence of completion.
 
 | Command | Purpose |
 |---------|---------|
-| `gt wl join <upstream>` | Join a wasteland (one-time setup) |
-| `gt wl browse` | View the wanted board |
-| `gt wl claim <id>` | Claim a wanted item |
-| `gt wl done <id> --evidence <url>` | Submit completion evidence |
-| `gt wl post --title "..."` | Post a new wanted item |
-| `gt wl sync` | Pull upstream changes |
+| `ms wl join <upstream>` | Join a wasteland (one-time setup) |
+| `ms wl browse` | View the wanted board |
+| `ms wl claim <id>` | Claim a wanted item |
+| `ms wl done <id> --evidence <url>` | Submit completion evidence |
+| `ms wl post --title "..."` | Post a new wanted item |
+| `ms wl sync` | Pull upstream changes |
 
 ## Prerequisites
 
@@ -36,7 +36,7 @@ You need a running Mineshaft installation and a DoltHub account.
 
 | Requirement | Check | Setup |
 |-------------|-------|-------|
-| **Mineshaft** | `gt version` | See [INSTALLING.md](INSTALLING.md) |
+| **Mineshaft** | `ms version` | See [INSTALLING.md](INSTALLING.md) |
 | **Dolt** | `dolt version` (>= 2.0.7) | See [dolthub/dolt](https://github.com/dolthub/dolt?tab=readme-ov-file#installation) |
 | **DoltHub account** | — | [Sign up](https://www.dolthub.com/signin) |
 | **DoltHub API token** | — | [Generate token](https://www.dolthub.com/settings/tokens) |
@@ -65,12 +65,12 @@ dolt login
 From your Mineshaft workspace directory:
 
 ```bash
-cd ~/gt
-gt wl join hop/wl-commons
+cd ~/ms
+ms wl join hop/wl-commons
 ```
 
 `hop` is the DoltHub organization hosting the default Wasteland commons.
-The argument is a DoltHub path in `org/database` format. (The `gt wl`
+The argument is a DoltHub path in `org/database` format. (The `ms wl`
 help text may reference `steveyegge/wl-commons` — `hop/wl-commons` is
 the canonical upstream.)
 
@@ -93,19 +93,19 @@ On success you'll see:
   Fork: your-org/wl-commons
   Local: /path/to/local/clone
 
-  Next: gt wl browse  — browse the wanted board
+  Next: ms wl browse  — browse the wanted board
 ```
 
-**Note:** `gt wl leave` is not yet implemented. To switch wastelands,
+**Note:** `ms wl leave` is not yet implemented. To switch wastelands,
 manually delete `overseer/wasteland.json` and the local database directory
 it references (the `local_dir` value — typically
-`~/gt/.wasteland/<org>/<db>`).
+`~/ms/.wasteland/<org>/<db>`).
 
 ### Verify Your Setup
 
 ```bash
-cd ~/gt
-gt wl browse
+cd ~/ms
+ms wl browse
 ```
 
 If this displays a table of wanted items, you're connected.
@@ -164,15 +164,15 @@ accumulate validated completions and stamps once enforcement is enabled.
 ## Browsing the Wanted Board
 
 ```bash
-cd ~/gt
-gt wl browse                          # All open items
-gt wl browse --project mineshaft        # Filter by project
-gt wl browse --type bug               # Only bugs
-gt wl browse --type docs              # Only documentation work
-gt wl browse --status claimed         # See what's claimed
-gt wl browse --priority 0             # Critical priority only
-gt wl browse --limit 10              # Limit results
-gt wl browse --json                   # JSON output (for scripting)
+cd ~/ms
+ms wl browse                          # All open items
+ms wl browse --project mineshaft        # Filter by project
+ms wl browse --type bug               # Only bugs
+ms wl browse --type docs              # Only documentation work
+ms wl browse --status claimed         # See what's claimed
+ms wl browse --priority 0             # Critical priority only
+ms wl browse --limit 10              # Limit results
+ms wl browse --json                   # JSON output (for scripting)
 ```
 
 Browse always queries the latest upstream state, so you see what's
@@ -183,8 +183,8 @@ currently available regardless of your local fork's state.
 Found something you want to work on? Claim it:
 
 ```bash
-cd ~/gt
-gt wl claim w-abc123
+cd ~/ms
+ms wl claim w-abc123
 ```
 
 This sets `claimed_by` to your rig handle and changes the status from
@@ -237,12 +237,12 @@ Once your work is done and you have evidence (a PR URL, commit hash, or
 description), submit it:
 
 ```bash
-cd ~/gt
-gt wl done w-abc123 --evidence "https://github.com/steveyegge/mineshaft/pull/99"
+cd ~/ms
+ms wl done w-abc123 --evidence "https://github.com/steveyegge/mineshaft/pull/99"
 ```
 
 The item must be in `claimed` status and claimed by **your** rig. If you
-skipped `gt wl claim`, this command will fail.
+skipped `ms wl claim`, this command will fail.
 
 This:
 1. Creates a **completion record** with a unique `c-<hash>` ID
@@ -264,8 +264,8 @@ reliability, and creativity dimensions.
 See something that needs doing? Post it to the wanted board:
 
 ```bash
-cd ~/gt
-gt wl post \
+cd ~/ms
+ms wl post \
   --title "Add retry logic to federation sync" \
   --project mineshaft \
   --type feature \
@@ -285,9 +285,9 @@ for `--description`.
 Pull the latest changes from the upstream commons:
 
 ```bash
-cd ~/gt
-gt wl sync                # Pull upstream changes
-gt wl sync --dry-run      # Preview changes without pulling
+cd ~/ms
+ms wl sync                # Pull upstream changes
+ms wl sync --dry-run      # Preview changes without pulling
 ```
 
 Sync is useful after other rigs have posted new items, claimed work, or
@@ -314,14 +314,14 @@ export DOLTHUB_ORG="your-username"
 export DOLTHUB_TOKEN="dhat.v1.your-token"
 
 # 2. Join the wasteland (one-time, from Mineshaft workspace)
-cd ~/gt
-gt wl join hop/wl-commons
+cd ~/ms
+ms wl join hop/wl-commons
 
 # 3. Browse for work
-gt wl browse --type docs
+ms wl browse --type docs
 
 # 4. Claim an item
-gt wl claim w-abc123
+ms wl claim w-abc123
 
 # 5. Do the work (in the relevant repo)
 cd ~/path/to/relevant/repo
@@ -334,16 +334,16 @@ git push -u origin HEAD
 gh pr create --title "docs: My contribution"
 
 # 7. Submit completion evidence (back in Mineshaft workspace)
-cd ~/gt
-gt wl done w-abc123 --evidence "https://github.com/org/repo/pull/123"
+cd ~/ms
+ms wl done w-abc123 --evidence "https://github.com/org/repo/pull/123"
 
 # 8. Sync to see updated state
-gt wl sync
+ms wl sync
 ```
 
 ## Troubleshooting
 
-### `gt wl join` fails with DoltHub API error
+### `ms wl join` fails with DoltHub API error
 
 The fork API requires a valid `DOLTHUB_TOKEN`. Verify your token:
 
@@ -359,7 +359,7 @@ If the token is correct but the fork fails, you can work around it manually:
 dolt clone hop/wl-commons /tmp/wl-setup/wl-commons
 cd /tmp/wl-setup/wl-commons
 
-# Register your rig (trust_level=1 matches what gt wl join sets)
+# Register your rig (trust_level=1 matches what ms wl join sets)
 dolt sql -q "INSERT INTO rigs (handle, display_name, dolthub_org, \
   trust_level, registered_at, last_seen) \
   VALUES ('$DOLTHUB_ORG', 'Your Name', '$DOLTHUB_ORG', 1, NOW(), NOW());"
@@ -369,12 +369,12 @@ dolt add -A && dolt commit -m "Register rig: $DOLTHUB_ORG"
 dolt remote add myfork https://doltremoteapi.dolthub.com/$DOLTHUB_ORG/wl-commons
 dolt push myfork main
 
-# Place the clone where gt wl join would put it
-mkdir -p ~/gt/.wasteland/hop
-cp -r /tmp/wl-setup/wl-commons ~/gt/.wasteland/hop/wl-commons
-cd ~/gt/.wasteland/hop/wl-commons
+# Place the clone where ms wl join would put it
+mkdir -p ~/ms/.wasteland/hop
+cp -r /tmp/wl-setup/wl-commons ~/ms/.wasteland/hop/wl-commons
+cd ~/ms/.wasteland/hop/wl-commons
 
-# Fix remotes: origin must point to your fork (gt wl join clones the
+# Fix remotes: origin must point to your fork (ms wl join clones the
 # fork, so origin = fork by default; our clone has origin = upstream)
 dolt remote remove origin
 dolt remote add origin https://doltremoteapi.dolthub.com/$DOLTHUB_ORG/wl-commons
@@ -384,47 +384,47 @@ dolt remote add upstream https://doltremoteapi.dolthub.com/hop/wl-commons
 rm -rf /tmp/wl-setup
 ```
 
-After the manual setup, create the config file at `~/gt/overseer/wasteland.json`:
+After the manual setup, create the config file at `~/ms/overseer/wasteland.json`:
 
 ```json
 {
   "upstream": "hop/wl-commons",
   "fork_org": "your-dolthub-org",
   "fork_db": "wl-commons",
-  "local_dir": "/path/to/your/gt/.wasteland/hop/wl-commons",
+  "local_dir": "/path/to/your/ms/.wasteland/hop/wl-commons",
   "rig_handle": "your-dolthub-org",
   "joined_at": "2026-01-01T00:00:00Z"
 }
 ```
 
-### `gt wl browse` shows "No wanted items found"
+### `ms wl browse` shows "No wanted items found"
 
 The upstream commons may be empty, or your filters may be too narrow.
 Try different combinations:
 
 ```bash
-gt wl browse                          # Default: open items only
-gt wl browse --status claimed         # Try a different status
-gt wl browse --limit 50              # Increase the limit
+ms wl browse                          # Default: open items only
+ms wl browse --status claimed         # Try a different status
+ms wl browse --limit 50              # Increase the limit
 ```
 
-### `gt wl claim` says "not in a Mineshaft workspace"
+### `ms wl claim` says "not in a Mineshaft workspace"
 
-All `gt wl` commands must be run from within your Mineshaft workspace
-(typically `~/gt`):
+All `ms wl` commands must be run from within your Mineshaft workspace
+(typically `~/ms`):
 
 ```bash
-cd ~/gt
-gt wl claim w-abc123
+cd ~/ms
+ms wl claim w-abc123
 ```
 
-### `gt wl sync` fails to pull
+### `ms wl sync` fails to pull
 
 Ensure the upstream remote exists in your local fork. Find the clone
-path from `local_dir` in `~/gt/overseer/wasteland.json`, then check:
+path from `local_dir` in `~/ms/overseer/wasteland.json`, then check:
 
 ```bash
-cd /path/from/local_dir            # e.g. ~/gt/.wasteland/hop/wl-commons
+cd /path/from/local_dir            # e.g. ~/ms/.wasteland/hop/wl-commons
 dolt remote -v                     # Should show an 'upstream' remote
 ```
 
@@ -456,8 +456,8 @@ The `stamps` table enforces the yearbook rule at the database level:
 
 After your first completion:
 
-- **Post work** you've identified: `gt wl post --title "..." --type feature`
-- **Sync regularly**: `gt wl sync` to stay current
+- **Post work** you've identified: `ms wl post --title "..." --type feature`
+- **Sync regularly**: `ms wl sync` to stay current
 - **Build reputation**: Consistent, high-quality completions earn stamps
 - **Explore federation**: Multiple wastelands can exist — your identity
   is portable across all of them

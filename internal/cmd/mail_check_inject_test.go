@@ -36,7 +36,7 @@ func TestFormatInjectOutput(t *testing.T) {
 				"</system-reminder>",
 				"URGENT: 1 urgent message(s)",
 				"m1 from overseer/: Deploy now",
-				"gt mail read <id>",
+				"ms mail read <id>",
 			},
 			wantAbsent: []string{
 				"high-priority",
@@ -104,7 +104,7 @@ func TestFormatInjectOutput(t *testing.T) {
 				"1 high-priority message(s)",
 				"m6 from mineshaft/wolf: Important review",
 				"process before going idle",
-				"gt mail read <id>",
+				"ms mail read <id>",
 			},
 			wantAbsent: []string{
 				// High-priority should NOT be folded into a generic "non-urgent" count.

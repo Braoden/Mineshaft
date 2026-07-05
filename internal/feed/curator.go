@@ -1,11 +1,11 @@
 // Package feed provides the feed daemon that curates raw events into a user-facing feed.
 //
 // The curator:
-// 1. Tails ~/gt/.events.jsonl (raw events)
+// 1. Tails ~/ms/.events.jsonl (raw events)
 // 2. Filters by visibility tag (drops audit-only events)
 // 3. Deduplicates repeated updates (5 molecule updates → "agent active")
 // 4. Aggregates related events (3 issues closed → "batch complete")
-// 5. Writes curated events to ~/gt/.feed.jsonl
+// 5. Writes curated events to ~/ms/.feed.jsonl
 package feed
 
 import (

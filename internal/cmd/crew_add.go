@@ -41,7 +41,7 @@ func upsertCrewAgentBead(bd agentBeadUpserter, townRoot, rigName, crewName strin
 }
 
 func runCrewAdd(cmd *cobra.Command, args []string) error {
-	// Deduplicate args to handle cases like "gt crew add foo --branch foo"
+	// Deduplicate args to handle cases like "ms crew add foo --branch foo"
 	// where "foo" appears twice because --branch is a boolean flag.
 	// This prevents confusing "already exists" errors after a successful create.
 	seen := make(map[string]bool)

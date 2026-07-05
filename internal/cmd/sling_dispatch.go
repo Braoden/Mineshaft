@@ -113,13 +113,13 @@ func executeSling(params SlingParams) (*SlingResult, error) {
 		BeadID: params.BeadID,
 	}
 
-	// 0. Check if rig is parked or docked before dispatching (gt-4owfd.1, gt-11y)
+	// 0. Check if rig is parked or docked before dispatching (ms-4owfd.1, ms-11y)
 	if params.RigName != "" {
 		if blocked, reason := IsRigParkedOrDocked(townRoot, params.RigName); blocked {
 			result.ErrMsg = "rig " + reason
-			undoCmd := "gt rig unpark"
+			undoCmd := "ms rig unpark"
 			if reason == "docked" {
-				undoCmd = "gt rig undock"
+				undoCmd = "ms rig undock"
 			}
 			return result, fmt.Errorf("cannot sling to %s rig %q\n%s %s", reason, params.RigName, undoCmd, params.RigName)
 		}
@@ -144,7 +144,7 @@ func executeSling(params SlingParams) (*SlingResult, error) {
 	explicitForce := params.Force
 
 	if (info.Status == "pinned" || info.Status == "hooked" || info.Status == "in_progress") && !params.Force {
-		// Auto-force when hooked/in_progress agent's session is confirmed dead (gt-npzy, GH#1380).
+		// Auto-force when hooked/in_progress agent's session is confirmed dead (ms-npzy, GH#1380).
 		// Mirrors the dead-agent detection in runSling (sling.go) so that
 		// programmatic dispatch also handles stale hooks from nuked miners.
 		if (info.Status == "hooked" || info.Status == "in_progress") && info.Assignee != "" && isHookedAgentDeadFn(info.Assignee) {
@@ -157,7 +157,7 @@ func executeSling(params SlingParams) (*SlingResult, error) {
 		}
 	}
 
-	// Guard against slinging deferred beads (gt-1326mw).
+	// Guard against slinging deferred beads (ms-1326mw).
 	// Uses explicitForce (not params.Force) so dead-agent auto-force doesn't
 	// accidentally bypass the deferred gate.
 	if isDeferredBead(info) && !explicitForce {
@@ -315,7 +315,7 @@ func executeSling(params SlingParams) (*SlingResult, error) {
 			allVars = append(allVars, fmt.Sprintf("base_branch=%s", spawnInfo.BaseBranch))
 		}
 
-		// GH#gt-zqvj: Inject prior attempt context when re-dispatching an issue
+		// GH#ms-zqvj: Inject prior attempt context when re-dispatching an issue
 		// that already has an open MR from a previous miner. The new miner
 		// gets the old branch name so it can cherry-pick prior work instead of
 		// starting from scratch.

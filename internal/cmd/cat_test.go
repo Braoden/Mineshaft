@@ -8,7 +8,7 @@ func TestIsBeadID(t *testing.T) {
 		want  bool
 	}{
 		// Valid bead IDs - all known prefixes
-		{"gt-abc123", true},
+		{"ms-abc123", true},
 		{"bd-xyz", true},
 		{"hq-foo", true},
 		{"mol-bar", true},
@@ -24,7 +24,7 @@ func TestIsBeadID(t *testing.T) {
 		{"abc", false},
 		{"ABC-123", false},
 		{"123-abc", false},
-		{"gt-", false},
+		{"ms-", false},
 		{"-", false},
 	}
 

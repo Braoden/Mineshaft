@@ -46,7 +46,7 @@ func runStatusLine(cmd *cobra.Command, args []string) error {
 			info = estop.Read(townRoot)
 		} else {
 			// Check per-rig E-stop
-			rigEnv := os.Getenv("GT_RIG")
+			rigEnv := os.Getenv("MS_RIG")
 			if rigEnv != "" && estop.IsRigActive(townRoot, rigEnv) {
 				showEstop = true
 				info = estop.ReadRig(townRoot, rigEnv)
@@ -68,18 +68,18 @@ func runStatusLine(cmd *cobra.Command, args []string) error {
 
 	if statusLineSession != "" {
 		// Non-fatal: missing env vars are handled gracefully below
-		rigName, _ = t.GetEnvironment(statusLineSession, "GT_RIG")
-		miner, _ = t.GetEnvironment(statusLineSession, "GT_MINER")
-		crew, _ = t.GetEnvironment(statusLineSession, "GT_CREW")
-		issue, _ = t.GetEnvironment(statusLineSession, "GT_ISSUE")
-		role, _ = t.GetEnvironment(statusLineSession, "GT_ROLE")
+		rigName, _ = t.GetEnvironment(statusLineSession, "MS_RIG")
+		miner, _ = t.GetEnvironment(statusLineSession, "MS_MINER")
+		crew, _ = t.GetEnvironment(statusLineSession, "MS_CREW")
+		issue, _ = t.GetEnvironment(statusLineSession, "MS_ISSUE")
+		role, _ = t.GetEnvironment(statusLineSession, "MS_ROLE")
 	} else {
 		// Fallback to process environment
-		rigName = os.Getenv("GT_RIG")
-		miner = os.Getenv("GT_MINER")
-		crew = os.Getenv("GT_CREW")
-		issue = os.Getenv("GT_ISSUE")
-		role = os.Getenv("GT_ROLE")
+		rigName = os.Getenv("MS_RIG")
+		miner = os.Getenv("MS_MINER")
+		crew = os.Getenv("MS_CREW")
+		issue = os.Getenv("MS_ISSUE")
+		role = os.Getenv("MS_ROLE")
 	}
 
 	// Get session names for comparison
@@ -96,7 +96,7 @@ func runStatusLine(cmd *cobra.Command, args []string) error {
 		return runSupervisorStatusLine(t)
 	}
 
-	// Witness status line (session naming: gt-<rig>-witness)
+	// Witness status line (session naming: ms-<rig>-witness)
 	if role == "witness" || strings.HasSuffix(statusLineSession, "-witness") {
 		return runWitnessStatusLine(t, rigName)
 	}
@@ -230,7 +230,7 @@ func runOverseerStatusLine(t *tmux.Tmux) error {
 	}
 
 	// Status-line is a tmux hot path. Do not query beads for dock/park state here;
-	// `gt rig list/status` remains the authoritative live status view.
+	// `ms rig list/status` remains the authoritative live status view.
 	for _, status := range rigStatuses {
 		status.opState = "OPERATIONAL"
 	}

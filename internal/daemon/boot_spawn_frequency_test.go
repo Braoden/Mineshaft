@@ -59,7 +59,7 @@ exit 0
 	}
 }
 
-// Regression test for gt-1z0:
+// Regression test for ms-1z0:
 // daemon should not spawn a fresh Boot session every heartbeat when triage was just run.
 func TestEnsureBootRunning_DoesNotSpawnEveryTick(t *testing.T) {
 	if runtime.GOOS == "windows" {
@@ -75,7 +75,7 @@ func TestEnsureBootRunning_DoesNotSpawnEveryTick(t *testing.T) {
 	writeFakeTmux(t, fakeBinDir)
 	t.Setenv("PATH", fakeBinDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv("TMUX_LOG", tmuxLog)
-	t.Setenv("GT_DEGRADED", "false")
+	t.Setenv("MS_DEGRADED", "false")
 
 	d := &Daemon{
 		config: &Config{TownRoot: townRoot},
@@ -105,7 +105,7 @@ func TestEnsureBootRunning_DoesNotSpawnEveryTick(t *testing.T) {
 	}
 }
 
-// Regression test for gt-qu883c:
+// Regression test for ms-qu883c:
 // daemon should suppress Boot spawns when Boot's last action was "nothing" (supervisor healthy).
 func TestEnsureBootRunning_SuppressesWhenSupervisorHealthy(t *testing.T) {
 	if runtime.GOOS == "windows" {
@@ -121,7 +121,7 @@ func TestEnsureBootRunning_SuppressesWhenSupervisorHealthy(t *testing.T) {
 	writeFakeTmux(t, fakeBinDir)
 	t.Setenv("PATH", fakeBinDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv("TMUX_LOG", tmuxLog)
-	t.Setenv("GT_DEGRADED", "false")
+	t.Setenv("MS_DEGRADED", "false")
 
 	// Write a boot-status.json indicating supervisor was healthy ("nothing") recently.
 	b := boot.New(townRoot)
@@ -174,7 +174,7 @@ func TestEnsureBootRunning_SpawnsWhenSupervisorUnhealthy(t *testing.T) {
 	writeFakeTmux(t, fakeBinDir)
 	t.Setenv("PATH", fakeBinDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv("TMUX_LOG", tmuxLog)
-	t.Setenv("GT_DEGRADED", "false")
+	t.Setenv("MS_DEGRADED", "false")
 
 	// Write a boot-status.json indicating Boot had to wake supervisor recently.
 	b := boot.New(townRoot)

@@ -160,8 +160,8 @@ func (b *Beads) CreateGroupBead(name string, fields *GroupFields) (*Issue, error
 		"--id=" + id,
 		"--title=" + title,
 		"--description=" + description,
-		"--type=task", // Groups use task type with gt:group label
-		"--labels=gt:group",
+		"--type=task", // Groups use task type with ms:group label
+		"--labels=ms:group",
 		"--force", // Override prefix check (town beads may have mixed prefixes)
 	}
 
@@ -196,8 +196,8 @@ func (b *Beads) GetGroupByName(name string) (*Issue, *GroupFields, error) {
 		return nil, nil, err
 	}
 
-	if !HasLabel(issue, "gt:group") {
-		return nil, nil, fmt.Errorf("bead %s is not a group bead (missing gt:group label)", id)
+	if !HasLabel(issue, "ms:group") {
+		return nil, nil, fmt.Errorf("bead %s is not a group bead (missing ms:group label)", id)
 	}
 
 	fields := ParseGroupFields(issue.Description)
@@ -215,8 +215,8 @@ func (b *Beads) GetGroupByID(id string) (*Issue, *GroupFields, error) {
 		return nil, nil, err
 	}
 
-	if !HasLabel(issue, "gt:group") {
-		return nil, nil, fmt.Errorf("bead %s is not a group bead (missing gt:group label)", id)
+	if !HasLabel(issue, "ms:group") {
+		return nil, nil, fmt.Errorf("bead %s is not a group bead (missing ms:group label)", id)
 	}
 
 	fields := ParseGroupFields(issue.Description)
@@ -318,7 +318,7 @@ func (b *Beads) DeleteGroupBead(name string) error {
 
 // ListGroupBeads returns all group beads.
 func (b *Beads) ListGroupBeads() (map[string]*GroupFields, error) {
-	out, err := b.run("list", "--label=gt:group", "--json")
+	out, err := b.run("list", "--label=ms:group", "--json")
 	if err != nil {
 		return nil, err
 	}

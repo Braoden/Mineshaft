@@ -35,7 +35,7 @@ func TestRunLogCrashEmitsFeedSessionDeath(t *testing.T) {
 		crashExitCode = origExitCode
 	})
 	crashAgent = "mineshaft/miners/rust"
-	crashSession = "gt-mineshaft-rust"
+	crashSession = "ms-mineshaft-rust"
 	crashExitCode = 42
 
 	if err := runLogCrash(nil, nil); err != nil {
@@ -72,10 +72,10 @@ func TestRunLogCrashEmitsFeedSessionDeath(t *testing.T) {
 	if event.Visibility != gtevents.VisibilityFeed {
 		t.Fatalf("visibility = %q", event.Visibility)
 	}
-	assertPayloadString(t, event.Payload, "session", "gt-mineshaft-rust")
+	assertPayloadString(t, event.Payload, "session", "ms-mineshaft-rust")
 	assertPayloadString(t, event.Payload, "agent", "mineshaft/miners/rust")
 	assertPayloadString(t, event.Payload, "reason", "crashed with exit code 42")
-	assertPayloadString(t, event.Payload, "caller", "gt log crash")
+	assertPayloadString(t, event.Payload, "caller", "ms log crash")
 	if got, ok := event.Payload["exit_code"].(float64); !ok || got != 42 {
 		t.Fatalf("exit_code = %#v, want 42", event.Payload["exit_code"])
 	}

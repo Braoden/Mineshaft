@@ -15,7 +15,7 @@ import (
 func setupSlingTestRegistry(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "mineshaft")
+	reg.Register("ms", "mineshaft")
 	reg.Register("bd", "beads")
 	reg.Register("mp", "my-project")
 	old := session.DefaultRegistry()
@@ -28,7 +28,7 @@ func setupSlingTestRegistry(t *testing.T) {
 func TestNudgeRefinerySessionName(t *testing.T) {
 	setupSlingTestRegistry(t)
 	logPath := filepath.Join(t.TempDir(), "nudge.log")
-	t.Setenv("GT_TEST_NUDGE_LOG", logPath)
+	t.Setenv("MS_TEST_NUDGE_LOG", logPath)
 
 	tests := []struct {
 		name        string
@@ -40,7 +40,7 @@ func TestNudgeRefinerySessionName(t *testing.T) {
 			name:        "simple rig name",
 			rigName:     "mineshaft",
 			message:     "MERGE_READY received - check inbox for pending work",
-			wantSession: "gt-refinery",
+			wantSession: "ms-refinery",
 		},
 		{
 			name:        "hyphenated rig name",
@@ -86,9 +86,9 @@ func TestNudgeRefinerySessionName(t *testing.T) {
 // when an MR is actually created (via nudgeRefinery), not at miner dispatch time.
 func TestWakeRigAgentsDoesNotNudgeRefinery(t *testing.T) {
 	logPath := filepath.Join(t.TempDir(), "nudge.log")
-	t.Setenv("GT_TEST_NUDGE_LOG", logPath)
+	t.Setenv("MS_TEST_NUDGE_LOG", logPath)
 
-	// wakeRigAgents calls exec.Command("gt", "rig", "boot", ...) and tmux.NudgeSession.
+	// wakeRigAgents calls exec.Command("ms", "rig", "boot", ...) and tmux.NudgeSession.
 	// The boot command and witness nudge will fail silently (no real rig/tmux).
 	// We only care that nudgeRefinery is NOT called (no log entries).
 	wakeRigAgents("testrig")
@@ -109,7 +109,7 @@ func TestWakeRigAgentsDoesNotNudgeRefinery(t *testing.T) {
 // The tmux NudgeSession call should fail silently.
 func TestNudgeRefineryNoOpWithoutLog(t *testing.T) {
 	// Ensure test log is NOT set so we exercise the real tmux path
-	t.Setenv("GT_TEST_NUDGE_LOG", "")
+	t.Setenv("MS_TEST_NUDGE_LOG", "")
 
 	// Should not panic even though no tmux session exists
 	nudgeRefinery("nonexistent-rig", "test message")
@@ -223,7 +223,7 @@ echo "$*" >> "${BD_LOG}"
 if [ "$1" = "sql" ]; then
   case "$2" in
     *wisp_dependencies*depends_on_issue_id*depends_on_wisp_id*)
-      echo '[{"issue_id":"gt-wisp-live"},{"issue_id":"gt-wisp-live"},{"issue_id":"gt-wisp-other"}]'
+      echo '[{"issue_id":"ms-wisp-live"},{"issue_id":"ms-wisp-live"},{"issue_id":"ms-wisp-other"}]'
       exit 0
       ;;
   esac
@@ -247,11 +247,11 @@ exit 1
 		t.Fatalf("chdir: %v", err)
 	}
 
-	got, err := collectExistingMoleculeDeps("gt-work", "")
+	got, err := collectExistingMoleculeDeps("ms-work", "")
 	if err != nil {
 		t.Fatalf("collectExistingMoleculeDeps: %v", err)
 	}
-	want := []string{"gt-wisp-live", "gt-wisp-other"}
+	want := []string{"ms-wisp-live", "ms-wisp-other"}
 	if len(got) != len(want) {
 		t.Fatalf("collectExistingMoleculeDeps() = %v, want %v", got, want)
 	}
@@ -319,9 +319,9 @@ exit 1
 		t.Fatalf("write bd stub: %v", err)
 	}
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1")
+	t.Setenv("MS_TEST_SKIP_HOOK_VERIFY", "1")
 
-	err := hookBeadWithRetry("gt-work", "mineshaft/miners/rust", t.TempDir())
+	err := hookBeadWithRetry("ms-work", "mineshaft/miners/rust", t.TempDir())
 	if err == nil {
 		t.Fatal("hookBeadWithRetry error = nil, want fail-fast error")
 	}

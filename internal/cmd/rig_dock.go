@@ -39,11 +39,11 @@ This is a Level 2 (global/persistent) operation:
   - Persists until explicitly undocked
   - The daemon respects this status and won't auto-restart agents
 
-Use 'gt rig undock' to resume normal operation.
+Use 'ms rig undock' to resume normal operation.
 
 Examples:
-  gt rig dock mineshaft
-  gt rig dock beads`,
+  ms rig dock mineshaft
+  ms rig dock beads`,
 	Args: cobra.ExactArgs(1),
 	RunE: runRigDock,
 }
@@ -57,11 +57,11 @@ Undocking a rig:
   - Removes the status:docked label from the rig identity bead
   - Syncs via git so all clones see the undocked status
   - Allows the daemon to auto-restart agents
-  - Does NOT automatically start agents (use 'gt rig start' for that)
+  - Does NOT automatically start agents (use 'ms rig start' for that)
 
 Examples:
-  gt rig undock mineshaft
-  gt rig undock beads`,
+  ms rig undock mineshaft
+  ms rig undock beads`,
 	Args: cobra.ExactArgs(1),
 	RunE: runRigUndock,
 }
@@ -92,13 +92,13 @@ func runRigDock(cmd *cobra.Command, args []string) error {
 	}
 
 	// Get rig prefix for bead ID
-	prefix := "gt" // default
+	prefix := "ms" // default
 	if r.Config != nil && r.Config.Prefix != "" {
 		prefix = r.Config.Prefix
 	}
 
 	// Find or create the rig identity bead (idempotent; handles duplicates
-	// and Dolt query hiccups gracefully — gt-d8681).
+	// and Dolt query hiccups gracefully — ms-d8681).
 	bd := beads.New(r.BeadsPath())
 	rigBead, err := bd.EnsureRigBead(rigName, &beads.RigFields{
 		Repo:   r.GitURL,
@@ -209,7 +209,7 @@ func runRigUndock(cmd *cobra.Command, args []string) error {
 	}
 
 	// Get rig prefix for bead ID
-	prefix := "gt" // default
+	prefix := "ms" // default
 	if r.Config != nil && r.Config.Prefix != "" {
 		prefix = r.Config.Prefix
 	}
@@ -258,7 +258,7 @@ func runRigUndock(cmd *cobra.Command, args []string) error {
 	fmt.Printf("%s Rig %s undocked\n", style.Success.Render("✓"), rigName)
 	fmt.Printf("  Label removed: %s\n", RigDockedLabel)
 	fmt.Printf("  Daemon can now auto-restart agents\n")
-	fmt.Printf("  Use '%s' to start agents immediately\n", style.Dim.Render("gt rig start "+rigName))
+	fmt.Printf("  Use '%s' to start agents immediately\n", style.Dim.Render("ms rig start "+rigName))
 
 	return nil
 }

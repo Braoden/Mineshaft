@@ -241,12 +241,12 @@ func TestThresholdConstants(t *testing.T) {
 // TestCheckAll_GUPPViolation tests that agents with hook + >30min stale are detected as GUPP
 func TestCheckAll_GUPPViolation(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-mineshaft-miner-Toast"] = &beads.Issue{
-		ID:        "gt-mineshaft-miner-Toast",
-		HookBead:  "gt-abc12",
+	mock.agents["ms-mineshaft-miner-Toast"] = &beads.Issue{
+		ID:        "ms-mineshaft-miner-Toast",
+		HookBead:  "ms-abc12",
 		UpdatedAt: time.Now().Add(-45 * time.Minute).Format(time.RFC3339),
 	}
-	mock.sessions["gt-Toast"] = true // session alive
+	mock.sessions["ms-Toast"] = true // session alive
 
 	detector := NewStuckDetectorWithSource(mock)
 	agents, err := detector.CheckAll()
@@ -271,12 +271,12 @@ func TestCheckAll_GUPPViolation(t *testing.T) {
 // TestCheckAll_Stalled tests that agents with hook + >15min stale are detected as stalled
 func TestCheckAll_Stalled(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-mineshaft-miner-Pearl"] = &beads.Issue{
-		ID:        "gt-mineshaft-miner-Pearl",
-		HookBead:  "gt-def34",
+	mock.agents["ms-mineshaft-miner-Pearl"] = &beads.Issue{
+		ID:        "ms-mineshaft-miner-Pearl",
+		HookBead:  "ms-def34",
 		UpdatedAt: time.Now().Add(-20 * time.Minute).Format(time.RFC3339),
 	}
-	mock.sessions["gt-Pearl"] = true
+	mock.sessions["ms-Pearl"] = true
 
 	detector := NewStuckDetectorWithSource(mock)
 	agents, err := detector.CheckAll()
@@ -295,12 +295,12 @@ func TestCheckAll_Stalled(t *testing.T) {
 // TestCheckAll_Working tests that agents with hook + recent update are working
 func TestCheckAll_Working(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-mineshaft-miner-Max"] = &beads.Issue{
-		ID:        "gt-mineshaft-miner-Max",
-		HookBead:  "gt-xyz89",
+	mock.agents["ms-mineshaft-miner-Max"] = &beads.Issue{
+		ID:        "ms-mineshaft-miner-Max",
+		HookBead:  "ms-xyz89",
 		UpdatedAt: time.Now().Add(-2 * time.Minute).Format(time.RFC3339),
 	}
-	mock.sessions["gt-Max"] = true
+	mock.sessions["ms-Max"] = true
 
 	detector := NewStuckDetectorWithSource(mock)
 	agents, err := detector.CheckAll()
@@ -319,12 +319,12 @@ func TestCheckAll_Working(t *testing.T) {
 // TestCheckAll_Idle tests that agents with no hook are idle
 func TestCheckAll_Idle(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-mineshaft-miner-Joe"] = &beads.Issue{
-		ID:        "gt-mineshaft-miner-Joe",
+	mock.agents["ms-mineshaft-miner-Joe"] = &beads.Issue{
+		ID:        "ms-mineshaft-miner-Joe",
 		HookBead:  "", // no hooked work
 		UpdatedAt: time.Now().Add(-5 * time.Minute).Format(time.RFC3339),
 	}
-	mock.sessions["gt-Joe"] = true
+	mock.sessions["ms-Joe"] = true
 
 	detector := NewStuckDetectorWithSource(mock)
 	agents, err := detector.CheckAll()
@@ -343,9 +343,9 @@ func TestCheckAll_Idle(t *testing.T) {
 // TestCheckAll_Zombie tests that agents with dead sessions are zombies
 func TestCheckAll_Zombie(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-mineshaft-miner-Dead"] = &beads.Issue{
-		ID:        "gt-mineshaft-miner-Dead",
-		HookBead:  "gt-work1",
+	mock.agents["ms-mineshaft-miner-Dead"] = &beads.Issue{
+		ID:        "ms-mineshaft-miner-Dead",
+		HookBead:  "ms-work1",
 		UpdatedAt: time.Now().Add(-10 * time.Minute).Format(time.RFC3339),
 	}
 	// session NOT alive (not in mock.sessions)
@@ -370,28 +370,28 @@ func TestCheckAll_MultipleAgents(t *testing.T) {
 	now := time.Now()
 
 	// GUPP violation agent
-	mock.agents["gt-mineshaft-miner-Stuck"] = &beads.Issue{
-		ID:        "gt-mineshaft-miner-Stuck",
-		HookBead:  "gt-work1",
+	mock.agents["ms-mineshaft-miner-Stuck"] = &beads.Issue{
+		ID:        "ms-mineshaft-miner-Stuck",
+		HookBead:  "ms-work1",
 		UpdatedAt: now.Add(-40 * time.Minute).Format(time.RFC3339),
 	}
-	mock.sessions["gt-Stuck"] = true
+	mock.sessions["ms-Stuck"] = true
 
 	// Working agent
-	mock.agents["gt-mineshaft-miner-Happy"] = &beads.Issue{
-		ID:        "gt-mineshaft-miner-Happy",
-		HookBead:  "gt-work2",
+	mock.agents["ms-mineshaft-miner-Happy"] = &beads.Issue{
+		ID:        "ms-mineshaft-miner-Happy",
+		HookBead:  "ms-work2",
 		UpdatedAt: now.Add(-2 * time.Minute).Format(time.RFC3339),
 	}
-	mock.sessions["gt-Happy"] = true
+	mock.sessions["ms-Happy"] = true
 
 	// Idle agent
-	mock.agents["gt-mineshaft-miner-Lazy"] = &beads.Issue{
-		ID:        "gt-mineshaft-miner-Lazy",
+	mock.agents["ms-mineshaft-miner-Lazy"] = &beads.Issue{
+		ID:        "ms-mineshaft-miner-Lazy",
 		HookBead:  "",
 		UpdatedAt: now.Add(-5 * time.Minute).Format(time.RFC3339),
 	}
-	mock.sessions["gt-Lazy"] = true
+	mock.sessions["ms-Lazy"] = true
 
 	detector := NewStuckDetectorWithSource(mock)
 	agents, err := detector.CheckAll()
@@ -475,12 +475,12 @@ func TestCheckAll_TownLevelAgent(t *testing.T) {
 // TestCheckAll_RigSingleton tests detection of rig-level singletons (witness, refinery)
 func TestCheckAll_RigSingleton(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-mineshaft-witness"] = &beads.Issue{
-		ID:        "gt-mineshaft-witness",
+	mock.agents["ms-mineshaft-witness"] = &beads.Issue{
+		ID:        "ms-mineshaft-witness",
 		HookBead:  "",
 		UpdatedAt: time.Now().Add(-1 * time.Minute).Format(time.RFC3339),
 	}
-	mock.sessions["gt-witness"] = true
+	mock.sessions["ms-witness"] = true
 
 	detector := NewStuckDetectorWithSource(mock)
 	agents, err := detector.CheckAll()
@@ -497,20 +497,20 @@ func TestCheckAll_RigSingleton(t *testing.T) {
 	if agents[0].Rig != "mineshaft" {
 		t.Errorf("expected rig 'mineshaft', got %q", agents[0].Rig)
 	}
-	if agents[0].SessionID != "gt-witness" {
-		t.Errorf("expected session 'gt-witness', got %q", agents[0].SessionID)
+	if agents[0].SessionID != "ms-witness" {
+		t.Errorf("expected session 'ms-witness', got %q", agents[0].SessionID)
 	}
 }
 
 // TestCheckAll_CrewAgent tests detection of crew agents
 func TestCheckAll_CrewAgent(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-mineshaft-crew-joe"] = &beads.Issue{
-		ID:        "gt-mineshaft-crew-joe",
-		HookBead:  "gt-task1",
+	mock.agents["ms-mineshaft-crew-joe"] = &beads.Issue{
+		ID:        "ms-mineshaft-crew-joe",
+		HookBead:  "ms-task1",
 		UpdatedAt: time.Now().Add(-5 * time.Minute).Format(time.RFC3339),
 	}
-	mock.sessions["gt-crew-joe"] = true
+	mock.sessions["ms-crew-joe"] = true
 
 	detector := NewStuckDetectorWithSource(mock)
 	agents, err := detector.CheckAll()
@@ -524,8 +524,8 @@ func TestCheckAll_CrewAgent(t *testing.T) {
 	if agents[0].Role != "crew" {
 		t.Errorf("expected role 'crew', got %q", agents[0].Role)
 	}
-	if agents[0].SessionID != "gt-crew-joe" {
-		t.Errorf("expected session 'gt-crew-joe', got %q", agents[0].SessionID)
+	if agents[0].SessionID != "ms-crew-joe" {
+		t.Errorf("expected session 'ms-crew-joe', got %q", agents[0].SessionID)
 	}
 	if agents[0].State != StateWorking {
 		t.Errorf("expected StateWorking, got %s", agents[0].State)
@@ -543,10 +543,10 @@ func TestDeriveSessionName(t *testing.T) {
 	}{
 		{"overseer", "", "overseer", "", "hq-overseer"},
 		{"supervisor", "", "supervisor", "", "hq-supervisor"},
-		{"witness", "mineshaft", "witness", "", "gt-witness"},
-		{"refinery", "mineshaft", "refinery", "", "gt-refinery"},
-		{"crew", "mineshaft", "crew", "joe", "gt-crew-joe"},
-		{"miner", "mineshaft", "miner", "Toast", "gt-Toast"},
+		{"witness", "mineshaft", "witness", "", "ms-witness"},
+		{"refinery", "mineshaft", "refinery", "", "ms-refinery"},
+		{"crew", "mineshaft", "crew", "joe", "ms-crew-joe"},
+		{"miner", "mineshaft", "miner", "Toast", "ms-Toast"},
 	}
 
 	for _, tt := range tests {
@@ -584,9 +584,9 @@ func TestCheckAll_InvalidBeadID(t *testing.T) {
 // TestCheckAll_SessionError tests that IsSessionAlive errors don't cause false zombies
 func TestCheckAll_SessionError(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-mineshaft-miner-Alpha"] = &beads.Issue{
-		ID:        "gt-mineshaft-miner-Alpha",
-		HookBead:  "gt-work1",
+	mock.agents["ms-mineshaft-miner-Alpha"] = &beads.Issue{
+		ID:        "ms-mineshaft-miner-Alpha",
+		HookBead:  "ms-work1",
 		UpdatedAt: time.Now().Add(-5 * time.Minute).Format(time.RFC3339),
 	}
 	// Session error (e.g., tmux socket contention) - should NOT mark as zombie
@@ -614,15 +614,15 @@ func TestCheckAll_SessionError(t *testing.T) {
 // (would be stalled for a normal miner at the 15min threshold)
 func TestCheckAll_RalphcatNotStalled(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-mineshaft-miner-Ralph"] = &beads.Issue{
-		ID:       "gt-mineshaft-miner-Ralph",
-		HookBead: "gt-abc12",
+	mock.agents["ms-mineshaft-miner-Ralph"] = &beads.Issue{
+		ID:       "ms-mineshaft-miner-Ralph",
+		HookBead: "ms-abc12",
 		// 45 minutes idle — stalled for normal miner, but fine for ralphcat
 		UpdatedAt: time.Now().Add(-45 * time.Minute).Format(time.RFC3339),
 		// Description contains mode: ralph (agent fields)
-		Description: "Miner Ralph\n\nrole_type: miner\nrig: mineshaft\nagent_state: working\nhook_bead: gt-abc12\ncleanup_status: null\nactive_mr: null\nnotification_level: null\nmode: ralph",
+		Description: "Miner Ralph\n\nrole_type: miner\nrig: mineshaft\nagent_state: working\nhook_bead: ms-abc12\ncleanup_status: null\nactive_mr: null\nnotification_level: null\nmode: ralph",
 	}
-	mock.sessions["gt-Ralph"] = true // session alive
+	mock.sessions["ms-Ralph"] = true // session alive
 
 	detector := NewStuckDetectorWithSource(mock)
 	agents, err := detector.CheckAll()
@@ -643,13 +643,13 @@ func TestCheckAll_RalphcatNotStalled(t *testing.T) {
 // TestCheckAll_RalphcatStalled tests that a ralphcat IS stalled after 2+ hours
 func TestCheckAll_RalphcatStalled(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-mineshaft-miner-Ralph2"] = &beads.Issue{
-		ID:          "gt-mineshaft-miner-Ralph2",
-		HookBead:    "gt-def34",
+	mock.agents["ms-mineshaft-miner-Ralph2"] = &beads.Issue{
+		ID:          "ms-mineshaft-miner-Ralph2",
+		HookBead:    "ms-def34",
 		UpdatedAt:   time.Now().Add(-150 * time.Minute).Format(time.RFC3339), // 2.5 hours
-		Description: "Miner Ralph2\n\nrole_type: miner\nrig: mineshaft\nagent_state: working\nhook_bead: gt-def34\ncleanup_status: null\nactive_mr: null\nnotification_level: null\nmode: ralph",
+		Description: "Miner Ralph2\n\nrole_type: miner\nrig: mineshaft\nagent_state: working\nhook_bead: ms-def34\ncleanup_status: null\nactive_mr: null\nnotification_level: null\nmode: ralph",
 	}
-	mock.sessions["gt-Ralph2"] = true
+	mock.sessions["ms-Ralph2"] = true
 
 	detector := NewStuckDetectorWithSource(mock)
 	agents, err := detector.CheckAll()
@@ -669,13 +669,13 @@ func TestCheckAll_RalphcatStalled(t *testing.T) {
 // TestCheckAll_RalphcatGUPP tests that a ralphcat with 5h idle IS in GUPP violation
 func TestCheckAll_RalphcatGUPP(t *testing.T) {
 	mock := newMockHealthSource()
-	mock.agents["gt-mineshaft-miner-Ralph3"] = &beads.Issue{
-		ID:          "gt-mineshaft-miner-Ralph3",
-		HookBead:    "gt-ghi56",
+	mock.agents["ms-mineshaft-miner-Ralph3"] = &beads.Issue{
+		ID:          "ms-mineshaft-miner-Ralph3",
+		HookBead:    "ms-ghi56",
 		UpdatedAt:   time.Now().Add(-300 * time.Minute).Format(time.RFC3339), // 5 hours
-		Description: "Miner Ralph3\n\nrole_type: miner\nrig: mineshaft\nagent_state: working\nhook_bead: gt-ghi56\ncleanup_status: null\nactive_mr: null\nnotification_level: null\nmode: ralph",
+		Description: "Miner Ralph3\n\nrole_type: miner\nrig: mineshaft\nagent_state: working\nhook_bead: ms-ghi56\ncleanup_status: null\nactive_mr: null\nnotification_level: null\nmode: ralph",
 	}
-	mock.sessions["gt-Ralph3"] = true
+	mock.sessions["ms-Ralph3"] = true
 
 	detector := NewStuckDetectorWithSource(mock)
 	agents, err := detector.CheckAll()
@@ -774,8 +774,8 @@ func TestNudgeTarget(t *testing.T) {
 		},
 		{
 			name:     "unknown role falls back to session ID",
-			agent:    &ProblemAgent{Role: "custom", Name: "x", Rig: "r", SessionID: "gt-r-custom-x"},
-			expected: "gt-r-custom-x",
+			agent:    &ProblemAgent{Role: "custom", Name: "x", Rig: "r", SessionID: "ms-r-custom-x"},
+			expected: "ms-r-custom-x",
 		},
 	}
 

@@ -44,10 +44,10 @@ tasks, cleaned up on completion — but the identity persists.
 A miner is either:
   - Working: Actively doing assigned work
   - Stalled: Session crashed mid-work (needs Witness intervention)
-  - Zombie: Finished but gt done failed (needs cleanup)
+  - Zombie: Finished but ms done failed (needs cleanup)
   - Nuked: Session ended, identity persists (ready for next assignment)
 
-Self-cleaning model: When work completes, the miner runs 'gt done',
+Self-cleaning model: When work completes, the miner runs 'ms done',
 which pushes the branch, submits to the merge queue, and exits. The
 Witness then nukes the sandbox. The miner's identity (agent bead)
 persists with agent_state=nuked, preserving work history.
@@ -71,26 +71,26 @@ all miners with their states:
   - stuck: Needs assistance
 
 Examples:
-  gt miner list greenplace
-  gt miner list --all
-  gt miner list greenplace --json`,
+  ms miner list greenplace
+  ms miner list --all
+  ms miner list greenplace --json`,
 	RunE: runMinerList,
 }
 
 var minerAddCmd = &cobra.Command{
 	Use:        "add <rig> <name>",
 	Short:      "Add a new miner to a rig (DEPRECATED)",
-	Deprecated: "use 'gt miner identity add' instead. This command will be removed in v1.0.",
+	Deprecated: "use 'ms miner identity add' instead. This command will be removed in v1.0.",
 	Long: `Add a new miner to a rig.
 
-DEPRECATED: Use 'gt miner identity add' instead. This command will be removed in v1.0.
+DEPRECATED: Use 'ms miner identity add' instead. This command will be removed in v1.0.
 
 Creates a miner directory, clones the rig repo, creates a work branch,
 and initializes state.
 
 Example:
-  gt miner identity add greenplace Toast  # Preferred
-  gt miner add greenplace Toast           # Deprecated`,
+  ms miner identity add greenplace Toast  # Preferred
+  ms miner add greenplace Toast           # Deprecated`,
 	Args: cobra.ExactArgs(2),
 	RunE: runMinerAdd,
 }
@@ -105,10 +105,10 @@ Warns if uncommitted changes exist.
 Use --force to bypass checks.
 
 Examples:
-  gt miner remove greenplace/Toast
-  gt miner remove greenplace/Toast greenplace/Furiosa
-  gt miner remove greenplace --all
-  gt miner remove greenplace --all --force`,
+  ms miner remove greenplace/Toast
+  ms miner remove greenplace/Toast greenplace/Furiosa
+  ms miner remove greenplace --all
+  ms miner remove greenplace --all --force`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runMinerRemove,
 }
@@ -129,8 +129,8 @@ NOTE: The argument is <rig>/<miner> — a single argument with a slash
 separator, NOT two separate arguments. For example: greenplace/Toast
 
 Examples:
-  gt miner status greenplace/Toast
-  gt miner status greenplace/Toast --json`,
+  ms miner status greenplace/Toast
+  ms miner status greenplace/Toast --json`,
 	Args: cobra.ExactArgs(1),
 	RunE: runMinerStatus,
 }
@@ -162,8 +162,8 @@ This command removes orphaned branches:
   - Old timestamped branches (keeps only the current one per miner)
 
 Examples:
-  gt miner gc greenplace
-  gt miner gc greenplace --dry-run`,
+  ms miner gc greenplace
+  ms miner gc greenplace --dry-run`,
 	Args: cobra.ExactArgs(1),
 	RunE: runMinerGC,
 }
@@ -189,11 +189,11 @@ Use --force to bypass safety checks (LOSES WORK).
 Use --dry-run to see what would happen and safety check status.
 
 Examples:
-  gt miner nuke greenplace/Toast
-  gt miner nuke greenplace/Toast greenplace/Furiosa
-  gt miner nuke greenplace --all
-  gt miner nuke greenplace --all --dry-run
-  gt miner nuke greenplace/Toast --force  # bypass safety checks`,
+  ms miner nuke greenplace/Toast
+  ms miner nuke greenplace/Toast greenplace/Furiosa
+  ms miner nuke greenplace --all
+  ms miner nuke greenplace --all --dry-run
+  ms miner nuke greenplace/Toast --force  # bypass safety checks`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runMinerNuke,
 }
@@ -212,8 +212,8 @@ Checks:
   - Stashes: stashed changes
 
 Examples:
-  gt miner git-state greenplace/Toast
-  gt miner git-state greenplace/Toast --json`,
+  ms miner git-state greenplace/Toast
+  ms miner git-state greenplace/Toast --json`,
 	Args: cobra.ExactArgs(1),
 	RunE: runMinerGitState,
 }
@@ -232,8 +232,8 @@ This prevents accidental data loss when cleaning up dormant miners.
 The Witness should escalate NEEDS_RECOVERY and NEEDS_MQ_SUBMIT cases to the Overseer.
 
 Examples:
-  gt miner check-recovery greenplace/Toast
-  gt miner check-recovery greenplace/Toast --json`,
+  ms miner check-recovery greenplace/Toast
+  ms miner check-recovery greenplace/Toast --json`,
 	Args: cobra.ExactArgs(1),
 	RunE: runMinerCheckRecovery,
 }
@@ -263,11 +263,11 @@ Use --cleanup to automatically nuke stale miners that are safe to remove.
 Use --dry-run with --cleanup to see what would be cleaned.
 
 Examples:
-  gt miner stale greenplace
-  gt miner stale greenplace --threshold 50
-  gt miner stale greenplace --json
-  gt miner stale greenplace --cleanup
-  gt miner stale greenplace --cleanup --dry-run`,
+  ms miner stale greenplace
+  ms miner stale greenplace --threshold 50
+  ms miner stale greenplace --json
+  ms miner stale greenplace --cleanup
+  ms miner stale greenplace --cleanup --dry-run`,
 	Args: cobra.ExactArgs(1),
 	RunE: runMinerStale,
 }
@@ -289,9 +289,9 @@ Use --dry-run to preview what would be pruned.
 Use --remote to also prune remote miner branches on origin.
 
 Examples:
-  gt miner prune greenplace
-  gt miner prune greenplace --dry-run
-  gt miner prune greenplace --remote`,
+  ms miner prune greenplace
+  ms miner prune greenplace --dry-run
+  ms miner prune greenplace --remote`,
 	Args: cobra.ExactArgs(1),
 	RunE: runMinerPrune,
 }
@@ -302,7 +302,7 @@ var minerPoolInitCmd = &cobra.Command{
 	Long: `Initialize a persistent miner pool for a rig.
 
 Creates N miners with identities and worktrees in IDLE state,
-ready for immediate work assignment via gt sling.
+ready for immediate work assignment via ms sling.
 
 Pool size is determined by (in priority order):
   1. --size flag
@@ -317,9 +317,9 @@ Existing miners are preserved — only new ones are created
 to reach the target pool size.
 
 Examples:
-  gt miner pool-init mineshaft
-  gt miner pool-init mineshaft --size 6
-  gt miner pool-init mineshaft --dry-run`,
+  ms miner pool-init mineshaft
+  ms miner pool-init mineshaft --size 6
+  ms miner pool-init mineshaft --dry-run`,
 	Args: cobra.ExactArgs(1),
 	RunE: runMinerPoolInit,
 }
@@ -620,7 +620,7 @@ func runMinerList(cmd *cobra.Command, args []string) error {
 
 func runMinerAdd(cmd *cobra.Command, args []string) error {
 	// Emit deprecation warning
-	fmt.Fprintf(os.Stderr, "%s 'gt miner add' is deprecated. Use 'gt miner identity add' instead.\n",
+	fmt.Fprintf(os.Stderr, "%s 'ms miner add' is deprecated. Use 'ms miner identity add' instead.\n",
 		style.Warning.Render("Warning:"))
 	fmt.Fprintf(os.Stderr, "         This command will be removed in v1.0.\n\n")
 
@@ -1596,7 +1596,7 @@ func isMQNotRequiredSource(bd issueShower, issueID string) bool {
 // forever, causing witness patrols to restart the miner on every cycle.
 func applyMQCheck(status *RecoveryStatus, bd mrFinder, beadTerminal, hasSubmittableWork, mqNotRequired bool) {
 	if !hasSubmittableWork || mqNotRequired {
-		// No commits/content ahead of the integration branch means gt done had
+		// No commits/content ahead of the integration branch means ms done had
 		// nothing to enqueue; treating that as missing MQ submission causes
 		// recovery loops on no-op/report-only assignments.
 		status.MQStatus = "not_required"
@@ -1746,7 +1746,7 @@ func runMinerNuke(cmd *cobra.Command, args []string) error {
 			} else {
 				fmt.Printf("Would nuke %s/%s:\n", p.rigName, p.minerName)
 			}
-			fmt.Printf("  - Kill session: gt-%s-%s\n", p.rigName, p.minerName)
+			fmt.Printf("  - Kill session: ms-%s-%s\n", p.rigName, p.minerName)
 			fmt.Printf("  - Delete worktree: %s/miners/%s\n", p.r.Path, p.minerName)
 			fmt.Printf("  - Delete branch (if exists)\n")
 			fmt.Printf("  - Reset agent bead: %s\n", minerBeadIDForRig(p.r, p.rigName, p.minerName))
@@ -1859,12 +1859,12 @@ func nukeMinerFullWithOptions(minerName, rigName string, mgr *miner.Manager, r *
 	// Step 2.5: Burn any molecule attached to the miner's hooked work bead.
 	// Without this, nuked miners leave orphan molecule refs that block re-sling.
 	// The stale attached_molecule in the work bead's description causes sling to
-	// fail with "bead already has N attached molecule(s)" on re-dispatch (gt-npzy).
+	// fail with "bead already has N attached molecule(s)" on re-dispatch (ms-npzy).
 	if getErr == nil && minerInfo != nil && minerInfo.Issue != "" {
 		nukeCleanupMolecules(minerInfo.Issue, r)
 	}
 
-	// Step 2.75: Best-effort push before nuke (gt-4vr guardrail).
+	// Step 2.75: Best-effort push before nuke (ms-4vr guardrail).
 	// Try to preserve any unpushed commits on the branch. If push fails,
 	// proceed — --force already means "I accept data loss".
 	if branchToDelete != "" {
@@ -1908,9 +1908,9 @@ func nukeMinerFullWithOptions(minerName, rigName string, mgr *miner.Manager, r *
 	// Step 4: Delete local branch (if we know it)
 	// Local branch can always be deleted (worktree is already gone).
 	// Remote branch is never deleted during nuke — the refinery owns
-	// remote branch cleanup after successful merge (gt mq post-merge).
+	// remote branch cleanup after successful merge (ms mq post-merge).
 	// This prevents the race where nuke deletes the branch before the
-	// refinery has a chance to merge it. (gt-v5ku)
+	// refinery has a chance to merge it. (ms-v5ku)
 	if branchToDelete != "" {
 		repoGit := getRepoGitForRig(r.Path)
 		if err := repoGit.DeleteBranch(branchToDelete, true); err != nil {
@@ -1942,13 +1942,13 @@ func resetMinerAgentBeadForReuse(r *rig.Rig, rigName, minerName string) {
 }
 
 // nukeCleanupMolecules burns any molecule attached to a work bead during miner nuke.
-// This prevents stale attached_molecule references from blocking re-dispatch (gt-npzy).
+// This prevents stale attached_molecule references from blocking re-dispatch (ms-npzy).
 // Best-effort: failures are logged but don't abort the nuke.
 func nukeCleanupMolecules(workBeadID string, r *rig.Rig) {
 	// Use overseer/rig as workDir so ResolveBeadsDir finds the Dolt-backed
 	// .beads/ directory, not the gitignored rig-root .beads/. Without this,
 	// detach/close operations route to the wrong database and the stale
-	// molecule attachment persists on the work bead. (gt--1up)
+	// molecule attachment persists on the work bead. (ms--1up)
 	bd := beads.New(filepath.Join(r.Path, "overseer", "rig"))
 
 	// Fetch the work bead to check for attached molecules
@@ -2354,7 +2354,7 @@ func runMinerPoolInit(cmd *cobra.Command, args []string) error {
 		style.Bold.Render("✓"), created, created+len(existing), poolSize)
 
 	// Sync hooks so all miner settings.json files reflect current defaults.
-	// Pool-init may run long after rig-add, when gt defaults have changed.
+	// Pool-init may run long after rig-add, when ms defaults have changed.
 	townRoot, twErr := workspace.FindFromCwdOrError()
 	if twErr == nil {
 		ensureHooksBase()

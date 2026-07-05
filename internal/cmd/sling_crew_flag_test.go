@@ -17,7 +17,7 @@ func TestSlingCrewFlagExpandsTarget(t *testing.T) {
 	}{
 		{
 			name:     "basic crew expansion",
-			args:     []string{"gt-abc", "mineshaft"},
+			args:     []string{"ms-abc", "mineshaft"},
 			crew:     "mel",
 			wantLast: "mineshaft/crew/mel",
 		},
@@ -29,13 +29,13 @@ func TestSlingCrewFlagExpandsTarget(t *testing.T) {
 		},
 		{
 			name:    "crew without rig target errors",
-			args:    []string{"gt-abc"},
+			args:    []string{"ms-abc"},
 			crew:    "mel",
 			wantErr: "--crew requires a rig target argument",
 		},
 		{
 			name:     "no crew flag leaves target unchanged",
-			args:     []string{"gt-abc", "mineshaft"},
+			args:     []string{"ms-abc", "mineshaft"},
 			crew:     "",
 			wantLast: "mineshaft",
 		},

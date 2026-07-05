@@ -1,5 +1,5 @@
 // ABOUTME: Hidden command for shell hook to detect rigs and update cache.
-// ABOUTME: Called by shell integration to set GT_TOWN_ROOT and GT_RIG env vars.
+// ABOUTME: Called by shell integration to set MS_TOWN_ROOT and MS_RIG env vars.
 
 package cmd
 
@@ -31,12 +31,12 @@ When --cache is specified, the result is written to ~/.cache/mineshaft/rigs.cach
 for fast lookups by the shell hook.
 
 Output format (to stdout):
-  export GT_TOWN_ROOT=/path/to/town
-  export GT_ROOT=/path/to/town
-  export GT_RIG=rigname
+  export MS_TOWN_ROOT=/path/to/town
+  export MS_ROOT=/path/to/town
+  export MS_RIG=rigname
 
 Or if not in a rig:
-  unset GT_TOWN_ROOT GT_ROOT GT_RIG`,
+  unset MS_TOWN_ROOT MS_ROOT MS_RIG`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runRigDetect,
 }
@@ -65,13 +65,13 @@ func runRigDetect(cmd *cobra.Command, args []string) error {
 	rigName := detectRigFromPath(townRoot, absPath)
 
 	if rigName != "" {
-		printEnvSet("GT_TOWN_ROOT", townRoot)
-		printEnvSet("GT_ROOT", townRoot)
-		printEnvSet("GT_RIG", rigName)
+		printEnvSet("MS_TOWN_ROOT", townRoot)
+		printEnvSet("MS_ROOT", townRoot)
+		printEnvSet("MS_RIG", rigName)
 	} else {
-		printEnvSet("GT_TOWN_ROOT", townRoot)
-		printEnvSet("GT_ROOT", townRoot)
-		printEnvUnset("GT_RIG")
+		printEnvSet("MS_TOWN_ROOT", townRoot)
+		printEnvSet("MS_ROOT", townRoot)
+		printEnvUnset("MS_RIG")
 	}
 
 	if rigDetectCache != "" {
@@ -111,9 +111,9 @@ func detectRigFromPath(townRoot, absPath string) string {
 
 func outputNotInRig() error {
 	if runtime.GOOS == "windows" {
-		fmt.Println("Remove-Item Env:GT_TOWN_ROOT -ErrorAction SilentlyContinue; Remove-Item Env:GT_ROOT -ErrorAction SilentlyContinue; Remove-Item Env:GT_RIG -ErrorAction SilentlyContinue")
+		fmt.Println("Remove-Item Env:MS_TOWN_ROOT -ErrorAction SilentlyContinue; Remove-Item Env:MS_ROOT -ErrorAction SilentlyContinue; Remove-Item Env:MS_RIG -ErrorAction SilentlyContinue")
 	} else {
-		fmt.Println("unset GT_TOWN_ROOT GT_ROOT GT_RIG")
+		fmt.Println("unset MS_TOWN_ROOT MS_ROOT MS_RIG")
 	}
 	return nil
 }
@@ -139,21 +139,21 @@ func updateRigCache(repoRoot, townRoot, rigName string) error {
 	var value string
 	if rigName != "" {
 		if runtime.GOOS == "windows" {
-			value = fmt.Sprintf("$env:GT_TOWN_ROOT=%q; $env:GT_ROOT=%q; $env:GT_RIG=%q", townRoot, townRoot, rigName)
+			value = fmt.Sprintf("$env:MS_TOWN_ROOT=%q; $env:MS_ROOT=%q; $env:MS_RIG=%q", townRoot, townRoot, rigName)
 		} else {
-			value = fmt.Sprintf("export GT_TOWN_ROOT=%q; export GT_ROOT=%q; export GT_RIG=%q", townRoot, townRoot, rigName)
+			value = fmt.Sprintf("export MS_TOWN_ROOT=%q; export MS_ROOT=%q; export MS_RIG=%q", townRoot, townRoot, rigName)
 		}
 	} else if townRoot != "" {
 		if runtime.GOOS == "windows" {
-			value = fmt.Sprintf("$env:GT_TOWN_ROOT=%q; $env:GT_ROOT=%q; Remove-Item Env:GT_RIG -ErrorAction SilentlyContinue", townRoot, townRoot)
+			value = fmt.Sprintf("$env:MS_TOWN_ROOT=%q; $env:MS_ROOT=%q; Remove-Item Env:MS_RIG -ErrorAction SilentlyContinue", townRoot, townRoot)
 		} else {
-			value = fmt.Sprintf("export GT_TOWN_ROOT=%q; export GT_ROOT=%q; unset GT_RIG", townRoot, townRoot)
+			value = fmt.Sprintf("export MS_TOWN_ROOT=%q; export MS_ROOT=%q; unset MS_RIG", townRoot, townRoot)
 		}
 	} else {
 		if runtime.GOOS == "windows" {
-			value = "Remove-Item Env:GT_TOWN_ROOT -ErrorAction SilentlyContinue; Remove-Item Env:GT_ROOT -ErrorAction SilentlyContinue; Remove-Item Env:GT_RIG -ErrorAction SilentlyContinue"
+			value = "Remove-Item Env:MS_TOWN_ROOT -ErrorAction SilentlyContinue; Remove-Item Env:MS_ROOT -ErrorAction SilentlyContinue; Remove-Item Env:MS_RIG -ErrorAction SilentlyContinue"
 		} else {
-			value = "unset GT_TOWN_ROOT GT_ROOT GT_RIG"
+			value = "unset MS_TOWN_ROOT MS_ROOT MS_RIG"
 		}
 	}
 

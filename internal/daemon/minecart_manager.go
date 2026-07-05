@@ -32,7 +32,7 @@ const (
 	minecartGracePeriod = 5 * time.Minute
 )
 
-// strandedMinecartInfo matches the JSON output of `gt minecart stranded --json`.
+// strandedMinecartInfo matches the JSON output of `ms minecart stranded --json`.
 type strandedMinecartInfo struct {
 	ID           string    `json:"id"`
 	Title        string    `json:"title"`
@@ -121,7 +121,7 @@ type MinecartManager struct {
 // unless openStores is provided for lazy initialization.
 // openStores is called lazily if stores is nil (e.g., Dolt not ready at startup).
 // isRigParked reports whether a rig should be skipped during polling (nil = never parked).
-// gtPath is the resolved path to the gt binary for subprocess calls.
+// gtPath is the resolved path to the ms binary for subprocess calls.
 func NewMinecartManager(townRoot string, logger func(format string, args ...interface{}), gtPath string, scanInterval time.Duration, stores map[string]beadsdk.Storage, openStores func() map[string]beadsdk.Storage, isRigParked func(string) bool) *MinecartManager {
 	if scanInterval <= 0 {
 		scanInterval = defaultStrandedScanInterval
@@ -506,7 +506,7 @@ func (m *MinecartManager) scan() {
 	}
 }
 
-// findStranded runs `gt minecart stranded --json` and parses the output.
+// findStranded runs `ms minecart stranded --json` and parses the output.
 func (m *MinecartManager) findStranded() ([]strandedMinecartInfo, error) {
 	cmd := exec.CommandContext(m.ctx, m.gtPath, "minecart", "stranded", "--json")
 	cmd.Dir = m.townRoot
@@ -581,7 +581,7 @@ func (m *MinecartManager) feedFirstReady(c strandedMinecartInfo) {
 	m.logger("Minecart %s: no dispatchable issues (all %d skipped)", c.ID, len(c.ReadyIssues))
 }
 
-// checkMinecartCompletion runs gt minecart check to auto-close a minecart whose
+// checkMinecartCompletion runs ms minecart check to auto-close a minecart whose
 // tracked issues may all be closed. This handles the case where the event poll
 // missed the close events (e.g., daemon restart, Dolt latency).
 func (m *MinecartManager) checkMinecartCompletion(minecartID string) {
@@ -597,7 +597,7 @@ func (m *MinecartManager) checkMinecartCompletion(minecartID string) {
 	}
 }
 
-// closeEmptyMinecart runs gt minecart check to auto-close an empty minecart.
+// closeEmptyMinecart runs ms minecart check to auto-close an empty minecart.
 func (m *MinecartManager) closeEmptyMinecart(minecartID string) {
 	m.logger("Minecart %s: auto-closing (empty)", minecartID)
 

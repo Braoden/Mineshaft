@@ -35,7 +35,7 @@ func TestWitnessSessionName(t *testing.T) {
 		rigPrefix string
 		want      string
 	}{
-		{"gt", "gt-witness"},
+		{"ms", "ms-witness"},
 		{"bd", "bd-witness"},
 		{"hop", "hop-witness"},
 		{"sky", "sky-witness"},
@@ -55,7 +55,7 @@ func TestRefinerySessionName(t *testing.T) {
 		rigPrefix string
 		want      string
 	}{
-		{"gt", "gt-refinery"},
+		{"ms", "ms-refinery"},
 		{"bd", "bd-refinery"},
 		{"hop", "hop-refinery"},
 	}
@@ -75,7 +75,7 @@ func TestCrewSessionName(t *testing.T) {
 		name      string
 		want      string
 	}{
-		{"gt", "max", "gt-crew-max"},
+		{"ms", "max", "ms-crew-max"},
 		{"bd", "alice", "bd-crew-alice"},
 		{"hop", "bar", "hop-crew-bar"},
 	}
@@ -95,8 +95,8 @@ func TestMinerSessionName(t *testing.T) {
 		name      string
 		want      string
 	}{
-		{"gt", "Toast", "gt-Toast"},
-		{"gt", "Furiosa", "gt-Furiosa"},
+		{"ms", "Toast", "ms-Toast"},
+		{"ms", "Furiosa", "ms-Furiosa"},
 		{"bd", "worker1", "bd-worker1"},
 		{"hop", "ostrom", "hop-ostrom"},
 	}
@@ -111,7 +111,7 @@ func TestMinerSessionName(t *testing.T) {
 }
 
 func TestDefaultPrefix(t *testing.T) {
-	want := "gt"
+	want := "ms"
 	if DefaultPrefix != want {
 		t.Errorf("DefaultPrefix = %q, want %q", DefaultPrefix, want)
 	}

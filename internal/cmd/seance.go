@@ -45,20 +45,20 @@ a predecessor session with full context. You can ask questions directly:
   - "What did you try that didn't work?"
 
 DISCOVERY:
-  gt seance                     # List recent sessions from events
-  gt seance --role crew         # Filter by role type
-  gt seance --rig mineshaft       # Filter by rig
-  gt seance --recent 10         # Last N sessions
+  ms seance                     # List recent sessions from events
+  ms seance --role crew         # Filter by role type
+  ms seance --rig mineshaft       # Filter by rig
+  ms seance --recent 10         # Last N sessions
 
 THE SEANCE (talk to predecessor):
-  gt seance --talk <session-id>              # Interactive conversation
-  gt seance --talk <id> -p "Where is X?"     # One-shot question
+  ms seance --talk <session-id>              # Interactive conversation
+  ms seance --talk <id> -p "Where is X?"     # One-shot question
 
 The --talk flag spawns: claude --fork-session --resume <id>
 This loads the predecessor's full context without modifying their session.
 
 Sessions are discovered from:
-  1. Events emitted by SessionStart hooks (~/gt/.events.jsonl)
+  1. Events emitted by SessionStart hooks (~/ms/.events.jsonl)
   2. The [MINESHAFT] beacon makes sessions searchable in /resume`,
 	RunE: runSeance,
 }
@@ -135,7 +135,7 @@ func runSeanceList() error {
 
 	if len(filtered) == 0 {
 		fmt.Println("No session events found.")
-		fmt.Println(style.Dim.Render("Sessions are discovered from ~/gt/.events.jsonl"))
+		fmt.Println(style.Dim.Render("Sessions are discovered from ~/ms/.events.jsonl"))
 		fmt.Println(style.Dim.Render("Ensure SessionStart hooks emit session_start events"))
 		return nil
 	}
@@ -185,8 +185,8 @@ func runSeanceList() error {
 	}
 
 	fmt.Printf("\n%s\n", style.Bold.Render("Talk to a predecessor:"))
-	fmt.Printf("  gt seance --talk <session-id>\n")
-	fmt.Printf("  gt seance --talk <session-id> -p \"Where did you put X?\"\n")
+	fmt.Printf("  ms seance --talk <session-id>\n")
+	fmt.Printf("  ms seance --talk <session-id> -p \"Where did you put X?\"\n")
 
 	return nil
 }
@@ -407,7 +407,7 @@ type sessionsIndexEntry struct {
 // sessionLocation contains the location info for a session.
 type sessionLocation struct {
 	configDir  string // The account's config directory
-	projectDir string // The project directory name (e.g., "-Users-jv-gt-mineshaft-crew-propane")
+	projectDir string // The project directory name (e.g., "-Users-jv-ms-mineshaft-crew-propane")
 }
 
 // sessionsIndexLockTimeout is how long to wait for the index lock.

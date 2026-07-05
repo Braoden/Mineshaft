@@ -146,7 +146,7 @@ func (c *StaleBeadsRedirectCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:  StatusWarning,
 		Message: fmt.Sprintf("%d beads redirect issue(s) found", totalIssues),
 		Details: details,
-		FixHint: "Run 'gt doctor --fix' to repair redirects and remove stale files",
+		FixHint: "Run 'ms doctor --fix' to repair redirects and remove stale files",
 	}
 }
 

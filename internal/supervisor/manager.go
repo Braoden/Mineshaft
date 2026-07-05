@@ -110,7 +110,7 @@ func (m *Manager) Start(agentOverride string) error {
 		Recipient: "supervisor",
 		Sender:    "daemon",
 		Topic:     "patrol",
-	}, "I am Supervisor. Start patrol: run gt supervisor heartbeat, then check gt hook. If no hook, run gt sling mol-supervisor-patrol supervisor, then execute the hook it creates.")
+	}, "I am Supervisor. Start patrol: run ms supervisor heartbeat, then check ms hook. If no hook, run ms sling mol-supervisor-patrol supervisor, then execute the hook it creates.")
 	startupCmd, err := config.BuildStartupCommandFromConfig(config.AgentEnvConfig{
 		Role:        "supervisor",
 		TownRoot:    m.townRoot,
@@ -124,7 +124,7 @@ func (m *Manager) Start(agentOverride string) error {
 
 	// Compute env vars BEFORE session creation so they reach Claude's
 	// subprocesses (e.g., bd) via tmux -e flags. SetEnvironment after creation
-	// only affects newly spawned panes, not the running pane's tree (gt-neycp).
+	// only affects newly spawned panes, not the running pane's tree (ms-neycp).
 	envVars := config.AgentEnv(config.AgentEnvConfig{
 		Role:        "supervisor",
 		TownRoot:    m.townRoot,
@@ -145,9 +145,9 @@ func (m *Manager) Start(agentOverride string) error {
 	// The pane will show "[Exited]" status but remain available for respawn.
 	_ = t.SetRemainOnExit(sessionID, true)
 
-	// Record agent's pane_id for ZFC-compliant liveness checks (gt-qmsx).
+	// Record agent's pane_id for ZFC-compliant liveness checks (ms-qmsx).
 	if paneID, err := t.GetPaneID(sessionID); err == nil {
-		_ = t.SetEnvironment(sessionID, "GT_PANE_ID", paneID)
+		_ = t.SetEnvironment(sessionID, "MS_PANE_ID", paneID)
 	}
 
 	// Apply Supervisor theming (non-fatal: theming failure doesn't affect operation)

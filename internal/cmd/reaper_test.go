@@ -40,8 +40,8 @@ func TestWaitBeforeReaperDatabase(t *testing.T) {
 func TestDefaultReaperEndpointIgnoresStaleBeadsAliases(t *testing.T) {
 	tmpDir := t.TempDir()
 	t.Chdir(tmpDir)
-	t.Setenv("GT_DOLT_HOST", "")
-	t.Setenv("GT_DOLT_PORT", "")
+	t.Setenv("MS_DOLT_HOST", "")
+	t.Setenv("MS_DOLT_PORT", "")
 	t.Setenv("BEADS_DOLT_SERVER_HOST", "stale-host")
 	t.Setenv("BEADS_DOLT_SERVER_PORT", "9999")
 	t.Setenv("BEADS_DOLT_PORT", "9999")
@@ -69,9 +69,9 @@ func TestDefaultReaperEndpointUsesTownConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Chdir(townRoot)
-	t.Setenv("GT_DOLT_IGNORE_CONFIG", "")
-	t.Setenv("GT_DOLT_HOST", "")
-	t.Setenv("GT_DOLT_PORT", "")
+	t.Setenv("MS_DOLT_IGNORE_CONFIG", "")
+	t.Setenv("MS_DOLT_HOST", "")
+	t.Setenv("MS_DOLT_PORT", "")
 	t.Setenv("BEADS_DOLT_SERVER_HOST", "stale-host")
 	t.Setenv("BEADS_DOLT_SERVER_PORT", "9999")
 	t.Setenv("BEADS_DOLT_PORT", "9999")

@@ -1,6 +1,6 @@
 ---
 description: Run a patrol cycle for the current agent role (witness, supervisor, or refinery)
-allowed-tools: Bash(gt patrol:*), Bash(gt hook:*), Bash(gt mail:*), Bash(gt nudge:*), Bash(gt peek:*), Bash(gt escalate:*), Bash(gt dolt status:*), Bash(bd :*), Bash(gt mol:*)
+allowed-tools: Bash(ms patrol:*), Bash(ms hook:*), Bash(ms mail:*), Bash(ms nudge:*), Bash(ms peek:*), Bash(ms escalate:*), Bash(ms dolt status:*), Bash(bd :*), Bash(ms mol:*)
 argument-hint: [witness|supervisor|refinery]
 ---
 
@@ -10,12 +10,12 @@ Run one patrol cycle for the specified role. Patrol is a continuous monitoring
 loop — each invocation executes one cycle of the patrol formula.
 
 Arguments: $ARGUMENTS
-If no role specified, detect from current GT_ROLE environment variable.
+If no role specified, detect from current MS_ROLE environment variable.
 
 ## Role Detection
 
 ```bash
-echo $GT_ROLE
+echo $MS_ROLE
 ```
 
 Map to patrol type:
@@ -27,7 +27,7 @@ Map to patrol type:
 ## Patrol Entry Point
 
 ```bash
-gt patrol new --role <role>
+ms patrol new --role <role>
 ```
 
 This creates a hooked wisp with steps from the patrol formula.
@@ -39,10 +39,10 @@ The witness is the per-rig miner supervisor. Execute in order:
 
 ### 1. inbox-check
 ```bash
-gt mail inbox
+ms mail inbox
 ```
 Process any pending messages: MINER_DONE, MERGED, HELP, escalations.
-Read each with `gt mail read <id>` and take appropriate action.
+Read each with `ms mail read <id>` and take appropriate action.
 
 ### 2. process-cleanups
 Check for cleanup wisps (dirty state from dead miners):
@@ -53,15 +53,15 @@ Process each: verify git state, clean worktrees, close cleanup wisps.
 
 ### 3. check-refinery
 ```bash
-gt peek mineshaft/refinery
+ms peek mineshaft/refinery
 ```
 Verify refinery is alive and processing the merge queue.
-If stuck, nudge: `gt nudge mineshaft/refinery "Health check — are you processing?"`
+If stuck, nudge: `ms nudge mineshaft/refinery "Health check — are you processing?"`
 
 ### 4. survey-workers
 Check all active miners in the rig:
 ```bash
-gt peek mineshaft/miners
+ms peek mineshaft/miners
 ```
 For each active miner:
 - Check if session is alive (has recent activity)
@@ -71,7 +71,7 @@ For each active miner:
 
 Nudge idle miners:
 ```bash
-gt nudge mineshaft/miners/<name> "Progress check — what's your status?"
+ms nudge mineshaft/miners/<name> "Progress check — what's your status?"
 ```
 
 ### 5. check-timer-gates
@@ -92,13 +92,13 @@ Close completed patrol wisps, update metrics.
 ### 8. context-check
 Check remaining context budget. If approaching limit:
 ```bash
-gt handoff -s "Patrol cycling" -m "Patrol cycle N complete, cycling for fresh context"
+ms handoff -s "Patrol cycling" -m "Patrol cycle N complete, cycling for fresh context"
 ```
 
 ### 9. loop-or-exit
 Report cycle results and spawn next cycle:
 ```bash
-gt patrol report --summary "<cycle summary>" --steps "inbox:OK,cleanup:OK,..."
+ms patrol report --summary "<cycle summary>" --steps "inbox:OK,cleanup:OK,..."
 ```
 
 ## Supervisor Patrol Steps
@@ -110,11 +110,11 @@ The supervisor is the town-wide daemon monitor. Key steps:
 3. **gate-evaluation** — Check async gates (timer, dependency)
 4. **dispatch-gated-molecules** — Release molecules whose gates cleared
 5. **check-minecart-completion** — Track multi-rig coordinated work
-6. **health-scan** — Check Dolt health (`gt dolt status`), agent health
+6. **health-scan** — Check Dolt health (`ms dolt status`), agent health
 7. **zombie-scan** — Find dead sessions, orphaned wisps
 8. **plugin-run** — Execute enabled plugins (backup, reaper, etc.)
 9. **dog-pool-maintenance** — Manage utility worker pool
-10. **orphan-check** — Find orphaned test databases (`gt dolt cleanup`)
+10. **orphan-check** — Find orphaned test databases (`ms dolt cleanup`)
 11. **session-gc** — Clean up dead session artifacts
 12. **patrol-cleanup** — Close completed wisps, update metrics
 13. **context-check** — Check context budget, handoff if needed
@@ -139,7 +139,7 @@ The refinery processes the merge queue sequentially:
 
 Each cycle ends with:
 ```bash
-gt patrol report --summary "<what happened>" --steps "<step1:OK,step2:SKIP,...>"
+ms patrol report --summary "<what happened>" --steps "<step1:OK,step2:SKIP,...>"
 ```
 
 This closes the current patrol wisp and spawns the next cycle automatically.

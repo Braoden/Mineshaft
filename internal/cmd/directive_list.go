@@ -18,7 +18,7 @@ var directiveListCmd = &cobra.Command{
 Shows each directive file with its scope (town or rig) and role.
 
 Examples:
-  gt directive list`,
+  ms directive list`,
 	RunE: runDirectiveList,
 }
 
@@ -89,7 +89,7 @@ func runDirectiveList(cmd *cobra.Command, args []string) error {
 
 	if len(entries) == 0 {
 		fmt.Println("No directive files found.")
-		fmt.Println("\nUse 'gt directive edit <role>' to create one.")
+		fmt.Println("\nUse 'ms directive edit <role>' to create one.")
 		return nil
 	}
 

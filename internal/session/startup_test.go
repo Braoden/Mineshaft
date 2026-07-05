@@ -229,14 +229,14 @@ func TestFormatStartupBeacon(t *testing.T) {
 				Recipient: BeaconRecipient("crew", "gus", "mineshaft"),
 				Sender:    "supervisor",
 				Topic:     "assigned",
-				MolID:     "gt-abc12",
+				MolID:     "ms-abc12",
 			},
 			wantSub: []string{
 				"[MINESHAFT]",
 				"crew gus (rig: mineshaft)",
 				"<- supervisor",
-				"assigned:gt-abc12",
-				"gt prime --hook",
+				"assigned:ms-abc12",
+				"ms prime --hook",
 				"begin work",
 			},
 			wantNot: []string{
@@ -256,8 +256,8 @@ func TestFormatStartupBeacon(t *testing.T) {
 				"<- overseer",
 				"cold-start",
 				"Check your hook and mail",
-				"gt hook",
-				"gt mail inbox",
+				"ms hook",
+				"ms mail inbox",
 			},
 		},
 		{
@@ -273,8 +273,8 @@ func TestFormatStartupBeacon(t *testing.T) {
 				"<- self",
 				"handoff",
 				"Check your hook and mail",
-				"gt hook",
-				"gt mail inbox",
+				"ms hook",
+				"ms mail inbox",
 			},
 			wantNot: []string{
 				"mineshaft/witness",
@@ -285,13 +285,13 @@ func TestFormatStartupBeacon(t *testing.T) {
 			cfg: BeaconConfig{
 				Recipient: BeaconRecipient("miner", "Toast", "mineshaft"),
 				Sender:    "witness",
-				MolID:     "gt-xyz99",
+				MolID:     "ms-xyz99",
 			},
 			wantSub: []string{
 				"[MINESHAFT]",
 				"miner Toast (rig: mineshaft)",
 				"<- witness",
-				"gt-xyz99",
+				"ms-xyz99",
 			},
 			wantNot: []string{
 				"mineshaft/miners/Toast",
@@ -322,7 +322,7 @@ func TestFormatStartupBeacon(t *testing.T) {
 				"start",
 			},
 			wantNot: []string{
-				"gt prime",
+				"ms prime",
 				"beads/crew/fang",
 			},
 		},
@@ -339,7 +339,7 @@ func TestFormatStartupBeacon(t *testing.T) {
 				"restart",
 			},
 			wantNot: []string{
-				"gt prime",
+				"ms prime",
 				"mineshaft/crew/george",
 			},
 		},
@@ -354,7 +354,7 @@ func TestFormatStartupBeacon(t *testing.T) {
 			wantSub: []string{
 				"[MINESHAFT]",
 				"miner ruby (rig: myrig)",
-				"gt prime",
+				"ms prime",
 			},
 			wantNot: []string{
 				"begin work", // excluded when IncludePrimeInstruction is set
@@ -371,8 +371,8 @@ func TestFormatStartupBeacon(t *testing.T) {
 				"[MINESHAFT]",
 				"overseer",
 				"attach",
-				"gt hook",
-				"gt mail inbox",
+				"ms hook",
+				"ms mail inbox",
 			},
 		},
 	}

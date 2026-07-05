@@ -34,13 +34,13 @@ import (
 //
 // Background: beads v0.62 removed built-in multi-rig routing from bd — all bd
 // commands now operate on the local database only. Cross-rig resolution must
-// happen in gt before invoking bd, by setting the correct working directory
+// happen in ms before invoking bd, by setting the correct working directory
 // (and stripping BEADS_DIR). This function reads routes.jsonl from the town-level
 // .beads directory and resolves the bead's prefix to the owning rig.
 //
 // PR #3166 (steveyegge/mineshaft) will replace bd shell-outs with the Go module
 // Storage API, making this function unnecessary. Until then, this is the
-// routing bridge between gt and the routing-free bd CLI.
+// routing bridge between ms and the routing-free bd CLI.
 func resolveBeadDir(beadID string) string {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
@@ -388,7 +388,7 @@ func verifyBeadExists(beadID string) error {
 }
 
 // verifyBeadExistsInTargetRigDatabase checks the target rig's beads database
-// directly instead of following prefix routing. This prevents gt sling from
+// directly instead of following prefix routing. This prevents ms sling from
 // spawning miners or creating molecule/hook side effects for beads that only
 // resolve from HQ or another rig database.
 func verifyBeadExistsInTargetRigDatabase(beadID, targetRig, townRoot string) error {
@@ -547,7 +547,7 @@ type beadFieldUpdates struct {
 	Mode             *string  // Execution mode: nil means unchanged, "" clears, "ralph" enables Ralph mode
 	MinecartID         string   // Minecart bead ID (e.g., "hq-cv-abc")
 	MergeStrategy    string   // Minecart merge strategy: "direct", "mr", "local"
-	MinecartOwned      bool     // Minecart has gt:owned label (caller-managed lifecycle)
+	MinecartOwned      bool     // Minecart has ms:owned label (caller-managed lifecycle)
 	FormulaVars      string   // Newline-separated key=value pairs for formula template substitution
 }
 
@@ -594,7 +594,7 @@ func storeFieldsInBead(beadID string, updates beadFieldUpdates) error {
 }
 
 func storeFieldsInBeadFromTownRoot(townRoot, beadID string, updates beadFieldUpdates) error {
-	logPath := os.Getenv("GT_TEST_ATTACHED_MOLECULE_LOG")
+	logPath := os.Getenv("MS_TEST_ATTACHED_MOLECULE_LOG")
 
 	issue := &beads.Issue{}
 	if logPath == "" {
@@ -703,7 +703,7 @@ func injectStartPrompt(pane, beadID, subject, args string) error {
 	}
 
 	// Skip nudge during tests to prevent agent self-interruption
-	if os.Getenv("GT_TEST_NO_NUDGE") != "" {
+	if os.Getenv("MS_TEST_NO_NUDGE") != "" {
 		return nil
 	}
 
@@ -722,7 +722,7 @@ func injectStartPrompt(pane, beadID, subject, args string) error {
 		prompt = fmt.Sprintf("Work slung: %s. Start working on it now - run `"+cli.Name()+" hook` to see the hook, then begin.", beadID)
 	}
 
-	// Use the reliable nudge pattern (same as gt nudge / tmux.NudgeSession)
+	// Use the reliable nudge pattern (same as ms nudge / tmux.NudgeSession)
 	t := tmux.NewTmux()
 	return t.NudgePane(pane, prompt)
 }
@@ -730,7 +730,7 @@ func injectStartPrompt(pane, beadID, subject, args string) error {
 // getSessionFromPane extracts session name from a pane target.
 // Pane targets can be:
 // - "%9" (pane ID) - need to query tmux for session
-// - "gt-rig-name:0.0" (session:window.pane) - extract session name
+// - "ms-rig-name:0.0" (session:window.pane) - extract session name
 func getSessionFromPane(pane string) string {
 	if strings.HasPrefix(pane, "%") {
 		// Pane ID format - query tmux for the session
@@ -770,7 +770,7 @@ func ensureAgentReady(sessionName string) error {
 
 	// Accept startup dialogs (workspace trust + bypass permissions) if they appear
 	_ = t.AcceptWorkspaceTrustDialog(sessionName)
-	agentName, _ := t.GetEnvironment(sessionName, "GT_AGENT")
+	agentName, _ := t.GetEnvironment(sessionName, "MS_AGENT")
 	if shouldAcceptPermissionWarning(agentName) {
 		_ = t.AcceptBypassPermissionsWarning(sessionName)
 	}
@@ -782,7 +782,7 @@ func ensureAgentReady(sessionName string) error {
 	// ensureAgentReady lacks rig/town context — only has the session name.
 	effectiveName := agentName
 	if effectiveName == "" {
-		effectiveName = "claude" // Default sessions without GT_AGENT are Claude
+		effectiveName = "claude" // Default sessions without MS_AGENT are Claude
 	}
 	var rc *config.RuntimeConfig
 	if preset := config.GetAgentPreset(config.AgentPreset(effectiveName)); preset != nil {
@@ -845,7 +845,7 @@ func detectActor() string {
 // agentIDToBeadID converts an agent ID to its corresponding agent bead ID.
 // Uses canonical naming: prefix-rig-role-name
 // Town-level agents (Overseer, Supervisor) use hq- prefix and are stored in town beads.
-// Rig-level agents use the rig's configured prefix (default "gt-").
+// Rig-level agents use the rig's configured prefix (default "ms-").
 // townRoot is needed to look up the rig's configured prefix.
 func agentIDToBeadID(agentID, townRoot string) string {
 	// Normalize: strip trailing slash (resolveSelfTarget returns "overseer/" not "overseer")
@@ -900,16 +900,16 @@ func updateAgentHookBead(agentID, beadID, workDir, townBeadsDir string) {
 // separately when an MR is actually created (by nudgeRefinery).
 func wakeRigAgents(rigName string) {
 	// Boot the rig (idempotent - no-op if already running)
-	bootCmd := exec.Command("gt", "rig", "boot", rigName)
+	bootCmd := exec.Command("ms", "rig", "boot", rigName)
 	_ = bootCmd.Run() // Ignore errors - rig might already be running
 
 	// Verify daemon is running — miner triggering depends on daemon
-	// processing supervisor mail. Warn if not running (gt-9wv0).
+	// processing supervisor mail. Warn if not running (ms-9wv0).
 	townRoot, _ := workspace.FindFromCwd()
 	if townRoot != "" {
 		if running, _, _ := daemon.IsRunning(townRoot); !running {
 			fmt.Fprintf(os.Stderr, "Warning: daemon is not running. Miner may not auto-start.\n")
-			fmt.Fprintf(os.Stderr, "  Start with: gt daemon start\n")
+			fmt.Fprintf(os.Stderr, "  Start with: ms daemon start\n")
 		}
 	}
 
@@ -924,14 +924,14 @@ func wakeRigAgents(rigName string) {
 	}
 }
 
-// nudgeWitness wakes the witness after miner completion (gt-a6gp).
+// nudgeWitness wakes the witness after miner completion (ms-a6gp).
 // Replaces MINER_DONE mail — nudges are free (no Dolt commit).
 // Uses immediate delivery: sends directly to the tmux pane.
 func nudgeWitness(rigName, message string) {
 	witnessSession := session.WitnessSessionName(session.PrefixFor(rigName))
 
 	// Test hook: log nudge for test observability
-	if logPath := os.Getenv("GT_TEST_NUDGE_LOG"); logPath != "" {
+	if logPath := os.Getenv("MS_TEST_NUDGE_LOG"); logPath != "" {
 		entry := fmt.Sprintf("nudge:%s:%s\n", witnessSession, message)
 		f, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err == nil {
@@ -964,8 +964,8 @@ func nudgeWitness(rigName, message string) {
 func nudgeRefinery(rigName, message string) {
 	refinerySession := session.RefinerySessionName(session.PrefixFor(rigName))
 
-	// Test hook: log nudge for test observability (same pattern as GT_TEST_ATTACHED_MOLECULE_LOG)
-	if logPath := os.Getenv("GT_TEST_NUDGE_LOG"); logPath != "" {
+	// Test hook: log nudge for test observability (same pattern as MS_TEST_ATTACHED_MOLECULE_LOG)
+	if logPath := os.Getenv("MS_TEST_NUDGE_LOG"); logPath != "" {
 		entry := fmt.Sprintf("nudge:%s:%s\n", refinerySession, message)
 		f, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err == nil {
@@ -1028,7 +1028,7 @@ func InstantiateFormulaOnBead(ctx context.Context, formulaName, beadID, title, h
 	// Step 1: Cook the formula (ensures proto exists)
 	// If cook fails, retry with the embedded formula extracted to a temp file.
 	// This handles non-mineshaft rigs that don't have formulas provisioned on disk.
-	// See gt-oir.
+	// See ms-oir.
 	resolvedFormula := formulaName
 	var formulaCleanup func()
 	if !skipCook {
@@ -1191,7 +1191,7 @@ func ensureFormulaRequiredVars(formulaName string, vars []string) []string {
 
 // CookFormula cooks a formula to ensure its proto exists.
 // This is useful for batch mode where we cook once before processing multiple beads.
-// townRoot is required for GT_ROOT so bd can find town-level formulas.
+// townRoot is required for MS_ROOT so bd can find town-level formulas.
 // Falls back to embedded formula extraction if bd can't find the formula on disk.
 func CookFormula(formulaName, workDir, townRoot string) error {
 	err := BdCmd("cook", formulaName).
@@ -1226,7 +1226,7 @@ func resolveFormulaToTempFile(formulaName string) (resolved string, cleanup func
 		return formulaName, nil
 	}
 
-	tmpFile, err := os.CreateTemp("", "gt-formula-*.formula.toml")
+	tmpFile, err := os.CreateTemp("", "ms-formula-*.formula.toml")
 	if err != nil {
 		return formulaName, nil
 	}
@@ -1244,7 +1244,7 @@ func resolveFormulaToTempFile(formulaName string) (resolved string, cleanup func
 var isHookedAgentDeadFn = isHookedAgentDead
 
 // isHookedAgentDead checks if the tmux session for a hooked assignee is dead.
-// Used by sling to auto-force re-sling when the previous agent has no active session (gt-pqf9x).
+// Used by sling to auto-force re-sling when the previous agent has no active session (ms-pqf9x).
 // Returns true if the session is confirmed dead. Returns false if alive or if we
 // can't determine liveness (conservative: don't auto-force on uncertainty).
 func isHookedAgentDead(assignee string) bool {
@@ -1262,7 +1262,7 @@ func isHookedAgentDead(assignee string) bool {
 
 // hookBeadWithRetry hooks a bead to a target agent with exponential backoff retry
 // and post-hook verification. This ensures the hook sticks even under Dolt concurrency.
-// Fails fast on configuration/initialization errors (gt-2ra).
+// Fails fast on configuration/initialization errors (ms-2ra).
 // See: https://github.com/steveyegge/mineshaft/issues/148
 func hookBeadWithRetry(beadID, targetAgent, hookDir string) error {
 	return hookBeadWithRetryWithTownRoot(beadID, targetAgent, hookDir, "")
@@ -1272,7 +1272,7 @@ func hookBeadWithRetryWithTownRoot(beadID, targetAgent, hookDir, townRoot string
 	const maxRetries = 10
 	const baseBackoff = 500 * time.Millisecond
 	const maxBackoff = 30 * time.Second
-	skipVerify := os.Getenv("GT_TEST_SKIP_HOOK_VERIFY") != ""
+	skipVerify := os.Getenv("MS_TEST_SKIP_HOOK_VERIFY") != ""
 
 	var lastErr error
 	for attempt := 1; attempt <= maxRetries; attempt++ {
@@ -1285,9 +1285,9 @@ func hookBeadWithRetryWithTownRoot(beadID, targetAgent, hookDir, townRoot string
 				err = fmt.Errorf("%w: %s", err, strings.TrimSpace(string(out)))
 			}
 			lastErr = err
-			// Fail fast on config/init errors — retrying won't help (gt-2ra)
+			// Fail fast on config/init errors — retrying won't help (ms-2ra)
 			if isSlingConfigError(err) {
-				return fmt.Errorf("hooking bead failed (non-retryable Dolt/beads failure — not retrying): %w\nSafe next action: run `gt dolt status` and `bd show %s` to verify whether a durable hook exists before re-slinging", err, beadID)
+				return fmt.Errorf("hooking bead failed (non-retryable Dolt/beads failure — not retrying): %w\nSafe next action: run `ms dolt status` and `bd show %s` to verify whether a durable hook exists before re-slinging", err, beadID)
 			}
 			if attempt < maxRetries {
 				backoff := slingBackoff(attempt, baseBackoff, maxBackoff)
@@ -1357,7 +1357,7 @@ func slingBackoff(attempt int, base, max time.Duration) time.Duration { //nolint
 
 // isSlingConfigError returns true if the error indicates a configuration or
 // initialization problem rather than a transient failure. Config errors should
-// NOT be retried because they will fail identically on every attempt (gt-2ra).
+// NOT be retried because they will fail identically on every attempt (ms-2ra).
 func isSlingConfigError(err error) bool {
 	if err == nil {
 		return false
@@ -1448,7 +1448,7 @@ func loadRigCommandVars(townRoot, rig string) []string {
 // warning on startup that needs to be acknowledged via tmux.
 func shouldAcceptPermissionWarning(agentName string) bool {
 	if agentName == "" {
-		agentName = "claude" // Default sessions without GT_AGENT are Claude
+		agentName = "claude" // Default sessions without MS_AGENT are Claude
 	}
 	preset := config.GetAgentPresetByName(agentName)
 	if preset == nil {
@@ -1486,7 +1486,7 @@ func updateAgentMode(agentID, mode, workDir, townBeadsDir string) {
 // lookupPriorAttempt checks if there are existing open MRs for the given issue.
 // If found, returns formula variables with the prior branch name so the new
 // miner can cherry-pick or reference prior work instead of starting from scratch.
-// Returns nil if no prior attempt exists. (GH#gt-zqvj)
+// Returns nil if no prior attempt exists. (GH#ms-zqvj)
 func lookupPriorAttempt(beadsDir, issueID string) []string {
 	bd := beads.New(beadsDir)
 	mrs, err := bd.FindOpenMRsForIssue(issueID)

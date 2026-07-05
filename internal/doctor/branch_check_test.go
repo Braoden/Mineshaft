@@ -16,13 +16,13 @@ func TestParseWorktreeConflict(t *testing.T) {
 	}{
 		{
 			name:     "older git: already checked out at",
-			output:   "fatal: 'main' is already checked out at '/home/user/gt/rig/.repo.git'",
-			wantPath: "/home/user/gt/rig/.repo.git",
+			output:   "fatal: 'main' is already checked out at '/home/user/ms/rig/.repo.git'",
+			wantPath: "/home/user/ms/rig/.repo.git",
 		},
 		{
 			name:     "newer git: already used by worktree at",
-			output:   "fatal: 'main' is already used by worktree at '/home/user/gt/rig/.repo.git'",
-			wantPath: "/home/user/gt/rig/.repo.git",
+			output:   "fatal: 'main' is already used by worktree at '/home/user/ms/rig/.repo.git'",
+			wantPath: "/home/user/ms/rig/.repo.git",
 		},
 		{
 			name:     "with trailing newline",

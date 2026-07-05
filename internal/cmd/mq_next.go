@@ -31,10 +31,10 @@ The priority scoring function considers:
 Use --strategy=fifo for first-in-first-out ordering instead.
 
 Examples:
-  gt mq next mineshaft                    # Show highest-priority MR
-  gt mq next mineshaft --strategy=fifo    # Show oldest MR instead
-  gt mq next mineshaft --quiet            # Just print the MR ID
-  gt mq next mineshaft --json             # Output as JSON`,
+  ms mq next mineshaft                    # Show highest-priority MR
+  ms mq next mineshaft --strategy=fifo    # Show oldest MR instead
+  ms mq next mineshaft --quiet            # Just print the MR ID
+  ms mq next mineshaft --json             # Output as JSON`,
 	Args: cobra.ExactArgs(1),
 	RunE: runMQNext,
 }
@@ -60,9 +60,9 @@ func runMQNext(cmd *cobra.Command, args []string) error {
 
 	// Query for open merge-requests (ready to process).
 	// Use ListMergeRequests to query both issues and wisps tables,
-	// since MRs are created as ephemeral (wisps) by gt mq submit (GH#2446).
+	// since MRs are created as ephemeral (wisps) by ms mq submit (GH#2446).
 	opts := beads.ListOptions{
-		Label:    "gt:merge-request",
+		Label:    "ms:merge-request",
 		Status:   "open",
 		Priority: -1, // No priority filter
 		Rig:      rigName,

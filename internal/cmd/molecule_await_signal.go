@@ -34,7 +34,7 @@ var moleculeAwaitSignalCmd = &cobra.Command{
 	Long: `Wait for any activity on the events feed, with optional backoff.
 
 This command is the primary wake mechanism for patrol agents. It tails
-~/gt/.events.jsonl and returns immediately when a new event is appended
+~/ms/.events.jsonl and returns immediately when a new event is appended
 (indicating Mineshaft activity such as slings, nudges, mail, spawns, etc.).
 
 If no activity occurs within the timeout, the command returns with exit code 0
@@ -57,30 +57,30 @@ EXIT CODES:
 
 EXAMPLES:
   # Simple wait with 60s timeout (canonical form)
-  gt mol step await-signal --timeout 60s
+  ms mol step await-signal --timeout 60s
 
   # Short form (alias)
-  gt mol await-signal --timeout 60s
+  ms mol await-signal --timeout 60s
 
   # Backoff mode with agent bead tracking:
-  gt mol await-signal --agent-bead gt-mineshaft-witness \
+  ms mol await-signal --agent-bead ms-mineshaft-witness \
     --backoff-base 30s --backoff-mult 2 --backoff-max 15m
 
   # On timeout, the agent bead's idle:N label is auto-incremented
-  # On signal, caller should reset: gt agents state gt-mineshaft-witness --set idle=0
+  # On signal, caller should reset: ms agents state ms-mineshaft-witness --set idle=0
 
   # Quiet mode (no output, for scripting)
-  gt mol await-signal --timeout 30s --quiet`,
+  ms mol await-signal --timeout 30s --quiet`,
 	RunE: runMoleculeAwaitSignal,
 }
 
 // moleculeAwaitSignalShortcutCmd is a separate command instance that allows
-// "gt mol await-signal" in addition to the canonical "gt mol step await-signal".
+// "ms mol await-signal" in addition to the canonical "ms mol step await-signal".
 // A separate instance is required because cobra does not support a single
 // command having two parents (AddCommand overwrites the parent pointer).
 var moleculeAwaitSignalShortcutCmd = &cobra.Command{
 	Use:   "await-signal",
-	Short: "Wait for activity feed signal with timeout (alias: gt mol step await-signal)",
+	Short: "Wait for activity feed signal with timeout (alias: ms mol step await-signal)",
 	Long:  moleculeAwaitSignalCmd.Long,
 	RunE:  runMoleculeAwaitSignal,
 }
@@ -128,7 +128,7 @@ func init() {
 	moleculeAwaitSignalShortcutCmd.Flags().BoolVar(&moleculeJSON, "json", false,
 		"Output as JSON")
 
-	// alias: gt mol await-signal (in addition to gt mol step await-signal)
+	// alias: ms mol await-signal (in addition to ms mol step await-signal)
 	moleculeCmd.AddCommand(moleculeAwaitSignalShortcutCmd)
 }
 

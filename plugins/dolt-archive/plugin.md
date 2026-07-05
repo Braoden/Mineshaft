@@ -31,11 +31,11 @@ whether the other layers work.
 ## Config
 
 ```bash
-DOLT_DATA_DIR="$GT_TOWN_ROOT/.dolt-data"
-PROD_DBS=("hq" "gt" "mo")
-JSONL_EXPORT_DIR="$GT_TOWN_ROOT/.dolt-archive/jsonl"
-DOLT_HOST="${GT_DOLT_HOST:-127.0.0.1}"
-DOLT_PORT="${GT_DOLT_PORT:-3307}"
+DOLT_DATA_DIR="$MS_TOWN_ROOT/.dolt-data"
+PROD_DBS=("hq" "ms" "mo")
+JSONL_EXPORT_DIR="$MS_TOWN_ROOT/.dolt-archive/jsonl"
+DOLT_HOST="${MS_DOLT_HOST:-127.0.0.1}"
+DOLT_PORT="${MS_DOLT_PORT:-3307}"
 DOLT_USER="root"
 ```
 
@@ -107,7 +107,7 @@ echo "=== Git Push ==="
 GIT_PUSHED=false
 
 # Check if we have a git backup repo configured
-BACKUP_REPO="$HOME/gt/.dolt-archive/git"
+BACKUP_REPO="$HOME/ms/.dolt-archive/git"
 
 if [ -d "$BACKUP_REPO/.git" ]; then
   cd "$BACKUP_REPO"
@@ -260,11 +260,11 @@ if [ "$EXPORT_FAILED" -gt 0 ] || [ "$DOLT_PUSH_FAILED" -gt 0 ] || [ "$VERIFY_FAI
   RESULT="warning"
 fi
 
-gt plugin record-run --plugin dolt-archive --result "$RESULT" \
+ms plugin record-run --plugin dolt-archive --result "$RESULT" \
   --title "$SUMMARY" --description "$SUMMARY" >/dev/null 2>&1 || true
 
 if [ "$EXPORT_FAILED" -gt 0 ]; then
-  gt escalate "JSONL export failed for $EXPORT_FAILED databases" \
+  ms escalate "JSONL export failed for $EXPORT_FAILED databases" \
     --severity critical \
     --reason "JSONL is our last-resort recovery layer. $EXPORT_FAILED databases failed to export."
 fi

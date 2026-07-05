@@ -57,7 +57,7 @@ func LoadConfig(townRoot string) (*Config, error) {
 	data, err := os.ReadFile(ConfigPath(townRoot))
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("%w (run 'gt wl join <upstream>')", ErrNotJoined)
+			return nil, fmt.Errorf("%w (run 'ms wl join <upstream>')", ErrNotJoined)
 		}
 		return nil, fmt.Errorf("reading wasteland config: %w", err)
 	}
@@ -168,9 +168,9 @@ func CloneLocally(org, db, targetDir string) error {
 // For Phase 1 (wild-west mode), writes directly to main.
 func RegisterRig(localDir string, handle, dolthubOrg, displayName, ownerEmail, gtVersion string) error {
 	sql := fmt.Sprintf(
-		`INSERT INTO rigs (handle, display_name, dolthub_org, owner_email, gt_version, trust_level, registered_at, last_seen) `+
+		`INSERT INTO rigs (handle, display_name, dolthub_org, owner_email, ms_version, trust_level, registered_at, last_seen) `+
 			`VALUES ('%s', '%s', '%s', '%s', '%s', 1, NOW(), NOW()) `+
-			`ON DUPLICATE KEY UPDATE last_seen = NOW(), gt_version = '%s'`,
+			`ON DUPLICATE KEY UPDATE last_seen = NOW(), ms_version = '%s'`,
 		escapeSQLString(handle),
 		escapeSQLString(displayName),
 		escapeSQLString(dolthubOrg),
@@ -321,7 +321,7 @@ func (s *Service) Join(upstream, forkOrg, token, handle, displayName, ownerEmail
 	// Check if already joined
 	if existing, err := s.Config.Load(townRoot); err == nil {
 		if existing.Upstream != upstream {
-			return nil, fmt.Errorf("already joined to %s; run gt wl leave first", existing.Upstream)
+			return nil, fmt.Errorf("already joined to %s; run ms wl leave first", existing.Upstream)
 		}
 		return existing, nil
 	} else if !errors.Is(err, ErrNotJoined) {

@@ -23,7 +23,7 @@ assignees: ''
 ## Environment
 - **OS**:
 - **Go version**:
-- **Mineshaft version**: (`gt version`)
+- **Mineshaft version**: (`ms version`)
 - **tmux version** (if applicable):
 
 ## Logs / Error Output

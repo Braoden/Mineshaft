@@ -7,7 +7,7 @@ Complete schema of all telemetry events emitted by Mineshaft. Each event consist
 
 > **`run.id` correlation**: automatic `run.id` injection into all log records is implemented in
 > PR #2199 (`otel-p0-work-context`), not yet on main. On main, correlation is possible only via
-> resource attributes (`gt.role`, `gt.rig`, `gt.agent`, `gt.actor`).
+> resource attributes (`ms.role`, `ms.rig`, `ms.agent`, `ms.actor`).
 
 ---
 
@@ -53,8 +53,8 @@ and the town root directory basename.
 
 | Attribute | Type | Description |
 |---|---|---|
-| `instance` | string | `hostname:basename(town_root)` — e.g. `"laptop:gt"` |
-| `town_root` | string | absolute path to the town root — e.g. `"/Users/pa/gt"` |
+| `instance` | string | `hostname:basename(town_root)` — e.g. `"laptop:ms"` |
+| `town_root` | string | absolute path to the town root — e.g. `"/Users/pa/ms"` |
 
 ### 1.2 Run
 
@@ -63,18 +63,18 @@ Resource attributes set at process start via `OTEL_RESOURCE_ATTRIBUTES` (populat
 
 | Attribute | Type | Source | Notes |
 |---|---|---|---|
-| `gt.role` | string | `GT_ROLE` env var | e.g. `"mineshaft/miners/Toast"` |
-| `gt.rig` | string | `GT_RIG` env var | e.g. `"mineshaft"` |
-| `gt.actor` | string | `BD_ACTOR` env var | bd actor identity |
-| `gt.agent` | string | `GT_MINER` or `GT_CREW` env var | agent name |
-| `gt.session` | string | `GT_SESSION` env var | tmux session name — **PR #2199** |
-| `gt.run_id` | string | `GT_RUN` env var | correlation key — **PR #2199** |
-| `gt.work_rig` | string | `GT_WORK_RIG` env var | work rig at last `gt prime` — **PR #2199** |
-| `gt.work_bead` | string | `GT_WORK_BEAD` env var | hooked bead at last `gt prime` — **PR #2199** |
-| `gt.work_mol` | string | `GT_WORK_MOL` env var | molecule step at last `gt prime` — **PR #2199** |
+| `ms.role` | string | `MS_ROLE` env var | e.g. `"mineshaft/miners/Toast"` |
+| `ms.rig` | string | `MS_RIG` env var | e.g. `"mineshaft"` |
+| `ms.actor` | string | `BD_ACTOR` env var | bd actor identity |
+| `ms.agent` | string | `MS_MINER` or `MS_CREW` env var | agent name |
+| `ms.session` | string | `MS_SESSION` env var | tmux session name — **PR #2199** |
+| `ms.run_id` | string | `MS_RUN` env var | correlation key — **PR #2199** |
+| `ms.work_rig` | string | `MS_WORK_RIG` env var | work rig at last `ms prime` — **PR #2199** |
+| `ms.work_bead` | string | `MS_WORK_BEAD` env var | hooked bead at last `ms prime` — **PR #2199** |
+| `ms.work_mol` | string | `MS_WORK_MOL` env var | molecule step at last `ms prime` — **PR #2199** |
 
 > Attributes marked **PR #2199** are only set after `otel-p0-work-context` merges.
-> On main, only `gt.role`, `gt.rig`, `gt.actor`, `gt.agent` are set.
+> On main, only `ms.role`, `ms.rig`, `ms.actor`, `ms.agent` are set.
 
 ---
 
@@ -95,7 +95,7 @@ tmux session lifecycle events.
 
 ### `prime`
 
-Emitted on each `gt prime` invocation. The rendered formula is emitted
+Emitted on each `ms prime` invocation. The rendered formula is emitted
 separately as `prime.context` (same attributes plus `formula`).
 
 | Attribute | Type | Description |
@@ -125,7 +125,7 @@ Companion to `prime`, emitted in the same invocation. Carries the full rendered 
 
 ### `prompt.send`
 
-Each `gt sendkeys` dispatch to an agent's tmux pane. Prompt content is **not** logged —
+Each `ms sendkeys` dispatch to an agent's tmux pane. Prompt content is **not** logged —
 only the length is recorded.
 
 | Attribute | Type | Description |
@@ -140,7 +140,7 @@ only the length is recorded.
 
 ### `agent.event`
 
-> **Status: PR #2199 (`otel-p0-work-context`)** — not on main. Requires `GT_LOG_AGENT_OUTPUT=true` and `GT_OTEL_LOGS_URL`.
+> **Status: PR #2199 (`otel-p0-work-context`)** — not on main. Requires `MS_LOG_AGENT_OUTPUT=true` and `MS_OTEL_LOGS_URL`.
 
 One record per content block in the agent's conversation log. Full content, no truncation.
 
@@ -160,7 +160,7 @@ For `tool_result`: `content = <full tool output>`
 
 ### `agent.usage`
 
-> **Status: PR #2199 (`otel-p0-work-context`)** — not on main. Requires `GT_LOG_AGENT_OUTPUT=true`.
+> **Status: PR #2199 (`otel-p0-work-context`)** — not on main. Requires `MS_LOG_AGENT_OUTPUT=true`.
 
 One record per assistant turn (not per content block, to avoid
 double-counting).
@@ -186,8 +186,8 @@ in a shell.
 | `subcommand` | string | bd subcommand (`"ready"`, `"update"`, `"create"`, …) |
 | `args` | string | full argument list |
 | `duration_ms` | float | wall-clock duration in milliseconds |
-| `stdout` | string | full stdout (opt-in: `GT_LOG_BD_OUTPUT=true`) |
-| `stderr` | string | full stderr (opt-in: `GT_LOG_BD_OUTPUT=true`) |
+| `stdout` | string | full stdout (opt-in: `MS_LOG_BD_OUTPUT=true`) |
+| `stderr` | string | full stderr (opt-in: `MS_LOG_BD_OUTPUT=true`) |
 | `status` | string | `"ok"` · `"error"` |
 | `error` | string | error message; empty when `"ok"` |
 
@@ -326,7 +326,7 @@ Per-child-bead event during molecule instantiation. No `RecordBeadCreate` functi
 ## 5. Recommended indexed attributes
 
 ```
-gt.role, gt.rig, gt.actor, gt.agent, session_id, event_type, subcommand,
+ms.role, ms.rig, ms.actor, ms.agent, session_id, event_type, subcommand,
 operation, new_state, exit_type
 ```
 
@@ -336,11 +336,11 @@ operation, new_state, exit_type
 
 | Variable | Set by | Description |
 |---|---|---|
-| `GT_OTEL_LOGS_URL` | daemon startup | OTLP logs endpoint URL |
-| `GT_OTEL_METRICS_URL` | daemon startup | OTLP metrics endpoint URL |
-| `GT_LOG_BD_OUTPUT` | operator | Set to `true` to include bd stdout/stderr in `bd.call` log records |
-| `GT_LOG_AGENT_OUTPUT` | operator | **PR #2199** — set to `true` to enable agent conversation event streaming. Requires `GT_OTEL_LOGS_URL`. |
-| `GT_RUN` | tmux session / subprocess | **PR #2199** — run UUID; correlation key across all events |
+| `MS_OTEL_LOGS_URL` | daemon startup | OTLP logs endpoint URL |
+| `MS_OTEL_METRICS_URL` | daemon startup | OTLP metrics endpoint URL |
+| `MS_LOG_BD_OUTPUT` | operator | Set to `true` to include bd stdout/stderr in `bd.call` log records |
+| `MS_LOG_AGENT_OUTPUT` | operator | **PR #2199** — set to `true` to enable agent conversation event streaming. Requires `MS_OTEL_LOGS_URL`. |
+| `MS_RUN` | tmux session / subprocess | **PR #2199** — run UUID; correlation key across all events |
 
 ---
 
@@ -361,7 +361,7 @@ When status is "error", the `error` field contains the error message. When statu
 
 This data model is **backend-agnostic** — any OTLP v1.x+ compatible backend can consume these events:
 
-- **VictoriaMetrics/VictoriaLogs** — Default for local development. Override with `GT_OTEL_METRICS_URL`/`GT_OTEL_LOGS_URL` to use any OTLP-compatible backend.
+- **VictoriaMetrics/VictoriaLogs** — Default for local development. Override with `MS_OTEL_METRICS_URL`/`MS_OTEL_LOGS_URL` to use any OTLP-compatible backend.
 - **Prometheus** — Via remote_write receiver
 - **Grafana Mimir** — Via write endpoint
 - **OpenTelemetry Collector** — Universal forwarder to any backend
@@ -433,9 +433,9 @@ Audited against `origin/main` @ `2d8d71ee35fafda3bbdf353683692bfcc9165476`
 
 `RecordMail(ctx, operation, err)` at `recorder.go:381` only emits `operation`, `status`, `error`. No `msg.id`, `msg.from`, `msg.to`, etc. No `RecordMailMessage` function exists — grep `recorder.go` for `RecordMailMessage` → zero matches.
 
-### GT_LOG_BD_OUTPUT
+### MS_LOG_BD_OUTPUT
 
-`recorder.go:208` — `os.Getenv("GT_LOG_BD_OUTPUT") == "true"` gates `stdout`/`stderr` logging.
+`recorder.go:208` — `os.Getenv("MS_LOG_BD_OUTPUT") == "true"` gates `stdout`/`stderr` logging.
 
 ### Absent events (confirmed by grep)
 
@@ -459,13 +459,13 @@ Audited against `origin/main` @ `2d8d71ee35fafda3bbdf353683692bfcc9165476`
 | `mineshaft.agent.events.total` Counter | `recorder.go` (added in `8b88de15`) |
 | `WithRunID(ctx, runID)` / `RunIDFromCtx(ctx)` | `recorder.go` (added in `8b88de15`) |
 | `addRunID(ctx, *record)` — injects `run.id` into all emit calls | `recorder.go` (added in `8b88de15`) |
-| `gt.session` in `OTEL_RESOURCE_ATTRIBUTES` | `subprocess.go` (updated in `8b88de15`) |
-| `gt.run_id` in `OTEL_RESOURCE_ATTRIBUTES` | `subprocess.go` (updated in `8b88de15`) |
-| `gt.work_rig/bead/mol` in `OTEL_RESOURCE_ATTRIBUTES` | `subprocess.go` (updated in `8b88de15`) |
-| `GT_RUN` propagation to subprocesses | `subprocess.go` (updated in `8b88de15`) |
+| `ms.session` in `OTEL_RESOURCE_ATTRIBUTES` | `subprocess.go` (updated in `8b88de15`) |
+| `ms.run_id` in `OTEL_RESOURCE_ATTRIBUTES` | `subprocess.go` (updated in `8b88de15`) |
+| `ms.work_rig/bead/mol` in `OTEL_RESOURCE_ATTRIBUTES` | `subprocess.go` (updated in `8b88de15`) |
+| `MS_RUN` propagation to subprocesses | `subprocess.go` (updated in `8b88de15`) |
 | `work_rig`, `work_bead`, `work_mol` on `prime` event | `recorder.go` (updated in `8b88de15`) |
 | `internal/agentlog/` package | new package in `8b88de15` |
 | `internal/cmd/agent_log.go` | new file in `8b88de15` |
 | `internal/session/agent_logging_unix.go` | new file in `8b88de15` |
-| `GT_LOG_AGENT_OUTPUT` env var | new in `8b88de15` |
+| `MS_LOG_AGENT_OUTPUT` env var | new in `8b88de15` |
 | `telemetry.IsActive()` | `telemetry.go` (added in `8b88de15`) |

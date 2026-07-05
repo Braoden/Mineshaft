@@ -42,7 +42,7 @@ func TestReadBeadsRuntimeConfigServerMetadata(t *testing.T) {
 }
 
 func TestReadBeadsRuntimeConfigDefaultServerAddr(t *testing.T) {
-	t.Setenv("GT_DOLT_PORT", "32769")
+	t.Setenv("MS_DOLT_PORT", "32769")
 
 	townRoot := t.TempDir()
 	beadsDir := filepath.Join(townRoot, ".beads")
@@ -71,7 +71,7 @@ func TestReadBeadsRuntimeConfigDefaultServerAddr(t *testing.T) {
 }
 
 func TestReadBeadsRuntimeConfigPortFileFallback(t *testing.T) {
-	t.Setenv("GT_DOLT_PORT", "32769")
+	t.Setenv("MS_DOLT_PORT", "32769")
 
 	townRoot := t.TempDir()
 	beadsDir := filepath.Join(townRoot, ".beads")
@@ -128,8 +128,8 @@ func TestBeadsScopeHint_HQWarnsAgainstGlobal(t *testing.T) {
 			t.Fatalf("beadsScopeHint() missing %q in:\n%s", want, hint)
 		}
 	}
-	if strings.Contains(hint, "~/gt") {
-		t.Fatalf("beadsScopeHint() should not hardcode ~/gt:\n%s", hint)
+	if strings.Contains(hint, "~/ms") {
+		t.Fatalf("beadsScopeHint() should not hardcode ~/ms:\n%s", hint)
 	}
 }
 

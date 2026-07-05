@@ -85,7 +85,7 @@ func runMoleculeBurn(cmd *cobra.Command, args []string) (retErr error) {
 	moleculeID := attachment.AttachedMolecule
 
 	// Recursively close all descendant step issues before detaching
-	// This prevents orphaned step issues from accumulating (gt-psj76.1)
+	// This prevents orphaned step issues from accumulating (ms-psj76.1)
 	childrenClosed := closeDescendants(b, moleculeID)
 	defer func() {
 		ctx := context.Background()
@@ -239,10 +239,10 @@ func runMoleculeSquash(cmd *cobra.Command, args []string) (retErr error) {
 	}
 
 	// Recursively close all descendant step issues before squashing
-	// This prevents orphaned step issues from accumulating (gt-psj76.1)
+	// This prevents orphaned step issues from accumulating (ms-psj76.1)
 	childrenClosed := closeDescendants(b, moleculeID)
 
-	// Skip digest creation if --no-digest flag is set (gt-t2bjt).
+	// Skip digest creation if --no-digest flag is set (ms-t2bjt).
 	// Patrol molecules (supervisor, witness, refinery) run frequently and their
 	// digests pollute the database with thousands of low-value beads.
 	if !moleculeNoDigest {
@@ -278,11 +278,11 @@ squashed_at: %s
 		}
 
 		// Create the digest bead (ephemeral to avoid git pollution)
-		// Per-cycle digests are aggregated daily by 'gt patrol digest'
+		// Per-cycle digests are aggregated daily by 'ms patrol digest'
 		digestIssue, err := b.Create(beads.CreateOptions{
 			Title:       digestTitle,
 			Description: digestDesc,
-			Labels:      []string{"gt:task"},
+			Labels:      []string{"ms:task"},
 			Priority:    4,       // P4 - backlog priority for digests
 			Actor:       target,
 			Ephemeral:   true,    // Don't export to JSONL - daily aggregation handles permanent record
@@ -370,7 +370,7 @@ func closeDescendants(b *beads.Beads, parentID string) int {
 // forceCloseDescendants is like closeDescendants but uses force-close,
 // which succeeds even for beads in invalid states. Returns the count of
 // issues closed and any error encountered. Callers should check the error
-// to avoid closing a parent while children survive (gt-7lx3).
+// to avoid closing a parent while children survive (ms-7lx3).
 func forceCloseDescendants(b *beads.Beads, parentID string) (int, error) {
 	return closeDescendantsImpl(b, parentID, true)
 }

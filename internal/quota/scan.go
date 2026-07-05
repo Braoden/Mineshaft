@@ -189,7 +189,7 @@ func (s *Scanner) scanSession(session string) ScanResult {
 }
 
 // resolveAccountHandle maps a session's active account back to a handle.
-// Checks GT_QUOTA_ACCOUNT first (set by keychain swap rotation), then
+// Checks MS_QUOTA_ACCOUNT first (set by keychain swap rotation), then
 // falls back to matching CLAUDE_CONFIG_DIR against registered accounts.
 func (s *Scanner) resolveAccountHandle(session string) string {
 	if s.accounts == nil {
@@ -197,8 +197,8 @@ func (s *Scanner) resolveAccountHandle(session string) string {
 	}
 
 	// After keychain swap, the config dir still maps to the old account.
-	// GT_QUOTA_ACCOUNT records which account's token is actually active.
-	if override, err := s.tmux.GetEnvironment(session, "GT_QUOTA_ACCOUNT"); err == nil {
+	// MS_QUOTA_ACCOUNT records which account's token is actually active.
+	if override, err := s.tmux.GetEnvironment(session, "MS_QUOTA_ACCOUNT"); err == nil {
 		override = strings.TrimSpace(override)
 		if override != "" {
 			if _, ok := s.accounts.Accounts[override]; ok {
@@ -224,7 +224,7 @@ func (s *Scanner) resolveAccountHandle(session string) string {
 }
 
 // isMineshaftSession returns true if the session name belongs to Mineshaft.
-// Uses the prefix registry to check for known rig prefixes (gt-, bd-, etc.)
+// Uses the prefix registry to check for known rig prefixes (ms-, bd-, etc.)
 // and the hq- prefix for town-level services.
 func isMineshaftSession(sess string) bool {
 	return session.IsKnownSession(sess)

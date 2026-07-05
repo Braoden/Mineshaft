@@ -29,7 +29,7 @@ This command:
   3. Optionally creates a GitHub repository (private by default)
 
 The .gitignore excludes:
-  - Miner worktrees and rig clones (recreated with 'gt sling' or 'gt rig add')
+  - Miner worktrees and rig clones (recreated with 'ms sling' or 'ms rig add')
   - Runtime state files (state.json, *.lock)
   - OS and editor files
 
@@ -39,9 +39,9 @@ And tracks:
   - Rig configs and hop/ directory
 
 Examples:
-  gt git-init                             # Init git with .gitignore
-  gt git-init --github=user/repo          # Create private GitHub repo (default)
-  gt git-init --github=user/repo --public # Create public GitHub repo`,
+  ms git-init                             # Init git with .gitignore
+  ms git-init --github=user/repo          # Create private GitHub repo (default)
+  ms git-init --github=user/repo --public # Create public GitHub repo`,
 	RunE: runGitInit,
 }
 
@@ -72,7 +72,7 @@ const HQGitignore = `# Mineshaft HQ .gitignore
 **/audit.log
 **/last-touched
 **/.local_version
-**/.gt-types-configured
+**/.ms-types-configured
 **/feed-*.json
 
 # =============================================================================
@@ -101,7 +101,7 @@ events/
 beads_hq/
 
 # =============================================================================
-# Rig git worktrees (recreate with 'gt sling' or 'gt rig add')
+# Rig git worktrees (recreate with 'ms sling' or 'ms rig add')
 # =============================================================================
 
 # Miners - worker worktrees
@@ -156,7 +156,7 @@ func runGitInit(cmd *cobra.Command, args []string) error {
 
 	hqRoot, err := workspace.Find(cwd)
 	if err != nil || hqRoot == "" {
-		return fmt.Errorf("not inside a Mineshaft HQ (run 'gt install' first)")
+		return fmt.Errorf("not inside a Mineshaft HQ (run 'ms install' first)")
 	}
 
 	fmt.Printf("%s Initializing git for HQ at %s\n\n",
@@ -199,7 +199,7 @@ func runGitInit(cmd *cobra.Command, args []string) error {
 		fmt.Printf("  1. Create initial commit: %s\n",
 			style.Dim.Render("git add . && git commit -m 'Initial Mineshaft HQ'"))
 		fmt.Printf("  2. Create remote repo: %s\n",
-			style.Dim.Render("gt git-init --github=user/repo"))
+			style.Dim.Render("ms git-init --github=user/repo"))
 	}
 
 	return nil
@@ -326,7 +326,7 @@ func ensureInitialCommit(hqRoot string) error {
 }
 
 // InitGitForHarness is the shared implementation for git initialization.
-// It can be called from both 'gt git-init' and 'gt install --git'.
+// It can be called from both 'ms git-init' and 'ms install --git'.
 // Note: Function name kept for backwards compatibility.
 func InitGitForHarness(hqRoot string, github string, private bool) error {
 	// Create .gitignore
@@ -370,7 +370,7 @@ const BranchProtectionMarker = "Mineshaft branch protection"
 // detect and auto-revert bad checkouts immediately after they happen.
 const BranchProtectionScript = `# Mineshaft branch protection
 # Auto-reverts to main if a non-main branch is checked out in the town root.
-# The town root must stay on main to avoid breaking gt commands.
+# The town root must stay on main to avoid breaking ms commands.
 # NOTE: Git does NOT support pre-checkout hooks, so we auto-revert after.
 
 # Only check branch checkouts (not file checkouts)
@@ -406,7 +406,7 @@ fi
 `
 
 // InstallPreCheckoutHook installs branch protection in the post-checkout hook.
-// This auto-reverts accidental branch switches that can break gt commands.
+// This auto-reverts accidental branch switches that can break ms commands.
 //
 // NOTE: The function name is kept for backwards compatibility, but it now
 // installs protection in post-checkout (git doesn't support pre-checkout).

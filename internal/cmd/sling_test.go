@@ -55,11 +55,11 @@ func setupMutableBDRawSlingTest(t *testing.T, initialDescription string) (townRo
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir town beads: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`+"\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(`{"prefix":"ms-","path":"mineshaft/overseer/rig"}`+"\n"), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
 	rigs := &config.RigsConfig{Version: 1, Rigs: map[string]config.RigEntry{
-		"mineshaft": {GitURL: "git@github.com:test/mineshaft.git", AddedAt: time.Now().Truncate(time.Second), BeadsConfig: &config.BeadsConfig{Repo: "local", Prefix: "gt"}},
+		"mineshaft": {GitURL: "git@github.com:test/mineshaft.git", AddedAt: time.Now().Truncate(time.Second), BeadsConfig: &config.BeadsConfig{Repo: "local", Prefix: "ms"}},
 	}}
 	if err := config.SaveRigsConfig(filepath.Join(townRoot, "overseer", "rigs.json"), rigs); err != nil {
 		t.Fatalf("SaveRigsConfig: %v", err)
@@ -106,7 +106,7 @@ case "$cmd" in
     if [ -f "$BD_STATUS_FILE" ]; then status=$(cat "$BD_STATUS_FILE"); fi
     assignee=""
     if [ -f "$BD_ASSIGNEE_FILE" ]; then assignee=$(cat "$BD_ASSIGNEE_FILE"); fi
-    printf '[{"id":"gt-rawrollback","title":"Test issue","status":"%s","assignee":"%s","description":"%s","dependencies":[]}]\n' "$status" "$assignee" "$desc"
+    printf '[{"id":"ms-rawrollback","title":"Test issue","status":"%s","assignee":"%s","description":"%s","dependencies":[]}]\n' "$status" "$assignee" "$desc"
     ;;
   update)
     for arg in "$@"; do
@@ -129,8 +129,8 @@ exit 0
 	t.Setenv("BD_STATUS_FILE", statusPath)
 	t.Setenv("BD_ASSIGNEE_FILE", assigneePath)
 	t.Setenv(EnvGTRole, "overseer")
-	t.Setenv("GT_TEST_NO_NUDGE", "1")
-	t.Setenv("GT_TEST_ATTACHED_MOLECULE_LOG", "")
+	t.Setenv("MS_TEST_NO_NUDGE", "1")
+	t.Setenv("MS_TEST_ATTACHED_MOLECULE_LOG", "")
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -196,23 +196,23 @@ func TestParseWispIDFromJSON(t *testing.T) {
 	}{
 		{
 			name:   "new_epic_id",
-			json:   `{"new_epic_id":"gt-wisp-abc","created":7,"phase":"vapor"}`,
-			wantID: "gt-wisp-abc",
+			json:   `{"new_epic_id":"ms-wisp-abc","created":7,"phase":"vapor"}`,
+			wantID: "ms-wisp-abc",
 		},
 		{
 			name:   "root_id legacy",
-			json:   `{"root_id":"gt-wisp-legacy"}`,
-			wantID: "gt-wisp-legacy",
+			json:   `{"root_id":"ms-wisp-legacy"}`,
+			wantID: "ms-wisp-legacy",
 		},
 		{
 			name:   "result_id forward compat",
-			json:   `{"result_id":"gt-wisp-result"}`,
-			wantID: "gt-wisp-result",
+			json:   `{"result_id":"ms-wisp-result"}`,
+			wantID: "ms-wisp-result",
 		},
 		{
 			name:   "precedence prefers new_epic_id",
-			json:   `{"root_id":"gt-wisp-legacy","new_epic_id":"gt-wisp-new"}`,
-			wantID: "gt-wisp-new",
+			json:   `{"root_id":"ms-wisp-legacy","new_epic_id":"ms-wisp-new"}`,
+			wantID: "ms-wisp-new",
 		},
 		{
 			name:    "missing id keys",
@@ -245,11 +245,11 @@ func TestExtractIssueID(t *testing.T) {
 		id   string
 		want string
 	}{
-		{"unwraps external format", "external:gt-mol:gt-mol-abc123", "gt-mol-abc123"},
+		{"unwraps external format", "external:ms-mol:ms-mol-abc123", "ms-mol-abc123"},
 		{"unwraps beads external", "external:beads-task:beads-task-xyz", "beads-task-xyz"},
 		{"passes through hq IDs", "hq-abc123", "hq-abc123"},
-		{"passes through plain IDs", "gt-abc123", "gt-abc123"},
-		{"handles malformed external (only 2 parts)", "external:gt-mol", "external:gt-mol"},
+		{"passes through plain IDs", "ms-abc123", "ms-abc123"},
+		{"handles malformed external (only 2 parts)", "external:ms-mol", "external:ms-mol"},
 		{"handles empty string", "", ""},
 	}
 	for _, tt := range tests {
@@ -270,14 +270,14 @@ func TestSlingNewlyCreatedRigBeadRoutesBDCommandsToTargetRig(t *testing.T) {
 	t.Cleanup(beads.ResetBdAllowStaleCacheForTest)
 
 	townRoot := t.TempDir()
-	newBeadID := "gt-new123"
+	newBeadID := "ms-new123"
 
 	// Minimal workspace marker so workspace.FindFromCwd() succeeds.
 	if err := os.MkdirAll(filepath.Join(townRoot, "overseer", "rig"), 0755); err != nil {
 		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 
-	// Create a rig path that owns gt-* beads, and a routes.jsonl pointing to it.
+	// Create a rig path that owns ms-* beads, and a routes.jsonl pointing to it.
 	rigDir := filepath.Join(townRoot, "mineshaft", "overseer", "rig")
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
@@ -286,7 +286,7 @@ func TestSlingNewlyCreatedRigBeadRoutesBDCommandsToTargetRig(t *testing.T) {
 		t.Fatalf("mkdir rigDir: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`,
+		`{"prefix":"ms-","path":"mineshaft/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
@@ -312,14 +312,14 @@ set -e
 log_args=""
 for arg in "$@"; do
   case "$arg" in
-    --description=*attached_molecule:*gt-wisp-xyz*attached_formula:*mol-miner-work*) arg="--description=<attached-molecule-and-formula-fields>" ;;
+    --description=*attached_molecule:*ms-wisp-xyz*attached_formula:*mol-miner-work*) arg="--description=<attached-molecule-and-formula-fields>" ;;
     --description=*no_merge:*true*review_only:*true*) arg="--description=<review-only-fields>" ;;
     --description=*review_only:*true*no_merge:*true*) arg="--description=<review-only-fields>" ;;
     --description=*) arg="--description=<redacted>" ;;
   esac
   log_args="${log_args}${log_args:+ }${arg}"
 done
-printf '%s|%s|%s|%s|%s|%s|%s|%s\n' "$(pwd)" "${BEADS_DIR:-}" "${BEADS_DOLT_SERVER_DATABASE:-}" "${BEADS_DB:-}" "${BD_DB:-}" "${BEADS_DOLT_DATA_DIR:-}" "${GT_DOLT_DATA:-}" "$log_args" >> "${BD_LOG}"
+printf '%s|%s|%s|%s|%s|%s|%s|%s\n' "$(pwd)" "${BEADS_DIR:-}" "${BEADS_DOLT_SERVER_DATABASE:-}" "${BEADS_DB:-}" "${BD_DB:-}" "${BEADS_DOLT_DATA_DIR:-}" "${MS_DOLT_DATA:-}" "$log_args" >> "${BD_LOG}"
 cmd="$1"
 shift || true
 while [ "$cmd" = "--db" ] || [ "$cmd" = "--allow-stale" ]; do
@@ -334,7 +334,7 @@ case "$cmd" in
     echo '[{"title":"Test issue","status":"open","assignee":"","description":""}]'
     ;;
   create)
-    echo '{"id":"gt-new123","title":"New sling smoke","status":"open","assignee":""}'
+    echo '{"id":"ms-new123","title":"New sling smoke","status":"open","assignee":""}'
     ;;
   formula)
     # formula show <name> - must output something for verifyFormulaExists
@@ -353,7 +353,7 @@ case "$cmd" in
 			exit 1
 			;;
 		  bond)
-			echo '{"result_id":"gt-abc123","id_mapping":{"mol-miner-work":"gt-wisp-xyz"}}'
+			echo '{"result_id":"ms-abc123","id_mapping":{"mol-miner-work":"ms-wisp-xyz"}}'
 			;;
 		esac
     ;;
@@ -365,7 +365,7 @@ exit 0
 `
 	bdScriptWindows := `@echo off
 setlocal enableextensions
-echo %CD%^|%BEADS_DIR%^|%BEADS_DOLT_SERVER_DATABASE%^|%BEADS_DB%^|%BD_DB%^|%BEADS_DOLT_DATA_DIR%^|%GT_DOLT_DATA%^|%*>>"%BD_LOG%"
+echo %CD%^|%BEADS_DIR%^|%BEADS_DOLT_SERVER_DATABASE%^|%BEADS_DB%^|%BD_DB%^|%BEADS_DOLT_DATA_DIR%^|%MS_DOLT_DATA%^|%*>>"%BD_LOG%"
 set "cmd=%1"
 set "sub=%2"
 if "%cmd%"=="--allow-stale" (
@@ -377,7 +377,7 @@ if "%cmd%"=="show" (
   exit /b 0
 )
 if "%cmd%"=="create" (
-  echo {"id":"gt-new123","title":"New sling smoke","status":"open","assignee":""}
+  echo {"id":"ms-new123","title":"New sling smoke","status":"open","assignee":""}
   exit /b 0
 )
 if "%cmd%"=="formula" (
@@ -391,7 +391,7 @@ if "%cmd%"=="mol" (
     exit /b 1
   )
   if "%sub%"=="bond" (
-    echo {"result_id":"gt-abc123","id_mapping":{"mol-miner-work":"gt-wisp-xyz"}}
+    echo {"result_id":"ms-abc123","id_mapping":{"mol-miner-work":"ms-wisp-xyz"}}
     exit /b 0
   )
 )
@@ -402,8 +402,8 @@ exit /b 0
 	t.Setenv("BD_LOG", logPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "overseer")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
 	t.Setenv("TMUX_PANE", "") // Prevent inheriting real tmux pane from test runner
 
 	cwd, err := os.Getwd()
@@ -450,8 +450,8 @@ exit /b 0
 	}
 
 	// Prevent real tmux nudge from firing during tests (causes agent self-interruption)
-	t.Setenv("GT_TEST_NO_NUDGE", "1")
-	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1") // Stub bd doesn't track state
+	t.Setenv("MS_TEST_NO_NUDGE", "1")
+	t.Setenv("MS_TEST_SKIP_HOOK_VERIFY", "1") // Stub bd doesn't track state
 	// Poison the ambient beads target: all mutating commands must override this
 	// with the route-resolved target rig database.
 	t.Setenv("BEADS_DIR", filepath.Join(townRoot, ".beads"))
@@ -459,7 +459,7 @@ exit /b 0
 	t.Setenv("BEADS_DB", filepath.Join(townRoot, "wrong.db"))
 	t.Setenv("BD_DB", filepath.Join(townRoot, "wrong.bd"))
 	t.Setenv("BEADS_DOLT_DATA_DIR", filepath.Join(townRoot, "wrong-data"))
-	t.Setenv("GT_DOLT_DATA", filepath.Join(townRoot, "wrong-gt-data"))
+	t.Setenv("MS_DOLT_DATA", filepath.Join(townRoot, "wrong-ms-data"))
 
 	createOut, err := BdCmd("create", "--json", "--title=New sling smoke", "--type=task").
 		Dir(rigDir).
@@ -528,7 +528,7 @@ exit /b 0
 			t.Fatalf("bd %s leaked stale DB env BEADS_DB=%q BD_DB=%q BEADS_DOLT_DATA_DIR=%q (args: %q)", kind, beadsDB, bdDB, dataDir, args)
 		}
 		if gtData != "" {
-			t.Fatalf("bd %s leaked GT_DOLT_DATA=%q (args: %q)", kind, gtData, args)
+			t.Fatalf("bd %s leaked MS_DOLT_DATA=%q (args: %q)", kind, gtData, args)
 		}
 	}
 
@@ -597,8 +597,8 @@ exit /b 0
 			assertTargetRig("review-only metadata update", dir, beadsDir, database, beadsDB, bdDB, dataDir, gtData, args)
 		case strings.Contains(args, "update "+newBeadID) && strings.Contains(args, "--description="):
 			assertTargetRig("description update", dir, beadsDir, database, beadsDB, bdDB, dataDir, gtData, args)
-		case args == "--version" || strings.HasPrefix(args, "version") || strings.Contains(args, " version") || strings.Contains(args, "show gt-rig-") || strings.Contains(args, "show mol-"):
-			// Explicitly exempt non-target-bead lookups; every gt-new123 operation
+		case args == "--version" || strings.HasPrefix(args, "version") || strings.Contains(args, " version") || strings.Contains(args, "show ms-rig-") || strings.Contains(args, "show mol-"):
+			// Explicitly exempt non-target-bead lookups; every ms-new123 operation
 			// above must still prove it is pinned to the mineshaft database.
 		default:
 			t.Fatalf("unexpected bd command without routing assertion: %q", line)
@@ -622,7 +622,7 @@ func TestRoutedBeadReadUsesCanonicalShowWithoutUnsupportedAllowStale(t *testing.
 	t.Cleanup(beads.ResetBdAllowStaleCacheForTest)
 
 	townRoot := t.TempDir()
-	beadID := "gt-new123"
+	beadID := "ms-new123"
 	rigDir := filepath.Join(townRoot, "mineshaft", "overseer", "rig")
 	rigBeadsDir := filepath.Join(rigDir, ".beads")
 	for _, dir := range []string{filepath.Join(townRoot, "overseer"), filepath.Join(townRoot, ".beads"), rigBeadsDir} {
@@ -634,7 +634,7 @@ func TestRoutedBeadReadUsesCanonicalShowWithoutUnsupportedAllowStale(t *testing.
 		t.Fatalf("write town.json: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`,
+		`{"prefix":"ms-","path":"mineshaft/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
@@ -663,7 +663,7 @@ case "$1" in
       echo "wrong database: ${BEADS_DIR:-}" >&2
       exit 1
     fi
-    echo '[{"id":"gt-new123","title":"Routed bead","status":"open","assignee":"","description":"body","issue_type":"bug","labels":["x"],"dependencies":[{"id":"gt-wisp-old","status":"open"}]}]'
+    echo '[{"id":"ms-new123","title":"Routed bead","status":"open","assignee":"","description":"body","issue_type":"bug","labels":["x"],"dependencies":[{"id":"ms-wisp-old","status":"open"}]}]'
     ;;
 esac
 `
@@ -673,7 +673,7 @@ esac
 	t.Setenv("RIG_BEADS", rigBeadsDir)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv("BEADS_DIR", filepath.Join(townRoot, ".beads"))
-	t.Setenv("GT_ROOT", townRoot)
+	t.Setenv("MS_ROOT", townRoot)
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -737,7 +737,7 @@ func TestSlingRollsBackSpawnedMinerOnInstantiateFailure(t *testing.T) {
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
 					Repo:   "local",
-					Prefix: "gt-",
+					Prefix: "ms-",
 				},
 			},
 		},
@@ -752,12 +752,12 @@ func TestSlingRollsBackSpawnedMinerOnInstantiateFailure(t *testing.T) {
 		t.Fatalf("mkdir rig dir: %v", err)
 	}
 
-	// Routes: gt-* resolves to mineshaft's rig beads dir.
+	// Routes: ms-* resolves to mineshaft's rig beads dir.
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`,
+		`{"prefix":"ms-","path":"mineshaft/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
@@ -831,11 +831,11 @@ exit /b 0
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "overseer")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
 	t.Setenv("TMUX_PANE", "")
-	t.Setenv("GT_TEST_NO_NUDGE", "1")
-	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1")
+	t.Setenv("MS_TEST_NO_NUDGE", "1")
+	t.Setenv("MS_TEST_SKIP_HOOK_VERIFY", "1")
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -881,7 +881,7 @@ exit /b 0
 		if spawnInfo == nil || spawnInfo.MinerName != "Toast" {
 			t.Fatalf("unexpected spawnInfo in rollback: %+v", spawnInfo)
 		}
-		if beadID != "gt-abc123" {
+		if beadID != "ms-abc123" {
 			t.Fatalf("unexpected beadID in rollback: %q", beadID)
 		}
 		if want := filepath.Join(townRoot, "fake-miner"); hookWorkDir != want {
@@ -889,7 +889,7 @@ exit /b 0
 		}
 	}
 
-	err = runSling(nil, []string{"gt-abc123", "mineshaft"})
+	err = runSling(nil, []string{"ms-abc123", "mineshaft"})
 	if err == nil {
 		t.Fatalf("expected error from runSling")
 	}
@@ -913,11 +913,11 @@ func TestSlingRollsBackSpawnedMinerOnHookFailure(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`+"\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(`{"prefix":"ms-","path":"mineshaft/overseer/rig"}`+"\n"), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
 	rigs := &config.RigsConfig{Version: 1, Rigs: map[string]config.RigEntry{
-		"mineshaft": {GitURL: "git@github.com:test/mineshaft.git", AddedAt: time.Now().Truncate(time.Second), BeadsConfig: &config.BeadsConfig{Repo: "local", Prefix: "gt-"}},
+		"mineshaft": {GitURL: "git@github.com:test/mineshaft.git", AddedAt: time.Now().Truncate(time.Second), BeadsConfig: &config.BeadsConfig{Repo: "local", Prefix: "ms-"}},
 	}}
 	if err := config.SaveRigsConfig(filepath.Join(townRoot, "overseer", "rigs.json"), rigs); err != nil {
 		t.Fatalf("SaveRigsConfig: %v", err)
@@ -946,7 +946,7 @@ exit /b 0
 	_ = writeBDStub(t, binDir, bdScript, bdScriptWindows)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "overseer")
-	t.Setenv("GT_TEST_NO_NUDGE", "1")
+	t.Setenv("MS_TEST_NO_NUDGE", "1")
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -995,7 +995,7 @@ exit /b 0
 		}
 	}
 
-	err = runSling(nil, []string{"gt-abc123", "mineshaft/miners/toast"})
+	err = runSling(nil, []string{"ms-abc123", "mineshaft/miners/toast"})
 	if err == nil {
 		t.Fatalf("expected hook failure from runSling")
 	}
@@ -1034,7 +1034,7 @@ func TestSlingRejectsBeadMissingFromTargetRigBeforeSpawn(t *testing.T) {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"."}`,
+		`{"prefix":"ms-","path":"."}`,
 		`{"prefix":"zz-","path":"mineshaft/overseer/rig"}`,
 		"",
 	}, "\n")
@@ -1090,11 +1090,11 @@ exit /b 0
 	t.Setenv("TARGET_BEADS_DIR", filepath.Join(townRoot, "mineshaft", "overseer", "rig", ".beads"))
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "overseer")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
 	t.Setenv("TMUX_PANE", "")
-	t.Setenv("GT_TEST_NO_NUDGE", "1")
-	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1")
+	t.Setenv("MS_TEST_NO_NUDGE", "1")
+	t.Setenv("MS_TEST_SKIP_HOOK_VERIFY", "1")
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -1122,7 +1122,7 @@ exit /b 0
 		return &SpawnedMinerInfo{RigName: rigName, MinerName: "toast", ClonePath: filepath.Join(townRoot, "fake-miner")}, nil
 	}
 
-	err = runSling(nil, []string{"gt-r2405", "mineshaft"})
+	err = runSling(nil, []string{"ms-r2405", "mineshaft"})
 	if err == nil {
 		t.Fatal("expected target-rig database validation error")
 	}
@@ -1149,7 +1149,7 @@ func TestTargetRigDatabaseAllowsRouteResolvedGtBead(t *testing.T) {
 		}
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`,
+		`{"prefix":"ms-","path":"mineshaft/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
@@ -1192,11 +1192,11 @@ esac
 
 	t.Setenv("BD_LOG", logPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv("GT_DOLT_DATA", filepath.Join(townRoot, ".dolt-data"))
+	t.Setenv("MS_DOLT_DATA", filepath.Join(townRoot, ".dolt-data"))
 	t.Setenv("BEADS_DOLT_DATA_DIR", filepath.Join(townRoot, "wrong-data"))
 	t.Setenv("BEADS_DOLT_SERVER_DATABASE", "hq")
 
-	if err := verifyBeadExistsInTargetRigDatabase("gt-hq-oy83-cleanup", "mineshaft", townRoot); err != nil {
+	if err := verifyBeadExistsInTargetRigDatabase("ms-hq-oy83-cleanup", "mineshaft", townRoot); err != nil {
 		t.Fatalf("verifyBeadExistsInTargetRigDatabase: %v", err)
 	}
 
@@ -1209,7 +1209,7 @@ esac
 	if len(parts) != 5 {
 		t.Fatalf("malformed bd log: %q", line)
 	}
-	if !strings.Contains(parts[0], "show gt-hq-oy83-cleanup --json") {
+	if !strings.Contains(parts[0], "show ms-hq-oy83-cleanup --json") {
 		t.Fatalf("bd args = %q, want route-resolved show", parts[0])
 	}
 	if parts[1] != rigDir {
@@ -1257,7 +1257,7 @@ func setupCrossDatabaseSlingGuardTest(t *testing.T) (townRoot, logPath string) {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"."}`,
+		`{"prefix":"ms-","path":"."}`,
 		`{"prefix":"zz-","path":"mineshaft/overseer/rig"}`,
 		"",
 	}, "\n")
@@ -1315,11 +1315,11 @@ exit /b 0
 	t.Setenv("TARGET_BEADS_DIR", filepath.Join(townRoot, "mineshaft", "overseer", "rig", ".beads"))
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "overseer")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
 	t.Setenv("TMUX_PANE", "")
-	t.Setenv("GT_TEST_NO_NUDGE", "1")
-	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1")
+	t.Setenv("MS_TEST_NO_NUDGE", "1")
+	t.Setenv("MS_TEST_SKIP_HOOK_VERIFY", "1")
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -1336,7 +1336,7 @@ exit /b 0
 func TestScheduleBeadRejectsMissingTargetRigDatabaseBeforeContext(t *testing.T) {
 	_, logPath := setupCrossDatabaseSlingGuardTest(t)
 
-	err := scheduleBead("gt-r2405", "mineshaft", ScheduleOptions{})
+	err := scheduleBead("ms-r2405", "mineshaft", ScheduleOptions{})
 	if err == nil {
 		t.Fatal("expected target-rig database validation error")
 	}
@@ -1376,7 +1376,7 @@ func TestBatchSlingRejectsMissingTargetRigDatabaseBeforeSpawn(t *testing.T) {
 		return &SpawnedMinerInfo{RigName: rigName, MinerName: "toast", ClonePath: filepath.Join(townRoot, "fake-miner")}, nil
 	}
 
-	err := runBatchSling([]string{"gt-r2405"}, "mineshaft", filepath.Join(townRoot, ".beads"))
+	err := runBatchSling([]string{"ms-r2405"}, "mineshaft", filepath.Join(townRoot, ".beads"))
 	if err == nil {
 		t.Fatal("expected target-rig database validation error")
 	}
@@ -1419,7 +1419,7 @@ func TestExecuteSlingRejectsMissingTargetRigDatabaseBeforeSpawn(t *testing.T) {
 	}
 
 	_, err := executeSling(SlingParams{
-		BeadID:   "gt-r2405",
+		BeadID:   "ms-r2405",
 		RigName:  "mineshaft",
 		TownRoot: townRoot,
 		BeadsDir: filepath.Join(townRoot, ".beads"),
@@ -1444,10 +1444,10 @@ func TestResolveTargetRejectsLiveMinerMissingTargetRigDatabase(t *testing.T) {
 		return "mineshaft/miners/toast", "%1", filepath.Join(townRoot, "mineshaft", "miners", "toast"), nil
 	}
 
-	for _, target := range []string{"mineshaft/miners/toast", "mineshaft/toast", "gt-mineshaft-miner-toast"} {
+	for _, target := range []string{"mineshaft/miners/toast", "mineshaft/toast", "ms-mineshaft-miner-toast"} {
 		t.Run(target, func(t *testing.T) {
 			_, err := resolveTarget(target, ResolveTargetOptions{
-				BeadID:   "gt-r2405",
+				BeadID:   "ms-r2405",
 				TownRoot: townRoot,
 			})
 			if err == nil {
@@ -1482,7 +1482,7 @@ func TestResolveTargetCreateSpawnsMinerShorthandWhenPaneMissing(t *testing.T) {
 		spawnMinerForSling = prevSpawn
 	})
 	resolveTargetAgentFn = func(target string) (string, string, string, error) {
-		return "", "", "", errors.New("getting pane for gt-toast: exit status 1")
+		return "", "", "", errors.New("getting pane for ms-toast: exit status 1")
 	}
 
 	spawnCalled := false
@@ -1534,7 +1534,7 @@ func TestResolveTargetCreateDoesNotSpawnCrewShorthandWhenPaneMissing(t *testing.
 		spawnMinerForSling = prevSpawn
 	})
 	resolveTargetAgentFn = func(target string) (string, string, string, error) {
-		return "", "", "", errors.New("getting pane for gt-crew-toast: exit status 1")
+		return "", "", "", errors.New("getting pane for ms-crew-toast: exit status 1")
 	}
 
 	spawnCalled := false
@@ -1553,7 +1553,7 @@ func TestResolveTargetCreateDoesNotSpawnCrewShorthandWhenPaneMissing(t *testing.
 }
 
 func TestTargetRigDatabaseLookupFailsClosedWithoutTownRoot(t *testing.T) {
-	err := verifyBeadExistsInTargetRigDatabase("gt-r2405", "mineshaft", "")
+	err := verifyBeadExistsInTargetRigDatabase("ms-r2405", "mineshaft", "")
 	if err == nil {
 		t.Fatal("expected fail-closed error without town root")
 	}
@@ -1612,13 +1612,13 @@ exit /b 0
 	})
 
 	getBeadInfoForRollback = func(beadID string) (*beadInfo, error) {
-		if beadID != "gt-abc123" {
+		if beadID != "ms-abc123" {
 			t.Fatalf("unexpected bead id: %q", beadID)
 		}
 		return &beadInfo{
-			Description: "attached_molecule: gt-wisp-stale",
+			Description: "attached_molecule: ms-wisp-stale",
 			Dependencies: []beads.IssueDep{
-				{ID: "gt-wisp-stale"},
+				{ID: "ms-wisp-stale"},
 			},
 		}, nil
 	}
@@ -1627,13 +1627,13 @@ exit /b 0
 	burnCalled := false
 	burnExistingMoleculesForRollback = func(molecules []string, beadID, gotTownRoot string) error {
 		burnCalled = true
-		if beadID != "gt-abc123" {
+		if beadID != "ms-abc123" {
 			t.Fatalf("unexpected burn bead id: %q", beadID)
 		}
 		if gotTownRoot != townRoot {
 			t.Fatalf("unexpected town root: got %q want %q", gotTownRoot, townRoot)
 		}
-		if len(molecules) != 1 || molecules[0] != "gt-wisp-stale" {
+		if len(molecules) != 1 || molecules[0] != "ms-wisp-stale" {
 			t.Fatalf("unexpected molecules to burn: %#v", molecules)
 		}
 		return nil
@@ -1642,7 +1642,7 @@ exit /b 0
 	rollbackSlingArtifacts(&SpawnedMinerInfo{
 		RigName:     "mineshaft",
 		MinerName: "Toast",
-	}, "gt-abc123", "", "")
+	}, "ms-abc123", "", "")
 
 	if !burnCalled {
 		t.Fatalf("expected rollbackSlingArtifacts to burn attached molecules")
@@ -1664,7 +1664,7 @@ func TestRollbackSlingArtifactsClearsRawReviewOnlyMetadata(t *testing.T) {
 		RigName:     "mineshaft",
 		MinerName: "toast",
 		ClonePath:   filepath.Join(townRoot, "mineshaft", "miners", "toast"),
-	}, "gt-rawrollback", filepath.Join(townRoot, "mineshaft", "miners", "toast"), "")
+	}, "ms-rawrollback", filepath.Join(townRoot, "mineshaft", "miners", "toast"), "")
 
 	desc := readMutableBDDescription(t, descPath)
 	assertNoRawReviewMetadata(t, desc)
@@ -1678,7 +1678,7 @@ func TestRollbackSlingArtifactsClearsRawReviewOnlyMetadata(t *testing.T) {
 
 func TestRollbackSlingArtifactsKeepsMetadataWhenMoleculeBurnFails(t *testing.T) {
 	initial := strings.Join([]string{
-		"attached_molecule: gt-wisp-stale",
+		"attached_molecule: ms-wisp-stale",
 		"attached_at: 2026-06-30T12:00:00Z",
 		"no_merge: true",
 		"review_only: true",
@@ -1694,7 +1694,7 @@ func TestRollbackSlingArtifactsKeepsMetadataWhenMoleculeBurnFails(t *testing.T) 
 		burnExistingMoleculesForRollback = prevBurn
 	})
 	collectExistingMoleculesForRollback = func(info *beadInfo) []string {
-		return []string{"gt-wisp-stale"}
+		return []string{"ms-wisp-stale"}
 	}
 	burnExistingMoleculesForRollback = func(molecules []string, beadID, townRoot string) error {
 		return errors.New("forced burn failure")
@@ -1704,10 +1704,10 @@ func TestRollbackSlingArtifactsKeepsMetadataWhenMoleculeBurnFails(t *testing.T) 
 		RigName:     "mineshaft",
 		MinerName: "toast",
 		ClonePath:   filepath.Join(townRoot, "mineshaft", "miners", "toast"),
-	}, "gt-rawrollback", filepath.Join(townRoot, "mineshaft", "miners", "toast"), "")
+	}, "ms-rawrollback", filepath.Join(townRoot, "mineshaft", "miners", "toast"), "")
 
 	desc := readMutableBDDescription(t, descPath)
-	if !strings.Contains(desc, "attached_molecule: gt-wisp-stale") {
+	if !strings.Contains(desc, "attached_molecule: ms-wisp-stale") {
 		t.Fatalf("rollback hid attached molecule after burn failure:\n%s", desc)
 	}
 	assertHasRawReviewMetadata(t, desc)
@@ -1715,7 +1715,7 @@ func TestRollbackSlingArtifactsKeepsMetadataWhenMoleculeBurnFails(t *testing.T) 
 
 func TestRollbackSlingArtifactsClearsRawReviewOnlyMetadataAfterMoleculeBurnSucceeds(t *testing.T) {
 	initial := strings.Join([]string{
-		"attached_molecule: gt-wisp-stale",
+		"attached_molecule: ms-wisp-stale",
 		"attached_at: 2026-06-30T12:00:00Z",
 		"no_merge: true",
 		"review_only: true",
@@ -1731,10 +1731,10 @@ func TestRollbackSlingArtifactsClearsRawReviewOnlyMetadataAfterMoleculeBurnSucce
 		burnExistingMoleculesForRollback = prevBurn
 	})
 	collectExistingMoleculesForRollback = func(info *beadInfo) []string {
-		return []string{"gt-wisp-stale"}
+		return []string{"ms-wisp-stale"}
 	}
 	burnExistingMoleculesForRollback = func(molecules []string, beadID, townRoot string) error {
-		if len(molecules) != 1 || molecules[0] != "gt-wisp-stale" {
+		if len(molecules) != 1 || molecules[0] != "ms-wisp-stale" {
 			t.Fatalf("unexpected molecules: %#v", molecules)
 		}
 		updated := strings.Join([]string{
@@ -1754,11 +1754,11 @@ func TestRollbackSlingArtifactsClearsRawReviewOnlyMetadataAfterMoleculeBurnSucce
 		RigName:     "mineshaft",
 		MinerName: "toast",
 		ClonePath:   filepath.Join(townRoot, "mineshaft", "miners", "toast"),
-	}, "gt-rawrollback", filepath.Join(townRoot, "mineshaft", "miners", "toast"), "")
+	}, "ms-rawrollback", filepath.Join(townRoot, "mineshaft", "miners", "toast"), "")
 
 	desc := readMutableBDDescription(t, descPath)
 	assertNoRawReviewMetadata(t, desc)
-	if strings.Contains(desc, "attached_molecule: gt-wisp-stale") {
+	if strings.Contains(desc, "attached_molecule: ms-wisp-stale") {
 		t.Fatalf("rollback reintroduced stale attached molecule:\n%s", desc)
 	}
 	if !strings.Contains(desc, "Keep this body.") {
@@ -1781,7 +1781,7 @@ func TestRestoreRollbackRawWorkflowFieldsFromCurrentRestoresOriginalValues(t *te
 		"Original body.",
 	}, "\n")}
 
-	restoreRollbackRawWorkflowFieldsFromCurrent("gt-rawrollback", townRoot, filepath.Join(townRoot, "mineshaft", "miners", "toast"), original)
+	restoreRollbackRawWorkflowFieldsFromCurrent("ms-rawrollback", townRoot, filepath.Join(townRoot, "mineshaft", "miners", "toast"), original)
 
 	desc := readMutableBDDescription(t, descPath)
 	fields := beads.ParseAttachmentFields(&beads.Issue{Description: desc})
@@ -1829,7 +1829,7 @@ func TestRunSlingRawReviewOnlyExistingTargetHookFailureClearsPreHookMetadata(t *
 		return errors.New("forced hook failure")
 	}
 
-	err := runSling(nil, []string{"gt-rawrollback", "mineshaft/crew/toast"})
+	err := runSling(nil, []string{"ms-rawrollback", "mineshaft/crew/toast"})
 	if err == nil {
 		t.Fatal("expected hook failure from runSling")
 	}
@@ -1862,7 +1862,7 @@ func TestExecuteSlingRawReviewOnlyHookFailureClearsPreHookMetadata(t *testing.T)
 	}
 
 	_, err := executeSling(SlingParams{
-		BeadID:      "gt-rawrollback",
+		BeadID:      "ms-rawrollback",
 		RigName:     "mineshaft",
 		TownRoot:    townRoot,
 		BeadsDir:    filepath.Join(rigPath, ".beads"),
@@ -1905,7 +1905,7 @@ func TestExecuteSlingRawReviewOnlyHookFailureRestoresOriginalMetadata(t *testing
 	}
 
 	_, err := executeSling(SlingParams{
-		BeadID:      "gt-rawrollback",
+		BeadID:      "ms-rawrollback",
 		RigName:     "mineshaft",
 		TownRoot:    townRoot,
 		BeadsDir:    filepath.Join(rigPath, ".beads"),
@@ -1951,7 +1951,7 @@ func TestExecuteSlingRawReviewOnlySuccessKeepsMetadata(t *testing.T) {
 	}
 
 	result, err := executeSling(SlingParams{
-		BeadID:      "gt-rawrollback",
+		BeadID:      "ms-rawrollback",
 		RigName:     "mineshaft",
 		TownRoot:    townRoot,
 		BeadsDir:    filepath.Join(rigPath, ".beads"),
@@ -1989,7 +1989,7 @@ func TestSlingFormulaRollsBackSpawnedMinerOnWispFailure(t *testing.T) {
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &config.BeadsConfig{
 					Repo:   "local",
-					Prefix: "gt-",
+					Prefix: "ms-",
 				},
 			},
 		},
@@ -2047,10 +2047,10 @@ exit /b 0
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "overseer")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
 	t.Setenv("TMUX_PANE", "")
-	t.Setenv("GT_TEST_NO_NUDGE", "1")
+	t.Setenv("MS_TEST_NO_NUDGE", "1")
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -2144,7 +2144,7 @@ case "$cmd" in
     shift || true
     case "$sub" in
       wisp)
-        echo '{"new_epic_id":"gt-wisp-xyz"}'
+        echo '{"new_epic_id":"ms-wisp-xyz"}'
         ;;
     esac
     ;;
@@ -2163,7 +2163,7 @@ if "%cmd%"=="formula" (
 if "%cmd%"=="cook" exit /b 0
 if "%cmd%"=="mol" (
   if "%sub%"=="wisp" (
-    echo {"new_epic_id":"gt-wisp-xyz"}
+    echo {"new_epic_id":"ms-wisp-xyz"}
     exit /b 0
   )
 )
@@ -2172,15 +2172,15 @@ exit /b 0
 	_ = writeBDStub(t, binDir, bdScript, bdScriptWindows)
 
 	attachedLogPath := filepath.Join(townRoot, "attached-molecule.log")
-	t.Setenv("GT_TEST_ATTACHED_MOLECULE_LOG", attachedLogPath)
+	t.Setenv("MS_TEST_ATTACHED_MOLECULE_LOG", attachedLogPath)
 	t.Setenv("BD_LOG", logPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "overseer")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
 	t.Setenv("TMUX_PANE", "")
-	t.Setenv("GT_TEST_NO_NUDGE", "1")
-	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1")
+	t.Setenv("MS_TEST_NO_NUDGE", "1")
+	t.Setenv("MS_TEST_SKIP_HOOK_VERIFY", "1")
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -2270,11 +2270,11 @@ exit /b 0
 	t.Setenv("BD_LOG", logPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "overseer")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
 	t.Setenv("TMUX_PANE", "")
-	t.Setenv("GT_TEST_NO_NUDGE", "1")
-	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1")
+	t.Setenv("MS_TEST_NO_NUDGE", "1")
+	t.Setenv("MS_TEST_SKIP_HOOK_VERIFY", "1")
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -2300,7 +2300,7 @@ exit /b 0
 	slingNoBoot = true
 	slingForce = false
 	findHookedFormulaSingletonFn = func(workDir, targetAgent, formulaName string) (*beads.Issue, error) {
-		return &beads.Issue{ID: "gt-wisp-existing"}, nil
+		return &beads.Issue{ID: "ms-wisp-existing"}, nil
 	}
 
 	if err := runSlingFormula(context.Background(), []string{"mol-anything"}); err != nil {
@@ -2341,14 +2341,14 @@ exit /b 0
 	_ = writeBDStub(t, binDir, bdScript, bdScriptWindows)
 
 	attachedLogPath := filepath.Join(townRoot, "attached-molecule.log")
-	t.Setenv("GT_TEST_ATTACHED_MOLECULE_LOG", attachedLogPath)
+	t.Setenv("MS_TEST_ATTACHED_MOLECULE_LOG", attachedLogPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "overseer")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
 	t.Setenv("TMUX_PANE", "")
-	t.Setenv("GT_TEST_NO_NUDGE", "1")
-	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1")
+	t.Setenv("MS_TEST_NO_NUDGE", "1")
+	t.Setenv("MS_TEST_SKIP_HOOK_VERIFY", "1")
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -2377,7 +2377,7 @@ exit /b 0
 	slingForce = false
 	slingRalph = false
 	findHookedFormulaSingletonFn = func(workDir, targetAgent, formulaName string) (*beads.Issue, error) {
-		return &beads.Issue{ID: "gt-wisp-existing", Description: "attached_formula: mol-anything\nmode: ralph"}, nil
+		return &beads.Issue{ID: "ms-wisp-existing", Description: "attached_formula: mol-anything\nmode: ralph"}, nil
 	}
 
 	if err := runSlingFormula(context.Background(), []string{"mol-anything"}); err != nil {
@@ -2394,7 +2394,7 @@ exit /b 0
 }
 
 // TestSlingFormulaOnBeadPassesFeatureAndIssueVars verifies that when using
-// gt sling <formula> --on <bead>, both --var feature=<title> and --var issue=<beadID>
+// ms sling <formula> --on <bead>, both --var feature=<title> and --var issue=<beadID>
 // are passed to the canonical bd mol bond command.
 func TestSlingFormulaOnBeadPassesFeatureAndIssueVars(t *testing.T) {
 	townRoot := t.TempDir()
@@ -2404,7 +2404,7 @@ func TestSlingFormulaOnBeadPassesFeatureAndIssueVars(t *testing.T) {
 		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 
-	// Create a rig path that owns gt-* beads, and a routes.jsonl pointing to it.
+	// Create a rig path that owns ms-* beads, and a routes.jsonl pointing to it.
 	rigDir := filepath.Join(townRoot, "mineshaft", "overseer", "rig")
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
@@ -2413,7 +2413,7 @@ func TestSlingFormulaOnBeadPassesFeatureAndIssueVars(t *testing.T) {
 		t.Fatalf("mkdir rigDir: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`,
+		`{"prefix":"ms-","path":"mineshaft/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
@@ -2454,7 +2454,7 @@ case "$cmd" in
 			exit 1
 			;;
 		  bond)
-			echo '{"result_id":"gt-abc123","id_mapping":{"mol-review":"gt-wisp-xyz"}}'
+			echo '{"result_id":"ms-abc123","id_mapping":{"mol-review":"ms-wisp-xyz"}}'
 			;;
 		esac
     ;;
@@ -2481,7 +2481,7 @@ if "%cmd%"=="mol" (
     exit /b 1
   )
   if "%sub%"=="bond" (
-    echo {^"result_id^":^"gt-abc123^",^"id_mapping^":{^"mol-review^":^"gt-wisp-xyz^"}}
+    echo {^"result_id^":^"ms-abc123^",^"id_mapping^":{^"mol-review^":^"ms-wisp-xyz^"}}
     exit /b 0
   )
 )
@@ -2491,11 +2491,11 @@ exit /b 0
 
 	t.Setenv("BD_LOG", logPath)
 	attachedLogPath := filepath.Join(townRoot, "attached-molecule.log")
-	t.Setenv("GT_TEST_ATTACHED_MOLECULE_LOG", attachedLogPath)
+	t.Setenv("MS_TEST_ATTACHED_MOLECULE_LOG", attachedLogPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "overseer")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
 	t.Setenv("TMUX_PANE", "") // Prevent inheriting real tmux pane from test runner
 
 	cwd, err := os.Getwd()
@@ -2522,11 +2522,11 @@ exit /b 0
 	slingDryRun = false
 	slingNoMinecart = true
 	slingVars = nil
-	slingOnTarget = "gt-abc123"
+	slingOnTarget = "ms-abc123"
 
 	// Prevent real tmux nudge from firing during tests (causes agent self-interruption)
-	t.Setenv("GT_TEST_NO_NUDGE", "1")
-	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1") // Stub bd doesn't track state
+	t.Setenv("MS_TEST_NO_NUDGE", "1")
+	t.Setenv("MS_TEST_SKIP_HOOK_VERIFY", "1") // Stub bd doesn't track state
 
 	if err := runSling(nil, []string{"mol-review"}); err != nil {
 		t.Fatalf("runSling: %v", err)
@@ -2557,7 +2557,7 @@ exit /b 0
 	}
 
 	// Verify --var issue=<beadID> is present
-	if !containsVarArg(bondLine, "issue", "gt-abc123") {
+	if !containsVarArg(bondLine, "issue", "ms-abc123") {
 		t.Errorf("mol bond missing --var issue=<beadID>\ngot: %s", bondLine)
 	}
 }
@@ -2637,7 +2637,7 @@ exit /b 0
 	}
 }
 
-// TestSlingWithAllowStale tests the full gt sling flow with --allow-stale fix.
+// TestSlingWithAllowStale tests the full ms sling flow with --allow-stale fix.
 // This is an integration test for the gtl-ncq bug.
 func TestSlingWithAllowStale(t *testing.T) {
 	beads.ResetBdAllowStaleCacheForTest()
@@ -2697,8 +2697,8 @@ exit /b 0
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "crew")
-	t.Setenv("GT_CREW", "jv")
-	t.Setenv("GT_MINER", "")
+	t.Setenv("MS_CREW", "jv")
+	t.Setenv("MS_MINER", "")
 	t.Setenv("TMUX_PANE", "") // Prevent inheriting real tmux pane from test runner
 
 	cwd, err := os.Getwd()
@@ -2722,18 +2722,18 @@ exit /b 0
 	slingNoMinecart = true
 
 	// Prevent real tmux nudge from firing during tests (causes agent self-interruption)
-	t.Setenv("GT_TEST_NO_NUDGE", "1")
+	t.Setenv("MS_TEST_NO_NUDGE", "1")
 
-	// EXPECTED: gt sling should use --allow-stale and succeed
+	// EXPECTED: ms sling should use --allow-stale and succeed
 	beadID := "jv-v599"
 	err = runSling(nil, []string{beadID})
 	if err != nil {
 		// Check if it's the specific error we're testing for
 		if strings.Contains(err.Error(), "is not a valid bead or formula") {
-			t.Errorf("gt sling failed to recognize bead %q: %v\nExpected --allow-stale to skip sync check", beadID, err)
+			t.Errorf("ms sling failed to recognize bead %q: %v\nExpected --allow-stale to skip sync check", beadID, err)
 		} else {
 			// Some other error - might be expected in dry-run mode
-			t.Logf("gt sling returned error (may be expected in test): %v", err)
+			t.Logf("ms sling returned error (may be expected in test): %v", err)
 		}
 	}
 }
@@ -2791,7 +2791,7 @@ exit /b 1
 	t.Setenv("BD_LOG", logPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
-	out, err := BdCmd("show", "gt-rca-epic-routing.3", "--json").
+	out, err := BdCmd("show", "ms-rca-epic-routing.3", "--json").
 		AllowStale().
 		Dir(townRoot).
 		Output()
@@ -2807,17 +2807,17 @@ exit /b 1
 		t.Fatalf("read bd log: %v", err)
 	}
 	log := string(logBytes)
-	if strings.Contains(log, "show gt-rca-epic-routing.3 --json --allow-stale") {
+	if strings.Contains(log, "show ms-rca-epic-routing.3 --json --allow-stale") {
 		t.Fatalf("BdCmd passed unsupported --allow-stale to show command:\n%s", log)
 	}
-	if !strings.Contains(log, "show gt-rca-epic-routing.3 --json") {
+	if !strings.Contains(log, "show ms-rca-epic-routing.3 --json") {
 		t.Fatalf("BdCmd did not run expected show command:\n%s", log)
 	}
 }
 
 // TestLooksLikeBeadID tests the bead ID pattern recognition function.
-// This ensures gt sling accepts bead IDs even when routing-based verification fails.
-// Fixes: gt sling bd-ka761 failing with 'not a valid bead or formula'
+// This ensures ms sling accepts bead IDs even when routing-based verification fails.
+// Fixes: ms sling bd-ka761 failing with 'not a valid bead or formula'
 //
 // Note: looksLikeBeadID is a fallback check in sling. The actual sling flow is:
 // 1. Try verifyBeadExists (routing-based lookup)
@@ -2831,13 +2831,13 @@ func TestLooksLikeBeadID(t *testing.T) {
 		want  bool
 	}{
 		// Valid bead IDs - should return true
-		{"gt-abc123", true},
+		{"ms-abc123", true},
 		{"bd-ka761", true},
 		{"hq-cv-abc", true},
 		{"ap-qtsup.16", true},
 		{"beads-xyz", true},
 		{"jv-v599", true},
-		{"gt-9e8s5", true},
+		{"ms-9e8s5", true},
 		{"hq-00gyg", true},
 
 		// Short prefixes that match pattern (but may be formulas in practice)
@@ -2851,25 +2851,25 @@ func TestLooksLikeBeadID(t *testing.T) {
 		{"supervisor/dogs", false},  // contains slash
 		{"", false},             // empty
 		{"-abc", false},         // starts with hyphen
-		{"GT-abc", false},       // uppercase prefix
+		{"MS-abc", false},       // uppercase prefix
 		{"123-abc", false},      // numeric prefix
 		{"a-", false},           // nothing after hyphen
 		{"aaaaaa-b", false},     // prefix too long (6 chars)
 
 		// Injection / invalid suffix characters - should return false
-		{"gt-abc;rm -rf /", false}, // shell injection in suffix
-		{"gt-abc$(cmd)", false},    // command substitution in suffix
-		{"gt-abc&bg", false},       // ampersand in suffix
-		{"gt-abc|pipe", false},     // pipe in suffix
-		{"gt-abc`tick`", false},    // backtick in suffix
-		{"gt-abc>redir", false},    // redirect in suffix
-		{"gt-abc<redir", false},    // redirect in suffix
-		{"gt-abc'quote", false},    // single quote in suffix
-		{"gt-abc\"dquote", false},  // double quote in suffix
-		{"gt-abc\\slash", false},   // backslash in suffix
-		{"gt-abc xyz", false},      // space in suffix
-		{"gt-ABC", false},          // uppercase in suffix
-		{"gt-abc/path", false},     // slash in suffix
+		{"ms-abc;rm -rf /", false}, // shell injection in suffix
+		{"ms-abc$(cmd)", false},    // command substitution in suffix
+		{"ms-abc&bg", false},       // ampersand in suffix
+		{"ms-abc|pipe", false},     // pipe in suffix
+		{"ms-abc`tick`", false},    // backtick in suffix
+		{"ms-abc>redir", false},    // redirect in suffix
+		{"ms-abc<redir", false},    // redirect in suffix
+		{"ms-abc'quote", false},    // single quote in suffix
+		{"ms-abc\"dquote", false},  // double quote in suffix
+		{"ms-abc\\slash", false},   // backslash in suffix
+		{"ms-abc xyz", false},      // space in suffix
+		{"ms-ABC", false},          // uppercase in suffix
+		{"ms-abc/path", false},     // slash in suffix
 	}
 
 	for _, tt := range tests {
@@ -2883,13 +2883,13 @@ func TestLooksLikeBeadID(t *testing.T) {
 }
 
 // TestSlingFormulaOnBeadSetsAttachedMolecule verifies that when using
-// gt sling <formula> --on <bead>, the attached_molecule field is set in the
-// hooked bead's description after bonding. This is required for gt hook to
+// ms sling <formula> --on <bead>, the attached_molecule field is set in the
+// hooked bead's description after bonding. This is required for ms hook to
 // recognize the molecule attachment.
 //
 // Bug: The original code bonds the wisp to the bead and sets status=hooked,
 // but doesn't record attached_molecule in the description. This causes
-// gt hook to report "No molecule attached".
+// ms hook to report "No molecule attached".
 func TestSlingFormulaOnBeadSetsAttachedMolecule(t *testing.T) {
 	townRoot := t.TempDir()
 
@@ -2898,7 +2898,7 @@ func TestSlingFormulaOnBeadSetsAttachedMolecule(t *testing.T) {
 		t.Fatalf("mkdir overseer/rig: %v", err)
 	}
 
-	// Create a rig path that owns gt-* beads, and a routes.jsonl pointing to it.
+	// Create a rig path that owns ms-* beads, and a routes.jsonl pointing to it.
 	rigDir := filepath.Join(townRoot, "mineshaft", "overseer", "rig")
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
@@ -2907,7 +2907,7 @@ func TestSlingFormulaOnBeadSetsAttachedMolecule(t *testing.T) {
 		t.Fatalf("mkdir rigDir: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`,
+		`{"prefix":"ms-","path":"mineshaft/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
@@ -2947,7 +2947,7 @@ case "$cmd" in
         exit 1
         ;;
       bond)
-        echo '{"result_id":"gt-abc123","id_mapping":{"mol-miner-work":"gt-wisp-xyz"}}'
+        echo '{"result_id":"ms-abc123","id_mapping":{"mol-miner-work":"ms-wisp-xyz"}}'
         ;;
     esac
     ;;
@@ -2978,7 +2978,7 @@ if "%cmd%"=="mol" (
     exit /b 1
   )
   if "%sub%"=="bond" (
-    echo {^"result_id^":^"gt-abc123^",^"id_mapping^":{^"mol-miner-work^":^"gt-wisp-xyz^"}}
+    echo {^"result_id^":^"ms-abc123^",^"id_mapping^":{^"mol-miner-work^":^"ms-wisp-xyz^"}}
     exit /b 0
   )
 )
@@ -2989,11 +2989,11 @@ exit /b 0
 
 	t.Setenv("BD_LOG", logPath)
 	attachedLogPath := filepath.Join(townRoot, "attached-molecule.log")
-	t.Setenv("GT_TEST_ATTACHED_MOLECULE_LOG", attachedLogPath)
+	t.Setenv("MS_TEST_ATTACHED_MOLECULE_LOG", attachedLogPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "overseer")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
 	t.Setenv("TMUX_PANE", "") // Prevent inheriting real tmux pane from test runner
 
 	cwd, err := os.Getwd()
@@ -3020,11 +3020,11 @@ exit /b 0
 	slingDryRun = false
 	slingNoMinecart = true
 	slingVars = nil
-	slingOnTarget = "gt-abc123" // The bug bead we're applying formula to
+	slingOnTarget = "ms-abc123" // The bug bead we're applying formula to
 
 	// Prevent real tmux nudge from firing during tests (causes agent self-interruption)
-	t.Setenv("GT_TEST_NO_NUDGE", "1")
-	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1") // Stub bd doesn't track state
+	t.Setenv("MS_TEST_NO_NUDGE", "1")
+	t.Setenv("MS_TEST_SKIP_HOOK_VERIFY", "1") // Stub bd doesn't track state
 
 	if err := runSling(nil, []string{"mol-miner-work"}); err != nil {
 		t.Fatalf("runSling: %v", err)
@@ -3036,7 +3036,7 @@ exit /b 0
 	}
 
 	// After bonding (mol bond), there should be an update call that includes
-	// --description with attached_molecule field. This is what gt hook looks for.
+	// --description with attached_molecule field. This is what ms hook looks for.
 	logLines := strings.Split(string(logBytes), "\n")
 
 	// Find all update commands after the bond
@@ -3074,7 +3074,7 @@ exit /b 0
 			attachedLog = string(descBytes)
 		}
 		t.Errorf("after mol bond, expected update with attached_molecule in description\n"+
-			"This is required for gt hook to recognize the molecule attachment.\n"+
+			"This is required for ms hook to recognize the molecule attachment.\n"+
 			"Log output:\n%s\nAttached log:\n%s", string(logBytes), attachedLog)
 	}
 
@@ -3086,8 +3086,8 @@ exit /b 0
 	if attachment == nil {
 		t.Fatalf("parse attached fields returned nil:\n%s", string(descBytes))
 	}
-	if attachment.AttachedMolecule != "gt-wisp-xyz" {
-		t.Fatalf("attached_molecule = %q, want gt-wisp-xyz\nDescription:\n%s", attachment.AttachedMolecule, string(descBytes))
+	if attachment.AttachedMolecule != "ms-wisp-xyz" {
+		t.Fatalf("attached_molecule = %q, want ms-wisp-xyz\nDescription:\n%s", attachment.AttachedMolecule, string(descBytes))
 	}
 	vars := map[string]string{}
 	for _, kv := range attachmentFormulaVars(attachment) {
@@ -3096,13 +3096,13 @@ exit /b 0
 			vars[key] = value
 		}
 	}
-	if vars["feature"] != "Bug to fix" || vars["issue"] != "gt-abc123" {
+	if vars["feature"] != "Bug to fix" || vars["issue"] != "ms-abc123" {
 		t.Fatalf("formula vars did not roundtrip through attached bead description: %#v\nDescription:\n%s", vars, string(descBytes))
 	}
 }
 
-// TestSlingNoMergeFlag verifies that gt sling --no-merge stores the no_merge flag
-// in the bead's description. This flag tells gt done to skip the merge queue
+// TestSlingNoMergeFlag verifies that ms sling --no-merge stores the no_merge flag
+// in the bead's description. This flag tells ms done to skip the merge queue
 // and keep work on the feature branch for human review.
 func TestSlingNoMergeFlag(t *testing.T) {
 	townRoot := t.TempDir()
@@ -3146,21 +3146,21 @@ exit /b 0
 `
 	_ = writeBDStub(t, binDir, bdScript, bdScriptWindows)
 
-	// Use GT_TEST_ATTACHED_MOLECULE_LOG to capture the description content directly.
+	// Use MS_TEST_ATTACHED_MOLECULE_LOG to capture the description content directly.
 	// On Windows, multi-line --description= args break batch script logging because
 	// newlines in command-line arguments cause cmd.exe to treat subsequent lines as
 	// separate commands.
 	molLogPath := filepath.Join(townRoot, "mol.log")
-	t.Setenv("GT_TEST_ATTACHED_MOLECULE_LOG", molLogPath)
+	t.Setenv("MS_TEST_ATTACHED_MOLECULE_LOG", molLogPath)
 
 	t.Setenv("BD_LOG", logPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "overseer")
-	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_MINER", "")
+	t.Setenv("MS_CREW", "")
+	t.Setenv("MS_MINER", "")
 	t.Setenv("TMUX_PANE", "")
-	t.Setenv("GT_TEST_NO_NUDGE", "1")
-	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1") // Stub bd doesn't track state
+	t.Setenv("MS_TEST_NO_NUDGE", "1")
+	t.Setenv("MS_TEST_SKIP_HOOK_VERIFY", "1") // Stub bd doesn't track state
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -3185,11 +3185,11 @@ exit /b 0
 	slingNoMinecart = true
 	slingNoMerge = true // This is what we're testing
 
-	if err := runSling(nil, []string{"gt-test123"}); err != nil {
+	if err := runSling(nil, []string{"ms-test123"}); err != nil {
 		t.Fatalf("runSling: %v", err)
 	}
 
-	// Check the molecule log file written by storeFieldsInBead (via GT_TEST_ATTACHED_MOLECULE_LOG).
+	// Check the molecule log file written by storeFieldsInBead (via MS_TEST_ATTACHED_MOLECULE_LOG).
 	// This directly captures the description content without relying on batch stub logging.
 	molBytes, err := os.ReadFile(molLogPath)
 	if err != nil {
@@ -3241,15 +3241,15 @@ exit /b 0
 	_ = writeBDStub(t, binDir, bdScript, bdScriptWindows)
 
 	molLogPath := filepath.Join(townRoot, "mol.log")
-	t.Setenv("GT_TEST_ATTACHED_MOLECULE_LOG", molLogPath)
+	t.Setenv("MS_TEST_ATTACHED_MOLECULE_LOG", molLogPath)
 	t.Setenv("BD_LOG", logPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "overseer")
-	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_MINER", "")
+	t.Setenv("MS_CREW", "")
+	t.Setenv("MS_MINER", "")
 	t.Setenv("TMUX_PANE", "")
-	t.Setenv("GT_TEST_NO_NUDGE", "1")
-	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1")
+	t.Setenv("MS_TEST_NO_NUDGE", "1")
+	t.Setenv("MS_TEST_SKIP_HOOK_VERIFY", "1")
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -3272,7 +3272,7 @@ exit /b 0
 	slingNoMinecart = true
 	slingRalph = true
 
-	if err := runSling(nil, []string{"gt-test123"}); err != nil {
+	if err := runSling(nil, []string{"ms-test123"}); err != nil {
 		t.Fatalf("runSling: %v", err)
 	}
 
@@ -3286,16 +3286,16 @@ exit /b 0
 	}
 }
 
-// TestSlingSetsDoltAutoCommitOff verifies that gt sling sets BD_DOLT_AUTO_COMMIT=off
+// TestSlingSetsDoltAutoCommitOff verifies that ms sling sets BD_DOLT_AUTO_COMMIT=off
 // for all child bd processes. Under concurrent load (batch slinging), auto-commits
 // from individual bd writes cause manifest contention and 'database is read only'
 // errors. The Dolt server handles commits — individual auto-commits are unnecessary.
-// Fixes: gt-u6n6a
+// Fixes: ms-u6n6a
 
 // TestCheckCrossRigGuard verifies that cross-rig sling is rejected when a bead's
 // prefix doesn't match the target rig. This prevents slinging beads-codebase issues
 // to mineshaft miners, which cannot fix code in a different rig's repo.
-// Fixes: gt-myecw
+// Fixes: ms-myecw
 func TestCheckCrossRigGuard(t *testing.T) {
 	tmpDir := t.TempDir()
 	beadsDir := filepath.Join(tmpDir, ".beads")
@@ -3303,7 +3303,7 @@ func TestCheckCrossRigGuard(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	routesContent := `{"prefix":"gt-","path":"mineshaft/overseer/rig"}
+	routesContent := `{"prefix":"ms-","path":"mineshaft/overseer/rig"}
 {"prefix":"bd-","path":"beads/overseer/rig"}
 {"prefix":"hq-","path":"."}
 `
@@ -3318,8 +3318,8 @@ func TestCheckCrossRigGuard(t *testing.T) {
 		wantErr     bool
 	}{
 		{
-			name:        "same rig: gt bead to mineshaft miner",
-			beadID:      "gt-abc123",
+			name:        "same rig: ms bead to mineshaft miner",
+			beadID:      "ms-abc123",
 			targetAgent: "mineshaft/miners/Toast",
 			wantErr:     false,
 		},
@@ -3336,16 +3336,16 @@ func TestCheckCrossRigGuard(t *testing.T) {
 			wantErr:     true,
 		},
 		{
-			name:        "cross-rig: gt bead to beads miner",
-			beadID:      "gt-abc123",
+			name:        "cross-rig: ms bead to beads miner",
+			beadID:      "ms-abc123",
 			targetAgent: "beads/miners/obsidian",
 			wantErr:     true,
 		},
 		{
 			// Known town-root prefix: warn but allow. A crew member with a broken
 			// redirect chain may create hq-* beads that legitimately target a rig
-			// miner (gt-gbu). Hard-rejecting silently drops all their miner work.
-			name:        "town-level: hq bead to rig (warns but allows — gt-gbu)",
+			// miner (ms-gbu). Hard-rejecting silently drops all their miner work.
+			name:        "town-level: hq bead to rig (warns but allows — ms-gbu)",
 			beadID:      "hq-abc123",
 			targetAgent: "mineshaft/miners/Toast",
 			wantErr:     false,
@@ -3459,16 +3459,16 @@ exit /b 0
 	_ = writeBDStub(t, binDir, bdScript, bdScriptWindows)
 
 	molLogPath := filepath.Join(townRoot, "mol.log")
-	t.Setenv("GT_TEST_ATTACHED_MOLECULE_LOG", molLogPath)
+	t.Setenv("MS_TEST_ATTACHED_MOLECULE_LOG", molLogPath)
 
 	t.Setenv("BD_LOG", logPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "overseer")
-	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_MINER", "")
+	t.Setenv("MS_CREW", "")
+	t.Setenv("MS_MINER", "")
 	t.Setenv("TMUX_PANE", "")
-	t.Setenv("GT_TEST_NO_NUDGE", "1")
-	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1")
+	t.Setenv("MS_TEST_NO_NUDGE", "1")
+	t.Setenv("MS_TEST_SKIP_HOOK_VERIFY", "1")
 	// Ensure BD_DOLT_AUTO_COMMIT is NOT set before sling runs
 	t.Setenv("BD_DOLT_AUTO_COMMIT", "")
 
@@ -3492,7 +3492,7 @@ exit /b 0
 	slingDryRun = false
 	slingNoMinecart = true
 
-	if err := runSling(nil, []string{"gt-test456"}); err != nil {
+	if err := runSling(nil, []string{"ms-test456"}); err != nil {
 		t.Fatalf("runSling: %v", err)
 	}
 
@@ -3541,9 +3541,9 @@ exit /b 0
 	t.Setenv("BD_LOG", logPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv("BD_DOLT_AUTO_COMMIT", "off")
-	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1")
+	t.Setenv("MS_TEST_SKIP_HOOK_VERIFY", "1")
 
-	if err := hookBeadWithRetry("gt-test123", "mineshaft/miners/toast", townRoot); err != nil {
+	if err := hookBeadWithRetry("ms-test123", "mineshaft/miners/toast", townRoot); err != nil {
 		t.Fatalf("hookBeadWithRetry: %v", err)
 	}
 
@@ -3562,7 +3562,7 @@ func TestBuildSlingFieldUpdatesIncludesMinecartFields(t *testing.T) {
 		"overseer",
 		"review this",
 		[]string{"feature=test"},
-		"gt-wisp-test",
+		"ms-wisp-test",
 		"mol-miner-work",
 		false,
 		false,
@@ -3588,10 +3588,10 @@ func TestBuildSlingFieldUpdatesIncludesMinecartFields(t *testing.T) {
 }
 
 func TestStoreFieldsInBeadMinecartFields(t *testing.T) {
-	t.Setenv("GT_TEST_ATTACHED_MOLECULE_LOG", filepath.Join(t.TempDir(), "mol.log"))
-	logPath := os.Getenv("GT_TEST_ATTACHED_MOLECULE_LOG")
+	t.Setenv("MS_TEST_ATTACHED_MOLECULE_LOG", filepath.Join(t.TempDir(), "mol.log"))
+	logPath := os.Getenv("MS_TEST_ATTACHED_MOLECULE_LOG")
 
-	if err := storeFieldsInBead("gt-test123", beadFieldUpdates{
+	if err := storeFieldsInBead("ms-test123", beadFieldUpdates{
 		MinecartID:      "hq-cv-test1",
 		MergeStrategy: "local",
 		MinecartOwned:   true,
@@ -3636,10 +3636,10 @@ func TestBeadFieldModeUpdateCanClearStaleRalphMode(t *testing.T) {
 }
 
 func TestStoreFieldsInBeadFormulaSetsAttachedAt(t *testing.T) {
-	t.Setenv("GT_TEST_ATTACHED_MOLECULE_LOG", filepath.Join(t.TempDir(), "mol.log"))
-	logPath := os.Getenv("GT_TEST_ATTACHED_MOLECULE_LOG")
+	t.Setenv("MS_TEST_ATTACHED_MOLECULE_LOG", filepath.Join(t.TempDir(), "mol.log"))
+	logPath := os.Getenv("MS_TEST_ATTACHED_MOLECULE_LOG")
 
-	if err := storeFieldsInBead("gt-test123", beadFieldUpdates{
+	if err := storeFieldsInBead("ms-test123", beadFieldUpdates{
 		AttachedFormula: "mol-dog-reaper",
 	}); err != nil {
 		t.Fatalf("storeFieldsInBead: %v", err)
@@ -3660,14 +3660,14 @@ func TestStoreFieldsInBeadFormulaSetsAttachedAt(t *testing.T) {
 
 func TestStoreFieldsInBeadRawReviewRefreshesAttachedAt(t *testing.T) {
 	logPath := filepath.Join(t.TempDir(), "raw-review.log")
-	t.Setenv("GT_TEST_ATTACHED_MOLECULE_LOG", logPath)
+	t.Setenv("MS_TEST_ATTACHED_MOLECULE_LOG", logPath)
 
 	stale := "2026-06-30T12:00:00Z"
 	if err := os.WriteFile(logPath, []byte("attached_at: "+stale+"\nno_merge: true\nreview_only: true\n"), 0644); err != nil {
 		t.Fatalf("write log: %v", err)
 	}
 
-	if err := storeFieldsInBead("gt-test123", beadFieldUpdates{
+	if err := storeFieldsInBead("ms-test123", beadFieldUpdates{
 		NoMerge:    true,
 		ReviewOnly: true,
 	}); err != nil {
@@ -3729,8 +3729,8 @@ exit /b 0
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "overseer")
-	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_MINER", "")
+	t.Setenv("MS_CREW", "")
+	t.Setenv("MS_MINER", "")
 	t.Setenv("TMUX_PANE", "")
 
 	cwd, err := os.Getwd()
@@ -3757,7 +3757,7 @@ exit /b 0
 	slingNoMinecart = true
 
 	// Sling to same target — should no-op (return nil, no error)
-	err = runSling(nil, []string{"gt-test123", "mineshaft/miners/toast"})
+	err = runSling(nil, []string{"ms-test123", "mineshaft/miners/toast"})
 	if err != nil {
 		t.Fatalf("expected no-op nil return, got error: %v", err)
 	}
@@ -3802,8 +3802,8 @@ exit /b 0
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "overseer")
-	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_MINER", "")
+	t.Setenv("MS_CREW", "")
+	t.Setenv("MS_MINER", "")
 	t.Setenv("TMUX_PANE", "")
 
 	cwd, err := os.Getwd()
@@ -3830,7 +3830,7 @@ exit /b 0
 	slingNoMinecart = true
 
 	// Sling pinned bead to same target — should no-op (return nil, no error)
-	err = runSling(nil, []string{"gt-test-pinned", "mineshaft/miners/toast"})
+	err = runSling(nil, []string{"ms-test-pinned", "mineshaft/miners/toast"})
 	if err != nil {
 		t.Fatalf("expected no-op nil return for pinned bead, got error: %v", err)
 	}
@@ -3879,11 +3879,11 @@ exit /b 0
 	t.Setenv("BD_LOG", logPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "overseer")
-	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_MINER", "")
+	t.Setenv("MS_CREW", "")
+	t.Setenv("MS_MINER", "")
 	t.Setenv("TMUX_PANE", "")
-	t.Setenv("GT_TEST_NO_NUDGE", "1")
-	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1")
+	t.Setenv("MS_TEST_NO_NUDGE", "1")
+	t.Setenv("MS_TEST_SKIP_HOOK_VERIFY", "1")
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -3921,7 +3921,7 @@ exit /b 0
 	// The auto-force path proceeds into resolveTarget which will fail
 	// because the miner doesn't exist in tmux. Use a unique name that
 	// will never collide with a real running miner session.
-	err = runSling(nil, []string{"gt-test456", "mineshaft/miners/test-dead-miner-xxxx"})
+	err = runSling(nil, []string{"ms-test456", "mineshaft/miners/test-dead-miner-xxxx"})
 
 	w.Close()
 	os.Stdout = origStdout
@@ -3985,14 +3985,14 @@ exit /b 0
 	t.Setenv("BD_LOG", logPath)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "overseer")
-	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_MINER", "")
+	t.Setenv("MS_CREW", "")
+	t.Setenv("MS_MINER", "")
 	t.Setenv("TMUX_PANE", "")
-	t.Setenv("GT_TEST_NO_NUDGE", "1")
-	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1")
+	t.Setenv("MS_TEST_NO_NUDGE", "1")
+	t.Setenv("MS_TEST_SKIP_HOOK_VERIFY", "1")
 
 	molLogPath := filepath.Join(townRoot, "mol.log")
-	t.Setenv("GT_TEST_ATTACHED_MOLECULE_LOG", molLogPath)
+	t.Setenv("MS_TEST_ATTACHED_MOLECULE_LOG", molLogPath)
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -4018,7 +4018,7 @@ exit /b 0
 	// --force bypasses the entire pinned/hooked guard including idempotency.
 	// resolveTarget will fail because rig doesn't exist, but the key assertion
 	// is that we don't get an "already hooked" error (idempotency no-op is skipped).
-	err = runSling(nil, []string{"gt-test789", "mineshaft/miners/toast"})
+	err = runSling(nil, []string{"ms-test789", "mineshaft/miners/toast"})
 	if err == nil {
 		// In dry-run + force mode, resolveTarget still runs.
 		// nil is acceptable if resolveTarget succeeded.
@@ -4029,7 +4029,7 @@ exit /b 0
 }
 
 // TestSlingFormulaOnBeadBypassesIdempotency verifies that formula-on-bead mode
-// (gt sling <formula> --on <bead>) does NOT idempotent no-op even when the
+// (ms sling <formula> --on <bead>) does NOT idempotent no-op even when the
 // target assignment already matches. The user expects formula instantiation to run.
 func TestSlingFormulaOnBeadBypassesIdempotency(t *testing.T) {
 	townRoot := t.TempDir()
@@ -4078,8 +4078,8 @@ exit /b 0
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "overseer")
-	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_MINER", "")
+	t.Setenv("MS_CREW", "")
+	t.Setenv("MS_MINER", "")
 	t.Setenv("TMUX_PANE", "")
 
 	cwd, err := os.Getwd()
@@ -4106,7 +4106,7 @@ exit /b 0
 	})
 	slingForce = false
 	slingNoMinecart = true
-	slingOnTarget = "gt-test-formula-on-bead" // --on flag: bead ID
+	slingOnTarget = "ms-test-formula-on-bead" // --on flag: bead ID
 
 	// Formula-on-bead with matching target. The idempotency guard must NOT
 	// return nil (no-op) or "already hooked" error — it should fall through
@@ -4167,8 +4167,8 @@ exit /b 0
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv(EnvGTRole, "overseer")
-	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_MINER", "")
+	t.Setenv("MS_CREW", "")
+	t.Setenv("MS_MINER", "")
 	t.Setenv("TMUX_PANE", "")
 
 	cwd, err := os.Getwd()
@@ -4196,14 +4196,14 @@ exit /b 0
 
 	// Sling pinned bead with dot target — self-resolution as overseer returns
 	// "overseer/" which normalizes to "overseer", matching the assignee. Should no-op.
-	err = runSling(nil, []string{"gt-test-pinned-dot", "."})
+	err = runSling(nil, []string{"ms-test-pinned-dot", "."})
 	if err != nil {
 		t.Fatalf("expected no-op nil return for pinned bead with dot target, got error: %v", err)
 	}
 }
 
 // TestSlingMinerEnvCheck verifies that the miner guard in runSling uses
-// GT_ROLE as the authoritative check, so coordinators with a stale GT_MINER
+// MS_ROLE as the authoritative check, so coordinators with a stale MS_MINER
 // in their environment are not blocked from slinging (GH #664).
 func TestSlingMinerEnvCheck(t *testing.T) {
 	tests := []struct {
@@ -4225,37 +4225,37 @@ func TestSlingMinerEnvCheck(t *testing.T) {
 			wantBlock: true,
 		},
 		{
-			name:      "overseer with stale GT_MINER is NOT blocked",
+			name:      "overseer with stale MS_MINER is NOT blocked",
 			role:      "overseer",
 			miner:   "alpha",
 			wantBlock: false,
 		},
 		{
-			name:      "compound witness with stale GT_MINER is NOT blocked",
+			name:      "compound witness with stale MS_MINER is NOT blocked",
 			role:      "mineshaft/witness",
 			miner:   "alpha",
 			wantBlock: false,
 		},
 		{
-			name:      "crew with stale GT_MINER is NOT blocked",
+			name:      "crew with stale MS_MINER is NOT blocked",
 			role:      "crew",
 			miner:   "alpha",
 			wantBlock: false,
 		},
 		{
-			name:      "compound crew with stale GT_MINER is NOT blocked",
+			name:      "compound crew with stale MS_MINER is NOT blocked",
 			role:      "mineshaft/crew/den",
 			miner:   "alpha",
 			wantBlock: false,
 		},
 		{
-			name:      "no GT_ROLE with GT_MINER set is blocked",
+			name:      "no MS_ROLE with MS_MINER set is blocked",
 			role:      "",
 			miner:   "alpha",
 			wantBlock: true,
 		},
 		{
-			name:      "no GT_ROLE and no GT_MINER is not blocked",
+			name:      "no MS_ROLE and no MS_MINER is not blocked",
 			role:      "",
 			miner:   "",
 			wantBlock: false,
@@ -4264,8 +4264,8 @@ func TestSlingMinerEnvCheck(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Setenv("GT_ROLE", tt.role)
-			t.Setenv("GT_MINER", tt.miner)
+			t.Setenv("MS_ROLE", tt.role)
+			t.Setenv("MS_MINER", tt.miner)
 
 			// We only test the miner guard, so we call runSling with no args.
 			// It will either fail at the guard or panic/fail later (missing args).
@@ -4284,9 +4284,9 @@ func TestSlingMinerEnvCheck(t *testing.T) {
 
 			if blocked != tt.wantBlock {
 				if tt.wantBlock {
-					t.Errorf("expected miner block but was not blocked (GT_ROLE=%q GT_MINER=%q)", tt.role, tt.miner)
+					t.Errorf("expected miner block but was not blocked (MS_ROLE=%q MS_MINER=%q)", tt.role, tt.miner)
 				} else {
-					t.Errorf("unexpected miner block with GT_ROLE=%q GT_MINER=%q", tt.role, tt.miner)
+					t.Errorf("unexpected miner block with MS_ROLE=%q MS_MINER=%q", tt.role, tt.miner)
 				}
 			}
 		})
@@ -4295,7 +4295,7 @@ func TestSlingMinerEnvCheck(t *testing.T) {
 
 // TestSlingNudgeCrewAndOverseer verifies that slinging to crew or overseer targets
 // with an active session includes the nudge (inject start prompt) step.
-// This is a regression test for gt-in7b: the generic resolveTarget + nudge
+// This is a regression test for ms-in7b: the generic resolveTarget + nudge
 // flow handles all target types, not just miners.
 func TestSlingNudgeCrewAndOverseer(t *testing.T) {
 	tests := []struct {
@@ -4332,7 +4332,7 @@ func TestSlingNudgeCrewAndOverseer(t *testing.T) {
 			if err := os.MkdirAll(rigDir, 0755); err != nil {
 				t.Fatalf("mkdir rigDir: %v", err)
 			}
-			routes := `{"prefix":"gt-","path":"mineshaft/overseer/rig"}` + "\n" +
+			routes := `{"prefix":"ms-","path":"mineshaft/overseer/rig"}` + "\n" +
 				`{"prefix":"hq-","path":"."}` + "\n"
 			if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(routes), 0644); err != nil {
 				t.Fatalf("write routes: %v", err)
@@ -4367,11 +4367,11 @@ exit /b 0
 
 			t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 			t.Setenv(EnvGTRole, "overseer")
-			t.Setenv("GT_MINER", "")
-			t.Setenv("GT_CREW", "")
+			t.Setenv("MS_MINER", "")
+			t.Setenv("MS_CREW", "")
 			t.Setenv("TMUX_PANE", "")
-			t.Setenv("GT_TEST_NO_NUDGE", "1")
-			t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1")
+			t.Setenv("MS_TEST_NO_NUDGE", "1")
+			t.Setenv("MS_TEST_SKIP_HOOK_VERIFY", "1")
 
 			cwd, err := os.Getwd()
 			if err != nil {
@@ -4404,7 +4404,7 @@ exit /b 0
 			os.Stdout = w
 			t.Cleanup(func() { os.Stdout = origStdout })
 
-			err = runSling(nil, []string{"gt-abc123", tt.target})
+			err = runSling(nil, []string{"ms-abc123", tt.target})
 
 			w.Close()
 			os.Stdout = origStdout
@@ -4429,8 +4429,8 @@ exit /b 0
 	}
 }
 
-// TestSlingRejectsDeferredBead verifies that gt sling refuses to sling beads
-// with deferred status or deferral keywords in their description (gt-1326mw).
+// TestSlingRejectsDeferredBead verifies that ms sling refuses to sling beads
+// with deferred status or deferral keywords in their description (ms-1326mw).
 // This prevents wasting miner slots on low-priority deferred work.
 func TestSlingRejectsDeferredBead(t *testing.T) {
 	tests := []struct {
@@ -4484,10 +4484,10 @@ func TestSlingRejectsDeferredBead(t *testing.T) {
 
 			t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 			t.Setenv(EnvGTRole, "crew")
-			t.Setenv("GT_CREW", "jv")
-			t.Setenv("GT_MINER", "")
+			t.Setenv("MS_CREW", "jv")
+			t.Setenv("MS_MINER", "")
 			t.Setenv("TMUX_PANE", "")
-			t.Setenv("GT_TEST_NO_NUDGE", "1")
+			t.Setenv("MS_TEST_NO_NUDGE", "1")
 
 			cwd, err := os.Getwd()
 			if err != nil {
@@ -4510,7 +4510,7 @@ func TestSlingRejectsDeferredBead(t *testing.T) {
 			slingNoMinecart = true
 			slingForce = tt.force
 
-			err = runSling(nil, []string{"gt-test123"})
+			err = runSling(nil, []string{"ms-test123"})
 
 			if tt.wantError != "" {
 				if err == nil {
@@ -4562,7 +4562,7 @@ func TestRunSlingResumeFlagValidation(t *testing.T) {
 	}
 
 	t.Setenv(EnvGTRole, "")
-	t.Setenv("GT_MINER", "")
+	t.Setenv("MS_MINER", "")
 
 	prevResumeBranch := slingResumeBranch
 	prevResumePR := slingResumePR
@@ -4579,7 +4579,7 @@ func TestRunSlingResumeFlagValidation(t *testing.T) {
 			slingResumePR = tt.resumePR
 			slingBaseBranch = tt.baseBranch
 
-			err := runSling(nil, []string{"gt-test"})
+			err := runSling(nil, []string{"ms-test"})
 			if err == nil {
 				t.Fatalf("expected error containing %q but got nil", tt.wantError)
 			}
@@ -4592,7 +4592,7 @@ func TestRunSlingResumeFlagValidation(t *testing.T) {
 
 // TestSlingStandaloneFormulaInDeferredMode is a regression test for gh#3917.
 //
-// When scheduler.max_miners > 0 (deferred dispatch mode), `gt sling <formula> <rig>`
+// When scheduler.max_miners > 0 (deferred dispatch mode), `ms sling <formula> <rig>`
 // was rejected with "standalone formula cannot be scheduled (use --on <bead>)" even
 // though the help text and documented examples explicitly show this usage.
 //
@@ -4631,7 +4631,7 @@ func TestSlingStandaloneFormulaInDeferredMode(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	routes := `{"prefix":"gt-","path":"testrig/overseer/rig"}` + "\n" + `{"prefix":"hq-","path":"."}` + "\n"
+	routes := `{"prefix":"ms-","path":"testrig/overseer/rig"}` + "\n" + `{"prefix":"hq-","path":"."}` + "\n"
 	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(routes), 0644); err != nil {
 		t.Fatalf("write routes.jsonl: %v", err)
 	}
@@ -4651,7 +4651,7 @@ case "$cmd" in
   mol)
     sub="$1"; shift || true
     case "$sub" in
-      wisp) echo '{"new_epic_id":"gt-wisp-xyz"}' ;;
+      wisp) echo '{"new_epic_id":"ms-wisp-xyz"}' ;;
     esac ;;
 esac
 exit 0
@@ -4661,7 +4661,7 @@ set "cmd=%1"
 if "%cmd%"=="formula" ( echo {"name":"mol-test-formula"} & exit /b 0 )
 if "%cmd%"=="show" ( echo [{"title":"Test","status":"open","assignee":"","description":""}] & exit /b 0 )
 if "%cmd%"=="cook" exit /b 0
-if "%cmd%"=="mol" if "%2"=="wisp" ( echo {"new_epic_id":"gt-wisp-xyz"} & exit /b 0 )
+if "%cmd%"=="mol" if "%2"=="wisp" ( echo {"new_epic_id":"ms-wisp-xyz"} & exit /b 0 )
 exit /b 0
 `
 	_ = writeBDStub(t, binDir, bdScript, bdScriptWindows)
@@ -4682,11 +4682,11 @@ exit /b 0
 	}
 
 	t.Setenv(EnvGTRole, "overseer")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
 	t.Setenv("TMUX_PANE", "")
-	t.Setenv("GT_TEST_NO_NUDGE", "1")
-	t.Setenv("GT_TEST_SKIP_HOOK_VERIFY", "1")
+	t.Setenv("MS_TEST_NO_NUDGE", "1")
+	t.Setenv("MS_TEST_SKIP_HOOK_VERIFY", "1")
 
 	// Save and restore global sling state
 	prevDryRun := slingDryRun
@@ -4713,7 +4713,7 @@ exit /b 0
 }
 
 // TestResolveTargetSelfSlingByPane verifies that a named target resolving to the
-// caller's own tmux pane sets IsSelfSling=true (GH#3839). Without this, gt sling
+// caller's own tmux pane sets IsSelfSling=true (GH#3839). Without this, ms sling
 // supervisor (from the supervisor itself) injects the ack prompt into the running agent's
 // pane, wedging it mid-command.
 func TestResolveTargetSelfSlingByPane(t *testing.T) {

@@ -8,11 +8,11 @@ import (
 	"time"
 )
 
-// TestReadHookSessionID_EnvTakesPriority verifies GT_SESSION_ID env var is
+// TestReadHookSessionID_EnvTakesPriority verifies MS_SESSION_ID env var is
 // returned without touching stdin or persisted files.
 func TestReadHookSessionID_EnvTakesPriority(t *testing.T) {
 	want := "env-session-abc123"
-	t.Setenv("GT_SESSION_ID", want)
+	t.Setenv("MS_SESSION_ID", want)
 	t.Setenv("CLAUDE_SESSION_ID", "should-not-use-this")
 
 	id, _ := readHookSessionID()
@@ -22,10 +22,10 @@ func TestReadHookSessionID_EnvTakesPriority(t *testing.T) {
 }
 
 // TestReadHookSessionID_ClaudeSessionIDFallback verifies CLAUDE_SESSION_ID
-// is used when GT_SESSION_ID is unset.
+// is used when MS_SESSION_ID is unset.
 func TestReadHookSessionID_ClaudeSessionIDFallback(t *testing.T) {
 	want := "claude-session-xyz"
-	t.Setenv("GT_SESSION_ID", "")
+	t.Setenv("MS_SESSION_ID", "")
 	t.Setenv("CLAUDE_SESSION_ID", want)
 
 	id, _ := readHookSessionID()
@@ -38,7 +38,7 @@ func TestReadHookSessionID_ClaudeSessionIDFallback(t *testing.T) {
 // .runtime/session_id file is used when env vars are unset.
 func TestReadHookSessionID_PersistedFileFallback(t *testing.T) {
 	want := "persisted-session-456"
-	t.Setenv("GT_SESSION_ID", "")
+	t.Setenv("MS_SESSION_ID", "")
 	t.Setenv("CLAUDE_SESSION_ID", "")
 
 	// Write a persisted session file in cwd (ReadPersistedSessionID checks cwd first)
@@ -65,11 +65,11 @@ func TestReadHookSessionID_PersistedFileFallback(t *testing.T) {
 	}
 }
 
-// TestReadHookSessionID_SourceFromEnv verifies GT_HOOK_SOURCE env var
+// TestReadHookSessionID_SourceFromEnv verifies MS_HOOK_SOURCE env var
 // populates the source return value.
 func TestReadHookSessionID_SourceFromEnv(t *testing.T) {
-	t.Setenv("GT_SESSION_ID", "some-id")
-	t.Setenv("GT_HOOK_SOURCE", "compact")
+	t.Setenv("MS_SESSION_ID", "some-id")
+	t.Setenv("MS_HOOK_SOURCE", "compact")
 
 	_, source := readHookSessionID()
 	if source != "compact" {
@@ -80,7 +80,7 @@ func TestReadHookSessionID_SourceFromEnv(t *testing.T) {
 // TestReadHookSessionID_AutoGeneratesFallback verifies a UUID is generated
 // when no env vars, stdin, or persisted file are available.
 func TestReadHookSessionID_AutoGeneratesFallback(t *testing.T) {
-	t.Setenv("GT_SESSION_ID", "")
+	t.Setenv("MS_SESSION_ID", "")
 	t.Setenv("CLAUDE_SESSION_ID", "")
 
 	// Use a temp dir with no .runtime/session_id

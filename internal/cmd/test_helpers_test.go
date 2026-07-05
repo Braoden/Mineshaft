@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-// buildGT builds the gt binary and returns its path.
+// buildGT builds the ms binary and returns its path.
 // It caches the build across tests in the same run.
 var cachedGTBinary string
 
@@ -43,19 +43,19 @@ func buildGT(t *testing.T) string {
 		projectRoot = parent
 	}
 
-	// Build gt binary to a persistent temp location (not per-test)
+	// Build ms binary to a persistent temp location (not per-test)
 	tmpDir := os.TempDir()
-	binaryName := "gt-integration-test"
+	binaryName := "ms-integration-test"
 	if runtime.GOOS == "windows" {
 		binaryName += ".exe"
 	}
 	tmpBinary := filepath.Join(tmpDir, binaryName)
 	// Must set BuiltProperly=1 via ldflags, otherwise binary refuses to run
 	ldflags := "-X github.com/steveyegge/mineshaft/internal/cmd.BuiltProperly=1"
-	cmd := exec.Command("go", "build", "-ldflags", ldflags, "-o", tmpBinary, "./cmd/gt")
+	cmd := exec.Command("go", "build", "-ldflags", ldflags, "-o", tmpBinary, "./cmd/ms")
 	cmd.Dir = projectRoot
 	if output, err := cmd.CombinedOutput(); err != nil {
-		t.Fatalf("failed to build gt: %v\nOutput: %s", err, output)
+		t.Fatalf("failed to build ms: %v\nOutput: %s", err, output)
 	}
 
 	cachedGTBinary = tmpBinary

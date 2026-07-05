@@ -57,7 +57,7 @@ func TestParseCrewSessionName_Invalid(t *testing.T) {
 	}{
 		{"empty", ""},
 		{"random", "random-session"},
-		{"no crew marker", "gt-mineshaft-miner-alpha"},
+		{"no crew marker", "ms-mineshaft-miner-alpha"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

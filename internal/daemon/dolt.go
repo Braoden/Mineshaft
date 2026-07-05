@@ -211,7 +211,7 @@ func (m *DoltServerManager) doSleep(d time.Duration) {
 
 // pidFile returns the path to the Dolt server PID file.
 // Production (port 3307) uses the canonical "dolt.pid" for compatibility with
-// gt dolt start/stop. Other ports get a port-specific name to avoid collisions.
+// ms dolt start/stop. Other ports get a port-specific name to avoid collisions.
 func (m *DoltServerManager) pidFile() string {
 	if m.config.Port == 3307 {
 		return filepath.Join(m.townRoot, "daemon", "dolt.pid")
@@ -388,7 +388,7 @@ func (m *DoltServerManager) isRunning() (int, bool) {
 	}
 
 	// Verify it's actually our dolt server by checking port connectivity.
-	// More reliable than ps string matching (ZFC fix: gt-utuk).
+	// More reliable than ps string matching (ZFC fix: ms-utuk).
 	if !m.isDoltServerOnPort() {
 		_ = os.Remove(m.pidFile())
 		return 0, false
@@ -667,7 +667,7 @@ Action needed: Investigate and fix the root cause, then restart the daemon or th
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
-		cmd := exec.CommandContext(ctx, "gt", "mail", "send", "overseer/", "-s", subject, "-m", body) //nolint:gosec // G204: args are constructed internally
+		cmd := exec.CommandContext(ctx, "ms", "mail", "send", "overseer/", "-s", subject, "-m", body) //nolint:gosec // G204: args are constructed internally
 		setSysProcAttr(cmd)
 		cmd.Dir = townRoot
 		cmd.Env = os.Environ()
@@ -747,7 +747,7 @@ This may indicate high load, connection exhaustion, or internal server errors.`,
 func sendDoltAlertMail(townRoot, recipient, subject, body string, logger func(format string, v ...interface{})) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, "gt", "mail", "send", recipient, "-s", subject, "-m", body) //nolint:gosec // G204: args are constructed internally
+	cmd := exec.CommandContext(ctx, "ms", "mail", "send", recipient, "-s", subject, "-m", body) //nolint:gosec // G204: args are constructed internally
 	setSysProcAttr(cmd)
 	cmd.Dir = townRoot
 	cmd.Env = os.Environ()
@@ -853,7 +853,7 @@ func writeDaemonDoltConfig(cfg *DoltServerConfig, configPath string) error {
 		hostLine = fmt.Sprintf("\n  host: %s", cfg.Host)
 	}
 	eventSchedulerLine := "  event_scheduler: \"OFF\"\n"
-	if scheduler, ok := os.LookupEnv("GT_DOLT_EVENT_SCHEDULER"); ok {
+	if scheduler, ok := os.LookupEnv("MS_DOLT_EVENT_SCHEDULER"); ok {
 		if strings.EqualFold(scheduler, "omit") {
 			eventSchedulerLine = ""
 		} else if strings.TrimSpace(scheduler) != "" {
@@ -861,7 +861,7 @@ func writeDaemonDoltConfig(cfg *DoltServerConfig, configPath string) error {
 		}
 	}
 	systemVariablesBlock := "\nsystem_variables:\n  dolt_stats_enabled: 0\n"
-	if stats, ok := os.LookupEnv("GT_DOLT_STATS_ENABLED"); ok {
+	if stats, ok := os.LookupEnv("MS_DOLT_STATS_ENABLED"); ok {
 		if strings.EqualFold(stats, "omit") {
 			systemVariablesBlock = ""
 		} else if strings.TrimSpace(stats) != "" {
@@ -931,7 +931,7 @@ func (m *DoltServerManager) startLocked() error {
 	// Write config.yaml with timeouts before starting. CLI flags like --port
 	// silently override the config file but cannot set timeout fields, so we
 	// use --config instead. This prevents CLOSE_WAIT accumulation that occurs
-	// when Dolt uses its 8-hour default read/write timeouts. (gt-ch5)
+	// when Dolt uses its 8-hour default read/write timeouts. (ms-ch5)
 	configPath := filepath.Join(m.config.DataDir, "config.yaml")
 	if err := writeDaemonDoltConfig(m.config, configPath); err != nil {
 		m.logger("Warning: failed to write Dolt config.yaml: %v", err)
@@ -1509,14 +1509,14 @@ func (m *DoltServerManager) listDatabases() ([]string, error) {
 }
 
 // CountDoltServers returns the count of running dolt sql-server processes.
-// Uses lsof-based listener discovery instead of pgrep string matching (ZFC fix: gt-fj87).
+// Uses lsof-based listener discovery instead of pgrep string matching (ZFC fix: ms-fj87).
 func CountDoltServers() int {
 	return len(doltserver.FindAllDoltListeners())
 }
 
 // StopAllDoltServers stops all dolt sql-server processes.
 // Returns (killed, remaining).
-// Uses lsof-based discovery and direct signal delivery instead of pkill -f (ZFC fix: gt-fj87).
+// Uses lsof-based discovery and direct signal delivery instead of pkill -f (ZFC fix: ms-fj87).
 func StopAllDoltServers(force bool) (int, int) {
 	listeners := doltserver.FindAllDoltListeners()
 	if len(listeners) == 0 {

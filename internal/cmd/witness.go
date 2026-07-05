@@ -32,10 +32,10 @@ The Witness patrols a single rig, watching over its miners:
   - Detects stalled miners (crashed or stuck mid-work)
   - Nudges unresponsive sessions back to life
   - Cleans up zombie miners (finished but failed to exit)
-  - Nukes sandboxes when miners complete via 'gt done'
+  - Nukes sandboxes when miners complete via 'ms done'
 
 The Witness does NOT force session cycles or interrupt working miners.
-Miners manage their own sessions (via gt handoff). The Witness handles
+Miners manage their own sessions (via ms handoff). The Witness handles
 failures and edge cases only.
 
 One Witness per rig. The Supervisor monitors all Witnesses.
@@ -57,9 +57,9 @@ crash recovery (restart with hooked work) and orphan cleanup (nuke abandoned
 sandboxes). There is no "idle" state - miners either have work or don't exist.
 
 Examples:
-  gt witness start greenplace
-  gt witness start greenplace --agent codex
-  gt witness start greenplace --env ANTHROPIC_MODEL=claude-3-haiku`,
+  ms witness start greenplace
+  ms witness start greenplace --agent codex
+  ms witness start greenplace --env ANTHROPIC_MODEL=claude-3-haiku`,
 	Args: cobra.ExactArgs(1),
 	RunE: runWitnessStart,
 }
@@ -97,8 +97,8 @@ If the witness is not running, this will start it first.
 If rig is not specified, infers it from the current directory.
 
 Examples:
-  gt witness attach greenplace
-  gt witness attach          # infer rig from cwd`,
+  ms witness attach greenplace
+  ms witness attach          # infer rig from cwd`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runWitnessAttach,
 }
@@ -111,9 +111,9 @@ var witnessRestartCmd = &cobra.Command{
 Stops the current session (if running) and starts a fresh one.
 
 Examples:
-  gt witness restart greenplace
-  gt witness restart greenplace --agent codex
-  gt witness restart greenplace --env ANTHROPIC_MODEL=claude-3-haiku`,
+  ms witness restart greenplace
+  ms witness restart greenplace --agent codex
+  ms witness restart greenplace --env ANTHROPIC_MODEL=claude-3-haiku`,
 	Args: cobra.ExactArgs(1),
 	RunE: runWitnessRestart,
 }
@@ -173,15 +173,15 @@ func runWitnessStart(cmd *cobra.Command, args []string) error {
 	if err := mgr.Start(witnessForeground, witnessAgentOverride, witnessEnvOverrides); err != nil {
 		if err == witness.ErrAlreadyRunning {
 			fmt.Printf("%s Witness is already running\n", style.Dim.Render("⚠"))
-			fmt.Printf("  %s\n", style.Dim.Render("Use 'gt witness attach' to connect"))
+			fmt.Printf("  %s\n", style.Dim.Render("Use 'ms witness attach' to connect"))
 			return nil
 		}
 		return fmt.Errorf("starting witness: %w", err)
 	}
 
 	fmt.Printf("%s Witness started for %s\n", style.Bold.Render("✓"), rigName)
-	fmt.Printf("  %s\n", style.Dim.Render("Use 'gt witness attach' to connect"))
-	fmt.Printf("  %s\n", style.Dim.Render("Use 'gt witness status' to check progress"))
+	fmt.Printf("  %s\n", style.Dim.Render("Use 'ms witness attach' to connect"))
+	fmt.Printf("  %s\n", style.Dim.Render("Use 'ms witness status' to check progress"))
 	return nil
 }
 
@@ -305,7 +305,7 @@ func runWitnessAttach(cmd *cobra.Command, args []string) error {
 		}
 		rigName, err = inferRigFromCwd(townRoot)
 		if err != nil {
-			return fmt.Errorf("could not determine rig: %w\nUsage: gt witness attach <rig>", err)
+			return fmt.Errorf("could not determine rig: %w\nUsage: ms witness attach <rig>", err)
 		}
 	}
 
@@ -351,6 +351,6 @@ func runWitnessRestart(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("%s Witness restarted for %s\n", style.Bold.Render("✓"), rigName)
-	fmt.Printf("  %s\n", style.Dim.Render("Use 'gt witness attach' to connect"))
+	fmt.Printf("  %s\n", style.Dim.Render("Use 'ms witness attach' to connect"))
 	return nil
 }

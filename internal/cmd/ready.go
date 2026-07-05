@@ -37,9 +37,9 @@ Ready items have no blockers and can be worked immediately.
 Results are sorted by priority (highest first) then by source.
 
 Examples:
-  gt ready              # Show all ready work
-  gt ready --json       # Output as JSON
-  gt ready --rig=mineshaft  # Show only one rig`,
+  ms ready              # Show all ready work
+  ms ready --json       # Output as JSON
+  ms ready --rig=mineshaft  # Show only one rig`,
 	RunE: runReady,
 }
 
@@ -56,7 +56,7 @@ type ReadySource struct {
 	Error  string         `json:"error,omitempty"`
 }
 
-// ReadyResult is the aggregated result of gt ready.
+// ReadyResult is the aggregated result of ms ready.
 type ReadyResult struct {
 	Sources  []ReadySource `json:"sources"`
 	Summary  ReadySummary  `json:"summary"`
@@ -131,14 +131,14 @@ func runReady(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				src.Error = err.Error()
 			} else {
-				// Filter out formula scaffolds (gt-579)
+				// Filter out formula scaffolds (ms-579)
 				formulaNames := getFormulaNames(townBeadsPath)
 				filtered := filterFormulaScaffolds(issues, formulaNames)
 				// Defense-in-depth: also filter wisps that shouldn't appear in ready work
 				wispIDs := getWispIDs(townBeadsPath)
 				filtered = filterWisps(filtered, wispIDs)
 				// Only show work whose ID routes back to the source that reported it.
-				// Otherwise the dashboard can render a row that `gt sling <same-id>`
+				// Otherwise the dashboard can render a row that `ms sling <same-id>`
 				// cannot resolve because routes.jsonl points that prefix elsewhere.
 				filtered = filterReadyIssuesByRoute(townRoot, "town", filtered)
 				// Filter identity beads (agents, roles, rigs) - not actionable work
@@ -164,7 +164,7 @@ func runReady(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				src.Error = err.Error()
 			} else {
-				// Filter out formula scaffolds (gt-579)
+				// Filter out formula scaffolds (ms-579)
 				formulaNames := getFormulaNames(r.BeadsPath())
 				filtered := filterFormulaScaffolds(issues, formulaNames)
 				// Defense-in-depth: also filter wisps that shouldn't appear in ready work
@@ -172,7 +172,7 @@ func runReady(cmd *cobra.Command, args []string) error {
 				filtered = filterWisps(filtered, wispIDs)
 				// Only show work whose ID routes back to this rig. This keeps the
 				// Ready Across Rigs surface honest: every displayed ID must be
-				// usable by the stock `gt sling <id> <rig>` command.
+				// usable by the stock `ms sling <id> <rig>` command.
 				filtered = filterReadyIssuesByRoute(townRoot, r.Name, filtered)
 				// Filter identity beads (agents, roles, rigs) - not actionable work
 				src.Issues = filterIdentityBeads(filtered)
@@ -422,14 +422,14 @@ func getWispIDs(beadsPath string) map[string]bool {
 //
 // Since bd ready --json doesn't include labels, we filter by:
 //   - issue_type "agent" (agent lifecycle beads)
-//   - Labels if present (gt:agent, gt:role, gt:rig)
+//   - Labels if present (ms:agent, ms:role, ms:rig)
 //   - ID suffix "-role" (role definition beads like hq-crew-role)
-//   - ID prefix matching "<prefix>-rig-" (rig identity beads like gt-rig-mineshaft)
+//   - ID prefix matching "<prefix>-rig-" (rig identity beads like ms-rig-mineshaft)
 func filterIdentityBeads(issues []*beads.Issue) []*beads.Issue {
 	identityLabels := map[string]bool{
-		"gt:agent": true,
-		"gt:role":  true,
-		"gt:rig":   true,
+		"ms:agent": true,
+		"ms:role":  true,
+		"ms:rig":   true,
 	}
 
 	filtered := make([]*beads.Issue, 0, len(issues))

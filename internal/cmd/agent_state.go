@@ -37,18 +37,18 @@ Labels are stored as key:value pairs (e.g., idle:3, backoff:2m).
 
 OPERATIONS:
   Get all labels (default):
-    gt agents state <agent-bead>
+    ms agents state <agent-bead>
 
   Set a label:
-    gt agents state <agent-bead> --set idle=0
-    gt agents state <agent-bead> --set idle=0 --set backoff=30s
+    ms agents state <agent-bead> --set idle=0
+    ms agents state <agent-bead> --set idle=0 --set backoff=30s
 
   Increment a numeric label:
-    gt agents state <agent-bead> --incr idle
+    ms agents state <agent-bead> --incr idle
     (Creates label with value 1 if not present)
 
   Delete a label:
-    gt agents state <agent-bead> --del idle
+    ms agents state <agent-bead> --del idle
 
 COMMON LABELS:
   idle:<n>           - Consecutive idle patrol cycles
@@ -57,16 +57,16 @@ COMMON LABELS:
 
 EXAMPLES:
   # Check current idle count
-  gt agents state gt-mineshaft-witness
+  ms agents state ms-mineshaft-witness
 
   # Reset idle counter after finding work
-  gt agents state gt-mineshaft-witness --set idle=0
+  ms agents state ms-mineshaft-witness --set idle=0
 
   # Increment idle counter on timeout
-  gt agents state gt-mineshaft-witness --incr idle
+  ms agents state ms-mineshaft-witness --incr idle
 
   # Get state as JSON
-  gt agents state gt-mineshaft-witness --json`,
+  ms agents state ms-mineshaft-witness --json`,
 	Args: cobra.ExactArgs(1),
 	RunE: runAgentState,
 }

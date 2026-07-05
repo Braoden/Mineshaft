@@ -535,7 +535,7 @@ func TestCheckFormulaHealth_NewFormula(t *testing.T) {
 }
 
 // TestCheckFormulaHealth_Untracked tests detection of files that exist but aren't
-// in .installed.json and don't match embedded (e.g., from older gt version).
+// in .installed.json and don't match embedded (e.g., from older ms version).
 func TestCheckFormulaHealth_Untracked(t *testing.T) {
 	tmpDir := t.TempDir()
 

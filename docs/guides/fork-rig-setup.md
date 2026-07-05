@@ -2,8 +2,8 @@
 
 When you run a rig against a repository you **don't own**, the rig has to
 fetch canonical history from upstream but push all work to your fork.
-`gt rig add` supports this directly through `--push-url` and
-`--upstream-url`. Without them, the default `gt rig add <name> <fork-url>`
+`ms rig add` supports this directly through `--push-url` and
+`--upstream-url`. Without them, the default `ms rig add <name> <fork-url>`
 produces a rig whose refinery merges miner work into your fork's `main`,
 diverging it from upstream.
 
@@ -16,12 +16,12 @@ Use fork mode whenever:
 - You push your work to a personal/organisation fork and open PRs from there.
 
 If you own the canonical repo and push directly to it, you do **not** need
-these flags — the plain `gt rig add <name> <git-url>` is correct.
+these flags — the plain `ms rig add <name> <git-url>` is correct.
 
 ## Setup
 
 ```bash
-gt rig add <name> <upstream-url> \
+ms rig add <name> <upstream-url> \
   --push-url     <your-fork-url> \
   --upstream-url <upstream-url>
 ```
@@ -29,7 +29,7 @@ gt rig add <name> <upstream-url> \
 Concretely, for a Mineshaft contributor:
 
 ```bash
-gt rig add mineshaft https://github.com/mineshafthall/mineshaft \
+ms rig add mineshaft https://github.com/mineshafthall/mineshaft \
   --push-url     https://github.com/<you>/mineshaft \
   --upstream-url https://github.com/mineshafthall/mineshaft
 ```
@@ -80,7 +80,7 @@ and is not yet implemented.
 
 Until then, for strict PR-only behavior:
 
-- Do **not** start the refinery. Park the rig with `gt rig park <rig>`.
+- Do **not** start the refinery. Park the rig with `ms rig park <rig>`.
 - Use the miner → feature branch → manual PR path. Push the branch to
   your fork and open the PR by hand.
 

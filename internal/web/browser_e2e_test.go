@@ -291,8 +291,8 @@ func TestBrowser_EmptyState(t *testing.T) {
 	}
 
 	// Verify help text is shown
-	if !strings.Contains(bodyText, "gt minecart create") {
-		t.Error("Expected help text with 'gt minecart create' command")
+	if !strings.Contains(bodyText, "ms minecart create") {
+		t.Error("Expected help text with 'ms minecart create' command")
 	}
 
 	t.Log("PASSED: Empty state displays correctly")

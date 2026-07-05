@@ -8,11 +8,11 @@ set -euo pipefail
 
 # --- Configuration -----------------------------------------------------------
 
-TOWN_ROOT="${GT_TOWN_ROOT:-$(gt town root 2>/dev/null)}"
+TOWN_ROOT="${MS_TOWN_ROOT:-$(ms town root 2>/dev/null)}"
 LOG_DIR="${TOWN_ROOT}/daemon"
 LOG_FILE="${LOG_DIR}/dolt.log"
-MAX_MB="${GT_DOLT_LOG_MAX_MB:-100}"
-KEEP="${GT_DOLT_LOG_KEEP:-3}"
+MAX_MB="${MS_DOLT_LOG_MAX_MB:-100}"
+KEEP="${MS_DOLT_LOG_KEEP:-3}"
 
 log() { echo "[dolt-log-rotate] $*"; }
 
@@ -35,7 +35,7 @@ log "Current log size: ${SIZE_MB}MB (threshold: ${MAX_MB}MB)"
 
 if [[ $SIZE_MB -lt $MAX_MB ]]; then
   log "Below threshold. Nothing to do."
-  gt plugin record-run --plugin dolt-log-rotate --result success \
+  ms plugin record-run --plugin dolt-log-rotate --result success \
     --title "dolt-log-rotate: log size ${SIZE_MB}MB, below ${MAX_MB}MB threshold" >/dev/null 2>&1 || true
   exit 0
 fi
@@ -86,5 +86,5 @@ SUMMARY="dolt-log-rotate: rotated ${SIZE_MB}MB -> ${COMPRESSED_MB}MB compressed,
 log ""
 log "=== Done === $SUMMARY"
 
-gt plugin record-run --plugin dolt-log-rotate --result success \
+ms plugin record-run --plugin dolt-log-rotate --result success \
   --title "$SUMMARY" >/dev/null 2>&1 || true

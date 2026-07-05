@@ -5,19 +5,19 @@ contributors and operators can drop into their own Mineshaft setup to customize
 agent behavior — without patching the framework.
 
 These examples are not active by default. They are starting points you copy
-into your own `~/gt/<rig>/directives/` or `~/gt/<rig>/formula-overlays/`
+into your own `~/ms/<rig>/directives/` or `~/ms/<rig>/formula-overlays/`
 directory and adapt to your rig's needs.
 
 See [`docs/design/directives-and-overlays.md`](../design/directives-and-overlays.md)
 for the design of the extension surface (how directives and overlays are
 loaded, injection points, precedence, validation). The canonical prime-time
-reference is `~/gt/docs/PRIMING.md` § "Role Directives and Formula Overlays".
+reference is `~/ms/docs/PRIMING.md` § "Role Directives and Formula Overlays".
 
 ## Available harnesses
 
 | Harness | What it does |
 |---------|--------------|
-| [`miner-pr-flow/`](miner-pr-flow/) | Makes miners open a GitHub PR for their branch before running `gt done`. For rigs that use a PR-review workflow instead of the canonical Refinery merge-queue flow. |
+| [`miner-pr-flow/`](miner-pr-flow/) | Makes miners open a GitHub PR for their branch before running `ms done`. For rigs that use a PR-review workflow instead of the canonical Refinery merge-queue flow. |
 
 ## Scope
 
@@ -29,7 +29,7 @@ Harnesses do **not**:
 
 - Modify Go source or formula source-of-truth files
 - Change default agent behavior for anyone who hasn't opted in
-- Replace `gt doctor` validation — run `gt doctor` after installing to confirm
+- Replace `ms doctor` validation — run `ms doctor` after installing to confirm
   overlays are healthy
 
 ## Contributing a new harness

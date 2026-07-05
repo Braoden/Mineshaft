@@ -26,7 +26,7 @@ var validMemoryTypes = map[string]string{
 	"general":   "Uncategorized memories (default)",
 }
 
-// memoryTypeOrder defines the injection priority during gt prime.
+// memoryTypeOrder defines the injection priority during ms prime.
 // Feedback first (behavioral corrections), then user context, then the rest.
 var memoryTypeOrder = []string{"feedback", "user", "project", "reference", "general"}
 
@@ -45,7 +45,7 @@ var rememberCmd = &cobra.Command{
 	Short: "Store a persistent memory",
 	Long: `Store a persistent memory in the beads key-value store.
 
-Memories persist across sessions and are injected during gt prime.
+Memories persist across sessions and are injected during ms prime.
 This replaces filesystem-based MEMORY.md with bead-backed storage.
 
 The key is auto-generated from the content if not specified.
@@ -58,10 +58,10 @@ Memory types help organize memories and prioritize injection:
   reference  Pointers to external resources
 
 Examples:
-  gt remember "Refinery uses worktree, cannot checkout main"
-  gt remember --type feedback "Don't mock the database in integration tests"
-  gt remember --type user --key senior-go-dev "User has 10 years Go experience"
-  gt remember --key refinery-worktree "Refinery uses worktree, cannot checkout main"`,
+  ms remember "Refinery uses worktree, cannot checkout main"
+  ms remember --type feedback "Don't mock the database in integration tests"
+  ms remember --type user --key senior-go-dev "User has 10 years Go experience"
+  ms remember --key refinery-worktree "Refinery uses worktree, cannot checkout main"`,
 	Args: cobra.ExactArgs(1),
 	RunE: runRemember,
 }

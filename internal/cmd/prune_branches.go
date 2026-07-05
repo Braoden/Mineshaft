@@ -33,9 +33,9 @@ Safety: Uses git branch -d (not -D) so only fully-merged branches are deleted.
 Never deletes the current branch or the default branch.
 
 Examples:
-  gt prune-branches              # Clean up stale miner branches
-  gt prune-branches --dry-run    # Show what would be deleted
-  gt prune-branches --pattern "feature/*"  # Custom pattern`,
+  ms prune-branches              # Clean up stale miner branches
+  ms prune-branches --dry-run    # Show what would be deleted
+  ms prune-branches --pattern "feature/*"  # Custom pattern`,
 	RunE: runPruneBranches,
 }
 

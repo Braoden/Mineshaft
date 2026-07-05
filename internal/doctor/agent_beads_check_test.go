@@ -245,7 +245,7 @@ case "$cmd" in
       esac
     done
     printf 'create %s\n' "$id" >> "$logfile"
-    printf '{"id":"%s","title":"%s","status":"open","labels":["gt:agent"]}\n' "$id" "$title"
+    printf '{"id":"%s","title":"%s","status":"open","labels":["ms:agent"]}\n' "$id" "$title"
     ;;
   update)
     if [[ ${#rest[@]} -gt 0 ]]; then
@@ -342,12 +342,12 @@ func TestListCrewWorkers_FiltersWorktrees(t *testing.T) {
 
 // TestAddWispLabelSQL_ErrorsGracefully verifies addWispLabelSQL doesn't panic
 // and returns an error when bd is unavailable (no Dolt server).
-// This is a regression guard for gt-3vx: after CreateAgentBead, the gt:agent
+// This is a regression guard for ms-3vx: after CreateAgentBead, the ms:agent
 // label must also be inserted into wisp_labels so doctor checks that join
 // wisp_labels can find the bead.
 func TestAddWispLabelSQL_ErrorsGracefully(t *testing.T) {
 	tmpDir := t.TempDir()
-	err := addWispLabelSQL(tmpDir, "gt-mineshaft-witness", "gt:agent")
+	err := addWispLabelSQL(tmpDir, "ms-mineshaft-witness", "ms:agent")
 	// bd sql will fail without a Dolt server — just verify no panic and that the
 	// function returns an error (not silently discarding the failure).
 	if err == nil {

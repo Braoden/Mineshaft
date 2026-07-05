@@ -30,7 +30,7 @@ var (
 // Manager handles dog lifecycle in the kennel.
 type Manager struct {
 	townRoot   string
-	kennelPath string // ~/gt/supervisor/dogs/
+	kennelPath string // ~/ms/supervisor/dogs/
 	rigsConfig *config.RigsConfig
 }
 

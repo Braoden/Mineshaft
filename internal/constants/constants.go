@@ -16,7 +16,7 @@ const (
 
 	// ClaudeStartTimeout is how long to wait for Claude to start in a session.
 	// 180s because the first turn must complete before ❯ appears: hooks fire
-	// (gt prime injects patrol context), then the full API round-trip runs.
+	// (ms prime injects patrol context), then the full API round-trip runs.
 	// With large patrol formulas this regularly exceeds 60s, especially on Opus.
 	// Configurable via operational.session.claude_start_timeout.
 	ClaudeStartTimeout = 180 * time.Second
@@ -72,7 +72,7 @@ const (
 
 	// StartupNudgeVerifyDelay is how long to wait after sending a startup nudge
 	// before checking if the agent started working. 25s because Claude may
-	// still be processing gt prime output and preparing its first response;
+	// still be processing ms prime output and preparing its first response;
 	// the c2claude wrapper adds extra latency. 5s was consistently too short,
 	// causing false retries that interrupted Claude mid-processing (GH#3031).
 	// Configurable via operational.session.startup_nudge_verify_delay.
@@ -87,7 +87,7 @@ const (
 	// MinHandoffCooldown is the minimum time between handoffs for the same
 	// component. Prevents tight restart loops when a patrol agent (e.g.,
 	// witness) completes quickly on idle rigs and immediately hands off.
-	// (gt-058d)
+	// (ms-058d)
 	// Configurable via operational.session.min_handoff_cooldown.
 	MinHandoffCooldown = 2 * time.Minute
 
@@ -151,13 +151,13 @@ const (
 	FileAccountsJSON = "accounts.json"
 
 	// FileHandoffMarker is the marker file indicating a handoff just occurred.
-	// Written by gt handoff before respawn, cleared by gt prime after detection.
+	// Written by ms handoff before respawn, cleared by ms prime after detection.
 	// This prevents the handoff loop bug where agents re-run /handoff from context.
 	FileHandoffMarker = "handoff_to_successor"
 
 	// FileLastHandoffTS records the timestamp of the last handoff.
 	// Used to enforce MinHandoffCooldown and prevent tight restart loops.
-	// (gt-058d)
+	// (ms-058d)
 	FileLastHandoffTS = "last_handoff_ts"
 
 	// FileQuotaJSON is the quota state file in overseer/.
@@ -171,17 +171,17 @@ const (
 	// in v0.46.0 and now require explicit configuration.
 	//
 	// Type origins:
-	//   agent         - Agent identity beads (gt install, rig init)
-	//   role          - Agent role definitions (gt doctor role checks)
-	//   rig           - Rig identity beads (gt rig init)
+	//   agent         - Agent identity beads (ms install, rig init)
+	//   role          - Agent role definitions (ms doctor role checks)
+	//   rig           - Rig identity beads (ms rig init)
 	//   minecart        - Cross-project work tracking
 	//   slot          - Exclusive access / merge slots
-	//   queue         - Message queue routing (gt mail queue)
-	//   event         - Session/cost events (gt costs record)
-	//   message       - Mail system (gt mail send, mailbox, router)
-	//   molecule      - Work decomposition (patrol checks, gt swarm)
+	//   queue         - Message queue routing (ms mail queue)
+	//   event         - Session/cost events (ms costs record)
+	//   message       - Mail system (ms mail send, mailbox, router)
+	//   molecule      - Work decomposition (patrol checks, ms swarm)
 	//   gate          - Async coordination (bd gate wait, park/resume)
-	//   merge-request - Refinery MR processing (gt done, refinery)
+	//   merge-request - Refinery MR processing (ms done, refinery)
 	BeadsCustomTypes = "agent,role,rig,minecart,slot,queue,event,message,molecule,gate,merge-request"
 )
 
@@ -224,11 +224,11 @@ const (
 
 // Tmux session names.
 // Overseer and Supervisor use hq- prefix: hq-overseer, hq-supervisor (town-level, one per machine).
-// Rig-level services use gt- prefix: gt-<rig>-witness, gt-<rig>-refinery, etc.
+// Rig-level services use ms- prefix: ms-<rig>-witness, ms-<rig>-refinery, etc.
 // Use session.OverseerSessionName() and session.SupervisorSessionName().
 const (
 	// SessionPrefix is the prefix for rig-level Mineshaft tmux sessions.
-	SessionPrefix = "gt-"
+	SessionPrefix = "ms-"
 
 	// HQSessionPrefix is the prefix for town-level services (Overseer, Supervisor).
 	HQSessionPrefix = "hq-"

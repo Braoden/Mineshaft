@@ -32,7 +32,7 @@ func resolveMinerTargets(args []string, useAll bool) ([]minerTarget, error) {
 		rigName := args[0]
 		// Check if it looks like rig/miner format
 		if _, _, err := parseAddress(rigName); err == nil {
-			return nil, fmt.Errorf("with --all, provide just the rig name (e.g., 'gt miner <cmd> %s --all')", strings.Split(rigName, "/")[0])
+			return nil, fmt.Errorf("with --all, provide just the rig name (e.g., 'ms miner <cmd> %s --all')", strings.Split(rigName, "/")[0])
 		}
 
 		mgr, r, err := getMinerManager(rigName)
@@ -247,10 +247,10 @@ func displaySafetyCheckBlockedTo(w io.Writer, blocked []*SafetyCheckResult) {
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Safety checks failed. Resolve issues before nuking, or use --force.")
 	fmt.Fprintln(w, "Options:")
-	fmt.Fprintln(w, "  1. Complete work: gt done (from miner session)")
+	fmt.Fprintln(w, "  1. Complete work: ms done (from miner session)")
 	fmt.Fprintln(w, "  2. Push changes: git push (from miner worktree)")
-	fmt.Fprintln(w, "  3. Escalate: gt mail send overseer/ -s \"RECOVERY_NEEDED\" -m \"...\"")
-	fmt.Fprintf(w, "  4. Force nuke (LOSES WORK): gt miner nuke --force %s\n", strings.Join(minerList, " "))
+	fmt.Fprintln(w, "  3. Escalate: ms mail send overseer/ -s \"RECOVERY_NEEDED\" -m \"...\"")
+	fmt.Fprintf(w, "  4. Force nuke (LOSES WORK): ms miner nuke --force %s\n", strings.Join(minerList, " "))
 	fmt.Fprintln(w)
 }
 

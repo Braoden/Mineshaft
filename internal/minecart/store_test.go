@@ -69,7 +69,7 @@ func TestGetTrackingMinecarts_FiltersByTracksType(t *testing.T) {
 		UpdatedAt: now,
 	}
 	trackedIssue := &beadsdk.Issue{
-		ID:        "gt-tracked1",
+		ID:        "ms-tracked1",
 		Title:     "Tracked",
 		Status:    beadsdk.StatusOpen,
 		Priority:  2,
@@ -99,7 +99,7 @@ func TestGetTrackingMinecarts_FiltersByTracksType(t *testing.T) {
 
 	// Add blocks dependency (should be filtered out)
 	otherIssue := &beadsdk.Issue{
-		ID:        "gt-other",
+		ID:        "ms-other",
 		Title:     "Other",
 		Status:    beadsdk.StatusOpen,
 		Priority:  2,

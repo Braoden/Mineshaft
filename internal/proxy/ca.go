@@ -143,12 +143,12 @@ func (ca *CA) IssueServer(cn string, extraIPs []net.IP, extraDNSNames []string, 
 }
 
 // IssueMiner issues a leaf certificate signed by the CA for a miner (client auth).
-// cn must be in the format "gt-<rig>-<name>" with non-empty rig and name segments
-// (e.g. "gt-mineshaft-furiosa"). Returns an error for malformed CNs to prevent issuing
+// cn must be in the format "ms-<rig>-<name>" with non-empty rig and name segments
+// (e.g. "ms-mineshaft-furiosa"). Returns an error for malformed CNs to prevent issuing
 // certs whose rig/name parsing would be inconsistent across exec and git auth.
 func (ca *CA) IssueMiner(cn string, ttl time.Duration) (certPEM, keyPEM []byte, err error) {
 	if cnToIdentity(cn) == "" {
-		return nil, nil, fmt.Errorf("invalid miner CN %q: must be gt-<rig>-<name> with non-empty rig and name", cn)
+		return nil, nil, fmt.Errorf("invalid miner CN %q: must be ms-<rig>-<name> with non-empty rig and name", cn)
 	}
 	return ca.issue(cn, nil, nil, ttl, x509.ExtKeyUsageClientAuth)
 }

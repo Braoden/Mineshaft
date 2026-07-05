@@ -22,7 +22,7 @@ The resume command checks for messages with "HANDOFF" in the subject
 and displays them formatted for easy continuation.
 
 Examples:
-  gt resume    # Check inbox for handoff messages`,
+  ms resume    # Check inbox for handoff messages`,
 	RunE: runResume,
 }
 
@@ -37,11 +37,11 @@ func runResume(cmd *cobra.Command, args []string) error {
 // checkHandoffMessages checks the inbox for handoff messages and displays them.
 func checkHandoffMessages() error {
 	// Get inbox in JSON format
-	inboxCmd := exec.Command("gt", "mail", "inbox", "--json")
+	inboxCmd := exec.Command("ms", "mail", "inbox", "--json")
 	output, err := inboxCmd.Output()
 	if err != nil {
 		// Fallback to non-JSON if --json not supported
-		inboxCmd = exec.Command("gt", "mail", "inbox")
+		inboxCmd = exec.Command("ms", "mail", "inbox")
 		output, err = inboxCmd.Output()
 		if err != nil {
 			return fmt.Errorf("checking inbox: %w", err)
@@ -55,7 +55,7 @@ func checkHandoffMessages() error {
 		}
 		fmt.Printf("%s Found handoff message(s):\n\n", style.Bold.Render("🤝"))
 		fmt.Println(outputStr)
-		fmt.Printf("\n%s Read with: gt mail read <id>\n", style.Bold.Render("→"))
+		fmt.Printf("\n%s Read with: ms mail read <id>\n", style.Bold.Render("→"))
 		return nil
 	}
 
@@ -69,7 +69,7 @@ func checkHandoffMessages() error {
 	}
 	if err := json.Unmarshal(output, &messages); err != nil {
 		// JSON parse failed, use plain text output
-		inboxCmd = exec.Command("gt", "mail", "inbox")
+		inboxCmd = exec.Command("ms", "mail", "inbox")
 		output, err = inboxCmd.Output()
 		if err != nil {
 			return fmt.Errorf("fallback inbox check failed: %w", err)
@@ -108,7 +108,7 @@ func checkHandoffMessages() error {
 	if len(handoffs) == 0 {
 		fmt.Printf("%s No handoff messages in inbox\n", style.Dim.Render("○"))
 		fmt.Printf("  Handoff messages have 'HANDOFF' in the subject.\n")
-		fmt.Printf("  Use 'gt handoff -s \"...\"' to create one when handing off.\n")
+		fmt.Printf("  Use 'ms handoff -s \"...\"' to create one when handing off.\n")
 		return nil
 	}
 
@@ -128,11 +128,11 @@ func checkHandoffMessages() error {
 	}
 
 	if len(handoffs) == 1 {
-		fmt.Printf("%s Read full message: gt mail read %s\n", style.Bold.Render("→"), handoffs[0].ID)
+		fmt.Printf("%s Read full message: ms mail read %s\n", style.Bold.Render("→"), handoffs[0].ID)
 	} else {
-		fmt.Printf("%s Read messages: gt mail read <id>\n", style.Bold.Render("→"))
+		fmt.Printf("%s Read messages: ms mail read <id>\n", style.Bold.Render("→"))
 	}
-	fmt.Printf("%s Clear after reading: gt mail close <id>\n", style.Dim.Render("💡"))
+	fmt.Printf("%s Clear after reading: ms mail close <id>\n", style.Dim.Render("💡"))
 
 	return nil
 }

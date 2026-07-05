@@ -72,11 +72,11 @@ func TestDispatchSingleBeadRawReviewOnlyHookFailureClearsMetadata(t *testing.T) 
 	}
 
 	_, err := dispatchSingleBead(capacity.PendingBead{
-		ID:         "gt-context",
-		WorkBeadID: "gt-rawrollback",
+		ID:         "ms-context",
+		WorkBeadID: "ms-rawrollback",
 		TargetRig:  "mineshaft",
 		Context: &capacity.SlingContextFields{
-			WorkBeadID:  "gt-rawrollback",
+			WorkBeadID:  "ms-rawrollback",
 			TargetRig:   "mineshaft",
 			HookRawBead: true,
 			NoMerge:     true,

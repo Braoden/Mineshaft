@@ -90,7 +90,7 @@ func TestMinecartMeta(t *testing.T) {
 		Status:    "open",
 		Formula:   "code-review",
 		ReviewID:  "pr123",
-		LegIssues: []string{"gt-leg1", "gt-leg2", "gt-leg3"},
+		LegIssues: []string{"ms-leg1", "ms-leg2", "ms-leg3"},
 	}
 
 	if meta.ID != "hq-cv-abc" {

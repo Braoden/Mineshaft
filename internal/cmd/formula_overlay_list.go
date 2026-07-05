@@ -18,7 +18,7 @@ var formulaOverlayListCmd = &cobra.Command{
 Shows each overlay file with its scope (town or rig) and formula name.
 
 Examples:
-  gt formula overlay list`,
+  ms formula overlay list`,
 	RunE: runFormulaOverlayList,
 }
 
@@ -84,7 +84,7 @@ func runFormulaOverlayList(cmd *cobra.Command, args []string) error {
 
 	if len(entries) == 0 {
 		fmt.Println("No overlay files found.")
-		fmt.Println("\nUse 'gt formula overlay edit <formula>' to create one.")
+		fmt.Println("\nUse 'ms formula overlay edit <formula>' to create one.")
 		return nil
 	}
 

@@ -114,7 +114,7 @@ func TestTruncateCommand(t *testing.T) {
 		t.Errorf("short command should not be truncated: got %q", got)
 	}
 
-	long := "export PATH=\"$HOME/go/bin:$HOME/.local/bin:$PATH\" && gt prime --hook && some-other-really-long-command-that-goes-on"
+	long := "export PATH=\"$HOME/go/bin:$HOME/.local/bin:$PATH\" && ms prime --hook && some-other-really-long-command-that-goes-on"
 	if got := truncateCommand(long); len(got) > 80 {
 		t.Errorf("truncated command should be ≤80 chars, got %d", len(got))
 	}

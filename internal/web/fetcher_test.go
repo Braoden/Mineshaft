@@ -357,18 +357,18 @@ func TestCalculateWorkerWorkStatus_DefaultThresholds(t *testing.T) {
 		workerName string
 		want       string
 	}{
-		{"refinery always working", 1 * time.Hour, "gt-123", "refinery", "working"},
+		{"refinery always working", 1 * time.Hour, "ms-123", "refinery", "working"},
 		{"refinery working even without issue", 0, "", "refinery", "working"},
 		{"no issue means idle", 0, "", "dag", "idle"},
 		{"no issue means idle even if active", 1 * time.Second, "", "nux", "idle"},
-		{"very recent is working", 1 * time.Second, "gt-123", "dag", "working"},
-		{"just under stale is working", stale - 1*time.Second, "gt-123", "dag", "working"},
-		{"at stale boundary is stale", stale, "gt-123", "dag", "stale"},
-		{"between stale and stuck is stale", 15 * time.Minute, "gt-123", "dag", "stale"},
-		{"just under stuck is stale", stuck - 1*time.Second, "gt-123", "dag", "stale"},
-		{"at stuck boundary is stuck", stuck, "gt-123", "dag", "stuck"},
-		{"well past stuck is stuck", 2 * time.Hour, "gt-123", "dag", "stuck"},
-		{"zero age with issue is working", 0, "gt-456", "nux", "working"},
+		{"very recent is working", 1 * time.Second, "ms-123", "dag", "working"},
+		{"just under stale is working", stale - 1*time.Second, "ms-123", "dag", "working"},
+		{"at stale boundary is stale", stale, "ms-123", "dag", "stale"},
+		{"between stale and stuck is stale", 15 * time.Minute, "ms-123", "dag", "stale"},
+		{"just under stuck is stale", stuck - 1*time.Second, "ms-123", "dag", "stale"},
+		{"at stuck boundary is stuck", stuck, "ms-123", "dag", "stuck"},
+		{"well past stuck is stuck", 2 * time.Hour, "ms-123", "dag", "stuck"},
+		{"zero age with issue is working", 0, "ms-456", "nux", "working"},
 	}
 
 	for _, tt := range tests {
@@ -393,10 +393,10 @@ func TestCalculateWorkerWorkStatus_CustomThresholds(t *testing.T) {
 		issueID string
 		want    string
 	}{
-		{"30s is working with 1m stale", 30 * time.Second, "gt-1", "working"},
-		{"90s is stale with 1m stale", 90 * time.Second, "gt-1", "stale"},
-		{"3m is stale with 5m stuck", 3 * time.Minute, "gt-1", "stale"},
-		{"6m is stuck with 5m stuck", 6 * time.Minute, "gt-1", "stuck"},
+		{"30s is working with 1m stale", 30 * time.Second, "ms-1", "working"},
+		{"90s is stale with 1m stale", 90 * time.Second, "ms-1", "stale"},
+		{"3m is stale with 5m stuck", 3 * time.Minute, "ms-1", "stale"},
+		{"6m is stuck with 5m stuck", 6 * time.Minute, "ms-1", "stuck"},
 	}
 
 	for _, tt := range tests {
@@ -415,12 +415,12 @@ func TestCalculateWorkerWorkStatus_LargeThresholds(t *testing.T) {
 	stale := 24 * time.Hour
 	stuck := 48 * time.Hour
 
-	got := calculateWorkerWorkStatus(12*time.Hour, "gt-1", "dag", stale, stuck)
+	got := calculateWorkerWorkStatus(12*time.Hour, "ms-1", "dag", stale, stuck)
 	if got != "working" {
 		t.Errorf("12h with 24h stale threshold should be working, got %q", got)
 	}
 
-	got = calculateWorkerWorkStatus(36*time.Hour, "gt-1", "dag", stale, stuck)
+	got = calculateWorkerWorkStatus(36*time.Hour, "ms-1", "dag", stale, stuck)
 	if got != "stale" {
 		t.Errorf("36h with 24h/48h thresholds should be stale, got %q", got)
 	}
@@ -428,7 +428,7 @@ func TestCalculateWorkerWorkStatus_LargeThresholds(t *testing.T) {
 
 func TestCalculateWorkerWorkStatus_ZeroThresholds(t *testing.T) {
 	// Zero thresholds: everything with an issue should be stuck
-	got := calculateWorkerWorkStatus(0, "gt-1", "dag", 0, 0)
+	got := calculateWorkerWorkStatus(0, "ms-1", "dag", 0, 0)
 	if got != "stuck" {
 		t.Errorf("0 age with 0/0 thresholds should be stuck, got %q", got)
 	}
@@ -711,7 +711,7 @@ func TestResolveOverseerRuntime(t *testing.T) {
 		{
 			name: "uses session agent env",
 			sessionEnv: func(sessionName, key string) (string, error) {
-				if sessionName != "hq-overseer" || key != "GT_AGENT" {
+				if sessionName != "hq-overseer" || key != "MS_AGENT" {
 					t.Fatalf("unexpected session env lookup: %s %s", sessionName, key)
 				}
 				return "codex", nil
@@ -755,7 +755,7 @@ func TestResolveOverseerRuntime(t *testing.T) {
 		{
 			name: "uses registry agent from session env",
 			sessionEnv: func(sessionName, key string) (string, error) {
-				if sessionName != "hq-overseer" || key != "GT_AGENT" {
+				if sessionName != "hq-overseer" || key != "MS_AGENT" {
 					t.Fatalf("unexpected session env lookup: %s %s", sessionName, key)
 				}
 				return "overseer-registry", nil
@@ -781,7 +781,7 @@ func TestResolveOverseerRuntime(t *testing.T) {
 		{
 			name: "uses ephemeral tier agent from session env",
 			sessionEnv: func(sessionName, key string) (string, error) {
-				if sessionName != "hq-overseer" || key != "GT_AGENT" {
+				if sessionName != "hq-overseer" || key != "MS_AGENT" {
 					t.Fatalf("unexpected session env lookup: %s %s", sessionName, key)
 				}
 				return "claude-sonnet", nil
@@ -791,7 +791,7 @@ func TestResolveOverseerRuntime(t *testing.T) {
 				if err := config.SaveTownSettings(config.TownSettingsPath(townRoot), config.NewTownSettings()); err != nil {
 					t.Fatalf("SaveTownSettings: %v", err)
 				}
-				t.Setenv("GT_COST_TIER", "economy")
+				t.Setenv("MS_COST_TIER", "economy")
 			},
 			wantRuntime: "claude/sonnet",
 		},
@@ -816,7 +816,7 @@ func TestResolveOverseerRuntime(t *testing.T) {
 		{
 			name: "returns unknown alias verbatim when unresolved",
 			sessionEnv: func(sessionName, key string) (string, error) {
-				if sessionName != "hq-overseer" || key != "GT_AGENT" {
+				if sessionName != "hq-overseer" || key != "MS_AGENT" {
 					t.Fatalf("unexpected session env lookup: %s %s", sessionName, key)
 				}
 				return "mystery-agent", nil
@@ -914,7 +914,7 @@ func TestFetchOverseer_UsesResolvedRuntime(t *testing.T) {
 	withOverseerFetcherHooks(
 		t,
 		func(sessionName, key string) (string, error) {
-			if sessionName != "hq-overseer" || key != "GT_AGENT" {
+			if sessionName != "hq-overseer" || key != "MS_AGENT" {
 				t.Fatalf("unexpected session env lookup: %s %s", sessionName, key)
 			}
 			return "codex", nil

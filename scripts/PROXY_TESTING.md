@@ -1,6 +1,6 @@
 # Proxy Manual Testing Guide
 
-This directory contains two testing scripts for the `gt-proxy-server` and `gt-proxy-client`:
+This directory contains two testing scripts for the `ms-proxy-server` and `ms-proxy-client`:
 
 ## Quick Smoke Test (2 minutes)
 
@@ -14,7 +14,7 @@ For a fast verification that the proxy is functional:
 - ✓ Builds binaries
 - ✓ Starts server on port 9876
 - ✓ Issues a test certificate
-- ✓ Runs a single `gt version` command through the proxy
+- ✓ Runs a single `ms version` command through the proxy
 - ✓ Automatically cleans up on exit
 
 **Best for:** Quick CI/CD checks, rapid iteration during development
@@ -34,10 +34,10 @@ For thorough validation with multiple test scenarios:
 - ✓ Starts server and keeps it running
 - ✓ Issues miner certificate
 - ✓ Tests client connection
-- ✓ Runs multiple `gt` commands:
-  - `gt --version`
-  - `gt status`
-  - `gt minecart --help`
+- ✓ Runs multiple `ms` commands:
+  - `ms --version`
+  - `ms status`
+  - `ms minecart --help`
 - ✓ Tests rate limiting (25 rapid requests)
 - ✓ Displays server health and logs
 - ✓ Keeps server running for manual testing
@@ -56,14 +56,14 @@ Once a testing script is running, you can manually test from another terminal:
 
 ```bash
 curl -s \
-  --cert /tmp/gt-proxy-quick-test/client.crt \
-  --key /tmp/gt-proxy-quick-test/client.key \
-  --cacert /tmp/gt-proxy-quick-test/ca-client.crt \
-  --resolve gt-proxy-server:9876:127.0.0.1 \
+  --cert /tmp/ms-proxy-quick-test/client.crt \
+  --key /tmp/ms-proxy-quick-test/client.key \
+  --cacert /tmp/ms-proxy-quick-test/ca-client.crt \
+  --resolve ms-proxy-server:9876:127.0.0.1 \
   -X POST \
   -H "Content-Type: application/json" \
-  -d '{"argv":["gt","version"]}' \
-  https://gt-proxy-server:9876/v1/exec
+  -d '{"argv":["ms","version"]}' \
+  https://ms-proxy-server:9876/v1/exec
 ```
 
 ### Test Different Commands
@@ -76,7 +76,7 @@ curl -s --cert ... -d '{"argv":["bd","ready"]}' https://localhost:9876/v1/exec
 curl -s --cert ... -d '{"argv":["bd","show","123"]}' https://localhost:9876/v1/exec
 
 # Check version
-curl -s --cert ... -d '{"argv":["gt","version"]}' https://localhost:9876/v1/exec
+curl -s --cert ... -d '{"argv":["ms","version"]}' https://localhost:9876/v1/exec
 ```
 
 ### Rate Limiting Test
@@ -99,10 +99,10 @@ wait
 
 ```bash
 # Smoke test logs
-tail -f /tmp/gt-proxy-quick-test/server.log
+tail -f /tmp/ms-proxy-quick-test/server.log
 
 # Manual test logs
-tail -f /tmp/gt-proxy-test/logs/server.log
+tail -f /tmp/ms-proxy-test/logs/server.log
 ```
 
 ---
@@ -115,8 +115,8 @@ You can customize the test behavior with environment variables:
 # Use a different port
 PROXY_PORT=9999 ./test-proxy-smoke.sh
 
-# Use a different town root (where gt/bd are located)
-TOWN_ROOT=/custom/gt/path ./test-proxy-manual.sh
+# Use a different town root (where ms/bd are located)
+TOWN_ROOT=/custom/ms/path ./test-proxy-manual.sh
 
 # Use a different CA directory
 CA_DIR=/custom/ca/path ./test-proxy-manual.sh
@@ -129,20 +129,20 @@ CA_DIR=/custom/ca/path ./test-proxy-manual.sh
 ### Server fails to start
 - Check if the port is already in use: `lsof -i :9876`
 - Check server logs for errors
-- Ensure `GT_TOWN` is set correctly (default: `~/gt`)
+- Ensure `MS_TOWN` is set correctly (default: `~/ms`)
 
 ### Certificate errors
 - Ensure OpenSSL is installed: `openssl version`
 - Check CA files are created in the test directory
-- Verify certificate CN matches the expected format: `gt-<rig>-<name>`
+- Verify certificate CN matches the expected format: `ms-<rig>-<name>`
 
 ### Connection refused
-- Verify server is running: `ps aux | grep gt-proxy-server`
+- Verify server is running: `ps aux | grep ms-proxy-server`
 - Check firewall settings: `netstat -an | grep 9876`
 - Ensure certificate files exist and are readable
 
 ### HTTP 403 (Forbidden)
-- Check that certificate CN matches format `gt-<rig>-<name>`
+- Check that certificate CN matches format `ms-<rig>-<name>`
 - Verify the subcommand is in the allowed list
 - Check server logs for the actual error
 

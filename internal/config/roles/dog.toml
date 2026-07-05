@@ -7,14 +7,14 @@ nudge = "Check your hook for work assignments."
 prompt_template = "dog.md.tmpl"
 
 [session]
-pattern = "gt-dog-{name}"
+pattern = "ms-dog-{name}"
 work_dir = "{town}/supervisor/dogs/{name}"
 needs_pre_sync = false
 start_command = "exec claude --dangerously-skip-permissions"
 
 [env]
-GT_ROLE = "dog"
-GT_SCOPE = "town"
+MS_ROLE = "dog"
+MS_SCOPE = "town"
 
 [health]
 ping_timeout = "30s"

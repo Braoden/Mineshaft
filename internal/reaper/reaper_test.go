@@ -23,7 +23,7 @@ func TestValidateDBName(t *testing.T) {
 	}{
 		{"hq", false},
 		{"beads", false},
-		{"gt", false},
+		{"ms", false},
 		{"test_db_123", false},
 		{"", true},
 		{"drop table", true},
@@ -163,10 +163,10 @@ func TestReaperQueriesUseTypedDependencyColumns(t *testing.T) {
 // TestReapQueryNoDatabaseNameInjection verifies that the Reap function's batch
 // SELECT query does not inject the database name into the SQL string. Previously,
 // dbName was passed as a Sprintf arg but the format string didn't use it, causing
-// positional shift: "FROM wisps w gt WHERE..." instead of "FROM wisps w LEFT JOIN...".
+// positional shift: "FROM wisps w ms WHERE..." instead of "FROM wisps w LEFT JOIN...".
 func TestReapQueryNoDatabaseNameInjection(t *testing.T) {
 	// Reproduce the exact Sprintf call from Reap() to verify no dbName injection.
-	dbName := "gt"
+	dbName := "ms"
 	parentJoin, parentWhere := parentExcludeJoin(dbName)
 	whereClause := fmt.Sprintf(
 		"w.status IN ('open', 'hooked', 'in_progress') AND w.created_at < ? AND %s", parentWhere)
@@ -177,8 +177,8 @@ func TestReapQueryNoDatabaseNameInjection(t *testing.T) {
 		parentJoin, whereClause, DefaultBatchSize)
 
 	// The query must NOT contain the literal database name as a bare token.
-	// Before the fix, "gt" appeared between "wisps w" and "WHERE".
-	if strings.Contains(idQuery, "wisps w gt") {
+	// Before the fix, "ms" appeared between "wisps w" and "WHERE".
+	if strings.Contains(idQuery, "wisps w ms") {
 		t.Errorf("Reap idQuery contains injected database name: %s", idQuery)
 	}
 	if !strings.Contains(idQuery, "LEFT JOIN") {
@@ -192,7 +192,7 @@ func TestReapQueryNoDatabaseNameInjection(t *testing.T) {
 // TestReapUpdateQueryNoDatabaseNameInjection verifies that the UPDATE query in
 // Reap() does not inject dbName where the IN clause should go.
 func TestReapUpdateQueryNoDatabaseNameInjection(t *testing.T) {
-	dbName := "gt"
+	dbName := "ms"
 	inClause := "?,?,?"
 
 	// This is the fixed query — only inClause in the Sprintf args.
@@ -214,7 +214,7 @@ func TestPurgeDigestQueryNoDatabaseNameInjection(t *testing.T) {
 	// The fixed digestQuery is a string literal — no Sprintf.
 	digestQuery := "SELECT COALESCE(w.wisp_type, 'unknown') AS wtype, COUNT(*) AS cnt FROM wisps w WHERE w.status = 'closed' AND w.closed_at < ? GROUP BY wtype"
 
-	if strings.Contains(digestQuery, "gt") {
+	if strings.Contains(digestQuery, "ms") {
 		t.Errorf("purge digestQuery should not contain database name, got: %s", digestQuery)
 	}
 	if !strings.Contains(digestQuery, "GROUP BY wtype") {
@@ -230,7 +230,7 @@ func TestPurgeBatchQueryNoDatabaseNameInjection(t *testing.T) {
 		"SELECT w.id FROM wisps w WHERE w.status = 'closed' AND w.closed_at < ? LIMIT %d",
 		DefaultBatchSize)
 
-	if strings.Contains(idQuery, "gt") {
+	if strings.Contains(idQuery, "ms") {
 		t.Errorf("purge idQuery contains injected database name: %s", idQuery)
 	}
 	expected := fmt.Sprintf("LIMIT %d", DefaultBatchSize)

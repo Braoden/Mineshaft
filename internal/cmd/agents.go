@@ -28,8 +28,8 @@ const (
 	AgentRefinery
 	AgentCrew
 	AgentMiner
-	AgentPersonal // Non-GT session (user's terminal session)
-	AgentTest     // Session on a gt-test-* socket (integration tests)
+	AgentPersonal // Non-MS session (user's terminal session)
+	AgentTest     // Session on a ms-test-* socket (integration tests)
 )
 
 // AgentSession represents a categorized tmux session.
@@ -80,9 +80,9 @@ var agentsCmd = &cobra.Command{
 	Long: `List Mineshaft agent sessions to stdout.
 
 Shows Overseer, Supervisor, Witnesses, Refineries, and Crew workers.
-Miners are hidden (use 'gt miner list' to see them).
+Miners are hidden (use 'ms miner list' to see them).
 
-Use 'gt agents menu' for an interactive tmux popup menu.`,
+Use 'ms agents menu' for an interactive tmux popup menu.`,
 	RunE: runAgentsList,
 }
 
@@ -109,7 +109,7 @@ This command helps detect situations where multiple Claude processes
 think they own the same worker identity.
 
 Output shows:
-  - Active tmux sessions with gt- prefix
+  - Active tmux sessions with ms- prefix
   - Identity locks in worker directories
   - Collisions (multiple agents claiming same identity)
   - Stale locks (dead PIDs)`,
@@ -197,7 +197,7 @@ type socketGroup struct {
 	Sessions []*AgentSession
 }
 
-// findTestSockets scans the tmux socket directory for active gt-test-* sockets.
+// findTestSockets scans the tmux socket directory for active ms-test-* sockets.
 // These sockets are created by TestMain in packages that need tmux isolation.
 // Only sockets with a running tmux server (i.e., ListSessions succeeds) are returned.
 func findTestSockets() []string {
@@ -211,7 +211,7 @@ func findTestSockets() []string {
 	var sockets []string
 	for _, e := range entries {
 		name := e.Name()
-		if !strings.HasPrefix(name, "gt-test-") {
+		if !strings.HasPrefix(name, "ms-test-") {
 			continue
 		}
 		// Skip if this somehow matches the town socket.
@@ -229,24 +229,24 @@ func findTestSockets() []string {
 }
 
 // getAllSocketSessions lists sessions from all known tmux sockets, categorized
-// and grouped. The town socket's GT agent sessions come first, followed by
+// and grouped. The town socket's MS agent sessions come first, followed by
 // personal sessions from other sockets (e.g., default), and finally any
-// active test sockets (gt-test-*) when integration tests are running.
+// active test sockets (ms-test-*) when integration tests are running.
 func getAllSocketSessions(includeMiners bool) []socketGroup {
 	townSocket := tmux.GetDefaultSocket()
 
-	// When gt agents menu is invoked via a tmux binding from a non-town
+	// When ms agents menu is invoked via a tmux binding from a non-town
 	// directory (e.g. a personal session), workspace.FindFromCwd fails in
 	// persistentPreRun, InitRegistry is never called, and GetDefaultSocket
-	// returns "". Fall back to GT_TOWN_SOCKET, which EnsureBindingsOnSocket
-	// embeds in the binding command at gt-up time.
+	// returns "". Fall back to MS_TOWN_SOCKET, which EnsureBindingsOnSocket
+	// embeds in the binding command at ms-up time.
 	if townSocket == "" {
-		townSocket = os.Getenv("GT_TOWN_SOCKET")
+		townSocket = os.Getenv("MS_TOWN_SOCKET")
 	}
 
 	var groups []socketGroup
 
-	// Town socket: GT agent sessions
+	// Town socket: MS agent sessions
 	townTmux := tmux.NewTmuxWithSocket(townSocket) // explicit socket avoids default-socket ambiguity
 	if sessions, err := townTmux.ListSessions(); err == nil && len(sessions) > 0 {
 		agents := filterAndSortSessions(sessions, includeMiners)
@@ -277,7 +277,7 @@ func getAllSocketSessions(includeMiners bool) []socketGroup {
 		}
 	}
 
-	// Test sockets: collect sessions from all gt-test-* sockets into a single
+	// Test sockets: collect sessions from all ms-test-* sockets into a single
 	// "testing" group. Install keybindings on each so prefix+g works after
 	// switching into a test session.
 	var allTestSessions []*AgentSession
@@ -287,7 +287,7 @@ func getAllSocketSessions(includeMiners bool) []socketGroup {
 		if err != nil || len(sessions) == 0 {
 			continue
 		}
-		// Test sockets: InitRegistry is already called (we're in a gt process),
+		// Test sockets: InitRegistry is already called (we're in a ms process),
 		// so townSocket is not needed here.
 		_ = tmux.EnsureBindingsOnSocket(sock, "")
 
@@ -359,11 +359,11 @@ func filterAndSortSessions(sessionNames []string, includeMiners bool) []*AgentSe
 	return agents
 }
 
-// testSocketPackage extracts the package name from a gt-test-* socket name.
-// e.g., "gt-test-tmux-12345" -> "tmux", "gt-test-cmd-67890" -> "cmd".
+// testSocketPackage extracts the package name from a ms-test-* socket name.
+// e.g., "ms-test-tmux-12345" -> "tmux", "ms-test-cmd-67890" -> "cmd".
 // Returns the full socket name if the format doesn't match.
 func testSocketPackage(socket string) string {
-	trimmed := strings.TrimPrefix(socket, "gt-test-")
+	trimmed := strings.TrimPrefix(socket, "ms-test-")
 	if idx := strings.LastIndex(trimmed, "-"); idx > 0 {
 		return trimmed[:idx]
 	}
@@ -404,7 +404,7 @@ func socketDisplayName(socket string) string {
 	if socket == tmux.GetDefaultSocket() {
 		return "hq"
 	}
-	if strings.HasPrefix(socket, "gt-test-") {
+	if strings.HasPrefix(socket, "ms-test-") {
 		return "testing"
 	}
 	return socket
@@ -454,8 +454,8 @@ func runAgents(cmd *cobra.Command, args []string) error {
 	if total == 0 {
 		fmt.Println("No agent sessions running.")
 		fmt.Println("\nStart agents with:")
-		fmt.Println("  gt overseer start")
-		fmt.Println("  gt supervisor start")
+		fmt.Println("  ms overseer start")
+		fmt.Println("  ms supervisor start")
 		return nil
 	}
 
@@ -634,7 +634,7 @@ func runAgentsCheck(cmd *cobra.Command, args []string) error {
 		fmt.Println()
 	}
 
-	fmt.Printf("Run %s to fix stale locks\n", style.Dim.Render("gt agents fix"))
+	fmt.Printf("Run %s to fix stale locks\n", style.Dim.Render("ms agents fix"))
 
 	return nil
 }

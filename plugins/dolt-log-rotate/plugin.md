@@ -20,10 +20,10 @@ severity = "medium"
 # Dolt Log Rotate
 
 The Dolt server writes stdout/stderr to `daemon/dolt.log`. This file can
-grow to multiple gigabytes and cause disk pressure or slow `gt dolt logs`.
+grow to multiple gigabytes and cause disk pressure or slow `ms dolt logs`.
 
 This plugin checks the log size every 6 hours and rotates when it exceeds
-100MB (configurable via `GT_DOLT_LOG_MAX_MB`). Keeps 3 compressed rotated
+100MB (configurable via `MS_DOLT_LOG_MAX_MB`). Keeps 3 compressed rotated
 copies.
 
 Rotation is safe while Dolt is running — the server holds an open file

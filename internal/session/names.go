@@ -6,7 +6,7 @@ import (
 )
 
 // DefaultPrefix is the default beads prefix used when no rig-specific prefix is known.
-const DefaultPrefix = "gt"
+const DefaultPrefix = "ms"
 
 // HQPrefix is the prefix for town-level services (Overseer, Supervisor).
 const HQPrefix = "hq-"
@@ -24,25 +24,25 @@ func SupervisorSessionName() string {
 }
 
 // WitnessSessionName returns the session name for a rig's Witness agent.
-// rigPrefix is the rig's beads prefix (e.g., "gt" for mineshaft, "bd" for beads).
+// rigPrefix is the rig's beads prefix (e.g., "ms" for mineshaft, "bd" for beads).
 func WitnessSessionName(rigPrefix string) string {
 	return fmt.Sprintf("%s-witness", rigPrefix)
 }
 
 // RefinerySessionName returns the session name for a rig's Refinery agent.
-// rigPrefix is the rig's beads prefix (e.g., "gt" for mineshaft, "bd" for beads).
+// rigPrefix is the rig's beads prefix (e.g., "ms" for mineshaft, "bd" for beads).
 func RefinerySessionName(rigPrefix string) string {
 	return fmt.Sprintf("%s-refinery", rigPrefix)
 }
 
 // CrewSessionName returns the session name for a crew worker in a rig.
-// rigPrefix is the rig's beads prefix (e.g., "gt" for mineshaft, "bd" for beads).
+// rigPrefix is the rig's beads prefix (e.g., "ms" for mineshaft, "bd" for beads).
 func CrewSessionName(rigPrefix, name string) string {
 	return fmt.Sprintf("%s-crew-%s", rigPrefix, name)
 }
 
 // MinerSessionName returns the session name for a miner in a rig.
-// rigPrefix is the rig's beads prefix (e.g., "gt" for mineshaft, "bd" for beads).
+// rigPrefix is the rig's beads prefix (e.g., "ms" for mineshaft, "bd" for beads).
 func MinerSessionName(rigPrefix, name string) string {
 	return fmt.Sprintf("%s-%s", rigPrefix, name)
 }

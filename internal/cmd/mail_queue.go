@@ -121,7 +121,7 @@ func runMailClaim(cmd *cobra.Command, args []string) error {
 			// winning claimant writes ack labels. Non-fatal: the claim
 			// itself already succeeded.
 			if ackErr := mail.AcknowledgeDeliveryBead(townRoot, beadsDir, candidate.ID, mail.AddressToIdentity(caller)); ackErr != nil {
-				fmt.Fprintf(os.Stderr, "gt mail claim: delivery ack failed for %s: %v\n", candidate.ID, ackErr)
+				fmt.Fprintf(os.Stderr, "ms mail claim: delivery ack failed for %s: %v\n", candidate.ID, ackErr)
 			}
 			claimed = candidate
 			break
@@ -177,7 +177,7 @@ func listUnclaimedQueueMessages(beadsDir, queueName string) ([]queueMessage, err
 	args := []string{"list",
 		"--label", "queue:" + queueName,
 		"--status", "open",
-		"--label", "gt:message",
+		"--label", "ms:message",
 		"--json",
 		"--limit", "0",
 	}
@@ -466,10 +466,10 @@ COMMANDS:
   delete    Delete a queue
 
 Examples:
-  gt mail queue create work --claimers 'mineshaft/miners/*'
-  gt mail queue show work
-  gt mail queue list
-  gt mail queue delete work`,
+  ms mail queue create work --claimers 'mineshaft/miners/*'
+  ms mail queue show work
+  ms mail queue list
+  ms mail queue delete work`,
 	RunE: requireSubcommand,
 }
 
@@ -482,9 +482,9 @@ The --claimers flag specifies a pattern for who can claim messages from this que
 Patterns support wildcards: 'mineshaft/miners/*' matches any miner in mineshaft rig.
 
 Examples:
-  gt mail queue create work --claimers 'mineshaft/miners/*'
-  gt mail queue create dispatch --claimers 'mineshaft/crew/*'
-  gt mail queue create urgent --claimers '*'`,
+  ms mail queue create work --claimers 'mineshaft/miners/*'
+  ms mail queue create dispatch --claimers 'mineshaft/crew/*'
+  ms mail queue create urgent --claimers '*'`,
 	Args: cobra.ExactArgs(1),
 	RunE: runMailQueueCreate,
 }
@@ -497,8 +497,8 @@ var mailQueueShowCmd = &cobra.Command{
 Displays the queue's claim pattern, status, and message counts.
 
 Examples:
-  gt mail queue show work
-  gt mail queue show dispatch --json`,
+  ms mail queue show work
+  ms mail queue show dispatch --json`,
 	Args: cobra.ExactArgs(1),
 	RunE: runMailQueueShow,
 }
@@ -511,8 +511,8 @@ var mailQueueListCmd = &cobra.Command{
 Shows queue names, claim patterns, and status.
 
 Examples:
-  gt mail queue list
-  gt mail queue list --json`,
+  ms mail queue list
+  ms mail queue list --json`,
 	RunE: runMailQueueList,
 }
 
@@ -524,7 +524,7 @@ var mailQueueDeleteCmd = &cobra.Command{
 This permanently removes the queue bead. Messages in the queue are not affected.
 
 Examples:
-  gt mail queue delete work`,
+  ms mail queue delete work`,
 	Args: cobra.ExactArgs(1),
 	RunE: runMailQueueDelete,
 }

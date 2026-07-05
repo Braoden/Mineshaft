@@ -12,7 +12,7 @@ import (
 //
 // Existing towns that upgraded may be missing entries for newer Dogs
 // (Compactor, JSONL backup, scheduled maintenance, etc.). This check
-// invokes the same EnsureLifecycleDefaults logic used by gt init/gt up.
+// invokes the same EnsureLifecycleDefaults logic used by ms init/ms up.
 type LifecycleDefaultsCheck struct {
 	FixableCheck
 	missing []string
@@ -43,7 +43,7 @@ func (c *LifecycleDefaultsCheck) Run(ctx *CheckContext) *CheckResult {
 			Name:    c.Name(),
 			Status:  StatusWarning,
 			Message: "daemon.json not found",
-			FixHint: "Run 'gt doctor --fix' to create with defaults",
+			FixHint: "Run 'ms doctor --fix' to create with defaults",
 		}
 	}
 
@@ -53,7 +53,7 @@ func (c *LifecycleDefaultsCheck) Run(ctx *CheckContext) *CheckResult {
 			Name:    c.Name(),
 			Status:  StatusWarning,
 			Message: "daemon.json missing patrols section",
-			FixHint: "Run 'gt doctor --fix' to populate defaults",
+			FixHint: "Run 'ms doctor --fix' to populate defaults",
 		}
 	}
 
@@ -90,7 +90,7 @@ func (c *LifecycleDefaultsCheck) Run(ctx *CheckContext) *CheckResult {
 		Name:    c.Name(),
 		Status:  StatusWarning,
 		Message: fmt.Sprintf("Missing %d lifecycle patrol(s): %s", len(c.missing), strings.Join(c.missing, ", ")),
-		FixHint: "Run 'gt doctor --fix' to populate defaults",
+		FixHint: "Run 'ms doctor --fix' to populate defaults",
 	}
 }
 

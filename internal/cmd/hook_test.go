@@ -8,7 +8,7 @@ import (
 )
 
 // TestHookMinerEnvCheck verifies that the miner guard in runHook uses
-// GT_ROLE as the authoritative check, so coordinators with a stale GT_MINER
+// MS_ROLE as the authoritative check, so coordinators with a stale MS_MINER
 // in their environment are not blocked from hooking (GH #1707).
 func TestHookMinerEnvCheck(t *testing.T) {
 	tests := []struct {
@@ -30,37 +30,37 @@ func TestHookMinerEnvCheck(t *testing.T) {
 			wantBlock: true,
 		},
 		{
-			name:      "overseer with stale GT_MINER is NOT blocked",
+			name:      "overseer with stale MS_MINER is NOT blocked",
 			role:      "overseer",
 			miner:   "alpha",
 			wantBlock: false,
 		},
 		{
-			name:      "compound witness with stale GT_MINER is NOT blocked",
+			name:      "compound witness with stale MS_MINER is NOT blocked",
 			role:      "mineshaft/witness",
 			miner:   "alpha",
 			wantBlock: false,
 		},
 		{
-			name:      "crew with stale GT_MINER is NOT blocked",
+			name:      "crew with stale MS_MINER is NOT blocked",
 			role:      "crew",
 			miner:   "alpha",
 			wantBlock: false,
 		},
 		{
-			name:      "compound crew with stale GT_MINER is NOT blocked",
+			name:      "compound crew with stale MS_MINER is NOT blocked",
 			role:      "mineshaft/crew/den",
 			miner:   "alpha",
 			wantBlock: false,
 		},
 		{
-			name:      "no GT_ROLE with GT_MINER set is blocked",
+			name:      "no MS_ROLE with MS_MINER set is blocked",
 			role:      "",
 			miner:   "alpha",
 			wantBlock: true,
 		},
 		{
-			name:      "no GT_ROLE and no GT_MINER is not blocked",
+			name:      "no MS_ROLE and no MS_MINER is not blocked",
 			role:      "",
 			miner:   "",
 			wantBlock: false,
@@ -69,8 +69,8 @@ func TestHookMinerEnvCheck(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Setenv("GT_ROLE", tt.role)
-			t.Setenv("GT_MINER", tt.miner)
+			t.Setenv("MS_ROLE", tt.role)
+			t.Setenv("MS_MINER", tt.miner)
 
 			// We only test the miner guard, so we call runHook with a dummy arg.
 			// It will either fail at the guard or fail later (missing bead, etc.).
@@ -89,9 +89,9 @@ func TestHookMinerEnvCheck(t *testing.T) {
 
 			if blocked != tt.wantBlock {
 				if tt.wantBlock {
-					t.Errorf("expected miner block but was not blocked (GT_ROLE=%q GT_MINER=%q)", tt.role, tt.miner)
+					t.Errorf("expected miner block but was not blocked (MS_ROLE=%q MS_MINER=%q)", tt.role, tt.miner)
 				} else {
-					t.Errorf("unexpected miner block with GT_ROLE=%q GT_MINER=%q", tt.role, tt.miner)
+					t.Errorf("unexpected miner block with MS_ROLE=%q MS_MINER=%q", tt.role, tt.miner)
 				}
 			}
 		})
@@ -104,8 +104,8 @@ func TestHookMinerEnvCheck(t *testing.T) {
 // than the misleading "bead 'set' not found" emitted by bd show.
 func TestHookRejectsNonBeadArg(t *testing.T) {
 	// Ensure we don't trip the miner guard.
-	t.Setenv("GT_ROLE", "")
-	t.Setenv("GT_MINER", "")
+	t.Setenv("MS_ROLE", "")
+	t.Setenv("MS_MINER", "")
 
 	tests := []string{"set", "list", "delete", "nonexistentword12345"}
 	for _, arg := range tests {
@@ -178,12 +178,12 @@ func TestCloseCompletedHookedMoleculeUsesBdCmdEnv(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := closeCompletedHookedMolecule(workDir, "gt-old"); err != nil {
+	if err := closeCompletedHookedMolecule(workDir, "ms-old"); err != nil {
 		t.Fatalf("closeCompletedHookedMolecule: %v", err)
 	}
 	log := readHookStubLog(t, logPath)
 	for _, want := range []string{
-		"args:[close][gt-old][--force][--reason=Auto-replaced by gt hook (molecule complete)][--session=ses-hook-test]",
+		"args:[close][ms-old][--force][--reason=Auto-replaced by ms hook (molecule complete)][--session=ses-hook-test]",
 		"BEADS_DIR=" + beadsDir,
 		"BEADS_DOLT_SERVER_DATABASE=hookdb",
 		"\nBD_READONLY=\n",

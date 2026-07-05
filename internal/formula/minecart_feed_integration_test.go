@@ -97,7 +97,7 @@ func TestMinecartFeedWorkflow_Integration(t *testing.T) {
 // Supervisor's dogs) can pass variable validation for wisp creation.
 //
 // Dog formulas are special because they're invoked via:
-//   gt sling mol-<name> supervisor/dogs/<dog> --var minecart=<id>
+//   ms sling mol-<name> supervisor/dogs/<dog> --var minecart=<id>
 //
 // The wisp creation validates that all template variables are either:
 // - Provided via --var flags, OR

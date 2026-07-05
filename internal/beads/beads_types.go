@@ -20,10 +20,10 @@ import (
 
 // typesSentinel is a marker file indicating custom types have been configured.
 // This persists across CLI invocations to avoid redundant bd config calls.
-const typesSentinel = ".gt-types-configured"
+const typesSentinel = ".ms-types-configured"
 
 // statusesSentinel is a marker file indicating custom statuses have been configured.
-const statusesSentinel = ".gt-statuses-configured"
+const statusesSentinel = ".ms-statuses-configured"
 
 // ensuredDirs tracks which beads directories have been ensured this session.
 // This provides fast in-memory caching for multiple creates in the same CLI run.
@@ -64,7 +64,7 @@ func ResolveRoutingTarget(townRoot, beadID, fallbackDir string) string {
 		return fallbackDir
 	}
 
-	// Extract prefix from bead ID (e.g., "gt-mineshaft-miner-Toast" -> "gt-")
+	// Extract prefix from bead ID (e.g., "ms-mineshaft-miner-Toast" -> "ms-")
 	prefix := ExtractPrefix(beadID)
 	if prefix == "" {
 		return fallbackDir
@@ -94,7 +94,7 @@ func ResolveRoutingTarget(townRoot, beadID, fallbackDir string) string {
 //
 // The sentinel file stores the configured types list. When the types list changes
 // (e.g., new types added in a mineshaft upgrade), the sentinel is detected as stale
-// and types are re-configured automatically (gt-zmy, gt-26f).
+// and types are re-configured automatically (ms-zmy, ms-26f).
 //
 // This function is thread-safe and idempotent.
 //
@@ -145,7 +145,7 @@ func EnsureCustomTypes(beadsDir string) error {
 	util.SetDetachedProcessGroup(cmd)
 	// Set BEADS_DIR and BEADS_DOLT_SERVER_DATABASE explicitly to ensure bd
 	// operates on the correct database. Strip inherited values first —
-	// getenv() returns the first match (gt-uygpe).
+	// getenv() returns the first match (ms-uygpe).
 	cmd.Env = bdEnv
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("configure custom types in %s: %s: %w",
@@ -417,16 +417,16 @@ func ensureDatabaseInitialized(beadsDir string) error {
 // Resolution order:
 //  1. Town-level config: FindTownRoot → config.GetRigPrefix (authoritative source from rigs.json)
 //  2. Local config.yaml: issue-prefix or prefix field
-//  3. Default: "gt"
+//  3. Default: "ms"
 //
 // All candidates are validated against prefixRe before use.
 //
 // Known limitation: when beadsDir is a routed path (e.g., overseer/rig/.beads
 // via beads routing), filepath.Base(filepath.Dir(beadsDir)) yields "rig" not
 // the actual rig name. GetRigPrefix will not find "rig" in rigs.json and
-// returns the default "gt". This is a safe fallback — "gt" is the universal
+// returns the default "ms". This is a safe fallback — "ms" is the universal
 // default prefix — but rigs with custom prefixes accessed via routed paths
-// will silently use "gt" instead. Fixing this would require walking up the
+// will silently use "ms" instead. Fixing this would require walking up the
 // directory tree to resolve the actual rig name, which is out of scope for
 // this crash-prevention guard.
 func detectPrefix(beadsDir string) string {
@@ -441,7 +441,7 @@ func detectPrefix(beadsDir string) string {
 
 	// 2. Fallback: read from config.yaml.
 	// NOTE: Inside towns, this is typically unreachable because GetRigPrefix
-	// always returns at least "gt" (the default) when a rig isn't found in
+	// always returns at least "ms" (the default) when a rig isn't found in
 	// rigs.json. This fallback is primarily for standalone rigs outside towns.
 	configPath := filepath.Join(beadsDir, "config.yaml")
 	if data, err := os.ReadFile(configPath); err == nil {
@@ -466,7 +466,7 @@ func detectPrefix(beadsDir string) string {
 	}
 
 	// 3. Default
-	return "gt"
+	return "ms"
 }
 
 // stripYAMLQuotes removes surrounding single or double quotes from a string.
@@ -495,7 +495,7 @@ func ResetEnsuredDirs() {
 //
 // Without this filter, callers that merge the parsed value back into a
 // `bd config set` would pollute the config with strings like
-// "status.custom (not set)", which fail bd's regex validation (gt-kbi).
+// "status.custom (not set)", which fail bd's regex validation (ms-kbi).
 func ParseConfigOutput(output []byte) string {
 	for _, line := range strings.Split(string(output), "\n") {
 		line = strings.TrimSpace(line)

@@ -7,7 +7,7 @@ package wisp
 import "time"
 
 // KeepLabel is the label that explicitly marks a wisp for preservation.
-const KeepLabel = "gt:keep"
+const KeepLabel = "ms:keep"
 
 // WispCandidate holds the data needed to evaluate promotion criteria for a wisp.
 // Populate this from a beads.Issue before calling the promotion helpers.

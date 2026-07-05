@@ -17,14 +17,14 @@ var catCmd = &cobra.Command{
 	Short:   "Display bead content",
 	Long: `Display the content of a bead (issue, task, molecule, etc.).
 
-This is a convenience wrapper around 'bd show' that integrates with gt.
-Accepts any bead ID with a recognized prefix (gt-*, bd-*, hq-*, mol-*, etc.).
+This is a convenience wrapper around 'bd show' that integrates with ms.
+Accepts any bead ID with a recognized prefix (ms-*, bd-*, hq-*, mol-*, etc.).
 
 Examples:
-  gt cat gt-abc123       # Show a mineshaft bead
-  gt cat bd-abc123       # Show a beads bead
-  gt cat hq-xyz789       # Show a town-level bead
-  gt cat bd-abc --json   # Output as JSON`,
+  ms cat ms-abc123       # Show a mineshaft bead
+  ms cat bd-abc123       # Show a beads bead
+  ms cat hq-xyz789       # Show a town-level bead
+  ms cat bd-abc --json   # Output as JSON`,
 	Args: cobra.ExactArgs(1),
 	RunE: runCat,
 }
@@ -39,7 +39,7 @@ func runCat(cmd *cobra.Command, args []string) error {
 
 	// Validate it looks like a bead ID
 	if !isBeadID(beadID) {
-		return fmt.Errorf("invalid bead ID %q (expected format: <prefix>-<id>, e.g. gt-abc123)", beadID)
+		return fmt.Errorf("invalid bead ID %q (expected format: <prefix>-<id>, e.g. ms-abc123)", beadID)
 	}
 
 	// Build bd show command
@@ -62,7 +62,7 @@ func runCat(cmd *cobra.Command, args []string) error {
 
 // isBeadID checks if a string looks like a bead ID.
 // Bead IDs have the format <prefix>-<id> where prefix is lowercase letters
-// (e.g. gt-abc123, bd-xyz, hq-cv-foo, wisp-bar, mol-baz).
+// (e.g. ms-abc123, bd-xyz, hq-cv-foo, wisp-bar, mol-baz).
 func isBeadID(s string) bool {
 	// Must contain a dash and start with lowercase letters
 	dashIdx := strings.Index(s, "-")

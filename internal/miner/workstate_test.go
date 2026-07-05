@@ -30,12 +30,12 @@ func TestDecideWorkstateCanonicalFields(t *testing.T) {
 		},
 		{
 			name: "terminal active mr does not block when gatherer omits blocker",
-			in:   WorkstateInput{State: StateIdle, CleanupStatus: CleanupClean, ActiveMR: "gt-mr-closed"},
+			in:   WorkstateInput{State: StateIdle, CleanupStatus: CleanupClean, ActiveMR: "ms-mr-closed"},
 			want: WorkstateDisposition{Verdict: WorkstateVerdictSafeToNuke, Reason: "reusable", Reusable: true, SafeToNuke: true, ReuseStatus: "idle-clean"},
 		},
 		{
 			name: "open active mr is preserved pending mr",
-			in:   WorkstateInput{State: StateIdle, CleanupStatus: CleanupClean, ActiveMR: "gt-mr-open", ActiveMRBlocker: "active_mr=gt-mr-open status=open"},
+			in:   WorkstateInput{State: StateIdle, CleanupStatus: CleanupClean, ActiveMR: "ms-mr-open", ActiveMRBlocker: "active_mr=ms-mr-open status=open"},
 			want: WorkstateDisposition{Verdict: WorkstateVerdictPendingMR, Reason: "active-mr-open", ReuseStatus: "idle-pr-open"},
 		},
 		{

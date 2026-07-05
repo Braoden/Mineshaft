@@ -35,8 +35,8 @@ func TestPrintGtEvents_ReadsAndFormats(t *testing.T) {
 	now := time.Now()
 	townRoot := writeTestEvents(t, []GtEvent{
 		{Timestamp: now.Add(-2 * time.Minute).Format(time.RFC3339), Source: "test", Type: "create", Actor: "mineshaft/witness", Visibility: "feed", Payload: map[string]interface{}{"message": "created issue"}},
-		{Timestamp: now.Add(-1 * time.Minute).Format(time.RFC3339), Source: "test", Type: "sling", Actor: "mineshaft/crew/joe", Visibility: "feed", Payload: map[string]interface{}{"bead": "gt-abc", "target": "miner-1"}},
-		{Timestamp: now.Format(time.RFC3339), Source: "test", Type: "done", Actor: "mineshaft/crew/joe", Visibility: "feed", Payload: map[string]interface{}{"bead": "gt-abc"}},
+		{Timestamp: now.Add(-1 * time.Minute).Format(time.RFC3339), Source: "test", Type: "sling", Actor: "mineshaft/crew/joe", Visibility: "feed", Payload: map[string]interface{}{"bead": "ms-abc", "target": "miner-1"}},
+		{Timestamp: now.Format(time.RFC3339), Source: "test", Type: "done", Actor: "mineshaft/crew/joe", Visibility: "feed", Payload: map[string]interface{}{"bead": "ms-abc"}},
 	})
 
 	// Capture stdout
@@ -148,7 +148,7 @@ func TestPrintGtEvents_TypeFilter(t *testing.T) {
 	now := time.Now()
 	townRoot := writeTestEvents(t, []GtEvent{
 		{Timestamp: now.Add(-2 * time.Minute).Format(time.RFC3339), Source: "test", Type: "create", Actor: "a", Visibility: "feed", Payload: map[string]interface{}{"message": "created"}},
-		{Timestamp: now.Add(-1 * time.Minute).Format(time.RFC3339), Source: "test", Type: "sling", Actor: "b", Visibility: "feed", Payload: map[string]interface{}{"bead": "gt-1", "target": "p1"}},
+		{Timestamp: now.Add(-1 * time.Minute).Format(time.RFC3339), Source: "test", Type: "sling", Actor: "b", Visibility: "feed", Payload: map[string]interface{}{"bead": "ms-1", "target": "p1"}},
 		{Timestamp: now.Format(time.RFC3339), Source: "test", Type: "create", Actor: "c", Visibility: "feed", Payload: map[string]interface{}{"message": "created again"}},
 	})
 
@@ -265,7 +265,7 @@ func TestPrintGtEvents_FollowStreamsAppended(t *testing.T) {
 
 	appended, _ := json.Marshal(GtEvent{
 		Timestamp: now.Add(1 * time.Second).Format(time.RFC3339), Source: "test", Type: "sling",
-		Actor: "b", Visibility: "feed", Payload: map[string]interface{}{"bead": "gt-1", "target": "p1"},
+		Actor: "b", Visibility: "feed", Payload: map[string]interface{}{"bead": "ms-1", "target": "p1"},
 	})
 	f, _ := os.OpenFile(eventsPath, os.O_APPEND|os.O_WRONLY, 0644)
 	f.Write(append(appended, '\n'))
@@ -313,7 +313,7 @@ func TestPrintGtEvents_RigFilter(t *testing.T) {
 	townRoot := writeTestEvents(t, []GtEvent{
 		{Timestamp: now.Add(-2 * time.Minute).Format(time.RFC3339), Source: "test", Type: "create", Actor: "greenplace/witness", Visibility: "feed", Payload: map[string]interface{}{"message": "greenplace event", "rig": "greenplace"}},
 		{Timestamp: now.Add(-1 * time.Minute).Format(time.RFC3339), Source: "test", Type: "create", Actor: "bluecove/witness", Visibility: "feed", Payload: map[string]interface{}{"message": "bluecove event", "rig": "bluecove"}},
-		{Timestamp: now.Format(time.RFC3339), Source: "test", Type: "sling", Actor: "greenplace/crew/joe", Visibility: "feed", Payload: map[string]interface{}{"bead": "gt-1", "target": "p1", "rig": "greenplace"}},
+		{Timestamp: now.Format(time.RFC3339), Source: "test", Type: "sling", Actor: "greenplace/crew/joe", Visibility: "feed", Payload: map[string]interface{}{"bead": "ms-1", "target": "p1", "rig": "greenplace"}},
 	})
 
 	oldStdout := os.Stdout
@@ -350,7 +350,7 @@ func TestMatchesFilters(t *testing.T) {
 		Time:    now,
 		Type:    "create",
 		Actor:   "mineshaft/witness",
-		Target:  "gt-abc-123",
+		Target:  "ms-abc-123",
 		Message: "created issue mol-42",
 		Rig:     "greenplace",
 	}
@@ -366,15 +366,15 @@ func TestMatchesFilters(t *testing.T) {
 		{"no filters", time.Time{}, "", "", "", true},
 		{"since matches", now.Add(-1 * time.Minute), "", "", "", true},
 		{"since excludes", now.Add(1 * time.Minute), "", "", "", false},
-		{"mol matches target", time.Time{}, "gt-abc", "", "", true},
+		{"mol matches target", time.Time{}, "ms-abc", "", "", true},
 		{"mol matches message", time.Time{}, "mol-42", "", "", true},
 		{"mol no match", time.Time{}, "nonexistent", "", "", false},
 		{"type matches", time.Time{}, "", "create", "", true},
 		{"type no match", time.Time{}, "", "delete", "", false},
 		{"rig matches", time.Time{}, "", "", "greenplace", true},
 		{"rig no match", time.Time{}, "", "", "otherrig", false},
-		{"combined all match", now.Add(-1 * time.Minute), "gt-abc", "create", "", true},
-		{"combined type mismatch", now.Add(-1 * time.Minute), "gt-abc", "delete", "", false},
+		{"combined all match", now.Add(-1 * time.Minute), "ms-abc", "create", "", true},
+		{"combined type mismatch", now.Add(-1 * time.Minute), "ms-abc", "delete", "", false},
 	}
 
 	for _, tc := range tests {

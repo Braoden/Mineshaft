@@ -33,9 +33,9 @@ The posted_by field is set to the rig's DoltHub org (DOLTHUB_ORG) or
 falls back to the directory name.
 
 Examples:
-  gt wl post --title "Fix auth bug" --project mineshaft --type bug
-  gt wl post --title "Add federation sync" --type feature --priority 1 --effort large
-  gt wl post --title "Update docs" --tags "docs,federation" --effort small`,
+  ms wl post --title "Fix auth bug" --project mineshaft --type bug
+  ms wl post --title "Add federation sync" --type feature --priority 1 --effort large
+  ms wl post --title "Update docs" --tags "docs,federation" --effort small`,
 	RunE: runWlPost,
 }
 

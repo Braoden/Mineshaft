@@ -31,9 +31,9 @@ This command is designed for the shell hook's "Add to Mineshaft?" prompt.
 It infers the rig name from the directory and git URL from the remote.
 
 Examples:
-  gt rig quick-add                    # Add current directory
-  gt rig quick-add ~/Repos/myproject  # Add specific path
-  gt rig quick-add --yes              # Non-interactive`,
+  ms rig quick-add                    # Add current directory
+  ms rig quick-add ~/Repos/myproject  # Add specific path
+  ms rig quick-add --yes              # Non-interactive`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runRigQuickAdd,
 }
@@ -94,14 +94,14 @@ func runRigQuickAdd(cmd *cobra.Command, args []string) error {
 	}
 
 	addArgs := []string{"rig", "add", rigName, gitURL}
-	addCmd := exec.Command("gt", addArgs...)
+	addCmd := exec.Command("ms", addArgs...)
 	addCmd.Dir = townRoot
 	addCmd.Stdout = os.Stdout
 	addCmd.Stderr = os.Stderr
 	if err := addCmd.Run(); err != nil {
 		fmt.Printf("\n%s Failed to add rig. You can try manually:\n", style.Warning.Render("⚠"))
-		fmt.Printf("  cd %s && gt rig add %s %s\n", townRoot, rigName, gitURL)
-		return fmt.Errorf("gt rig add failed: %w", err)
+		fmt.Printf("  cd %s && ms rig add %s %s\n", townRoot, rigName, gitURL)
+		return fmt.Errorf("ms rig add failed: %w", err)
 	}
 
 	user := quickAddUser
@@ -117,13 +117,13 @@ func runRigQuickAdd(cmd *cobra.Command, args []string) error {
 	}
 
 	crewArgs := []string{"crew", "add", user, "--rig", rigName}
-	crewCmd := exec.Command("gt", crewArgs...)
+	crewCmd := exec.Command("ms", crewArgs...)
 	crewCmd.Dir = filepath.Join(townRoot, rigName)
 	crewCmd.Stdout = os.Stdout
 	crewCmd.Stderr = os.Stderr
 	if err := crewCmd.Run(); err != nil {
 		fmt.Printf("  %s Could not create crew workspace: %v\n", style.Dim.Render("⚠"), err)
-		fmt.Printf("  Run manually: cd %s && gt crew add %s --rig %s\n", filepath.Join(townRoot, rigName), user, rigName)
+		fmt.Printf("  Run manually: cd %s && ms crew add %s --rig %s\n", filepath.Join(townRoot, rigName), user, rigName)
 	}
 
 	crewPath := filepath.Join(townRoot, rigName, "crew", user)
@@ -132,7 +132,7 @@ func runRigQuickAdd(cmd *cobra.Command, args []string) error {
 		fmt.Printf("\nYour workspace: %s\n", style.Bold.Render(crewPath))
 	}
 
-	fmt.Printf("GT_CREW_PATH=%s\n", crewPath)
+	fmt.Printf("MS_CREW_PATH=%s\n", crewPath)
 
 	return nil
 }
@@ -165,8 +165,8 @@ func sanitizeRigName(name string) string {
 }
 
 func findOrCreateTown() (string, error) {
-	// Priority 1: GT_TOWN_ROOT env var (explicit user preference)
-	if townRoot := os.Getenv("GT_TOWN_ROOT"); townRoot != "" {
+	// Priority 1: MS_TOWN_ROOT env var (explicit user preference)
+	if townRoot := os.Getenv("MS_TOWN_ROOT"); townRoot != "" {
 		if isValidTown(townRoot) {
 			return townRoot, nil
 		}
@@ -184,7 +184,7 @@ func findOrCreateTown() (string, error) {
 	}
 
 	candidates := []string{
-		filepath.Join(home, "gt"),
+		filepath.Join(home, "ms"),
 		filepath.Join(home, "mineshaft"),
 	}
 
@@ -194,7 +194,7 @@ func findOrCreateTown() (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("no Mineshaft found - run 'gt install ~/gt' first")
+	return "", fmt.Errorf("no Mineshaft found - run 'ms install ~/ms' first")
 }
 
 // isValidTown checks if a path is a valid Mineshaft installation.

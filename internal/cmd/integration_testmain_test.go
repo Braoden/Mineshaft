@@ -18,8 +18,8 @@ func TestMain(m *testing.M) {
 
 	// Start an ephemeral Dolt container for this package's integration tests.
 	// Tests like TestAgentWorktreesStayClean and TestBeadsRoutingFromTownRoot
-	// spawn gt/bd subprocesses that create databases (e.g., "tr", "hq").
-	// By routing to an isolated container (via GT_DOLT_PORT), those databases
+	// spawn ms/bd subprocesses that create databases (e.g., "tr", "hq").
+	// By routing to an isolated container (via MS_DOLT_PORT), those databases
 	// are destroyed when the container is terminated at cleanup —
 	// preventing orphan accumulation in the shared production Dolt data dir.
 	if err := testutil.EnsureDoltContainerForTestMain(); err != nil {

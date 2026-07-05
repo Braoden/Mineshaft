@@ -35,7 +35,7 @@ This is set automatically when agents are spawned and used for all attribution.
 
 The slash format mirrors filesystem paths and enables:
 - Hierarchical parsing (extract rig, role, name)
-- Consistent mail addressing (`gt mail send mineshaft/witness`)
+- Consistent mail addressing (`ms mail send mineshaft/witness`)
 - Path-like routing in beads operations
 - Visual clarity about agent location
 
@@ -64,7 +64,7 @@ abc123 Fix bug (mineshaft/crew/joe <steve@example.com>)
 
 ```json
 {
-  "id": "gt-xyz",
+  "id": "ms-xyz",
   "created_by": "mineshaft/crew/joe",
   "updated_by": "mineshaft/witness"
 }
@@ -82,7 +82,7 @@ All events include actor attribution:
   "ts": "2025-01-15T10:30:00Z",
   "type": "sling",
   "actor": "mineshaft/crew/joe",
-  "payload": { "bead": "gt-xyz", "target": "mineshaft/miners/toast" }
+  "payload": { "bead": "ms-xyz", "target": "mineshaft/miners/toast" }
 }
 ```
 
@@ -95,13 +95,13 @@ variables consistently across all agent spawn paths (managers, daemon, boot).
 
 ```bash
 # Set automatically for miner 'toast' in rig 'mineshaft'
-export GT_ROLE="miner"
-export GT_RIG="mineshaft"
-export GT_MINER="toast"
+export MS_ROLE="miner"
+export MS_RIG="mineshaft"
+export MS_MINER="toast"
 export BD_ACTOR="mineshaft/miners/toast"
 export GIT_AUTHOR_NAME="mineshaft/miners/toast"
-export GT_ROOT="/home/user/gt"
-export BEADS_DIR="/home/user/gt/mineshaft/.beads"
+export MS_ROOT="/home/user/ms"
+export BEADS_DIR="/home/user/ms/mineshaft/.beads"
 export BEADS_AGENT_NAME="mineshaft/toast"
 ```
 
@@ -109,13 +109,13 @@ export BEADS_AGENT_NAME="mineshaft/toast"
 
 ```bash
 # Set automatically for crew member 'joe' in rig 'mineshaft'
-export GT_ROLE="crew"
-export GT_RIG="mineshaft"
-export GT_CREW="joe"
+export MS_ROLE="crew"
+export MS_RIG="mineshaft"
+export MS_CREW="joe"
 export BD_ACTOR="mineshaft/crew/joe"
 export GIT_AUTHOR_NAME="mineshaft/crew/joe"
-export GT_ROOT="/home/user/gt"
-export BEADS_DIR="/home/user/gt/mineshaft/.beads"
+export MS_ROOT="/home/user/ms"
+export BEADS_DIR="/home/user/ms/mineshaft/.beads"
 export BEADS_AGENT_NAME="mineshaft/joe"
 ```
 
@@ -245,7 +245,7 @@ bd cv steve@example.com
 # Discovers all towns, aggregates work, derives skills
 ```
 
-See `~/gt/docs/hop/decisions/008-identity-model.md` for architectural rationale.
+See `~/ms/docs/hop/decisions/008-identity-model.md` for architectural rationale.
 
 ## Enterprise Use Cases
 

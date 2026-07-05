@@ -8,8 +8,8 @@ dist
 bin
 node_modules
 *.exe
-gt
-gt-desktop
+ms
+ms-desktop
 *.log
 *.tmp
 crew/

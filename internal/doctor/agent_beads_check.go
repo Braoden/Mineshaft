@@ -17,8 +17,8 @@ import (
 // - Per-rig agents (witness, refinery) - stored in each rig's beads
 // - Crew workers - stored in each rig's beads
 //
-// Agent beads are created by gt rig add (see gt-h3hak, gt-pinkq) and gt crew add.
-// Each rig uses its configured prefix (e.g., "gt-" for mineshaft, "bd-" for beads).
+// Agent beads are created by ms rig add (see ms-h3hak, ms-pinkq) and ms crew add.
+// Each rig uses its configured prefix (e.g., "ms-" for mineshaft, "bd-" for beads).
 type AgentBeadsCheck struct {
 	FixableCheck
 }
@@ -56,7 +56,7 @@ func (c *AgentBeadsCheck) Run(ctx *CheckContext) *CheckResult {
 	}
 
 	// Build prefix -> rigInfo map from routes
-	// Routes have format: prefix "gt-" -> path "mineshaft/overseer/rig" or "my-saas"
+	// Routes have format: prefix "ms-" -> path "mineshaft/overseer/rig" or "my-saas"
 	prefixToRig := make(map[string]rigInfo) // prefix (without hyphen) -> rigInfo
 	for _, r := range routes {
 		// Extract rig name from path (first component)
@@ -121,7 +121,7 @@ func (c *AgentBeadsCheck) Run(ctx *CheckContext) *CheckResult {
 	checkAgentBead := func(id string) {
 		if issue, exists := allAgentBeads[id]; exists {
 			// Found in issues table — check label
-			if !beads.HasLabel(issue, "gt:agent") {
+			if !beads.HasLabel(issue, "ms:agent") {
 				missingLabel = append(missingLabel, id)
 			}
 		} else if !allWispIDs[id] {
@@ -144,16 +144,16 @@ func (c *AgentBeadsCheck) Run(ctx *CheckContext) *CheckResult {
 			return &CheckResult{
 				Name:    c.Name(),
 				Status:  StatusOK,
-				Message: fmt.Sprintf("All %d agent beads exist with gt:agent label", checked),
+				Message: fmt.Sprintf("All %d agent beads exist with ms:agent label", checked),
 			}
 		}
 		details := append(missing, missingLabel...)
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusError,
-			Message: fmt.Sprintf("%d agent bead(s) missing, %d missing gt:agent label", len(missing), len(missingLabel)),
+			Message: fmt.Sprintf("%d agent bead(s) missing, %d missing ms:agent label", len(missing), len(missingLabel)),
 			Details: details,
-			FixHint: "Run 'gt doctor --fix' to create missing agent beads and add labels",
+			FixHint: "Run 'ms doctor --fix' to create missing agent beads and add labels",
 		}
 	}
 
@@ -187,7 +187,7 @@ func (c *AgentBeadsCheck) Run(ctx *CheckContext) *CheckResult {
 		return &CheckResult{
 			Name:    c.Name(),
 			Status:  StatusOK,
-			Message: fmt.Sprintf("All %d agent beads exist with gt:agent label", checked),
+			Message: fmt.Sprintf("All %d agent beads exist with ms:agent label", checked),
 		}
 	}
 
@@ -197,20 +197,20 @@ func (c *AgentBeadsCheck) Run(ctx *CheckContext) *CheckResult {
 			Status:  StatusError,
 			Message: fmt.Sprintf("%d agent bead(s) missing", len(missing)),
 			Details: missing,
-			FixHint: "Run 'gt doctor --fix' to create missing agent beads",
+			FixHint: "Run 'ms doctor --fix' to create missing agent beads",
 		}
 	}
 
 	return &CheckResult{
 		Name:    c.Name(),
 		Status:  StatusWarning,
-		Message: fmt.Sprintf("%d agent bead(s) missing gt:agent label", len(missingLabel)),
+		Message: fmt.Sprintf("%d agent bead(s) missing ms:agent label", len(missingLabel)),
 		Details: missingLabel,
-		FixHint: "Run 'gt doctor --fix' to add missing labels",
+		FixHint: "Run 'ms doctor --fix' to add missing labels",
 	}
 }
 
-// Fix creates missing agent beads and adds gt:agent labels to beads missing them.
+// Fix creates missing agent beads and adds ms:agent labels to beads missing them.
 func (c *AgentBeadsCheck) Fix(ctx *CheckContext) error {
 	// Pre-load all known agent bead IDs (from both issues and wisps tables)
 	// so we can check existence without per-bead Show() calls that miss ephemeral wisps.
@@ -239,8 +239,8 @@ func (c *AgentBeadsCheck) Fix(ctx *CheckContext) error {
 
 	// fixAgentBead ensures an agent bead exists and is open.
 	// Logic:
-	//   1. If in issues table → ensure gt:agent label
-	//   2. If in wisps table (open) → ensure gt:agent label
+	//   1. If in issues table → ensure ms:agent label
+	//   2. If in wisps table (open) → ensure ms:agent label
 	//   3. If exists but closed → REOPEN it (don't recreate)
 	//   4. If truly missing → CREATE it
 	// Uses CreateAgentBead which creates durable agent beads (not wisps)
@@ -250,23 +250,23 @@ func (c *AgentBeadsCheck) Fix(ctx *CheckContext) error {
 	fixAgentBead := func(bd *beads.Beads, workDir, id, desc string, fields *beads.AgentFields) error {
 		// Check issues table first
 		if issue, exists := allAgentBeads[id]; exists {
-			// In issues table — ensure it has the gt:agent label.
-			if !beads.HasLabel(issue, "gt:agent") {
+			// In issues table — ensure it has the ms:agent label.
+			if !beads.HasLabel(issue, "ms:agent") {
 				// Try bd update first (works for well-routed beads).
-				err := bd.Update(id, beads.UpdateOptions{AddLabels: []string{"gt:agent"}})
+				err := bd.Update(id, beads.UpdateOptions{AddLabels: []string{"ms:agent"}})
 				if err != nil {
 					// bd update failed explicitly — fall back to direct SQL.
-					sqlErr := addLabelSQL(workDir, id, "gt:agent")
+					sqlErr := addLabelSQL(workDir, id, "ms:agent")
 					if sqlErr != nil {
-						return fmt.Errorf("adding gt:agent label to %s: bd update: %w; SQL fallback: %v", id, err, sqlErr)
+						return fmt.Errorf("adding ms:agent label to %s: bd update: %w; SQL fallback: %v", id, err, sqlErr)
 					}
 				}
 				// Verify the label was actually added — bd update can exit 0
 				// without modifying beads with unroutable legacy prefixes (GH#2127).
-				if err == nil && !verifyLabelAdded(workDir, id, "gt:agent") {
-					sqlErr := addLabelSQL(workDir, id, "gt:agent")
+				if err == nil && !verifyLabelAdded(workDir, id, "ms:agent") {
+					sqlErr := addLabelSQL(workDir, id, "ms:agent")
 					if sqlErr != nil {
-						return fmt.Errorf("adding gt:agent label to %s: bd update was no-op, SQL fallback: %w", id, sqlErr)
+						return fmt.Errorf("adding ms:agent label to %s: bd update was no-op, SQL fallback: %w", id, sqlErr)
 					}
 				}
 			}
@@ -275,11 +275,11 @@ func (c *AgentBeadsCheck) Fix(ctx *CheckContext) error {
 
 		// Check wisps table (only open wisps are listed)
 		if allWispIDs[id] {
-			// Exists as open wisp — ensure it has gt:agent label
+			// Exists as open wisp — ensure it has ms:agent label
 			// (ListWispIDs doesn't return labels, so we need to check)
 			if issue, err := bd.Show(id); err == nil && issue != nil {
-				if !beads.HasLabel(issue, "gt:agent") {
-					_ = bd.Update(id, beads.UpdateOptions{AddLabels: []string{"gt:agent"}})
+				if !beads.HasLabel(issue, "ms:agent") {
+					_ = bd.Update(id, beads.UpdateOptions{AddLabels: []string{"ms:agent"}})
 				}
 			}
 			return nil
@@ -293,9 +293,9 @@ func (c *AgentBeadsCheck) Fix(ctx *CheckContext) error {
 				if err := bd.Update(id, beads.UpdateOptions{Status: &openStatus}); err != nil {
 					return fmt.Errorf("reopening closed agent bead %s: %w", id, err)
 				}
-				// Also ensure it has the gt:agent label
-				if !beads.HasLabel(issue, "gt:agent") {
-					_ = bd.Update(id, beads.UpdateOptions{AddLabels: []string{"gt:agent"}})
+				// Also ensure it has the ms:agent label
+				if !beads.HasLabel(issue, "ms:agent") {
+					_ = bd.Update(id, beads.UpdateOptions{AddLabels: []string{"ms:agent"}})
 				}
 				return nil
 			}
@@ -308,8 +308,8 @@ func (c *AgentBeadsCheck) Fix(ctx *CheckContext) error {
 		// Also insert into wisp_labels — CreateAgentBead may create a wisp-backed
 		// bead where bd create --labels only writes to the labels table, not
 		// wisp_labels. Doctor checks query wisps via JOIN wisp_labels, so the label
-		// must exist there or the check still reports the bead as missing. See gt-3vx.
-		_ = addWispLabelSQL(workDir, id, "gt:agent")
+		// must exist there or the check still reports the bead as missing. See ms-3vx.
+		_ = addWispLabelSQL(workDir, id, "ms:agent")
 		return nil
 	}
 
@@ -464,7 +464,7 @@ func addLabelSQL(workDir, beadID, label string) error {
 // This is needed because bd create --labels=X only inserts into the labels table,
 // not wisp_labels. Doctor checks and bd list for wisps join on wisp_labels to resolve
 // labels, so the label must be present there for wisp-backed beads to be visible.
-// See gt-3vx.
+// See ms-3vx.
 func addWispLabelSQL(workDir, beadID, label string) error {
 	escapedID := strings.ReplaceAll(beadID, "'", "''")
 	escapedLabel := strings.ReplaceAll(label, "'", "''")

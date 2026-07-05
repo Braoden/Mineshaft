@@ -23,7 +23,7 @@ var (
 	healthJSON bool
 )
 
-// HealthReport is the machine-readable output of gt health --json.
+// HealthReport is the machine-readable output of ms health --json.
 type HealthReport struct {
 	Timestamp string              `json:"timestamp"`
 	Server    *ServerHealth       `json:"server"`
@@ -178,14 +178,14 @@ func checkServerHealth(townRoot string) *ServerHealth {
 }
 
 func checkDatabaseHealth(port int) []DatabaseHealth {
-	productionDBs := []string{"hq", "gt", "mo"}
+	productionDBs := []string{"hq", "ms", "mo"}
 	var results []DatabaseHealth
 
 	for _, dbName := range productionDBs {
 		dh := DatabaseHealth{Name: dbName}
 
 		// wa-d6f: socket-first DSN (TCP fallback) to avoid TIME_WAIT churn
-		// from short-lived gt-CLI calls into Dolt.
+		// from short-lived ms-CLI calls into Dolt.
 		dsn := buildDoltDSN("root", port, dbName, dsnOpts{
 			ParseTime:   true,
 			Timeout:     "5s",
@@ -219,7 +219,7 @@ func checkDatabaseHealth(port int) []DatabaseHealth {
 }
 
 func checkPollution(port int) []PollutionRecord {
-	productionDBs := []string{"hq", "gt", "mo"}
+	productionDBs := []string{"hq", "ms", "mo"}
 	var records []PollutionRecord
 
 	// Known pollution patterns to check in the issues table.
@@ -318,7 +318,7 @@ func checkBackupHealth(townRoot string) *BackupHealth {
 }
 
 // checkProcessHealth finds zombie Dolt servers (not on the expected port).
-// Uses lsof-based port discovery instead of pgrep/ps string matching (ZFC fix: gt-fj87).
+// Uses lsof-based port discovery instead of pgrep/ps string matching (ZFC fix: ms-fj87).
 func checkProcessHealth(expectedPort int) *ProcessHealth {
 	result := health.FindZombieServers([]int{expectedPort})
 	return &ProcessHealth{

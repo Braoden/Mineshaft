@@ -4,22 +4,22 @@ This directory holds **Cursor-specific** onboarding. For general Mineshaft agent
 
 ## Prerequisites
 
-1. **Build `gt`** from the repo root (`make build` or `go install ./cmd/gt`). Mineshaft expects a working `gt` on your `PATH` for hooks and crew workflows.
+1. **Build `ms`** from the repo root (`make build` or `go install ./cmd/ms`). Mineshaft expects a working `ms` on your `PATH` for hooks and crew workflows.
 2. **`bd` (beads)** — issue DB under `.beads/`; see [`../CONTRIBUTING.md`](../CONTRIBUTING.md) for workflow.
 3. **Cursor Agent CLI** — install the `cursor-agent` binary per Cursor’s documentation. The Mineshaft preset name is **`cursor`**; the process is typically **`cursor-agent`** (an **`agent`** symlink may exist).
 
 ## Preset vs binary
 
-- **Preset:** `cursor` (`GT_AGENT=cursor`) — defined in `internal/config/agents.go`.
+- **Preset:** `cursor` (`MS_AGENT=cursor`) — defined in `internal/config/agents.go`.
 - **CLI:** `cursor-agent` (args include **`-f`** for auto-approve in autonomous flows).
 
 ## Hooks
 
-Hooks are installed under **`.cursor/hooks.json`** when roles are provisioned (`EnsureSettingsForRole`). After template or hook changes, restart agents (e.g. **`gt up --restore`**) so sessions pick up new files.
+Hooks are installed under **`.cursor/hooks.json`** when roles are provisioned (`EnsureSettingsForRole`). After template or hook changes, restart agents (e.g. **`ms up --restore`**) so sessions pick up new files.
 
 ## Skills
 
-See [`.cursor/skills/mineshaft-cursor/SKILL.md`](skills/mineshaft-cursor/SKILL.md) for agent-facing workflow (gt, resume, pointers to code).
+See [`.cursor/skills/mineshaft-cursor/SKILL.md`](skills/mineshaft-cursor/SKILL.md) for agent-facing workflow (ms, resume, pointers to code).
 
 ## Beads / plan tracking
 
@@ -42,8 +42,8 @@ Run as a **non-root** user if you want chmod/read-only failure tests in `hooks` 
 
 Run these only when changing behavior that tests do not cover end-to-end:
 
-1. `make build` — `gt` binary builds.
-2. `gt config agent list` — output includes the **`cursor`** preset.
-3. Start or attach to a dev session with **`GT_AGENT=cursor`** (or `--agent cursor`) and confirm the pane command shows **`cursor-agent`** or **`agent`** and the session receives hooks/nudges as expected.
+1. `make build` — `ms` binary builds.
+2. `ms config agent list` — output includes the **`cursor`** preset.
+3. Start or attach to a dev session with **`MS_AGENT=cursor`** (or `--agent cursor`) and confirm the pane command shows **`cursor-agent`** or **`agent`** and the session receives hooks/nudges as expected.
 
 For full §9-style checklists, see the Cursor parity plan document in your planning folder if present; prefer adding **automated** tests in-repo when possible.

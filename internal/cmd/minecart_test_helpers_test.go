@@ -24,7 +24,7 @@ type testBead struct {
 	Type   string // "epic", "task", "bug", etc.
 	Status string // default "open"
 	Rig    string // e.g. "mineshaft"
-	Prefix string // e.g. "gt-"
+	Prefix string // e.g. "ms-"
 	Parent string // parent bead ID
 }
 
@@ -300,7 +300,7 @@ func (d *testDAG) BdStubScript() string {
 
 	// --- handle: minecart list queries (overlapping minecart detection) ---
 	minecartListJSON := d.minecartListJSON()
-	sb.WriteString("  list\\ *--label=gt:minecart*)\n")
+	sb.WriteString("  list\\ *--label=ms:minecart*)\n")
 	sb.WriteString(fmt.Sprintf("    echo '%s'\n", minecartListJSON))
 	sb.WriteString("    exit 0\n")
 	sb.WriteString("    ;;\n")
@@ -360,7 +360,7 @@ func (d *testDAG) RoutesJSONL() string {
 			continue
 		}
 		seen[key] = true
-		// Use the codebase convention: {"prefix":"gt-","path":"<rig>/.beads"}
+		// Use the codebase convention: {"prefix":"ms-","path":"<rig>/.beads"}
 		lines = append(lines, fmt.Sprintf(`{"prefix":%q,"path":"%s/.beads"}`, prefix, rigName))
 	}
 
@@ -384,11 +384,11 @@ func (d *testDAG) Setup(t *testing.T) (townRoot, logPath string) {
 
 	// Write sentinel files so beads.EnsureCustomTypes/Statuses skip bd calls.
 	typesList := strings.Join(constants.BeadsCustomTypesList(), ",")
-	if err := os.WriteFile(filepath.Join(townRoot, ".beads", ".gt-types-configured"), []byte(typesList+"\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, ".beads", ".ms-types-configured"), []byte(typesList+"\n"), 0644); err != nil {
 		t.Fatalf("write types sentinel: %v", err)
 	}
 	statusesList := strings.Join(constants.BeadsCustomStatusesList(), ",")
-	if err := os.WriteFile(filepath.Join(townRoot, ".beads", ".gt-statuses-configured"), []byte(statusesList+"\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, ".beads", ".ms-statuses-configured"), []byte(statusesList+"\n"), 0644); err != nil {
 		t.Fatalf("write statuses sentinel: %v", err)
 	}
 
@@ -441,7 +441,7 @@ func (d *testDAG) Setup(t *testing.T) (townRoot, logPath string) {
 // Internal helpers
 // ---------------------------------------------------------------------------
 
-// prefixOf extracts the prefix from a bead ID (e.g. "gt-abc" → "gt-").
+// prefixOf extracts the prefix from a bead ID (e.g. "ms-abc" → "ms-").
 func prefixOf(id string) string {
 	idx := strings.Index(id, "-")
 	if idx < 0 {

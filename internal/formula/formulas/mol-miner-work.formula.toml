@@ -10,15 +10,15 @@ crash after any step and resume from the last completed step.
 You are a self-cleaning worker. You:
 1. Receive work via your hook (formula checklist + issue)
 2. Work through formula steps in order (shown inline at prime time)
-3. Complete and self-clean via `gt done` (submit + nuke yourself)
+3. Complete and self-clean via `ms done` (submit + nuke yourself)
 4. You are GONE - Refinery merges from MQ
 
-**Self-cleaning:** When you run `gt done`, you push your work, submit to MQ,
+**Self-cleaning:** When you run `ms done`, you push your work, submit to MQ,
 nuke your sandbox, and exit. There is no idle state. Done means gone.
 
 **Important:** This formula defines the workflow template. Steps are shown inline
-when you run `gt prime` — there are no separate step beads to close. Work through
-the checklist, then run `gt done`.
+when you run `ms prime` — there are no separate step beads to close. Work through
+the checklist, then run `ms done`.
 
 **Speed principle:** You run the full gate suite AFTER rebasing onto the target
 branch (pre-verify step). This enables the refinery to fast-path merge your MR
@@ -28,7 +28,7 @@ stale, the refinery falls through to normal gate execution.
 **You do NOT:**
 - Push directly to main (Refinery merges from MQ)
 - Close your own issue (Refinery closes after merge)
-- Wait for merge (you're gone after `gt done`)
+- Wait for merge (you're gone after `ms done`)
 - Fix pre-existing failures on main (Refinery owns main health)
 
 ## Variables
@@ -49,7 +49,7 @@ stale, the refinery falls through to normal gate execution.
 |-----------|--------|
 | Build fails | Fix it. Do not proceed if it won't compile. |
 | Blocked on external | Mail Witness for help, mark yourself stuck |
-| Context filling | Use gt handoff to cycle to fresh session |
+| Context filling | Use ms handoff to cycle to fresh session |
 | Unsure what to do | Mail Witness, don't guess |"""
 formula = "mol-miner-work"
 version = 11
@@ -62,23 +62,23 @@ Initialize your session and understand your assignment.
 
 **1. Prime your environment:**
 ```bash
-gt prime                    # Load role context
+ms prime                    # Load role context
 bd prime                    # Load beads context
 ```
 
 **2. Preflight check (validate connectivity):**
 ```bash
-gt hook               # Shows your pinned molecule and hook_bead
+ms hook               # Shows your pinned molecule and hook_bead
 bd show {{issue}}           # Validates Dolt connectivity + reads your assignment
 ```
-If `bd show` hangs or fails: run `gt dolt status` to check Dolt health.
-If Dolt is down: `gt escalate -s HIGH "Dolt: <symptom>"` — do NOT restart it yourself.
+If `bd show` hangs or fails: run `ms dolt status` to check Dolt health.
+If Dolt is down: `ms escalate -s HIGH "Dolt: <symptom>"` — do NOT restart it yourself.
 
 The hook_bead is your assigned issue. Read the output of `bd show` carefully.
 
 **3. Check inbox for additional context:**
 ```bash
-gt mail inbox
+ms mail inbox
 # Read any HANDOFF or assignment messages
 ```
 
@@ -113,7 +113,7 @@ This lets you make a targeted fix rather than starting from scratch.
 
 If blocked or unclear, mail Witness immediately:
 ```bash
-gt mail send <rig>/witness -s "HELP: Unclear requirements" -m "Issue: {{issue}}
+ms mail send <rig>/witness -s "HELP: Unclear requirements" -m "Issue: {{issue}}
 Question: <what you need clarified>"
 ```
 
@@ -126,7 +126,7 @@ needs = ["load-context"]
 description = """
 Ensure you're on a FRESH branch named for THIS bead, based on latest origin/{{base_branch}}.
 
-**The branch name is load-bearing metadata.** `gt done` infers the MR's
+**The branch name is load-bearing metadata.** `ms done` infers the MR's
 source_issue from the bead-id embedded in your branch name. A reused branch
 carries the PREVIOUS bead's id: your MR gets attributed to the wrong (often
 closed) bead, close credit goes to the wrong issue, and your real issue stays
@@ -223,7 +223,7 @@ Do the actual implementation work.
 - **Scope is a contract.** The bead description defines what you build. If you believe \
 the issue requires work beyond what is described, mail the overseer BEFORE implementing it:
   ```bash
-  gt mail send overseer/ -s "Scope question: {{issue}}" -m "I think we also need X because Y. Proceed?"
+  ms mail send overseer/ -s "Scope question: {{issue}}" -m "I think we also need X because Y. Proceed?"
   ```
   Wait for a response before expanding scope. Do NOT build unrequested features and \
 present them as complete.
@@ -250,7 +250,7 @@ to the bead via --notes or --design. Without this, your entire work product is
 lost when the session ends.
 
 **Review-only close evidence:** If the bead has `review_only: true`, notes/design
-are durable report content but do NOT satisfy `gt done`. Add a fresh evidence
+are durable report content but do NOT satisfy `ms done`. Add a fresh evidence
 comment after the current assignment, authored by the assignee, with the current
 head SHA before completing:
 ```bash
@@ -282,7 +282,7 @@ Do NOT fix unrelated issues in this branch.
 **If stuck:**
 Don't spin for more than 15 minutes. Mail Witness:
 ```bash
-gt mail send <rig>/witness -s "HELP: Stuck on implementation" -m "Issue: {{issue}}
+ms mail send <rig>/witness -s "HELP: Stuck on implementation" -m "Issue: {{issue}}
 Trying to: <what you're attempting>
 Problem: <what's blocking you>
 Tried: <what you've attempted>"
@@ -327,7 +327,7 @@ This MUST show at least 1 commit. If it shows NOTHING:
 - You have NOT completed your implementation. Do NOT close this step.
 - Go back to the implement step and do the work.
 - If the task genuinely requires no code changes (already fixed upstream, etc.),
-  run `gt done --status DEFERRED` and skip remaining steps.
+  run `ms done --status DEFERRED` and skip remaining steps.
 - Do NOT proceed to review or build with zero commits.
 
 **5. VERIFY clean working tree:**
@@ -501,11 +501,11 @@ Empty commands mean "not configured" — skip silently.
 - Do NOT proceed with --pre-verified if gates failed
 
 **4. If all gates pass:**
-You will use `gt done --pre-verified` in the next step. This tells the refinery
+You will use `ms done --pre-verified` in the next step. This tells the refinery
 that you ran the full gate suite on a rebased branch, enabling fast-path merge.
 
 **Note:** If this step takes too long or the gates are not configured for this
-project, you may skip this step and use `gt done` without --pre-verified.
+project, you may skip this step and use `ms done` without --pre-verified.
 The refinery will run gates normally (slower but still correct).
 
 **Exit criteria:** Branch rebased onto latest origin/{{base_branch}}, all configured gates pass."""
@@ -518,7 +518,7 @@ description = """
 Submit your work and clean up. You cease to exist after this step.
 
 **Self-Cleaning Model:**
-Once you run `gt done`, you're gone. The command:
+Once you run `ms done`, you're gone. The command:
 1. Pushes your branch to origin
 2. Creates an MR bead in the merge queue
 3. Nukes your sandbox (worktree removal)
@@ -528,25 +528,25 @@ Once you run `gt done`, you're gone. The command:
 ```bash
 git log origin/{{base_branch}}..HEAD --oneline
 ```
-This MUST show at least 1 commit. If it shows nothing, do NOT run `gt done`.
-`gt done` will reject zero-commit branches for miners.
+This MUST show at least 1 commit. If it shows nothing, do NOT run `ms done`.
+`ms done` will reject zero-commit branches for miners.
 
-**Run gt done:**
+**Run ms done:**
 ```bash
 # For code tasks with pre-verification (recommended — enables fast-path merge):
-gt done --pre-verified --target {{base_branch}}
+ms done --pre-verified --target {{base_branch}}
 
 # For code tasks without pre-verification (gates skipped or failed):
-gt done --target {{base_branch}}
+ms done --target {{base_branch}}
 
 # For report-only tasks (no commits — audits, reviews, research):
-gt done --status DEFERRED
+ms done --status DEFERRED
 ```
 
 You should see output like:
 ```
 ✓ Work submitted to merge queue
-  MR ID: gt-xxxxx
+  MR ID: ms-xxxxx
   Source: miner/<name>
   Target: {{base_branch}}
   Issue: {{issue}}

@@ -83,7 +83,7 @@ func ParseMessageType(subject string) MessageType {
 // MergeReadyPayload contains the data for a MERGE_READY message.
 // Sent by Witness after verifying miner work is complete.
 type MergeReadyPayload struct {
-	// Branch is the miner's work branch (e.g., "miner/Toast/gt-abc").
+	// Branch is the miner's work branch (e.g., "miner/Toast/ms-abc").
 	Branch string `json:"branch"`
 
 	// Issue is the beads issue ID the miner completed.
@@ -246,7 +246,7 @@ type MinerDonePayload struct {
 	// MergeStrategy is the minecart's merge strategy (direct, mr, local).
 	MergeStrategy string `json:"merge_strategy,omitempty"`
 
-	// Errors contains any non-fatal errors encountered during gt done.
+	// Errors contains any non-fatal errors encountered during ms done.
 	Errors string `json:"errors,omitempty"`
 }
 

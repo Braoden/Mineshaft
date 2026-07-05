@@ -199,10 +199,10 @@ func TestHandleMRInfoFailure_NeedsApproval_StaysInQueue(t *testing.T) {
 	e.mergeSlotRelease = func(holder string) error { return nil }
 
 	mr := &MRInfo{
-		ID:          "gt-test",
-		Branch:      "miner/test/gt-test",
+		ID:          "ms-test",
+		Branch:      "miner/test/ms-test",
 		Target:      "main",
-		SourceIssue: "gt-src",
+		SourceIssue: "ms-src",
 		Worker:      "miners/test",
 	}
 	result := ProcessResult{

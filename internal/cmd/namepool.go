@@ -29,12 +29,12 @@ By default, miners get themed names from the Mad Max universe
 (furiosa, nux, slit, etc.). You can change the theme or add custom names.
 
 Examples:
-  gt namepool              # Show current pool status
-  gt namepool --list       # List available themes
-  gt namepool themes       # Show theme names
-  gt namepool set minerals # Set theme to 'minerals'
-  gt namepool add ember    # Add custom name to pool
-  gt namepool reset        # Reset pool state`,
+  ms namepool              # Show current pool status
+  ms namepool --list       # List available themes
+  ms namepool themes       # Show theme names
+  ms namepool set minerals # Set theme to 'minerals'
+  ms namepool add ember    # Add custom name to pool
+  ms namepool reset        # Reset pool state`,
 	RunE: runNamepool,
 }
 
@@ -54,7 +54,7 @@ var namepoolSetCmd = &cobra.Command{
 	Long: `Set the namepool theme used for naming new miners in this rig.
 
 Changes the theme and saves it to the rig settings. Existing miner
-names are not affected. Use 'gt namepool themes' to see available themes.`,
+names are not affected. Use 'ms namepool themes' to see available themes.`,
 	Args: cobra.ExactArgs(1),
 	RunE: runNamepoolSet,
 }
@@ -86,12 +86,12 @@ var namepoolCreateCmd = &cobra.Command{
 	Long: `Create a custom namepool theme stored as a text file.
 
 The theme is saved to <town>/settings/themes/<name>.txt and can be
-used with 'gt namepool set <name>'. Names can be provided as arguments
+used with 'ms namepool set <name>'. Names can be provided as arguments
 or read from a file with --from-file.
 
 Examples:
-  gt namepool create tolkien aragorn legolas gimli gandalf frodo samwise
-  gt namepool create tolkien --from-file ~/tolkien-names.txt`,
+  ms namepool create tolkien aragorn legolas gimli gandalf frodo samwise
+  ms namepool create tolkien --from-file ~/tolkien-names.txt`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runNamepoolCreate,
 }
@@ -224,7 +224,7 @@ func runNamepoolThemes(cmd *cobra.Command, args []string) error {
 		names, err = miner.GetThemeNames(theme)
 	}
 	if err != nil {
-		return fmt.Errorf("unknown theme: %s (use 'gt namepool themes' to list available themes)", theme)
+		return fmt.Errorf("unknown theme: %s (use 'ms namepool themes' to list available themes)", theme)
 	}
 
 	label := ""
@@ -257,7 +257,7 @@ func runNamepoolSet(cmd *cobra.Command, args []string) error {
 
 	// Validate theme: check built-in first, then custom
 	if _, err := miner.ResolveThemeNames(townRoot, theme); err != nil {
-		return fmt.Errorf("unknown theme: %s (use 'gt namepool themes' to list available themes)", theme)
+		return fmt.Errorf("unknown theme: %s (use 'ms namepool themes' to list available themes)", theme)
 	}
 
 	// Update pool
@@ -458,7 +458,7 @@ func runNamepoolCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("Created custom theme '%s' with %d names\n", themeName, len(names))
-	fmt.Printf("Use 'gt namepool set %s' to activate it for a rig.\n", themeName)
+	fmt.Printf("Use 'ms namepool set %s' to activate it for a rig.\n", themeName)
 	return nil
 }
 

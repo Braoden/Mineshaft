@@ -67,7 +67,7 @@ var mqCmd = &cobra.Command{
 	RunE:    requireSubcommand,
 	Long: `Manage merge requests and the merge queue for a rig.
 
-Alias: 'gt mr' is equivalent to 'gt mq' (merge request vs merge queue).
+Alias: 'ms mr' is equivalent to 'ms mq' (merge request vs merge queue).
 
 The merge queue tracks work branches from miners waiting to be merged.
 Use these commands to view, submit, retry, and manage merge requests.`,
@@ -82,7 +82,7 @@ Creates a merge-request bead that will be processed by the Refinery.
 
 Auto-detection:
   - Branch: current git branch
-  - Issue: parsed from branch name (e.g., miner/Nux/gp-xyz → gt-xyz)
+  - Issue: parsed from branch name (e.g., miner/Nux/gp-xyz → ms-xyz)
   - Worker: parsed from branch name
   - Rig: detected from current directory
   - Target: automatically determined (see below)
@@ -104,11 +104,11 @@ Miner auto-cleanup:
   multiple MRs or continue working).
 
 Examples:
-  gt mq submit                           # Auto-detect everything + auto-cleanup
-  gt mq submit --issue gp-abc            # Explicit issue
-  gt mq submit --epic gt-xyz             # Target integration branch explicitly
-  gt mq submit --priority 0              # Override priority (P0)
-  gt mq submit --no-cleanup              # Submit without auto-cleanup`,
+  ms mq submit                           # Auto-detect everything + auto-cleanup
+  ms mq submit --issue gp-abc            # Explicit issue
+  ms mq submit --epic ms-xyz             # Target integration branch explicitly
+  ms mq submit --priority 0              # Override priority (P0)
+  ms mq submit --no-cleanup              # Submit without auto-cleanup`,
 	RunE: runMqSubmit,
 }
 
@@ -121,8 +121,8 @@ Resets a failed MR so it can be processed again by the refinery.
 The MR must be in a failed state (open with an error).
 
 Examples:
-  gt mq retry greenplace gp-mr-abc123
-  gt mq retry greenplace gp-mr-abc123 --now`,
+  ms mq retry greenplace gp-mr-abc123
+  ms mq retry greenplace gp-mr-abc123 --now`,
 	Args: cobra.ExactArgs(2),
 	RunE: runMQRetry,
 }
@@ -136,16 +136,16 @@ Lists all pending merge requests waiting to be processed.
 
 Output format:
   ID          STATUS       PRIORITY  BRANCH                    WORKER  AGE
-  gt-mr-001   ready        P0        miner/Nux/gp-xyz        Nux     5m
-  gt-mr-002   in_progress  P1        miner/Toast/gt-abc      Toast   12m
-  gt-mr-003   blocked      P1        miner/Capable/gt-def    Capable 8m
-              (waiting on gt-mr-001)
+  ms-mr-001   ready        P0        miner/Nux/gp-xyz        Nux     5m
+  ms-mr-002   in_progress  P1        miner/Toast/ms-abc      Toast   12m
+  ms-mr-003   blocked      P1        miner/Capable/ms-def    Capable 8m
+              (waiting on ms-mr-001)
 
 Examples:
-  gt mq list greenplace
-  gt mq list greenplace --ready
-  gt mq list greenplace --status=open
-  gt mq list greenplace --worker=Nux`,
+  ms mq list greenplace
+  ms mq list greenplace --ready
+  ms mq list greenplace --status=open
+  ms mq list greenplace --worker=Nux`,
 	Args: cobra.ExactArgs(1),
 	RunE: runMQList,
 }
@@ -159,8 +159,8 @@ This closes the MR with a 'rejected' status without merging.
 The source issue is NOT closed (work is not done).
 
 Examples:
-  gt mq reject greenplace miner/Nux/gp-xyz --reason "Does not meet requirements"
-  gt mq reject greenplace mr-Nux-12345 --reason "Superseded by other work" --notify`,
+  ms mq reject greenplace miner/Nux/gp-xyz --reason "Does not meet requirements"
+  ms mq reject greenplace mr-Nux-12345 --reason "Superseded by other work" --notify`,
 	Args: cobra.ExactArgs(2),
 	RunE: runMQReject,
 }
@@ -182,8 +182,8 @@ Designed for use by the refinery formula after a successful merge to main.
 The branch name is read from the MR bead, so no manual branch argument is needed.
 
 Examples:
-  gt mq post-merge mineshaft gt-mr-abc123
-  gt mq post-merge mineshaft gt-mr-abc123 --skip-branch-delete`,
+  ms mq post-merge mineshaft ms-mr-abc123
+  ms mq post-merge mineshaft ms-mr-abc123 --skip-branch-delete`,
 	Args: cobra.ExactArgs(2),
 	RunE: runMQPostMerge,
 }
@@ -197,7 +197,7 @@ Shows all MR fields, current status with timestamps, dependencies,
 blockers, and processing history.
 
 Example:
-  gt mq status gp-mr-abc123`,
+  ms mq status gp-mr-abc123`,
 	Args: cobra.ExactArgs(1),
 	RunE: runMqStatus,
 }
@@ -247,10 +247,10 @@ Actions:
   4. Store actual branch name in epic metadata
 
 Examples:
-  gt mq integration create gt-auth-epic
+  ms mq integration create ms-auth-epic
   # Creates integration/add-user-authentication (from epic title)
 
-  gt mq integration create RA-123 --branch "klauern/PROJ-1234/{epic}"
+  ms mq integration create RA-123 --branch "klauern/PROJ-1234/{epic}"
   # Creates klauern/PROJ-1234/RA-123`,
 	Args: cobra.ExactArgs(1),
 	RunE: runMqIntegrationCreate,
@@ -279,9 +279,9 @@ Options:
   --dry-run     Preview only, make no changes
 
 Examples:
-  gt mq integration land gt-auth-epic
-  gt mq integration land gt-auth-epic --dry-run
-  gt mq integration land gt-auth-epic --force --skip-tests`,
+  ms mq integration land ms-auth-epic
+  ms mq integration land ms-auth-epic --dry-run
+  ms mq integration land ms-auth-epic --force --skip-tests`,
 	Args: cobra.ExactArgs(1),
 	RunE: runMqIntegrationLand,
 }
@@ -298,7 +298,7 @@ Shows:
   - Pending MRs (open, targeting integration branch)
 
 Example:
-  gt mq integration status gt-auth-epic`,
+  ms mq integration status ms-auth-epic`,
 	Args: cobra.ExactArgs(1),
 	RunE: runMqIntegrationStatus,
 }
@@ -385,13 +385,13 @@ func findCurrentRig(townRoot string) (string, *rig.Rig, error) {
 		rigName = parts[0]
 	}
 
-	// When gt is invoked via shell alias (cd ~/gt && gt), cwd is the town
-	// root and relPath is ".". Fall back to GT_RIG env var.
+	// When ms is invoked via shell alias (cd ~/ms && ms), cwd is the town
+	// root and relPath is ".". Fall back to MS_RIG env var.
 	if rigName == "" {
-		rigName = os.Getenv("GT_RIG")
+		rigName = os.Getenv("MS_RIG")
 	}
 	if rigName == "" {
-		return "", nil, fmt.Errorf("not inside a rig directory (and GT_RIG not set)")
+		return "", nil, fmt.Errorf("not inside a rig directory (and MS_RIG not set)")
 	}
 
 	// Load rig manager and get the rig

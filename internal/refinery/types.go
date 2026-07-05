@@ -15,7 +15,7 @@ type MergeRequest struct {
 	// ID is a unique identifier for this merge request.
 	ID string `json:"id"`
 
-	// Branch is the source branch name (e.g., "miner/Toast/gt-abc").
+	// Branch is the source branch name (e.g., "miner/Toast/ms-abc").
 	Branch string `json:"branch"`
 
 	// Worker is the miner that created this branch.

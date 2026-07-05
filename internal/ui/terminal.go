@@ -35,7 +35,7 @@ func InitTheme(configTheme string) {
 
 // GetThemeMode returns the current CLI color scheme mode.
 // Priority order:
-//  1. GT_THEME environment variable ("dark", "light", "auto")
+//  1. MS_THEME environment variable ("dark", "light", "auto")
 //  2. Configured value from settings (passed to InitTheme)
 //  3. Default: "auto"
 func GetThemeMode() ThemeMode {
@@ -50,8 +50,8 @@ func HasDarkBackground() bool {
 
 // resolveThemeMode determines the theme mode from env and config.
 func resolveThemeMode(configTheme string) ThemeMode {
-	// Priority 1: GT_THEME environment variable
-	if envTheme := os.Getenv("GT_THEME"); envTheme != "" {
+	// Priority 1: MS_THEME environment variable
+	if envTheme := os.Getenv("MS_THEME"); envTheme != "" {
 		switch strings.ToLower(envTheme) {
 		case "dark":
 			return ThemeModeDark
@@ -122,8 +122,8 @@ func ShouldUseColor() bool {
 // ShouldUseEmoji determines if emoji decorations should be used.
 // Disabled in non-TTY mode to keep output machine-readable.
 func ShouldUseEmoji() bool {
-	// GT_NO_EMOJI disables emoji output
-	if _, exists := os.LookupEnv("GT_NO_EMOJI"); exists {
+	// MS_NO_EMOJI disables emoji output
+	if _, exists := os.LookupEnv("MS_NO_EMOJI"); exists {
 		return false
 	}
 
@@ -133,12 +133,12 @@ func ShouldUseEmoji() bool {
 
 // IsAgentMode returns true if the CLI is running in agent-optimized mode.
 // This is triggered by:
-//   - GT_AGENT_MODE=1 environment variable (explicit)
+//   - MS_AGENT_MODE=1 environment variable (explicit)
 //   - CLAUDE_CODE environment variable (auto-detect Claude Code)
 //
 // Agent mode provides ultra-compact output optimized for LLM context windows.
 func IsAgentMode() bool {
-	if os.Getenv("GT_AGENT_MODE") == "1" {
+	if os.Getenv("MS_AGENT_MODE") == "1" {
 		return true
 	}
 	// auto-detect Claude Code environment

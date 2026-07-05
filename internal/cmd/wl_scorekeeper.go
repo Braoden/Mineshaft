@@ -33,9 +33,9 @@ Without clusters, max achievable tier is 'contributor' (3+ stamps).
 'trusted' and above require cluster_breadth >= 1 (Phase 2).
 
 EXAMPLES:
-  gt wl scorekeeper             # Compute and update leaderboard
-  gt wl scorekeeper --json      # Output computation summary as JSON
-  gt wl scorekeeper --push      # Update leaderboard and push to DoltHub`,
+  ms wl scorekeeper             # Compute and update leaderboard
+  ms wl scorekeeper --json      # Output computation summary as JSON
+  ms wl scorekeeper --push      # Update leaderboard and push to DoltHub`,
 }
 
 func init() {
@@ -52,7 +52,7 @@ func runWlScorekeeper(cmd *cobra.Command, args []string) error {
 
 	dbName := wasteland.ResolveDBName(townRoot)
 	if !doltserver.DatabaseExists(townRoot, dbName) {
-		return fmt.Errorf("database %q not found\nJoin a wasteland first with: gt wl join <org/db>", dbName)
+		return fmt.Errorf("database %q not found\nJoin a wasteland first with: ms wl join <org/db>", dbName)
 	}
 
 	store := doltserver.NewWLCommonsWithDB(townRoot, dbName)

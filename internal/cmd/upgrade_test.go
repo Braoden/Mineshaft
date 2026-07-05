@@ -22,8 +22,8 @@ func TestGenerateCLAUDEMD(t *testing.T) {
 	if !contains(content, "Do NOT adopt an identity") {
 		t.Error("CLAUDE.md should contain identity anchoring warning")
 	}
-	if !contains(content, "GT_ROLE") {
-		t.Error("CLAUDE.md should reference GT_ROLE environment variable")
+	if !contains(content, "MS_ROLE") {
+		t.Error("CLAUDE.md should reference MS_ROLE environment variable")
 	}
 }
 

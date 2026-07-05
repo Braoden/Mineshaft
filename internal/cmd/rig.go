@@ -1,4 +1,4 @@
-// Package cmd provides CLI commands for the gt tool.
+// Package cmd provides CLI commands for the ms tool.
 package cmd
 
 import (
@@ -61,13 +61,13 @@ This creates a rig container with:
   - plugins/              Rig-level plugin directory
   - refinery/rig/         Canonical main clone
   - overseer/rig/            Overseer's working clone
-  - crew/                 Empty crew directory (add members with 'gt crew add')
+  - crew/                 Empty crew directory (add members with 'ms crew add')
   - witness/              Witness agent directory
   - miners/             Worker directory (empty)
 
 The command also:
   - Seeds patrol molecules (Supervisor, Witness, Refinery)
-  - Creates ~/gt/plugins/ (town-level) if it doesn't exist
+  - Creates ~/ms/plugins/ (town-level) if it doesn't exist
   - Creates <rig>/plugins/ (rig-level)
 
 Use --adopt to register an existing directory instead of creating new:
@@ -79,10 +79,10 @@ For a repo you don't own, use fork mode (fetch upstream, push to fork).
 See docs/guides/fork-rig-setup.md for setup, verification, and recovery.
 
 Example:
-  gt rig add mineshaft https://github.com/steveyegge/mineshaft
-  gt rig add my_project git@github.com:user/repo.git --prefix mp
-  gt rig add existing_rig --adopt
-  gt rig add mineshaft https://github.com/mineshafthall/mineshaft \
+  ms rig add mineshaft https://github.com/steveyegge/mineshaft
+  ms rig add my_project git@github.com:user/repo.git --prefix mp
+  ms rig add existing_rig --adopt
+  ms rig add mineshaft https://github.com/mineshafthall/mineshaft \
     --push-url https://github.com/you/mineshaft \
     --upstream-url https://github.com/mineshafthall/mineshaft`,
 	Args: cobra.RangeArgs(1, 2),
@@ -101,8 +101,8 @@ For each rig, displays:
   - Number of miners and crew members
 
 Examples:
-  gt rig list          # List all rigs with status
-  gt rig list --json   # Output as JSON for scripting`,
+  ms rig list          # List all rigs with status
+  ms rig list --json   # Output as JSON for scripting`,
 	RunE: runRigList,
 }
 
@@ -115,15 +115,15 @@ This only removes the rig entry from overseer/rigs.json and cleans up
 the beads route. The rig's files on disk are NOT deleted.
 
 If the rig has running tmux sessions (witness, refinery, miners, crew),
-you must shut them down first with 'gt rig shutdown' or use --force to
+you must shut them down first with 'ms rig shutdown' or use --force to
 kill them automatically.
 
 To fully remove a rig, delete the directory manually after unregistering.
 
 Examples:
-  gt rig remove myproject                    # Unregister (fails if sessions running)
-  gt rig remove myproject --force            # Kill sessions then unregister
-  gt rig remove myproject && rm -rf myproject # Unregister and delete files`,
+  ms rig remove myproject                    # Unregister (fails if sessions running)
+  ms rig remove myproject --force            # Kill sessions then unregister
+  ms rig remove myproject && rm -rf myproject # Unregister and delete files`,
 	Args: cobra.ExactArgs(1),
 	RunE: runRigRemove,
 }
@@ -136,11 +136,11 @@ var rigResetCmd = &cobra.Command{
 By default, resets all resettable state. Use flags to reset specific items.
 
 Examples:
-  gt rig reset              # Reset all state
-  gt rig reset --handoff    # Clear handoff content only
-  gt rig reset --mail       # Clear stale mail messages only
-  gt rig reset --stale      # Reset orphaned in_progress issues
-  gt rig reset --stale --dry-run  # Preview what would be reset`,
+  ms rig reset              # Reset all state
+  ms rig reset --handoff    # Clear handoff content only
+  ms rig reset --mail       # Clear stale mail messages only
+  ms rig reset --stale      # Reset orphaned in_progress issues
+  ms rig reset --stale --dry-run  # Preview what would be reset`,
 	RunE: runRigReset,
 }
 
@@ -149,7 +149,7 @@ var rigBootCmd = &cobra.Command{
 	Short: "Start witness and refinery for a rig",
 	Long: `Start the witness and refinery agents for a rig.
 
-This is the inverse of 'gt rig shutdown'. It starts:
+This is the inverse of 'ms rig shutdown'. It starts:
 - The witness (if not already running)
 - The refinery (if not already running)
 
@@ -157,7 +157,7 @@ Miners are NOT started by this command - they are spawned
 on demand when work is assigned.
 
 Examples:
-  gt rig boot greenplace`,
+  ms rig boot greenplace`,
 	Args: cobra.ExactArgs(1),
 	RunE: runRigBoot,
 }
@@ -167,7 +167,7 @@ var rigStartCmd = &cobra.Command{
 	Short: "Start witness and refinery on patrol for one or more rigs",
 	Long: `Start the witness and refinery agents on patrol for one or more rigs.
 
-This is similar to 'gt rig boot' but supports multiple rigs at once.
+This is similar to 'ms rig boot' but supports multiple rigs at once.
 For each rig, it starts:
 - The witness (if not already running)
 - The refinery (if not already running)
@@ -176,9 +176,9 @@ Miners are NOT started by this command - they are spawned
 on demand when work is assigned.
 
 Examples:
-  gt rig start mineshaft
-  gt rig start mineshaft beads
-  gt rig start mineshaft beads myproject`,
+  ms rig start mineshaft
+  ms rig start mineshaft beads
+  ms rig start mineshaft beads myproject`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runRigStart,
 }
@@ -188,12 +188,12 @@ var rigRebootCmd = &cobra.Command{
 	Short: "Restart witness and refinery for a rig",
 	Long: `Restart the patrol agents (witness and refinery) for a rig.
 
-This is equivalent to 'gt rig shutdown' followed by 'gt rig boot'.
+This is equivalent to 'ms rig shutdown' followed by 'ms rig boot'.
 Useful after miners complete work and land their changes.
 
 Examples:
-  gt rig reboot greenplace
-  gt rig reboot beads --force`,
+  ms rig reboot greenplace
+  ms rig reboot beads --force`,
 	Args: cobra.ExactArgs(1),
 	RunE: runRigReboot,
 }
@@ -217,9 +217,9 @@ Use --force to force immediate shutdown (prompts if uncommitted work).
 Use --nuclear to bypass ALL safety checks (will lose work!).
 
 Examples:
-  gt rig shutdown greenplace
-  gt rig shutdown greenplace --force
-  gt rig shutdown greenplace --nuclear  # DANGER: loses uncommitted work`,
+  ms rig shutdown greenplace
+  ms rig shutdown greenplace --force
+  ms rig shutdown greenplace --nuclear  # DANGER: loses uncommitted work`,
 	Args: cobra.ExactArgs(1),
 	RunE: runRigShutdown,
 }
@@ -240,9 +240,9 @@ Displays:
 - Crew members (name, branch, session status, git status)
 
 Examples:
-  gt rig status           # Infer rig from current directory
-  gt rig status mineshaft
-  gt rig status beads`,
+  ms rig status           # Infer rig from current directory
+  ms rig status mineshaft
+  ms rig status beads`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runRigStatus,
 }
@@ -252,7 +252,7 @@ var rigStopCmd = &cobra.Command{
 	Short: "Stop one or more rigs (shutdown semantics)",
 	Long: `Stop all agents in one or more rigs.
 
-This command is similar to 'gt rig shutdown' but supports multiple rigs.
+This command is similar to 'ms rig shutdown' but supports multiple rigs.
 For each rig, it gracefully shuts down:
 - All miner sessions
 - The refinery (if running)
@@ -267,10 +267,10 @@ Use --force to force immediate shutdown (prompts if uncommitted work).
 Use --nuclear to bypass ALL safety checks (will lose work!).
 
 Examples:
-  gt rig stop mineshaft
-  gt rig stop mineshaft beads
-  gt rig stop --force mineshaft beads
-  gt rig stop --nuclear mineshaft  # DANGER: loses uncommitted work`,
+  ms rig stop mineshaft
+  ms rig stop mineshaft beads
+  ms rig stop --force mineshaft beads
+  ms rig stop --nuclear mineshaft  # DANGER: loses uncommitted work`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runRigStop,
 }
@@ -280,7 +280,7 @@ var rigRestartCmd = &cobra.Command{
 	Short: "Restart one or more rigs (stop then start)",
 	Long: `Restart the patrol agents (witness and refinery) for one or more rigs.
 
-This is equivalent to 'gt rig stop' followed by 'gt rig start' for each rig.
+This is equivalent to 'ms rig stop' followed by 'ms rig start' for each rig.
 Useful after miners complete work and land their changes.
 
 Before shutdown, checks all miners for uncommitted work:
@@ -292,10 +292,10 @@ Use --force to force immediate shutdown (prompts if uncommitted work).
 Use --nuclear to bypass ALL safety checks (will lose work!).
 
 Examples:
-  gt rig restart mineshaft
-  gt rig restart mineshaft beads
-  gt rig restart --force mineshaft beads
-  gt rig restart --nuclear mineshaft  # DANGER: loses uncommitted work`,
+  ms rig restart mineshaft
+  ms rig restart mineshaft beads
+  ms rig restart --force mineshaft beads
+  ms rig restart --nuclear mineshaft  # DANGER: loses uncommitted work`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runRigRestart,
 }
@@ -497,7 +497,7 @@ func runRigAdd(cmd *cobra.Command, args []string) error {
 	gitURL := args[1]
 
 	if !isGitRemoteURL(gitURL) {
-		return fmt.Errorf("invalid git URL %q: expected a remote URL (e.g. https://, git@host:, ssh://, s3://, file:///abs/path)\n\nTo use a local repo as the source, pass a file:// URL. To register an already-assembled rig directory, use:\n  gt rig add %s --adopt", gitURL, name)
+		return fmt.Errorf("invalid git URL %q: expected a remote URL (e.g. https://, git@host:, ssh://, s3://, file:///abs/path)\n\nTo use a local repo as the source, pass a file:// URL. To register an already-assembled rig directory, use:\n  ms rig add %s --adopt", gitURL, name)
 	}
 
 	// Ensure beads (bd) is available before proceeding
@@ -643,7 +643,7 @@ func runRigAdd(cmd *cobra.Command, args []string) error {
 	// Auto-assign a namepool theme that doesn't collide with other rigs (gas-21k).
 	autoAssignNamepoolTheme(townRoot, name, mgr)
 
-	// Ensure hooks-base.json exists before syncing (needed for gt hooks diff).
+	// Ensure hooks-base.json exists before syncing (needed for ms hooks diff).
 	ensureHooksBase()
 
 	// Sync hooks for the new rig's targets
@@ -678,12 +678,12 @@ func runRigAdd(cmd *cobra.Command, args []string) error {
 	fmt.Printf("  ├── plugins/          (rig-level plugins)\n")
 	fmt.Printf("  ├── overseer/rig/        (clone: %s)\n", defaultBranch)
 	fmt.Printf("  ├── refinery/rig/     (worktree: %s, sees miner branches)\n", defaultBranch)
-	fmt.Printf("  ├── crew/             (empty - add crew with 'gt crew add')\n")
+	fmt.Printf("  ├── crew/             (empty - add crew with 'ms crew add')\n")
 	fmt.Printf("  ├── witness/\n")
 	fmt.Printf("  └── miners/         (.claude/ scaffolded for miner sessions)\n")
 
 	fmt.Printf("\nNext steps:\n")
-	fmt.Printf("  gt crew add <name> --rig %s   # Create your personal workspace\n", name)
+	fmt.Printf("  ms crew add <name> --rig %s   # Create your personal workspace\n", name)
 	fmt.Printf("  cd %s/crew/<name>              # Start working\n", filepath.Join(townRoot, name))
 
 	return nil
@@ -752,7 +752,7 @@ func runRigList(cmd *cobra.Command, args []string) error {
 
 	if len(rigsConfig.Rigs) == 0 {
 		fmt.Println("No rigs configured.")
-		fmt.Printf("\nAdd one with: %s\n", style.Dim.Render("gt rig add <name> <git-url>"))
+		fmt.Printf("\nAdd one with: %s\n", style.Dim.Render("ms rig add <name> <git-url>"))
 		return nil
 	}
 
@@ -935,36 +935,36 @@ func runRigMenu(cmd *cobra.Command, args []string) error {
 		}
 		label := fmt.Sprintf("%s%s%s", r.led, space, r.name)
 		key := shortcutKey(keyIndex)
-		action := fmt.Sprintf("display-popup -E -w 80 -h 25 -T ' %s ' 'gt rig status %s; echo; echo \"Press any key to close\"; read -rsn1'", r.name, r.name)
+		action := fmt.Sprintf("display-popup -E -w 80 -h 25 -T ' %s ' 'ms rig status %s; echo; echo \"Press any key to close\"; read -rsn1'", r.name, r.name)
 		menuArgs = append(menuArgs, label, key, action)
 		keyIndex++
 
 		// Contextual actions (no shortcut keys)
 		if r.running {
 			menuArgs = append(menuArgs,
-				"   Stop", "", fmt.Sprintf("run-shell 'gt rig stop %s'", r.name),
-				"   Reboot", "", fmt.Sprintf("run-shell 'gt rig reboot %s'", r.name),
+				"   Stop", "", fmt.Sprintf("run-shell 'ms rig stop %s'", r.name),
+				"   Reboot", "", fmt.Sprintf("run-shell 'ms rig reboot %s'", r.name),
 			)
 		} else if r.opState == "PARKED" {
 			menuArgs = append(menuArgs,
-				"   Unpark", "", fmt.Sprintf("run-shell 'gt rig unpark %s'", r.name),
-				"   Start", "", fmt.Sprintf("run-shell 'gt rig start %s'", r.name),
+				"   Unpark", "", fmt.Sprintf("run-shell 'ms rig unpark %s'", r.name),
+				"   Start", "", fmt.Sprintf("run-shell 'ms rig start %s'", r.name),
 			)
 		} else if r.opState == "DOCKED" {
 			menuArgs = append(menuArgs,
-				"   Undock", "", fmt.Sprintf("run-shell 'gt rig undock %s'", r.name),
+				"   Undock", "", fmt.Sprintf("run-shell 'ms rig undock %s'", r.name),
 			)
 		} else {
 			// Stopped but not parked/docked
 			menuArgs = append(menuArgs,
-				"   Start", "", fmt.Sprintf("run-shell 'gt rig start %s'", r.name),
+				"   Start", "", fmt.Sprintf("run-shell 'ms rig start %s'", r.name),
 			)
 		}
 
 		// Park/dock available for non-parked/docked rigs
 		if r.opState != "PARKED" && r.opState != "DOCKED" {
 			menuArgs = append(menuArgs,
-				"   Park", "", fmt.Sprintf("run-shell 'gt rig park %s'", r.name),
+				"   Park", "", fmt.Sprintf("run-shell 'ms rig park %s'", r.name),
 			)
 		}
 
@@ -1027,9 +1027,9 @@ func runRigRemove(cmd *cobra.Command, args []string) error {
 				fmt.Printf("  - %s\n", s)
 			}
 			fmt.Printf("\nShut them down first:\n")
-			fmt.Printf("  %s\n", style.Dim.Render(fmt.Sprintf("gt rig shutdown %s", name)))
+			fmt.Printf("  %s\n", style.Dim.Render(fmt.Sprintf("ms rig shutdown %s", name)))
 			fmt.Printf("Or force removal:\n")
-			fmt.Printf("  %s\n", style.Dim.Render(fmt.Sprintf("gt rig remove %s --force", name)))
+			fmt.Printf("  %s\n", style.Dim.Render(fmt.Sprintf("ms rig remove %s --force", name)))
 			return fmt.Errorf("refusing to remove rig with running sessions")
 		}
 
@@ -1058,7 +1058,7 @@ func runRigRemove(cmd *cobra.Command, args []string) error {
 					style.Warning.Render("!"), name, rigPath)
 				fmt.Printf("This is an inconsistent state. To fix it, either:\n")
 				fmt.Printf("  Adopt the directory:  %s\n",
-					style.Dim.Render(fmt.Sprintf("gt rig add %s --adopt", name)))
+					style.Dim.Render(fmt.Sprintf("ms rig add %s --adopt", name)))
 				fmt.Printf("  Delete the directory: %s\n",
 					style.Dim.Render(fmt.Sprintf("rm -rf %s", rigPath)))
 				return fmt.Errorf("rig %q not in registry but directory exists", name)
@@ -1098,7 +1098,7 @@ func runRigRemove(cmd *cobra.Command, args []string) error {
 }
 
 // refreshCycleBindingsOnExistingSessions forces a refresh of the tmux C-b n/p
-// cycle bindings on any existing session. This is needed after gt rig add so
+// cycle bindings on any existing session. This is needed after ms rig add so
 // the new rig's prefix is included in the grep pattern.
 // Non-fatal: failure only means existing sessions need a restart to pick up the
 // new prefix.
@@ -1299,7 +1299,7 @@ func runRigAdopt(_ *cobra.Command, args []string) error {
 	}
 
 	// If no existing .beads/ candidate was found, initialize a fresh database
-	// to match the behavior of the normal (non-adopt) gt rig add path.
+	// to match the behavior of the normal (non-adopt) ms rig add path.
 	if !foundBeadsCandidate && result.BeadsPrefix != "" {
 		// Dolt server is required for beads init.
 		if running, _, sErr := doltserver.IsRunning(townRoot); sErr != nil || !running {
@@ -1563,14 +1563,14 @@ func assigneeToSessionName(assignee string) (sessionName string, isPersistent bo
 
 	switch len(parts) {
 	case 2:
-		// rig/minerName -> gt-rig-minerName
+		// rig/minerName -> ms-rig-minerName
 		return session.MinerSessionName(session.PrefixFor(parts[0]), parts[1]), false
 	case 3:
-		// rig/crew/name -> gt-rig-crew-name
+		// rig/crew/name -> ms-rig-crew-name
 		if parts[1] == "crew" {
 			return session.CrewSessionName(session.PrefixFor(parts[0]), parts[2]), true
 		}
-		// rig/miners/name -> gt-rig-name
+		// rig/miners/name -> ms-rig-name
 		if parts[1] == "miners" {
 			return session.MinerSessionName(session.PrefixFor(parts[0]), parts[2]), false
 		}
@@ -1616,7 +1616,7 @@ func runRigBoot(cmd *cobra.Command, args []string) error {
 
 	// Check if rig is parked or docked (uses bead labels + wisp state)
 	if blocked, reason := IsRigParkedOrDocked(townRoot, rigName); blocked {
-		return fmt.Errorf("rig '%s' is %s - use 'gt rig unpark' or 'gt rig undock' first", rigName, reason)
+		return fmt.Errorf("rig '%s' is %s - use 'ms rig unpark' or 'ms rig undock' first", rigName, reason)
 	}
 
 	fmt.Printf("Booting rig %s...\n", style.Bold.Render(rigName))
@@ -1691,7 +1691,7 @@ func runRigStart(cmd *cobra.Command, args []string) error {
 
 		// Check if rig is parked or docked (uses bead labels + wisp state)
 		if blocked, reason := IsRigParkedOrDocked(townRoot, rigName); blocked {
-			fmt.Printf("%s Rig '%s' is %s - skipping (use 'gt rig unpark' or 'gt rig undock' first)\n",
+			fmt.Printf("%s Rig '%s' is %s - skipping (use 'ms rig unpark' or 'ms rig undock' first)\n",
 				style.Warning.Render("⚠"), rigName, reason)
 			continue
 		}
@@ -2039,12 +2039,12 @@ func runRigStatus(cmd *cobra.Command, args []string) error {
 			}
 
 			// Reconcile display state with tmux session liveness.
-			// Per gt-zecmc design: tmux is ground truth for observable states.
+			// Per ms-zecmc design: tmux is ground truth for observable states.
 			// If session is running but beads says done, the miner is still alive.
 			// If session is dead but beads says working, show "stalled" so the
-			// witness can detect unsubmitted work (gt-3071b). Previously this
+			// witness can detect unsubmitted work (ms-3071b). Previously this
 			// showed "done" which masked failures where miners died before
-			// running gt done, leaving work stranded in worktrees.
+			// running ms done, leaving work stranded in worktrees.
 			displayState := pi.state
 			if pi.hasSession && displayState == miner.StateDone {
 				displayState = miner.StateWorking
@@ -2389,10 +2389,10 @@ func getRigOperationalState(townRoot, rigName string) (state string, source stri
 	return "OPERATIONAL", "default"
 }
 
-// ensureHooksBase creates ~/.gt/hooks-base.json from current defaults if it
-// doesn't exist yet. Without this file, gt hooks diff has no reference point
+// ensureHooksBase creates ~/.ms/hooks-base.json from current defaults if it
+// doesn't exist yet. Without this file, ms hooks diff has no reference point
 // and cannot detect drift when default hooks change after initial setup.
-// Non-fatal: missing base config is caught by gt doctor hooks-base-missing.
+// Non-fatal: missing base config is caught by ms doctor hooks-base-missing.
 func ensureHooksBase() {
 	if _, err := hooks.LoadBase(); err == nil {
 		return // already exists

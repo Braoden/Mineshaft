@@ -31,7 +31,7 @@ func setupPrimeExternalToolTest(t *testing.T, bdScript, gtScript string) string 
 		t.Fatalf("create bin dir: %v", err)
 	}
 	writePrimeToolScript(t, filepath.Join(binDir, "bd"), bdScript)
-	writePrimeToolScript(t, filepath.Join(binDir, "gt"), gtScript)
+	writePrimeToolScript(t, filepath.Join(binDir, "ms"), gtScript)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv("PRIME_TOOL_CALL_LOG", logPath)
 	t.Setenv("TMUX", "")
@@ -87,7 +87,7 @@ esac
 	output := captureStdout(t, func() { runPrimeExternalTools(RoleContext{Role: RoleMiner}, workDir) })
 	assertElapsedUnder(t, time.Since(start), time.Second)
 	assertPrimeToolCalled(t, "bd:kv list --json")
-	assertPrimeToolCalled(t, "gt:mail check --inject")
+	assertPrimeToolCalled(t, "ms:mail check --inject")
 
 	if !strings.Contains(output, "remembered") {
 		t.Fatalf("memory injection missing: %q", output)
@@ -122,7 +122,7 @@ esac
 	output := captureStdout(t, func() { runPrimeExternalTools(RoleContext{Role: RoleMiner}, workDir) })
 	assertElapsedUnder(t, time.Since(start), time.Second)
 	assertPrimeToolCalled(t, "bd:kv list --json")
-	assertPrimeToolCalled(t, "gt:mail check --inject")
+	assertPrimeToolCalled(t, "ms:mail check --inject")
 
 	if !strings.Contains(output, "remembered") {
 		t.Fatalf("memory output missing: %q", output)
@@ -158,7 +158,7 @@ esac
 			if err != nil {
 				t.Fatalf("read call log: %v", err)
 			}
-			if strings.Contains(string(logData), "gt:mail check --inject") {
+			if strings.Contains(string(logData), "ms:mail check --inject") {
 				t.Fatalf("patrol role %s should not run startup mail check:\n%s", role, string(logData))
 			}
 			if strings.Contains(output, "MAIL OUTPUT") {

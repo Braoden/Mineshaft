@@ -17,13 +17,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// TestInstallCreatesCorrectStructure validates that a fresh gt install
+// TestInstallCreatesCorrectStructure validates that a fresh ms install
 // creates the expected directory structure and configuration files.
 func TestInstallCreatesCorrectStructure(t *testing.T) {
 	tmpDir := t.TempDir()
 	hqPath := filepath.Join(tmpDir, "test-hq")
 
-	// Build gt binary for testing
+	// Build ms binary for testing
 	gtBinary := buildGT(t)
 
 	// HOME and Dolt port are overridden for isolation; configure git identity so EnsureDoltIdentity works.
@@ -31,13 +31,13 @@ func TestInstallCreatesCorrectStructure(t *testing.T) {
 	configureGitIdentity(t, env)
 	testutil.ReapOwnedDoltOnCleanup(t, hqPath)
 
-	// Run gt install
+	// Run ms install
 	cmd := exec.Command(gtBinary, "install", hqPath, "--name", "test-town", "--dolt-port", doltPort)
 	cmd.Dir = tmpDir
 	cmd.Env = env
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("gt install failed: %v\nOutput: %s", err, output)
+		t.Fatalf("ms install failed: %v\nOutput: %s", err, output)
 	}
 	assertDoltConfigPort(t, hqPath, doltPort)
 
@@ -88,7 +88,7 @@ func TestInstallBeadsHasCorrectPrefix(t *testing.T) {
 	tmpDir := t.TempDir()
 	hqPath := filepath.Join(tmpDir, "test-hq")
 
-	// Build gt binary for testing
+	// Build ms binary for testing
 	gtBinary := buildGT(t)
 
 	// HOME and Dolt port are overridden for isolation; configure git identity so EnsureDoltIdentity works.
@@ -96,13 +96,13 @@ func TestInstallBeadsHasCorrectPrefix(t *testing.T) {
 	configureGitIdentity(t, env)
 	testutil.ReapOwnedDoltOnCleanup(t, hqPath)
 
-	// Run gt install (includes beads init by default)
+	// Run ms install (includes beads init by default)
 	cmd := exec.Command(gtBinary, "install", hqPath, "--dolt-port", doltPort)
 	cmd.Dir = tmpDir
 	cmd.Env = env
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("gt install failed: %v\nOutput: %s", err, output)
+		t.Fatalf("ms install failed: %v\nOutput: %s", err, output)
 	}
 	assertDoltConfigPort(t, hqPath, doltPort)
 
@@ -178,7 +178,7 @@ func TestInstallBeadsHasCorrectPrefix(t *testing.T) {
 	}
 }
 
-// TestInstallIdempotent validates that running gt install twice
+// TestInstallIdempotent validates that running ms install twice
 // on the same directory fails without --force flag.
 func TestInstallIdempotent(t *testing.T) {
 	tmpDir := t.TempDir()
@@ -212,7 +212,7 @@ func TestInstallIdempotent(t *testing.T) {
 	}
 }
 
-// TestInstallForcePreservesConfigs validates that re-running gt install --force
+// TestInstallForcePreservesConfigs validates that re-running ms install --force
 // preserves existing town.json and rigs.json rather than clobbering them.
 func TestInstallForcePreservesConfigs(t *testing.T) {
 	tmpDir := t.TempDir()
@@ -309,7 +309,7 @@ func TestInstallForcePreservesConfigs(t *testing.T) {
 	}
 }
 
-// TestInstallForceRejectsNonRegularConfigs validates that gt install --force
+// TestInstallForceRejectsNonRegularConfigs validates that ms install --force
 // errors when town.json or rigs.json exists as a directory instead of a file.
 func TestInstallForceRejectsNonRegularConfigs(t *testing.T) {
 	tmpDir := t.TempDir()
@@ -359,13 +359,13 @@ func TestInstallFormulasProvisioned(t *testing.T) {
 	configureGitIdentity(t, env)
 	testutil.ReapOwnedDoltOnCleanup(t, hqPath)
 
-	// Run gt install (includes beads and formula provisioning)
+	// Run ms install (includes beads and formula provisioning)
 	cmd := exec.Command(gtBinary, "install", hqPath, "--dolt-port", doltPort)
 	cmd.Dir = tmpDir
 	cmd.Env = env
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("gt install failed: %v\nOutput: %s", err, output)
+		t.Fatalf("ms install failed: %v\nOutput: %s", err, output)
 	}
 	assertDoltConfigPort(t, hqPath, doltPort)
 
@@ -452,7 +452,7 @@ func TestInstallWrappersInExistingTown(t *testing.T) {
 	}
 
 	// Verify output mentions wrapper installation
-	if !strings.Contains(string(output), "gt-codex") && !strings.Contains(string(output), "gt-opencode") {
+	if !strings.Contains(string(output), "ms-codex") && !strings.Contains(string(output), "ms-opencode") {
 		t.Errorf("expected output to mention wrappers, got: %s", output)
 	}
 }
@@ -464,12 +464,12 @@ func TestInstallNoBeadsFlag(t *testing.T) {
 
 	gtBinary := buildGT(t)
 
-	// Run gt install with --no-beads
+	// Run ms install with --no-beads
 	cmd := exec.Command(gtBinary, "install", hqPath, "--no-beads")
 	cmd.Env = append(os.Environ(), "HOME="+tmpDir)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("gt install --no-beads failed: %v\nOutput: %s", err, output)
+		t.Fatalf("ms install --no-beads failed: %v\nOutput: %s", err, output)
 	}
 
 	// Verify .beads/ directory does NOT exist
@@ -557,11 +557,11 @@ func assertSlotValue(t *testing.T, townRoot, issueID, slot, want string) {
 	}
 }
 
-// TestInstallDoctorClean validates that gt install creates a functional system.
+// TestInstallDoctorClean validates that ms install creates a functional system.
 // This test verifies:
-// 1. gt install succeeds with proper structure
-// 2. gt rig add succeeds
-// 3. gt crew add succeeds
+// 1. ms install succeeds with proper structure
+// 2. ms rig add succeeds
+// 3. ms crew add succeeds
 // 4. Basic commands work
 //
 // NOTE: Full doctor --fix verification is currently limited by known issues:
@@ -697,7 +697,7 @@ func TestInstallDoctorClean(t *testing.T) {
 	})
 }
 
-// TestInstallWithDaemon validates that gt install creates a functional system
+// TestInstallWithDaemon validates that ms install creates a functional system
 // with the daemon running. This extends TestInstallDoctorClean by:
 // 1. Starting the daemon after install
 // 2. Verifying the daemon is healthy
@@ -794,7 +794,7 @@ func TestInstallWithDaemon(t *testing.T) {
 func cleanE2EEnv() []string {
 	var clean []string
 	for _, env := range os.Environ() {
-		if strings.HasPrefix(env, "GT_") || strings.HasPrefix(env, "BD_") || strings.HasPrefix(env, "BEADS_") {
+		if strings.HasPrefix(env, "MS_") || strings.HasPrefix(env, "BD_") || strings.HasPrefix(env, "BEADS_") {
 			continue
 		}
 		clean = append(clean, env)
@@ -807,7 +807,7 @@ func isolatedE2EDoltEnv(t *testing.T, homeDir string) ([]string, string) {
 	port := strconv.Itoa(freeE2EDoltPort(t))
 	env := append(cleanE2EEnv(),
 		"HOME="+homeDir,
-		"GT_DOLT_PORT="+port,
+		"MS_DOLT_PORT="+port,
 		"BEADS_DOLT_PORT="+port,
 		"BEADS_DOLT_AUTO_START=0",
 	)
@@ -827,7 +827,7 @@ func freeE2EDoltPort(t *testing.T) int {
 // configureGitIdentity sets git global config in the test's temp HOME directory.
 // Tests override HOME to a temp dir for isolation, so git/dolt can't find the
 // container's build-time global config. EnsureDoltIdentity copies from git config,
-// so git identity must be available before gt install.
+// so git identity must be available before ms install.
 func configureGitIdentity(t *testing.T, env []string) {
 	t.Helper()
 	for _, args := range [][]string{
@@ -842,7 +842,7 @@ func configureGitIdentity(t *testing.T, env []string) {
 	}
 }
 
-// runGTCmd runs a gt command and fails the test if it fails.
+// runGTCmd runs a ms command and fails the test if it fails.
 func runGTCmd(t *testing.T, binary, dir string, env []string, args ...string) {
 	t.Helper()
 	cmd := exec.Command(binary, args...)
@@ -850,6 +850,6 @@ func runGTCmd(t *testing.T, binary, dir string, env []string, args ...string) {
 	cmd.Env = env
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("gt %v failed: %v\n%s", args, err, out)
+		t.Fatalf("ms %v failed: %v\n%s", args, err, out)
 	}
 }

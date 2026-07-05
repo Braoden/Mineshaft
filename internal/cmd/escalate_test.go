@@ -290,8 +290,8 @@ func TestFormatEscalationMailBody(t *testing.T) {
 				"From: mineshaft/witness",
 				"Reason:",
 				"Build failing",
-				"gt escalate ack hq-abc123",
-				"gt escalate close hq-abc123",
+				"ms escalate ack hq-abc123",
+				"ms escalate close hq-abc123",
 			},
 			notIn: []string{"Related:"},
 		},
@@ -301,11 +301,11 @@ func TestFormatEscalationMailBody(t *testing.T) {
 			severity: "critical",
 			reason:   "Agent stuck",
 			from:     "mineshaft/supervisor",
-			related:  "gt-stuck42",
+			related:  "ms-stuck42",
 			wantIn: []string{
 				"Escalation ID: hq-xyz789",
 				"Severity: critical",
-				"Related: gt-stuck42",
+				"Related: ms-stuck42",
 			},
 		},
 		{
@@ -358,8 +358,8 @@ func TestFormatReescalationMailBody(t *testing.T) {
 		"Reescalation #2",
 		"Reescalated by: mineshaft/patrol",
 		"stale threshold",
-		"gt escalate ack hq-esc123",
-		"gt escalate close hq-esc123",
+		"ms escalate ack hq-esc123",
+		"ms escalate close hq-esc123",
 	}
 
 	for _, s := range wantIn {
@@ -372,10 +372,10 @@ func TestFormatReescalationMailBody(t *testing.T) {
 func TestDetectSenderFallback(t *testing.T) {
 	// Save original env vars
 	origActor := os.Getenv("BD_ACTOR")
-	origRole := os.Getenv("GT_ROLE")
+	origRole := os.Getenv("MS_ROLE")
 	defer func() {
 		os.Setenv("BD_ACTOR", origActor)
-		os.Setenv("GT_ROLE", origRole)
+		os.Setenv("MS_ROLE", origRole)
 	}()
 
 	tests := []struct {
@@ -391,7 +391,7 @@ func TestDetectSenderFallback(t *testing.T) {
 			want:  "mineshaft/miners/alpha",
 		},
 		{
-			name:  "GT_ROLE used when BD_ACTOR empty",
+			name:  "MS_ROLE used when BD_ACTOR empty",
 			actor: "",
 			role:  "mineshaft/witness",
 			want:  "mineshaft/witness",
@@ -407,7 +407,7 @@ func TestDetectSenderFallback(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			os.Setenv("BD_ACTOR", tt.actor)
-			os.Setenv("GT_ROLE", tt.role)
+			os.Setenv("MS_ROLE", tt.role)
 
 			got := detectSenderFallback()
 			if got != tt.want {
@@ -584,12 +584,12 @@ func TestRunEscalateValidation(t *testing.T) {
 }
 
 func TestFormatEscalationMailBodyNeutralSubjectStillCarriesStructuredBody(t *testing.T) {
-	body := formatEscalationMailBody("hq-abc123", "high", "Database drift", "supervisor/", "gt-xyz")
+	body := formatEscalationMailBody("hq-abc123", "high", "Database drift", "supervisor/", "ms-xyz")
 	for _, want := range []string{
 		"Escalation ID: hq-abc123",
 		"Severity: high",
 		"From: supervisor/",
-		"Related: gt-xyz",
+		"Related: ms-xyz",
 	} {
 		if !strings.Contains(body, want) {
 			t.Errorf("body missing %q: %s", want, body)

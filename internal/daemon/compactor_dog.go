@@ -36,7 +36,7 @@ const (
 	// compactorPushTimeout is the timeout for DOLT_PUSH after compaction.
 	compactorPushTimeout = 2 * time.Minute
 	// compactorBranchName is the temporary branch used during compaction.
-	compactorBranchName = "gt-compaction"
+	compactorBranchName = "ms-compaction"
 	// surgicalMaxRetries is the number of times to retry surgical rebase after
 	// a concurrent write error. DOLT_REBASE is NOT safe with concurrent writes —
 	// Dolt detects that the commit graph changed and returns an error. One retry

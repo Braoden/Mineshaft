@@ -46,7 +46,7 @@ Load the minecart bead and verify it's ready for archival.
 
 **1. Check your assignment:**
 ```bash
-gt hook               # Shows hook_bead = minecart ID
+ms hook               # Shows hook_bead = minecart ID
 bd show {{minecart}}          # Full minecart details
 ```
 
@@ -145,7 +145,7 @@ Notify the Overseer (boss) of minecart completion.
 
 **1. Send completion mail:**
 ```bash
-gt mail send overseer/ -s "Minecart complete: {{minecart.title}}" -m "$(cat <<EOF
+ms mail send overseer/ -s "Minecart complete: {{minecart.title}}" -m "$(cat <<EOF
 Minecart {{minecart}} has completed and been closed.
 
 ## Summary
@@ -164,7 +164,7 @@ EOF
 **2. Post to activity feed:**
 The minecart closure already creates a feed entry. Verify:
 ```bash
-gt feed --since 5m
+ms feed --since 5m
 # Should show minecart completion
 ```
 
@@ -179,7 +179,7 @@ Signal work complete and return to available pool.
 
 **1. Signal completion to Supervisor:**
 ```bash
-gt mail send supervisor/ -s "DOG_DONE $(hostname)" -m "Task: minecart-cleanup
+ms mail send supervisor/ -s "DOG_DONE $(hostname)" -m "Task: minecart-cleanup
 Minecart: {{minecart}}
 Status: COMPLETE
 Duration: {{work_duration}}

@@ -86,7 +86,7 @@ type QueueRow struct {
 
 // SessionRow represents a tmux session.
 type SessionRow struct {
-	Name     string // Session name (e.g., "gt-mineshaft-witness")
+	Name     string // Session name (e.g., "ms-mineshaft-witness")
 	Role     string // witness, refinery, miner, crew, supervisor
 	Rig      string // Rig name if applicable
 	Worker   string // Worker name for miners/crew
@@ -96,7 +96,7 @@ type SessionRow struct {
 
 // HookRow represents a hooked bead (work pinned to an agent).
 type HookRow struct {
-	ID       string // Bead ID (e.g., "gt-abc12")
+	ID       string // Bead ID (e.g., "ms-abc12")
 	Title    string // Work item title
 	Assignee string // Agent address (e.g., "mineshaft/miners/nux")
 	Agent    string // Formatted agent name
@@ -106,7 +106,7 @@ type HookRow struct {
 
 // OverseerStatus represents the Overseer's current state.
 type OverseerStatus struct {
-	IsAttached   bool   // True if gt-overseer tmux session exists
+	IsAttached   bool   // True if ms-overseer tmux session exists
 	SessionName  string // Tmux session name
 	LastActivity string // Age since last activity
 	IsActive     bool   // True if activity < 5 min (likely working)
@@ -115,7 +115,7 @@ type OverseerStatus struct {
 
 // IssueRow represents an open issue in the backlog.
 type IssueRow struct {
-	ID       string // Bead ID (e.g., "gt-abc12")
+	ID       string // Bead ID (e.g., "ms-abc12")
 	Title    string // Issue title
 	Type     string // issue, bug, feature, task
 	Priority int    // 1=critical, 2=high, 3=medium, 4=low
@@ -175,7 +175,7 @@ type MailRow struct {
 type WorkerRow struct {
 	Name         string        // e.g., "dag", "nux", "refinery"
 	Rig          string        // e.g., "roxas", "mineshaft"
-	SessionID    string        // e.g., "gt-roxas-dag"
+	SessionID    string        // e.g., "ms-roxas-dag"
 	LastActivity activity.Info // Colored activity display
 	StatusHint   string        // Last line from pane (optional)
 	IssueID      string        // Currently assigned issue ID (e.g., "hq-1234")

@@ -31,7 +31,7 @@ var activityCmd = &cobra.Command{
 	Short:   "Emit and view activity events",
 	Long: `Emit and view activity events for the Mineshaft activity feed.
 
-Events are written to ~/gt/.events.jsonl and can be viewed with 'gt feed'.
+Events are written to ~/ms/.events.jsonl and can be viewed with 'ms feed'.
 
 Subcommands:
   emit    Emit an activity event`,
@@ -61,11 +61,11 @@ Common options:
   --message  Human-readable message
 
 Examples:
-  gt activity emit patrol_started --rig greenplace --count 3
-  gt activity emit miner_checked --rig greenplace --miner Toast --status working --issue gp-xyz
-  gt activity emit miner_nudged --rig greenplace --miner Toast --reason "idle for 10 minutes"
-  gt activity emit escalation_sent --rig greenplace --target Toast --to overseer --reason "unresponsive"
-  gt activity emit patrol_complete --rig greenplace --count 3 --message "All miners healthy"`,
+  ms activity emit patrol_started --rig greenplace --count 3
+  ms activity emit miner_checked --rig greenplace --miner Toast --status working --issue gp-xyz
+  ms activity emit miner_nudged --rig greenplace --miner Toast --reason "idle for 10 minutes"
+  ms activity emit escalation_sent --rig greenplace --target Toast --to overseer --reason "unresponsive"
+  ms activity emit patrol_complete --rig greenplace --count 3 --message "All miners healthy"`,
 	Args: cobra.ExactArgs(1),
 	RunE: runActivityEmit,
 }

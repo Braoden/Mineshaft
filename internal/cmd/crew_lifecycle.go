@@ -251,7 +251,7 @@ func runCrewRefresh(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("%s Refreshed crew workspace: %s/%s\n",
 		style.Bold.Render("✓"), r.Name, name)
-	fmt.Printf("Attach with: %s\n", style.Dim.Render(fmt.Sprintf("gt crew at %s", name)))
+	fmt.Printf("Attach with: %s\n", style.Dim.Render(fmt.Sprintf("ms crew at %s", name)))
 
 	return nil
 }
@@ -449,7 +449,7 @@ func runCrewRestart(cmd *cobra.Command, args []string) error {
 
 		fmt.Printf("%s Restarted crew workspace: %s/%s\n",
 			style.Bold.Render("✓"), r.Name, name)
-		fmt.Printf("Attach with: %s\n", style.Dim.Render(fmt.Sprintf("gt crew at %s", name)))
+		fmt.Printf("Attach with: %s\n", style.Dim.Render(fmt.Sprintf("ms crew at %s", name)))
 	}
 
 	return lastErr
@@ -642,7 +642,7 @@ func runCrewStop(cmd *cobra.Command, args []string) error {
 		if townRoot != "" {
 			agent := fmt.Sprintf("%s/crew/%s", r.Name, name)
 			logger := townlog.NewLogger(townRoot)
-			_ = logger.Log(townlog.EventKill, agent, "gt crew stop")
+			_ = logger.Log(townlog.EventKill, agent, "ms crew stop")
 		}
 
 		// Log captured output (truncated)
@@ -728,7 +728,7 @@ func runCrewStopAll() error {
 		townRoot, _ := workspace.FindFromCwd()
 		if townRoot != "" {
 			logger := townlog.NewLogger(townRoot)
-			_ = logger.Log(townlog.EventKill, agentName, "gt crew stop --all")
+			_ = logger.Log(townlog.EventKill, agentName, "ms crew stop --all")
 		}
 
 		// Log captured output (truncated)

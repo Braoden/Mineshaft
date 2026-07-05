@@ -65,14 +65,14 @@ See docs/hq.md for advanced HQ configurations including beads
 redirects, multi-system setups, and HQ templates.
 
 Examples:
-  gt install ~/gt                              # Create HQ at ~/gt
-  gt install . --name my-workspace             # Initialize current dir
-  gt install ~/gt --no-beads                   # Skip .beads/ initialization
-  gt install ~/gt --git                        # Also init git with .gitignore
-  gt install ~/gt --github=user/repo           # Create private GitHub repo (default)
-  gt install ~/gt --github=user/repo --public  # Create public GitHub repo
-  gt install ~/gt --shell                      # Install shell integration (sets GT_TOWN_ROOT/GT_RIG)
-  gt install ~/gt --supervisor                 # Configure launchd/systemd for daemon auto-restart`,
+  ms install ~/ms                              # Create HQ at ~/ms
+  ms install . --name my-workspace             # Initialize current dir
+  ms install ~/ms --no-beads                   # Skip .beads/ initialization
+  ms install ~/ms --git                        # Also init git with .gitignore
+  ms install ~/ms --github=user/repo           # Create private GitHub repo (default)
+  ms install ~/ms --github=user/repo --public  # Create public GitHub repo
+  ms install ~/ms --shell                      # Install shell integration (sets MS_TOWN_ROOT/MS_RIG)
+  ms install ~/ms --supervisor                 # Configure launchd/systemd for daemon auto-restart`,
 	Args:         cobra.MaximumNArgs(1),
 	RunE:         runInstall,
 	SilenceUsage: true,
@@ -87,8 +87,8 @@ func init() {
 	installCmd.Flags().BoolVar(&installGit, "git", false, "Initialize git with .gitignore")
 	installCmd.Flags().StringVar(&installGitHub, "github", "", "Create GitHub repo (format: owner/repo, private by default)")
 	installCmd.Flags().BoolVar(&installPublic, "public", false, "Make GitHub repo public (use with --github)")
-	installCmd.Flags().BoolVar(&installShell, "shell", false, "Install shell integration (sets GT_TOWN_ROOT/GT_RIG env vars)")
-	installCmd.Flags().BoolVar(&installWrappers, "wrappers", false, "Install gt-codex/gt-gemini/gt-opencode wrapper scripts to ~/bin/")
+	installCmd.Flags().BoolVar(&installShell, "shell", false, "Install shell integration (sets MS_TOWN_ROOT/MS_RIG env vars)")
+	installCmd.Flags().BoolVar(&installWrappers, "wrappers", false, "Install ms-codex/ms-gemini/ms-opencode wrapper scripts to ~/bin/")
 	installCmd.Flags().BoolVar(&installSupervisor, "supervisor", false, "Configure launchd/systemd for daemon auto-restart")
 	installCmd.Flags().IntVar(&installDoltPort, "dolt-port", 0, "Dolt SQL server port (default 3307; set when another instance owns the default port)")
 	rootCmd.AddCommand(installCmd)
@@ -128,7 +128,7 @@ func runInstall(cmd *cobra.Command, args []string) error {
 			if err := wrappers.Install(); err != nil {
 				return fmt.Errorf("installing wrapper scripts: %w", err)
 			}
-			fmt.Printf("✓ Installed gt-codex, gt-gemini, and gt-opencode to %s\n", wrappers.BinDir())
+			fmt.Printf("✓ Installed ms-codex, ms-gemini, and ms-opencode to %s\n", wrappers.BinDir())
 			return nil
 		}
 		return fmt.Errorf("directory is already a Mineshaft HQ (use --force to reinitialize)")
@@ -163,8 +163,8 @@ func runInstall(cmd *cobra.Command, args []string) error {
 		port := doltserver.DefaultPort
 		if installDoltPort != 0 {
 			port = installDoltPort
-			os.Setenv("GT_DOLT_PORT", strconv.Itoa(port))
-		} else if p := os.Getenv("GT_DOLT_PORT"); p != "" {
+			os.Setenv("MS_DOLT_PORT", strconv.Itoa(port))
+		} else if p := os.Getenv("MS_DOLT_PORT"); p != "" {
 			if envPort, err := strconv.Atoi(p); err == nil {
 				port = envPort
 			}
@@ -187,9 +187,9 @@ func runInstall(cmd *cobra.Command, args []string) error {
 				msg += "\n\nAnother Mineshaft instance is using this port. Specify a free port:"
 				origArgs := strings.Join(os.Args[1:], " ")
 				if freePort := doltserver.FindFreePort(port + 1); freePort > 0 {
-					msg += fmt.Sprintf("\n\n  gt %s --dolt-port %d", origArgs, freePort)
+					msg += fmt.Sprintf("\n\n  ms %s --dolt-port %d", origArgs, freePort)
 				} else {
-					msg += fmt.Sprintf("\n\n  gt %s --dolt-port <port>", origArgs)
+					msg += fmt.Sprintf("\n\n  ms %s --dolt-port <port>", origArgs)
 				}
 				return fmt.Errorf("%s", msg)
 			}
@@ -270,10 +270,10 @@ func runInstall(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create a generic CLAUDE.md at the town root as an identity anchor.
-	// Claude Code sets its CWD to the git root (~/gt/), so overseer/CLAUDE.md is
+	// Claude Code sets its CWD to the git root (~/ms/), so overseer/CLAUDE.md is
 	// not loaded directly. This town-root file ensures agents running from within
 	// the town git tree (Overseer, Supervisor) always get a baseline identity reminder.
-	// It is NOT role-specific — role context comes from gt prime.
+	// It is NOT role-specific — role context comes from ms prime.
 	// Crew/miners have their own nested git repos and won't inherit this.
 	if created, err := createTownRootAgentMDs(absPath); err != nil {
 		fmt.Printf("   %s Could not create agent MDs at town root: %v\n", style.Dim.Render("⚠"), err)
@@ -283,8 +283,8 @@ func runInstall(cmd *cobra.Command, args []string) error {
 		fmt.Printf("   ✓ Preserved existing CLAUDE.md + AGENTS.md (town root identity anchor)\n")
 	}
 
-	// Create overseer settings (overseer runs from ~/gt/overseer/)
-	// IMPORTANT: Settings must be in ~/gt/overseer/.claude/, NOT ~/gt/.claude/
+	// Create overseer settings (overseer runs from ~/ms/overseer/)
+	// IMPORTANT: Settings must be in ~/ms/overseer/.claude/, NOT ~/ms/.claude/
 	// Settings at town root would be found by ALL agents via directory traversal,
 	// causing crew/miner/etc to cd to town root before running commands.
 	// overseerDir already defined above
@@ -299,7 +299,7 @@ func runInstall(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Create supervisor directory and settings (supervisor runs from ~/gt/supervisor/)
+	// Create supervisor directory and settings (supervisor runs from ~/ms/supervisor/)
 	supervisorDir := filepath.Join(absPath, "supervisor")
 	if err := os.MkdirAll(supervisorDir, 0755); err != nil {
 		fmt.Printf("   %s Could not create supervisor directory: %v\n", style.Dim.Render("⚠"), err)
@@ -313,14 +313,14 @@ func runInstall(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create boot directory (supervisor/dogs/boot/) for Boot watchdog.
-	// This avoids gt doctor warning on fresh install.
+	// This avoids ms doctor warning on fresh install.
 	bootDir := filepath.Join(supervisorDir, "dogs", "boot")
 	if err := os.MkdirAll(bootDir, 0755); err != nil {
 		fmt.Printf("   %s Could not create boot directory: %v\n", style.Dim.Render("⚠"), err)
 	}
 
 	// Create plugins directory for town-level patrol plugins.
-	// This avoids gt doctor warning on fresh install.
+	// This avoids ms doctor warning on fresh install.
 	pluginsDir := filepath.Join(absPath, "plugins")
 	if err := os.MkdirAll(pluginsDir, 0755); err != nil {
 		fmt.Printf("   %s Could not create plugins directory: %v\n", style.Dim.Render("⚠"), err)
@@ -329,7 +329,7 @@ func runInstall(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create daemon.json patrol config.
-	// This avoids gt doctor warning on fresh install.
+	// This avoids ms doctor warning on fresh install.
 	if err := config.EnsureDaemonPatrolConfig(absPath); err != nil {
 		fmt.Printf("   %s Could not create daemon.json: %v\n", style.Dim.Render("⚠"), err)
 	} else {
@@ -364,7 +364,7 @@ func runInstall(cmd *cobra.Command, args []string) error {
 
 			// Start the Dolt server — bd commands need a running server.
 			// The server stays running after install (it's lightweight infrastructure,
-			// like a database). Stop it with 'gt dolt stop' when not needed.
+			// like a database). Stop it with 'ms dolt stop' when not needed.
 			if err := doltserver.Start(absPath); err != nil {
 				if !strings.Contains(err.Error(), "already running") {
 					return fmt.Errorf("starting Dolt server for beads: %w", err)
@@ -393,7 +393,7 @@ func runInstall(cmd *cobra.Command, args []string) error {
 			fmt.Printf("   %s Could not create town-level agent beads: %v\n", style.Dim.Render("⚠"), err)
 		}
 
-		// Set beads routing mode to explicit (required by gt doctor).
+		// Set beads routing mode to explicit (required by ms doctor).
 		routingCmd := exec.Command("bd", "config", "set", "routing.mode", "explicit")
 		routingCmd.Dir = absPath
 		routingCmd.Env = withBeadsDirEnv(filepath.Join(absPath, ".beads"))
@@ -463,7 +463,7 @@ func runInstall(cmd *cobra.Command, args []string) error {
 		if err := wrappers.Install(); err != nil {
 			fmt.Printf("   %s Could not install wrapper scripts: %v\n", style.Dim.Render("⚠"), err)
 		} else {
-			fmt.Printf("   ✓ Installed gt-codex and gt-opencode to %s\n", wrappers.BinDir())
+			fmt.Printf("   ✓ Installed ms-codex and ms-opencode to %s\n", wrappers.BinDir())
 		}
 	}
 
@@ -482,17 +482,17 @@ func runInstall(cmd *cobra.Command, args []string) error {
 	fmt.Println("Next steps:")
 	step := 1
 	if !installGit && installGitHub == "" {
-		fmt.Printf("  %d. Initialize git: %s\n", step, style.Dim.Render("gt git-init"))
+		fmt.Printf("  %d. Initialize git: %s\n", step, style.Dim.Render("ms git-init"))
 		step++
 	}
-	fmt.Printf("  %d. Add a rig: %s\n", step, style.Dim.Render("gt rig add <name> <git-url>"))
+	fmt.Printf("  %d. Add a rig: %s\n", step, style.Dim.Render("ms rig add <name> <git-url>"))
 	step++
-	fmt.Printf("  %d. (Optional) Configure agents: %s\n", step, style.Dim.Render("gt config agent list"))
+	fmt.Printf("  %d. (Optional) Configure agents: %s\n", step, style.Dim.Render("ms config agent list"))
 	step++
-	fmt.Printf("  %d. Enter the Overseer's office: %s\n", step, style.Dim.Render("gt overseer attach"))
+	fmt.Printf("  %d. Enter the Overseer's office: %s\n", step, style.Dim.Render("ms overseer attach"))
 	fmt.Println()
 	if !installNoBeads {
-		fmt.Printf("Note: Dolt server is running (stop with %s)\n", style.Dim.Render("gt dolt stop"))
+		fmt.Printf("Note: Dolt server is running (stop with %s)\n", style.Dim.Render("ms dolt stop"))
 	}
 
 	return nil
@@ -539,7 +539,7 @@ func canReuseInstallDoltServer(townRoot string, port int) bool {
 }
 
 func useExternalTestDoltServer(port int) bool {
-	if os.Getenv("GT_TEST_EXTERNAL_DOLT") == "" {
+	if os.Getenv("MS_TEST_EXTERNAL_DOLT") == "" {
 		return false
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), installDoltServerProbeTimeout)
@@ -561,19 +561,19 @@ func formatInstallDoltError(status deps.DoltStatus, version, detail, goos string
 	case deps.DoltOK:
 		return nil
 	case deps.DoltNotFound:
-		return fmt.Errorf("dolt is required for gt install with beads enabled but was not found in PATH.\n\nInstall Dolt:\n  %s\n\nTo create an HQ without beads, rerun with --no-beads.\nMore install options: %s", doltInstallHint(goos), deps.DoltInstallURL)
+		return fmt.Errorf("dolt is required for ms install with beads enabled but was not found in PATH.\n\nInstall Dolt:\n  %s\n\nTo create an HQ without beads, rerun with --no-beads.\nMore install options: %s", doltInstallHint(goos), deps.DoltInstallURL)
 	case deps.DoltTooOld:
-		return fmt.Errorf("dolt %s is too old for gt install with beads enabled (minimum: %s).\n\nUpgrade Dolt:\n  %s\n\nTo create an HQ without beads, rerun with --no-beads.", version, deps.MinDoltVersion, doltUpgradeHint(goos))
+		return fmt.Errorf("dolt %s is too old for ms install with beads enabled (minimum: %s).\n\nUpgrade Dolt:\n  %s\n\nTo create an HQ without beads, rerun with --no-beads.", version, deps.MinDoltVersion, doltUpgradeHint(goos))
 	case deps.DoltExecFailed:
 		if detail == "" {
 			detail = "no diagnostic output"
 		}
-		return fmt.Errorf("'dolt version' failed, so gt install cannot verify the Dolt dependency required for beads.\n\nDetail: %s\n\nReinstall Dolt:\n  %s\n\nTo create an HQ without beads, rerun with --no-beads.", detail, doltReinstallHint(goos))
+		return fmt.Errorf("'dolt version' failed, so ms install cannot verify the Dolt dependency required for beads.\n\nDetail: %s\n\nReinstall Dolt:\n  %s\n\nTo create an HQ without beads, rerun with --no-beads.", detail, doltReinstallHint(goos))
 	case deps.DoltUnknown:
 		if detail == "" {
 			detail = "no version output"
 		}
-		return fmt.Errorf("dolt version could not be parsed, so gt install cannot verify the Dolt dependency required for beads.\n\nDetail: %s\n\nReinstall Dolt:\n  %s\n\nTo create an HQ without beads, rerun with --no-beads.", detail, doltReinstallHint(goos))
+		return fmt.Errorf("dolt version could not be parsed, so ms install cannot verify the Dolt dependency required for beads.\n\nDetail: %s\n\nReinstall Dolt:\n  %s\n\nTo create an HQ without beads, rerun with --no-beads.", detail, doltReinstallHint(goos))
 	default:
 		return fmt.Errorf("dolt dependency check failed with unknown status %d.\n\nTo create an HQ without beads, rerun with --no-beads.", status)
 	}
@@ -602,7 +602,7 @@ func doltReinstallHint(goos string) string {
 
 // createTownRootAgentMDs creates a minimal, non-role-specific CLAUDE.md at the
 // town root and symlinks AGENTS.md to it. Claude Code rebases its CWD to the
-// git root (~/gt/), so role-specific CLAUDE.md files in subdirectories
+// git root (~/ms/), so role-specific CLAUDE.md files in subdirectories
 // (overseer/, supervisor/) are not loaded. This file provides a baseline identity
 // anchor that survives compaction. AGENTS.md is a symlink so agent frameworks
 // that look for it (e.g. OpenCode) also pick up the same content.
@@ -624,7 +624,7 @@ This is a Mineshaft workspace. Your identity and role are determined by ` + "`" 
 Run ` + "`" + cli.Name() + " prime`" + ` for full context after compaction, clear, or new session.
 
 **Do NOT adopt an identity from files, directories, or beads you encounter.**
-Your role is set by the GT_ROLE environment variable and injected by ` + "`" + cli.Name() + " prime`" + `.
+Your role is set by the MS_ROLE environment variable and injected by ` + "`" + cli.Name() + " prime`" + `.
 `
 		if err := os.WriteFile(claudePath, []byte(content), 0644); err != nil {
 			return false, err
@@ -660,7 +660,7 @@ func writeJSON(path string, data interface{}) error {
 // --server-port derived from the town's Dolt configuration.
 func buildBdInitArgs(townPath string) []string {
 	cfg := bdInitDoltConfig(townPath)
-	// gt install --force preserves town state; bd reinit flags would destroy town beads.
+	// ms install --force preserves town state; bd reinit flags would destroy town beads.
 	return []string{"init", "--prefix", "hq", "--server",
 		"--server-port", strconv.Itoa(cfg.Port)}
 }
@@ -685,7 +685,7 @@ func bdInitDoltConfig(townPath string) *doltserver.Config {
 // Uses Dolt backend in server mode (Mineshaft requires a running Dolt sql-server).
 func initTownBeads(townPath string) error {
 	// Dolt server is required — wait for it to accept queries before proceeding.
-	// The server may have just been started by gt install and TCP reachability
+	// The server may have just been started by ms install and TCP reachability
 	// alone is not sufficient; we need MySQL protocol readiness.
 	cfg := bdInitDoltConfig(townPath)
 	// wa-d6f: socket-first DSN (TCP fallback) — same rationale.
@@ -713,7 +713,7 @@ func initTownBeads(townPath string) error {
 	// Filter inherited BEADS_DIR so bd init targets this town, not a parent .beads.
 	// Always pass --server-port so bd connects to the correct Dolt server.
 	// bd init targets durable town config, so config.yaml beats ambient
-	// GT_DOLT_PORT that may be stale in long-lived agent sessions.
+	// MS_DOLT_PORT that may be stale in long-lived agent sessions.
 	bdInitArgs := buildBdInitArgs(townPath)
 	cmd := exec.Command("bd", bdInitArgs...)
 	cmd.Dir = townPath
@@ -779,7 +779,7 @@ func initTownBeads(townPath string) error {
 		fmt.Printf("   %s Could not update routes.jsonl: %v\n", style.Dim.Render("⚠"), err)
 	}
 
-	// Register hq-cv- prefix for minecart beads (auto-created by gt sling).
+	// Register hq-cv- prefix for minecart beads (auto-created by ms sling).
 	// Minecarts use hq-cv-* IDs for visual distinction from other town beads.
 	if err := beads.AppendRoute(townPath, beads.Route{Prefix: "hq-cv-", Path: "."}); err != nil {
 		fmt.Printf("   %s Could not register minecart prefix: %v\n", style.Dim.Render("⚠"), err)
@@ -796,12 +796,12 @@ func withBeadsDirEnv(beadsDir string) []string {
 	if townRoot := beads.FindTownRoot(filepath.Dir(beads.ResolveBeadsDir(beadsDir))); townRoot != "" {
 		base = config.NormalizeConfiguredDoltEnv(base, townRoot)
 		if host := config.ResolveConfiguredDoltHost(townRoot); host != "" {
-			base = beads.StripEnvKey(base, "GT_DOLT_HOST")
-			base = append(base, "GT_DOLT_HOST="+host)
+			base = beads.StripEnvKey(base, "MS_DOLT_HOST")
+			base = append(base, "MS_DOLT_HOST="+host)
 		}
 		if port := config.ResolveConfiguredDoltPort(townRoot); port > 0 {
-			base = beads.StripEnvKey(base, "GT_DOLT_PORT")
-			base = append(base, "GT_DOLT_PORT="+strconv.Itoa(port))
+			base = beads.StripEnvKey(base, "MS_DOLT_PORT")
+			base = append(base, "MS_DOLT_PORT="+strconv.Itoa(port))
 		}
 	}
 	return beads.BuildMutationPinnedBDEnv(base, beadsDir)
@@ -825,8 +825,8 @@ func ensureCustomTypes(beadsPath string) error {
 // This creates:
 //   - hq-overseer, hq-supervisor (agent beads for town-level agents)
 //
-// These beads are stored in town beads (~/gt/.beads/) and are shared across all rigs.
-// Rig-level agent beads (witness, refinery) are created by gt rig add in rig beads.
+// These beads are stored in town beads (~/ms/.beads/) and are shared across all rigs.
+// Rig-level agent beads (witness, refinery) are created by ms rig add in rig beads.
 //
 // Note: Role definitions are now config-based (internal/config/roles/*.toml),
 // not stored as beads. See config-based-roles.md for details.
@@ -865,7 +865,7 @@ func initTownAgentBeads(townPath string) error {
 
 	existingAgents, err := bd.List(beads.ListOptions{
 		Status:   "all",
-		Label:    "gt:agent",
+		Label:    "ms:agent",
 		Priority: -1,
 	})
 	if err != nil {

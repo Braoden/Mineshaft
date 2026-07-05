@@ -6,7 +6,7 @@ Mineshaft uses OpenTelemetry (OTel) for structured observability of all agent op
 
 **Backend-agnostic design**: The system emits standard OpenTelemetry Protocol (OTLP) — any OTLP v1.x+ compatible backend can consume it. You are **not obligated** to use VictoriaMetrics/VictoriaLogs; these are simply development defaults.
 
-**Best-effort design**: Telemetry initialization errors are returned but do not affect normal GT operation. The system remains functional even when telemetry is unavailable.
+**Best-effort design**: Telemetry initialization errors are returned but do not affect normal MS operation. The system remains functional even when telemetry is unavailable.
 
 ---
 
@@ -16,12 +16,12 @@ Set at least one endpoint variable to activate telemetry — both endpoints unse
 
 ```bash
 # Full local setup (recommended)
-export GT_OTEL_METRICS_URL=http://localhost:8428/opentelemetry/api/v1/push
-export GT_OTEL_LOGS_URL=http://localhost:9428/insert/opentelemetry/v1/logs
+export MS_OTEL_METRICS_URL=http://localhost:8428/opentelemetry/api/v1/push
+export MS_OTEL_LOGS_URL=http://localhost:9428/insert/opentelemetry/v1/logs
 
 # Opt-in features
-export GT_LOG_BD_OUTPUT=true      # Include bd stdout/stderr in bd.call records
-export GT_LOG_AGENT_OUTPUT=true   # Stream Claude conversation turns to logs (PR #2199)
+export MS_LOG_BD_OUTPUT=true      # Include bd stdout/stderr in bd.call records
+export MS_LOG_AGENT_OUTPUT=true   # Stream Claude conversation turns to logs (PR #2199)
 ```
 
 **Local backends (Docker):**
@@ -30,7 +30,7 @@ docker run -d -p 8428:8428 victoriametrics/victoria-metrics
 docker run -d -p 9428:9428 victoriametrics/victoria-logs
 ```
 
-**Verify:** `gt prime` should emit a `prime` event visible at `http://localhost:9428/select/vmui`.
+**Verify:** `ms prime` should emit a `prime` event visible at `http://localhost:9428/select/vmui`.
 
 ---
 
@@ -58,10 +58,10 @@ docker run -d -p 9428:9428 victoriametrics/victoria-logs
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Prompt/nudge telemetry | ✅ Main | `prompt.send` and `nudge` events |
-| BD operation telemetry | ✅ Main | `bd.call` events (stdout/stderr opt-in via `GT_LOG_BD_OUTPUT=true`) |
+| BD operation telemetry | ✅ Main | `bd.call` events (stdout/stderr opt-in via `MS_LOG_BD_OUTPUT=true`) |
 | Mail telemetry | ✅ Main | `mail` operations (operation + status only; no message payload) |
 | Sling/done telemetry | ✅ Main | `sling` and `done` events |
-| GT prime telemetry | ✅ Main | `prime` + `prime.context` events |
+| MS prime telemetry | ✅ Main | `prime` + `prime.context` events |
 | Work context in `prime` | 🔲 PR #2199 | `work_rig`, `work_bead`, `work_mol` on `prime` events |
 
 ### Agent Lifecycle (Main ✅)
@@ -88,11 +88,11 @@ docker run -d -p 9428:9428 victoriametrics/victoria-logs
 |---------|--------|-------|
 | **Agent conversation events** | 🔲 PR #2199 | `agent.event` per conversation turn (text/tool_use/tool_result/thinking) |
 | **Token usage tracking** | 🔲 PR #2199 | `agent.usage` per assistant turn (input/output/cache_read/cache_creation) |
-| **Cloud session correlation** | 🔲 PR #2199 | `native_session_id` linking Claude to GT telemetry |
-| **Agent logging daemon** | 🔲 PR #2199 | `gt agent-log` detached process for JSONL streaming |
+| **Cloud session correlation** | 🔲 PR #2199 | `native_session_id` linking Claude to MS telemetry |
+| **Agent logging daemon** | 🔲 PR #2199 | `ms agent-log` detached process for JSONL streaming |
 | **`run.id` on all events** | 🔲 PR #2199 | `WithRunID`/`RunIDFromCtx`; `addRunID()` injects `run.id` into every log record |
 
-**Activation (PR #2199)**: Requires `GT_LOG_AGENT_OUTPUT=true` AND `GT_OTEL_LOGS_URL` set.
+**Activation (PR #2199)**: Requires `MS_LOG_AGENT_OUTPUT=true` AND `MS_OTEL_LOGS_URL` set.
 
 ---
 
@@ -100,21 +100,21 @@ docker run -d -p 9428:9428 victoriametrics/victoria-logs
 
 ### P0 — Critical (blocking accurate attribution)
 
-**Work context injection at `gt prime`** — implemented in PR #2199
+**Work context injection at `ms prime`** — implemented in PR #2199
 
-Miners are **generic agents** — they have no fixed rig. `GT_RIG` at session start reflects an allocation rig or is empty, which is meaningless for attributing work. The actual work context (which rig, bead, and molecule a miner is processing) is only known at each `gt prime` invocation.
+Miners are **generic agents** — they have no fixed rig. `MS_RIG` at session start reflects an allocation rig or is empty, which is meaningless for attributing work. The actual work context (which rig, bead, and molecule a miner is processing) is only known at each `ms prime` invocation.
 
-A single miner session goes through multiple `gt prime` cycles, each on a potentially different rig and bead:
+A single miner session goes through multiple `ms prime` cycles, each on a potentially different rig and bead:
 
 ```
 session start → rig="" (generic, no work yet)
-gt prime #1   → work_rig="mineshaft", work_bead="sg-05iq", work_mol="mol-miner-work"
+ms prime #1   → work_rig="mineshaft", work_bead="sg-05iq", work_mol="mol-miner-work"
   bd.call, mail, sling, done  ← carry work context from prime #1
-gt prime #2   → work_rig="sfmineshaft", work_bead="sg-g8vs", work_mol="mol-miner-work"
+ms prime #2   → work_rig="sfmineshaft", work_bead="sg-g8vs", work_mol="mol-miner-work"
   bd.call, mail, sling, done  ← carry work context from prime #2
 ```
 
-Fix: at each `gt prime`, inject `GT_WORK_RIG`, `GT_WORK_BEAD`, `GT_WORK_MOL` into the **tmux session environment** (via `SetEnvironment`), not just emit them as log attributes. This ensures all subsequent subprocesses (`bd`, mail, agent logging) inherit the current work context automatically until the next prime overwrites it.
+Fix: at each `ms prime`, inject `MS_WORK_RIG`, `MS_WORK_BEAD`, `MS_WORK_MOL` into the **tmux session environment** (via `SetEnvironment`), not just emit them as log attributes. This ensures all subsequent subprocesses (`bd`, mail, agent logging) inherit the current work context automatically until the next prime overwrites it.
 
 New attributes emitted on the `prime` event and carried by all events until the next prime:
 
@@ -167,7 +167,7 @@ Currently the waterfall relies on `run.id` as a manual correlation key across fl
 - Automatic parent → child span attribution (no manual run.id joins)
 - P95/P99 latency per operation derived from spans, not histograms
 
-Architecture: each miner session spawn creates a **root span** (`gt.session`). Child spans are created for `bd.call`, `mail`, `sling`, `done`. The `run.id` becomes the trace ID. `GT_RUN` propagation becomes W3C `traceparent` header injection.
+Architecture: each miner session spawn creates a **root span** (`ms.session`). Child spans are created for `bd.call`, `mail`, `sling`, `done`. The `run.id` becomes the trace ID. `MS_RUN` propagation becomes W3C `traceparent` header injection.
 
 This is a significant effort (requires `go.opentelemetry.io/otel/trace` + tracer provider + exporter) but would be the single highest-impact observability improvement.
 
@@ -184,7 +184,7 @@ flowchart TD
     A[Query Pending<br/>Readiness Filter] --> B{Capacity Available?}
     B -->|Yes| C[Plan Dispatch<br/>ToDispatch array]
     B -->|No| D[Skip All<br/>Reason: capacity]
-    C --> E[Execute Dispatch<br/>gt sling / gt prime]
+    C --> E[Execute Dispatch<br/>ms sling / ms prime]
     E --> F{Dispatch Result}
     F -->|Success| G[Close Sling Context<br/>OnSuccess]
     F -->|Failure| H[Retry / Quarantine<br/>OnFailure]
@@ -230,7 +230,7 @@ New metrics: `mineshaft.dolt.connections`, `mineshaft.dolt.query_duration_ms` (h
 | **Supervisor watchdog telemetry** | State machine transitions in the supervisor watchdog chain |
 | **Crew session tracking** | Crew session cycle events: start, push, done, idle |
 | **Git operation telemetry** | Track clone, checkout, fetch duration per miner session |
-| **OTel W3C Baggage** | Replace `GT_RUN` env var propagation with W3C Baggage for standard cross-process context |
+| **OTel W3C Baggage** | Replace `MS_RUN` env var propagation with W3C Baggage for standard cross-process context |
 | **Retry pattern detection** | Alert when a miner's error rate exceeds threshold across runs |
 
 ---
@@ -255,7 +255,7 @@ defer provider.Shutdown(ctx)
 - **Metrics**: Any OTLP-compatible metrics backend via `otlpmetrichttp` exporter
 - **Logs**: Any OTLP-compatible logs backend via `otlploghttp` exporter
 
-**Default endpoints** (when GT_OTEL_* variables are not set):
+**Default endpoints** (when MS_OTEL_* variables are not set):
 - Metrics: `http://localhost:8428/opentelemetry/api/v1/push`
 - Logs: `http://localhost:9428/insert/opentelemetry/v1/logs`
 
@@ -271,7 +271,7 @@ defer provider.Shutdown(ctx)
 | OTel attribute | Source |
 |---|---|
 | `service.name` | `"mineshaft"` (hardcoded at call site) |
-| `service.version` | GT binary version |
+| `service.version` | MS binary version |
 | `host.name`, `host.arch` | `resource.WithHost()` — OTel SDK reads system hostname |
 | `os.type`, `os.version`, `os.description` | `resource.WithOS()` — OTel SDK reads OS info |
 
@@ -279,28 +279,28 @@ defer provider.Shutdown(ctx)
 
 | Attribute | Source env var | Notes |
 |---|---|---|
-| `gt.role` | `GT_ROLE` | Agent role (e.g. `mineshaft/miners/Toast`) |
-| `gt.rig` | `GT_RIG` | Rig name |
-| `gt.actor` | `BD_ACTOR` | BD actor/identity |
-| `gt.agent` | `GT_MINER` or `GT_CREW` | Agent name |
-| `gt.session` | `GT_SESSION` | Tmux session name — **PR #2199** |
-| `gt.run_id` | `GT_RUN` | Run UUID — **PR #2199** |
-| `gt.work_rig` | `GT_WORK_RIG` | Work rig at last prime — **PR #2199** |
-| `gt.work_bead` | `GT_WORK_BEAD` | Hooked bead at last prime — **PR #2199** |
-| `gt.work_mol` | `GT_WORK_MOL` | Molecule step at last prime — **PR #2199** |
+| `ms.role` | `MS_ROLE` | Agent role (e.g. `mineshaft/miners/Toast`) |
+| `ms.rig` | `MS_RIG` | Rig name |
+| `ms.actor` | `BD_ACTOR` | BD actor/identity |
+| `ms.agent` | `MS_MINER` or `MS_CREW` | Agent name |
+| `ms.session` | `MS_SESSION` | Tmux session name — **PR #2199** |
+| `ms.run_id` | `MS_RUN` | Run UUID — **PR #2199** |
+| `ms.work_rig` | `MS_WORK_RIG` | Work rig at last prime — **PR #2199** |
+| `ms.work_bead` | `MS_WORK_BEAD` | Hooked bead at last prime — **PR #2199** |
+| `ms.work_mol` | `MS_WORK_MOL` | Molecule step at last prime — **PR #2199** |
 
 ---
 
 ### 2. Recording Layer (`internal/telemetry/recorder.go`)
 
-The recorder provides type-safe functions for emitting all GT telemetry events. Each function emits:
+The recorder provides type-safe functions for emitting all MS telemetry events. Each function emits:
 
 1. **OTel metric counter** (→ VictoriaMetrics, aggregated)
 2. **OTel log record** (→ VictoriaLogs, full detail)
 
 > **`run.id` on log records**: On main, log records do not carry `run.id`. After PR #2199
 > merges, `addRunID(ctx, &r)` will be called on every log record, injecting `run.id` from
-> context (set via `WithRunID`) or from the `GT_RUN` env var.
+> context (set via `WithRunID`) or from the `MS_RUN` env var.
 
 #### Recording Pattern
 
@@ -338,24 +338,24 @@ func RecordSomething(ctx context.Context, args ..., err error) {
 Two mechanisms ensure subprocess telemetry is correlated:
 
 **1. Process-level inheritance** (`SetProcessOTELAttrs`):
-- Called once at GT startup
+- Called once at MS startup
 - Sets `OTEL_RESOURCE_ATTRIBUTES` in process environment
 - All `exec.Command()` subprocesses inherit these env vars automatically
 
 **2. Manual injection** (`OTELEnvForSubprocess`):
 - For callers building `cmd.Env` explicitly (overriding `os.Environ`)
 - Returns pre-built env slice with:
-  - `OTEL_RESOURCE_ATTRIBUTES` (GT context attributes)
-  - `BD_OTEL_METRICS_URL` (mirrors `GT_OTEL_METRICS_URL`)
-  - `BD_OTEL_LOGS_URL` (mirrors `GT_OTEL_LOGS_URL`)
-  - `GT_RUN` (run ID for correlation — **PR #2199**)
+  - `OTEL_RESOURCE_ATTRIBUTES` (MS context attributes)
+  - `BD_OTEL_METRICS_URL` (mirrors `MS_OTEL_METRICS_URL`)
+  - `BD_OTEL_LOGS_URL` (mirrors `MS_OTEL_LOGS_URL`)
+  - `MS_RUN` (run ID for correlation — **PR #2199**)
 
 #### Run ID Correlation (PR #2199)
 
 On main, there is no run-level correlation key in log records. PR #2199 adds:
 
-- `GT_RUN` env var — UUID generated at miner spawn
-- `gt.run_id` in `OTEL_RESOURCE_ATTRIBUTES` — carried by all subprocesses
+- `MS_RUN` env var — UUID generated at miner spawn
+- `ms.run_id` in `OTEL_RESOURCE_ATTRIBUTES` — carried by all subprocesses
 - `WithRunID(ctx, runID)` / `RunIDFromCtx(ctx)` — Go context carrier
 - `addRunID(ctx, &record)` — called in every emit, injects `run.id` into log record
 
@@ -370,14 +370,14 @@ run.id:uuid-1234
 
 > **Status: PR #2199 (`otel-p0-work-context`)** — not on main. The files below are added in PR #2199 and do not exist at `origin/main`.
 
-**Opt-in feature**: `GT_LOG_AGENT_OUTPUT=true` streams native AI agent JSONL to VictoriaLogs.
+**Opt-in feature**: `MS_LOG_AGENT_OUTPUT=true` streams native AI agent JSONL to VictoriaLogs.
 
 **How it works:**
-1. `ActivateAgentLogging()` (`internal/session/agent_logging_unix.go`) spawns detached `gt agent-log` process
+1. `ActivateAgentLogging()` (`internal/session/agent_logging_unix.go`) spawns detached `ms agent-log` process
 2. Uses `Setsid` so it survives parent process exit
-3. PID file at `/tmp/gt-agentlog-<session>.pid` ensures single instance
+3. PID file at `/tmp/ms-agentlog-<session>.pid` ensures single instance
 4. `--since=now-60s` filters to only this session's Claude instance
-5. `gt agent-log` (`internal/cmd/agent_log.go`) tails JSONL files and emits `RecordAgentEvent` for each
+5. `ms agent-log` (`internal/cmd/agent_log.go`) tails JSONL files and emits `RecordAgentEvent` for each
 6. `internal/agentlog/` package — adapters for claudecode and opencode JSONL formats
 
 **Events emitted:**
@@ -385,35 +385,35 @@ run.id:uuid-1234
 - `agent.usage`: Token usage per assistant turn (input, output, cache stats)
 
 **Session name in telemetry:**
-- `session`: Tmux session name (e.g., `gt-mineshaft-Toast`)
+- `session`: Tmux session name (e.g., `ms-mineshaft-Toast`)
 - `native_session_id`: Claude Code JSONL filename UUID
 
 ---
 
 ## Environment Variables
 
-### GT-Level Variables
+### MS-Level Variables
 
 | Variable | Set by | Description |
 |----------|---------|-------------|
-| `GT_OTEL_METRICS_URL` | Operator | OTLP metrics endpoint (default: localhost:8428) |
-| `GT_OTEL_LOGS_URL` | Operator | OTLP logs endpoint (default: localhost:9428) |
-| `GT_LOG_BD_OUTPUT` | Operator | **Opt-in**: Include bd stdout/stderr in `bd.call` records |
-| `GT_LOG_AGENT_OUTPUT` | Operator | **Opt-in (PR #2199)**: Stream Claude conversation events |
+| `MS_OTEL_METRICS_URL` | Operator | OTLP metrics endpoint (default: localhost:8428) |
+| `MS_OTEL_LOGS_URL` | Operator | OTLP logs endpoint (default: localhost:9428) |
+| `MS_LOG_BD_OUTPUT` | Operator | **Opt-in**: Include bd stdout/stderr in `bd.call` records |
+| `MS_LOG_AGENT_OUTPUT` | Operator | **Opt-in (PR #2199)**: Stream Claude conversation events |
 
 ### Session Context Variables (Set by `session.StartSession`)
 
 | Variable | Values / Format | Description |
 |----------|-----------------|-------------|
-| `GT_ROLE` | `<rig>/miners/<name>` · `overseer` · `beads/witness` | Agent role for identity parsing |
-| `GT_RIG` | `mineshaft`, `beads` | Rig name (empty for town-level agents) |
-| `GT_MINER` | `Toast`, `Shadow`, `Furiosa` | Miner name (rig-specific) |
-| `GT_CREW` | `max`, `jane` | Crew member name |
-| `GT_SESSION` | `gt-mineshaft-Toast`, `hq-overseer` | Tmux session name |
-| `GT_AGENT` | Preset names: `claude`, `gemini`, `codex`, `cursor`, `copilot`, `opencode`, … | Agent override (if specified) |
-| `GT_RUN` | UUID v4 | **PR #2199** — Run identifier, primary waterfall correlation key |
-| `GT_ROOT` | `/Users/pa/gt` | Town root path |
-| `CLAUDE_CONFIG_DIR` | `~/gt/.claude` | Runtime config directory (for agent overrides) |
+| `MS_ROLE` | `<rig>/miners/<name>` · `overseer` · `beads/witness` | Agent role for identity parsing |
+| `MS_RIG` | `mineshaft`, `beads` | Rig name (empty for town-level agents) |
+| `MS_MINER` | `Toast`, `Shadow`, `Furiosa` | Miner name (rig-specific) |
+| `MS_CREW` | `max`, `jane` | Crew member name |
+| `MS_SESSION` | `ms-mineshaft-Toast`, `hq-overseer` | Tmux session name |
+| `MS_AGENT` | Preset names: `claude`, `gemini`, `codex`, `cursor`, `copilot`, `opencode`, … | Agent override (if specified) |
+| `MS_RUN` | UUID v4 | **PR #2199** — Run identifier, primary waterfall correlation key |
+| `MS_ROOT` | `/Users/pa/ms` | Town root path |
+| `CLAUDE_CONFIG_DIR` | `~/ms/.claude` | Runtime config directory (for agent overrides) |
 | `BD_ACTOR` | `<rig>/miners/<name>` | BD actor identity (git author) |
 | `GIT_AUTHOR_NAME` | Agent name | Git author name |
 | `GIT_CEILING_DIRECTORIES` | Town root | Git ceiling (prevents repo traversal) |
@@ -440,15 +440,15 @@ See [OTel Data Model](otel-data-model.md) for the complete event schema, attribu
 | Formula instantiation | Full (formula name, bead ID) |
 | Minecart tracking | Full (auto-minecart creation) |
 | Daemon restarts | Full (witness/supervisor-initiated) |
-| GT prime operations | Full (with formula context) |
-| Agent conversation events | 🔲 PR #2199 — requires `GT_LOG_AGENT_OUTPUT=true` |
-| Token usage | 🔲 PR #2199 — requires `GT_LOG_AGENT_OUTPUT=true` |
+| MS prime operations | Full (with formula context) |
+| Agent conversation events | 🔲 PR #2199 — requires `MS_LOG_AGENT_OUTPUT=true` |
+| Token usage | 🔲 PR #2199 — requires `MS_LOG_AGENT_OUTPUT=true` |
 
 ### Not Currently Monitored ❌
 
 | Area | Notes | Operational Impact |
 |-------|-------|-------------------|
-| **Generic miner work context** | **Critical gap** — see [Generic Miner Work Context](#generic-miner-work-context-️) below | No work attribution on any event between two `gt prime` calls; token costs unattributable |
+| **Generic miner work context** | **Critical gap** — see [Generic Miner Work Context](#generic-miner-work-context-️) below | No work attribution on any event between two `ms prime` calls; token costs unattributable |
 | **Agent instantiation** | No `agent.instantiate` event (roadmap) | Cannot anchor a run to a specific agent spawn |
 | **Molecule lifecycle** | No `mol.cook/wisp/squash/burn` events (roadmap) | Cannot observe formula-to-wisp pipeline |
 | **Bead creation** | No `bead.create` event (roadmap) | Cannot trace child bead graph during molecule instantiation |
@@ -467,17 +467,17 @@ See [OTel Data Model](otel-data-model.md) for the complete event schema, attribu
 
 ## Generic Miner Work Context ⚠️
 
-**Critical gap**: Miners are generic agents with no fixed rig. `gt.rig` in resource attributes reflects the allocation rig (or is empty), which has no bearing on the actual work being done. Work context is only determined at each `gt prime` invocation — and changes with every new work assignment.
+**Critical gap**: Miners are generic agents with no fixed rig. `ms.rig` in resource attributes reflects the allocation rig (or is empty), which has no bearing on the actual work being done. Work context is only determined at each `ms prime` invocation — and changes with every new work assignment.
 
-This means all events emitted between two `gt prime` calls (`bd.call`, `mail`, `sling`, `done`) have no work attribution today. You cannot answer "which bead did this `bd.call` serve?" from current telemetry.
+This means all events emitted between two `ms prime` calls (`bd.call`, `mail`, `sling`, `done`) have no work attribution today. You cannot answer "which bead did this `bd.call` serve?" from current telemetry.
 
 **Impact**:
-- `gt.rig` resource attribute is the allocation rig, not the work rig — misleading for multi-rig miners
+- `ms.rig` resource attribute is the allocation rig, not the work rig — misleading for multi-rig miners
 - Token usage (`agent.usage`, PR #2199) cannot be attributed to a specific bead, rig, or molecule
 - `bd.call`, `mail`, `done` events carry no indication of which work item triggered them
 
 **Proposed solution** (see [Roadmap P0](#p0--critical-blocking-accurate-attribution)):
-- At each `gt prime`, write `GT_WORK_RIG`, `GT_WORK_BEAD`, `GT_WORK_MOL` into the tmux session via `SetEnvironment` — all subprocesses inherit automatically
+- At each `ms prime`, write `MS_WORK_RIG`, `MS_WORK_BEAD`, `MS_WORK_MOL` into the tmux session via `SetEnvironment` — all subprocesses inherit automatically
 - Emit `work_rig`, `work_bead`, `work_mol` on the `prime` event
 - All events emitted after a `prime` (until the next one) carry the current work context via the inherited env vars
 
@@ -524,7 +524,7 @@ sum(increase(mineshaft_done_total[1h])) by (exit_type)
 
 **Find all events from a miner:**
 ```logsql
-gt.agent:Toast
+ms.agent:Toast
 ```
 
 **Error analysis:**
@@ -545,7 +545,7 @@ _msg:agent.state_change AND new_state:working
 
 **Track a miner working across multiple rigs:**
 ```logsql
-gt.agent:Toast
+ms.agent:Toast
 ```
 Shows all events from miner Toast, regardless of rig assignment.
 
@@ -572,8 +572,8 @@ run.id:uuid-1234
 
 | Backend | Notes |
 |---------|-------|
-| **VictoriaMetrics** | Default for metrics (localhost:8428) — open source. Override with `GT_OTEL_METRICS_URL` to use any OTLP-compatible backend. |
-| **VictoriaLogs** | Default for logs (localhost:9428) — open source. Override with `GT_OTEL_LOGS_URL` to use any OTLP-compatible backend. |
+| **VictoriaMetrics** | Default for metrics (localhost:8428) — open source. Override with `MS_OTEL_METRICS_URL` to use any OTLP-compatible backend. |
+| **VictoriaLogs** | Default for logs (localhost:9428) — open source. Override with `MS_OTEL_LOGS_URL` to use any OTLP-compatible backend. |
 | **Prometheus** | Supports OTLP via remote_write receiver — open source |
 | **Grafana Mimir** | Supports OTLP via write endpoint — open source |
 | **Loki** | Requires OTLP bridge (Loki uses different format) — open source |
@@ -597,8 +597,8 @@ Audited against `origin/main` @ `2d8d71ee35fafda3bbdf353683692bfcc9165476`
 |-------|--------|
 | `func Init(ctx context.Context, serviceName, serviceVersion string) (*Provider, error)` | `telemetry.go:104` |
 | `func (p *Provider) Shutdown(ctx context.Context) error` | `telemetry.go:68` |
-| `EnvMetricsURL = "GT_OTEL_METRICS_URL"` | `telemetry.go:36` |
-| `EnvLogsURL = "GT_OTEL_LOGS_URL"` | `telemetry.go:39` |
+| `EnvMetricsURL = "MS_OTEL_METRICS_URL"` | `telemetry.go:36` |
+| `EnvLogsURL = "MS_OTEL_LOGS_URL"` | `telemetry.go:39` |
 | `DefaultMetricsURL = "http://localhost:8428/opentelemetry/api/v1/push"` | `telemetry.go:42` |
 | `DefaultLogsURL = "http://localhost:9428/insert/opentelemetry/v1/logs"` | `telemetry.go:45` |
 | `semconv.ServiceName(serviceName)` — resource attr | `telemetry.go:129` |
@@ -612,11 +612,11 @@ Audited against `origin/main` @ `2d8d71ee35fafda3bbdf353683692bfcc9165476`
 | Claim | Source |
 |-------|--------|
 | `func buildGTResourceAttrs() string` | `subprocess.go:11` |
-| `GT_ROLE` → `gt.role` | `subprocess.go:13` |
-| `GT_RIG` → `gt.rig` | `subprocess.go:16` |
-| `BD_ACTOR` → `gt.actor` | `subprocess.go:19` |
-| `GT_MINER` → `gt.agent` | `subprocess.go:23` |
-| `GT_CREW` → `gt.agent` (fallback) | `subprocess.go:25` |
+| `MS_ROLE` → `ms.role` | `subprocess.go:13` |
+| `MS_RIG` → `ms.rig` | `subprocess.go:16` |
+| `BD_ACTOR` → `ms.actor` | `subprocess.go:19` |
+| `MS_MINER` → `ms.agent` | `subprocess.go:23` |
+| `MS_CREW` → `ms.agent` (fallback) | `subprocess.go:25` |
 | `func SetProcessOTELAttrs()` | `subprocess.go:42` |
 | Sets `OTEL_RESOURCE_ATTRIBUTES` | `subprocess.go:48` |
 | Sets `BD_OTEL_METRICS_URL` | `subprocess.go:52` |
@@ -629,7 +629,7 @@ Audited against `origin/main` @ `2d8d71ee35fafda3bbdf353683692bfcc9165476`
 |-------|--------|
 | `func emit(ctx, body, sev, attrs...)` | `recorder.go:133` |
 | `initInstruments()` — all instruments initialized here | `recorder.go:59` |
-| `GT_LOG_BD_OUTPUT` gates stdout/stderr logging | `recorder.go:208` |
+| `MS_LOG_BD_OUTPUT` gates stdout/stderr logging | `recorder.go:208` |
 | `RecordBDCall` / `bd.call` event | `recorder.go:187` |
 | `RecordSessionStart` / `session.start` event | `recorder.go:218` |
 | `RecordSessionStop` / `session.stop` event | `recorder.go:236` |
@@ -657,9 +657,9 @@ Audited against `origin/main` @ `2d8d71ee35fafda3bbdf353683692bfcc9165476`
 | `RecordMolCook` / `mol.cook` etc. — do not exist | `grep -r "RecordMol\|mol\.cook\|mol\.wisp\|mol\.squash\|mol\.burn" internal/ → zero matches` |
 | `RecordBeadCreate` / `bead.create` — does not exist | `grep -r "RecordBeadCreate\|bead\.create" internal/ → zero matches` |
 | `WithRunID` / `RunIDFromCtx` — do not exist on main | `grep -r "WithRunID\|RunIDFromCtx" internal/telemetry/ → zero matches` |
-| `GT_RUN` — does not exist on main | `grep -r "GT_RUN" internal/ → zero matches` |
-| `GT_LOG_AGENT_OUTPUT` — does not exist on main | `grep -r "GT_LOG_AGENT_OUTPUT" . → zero matches` |
-| `gt.session` / `gt.run_id` in resource attrs — not in subprocess.go on main | confirmed: `subprocess.go` has only `gt.role`, `gt.rig`, `gt.actor`, `gt.agent` |
+| `MS_RUN` — does not exist on main | `grep -r "MS_RUN" internal/ → zero matches` |
+| `MS_LOG_AGENT_OUTPUT` — does not exist on main | `grep -r "MS_LOG_AGENT_OUTPUT" . → zero matches` |
+| `ms.session` / `ms.run_id` in resource attrs — not in subprocess.go on main | confirmed: `subprocess.go` has only `ms.role`, `ms.rig`, `ms.actor`, `ms.agent` |
 | `agent_logging_unix.go` — does not exist on main | `find internal/session/ -name "agent_logging*" → zero results` |
 | `agent_log.go` — does not exist on main | `find internal/cmd/ -name "agent_log*" → zero results` |
 | `telemetry.IsActive()` — does not exist on main | `grep -r "IsActive" internal/telemetry/ → zero matches` |
@@ -684,11 +684,11 @@ OTel SDK uses dot notation; Prometheus-compatible backends export with underscor
 | `RecordAgentTokenUsage` / `agent.usage` | added in `8b88de15` |
 | `mineshaft.agent.events.total` Counter | added in `8b88de15` |
 | `WithRunID` / `RunIDFromCtx` / `addRunID` | added in `8b88de15` |
-| `gt.session`, `gt.run_id`, `gt.work_*` in resource attrs | `subprocess.go` updated in `8b88de15` |
-| `GT_RUN` propagation to subprocesses | `subprocess.go` updated in `8b88de15` |
+| `ms.session`, `ms.run_id`, `ms.work_*` in resource attrs | `subprocess.go` updated in `8b88de15` |
+| `MS_RUN` propagation to subprocesses | `subprocess.go` updated in `8b88de15` |
 | `injectWorkContext` / `setTmuxWorkContext` in `prime.go` | added in `8b88de15` |
 | `internal/agentlog/` package | new in `8b88de15` |
 | `internal/cmd/agent_log.go` | new in `8b88de15` |
 | `internal/session/agent_logging_unix.go` | new in `8b88de15` |
-| `GT_LOG_AGENT_OUTPUT` env var | new in `8b88de15` |
+| `MS_LOG_AGENT_OUTPUT` env var | new in `8b88de15` |
 | `telemetry.IsActive()` | added in `8b88de15` |

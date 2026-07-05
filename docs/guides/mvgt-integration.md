@@ -153,7 +153,7 @@ Purpose: Identity registry for all participants (humans, bots, CI systems) in th
 | dolthub_org | varchar(255) | NO | NULL | DoltHub organization or username that owns this rig's fork, e.g. `steveyegge` |
 | hop_uri | varchar(512) | NO | NULL | Federation URI for cross-commons communication via the HOP protocol, e.g. `hop://steveyegge/wl-commons` |
 | owner_email | varchar(255) | NO | NULL | Contact email for the rig owner, e.g. `admin@example.com` |
-| gt_version | varchar(32) | NO | NULL | Version of Mineshaft tooling the rig is running, e.g. `0.4.2` |
+| ms_version | varchar(32) | NO | NULL | Version of Mineshaft tooling the rig is running, e.g. `0.4.2` |
 | trust_level | int | NO | 0 | Reputation tier: 0 = unverified, 1 = participant, 2 = trusted, 3 = maintainer |
 | registered_at | timestamp | NO | NULL | When the rig first registered in the commons, e.g. `2026-02-16 14:14:42` |
 | last_seen | timestamp | NO | NULL | Last time this rig pushed or interacted with the commons, e.g. `2026-03-04 12:14:42` |
@@ -292,7 +292,7 @@ erDiagram
         varchar dolthub_org
         varchar hop_uri
         varchar owner_email
-        varchar gt_version
+        varchar ms_version
         int trust_level
         timestamp registered_at
         timestamp last_seen
@@ -970,7 +970,7 @@ The flow was not entirely smooth. These are the issues encountered, documented h
 
 1. **`dolt login` retry loop on headless server.** The command tries to open a browser for OAuth. On a headless server with no browser, it enters a retry loop. The URL must be copied manually and opened in a browser elsewhere.
 2. **Multiple credentials created.** Each `dolt login` invocation creates a new JWK key, even if a previous one exists. This can lead to confusion about which credential is active. `dolt creds ls` and `dolt creds use <id>` are required to sort it out.
-3. **`gt wl join` fork API error (HTTP 400).** Mineshaft's join command, which automates forking, returned an HTTP 400 error. The fork had to be created manually on the DoltHub website instead.
+3. **`ms wl join` fork API error (HTTP 400).** Mineshaft's join command, which automates forking, returned an HTTP 400 error. The fork had to be created manually on the DoltHub website instead.
 4. **Permission denied on push until fork existed.** Attempting to push before the fork was created on DoltHub resulted in a permission denied error. The fork must exist on DoltHub before any push attempt.
 
 ---
@@ -1132,9 +1132,9 @@ Note: create forks via the DoltHub website. The API for forking is not yet stabl
 
 **Solution:** Run `dolt creds ls` to see all credentials. Identify the one you authorized (match the public key shown during the browser OAuth flow). Run `dolt creds use <id>` to select it. Run `dolt creds check` to verify it is valid.
 
-### 3. `gt wl join` Fork API Error (HTTP 400)
+### 3. `ms wl join` Fork API Error (HTTP 400)
 
-**Symptom:** Running `gt wl join` to join the Wasteland returns an HTTP 400 error when attempting to fork the commons repository.
+**Symptom:** Running `ms wl join` to join the Wasteland returns an HTTP 400 error when attempting to fork the commons repository.
 
 **Cause:** Mineshaft's join command uses an API endpoint for forking that may not handle all edge cases. The fork API is not yet stable.
 
@@ -1186,7 +1186,7 @@ Note: create forks via the DoltHub website. The API for forking is not yet stabl
 
 **Do I need Mineshaft?**
 
-No. Mineshaft is a full orchestrator with its own CLI (`gt`), but participating in the Wasteland only requires Dolt and standard shell tools. This guide covers that non-Mineshaft path end to end; see the [Introduction](#introduction).
+No. Mineshaft is a full orchestrator with its own CLI (`ms`), but participating in the Wasteland only requires Dolt and standard shell tools. This guide covers that non-Mineshaft path end to end; see the [Introduction](#introduction).
 
 **How do I get stamps?**
 

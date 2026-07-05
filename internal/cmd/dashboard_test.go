@@ -83,16 +83,16 @@ func TestEnsureDoltPortEnv_ReadsConfigYAML(t *testing.T) {
 	}
 
 	// Clear any existing env vars
-	t.Setenv("GT_DOLT_HOST", "")
-	t.Setenv("GT_DOLT_PORT", "")
+	t.Setenv("MS_DOLT_HOST", "")
+	t.Setenv("MS_DOLT_PORT", "")
 	t.Setenv("BEADS_DOLT_SERVER_HOST", "stale-host")
 	t.Setenv("BEADS_DOLT_SERVER_PORT", "")
 	t.Setenv("BEADS_DOLT_PORT", "")
 
 	ensureDoltPortEnv(townRoot)
 
-	if got := os.Getenv("GT_DOLT_PORT"); got != "13307" {
-		t.Errorf("GT_DOLT_PORT = %q, want %q", got, "13307")
+	if got := os.Getenv("MS_DOLT_PORT"); got != "13307" {
+		t.Errorf("MS_DOLT_PORT = %q, want %q", got, "13307")
 	}
 	if got := os.Getenv("BEADS_DOLT_PORT"); got != "13307" {
 		t.Errorf("BEADS_DOLT_PORT = %q, want %q", got, "13307")
@@ -100,8 +100,8 @@ func TestEnsureDoltPortEnv_ReadsConfigYAML(t *testing.T) {
 	if got := os.Getenv("BEADS_DOLT_SERVER_PORT"); got != "13307" {
 		t.Errorf("BEADS_DOLT_SERVER_PORT = %q, want %q", got, "13307")
 	}
-	if got := os.Getenv("GT_DOLT_HOST"); got != "127.0.0.2" {
-		t.Errorf("GT_DOLT_HOST = %q, want %q", got, "127.0.0.2")
+	if got := os.Getenv("MS_DOLT_HOST"); got != "127.0.0.2" {
+		t.Errorf("MS_DOLT_HOST = %q, want %q", got, "127.0.0.2")
 	}
 	if got := os.Getenv("BEADS_DOLT_SERVER_HOST"); got != "127.0.0.2" {
 		t.Errorf("BEADS_DOLT_SERVER_HOST = %q, want %q", got, "127.0.0.2")
@@ -112,8 +112,8 @@ func TestEnsureDoltPortEnv_FallsBackToDefault(t *testing.T) {
 	// Use a temp dir with no durable Dolt config.
 	townRoot := t.TempDir()
 
-	t.Setenv("GT_DOLT_HOST", "")
-	t.Setenv("GT_DOLT_PORT", "")
+	t.Setenv("MS_DOLT_HOST", "")
+	t.Setenv("MS_DOLT_PORT", "")
 	t.Setenv("BEADS_DOLT_SERVER_HOST", "stale-host")
 	t.Setenv("BEADS_DOLT_SERVER_PORT", "")
 	t.Setenv("BEADS_DOLT_PORT", "")
@@ -121,8 +121,8 @@ func TestEnsureDoltPortEnv_FallsBackToDefault(t *testing.T) {
 	ensureDoltPortEnv(townRoot)
 
 	want := "3307"
-	if got := os.Getenv("GT_DOLT_PORT"); got != want {
-		t.Errorf("GT_DOLT_PORT = %q, want %q (default)", got, want)
+	if got := os.Getenv("MS_DOLT_PORT"); got != want {
+		t.Errorf("MS_DOLT_PORT = %q, want %q (default)", got, want)
 	}
 	if got := os.Getenv("BEADS_DOLT_PORT"); got != want {
 		t.Errorf("BEADS_DOLT_PORT = %q, want %q (default)", got, want)
@@ -137,12 +137,12 @@ func TestEnsureDoltPortEnv_FallsBackToDefault(t *testing.T) {
 
 func TestEnsureDoltPortEnv_GTDoltPortOverridesWrongBeadsPort(t *testing.T) {
 	// Simulate the bug: Beads port aliases set to dashboard HTTP port (8080)
-	// while GT_DOLT_PORT carries the explicit Dolt endpoint.
-	t.Setenv("GT_DOLT_PORT", "3307")
+	// while MS_DOLT_PORT carries the explicit Dolt endpoint.
+	t.Setenv("MS_DOLT_PORT", "3307")
 	t.Setenv("BEADS_DOLT_SERVER_PORT", "8080")
 	t.Setenv("BEADS_DOLT_PORT", "8080")
 
-	// Create durable config with a different port. Explicit GT_DOLT_PORT is still
+	// Create durable config with a different port. Explicit MS_DOLT_PORT is still
 	// authoritative for dashboard-spawned subprocesses.
 	townRoot := t.TempDir()
 	doltDataDir := filepath.Join(townRoot, ".dolt-data")
@@ -155,8 +155,8 @@ func TestEnsureDoltPortEnv_GTDoltPortOverridesWrongBeadsPort(t *testing.T) {
 
 	ensureDoltPortEnv(townRoot)
 
-	if got := os.Getenv("GT_DOLT_PORT"); got != "3307" {
-		t.Errorf("GT_DOLT_PORT = %q, want %q", got, "3307")
+	if got := os.Getenv("MS_DOLT_PORT"); got != "3307" {
+		t.Errorf("MS_DOLT_PORT = %q, want %q", got, "3307")
 	}
 	if got := os.Getenv("BEADS_DOLT_PORT"); got != "3307" {
 		t.Errorf("BEADS_DOLT_PORT = %q, want %q", got, "3307")

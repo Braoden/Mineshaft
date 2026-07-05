@@ -22,7 +22,7 @@ func readIfExists(path string) ([]byte, error) {
 	return data, err
 }
 
-// TestNewSessionWithCommandAndEnv_SubprocessInheritsEnv verifies the gt-neycp
+// TestNewSessionWithCommandAndEnv_SubprocessInheritsEnv verifies the ms-neycp
 // fix: env vars passed via tmux -e flags reach SUBPROCESSES spawned inside the
 // pane, not just the initial shell. This is the contract bd subprocess of
 // Claude depends on — without it, bd auto-discovers a per-rig embedded Dolt
@@ -37,7 +37,7 @@ func TestNewSessionWithCommandAndEnv_SubprocessInheritsEnv(t *testing.T) {
 	}
 
 	tm := newTestTmux(t)
-	sessionName := "gt-test-env-prop-" + t.Name()
+	sessionName := "ms-test-env-prop-" + t.Name()
 	_ = tm.KillSession(sessionName)
 	defer func() { _ = tm.KillSession(sessionName) }()
 
@@ -53,7 +53,7 @@ func TestNewSessionWithCommandAndEnv_SubprocessInheritsEnv(t *testing.T) {
 	envVars := map[string]string{
 		"BEADS_DOLT_PORT":       "3307",
 		"BEADS_DOLT_AUTO_START": "0",
-		"GT_ROLE":               "witness",
+		"MS_ROLE":               "witness",
 	}
 
 	if err := tm.NewSessionWithCommandAndEnv(sessionName, workDir, cmd, envVars); err != nil {

@@ -37,7 +37,7 @@ var HungSessionThresholdMinutes = int(constants.HungSessionThreshold.Minutes())
 
 // initRegistryFromWorkDir initializes the session prefix and agent registries
 // from a work directory. This ensures session.PrefixFor(rigName) returns the
-// correct rig prefix (e.g., "tr" for testrig) instead of the default "gt",
+// correct rig prefix (e.g., "tr" for testrig) instead of the default "ms",
 // and that user-configured agent overrides (e.g., custom process_names) are
 // loaded for liveness checks.
 func initRegistryFromWorkDir(workDir string) {
@@ -145,7 +145,7 @@ type HandlerResult struct {
 // immediate merge queue processing. This ensures work flows through the system
 // without waiting for the daemon's heartbeat cycle.
 //
-// Persistent Miner Model (gt-4ac):
+// Persistent Miner Model (ms-4ac):
 // Miners persist after work completion - sandbox is preserved for reuse.
 // When work is done, the miner transitions to idle state (no nuke).
 // The MR lifecycle continues independently in the Refinery.
@@ -203,11 +203,11 @@ func HandleMinerDone(bd *BdCli, workDir, rigName string, msg *mail.Message, rout
 }
 
 // HandleMinerDoneFromBead processes miner completion detected from agent bead
-// state (gt-a6gp: nudge-over-mail). Instead of parsing a MINER_DONE mail message,
+// state (ms-a6gp: nudge-over-mail). Instead of parsing a MINER_DONE mail message,
 // this reads completion metadata directly from the agent bead's description fields
 // (exit_type, mr_id, branch, mr_failed, completion_time).
 //
-// Self-managed completion (gt-1qlg): Miners now set agent_state=idle directly,
+// Self-managed completion (ms-1qlg): Miners now set agent_state=idle directly,
 // so the witness rarely sees agent_state=done. This function is retained as a
 // safety net for crash recovery — if a miner crashes between setting completion
 // metadata and transitioning to idle, the witness can process the completion.
@@ -289,7 +289,7 @@ func HandleMinerDoneFromBead(bd *BdCli, workDir, rigName, minerName string, fiel
 }
 
 // TransitionMinerToIdle sets a miner's agent_state to idle after the witness
-// has processed its completion (gt-a6gp). With self-managed completion (gt-1qlg),
+// has processed its completion (ms-a6gp). With self-managed completion (ms-1qlg),
 // miners transition to idle directly — this function is now a safety net for
 // crash recovery where the miner set completion metadata but didn't reach
 // the idle transition.
@@ -357,8 +357,8 @@ func notifyRefineryMergeReady(workDir, rigName string, result *HandlerResult) {
 // handleMinerDoneNoMR handles a MINER_DONE with no pending MR.
 // Tries auto-nuke; falls back to creating a cleanup wisp for manual intervention.
 func handleMinerDoneNoMR(_, _ string, payload *MinerDonePayload, result *HandlerResult) *HandlerResult {
-	// Persistent miner model (gt-4ac): miners go idle after completion, no nuke.
-	// The miner has already set its own state to "idle" in gt done.
+	// Persistent miner model (ms-4ac): miners go idle after completion, no nuke.
+	// The miner has already set its own state to "idle" in ms done.
 	// We just acknowledge the completion here.
 	result.Handled = true
 	result.Action = fmt.Sprintf("miner %s completed (exit=%s, no MR) — now idle, sandbox preserved", payload.MinerName, payload.Exit)
@@ -383,7 +383,7 @@ func isStaleMinerDone(workDir, rigName, minerName string, msg *mail.Message) (bo
 
 // HandleLifecycleShutdown processes a LIFECYCLE:Shutdown message.
 // Similar to MINER_DONE but triggered by daemon rather than miner.
-// Persistent miner model (gt-4ac): sandbox preserved, miner goes idle.
+// Persistent miner model (ms-4ac): sandbox preserved, miner goes idle.
 func HandleLifecycleShutdown(workDir, rigName string, msg *mail.Message) *HandlerResult {
 	result := &HandlerResult{
 		MessageID:    msg.ID,
@@ -478,8 +478,8 @@ func HandleMerged(bd *BdCli, workDir, rigName string, msg *mail.Message) *Handle
 }
 
 // handleMergedCleanupStatus acknowledges merge completion for persistent miners.
-// Persistent model (gt-4ac): miners go idle after merge, sandbox preserved.
-// ZFC (gt-5rne): Reports cleanup_status as data. The witness agent decides
+// Persistent model (ms-4ac): miners go idle after merge, sandbox preserved.
+// ZFC (ms-5rne): Reports cleanup_status as data. The witness agent decides
 // whether dirty state warrants escalation — Go code does not make that policy call.
 func handleMergedCleanupStatus(_, _, minerName, cleanupStatus, wispID string, result *HandlerResult) {
 	result.Handled = true
@@ -506,7 +506,7 @@ func HandleMergeFailed(workDir, rigName string, msg *mail.Message, router *mail.
 	// Nudge the miner about the failure instead of sending permanent mail.
 	initRegistryFromWorkDir(workDir)
 	sessionName := session.MinerSessionName(session.PrefixFor(rigName), payload.MinerName)
-	nudgeMsg := fmt.Sprintf("MERGE_FAILED: branch=%s issue=%s type=%s error=%s — fix and resubmit with 'gt done'",
+	nudgeMsg := fmt.Sprintf("MERGE_FAILED: branch=%s issue=%s type=%s error=%s — fix and resubmit with 'ms done'",
 		payload.Branch, payload.IssueID, payload.FailureType, payload.Error)
 	t := tmux.NewTmux()
 	if err := t.NudgeSession(sessionName, nudgeMsg); err != nil {
@@ -655,10 +655,10 @@ type agentBeadResponse struct {
 // Returns empty string if agent bead doesn't exist or has no cleanup_status.
 //
 // ZFC #10: This enables the Witness to verify it's safe to nuke before proceeding.
-// The miner self-reports its git state when running `gt done`, and we trust that report.
+// The miner self-reports its git state when running `ms done`, and we trust that report.
 func getCleanupStatus(bd *BdCli, workDir, rigName, minerName string) string {
 	// Construct agent bead ID using the rig's configured prefix
-	// This supports non-gt prefixes like "bd-" for the beads rig
+	// This supports non-ms prefixes like "bd-" for the beads rig
 	townRoot, err := workspace.Find(workDir)
 	if err != nil || townRoot == "" {
 		// Fall back to default prefix
@@ -696,7 +696,7 @@ func findMRBeadForBranch(bd *BdCli, workDir, branch string) string {
 	// MR beads live (GH#2446). "bd list --type=merge-request" only searches
 	// the issues table and misses wisps.
 	output, err := bd.Exec(workDir, "query",
-		"ephemeral=true AND label=gt:merge-request AND status=open",
+		"ephemeral=true AND label=ms:merge-request AND status=open",
 		"--json")
 	if err != nil || output == "" || output == "[]" || output == "null" {
 		return ""
@@ -750,7 +750,7 @@ func nudgeRefinery(townRoot, rigName string) error {
 }
 
 var slotOpenRecoveryCheck = func(workDir, rigName, minerName string) (string, error) {
-	return util.ExecWithOutput(workDir, "gt", "miner", "check-recovery", rigName+"/"+minerName, "--json", "--reconcile-cleanup")
+	return util.ExecWithOutput(workDir, "ms", "miner", "check-recovery", rigName+"/"+minerName, "--json", "--reconcile-cleanup")
 }
 
 type slotOpenSchedulerStatus struct {
@@ -836,16 +836,16 @@ func runGTForSlotOpen(townRoot string, args ...string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, "gt", args...)
+	cmd := exec.CommandContext(ctx, "ms", args...)
 	cmd.Dir = townRoot
-	cmd.Env = append(beads.BuildMutationRoutingBDEnv(os.Environ(), filepath.Join(townRoot, ".beads")), "GT_DAEMON=1")
+	cmd.Env = append(beads.BuildMutationRoutingBDEnv(os.Environ(), filepath.Join(townRoot, ".beads")), "MS_DAEMON=1")
 	out, err := cmd.CombinedOutput()
 	output := string(out)
 	if ctx.Err() == context.DeadlineExceeded {
-		return output, fmt.Errorf("gt %s timed out after 5m", strings.Join(args, " "))
+		return output, fmt.Errorf("ms %s timed out after 5m", strings.Join(args, " "))
 	}
 	if err != nil {
-		return output, fmt.Errorf("gt %s failed: %w (output: %s)", strings.Join(args, " "), err, strings.TrimSpace(output))
+		return output, fmt.Errorf("ms %s failed: %w (output: %s)", strings.Join(args, " "), err, strings.TrimSpace(output))
 	}
 	return output, nil
 }
@@ -944,7 +944,7 @@ func notifyOverseerSlotOpen(workDir, rigName, minerName, exitType string) {
 	overseerSession := session.OverseerSessionName()
 	t := tmux.NewTmux()
 	if running, err := t.HasSession(overseerSession); err == nil && running {
-		msg := fmt.Sprintf("SLOT_OPEN: %s/%s completed (exit=%s) — slot available. Run `gt miner list` to verify and sling next bead.", rigName, minerName, exitType)
+		msg := fmt.Sprintf("SLOT_OPEN: %s/%s completed (exit=%s) — slot available. Run `ms miner list` to verify and sling next bead.", rigName, minerName, exitType)
 		if err := t.NudgeSession(overseerSession, msg); err == nil {
 			return // Nudge delivered — no mail needed.
 		}
@@ -954,7 +954,7 @@ func notifyOverseerSlotOpen(workDir, rigName, minerName, exitType string) {
 	// Fall back to mail so the completion is not silently lost.
 	subject := fmt.Sprintf("SLOT_OPEN: %s/%s completed (exit=%s)", rigName, minerName, exitType)
 	body := fmt.Sprintf("Miner %s/%s finished (exit=%s). Slot available for next bead.", rigName, minerName, exitType)
-	cmd := exec.Command("gt", "mail", "send", "overseer/", "-s", subject, "-m", body)
+	cmd := exec.Command("ms", "mail", "send", "overseer/", "-s", subject, "-m", body)
 	cmd.Dir = townRoot
 	_ = cmd.Run()
 }
@@ -992,7 +992,7 @@ func notifyOverseerSchedulerOpen(townRoot, rigName, minerName, exitType string, 
 	}
 
 	subject := fmt.Sprintf("SCHEDULER_OPEN: %s/%s completed (exit=%s)", rigName, minerName, exitType)
-	cmd := exec.Command("gt", "mail", "send", "overseer/", "-s", subject, "-m", msg)
+	cmd := exec.Command("ms", "mail", "send", "overseer/", "-s", subject, "-m", msg)
 	cmd.Dir = townRoot
 	_ = cmd.Run()
 }
@@ -1254,7 +1254,7 @@ type RecoveryPayload struct {
 // EscalateRecoveryNeeded nudges the Supervisor about a RECOVERY_NEEDED situation.
 // Previously sent permanent mail; now uses ephemeral nudge since the supervisor
 // can discover recovery state from cleanup wisps and miner status.
-// ZFC (gt-5rne): Not called directly from handlers — available for callers
+// ZFC (ms-5rne): Not called directly from handlers — available for callers
 // who decide escalation is warranted based on reported CleanupStatus data.
 func EscalateRecoveryNeeded(workDir, rigName string, payload *RecoveryPayload) (string, error) {
 	initRegistryFromWorkDir(workDir)
@@ -1315,15 +1315,15 @@ func extractMinerFromJSON(output string) string {
 // while giving it a fresh agent process.
 //
 // Used by the witness instead of NukeMiner when a miner is stuck, hung, or
-// has a dead agent process but still has work worth preserving (gt-dsgp).
+// has a dead agent process but still has work worth preserving (ms-dsgp).
 //
 // The restart flow:
 //  1. Kill the existing tmux session (if alive)
-//  2. Start a fresh session via `gt session restart`
+//  2. Start a fresh session via `ms session restart`
 //  3. The new session picks up the miner's existing hook and continues
 func RestartMinerSession(workDir, rigName, minerName string) error {
 	address := fmt.Sprintf("%s/%s", rigName, minerName)
-	if err := util.ExecRun(workDir, "gt", "session", "restart", address, "--force"); err != nil {
+	if err := util.ExecRun(workDir, "ms", "session", "restart", address, "--force"); err != nil {
 		return fmt.Errorf("session restart failed: %w", err)
 	}
 	return nil
@@ -1331,29 +1331,29 @@ func RestartMinerSession(workDir, rigName, minerName string) error {
 
 // NukeMiner executes the actual nuke operation for a miner.
 // This kills the tmux session, removes the worktree, and cleans up beads.
-// Refuses to nuke miners with pending MRs in the refinery queue (gt-6a9d).
-// Refuses to nuke if Overseer ACP session is active (gt-qnp).
+// Refuses to nuke miners with pending MRs in the refinery queue (ms-6a9d).
+// Refuses to nuke if Overseer ACP session is active (ms-qnp).
 func NukeMiner(bd *BdCli, workDir, rigName, minerName string) error {
-	// Persistence interlock (gt-qnp): veto cleanup if Overseer ACP session is active.
+	// Persistence interlock (ms-qnp): veto cleanup if Overseer ACP session is active.
 	townRoot := workDirToTownRoot(workDir)
 	checker := overseer.NewCleanupVetoChecker(townRoot)
 	if vetoed, reason := checker.ShouldVetoCleanup(); vetoed {
 		return fmt.Errorf("refusing to nuke %s/%s: %s", rigName, minerName, reason)
 	}
 
-	// Safety gate (gt-6a9d): refuse to nuke if MR is pending in refinery.
+	// Safety gate (ms-6a9d): refuse to nuke if MR is pending in refinery.
 	// Nuking deletes the remote branch, which the refinery needs to merge.
 	initRegistryFromWorkDir(workDir)
 	prefix := beads.GetPrefixForRig(townRoot, rigName)
 	agentBeadID := beads.MinerBeadIDWithPrefix(prefix, rigName, minerName)
 	if hasPendingMR(bd, workDir, rigName, minerName, agentBeadID) {
-		return fmt.Errorf("refusing to nuke %s/%s: MR pending in refinery (gt-6a9d)", rigName, minerName)
+		return fmt.Errorf("refusing to nuke %s/%s: MR pending in refinery (ms-6a9d)", rigName, minerName)
 	}
 
 	// CRITICAL: Kill the tmux session FIRST and unconditionally.
-	// We do this explicitly here because gt miner nuke may fail to kill the
+	// We do this explicitly here because ms miner nuke may fail to kill the
 	// session due to rig loading issues or race conditions with IsRunning checks.
-	// See: gt-g9ft5 - sessions were piling up because nuke wasn't killing them.
+	// See: ms-g9ft5 - sessions were piling up because nuke wasn't killing them.
 	sessionName := session.MinerSessionName(session.PrefixFor(rigName), minerName)
 	t := tmux.NewTmux()
 
@@ -1370,10 +1370,10 @@ func NukeMiner(bd *BdCli, workDir, rigName, minerName string) error {
 		}
 	}
 
-	// Now run gt miner nuke to clean up worktree, branch, and beads
+	// Now run ms miner nuke to clean up worktree, branch, and beads
 	address := fmt.Sprintf("%s/%s", rigName, minerName)
 
-	if err := util.ExecRun(workDir, "gt", "miner", "nuke", address); err != nil {
+	if err := util.ExecRun(workDir, "ms", "miner", "nuke", address); err != nil {
 		return fmt.Errorf("nuke failed: %w", err)
 	}
 
@@ -1389,13 +1389,13 @@ type NukeMinerResult struct {
 }
 
 // AutoNukeIfClean is a legacy function preserved for backward compatibility.
-// With persistent miners (gt-4ac), miners are no longer auto-nuked.
+// With persistent miners (ms-4ac), miners are no longer auto-nuked.
 // This function now always returns a "skipped" result since miners go idle
 // instead of being destroyed. The miner's sandbox is preserved for reuse.
 func AutoNukeIfClean(workDir, rigName, minerName string) *NukeMinerResult {
 	return &NukeMinerResult{
 		Skipped: true,
-		Reason:  "persistent miner model: sandbox preserved for reuse (gt-4ac)",
+		Reason:  "persistent miner model: sandbox preserved for reuse (ms-4ac)",
 	}
 }
 
@@ -1562,31 +1562,31 @@ func cherryHasUnmergedCommits(out string) bool {
 
 // ZombieClassification categorizes why a miner was classified as a zombie.
 // These are distinct from AgentState — they describe the zombie detection
-// reason, not the agent's lifecycle state. See gt-tsut.
+// reason, not the agent's lifecycle state. See ms-tsut.
 type ZombieClassification string
 
 const (
-	// ZombieStuckInDone: miner hung in gt done (>60s with done-intent label).
+	// ZombieStuckInDone: miner hung in ms done (>60s with done-intent label).
 	ZombieStuckInDone ZombieClassification = "stuck-in-done"
 	// ZombieAgentDeadInSession: tmux session alive but agent process died.
 	ZombieAgentDeadInSession ZombieClassification = "agent-dead-in-session"
 	// ZombieBeadClosedStillRunning: agent alive but hooked bead already closed.
 	ZombieBeadClosedStillRunning ZombieClassification = "bead-closed-still-running"
-	// ZombieDoneIntentDead: session died while executing gt done.
+	// ZombieDoneIntentDead: session died while executing ms done.
 	ZombieDoneIntentDead ZombieClassification = "done-intent-dead"
 	// ZombieIdleDirtySandbox: idle miner with uncommitted changes.
 	ZombieIdleDirtySandbox ZombieClassification = "idle-dirty-sandbox"
 	// ZombieSessionDeadActive: session dead but agent state indicates active work.
 	ZombieSessionDeadActive ZombieClassification = "session-dead-active"
-	// ZombieAgentSelfReportedStuck: agent self-reported stuck via heartbeat v2 (gt-3vr5).
+	// ZombieAgentSelfReportedStuck: agent self-reported stuck via heartbeat v2 (ms-3vr5).
 	ZombieAgentSelfReportedStuck ZombieClassification = "agent-self-reported-stuck"
 
 	// ZombieNeverHeartbeated: live session with assigned work but no heartbeat file
 	// written — agent likely stuck at startup (e.g., auth 401 blocking initialization).
 	// Detected once the session exceeds the HeartbeatStartupGrace threshold.
-	// Flagged for formula-step review; no auto-action (auth errors don't self-heal). (gt-uk7)
+	// Flagged for formula-step review; no auto-action (auth errors don't self-heal). (ms-uk7)
 	ZombieNeverHeartbeated ZombieClassification = "never-heartbeated"
-	// ZombieSubmittedStillRunning: gt done submitted work cleanly, but the miner
+	// ZombieSubmittedStillRunning: ms done submitted work cleanly, but the miner
 	// session stayed alive with an open hook and no fresh heartbeat. This catches
 	// the post-submit/pre-exit ghost idle gap from GH#3055.
 	ZombieSubmittedStillRunning ZombieClassification = "submitted-still-running"
@@ -1595,7 +1595,7 @@ const (
 // ImpliesActiveWork returns true if this classification indicates the miner
 // had evidence of recent work (active state or hooked bead). Used by
 // receiptVerdictForZombie to derive patrol verdicts from the typed classification
-// rather than a separately-computed boolean. See gt-tsut.
+// rather than a separately-computed boolean. See ms-tsut.
 func (c ZombieClassification) ImpliesActiveWork() bool {
 	switch c {
 	case ZombieStuckInDone, ZombieAgentDeadInSession, ZombieBeadClosedStillRunning,
@@ -1611,7 +1611,7 @@ func (c ZombieClassification) ImpliesActiveWork() bool {
 type ZombieResult struct {
 	MinerName    string
 	AgentState     string               // Real agent state from DB (e.g., "working", "idle")
-	Classification ZombieClassification // Why this miner is classified as a zombie (gt-tsut)
+	Classification ZombieClassification // Why this miner is classified as a zombie (ms-tsut)
 	HookBead       string
 	CleanupStatus  string // Observed cleanup_status (ZFC: report data, agent decides policy)
 	WasActive      bool   // true if evidence of recent work (active state or hooked bead)
@@ -1624,7 +1624,7 @@ type ZombieResult struct {
 type DetectZombieMinersResult struct {
 	Checked        int
 	Zombies        []ZombieResult
-	MinecartFailures []MinecartFailureResult // Mountain-Eater Layer 1: minecart failure tracking (gt-cfq)
+	MinecartFailures []MinecartFailureResult // Mountain-Eater Layer 1: minecart failure tracking (ms-cfq)
 	Errors         []error               // Transient errors that prevented checking some miners
 }
 
@@ -1633,7 +1633,7 @@ type DetectZombieMinersResult struct {
 //   - Session-dead: tmux session is dead but agent bead still shows agent_state=
 //     "working", "running", or "spawning", or has a hook_bead assigned.
 //   - Agent-dead: tmux session exists but the agent process (Claude/node) inside
-//     it has died. Detected via IsAgentAlive. See gt-kj6r6.
+//     it has died. Detected via IsAgentAlive. See ms-kj6r6.
 //
 // Zombies cannot send MINER_DONE or other signals, so they sit undetected
 // by the reactive signal-based patrol. This function provides proactive detection.
@@ -1646,9 +1646,9 @@ type DetectZombieMinersResult struct {
 // Dedup: Checks for existing cleanup wisps before escalating, preventing
 // infinite escalation loops on subsequent patrol cycles.
 //
-// gt-dsgp: Restart-first policy. For each zombie found, we RESTART the session
+// ms-dsgp: Restart-first policy. For each zombie found, we RESTART the session
 // instead of nuking. This preserves the miner's worktree and branch, preventing
-// work loss. Nuking only happens via explicit `gt miner nuke` command.
+// work loss. Nuking only happens via explicit `ms miner nuke` command.
 //
 // For each zombie found:
 //   - If miner has a pending MR: skip (not a zombie, waiting for refinery)
@@ -1656,7 +1656,7 @@ type DetectZombieMinersResult struct {
 //   - If agent is dead inside live session: restart the session
 //   - If agent is hung (no output for 30+ min): restart the session
 //   - If git state is dirty (unpushed/uncommitted work): report cleanup_status,
-//     create cleanup wisp (witness agent decides escalation policy, gt-5rne)
+//     create cleanup wisp (witness agent decides escalation policy, ms-5rne)
 func DetectZombieMiners(bd *BdCli, workDir, rigName string, router *mail.Router) *DetectZombieMinersResult {
 	result := &DetectZombieMinersResult{}
 
@@ -1698,7 +1698,7 @@ func DetectZombieMiners(bd *BdCli, workDir, rigName string, router *mail.Router)
 		prefix := beads.GetPrefixForRig(townRoot, rigName)
 		agentBeadID := beads.MinerBeadIDWithPrefix(prefix, rigName, minerName)
 
-		// gt-2gra: Fetch agent bead data once per miner instead of 3-5 times
+		// ms-2gra: Fetch agent bead data once per miner instead of 3-5 times
 		// across helper functions. The snapshot is passed to sub-functions.
 		snap := fetchAgentBeadSnapshot(bd, workDir, agentBeadID)
 
@@ -1709,7 +1709,7 @@ func DetectZombieMiners(bd *BdCli, workDir, rigName string, router *mail.Router)
 		doneIntent := extractDoneIntent(labels)
 
 		if sessionAlive {
-			// gt-s8bq: Idle Miner Heresy fix. Idle miners are HEALTHY — they
+			// ms-s8bq: Idle Miner Heresy fix. Idle miners are HEALTHY — they
 			// have no hook_bead, agent_state="idle", and their sandbox is preserved
 			// for reuse. Skip them entirely during patrol. Only report if the
 			// sandbox is dirty (uncommitted changes in idle state).
@@ -1720,7 +1720,7 @@ func DetectZombieMiners(bd *BdCli, workDir, rigName string, router *mail.Router)
 			if beads.AgentState(agentState) == AgentStateIdle {
 				cleanupStatus := snap.cleanupStatus()
 				if cleanupStatus != "" && cleanupStatus != "clean" {
-					// ZFC (gt-5rne): Report data, don't escalate. The witness agent
+					// ZFC (ms-5rne): Report data, don't escalate. The witness agent
 					// decides whether dirty idle state warrants escalation.
 					zombie := ZombieResult{
 						MinerName:    minerName,
@@ -1747,7 +1747,7 @@ func DetectZombieMiners(bd *BdCli, workDir, rigName string, router *mail.Router)
 		}
 	}
 
-	// Mountain-Eater Layer 1 (gt-cfq): Track miner failures for minecart-tracked issues.
+	// Mountain-Eater Layer 1 (ms-cfq): Track miner failures for minecart-tracked issues.
 	// For each zombie with an active hook_bead (miner failed without completing work),
 	// check if the issue belongs to a minecart and track the failure.
 	trackMinecartFailures(bd, workDir, result)
@@ -1758,17 +1758,17 @@ func DetectZombieMiners(bd *BdCli, workDir, rigName string, router *mail.Router)
 // detectZombieLiveSession checks a miner with a live tmux session for zombie indicators:
 // stuck done-intent, dead agent process, or closed bead while still running.
 //
-// gt-dsgp: Uses restart-first policy. Instead of nuking miners, restarts their
+// ms-dsgp: Uses restart-first policy. Instead of nuking miners, restarts their
 // sessions to preserve worktrees and branches.
 func detectZombieLiveSession(bd *BdCli, workDir, townRoot, rigName, minerName, sessionName string, t *tmux.Tmux, doneIntent *DoneIntent, witCfg *config.WitnessThresholds, snap *agentBeadSnapshot) (ZombieResult, bool) {
-	// gt-2gra: Agent state and hook bead are read from the pre-fetched snapshot
+	// ms-2gra: Agent state and hook bead are read from the pre-fetched snapshot
 	// instead of calling getAgentBeadState multiple times per code path.
 	snapState, snapHook := "", ""
 	if snap != nil {
 		snapState, snapHook = snap.AgentState, snap.HookBead
 	}
 
-	// Heartbeat v2 check (gt-3vr5): if the agent reports its own state via heartbeat,
+	// Heartbeat v2 check (ms-3vr5): if the agent reports its own state via heartbeat,
 	// trust the agent-reported state instead of inferring from timers.
 	// The witness makes exactly ONE inference: is the heartbeat fresh?
 	hb := miner.ReadSessionHeartbeat(townRoot, sessionName)
@@ -1802,8 +1802,8 @@ func detectZombieLiveSession(bd *BdCli, workDir, townRoot, rigName, minerName, s
 		// Agent may have died; let the existing checks determine action.
 	}
 
-	// Legacy detection: Check for done-intent stuck too long (miner hung in gt done).
-	// gt-dsgp: Restart instead of nuke — the session is stuck trying to exit,
+	// Legacy detection: Check for done-intent stuck too long (miner hung in ms done).
+	// ms-dsgp: Restart instead of nuke — the session is stuck trying to exit,
 	// a fresh start will let it retry or pick up its hook cleanly.
 	if doneIntent != nil && time.Since(doneIntent.Timestamp) > witCfg.DoneIntentStuckTimeoutD() {
 		zombie := ZombieResult{
@@ -1814,7 +1814,7 @@ func detectZombieLiveSession(bd *BdCli, workDir, townRoot, rigName, minerName, s
 			WasActive:      true,
 			Action:         fmt.Sprintf("restarted-stuck-session (done-intent age=%v)", time.Since(doneIntent.Timestamp).Round(time.Second)),
 		}
-		// TOCTOU guard (gt-0pst): Re-check session liveness before restarting.
+		// TOCTOU guard (ms-0pst): Re-check session liveness before restarting.
 		// The session could have exited normally between our initial check and here.
 		if alive, _ := t.HasSession(sessionName); !alive {
 			return ZombieResult{}, false
@@ -1826,8 +1826,8 @@ func detectZombieLiveSession(bd *BdCli, workDir, townRoot, rigName, minerName, s
 		return zombie, true
 	}
 
-	// Tmux alive but agent process dead (gt-kj6r6).
-	// gt-dsgp: Restart instead of nuke — preserve worktree and branch.
+	// Tmux alive but agent process dead (ms-kj6r6).
+	// ms-dsgp: Restart instead of nuke — preserve worktree and branch.
 	if !t.IsAgentAlive(sessionName) {
 		zombie := ZombieResult{
 			MinerName:    minerName,
@@ -1837,7 +1837,7 @@ func detectZombieLiveSession(bd *BdCli, workDir, townRoot, rigName, minerName, s
 			WasActive:      true,
 			Action:         "restarted-agent-dead-session",
 		}
-		// TOCTOU guard (gt-0pst): Re-check session liveness before restarting.
+		// TOCTOU guard (ms-0pst): Re-check session liveness before restarting.
 		// The session could have exited normally between our initial check and here.
 		if alive, _ := t.HasSession(sessionName); !alive {
 			return ZombieResult{}, false
@@ -1849,9 +1849,9 @@ func detectZombieLiveSession(bd *BdCli, workDir, townRoot, rigName, minerName, s
 		return zombie, true
 	}
 
-	// Agent alive but hooked bead closed — occupying slot without work (gt-h1l6i).
-	// gt-dsgp: Restart instead of nuke — the fresh session will pick up its hook
-	// and run gt done properly, or go idle waiting for new work.
+	// Agent alive but hooked bead closed — occupying slot without work (ms-h1l6i).
+	// ms-dsgp: Restart instead of nuke — the fresh session will pick up its hook
+	// and run ms done properly, or go idle waiting for new work.
 	if hookSt, hookOk := getBeadStatus(bd, workDir, snapHook); snapHook != "" && hookOk && hookSt == "closed" {
 		zombie := ZombieResult{
 			MinerName:    minerName,
@@ -1861,7 +1861,7 @@ func detectZombieLiveSession(bd *BdCli, workDir, townRoot, rigName, minerName, s
 			WasActive:      true,
 			Action:         "restarted-bead-closed-miner",
 		}
-		// TOCTOU guard (gt-0pst): Re-check session liveness before restarting.
+		// TOCTOU guard (ms-0pst): Re-check session liveness before restarting.
 		// The session could have exited normally between our initial check and here.
 		if alive, _ := t.HasSession(sessionName); !alive {
 			return ZombieResult{}, false
@@ -1873,7 +1873,7 @@ func detectZombieLiveSession(bd *BdCli, workDir, townRoot, rigName, minerName, s
 		return zombie, true
 	}
 
-	// GH#3055: gt done can successfully submit work and leave cleanup_status=clean,
+	// GH#3055: ms done can successfully submit work and leave cleanup_status=clean,
 	// but fail before exiting the miner session. If successful MR evidence exists
 	// and the hook is either gone or still open, nudge the live session to finish
 	// instead of letting it sit idle forever.
@@ -1884,7 +1884,7 @@ func detectZombieLiveSession(bd *BdCli, workDir, townRoot, rigName, minerName, s
 	// Live session with assigned work but no heartbeat file: agent stuck at startup
 	// (e.g., auth 401 blocking initialization). Once the session is old enough to
 	// have written a first heartbeat and hasn't, flag for formula-step review.
-	// ZFC (gt-uk7): No auto-restart — auth errors don't self-heal on restart.
+	// ZFC (ms-uk7): No auto-restart — auth errors don't self-heal on restart.
 	if snapHook != "" && hb == nil {
 		if createdAt, err := t.GetSessionCreatedTime(sessionName); err == nil {
 			age := time.Since(createdAt)
@@ -1931,7 +1931,7 @@ func detectSubmittedStillRunning(bd *BdCli, workDir, minerName, sessionName stri
 		WasActive:      false,
 		Action:         fmt.Sprintf("nudged-exit-submitted-session (idle=%v, hook_status=%s)", age.Round(time.Second), hookStatus),
 	}
-	msg := fmt.Sprintf("RECOVERY_NEEDED: gt done appears submitted (hook=%s, cleanup_status=clean), but this session is still running with no fresh heartbeat for %v. If work is already submitted, exit now; otherwise run gt done again.", hookStatusForNudge(snapHook), age.Round(time.Second))
+	msg := fmt.Sprintf("RECOVERY_NEEDED: ms done appears submitted (hook=%s, cleanup_status=clean), but this session is still running with no fresh heartbeat for %v. If work is already submitted, exit now; otherwise run ms done again.", hookStatusForNudge(snapHook), age.Round(time.Second))
 	if err := t.NudgeSession(sessionName, msg); err != nil {
 		zombie.Error = err
 		zombie.Action = fmt.Sprintf("nudge-exit-submitted-session-failed: %v", err)
@@ -1988,16 +1988,16 @@ func hasSuccessfulSubmissionEvidence(snap *agentBeadSnapshot) bool {
 // detectZombieDeadSession checks a miner with a dead tmux session for zombie indicators:
 // stale done-intent, or active agent state / hooked bead with no session.
 //
-// gt-dsgp: Uses restart-first policy. Instead of nuking miners with dead sessions,
+// ms-dsgp: Uses restart-first policy. Instead of nuking miners with dead sessions,
 // restarts them to preserve worktrees and branches.
 func detectZombieDeadSession(bd *BdCli, workDir, townRoot, rigName, minerName, sessionName string, t *tmux.Tmux, doneIntent *DoneIntent, detectedAt time.Time, witCfg *config.WitnessThresholds, snap *agentBeadSnapshot) (ZombieResult, bool) {
-	// gt-2gra: Agent state and hook bead are read from the pre-fetched snapshot.
+	// ms-2gra: Agent state and hook bead are read from the pre-fetched snapshot.
 	snapState, snapHook := "", ""
 	if snap != nil {
 		snapState, snapHook = snap.AgentState, snap.HookBead
 	}
 
-	// Heartbeat v2 check (gt-3vr5): for dead sessions, a fresh heartbeat means
+	// Heartbeat v2 check (ms-3vr5): for dead sessions, a fresh heartbeat means
 	// the session isn't actually dead (race condition). A stale heartbeat confirms death.
 	// This check is supplementary — dead session detection proceeds normally after.
 	if hb := miner.ReadSessionHeartbeat(townRoot, sessionName); hb != nil && hb.IsV2() {
@@ -2013,24 +2013,24 @@ func detectZombieDeadSession(bd *BdCli, workDir, townRoot, rigName, minerName, s
 	if doneIntent != nil {
 		age := time.Since(doneIntent.Timestamp)
 		if age < witCfg.DoneIntentRecentGraceD() {
-			return ZombieResult{}, false // Recent — still working through gt done
+			return ZombieResult{}, false // Recent — still working through ms done
 		}
 
 		// If bead is already closed, the miner completed successfully.
-		// The dead session is expected (gt done kills it). Leave it alone. (gt-sy8)
+		// The dead session is expected (ms done kills it). Leave it alone. (ms-sy8)
 		hookSt, hookFound := getBeadStatus(bd, workDir, snapHook)
 		beadAlreadyClosed := snapHook != "" && hookFound && (hookSt == "closed" || hookSt == "")
 		if beadAlreadyClosed {
-			// gt-dsgp: Miner completed its work. Don't nuke, don't restart.
+			// ms-dsgp: Miner completed its work. Don't nuke, don't restart.
 			// The sandbox is preserved for reuse by future slings.
 			return ZombieResult{}, false
 		}
 
-		// Persistent miner model (gt-6a9d): Do NOT touch if there's a pending MR.
-		// The miner completed normally (gt done → session exit). Its MR is in the
+		// Persistent miner model (ms-6a9d): Do NOT touch if there's a pending MR.
+		// The miner completed normally (ms done → session exit). Its MR is in the
 		// refinery queue. Nuking would delete the remote branch before the refinery
 		// can merge it. The dead session is expected, not a zombie.
-		// gt-2gra: Use snapshot's ActiveMR instead of calling getAgentActiveMR.
+		// ms-2gra: Use snapshot's ActiveMR instead of calling getAgentActiveMR.
 		if hasPendingMRFromSnapshot(bd, workDir, rigName, minerName, snap) {
 			return ZombieResult{}, false
 		}
@@ -2038,7 +2038,7 @@ func detectZombieDeadSession(bd *BdCli, workDir, townRoot, rigName, minerName, s
 			return ZombieResult{}, false
 		}
 
-		// gt-dsgp: Restart instead of nuke — the session died during gt done,
+		// ms-dsgp: Restart instead of nuke — the session died during ms done,
 		// restart it so it can retry the exit sequence or pick up new work.
 		zombie := ZombieResult{
 			MinerName:    minerName,
@@ -2074,7 +2074,7 @@ func detectZombieDeadSession(bd *BdCli, workDir, townRoot, rigName, minerName, s
 	// This is expected during worktree creation and session startup. Skip zombie
 	// detection if the miner has been spawning for less than SpawnGracePeriod.
 	if typedState == beads.AgentStateSpawning {
-		// gt-2gra: Use snapshot's age instead of calling getAgentBeadAge.
+		// ms-2gra: Use snapshot's age instead of calling getAgentBeadAge.
 		spawnAge := snap.age()
 		if spawnAge < SpawnGracePeriod {
 			return ZombieResult{}, false
@@ -2083,10 +2083,10 @@ func detectZombieDeadSession(bd *BdCli, workDir, townRoot, rigName, minerName, s
 	}
 
 	// A miner whose hook bead is already CLOSED (or reaped) completed its
-	// work successfully. The dead session is expected (gt done kills it).
-	// Don't flag as zombie or trigger re-dispatch. (gt-sy8)
-	// gt-dsgp: Don't nuke — sandbox preserved for reuse.
-	// gt-qbh: Treat missing beads (empty status from successful lookup) as closed.
+	// work successfully. The dead session is expected (ms done kills it).
+	// Don't flag as zombie or trigger re-dispatch. (ms-sy8)
+	// ms-dsgp: Don't nuke — sandbox preserved for reuse.
+	// ms-qbh: Treat missing beads (empty status from successful lookup) as closed.
 	// Wisp beads get reaped after completion, so getBeadStatus returns ("", true)
 	// for reaped wisps. A missing bead is not evidence of a crash.
 	// But a FAILED lookup ("", false) — e.g., cross-rig routing error — must
@@ -2111,8 +2111,8 @@ func detectZombieDeadSession(bd *BdCli, workDir, townRoot, rigName, minerName, s
 		WasActive:      snapHook != "" || typedState.IsActive(),
 	}
 
-	// gt-dsgp: Restart instead of nuking. For dirty state, escalate AND restart.
-	// gt-2gra: Use snapshot's cleanup status instead of calling getCleanupStatus.
+	// ms-dsgp: Restart instead of nuking. For dirty state, escalate AND restart.
+	// ms-2gra: Use snapshot's cleanup status instead of calling getCleanupStatus.
 	cleanupStatus := snap.cleanupStatus()
 	handleZombieRestart(bd, workDir, rigName, minerName, snapHook, cleanupStatus, &zombie)
 	return zombie, true
@@ -2120,7 +2120,7 @@ func detectZombieDeadSession(bd *BdCli, workDir, townRoot, rigName, minerName, s
 
 // isZombieState returns true if the agent state or hook bead indicates a zombie.
 // Uses typed AgentState to leverage IsActive() metadata rather than hardcoded
-// string comparisons. See gt-tsut.
+// string comparisons. See ms-tsut.
 func isZombieState(agentState beads.AgentState, hookBead string) bool {
 	if hookBead != "" {
 		return true
@@ -2128,18 +2128,18 @@ func isZombieState(agentState beads.AgentState, hookBead string) bool {
 	return agentState.IsActive()
 }
 
-// handleZombieRestart determines the restart action for a confirmed zombie (gt-dsgp).
+// handleZombieRestart determines the restart action for a confirmed zombie (ms-dsgp).
 // Restarts the session regardless of cleanup state. For dirty state, creates a
 // cleanup wisp for tracking but does NOT escalate — the witness agent decides
-// whether to escalate based on the reported CleanupStatus (ZFC gt-5rne).
-// Error chaining (gt-v95d): multiple errors are preserved, not silently dropped.
+// whether to escalate based on the reported CleanupStatus (ZFC ms-5rne).
+// Error chaining (ms-v95d): multiple errors are preserved, not silently dropped.
 //
-// gt-7vs1: For dirty state, uses create-then-dedup pattern to prevent TOCTOU races
+// ms-7vs1: For dirty state, uses create-then-dedup pattern to prevent TOCTOU races
 // between concurrent patrol cycles. The cleanup wisp is created first as an atomic
 // interlock, then checked for duplicates. Deterministic winner selection (lowest
 // wisp ID) ensures exactly one patrol proceeds with the restart.
 //
-// gt-qnp: If Overseer ACP session is active, vetoes automatic cleanup to allow Overseer review.
+// ms-qnp: If Overseer ACP session is active, vetoes automatic cleanup to allow Overseer review.
 func handleZombieRestart(bd *BdCli, workDir, rigName, minerName, hookBead, cleanupStatus string, zombie *ZombieResult) {
 	zombie.CleanupStatus = cleanupStatus
 	skipRestart := false
@@ -2158,7 +2158,7 @@ func handleZombieRestart(bd *BdCli, workDir, rigName, minerName, hookBead, clean
 		return
 	}
 
-	// Persistence interlock (gt-qnp): check if Overseer ACP session is active before cleanup.
+	// Persistence interlock (ms-qnp): check if Overseer ACP session is active before cleanup.
 	townRoot := workDirToTownRoot(workDir)
 	if overseer.IsACPActive(townRoot) {
 		existingWisp := findAnyCleanupWisp(bd, workDir, minerName)
@@ -2180,7 +2180,7 @@ func handleZombieRestart(bd *BdCli, workDir, rigName, minerName, hookBead, clean
 
 	case "has_uncommitted", "has_stash", "has_unpushed":
 		// Dirty state — create cleanup wisp for tracking if not already tracked.
-		// ZFC (gt-5rne): Report data, don't escalate. The witness agent decides policy.
+		// ZFC (ms-5rne): Report data, don't escalate. The witness agent decides policy.
 
 		// Fast path: if a cleanup wisp already exists from a previous patrol cycle,
 		// the miner was already restarted and became zombie again. Just restart.
@@ -2190,7 +2190,7 @@ func handleZombieRestart(bd *BdCli, workDir, rigName, minerName, hookBead, clean
 			break
 		}
 
-		// No existing wisp — create one as the atomic interlock (gt-7vs1).
+		// No existing wisp — create one as the atomic interlock (ms-7vs1).
 		// Previous code checked then created, allowing two concurrent patrols to
 		// both see "no wisp" and create duplicates. Now we create first, then dedup.
 		wispID, wispErr := createCleanupWisp(bd, workDir, minerName, hookBead, "")
@@ -2210,13 +2210,13 @@ func handleZombieRestart(bd *BdCli, workDir, rigName, minerName, hookBead, clean
 			if wispID != allWisps[0] {
 				// Lost the race — close our duplicate and skip restart to avoid
 				// disrupting the session the winning patrol is starting.
-				_, _ = bd.Exec(workDir, "close", wispID, "--reason=duplicate: concurrent patrol race (gt-7vs1)")
+				_, _ = bd.Exec(workDir, "close", wispID, "--reason=duplicate: concurrent patrol race (ms-7vs1)")
 				zombie.Action = fmt.Sprintf("already-tracked (cleanup_status=%s, existing-wisp=%s, closed-dup=%s)", cleanupStatus, allWisps[0], wispID)
 				skipRestart = true
 			} else {
 				// Won the race — clean up the other patrol's duplicate(s).
 				for _, w := range allWisps[1:] {
-					_, _ = bd.Exec(workDir, "close", w, "--reason=duplicate: concurrent patrol race (gt-7vs1)")
+					_, _ = bd.Exec(workDir, "close", w, "--reason=duplicate: concurrent patrol race (ms-7vs1)")
 				}
 				zombie.Action = fmt.Sprintf("restarted-dirty (cleanup_status=%s, wisp=%s)", cleanupStatus, wispID)
 			}
@@ -2329,7 +2329,7 @@ func DetectStalledMiners(workDir, rigName string) *DetectStalledMinersResult {
 			continue // Dead agent — zombie detection handles this
 		}
 
-		// Heartbeat v2 check (gt-3vr5): if the agent has a fresh heartbeat,
+		// Heartbeat v2 check (ms-3vr5): if the agent has a fresh heartbeat,
 		// it's alive and making progress — skip stall detection entirely.
 		// This replaces tmux activity scraping for v2 agents.
 		if hb := miner.ReadSessionHeartbeat(townRoot, sessionName); hb != nil && hb.IsV2() {
@@ -2383,7 +2383,7 @@ func DetectStalledMiners(workDir, rigName string) *DetectStalledMinersResult {
 
 // CompletionDiscovery represents a miner completion discovered from agent bead
 // metadata rather than MINER_DONE mail. This is the primary discovery mechanism
-// for miner state transitions (gt-w0br).
+// for miner state transitions (ms-w0br).
 type CompletionDiscovery struct {
 	MinerName    string
 	AgentBeadID    string
@@ -2407,7 +2407,7 @@ type DiscoverCompletionsResult struct {
 }
 
 // DiscoverCompletions scans all miner agent beads for completion metadata
-// written by gt done. With self-managed completion (gt-1qlg), this is now a
+// written by ms done. With self-managed completion (ms-1qlg), this is now a
 // SAFETY NET — miners transition to idle directly and nudge refinery themselves.
 // This function catches crash recovery cases where a miner wrote completion
 // metadata but crashed before transitioning to idle.
@@ -2576,7 +2576,7 @@ func processDiscoveredCompletion(bd *BdCli, workDir, rigName string, payload *Mi
 		return
 	}
 
-	// No MR — miner is idle (persistent miner model, gt-4ac)
+	// No MR — miner is idle (persistent miner model, ms-4ac)
 	discovery.Action = fmt.Sprintf("acknowledged-idle (exit=%s)", payload.Exit)
 
 	// Notify Overseer that a slot is open (bead-based discovery path). (GH#2727)
@@ -2585,7 +2585,7 @@ func processDiscoveredCompletion(bd *BdCli, workDir, rigName string, payload *Mi
 
 // agentBeadSnapshot holds all fields from a single bd show --json call for an agent bead.
 // Used to avoid redundant subprocess invocations during zombie detection, where the same
-// agent bead was previously queried 3-5 times per miner per patrol cycle. (gt-2gra)
+// agent bead was previously queried 3-5 times per miner per patrol cycle. (ms-2gra)
 type agentBeadSnapshot struct {
 	AgentState string
 	HookBead   string
@@ -3373,7 +3373,7 @@ func findAnyCleanupWisp(bd *BdCli, workDir, minerName string) string {
 
 // findAllCleanupWisps returns all open cleanup wisp IDs for a miner.
 // Used for dedup after wisp creation to detect races between concurrent patrol
-// cycles (gt-7vs1). If the query fails, returns nil (caller treats as no race).
+// cycles (ms-7vs1). If the query fails, returns nil (caller treats as no race).
 func findAllCleanupWisps(bd *BdCli, workDir, minerName string) []string {
 	output, err := bd.Exec(workDir, "list",
 		"--label", fmt.Sprintf("cleanup,miner:%s", minerName),
@@ -3406,7 +3406,7 @@ func findAllCleanupWisps(bd *BdCli, workDir, minerName string) []string {
 //
 // Used to prevent zombie detection from nuking miners whose MR is still being
 // processed by the refinery. Nuking would delete the remote branch and orphan the MR.
-// See: gt-6a9d
+// See: ms-6a9d
 func hasPendingMR(bd *BdCli, workDir, rigName, minerName, agentBeadID string) bool {
 	// Check 1: Cleanup wisp with merge-requested state (created by HandleMinerDone)
 	wispID, wispErr := findCleanupWisp(bd, workDir, minerName)
@@ -3414,14 +3414,14 @@ func hasPendingMR(bd *BdCli, workDir, rigName, minerName, agentBeadID string) bo
 		return true
 	}
 
-	// Check 2: active_mr on agent bead (set by gt done when MR is created)
+	// Check 2: active_mr on agent bead (set by ms done when MR is created)
 	activeMR, sourceHint := getAgentMRContext(bd, workDir, agentBeadID)
 	assessment := miner.AssessActiveMR(beadCLIShower{bd: bd, workDir: workDir}, miner.ActiveMRInput{ActiveMR: activeMR, SourceIssueHint: sourceHint, RequireGitSafe: true, GitSafe: activeMRGitSafe(workDir, rigName, minerName)})
 	return assessment.Pending
 }
 
 // hasPendingMRFromSnapshot checks for a pending MR using a pre-fetched ActiveMR
-// value from the agent bead snapshot, avoiding a redundant bd show call. (gt-2gra)
+// value from the agent bead snapshot, avoiding a redundant bd show call. (ms-2gra)
 func hasPendingMRFromSnapshot(bd *BdCli, workDir, rigName, minerName string, snap *agentBeadSnapshot) bool {
 	// Check 1: Cleanup wisp with merge-requested state (created by HandleMinerDone)
 	wispID, wispErr := findCleanupWisp(bd, workDir, minerName)

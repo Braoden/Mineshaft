@@ -13,7 +13,7 @@ import (
 func setupTestRegistry(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "mineshaft")
+	reg.Register("ms", "mineshaft")
 	reg.Register("bd", "beads")
 	reg.Register("nif", "niflheim")
 	reg.Register("grc", "grctool")
@@ -105,16 +105,16 @@ func TestIsCrewSession(t *testing.T) {
 		session string
 		want    bool
 	}{
-		{"gt-crew-joe", true},  // mineshaft crew (prefix: gt)
+		{"ms-crew-joe", true},  // mineshaft crew (prefix: ms)
 		{"bd-crew-max", true},  // beads crew (prefix: bd)
 		{"nif-crew-a", true},   // niflheim crew (prefix: nif)
-		{"gt-witness", false},  // witness, not crew
-		{"gt-refinery", false}, // refinery, not crew
-		{"gt-miner1", false}, // miner, not crew
+		{"ms-witness", false},  // witness, not crew
+		{"ms-refinery", false}, // refinery, not crew
+		{"ms-miner1", false}, // miner, not crew
 		{"hq-supervisor", false},
 		{"hq-overseer", false},
 		{"other-session", false},
-		{"gt-crew", false}, // "crew" is a miner name, not crew role (no name after crew-)
+		{"ms-crew", false}, // "crew" is a miner name, not crew role (no name after crew-)
 	}
 
 	for _, tt := range tests {
@@ -146,9 +146,9 @@ func TestOrphanSessionCheck_IsValidSession(t *testing.T) {
 		{"hq-boot", true},
 
 		// Valid rig sessions (using rig prefixes)
-		{"gt-witness", true},  // mineshaft witness (prefix: gt)
-		{"gt-refinery", true}, // mineshaft refinery
-		{"gt-miner1", true}, // mineshaft miner
+		{"ms-witness", true},  // mineshaft witness (prefix: ms)
+		{"ms-refinery", true}, // mineshaft refinery
+		{"ms-miner1", true}, // mineshaft miner
 		{"bd-witness", true},  // beads witness (prefix: bd)
 		{"bd-refinery", true}, // beads refinery
 		{"bd-crew-max", true}, // beads crew
@@ -157,7 +157,7 @@ func TestOrphanSessionCheck_IsValidSession(t *testing.T) {
 		{"zz-witness", false},  // unknown prefix
 		{"xx-refinery", false}, // unknown prefix
 
-		// Non-GT sessions fail format validation
+		// Non-MS sessions fail format validation
 		{"other-session", false},
 	}
 
@@ -189,7 +189,7 @@ func TestOrphanSessionCheck_IsValidSession_EdgeCases(t *testing.T) {
 		// Crew sessions with various name formats (using rig prefixes)
 		{
 			name:    "crew_simple_name",
-			session: "gt-crew-max",
+			session: "ms-crew-max",
 			want:    true,
 			reason:  "simple crew name should be valid",
 		},
@@ -221,7 +221,7 @@ func TestOrphanSessionCheck_IsValidSession_EdgeCases(t *testing.T) {
 		// Miner sessions (any name after prefix should be accepted)
 		{
 			name:    "miner_hash_style",
-			session: "gt-abc123def",
+			session: "ms-abc123def",
 			want:    true,
 			reason:  "miner with hash-style name should be valid",
 		},
@@ -319,14 +319,14 @@ func TestOrphanSessionCheck_FixProtectsCrewSessions(t *testing.T) {
 
 	// Simulate cached orphan sessions including a crew session
 	check.orphanSessions = []string{
-		"gt-crew-max",     // Crew - should be protected
+		"ms-crew-max",     // Crew - should be protected
 		"zz-witness",      // Not crew - would be killed
 		"nif-crew-codex1", // Crew - should be protected
 	}
 
 	// Verify isCrewSession correctly identifies crew sessions
 	for _, sess := range check.orphanSessions {
-		if sess == "gt-crew-max" || sess == "nif-crew-codex1" {
+		if sess == "ms-crew-max" || sess == "nif-crew-codex1" {
 			if !isCrewSession(sess) {
 				t.Errorf("isCrewSession(%q) should return true for crew session", sess)
 			}
@@ -348,20 +348,20 @@ func TestIsCrewSession_ComprehensivePatterns(t *testing.T) {
 		reason  string
 	}{
 		// Valid crew patterns (new format: <prefix>-crew-<name>)
-		{"gt-crew-joe", true, "mineshaft crew session"},
+		{"ms-crew-joe", true, "mineshaft crew session"},
 		{"bd-crew-max", true, "beads crew session"},
 		{"nif-crew-codex1", true, "niflheim crew with numbers in name"},
 		{"grc-crew-grc1", true, "grctool crew with alphanumeric name"},
 		{"7s-crew-ss1", true, "rig starting with number"},
 
 		// Invalid crew patterns
-		{"gt-witness", false, "witness is not crew"},
-		{"gt-refinery", false, "refinery is not crew"},
-		{"gt-miner-abc", false, "miner name, not crew"},
+		{"ms-witness", false, "witness is not crew"},
+		{"ms-refinery", false, "refinery is not crew"},
+		{"ms-miner-abc", false, "miner name, not crew"},
 		{"hq-supervisor", false, "supervisor is not crew"},
 		{"hq-overseer", false, "overseer is not crew"},
 		{"", false, "empty string"},
-		{"gt-morsov", false, "miner, not crew"},
+		{"ms-morsov", false, "miner, not crew"},
 	}
 
 	for _, tt := range tests {
@@ -429,8 +429,8 @@ func TestOrphanSessionCheck_Run_Deterministic(t *testing.T) {
 
 	lister := &mockSessionLister{
 		sessions: []string{
-			"gt-witness",     // valid: mineshaft rig exists (prefix "gt")
-			"gt-miner1",    // valid: mineshaft rig exists
+			"ms-witness",     // valid: mineshaft rig exists (prefix "ms")
+			"ms-miner1",    // valid: mineshaft rig exists
 			"bd-refinery",    // valid: beads rig exists (prefix "bd")
 			"hq-overseer",       // valid: hq-overseer is recognized
 			"hq-supervisor",      // valid: hq-supervisor is recognized
@@ -467,7 +467,7 @@ func TestMineshaftRuntimeYOLO(t *testing.T) {
 		args string
 		want bool
 	}{
-		{"claude_gt", "claude", "/x/claude --dangerously-skip-permissions foo", true},
+		{"claude_ms", "claude", "/x/claude --dangerously-skip-permissions foo", true},
 		{"claude_personal", "claude", "/x/claude foo", false},
 		{"cursor_agent", "cursor-agent", "cursor-agent -f --resume x", true},
 		{"cursor_no_f", "cursor-agent", "cursor-agent --resume x", false},

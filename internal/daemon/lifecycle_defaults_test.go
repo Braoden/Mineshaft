@@ -227,7 +227,7 @@ func TestEnsureLifecycleConfigFile_ExistingPartial(t *testing.T) {
 	existing := &DaemonPatrolConfig{
 		Type:    "daemon-patrol-config",
 		Version: 1,
-		Env:     map[string]string{"GT_DOLT_PORT": "3307"},
+		Env:     map[string]string{"MS_DOLT_PORT": "3307"},
 		Patrols: &PatrolsConfig{
 			WispReaper: &WispReaperConfig{
 				Enabled:     true,
@@ -252,7 +252,7 @@ func TestEnsureLifecycleConfigFile_ExistingPartial(t *testing.T) {
 	json.Unmarshal(data, &config)
 
 	// Existing env preserved
-	if config.Env["GT_DOLT_PORT"] != "3307" {
+	if config.Env["MS_DOLT_PORT"] != "3307" {
 		t.Error("expected env to be preserved")
 	}
 

@@ -34,11 +34,11 @@ func DoltHubOrg() string {
 }
 
 // DoltHubRepoName converts a local database name to a DoltHub repo name.
-// Replaces underscores with hyphens (e.g., "beads_gt" → "beads-gt").
-// Special case: "hq" maps to "gt-hq" (the town-level HQ database uses the gt- prefix).
+// Replaces underscores with hyphens (e.g., "beads_ms" → "beads-ms").
+// Special case: "hq" maps to "ms-hq" (the town-level HQ database uses the ms- prefix).
 func DoltHubRepoName(dbName string) string {
 	if dbName == "hq" {
-		return "gt-hq"
+		return "ms-hq"
 	}
 	return strings.ReplaceAll(dbName, "_", "-")
 }

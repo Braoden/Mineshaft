@@ -48,14 +48,14 @@ func TestTmuxGlobalEnvCheck_Metadata(t *testing.T) {
 }
 
 func TestTmuxGlobalEnvCheck_Missing(t *testing.T) {
-	// GT_TOWN_ROOT not set — should warn, fix should set it, re-run should pass.
+	// MS_TOWN_ROOT not set — should warn, fix should set it, re-run should pass.
 	mock := &mockGlobalEnvAccessor{env: map[string]string{}}
 	check := NewTmuxGlobalEnvCheckWithAccessor(mock)
-	ctx := &CheckContext{TownRoot: "/home/user/gt"}
+	ctx := &CheckContext{TownRoot: "/home/user/ms"}
 
 	result := check.Run(ctx)
 	if result.Status != StatusWarning {
-		t.Errorf("expected StatusWarning when GT_TOWN_ROOT missing, got %v: %s", result.Status, result.Message)
+		t.Errorf("expected StatusWarning when MS_TOWN_ROOT missing, got %v: %s", result.Status, result.Message)
 	}
 
 	// Fix should set the value.
@@ -71,16 +71,16 @@ func TestTmuxGlobalEnvCheck_Missing(t *testing.T) {
 }
 
 func TestTmuxGlobalEnvCheck_WrongValue(t *testing.T) {
-	// GT_TOWN_ROOT set to wrong path — should warn, fix should correct it.
+	// MS_TOWN_ROOT set to wrong path — should warn, fix should correct it.
 	mock := &mockGlobalEnvAccessor{env: map[string]string{
-		"GT_TOWN_ROOT": "/old/path",
+		"MS_TOWN_ROOT": "/old/path",
 	}}
 	check := NewTmuxGlobalEnvCheckWithAccessor(mock)
-	ctx := &CheckContext{TownRoot: "/home/user/gt"}
+	ctx := &CheckContext{TownRoot: "/home/user/ms"}
 
 	result := check.Run(ctx)
 	if result.Status != StatusWarning {
-		t.Errorf("expected StatusWarning when GT_TOWN_ROOT wrong, got %v: %s", result.Status, result.Message)
+		t.Errorf("expected StatusWarning when MS_TOWN_ROOT wrong, got %v: %s", result.Status, result.Message)
 	}
 
 	if err := check.Fix(ctx); err != nil {
@@ -94,16 +94,16 @@ func TestTmuxGlobalEnvCheck_WrongValue(t *testing.T) {
 }
 
 func TestTmuxGlobalEnvCheck_Correct(t *testing.T) {
-	// GT_TOWN_ROOT already correct — should pass.
+	// MS_TOWN_ROOT already correct — should pass.
 	mock := &mockGlobalEnvAccessor{env: map[string]string{
-		"GT_TOWN_ROOT": "/home/user/gt",
+		"MS_TOWN_ROOT": "/home/user/ms",
 	}}
 	check := NewTmuxGlobalEnvCheckWithAccessor(mock)
-	ctx := &CheckContext{TownRoot: "/home/user/gt"}
+	ctx := &CheckContext{TownRoot: "/home/user/ms"}
 
 	result := check.Run(ctx)
 	if result.Status != StatusOK {
-		t.Errorf("expected StatusOK when GT_TOWN_ROOT correct, got %v: %s", result.Status, result.Message)
+		t.Errorf("expected StatusOK when MS_TOWN_ROOT correct, got %v: %s", result.Status, result.Message)
 	}
 }
 
@@ -111,7 +111,7 @@ func TestTmuxGlobalEnvCheck_NoTmuxServer(t *testing.T) {
 	// No tmux server — should be OK (nothing to check).
 	mock := &mockGlobalEnvAccessor{err: tmux.ErrNoServer}
 	check := NewTmuxGlobalEnvCheckWithAccessor(mock)
-	ctx := &CheckContext{TownRoot: "/home/user/gt"}
+	ctx := &CheckContext{TownRoot: "/home/user/ms"}
 
 	result := check.Run(ctx)
 	if result.Status != StatusOK {

@@ -21,7 +21,7 @@ var minecartStageJSON bool
 
 // minecartStageLaunch controls whether to launch the minecart immediately after staging.
 // When true, the staged minecart is transitioned to open and Wave 1 is dispatched.
-// Set by `gt minecart stage --launch` or when `gt minecart launch` delegates to stage.
+// Set by `ms minecart stage --launch` or when `ms minecart launch` delegates to stage.
 var minecartStageLaunch bool
 
 // minecartStageTitle is an optional human-readable title for the staged minecart.
@@ -41,10 +41,10 @@ func init() {
 }
 
 // ---------------------------------------------------------------------------
-// JSON output types (gt-csl.4.3)
+// JSON output types (ms-csl.4.3)
 // ---------------------------------------------------------------------------
 
-// StageResult is the top-level JSON output for gt minecart stage --json.
+// StageResult is the top-level JSON output for ms minecart stage --json.
 type StageResult struct {
 	Status           string          `json:"status"`                       // "staged_ready", "staged_warnings", or "error"
 	MinecartID         string          `json:"minecart_id"`                    // empty if errors prevented creation
@@ -98,7 +98,7 @@ type TreeNodeJSON struct {
 	Children []TreeNodeJSON `json:"children,omitempty"`
 }
 
-// StageInputKind identifies the type of input provided to gt minecart stage.
+// StageInputKind identifies the type of input provided to ms minecart stage.
 type StageInputKind int
 
 const (
@@ -107,7 +107,7 @@ const (
 	StageInputMinecart                       // single minecart ID → read tracked beads
 )
 
-// StageInput represents parsed and validated input for gt minecart stage.
+// StageInput represents parsed and validated input for ms minecart stage.
 type StageInput struct {
 	Kind    StageInputKind
 	IDs     []string // bead IDs to process
@@ -130,7 +130,7 @@ func classifyBeadType(beadType string) StageInputKind {
 // Returns error for empty args, flag-like args, etc.
 func validateStageArgs(args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("gt minecart stage requires at least one bead ID\n\nUsage: gt minecart stage <epic-id | task-id... | minecart-id>")
+		return fmt.Errorf("ms minecart stage requires at least one bead ID\n\nUsage: ms minecart stage <epic-id | task-id... | minecart-id>")
 	}
 	for _, arg := range args {
 		if strings.HasPrefix(arg, "--") || strings.HasPrefix(arg, "-") {
@@ -189,7 +189,7 @@ func resolveInputKind(beadTypes map[string]string) (*StageInput, error) {
 
 	// Epics and minecarts must be singular.
 	if kind == StageInputEpic && len(ids) > 1 {
-		return nil, fmt.Errorf("only one epic ID allowed, got %d: %s\n  To stage multiple epics, run gt minecart stage once per epic", len(ids), strings.Join(ids, ", "))
+		return nil, fmt.Errorf("only one epic ID allowed, got %d: %s\n  To stage multiple epics, run ms minecart stage once per epic", len(ids), strings.Join(ids, ", "))
 	}
 	if kind == StageInputMinecart && len(ids) > 1 {
 		return nil, fmt.Errorf("only one minecart ID allowed, got %d: %s", len(ids), strings.Join(ids, ", "))
@@ -208,11 +208,11 @@ var minecartStageCmd = &cobra.Command{
 	Long: `Analyze bead dependencies, compute execution waves, and create a staged minecart.
 
 Three input forms:
-  gt minecart stage <epic-id>           Walk epic's children, analyze all descendants
-  gt minecart stage <task1> <task2>...  Analyze exactly the given tasks
-  gt minecart stage <minecart-id>         Re-analyze an existing minecart's tracked beads
+  ms minecart stage <epic-id>           Walk epic's children, analyze all descendants
+  ms minecart stage <task1> <task2>...  Analyze exactly the given tasks
+  ms minecart stage <minecart-id>         Re-analyze an existing minecart's tracked beads
 
-The staged minecart can later be launched with 'gt minecart launch'.`,
+The staged minecart can later be launched with 'ms minecart launch'.`,
 	RunE: runMinecartStage,
 }
 
@@ -657,7 +657,7 @@ func handleOverlappingMinecarts(overlaps []overlappingMinecart) (bool, string, e
 		o := open[0]
 		return false, "", fmt.Errorf(
 			"cannot stage: open minecart %s already tracks %d of these beads — close it first or wait for completion\n"+
-				"  gt minecart close %s --reason \"re-staging\"",
+				"  ms minecart close %s --reason \"re-staging\"",
 			o.ID, o.OverlapCount, o.ID)
 	}
 
@@ -670,7 +670,7 @@ func handleOverlappingMinecarts(overlaps []overlappingMinecart) (bool, string, e
 		sort.Strings(ids)
 		return false, "", fmt.Errorf(
 			"ambiguous: %d staged minecarts overlap with these beads (%s)\n"+
-				"  Specify which minecart to re-stage: gt minecart stage <minecart-id>",
+				"  Specify which minecart to re-stage: ms minecart stage <minecart-id>",
 			len(staged), strings.Join(ids, ", "))
 	}
 
@@ -707,7 +707,7 @@ func resolveMinecartTitle(flagTitle string, input *StageInput, beadResults map[s
 // It generates a minecart ID, builds a title and description, then runs
 // `bd create` to create the minecart and typed tracking relations for each slingable bead.
 // Minecarts live in the town HQ beads database (hq-cv-* prefix), so all bd
-// commands run against getTownBeadsDir(), matching gt minecart create behavior.
+// commands run against getTownBeadsDir(), matching ms minecart create behavior.
 // Returns the minecart ID.
 func createStagedMinecart(dag *MinecartDAG, waves []Wave, status string, title string) (string, error) {
 	// Minecarts live in the town HQ beads database.
@@ -765,7 +765,7 @@ func createStagedMinecart(dag *MinecartDAG, waves []Wave, status string, title s
 		"--id=" + minecartID,
 		"--title=" + title,
 		"--description=" + description,
-		"--labels=gt:minecart",
+		"--labels=ms:minecart",
 	}
 	if beads.NeedsForceForID(minecartID) {
 		createArgs = append(createArgs, "--force")
@@ -1351,10 +1351,10 @@ func renderErrors(findings []StagingFinding) string {
 //
 //	Wave | ID | Title | Rig | Blocked By
 //	─────┼────┼───────┼─────┼───────────
-//	1    | gt-a  | Task A | gst | —
-//	1    | gt-c  | Task C | gst | —
-//	2    | gt-b  | Task B | gst | gt-a
-//	3    | gt-d  | Task D | gst | gt-b
+//	1    | ms-a  | Task A | gst | —
+//	1    | ms-c  | Task C | gst | —
+//	2    | ms-b  | Task B | gst | ms-a
+//	3    | ms-d  | Task D | gst | ms-b
 //
 // Summary line at end: "N tasks across M waves (max parallelism: K in wave W)"
 func renderWaveTable(waves []Wave, dag *MinecartDAG) string {
@@ -1925,7 +1925,7 @@ func sortedNodeIDs(dag *MinecartDAG) []string {
 }
 
 // ---------------------------------------------------------------------------
-// Warning detection (gt-csl.3.4)
+// Warning detection (ms-csl.3.4)
 // ---------------------------------------------------------------------------
 
 // waveCapacityThreshold is the maximum number of tasks in a wave before a
@@ -2010,7 +2010,7 @@ var isRigBlockedFn = func(townRoot, rigName string) (bool, string) {
 }
 
 // detectBlockedRigs warns about slingable nodes whose target rig is parked
-// or docked (gt-4owfd.1, #2120). Uses IsRigParkedOrDocked which checks both
+// or docked (ms-4owfd.1, #2120). Uses IsRigParkedOrDocked which checks both
 // wisp ephemeral state and persistent bead labels.
 func detectBlockedRigs(dag *MinecartDAG) []StagingFinding {
 	townRoot, err := workspace.FindFromCwd()
@@ -2052,9 +2052,9 @@ func detectBlockedRigs(dag *MinecartDAG) []StagingFinding {
 	for _, rigName := range rigNames {
 		info := blockedRigs[rigName]
 		sort.Strings(info.beadIDs)
-		undoCmd := "gt rig unpark"
+		undoCmd := "ms rig unpark"
 		if info.reason == "docked" {
-			undoCmd = "gt rig undock"
+			undoCmd = "ms rig undock"
 		}
 		findings = append(findings, StagingFinding{
 			Severity:     "warning",
@@ -2183,7 +2183,7 @@ func renderWarnings(findings []StagingFinding) string {
 }
 
 // ---------------------------------------------------------------------------
-// JSON output helpers (gt-csl.4.3)
+// JSON output helpers (ms-csl.4.3)
 // ---------------------------------------------------------------------------
 
 // renderJSON marshals a StageResult to indented JSON.

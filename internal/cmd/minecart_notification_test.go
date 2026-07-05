@@ -23,7 +23,7 @@ func TestNotifyMinecartCompletion_StampsAndSkipsDuplicate(t *testing.T) {
 	mailLogPath := filepath.Join(binDir, "mail.log")
 	exportLogPath := filepath.Join(binDir, "export.log")
 	bdPath := filepath.Join(binDir, "bd")
-	gtPath := filepath.Join(binDir, "gt")
+	gtPath := filepath.Join(binDir, "ms")
 
 	bdScript := `#!/bin/sh
 STATE="` + statePath + `"
@@ -69,7 +69,7 @@ fi
 exit 0
 `
 	if err := os.WriteFile(gtPath, []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write gt stub: %v", err)
+		t.Fatalf("write ms stub: %v", err)
 	}
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
@@ -111,7 +111,7 @@ func TestCloseMinecartIfComplete_ExportsJSONLBeforeNotification(t *testing.T) {
 
 	orderPath := filepath.Join(binDir, "order.log")
 	bdPath := filepath.Join(binDir, "bd")
-	gtPath := filepath.Join(binDir, "gt")
+	gtPath := filepath.Join(binDir, "ms")
 
 	bdScript := `#!/bin/sh
 ORDER="` + orderPath + `"
@@ -156,12 +156,12 @@ fi
 exit 0
 `
 	if err := os.WriteFile(gtPath, []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write gt stub: %v", err)
+		t.Fatalf("write ms stub: %v", err)
 	}
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
 	closed, err := closeMinecartIfComplete(townRoot, "hq-cv-done", "Done Minecart", []trackedIssueInfo{
-		{ID: "gt-done", Status: "closed"},
+		{ID: "ms-done", Status: "closed"},
 	}, false)
 	if err != nil {
 		t.Fatalf("closeMinecartIfComplete returned error: %v", err)
@@ -200,7 +200,7 @@ func TestNotifyMinecartCompletion_ExportFailureDoesNotPreventMail(t *testing.T) 
 
 	orderPath := filepath.Join(binDir, "order.log")
 	bdPath := filepath.Join(binDir, "bd")
-	gtPath := filepath.Join(binDir, "gt")
+	gtPath := filepath.Join(binDir, "ms")
 
 	bdScript := `#!/bin/sh
 ORDER="` + orderPath + `"
@@ -241,7 +241,7 @@ fi
 exit 0
 `
 	if err := os.WriteFile(gtPath, []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write gt stub: %v", err)
+		t.Fatalf("write ms stub: %v", err)
 	}
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
@@ -276,7 +276,7 @@ func TestCloseMinecartIfComplete_CloseExportFailureRequiresDurableRetryBeforeNot
 	exportFailedPath := filepath.Join(binDir, "export.failed")
 	orderPath := filepath.Join(binDir, "order.log")
 	bdPath := filepath.Join(binDir, "bd")
-	gtPath := filepath.Join(binDir, "gt")
+	gtPath := filepath.Join(binDir, "ms")
 
 	bdScript := `#!/bin/sh
 EXPORT_FAILED="` + exportFailedPath + `"
@@ -326,12 +326,12 @@ fi
 exit 0
 `
 	if err := os.WriteFile(gtPath, []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write gt stub: %v", err)
+		t.Fatalf("write ms stub: %v", err)
 	}
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
 	closed, err := closeMinecartIfComplete(townRoot, "hq-cv-close-export-fail", "Close Export Failure", []trackedIssueInfo{
-		{ID: "gt-done", Status: "closed"},
+		{ID: "ms-done", Status: "closed"},
 	}, false)
 	if err == nil {
 		t.Fatal("closeMinecartIfComplete returned nil error after close JSONL export failure")

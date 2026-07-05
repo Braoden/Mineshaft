@@ -81,7 +81,7 @@ func runMailSend(cmd *cobra.Command, args []string) error {
 	// --reply-to, try to infer the original message from the sender's inbox.
 	// When exactly one unambiguous match exists, populate mailReplyTo so the
 	// existing thread-lookup + ClearReplyReminders flow below works as designed.
-	// hq-k382x: without this, every "gt mail send <addr> -s 'Re: ...'" leaves
+	// hq-k382x: without this, every "ms mail send <addr> -s 'Re: ...'" leaves
 	// the queued reply-reminder in place.
 	if mailReplyTo == "" && hasReplyPrefix(mailSubject) {
 		if inferred := inferReplyTo(workDir, from, to, mailSubject); inferred != "" {
@@ -286,7 +286,7 @@ func normalizeAddress(addr string) string {
 // FROM `to` whose subject (after stripping "Re:" prefixes) matches `subject`.
 // Returns the matching message ID when exactly one match exists; returns "" on
 // no-match, ambiguity, or any error. Best-effort — used only as a convenience
-// to make `gt mail send <to> -s "Re: ..."` clear queued reply-reminders.
+// to make `ms mail send <to> -s "Re: ..."` clear queued reply-reminders.
 func inferReplyTo(workDir, from, to, subject string) string {
 	router := mail.NewRouter(workDir)
 	mailbox, err := router.GetMailbox(from)

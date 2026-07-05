@@ -45,9 +45,9 @@ func TestDoltHubRepoName(t *testing.T) {
 		input string
 		want  string
 	}{
-		{"beads_gt", "beads-gt"},
+		{"beads_ms", "beads-ms"},
 		{"beads_bd", "beads-bd"},
-		{"hq", "gt-hq"},
+		{"hq", "ms-hq"},
 		{"laser", "laser"},
 		{"payment_portal", "payment-portal"},
 		{"a_b_c", "a-b-c"},
@@ -61,8 +61,8 @@ func TestDoltHubRepoName(t *testing.T) {
 }
 
 func TestDoltHubRemoteURL(t *testing.T) {
-	got := DoltHubRemoteURL("bvts", "beads-gt")
-	want := "https://doltremoteapi.dolthub.com/bvts/beads-gt"
+	got := DoltHubRemoteURL("bvts", "beads-ms")
+	want := "https://doltremoteapi.dolthub.com/bvts/beads-ms"
 	if got != want {
 		t.Errorf("DoltHubRemoteURL() = %q, want %q", got, want)
 	}
@@ -88,8 +88,8 @@ func TestCreateDoltHubRepo_Success(t *testing.T) {
 		if body["ownerName"] != "bvts" {
 			t.Errorf("ownerName = %q, want bvts", body["ownerName"])
 		}
-		if body["repoName"] != "beads-gt" {
-			t.Errorf("repoName = %q, want beads-gt", body["repoName"])
+		if body["repoName"] != "beads-ms" {
+			t.Errorf("repoName = %q, want beads-ms", body["repoName"])
 		}
 		if body["visibility"] != "private" {
 			t.Errorf("visibility = %q, want private", body["visibility"])
@@ -99,7 +99,7 @@ func TestCreateDoltHubRepo_Success(t *testing.T) {
 		json.NewEncoder(w).Encode(map[string]string{
 			"status":           "Success",
 			"repository_owner": "bvts",
-			"repository_name":  "beads-gt",
+			"repository_name":  "beads-ms",
 		})
 	}))
 	defer server.Close()
@@ -109,7 +109,7 @@ func TestCreateDoltHubRepo_Success(t *testing.T) {
 	dolthubAPIBase = server.URL
 	defer func() { dolthubAPIBase = orig }()
 
-	if err := CreateDoltHubRepo("bvts", "beads-gt", "test-token"); err != nil {
+	if err := CreateDoltHubRepo("bvts", "beads-ms", "test-token"); err != nil {
 		t.Fatalf("CreateDoltHubRepo returned error: %v", err)
 	}
 }
@@ -133,7 +133,7 @@ func TestCreateDoltHubRepo_AlreadyExists(t *testing.T) {
 	defer func() { dolthubAPIBase = orig }()
 
 	// "already exists" should be treated as success (nil error).
-	if err := CreateDoltHubRepo("bvts", "beads-gt", "test-token"); err != nil {
+	if err := CreateDoltHubRepo("bvts", "beads-ms", "test-token"); err != nil {
 		t.Fatalf("CreateDoltHubRepo returned error for 409 already-exists: %v", err)
 	}
 }

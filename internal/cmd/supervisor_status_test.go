@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// TestSupervisorStatusJSON_Schema verifies the JSON output schema for gt supervisor status --json.
+// TestSupervisorStatusJSON_Schema verifies the JSON output schema for ms supervisor status --json.
 // This catches schema changes that would break witness parsing.
 func TestSupervisorStatusJSON_Schema(t *testing.T) {
 	now := time.Now().UTC()
@@ -14,7 +14,7 @@ func TestSupervisorStatusJSON_Schema(t *testing.T) {
 	out := SupervisorStatusOutput{
 		Running: true,
 		Paused:  false,
-		Session: "gt-supervisor",
+		Session: "ms-supervisor",
 		Heartbeat: &HeartbeatStatus{
 			Timestamp:  now,
 			AgeSec:     42.5,
@@ -72,7 +72,7 @@ func TestSupervisorStatusJSON_NoHeartbeat(t *testing.T) {
 	out := SupervisorStatusOutput{
 		Running:   false,
 		Paused:    false,
-		Session:   "gt-supervisor",
+		Session:   "ms-supervisor",
 		Heartbeat: nil,
 	}
 
@@ -102,7 +102,7 @@ func TestSupervisorStatusJSON_Roundtrip(t *testing.T) {
 	original := SupervisorStatusOutput{
 		Running: true,
 		Paused:  true,
-		Session: "gt-supervisor",
+		Session: "ms-supervisor",
 		Heartbeat: &HeartbeatStatus{
 			Timestamp:  now,
 			AgeSec:     120.0,
@@ -169,7 +169,7 @@ func TestSupervisorStatusJSON_FreshnessStates(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			out := SupervisorStatusOutput{
 				Running: true,
-				Session: "gt-supervisor",
+				Session: "ms-supervisor",
 				Heartbeat: &HeartbeatStatus{
 					Fresh:     tc.fresh,
 					Stale:     tc.stale,
@@ -204,7 +204,7 @@ func TestSupervisorStatusJSON_FreshnessStates(t *testing.T) {
 func TestSupervisorStatusJSON_LastActionOmitEmpty(t *testing.T) {
 	out := SupervisorStatusOutput{
 		Running: true,
-		Session: "gt-supervisor",
+		Session: "ms-supervisor",
 		Heartbeat: &HeartbeatStatus{
 			Cycle:      1,
 			LastAction: "", // empty — should be omitted

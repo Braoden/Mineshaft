@@ -41,12 +41,12 @@ Shows a unified timeline of work performed by an actor including:
   - Activity feed events
 
 Examples:
-  gt audit --actor=greenplace/crew/joe       # Show all work by joe
-  gt audit --actor=greenplace/miners/toast # Show miner toast's work
-  gt audit --actor=overseer                  # Show overseer's activity
-  gt audit --since=24h                    # Show all activity in last 24h
-  gt audit --actor=joe --since=1h         # Combined filters
-  gt audit --json                         # Output as JSON`,
+  ms audit --actor=greenplace/crew/joe       # Show all work by joe
+  ms audit --actor=greenplace/miners/toast # Show miner toast's work
+  ms audit --actor=overseer                  # Show overseer's activity
+  ms audit --since=24h                    # Show all activity in last 24h
+  ms audit --actor=joe --since=1h         # Combined filters
+  ms audit --json                         # Output as JSON`,
 	RunE: runAudit,
 }
 
@@ -258,7 +258,7 @@ func matchesActor(name, actor string) bool {
 func collectBeadsActivity(townRoot, actor string, since time.Time) ([]AuditEntry, error) {
 	var entries []AuditEntry
 
-	// Find the mineshaft beads path (where gt- prefix issues live)
+	// Find the mineshaft beads path (where ms- prefix issues live)
 	mineshaftBeadsPath := filepath.Join(townRoot, "mineshaft", "overseer", "rig")
 	b := beads.New(mineshaftBeadsPath)
 

@@ -112,7 +112,7 @@ func minecartTracksBead(beadsDir, minecartID, beadID string) bool {
 // MinecartInfo holds minecart details for an issue's tracking minecart.
 type MinecartInfo struct {
 	ID            string // Minecart bead ID (e.g., "hq-cv-abc")
-	Owned         bool   // true if minecart has gt:owned label
+	Owned         bool   // true if minecart has ms:owned label
 	MergeStrategy string // "direct", "mr", "local", or "" (default = mr)
 }
 
@@ -147,7 +147,7 @@ func getMinecartInfoForIssue(issueID string) *MinecartInfo {
 	if err != nil {
 		// Check if this is a "not found" error (phantom minecart) vs transient error.
 		// Phantom minecarts occur when a minecart bead is deleted from HQ but tracking
-		// deps still exist in local beads DB (gt-9xum2). Return nil to treat as
+		// deps still exist in local beads DB (ms-9xum2). Return nil to treat as
 		// untracked, allowing normal MR flow to proceed.
 		stderrStr := stderr.String()
 		if strings.Contains(stderrStr, "not found") ||
@@ -169,9 +169,9 @@ func getMinecartInfoForIssue(issueID string) *MinecartInfo {
 
 	info := &MinecartInfo{ID: minecartID}
 
-	// Check for gt:owned label
+	// Check for ms:owned label
 	for _, label := range minecarts[0].Labels {
-		if label == "gt:owned" {
+		if label == "ms:owned" {
 			info.Owned = true
 			break
 		}
@@ -184,7 +184,7 @@ func getMinecartInfoForIssue(issueID string) *MinecartInfo {
 }
 
 // getMinecartInfoFromIssue reads minecart info directly from the issue's attachment fields.
-// This is the primary lookup method (gt-7b6wf fix): gt sling stores minecart_id and
+// This is the primary lookup method (ms-7b6wf fix): ms sling stores minecart_id and
 // merge_strategy on the issue when dispatching, avoiding unreliable cross-rig dep
 // resolution. Returns nil if the issue has no minecart fields in its description.
 func getMinecartInfoFromIssue(issueID, cwd string) *MinecartInfo {
@@ -275,15 +275,15 @@ func printMinecartConflict(beadID, minecartID string) {
 
 	fmt.Printf("\n  Options:\n")
 	fmt.Printf("    1. Remove the bead from this batch:\n")
-	fmt.Printf("         gt sling <other-beads...> <rig>   (without %s)\n", beadID)
+	fmt.Printf("         ms sling <other-beads...> <rig>   (without %s)\n", beadID)
 	fmt.Printf("    2. Move the bead to the new batch (remove from existing minecart first):\n")
 	fmt.Printf("         bd dep remove %s %s --type=tracks\n", minecartID, beadID)
-	fmt.Printf("         gt sling <all-beads...> <rig>\n")
+	fmt.Printf("         ms sling <all-beads...> <rig>\n")
 	fmt.Printf("    3. Close the existing minecart and re-sling all beads together:\n")
-	fmt.Printf("         gt minecart close %s --reason \"re-batching\"\n", minecartID)
-	fmt.Printf("         gt sling <all-beads...> <rig>\n")
+	fmt.Printf("         ms minecart close %s --reason \"re-batching\"\n", minecartID)
+	fmt.Printf("         ms sling <all-beads...> <rig>\n")
 	fmt.Printf("    4. Add the other beads to the existing minecart instead:\n")
-	fmt.Printf("         gt minecart add %s <other-beads...>\n", minecartID)
+	fmt.Printf("         ms minecart add %s <other-beads...>\n", minecartID)
 	fmt.Println()
 }
 
@@ -291,7 +291,7 @@ func printMinecartConflict(beadID, minecartID string) {
 // Returns the minecart ID and the list of bead IDs that were successfully tracked.
 // Callers should only stamp MinecartID on beads in the tracked set — a bead whose
 // dep add failed should not reference a minecart that has no knowledge of it.
-// If owned is true, the minecart is marked with gt:owned label.
+// If owned is true, the minecart is marked with ms:owned label.
 // beadIDs must be non-empty. The minecart title uses the rig name and bead count.
 func createBatchMinecart(beadIDs []string, rigName string, owned bool, mergeStrategy, baseBranch string) (string, []string, error) {
 	if len(beadIDs) == 0 {
@@ -327,7 +327,7 @@ func createBatchMinecart(beadIDs []string, rigName string, owned bool, mergeStra
 	}
 
 	// Use BdCmd with WithAutoCommit to ensure minecart is persisted even when
-	// gt sling has set BD_DOLT_AUTO_COMMIT=off globally (gt-9xum2 root cause fix).
+	// ms sling has set BD_DOLT_AUTO_COMMIT=off globally (ms-9xum2 root cause fix).
 	if out, err := BdCmd(createArgs...).Dir(townBeads).WithAutoCommit().CombinedOutput(); err != nil {
 		return "", nil, fmt.Errorf("creating batch minecart: %w\noutput: %s", err, out)
 	}
@@ -348,12 +348,12 @@ func createBatchMinecart(beadIDs []string, rigName string, owned bool, mergeStra
 }
 
 // createAutoMinecart creates an auto-minecart for a single issue and tracks it.
-// If owned is true, the minecart is marked with the gt:owned label for caller-managed lifecycle.
+// If owned is true, the minecart is marked with the ms:owned label for caller-managed lifecycle.
 // mergeStrategy is optional: "direct", "mr", or "local" (empty = default mr).
 // Returns the created minecart ID.
 func createAutoMinecart(beadID, beadTitle string, owned bool, mergeStrategy, baseBranch string) (_ string, retErr error) {
 	defer func() { telemetry.RecordMinecartCreate(context.Background(), beadID, retErr) }()
-	// Guard against flag-like titles propagating into minecart names (gt-e0kx5)
+	// Guard against flag-like titles propagating into minecart names (ms-e0kx5)
 	if beads.IsFlagLikeTitle(beadTitle) {
 		return "", fmt.Errorf("refusing to create minecart: bead title %q looks like a CLI flag", beadTitle)
 	}
@@ -366,7 +366,7 @@ func createAutoMinecart(beadID, beadTitle string, owned bool, mergeStrategy, bas
 	townBeads := filepath.Join(townRoot, ".beads")
 
 	// Generate minecart ID with hq-cv- prefix for visual distinction
-	// The hq-cv- prefix is registered in routes during gt install
+	// The hq-cv- prefix is registered in routes during ms install
 	minecartID := fmt.Sprintf("hq-cv-%s", slingGenerateShortID())
 
 	// Create minecart with title "Work: <issue-title>"
@@ -390,7 +390,7 @@ func createAutoMinecart(beadID, beadTitle string, owned bool, mergeStrategy, bas
 	}
 
 	// Use BdCmd with WithAutoCommit to ensure minecart is persisted even when
-	// gt sling has set BD_DOLT_AUTO_COMMIT=off globally (gt-9xum2 root cause fix).
+	// ms sling has set BD_DOLT_AUTO_COMMIT=off globally (ms-9xum2 root cause fix).
 	if out, err := BdCmd(createArgs...).Dir(townBeads).WithAutoCommit().CombinedOutput(); err != nil {
 		return "", fmt.Errorf("creating minecart: %w\noutput: %s", err, out)
 	}

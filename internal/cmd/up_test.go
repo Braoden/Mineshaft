@@ -19,7 +19,7 @@ func TestAgentStartResult_Fields(t *testing.T) {
 	result := agentStartResult{
 		name:   "Witness (mineshaft)",
 		ok:     true,
-		detail: "gt-mineshaft-witness",
+		detail: "ms-mineshaft-witness",
 	}
 
 	if result.name != "Witness (mineshaft)" {
@@ -28,8 +28,8 @@ func TestAgentStartResult_Fields(t *testing.T) {
 	if !result.ok {
 		t.Error("ok should be true")
 	}
-	if result.detail != "gt-mineshaft-witness" {
-		t.Errorf("detail = %q, want %q", result.detail, "gt-mineshaft-witness")
+	if result.detail != "ms-mineshaft-witness" {
+		t.Errorf("detail = %q, want %q", result.detail, "ms-mineshaft-witness")
 	}
 }
 
@@ -52,20 +52,20 @@ func TestApplyConfiguredDoltEnvConfigBeatsStaleEnv(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(doltDataDir, "config.yaml"), []byte("listener:\n  host: 127.0.0.2\n  port: 5507\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("GT_DOLT_IGNORE_CONFIG", "")
-	t.Setenv("GT_DOLT_HOST", "stale-host")
-	t.Setenv("GT_DOLT_PORT", "9999")
+	t.Setenv("MS_DOLT_IGNORE_CONFIG", "")
+	t.Setenv("MS_DOLT_HOST", "stale-host")
+	t.Setenv("MS_DOLT_PORT", "9999")
 	t.Setenv("BEADS_DOLT_SERVER_HOST", "stale-host")
 	t.Setenv("BEADS_DOLT_SERVER_PORT", "9999")
 	t.Setenv("BEADS_DOLT_PORT", "9999")
 
 	config.ApplyConfiguredDoltEnv(townRoot)
 
-	if got := os.Getenv("GT_DOLT_HOST"); got != "127.0.0.2" {
-		t.Fatalf("GT_DOLT_HOST = %q, want 127.0.0.2", got)
+	if got := os.Getenv("MS_DOLT_HOST"); got != "127.0.0.2" {
+		t.Fatalf("MS_DOLT_HOST = %q, want 127.0.0.2", got)
 	}
-	if got := os.Getenv("GT_DOLT_PORT"); got != "5507" {
-		t.Fatalf("GT_DOLT_PORT = %q, want 5507", got)
+	if got := os.Getenv("MS_DOLT_PORT"); got != "5507" {
+		t.Fatalf("MS_DOLT_PORT = %q, want 5507", got)
 	}
 	if got := os.Getenv("BEADS_DOLT_SERVER_HOST"); got != "" {
 		t.Fatalf("BEADS_DOLT_SERVER_HOST = %q, want cleared", got)
@@ -81,18 +81,18 @@ func TestApplyConfiguredDoltEnvClearsStaleHostWhenConfigHasNoHost(t *testing.T) 
 	if err := os.WriteFile(filepath.Join(doltDataDir, "config.yaml"), []byte("listener:\n  port: 5507\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("GT_DOLT_IGNORE_CONFIG", "")
-	t.Setenv("GT_DOLT_HOST", "stale-host")
-	t.Setenv("GT_DOLT_PORT", "9999")
+	t.Setenv("MS_DOLT_IGNORE_CONFIG", "")
+	t.Setenv("MS_DOLT_HOST", "stale-host")
+	t.Setenv("MS_DOLT_PORT", "9999")
 	t.Setenv("BEADS_DOLT_SERVER_HOST", "stale-host")
 
 	config.ApplyConfiguredDoltEnv(townRoot)
 
-	if got := os.Getenv("GT_DOLT_HOST"); got != "" {
-		t.Fatalf("GT_DOLT_HOST = %q, want cleared", got)
+	if got := os.Getenv("MS_DOLT_HOST"); got != "" {
+		t.Fatalf("MS_DOLT_HOST = %q, want cleared", got)
 	}
-	if got := os.Getenv("GT_DOLT_PORT"); got != "5507" {
-		t.Fatalf("GT_DOLT_PORT = %q, want 5507", got)
+	if got := os.Getenv("MS_DOLT_PORT"); got != "5507" {
+		t.Fatalf("MS_DOLT_PORT = %q, want 5507", got)
 	}
 }
 
@@ -262,13 +262,13 @@ func TestWorkerPoolLimitsConcurrency(t *testing.T) {
 }
 
 // =============================================================================
-// waitForDoltReady tests (gt-zou1n)
-// Verifies that gt up waits for Dolt server readiness before starting witnesses.
+// waitForDoltReady tests (ms-zou1n)
+// Verifies that ms up waits for Dolt server readiness before starting witnesses.
 // =============================================================================
 
 // =============================================================================
 // recoverOrphanedBeads tests (gas-udp)
-// Verifies that gt up detects and recovers orphaned hooked beads after crash.
+// Verifies that ms up detects and recovers orphaned hooked beads after crash.
 // =============================================================================
 
 func TestRecoverOrphanedBeads_NoRigs(t *testing.T) {
@@ -366,7 +366,7 @@ func TestWaitForDoltReady_ServerListening(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(beadsDir, "metadata.json"), []byte(metadata), 0644); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("GT_DOLT_PORT", fmt.Sprintf("%d", port))
+	t.Setenv("MS_DOLT_PORT", fmt.Sprintf("%d", port))
 
 	start := time.Now()
 	waitForDoltReady(townRoot)
@@ -401,7 +401,7 @@ func TestWaitForDoltReady_GracefulDegradation(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(beadsDir, "metadata.json"), []byte(metadata), 0644); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("GT_DOLT_PORT", fmt.Sprintf("%d", freePort))
+	t.Setenv("MS_DOLT_PORT", fmt.Sprintf("%d", freePort))
 
 	// WaitForReady with short timeout should fail when nothing is listening
 	err = doltserver.WaitForReady(townRoot, 200*time.Millisecond)
@@ -431,7 +431,7 @@ func TestWaitForDoltReady_WrapperTimesOutAndContinues(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(beadsDir, "metadata.json"), []byte(metadata), 0644); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("GT_DOLT_PORT", fmt.Sprintf("%d", port))
+	t.Setenv("MS_DOLT_PORT", fmt.Sprintf("%d", port))
 
 	// Verify the error path fires when nothing listens.
 	err = doltserver.WaitForReady(townRoot, 200*time.Millisecond)

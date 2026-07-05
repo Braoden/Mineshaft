@@ -51,14 +51,14 @@ func (c *LifecycleHygieneCheck) Run(ctx *CheckContext) *CheckResult {
 		Name:    c.Name(),
 		Status:  StatusWarning,
 		Message: fmt.Sprintf("Found %d stale lifecycle message(s) in supervisor inbox", staleCount),
-		FixHint: "Run 'gt doctor --fix' to clean up",
+		FixHint: "Run 'ms doctor --fix' to clean up",
 	}
 }
 
 // checkSupervisorInbox looks for stale lifecycle messages.
 func (c *LifecycleHygieneCheck) checkSupervisorInbox(ctx *CheckContext) int {
-	// Get supervisor inbox via gt mail
-	cmd := exec.Command("gt", "mail", "inbox", "--identity", "supervisor/", "--json")
+	// Get supervisor inbox via ms mail
+	cmd := exec.Command("ms", "mail", "inbox", "--identity", "supervisor/", "--json")
 	cmd.Dir = ctx.TownRoot
 
 	output, err := cmd.Output()
@@ -99,7 +99,7 @@ func (c *LifecycleHygieneCheck) Fix(ctx *CheckContext) error {
 
 	// Delete stale lifecycle messages
 	for _, msg := range c.staleMessages {
-		cmd := exec.Command("gt", "mail", "delete", msg.ID) //nolint:gosec // G204: msg.ID is from internal state, not user input
+		cmd := exec.Command("ms", "mail", "delete", msg.ID) //nolint:gosec // G204: msg.ID is from internal state, not user input
 		cmd.Dir = ctx.TownRoot
 		if err := cmd.Run(); err != nil {
 			errors = append(errors, fmt.Sprintf("failed to delete message %s: %v", msg.ID, err))

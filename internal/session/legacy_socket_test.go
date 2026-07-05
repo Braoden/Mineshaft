@@ -81,7 +81,7 @@ func TestCleanupLegacyDefaultSocketCleansMineshaftSessions(t *testing.T) {
 	mock := &mockLegacyTmux{
 		sessions: []string{"ga-witness", "hq-overseer"},
 	}
-	setupLegacyHooks(t, "gt-abc123", mock)
+	setupLegacyHooks(t, "ms-abc123", mock)
 
 	got := CleanupLegacyDefaultSocket()
 	if got != 2 {
@@ -102,7 +102,7 @@ func TestCleanupLegacyDefaultSocketIgnoresNonMineshaftSessions(t *testing.T) {
 	mock := &mockLegacyTmux{
 		sessions: []string{"personal-stuff", "hq-notes", "ga-witness"},
 	}
-	setupLegacyHooks(t, "gt-abc123", mock)
+	setupLegacyHooks(t, "ms-abc123", mock)
 
 	got := CleanupLegacyDefaultSocket()
 	if got != 1 {
@@ -117,7 +117,7 @@ func TestCleanupLegacyDefaultSocketCleansSpecificTownSessions(t *testing.T) {
 	mock := &mockLegacyTmux{
 		sessions: []string{"hq-supervisor", "hq-boot", "hq-dog-alpha", "hq-boss"},
 	}
-	setupLegacyHooks(t, "gt-abc123", mock)
+	setupLegacyHooks(t, "ms-abc123", mock)
 
 	got := CleanupLegacyDefaultSocket()
 	if got != 3 {
@@ -137,7 +137,7 @@ func TestCleanupLegacyDefaultSocketNoDefaultServer(t *testing.T) {
 	mock := &mockLegacyTmux{
 		listErr: fmt.Errorf("no server running"),
 	}
-	setupLegacyHooks(t, "gt-abc123", mock)
+	setupLegacyHooks(t, "ms-abc123", mock)
 
 	got := CleanupLegacyDefaultSocket()
 	if got != 0 {
@@ -159,7 +159,7 @@ func TestCountLegacyDefaultSocketCountsMineshaftOnly(t *testing.T) {
 	mock := &mockLegacyTmux{
 		sessions: []string{"ga-witness", "personal", "hq-notes"},
 	}
-	setupLegacyHooks(t, "gt-abc123", mock)
+	setupLegacyHooks(t, "ms-abc123", mock)
 
 	got := CountLegacyDefaultSocketSessions()
 	if got != 1 {
@@ -169,9 +169,9 @@ func TestCountLegacyDefaultSocketCountsMineshaftOnly(t *testing.T) {
 
 func TestCleanupLegacyBaseSocketSkipsWhenSameSocket(t *testing.T) {
 	mock := &mockLegacyTmux{}
-	setupLegacyHooks(t, "gt", mock)
+	setupLegacyHooks(t, "ms", mock)
 
-	got := CleanupLegacyBaseSocket("/some/path/gt")
+	got := CleanupLegacyBaseSocket("/some/path/ms")
 	if got != 0 {
 		t.Errorf("expected 0, got %d", got)
 	}
@@ -181,9 +181,9 @@ func TestCleanupLegacyBaseSocketCleansOldSessions(t *testing.T) {
 	mock := &mockLegacyTmux{
 		sessions: []string{"ga-witness"},
 	}
-	setupLegacyHooks(t, "gt-abc123", mock)
+	setupLegacyHooks(t, "ms-abc123", mock)
 
-	got := CleanupLegacyBaseSocket("/some/path/gt")
+	got := CleanupLegacyBaseSocket("/some/path/ms")
 	if got != 1 {
 		t.Errorf("expected 1 cleaned, got %d", got)
 	}
@@ -194,9 +194,9 @@ func TestCleanupLegacyBaseSocketCleansOldSessions(t *testing.T) {
 
 func TestCountLegacyBaseSocketSkipsWhenSame(t *testing.T) {
 	mock := &mockLegacyTmux{}
-	setupLegacyHooks(t, "gt", mock)
+	setupLegacyHooks(t, "ms", mock)
 
-	got := CountLegacyBaseSocketSessions("/some/path/gt")
+	got := CountLegacyBaseSocketSessions("/some/path/ms")
 	if got != 0 {
 		t.Errorf("expected 0, got %d", got)
 	}
@@ -206,9 +206,9 @@ func TestCountLegacyBaseSocketCountsCorrectly(t *testing.T) {
 	mock := &mockLegacyTmux{
 		sessions: []string{"ga-witness", "hq-supervisor", "random-thing"},
 	}
-	setupLegacyHooks(t, "gt-abc123", mock)
+	setupLegacyHooks(t, "ms-abc123", mock)
 
-	got := CountLegacyBaseSocketSessions("/some/path/gt")
+	got := CountLegacyBaseSocketSessions("/some/path/ms")
 	if got != 2 {
 		t.Errorf("expected 2, got %d", got)
 	}

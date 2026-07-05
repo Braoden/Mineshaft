@@ -62,7 +62,7 @@ func testCtx() *CheckContext {
 func setupEnvTestRegistry(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "mineshaft")
+	reg.Register("ms", "mineshaft")
 	reg.Register("bd", "beads")
 	reg.Register("mr", "myrig")
 	reg.Register("r1", "rig1")
@@ -172,8 +172,8 @@ func TestEnvVarsCheck_WitnessMismatch(t *testing.T) {
 		sessions: []string{"mr-witness"},
 		sessionEnvs: map[string]map[string]string{
 			"mr-witness": {
-				"GT_ROLE": "witness",
-				"GT_RIG":  "wrongrig", // Wrong rig
+				"MS_ROLE": "witness",
+				"MS_RIG":  "wrongrig", // Wrong rig
 			},
 		},
 	}
@@ -225,8 +225,8 @@ func TestEnvVarsCheck_MinerMissing(t *testing.T) {
 		sessions: []string{"mr-Toast"},
 		sessionEnvs: map[string]map[string]string{
 			"mr-Toast": {
-				"GT_ROLE": "miner",
-				// Missing GT_RIG, GT_MINER, BD_ACTOR, GIT_AUTHOR_NAME
+				"MS_ROLE": "miner",
+				// Missing MS_RIG, MS_MINER, BD_ACTOR, GIT_AUTHOR_NAME
 			},
 		},
 	}
@@ -289,8 +289,8 @@ func TestEnvVarsCheck_MixedCorrectAndMismatch(t *testing.T) {
 		sessionEnvs: map[string]map[string]string{
 			"hq-overseer": overseerEnv,
 			"r1-witness": {
-				"GT_ROLE": "witness",
-				// Missing GT_RIG and other vars
+				"MS_ROLE": "witness",
+				// Missing MS_RIG and other vars
 			},
 		},
 	}
@@ -437,7 +437,7 @@ func TestEnvVarsCheck_BeadsDirWarning(t *testing.T) {
 	if !strings.Contains(result.Message, "BEADS_DIR") {
 		t.Errorf("Message should mention BEADS_DIR, got: %q", result.Message)
 	}
-	if !strings.Contains(result.FixHint, "gt shutdown") {
+	if !strings.Contains(result.FixHint, "ms shutdown") {
 		t.Errorf("FixHint should mention restart, got: %q", result.FixHint)
 	}
 }
@@ -493,8 +493,8 @@ func TestEnvVarsCheck_BeadsDirWithOtherMismatches(t *testing.T) {
 		sessions: []string{"mr-witness"},
 		sessionEnvs: map[string]map[string]string{
 			"mr-witness": {
-				"GT_ROLE":   "witness",
-				"GT_RIG":    "wrongrig", // Mismatch
+				"MS_ROLE":   "witness",
+				"MS_RIG":    "wrongrig", // Mismatch
 				"BEADS_DIR": "/bad/path",
 			},
 		},

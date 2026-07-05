@@ -10,7 +10,7 @@ import (
 )
 
 // StaleTaskDispatchCheck detects settings.json files that still reference
-// the removed "gt tap guard task-dispatch" command. After the task-dispatch
+// the removed "ms tap guard task-dispatch" command. After the task-dispatch
 // guard was removed, existing Overseer settings.json files may retain stale
 // hook entries that invoke the deleted subcommand.
 type StaleTaskDispatchCheck struct {
@@ -91,7 +91,7 @@ func (c *StaleTaskDispatchCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:   StatusWarning,
 		Message:  fmt.Sprintf("%d target(s) have stale task-dispatch guard", len(c.staleTargets)),
 		Details:  details,
-		FixHint:  "Run 'gt doctor --fix' or 'gt hooks sync' to regenerate settings.json files",
+		FixHint:  "Run 'ms doctor --fix' or 'ms hooks sync' to regenerate settings.json files",
 		Category: c.Category(),
 	}
 }

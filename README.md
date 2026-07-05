@@ -20,7 +20,7 @@ Mineshaft is a workspace manager that lets you coordinate multiple AI coding age
 ```mermaid
 graph TB
     Overseer[The Overseer<br/>AI Coordinator]
-    Town[Town Workspace<br/>~/gt/]
+    Town[Town Workspace<br/>~/ms/]
 
     Town --> Overseer
     Town --> Rig1[Rig: Project A]
@@ -51,7 +51,7 @@ Your primary AI coordinator. The Overseer is a Claude Code instance with full co
 
 ### Town 🏘️
 
-Your workspace directory (e.g., `~/gt/`). Contains all projects, agents, and configuration.
+Your workspace directory (e.g., `~/ms/`). Contains all projects, agents, and configuration.
 
 ### Rigs 🏗️
 
@@ -77,7 +77,7 @@ Work tracking units. Bundle multiple beads that get assigned to agents. Minecart
 
 Git-backed issue tracking system that stores work state as structured data.
 
-**Bead IDs** (also called **issue IDs**) use a prefix + 5-character alphanumeric format (e.g., `gt-abc12`, `hq-x7k2m`). The prefix indicates the item's origin or rig. Commands like `gt sling` and `gt minecart` accept these IDs to reference specific work items. The terms "bead" and "issue" are used interchangeably—beads are the underlying data format, while issues are the work items stored as beads.
+**Bead IDs** (also called **issue IDs**) use a prefix + 5-character alphanumeric format (e.g., `ms-abc12`, `hq-x7k2m`). The prefix indicates the item's origin or rig. Commands like `ms sling` and `ms minecart` accept these IDs to reference specific work items. The terms "bead" and "issue" are used interchangeably—beads are the underlying data format, while issues are the work items stored as beads.
 
 ### Molecules 🧬
 
@@ -93,11 +93,11 @@ A three-tier watchdog system keeps agents healthy:
 
 ### Refinery 🏭
 
-Per-rig merge queue processor. When miners complete work via `gt done`, the Refinery batches merge requests, runs verification gates, and merges to main using a Bors-style bisecting queue. Failed MRs are isolated and either fixed inline or re-dispatched.
+Per-rig merge queue processor. When miners complete work via `ms done`, the Refinery batches merge requests, runs verification gates, and merges to main using a Bors-style bisecting queue. Failed MRs are isolated and either fixed inline or re-dispatched.
 
 ### Escalation 🚨
 
-Severity-routed issue escalation. Agents that hit blockers escalate via `gt escalate`, which creates tracked beads routed through the Supervisor, Overseer, and (if needed) Boss. Severity levels: CRITICAL (P0), HIGH (P1), MEDIUM (P2). See [Escalation](docs/design/escalation.md).
+Severity-routed issue escalation. Agents that hit blockers escalate via `ms escalate`, which creates tracked beads routed through the Supervisor, Overseer, and (if needed) Boss. Severity levels: CRITICAL (P0), HIGH (P1), MEDIUM (P2). See [Escalation](docs/design/escalation.md).
 
 ### Scheduler ⏱️
 
@@ -108,8 +108,8 @@ Config-driven capacity governor for miner dispatch. Prevents API rate limit exha
 Session discovery and continuation. Discovers previous agent sessions via `.events.jsonl` logs, enabling agents to query their predecessors for context and decisions from earlier work.
 
 ```bash
-gt seance                       # List discoverable predecessor sessions
-gt seance --talk <id> -p "What did you find?"  # One-shot question
+ms seance                       # List discoverable predecessor sessions
+ms seance --talk <id> -p "What did you find?"  # One-shot question
 ```
 
 ### Wasteland 🏜️
@@ -137,36 +137,36 @@ Federated work coordination network linking Mineshafts through DoltHub. Rigs pos
 ```bash
 # Install Mineshaft
 $ brew install mineshaft                                    # Homebrew (recommended)
-$ npm install -g @mineshaft/gt                              # npm
-$ go install github.com/steveyegge/mineshaft/cmd/gt@latest  # From source (Linux only)
+$ npm install -g @mineshaft/ms                              # npm
+$ go install github.com/steveyegge/mineshaft/cmd/ms@latest  # From source (Linux only)
 
 # macOS: go install produces unsigned binaries that macOS will SIGKILL.
 # Use brew install (above) or install Dolt and clone/build with make:
 $ brew install dolt
 $ git clone https://github.com/steveyegge/mineshaft.git && cd mineshaft
-$ make build && mv gt $HOME/go/bin/
+$ make build && mv ms $HOME/go/bin/
 
 # Windows (or if go install fails): clone and build manually
 $ git clone https://github.com/steveyegge/mineshaft.git && cd mineshaft
-$ go build -o gt.exe ./cmd/gt
-$ mv gt.exe $HOME/go/bin/  # or add mineshaft to PATH
+$ go build -o ms.exe ./cmd/ms
+$ mv ms.exe $HOME/go/bin/  # or add mineshaft to PATH
 
 # If using go install, add Go binaries to PATH (add to ~/.zshrc or ~/.bashrc)
 export PATH="$PATH:$HOME/go/bin"
 
 # Create workspace with git initialization
-gt install ~/gt --git
-cd ~/gt
+ms install ~/ms --git
+cd ~/ms
 
 # Add your first project
-gt rig add myproject https://github.com/you/repo.git
+ms rig add myproject https://github.com/you/repo.git
 
 # Create your crew workspace
-gt crew add yourname --rig myproject
+ms crew add yourname --rig myproject
 cd myproject/crew/yourname
 
 # Start the Overseer session (your main interface)
-gt overseer attach
+ms overseer attach
 ```
 
 ### Docker Compose
@@ -182,11 +182,11 @@ docker compose up -d
 
 docker compose exec mineshaft zsh   # or bash
 
-gt up
+ms up
 
 gh auth login                     # if you want gh to work
 
-gt overseer attach
+ms overseer attach
 ```
 
 ## Quick Start Guide
@@ -194,10 +194,10 @@ gt overseer attach
 ### Getting Started
 Run
 ```shell
-gt install ~/gt --git &&
-cd ~/gt &&
-gt config agent list &&
-gt overseer attach
+ms install ~/ms --git &&
+cd ~/ms &&
+ms config agent list &&
+ms overseer attach
 ```
 and tell the Overseer what you want to build!
 
@@ -226,19 +226,19 @@ sequenceDiagram
 
 ```bash
 # 1. Start the Overseer
-gt overseer attach
+ms overseer attach
 
 # 2. In Overseer session, create a minecart with bead IDs
-gt minecart create "Feature X" gt-abc12 gt-def34 --notify --human
+ms minecart create "Feature X" ms-abc12 ms-def34 --notify --human
 
 # 3. Assign work to an agent
-gt sling gt-abc12 myproject
+ms sling ms-abc12 myproject
 
 # 4. Track progress
-gt minecart list
+ms minecart list
 
 # 5. Monitor agents
-gt agents
+ms agents
 ```
 
 ## Common Workflows
@@ -261,13 +261,13 @@ flowchart LR
 
 ```bash
 # Attach to Overseer
-gt overseer attach
+ms overseer attach
 
 # In Overseer, create minecart and let it orchestrate
-gt minecart create "Auth System" gt-x7k2m gt-p9n4q --notify
+ms minecart create "Auth System" ms-x7k2m ms-p9n4q --notify
 
 # Track progress
-gt minecart list
+ms minecart list
 ```
 
 ### Minimal Mode (No Tmux)
@@ -275,18 +275,18 @@ gt minecart list
 Run individual runtime instances manually. Mineshaft just tracks state.
 
 ```bash
-gt minecart create "Fix bugs" gt-abc12   # Create minecart (sling auto-creates if skipped)
-gt sling gt-abc12 myproject            # Assign to worker
+ms minecart create "Fix bugs" ms-abc12   # Create minecart (sling auto-creates if skipped)
+ms sling ms-abc12 myproject            # Assign to worker
 claude --resume                        # Agent reads mail, runs work (Claude)
 # or: codex                            # Start Codex in the workspace
-gt minecart list                         # Check progress
+ms minecart list                         # Check progress
 ```
 
 ### Beads Formula Workflow
 
 **Best for:** Predefined, repeatable processes
 
-Formulas are TOML-defined workflows embedded in the `gt` binary (source in `internal/formula/formulas/`).
+Formulas are TOML-defined workflows embedded in the `ms` binary (source in `internal/formula/formulas/`).
 
 **Example Formula** (`internal/formula/formulas/release.formula.toml`):
 
@@ -348,16 +348,16 @@ bd mol pour release --var version=1.2.0
 
 ```bash
 # Create minecart manually
-gt minecart create "Bug Fixes" --human
+ms minecart create "Bug Fixes" --human
 
 # Add issues to existing minecart
-gt minecart add hq-cv-abc gt-m3k9p gt-w5t2x
+ms minecart add hq-cv-abc ms-m3k9p ms-w5t2x
 
 # Assign to specific agents
-gt sling gt-m3k9p myproject/my-agent
+ms sling ms-m3k9p myproject/my-agent
 
 # Check status
-gt minecart show
+ms minecart show
 ```
 
 ## Runtime Configuration
@@ -381,8 +381,8 @@ Mineshaft supports multiple AI coding runtimes. Per-rig runtime settings are in 
 - For Codex, set `project_doc_fallback_filenames = ["CLAUDE.md"]` in
   `~/.codex/config.toml` so role instructions are picked up.
 - For runtimes without hooks (e.g., Codex), Mineshaft sends a startup fallback
-  after the session is ready: `gt prime`, optional `gt mail check --inject`
-  for autonomous roles, and `gt nudge supervisor session-started`.
+  after the session is ready: `ms prime`, optional `ms mail check --inject`
+  for autonomous roles, and `ms nudge supervisor session-started`.
 - **GitHub Copilot** (`copilot`) is a built-in preset using `--yolo` for autonomous
   mode. It uses executable lifecycle hooks in `.github/hooks/mineshaft.json` (same events
   as Claude: `sessionStart`, `userPromptSubmitted`, `preToolUse`, `sessionEnd`). Uses a
@@ -394,23 +394,23 @@ Mineshaft supports multiple AI coding runtimes. Per-rig runtime settings are in 
 ### Workspace Management
 
 ```bash
-gt install <path>           # Initialize workspace
-gt rig add <name> <repo>    # Add project
-gt rig list                 # List projects
-gt crew add <name> --rig <rig>  # Create crew workspace
+ms install <path>           # Initialize workspace
+ms rig add <name> <repo>    # Add project
+ms rig list                 # List projects
+ms crew add <name> --rig <rig>  # Create crew workspace
 ```
 
 ### Agent Operations
 
 ```bash
-gt agents                   # List active agents
-gt sling <bead-id> <rig>    # Assign work to agent
-gt sling <bead-id> <rig> --agent cursor   # Override runtime for this sling/spawn
-gt overseer attach             # Start Overseer session
-gt overseer start --agent auggie           # Run Overseer with a specific agent alias
-gt prime                    # Context recovery (run inside existing session)
-gt feed                     # Real-time activity feed (TUI)
-gt feed --problems          # Start in problems view (stuck agent detection)
+ms agents                   # List active agents
+ms sling <bead-id> <rig>    # Assign work to agent
+ms sling <bead-id> <rig> --agent cursor   # Override runtime for this sling/spawn
+ms overseer attach             # Start Overseer session
+ms overseer start --agent auggie           # Run Overseer with a specific agent alias
+ms prime                    # Context recovery (run inside existing session)
+ms feed                     # Real-time activity feed (TUI)
+ms feed --problems          # Start in problems view (stuck agent detection)
 ```
 
 **Built-in agent presets**: `claude`, `gemini`, `codex`, `cursor`, `auggie`, `amp`, `opencode`, `copilot`, `pi`, `omp`
@@ -418,31 +418,31 @@ gt feed --problems          # Start in problems view (stuck agent detection)
 ### Minecart (Work Tracking)
 
 ```bash
-gt minecart create <name> [issues...]   # Create minecart with issues
-gt minecart list              # List all minecarts
-gt minecart show [id]         # Show minecart details
-gt minecart add <minecart-id> <issue-id...>  # Add issues to minecart
+ms minecart create <name> [issues...]   # Create minecart with issues
+ms minecart list              # List all minecarts
+ms minecart show [id]         # Show minecart details
+ms minecart add <minecart-id> <issue-id...>  # Add issues to minecart
 ```
 
 ### Configuration
 
 ```bash
 # Set custom agent command
-gt config agent set claude-glm "claude-glm --model glm-4"
-gt config agent set codex-low "codex --thinking low"
+ms config agent set claude-glm "claude-glm --model glm-4"
+ms config agent set codex-low "codex --thinking low"
 
 # Set default agent
-gt config default-agent claude-glm
+ms config default-agent claude-glm
 ```
 
 ### Monitoring & Health
 
 ```bash
-gt escalate -s HIGH "description"  # Escalate a blocker
-gt escalate list               # List open escalations
-gt scheduler status            # Show scheduler state
-gt seance                      # Discover previous sessions
-gt seance --talk <id>          # Query a predecessor session
+ms escalate -s HIGH "description"  # Escalate a blocker
+ms escalate list               # List open escalations
+ms scheduler status            # Show scheduler state
+ms seance                      # Discover previous sessions
+ms seance --talk <id>          # Query a predecessor session
 ```
 
 ### Beads Integration
@@ -457,10 +457,10 @@ bd mol list                 # List active instances
 ### Wasteland Federation
 
 ```bash
-gt wl join <remote>            # Join a wasteland
-gt wl browse                   # View wanted board
-gt wl claim <id>               # Claim work
-gt wl done <id> --evidence <url>  # Submit completion
+ms wl join <remote>            # Join a wasteland
+ms wl browse                   # View wanted board
+ms wl claim <id>               # Claim work
+ms wl done <id> --evidence <url>  # Submit completion
 ```
 
 ## Cooking Formulas
@@ -469,18 +469,18 @@ Mineshaft includes built-in formulas for common workflows. See `internal/formula
 
 ## Activity Feed
 
-`gt feed` launches an interactive terminal dashboard for monitoring all agent activity in real-time. It combines beads activity, agent events, and merge queue updates into a three-panel TUI:
+`ms feed` launches an interactive terminal dashboard for monitoring all agent activity in real-time. It combines beads activity, agent events, and merge queue updates into a three-panel TUI:
 
 - **Agent Tree** - Hierarchical view of all agents grouped by rig and role
 - **Minecart Panel** - In-progress and recently-landed minecarts
 - **Event Stream** - Chronological feed of creates, completions, slings, nudges, and more
 
 ```bash
-gt feed                      # Launch TUI dashboard
-gt feed --problems           # Start in problems view
-gt feed --plain              # Plain text output (no TUI)
-gt feed --window             # Open in dedicated tmux window
-gt feed --since 1h           # Events from last hour
+ms feed                      # Launch TUI dashboard
+ms feed --problems           # Start in problems view
+ms feed --plain              # Plain text output (no TUI)
+ms feed --window             # Open in dedicated tmux window
+ms feed --since 1h           # Events from last hour
 ```
 
 **Navigation:** `j`/`k` to scroll, `Tab` to switch panels, `1`/`2`/`3` to jump to a panel, `?` for help, `q` to quit.
@@ -489,7 +489,7 @@ gt feed --since 1h           # Events from last hour
 
 At scale (20-50+ agents), spotting stuck agents in the activity stream becomes difficult. The problems view surfaces agents needing human intervention by analyzing structured beads data.
 
-Press `p` in `gt feed` (or start with `gt feed --problems`) to toggle the problems view, which groups agents by health state:
+Press `p` in `ms feed` (or start with `ms feed --problems`) to toggle the problems view, which groups agents by health state:
 
 | State | Condition |
 |-------|-----------|
@@ -508,18 +508,18 @@ must be run from inside a Mineshaft workspace (HQ) directory.
 
 ```bash
 # Start dashboard (default port 8080)
-gt dashboard
+ms dashboard
 
 # Start on a custom port
-gt dashboard --port 3000
+ms dashboard --port 3000
 
 # Start and automatically open in browser
-gt dashboard --open
+ms dashboard --open
 ```
 
 The dashboard gives you a single-page overview of everything happening in your
 workspace: agents, minecarts, hooks, queues, issues, and escalations. It
-auto-refreshes via htmx and includes a command palette for running gt commands
+auto-refreshes via htmx and includes a command palette for running ms commands
 directly from the browser.
 
 ## Monitoring & Health
@@ -546,9 +546,9 @@ The Supervisor runs continuous patrol cycles across all rigs, checking agent hea
 When agents hit blockers, they escalate rather than waiting:
 
 ```bash
-gt escalate -s HIGH "Description of blocker"
-gt escalate list                    # List open escalations
-gt escalate ack <bead-id>           # Acknowledge an escalation
+ms escalate -s HIGH "Description of blocker"
+ms escalate list                    # List open escalations
+ms escalate ack <bead-id>           # Acknowledge an escalation
 ```
 
 Escalations route through Supervisor -> Overseer -> Boss based on severity. See [Escalation design](docs/design/escalation.md).
@@ -557,7 +557,7 @@ Escalations route through Supervisor -> Overseer -> Boss based on severity. See 
 
 The Refinery processes completed miner work through a bisecting merge queue:
 
-1. Miner runs `gt done` -> branch pushed, MR bead created
+1. Miner runs `ms done` -> branch pushed, MR bead created
 2. Refinery batches pending MRs
 3. Runs verification gates on the merged stack
 4. If green: all MRs in batch merge to main
@@ -570,22 +570,22 @@ This is a Bors-style merge queue — miners never push directly to main.
 The scheduler controls miner dispatch capacity to prevent API rate limit exhaustion:
 
 ```bash
-gt config set scheduler.max_miners 5   # Enable deferred dispatch (max 5 concurrent)
-gt scheduler status                      # Show scheduler state
-gt scheduler pause                       # Pause dispatch
-gt scheduler resume                      # Resume dispatch
+ms config set scheduler.max_miners 5   # Enable deferred dispatch (max 5 concurrent)
+ms scheduler status                      # Show scheduler state
+ms scheduler pause                       # Pause dispatch
+ms scheduler resume                      # Resume dispatch
 ```
 
-Default mode (`max_miners = -1`) dispatches immediately via `gt sling`. When a limit is set, the daemon dispatches incrementally, respecting capacity. See [Scheduler design](docs/design/scheduler.md).
+Default mode (`max_miners = -1`) dispatches immediately via `ms sling`. When a limit is set, the daemon dispatches incrementally, respecting capacity. See [Scheduler design](docs/design/scheduler.md).
 
 ## Seance
 
 Discover and query previous agent sessions:
 
 ```bash
-gt seance                              # List discoverable predecessor sessions
-gt seance --talk <id>                  # Full context conversation with predecessor
-gt seance --talk <id> -p "Question?"   # One-shot question to predecessor
+ms seance                              # List discoverable predecessor sessions
+ms seance --talk <id>                  # Full context conversation with predecessor
+ms seance --talk <id> -p "Question?"   # One-shot question to predecessor
 ```
 
 Seance discovers sessions via `.events.jsonl` logs, enabling agents to recover context and decisions from earlier work without re-reading entire codebases.
@@ -595,11 +595,11 @@ Seance discovers sessions via `.events.jsonl` logs, enabling agents to recover c
 The Wasteland is a federated work coordination network linking multiple Mineshafts through DoltHub:
 
 ```bash
-gt wl join hop/wl-commons              # Join a wasteland
-gt wl browse                           # View wanted board
-gt wl claim <id>                       # Claim a wanted item
-gt wl done <id> --evidence <url>       # Submit completion with evidence
-gt wl post --title "Need X"            # Post new wanted item
+ms wl join hop/wl-commons              # Join a wasteland
+ms wl browse                           # View wanted board
+ms wl claim <id>                       # Claim a wanted item
+ms wl done <id> --evidence <url>       # Submit completion with evidence
+ms wl post --title "Need X"            # Post new wanted item
 ```
 
 Completions earn portable reputation via multi-dimensional stamps (quality, speed, complexity). See [Wasteland guide](docs/WASTELAND.md).
@@ -610,8 +610,8 @@ Mineshaft emits all agent operations as structured logs and metrics to any OTLP-
 
 ```bash
 # Configure OTLP endpoints
-export GT_OTEL_LOGS_URL="http://localhost:9428/insert/jsonline"
-export GT_OTEL_METRICS_URL="http://localhost:8428/api/v1/write"
+export MS_OTEL_LOGS_URL="http://localhost:9428/insert/jsonline"
+export MS_OTEL_METRICS_URL="http://localhost:8428/api/v1/write"
 ```
 
 **Events emitted:** session lifecycle, agent state changes, bd calls with duration, mail operations, sling/nudge/done workflows, miner spawn/remove, formula instantiation, minecart creation, daemon restarts, and more.
@@ -660,27 +660,27 @@ MEOW is the recommended pattern:
 
 ```bash
 # Bash
-gt completion bash > /etc/bash_completion.d/gt
+ms completion bash > /etc/bash_completion.d/ms
 
 # Zsh
-gt completion zsh > "${fpath[1]}/_gt"
+ms completion zsh > "${fpath[1]}/_ms"
 
 # Fish
-gt completion fish > ~/.config/fish/completions/gt.fish
+ms completion fish > ~/.config/fish/completions/ms.fish
 ```
 
 ## Project Roles
 
 | Role            | Description                          | Primary Interface    |
 | --------------- | ------------------------------------ | -------------------- |
-| **Overseer**       | AI coordinator                       | `gt overseer attach`    |
+| **Overseer**       | AI coordinator                       | `ms overseer attach`    |
 | **Human (You)** | Crew member                          | Your crew directory  |
 | **Miner**     | Worker agent                         | Spawned by Overseer     |
 | **Witness**     | Per-rig agent health monitor         | Automatic patrol     |
-| **Supervisor**      | Cross-rig supervisor daemon          | `gt patrol`          |
+| **Supervisor**      | Cross-rig supervisor daemon          | `ms patrol`          |
 | **Refinery**    | Merge queue processor                | Automatic            |
 | **Hook**        | Persistent storage                   | Git worktree         |
-| **Minecart**      | Work tracker                         | `gt minecart` commands |
+| **Minecart**      | Work tracker                         | `ms minecart` commands |
 
 ## Tips
 
@@ -688,7 +688,7 @@ gt completion fish > ~/.config/fish/completions/gt.fish
 - **Use minecarts for coordination** - They provide visibility across agents
 - **Leverage hooks for persistence** - Your work won't disappear
 - **Create formulas for repeated tasks** - Save time with Beads recipes
-- **Use `gt feed` for live monitoring** - Watch agent activity and catch stuck agents early
+- **Use `ms feed` for live monitoring** - Watch agent activity and catch stuck agents early
 - **Monitor the dashboard** - Get real-time visibility in the browser
 - **Let the Overseer orchestrate** - It knows how to manage agents
 
@@ -720,8 +720,8 @@ For deeper technical details, see the design docs in `docs/`:
 Check hooks are properly initialized:
 
 ```bash
-gt hooks list
-gt hooks repair
+ms hooks list
+ms hooks repair
 ```
 
 ### Minecart stuck
@@ -729,7 +729,7 @@ gt hooks repair
 Force refresh:
 
 ```bash
-gt minecart refresh <minecart-id>
+ms minecart refresh <minecart-id>
 ```
 
 ### Overseer not responding
@@ -737,8 +737,8 @@ gt minecart refresh <minecart-id>
 Restart Overseer session:
 
 ```bash
-gt overseer detach
-gt overseer attach
+ms overseer detach
+ms overseer attach
 ```
 
 ## License

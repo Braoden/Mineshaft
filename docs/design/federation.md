@@ -43,7 +43,7 @@ greenplace/gp-xyz  # Different rig, same chain
 ./gp-xyz           # Explicit current-rig ref
 ```
 
-See `~/gt/docs/hop/GRAPH-ARCHITECTURE.md` for full URI specification.
+See `~/ms/docs/hop/GRAPH-ARCHITECTURE.md` for full URI specification.
 
 ## Relationship Types (not yet implemented)
 
@@ -88,8 +88,8 @@ All events include actor:
 
 ## Discovery (not yet implemented)
 
-Workspace metadata lives in `~/gt/.town.json` (owner, name, public_name).
-Planned commands: `gt remote add/list` for remote registration,
+Workspace metadata lives in `~/ms/.town.json` (owner, name, public_name).
+Planned commands: `ms remote add/list` for remote registration,
 `bd show hop://...` and `bd list --remote=...` for cross-workspace queries.
 
 ## Implementation Status
@@ -101,7 +101,7 @@ Planned commands: `gt remote add/list` for remote registration,
 - [x] Dolt remotes configured (DoltHub endpoints)
 - [x] Local remotesapi enabled (port 8000)
 - [ ] DoltHub authentication (`dolt login`)
-- [ ] Remote registration (gt remote add)
+- [ ] Remote registration (ms remote add)
 - [ ] Cross-workspace queries
 - [ ] Delegation primitives
 
@@ -113,7 +113,7 @@ Town-level Dolt databases have remotes configured pointing to DoltHub:
 
 ```bash
 # Check configured remotes for town database
-cd ~/gt/.dolt-data/town && dolt remote -v
+cd ~/ms/.dolt-data/town && dolt remote -v
 # origin https://doltremoteapi.dolthub.com/steveyegge/mineshaft-town {}
 # local  http://localhost:8000/town {}
 ```
@@ -138,13 +138,13 @@ Like GitHub for Dolt - public, hosted, zero infrastructure:
 dolt login
 
 # Push to remote
-cd ~/gt/.dolt-data/town
+cd ~/ms/.dolt-data/town
 dolt push origin main
 ```
 
 **2. Local Remotesapi (Development/Testing)**
 
-Already enabled in `~/gt/.dolt-data/config.yaml`:
+Already enabled in `~/ms/.dolt-data/config.yaml`:
 - Port: 8000
 - Mode: read-only (set `read_only: false` for full federation)
 
@@ -182,18 +182,18 @@ To push/pull from configured remotes:
 
 3. **Initial Push:**
    ```bash
-   cd ~/gt/.dolt-data/town
+   cd ~/ms/.dolt-data/town
    dolt push -u origin main
    ```
 
 4. **Enable Write for Local Remotesapi:**
-   Edit `~/gt/.dolt-data/config.yaml`:
+   Edit `~/ms/.dolt-data/config.yaml`:
    ```yaml
    remotesapi:
      port: 8000
      read_only: false  # Enable writes
    ```
-   Restart daemon: `gt down && gt up`
+   Restart daemon: `ms down && ms up`
 
 ### Security Considerations
 

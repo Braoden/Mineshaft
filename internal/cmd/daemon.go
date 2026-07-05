@@ -38,7 +38,7 @@ var daemonStartCmd = &cobra.Command{
 	Short: "Start the daemon",
 	Long: `Start the Mineshaft daemon in the background.
 
-The daemon will run until stopped with 'gt daemon stop'.`,
+The daemon will run until stopped with 'ms daemon stop'.`,
 	RunE: runDaemonStart,
 }
 
@@ -51,7 +51,7 @@ Sends a stop signal to the daemon process and waits for it to exit.
 The daemon must be running or this command returns an error.
 
 Examples:
-  gt daemon stop`,
+  ms daemon stop`,
 	RunE: runDaemonStop,
 }
 
@@ -64,7 +64,7 @@ Displays whether the daemon is running, its PID, uptime, heartbeat
 count, and whether the binary has been rebuilt since the daemon started.
 
 Examples:
-  gt daemon status`,
+  ms daemon status`,
 	RunE: runDaemonStatus,
 }
 
@@ -77,9 +77,9 @@ Shows the most recent log entries from the daemon. Use -n to control
 how many lines to display, or -f to follow the log in real time.
 
 Examples:
-  gt daemon logs             # Show last 50 lines
-  gt daemon logs -n 100      # Show last 100 lines
-  gt daemon logs -f           # Follow log output in real time`,
+  ms daemon logs             # Show last 50 lines
+  ms daemon logs -n 100      # Show last 100 lines
+  ms daemon logs -f           # Follow log output in real time`,
 	RunE: runDaemonLogs,
 }
 
@@ -89,7 +89,7 @@ var daemonRunCmd = &cobra.Command{
 	Long: `Run the Mineshaft daemon in the foreground.
 
 This is called internally by the daemon start process and supervisor
-services (launchd/systemd). Use 'gt daemon start' to start the daemon
+services (launchd/systemd). Use 'ms daemon start' to start the daemon
 normally in the background.`,
 	Hidden: true,
 	RunE:   runDaemonRun,
@@ -105,7 +105,7 @@ systemd on Linux) that will automatically restart the daemon if it crashes
 or terminates. The daemon will also start automatically on login/boot.
 
 Examples:
-  gt daemon enable-supervisor    # Configure launchd/systemd`,
+  ms daemon enable-supervisor    # Configure launchd/systemd`,
 	RunE: runDaemonEnableSupervisor,
 }
 
@@ -120,8 +120,8 @@ daemon.log uses automatic lumberjack rotation and is skipped.
 By default, only rotates logs exceeding 100MB. Use --force to rotate all.
 
 Examples:
-  gt daemon rotate-logs           # Rotate logs > 100MB
-  gt daemon rotate-logs --force   # Rotate all logs regardless of size`,
+  ms daemon rotate-logs           # Rotate logs > 100MB
+  ms daemon rotate-logs --force   # Rotate all logs regardless of size`,
 	RunE: runDaemonRotateLogs,
 }
 
@@ -139,7 +139,7 @@ the daemon will resume restarting the agent.
 The agent name is the session identity (e.g., "supervisor", "overseer").
 
 Examples:
-  gt daemon clear-backoff supervisor   # Reset supervisor crash loop`,
+  ms daemon clear-backoff supervisor   # Reset supervisor crash loop`,
 	Args: cobra.ExactArgs(1),
 	RunE: runDaemonClearBackoff,
 }
@@ -182,7 +182,7 @@ func runDaemonStart(cmd *cobra.Command, args []string) error {
 	}
 
 	// Start daemon in background
-	// We use 'gt daemon run' as the actual daemon process
+	// We use 'ms daemon run' as the actual daemon process
 	gtPath, err := os.Executable()
 	if err != nil {
 		return fmt.Errorf("finding executable: %w", err)
@@ -218,7 +218,7 @@ func runDaemonStart(cmd *cobra.Command, args []string) error {
 		if msg := readDaemonStartupFailure(townRoot, daemonCmd.Process.Pid); msg != "" {
 			return fmt.Errorf("daemon failed to start: %s", msg)
 		}
-		return fmt.Errorf("daemon failed to start (check logs with 'gt daemon logs')")
+		return fmt.Errorf("daemon failed to start (check logs with 'ms daemon logs')")
 	}
 
 	// Check if our spawned process is the one that won the race.
@@ -290,7 +290,7 @@ func runDaemonStatus(cmd *cobra.Command, args []string) error {
 				if binaryModTime.After(state.StartedAt) {
 					fmt.Printf("  %s Binary is newer than process - consider '%s'\n",
 						style.Bold.Render("⚠"),
-						style.Dim.Render("gt daemon stop && gt daemon start"))
+						style.Dim.Render("ms daemon stop && ms daemon start"))
 				}
 			}
 		}
@@ -298,7 +298,7 @@ func runDaemonStatus(cmd *cobra.Command, args []string) error {
 		fmt.Printf("%s Daemon is %s\n",
 			style.Dim.Render("○"),
 			"not running")
-		fmt.Printf("\nStart with: %s\n", style.Dim.Render("gt daemon start"))
+		fmt.Printf("\nStart with: %s\n", style.Dim.Render("ms daemon start"))
 	}
 
 	return nil
@@ -370,8 +370,8 @@ func runDaemonRun(cmd *cobra.Command, args []string) error {
 
 	// Clear agent identity env vars inherited from the launch environment.
 	// When the daemon is started from an agent session (e.g. crew runs
-	// 'gt daemon start'), it inherits GT_ROLE/GT_CREW/etc. Any subprocess
-	// that derives sender identity from ambient env vars (e.g. gt mail send)
+	// 'ms daemon start'), it inherits MS_ROLE/MS_CREW/etc. Any subprocess
+	// that derives sender identity from ambient env vars (e.g. ms mail send)
 	// would then be misattributed to the launching agent. GH#3006.
 	for _, k := range agentconfig.IdentityEnvVars {
 		os.Unsetenv(k)

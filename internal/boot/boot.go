@@ -37,8 +37,8 @@ type Status struct {
 // Boot manages the Boot watchdog lifecycle.
 type Boot struct {
 	townRoot   string
-	bootDir    string // ~/gt/supervisor/dogs/boot/
-	supervisorDir  string // ~/gt/supervisor/
+	bootDir    string // ~/ms/supervisor/dogs/boot/
+	supervisorDir  string // ~/ms/supervisor/
 	tmux       *tmux.Tmux
 	degraded   bool
 	lockHandle *flock.Flock // held during triage execution
@@ -51,7 +51,7 @@ func New(townRoot string) *Boot {
 		bootDir:   filepath.Join(townRoot, "supervisor", "dogs", "boot"),
 		supervisorDir: filepath.Join(townRoot, "supervisor"),
 		tmux:      tmux.NewTmux(),
-		degraded:  os.Getenv("GT_DEGRADED") == "true",
+		degraded:  os.Getenv("MS_DEGRADED") == "true",
 	}
 }
 
@@ -198,9 +198,9 @@ func (b *Boot) spawnTmux(agentOverride string) error {
 // spawnDegraded spawns Boot in degraded mode (no tmux).
 // Boot runs to completion and exits without handoff.
 func (b *Boot) spawnDegraded() error {
-	// In degraded mode, we run gt boot triage directly
+	// In degraded mode, we run ms boot triage directly
 	// This performs the triage logic without a full Claude session
-	cmd := exec.Command("gt", "boot", "triage", "--degraded")
+	cmd := exec.Command("ms", "boot", "triage", "--degraded")
 	cmd.Dir = b.supervisorDir
 	util.SetDetachedProcessGroup(cmd)
 
@@ -210,7 +210,7 @@ func (b *Boot) spawnDegraded() error {
 		TownRoot: b.townRoot,
 	})
 	cmd.Env = config.EnvForExecCommand(envVars)
-	cmd.Env = append(cmd.Env, "GT_DEGRADED=true")
+	cmd.Env = append(cmd.Env, "MS_DEGRADED=true")
 
 	// Run async - don't wait for completion
 	return cmd.Start()

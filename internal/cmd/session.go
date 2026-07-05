@@ -47,7 +47,7 @@ var sessionCmd = &cobra.Command{
 Sessions are tmux sessions running Claude for each miner.
 Use the subcommands to start, stop, attach, and monitor sessions.
 
-TIP: To send messages to a running session, use 'gt nudge' (not 'session inject').
+TIP: To send messages to a running session, use 'ms nudge' (not 'session inject').
 The nudge command uses reliable delivery that works correctly with Claude Code.`,
 }
 
@@ -60,8 +60,8 @@ Creates a tmux session, navigates to the miner's working directory,
 and launches claude. Optionally inject an initial issue to work on.
 
 Examples:
-  gt session start wyvern/Toast
-  gt session start wyvern/Toast --issue gt-123`,
+  ms session start wyvern/Toast
+  ms session start wyvern/Toast --issue ms-123`,
 	Args: cobra.ExactArgs(1),
 	RunE: runSessionStart,
 }
@@ -105,19 +105,19 @@ var sessionCaptureCmd = &cobra.Command{
 Returns the last N lines of terminal output. Useful for checking progress.
 
 Examples:
-  gt session capture wyvern/Toast        # Last 100 lines (default)
-  gt session capture wyvern/Toast 50     # Last 50 lines
-  gt session capture wyvern/Toast -n 50  # Same as above`,
+  ms session capture wyvern/Toast        # Last 100 lines (default)
+  ms session capture wyvern/Toast 50     # Last 50 lines
+  ms session capture wyvern/Toast -n 50  # Same as above`,
 	Args: cobra.RangeArgs(1, 2),
 	RunE: runSessionCapture,
 }
 
 var sessionInjectCmd = &cobra.Command{
 	Use:   "inject <rig>/<miner>",
-	Short: "Send message to session (prefer 'gt nudge')",
+	Short: "Send message to session (prefer 'ms nudge')",
 	Long: `Send a message to a miner session.
 
-NOTE: For sending messages to Claude sessions, use 'gt nudge' instead.
+NOTE: For sending messages to Claude sessions, use 'ms nudge' instead.
 It uses reliable delivery (literal mode + timing) that works correctly
 with Claude Code's input handling.
 
@@ -125,8 +125,8 @@ This command is a low-level primitive for file-based injection or
 cases where you need raw tmux send-keys behavior.
 
 Examples:
-  gt nudge greenplace/furiosa "Check your mail"     # Preferred
-  gt session inject wyvern/Toast -f prompt.txt   # For file injection`,
+  ms nudge greenplace/furiosa "Check your mail"     # Preferred
+  ms session inject wyvern/Toast -f prompt.txt   # For file injection`,
 	Args: cobra.ExactArgs(1),
 	RunE: runSessionInject,
 }
@@ -164,8 +164,8 @@ This command validates that:
 Use this for manual health checks or debugging session issues.
 
 Examples:
-  gt session check              # Check all rigs
-  gt session check greenplace      # Check specific rig`,
+  ms session check              # Check all rigs
+  ms session check greenplace      # Check specific rig`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runSessionCheck,
 }
@@ -175,7 +175,7 @@ var sessionHealthCmd = &cobra.Command{
 	Short: "Check a tmux agent session with central runtime liveness",
 	Long: `Check a tmux agent session using the central runtime-aware liveness path.
 
-This wraps tmux.CheckSessionHealth, which reads GT_PROCESS_NAMES/GT_AGENT from
+This wraps tmux.CheckSessionHealth, which reads MS_PROCESS_NAMES/MS_AGENT from
 the session environment before falling back to built-in agent process names.
 
 The command exits successfully for all valid health states; inspect the status
@@ -183,8 +183,8 @@ field when using --json. Operational failures, argument errors, or invalid flags
 return non-zero.
 
 Examples:
-  gt session health gt-vault --json
-  gt session health gt-vault --json --max-inactivity 30m`,
+  ms session health ms-vault --json
+  ms session health ms-vault --json --max-inactivity 30m`,
 	Args: cobra.ExactArgs(1),
 	RunE: runSessionHealth,
 }
@@ -306,7 +306,7 @@ func runSessionStart(cmd *cobra.Command, args []string) error {
 	}
 	if !found {
 		suggestions := suggest.FindSimilar(minerName, r.Miners, 3)
-		hint := fmt.Sprintf("Create with: gt miner identity add %s %s", rigName, minerName)
+		hint := fmt.Sprintf("Create with: ms miner identity add %s %s", rigName, minerName)
 		return fmt.Errorf("%s", suggest.FormatSuggestion("Miner", minerName, suggestions, hint))
 	}
 
@@ -321,7 +321,7 @@ func runSessionStart(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("%s Session started. Attach with: %s\n",
 		style.Bold.Render("✓"),
-		style.Dim.Render(fmt.Sprintf("gt session at %s/%s", rigName, minerName)))
+		style.Dim.Render(fmt.Sprintf("ms session at %s/%s", rigName, minerName)))
 
 	// Log wake event
 	if townRoot, err := workspace.FindFromCwd(); err == nil && townRoot != "" {
@@ -358,9 +358,9 @@ func runSessionStop(cmd *cobra.Command, args []string) error {
 	// Log kill event
 	if townRoot, err := workspace.FindFromCwd(); err == nil && townRoot != "" {
 		agent := fmt.Sprintf("%s/%s", rigName, minerName)
-		reason := "gt session stop"
+		reason := "ms session stop"
 		if sessionForce {
-			reason = "gt session stop --force"
+			reason = "ms session stop --force"
 		}
 		logger := townlog.NewLogger(townRoot)
 		_ = logger.Log(townlog.EventKill, agent, reason)
@@ -597,7 +597,7 @@ func runSessionRestart(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("%s Session restarted. Attach with: %s\n",
 		style.Bold.Render("✓"),
-		style.Dim.Render(fmt.Sprintf("gt session at %s/%s", rigName, minerName)))
+		style.Dim.Render(fmt.Sprintf("ms session at %s/%s", rigName, minerName)))
 	return nil
 }
 
@@ -646,7 +646,7 @@ func runSessionStatus(cmd *cobra.Command, args []string) error {
 		fmt.Printf("  Uptime: %s\n", formatDuration(uptime))
 	}
 
-	fmt.Printf("\nAttach with: %s\n", style.Dim.Render(fmt.Sprintf("gt session at %s/%s", rigName, minerName)))
+	fmt.Printf("\nAttach with: %s\n", style.Dim.Render(fmt.Sprintf("ms session at %s/%s", rigName, minerName)))
 	return nil
 }
 
@@ -772,7 +772,7 @@ func runSessionCheck(cmd *cobra.Command, args []string) error {
 		style.Bold.Render("📊"), totalChecked, totalHealthy, totalCrashed)
 
 	if totalCrashed > 0 {
-		fmt.Printf("\n%s To restart crashed miners: gt session restart <rig>/<miner>\n",
+		fmt.Printf("\n%s To restart crashed miners: ms session restart <rig>/<miner>\n",
 			style.Dim.Render("Tip:"))
 	}
 

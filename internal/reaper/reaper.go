@@ -23,7 +23,7 @@ var validDBName = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
 // DefaultDatabases is the static fallback list of known production databases.
 // Used only when SHOW DATABASES fails (server unreachable).
-// GH#2385: Removed legacy "gt" and "bd" names — modern towns use "hq" (town
+// GH#2385: Removed legacy "ms" and "bd" names — modern towns use "hq" (town
 // beads) and rig-specific names. Those databases no longer exist in most
 // installations and their presence in the fallback caused phantom DB errors.
 var DefaultDatabases = []string{"hq"}
@@ -38,7 +38,7 @@ func isNothingToCommit(err error) bool {
 
 // isTableNotFound returns true if the error indicates a missing table.
 // This happens when beads stores its data on a separate Dolt instance from
-// the gt Dolt server, so tables like issues/labels/dependencies don't exist
+// the ms Dolt server, so tables like issues/labels/dependencies don't exist
 // on the server the reaper connects to.
 func isTableNotFound(err error) bool {
 	if err == nil {
@@ -187,7 +187,7 @@ func OpenDB(host string, port int, dbName string, readTimeout, writeTimeout time
 // results to wisps whose parent molecule is closed, missing, or nonexistent.
 //
 // This replaces the previous parentCheckWhere() which used 3 correlated EXISTS
-// subqueries per row, causing O(n*m) query cost on large wisp tables (gt-jd1z).
+// subqueries per row, causing O(n*m) query cost on large wisp tables (ms-jd1z).
 // The LEFT JOIN approach runs the subquery once and hash-joins: O(n+m).
 //
 // Semantics (unchanged from parentCheckWhere):
@@ -320,7 +320,7 @@ func Scan(db *sql.DB, dbName string, maxAge, purgeAge, mailDeleteAge, staleIssue
 	// Count reap candidates: open wisps past max_age with eligible parent status.
 	// Must match Reap() eligibility semantics exactly, including the exclusion of
 	// agent beads, otherwise scan can report candidates that reap will never close.
-	// Uses LEFT JOIN anti-pattern instead of correlated EXISTS to avoid O(n*m) cost (gt-jd1z).
+	// Uses LEFT JOIN anti-pattern instead of correlated EXISTS to avoid O(n*m) cost (ms-jd1z).
 	// Closed-molecule steps are counted separately above and excluded here so counts stay disjoint.
 	reapQuery := fmt.Sprintf(
 		"SELECT COUNT(*) FROM wisps w %s %s WHERE %s AND w.created_at < ? AND w.issue_type != 'agent' AND %s AND closed_molecule_step.issue_id IS NULL",
@@ -332,16 +332,16 @@ func Scan(db *sql.DB, dbName string, maxAge, purgeAge, mailDeleteAge, staleIssue
 	// Count purge candidates: closed wisps past purge_age.
 	// No parent check needed — closed wisps past the delete age are unconditionally purgeable.
 	// The parent check (correlated subqueries on wisp_dependencies) was causing O(n*m) query
-	// cost with 1800+ closed wisps, leading to CPU spikes and connection timeouts (gt-wvd2).
+	// cost with 1800+ closed wisps, leading to CPU spikes and connection timeouts (ms-wvd2).
 	purgeQuery := "SELECT COUNT(*) FROM wisps w WHERE w.status = 'closed' AND w.closed_at < ?"
 	if err := db.QueryRowContext(ctx, purgeQuery, now.Add(-purgeAge)).Scan(&result.PurgeCandidates); err != nil {
 		return nil, fmt.Errorf("count purge candidates: %w", err)
 	}
 
 	// Count mail candidates.
-	// The issues/labels tables may not exist on the gt Dolt server if beads
+	// The issues/labels tables may not exist on the ms Dolt server if beads
 	// stores its data on a separate Dolt instance. Skip gracefully.
-	mailQuery := "SELECT COUNT(*) FROM issues WHERE status = 'closed' AND closed_at < ? AND id IN (SELECT issue_id FROM labels WHERE label = 'gt:message')"
+	mailQuery := "SELECT COUNT(*) FROM issues WHERE status = 'closed' AND closed_at < ? AND id IN (SELECT issue_id FROM labels WHERE label = 'ms:message')"
 	if err := db.QueryRowContext(ctx, mailQuery, now.Add(-mailDeleteAge)).Scan(&result.MailCandidates); err != nil {
 		if !isTableNotFound(err) {
 			return nil, fmt.Errorf("count mail candidates: %w", err)
@@ -466,7 +466,7 @@ func Reap(db *sql.DB, dbName string, maxAge time.Duration, dryRun bool) (*ReapRe
 
 	// Batch UPDATE: select IDs in chunks, update each chunk.
 	// This avoids holding a write lock on the entire table for minutes.
-	// Uses LEFT JOIN anti-pattern instead of correlated EXISTS to avoid O(n*m) cost (gt-jd1z).
+	// Uses LEFT JOIN anti-pattern instead of correlated EXISTS to avoid O(n*m) cost (ms-jd1z).
 	idQuery := fmt.Sprintf(
 		"SELECT w.id FROM wisps w %s %s WHERE %s LIMIT %d",
 		parentJoin, moleculeStepExcludeJoin, whereClause, DefaultBatchSize)
@@ -588,7 +588,7 @@ func purgeClosedWisps(db *sql.DB, dbName string, purgeAge time.Duration, dryRun 
 	// Digest: count by wisp_type.
 	// No parent check — closed wisps past the delete age are unconditionally purgeable.
 	// The parent check (correlated subqueries on wisp_dependencies) was causing O(n*m)
-	// query cost with 1800+ closed wisps, leading to CPU spikes and timeouts (gt-wvd2).
+	// query cost with 1800+ closed wisps, leading to CPU spikes and timeouts (ms-wvd2).
 	digestQuery := "SELECT COALESCE(w.wisp_type, 'unknown') AS wtype, COUNT(*) AS cnt FROM wisps w WHERE w.status = 'closed' AND w.closed_at < ? GROUP BY wtype"
 	rows, err := db.QueryContext(ctx, digestQuery, deleteCutoff)
 	if err != nil {
@@ -661,7 +661,7 @@ func purgeOldMail(db *sql.DB, dbName string, mailDeleteAge time.Duration, dryRun
 	mailCutoff := time.Now().UTC().Add(-mailDeleteAge)
 
 	countQuery := fmt.Sprintf(
-		"SELECT COUNT(*) FROM `%s`.issues WHERE status = 'closed' AND closed_at < ? AND id IN (SELECT issue_id FROM `%s`.labels WHERE label = 'gt:message')",
+		"SELECT COUNT(*) FROM `%s`.issues WHERE status = 'closed' AND closed_at < ? AND id IN (SELECT issue_id FROM `%s`.labels WHERE label = 'ms:message')",
 		dbName, dbName)
 	var count int
 	if err := db.QueryRowContext(ctx, countQuery, mailCutoff).Scan(&count); err != nil {
@@ -686,7 +686,7 @@ func purgeOldMail(db *sql.DB, dbName string, mailDeleteAge time.Duration, dryRun
 	}()
 
 	idQuery := fmt.Sprintf(
-		"SELECT i.id FROM `%s`.issues i INNER JOIN `%s`.labels l ON i.id = l.issue_id WHERE i.status = 'closed' AND i.closed_at < ? AND l.label = 'gt:message' LIMIT %d",
+		"SELECT i.id FROM `%s`.issues i INNER JOIN `%s`.labels l ON i.id = l.issue_id WHERE i.status = 'closed' AND i.closed_at < ? AND l.label = 'ms:message' LIMIT %d",
 		dbName, dbName, DefaultBatchSize)
 	auxTables := []string{"labels", "comments", "events", "dependencies"}
 
@@ -720,7 +720,7 @@ func AutoClose(db *sql.DB, dbName string, staleAge time.Duration, dryRun bool) (
 	result := &AutoCloseResult{Database: dbName, DryRun: dryRun}
 
 	// Minecarts are excluded from staleness auto-close (hq-jnap): their lifecycle
-	// is driven by tracked-bead status (`gt minecart check` / refinery post-merge),
+	// is driven by tracked-bead status (`ms minecart check` / refinery post-merge),
 	// and the 'tracks' relation is non-blocking so the dependency exclusions
 	// below do NOT protect a minecart with open tracked issues. Stale-closing a
 	// minecart while its tracked beads are open orphans them from dispatch
@@ -732,7 +732,7 @@ func AutoClose(db *sql.DB, dbName string, staleAge time.Duration, dryRun bool) (
 		AND i.issue_type NOT IN ('epic', 'minecart')
 		AND i.id NOT IN (
 			SELECT DISTINCT l.issue_id FROM `+"`%s`"+`.labels l
-			WHERE l.label IN ('gt:standing-orders', 'gt:keep', 'gt:role', 'gt:rig')
+			WHERE l.label IN ('ms:standing-orders', 'ms:keep', 'ms:role', 'ms:rig')
 		)
 		AND i.id NOT IN (
 			SELECT DISTINCT d.issue_id FROM `+"`%s`"+`.dependencies d
@@ -1004,7 +1004,7 @@ func ClosePluginReceipts(db *sql.DB, dbName string, maxAge time.Duration, dryRun
 }
 
 // ClosePluginDispatches closes open dispatch mail beads created by the daemon
-// when sending plugin instructions to dogs. These beads are labeled "gt:message"
+// when sending plugin instructions to dogs. These beads are labeled "ms:message"
 // + "from:daemon" with a title prefix "Plugin:" and are never closed after the
 // dog completes. Without this, they accumulate at ~288/day (one per 5-minute
 // stuck-agent-dog run) and are only caught by AutoClose after 7 days.
@@ -1015,14 +1015,14 @@ func ClosePluginDispatches(db *sql.DB, dbName string, maxAge time.Duration, dryR
 	cutoff := time.Now().UTC().Add(-maxAge)
 	result := &ClosePluginReceiptResult{Database: dbName, DryRun: dryRun}
 
-	// Find open issues with both "gt:message" and "from:daemon" labels whose
+	// Find open issues with both "ms:message" and "from:daemon" labels whose
 	// title starts with "Plugin:", older than maxAge.
 	selectQuery := fmt.Sprintf(`
 		SELECT i.id FROM `+"`%s`"+`.issues i
 		INNER JOIN `+"`%s`"+`.labels l1 ON i.id = l1.issue_id
 		INNER JOIN `+"`%s`"+`.labels l2 ON i.id = l2.issue_id
 		WHERE i.status IN ('open', 'in_progress')
-		AND l1.label = 'gt:message'
+		AND l1.label = 'ms:message'
 		AND l2.label = 'from:daemon'
 		AND i.title LIKE 'Plugin:%%'
 		AND i.created_at < ?`, dbName, dbName, dbName)

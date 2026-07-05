@@ -31,16 +31,16 @@ var schedulerCmd = &cobra.Command{
 	Long: `Manage the capacity-controlled dispatch scheduler.
 
 Subcommands:
-  gt scheduler status    # Show scheduler state
-  gt scheduler list      # List all scheduled beads
-  gt scheduler run       # Manual dispatch trigger
-  gt scheduler pause     # Pause dispatch
-  gt scheduler resume    # Resume dispatch
-  gt scheduler clear     # Remove beads from scheduler
+  ms scheduler status    # Show scheduler state
+  ms scheduler list      # List all scheduled beads
+  ms scheduler run       # Manual dispatch trigger
+  ms scheduler pause     # Pause dispatch
+  ms scheduler resume    # Resume dispatch
+  ms scheduler clear     # Remove beads from scheduler
 
 Config:
-  gt config set scheduler.max_miners 5    # Enable deferred dispatch
-  gt config set scheduler.max_miners -1   # Direct dispatch (default)`,
+  ms config set scheduler.max_miners 5    # Enable deferred dispatch
+  ms config set scheduler.max_miners -1   # Direct dispatch (default)`,
 	RunE: requireSubcommand,
 }
 
@@ -86,9 +86,9 @@ var schedulerRunCmd = &cobra.Command{
 This dispatches scheduled beads using the same logic as the daemon heartbeat,
 but can be run ad-hoc. Useful for testing or when the daemon is not running.
 
-  gt scheduler run                  # Dispatch using config defaults
-  gt scheduler run --batch 5        # Dispatch up to 5
-  gt scheduler run --dry-run        # Preview what would dispatch`,
+  ms scheduler run                  # Dispatch using config defaults
+  ms scheduler run --batch 5        # Dispatch up to 5
+  ms scheduler run --dry-run        # Preview what would dispatch`,
 	RunE: runSchedulerRun,
 }
 
@@ -224,7 +224,7 @@ func runSchedulerList(cmd *cobra.Command, args []string) error {
 
 	if len(scheduled) == 0 {
 		fmt.Println("No beads scheduled.")
-		fmt.Println("Enable deferred dispatch with: gt config set scheduler.max_miners <N>")
+		fmt.Println("Enable deferred dispatch with: ms config set scheduler.max_miners <N>")
 		return nil
 	}
 

@@ -36,7 +36,7 @@ func sortStepIDsBySequence(ids []string) {
 }
 
 // extractStepSequence extracts the numeric sequence suffix from a step ID.
-// E.g., "gt-mol.3" -> 3, "gt-mol.12" -> 12
+// E.g., "ms-mol.3" -> 3, "ms-mol.12" -> 12
 func extractStepSequence(id string) int {
 	if idx := strings.LastIndex(id, "."); idx >= 0 {
 		if n, err := strconv.Atoi(id[idx+1:]); err == nil {

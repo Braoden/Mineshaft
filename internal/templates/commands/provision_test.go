@@ -20,7 +20,7 @@ func TestBuildCommand_Claude(t *testing.T) {
 	if !strings.Contains(content, "description: Hand off to fresh session") {
 		t.Error("missing description")
 	}
-	if !strings.Contains(content, "allowed-tools: Bash(gt handoff:*)") {
+	if !strings.Contains(content, "allowed-tools: Bash(ms handoff:*)") {
 		t.Error("missing allowed-tools for Claude")
 	}
 	if !strings.Contains(content, "argument-hint: [message]") {
@@ -34,8 +34,8 @@ func TestBuildCommand_Claude(t *testing.T) {
 	if strings.Contains(content, "Ready to hand off?") {
 		t.Error("Claude handoff command should not require an interactive confirmation prompt")
 	}
-	if !strings.Contains(content, "gt handoff -y") {
-		t.Error("Claude handoff command should use gt handoff -y")
+	if !strings.Contains(content, "ms handoff -y") {
+		t.Error("Claude handoff command should use ms handoff -y")
 	}
 }
 

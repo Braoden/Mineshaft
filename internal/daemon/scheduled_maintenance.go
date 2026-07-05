@@ -25,11 +25,11 @@ const (
 // ScheduledMaintenanceConfig holds configuration for the scheduled_maintenance patrol.
 // User opts in via:
 //
-//	gt config set maintenance.window 03:00
-//	gt config set maintenance.interval daily
+//	ms config set maintenance.window 03:00
+//	ms config set maintenance.interval daily
 //
 // The daemon checks commit counts per DB during the window and runs
-// `gt maintain --force` when any DB exceeds the threshold.
+// `ms maintain --force` when any DB exceeds the threshold.
 type ScheduledMaintenanceConfig struct {
 	// Enabled controls whether scheduled maintenance runs.
 	Enabled bool `json:"enabled"`
@@ -143,7 +143,7 @@ func shouldRunMaintenance(now time.Time, lastRun time.Time, interval string) boo
 }
 
 // runScheduledMaintenance checks if we're in the maintenance window and
-// if any database exceeds the commit threshold, runs `gt maintain --force`.
+// if any database exceeds the commit threshold, runs `ms maintain --force`.
 func (d *Daemon) runScheduledMaintenance() {
 	if !d.isPatrolActive("scheduled_maintenance") {
 		return
@@ -201,8 +201,8 @@ func (d *Daemon) runScheduledMaintenance() {
 		return
 	}
 
-	// Run gt maintain --force --threshold <threshold>
-	d.logger.Printf("scheduled_maintenance: running gt maintain --force --threshold %d", threshold)
+	// Run ms maintain --force --threshold <threshold>
+	d.logger.Printf("scheduled_maintenance: running ms maintain --force --threshold %d", threshold)
 
 	cmd := exec.CommandContext(d.ctx, d.gtPath, "maintain", "--force",
 		"--threshold", strconv.Itoa(threshold))
@@ -210,10 +210,10 @@ func (d *Daemon) runScheduledMaintenance() {
 	util.SetDetachedProcessGroup(cmd)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		d.logger.Printf("scheduled_maintenance: gt maintain failed: %v\nOutput: %s", err, string(output))
-		d.escalate("scheduled_maintenance", fmt.Sprintf("gt maintain --force failed: %v", err))
+		d.logger.Printf("scheduled_maintenance: ms maintain failed: %v\nOutput: %s", err, string(output))
+		d.escalate("scheduled_maintenance", fmt.Sprintf("ms maintain --force failed: %v", err))
 	} else {
-		d.logger.Printf("scheduled_maintenance: gt maintain completed successfully")
+		d.logger.Printf("scheduled_maintenance: ms maintain completed successfully")
 		if len(output) > 0 {
 			// Log last few lines of output
 			lines := strings.Split(strings.TrimSpace(string(output)), "\n")

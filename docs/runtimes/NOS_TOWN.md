@@ -16,7 +16,7 @@ Mineshaft Core (this repo)     NOS Town Runtime (kab0rn/nostown)
 ├── Minecart management          ├── Council orchestration
 ├── Overseer/Witness/Supervisor       ├── Historian (Batch job)
 ├── Refinery merge queue       ├── Safeguard integration
-└── gt CLI                     └── nos CLI (wraps gt + Groq)
+└── ms CLI                     └── nos CLI (wraps ms + Groq)
 ```
 
 ## Fork Strategy
@@ -41,7 +41,7 @@ To use NOS Town with this Mineshaft fork:
 
 ```bash
 # Mineshaft deps (same as standard install)
-go install github.com/kab0rn/mineshaft/cmd/gt@latest
+go install github.com/kab0rn/mineshaft/cmd/ms@latest
 go install github.com/steveyegge/beads/cmd/bd@latest
 
 # NOS Town CLI
@@ -54,15 +54,15 @@ export GROQ_API_KEY="your-api-key"
 ### 2. Initialize Workspace
 
 ```bash
-# Use nos CLI (wraps gt internally)
+# Use nos CLI (wraps ms internally)
 nos install ~/nos --git
 cd ~/nos
 
-# Or use gt and configure Groq runtime manually
-gt install ~/nos --git
+# Or use ms and configure Groq runtime manually
+ms install ~/nos --git
 cd ~/nos
-gt config set runtime.provider groq
-gt config set runtime.base_url https://api.groq.com/openai/v1
+ms config set runtime.provider groq
+ms config set runtime.base_url https://api.groq.com/openai/v1
 ```
 
 ### 3. Configure Per-Rig Runtime
@@ -92,10 +92,10 @@ Edit `<rig>/settings/config.json`:
 
 ### Using nos CLI
 
-The `nos` CLI wraps all `gt` commands and adds Groq-specific extensions:
+The `nos` CLI wraps all `ms` commands and adds Groq-specific extensions:
 
 ```bash
-# Same as gt
+# Same as ms
 nos rig add myproject https://github.com/you/repo.git
 nos crew add yourname --rig myproject
 nos overseer attach
@@ -109,17 +109,17 @@ nos historian status
 nos historian rebuild  # Force Playbook rebuild from Beads
 ```
 
-### Using gt CLI with Groq
+### Using ms CLI with Groq
 
-You can also use `gt` directly if you configure the Groq runtime in `settings/config.json`. All core commands work:
+You can also use `ms` directly if you configure the Groq runtime in `settings/config.json`. All core commands work:
 
 ```bash
-gt overseer attach
-gt minecart create "Feature X" gt-abc12 gt-def34
-gt sling gt-abc12 myproject
+ms overseer attach
+ms minecart create "Feature X" ms-abc12 ms-def34
+ms sling ms-abc12 myproject
 ```
 
-The main difference: `gt` doesn't know about NOS-specific features like councils, Historian, or routing table management. Use `nos` for those.
+The main difference: `ms` doesn't know about NOS-specific features like councils, Historian, or routing table management. Use `nos` for those.
 
 ## Key Differences from Standard Mineshaft
 

@@ -1,5 +1,5 @@
-// Package cmd provides CLI commands for the gt tool.
-// This file implements the gt rig settings commands for viewing and manipulating
+// Package cmd provides CLI commands for the ms tool.
+// This file implements the ms rig settings commands for viewing and manipulating
 // rig settings/config.json files.
 package cmd
 
@@ -44,7 +44,7 @@ var rigSettingsShowCmd = &cobra.Command{
 Shows the complete settings/config.json file as formatted JSON.
 
 Example:
-  gt rig settings show mineshaft`,
+  ms rig settings show mineshaft`,
 	Args: cobra.ExactArgs(1),
 	RunE: runRigSettingsShow,
 }
@@ -63,12 +63,12 @@ The value type is automatically inferred:
 If the settings file doesn't exist, it will be created with a valid scaffold.
 
 Examples:
-  gt rig settings set mineshaft agent claude
-  gt rig settings set mineshaft role_agents.witness gemini
-  gt rig settings set mineshaft merge_queue.max_concurrent 5
-  gt rig settings set mineshaft theme.disabled true
-  gt rig settings set mineshaft theme.name forest
-  gt rig settings set mineshaft theme.custom '{"bg":"#111111","fg":"#eeeeee"}'`,
+  ms rig settings set mineshaft agent claude
+  ms rig settings set mineshaft role_agents.witness gemini
+  ms rig settings set mineshaft merge_queue.max_concurrent 5
+  ms rig settings set mineshaft theme.disabled true
+  ms rig settings set mineshaft theme.name forest
+  ms rig settings set mineshaft theme.custom '{"bg":"#111111","fg":"#eeeeee"}'`,
 	Args: cobra.ExactArgs(3),
 	RunE: runRigSettingsSet,
 }
@@ -82,8 +82,8 @@ This removes the key from the settings file. For nested keys, only the
 specified key is removed (parent objects remain if they have other keys).
 
 Examples:
-  gt rig settings unset mineshaft agent
-  gt rig settings unset mineshaft role_agents.witness`,
+  ms rig settings unset mineshaft agent
+  ms rig settings unset mineshaft role_agents.witness`,
 	Args: cobra.ExactArgs(2),
 	RunE: runRigSettingsUnset,
 }
@@ -108,7 +108,7 @@ func runRigSettingsShow(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		if errors.Is(err, config.ErrNotFound) {
 			fmt.Printf("No settings file found at %s\n", settingsPath)
-			fmt.Printf("Use 'gt rig settings set' to create one.\n")
+			fmt.Printf("Use 'ms rig settings set' to create one.\n")
 			return nil
 		}
 		return fmt.Errorf("loading settings: %w", err)

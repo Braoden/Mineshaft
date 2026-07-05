@@ -24,8 +24,8 @@
       in
       {
         packages = {
-          gt = pkgs.buildGoModule {
-            pname = "gt";
+          ms = pkgs.buildGoModule {
+            pname = "ms";
             version = "1.0.0";
             src = ./.;
             vendorHash = "sha256-mJzpsl4XnIm3ZSg7fFn0MOdQQW1bdOkAJ+TikiLMXJM=";
@@ -35,23 +35,23 @@
               "-X github.com/steveyegge/mineshaft/internal/cmd.BuiltProperly=1"
             ];
 
-            subPackages = [ "cmd/gt" ];
+            subPackages = [ "cmd/ms" ];
 
             meta = with pkgs.lib; {
               description = "Multi-agent orchestration system for Claude Code with persistent work tracking";
               homepage = "https://github.com/mineshafthall/mineshaft";
               license = licenses.mit;
-              mainProgram = "gt";
+              mainProgram = "ms";
             };
           };
-          default = self.packages.${system}.gt;
+          default = self.packages.${system}.ms;
         };
 
         apps = {
-          gt = flake-utils.lib.mkApp {
-            drv = self.packages.${system}.gt;
+          ms = flake-utils.lib.mkApp {
+            drv = self.packages.${system}.ms;
           };
-          default = self.apps.${system}.gt;
+          default = self.apps.${system}.ms;
         };
 
         devShells.default = pkgs.mkShell {

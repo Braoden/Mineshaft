@@ -372,7 +372,7 @@ func TestWaitForEventFilesNoDeadline(t *testing.T) {
 }
 
 func TestWaitForEventFilesTimeoutWithPolling(t *testing.T) {
-	// Regression test for gt-x2lc: the ticker-driven poll must honor
+	// Regression test for ms-x2lc: the ticker-driven poll must honor
 	// ctx cancellation even if events never arrive. Previously the wait
 	// could stall past the deadline if readPendingEvents was slow.
 	dir := t.TempDir()
@@ -545,7 +545,7 @@ func TestEffortLevelContextYield(t *testing.T) {
 
 func TestEventFileStruct(t *testing.T) {
 	ef := EventFile{
-		Path:    "/home/gt/events/refinery/12345.event",
+		Path:    "/home/ms/events/refinery/12345.event",
 		Content: json.RawMessage(`{"type":"MQ_SUBMIT","payload":{"branch":"feat/test"}}`),
 	}
 

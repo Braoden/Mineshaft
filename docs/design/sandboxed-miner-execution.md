@@ -15,7 +15,7 @@ This creates two distinct problems:
 
 **Security.** A misbehaving or manipulated agent (e.g. via a malicious MCP server)
 can read files outside its worktree, write to `~/.ssh` or `~/.gitconfig`, make
-arbitrary outbound network connections, or call `gt`/`bd` with a fabricated
+arbitrary outbound network connections, or call `ms`/`bd` with a fabricated
 identity. Credential exfiltration is a real threat.
 
 **Scalability.** A developer laptop cannot sustain 10–20 simultaneous Claude
@@ -34,7 +34,7 @@ An agent session does two independent things that require different treatment:
 | Plane | What runs | Where it must run |
 |---|---|---|
 | **Agent work** | LLM inference, file edits, code execution, `git` operations | Inside the sandbox / container — needs the worktree |
-| **Control plane** | `gt prime`, `gt done`, `gt mail`, `bd show/update`, events, nudges | Reaches back to the host — needs Dolt, `.runtime/`, mail |
+| **Control plane** | `ms prime`, `ms done`, `ms mail`, `bd show/update`, events, nudges | Reaches back to the host — needs Dolt, `.runtime/`, mail |
 
 Keeping these planes separate is the key to a clean design.
 
@@ -51,18 +51,18 @@ Host machine
 │  Mineshaft daemon                                     │
 │  ┌──────────────────────────────────────────────┐   │
 │  │  SessionManager.Start()                      │   │
-│  │    exec env GT_RIG=... GT_MINER=...        │   │
+│  │    exec env MS_RIG=... MS_MINER=...        │   │
 │  │    claude --mode=direct                      │   │
 │  └──────────────┬───────────────────────────────┘   │
 │                 │  tmux new-session                  │
 │                 ▼                                    │
-│           ┌──────────┐   gt prime / gt done          │
+│           ┌──────────┐   ms prime / ms done          │
 │           │  miner │ ──────────────────────────►  │
 │           │  (tmux)  │   bd show / bd update         │
 │           └──────────┘   (direct, loopback Dolt)     │
 │                                                     │
 │   Dolt SQL  127.0.0.1:3307                          │
-│   .runtime/  ~/gt/                                  │
+│   .runtime/  ~/ms/                                  │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -78,14 +78,14 @@ Host machine
 │                                                     │
 │  Mineshaft daemon                                     │
 │  ┌──────────────────────────────────────────────┐   │
-│  │  exec env GT_RIG=... GT_MINER=...          │   │
+│  │  exec env MS_RIG=... MS_MINER=...          │   │
 │  │  exitbox run --profile=mineshaft-miner --    │   │
 │  │  claude --mode=direct                        │   │
 │  └──────────────┬───────────────────────────────┘   │
 │                 │  tmux new-session                  │
 │                 ▼                                    │
 │  ┌─────────────────────────┐                        │
-│  │  exitbox sandbox        │  gt / bd calls          │
+│  │  exitbox sandbox        │  ms / bd calls          │
 │  │  ┌─────────────────┐    │ ──────────────────────► │
 │  │  │ miner (agent) │    │   loopback — direct     │
 │  │  └─────────────────┘    │   (Dolt, .runtime/)     │
@@ -112,24 +112,24 @@ Host machine                      Daytona cloud container
 │  ┌──────────────────────┐ │     │  ┌────────────────────────────────┐  │
 │  │ SessionManager       │ │     │  │ claude --mode=direct           │  │
 │  │  - issues cert       │ │     │  │                                │  │
-│  │  - injects env vars  │ │     │  │  gt prime / gt done / bd show  │  │
+│  │  - injects env vars  │ │     │  │  ms prime / ms done / bd show  │  │
 │  │  - starts proxy      │ │     │  │  ↓ (proxy-client detects env)  │  │
 │  └──────────────────────┘ │     │  │  POST /v1/exec over mTLS       │  │
 │                           │     │  └───────────────┬────────────────┘  │
-│  gt-proxy-server          │     │                  │ mTLS (cert CN     │
-│  ┌──────────────────────┐ │◄────┼──────────────────┘  gt-rig-name)     │
+│  ms-proxy-server          │     │                  │ mTLS (cert CN     │
+│  ┌──────────────────────┐ │◄────┼──────────────────┘  ms-rig-name)     │
 │  │ /v1/exec             │ │     │                                      │
 │  │  - validates cert CN │ │     │  git fetch / git push origin         │
 │  │  - injects --identity│ │     │  (origin = proxy git endpoint)       │
-│  │  - runs gt/bd on host│ │     │  ↓                                   │
+│  │  - runs ms/bd on host│ │     │  ↓                                   │
 │  │                      │ │◄────┼──── git smart HTTP over mTLS ────────┘
 │  │ /v1/git/<rig>/       │ │     │
 │  │  upload-pack (fetch) │ │     │  Container git remote:
 │  │  receive-pack (push) │ │     │    origin = https://host:9876/v1/git/<rig>
 │  │  ↕ .repo.git on host │ │     │
 │  └──────────────────────┘ │     The container needs:
-│         │                 │     - gt-proxy-client binary (as gt + bd)
-│         │ daemon pushes   │     - GT_PROXY_URL, GT_PROXY_CERT, GT_PROXY_KEY
+│         │                 │     - ms-proxy-client binary (as ms + bd)
+│         │ daemon pushes   │     - MS_PROXY_URL, MS_PROXY_CERT, MS_PROXY_KEY
 │         ▼ to GitHub       │     - GIT_SSL_CERT, GIT_SSL_KEY, GIT_SSL_CAINFO
 │  GitHub  ◄───────────     │     (all injected at session spawn)
 │  (upstream, host-only)    │
@@ -151,14 +151,14 @@ The startup command builder inserts the wrapper tokens between
 
 ```
 # Local (no wrapper):
-exec env GT_RIG=mineshaft GT_MINER=furiosa ... claude --mode=direct
+exec env MS_RIG=mineshaft MS_MINER=furiosa ... claude --mode=direct
 
 # exitbox:
-exec env GT_RIG=mineshaft GT_MINER=furiosa ... \
+exec env MS_RIG=mineshaft MS_MINER=furiosa ... \
     exitbox run --profile=mineshaft-miner -- claude --mode=direct
 
 # daytona:
-exec env GT_RIG=mineshaft GT_MINER=furiosa ... \
+exec env MS_RIG=mineshaft MS_MINER=furiosa ... \
     daytona exec furiosa-ws -- claude --mode=direct
 ```
 
@@ -167,37 +167,37 @@ still delivers nudges — no changes to the messaging layer.
 
 Exposed as:
 - `settings/config.json`: `agent.exec_wrapper: ["exitbox", "run", "--profile=mineshaft-miner", "--"]`
-- CLI flag: `gt sling <bead> --exec-wrapper "..."`
+- CLI flag: `ms sling <bead> --exec-wrapper "..."`
 
-### 4.2 mTLS proxy — `gt-proxy-server` and `gt-proxy-client`
+### 4.2 mTLS proxy — `ms-proxy-server` and `ms-proxy-client`
 
 Two new lightweight binaries handle all communication from container → host.
 
-#### gt-proxy-server (runs on host)
+#### ms-proxy-server (runs on host)
 
 - Listens on a configured address and port (`proxy_listen_addr`, e.g. `0.0.0.0:9876`)
 - Requires mTLS: client cert must be signed by the Mineshaft CA
-- **CLI relay model**: forwards argv to `gt`/`bd` on the host and streams stdout/stderr/exitCode back verbatim
-- Injects `--identity <rig>/<name>` (extracted from cert `CN=gt-<rig>-<name>`) for commands that require it
+- **CLI relay model**: forwards argv to `ms`/`bd` on the host and streams stdout/stderr/exitCode back verbatim
+- Injects `--identity <rig>/<name>` (extracted from cert `CN=ms-<rig>-<name>`) for commands that require it
 - Maintains an explicit allowlist of permitted subcommands — no arbitrary shell execution
 
 ```
 POST /v1/exec
-  body:     {"argv": ["gt", "mail", "inbox", "--json"]}
+  body:     {"argv": ["ms", "mail", "inbox", "--json"]}
   response: {"stdout": "...", "stderr": "...", "exitCode": 0}
 ```
 
 The CLI relay approach means:
-- Zero maintenance overhead: new `gt`/`bd` subcommands and flag changes work automatically
+- Zero maintenance overhead: new `ms`/`bd` subcommands and flag changes work automatically
 - Correctness by construction: proxy executes the same code path as local invocations
 - Identity is established by the cert, injected as a CLI flag — no internal API plumbing
 
-#### gt-proxy-client (runs in container, replaces `gt` and `bd`)
+#### ms-proxy-client (runs in container, replaces `ms` and `bd`)
 
-- Detects `GT_PROXY_URL` + `GT_PROXY_CERT` + `GT_PROXY_KEY` in environment
+- Detects `MS_PROXY_URL` + `MS_PROXY_CERT` + `MS_PROXY_KEY` in environment
 - If set: forwards argv wholesale to proxy server over mTLS, prints response, exits with server's exit code
 - If not set: falls through to normal local execution (backward-compatible; used by local miners)
-- Installed as both `gt` and `bd` via symlinks
+- Installed as both `ms` and `bd` via symlinks
 
 #### Git relay — fetch and push via `.repo.git`
 
@@ -215,7 +215,7 @@ POST /v1/git/<rig>/git-receive-pack
 ```
 
 The proxy runs `git upload-pack` or `git receive-pack` against
-`~/gt/<rig>/.repo.git` as a subprocess.
+`~/ms/<rig>/.repo.git` as a subprocess.
 
 **The container never contacts GitHub.** Its `origin` remote points at the proxy:
 ```
@@ -226,11 +226,11 @@ Branch-scoped authorization is enforced by cert CN: a miner may only push refs
 under `miner/<cn-name>-*`; attempting to push `main` or another miner's
 branch is rejected (403). Fetch is unrestricted (read-only).
 
-`.repo.git` (the bare repo Mineshaft already maintains at `~/gt/<rig>/.repo.git`)
+`.repo.git` (the bare repo Mineshaft already maintains at `~/ms/<rig>/.repo.git`)
 is the ideal endpoint:
 - It already has `origin` → GitHub configured on the host side
 - It is a bare repo — can both serve fetches and receive pushes unconditionally
-- `gt done` already uses it as a fallback push target
+- `ms done` already uses it as a fallback push target
 - All miner worktrees are created from it
 
 **Host → GitHub sync:** After a successful receive-pack, the proxy enqueues an
@@ -240,10 +240,10 @@ container clones.
 
 ### 4.3 CA and per-miner certificates
 
-Mineshaft generates a self-signed CA at daemon startup (`~/gt/.runtime/ca/`). For
+Mineshaft generates a self-signed CA at daemon startup (`~/ms/.runtime/ca/`). For
 each daytona-mode miner, it issues a short-lived leaf certificate:
 
-- **CN**: `gt-<rig>-<name>` (e.g. `gt-mineshaft-furiosa`)
+- **CN**: `ms-<rig>-<name>` (e.g. `ms-mineshaft-furiosa`)
 - **SAN**: `session:<sessionID>`
 - **TTL**: configurable via `proxy_cert_ttl` (default 24h)
 
@@ -251,9 +251,9 @@ Five environment variables are set in the miner's startup env:
 
 | Variable | Purpose |
 |---|---|
-| `GT_PROXY_URL` | `https://<host>:9876` |
-| `GT_PROXY_CERT` | Path to client cert PEM |
-| `GT_PROXY_KEY` | Path to client key PEM |
+| `MS_PROXY_URL` | `https://<host>:9876` |
+| `MS_PROXY_CERT` | Path to client cert PEM |
+| `MS_PROXY_KEY` | Path to client key PEM |
 | `GIT_SSL_CERT` | Same cert — used by git for mTLS with proxy |
 | `GIT_SSL_KEY` | Same key — used by git for mTLS with proxy |
 | `GIT_SSL_CAINFO` | CA cert — used by git to trust the proxy TLS cert |
@@ -273,7 +273,7 @@ lifecycle:
 ```
 daytona create → daytona start → [daytona exec, repeatedly] → daytona stop → daytona delete
       ▲                ▲                    ▲                      ▲               ▲
-  gt sling         auto on create      miner sessions         gt session     cleanup
+  ms sling         auto on create      miner sessions         ms session     cleanup
   (once per                                                         stop
    miner)
 ```
@@ -282,52 +282,52 @@ daytona create → daytona start → [daytona exec, repeatedly] → daytona stop
 
 | State | daytona CLI | Mineshaft triggers |
 |---|---|---|
-| Does not exist | `daytona create <repo> --name <ws>` | `gt sling` (first time for this miner) |
-| Stopped | `daytona start <ws>` | `gt session start` / `gt sling` resume |
+| Does not exist | `daytona create <repo> --name <ws>` | `ms sling` (first time for this miner) |
+| Stopped | `daytona start <ws>` | `ms session start` / `ms sling` resume |
 | Running | `daytona exec <ws> -- cmd` | Normal miner operation |
-| Running, miner done | `daytona stop <ws>` | `gt session stop` / TTL expiry |
-| No longer needed | `daytona delete <ws>` | `gt miner remove` / manual |
+| Running, miner done | `daytona stop <ws>` | `ms session stop` / TTL expiry |
+| No longer needed | `daytona delete <ws>` | `ms miner remove` / manual |
 
 Mineshaft stops (not deletes) workspaces on session end, preserving git state for
 the next session. Deletion is an explicit operator action.
 
-#### Full provisioning sequence at `gt sling`
+#### Full provisioning sequence at `ms sling`
 
 ```
-gt sling <bead> --daytona
+ms sling <bead> --daytona
   │
   ├─ 1. Create miner branch (host, instant):
-  │       git -C ~/gt/<rig>/.repo.git fetch origin
-  │       git -C ~/gt/<rig>/.repo.git branch miner/<name>-<ts> origin/main
+  │       git -C ~/ms/<rig>/.repo.git fetch origin
+  │       git -C ~/ms/<rig>/.repo.git branch miner/<name>-<ts> origin/main
   │
   ├─ 2. Issue miner mTLS cert (host, instant)
   │
   ├─ 3. Provision daytona workspace (slow: 30–120s):
   │       daytona create https://<host>:9876/v1/git/<rig>
-  │         --name gt-<rig>-<miner>
+  │         --name ms-<rig>-<miner>
   │         --branch miner/<name>-<ts>
   │         --devcontainer-path .devcontainer/mineshaft-miner
   │       (clones from proxy → .repo.git; runs onCreateCommand)
   │
   ├─ 4. Inject cert into workspace:
-  │       daytona exec gt-<rig>-<miner> -- mkdir -p /run/gt-proxy
-  │       daytona exec gt-<rig>-<miner> -- tee /run/gt-proxy/client.crt < <cert>
-  │       daytona exec gt-<rig>-<miner> -- tee /run/gt-proxy/client.key < <key>
-  │       daytona exec gt-<rig>-<miner> -- tee /run/gt-proxy/ca.crt < <ca>
+  │       daytona exec ms-<rig>-<miner> -- mkdir -p /run/ms-proxy
+  │       daytona exec ms-<rig>-<miner> -- tee /run/ms-proxy/client.crt < <cert>
+  │       daytona exec ms-<rig>-<miner> -- tee /run/ms-proxy/client.key < <key>
+  │       daytona exec ms-<rig>-<miner> -- tee /run/ms-proxy/ca.crt < <ca>
   │
   ├─ 5. Post-create setup:
-  │       daytona exec gt-<rig>-<miner> -- gt prime --write-prime-md
-  │       daytona exec gt-<rig>-<miner> -- [overlay files, setup hooks]
+  │       daytona exec ms-<rig>-<miner> -- ms prime --write-prime-md
+  │       daytona exec ms-<rig>-<miner> -- [overlay files, setup hooks]
   │
   ├─ 6. Register agent bead via proxy:
   │       (proxy client calls bd create/update with state=spawning)
   │
   └─ 7. Start tmux pane:
           tmux new-window -n <miner>
-          tmux send-keys "daytona exec gt-<rig>-<miner> \
-            --env GT_RIG=<rig> --env GT_MINER=<name> \
-            --env GT_PROXY_URL=... --env GT_PROXY_CERT=... \
-            --env GT_PROXY_KEY=... --env GIT_SSL_CERT=... \
+          tmux send-keys "daytona exec ms-<rig>-<miner> \
+            --env MS_RIG=<rig> --env MS_MINER=<name> \
+            --env MS_PROXY_URL=... --env MS_PROXY_CERT=... \
+            --env MS_PROXY_KEY=... --env GIT_SSL_CERT=... \
             --env GIT_SSL_KEY=... --env GIT_SSL_CAINFO=... \
             -- claude --mode=direct" Enter
 ```
@@ -382,9 +382,9 @@ Host (.repo.git)                     Container
 # .devcontainer/mineshaft-miner/setup.sh
 set -e
 npm install -g @anthropic-ai/claude-code
-curl -fsSL https://releases.mineshaft.dev/gt-proxy-client/latest/linux-amd64 -o /usr/local/bin/gt
-chmod +x /usr/local/bin/gt
-ln -sf /usr/local/bin/gt /usr/local/bin/bd
+curl -fsSL https://releases.mineshaft.dev/ms-proxy-client/latest/linux-amd64 -o /usr/local/bin/ms
+chmod +x /usr/local/bin/ms
+ln -sf /usr/local/bin/ms /usr/local/bin/bd
 apt-get install -y git
 ```
 
@@ -422,7 +422,7 @@ queue.**
 ```
 Host tmux server
 ┌──────────────────────────────────────────────────────────────────┐
-│ session: gt-mineshaft-furiosa                                      │
+│ session: ms-mineshaft-furiosa                                      │
 │ pane %3                                                          │
 │   process: daytona ◄── tmux send-keys targets this pane         │
 │              │                                                   │
@@ -442,7 +442,7 @@ Currently `IsAgentAlive` walks the local process tree looking for `claude`. With
 to the local process tree.
 
 **Option 1 (chosen for initial implementation):** Add `daytona` to
-`GT_PROCESS_NAMES` at session spawn — liveness is "the daytona exec connection is
+`MS_PROCESS_NAMES` at session spawn — liveness is "the daytona exec connection is
 up". Simple and correct in practice: if `daytona exec` exits, the session is dead.
 This is handled by G5 (`ExecWrapper[0]` auto-added to accepted process names).
 
@@ -455,8 +455,8 @@ but more complex.
 Attach to any miner's tmux pane on the host:
 
 ```bash
-tmux attach -t gt-mineshaft-furiosa        # interactive
-tmux attach -t gt-mineshaft-furiosa -r     # read-only
+tmux attach -t ms-mineshaft-furiosa        # interactive
+tmux attach -t ms-mineshaft-furiosa -r     # read-only
 ```
 
 The terminal output is the remote Claude TUI rendered through the `daytona exec`
@@ -468,7 +468,7 @@ For remote miners it is ergonomic to group them into one tmux session with
 multiple windows — one window per miner:
 
 ```
-tmux session: gt-mineshaft (one session per rig)
+tmux session: ms-mineshaft (one session per rig)
   window 0: furiosa    ← daytona exec furiosa-ws -- claude
   window 1: nova       ← daytona exec nova-ws -- claude
   window 2: drake      ← daytona exec drake-ws -- claude
@@ -477,7 +477,7 @@ tmux session: gt-mineshaft (one session per rig)
 
 `FindAgentPane` already handles multi-window sessions (enumerates all panes via
 `tmux list-panes -s`), so the nudge path requires no changes. Window-grouping is
-enabled per-rig with `group_sessions: true`. When enabled, `gt sling` creates a
+enabled per-rig with `group_sessions: true`. When enabled, `ms sling` creates a
 new window in the existing rig session rather than a new session.
 
 ### 5.5 Summary of changes needed for nudge / observation
@@ -486,7 +486,7 @@ new window in the existing rig session rather than a new session.
 |---|---|
 | Nudge delivery | **None** — `send-keys` to local pane, daytona exec tunnels it |
 | Mail nudge queue | **None** — same path, same code |
-| Liveness detection | **G5** — add `daytona` to `GT_PROCESS_NAMES` |
+| Liveness detection | **G5** — add `daytona` to `MS_PROCESS_NAMES` |
 | Human observation | **None** — `tmux attach` works as-is |
 | Multi-miner window grouping | **Optional** — new `group_sessions` setting + window creation in G6 |
 
@@ -502,19 +502,19 @@ by Mineshaft changes in dependency order.
 **S1 — exitbox policy profile**
 
 Write the policy file permitting a miner session:
-- Read + execute: `gt`, `bd`, `claude`, `node`, `git`
-- Read + write: miner worktree (`~/gt/<rig>/miners/<name>/`)
-- Read: town shared dirs (`~/gt/.beads/`, `~/gt/.runtime/`)
+- Read + execute: `ms`, `bd`, `claude`, `node`, `git`
+- Read + write: miner worktree (`~/ms/<rig>/miners/<name>/`)
+- Read: town shared dirs (`~/ms/.beads/`, `~/ms/.runtime/`)
 - Network: loopback only (`127.0.0.1:3307`)
 - Write: heartbeat and nudge queue dirs
 
 Manually test: `exitbox run --profile=mineshaft-miner -- claude --mode=direct` in
-a tmux pane. Run `gt prime` → `gt done`.
+a tmux pane. Run `ms prime` → `ms done`.
 
-**S2 — standalone `gt-proxy-server` + `gt-proxy-client`**
+**S2 — standalone `ms-proxy-server` + `ms-proxy-client`**
 
 Build and test entirely outside Mineshaft. Spin up any Docker container, inject the
-cert env vars, run `gt prime` and `gt done` from inside.
+cert env vars, run `ms prime` and `ms done` from inside.
 
 Open question answered by this step: does `daytona exec` inherit parent env or
 require explicit `--env` flags?
@@ -532,7 +532,7 @@ With the S2 proxy running on the host, manually exercise the full miner lifecycl
    If daytona only accepts GitHub URLs: fallback — `daytona create <github-url>`
    + post-create `git remote set-url origin https://<proxy>/v1/git/<rig>` via
    `daytona exec`.
-2. Inject cert and env vars explicitly, run `gt prime`, `gt hook`, `gt done`.
+2. Inject cert and env vars explicitly, run `ms prime`, `ms hook`, `ms done`.
 3. Verify `git push origin` routes to proxy → lands in `.repo.git` on host.
 4. Verify `git fetch origin` pulls from proxy → `.repo.git` (not from GitHub).
 5. `daytona stop test-miner` — verify workspace persists; `daytona start` +
@@ -608,23 +608,23 @@ Out of scope.
 
 ### exitbox
 
-- [ ] `exitbox run --profile=mineshaft-miner -- gt prime` succeeds inside sandbox (loopback Dolt reachable)
-- [ ] `gt sling <bead> --exec-wrapper "exitbox run --profile=mineshaft-miner --"` starts a live session
+- [ ] `exitbox run --profile=mineshaft-miner -- ms prime` succeeds inside sandbox (loopback Dolt reachable)
+- [ ] `ms sling <bead> --exec-wrapper "exitbox run --profile=mineshaft-miner --"` starts a live session
 - [ ] Miner receives nudge via `tmux send-keys` into the exitbox pane
-- [ ] `gt done` completes fully inside sandbox: git push to remote + bd update via loopback Dolt
+- [ ] `ms done` completes fully inside sandbox: git push to remote + bd update via loopback Dolt
 - [ ] Liveness detection sees the correct process (exitbox or agent, depending on exec behavior)
 - [ ] Existing local miners unaffected (no regression)
 
 ### daytona + proxy
 
-- [ ] `gt-proxy-server` starts on host; CA initialised at `~/gt/.runtime/ca/`
-- [ ] Miner cert issued and injected into daytona workspace at `/run/gt-proxy/`
-- [ ] `gt prime` inside container succeeds (control-plane routed via proxy)
-- [ ] `gt done` inside container: `git push origin` → proxy receive-pack → `.repo.git` on host → daemon pushes to GitHub
+- [ ] `ms-proxy-server` starts on host; CA initialised at `~/ms/.runtime/ca/`
+- [ ] Miner cert issued and injected into daytona workspace at `/run/ms-proxy/`
+- [ ] `ms prime` inside container succeeds (control-plane routed via proxy)
+- [ ] `ms done` inside container: `git push origin` → proxy receive-pack → `.repo.git` on host → daemon pushes to GitHub
 - [ ] `git fetch origin` inside container: fetches from proxy → `.repo.git` (not from GitHub)
 - [ ] Proxy rejects a push to `main` or another miner's branch (CN-scoped authorization)
 - [ ] Proxy rejects control-plane calls from a revoked or mismatched cert
-- [ ] `gt sling <bead> --daytona <workspace>` provisions workspace, issues cert, starts session end-to-end
+- [ ] `ms sling <bead> --daytona <workspace>` provisions workspace, issues cert, starts session end-to-end
 - [ ] Nudge delivered via tmux pane running `daytona exec`
 - [ ] Local worktree creation skipped for daytona-mode miners
 - [ ] Session end: cert deny-listed; subsequent proxy calls rejected
@@ -636,7 +636,7 @@ Out of scope.
 
 1. **Host reachability** — What address is reachable from inside a daytona cloud
    container: fixed host IP, `host.docker.internal`, or a daytona-specific
-   tunnel? Determines the value of `GT_PROXY_URL`. Answered by S3.
+   tunnel? Determines the value of `MS_PROXY_URL`. Answered by S3.
 
 2. **Custom git endpoint for `daytona create`** — Does `daytona create` accept an
    arbitrary HTTPS URL as the repo source, or only GitHub/GitLab URLs? If the
@@ -653,7 +653,7 @@ Out of scope.
    How often? On-demand triggered by proxy upload-pack, or on a timer?
 
 5. **Workspace warm pool** — First-time `daytona create` takes 30–120s. For
-   low-latency `gt sling`, should Mineshaft maintain a pool of pre-provisioned warm
+   low-latency `ms sling`, should Mineshaft maintain a pool of pre-provisioned warm
    workspaces? Optional optimisation, not required for initial implementation.
 
 6. **Devcontainer distribution** — Ship `.devcontainer/mineshaft-miner/` in the

@@ -300,7 +300,7 @@ func TestMinecartDependencyTargetsQueryUsesTypedTargets(t *testing.T) {
 }
 
 func TestResolveHost(t *testing.T) {
-	os.Unsetenv("GT_DOLT_HOST")
+	os.Unsetenv("MS_DOLT_HOST")
 	os.Unsetenv("DOLT_HOST")
 
 	// Flag takes precedence
@@ -308,17 +308,17 @@ func TestResolveHost(t *testing.T) {
 		t.Errorf("resolveHost with flag = %q, want 192.168.1.1", got)
 	}
 
-	// GT_DOLT_HOST takes precedence over DOLT_HOST
-	os.Setenv("GT_DOLT_HOST", "10.0.0.2")
+	// MS_DOLT_HOST takes precedence over DOLT_HOST
+	os.Setenv("MS_DOLT_HOST", "10.0.0.2")
 	os.Setenv("DOLT_HOST", "10.0.0.1")
-	defer os.Unsetenv("GT_DOLT_HOST")
+	defer os.Unsetenv("MS_DOLT_HOST")
 	defer os.Unsetenv("DOLT_HOST")
 	if got := resolveHost(""); got != "10.0.0.2" {
-		t.Errorf("resolveHost with GT_DOLT_HOST = %q, want 10.0.0.2", got)
+		t.Errorf("resolveHost with MS_DOLT_HOST = %q, want 10.0.0.2", got)
 	}
 
 	// DOLT_HOST fallback
-	os.Unsetenv("GT_DOLT_HOST")
+	os.Unsetenv("MS_DOLT_HOST")
 	if got := resolveHost(""); got != "10.0.0.1" {
 		t.Errorf("resolveHost with DOLT_HOST = %q, want 10.0.0.1", got)
 	}
@@ -331,7 +331,7 @@ func TestResolveHost(t *testing.T) {
 }
 
 func TestResolvePort(t *testing.T) {
-	os.Unsetenv("GT_DOLT_PORT")
+	os.Unsetenv("MS_DOLT_PORT")
 	os.Unsetenv("DOLT_PORT")
 
 	// Flag takes precedence
@@ -339,17 +339,17 @@ func TestResolvePort(t *testing.T) {
 		t.Errorf("resolvePort with flag = %q, want 3308", got)
 	}
 
-	// GT_DOLT_PORT takes precedence over DOLT_PORT
-	os.Setenv("GT_DOLT_PORT", "3309")
+	// MS_DOLT_PORT takes precedence over DOLT_PORT
+	os.Setenv("MS_DOLT_PORT", "3309")
 	os.Setenv("DOLT_PORT", "3310")
-	defer os.Unsetenv("GT_DOLT_PORT")
+	defer os.Unsetenv("MS_DOLT_PORT")
 	defer os.Unsetenv("DOLT_PORT")
 	if got := resolvePort(""); got != "3309" {
-		t.Errorf("resolvePort with GT_DOLT_PORT = %q, want 3309", got)
+		t.Errorf("resolvePort with MS_DOLT_PORT = %q, want 3309", got)
 	}
 
 	// DOLT_PORT fallback
-	os.Unsetenv("GT_DOLT_PORT")
+	os.Unsetenv("MS_DOLT_PORT")
 	if got := resolvePort(""); got != "3310" {
 		t.Errorf("resolvePort with DOLT_PORT = %q, want 3310", got)
 	}
@@ -376,7 +376,7 @@ func TestResolveRoutesFile(t *testing.T) {
 		t.Errorf("resolveRoutesFile with ROUTES_FILE = %q, want /env/routes.jsonl", got)
 	}
 
-	// Default includes ~/gt/.beads/routes.jsonl
+	// Default includes ~/ms/.beads/routes.jsonl
 	os.Unsetenv("ROUTES_FILE")
 	got := resolveRoutesFile("")
 	if !filepath.IsAbs(got) {

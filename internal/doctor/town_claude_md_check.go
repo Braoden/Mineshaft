@@ -13,7 +13,7 @@ import (
 // the version embedded in the binary. This is the highest-value migration
 // check — behavioral norms for agents come from CLAUDE.md.
 //
-// The town-root CLAUDE.md (~/gt/CLAUDE.md) is loaded by Claude Code for
+// The town-root CLAUDE.md (~/ms/CLAUDE.md) is loaded by Claude Code for
 // all agents running from within the town git tree (Overseer, Supervisor).
 // It must contain operational norms (Dolt awareness, communication hygiene,
 // nudge-first) that guide agent behavior.
@@ -52,7 +52,7 @@ func (c *TownCLAUDEmdCheck) Run(ctx *CheckContext) *CheckResult {
 				Name:    c.Name(),
 				Status:  StatusError,
 				Message: "Town-root CLAUDE.md is missing",
-				FixHint: "Run 'gt doctor --fix' to create it from embedded template",
+				FixHint: "Run 'ms doctor --fix' to create it from embedded template",
 			}
 		}
 		return &CheckResult{
@@ -91,7 +91,7 @@ func (c *TownCLAUDEmdCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:  StatusWarning,
 		Message: fmt.Sprintf("Town-root CLAUDE.md missing %d section(s)", len(missing)),
 		Details: details,
-		FixHint: "Run 'gt doctor --fix' to add missing sections from embedded template",
+		FixHint: "Run 'ms doctor --fix' to add missing sections from embedded template",
 	}
 }
 

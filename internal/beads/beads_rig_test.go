@@ -23,13 +23,13 @@ func TestFormatRigDescription(t *testing.T) {
 			rigName: "mineshaft",
 			fields: &RigFields{
 				Repo:   "git@github.com:user/mineshaft.git",
-				Prefix: "gt",
+				Prefix: "ms",
 				State:  RigStateActive,
 			},
 			want: []string{
 				"Rig identity bead for mineshaft.",
 				"repo: git@github.com:user/mineshaft.git",
-				"prefix: gt",
+				"prefix: ms",
 				"state: active",
 			},
 		},
@@ -88,11 +88,11 @@ func TestParseRigFields(t *testing.T) {
 			desc: `Rig identity bead for mineshaft.
 
 repo: git@github.com:user/mineshaft.git
-prefix: gt
+prefix: ms
 state: active`,
 			want: &RigFields{
 				Repo:   "git@github.com:user/mineshaft.git",
-				Prefix: "gt",
+				Prefix: "ms",
 				State:  RigStateActive,
 			},
 		},
@@ -114,10 +114,10 @@ state: active`,
 		},
 		{
 			name: "state maintenance",
-			desc: "state: maintenance\nprefix: gt",
+			desc: "state: maintenance\nprefix: ms",
 			want: &RigFields{
 				State:  RigStateMaintenance,
-				Prefix: "gt",
+				Prefix: "ms",
 			},
 		},
 	}
@@ -141,7 +141,7 @@ state: active`,
 func TestRigFieldsRoundTrip(t *testing.T) {
 	original := &RigFields{
 		Repo:   "git@github.com:user/mineshaft.git",
-		Prefix: "gt",
+		Prefix: "ms",
 		State:  RigStateActive,
 	}
 
@@ -164,9 +164,9 @@ func TestRigBeadID(t *testing.T) {
 		name string
 		want string
 	}{
-		{"mineshaft", "gt-rig-mineshaft"},
-		{"beads", "gt-rig-beads"},
-		{"my-rig", "gt-rig-my-rig"},
+		{"mineshaft", "ms-rig-mineshaft"},
+		{"beads", "ms-rig-beads"},
+		{"my-rig", "ms-rig-my-rig"},
 	}
 
 	for _, tt := range tests {
@@ -184,7 +184,7 @@ func TestRigBeadIDWithPrefix(t *testing.T) {
 		name   string
 		want   string
 	}{
-		{"gt", "mineshaft", "gt-rig-mineshaft"},
+		{"ms", "mineshaft", "ms-rig-mineshaft"},
 		{"bd", "beads", "bd-rig-beads"},
 		{"hq", "town", "hq-rig-town"},
 	}

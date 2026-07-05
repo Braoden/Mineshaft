@@ -4,9 +4,9 @@ See **CLAUDE.md** for complete agent context and instructions.
 
 This file exists for compatibility with tools that look for AGENTS.md.
 
-> **Recovery**: Run `gt prime` after compaction, clear, or new session
+> **Recovery**: Run `ms prime` after compaction, clear, or new session
 
-Full context is injected by `gt prime` at session start.
+Full context is injected by `ms prime` at session start.
 
 <!-- beads-agent-instructions-v2 -->
 
@@ -78,61 +78,61 @@ git push              # Push to remote
 ## Mineshaft Multi-Agent Communication
 
 This workspace is part of a **Mineshaft** multi-agent environment. You communicate
-with other agents using `gt` commands — never by printing text or using raw tmux.
+with other agents using `ms` commands — never by printing text or using raw tmux.
 
 ### Nudging Agents (Immediate Delivery)
 
-`gt nudge` sends a message directly to another agent's active session:
+`ms nudge` sends a message directly to another agent's active session:
 
 ```bash
-gt nudge overseer "Status update: PR review complete"
-gt nudge laneassist/crew/dom "Check your mail — PR ready for review"
-gt nudge witness "Miner health check needed"
-gt nudge refinery "Merge queue has items"
+ms nudge overseer "Status update: PR review complete"
+ms nudge laneassist/crew/dom "Check your mail — PR ready for review"
+ms nudge witness "Miner health check needed"
+ms nudge refinery "Merge queue has items"
 ```
 
 **Target formats:**
 - Role shortcuts: `overseer`, `supervisor`, `witness`, `refinery`
 - Full path: `<rig>/crew/<name>`, `<rig>/miners/<name>`
 
-**Important:** `gt nudge` is the ONLY way to send text to another agent's session.
+**Important:** `ms nudge` is the ONLY way to send text to another agent's session.
 Never print "Hey @name" — the other agent cannot see your terminal output.
 
 ### Sending Mail (Persistent Messages)
 
-`gt mail` sends messages that persist across session restarts:
+`ms mail` sends messages that persist across session restarts:
 
 ```bash
 # Reading
-gt mail inbox                    # List messages
-gt mail read <id>                # Read a specific message
+ms mail inbox                    # List messages
+ms mail read <id>                # Read a specific message
 
 # Sending (use --stdin for multi-line content)
-gt mail send overseer/ -s "Subject" -m "Short message"
-gt mail send laneassist/crew/dom -s "PR Review" --stdin <<'BODY'
+ms mail send overseer/ -s "Subject" -m "Short message"
+ms mail send laneassist/crew/dom -s "PR Review" --stdin <<'BODY'
 Multi-line message content here.
 Details about the PR and what to look for.
 BODY
-gt mail send --human -s "Subject" -m "Message to boss"
+ms mail send --human -s "Subject" -m "Message to boss"
 ```
 
 ### When to Use Which
 
 | Want to... | Command | Why |
 |------------|---------|-----|
-| Wake a sleeping agent | `gt nudge <target> "msg"` | Immediate delivery |
-| Send detailed task/info | `gt mail send <target> -s "..." --stdin` | Persists across restarts |
-| Both: send + wake | `gt mail send` then `gt nudge` | Mail carries payload, nudge wakes |
+| Wake a sleeping agent | `ms nudge <target> "msg"` | Immediate delivery |
+| Send detailed task/info | `ms mail send <target> -s "..." --stdin` | Persists across restarts |
+| Both: send + wake | `ms mail send` then `ms nudge` | Mail carries payload, nudge wakes |
 
 ### Context Recovery
 
-After compaction or new session, run `gt prime` to reload your full role context,
+After compaction or new session, run `ms prime` to reload your full role context,
 identity, and any pending work.
 
 ```bash
-gt prime              # Full context reload
-gt hook               # Check for assigned work
-gt mail inbox         # Check for messages
+ms prime              # Full context reload
+ms hook               # Check for assigned work
+ms mail inbox         # Check for messages
 ```
 
 <!-- end-mineshaft-agent-instructions -->
@@ -140,7 +140,7 @@ gt mail inbox         # Check for messages
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:ca08a54f -->
 ## Beads Issue Tracker
 
-This project uses **bd (beads)** for issue tracking. Run `gt prime` to see full workflow context and commands.
+This project uses **bd (beads)** for issue tracking. Run `ms prime` to see full workflow context and commands.
 
 ### Quick Reference
 
@@ -154,7 +154,7 @@ bd close <id>         # Complete work
 ### Rules
 
 - Use `bd` for ALL task tracking — do NOT use TodoWrite, TaskCreate, or markdown TODO lists
-- Run `gt prime` for detailed command reference and session close protocol
+- Run `ms prime` for detailed command reference and session close protocol
 - Use `bd remember` for persistent knowledge — do NOT use MEMORY.md files
 
 ## Session Completion

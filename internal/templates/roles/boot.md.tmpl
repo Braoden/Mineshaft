@@ -60,13 +60,13 @@ Check the current system state:
 tmux has-session -t {{ .SupervisorSession }} 2>/dev/null && echo "alive" || echo "dead"
 
 # If alive, what's the pane showing?
-gt peek supervisor --lines 20
+ms peek supervisor --lines 20
 
 # Agent bead state
 bd show hq-supervisor 2>/dev/null
 
 # Recent activity
-gt feed --since 10m --plain | head -20
+ms feed --since 10m --plain | head -20
 ```
 
 ### Step 2: Decide
@@ -108,7 +108,7 @@ Archive stale handoff messages (> 1 hour old) from Supervisor's inbox.
 In degraded mode: Exit directly.
 In normal mode: Optional brief handoff mail for next Boot instance.
 
-## Degraded Mode (GT_DEGRADED=true)
+## Degraded Mode (MS_DEGRADED=true)
 
 When tmux is unavailable:
 - Cannot observe tmux panes
@@ -135,13 +135,13 @@ instructions need to be passed to a Boot instance.
 
 ```bash
 # Your status
-gt boot status
+ms boot status
 
 # Manual spawn (for debugging)
-gt boot spawn
+ms boot spawn
 
 # Run triage directly (degraded mode)
-gt boot triage --degraded
+ms boot triage --degraded
 ```
 
 ## Important Notes

@@ -18,10 +18,10 @@ func TestExtractIssueID(t *testing.T) {
 		input    string
 		expected string
 	}{
-		{"gt-abc", "gt-abc"},
+		{"ms-abc", "ms-abc"},
 		{"bd-xyz", "bd-xyz"},
 		{"hq-cv-123", "hq-cv-123"},
-		{"external:gt:gt-abc", "gt-abc"},
+		{"external:ms:ms-abc", "ms-abc"},
 		{"external:bd:bd-xyz", "bd-xyz"},
 		{"external:hq:hq-cv-123", "hq-cv-123"},
 		{"external:", "external:"}, // malformed, return as-is
@@ -82,10 +82,10 @@ func TestReadyIssueFilterLogic_SkipsNonSlingableTypes(t *testing.T) {
 	// Validates that feedNextReadyIssue's type filter skips non-slingable types.
 	// We test the predicate inline (same pattern as existing filter tests).
 	tracked := []trackedIssue{
-		{ID: "gt-epic", Status: "open", Assignee: "", IssueType: "epic"},
-		{ID: "gt-task", Status: "open", Assignee: "", IssueType: "task"},
-		{ID: "gt-minecart", Status: "open", Assignee: "", IssueType: "minecart"},
-		{ID: "gt-bug", Status: "open", Assignee: "", IssueType: "bug"},
+		{ID: "ms-epic", Status: "open", Assignee: "", IssueType: "epic"},
+		{ID: "ms-task", Status: "open", Assignee: "", IssueType: "task"},
+		{ID: "ms-minecart", Status: "open", Assignee: "", IssueType: "minecart"},
+		{ID: "ms-bug", Status: "open", Assignee: "", IssueType: "bug"},
 	}
 
 	var slingable []string
@@ -98,8 +98,8 @@ func TestReadyIssueFilterLogic_SkipsNonSlingableTypes(t *testing.T) {
 	if len(slingable) != 2 {
 		t.Errorf("expected 2 slingable issues (task, bug), got %d: %v", len(slingable), slingable)
 	}
-	if slingable[0] != "gt-task" || slingable[1] != "gt-bug" {
-		t.Errorf("expected [gt-task, gt-bug], got %v", slingable)
+	if slingable[0] != "ms-task" || slingable[1] != "ms-bug" {
+		t.Errorf("expected [ms-task, ms-bug], got %v", slingable)
 	}
 }
 
@@ -110,10 +110,10 @@ func TestReadyIssueFilterLogic_SkipsNonOpenIssues(t *testing.T) {
 	// and dispatchIssue, making isolated unit testing impractical without a
 	// real store. Integration coverage lives in minecart_manager_integration_test.go.
 	tracked := []trackedIssue{
-		{ID: "gt-closed", Status: "closed", Assignee: ""},
-		{ID: "gt-inprog", Status: "in_progress", Assignee: "mineshaft/miners/alpha"},
-		{ID: "gt-hooked", Status: "hooked", Assignee: "mineshaft/miners/beta"},
-		{ID: "gt-assigned", Status: "open", Assignee: "mineshaft/miners/gamma"},
+		{ID: "ms-closed", Status: "closed", Assignee: ""},
+		{ID: "ms-inprog", Status: "in_progress", Assignee: "mineshaft/miners/alpha"},
+		{ID: "ms-hooked", Status: "hooked", Assignee: "mineshaft/miners/beta"},
+		{ID: "ms-assigned", Status: "open", Assignee: "mineshaft/miners/gamma"},
 	}
 
 	// None of these should be considered "ready"
@@ -129,13 +129,13 @@ func TestReadyIssueFilterLogic_FindsReadyIssue(t *testing.T) {
 	// issue. See comment on TestReadyIssueFilterLogic_SkipsNonOpenIssues for
 	// why this tests the predicate inline rather than calling feedNextReadyIssue.
 	tracked := []trackedIssue{
-		{ID: "gt-closed", Status: "closed", Assignee: ""},
-		{ID: "gt-inprog", Status: "in_progress", Assignee: "mineshaft/miners/alpha"},
-		{ID: "gt-ready", Status: "open", Assignee: ""},
-		{ID: "gt-also-ready", Status: "open", Assignee: ""},
+		{ID: "ms-closed", Status: "closed", Assignee: ""},
+		{ID: "ms-inprog", Status: "in_progress", Assignee: "mineshaft/miners/alpha"},
+		{ID: "ms-ready", Status: "open", Assignee: ""},
+		{ID: "ms-also-ready", Status: "open", Assignee: ""},
 	}
 
-	// Find first ready issue - should be gt-ready (first match)
+	// Find first ready issue - should be ms-ready (first match)
 	var foundReady string
 	for _, issue := range tracked {
 		if issue.Status == "open" && issue.Assignee == "" {
@@ -144,14 +144,14 @@ func TestReadyIssueFilterLogic_FindsReadyIssue(t *testing.T) {
 		}
 	}
 
-	if foundReady != "gt-ready" {
-		t.Errorf("expected first ready issue to be gt-ready, got %s", foundReady)
+	if foundReady != "ms-ready" {
+		t.Errorf("expected first ready issue to be ms-ready, got %s", foundReady)
 	}
 }
 
 func TestCheckMinecartsForIssue_NilStore(t *testing.T) {
 	// Nil store returns nil immediately (no minecart checks).
-	result := CheckMinecartsForIssue(context.Background(), nil, "/nonexistent/path", "gt-test", "test", nil, "gt", nil)
+	result := CheckMinecartsForIssue(context.Background(), nil, "/nonexistent/path", "ms-test", "test", nil, "ms", nil)
 	if result != nil {
 		t.Errorf("expected nil for nil store, got %v", result)
 	}
@@ -160,7 +160,7 @@ func TestCheckMinecartsForIssue_NilStore(t *testing.T) {
 func TestCheckMinecartsForIssue_NilLogger(t *testing.T) {
 	// Nil logger should not panic — gets replaced with no-op internally.
 	// With nil store, returns nil.
-	result := CheckMinecartsForIssue(context.Background(), nil, "/nonexistent/path", "gt-test", "test", nil, "gt", nil)
+	result := CheckMinecartsForIssue(context.Background(), nil, "/nonexistent/path", "ms-test", "test", nil, "ms", nil)
 	if result != nil {
 		t.Errorf("expected nil for nil store, got %v", result)
 	}
@@ -413,7 +413,7 @@ func TestIsIssueBlocked_MergeBlocksStillBlockedWhenClosedWithoutMerge(t *testing
 	ctx := context.Background()
 	now := time.Now().UTC()
 
-	// Blocker is closed but has no CloseReason (gt done without merge)
+	// Blocker is closed but has no CloseReason (ms done without merge)
 	blocker := &beadsdk.Issue{
 		ID:        "test-mblkr1",
 		Title:     "Closed No Merge",
@@ -594,15 +594,15 @@ func TestRigForIssue_ValidPrefix(t *testing.T) {
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatalf("MkdirAll: %v", err)
 	}
-	routesContent := `{"prefix":"gt-","path":"mineshaft/.beads"}` + "\n" +
+	routesContent := `{"prefix":"ms-","path":"mineshaft/.beads"}` + "\n" +
 		`{"prefix":"bd-","path":"beads/.beads"}` + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatalf("WriteFile routes.jsonl: %v", err)
 	}
 
-	rig := rigForIssue(townRoot, "gt-abc123")
+	rig := rigForIssue(townRoot, "ms-abc123")
 	if rig != "mineshaft" {
-		t.Errorf("rigForIssue(townRoot, 'gt-abc123') = %q, want 'mineshaft'", rig)
+		t.Errorf("rigForIssue(townRoot, 'ms-abc123') = %q, want 'mineshaft'", rig)
 	}
 
 	rig = rigForIssue(townRoot, "bd-xyz")
@@ -633,12 +633,12 @@ func TestRigForIssue_EmptyIssueID(t *testing.T) {
 func TestRigForIssue_UnknownPrefix(t *testing.T) {
 	townRoot := t.TempDir()
 
-	// Create routes.jsonl with only gt- mapping
+	// Create routes.jsonl with only ms- mapping
 	beadsDir := filepath.Join(townRoot, ".beads")
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatalf("MkdirAll: %v", err)
 	}
-	routesContent := `{"prefix":"gt-","path":"mineshaft/.beads"}` + "\n"
+	routesContent := `{"prefix":"ms-","path":"mineshaft/.beads"}` + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatalf("WriteFile routes.jsonl: %v", err)
 	}
@@ -654,7 +654,7 @@ func TestRigForIssue_NoRoutesFile(t *testing.T) {
 	townRoot := t.TempDir()
 
 	// No .beads directory at all — should return ""
-	rig := rigForIssue(townRoot, "gt-abc")
+	rig := rigForIssue(townRoot, "ms-abc")
 	if rig != "" {
 		t.Errorf("rigForIssue with no routes file = %q, want empty", rig)
 	}
@@ -680,7 +680,7 @@ func TestRigForIssue_TownLevelPrefix(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Helper: create a temporary town root with routes.jsonl and a gt stub
+// Helper: create a temporary town root with routes.jsonl and a ms stub
 // ---------------------------------------------------------------------------
 
 // setupTownRoot creates a temp directory with .beads/routes.jsonl mapping
@@ -707,11 +707,11 @@ func makeGTStub(t *testing.T, exitCode int) (gtPath, logPath string) {
 		t.Skip("skipping on windows")
 	}
 	dir := t.TempDir()
-	logPath = filepath.Join(dir, "gt.log")
+	logPath = filepath.Join(dir, "ms.log")
 	script := fmt.Sprintf("#!/bin/sh\necho \"$*\" >> %q\nexit %d\n", logPath, exitCode)
-	gtPath = filepath.Join(dir, "gt")
+	gtPath = filepath.Join(dir, "ms")
 	if err := os.WriteFile(gtPath, []byte(script), 0755); err != nil {
-		t.Fatalf("WriteFile gt stub: %v", err)
+		t.Fatalf("WriteFile ms stub: %v", err)
 	}
 	return gtPath, logPath
 }
@@ -808,15 +808,15 @@ func TestFeedNextReadyIssue_DispatchesFirstReadyIssue(t *testing.T) {
 
 	feedNextReadyIssue(ctx, store, townRoot, minecart.ID, "test", logger, gtPath, func(string) bool { return false }, nil)
 
-	// Verify gt was called with the ready issue
+	// Verify ms was called with the ready issue
 	logData, err := os.ReadFile(logPath)
 	if err != nil {
-		t.Fatalf("gt stub was not called (no log file): %v", err)
+		t.Fatalf("ms stub was not called (no log file): %v", err)
 	}
 	logStr := strings.TrimSpace(string(logData))
 	// Expected: "sling test-ready1 testrig --no-boot"
 	if !strings.Contains(logStr, "sling test-ready1 testrig --no-boot") {
-		t.Errorf("gt stub called with unexpected args: %q", logStr)
+		t.Errorf("ms stub called with unexpected args: %q", logStr)
 	}
 }
 
@@ -887,7 +887,7 @@ func TestFeedNextReadyIssue_SkipsEpicAndDispatchesTask(t *testing.T) {
 
 	logData, err := os.ReadFile(logPath)
 	if err != nil {
-		t.Fatalf("gt stub was not called (no log file): %v", err)
+		t.Fatalf("ms stub was not called (no log file): %v", err)
 	}
 	logStr := strings.TrimSpace(string(logData))
 	// Only the task should have been dispatched, not the epic
@@ -990,11 +990,11 @@ func TestFeedNextReadyIssue_SkipsBlockedIssue(t *testing.T) {
 
 	logData, err := os.ReadFile(logPath)
 	if err != nil {
-		// If gt was not called at all, check if GetDependenciesWithMetadata
+		// If ms was not called at all, check if GetDependenciesWithMetadata
 		// failed (embedded Dolt nested query limitation). This means both
 		// isIssueBlocked and getMinecartTrackedIssues may fail.
-		t.Logf("gt stub not called; log messages: %v", *logMsgs)
-		t.Skipf("gt stub was not called — likely embedded Dolt nested query limitation")
+		t.Logf("ms stub not called; log messages: %v", *logMsgs)
+		t.Skipf("ms stub was not called — likely embedded Dolt nested query limitation")
 	}
 	logStr := strings.TrimSpace(string(logData))
 
@@ -1138,9 +1138,9 @@ func TestFeedNextReadyIssue_SkipsParkedRig(t *testing.T) {
 	// isRigParked always returns true
 	feedNextReadyIssue(ctx, store, townRoot, minecart.ID, "test", logger, gtPath, func(string) bool { return true }, nil)
 
-	// gt should NOT have been called
+	// ms should NOT have been called
 	if _, err := os.ReadFile(logPath); err == nil {
-		t.Errorf("gt stub should not have been called for parked rig")
+		t.Errorf("ms stub should not have been called for parked rig")
 	}
 
 	// Verify "parked" appeared in log
@@ -1177,12 +1177,12 @@ func TestDispatchIssue_Success(t *testing.T) {
 
 	logData, err := os.ReadFile(logPath)
 	if err != nil {
-		t.Fatalf("gt stub log not written: %v", err)
+		t.Fatalf("ms stub log not written: %v", err)
 	}
 	logStr := strings.TrimSpace(string(logData))
 	expected := "sling test-abc myrig --no-boot"
 	if logStr != expected {
-		t.Errorf("gt stub called with %q, want %q", logStr, expected)
+		t.Errorf("ms stub called with %q, want %q", logStr, expected)
 	}
 }
 
@@ -1196,7 +1196,7 @@ func TestDispatchIssue_Failure(t *testing.T) {
 
 	err := dispatchIssue(context.Background(), townRoot, "test-fail", "myrig", gtPath, "")
 	if err == nil {
-		t.Fatal("dispatchIssue should return error when gt exits 1")
+		t.Fatal("dispatchIssue should return error when ms exits 1")
 	}
 }
 
@@ -1710,7 +1710,7 @@ func TestFireCrossRigDepNotifications_NotifiesWitnessOnCrossRigBlocker(t *testin
 	}
 
 	// Set up a real store that simulates the "mineshaft" rig.
-	// In it we create gt-dep which is blocked by external:bd:bd-closed.
+	// In it we create ms-dep which is blocked by external:bd:bd-closed.
 	store, cleanup := setupTestStore(t)
 	defer cleanup()
 
@@ -1718,7 +1718,7 @@ func TestFireCrossRigDepNotifications_NotifiesWitnessOnCrossRigBlocker(t *testin
 	now := time.Now().UTC()
 
 	dependent := &beadsdk.Issue{
-		ID:        "gt-dep1",
+		ID:        "ms-dep1",
 		Title:     "Waiting on beads fix",
 		Status:    beadsdk.StatusOpen,
 		Priority:  2,
@@ -1730,9 +1730,9 @@ func TestFireCrossRigDepNotifications_NotifiesWitnessOnCrossRigBlocker(t *testin
 		t.Fatalf("CreateIssue dependent: %v", err)
 	}
 
-	// Add a blocking dep: gt-dep1 is blocked by external:bd:bd-closed
+	// Add a blocking dep: ms-dep1 is blocked by external:bd:bd-closed
 	dep := &beadsdk.Dependency{
-		IssueID:     "gt-dep1",
+		IssueID:     "ms-dep1",
 		DependsOnID: "external:bd:bd-closed",
 		Type:        beadsdk.DepBlocks,
 		CreatedAt:   now,
@@ -1742,35 +1742,35 @@ func TestFireCrossRigDepNotifications_NotifiesWitnessOnCrossRigBlocker(t *testin
 		t.Fatalf("AddDependency: %v", err)
 	}
 
-	// Set up town root with routes: gt- → mineshaft, bd- → beads.
+	// Set up town root with routes: ms- → mineshaft, bd- → beads.
 	townRoot := t.TempDir()
 	beadsDir := filepath.Join(townRoot, ".beads")
 	if err := os.MkdirAll(beadsDir, 0o755); err != nil {
 		t.Fatalf("MkdirAll .beads: %v", err)
 	}
-	routesContent := `{"prefix":"gt-","path":"mineshaft/.beads"}` + "\n" +
+	routesContent := `{"prefix":"ms-","path":"mineshaft/.beads"}` + "\n" +
 		`{"prefix":"bd-","path":"beads/.beads"}` + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0o644); err != nil {
 		t.Fatalf("WriteFile routes.jsonl: %v", err)
 	}
 
-	// Set up a mock gt binary that logs nudge calls.
+	// Set up a mock ms binary that logs nudge calls.
 	binDir := filepath.Join(townRoot, "bin")
 	if err := os.MkdirAll(binDir, 0o755); err != nil {
 		t.Fatalf("MkdirAll binDir: %v", err)
 	}
-	gtLogPath := filepath.Join(townRoot, "gt.log")
+	gtLogPath := filepath.Join(townRoot, "ms.log")
 	gtScript := fmt.Sprintf(`#!/bin/sh
 echo "CMD:$*" >> %q
 exit 0
 `, gtLogPath)
-	gtPath := filepath.Join(binDir, "gt")
+	gtPath := filepath.Join(binDir, "ms")
 	if err := os.WriteFile(gtPath, []byte(gtScript), 0o755); err != nil {
-		t.Fatalf("write gt stub: %v", err)
+		t.Fatalf("write ms stub: %v", err)
 	}
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
-	// stores: "mineshaft" → store (has gt-dep1 blocked by external:bd:bd-closed)
+	// stores: "mineshaft" → store (has ms-dep1 blocked by external:bd:bd-closed)
 	//         "beads"   → (closed issue's home store, skipped by FireCrossRigDepNotifications)
 	stores := map[string]beadsdk.Storage{
 		"mineshaft": store,
@@ -1783,13 +1783,13 @@ exit 0
 
 	FireCrossRigDepNotifications(ctx, "bd-closed", townRoot, stores, logger)
 
-	// Verify gt nudge was called for mineshaft/witness.
+	// Verify ms nudge was called for mineshaft/witness.
 	logData, err := os.ReadFile(gtLogPath)
 	if err != nil {
-		t.Skipf("gt stub not called (no log): %v", err)
+		t.Skipf("ms stub not called (no log): %v", err)
 	}
 	logStr := string(logData)
 	if !strings.Contains(logStr, "nudge") || !strings.Contains(logStr, "mineshaft/witness") {
-		t.Errorf("expected gt nudge mineshaft/witness in log, got: %q\nlogger output: %v", logStr, logged)
+		t.Errorf("expected ms nudge mineshaft/witness in log, got: %q\nlogger output: %v", logStr, logged)
 	}
 }

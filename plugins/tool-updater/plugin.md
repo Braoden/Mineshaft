@@ -21,10 +21,10 @@ severity = "medium"
 
 Checks for and applies Homebrew updates to `beads` (bd) and `dolt`.
 
-gt is rebuilt separately by the `rebuild-gt` plugin (it builds from source, not Homebrew).
+ms is rebuilt separately by the `rebuild-ms` plugin (it builds from source, not Homebrew).
 
 ## Run
 
 ```bash
-cd /Users/jeremy/gt/plugins/tool-updater && bash run.sh
+cd /Users/jeremy/ms/plugins/tool-updater && bash run.sh
 ```

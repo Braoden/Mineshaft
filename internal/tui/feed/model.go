@@ -45,7 +45,7 @@ type Event struct {
 	Time    time.Time
 	Type    string // create, update, complete, fail, delete
 	Actor   string // who did it (e.g., "mineshaft/crew/joe")
-	Target  string // what was affected (e.g., "gt-xyz")
+	Target  string // what was affected (e.g., "ms-xyz")
 	Message string // human-readable description
 	Rig     string // which rig
 	Role    string // actor's role
@@ -166,7 +166,7 @@ func (m *Model) Init() tea.Cmd {
 	cmds := []tea.Cmd{
 		m.listenForEvents(),
 		m.fetchMinecarts(),
-		tea.SetWindowTitle("GT Feed"),
+		tea.SetWindowTitle("MS Feed"),
 	}
 	// If starting in problems view, fetch problems immediately
 	if m.viewMode == ViewProblems {
@@ -626,7 +626,7 @@ func (m *Model) attachToSelected() (tea.Model, tea.Cmd) {
 	)
 }
 
-// nudgeTarget returns the proper gt nudge target for an agent.
+// nudgeTarget returns the proper ms nudge target for an agent.
 // Uses rig/name format for miners, rig/crew/name for crew,
 // and role shortcuts for singletons (overseer, supervisor, witness, refinery).
 func nudgeTarget(agent *ProblemAgent) string {
@@ -651,9 +651,9 @@ func (m *Model) nudgeSelected() (tea.Model, tea.Cmd) {
 	if agent == nil {
 		return m, nil
 	}
-	// Run gt nudge with proper target format
+	// Run ms nudge with proper target format
 	target := nudgeTarget(agent)
-	c := exec.Command("gt", "nudge", target, "continue")
+	c := exec.Command("ms", "nudge", target, "continue")
 	util.SetDetachedProcessGroup(c)
 	return m, tea.ExecProcess(c, func(err error) tea.Msg {
 		// Refresh problems after nudge
@@ -667,9 +667,9 @@ func (m *Model) handoffSelected() (tea.Model, tea.Cmd) {
 	if agent == nil {
 		return m, nil
 	}
-	// Run gt nudge with proper target format
+	// Run ms nudge with proper target format
 	target := nudgeTarget(agent)
-	c := exec.Command("gt", "nudge", target, "handoff")
+	c := exec.Command("ms", "nudge", target, "handoff")
 	util.SetDetachedProcessGroup(c)
 	return m, tea.ExecProcess(c, func(err error) tea.Msg {
 		return problemsTickMsg{}
@@ -806,7 +806,7 @@ func (m *Model) addEventLocked(e Event) bool {
 	}
 
 	// Filter out noisy agent session updates from the event feed.
-	// Agent session molecules (like gt-mineshaft-crew-joe) update frequently
+	// Agent session molecules (like ms-mineshaft-crew-joe) update frequently
 	// for status tracking. These updates are visible in the agent tree,
 	// so we don't need to clutter the event feed with them.
 	// We still show create/complete/fail/delete events for agent sessions.

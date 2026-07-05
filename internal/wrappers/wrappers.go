@@ -1,5 +1,5 @@
 // ABOUTME: Manages wrapper scripts for non-Claude agentic coding tools.
-// ABOUTME: Provides gt-codex and gt-opencode wrappers that run gt prime first.
+// ABOUTME: Provides ms-codex and ms-opencode wrappers that run ms prime first.
 
 package wrappers
 
@@ -23,7 +23,7 @@ func Install() error {
 		return fmt.Errorf("creating bin directory: %w", err)
 	}
 
-	wrappers := []string{"gt-codex", "gt-gemini", "gt-opencode"}
+	wrappers := []string{"ms-codex", "ms-gemini", "ms-opencode"}
 	for _, name := range wrappers {
 		content, err := scriptsFS.ReadFile("scripts/" + name)
 		if err != nil {
@@ -45,7 +45,7 @@ func Remove() error {
 		return err
 	}
 
-	wrappers := []string{"gt-codex", "gt-gemini", "gt-opencode"}
+	wrappers := []string{"ms-codex", "ms-gemini", "ms-opencode"}
 	for _, name := range wrappers {
 		destPath := filepath.Join(binDir, name)
 		if err := os.Remove(destPath); err != nil && !os.IsNotExist(err) {

@@ -4,28 +4,28 @@
     "sessionStart": [
       {
         "type": "command",
-        "bash": "{{GT_BIN}} prime --hook",
+        "bash": "{{MS_BIN}} prime --hook",
         "timeoutSec": 30
       }
     ],
     "userPromptSubmitted": [
       {
         "type": "command",
-        "bash": "case \"${GT_ROLE:-}\" in *witness*|*refinery*|supervisor*|*boot*) exit 0 ;; *) {{GT_BIN}} mail check --inject ;; esac",
+        "bash": "case \"${MS_ROLE:-}\" in *witness*|*refinery*|supervisor*|*boot*) exit 0 ;; *) {{MS_BIN}} mail check --inject ;; esac",
         "timeoutSec": 10
       }
     ],
     "preToolUse": [
       {
         "type": "command",
-        "bash": "INPUT=$(cat) && TOOL=$(echo \"$INPUT\" | jq -r '.toolName // empty') && if [ \"$TOOL\" = \"bash\" ]; then CMD=$(echo \"$INPUT\" | jq -r '.toolArgs // empty' | jq -r '.command // empty'); if echo \"$CMD\" | grep -qE 'gh\\s+pr\\s+create|git\\s+checkout\\s+-b|git\\s+switch\\s+-c'; then {{GT_BIN}} tap guard pr-workflow 2>/dev/null || echo '{\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Mineshaft PR workflow guard: use gt done to submit work\"}'; fi; fi",
+        "bash": "INPUT=$(cat) && TOOL=$(echo \"$INPUT\" | jq -r '.toolName // empty') && if [ \"$TOOL\" = \"bash\" ]; then CMD=$(echo \"$INPUT\" | jq -r '.toolArgs // empty' | jq -r '.command // empty'); if echo \"$CMD\" | grep -qE 'gh\\s+pr\\s+create|git\\s+checkout\\s+-b|git\\s+switch\\s+-c'; then {{MS_BIN}} tap guard pr-workflow 2>/dev/null || echo '{\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Mineshaft PR workflow guard: use ms done to submit work\"}'; fi; fi",
         "timeoutSec": 10
       }
     ],
     "sessionEnd": [
       {
         "type": "command",
-        "bash": "{{GT_BIN}} costs record &",
+        "bash": "{{MS_BIN}} costs record &",
         "timeoutSec": 10
       }
     ]

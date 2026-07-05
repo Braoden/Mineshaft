@@ -17,7 +17,7 @@ func TestAddressToIdentity(t *testing.T) {
 		{"supervisor", "supervisor/"},
 		{"supervisor/", "supervisor/"},
 
-		// Rig-scoped town-level roles resolve to canonical form (gt-te23)
+		// Rig-scoped town-level roles resolve to canonical form (ms-te23)
 		{"mineshaft/overseer", "overseer/"},
 		{"mineshaft/supervisor", "supervisor/"},
 		{"laser/overseer", "overseer/"},
@@ -300,7 +300,7 @@ func TestBeadsMessageToMessageWithEscalationTypeAndLabels(t *testing.T) {
 			"from:supervisor/",
 			"thread:t-esc",
 			"msg-type:escalation",
-			"gt:escalation",
+			"ms:escalation",
 			"severity:critical",
 			"escalation:hq-abc123",
 		},
@@ -313,8 +313,8 @@ func TestBeadsMessageToMessageWithEscalationTypeAndLabels(t *testing.T) {
 	if msg.Type != TypeEscalation {
 		t.Errorf("Type = %q, want TypeEscalation", msg.Type)
 	}
-	if !bm.HasLabel("gt:escalation") {
-		t.Error("expected gt:escalation label to be preserved")
+	if !bm.HasLabel("ms:escalation") {
+		t.Error("expected ms:escalation label to be preserved")
 	}
 	if !bm.HasLabel("severity:critical") {
 		t.Error("expected severity:critical label to be preserved")
@@ -919,7 +919,7 @@ func TestSuppressNotifyNotSerialized(t *testing.T) {
 
 func TestNewMessageValidatesForCrossRigAddresses(t *testing.T) {
 	// Regression test: cross-rig addresses like "beads/crew/emma" must have
-	// auto-generated ID and pass validation (gt-rud3p).
+	// auto-generated ID and pass validation (ms-rud3p).
 	crossRigAddresses := []string{
 		"beads/crew/emma",
 		"mineshaft/miners/Toast",
@@ -947,7 +947,7 @@ func TestNewMessageValidatesForCrossRigAddresses(t *testing.T) {
 
 func TestNewMessageFanOutCopiesGetUniqueIDs(t *testing.T) {
 	// When fanning out to multiple recipients, copies with cleared IDs
-	// should get unique IDs from sendToSingle (gt-rud3p).
+	// should get unique IDs from sendToSingle (ms-rud3p).
 	msg := NewMessage("mineshaft/dag", "beads/crew/emma", "Test", "Body")
 	originalID := msg.ID
 

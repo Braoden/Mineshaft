@@ -89,7 +89,7 @@ func TestFilterFormulaScaffolds(t *testing.T) {
 		{ID: constants.MolWitnessPatrol + ".loop-or-exit", Title: "Loop or exit"},
 		{ID: "hq-123", Title: "Real work item"},
 		{ID: "hq-wisp-abc", Title: "Actual wisp"},
-		{ID: "gt-456", Title: "Project issue"},
+		{ID: "ms-456", Title: "Project issue"},
 	}
 
 	filtered := filterFormulaScaffolds(issues, formulaNames)
@@ -102,7 +102,7 @@ func TestFilterFormulaScaffolds(t *testing.T) {
 	expectedIDs := map[string]bool{
 		"hq-123":      true,
 		"hq-wisp-abc": true,
-		"gt-456":      true,
+		"ms-456":      true,
 	}
 	for _, issue := range filtered {
 		if !expectedIDs[issue.ID] {
@@ -198,7 +198,7 @@ func TestFilterReadyIssuesByRoute(t *testing.T) {
 		`{"prefix":"hq-","path":"."}`,
 		`{"prefix":"hq-cv-","path":"."}`,
 		`{"prefix":"bds-","path":"bd_symphony/overseer/rig"}`,
-		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`,
+		`{"prefix":"ms-","path":"mineshaft/overseer/rig"}`,
 	}, "\n") + "\n"
 	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(routes), 0644); err != nil {
 		t.Fatalf("writing routes: %v", err)
@@ -218,7 +218,7 @@ func TestFilterReadyIssuesByRoute(t *testing.T) {
 	issues = []*beads.Issue{
 		{ID: "bds-123", Title: "bd_symphony work"},
 		{ID: "hq-123", Title: "town work in rig result"},
-		{ID: "gt-123", Title: "other rig work"},
+		{ID: "ms-123", Title: "other rig work"},
 		{ID: "unknown-123", Title: "unknown route"},
 	}
 	filtered = filterReadyIssuesByRoute(townRoot, "bd_symphony", issues)

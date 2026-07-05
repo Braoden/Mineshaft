@@ -13,7 +13,7 @@ import (
 // Scenario: three beads in three different rigs, with a linear cross-rig dep
 // chain mo-bmx ← fr-2p0 ← svh-0m5 (read "X depends on Y").
 //
-// Expected: gt minecart stage produces 3 waves: [mo-bmx] → [fr-2p0] → [svh-0m5]
+// Expected: ms minecart stage produces 3 waves: [mo-bmx] → [fr-2p0] → [svh-0m5]
 // Bug (before beads fix): bd dep list returned [] for all three (cross-rig
 // rows silently dropped), so the wave walker saw zero edges and produced 1
 // wave with all 3 in parallel.

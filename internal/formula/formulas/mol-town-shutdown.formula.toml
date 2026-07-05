@@ -10,7 +10,7 @@ Use when you need to:
 - Prepare for maintenance or upgrades
 
 Sling to Overseer when ready to reboot:
-  gt sling mol-town-shutdown overseer
+  ms sling mol-town-shutdown overseer
 """
 formula = "mol-town-shutdown"
 type = "workflow"
@@ -23,7 +23,7 @@ description = """
 Scan for conditions that might make shutdown inadvisable.
 
 ```bash
-gt shutdown preflight
+ms shutdown preflight
 ```
 
 This checks for:
@@ -54,10 +54,10 @@ Kill Claude processes but leave miner sandboxes intact.
 
 ```bash
 # Stop all miner Claude sessions
-gt stop --all --preserve-sandbox
+ms stop --all --preserve-sandbox
 
 # Verify sandboxes still exist
-gt miners --all --status
+ms miners --all --status
 ```
 
 What this does:
@@ -85,13 +85,13 @@ Archive and clear all agent inboxes across all rigs.
 
 ```bash
 # For each rig
-for rig in $(gt rigs --names); do
-  gt mail clear $rig/witness --archive
-  gt mail clear $rig/refinery --archive
+for rig in $(ms rigs --names); do
+  ms mail clear $rig/witness --archive
+  ms mail clear $rig/refinery --archive
 done
 
 # Clear Overseer inbox
-gt mail clear overseer --archive
+ms mail clear overseer --archive
 ```
 
 Messages are archived to `.beads/mail-archive/` before deletion.
@@ -106,7 +106,7 @@ description = """
 Stop the Mineshaft daemon gracefully.
 
 ```bash
-gt daemon stop
+ms daemon stop
 ```
 
 The daemon handles:
@@ -126,13 +126,13 @@ Rotate logs to prevent unbounded growth.
 
 ```bash
 # Rotate daemon logs
-gt daemon rotate-logs
+ms daemon rotate-logs
 
 # Clean up old session captures (but not current sandboxes)
-gt doctor --fix
+ms doctor --fix
 ```
 
-Old logs are moved to `$GT_ROOT/logs/archive/` with timestamps.
+Old logs are moved to `$MS_ROOT/logs/archive/` with timestamps.
 """
 
 [[steps]]
@@ -159,7 +159,7 @@ description = """
 Record shutdown context for the fresh Overseer session.
 
 ```bash
-gt mail send overseer -s "🤝 HANDOFF: Town shutdown complete" -m "
+ms mail send overseer -s "🤝 HANDOFF: Town shutdown complete" -m "
 Town shutdown completed. State preserved.
 
 Miner sandboxes: PRESERVED (will resume from hooks)
@@ -167,9 +167,9 @@ Inboxes: ARCHIVED and cleared
 Daemon: STOPPED
 
 Next steps:
-1. gt daemon start
-2. gt prime
-3. gt status (verify health)
+1. ms daemon start
+2. ms prime
+3. ms status (verify health)
 4. Resume operations or respawn miners
 
 Shutdown reason: {{shutdown_reason}}
@@ -185,7 +185,7 @@ description = """
 Start the daemon with fresh state.
 
 ```bash
-gt daemon start
+ms daemon start
 ```
 
 The daemon will:
@@ -193,7 +193,7 @@ The daemon will:
 - Watch for pending spawns
 - Resume background coordination
 
-Miners are NOT auto-respawned. Use `gt sling` or let Witness
+Miners are NOT auto-respawned. Use `ms sling` or let Witness
 restart them based on their preserved hooks.
 """
 

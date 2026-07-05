@@ -45,7 +45,7 @@ func NewWithBeadsDirAndStore(workDir, beadsDir string, store beadsdk.Storage) *B
 }
 
 // OpenStore opens a beadsdk.Storage for the resolved beads directory.
-// This is a convenience for short-lived gt commands that open, use, and close
+// This is a convenience for short-lived ms commands that open, use, and close
 // a store within a single invocation. For long-lived processes (daemon), prefer
 // keeping persistent stores via SetStore.
 //
@@ -80,7 +80,7 @@ func storeCtx() (context.Context, context.CancelFunc) {
 }
 
 // sdkIssueToIssue converts a beadsdk Issue (types.Issue) to the mineshaft
-// beads.Issue type used throughout the gt codebase. This handles the type
+// beads.Issue type used throughout the ms codebase. This handles the type
 // differences between the two representations:
 //   - time.Time → string (RFC3339)
 //   - types.Status → string
@@ -216,7 +216,7 @@ func issueFilterFromListOpts(opts ListOptions) beadsdk.IssueFilter {
 	if opts.Label != "" {
 		f.Labels = []string{opts.Label}
 	} else if opts.Type != "" {
-		f.Labels = []string{"gt:" + opts.Type}
+		f.Labels = []string{"ms:" + opts.Type}
 	}
 
 	if opts.Priority >= 0 {
@@ -252,7 +252,7 @@ func workFilterFromListOpts(opts ListOptions) beadsdk.WorkFilter {
 	if opts.Label != "" {
 		f.Labels = []string{opts.Label}
 	} else if opts.Type != "" {
-		f.Labels = []string{"gt:" + opts.Type}
+		f.Labels = []string{"ms:" + opts.Type}
 	}
 
 	if opts.Priority >= 0 {
@@ -369,7 +369,7 @@ func (b *Beads) storeCreate(opts CreateOptions) (*Issue, error) {
 	} else if opts.Label != "" {
 		sdkIssue.Labels = []string{opts.Label}
 	} else if opts.Type != "" {
-		sdkIssue.Labels = []string{"gt:" + opts.Type}
+		sdkIssue.Labels = []string{"ms:" + opts.Type}
 	}
 
 	// Actor

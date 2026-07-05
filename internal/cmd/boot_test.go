@@ -63,7 +63,7 @@ func TestExecuteWarrants_MarksPendingAsExecuted(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping warrant execution test on Windows (no tmux)")
 	}
-	// Register prefixes so targetToSessionName can resolve "mineshaft" → "gt"
+	// Register prefixes so targetToSessionName can resolve "mineshaft" → "ms"
 	setupWarrantTestRegistry(t)
 
 	warrantDir := t.TempDir()

@@ -1,6 +1,6 @@
-// Package events provides event logging for the gt activity feed.
+// Package events provides event logging for the ms activity feed.
 //
-// Events are written to ~/gt/.events.jsonl (raw audit log) and later
+// Events are written to ~/ms/.events.jsonl (raw audit log) and later
 // curated by the feed daemon into ~/.feed.jsonl (user-facing).
 package events
 
@@ -32,7 +32,7 @@ const (
 	VisibilityBoth  = "both"  // Both audit and feed
 )
 
-// Common event types for gt commands.
+// Common event types for ms commands.
 const (
 	TypeSling   = "sling"
 	TypeHook    = "hook"
@@ -80,12 +80,12 @@ const (
 const EventsFile = ".events.jsonl"
 
 // Log writes an event to the events log.
-// The event is appended to ~/gt/.events.jsonl.
+// The event is appended to ~/ms/.events.jsonl.
 // Returns nil if logging fails (events are best-effort).
 func Log(eventType, actor string, payload map[string]interface{}, visibility string) error {
 	event := Event{
 		Timestamp:  time.Now().UTC().Format(time.RFC3339),
-		Source:     "gt",
+		Source:     "ms",
 		Type:       eventType,
 		Actor:      actor,
 		Payload:    payload,
@@ -106,7 +106,7 @@ func LogAudit(eventType, actor string, payload map[string]interface{}) error {
 
 // write appends an event to the events file.
 // Uses flock for cross-process synchronization — sync.Mutex only protects
-// intra-process goroutines, but multiple gt processes write concurrently.
+// intra-process goroutines, but multiple ms processes write concurrently.
 func write(event Event) error {
 	// Find town root
 	townRoot, err := workspace.FindFromCwd()
@@ -296,7 +296,7 @@ func HaltPayload(services []string) map[string]interface{} {
 // session: tmux session name that died
 // agent: Mineshaft agent identity (e.g., "mineshaft/miners/Toast")
 // reason: why the session was killed (e.g., "zombie cleanup", "user request", "doctor fix")
-// caller: what initiated the kill (e.g., "daemon", "doctor", "gt down")
+// caller: what initiated the kill (e.g., "daemon", "doctor", "ms down")
 func SessionDeathPayload(session, agent, reason, caller string) map[string]interface{} {
 	return map[string]interface{}{
 		"session": session,

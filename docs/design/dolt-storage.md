@@ -15,7 +15,7 @@ no embedded mode and no SQLite. JSONL is used only for disaster-recovery
 backups (the JSONL Dog exports scrubbed snapshots every 15 minutes to a
 git-backed archive), not as a primary storage format.
 
-The `gt daemon` manages the server lifecycle (auto-start, health checks
+The `ms daemon` manages the server lifecycle (auto-start, health checks
 every 30s, crash restart with exponential backoff).
 
 ## Server Architecture
@@ -23,29 +23,29 @@ every 30s, crash restart with exponential backoff).
 ```
 Dolt SQL Server (one per town, port 3307)
 ├── hq/       town-level beads  (hq-* prefix)
-├── mineshaft/  rig beads         (gt-* prefix)
+├── mineshaft/  rig beads         (ms-* prefix)
 ├── beads/    rig beads         (bd-* prefix)
 ├── wyvern/   rig beads         (wy-* prefix)
 └── sky/      rig beads         (sky-* prefix)
 ```
 
-**Data directory**: `~/gt/.dolt-data/` — each subdirectory is a database
+**Data directory**: `~/ms/.dolt-data/` — each subdirectory is a database
 accessible via `USE <name>` in SQL.
 
 **Connection**: `root@tcp(<host>:3307)/<database>` (no password).
 
 ## Environment Variables
 
-gt and bd use separate env vars for Dolt connection. gt automatically
+ms and bd use separate env vars for Dolt connection. ms automatically
 translates its variables to bd's equivalents when spawning agents.
 
-| gt (Mineshaft) | bd (Beads) | Purpose |
+| ms (Mineshaft) | bd (Beads) | Purpose |
 |---------------|------------|---------|
-| `GT_DOLT_HOST` | `BEADS_DOLT_SERVER_HOST` | Server host (bd defaults to `127.0.0.1` if unset) |
-| `GT_DOLT_PORT` | `BEADS_DOLT_PORT` | Server port (default: `3307`) |
+| `MS_DOLT_HOST` | `BEADS_DOLT_SERVER_HOST` | Server host (bd defaults to `127.0.0.1` if unset) |
+| `MS_DOLT_PORT` | `BEADS_DOLT_PORT` | Server port (default: `3307`) |
 
 **Remote Dolt servers**: If Dolt runs on a different machine (e.g., over
-Tailscale), set `GT_DOLT_HOST` in the environment. gt propagates this as
+Tailscale), set `MS_DOLT_HOST` in the environment. ms propagates this as
 `BEADS_DOLT_SERVER_HOST` to all bd subprocesses, overriding bd's hardcoded
 `127.0.0.1` default. Without this, every new rig/worktree/miner silently
 connects to localhost and fails.
@@ -57,25 +57,25 @@ This takes priority over the env var for that specific workspace.
 
 ```bash
 # Daemon manages server lifecycle (preferred)
-gt daemon start
+ms daemon start
 
 # Manual management
-gt dolt start          # Start server
-gt dolt stop           # Stop server
-gt dolt status         # Health check, list databases
-gt dolt logs           # View server logs
-gt dolt sql            # Open SQL shell
-gt dolt init-rig <X>   # Create a new rig database
-gt dolt list           # List all databases
+ms dolt start          # Start server
+ms dolt stop           # Stop server
+ms dolt status         # Health check, list databases
+ms dolt logs           # View server logs
+ms dolt sql            # Open SQL shell
+ms dolt init-rig <X>   # Create a new rig database
+ms dolt list           # List all databases
 ```
 
 If the server isn't running, `bd` fails fast with a clear message
-pointing to `gt dolt start`.
+pointing to `ms dolt start`.
 
 ## Mineshaft Scope vs `bd --global`
 
 Mineshaft's town-level beads are the `hq` database. Access them by running
-direct `bd` commands from the town root (`~/gt`) or with `bd -C ~/gt ...`.
+direct `bd` commands from the town root (`~/ms`) or with `bd -C ~/ms ...`.
 Direct `bd` commands from rig worktrees use that rig's `.beads` redirect and
 database, so do not assume an `hq-*` ID will retarget the command.
 
@@ -84,7 +84,7 @@ means the standalone shared-server database named `beads_global`; it does
 not mean Mineshaft's `hq` database, and `BEADS_DOLT_DATABASE=hq` does not
 retarget `--global`.
 
-For Mineshaft Dolt health, use `gt dolt status`. `bd dolt status` reports
+For Mineshaft Dolt health, use `ms dolt status`. `bd dolt status` reports
 the Beads client/runtime view and can say no Beads-managed server is running
 even when the Mineshaft Dolt server on port 3307 is healthy.
 
@@ -258,7 +258,7 @@ CREATE → LIVE → CLOSE → DECAY → COMPACT → FLATTEN
 | Stage | Owner | Frequency | Mechanism |
 |-------|-------|-----------|-----------|
 | CREATE | Any agent | Continuous | `bd create`, `bd mol wisp create` |
-| CLOSE | Agent or patrol | Per-task | `bd close`, `gt done` |
+| CLOSE | Agent or patrol | Per-task | `bd close`, `ms done` |
 | DECAY | Reaper Dog | Daily | `DELETE FROM wisps WHERE status='closed' AND age > 7d` |
 | COMPACT | Compactor Dog | Daily | `DOLT_RESET --soft` + `DOLT_COMMIT` (safe on running server) |
 | FLATTEN | Compactor Dog | Daily | Same as COMPACT — no downtime, no maintenance window |
@@ -267,7 +267,7 @@ All six stages are implemented in code. DECAY runs in the Reaper Dog
 (wisp_reaper.go), COMPACT/FLATTEN run in the Compactor Dog (compactor_dog.go).
 All lifecycle tickers are enabled by default via `EnsureLifecycleDefaults()`
 (lifecycle_defaults.go), which auto-populates daemon.json with sensible
-defaults on `gt init` or `gt up`. Explicitly disabled patrols are preserved.
+defaults on `ms init` or `ms up`. Explicitly disabled patrols are preserved.
 
 ### Two Data Streams
 
@@ -441,15 +441,15 @@ reclamation. Scheduled events add no value beyond what we already have.
 Pollution enters Dolt via four vectors:
 
 1. **Commit graph growth**: Every mutation = a commit. Rebase compacts.
-2. **Mail pollution**: Agents overuse `gt mail send` for routine comms.
-   Use `gt nudge` (ephemeral, zero Dolt cost) instead. See mail-protocol.md.
+2. **Mail pollution**: Agents overuse `ms mail send` for routine comms.
+   Use `ms nudge` (ephemeral, zero Dolt cost) instead. See mail-protocol.md.
 3. **Test artifacts**: Test code creating issues on production server.
    Firewall in store.go refuses test-prefixed CREATE DATABASE on port 3307.
 4. **Zombie processes**: Test dolt-server processes that outlive tests.
    Doctor Dog kills these. 45 zombies (7GB RAM) found and killed 2026-02-27.
 
 Prevention is layered:
-- **Prompting**: Agents prefer `gt nudge` over `gt mail send` (zero commits)
+- **Prompting**: Agents prefer `ms nudge` over `ms mail send` (zero commits)
 - **Firewall** (store.go): refuses test-prefixed CREATE DATABASE on port 3307
 - **Reaper Dog**: DELETEs closed wisps, auto-closes stale issues
 - **Compactor Dog**: flattens old commits to compress history, runs gc after
@@ -458,16 +458,16 @@ Prevention is layered:
 
 All Dogs are enabled by default via `EnsureLifecycleDefaults()` in
 lifecycle_defaults.go. The daemon auto-populates missing patrol entries
-in daemon.json on startup (`gt init` / `gt up`). To disable a specific
+in daemon.json on startup (`ms init` / `ms up`). To disable a specific
 Dog, set `"enabled": false` in its daemon.json section — the auto-populate
 logic preserves explicitly configured entries.
 
 ### Communication Hygiene (Reducing Commit Volume)
 
-Every `gt mail send` creates a bead + Dolt commit. Every `gt nudge`
+Every `ms mail send` creates a bead + Dolt commit. Every `ms nudge`
 creates nothing. The rule:
 
-**Default to `gt nudge`. Only use `gt mail send` when the message MUST
+**Default to `ms nudge`. Only use `ms mail send` when the message MUST
 survive the recipient's session death.**
 
 | Role | Mail budget | Nudge for everything else |
@@ -491,13 +491,13 @@ versioning capabilities.
 
 ## Remote Push (Git Protocol)
 
-Mineshaft pushes Dolt databases to GitHub remotes via `gt dolt sync`. These
+Mineshaft pushes Dolt databases to GitHub remotes via `ms dolt sync`. These
 use git SSH protocol (`git+ssh://git@github.com/...`), not DoltHub's native
 protocol.
 
 ### Git Remote Cache
 
-Dolt maintains a cache at `~/gt/.dolt-data/<db>/.dolt/git-remote-cache/` that
+Dolt maintains a cache at `~/ms/.dolt-data/<db>/.dolt/git-remote-cache/` that
 stores git objects built from Dolt's internal format. Per the Dolt team
 (Dustin Brown, 2026-02-26):
 
@@ -514,7 +514,7 @@ rebuild is acceptable.
 
 ### Sync Procedure
 
-`gt dolt sync` parks all rigs (stops witnesses/refineries), stops the Dolt
+`ms dolt sync` parks all rigs (stops witnesses/refineries), stops the Dolt
 server, runs `dolt push` for each database with a configured remote, then
 restarts the server and unparks rigs. The parking prevents witnesses from
 detecting the server outage and restarting it mid-push.
@@ -522,7 +522,7 @@ detecting the server outage and restarting it mid-push.
 ### Force Push
 
 After data recovery (e.g., Clown Show #13), local and remote histories
-diverge. Use `gt dolt sync --force` for the first push to overwrite the
+diverge. Use `ms dolt sync --force` for the first push to overwrite the
 remote with local state. Subsequent pushes should work without `--force`.
 
 ### Known Limitations
@@ -545,10 +545,10 @@ require DoltHub accounts and reconfiguring remotes with
 ## File Layout
 
 ```
-~/gt/                            Town root
+~/ms/                            Town root
 ├── .dolt-data/                  Centralized Dolt data directory
 │   ├── hq/                      Town beads (hq-*)
-│   ├── mineshaft/                 Mineshaft rig (gt-*)
+│   ├── mineshaft/                 Mineshaft rig (ms-*)
 │   ├── beads/                   Beads rig (bd-*)
 │   ├── wyvern/                  Wyvern rig (wy-*)
 │   └── sky/                     Sky rig (sky-*)

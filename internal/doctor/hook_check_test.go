@@ -65,18 +65,18 @@ func TestHookAttachmentValidCheck_FormatInvalid(t *testing.T) {
 		{
 			inv: invalidAttachment{
 				pinnedBeadID: "hq-123",
-				moleculeID:   "gt-456",
+				moleculeID:   "ms-456",
 				reason:       "not_found",
 			},
-			expected: "hq-123: attached molecule gt-456 not found",
+			expected: "hq-123: attached molecule ms-456 not found",
 		},
 		{
 			inv: invalidAttachment{
 				pinnedBeadID: "hq-123",
-				moleculeID:   "gt-789",
+				moleculeID:   "ms-789",
 				reason:       "closed",
 			},
-			expected: "hq-123: attached molecule gt-789 is closed",
+			expected: "hq-123: attached molecule ms-789 is closed",
 		},
 	}
 
@@ -189,9 +189,9 @@ func TestHookSingletonCheck_FormatDuplicate(t *testing.T) {
 		{
 			dup: duplicateHandoff{
 				title:   "Witness Handoff",
-				beadIDs: []string{"gt-1", "gt-2", "gt-3"},
+				beadIDs: []string{"ms-1", "ms-2", "ms-3"},
 			},
-			expected: `"Witness Handoff" has 3 beads: gt-1, gt-2, gt-3`,
+			expected: `"Witness Handoff" has 3 beads: ms-1, ms-2, ms-3`,
 		},
 	}
 
@@ -252,10 +252,10 @@ func TestOrphanedAttachmentsCheck_FormatOrphan(t *testing.T) {
 		},
 		{
 			orph: orphanedHandoff{
-				beadID: "gt-456",
+				beadID: "ms-456",
 				agent:  "mineshaft/crew/joe",
 			},
-			expected: `gt-456: agent "mineshaft/crew/joe" no longer exists`,
+			expected: `ms-456: agent "mineshaft/crew/joe" no longer exists`,
 		},
 	}
 

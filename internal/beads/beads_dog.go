@@ -14,7 +14,7 @@ func (b *Beads) CreateDogAgentBead(name, location string) (*Issue, error) {
 	title := fmt.Sprintf("Dog: %s", name)
 	beadID := DogBeadIDTown(name) // Use canonical ID: hq-dog-<name>
 	labels := []string{
-		"gt:agent",
+		"ms:agent",
 		"role_type:dog",
 		"rig:town",
 		"location:" + location,
@@ -56,7 +56,7 @@ func (b *Beads) CreateDogAgentBead(name, location string) (*Issue, error) {
 func (b *Beads) FindDogAgentBead(name string) (*Issue, error) {
 	// List all agent beads and filter by role_type:dog label
 	issues, err := b.List(ListOptions{
-		Label:    "gt:agent",
+		Label:    "ms:agent",
 		Status:   "all",
 		Priority: -1, // No priority filter
 	})

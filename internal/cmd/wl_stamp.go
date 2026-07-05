@@ -48,12 +48,12 @@ Confidence is auto-computed from your validator tier if not specified.
 Phase 1: writes directly to the local wl-commons database.
 
 EXAMPLES:
-  gt wl stamp --subject alice --completion c-abc123 \
+  ms wl stamp --subject alice --completion c-abc123 \
     --quality 4 --reliability 5 --creativity 3 \
     --skills go,federation --stamp-type work \
     --context-type completion --evidence 'https://github.com/org/repo/pull/42'
 
-  gt wl stamp --subject bob --quality 3 --reliability 3 --creativity 2 \
+  ms wl stamp --subject bob --quality 3 --reliability 3 --creativity 2 \
     --stamp-type peer_review --context-type endorsement \
     --message "Great code review feedback"`,
 }
@@ -137,7 +137,7 @@ func runWlStamp(cmd *cobra.Command, args []string) error {
 	dbName := wasteland.ResolveDBName(townRoot)
 	if !doltserver.DatabaseExists(townRoot, dbName) {
 		if wlCfg.LocalDir == "" {
-			return fmt.Errorf("database %q not found\nJoin a wasteland first with: gt wl join <org/db>", dbName)
+			return fmt.Errorf("database %q not found\nJoin a wasteland first with: ms wl join <org/db>", dbName)
 		}
 		return insertStampInLocalClone(wlCfg.LocalDir, stamp)
 	}

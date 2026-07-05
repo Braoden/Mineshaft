@@ -73,7 +73,7 @@ func (c *WispGCCheck) Run(ctx *CheckContext) *CheckResult {
 			Status:  StatusWarning,
 			Message: fmt.Sprintf("%d abandoned wisp(s) found (>1h old)", totalAbandoned),
 			Details: details,
-			FixHint: "Run 'gt doctor --fix' to garbage collect orphaned wisps",
+			FixHint: "Run 'ms doctor --fix' to garbage collect orphaned wisps",
 		}
 	}
 
@@ -107,7 +107,7 @@ func (c *WispGCCheck) countAbandonedWisps(rigPath string) int {
 		return 0
 	}
 
-	// Use UTC for cutoff: Dolt stores timestamps in UTC (gt-ty4).
+	// Use UTC for cutoff: Dolt stores timestamps in UTC (ms-ty4).
 	cutoff := time.Now().UTC().Add(-c.threshold)
 	count := 0
 	for _, w := range wisps {

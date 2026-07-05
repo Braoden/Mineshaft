@@ -25,8 +25,8 @@ Shows agent addresses, group addresses, queue addresses, channel addresses,
 and well-known special addresses.
 
 Examples:
-  gt mail directory              # List all addresses
-  gt mail directory --json       # JSON output`,
+  ms mail directory              # List all addresses
+  ms mail directory --json       # JSON output`,
 	Args: cobra.NoArgs,
 	RunE: runMailDirectory,
 }

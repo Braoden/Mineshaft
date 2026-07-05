@@ -51,7 +51,7 @@ type Delivery string
 
 const (
 	// DeliveryQueue creates the message in the mailbox for periodic checking.
-	// This is the default delivery mode. Agent checks with `gt mail check`.
+	// This is the default delivery mode. Agent checks with `ms mail check`.
 	DeliveryQueue Delivery = "queue"
 
 	// DeliveryInterrupt injects a system-reminder directly into the agent's session.
@@ -564,7 +564,7 @@ func normalizeAddress(s string) string {
 		return "supervisor/"
 	}
 
-	// Resolve rig-scoped town-level roles to their canonical form (gt-te23).
+	// Resolve rig-scoped town-level roles to their canonical form (ms-te23).
 	// "mineshaft/overseer" → "overseer/", "mineshaft/supervisor" → "supervisor/"
 	// Overseer and supervisor are town-level singletons, not rig-level agents.
 	parts := strings.Split(s, "/")

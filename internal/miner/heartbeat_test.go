@@ -12,16 +12,16 @@ func TestTouchAndReadSessionHeartbeat(t *testing.T) {
 	townRoot := t.TempDir()
 
 	// No heartbeat initially
-	hb := ReadSessionHeartbeat(townRoot, "gt-test-session")
+	hb := ReadSessionHeartbeat(townRoot, "ms-test-session")
 	if hb != nil {
 		t.Fatal("expected nil heartbeat before touch")
 	}
 
 	// Touch heartbeat
-	TouchSessionHeartbeat(townRoot, "gt-test-session")
+	TouchSessionHeartbeat(townRoot, "ms-test-session")
 
 	// Read it back
-	hb = ReadSessionHeartbeat(townRoot, "gt-test-session")
+	hb = ReadSessionHeartbeat(townRoot, "ms-test-session")
 	if hb == nil {
 		t.Fatal("expected non-nil heartbeat after touch")
 	}
@@ -30,7 +30,7 @@ func TestTouchAndReadSessionHeartbeat(t *testing.T) {
 		t.Errorf("heartbeat timestamp too old: %v", hb.Timestamp)
 	}
 
-	// v2: TouchSessionHeartbeat writes state="working" by default (gt-3vr5)
+	// v2: TouchSessionHeartbeat writes state="working" by default (ms-3vr5)
 	if hb.State != HeartbeatWorking {
 		t.Errorf("heartbeat state = %q, want %q", hb.State, HeartbeatWorking)
 	}
@@ -39,9 +39,9 @@ func TestTouchAndReadSessionHeartbeat(t *testing.T) {
 func TestTouchSessionHeartbeatWithState(t *testing.T) {
 	townRoot := t.TempDir()
 
-	TouchSessionHeartbeatWithState(townRoot, "gt-test-state", HeartbeatExiting, "gt done", "gt-abc123")
+	TouchSessionHeartbeatWithState(townRoot, "ms-test-state", HeartbeatExiting, "ms done", "ms-abc123")
 
-	hb := ReadSessionHeartbeat(townRoot, "gt-test-state")
+	hb := ReadSessionHeartbeat(townRoot, "ms-test-state")
 	if hb == nil {
 		t.Fatal("expected non-nil heartbeat after touch with state")
 	}
@@ -49,11 +49,11 @@ func TestTouchSessionHeartbeatWithState(t *testing.T) {
 	if hb.State != HeartbeatExiting {
 		t.Errorf("state = %q, want %q", hb.State, HeartbeatExiting)
 	}
-	if hb.Context != "gt done" {
-		t.Errorf("context = %q, want %q", hb.Context, "gt done")
+	if hb.Context != "ms done" {
+		t.Errorf("context = %q, want %q", hb.Context, "ms done")
 	}
-	if hb.Bead != "gt-abc123" {
-		t.Errorf("bead = %q, want %q", hb.Bead, "gt-abc123")
+	if hb.Bead != "ms-abc123" {
+		t.Errorf("bead = %q, want %q", hb.Bead, "ms-abc123")
 	}
 }
 
@@ -109,9 +109,9 @@ func TestIsSessionHeartbeatStale_NoFile(t *testing.T) {
 func TestIsSessionHeartbeatStale_Fresh(t *testing.T) {
 	townRoot := t.TempDir()
 
-	TouchSessionHeartbeat(townRoot, "gt-test-fresh")
+	TouchSessionHeartbeat(townRoot, "ms-test-fresh")
 
-	stale, exists := IsSessionHeartbeatStale(townRoot, "gt-test-fresh")
+	stale, exists := IsSessionHeartbeatStale(townRoot, "ms-test-fresh")
 	if !exists {
 		t.Error("expected exists=true for fresh heartbeat")
 	}
@@ -131,11 +131,11 @@ func TestIsSessionHeartbeatStale_Old(t *testing.T) {
 
 	oldTime := time.Now().Add(-10 * time.Minute).UTC()
 	data := []byte(`{"timestamp":"` + oldTime.Format(time.RFC3339Nano) + `"}`)
-	if err := os.WriteFile(filepath.Join(dir, "gt-test-stale.json"), data, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "ms-test-stale.json"), data, 0644); err != nil {
 		t.Fatal(err)
 	}
 
-	stale, exists := IsSessionHeartbeatStale(townRoot, "gt-test-stale")
+	stale, exists := IsSessionHeartbeatStale(townRoot, "ms-test-stale")
 	if !exists {
 		t.Error("expected exists=true for old heartbeat")
 	}
@@ -147,19 +147,19 @@ func TestIsSessionHeartbeatStale_Old(t *testing.T) {
 func TestRemoveSessionHeartbeat(t *testing.T) {
 	townRoot := t.TempDir()
 
-	TouchSessionHeartbeat(townRoot, "gt-test-remove")
+	TouchSessionHeartbeat(townRoot, "ms-test-remove")
 
 	// Verify it exists
-	hb := ReadSessionHeartbeat(townRoot, "gt-test-remove")
+	hb := ReadSessionHeartbeat(townRoot, "ms-test-remove")
 	if hb == nil {
 		t.Fatal("expected heartbeat to exist before removal")
 	}
 
 	// Remove it
-	RemoveSessionHeartbeat(townRoot, "gt-test-remove")
+	RemoveSessionHeartbeat(townRoot, "ms-test-remove")
 
 	// Verify it's gone
-	hb = ReadSessionHeartbeat(townRoot, "gt-test-remove")
+	hb = ReadSessionHeartbeat(townRoot, "ms-test-remove")
 	if hb != nil {
 		t.Error("expected nil heartbeat after removal")
 	}
@@ -173,7 +173,7 @@ func TestRemoveSessionHeartbeat_NoopOnMissing(t *testing.T) {
 
 func TestIsSessionProcessDead_HeartbeatFresh(t *testing.T) {
 	townRoot := t.TempDir()
-	sessionName := "gt-test-hb-alive"
+	sessionName := "ms-test-hb-alive"
 
 	// Touch a fresh heartbeat — isSessionProcessDead should return false
 	TouchSessionHeartbeat(townRoot, sessionName)
@@ -186,7 +186,7 @@ func TestIsSessionProcessDead_HeartbeatFresh(t *testing.T) {
 
 func TestIsSessionProcessDead_HeartbeatStale(t *testing.T) {
 	townRoot := t.TempDir()
-	sessionName := "gt-test-hb-dead"
+	sessionName := "ms-test-hb-dead"
 
 	// Write a stale heartbeat
 	dir := filepath.Join(townRoot, ".runtime", "heartbeats")
@@ -210,7 +210,7 @@ func TestIsSessionProcessDead_EmptyTownRoot(t *testing.T) {
 	// This tests backward compatibility when townRoot isn't available.
 	// We can't test the full PID fallback without a real tmux session,
 	// but we verify no panic with empty townRoot.
-	sessionName := "gt-test-no-townroot"
+	sessionName := "ms-test-no-townroot"
 
 	// Empty townRoot skips heartbeat, falls through to PID check.
 	// Can't test PID path without tmux, but verify heartbeat path is skipped.
@@ -234,11 +234,11 @@ func TestReadSessionHeartbeat_V1BackwardsCompat(t *testing.T) {
 
 	ts := time.Now().UTC()
 	data := []byte(`{"timestamp":"` + ts.Format(time.RFC3339Nano) + `"}`)
-	if err := os.WriteFile(filepath.Join(dir, "gt-test-v1.json"), data, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "ms-test-v1.json"), data, 0644); err != nil {
 		t.Fatal(err)
 	}
 
-	hb := ReadSessionHeartbeat(townRoot, "gt-test-v1")
+	hb := ReadSessionHeartbeat(townRoot, "ms-test-v1")
 	if hb == nil {
 		t.Fatal("expected non-nil heartbeat for v1 format")
 	}
@@ -270,12 +270,12 @@ func TestReadSessionHeartbeat_V2AllStates(t *testing.T) {
 	states := []HeartbeatState{HeartbeatWorking, HeartbeatIdle, HeartbeatExiting, HeartbeatStuck}
 	for _, state := range states {
 		t.Run(string(state), func(t *testing.T) {
-			session := "gt-test-v2-" + string(state)
+			session := "ms-test-v2-" + string(state)
 			hb := SessionHeartbeat{
 				Timestamp: time.Now().UTC(),
 				State:     state,
 				Context:   "test context",
-				Bead:      "gt-test-bead",
+				Bead:      "ms-test-bead",
 			}
 			data, err := json.Marshal(hb)
 			if err != nil {
@@ -301,8 +301,8 @@ func TestReadSessionHeartbeat_V2AllStates(t *testing.T) {
 			if read.Context != "test context" {
 				t.Errorf("context = %q, want %q", read.Context, "test context")
 			}
-			if read.Bead != "gt-test-bead" {
-				t.Errorf("bead = %q, want %q", read.Bead, "gt-test-bead")
+			if read.Bead != "ms-test-bead" {
+				t.Errorf("bead = %q, want %q", read.Bead, "ms-test-bead")
 			}
 		})
 	}

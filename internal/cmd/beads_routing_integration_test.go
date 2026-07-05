@@ -22,11 +22,11 @@ import (
 var routingTestCounter atomic.Int32
 
 // setupRoutingTestTown creates a minimal Mineshaft with multiple rigs for testing routing.
-// Uses fixed prefixes (hq, gt, tr) — suitable for tests that don't create Dolt databases.
+// Uses fixed prefixes (hq, ms, tr) — suitable for tests that don't create Dolt databases.
 // Returns townRoot.
 func setupRoutingTestTown(t *testing.T) string {
 	t.Helper()
-	return setupRoutingTestTownWithPrefixes(t, "hq", "gt", "tr")
+	return setupRoutingTestTownWithPrefixes(t, "hq", "ms", "tr")
 }
 
 // setupRoutingTestTownWithPrefixes creates a minimal Mineshaft with multiple rigs,
@@ -136,9 +136,9 @@ func initBeadsDBWithPrefix(t *testing.T, dir, prefix string) {
 	t.Helper()
 
 	args := []string{"init", "--quiet", "--prefix", prefix}
-	// Forward GT_DOLT_PORT so bd connects to the ephemeral test server
+	// Forward MS_DOLT_PORT so bd connects to the ephemeral test server
 	// instead of defaulting to port 3307. bd v1.0.0+ requires --server.
-	if p := os.Getenv("GT_DOLT_PORT"); p != "" {
+	if p := os.Getenv("MS_DOLT_PORT"); p != "" {
 		args = append(args, "--server", "--server-port", p)
 	}
 	cmd := exec.Command("bd", args...)
@@ -319,8 +319,8 @@ func TestBeadsPrefixConflictDetection(t *testing.T) {
 
 	// Create routes with a duplicate prefix
 	routes := []beads.Route{
-		{Prefix: "gt-", Path: "mineshaft/overseer/rig"},
-		{Prefix: "gt-", Path: "other/overseer/rig"}, // Duplicate!
+		{Prefix: "ms-", Path: "mineshaft/overseer/rig"},
+		{Prefix: "ms-", Path: "other/overseer/rig"}, // Duplicate!
 		{Prefix: "bd-", Path: "beads/overseer/rig"},
 	}
 	if err := beads.WriteRoutes(beadsDir, routes); err != nil {
@@ -337,10 +337,10 @@ func TestBeadsPrefixConflictDetection(t *testing.T) {
 		t.Error("expected to find conflicts, got none")
 	}
 
-	if paths, ok := conflicts["gt-"]; !ok {
-		t.Error("expected conflict for prefix 'gt-'")
+	if paths, ok := conflicts["ms-"]; !ok {
+		t.Error("expected conflict for prefix 'ms-'")
 	} else if len(paths) != 2 {
-		t.Errorf("expected 2 conflicting paths for 'gt-', got %d", len(paths))
+		t.Errorf("expected 2 conflicting paths for 'ms-', got %d", len(paths))
 	}
 }
 
@@ -417,7 +417,7 @@ func TestBeadsRoutesLoading(t *testing.T) {
 
 	// Create routes.jsonl with various entries
 	routesContent := `{"prefix": "hq-", "path": "."}
-{"prefix": "gt-", "path": "mineshaft/overseer/rig"}
+{"prefix": "ms-", "path": "mineshaft/overseer/rig"}
 # Comment line should be ignored
 {"prefix": "bd-", "path": "beads/overseer/rig"}
 
@@ -439,7 +439,7 @@ func TestBeadsRoutesLoading(t *testing.T) {
 	// Verify specific routes
 	expectedPrefixes := map[string]string{
 		"hq-": ".",
-		"gt-": "mineshaft/overseer/rig",
+		"ms-": "mineshaft/overseer/rig",
 		"bd-": "beads/overseer/rig",
 		"tr-": "testrig/overseer/rig",
 	}
@@ -464,7 +464,7 @@ func TestBeadsAppendRoute(t *testing.T) {
 	}
 
 	// Append first route
-	route1 := beads.Route{Prefix: "gt-", Path: "mineshaft/overseer/rig"}
+	route1 := beads.Route{Prefix: "ms-", Path: "mineshaft/overseer/rig"}
 	if err := beads.AppendRoute(tmpDir, route1); err != nil {
 		t.Fatalf("AppendRoute 1: %v", err)
 	}
@@ -485,7 +485,7 @@ func TestBeadsAppendRoute(t *testing.T) {
 	}
 
 	// Update existing route (same prefix, different path)
-	route1Updated := beads.Route{Prefix: "gt-", Path: "newpath/overseer/rig"}
+	route1Updated := beads.Route{Prefix: "ms-", Path: "newpath/overseer/rig"}
 	if err := beads.AppendRoute(tmpDir, route1Updated); err != nil {
 		t.Fatalf("AppendRoute update: %v", err)
 	}
@@ -497,7 +497,7 @@ func TestBeadsAppendRoute(t *testing.T) {
 	}
 
 	for _, r := range routes {
-		if r.Prefix == "gt-" && r.Path != "newpath/overseer/rig" {
+		if r.Prefix == "ms-" && r.Path != "newpath/overseer/rig" {
 			t.Errorf("route update failed: got path %q", r.Path)
 		}
 	}
@@ -513,7 +513,7 @@ func TestBeadsRemoveRoute(t *testing.T) {
 
 	// Create initial routes
 	routes := []beads.Route{
-		{Prefix: "gt-", Path: "mineshaft/overseer/rig"},
+		{Prefix: "ms-", Path: "mineshaft/overseer/rig"},
 		{Prefix: "bd-", Path: "beads/overseer/rig"},
 	}
 	if err := beads.WriteRoutes(beadsDir, routes); err != nil {
@@ -521,7 +521,7 @@ func TestBeadsRemoveRoute(t *testing.T) {
 	}
 
 	// Remove one route
-	if err := beads.RemoveRoute(tmpDir, "gt-"); err != nil {
+	if err := beads.RemoveRoute(tmpDir, "ms-"); err != nil {
 		t.Fatalf("RemoveRoute: %v", err)
 	}
 
@@ -545,7 +545,7 @@ func TestSlingCrossRigRoutingResolution(t *testing.T) {
 		beadID       string
 		expectedPath string // Relative to townRoot, or "." for town-level
 	}{
-		{"gt-mol-abc", "mineshaft/overseer/rig"},
+		{"ms-mol-abc", "mineshaft/overseer/rig"},
 		{"tr-task-xyz", "testrig/overseer/rig"},
 		{"hq-cv-123", "."}, // Town-level beads
 	}
@@ -612,7 +612,7 @@ func TestBeadsGetPrefixForRig(t *testing.T) {
 
 	// Create routes
 	routes := []beads.Route{
-		{Prefix: "gt-", Path: "mineshaft/overseer/rig"},
+		{Prefix: "ms-", Path: "mineshaft/overseer/rig"},
 		{Prefix: "bd-", Path: "beads/overseer/rig"},
 		{Prefix: "hq-", Path: "."},
 	}
@@ -624,10 +624,10 @@ func TestBeadsGetPrefixForRig(t *testing.T) {
 		rigName  string
 		expected string
 	}{
-		{"mineshaft", "gt"},
+		{"mineshaft", "ms"},
 		{"beads", "bd"},
-		{"unknown", "gt"}, // Default
-		{"", "gt"},        // Empty -> default
+		{"unknown", "ms"}, // Default
+		{"", "ms"},        // Empty -> default
 	}
 
 	for _, tc := range tests {

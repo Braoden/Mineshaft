@@ -51,7 +51,7 @@ func wrapCloneError(err error, gitURL string) error {
 			// Try to suggest the SSH equivalent
 			sshURL := convertToSSH(gitURL)
 			if sshURL != "" {
-				return fmt.Errorf("creating bare repo: %w\n\nHint: GitHub no longer supports password authentication.\nTry using SSH instead:\n  gt rig add <name> %s", err, sshURL)
+				return fmt.Errorf("creating bare repo: %w\n\nHint: GitHub no longer supports password authentication.\nTry using SSH instead:\n  ms rig add <name> %s", err, sshURL)
 			}
 			return fmt.Errorf("creating bare repo: %w\n\nHint: GitHub no longer supports password authentication.\nTry using an SSH URL (git@github.com:owner/repo.git) or a personal access token.", err)
 		}
@@ -115,7 +115,7 @@ type RigConfig struct {
 
 // BeadsConfig represents beads configuration for the rig.
 type BeadsConfig struct {
-	Prefix string `json:"prefix"` // issue prefix (e.g., "gt")
+	Prefix string `json:"prefix"` // issue prefix (e.g., "ms")
 }
 
 // CurrentRigConfigVersion is the current schema version.
@@ -343,7 +343,7 @@ func (m *Manager) AddRig(opts AddRigOptions) (*Rig, error) {
 		if running, _, err := doltserver.IsRunning(m.townRoot); err != nil {
 			return nil, fmt.Errorf("checking Dolt server: %w", err)
 		} else if !running {
-			return nil, fmt.Errorf("Dolt server is not running (required for beads init); start it with 'gt up' or 'gt dolt start'")
+			return nil, fmt.Errorf("Dolt server is not running (required for beads init); start it with 'ms up' or 'ms dolt start'")
 		}
 	}
 
@@ -351,7 +351,7 @@ func (m *Manager) AddRig(opts AddRigOptions) (*Rig, error) {
 
 	// Check if directory already exists
 	if _, err := os.Stat(rigPath); err == nil {
-		return nil, fmt.Errorf("directory already exists: %s\n\nTo adopt an existing directory, use --adopt:\n  gt rig add %s --adopt", rigPath, opts.Name)
+		return nil, fmt.Errorf("directory already exists: %s\n\nTo adopt an existing directory, use --adopt:\n  ms rig add %s --adopt", rigPath, opts.Name)
 	}
 
 	// Track whether user explicitly provided --prefix (before deriving)
@@ -622,7 +622,7 @@ func (m *Manager) AddRig(opts AddRigOptions) (*Rig, error) {
 				initArgs = append(initArgs, "--database", opts.Name)
 			}
 			initArgs = append(initArgs, "--server")
-			// Always pass --server-port so bd connects to gt's central Dolt
+			// Always pass --server-port so bd connects to ms's central Dolt
 			// server. Without this, bd auto-starts its own server on a random
 			// port, causing "database not found" errors. (GH #2405)
 			initArgs = append(initArgs, "--server-port", strconv.Itoa(bdInitServerPort(m.townRoot)))
@@ -642,7 +642,7 @@ func (m *Manager) AddRig(opts AddRigOptions) (*Rig, error) {
 			if output, err := cmd.CombinedOutput(); err != nil {
 				fmt.Printf("  Warning: Could not init bd database: %v (%s)\n", err, strings.TrimSpace(string(output)))
 			}
-			// Drop orphan databases created by bd init (gh#3562, gt-sv1h).
+			// Drop orphan databases created by bd init (gh#3562, ms-sv1h).
 			// See dropRigOrphanDBs for naming details across bd versions.
 			if err := dropRigOrphanDBs(m.townRoot, opts.BeadsPrefix, opts.Name); err != nil {
 				fmt.Fprintf(os.Stderr, "Warning: orphan database cleanup: %v\n", err)
@@ -655,8 +655,8 @@ func (m *Manager) AddRig(opts AddRigOptions) (*Rig, error) {
 	}
 
 	// NOTE: No per-directory CLAUDE.md/AGENTS.md is created for any agent.
-	// Only ~/gt/CLAUDE.md (town-root identity anchor) exists on disk.
-	// Full context is injected ephemerally by `gt prime` at session start.
+	// Only ~/ms/CLAUDE.md (town-root identity anchor) exists on disk.
+	// Full context is injected ephemerally by `ms prime` at session start.
 
 	// Create server-side database for this rig BEFORE initializing beads.
 	// InitBeads runs bd init --server which writes metadata.json, but the actual
@@ -684,9 +684,9 @@ func (m *Manager) AddRig(opts AddRigOptions) (*Rig, error) {
 	// the correct server-side database (rigName, not beads_<prefix>).
 	if err := doltserver.EnsureMetadata(m.townRoot, opts.Name); err != nil {
 		// Non-fatal: daemon's EnsureAllMetadata self-heals on next startup,
-		// or user can run gt doctor --fix to repair manually.
+		// or user can run ms doctor --fix to repair manually.
 		fmt.Printf("  Warning: Could not set Dolt server metadata: %v\n", err)
-		fmt.Printf("  Run 'gt doctor --fix' to repair, or it will self-heal on next daemon start.\n")
+		fmt.Printf("  Run 'ms doctor --fix' to repair, or it will self-heal on next daemon start.\n")
 	}
 
 	// Safety-net: drop orphan databases that may have been created by bd init.
@@ -724,7 +724,7 @@ func (m *Manager) AddRig(opts AddRigOptions) (*Rig, error) {
 			fmt.Printf("  Setting up DoltHub remote for %s/%s...\n", org, doltserver.DoltHubRepoName(dbName))
 			if err := doltserver.SetupDoltHubRemote(dbDir, org, dbName, token); err != nil {
 				fmt.Printf("  Warning: DoltHub remote setup failed: %v\n", err)
-				fmt.Printf("  You can set up the remote manually later with 'gt dolt sync'.\n")
+				fmt.Printf("  You can set up the remote manually later with 'ms dolt sync'.\n")
 			} else {
 				fmt.Printf("   ✓ DoltHub remote configured and initial push complete\n")
 			}
@@ -772,7 +772,7 @@ func (m *Manager) AddRig(opts AddRigOptions) (*Rig, error) {
 	// Claude Code does NOT traverse parent directories for settings.json.
 	// See: https://github.com/anthropics/claude-code/issues/12962
 
-	// Create empty crew directory with README (crew members added via gt crew add)
+	// Create empty crew directory with README (crew members added via ms crew add)
 	crewPath := filepath.Join(rigPath, "crew")
 	if err := os.MkdirAll(crewPath, 0755); err != nil {
 		return nil, fmt.Errorf("creating crew dir: %w", err)
@@ -786,7 +786,7 @@ This directory contains crew worker workspaces.
 ## Adding a Crew Member
 
 ` + "```bash" + `
-gt crew add <name>    # Creates crew/<name>/ with a git clone
+ms crew add <name>    # Creates crew/<name>/ with a git clone
 ` + "```" + `
 
 ## Crew vs Miners
@@ -857,7 +857,7 @@ Use crew for your own workspace. Miners are for batch work dispatch.
 		}
 	}
 
-	// Create rig-level settings directory (used by gt config for rig overrides)
+	// Create rig-level settings directory (used by ms config for rig overrides)
 	rigSettingsPath := filepath.Join(rigPath, constants.DirSettings)
 	if err := os.MkdirAll(rigSettingsPath, 0755); err != nil {
 		return nil, fmt.Errorf("creating settings dir: %w", err)
@@ -870,7 +870,7 @@ Use crew for your own workspace. Miners are for batch work dispatch.
 	// any future repo-side updates.
 
 	// Create rig-level agent beads (witness, refinery) in rig beads.
-	// Town-level agents (overseer, supervisor) are created by gt install in town beads.
+	// Town-level agents (overseer, supervisor) are created by ms install in town beads.
 	if err := m.initAgentBeads(rigPath, opts.Name, opts.BeadsPrefix); err != nil {
 		// Non-fatal: log warning but continue
 		fmt.Fprintf(os.Stderr, "  Warning: Could not create agent beads: %v\n", err)
@@ -905,9 +905,9 @@ Use crew for your own workspace. Miners are for batch work dispatch.
 	// writing the wrong database name, before the rig is considered ready.
 	if err := m.verifyRigIdentity(rigPath, opts.Name); err != nil {
 		// Non-fatal but loud: the rig was created, but identity may be wrong.
-		// gt doctor --fix can repair this.
+		// ms doctor --fix can repair this.
 		fmt.Fprintf(os.Stderr, "  ⚠ Identity verification warning: %v\n", err)
-		fmt.Fprintf(os.Stderr, "  Run 'gt doctor --fix' to repair if needed.\n")
+		fmt.Fprintf(os.Stderr, "  Run 'ms doctor --fix' to repair if needed.\n")
 	}
 
 	// Persist rigs.json atomically before marking success.
@@ -927,7 +927,7 @@ Use crew for your own workspace. Miners are for batch work dispatch.
 }
 
 // addOwnershipStampFile marks which AddRig invocation currently owns the path.
-const addOwnershipStampFile = ".gt-add-owner"
+const addOwnershipStampFile = ".ms-add-owner"
 
 func newAddOwnershipStamp() (string, error) {
 	var buf [16]byte
@@ -1013,7 +1013,7 @@ func (m *Manager) verifyRigIdentity(rigPath, rigName string) error {
 
 	// Verify the database name matches what we expect.
 	// The database should be named after the rig (e.g., "mineshaft") not after
-	// a bd init artifact (e.g., "beads_gt") or a stale value from another rig.
+	// a bd init artifact (e.g., "beads_ms") or a stale value from another rig.
 	if metadata.DoltDatabase != "" && metadata.DoltDatabase != rigName {
 		fmt.Fprintf(os.Stderr, "   ⚠ metadata.json has dolt_database=%q (expected %q) — attempting repair\n",
 			metadata.DoltDatabase, rigName)
@@ -1055,7 +1055,7 @@ func LoadRigConfig(rigPath string) (*RigConfig, error) {
 // warnDeprecatedRigConfigKeys detects merge_queue keys in rig root config.json
 // that are silently ignored by json.Unmarshal (RigConfig has no merge_queue field).
 // Without this warning, users can set merge_queue.target_branch believing it
-// controls MR targets, while gt mq submit / gt done actually use default_branch.
+// controls MR targets, while ms mq submit / ms done actually use default_branch.
 func warnDeprecatedRigConfigKeys(data []byte, path string) {
 	var raw map[string]json.RawMessage
 	if err := json.Unmarshal(data, &raw); err != nil {
@@ -1112,7 +1112,7 @@ func dropRigOrphanDBs(townRoot, prefix, rigName string) error {
 		}
 	}
 	if len(failures) > 0 {
-		return fmt.Errorf("orphan database(s) for rig %q (prefix %q) could not be removed: %s — run `gt dolt cleanup --force` to resolve",
+		return fmt.Errorf("orphan database(s) for rig %q (prefix %q) could not be removed: %s — run `ms dolt cleanup --force` to resolve",
 			rigName, prefix, strings.Join(failures, "; "))
 	}
 	return nil
@@ -1170,7 +1170,7 @@ func (m *Manager) InitBeads(rigPath, prefix, rigName string) error {
 		initArgs = append(initArgs, "--database", rigName)
 	}
 	initArgs = append(initArgs, "--server")
-	// Always pass --server-port so bd connects to gt's central Dolt server.
+	// Always pass --server-port so bd connects to ms's central Dolt server.
 	// Without this, bd auto-starts its own server on a random port. (GH #2405)
 	initArgs = append(initArgs, "--server-port", strconv.Itoa(bdInitServerPort(m.townRoot)))
 	// --force ensures bd 1.0+ persists issue_prefix on existing server-side DBs.
@@ -1194,7 +1194,7 @@ func (m *Manager) InitBeads(rigPath, prefix, rigName string) error {
 		_, _ = configCmd.CombinedOutput()
 
 		// Explicitly set issue_prefix config (bd init --prefix may not persist it in newer versions).
-		// Without this, bd create and gt sling fail with "issue_prefix config is missing".
+		// Without this, bd create and ms sling fail with "issue_prefix config is missing".
 		// bd >= 1.0.0 rejects this with "cannot be set via 'bd config set'" because init persists
 		// it directly; treat that as already-set rather than a failure.
 		prefixSetCmd := exec.Command("bd", "config", "set", "issue_prefix", prefix)
@@ -1207,7 +1207,7 @@ func (m *Manager) InitBeads(rigPath, prefix, rigName string) error {
 			}
 		}
 
-		// Drop orphan databases created by bd init (gh#3562, gt-sv1h).
+		// Drop orphan databases created by bd init (gh#3562, ms-sv1h).
 		// bd init --prefix creates a database whose name depends on the bd version:
 		//   bd >= 0.62: "<prefix>"        (e.g. "ma" for prefix=ma)
 		//   bd <  0.62: "beads_<prefix>"  (e.g. "beads_ma")
@@ -1253,16 +1253,16 @@ func (m *Manager) InitBeads(rigPath, prefix, rigName string) error {
 // initAgentBeads creates rig-level agent beads for Witness and Refinery.
 // These agents use the rig's beads prefix and are stored in rig beads.
 //
-// Town-level agents (Overseer, Supervisor) are created by gt install in town beads.
-// Role beads are also created by gt install with hq- prefix.
+// Town-level agents (Overseer, Supervisor) are created by ms install in town beads.
+// Role beads are also created by ms install with hq- prefix.
 //
 // Rig-level agents (Witness, Refinery) are created here in rig beads with rig prefix.
 // Format: <prefix>-<rig>-<role> (e.g., pi-pixelforge-witness)
 //
-// Agent beads track lifecycle state for ZFC compliance (gt-h3hak, gt-pinkq).
+// Agent beads track lifecycle state for ZFC compliance (ms-h3hak, ms-pinkq).
 func (m *Manager) initAgentBeads(rigPath, rigName, prefix string) error {
 	// Rig-level agents go in rig beads with rig prefix (per docs/architecture.md).
-	// Town-level agents (Overseer, Supervisor) are created by gt install in town beads.
+	// Town-level agents (Overseer, Supervisor) are created by ms install in town beads.
 	// Use ResolveBeadsDir to follow redirect files for tracked beads.
 	rigBeadsDir := beads.ResolveBeadsDir(rigPath)
 	bd := beads.NewWithBeadsDir(rigPath, rigBeadsDir)
@@ -1292,7 +1292,7 @@ func (m *Manager) initAgentBeads(rigPath, rigName, prefix string) error {
 		},
 	}
 
-	// Note: Overseer and Supervisor are now created by gt install in town beads.
+	// Note: Overseer and Supervisor are now created by ms install in town beads.
 
 	for _, agent := range agents {
 		// Check if already exists
@@ -1351,7 +1351,7 @@ func (m *Manager) ensureGitignoreEntry(gitignorePath, entry string) error {
 }
 
 // deriveBeadsPrefix generates a beads prefix from a rig name.
-// Examples: "mineshaft" -> "gt", "my-project" -> "mp", "foo" -> "foo"
+// Examples: "mineshaft" -> "ms", "my-project" -> "mp", "foo" -> "foo"
 func deriveBeadsPrefix(name string) string {
 	// Strip path separators — callers should validate names, but be defensive
 	name = filepath.Base(name)
@@ -1377,7 +1377,7 @@ func deriveBeadsPrefix(name string) string {
 	}
 
 	if len(parts) >= 2 {
-		// Take first letter of each part: "mineshaft" -> "gt"
+		// Take first letter of each part: "mineshaft" -> "ms"
 		prefix := ""
 		for _, p := range parts {
 			if len(p) > 0 {
@@ -1918,7 +1918,7 @@ func (m *Manager) seedPatrolMoleculesManually(rigPath string) error {
 }
 
 // createPluginDirectories creates plugin directories at town and rig levels.
-// - ~/gt/plugins/ (town-level, shared across all rigs)
+// - ~/ms/plugins/ (town-level, shared across all rigs)
 // - <rig>/plugins/ (rig-level, rig-specific plugins)
 func (m *Manager) createPluginDirectories(rigPath string) error {
 	// Town-level plugins directory
@@ -1965,7 +1965,7 @@ See docs/supervisor-plugins.md for full documentation.
 	// itself, but this is a defensive measure against accidental git init
 	// or future architecture changes.
 	//
-	// NOTE: No **/* wildcards — all GT runtime files live inside these
+	// NOTE: No **/* wildcards — all MS runtime files live inside these
 	// directories. Broad patterns like **/*.lock would catch project files
 	// (yarn.lock, Cargo.lock, flake.lock, etc).
 	gitignorePath := filepath.Join(rigPath, ".gitignore")
@@ -1974,7 +1974,7 @@ See docs/supervisor-plugins.md for full documentation.
 		"plugins/",
 		".repo.git/",
 		".land-worktree/",
-		// GT infrastructure directories
+		// MS infrastructure directories
 		".beads/",
 		".claude/",
 		".archive/",
@@ -1986,7 +1986,7 @@ See docs/supervisor-plugins.md for full documentation.
 		"refinery/",
 		"settings/",
 		"witness/",
-		// GT configuration files
+		// MS configuration files
 		"config.json",
 		"state.json",
 		"AGENTS.md",

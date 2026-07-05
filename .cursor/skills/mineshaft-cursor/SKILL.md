@@ -2,7 +2,7 @@
 name: mineshaft-cursor
 description: >
   Develop and operate Mineshaft with the Cursor agent preset (cursor-agent CLI):
-  gt flags, hooks at .cursor/hooks.json, session resume, and how this repo differs from README marketing copy.
+  ms flags, hooks at .cursor/hooks.json, session resume, and how this repo differs from README marketing copy.
 ---
 
 # Mineshaft + Cursor Agent CLI
@@ -13,15 +13,15 @@ Use this skill when working **in this repository** with the **`cursor`** agent p
 
 | Name | Meaning |
 |------|---------|
-| **Preset `cursor`** | Mineshaft agent id (`GT_AGENT=cursor`). Config lives in `internal/config/agents.go` (`AgentCursor`). |
+| **Preset `cursor`** | Mineshaft agent id (`MS_AGENT=cursor`). Config lives in `internal/config/agents.go` (`AgentCursor`). |
 | **Binary `cursor-agent`** | The Cursor Agent CLI process name for pane/detection; install docs may also symlink `agent` → same binary. |
 | **Hooks** | Cursor lifecycle hooks are configured at **`.cursor/hooks.json`** (see preset `HooksSettingsFile`). |
 
 ## Essential commands
 
-- Build / run `gt` from repo root: `make build` or `go run ./cmd/gt …`.
-- Point a session at the Cursor preset: spawn or config so the runtime uses **`--agent cursor`** (or set **`GT_AGENT=cursor`** where applicable).
-- After changing hooks or settings: **`gt up --restore`** (or role-specific restart) so agents reload config.
+- Build / run `ms` from repo root: `make build` or `go run ./cmd/ms …`.
+- Point a session at the Cursor preset: spawn or config so the runtime uses **`--agent cursor`** (or set **`MS_AGENT=cursor`** where applicable).
+- After changing hooks or settings: **`ms up --restore`** (or role-specific restart) so agents reload config.
 
 ## Resume semantics
 

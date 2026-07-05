@@ -141,7 +141,7 @@ case "$cmd" in
     exit 0
     ;;
   show)
-    printf '%%s\n' '[{"id":"gt-mineshaft-miner-nux","title":"Miner nux","issue_type":"agent","labels":["gt:agent"],"description":"role_type: miner\nrig: mineshaft\nagent_state: idle\nhook_bead: null","agent_state":"idle"}]'
+    printf '%%s\n' '[{"id":"ms-mineshaft-miner-nux","title":"Miner nux","issue_type":"agent","labels":["ms:agent"],"description":"role_type: miner\nrig: mineshaft\nagent_state: idle\nhook_bead: null","agent_state":"idle"}]'
     exit 0
     ;;
   *)
@@ -163,10 +163,10 @@ func TestGetAgentBead_PrefersDescriptionAgentState(t *testing.T) {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 
-	installMockBDFixedShowOutput(t, `[{"id":"gt-mineshaft-miner-nux","title":"Miner nux","issue_type":"agent","labels":["gt:agent"],"description":"role_type: miner\nrig: mineshaft\nagent_state: spawning\nhook_bead: null","agent_state":"idle"}]`)
+	installMockBDFixedShowOutput(t, `[{"id":"ms-mineshaft-miner-nux","title":"Miner nux","issue_type":"agent","labels":["ms:agent"],"description":"role_type: miner\nrig: mineshaft\nagent_state: spawning\nhook_bead: null","agent_state":"idle"}]`)
 
 	bd := NewIsolated(tmpDir)
-	issue, fields, err := bd.GetAgentBead("gt-mineshaft-miner-nux")
+	issue, fields, err := bd.GetAgentBead("ms-mineshaft-miner-nux")
 	if err != nil {
 		t.Fatalf("GetAgentBead: %v", err)
 	}
@@ -192,10 +192,10 @@ func TestGetAgentBead_FallsBackToDescriptionAgentState(t *testing.T) {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 
-	installMockBDFixedShowOutput(t, `[{"id":"gt-mineshaft-miner-nux","title":"Miner nux","issue_type":"agent","labels":["gt:agent"],"description":"role_type: miner\nrig: mineshaft\nagent_state: spawning\nhook_bead: null"}]`)
+	installMockBDFixedShowOutput(t, `[{"id":"ms-mineshaft-miner-nux","title":"Miner nux","issue_type":"agent","labels":["ms:agent"],"description":"role_type: miner\nrig: mineshaft\nagent_state: spawning\nhook_bead: null"}]`)
 
 	bd := NewIsolated(tmpDir)
-	_, fields, err := bd.GetAgentBead("gt-mineshaft-miner-nux")
+	_, fields, err := bd.GetAgentBead("ms-mineshaft-miner-nux")
 	if err != nil {
 		t.Fatalf("GetAgentBead: %v", err)
 	}
@@ -216,18 +216,18 @@ func TestUpdateAgentState_UsesUpdateDescriptionPath(t *testing.T) {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 
-	logPath := installMockBDShowRecorder(t, `[{"id":"gt-mineshaft-miner-nux","title":"Miner nux","issue_type":"agent","labels":["gt:agent"],"description":"role_type: miner\nrig: mineshaft\nagent_state: spawning\nhook_bead: null"}]`)
+	logPath := installMockBDShowRecorder(t, `[{"id":"ms-mineshaft-miner-nux","title":"Miner nux","issue_type":"agent","labels":["ms:agent"],"description":"role_type: miner\nrig: mineshaft\nagent_state: spawning\nhook_bead: null"}]`)
 	bd := NewIsolated(tmpDir)
 
-	if err := bd.UpdateAgentState("gt-mineshaft-miner-nux", "working"); err != nil {
+	if err := bd.UpdateAgentState("ms-mineshaft-miner-nux", "working"); err != nil {
 		t.Fatalf("UpdateAgentState: %v", err)
 	}
 
 	logOutput := readMockBDLog(t, logPath)
-	if !strings.Contains(logOutput, "show gt-mineshaft-miner-nux --json") {
+	if !strings.Contains(logOutput, "show ms-mineshaft-miner-nux --json") {
 		t.Fatalf("mock bd log %q missing show call", logOutput)
 	}
-	if !strings.Contains(logOutput, "update gt-mineshaft-miner-nux") {
+	if !strings.Contains(logOutput, "update ms-mineshaft-miner-nux") {
 		t.Fatalf("mock bd log %q missing update call", logOutput)
 	}
 	// Should NOT use the obsolete bd agent state or bd set-state path
@@ -249,7 +249,7 @@ func TestUpdateAgentState_UsesExplicitBeadsDir(t *testing.T) {
 	installMockBDRequireExplicitBeadsDir(t, targetBeadsDir)
 
 	bd := NewWithBeadsDir(workDir, targetBeadsDir)
-	if err := bd.UpdateAgentState("gt-mineshaft-miner-nux", "spawning"); err != nil {
+	if err := bd.UpdateAgentState("ms-mineshaft-miner-nux", "spawning"); err != nil {
 		t.Fatalf("UpdateAgentState: %v", err)
 	}
 }
@@ -261,10 +261,10 @@ func TestIsAgentBeadByID(t *testing.T) {
 		want bool
 	}{
 		// Full-form IDs (prefix != rig): prefix-rig-role[-name]
-		{name: "full witness", id: "gt-mineshaft-witness", want: true},
-		{name: "full refinery", id: "gt-mineshaft-refinery", want: true},
-		{name: "full crew with name", id: "gt-mineshaft-crew-krystian", want: true},
-		{name: "full miner with name", id: "gt-mineshaft-miner-Toast", want: true},
+		{name: "full witness", id: "ms-mineshaft-witness", want: true},
+		{name: "full refinery", id: "ms-mineshaft-refinery", want: true},
+		{name: "full crew with name", id: "ms-mineshaft-crew-krystian", want: true},
+		{name: "full miner with name", id: "ms-mineshaft-miner-Toast", want: true},
 		{name: "full supervisor", id: "sh-shippercrm-supervisor", want: true},
 		{name: "full overseer", id: "ax-axon-overseer", want: true},
 
@@ -276,12 +276,12 @@ func TestIsAgentBeadByID(t *testing.T) {
 		{name: "collapsed miner with name", id: "bcc-miner-obsidian", want: true},
 
 		// Non-agent IDs
-		{name: "regular issue", id: "gt-12345", want: false},
+		{name: "regular issue", id: "ms-12345", want: false},
 		{name: "task bead", id: "bcc-fix-button-color", want: false},
 		{name: "single part", id: "witness", want: false},
 		{name: "empty string", id: "", want: false},
 		{name: "patrol molecule", id: "mol-patrol-abc123", want: false},
-		{name: "merge request", id: "gt-mr-1234", want: false},
+		{name: "merge request", id: "ms-mr-1234", want: false},
 
 		// Edge cases
 		{name: "role in first position", id: "witness-something", want: false},
@@ -302,7 +302,7 @@ func TestIsAgentBeadByID(t *testing.T) {
 func TestMergeAgentBeadSources(t *testing.T) {
 	t.Run("issues override duplicate wisp ids", func(t *testing.T) {
 		issuesByID := map[string]*Issue{
-			"hq-supervisor": {ID: "hq-supervisor", Type: "agent", Labels: []string{"gt:agent"}},
+			"hq-supervisor": {ID: "hq-supervisor", Type: "agent", Labels: []string{"ms:agent"}},
 		}
 		wispsByID := map[string]*Issue{
 			"hq-supervisor": {ID: "hq-supervisor"},
@@ -315,14 +315,14 @@ func TestMergeAgentBeadSources(t *testing.T) {
 		if merged["hq-supervisor"].Type != "agent" {
 			t.Fatalf("merged issue type = %q, want %q", merged["hq-supervisor"].Type, "agent")
 		}
-		if len(merged["hq-supervisor"].Labels) != 1 || merged["hq-supervisor"].Labels[0] != "gt:agent" {
-			t.Fatalf("merged labels = %v, want [gt:agent]", merged["hq-supervisor"].Labels)
+		if len(merged["hq-supervisor"].Labels) != 1 || merged["hq-supervisor"].Labels[0] != "ms:agent" {
+			t.Fatalf("merged labels = %v, want [ms:agent]", merged["hq-supervisor"].Labels)
 		}
 	})
 
 	t.Run("wisps are included when missing from issues", func(t *testing.T) {
 		issuesByID := map[string]*Issue{
-			"hq-overseer": {ID: "hq-overseer", Type: "agent", Labels: []string{"gt:agent"}},
+			"hq-overseer": {ID: "hq-overseer", Type: "agent", Labels: []string{"ms:agent"}},
 		}
 		wispsByID := map[string]*Issue{
 			"bom-bti_ops_match-witness": {ID: "bom-bti_ops_match-witness"},
@@ -350,7 +350,7 @@ func TestMergeAgentBeadSources(t *testing.T) {
 
 func TestLabelsForAgentBeadReusePreservesOnlySafetyStop(t *testing.T) {
 	got := labelsForAgentBeadReuse([]string{
-		"gt:agent",
+		"ms:agent",
 		"heartbeat:123",
 		"idle:2",
 		"done-intent:COMPLETED:123",
@@ -358,7 +358,7 @@ func TestLabelsForAgentBeadReusePreservesOnlySafetyStop(t *testing.T) {
 		"safety_stop:hq-vmrwr",
 		"safety_stop:hq-other",
 	})
-	want := []string{"gt:agent", "safety_stop:hq-vmrwr", "safety_stop:hq-other"}
+	want := []string{"ms:agent", "safety_stop:hq-vmrwr", "safety_stop:hq-other"}
 	if len(got) != len(want) {
 		t.Fatalf("labels = %v, want %v", got, want)
 	}
@@ -501,10 +501,10 @@ func TestCreateOrReopenAgentBeadExistingUsesTownBeadsDir(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(townRoot, "overseer", "town.json"), []byte(`{"name":"test"}`), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := WriteRoutes(townBeadsDir, []Route{{Prefix: "hq-", Path: "."}, {Prefix: "gt-", Path: "mineshaft/overseer/rig"}}); err != nil {
+	if err := WriteRoutes(townBeadsDir, []Route{{Prefix: "hq-", Path: "."}, {Prefix: "ms-", Path: "mineshaft/overseer/rig"}}); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townBeadsDir, ".gt-types-configured"), []byte("v1\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townBeadsDir, ".ms-types-configured"), []byte("v1\n"), 0644); err != nil {
 		t.Fatalf("write types sentinel: %v", err)
 	}
 
@@ -534,7 +534,7 @@ case "$cmd" in
     exit 1
     ;;
   show)
-    printf '%%s\n' '[{"id":"gt-mineshaft-miner-rust","title":"old","issue_type":"task","labels":["gt:agent"],"status":"open","description":"role_type: miner\nrig: mineshaft\nagent_state: idle\nhook_bead: old"}]'
+    printf '%%s\n' '[{"id":"ms-mineshaft-miner-rust","title":"old","issue_type":"task","labels":["ms:agent"],"status":"open","description":"role_type: miner\nrig: mineshaft\nagent_state: idle\nhook_bead: old"}]'
     exit 0
     ;;
   *)
@@ -548,7 +548,7 @@ esac
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
 	bd := NewWithBeadsDir(rigDir, rigBeadsDir)
-	if _, err := bd.CreateOrReopenAgentBead("gt-mineshaft-miner-rust", "gt-mineshaft-miner-rust", &AgentFields{
+	if _, err := bd.CreateOrReopenAgentBead("ms-mineshaft-miner-rust", "ms-mineshaft-miner-rust", &AgentFields{
 		RoleType:   "miner",
 		Rig:        "mineshaft",
 		AgentState: "spawning",

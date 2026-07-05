@@ -9,10 +9,10 @@ from project implementation work.
 
 | Level | Location | Prefix | Purpose |
 |-------|----------|--------|---------|
-| **Town** | `~/gt/.beads/` | `hq-*` | Cross-rig coordination, Overseer mail, agent identity |
+| **Town** | `~/ms/.beads/` | `hq-*` | Cross-rig coordination, Overseer mail, agent identity |
 | **Rig** | `<rig>/overseer/rig/.beads/` | project prefix | Implementation work, MRs, project issues |
 
-### Town-Level Beads (`~/gt/.beads/`)
+### Town-Level Beads (`~/ms/.beads/`)
 
 Organizational chain for cross-rig coordination:
 - Overseer mail and messages
@@ -36,10 +36,10 @@ the agent's scope.
 
 | Agent Type | Scope | Bead Location | Bead ID Format |
 |------------|-------|---------------|----------------|
-| Overseer | Town | `~/gt/.beads/` | `hq-overseer` |
-| Supervisor | Town | `~/gt/.beads/` | `hq-supervisor` |
-| Boot | Town | `~/gt/.beads/` | `hq-boot` |
-| Dogs | Town | `~/gt/.beads/` | `hq-dog-<name>` |
+| Overseer | Town | `~/ms/.beads/` | `hq-overseer` |
+| Supervisor | Town | `~/ms/.beads/` | `hq-supervisor` |
+| Boot | Town | `~/ms/.beads/` | `hq-boot` |
+| Dogs | Town | `~/ms/.beads/` | `hq-dog-<name>` |
 | Witness | Rig | `<rig>/.beads/` | `<prefix>-<rig>-witness` |
 | Refinery | Rig | `<rig>/.beads/` | `<prefix>-<rig>-refinery` |
 | Miners | Rig | `<rig>/.beads/` | `<prefix>-<rig>-miner-<name>` |
@@ -82,13 +82,13 @@ Each agent bead references its role bead via the `role_bead` field.
 ## Directory Structure
 
 ```
-~/gt/                           Town root
+~/ms/                           Town root
 ├── .beads/                     Town-level beads (hq-* prefix)
 │   ├── metadata.json           Beads config (dolt_mode, dolt_database)
 │   └── routes.jsonl            Prefix → rig routing table
 ├── .dolt-data/                 Centralized Dolt data directory
 │   ├── hq/                     Town beads database (hq-* prefix)
-│   ├── mineshaft/                Mineshaft rig database (gt-* prefix)
+│   ├── mineshaft/                Mineshaft rig database (ms-* prefix)
 │   ├── beads/                  Beads rig database (bd-* prefix)
 │   └── <other rigs>/           Per-rig databases
 ├── daemon/                     Daemon runtime state
@@ -128,8 +128,8 @@ Each agent bead references its role bead via the `role_bead` field.
         └── <name>/<rigname>/   Worker worktrees from overseer/rig
 ```
 
-**Note**: No per-directory CLAUDE.md or AGENTS.md is created. Only `~/gt/CLAUDE.md`
-(town-root identity anchor) exists on disk. Full context is injected by `gt prime`
+**Note**: No per-directory CLAUDE.md or AGENTS.md is created. Only `~/ms/CLAUDE.md`
+(town-root identity anchor) exists on disk. Full context is injected by `ms prime`
 via SessionStart hook.
 
 ### Worktree Architecture
@@ -149,13 +149,13 @@ independent repos. Miner sessions are ephemeral and benefit from worktree effici
 
 All beads data is stored in a single Dolt SQL Server process per town. There is
 no embedded Dolt fallback — if the server is down, `bd` fails fast with a clear
-error pointing to `gt dolt start`.
+error pointing to `ms dolt start`.
 
 ```
 ┌─────────────────────────────────┐
 │  Dolt SQL Server (per town)     │
 │  Port 3307, managed by daemon   │
-│  Data: ~/gt/.dolt-data/         │
+│  Data: ~/ms/.dolt-data/         │
 └──────────┬──────────────────────┘
            │ MySQL protocol
     ┌──────┼──────┬──────────┐
@@ -178,7 +178,7 @@ The `routes.jsonl` file maps issue ID prefixes to rig locations (relative to tow
 
 ```jsonl
 {"prefix":"hq-","path":"."}
-{"prefix":"gt-","path":"mineshaft/overseer/rig"}
+{"prefix":"ms-","path":"mineshaft/overseer/rig"}
 {"prefix":"bd-","path":"beads/overseer/rig"}
 ```
 
@@ -186,8 +186,8 @@ Routes point to `overseer/rig` because that's where the canonical `.beads/` live
 This enables transparent cross-rig beads operations:
 
 ```bash
-bd show hq-overseer    # Routes to town beads (~/.gt/.beads)
-bd show gt-xyz      # Routes to mineshaft/overseer/rig/.beads
+bd show hq-overseer    # Routes to town beads (~/.ms/.beads)
+bd show ms-xyz      # Routes to mineshaft/overseer/rig/.beads
 ```
 
 ## Beads Redirects
@@ -228,13 +228,13 @@ If FAIL:      Binary bisect → test B (midpoint)
 
 | Phase | Bead | What | Status |
 |-------|------|------|--------|
-| 1: GatesParallel | gt-8b2i | Run test + lint concurrently per MR | In progress |
-| 2: Batch-then-bisect | gt-i2vm | Bors-style batching with binary bisect | Blocked by Phase 1 |
-| 3: Pre-verification | gt-lu84 | Miners run tests before MR submission | Blocked by Phase 2 |
+| 1: GatesParallel | ms-8b2i | Run test + lint concurrently per MR | In progress |
+| 2: Batch-then-bisect | ms-i2vm | Bors-style batching with binary bisect | Blocked by Phase 1 |
+| 3: Pre-verification | ms-lu84 | Miners run tests before MR submission | Blocked by Phase 2 |
 
 Gates (test command, lint, etc.) are pluggable. The batching strategy is core.
 
-Design doc: produced by gt-yxx0 review.
+Design doc: produced by ms-yxx0 review.
 
 ## Miner Lifecycle: Self-Managed Completion
 
@@ -255,7 +255,7 @@ Miner finishes work
 The Witness monitors for stuck/zombie miners (no activity for extended period)
 and nudges or escalates. It does NOT process completion — that's the miner's job.
 
-Design bead: gt-0wkk.
+Design bead: ms-0wkk.
 
 ## Data Plane Lifecycle
 
@@ -270,7 +270,7 @@ CREATE → LIVE → CLOSE → DECAY → COMPACT → FLATTEN
 ```
 
 Stages 1-3 are automated today. Stages 4-6 are being shipped via Dog automation
-(gt-at0i Reaper DELETE, gt-l8dc Compactor REBASE, gt-emm4 Doctor gc).
+(ms-at0i Reaper DELETE, ms-l8dc Compactor REBASE, ms-emm4 Doctor gc).
 
 See [dolt-storage.md](dolt-storage.md) for full details.
 
@@ -279,14 +279,14 @@ See [dolt-storage.md](dolt-storage.md) for full details.
 Mineshaft and Beads are distributed through multiple channels. Tag pushes (`v*`)
 trigger GitHub Actions release workflows that build and publish everything.
 
-### Mineshaft (`gt`)
+### Mineshaft (`ms`)
 
 | Channel | Artifact | Trigger |
 |---------|----------|---------|
 | **GitHub Releases** | Platform binaries (darwin/linux/windows, amd64/arm64) + checksums | GoReleaser on tag push |
-| **Homebrew** | `brew install steveyegge/mineshaft/gt` — formula auto-updated on release | `update-homebrew` job pushes to `steveyegge/homebrew-mineshaft` |
-| **npm** | `npx @mineshaft/gt` — wrapper that downloads the correct binary | OIDC trusted publishing (no token) |
-| **Local build** | `go build -o $(go env GOPATH)/bin/gt ./cmd/gt` | Manual |
+| **Homebrew** | `brew install steveyegge/mineshaft/ms` — formula auto-updated on release | `update-homebrew` job pushes to `steveyegge/homebrew-mineshaft` |
+| **npm** | `npx @mineshaft/ms` — wrapper that downloads the correct binary | OIDC trusted publishing (no token) |
+| **Local build** | `go build -o $(go env GOPATH)/bin/ms ./cmd/ms` | Manual |
 
 ### Beads (`bd`)
 
@@ -314,14 +314,14 @@ GitHub repo and `release.yml` workflow file.
 ### What the binary embeds
 
 The Go binary is the primary distribution vehicle. It embeds:
-- **Role templates** — Agent priming context, served by `gt prime`
+- **Role templates** — Agent priming context, served by `ms prime`
 - **Formula definitions** — Workflow molecules, served by `bd mol`
 - **Doctor checks** — Health diagnostics, including migration checks
 - **Default configs** — `daemon.json` lifecycle defaults, operational thresholds
 
 This means upgrading the binary automatically propagates most fixes. Files that
-are NOT embedded (and require `gt doctor` or `gt upgrade` to update):
-- Town-root `CLAUDE.md` (created at `gt install` time)
+are NOT embedded (and require `ms doctor` or `ms upgrade` to update):
+- Town-root `CLAUDE.md` (created at `ms install` time)
 - `daemon.json` patrol entries (created at install, extended by `EnsureLifecycleDefaults`)
 - Claude Code hooks (`.claude/settings.json` managed sections)
 - Dolt schema (migrations run on first `bd` command after upgrade)
@@ -334,13 +334,13 @@ model (rig > town > system) and the hooks override precedent.
 
 ### Role Directives
 
-Per-role Markdown files injected during `gt prime`, after the role template but
+Per-role Markdown files injected during `ms prime`, after the role template but
 before context files and handoff content. Operator policy that overrides formula
 instructions where they conflict.
 
 ```
-~/gt/directives/<role>.md              # Town-level (all rigs)
-~/gt/<rig>/directives/<role>.md        # Rig-level
+~/ms/directives/<role>.md              # Town-level (all rigs)
+~/ms/<rig>/directives/<role>.md        # Rig-level
 ```
 
 Both levels concatenate (rig content appears last and wins conflicts).
@@ -353,8 +353,8 @@ Per-formula TOML files that modify individual steps. Applied post-parse before
 rendering in `showFormulaStepsFull()`.
 
 ```
-~/gt/formula-overlays/<formula>.toml   # Town-level
-~/gt/<rig>/formula-overlays/<formula>.toml  # Rig-level (full precedence)
+~/ms/formula-overlays/<formula>.toml   # Town-level
+~/ms/<rig>/formula-overlays/<formula>.toml  # Rig-level (full precedence)
 ```
 
 Rig-level overlays fully replace town-level (not merged). Three override modes:
@@ -366,7 +366,7 @@ Rig-level overlays fully replace town-level (not merged). Three override modes:
 | `skip` | Remove the step (dependents inherit its needs) |
 
 Implemented in `internal/formula/overlay.go` (`LoadFormulaOverlay`,
-`ApplyOverlays`). `gt doctor` validates overlay step IDs against current
+`ApplyOverlays`). `ms doctor` validates overlay step IDs against current
 formula definitions and can auto-fix stale references.
 
 See [directives-and-overlays.md](directives-and-overlays.md) for the full

@@ -216,7 +216,7 @@ func TestEscalation_MaxTierNoPromotion(t *testing.T) {
 }
 
 // TestEscalation_DrifterNeedsNoRequirements verifies that Drifter → Registered
-// is essentially automatic (handled by gt wl join).
+// is essentially automatic (handled by ms wl join).
 func TestEscalation_DrifterNeedsNoRequirements(t *testing.T) {
 	t.Parallel()
 

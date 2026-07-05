@@ -62,7 +62,7 @@ func TestCapacitySnapshotCleansStaleReservations(t *testing.T) {
 		ID:        "stale",
 		PID:       99999999,
 		Rig:       "mineshaft",
-		Bead:      "gt-stale",
+		Bead:      "ms-stale",
 		Operation: "test",
 		CreatedAt: time.Now().Add(-2 * minerAdmissionReservationTTL),
 	}
@@ -119,7 +119,7 @@ func TestCapacitySnapshotRemovesMismatchedReservationFile(t *testing.T) {
 		ID:        "other",
 		PID:       os.Getpid(),
 		Rig:       "mineshaft",
-		Bead:      "gt-mismatch",
+		Bead:      "ms-mismatch",
 		Operation: "test",
 		CreatedAt: time.Now(),
 	}
@@ -154,7 +154,7 @@ func TestCapacitySnapshotKeepsOldLiveReservation(t *testing.T) {
 		ID:        "live",
 		PID:       os.Getpid(),
 		Rig:       "mineshaft",
-		Bead:      "gt-live",
+		Bead:      "ms-live",
 		Operation: "test",
 		CreatedAt: time.Now().Add(-2 * minerAdmissionReservationTTL),
 	}
@@ -182,7 +182,7 @@ func TestCapacitySnapshotKeepsOldLiveReservation(t *testing.T) {
 func TestAcquireMinerAdmissionUsesConfiguredCap(t *testing.T) {
 	townRoot := setupMinerCapacityTestTown(t, 1)
 
-	first, snapshot, err := acquireMinerAdmission(townRoot, "mineshaft", "gt-one", "test")
+	first, snapshot, err := acquireMinerAdmission(townRoot, "mineshaft", "ms-one", "test")
 	if err != nil {
 		t.Fatalf("first admission: %v", err)
 	}
@@ -191,7 +191,7 @@ func TestAcquireMinerAdmissionUsesConfiguredCap(t *testing.T) {
 		t.Fatalf("snapshot after first admission = %+v, want max=1 reservations=1 free=0", snapshot)
 	}
 
-	second, deniedSnapshot, err := acquireMinerAdmission(townRoot, "mineshaft", "gt-two", "test")
+	second, deniedSnapshot, err := acquireMinerAdmission(townRoot, "mineshaft", "ms-two", "test")
 	if second != nil {
 		defer second.Release()
 	}
@@ -207,7 +207,7 @@ func TestAcquireMinerAdmissionUsesConfiguredCap(t *testing.T) {
 	}
 
 	first.Release()
-	third, snapshot, err := acquireMinerAdmission(townRoot, "mineshaft", "gt-three", "test")
+	third, snapshot, err := acquireMinerAdmission(townRoot, "mineshaft", "ms-three", "test")
 	if err != nil {
 		t.Fatalf("third admission after release: %v", err)
 	}
@@ -223,7 +223,7 @@ func TestAcquireMinerAdmissionDisabledWhenSchedulerCapNonPositive(t *testing.T) 
 			townRoot := t.TempDir()
 			configureScheduler(t, townRoot, maxMiners, 1)
 
-			handle, snapshot, err := acquireMinerAdmission(townRoot, "mineshaft", "gt-one", "test")
+			handle, snapshot, err := acquireMinerAdmission(townRoot, "mineshaft", "ms-one", "test")
 			if err != nil {
 				t.Fatalf("admission with max=%d: %v", maxMiners, err)
 			}
@@ -255,7 +255,7 @@ func TestConcurrentMinerAdmissionReservationsDoNotExceedCap(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			<-start
-			handle, _, err := acquireMinerAdmission(townRoot, "mineshaft", "gt-race", "test")
+			handle, _, err := acquireMinerAdmission(townRoot, "mineshaft", "ms-race", "test")
 			mu.Lock()
 			defer mu.Unlock()
 			if err == nil {
@@ -293,12 +293,12 @@ func TestApplyAgentFieldsToCapacitySnapshotSeparatesPendingMR(t *testing.T) {
 	}{
 		{
 			name:   "active mr is pending capacity",
-			fields: &beads.AgentFields{AgentState: string(beads.AgentStateIdle), CleanupStatus: "clean", ActiveMR: "gt-mr-open"},
+			fields: &beads.AgentFields{AgentState: string(beads.AgentStateIdle), CleanupStatus: "clean", ActiveMR: "ms-mr-open"},
 			want:   minerCapacitySnapshot{PendingMR: 1},
 		},
 		{
 			name:   "push failed remains recovery blocked",
-			fields: &beads.AgentFields{AgentState: string(beads.AgentStateIdle), CleanupStatus: "clean", ActiveMR: "gt-mr-open", PushFailed: true},
+			fields: &beads.AgentFields{AgentState: string(beads.AgentStateIdle), CleanupStatus: "clean", ActiveMR: "ms-mr-open", PushFailed: true},
 			want:   minerCapacitySnapshot{RecoveryBlocked: 1},
 		},
 		{
@@ -322,7 +322,7 @@ func TestApplyAgentFieldsToCapacitySnapshotSeparatesPendingMR(t *testing.T) {
 func TestPrintDryRunPlanUsesCapacitySnapshot(t *testing.T) {
 	out := captureStdout(t, func() {
 		printDryRunPlan(capacity.DispatchPlan{
-			ToDispatch: []capacity.PendingBead{{ID: "ctx-1", WorkBeadID: "gt-one", TargetRig: "mineshaft"}},
+			ToDispatch: []capacity.PendingBead{{ID: "ctx-1", WorkBeadID: "ms-one", TargetRig: "mineshaft"}},
 			Skipped:    2,
 			Reason:     "capacity",
 		}, minerCapacitySnapshot{
@@ -362,7 +362,7 @@ func TestResolveTargetRigPassesHeldAdmissionToSpawn(t *testing.T) {
 			RigName:     "mineshaft",
 			MinerName: "toast",
 			ClonePath:   filepath.Join(townRoot, "mineshaft", "miners", "toast", "mineshaft"),
-			SessionName: "gt-mineshaft-miner-toast",
+			SessionName: "ms-mineshaft-miner-toast",
 		}, nil
 	}
 
@@ -412,11 +412,11 @@ func TestStandaloneFormulaRigTargetAcquiresSingleAdmission(t *testing.T) {
 			RigName:     "mineshaft",
 			MinerName: "toast",
 			ClonePath:   filepath.Join(townRoot, "mineshaft", "miners", "toast", "mineshaft"),
-			SessionName: "gt-mineshaft-miner-toast",
+			SessionName: "ms-mineshaft-miner-toast",
 		}, nil
 	}
 	findHookedFormulaSingletonFn = func(workDir, targetAgent, formulaName string) (*beads.Issue, error) {
-		return &beads.Issue{ID: "gt-wisp-existing"}, nil
+		return &beads.Issue{ID: "ms-wisp-existing"}, nil
 	}
 
 	if err := runSlingFormula(context.Background(), []string{"test-formula", "mineshaft"}); err != nil {
@@ -451,7 +451,7 @@ func TestStandaloneFormulaExistingMinerNoopDoesNotRequireCapacity(t *testing.T) 
 		return "mineshaft/miners/toast", "%1", filepath.Join(townRoot, "mineshaft", "miners", "toast", "mineshaft"), nil
 	}
 	findHookedFormulaSingletonFn = func(workDir, targetAgent, formulaName string) (*beads.Issue, error) {
-		return &beads.Issue{ID: "gt-wisp-existing"}, nil
+		return &beads.Issue{ID: "ms-wisp-existing"}, nil
 	}
 
 	if err := runSlingFormula(context.Background(), []string{"test-formula", "mineshaft/miners/toast"}); err != nil {

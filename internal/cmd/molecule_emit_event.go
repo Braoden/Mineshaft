@@ -18,26 +18,26 @@ var (
 var moleculeEmitEventCmd = &cobra.Command{
 	Use:   "emit-event",
 	Short: "Emit a file-based event on a named channel",
-	Long: `Emit an event file to ~/gt/events/<channel>/ for subscribers to pick up.
+	Long: `Emit an event file to ~/ms/events/<channel>/ for subscribers to pick up.
 
 This is the Go counterpart to emit-event.sh. Events are JSON files consumed
 by await-event subscribers (e.g., the refinery watching for MERGE_READY events).
 
 EVENT FORMAT:
-Creates a JSON file at ~/gt/events/<channel>/<timestamp>.event:
+Creates a JSON file at ~/ms/events/<channel>/<timestamp>.event:
   {"type": "...", "channel": "...", "timestamp": "...", "payload": {...}}
 
 EXAMPLES:
   # Emit a MERGE_READY event for the refinery
-  gt mol step emit-event --channel refinery --type MERGE_READY \
-    --payload miner=nux --payload branch=miner/nux/gt-iw7m
+  ms mol step emit-event --channel refinery --type MERGE_READY \
+    --payload miner=nux --payload branch=miner/nux/ms-iw7m
 
   # Emit a PATROL_WAKE event
-  gt mol step emit-event --channel refinery --type PATROL_WAKE \
+  ms mol step emit-event --channel refinery --type PATROL_WAKE \
     --payload source=witness --payload queue_depth=3
 
   # Emit an MQ_SUBMIT event
-  gt mol step emit-event --channel refinery --type MQ_SUBMIT \
+  ms mol step emit-event --channel refinery --type MQ_SUBMIT \
     --payload branch=feat/new-feature --payload mr_id=bd-42`,
 	RunE: runMoleculeEmitEvent,
 }

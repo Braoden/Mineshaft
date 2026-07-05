@@ -283,7 +283,7 @@ func TestBeadIDPrefix(t *testing.T) {
 	tests := []struct {
 		in, want string
 	}{
-		{"gt-abc", "gt"},
+		{"ms-abc", "ms"},
 		{"hq-uejt", "hq"},
 		{"wisp-xyz-123", "wisp"},
 		{"noprefix", ""},
@@ -302,10 +302,10 @@ func TestAcceptsPrefix(t *testing.T) {
 		name, rigPrefix, beadID string
 		want                    bool
 	}{
-		{"matching", "gt", "gt-abc", true},
-		{"mismatched", "gt", "hq-uejt", false},
+		{"matching", "ms", "ms-abc", true},
+		{"mismatched", "ms", "hq-uejt", false},
 		{"empty rig prefix accepts all", "", "hq-uejt", true},
-		{"bead with no prefix vs gt rig", "gt", "barewordbead", false},
+		{"bead with no prefix vs ms rig", "ms", "barewordbead", false},
 		{"matching wisp", "wisp", "wisp-di92", true},
 	}
 	for _, tt := range tests {
@@ -319,9 +319,9 @@ func TestAcceptsPrefix(t *testing.T) {
 }
 
 func TestDispatchCycle_Run_ValidateRefusesCrossRigPrefix(t *testing.T) {
-	// Validate returns ErrCrossRigPrefix for `hq-` beads on a `gt`-prefix rig;
+	// Validate returns ErrCrossRigPrefix for `hq-` beads on a `ms`-prefix rig;
 	// Execute must not be called for the refused bead.
-	rigPrefix := "gt"
+	rigPrefix := "ms"
 	executed := []string{}
 	failureErrs := map[string]error{}
 
@@ -329,7 +329,7 @@ func TestDispatchCycle_Run_ValidateRefusesCrossRigPrefix(t *testing.T) {
 		AvailableCapacity: func() (int, error) { return 100, nil },
 		QueryPending: func() ([]PendingBead, error) {
 			return []PendingBead{
-				{ID: "ctx-a", WorkBeadID: "gt-abc", TargetRig: "walletui"},
+				{ID: "ctx-a", WorkBeadID: "ms-abc", TargetRig: "walletui"},
 				{ID: "ctx-b", WorkBeadID: "hq-uejt", TargetRig: "walletui"},
 			}, nil
 		},
@@ -358,8 +358,8 @@ func TestDispatchCycle_Run_ValidateRefusesCrossRigPrefix(t *testing.T) {
 	if report.Failed != 1 {
 		t.Errorf("Failed = %d, want 1", report.Failed)
 	}
-	if len(executed) != 1 || executed[0] != "gt-abc" {
-		t.Errorf("Execute should run only for gt-abc, got %v", executed)
+	if len(executed) != 1 || executed[0] != "ms-abc" {
+		t.Errorf("Execute should run only for ms-abc, got %v", executed)
 	}
 	if !errors.Is(failureErrs["hq-uejt"], ErrCrossRigPrefix) {
 		t.Errorf("OnFailure for hq-uejt err = %v, want ErrCrossRigPrefix", failureErrs["hq-uejt"])

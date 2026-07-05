@@ -1,4 +1,4 @@
-// Package cmd provides CLI commands for the gt tool.
+// Package cmd provides CLI commands for the ms tool.
 package cmd
 
 import (
@@ -23,15 +23,15 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:               "gt", // Updated in init() based on GT_COMMAND
+	Use:               "ms", // Updated in init() based on MS_COMMAND
 	Short:             "Mineshaft - Multi-agent workspace manager",
 	Version:           Version,
-	Long:              "", // Updated in init() based on GT_COMMAND
+	Long:              "", // Updated in init() based on MS_COMMAND
 	PersistentPreRunE: persistentPreRun,
 }
 
 func init() {
-	// Update command name based on GT_COMMAND env var
+	// Update command name based on MS_COMMAND env var
 	cmdName := cli.Name()
 	rootCmd.Use = cmdName
 	rootCmd.Long = fmt.Sprintf(`Mineshaft (%s) manages multi-agent workspaces called rigs.
@@ -105,7 +105,7 @@ func persistentPreRun(cmd *cobra.Command, args []string) error {
 	if BuiltProperly == "" && Build == "dev" && runtime.GOOS == "darwin" {
 		fmt.Fprintln(os.Stderr, "ERROR: This binary was built with 'go build' directly.")
 		fmt.Fprintln(os.Stderr, "       macOS will SIGKILL unsigned binaries. Use 'make build' instead.")
-		if gtRoot := os.Getenv("GT_ROOT"); gtRoot != "" {
+		if gtRoot := os.Getenv("MS_ROOT"); gtRoot != "" {
 			fmt.Fprintf(os.Stderr, "       Run from: %s\n", gtRoot)
 		}
 		os.Exit(1)
@@ -118,9 +118,9 @@ func persistentPreRun(cmd *cobra.Command, args []string) error {
 	logCommandUsage(cmd, args)
 
 	// Initialize session prefix registry and agent registry from town root.
-	// Try CWD detection first, then fall back to GT_TOWN_ROOT / GT_ROOT env vars.
+	// Try CWD detection first, then fall back to MS_TOWN_ROOT / MS_ROOT env vars.
 	// Env var fallback ensures commands invoked from outside the town directory
-	// (e.g., "gt agents menu" via a cross-socket tmux binding) still connect to
+	// (e.g., "ms agents menu" via a cross-socket tmux binding) still connect to
 	// the correct town socket rather than silently using the wrong server.
 	if townRoot := detectTownRootFromCwd(); townRoot != "" {
 		if err := session.InitRegistry(townRoot); err != nil {
@@ -141,9 +141,9 @@ func persistentPreRun(cmd *cobra.Command, args []string) error {
 		warnIfTownRootOffMain()
 	}
 
-	// Touch miner session heartbeat on every gt command (gt-qjtq: ZFC liveness fix).
+	// Touch miner session heartbeat on every ms command (ms-qjtq: ZFC liveness fix).
 	// This is best-effort and non-blocking — the heartbeat file signals that the agent
-	// is alive and actively running gt commands. Used by isSessionProcessDead to
+	// is alive and actively running ms commands. Used by isSessionProcessDead to
 	// determine liveness without PID signal probing.
 	touchMinerHeartbeat()
 
@@ -156,7 +156,7 @@ func persistentPreRun(cmd *cobra.Command, args []string) error {
 	if err := CheckBeadsVersion(); err != nil {
 		fmt.Fprintf(os.Stderr, "\n%s beads (bd) version issue:\n", style.Bold.Render("⚠️  WARNING:"))
 		fmt.Fprintf(os.Stderr, "   %v\n", err)
-		fmt.Fprintf(os.Stderr, "   Run %s for details.\n\n", style.Dim.Render("gt doctor"))
+		fmt.Fprintf(os.Stderr, "   Run %s for details.\n\n", style.Dim.Render("ms doctor"))
 	}
 	return nil
 }
@@ -170,7 +170,7 @@ func isCommandOrAncestorExempt(cmd *cobra.Command, exemptions map[string]bool) b
 	return false
 }
 
-// isRoleCommand returns true when the invoked command belongs to the `gt role` tree.
+// isRoleCommand returns true when the invoked command belongs to the `ms role` tree.
 // Role introspection commands are often used in scripts and tests that expect clean
 // output; beads version warnings are unrelated noise for these commands.
 func isRoleCommand(cmd *cobra.Command) bool {
@@ -199,21 +199,21 @@ func initCLITheme() {
 }
 
 // touchMinerHeartbeat touches the session heartbeat file for miner agents.
-// Called from persistentPreRun on every gt command. The heartbeat signals that
-// the agent process is alive and actively running gt commands. Used by
-// isSessionProcessDead to determine liveness without PID signal probing (gt-qjtq).
+// Called from persistentPreRun on every ms command. The heartbeat signals that
+// the agent process is alive and actively running ms commands. Used by
+// isSessionProcessDead to determine liveness without PID signal probing (ms-qjtq).
 //
 // This is best-effort: errors are silently ignored. Non-miner sessions and
-// sessions without GT_SESSION are skipped silently.
+// sessions without MS_SESSION are skipped silently.
 func touchMinerHeartbeat() {
-	sessionName := os.Getenv("GT_SESSION")
+	sessionName := os.Getenv("MS_SESSION")
 	if sessionName == "" {
 		return
 	}
 
 	// Only miners, crew, and dogs need heartbeats — they're the ones checked
 	// by isSessionProcessDead for stale session detection.
-	role := os.Getenv("GT_ROLE")
+	role := os.Getenv("MS_ROLE")
 	if !strings.Contains(role, "miner") && !strings.Contains(role, "crew") && !strings.Contains(role, "dog") {
 		return
 	}
@@ -250,20 +250,20 @@ func warnIfTownRootOffMain() {
 	}
 
 	branch := strings.TrimSpace(string(out))
-	if branch == "" || branch == "main" || branch == "master" || branch == "gt_managed" {
+	if branch == "" || branch == "main" || branch == "master" || branch == "ms_managed" {
 		return
 	}
 
 	// Town root is on wrong branch - warn the user
 	fmt.Fprintf(os.Stderr, "\n%s Town root is on branch '%s' (should be 'main')\n",
 		style.Bold.Render("⚠️  WARNING:"), branch)
-	fmt.Fprintf(os.Stderr, "   This can cause gt commands to fail. Run: %s\n\n",
-		style.Dim.Render("gt doctor --fix"))
+	fmt.Fprintf(os.Stderr, "   This can cause ms commands to fail. Run: %s\n\n",
+		style.Dim.Render("ms doctor --fix"))
 }
 
 // staleBinaryWarned tracks if we've already warned about stale binary in this session.
 // We use an environment variable since the binary restarts on each command.
-var staleBinaryWarned = os.Getenv("GT_STALE_WARNED") == "1"
+var staleBinaryWarned = os.Getenv("MS_STALE_WARNED") == "1"
 
 // checkStaleBinaryWarning checks if the installed binary is stale and prints a warning.
 // This is a non-blocking check - errors are silently ignored.
@@ -287,14 +287,14 @@ func checkStaleBinaryWarning() {
 
 	if info.IsStale {
 		staleBinaryWarned = true
-		_ = os.Setenv("GT_STALE_WARNED", "1")
+		_ = os.Setenv("MS_STALE_WARNED", "1")
 
-		msg := info.Describe("gt binary")
+		msg := info.Describe("ms binary")
 		fmt.Fprintf(os.Stderr, "%s %s\n", style.WarningPrefix, msg)
 		if info.IsForward && info.OnMainBranch {
 			fmt.Fprintf(os.Stderr, "    %s Run 'make install' in mineshaft repo to update\n", style.ArrowPrefix)
 		} else {
-			fmt.Fprintf(os.Stderr, "    %s Run 'gt stale' for details; switch to a build branch before rebuilding\n", style.ArrowPrefix)
+			fmt.Fprintf(os.Stderr, "    %s Run 'ms stale' for details; switch to a build branch before rebuilding\n", style.ArrowPrefix)
 		}
 	}
 }
@@ -314,7 +314,7 @@ func Execute() int {
 			_ = provider.Shutdown(shutdownCtx)
 		}()
 		// Set OTEL_RESOURCE_ATTRIBUTES in the process env so all bd subprocesses
-		// spawned via exec.Command inherit GT context automatically.
+		// spawned via exec.Command inherit MS context automatically.
 		telemetry.SetProcessOTELAttrs()
 	}
 
@@ -341,7 +341,7 @@ const (
 )
 
 func init() {
-	// Enable prefix matching for subcommands (e.g., "gt ref at" -> "gt refinery attach")
+	// Enable prefix matching for subcommands (e.g., "ms ref at" -> "ms refinery attach")
 	cobra.EnablePrefixMatching = true
 
 	// Define command groups (order determines help output order)
@@ -364,7 +364,7 @@ func init() {
 }
 
 // buildCommandPath walks the command hierarchy to build the full command path.
-// For example: "gt mail send", "gt status", etc.
+// For example: "ms mail send", "ms status", etc.
 func buildCommandPath(cmd *cobra.Command) string {
 	var parts []string
 	for c := cmd; c != nil; c = c.Parent() {
@@ -375,7 +375,7 @@ func buildCommandPath(cmd *cobra.Command) string {
 
 // requireSubcommand returns a RunE function for parent commands that require
 // a subcommand. Without this, Cobra silently shows help and exits 0 for
-// unknown subcommands like "gt mol foobar", masking errors.
+// unknown subcommands like "ms mol foobar", masking errors.
 func requireSubcommand(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("requires a subcommand\n\nRun '%s --help' for usage", buildCommandPath(cmd))
@@ -406,9 +406,9 @@ func requireSubcommand(cmd *cobra.Command, args []string) error {
 //
 // We only check the FIRST argument to avoid false positives like:
 //
-//	gt commit -m "--help"  # User wants message "--help", not help output
+//	ms commit -m "--help"  # User wants message "--help", not help output
 //
-// This covers the common case (gt commit --help) without breaking edge cases.
+// This covers the common case (ms commit --help) without breaking edge cases.
 func checkHelpFlag(cmd *cobra.Command, args []string) (bool, error) {
 	if len(args) > 0 && (args[0] == "--help" || args[0] == "-h") {
 		return true, cmd.Help()

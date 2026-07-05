@@ -127,7 +127,7 @@ func (c *OrphanSessionCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:  StatusWarning,
 		Message: fmt.Sprintf("Found %d orphaned session(s)", len(orphans)),
 		Details: details,
-		FixHint: "Run 'gt doctor --fix' to kill orphaned sessions",
+		FixHint: "Run 'ms doctor --fix' to kill orphaned sessions",
 	}
 }
 
@@ -148,7 +148,7 @@ func (c *OrphanSessionCheck) Fix(ctx *CheckContext) error {
 		}
 		// Log pre-death event for crash investigation (before killing)
 		_ = events.LogFeed(events.TypeSessionDeath, sess,
-			events.SessionDeathPayload(sess, "unknown", "orphan cleanup", "gt doctor"))
+			events.SessionDeathPayload(sess, "unknown", "orphan cleanup", "ms doctor"))
 		// Use KillSessionWithProcesses to ensure all descendant processes are killed.
 		if err := t.KillSessionWithProcesses(sess); err != nil {
 			lastErr = err
@@ -159,7 +159,7 @@ func (c *OrphanSessionCheck) Fix(ctx *CheckContext) error {
 }
 
 // isCrewSession returns true if the session name matches the crew pattern.
-// Crew sessions are gt-<rig>-crew-<name> and are protected from auto-cleanup.
+// Crew sessions are ms-<rig>-crew-<name> and are protected from auto-cleanup.
 func isCrewSession(sess string) bool {
 	identity, err := session.ParseSessionName(sess)
 	if err != nil {
@@ -200,10 +200,10 @@ func (c *OrphanSessionCheck) getValidRigs(townRoot string) []string {
 // Valid patterns:
 //   - hq-overseer (headquarters overseer session)
 //   - hq-supervisor (headquarters supervisor session)
-//   - gt-boot (boot watchdog session)
-//   - gt-<rig>-witness
-//   - gt-<rig>-refinery
-//   - gt-<rig>-<miner> (where miner is any name)
+//   - ms-boot (boot watchdog session)
+//   - ms-<rig>-witness
+//   - ms-<rig>-refinery
+//   - ms-<rig>-<miner> (where miner is any name)
 //
 // Note: We can't verify miner names without reading state, so we're permissive.
 func (c *OrphanSessionCheck) isValidSession(sess string, validRigs []string, overseerSession, supervisorSession string) bool {
@@ -236,7 +236,7 @@ func (c *OrphanSessionCheck) isValidSession(sess string, validRigs []string, ove
 
 	// Check if this rig exists.
 	// For miners, ParseSessionName assumes rig = everything except last segment,
-	// but miner names can contain hyphens (e.g., gt-niflheim-fix-auth-bug where
+	// but miner names can contain hyphens (e.g., ms-niflheim-fix-auth-bug where
 	// rig=niflheim, name=fix-auth-bug). If the initial parse doesn't match a valid
 	// rig, check if any valid rig is a prefix of the session suffix.
 	rigFound := false

@@ -107,7 +107,7 @@ func (c *LinkedPaneCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:  StatusError,
 		Message: fmt.Sprintf("Found %d linked pane(s) causing crosstalk!", len(conflicts)),
 		Details: conflicts,
-		FixHint: "Run 'gt doctor --fix' to kill linked sessions (daemon will recreate)",
+		FixHint: "Run 'ms doctor --fix' to kill linked sessions (daemon will recreate)",
 	}
 }
 

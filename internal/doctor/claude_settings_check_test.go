@@ -48,7 +48,7 @@ func createValidSettings(t *testing.T, path string) {
 					"hooks": []any{
 						map[string]any{
 							"type":    "command",
-							"command": "/usr/local/bin/gt prime --hook",
+							"command": "/usr/local/bin/ms prime --hook",
 						},
 					},
 				},
@@ -59,7 +59,7 @@ func createValidSettings(t *testing.T, path string) {
 					"hooks": []any{
 						map[string]any{
 							"type":    "command",
-							"command": "gt costs record --session $CLAUDE_SESSION_ID",
+							"command": "ms costs record --session $CLAUDE_SESSION_ID",
 						},
 					},
 				},
@@ -82,7 +82,7 @@ func createValidSettings(t *testing.T, path string) {
 }
 
 // createValidMinerSettings creates a miner settings file whose Stop hook
-// invokes `gt tap miner-stop-check`, matching the canonical template in
+// invokes `ms tap miner-stop-check`, matching the canonical template in
 // internal/hooks/config.go DefaultOverrides()["miners"].
 func createValidMinerSettings(t *testing.T, path string) {
 	t.Helper()
@@ -96,7 +96,7 @@ func createValidMinerSettings(t *testing.T, path string) {
 					"hooks": []any{
 						map[string]any{
 							"type":    "command",
-							"command": "/usr/local/bin/gt prime --hook",
+							"command": "/usr/local/bin/ms prime --hook",
 						},
 					},
 				},
@@ -107,7 +107,7 @@ func createValidMinerSettings(t *testing.T, path string) {
 					"hooks": []any{
 						map[string]any{
 							"type":    "command",
-							"command": `export PATH="$HOME/go/bin:$HOME/.local/bin:$PATH" && gt tap miner-stop-check`,
+							"command": `export PATH="$HOME/go/bin:$HOME/.local/bin:$PATH" && ms tap miner-stop-check`,
 						},
 					},
 				},
@@ -140,7 +140,7 @@ func createStaleSettings(t *testing.T, path string, missingElements ...string) {
 					"hooks": []any{
 						map[string]any{
 							"type":    "command",
-							"command": "/usr/local/bin/gt prime --hook",
+							"command": "/usr/local/bin/ms prime --hook",
 						},
 					},
 				},
@@ -151,7 +151,7 @@ func createStaleSettings(t *testing.T, path string, missingElements ...string) {
 					"hooks": []any{
 						map[string]any{
 							"type":    "command",
-							"command": "gt costs record --session $CLAUDE_SESSION_ID",
+							"command": "ms costs record --session $CLAUDE_SESSION_ID",
 						},
 					},
 				},
@@ -297,7 +297,7 @@ func TestClaudeSettingsCheck_ValidMinerSettings(t *testing.T) {
 	rigName := "testrig"
 
 	// Create valid miner settings in correct location (miners/.claude/settings.json)
-	// with the miner-specific Stop hook (`gt tap miner-stop-check`) — see
+	// with the miner-specific Stop hook (`ms tap miner-stop-check`) — see
 	// internal/hooks/config.go DefaultOverrides()["miners"]. The check
 	// recognizes role-specific Stop patterns (#3648).
 	pcSettings := filepath.Join(tmpDir, rigName, "miners", ".claude", "settings.json")
@@ -316,7 +316,7 @@ func TestClaudeSettingsCheck_ValidMinerSettings(t *testing.T) {
 // TestClaudeSettingsCheck_MinerStopHookRecognized is the regression test for
 // #3648: doctor's claude-settings check used to expect `costs record` in the
 // Stop hook for *all* roles, but the miner hooks template installs
-// `gt tap miner-stop-check`. Result: doctor reported miner settings as
+// `ms tap miner-stop-check`. Result: doctor reported miner settings as
 // stale, --fix deleted them, the daemon recreated the same file, and the
 // check never converged. The fix recognizes role-specific Stop patterns.
 func TestClaudeSettingsCheck_MinerStopHookRecognized(t *testing.T) {
@@ -332,18 +332,18 @@ func TestClaudeSettingsCheck_MinerStopHookRecognized(t *testing.T) {
 	result := check.Run(ctx)
 
 	if result.Status != StatusOK {
-		t.Fatalf("miner settings with `gt tap miner-stop-check` should pass; got %v: %s\nDetails: %v",
+		t.Fatalf("miner settings with `ms tap miner-stop-check` should pass; got %v: %s\nDetails: %v",
 			result.Status, result.Message, result.Details)
 	}
 
 	// Witness role should still expect `costs record` — verify the role-aware
 	// pattern didn't break the canonical case.
 	witnessSettings := filepath.Join(tmpDir, rigName, "witness", ".claude", "settings.json")
-	createValidSettings(t, witnessSettings) // uses `gt costs record`
+	createValidSettings(t, witnessSettings) // uses `ms costs record`
 
 	result = check.Run(ctx)
 	if result.Status != StatusOK {
-		t.Fatalf("witness settings with `gt costs record` should still pass; got %v: %s\nDetails: %v",
+		t.Fatalf("witness settings with `ms costs record` should still pass; got %v: %s\nDetails: %v",
 			result.Status, result.Message, result.Details)
 	}
 }
@@ -414,7 +414,7 @@ func TestClaudeSettingsCheck_MissingHooks(t *testing.T) {
 func TestClaudeSettingsCheck_MissingSessionStartPrime(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// Create overseer settings.json missing gt prime in SessionStart (content validation)
+	// Create overseer settings.json missing ms prime in SessionStart (content validation)
 	overseerSettings := filepath.Join(tmpDir, "overseer", ".claude", "settings.json")
 	createStaleSettings(t, overseerSettings, "PATH")
 
@@ -1053,7 +1053,7 @@ func TestClaudeSettingsCheck_RigRootSettingsFixDeletes(t *testing.T) {
 
 // NOTE: TestClaudeSettingsCheck_DetectsStaleCLAUDEmdAtTownRoot and
 // TestClaudeSettingsCheck_FixMovesCLAUDEmdToOverseer were removed because
-// CLAUDE.md at town root is now intentionally created by gt install.
+// CLAUDE.md at town root is now intentionally created by ms install.
 // It serves as an identity anchor for Overseer/Supervisor who run from the town root.
 // See install.go createTownRootAgentMDs() for details.
 
@@ -1108,8 +1108,8 @@ func TestClaudeSettingsCheck_TownRootSettingsWarnsInsteadOfKilling(t *testing.T)
 		"env": {"PATH": "/usr/bin"},
 		"enabledPlugins": ["claude-code-expert"],
 		"hooks": {
-			"SessionStart": [{"matcher": "", "hooks": [{"type": "command", "command": "gt prime"}]}],
-			"Stop": [{"matcher": "", "hooks": [{"type": "command", "command": "gt handoff"}]}]
+			"SessionStart": [{"matcher": "", "hooks": [{"type": "command", "command": "ms prime"}]}],
+			"Stop": [{"matcher": "", "hooks": [{"type": "command", "command": "ms handoff"}]}]
 		}
 	}`
 	if err := os.WriteFile(staleTownRootSettings, []byte(settingsContent), 0644); err != nil {
@@ -1432,8 +1432,8 @@ func TestClaudeSettingsCheck_MissingFileOnlyMessage(t *testing.T) {
 	}
 
 	// Fix hint should mention restart for missing files
-	if !strings.Contains(result.FixHint, "gt up --restore") {
-		t.Errorf("expected fix hint to mention 'gt up --restore', got %q", result.FixHint)
+	if !strings.Contains(result.FixHint, "ms up --restore") {
+		t.Errorf("expected fix hint to mention 'ms up --restore', got %q", result.FixHint)
 	}
 }
 

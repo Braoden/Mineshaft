@@ -12,12 +12,12 @@ var tapGuardMolPatrolCmd = &cobra.Command{
 	Short: "Block mol patrol in agent contexts",
 	Long: `Block mol patrol operations that could disrupt running agents.
 
-'gt mol patrol' terminates stale molecules. Running it from within an
+'ms mol patrol' terminates stale molecules. Running it from within an
 agent session risks killing sibling agents or even the caller's own
 molecule.
 
 This guard blocks:
-  - gt mol patrol (when called from within a Mineshaft agent)
+  - ms mol patrol (when called from within a Mineshaft agent)
 
 Exit codes:
   0 - Operation allowed (not in Mineshaft agent context, or Overseer)
@@ -38,7 +38,7 @@ func runTapGuardMolPatrol(cmd *cobra.Command, args []string) error {
 	}
 
 	// Allow Overseer to run patrol (it coordinates agents)
-	if os.Getenv("GT_OVERSEER") != "" {
+	if os.Getenv("MS_OVERSEER") != "" {
 		return nil
 	}
 
@@ -46,13 +46,13 @@ func runTapGuardMolPatrol(cmd *cobra.Command, args []string) error {
 	fmt.Fprintln(os.Stderr, "╔══════════════════════════════════════════════════════════════════╗")
 	fmt.Fprintln(os.Stderr, "║  ❌ MOL PATROL BLOCKED                                           ║")
 	fmt.Fprintln(os.Stderr, "╠══════════════════════════════════════════════════════════════════╣")
-	fmt.Fprintln(os.Stderr, "║  Running 'gt mol patrol' from an agent can kill sibling agents  ║")
+	fmt.Fprintln(os.Stderr, "║  Running 'ms mol patrol' from an agent can kill sibling agents  ║")
 	fmt.Fprintln(os.Stderr, "║  or even your own molecule.                                     ║")
 	fmt.Fprintln(os.Stderr, "║                                                                  ║")
 	fmt.Fprintln(os.Stderr, "║  Only the Overseer or human operators should run mol patrol.       ║")
 	fmt.Fprintln(os.Stderr, "║                                                                  ║")
 	fmt.Fprintln(os.Stderr, "║  If you need to check molecule status, use:                     ║")
-	fmt.Fprintln(os.Stderr, "║    gt mol status    (safe, read-only)                           ║")
+	fmt.Fprintln(os.Stderr, "║    ms mol status    (safe, read-only)                           ║")
 	fmt.Fprintln(os.Stderr, "╚══════════════════════════════════════════════════════════════════╝")
 	fmt.Fprintln(os.Stderr, "")
 	return NewSilentExit(2)

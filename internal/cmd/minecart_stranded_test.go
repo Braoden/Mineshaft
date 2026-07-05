@@ -74,11 +74,11 @@ func TestIsReadyIssue_BlockingAndStatus(t *testing.T) {
 
 func TestApplyFreshIssueDetails_SetsBlockedFlag(t *testing.T) {
 	dep := trackedDependency{
-		ID:     "gt-123",
+		ID:     "ms-123",
 		Status: "open",
 	}
 	details := &issueDetails{
-		ID:             "gt-123",
+		ID:             "ms-123",
 		Status:         "open",
 		BlockedByCount: 1,
 	}
@@ -91,8 +91,8 @@ func TestApplyFreshIssueDetails_SetsBlockedFlag(t *testing.T) {
 }
 
 func TestApplyFreshIssueDetails_BlankStatusBecomesUnknown(t *testing.T) {
-	dep := trackedDependency{ID: "gt-123"}
-	details := &issueDetails{ID: "gt-123", Status: "  "}
+	dep := trackedDependency{ID: "ms-123"}
+	details := &issueDetails{ID: "ms-123", Status: "  "}
 
 	applyFreshIssueDetails(&dep, details)
 
@@ -117,7 +117,7 @@ func TestIssueDetailsIsBlocked(t *testing.T) {
 		{
 			name: "blocked_by list marks blocked",
 			in: issueDetails{
-				BlockedBy: []string{"gt-1"},
+				BlockedBy: []string{"ms-1"},
 			},
 			want: true,
 		},
@@ -168,7 +168,7 @@ func TestIsSlingableBead(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	routesContent := `{"prefix": "gt-", "path": "mineshaft/overseer/rig"}
+	routesContent := `{"prefix": "ms-", "path": "mineshaft/overseer/rig"}
 {"prefix": "bd-", "path": "beads/overseer/rig"}
 {"prefix": "hq-", "path": "."}
 `
@@ -181,7 +181,7 @@ func TestIsSlingableBead(t *testing.T) {
 		beadID string
 		want   bool
 	}{
-		{"rig bead is slingable", "gt-wisp-abc", true},
+		{"rig bead is slingable", "ms-wisp-abc", true},
 		{"another rig bead is slingable", "bd-wisp-xyz", true},
 		{"town-level bead not slingable", "hq-wisp-abc", false},
 		{"town-level minecart not slingable", "hq-cv-kl6ns", false},

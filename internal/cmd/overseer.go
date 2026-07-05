@@ -100,9 +100,9 @@ IDE integration via the Agent Control Protocol. It bypasses all tmux
 logic and runs directly in the current terminal.
 
 Environment variable overrides:
-  GT_RIG          - Override rig name
-  GT_TOWN_ROOT    - Override town root directory
-  GT_ROLE         - Override role (default: overseer)
+  MS_RIG          - Override rig name
+  MS_TOWN_ROOT    - Override town root directory
+  MS_ROLE         - Override role (default: overseer)
 
 The agent reads prompts from stdin and outputs to stdout. This enables
 programmatic control by IDEs or other tools that need direct agent access.
@@ -129,8 +129,8 @@ func init() {
 	overseerAttachCmd.Flags().StringVar(&overseerAgentOverride, "agent", "", "Agent alias to run the Overseer with (overrides town default)")
 	overseerRestartCmd.Flags().StringVar(&overseerAgentOverride, "agent", "", "Agent alias to run the Overseer with (overrides town default)")
 
-	overseerAcpCmd.Flags().StringVar(&acpRigOverride, "rig", "", "Rig name (overrides GT_RIG env)")
-	overseerAcpCmd.Flags().StringVar(&acpTownRootOverride, "town", "", "Town root directory (overrides GT_TOWN_ROOT env)")
+	overseerAcpCmd.Flags().StringVar(&acpRigOverride, "rig", "", "Rig name (overrides MS_RIG env)")
+	overseerAcpCmd.Flags().StringVar(&acpTownRootOverride, "town", "", "Town root directory (overrides MS_TOWN_ROOT env)")
 	overseerAcpCmd.Flags().StringVar(&overseerAgentOverride, "agent", "", "Agent alias to run (overrides town default)")
 
 	rootCmd.AddCommand(overseerCmd)
@@ -159,14 +159,14 @@ func runOverseerStart(cmd *cobra.Command, args []string) error {
 	fmt.Println("Starting Overseer session...")
 	if err := mgr.Start(overseerAgentOverride); err != nil {
 		if err == overseer.ErrAlreadyRunning {
-			return fmt.Errorf("Overseer session already running. Attach with: gt overseer attach")
+			return fmt.Errorf("Overseer session already running. Attach with: ms overseer attach")
 		}
 		return err
 	}
 
 	fmt.Printf("%s Overseer session started. Attach with: %s\n",
 		style.Bold.Render("✓"),
-		style.Dim.Render("gt overseer attach"))
+		style.Dim.Render("ms overseer attach"))
 
 	return nil
 }
@@ -201,7 +201,7 @@ func runOverseerAttach(cmd *cobra.Command, args []string) error {
 	}
 
 	// Check if ACP is active and gracefully shut it down before switching to tmux.
-	// Only 'gt overseer attach' is allowed to transition from ACP to tmux mode.
+	// Only 'ms overseer attach' is allowed to transition from ACP to tmux mode.
 	if overseer.IsACPActive(townRoot) {
 		fmt.Fprintf(os.Stderr, "ACP Overseer is active. Switching to tmux mode...\n")
 		if err := gracefullyShutdownACP(townRoot); err != nil {
@@ -228,7 +228,7 @@ func runOverseerAttach(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	} else {
-		// Session exists - check if runtime is still running (hq-95xfq, gt-7zl)
+		// Session exists - check if runtime is still running (hq-95xfq, ms-7zl)
 		// If runtime exited or sitting at shell, restart with proper context.
 		// Use IsAgentAlive (checks descendant processes) instead of IsAgentRunning
 		// (pane command only), since overseer launches via bash wrapper.
@@ -241,7 +241,7 @@ func runOverseerAttach(cmd *cobra.Command, args []string) error {
 				return fmt.Errorf("getting pane ID: %w", err)
 			}
 
-			// Build startup beacon for context (like gt handoff does)
+			// Build startup beacon for context (like ms handoff does)
 			beacon := session.FormatStartupBeacon(session.BeaconConfig{
 				Recipient: "overseer",
 				Sender:    "human",
@@ -354,7 +354,7 @@ func runOverseerStatus(cmd *cobra.Command, args []string) error {
 		fmt.Printf("%s Overseer session is %s\n",
 			style.Dim.Render("○"),
 			"not running")
-		fmt.Printf("\nStart with: %s\n", style.Dim.Render("gt overseer start"))
+		fmt.Printf("\nStart with: %s\n", style.Dim.Render("ms overseer start"))
 		return nil
 	}
 
@@ -378,9 +378,9 @@ func runOverseerStatus(cmd *cobra.Command, args []string) error {
 	}
 
 	if status.Tmux != nil {
-		fmt.Printf("\nAttach with: %s\n", style.Dim.Render("gt overseer attach"))
+		fmt.Printf("\nAttach with: %s\n", style.Dim.Render("ms overseer attach"))
 	} else if status.ACPPid != 0 {
-		fmt.Printf("\nAttach with: %s\n", style.Dim.Render("gt overseer acp"))
+		fmt.Printf("\nAttach with: %s\n", style.Dim.Render("ms overseer acp"))
 	}
 
 	return nil
@@ -407,7 +407,7 @@ func runOverseerRestart(cmd *cobra.Command, args []string) error {
 // for the Overseer (it cannot operate without database access).
 // Daemon failures are non-fatal (warned but do not block).
 func ensureOverseerInfra(townRoot string) error {
-	// Load daemon.json env vars (e.g., GT_DOLT_PORT) so Dolt uses the right port.
+	// Load daemon.json env vars (e.g., MS_DOLT_PORT) so Dolt uses the right port.
 	if patrolCfg := daemon.LoadPatrolConfig(townRoot); patrolCfg != nil {
 		for k, v := range patrolCfg.Env {
 			os.Setenv(k, v)
@@ -443,7 +443,7 @@ func ensureOverseerInfra(townRoot string) error {
 						}
 					}
 					if freePort := doltserver.FindFreePort(doltCfg.Port + 1); freePort > 0 {
-						msg += fmt.Sprintf("\n\nConfigure a free port for this town, then retry:\n  gt config set dolt.port %d && gt overseer at", freePort)
+						msg += fmt.Sprintf("\n\nConfigure a free port for this town, then retry:\n  ms config set dolt.port %d && ms overseer at", freePort)
 					}
 					return fmt.Errorf("%s", msg)
 				}
@@ -463,7 +463,7 @@ func runOverseerAcp(cmd *cobra.Command, args []string) error {
 
 	townRoot := acpTownRootOverride
 	if townRoot == "" {
-		townRoot = os.Getenv("GT_TOWN_ROOT")
+		townRoot = os.Getenv("MS_TOWN_ROOT")
 	}
 	if townRoot == "" {
 		var err error
@@ -479,7 +479,7 @@ func runOverseerAcp(cmd *cobra.Command, args []string) error {
 
 	rigName := acpRigOverride
 	if rigName == "" {
-		rigName = os.Getenv("GT_RIG")
+		rigName = os.Getenv("MS_RIG")
 	}
 
 	mgr := overseer.NewManager(townRoot)

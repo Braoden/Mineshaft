@@ -28,7 +28,7 @@ func runMailCheck(cmd *cobra.Command, args []string) error {
 	workDir, err := findMailWorkDir()
 	if err != nil {
 		if mailCheckInject {
-			fmt.Fprintf(os.Stderr, "gt mail check: workspace lookup failed: %v\n", err)
+			fmt.Fprintf(os.Stderr, "ms mail check: workspace lookup failed: %v\n", err)
 			return nil
 		}
 		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
@@ -39,7 +39,7 @@ func runMailCheck(cmd *cobra.Command, args []string) error {
 	mailbox, err := router.GetMailbox(address)
 	if err != nil {
 		if mailCheckInject {
-			fmt.Fprintf(os.Stderr, "gt mail check: mailbox error for %s: %v\n", address, err)
+			fmt.Fprintf(os.Stderr, "ms mail check: mailbox error for %s: %v\n", address, err)
 			return nil
 		}
 		return fmt.Errorf("getting mailbox: %w", err)
@@ -50,7 +50,7 @@ func runMailCheck(cmd *cobra.Command, args []string) error {
 	messages, _, unread, err := loadInboxSnapshot(mailbox, false)
 	if err != nil {
 		if mailCheckInject {
-			fmt.Fprintf(os.Stderr, "gt mail check: inbox load error for %s: %v\n", address, err)
+			fmt.Fprintf(os.Stderr, "ms mail check: inbox load error for %s: %v\n", address, err)
 			return nil
 		}
 		return fmt.Errorf("loading inbox: %w", err)
@@ -78,12 +78,12 @@ func runMailCheck(cmd *cobra.Command, args []string) error {
 		// telling the agent to checkpoint and wait. This catches agents that
 		// survived the SIGTSTP freeze.
 		if townRoot, twErr := workspace.FindFromCwd(); twErr == nil {
-			rigName := os.Getenv("GT_RIG")
+			rigName := os.Getenv("MS_RIG")
 			if estop.IsActive(townRoot) || (rigName != "" && estop.IsRigActive(townRoot, rigName)) {
 				fmt.Print("<system-reminder>\n")
 				fmt.Print("EMERGENCY STOP ACTIVE. All work is paused.\n")
 				fmt.Print("Do NOT start new tasks or tool calls. Checkpoint your current state\n")
-				fmt.Print("(save progress notes) and wait for the boss to run 'gt thaw'.\n")
+				fmt.Print("(save progress notes) and wait for the boss to run 'ms thaw'.\n")
 				fmt.Print("This is a system-level pause — it may be due to infrastructure failure,\n")
 				fmt.Print("maintenance, or the operator traveling.\n")
 				fmt.Print("</system-reminder>\n")
@@ -95,7 +95,7 @@ func runMailCheck(cmd *cobra.Command, args []string) error {
 			fmt.Print(formatInjectOutput(messages))
 			// Ack after output so message is delivered before being marked acked.
 			if ackErr := mailbox.AcknowledgeDeliveries(address, messages); ackErr != nil {
-				fmt.Fprintf(os.Stderr, "gt mail check: delivery ack update failed for %s: %v\n", address, ackErr)
+				fmt.Fprintf(os.Stderr, "ms mail check: delivery ack update failed for %s: %v\n", address, ackErr)
 			}
 		}
 
@@ -105,7 +105,7 @@ func runMailCheck(cmd *cobra.Command, args []string) error {
 		if sessionName != "" {
 			queuedNudges, drainErr := nudge.Drain(workDir, sessionName)
 			if drainErr != nil {
-				fmt.Fprintf(os.Stderr, "gt mail check: nudge queue drain error: %v\n", drainErr)
+				fmt.Fprintf(os.Stderr, "ms mail check: nudge queue drain error: %v\n", drainErr)
 			} else if len(queuedNudges) > 0 {
 				fmt.Print(nudge.FormatForInjection(queuedNudges))
 			}
@@ -159,7 +159,7 @@ func formatInjectOutput(messages []*mail.Message) string {
 		if len(normal) > 0 {
 			fmt.Fprintf(&b, "\n(Plus %d additional message(s) — check after current task.)\n", len(normal))
 		}
-		b.WriteString("\nRun 'gt mail read <id>' to read urgent messages.\n")
+		b.WriteString("\nRun 'ms mail read <id>' to read urgent messages.\n")
 		b.WriteString("</system-reminder>\n")
 	} else if len(high) > 0 {
 		// High-priority mail: don't interrupt, but process promptly at task boundary.
@@ -172,7 +172,7 @@ func formatInjectOutput(messages []*mail.Message) string {
 			fmt.Fprintf(&b, "\n(Plus %d additional message(s).)\n", len(normal))
 		}
 		b.WriteString("\nContinue your current task. When it completes, process these messages\n")
-		b.WriteString("before going idle: 'gt mail inbox'\n")
+		b.WriteString("before going idle: 'ms mail inbox'\n")
 		b.WriteString("</system-reminder>\n")
 	} else {
 		// Normal/low mail: informational, process at next task boundary.
@@ -182,7 +182,7 @@ func formatInjectOutput(messages []*mail.Message) string {
 			fmt.Fprintf(&b, "- %s from %s: %s\n", msg.ID, msg.From, msg.Subject)
 		}
 		b.WriteString("\nContinue your current task. When it completes, check these messages\n")
-		b.WriteString("before going idle: 'gt mail inbox'\n")
+		b.WriteString("before going idle: 'ms mail inbox'\n")
 		b.WriteString("</system-reminder>\n")
 	}
 

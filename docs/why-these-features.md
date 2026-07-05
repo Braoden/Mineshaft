@@ -77,7 +77,7 @@ on similar tasks, track their completion rates and quality, make informed decisi
 
 ## Feature: Capability-Based Routing
 
-> **Status: Planned** — Skill tracking and automatic routing are not yet implemented. Work assignment is currently manual via `gt sling`.
+> **Status: Planned** — Skill tracking and automatic routing are not yet implemented. Work assignment is currently manual via `ms sling`.
 
 **The problem:** You have work in Go, Python, TypeScript, Rust. You have agents
 with varying capabilities. Manual assignment doesn't scale.
@@ -91,7 +91,7 @@ bd skills mineshaft/miners/toast
 # → go: 47 tasks, python: 12 tasks, typescript: 3 tasks
 
 # Route based on fit
-gt dispatch gt-xyz --prefer-skill=go
+ms dispatch ms-xyz --prefer-skill=go
 ```
 
 **Why it matters:**
@@ -161,7 +161,7 @@ sometimes multiple organizations (contractors, partners). Visibility is fragment
 
 ```bash
 # Register remote workspace
-gt remote add partner hop://partner.com/their-project
+ms remote add partner hop://partner.com/their-project
 
 # Query across workspaces
 bd list --remote=partner --tag=integration

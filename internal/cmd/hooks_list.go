@@ -21,8 +21,8 @@ Displays each target with its override chain and whether it is
 currently in sync with the base + overrides configuration.
 
 Examples:
-  gt hooks list            # Show all managed locations
-  gt hooks list --json     # Output as JSON`,
+  ms hooks list            # Show all managed locations
+  ms hooks list --json     # Output as JSON`,
 	RunE: runHooksListTargets,
 }
 

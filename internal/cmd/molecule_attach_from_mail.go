@@ -13,7 +13,7 @@ import (
 	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
-// runMoleculeAttachFromMail handles the "gt mol attach-from-mail <mail-id>" command.
+// runMoleculeAttachFromMail handles the "ms mol attach-from-mail <mail-id>" command.
 // It reads a mail message, extracts the molecule ID from the body, and attaches
 // it to the current agent's hook (pinned bead).
 func runMoleculeAttachFromMail(cmd *cobra.Command, args []string) error {
@@ -123,7 +123,7 @@ func runMoleculeAttachFromMail(cmd *cobra.Command, args []string) error {
 	if attachment != nil && attachment.AttachedAt != "" {
 		fmt.Printf("  Attached at: %s\n", attachment.AttachedAt)
 	}
-	fmt.Printf("\n%s Run 'gt hook' to see progress\n", style.Dim.Render("Hint:"))
+	fmt.Printf("\n%s Run 'ms hook' to see progress\n", style.Dim.Render("Hint:"))
 
 	return nil
 }

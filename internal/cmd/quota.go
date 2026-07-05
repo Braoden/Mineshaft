@@ -44,10 +44,10 @@ When sessions hit rate limits, quota commands help detect blocked sessions
 and rotate them to available accounts from the pool.
 
 Commands:
-  gt quota status            Show account quota status
-  gt quota scan              Detect rate-limited sessions
-  gt quota rotate            Swap blocked sessions to available accounts
-  gt quota clear             Mark account(s) as available again`,
+  ms quota status            Show account quota status
+  ms quota scan              Detect rate-limited sessions
+  ms quota rotate            Swap blocked sessions to available accounts
+  ms quota clear             Mark account(s) as available again`,
 }
 
 var quotaStatusCmd = &cobra.Command{
@@ -59,8 +59,8 @@ Displays which accounts are available, rate-limited, or in cooldown,
 along with timestamps for limit detection and estimated reset times.
 
 Examples:
-  gt quota status           # Text output
-  gt quota status --json    # JSON output`,
+  ms quota status           # Text output
+  ms quota status --json    # JSON output`,
 	RunE: runQuotaStatus,
 }
 
@@ -87,7 +87,7 @@ func runQuotaStatus(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		fmt.Println("No accounts configured.")
 		fmt.Println("\nTo add an account:")
-		fmt.Println("  gt account add <handle>")
+		fmt.Println("  ms account add <handle>")
 		return nil
 	}
 
@@ -214,9 +214,9 @@ messages. Reports which sessions are blocked and which account they use.
 Use --update to automatically update quota state with detected limits.
 
 Examples:
-  gt quota scan              # Report rate-limited sessions
-  gt quota scan --update     # Report and update quota state
-  gt quota scan --json       # JSON output`,
+  ms quota scan              # Report rate-limited sessions
+  ms quota scan --update     # Report and update quota state
+  ms quota scan --json       # JSON output`,
 	RunE: runQuotaScan,
 }
 
@@ -376,11 +376,11 @@ The rotation process:
   5. Sends /resume to recover conversation context
 
 Examples:
-  gt quota rotate                    # Rotate all blocked sessions
-  gt quota rotate --from work        # Preemptively rotate sessions on 'work' account
-  gt quota rotate --from work --idle # Only rotate idle sessions on 'work' account
-  gt quota rotate --dry-run          # Show plan without executing
-  gt quota rotate --json             # JSON output`,
+  ms quota rotate                    # Rotate all blocked sessions
+  ms quota rotate --from work        # Preemptively rotate sessions on 'work' account
+  ms quota rotate --from work --idle # Only rotate idle sessions on 'work' account
+  ms quota rotate --dry-run          # Show plan without executing
+  ms quota rotate --json             # JSON output`,
 	RunE: runQuotaRotate,
 }
 
@@ -394,7 +394,7 @@ func runQuotaRotate(cmd *cobra.Command, args []string) error {
 	accountsPath := constants.OverseerAccountsPath(townRoot)
 	acctCfg, err := config.LoadAccountsConfig(accountsPath)
 	if err != nil {
-		return fmt.Errorf("no accounts configured (run 'gt account add' first): %w", err)
+		return fmt.Errorf("no accounts configured (run 'ms account add' first): %w", err)
 	}
 	if len(acctCfg.Accounts) < 2 {
 		return fmt.Errorf("need at least 2 accounts for rotation (have %d)", len(acctCfg.Accounts))
@@ -598,9 +598,9 @@ var quotaClearCmd = &cobra.Command{
 When no handles are specified, all limited accounts are cleared.
 
 Examples:
-  gt quota clear              # Clear all limited accounts
-  gt quota clear work         # Clear a specific account
-  gt quota clear work personal`,
+  ms quota clear              # Clear all limited accounts
+  ms quota clear work         # Clear a specific account
+  ms quota clear work personal`,
 	RunE: runQuotaClear,
 }
 
@@ -733,11 +733,11 @@ func executeKeychainRotation(
 
 	// Keep the SAME config dir — this is what makes /resume work.
 	// The keychain swap already replaced the auth token in this dir's keychain entry.
-	// Set GT_QUOTA_ACCOUNT so the scanner knows which account's token is actually active
+	// Set MS_QUOTA_ACCOUNT so the scanner knows which account's token is actually active
 	// (the config dir still maps to the old account).
 	restartCmd = config.PrependEnv(restartCmd, map[string]string{
 		"CLAUDE_CONFIG_DIR": currentConfigDir,
-		"GT_QUOTA_ACCOUNT":  newAccount,
+		"MS_QUOTA_ACCOUNT":  newAccount,
 	})
 
 	// Get target pane
@@ -768,11 +768,11 @@ func executeKeychainRotation(
 		return result
 	}
 
-	// Set GT_QUOTA_ACCOUNT in the tmux session environment so the scanner
+	// Set MS_QUOTA_ACCOUNT in the tmux session environment so the scanner
 	// can resolve the active account. The shell export in restartCmd only
 	// affects the process env; this sets it where GetEnvironment reads it.
-	if err := t.SetEnvironment(session, "GT_QUOTA_ACCOUNT", newAccount); err != nil {
-		style.PrintWarning("could not set GT_QUOTA_ACCOUNT for %s: %v", session, err)
+	if err := t.SetEnvironment(session, "MS_QUOTA_ACCOUNT", newAccount); err != nil {
+		style.PrintWarning("could not set MS_QUOTA_ACCOUNT for %s: %v", session, err)
 	}
 
 	// Context recovery is handled by --continue in the restart command.
@@ -821,9 +821,9 @@ When a session is detected as approaching its limit, rotation is triggered
 before the hard 429 hits.
 
 Examples:
-  gt quota watch                      # Watch with default 5m interval
-  gt quota watch --interval 2m        # Custom interval
-  gt quota watch --dry-run            # Show detections without rotating`,
+  ms quota watch                      # Watch with default 5m interval
+  ms quota watch --interval 2m        # Custom interval
+  ms quota watch --dry-run            # Show detections without rotating`,
 	RunE: runQuotaWatch,
 }
 

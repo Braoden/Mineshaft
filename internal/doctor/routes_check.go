@@ -75,7 +75,7 @@ func (c *RoutesCheck) Run(ctx *CheckContext) *CheckResult {
 			Name:    c.Name(),
 			Status:  StatusWarning,
 			Message: "No routes.jsonl file (prefix routing not configured)",
-			FixHint: "Run 'gt doctor --fix' to create routes.jsonl",
+			FixHint: "Run 'ms doctor --fix' to create routes.jsonl",
 		}
 	}
 
@@ -124,7 +124,7 @@ func (c *RoutesCheck) Run(ctx *CheckContext) *CheckResult {
 				Status:  StatusWarning,
 				Message: "Required town routes are missing",
 				Details: details,
-				FixHint: "Run 'gt doctor --fix' to add missing routes",
+				FixHint: "Run 'ms doctor --fix' to add missing routes",
 			}
 		}
 		return c.checkRoutesValid(ctx, routes)
@@ -234,7 +234,7 @@ func (c *RoutesCheck) Run(ctx *CheckContext) *CheckResult {
 			Status:  status,
 			Message: strings.Join(messageParts, ", "),
 			Details: details,
-			FixHint: "Run 'gt doctor --fix' to fix routing issues",
+			FixHint: "Run 'ms doctor --fix' to fix routing issues",
 		}
 	}
 
@@ -324,7 +324,7 @@ func (c *RoutesCheck) Fix(ctx *CheckContext) error {
 	}
 
 	// Ensure town root route exists (hq- -> .)
-	// This is normally created by gt install but may be missing if routes.jsonl was corrupted
+	// This is normally created by ms install but may be missing if routes.jsonl was corrupted
 	modified := false
 	if _, exists := routeMap["hq-"]; !exists {
 		routeMap["hq-"] = len(routes)

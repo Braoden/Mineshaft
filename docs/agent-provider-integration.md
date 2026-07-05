@@ -76,12 +76,12 @@ There are three levels, checked in order:
 
 | Level | Path | Scope |
 |-------|------|-------|
-| Town | `~/gt/settings/agents.json` | All rigs in the town |
-| Rig | `~/gt/<rig>/settings/agents.json` | Single rig only |
-| Built-in | Compiled into `gt` binary | Ships with Mineshaft |
+| Town | `~/ms/settings/agents.json` | All rigs in the town |
+| Rig | `~/ms/<rig>/settings/agents.json` | Single rig only |
+| Built-in | Compiled into `ms` binary | Ships with Mineshaft |
 
 For external agent teams, **town-level** is the right choice. Users drop your
-config into `~/gt/settings/agents.json` and every rig can use it.
+config into `~/ms/settings/agents.json` and every rig can use it.
 
 ### Registry schema
 
@@ -111,7 +111,7 @@ Every field from the `AgentPresetInfo` struct in `internal/config/agents.go`:
 | `name` | string | Yes | Preset identifier (e.g., `"kiro"`) |
 | `command` | string | Yes | CLI binary name or path (e.g., `"kiro"`) |
 | `args` | string[] | Yes | Default args for autonomous mode (e.g., `["--yolo"]`) |
-| `env` | map[string]string | No | Extra env vars to set (merged with GT_* vars) |
+| `env` | map[string]string | No | Extra env vars to set (merged with MS_* vars) |
 | `process_names` | string[] | No | Process names for tmux liveness detection |
 | `session_id_env` | string | No | Env var the agent sets for session ID tracking |
 | `resume_flag` | string | No | Flag or subcommand for resuming sessions |
@@ -204,8 +204,8 @@ This is the same hook events as Claude Code, just in Copilot's JSON format.
 
 To activate:
 ```bash
-gt config default-agent copilot        # Set as town default
-gt start --agent copilot               # Or pass per-command
+ms config default-agent copilot        # Set as town default
+ms start --agent copilot               # Or pass per-command
 ```
 
 ### Activating a custom preset
@@ -213,7 +213,7 @@ gt start --agent copilot               # Or pass per-command
 Once a JSON file exists, configure a rig (or the whole town) to use it:
 
 ```json
-// In ~/gt/<rig>/settings/config.json
+// In ~/ms/<rig>/settings/config.json
 {
   "type": "rig-settings",
   "version": 1,
@@ -224,7 +224,7 @@ Once a JSON file exists, configure a rig (or the whole town) to use it:
 Or set it as the town-wide default:
 
 ```json
-// In ~/gt/settings/config.json
+// In ~/ms/settings/config.json
 {
   "type": "town-settings",
   "version": 1,
@@ -259,7 +259,7 @@ When Mineshaft starts an agent session, it resolves the config through this chai
 At each step, the agent name is looked up in:
 1. Rig's custom agents (`rig settings/agents.json`)
 2. Town's custom agents (`town settings/agents.json`)
-3. Built-in presets (compiled into `gt`)
+3. Built-in presets (compiled into `ms`)
 
 This means your JSON preset is found automatically — no code change needed.
 
@@ -280,11 +280,11 @@ or Gemini CLI), Mineshaft can install hooks automatically.
 
 | Hook | Event | Command |
 |------|-------|---------|
-| `SessionStart` | Agent session begins | `gt prime --hook && gt mail check --inject` |
-| `PreCompact` | Before context compaction | `gt prime --hook` |
-| `UserPromptSubmit` | User sends a message | `gt mail check --inject` |
-| `PreToolUse` | Before tool execution | `gt tap guard pr-workflow` (guards PR creation) |
-| `Stop` | Session ends | `gt costs record` |
+| `SessionStart` | Agent session begins | `ms prime --hook && ms mail check --inject` |
+| `PreCompact` | Before context compaction | `ms prime --hook` |
+| `UserPromptSubmit` | User sends a message | `ms mail check --inject` |
+| `PreToolUse` | Before tool execution | `ms tap guard pr-workflow` (guards PR creation) |
+| `Stop` | Session ends | `ms costs record` |
 
 Reference template: `internal/claude/config/settings-autonomous.json`
 
@@ -297,7 +297,7 @@ Reference template: `internal/claude/config/settings-autonomous.json`
         "hooks": [
           {
             "type": "command",
-            "command": "gt prime --hook && gt mail check --inject"
+            "command": "ms prime --hook && ms mail check --inject"
           }
         ]
       }
@@ -308,7 +308,7 @@ Reference template: `internal/claude/config/settings-autonomous.json`
         "hooks": [
           {
             "type": "command",
-            "command": "gt mail check --inject"
+            "command": "ms mail check --inject"
           }
         ]
       }
@@ -350,7 +350,7 @@ Reference: `internal/hooks/templates/opencode/mineshaft.js`
 
 ```javascript
 export const Mineshaft = async ({ $, directory }) => {
-  const role = (process.env.GT_ROLE || "").toLowerCase();
+  const role = (process.env.MS_ROLE || "").toLowerCase();
   const autonomousRoles = new Set(["miner", "witness", "refinery", "supervisor"]);
 
   const run = async (cmd) => {
@@ -362,9 +362,9 @@ export const Mineshaft = async ({ $, directory }) => {
   };
 
   const injectContext = async () => {
-    await run("gt prime");
+    await run("ms prime");
     if (autonomousRoles.has(role)) {
-      await run("gt mail check --inject");
+      await run("ms mail check --inject");
     }
   };
 
@@ -381,7 +381,7 @@ export const Mineshaft = async ({ $, directory }) => {
 };
 ```
 
-The key commands are the same (`gt prime`, `gt mail check --inject`). The
+The key commands are the same (`ms prime`, `ms mail check --inject`). The
 delivery mechanism adapts to the agent's plugin API.
 
 ### Pattern C: Informational hooks (instructions file)
@@ -400,13 +400,13 @@ You are running inside Mineshaft, a multi-agent workspace manager.
 
 On session start or after compaction, run:
 \`\`\`
-gt prime
+ms prime
 \`\`\`
 This loads your full role context, mail, and pending work.
 ```
 
 Set `hooks_informational: true` in the preset. Mineshaft will then send
-`gt prime` via tmux nudge as a fallback (since hooks won't run automatically).
+`ms prime` via tmux nudge as a fallback (since hooks won't run automatically).
 
 > **Note**: GitHub Copilot CLI previously used Pattern C, but now supports full
 > executable lifecycle hooks (Pattern B equivalent, using its own JSON format).
@@ -418,10 +418,10 @@ The startup fallback matrix (from `internal/runtime/runtime.go`):
 
 | Has Hooks | Has Prompt | Context Source | Work Instructions |
 |-----------|-----------|----------------|-------------------|
-| Yes | Yes | Hook runs `gt prime` | In CLI prompt arg |
-| Yes | No | Hook runs `gt prime` | Sent via nudge |
-| No | Yes | "Run `gt prime`" in prompt | Delayed nudge |
-| No | No | "Run `gt prime`" via nudge | Delayed nudge |
+| Yes | Yes | Hook runs `ms prime` | In CLI prompt arg |
+| Yes | No | Hook runs `ms prime` | Sent via nudge |
+| No | Yes | "Run `ms prime`" in prompt | Delayed nudge |
+| No | No | "Run `ms prime`" via nudge | Delayed nudge |
 
 Agents with hooks get the most reliable experience. Without hooks, Mineshaft
 falls back to tmux-based delivery with timing heuristics.
@@ -452,7 +452,7 @@ Mineshaft builds the command as: `kiro exec -p "prompt" --json`
 ### Session forking
 
 If your agent supports forking a past session (creating a read-only copy
-for inspection), set `supports_fork_session: true`. Used by the `gt seance`
+for inspection), set `supports_fork_session: true`. Used by the `ms seance`
 command for talking to past agent sessions.
 
 ### Wrapper scripts
@@ -460,21 +460,21 @@ command for talking to past agent sessions.
 For agents that don't support hooks at all, a wrapper script can inject
 Mineshaft context before launching the agent.
 
-Reference: `internal/wrappers/scripts/gt-codex`
+Reference: `internal/wrappers/scripts/ms-codex`
 
 ```bash
 #!/bin/bash
 set -e
 
-if command -v gt &>/dev/null; then
-    gt prime 2>/dev/null || true
+if command -v ms &>/dev/null; then
+    ms prime 2>/dev/null || true
 fi
 
 exec codex "$@"
 ```
 
-The wrapper runs `gt prime` before `exec`-ing the real agent binary. Users
-install it as `gt-codex` in their PATH.
+The wrapper runs `ms prime` before `exec`-ing the real agent binary. Users
+install it as `ms-codex` in their PATH.
 
 ### Experimental Codex hooks via custom profile
 
@@ -485,9 +485,9 @@ Use this only when both of these are true:
 - Codex has its upstream hooks feature enabled via `[features].codex_hooks = true`
 
 This installs `.codex/hooks.json` through the existing provider installer path and keeps the implementation intentionally small:
-- `SessionStart` runs `gt prime --hook`
-- Autonomous `SessionStart` also runs `gt mail check --inject`
-- `Stop` runs `gt costs record`
+- `SessionStart` runs `ms prime --hook`
+- Autonomous `SessionStart` also runs `ms mail check --inject`
+- `Stop` runs `ms costs record`
 
 Example custom profile:
 
@@ -510,7 +510,7 @@ Example custom profile:
 
 This path does not attempt broader hook parity such as tool guards, prompt-submit hooks, or pre-compact behavior.
 
-The default built-in `codex` preset does not change. It remains on the no-hooks fallback path, and the `gt-codex` wrapper guidance above still applies to that default path unless you explicitly opt into a custom hook-capable Codex profile.
+The default built-in `codex` preset does not change. It remains on the no-hooks fallback path, and the `ms-codex` wrapper guidance above still applies to that default path unless you explicitly opt into a custom hook-capable Codex profile.
 
 ### Slash commands
 
@@ -591,8 +591,8 @@ interface AgentProvider {
 ### What stays the same
 
 - JSON preset registration (`agents.json`)
-- Environment-based identity (`GT_ROLE`, `GT_RIG`, `BD_ACTOR`)
-- Hook patterns (`gt prime` for context, `gt mail check --inject` for mail)
+- Environment-based identity (`MS_ROLE`, `MS_RIG`, `BD_ACTOR`)
+- Hook patterns (`ms prime` for context, `ms mail check --inject` for mail)
 - Tmux as the universal fallback
 
 ### What changes in Gas City
@@ -638,7 +638,7 @@ The system works (less reliably) with zero native API support.
 
 These are patterns we've seen in integration attempts that cause problems.
 
-### Hardcoding into GT internals
+### Hardcoding into MS internals
 
 Adding your agent as a Go constant in `agents.go`, adding switch cases in
 `types.go`, or modifying `runtime.go` creates tight coupling. Your agent
@@ -655,7 +655,7 @@ these values — set them in your JSON preset instead.
 ### Forking hook templates
 
 Copying and modifying Claude's `settings-autonomous.json` for your agent
-creates a maintenance burden. The hook commands (`gt prime`, `gt mail check`)
+creates a maintenance burden. The hook commands (`ms prime`, `ms mail check`)
 are agent-agnostic. Adapt them to your agent's hook format, but don't change
 the underlying commands.
 
@@ -664,8 +664,8 @@ the underlying commands.
 Importing Mineshaft Go packages, referencing internal file paths, or depending
 on internal data structures means your integration breaks when Mineshaft
 refactors. The public interface is:
-- `gt` CLI commands (`gt prime`, `gt mail`, `gt hook`, etc.)
-- Environment variables (`GT_ROLE`, `GT_RIG`, `GT_ROOT`, `BD_ACTOR`)
+- `ms` CLI commands (`ms prime`, `ms mail`, `ms hook`, etc.)
+- Environment variables (`MS_ROLE`, `MS_RIG`, `MS_ROOT`, `BD_ACTOR`)
 - JSON config files (`settings/agents.json`)
 
 ### Skipping the preset for direct RuntimeConfig hacks
@@ -681,7 +681,7 @@ mode that are only available through `AgentPresetInfo`.
 
 ### Step 1: Create the preset file (5 minutes)
 
-Create `~/gt/settings/agents.json` (or add to existing):
+Create `~/ms/settings/agents.json` (or add to existing):
 
 ```json
 {
@@ -704,16 +704,16 @@ Create `~/gt/settings/agents.json` (or add to existing):
 
 ```bash
 # Set your agent as default for a rig
-gt config set agent your-agent --rig <rigname>
+ms config set agent your-agent --rig <rigname>
 
 # Or test with a one-off override
-gt crew start jack --agent your-agent
+ms crew start jack --agent your-agent
 ```
 
 Verify:
 - Agent starts in a tmux pane
-- `gt prime` content is delivered (either via hooks, prompt, or nudge)
-- Agent can receive nudges (`gt nudge <rig>/crew/jack "hello"`)
+- `ms prime` content is delivered (either via hooks, prompt, or nudge)
+- Agent can receive nudges (`ms nudge <rig>/crew/jack "hello"`)
 
 ### Step 3: Add session resume (if supported)
 
@@ -784,17 +784,17 @@ still work for crew (human-supervised) sessions.
 
 | Variable | Example | Purpose |
 |----------|---------|---------|
-| `GT_ROLE` | `mineshaft/crew/jack` | Agent's role in the system |
-| `GT_RIG` | `mineshaft` | Which rig the agent belongs to |
-| `GT_ROOT` | `/Users/me/gt` | Town root directory |
+| `MS_ROLE` | `mineshaft/crew/jack` | Agent's role in the system |
+| `MS_RIG` | `mineshaft` | Which rig the agent belongs to |
+| `MS_ROOT` | `/Users/me/ms` | Town root directory |
 | `BD_ACTOR` | `mineshaft/crew/jack` | Beads identity for issue tracking |
 | `GIT_AUTHOR_NAME` | `mineshaft/crew/jack` | Git commit identity |
-| `GT_AGENT` | `kiro` | Which agent preset is active |
-| `GT_SESSION_ID_ENV` | `KIRO_SESSION_ID` | Which env var holds the session ID |
+| `MS_AGENT` | `kiro` | Which agent preset is active |
+| `MS_SESSION_ID_ENV` | `KIRO_SESSION_ID` | Which env var holds the session ID |
 
-### What is `gt prime`?
+### What is `ms prime`?
 
-`gt prime` is the context injection command. It outputs the agent's role
+`ms prime` is the context injection command. It outputs the agent's role
 documentation, mail, hooked work, and system instructions as markdown to
 stdout. Agents read this output to understand their identity and current
 assignment. It's the single most important Mineshaft command for agents.

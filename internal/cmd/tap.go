@@ -23,11 +23,11 @@ Hook configuration in .claude/settings.json:
   {
     "PreToolUse": [{
       "matcher": "Bash(gh pr create*)",
-      "hooks": [{"command": "gt tap guard pr-workflow"}]
+      "hooks": [{"command": "ms tap guard pr-workflow"}]
     }]
   }
 
-See ~/gt/docs/HOOKS.md for full documentation.`,
+See ~/ms/docs/HOOKS.md for full documentation.`,
 }
 
 func init() {

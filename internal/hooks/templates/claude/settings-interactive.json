@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{GT_BIN}} tap guard pr-workflow"
+            "command": "{{MS_BIN}} tap guard pr-workflow"
           }
         ]
       },
@@ -25,7 +25,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{GT_BIN}} tap guard pr-workflow"
+            "command": "{{MS_BIN}} tap guard pr-workflow"
           }
         ]
       },
@@ -34,7 +34,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{GT_BIN}} tap guard pr-workflow"
+            "command": "{{MS_BIN}} tap guard pr-workflow"
           }
         ]
       }
@@ -45,7 +45,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{GT_BIN}} prime --hook"
+            "command": "{{MS_BIN}} prime --hook"
           }
         ]
       }
@@ -56,7 +56,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{GT_BIN}} prime --hook"
+            "command": "{{MS_BIN}} prime --hook"
           }
         ]
       }
@@ -67,7 +67,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{GT_BIN}} mail check --inject"
+            "command": "{{MS_BIN}} mail check --inject"
           }
         ]
       }
@@ -78,7 +78,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{GT_BIN}} costs record &"
+            "command": "{{MS_BIN}} costs record &"
           }
         ]
       }

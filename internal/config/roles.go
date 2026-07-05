@@ -44,7 +44,7 @@ type RoleDefinition struct {
 type RoleSessionConfig struct {
 	// Pattern is the tmux session name pattern.
 	// Supports placeholders: {rig}, {name}, {role}
-	// Examples: "hq-overseer", "gt-{rig}-witness", "gt-{rig}-{name}"
+	// Examples: "hq-overseer", "ms-{rig}-witness", "ms-{rig}-{name}"
 	Pattern string `toml:"pattern"`
 
 	// WorkDir is the working directory pattern.

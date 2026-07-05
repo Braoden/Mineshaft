@@ -15,14 +15,14 @@ var hooksBaseCmd = &cobra.Command{
 	Long: `Edit the shared base hook configuration.
 
 The base config defines hooks that apply to all agents. It is stored
-at ~/.gt/hooks-base.json. If the file doesn't exist, it will be
-created with sensible defaults (PATH setup, gt prime, etc.).
+at ~/.ms/hooks-base.json. If the file doesn't exist, it will be
+created with sensible defaults (PATH setup, ms prime, etc.).
 
-After editing, run 'gt hooks sync' to propagate changes.
+After editing, run 'ms hooks sync' to propagate changes.
 
 Examples:
-  gt hooks base           # Open base config in $EDITOR
-  gt hooks base --show    # Print current base config to stdout`,
+  ms hooks base           # Open base config in $EDITOR
+  ms hooks base --show    # Print current base config to stdout`,
 	RunE: runHooksBase,
 }
 
@@ -76,6 +76,6 @@ func runHooksBase(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("warning: base config has errors after editing: %w", err)
 	}
 
-	fmt.Println("Base config updated. Run 'gt hooks sync' to propagate changes.")
+	fmt.Println("Base config updated. Run 'ms hooks sync' to propagate changes.")
 	return nil
 }

@@ -11,7 +11,7 @@ func TestDetectQueueAnomalies_StaleClaim(t *testing.T) {
 	now := time.Date(2026, 2, 10, 12, 0, 0, 0, time.UTC)
 	issues := []*beads.Issue{
 		{
-			ID:        "gt-warn",
+			ID:        "ms-warn",
 			Status:    "open",
 			Assignee:  "rig/refinery-1",
 			UpdatedAt: now.Add(-3 * time.Hour).Format(time.RFC3339),
@@ -20,7 +20,7 @@ target: main
 worker: nux`,
 		},
 		{
-			ID:        "gt-critical",
+			ID:        "ms-critical",
 			Status:    "open",
 			Assignee:  "rig/refinery-2",
 			UpdatedAt: now.Add(-7 * time.Hour).Format(time.RFC3339),
@@ -47,11 +47,11 @@ worker: nux`,
 	for _, a := range anomalies {
 		got[a.ID] = a.Age
 	}
-	if got["gt-warn"] < 3*time.Hour {
-		t.Fatalf("gt-warn age = %v, want >= 3h", got["gt-warn"])
+	if got["ms-warn"] < 3*time.Hour {
+		t.Fatalf("ms-warn age = %v, want >= 3h", got["ms-warn"])
 	}
-	if got["gt-critical"] < 7*time.Hour {
-		t.Fatalf("gt-critical age = %v, want >= 7h", got["gt-critical"])
+	if got["ms-critical"] < 7*time.Hour {
+		t.Fatalf("ms-critical age = %v, want >= 7h", got["ms-critical"])
 	}
 }
 
@@ -59,7 +59,7 @@ func TestDetectQueueAnomalies_OrphanedBranch(t *testing.T) {
 	now := time.Date(2026, 2, 10, 12, 0, 0, 0, time.UTC)
 	issues := []*beads.Issue{
 		{
-			ID:        "gt-orphan",
+			ID:        "ms-orphan",
 			Status:    "open",
 			UpdatedAt: now.Add(-30 * time.Minute).Format(time.RFC3339),
 			Description: `branch: miner/orphan
@@ -67,7 +67,7 @@ target: main
 worker: nux`,
 		},
 		{
-			ID:        "gt-ok",
+			ID:        "ms-ok",
 			Status:    "open",
 			UpdatedAt: now.Add(-30 * time.Minute).Format(time.RFC3339),
 			Description: `branch: miner/ok
@@ -90,7 +90,7 @@ worker: nux`,
 		t.Fatalf("anomaly type = %q, want orphaned-branch", anomalies[0].Type)
 	}
 	// ZFC: no severity field — agent classifies from type + context.
-	if anomalies[0].ID != "gt-orphan" {
-		t.Fatalf("anomaly ID = %q, want gt-orphan", anomalies[0].ID)
+	if anomalies[0].ID != "ms-orphan" {
+		t.Fatalf("anomaly ID = %q, want ms-orphan", anomalies[0].ID)
 	}
 }

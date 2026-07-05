@@ -41,20 +41,20 @@ type SlingContextFields struct {
 }
 
 // LabelSlingContext is the label used to identify sling context beads.
-const LabelSlingContext = "gt:sling-context"
+const LabelSlingContext = "ms:sling-context"
 
 // Labels that mark inter-agent messaging beads. These are never miner work
 // and must not be dispatched to rig miners.
 const (
-	LabelMessage      = "gt:message"
-	LabelHandoff      = "gt:handoff"
-	LabelMergeRequest = "gt:merge-request"
+	LabelMessage      = "ms:message"
+	LabelHandoff      = "ms:handoff"
+	LabelMergeRequest = "ms:merge-request"
 )
 
 // IsMessagingBead reports whether the bead is an inter-agent communication
 // artifact rather than dispatchable work. Used as a defensive filter in the
 // dispatch pipeline: a bead carrying any of these labels must never be handed
-// to a miner (gt-el4 / mineshafthall/mineshaft#3800).
+// to a miner (ms-el4 / mineshafthall/mineshaft#3800).
 func IsMessagingBead(labels []string) bool {
 	for _, l := range labels {
 		switch l {
@@ -128,10 +128,10 @@ func BlockerAware(readyIDs map[string]bool) ReadinessFilter {
 // batchSize: max beads per cycle.
 // ready: beads that passed readiness filtering.
 //
-// Messaging-labeled beads (gt:message / gt:handoff / gt:merge-request) are
+// Messaging-labeled beads (ms:message / ms:handoff / ms:merge-request) are
 // filtered out defensively before any capacity math runs. They are inter-agent
 // communication artifacts and never dispatchable work; if any survived earlier
-// filtering they must not reach a miner (gt-el4).
+// filtering they must not reach a miner (ms-el4).
 func PlanDispatch(availableCapacity, batchSize int, ready []PendingBead) DispatchPlan {
 	ready, msgSkipped := FilterMessagingBeads(ready)
 

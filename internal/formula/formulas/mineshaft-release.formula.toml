@@ -12,19 +12,19 @@ This formula orchestrates a release cycle for Mineshaft:
 ## Usage
 
 ```bash
-gt mol wisp create mineshaft-release --var version=0.3.0
+ms mol wisp create mineshaft-release --var version=0.3.0
 ```
 
 Or assign to a crew member:
 ```bash
-gt sling mineshaft/crew/max --formula mineshaft-release --var version=0.3.0
+ms sling mineshaft/crew/max --formula mineshaft-release --var version=0.3.0
 ```
 
 ## Error Handling
 
 - **Crew members (with user present)**: Attempt to resolve issues (merge branches,
   commit/stash work). Ask the user if blocked.
-- **Miners (autonomous)**: Escalate via `gt escalate` if preflight fails or
+- **Miners (autonomous)**: Escalate via `ms escalate` if preflight fails or
   unrecoverable errors occur. Do not proceed with a release if workspaces have
   uncommitted work.
 """
@@ -47,7 +47,7 @@ Check all crew workspaces and the overseer rig:
 
 ```bash
 # Check each workspace
-for dir in $GT_ROOT/mineshaft/crew/* $GT_ROOT/mineshaft/overseer; do
+for dir in $MS_ROOT/mineshaft/crew/* $MS_ROOT/mineshaft/overseer; do
   if [ -d "$dir/.git" ] || [ -d "$dir" ]; then
     echo "=== Checking $dir ==="
     cd "$dir" 2>/dev/null || continue
@@ -86,7 +86,7 @@ done
 
 **For miners (autonomous)**:
 1. If any workspace has uncommitted work: STOP and escalate
-2. Use: `gt escalate --severity medium "Release blocked: workspace X has uncommitted work"`
+2. Use: `ms escalate --severity medium "Release blocked: workspace X has uncommitted work"`
 3. Do NOT proceed with release - uncommitted work would be excluded
 
 This step is critical. A release with uncommitted work means losing changes.
@@ -180,7 +180,7 @@ needs = ["update-changelog"]
 description = """
 Add entry to versionChanges in internal/cmd/info.go.
 
-This powers `gt info --whats-new` for agents.
+This powers `ms info --whats-new` for agents.
 
 Add a new entry at the TOP of the versionChanges slice:
 
@@ -313,20 +313,20 @@ id = "local-install"
 title = "Update local installation"
 needs = ["push-release"]
 description = """
-Rebuild and install gt locally with the new version.
+Rebuild and install ms locally with the new version.
 
 ```bash
-go build -o $(go env GOPATH)/bin/gt ./cmd/gt
+go build -o $(go env GOPATH)/bin/ms ./cmd/ms
 ```
 
 On macOS, codesign the binary:
 ```bash
-codesign -f -s - $(go env GOPATH)/bin/gt
+codesign -f -s - $(go env GOPATH)/bin/ms
 ```
 
 Verify:
 ```bash
-gt version
+ms version
 ```
 
 Should show {{version}}.
@@ -341,15 +341,15 @@ id = "restart-daemons"
 title = "Restart daemons"
 needs = ["local-install"]
 description = """
-Restart gt daemon to pick up the new version.
+Restart ms daemon to pick up the new version.
 
 ```bash
-gt daemon stop && gt daemon start
+ms daemon stop && ms daemon start
 ```
 
 Verify:
 ```bash
-gt daemon status
+ms daemon status
 ```
 
 The daemon should show the new binary timestamp and no stale warning.
@@ -368,10 +368,10 @@ Summary:
 - All workspaces verified clean before release
 - Version files updated (version.go, package.json)
 - CHANGELOG.md updated with release date
-- info.go versionChanges updated for `gt info --whats-new`
+- info.go versionChanges updated for `ms info --whats-new`
 - Git tag v{{version}} pushed
 - GitHub Actions triggered for artifact builds
-- Local gt binary rebuilt and installed
+- Local ms binary rebuilt and installed
 - Daemons restarted with new version
 
 Optional next steps:

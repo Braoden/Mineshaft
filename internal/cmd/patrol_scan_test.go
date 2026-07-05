@@ -151,9 +151,9 @@ func TestRunPatrolScanPhaseEmitsProgressDiagnostics(t *testing.T) {
 		t.Fatalf("diagnostics %q never emitted progress", output)
 	}
 	for _, want := range []string{
-		"gt patrol scan: starting slow phase",
-		"gt patrol scan: still running slow phase after",
-		"gt patrol scan: finished slow phase in",
+		"ms patrol scan: starting slow phase",
+		"ms patrol scan: still running slow phase after",
+		"ms patrol scan: finished slow phase in",
 	} {
 		if !strings.Contains(output, want) {
 			t.Fatalf("diagnostics %q missing %q", output, want)
@@ -180,8 +180,8 @@ func TestRunPatrolScanPhaseZeroIntervalSkipsProgressTicks(t *testing.T) {
 		t.Fatalf("diagnostics should not include progress tick when interval is disabled: %q", output)
 	}
 	for _, want := range []string{
-		"gt patrol scan: starting fast phase",
-		"gt patrol scan: finished fast phase in",
+		"ms patrol scan: starting fast phase",
+		"ms patrol scan: finished fast phase in",
 	} {
 		if !strings.Contains(output, want) {
 			t.Fatalf("diagnostics %q missing %q", output, want)

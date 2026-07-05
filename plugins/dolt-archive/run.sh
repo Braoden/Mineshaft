@@ -10,12 +10,12 @@ set -euo pipefail
 
 # --- Configuration -----------------------------------------------------------
 
-DOLT_HOST="${GT_DOLT_HOST:-${DOLT_HOST:-127.0.0.1}}"
-DOLT_PORT="${GT_DOLT_PORT:-${DOLT_PORT:-3307}}"
+DOLT_HOST="${MS_DOLT_HOST:-${DOLT_HOST:-127.0.0.1}}"
+DOLT_PORT="${MS_DOLT_PORT:-${DOLT_PORT:-3307}}"
 DOLT_USER="${DOLT_USER:-root}"
-DOLT_DATA_DIR="${DOLT_DATA_DIR:-$HOME/gt/.dolt-data}"
-JSONL_EXPORT_DIR="$HOME/gt/.dolt-archive/jsonl"
-BACKUP_REPO="$HOME/gt/.dolt-archive/git"
+DOLT_DATA_DIR="${DOLT_DATA_DIR:-$HOME/ms/.dolt-data}"
+JSONL_EXPORT_DIR="$HOME/ms/.dolt-archive/jsonl"
+BACKUP_REPO="$HOME/ms/.dolt-archive/git"
 DEFAULT_DBS="auto"
 SKIP_GIT=false
 SKIP_DOLT_PUSH=false
@@ -224,11 +224,11 @@ if [[ "$EXPORT_FAILED" -gt 0 ]] || [[ "$DOLT_PUSH_FAILED" -gt 0 ]]; then
   RESULT="warning"
 fi
 
-gt plugin record-run --plugin dolt-archive --result "$RESULT" \
+ms plugin record-run --plugin dolt-archive --result "$RESULT" \
   --title "$SUMMARY" --description "$SUMMARY" >/dev/null 2>&1 || true
 
 if [[ "$EXPORT_FAILED" -gt 0 ]]; then
-  gt escalate "dolt-archive: JSONL export failed for $EXPORT_FAILED databases ($EXPORT_ERRORS)" \
+  ms escalate "dolt-archive: JSONL export failed for $EXPORT_FAILED databases ($EXPORT_ERRORS)" \
     -s critical \
     --reason "JSONL is our last-resort recovery layer. Failed databases: $EXPORT_ERRORS" 2>/dev/null || true
 fi

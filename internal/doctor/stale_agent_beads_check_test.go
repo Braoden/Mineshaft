@@ -72,7 +72,7 @@ func TestStaleAgentBeadsCheck_CrewOnDisk(t *testing.T) {
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	routesContent := `{"prefix":"gt-","path":"myrig/overseer/rig"}` + "\n"
+	routesContent := `{"prefix":"ms-","path":"myrig/overseer/rig"}` + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -114,7 +114,7 @@ func TestStaleAgentBeadsCheck_Phase2_NoTownBeadsDir(t *testing.T) {
 	}
 	// Routes with one known rig + town-level route
 	routesContent := `{"prefix":"hq-","path":"."}` + "\n" +
-		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}` + "\n"
+		`{"prefix":"ms-","path":"mineshaft/overseer/rig"}` + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -152,7 +152,7 @@ func TestStaleAgentBeadsCheck_KnownPrefixTracking(t *testing.T) {
 	// Mix of town-level and rig-level routes
 	routesContent := `{"prefix":"hq-","path":"."}` + "\n" +
 		`{"prefix":"hq-cv-","path":"."}` + "\n" +
-		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}` + "\n" +
+		`{"prefix":"ms-","path":"mineshaft/overseer/rig"}` + "\n" +
 		`{"prefix":"bd-","path":"beads/overseer/rig"}` + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
@@ -169,7 +169,7 @@ func TestStaleAgentBeadsCheck_KnownPrefixTracking(t *testing.T) {
 	ctx := &CheckContext{TownRoot: tmpDir}
 
 	// Run should complete without crash — verifies knownPrefixes includes
-	// both town-level ("hq", "hq-cv") and rig-level ("gt", "bd") prefixes
+	// both town-level ("hq", "hq-cv") and rig-level ("ms", "bd") prefixes
 	result := check.Run(ctx)
 	t.Logf("Known prefix tracking: status=%v, message=%s", result.Status, result.Message)
 }
@@ -187,16 +187,16 @@ func TestParseCrewOrMinerFromID(t *testing.T) {
 	}{
 		{
 			name:       "standard crew ID",
-			id:         "gt-mineshaft-crew-alice",
-			prefix:     "gt",
+			id:         "ms-mineshaft-crew-alice",
+			prefix:     "ms",
 			rigName:    "mineshaft",
 			role:       "crew",
 			wantWorker: "alice",
 		},
 		{
 			name:       "standard miner ID",
-			id:         "gt-mineshaft-miner-nux",
-			prefix:     "gt",
+			id:         "ms-mineshaft-miner-nux",
+			prefix:     "ms",
 			rigName:    "mineshaft",
 			role:       "miner",
 			wantWorker: "nux",
@@ -227,8 +227,8 @@ func TestParseCrewOrMinerFromID(t *testing.T) {
 		},
 		{
 			name:       "ID does not match pattern",
-			id:         "gt-mineshaft-witness",
-			prefix:     "gt",
+			id:         "ms-mineshaft-witness",
+			prefix:     "ms",
 			rigName:    "mineshaft",
 			role:       "crew",
 			wantWorker: "",
@@ -236,15 +236,15 @@ func TestParseCrewOrMinerFromID(t *testing.T) {
 		{
 			name:       "wrong prefix",
 			id:         "bd-beads-crew-human",
-			prefix:     "gt",
+			prefix:     "ms",
 			rigName:    "mineshaft",
 			role:       "crew",
 			wantWorker: "",
 		},
 		{
 			name:       "empty worker name after prefix strip",
-			id:         "gt-mineshaft-crew-",
-			prefix:     "gt",
+			id:         "ms-mineshaft-crew-",
+			prefix:     "ms",
 			rigName:    "mineshaft",
 			role:       "crew",
 			wantWorker: "",
@@ -324,7 +324,7 @@ func TestStaleAgentBeadsCheck_FixFallbackToTownBeads(t *testing.T) {
 		t.Fatal(err)
 	}
 	routesContent := `{"prefix":"hq-","path":"."}` + "\n" +
-		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}` + "\n"
+		`{"prefix":"ms-","path":"mineshaft/overseer/rig"}` + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
 	}

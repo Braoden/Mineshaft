@@ -8,21 +8,21 @@ Enable deferred dispatch and schedule some work:
 
 ```bash
 # 1. Enable deferred dispatch (config-driven, no per-command flag)
-gt config set scheduler.max_miners 5
+ms config set scheduler.max_miners 5
 
-# 2. Schedule work via gt sling (auto-defers when max_miners > 0)
-gt sling gt-abc mineshaft              # Single task bead
-gt sling gt-abc gt-def gt-ghi mineshaft  # Batch task beads
-gt sling hq-cv-abc                   # Minecart (schedules all tracked issues)
-gt sling gt-epic-123                 # Epic (schedules all children)
+# 2. Schedule work via ms sling (auto-defers when max_miners > 0)
+ms sling ms-abc mineshaft              # Single task bead
+ms sling ms-abc ms-def ms-ghi mineshaft  # Batch task beads
+ms sling hq-cv-abc                   # Minecart (schedules all tracked issues)
+ms sling ms-epic-123                 # Epic (schedules all children)
 
 # 3. Check what's scheduled
-gt scheduler status
-gt scheduler list
+ms scheduler status
+ms scheduler list
 
 # 4. Dispatch manually (or let the daemon do it)
-gt scheduler run
-gt scheduler run --dry-run    # Preview first
+ms scheduler run
+ms scheduler run --dry-run    # Preview first
 ```
 
 ### Dispatch Modes
@@ -31,34 +31,34 @@ The `scheduler.max_miners` config value controls dispatch behavior:
 
 | Value | Mode | Behavior |
 |-------|------|----------|
-| `-1` (default) | Direct dispatch | `gt sling` dispatches immediately, near-zero overhead |
-| `0` | Direct dispatch | Same as `-1` — `gt sling` dispatches immediately |
-| `N > 0` | Deferred dispatch | `gt sling` creates sling context bead, daemon dispatches |
+| `-1` (default) | Direct dispatch | `ms sling` dispatches immediately, near-zero overhead |
+| `0` | Direct dispatch | Same as `-1` — `ms sling` dispatches immediately |
+| `N > 0` | Deferred dispatch | `ms sling` creates sling context bead, daemon dispatches |
 
-No per-invocation flag needed. The same `gt sling` command adapts automatically.
+No per-invocation flag needed. The same `ms sling` command adapts automatically.
 
 ### Common CLI
 
 | Command | Description |
 |---------|-------------|
-| `gt sling <bead> <rig>` | Sling bead (direct or deferred, per config) |
-| `gt sling <bead>... <rig>` | Batch sling/schedule multiple beads |
-| `gt sling <minecart-id>` | Sling/schedule all tracked issues in minecart |
-| `gt sling <epic-id>` | Sling/schedule all children of epic |
-| `gt scheduler status` | Show scheduler state and capacity |
-| `gt scheduler list` | List all scheduled beads by rig |
-| `gt scheduler run` | Trigger dispatch manually |
-| `gt scheduler pause` | Pause all dispatch town-wide |
-| `gt scheduler resume` | Resume dispatch |
-| `gt scheduler clear` | Remove beads from scheduler |
+| `ms sling <bead> <rig>` | Sling bead (direct or deferred, per config) |
+| `ms sling <bead>... <rig>` | Batch sling/schedule multiple beads |
+| `ms sling <minecart-id>` | Sling/schedule all tracked issues in minecart |
+| `ms sling <epic-id>` | Sling/schedule all children of epic |
+| `ms scheduler status` | Show scheduler state and capacity |
+| `ms scheduler list` | List all scheduled beads by rig |
+| `ms scheduler run` | Trigger dispatch manually |
+| `ms scheduler pause` | Pause all dispatch town-wide |
+| `ms scheduler resume` | Resume dispatch |
+| `ms scheduler clear` | Remove beads from scheduler |
 
 ### Minimal Example
 
 ```bash
-gt config set scheduler.max_miners 5
-gt sling gt-abc mineshaft              # Defers: creates sling context bead
-gt scheduler status                  # "Queued: 1 total, 1 ready"
-gt scheduler run                     # Dispatches -> spawns miner -> closes context
+ms config set scheduler.max_miners 5
+ms sling ms-abc mineshaft              # Defers: creates sling context bead
+ms scheduler status                  # "Queued: 1 total, 1 ready"
+ms scheduler run                     # Dispatches -> spawns miner -> closes context
 ```
 
 ---
@@ -76,13 +76,13 @@ Daemon heartbeat (every 3 min)
     |
     +- Steps 0-13: Health checks, agent recovery, cleanup
     |
-    +- Step 14: gt scheduler run (capacity-controlled dispatch)
+    +- Step 14: ms scheduler run (capacity-controlled dispatch)
          |
          +- flock (exclusive)
          +- Check paused state
          +- Load config (max_miners, batch_size)
          +- Count active miners (tmux)
-         +- Query sling contexts (bd list --label=gt:sling-context)
+         +- Query sling contexts (bd list --label=ms:sling-context)
          +- Join with bd ready to determine unblocked beads
          +- DispatchCycle.Run() — plan + execute + report
          |    +- PlanDispatch(availableCapacity, batchSize, ready)
@@ -98,14 +98,14 @@ Daemon heartbeat (every 3 min)
 Scheduling state is stored on **separate ephemeral beads** called sling contexts. The work bead is never modified by the scheduler.
 
 Each sling context bead:
-- Is created via `bd create --ephemeral` with label `gt:sling-context`
+- Is created via `bd create --ephemeral` with label `ms:sling-context`
 - Has a `tracks` dependency pointing to the work bead
 - Stores all scheduling parameters as JSON in its description
 - Is closed when dispatch succeeds, the bead is cleared, or the circuit breaker trips
 
 ### Why Separate Beads?
 
-The previous approach stored scheduling metadata on the work bead's description (delimited block) and used labels (`gt:queued`) as state signals. This required:
+The previous approach stored scheduling metadata on the work bead's description (delimited block) and used labels (`ms:queued`) as state signals. This required:
 - Two-step writes with rollback (metadata then label)
 - Description sanitization to avoid delimiter collision
 - Three-step dispatch cleanup (strip metadata + swap labels + retry)
@@ -157,7 +157,7 @@ A sling context transitions through these states:
                 |                                    |
                 +-- 3 failures --> CLOSED (circuit-broken)
                 |
-                +-- gt scheduler clear --> CLOSED (cleared)
+                +-- ms scheduler clear --> CLOSED (cleared)
 ```
 
 | State | Representation | Trigger |
@@ -165,7 +165,7 @@ A sling context transitions through these states:
 | **SCHEDULED** | Open sling context bead | `scheduleBead()` |
 | **DISPATCHED** | Closed sling context (reason: "dispatched") | `dispatchSingleBead()` success |
 | **CIRCUIT-BROKEN** | Closed sling context (reason: "circuit-broken") | `dispatch_failures >= 3` |
-| **CLEARED** | Closed sling context (reason: "cleared") | `gt scheduler clear` |
+| **CLEARED** | Closed sling context (reason: "cleared") | `ms scheduler clear` |
 
 Key invariant: the work bead is **never modified** by the scheduler. All state lives on the sling context bead.
 
@@ -175,14 +175,14 @@ Key invariant: the work bead is **never modified** by the scheduler. All state l
 
 ### CLI Entry Points
 
-`gt sling` auto-detects the dispatch mode from config and the ID type:
+`ms sling` auto-detects the dispatch mode from config and the ID type:
 
 | Command | Direct Mode (max_miners=-1) | Deferred Mode (max_miners>0) |
 |---------|-------------------------------|-------------------------------|
-| `gt sling <bead> <rig>` | Immediate dispatch | Schedule for later dispatch |
-| `gt sling <bead>... <rig>` | Batch immediate dispatch | Batch schedule |
-| `gt sling <epic-id>` | `runEpicSlingByID()` — dispatch all children | `runEpicScheduleByID()` — schedule all children |
-| `gt sling <minecart-id>` | `runMinecartSlingByID()` — dispatch all tracked | `runMinecartScheduleByID()` — schedule all tracked |
+| `ms sling <bead> <rig>` | Immediate dispatch | Schedule for later dispatch |
+| `ms sling <bead>... <rig>` | Batch immediate dispatch | Batch schedule |
+| `ms sling <epic-id>` | `runEpicSlingByID()` — dispatch all children | `runEpicScheduleByID()` — schedule all children |
+| `ms sling <minecart-id>` | `runMinecartSlingByID()` — dispatch all tracked | `runMinecartScheduleByID()` — schedule all tracked |
 
 **Detection chain** in `runSling`:
 1. `shouldDeferDispatch()` — check `scheduler.max_miners` config
@@ -196,15 +196,15 @@ All dispatch goes through `dispatchScheduledWork()` in `internal/cmd/capacity_di
 
 ### Daemon Entry Point
 
-The daemon calls `gt scheduler run` as a subprocess on each heartbeat (step 14):
+The daemon calls `ms scheduler run` as a subprocess on each heartbeat (step 14):
 
 ```go
 // internal/daemon/daemon.go
 func (d *Daemon) dispatchScheduledWork() {
     ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
     defer cancel()
-    cmd := exec.CommandContext(ctx, "gt", "scheduler", "run")
-    cmd.Env = append(os.Environ(), "GT_DAEMON=1", "BD_DOLT_AUTO_COMMIT=off")
+    cmd := exec.CommandContext(ctx, "ms", "scheduler", "run")
+    cmd.Env = append(os.Environ(), "MS_DAEMON=1", "BD_DOLT_AUTO_COMMIT=off")
     // ...
 }
 ```
@@ -212,7 +212,7 @@ func (d *Daemon) dispatchScheduledWork() {
 | Property | Value |
 |----------|-------|
 | Timeout | 5 minutes |
-| Environment | `GT_DAEMON=1` (identifies daemon dispatch) |
+| Environment | `MS_DAEMON=1` (identifies daemon dispatch) |
 | Gating | `scheduler.max_miners > 0` (deferred mode) |
 
 ---
@@ -264,7 +264,7 @@ DispatchCycle.Run()
     +- AvailableCapacity() → capacity = maxMiners - activeMiners
     |
     +- QueryPending() → getReadySlingContexts():
-    |    +- bd list --label=gt:sling-context --status=open (all rig DBs)
+    |    +- bd list --label=ms:sling-context --status=open (all rig DBs)
     |    +- Parse SlingContextFields from each context bead description
     |    +- bd ready --json --limit=0 (all rig DBs) → readyWorkIDs set
     |    +- Filter: context beads whose WorkBeadID is in readyWorkIDs
@@ -303,13 +303,13 @@ Post-dispatch cleanup is handled by callbacks:
 | `scheduler.batch_size` | *int | `1` | Beads dispatched per heartbeat tick |
 | `scheduler.spawn_delay` | string | `"0s"` | Delay between spawns (Dolt lock contention) |
 
-Set via `gt config set`:
+Set via `ms config set`:
 
 ```bash
-gt config set scheduler.max_miners 5    # Enable deferred dispatch
-gt config set scheduler.max_miners -1   # Direct dispatch (default)
-gt config set scheduler.batch_size 2
-gt config set scheduler.spawn_delay 3s
+ms config set scheduler.max_miners 5    # Enable deferred dispatch
+ms config set scheduler.max_miners -1   # Direct dispatch (default)
+ms config set scheduler.batch_size 2
+ms config set scheduler.spawn_delay 3s
 ```
 
 ### Dispatch Count Formula
@@ -363,8 +363,8 @@ Dispatch attempt fails
 Pausing stops all dispatch town-wide. The state is stored in `.runtime/scheduler-state.json`.
 
 ```bash
-gt scheduler pause    # Sets paused=true, records actor and timestamp
-gt scheduler resume   # Clears paused state
+ms scheduler pause    # Sets paused=true, records actor and timestamp
+ms scheduler resume   # Clears paused state
 ```
 
 Write is atomic (temp file + rename) to prevent corruption from concurrent writers.
@@ -374,18 +374,18 @@ Write is atomic (temp file + rename) to prevent corruption from concurrent write
 Closes sling context beads, removing beads from the scheduler:
 
 ```bash
-gt scheduler clear              # Close ALL sling contexts
-gt scheduler clear --bead gt-abc  # Close context for specific bead
+ms scheduler clear              # Close ALL sling contexts
+ms scheduler clear --bead ms-abc  # Close context for specific bead
 ```
 
 ### Status / List
 
 ```bash
-gt scheduler status         # Summary: paused, queued count, active miners
-gt scheduler status --json  # JSON output
+ms scheduler status         # Summary: paused, queued count, active miners
+ms scheduler status --json  # JSON output
 
-gt scheduler list           # Beads grouped by target rig, with blocked indicator
-gt scheduler list --json    # JSON output
+ms scheduler list           # Beads grouped by target rig, with blocked indicator
+ms scheduler list --json    # JSON output
 ```
 
 `list` reconciles sling contexts (all scheduled) with `bd ready` (unblocked work beads) to mark blocked beads.
@@ -400,22 +400,22 @@ Minecarts and the scheduler are complementary but distinct mechanisms. Minecarts
 
 | Path | Trigger | Capacity Control | Use Case |
 |------|---------|-----------------|----------|
-| **Direct dispatch** | `gt sling <minecart-id>` (max_miners=-1) | None (fires immediately) | Default mode — all issues dispatch at once |
-| **Deferred dispatch** | `gt sling <minecart-id>` (max_miners>0) | Yes (daemon heartbeat, max_miners, batch_size) | Capacity-controlled — batched with back-pressure |
+| **Direct dispatch** | `ms sling <minecart-id>` (max_miners=-1) | None (fires immediately) | Default mode — all issues dispatch at once |
+| **Deferred dispatch** | `ms sling <minecart-id>` (max_miners>0) | Yes (daemon heartbeat, max_miners, batch_size) | Capacity-controlled — batched with back-pressure |
 
-**Direct dispatch** (max_miners=-1): `gt sling <minecart-id>` calls `runMinecartSlingByID()` which dispatches all open tracked issues immediately via `executeSling()`. Each issue's rig is auto-resolved from its bead ID prefix. No capacity control — all issues dispatch at once.
+**Direct dispatch** (max_miners=-1): `ms sling <minecart-id>` calls `runMinecartSlingByID()` which dispatches all open tracked issues immediately via `executeSling()`. Each issue's rig is auto-resolved from its bead ID prefix. No capacity control — all issues dispatch at once.
 
-**Deferred dispatch** (max_miners>0): `gt sling <minecart-id>` calls `runMinecartScheduleByID()` which schedules all open tracked issues (creating sling context beads). The daemon dispatches incrementally via `gt scheduler run`, respecting `max_miners` and `batch_size`. Use this for large batches where simultaneous dispatch would exhaust resources.
+**Deferred dispatch** (max_miners>0): `ms sling <minecart-id>` calls `runMinecartScheduleByID()` which schedules all open tracked issues (creating sling context beads). The daemon dispatches incrementally via `ms scheduler run`, respecting `max_miners` and `batch_size`. Use this for large batches where simultaneous dispatch would exhaust resources.
 
 ### When to Use Which
 
 - **Small minecarts (< 5 issues)**: Direct dispatch (default, max_miners=-1)
 - **Large batches (5+ issues)**: Set `scheduler.max_miners` for capacity-controlled dispatch
-- **Epics**: Same logic — `gt sling <epic-id>` auto-resolves mode from config
+- **Epics**: Same logic — `ms sling <epic-id>` auto-resolves mode from config
 
 ### Rig Resolution
 
-`gt sling <minecart-id>` and `gt sling <epic-id>` auto-resolve the target rig per-bead from its ID prefix using `beads.ExtractPrefix()` + `beads.GetRigNameForPrefix()`. Town-root beads (`hq-*`) are skipped with a warning since they are coordination artifacts, not dispatchable work.
+`ms sling <minecart-id>` and `ms sling <epic-id>` auto-resolve the target rig per-bead from its ID prefix using `beads.ExtractPrefix()` + `beads.GetRigNameForPrefix()`. Town-root beads (`hq-*`) are skipped with a warning since they are coordination artifacts, not dispatchable work.
 
 ---
 
@@ -444,11 +444,11 @@ Minecarts and the scheduler are complementary but distinct mechanisms. Minecarts
 | `internal/beads/beads_sling_context.go` | Sling context CRUD (create, find, list, close, update) |
 | `internal/cmd/sling.go` | CLI entry, config-driven routing |
 | `internal/cmd/sling_schedule.go` | `scheduleBead()`, `shouldDeferDispatch()`, `isScheduled()` |
-| `internal/cmd/scheduler.go` | `gt scheduler` command tree |
+| `internal/cmd/scheduler.go` | `ms scheduler` command tree |
 | `internal/cmd/scheduler_epic.go` | Epic schedule/sling handlers |
 | `internal/cmd/scheduler_minecart.go` | Minecart schedule/sling handlers |
 | `internal/cmd/capacity_dispatch.go` | `dispatchScheduledWork()`, dispatch callback wiring |
-| `internal/daemon/daemon.go` | Heartbeat integration (`gt scheduler run`) |
+| `internal/daemon/daemon.go` | Heartbeat integration (`ms scheduler run`) |
 
 ---
 

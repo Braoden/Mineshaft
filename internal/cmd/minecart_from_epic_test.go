@@ -30,7 +30,7 @@ func TestCollectEpicChildren_NotAnEpic(t *testing.T) {
 	// bdShow is package-level and uses real bd; for unit tests we test
 	// the error message format when the type check fails.
 	// This test validates the error message construction.
-	err := checkEpicTypeError("gt-task-1", "task")
+	err := checkEpicTypeError("ms-task-1", "task")
 	if err == nil {
 		t.Fatal("expected error for non-epic type")
 	}

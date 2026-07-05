@@ -68,7 +68,7 @@ type StaleHookScanResult struct {
 }
 
 // ScanStaleHooks finds hooked beads with dead agents and optionally unhooks them.
-// Session liveness is checked for ALL hooked beads regardless of age (gt-pqf9x).
+// Session liveness is checked for ALL hooked beads regardless of age (ms-pqf9x).
 // A hooked bead is considered stale if:
 //  1. The assignee's tmux session is dead (immediate unhook), OR
 //  2. The bead is older than MaxAge AND we can't determine session liveness

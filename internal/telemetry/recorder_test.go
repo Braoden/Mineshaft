@@ -132,10 +132,10 @@ func TestWithRunID_RoundTrip(t *testing.T) {
 }
 
 func TestRunIDFromCtx_Empty(t *testing.T) {
-	t.Setenv("GT_RUN", "")
-	// No run ID in context and GT_RUN not set → empty string.
+	t.Setenv("MS_RUN", "")
+	// No run ID in context and MS_RUN not set → empty string.
 	if got := RunIDFromCtx(context.Background()); got != "" {
-		t.Errorf("RunIDFromCtx on bare context = %q, want empty (GT_RUN not set)", got)
+		t.Errorf("RunIDFromCtx on bare context = %q, want empty (MS_RUN not set)", got)
 	}
 }
 
@@ -145,17 +145,17 @@ func TestRecordAgentInstantiate(t *testing.T) {
 
 	RecordAgentInstantiate(ctx, AgentInstantiateInfo{
 		RunID: "run-id-1", AgentType: "claudecode", Role: "miner",
-		AgentName: "wyvern-Toast", SessionID: "gt-wyvern-Toast", RigName: "wyvern",
-		TownRoot: "/Users/pa/gt", IssueID: "GT-123", GitBranch: "feat/foo", GitCommit: "abc1234",
+		AgentName: "wyvern-Toast", SessionID: "ms-wyvern-Toast", RigName: "wyvern",
+		TownRoot: "/Users/pa/ms", IssueID: "MS-123", GitBranch: "feat/foo", GitCommit: "abc1234",
 	})
 	RecordAgentInstantiate(ctx, AgentInstantiateInfo{
 		RunID: "run-id-2", AgentType: "opencode", Role: "witness",
 		AgentName: "witness", SessionID: "mol-witness", RigName: "mol",
-		TownRoot: "/Users/pa/gt",
+		TownRoot: "/Users/pa/ms",
 	})
 	RecordAgentInstantiate(ctx, AgentInstantiateInfo{
 		RunID: "run-id-3", AgentType: "claudecode", Role: "overseer",
-		AgentName: "overseer", SessionID: "hq-overseer", TownRoot: "/Users/pa/gt",
+		AgentName: "overseer", SessionID: "hq-overseer", TownRoot: "/Users/pa/ms",
 	})
 }
 
@@ -266,31 +266,31 @@ func TestRecordMolWisp(t *testing.T) {
 	resetInstruments(t)
 	ctx := context.Background()
 
-	RecordMolWisp(ctx, "mol-miner-work", "gt-abc12", "bead-456", nil)
+	RecordMolWisp(ctx, "mol-miner-work", "ms-abc12", "bead-456", nil)
 	RecordMolWisp(ctx, "mol-miner-work", "", "", errors.New("wisp error"))
-	RecordMolWisp(ctx, "formula-standalone", "gt-abc12", "", nil) // standalone (no bead)
+	RecordMolWisp(ctx, "formula-standalone", "ms-abc12", "", nil) // standalone (no bead)
 }
 
 func TestRecordMolSquash(t *testing.T) {
 	resetInstruments(t)
 	ctx := context.Background()
 
-	RecordMolSquash(ctx, "gt-abc12", 3, 5, true, nil)
-	RecordMolSquash(ctx, "gt-def34", 0, 0, false, errors.New("squash error"))
+	RecordMolSquash(ctx, "ms-abc12", 3, 5, true, nil)
+	RecordMolSquash(ctx, "ms-def34", 0, 0, false, errors.New("squash error"))
 }
 
 func TestRecordMolBurn(t *testing.T) {
 	resetInstruments(t)
 	ctx := context.Background()
 
-	RecordMolBurn(ctx, "gt-abc12", 3, nil)
-	RecordMolBurn(ctx, "gt-def34", 0, errors.New("burn error"))
+	RecordMolBurn(ctx, "ms-abc12", 3, nil)
+	RecordMolBurn(ctx, "ms-def34", 0, errors.New("burn error"))
 }
 
 func TestRecordBeadCreate(t *testing.T) {
 	resetInstruments(t)
 	ctx := context.Background()
 
-	RecordBeadCreate(ctx, "gt-abc12.s01", "gt-abc12", "mol-miner-work")
-	RecordBeadCreate(ctx, "gt-def34.s01", "gt-def34", "mol-review")
+	RecordBeadCreate(ctx, "ms-abc12.s01", "ms-abc12", "mol-miner-work")
+	RecordBeadCreate(ctx, "ms-def34.s01", "ms-def34", "mol-review")
 }

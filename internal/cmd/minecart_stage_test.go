@@ -560,7 +560,7 @@ func TestDetectOrphans_DecisionGatedNotOrphan(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Input parsing + validation tests (gt-csl.3.1)
+// Input parsing + validation tests (ms-csl.3.1)
 // ---------------------------------------------------------------------------
 
 // TestMinecartStageInput_EmptyArgs verifies empty args are rejected.
@@ -584,7 +584,7 @@ func TestMinecartStageInput_FlagLikeArg(t *testing.T) {
 
 // TestMinecartStageInput_ValidSingleArg verifies a single bead ID passes.
 func TestMinecartStageInput_ValidSingleArg(t *testing.T) {
-	err := validateStageArgs([]string{"gt-abc"})
+	err := validateStageArgs([]string{"ms-abc"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -592,7 +592,7 @@ func TestMinecartStageInput_ValidSingleArg(t *testing.T) {
 
 // TestMinecartStageInput_ValidMultipleArgs verifies multiple bead IDs pass.
 func TestMinecartStageInput_ValidMultipleArgs(t *testing.T) {
-	err := validateStageArgs([]string{"gt-abc", "gt-def", "gt-ghi"})
+	err := validateStageArgs([]string{"ms-abc", "ms-def", "ms-ghi"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -626,7 +626,7 @@ func TestMinecartStageInput_ClassifyTask(t *testing.T) {
 
 // TestMinecartStageInput_MixedTypes verifies mixed input types are rejected.
 func TestMinecartStageInput_MixedTypes(t *testing.T) {
-	types := map[string]string{"gt-epic": "epic", "gt-task": "task"}
+	types := map[string]string{"ms-epic": "epic", "ms-task": "task"}
 	_, err := resolveInputKind(types)
 	if err == nil {
 		t.Fatal("expected error for mixed types")
@@ -638,7 +638,7 @@ func TestMinecartStageInput_MixedTypes(t *testing.T) {
 
 // TestMinecartStageInput_MultipleEpicsError verifies multiple epics are rejected.
 func TestMinecartStageInput_MultipleEpicsError(t *testing.T) {
-	types := map[string]string{"gt-epic1": "epic", "gt-epic2": "epic"}
+	types := map[string]string{"ms-epic1": "epic", "ms-epic2": "epic"}
 	_, err := resolveInputKind(types)
 	if err == nil {
 		t.Fatal("expected error for multiple epics")
@@ -647,7 +647,7 @@ func TestMinecartStageInput_MultipleEpicsError(t *testing.T) {
 
 // TestMinecartStageInput_SingleEpicOK verifies a single epic is accepted.
 func TestMinecartStageInput_SingleEpicOK(t *testing.T) {
-	types := map[string]string{"gt-epic": "epic"}
+	types := map[string]string{"ms-epic": "epic"}
 	input, err := resolveInputKind(types)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -659,7 +659,7 @@ func TestMinecartStageInput_SingleEpicOK(t *testing.T) {
 
 // TestMinecartStageInput_MultipleTasksOK verifies multiple tasks are accepted.
 func TestMinecartStageInput_MultipleTasksOK(t *testing.T) {
-	types := map[string]string{"gt-a": "task", "gt-b": "task", "gt-c": "bug"}
+	types := map[string]string{"ms-a": "task", "ms-b": "task", "ms-c": "bug"}
 	input, err := resolveInputKind(types)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -810,24 +810,24 @@ func TestBuildDAG_RelatedTracksIgnored(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 // IT-01: Epic walk collects all descendants across 3 levels.
-// Tree: gt-epic → {gt-sub (epic), gt-task1 (task)}
+// Tree: ms-epic → {ms-sub (epic), ms-task1 (task)}
 //
-//	gt-sub → {gt-task2 (task), gt-task3 (task)}
+//	ms-sub → {ms-task2 (task), ms-task3 (task)}
 func TestEpicWalk_CollectsAllDescendants(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows — shell stubs")
 	}
 
 	dag := newTestDAG(t).
-		Epic("gt-epic", "Root Epic").
-		Epic("gt-sub", "Sub Epic").ParentOf("gt-epic").
-		Task("gt-task1", "Task 1", withRig("mineshaft")).ParentOf("gt-epic").
-		Task("gt-task2", "Task 2", withRig("mineshaft")).ParentOf("gt-sub").
-		Task("gt-task3", "Task 3", withRig("mineshaft")).ParentOf("gt-sub")
+		Epic("ms-epic", "Root Epic").
+		Epic("ms-sub", "Sub Epic").ParentOf("ms-epic").
+		Task("ms-task1", "Task 1", withRig("mineshaft")).ParentOf("ms-epic").
+		Task("ms-task2", "Task 2", withRig("mineshaft")).ParentOf("ms-sub").
+		Task("ms-task3", "Task 3", withRig("mineshaft")).ParentOf("ms-sub")
 
 	dag.Setup(t)
 
-	input := &StageInput{Kind: StageInputEpic, IDs: []string{"gt-epic"}}
+	input := &StageInput{Kind: StageInputEpic, IDs: []string{"ms-epic"}}
 	beads, _, err := collectBeads(input)
 	if err != nil {
 		t.Fatalf("collectBeads: %v", err)
@@ -847,7 +847,7 @@ func TestEpicWalk_CollectsAllDescendants(t *testing.T) {
 	for _, b := range beads {
 		idSet[b.ID] = true
 	}
-	for _, want := range []string{"gt-epic", "gt-sub", "gt-task1", "gt-task2", "gt-task3"} {
+	for _, want := range []string{"ms-epic", "ms-sub", "ms-task1", "ms-task2", "ms-task3"} {
 		if !idSet[want] {
 			t.Errorf("missing bead %q in collected set", want)
 		}
@@ -860,12 +860,12 @@ func TestEpicWalk_NonexistentBeadErrors(t *testing.T) {
 		t.Skip("skipping on windows — shell stubs")
 	}
 
-	// Set up a DAG with only one bead so "gt-missing" doesn't exist.
+	// Set up a DAG with only one bead so "ms-missing" doesn't exist.
 	dag := newTestDAG(t).
-		Task("gt-exists", "Existing task", withRig("mineshaft"))
+		Task("ms-exists", "Existing task", withRig("mineshaft"))
 	dag.Setup(t)
 
-	input := &StageInput{Kind: StageInputEpic, IDs: []string{"gt-missing"}}
+	input := &StageInput{Kind: StageInputEpic, IDs: []string{"ms-missing"}}
 	_, _, err := collectBeads(input)
 	if err == nil {
 		t.Fatal("expected error for nonexistent epic, got nil")
@@ -879,12 +879,12 @@ func TestTaskListWalk_AnalyzesOnlyGiven(t *testing.T) {
 	}
 
 	dag := newTestDAG(t).
-		Task("gt-a", "Task A", withRig("mineshaft")).
-		Task("gt-b", "Task B", withRig("mineshaft")).BlockedBy("gt-a").
-		Task("gt-c", "Task C", withRig("mineshaft")) // not requested
+		Task("ms-a", "Task A", withRig("mineshaft")).
+		Task("ms-b", "Task B", withRig("mineshaft")).BlockedBy("ms-a").
+		Task("ms-c", "Task C", withRig("mineshaft")) // not requested
 	dag.Setup(t)
 
-	input := &StageInput{Kind: StageInputTasks, IDs: []string{"gt-a", "gt-b"}}
+	input := &StageInput{Kind: StageInputTasks, IDs: []string{"ms-a", "ms-b"}}
 	beads, deps, err := collectBeads(input)
 	if err != nil {
 		t.Fatalf("collectBeads: %v", err)
@@ -899,27 +899,27 @@ func TestTaskListWalk_AnalyzesOnlyGiven(t *testing.T) {
 		t.Errorf("expected 2 beads, got %d: %v", len(beads), ids)
 	}
 
-	// Verify only gt-a and gt-b.
+	// Verify only ms-a and ms-b.
 	idSet := make(map[string]bool)
 	for _, b := range beads {
 		idSet[b.ID] = true
 	}
-	if !idSet["gt-a"] || !idSet["gt-b"] {
-		t.Errorf("expected gt-a and gt-b, got %v", idSet)
+	if !idSet["ms-a"] || !idSet["ms-b"] {
+		t.Errorf("expected ms-a and ms-b, got %v", idSet)
 	}
-	if idSet["gt-c"] {
-		t.Error("gt-c should not be in collected beads")
+	if idSet["ms-c"] {
+		t.Error("ms-c should not be in collected beads")
 	}
 
-	// gt-b should have a dep on gt-a.
+	// ms-b should have a dep on ms-a.
 	foundDep := false
 	for _, d := range deps {
-		if d.IssueID == "gt-b" && d.DependsOnID == "gt-a" && d.Type == "blocks" {
+		if d.IssueID == "ms-b" && d.DependsOnID == "ms-a" && d.Type == "blocks" {
 			foundDep = true
 		}
 	}
 	if !foundDep {
-		t.Errorf("expected dep gt-b blocked-by gt-a, got deps: %+v", deps)
+		t.Errorf("expected dep ms-b blocked-by ms-a, got deps: %+v", deps)
 	}
 }
 
@@ -930,12 +930,12 @@ func TestMinecartWalk_ReadsTrackedBeads(t *testing.T) {
 	}
 
 	dag := newTestDAG(t).
-		Minecart("gt-minecart", "Test Minecart").
-		Task("gt-t1", "Tracked 1", withRig("mineshaft")).TrackedBy("gt-minecart").
-		Task("gt-t2", "Tracked 2", withRig("mineshaft")).TrackedBy("gt-minecart")
+		Minecart("ms-minecart", "Test Minecart").
+		Task("ms-t1", "Tracked 1", withRig("mineshaft")).TrackedBy("ms-minecart").
+		Task("ms-t2", "Tracked 2", withRig("mineshaft")).TrackedBy("ms-minecart")
 	dag.Setup(t)
 
-	input := &StageInput{Kind: StageInputMinecart, IDs: []string{"gt-minecart"}}
+	input := &StageInput{Kind: StageInputMinecart, IDs: []string{"ms-minecart"}}
 	beads, _, err := collectBeads(input)
 	if err != nil {
 		t.Fatalf("collectBeads: %v", err)
@@ -954,8 +954,8 @@ func TestMinecartWalk_ReadsTrackedBeads(t *testing.T) {
 	for _, b := range beads {
 		idSet[b.ID] = true
 	}
-	if !idSet["gt-t1"] || !idSet["gt-t2"] {
-		t.Errorf("expected gt-t1 and gt-t2 in tracked beads, got %v", idSet)
+	if !idSet["ms-t1"] || !idSet["ms-t2"] {
+		t.Errorf("expected ms-t1 and ms-t2 in tracked beads, got %v", idSet)
 	}
 }
 
@@ -966,12 +966,12 @@ func TestEpicWalk_CollectsDeps(t *testing.T) {
 	}
 
 	dag := newTestDAG(t).
-		Epic("gt-epic", "Root Epic").
-		Task("gt-t1", "Task 1", withRig("mineshaft")).ParentOf("gt-epic").
-		Task("gt-t2", "Task 2", withRig("mineshaft")).ParentOf("gt-epic").BlockedBy("gt-t1")
+		Epic("ms-epic", "Root Epic").
+		Task("ms-t1", "Task 1", withRig("mineshaft")).ParentOf("ms-epic").
+		Task("ms-t2", "Task 2", withRig("mineshaft")).ParentOf("ms-epic").BlockedBy("ms-t1")
 	dag.Setup(t)
 
-	input := &StageInput{Kind: StageInputEpic, IDs: []string{"gt-epic"}}
+	input := &StageInput{Kind: StageInputEpic, IDs: []string{"ms-epic"}}
 	beads, deps, err := collectBeads(input)
 	if err != nil {
 		t.Fatalf("collectBeads: %v", err)
@@ -987,41 +987,41 @@ func TestEpicWalk_CollectsDeps(t *testing.T) {
 	}
 	sort.Strings(depTypes)
 
-	// Expect parent-child deps for gt-t1 and gt-t2, plus blocks dep gt-t2→gt-t1.
+	// Expect parent-child deps for ms-t1 and ms-t2, plus blocks dep ms-t2→ms-t1.
 	foundBlocks := false
 	for _, d := range deps {
-		if d.IssueID == "gt-t2" && d.DependsOnID == "gt-t1" && d.Type == "blocks" {
+		if d.IssueID == "ms-t2" && d.DependsOnID == "ms-t1" && d.Type == "blocks" {
 			foundBlocks = true
 		}
 	}
 	if !foundBlocks {
-		t.Errorf("expected blocks dep gt-t2→gt-t1, got: %v", depTypes)
+		t.Errorf("expected blocks dep ms-t2→ms-t1, got: %v", depTypes)
 	}
 }
 
 // ---------------------------------------------------------------------------
-// renderWaveTable tests (U-30, U-38, gt-csl.4.2)
+// renderWaveTable tests (U-30, U-38, ms-csl.4.2)
 // ---------------------------------------------------------------------------
 
 // U-30: Wave table includes blockers column
 func TestRenderWaveTable_IncludesBlockers(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-a": {ID: "gt-a", Title: "Task A", Type: "task", Rig: "mineshaft", Blocks: []string{"gt-b"}},
-		"gt-b": {ID: "gt-b", Title: "Task B", Type: "task", Rig: "mineshaft", BlockedBy: []string{"gt-a"}},
+		"ms-a": {ID: "ms-a", Title: "Task A", Type: "task", Rig: "mineshaft", Blocks: []string{"ms-b"}},
+		"ms-b": {ID: "ms-b", Title: "Task B", Type: "task", Rig: "mineshaft", BlockedBy: []string{"ms-a"}},
 	}}
 	waves := []Wave{
-		{Number: 1, Tasks: []string{"gt-a"}},
-		{Number: 2, Tasks: []string{"gt-b"}},
+		{Number: 1, Tasks: []string{"ms-a"}},
+		{Number: 2, Tasks: []string{"ms-b"}},
 	}
 	output := renderWaveTable(waves, dag)
-	if !strings.Contains(output, "gt-a") {
-		t.Error("should show gt-a")
+	if !strings.Contains(output, "ms-a") {
+		t.Error("should show ms-a")
 	}
-	if !strings.Contains(output, "gt-b") {
-		t.Error("should show gt-b")
+	if !strings.Contains(output, "ms-b") {
+		t.Error("should show ms-b")
 	}
-	// gt-b's row should show gt-a as blocker
-	// The table should contain "gt-a" in the blocked-by column for gt-b
+	// ms-b's row should show ms-a as blocker
+	// The table should contain "ms-a" in the blocked-by column for ms-b
 }
 
 // U-38: Summary line shows totals
@@ -1059,11 +1059,11 @@ func TestRenderWaveTable_Empty(t *testing.T) {
 // Test wave table with multiple rigs
 func TestRenderWaveTable_MultipleRigs(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-a": {ID: "gt-a", Title: "Task A", Type: "task", Rig: "mineshaft"},
+		"ms-a": {ID: "ms-a", Title: "Task A", Type: "task", Rig: "mineshaft"},
 		"bd-b": {ID: "bd-b", Title: "Task B", Type: "task", Rig: "beads"},
 	}}
 	waves := []Wave{
-		{Number: 1, Tasks: []string{"bd-b", "gt-a"}},
+		{Number: 1, Tasks: []string{"bd-b", "ms-a"}},
 	}
 	output := renderWaveTable(waves, dag)
 	if !strings.Contains(output, "mineshaft") {
@@ -1080,10 +1080,10 @@ func TestRenderWaveTable_MultipleRigs(t *testing.T) {
 func TestRenderWaveTable_UTF8Truncation(t *testing.T) {
 	// Title with em-dash that would be split by byte-based title[:28]
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-a": {ID: "gt-a", Title: "F.2: Beads for Optuna rig \u2014 extra", Type: "task", Rig: "gst"},
+		"ms-a": {ID: "ms-a", Title: "F.2: Beads for Optuna rig \u2014 extra", Type: "task", Rig: "gst"},
 	}}
 	waves := []Wave{
-		{Number: 1, Tasks: []string{"gt-a"}},
+		{Number: 1, Tasks: []string{"ms-a"}},
 	}
 	output := renderWaveTable(waves, dag)
 
@@ -1110,7 +1110,7 @@ func TestRenderWaveTable_UTF8Truncation(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Error detection + categorization tests (gt-csl.3.3)
+// Error detection + categorization tests (ms-csl.3.3)
 // ---------------------------------------------------------------------------
 
 // U-20: Cycle is categorized as error, not warning
@@ -1130,7 +1130,7 @@ func TestCategorize_CycleIsError(t *testing.T) {
 // U-21: No-rig is categorized as error
 func TestCategorize_NoRigIsError(t *testing.T) {
 	findings := []StagingFinding{
-		{Severity: "error", Category: "no-rig", BeadIDs: []string{"gt-xyz"}, Message: "no rig"},
+		{Severity: "error", Category: "no-rig", BeadIDs: []string{"ms-xyz"}, Message: "no rig"},
 	}
 	errs, warns := categorizeFindings(findings)
 	if len(errs) != 1 {
@@ -1231,21 +1231,21 @@ func TestErrorDetection_Clean(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// renderDAGTree tests (gt-csl.4.1)
+// renderDAGTree tests (ms-csl.4.1)
 // ---------------------------------------------------------------------------
 
 // U-28: Task-list input renders flat list
 func TestRenderDAGTree_TaskListFlat(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-a": {ID: "gt-a", Title: "Task A", Type: "task", Status: "open", Rig: "mineshaft"},
-		"gt-b": {ID: "gt-b", Title: "Task B", Type: "task", Status: "open", Rig: "mineshaft"},
-		"gt-c": {ID: "gt-c", Title: "Task C", Type: "bug", Status: "open", Rig: "mineshaft"},
+		"ms-a": {ID: "ms-a", Title: "Task A", Type: "task", Status: "open", Rig: "mineshaft"},
+		"ms-b": {ID: "ms-b", Title: "Task B", Type: "task", Status: "open", Rig: "mineshaft"},
+		"ms-c": {ID: "ms-c", Title: "Task C", Type: "bug", Status: "open", Rig: "mineshaft"},
 	}}
-	input := &StageInput{Kind: StageInputTasks, IDs: []string{"gt-a", "gt-b", "gt-c"}}
+	input := &StageInput{Kind: StageInputTasks, IDs: []string{"ms-a", "ms-b", "ms-c"}}
 	output := renderDAGTree(dag, input)
 
 	// All 3 IDs must appear
-	for _, id := range []string{"gt-a", "gt-b", "gt-c"} {
+	for _, id := range []string{"ms-a", "ms-b", "ms-c"} {
 		if !strings.Contains(output, id) {
 			t.Errorf("output should contain %q, got:\n%s", id, output)
 		}
@@ -1319,13 +1319,13 @@ func TestRenderDAGTree_EpicTree(t *testing.T) {
 // U-36: Each node shows ID, type, title, rig, status
 func TestRenderDAGTree_NodeInfo(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-abc": {ID: "gt-abc", Title: "My Task", Type: "task", Status: "open", Rig: "mineshaft"},
+		"ms-abc": {ID: "ms-abc", Title: "My Task", Type: "task", Status: "open", Rig: "mineshaft"},
 	}}
-	input := &StageInput{Kind: StageInputTasks, IDs: []string{"gt-abc"}}
+	input := &StageInput{Kind: StageInputTasks, IDs: []string{"ms-abc"}}
 	output := renderDAGTree(dag, input)
 
 	// Verify all fields appear in the output
-	for _, want := range []string{"gt-abc", "task", "My Task", "mineshaft", "open"} {
+	for _, want := range []string{"ms-abc", "task", "My Task", "mineshaft", "open"} {
 		if !strings.Contains(output, want) {
 			t.Errorf("output should contain %q, got:\n%s", want, output)
 		}
@@ -1407,12 +1407,12 @@ func TestRenderDAGTree_NestedEpic(t *testing.T) {
 // IT-40: Tree displayed before wave table (ordering contract)
 func TestRenderDAGTree_OutputOrdering(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-a": {ID: "gt-a", Title: "Task A", Type: "task", Status: "open", Rig: "mineshaft",
-			Blocks: []string{"gt-b"}},
-		"gt-b": {ID: "gt-b", Title: "Task B", Type: "task", Status: "open", Rig: "mineshaft",
-			BlockedBy: []string{"gt-a"}},
+		"ms-a": {ID: "ms-a", Title: "Task A", Type: "task", Status: "open", Rig: "mineshaft",
+			Blocks: []string{"ms-b"}},
+		"ms-b": {ID: "ms-b", Title: "Task B", Type: "task", Status: "open", Rig: "mineshaft",
+			BlockedBy: []string{"ms-a"}},
 	}}
-	input := &StageInput{Kind: StageInputTasks, IDs: []string{"gt-a", "gt-b"}}
+	input := &StageInput{Kind: StageInputTasks, IDs: []string{"ms-a", "ms-b"}}
 
 	treeOutput := renderDAGTree(dag, input)
 
@@ -1426,21 +1426,21 @@ func TestRenderDAGTree_OutputOrdering(t *testing.T) {
 	}
 
 	// Verify tree output is non-empty and contains expected bead IDs
-	if !strings.Contains(treeOutput, "gt-a") || !strings.Contains(treeOutput, "gt-b") {
+	if !strings.Contains(treeOutput, "ms-a") || !strings.Contains(treeOutput, "ms-b") {
 		t.Errorf("tree output should contain task IDs, got:\n%s", treeOutput)
 	}
 
 	// Simulate the full output: tree + wave table concatenation
 	waves := []Wave{
-		{Number: 1, Tasks: []string{"gt-a"}},
-		{Number: 2, Tasks: []string{"gt-b"}},
+		{Number: 1, Tasks: []string{"ms-a"}},
+		{Number: 2, Tasks: []string{"ms-b"}},
 	}
 	waveOutput := renderWaveTable(waves, dag)
 
 	fullOutput := treeOutput + "\n" + waveOutput
 
 	// Tree content (task IDs without wave table formatting) appears before wave table content
-	treeFirstID := strings.Index(fullOutput, "gt-a")
+	treeFirstID := strings.Index(fullOutput, "ms-a")
 	waveTableStart := strings.Index(fullOutput, "Wave")
 	if treeFirstID < 0 || waveTableStart < 0 {
 		t.Fatalf("expected both tree content and wave table in full output:\n%s", fullOutput)
@@ -1451,7 +1451,7 @@ func TestRenderDAGTree_OutputOrdering(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Warning detection tests (gt-csl.3.4)
+// Warning detection tests (ms-csl.3.4)
 // ---------------------------------------------------------------------------
 
 // U-22: Parked rig detected and warned
@@ -1479,10 +1479,10 @@ func TestDetectWarnings_ParkedRig(t *testing.T) {
 	t.Cleanup(func() { isRigBlockedFn = origFn })
 
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-a": {ID: "gt-a", Type: "task", Rig: "parkedrig"},
-		"gt-b": {ID: "gt-b", Type: "task", Rig: "mineshaft"},
+		"ms-a": {ID: "ms-a", Type: "task", Rig: "parkedrig"},
+		"ms-b": {ID: "ms-b", Type: "task", Rig: "mineshaft"},
 	}}
-	input := &StageInput{Kind: StageInputTasks, IDs: []string{"gt-a", "gt-b"}}
+	input := &StageInput{Kind: StageInputTasks, IDs: []string{"ms-a", "ms-b"}}
 	findings := detectWarnings(dag, input)
 
 	var parkedFindings []StagingFinding
@@ -1498,8 +1498,8 @@ func TestDetectWarnings_ParkedRig(t *testing.T) {
 	if f.Severity != "warning" {
 		t.Errorf("severity = %q, want %q", f.Severity, "warning")
 	}
-	if !sliceContains(f.BeadIDs, "gt-a") {
-		t.Errorf("BeadIDs should contain gt-a, got %v", f.BeadIDs)
+	if !sliceContains(f.BeadIDs, "ms-a") {
+		t.Errorf("BeadIDs should contain ms-a, got %v", f.BeadIDs)
 	}
 }
 
@@ -1526,10 +1526,10 @@ func TestDetectWarnings_DockedRig(t *testing.T) {
 	t.Cleanup(func() { isRigBlockedFn = origFn })
 
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-a": {ID: "gt-a", Type: "task", Rig: "dockedrig"},
-		"gt-b": {ID: "gt-b", Type: "task", Rig: "mineshaft"},
+		"ms-a": {ID: "ms-a", Type: "task", Rig: "dockedrig"},
+		"ms-b": {ID: "ms-b", Type: "task", Rig: "mineshaft"},
 	}}
-	input := &StageInput{Kind: StageInputTasks, IDs: []string{"gt-a", "gt-b"}}
+	input := &StageInput{Kind: StageInputTasks, IDs: []string{"ms-a", "ms-b"}}
 	findings := detectWarnings(dag, input)
 
 	var blockedFindings []StagingFinding
@@ -1545,8 +1545,8 @@ func TestDetectWarnings_DockedRig(t *testing.T) {
 	if f.Severity != "warning" {
 		t.Errorf("severity = %q, want %q", f.Severity, "warning")
 	}
-	if !sliceContains(f.BeadIDs, "gt-a") {
-		t.Errorf("BeadIDs should contain gt-a, got %v", f.BeadIDs)
+	if !sliceContains(f.BeadIDs, "ms-a") {
+		t.Errorf("BeadIDs should contain ms-a, got %v", f.BeadIDs)
 	}
 	if !strings.Contains(f.Message, "docked") {
 		t.Errorf("message should mention 'docked', got: %s", f.Message)
@@ -1560,10 +1560,10 @@ func TestDetectWarnings_DockedRig(t *testing.T) {
 func TestDetectWarnings_OrphanEpicInput(t *testing.T) {
 	// 3 tasks under an epic: A blocks B (connected), C is isolated.
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"epic-1": {ID: "epic-1", Type: "epic", Children: []string{"gt-a", "gt-b", "gt-c"}},
-		"gt-a":   {ID: "gt-a", Type: "task", Rig: "mineshaft", Parent: "epic-1", Blocks: []string{"gt-b"}},
-		"gt-b":   {ID: "gt-b", Type: "task", Rig: "mineshaft", Parent: "epic-1", BlockedBy: []string{"gt-a"}},
-		"gt-c":   {ID: "gt-c", Type: "task", Rig: "mineshaft", Parent: "epic-1"},
+		"epic-1": {ID: "epic-1", Type: "epic", Children: []string{"ms-a", "ms-b", "ms-c"}},
+		"ms-a":   {ID: "ms-a", Type: "task", Rig: "mineshaft", Parent: "epic-1", Blocks: []string{"ms-b"}},
+		"ms-b":   {ID: "ms-b", Type: "task", Rig: "mineshaft", Parent: "epic-1", BlockedBy: []string{"ms-a"}},
+		"ms-c":   {ID: "ms-c", Type: "task", Rig: "mineshaft", Parent: "epic-1"},
 	}}
 	input := &StageInput{Kind: StageInputEpic, IDs: []string{"epic-1"}}
 	findings := detectWarnings(dag, input)
@@ -1577,8 +1577,8 @@ func TestDetectWarnings_OrphanEpicInput(t *testing.T) {
 	if len(orphanFindings) != 1 {
 		t.Fatalf("expected 1 orphan warning, got %d: %+v", len(orphanFindings), findings)
 	}
-	if !sliceContains(orphanFindings[0].BeadIDs, "gt-c") {
-		t.Errorf("orphan warning should reference gt-c, got %v", orphanFindings[0].BeadIDs)
+	if !sliceContains(orphanFindings[0].BeadIDs, "ms-c") {
+		t.Errorf("orphan warning should reference ms-c, got %v", orphanFindings[0].BeadIDs)
 	}
 }
 
@@ -1586,9 +1586,9 @@ func TestDetectWarnings_OrphanEpicInput(t *testing.T) {
 func TestDetectWarnings_MissingBranch(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
 		"root-epic": {ID: "root-epic", Type: "epic", Children: []string{"sub-epic"}},
-		"sub-epic":  {ID: "sub-epic", Type: "epic", Parent: "root-epic", Children: []string{"gt-a", "gt-b"}},
-		"gt-a":      {ID: "gt-a", Type: "task", Rig: "mineshaft", Parent: "sub-epic"},
-		"gt-b":      {ID: "gt-b", Type: "task", Rig: "mineshaft", Parent: "sub-epic"},
+		"sub-epic":  {ID: "sub-epic", Type: "epic", Parent: "root-epic", Children: []string{"ms-a", "ms-b"}},
+		"ms-a":      {ID: "ms-a", Type: "task", Rig: "mineshaft", Parent: "sub-epic"},
+		"ms-b":      {ID: "ms-b", Type: "task", Rig: "mineshaft", Parent: "sub-epic"},
 	}}
 	input := &StageInput{Kind: StageInputEpic, IDs: []string{"root-epic"}}
 	findings := detectWarnings(dag, input)
@@ -1617,11 +1617,11 @@ func TestDetectWarnings_MissingBranch(t *testing.T) {
 // U-34: Cross-rig routing mismatch warned
 func TestDetectWarnings_CrossRig(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-a": {ID: "gt-a", Type: "task", Rig: "mineshaft"},
-		"gt-b": {ID: "gt-b", Type: "task", Rig: "mineshaft"},
+		"ms-a": {ID: "ms-a", Type: "task", Rig: "mineshaft"},
+		"ms-b": {ID: "ms-b", Type: "task", Rig: "mineshaft"},
 		"bd-c": {ID: "bd-c", Type: "task", Rig: "beads"},
 	}}
-	input := &StageInput{Kind: StageInputTasks, IDs: []string{"gt-a", "gt-b", "bd-c"}}
+	input := &StageInput{Kind: StageInputTasks, IDs: []string{"ms-a", "ms-b", "bd-c"}}
 	findings := detectWarnings(dag, input)
 
 	var crossFindings []StagingFinding
@@ -1694,11 +1694,11 @@ func TestDetectWarnings_Capacity(t *testing.T) {
 func TestDetectWarnings_NoOrphansForTaskList(t *testing.T) {
 	// Same DAG as orphan test but with task-list input.
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-a": {ID: "gt-a", Type: "task", Rig: "mineshaft", Blocks: []string{"gt-b"}},
-		"gt-b": {ID: "gt-b", Type: "task", Rig: "mineshaft", BlockedBy: []string{"gt-a"}},
-		"gt-c": {ID: "gt-c", Type: "task", Rig: "mineshaft"}, // isolated
+		"ms-a": {ID: "ms-a", Type: "task", Rig: "mineshaft", Blocks: []string{"ms-b"}},
+		"ms-b": {ID: "ms-b", Type: "task", Rig: "mineshaft", BlockedBy: []string{"ms-a"}},
+		"ms-c": {ID: "ms-c", Type: "task", Rig: "mineshaft"}, // isolated
 	}}
-	input := &StageInput{Kind: StageInputTasks, IDs: []string{"gt-a", "gt-b", "gt-c"}}
+	input := &StageInput{Kind: StageInputTasks, IDs: []string{"ms-a", "ms-b", "ms-c"}}
 	findings := detectWarnings(dag, input)
 
 	for _, f := range findings {
@@ -1714,9 +1714,9 @@ func TestRenderWarnings_Format(t *testing.T) {
 		{
 			Severity:     "warning",
 			Category:     "blocked-rig",
-			BeadIDs:      []string{"gt-a"},
-			Message:      "task gt-a is assigned to parked rig \"mineshaft.parked\"",
-			SuggestedFix: "reassign gt-a to an active rig",
+			BeadIDs:      []string{"ms-a"},
+			Message:      "task ms-a is assigned to parked rig \"mineshaft.parked\"",
+			SuggestedFix: "reassign ms-a to an active rig",
 		},
 		{
 			Severity: "warning",
@@ -1748,14 +1748,14 @@ func TestRenderWarnings_Format(t *testing.T) {
 	}
 
 	// Must include bead IDs
-	for _, id := range []string{"gt-a", "bd-c"} {
+	for _, id := range []string{"ms-a", "bd-c"} {
 		if !strings.Contains(output, id) {
 			t.Errorf("output should contain bead ID %q, got:\n%s", id, output)
 		}
 	}
 
 	// Must include suggested fixes
-	if !strings.Contains(output, "reassign gt-a") {
+	if !strings.Contains(output, "reassign ms-a") {
 		t.Errorf("output should contain suggested fix, got:\n%s", output)
 	}
 
@@ -1774,10 +1774,10 @@ func TestDetectWarnings_Clean(t *testing.T) {
 
 	// All tasks on same rig, all have deps between them, epic input.
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"epic-1": {ID: "epic-1", Type: "epic", Children: []string{"gt-a", "gt-b", "gt-c"}},
-		"gt-a":   {ID: "gt-a", Type: "task", Rig: "mineshaft", Parent: "epic-1", Blocks: []string{"gt-b"}},
-		"gt-b":   {ID: "gt-b", Type: "task", Rig: "mineshaft", Parent: "epic-1", BlockedBy: []string{"gt-a"}, Blocks: []string{"gt-c"}},
-		"gt-c":   {ID: "gt-c", Type: "task", Rig: "mineshaft", Parent: "epic-1", BlockedBy: []string{"gt-b"}},
+		"epic-1": {ID: "epic-1", Type: "epic", Children: []string{"ms-a", "ms-b", "ms-c"}},
+		"ms-a":   {ID: "ms-a", Type: "task", Rig: "mineshaft", Parent: "epic-1", Blocks: []string{"ms-b"}},
+		"ms-b":   {ID: "ms-b", Type: "task", Rig: "mineshaft", Parent: "epic-1", BlockedBy: []string{"ms-a"}, Blocks: []string{"ms-c"}},
+		"ms-c":   {ID: "ms-c", Type: "task", Rig: "mineshaft", Parent: "epic-1", BlockedBy: []string{"ms-b"}},
 	}}
 	input := &StageInput{Kind: StageInputEpic, IDs: []string{"epic-1"}}
 	findings := detectWarnings(dag, input)
@@ -1799,7 +1799,7 @@ func TestRenderWarnings_Empty(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Staged minecart creation tests (gt-csl.3.5)
+// Staged minecart creation tests (ms-csl.3.5)
 // ---------------------------------------------------------------------------
 
 // IT-10: Stage clean (no errors, no warnings) → creates minecart as staged_ready.
@@ -1813,23 +1813,23 @@ func TestCreateStagedMinecart_CleanReady(t *testing.T) {
 
 	// Set up bd stub environment for create/dep add commands.
 	testDAG := newTestDAG(t).
-		Task("gt-a", "Task A", withRig("mineshaft")).
-		Task("gt-b", "Task B", withRig("mineshaft")).BlockedBy("gt-a").
-		Task("gt-c", "Task C", withRig("mineshaft")).BlockedBy("gt-b")
+		Task("ms-a", "Task A", withRig("mineshaft")).
+		Task("ms-b", "Task B", withRig("mineshaft")).BlockedBy("ms-a").
+		Task("ms-c", "Task C", withRig("mineshaft")).BlockedBy("ms-b")
 
 	_, logPath := testDAG.Setup(t)
 
 	// Build the MinecartDAG directly with rigs populated (avoids rigFromBeadID stub).
 	minecartDAG := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-a": {ID: "gt-a", Title: "Task A", Type: "task", Status: "open", Rig: "mineshaft",
-			Blocks: []string{"gt-b"}},
-		"gt-b": {ID: "gt-b", Title: "Task B", Type: "task", Status: "open", Rig: "mineshaft",
-			BlockedBy: []string{"gt-a"}, Blocks: []string{"gt-c"}},
-		"gt-c": {ID: "gt-c", Title: "Task C", Type: "task", Status: "open", Rig: "mineshaft",
-			BlockedBy: []string{"gt-b"}},
+		"ms-a": {ID: "ms-a", Title: "Task A", Type: "task", Status: "open", Rig: "mineshaft",
+			Blocks: []string{"ms-b"}},
+		"ms-b": {ID: "ms-b", Title: "Task B", Type: "task", Status: "open", Rig: "mineshaft",
+			BlockedBy: []string{"ms-a"}, Blocks: []string{"ms-c"}},
+		"ms-c": {ID: "ms-c", Title: "Task C", Type: "task", Status: "open", Rig: "mineshaft",
+			BlockedBy: []string{"ms-b"}},
 	}}
 
-	input := &StageInput{Kind: StageInputTasks, IDs: []string{"gt-a", "gt-b", "gt-c"}}
+	input := &StageInput{Kind: StageInputTasks, IDs: []string{"ms-a", "ms-b", "ms-c"}}
 
 	// Run the full error/warning detection pipeline.
 	errFindings := detectErrors(minecartDAG)
@@ -1873,8 +1873,8 @@ func TestCreateStagedMinecart_CleanReady(t *testing.T) {
 	}
 
 	// Verify bd dep add was called for each slingable bead.
-	for _, beadID := range []string{"gt-a", "gt-b", "gt-c"} {
-		targetID := "external:gt:" + beadID
+	for _, beadID := range []string{"ms-a", "ms-b", "ms-c"} {
+		targetID := "external:ms:" + beadID
 		if !strings.Contains(logContent, "dep add "+minecartID+" "+targetID) {
 			t.Errorf("bd.log should contain 'dep add %s %s', got:\n%s", minecartID, targetID, logContent)
 		}
@@ -1889,14 +1889,14 @@ func TestCreateStagedMinecart_TracksOnlySlingable(t *testing.T) {
 	}
 
 	dag := newTestDAG(t).
-		Epic("gt-epic", "Root Epic").
-		Task("gt-t1", "Task 1", withRig("mineshaft")).ParentOf("gt-epic").
-		Bug("gt-b1", "Bug 1", withRig("mineshaft")).ParentOf("gt-epic").
-		Task("gt-t2", "Task 2", withRig("mineshaft")).ParentOf("gt-epic").BlockedBy("gt-t1")
+		Epic("ms-epic", "Root Epic").
+		Task("ms-t1", "Task 1", withRig("mineshaft")).ParentOf("ms-epic").
+		Bug("ms-b1", "Bug 1", withRig("mineshaft")).ParentOf("ms-epic").
+		Task("ms-t2", "Task 2", withRig("mineshaft")).ParentOf("ms-epic").BlockedBy("ms-t1")
 
 	_, logPath := dag.Setup(t)
 
-	input := &StageInput{Kind: StageInputEpic, IDs: []string{"gt-epic"}}
+	input := &StageInput{Kind: StageInputEpic, IDs: []string{"ms-epic"}}
 	beads, deps, err := collectBeads(input)
 	if err != nil {
 		t.Fatalf("collectBeads: %v", err)
@@ -1922,8 +1922,8 @@ func TestCreateStagedMinecart_TracksOnlySlingable(t *testing.T) {
 	logContent := string(logBytes)
 
 	// Slingable beads (tasks and bugs) should be tracked.
-	for _, beadID := range []string{"gt-t1", "gt-b1", "gt-t2"} {
-		targetID := "external:gt:" + beadID
+	for _, beadID := range []string{"ms-t1", "ms-b1", "ms-t2"} {
+		targetID := "external:ms:" + beadID
 		if !strings.Contains(logContent, "dep add "+minecartID+" "+targetID) {
 			t.Errorf("bd.log should contain 'dep add %s %s' for slingable bead, got:\n%s", minecartID, targetID, logContent)
 		}
@@ -1932,8 +1932,8 @@ func TestCreateStagedMinecart_TracksOnlySlingable(t *testing.T) {
 	// Epics should NOT be tracked.
 	lines := strings.Split(logContent, "\n")
 	for _, line := range lines {
-		if strings.Contains(line, "dep add") && strings.Contains(line, "gt-epic") {
-			t.Errorf("epic gt-epic should NOT be tracked via dep add, but found: %s", line)
+		if strings.Contains(line, "dep add") && strings.Contains(line, "ms-epic") {
+			t.Errorf("epic ms-epic should NOT be tracked via dep add, but found: %s", line)
 		}
 	}
 }
@@ -1945,12 +1945,12 @@ func TestCreateStagedMinecart_DescriptionFormat(t *testing.T) {
 	}
 
 	dag := newTestDAG(t).
-		Task("gt-a", "Task A", withRig("mineshaft")).
-		Task("gt-b", "Task B", withRig("mineshaft")).BlockedBy("gt-a")
+		Task("ms-a", "Task A", withRig("mineshaft")).
+		Task("ms-b", "Task B", withRig("mineshaft")).BlockedBy("ms-a")
 
 	_, logPath := dag.Setup(t)
 
-	input := &StageInput{Kind: StageInputTasks, IDs: []string{"gt-a", "gt-b"}}
+	input := &StageInput{Kind: StageInputTasks, IDs: []string{"ms-a", "ms-b"}}
 	beads, deps, err := collectBeads(input)
 	if err != nil {
 		t.Fatalf("collectBeads: %v", err)
@@ -1979,7 +1979,7 @@ func TestCreateStagedMinecart_DescriptionFormat(t *testing.T) {
 	lines := strings.Split(logContent, "\n")
 	var createLine string
 	for _, line := range lines {
-		if strings.Contains(line, "create") && strings.Contains(line, "--type=task") && strings.Contains(line, "--labels=gt:minecart") {
+		if strings.Contains(line, "create") && strings.Contains(line, "--type=task") && strings.Contains(line, "--labels=ms:minecart") {
 			createLine = line
 			break
 		}
@@ -2008,11 +2008,11 @@ func TestCreateStagedMinecart_IDFormat(t *testing.T) {
 	}
 
 	dag := newTestDAG(t).
-		Task("gt-a", "Task A", withRig("mineshaft"))
+		Task("ms-a", "Task A", withRig("mineshaft"))
 
 	dag.Setup(t)
 
-	input := &StageInput{Kind: StageInputTasks, IDs: []string{"gt-a"}}
+	input := &StageInput{Kind: StageInputTasks, IDs: []string{"ms-a"}}
 	beads, deps, err := collectBeads(input)
 	if err != nil {
 		t.Fatalf("collectBeads: %v", err)
@@ -2047,7 +2047,7 @@ func TestCreateStagedMinecart_IDFormat(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Re-stage existing minecart tests (gt-csl.3.6)
+// Re-stage existing minecart tests (ms-csl.3.6)
 // ---------------------------------------------------------------------------
 
 // IT-13: Re-stage existing staged minecart updates in place (no duplicate).
@@ -2066,17 +2066,17 @@ func TestRestageMinecart_UpdatesInPlace(t *testing.T) {
 	// tracking two tasks.
 	testDAG := newTestDAG(t).
 		Minecart("hq-cv-test1", "Staged Minecart").WithStatus("staged_ready").
-		Task("gt-x1", "Task X1", withRig("mineshaft")).TrackedBy("hq-cv-test1").
-		Task("gt-x2", "Task X2", withRig("mineshaft")).TrackedBy("hq-cv-test1").BlockedBy("gt-x1")
+		Task("ms-x1", "Task X1", withRig("mineshaft")).TrackedBy("hq-cv-test1").
+		Task("ms-x2", "Task X2", withRig("mineshaft")).TrackedBy("hq-cv-test1").BlockedBy("ms-x1")
 
 	_, logPath := testDAG.Setup(t)
 
 	// Build the MinecartDAG directly (as runMinecartStage would after collectBeads).
 	minecartDAG := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-x1": {ID: "gt-x1", Title: "Task X1", Type: "task", Status: "open", Rig: "mineshaft",
-			Blocks: []string{"gt-x2"}},
-		"gt-x2": {ID: "gt-x2", Title: "Task X2", Type: "task", Status: "open", Rig: "mineshaft",
-			BlockedBy: []string{"gt-x1"}},
+		"ms-x1": {ID: "ms-x1", Title: "Task X1", Type: "task", Status: "open", Rig: "mineshaft",
+			Blocks: []string{"ms-x2"}},
+		"ms-x2": {ID: "ms-x2", Title: "Task X2", Type: "task", Status: "open", Rig: "mineshaft",
+			BlockedBy: []string{"ms-x1"}},
 	}}
 
 	waves, _, err := computeWaves(minecartDAG)
@@ -2141,8 +2141,8 @@ func TestRestageMinecart_DetectionLogic(t *testing.T) {
 
 	testDAG := newTestDAG(t).
 		Minecart("hq-cv-det", "Detection Minecart").WithStatus("staged_ready").
-		Task("gt-d1", "Detection Task 1", withRig("mineshaft")).TrackedBy("hq-cv-det").
-		Task("gt-d2", "Detection Task 2", withRig("mineshaft")).TrackedBy("hq-cv-det")
+		Task("ms-d1", "Detection Task 1", withRig("mineshaft")).TrackedBy("hq-cv-det").
+		Task("ms-d2", "Detection Task 2", withRig("mineshaft")).TrackedBy("hq-cv-det")
 
 	testDAG.Setup(t)
 
@@ -2187,14 +2187,14 @@ func TestRestageMinecart_UpdatesStatusToWarnings(t *testing.T) {
 
 	testDAG := newTestDAG(t).
 		Minecart("hq-cv-warn", "Warn Minecart").WithStatus("staged_ready").
-		Task("gt-w1", "Warn Task 1", withRig("mineshaft")).TrackedBy("hq-cv-warn").
+		Task("ms-w1", "Warn Task 1", withRig("mineshaft")).TrackedBy("hq-cv-warn").
 		Task("bd-w2", "Warn Task 2", withRig("beads")).TrackedBy("hq-cv-warn")
 
 	_, logPath := testDAG.Setup(t)
 
 	// Build a MinecartDAG with cross-rig tasks.
 	minecartDAG := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-w1": {ID: "gt-w1", Title: "Warn Task 1", Type: "task", Status: "open", Rig: "mineshaft"},
+		"ms-w1": {ID: "ms-w1", Title: "Warn Task 1", Type: "task", Status: "open", Rig: "mineshaft"},
 		"bd-w2": {ID: "bd-w2", Title: "Warn Task 2", Type: "task", Status: "open", Rig: "beads"},
 	}}
 
@@ -2229,7 +2229,7 @@ func TestRestageMinecart_UpdatesStatusToWarnings(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// JSON output mode tests (gt-csl.4.3)
+// JSON output mode tests (ms-csl.4.3)
 // ---------------------------------------------------------------------------
 
 // U-31: JSON output: valid JSON with all required fields present.
@@ -2237,12 +2237,12 @@ func TestRestageMinecart_UpdatesStatusToWarnings(t *testing.T) {
 // function, verify valid JSON with all fields.
 func TestJSONOutput_ValidWithAllFields(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-a": {ID: "gt-a", Title: "Task A", Type: "task", Status: "open", Rig: "mineshaft",
-			Blocks: []string{"gt-b"}},
-		"gt-b": {ID: "gt-b", Title: "Task B", Type: "task", Status: "open", Rig: "mineshaft",
-			BlockedBy: []string{"gt-a"}},
+		"ms-a": {ID: "ms-a", Title: "Task A", Type: "task", Status: "open", Rig: "mineshaft",
+			Blocks: []string{"ms-b"}},
+		"ms-b": {ID: "ms-b", Title: "Task B", Type: "task", Status: "open", Rig: "mineshaft",
+			BlockedBy: []string{"ms-a"}},
 	}}
-	input := &StageInput{Kind: StageInputTasks, IDs: []string{"gt-a", "gt-b"}}
+	input := &StageInput{Kind: StageInputTasks, IDs: []string{"ms-a", "ms-b"}}
 
 	waves, _, err := computeWaves(dag)
 	if err != nil {
@@ -2294,28 +2294,28 @@ func TestJSONOutput_ValidWithAllFields(t *testing.T) {
 	foundB := false
 	for _, w := range parsed.Waves {
 		for _, task := range w.Tasks {
-			if task.ID == "gt-a" {
+			if task.ID == "ms-a" {
 				foundA = true
 				if task.Title != "Task A" {
-					t.Errorf("gt-a title = %q, want %q", task.Title, "Task A")
+					t.Errorf("ms-a title = %q, want %q", task.Title, "Task A")
 				}
 				if task.Rig != "mineshaft" {
-					t.Errorf("gt-a rig = %q, want %q", task.Rig, "mineshaft")
+					t.Errorf("ms-a rig = %q, want %q", task.Rig, "mineshaft")
 				}
 			}
-			if task.ID == "gt-b" {
+			if task.ID == "ms-b" {
 				foundB = true
-				if len(task.BlockedBy) == 0 || task.BlockedBy[0] != "gt-a" {
-					t.Errorf("gt-b blocked_by = %v, want [gt-a]", task.BlockedBy)
+				if len(task.BlockedBy) == 0 || task.BlockedBy[0] != "ms-a" {
+					t.Errorf("ms-b blocked_by = %v, want [ms-a]", task.BlockedBy)
 				}
 			}
 		}
 	}
 	if !foundA {
-		t.Error("wave tasks should contain gt-a")
+		t.Error("wave tasks should contain ms-a")
 	}
 	if !foundB {
-		t.Error("wave tasks should contain gt-b")
+		t.Error("wave tasks should contain ms-b")
 	}
 }
 
@@ -2323,12 +2323,12 @@ func TestJSONOutput_ValidWithAllFields(t *testing.T) {
 // Build a DAG with a cycle, verify the errors array has the cycle finding.
 func TestJSONOutput_ErrorsPopulatedOnCycle(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-a": {ID: "gt-a", Type: "task", Rig: "mineshaft",
-			Blocks: []string{"gt-b"}, BlockedBy: []string{"gt-b"}},
-		"gt-b": {ID: "gt-b", Type: "task", Rig: "mineshaft",
-			Blocks: []string{"gt-a"}, BlockedBy: []string{"gt-a"}},
+		"ms-a": {ID: "ms-a", Type: "task", Rig: "mineshaft",
+			Blocks: []string{"ms-b"}, BlockedBy: []string{"ms-b"}},
+		"ms-b": {ID: "ms-b", Type: "task", Rig: "mineshaft",
+			Blocks: []string{"ms-a"}, BlockedBy: []string{"ms-a"}},
 	}}
-	input := &StageInput{Kind: StageInputTasks, IDs: []string{"gt-a", "gt-b"}}
+	input := &StageInput{Kind: StageInputTasks, IDs: []string{"ms-a", "ms-b"}}
 
 	errFindings := detectErrors(dag)
 	warnFindings := detectWarnings(dag, input)
@@ -2456,7 +2456,7 @@ func TestJSONOutput_FlagParseErrorReturnsEnvelope(t *testing.T) {
 		t.Run(strings.Join(args, " "), func(t *testing.T) {
 			cmd := newJSONStageTestCommand(t)
 			oldArgs := os.Args
-			os.Args = append([]string{"gt", "minecart", "stage"}, args...)
+			os.Args = append([]string{"ms", "minecart", "stage"}, args...)
 			t.Cleanup(func() { os.Args = oldArgs })
 
 			output, stderrOutput, err := runStageCommandJSONTest(t, cmd, args...)
@@ -2532,8 +2532,8 @@ func TestJSONOutput_NoHumanReadableText(t *testing.T) {
 	}
 
 	testDAG := newTestDAG(t).
-		Task("gt-j1", "JSON Task 1", withRig("mineshaft")).
-		Task("gt-j2", "JSON Task 2", withRig("mineshaft")).BlockedBy("gt-j1")
+		Task("ms-j1", "JSON Task 1", withRig("mineshaft")).
+		Task("ms-j2", "JSON Task 2", withRig("mineshaft")).BlockedBy("ms-j1")
 
 	testDAG.Setup(t)
 
@@ -2551,7 +2551,7 @@ func TestJSONOutput_NoHumanReadableText(t *testing.T) {
 	minecartStageJSON = true
 	defer func() { minecartStageJSON = false }()
 
-	_ = runMinecartStage(nil, []string{"gt-j1", "gt-j2"})
+	_ = runMinecartStage(nil, []string{"ms-j1", "ms-j2"})
 	w.Close()
 	wErr.Close()
 	os.Stdout = oldStdout
@@ -2642,11 +2642,11 @@ func TestJSONOutput_ErrorsReturnNonZeroExit(t *testing.T) {
 func TestJSONOutput_FullStructureSnapshot(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
 		"epic-1": {ID: "epic-1", Title: "Root Epic", Type: "epic", Status: "open",
-			Children: []string{"gt-a", "gt-b"}},
-		"gt-a": {ID: "gt-a", Title: "Task A", Type: "task", Status: "open", Rig: "mineshaft",
-			Parent: "epic-1", Blocks: []string{"gt-b"}},
-		"gt-b": {ID: "gt-b", Title: "Task B", Type: "task", Status: "open", Rig: "mineshaft",
-			Parent: "epic-1", BlockedBy: []string{"gt-a"}},
+			Children: []string{"ms-a", "ms-b"}},
+		"ms-a": {ID: "ms-a", Title: "Task A", Type: "task", Status: "open", Rig: "mineshaft",
+			Parent: "epic-1", Blocks: []string{"ms-b"}},
+		"ms-b": {ID: "ms-b", Title: "Task B", Type: "task", Status: "open", Rig: "mineshaft",
+			Parent: "epic-1", BlockedBy: []string{"ms-a"}},
 	}}
 	input := &StageInput{Kind: StageInputEpic, IDs: []string{"epic-1"}}
 
@@ -2657,8 +2657,8 @@ func TestJSONOutput_FullStructureSnapshot(t *testing.T) {
 
 	// Build a warning for cross-rig (simulated).
 	warns := []StagingFinding{
-		{Severity: "warning", Category: "orphan", BeadIDs: []string{"gt-a"},
-			Message: "task gt-a isolated", SuggestedFix: "add dep"},
+		{Severity: "warning", Category: "orphan", BeadIDs: []string{"ms-a"},
+			Message: "task ms-a isolated", SuggestedFix: "add dep"},
 	}
 
 	result := StageResult{
@@ -2710,17 +2710,17 @@ func TestJSONOutput_FullStructureSnapshot(t *testing.T) {
 		t.Fatalf("tree root should have 2 children, got %d", len(root.Children))
 	}
 
-	// Children should be sorted by ID (gt-a before gt-b).
-	if root.Children[0].ID != "gt-a" {
-		t.Errorf("first child = %q, want gt-a", root.Children[0].ID)
+	// Children should be sorted by ID (ms-a before ms-b).
+	if root.Children[0].ID != "ms-a" {
+		t.Errorf("first child = %q, want ms-a", root.Children[0].ID)
 	}
-	if root.Children[1].ID != "gt-b" {
-		t.Errorf("second child = %q, want gt-b", root.Children[1].ID)
+	if root.Children[1].ID != "ms-b" {
+		t.Errorf("second child = %q, want ms-b", root.Children[1].ID)
 	}
 
 	// Children should have rig set.
 	if root.Children[0].Rig != "mineshaft" {
-		t.Errorf("gt-a rig = %q, want mineshaft", root.Children[0].Rig)
+		t.Errorf("ms-a rig = %q, want mineshaft", root.Children[0].Rig)
 	}
 
 	// Waves should have task details.
@@ -2751,10 +2751,10 @@ func TestJSONOutput_FullStructureSnapshot(t *testing.T) {
 // Test buildTreeJSON for flat (task-list) input.
 func TestBuildTreeJSON_FlatInput(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-x": {ID: "gt-x", Title: "X", Type: "task", Status: "open", Rig: "mineshaft"},
-		"gt-y": {ID: "gt-y", Title: "Y", Type: "bug", Status: "open", Rig: "beads"},
+		"ms-x": {ID: "ms-x", Title: "X", Type: "task", Status: "open", Rig: "mineshaft"},
+		"ms-y": {ID: "ms-y", Title: "Y", Type: "bug", Status: "open", Rig: "beads"},
 	}}
-	input := &StageInput{Kind: StageInputTasks, IDs: []string{"gt-x", "gt-y"}}
+	input := &StageInput{Kind: StageInputTasks, IDs: []string{"ms-x", "ms-y"}}
 
 	tree := buildTreeJSON(dag, input)
 
@@ -2770,7 +2770,7 @@ func TestBuildTreeJSON_FlatInput(t *testing.T) {
 	}
 
 	// Sorted by ID.
-	if tree[0].ID != "gt-x" || tree[1].ID != "gt-y" {
+	if tree[0].ID != "ms-x" || tree[1].ID != "ms-y" {
 		t.Errorf("tree should be sorted by ID: got [%s, %s]", tree[0].ID, tree[1].ID)
 	}
 }
@@ -2879,16 +2879,16 @@ func TestAppendValidationWave_CreatesCapstoneWave(t *testing.T) {
 
 	testDAG := newTestDAG(t).
 		Epic("epic-1", "Test Epic").
-		Task("gt-a", "Task A", withRig("mineshaft")).ParentOf("epic-1").
-		Task("gt-b", "Task B", withRig("mineshaft")).ParentOf("epic-1").BlockedBy("gt-a")
+		Task("ms-a", "Task A", withRig("mineshaft")).ParentOf("epic-1").
+		Task("ms-b", "Task B", withRig("mineshaft")).ParentOf("epic-1").BlockedBy("ms-a")
 
 	_, logPath := testDAG.Setup(t)
 
 	// Build the MinecartDAG.
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
 		"epic-1": {ID: "epic-1", Title: "Test Epic", Type: "epic", Status: "open"},
-		"gt-a":   {ID: "gt-a", Title: "Task A", Type: "task", Status: "open", Rig: "mineshaft", Blocks: []string{"gt-b"}},
-		"gt-b":   {ID: "gt-b", Title: "Task B", Type: "task", Status: "open", Rig: "mineshaft", BlockedBy: []string{"gt-a"}},
+		"ms-a":   {ID: "ms-a", Title: "Task A", Type: "task", Status: "open", Rig: "mineshaft", Blocks: []string{"ms-b"}},
+		"ms-b":   {ID: "ms-b", Title: "Task B", Type: "task", Status: "open", Rig: "mineshaft", BlockedBy: []string{"ms-a"}},
 	}}
 
 	// Compute waves first.
@@ -2942,12 +2942,12 @@ func TestAppendValidationWave_CreatesCapstoneWave(t *testing.T) {
 	for _, id := range valNode.BlockedBy {
 		blockedBy[id] = true
 	}
-	if !blockedBy["gt-a"] || !blockedBy["gt-b"] {
-		t.Errorf("validation bead should be blocked by gt-a and gt-b, got %v", valNode.BlockedBy)
+	if !blockedBy["ms-a"] || !blockedBy["ms-b"] {
+		t.Errorf("validation bead should be blocked by ms-a and ms-b, got %v", valNode.BlockedBy)
 	}
 
 	// Verify slingable nodes now block the validation bead.
-	if nodeA, ok := dag.Nodes["gt-a"]; ok {
+	if nodeA, ok := dag.Nodes["ms-a"]; ok {
 		found := false
 		for _, id := range nodeA.Blocks {
 			if id == validationID {
@@ -2955,7 +2955,7 @@ func TestAppendValidationWave_CreatesCapstoneWave(t *testing.T) {
 			}
 		}
 		if !found {
-			t.Errorf("gt-a should block validation bead, Blocks = %v", nodeA.Blocks)
+			t.Errorf("ms-a should block validation bead, Blocks = %v", nodeA.Blocks)
 		}
 	}
 
@@ -2978,7 +2978,7 @@ func TestAppendValidationWave_CreatesCapstoneWave(t *testing.T) {
 	if !strings.Contains(logContent, "dep add epic-1 "+validationID+" --type=parent-child") {
 		t.Errorf("bd.log should contain parent-child dep add, got:\n%s", logContent)
 	}
-	for _, beadID := range []string{"gt-a", "gt-b"} {
+	for _, beadID := range []string{"ms-a", "ms-b"} {
 		if !strings.Contains(logContent, "dep add "+beadID+" "+validationID+" --type=blocks") {
 			t.Errorf("bd.log should contain 'dep add %s %s --type=blocks', got:\n%s", beadID, validationID, logContent)
 		}

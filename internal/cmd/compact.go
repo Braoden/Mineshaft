@@ -67,10 +67,10 @@ TTLs by wisp type:
   default (untyped):            24h
 
 Examples:
-  gt compact              # Run compaction
-  gt compact --dry-run    # Preview what would happen
-  gt compact --verbose    # Show each wisp decision
-  gt compact --json       # Machine-readable output`,
+  ms compact              # Run compaction
+  ms compact --dry-run    # Preview what would happen
+  ms compact --verbose    # Show each wisp decision
+  ms compact --json       # Machine-readable output`,
 	RunE: runCompact,
 }
 
@@ -132,7 +132,7 @@ func applyRigBeadTTLOverrides(ttls map[string]time.Duration, townRoot, rigName s
 	beadsDir := beads.ResolveBeadsDir(townRoot)
 	bd := beads.NewWithBeadsDir(townRoot, beadsDir)
 
-	rigBeadID := beads.RigBeadIDWithPrefix("gt", rigName)
+	rigBeadID := beads.RigBeadIDWithPrefix("ms", rigName)
 	issue, err := bd.Show(rigBeadID)
 	if err != nil {
 		return
@@ -185,7 +185,7 @@ func runCompact(cmd *cobra.Command, args []string) error {
 	townRoot := beads.FindTownRoot(workDir)
 	rigName := compactRig
 	if rigName == "" {
-		rigName = os.Getenv("GT_RIG")
+		rigName = os.Getenv("MS_RIG")
 	}
 
 	// Load TTL config
@@ -465,7 +465,7 @@ func isReferenced(w *compactIssue) bool {
 // hasKeepLabel checks for keep labels.
 func hasKeepLabel(w *compactIssue) bool {
 	for _, label := range w.Labels {
-		if label == "keep" || label == "gt:keep" {
+		if label == "keep" || label == "ms:keep" {
 			return true
 		}
 	}

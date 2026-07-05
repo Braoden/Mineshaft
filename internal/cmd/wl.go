@@ -31,7 +31,7 @@ sovereign fork of a shared commons database containing the wanted board
 (open work), rig registry, and validated completions.
 
 Getting started:
-  gt wl join steveyegge/wl-commons   # Join the default wasteland
+  ms wl join steveyegge/wl-commons   # Join the default wasteland
 
 See https://github.com/steveyegge/mineshaft for more information.`,
 }
@@ -55,9 +55,9 @@ Required environment variables:
   DOLTHUB_ORG    - Your DoltHub organization name
 
 Examples:
-  gt wl join steveyegge/wl-commons
-  gt wl join steveyegge/wl-commons --handle my-rig
-  gt wl join steveyegge/wl-commons --display-name "Alice's Workshop"`,
+  ms wl join steveyegge/wl-commons
+  ms wl join steveyegge/wl-commons --handle my-rig
+  ms wl join steveyegge/wl-commons --display-name "Alice's Workshop"`,
 	Args: cobra.ExactArgs(1),
 	RunE: runWlJoin,
 }
@@ -106,7 +106,7 @@ func runWlJoin(cmd *cobra.Command, args []string) error {
 			fmt.Printf("  Local: %s\n", existing.LocalDir)
 			return nil
 		}
-		return fmt.Errorf("already joined to %s; run gt wl leave first", existing.Upstream)
+		return fmt.Errorf("already joined to %s; run ms wl leave first", existing.Upstream)
 	}
 
 	// Load town config for identity (only needed for fresh join)
@@ -149,6 +149,6 @@ func runWlJoin(cmd *cobra.Command, args []string) error {
 	fmt.Printf("  Handle: %s\n", cfg.RigHandle)
 	fmt.Printf("  Fork: %s/%s\n", cfg.ForkOrg, cfg.ForkDB)
 	fmt.Printf("  Local: %s\n", cfg.LocalDir)
-	fmt.Printf("\n  %s\n", style.Dim.Render("Next: gt wl browse  — browse the wanted board"))
+	fmt.Printf("\n  %s\n", style.Dim.Render("Next: ms wl browse  — browse the wanted board"))
 	return nil
 }

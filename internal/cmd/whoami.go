@@ -17,15 +17,15 @@ var whoamiCmd = &cobra.Command{
 	Long: `Show the identity that will be used for mail commands.
 
 Identity is determined by:
-1. GT_ROLE env var (if set) - indicates an agent session
-2. No GT_ROLE - you are the boss (human)
+1. MS_ROLE env var (if set) - indicates an agent session
+2. No MS_ROLE - you are the boss (human)
 
 Use --identity flag with mail commands to override.
 
 Examples:
-  gt whoami                      # Show current identity
-  gt mail inbox                  # Check inbox for current identity
-  gt mail inbox --identity overseer/  # Check Overseer's inbox instead`,
+  ms whoami                      # Show current identity
+  ms mail inbox                  # Check inbox for current identity
+  ms mail inbox --identity overseer/  # Check Overseer's inbox instead`,
 	RunE: runWhoami,
 }
 
@@ -40,22 +40,22 @@ func runWhoami(cmd *cobra.Command, args []string) error {
 	fmt.Printf("%s %s\n", style.Bold.Render("Identity:"), identity)
 
 	// Show how it was determined
-	gtRole := os.Getenv("GT_ROLE")
+	gtRole := os.Getenv("MS_ROLE")
 	if gtRole != "" {
-		fmt.Printf("%s GT_ROLE=%s\n", style.Dim.Render("Source:"), gtRole)
+		fmt.Printf("%s MS_ROLE=%s\n", style.Dim.Render("Source:"), gtRole)
 
 		// Show additional env vars if present
-		if rig := os.Getenv("GT_RIG"); rig != "" {
-			fmt.Printf("%s GT_RIG=%s\n", style.Dim.Render("       "), rig)
+		if rig := os.Getenv("MS_RIG"); rig != "" {
+			fmt.Printf("%s MS_RIG=%s\n", style.Dim.Render("       "), rig)
 		}
-		if miner := os.Getenv("GT_MINER"); miner != "" {
-			fmt.Printf("%s GT_MINER=%s\n", style.Dim.Render("       "), miner)
+		if miner := os.Getenv("MS_MINER"); miner != "" {
+			fmt.Printf("%s MS_MINER=%s\n", style.Dim.Render("       "), miner)
 		}
-		if crew := os.Getenv("GT_CREW"); crew != "" {
-			fmt.Printf("%s GT_CREW=%s\n", style.Dim.Render("       "), crew)
+		if crew := os.Getenv("MS_CREW"); crew != "" {
+			fmt.Printf("%s MS_CREW=%s\n", style.Dim.Render("       "), crew)
 		}
 	} else {
-		fmt.Printf("%s no GT_ROLE set (human at terminal)\n", style.Dim.Render("Source:"))
+		fmt.Printf("%s no MS_ROLE set (human at terminal)\n", style.Dim.Render("Source:"))
 
 		// If boss, show their configured identity
 		if identity == "boss" {

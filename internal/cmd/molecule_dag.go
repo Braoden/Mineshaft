@@ -47,10 +47,10 @@ Shows the dependency structure with execution tiers and status:
   ◌ blocked     - Step waiting on dependencies
 
 Examples:
-  gt mol dag gs-wisp-abc     # Show DAG for molecule
-  gt mol dag gs-wisp-abc --json  # JSON output
-  gt mol dag gs-wisp-abc --tree  # Tree view (default)
-  gt mol dag gs-wisp-abc --tiers # Group by execution tier`,
+  ms mol dag gs-wisp-abc     # Show DAG for molecule
+  ms mol dag gs-wisp-abc --json  # JSON output
+  ms mol dag gs-wisp-abc --tree  # Tree view (default)
+  ms mol dag gs-wisp-abc --tiers # Group by execution tier`,
 	Args: cobra.ExactArgs(1),
 	RunE: runMoleculeDag,
 }

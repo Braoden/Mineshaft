@@ -79,7 +79,7 @@ func (b *Beads) GetOrCreateHandoffBead(role string) (*Issue, error) {
 
 	issue, err := b.Create(CreateOptions{
 		Title:       HandoffBeadTitle(role),
-		Labels:      []string{"gt:task"},
+		Labels:      []string{"ms:task"},
 		Priority:    2,
 		Description: "", // Empty until first handoff
 		Actor:       role,
@@ -139,7 +139,7 @@ func (b *Beads) ClearMail(reason string) (*ClearMailResult, error) {
 	// List all open messages
 	issues, err := b.List(ListOptions{
 		Status:   "open",
-		Label:    "gt:message",
+		Label:    "ms:message",
 		Priority: -1,
 	})
 	if err != nil {
@@ -187,13 +187,13 @@ func (b *Beads) ClearMail(reason string) (*ClearMailResult, error) {
 	return result, nil
 }
 
-// CloseStaleHookedMailBeads closes any gt:message beads in status=hooked assigned
+// CloseStaleHookedMailBeads closes any ms:message beads in status=hooked assigned
 // to agentID. Called before creating a new handoff mail to prevent accumulation of
 // stale beads across sessions. Returns the number of beads closed. (GH#3859)
 func (b *Beads) CloseStaleHookedMailBeads(agentID string) (int, error) {
 	hooked, err := b.List(ListOptions{
 		Status:   StatusHooked,
-		Label:    "gt:message",
+		Label:    "ms:message",
 		Assignee: agentID,
 		Priority: -1,
 	})

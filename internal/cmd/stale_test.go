@@ -7,7 +7,7 @@ import (
 	"github.com/steveyegge/mineshaft/internal/version"
 )
 
-// TestOutputStaleText exercises the pure text renderer for `gt stale`,
+// TestOutputStaleText exercises the pure text renderer for `ms stale`,
 // covering the Skipped / Stale / Fresh branches added for GH#4034.
 // It asserts on the unstyled literal substrings (style.Render only wraps
 // the leading glyph, not the message text) so it is colour-agnostic.

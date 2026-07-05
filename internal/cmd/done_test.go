@@ -91,7 +91,7 @@ func TestForceCloseIssueWithRetryClosesNoMergeIssue(t *testing.T) {
 		gotReason = reason
 		gotIDs = append([]string(nil), ids...)
 		return nil
-	}, "gt-abc", "No-merge work completed; merge queue skipped", "Issue %s closed (no-merge)")
+	}, "ms-abc", "No-merge work completed; merge queue skipped", "Issue %s closed (no-merge)")
 	if err != nil {
 		t.Fatalf("forceCloseIssueWithRetry returned error: %v", err)
 	}
@@ -101,8 +101,8 @@ func TestForceCloseIssueWithRetryClosesNoMergeIssue(t *testing.T) {
 	if gotReason != "No-merge work completed; merge queue skipped" {
 		t.Errorf("reason = %q", gotReason)
 	}
-	if len(gotIDs) != 1 || gotIDs[0] != "gt-abc" {
-		t.Errorf("ids = %v, want [gt-abc]", gotIDs)
+	if len(gotIDs) != 1 || gotIDs[0] != "ms-abc" {
+		t.Errorf("ids = %v, want [ms-abc]", gotIDs)
 	}
 }
 
@@ -113,7 +113,7 @@ func TestForceCloseIssueWithRetryReturnsFinalError(t *testing.T) {
 	err := forceCloseIssueWithRetrySleep(func(string, ...string) error {
 		calls++
 		return wantErr
-	}, "gt-abc", "No-merge work completed; merge queue skipped", "Issue %s closed (no-merge)", func(time.Duration) {})
+	}, "ms-abc", "No-merge work completed; merge queue skipped", "Issue %s closed (no-merge)", func(time.Duration) {})
 	if !errors.Is(err, wantErr) {
 		t.Fatalf("err = %v, want %v", err, wantErr)
 	}
@@ -124,7 +124,7 @@ func TestForceCloseIssueWithRetryReturnsFinalError(t *testing.T) {
 
 func TestReviewOnlyCloseRequiresEvidence(t *testing.T) {
 	issue := &beads.Issue{
-		ID:          "gt-review",
+		ID:          "ms-review",
 		Description: "review_only: true\n",
 	}
 
@@ -142,7 +142,7 @@ func TestReviewOnlyCloseRequiresEvidence(t *testing.T) {
 
 func TestReviewOnlyCloseRejectsNotesAndDesignEvidence(t *testing.T) {
 	issue := &beads.Issue{
-		ID:          "gt-review",
+		ID:          "ms-review",
 		Description: "review_only: true\nattached_at: 2026-07-01T12:00:00Z\n",
 		Assignee:    "mineshaft/miners/toast",
 		Notes:       "FINDINGS: reviewed and no code changes needed",
@@ -157,7 +157,7 @@ func TestReviewOnlyCloseRejectsNotesAndDesignEvidence(t *testing.T) {
 
 func TestReviewOnlyCloseAllowsFreshEvidenceComment(t *testing.T) {
 	issue := &beads.Issue{
-		ID:          "gt-review",
+		ID:          "ms-review",
 		Description: "review_only: true\nattached_at: 2026-07-01T12:00:00Z\n",
 		Assignee:    "mineshaft/miners/toast",
 		Comments: []beads.Comment{
@@ -177,12 +177,12 @@ func TestReviewOnlyCloseAllowsFreshEvidenceComment(t *testing.T) {
 
 func TestReviewOnlyGeneratedCommentsDoNotCountAsEvidence(t *testing.T) {
 	issue := &beads.Issue{
-		ID:          "gt-review",
+		ID:          "ms-review",
 		Description: "review_only: true\nattached_at: 2026-07-01T12:00:00Z\n",
 		Assignee:    "mineshaft/miners/toast",
 		Comments: []beads.Comment{
 			{Author: "mineshaft/miners/toast", CreatedAt: "2026-07-01T12:05:00Z", Text: "verified_push_skipped: --skip-verify on no-MR close\nPR-SHERIFF-EVIDENCE: pass\nhead_sha: abc123"},
-			{Author: "mineshaft/miners/toast", CreatedAt: "2026-07-01T12:06:00Z", Text: "MR created: gt-wisp-abc\nPR-SHERIFF-EVIDENCE: pass\nhead_sha: abc123"},
+			{Author: "mineshaft/miners/toast", CreatedAt: "2026-07-01T12:06:00Z", Text: "MR created: ms-wisp-abc\nPR-SHERIFF-EVIDENCE: pass\nhead_sha: abc123"},
 		},
 	}
 
@@ -203,7 +203,7 @@ func TestReviewOnlyCloseRejectsStaleComment(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			issue := &beads.Issue{
-				ID:          "gt-review",
+				ID:          "ms-review",
 				Description: "review_only: true\nattached_at: 2026-07-01T12:00:00Z\n",
 				Assignee:    "mineshaft/miners/toast",
 				Comments: []beads.Comment{{
@@ -239,7 +239,7 @@ func TestReviewOnlyCloseRejectsWrongAuthorOrHead(t *testing.T) {
 				text += "\nhead_sha: " + tt.head
 			}
 			issue := &beads.Issue{
-				ID:          "gt-review",
+				ID:          "ms-review",
 				Description: "review_only: true\nattached_at: 2026-07-01T12:00:00Z\n",
 				Assignee:    "mineshaft/miners/toast",
 				Comments: []beads.Comment{{
@@ -268,7 +268,7 @@ func TestReviewOnlyCloseRejectsMissingAssigneeOrInvalidCommentTime(t *testing.T)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			issue := &beads.Issue{
-				ID:          "gt-review",
+				ID:          "ms-review",
 				Description: "review_only: true\nattached_at: 2026-07-01T12:00:00Z\n",
 				Assignee:    tt.assignee,
 				Comments: []beads.Comment{{
@@ -287,7 +287,7 @@ func TestReviewOnlyCloseRejectsMissingAssigneeOrInvalidCommentTime(t *testing.T)
 
 func TestNonReviewOnlyCloseDoesNotRequireEvidence(t *testing.T) {
 	issue := &beads.Issue{
-		ID:          "gt-review",
+		ID:          "ms-review",
 		Description: "no_merge: true\n",
 	}
 
@@ -299,7 +299,7 @@ func TestNonReviewOnlyCloseDoesNotRequireEvidence(t *testing.T) {
 
 func TestNonReviewOnlyReviewGateDoesNotChangeCriteriaHandling(t *testing.T) {
 	issue := &beads.Issue{
-		ID:                 "gt-review",
+		ID:                 "ms-review",
 		Description:        "no_merge: true\n",
 		AcceptanceCriteria: "- [ ] still open\n",
 	}
@@ -508,7 +508,7 @@ func TestFindHookedBeadForAgent(t *testing.T) {
 				// Create a task and set it to hooked with assignee
 				_, err := bd.CreateWithID("test-456", beads.CreateOptions{
 					Title:  "Task to be hooked",
-					Labels: []string{"gt:task"},
+					Labels: []string{"ms:task"},
 				})
 				if err != nil {
 					t.Fatalf("create task bead: %v", err)
@@ -535,7 +535,7 @@ func TestFindHookedBeadForAgent(t *testing.T) {
 			setupBeads: func(t *testing.T, bd *beads.Beads) {
 				_, err := bd.CreateWithID("test-789", beads.CreateOptions{
 					Title:  "Claimed task",
-					Labels: []string{"gt:task"},
+					Labels: []string{"ms:task"},
 				})
 				if err != nil {
 					t.Fatalf("create task bead: %v", err)
@@ -600,38 +600,38 @@ func TestSelectAssignedIssue(t *testing.T) {
 	}{
 		{
 			name:      "single assignment selected",
-			assigned:  []string{"gt-real"},
-			wantIssue: "gt-real",
+			assigned:  []string{"ms-real"},
+			wantIssue: "ms-real",
 		},
 		{
 			name:        "stale branch overridden by single assignment",
-			branchIssue: "gt-old",
-			assigned:    []string{"gt-real"},
-			wantIssue:   "gt-real",
+			branchIssue: "ms-old",
+			assigned:    []string{"ms-real"},
+			wantIssue:   "ms-real",
 		},
 		{
 			name:        "branch matching assignment needs no override",
-			branchIssue: "gt-real",
-			assigned:    []string{"gt-real"},
+			branchIssue: "ms-real",
+			assigned:    []string{"ms-real"},
 		},
 		{
 			name:        "subtask branch matching assignment needs no override",
-			branchIssue: "gt-real.1",
-			assigned:    []string{"gt-real"},
+			branchIssue: "ms-real.1",
+			assigned:    []string{"ms-real"},
 		},
 		{
 			name:        "branch matching one of multiple assignments needs no override",
-			branchIssue: "gt-real",
-			assigned:    []string{"gt-real", "gt-other"},
+			branchIssue: "ms-real",
+			assigned:    []string{"ms-real", "ms-other"},
 		},
 		{
 			name:      "duplicate assignment ids collapse",
-			assigned:  []string{"gt-real", "gt-real"},
-			wantIssue: "gt-real",
+			assigned:  []string{"ms-real", "ms-real"},
+			wantIssue: "ms-real",
 		},
 		{
 			name:      "multiple assignments are ambiguous",
-			assigned:  []string{"gt-b", "gt-a"},
+			assigned:  []string{"ms-b", "ms-a"},
 			wantAmbig: true,
 		},
 	}
@@ -659,8 +659,8 @@ func TestIsStaleBranchIssue(t *testing.T) {
 	}{
 		{"matching ids are not stale", "hq-oibv", "hq-oibv", false},
 		{"reused branch from closed bead is stale", "re-ofo", "hq-oibv", true},
-		{"subtask of hooked bead is not stale", "gt-abc.1", "gt-abc", false},
-		{"different bead with shared prefix is stale", "gt-abc1", "gt-abc", true},
+		{"subtask of hooked bead is not stale", "ms-abc.1", "ms-abc", false},
+		{"different bead with shared prefix is stale", "ms-abc1", "ms-abc", true},
 		{"no branch issue is not stale", "", "hq-oibv", false},
 		{"no hooked bead is not stale", "re-ofo", "", false},
 		{"both empty is not stale", "", "", false},
@@ -758,12 +758,12 @@ func TestShouldNudgeRefinery(t *testing.T) {
 		mrID     string
 		want     bool
 	}{
-		{"completed with MR nudges", ExitCompleted, "gt-abc123", true},
+		{"completed with MR nudges", ExitCompleted, "ms-abc123", true},
 		{"completed without MR does not nudge", ExitCompleted, "", false},
 		{"deferred without MR does not nudge", ExitDeferred, "", false},
-		{"deferred with stray MR does not nudge", ExitDeferred, "gt-abc123", false},
+		{"deferred with stray MR does not nudge", ExitDeferred, "ms-abc123", false},
 		{"escalated without MR does not nudge", ExitEscalated, "", false},
-		{"escalated with stray MR does not nudge", ExitEscalated, "gt-abc123", false},
+		{"escalated with stray MR does not nudge", ExitEscalated, "ms-abc123", false},
 	}
 
 	for _, tt := range tests {
@@ -837,7 +837,7 @@ func TestClearDoneIntentLabel(t *testing.T) {
 	// a running bd instance, but we can verify the filtering logic.
 	// The function reads labels, filters out done-intent:*, and writes back.
 	allLabels := []string{
-		"gt:agent",
+		"ms:agent",
 		"idle:3",
 		"done-intent:COMPLETED:1738972800",
 		"backoff-until:1738972900",
@@ -863,7 +863,7 @@ func TestClearDoneIntentLabel(t *testing.T) {
 
 	// Verify other labels were preserved
 	wantKept := map[string]bool{
-		"gt:agent":                 true,
+		"ms:agent":                 true,
 		"idle:3":                   true,
 		"backoff-until:1738972900": true,
 	}
@@ -945,7 +945,7 @@ func TestMRVerificationSetsMRFailed(t *testing.T) {
 	}
 }
 
-// TestMRBeadCreationUsesRig verifies that MR bead creation specifies the rig (gt-7y7).
+// TestMRBeadCreationUsesRig verifies that MR bead creation specifies the rig (ms-7y7).
 // When a miner works on a cross-rig bead (e.g., hq-xxx on rig "mineshaft"), the
 // MR bead must be created with Rig set to the miner's rig so it lands in the
 // rig's database — not the town-level database where the source bead lives.
@@ -959,7 +959,7 @@ func TestMRBeadCreationUsesRig(t *testing.T) {
 	}{
 		{
 			name:    "same-rig bead: rig is still set",
-			issueID: "gt-abc",
+			issueID: "ms-abc",
 			rigName: "mineshaft",
 			wantRig: "mineshaft",
 		},
@@ -982,7 +982,7 @@ func TestMRBeadCreationUsesRig(t *testing.T) {
 			// Simulate the CreateOptions construction in done.go.
 			opts := beads.CreateOptions{
 				Title:     "Merge: " + tt.issueID,
-				Labels:    []string{"gt:merge-request"},
+				Labels:    []string{"ms:merge-request"},
 				Ephemeral: true,
 				Rig:       tt.rigName,
 			}
@@ -1029,15 +1029,15 @@ func TestDeferredKillNotOnValidationError(t *testing.T) {
 }
 
 // TestBranchDetectionGuard verifies that the branch detection logic in runDone
-// correctly handles the three states: cwd available, cwd unavailable with GT_BRANCH,
-// and cwd unavailable without GT_BRANCH.
+// correctly handles the three states: cwd available, cwd unavailable with MS_BRANCH,
+// and cwd unavailable without MS_BRANCH.
 // This is a regression test for PR #1402 — prevents incorrect main/master detection
 // when the miner's working directory is deleted.
 func TestBranchDetectionGuard(t *testing.T) {
 	tests := []struct {
 		name         string
 		cwdAvailable bool
-		gtBranch     string // GT_BRANCH env var value
+		gtBranch     string // MS_BRANCH env var value
 		wantError    bool
 		wantBranch   string
 	}{
@@ -1049,14 +1049,14 @@ func TestBranchDetectionGuard(t *testing.T) {
 			wantBranch:   "current-branch", // simulated
 		},
 		{
-			name:         "cwd unavailable + GT_BRANCH set - uses env var",
+			name:         "cwd unavailable + MS_BRANCH set - uses env var",
 			cwdAvailable: false,
 			gtBranch:     "miner/test-worker",
 			wantError:    false,
 			wantBranch:   "miner/test-worker",
 		},
 		{
-			name:         "cwd unavailable + GT_BRANCH empty - returns error",
+			name:         "cwd unavailable + MS_BRANCH empty - returns error",
 			cwdAvailable: false,
 			gtBranch:     "",
 			wantError:    true,
@@ -1093,7 +1093,7 @@ func TestBranchDetectionGuard(t *testing.T) {
 }
 
 // TestBranchDetectionCleanupOnError verifies that when branch detection fails
-// (cwdAvailable=false + no GT_BRANCH), the session cleanup backstop is armed
+// (cwdAvailable=false + no MS_BRANCH), the session cleanup backstop is armed
 // so the miner doesn't get stranded.
 func TestBranchDetectionCleanupOnError(t *testing.T) {
 	// Simulate the cleanup arming logic from runDone's branch detection error path
@@ -1116,7 +1116,7 @@ func TestBranchDetectionCleanupOnError(t *testing.T) {
 	}
 
 	if !sessionCleanupNeeded {
-		t.Error("sessionCleanupNeeded should be true when branch detection fails with GT_MINER set")
+		t.Error("sessionCleanupNeeded should be true when branch detection fails with MS_MINER set")
 	}
 
 	// Verify the RoleInfo would be constructible from env vars
@@ -1245,7 +1245,7 @@ func TestMinecartMergeFromFields(t *testing.T) {
 	}{
 		{
 			name:        "direct strategy",
-			description: "Auto-created minecart tracking gt-abc\nMerge: direct",
+			description: "Auto-created minecart tracking ms-abc\nMerge: direct",
 			want:        "direct",
 		},
 		{
@@ -1260,7 +1260,7 @@ func TestMinecartMergeFromFields(t *testing.T) {
 		},
 		{
 			name:        "no merge field",
-			description: "Auto-created minecart tracking gt-abc",
+			description: "Auto-created minecart tracking ms-abc",
 			want:        "",
 		},
 		{
@@ -1295,7 +1295,7 @@ func TestDoneCheckpointLabelFormat(t *testing.T) {
 		wantPrefix string
 	}{
 		{CheckpointPushed, "miner/furiosa-abc", "done-cp:pushed:miner/furiosa-abc:"},
-		{CheckpointMRCreated, "gt-xyz123", "done-cp:mr-created:gt-xyz123:"},
+		{CheckpointMRCreated, "ms-xyz123", "done-cp:mr-created:ms-xyz123:"},
 		{CheckpointWitnessNotified, "ok", "done-cp:witness-notified:ok:"},
 	}
 
@@ -1335,43 +1335,43 @@ func TestReadDoneCheckpoints(t *testing.T) {
 	}{
 		{
 			name:   "no checkpoints",
-			labels: []string{"gt:agent", "idle:3"},
+			labels: []string{"ms:agent", "idle:3"},
 			want:   map[DoneCheckpoint]string{},
 		},
 		{
 			name:   "push checkpoint only",
-			labels: []string{"gt:agent", "done-cp:pushed:miner/furiosa-abc:1738972800"},
+			labels: []string{"ms:agent", "done-cp:pushed:miner/furiosa-abc:1738972800"},
 			want:   map[DoneCheckpoint]string{CheckpointPushed: "miner/furiosa-abc"},
 		},
 		{
 			name: "multiple checkpoints",
 			labels: []string{
-				"gt:agent",
+				"ms:agent",
 				"done-cp:pushed:miner/furiosa-abc:1738972800",
-				"done-cp:mr-created:gt-xyz123:1738972801",
+				"done-cp:mr-created:ms-xyz123:1738972801",
 			},
 			want: map[DoneCheckpoint]string{
 				CheckpointPushed:    "miner/furiosa-abc",
-				CheckpointMRCreated: "gt-xyz123",
+				CheckpointMRCreated: "ms-xyz123",
 			},
 		},
 		{
 			name: "all checkpoints",
 			labels: []string{
 				"done-cp:pushed:branch-name:1738972800",
-				"done-cp:mr-created:gt-mr1:1738972801",
+				"done-cp:mr-created:ms-mr1:1738972801",
 				"done-cp:witness-notified:ok:1738972803",
 			},
 			want: map[DoneCheckpoint]string{
 				CheckpointPushed:          "branch-name",
-				CheckpointMRCreated:       "gt-mr1",
+				CheckpointMRCreated:       "ms-mr1",
 				CheckpointWitnessNotified: "ok",
 			},
 		},
 		{
 			name: "mixed with done-intent and other labels",
 			labels: []string{
-				"gt:agent",
+				"ms:agent",
 				"done-intent:COMPLETED:1738972800",
 				"done-cp:pushed:mybranch:1738972801",
 				"idle:2",
@@ -1411,11 +1411,11 @@ func TestReadDoneCheckpoints(t *testing.T) {
 // only done-cp labels while preserving other labels.
 func TestClearDoneCheckpoints(t *testing.T) {
 	allLabels := []string{
-		"gt:agent",
+		"ms:agent",
 		"idle:3",
 		"done-intent:COMPLETED:1738972800",
 		"done-cp:pushed:mybranch:1738972801",
-		"done-cp:mr-created:gt-xyz:1738972802",
+		"done-cp:mr-created:ms-xyz:1738972802",
 		"backoff-until:1738972900",
 	}
 
@@ -1477,7 +1477,7 @@ func TestCheckpointResumeSkipsPush(t *testing.T) {
 			name: "push and MR checkpoints - skip push",
 			checkpoints: map[DoneCheckpoint]string{
 				CheckpointPushed:    "mybranch",
-				CheckpointMRCreated: "gt-xyz",
+				CheckpointMRCreated: "ms-xyz",
 			},
 			wantSkip: true,
 		},
@@ -1511,7 +1511,7 @@ func TestCheckpointNilMapSafe(t *testing.T) {
 }
 
 // TestMinecartInfoFallbackChain verifies that done.go checks attachment fields
-// first, then falls back to dep-based minecart lookup. This is the fix for gt-7b6wf:
+// first, then falls back to dep-based minecart lookup. This is the fix for ms-7b6wf:
 // minecart merge=direct was not propagated because cross-rig dep resolution failed.
 func TestMinecartInfoFallbackChain(t *testing.T) {
 	tests := []struct {
@@ -1579,8 +1579,8 @@ func TestMinecartInfoFallbackChain(t *testing.T) {
 	}
 }
 
-// TestHookedBeadCloseNotRestrictedToHookedStatus verifies the gt-pftz fix:
-// gt done must close the hooked bead regardless of its current status (hooked,
+// TestHookedBeadCloseNotRestrictedToHookedStatus verifies the ms-pftz fix:
+// ms done must close the hooked bead regardless of its current status (hooked,
 // in_progress, open), not only when status == "hooked". Miners update their
 // work bead to in_progress during work, so the old exact-match check skipped
 // closing and caused infinite dispatch loops.
@@ -1600,7 +1600,7 @@ func TestHookedBeadCloseNotRestrictedToHookedStatus(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Replicate the guard condition from updateAgentStateOnDone (gt-pftz fix)
+			// Replicate the guard condition from updateAgentStateOnDone (ms-pftz fix)
 			shouldClose := !beads.IssueStatus(tt.status).IsTerminal()
 			if shouldClose != tt.wantClose {
 				t.Errorf("shouldClose for status %q = %v, want %v", tt.status, shouldClose, tt.wantClose)
@@ -1610,7 +1610,7 @@ func TestHookedBeadCloseNotRestrictedToHookedStatus(t *testing.T) {
 }
 
 // TestPushSubmoduleChanges_Integration verifies that pushSubmoduleChanges detects
-// modified submodules and pushes their commits before the parent repo push (gt-dzs).
+// modified submodules and pushes their commits before the parent repo push (ms-dzs).
 func TestPushSubmoduleChanges_Integration(t *testing.T) {
 	tmp := t.TempDir()
 
@@ -1700,7 +1700,7 @@ func TestPushSubmoduleChanges_Integration(t *testing.T) {
 }
 
 // TestPushSubmoduleChanges_NoSubmodules verifies pushSubmoduleChanges is a no-op
-// for repos without submodules (gt-dzs).
+// for repos without submodules (ms-dzs).
 func TestPushSubmoduleChanges_NoSubmodules(t *testing.T) {
 	tmp := t.TempDir()
 
@@ -1731,8 +1731,8 @@ func TestPushSubmoduleChanges_NoSubmodules(t *testing.T) {
 	pushSubmoduleChanges(g, "origin/main")
 }
 
-// TestAutoCommitSafetyNet verifies that the gt done auto-commit safety net
-// (gt-pvx) correctly detects uncommitted implementation work and auto-commits it.
+// TestAutoCommitSafetyNet verifies that the ms done auto-commit safety net
+// (ms-pvx) correctly detects uncommitted implementation work and auto-commits it.
 // This tests the git-level operations that underpin the safety net in done.go.
 func TestAutoCommitSafetyNet(t *testing.T) {
 	// Set up a git repo with uncommitted changes
@@ -1791,7 +1791,7 @@ func TestAutoCommitSafetyNet(t *testing.T) {
 		if err := g.Add("-A"); err != nil {
 			t.Fatalf("git add: %v", err)
 		}
-		if err := g.Commit("fix: auto-save uncommitted implementation work (gt-pvx safety net)"); err != nil {
+		if err := g.Commit("fix: auto-save uncommitted implementation work (ms-pvx safety net)"); err != nil {
 			t.Fatalf("git commit: %v", err)
 		}
 
@@ -1876,7 +1876,7 @@ func TestAutoCommitSafetyNet(t *testing.T) {
 				t.Fatalf("reset runtime artifacts: %v", err)
 			}
 		}
-		if err := g.Commit("fix: auto-save uncommitted implementation work (gt-pvx safety net)"); err != nil {
+		if err := g.Commit("fix: auto-save uncommitted implementation work (ms-pvx safety net)"); err != nil {
 			t.Fatalf("git commit: %v", err)
 		}
 
@@ -1899,7 +1899,7 @@ func TestAutoCommitSafetyNet(t *testing.T) {
 }
 
 // TestSyncGuardWithUncommittedChanges verifies that the worktree sync guard
-// (gt-pvx) prevents switching branches when uncommitted changes remain.
+// (ms-pvx) prevents switching branches when uncommitted changes remain.
 func TestSyncGuardWithUncommittedChanges(t *testing.T) {
 	// This tests the logic: if auto-commit fails, we should NOT sync to main
 	dir := t.TempDir()

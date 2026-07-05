@@ -32,23 +32,23 @@ func TestMinecartStageBDHelpersPinRouteMetadataUnderStaleEnv(t *testing.T) {
 	townRoot, rigDir, logPath := setupRoutedBDEnvStub(t)
 	poisonBDTargetEnv(t, townRoot)
 
-	if _, err := bdShow("gt-abc"); err != nil {
-		t.Fatalf("bdShow gt: %v", err)
+	if _, err := bdShow("ms-abc"); err != nil {
+		t.Fatalf("bdShow ms: %v", err)
 	}
-	if _, err := bdDepList("gt-abc"); err != nil {
-		t.Fatalf("bdDepList gt: %v", err)
+	if _, err := bdDepList("ms-abc"); err != nil {
+		t.Fatalf("bdDepList ms: %v", err)
 	}
-	if _, err := bdListChildren("gt-abc"); err != nil {
-		t.Fatalf("bdListChildren gt: %v", err)
+	if _, err := bdListChildren("ms-abc"); err != nil {
+		t.Fatalf("bdListChildren ms: %v", err)
 	}
 	if _, err := bdShow("hq-cv-found"); err != nil {
 		t.Fatalf("bdShow hq: %v", err)
 	}
 
 	logs := readBDEnvLog(t, logPath)
-	assertBDEnvLog(t, findBDEnvLog(t, logs, "show gt-abc"), rigDir, "mineshaft", "127.0.0.2", "4407")
-	assertBDEnvLog(t, findBDEnvLog(t, logs, "dep list gt-abc"), rigDir, "mineshaft", "127.0.0.2", "4407")
-	assertBDEnvLog(t, findBDEnvLog(t, logs, "list --parent=gt-abc"), rigDir, "mineshaft", "127.0.0.2", "4407")
+	assertBDEnvLog(t, findBDEnvLog(t, logs, "show ms-abc"), rigDir, "mineshaft", "127.0.0.2", "4407")
+	assertBDEnvLog(t, findBDEnvLog(t, logs, "dep list ms-abc"), rigDir, "mineshaft", "127.0.0.2", "4407")
+	assertBDEnvLog(t, findBDEnvLog(t, logs, "list --parent=ms-abc"), rigDir, "mineshaft", "127.0.0.2", "4407")
 	assertBDEnvLog(t, findBDEnvLog(t, logs, "show hq-cv-found"), townRoot, "hq", "127.0.0.1", "3307")
 }
 
@@ -60,7 +60,7 @@ func TestSlingAutoMinecartCheckPinsTrackerShowToHQUnderStaleEnv(t *testing.T) {
 	townRoot, _, logPath := setupRoutedBDEnvStub(t)
 	poisonBDTargetEnv(t, townRoot)
 
-	if got := isTrackedByMinecart("gt-abc"); got != "hq-cv-found" {
+	if got := isTrackedByMinecart("ms-abc"); got != "hq-cv-found" {
 		t.Fatalf("isTrackedByMinecart() = %q, want hq-cv-found", got)
 	}
 
@@ -78,22 +78,22 @@ func setupRoutedBDEnvStub(t *testing.T) (townRoot, rigDir, logPath string) {
 	logPath = filepath.Join(t.TempDir(), "bd-env.log")
 
 	script := fmt.Sprintf(`#!/bin/sh
-	printf '%%s|%%s|%%s|%%s|%%s|%%s|%%s|%%s|%%s|%%s|%%s|%%s\n' "$*" "$(pwd)" "${BEADS_DIR:-}" "${BEADS_DOLT_SERVER_DATABASE:-}" "${BEADS_DOLT_SERVER_HOST:-}" "${BEADS_DOLT_SERVER_PORT:-}" "${BEADS_DOLT_PORT:-}" "${BEADS_DOLT_DATA_DIR:-}" "${GT_DOLT_DATA:-}" "${BEADS_DB:-}" "${BD_DB:-}" "${BD_EXPORT_AUTO:-}" >> "%s"
+	printf '%%s|%%s|%%s|%%s|%%s|%%s|%%s|%%s|%%s|%%s|%%s|%%s\n' "$*" "$(pwd)" "${BEADS_DIR:-}" "${BEADS_DOLT_SERVER_DATABASE:-}" "${BEADS_DOLT_SERVER_HOST:-}" "${BEADS_DOLT_SERVER_PORT:-}" "${BEADS_DOLT_PORT:-}" "${BEADS_DOLT_DATA_DIR:-}" "${MS_DOLT_DATA:-}" "${BEADS_DB:-}" "${BD_DB:-}" "${BD_EXPORT_AUTO:-}" >> "%s"
 
 case "$1" in
   show)
     case "$2" in
-      hq-cv-*) echo '[{"id":"hq-cv-found","title":"HQ minecart","status":"open","issue_type":"minecart","labels":["gt:minecart"]}]' ;;
-      *) echo '[{"id":"gt-abc","title":"GT task","status":"open","issue_type":"task","labels":[]}]' ;;
+      hq-cv-*) echo '[{"id":"hq-cv-found","title":"HQ minecart","status":"open","issue_type":"minecart","labels":["ms:minecart"]}]' ;;
+      *) echo '[{"id":"ms-abc","title":"MS task","status":"open","issue_type":"task","labels":[]}]' ;;
     esac
     exit 0
     ;;
   dep)
-    echo '[{"id":"gt-blocker","dependency_type":"blocks"}]'
+    echo '[{"id":"ms-blocker","dependency_type":"blocks"}]'
     exit 0
     ;;
   list)
-    echo '[{"id":"gt-child","title":"Child","status":"open","issue_type":"task","labels":[]}]'
+    echo '[{"id":"ms-child","title":"Child","status":"open","issue_type":"task","labels":[]}]'
     exit 0
     ;;
   sql)
@@ -130,9 +130,9 @@ func poisonBDTargetEnv(t *testing.T, townRoot string) {
 	t.Setenv("BEADS_DOLT_SERVER_PORT", "9999")
 	t.Setenv("BEADS_DOLT_PORT", "9999")
 	t.Setenv("BEADS_DOLT_DATA_DIR", filepath.Join(townRoot, "wrong-data"))
-	t.Setenv("GT_DOLT_HOST", "")
-	t.Setenv("GT_DOLT_PORT", "")
-	t.Setenv("GT_DOLT_DATA", filepath.Join(townRoot, "wrong-gt-data"))
+	t.Setenv("MS_DOLT_HOST", "")
+	t.Setenv("MS_DOLT_PORT", "")
+	t.Setenv("MS_DOLT_DATA", filepath.Join(townRoot, "wrong-ms-data"))
 	t.Setenv("BEADS_DB", filepath.Join(townRoot, "wrong.db"))
 	t.Setenv("BD_DB", filepath.Join(townRoot, "wrong.bd"))
 	t.Setenv("BD_EXPORT_AUTO", "true")
@@ -211,7 +211,7 @@ func assertBDEnvLogWithBeadsDir(t *testing.T, entry bdEnvLogEntry, wantDir, want
 		t.Fatalf("%q BEADS_DOLT_DATA_DIR should be stripped, got %q", entry.Args, entry.DataDir)
 	}
 	if entry.GTData != "" {
-		t.Fatalf("%q GT_DOLT_DATA should be stripped, got %q", entry.Args, entry.GTData)
+		t.Fatalf("%q MS_DOLT_DATA should be stripped, got %q", entry.Args, entry.GTData)
 	}
 	if entry.BeadsDB != "" || entry.BDDB != "" {
 		t.Fatalf("%q stale DB env leaked: BEADS_DB=%q BD_DB=%q", entry.Args, entry.BeadsDB, entry.BDDB)

@@ -96,7 +96,7 @@ func TestRigsConfigRoundTrip(t *testing.T) {
 				AddedAt:   time.Now().Truncate(time.Second),
 				BeadsConfig: &BeadsConfig{
 					Repo:   "local",
-					Prefix: "gt-",
+					Prefix: "ms-",
 				},
 			},
 		},
@@ -119,8 +119,8 @@ func TestRigsConfigRoundTrip(t *testing.T) {
 	if !ok {
 		t.Fatal("missing 'mineshaft' rig")
 	}
-	if rig.BeadsConfig == nil || rig.BeadsConfig.Prefix != "gt-" {
-		t.Errorf("BeadsConfig.Prefix = %v, want 'gt-'", rig.BeadsConfig)
+	if rig.BeadsConfig == nil || rig.BeadsConfig.Prefix != "ms-" {
+		t.Errorf("BeadsConfig.Prefix = %v, want 'ms-'", rig.BeadsConfig)
 	}
 	if rig.LocalRepo != "/tmp/local-repo" {
 		t.Errorf("LocalRepo = %q, want %q", rig.LocalRepo, "/tmp/local-repo")
@@ -157,7 +157,7 @@ func TestRigConfigRoundTrip(t *testing.T) {
 
 	original := NewRigConfig("mineshaft", "git@github.com:test/mineshaft.git")
 	original.CreatedAt = time.Now().Truncate(time.Second)
-	original.Beads = &BeadsConfig{Prefix: "gt-"}
+	original.Beads = &BeadsConfig{Prefix: "ms-"}
 	original.LocalRepo = "/tmp/local-repo"
 
 	if err := SaveRigConfig(path, original); err != nil {
@@ -184,7 +184,7 @@ func TestRigConfigRoundTrip(t *testing.T) {
 	if loaded.LocalRepo != "/tmp/local-repo" {
 		t.Errorf("LocalRepo = %q, want %q", loaded.LocalRepo, "/tmp/local-repo")
 	}
-	if loaded.Beads == nil || loaded.Beads.Prefix != "gt-" {
+	if loaded.Beads == nil || loaded.Beads.Prefix != "ms-" {
 		t.Error("Beads.Prefix not preserved")
 	}
 }
@@ -980,8 +980,8 @@ func TestLoadOrCreateMessagingConfig(t *testing.T) {
 
 func TestMessagingConfigPath(t *testing.T) {
 	t.Parallel()
-	path := MessagingConfigPath("/home/user/gt")
-	expected := "/home/user/gt/config/messaging.json"
+	path := MessagingConfigPath("/home/user/ms")
+	expected := "/home/user/ms/config/messaging.json"
 	if filepath.ToSlash(path) != expected {
 		t.Errorf("MessagingConfigPath = %q, want %q", path, expected)
 	}
@@ -1083,8 +1083,8 @@ func TestRuntimeConfigBuildCommandWithPrompt(t *testing.T) {
 		{
 			name:         "with prompt",
 			rc:           DefaultRuntimeConfig(),
-			prompt:       "gt prime",
-			wantContains: []string{"--dangerously-skip-permissions", `"gt prime"`},
+			prompt:       "ms prime",
+			wantContains: []string{"--dangerously-skip-permissions", `"ms prime"`},
 			isClaudeCmd:  true,
 		},
 		{
@@ -1158,8 +1158,8 @@ func TestBuildAgentStartupCommand(t *testing.T) {
 	if !strings.Contains(cmd, "exec env") {
 		t.Error("expected 'exec env' in command")
 	}
-	if !strings.Contains(cmd, "GT_ROLE=mineshaft/witness") {
-		t.Error("expected GT_ROLE=mineshaft/witness in command")
+	if !strings.Contains(cmd, "MS_ROLE=mineshaft/witness") {
+		t.Error("expected MS_ROLE=mineshaft/witness in command")
 	}
 	if !strings.Contains(cmd, "BD_ACTOR=mineshaft/witness") {
 		t.Error("expected BD_ACTOR in command")
@@ -1174,14 +1174,14 @@ func TestBuildMinerStartupCommand(t *testing.T) {
 	t.Parallel()
 	cmd := BuildMinerStartupCommand("mineshaft", "toast", "", "")
 
-	if !strings.Contains(cmd, "GT_ROLE=mineshaft/miners/toast") {
-		t.Error("expected GT_ROLE=mineshaft/miners/toast in command")
+	if !strings.Contains(cmd, "MS_ROLE=mineshaft/miners/toast") {
+		t.Error("expected MS_ROLE=mineshaft/miners/toast in command")
 	}
-	if !strings.Contains(cmd, "GT_RIG=mineshaft") {
-		t.Error("expected GT_RIG=mineshaft in command")
+	if !strings.Contains(cmd, "MS_RIG=mineshaft") {
+		t.Error("expected MS_RIG=mineshaft in command")
 	}
-	if !strings.Contains(cmd, "GT_MINER=toast") {
-		t.Error("expected GT_MINER=toast in command")
+	if !strings.Contains(cmd, "MS_MINER=toast") {
+		t.Error("expected MS_MINER=toast in command")
 	}
 	if !strings.Contains(cmd, "BD_ACTOR=mineshaft/miners/toast") {
 		t.Error("expected BD_ACTOR in command")
@@ -1192,14 +1192,14 @@ func TestBuildCrewStartupCommand(t *testing.T) {
 	t.Parallel()
 	cmd := BuildCrewStartupCommand("mineshaft", "max", "", "")
 
-	if !strings.Contains(cmd, "GT_ROLE=mineshaft/crew/max") {
-		t.Error("expected GT_ROLE=mineshaft/crew/max in command")
+	if !strings.Contains(cmd, "MS_ROLE=mineshaft/crew/max") {
+		t.Error("expected MS_ROLE=mineshaft/crew/max in command")
 	}
-	if !strings.Contains(cmd, "GT_RIG=mineshaft") {
-		t.Error("expected GT_RIG=mineshaft in command")
+	if !strings.Contains(cmd, "MS_RIG=mineshaft") {
+		t.Error("expected MS_RIG=mineshaft in command")
 	}
-	if !strings.Contains(cmd, "GT_CREW=max") {
-		t.Error("expected GT_CREW=max in command")
+	if !strings.Contains(cmd, "MS_CREW=max") {
+		t.Error("expected MS_CREW=max in command")
 	}
 	if !strings.Contains(cmd, "BD_ACTOR=mineshaft/crew/max") {
 		t.Error("expected BD_ACTOR in command")
@@ -1366,14 +1366,14 @@ func TestBuildMinerStartupCommandWithAgentOverride(t *testing.T) {
 	if err != nil {
 		t.Fatalf("BuildMinerStartupCommandWithAgentOverride: %v", err)
 	}
-	if !strings.Contains(cmd, "GT_ROLE=testrig/miners/toast") {
-		t.Fatalf("expected GT_ROLE export in command: %q", cmd)
+	if !strings.Contains(cmd, "MS_ROLE=testrig/miners/toast") {
+		t.Fatalf("expected MS_ROLE export in command: %q", cmd)
 	}
-	if !strings.Contains(cmd, "GT_RIG=testrig") {
-		t.Fatalf("expected GT_RIG export in command: %q", cmd)
+	if !strings.Contains(cmd, "MS_RIG=testrig") {
+		t.Fatalf("expected MS_RIG export in command: %q", cmd)
 	}
-	if !strings.Contains(cmd, "GT_MINER=toast") {
-		t.Fatalf("expected GT_MINER export in command: %q", cmd)
+	if !strings.Contains(cmd, "MS_MINER=toast") {
+		t.Fatalf("expected MS_MINER export in command: %q", cmd)
 	}
 	if !strings.Contains(cmd, "gemini --approval-mode yolo") {
 		t.Fatalf("expected gemini command in output: %q", cmd)
@@ -1408,8 +1408,8 @@ func TestBuildAgentStartupCommandWithAgentOverride(t *testing.T) {
 		if err != nil {
 			t.Fatalf("BuildAgentStartupCommandWithAgentOverride: %v", err)
 		}
-		if !strings.Contains(cmd, "GT_ROLE=overseer") {
-			t.Fatalf("expected GT_ROLE export in command: %q", cmd)
+		if !strings.Contains(cmd, "MS_ROLE=overseer") {
+			t.Fatalf("expected MS_ROLE export in command: %q", cmd)
 		}
 		if !strings.Contains(cmd, "BD_ACTOR=overseer") {
 			t.Fatalf("expected BD_ACTOR export in command: %q", cmd)
@@ -1445,18 +1445,18 @@ func TestBuildCrewStartupCommandWithAgentOverride(t *testing.T) {
 		t.Fatalf("SaveRigSettings: %v", err)
 	}
 
-	cmd, err := BuildCrewStartupCommandWithAgentOverride("testrig", "max", rigPath, "gt prime", "gemini")
+	cmd, err := BuildCrewStartupCommandWithAgentOverride("testrig", "max", rigPath, "ms prime", "gemini")
 	if err != nil {
 		t.Fatalf("BuildCrewStartupCommandWithAgentOverride: %v", err)
 	}
-	if !strings.Contains(cmd, "GT_ROLE=testrig/crew/max") {
-		t.Fatalf("expected GT_ROLE export in command: %q", cmd)
+	if !strings.Contains(cmd, "MS_ROLE=testrig/crew/max") {
+		t.Fatalf("expected MS_ROLE export in command: %q", cmd)
 	}
-	if !strings.Contains(cmd, "GT_RIG=testrig") {
-		t.Fatalf("expected GT_RIG export in command: %q", cmd)
+	if !strings.Contains(cmd, "MS_RIG=testrig") {
+		t.Fatalf("expected MS_RIG export in command: %q", cmd)
 	}
-	if !strings.Contains(cmd, "GT_CREW=max") {
-		t.Fatalf("expected GT_CREW export in command: %q", cmd)
+	if !strings.Contains(cmd, "MS_CREW=max") {
+		t.Fatalf("expected MS_CREW export in command: %q", cmd)
 	}
 	if !strings.Contains(cmd, "BD_ACTOR=testrig/crew/max") {
 		t.Fatalf("expected BD_ACTOR export in command: %q", cmd)
@@ -1483,7 +1483,7 @@ func TestBuildStartupCommand_UsesRigAgentWhenRigPathProvided(t *testing.T) {
 		t.Fatalf("SaveRigSettings: %v", err)
 	}
 
-	cmd := BuildStartupCommand(map[string]string{"GT_ROLE": "witness"}, rigPath, "")
+	cmd := BuildStartupCommand(map[string]string{"MS_ROLE": "witness"}, rigPath, "")
 	if !strings.Contains(cmd, "codex") {
 		t.Fatalf("expected rig agent (codex) in command: %q", cmd)
 	}
@@ -1530,21 +1530,21 @@ func TestBuildStartupCommand_UsesRoleAgentsFromTownSettings(t *testing.T) {
 	}
 
 	t.Run("refinery role gets gemini from role_agents", func(t *testing.T) {
-		cmd := BuildStartupCommand(map[string]string{"GT_ROLE": constants.RoleRefinery}, rigPath, "")
+		cmd := BuildStartupCommand(map[string]string{"MS_ROLE": constants.RoleRefinery}, rigPath, "")
 		if !strings.Contains(cmd, "gemini") {
 			t.Fatalf("expected gemini for refinery role, got: %q", cmd)
 		}
 	})
 
 	t.Run("witness role gets codex from role_agents", func(t *testing.T) {
-		cmd := BuildStartupCommand(map[string]string{"GT_ROLE": constants.RoleWitness}, rigPath, "")
+		cmd := BuildStartupCommand(map[string]string{"MS_ROLE": constants.RoleWitness}, rigPath, "")
 		if !strings.Contains(cmd, "codex") {
 			t.Fatalf("expected codex for witness role, got: %q", cmd)
 		}
 	})
 
 	t.Run("crew role falls back to default_agent (not in role_agents)", func(t *testing.T) {
-		cmd := BuildStartupCommand(map[string]string{"GT_ROLE": constants.RoleCrew}, rigPath, "")
+		cmd := BuildStartupCommand(map[string]string{"MS_ROLE": constants.RoleCrew}, rigPath, "")
 		if !strings.Contains(cmd, "claude") {
 			t.Fatalf("expected claude fallback for crew role, got: %q", cmd)
 		}
@@ -1583,7 +1583,7 @@ func TestBuildStartupCommand_RigRoleAgentsOverridesTownRoleAgents(t *testing.T) 
 		t.Fatalf("SaveRigSettings: %v", err)
 	}
 
-	cmd := BuildStartupCommand(map[string]string{"GT_ROLE": constants.RoleWitness}, rigPath, "")
+	cmd := BuildStartupCommand(map[string]string{"MS_ROLE": constants.RoleWitness}, rigPath, "")
 	if !strings.Contains(cmd, "codex") {
 		t.Fatalf("expected codex from rig role_agents override, got: %q", cmd)
 	}
@@ -1614,13 +1614,13 @@ func TestBuildAgentStartupCommand_UsesRoleAgents(t *testing.T) {
 		t.Fatalf("SaveRigSettings: %v", err)
 	}
 
-	// BuildAgentStartupCommand passes role via GT_ROLE env var (compound format)
+	// BuildAgentStartupCommand passes role via MS_ROLE env var (compound format)
 	cmd := BuildAgentStartupCommand(constants.RoleRefinery, "testrig", townRoot, rigPath, "")
 	if !strings.Contains(cmd, "codex") {
 		t.Fatalf("expected codex for refinery role, got: %q", cmd)
 	}
-	if !strings.Contains(cmd, "GT_ROLE=testrig/refinery") {
-		t.Fatalf("expected GT_ROLE=testrig/refinery in command: %q", cmd)
+	if !strings.Contains(cmd, "MS_ROLE=testrig/refinery") {
+		t.Fatalf("expected MS_ROLE=testrig/refinery in command: %q", cmd)
 	}
 }
 
@@ -1648,8 +1648,8 @@ func TestBuildAgentStartupCommand_DogUsesRoleAgents(t *testing.T) {
 	}
 
 	cmd := BuildAgentStartupCommand("dog", "", townRoot, "", "")
-	if !strings.Contains(cmd, "GT_ROLE=dog") {
-		t.Fatalf("expected GT_ROLE=dog in command, got: %q", cmd)
+	if !strings.Contains(cmd, "MS_ROLE=dog") {
+		t.Fatalf("expected MS_ROLE=dog in command, got: %q", cmd)
 	}
 	if !strings.Contains(cmd, "--model haiku") {
 		t.Fatalf("expected --model haiku from role_agents[dog], got: %q", cmd)
@@ -1891,8 +1891,8 @@ func TestBuildStartupCommand_WorkerAgentsViaCrew(t *testing.T) {
 
 	t.Run("crew worker with worker_agents entry uses codex", func(t *testing.T) {
 		envVars := map[string]string{
-			"GT_ROLE": constants.RoleCrew,
-			"GT_CREW": "denali",
+			"MS_ROLE": constants.RoleCrew,
+			"MS_CREW": "denali",
 		}
 		cmd := BuildStartupCommand(envVars, rigPath, "")
 		if !strings.Contains(cmd, "codex") {
@@ -1902,8 +1902,8 @@ func TestBuildStartupCommand_WorkerAgentsViaCrew(t *testing.T) {
 
 	t.Run("crew worker without worker_agents entry falls back to default", func(t *testing.T) {
 		envVars := map[string]string{
-			"GT_ROLE": constants.RoleCrew,
-			"GT_CREW": "glacier",
+			"MS_ROLE": constants.RoleCrew,
+			"MS_CREW": "glacier",
 		}
 		cmd := BuildStartupCommand(envVars, rigPath, "")
 		if strings.Contains(cmd, "codex") {
@@ -1911,13 +1911,13 @@ func TestBuildStartupCommand_WorkerAgentsViaCrew(t *testing.T) {
 		}
 	})
 
-	t.Run("crew role without GT_CREW falls back to role resolution", func(t *testing.T) {
+	t.Run("crew role without MS_CREW falls back to role resolution", func(t *testing.T) {
 		envVars := map[string]string{
-			"GT_ROLE": constants.RoleCrew,
+			"MS_ROLE": constants.RoleCrew,
 		}
 		cmd := BuildStartupCommand(envVars, rigPath, "")
 		if strings.Contains(cmd, "codex") {
-			t.Errorf("expected non-codex when GT_CREW not set, got: %q", cmd)
+			t.Errorf("expected non-codex when MS_CREW not set, got: %q", cmd)
 		}
 	})
 }
@@ -2189,10 +2189,10 @@ func TestDaemonPatrolConfigPath(t *testing.T) {
 		townRoot string
 		expected string
 	}{
-		{"/home/user/gt", "/home/user/gt/overseer/daemon.json"},
+		{"/home/user/ms", "/home/user/ms/overseer/daemon.json"},
 		{"/var/lib/mineshaft", "/var/lib/mineshaft/overseer/daemon.json"},
 		{"/tmp/test-workspace", "/tmp/test-workspace/overseer/daemon.json"},
-		{"~/gt", "~/gt/overseer/daemon.json"},
+		{"~/ms", "~/ms/overseer/daemon.json"},
 	}
 
 	for _, tt := range tests {
@@ -3249,7 +3249,7 @@ func TestFillRuntimeDefaults(t *testing.T) {
 		} else if result.Hooks.Provider != "claude" {
 			t.Errorf("Hooks.Provider = %q, want %q", result.Hooks.Provider, "claude")
 		}
-		// Session is auto-filled from preset so handoffs can propagate GT_SESSION_ID_ENV.
+		// Session is auto-filled from preset so handoffs can propagate MS_SESSION_ID_ENV.
 		if result.Session == nil {
 			t.Error("Session should be auto-filled for claude command")
 		} else if result.Session.SessionIDEnv != "CLAUDE_SESSION_ID" {
@@ -3379,7 +3379,7 @@ func TestFillRuntimeDefaults(t *testing.T) {
 
 	t.Run("custom claude agent inherits Session and Tmux from preset", func(t *testing.T) {
 		t.Parallel()
-		// Simulates: gt config agent set claude-opus 'claude --model claude-opus-4-6'
+		// Simulates: ms config agent set claude-opus 'claude --model claude-opus-4-6'
 		input := &RuntimeConfig{
 			Command: "claude",
 			Args:    []string{"--dangerously-skip-permissions", "--model", "claude-opus-4-6"},
@@ -3812,9 +3812,9 @@ func TestBuildArgsWithPromptWarnsOnDroppedPrompt(t *testing.T) {
 //
 // Manual test procedure:
 //  1. Set role_agents.overseer to each agent (claude, gemini, codex, cursor, auggie, amp, opencode)
-//  2. Run: gt start
+//  2. Run: ms start
 //  3. Verify overseer starts with correct agent config
-//  4. Run: GT_NUKE_ACKNOWLEDGED=1 gt down --nuke
+//  4. Run: MS_NUKE_ACKNOWLEDGED=1 ms down --nuke
 //  5. Repeat for all 7 built-in agents
 func TestRoleAgentConfigWithCustomAgent(t *testing.T) {
 	skipIfAgentBinaryMissing(t, "opencode", "claude")
@@ -4699,8 +4699,8 @@ func TestLoadOrCreateEscalationConfig(t *testing.T) {
 func TestEscalationConfigPath(t *testing.T) {
 	t.Parallel()
 
-	path := EscalationConfigPath("/home/user/gt")
-	expected := "/home/user/gt/settings/escalation.json"
+	path := EscalationConfigPath("/home/user/ms")
+	expected := "/home/user/ms/settings/escalation.json"
 	if filepath.ToSlash(path) != expected {
 		t.Errorf("EscalationConfigPath = %q, want %q", path, expected)
 	}
@@ -4729,7 +4729,7 @@ func TestBuildStartupCommandWithAgentOverride_PriorityOverRoleAgents(t *testing.
 
 	// agentOverride = "gemini" should take priority over role_agents[refinery] = "codex"
 	cmd, err := BuildStartupCommandWithAgentOverride(
-		map[string]string{"GT_ROLE": constants.RoleRefinery},
+		map[string]string{"MS_ROLE": constants.RoleRefinery},
 		rigPath,
 		"",
 		"gemini", // explicit override
@@ -4761,7 +4761,7 @@ func TestBuildStartupCommandWithAgentOverride_IncludesGTRoot(t *testing.T) {
 	}
 
 	cmd, err := BuildStartupCommandWithAgentOverride(
-		map[string]string{"GT_ROLE": constants.RoleWitness},
+		map[string]string{"MS_ROLE": constants.RoleWitness},
 		rigPath,
 		"",
 		"gemini",
@@ -4770,8 +4770,8 @@ func TestBuildStartupCommandWithAgentOverride_IncludesGTRoot(t *testing.T) {
 		t.Fatalf("BuildStartupCommandWithAgentOverride: %v", err)
 	}
 
-	// Should include GT_ROOT in export
-	expected := "GT_ROOT=" + ShellQuote(townRoot)
+	// Should include MS_ROOT in export
+	expected := "MS_ROOT=" + ShellQuote(townRoot)
 	if !strings.Contains(cmd, expected) {
 		t.Errorf("expected %s in command, got: %q", expected, cmd)
 	}
@@ -4851,7 +4851,7 @@ func TestBuildStartupCommandWithAgentOverride_SetsGTAgent(t *testing.T) {
 	}
 
 	cmd, err := BuildStartupCommandWithAgentOverride(
-		map[string]string{"GT_ROLE": constants.RoleWitness},
+		map[string]string{"MS_ROLE": constants.RoleWitness},
 		rigPath,
 		"",
 		"gemini",
@@ -4860,9 +4860,9 @@ func TestBuildStartupCommandWithAgentOverride_SetsGTAgent(t *testing.T) {
 		t.Fatalf("BuildStartupCommandWithAgentOverride: %v", err)
 	}
 
-	// Should include GT_AGENT=gemini in export so handoff can preserve it
-	if !strings.Contains(cmd, "GT_AGENT=gemini") {
-		t.Errorf("expected GT_AGENT=gemini in command, got: %q", cmd)
+	// Should include MS_AGENT=gemini in export so handoff can preserve it
+	if !strings.Contains(cmd, "MS_AGENT=gemini") {
+		t.Errorf("expected MS_AGENT=gemini in command, got: %q", cmd)
 	}
 }
 
@@ -4881,7 +4881,7 @@ func TestBuildStartupCommandWithAgentOverride_SetsGTProcessNames(t *testing.T) {
 	}
 
 	cmd, err := BuildStartupCommandWithAgentOverride(
-		map[string]string{"GT_ROLE": constants.RoleWitness},
+		map[string]string{"MS_ROLE": constants.RoleWitness},
 		rigPath,
 		"",
 		"gemini",
@@ -4890,9 +4890,9 @@ func TestBuildStartupCommandWithAgentOverride_SetsGTProcessNames(t *testing.T) {
 		t.Fatalf("BuildStartupCommandWithAgentOverride: %v", err)
 	}
 
-	// Should include GT_PROCESS_NAMES with gemini's process names
-	if !strings.Contains(cmd, "GT_PROCESS_NAMES=gemini") {
-		t.Errorf("expected GT_PROCESS_NAMES=gemini in command, got: %q", cmd)
+	// Should include MS_PROCESS_NAMES with gemini's process names
+	if !strings.Contains(cmd, "MS_PROCESS_NAMES=gemini") {
+		t.Errorf("expected MS_PROCESS_NAMES=gemini in command, got: %q", cmd)
 	}
 }
 
@@ -4910,20 +4910,20 @@ func TestBuildStartupCommand_SetsGTProcessNames(t *testing.T) {
 	}
 
 	cmd := BuildStartupCommand(
-		map[string]string{"GT_ROLE": constants.RoleWitness},
+		map[string]string{"MS_ROLE": constants.RoleWitness},
 		rigPath,
 		"",
 	)
 
-	// Default agent is claude — GT_PROCESS_NAMES should include node,claude
-	if !strings.Contains(cmd, "GT_PROCESS_NAMES=") {
-		t.Errorf("expected GT_PROCESS_NAMES in command, got: %q", cmd)
+	// Default agent is claude — MS_PROCESS_NAMES should include node,claude
+	if !strings.Contains(cmd, "MS_PROCESS_NAMES=") {
+		t.Errorf("expected MS_PROCESS_NAMES in command, got: %q", cmd)
 	}
 }
 
 // TestBuildStartupCommandWithAgentOverride_UsesOverrideWhenNoTownRoot tests that
 // agentOverride is respected even when findTownRootFromCwd fails.
-// This is a regression test for the bug where `gt supervisor start --agent codex`
+// This is a regression test for the bug where `ms supervisor start --agent codex`
 // would still launch Claude if run from outside the town directory.
 func TestBuildStartupCommandWithAgentOverride_UsesOverrideWhenNoTownRoot(t *testing.T) {
 	t.Parallel()
@@ -4945,7 +4945,7 @@ func TestBuildStartupCommandWithAgentOverride_UsesOverrideWhenNoTownRoot(t *test
 
 	// Call with rigPath="" (like supervisor does) and agentOverride="codex"
 	cmd, err := BuildStartupCommandWithAgentOverride(
-		map[string]string{"GT_ROLE": "supervisor"},
+		map[string]string{"MS_ROLE": "supervisor"},
 		"",      // rigPath is empty for town-level roles
 		"",      // no prompt
 		"codex", // agent override
@@ -4965,9 +4965,9 @@ func TestBuildStartupCommandWithAgentOverride_UsesOverrideWhenNoTownRoot(t *test
 	if !strings.Contains(cmd, "--dangerously-bypass-approvals-and-sandbox") {
 		t.Errorf("expected command to contain '--dangerously-bypass-approvals-and-sandbox' (codex flag) but got: %q", cmd)
 	}
-	// Should set GT_AGENT=codex
-	if !strings.Contains(cmd, "GT_AGENT=codex") {
-		t.Errorf("expected command to contain 'GT_AGENT=codex' but got: %q", cmd)
+	// Should set MS_AGENT=codex
+	if !strings.Contains(cmd, "MS_AGENT=codex") {
+		t.Errorf("expected command to contain 'MS_AGENT=codex' but got: %q", cmd)
 	}
 }
 
@@ -4986,26 +4986,26 @@ func TestBuildStartupCommandWithAgentOverride_GTAgentFromResolvedAgent(t *testin
 	}
 
 	cmd, err := BuildStartupCommandWithAgentOverride(
-		map[string]string{"GT_ROLE": constants.RoleWitness},
+		map[string]string{"MS_ROLE": constants.RoleWitness},
 		rigPath,
 		"",
-		"", // No override — should still get GT_AGENT from resolved agent
+		"", // No override — should still get MS_AGENT from resolved agent
 	)
 	if err != nil {
 		t.Fatalf("BuildStartupCommandWithAgentOverride: %v", err)
 	}
 
-	// GT_AGENT should be set from the resolved agent for liveness detection,
+	// MS_AGENT should be set from the resolved agent for liveness detection,
 	// even when no explicit override is used.
-	if !strings.Contains(cmd, "GT_AGENT=") {
-		t.Errorf("expected GT_AGENT in command for liveness detection, got: %q", cmd)
+	if !strings.Contains(cmd, "MS_AGENT=") {
+		t.Errorf("expected MS_AGENT in command for liveness detection, got: %q", cmd)
 	}
 }
 
 // TestBuildStartupCommand_RoleAgentsSetGTAgent verifies that when a non-Claude agent
-// is configured via role_agents, GT_AGENT is set in the startup command.
+// is configured via role_agents, MS_AGENT is set in the startup command.
 // Without this, IsAgentAlive falls back to ["node", "claude"] and witness patrol
-// auto-nukes miners running non-Claude agents. See: fix/gt-agent-role-agents.
+// auto-nukes miners running non-Claude agents. See: fix/ms-agent-role-agents.
 func TestBuildStartupCommand_RoleAgentsSetGTAgent(t *testing.T) {
 	t.Parallel()
 	townRoot := t.TempDir()
@@ -5030,14 +5030,14 @@ func TestBuildStartupCommand_RoleAgentsSetGTAgent(t *testing.T) {
 
 	cmd := BuildMinerStartupCommand("testrig", "furiosa", rigPath, "do work")
 
-	// GT_AGENT must be set to "opencode" so IsAgentAlive detects the process
-	if !strings.Contains(cmd, "GT_AGENT=opencode") {
-		t.Errorf("expected GT_AGENT=opencode in command, got: %q", cmd)
+	// MS_AGENT must be set to "opencode" so IsAgentAlive detects the process
+	if !strings.Contains(cmd, "MS_AGENT=opencode") {
+		t.Errorf("expected MS_AGENT=opencode in command, got: %q", cmd)
 	}
 }
 
 // TestBuildStartupCommand_RoleAgentsCustomAgentSetGTAgent verifies that custom
-// agents defined in town settings and used via role_agents also get GT_AGENT set.
+// agents defined in town settings and used via role_agents also get MS_AGENT set.
 func TestBuildStartupCommand_RoleAgentsCustomAgentSetGTAgent(t *testing.T) {
 	t.Parallel()
 	townRoot := t.TempDir()
@@ -5061,14 +5061,14 @@ func TestBuildStartupCommand_RoleAgentsCustomAgentSetGTAgent(t *testing.T) {
 
 	cmd := BuildMinerStartupCommand("testrig", "furiosa", rigPath, "do work")
 
-	// GT_AGENT must be set to the custom agent name "codex"
-	if !strings.Contains(cmd, "GT_AGENT=codex") {
-		t.Errorf("expected GT_AGENT=codex in command, got: %q", cmd)
+	// MS_AGENT must be set to the custom agent name "codex"
+	if !strings.Contains(cmd, "MS_AGENT=codex") {
+		t.Errorf("expected MS_AGENT=codex in command, got: %q", cmd)
 	}
 }
 
 // TestBuildStartupCommand_UsesGTRootFromEnvVars verifies that when rigPath is empty
-// but GT_ROOT is provided in envVars, the function uses GT_ROOT to resolve town
+// but MS_ROOT is provided in envVars, the function uses MS_ROOT to resolve town
 // settings and respects role_agents configuration. This is the path hit when the
 // daemon spawns town-level agents (supervisor, overseer) where rigPath is always empty.
 // Fixes #433
@@ -5092,8 +5092,8 @@ func TestBuildStartupCommand_UsesGTRootFromEnvVars(t *testing.T) {
 	}
 
 	envVars := map[string]string{
-		"GT_ROLE": constants.RoleSupervisor,
-		"GT_ROOT": townRoot,
+		"MS_ROLE": constants.RoleSupervisor,
+		"MS_ROOT": townRoot,
 	}
 	cmd := BuildStartupCommand(envVars, "", "")
 
@@ -5122,8 +5122,8 @@ func TestBuildStartupCommandWithAgentOverride_UsesGTRootFromEnvVars(t *testing.T
 	}
 
 	envVars := map[string]string{
-		"GT_ROLE": constants.RoleSupervisor,
-		"GT_ROOT": townRoot,
+		"MS_ROLE": constants.RoleSupervisor,
+		"MS_ROOT": townRoot,
 	}
 	cmd, err := BuildStartupCommandWithAgentOverride(envVars, "", "", "")
 	if err != nil {
@@ -5260,18 +5260,18 @@ func TestMergeQueueConfig_PartialJSON_NilPointers(t *testing.T) {
 
 func TestTryResolveFromEphemeralTier(t *testing.T) {
 	t.Run("no env var returns not handled", func(t *testing.T) {
-		t.Setenv("GT_COST_TIER", "")
+		t.Setenv("MS_COST_TIER", "")
 		rc, handled := tryResolveFromEphemeralTier("witness")
 		if handled {
-			t.Error("expected handled=false when GT_COST_TIER not set")
+			t.Error("expected handled=false when MS_COST_TIER not set")
 		}
 		if rc != nil {
-			t.Errorf("expected nil rc when GT_COST_TIER not set, got %+v", rc)
+			t.Errorf("expected nil rc when MS_COST_TIER not set, got %+v", rc)
 		}
 	})
 
 	t.Run("invalid tier returns not handled", func(t *testing.T) {
-		t.Setenv("GT_COST_TIER", "premium")
+		t.Setenv("MS_COST_TIER", "premium")
 		rc, handled := tryResolveFromEphemeralTier("witness")
 		if handled {
 			t.Error("expected handled=false for invalid tier")
@@ -5282,7 +5282,7 @@ func TestTryResolveFromEphemeralTier(t *testing.T) {
 	})
 
 	t.Run("budget tier witness gets haiku", func(t *testing.T) {
-		t.Setenv("GT_COST_TIER", "budget")
+		t.Setenv("MS_COST_TIER", "budget")
 		rc, handled := tryResolveFromEphemeralTier("witness")
 		if !handled {
 			t.Fatal("expected handled=true for witness in budget tier")
@@ -5306,7 +5306,7 @@ func TestTryResolveFromEphemeralTier(t *testing.T) {
 	})
 
 	t.Run("economy tier miner returns handled with nil rc (use default)", func(t *testing.T) {
-		t.Setenv("GT_COST_TIER", "economy")
+		t.Setenv("MS_COST_TIER", "economy")
 		rc, handled := tryResolveFromEphemeralTier("miner")
 		if !handled {
 			t.Error("expected handled=true for miner in economy tier (tier manages this role)")
@@ -5317,7 +5317,7 @@ func TestTryResolveFromEphemeralTier(t *testing.T) {
 	})
 
 	t.Run("economy tier overseer gets sonnet", func(t *testing.T) {
-		t.Setenv("GT_COST_TIER", "economy")
+		t.Setenv("MS_COST_TIER", "economy")
 		rc, handled := tryResolveFromEphemeralTier("overseer")
 		if !handled {
 			t.Fatal("expected handled=true for overseer in economy tier")
@@ -5338,7 +5338,7 @@ func TestTryResolveFromEphemeralTier(t *testing.T) {
 	})
 
 	t.Run("standard tier returns handled with nil rc for all roles", func(t *testing.T) {
-		t.Setenv("GT_COST_TIER", "standard")
+		t.Setenv("MS_COST_TIER", "standard")
 		for _, role := range []string{"overseer", "supervisor", "witness", "refinery", "miner", "crew"} {
 			rc, handled := tryResolveFromEphemeralTier(role)
 			if !handled {
@@ -5360,7 +5360,7 @@ func TestResolveRoleAgentConfig_WithEphemeralTier(t *testing.T) {
 		t.Fatalf("SaveTownSettings: %v", err)
 	}
 
-	t.Setenv("GT_COST_TIER", "budget")
+	t.Setenv("MS_COST_TIER", "budget")
 
 	rc := ResolveRoleAgentConfig("witness", townRoot, "")
 	if rc == nil {
@@ -5394,7 +5394,7 @@ func TestResolveRoleAgentConfig_EphemeralOverridesPersistent(t *testing.T) {
 	}
 
 	// Set ephemeral to budget — should override
-	t.Setenv("GT_COST_TIER", "budget")
+	t.Setenv("MS_COST_TIER", "budget")
 
 	// witness is sonnet in economy, haiku in budget
 	rc := ResolveRoleAgentConfig("witness", townRoot, "")
@@ -5426,7 +5426,7 @@ func TestResolveRoleAgentConfig_EphemeralStandardSkipsPersisted(t *testing.T) {
 	}
 
 	// Set ephemeral to standard — should skip persisted budget config
-	t.Setenv("GT_COST_TIER", "standard")
+	t.Setenv("MS_COST_TIER", "standard")
 
 	// miner was claude-sonnet in budget, should now use default (opus/claude)
 	rc := ResolveRoleAgentConfig("miner", townRoot, "")
@@ -5475,7 +5475,7 @@ func TestResolveRoleAgentConfig_EphemeralRespectsNonClaudeOverride(t *testing.T)
 	}
 
 	// Set ephemeral budget tier — should NOT override the gemini witness
-	t.Setenv("GT_COST_TIER", "budget")
+	t.Setenv("MS_COST_TIER", "budget")
 
 	rc := ResolveRoleAgentConfig("witness", townRoot, rigPath)
 	if rc == nil {
@@ -5518,7 +5518,7 @@ func TestResolveRoleAgentConfig_EphemeralDefaultPreservesNonClaudeOverride(t *te
 	}
 
 	// Economy tier maps miner to "" (use default) — should NOT override gemini
-	t.Setenv("GT_COST_TIER", "economy")
+	t.Setenv("MS_COST_TIER", "economy")
 
 	rc := ResolveRoleAgentConfig("miner", townRoot, rigPath)
 	if rc == nil {
@@ -5546,7 +5546,7 @@ func TestBuildStartupCommand_ExecWrapper(t *testing.T) {
 		t.Fatalf("SaveRigSettings: %v", err)
 	}
 
-	cmd := BuildStartupCommand(map[string]string{"GT_ROLE": "miner"}, rigPath, "hello")
+	cmd := BuildStartupCommand(map[string]string{"MS_ROLE": "miner"}, rigPath, "hello")
 
 	// Must contain exec wrapper tokens
 	if !strings.Contains(cmd, "exitbox run --profile=mineshaft-miner --") {
@@ -5583,7 +5583,7 @@ func TestBuildStartupCommandWithAgentOverride_ExecWrapper(t *testing.T) {
 	}
 
 	cmd, err := BuildStartupCommandWithAgentOverride(
-		map[string]string{"GT_ROLE": "miner"},
+		map[string]string{"MS_ROLE": "miner"},
 		rigPath, "hello", "",
 	)
 	if err != nil {
@@ -5645,7 +5645,7 @@ func TestBuildStartupCommandWithAgentOverride_SettingsFlagForClaudeOverride(t *t
 	}
 
 	cmd, err := BuildStartupCommandWithAgentOverride(
-		map[string]string{"GT_ROLE": "testrig/miners/toast"},
+		map[string]string{"MS_ROLE": "testrig/miners/toast"},
 		rigPath,
 		"",
 		"claude-sonnet",
@@ -5708,7 +5708,7 @@ func TestBuildStartupCommandWithAgentOverride_NoSettingsFlagForNonClaude(t *test
 	}
 
 	cmd, err := BuildStartupCommandWithAgentOverride(
-		map[string]string{"GT_ROLE": "testrig/miners/toast"},
+		map[string]string{"MS_ROLE": "testrig/miners/toast"},
 		rigPath,
 		"",
 		"gemini",
@@ -5739,7 +5739,7 @@ func TestBuildStartupCommandWithAgentOverride_NoDoubleSettingsOnNonOverridePath(
 	// The new withRoleSettingsFlag call in BuildStartupCommandWithAgentOverride should
 	// be a no-op (idempotency guard), not double-add.
 	cmd, err := BuildStartupCommandWithAgentOverride(
-		map[string]string{"GT_ROLE": "testrig/miners/toast"},
+		map[string]string{"MS_ROLE": "testrig/miners/toast"},
 		rigPath,
 		"",
 		"", // no override
@@ -5796,7 +5796,7 @@ func TestBuildStartupCommandWithAgentOverrideSetsGTAgentForOpenCode(t *testing.T
 	}
 
 	cmd, err := BuildStartupCommandWithAgentOverride(
-		map[string]string{"GT_ROLE": constants.RoleMiner},
+		map[string]string{"MS_ROLE": constants.RoleMiner},
 		rigPath,
 		"[MINESHAFT] test miner beacon",
 		"opencode",
@@ -5805,11 +5805,11 @@ func TestBuildStartupCommandWithAgentOverrideSetsGTAgentForOpenCode(t *testing.T
 		t.Fatalf("BuildStartupCommandWithAgentOverride: %v", err)
 	}
 
-	if !strings.Contains(cmd, "GT_AGENT=opencode") {
-		t.Errorf("expected GT_AGENT=opencode in command, got: %q", cmd)
+	if !strings.Contains(cmd, "MS_AGENT=opencode") {
+		t.Errorf("expected MS_AGENT=opencode in command, got: %q", cmd)
 	}
-	if !strings.Contains(cmd, "GT_PROCESS_NAMES=opencode") {
-		t.Errorf("expected GT_PROCESS_NAMES=opencode in command, got: %q", cmd)
+	if !strings.Contains(cmd, "MS_PROCESS_NAMES=opencode") {
+		t.Errorf("expected MS_PROCESS_NAMES=opencode in command, got: %q", cmd)
 	}
 	if strings.Contains(cmd, "--settings") {
 		t.Errorf("opencode should not get Claude --settings, got: %q", cmd)

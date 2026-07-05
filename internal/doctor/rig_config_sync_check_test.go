@@ -433,7 +433,7 @@ func TestRigConfigSyncCheck_DoltListErrorDoesNotMeanMissingDB(t *testing.T) {
 		t.Fatalf("write fake dolt: %v", err)
 	}
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv("GT_DOLT_HOST", "192.0.2.1")
+	t.Setenv("MS_DOLT_HOST", "192.0.2.1")
 
 	ctx := &CheckContext{TownRoot: tmpDir}
 	check := NewRigConfigSyncCheck()
@@ -519,7 +519,7 @@ exit 0
 	}
 }
 
-// TestRigConfigSyncCheck_PrefixNamedDoltDBNoMismatch reproduces gt-5hd2: a rig
+// TestRigConfigSyncCheck_PrefixNamedDoltDBNoMismatch reproduces ms-5hd2: a rig
 // whose Dolt data physically lives in a PREFIX-named directory (.dolt-data/bd)
 // rather than a rig-name directory (.dolt-data/beads) must NOT be reported as a
 // "DB name mismatch", and --fix must NOT revert its metadata.json back to the

@@ -59,7 +59,7 @@ var doltStartCmd = &cobra.Command{
 	Short: "Start the Dolt server",
 	Long: `Start the Dolt SQL server in the background.
 
-The server will run until stopped with 'gt dolt stop'.`,
+The server will run until stopped with 'ms dolt stop'.`,
 	RunE: runDoltStart,
 }
 
@@ -100,8 +100,8 @@ This is safe to run at any time. It only kills servers that are:
 It never kills the workspace's own legitimate Dolt server.
 
 Examples:
-  gt dolt kill-imposters          # Kill imposters on configured port
-  gt dolt kill-imposters --dry-run # Preview without killing`,
+  ms dolt kill-imposters          # Kill imposters on configured port
+  ms dolt kill-imposters --dry-run # Preview without killing`,
 	RunE: runDoltKillImposters,
 }
 
@@ -137,7 +137,7 @@ var doltSQLCmd = &cobra.Command{
 	Long: `Open an interactive SQL shell to the Dolt database.
 
 Works in both embedded mode (no server) and server mode.
-For multi-client access, start the server first with 'gt dolt start'.`,
+For multi-client access, start the server first with 'ms dolt start'.`,
 	RunE: runDoltSQL,
 }
 
@@ -151,8 +151,8 @@ served by the Dolt server. The rig name becomes the database name
 when connecting via MySQL protocol.
 
 Example:
-  gt dolt init-rig mineshaft
-  gt dolt init-rig beads`,
+  ms dolt init-rig mineshaft
+  ms dolt init-rig beads`,
 	Args: cobra.ExactArgs(1),
 	RunE: runDoltInitRig,
 }
@@ -178,7 +178,7 @@ This command will:
 Use --dry-run to preview what would be moved (source/target paths and sizes)
 without making any changes.
 
-After migration, start the server with 'gt dolt start'.`,
+After migration, start the server with 'ms dolt start'.`,
 	RunE: runDoltMigrate,
 }
 
@@ -236,12 +236,12 @@ Use --db to sync a single database, --dry-run to preview, or --force for force-p
 Use --gc to purge closed ephemeral beads (wisps, minecarts) before pushing.
 
 Examples:
-  gt dolt sync                # Push all databases with remotes
-  gt dolt sync --dry-run      # Preview what would be pushed
-  gt dolt sync --db mineshaft   # Push only the mineshaft database
-  gt dolt sync --force        # Force-push all databases
-  gt dolt sync --gc           # Purge closed ephemeral beads, then push
-  gt dolt sync --gc --dry-run # Preview purge + push without changes`,
+  ms dolt sync                # Push all databases with remotes
+  ms dolt sync --dry-run      # Preview what would be pushed
+  ms dolt sync --db mineshaft   # Push only the mineshaft database
+  ms dolt sync --force        # Force-push all databases
+  ms dolt sync --gc           # Purge closed ephemeral beads, then push
+  ms dolt sync --gc --dry-run # Preview purge + push without changes`,
 	RunE: runDoltSync,
 }
 
@@ -259,9 +259,9 @@ that the server is managing can cause exclusive lock contention and prevent
 server restarts.
 
 Examples:
-  gt dolt pull                # Pull all databases with remotes
-  gt dolt pull --db xtm       # Pull only the xtm database
-  gt dolt pull --dry-run      # Preview what would be pulled`,
+  ms dolt pull                # Pull all databases with remotes
+  ms dolt pull --db xtm       # Pull only the xtm database
+  ms dolt pull --dry-run      # Preview what would be pulled`,
 	RunE: runDoltPull,
 }
 
@@ -277,8 +277,8 @@ renamed databases, or failed migrations.
 Use --dry-run to preview what would be removed without making changes.
 
 Examples:
-  gt dolt cleanup             # Remove all orphaned databases
-  gt dolt cleanup --dry-run   # Preview what would be removed`,
+  ms dolt cleanup             # Remove all orphaned databases
+  ms dolt cleanup --dry-run   # Preview what would be removed`,
 	RunE: runDoltCleanup,
 }
 
@@ -404,7 +404,7 @@ func runDoltStart(cmd *cobra.Command, args []string) error {
 	// data dir and create databases afterward via bd init.
 	databases, _ := doltserver.ListDatabases(townRoot)
 	if len(databases) == 0 {
-		return fmt.Errorf("no databases found in %s\nInitialize with: gt dolt init-rig <name>", config.DataDir)
+		return fmt.Errorf("no databases found in %s\nInitialize with: ms dolt init-rig <name>", config.DataDir)
 	}
 
 	if err := doltserver.Start(townRoot); err != nil {
@@ -432,7 +432,7 @@ func runDoltStart(cmd *cobra.Command, args []string) error {
 		}
 		fmt.Printf("\n  Served: %v\n", served)
 		fmt.Printf("  This usually means the database has a stale manifest.\n")
-		fmt.Printf("  Try: %s\n", style.Dim.Render("cd ~/gt/.dolt-data/<db> && dolt fsck --repair"))
+		fmt.Printf("  Try: %s\n", style.Dim.Render("cd ~/ms/.dolt-data/<db> && dolt fsck --repair"))
 	} else {
 		fmt.Printf("  %s All %d databases verified\n", style.Bold.Render("✓"), len(served))
 	}
@@ -529,7 +529,7 @@ func runDoltRestart(cmd *cobra.Command, args []string) error {
 	// Step 3: Check for databases before starting
 	databases, _ := doltserver.ListDatabases(townRoot)
 	if len(databases) == 0 {
-		return fmt.Errorf("no databases found in %s\nInitialize with: gt dolt init-rig <name>", config.DataDir)
+		return fmt.Errorf("no databases found in %s\nInitialize with: ms dolt init-rig <name>", config.DataDir)
 	}
 
 	// Step 4: Start the correct server
@@ -538,7 +538,7 @@ func runDoltRestart(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("restart failed: %w", err)
 	}
 
-	// Display status (same as gt dolt start)
+	// Display status (same as ms dolt start)
 	state, _ := doltserver.LoadState(townRoot)
 
 	fmt.Printf("%s Dolt server restarted (PID %d, port %d)\n",
@@ -643,7 +643,7 @@ func runDoltStatus(cmd *cobra.Command, args []string) error {
 		if metrics.ReadOnly {
 			fmt.Printf("\n  %s %s\n",
 				style.Bold.Render("!!!"),
-				style.Bold.Render("SERVER IS READ-ONLY — run 'gt dolt recover' to restart"))
+				style.Bold.Render("SERVER IS READ-ONLY — run 'ms dolt recover' to restart"))
 		}
 
 		// Verify all filesystem databases are actually served.
@@ -656,7 +656,7 @@ func runDoltStatus(cmd *cobra.Command, args []string) error {
 			for _, db := range missing {
 				fmt.Printf("    - %s\n", db)
 			}
-			fmt.Printf("  Try: cd ~/gt/.dolt-data/<db> && dolt fsck --repair\n")
+			fmt.Printf("  Try: cd ~/ms/.dolt-data/<db> && dolt fsck --repair\n")
 		}
 
 		// Check for orphaned databases
@@ -667,7 +667,7 @@ func runDoltStatus(cmd *cobra.Command, args []string) error {
 			for _, o := range orphans {
 				fmt.Printf("    - %s (%s)\n", o.Name, formatBytes(o.SizeBytes))
 			}
-			fmt.Printf("  Clean up with: %s\n", style.Dim.Render("gt dolt cleanup"))
+			fmt.Printf("  Clean up with: %s\n", style.Dim.Render("ms dolt cleanup"))
 		}
 
 		if len(metrics.Warnings) > 0 {
@@ -687,7 +687,7 @@ func runDoltStatus(cmd *cobra.Command, args []string) error {
 			fmt.Printf("\n%s No rig databases found in %s\n",
 				style.Bold.Render("!"),
 				config.DataDir)
-			fmt.Printf("  Initialize with: %s\n", style.Dim.Render("gt dolt init-rig <name>"))
+			fmt.Printf("  Initialize with: %s\n", style.Dim.Render("ms dolt init-rig <name>"))
 		} else {
 			fmt.Printf("\nAvailable databases in %s:\n", config.DataDir)
 			owners := doltserver.CollectDatabaseOwners(townRoot)
@@ -698,7 +698,7 @@ func runDoltStatus(cmd *cobra.Command, args []string) error {
 					fmt.Printf("  - %s\n", db)
 				}
 			}
-			fmt.Printf("\nStart with: %s\n", style.Dim.Render("gt dolt start"))
+			fmt.Printf("\nStart with: %s\n", style.Dim.Render("ms dolt start"))
 		}
 	}
 
@@ -935,12 +935,12 @@ func runDoltSQL(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(databases) == 0 {
-		return fmt.Errorf("no databases found in %s\nInitialize with: gt dolt init-rig <name>", config.DataDir)
+		return fmt.Errorf("no databases found in %s\nInitialize with: ms dolt init-rig <name>", config.DataDir)
 	}
 
 	// Use first database for embedded SQL shell
 	dbDir := doltserver.RigDatabaseDir(townRoot, databases[0])
-	fmt.Printf("Using database: %s (start server with 'gt dolt start' for multi-database access)\n\n", databases[0])
+	fmt.Printf("Using database: %s (start server with 'ms dolt start' for multi-database access)\n\n", databases[0])
 
 	sqlCmd := exec.Command("dolt", "sql")
 	sqlCmd.Dir = dbDir
@@ -980,7 +980,7 @@ func runDoltInitRig(cmd *cobra.Command, args []string) error {
 	if serverWasRunning {
 		fmt.Printf("  Server: %s\n", style.Bold.Render("database registered with running server"))
 	} else {
-		fmt.Printf("\nStart server with: %s\n", style.Dim.Render("gt dolt start"))
+		fmt.Printf("\nStart server with: %s\n", style.Dim.Render("ms dolt start"))
 	}
 
 	return nil
@@ -1006,7 +1006,7 @@ func runDoltInit(cmd *cobra.Command, args []string) error {
 		databases, _ := doltserver.ListDatabases(townRoot)
 		if len(databases) == 0 {
 			fmt.Println("No Dolt databases found and no workspaces configured for Dolt.")
-			fmt.Printf("\nInitialize a rig database with: %s\n", style.Dim.Render("gt dolt init-rig <name>"))
+			fmt.Printf("\nInitialize a rig database with: %s\n", style.Dim.Render("ms dolt init-rig <name>"))
 		} else {
 			fmt.Printf("%s All workspaces healthy (%d database(s) verified)\n",
 				style.Bold.Render("✓"), len(databases))
@@ -1019,7 +1019,7 @@ func runDoltInit(cmd *cobra.Command, args []string) error {
 			for _, o := range orphans {
 				fmt.Printf("  - %s (%s)\n", o.Name, formatBytes(o.SizeBytes))
 			}
-			fmt.Printf("\nClean up with: %s\n", style.Dim.Render("gt dolt cleanup"))
+			fmt.Printf("\nClean up with: %s\n", style.Dim.Render("ms dolt cleanup"))
 		}
 
 		return nil
@@ -1032,7 +1032,7 @@ func runDoltInit(cmd *cobra.Command, args []string) error {
 		if ws.NotServed {
 			fmt.Printf("  %s %s: database %q exists on disk but is not served by the running Dolt server\n",
 				style.Bold.Render("!"), ws.RigName, ws.ConfiguredDB)
-			fmt.Printf("    Try restarting the server: %s\n", style.Dim.Render("gt dolt restart"))
+			fmt.Printf("    Try restarting the server: %s\n", style.Dim.Render("ms dolt restart"))
 			continue
 		}
 		fmt.Printf("  %s %s: metadata.json → database %q (missing from .dolt-data/)\n",
@@ -1062,7 +1062,7 @@ func runDoltInit(cmd *cobra.Command, args []string) error {
 		for _, o := range orphans {
 			fmt.Printf("  - %s (%s)\n", o.Name, formatBytes(o.SizeBytes))
 		}
-		fmt.Printf("\nClean up with: %s\n", style.Dim.Render("gt dolt cleanup"))
+		fmt.Printf("\nClean up with: %s\n", style.Dim.Render("ms dolt cleanup"))
 	}
 
 	return nil
@@ -1097,7 +1097,7 @@ func runDoltCleanup(cmd *cobra.Command, args []string) error {
 
 	// BALK: If orphans are a large fraction of all databases, something is likely
 	// wrong with the orphan detection (e.g., metadata files not found). Refuse to
-	// proceed without --force to prevent accidentally dropping production databases. (gt-xvh)
+	// proceed without --force to prevent accidentally dropping production databases. (ms-xvh)
 	allDBs, _ := doltserver.ListDatabases(townRoot)
 	if len(allDBs) > 0 && !doltCleanupForce {
 		orphanRatio := float64(len(orphans)) / float64(len(allDBs))
@@ -1106,9 +1106,9 @@ func runDoltCleanup(cmd *cobra.Command, args []string) error {
 				style.Bold.Render("!"), len(orphans), len(allDBs), orphanRatio*100)
 			fmt.Printf("  This usually means metadata.json files are missing or incorrect,\n")
 			fmt.Printf("  not that the databases are actually orphaned.\n\n")
-			fmt.Printf("  To proceed anyway: gt dolt cleanup --force\n")
-			fmt.Printf("  To diagnose: gt dolt list   (check owner column for mismatches)\n")
-			return fmt.Errorf("refusing to clean %d/%d databases without --force (safety check, gt-xvh)", len(orphans), len(allDBs))
+			fmt.Printf("  To proceed anyway: ms dolt cleanup --force\n")
+			fmt.Printf("  To diagnose: ms dolt list   (check owner column for mismatches)\n")
+			return fmt.Errorf("refusing to clean %d/%d databases without --force (safety check, ms-xvh)", len(orphans), len(allDBs))
 		}
 	}
 
@@ -1122,9 +1122,9 @@ func runDoltCleanup(cmd *cobra.Command, args []string) error {
 			style.Bold.Render("!"), len(orphans), maxSQLCleanup)
 		fmt.Printf("  The server is likely overloaded. SQL cleanup would take hours.\n\n")
 		fmt.Printf("  Instead, stop the server and clean the filesystem:\n\n")
-		fmt.Printf("    gt dolt stop\n")
+		fmt.Printf("    ms dolt stop\n")
 		fmt.Printf("    cd %s/.dolt-data && rm -rf testdb_* beads_t* beads_pt* beads_vr* doctest_* doctortest_*\n", townRoot)
-		fmt.Printf("    gt dolt start\n\n")
+		fmt.Printf("    ms dolt start\n\n")
 		fmt.Printf("  This is safe — orphan databases have no production data.\n")
 		return fmt.Errorf("too many orphans (%d) for SQL cleanup — see instructions above", len(orphans))
 	}
@@ -1133,12 +1133,12 @@ func runDoltCleanup(cmd *cobra.Command, args []string) error {
 	removed := 0
 	for _, o := range orphans {
 		if err := doltserver.RemoveDatabase(townRoot, o.Name, doltCleanupForce); err != nil {
-			// If DROP caused read-only, stop immediately and recover (gt-r1cyd)
+			// If DROP caused read-only, stop immediately and recover (ms-r1cyd)
 			if doltserver.IsReadOnlyError(err.Error()) {
 				fmt.Printf("  %s DROP put server into read-only mode — attempting recovery...\n", style.Bold.Render("!"))
 				if recoverErr := doltserver.RecoverReadOnly(townRoot); recoverErr != nil {
 					fmt.Printf("  %s Recovery failed: %v\n", style.Bold.Render("✗"), recoverErr)
-					fmt.Printf("  Run: gt dolt stop && gt dolt start\n")
+					fmt.Printf("  Run: ms dolt stop && ms dolt start\n")
 				} else {
 					fmt.Printf("  %s Server recovered from read-only state\n", style.Bold.Render("✓"))
 				}
@@ -1150,12 +1150,12 @@ func runDoltCleanup(cmd *cobra.Command, args []string) error {
 		fmt.Printf("  %s Removed %s\n", style.Bold.Render("✓"), o.Name)
 		removed++
 
-		// Health check after each DROP to catch read-only early (gt-r1cyd)
+		// Health check after each DROP to catch read-only early (ms-r1cyd)
 		if readOnly, _ := doltserver.CheckReadOnly(townRoot); readOnly {
 			fmt.Printf("  %s Server went read-only after DROP — attempting recovery...\n", style.Bold.Render("!"))
 			if recoverErr := doltserver.RecoverReadOnly(townRoot); recoverErr != nil {
 				fmt.Printf("  %s Recovery failed: %v\n", style.Bold.Render("✗"), recoverErr)
-				fmt.Printf("  Run: gt dolt stop && gt dolt start\n")
+				fmt.Printf("  Run: ms dolt stop && ms dolt start\n")
 				break
 			}
 			fmt.Printf("  %s Server recovered — continuing cleanup\n", style.Bold.Render("✓"))
@@ -1182,7 +1182,7 @@ func runDoltList(cmd *cobra.Command, args []string) error {
 
 	if len(databases) == 0 {
 		fmt.Printf("No rig databases found in %s\n", config.DataDir)
-		fmt.Printf("\nInitialize with: %s\n", style.Dim.Render("gt dolt init-rig <name>"))
+		fmt.Printf("\nInitialize with: %s\n", style.Dim.Render("ms dolt init-rig <name>"))
 		return nil
 	}
 
@@ -1212,18 +1212,18 @@ func runDoltMigrate(cmd *cobra.Command, args []string) error {
 	}
 
 	// Check if daemon is running - must stop first to avoid race conditions.
-	// The daemon spawns many bd processes via gt status heartbeats. If these
+	// The daemon spawns many bd processes via ms status heartbeats. If these
 	// run concurrently with migration, race conditions occur between old
 	// old and new backends.
 	daemonRunning, _, _ := daemon.IsRunning(townRoot)
 	if daemonRunning {
-		return fmt.Errorf("Mineshaft daemon is running. Stop it first with: gt daemon stop\n\nThe daemon spawns bd processes that can race with migration.\nStop the daemon, run migration, then restart it.")
+		return fmt.Errorf("Mineshaft daemon is running. Stop it first with: ms daemon stop\n\nThe daemon spawns bd processes that can race with migration.\nStop the daemon, run migration, then restart it.")
 	}
 
 	// Check if Dolt server is running - must stop first
 	running, _, _ := doltserver.IsRunning(townRoot)
 	if running {
-		return fmt.Errorf("Dolt server is running. Stop it first with: gt dolt stop")
+		return fmt.Errorf("Dolt server is running. Stop it first with: ms dolt stop")
 	}
 
 	// Find databases to migrate
@@ -1272,9 +1272,9 @@ func runDoltMigrate(cmd *cobra.Command, args []string) error {
 	if err := doltserver.Start(townRoot); err != nil {
 		fmt.Printf("\n%s Could not auto-start Dolt server: %v\n", style.Bold.Render("⚠"), err)
 		fmt.Printf("\n%s WARNING: Do NOT run bd commands until the server is started!\n", style.Bold.Render("⚠"))
-		fmt.Printf("  Running bd before 'gt dolt start' risks split-brain: bd may create an\n")
+		fmt.Printf("  Running bd before 'ms dolt start' risks split-brain: bd may create an\n")
 		fmt.Printf("  isolated local database instead of connecting to the centralized server.\n")
-		fmt.Printf("\n  Start manually with: %s\n", style.Dim.Render("gt dolt start"))
+		fmt.Printf("\n  Start manually with: %s\n", style.Dim.Render("ms dolt start"))
 	} else {
 		state, _ := doltserver.LoadState(townRoot)
 		fmt.Printf("%s Dolt server started (PID %d)\n", style.Bold.Render("✓"), state.PID)
@@ -1286,7 +1286,7 @@ func runDoltMigrate(cmd *cobra.Command, args []string) error {
 		served, missing, verifyErr := doltserver.VerifyDatabasesWithRetry(townRoot, 5)
 		if verifyErr != nil {
 			fmt.Printf("  %s Could not verify databases: %v\n", style.Dim.Render("⚠"), verifyErr)
-			fmt.Printf("  Migration may be incomplete. Verify manually with: %s\n", style.Dim.Render("gt dolt status"))
+			fmt.Printf("  Migration may be incomplete. Verify manually with: %s\n", style.Dim.Render("ms dolt status"))
 			return fmt.Errorf("database verification failed after migration: %w", verifyErr)
 		} else if len(missing) > 0 {
 			fmt.Printf("\n%s Some databases exist on disk but are NOT served by Dolt:\n", style.Bold.Render("⚠"))
@@ -1296,9 +1296,9 @@ func runDoltMigrate(cmd *cobra.Command, args []string) error {
 			fmt.Printf("\n  Served databases: %v\n", served)
 			fmt.Printf("\n  This usually means the database has a stale manifest from migration.\n")
 			fmt.Printf("  To fix, try:\n")
-			fmt.Printf("    1. Stop the server:  %s\n", style.Dim.Render("gt dolt stop"))
-			fmt.Printf("    2. Repair the DB:    %s\n", style.Dim.Render("cd ~/gt/.dolt-data/<db> && dolt fsck --repair"))
-			fmt.Printf("    3. Restart:           %s\n", style.Dim.Render("gt dolt start"))
+			fmt.Printf("    1. Stop the server:  %s\n", style.Dim.Render("ms dolt stop"))
+			fmt.Printf("    2. Repair the DB:    %s\n", style.Dim.Render("cd ~/ms/.dolt-data/<db> && dolt fsck --repair"))
+			fmt.Printf("    3. Restart:           %s\n", style.Dim.Render("ms dolt start"))
 			return fmt.Errorf("migration incomplete: %d database(s) exist on disk but are not served: %v", len(missing), missing)
 		} else {
 			fmt.Printf("  %s All %d databases verified as served\n", style.Bold.Render("✓"), len(served))
@@ -1365,7 +1365,7 @@ func runDoltRecover(cmd *cobra.Command, args []string) error {
 
 	running, _, _ := doltserver.IsRunning(townRoot)
 	if !running {
-		return fmt.Errorf("Dolt server is not running — start with 'gt dolt start'")
+		return fmt.Errorf("Dolt server is not running — start with 'ms dolt start'")
 	}
 
 	readOnly, err := doltserver.CheckReadOnly(townRoot)
@@ -1581,7 +1581,7 @@ func runDoltSync(cmd *cobra.Command, args []string) error {
 
 	// Validate --db flag if set
 	if doltSyncDB != "" && !doltserver.DatabaseExists(townRoot, doltSyncDB) {
-		return fmt.Errorf("database %q not found in .dolt-data/\nRun 'gt dolt list' to see available databases", doltSyncDB)
+		return fmt.Errorf("database %q not found in .dolt-data/\nRun 'ms dolt list' to see available databases", doltSyncDB)
 	}
 
 	// Check server state
@@ -1704,7 +1704,7 @@ func runDoltPull(cmd *cobra.Command, args []string) error {
 
 	// Validate --db flag if set
 	if doltPullDB != "" && !doltserver.DatabaseExists(townRoot, doltPullDB) {
-		return fmt.Errorf("database %q not found in .dolt-data/\nRun 'gt dolt list' to see available databases", doltPullDB)
+		return fmt.Errorf("database %q not found in .dolt-data/\nRun 'ms dolt list' to see available databases", doltPullDB)
 	}
 
 	// Check server state

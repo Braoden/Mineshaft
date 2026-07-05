@@ -14,10 +14,10 @@ Miners have four operating states:
 
 | State | Description | How it happens |
 |-------|-------------|----------------|
-| **Working** | Actively doing assigned work | Normal operation after `gt sling` |
-| **Idle** | Work completed, sandbox preserved for reuse | After `gt done` completes successfully |
+| **Working** | Actively doing assigned work | Normal operation after `ms sling` |
+| **Idle** | Work completed, sandbox preserved for reuse | After `ms done` completes successfully |
 | **Stalled** | Session stopped mid-work | Interrupted, crashed, or timed out without being nudged |
-| **Zombie** | Completed work but failed to exit | `gt done` failed during cleanup |
+| **Zombie** | Completed work but failed to exit | `ms done` failed during cleanup |
 
 **State cycle (happy path):**
 
@@ -25,12 +25,12 @@ Miners have four operating states:
          ┌──────────┐
     ┌───>│  IDLE    │<──── sync sandbox to main, clear hook
     │    └────┬─────┘
-    │         │ gt sling
+    │         │ ms sling
     │         v
     │    ┌──────────┐
     │    │ WORKING  │<──── session active, hook set
     │    └────┬─────┘
-    │         │ gt done
+    │         │ ms done
     │         v
     │    ┌──────────┐
     └────┤  IDLE    │──── push branch, submit MR, go idle
@@ -42,22 +42,22 @@ No `nuke` in the happy path. Miners cycle: IDLE -> WORKING -> IDLE.
 **Key distinctions:**
 
 - **Working** = actively executing. Session alive, hook set, doing work.
-- **Idle** = work done, session killed, sandbox preserved. Ready for next `gt sling`.
+- **Idle** = work done, session killed, sandbox preserved. Ready for next `ms sling`.
 - **Stalled** = supposed to be working, but stopped. Needs Witness intervention.
 - **Zombie** = finished work, tried to exit, but cleanup failed. Stuck in limbo.
 
-## The Persistent Miner Model (gt-4ac)
+## The Persistent Miner Model (ms-4ac)
 
 **Miners persist after completing work.** When a miner finishes its assignment:
 
-1. Signals completion via `gt done`
+1. Signals completion via `ms done`
 2. Pushes branch, submits MR to merge queue
 3. Clears its hook (work is done)
 4. Sets agent state to "idle"
 5. Kills its own session
 6. **Sandbox (worktree) is preserved for reuse**
 
-The next `gt sling` reuses idle miners before allocating new ones, avoiding
+The next `ms sling` reuses idle miners before allocating new ones, avoiding
 the overhead of creating fresh worktrees.
 
 ### Why Persistent?
@@ -69,7 +69,7 @@ the overhead of creating fresh worktrees.
 
 ### What About Pending Merges?
 
-The Refinery owns the merge queue. Once `gt done` submits work:
+The Refinery owns the merge queue. Once `ms done` submits work:
 - The branch is pushed to origin
 - Work exists in the MQ, not in the miner
 - If rebase fails, Refinery creates a conflict-resolution task
@@ -115,7 +115,7 @@ the miner — everything else is infrastructure that comes and goes. See
 
 The Claude session is **ephemeral**. It cycles frequently:
 
-- After each molecule step (via `gt handoff`)
+- After each molecule step (via `ms handoff`)
 - On context compaction
 - On crash/timeout
 - After extended work periods
@@ -126,7 +126,7 @@ continues working—only the Claude context refreshes.
 ```
 Session 1: Steps 1-2 → handoff
 Session 2: Steps 3-4 → handoff
-Session 3: Step 5 → gt done
+Session 3: Step 5 → ms done
 ```
 
 All three sessions are the **same miner**. The sandbox persists throughout.
@@ -136,23 +136,23 @@ All three sessions are the **same miner**. The sandbox persists throughout.
 The sandbox is the **git worktree**—the miner's working directory:
 
 ```
-~/gt/mineshaft/miners/Toast/
+~/ms/mineshaft/miners/Toast/
 ```
 
 This worktree:
-- Exists from first `gt sling` and persists across assignments
+- Exists from first `ms sling` and persists across assignments
 - Survives all session cycles
-- Is repaired (reset to fresh branch from main) when reused by `gt sling`
+- Is repaired (reset to fresh branch from main) when reused by `ms sling`
 - Contains uncommitted work, staged changes, branch state during active work
 
-The Witness never destroys sandboxes. Only explicit `gt miner nuke` removes them.
+The Witness never destroys sandboxes. Only explicit `ms miner nuke` removes them.
 
 #### Sandbox Sync (Between Assignments)
 
 When work completes and the miner goes idle, the sandbox is synced to main:
 
 ```bash
-# In the miner's worktree (done automatically by gt done / gt sling)
+# In the miner's worktree (done automatically by ms done / ms sling)
 git checkout main
 git pull origin main
 git branch -D miner/<name>/<old-issue>@<timestamp>
@@ -175,12 +175,12 @@ The slot is the **name allocation** from the miner pool:
 
 ```bash
 # Pool: [Toast, Shadow, Copper, Ash, Storm...]
-# Toast is allocated to work gt-abc
+# Toast is allocated to work ms-abc
 ```
 
 The slot:
 - Determines the sandbox path (`miners/Toast/`)
-- Maps to a tmux session (`gt-mineshaft-Toast`)
+- Maps to a tmux session (`ms-mineshaft-Toast`)
 - Appears in attribution (`mineshaft/miners/Toast`)
 - Persists until explicit nuke
 
@@ -188,7 +188,7 @@ The slot:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                        gt sling                             │
+│                        ms sling                             │
 │  → Find idle miner OR allocate slot from pool (Toast)    │
 │  → Create/repair sandbox (worktree on new branch)          │
 │  → Start session (Claude in tmux)                          │
@@ -200,7 +200,7 @@ The slot:
 │                     Work Happens                            │
 │                                                             │
 │  Session cycles happen here:                               │
-│  - gt handoff between steps                                │
+│  - ms handoff between steps                                │
 │  - Compaction triggers respawn                             │
 │  - Crash → Witness respawns                                │
 │                                                             │
@@ -209,14 +209,14 @@ The slot:
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                  gt done (persistent model)                  │
+│                  ms done (persistent model)                  │
 │  → Push branch to origin                                   │
 │  → Submit work to merge queue (MR bead)                    │
 │  → Set agent state to "idle"                               │
 │  → Kill session                                            │
 │                                                             │
 │  Work now lives in MQ. Miner is IDLE, not gone.          │
-│  Sandbox preserved for reuse by next gt sling.             │
+│  Sandbox preserved for reuse by next ms sling.             │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -238,13 +238,13 @@ The slot:
 **Session cycling**: Normal. Claude restarts, sandbox stays, slot stays.
 
 ```bash
-gt handoff  # Session cycles, miner continues
+ms handoff  # Session cycles, miner continues
 ```
 
-**Sandbox repair**: On reuse. `gt sling` resets the worktree to a fresh branch.
+**Sandbox repair**: On reuse. `ms sling` resets the worktree to a fresh branch.
 
 ```bash
-gt sling gt-xyz mineshaft  # Reuses idle Toast, repairs worktree
+ms sling ms-xyz mineshaft  # Reuses idle Toast, repairs worktree
 ```
 
 Session cycling happens constantly. Sandbox repair happens between assignments.
@@ -255,17 +255,17 @@ Session cycling happens constantly. Sandbox repair happens between assignments.
 
 **Anti-pattern:**
 ```bash
-gt miner done Toast    # DON'T: external state manipulation
-gt miner reset Toast   # DON'T: manual lifecycle control
+ms miner done Toast    # DON'T: external state manipulation
+ms miner reset Toast   # DON'T: manual lifecycle control
 ```
 
 **Correct:**
 ```bash
 # Miner signals its own completion:
-gt done  # (from inside the miner session)
+ms done  # (from inside the miner session)
 
 # Only explicit nuke destroys miners:
-gt miner nuke Toast  # (destroys sandbox, identity persists)
+ms miner nuke Toast  # (destroys sandbox, identity persists)
 ```
 
 Miners manage their own session lifecycle. External manipulation bypasses verification.
@@ -273,7 +273,7 @@ Miners manage their own session lifecycle. External manipulation bypasses verifi
 ### Sandboxes Without Work (Idle vs Stalled)
 
 An idle miner has no hook and no session — this is **normal**. It completed
-its work and is waiting for the next `gt sling`.
+its work and is waiting for the next `ms sling`.
 
 A **stalled** miner has a hook but no session — this is a **failure**:
 - The session crashed and wasn't nudged back to life
@@ -284,8 +284,8 @@ A **stalled** miner has a hook but no session — this is a **failure**:
 ```bash
 # Witness respawns the session in the existing sandbox
 # Or, if unrecoverable:
-gt miner nuke Toast        # Clean up the stalled miner
-gt sling gt-abc mineshaft      # Respawn with fresh miner
+ms miner nuke Toast        # Clean up the stalled miner
+ms sling ms-abc mineshaft      # Respawn with fresh miner
 ```
 
 ### Confusing Session with Sandbox
@@ -301,7 +301,7 @@ gt sling gt-abc mineshaft      # Respawn with fresh miner
 # - Hook persists across sessions
 ```
 
-The new session picks up where the old one left off via `gt prime`.
+The new session picks up where the old one left off via `ms prime`.
 
 ## Session Lifecycle Details
 
@@ -309,12 +309,12 @@ Sessions cycle for these reasons:
 
 | Trigger | Action | Result |
 |---------|--------|--------|
-| `gt handoff` | Voluntary | Clean cycle to fresh context |
+| `ms handoff` | Voluntary | Clean cycle to fresh context |
 | Context compaction | Automatic | Forced by Claude Code |
 | Crash/timeout | Failure | Witness respawns |
-| `gt done` | Completion | Session exits, miner goes idle |
+| `ms done` | Completion | Session exits, miner goes idle |
 
-All except `gt done` result in continued work. Only `gt done` signals completion
+All except `ms done` result in continued work. Only `ms done` signals completion
 and transitions the miner to idle.
 
 ## Witness Responsibilities
@@ -326,7 +326,7 @@ The Witness monitors miners but does NOT:
 
 The Witness DOES:
 - Detect and nudge stalled miners (sessions that stopped unexpectedly)
-- Clean up zombie miners (sessions where `gt done` failed)
+- Clean up zombie miners (sessions where `ms done` failed)
 - Respawn crashed sessions
 - Handle escalations from stuck miners (miners that explicitly asked for help)
 
@@ -349,7 +349,7 @@ MINER IDENTITY (permanent)      SESSION (ephemeral)     SANDBOX (persistent)
 ├── CV chain                      ├── Claude instance     ├── Git worktree
 ├── Work history                  ├── Context window      ├── Branch
 ├── Skills demonstrated           └── Dies on handoff     └── Repaired on reuse
-└── Credit for work                   or gt done              by gt sling
+└── Credit for work                   or ms done              by ms sling
 ```
 
 This distinction matters for:
@@ -360,8 +360,8 @@ This distinction matters for:
 
 ## Implementation Status
 
-As of 2026-03-07 (gt-o8g8 audit), all core lifecycle operations are **shipped and
-running in production**. See [design/miner-lifecycle-patrol.md § 10](../design/miner-lifecycle-patrol.md#10-implementation-status-gt-o8g8-audit-2026-03-07)
+As of 2026-03-07 (ms-o8g8 audit), all core lifecycle operations are **shipped and
+running in production**. See [design/miner-lifecycle-patrol.md § 10](../design/miner-lifecycle-patrol.md#10-implementation-status-ms-o8g8-audit-2026-03-07)
 for the full implementation matrix and [design/persistent-miner-pool.md](../design/persistent-miner-pool.md)
 for phase-by-phase shipping status.
 

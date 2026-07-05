@@ -1,7 +1,7 @@
 .PHONY: build desktop-build desktop-run install safe-install check-forward-only check-version-tag check-install-path clean test test-makefile test-e2e-container check-up-to-date
 
-BINARY := gt
-BINARY_DESKTOP := gt-desktop
+BINARY := ms
+BINARY_DESKTOP := ms-desktop
 BUILD_DIR := .
 INSTALL_DIR := $(HOME)/.local/bin
 E2E_IMAGE ?= mineshaft-test
@@ -33,15 +33,15 @@ ifeq ($(shell uname),Darwin)
 endif
 
 build:
-	go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY)-proxy-server ./cmd/gt-proxy-server
-	go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY)-proxy-client ./cmd/gt-proxy-client
-	go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY) ./cmd/gt
+	go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY)-proxy-server ./cmd/ms-proxy-server
+	go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY)-proxy-client ./cmd/ms-proxy-client
+	go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY) ./cmd/ms
 
 desktop-build:
-	go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_DESKTOP) ./cmd/gt-desktop
+	go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_DESKTOP) ./cmd/ms-desktop
 
 desktop-run:
-	go run ./cmd/gt-desktop
+	go run ./cmd/ms-desktop
 
 check-up-to-date:
 ifndef SKIP_UPDATE_CHECK
@@ -120,7 +120,7 @@ install: check-up-to-date build
 		sleep 1; \
 		$(INSTALL_DIR)/$(BINARY) daemon start >/dev/null 2>&1 && \
 			echo "Daemon restarted." || \
-			echo "Warning: daemon restart failed (start manually with: gt daemon start)"; \
+			echo "Warning: daemon restart failed (start manually with: ms daemon start)"; \
 	fi
 	@# Sync plugins from build repo to town runtime directories.
 	@# Prevents drift when plugin fixes merge but runtime dirs are stale.
@@ -128,7 +128,7 @@ install: check-up-to-date build
 		echo "Plugins synced." || true
 
 # safe-install: Replace binary WITHOUT restarting daemon or killing sessions.
-# Use this for automated rebuilds (e.g., rebuild-gt plugin). Sessions pick up
+# Use this for automated rebuilds (e.g., rebuild-ms plugin). Sessions pick up
 # the new binary on their next natural cycle/handoff.
 safe-install: check-up-to-date check-forward-only build
 	@mkdir -p $(INSTALL_DIR)

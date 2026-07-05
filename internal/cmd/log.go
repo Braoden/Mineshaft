@@ -45,12 +45,12 @@ Events logged include:
   kill    - agent killed intentionally
 
 Examples:
-  gt log                     # Show last 20 events
-  gt log -n 50               # Show last 50 events
-  gt log --type spawn        # Show only spawn events
-  gt log --agent greenplace/    # Show events for mineshaft rig
-  gt log --since 1h          # Show events from last hour
-  gt log -f                  # Follow log (like tail -f)`,
+  ms log                     # Show last 20 events
+  ms log -n 50               # Show last 50 events
+  ms log --type spawn        # Show only spawn events
+  ms log --agent greenplace/    # Show events for mineshaft rig
+  ms log --since 1h          # Show events from last hour
+  ms log -f                  # Follow log (like tail -f)`,
 	RunE: runLog,
 }
 
@@ -67,7 +67,7 @@ The exit code determines if this was a crash or expected exit:
   - Exit code non-zero: Crash (logged as 'crash')
 
 Examples:
-  gt log crash --agent greenplace/Toast --session gt-greenplace-Toast --exit-code 1`,
+  ms log crash --agent greenplace/Toast --session ms-greenplace-Toast --exit-code 1`,
 	RunE: runLogCrash,
 }
 
@@ -77,7 +77,7 @@ func init() {
 	logCmd.Flags().StringVarP(&logAgent, "agent", "a", "", "Filter by agent prefix (e.g., mineshaft/, greenplace/crew/max)")
 	logCmd.Flags().StringVar(&logSince, "since", "", "Show events since duration (e.g., 1h, 30m, 24h)")
 	logCmd.Flags().BoolVarP(&logFollow, "follow", "f", false, "Follow log output (like tail -f)")
-	logCmd.Flags().BoolVar(&logAcp, "acp", false, "View ACP debug logs (requires GT_ACP_DEBUG=1)")
+	logCmd.Flags().BoolVar(&logAcp, "acp", false, "View ACP debug logs (requires MS_ACP_DEBUG=1)")
 
 	// crash subcommand flags
 	logCrashCmd.Flags().StringVar(&crashAgent, "agent", "", "Agent ID (e.g., greenplace/Toast)")
@@ -197,7 +197,7 @@ func viewACPLogs(townRoot string) error {
 
 	// Check if log file exists
 	if _, err := os.Stat(logPath); os.IsNotExist(err) {
-		fmt.Printf("%s No ACP log file. Set GT_ACP_DEBUG=1 to enable logging.\n", style.Dim.Render("○"))
+		fmt.Printf("%s No ACP log file. Set MS_ACP_DEBUG=1 to enable logging.\n", style.Dim.Render("○"))
 		return nil
 	}
 
@@ -355,19 +355,19 @@ func truncateStr(s string, maxLen int) string {
 	return s[:maxLen-3] + "..."
 }
 
-// runLogCrash handles the "gt log crash" command from tmux pane-died hooks.
+// runLogCrash handles the "ms log crash" command from tmux pane-died hooks.
 func runLogCrash(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil || townRoot == "" {
 		// Try to find town root from conventional location
 		// This is called from tmux hook which may not have proper cwd
 		home := os.Getenv("HOME")
-		defaultRoot := home + "/gt"
+		defaultRoot := home + "/ms"
 		if _, statErr := os.Stat(defaultRoot + "/overseer"); statErr == nil {
 			townRoot = defaultRoot
 		}
 		if townRoot == "" {
-			return fmt.Errorf("cannot find town root (tried cwd and ~/gt)")
+			return fmt.Errorf("cannot find town root (tried cwd and ~/ms)")
 		}
 	}
 
@@ -424,7 +424,7 @@ func logCrashFeedEvent(townRoot, agent, session string, exitCode int) {
 	}
 
 	reason := fmt.Sprintf("crashed with exit code %d", exitCode)
-	payload := events.SessionDeathPayload(session, agent, reason, "gt log crash")
+	payload := events.SessionDeathPayload(session, agent, reason, "ms log crash")
 	payload["exit_code"] = exitCode
 	_ = events.LogFeed(events.TypeSessionDeath, agent, payload)
 }

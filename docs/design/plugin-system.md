@@ -7,11 +7,11 @@
 
 ## Problem Statement
 
-Mineshaft needs extensible, project-specific automation that runs during Supervisor patrol cycles. The immediate use case is rebuilding stale binaries (gt, bd, wv), but the pattern generalizes to any periodic maintenance task.
+Mineshaft needs extensible, project-specific automation that runs during Supervisor patrol cycles. The immediate use case is rebuilding stale binaries (ms, bd, wv), but the pattern generalizes to any periodic maintenance task.
 
 Current state:
 - Plugin infrastructure exists conceptually (patrol step mentions it)
-- `~/gt/plugins/` directory exists with README
+- `~/ms/plugins/` directory exists with README
 - No actual plugins in production use
 - No formalized execution model
 
@@ -25,7 +25,7 @@ Plugin state (last run, run count, results) lives on the ledger as wisps, not in
 ### ZFC: Zero Framework Cognition
 > Agent decides. Go transports.
 
-The Supervisor (agent) evaluates gates and decides whether to dispatch. Go code provides transport (`gt dog dispatch`) but doesn't make decisions.
+The Supervisor (agent) evaluates gates and decides whether to dispatch. Go code provides transport (`ms dog dispatch`) but doesn't make decisions.
 
 ### MEOW Stack Integration
 
@@ -43,12 +43,12 @@ The Supervisor (agent) evaluates gates and decides whether to dispatch. Go code 
 ### Plugin Locations
 
 ```
-~/gt/
+~/ms/
 ├── plugins/                      # Town-level plugins (universal)
 │   └── README.md
 ├── mineshaft/
 │   └── plugins/                  # Rig-level plugins
-│       └── rebuild-gt/
+│       └── rebuild-ms/
 │           └── plugin.md
 ├── beads/
 │   └── plugins/
@@ -60,7 +60,7 @@ The Supervisor (agent) evaluates gates and decides whether to dispatch. Go code 
             └── plugin.md
 ```
 
-**Town-level** (`~/gt/plugins/`): Universal plugins that apply everywhere.
+**Town-level** (`~/ms/plugins/`): Universal plugins that apply everywhere.
 **Rig-level** (`<rig>/plugins/`): Project-specific plugins.
 
 The Supervisor scans both locations during patrol.
@@ -77,7 +77,7 @@ Supervisor Patrol                    Dog Worker
 1. Scan plugins
 2. Evaluate gates
 3. For open gates:
-   └─ gt dog dispatch plugin     ──→ 4. Execute plugin
+   └─ ms dog dispatch plugin     ──→ 4. Execute plugin
       (non-blocking)                  5. Create result wisp
                                       6. Send DOG_DONE
 4. Continue patrol
@@ -96,16 +96,16 @@ Benefits:
 Each plugin run creates a wisp:
 
 ```bash
-gt plugin record-run --plugin rebuild-gt --result success --rig mineshaft \
-  --title "Plugin: rebuild-gt [success]" \
-  --description "Rebuilt gt: abc123 → def456 (5 commits)"
+ms plugin record-run --plugin rebuild-ms --result success --rig mineshaft \
+  --title "Plugin: rebuild-ms [success]" \
+  --description "Rebuilt ms: abc123 → def456 (5 commits)"
 ```
 
 **Gate evaluation** queries wisps instead of state files:
 
 ```bash
 # Cooldown check: any runs in last hour?
-bd list --all --label type:plugin-run --label plugin:rebuild-gt --created-after 1h -n 1
+bd list --all --label type:plugin-run --label plugin:rebuild-ms --created-after 1h -n 1
 ```
 
 **Derived state** (no state.json needed):
@@ -122,7 +122,7 @@ bd list --all --label type:plugin-run --label plugin:rebuild-gt --created-after 
 Like cost digests, plugin wisps accumulate and get squashed daily:
 
 ```bash
-gt plugin digest --yesterday
+ms plugin digest --yesterday
 ```
 
 Creates: `Plugin Digest 2026-01-10` bead with summary
@@ -137,7 +137,7 @@ This keeps the ledger clean while preserving audit history.
 ### File Structure
 
 ```
-rebuild-gt/
+rebuild-ms/
 └── plugin.md      # Definition with TOML frontmatter
 ```
 
@@ -145,8 +145,8 @@ rebuild-gt/
 
 ```markdown
 +++
-name = "rebuild-gt"
-description = "Rebuild stale gt binary from source"
+name = "rebuild-ms"
+description = "Rebuild stale ms binary from source"
 version = 1
 
 [gate]
@@ -154,7 +154,7 @@ type = "cooldown"
 duration = "1h"
 
 [tracking]
-labels = ["plugin:rebuild-gt", "rig:mineshaft", "category:maintenance"]
+labels = ["plugin:rebuild-ms", "rig:mineshaft", "category:maintenance"]
 digest = true
 
 [execution]
@@ -162,7 +162,7 @@ timeout = "5m"
 notify_on_failure = true
 +++
 
-# Rebuild gt Binary
+# Rebuild ms Binary
 
 Instructions for the dog worker to execute...
 ```
@@ -180,7 +180,7 @@ type = "cooldown|cron|condition|event|manual"
 # Type-specific fields:
 duration = "1h"           # For cooldown
 schedule = "0 9 * * *"    # For cron
-check = "gt stale -q"     # For condition (exit 0 = run)
+check = "ms stale -q"     # For condition (exit 0 = run)
 on = "startup"            # For event
 
 [tracking]
@@ -217,9 +217,9 @@ Standard sections:
 
 ## New Commands Required
 
-- **`gt stale`** -- Expose binary staleness check (human-readable, `--json`, `--quiet` exit code)
-- **`gt dog dispatch --plugin <name>`** -- Dispatch plugin execution to an idle dog (non-blocking)
-- **`gt plugin list|show|run|digest|history`** -- Plugin management and execution history
+- **`ms stale`** -- Expose binary staleness check (human-readable, `--json`, `--quiet` exit code)
+- **`ms dog dispatch --plugin <name>`** -- Dispatch plugin execution to an idle dog (non-blocking)
+- **`ms plugin list|show|run|digest|history`** -- Plugin management and execution history
 
 ---
 
@@ -227,13 +227,13 @@ Standard sections:
 
 ### Phase 1: Foundation
 
-1. **`gt stale` command** - Expose CheckStaleBinary() via CLI
+1. **`ms stale` command** - Expose CheckStaleBinary() via CLI
 2. **Plugin format spec** - Finalize TOML schema
 3. **Plugin scanning** - Supervisor scans town + rig plugin dirs
 
 ### Phase 2: Execution
 
-4. **`gt dog dispatch --plugin`** - Formalized dog dispatch
+4. **`ms dog dispatch --plugin`** - Formalized dog dispatch
 5. **Plugin execution in dogs** - Dog reads plugin.md, executes
 6. **Wisp creation** - Record results on ledger
 
@@ -245,13 +245,13 @@ Standard sections:
 
 ### Phase 4: Escalation
 
-10. **`gt escalate` command** - Unified escalation API
+10. **`ms escalate` command** - Unified escalation API
 11. **Escalation routing** - Config-driven multi-channel
 12. **Stale escalation patrol** - Check unacknowledged
 
 ### Phase 5: First Plugin
 
-13. **`rebuild-gt` plugin** - The actual mineshaft plugin
+13. **`rebuild-ms` plugin** - The actual mineshaft plugin
 14. **Documentation** - So Beads/Wyvern can create theirs
 
 ---
@@ -272,4 +272,4 @@ Standard sections:
 
 - PRIMING.md - Core design principles
 - mol-supervisor-patrol.formula.toml - Patrol step plugin-run
-- ~/gt/plugins/README.md - Current plugin stub
+- ~/ms/plugins/README.md - Current plugin stub

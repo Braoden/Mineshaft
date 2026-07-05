@@ -31,22 +31,22 @@ Miner has been spawned. Verify it initializes and starts working.
 
 **Check if alive:**
 ```bash
-tmux capture-pane -t gt-{{rig}}-{{miner}} -p | tail -20
+tmux capture-pane -t ms-{{rig}}-{{miner}} -p | tail -20
 ```
 
 Look for:
 - Claude prompt visible ("> " at start of line)
-- `gt prime` output
+- `ms prime` output
 - Signs of reading the assigned issue
 
 **If idle for >60 seconds:**
 ```bash
-gt nudge {{rig}}/miners/{{miner}} "Begin work on {{issue}}."
+ms nudge {{rig}}/miners/{{miner}} "Begin work on {{issue}}."
 ```
 
 **If still no response after nudge:**
 ```bash
-gt nudge {{rig}}/miners/{{miner}} "Are you there? Please acknowledge."
+ms nudge {{rig}}/miners/{{miner}} "Are you there? Please acknowledge."
 ```
 
 After 3 failed nudges, mark as stuck and escalate.
@@ -113,7 +113,7 @@ bd show {{issue}}             # Status should be 'closed'
 Nudge miner to fix:
 ```bash
 # Use --mode=queue to avoid interrupting in-flight tool calls
-gt nudge --mode=queue {{rig}}/miners/{{miner}} "Verification failed: <issue>. Please fix."
+ms nudge --mode=queue {{rig}}/miners/{{miner}} "Verification failed: <issue>. Please fix."
 ```
 Return to working step.
 
@@ -131,7 +131,7 @@ Work verified. Send MERGE_READY to Refinery and wait.
 
 **Send merge request:**
 ```bash
-gt mail send {{rig}}/refinery -s "MERGE_READY {{miner}}" -m "Branch: $(cd miners/{{miner}} && git branch --show-current)
+ms mail send {{rig}}/refinery -s "MERGE_READY {{miner}}" -m "Branch: $(cd miners/{{miner}} && git branch --show-current)
 Issue: {{issue}}
 Miner: {{miner}}
 Verified: clean git state, issue closed"
@@ -165,7 +165,7 @@ Merge confirmed. Clean up the miner.
 
 **1. Kill the miner session:**
 ```bash
-gt session kill {{rig}}/miners/{{miner}}
+ms session kill {{rig}}/miners/{{miner}}
 ```
 
 **2. Remove worktree (if ephemeral):**

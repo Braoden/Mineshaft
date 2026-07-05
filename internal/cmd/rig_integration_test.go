@@ -37,7 +37,7 @@ import (
 //
 // IMPORTANT: Be very conservative about adding files here. Each entry represents
 // a file that Mineshaft creates inside the user's repo, which could be accidentally
-// committed and pushed upstream. Prefer ephemeral context injection (gt prime) over
+// committed and pushed upstream. Prefer ephemeral context injection (ms prime) over
 // on-disk files.
 var agentAllowlist = map[string][]string{
 	// Overseer is a clone (not worktree) - it's the canonical copy of the user's repo.
@@ -61,7 +61,7 @@ var agentAllowlist = map[string][]string{
 	"miner": {
 		"?? .claude/",   // bd init: creates .claude/commands/ with handoff/review slash commands
 		"?? .gitignore", // EnsureGitignorePatterns: adds .claude/, .runtime/, .logs/, __pycache__/ patterns
-		"?? CLAUDE.md",  // CreateMinerCLAUDEmd: gt done instructions and lifecycle context
+		"?? CLAUDE.md",  // CreateMinerCLAUDEmd: ms done instructions and lifecycle context
 	},
 }
 
@@ -215,7 +215,7 @@ foreach ($arg in $args) {
 
 switch ($cmd) {
   'init' {
-    $prefix = 'gt'
+    $prefix = 'ms'
     for ($i = 0; $i -lt $args.Length; $i++) {
       $arg = $args[$i]
       if ($arg -like '--prefix=*') {
@@ -280,7 +280,7 @@ case "$cmd" in
   init)
     # Create .beads directory and config.yaml
     mkdir -p .beads
-    prefix="gt"
+    prefix="ms"
     # Handle both --prefix=value and --prefix value forms
     next_is_prefix=false
     for arg in "$@"; do
@@ -337,7 +337,7 @@ esac
 	return logPath
 }
 
-// TestRigAddCreatesCorrectStructure verifies that gt rig add creates
+// TestRigAddCreatesCorrectStructure verifies that ms rig add creates
 // the expected directory structure.
 func TestRigAddCreatesCorrectStructure(t *testing.T) {
 	requireDoltServer(t)
@@ -423,9 +423,9 @@ func TestRigAddCreatesCorrectStructure(t *testing.T) {
 		t.Errorf("refinery/rig/.git should be a file (worktree), not a directory")
 	}
 
-	// NOTE: Most agent settings are installed at startup time, not by gt rig add.
-	// Exception: miners/.claude/ is scaffolded by gt rig add so miner sessions
-	// don't fail on startup due to missing hooks (gt-ke4mj).
+	// NOTE: Most agent settings are installed at startup time, not by ms rig add.
+	// Exception: miners/.claude/ is scaffolded by ms rig add so miner sessions
+	// don't fail on startup due to missing hooks (ms-ke4mj).
 	parentSettingsThatShouldNotExist := []struct {
 		path string
 		desc string
@@ -437,23 +437,23 @@ func TestRigAddCreatesCorrectStructure(t *testing.T) {
 
 	for _, s := range parentSettingsThatShouldNotExist {
 		if _, err := os.Stat(s.path); err == nil {
-			t.Errorf("%s should NOT exist after gt rig add (agents install settings at startup)", s.desc)
+			t.Errorf("%s should NOT exist after ms rig add (agents install settings at startup)", s.desc)
 		}
 	}
 
-	// Miners settings should be scaffolded by gt rig add (gt-ke4mj).
+	// Miners settings should be scaffolded by ms rig add (ms-ke4mj).
 	minerSettings := filepath.Join(rigPath, "miners", ".claude", "settings.json")
 	if _, err := os.Stat(minerSettings); os.IsNotExist(err) {
-		t.Errorf("miners/.claude/settings.json should exist after gt rig add (scaffolded for miner startup)")
+		t.Errorf("miners/.claude/settings.json should exist after ms rig add (scaffolded for miner startup)")
 	}
 	minerHandoff := filepath.Join(rigPath, "miners", ".claude", "commands", "handoff.md")
 	if _, err := os.Stat(minerHandoff); os.IsNotExist(err) {
-		t.Errorf("miners/.claude/commands/handoff.md should exist after gt rig add (scaffolded for miner startup)")
+		t.Errorf("miners/.claude/commands/handoff.md should exist after ms rig add (scaffolded for miner startup)")
 	}
 
 	// NOTE: No per-directory CLAUDE.md/AGENTS.md is created at agent level.
-	// Only ~/gt/CLAUDE.md (town-root identity anchor) exists on disk.
-	// Full context is injected ephemerally by `gt prime` at session start.
+	// Only ~/ms/CLAUDE.md (town-root identity anchor) exists on disk.
+	// Full context is injected ephemerally by `ms prime` at session start.
 
 	// NOTE: Settings are now installed at parent directories (e.g., witness/.claude/settings.json)
 	// and passed to Claude via --settings flag. Settings no longer exist inside working directories.
@@ -500,8 +500,8 @@ func TestRigAddCreatesCorrectStructure(t *testing.T) {
 	}
 }
 
-// TestRigAddRespectsDefaultAgent verifies that gt rig add scaffolds the miner
-// config directory matching the town's default_agent setting (gt-vdx).
+// TestRigAddRespectsDefaultAgent verifies that ms rig add scaffolds the miner
+// config directory matching the town's default_agent setting (ms-vdx).
 func TestRigAddRespectsDefaultAgent(t *testing.T) {
 	requireDoltServer(t)
 	_ = mockBdCommand(t)
@@ -835,7 +835,7 @@ func TestRigAddCreatesRigConfig(t *testing.T) {
 	}
 }
 
-// TestRigAddWithUpstreamURL verifies that gt rig add --upstream-url
+// TestRigAddWithUpstreamURL verifies that ms rig add --upstream-url
 // configures the upstream remote on both the bare repo and overseer clone,
 // and persists the URL to config.json and rigs.json.
 func TestRigAddWithUpstreamURL(t *testing.T) {
@@ -1007,7 +1007,7 @@ func TestRigAddRejectsInvalidNames(t *testing.T) {
 	}
 }
 
-// TestRigAddCreatesAgentBeads verifies that gt rig add creates
+// TestRigAddCreatesAgentBeads verifies that ms rig add creates
 // witness and refinery agent beads via the manager's initAgentBeads.
 func TestRigAddCreatesAgentBeads(t *testing.T) {
 	requireDoltServer(t)
@@ -1088,22 +1088,22 @@ func TestAgentBeadIDs(t *testing.T) {
 	}
 }
 
-// TestAgentWorktreesStayClean verifies that after gt install, gt rig add, and
+// TestAgentWorktreesStayClean verifies that after ms install, ms rig add, and
 // agent creation, all agent worktrees have no unexpected Mineshaft files.
 //
 // This is a critical invariant: user repos should stay clean. The only allowed
 // Mineshaft file is .beads/redirect which points to the shared rig-level beads.
 //
 // Agents tested:
-// - Overseer: overseer/rig/ (clone, created by gt rig add)
-// - Refinery: refinery/rig/ (worktree, created by gt rig add)
-// - Crew: crew/<name>/ (worktree, created by gt crew add)
-// - Miner: miners/<name>/<rigname>/ (worktree, created by gt miner identity add)
+// - Overseer: overseer/rig/ (clone, created by ms rig add)
+// - Refinery: refinery/rig/ (worktree, created by ms rig add)
+// - Crew: crew/<name>/ (worktree, created by ms crew add)
+// - Miner: miners/<name>/<rigname>/ (worktree, created by ms miner identity add)
 //
 // Known issues this test catches:
 // - Extra files in .beads/ beyond redirect (e.g., PRIME.md, databases)
 // - AGENTS.md being copied/created in worktrees
-// - CLAUDE.md being created in non-miner worktrees (miners need it for gt done)
+// - CLAUDE.md being created in non-miner worktrees (miners need it for ms done)
 // - Any other Mineshaft artifacts polluting the repo
 //
 // Tests two scenarios:
@@ -1148,7 +1148,7 @@ func runAgentCleanTest(t *testing.T, hasTrackedBeads bool) {
 	configureTestGitIdentity(t, tmpDir)
 	hqPath := filepath.Join(tmpDir, "test-hq")
 
-	// Build gt binary for testing
+	// Build ms binary for testing
 	gtBinary := buildGT(t)
 
 	// Step 1: Create test git repo with some committed files
@@ -1207,14 +1207,14 @@ func runAgentCleanTest(t *testing.T, hasTrackedBeads bool) {
 		}
 	}
 
-	// Step 2: Run gt install
+	// Step 2: Run ms install
 	cmd := exec.Command(gtBinary, "install", hqPath, "--name", "test-town")
 	cmd.Env = append(os.Environ(), "HOME="+tmpDir)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("gt install failed: %v\nOutput: %s", err, output)
+		t.Fatalf("ms install failed: %v\nOutput: %s", err, output)
 	}
-	t.Logf("gt install output:\n%s", output)
+	t.Logf("ms install output:\n%s", output)
 
 	// Bridge the test Dolt server PID so AddRig's IsRunning check passes.
 	bridgeDoltPidToTown(t, hqPath)
@@ -1256,12 +1256,12 @@ func runAgentCleanTest(t *testing.T, hasTrackedBeads bool) {
 	// Step 4: Create a crew member
 	cmd = exec.Command(gtBinary, "crew", "add", "testcrew", "--rig", "testrig")
 	cmd.Dir = hqPath
-	cmd.Env = append(os.Environ(), "HOME="+tmpDir, "GT_ROOT="+hqPath)
+	cmd.Env = append(os.Environ(), "HOME="+tmpDir, "MS_ROOT="+hqPath)
 	output, err = cmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("gt crew add failed: %v\nOutput: %s", err, output)
+		t.Fatalf("ms crew add failed: %v\nOutput: %s", err, output)
 	}
-	t.Logf("gt crew add output:\n%s", output)
+	t.Logf("ms crew add output:\n%s", output)
 
 	// Step 5: Create a miner (non-fatal: beads infrastructure may not support
 	// agent bead creation in environments without a running Dolt server).
@@ -1272,13 +1272,13 @@ func runAgentCleanTest(t *testing.T, hasTrackedBeads bool) {
 	defer cancel()
 	cmd = exec.CommandContext(ctx, gtBinary, "miner", "add", "testrig", "TestCat")
 	cmd.Dir = hqPath
-	cmd.Env = append(os.Environ(), "HOME="+tmpDir, "GT_ROOT="+hqPath)
+	cmd.Env = append(os.Environ(), "HOME="+tmpDir, "MS_ROOT="+hqPath)
 	output, err = cmd.CombinedOutput()
 	if err != nil {
-		t.Logf("gt miner identity add failed (non-fatal, beads may not be available): %v", err)
+		t.Logf("ms miner identity add failed (non-fatal, beads may not be available): %v", err)
 	} else {
 		minerCreated = true
-		t.Logf("gt miner identity add output:\n%s", output)
+		t.Logf("ms miner identity add output:\n%s", output)
 	}
 
 	// Step 6: Define all agent worktrees to check
@@ -1370,7 +1370,7 @@ func checkWorktreeClean(t *testing.T, agent agentWorktree, hasTrackedBeads bool)
 		allowlist["?? .beads/issues.jsonl"] = true         // Issues log
 		allowlist["?? .beads/metadata.json"] = true        // Beads metadata
 		allowlist["M .beads/metadata.json"] = true         // Tracked metadata is rewritten to the active Dolt server in tracked-beads mode
-		allowlist["?? .beads/.gt-types-configured"] = true // Custom types sentinel
+		allowlist["?? .beads/.ms-types-configured"] = true // Custom types sentinel
 		allowlist["?? .beads/.locks/"] = true              // Beads lock files directory
 		allowlist["?? .beads/dolt-access.lock"] = true     // Dolt access lock
 		allowlist["?? .beads/dolt/"] = true                // Dolt database directory

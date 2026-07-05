@@ -16,10 +16,10 @@ Consensus and model-aware molecules are **complementary layers** that share the 
 |---|---|---|
 | **Pattern** | Fan-out | DAG routing |
 | **Shape** | Same prompt → N agents → compare | N steps → best model per step |
-| **Session infra** | `GT_AGENT` + `AgentPresetInfo` readiness | Same — reused, not rebuilt |
+| **Session infra** | `MS_AGENT` + `AgentPresetInfo` readiness | Same — reused, not rebuilt |
 | **Routing goal** | Diversity (multiple perspectives) | Optimality (right model for each step) |
 
-The provider resolution pipeline that Consensus v2 established — `GT_AGENT` env lookup → `AgentPresetInfo` → readiness detection (prompt polling or delay fallback) — is exactly the session awareness the molecule router needs for dispatch. See §5.3 (Two-Phase Routing).
+The provider resolution pipeline that Consensus v2 established — `MS_AGENT` env lookup → `AgentPresetInfo` → readiness detection (prompt polling or delay fallback) — is exactly the session awareness the molecule router needs for dispatch. See §5.3 (Two-Phase Routing).
 
 ---
 
@@ -31,7 +31,7 @@ Molecules currently support dependency-based DAG execution, but lack the ability
 2. **Subscription support** — Support Claude Code and other subscription-based access (crucial for cost optimization)
 3. **Automatic pricing data** — Fetch live pricing from OpenRouter; fall back to cached data
 4. **Meta-model routing** — Lightweight heuristic selects model based on cost, quality, and quota
-5. **Local usage tracking** — Record invocations to `~/.gt/usage.jsonl` (OTel additive/optional)
+5. **Local usage tracking** — Record invocations to `~/.ms/usage.jsonl` (OTel additive/optional)
 
 ---
 
@@ -42,9 +42,9 @@ Molecules currently support dependency-based DAG execution, but lack the ability
 | **Molecule-Level Constraints** | Add model/capability constraints to molecule steps |
 | **Subscription Support** | Support both API key AND subscription-based access |
 | **Live Pricing** | Fetch pricing from OpenRouter with 24h local cache |
-| **Static Benchmarks** | Bundle MMLU/SWE scores; override via `~/.gt/models.toml` |
+| **Static Benchmarks** | Bundle MMLU/SWE scores; override via `~/.ms/models.toml` |
 | **Meta-Model Routing** | Heuristic-only scoring: no LLM calls |
-| **Local Usage Tracking** | `~/.gt/usage.jsonl` always written; OTel is additive |
+| **Local Usage Tracking** | `~/.ms/usage.jsonl` always written; OTel is additive |
 | **DAG Compatible** | Works with existing molecule DAG structure |
 | **Backward Compatible** | Existing formulas work without modification |
 
@@ -79,8 +79,8 @@ All implementation stories in this plan must pass these quality gates:
 **Acceptance Criteria**:
 - [x] `internal/models/database.go` contains static model entries with benchmark scores
 - [x] Pricing is fetched from OpenRouter (`https://openrouter.ai/api/v1/models`) with 24h cache
-- [x] Cache stored at `~/.gt/models_pricing_cache.json`; fetching fails gracefully (zero pricing used)
-- [x] `~/.gt/models.toml` overrides or extends any field including prices, benchmarks, new models
+- [x] Cache stored at `~/.ms/models_pricing_cache.json`; fetching fails gracefully (zero pricing used)
+- [x] `~/.ms/models.toml` overrides or extends any field including prices, benchmarks, new models
 - [x] `GetModel(db, id)` returns model metadata or nil
 - [x] `LoadDatabase(gtDir)` = static + OpenRouter pricing + user overrides
 
@@ -115,21 +115,21 @@ All implementation stories in this plan must pass these quality gates:
 **Description**: As a system, I want to track model usage locally so that operators can monitor costs without depending on OTel.
 
 **Acceptance Criteria**:
-- [x] `internal/models/usage.go` records usage to `~/.gt/usage.jsonl` (always)
+- [x] `internal/models/usage.go` records usage to `~/.ms/usage.jsonl` (always)
 - [x] Each entry: timestamp, model ID, provider, access_type, tokens in/out, cost, success, latency, reason
 - [x] `LoadUsage(gtDir, since)` reads and filters entries
 - [x] `MonthlyStats(entries, year, month)` aggregates by model
 - [x] `TotalCost(entries)` sums USD cost
-- [x] OTel integration is additive — callers emit OTel events separately if `GT_OTEL_LOGS_URL` is set
+- [x] OTel integration is additive — callers emit OTel events separately if `MS_OTEL_LOGS_URL` is set
 
-### US-006: Enhanced `gt prime` with Model Info
+### US-006: Enhanced `ms prime` with Model Info
 
-**Description**: As an operator, I want `gt prime` to show which models are available for each step and which model will be used.
+**Description**: As an operator, I want `ms prime` to show which models are available for each step and which model will be used.
 
 **Acceptance Criteria**:
 - [ ] Each step shows: constraint type, recommended model, access type, estimated cost
 - [ ] Fallback models are listed when primary is unavailable
-- [ ] `gt step <step-id>` executes a specific step with model routing
+- [ ] `ms step <step-id>` executes a specific step with model routing
 - [ ] Visual indicators: `✓ subscription` vs `$0.003/K api_key`
 
 ### US-007: Batch DAG Execution with Model Assignment
@@ -137,19 +137,19 @@ All implementation stories in this plan must pass these quality gates:
 **Description**: As an operator, I want to execute an entire molecule with automatic model assignment per step.
 
 **Acceptance Criteria**:
-- [ ] `gt mol execute --auto-route <mol-id>` reads constraints and routes per step
+- [ ] `ms mol execute --auto-route <mol-id>` reads constraints and routes per step
 - [ ] Parallel steps execute simultaneously when available
 - [ ] Failed routing shows which constraint could not be satisfied
 
 ### US-008: Usage Reporting CLI
 
-**Description**: As an operator, I want `gt usage` to show comprehensive usage statistics.
+**Description**: As an operator, I want `ms usage` to show comprehensive usage statistics.
 
 **Acceptance Criteria**:
-- [ ] `gt usage` shows monthly summary: total cost, invocations, subscription uses
+- [ ] `ms usage` shows monthly summary: total cost, invocations, subscription uses
 - [ ] Table: provider, model, tokens, cost, success rate
-- [ ] `gt usage --month 2025-02` filters to a specific month
-- [ ] Historical data loaded from `~/.gt/usage.jsonl`
+- [ ] `ms usage --month 2025-02` filters to a specific month
+- [ ] Historical data loaded from `~/.ms/usage.jsonl`
 
 ---
 
@@ -179,7 +179,7 @@ type ModelEntry struct {
     Name          string   // "Claude Sonnet 4.5"
     OpenRouterID  string   // "anthropic/claude-sonnet-4-5" (for pricing fetch)
 
-    // Benchmark scores (static, overridable via ~/.gt/models.toml)
+    // Benchmark scores (static, overridable via ~/.ms/models.toml)
     MMLUScore     float64
     SWEScore      float64
 
@@ -196,18 +196,18 @@ type ModelEntry struct {
     GoodFor              []string
 }
 
-// LoadDatabase merges: static benchmarks → OpenRouter pricing → ~/.gt/models.toml overrides
+// LoadDatabase merges: static benchmarks → OpenRouter pricing → ~/.ms/models.toml overrides
 func LoadDatabase(gtDir string) []ModelEntry
 ```
 
 **External pricing source**: OpenRouter (`https://openrouter.ai/api/v1/models`)
 - No API key required
 - Returns per-token pricing for hundreds of models
-- Response cached to `~/.gt/models_pricing_cache.json` for 24h
+- Response cached to `~/.ms/models_pricing_cache.json` for 24h
 - Fetch timeout: 5s; failures are non-fatal (zero pricing used as fallback)
 
 **Benchmark data**: Bundled statically in `staticDB` (from published evaluations).
-Override or extend via `~/.gt/models.toml`:
+Override or extend via `~/.ms/models.toml`:
 
 ```toml
 # Override a built-in model's benchmark
@@ -259,8 +259,8 @@ type RoutingDecision struct {
     SWEScore     float64
 
     // Session resolution (Phase 2) — nil when no live session found
-    SessionID    string   // tmux session name, e.g. "gt-mineshaft-miner-Toast"
-    AgentPreset  string   // resolved GT_AGENT value, e.g. "claude", "gemini"
+    SessionID    string   // tmux session name, e.g. "ms-mineshaft-miner-Toast"
+    AgentPreset  string   // resolved MS_AGENT value, e.g. "claude", "gemini"
 }
 
 func SelectModel(constraints StepConstraints, db []ModelEntry) (*RoutingDecision, error)
@@ -277,7 +277,7 @@ Scoring:
 
 #### Phase 2 — Session Resolution (`ResolveSession`)
 
-After a model is selected, find a **live, idle tmux session** running that model. This reuses the existing `GT_AGENT` + `AgentPresetInfo` infrastructure from the provider resolution pipeline — the same logic Consensus v2 uses.
+After a model is selected, find a **live, idle tmux session** running that model. This reuses the existing `MS_AGENT` + `AgentPresetInfo` infrastructure from the provider resolution pipeline — the same logic Consensus v2 uses.
 
 ```go
 // internal/models/router.go (planned)
@@ -287,7 +287,7 @@ After a model is selected, find a **live, idle tmux session** running that model
 //
 // Resolution:
 //  1. List active tmux sessions
-//  2. Read GT_AGENT env var from each session
+//  2. Read MS_AGENT env var from each session
 //  3. Look up AgentPresetInfo for that agent name
 //  4. Check readiness: prompt polling (ReadyPromptPrefix e.g. "❯ ") or delay fallback (ReadyDelayMs)
 //  5. Return first session that matches ModelID and is idle
@@ -391,25 +391,25 @@ export GOOGLE_API_KEY=xxx
 export DEEPSEEK_API_KEY=xxx
 
 # Model Defaults (new)
-export GT_DEFAULT_MODEL=claude-sonnet-4-5  # fallback for unconstrained steps
-export GT_PREFERRED_PROVIDER=anthropic
+export MS_DEFAULT_MODEL=claude-sonnet-4-5  # fallback for unconstrained steps
+export MS_PREFERRED_PROVIDER=anthropic
 
 # Thresholds (new)
-export GT_MIN_MMLU=80
-export GT_MIN_SWE=50
-export GT_MAX_COST=0.005
+export MS_MIN_MMLU=80
+export MS_MIN_SWE=50
+export MS_MAX_COST=0.005
 
 # Usage tracking
-export GT_TRACK_USAGE=true   # default true; set false to disable
+export MS_TRACK_USAGE=true   # default true; set false to disable
 ```
 
-Note: `CLAUDE_CODE_QUOTA` is **not** a real env var — Claude Code does not expose token quota programmatically. If quota tracking is needed, derive it from `~/.gt/usage.jsonl` entries with `access_type="subscription"`.
+Note: `CLAUDE_CODE_QUOTA` is **not** a real env var — Claude Code does not expose token quota programmatically. If quota tracking is needed, derive it from `~/.ms/usage.jsonl` entries with `access_type="subscription"`.
 
 ---
 
 ## 7. Configuration Files
 
-### `~/.gt/models.toml` — Model Database Override
+### `~/.ms/models.toml` — Model Database Override
 
 ```toml
 # Override built-in benchmark scores
@@ -427,7 +427,7 @@ context_window = 131072
 good_for = ["coding", "reasoning"]
 ```
 
-### `~/.gt/models_pricing_cache.json` — OpenRouter pricing cache (auto-managed)
+### `~/.ms/models_pricing_cache.json` — OpenRouter pricing cache (auto-managed)
 
 Written by `LoadDatabase`; refreshed after 24h. Do not edit manually.
 
@@ -435,7 +435,7 @@ Written by `LoadDatabase`; refreshed after 24h. Do not edit manually.
 
 ## 8. CLI Integration
 
-### Step constraints in `gt prime` output (planned)
+### Step constraints in `ms prime` output (planned)
 
 ```
 ### Step 2: Analyze requirements
@@ -451,11 +451,11 @@ Written by `LoadDatabase`; refreshed after 24h. Do not edit manually.
 ### New commands (planned)
 
 ```bash
-gt step <step-id>                       # execute step with model routing
-gt mol execute --auto-route <mol-id>    # batch DAG execution with routing
-gt usage                                # monthly cost summary
-gt usage --month 2025-02                # filter to specific month
-gt model route --task coding --mmlu 85  # debug: test routing logic
+ms step <step-id>                       # execute step with model routing
+ms mol execute --auto-route <mol-id>    # batch DAG execution with routing
+ms usage                                # monthly cost summary
+ms usage --month 2025-02                # filter to specific month
+ms model route --task coding --mmlu 85  # debug: test routing logic
 ```
 
 ---
@@ -553,9 +553,9 @@ description = "Thorough work with quality model within budget"
 
 ### Phase 3: Session-Aware Dispatch (P0)
 
-Implement `ResolveSession()` using the existing `GT_AGENT` + `AgentPresetInfo` infrastructure:
+Implement `ResolveSession()` using the existing `MS_AGENT` + `AgentPresetInfo` infrastructure:
 
-- [ ] Scan live tmux sessions; read `GT_AGENT` env var per session (already done in `sling_helpers.go`)
+- [ ] Scan live tmux sessions; read `MS_AGENT` env var per session (already done in `sling_helpers.go`)
 - [ ] Look up `AgentPresetInfo` by agent name to get `ReadyPromptPrefix` / `ReadyDelayMs`
 - [ ] Implement idle check: prompt polling for agents with `ReadyPromptPrefix`, delay fallback otherwise
 - [ ] Return first idle session whose agent matches `RoutingDecision.ModelID`; set `SessionID` + `AgentPreset`
@@ -564,10 +564,10 @@ Implement `ResolveSession()` using the existing `GT_AGENT` + `AgentPresetInfo` i
 
 ### Phase 4: CLI Integration (P1)
 
-- [ ] Update `gt prime` to show model constraints, routing recommendation, and live session per step
-- [ ] Implement `gt step` for single-step execution with two-phase routing
-- [ ] Implement `gt mol execute --auto-route` for batch DAG execution
-- [ ] Implement `gt usage` and `gt usage --month`
+- [ ] Update `ms prime` to show model constraints, routing recommendation, and live session per step
+- [ ] Implement `ms step` for single-step execution with two-phase routing
+- [ ] Implement `ms mol execute --auto-route` for batch DAG execution
+- [ ] Implement `ms usage` and `ms usage --month`
 
 ### Phase 5: Usage Recording at Dispatch (P1)
 
@@ -618,7 +618,7 @@ needs = ["previous-step"]
 - Formula steps can specify per-step model constraints
 - Subscription access is detected and preferred over API keys automatically
 - Model pricing is fetched from OpenRouter and cached locally (no API key required)
-- Usage is tracked locally to `~/.gt/usage.jsonl` regardless of OTel configuration
+- Usage is tracked locally to `~/.ms/usage.jsonl` regardless of OTel configuration
 - Existing formulas continue to work unchanged
 
 ---
@@ -628,7 +628,7 @@ needs = ["previous-step"]
 | Question | Discussion |
 |----------|-------------|
 | **Dispatch mechanism** | Resolved: `ResolveSession()` targets the live tmux session directly. The routing decision (`SessionID`, `AgentPreset`) is the dispatch target — no separate env var injection needed. The step description is sent via the existing `tmux send-keys` / nudge path. |
-| **Model ID ↔ GT_AGENT mapping** | `GT_AGENT` values are agent preset names (`"claude"`, `"gemini"`), not model IDs (`"claude-sonnet-4-5"`). Need a mapping: `AgentPresetInfo` could carry a `DefaultModelID` field, or sessions could set an additional `GT_MODEL` env var at spawn time for precise matching. |
+| **Model ID ↔ MS_AGENT mapping** | `MS_AGENT` values are agent preset names (`"claude"`, `"gemini"`), not model IDs (`"claude-sonnet-4-5"`). Need a mapping: `AgentPresetInfo` could carry a `DefaultModelID` field, or sessions could set an additional `MS_MODEL` env var at spawn time for precise matching. |
 | **Multiple sessions for same model** | If two Claude sessions are idle and both qualify, which gets the step? Current proposal: first idle session wins (FIFO). Alternative: round-robin or load-based. |
 | **Cost-based auto-switch** | Should the system switch to cheaper models mid-session if budget is nearly exhausted? |
 | **Model performance learning** | Should historical success rates (from usage.jsonl) influence routing weights? |

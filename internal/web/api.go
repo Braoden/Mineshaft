@@ -24,7 +24,7 @@ import (
 
 // CommandRequest is the JSON request body for /api/run.
 type CommandRequest struct {
-	// Command is the gt command to run (without the "gt" prefix).
+	// Command is the ms command to run (without the "ms" prefix).
 	// Example: "status --json" or "mail inbox"
 	Command string `json:"command"`
 	// Timeout in seconds (optional; see WebTimeoutsConfig for defaults)
@@ -49,7 +49,7 @@ type CommandListResponse struct {
 
 // APIHandler handles API requests for the dashboard.
 type APIHandler struct {
-	// gtPath is the path to the gt binary. If empty, uses "gt" from PATH.
+	// gtPath is the path to the ms binary. If empty, uses "ms" from PATH.
 	gtPath string
 	// workDir is the working directory for command execution.
 	workDir string
@@ -68,7 +68,7 @@ type APIHandler struct {
 
 const optionsCacheTTL = 30 * time.Second
 
-// maxConcurrentCommands limits how many gt subprocesses can run at once.
+// maxConcurrentCommands limits how many ms subprocesses can run at once.
 // handleOptions alone spawns 7; allow headroom for other concurrent handlers.
 const maxConcurrentCommands = 12
 
@@ -77,11 +77,11 @@ func NewAPIHandler(defaultRunTimeout, maxRunTimeout time.Duration, csrfToken str
 	if csrfToken == "" {
 		log.Printf("WARNING: APIHandler created with empty CSRF token — POST requests will not be protected")
 	}
-	// Use PATH lookup for gt binary. Do NOT use os.Executable() here - during
+	// Use PATH lookup for ms binary. Do NOT use os.Executable() here - during
 	// tests it returns the test binary, causing fork bombs when executed.
 	workDir, _ := os.Getwd()
 	return &APIHandler{
-		gtPath:            "gt",
+		gtPath:            "ms",
 		workDir:           workDir,
 		defaultRunTimeout: defaultRunTimeout,
 		maxRunTimeout:     maxRunTimeout,
@@ -149,7 +149,7 @@ func (h *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleRun executes a gt command and returns the result.
+// handleRun executes a ms command and returns the result.
 func (h *APIHandler) handleRun(w http.ResponseWriter, r *http.Request) {
 	var req CommandRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -227,7 +227,7 @@ func (h *APIHandler) handleCommands(w http.ResponseWriter, _ *http.Request) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
-// runGtCommand executes a gt command with the given args.
+// runGtCommand executes a ms command with the given args.
 func (h *APIHandler) runGtCommand(ctx context.Context, timeout time.Duration, args []string) (string, error) {
 	// Apply timeout first so it bounds both semaphore wait and command execution.
 	ctx, cancel := context.WithTimeout(ctx, timeout)
@@ -593,7 +593,7 @@ func (h *APIHandler) handleMailSend(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// parseMailInboxText parses text output from "gt mail inbox".
+// parseMailInboxText parses text output from "ms mail inbox".
 func parseMailInboxText(output string) []MailMessage {
 	var messages []MailMessage
 	lines := strings.Split(output, "\n")
@@ -643,7 +643,7 @@ func parseMailInboxText(output string) []MailMessage {
 	return messages
 }
 
-// parseMailReadOutput parses the output from "gt mail read <id>".
+// parseMailReadOutput parses the output from "ms mail read <id>".
 func parseMailReadOutput(output string, msgID string) MailMessage {
 	msg := MailMessage{ID: msgID}
 	lines := strings.Split(output, "\n")
@@ -897,10 +897,10 @@ func findRigsConfigPath(startDir string) (string, error) {
 	}
 }
 
-// parseRigListOutput extracts rig names from the text output of "gt rig list".
+// parseRigListOutput extracts rig names from the text output of "ms rig list".
 // Example output:
 //
-//	Rigs in /Users/foo/gt:
+//	Rigs in /Users/foo/ms:
 //	  claycantrell
 //	    Miners: 1  Crew: 2
 //	  mineshaft
@@ -922,7 +922,7 @@ func parseRigListOutput(output string) []string {
 	return rigs
 }
 
-// parseRigListJSON extracts rig names from JSON output of "gt rig list --json".
+// parseRigListJSON extracts rig names from JSON output of "ms rig list --json".
 func parseRigListJSON(jsonStr string) []string {
 	var rigList []struct {
 		Name string `json:"name"`
@@ -953,7 +953,7 @@ func parseMinecartListJSON(jsonStr string) []string {
 	}
 	ids := make([]string, 0, len(minecarts))
 	for _, c := range minecarts {
-		if c.ID != "" && (c.IssueType == "minecart" || webAPIHasLabel(c.Labels, "gt:minecart")) {
+		if c.ID != "" && (c.IssueType == "minecart" || webAPIHasLabel(c.Labels, "ms:minecart")) {
 			ids = append(ids, c.ID)
 		}
 	}
@@ -1033,7 +1033,7 @@ func parseCrewListOutput(output string) []string {
 	return crew
 }
 
-// parseAgentsFromStatus extracts agents with status from "gt status --json" output.
+// parseAgentsFromStatus extracts agents with status from "ms status --json" output.
 func parseAgentsFromStatus(jsonStr string) []OptionItem {
 	var status struct {
 		Agents []struct {
@@ -1812,7 +1812,7 @@ func (h *APIHandler) handleCrew(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
 	defer cancel()
 
-	// Run gt crew list --all --json to get crew across all rigs
+	// Run ms crew list --all --json to get crew across all rigs
 	output, err := h.runGtCommand(ctx, 10*time.Second, []string{"crew", "list", "--all", "--json"})
 
 	resp := CrewResponse{
@@ -2017,7 +2017,7 @@ func (h *APIHandler) handleReady(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
 	defer cancel()
 
-	// Run gt ready --json to get ready work
+	// Run ms ready --json to get ready work
 	output, err := h.runGtCommand(ctx, 12*time.Second, []string{"ready", "--json"})
 
 	resp := ReadyResponse{
@@ -2031,7 +2031,7 @@ func (h *APIHandler) handleReady(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Parse the JSON output from gt ready
+	// Parse the JSON output from ms ready
 	var readyData struct {
 		Sources []struct {
 			Name   string `json:"name"`
@@ -2350,7 +2350,7 @@ func (h *APIHandler) handleRigAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Run gt rig add
+	// Run ms rig add
 	ctx, cancel := context.WithTimeout(r.Context(), 60*time.Second)
 	defer cancel()
 

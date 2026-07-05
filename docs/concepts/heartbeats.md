@@ -9,8 +9,8 @@ refreshed its session heartbeat while the file store aged past threshold).
 
 ### 1. Supervisor heartbeat file — `<townRoot>/supervisor/heartbeat.json`
 
-- **Written by:** `gt supervisor heartbeat [action]` and `gt heartbeat` when
-  `GT_ROLE=supervisor` → `supervisor.Touch()` / `supervisor.TouchWithAction()`
+- **Written by:** `ms supervisor heartbeat [action]` and `ms heartbeat` when
+  `MS_ROLE=supervisor` → `supervisor.Touch()` / `supervisor.TouchWithAction()`
   (`internal/supervisor/heartbeat.go`).
 - **Read by:** the stuck-agent-dog plugin (parses the JSON `timestamp`, falling
   back to mtime for malformed legacy files, and cross-checks tmux activity
@@ -21,15 +21,15 @@ refreshed its session heartbeat while the file store aged past threshold).
 
 ### 2. Session heartbeat (per-session state store)
 
-- **Written by:** `gt heartbeat [--state=working|idle|exiting|stuck]` →
-  `miner.TouchSessionHeartbeatWithState()`. Requires `GT_SESSION`.
+- **Written by:** `ms heartbeat [--state=working|idle|exiting|stuck]` →
+  `miner.TouchSessionHeartbeatWithState()`. Requires `MS_SESSION`.
 - **Read by:** the Witness, which reads the self-reported state instead of
-  inferring liveness from timers (ZFC: gt-3vr5). This is the store miners
+  inferring liveness from timers (ZFC: ms-3vr5). This is the store miners
   refresh.
 
 ### 3. Agent-bead label — `heartbeat:<EPOCH>` on the agent bead (e.g. `hq-supervisor`)
 
-- **Written by:** `gt mol await-signal` on each timeout/signal wake
+- **Written by:** `ms mol await-signal` on each timeout/signal wake
   (`updateAgentHeartbeat` in `internal/cmd/molecule_await_signal.go`). A
   label rewrite is used because `bd agent heartbeat` was never shipped
   (steveyegge/beads#2828). Supervisor heartbeat commands also sync this label when
@@ -43,10 +43,10 @@ refreshed its session heartbeat while the file store aged past threshold).
 
 ## Rules of thumb
 
-- **Supervisor sessions:** `gt supervisor heartbeat` refreshes the Supervisor file and
-  throttled bead label. `gt heartbeat` also refreshes the session store and,
-  when `GT_ROLE=supervisor`, uses the same Supervisor file/label sync path.
-- **Miners / Witness / Refinery:** `gt heartbeat` (session store) is the
+- **Supervisor sessions:** `ms supervisor heartbeat` refreshes the Supervisor file and
+  throttled bead label. `ms heartbeat` also refreshes the session store and,
+  when `MS_ROLE=supervisor`, uses the same Supervisor file/label sync path.
+- **Miners / Witness / Refinery:** `ms heartbeat` (session store) is the
   one that matters.
 - **Monitoring scripts:** never declare an agent stuck from a single store.
   Cross-check tmux session activity (`tmux display-message -p

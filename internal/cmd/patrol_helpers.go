@@ -31,7 +31,7 @@ type PatrolConfig struct {
 // maxStalePurgePerRun caps the number of stale patrol beads cleaned up in a
 // single findActivePatrol call. Without a cap, N accumulated orphans produce
 // N×K sequential Dolt queries (K = closeDescendants depth), overwhelming the
-// server when multiple patrol agents call gt patrol report concurrently (gt-18dzn6p).
+// server when multiple patrol agents call ms patrol report concurrently (ms-18dzn6p).
 // Remaining stale beads are cleaned by burnPreviousPatrolWisps at cycle end.
 const maxStalePurgePerRun = 5
 
@@ -158,7 +158,7 @@ func formatBeadLine(issue *beads.Issue) string {
 
 // burnPreviousPatrolWisps finds and burns all existing patrol wisps for a role.
 // This prevents orphaned root wisp accumulation when a new patrol cycle starts
-// without the previous one being properly closed (gt-92jh).
+// without the previous one being properly closed (ms-92jh).
 // Errors are logged as warnings but don't block new patrol creation.
 func burnPreviousPatrolWisps(cfg PatrolConfig) {
 	b := cfg.Beads
@@ -199,7 +199,7 @@ func burnPreviousPatrolWisps(cfg PatrolConfig) {
 
 // autoSpawnPatrol creates and pins a new patrol wisp.
 // Before creating, it burns any existing patrol wisps for this role to prevent
-// orphaned root wisp accumulation (gt-92jh). This makes the function
+// orphaned root wisp accumulation (ms-92jh). This makes the function
 // self-cleaning regardless of the caller.
 // Returns the patrol ID or an error.
 func autoSpawnPatrol(cfg PatrolConfig) (string, error) {
@@ -211,16 +211,16 @@ func autoSpawnPatrol(cfg PatrolConfig) (string, error) {
 
 	// Resolve the beads directory following redirects.
 	// This ensures bd targets the correct database (e.g., rig database
-	// instead of HQ) regardless of inherited BEADS_DIR. See gt-ctir.
+	// instead of HQ) regardless of inherited BEADS_DIR. See ms-ctir.
 	resolvedBeadsDir := beads.ResolveBeadsDir(cfg.BeadsDir)
 
 	// Burn any existing patrol wisps for this role before creating a new one.
 	// Without this, each patrol cycle leaks a root wisp into the DB, producing
-	// ~500-700 orphans/day across all patrol formulas (gt-92jh).
+	// ~500-700 orphans/day across all patrol formulas (ms-92jh).
 	burnPreviousPatrolWisps(cfg)
 
 	// Find the proto ID for the patrol molecule
-	cmdCatalog := exec.Command("gt", "formula", "list")
+	cmdCatalog := exec.Command("ms", "formula", "list")
 	cmdCatalog.Dir = cfg.BeadsDir
 	var stdoutCatalog, stderrCatalog bytes.Buffer
 	cmdCatalog.Stdout = &stdoutCatalog
@@ -302,7 +302,7 @@ func autoSpawnPatrol(cfg PatrolConfig) (string, error) {
 		return "", fmt.Errorf("created wisp but could not parse ID from output")
 	}
 
-	// Hook the wisp to the agent so gt mol status sees it
+	// Hook the wisp to the agent so ms mol status sees it
 	if err := BdCmd("update", patrolID, "--status=hooked", "--assignee="+cfg.Assignee).
 		WithAutoCommit().
 		WithBeadsDir(resolvedBeadsDir).

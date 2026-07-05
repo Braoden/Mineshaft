@@ -49,9 +49,9 @@ func (c *DiskSpaceCheck) Run(ctx *CheckContext) *CheckResult {
 					util.FormatBytesHuman(info.TotalBytes),
 					info.UsedPercent),
 				"Disk space exhaustion causes: Dolt data loss, miner session death, lost commits",
-				"Free up space immediately, then run 'gt doctor --fix' to recover",
+				"Free up space immediately, then run 'ms doctor --fix' to recover",
 			},
-			FixHint: "Free disk space, then run 'gt doctor --fix'",
+			FixHint: "Free disk space, then run 'ms doctor --fix'",
 		}
 
 	case util.DiskSpaceWarning:

@@ -181,7 +181,7 @@ func TestSandbox_DenyWriteOutsideProjectDir(t *testing.T) {
 }
 
 // TestSandbox_DenyWriteToGTRoot verifies that a sandboxed miner
-// cannot write to the GT town root (~/gt/) — only its own worktree.
+// cannot write to the MS town root (~/ms/) — only its own worktree.
 func TestSandbox_DenyWriteToGTRoot(t *testing.T) {
 	skipIfNoSandboxExec(t)
 	t.Parallel()
@@ -190,25 +190,25 @@ func TestSandbox_DenyWriteToGTRoot(t *testing.T) {
 	profileDir := t.TempDir()
 	profilePath := writeSandboxProfile(t, profileDir)
 
-	// Try to write to home directory (simulates ~/gt/ — outside project dir AND /private/tmp)
+	// Try to write to home directory (simulates ~/ms/ — outside project dir AND /private/tmp)
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		t.Fatalf("get home dir: %v", err)
 	}
-	forbiddenFile := filepath.Join(homeDir, ".sandbox-gt-root-test")
+	forbiddenFile := filepath.Join(homeDir, ".sandbox-ms-root-test")
 
 	shellCmd := fmt.Sprintf("echo '{\"compromised\":true}' > %q 2>&1; echo exit=$?", forbiddenFile)
 	stdout, _, _ := runInSandbox(profilePath, projectDir, shellCmd)
 
 	if _, err := os.Stat(forbiddenFile); err == nil {
 		os.Remove(forbiddenFile)
-		t.Fatal("sandbox allowed write to home dir (simulating GT root)")
+		t.Fatal("sandbox allowed write to home dir (simulating MS root)")
 	}
 
 	if strings.Contains(stdout, "exit=0") {
-		t.Error("expected non-zero exit from write to GT root area")
+		t.Error("expected non-zero exit from write to MS root area")
 	}
-	t.Logf("write to GT root correctly denied: %s", strings.TrimSpace(stdout))
+	t.Logf("write to MS root correctly denied: %s", strings.TrimSpace(stdout))
 }
 
 // TestSandbox_DenyExternalNetwork verifies that network connections
@@ -354,7 +354,7 @@ echo "DONE"
 
 	// Build the startup command (this is what session_manager would do)
 	startupCmd := BuildStartupCommand(
-		map[string]string{"GT_ROLE": "testrig/miners/test"},
+		map[string]string{"MS_ROLE": "testrig/miners/test"},
 		rigPath, "",
 	)
 

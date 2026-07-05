@@ -154,12 +154,12 @@ git checkout "$DEFAULT_BRANCH" >/dev/null 2>&1
 remote_sha=$(get_sha HEAD)
 git merge --no-ff integration/epic-2 -m "land integration" >/dev/null 2>&1
 local_sha=$(get_sha HEAD)
-unset GT_INTEGRATION_LAND 2>/dev/null || true
+unset MS_INTEGRATION_LAND 2>/dev/null || true
 assert_block "Integration merge blocked (no env var)" run_hook "refs/heads/$DEFAULT_BRANCH" "$local_sha" "refs/heads/$DEFAULT_BRANCH" "$remote_sha"
 cleanup
 
-# Test 7: Push to default branch with integration merge + GT_INTEGRATION_LAND=1 — ALLOWED
-echo "Test 7: Push to default branch with integration merge + GT_INTEGRATION_LAND=1"
+# Test 7: Push to default branch with integration merge + MS_INTEGRATION_LAND=1 — ALLOWED
+echo "Test 7: Push to default branch with integration merge + MS_INTEGRATION_LAND=1"
 setup_repos
 cd "$TMPDIR/local"
 git checkout -b integration/epic-3 >/dev/null 2>&1
@@ -171,7 +171,7 @@ git checkout "$DEFAULT_BRANCH" >/dev/null 2>&1
 remote_sha=$(get_sha HEAD)
 git merge --no-ff integration/epic-3 -m "land integration" >/dev/null 2>&1
 local_sha=$(get_sha HEAD)
-GT_INTEGRATION_LAND=1 assert_pass "Integration merge allowed (env var set)" run_hook "refs/heads/$DEFAULT_BRANCH" "$local_sha" "refs/heads/$DEFAULT_BRANCH" "$remote_sha"
+MS_INTEGRATION_LAND=1 assert_pass "Integration merge allowed (env var set)" run_hook "refs/heads/$DEFAULT_BRANCH" "$local_sha" "refs/heads/$DEFAULT_BRANCH" "$remote_sha"
 cleanup
 
 # Test 8: Push to default branch with non-integration merge — allowed
@@ -210,7 +210,7 @@ git checkout "$DEFAULT_BRANCH" >/dev/null 2>&1
 remote_sha=$(get_sha HEAD)
 git merge --ff-only integration/epic-4 >/dev/null 2>&1
 local_sha=$(get_sha HEAD)
-unset GT_INTEGRATION_LAND 2>/dev/null || true
+unset MS_INTEGRATION_LAND 2>/dev/null || true
 assert_block "FF integration merge blocked" run_hook "refs/heads/$DEFAULT_BRANCH" "$local_sha" "refs/heads/$DEFAULT_BRANCH" "$remote_sha"
 cleanup
 
@@ -223,19 +223,19 @@ git checkout -b session/x >/dev/null 2>&1
 echo "session work" >> file.txt
 git add file.txt && git commit -m "session work" >/dev/null 2>&1
 default_sha=$(get_sha "$DEFAULT_BRANCH")
-unset GT_ALLOW_OFFBRANCH_PUSH 2>/dev/null || true
+unset MS_ALLOW_OFFBRANCH_PUSH 2>/dev/null || true
 assert_block "Off-branch default push blocked (HEAD mismatch)" run_hook "refs/heads/$DEFAULT_BRANCH" "$default_sha" "refs/heads/$DEFAULT_BRANCH" "$default_sha"
 cleanup
 
-# Test 12: Off-branch push with GT_ALLOW_OFFBRANCH_PUSH=1 — ALLOWED (override).
-echo "Test 12: Off-branch push with GT_ALLOW_OFFBRANCH_PUSH=1"
+# Test 12: Off-branch push with MS_ALLOW_OFFBRANCH_PUSH=1 — ALLOWED (override).
+echo "Test 12: Off-branch push with MS_ALLOW_OFFBRANCH_PUSH=1"
 setup_repos
 cd "$TMPDIR/local"
 git checkout -b session/y >/dev/null 2>&1
 echo "session work" >> file.txt
 git add file.txt && git commit -m "session work" >/dev/null 2>&1
 default_sha=$(get_sha "$DEFAULT_BRANCH")
-GT_ALLOW_OFFBRANCH_PUSH=1 assert_pass "Off-branch push allowed with override" run_hook "refs/heads/$DEFAULT_BRANCH" "$default_sha" "refs/heads/$DEFAULT_BRANCH" "$default_sha"
+MS_ALLOW_OFFBRANCH_PUSH=1 assert_pass "Off-branch push allowed with override" run_hook "refs/heads/$DEFAULT_BRANCH" "$default_sha" "refs/heads/$DEFAULT_BRANCH" "$default_sha"
 cleanup
 
 # Test 13: Off-branch deletion push (zero local sha) — not a HEAD mismatch, ALLOWED.
@@ -244,7 +244,7 @@ setup_repos
 cd "$TMPDIR/local"
 git checkout -b session/z >/dev/null 2>&1
 default_sha=$(get_sha "$DEFAULT_BRANCH")
-unset GT_ALLOW_OFFBRANCH_PUSH 2>/dev/null || true
+unset MS_ALLOW_OFFBRANCH_PUSH 2>/dev/null || true
 assert_pass "Off-branch deletion not blocked by HEAD guard" run_hook "refs/heads/$DEFAULT_BRANCH" "0000000000000000000000000000000000000000" "refs/heads/$DEFAULT_BRANCH" "$default_sha"
 cleanup
 

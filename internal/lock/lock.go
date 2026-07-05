@@ -294,14 +294,14 @@ func CleanStaleLocks(root string) (int, error) {
 }
 
 // getActiveTmuxSessions returns a list of active tmux session identifiers.
-// Returns both session names (gt-foo-bar) and session IDs in various formats
+// Returns both session names (ms-foo-bar) and session IDs in various formats
 // (%N, $N) to handle different lock file formats.
 func getActiveTmuxSessions() []string {
 	// Get both session name and ID to handle different lock formats
-	// Format: "session_name:session_id" e.g., "gt-beads-crew-dave:$55"
+	// Format: "session_name:session_id" e.g., "ms-beads-crew-dave:$55"
 	// Use the town's tmux socket so we query the correct server.
 	// Without -L, bare "tmux" queries the "default" socket, which misses
-	// all sessions on the per-town socket (e.g., "gt-a1b2c3") and causes
+	// all sessions on the per-town socket (e.g., "ms-a1b2c3") and causes
 	// CleanStaleLocks to incorrectly remove locks for active sessions.
 	args := []string{}
 	if sock := tmux.GetDefaultSocket(); sock != "" {

@@ -85,7 +85,7 @@ func (c *BranchCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:  StatusWarning,
 		Message: fmt.Sprintf("%d persistent role(s) not on main branch", len(offMain)),
 		Details: offMain,
-		FixHint: "Run 'gt doctor --fix' to switch to main, or manually: git checkout main && git pull",
+		FixHint: "Run 'ms doctor --fix' to switch to main, or manually: git checkout main && git pull",
 	}
 }
 

@@ -112,9 +112,9 @@ func TestTrackMinecartFailure_NoMinecart(t *testing.T) {
 	t.Parallel()
 	mock := newMockBd()
 	// dep list returns empty
-	mock.execResults["dep list gt-abc --direction=up --type=tracks --json"] = mockExecResult{output: "[]"}
+	mock.execResults["dep list ms-abc --direction=up --type=tracks --json"] = mockExecResult{output: "[]"}
 
-	result := TrackMinecartFailure(mock.toBdCli(), "/tmp", "gt-abc")
+	result := TrackMinecartFailure(mock.toBdCli(), "/tmp", "ms-abc")
 	if result != nil {
 		t.Errorf("expected nil for issue with no minecart, got %+v", result)
 	}
@@ -138,7 +138,7 @@ func TestTrackMinecartFailure_RegularMinecart(t *testing.T) {
 		ID   string `json:"id"`
 		Type string `json:"type"`
 	}{{ID: "hq-cv-abc", Type: "tracks"}})
-	mock.execResults["dep list gt-xyz --direction=up --type=tracks --json"] = mockExecResult{output: string(deps)}
+	mock.execResults["dep list ms-xyz --direction=up --type=tracks --json"] = mockExecResult{output: string(deps)}
 
 	// Minecart has no mountain label
 	minecartShow, _ := json.Marshal([]struct {
@@ -146,7 +146,7 @@ func TestTrackMinecartFailure_RegularMinecart(t *testing.T) {
 	}{{Labels: []string{"minecart"}}})
 	mock.execResults["show hq-cv-abc --json"] = mockExecResult{output: string(minecartShow)}
 
-	result := TrackMinecartFailure(mock.toBdCli(), "/tmp", "gt-xyz")
+	result := TrackMinecartFailure(mock.toBdCli(), "/tmp", "ms-xyz")
 	if result == nil {
 		t.Fatal("expected non-nil result for minecart-tracked issue")
 	}
@@ -156,7 +156,7 @@ func TestTrackMinecartFailure_RegularMinecart(t *testing.T) {
 	if result.Warning == "" {
 		t.Error("expected warning for regular minecart failure")
 	}
-	if !strings.Contains(result.Warning, "gt-xyz") {
+	if !strings.Contains(result.Warning, "ms-xyz") {
 		t.Errorf("warning should mention issue ID, got: %s", result.Warning)
 	}
 }
@@ -170,7 +170,7 @@ func TestTrackMinecartFailure_MountainFirstFailure(t *testing.T) {
 		ID   string `json:"id"`
 		Type string `json:"type"`
 	}{{ID: "hq-cv-mtn", Type: "tracks"}})
-	mock.execResults["dep list gt-task1 --direction=up --type=tracks --json"] = mockExecResult{output: string(deps)}
+	mock.execResults["dep list ms-task1 --direction=up --type=tracks --json"] = mockExecResult{output: string(deps)}
 
 	// Minecart has mountain label
 	minecartShow, _ := json.Marshal([]struct {
@@ -182,9 +182,9 @@ func TestTrackMinecartFailure_MountainFirstFailure(t *testing.T) {
 	issueShow, _ := json.Marshal([]struct {
 		Labels []string `json:"labels"`
 	}{{Labels: []string{"task"}}})
-	mock.execResults["show gt-task1 --json"] = mockExecResult{output: string(issueShow)}
+	mock.execResults["show ms-task1 --json"] = mockExecResult{output: string(issueShow)}
 
-	result := TrackMinecartFailure(mock.toBdCli(), "/tmp", "gt-task1")
+	result := TrackMinecartFailure(mock.toBdCli(), "/tmp", "ms-task1")
 	if result == nil {
 		t.Fatal("expected non-nil result")
 	}
@@ -219,7 +219,7 @@ func TestTrackMinecartFailure_MountainThirdFailure_AutoSkip(t *testing.T) {
 		ID   string `json:"id"`
 		Type string `json:"type"`
 	}{{ID: "hq-cv-mtn", Type: "tracks"}})
-	mock.execResults["dep list gt-task2 --direction=up --type=tracks --json"] = mockExecResult{output: string(deps)}
+	mock.execResults["dep list ms-task2 --direction=up --type=tracks --json"] = mockExecResult{output: string(deps)}
 
 	// Minecart has mountain label
 	minecartShow, _ := json.Marshal([]struct {
@@ -231,9 +231,9 @@ func TestTrackMinecartFailure_MountainThirdFailure_AutoSkip(t *testing.T) {
 	issueShow, _ := json.Marshal([]struct {
 		Labels []string `json:"labels"`
 	}{{Labels: []string{"mountain:failures:2"}}})
-	mock.execResults["show gt-task2 --json"] = mockExecResult{output: string(issueShow)}
+	mock.execResults["show ms-task2 --json"] = mockExecResult{output: string(issueShow)}
 
-	result := TrackMinecartFailure(mock.toBdCli(), "/tmp", "gt-task2")
+	result := TrackMinecartFailure(mock.toBdCli(), "/tmp", "ms-task2")
 	if result == nil {
 		t.Fatal("expected non-nil result")
 	}
@@ -265,7 +265,7 @@ func TestTrackMinecartFailure_MountainSecondFailure_NoSkip(t *testing.T) {
 		ID   string `json:"id"`
 		Type string `json:"type"`
 	}{{ID: "hq-cv-mtn", Type: "tracks"}})
-	mock.execResults["dep list gt-task3 --direction=up --type=tracks --json"] = mockExecResult{output: string(deps)}
+	mock.execResults["dep list ms-task3 --direction=up --type=tracks --json"] = mockExecResult{output: string(deps)}
 
 	// Minecart has mountain label
 	minecartShow, _ := json.Marshal([]struct {
@@ -277,9 +277,9 @@ func TestTrackMinecartFailure_MountainSecondFailure_NoSkip(t *testing.T) {
 	issueShow, _ := json.Marshal([]struct {
 		Labels []string `json:"labels"`
 	}{{Labels: []string{"mountain:failures:1"}}})
-	mock.execResults["show gt-task3 --json"] = mockExecResult{output: string(issueShow)}
+	mock.execResults["show ms-task3 --json"] = mockExecResult{output: string(issueShow)}
 
-	result := TrackMinecartFailure(mock.toBdCli(), "/tmp", "gt-task3")
+	result := TrackMinecartFailure(mock.toBdCli(), "/tmp", "ms-task3")
 	if result == nil {
 		t.Fatal("expected non-nil result")
 	}
@@ -322,13 +322,13 @@ func TestTrackMinecartFailures_Integration(t *testing.T) {
 			{
 				MinerName:    "alpha",
 				Classification: ZombieSessionDeadActive,
-				HookBead:       "gt-task-a",
+				HookBead:       "ms-task-a",
 			},
 			{
 				// Completed bead — should NOT be tracked
 				MinerName:    "beta",
 				Classification: ZombieBeadClosedStillRunning,
-				HookBead:       "gt-task-b",
+				HookBead:       "ms-task-b",
 			},
 			{
 				// No hook bead — should NOT be tracked
@@ -340,19 +340,19 @@ func TestTrackMinecartFailures_Integration(t *testing.T) {
 				// Submitted/orphan cleanup — should NOT be tracked as a failure
 				MinerName:    "delta",
 				Classification: ZombieSubmittedStillRunning,
-				HookBead:       "gt-task-d",
+				HookBead:       "ms-task-d",
 				WasActive:      false,
 			},
 		},
 	}
 
-	// Only gt-task-a should be checked for minecart tracking
+	// Only ms-task-a should be checked for minecart tracking
 	// No minecarts for it
-	mock.execResults["dep list gt-task-a --direction=up --type=tracks --json"] = mockExecResult{output: "[]"}
+	mock.execResults["dep list ms-task-a --direction=up --type=tracks --json"] = mockExecResult{output: "[]"}
 
 	trackMinecartFailures(mock.toBdCli(), "/tmp", result)
 
-	// Should have queried only gt-task-a (not gt-task-b, empty, or submitted idle)
+	// Should have queried only ms-task-a (not ms-task-b, empty, or submitted idle)
 	if len(mock.execCalls) != 1 {
 		t.Errorf("expected 1 exec call, got %d: %v", len(mock.execCalls), mock.execCalls)
 	}
@@ -371,7 +371,7 @@ func TestTrackMinecartFailures_MountainZombie(t *testing.T) {
 			{
 				MinerName:    "nux",
 				Classification: ZombieSessionDeadActive,
-				HookBead:       "gt-mtn-task",
+				HookBead:       "ms-mtn-task",
 			},
 		},
 	}
@@ -381,7 +381,7 @@ func TestTrackMinecartFailures_MountainZombie(t *testing.T) {
 		ID   string `json:"id"`
 		Type string `json:"type"`
 	}{{ID: "hq-cv-mtn", Type: "tracks"}})
-	mock.execResults["dep list gt-mtn-task --direction=up --type=tracks --json"] = mockExecResult{output: string(deps)}
+	mock.execResults["dep list ms-mtn-task --direction=up --type=tracks --json"] = mockExecResult{output: string(deps)}
 
 	// Minecart has mountain label
 	minecartShow, _ := json.Marshal([]struct {
@@ -393,7 +393,7 @@ func TestTrackMinecartFailures_MountainZombie(t *testing.T) {
 	issueShow, _ := json.Marshal([]struct {
 		Labels []string `json:"labels"`
 	}{{Labels: []string{}}})
-	mock.execResults["show gt-mtn-task --json"] = mockExecResult{output: string(issueShow)}
+	mock.execResults["show ms-mtn-task --json"] = mockExecResult{output: string(issueShow)}
 
 	trackMinecartFailures(mock.toBdCli(), "/tmp", result)
 
@@ -402,8 +402,8 @@ func TestTrackMinecartFailures_MountainZombie(t *testing.T) {
 	}
 
 	cf := result.MinecartFailures[0]
-	if cf.IssueID != "gt-mtn-task" {
-		t.Errorf("IssueID = %q, want %q", cf.IssueID, "gt-mtn-task")
+	if cf.IssueID != "ms-mtn-task" {
+		t.Errorf("IssueID = %q, want %q", cf.IssueID, "ms-mtn-task")
 	}
 	if !cf.IsMountain {
 		t.Error("expected IsMountain=true")

@@ -41,8 +41,8 @@ Boot lifecycle:
   3. Boot cleans inbox (discards stale handoffs)
   4. Boot exits (or handoffs in non-degraded mode)
 
-Location: ~/gt/supervisor/dogs/boot/
-Session: gt-boot`,
+Location: ~/ms/supervisor/dogs/boot/
+Session: ms-boot`,
 }
 
 var bootStatusCmd = &cobra.Command{
@@ -284,7 +284,7 @@ func runBootTriage(cmd *cobra.Command, args []string) error {
 func runDegradedTriage(b *boot.Boot) (action, target string, err error) {
 	// Abort triage if a shutdown is in progress. Without this check, Boot could
 	// detect Supervisor as "down" during the graceful shutdown window and restart it,
-	// creating a zombie Supervisor that survives gt down.
+	// creating a zombie Supervisor that survives ms down.
 	townRoot, _ := workspace.FindFromCwd()
 	if townRoot != "" && daemon.IsShutdownInProgress(townRoot) {
 		return "nothing", "shutdown-in-progress", nil

@@ -36,7 +36,7 @@ Current enabled rigs: `lilypad_chat` (3 Bitbucket submodules).
 ## Step 1: Find opt-in rigs with submodules
 
 ```bash
-RIG_JSON=$(gt rig list --json 2>/dev/null || true)
+RIG_JSON=$(ms rig list --json 2>/dev/null || true)
 if [ -z "$RIG_JSON" ]; then
   echo "SKIP: could not get rig list"
   exit 0
@@ -49,7 +49,7 @@ while IFS= read -r REPO_PATH; do
   [ ! -f "$REPO_PATH/.gitmodules" ] && continue
   # Check rig plugin config for opt-in
   RIG_NAME=$(basename "$REPO_PATH")
-  PLUGIN_CONFIG=$(gt rig show "$RIG_NAME" --json 2>/dev/null | jq -r '.plugins["submodule-commit"].enabled // false' 2>/dev/null || echo "false")
+  PLUGIN_CONFIG=$(ms rig show "$RIG_NAME" --json 2>/dev/null | jq -r '.plugins["submodule-commit"].enabled // false' 2>/dev/null || echo "false")
   if [ "$PLUGIN_CONFIG" = "true" ]; then
     ENABLED_RIGS+=("$REPO_PATH")
   fi
@@ -78,7 +78,7 @@ for REPO_PATH in "${ENABLED_RIGS[@]}"; do
   RIG_NAME=$(basename "$REPO_PATH")
 
   # Get plugin config
-  RIG_CONFIG=$(gt rig show "$RIG_NAME" --json 2>/dev/null | jq -r '.plugins["submodule-commit"] // {}' 2>/dev/null || echo "{}")
+  RIG_CONFIG=$(ms rig show "$RIG_NAME" --json 2>/dev/null | jq -r '.plugins["submodule-commit"] // {}' 2>/dev/null || echo "{}")
   COMMIT_BRANCH=$(echo "$RIG_CONFIG" | jq -r '.commit_branch // "main"')
   PUSH_ENABLED=$(echo "$RIG_CONFIG" | jq -r '.push_enabled // false')
   ALLOWLIST=$(echo "$RIG_CONFIG" | jq -r '.allowlist // [] | .[]' 2>/dev/null || true)
@@ -181,6 +181,6 @@ echo "$SUMMARY"
 RESULT="success"
 [ -n "$ERRORS" ] && RESULT="warning"
 
-gt plugin record-run --plugin submodule-commit --result "$RESULT" \
+ms plugin record-run --plugin submodule-commit --result "$RESULT" \
   --title "$SUMMARY" --description "$SUMMARY" >/dev/null 2>&1 || true
 ```

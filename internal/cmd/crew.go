@@ -48,14 +48,14 @@ Features:
   - Tmux optional: Can work in terminal directly without tmux session
 
 Commands:
-  gt crew start <name>     Start session (creates workspace if needed)
-  gt crew stop <name>      Stop session(s)
-  gt crew add <name>       Create workspace without starting
-  gt crew list             List workspaces with status
-  gt crew at <name>        Attach to session
-  gt crew remove <name>    Remove workspace
-  gt crew refresh <name>   Context cycle with handoff mail
-  gt crew restart <name>   Kill and restart session fresh`,
+  ms crew start <name>     Start session (creates workspace if needed)
+  ms crew stop <name>      Stop session(s)
+  ms crew add <name>       Create workspace without starting
+  ms crew list             List workspaces with status
+  ms crew at <name>        Attach to session
+  ms crew remove <name>    Remove workspace
+  ms crew refresh <name>   Context cycle with handoff mail
+  ms crew restart <name>   Kill and restart session fresh`,
 }
 
 var crewAddCmd = &cobra.Command{
@@ -70,10 +70,10 @@ Each workspace is created at <rig>/crew/<name>/ with:
 - Optional feature branch (crew/<name>)
 
 Examples:
-  gt crew add dave                       # Create single workspace
-  gt crew add murgen croaker goblin      # Create multiple at once
-  gt crew add emma --rig greenplace      # Create in specific rig
-  gt crew add fred --branch              # Create with feature branch`,
+  ms crew add dave                       # Create single workspace
+  ms crew add murgen croaker goblin      # Create multiple at once
+  ms crew add emma --rig greenplace      # Create in specific rig
+  ms crew add fred --branch              # Create with feature branch`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runCrewAdd,
 }
@@ -87,11 +87,11 @@ var crewListCmd = &cobra.Command{
 Shows git branch, session state, and git status for each workspace.
 
 Examples:
-  gt crew list                    # List in current rig
-  gt crew list greenplace         # List in specific rig (positional)
-  gt crew list --rig greenplace   # List in specific rig (flag)
-  gt crew list --all              # List in all rigs
-  gt crew list --json             # JSON output`,
+  ms crew list                    # List in current rig
+  ms crew list greenplace         # List in specific rig (positional)
+  ms crew list --rig greenplace   # List in specific rig (flag)
+  ms crew list --all              # List in all rigs
+  ms crew list --json             # JSON output`,
 	RunE: runCrewList,
 }
 
@@ -118,7 +118,7 @@ Branch Handling:
 Rig Discovery:
   The rig is resolved in order: --rig flag, rig/name format, current
   directory, or by scanning all rigs for the crew member name. This
-  means "gt crew at dave" works from anywhere in the town if dave
+  means "ms crew at dave" works from anywhere in the town if dave
   exists in exactly one rig.
 
   If no name is provided, attempts to detect the crew workspace from the
@@ -126,12 +126,12 @@ Rig Discovery:
   that workspace automatically.
 
 Examples:
-  gt crew at dave                 # Attach to dave's session (rig auto-detected)
-  gt crew at                      # Auto-detect from cwd
-  gt crew at mineshaft/dave         # Explicit rig/name format
-  gt crew at dave --reset         # Reset to default branch first
-  gt crew at dave --detached      # Start session without attaching
-  gt crew at dave --no-tmux       # Just print path`,
+  ms crew at dave                 # Attach to dave's session (rig auto-detected)
+  ms crew at                      # Auto-detect from cwd
+  ms crew at mineshaft/dave         # Explicit rig/name format
+  ms crew at dave --reset         # Reset to default branch first
+  ms crew at dave --detached      # Start session without attaching
+  ms crew at dave --no-tmux       # Just print path`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runCrewAt,
 }
@@ -155,11 +155,11 @@ leave no trace in the ledger).
   - Properly handles git worktrees (not just regular clones)
 
 Examples:
-  gt crew remove dave                       # Remove with safety checks
-  gt crew remove dave emma fred             # Remove multiple
-  gt crew remove beads/grip beads/fang      # Remove from specific rig
-  gt crew remove dave --force               # Force remove (closes bead)
-  gt crew remove test-crew --purge          # Obliterate (deletes bead)`,
+  ms crew remove dave                       # Remove with safety checks
+  ms crew remove dave emma fred             # Remove multiple
+  ms crew remove beads/grip beads/fang      # Remove from specific rig
+  ms crew remove dave --force               # Force remove (closes bead)
+  ms crew remove test-crew --purge          # Obliterate (deletes bead)`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runCrewRemove,
 }
@@ -173,8 +173,8 @@ Sends a handoff mail to the workspace's own inbox, then restarts the session.
 The new session reads the handoff mail and resumes work.
 
 Examples:
-  gt crew refresh dave                           # Refresh with auto-generated handoff
-  gt crew refresh dave -m "Working on gt-123"    # Add custom message`,
+  ms crew refresh dave                           # Refresh with auto-generated handoff
+  ms crew refresh dave -m "Working on ms-123"    # Add custom message`,
 	Args: cobra.ExactArgs(1),
 	RunE: runCrewRefresh,
 }
@@ -188,12 +188,12 @@ Displays session state, git status, branch info, and mail inbox status.
 If no name given, shows status for all crew workers across all rigs.
 
 Examples:
-  gt crew status                  # Status of all crew workers across all rigs
-  gt crew status beads            # Status of all crew workers in beads
-  gt crew status --rig beads      # Status of all crew workers in beads
-  gt crew status dave             # Status of specific worker
-  gt crew status beads/dave       # Status of specific worker in beads
-  gt crew status --json           # JSON output`,
+  ms crew status                  # Status of all crew workers across all rigs
+  ms crew status beads            # Status of all crew workers in beads
+  ms crew status --rig beads      # Status of all crew workers in beads
+  ms crew status dave             # Status of specific worker
+  ms crew status beads/dave       # Status of specific worker in beads
+  ms crew status --json           # JSON output`,
 	RunE: runCrewStatus,
 }
 
@@ -209,18 +209,18 @@ Unlike 'refresh', this does NOT send handoff mail - it's a clean start.
 The command will:
 1. Kill existing tmux session if running
 2. Start fresh session with Claude
-3. Run gt prime to reinitialize context
+3. Run ms prime to reinitialize context
 
 Use --all to restart all running crew sessions across all rigs.
 
 Examples:
-  gt crew restart dave                  # Restart dave's session
-  gt crew restart dave emma fred        # Restart multiple
-  gt crew restart beads/grip beads/fang # Restart from specific rig
-  gt crew rs emma                       # Same, using alias
-  gt crew restart --all                 # Restart all running crew sessions
-  gt crew restart --all --rig beads     # Restart all crew in beads rig
-  gt crew restart --all --dry-run       # Preview what would be restarted`,
+  ms crew restart dave                  # Restart dave's session
+  ms crew restart dave emma fred        # Restart multiple
+  ms crew restart beads/grip beads/fang # Restart from specific rig
+  ms crew rs emma                       # Same, using alias
+  ms crew restart --all                 # Restart all running crew sessions
+  ms crew restart --all --rig beads     # Restart all crew in beads rig
+  ms crew restart --all --dry-run       # Preview what would be restarted`,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if crewAll {
 			if len(args) > 0 {
@@ -242,11 +242,11 @@ var crewRenameCmd = &cobra.Command{
 	Long: `Rename a crew workspace.
 
 Kills any running session, renames the directory, and updates state.
-The new session will use the new name (gt-<rig>-crew-<new-name>).
+The new session will use the new name (ms-<rig>-crew-<new-name>).
 
 Examples:
-  gt crew rename dave david       # Rename dave to david
-  gt crew rename madmax max       # Rename madmax to max`,
+  ms crew rename dave david       # Rename dave to david
+  ms crew rename madmax max       # Rename madmax to max`,
 	Args: cobra.ExactArgs(2),
 	RunE: runCrewRename,
 }
@@ -260,9 +260,9 @@ Runs git pull for the specified crew, or all crew workers.
 Reports any uncommitted changes that may need attention.
 
 Examples:
-  gt crew pristine                # Pristine all crew workers
-  gt crew pristine dave           # Pristine specific worker
-  gt crew pristine --json         # JSON output`,
+  ms crew pristine                # Pristine all crew workers
+  ms crew pristine dave           # Pristine specific worker
+  ms crew pristine --json         # JSON output`,
 	RunE: runCrewPristine,
 }
 
@@ -305,12 +305,12 @@ picks up where it left off, with proper Mineshaft metadata set so GC doesn't
 kill the session.
 
 Examples:
-  gt crew start beads             # Start all crew in beads rig
-  gt crew start                   # Start all crew (rig inferred from cwd)
-  gt crew start beads grip fang   # Start specific crew in beads rig
-  gt crew start mineshaft joe       # Start joe in mineshaft rig
-  gt crew start beads ace --resume          # Resume ace's most recent session
-  gt crew start beads ace --resume abc123   # Resume specific session ID`,
+  ms crew start beads             # Start all crew in beads rig
+  ms crew start                   # Start all crew (rig inferred from cwd)
+  ms crew start beads grip fang   # Start specific crew in beads rig
+  ms crew start mineshaft joe       # Start joe in mineshaft rig
+  ms crew start beads ace --resume          # Resume ace's most recent session
+  ms crew start beads ace --resume abc123   # Resume specific session ID`,
 	Args: func(cmd *cobra.Command, args []string) error {
 		// With --all, we can have 0 args (infer rig) or 1+ args (rig specified)
 		if crewAll {
@@ -339,12 +339,12 @@ Output is captured before stopping for debugging purposes (use --force
 to skip capture for faster shutdown).
 
 Examples:
-  gt crew stop beads                        # Stop all crew in beads rig
-  gt crew stop                              # Stop all crew (rig inferred from cwd)
-  gt crew stop beads/emma                   # Stop specific crew member
-  gt crew stop dave                         # Stop dave in current rig
-  gt crew stop --all                        # Stop all running crew sessions
-  gt crew stop dave --force                 # Stop without capturing output`,
+  ms crew stop beads                        # Stop all crew in beads rig
+  ms crew stop                              # Stop all crew (rig inferred from cwd)
+  ms crew stop beads/emma                   # Stop specific crew member
+  ms crew stop dave                         # Stop dave in current rig
+  ms crew stop --all                        # Stop all running crew sessions
+  ms crew stop dave --force                 # Stop without capturing output`,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if crewAll {
 			if len(args) > 0 {

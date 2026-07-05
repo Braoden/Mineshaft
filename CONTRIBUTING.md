@@ -7,13 +7,13 @@ Thanks for your interest in contributing! Mineshaft is experimental software, an
 1. Fork the repository
 2. Clone your fork
 3. Install prerequisites (see README.md)
-4. Build and test: `go build -o gt ./cmd/gt && go test ./...`
+4. Build and test: `go build -o ms ./cmd/ms && go test ./...`
 
 ## Setting up a rig to contribute to Mineshaft
 
 If you run a Mineshaft rig against this repo, you don't own the canonical
 repository, so the rig must **fetch from upstream but push to your fork**.
-`gt rig add` has first-class support for this through `--push-url` and
+`ms rig add` has first-class support for this through `--push-url` and
 `--upstream-url`.
 
 1. Fork `mineshafthall/mineshaft` on GitHub (gives you
@@ -21,7 +21,7 @@ repository, so the rig must **fetch from upstream but push to your fork**.
 2. Add the rig with fork routing:
 
    ```bash
-   gt rig add mineshaft https://github.com/mineshafthall/mineshaft \
+   ms rig add mineshaft https://github.com/mineshafthall/mineshaft \
      --push-url     https://github.com/<you>/mineshaft \
      --upstream-url https://github.com/mineshafthall/mineshaft
    ```
@@ -43,7 +43,7 @@ What each flag does at the git-remote level:
 > ships, even a correctly-configured fork rig will have its refinery attempt
 > to **merge miner branches into the fork's `main`**, diverging it from
 > upstream. If you want strict PR-only behavior, do not start the refinery
-> (park the rig with `gt rig park <rig>`) and use the
+> (park the rig with `ms rig park <rig>`) and use the
 > miner → branch → manual PR path instead.
 
 If you set up a rig **without** these flags and your fork's `main` has
@@ -112,7 +112,7 @@ This means:
 - **No heuristics in Go.** Don't write detection logic that pattern-matches
   agent behavior. Give agents the tools to observe, and let them reason.
 - **Formulas over subcommands.** If the feature is "detect X and do Y," it's
-  probably a molecule step, not a new `gt` subcommand.
+  probably a molecule step, not a new `ms` subcommand.
 
 **The test:** Before adding Go code, ask yourself — *"Am I adding transport or
 cognition?"* If the answer is cognition, it should be a molecule step or
@@ -133,7 +133,7 @@ primitive ages well.
 
 | Good (transport) | Bad (cognition in Go) |
 |---|---|
-| `gt nudge <session> "message"` | Go code deciding *when* to nudge |
+| `ms nudge <session> "message"` | Go code deciding *when* to nudge |
 | `bd show --json` exposing step status | Go code deciding *what* step status means |
 | `tmux has-session` checking liveness | Go code with hardcoded "stuck after N minutes" |
 
@@ -151,7 +151,7 @@ For larger changes, please open an issue first to discuss the approach.
 
 - Use present tense ("Add feature" not "Added feature")
 - Keep the first line under 72 characters
-- Reference issues when applicable: `Fix timeout bug (gt-xxx)`
+- Reference issues when applicable: `Fix timeout bug (ms-xxx)`
 
 ## Testing
 
@@ -165,7 +165,7 @@ For specific packages:
 
 ```bash
 go test ./internal/wisp/...
-go test ./cmd/gt/...
+go test ./cmd/ms/...
 ```
 
 ### Integration Test Guards
@@ -187,7 +187,7 @@ that may not be available in every environment. Use the helpers in
 
 - Tests that connect to Dolt (create databases, run SQL) →
   `RequireDoltContainer` or `StartIsolatedDoltContainer`
-- Tests that need a real Mineshaft directory tree (shell out to `gt`/`bd` with
+- Tests that need a real Mineshaft directory tree (shell out to `ms`/`bd` with
   workspace detection) → `RequireTownEnv`
 - Tests that create their own temporary town via `t.TempDir()` → no guard needed
   (they are self-contained)

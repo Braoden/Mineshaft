@@ -16,16 +16,16 @@ var staleQuiet bool
 var staleCmd = &cobra.Command{
 	Use:     "stale",
 	GroupID: GroupDiag,
-	Short:   "Check if the gt binary is stale",
-	Long: `Check if the gt binary was built from an older commit than a build ref.
+	Short:   "Check if the ms binary is stale",
+	Long: `Check if the ms binary was built from an older commit than a build ref.
 
 This command compares the commit hash embedded in the binary at build time
 with the resolved build branch of the mineshaft repository (main/master/carry/*).
 
 Examples:
-  gt stale              # Human-readable output
-  gt stale --json       # Machine-readable JSON output
-  gt stale --quiet      # Exit code only (0=stale, 1=fresh, 2=undetermined)
+  ms stale              # Human-readable output
+  ms stale --json       # Machine-readable JSON output
+  ms stale --quiet      # Exit code only (0=stale, 1=fresh, 2=undetermined)
 
 Exit codes:
   0 - Binary is stale

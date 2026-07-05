@@ -257,7 +257,7 @@ func claudeHaikuPreset() *RuntimeConfig {
 //   - Full Claude SDK hooks / session tracking / tmux detection inherited
 //   - Claude Opus on overseer and crew via the default claude preset
 //
-// Prerequisite: export GROQ_API_KEY=gsk_... in your shell before starting gt.
+// Prerequisite: export GROQ_API_KEY=gsk_... in your shell before starting ms.
 func groqCompoundPreset() *RuntimeConfig {
 	// Derive from the canonical AgentGroqCompound builtin so Command, Args,
 	// Env, and all normalisation logic stay in one place (agents.go).

@@ -22,9 +22,9 @@ func TestFormatLogLine(t *testing.T) {
 				Timestamp: ts,
 				Type:      EventSpawn,
 				Agent:     "mineshaft/crew/max",
-				Context:   "gt-xyz",
+				Context:   "ms-xyz",
 			},
-			contains: []string{"2025-12-26 15:30:45", "[spawn]", "mineshaft/crew/max", "spawned for gt-xyz"},
+			contains: []string{"2025-12-26 15:30:45", "[spawn]", "mineshaft/crew/max", "spawned for ms-xyz"},
 		},
 		{
 			name: "nudge event",
@@ -42,9 +42,9 @@ func TestFormatLogLine(t *testing.T) {
 				Timestamp: ts,
 				Type:      EventDone,
 				Agent:     "mineshaft/crew/max",
-				Context:   "gt-abc",
+				Context:   "ms-abc",
 			},
-			contains: []string{"[done]", "completed gt-abc"},
+			contains: []string{"[done]", "completed ms-abc"},
 		},
 		{
 			name: "crash event",
@@ -62,9 +62,9 @@ func TestFormatLogLine(t *testing.T) {
 				Timestamp: ts,
 				Type:      EventKill,
 				Agent:     "mineshaft/miners/Toast",
-				Context:   "gt stop",
+				Context:   "ms stop",
 			},
-			contains: []string{"[kill]", "killed", "gt stop"},
+			contains: []string{"[kill]", "killed", "ms stop"},
 		},
 	}
 
@@ -89,7 +89,7 @@ func TestParseLogLine(t *testing.T) {
 	}{
 		{
 			name: "valid spawn line",
-			line: "2025-12-26 15:30:45 [spawn] mineshaft/crew/max spawned for gt-xyz",
+			line: "2025-12-26 15:30:45 [spawn] mineshaft/crew/max spawned for ms-xyz",
 			check: func(e Event) bool {
 				return e.Type == EventSpawn && e.Agent == "mineshaft/crew/max"
 			},
@@ -144,7 +144,7 @@ func TestLoggerLogEvent(t *testing.T) {
 	logger := NewLogger(tmpDir)
 
 	// Log an event
-	err = logger.Log(EventSpawn, "mineshaft/crew/max", "gt-xyz")
+	err = logger.Log(EventSpawn, "mineshaft/crew/max", "ms-xyz")
 	if err != nil {
 		t.Fatalf("Log() error: %v", err)
 	}
@@ -167,10 +167,10 @@ func TestLoggerLogEvent(t *testing.T) {
 func TestFilterEvents(t *testing.T) {
 	now := time.Now()
 	events := []Event{
-		{Timestamp: now.Add(-2 * time.Hour), Type: EventSpawn, Agent: "mineshaft/crew/max", Context: "gt-1"},
+		{Timestamp: now.Add(-2 * time.Hour), Type: EventSpawn, Agent: "mineshaft/crew/max", Context: "ms-1"},
 		{Timestamp: now.Add(-1 * time.Hour), Type: EventNudge, Agent: "mineshaft/crew/max", Context: "hi"},
-		{Timestamp: now.Add(-30 * time.Minute), Type: EventDone, Agent: "mineshaft/miners/Toast", Context: "gt-2"},
-		{Timestamp: now.Add(-10 * time.Minute), Type: EventSpawn, Agent: "wyvern/crew/joe", Context: "gt-3"},
+		{Timestamp: now.Add(-30 * time.Minute), Type: EventDone, Agent: "mineshaft/miners/Toast", Context: "ms-2"},
+		{Timestamp: now.Add(-10 * time.Minute), Type: EventSpawn, Agent: "wyvern/crew/joe", Context: "ms-3"},
 	}
 
 	tests := []struct {

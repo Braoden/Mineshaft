@@ -141,7 +141,7 @@ func TestAutoRebaseOnTarget_ConflictAborts(t *testing.T) {
 	if !strings.Contains(msg, "git rebase origin/main") {
 		t.Errorf("error missing remediation hint: %q", msg)
 	}
-	if !strings.Contains(msg, "rerun gt done") {
+	if !strings.Contains(msg, "rerun ms done") {
 		t.Errorf("error missing rerun hint: %q", msg)
 	}
 }

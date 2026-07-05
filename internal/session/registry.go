@@ -24,8 +24,8 @@ import (
 // Used to resolve session names that use rig-specific prefixes.
 type PrefixRegistry struct {
 	mu          sync.RWMutex
-	prefixToRig map[string]string // "gt" → "mineshaft"
-	rigToPrefix map[string]string // "mineshaft" → "gt"
+	prefixToRig map[string]string // "ms" → "mineshaft"
+	rigToPrefix map[string]string // "mineshaft" → "ms"
 }
 
 // NewPrefixRegistry creates an empty prefix registry.
@@ -122,10 +122,10 @@ func SetDefaultRegistry(r *PrefixRegistry) {
 func InitRegistry(townRoot string) error {
 	var errs []error
 
-	// Determine the tmux socket name from GT_TMUX_SOCKET env var:
+	// Determine the tmux socket name from MS_TMUX_SOCKET env var:
 	//   unset / "default" / "auto" → per-town socket derived from town directory path
 	//   any other value            → use that name as-is
-	socket := os.Getenv("GT_TMUX_SOCKET")
+	socket := os.Getenv("MS_TMUX_SOCKET")
 	switch socket {
 	case "", "default", "auto":
 		socket = townSocketName(townRoot)
@@ -155,8 +155,8 @@ var sanitizeRe = regexp.MustCompile(`[^a-z0-9-]+`)
 // Lowercases, replaces non-alphanumeric characters with hyphens, trims hyphens.
 // townSocketName derives a unique tmux socket name from the full town path.
 // Uses the directory basename plus a short hash of the canonical path to ensure
-// uniqueness even when two towns share the same basename (e.g., ~/gt and ~/work/gt).
-// Format: "basename-hash6" (e.g., "gt-a1b2c3").
+// uniqueness even when two towns share the same basename (e.g., ~/ms and ~/work/ms).
+// Format: "basename-hash6" (e.g., "ms-a1b2c3").
 func townSocketName(townRoot string) string {
 	base := sanitizeTownName(filepath.Base(townRoot))
 
@@ -175,7 +175,7 @@ func townSocketName(townRoot string) string {
 }
 
 // LegacySocketName returns the old-format socket name (basename only, no hash)
-// used before path-based socket derivation was added. Used by gt down to clean
+// used before path-based socket derivation was added. Used by ms down to clean
 // up sessions orphaned on the old socket during migration.
 func LegacySocketName(townRoot string) string {
 	return sanitizeTownName(filepath.Base(townRoot))
@@ -223,7 +223,7 @@ func BuildPrefixRegistryFromTown(townRoot string) (*PrefixRegistry, error) {
 	// No rigs.json found anywhere — warn loudly.
 	style.PrintWarning("rigs.json not found (checked overseer/rigs.json and town root). " +
 		"PrefixRegistry is empty — session parsing will fail. " +
-		"Run 'gt doctor' or restore rigs.json.")
+		"Run 'ms doctor' or restore rigs.json.")
 	return NewPrefixRegistry(), nil
 }
 
@@ -267,8 +267,8 @@ func BuildPrefixRegistryFromFile(path string) (*PrefixRegistry, error) {
 }
 
 // LegacyPrefixes are prefixes accepted as valid even when the registry is empty.
-// gt = default rig, bd = beads, hq = town-level HQ services, gthq = mineshaft HQ.
-var LegacyPrefixes = []string{"gt", "bd", "hq", "gthq"}
+// ms = default rig, bd = beads, hq = town-level HQ services, gthq = mineshaft HQ.
+var LegacyPrefixes = []string{"ms", "bd", "hq", "gthq"}
 
 // HasKnownPrefix returns true if s starts with a registered or legacy prefix
 // followed by "-". Use this instead of hand-rolling prefix checks so that

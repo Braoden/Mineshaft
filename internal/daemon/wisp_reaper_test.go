@@ -75,7 +75,7 @@ func TestWispDeleteAge(t *testing.T) {
 }
 
 func TestDefaultReaperIntervalIsOneHour(t *testing.T) {
-	// Verify the default changed from 30m to 1h per issue gt-caf7.
+	// Verify the default changed from 30m to 1h per issue ms-caf7.
 	if defaultWispReaperInterval != 1*time.Hour {
 		t.Errorf("expected default interval 1h, got %v", defaultWispReaperInterval)
 	}
@@ -88,11 +88,11 @@ func TestDispatchReaperDogUsesDogPoolSling(t *testing.T) {
 
 	townRoot := t.TempDir()
 	binDir := t.TempDir()
-	logPath := filepath.Join(t.TempDir(), "gt-args.log")
-	fakeGT := filepath.Join(binDir, "gt")
+	logPath := filepath.Join(t.TempDir(), "ms-args.log")
+	fakeGT := filepath.Join(binDir, "ms")
 	script := fmt.Sprintf("#!/bin/sh\nprintf '%%s\\n' \"$@\" > %q\n", logPath)
 	if err := os.WriteFile(fakeGT, []byte(script), 0755); err != nil {
-		t.Fatalf("write fake gt: %v", err)
+		t.Fatalf("write fake ms: %v", err)
 	}
 
 	d := &Daemon{
@@ -105,22 +105,22 @@ func TestDispatchReaperDogUsesDogPoolSling(t *testing.T) {
 
 	data, err := os.ReadFile(logPath)
 	if err != nil {
-		t.Fatalf("read gt args log: %v", err)
+		t.Fatalf("read ms args log: %v", err)
 	}
 	args := strings.Split(strings.TrimSpace(string(data)), "\n")
 	wantPrefix := []string{"sling", constants.MolDogReaper, "supervisor/dogs"}
 	if len(args) < len(wantPrefix) {
-		t.Fatalf("gt args = %v, want prefix %v", args, wantPrefix)
+		t.Fatalf("ms args = %v, want prefix %v", args, wantPrefix)
 	}
 	for i, want := range wantPrefix {
 		if args[i] != want {
-			t.Fatalf("gt arg %d = %q, want %q (all args: %v)", i, args[i], want, args)
+			t.Fatalf("ms arg %d = %q, want %q (all args: %v)", i, args[i], want, args)
 		}
 	}
 }
 
 func TestDoltServerHostIgnoresStaleBeadsHost(t *testing.T) {
-	t.Setenv("GT_DOLT_HOST", "")
+	t.Setenv("MS_DOLT_HOST", "")
 	t.Setenv("BEADS_DOLT_SERVER_HOST", "stale-host")
 
 	d := &Daemon{config: &Config{TownRoot: t.TempDir()}}
@@ -130,8 +130,8 @@ func TestDoltServerHostIgnoresStaleBeadsHost(t *testing.T) {
 }
 
 func TestDoltServerHostUsesConfiguredTownHost(t *testing.T) {
-	t.Setenv("GT_DOLT_IGNORE_CONFIG", "")
-	t.Setenv("GT_DOLT_HOST", "")
+	t.Setenv("MS_DOLT_IGNORE_CONFIG", "")
+	t.Setenv("MS_DOLT_HOST", "")
 	t.Setenv("BEADS_DOLT_SERVER_HOST", "stale-host")
 	townRoot := t.TempDir()
 	doltDataDir := filepath.Join(townRoot, ".dolt-data")

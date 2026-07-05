@@ -178,8 +178,8 @@ exit 2
 	}
 	t.Setenv("PATH", stubDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv("MOCK_BD_LOG", logPath)
-	t.Setenv("GT_DOLT_HOST", "127.0.0.2")
-	t.Setenv("GT_DOLT_PORT", "5507")
+	t.Setenv("MS_DOLT_HOST", "127.0.0.2")
+	t.Setenv("MS_DOLT_PORT", "5507")
 	t.Setenv("BEADS_DIR", "/wrong")
 	t.Setenv("BEADS_DB", "/wrong.db")
 	t.Setenv("BD_DB", "/wrong.bd")

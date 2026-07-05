@@ -1,4 +1,4 @@
-// Package version provides version information and staleness checking for gt.
+// Package version provides version information and staleness checking for ms.
 package version
 
 import (
@@ -57,10 +57,10 @@ func resolveCommitHash() string {
 
 // Describe returns a one-line, human-readable staleness summary for a stale
 // binary, using subject as the leading noun so callers can vary it
-// ("Binary" for gt doctor, "gt binary" for the startup warning):
+// ("Binary" for ms doctor, "ms binary" for the startup warning):
 //
 //	"Binary is 3 commits behind main (built from abc123…, main at def456…)"
-//	"gt binary is stale (built from abc123…, origin/main at def456…)"
+//	"ms binary is stale (built from abc123…, origin/main at def456…)"
 //
 // It is only meaningful when i.IsStale; callers gate on that. A zero
 // CommitsBehind (count unknown) falls back to the "is stale" wording.
@@ -133,7 +133,7 @@ func CheckStaleBinary(repoDir string) *StaleBinaryInfo {
 
 	// Decide which ref to compare the binary against.
 	//
-	// GetRepoRoot resolves to $GT_ROOT/mineshaft/overseer/rig, a worktree that
+	// GetRepoRoot resolves to $MS_ROOT/mineshaft/overseer/rig, a worktree that
 	// normally sits on a feature branch (that's where the Overseer does git work).
 	// Diffing the binary against that worktree's HEAD compares it to unmerged
 	// feature work and produces a false "N commits behind" warning advising a
@@ -196,7 +196,7 @@ func CheckStaleBinary(repoDir string) *StaleBinaryInfo {
 
 // resolveBuildBranchRef finds a build-branch ref to compare the binary against
 // when the resolved source worktree is parked on a non-build branch (the normal
-// state for $GT_ROOT/mineshaft/overseer/rig). Without this, staleness would be
+// state for $MS_ROOT/mineshaft/overseer/rig). Without this, staleness would be
 // computed against unmerged feature work (GH#4034).
 //
 // Candidate refs are fully qualified to avoid branch/tag shadowing. Among refs
@@ -296,13 +296,13 @@ func singleBranchRef(repoDir, pattern string) (buildBranchRef, bool) {
 	return buildBranchRef{ref: refs[0], display: display}, true
 }
 
-// GetRepoRoot returns the git repository root for the gt source code.
-// The canonical source is the mineshaft repo itself ($GT_ROOT/mineshaft).
-// Crew rigs also contain cmd/gt/main.go but have different HEADs,
+// GetRepoRoot returns the git repository root for the ms source code.
+// The canonical source is the mineshaft repo itself ($MS_ROOT/mineshaft).
+// Crew rigs also contain cmd/ms/main.go but have different HEADs,
 // so we prefer the mineshaft repo over CWD-based git toplevel detection.
 func GetRepoRoot() (string, error) {
-	// Check if GT_ROOT environment variable is set (agents always have this)
-	if gtRoot := os.Getenv("GT_ROOT"); gtRoot != "" {
+	// Check if MS_ROOT environment variable is set (agents always have this)
+	if gtRoot := os.Getenv("MS_ROOT"); gtRoot != "" {
 		candidates := []string{
 			gtRoot + "/mineshaft",
 			gtRoot + "/mineshaft/overseer/rig",
@@ -318,8 +318,8 @@ func GetRepoRoot() (string, error) {
 	home := os.Getenv("HOME")
 	if home != "" {
 		candidates := []string{
-			home + "/gt/mineshaft",
-			home + "/gt/mineshaft/overseer/rig",
+			home + "/ms/mineshaft",
+			home + "/ms/mineshaft/overseer/rig",
 			home + "/mineshaft",
 			home + "/mineshaft/overseer/rig",
 			home + "/src/mineshaft",
@@ -342,7 +342,7 @@ func GetRepoRoot() (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("cannot locate gt source repository")
+	return "", fmt.Errorf("cannot locate ms source repository")
 }
 
 // isGitRepo checks if a directory is a git repository.
@@ -354,10 +354,10 @@ func isGitRepo(dir string) bool {
 	return err == nil && strings.TrimSpace(string(output)) == "true"
 }
 
-// hasGtSource checks if a directory contains the gt source code.
-// We look for cmd/gt/main.go as the definitive marker.
+// hasGtSource checks if a directory contains the ms source code.
+// We look for cmd/ms/main.go as the definitive marker.
 func hasGtSource(dir string) bool {
-	_, err := os.Stat(dir + "/cmd/gt/main.go")
+	_, err := os.Stat(dir + "/cmd/ms/main.go")
 	return err == nil
 }
 

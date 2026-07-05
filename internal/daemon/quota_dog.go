@@ -34,8 +34,8 @@ func quotaDogInterval(config *DaemonPatrolConfig) time.Duration {
 	return defaultQuotaDogInterval
 }
 
-// runQuotaDog executes a quota rotation cycle by shelling out to `gt quota rotate`.
-// The daemon is a thin ticker — `gt quota rotate` handles scanning for rate-limited
+// runQuotaDog executes a quota rotation cycle by shelling out to `ms quota rotate`.
+// The daemon is a thin ticker — `ms quota rotate` handles scanning for rate-limited
 // sessions, planning account assignments, and executing keychain swaps + session restarts.
 //
 // This follows the daemon's "dumb scheduler" principle: the daemon schedules,

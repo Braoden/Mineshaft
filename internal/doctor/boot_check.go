@@ -57,7 +57,7 @@ func (c *BootHealthCheck) Run(ctx *CheckContext) *CheckResult {
 			Status:  StatusWarning,
 			Message: "Boot directory not present",
 			Details: []string{fmt.Sprintf("Expected: %s", bootDir)},
-			FixHint: "Run 'gt doctor --fix' to create it",
+			FixHint: "Run 'ms doctor --fix' to create it",
 		}
 	}
 

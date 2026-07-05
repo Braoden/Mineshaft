@@ -7,7 +7,7 @@ import (
 
 // TestSlingTrimsTrailingSlash verifies that trailing slashes in target arguments
 // are trimmed to handle tab-completion artifacts like "slingshot/" -> "slingshot".
-// This ensures that "gt sling sl-123 slingshot/" behaves the same as "gt sling sl-123 slingshot".
+// This ensures that "ms sling sl-123 slingshot/" behaves the same as "ms sling sl-123 slingshot".
 func TestSlingTrimsTrailingSlash(t *testing.T) {
 	tests := []struct {
 		name     string

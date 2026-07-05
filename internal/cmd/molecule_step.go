@@ -15,7 +15,7 @@ import (
 	"github.com/steveyegge/mineshaft/internal/workspace"
 )
 
-// moleculeStepDoneCmd is the "gt mol step done" command.
+// moleculeStepDoneCmd is the "ms mol step done" command.
 var moleculeStepDoneCmd = &cobra.Command{
 	Use:   "done <step-id>",
 	Short: "Complete step and auto-continue to next",
@@ -38,7 +38,7 @@ IMPORTANT: This is the canonical way to complete molecule steps. Do NOT manually
 close steps with 'bd close' - it skips the auto-continuation logic.
 
 Example:
-  gt mol step done gt-abc.1    # Complete step 1 of molecule gt-abc`,
+  ms mol step done ms-abc.1    # Complete step 1 of molecule ms-abc`,
 	Args: cobra.ExactArgs(1),
 	RunE: runMoleculeStepDone,
 }
@@ -95,7 +95,7 @@ func runMoleculeStepDone(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("step not found: %w", err)
 	}
 
-	// Step 2: Extract molecule ID from step ID (gt-xxx.1 -> gt-xxx)
+	// Step 2: Extract molecule ID from step ID (ms-xxx.1 -> ms-xxx)
 	// Also handle wisp format (go-wisp-xxx) by using the step's Parent field
 	moleculeID := extractMoleculeIDFromStep(stepID)
 	if moleculeID == "" {
@@ -170,7 +170,7 @@ func runMoleculeStepDone(cmd *cobra.Command, args []string) error {
 	case "no_more_ready":
 		fmt.Printf("\n%s All remaining steps are blocked - waiting on dependencies\n",
 			style.Dim.Render("ℹ"))
-		fmt.Printf("Run 'gt mol progress %s' to see blocked steps\n", moleculeID)
+		fmt.Printf("Run 'ms mol progress %s' to see blocked steps\n", moleculeID)
 		return nil
 	}
 
@@ -181,8 +181,8 @@ func runMoleculeStepDone(cmd *cobra.Command, args []string) error {
 // Step IDs have format: mol-id.N where N is the step number.
 // Examples:
 //
-//	gt-abc.1 -> gt-abc
-//	gt-xyz.3 -> gt-xyz
+//	ms-abc.1 -> ms-abc
+//	ms-xyz.3 -> ms-xyz
 //	bd-mol-abc.2 -> bd-mol-abc
 func extractMoleculeIDFromStep(stepID string) string {
 	// Find the last dot
@@ -306,7 +306,7 @@ func handleStepContinue(cwd, townRoot string, nextStep *beads.Issue, dryRun bool
 	// Respawn the pane
 	if !tmux.IsInsideTmux() {
 		// Not in tmux - just print next action
-		fmt.Printf("\n%s Not in tmux - start new session with 'gt prime'\n",
+		fmt.Printf("\n%s Not in tmux - start new session with 'ms prime'\n",
 			style.Dim.Render("ℹ"))
 		return nil
 	}
@@ -412,7 +412,7 @@ func handleParallelSteps(cwd, townRoot, _ string, steps []*beads.Issue, dryRun b
 	}
 
 	fmt.Printf("\n%s All parallel steps marked as in_progress\n", style.Bold.Render("✓"))
-	fmt.Printf("%s Execute each step and close with: gt mol step done <step-id>\n", style.Dim.Render("ℹ"))
+	fmt.Printf("%s Execute each step and close with: ms mol step done <step-id>\n", style.Dim.Render("ℹ"))
 	fmt.Printf("%s Once all parallel steps are closed, the gather step will become ready\n", style.Dim.Render("ℹ"))
 
 	// For the current agent, pick the first step to continue with
@@ -453,14 +453,14 @@ func handleMoleculeComplete(cwd, townRoot, moleculeID string, dryRun bool) error
 	if dryRun {
 		fmt.Printf("[dry-run] Would unpin work for %s\n", agentID)
 		if roleCtx.Role == RoleDog {
-			fmt.Printf("[dry-run] Would run gt dog done\n")
+			fmt.Printf("[dry-run] Would run ms dog done\n")
 		} else {
 			fmt.Printf("[dry-run] Would send MINER_DONE to witness\n")
 		}
 		return nil
 	}
 
-	// Unpin the molecule bead (set status to open, will be closed by gt done or manually)
+	// Unpin the molecule bead (set status to open, will be closed by ms done or manually)
 	workDir, err := findLocalBeadsDir()
 	if err == nil {
 		b := beads.New(workDir)
@@ -482,17 +482,17 @@ func handleMoleculeComplete(cwd, townRoot, moleculeID string, dryRun bool) error
 		}
 	}
 
-	// For miners, use gt done to signal completion
+	// For miners, use ms done to signal completion
 	if roleCtx.Role == RoleMiner {
 		fmt.Printf("%s Signaling completion to witness...\n", style.Bold.Render("📤"))
 
-		doneCmd := exec.Command("gt", "done", "--status", "DEFERRED")
+		doneCmd := exec.Command("ms", "done", "--status", "DEFERRED")
 		doneCmd.Stdout = os.Stdout
 		doneCmd.Stderr = os.Stderr
 		return doneCmd.Run()
 	}
 
-	// For dogs, use gt dog done to clear work and auto-terminate session.
+	// For dogs, use ms dog done to clear work and auto-terminate session.
 	// Without this, dogs idle at the prompt indefinitely after completing
 	// their formula, wasting resources until the stale-working detector
 	// kills them (2 hours).
@@ -503,7 +503,7 @@ func handleMoleculeComplete(cwd, townRoot, moleculeID string, dryRun bool) error
 		if roleCtx.Miner != "" { // dog name stored in Miner field
 			dogDoneArgs = append(dogDoneArgs, roleCtx.Miner)
 		}
-		dogDoneCmd := exec.Command("gt", dogDoneArgs...)
+		dogDoneCmd := exec.Command("ms", dogDoneArgs...)
 		dogDoneCmd.Stdout = os.Stdout
 		dogDoneCmd.Stderr = os.Stderr
 		return dogDoneCmd.Run()

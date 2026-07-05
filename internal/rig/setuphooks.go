@@ -99,8 +99,8 @@ func RunSetupHooks(rigPath, worktreePath string) error {
 // runHook executes a single hook script in the context of the worktree.
 // The hook is run with:
 // - Working directory set to worktreePath
-// - Environment variable GT_WORKTREE_PATH pointing to the worktree
-// - Environment variable GT_RIG_PATH pointing to the rig
+// - Environment variable MS_WORKTREE_PATH pointing to the worktree
+// - Environment variable MS_RIG_PATH pointing to the rig
 // hookTimeout is the maximum time a setup hook is allowed to run.
 const hookTimeout = 60 * time.Second
 
@@ -116,8 +116,8 @@ func runHook(hookPath, worktreePath string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Env = append(os.Environ(),
-		fmt.Sprintf("GT_WORKTREE_PATH=%s", worktreePath),
-		fmt.Sprintf("GT_RIG_PATH=%s", rigPath),
+		fmt.Sprintf("MS_WORKTREE_PATH=%s", worktreePath),
+		fmt.Sprintf("MS_RIG_PATH=%s", rigPath),
 	)
 
 	if err := cmd.Run(); err != nil {

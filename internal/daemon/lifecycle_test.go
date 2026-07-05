@@ -201,14 +201,14 @@ func TestIdentityToSession_Overseer(t *testing.T) {
 func TestIdentityToSession_Witness(t *testing.T) {
 	d := testDaemon()
 
-	// Default prefix registry: all unknown rigs map to DefaultPrefix ("gt")
+	// Default prefix registry: all unknown rigs map to DefaultPrefix ("ms")
 	tests := []struct {
 		identity string
 		expected string
 	}{
-		{"mineshaft-witness", "gt-witness"},
-		{"myrig-witness", "gt-witness"},
-		{"my-rig-name-witness", "gt-witness"},
+		{"mineshaft-witness", "ms-witness"},
+		{"myrig-witness", "ms-witness"},
+		{"my-rig-name-witness", "ms-witness"},
 	}
 
 	for _, tc := range tests {
@@ -225,7 +225,7 @@ func TestIdentityToSession_WitnessWithPrefix(t *testing.T) {
 	// Register a rig with a distinct prefix to verify prefix differentiation
 	oldRegistry := session.DefaultRegistry()
 	r := session.NewPrefixRegistry()
-	r.Register("gt", "mineshaft")
+	r.Register("ms", "mineshaft")
 	r.Register("bd", "beads")
 	session.SetDefaultRegistry(r)
 	defer session.SetDefaultRegistry(oldRegistry)
@@ -234,9 +234,9 @@ func TestIdentityToSession_WitnessWithPrefix(t *testing.T) {
 		identity string
 		expected string
 	}{
-		{"mineshaft-witness", "gt-witness"},
+		{"mineshaft-witness", "ms-witness"},
 		{"beads-witness", "bd-witness"},
-		{"unknown-witness", "gt-witness"}, // unknown rig falls back to DefaultPrefix
+		{"unknown-witness", "ms-witness"}, // unknown rig falls back to DefaultPrefix
 	}
 
 	for _, tc := range tests {

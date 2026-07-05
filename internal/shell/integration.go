@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	markerStart = "# --- Mineshaft Integration (managed by gt) ---"
+	markerStart = "# --- Mineshaft Integration (managed by ms) ---"
 	markerEnd   = "# --- End Mineshaft ---"
 )
 
@@ -153,7 +153,7 @@ func updateRCFile(path, content string) error {
 
 var shellHookScript = `#!/bin/zsh
 # Mineshaft Shell Integration
-# Installed by: gt install --shell
+# Installed by: ms install --shell
 # Location: ~/.config/mineshaft/shell-hook.sh
 
 _mineshaft_enabled() {
@@ -189,9 +189,9 @@ _mineshaft_offer_add() {
     local repo_root="$1"
 
     # Offer-to-add is OPT-IN. By default Mineshaft stays silent in your shells
-    # and only sets GT_TOWN_ROOT/GT_RIG when you are inside a known rig. To be
+    # and only sets MS_TOWN_ROOT/MS_RIG when you are inside a known rig. To be
     # prompted to add unrecognized git repos, set MINESHAFT_OFFER_ADD=1. Add a
-    # repo any time with 'gt rig quick-add'.
+    # repo any time with 'ms rig quick-add'.
     [[ "${MINESHAFT_OFFER_ADD:-}" == "1" ]] || return 0
     [[ "${MINESHAFT_DISABLE_OFFER_ADD:-}" == "1" ]] && return 0
     _mineshaft_already_asked "$repo_root" && return 0
@@ -214,18 +214,18 @@ _mineshaft_offer_add() {
         y|Y|yes)
             echo "Adding to Mineshaft..."
             local output
-            output=$(gt rig quick-add "$repo_root" --yes 2>&1)
+            output=$(ms rig quick-add "$repo_root" --yes 2>&1)
             local exit_code=$?
             echo "$output"
 
             if [[ $exit_code -eq 0 ]]; then
                 local crew_path
-                crew_path=$(echo "$output" | grep "^GT_CREW_PATH=" | cut -d= -f2)
+                crew_path=$(echo "$output" | grep "^MS_CREW_PATH=" | cut -d= -f2)
                 if [[ -n "$crew_path" && -d "$crew_path" ]]; then
                     echo ""
                     echo "Switching to crew workspace..."
                     cd "$crew_path" || true
-                    # Re-run hook to set GT_TOWN_ROOT and GT_RIG
+                    # Re-run hook to set MS_TOWN_ROOT and MS_RIG
                     _mineshaft_hook
                 fi
             fi
@@ -235,7 +235,7 @@ _mineshaft_offer_add() {
             echo "Created .mineshaft-ignore - won't ask again for this repo."
             ;;
         *)
-            echo "Skipped. Run 'gt rig quick-add' later to add manually."
+            echo "Skipped. Run 'ms rig quick-add' later to add manually."
             ;;
     esac
 }
@@ -244,23 +244,23 @@ _mineshaft_hook() {
     local previous_exit_status=$?
 
     _mineshaft_enabled || {
-        unset GT_TOWN_ROOT GT_RIG
+        unset MS_TOWN_ROOT MS_RIG
         return $previous_exit_status
     }
 
     _mineshaft_ignored && {
-        unset GT_TOWN_ROOT GT_RIG
+        unset MS_TOWN_ROOT MS_RIG
         return $previous_exit_status
     }
 
     if ! git rev-parse --git-dir &>/dev/null; then
-        unset GT_TOWN_ROOT GT_RIG
+        unset MS_TOWN_ROOT MS_RIG
         return $previous_exit_status
     fi
 
     local repo_root
     repo_root=$(git rev-parse --show-toplevel 2>/dev/null) || {
-        unset GT_TOWN_ROOT GT_RIG
+        unset MS_TOWN_ROOT MS_RIG
         return $previous_exit_status
     }
 
@@ -274,13 +274,13 @@ _mineshaft_hook() {
         fi
     fi
 
-    if command -v gt &>/dev/null; then
+    if command -v ms &>/dev/null; then
         local detect_output
-        detect_output=$(gt rig detect "$repo_root" 2>/dev/null)
+        detect_output=$(ms rig detect "$repo_root" 2>/dev/null)
         eval "$detect_output"
 
-        if [[ -n "$GT_TOWN_ROOT" ]]; then
-            (gt rig detect --cache "$repo_root" &>/dev/null &)
+        if [[ -n "$MS_TOWN_ROOT" ]]; then
+            (ms rig detect --cache "$repo_root" &>/dev/null &)
         elif [[ -n "$_MINESHAFT_PWD_CHANGED" ]]; then
             _mineshaft_offer_add "$repo_root"
             unset _MINESHAFT_PWD_CHANGED

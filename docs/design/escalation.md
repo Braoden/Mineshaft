@@ -19,7 +19,7 @@ with automatic re-escalation.
 ## Tiered Escalation Flow
 
 ```
-Agent -> gt escalate -s <SEVERITY> "description"
+Agent -> ms escalate -s <SEVERITY> "description"
            |
            v
      [Supervisor receives]
@@ -34,7 +34,7 @@ Each tier can resolve OR forward. The chain is tracked via bead comments.
 
 ## Configuration
 
-Config file: `~/gt/settings/escalation.json`
+Config file: `~/ms/settings/escalation.json`
 
 ### Default Configuration
 
@@ -68,7 +68,7 @@ Config file: `~/gt/settings/escalation.json`
 | Action | Format | Behavior |
 |--------|--------|----------|
 | `bead` | `bead` | Create escalation bead (always first, implicit) |
-| `mail:<target>` | `mail:overseer` | Send gt mail to target |
+| `mail:<target>` | `mail:overseer` | Send ms mail to target |
 | `email:human` | `email:human` | Send email to `contacts.human_email` |
 | `sms:human` | `sms:human` | Send SMS to `contacts.human_sms` |
 | `slack` | `slack` | Post to `contacts.slack_webhook` |
@@ -83,7 +83,7 @@ Escalation beads use `type: escalation` with structured labels for tracking.
 | Label | Values | Purpose |
 |-------|--------|---------|
 | `severity:<level>` | MEDIUM, HIGH, CRITICAL | Current severity |
-| `source:<type>:<name>` | plugin:rebuild-gt, patrol:supervisor | What triggered it |
+| `source:<type>:<name>` | plugin:rebuild-ms, patrol:supervisor | What triggered it |
 | `acknowledged:<bool>` | true, false | Has human acknowledged |
 | `reescalated:<bool>` | true, false | Has been re-escalated |
 | `reescalation_count:<n>` | 0, 1, 2, ... | Times re-escalated |
@@ -106,49 +106,49 @@ Not yet implemented as CLI flags; currently use `--to` for explicit routing.
 
 ## Commands
 
-### gt escalate
+### ms escalate
 
 Create a new escalation.
 
 ```bash
-gt escalate -s <MEDIUM|HIGH|CRITICAL> "Short description" \
-  [-m "Detailed explanation"] [--source="plugin:rebuild-gt"]
+ms escalate -s <MEDIUM|HIGH|CRITICAL> "Short description" \
+  [-m "Detailed explanation"] [--source="plugin:rebuild-ms"]
 ```
 
 Flags: `-s` severity (required), `-m` body, `--source` origin identifier,
 `--to` route to tier (supervisor/overseer/boss), `--dry-run`, `--json`.
 
-For Dolt outages or GT behavior mismatches that involve Dolt-backed state, add
+For Dolt outages or MS behavior mismatches that involve Dolt-backed state, add
 the RCA capture checklist from `docs/dolt-health-guide.md` to the escalation
 body or the follow-up bead before restarting services.
 
-### gt escalate ack
+### ms escalate ack
 
 Acknowledge an escalation (prevents re-escalation).
 
 ```bash
-gt escalate ack <bead-id> [--note="Investigating"]
+ms escalate ack <bead-id> [--note="Investigating"]
 ```
 
-### gt escalate list
+### ms escalate list
 
 ```bash
-gt escalate list [--severity=...] [--stale] [--unacked] [--all] [--json]
+ms escalate list [--severity=...] [--stale] [--unacked] [--all] [--json]
 ```
 
-### gt escalate stale
+### ms escalate stale
 
 Re-escalate stale (unacked past `stale_threshold`) escalations. Bumps severity
 (MEDIUM->HIGH->CRITICAL), re-executes route, respects `max_reescalations`.
 
 ```bash
-gt escalate stale [--dry-run]
+ms escalate stale [--dry-run]
 ```
 
-### gt escalate close
+### ms escalate close
 
 ```bash
-gt escalate close <bead-id> [--reason="Fixed in commit abc123"]
+ms escalate close <bead-id> [--reason="Fixed in commit abc123"]
 ```
 
 ## Integration Points
@@ -158,8 +158,8 @@ gt escalate close <bead-id> [--reason="Fixed in commit abc123"]
 Plugins use escalation for failure notification:
 
 ```bash
-gt escalate -s MEDIUM "Plugin FAILED: rebuild-gt" \
-  -m "$ERROR" --source="plugin:rebuild-gt"
+ms escalate -s MEDIUM "Plugin FAILED: rebuild-ms" \
+  -m "$ERROR" --source="plugin:rebuild-ms"
 ```
 
 ### Supervisor Patrol
@@ -168,13 +168,13 @@ Supervisor uses escalation for health issues:
 
 ```bash
 if [ $unresponsive_cycles -ge 5 ]; then
-  gt escalate -s HIGH "Witness unresponsive: mineshaft" \
+  ms escalate -s HIGH "Witness unresponsive: mineshaft" \
     -m "Witness has been unresponsive for $unresponsive_cycles cycles" \
     --source="patrol:supervisor:health-scan"
 fi
 ```
 
-Supervisor patrol also runs `gt escalate stale` periodically to catch unacked
+Supervisor patrol also runs `ms escalate stale` periodically to catch unacked
 escalations and re-escalate them.
 
 ## When to Escalate
@@ -197,7 +197,7 @@ escalations and re-escalate them.
 
 ## Overseer Startup Check
 
-On `gt prime`, Overseer displays pending escalations grouped by severity.
+On `ms prime`, Overseer displays pending escalations grouped by severity.
 Action: review with `bd list --tag=escalation`, close with `bd close <id> --reason "..."`.
 
 

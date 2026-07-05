@@ -55,7 +55,7 @@ func (m *Model) renderView() string {
 	// Empty state
 	if len(m.minecarts) == 0 && m.err == nil {
 		b.WriteString("No minecarts found.\n")
-		b.WriteString("Create a minecart with: gt minecart create <name> [issues...]\n")
+		b.WriteString("Create a minecart with: ms minecart create <name> [issues...]\n")
 	}
 
 	// Render minecarts

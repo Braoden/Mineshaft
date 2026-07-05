@@ -21,7 +21,7 @@ func TestExecuteSling_AcquiresBeadLock(t *testing.T) {
 		t.Fatalf("failed to create .beads: %v", err)
 	}
 
-	beadID := "gt-locktest1"
+	beadID := "ms-locktest1"
 
 	// Hold the flock from outside executeSling — this simulates a concurrent dispatch.
 	release, err := tryAcquireSlingBeadLock(townRoot, beadID)
@@ -69,7 +69,7 @@ func TestExecuteSling_LockReleasedAfterReturn(t *testing.T) {
 		t.Fatalf("failed to create .beads: %v", err)
 	}
 
-	beadID := "gt-lockrel1"
+	beadID := "ms-lockrel1"
 
 	// Create a bd stub that returns closed status (causes executeSling to error out)
 	binDir := filepath.Join(townRoot, "bin")

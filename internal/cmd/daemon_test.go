@@ -15,13 +15,13 @@ func TestReadDaemonStartupFailure(t *testing.T) {
 
 	logData := "" +
 		"2026/03/28 22:00:00 Daemon startup failed (PID 111): stale error\n" +
-		"2026/03/28 22:00:01 Daemon startup failed (PID 222): incompatible beads workspace / gt binary combination\n"
+		"2026/03/28 22:00:01 Daemon startup failed (PID 222): incompatible beads workspace / ms binary combination\n"
 	if err := os.WriteFile(filepath.Join(daemonDir, "daemon.log"), []byte(logData), 0644); err != nil {
 		t.Fatalf("WriteFile: %v", err)
 	}
 
 	got := readDaemonStartupFailure(townRoot, 222)
-	want := "incompatible beads workspace / gt binary combination"
+	want := "incompatible beads workspace / ms binary combination"
 	if got != want {
 		t.Fatalf("readDaemonStartupFailure() = %q, want %q", got, want)
 	}

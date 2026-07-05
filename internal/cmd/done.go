@@ -48,14 +48,14 @@ Exit statuses:
   DEFERRED       - Work paused, issue still open
 
 Examples:
-  gt done                              # Submit branch, notify COMPLETED, transition to IDLE
-  gt done --pre-verified               # Submit with pre-verification fast-path
-  gt done --target feat/my-branch      # Explicit MR target branch
-  gt done --pre-verified --target feat/contract-review  # Pre-verified with explicit target
-  gt done --issue gt-abc               # Explicit issue ID
-  gt done --skip-verify                # Audit-only escape hatch for non-code closes
-  gt done --status ESCALATED           # Signal blocker, skip MR
-  gt done --status DEFERRED            # Pause work, skip MR`,
+  ms done                              # Submit branch, notify COMPLETED, transition to IDLE
+  ms done --pre-verified               # Submit with pre-verification fast-path
+  ms done --target feat/my-branch      # Explicit MR target branch
+  ms done --pre-verified --target feat/contract-review  # Pre-verified with explicit target
+  ms done --issue ms-abc               # Explicit issue ID
+  ms done --skip-verify                # Audit-only escape hatch for non-code closes
+  ms done --status ESCALATED           # Signal blocker, skip MR
+  ms done --status DEFERRED            # Pause work, skip MR`,
 	RunE:         runDone,
 	SilenceUsage: true, // Don't print usage on operational errors (confuses agents)
 }
@@ -71,7 +71,7 @@ var (
 	doneSkipVerify    bool
 )
 
-// Valid exit types for gt done
+// Valid exit types for ms done
 const (
 	ExitCompleted = "COMPLETED"
 	ExitEscalated = "ESCALATED"
@@ -351,13 +351,13 @@ func init() {
 
 func runDone(cmd *cobra.Command, args []string) (retErr error) {
 	defer func() { telemetry.RecordDone(context.Background(), strings.ToUpper(doneStatus), retErr) }()
-	// Guard: Only miners should call gt done
-	// Crew, supervisors, witnesses etc. don't use gt done - they persist across tasks.
-	// Miner sessions end with gt done — the session is cleaned up, but the
+	// Guard: Only miners should call ms done
+	// Crew, supervisors, witnesses etc. don't use ms done - they persist across tasks.
+	// Miner sessions end with ms done — the session is cleaned up, but the
 	// miner's persistent identity (agent bead, CV chain) survives across assignments.
 	actor := os.Getenv("BD_ACTOR")
 	if actor != "" && !isMinerActor(actor) {
-		return fmt.Errorf("gt done is for miners only (you are %s)\nMiner sessions end with gt done — the session is cleaned up, but identity persists.\nOther roles persist across tasks and don't use gt done.", actor)
+		return fmt.Errorf("ms done is for miners only (you are %s)\nMiner sessions end with ms done — the session is cleaned up, but identity persists.\nOther roles persist across tasks and don't use ms done.", actor)
 	}
 
 	// Validate exit status
@@ -366,13 +366,13 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 		return fmt.Errorf("invalid exit status '%s': must be COMPLETED, ESCALATED, or DEFERRED", doneStatus)
 	}
 
-	// Persistent miner model (gt-hdf8): sessions stay alive after gt done.
+	// Persistent miner model (ms-hdf8): sessions stay alive after ms done.
 	// No deferred session kill — the miner transitions to IDLE with sandbox
 	// preserved. The Witness handles any cleanup if the miner gets stuck.
 
 	// Find workspace with fallback for deleted worktrees (hq-3xaxy)
-	// If the miner's worktree was deleted by Witness before gt done finishes,
-	// getcwd will fail. We fall back to GT_TOWN_ROOT env var in that case.
+	// If the miner's worktree was deleted by Witness before ms done finishes,
+	// getcwd will fail. We fall back to MS_TOWN_ROOT env var in that case.
 	townRoot, cwd, err := workspace.FindFromCwdWithFallback()
 	if err != nil {
 		return fmt.Errorf("not in a Mineshaft workspace: %w", err)
@@ -382,8 +382,8 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 	cwdAvailable := cwd != ""
 	if !cwdAvailable {
 		style.PrintWarning("working directory deleted (worktree nuked?), using fallback paths")
-		// Try to get cwd from GT_MINER_PATH env var (set by session manager)
-		if minerPath := os.Getenv("GT_MINER_PATH"); minerPath != "" {
+		// Try to get cwd from MS_MINER_PATH env var (set by session manager)
+		if minerPath := os.Getenv("MS_MINER_PATH"); minerPath != "" {
 			cwd = minerPath // May still be gone, but we have a path to use
 		}
 	}
@@ -400,28 +400,28 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 			}
 		}
 	}
-	// Prefer GT_RIG over cwd-derived rig name when available.
+	// Prefer MS_RIG over cwd-derived rig name when available.
 	// When Claude Code resets shell cwd (e.g., to overseer/rig), the cwd-derived
-	// rig name is wrong (e.g., "overseer" instead of "vets"). GT_RIG is set
+	// rig name is wrong (e.g., "overseer" instead of "vets"). MS_RIG is set
 	// reliably for miners via session env injection.
-	if envRig := os.Getenv("GT_RIG"); envRig != "" {
+	if envRig := os.Getenv("MS_RIG"); envRig != "" {
 		rigName = envRig
 	}
 	if rigName == "" {
 		return fmt.Errorf("cannot determine current rig (working directory may be deleted)")
 	}
 
-	// When gt is invoked via shell alias (cd ~/gt && gt), or when Claude Code
+	// When ms is invoked via shell alias (cd ~/ms && ms), or when Claude Code
 	// resets the shell CWD to overseer/rig, cwd is NOT the miner's worktree.
 	// Detect and reconstruct actual path.
 	//
 	// This triggers when cwd is:
-	// - The town root itself (cd ~/gt && gt)
+	// - The town root itself (cd ~/ms && ms)
 	// - The overseer rig path (Claude Code Bash tool CWD reset)
 	// - Any non-miner path within the rig
 	cwdIsMinerWorktree := strings.Contains(cwd, "/miners/")
 	if cwdAvailable && !cwdIsMinerWorktree {
-		if minerName := os.Getenv("GT_MINER"); minerName != "" && rigName != "" {
+		if minerName := os.Getenv("MS_MINER"); minerName != "" && rigName != "" {
 			minerClone := filepath.Join(townRoot, rigName, "miners", minerName, rigName)
 			if _, err := os.Stat(minerClone); err == nil {
 				cwd = minerClone
@@ -431,7 +431,7 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 					cwd = minerClone
 				}
 			}
-		} else if crewName := os.Getenv("GT_CREW"); crewName != "" && rigName != "" {
+		} else if crewName := os.Getenv("MS_CREW"); crewName != "" && rigName != "" {
 			crewClone := filepath.Join(townRoot, rigName, "crew", crewName)
 			if _, err := os.Stat(crewClone); err == nil {
 				cwd = crewClone
@@ -439,7 +439,7 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 		}
 	}
 
-	// Normalize miner CWD: miners may run gt done from a subdirectory (e.g.,
+	// Normalize miner CWD: miners may run ms done from a subdirectory (e.g.,
 	// beads-ide/ inside the repo). beads.ResolveBeadsDir only looks at cwd/.beads,
 	// not parent dirs, so we must normalize to the git repo root before use.
 	// Walk up from cwd until we find .git, stopping if we leave the miners area.
@@ -471,8 +471,8 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 	// Get current branch - try env var first if cwd is gone
 	var branch string
 	if !cwdAvailable {
-		// Try to get branch from GT_BRANCH env var (set by session manager)
-		branch = os.Getenv("GT_BRANCH")
+		// Try to get branch from MS_BRANCH env var (set by session manager)
+		branch = os.Getenv("MS_BRANCH")
 	}
 	// CRITICAL FIX: Only call g.CurrentBranch() if we're using the cwd-based git.
 	// When cwdAvailable is false, we fall back to the overseer clone for git operations,
@@ -480,15 +480,15 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 	// g.CurrentBranch() in that case would incorrectly return main/master.
 	if branch == "" {
 		if !cwdAvailable {
-			// We don't have GT_BRANCH and we're using overseer clone - can't determine branch.
+			// We don't have MS_BRANCH and we're using overseer clone - can't determine branch.
 			// Session stays alive (persistent miner model) — Witness handles recovery.
-			return fmt.Errorf("cannot determine branch: GT_BRANCH not set and working directory unavailable")
+			return fmt.Errorf("cannot determine branch: MS_BRANCH not set and working directory unavailable")
 		}
 		var err error
 		branch, err = g.CurrentBranch()
 		if err != nil {
 			// Last resort: try to extract from miner name (miner/<name>-<suffix>)
-			if minerName := os.Getenv("GT_MINER"); minerName != "" {
+			if minerName := os.Getenv("MS_MINER"); minerName != "" {
 				branch = fmt.Sprintf("miner/%s", minerName)
 				style.PrintWarning("could not get branch from git, using fallback: %s", branch)
 			} else {
@@ -532,7 +532,7 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 		}
 	}
 
-	// SAFETY NET (gt-pvx, stash recovery): If we detected stashes belonging to
+	// SAFETY NET (ms-pvx, stash recovery): If we detected stashes belonging to
 	// this branch, auto-pop them so the existing uncommitted-work auto-commit
 	// path (below) catches the contents and saves them as a normal commit.
 	//
@@ -540,7 +540,7 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 	// working tree before rebase/checkout, then dying before `git stash pop`.
 	// The stash entries become orphaned in .git/refs/stash, surviving for
 	// indefinite periods and silently leaking work. By popping them on the way
-	// out of `gt done`, the recovery flow turns "lost" stashes into a
+	// out of `ms done`, the recovery flow turns "lost" stashes into a
 	// committed safety-net snapshot.
 	//
 	// Pop happens oldest-first so the most recent state ends up on top of the
@@ -552,7 +552,7 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 		if err != nil {
 			style.PrintWarning("auto-pop: could not list stashes: %v — orphaned stashes may remain", err)
 		} else if len(entries) > 0 {
-			fmt.Printf("\n%s %d stash(es) detected on this branch — auto-popping (gt-pvx safety net)\n",
+			fmt.Printf("\n%s %d stash(es) detected on this branch — auto-popping (ms-pvx safety net)\n",
 				style.Bold.Render("⚠"), len(entries))
 			// Pop oldest first: iterate in reverse so newest lands on top.
 			popFailed := false
@@ -561,7 +561,7 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 				fmt.Printf("  popping %s — %s\n", e.Ref, e.Message)
 				if popErr := g.StashPop(e.Ref); popErr != nil {
 					style.PrintWarning("auto-pop %s failed (likely conflict): %v", e.Ref, popErr)
-					style.PrintWarning("stopping pop chain — resolve conflict manually then re-run gt done")
+					style.PrintWarning("stopping pop chain — resolve conflict manually then re-run ms done")
 					popFailed = true
 					break
 				}
@@ -588,8 +588,8 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 		}
 	}
 
-	// SAFETY NET: Auto-commit uncommitted work before ANY exit path (gt-pvx).
-	// Miners have been observed running gt done without committing their
+	// SAFETY NET: Auto-commit uncommitted work before ANY exit path (ms-pvx).
+	// Miners have been observed running ms done without committing their
 	// implementation work (1000s of lines lost). This happened because:
 	// 1. The agent skips the "commit changes" formula step
 	// 2. The COMPLETED check blocks, but the agent retries with --status DEFERRED
@@ -609,8 +609,8 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 			fmt.Printf("\n%s Uncommitted changes detected — auto-saving to prevent work loss\n", style.Bold.Render("⚠"))
 			fmt.Printf("  Files: %s\n\n", workStatus.String())
 
-			// Stage all changes (git add -A), then unstage overlay/runtime files (gt-p35)
-			// and any deletions of tracked files (gt-pvx safety: never commit deletions).
+			// Stage all changes (git add -A), then unstage overlay/runtime files (ms-p35)
+			// and any deletions of tracked files (ms-pvx safety: never commit deletions).
 			if addErr := g.Add("-A"); addErr != nil {
 				style.PrintWarning("auto-commit: git add failed: %v — uncommitted work may be at risk", addErr)
 			} else {
@@ -636,15 +636,15 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 					_ = g.ResetFiles(stagedDeletions...)
 				}
 				// Build a descriptive commit message
-				autoMsg := "fix: auto-save uncommitted implementation work (gt-pvx safety net)"
+				autoMsg := "fix: auto-save uncommitted implementation work (ms-pvx safety net)"
 				if issueFromBranch := parseBranchName(branch).Issue; issueFromBranch != "" {
-					autoMsg = fmt.Sprintf("fix: auto-save uncommitted implementation work (%s, gt-pvx safety net)", issueFromBranch)
+					autoMsg = fmt.Sprintf("fix: auto-save uncommitted implementation work (%s, ms-pvx safety net)", issueFromBranch)
 				}
 				if commitErr := g.Commit(autoMsg); commitErr != nil {
 					style.PrintWarning("auto-commit: git commit failed: %v — uncommitted work may be at risk", commitErr)
 				} else {
 					fmt.Printf("%s Auto-committed uncommitted work (safety net)\n", style.Bold.Render("✓"))
-					fmt.Printf("  The agent should have committed before running gt done.\n")
+					fmt.Printf("  The agent should have committed before running ms done.\n")
 					fmt.Printf("  This auto-save prevents work loss.\n\n")
 					doneCleanupStatus = "unpushed" // Update status — changes are now committed but not pushed
 				}
@@ -687,8 +687,8 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 		// leaves the existing warnings.
 		ensureAgentBeadExists(beads.New(cwd).ForAgentBead(), agentBeadID, ctx)
 
-		// Persistent miner model (gt-hdf8): no deferred session kill.
-		// Sessions stay alive after gt done — miner transitions to IDLE.
+		// Persistent miner model (ms-hdf8): no deferred session kill.
+		// Sessions stay alive after ms done — miner transitions to IDLE.
 	}
 	minerName := ""
 	if parts := strings.Split(sender, "/"); len(parts) >= 2 {
@@ -719,8 +719,8 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 	// would mis-attribute this MR (close credit goes to a closed bead; the
 	// real issue stays open and hooked). When the branch-derived id differs
 	// from the hooked bead, trust the hook. An explicit --issue flag still
-	// wins, and subtask branches of the hooked bead (e.g. gt-abc.1 under
-	// hooked gt-abc) are left alone.
+	// wins, and subtask branches of the hooked bead (e.g. ms-abc.1 under
+	// hooked ms-abc) are left alone.
 	if doneIssue == "" && info.Issue != "" && sender != "" {
 		if hookIssue, ambiguous := selectAssignedIssue(info.Issue, loadAssignedIssueIDs()); isStaleBranchIssue(info.Issue, hookIssue) {
 			style.PrintWarning("branch %q embeds issue %s but your hooked bead is %s — submitting for %s (stale branch reuse?)", branch, info.Issue, hookIssue, hookIssue)
@@ -733,11 +733,11 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 	}
 
 	// Write done-intent label EARLY, before push/MR operations.
-	// If gt done crashes after this point, the Witness can detect the intent
+	// If ms done crashes after this point, the Witness can detect the intent
 	// and auto-nuke the zombie miner.
 	//
-	// Also read existing checkpoints for resume capability (gt-aufru).
-	// If gt done was interrupted (SIGTERM, context exhaustion, SIGKILL),
+	// Also read existing checkpoints for resume capability (ms-aufru).
+	// If ms done was interrupted (SIGTERM, context exhaustion, SIGKILL),
 	// checkpoints indicate which stages completed. On re-invocation, we
 	// skip those stages to avoid repeating work or hitting errors.
 	checkpoints := map[DoneCheckpoint]string{}
@@ -747,16 +747,16 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 		setDoneIntentLabel(bd, agentBeadID, exitType)
 		checkpoints = readDoneCheckpoints(bd, agentBeadID)
 		if len(checkpoints) > 0 {
-			fmt.Printf("%s Resuming gt done from checkpoint (previous run was interrupted)\n", style.Bold.Render("→"))
+			fmt.Printf("%s Resuming ms done from checkpoint (previous run was interrupted)\n", style.Bold.Render("→"))
 		}
 	}
 
-	// Write heartbeat state="exiting" (gt-3vr5: heartbeat v2).
-	// Tells the witness we're in the gt done flow — trust the agent until
+	// Write heartbeat state="exiting" (ms-3vr5: heartbeat v2).
+	// Tells the witness we're in the ms done flow — trust the agent until
 	// heartbeat goes stale. No timer-based inference needed.
 	// Parallel to done-intent label for backwards compat during migration.
-	if sessionName := os.Getenv("GT_SESSION"); sessionName != "" && townRoot != "" {
-		miner.TouchSessionHeartbeatWithState(townRoot, sessionName, miner.HeartbeatExiting, "gt done", issueID)
+	if sessionName := os.Getenv("MS_SESSION"); sessionName != "" && townRoot != "" {
+		miner.TouchSessionHeartbeatWithState(townRoot, sessionName, miner.HeartbeatExiting, "ms done", issueID)
 	}
 
 	// Get configured default branch for this rig
@@ -778,7 +778,7 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 		}
 
 		// CRITICAL: Verify work exists before completing (hq-xthqf)
-		// Miners calling gt done without commits results in lost work.
+		// Miners calling ms done without commits results in lost work.
 		// We MUST check for:
 		// 1. Working directory availability (can't verify git state without it)
 		// 2. Uncommitted changes (work that would be lost)
@@ -792,7 +792,7 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 		// Block if there are uncommitted changes (would be lost on completion).
 		// Runtime artifacts (.claude/, .opencode/, .beads/, .runtime/, __pycache__/) are
 		// excluded — these are toolchain-managed and normally gitignored.
-		// Without this filter, gt done fails on virtually every miner because
+		// Without this filter, ms done fails on virtually every miner because
 		// Cursor creates .claude/ at runtime in every workspace.
 		workStatus, err := g.CheckUncommittedWork()
 		if err != nil {
@@ -818,7 +818,7 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 		// Check no_merge or review_only flags on the hooked bead. When set,
 		// this is a non-code task (email, research, analysis, PRD review)
 		// where zero commits is expected.
-		// Must be checked before the zero-commit guard below (GH#2496, gt-kvf).
+		// Must be checked before the zero-commit guard below (GH#2496, ms-kvf).
 		isNoMergeTask := false
 		reviewOnlySource := false
 		if issueID != "" {
@@ -841,11 +841,11 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 		// implementation without writing code (mineshaft#1484, beads#emma).
 		// The --cleanup-status=clean escape is preserved for legitimate report-only
 		// tasks (audits, reviews) that the formula explicitly directs to use it.
-		// no_merge/review_only tasks (GH#2496, gt-kvf) also bypass: non-code work has no commits by design.
+		// no_merge/review_only tasks (GH#2496, ms-kvf) also bypass: non-code work has no commits by design.
 		// IMPORTANT: The error message must NOT mention --cleanup-status=clean.
 		// LLM agents read error messages and self-bypass (the original bug).
 		if aheadCount == 0 {
-			if os.Getenv("GT_MINER") != "" && doneCleanupStatus != "clean" && !isNoMergeTask {
+			if os.Getenv("MS_MINER") != "" && doneCleanupStatus != "clean" && !isNoMergeTask {
 				// Before failing, check whether commits exist on the remote feature branch.
 				// After a miner pushes to origin/<feature-branch> and submits an MR,
 				// if master advances (e.g., other MRs land), the feature branch is no
@@ -859,8 +859,8 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 				if !branchPushedWithWork {
 					return fmt.Errorf("cannot complete: no commits on branch ahead of %s\n"+
 						"Miners must have at least 1 commit to submit.\n"+
-						"If the bug was already fixed upstream: gt done --status DEFERRED\n"+
-						"If you're blocked: gt done --status ESCALATED",
+						"If the bug was already fixed upstream: ms done --status DEFERRED\n"+
+						"If you're blocked: ms done --status ESCALATED",
 						baseRef)
 				}
 			}
@@ -988,7 +988,7 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 			}
 		}
 
-		// Strip Mineshaft overlay from CLAUDE.md / CLAUDE.local.md (gt-p35).
+		// Strip Mineshaft overlay from CLAUDE.md / CLAUDE.local.md (ms-p35).
 		// Miners commit the overlay (miner lifecycle boilerplate) into repos,
 		// overwriting project-specific CLAUDE.md content. Detect and revert before push.
 		if stripped := stripOverlayCLAUDEmd(g, defaultBranch, baseRef); stripped {
@@ -996,15 +996,15 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 			aheadCount, _ = g.CommitsAhead(baseRef, "HEAD")
 		}
 
-		// Determine merge strategy from minecart (gt-myofa.3)
+		// Determine merge strategy from minecart (ms-myofa.3)
 		// Minecarts can override the default MR-based workflow:
 		//   direct: push commits straight to target branch, bypass refinery
 		//   mr:     default — create merge-request bead, refinery merges
 		//   local:  keep on feature branch, no push, no MR (for human review/upstream PRs)
 		//
-		// Primary: read minecart info from the issue's attachment fields (gt-7b6wf fix).
-		// gt sling stores minecart_id and merge_strategy on the issue when dispatching,
-		// which avoids unreliable cross-rig dep resolution at gt done time.
+		// Primary: read minecart info from the issue's attachment fields (ms-7b6wf fix).
+		// ms sling stores minecart_id and merge_strategy on the issue when dispatching,
+		// which avoids unreliable cross-rig dep resolution at ms done time.
 		// Fallback: dep-based lookup via getMinecartInfoForIssue (for issues dispatched
 		// before this fix, or where attachment fields weren't set).
 		minecartInfo = getMinecartInfoFromIssue(issueID, cwd)
@@ -1027,7 +1027,7 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 		// Handle "direct" strategy: push to target branch, skip MR
 		if minecartInfo != nil && minecartInfo.MergeStrategy == "direct" {
 			fmt.Printf("%s Direct merge strategy: pushing to %s\n", style.Bold.Render("→"), defaultBranch)
-			// Push submodule changes before direct push (gt-dzs)
+			// Push submodule changes before direct push (ms-dzs)
 			pushSubmoduleChanges(g, baseRef)
 			directRefspec := branch + ":" + defaultBranch
 			directPushErr := g.Push("origin", directRefspec, false)
@@ -1086,12 +1086,12 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 
 		// Default: "mr" strategy (or no minecart) — push branch, create MR bead
 
-		// Pre-declare push variables for checkpoint goto (gt-aufru)
+		// Pre-declare push variables for checkpoint goto (ms-aufru)
 		var refspec string
 		var pushErr error
 		var pushedCommitSHA string
 
-		// Resume: skip push if already completed in a previous run (gt-aufru).
+		// Resume: skip push if already completed in a previous run (ms-aufru).
 		// Validate checkpoint branch matches current branch (ge-sbo: stale checkpoint
 		// on miner reassignment causes new work to skip push for old branch).
 		if checkpoints[CheckpointPushed] != "" {
@@ -1107,9 +1107,9 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 		// CRITICAL: Push branch BEFORE creating MR bead (hq-6dk53, hq-a4ksk)
 		// The MR bead triggers Refinery to process this branch. If the branch
 		// isn't pushed yet, Refinery finds nothing to merge. The worktree gets
-		// nuked at the end of gt done, so the commits are lost forever.
+		// nuked at the end of ms done, so the commits are lost forever.
 		//
-		// Auto-push submodule changes BEFORE parent push (gt-dzs).
+		// Auto-push submodule changes BEFORE parent push (ms-dzs).
 		// If the parent repo's submodule pointer references commits that don't
 		// exist on the submodule's remote, the Refinery MR will be broken.
 		// Detect modified submodules and push each one first.
@@ -1181,11 +1181,11 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 		}
 		fmt.Printf("%s Branch pushed to origin\n", style.Bold.Render("✓"))
 
-		// Fix cleanup_status after successful push (gt-wcr).
+		// Fix cleanup_status after successful push (ms-wcr).
 		// Status was detected before push, so "unpushed" is now stale.
 		doneCleanupStatus = cleanupStatusAfterSuccessfulPush(doneCleanupStatus)
 
-		// Write push checkpoint for resume (gt-aufru)
+		// Write push checkpoint for resume (ms-aufru)
 		if agentBeadID != "" {
 			// Agent bead lives in town DB despite rig prefix — bypass routing.
 			cpBd := beads.New(cwd).ForAgentBead()
@@ -1203,7 +1203,7 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 		resolvedBeads := beads.ResolveBeadsDir(cwd)
 		if beads.IsLocalBeadsDir(cwd, resolvedBeads) {
 			fmt.Fprintf(os.Stderr, "WARNING: beads resolved to local dir %s (no shared-beads redirect)\n", resolvedBeads)
-			fmt.Fprintf(os.Stderr, "  MR beads written here will be invisible to the Refinery — run 'gt miner repair' to fix\n")
+			fmt.Fprintf(os.Stderr, "  MR beads written here will be invisible to the Refinery — run 'ms miner repair' to fix\n")
 		}
 		bd := beads.NewWithBeadsDir(cwd, resolvedBeads)
 
@@ -1470,7 +1470,7 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 			}
 		}
 
-		// Pre-declare for checkpoint goto (gt-aufru)
+		// Pre-declare for checkpoint goto (ms-aufru)
 		var existingMR *beads.Issue
 		var commitSHA string
 
@@ -1480,7 +1480,7 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 		// distinguishes genuinely new submissions from idempotent retries.
 		commitSHA, _ = g.Rev("HEAD")
 
-		// Resume: skip MR creation if already completed in a previous run (gt-aufru).
+		// Resume: skip MR creation if already completed in a previous run (ms-aufru).
 		// Mirrors the push checkpoint pattern above. Without this, every retry
 		// re-attempts bd.Create which hits unique constraints or creates duplicates.
 		// Validate that the checkpoint MR corresponds to the current branch (ge-sbo:
@@ -1556,11 +1556,11 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 
 			mrIssue, err := bd.Create(beads.CreateOptions{
 				Title:       title,
-				Labels:      []string{"gt:merge-request"},
+				Labels:      []string{"ms:merge-request"},
 				Priority:    priority,
 				Description: description,
 				Ephemeral:   true,
-				Rig:         rigName, // Ensure MR bead is created in the rig's database (gt-7y7)
+				Rig:         rigName, // Ensure MR bead is created in the rig's database (ms-7y7)
 			})
 			if err != nil {
 				// Non-fatal: record the error and skip to notifyWitness.
@@ -1596,12 +1596,12 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 				goto notifyWitness
 			}
 
-			// gt-gpy: Validate that the MR bead landed in the rig's database.
+			// ms-gpy: Validate that the MR bead landed in the rig's database.
 			// If the source bead has a cross-rig prefix (e.g., hq-), the routing
 			// could still resolve to the wrong database despite Rig: rigName.
 			// This is a warning-only guard — mrFailed is NOT set on mismatch.
 			if prefixErr := beads.ValidateRigPrefix(townRoot, rigName, mrID); prefixErr != nil {
-				style.PrintWarning("MR bead prefix mismatch: %v\nThe refinery may not find this MR — check 'gt mq list %s'", prefixErr, rigName)
+				style.PrintWarning("MR bead prefix mismatch: %v\nThe refinery may not find this MR — check 'ms mq list %s'", prefixErr, rigName)
 			}
 
 			// GH#3032: Supersede older open MRs for the same source issue.
@@ -1627,7 +1627,7 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 			// Update agent bead with active_mr reference (for traceability).
 			// Agent beads live in HQ regardless of rig prefix — bypass routing
 			// via ForAgentBead() to avoid the "issue not found" warning that
-			// leaves active_mr null after every gt done (hq-e73z).
+			// leaves active_mr null after every ms done (hq-e73z).
 			if agentBeadID != "" {
 				if err := bd.ForAgentBead().UpdateAgentActiveMR(agentBeadID, mrID); err != nil {
 					style.PrintWarning("could not update agent bead with active_mr: %v", err)
@@ -1652,7 +1652,7 @@ func runDone(cmd *cobra.Command, args []string) (retErr error) {
 			// Dolt branch (containing the MR bead) is merged.
 		}
 
-		// Write MR checkpoint for resume (gt-aufru)
+		// Write MR checkpoint for resume (ms-aufru)
 		if mrID != "" && agentBeadID != "" {
 			// Agent bead lives in town DB despite rig prefix — bypass routing.
 			cpBd := beads.New(cwd).ForAgentBead()
@@ -1685,7 +1685,7 @@ notifyWitness:
 	}
 
 	// Write completion metadata to agent bead for audit trail.
-	// Self-managed completion (gt-1qlg): metadata is retained for anomaly
+	// Self-managed completion (ms-1qlg): metadata is retained for anomaly
 	// detection and crash recovery by witness patrol, but the witness no
 	// longer processes routine completions from these fields.
 	fmt.Printf("\nNotifying Witness...\n")
@@ -1706,7 +1706,7 @@ notifyWitness:
 		}
 	}
 
-	// Write witness notification checkpoint for resume (gt-aufru)
+	// Write witness notification checkpoint for resume (ms-aufru)
 	if agentBeadID != "" {
 		// Agent bead lives in town DB despite rig prefix — bypass routing.
 		cpBd := beads.New(cwd).ForAgentBead()
@@ -1732,7 +1732,7 @@ notifyWitness:
 	nudgeWitness(rigName, fmt.Sprintf("MINER_DONE %s exit=%s", minerName, exitType))
 	fmt.Printf("%s Witness notified of %s (via nudge)\n", style.Bold.Render("✓"), exitType)
 
-	// Persistent miner model (gt-hdf8): miners transition to IDLE after completion.
+	// Persistent miner model (ms-hdf8): miners transition to IDLE after completion.
 	// Session stays alive, sandbox preserved, worktree synced to main for reuse.
 	// "done means idle" - not "done means dead".
 	isMiner := false
@@ -1748,9 +1748,9 @@ notifyWitness:
 		// Sync worktree to main so the miner is ready for new assignments.
 		// Phase 3 of persistent-miner-pool: DONE→IDLE syncs to main and deletes old branch.
 		// Non-fatal: if sync fails, the miner is still IDLE and the Witness
-		// or next gt sling can handle the branch state.
+		// or next ms sling can handle the branch state.
 		//
-		// GUARD (gt-pvx): Refuse to sync if uncommitted changes remain.
+		// GUARD (ms-pvx): Refuse to sync if uncommitted changes remain.
 		// If the auto-commit safety net above failed (git add/commit error),
 		// switching branches would discard the work. Better to leave the worktree
 		// dirty on the feature branch so work can be recovered.
@@ -1819,10 +1819,10 @@ notifyWitness:
 	}
 
 	// Self-terminate AFTER all cleanup is complete (opt-in via config).
-	// When enabled, miners kill their session after gt done finishes
+	// When enabled, miners kill their session after ms done finishes
 	// instead of transitioning to IDLE. This gives fresh context windows
 	// per task, reduces token waste, and eliminates stale state bugs.
-	// Must be the LAST thing gt done does — everything above must complete first.
+	// Must be the LAST thing ms done does — everything above must complete first.
 	if isMiner {
 		daemonCfg := config.LoadOperationalConfig(townRoot).GetDaemonConfig()
 		if daemonCfg.MinerSelfTerminate != nil && *daemonCfg.MinerSelfTerminate {
@@ -1842,7 +1842,7 @@ notifyWitness:
 // pushSubmoduleChanges detects submodules modified between baseRef
 // and HEAD, and pushes each submodule's new commit to its remote before the
 // parent repo push. This prevents the parent's submodule pointer from
-// referencing commits that don't exist on the submodule's remote (gt-dzs).
+// referencing commits that don't exist on the submodule's remote (ms-dzs).
 func pushSubmoduleChanges(g *git.Git, baseRef string) {
 	subChanges, err := g.SubmoduleChanges(baseRef, "HEAD")
 	if err != nil {
@@ -1902,7 +1902,7 @@ func notifyDoneCloseSkipped(townRoot, rigName, sender, issueID, reason string) {
 		To:      fmt.Sprintf("%s/witness", rigName),
 		From:    sender,
 		Subject: fmt.Sprintf("DONE_CLOSE_SKIPPED: %s", issueID),
-		Body: fmt.Sprintf("gt done skipped closing %s.\n\nReason: %s\n\nThe bead remains open for witness/overseer review.",
+		Body: fmt.Sprintf("ms done skipped closing %s.\n\nReason: %s\n\nThe bead remains open for witness/overseer review.",
 			issueID, reason),
 	}
 	if err := router.Send(msg); err != nil {
@@ -1949,7 +1949,7 @@ func verifyPushedCommitWithBareFallback(g *git.Git, townRoot, rigName, branch, c
 	return verifyErr
 }
 
-// shouldNudgeRefinery reports whether a gt done invocation may wake the
+// shouldNudgeRefinery reports whether a ms done invocation may wake the
 // refinery. Only COMPLETED exits create an MR bead; DEFERRED and ESCALATED
 // exits (miners finishing operational tasks with no code changes) must
 // never emit MQ_SUBMIT, or the refinery wakes from backoff to find an empty
@@ -1960,12 +1960,12 @@ func shouldNudgeRefinery(exitType, mrID string) bool {
 }
 
 // setDoneIntentLabel writes a done-intent:<type>:<unix-ts> label on the agent bead
-// EARLY in gt done, before push/MR. This allows the Witness to detect miners that
-// crashed mid-gt-done: if the session is dead but done-intent exists, the miner was
+// EARLY in ms done, before push/MR. This allows the Witness to detect miners that
+// crashed mid-ms-done: if the session is dead but done-intent exists, the miner was
 // trying to exit and should be auto-nuked.
 //
 // Follows the existing idle:N / backoff-until:TIMESTAMP label pattern.
-// Non-fatal: if this fails, gt done continues without the safety net.
+// Non-fatal: if this fails, ms done continues without the safety net.
 func setDoneIntentLabel(bd *beads.Beads, agentBeadID, exitType string) {
 	if agentBeadID == "" {
 		return
@@ -2008,7 +2008,7 @@ func clearDoneIntentLabel(bd *beads.Beads, agentBeadID string) {
 	}
 }
 
-// DoneCheckpoint represents a checkpoint stage in the gt done flow (gt-aufru).
+// DoneCheckpoint represents a checkpoint stage in the ms done flow (ms-aufru).
 // Checkpoints are stored as labels on the agent bead, enabling resume after
 // process interruption (context exhaustion, SIGTERM, etc.).
 type DoneCheckpoint string
@@ -2021,7 +2021,7 @@ const (
 
 // writeDoneCheckpoint writes a checkpoint label on the agent bead.
 // Format: done-cp:<stage>:<value>:<unix-ts>
-// Non-fatal: if this fails, gt done continues without the checkpoint.
+// Non-fatal: if this fails, ms done continues without the checkpoint.
 func writeDoneCheckpoint(bd *beads.Beads, agentBeadID string, cp DoneCheckpoint, value string) {
 	if agentBeadID == "" {
 		return
@@ -2089,28 +2089,28 @@ func clearDoneCheckpoints(bd *beads.Beads, agentBeadID string) {
 // Uses issueID directly to find the hooked bead instead of reading the agent bead's
 // hook_bead slot (hq-l6mm5: direct bead tracking).
 //
-// Per gt-zecmc: observable states ("done", "idle") removed - use tmux to discover.
+// Per ms-zecmc: observable states ("done", "idle") removed - use tmux to discover.
 // Non-observable states ("stuck", "awaiting-gate") are still set since they represent
 // intentional agent decisions that can't be observed from tmux.
 //
 // Also self-reports cleanup_status for ZFC compliance (#10).
 //
 // BUG FIX (hq-3xaxy): This function must be resilient to working directory deletion.
-// If the miner's worktree is deleted before gt done finishes, we use env vars as fallback.
-// All errors are warnings, not failures - gt done must complete even if bead ops fail.
+// If the miner's worktree is deleted before ms done finishes, we use env vars as fallback.
+// All errors are warnings, not failures - ms done must complete even if bead ops fail.
 func updateAgentStateOnDone(cwd, townRoot, exitType, issueID string) error {
 	// Get role context - try multiple sources for resilience
 	roleInfo, err := GetRoleWithContext(cwd, townRoot)
 	if err != nil {
 		// Fallback: try to construct role info from environment variables
 		// This handles the case where cwd is deleted but env vars are set
-		envRole := os.Getenv("GT_ROLE")
-		envRig := os.Getenv("GT_RIG")
-		envMiner := os.Getenv("GT_MINER")
+		envRole := os.Getenv("MS_ROLE")
+		envRig := os.Getenv("MS_RIG")
+		envMiner := os.Getenv("MS_MINER")
 
 		if envRole == "" || envRig == "" {
 			// Can't determine role, skip agent state update
-			style.PrintWarning("could not determine role for agent state update (env: GT_ROLE=%q, GT_RIG=%q)", envRole, envRig)
+			style.PrintWarning("could not determine role for agent state update (env: MS_ROLE=%q, MS_RIG=%q)", envRole, envRig)
 			return nil
 		}
 
@@ -2152,7 +2152,7 @@ func updateAgentStateOnDone(cwd, townRoot, exitType, issueID string) error {
 		beadsPath = filepath.Join(townRoot, ctx.Rig)
 	}
 	bd := beads.New(beadsPath)
-	// agentBd bypasses prefix routing — agent beads (gt:agent label) live in
+	// agentBd bypasses prefix routing — agent beads (ms:agent label) live in
 	// the town DB regardless of their ID prefix, but the rig-prefix routing
 	// would otherwise misroute them to the rig DB and silently fail with
 	// "issue not found". See beads.ForAgentBead docstring for details.
@@ -2175,10 +2175,10 @@ func updateAgentStateOnDone(cwd, townRoot, exitType, issueID string) error {
 	isWorkflowStep := strings.Contains(hookedBeadID, "-wfs-")
 
 	if hookedBeadID != "" && (exitType != ExitDeferred || isWorkflowStep) {
-		// BUG FIX (gt-pftz): Close hooked bead unless already terminal (closed/tombstone).
+		// BUG FIX (ms-pftz): Close hooked bead unless already terminal (closed/tombstone).
 		// Previously checked hookedBead.Status == StatusHooked, but miners update
 		// their work bead to in_progress during work. The exact-match check caused
-		// gt done to skip closing the bead, leaving it as unassigned open work after
+		// ms done to skip closing the bead, leaving it as unassigned open work after
 		// the hook was cleared — triggering infinite dispatch loops.
 		//
 		// DEFERRED exits preserve the bead: work is paused, not done. The bead
@@ -2188,8 +2188,8 @@ func updateAgentStateOnDone(cwd, townRoot, exitType, issueID string) error {
 			// Guard: never close a rig identity bead. Miners dispatched with the
 			// rig bead as their hook (via mol-miner-work) must not close permanent
 			// infrastructure. Skip close and fall through to idle state update.
-			if beads.HasLabel(hookedBead, "gt:rig") {
-				fmt.Fprintf(os.Stderr, "Note: hooked bead %s is a rig identity bead (gt:rig) — skipping close\n", hookedBeadID)
+			if beads.HasLabel(hookedBead, "ms:rig") {
+				fmt.Fprintf(os.Stderr, "Note: hooked bead %s is a rig identity bead (ms:rig) — skipping close\n", hookedBeadID)
 				goto doneStateUpdate
 			}
 
@@ -2204,15 +2204,15 @@ func updateAgentStateOnDone(cwd, townRoot, exitType, issueID string) error {
 			}
 
 			// BUG FIX: Close attached molecule (wisp) BEFORE closing hooked bead.
-			// When using formula-on-bead (gt sling formula --on bead), the base bead
-			// has attached_molecule pointing to the wisp. Without this fix, gt done
+			// When using formula-on-bead (ms sling formula --on bead), the base bead
+			// has attached_molecule pointing to the wisp. Without this fix, ms done
 			// only closed the hooked bead, leaving the wisp orphaned.
 			// Order matters: wisp closes -> unblocks base bead -> base bead closes.
 			attachment := beads.ParseAttachmentFields(hookedBead)
 			if attachment != nil && attachment.AttachedMolecule != "" {
 				// Close molecule step descendants before closing the wisp root.
 				// bd close doesn't cascade — without this, open/in_progress steps
-				// from the molecule stay stuck forever after gt done completes.
+				// from the molecule stay stuck forever after ms done completes.
 				// Order: step children -> wisp root -> base bead.
 				if n := closeDescendants(bd, attachment.AttachedMolecule); n > 0 {
 					fmt.Fprintf(os.Stderr, "Closed %d molecule step(s) for %s\n", n, attachment.AttachedMolecule)
@@ -2221,7 +2221,7 @@ func updateAgentStateOnDone(cwd, townRoot, exitType, issueID string) error {
 				// Close the wisp root with --force and audit reason.
 				// ForceCloseWithReason handles any status (hooked, open, in_progress)
 				// and records the reason + session for attribution.
-				// Same pattern as gt mol burn/squash (#1879).
+				// Same pattern as ms mol burn/squash (#1879).
 				if closeErr := bd.ForceCloseWithReason("done", attachment.AttachedMolecule); closeErr != nil {
 					if !errors.Is(closeErr, beads.ErrNotFound) {
 						fmt.Fprintf(os.Stderr, "Warning: couldn't close attached molecule %s: %v\n", attachment.AttachedMolecule, closeErr)
@@ -2246,7 +2246,7 @@ func updateAgentStateOnDone(cwd, townRoot, exitType, issueID string) error {
 	}
 
 doneStateUpdate:
-	// Clear hook_bead on the agent bead (gt-qbh). The hq-l6mm5 refactor made
+	// Clear hook_bead on the agent bead (ms-qbh). The hq-l6mm5 refactor made
 	// SetHookBead/ClearHookBead no-ops, but the witness still reads the
 	// hook_bead field from the agent bead snapshot. If the hooked bead is a
 	// wisp that gets reaped, the witness can't verify it was closed and flags
@@ -2262,7 +2262,7 @@ doneStateUpdate:
 	// Best-effort: failures are non-fatal since the work is already done.
 	purgeClosedEphemeralBeads(bd)
 
-	// Self-managed completion (gt-1qlg, miner-self-managed-completion.md Phase 2):
+	// Self-managed completion (ms-1qlg, miner-self-managed-completion.md Phase 2):
 	// Miner sets agent_state=idle directly, skipping the intermediate "done" state.
 	// The witness is no longer in the critical path for routine completions.
 	// Completion metadata (exit_type, MR ID, branch) remains on the agent bead
@@ -2272,7 +2272,7 @@ doneStateUpdate:
 	if exitType == ExitEscalated {
 		doneState = "stuck"
 	}
-	// Use UpdateAgentState to sync both column and description (gt-ulom).
+	// Use UpdateAgentState to sync both column and description (ms-ulom).
 	if err := agentBd.UpdateAgentState(agentBeadID, doneState); err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: couldn't set agent %s to %s: %v\n", agentBeadID, doneState, err)
 	}
@@ -2289,7 +2289,7 @@ doneStateUpdate:
 		}
 	}
 
-	// Clear done-intent label and checkpoints on clean exit — gt done completed
+	// Clear done-intent label and checkpoints on clean exit — ms done completed
 	// successfully. If we don't reach here (crash/stuck), the Witness uses the
 	// lingering labels to detect the zombie and resume from checkpoints.
 	clearDoneIntentLabel(agentBd, agentBeadID)
@@ -2300,7 +2300,7 @@ doneStateUpdate:
 // ensureAgentBeadExists recreates a missing agent bead so done-intent labels,
 // checkpoints, and active_mr writes don't silently fail (hq-xu4p). Only
 // rig-level agents are handled — town agents (overseer/supervisor) are owned by
-// gt doctor. Best-effort: failures are warned, never fatal.
+// ms doctor. Best-effort: failures are warned, never fatal.
 func ensureAgentBeadExists(bd *beads.Beads, id string, ctx RoleContext) {
 	if id == "" {
 		return
@@ -2335,7 +2335,7 @@ func ensureAgentBeadExists(bd *beads.Beads, id string, ctx RoleContext) {
 // isStaleBranchIssue reports whether a branch-derived issue id should be
 // overridden by the agent's hooked bead (hq-l0fj stale-branch guard).
 // True when both ids exist, they differ, and the branch id is not a subtask
-// of the hooked bead (e.g. branch gt-abc.1 under hooked gt-abc is fine).
+// of the hooked bead (e.g. branch ms-abc.1 under hooked ms-abc is fine).
 func isStaleBranchIssue(branchIssue, hookedIssue string) bool {
 	if branchIssue == "" || hookedIssue == "" {
 		return false
@@ -2374,7 +2374,7 @@ func selectAssignedIssue(branchIssue string, assigned []string) (string, bool) {
 	return ids[0], false
 }
 
-// findAssignedBeadsForAgent queries the same assignment locations as gt hook:
+// findAssignedBeadsForAgent queries the same assignment locations as ms hook:
 // the current rig, the target rig for rig agents, then town beads. The assigned
 // work bead is authoritative; agent-bead hook slots are intentionally ignored.
 func findAssignedBeadsForAgent(workDir, agentID string) []string {
@@ -2458,7 +2458,7 @@ func assignedIssueIDs(assigned []*beads.Issue) []string {
 // their assignment with `bd update --status=in_progress` when starting work,
 // which made a hooked-only lookup blind to the active assignment — the stale-
 // branch guard and the hook fallback silently no-op'd (same class of bug as
-// gt-pftz in the close path). Hooked wins over in_progress when both exist.
+// ms-pftz in the close path). Hooked wins over in_progress when both exist.
 // Returns empty string if no assignment bead is found.
 func findHookedBeadForAgent(bd *beads.Beads, agentID string) string {
 	issueID, _ := selectAssignedIssue("", assignedIssueIDs(queryAssignedBeads(bd, agentID)))
@@ -2493,8 +2493,8 @@ func isMinerActor(actor string) bool {
 // stripOverlayCLAUDEmd detects and removes Mineshaft overlay content from CLAUDE.md
 // and CLAUDE.local.md before the branch is pushed. Miners were committing the
 // overlay (which contains miner lifecycle boilerplate like "Idle Miner Heresy",
-// "gt done" protocol, etc.) into actual repos, overwriting project-specific CLAUDE.md
-// content. (gt-p35)
+// "ms done" protocol, etc.) into actual repos, overwriting project-specific CLAUDE.md
+// content. (ms-p35)
 //
 // This runs after all commits but before push. If overlay files are detected in
 // the branch diff, they are restored (CLAUDE.md) or removed (CLAUDE.local.md)
@@ -2569,7 +2569,7 @@ func stripOverlayCLAUDEmd(g *git.Git, defaultBranch, baseRef string) bool {
 	}
 
 	// Create cleanup commit
-	if commitErr := g.Commit("chore: strip Mineshaft overlay from CLAUDE.md (gt-p35)"); commitErr != nil {
+	if commitErr := g.Commit("chore: strip Mineshaft overlay from CLAUDE.md (ms-p35)"); commitErr != nil {
 		style.PrintWarning("failed to create overlay cleanup commit: %v", commitErr)
 		return false
 	}
@@ -2585,7 +2585,7 @@ func stripOverlayCLAUDEmd(g *git.Git, defaultBranch, baseRef string) bool {
 // operation but are never deleted, accumulating hundreds of rows that pollute
 // bd ready/list output. (hq-6161m)
 //
-// Best-effort: errors are logged but don't block gt done completion.
+// Best-effort: errors are logged but don't block ms done completion.
 func purgeClosedEphemeralBeads(bd *beads.Beads) {
 	out, err := bd.Run("purge", "--force", "--quiet")
 	if err != nil {

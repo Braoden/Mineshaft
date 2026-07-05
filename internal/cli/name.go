@@ -12,13 +12,13 @@ var (
 )
 
 // Name returns the Mineshaft CLI command name.
-// Defaults to "gt", but can be overridden with GT_COMMAND env var.
-// This allows coexistence with other tools that use "gt" (e.g., Graphite).
+// Defaults to "ms", but can be overridden with MS_COMMAND env var.
+// This allows coexistence with other tools that use "ms" (e.g., Graphite).
 func Name() string {
 	nameOnce.Do(func() {
-		name = os.Getenv("GT_COMMAND")
+		name = os.Getenv("MS_COMMAND")
 		if name == "" {
-			name = "gt"
+			name = "ms"
 		}
 	})
 	return name

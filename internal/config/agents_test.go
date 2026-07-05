@@ -311,9 +311,9 @@ func TestResolveProcessNames(t *testing.T) {
 			want:      []string{"codex"},
 		},
 		{
-			name:      "built-in preset through gt wrapper command",
+			name:      "built-in preset through ms wrapper command",
 			agentName: "codex",
-			command:   "gt-codex",
+			command:   "ms-codex",
 			want:      []string{"codex"},
 		},
 		{
@@ -424,7 +424,7 @@ func TestResolveProcessNames(t *testing.T) {
 	})
 
 	// Regression: custom agents wrapped in `env -u VAR <real-binary>` (or
-	// nohup/sudo/etc.) used to fall through to GT_PROCESS_NAMES=<wrapper>,
+	// nohup/sudo/etc.) used to fall through to MS_PROCESS_NAMES=<wrapper>,
 	// which IsAgentAlive could never match — wrapper has exec'd into the real
 	// binary by then. ResolveProcessNames must look past the wrapper.
 	wrapperCases := []struct {
@@ -889,7 +889,7 @@ func TestCursorAgentPreset(t *testing.T) {
 	}
 
 	// Check ProcessNames for detection (install script provides both "agent" and "cursor-agent" symlinks).
-	// Tmux only treats "agent" as Cursor when GT_AGENT=cursor or GT_PROCESS_NAMES includes cursor-agent.
+	// Tmux only treats "agent" as Cursor when MS_AGENT=cursor or MS_PROCESS_NAMES includes cursor-agent.
 	seen := make(map[string]bool, len(info.ProcessNames))
 	for _, n := range info.ProcessNames {
 		seen[n] = true
@@ -919,7 +919,7 @@ func TestDefaultRigAgentRegistryPath(t *testing.T) {
 		rigPath      string
 		expectedPath string
 	}{
-		{"/Users/alice/gt/myproject", "/Users/alice/gt/myproject/settings/agents.json"},
+		{"/Users/alice/ms/myproject", "/Users/alice/ms/myproject/settings/agents.json"},
 		{"/tmp/my-rig", "/tmp/my-rig/settings/agents.json"},
 		{"relative/path", "relative/path/settings/agents.json"},
 	}

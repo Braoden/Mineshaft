@@ -71,14 +71,14 @@ assert_line_count() {
 write_fake_commands() {
   local bin_dir="$1"
 
-  cat > "$bin_dir/gt" <<'SH'
+  cat > "$bin_dir/ms" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
 
 case "${1:-}" in
   town)
     if [ "${2:-}" = "root" ]; then
-      printf '%s\n' "$GT_TOWN_ROOT"
+      printf '%s\n' "$MS_TOWN_ROOT"
       exit 0
     fi
     ;;
@@ -89,7 +89,7 @@ case "${1:-}" in
       if [ -f "$TEST_STATE/nohook/$name" ]; then
         printf '{"bead_id":""}\n'
       else
-        printf '{"bead_id":"gt-hook-%s"}\n' "$name"
+        printf '{"bead_id":"ms-hook-%s"}\n' "$name"
       fi
       exit 0
     fi
@@ -139,10 +139,10 @@ case "${1:-}" in
     ;;
 esac
 
-printf 'unexpected gt call: %s\n' "$*" >&2
+printf 'unexpected ms call: %s\n' "$*" >&2
 exit 1
 SH
-  chmod +x "$bin_dir/gt"
+  chmod +x "$bin_dir/ms"
 
   cat > "$bin_dir/tmux" <<'SH'
 #!/usr/bin/env bash
@@ -231,12 +231,12 @@ setup_case() {
   TEST_TMP=$(mktemp -d)
   CLEANUP_DIRS+=("$TEST_TMP")
   export TEST_STATE="$TEST_TMP/state"
-  export GT_TOWN_ROOT="$TEST_TMP/town"
+  export MS_TOWN_ROOT="$TEST_TMP/town"
   local bin_dir="$TEST_TMP/bin"
 
   mkdir -p "$TEST_STATE/health" "$TEST_STATE/nohook" "$TEST_STATE/sessions" "$TEST_STATE/status" "$bin_dir"
-  mkdir -p "$GT_TOWN_ROOT/mineshaft/miners" "$GT_TOWN_ROOT/supervisor"
-  printf '{"rigs":{"mineshaft":{"beads":{"prefix":"gt"}}}}\n' > "$GT_TOWN_ROOT/rigs.json"
+  mkdir -p "$MS_TOWN_ROOT/mineshaft/miners" "$MS_TOWN_ROOT/supervisor"
+  printf '{"rigs":{"mineshaft":{"beads":{"prefix":"ms"}}}}\n' > "$MS_TOWN_ROOT/rigs.json"
   : > "$TEST_STATE/mail.log"
   : > "$TEST_STATE/kill.log"
   : > "$TEST_STATE/escalate.log"
@@ -246,16 +246,16 @@ setup_case() {
 
   write_fake_commands "$bin_dir"
   export PATH="$bin_dir:$ORIGINAL_PATH"
-  export GT_STUCK_AGENT_DOG_MAX_INACTIVITY=0s
-  unset GT_STUCK_AGENT_DOG_MASS_DEATH_THRESHOLD
+  export MS_STUCK_AGENT_DOG_MAX_INACTIVITY=0s
+  unset MS_STUCK_AGENT_DOG_MASS_DEATH_THRESHOLD
 }
 
 add_miner() {
   local name="$1"
   local status="$2"
-  local session="gt-$name"
+  local session="ms-$name"
 
-  mkdir -p "$GT_TOWN_ROOT/mineshaft/miners/$name"
+  mkdir -p "$MS_TOWN_ROOT/mineshaft/miners/$name"
   touch "$TEST_STATE/sessions/$session"
   printf '%s\n' "$status" > "$TEST_STATE/health/$session"
 }
@@ -274,19 +274,19 @@ test_healthy_runtime() {
   assert_file_empty "$TEST_STATE/kill.log" "$runtime healthy: no session kill"
   assert_file_empty "$TEST_STATE/mail.log" "$runtime healthy: no restart mail"
   assert_file_empty "$TEST_STATE/escalate.log" "$runtime healthy: no escalation"
-  assert_file_contains "$TEST_STATE/health_calls.log" "gt-$runtime --max-inactivity 0s" "$runtime healthy: used central health"
+  assert_file_contains "$TEST_STATE/health_calls.log" "ms-$runtime --max-inactivity 0s" "$runtime healthy: used central health"
 }
 
 test_long_research_active_pane() {
   setup_case
-  export GT_STUCK_AGENT_DOG_MAX_INACTIVITY=30m
+  export MS_STUCK_AGENT_DOG_MAX_INACTIVITY=30m
   add_miner research agent-hung
   run_script
 
   assert_file_empty "$TEST_STATE/kill.log" "active research: no session kill"
   assert_file_empty "$TEST_STATE/mail.log" "active research: no restart mail"
   assert_file_empty "$TEST_STATE/escalate.log" "active research: no mass-death escalation"
-  assert_file_contains "$TEST_STATE/output.log" "OBSERVE: gt-research runtime alive" "active research: observed live runtime"
+  assert_file_contains "$TEST_STATE/output.log" "OBSERVE: ms-research runtime alive" "active research: observed live runtime"
   assert_file_contains "$TEST_STATE/output.log" "0 crashed, 0 stuck, 1 healthy" "active research: counted healthy"
 }
 
@@ -296,7 +296,7 @@ test_dead_agent_restarts_one() {
   run_script
 
   assert_line_count "$TEST_STATE/kill.log" 1 "dead agent: one session kill"
-  assert_file_contains "$TEST_STATE/kill.log" "gt-alpha" "dead agent: killed target session"
+  assert_file_contains "$TEST_STATE/kill.log" "ms-alpha" "dead agent: killed target session"
   assert_line_count "$TEST_STATE/mail.log" 1 "dead agent: one restart mail"
   assert_file_contains "$TEST_STATE/mail.log" "mineshaft/witness" "dead agent: mailed rig witness"
   assert_file_empty "$TEST_STATE/escalate.log" "dead agent: no mass-death escalation"
@@ -316,7 +316,7 @@ test_dead_session_restarts_one() {
 test_closed_hook_skips_restart() {
   setup_case
   add_miner alpha agent-dead
-  printf 'closed\n' > "$TEST_STATE/status/gt-hook-alpha"
+  printf 'closed\n' > "$TEST_STATE/status/ms-hook-alpha"
   run_script
 
   assert_file_empty "$TEST_STATE/kill.log" "closed hook: no session kill"

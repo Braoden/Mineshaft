@@ -86,7 +86,7 @@ func makeTestMR(id, branch, target, worker string, status string) *beads.Issue {
 		Branch:      branch,
 		Target:      target,
 		Worker:      worker,
-		SourceIssue: "gt-src-123",
+		SourceIssue: "ms-src-123",
 		Rig:         "testrig",
 	})
 	return &beads.Issue{
@@ -95,7 +95,7 @@ func makeTestMR(id, branch, target, worker string, status string) *beads.Issue {
 		Type:        "task",
 		Status:      status,
 		Priority:    2,
-		Labels:      []string{"gt:merge-request"},
+		Labels:      []string{"ms:merge-request"},
 		Description: desc,
 		CreatedAt:   "2025-01-01T12:00:00Z",
 		UpdatedAt:   "2025-01-01T12:00:00Z",

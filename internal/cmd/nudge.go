@@ -98,30 +98,30 @@ This is the ONLY way to send messages to Claude sessions.
 Do not use raw tmux send-keys elsewhere.
 
 Role shortcuts (expand to session names):
-  overseer     Maps to gt-overseer
-  supervisor    Maps to gt-supervisor
-  witness   Maps to gt-<rig>-witness (uses current rig)
-  refinery  Maps to gt-<rig>-refinery (uses current rig)
+  overseer     Maps to ms-overseer
+  supervisor    Maps to ms-supervisor
+  witness   Maps to ms-<rig>-witness (uses current rig)
+  refinery  Maps to ms-<rig>-refinery (uses current rig)
 
 Channel syntax:
   channel:<name>  Nudges all members of a named channel defined in
-                  ~/gt/config/messaging.json under "nudge_channels".
+                  ~/ms/config/messaging.json under "nudge_channels".
                   Patterns like "mineshaft/miners/*" are expanded.
 
 DND (Do Not Disturb):
-  If the target has DND enabled (gt dnd on), the nudge is skipped.
+  If the target has DND enabled (ms dnd on), the nudge is skipped.
   Use --force to override DND and send anyway.
 
 Examples:
-  gt nudge greenplace/furiosa "Check your mail and start working"
-  gt nudge greenplace/alpha -m "What's your status?"
-  gt nudge overseer "Status update requested"
-  gt nudge witness "Check miner health"
-  gt nudge supervisor session-started
-  gt nudge channel:workers "New priority work available"
+  ms nudge greenplace/furiosa "Check your mail and start working"
+  ms nudge greenplace/alpha -m "What's your status?"
+  ms nudge overseer "Status update requested"
+  ms nudge witness "Check miner health"
+  ms nudge supervisor session-started
+  ms nudge channel:workers "New priority work available"
 
   # Use --stdin for messages with special characters or formatting:
-  gt nudge mineshaft/alpha --stdin <<'EOF'
+  ms nudge mineshaft/alpha --stdin <<'EOF'
   Status update:
   - Task 1: complete
   - Task 2: in progress
@@ -155,12 +155,12 @@ var idleWatcherPollInterval = 1 * time.Second
 // For "queue" mode: writes to the nudge queue for cooperative delivery.
 // For "wait-idle" mode: waits for idle, then delivers or falls back to queue.
 func deliverNudge(t *tmux.Tmux, sessionName, message, sender string) error {
-	// Test hook: when GT_TEST_NUDGE_LOG is set, log the nudge instead of
+	// Test hook: when MS_TEST_NUDGE_LOG is set, log the nudge instead of
 	// delivering through real tmux/queue transport. Prevents test-suite
 	// runs from delivering "test" messages to live agents (overseer reported
 	// recurring synthetic nudges traced to nudge_test.go invocations).
 	// Mirrors the pattern in sling_helpers.go's nudgeWitness/nudgeRefinery.
-	if logPath := os.Getenv("GT_TEST_NUDGE_LOG"); logPath != "" {
+	if logPath := os.Getenv("MS_TEST_NUDGE_LOG"); logPath != "" {
 		entry := fmt.Sprintf("nudge:%s:%s:%s\n", sessionName, sender, message)
 		if f, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
 			_, _ = f.WriteString(entry)
@@ -204,9 +204,9 @@ func deliverNudge(t *tmux.Tmux, sessionName, message, sender string) error {
 		// WaitForIdle uses Claude Code's prompt pattern (❯) and status bar (⏵⏵).
 		// Non-Claude agents (Gemini, Codex, etc.) have no ReadyPromptPrefix,
 		// so WaitForIdle produces false positives — it sees no busy indicator
-		// and matches stale prompt characters in the pane buffer. (GH#gt-5ey3)
+		// and matches stale prompt characters in the pane buffer. (GH#ms-5ey3)
 		// Degrade to queue mode for agents without prompt-based detection.
-		if agentName, err := t.GetEnvironment(sessionName, "GT_AGENT"); err == nil && agentName != "" {
+		if agentName, err := t.GetEnvironment(sessionName, "MS_AGENT"); err == nil && agentName != "" {
 			preset := config.GetAgentPresetByName(agentName)
 			if preset != nil && preset.ReadyPromptPrefix == "" {
 				fmt.Fprintf(os.Stderr, "wait-idle: %s agent %q has no prompt detection, using queue mode\n", sessionName, agentName)
@@ -223,7 +223,7 @@ func deliverNudge(t *tmux.Tmux, sessionName, message, sender string) error {
 					return t.NudgeSessionWithOpts(sessionName, formatted, tmux.NudgeOpts{TownRoot: townRoot})
 				}
 				// Ensure a nudge-poller is running so the queue actually drains.
-				// The poller is normally started by gt crew start, but if the
+				// The poller is normally started by ms crew start, but if the
 				// session was started manually (or the poller crashed), queued
 				// nudges sit undelivered forever. StartPoller is idempotent —
 				// it no-ops if a poller is already alive for this session.
@@ -273,7 +273,7 @@ func deliverNudge(t *tmux.Tmux, sessionName, message, sender string) error {
 		// The UserPromptSubmit hook drains the queue on agent input, but an
 		// idle agent receives no input — so queued nudges are lost without
 		// this watcher. It exits on: delivery, session death, or timeout.
-		// Must be synchronous (not a goroutine) because gt nudge is a CLI
+		// Must be synchronous (not a goroutine) because ms nudge is a CLI
 		// command — the process exits after return, killing any goroutines.
 		watchAndDeliver(t, townRoot, sessionName)
 		return nil
@@ -282,8 +282,8 @@ func deliverNudge(t *tmux.Tmux, sessionName, message, sender string) error {
 		opts := tmux.NudgeOpts{TownRoot: townRoot}
 		// Check if the target agent uses Escape as cancel (e.g., Gemini CLI).
 		// For these agents, skip the Escape keystroke to avoid canceling
-		// in-flight generation. (GH#gt-wasn)
-		if agentName, err := t.GetEnvironment(sessionName, "GT_AGENT"); err == nil && agentName != "" {
+		// in-flight generation. (GH#ms-wasn)
+		if agentName, err := t.GetEnvironment(sessionName, "MS_AGENT"); err == nil && agentName != "" {
 			if preset := config.GetAgentPresetByName(agentName); preset != nil && preset.EscapeCancelsRequest {
 				opts.SkipEscape = true
 			}
@@ -298,7 +298,7 @@ func deliverNudge(t *tmux.Tmux, sessionName, message, sender string) error {
 // UserPromptSubmit hook entirely — that hook does not fire for tmux
 // send-keys input, so we cannot rely on it.
 //
-// This runs synchronously — gt nudge blocks until the watcher exits.
+// This runs synchronously — ms nudge blocks until the watcher exits.
 // Errors are logged to stderr rather than returned since delivery failure
 // after successful queue write is non-fatal (queue persists for next drain).
 //
@@ -453,7 +453,7 @@ func runNudge(cmd *cobra.Command, args []string) (retErr error) {
 	if townRoot != "" {
 		// Initialize tmux socket and prefix registry so NewTmux() connects
 		// to the correct town socket. Without this, nudge from non-agent
-		// contexts (e.g., crew workspaces without GT_TOWN_SOCKET) falls
+		// contexts (e.g., crew workspaces without MS_TOWN_SOCKET) falls
 		// through to the sentinel socket and fails to find sessions.
 		_ = session.InitRegistry(townRoot)
 	}
@@ -469,7 +469,7 @@ func runNudge(cmd *cobra.Command, args []string) (retErr error) {
 	t := tmux.NewTmux()
 
 	// Expand role shortcuts to session names
-	// These shortcuts let users type "overseer" instead of "gt-overseer"
+	// These shortcuts let users type "overseer" instead of "ms-overseer"
 	switch target {
 	case constants.RoleOverseer:
 		target = session.OverseerSessionName()
@@ -729,10 +729,10 @@ func runNudgeChannel(channelName, message, sender string) error {
 
 // resolveNudgePattern resolves a nudge channel pattern to session names.
 // Patterns can be:
-//   - Literal: "mineshaft/witness" → gt-mineshaft-witness
+//   - Literal: "mineshaft/witness" → ms-mineshaft-witness
 //   - Wildcard: "mineshaft/miners/*" → all miner sessions in mineshaft
 //   - Role: "*/witness" → all witness sessions
-//   - Special: "overseer", "supervisor" → gt-{town}-overseer, gt-{town}-supervisor
+//   - Special: "overseer", "supervisor" → ms-{town}-overseer, ms-{town}-supervisor
 //
 // townName is used to generate the correct session names for overseer/supervisor.
 func resolveNudgePattern(pattern string, agents []*AgentSession) []string {
@@ -832,9 +832,9 @@ func shouldNudgeTarget(townRoot, targetAddress string, force bool) (bool, string
 // sessionNameToAddress converts a tmux session name back to a mail address
 // for DND lookup. Returns empty string if the format is unrecognized.
 // Examples:
-//   - "gt-mineshaft-crew-max" -> "mineshaft/crew/max"
-//   - "gt-mineshaft-alpha" -> "mineshaft/alpha"
-//   - "gt-mineshaft-witness" -> "mineshaft/witness"
+//   - "ms-mineshaft-crew-max" -> "mineshaft/crew/max"
+//   - "ms-mineshaft-alpha" -> "mineshaft/alpha"
+//   - "ms-mineshaft-witness" -> "mineshaft/witness"
 //   - "hq-overseer" -> "overseer"
 //   - "hq-supervisor" -> "supervisor"
 func sessionNameToAddress(sessionName string) string {
@@ -864,10 +864,10 @@ func sessionNameToAddress(sessionName string) string {
 
 // addressToAgentBeadID converts a target address to an agent bead ID.
 // Examples:
-//   - "overseer" -> "gt-{town}-overseer"
-//   - "supervisor" -> "gt-{town}-supervisor"
-//   - "mineshaft/witness" -> "gt-mineshaft-witness"
-//   - "mineshaft/alpha" -> "gt-mineshaft-miner-alpha"
+//   - "overseer" -> "ms-{town}-overseer"
+//   - "supervisor" -> "ms-{town}-supervisor"
+//   - "mineshaft/witness" -> "ms-mineshaft-witness"
+//   - "mineshaft/alpha" -> "ms-mineshaft-miner-alpha"
 //
 // Returns empty string if the address cannot be converted.
 func addressToAgentBeadID(address string) string {

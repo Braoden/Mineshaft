@@ -56,7 +56,7 @@ Capture current state before any changes.
 
 **0. Prime context (critical for fresh sessions):**
 ```bash
-gt prime   # Load gt/mol context
+ms prime   # Load ms/mol context
 bd prime   # Load beads context
 ```
 These ensure the agent has full system context, especially after session
@@ -161,7 +161,7 @@ git worktree prune
 ```
 
 **CAUTION:** Don't remove worktrees for active cross-rig work.
-Check with `gt worktree list` if available.
+Check with `ms worktree list` if available.
 
 **Exit criteria:** Stale worktrees removed."""
 
@@ -265,8 +265,8 @@ a conflict, the queue backs up and miners' completed work never lands.
 
    ```bash
    git rebase --abort
-   gt mail send <rig>/miners/<worker> -s "Rebase needed" \
-     -m "Your branch conflicts with main in <files>. Please rebase and resubmit via gt done."
+   ms mail send <rig>/miners/<worker> -s "Rebase needed" \
+     -m "Your branch conflicts with main in <files>. Please rebase and resubmit via ms done."
    # Skip this branch, continue with queue
    ```
 
@@ -374,7 +374,7 @@ This is a blocking issue. Options:
 2. **Non-trivial fix:** File and escalate
    ```bash
    bd create --title "Quality check failing on main" --type bug --priority 0
-   gt mail send --human -s "ALERT: Main failing quality checks" -m "Details..."
+   ms mail send --human -s "ALERT: Main failing quality checks" -m "Details..."
    ```
    Cannot mark sync complete with failing quality checks.
 
@@ -486,7 +486,7 @@ Report sync completion to coordinator (if broadcast) or to self (if autonomous).
 
 **If responding to broadcast:**
 ```bash
-gt mail send <coordinator> -s "SYNC_COMPLETE $(hostname)" -m "<report>"
+ms mail send <coordinator> -s "SYNC_COMPLETE $(hostname)" -m "<report>"
 ```
 
 **If autonomous sync:**
@@ -495,7 +495,7 @@ gt mail send <coordinator> -s "SYNC_COMPLETE $(hostname)" -m "<report>"
 
 **If sync failed (couldn't pass quality checks):**
 ```bash
-gt mail send --human -s "SYNC_FAILED $(hostname)" -m "<report with failure details>"
+ms mail send --human -s "SYNC_FAILED $(hostname)" -m "<report with failure details>"
 ```
 
 **Exit criteria:** Readiness signaled, molecule complete."""

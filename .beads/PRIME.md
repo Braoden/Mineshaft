@@ -1,6 +1,6 @@
 # Mineshaft Worker Context
 
-> **Context Recovery**: Run `gt prime` for full context after compaction or new session.
+> **Context Recovery**: Run `ms prime` for full context after compaction or new session.
 
 ## The Propulsion Principle (GUPP)
 
@@ -17,16 +17,16 @@ This is physics, not politeness. Mineshaft is a steam engine - you are a piston.
 
 ## Startup Protocol
 
-1. Check your hook: `gt mol status`
+1. Check your hook: `ms mol status`
 2. If work is hooked → EXECUTE (no announcement, no waiting)
-3. If hook empty → Check mail: `gt mail inbox`
+3. If hook empty → Check mail: `ms mail inbox`
 4. Still nothing? Wait for user instructions
 
 ## Key Commands
 
-- `gt prime` - Get full role context (run after compaction)
-- `gt mol status` - Check your hooked work
-- `gt mail inbox` - Check for messages
+- `ms prime` - Get full role context (run after compaction)
+- `ms mol status` - Check your hooked work
+- `ms mail inbox` - Check for messages
 - `bd ready` - Find available work (no blockers)
 
 ## Session Close Protocol

@@ -19,8 +19,8 @@ set -euo pipefail
 
 # --- Configuration -----------------------------------------------------------
 
-DOLT_HOST="${GT_DOLT_HOST:-${DOLT_HOST:-127.0.0.1}}"
-DOLT_PORT="${GT_DOLT_PORT:-${DOLT_PORT:-3307}}"
+DOLT_HOST="${MS_DOLT_HOST:-${DOLT_HOST:-127.0.0.1}}"
+DOLT_PORT="${MS_DOLT_PORT:-${DOLT_PORT:-3307}}"
 DOLT_USER="${DOLT_USER:-root}"
 COMMIT_THRESHOLD="${COMMIT_THRESHOLD:-2000}"
 # Default: auto-discover production databases via SHOW DATABASES.
@@ -138,7 +138,7 @@ if [[ "$DEFAULT_DBS" == "auto" ]]; then
   ALL_DBS=$(dolt_query "" "SHOW DATABASES" | grep -v -E '^(information_schema|mysql|dolt_cluster)$' | grep -v -E '^(testdb_|beads_t|beads_pt|doctest_)')
   if [[ -z "$ALL_DBS" ]]; then
     log "ERROR: No production databases found (is Dolt running on $DOLT_HOST:$DOLT_PORT?)"
-    gt escalate "compactor-dog: no databases found" -s MEDIUM \
+    ms escalate "compactor-dog: no databases found" -s MEDIUM \
       --reason "Dolt server at $DOLT_HOST:$DOLT_PORT returned no production databases" 2>/dev/null || true
     exit 1
   fi
@@ -201,7 +201,7 @@ log "Skipped (below threshold): ${#SKIPPED[@]}"
 if [[ ${#CANDIDATES[@]} -eq 0 ]]; then
   log "All databases within threshold ($COMMIT_THRESHOLD). No compaction needed."
   SUMMARY="compactor-dog: all ${DB_COUNT} DBs below threshold ($COMMIT_THRESHOLD commits)"
-  gt plugin record-run --plugin compactor-dog --result success \
+  ms plugin record-run --plugin compactor-dog --result success \
     --title "$SUMMARY" --description "$SUMMARY" >/dev/null 2>&1 || true
   exit 0
 fi
@@ -215,7 +215,7 @@ if $CHECK_ONLY; then
     log "  ${entry%%:*} (${entry##*:} commits) — recommends compaction"
   done
   SUMMARY="compactor-dog: ${#CANDIDATES[@]} DBs exceed threshold ($COMMIT_THRESHOLD commits)"
-  gt plugin record-run --plugin compactor-dog --result check-only \
+  ms plugin record-run --plugin compactor-dog --result check-only \
     --title "$SUMMARY" --description "$SUMMARY" >/dev/null 2>&1 || true
   exit 0
 fi
@@ -269,7 +269,7 @@ for entry in "${CANDIDATES[@]}"; do
 
   # Step 3a.5: Fetch from remote before compaction to check for divergence.
   # Without this, flatten rewrites the commit graph and DoltHub push can never
-  # fast-forward again (see gt-mkd1).
+  # fast-forward again (see ms-mkd1).
   # NOTE: We use DOLT_FETCH instead of DOLT_PULL because a live Dolt server
   # always has uncommitted working set changes, making DOLT_PULL fail with
   # "cannot merge with uncommitted changes".
@@ -299,7 +299,7 @@ for entry in "${CANDIDATES[@]}"; do
     fi
     if ! $FETCH_OK; then
       # Fetch timeout/failure is a warning, not a blocker. For local-source-of-truth
-      # databases (hq/bd/gt), the local data IS the authority — we compact and
+      # databases (hq/bd/ms), the local data IS the authority — we compact and
       # force-push. Aborting on fetch failure causes the escalation feedback loop:
       # timeout → abort → escalate → more commits → slower fetch → repeat.
       log "  [handled] Fetch from remote timed out for $DB — proceeding with compaction (local is source of truth)"
@@ -420,7 +420,7 @@ for entry in "${CANDIDATES[@]}"; do
     log "  WARNING: DATABASE LEFT IN COMPACTED STATE — MANUAL INSPECTION REQUIRED"
     ERRORS=$((ERRORS + 1))
     ERROR_DETAILS="${ERROR_DETAILS}${DB}: integrity check failed (DB left in compacted state)\n"
-    gt escalate "compactor-dog: integrity failure in $DB" -s HIGH \
+    ms escalate "compactor-dog: integrity failure in $DB" -s HIGH \
       --reason "Row count mismatch after flatten compaction on $DB. DATABASE LEFT IN COMPACTED STATE — MANUAL INSPECTION REQUIRED." 2>/dev/null || true
     continue
   fi
@@ -473,14 +473,14 @@ if [[ $ERRORS -gt 0 ]]; then
     [[ -n "$line" ]] && log "  $line"
   done
 
-  gt escalate "compactor-dog: $ERRORS databases had compaction errors" -s MEDIUM \
+  ms escalate "compactor-dog: $ERRORS databases had compaction errors" -s MEDIUM \
     --reason "Compaction cycle completed with errors. $SUMMARY" 2>/dev/null || true
 
-  gt plugin record-run --plugin compactor-dog --result warning \
+  ms plugin record-run --plugin compactor-dog --result warning \
     --title "compactor-dog: ERRORS — $SUMMARY" \
     --description "Compaction completed with $ERRORS errors. $SUMMARY" >/dev/null 2>&1 || true
 else
-  gt plugin record-run --plugin compactor-dog --result success \
+  ms plugin record-run --plugin compactor-dog --result success \
     --title "$SUMMARY" --description "$SUMMARY" >/dev/null 2>&1 || true
 fi
 

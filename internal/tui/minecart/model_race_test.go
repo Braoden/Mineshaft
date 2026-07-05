@@ -26,7 +26,7 @@ func TestMinecartsWriteConcurrentWithView(t *testing.T) {
 			m.mu.Lock()
 			m.minecarts = []MinecartItem{
 				{ID: "hq-abc", Title: "Test Minecart", Status: "open",
-					Issues:   []IssueItem{{ID: "gt-xyz", Title: "Fix bug", Status: "open"}},
+					Issues:   []IssueItem{{ID: "ms-xyz", Title: "Fix bug", Status: "open"}},
 					Progress: "0/1", Expanded: true},
 			}
 			m.mu.Unlock()
@@ -57,10 +57,10 @@ func TestToggleExpandConcurrentWithView(t *testing.T) {
 	// Pre-populate minecarts
 	m.minecarts = []MinecartItem{
 		{ID: "hq-abc", Title: "Minecart 1", Status: "open",
-			Issues:   []IssueItem{{ID: "gt-1", Title: "Issue 1", Status: "open"}},
+			Issues:   []IssueItem{{ID: "ms-1", Title: "Issue 1", Status: "open"}},
 			Progress: "0/1", Expanded: false},
 		{ID: "hq-def", Title: "Minecart 2", Status: "open",
-			Issues:   []IssueItem{{ID: "gt-2", Title: "Issue 2", Status: "open"}},
+			Issues:   []IssueItem{{ID: "ms-2", Title: "Issue 2", Status: "open"}},
 			Progress: "0/1", Expanded: false},
 	}
 
@@ -95,13 +95,13 @@ func TestCursorToMinecartIndexLocked(t *testing.T) {
 	m.minecarts = []MinecartItem{
 		{ID: "hq-abc", Title: "C1", Status: "open",
 			Issues: []IssueItem{
-				{ID: "gt-1", Title: "I1", Status: "open"},
-				{ID: "gt-2", Title: "I2", Status: "closed"},
+				{ID: "ms-1", Title: "I1", Status: "open"},
+				{ID: "ms-2", Title: "I2", Status: "closed"},
 			},
 			Expanded: true},
 		{ID: "hq-def", Title: "C2", Status: "open",
 			Issues: []IssueItem{
-				{ID: "gt-3", Title: "I3", Status: "open"},
+				{ID: "ms-3", Title: "I3", Status: "open"},
 			},
 			Expanded: false},
 	}
@@ -144,7 +144,7 @@ func TestMaxCursorLocked(t *testing.T) {
 
 	// One minecart, collapsed
 	m.minecarts = []MinecartItem{
-		{ID: "hq-abc", Issues: []IssueItem{{ID: "gt-1"}}, Expanded: false},
+		{ID: "hq-abc", Issues: []IssueItem{{ID: "ms-1"}}, Expanded: false},
 	}
 	m.mu.RLock()
 	if got := m.maxCursorLocked(); got != 0 {
@@ -154,7 +154,7 @@ func TestMaxCursorLocked(t *testing.T) {
 
 	// One minecart, expanded with 2 issues
 	m.minecarts[0].Expanded = true
-	m.minecarts[0].Issues = append(m.minecarts[0].Issues, IssueItem{ID: "gt-2"})
+	m.minecarts[0].Issues = append(m.minecarts[0].Issues, IssueItem{ID: "ms-2"})
 	m.mu.RLock()
 	if got := m.maxCursorLocked(); got != 2 {
 		t.Errorf("1 expanded w/2 issues: maxCursor = %d, want 2", got)
@@ -171,7 +171,7 @@ func TestViewConcurrentWithWindowResize(t *testing.T) {
 	m.height = 40
 	m.minecarts = []MinecartItem{
 		{ID: "hq-abc", Title: "Test", Status: "open",
-			Issues: []IssueItem{{ID: "gt-1", Title: "Issue", Status: "open"}},
+			Issues: []IssueItem{{ID: "ms-1", Title: "Issue", Status: "open"}},
 			Progress: "0/1", Expanded: true},
 	}
 	m.mu.Unlock()
@@ -209,12 +209,12 @@ func TestViewConcurrentWithCursorNavigation(t *testing.T) {
 	m.minecarts = []MinecartItem{
 		{ID: "hq-abc", Title: "C1", Status: "open",
 			Issues: []IssueItem{
-				{ID: "gt-1", Title: "I1", Status: "open"},
-				{ID: "gt-2", Title: "I2", Status: "open"},
+				{ID: "ms-1", Title: "I1", Status: "open"},
+				{ID: "ms-2", Title: "I2", Status: "open"},
 			},
 			Progress: "0/2", Expanded: true},
 		{ID: "hq-def", Title: "C2", Status: "open",
-			Issues: []IssueItem{{ID: "gt-3", Title: "I3", Status: "open"}},
+			Issues: []IssueItem{{ID: "ms-3", Title: "I3", Status: "open"}},
 			Progress: "0/1", Expanded: true},
 	}
 	m.mu.Unlock()
@@ -263,7 +263,7 @@ func TestViewConcurrentWithFetchMinecarts(t *testing.T) {
 			m.Update(fetchMinecartsMsg{
 				minecarts: []MinecartItem{
 					{ID: "hq-abc", Title: "Test", Status: "open",
-						Issues:   []IssueItem{{ID: "gt-1", Title: "I1", Status: "open"}},
+						Issues:   []IssueItem{{ID: "ms-1", Title: "I1", Status: "open"}},
 						Progress: "0/1", Expanded: true},
 				},
 			})

@@ -86,7 +86,7 @@ func FindFromCwd() (string, error) {
 
 // FindFromCwdOrError is like FindFromCwd but returns an error if not found.
 // It searches for a workspace starting from the CWD. If none is found, it
-// falls back to the GT_TOWN_ROOT or GT_ROOT environment variables.
+// falls back to the MS_TOWN_ROOT or MS_ROOT environment variables.
 func FindFromCwdOrError() (string, error) {
 	cwd, err := os.Getwd()
 	if err == nil {
@@ -96,8 +96,8 @@ func FindFromCwdOrError() (string, error) {
 		}
 	}
 
-	// Fallback: try GT_TOWN_ROOT or GT_ROOT env vars (set by shell integration or session manager)
-	for _, envName := range []string{"GT_TOWN_ROOT", "GT_ROOT"} {
+	// Fallback: try MS_TOWN_ROOT or MS_ROOT env vars (set by shell integration or session manager)
+	for _, envName := range []string{"MS_TOWN_ROOT", "MS_ROOT"} {
 		if townRoot := os.Getenv(envName); townRoot != "" {
 			// Verify it's actually a workspace
 			if ok, _ := IsWorkspace(townRoot); ok {
@@ -113,14 +113,14 @@ func FindFromCwdOrError() (string, error) {
 }
 
 // FindFromCwdWithFallback is like FindFromCwdOrError but returns (townRoot, cwd, error).
-// If getcwd fails, returns (townRoot, "", nil) using GT_TOWN_ROOT fallback.
-// This is useful for commands like `gt done` that need to continue even if the
+// If getcwd fails, returns (townRoot, "", nil) using MS_TOWN_ROOT fallback.
+// This is useful for commands like `ms done` that need to continue even if the
 // working directory is deleted (e.g., miner worktree nuked by Witness).
 func FindFromCwdWithFallback() (townRoot string, cwd string, err error) {
 	cwd, err = os.Getwd()
 	if err != nil {
-		// Fallback: try GT_TOWN_ROOT env var
-		if townRoot = os.Getenv("GT_TOWN_ROOT"); townRoot != "" {
+		// Fallback: try MS_TOWN_ROOT env var
+		if townRoot = os.Getenv("MS_TOWN_ROOT"); townRoot != "" {
 			// Verify it's actually a workspace
 			if _, statErr := os.Stat(filepath.Join(townRoot, PrimaryMarker)); statErr == nil {
 				return townRoot, "", nil // cwd is gone but townRoot is valid

@@ -205,7 +205,7 @@ Issue: %s
 Failure: %s
 Error: %s
 
-Please fix the issue and resubmit your work with 'gt done'.`,
+Please fix the issue and resubmit your work with 'ms done'.`,
 			payload.Branch,
 			payload.Issue,
 			payload.FailureType,
@@ -244,7 +244,7 @@ Please rebase your changes:
   # Resolve any conflicts
   git push -f
 
-Then run 'gt done' to resubmit for merge.`,
+Then run 'ms done' to resubmit for merge.`,
 			payload.TargetBranch,
 			payload.Branch,
 			payload.Issue,

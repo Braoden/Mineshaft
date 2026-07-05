@@ -7,16 +7,16 @@ import (
 )
 
 func TestBuildGTResourceAttrs_Empty(t *testing.T) {
-	t.Setenv("GT_ROLE", "")
-	t.Setenv("GT_RIG", "")
+	t.Setenv("MS_ROLE", "")
+	t.Setenv("MS_RIG", "")
 	t.Setenv("BD_ACTOR", "")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_SESSION", "")
-	t.Setenv("GT_RUN", "")
-	t.Setenv("GT_WORK_RIG", "")
-	t.Setenv("GT_WORK_BEAD", "")
-	t.Setenv("GT_WORK_MOL", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
+	t.Setenv("MS_SESSION", "")
+	t.Setenv("MS_RUN", "")
+	t.Setenv("MS_WORK_RIG", "")
+	t.Setenv("MS_WORK_BEAD", "")
+	t.Setenv("MS_WORK_MOL", "")
 
 	result := buildGTResourceAttrs()
 	if result != "" {
@@ -25,29 +25,29 @@ func TestBuildGTResourceAttrs_Empty(t *testing.T) {
 }
 
 func TestBuildGTResourceAttrs_Session(t *testing.T) {
-	t.Setenv("GT_ROLE", "supervisor")
-	t.Setenv("GT_RIG", "")
+	t.Setenv("MS_ROLE", "supervisor")
+	t.Setenv("MS_RIG", "")
 	t.Setenv("BD_ACTOR", "supervisor")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_SESSION", "hq-supervisor")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
+	t.Setenv("MS_SESSION", "hq-supervisor")
 
 	result := buildGTResourceAttrs()
-	if !strings.Contains(result, "gt.session=hq-supervisor") {
-		t.Errorf("expected gt.session in result, got %q", result)
+	if !strings.Contains(result, "ms.session=hq-supervisor") {
+		t.Errorf("expected ms.session in result, got %q", result)
 	}
 }
 
 func TestBuildGTResourceAttrs_AllVars(t *testing.T) {
-	t.Setenv("GT_ROLE", "mol/witness")
-	t.Setenv("GT_RIG", "mol")
+	t.Setenv("MS_ROLE", "mol/witness")
+	t.Setenv("MS_RIG", "mol")
 	t.Setenv("BD_ACTOR", "mol/witness")
-	t.Setenv("GT_MINER", "furiosa")
-	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_SESSION", "")
+	t.Setenv("MS_MINER", "furiosa")
+	t.Setenv("MS_CREW", "")
+	t.Setenv("MS_SESSION", "")
 
 	result := buildGTResourceAttrs()
-	for _, want := range []string{"gt.role=mol/witness", "gt.rig=mol", "gt.actor=mol/witness", "gt.agent=furiosa"} {
+	for _, want := range []string{"ms.role=mol/witness", "ms.rig=mol", "ms.actor=mol/witness", "ms.agent=furiosa"} {
 		if !strings.Contains(result, want) {
 			t.Errorf("expected %q in result, got %q", want, result)
 		}
@@ -55,46 +55,46 @@ func TestBuildGTResourceAttrs_AllVars(t *testing.T) {
 }
 
 func TestBuildGTResourceAttrs_MinerTakesPriorityOverCrew(t *testing.T) {
-	t.Setenv("GT_MINER", "furiosa")
-	t.Setenv("GT_CREW", "overseer")
-	t.Setenv("GT_ROLE", "")
-	t.Setenv("GT_RIG", "")
+	t.Setenv("MS_MINER", "furiosa")
+	t.Setenv("MS_CREW", "overseer")
+	t.Setenv("MS_ROLE", "")
+	t.Setenv("MS_RIG", "")
 	t.Setenv("BD_ACTOR", "")
 
 	result := buildGTResourceAttrs()
-	if !strings.Contains(result, "gt.agent=furiosa") {
-		t.Errorf("expected gt.agent=furiosa (GT_MINER), got %q", result)
+	if !strings.Contains(result, "ms.agent=furiosa") {
+		t.Errorf("expected ms.agent=furiosa (MS_MINER), got %q", result)
 	}
-	if strings.Contains(result, "gt.agent=overseer") {
-		t.Errorf("GT_CREW should not override GT_MINER, got %q", result)
+	if strings.Contains(result, "ms.agent=overseer") {
+		t.Errorf("MS_CREW should not override MS_MINER, got %q", result)
 	}
 }
 
 func TestBuildGTResourceAttrs_CrewFallback(t *testing.T) {
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "overseer")
-	t.Setenv("GT_ROLE", "")
-	t.Setenv("GT_RIG", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "overseer")
+	t.Setenv("MS_ROLE", "")
+	t.Setenv("MS_RIG", "")
 	t.Setenv("BD_ACTOR", "")
 
 	result := buildGTResourceAttrs()
-	if !strings.Contains(result, "gt.agent=overseer") {
-		t.Errorf("expected gt.agent=overseer from GT_CREW, got %q", result)
+	if !strings.Contains(result, "ms.agent=overseer") {
+		t.Errorf("expected ms.agent=overseer from MS_CREW, got %q", result)
 	}
 }
 
 func TestBuildGTResourceAttrs_WorkContext(t *testing.T) {
-	t.Setenv("GT_ROLE", "")
-	t.Setenv("GT_RIG", "")
+	t.Setenv("MS_ROLE", "")
+	t.Setenv("MS_RIG", "")
 	t.Setenv("BD_ACTOR", "")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_WORK_RIG", "mineshaft")
-	t.Setenv("GT_WORK_BEAD", "sg-05iq")
-	t.Setenv("GT_WORK_MOL", "mol-miner-work")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
+	t.Setenv("MS_WORK_RIG", "mineshaft")
+	t.Setenv("MS_WORK_BEAD", "sg-05iq")
+	t.Setenv("MS_WORK_MOL", "mol-miner-work")
 
 	result := buildGTResourceAttrs()
-	for _, want := range []string{"gt.work_rig=mineshaft", "gt.work_bead=sg-05iq", "gt.work_mol=mol-miner-work"} {
+	for _, want := range []string{"ms.work_rig=mineshaft", "ms.work_bead=sg-05iq", "ms.work_mol=mol-miner-work"} {
 		if !strings.Contains(result, want) {
 			t.Errorf("expected %q in result, got %q", want, result)
 		}
@@ -102,33 +102,33 @@ func TestBuildGTResourceAttrs_WorkContext(t *testing.T) {
 }
 
 func TestBuildGTResourceAttrs_WorkContextPartial(t *testing.T) {
-	t.Setenv("GT_ROLE", "")
-	t.Setenv("GT_RIG", "")
+	t.Setenv("MS_ROLE", "")
+	t.Setenv("MS_RIG", "")
 	t.Setenv("BD_ACTOR", "")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
-	t.Setenv("GT_WORK_RIG", "")
-	t.Setenv("GT_WORK_BEAD", "sg-05iq")
-	t.Setenv("GT_WORK_MOL", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
+	t.Setenv("MS_WORK_RIG", "")
+	t.Setenv("MS_WORK_BEAD", "sg-05iq")
+	t.Setenv("MS_WORK_MOL", "")
 
 	result := buildGTResourceAttrs()
-	if !strings.Contains(result, "gt.work_bead=sg-05iq") {
-		t.Errorf("expected gt.work_bead in result, got %q", result)
+	if !strings.Contains(result, "ms.work_bead=sg-05iq") {
+		t.Errorf("expected ms.work_bead in result, got %q", result)
 	}
-	if strings.Contains(result, "gt.work_rig") {
-		t.Errorf("gt.work_rig should not appear when empty, got %q", result)
+	if strings.Contains(result, "ms.work_rig") {
+		t.Errorf("ms.work_rig should not appear when empty, got %q", result)
 	}
-	if strings.Contains(result, "gt.work_mol") {
-		t.Errorf("gt.work_mol should not appear when empty, got %q", result)
+	if strings.Contains(result, "ms.work_mol") {
+		t.Errorf("ms.work_mol should not appear when empty, got %q", result)
 	}
 }
 
 func TestBuildGTResourceAttrs_Comma(t *testing.T) {
-	t.Setenv("GT_ROLE", "a")
-	t.Setenv("GT_RIG", "b")
+	t.Setenv("MS_ROLE", "a")
+	t.Setenv("MS_RIG", "b")
 	t.Setenv("BD_ACTOR", "")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
 
 	result := buildGTResourceAttrs()
 	if !strings.Contains(result, ",") {
@@ -147,11 +147,11 @@ func TestOTELEnvForSubprocess_Disabled(t *testing.T) {
 func TestOTELEnvForSubprocess_BothURLs(t *testing.T) {
 	t.Setenv(EnvMetricsURL, "http://localhost:8428/opentelemetry/api/v1/push")
 	t.Setenv(EnvLogsURL, "http://localhost:9428/insert/opentelemetry/v1/logs")
-	t.Setenv("GT_ROLE", "")
-	t.Setenv("GT_RIG", "")
+	t.Setenv("MS_ROLE", "")
+	t.Setenv("MS_RIG", "")
 	t.Setenv("BD_ACTOR", "")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
 
 	env := OTELEnvForSubprocess()
 	if len(env) == 0 {
@@ -178,16 +178,16 @@ func TestOTELEnvForSubprocess_BothURLs(t *testing.T) {
 func TestOTELEnvForSubprocess_NoLogsURL(t *testing.T) {
 	t.Setenv(EnvMetricsURL, "http://localhost:8428/opentelemetry/api/v1/push")
 	t.Setenv(EnvLogsURL, "")
-	t.Setenv("GT_ROLE", "")
-	t.Setenv("GT_RIG", "")
+	t.Setenv("MS_ROLE", "")
+	t.Setenv("MS_RIG", "")
 	t.Setenv("BD_ACTOR", "")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
 
 	env := OTELEnvForSubprocess()
 	for _, e := range env {
 		if strings.HasPrefix(e, "BD_OTEL_LOGS_URL=") {
-			t.Errorf("BD_OTEL_LOGS_URL should not appear when GT_OTEL_LOGS_URL is empty, got %q", e)
+			t.Errorf("BD_OTEL_LOGS_URL should not appear when MS_OTEL_LOGS_URL is empty, got %q", e)
 		}
 	}
 }
@@ -195,24 +195,24 @@ func TestOTELEnvForSubprocess_NoLogsURL(t *testing.T) {
 func TestOTELEnvForSubprocess_WithResourceAttrs(t *testing.T) {
 	t.Setenv(EnvMetricsURL, "http://localhost:8428/opentelemetry/api/v1/push")
 	t.Setenv(EnvLogsURL, "")
-	t.Setenv("GT_ROLE", "mol/witness")
-	t.Setenv("GT_RIG", "mol")
+	t.Setenv("MS_ROLE", "mol/witness")
+	t.Setenv("MS_RIG", "mol")
 	t.Setenv("BD_ACTOR", "")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
 
 	env := OTELEnvForSubprocess()
 	hasAttrs := false
 	for _, e := range env {
 		if strings.HasPrefix(e, "OTEL_RESOURCE_ATTRIBUTES=") {
 			hasAttrs = true
-			if !strings.Contains(e, "gt.role=mol/witness") {
-				t.Errorf("expected gt.role in OTEL_RESOURCE_ATTRIBUTES, got %q", e)
+			if !strings.Contains(e, "ms.role=mol/witness") {
+				t.Errorf("expected ms.role in OTEL_RESOURCE_ATTRIBUTES, got %q", e)
 			}
 		}
 	}
 	if !hasAttrs {
-		t.Error("expected OTEL_RESOURCE_ATTRIBUTES in subprocess env when GT vars present")
+		t.Error("expected OTEL_RESOURCE_ATTRIBUTES in subprocess env when MS vars present")
 	}
 }
 
@@ -233,11 +233,11 @@ func TestSetProcessOTELAttrs_Enabled(t *testing.T) {
 	logsURL := "http://localhost:9428/insert/opentelemetry/v1/logs"
 	t.Setenv(EnvMetricsURL, metricsURL)
 	t.Setenv(EnvLogsURL, logsURL)
-	t.Setenv("GT_ROLE", "")
-	t.Setenv("GT_RIG", "")
+	t.Setenv("MS_ROLE", "")
+	t.Setenv("MS_RIG", "")
 	t.Setenv("BD_ACTOR", "")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
 
 	SetProcessOTELAttrs()
 
@@ -252,11 +252,11 @@ func TestSetProcessOTELAttrs_Enabled(t *testing.T) {
 func TestSetProcessOTELAttrs_SetsResourceAttrs(t *testing.T) {
 	t.Setenv(EnvMetricsURL, "http://localhost:8428/opentelemetry/api/v1/push")
 	t.Setenv(EnvLogsURL, "")
-	t.Setenv("GT_ROLE", "mol/witness")
-	t.Setenv("GT_RIG", "mol")
+	t.Setenv("MS_ROLE", "mol/witness")
+	t.Setenv("MS_RIG", "mol")
 	t.Setenv("BD_ACTOR", "")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
 	os.Unsetenv("OTEL_RESOURCE_ATTRIBUTES")
 
 	SetProcessOTELAttrs()
@@ -265,7 +265,7 @@ func TestSetProcessOTELAttrs_SetsResourceAttrs(t *testing.T) {
 	if got == "" {
 		t.Error("expected OTEL_RESOURCE_ATTRIBUTES to be set")
 	}
-	if !strings.Contains(got, "gt.role=mol/witness") {
-		t.Errorf("expected gt.role in OTEL_RESOURCE_ATTRIBUTES, got %q", got)
+	if !strings.Contains(got, "ms.role=mol/witness") {
+		t.Errorf("expected ms.role in OTEL_RESOURCE_ATTRIBUTES, got %q", got)
 	}
 }

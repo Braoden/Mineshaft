@@ -14,7 +14,7 @@ log() { echo "[git-hygiene] $*"; }
 
 # --- Enumerate rig repos -----------------------------------------------------
 
-RIG_JSON=$(gt rig list --json 2>/dev/null) || {
+RIG_JSON=$(ms rig list --json 2>/dev/null) || {
   log "SKIP: could not get rig list"
   exit 0
 }
@@ -170,5 +170,5 @@ log ""
 log "=== Git Hygiene Summary ==="
 log "$SUMMARY"
 
-gt plugin record-run --plugin git-hygiene --result success \
+ms plugin record-run --plugin git-hygiene --result success \
   --title "git-hygiene: $SUMMARY" --description "$SUMMARY" >/dev/null 2>&1 || true

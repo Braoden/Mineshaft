@@ -11,21 +11,21 @@ set -euo pipefail
 
 # --- Configuration -----------------------------------------------------------
 
-# Honor GT_TOWN_ROOT first (set by daemon when invoking plugins). The
-# earlier hardcoded ~/gt fallback caused "No databases found" for towns
+# Honor MS_TOWN_ROOT first (set by daemon when invoking plugins). The
+# earlier hardcoded ~/ms fallback caused "No databases found" for towns
 # rooted elsewhere (hq-huub).
 if [[ -z "${DOLT_DATA_DIR:-}" ]]; then
-  if [[ -n "${GT_TOWN_ROOT:-}" && -d "$GT_TOWN_ROOT/.dolt-data" ]]; then
-    DOLT_DATA_DIR="$GT_TOWN_ROOT/.dolt-data"
+  if [[ -n "${MS_TOWN_ROOT:-}" && -d "$MS_TOWN_ROOT/.dolt-data" ]]; then
+    DOLT_DATA_DIR="$MS_TOWN_ROOT/.dolt-data"
   else
-    DOLT_DATA_DIR="$HOME/gt/.dolt-data"
+    DOLT_DATA_DIR="$HOME/ms/.dolt-data"
   fi
 fi
 if [[ -z "${DOLT_BACKUP_DIR:-}" ]]; then
-  if [[ -n "${GT_TOWN_ROOT:-}" ]]; then
-    DOLT_BACKUP_DIR="$GT_TOWN_ROOT/.dolt-backup"
+  if [[ -n "${MS_TOWN_ROOT:-}" ]]; then
+    DOLT_BACKUP_DIR="$MS_TOWN_ROOT/.dolt-backup"
   else
-    DOLT_BACKUP_DIR="$HOME/gt/.dolt-backup"
+    DOLT_BACKUP_DIR="$HOME/ms/.dolt-backup"
   fi
 fi
 BACKUP_DIR="$DOLT_BACKUP_DIR"
@@ -185,15 +185,15 @@ log "$SUMMARY"
 
 if [[ "$FAILED" -eq 0 ]]; then
   # Success — record quietly
-  gt plugin record-run --plugin dolt-backup --result success \
+  ms plugin record-run --plugin dolt-backup --result success \
     --title "dolt-backup: $SUMMARY" --description "$SUMMARY" >/dev/null 2>&1 || true
 else
   # Failure — record and escalate
   FAIL_MSG="$SUMMARY. Failed:$FAILED_DBS"
-  gt plugin record-run --plugin dolt-backup --result failure \
+  ms plugin record-run --plugin dolt-backup --result failure \
     --title "dolt-backup: FAILED - $FAIL_MSG" --description "$FAIL_MSG" >/dev/null 2>&1 || true
 
-  gt escalate "dolt-backup FAILED: $FAIL_MSG" \
+  ms escalate "dolt-backup FAILED: $FAIL_MSG" \
     --severity high \
     --reason "$FAIL_MSG" 2>/dev/null || true
 

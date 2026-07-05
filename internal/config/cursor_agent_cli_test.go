@@ -9,17 +9,17 @@ import (
 )
 
 // resolveCursorAgentForCLIPTest returns a real cursor-agent binary path. test_main_test.go prepends
-// tiny PATH stubs that shadow the real CLI; we skip those dirs and prefer GT_CURSOR_AGENT_BIN when set.
+// tiny PATH stubs that shadow the real CLI; we skip those dirs and prefer MS_CURSOR_AGENT_BIN when set.
 func resolveCursorAgentForCLIPTest(t *testing.T) (string, []byte) {
 	t.Helper()
-	if p := os.Getenv("GT_CURSOR_AGENT_BIN"); p != "" {
+	if p := os.Getenv("MS_CURSOR_AGENT_BIN"); p != "" {
 		out, err := exec.Command(p, "--help").CombinedOutput()
 		if err != nil {
-			t.Fatalf("GT_CURSOR_AGENT_BIN --help: %v\n%s", err, out)
+			t.Fatalf("MS_CURSOR_AGENT_BIN --help: %v\n%s", err, out)
 		}
 		return p, out
 	}
-	stubDir := os.Getenv("GT_AGENT_STUB_BIN_DIR")
+	stubDir := os.Getenv("MS_AGENT_STUB_BIN_DIR")
 	for _, dir := range filepath.SplitList(os.Getenv("PATH")) {
 		if dir == "" {
 			continue
@@ -48,7 +48,7 @@ func resolveCursorAgentForCLIPTest(t *testing.T) (string, []byte) {
 func TestCursorAgentCLIPresetMatchesHelp(t *testing.T) {
 	path, out := resolveCursorAgentForCLIPTest(t)
 	if path == "" {
-		t.Skip("real cursor-agent not found outside test stubs; install Cursor CLI or set GT_CURSOR_AGENT_BIN")
+		t.Skip("real cursor-agent not found outside test stubs; install Cursor CLI or set MS_CURSOR_AGENT_BIN")
 	}
 
 	t.Logf("cursor-agent CLI contract using %s", path)

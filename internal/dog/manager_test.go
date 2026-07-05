@@ -78,10 +78,10 @@ func TestDogDir(t *testing.T) {
 		Version: 1,
 		Rigs:    map[string]config.RigEntry{},
 	}
-	m := NewManager("/home/user/gt", rigsConfig)
+	m := NewManager("/home/user/ms", rigsConfig)
 
 	path := m.dogDir("alpha")
-	expected := "/home/user/gt/supervisor/dogs/alpha"
+	expected := "/home/user/ms/supervisor/dogs/alpha"
 	if filepath.ToSlash(path) != expected {
 		t.Errorf("expected %q, got %q", expected, path)
 	}

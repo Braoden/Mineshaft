@@ -1,4 +1,4 @@
-// Package cmd provides CLI commands for the gt tool.
+// Package cmd provides CLI commands for the ms tool.
 package cmd
 
 import (
@@ -53,17 +53,17 @@ $CLAUDE_CONFIG_DIR/projects/ (defaults to ~/.claude/projects/) by summing
 token usage from assistant messages and applying model-specific pricing.
 
 Examples:
-  gt costs              # Live costs from running sessions
-  gt costs --today      # Today's costs from log file (not yet digested)
-  gt costs --week       # This week's costs from digest beads + today's log
-  gt costs --by-role    # Breakdown by role (miner, witness, etc.)
-  gt costs --by-rig     # Breakdown by rig
-  gt costs --json       # Output as JSON
-  gt costs -v           # Show debug output for failures
+  ms costs              # Live costs from running sessions
+  ms costs --today      # Today's costs from log file (not yet digested)
+  ms costs --week       # This week's costs from digest beads + today's log
+  ms costs --by-role    # Breakdown by role (miner, witness, etc.)
+  ms costs --by-rig     # Breakdown by rig
+  ms costs --json       # Output as JSON
+  ms costs -v           # Show debug output for failures
 
 Subcommands:
-  gt costs record       # Record session cost to local log file (Stop hook)
-  gt costs digest       # Aggregate log entries into daily digest bead (Supervisor patrol)`,
+  ms costs record       # Record session cost to local log file (Stop hook)
+  ms costs digest       # Aggregate log entries into daily digest bead (Supervisor patrol)`,
 	RunE: runCosts,
 }
 
@@ -76,15 +76,15 @@ This command is intended to be called from a Claude Code Stop hook.
 It reads token usage from the Claude Code transcript file
 ($CLAUDE_CONFIG_DIR/projects/... or ~/.claude/projects/...)
 and calculates the cost based on model pricing, then appends it to
-~/.gt/costs.jsonl. This is a simple append operation that never fails
+~/.ms/costs.jsonl. This is a simple append operation that never fails
 due to database availability.
 
-Session costs are aggregated daily by 'gt costs digest' into a single
+Session costs are aggregated daily by 'ms costs digest' into a single
 permanent "Cost Report YYYY-MM-DD" bead for audit purposes.
 
 Examples:
-  gt costs record --session gt-mineshaft-toast
-  gt costs record --session gt-mineshaft-toast --work-item gt-abc123`,
+  ms costs record --session ms-mineshaft-toast
+  ms costs record --session ms-mineshaft-toast --work-item ms-abc123`,
 	RunE: runCostsRecord,
 }
 
@@ -94,16 +94,16 @@ var costsDigestCmd = &cobra.Command{
 	Long: `Aggregate session cost log entries into a permanent daily digest.
 
 This command is intended to be run by Supervisor patrol (daily) or manually.
-It reads entries from ~/.gt/costs.jsonl for a target date, creates a single
+It reads entries from ~/.ms/costs.jsonl for a target date, creates a single
 aggregate "Cost Report YYYY-MM-DD" bead, then removes the source entries.
 
 The resulting digest bead is permanent (synced via git) and provides
 an audit trail without log-in-database pollution.
 
 Examples:
-  gt costs digest --yesterday   # Digest yesterday's costs (default for patrol)
-  gt costs digest --date 2026-01-07  # Digest a specific date
-  gt costs digest --yesterday --dry-run  # Preview without changes`,
+  ms costs digest --yesterday   # Digest yesterday's costs (default for patrol)
+  ms costs digest --date 2026-01-07  # Digest a specific date
+  ms costs digest --yesterday --dry-run  # Preview without changes`,
 	RunE: runCostsDigest,
 }
 
@@ -929,7 +929,7 @@ type CostLogEntry struct {
 }
 
 // getCostsLogPath returns the path to the costs log file.
-// Location: $GT_HOME/.gt/costs.jsonl when GT_HOME is set, otherwise ~/.gt/.
+// Location: $MS_HOME/.ms/costs.jsonl when MS_HOME is set, otherwise ~/.ms/.
 func getCostsLogPath() string {
 	return filepath.Join(gtDataDir(), "costs.jsonl")
 }
@@ -941,10 +941,10 @@ func runCostsRecord(cmd *cobra.Command, args []string) error {
 	// Get session from flag or try to detect from environment
 	session := recordSession
 	if session == "" {
-		session = os.Getenv("GT_SESSION")
+		session = os.Getenv("MS_SESSION")
 	}
 	if session == "" {
-		// Derive session name from GT_* environment variables
+		// Derive session name from MS_* environment variables
 		session = deriveSessionName()
 	}
 	if session == "" {
@@ -952,7 +952,7 @@ func runCostsRecord(cmd *cobra.Command, args []string) error {
 		session = detectCurrentTmuxSession()
 	}
 	if session == "" {
-		// Not a Mineshaft session (e.g., Claude Code launched outside gt agent system).
+		// Not a Mineshaft session (e.g., Claude Code launched outside ms agent system).
 		// Exit silently — no costs to record.
 		if costsVerbose {
 			fmt.Fprintf(os.Stderr, "[costs] no session context found, skipping costs record\n")
@@ -961,7 +961,7 @@ func runCostsRecord(cmd *cobra.Command, args []string) error {
 	}
 
 	// Get working directory from environment or tmux session
-	workDir := os.Getenv("GT_CWD")
+	workDir := os.Getenv("MS_CWD")
 	if workDir == "" {
 		// Try to get from tmux session
 		var err error
@@ -1041,27 +1041,27 @@ func runCostsRecord(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// deriveSessionName derives the tmux session name from GT_* environment variables.
-// Uses session.* helpers for canonical naming. Parses GT_ROLE via parseRoleString
+// deriveSessionName derives the tmux session name from MS_* environment variables.
+// Uses session.* helpers for canonical naming. Parses MS_ROLE via parseRoleString
 // so compound forms (e.g. "mineshaft/witness") resolve to their canonical session names.
 func deriveSessionName() string {
-	role := os.Getenv("GT_ROLE")
-	rig := os.Getenv("GT_RIG")
-	miner := os.Getenv("GT_MINER")
-	crew := os.Getenv("GT_CREW")
+	role := os.Getenv("MS_ROLE")
+	rig := os.Getenv("MS_RIG")
+	miner := os.Getenv("MS_MINER")
+	crew := os.Getenv("MS_CREW")
 
-	// Parse GT_ROLE once to handle both bare and compound forms.
+	// Parse MS_ROLE once to handle both bare and compound forms.
 	parsedRole, _, parsedName := parseRoleString(role)
 
 	// Miner: {prefix}-{miner}
-	// Gate on GT_ROLE: coordinators may have stale GT_MINER from spawning miners.
+	// Gate on MS_ROLE: coordinators may have stale MS_MINER from spawning miners.
 	if miner != "" && rig != "" {
 		if role == "" || parsedRole == RoleMiner {
 			return session.MinerSessionName(session.PrefixFor(rig), miner)
 		}
 	}
 
-	// Crew: {prefix}-crew-{crew} (from GT_CREW or parsed compound role)
+	// Crew: {prefix}-crew-{crew} (from MS_CREW or parsed compound role)
 	if parsedRole == RoleCrew && parsedName != "" && rig != "" {
 		return session.CrewSessionName(session.PrefixFor(rig), parsedName)
 	}
@@ -1108,7 +1108,7 @@ func detectCurrentTmuxSession() string {
 
 	session := strings.TrimSpace(string(output))
 	// Only return if it looks like a Mineshaft session
-	// Accept both gt- (rig sessions) and hq- (town-level sessions like hq-overseer)
+	// Accept both ms- (rig sessions) and hq- (town-level sessions like hq-overseer)
 	if strings.HasPrefix(session, constants.SessionPrefix) || strings.HasPrefix(session, constants.HQSessionPrefix) {
 		return session
 	}

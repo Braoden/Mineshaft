@@ -38,12 +38,12 @@ var hooksRegistryCmd = &cobra.Command{
 	Short: "List available hooks from the registry",
 	Long: `List all hooks defined in the hook registry.
 
-The registry is at ~/gt/hooks/registry.toml and defines hooks that can be
+The registry is at ~/ms/hooks/registry.toml and defines hooks that can be
 installed for different roles (crew, miner, witness, etc.).
 
 Examples:
-  gt hooks registry           # Show enabled hooks
-  gt hooks registry --all     # Show all hooks including disabled`,
+  ms hooks registry           # Show enabled hooks
+  ms hooks registry --all     # Show all hooks including disabled`,
 	RunE: runHooksRegistry,
 }
 

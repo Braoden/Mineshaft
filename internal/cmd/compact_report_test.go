@@ -199,7 +199,7 @@ func TestFormatDailyDigest(t *testing.T) {
 			"Untyped":    {Deleted: 15, Promoted: 0, Active: 4},
 		},
 		Promotions: []compactAction{
-			{ID: "gt-wisp-abc", Title: "Miner crash during minecart", Reason: "has comments"},
+			{ID: "ms-wisp-abc", Title: "Miner crash during minecart", Reason: "has comments"},
 		},
 		Anomalies: []string{"mineshaft: 3x normal heartbeat volume (possible restart loop)"},
 	}
@@ -219,7 +219,7 @@ func TestFormatDailyDigest(t *testing.T) {
 	if !strings.Contains(md, "### Promotions") {
 		t.Error("missing promotions section")
 	}
-	if !strings.Contains(md, "gt-wisp-abc") {
+	if !strings.Contains(md, "ms-wisp-abc") {
 		t.Error("missing promotion entry")
 	}
 	if !strings.Contains(md, "### Anomalies") {
@@ -462,11 +462,11 @@ if [ "$1" = "mail" ]; then
   echo "$*" >> "$MAIL_LOG"
   exit 0
 fi
-echo "unexpected gt command: $*" >&2
+echo "unexpected ms command: $*" >&2
 exit 1
 `
-	if err := os.WriteFile(filepath.Join(binDir, "gt"), []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write fake gt: %v", err)
+	if err := os.WriteFile(filepath.Join(binDir, "ms"), []byte(gtScript), 0755); err != nil {
+		t.Fatalf("write fake ms: %v", err)
 	}
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))

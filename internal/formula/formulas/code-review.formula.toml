@@ -5,8 +5,8 @@
 # and synthesized into a unified review.
 #
 # Usage:
-#   gt formula run code-review --pr=123
-#   gt formula run code-review --files="src/*.go"
+#   ms formula run code-review --pr=123
+#   ms formula run code-review --files="src/*.go"
 
 description = """
 Comprehensive code review via parallel specialized reviewers.

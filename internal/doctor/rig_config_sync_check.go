@@ -195,13 +195,13 @@ func (c *RigConfigSyncCheck) Run(ctx *CheckContext) *CheckResult {
 			// bd can always locate the right database without extra config.
 			//
 			// Exception: some rigs' Dolt data physically lives in a PREFIX-named
-			// directory (e.g. .dolt-data/bd, .dolt-data/gt) from a directory rename
+			// directory (e.g. .dolt-data/bd, .dolt-data/ms) from a directory rename
 			// where the rig-name DB no longer exists on the server. Mirror the
-			// prefix-fallback already used by migration_check.go (gt-85w7): default to
+			// prefix-fallback already used by migration_check.go (ms-85w7): default to
 			// rigName, but fall back to the prefix-named DB when .dolt-data/<rigName>
 			// is absent and .dolt-data/<prefix> exists. Without this, the check reports
 			// a false mismatch and --fix reverts metadata to the non-existent rig-name
-			// DB. (gt-5hd2)
+			// DB. (ms-5hd2)
 			expectedDBName := rigName
 			doltDataDir := filepath.Join(ctx.TownRoot, ".dolt-data")
 			if _, err := os.Stat(filepath.Join(doltDataDir, rigName)); os.IsNotExist(err) {
@@ -299,7 +299,7 @@ func (c *RigConfigSyncCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:  StatusWarning,
 		Message: strings.Join(parts, ", "),
 		Details: details,
-		FixHint: "Run 'gt doctor --fix' to create missing config files and databases",
+		FixHint: "Run 'ms doctor --fix' to create missing config files and databases",
 	}
 }
 
@@ -489,7 +489,7 @@ func (c *RigConfigSyncCheck) Fix(ctx *CheckContext) error {
 
 	// If we renamed databases, restart the Dolt server to pick up the changes.
 	// Guard: skip restart if the server has been running less than 60s — restarting
-	// during startup churn is a known crash trigger (gt-9bxzs: Dolt NomsBlockStore
+	// during startup churn is a known crash trigger (ms-9bxzs: Dolt NomsBlockStore
 	// panic when SIGTERM arrives mid-write). The server will pick up renamed databases
 	// on its next natural restart or on the next doctor --fix run once stable.
 	if renamedDBs {

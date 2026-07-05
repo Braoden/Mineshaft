@@ -16,7 +16,7 @@ type ConfigSource string
 const (
 	SourceWisp    ConfigSource = "wisp"    // Local wisp layer (.beads-wisp/config/)
 	SourceBead    ConfigSource = "bead"    // Rig identity bead labels
-	SourceTown    ConfigSource = "town"    // Town defaults (~/gt/settings/config.json)
+	SourceTown    ConfigSource = "town"    // Town defaults (~/ms/settings/config.json)
 	SourceSystem  ConfigSource = "system"  // Compiled-in system defaults
 	SourceBlocked ConfigSource = "blocked" // Explicitly blocked at wisp layer
 	SourceNone    ConfigSource = "none"    // No value found
@@ -33,7 +33,7 @@ type ConfigResult struct {
 var SystemDefaults = map[string]interface{}{
 	"status":                  "operational",
 	"auto_restart":            true,
-	"auto_start_on_up":        false, // If true, rig agents start on gt up even when docked
+	"auto_start_on_up":        false, // If true, rig agents start on ms up even when docked
 	"max_miners":            10,
 	"priority_adjustment":     0,
 	"dnd":                     false,
@@ -75,7 +75,7 @@ func (r *Rig) GetConfigWithSource(key string) ConfigResult {
 
 	// Layer 3: Town defaults
 	// Note: Town defaults for operational state would typically be in
-	// ~/gt/settings/config.json. For now, we skip directly to system defaults.
+	// ~/ms/settings/config.json. For now, we skip directly to system defaults.
 	// Future: load from config.TownSettings
 
 	// Layer 4: System defaults
@@ -167,7 +167,7 @@ func (r *Rig) GetStringConfig(key string) string {
 // Returns nil if the rig bead doesn't exist or the label is not set.
 func (r *Rig) getBeadLabel(key string) interface{} {
 	// Get the rig's beads prefix
-	prefix := "gt" // default
+	prefix := "ms" // default
 	if r.Config != nil && r.Config.Prefix != "" {
 		prefix = r.Config.Prefix
 	}

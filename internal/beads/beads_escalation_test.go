@@ -169,7 +169,7 @@ acked_by: mineshaft/crew/joe
 acked_at: 2024-01-15T10:05:00Z
 closed_by: null
 closed_reason: null
-related_bead: gt-abc123
+related_bead: ms-abc123
 original_severity: medium
 reescalation_count: 1
 last_reescalated_at: 2024-01-15T09:30:00Z
@@ -185,7 +185,7 @@ fingerprint: escalation-fp:abc123def456`,
 				AckedAt:           "2024-01-15T10:05:00Z",
 				ClosedBy:          "",
 				ClosedReason:      "",
-				RelatedBead:       "gt-abc123",
+				RelatedBead:       "ms-abc123",
 				OriginalSeverity:  "medium",
 				ReescalationCount: 1,
 				LastReescalatedAt: "2024-01-15T09:30:00Z",
@@ -273,7 +273,7 @@ func TestEscalationFieldsRoundTrip(t *testing.T) {
 		EscalatedAt:       "2024-06-15T12:00:00Z",
 		AckedBy:           "mineshaft/crew/joe",
 		AckedAt:           "2024-06-15T12:05:00Z",
-		RelatedBead:       "gt-stuck123",
+		RelatedBead:       "ms-stuck123",
 		OriginalSeverity:  "medium",
 		ReescalationCount: 1,
 		LastReescalatedAt: "2024-06-15T11:30:00Z",
@@ -327,8 +327,8 @@ func TestEscalationFieldsRoundTrip(t *testing.T) {
 
 func TestFilterEscalationRecordsSkipsMailMessages(t *testing.T) {
 	issues := []*Issue{
-		{ID: "hq-root", Labels: []string{"gt:escalation"}},
-		{ID: "hq-mail", Labels: []string{"gt:escalation", "gt:message"}},
+		{ID: "hq-root", Labels: []string{"ms:escalation"}},
+		{ID: "hq-mail", Labels: []string{"ms:escalation", "ms:message"}},
 	}
 
 	got := filterEscalationRecords(issues)
@@ -365,7 +365,7 @@ func TestBumpSeverity(t *testing.T) {
 // (--body-file=-) rather than embedding newlines in --description=...
 //
 // Regression test for dc-1bxe: bd 1.0.3+ rejects newlines inside --description
-// flag values, which broke `gt escalate` for any escalation containing the
+// flag values, which broke `ms escalate` for any escalation containing the
 // structured YAML metadata block (severity, reason, escalated_by, etc.).
 func TestCreateEscalationBead_PassesDescriptionViaStdin(t *testing.T) {
 	stubDir := t.TempDir()
@@ -379,7 +379,7 @@ for a in "$@"; do
   printf '%s\n' "$a" >> "` + argsPath + `"
 done
 cat > "` + stdinPath + `"
-echo '{"id":"dc-test1","title":"x","status":"open","priority":2,"type":"task","labels":["gt:escalation"]}'
+echo '{"id":"dc-test1","title":"x","status":"open","priority":2,"type":"task","labels":["ms:escalation"]}'
 exit 0
 `
 	stubPath := filepath.Join(stubDir, "bd")

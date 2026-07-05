@@ -444,8 +444,8 @@ func TestStaleBinaryInfo_Describe(t *testing.T) {
 		{
 			name:    "count unknown falls back to stale wording",
 			info:    StaleBinaryInfo{BinaryCommit: bin, RepoCommit: repo, CompareRef: "origin/main", CommitsBehind: 0},
-			subject: "gt binary",
-			want:    "gt binary is stale (built from abc123456789, origin/main at fed098765432)",
+			subject: "ms binary",
+			want:    "ms binary is stale (built from abc123456789, origin/main at fed098765432)",
 		},
 		{
 			name:    "short hashes are not truncated",

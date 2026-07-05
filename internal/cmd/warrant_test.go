@@ -13,7 +13,7 @@ import (
 func setupWarrantTestRegistry(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "mineshaft")
+	reg.Register("ms", "mineshaft")
 	reg.Register("bd", "beads")
 	old := session.DefaultRegistry()
 	session.SetDefaultRegistry(reg)
@@ -183,16 +183,16 @@ func TestTargetToSessionName(t *testing.T) {
 		wantErr bool
 		want    string
 	}{
-		{"mineshaft/miners/alpha", false, "gt-alpha"},
+		{"mineshaft/miners/alpha", false, "ms-alpha"},
 		{"beads/miners/charlie", false, "bd-charlie"},
 		{"supervisor/dogs", true, ""},
 		{"supervisor/dogs/alpha", false, "hq-dog-alpha"},
-		{"mineshaft/crew/bob", false, "gt-crew-bob"},
-		{"mineshaft/witness", false, "gt-witness"},
-		{"mineshaft/refinery", false, "gt-refinery"},
+		{"mineshaft/crew/bob", false, "ms-crew-bob"},
+		{"mineshaft/witness", false, "ms-witness"},
+		{"mineshaft/refinery", false, "ms-refinery"},
 		{"beads/witness", false, "bd-witness"},
 		{"beads/refinery", false, "bd-refinery"},
-		{"unknownrig/something/else", false, "gt-unknownrig-something-else"},
+		{"unknownrig/something/else", false, "ms-unknownrig-something-else"},
 	}
 
 	for _, tt := range tests {
@@ -222,9 +222,9 @@ func TestWarrantFilePath(t *testing.T) {
 			want:   filepath.Join("/tmp", "warrants", "mineshaft_miners_alpha.warrant.json"),
 		},
 		{
-			dir:    filepath.Join("/home", "user", "gt", "warrants"),
+			dir:    filepath.Join("/home", "user", "ms", "warrants"),
 			target: "supervisor/dogs/bravo",
-			want:   filepath.Join("/home", "user", "gt", "warrants", "supervisor_dogs_bravo.warrant.json"),
+			want:   filepath.Join("/home", "user", "ms", "warrants", "supervisor_dogs_bravo.warrant.json"),
 		},
 	}
 

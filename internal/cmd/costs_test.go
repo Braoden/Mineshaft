@@ -13,7 +13,7 @@ import (
 func setupCostsTestRegistry(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "mineshaft")
+	reg.Register("ms", "mineshaft")
 	reg.Register("bd", "beads")
 	old := session.DefaultRegistry()
 	session.SetDefaultRegistry(reg)
@@ -30,112 +30,112 @@ func TestDeriveSessionName(t *testing.T) {
 		{
 			name: "miner session",
 			envVars: map[string]string{
-				"GT_ROLE":    "miner",
-				"GT_RIG":     "mineshaft",
-				"GT_MINER": "toast",
+				"MS_ROLE":    "miner",
+				"MS_RIG":     "mineshaft",
+				"MS_MINER": "toast",
 			},
-			expected: "gt-toast",
+			expected: "ms-toast",
 		},
 		{
 			name: "crew session",
 			envVars: map[string]string{
-				"GT_ROLE": "crew",
-				"GT_RIG":  "mineshaft",
-				"GT_CREW": "max",
+				"MS_ROLE": "crew",
+				"MS_RIG":  "mineshaft",
+				"MS_CREW": "max",
 			},
-			expected: "gt-crew-max",
+			expected: "ms-crew-max",
 		},
 		{
 			name: "witness session",
 			envVars: map[string]string{
-				"GT_ROLE": "witness",
-				"GT_RIG":  "mineshaft",
+				"MS_ROLE": "witness",
+				"MS_RIG":  "mineshaft",
 			},
-			expected: "gt-witness",
+			expected: "ms-witness",
 		},
 		{
 			name: "refinery session",
 			envVars: map[string]string{
-				"GT_ROLE": "refinery",
-				"GT_RIG":  "mineshaft",
+				"MS_ROLE": "refinery",
+				"MS_RIG":  "mineshaft",
 			},
-			expected: "gt-refinery",
+			expected: "ms-refinery",
 		},
 		{
 			name: "overseer session",
 			envVars: map[string]string{
-				"GT_ROLE": "overseer",
-				"GT_TOWN": "ai",
+				"MS_ROLE": "overseer",
+				"MS_TOWN": "ai",
 			},
 			expected: "hq-overseer",
 		},
 		{
 			name: "supervisor session",
 			envVars: map[string]string{
-				"GT_ROLE": "supervisor",
-				"GT_TOWN": "ai",
+				"MS_ROLE": "supervisor",
+				"MS_TOWN": "ai",
 			},
 			expected: "hq-supervisor",
 		},
 		{
-			name: "overseer session without GT_TOWN",
+			name: "overseer session without MS_TOWN",
 			envVars: map[string]string{
-				"GT_ROLE": "overseer",
+				"MS_ROLE": "overseer",
 			},
 			expected: "hq-overseer",
 		},
 		{
-			name: "supervisor session without GT_TOWN",
+			name: "supervisor session without MS_TOWN",
 			envVars: map[string]string{
-				"GT_ROLE": "supervisor",
+				"MS_ROLE": "supervisor",
 			},
 			expected: "hq-supervisor",
 		},
 		{
-			name: "overseer with stale GT_MINER is NOT miner session",
+			name: "overseer with stale MS_MINER is NOT miner session",
 			envVars: map[string]string{
-				"GT_ROLE":    "overseer",
-				"GT_RIG":     "mineshaft",
-				"GT_MINER": "toast",
-				"GT_TOWN":    "ai",
+				"MS_ROLE":    "overseer",
+				"MS_RIG":     "mineshaft",
+				"MS_MINER": "toast",
+				"MS_TOWN":    "ai",
 			},
 			expected: "hq-overseer",
 		},
 		{
-			name: "compound witness with stale GT_MINER is NOT miner session",
+			name: "compound witness with stale MS_MINER is NOT miner session",
 			envVars: map[string]string{
-				"GT_ROLE":    "mineshaft/witness",
-				"GT_RIG":     "mineshaft",
-				"GT_MINER": "toast",
+				"MS_ROLE":    "mineshaft/witness",
+				"MS_RIG":     "mineshaft",
+				"MS_MINER": "toast",
 			},
-			expected: "gt-witness",
+			expected: "ms-witness",
 		},
 		{
-			name: "compound refinery with stale GT_MINER is NOT miner session",
+			name: "compound refinery with stale MS_MINER is NOT miner session",
 			envVars: map[string]string{
-				"GT_ROLE":    "mineshaft/refinery",
-				"GT_RIG":     "mineshaft",
-				"GT_MINER": "toast",
+				"MS_ROLE":    "mineshaft/refinery",
+				"MS_RIG":     "mineshaft",
+				"MS_MINER": "toast",
 			},
-			expected: "gt-refinery",
+			expected: "ms-refinery",
 		},
 		{
-			name: "compound crew with stale GT_MINER is NOT miner session",
+			name: "compound crew with stale MS_MINER is NOT miner session",
 			envVars: map[string]string{
-				"GT_ROLE":    "mineshaft/crew/alice",
-				"GT_RIG":     "mineshaft",
-				"GT_MINER": "toast",
+				"MS_ROLE":    "mineshaft/crew/alice",
+				"MS_RIG":     "mineshaft",
+				"MS_MINER": "toast",
 			},
-			expected: "gt-crew-alice",
+			expected: "ms-crew-alice",
 		},
 		{
-			name: "compound miner role uses GT_MINER for session name",
+			name: "compound miner role uses MS_MINER for session name",
 			envVars: map[string]string{
-				"GT_ROLE":    "mineshaft/miners/toast",
-				"GT_RIG":     "mineshaft",
-				"GT_MINER": "toast",
+				"MS_ROLE":    "mineshaft/miners/toast",
+				"MS_RIG":     "mineshaft",
+				"MS_MINER": "toast",
 			},
-			expected: "gt-toast",
+			expected: "ms-toast",
 		},
 		{
 			name:     "no env vars",
@@ -148,7 +148,7 @@ func TestDeriveSessionName(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Save and clear relevant env vars
 			saved := make(map[string]string)
-			envKeys := []string{"GT_ROLE", "GT_RIG", "GT_MINER", "GT_CREW", "GT_TOWN"}
+			envKeys := []string{"MS_ROLE", "MS_RIG", "MS_MINER", "MS_CREW", "MS_TOWN"}
 			for _, key := range envKeys {
 				saved[key] = os.Getenv(key)
 				os.Unsetenv(key)
@@ -177,7 +177,7 @@ func TestDeriveSessionName(t *testing.T) {
 
 func TestRunCostsRecord_NoSession_ReturnsNil(t *testing.T) {
 	// Clear all session-related env vars so no session can be derived.
-	envKeys := []string{"GT_SESSION", "GT_ROLE", "GT_RIG", "GT_MINER", "GT_CREW", "GT_TOWN"}
+	envKeys := []string{"MS_SESSION", "MS_ROLE", "MS_RIG", "MS_MINER", "MS_CREW", "MS_TOWN"}
 	saved := make(map[string]string)
 	for _, key := range envKeys {
 		saved[key] = os.Getenv(key)
@@ -199,7 +199,7 @@ func TestRunCostsRecord_NoSession_ReturnsNil(t *testing.T) {
 	// runCostsRecord should return nil (silent skip) when no session is resolvable
 	err := runCostsRecord(nil, nil)
 	if err != nil {
-		t.Errorf("runCostsRecord() returned error %v, want nil for non-GT session", err)
+		t.Errorf("runCostsRecord() returned error %v, want nil for non-MS session", err)
 	}
 }
 
@@ -224,7 +224,7 @@ func TestCostDigestPayload_ExcludesSessions(t *testing.T) {
 	// Fill sessions with realistic data
 	for i := range digest.Sessions {
 		digest.Sessions[i] = CostEntry{
-			SessionID: "gt-session-" + time.Now().Format("150405"),
+			SessionID: "ms-session-" + time.Now().Format("150405"),
 			Role:      "miner",
 			Rig:       "mineshaft",
 			Worker:    "toast",

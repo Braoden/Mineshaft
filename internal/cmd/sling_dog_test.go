@@ -116,7 +116,7 @@ func TestMaxDogPoolSize(t *testing.T) {
 // The deferred sling path (active when scheduler.max_miners > 0) rejects
 // targets that are neither rigs nor dogs. When dispatchFeedDog calls
 //
-//	gt sling mol-minecart-feed supervisor/dogs --var minecart=<id>
+//	ms sling mol-minecart-feed supervisor/dogs --var minecart=<id>
 //
 // the target "supervisor/dogs" must be classified as a dog pool target, not
 // fall through to rig-name resolution. Otherwise the deferred path bails

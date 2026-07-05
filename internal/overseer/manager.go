@@ -216,7 +216,7 @@ func (m *Manager) StartACP(ctx context.Context, agentOverride, rigName string) e
 	for k, v := range envVars {
 		os.Setenv(k, v)
 	}
-	os.Setenv("GT_TOWN_ROOT", m.townRoot)
+	os.Setenv("MS_TOWN_ROOT", m.townRoot)
 
 	// Apply agent-specific environment variables from RuntimeConfig
 	// This ensures variables like ANTHROPIC_API_KEY reach the agent process

@@ -48,8 +48,8 @@ type minecartRow struct {
 
 func main() {
 	host := flag.String("host", "", "Dolt server host (default: 127.0.0.1)")
-	port := flag.String("port", "", "Dolt server port (default: GT_DOLT_PORT or 3307)")
-	routesFile := flag.String("routes", "", "Path to routes.jsonl (default: ~/gt/.beads/routes.jsonl)")
+	port := flag.String("port", "", "Dolt server port (default: MS_DOLT_PORT or 3307)")
+	routesFile := flag.String("routes", "", "Path to routes.jsonl (default: ~/ms/.beads/routes.jsonl)")
 	dryRun := flag.Bool("dry-run", false, "Show what would be done without making changes")
 	cleanup := flag.Bool("cleanup", false, "Also escalate stale minecart branches for review")
 	watch := flag.Bool("watch", false, "Watch events.jsonl and snapshot immediately on minecart events")
@@ -112,7 +112,7 @@ func resolveHost(flag string) string {
 	if flag != "" {
 		return flag
 	}
-	if h := os.Getenv("GT_DOLT_HOST"); h != "" {
+	if h := os.Getenv("MS_DOLT_HOST"); h != "" {
 		return h
 	}
 	if h := os.Getenv("DOLT_HOST"); h != "" {
@@ -125,7 +125,7 @@ func resolvePort(flag string) string {
 	if flag != "" {
 		return flag
 	}
-	if p := os.Getenv("GT_DOLT_PORT"); p != "" {
+	if p := os.Getenv("MS_DOLT_PORT"); p != "" {
 		return p
 	}
 	if p := os.Getenv("DOLT_PORT"); p != "" {
@@ -142,7 +142,7 @@ func resolveRoutesFile(flag string) string {
 		return rf
 	}
 	home, _ := os.UserHomeDir()
-	return filepath.Join(home, "gt", ".beads", "routes.jsonl")
+	return filepath.Join(home, "ms", ".beads", "routes.jsonl")
 }
 
 // listDatabases returns all non-system databases on the Dolt server.
@@ -349,7 +349,7 @@ func findMinecartsNeedingSnapshots(db *sql.DB) ([]minecartRow, error) {
 		FROM hq.issues i
 		WHERE (i.issue_type = 'minecart' OR EXISTS (
 				SELECT 1 FROM hq.labels l
-				WHERE l.issue_id = i.id AND l.label = 'gt:minecart'
+				WHERE l.issue_id = i.id AND l.label = 'ms:minecart'
 			))
 			AND (
 				i.status IN ('staged_ready', 'staged_warnings', 'launched', 'open')
@@ -551,7 +551,7 @@ func escalateStale(db *sql.DB, databases []string, dryRun bool) {
 					SELECT 1 FROM hq.issues i
 					WHERE (i.issue_type = 'minecart' OR EXISTS (
 							SELECT 1 FROM hq.labels l
-							WHERE l.issue_id = i.id AND l.label = 'gt:minecart'
+							WHERE l.issue_id = i.id AND l.label = 'ms:minecart'
 						))
 						AND b.name LIKE CONCAT('%%-', i.id)
 						AND i.status IN ('closed', 'landed')
@@ -602,7 +602,7 @@ func watchEvents(host, port, routesFile string, cleanup bool) error {
 	if err != nil {
 		return fmt.Errorf("cannot determine home dir: %w", err)
 	}
-	eventsPath := filepath.Join(home, "gt", ".events.jsonl")
+	eventsPath := filepath.Join(home, "ms", ".events.jsonl")
 
 	file, err := os.Open(eventsPath)
 	if err != nil {

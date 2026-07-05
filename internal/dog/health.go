@@ -88,7 +88,7 @@ func (hc *HealthChecker) Check(d *Dog, maxInactivity time.Duration, autoClear bo
 		case tmux.AgentHung:
 			// Hung: process alive but no tmux activity for maxInactivity.
 			// If autoClear is on, kill and reclaim — the dog almost certainly
-			// finished its work but failed to call `gt dog done`.
+			// finished its work but failed to call `ms dog done`.
 			result.NeedsAttention = true
 			if autoClear {
 				_ = hc.checker.KillSession(session)

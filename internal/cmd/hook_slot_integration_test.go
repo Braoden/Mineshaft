@@ -138,7 +138,7 @@ func TestHookSlot_BasicHook(t *testing.T) {
 	// Create a test bead
 	issue, err := b.Create(beads.CreateOptions{
 		Title:    "Test task for hooking",
-		Labels:   []string{"gt:task"},
+		Labels:   []string{"ms:task"},
 		Priority: 2,
 	})
 	if err != nil {
@@ -194,7 +194,7 @@ func TestHookSlot_Singleton(t *testing.T) {
 	// Create and hook first bead
 	issue1, err := b.Create(beads.CreateOptions{
 		Title:    "First task",
-		Labels:   []string{"gt:task"},
+		Labels:   []string{"ms:task"},
 		Priority: 2,
 	})
 	if err != nil {
@@ -211,7 +211,7 @@ func TestHookSlot_Singleton(t *testing.T) {
 	// Create second bead
 	issue2, err := b.Create(beads.CreateOptions{
 		Title:    "Second task",
-		Labels:   []string{"gt:task"},
+		Labels:   []string{"ms:task"},
 		Priority: 2,
 	})
 	if err != nil {
@@ -227,7 +227,7 @@ func TestHookSlot_Singleton(t *testing.T) {
 	}
 
 	// Query hooked beads - both should be hooked (bd allows multiple)
-	// The singleton constraint is enforced by gt hook, not bd itself
+	// The singleton constraint is enforced by ms hook, not bd itself
 	hookedBeads, err := b.List(beads.ListOptions{
 		Status:   beads.StatusHooked,
 		Assignee: agentID,
@@ -243,7 +243,7 @@ func TestHookSlot_Singleton(t *testing.T) {
 	}
 
 	// The test documents actual behavior: bd allows multiple hooked beads
-	// The gt hook command enforces singleton behavior
+	// The ms hook command enforces singleton behavior
 	if len(hookedBeads) != 2 {
 		t.Errorf("expected 2 hooked beads (bd allows multiple), got %d", len(hookedBeads))
 	}
@@ -267,7 +267,7 @@ func TestHookSlot_Unhook(t *testing.T) {
 	// Create and hook a bead
 	issue, err := b.Create(beads.CreateOptions{
 		Title:    "Task to unhook",
-		Labels:   []string{"gt:task"},
+		Labels:   []string{"ms:task"},
 		Priority: 2,
 	})
 	if err != nil {
@@ -330,7 +330,7 @@ func TestHookSlot_DifferentAgents(t *testing.T) {
 	// Create and hook bead to first agent
 	issue1, err := b.Create(beads.CreateOptions{
 		Title:    "Toast's task",
-		Labels:   []string{"gt:task"},
+		Labels:   []string{"ms:task"},
 		Priority: 2,
 	})
 	if err != nil {
@@ -347,7 +347,7 @@ func TestHookSlot_DifferentAgents(t *testing.T) {
 	// Create and hook bead to second agent
 	issue2, err := b.Create(beads.CreateOptions{
 		Title:    "Nux's task",
-		Labels:   []string{"gt:task"},
+		Labels:   []string{"ms:task"},
 		Priority: 2,
 	})
 	if err != nil {
@@ -415,7 +415,7 @@ func TestHookSlot_HookPersistence(t *testing.T) {
 	b1 := beads.New(rigDir)
 	issue, err := b1.Create(beads.CreateOptions{
 		Title:    "Persistent task",
-		Labels:   []string{"gt:task"},
+		Labels:   []string{"ms:task"},
 		Priority: 2,
 	})
 	if err != nil {
@@ -469,7 +469,7 @@ func TestHookSlot_StatusTransitions(t *testing.T) {
 	// Create a bead
 	issue, err := b.Create(beads.CreateOptions{
 		Title:    "Status transition test",
-		Labels:   []string{"gt:task"},
+		Labels:   []string{"ms:task"},
 		Priority: 2,
 	})
 	if err != nil {

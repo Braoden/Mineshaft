@@ -21,7 +21,7 @@ import (
 // defaultIntegrationBranchTemplate is kept for local backward compat references.
 var defaultIntegrationBranchTemplate = beads.DefaultIntegrationBranchTemplate
 
-// LandConflictError is returned by `gt mq integration land` when the merge of
+// LandConflictError is returned by `ms mq integration land` when the merge of
 // an integration branch into its target branch fails due to conflicts. Callers
 // (notably the refinery patrol formula) can detect this typed error to drive a
 // structured recovery path — escalate to overseer, file a conflict-resolution
@@ -186,7 +186,7 @@ func branchNameExists(g *git.Git, name string) bool {
 }
 
 // extractEpicNumericSuffix extracts the suffix after the last hyphen in an epic ID.
-// Examples: "gt-123" -> "123", "PROJ-456" -> "456", "a-b-c" -> "c", "abc" -> "abc"
+// Examples: "ms-123" -> "123", "PROJ-456" -> "456", "a-b-c" -> "c", "abc" -> "abc"
 func extractEpicNumericSuffix(epicID string) string {
 	if idx := strings.LastIndex(epicID, "-"); idx >= 0 {
 		suffix := epicID[idx+1:]
@@ -443,7 +443,7 @@ func runMqIntegrationCreate(cmd *cobra.Command, args []string) error {
 	fmt.Printf("  Branch: %s\n", branchName)
 	fmt.Printf("  From:   %s\n", baseBranchDisplay)
 	fmt.Printf("\n  Future MRs for this epic's children can target:\n")
-	fmt.Printf("    gt mq submit --epic %s\n", epicID)
+	fmt.Printf("    ms mq submit --epic %s\n", epicID)
 
 	return nil
 }
@@ -718,7 +718,7 @@ func runMqIntegrationLand(cmd *cobra.Command, args []string) error {
 
 	// 6. Push to origin
 	fmt.Printf("Pushing %s to origin...\n", targetBranch)
-	if err := landGit.PushWithEnv("origin", targetBranch, false, []string{"GT_INTEGRATION_LAND=1"}); err != nil {
+	if err := landGit.PushWithEnv("origin", targetBranch, false, []string{"MS_INTEGRATION_LAND=1"}); err != nil {
 		return fmt.Errorf("push failed: %w", err)
 	}
 	fmt.Printf("  %s Pushed to origin\n", style.Bold.Render("✓"))
@@ -787,10 +787,10 @@ func cleanupIntegrationBranch(g *git.Git, bd *beads.Beads, epicID, branchName, t
 // Uses Status "all" instead of "open" to catch in_progress MRs (refinery race),
 // then post-filters to exclude closed MRs.
 func findOpenMRsForIntegration(bd *beads.Beads, targetBranch string) ([]*beads.Issue, error) {
-	// List all merge requests at any priority (MRs have Type: "task" with label "gt:merge-request").
+	// List all merge requests at any priority (MRs have Type: "task" with label "ms:merge-request").
 	// Use Status "all" to catch in_progress MRs that the refinery may have picked up.
 	opts := beads.ListOptions{
-		Label:    "gt:merge-request",
+		Label:    "ms:merge-request",
 		Status:   "all",
 		Priority: -1,
 	}
@@ -929,9 +929,9 @@ func runMqIntegrationStatus(cmd *cobra.Command, args []string) error {
 	// Query for MRs targeting this integration branch (use resolved name)
 	targetBranch := branchName
 
-	// Get all merge-request issues (MRs have Type: "task" with label "gt:merge-request")
+	// Get all merge-request issues (MRs have Type: "task" with label "ms:merge-request")
 	allMRs, err := bd.List(beads.ListOptions{
-		Label:    "gt:merge-request",
+		Label:    "ms:merge-request",
 		Status:   "all",
 		Priority: -1,
 	})
@@ -1080,7 +1080,7 @@ func printIntegrationStatus(output *IntegrationStatusOutput) error {
 			fmt.Printf("  Auto-land: %s\n", style.Bold.Render("enabled"))
 		} else {
 			fmt.Printf("  Auto-land: %s\n", style.Dim.Render("disabled"))
-			fmt.Printf("  Run: gt mq integration land %s\n", output.Epic)
+			fmt.Printf("  Run: ms mq integration land %s\n", output.Epic)
 		}
 	} else {
 		if output.ChildrenTotal == 0 {

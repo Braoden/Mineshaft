@@ -53,7 +53,7 @@ cat > "$BACKUP_DIR/metadata.json" <<EOF
 {
   "created_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "town_root": "$TOWN_ROOT",
-  "gt_version": "$(gt --version 2>/dev/null || echo 'unknown')",
+  "ms_version": "$(ms --version 2>/dev/null || echo 'unknown')",
   "bd_version": "$(bd --version 2>/dev/null || echo 'unknown')"
 }
 EOF

@@ -30,17 +30,17 @@ var wlBrowseCmd = &cobra.Command{
 	RunE:  runWLBrowse,
 	Long: `Browse the Wasteland wanted board.
 
-Uses the local fork if available (set by gt wl join), otherwise falls back
+Uses the local fork if available (set by ms wl join), otherwise falls back
 to cloning the upstream commons temporarily.
 
 EXAMPLES:
-  gt wl browse                          # All open wanted items
-  gt wl browse --project mineshaft        # Filter by project
-  gt wl browse --type bug               # Only bugs
-  gt wl browse --status claimed         # Claimed items
-  gt wl browse --priority 0             # Critical priority only
-  gt wl browse --limit 5               # Show 5 items
-  gt wl browse --json                   # JSON output`,
+  ms wl browse                          # All open wanted items
+  ms wl browse --project mineshaft        # Filter by project
+  ms wl browse --type bug               # Only bugs
+  ms wl browse --status claimed         # Claimed items
+  ms wl browse --priority 0             # Critical priority only
+  ms wl browse --limit 5               # Show 5 items
+  ms wl browse --json                   # JSON output`,
 }
 
 func init() {
@@ -152,7 +152,7 @@ func runWLBrowse(cmd *cobra.Command, args []string) error {
 // Returns (cloneDir, tmpDir, err). If tmpDir is non-empty, caller must
 // defer os.RemoveAll(tmpDir) — a temporary clone was created.
 func resolveWLCommonsBrowse(townRoot, doltPath string) (cloneDir, tmpDir string, err error) {
-	// Try wasteland config (set by gt wl join).
+	// Try wasteland config (set by ms wl join).
 	if cfg, cfgErr := wasteland.LoadConfig(townRoot); cfgErr == nil && cfg.LocalDir != "" {
 		if _, statErr := os.Stat(filepath.Join(cfg.LocalDir, ".dolt")); statErr == nil {
 			return cfg.LocalDir, "", nil

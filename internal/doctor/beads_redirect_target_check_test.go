@@ -432,7 +432,7 @@ func TestBeadsRedirectTargetCheck_ValidConfigYaml(t *testing.T) {
 	if err := os.MkdirAll(rigBeadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(rigBeadsDir, "config.yaml"), []byte("prefix: gt-\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(rigBeadsDir, "config.yaml"), []byte("prefix: ms-\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.MkdirAll(filepath.Join(rigDir, ".git"), 0755); err != nil {

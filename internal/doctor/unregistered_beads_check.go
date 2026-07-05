@@ -100,7 +100,7 @@ func (c *UnregisteredBeadsDirsCheck) Run(ctx *CheckContext) *CheckResult {
 			Status:  StatusWarning,
 			Message: fmt.Sprintf("%d unregistered directory(ies) with beads metadata", len(details)),
 			Details: details,
-			FixHint: "Remove stale directories or register them as rigs with 'gt rig add'",
+			FixHint: "Remove stale directories or register them as rigs with 'ms rig add'",
 		}
 	}
 

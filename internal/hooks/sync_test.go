@@ -112,7 +112,7 @@ func TestSyncCreatesNewSettings(t *testing.T) {
 	// Save base config
 	base := &HooksConfig{
 		SessionStart: []HookEntry{
-			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "gt prime"}}},
+			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "ms prime"}}},
 		},
 	}
 	SaveBase(base)
@@ -150,7 +150,7 @@ func TestUnmarshalMarshalRoundtrip(t *testing.T) {
   "editorMode": "vim",
   "enabledPlugins": {"beads@beads-marketplace": false},
   "hooks": {
-    "SessionStart": [{"matcher": "", "hooks": [{"type": "command", "command": "gt prime"}]}]
+    "SessionStart": [{"matcher": "", "hooks": [{"type": "command", "command": "ms prime"}]}]
   },
   "customSetting": "hello",
   "nested": {"a": 1, "b": "two"}

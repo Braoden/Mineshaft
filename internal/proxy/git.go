@@ -1,7 +1,7 @@
 // Git smart-HTTP proxy
 //
 // This file implements a git smart-HTTP server that bridges sandboxed containers
-// to the host's bare repositories (~/gt/<rig>/.repo.git).  Containers never
+// to the host's bare repositories (~/ms/<rig>/.repo.git).  Containers never
 // contact GitHub directly; all fetch and push traffic flows through this proxy.
 //
 // Protocol overview
@@ -30,7 +30,7 @@
 //   - The repository must exist; handlers return 404 before writing any
 //     response body if repoPath is missing (avoids corrupt partial responses).
 //   - git-receive-pack requires a valid mTLS client cert.  The cert CN
-//     (format: "gt-<rig>-<name>") is parsed to extract the miner name.
+//     (format: "ms-<rig>-<name>") is parsed to extract the miner name.
 //     Every pushed ref must match refs/heads/miner/<name>-*; any other
 //     ref is rejected with 403 before git ever sees the request body.
 //   - git-upload-pack is unrestricted for any authenticated client (read-only).

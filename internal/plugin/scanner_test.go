@@ -92,8 +92,8 @@ func TestDoltShellPluginsPreferGTDoltEnv(t *testing.T) {
 		}
 		content := string(data)
 		for _, want := range []string{
-			`DOLT_HOST="${GT_DOLT_HOST:-${DOLT_HOST:-127.0.0.1}}"`,
-			`DOLT_PORT="${GT_DOLT_PORT:-${DOLT_PORT:-3307}}"`,
+			`DOLT_HOST="${MS_DOLT_HOST:-${DOLT_HOST:-127.0.0.1}}"`,
+			`DOLT_PORT="${MS_DOLT_PORT:-${DOLT_PORT:-3307}}"`,
 		} {
 			if !strings.Contains(content, want) {
 				t.Fatalf("%s missing %q", rel, want)
@@ -457,7 +457,7 @@ func TestParsePluginMD_StuckAgentDogUsesCanonicalHeartbeatPath(t *testing.T) {
 	if !strings.Contains(plugin.Instructions, "could not parse rigs.json") {
 		t.Fatalf("expected fail-safe rigs.json parse handling in instructions, got:\n%s", plugin.Instructions)
 	}
-	if !strings.Contains(plugin.Instructions, "GT_STUCK_AGENT_DOG_SUPERVISOR_STALE_SECONDS") {
+	if !strings.Contains(plugin.Instructions, "MS_STUCK_AGENT_DOG_SUPERVISOR_STALE_SECONDS") {
 		t.Fatalf("expected configurable supervisor stale threshold in instructions, got:\n%s", plugin.Instructions)
 	}
 	if !strings.Contains(plugin.Instructions, "heartbeat_write_divergence") {
@@ -695,21 +695,21 @@ func TestFormatMailBody_WithRunScript(t *testing.T) {
 	p := &Plugin{
 		Name:         "test-plugin",
 		Description:  "A test plugin",
-		Path:         "/home/user/gt/plugins/test-plugin",
+		Path:         "/home/user/ms/plugins/test-plugin",
 		HasRunScript: true,
 	}
 
 	body := p.FormatMailBody()
 
 	// Must contain the bash command to run the script
-	if !strings.Contains(body, "cd /home/user/gt/plugins/test-plugin && bash run.sh") {
+	if !strings.Contains(body, "cd /home/user/ms/plugins/test-plugin && bash run.sh") {
 		t.Error("expected mail body to contain run.sh execution command")
 	}
 	// Must instruct dog NOT to interpret markdown
 	if !strings.Contains(body, "Do NOT interpret the plugin.md instructions") {
 		t.Error("expected mail body to warn against interpreting markdown")
 	}
-	if !strings.Contains(body, "gt plugin record-run --plugin test-plugin --result <outcome>") {
+	if !strings.Contains(body, "ms plugin record-run --plugin test-plugin --result <outcome>") {
 		t.Error("expected mail body to use canonical plugin run recorder")
 	}
 	if strings.Contains(body, "bd create --ephemeral") {
@@ -876,7 +876,7 @@ func TestFormatMailBody_WithoutRunScript(t *testing.T) {
 	p := &Plugin{
 		Name:         "test-plugin",
 		Description:  "A test plugin",
-		Path:         "/home/user/gt/plugins/test-plugin",
+		Path:         "/home/user/ms/plugins/test-plugin",
 		Instructions: "Do the thing.",
 		HasRunScript: false,
 	}
@@ -894,7 +894,7 @@ func TestFormatMailBody_WithoutRunScript(t *testing.T) {
 	if strings.Contains(body, "bash run.sh") {
 		t.Error("expected mail body to NOT contain run.sh command")
 	}
-	if !strings.Contains(body, "gt plugin record-run --plugin test-plugin --result <outcome>") {
+	if !strings.Contains(body, "ms plugin record-run --plugin test-plugin --result <outcome>") {
 		t.Error("expected mail body to use canonical plugin run recorder")
 	}
 	if strings.Contains(body, "bd create --ephemeral") {

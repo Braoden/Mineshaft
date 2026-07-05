@@ -4,21 +4,21 @@
     "sessionStart": [
       {
         "type": "command",
-        "bash": "{{GT_BIN}} prime --hook",
+        "bash": "{{MS_BIN}} prime --hook",
         "timeoutSec": 30
       }
     ],
     "userPromptSubmitted": [
       {
         "type": "command",
-        "bash": "{{GT_BIN}} mail check --inject",
+        "bash": "{{MS_BIN}} mail check --inject",
         "timeoutSec": 10
       }
     ],
     "sessionEnd": [
       {
         "type": "command",
-        "bash": "{{GT_BIN}} costs record &",
+        "bash": "{{MS_BIN}} costs record &",
         "timeoutSec": 10
       }
     ]

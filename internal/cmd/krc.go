@@ -27,11 +27,11 @@ KRC provides:
   - Statistics on ephemeral data lifecycle
 
 Examples:
-  gt krc stats              # Show event statistics
-  gt krc prune              # Remove expired events
-  gt krc prune --dry-run    # Preview what would be pruned
-  gt krc config             # Show TTL configuration
-  gt krc config set patrol_* 12h   # Set TTL for patrol events`,
+  ms krc stats              # Show event statistics
+  ms krc prune              # Remove expired events
+  ms krc prune --dry-run    # Preview what would be pruned
+  ms krc config             # Show TTL configuration
+  ms krc config set patrol_* 12h   # Set TTL for patrol events`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cmd.Help()
 	},
@@ -73,10 +73,10 @@ Subcommands:
   reset                 Reset to default configuration
 
 Examples:
-  gt krc config                     # Show current config
-  gt krc config set patrol_* 12h    # Set patrol TTL to 12 hours
-  gt krc config set default 3d      # Set default TTL to 3 days
-  gt krc config reset               # Reset to defaults`,
+  ms krc config                     # Show current config
+  ms krc config set patrol_* 12h    # Set patrol TTL to 12 hours
+  ms krc config set default 3d      # Set default TTL to 3 days
+  ms krc config reset               # Reset to defaults`,
 	RunE: runKrcConfig,
 }
 

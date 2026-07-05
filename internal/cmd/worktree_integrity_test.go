@@ -21,7 +21,7 @@ func TestEnsureRoleWorktreeIntegrityRequiresMinerMetadata(t *testing.T) {
 	if !errors.Is(err, worktreeintegrity.ErrIntegrityViolation) {
 		t.Fatalf("ensureRoleWorktreeIntegrity() error = %v, want ErrIntegrityViolation", err)
 	}
-	if !strings.Contains(err.Error(), "gt doctor --fix") {
+	if !strings.Contains(err.Error(), "ms doctor --fix") {
 		t.Fatalf("ensureRoleWorktreeIntegrity() error = %v, want remediation", err)
 	}
 }

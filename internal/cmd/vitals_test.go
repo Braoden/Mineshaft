@@ -29,9 +29,9 @@ func TestVitalsShortHome(t *testing.T) {
 	if err != nil {
 		t.Skip("no home dir")
 	}
-	got := vitalsShortHome(filepath.Join(home, "gt", ".dolt-backup"))
-	if got != "~/gt/.dolt-backup" {
-		t.Errorf("vitalsShortHome: got %q, want %q", got, "~/gt/.dolt-backup")
+	got := vitalsShortHome(filepath.Join(home, "ms", ".dolt-backup"))
+	if got != "~/ms/.dolt-backup" {
+		t.Errorf("vitalsShortHome: got %q, want %q", got, "~/ms/.dolt-backup")
 	}
 
 	got = vitalsShortHome("/tmp/other")

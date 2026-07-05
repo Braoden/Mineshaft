@@ -40,7 +40,7 @@ func autoRebaseOnTarget(g rebaseGit, base string, behind int, preVerified, alrea
 	if rebaseErr := g.Rebase(base); rebaseErr != nil {
 		_ = g.AbortRebase()
 		return false, "", fmt.Errorf("auto-rebase onto %s failed: %w\n"+
-			"Resolve conflicts manually (git fetch origin && git rebase %s), commit the resolution, then rerun gt done.",
+			"Resolve conflicts manually (git fetch origin && git rebase %s), commit the resolution, then rerun ms done.",
 			base, rebaseErr, base)
 	}
 	return true, "", nil

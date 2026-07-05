@@ -30,8 +30,8 @@ A completion ID is generated as c-<hash> where hash is derived from the
 wanted ID, rig handle, and timestamp.
 
 Examples:
-  gt wl done w-abc123 --evidence 'https://github.com/org/repo/pull/123'
-  gt wl done w-abc123 --evidence 'commit abc123def'`,
+  ms wl done w-abc123 --evidence 'https://github.com/org/repo/pull/123'
+  ms wl done w-abc123 --evidence 'commit abc123def'`,
 	Args: cobra.ExactArgs(1),
 	RunE: runWlDone,
 }
@@ -63,7 +63,7 @@ func runWlDone(cmd *cobra.Command, args []string) error {
 	if !doltserver.DatabaseExists(townRoot, dbName) {
 		// Fallback for wl-commons clone-based workspaces (join creates .wasteland clone).
 		if wlCfg.LocalDir == "" {
-			return fmt.Errorf("database %q not found\nJoin a wasteland first with: gt wl join <org/db>", dbName)
+			return fmt.Errorf("database %q not found\nJoin a wasteland first with: ms wl join <org/db>", dbName)
 		}
 		if err := submitDoneInLocalClone(wlCfg.LocalDir, wantedID, rigHandle, wlDoneEvidence, completionID); err != nil {
 			return err

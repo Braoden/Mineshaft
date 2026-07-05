@@ -1,6 +1,6 @@
 // Package beads provides merge slot management for serialized conflict resolution.
 //
-// The merge slot is a single bead identified by the label "gt:merge-slot".
+// The merge slot is a single bead identified by the label "ms:merge-slot".
 // Its holder is stored in the bead's Description field as a JSON blob:
 //
 //	{"holder": "<actor>", "waiters": ["<actor1>", ...]}
@@ -52,10 +52,10 @@ func mergeSlotStatusFromIssue(issue *Issue) *MergeSlotStatus {
 	}
 }
 
-// getMergeSlotBead finds the merge slot bead (label=gt:merge-slot).
+// getMergeSlotBead finds the merge slot bead (label=ms:merge-slot).
 // Returns ErrNotFound if no slot bead exists.
 func (b *Beads) getMergeSlotBead() (*Issue, error) {
-	issues, err := b.List(ListOptions{Label: "gt:merge-slot"})
+	issues, err := b.List(ListOptions{Label: "ms:merge-slot"})
 	if err != nil {
 		return nil, fmt.Errorf("listing merge slot beads: %w", err)
 	}
@@ -73,7 +73,7 @@ func (b *Beads) MergeSlotCreate() (string, error) {
 	initial, _ := json.Marshal(mergeSlotData{})
 	issue, err := b.Create(CreateOptions{
 		Title:       "merge-slot",
-		Labels:      []string{"gt:merge-slot"},
+		Labels:      []string{"ms:merge-slot"},
 		Description: string(initial),
 	})
 	if err != nil {

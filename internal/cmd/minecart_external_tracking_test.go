@@ -348,7 +348,7 @@ case "$*" in
     echo '[]'
     ;;
   "show hq-cv-ext --json")
-    echo '[{"id":"hq-cv-ext","title":"External minecart","status":"open","issue_type":"minecart","dependencies":[{"id":"external:ghostty:ghostty-123","title":"Ghost 123","status":"open","type":"task","dependency_type":"tracks"},{"id":"external:ghostty:ghostty-456","title":"Ghost 456","status":"closed","type":"task","dependency_type":"tracks"},{"id":"gt-ignore","title":"Ignore me","status":"open","type":"task","dependency_type":"blocks"}]}]'
+    echo '[{"id":"hq-cv-ext","title":"External minecart","status":"open","issue_type":"minecart","dependencies":[{"id":"external:ghostty:ghostty-123","title":"Ghost 123","status":"open","type":"task","dependency_type":"tracks"},{"id":"external:ghostty:ghostty-456","title":"Ghost 456","status":"closed","type":"task","dependency_type":"tracks"},{"id":"ms-ignore","title":"Ignore me","status":"open","type":"task","dependency_type":"blocks"}]}]'
     ;;
   "show ghostty-123 ghostty-456 --json"|"show ghostty-456 ghostty-123 --json")
     echo '[{"id":"ghostty-123","title":"Ghost 123","status":"open","issue_type":"task"},{"id":"ghostty-456","title":"Ghost 456","status":"closed","issue_type":"task"}]'
@@ -390,7 +390,7 @@ esac
 	}
 }
 
-// TestGetTrackedIssues_UnknownStatusForUnreachableCrossRig verifies the (gt-bs6)
+// TestGetTrackedIssues_UnknownStatusForUnreachableCrossRig verifies the (ms-bs6)
 // contract: when the tracked bead lives in a cross-rig DB that cannot be
 // resolved from the minecart owner's cwd (routes.jsonl missing, rig parked, or
 // rig beads DB unreachable), the returned tracked entry carries status
@@ -443,7 +443,7 @@ esac
 	}
 }
 
-// TestCloseMinecartIfComplete_UnknownBlocksAutoClose verifies (gt-bs6) that an
+// TestCloseMinecartIfComplete_UnknownBlocksAutoClose verifies (ms-bs6) that an
 // unknown-status tracked bead prevents minecart auto-close. The rig DB being
 // temporarily unreachable must not be mistaken for a completed bead.
 func TestCloseMinecartIfComplete_UnknownBlocksAutoClose(t *testing.T) {

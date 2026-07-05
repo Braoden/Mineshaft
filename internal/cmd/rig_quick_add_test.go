@@ -8,10 +8,10 @@ import (
 
 func TestFindOrCreateTown(t *testing.T) {
 	// Save original env and restore after test
-	origTownRoot := os.Getenv("GT_TOWN_ROOT")
-	defer os.Setenv("GT_TOWN_ROOT", origTownRoot)
+	origTownRoot := os.Getenv("MS_TOWN_ROOT")
+	defer os.Setenv("MS_TOWN_ROOT", origTownRoot)
 
-	t.Run("respects GT_TOWN_ROOT when set", func(t *testing.T) {
+	t.Run("respects MS_TOWN_ROOT when set", func(t *testing.T) {
 		// Create a valid town in temp dir
 		tmpTown := t.TempDir()
 		overseerDir := filepath.Join(tmpTown, "overseer")
@@ -19,7 +19,7 @@ func TestFindOrCreateTown(t *testing.T) {
 			t.Fatalf("mkdir overseer: %v", err)
 		}
 
-		os.Setenv("GT_TOWN_ROOT", tmpTown)
+		os.Setenv("MS_TOWN_ROOT", tmpTown)
 
 		result, err := findOrCreateTown()
 		if err != nil {
@@ -30,35 +30,35 @@ func TestFindOrCreateTown(t *testing.T) {
 		}
 	})
 
-	t.Run("ignores invalid GT_TOWN_ROOT", func(t *testing.T) {
-		// Set GT_TOWN_ROOT to a non-existent path
-		os.Setenv("GT_TOWN_ROOT", "/nonexistent/path/to/town")
+	t.Run("ignores invalid MS_TOWN_ROOT", func(t *testing.T) {
+		// Set MS_TOWN_ROOT to a non-existent path
+		os.Setenv("MS_TOWN_ROOT", "/nonexistent/path/to/town")
 
-		// Create a valid town at ~/gt for fallback
+		// Create a valid town at ~/ms for fallback
 		home, err := os.UserHomeDir()
 		if err != nil {
 			t.Skip("cannot get home dir")
 		}
 
-		gtPath := filepath.Join(home, "gt")
+		gtPath := filepath.Join(home, "ms")
 		overseerDir := filepath.Join(gtPath, "overseer")
 
-		// Skip if ~/gt doesn't exist (don't want to create it in user's home)
+		// Skip if ~/ms doesn't exist (don't want to create it in user's home)
 		if _, err := os.Stat(overseerDir); os.IsNotExist(err) {
-			t.Skip("~/gt/overseer does not exist, skipping fallback test")
+			t.Skip("~/ms/overseer does not exist, skipping fallback test")
 		}
 
 		result, err := findOrCreateTown()
 		if err != nil {
 			t.Fatalf("findOrCreateTown() error = %v", err)
 		}
-		// Should fall back to ~/gt since GT_TOWN_ROOT is invalid
+		// Should fall back to ~/ms since MS_TOWN_ROOT is invalid
 		if result != gtPath {
 			t.Logf("findOrCreateTown() = %q (fell back to valid town)", result)
 		}
 	})
 
-	t.Run("GT_TOWN_ROOT takes priority over fallback", func(t *testing.T) {
+	t.Run("MS_TOWN_ROOT takes priority over fallback", func(t *testing.T) {
 		// Create two valid towns
 		tmpTown1 := t.TempDir()
 		tmpTown2 := t.TempDir()
@@ -70,16 +70,16 @@ func TestFindOrCreateTown(t *testing.T) {
 			t.Fatalf("mkdir overseer2: %v", err)
 		}
 
-		// Set GT_TOWN_ROOT to tmpTown1
-		os.Setenv("GT_TOWN_ROOT", tmpTown1)
+		// Set MS_TOWN_ROOT to tmpTown1
+		os.Setenv("MS_TOWN_ROOT", tmpTown1)
 
 		result, err := findOrCreateTown()
 		if err != nil {
 			t.Fatalf("findOrCreateTown() error = %v", err)
 		}
-		// Should use GT_TOWN_ROOT, not any other valid town
+		// Should use MS_TOWN_ROOT, not any other valid town
 		if result != tmpTown1 {
-			t.Errorf("findOrCreateTown() = %q, want %q (GT_TOWN_ROOT should take priority)", result, tmpTown1)
+			t.Errorf("findOrCreateTown() = %q, want %q (MS_TOWN_ROOT should take priority)", result, tmpTown1)
 		}
 	})
 }

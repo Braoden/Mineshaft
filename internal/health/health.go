@@ -1,6 +1,6 @@
 // Package health provides reusable health check functions for the Mineshaft data plane.
 // These checks are shared between the Doctor Dog (daemon/doctor_dog.go) and the
-// gt health CLI command (cmd/health.go).
+// ms health CLI command (cmd/health.go).
 package health
 
 import (
@@ -92,7 +92,7 @@ type ZombieResult struct {
 }
 
 // FindZombieServers scans for dolt sql-server processes not on any expected port.
-// Uses lsof-based port discovery instead of pgrep/ps string matching (ZFC fix: gt-fj87).
+// Uses lsof-based port discovery instead of pgrep/ps string matching (ZFC fix: ms-fj87).
 func FindZombieServers(expectedPorts []int) ZombieResult {
 	result := ZombieResult{}
 

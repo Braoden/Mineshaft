@@ -61,7 +61,7 @@ func TestLoadBuiltinRoleDefinition(t *testing.T) {
 			name:          "dog",
 			role:          "dog",
 			wantScope:     "town",
-			wantPattern:   "gt-dog-{name}",
+			wantPattern:   "ms-dog-{name}",
 			wantPreSync:   false,
 		},
 	}
@@ -184,28 +184,28 @@ func TestExpandPattern(t *testing.T) {
 	}{
 		{
 			pattern:  "{town}",
-			town:     "/home/user/gt",
-			expected: "/home/user/gt",
+			town:     "/home/user/ms",
+			expected: "/home/user/ms",
 		},
 		{
 			pattern:  "{prefix}-witness",
 			rig:      "mineshaft",
-			prefix:   "gt",
-			expected: "gt-witness",
+			prefix:   "ms",
+			expected: "ms-witness",
 		},
 		{
 			pattern:  "{town}/{rig}/crew/{name}",
-			town:     "/home/user/gt",
+			town:     "/home/user/ms",
 			rig:      "mineshaft",
 			name:     "max",
-			expected: "/home/user/gt/mineshaft/crew/max",
+			expected: "/home/user/ms/mineshaft/crew/max",
 		},
 		{
 			pattern:  "{prefix}-{name}",
 			rig:      "mineshaft",
 			name:     "toast",
-			prefix:   "gt",
-			expected: "gt-toast",
+			prefix:   "ms",
+			expected: "ms-toast",
 		},
 	}
 

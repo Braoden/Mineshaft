@@ -6,5 +6,5 @@ set -euo pipefail
 name=$(git config --global user.name 2>/dev/null || true)
 email=$(git config --global user.email 2>/dev/null || true)
 
-[ -n "$name" ]  && git -C "$GT_WORKTREE_PATH" config user.name  "$name"
-[ -n "$email" ] && git -C "$GT_WORKTREE_PATH" config user.email "$email"
+[ -n "$name" ]  && git -C "$MS_WORKTREE_PATH" config user.name  "$name"
+[ -n "$email" ] && git -C "$MS_WORKTREE_PATH" config user.email "$email"

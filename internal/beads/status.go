@@ -3,7 +3,7 @@
 // ZFC: Hardcoded string comparisons for states and statuses are replaced by typed
 // constants with semantic metadata methods. State properties (protectsFromCleanup,
 // blocksRemoval, isTerminal) belong on the type, not scattered as conditionals.
-// See gt-4d7p.
+// See ms-4d7p.
 package beads
 
 // AgentState represents the lifecycle state of an agent bead.
@@ -23,7 +23,7 @@ const (
 	AgentStateAwaitingGate AgentState = "awaiting-gate"
 	// Supervisor lifecycle states (hq-sa8de Phase A).
 	// patrolling: mid-cycle. idle (shared): cycle done, awaiting daemon poke.
-	// paused: operator-held standby via `gt supervisor pause`.
+	// paused: operator-held standby via `ms supervisor pause`.
 	AgentStatePatrolling AgentState = "patrolling"
 	AgentStatePaused     AgentState = "paused"
 )

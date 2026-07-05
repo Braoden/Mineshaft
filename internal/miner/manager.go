@@ -43,7 +43,7 @@ const (
 	// doltStateRetries is a reduced retry count for SetAgentStateWithRetry.
 	// Agent state is a monitoring concern, not a correctness requirement (see
 	// comment on SetAgentStateWithRetry). 10 retries with exponential backoff
-	// wastes ~2 minutes on persistent failures, blocking `gt sling` for no
+	// wastes ~2 minutes on persistent failures, blocking `ms sling` for no
 	// benefit since the caller already treats errors as warn-only.
 	// 3 retries (total backoff ~3.5s) is sufficient to ride out transient
 	// Dolt hiccups without punishing interactive workflows.
@@ -88,7 +88,7 @@ func isDoltOptimisticLockError(err error) bool {
 // isDoltConfigError returns true if the error indicates a configuration or initialization
 // problem rather than a transient failure. Config errors should NOT be retried because
 // they will fail identically on every attempt, wasting ~3 minutes in the retry loop.
-// See gt-2ra: miner spawn hang when Dolt DB not initialized.
+// See ms-2ra: miner spawn hang when Dolt DB not initialized.
 func isDoltConfigError(err error) bool {
 	if err == nil {
 		return false
@@ -158,7 +158,7 @@ func NewManager(r *rig.Rig, g *git.Git, t *tmux.Tmux) *Manager {
 	// Compute town root once for deterministic use across all Manager methods.
 	// Rig path is always filepath.Join(townRoot, rigName), so filepath.Dir is correct
 	// and avoids the non-determinism of workspace.Find which can fail or resolve
-	// differently depending on call-site context (gt-lph).
+	// differently depending on call-site context (ms-lph).
 	townRoot := filepath.Dir(r.Path)
 
 	// Try to load rig settings for namepool config
@@ -183,7 +183,7 @@ func NewManager(r *rig.Rig, g *git.Git, t *tmux.Tmux) *Manager {
 		)
 	} else {
 		// Fallback: check rig-level config.json for miner_names
-		// (pool-init and gt rig config write namepool config here).
+		// (pool-init and ms rig config write namepool config here).
 		if rigCfg, rcErr := rig.LoadRigConfig(r.Path); rcErr == nil && len(rigCfg.MinerNames) > 0 {
 			pool = NewNamePoolWithConfig(r.Path, r.Name, "", rigCfg.MinerNames, 0)
 		} else {
@@ -212,7 +212,7 @@ func (m *Manager) GetNamePool() *NamePool {
 }
 
 // lockMiner acquires an exclusive file lock for a specific miner.
-// This prevents concurrent gt processes from racing on the same miner's
+// This prevents concurrent ms processes from racing on the same miner's
 // filesystem operations (Add, Remove, RepairWorktree).
 // Caller must defer fl.Unlock().
 func (m *Manager) lockMiner(name string) (*flock.Flock, error) {
@@ -229,7 +229,7 @@ func (m *Manager) lockMiner(name string) (*flock.Flock, error) {
 }
 
 // lockPool acquires an exclusive file lock for name pool operations.
-// This prevents concurrent gt processes from racing on AllocateName/ReconcilePool.
+// This prevents concurrent ms processes from racing on AllocateName/ReconcilePool.
 // Caller must defer fl.Unlock().
 func (m *Manager) lockPool() (*flock.Flock, error) {
 	lockDir := filepath.Join(m.rig.Path, ".runtime", "locks")
@@ -247,8 +247,8 @@ func (m *Manager) lockPool() (*flock.Flock, error) {
 // CheckDoltHealth verifies that the Dolt database is reachable before spawning.
 // Returns an error if Dolt exists but is unhealthy after retries.
 // Returns nil if beads is not configured (test/setup environments).
-// If read-only errors persist after retries, attempts server recovery (gt-chx92).
-// Fails fast on configuration/initialization errors (gt-2ra).
+// If read-only errors persist after retries, attempts server recovery (ms-chx92).
+// Fails fast on configuration/initialization errors (ms-2ra).
 func (m *Manager) CheckDoltHealth() error {
 	var lastErr error
 	for attempt := 1; attempt <= doltMaxRetries; attempt++ {
@@ -266,9 +266,9 @@ func (m *Manager) CheckDoltHealth() error {
 		if strings.Contains(err.Error(), "does not exist") || errors.Is(err, beads.ErrNotInstalled) {
 			return nil
 		}
-		// Fail fast on config/init errors — retrying won't help (gt-2ra, gas-tc4)
+		// Fail fast on config/init errors — retrying won't help (ms-2ra, gas-tc4)
 		if isDoltConfigError(err) {
-			return fmt.Errorf("%w: %v\n\nRecovery: run 'gt doctor --fix' to repair database configuration.\n"+
+			return fmt.Errorf("%w: %v\n\nRecovery: run 'ms doctor --fix' to repair database configuration.\n"+
 				"If that doesn't help, try: bd init --force --server", ErrDoltUnhealthy, err)
 		}
 		lastErr = err
@@ -280,7 +280,7 @@ func (m *Manager) CheckDoltHealth() error {
 	}
 
 	// If the persistent failure looks like read-only, attempt server recovery
-	// before giving up. This is the gt-level recovery path (gt-chx92).
+	// before giving up. This is the ms-level recovery path (ms-chx92).
 	if lastErr != nil && doltserver.IsReadOnlyError(lastErr.Error()) {
 		if recoverErr := doltserver.RecoverReadOnly(m.townRoot); recoverErr == nil {
 			// Recovery succeeded — verify health once more
@@ -291,7 +291,7 @@ func (m *Manager) CheckDoltHealth() error {
 		}
 	}
 
-	return fmt.Errorf("%w: %v\n\nRecovery: run 'gt doctor --fix' to diagnose and repair Dolt configuration", ErrDoltUnhealthy, lastErr)
+	return fmt.Errorf("%w: %v\n\nRecovery: run 'ms doctor --fix' to diagnose and repair Dolt configuration", ErrDoltUnhealthy, lastErr)
 }
 
 // CheckDoltServerCapacity verifies the Dolt server has capacity for new connections.
@@ -299,18 +299,18 @@ func (m *Manager) CheckDoltHealth() error {
 // spawning another miner (which will make many bd calls) could overwhelm it.
 // Returns nil if capacity is available, ErrDoltAtCapacity if the server is overloaded.
 // Fails closed if the check errors — a server that can't report capacity is likely
-// already under stress (gt-lfc0d).
+// already under stress (ms-lfc0d).
 func (m *Manager) CheckDoltServerCapacity() error {
-	// NOTE: Prior to gt-lph, this method called workspace.Find to locate townRoot,
+	// NOTE: Prior to ms-lph, this method called workspace.Find to locate townRoot,
 	// which could fail and silently skip the capacity check (return nil). Now that
 	// m.townRoot is computed deterministically at Manager construction, errors from
 	// HasConnectionCapacity always propagate — this is intentional. A server that
 	// can't report capacity is likely under stress, and silently passing was a
-	// latent bug that allowed connection storms under load (gt-lfc0d).
+	// latent bug that allowed connection storms under load (ms-lfc0d).
 	hasCapacity, active, err := doltserver.HasConnectionCapacity(m.townRoot)
 	if err != nil {
 		// Fail closed: if we can't check capacity, the server may be overloaded.
-		// Proceeding optimistically caused read-only mode under load (gt-lfc0d).
+		// Proceeding optimistically caused read-only mode under load (ms-lfc0d).
 		return fmt.Errorf("%w: capacity check failed: %v", ErrDoltAtCapacity, err)
 	}
 
@@ -326,7 +326,7 @@ func (m *Manager) CheckDoltServerCapacity() error {
 // and fails hard — a miner without an agent bead is untrackable.
 // If beads is not configured (no .beads directory), warns and returns nil
 // since this indicates a test/setup environment, not a Dolt failure.
-// Fails fast on configuration/initialization errors (gt-2ra) — these are not
+// Fails fast on configuration/initialization errors (ms-2ra) — these are not
 // transient and retrying them wastes ~3 minutes for identical failures.
 func (m *Manager) createAgentBeadWithRetry(agentID string, fields *beads.AgentFields) error {
 	var lastErr error
@@ -341,7 +341,7 @@ func (m *Manager) createAgentBeadWithRetry(agentID string, fields *beads.AgentFi
 			style.PrintWarning("could not create agent bead (beads not configured): %v", err)
 			return nil
 		}
-		// Fail fast on config/init errors — retrying won't help (gt-2ra)
+		// Fail fast on config/init errors — retrying won't help (ms-2ra)
 		if isDoltConfigError(err) {
 			return fmt.Errorf("agent bead creation failed (DB not initialized — not retrying): %w", err)
 		}
@@ -367,7 +367,7 @@ func (m *Manager) resetAgentBeadForReuse(agentID, reason string) error {
 // rather than fail — e.g., in StartSession where the tmux session is already
 // running and failing hard would orphan it. Agent state is a monitoring
 // concern, not a correctness requirement.
-// Fails fast on configuration/initialization errors (gt-2ra).
+// Fails fast on configuration/initialization errors (ms-2ra).
 func (m *Manager) SetAgentStateWithRetry(name string, state string) error {
 	var lastErr error
 	for attempt := 1; attempt <= doltStateRetries; attempt++ {
@@ -376,7 +376,7 @@ func (m *Manager) SetAgentStateWithRetry(name string, state string) error {
 			return nil
 		}
 		lastErr = err
-		// Fail fast on config/init errors — retrying won't help (gt-2ra)
+		// Fail fast on config/init errors — retrying won't help (ms-2ra)
 		if isDoltConfigError(err) {
 			return fmt.Errorf("setting agent state failed (DB not initialized — not retrying): %w", err)
 		}
@@ -396,10 +396,10 @@ func (m *Manager) assigneeID(name string) string {
 }
 
 // agentBeadID returns the agent bead ID for a miner.
-// Format: "<prefix>-<rig>-miner-<name>" (e.g., "gt-mineshaft-miner-Toast", "bd-beads-miner-obsidian")
+// Format: "<prefix>-<rig>-miner-<name>" (e.g., "ms-mineshaft-miner-Toast", "bd-beads-miner-obsidian")
 // The prefix is looked up from routes.jsonl to support rigs with custom prefixes.
 // Uses the town root computed at Manager construction for deterministic IDs
-// regardless of call site (gt-lph).
+// regardless of call site (ms-lph).
 func (m *Manager) agentBeadID(name string) string {
 	prefix := beads.GetPrefixForRig(m.townRoot, m.rig.Name)
 	return beads.MinerBeadIDWithPrefix(prefix, m.rig.Name, name)
@@ -532,7 +532,7 @@ func (m *Manager) exists(name string) bool {
 // AddOptions configures miner creation.
 type AddOptions struct {
 	HookBead   string // Bead ID to set as hook_bead at spawn time (atomic assignment)
-	BaseBranch string // Override base branch for worktree (e.g., "origin/integration/gt-epic")
+	BaseBranch string // Override base branch for worktree (e.g., "origin/integration/ms-epic")
 	// ResumeBranch reuses an existing branch (typically a PR head) for the miner
 	// worktree instead of creating a fresh miner/<name>/<bead>@<ts> branch (gh#3602).
 	// When set, the miner's branch IS this branch — pushes go back to the same ref,
@@ -592,7 +592,7 @@ func (m *Manager) buildBranchName(name, issue string) string {
 
 	// {issue} - issue ID without prefix
 	if issue != "" {
-		// Strip prefix (e.g., "gt-123" -> "123")
+		// Strip prefix (e.g., "ms-123" -> "123")
 		if idx := strings.Index(issue, "-"); idx >= 0 {
 			vars["{issue}"] = issue[idx+1:]
 		} else {
@@ -699,7 +699,7 @@ func (m *Manager) AllocateAndAdd(opts AddOptions) (string, *Miner, error) {
 		return "", nil, fmt.Errorf("creating miner dir: %w", err)
 	}
 
-	// Kill any lingering tmux session for this name (gt-pqf9x)
+	// Kill any lingering tmux session for this name (ms-pqf9x)
 	if m.tmux != nil {
 		sessionName := session.MinerSessionName(session.PrefixFor(m.rig.Name), name)
 		if alive, _ := m.tmux.HasSession(sessionName); alive {
@@ -801,7 +801,7 @@ func (m *Manager) addWithOptionsLocked(name string, opts AddOptions, minerDir st
 				"  - Branch doesn't exist on the remote (create it there first)\n"+
 				"  - default_branch is misconfigured (check %s/config.json)\n"+
 				"  - Bare repo fetch failed (try: git -C %s fetch origin)\n\n"+
-				"Run 'gt doctor' to diagnose.",
+				"Run 'ms doctor' to diagnose.",
 				startPoint, m.rig.Path, filepath.Join(m.rig.Path, ".repo.git"))
 		}
 
@@ -812,7 +812,7 @@ func (m *Manager) addWithOptionsLocked(name string, opts AddOptions, minerDir st
 		worktreeCreated = true
 	}
 
-	// Provision CLAUDE.md with gt done instructions (same as AddWithOptions path).
+	// Provision CLAUDE.md with ms done instructions (same as AddWithOptions path).
 	lockedRigName := filepath.Base(m.rig.Path)
 	if _, err := templates.CreateMinerCLAUDEmd(clonePath, lockedRigName, name); err != nil {
 		style.PrintWarning("could not provision miner CLAUDE.md: %v", err)
@@ -927,7 +927,7 @@ func (m *Manager) AddWithOptions(name string, opts AddOptions) (_ *Miner, retErr
 	// AddWithOptions creates several resources in sequence (directory, worktree,
 	// agent bead); on failure, all created resources must be cleaned up to prevent
 	// leaking names, orphaning beads, or leaving stale worktree registrations.
-	// See: gt-2vs22
+	// See: ms-2vs22
 	var worktreeCreated bool
 	cleanupOnError := func() {
 		// Best-effort reset of agent bead (may have been partially created
@@ -1002,7 +1002,7 @@ func (m *Manager) AddWithOptions(name string, opts AddOptions) (_ *Miner, retErr
 				"  - Branch doesn't exist on the remote (create it there first)\n"+
 				"  - default_branch is misconfigured (check %s/config.json)\n"+
 				"  - Bare repo fetch failed (try: git -C %s fetch origin)\n\n"+
-				"Run 'gt doctor' to diagnose.",
+				"Run 'ms doctor' to diagnose.",
 				startPoint, m.rig.Path, filepath.Join(m.rig.Path, ".repo.git"))
 		}
 
@@ -1016,19 +1016,19 @@ func (m *Manager) AddWithOptions(name string, opts AddOptions) (_ *Miner, retErr
 		worktreeCreated = true
 	}
 
-	// Provision CLAUDE.md with gt done instructions and lifecycle context.
+	// Provision CLAUDE.md with ms done instructions and lifecycle context.
 	// This is the primary mechanism for miners to learn about completion —
 	// the file persists across compaction and session restarts (unlike ephemeral
-	// gt prime output which scrolls past and gets lost).
+	// ms prime output which scrolls past and gets lost).
 	rigName := filepath.Base(m.rig.Path)
 	if _, err := templates.CreateMinerCLAUDEmd(clonePath, rigName, name); err != nil {
-		// Non-fatal — miner can still learn via gt prime hook
+		// Non-fatal — miner can still learn via ms prime hook
 		style.PrintWarning("could not provision miner CLAUDE.md: %v", err)
 	}
 
 	// Set up shared beads: miner uses rig's .beads via redirect file.
 	// This eliminates git sync overhead - all miners share one database.
-	// Fatal: without shared beads, gt done writes MR beads to a local .beads/
+	// Fatal: without shared beads, ms done writes MR beads to a local .beads/
 	// that the Refinery never reads, causing the merge queue to stay empty.
 	if err := m.setupSharedBeads(clonePath); err != nil {
 		cleanupOnError()
@@ -1076,14 +1076,14 @@ func (m *Manager) AddWithOptions(name string, opts AddOptions) (_ *Miner, retErr
 		return nil, err
 	}
 
-	// NOTE: Slash commands (.claude/commands/) are provisioned at town level by gt install.
+	// NOTE: Slash commands (.claude/commands/) are provisioned at town level by ms install.
 	// All agents inherit them via Claude's directory traversal - no per-workspace copies needed.
 
 	// Create or reopen agent bead for ZFC compliance (self-report state).
 	// State starts as "spawning" - will be updated to "working" when Claude starts.
 	// HookBead is set atomically at creation time if provided (avoids cross-beads routing issues).
 	// Uses CreateOrReopenAgentBead to handle re-spawning with same name (GH #332).
-	// Retries with backoff — a miner without an agent bead is untrackable (gt-94llt7).
+	// Retries with backoff — a miner without an agent bead is untrackable (ms-94llt7).
 	agentID := m.agentBeadID(name)
 	if err = m.createAgentBeadWithRetry(agentID, &beads.AgentFields{
 		RoleType:   "miner",
@@ -1193,7 +1193,7 @@ func (m *Manager) RemoveWithOptions(name string, force, nuclear, selfNuke bool) 
 	// the agent bead first (clearing fields, setting agent_state="nuked"),
 	// concurrent slings see a clean bead and CreateOrReopenAgentBead can
 	// simply update it without needing close/reopen (which fails on Dolt).
-	// See gt-14b8o: close/reopen cycle breaks on Dolt backend.
+	// See ms-14b8o: close/reopen cycle breaks on Dolt backend.
 	agentID := m.agentBeadID(name)
 	if err := m.resetAgentBeadForReuse(agentID, "miner removed"); err != nil {
 		// Only log if not "not found" - it's ok if it doesn't exist
@@ -1202,14 +1202,14 @@ func (m *Manager) RemoveWithOptions(name string, force, nuclear, selfNuke bool) 
 		}
 	}
 
-	// Unassign any work beads still pointing at this miner (gt-e4u1).
+	// Unassign any work beads still pointing at this miner (ms-e4u1).
 	// Without this, beads remain assigned to a ghost miner (status in_progress,
 	// assignee set) after removal, permanently stuck with no one working on them.
 	m.unassignWorkBeads(name)
 
 	// Check if user's shell is cd'd into the worktree (prevents broken shell)
 	// This check runs unless selfNuke=true (miner deleting its own worktree).
-	// When a miner calls `gt done`, it's inside its worktree by design - the session
+	// When a miner calls `ms done`, it's inside its worktree by design - the session
 	// will be killed immediately after, so breaking the shell is expected and harmless.
 	// See: https://github.com/steveyegge/mineshaft/issues/942
 	if !selfNuke {
@@ -1226,7 +1226,7 @@ func (m *Manager) RemoveWithOptions(name string, force, nuclear, selfNuke bool) 
 			}
 
 			if strings.HasPrefix(cwdAbs, cloneAbs) || strings.HasPrefix(cwdAbs, minerAbs) {
-				return fmt.Errorf("%w: your shell is in %s\n\nPlease cd elsewhere first, then retry:\n  cd ~/gt\n  gt miner nuke %s/%s --force",
+				return fmt.Errorf("%w: your shell is in %s\n\nPlease cd elsewhere first, then retry:\n  cd ~/ms\n  ms miner nuke %s/%s --force",
 					ErrShellInWorktree, cwd, m.rig.Name, name)
 			}
 		}
@@ -1277,7 +1277,7 @@ func (m *Manager) RemoveWithOptions(name string, force, nuclear, selfNuke bool) 
 			return fmt.Errorf("removing clone path: %w", removeErr)
 		}
 	} else {
-		// GT-1L3MY9: git worktree remove may leave untracked directories behind.
+		// MS-1L3MY9: git worktree remove may leave untracked directories behind.
 		// Clean up any leftover files (overlay files, .beads/, setup hook outputs, etc.)
 		// Use RemoveAll to handle non-empty directories with untracked files.
 		_ = os.RemoveAll(clonePath)
@@ -1286,7 +1286,7 @@ func (m *Manager) RemoveWithOptions(name string, force, nuclear, selfNuke bool) 
 	// Also remove the parent miner directory
 	// (for new structure: miners/<name>/ contains only miners/<name>/<rigname>/)
 	if minerDir != clonePath {
-		// GT-1L3MY9: Clean up any orphaned files at miner level.
+		// MS-1L3MY9: Clean up any orphaned files at miner level.
 		// Use RemoveAll to handle non-empty directories with leftover files.
 		_ = os.RemoveAll(minerDir)
 	}
@@ -1368,8 +1368,8 @@ func forceRemoveDir(dir string) error {
 // AllocateName allocates a name from the name pool.
 // Returns a themed pooled name (furiosa, nux, etc.) if available,
 // otherwise returns an overflow name (just a number like "51").
-// The rig prefix is added by SessionName to create full session names like "gt-<rig>-51".
-// After allocation, kills any lingering tmux session for the name (gt-pqf9x)
+// The rig prefix is added by SessionName to create full session names like "ms-<rig>-51".
+// After allocation, kills any lingering tmux session for the name (ms-pqf9x)
 // to prevent "session already running" errors when reusing names from dead miners.
 func (m *Manager) AllocateName() (string, error) {
 	// Acquire pool lock to prevent concurrent allocations from racing
@@ -1407,7 +1407,7 @@ func (m *Manager) AllocateName() (string, error) {
 		return "", fmt.Errorf("writing reservation marker: %w", err)
 	}
 
-	// Kill any lingering tmux session for this name (gt-pqf9x).
+	// Kill any lingering tmux session for this name (ms-pqf9x).
 	// ReconcilePool kills sessions for names without directories, but a name
 	// can be allocated after its directory was cleaned up while the tmux session
 	// lingers (race between cleanup and allocation). This extra check ensures
@@ -1530,7 +1530,7 @@ func (m *Manager) RepairWorktreeWithOptions(name string, force bool, opts AddOpt
 				"  - Branch doesn't exist on the remote (create it there first)\n"+
 				"  - default_branch is misconfigured (check %s/config.json)\n"+
 				"  - Bare repo fetch failed (try: git -C %s fetch origin)\n\n"+
-				"Run 'gt doctor' to diagnose.",
+				"Run 'ms doctor' to diagnose.",
 				startPoint, m.rig.Path, filepath.Join(m.rig.Path, ".repo.git"))
 		}
 
@@ -1565,7 +1565,7 @@ func (m *Manager) RepairWorktreeWithOptions(name string, force bool, opts AddOpt
 
 	// Reset agent bead AFTER old worktree is confirmed removed.
 	// NOTE: We use ResetAgentBeadForReuse to avoid the close/reopen cycle
-	// that fails on Dolt backend (gt-14b8o).
+	// that fails on Dolt backend (ms-14b8o).
 	agentID := m.agentBeadID(name)
 	if err := m.resetAgentBeadForReuse(agentID, "miner repair"); err != nil {
 		if !errors.Is(err, beads.ErrNotFound) {
@@ -1620,7 +1620,7 @@ func (m *Manager) RepairWorktreeWithOptions(name string, force bool, opts AddOpt
 	// Create or reopen agent bead for ZFC compliance
 	// HookBead is set atomically at recreation time if provided.
 	// Uses CreateOrReopenAgentBead to handle re-spawning with same name (GH #332).
-	// Retries with backoff — a miner without an agent bead is untrackable (gt-94llt7).
+	// Retries with backoff — a miner without an agent bead is untrackable (ms-94llt7).
 	if err = m.createAgentBeadWithRetry(agentID, &beads.AgentFields{
 		RoleType:   "miner",
 		Rig:        m.rig.Name,
@@ -1769,9 +1769,9 @@ func (m *Manager) ReuseIdleMiner(name string, opts AddOptions) (*Miner, error) {
 	_ = minerGit.CleanForce()
 
 	// Re-provision CLAUDE.md after reset — git reset --hard restores the tracked
-	// version (which lacks gt done instructions), and git clean -f removes any
+	// version (which lacks ms done instructions), and git clean -f removes any
 	// untracked CLAUDE.md we previously wrote. Without this, reused miners
-	// lose all lifecycle instructions and never call gt done.
+	// lose all lifecycle instructions and never call ms done.
 	reuseRigName := filepath.Base(m.rig.Path)
 	if _, err := templates.CreateMinerCLAUDEmd(clonePath, reuseRigName, name); err != nil {
 		style.PrintWarning("could not re-provision miner CLAUDE.md on reuse: %v", err)
@@ -1829,9 +1829,9 @@ func (m *Manager) ReuseIdleMiner(name string, opts AddOptions) (*Miner, error) {
 		return nil, fmt.Errorf("agent bead required for miner tracking: %w", err)
 	}
 
-	// Sync agent_state column to "spawning" (gt-ulom).
+	// Sync agent_state column to "spawning" (ms-ulom).
 	// createAgentBeadWithRetry sets agent_state in the description only.
-	// The column stays stale (e.g., "idle" from previous gt done) until
+	// The column stays stale (e.g., "idle" from previous ms done) until
 	// StartSession sets it to "working". Without this, the column and
 	// description diverge, causing dashboards to show incorrect state.
 	// Agent beads live in town DB — bypass prefix routing.
@@ -1977,18 +1977,18 @@ func (m *Manager) ReconcilePoolWith(namesWithDirs, namesWithSessions []string) {
 
 // isSessionProcessDead checks if a miner session's agent has exited.
 //
-// Uses heartbeat-based liveness detection (gt-qjtq): checks whether the session's
+// Uses heartbeat-based liveness detection (ms-qjtq): checks whether the session's
 // heartbeat file has been updated recently. Miner sessions touch their heartbeat
-// via gt commands (gt prime, gt hook, bd show, etc.) which run frequently during
+// via ms commands (ms prime, ms hook, bd show, etc.) which run frequently during
 // normal operation. A stale heartbeat indicates the agent is no longer active.
 //
 // Falls back to PID signal probing when no heartbeat file exists (backward
 // compatibility for sessions started before heartbeat support was added).
 //
 // Returns true only when we can confirm the process is dead, not on transient
-// failures (gt-kncti: permission denied false positives).
+// failures (ms-kncti: permission denied false positives).
 func isSessionProcessDead(t *tmux.Tmux, sessionName string, townRoot string) bool {
-	// Primary: heartbeat-based liveness check (gt-qjtq ZFC fix).
+	// Primary: heartbeat-based liveness check (ms-qjtq ZFC fix).
 	if townRoot != "" {
 		stale, exists := IsSessionHeartbeatStale(townRoot, sessionName)
 		if exists {
@@ -2025,7 +2025,7 @@ func isSessionProcessDead(t *tmux.Tmux, sessionName string, townRoot string) boo
 }
 
 // pendingMaxAge is how long a .pending reservation marker may exist before
-// it is considered stale. gt sling completes in seconds, so 5 minutes is
+// it is considered stale. ms sling completes in seconds, so 5 minutes is
 // a conservative bound that avoids false positives on slow machines.
 // Configurable via operational.miner.pending_max_age in settings/config.json.
 const pendingMaxAge = 5 * time.Minute
@@ -2035,7 +2035,7 @@ const pendingMaxAge = 5 * time.Minute
 // - Empty miner directories without .git
 // - Directories with invalid/corrupt .git files
 // - Stale git worktree registrations
-// - Stale .pending reservation markers (gt sling crashed before AddWithOptions)
+// - Stale .pending reservation markers (ms sling crashed before AddWithOptions)
 func (m *Manager) cleanupOrphanMinerState() {
 	minersDir := filepath.Join(m.rig.Path, "miners")
 
@@ -2046,7 +2046,7 @@ func (m *Manager) cleanupOrphanMinerState() {
 
 	for _, entry := range entries {
 		// Clean up stale allocation reservation markers.
-		// A .pending file older than pendingMaxAge means gt sling crashed after
+		// A .pending file older than pendingMaxAge means ms sling crashed after
 		// AllocateName but before AddWithOptions created the directory. Remove it
 		// so the name can be reallocated on the next reconcile.
 		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".pending") {
@@ -2144,8 +2144,8 @@ func (m *Manager) List() ([]*Miner, error) {
 
 // FindIdleMiner returns the first idle miner in the rig, or nil if none.
 // Idle miners have completed their work and have a preserved sandbox (worktree)
-// that can be reused by gt sling without creating a new worktree.
-// Persistent miner model (gt-4ac).
+// that can be reused by ms sling without creating a new worktree.
+// Persistent miner model (ms-4ac).
 func (m *Manager) FindIdleMiner() (*Miner, error) {
 	miners, err := m.List()
 	if err != nil {
@@ -2439,7 +2439,7 @@ func (m *Manager) Get(name string) (*Miner, error) {
 // - StateWorking: issue status set to in_progress
 // SetAgentState updates the agent bead's agent_state field.
 // This is called after a miner session successfully starts to transition
-// from "spawning" to "working", making gt miner identity show accurate status.
+// from "spawning" to "working", making ms miner identity show accurate status.
 // Valid states: "spawning", "working", "done", "stuck", "idle"
 func (m *Manager) SetAgentState(name string, state string) error {
 	agentID := m.agentBeadID(name)
@@ -2468,8 +2468,8 @@ func (m *Manager) SetState(name string, state State) error {
 	case StateWorking:
 		// Set issue to in_progress if there is one.
 		// Skip if status is "hooked" — sling sets this, and changing it here causes
-		// merge conflicts when gt done runs. The miner should claim work via gt prime,
-		// not have sling change status during spawn (gt-zecmc).
+		// merge conflicts when ms done runs. The miner should claim work via ms prime,
+		// not have sling change status during spawn (ms-zecmc).
 		if issue != nil && issue.Status != beads.StatusHooked {
 			status := "in_progress"
 			if err := m.beads.Update(issue.ID, beads.UpdateOptions{Status: &status}); err != nil {
@@ -2549,7 +2549,7 @@ func (m *Manager) ClearIssue(name string) error {
 
 // unassignWorkBeads finds all active work beads assigned to a miner and resets them
 // to status=open with an empty assignee, so they can be picked up by another miner.
-// This must be called during miner removal to prevent orphaned beads (gt-e4u1).
+// This must be called during miner removal to prevent orphaned beads (ms-e4u1).
 // Agent beads are skipped (handled separately by ResetAgentBeadForReuse).
 // Errors are logged as warnings but do not block removal.
 func (m *Manager) unassignWorkBeads(name string) {
@@ -2624,7 +2624,7 @@ func (m *Manager) loadFromBeads(name string) (*Miner, error) {
 	// Cross-check tmux session liveness once for use in state derivation below.
 	// When a tmux session has died (e.g., due to disk space exhaustion or OOM),
 	// beads may still report the miner as "working" because the bead state was
-	// never updated. Without this check, `gt miner list` shows zombies as working.
+	// never updated. Without this check, `ms miner list` shows zombies as working.
 	// See: disk-space-resilience — all 5 miners appeared "working" after sessions died.
 	//
 	// When tmux is nil (e.g., no tmux available or in tests), we cannot determine
@@ -2814,8 +2814,8 @@ func (m *Manager) runSetupCommand(worktreePath string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Env = append(os.Environ(),
-		fmt.Sprintf("GT_WORKTREE_PATH=%s", worktreePath),
-		fmt.Sprintf("GT_RIG_PATH=%s", m.rig.Path),
+		fmt.Sprintf("MS_WORKTREE_PATH=%s", worktreePath),
+		fmt.Sprintf("MS_RIG_PATH=%s", m.rig.Path),
 	)
 
 	fmt.Println("Running setup_command...")
@@ -2933,7 +2933,7 @@ func (m *Manager) DetectStaleMiners(threshold int) ([]*StalenessInfo, error) {
 		}
 
 		// Check for active tmux session
-		// Session name follows pattern: gt-<rig>-<miner>
+		// Session name follows pattern: ms-<rig>-<miner>
 		sessionName := session.MinerSessionName(session.PrefixFor(m.rig.Name), p.Name)
 		info.HasActiveSession = checkTmuxSession(sessionName)
 
@@ -2982,7 +2982,7 @@ func countCommitsBehind(g *git.Git, defaultBranch string) int {
 }
 
 // assessStaleness determines if a miner should be cleaned up.
-// Per gt-zecmc: uses tmux state (HasActiveSession) rather than agent_state
+// Per ms-zecmc: uses tmux state (HasActiveSession) rather than agent_state
 // since observable states (running, done, idle) are no longer recorded in beads.
 func assessStaleness(info *StalenessInfo, threshold int) (bool, string) {
 	// Never clean up if there's uncommitted work
@@ -2999,7 +2999,7 @@ func assessStaleness(info *StalenessInfo, threshold int) (bool, string) {
 	// Check for reasons to keep it:
 
 	// Check for non-observable states that indicate intentional pause
-	// (stuck, awaiting-gate are still stored in beads per gt-zecmc)
+	// (stuck, awaiting-gate are still stored in beads per ms-zecmc)
 	if beads.AgentState(info.AgentState).ProtectsFromCleanup() {
 		return false, fmt.Sprintf("agent_state=%s (intentional pause)", info.AgentState)
 	}

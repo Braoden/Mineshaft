@@ -73,7 +73,7 @@ func (m *Mailbox) storeListFromDir() ([]*Message, error) {
 	// avoiding a redundant second round-trip per identity variant.
 	for _, id := range identities {
 		filter := beadsdk.IssueFilter{
-			Labels:   []string{"gt:message"},
+			Labels:   []string{"ms:message"},
 			Assignee: &id,
 			Limit:    0, // No limit
 		}

@@ -5,11 +5,11 @@
 //
 // Enabled by setting at least one of:
 //
-//	GT_OTEL_METRICS_URL  (default: http://localhost:8428/opentelemetry/api/v1/push)
-//	GT_OTEL_LOGS_URL     (default: http://localhost:9428/insert/opentelemetry/v1/logs)
+//	MS_OTEL_METRICS_URL  (default: http://localhost:8428/opentelemetry/api/v1/push)
+//	MS_OTEL_LOGS_URL     (default: http://localhost:9428/insert/opentelemetry/v1/logs)
 //
 // Telemetry is best-effort: initialization errors are returned but do not
-// affect normal gt operation — callers should log and continue.
+// affect normal ms operation — callers should log and continue.
 //
 // Init is idempotent: multiple calls return the same provider.
 package telemetry
@@ -33,10 +33,10 @@ import (
 
 const (
 	// EnvMetricsURL is the env var for the VictoriaMetrics OTLP endpoint.
-	EnvMetricsURL = "GT_OTEL_METRICS_URL"
+	EnvMetricsURL = "MS_OTEL_METRICS_URL"
 
 	// EnvLogsURL is the env var for the VictoriaLogs OTLP endpoint.
-	EnvLogsURL = "GT_OTEL_LOGS_URL"
+	EnvLogsURL = "MS_OTEL_LOGS_URL"
 
 	// DefaultMetricsURL is VictoriaMetrics' OTLP push endpoint.
 	DefaultMetricsURL = "http://localhost:8428/opentelemetry/api/v1/push"
@@ -86,7 +86,7 @@ func (p *Provider) Shutdown(ctx context.Context) error {
 }
 
 // IsActive reports whether OTel telemetry is configured in the current process.
-// Returns true when at least one of GT_OTEL_METRICS_URL or GT_OTEL_LOGS_URL is set.
+// Returns true when at least one of MS_OTEL_METRICS_URL or MS_OTEL_LOGS_URL is set.
 // Used to gate side-effectful operations (env var injection, tmux session updates)
 // that only make sense when telemetry is collecting data.
 func IsActive() bool {
@@ -98,11 +98,11 @@ func IsActive() bool {
 // Idempotent: subsequent calls (same or different arguments) return the
 // provider created on the first call. The serviceName and serviceVersion
 // passed to later calls are silently ignored — the first caller wins.
-// In practice each GT process calls Init exactly once, so this is not an
+// In practice each MS process calls Init exactly once, so this is not an
 // issue. If multiple packages call Init, ensure the entry-point (main or
 // cobra root) calls it first with the correct service name.
 //
-// Returns (nil, nil) if neither GT_OTEL_METRICS_URL nor GT_OTEL_LOGS_URL is set,
+// Returns (nil, nil) if neither MS_OTEL_METRICS_URL nor MS_OTEL_LOGS_URL is set,
 // so that telemetry is strictly opt-in. Set either variable to activate.
 //
 // When active, defaults are used for any unset endpoint:

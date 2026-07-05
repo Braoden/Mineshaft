@@ -31,9 +31,9 @@ Hook types:
   WorktreeRemove   - Runs when agent worktree isolation removes a worktree
 
 Examples:
-  gt hooks scan              # List all hooks in workspace
-  gt hooks scan --verbose    # Show hook commands
-  gt hooks scan --json       # Output as JSON`,
+  ms hooks scan              # List all hooks in workspace
+  ms hooks scan --verbose    # Show hook commands
+  ms hooks scan --json       # Output as JSON`,
 	RunE: runHooksScan,
 }
 

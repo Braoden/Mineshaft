@@ -250,13 +250,13 @@ func TestContainsPathBoundary(t *testing.T) {
 		path string
 		want bool
 	}{
-		{name: "empty path", line: "/tmp/gt", path: "", want: false},
-		{name: "exact at end", line: "--data-dir /tmp/gt", path: "/tmp/gt", want: true},
-		{name: "path separator", line: "--data-dir /tmp/gt/.dolt-data", path: "/tmp/gt", want: true},
-		{name: "space boundary", line: "/tmp/gt --port 3307", path: "/tmp/gt", want: true},
-		{name: "tab boundary", line: "/tmp/gt\t--port 3307", path: "/tmp/gt", want: true},
-		{name: "reject sibling prefix", line: "/tmp/gt-old --port 3307", path: "/tmp/gt", want: false},
-		{name: "later match after rejected prefix", line: "/tmp/gt-old /tmp/gt/.beads", path: "/tmp/gt", want: true},
+		{name: "empty path", line: "/tmp/ms", path: "", want: false},
+		{name: "exact at end", line: "--data-dir /tmp/ms", path: "/tmp/ms", want: true},
+		{name: "path separator", line: "--data-dir /tmp/ms/.dolt-data", path: "/tmp/ms", want: true},
+		{name: "space boundary", line: "/tmp/ms --port 3307", path: "/tmp/ms", want: true},
+		{name: "tab boundary", line: "/tmp/ms\t--port 3307", path: "/tmp/ms", want: true},
+		{name: "reject sibling prefix", line: "/tmp/ms-old --port 3307", path: "/tmp/ms", want: false},
+		{name: "later match after rejected prefix", line: "/tmp/ms-old /tmp/ms/.beads", path: "/tmp/ms", want: true},
 	}
 
 	for _, tt := range tests {
@@ -270,14 +270,14 @@ func TestContainsPathBoundary(t *testing.T) {
 }
 
 func TestFindIdleMonitorProcessesFromPS(t *testing.T) {
-	const townRoot = "/tmp/gt"
+	const townRoot = "/tmp/ms"
 	const port = 3307
 	pidLines := []struct {
 		line string
 		want []int
 	}{
-		{line: "101 bd dolt idle-monitor --data-dir /tmp/gt/.beads/dolt", want: []int{101}},
-		{line: "102 bd dolt idle-monitor --data-dir /tmp/gt-old/.beads/dolt", want: nil},
+		{line: "101 bd dolt idle-monitor --data-dir /tmp/ms/.beads/dolt", want: []int{101}},
+		{line: "102 bd dolt idle-monitor --data-dir /tmp/ms-old/.beads/dolt", want: nil},
 		{line: "103 bd dolt idle-monitor --port 3307", want: []int{103}},
 		{line: "104 bd dolt idle-monitor -p 3307", want: []int{104}},
 		{line: "105 bd dolt idle-monitor --port=3307", want: []int{105}},
@@ -305,15 +305,15 @@ func TestFindIdleMonitorProcessesFromPS(t *testing.T) {
 }
 
 func TestFindOwnedDoltTestServerCandidatesFromPS(t *testing.T) {
-	townRoot := "/tmp/gt"
-	dataDir := "/tmp/gt/.dolt-data"
+	townRoot := "/tmp/ms"
+	dataDir := "/tmp/ms/.dolt-data"
 	output := strings.Join([]string{
-		"101 dolt sql-server --config /tmp/gt/.dolt-data/config.yaml",
-		"102 dolt sql-server --config /tmp/gt-old/.dolt-data/config.yaml",
-		"103 grep dolt sql-server /tmp/gt/.dolt-data/config.yaml",
-		"104 dolt sql-server --data-dir /tmp/gt/.dolt-data",
-		"105 /usr/bin/dolt sql-server --config=/tmp/gt/.dolt-data/config.yaml",
-		"106 dolt status /tmp/gt/.dolt-data",
+		"101 dolt sql-server --config /tmp/ms/.dolt-data/config.yaml",
+		"102 dolt sql-server --config /tmp/ms-old/.dolt-data/config.yaml",
+		"103 grep dolt sql-server /tmp/ms/.dolt-data/config.yaml",
+		"104 dolt sql-server --data-dir /tmp/ms/.dolt-data",
+		"105 /usr/bin/dolt sql-server --config=/tmp/ms/.dolt-data/config.yaml",
+		"106 dolt status /tmp/ms/.dolt-data",
 		"107 dolt sql-server --port 3307",
 	}, "\n")
 
@@ -342,7 +342,7 @@ func TestReapOwnedTestServersIgnoresNonDoltPID(t *testing.T) {
 		t.Fatal(err)
 	}
 	cmd := exec.Command(os.Args[0], "-test.run=^TestReapOwnedTestServersHelperProcess$")
-	cmd.Env = append(os.Environ(), "GT_DOLT_REAP_HELPER=1")
+	cmd.Env = append(os.Environ(), "MS_DOLT_REAP_HELPER=1")
 	if err := cmd.Start(); err != nil {
 		t.Fatalf("start helper process: %v", err)
 	}
@@ -369,7 +369,7 @@ func TestReapOwnedTestServersIgnoresNonDoltPID(t *testing.T) {
 }
 
 func TestReapOwnedTestServersHelperProcess(t *testing.T) {
-	if os.Getenv("GT_DOLT_REAP_HELPER") != "1" {
+	if os.Getenv("MS_DOLT_REAP_HELPER") != "1" {
 		return
 	}
 	time.Sleep(30 * time.Second)
@@ -382,7 +382,7 @@ func TestIsDoltSQLServerArgs(t *testing.T) {
 		args []string
 		want bool
 	}{
-		{name: "plain dolt", args: []string{"dolt", "sql-server", "--config", "/tmp/gt/.dolt-data/config.yaml"}, want: true},
+		{name: "plain dolt", args: []string{"dolt", "sql-server", "--config", "/tmp/ms/.dolt-data/config.yaml"}, want: true},
 		{name: "absolute dolt", args: []string{"/usr/bin/dolt", "sql-server"}, want: true},
 		{name: "not sql server", args: []string{"dolt", "status"}, want: false},
 		{name: "grep", args: []string{"grep", "dolt", "sql-server"}, want: false},
@@ -624,11 +624,11 @@ func TestFindLocalDoltDB(t *testing.T) {
 			t.Fatal(err)
 		}
 		// Create the real database
-		if err := os.MkdirAll(filepath.Join(doltParent, "beads_gt", ".dolt"), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Join(doltParent, "beads_ms", ".dolt"), 0755); err != nil {
 			t.Fatal(err)
 		}
 		result := findLocalDoltDB(beadsDir)
-		expected := filepath.Join(doltParent, "beads_gt")
+		expected := filepath.Join(doltParent, "beads_ms")
 		if result != expected {
 			t.Errorf("got %q, want %q", result, expected)
 		}
@@ -638,7 +638,7 @@ func TestFindLocalDoltDB(t *testing.T) {
 		beadsDir := t.TempDir()
 		doltParent := filepath.Join(beadsDir, "dolt")
 		// Create two valid dolt databases
-		for _, name := range []string{"beads_gt", "beads_old"} {
+		for _, name := range []string{"beads_ms", "beads_old"} {
 			if err := os.MkdirAll(filepath.Join(doltParent, name, ".dolt"), 0755); err != nil {
 				t.Fatal(err)
 			}
@@ -1556,7 +1556,7 @@ func TestConcurrentMetadataSameFile(t *testing.T) {
 }
 
 // TestConcurrentFindMigratableDatabases tests that FindMigratableDatabases
-// can be called concurrently (simulating gt status during migration).
+// can be called concurrently (simulating ms status during migration).
 func TestConcurrentFindMigratableDatabases(t *testing.T) {
 	townRoot := t.TempDir()
 
@@ -1838,7 +1838,7 @@ func TestEnsureMetadata_RepairsMissingDoltFields(t *testing.T) {
 // TestEnsureMetadata_RepairsStalePort tests that EnsureMetadata overwrites
 // a stale dolt_server_port (e.g., 13729 from a previous bd init) with the
 // correct port from DefaultConfig. This is the root cause of "connection
-// refused" errors reported by community users after gt dolt fix-metadata.
+// refused" errors reported by community users after ms dolt fix-metadata.
 func TestEnsureMetadata_RepairsStalePort(t *testing.T) {
 	townRoot := t.TempDir()
 
@@ -1887,7 +1887,7 @@ func TestEnsureMetadata_RepairsStalePort(t *testing.T) {
 
 // TestEnsureMetadata_RepairsWrongDoltDatabase verifies that EnsureMetadata
 // corrects a metadata.json where dolt_database points to the wrong database
-// (e.g., "beads_gt" instead of "mineshaft"). This is the primary fix for the
+// (e.g., "beads_ms" instead of "mineshaft"). This is the primary fix for the
 // PROJECT IDENTITY MISMATCH bug (gas-tc4).
 func TestEnsureMetadata_RepairsWrongDoltDatabase(t *testing.T) {
 	townRoot := t.TempDir()
@@ -1897,12 +1897,12 @@ func TestEnsureMetadata_RepairsWrongDoltDatabase(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Simulate wrong database name (bd init wrote "beads_gt" instead of "mineshaft")
+	// Simulate wrong database name (bd init wrote "beads_ms" instead of "mineshaft")
 	wrong := map[string]interface{}{
 		"backend":          "dolt",
 		"database":         "dolt",
 		"dolt_mode":        "server",
-		"dolt_database":    "beads_gt",
+		"dolt_database":    "beads_ms",
 		"dolt_server_host": "127.0.0.1",
 		"dolt_server_port": float64(DefaultPort),
 	}
@@ -1925,7 +1925,7 @@ func TestEnsureMetadata_RepairsWrongDoltDatabase(t *testing.T) {
 		t.Fatalf("parsing metadata: %v", err)
 	}
 
-	// dolt_database should now be "mineshaft", not "beads_gt"
+	// dolt_database should now be "mineshaft", not "beads_ms"
 	if meta["dolt_database"] != "mineshaft" {
 		t.Errorf("dolt_database = %v, want %q", meta["dolt_database"], "mineshaft")
 	}
@@ -2070,7 +2070,7 @@ func TestHasConnectionCapacity_ZeroMax(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// HasConnectionCapacity should return false (fail closed) when query fails (gt-lfc0d)
+	// HasConnectionCapacity should return false (fail closed) when query fails (ms-lfc0d)
 	hasCapacity, _, err := HasConnectionCapacity(townRoot)
 	if err == nil {
 		t.Skip("Dolt server is actually running, cannot test offline case")
@@ -2113,7 +2113,7 @@ func TestFindAndMigrateAll_Idempotent(t *testing.T) {
 		}
 	}
 
-	// Update metadata (as gt dolt migrate does)
+	// Update metadata (as ms dolt migrate does)
 	updated1, errs1 := EnsureAllMetadata(townRoot)
 	if len(errs1) > 0 {
 		t.Errorf("pass 1 metadata errors: %v", errs1)
@@ -2299,7 +2299,7 @@ func TestInitRigSeedsIssuePrefixEmbedded(t *testing.T) {
 	if err := listener.Close(); err != nil {
 		t.Fatalf("close free port listener: %v", err)
 	}
-	t.Setenv("GT_DOLT_PORT", strconv.Itoa(port))
+	t.Setenv("MS_DOLT_PORT", strconv.Itoa(port))
 
 	townRoot := t.TempDir()
 	beadsDir := filepath.Join(townRoot, ".beads")
@@ -2453,7 +2453,7 @@ func TestGetConnectionStringForRig(t *testing.T) {
 
 func TestGetConnectionString_MasksPassword(t *testing.T) {
 	townRoot := t.TempDir()
-	t.Setenv("GT_DOLT_PASSWORD", "supersecret")
+	t.Setenv("MS_DOLT_PASSWORD", "supersecret")
 	s := GetConnectionString(townRoot)
 	if strings.Contains(s, "supersecret") {
 		t.Errorf("connection string should not contain raw password, got %q", s)
@@ -3466,7 +3466,7 @@ func TestFindOrphanedDatabases_MultipleOrphans(t *testing.T) {
 
 	// Multiple orphans
 	setupDoltDB(t, dataDir, "old_setup")
-	setupDoltDB(t, dataDir, "beads_gt")
+	setupDoltDB(t, dataDir, "beads_ms")
 	setupDoltDB(t, dataDir, "stale_backup")
 
 	setupRigsJSON(t, townRoot, []string{"mineshaft"})
@@ -3484,7 +3484,7 @@ func TestFindOrphanedDatabases_MultipleOrphans(t *testing.T) {
 	for _, o := range orphans {
 		names[o.Name] = true
 	}
-	for _, want := range []string{"old_setup", "beads_gt", "stale_backup"} {
+	for _, want := range []string{"old_setup", "beads_ms", "stale_backup"} {
 		if !names[want] {
 			t.Errorf("expected orphan %q not found", want)
 		}
@@ -3879,10 +3879,10 @@ func TestHostPort(t *testing.T) {
 func TestDefaultConfig_EnvVarOverrides(t *testing.T) {
 	townRoot := t.TempDir()
 
-	t.Setenv("GT_DOLT_HOST", "10.0.0.5")
-	t.Setenv("GT_DOLT_PORT", "13306")
-	t.Setenv("GT_DOLT_USER", "myuser")
-	t.Setenv("GT_DOLT_PASSWORD", "mypass")
+	t.Setenv("MS_DOLT_HOST", "10.0.0.5")
+	t.Setenv("MS_DOLT_PORT", "13306")
+	t.Setenv("MS_DOLT_USER", "myuser")
+	t.Setenv("MS_DOLT_PASSWORD", "mypass")
 
 	config := DefaultConfig(townRoot)
 
@@ -3904,8 +3904,8 @@ func TestDefaultConfig_EnvVarPartialOverride(t *testing.T) {
 	townRoot := t.TempDir()
 
 	// Only override host, rest should keep defaults
-	t.Setenv("GT_DOLT_HOST", "remote.host")
-	t.Setenv("GT_DOLT_PORT", "")
+	t.Setenv("MS_DOLT_HOST", "remote.host")
+	t.Setenv("MS_DOLT_PORT", "")
 
 	config := DefaultConfig(townRoot)
 
@@ -3926,7 +3926,7 @@ func TestDefaultConfig_EnvVarPartialOverride(t *testing.T) {
 func TestDefaultConfig_InvalidPortIgnored(t *testing.T) {
 	townRoot := t.TempDir()
 
-	t.Setenv("GT_DOLT_PORT", "not-a-number")
+	t.Setenv("MS_DOLT_PORT", "not-a-number")
 
 	config := DefaultConfig(townRoot)
 	if config.Port != DefaultPort {
@@ -3936,9 +3936,9 @@ func TestDefaultConfig_InvalidPortIgnored(t *testing.T) {
 
 func TestDefaultConfig_ConfigYAMLBeatsDaemonJSON(t *testing.T) {
 	townRoot := t.TempDir()
-	t.Setenv("GT_DOLT_IGNORE_CONFIG", "")
-	t.Setenv("GT_DOLT_HOST", "")
-	t.Setenv("GT_DOLT_PORT", "")
+	t.Setenv("MS_DOLT_IGNORE_CONFIG", "")
+	t.Setenv("MS_DOLT_HOST", "")
+	t.Setenv("MS_DOLT_PORT", "")
 	dataDir := filepath.Join(townRoot, ".dolt-data")
 	if err := os.MkdirAll(dataDir, 0755); err != nil {
 		t.Fatal(err)
@@ -3950,7 +3950,7 @@ func TestDefaultConfig_ConfigYAMLBeatsDaemonJSON(t *testing.T) {
 	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(overseerDir, "daemon.json"), []byte(`{"env":{"GT_DOLT_HOST":"127.0.0.3","GT_DOLT_PORT":"5507"}}`), 0600); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "daemon.json"), []byte(`{"env":{"MS_DOLT_HOST":"127.0.0.3","MS_DOLT_PORT":"5507"}}`), 0600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -3965,12 +3965,12 @@ func TestDefaultConfig_ConfigYAMLBeatsDaemonJSON(t *testing.T) {
 
 func TestDefaultConfig_DaemonJSONFallbackWithoutConfigOrEnv(t *testing.T) {
 	townRoot := t.TempDir()
-	t.Setenv("GT_DOLT_PORT", "")
+	t.Setenv("MS_DOLT_PORT", "")
 	overseerDir := filepath.Join(townRoot, "overseer")
 	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(overseerDir, "daemon.json"), []byte(`{"env":{"GT_DOLT_PORT":"5507"}}`), 0600); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerDir, "daemon.json"), []byte(`{"env":{"MS_DOLT_PORT":"5507"}}`), 0600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -3989,8 +3989,8 @@ func TestDefaultConfig_IgnoreConfigUsesEnvPort(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dataDir, "config.yaml"), []byte("listener:\n  port: 4407\n"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("GT_DOLT_IGNORE_CONFIG", "1")
-	t.Setenv("GT_DOLT_PORT", "5507")
+	t.Setenv("MS_DOLT_IGNORE_CONFIG", "1")
+	t.Setenv("MS_DOLT_PORT", "5507")
 
 	config := DefaultConfig(townRoot)
 	if config.Port != 5507 {
@@ -4000,7 +4000,7 @@ func TestDefaultConfig_IgnoreConfigUsesEnvPort(t *testing.T) {
 
 func TestDefaultConfig_ManagedDefaultsAndEnvOverrides(t *testing.T) {
 	townRoot := t.TempDir()
-	t.Setenv("GT_DOLT_PORT", "")
+	t.Setenv("MS_DOLT_PORT", "")
 
 	config := DefaultConfig(townRoot)
 	if config.EventScheduler != "OFF" {
@@ -4010,8 +4010,8 @@ func TestDefaultConfig_ManagedDefaultsAndEnvOverrides(t *testing.T) {
 		t.Errorf("DoltStatsEnabled = %q, want 0", config.DoltStatsEnabled)
 	}
 
-	t.Setenv("GT_DOLT_STATS_ENABLED", "omit")
-	t.Setenv("GT_DOLT_EVENT_SCHEDULER", "omit")
+	t.Setenv("MS_DOLT_STATS_ENABLED", "omit")
+	t.Setenv("MS_DOLT_EVENT_SCHEDULER", "omit")
 	config = DefaultConfig(townRoot)
 	if config.DoltStatsEnabled != "omit" {
 		t.Errorf("DoltStatsEnabled = %q, want omit", config.DoltStatsEnabled)
@@ -4120,7 +4120,7 @@ func TestBuildDoltSQLCmd_RemoteNoPassword(t *testing.T) {
 }
 
 // =============================================================================
-// WaitForReady tests (gt-zou1n)
+// WaitForReady tests (ms-zou1n)
 // =============================================================================
 
 func TestWaitForReady_NoServerConfigured(t *testing.T) {
@@ -4157,7 +4157,7 @@ func TestWaitForReady_ServerAlreadyListening(t *testing.T) {
 	}
 
 	// Override port via env var so DefaultConfig picks it up
-	t.Setenv("GT_DOLT_PORT", fmt.Sprintf("%d", port))
+	t.Setenv("MS_DOLT_PORT", fmt.Sprintf("%d", port))
 
 	start := time.Now()
 	err = WaitForReady(townRoot, 5*time.Second)
@@ -4193,7 +4193,7 @@ func TestWaitForReady_TimeoutWhenNoServer(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(beadsDir, "metadata.json"), []byte(metadata), 0644); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("GT_DOLT_PORT", fmt.Sprintf("%d", port))
+	t.Setenv("MS_DOLT_PORT", fmt.Sprintf("%d", port))
 
 	start := time.Now()
 	err = WaitForReady(townRoot, 500*time.Millisecond)
@@ -4231,7 +4231,7 @@ func TestWaitForReady_ServerBecomesReady(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(beadsDir, "metadata.json"), []byte(metadata), 0644); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("GT_DOLT_PORT", fmt.Sprintf("%d", port))
+	t.Setenv("MS_DOLT_PORT", fmt.Sprintf("%d", port))
 
 	// Start the listener after 300ms delay. Use a done channel to
 	// synchronize goroutine lifetime with test lifecycle. (review finding #3)
@@ -4334,15 +4334,15 @@ func TestCollectDatabaseOwners_MultipleRigs(t *testing.T) {
 
 	setupRigsJSON(t, townRoot, []string{"mineshaft", "beads"})
 	setupRigMetadata(t, townRoot, "hq", "hq")
-	setupRigMetadata(t, townRoot, "mineshaft", "gt")
+	setupRigMetadata(t, townRoot, "mineshaft", "ms")
 	setupRigMetadata(t, townRoot, "beads", "beads")
 
 	owners := CollectDatabaseOwners(townRoot)
 	if owners["hq"] != "town beads" {
 		t.Errorf("expected 'hq' owner 'town beads', got %q", owners["hq"])
 	}
-	if owners["gt"] != "mineshaft rig beads" {
-		t.Errorf("expected 'gt' owner 'mineshaft rig beads', got %q", owners["gt"])
+	if owners["ms"] != "mineshaft rig beads" {
+		t.Errorf("expected 'ms' owner 'mineshaft rig beads', got %q", owners["ms"])
 	}
 	if owners["beads"] != "beads rig beads" {
 		t.Errorf("expected 'beads' owner 'beads rig beads', got %q", owners["beads"])
@@ -4355,7 +4355,7 @@ func TestCollectDatabaseOwners_MultipleRigs(t *testing.T) {
 func TestCollectDatabaseOwners_CustomDatabaseName(t *testing.T) {
 	townRoot := t.TempDir()
 
-	// Rig name differs from dolt_database name (like mineshaft → gt)
+	// Rig name differs from dolt_database name (like mineshaft → ms)
 	setupRigsJSON(t, townRoot, []string{"myrig"})
 	setupRigMetadata(t, townRoot, "myrig", "custom_db")
 
@@ -4382,7 +4382,7 @@ func TestCollectDatabaseOwners_UnknownDB(t *testing.T) {
 
 // TestCollectDatabaseOwners_ProtectedSharedServerDatabaseLabeled verifies that
 // protected shared-server databases (e.g. beads_global) are reported with a
-// dedicated owner label rather than appearing as orphans in `gt dolt list`.
+// dedicated owner label rather than appearing as orphans in `ms dolt list`.
 // Regression for the operator-confusion gap flagged on PR #3823 — the
 // orphan-detection skip alone wasn't enough; CollectDatabaseOwners has to
 // know about the same registry.
@@ -4662,7 +4662,7 @@ func TestBuildDatabaseToRigMap(t *testing.T) {
 	// Test with typical routes.jsonl
 	routesContent := `{"prefix":"hq-","path":"."}
 {"prefix":"bd-","path":"beads/overseer/rig"}
-{"prefix":"gt-","path":"mineshaft/overseer/rig"}
+{"prefix":"ms-","path":"mineshaft/overseer/rig"}
 {"prefix":"sw-","path":"sallaWork/overseer/rig"}
 {"prefix":"hq-cv-","path":"."}
 `
@@ -4675,7 +4675,7 @@ func TestBuildDatabaseToRigMap(t *testing.T) {
 	// Check expected mappings
 	expected := map[string]string{
 		"bd": "beads",
-		"gt": "mineshaft",
+		"ms": "mineshaft",
 		"sw": "sallaWork",
 	}
 
@@ -4696,9 +4696,9 @@ func TestBuildDatabaseToRigMap(t *testing.T) {
 
 // TestEnsureAllMetadata_UsesRigNames verifies that EnsureAllMetadata correctly
 // maps database names to rig names using routes.jsonl.
-// This is a regression test for the bug where databases named "bd", "gt", "sw"
-// were incorrectly used as rig names, creating stub directories at /gt/bd/, /gt/gt/, /gt/sw/
-// instead of the correct /gt/beads/, /gt/mineshaft/, /gt/sallaWork/.
+// This is a regression test for the bug where databases named "bd", "ms", "sw"
+// were incorrectly used as rig names, creating stub directories at /ms/bd/, /ms/ms/, /ms/sw/
+// instead of the correct /ms/beads/, /ms/mineshaft/, /ms/sallaWork/.
 func TestEnsureAllMetadata_UsesRigNames(t *testing.T) {
 	townRoot := t.TempDir()
 
@@ -4706,7 +4706,7 @@ func TestEnsureAllMetadata_UsesRigNames(t *testing.T) {
 	dataDir := filepath.Join(townRoot, ".dolt-data")
 	setupDoltDB(t, dataDir, "hq")
 	setupDoltDB(t, dataDir, "bd")
-	setupDoltDB(t, dataDir, "gt")
+	setupDoltDB(t, dataDir, "ms")
 
 	// Create routes.jsonl with correct mappings
 	beadsDir := filepath.Join(townRoot, ".beads")
@@ -4715,7 +4715,7 @@ func TestEnsureAllMetadata_UsesRigNames(t *testing.T) {
 	}
 	routesContent := `{"prefix":"hq-","path":"."}
 {"prefix":"bd-","path":"beads/overseer/rig"}
-{"prefix":"gt-","path":"mineshaft/overseer/rig"}
+{"prefix":"ms-","path":"mineshaft/overseer/rig"}
 `
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
@@ -4742,7 +4742,7 @@ func TestEnsureAllMetadata_UsesRigNames(t *testing.T) {
 
 	// Buggy paths that should NOT exist
 	buggyBdMeta := filepath.Join(townRoot, "bd", ".beads", "metadata.json")
-	buggyGtMeta := filepath.Join(townRoot, "gt", ".beads", "metadata.json")
+	buggyGtMeta := filepath.Join(townRoot, "ms", ".beads", "metadata.json")
 
 	if _, err := os.Stat(hqMeta); os.IsNotExist(err) {
 		t.Error("hq metadata.json should exist")
@@ -4759,7 +4759,7 @@ func TestEnsureAllMetadata_UsesRigNames(t *testing.T) {
 		t.Error("buggy path bd/.beads/metadata.json should NOT exist")
 	}
 	if _, err := os.Stat(buggyGtMeta); err == nil {
-		t.Error("buggy path gt/.beads/metadata.json should NOT exist")
+		t.Error("buggy path ms/.beads/metadata.json should NOT exist")
 	}
 
 	// Verify correct number of updates
@@ -4807,7 +4807,7 @@ func TestEnsureAllMetadata_FallbackToDbName(t *testing.T) {
 }
 
 // TestEnsureAllMetadata_NoOscillation verifies that when two databases map to
-// the same rig (e.g. "mineshaft" and "gt" both map to rig "mineshaft" via
+// the same rig (e.g. "mineshaft" and "ms" both map to rig "mineshaft" via
 // conflicting routes.jsonl/rigs.json entries), EnsureAllMetadata does not
 // oscillate the dolt_database value on repeated calls. (gas-ar0)
 func TestEnsureAllMetadata_NoOscillation(t *testing.T) {
@@ -4816,17 +4816,17 @@ func TestEnsureAllMetadata_NoOscillation(t *testing.T) {
 
 	// Simulate two databases that both map to "mineshaft":
 	//   "mineshaft" — matched by default (db name == rig name)
-	//   "gt"      — matched via rigs.json prefix "gt"
+	//   "ms"      — matched via rigs.json prefix "ms"
 	setupDoltDB(t, dataDir, "mineshaft")
-	setupDoltDB(t, dataDir, "gt")
+	setupDoltDB(t, dataDir, "ms")
 	setupDoltDB(t, dataDir, "hq")
 
-	// rigs.json: mineshaft rig uses prefix "gt"
+	// rigs.json: mineshaft rig uses prefix "ms"
 	overseerDir := filepath.Join(townRoot, "overseer")
 	if err := os.MkdirAll(overseerDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	rigsData := `{"version":1,"rigs":{"mineshaft":{"beads":{"prefix":"gt"}}}}`
+	rigsData := `{"version":1,"rigs":{"mineshaft":{"beads":{"prefix":"ms"}}}}`
 	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), []byte(rigsData), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -4911,7 +4911,7 @@ func TestCleanStaleSocket_NoopWhenMissing(t *testing.T) {
 }
 
 // =============================================================================
-// Thundering herd fix tests (gt-nkn)
+// Thundering herd fix tests (ms-nkn)
 // =============================================================================
 
 func TestCountDoltDatabases(t *testing.T) {
@@ -4949,7 +4949,7 @@ func TestCountDoltDatabases(t *testing.T) {
 
 // TestRemoveDatabase_RefusesLargeDBWhenServerDown verifies that RemoveDatabase
 // refuses to delete databases with >1MB of data when the server is offline
-// and --force is not set. (gt-xvh)
+// and --force is not set. (ms-xvh)
 func TestRemoveDatabase_RefusesLargeDBWhenServerDown(t *testing.T) {
 	// Skip if a real Dolt server is running on the default port — IsRunning
 	// would detect it and take the SQL-check path instead of the size-check path.
@@ -4985,7 +4985,7 @@ func TestRemoveDatabase_RefusesLargeDBWhenServerDown(t *testing.T) {
 }
 
 // TestRemoveDatabase_AllowsSmallDBWhenServerDown verifies that small databases
-// (<1MB) can be removed even when the server is offline. (gt-xvh)
+// (<1MB) can be removed even when the server is offline. (ms-xvh)
 func TestRemoveDatabase_AllowsSmallDBWhenServerDown(t *testing.T) {
 	townRoot := t.TempDir()
 	dataDir := filepath.Join(townRoot, ".dolt-data")
@@ -5003,7 +5003,7 @@ func TestRemoveDatabase_AllowsSmallDBWhenServerDown(t *testing.T) {
 }
 
 // TestQuarantine_MovesInsteadOfDeleting verifies that the quarantine logic
-// moves corrupted database dirs to .quarantine/ instead of deleting them. (gt-xvh)
+// moves corrupted database dirs to .quarantine/ instead of deleting them. (ms-xvh)
 func TestQuarantine_MovesInsteadOfDeleting(t *testing.T) {
 	townRoot := t.TempDir()
 	dataDir := filepath.Join(townRoot, ".dolt-data")

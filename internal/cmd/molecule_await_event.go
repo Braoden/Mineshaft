@@ -35,18 +35,18 @@ var validChannelName = channelevents.ValidChannelName
 var moleculeAwaitEventCmd = &cobra.Command{
 	Use:   "await-event",
 	Short: "Wait for a file-based event on a named channel",
-	Long: `Wait for event files to appear in ~/gt/events/<channel>/, with optional backoff.
+	Long: `Wait for event files to appear in ~/ms/events/<channel>/, with optional backoff.
 
 Unlike await-signal (which subscribes to the generic beads activity feed),
 await-event watches a dedicated event channel directory for .event files.
-Events are emitted via "gt mol step emit-event" or programmatically.
+Events are emitted via "ms mol step emit-event" or programmatically.
 
 Channels are single-consumer: only one process should watch a given channel
 at a time. If multiple consumers watch the same channel with --cleanup,
 events may be deleted before all consumers read them.
 
 EVENT FORMAT:
-Events are JSON files in ~/gt/events/<channel>/*.event:
+Events are JSON files in ~/ms/events/<channel>/*.event:
   {"type": "...", "channel": "...", "timestamp": "...", "payload": {...}}
 
 BEHAVIOR:
@@ -80,17 +80,17 @@ EXIT CODES:
 
 EXAMPLES:
   # Wait for refinery events with 10min timeout
-  gt mol step await-event --channel refinery --timeout 10m
+  ms mol step await-event --channel refinery --timeout 10m
 
   # Backoff mode with agent bead tracking
-  gt mol step await-event --channel refinery --agent-bead VAS-refinery \
+  ms mol step await-event --channel refinery --agent-bead VAS-refinery \
     --backoff-base 60s --backoff-mult 2 --backoff-max 10m
 
   # Auto-cleanup processed events
-  gt mol step await-event --channel refinery --cleanup
+  ms mol step await-event --channel refinery --cleanup
 
   # Yield every 5m for context check during long idle waits
-  gt mol step await-event --channel refinery --agent-bead VAS-refinery \
+  ms mol step await-event --channel refinery --agent-bead VAS-refinery \
     --backoff-base 60s --backoff-mult 2 --backoff-max 15m --cleanup \
     --context-check-interval 5m`,
 	RunE: runMoleculeAwaitEvent,
@@ -146,9 +146,9 @@ func runMoleculeAwaitEvent(cmd *cobra.Command, args []string) error {
 	// Resolve event directory
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil || townRoot == "" {
-		// Fallback to ~/gt
+		// Fallback to ~/ms
 		home, _ := os.UserHomeDir()
-		townRoot = filepath.Join(home, "gt")
+		townRoot = filepath.Join(home, "ms")
 	}
 	eventDir := filepath.Join(townRoot, "events", awaitEventChannel)
 	if err := os.MkdirAll(eventDir, 0755); err != nil {
@@ -437,7 +437,7 @@ func waitForEventFiles(ctx context.Context, eventDir string, contextCheckAfter t
 			// always interrupt the wait. Without this, a slow/stuck
 			// read (e.g., stalled filesystem, sleeping laptop) would
 			// starve the timeout case until the read returns. This is
-			// the root cause of gt-x2lc: the timeout deadline expired
+			// the root cause of ms-x2lc: the timeout deadline expired
 			// but waitForEventFiles stayed blocked inside the read.
 			type readRes struct {
 				events []EventFile

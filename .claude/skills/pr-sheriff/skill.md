@@ -3,7 +3,7 @@ name: pr-sheriff
 description: >
   PR Sheriff workflow: triage PRs into easy-wins and crew assignments.
   Prints recommendations inline - does NOT post to GitHub.
-allowed-tools: "Bash(gh pr *), Bash(git *), Bash(gt *), Bash(bd *), Bash(cat *)"
+allowed-tools: "Bash(gh pr *), Bash(git *), Bash(ms *), Bash(bd *), Bash(cat *)"
 version: "2.0.0"
 author: "Mineshaft"
 ---
@@ -11,7 +11,7 @@ author: "Mineshaft"
 # PR Sheriff - Triage and Review Workflow
 
 This skill delegates to the `mol-pr-sheriff-patrol` formula, which lives at
-`$GT_ROOT/.beads/formulas/mol-pr-sheriff-patrol.formula.toml` and is shared
+`$MS_ROOT/.beads/formulas/mol-pr-sheriff-patrol.formula.toml` and is shared
 across all Mineshaft rigs (mineshaft, beads, etc.).
 
 ## Repo Scope
@@ -35,7 +35,7 @@ When loading the shared config, filter the repo list to only `steveyegge/minesha
 
 **1. Load the config:**
 ```bash
-cat $GT_ROOT/.beads/pr-sheriff-config.json
+cat $MS_ROOT/.beads/pr-sheriff-config.json
 ```
 
 This contains crew mappings per repo and contributor policies
@@ -44,7 +44,7 @@ This contains crew mappings per repo and contributor policies
 
 **2. Follow the formula steps in order:**
 ```bash
-gt formula show mol-pr-sheriff-patrol
+ms formula show mol-pr-sheriff-patrol
 ```
 
 The formula defines a 7-step workflow:
@@ -63,7 +63,7 @@ The formula defines a 7-step workflow:
 
 **3. For each step, read the full description:**
 ```bash
-gt formula show mol-pr-sheriff-patrol  # Shows all steps with descriptions
+ms formula show mol-pr-sheriff-patrol  # Shows all steps with descriptions
 ```
 
 ## Key References
@@ -71,7 +71,7 @@ gt formula show mol-pr-sheriff-patrol  # Shows all steps with descriptions
 - **Patrol formula:** `mol-pr-sheriff-patrol` (town-level)
 - **Crew review formula:** `mol-pr-crew-review` (dispatched to crew)
 - **Deep review formula:** `mol-pr-deep-review` (dispatched for NEEDS-HUMAN)
-- **Config:** `$GT_ROOT/.beads/pr-sheriff-config.json`
+- **Config:** `$MS_ROOT/.beads/pr-sheriff-config.json`
 
 ## Contributor Policy Tiers
 

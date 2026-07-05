@@ -17,7 +17,7 @@ func requireTestSocket(t *testing.T) string {
 	if !hasTmux() {
 		t.Skip("tmux not installed")
 	}
-	socket := fmt.Sprintf("gt-test-hook-%d", os.Getpid())
+	socket := fmt.Sprintf("ms-test-hook-%d", os.Getpid())
 	t.Cleanup(func() {
 		_ = exec.Command("tmux", "-L", socket, "kill-server").Run()
 	})
@@ -69,10 +69,10 @@ func TestAutoRespawnHookCmd_Format(t *testing.T) {
 		session  string
 		wantFlag string
 	}{
-		{"background_flag", "tmux -L gt", "hq-supervisor", "run-shell -b"},
-		{"dead_pane_guard", "tmux -L gt", "hq-supervisor", "pane_dead"},
-		{"error_suppression", "tmux -L gt", "hq-supervisor", "|| true"},
-		{"socket_in_respawn", "tmux -L gt", "hq-supervisor", "-L gt"},
+		{"background_flag", "tmux -L ms", "hq-supervisor", "run-shell -b"},
+		{"dead_pane_guard", "tmux -L ms", "hq-supervisor", "pane_dead"},
+		{"error_suppression", "tmux -L ms", "hq-supervisor", "|| true"},
+		{"socket_in_respawn", "tmux -L ms", "hq-supervisor", "-L ms"},
 		{"bare_tmux_no_socket", "tmux", "hq-supervisor", "tmux respawn-pane"},
 	}
 	for _, tt := range tests {

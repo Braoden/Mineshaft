@@ -25,16 +25,16 @@ func checkRigNotParkedOrDocked(rigName string) error {
 	}
 
 	if IsRigParked(townRoot, rigName) {
-		return fmt.Errorf("rig '%s' is parked - use 'gt rig unpark %s' first", rigName, rigName)
+		return fmt.Errorf("rig '%s' is parked - use 'ms rig unpark %s' first", rigName, rigName)
 	}
 
-	prefix := "gt"
+	prefix := "ms"
 	if r.Config != nil && r.Config.Prefix != "" {
 		prefix = r.Config.Prefix
 	}
 
 	if IsRigDocked(townRoot, rigName, prefix) {
-		return fmt.Errorf("rig '%s' is docked - use 'gt rig undock %s' first", rigName, rigName)
+		return fmt.Errorf("rig '%s' is docked - use 'ms rig undock %s' first", rigName, rigName)
 	}
 
 	return nil
@@ -101,9 +101,9 @@ func hasRigBeadLabel(townRoot, rigName, label string) bool {
 // minecart stage) to check rig availability.
 //
 // Parked vs docked asymmetry: parked state is checked in both the wisp layer
-// (ephemeral, set by "gt rig park") and bead labels (persistent fallback for
+// (ephemeral, set by "ms rig park") and bead labels (persistent fallback for
 // when wisp state is lost during cleanup). Docked state is bead-label only
-// because "gt rig dock" never writes to wisp — it persists exclusively via
+// because "ms rig dock" never writes to wisp — it persists exclusively via
 // the rig identity bead's status:docked label.
 func IsRigParkedOrDocked(townRoot, rigName string) (bool, string) {
 	// Check wisp layer first (fast, local) — only relevant for parked state

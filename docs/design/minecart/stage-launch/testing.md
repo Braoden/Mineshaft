@@ -1,6 +1,6 @@
 # Test Analysis: Minecart Stage & Launch
 
-Testing plan for `gt minecart stage` and `gt minecart launch` (PRD: `stage-launch/prd.md`).
+Testing plan for `ms minecart stage` and `ms minecart launch` (PRD: `stage-launch/prd.md`).
 
 ---
 
@@ -22,7 +22,7 @@ Testing plan for `gt minecart stage` and `gt minecart launch` (PRD: `stage-launc
 | I-12 | All beads validated to exist before any minecart creation | safety | medium | no |
 | I-13 | Launch dispatches ONLY Wave 1, not subsequent waves | safety | **high** | no |
 | I-14 | Dispatch failure for one task does NOT abort remaining Wave 1 tasks | liveness | medium | no |
-| I-15 | `gt minecart launch <id>` on already-open minecart MUST error | safety | low | no |
+| I-15 | `ms minecart launch <id>` on already-open minecart MUST error | safety | low | no |
 
 ---
 
@@ -57,7 +57,7 @@ Testing plan for `gt minecart stage` and `gt minecart launch` (PRD: `stage-launc
 | F-13 | `bd` binary not on PATH | low | exec error | clear error message | no |
 | F-14 | `bd dep list` returns malformed JSON | low | json.Unmarshal fails | error with raw output | no |
 | F-15 | `routes.jsonl` missing or corrupt | medium | parse error | error: cannot resolve rigs | partial |
-| F-16 | `gt sling` fails during launch dispatch | medium | exec error | continue to next task, report | no |
+| F-16 | `ms sling` fails during launch dispatch | medium | exec error | continue to next task, report | no |
 | F-17 | Dolt store unavailable during re-stage | low | store open fails | error | no |
 
 ### Timing failures
@@ -128,7 +128,7 @@ These test pure logic in isolation using in-memory data. No Dolt, no bd stubs.
 
 ### Integration tests (bd stub + workspace, package `cmd`)
 
-These test the full command flow with stubbed `bd` and `gt` binaries.
+These test the full command flow with stubbed `bd` and `ms` binaries.
 
 | ID | Test | User Story | Failure Modes | Invariants | Priority |
 |----|------|-----------|---------------|------------|----------|
@@ -150,8 +150,8 @@ These test the full command flow with stubbed `bd` and `gt` binaries.
 | IT-16 | Launch staged_warnings with --force: dispatches | US-008 | -- | I-8 | P1 |
 | IT-17 | Launch dispatch failure: continues to next task | US-008 | F-16 | I-14 | P1 |
 | IT-18 | Launch already-open minecart: errors | US-010 | F-05 | I-15 | P1 |
-| IT-19 | `gt minecart launch <epic>` = `gt minecart stage <epic> --launch` | US-010 | -- | -- | P1 |
-| IT-20 | `gt minecart launch <task1> <task2>` works as alias | US-010 | -- | -- | P1 |
+| IT-19 | `ms minecart launch <epic>` = `ms minecart stage <epic> --launch` | US-010 | -- | -- | P1 |
+| IT-20 | `ms minecart launch <task1> <task2>` works as alias | US-010 | -- | -- | P1 |
 | IT-21 | --json output: valid JSON with all fields | US-011 | -- | I-10 | P1 |
 | IT-22 | --json output: no human-readable text on stdout | US-011 | -- | I-10 | P1 |
 | IT-23 | Stage with --launch: full end-to-end (stage + dispatch) | US-008 | -- | I-4, I-13 | P0 |
@@ -160,9 +160,9 @@ These test the full command flow with stubbed `bd` and `gt` binaries.
 | IT-26 | Stage with missing integration branch: warns, creates staged_warnings | US-003 | -- | -- | P1 |
 | IT-27 | Stage with cross-rig routing mismatch: warns, includes in output | US-003 | -- | -- | P1 |
 | IT-28 | Stage with capacity warning: informational, creates staged_warnings | US-003 | -- | -- | P2 |
-| IT-29 | Launch output: minecart ID + `gt minecart status` command printed | US-009 | -- | -- | P1 |
+| IT-29 | Launch output: minecart ID + `ms minecart status` command printed | US-009 | -- | -- | P1 |
 | IT-30 | Launch output: each dispatched task shows miner name | US-009 | -- | -- | P1 |
-| IT-31 | Launch output: TUI hint (`gt minecart -i`) printed | US-009 | -- | -- | P2 |
+| IT-31 | Launch output: TUI hint (`ms minecart -i`) printed | US-009 | -- | -- | P2 |
 | IT-32 | Launch output: daemon feed explanation printed | US-009 | -- | -- | P2 |
 | IT-33 | Launch staged_ready minecart: skips re-analysis, dispatches directly | US-010 | -- | -- | P0 |
 | IT-34 | --json with errors: non-zero exit code | US-011 | -- | I-3, I-10 | P1 |
@@ -357,7 +357,7 @@ Combined with property assertions: "every task in exactly one wave", "no task be
 | Assertion-free tests | "It didn't panic" is not a test | Every test asserts on: wave assignment, error/warning categorization, or bd commands logged |
 | Snapshot overload | Tempting to snapshot all console output | Use snapshots only for display format (SN-*); use specific assertions for logic (waves, errors) |
 | Test-after-the-fact | Writing tests to hit coverage after impl | Write U-01 through U-13 (cycle + wave) BEFORE implementing; they define the contract |
-| Environment coupling | Tests relying on real `bd` or `gt` on PATH | Always use stub binaries in bin/ with PATH override; never depend on system binaries |
+| Environment coupling | Tests relying on real `bd` or `ms` on PATH | Always use stub binaries in bin/ with PATH override; never depend on system binaries |
 
 ---
 
@@ -371,7 +371,7 @@ Combined with property assertions: "every task in exactly one wave", "no task be
 
 4. **Write integration tests for staging flow** (IT-01 through IT-07, IT-10, IT-11) -- full command flow with bd stubs.
 
-5. **Implement `gt minecart stage`** -- bead validation, DAG construction, analysis, minecart creation.
+5. **Implement `ms minecart stage`** -- bead validation, DAG construction, analysis, minecart creation.
 
 6. **Write daemon integration tests** (DS-07, DS-08, DS-09) -- staged minecarts must not be fed via either feeding path (event-driven + stranded scan).
 
@@ -379,7 +379,7 @@ Combined with property assertions: "every task in exactly one wave", "no task be
 
 8. **Write launch tests** (IT-14, IT-15, IT-23) -- dispatch Wave 1 only.
 
-9. **Implement `gt minecart launch`** -- status transition, Wave 1 dispatch.
+9. **Implement `ms minecart launch`** -- status transition, Wave 1 dispatch.
 
 10. **Build `waveAssert` helper + property tests** (PT-01 through PT-04) -- prove invariants over random graphs.
 
@@ -481,10 +481,10 @@ Every acceptance criterion in the PRD mapped to its covering test(s).
 | 1 | Minecart ID + status command | IT-29, SN-03 |
 | 2 | Wave summary | SN-03 |
 | 3 | Each Wave 1 task with miner | IT-30, SN-03 |
-| 4 | TUI hint (gt minecart -i) | IT-31, SN-03 |
+| 4 | TUI hint (ms minecart -i) | IT-31, SN-03 |
 | 5 | Daemon feeds explanation | IT-32, SN-03 |
 
-### US-010: gt minecart launch as alias
+### US-010: ms minecart launch as alias
 
 | AC | Criterion | Tests |
 |---|---|---|
@@ -522,7 +522,7 @@ Every acceptance criterion in the PRD mapped to its covering test(s).
 | F-13 | bd not on PATH | IT-37 |
 | F-14 | Malformed JSON from bd | IT-38 |
 | F-15 | routes.jsonl missing | IT-06, IT-44 |
-| F-16 | gt sling fails during launch | IT-17 |
+| F-16 | ms sling fails during launch | IT-17 |
 | F-17 | Dolt unavailable | _(skips via setupTestStore)_ |
 | F-18 | Bead closed between stage and launch | IT-42 |
 | F-19 | Rig parked between stage and launch | IT-08 |

@@ -12,7 +12,7 @@ import (
 func TestBuildUpSummary(t *testing.T) {
 	services := []ServiceStatus{
 		{Name: "Daemon", Type: "daemon", OK: true, Detail: "PID 123"},
-		{Name: "Supervisor", Type: constants.RoleSupervisor, OK: true, Detail: "gt-supervisor"},
+		{Name: "Supervisor", Type: constants.RoleSupervisor, OK: true, Detail: "ms-supervisor"},
 		{Name: "Overseer", Type: constants.RoleOverseer, OK: false, Detail: "failed"},
 	}
 
@@ -32,7 +32,7 @@ func TestEmitUpJSON_Success(t *testing.T) {
 	services := []ServiceStatus{
 		{Name: "Dolt", Type: "dolt", OK: true, Detail: "started (port 3306)"},
 		{Name: "Daemon", Type: "daemon", OK: true, Detail: "PID 123"},
-		{Name: "Supervisor", Type: constants.RoleSupervisor, OK: true, Detail: "gt-supervisor"},
+		{Name: "Supervisor", Type: constants.RoleSupervisor, OK: true, Detail: "ms-supervisor"},
 	}
 
 	var buf bytes.Buffer

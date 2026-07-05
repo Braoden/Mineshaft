@@ -124,7 +124,7 @@ func TestLoadSaveOverrideRigRole(t *testing.T) {
 		t.Fatalf("SaveOverride failed: %v", err)
 	}
 
-	expectedPath := filepath.Join(tmpDir, ".gt", "hooks-overrides", "mineshaft__crew.json")
+	expectedPath := filepath.Join(tmpDir, ".ms", "hooks-overrides", "mineshaft__crew.json")
 	if _, err := os.Stat(expectedPath); err != nil {
 		t.Fatalf("expected override file at %s: %v", expectedPath, err)
 	}
@@ -462,7 +462,7 @@ func TestComputeExpected(t *testing.T) {
 	}
 }
 
-// TestComputeExpectedBackfillsSessionStart reproduces gt-y22: on-disk base
+// TestComputeExpectedBackfillsSessionStart reproduces ms-y22: on-disk base
 // created before SessionStart was added to DefaultBase. SessionStart should
 // be backfilled from DefaultBase so settings.json files contain startup hooks.
 func TestComputeExpectedBackfillsSessionStart(t *testing.T) {
@@ -473,13 +473,13 @@ func TestComputeExpectedBackfillsSessionStart(t *testing.T) {
 	// It has Stop, PreCompact, UserPromptSubmit but no SessionStart.
 	staleBase := &HooksConfig{
 		Stop: []HookEntry{
-			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "gt costs record"}}},
+			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "ms costs record"}}},
 		},
 		PreCompact: []HookEntry{
-			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "gt prime --hook"}}},
+			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "ms prime --hook"}}},
 		},
 		UserPromptSubmit: []HookEntry{
-			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "gt mail check --inject"}}},
+			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "ms mail check --inject"}}},
 		},
 	}
 	if err := SaveBase(staleBase); err != nil {
@@ -495,7 +495,7 @@ func TestComputeExpectedBackfillsSessionStart(t *testing.T) {
 		if len(expected.SessionStart) == 0 {
 			t.Errorf("%s: expected SessionStart to be backfilled from DefaultBase, got none", target)
 		}
-		// Verify the generated hook uses a resolved gt command, not the stale
+		// Verify the generated hook uses a resolved ms command, not the stale
 		// export PATH= marker that causes settings to be treated as out-of-date.
 		hasPrime := false
 		for _, entry := range expected.SessionStart {
@@ -514,7 +514,7 @@ func TestComputeExpectedBackfillsSessionStart(t *testing.T) {
 		// On-disk Stop should be preserved (not overwritten by DefaultBase)
 		if len(expected.Stop) == 0 {
 			t.Errorf("%s: on-disk Stop should be preserved", target)
-		} else if expected.Stop[0].Hooks[0].Command != "gt costs record" {
+		} else if expected.Stop[0].Hooks[0].Command != "ms costs record" {
 			t.Errorf("%s: on-disk Stop should take precedence, got %q", target, expected.Stop[0].Hooks[0].Command)
 		}
 	}
@@ -581,7 +581,7 @@ func TestComputeExpectedNoBase(t *testing.T) {
 		t.Error("expected crew to inherit SessionStart from DefaultBase")
 	}
 
-	// Witness should get DefaultBase + built-in patrol-formula-guard (gt-e47hxn)
+	// Witness should get DefaultBase + built-in patrol-formula-guard (ms-e47hxn)
 	witness, err := ComputeExpected("witness")
 	if err != nil {
 		t.Fatalf("ComputeExpected(witness) failed: %v", err)
@@ -741,7 +741,7 @@ func TestComputeExpectedBootBlocksRawTmuxSendKeys(t *testing.T) {
 	command := entry.Hooks[0].Command
 	for _, want := range []string{
 		"BLOCKED: Boot must not use raw tmux send-keys",
-		"gt nudge --mode=immediate supervisor",
+		"ms nudge --mode=immediate supervisor",
 		"exit 2",
 	} {
 		if !strings.Contains(command, want) {

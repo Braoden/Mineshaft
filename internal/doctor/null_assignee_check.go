@@ -99,7 +99,7 @@ func (c *NullAssigneeCheck) Run(ctx *CheckContext) *CheckResult {
 			len(c.affected),
 		),
 		Details:  details,
-		FixHint:  "Run 'gt doctor --fix' to reset to open for re-dispatch",
+		FixHint:  "Run 'ms doctor --fix' to reset to open for re-dispatch",
 		Category: c.Category(),
 	}
 }
@@ -129,7 +129,7 @@ func (c *NullAssigneeCheck) Fix(ctx *CheckContext) error {
 
 		// Commit the repair to Dolt history (non-fatal: repair is effective even
 		// without a version commit, but the commit gives audit visibility).
-		commitMsg := "fix: reset in_progress beads with null assignee (gt doctor)"
+		commitMsg := "fix: reset in_progress beads with null assignee (ms doctor)"
 		if err := doltserver.CommitServerWorkingSet(ctx.TownRoot, db, commitMsg); err != nil {
 			// Non-fatal: data is already fixed, commit is best-effort.
 			_ = err

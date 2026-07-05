@@ -157,7 +157,7 @@ func TestExtraSANIPs(t *testing.T) {
 	pool.AddCert(ca.Cert)
 	conn, err := tls.Dial("tcp", addr, &tls.Config{
 		RootCAs:    pool,
-		ServerName: "gt-proxy-server",
+		ServerName: "ms-proxy-server",
 	})
 	require.NoError(t, err)
 	defer conn.Close()
@@ -211,7 +211,7 @@ func TestExtraSANHosts(t *testing.T) {
 	pool.AddCert(ca.Cert)
 	conn, err := tls.Dial("tcp", addr, &tls.Config{
 		RootCAs:    pool,
-		ServerName: "gt-proxy-server",
+		ServerName: "ms-proxy-server",
 	})
 	require.NoError(t, err)
 	defer conn.Close()
@@ -348,7 +348,7 @@ func TestStartIntegration(t *testing.T) {
 	pool := x509.NewCertPool()
 	pool.AddCert(ca.Cert)
 
-	clientCertPEM, clientKeyPEM, err := ca.IssueMiner("gt-mineshaft-testclient", time.Hour)
+	clientCertPEM, clientKeyPEM, err := ca.IssueMiner("ms-mineshaft-testclient", time.Hour)
 	require.NoError(t, err)
 	clientCert, err := tls.X509KeyPair(clientCertPEM, clientKeyPEM)
 	require.NoError(t, err)
@@ -402,7 +402,7 @@ func TestStartIntegration(t *testing.T) {
 		ca2, err := GenerateCA(dir2)
 		require.NoError(t, err)
 
-		wrongCertPEM, wrongKeyPEM, err := ca2.IssueMiner("gt-mineshaft-evil", time.Hour)
+		wrongCertPEM, wrongKeyPEM, err := ca2.IssueMiner("ms-mineshaft-evil", time.Hour)
 		require.NoError(t, err)
 		wrongClientCert, err := tls.X509KeyPair(wrongCertPEM, wrongKeyPEM)
 		require.NoError(t, err)
@@ -487,12 +487,12 @@ func TestCertRevocation(t *testing.T) {
 	pool.AddCert(ca.Cert)
 
 	// Issue two distinct miner certs.
-	cert1PEM, key1PEM, err := ca.IssueMiner("gt-mineshaft-alice", time.Hour)
+	cert1PEM, key1PEM, err := ca.IssueMiner("ms-mineshaft-alice", time.Hour)
 	require.NoError(t, err)
 	tlsCert1, err := tls.X509KeyPair(cert1PEM, key1PEM)
 	require.NoError(t, err)
 
-	cert2PEM, key2PEM, err := ca.IssueMiner("gt-mineshaft-bob", time.Hour)
+	cert2PEM, key2PEM, err := ca.IssueMiner("ms-mineshaft-bob", time.Hour)
 	require.NoError(t, err)
 	tlsCert2, err := tls.X509KeyPair(cert2PEM, key2PEM)
 	require.NoError(t, err)
@@ -579,7 +579,7 @@ func TestAdminDenyCertEndpoint(t *testing.T) {
 	pool.AddCert(ca.Cert)
 
 	// Issue a cert for testing.
-	certPEM, keyPEM, err := ca.IssueMiner("gt-mineshaft-carol", time.Hour)
+	certPEM, keyPEM, err := ca.IssueMiner("ms-mineshaft-carol", time.Hour)
 	require.NoError(t, err)
 	tlsCert, err := tls.X509KeyPair(certPEM, keyPEM)
 	require.NoError(t, err)
@@ -775,7 +775,7 @@ func TestAdminIssueCertEndpoint(t *testing.T) {
 
 		var result issueCertResponse
 		require.NoError(t, json.NewDecoder(resp.Body).Decode(&result))
-		assert.Equal(t, "gt-MyRig-rust", result.CN)
+		assert.Equal(t, "ms-MyRig-rust", result.CN)
 		assert.NotEmpty(t, result.Cert)
 		assert.NotEmpty(t, result.Key)
 		assert.NotEmpty(t, result.CA)
@@ -825,7 +825,7 @@ func TestAdminIssueCertEndpoint(t *testing.T) {
 
 		var result issueCertResponse
 		require.NoError(t, json.NewDecoder(resp.Body).Decode(&result))
-		assert.Equal(t, "gt-MyRig-furiosa", result.CN)
+		assert.Equal(t, "ms-MyRig-furiosa", result.CN)
 
 		expiry, err := time.Parse(time.RFC3339, result.ExpiresAt)
 		require.NoError(t, err)

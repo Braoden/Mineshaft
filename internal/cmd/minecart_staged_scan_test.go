@@ -12,7 +12,7 @@ import (
 // queries bd with --status=open, which inherently excludes staged minecarts
 // (status "staged_ready" or "staged_warnings").
 //
-// This is a safety-net test for bead gt-csl.5.2: the stranded scan is safe
+// This is a safety-net test for bead ms-csl.5.2: the stranded scan is safe
 // by construction because it only queries open minecarts, but we want a test
 // proving that invariant so future refactors don't regress it.
 func TestStrandedScanExcludesStagedMinecarts(t *testing.T) {
@@ -131,7 +131,7 @@ exit 0
 }
 
 // TestStrandedScanQueryShape verifies the exact arguments passed to bd
-// by findStrandedMinecarts, ensuring the gt:minecart label and --status=open
+// by findStrandedMinecarts, ensuring the ms:minecart label and --status=open
 // flags are both present. This guards against flag drift in refactors.
 func TestStrandedScanQueryShape(t *testing.T) {
 	if runtime.GOOS == "windows" {
@@ -186,7 +186,7 @@ exit 0
 		t.Fatalf("bd was never called with a 'list' subcommand; log: %q", string(logData))
 	}
 
-	requiredFlags := []string{"list", "--label=gt:minecart", "--status=open", "--json", "--limit=0", "--flat"}
+	requiredFlags := []string{"list", "--label=ms:minecart", "--status=open", "--json", "--limit=0", "--flat"}
 	for _, flag := range requiredFlags {
 		if !strings.Contains(listLine, flag) {
 			t.Errorf("bd list command missing %q; got: %q", flag, listLine)

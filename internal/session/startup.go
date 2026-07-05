@@ -44,14 +44,14 @@ type BeaconConfig struct {
 	// If provided, appended to topic as "topic:mol-id"
 	MolID string
 
-	// IncludePrimeInstruction adds "Run gt prime" to beacon for non-hook agents.
-	// When true, the beacon tells the agent to manually run gt prime since
+	// IncludePrimeInstruction adds "Run ms prime" to beacon for non-hook agents.
+	// When true, the beacon tells the agent to manually run ms prime since
 	// there's no SessionStart hook to do it automatically.
 	IncludePrimeInstruction bool
 
 	// ExcludeWorkInstructions omits work instructions from the beacon.
 	// When true, work instructions will be sent as a separate nudge later.
-	// Used for non-hook agents where gt prime must complete first.
+	// Used for non-hook agents where ms prime must complete first.
 	// Default (false) preserves backward compatible behavior.
 	ExcludeWorkInstructions bool
 }
@@ -63,7 +63,7 @@ type BeaconConfig struct {
 // Format: [MINESHAFT] <recipient> <- <sender> • <timestamp> • <topic[:mol-id]>
 //
 // Examples:
-//   - [MINESHAFT] mineshaft/crew/gus <- supervisor • 2025-12-30T15:42 • assigned:gt-abc12
+//   - [MINESHAFT] mineshaft/crew/gus <- supervisor • 2025-12-30T15:42 • assigned:ms-abc12
 //   - [MINESHAFT] supervisor <- daemon • 2025-12-30T08:00 • patrol
 //   - [MINESHAFT] mineshaft/witness <- supervisor • 2025-12-30T14:00 • patrol
 func FormatStartupBeacon(cfg BeaconConfig) string {
@@ -84,12 +84,12 @@ func FormatStartupBeacon(cfg BeaconConfig) string {
 	beacon := fmt.Sprintf("[MINESHAFT] %s <- %s • %s • %s",
 		cfg.Recipient, cfg.Sender, timestamp, topic)
 
-	// For non-hook agents, add "Run gt prime" instruction since there's no
+	// For non-hook agents, add "Run ms prime" instruction since there's no
 	// SessionStart hook to do it automatically. Work instructions will
-	// come as a separate nudge after gt prime completes.
+	// come as a separate nudge after ms prime completes.
 	if cfg.IncludePrimeInstruction {
 		beacon += "\n\nRun `" + cli.Name() + " prime` to initialize your context."
-		// Don't add work instructions here - they come as a delayed nudge after gt prime
+		// Don't add work instructions here - they come as a delayed nudge after ms prime
 		return beacon
 	}
 
@@ -119,11 +119,11 @@ func FormatStartupBeacon(cfg BeaconConfig) string {
 // GUPP (Mineshaft Universal Propulsion Principle) implementation:
 //   - Beacon identifies session for /resume predecessor discovery
 //   - Instructions tell agent to start working immediately
-//   - SessionStart hook runs `gt prime` which injects full context including
+//   - SessionStart hook runs `ms prime` which injects full context including
 //     "AUTONOMOUS WORK MODE" instructions when work is hooked
 //
 // This replaces the old two-step StartupNudge + PropulsionNudge pattern.
-// The beacon is processed in Claude's first turn along with gt prime context,
+// The beacon is processed in Claude's first turn along with ms prime context,
 // so no separate propulsion nudge is needed.
 func BuildStartupPrompt(cfg BeaconConfig, instructions string) string {
 	return FormatStartupBeacon(cfg) + "\n\n" + instructions

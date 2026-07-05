@@ -33,9 +33,9 @@ Use --type to filter by memory category:
   general    Uncategorized memories
 
 Examples:
-  gt memories                    # List all memories
-  gt memories --type feedback    # Show only behavioral corrections
-  gt memories refinery           # Search for memories about refinery`,
+  ms memories                    # List all memories
+  ms memories --type feedback    # Show only behavioral corrections
+  ms memories refinery           # Search for memories about refinery`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runMemories,
 }
@@ -101,7 +101,7 @@ func runMemories(cmd *cobra.Command, args []string) error {
 		} else if typeFilter != "" {
 			fmt.Printf("No %s memories stored.\n", typeFilter)
 		} else {
-			fmt.Println("No memories stored. Use 'gt remember \"insight\"' to add one.")
+			fmt.Println("No memories stored. Use 'ms remember \"insight\"' to add one.")
 		}
 		return nil
 	}

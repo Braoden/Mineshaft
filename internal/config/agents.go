@@ -67,7 +67,7 @@ type AgentPresetInfo struct {
 	Args []string `json:"args"`
 
 	// Env are environment variables to set when starting the agent.
-	// These are merged with the standard GT_* variables.
+	// These are merged with the standard MS_* variables.
 	// Used for agent-specific configuration like OPENCODE_PERMISSION.
 	Env map[string]string `json:"env,omitempty"`
 
@@ -301,7 +301,7 @@ var builtinPresets = map[AgentPreset]*AgentPresetInfo{
 		Command: "cursor-agent",
 		// -f/--force: auto-approve tool use (see cursor-agent --help). Install script also symlinks "agent" -> same binary.
 		Args: []string{"-f"},
-		// cursor-agent + agent (install symlinks). Pane matching for "agent" requires session env (GT_AGENT=cursor or GT_PROCESS_NAMES includes cursor-agent); see internal/tmux processNamesForSession.
+		// cursor-agent + agent (install symlinks). Pane matching for "agent" requires session env (MS_AGENT=cursor or MS_PROCESS_NAMES includes cursor-agent); see internal/tmux processNamesForSession.
 		ProcessNames:        []string{"cursor-agent", "agent"},
 		SessionIDEnv:        "", // Uses --resume with chatId directly
 		ResumeFlag:          "--resume",
@@ -684,7 +684,7 @@ func ListAgentPresets() []string {
 }
 
 // BuiltInAgentPresetSummary returns a sorted, comma-separated list of built-in preset names
-// for CLI help text (gt config agent list, default-agent, --provider, etc.).
+// for CLI help text (ms config agent list, default-agent, --provider, etc.).
 func BuiltInAgentPresetSummary() string {
 	names := ListAgentPresets()
 	sort.Strings(names)
@@ -922,7 +922,7 @@ func ResolveProcessNames(agentName, command string, args ...string) []string {
 	if command != "" {
 		cmdBase = filepath.Base(command)
 	}
-	unwrappedCmdBase := strings.TrimPrefix(cmdBase, "gt-")
+	unwrappedCmdBase := strings.TrimPrefix(cmdBase, "ms-")
 
 	// Check if agentName matches a built-in/registered preset with matching command.
 	// Compare against both the raw command and basename to handle registry entries
@@ -933,7 +933,7 @@ func ResolveProcessNames(agentName, command string, args ...string) []string {
 			(info.Command == command ||
 				info.Command == cmdBase ||
 				filepath.Base(info.Command) == cmdBase ||
-				(info.Command == unwrappedCmdBase && strings.HasPrefix(cmdBase, "gt-")) ||
+				(info.Command == unwrappedCmdBase && strings.HasPrefix(cmdBase, "ms-")) ||
 				cmdBase == "") {
 			return info.ProcessNames
 		}
@@ -968,7 +968,7 @@ func ResolveProcessNames(agentName, command string, args ...string) []string {
 			}
 			if info.Command == command ||
 				filepath.Base(info.Command) == cmdBase ||
-				(strings.HasPrefix(cmdBase, "gt-") && filepath.Base(info.Command) == unwrappedCmdBase) {
+				(strings.HasPrefix(cmdBase, "ms-") && filepath.Base(info.Command) == unwrappedCmdBase) {
 				return info.ProcessNames
 			}
 		}

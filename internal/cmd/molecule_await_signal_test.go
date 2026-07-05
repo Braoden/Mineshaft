@@ -125,7 +125,7 @@ func TestAwaitSignalResult(t *testing.T) {
 	result := AwaitSignalResult{
 		Reason:  "signal",
 		Elapsed: 5 * time.Second,
-		Signal:  "[12:34:56] + gt-abc created · New issue",
+		Signal:  "[12:34:56] + ms-abc created · New issue",
 	}
 
 	if result.Reason != "signal" {

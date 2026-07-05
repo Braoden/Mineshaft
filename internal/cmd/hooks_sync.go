@@ -33,8 +33,8 @@ For template-based agents (OpenCode, Gemini, Copilot, etc.):
 3. Overwrite if content differs
 
 Examples:
-  gt hooks sync             # Regenerate all hook/settings files
-  gt hooks sync --dry-run   # Show what would change without writing`,
+  ms hooks sync             # Regenerate all hook/settings files
+  ms hooks sync --dry-run   # Show what would change without writing`,
 	RunE: runHooksSync,
 }
 

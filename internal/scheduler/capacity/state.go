@@ -60,7 +60,7 @@ func LoadState(townRoot string) (*SchedulerState, error) {
 
 // SaveState writes the scheduler runtime state to disk atomically.
 // Uses write-to-temp + rename to prevent corruption from concurrent writers
-// (e.g., dispatch RecordDispatch racing with gt scheduler pause).
+// (e.g., dispatch RecordDispatch racing with ms scheduler pause).
 func SaveState(townRoot string, state *SchedulerState) error {
 	path := stateFile(townRoot)
 	dir := filepath.Dir(path)

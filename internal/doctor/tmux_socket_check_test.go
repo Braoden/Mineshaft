@@ -82,7 +82,7 @@ func TestSocketSplitBrainCheck_NoTownServer(t *testing.T) {
 
 	check := NewSocketSplitBrainCheck()
 	check.useSocketForTest = true
-	check.socketForTest = "gt-abc123"
+	check.socketForTest = "ms-abc123"
 	check.townListerForTest = &mockSocketLister{listErr: fmt.Errorf("no server running")}
 	check.defaultListerForTest = &mockSocketLister{sessions: []string{}}
 
@@ -102,7 +102,7 @@ func TestSocketSplitBrainCheck_NoDefaultServer(t *testing.T) {
 
 	check := NewSocketSplitBrainCheck()
 	check.useSocketForTest = true
-	check.socketForTest = "gt-abc123"
+	check.socketForTest = "ms-abc123"
 	check.townListerForTest = &mockSocketLister{sessions: []string{"ga-witness"}}
 	check.defaultListerForTest = &mockSocketLister{listErr: fmt.Errorf("no server running")}
 
@@ -122,7 +122,7 @@ func TestSocketSplitBrainCheck_NoDuplicates(t *testing.T) {
 
 	check := NewSocketSplitBrainCheck()
 	check.useSocketForTest = true
-	check.socketForTest = "gt-abc123"
+	check.socketForTest = "ms-abc123"
 	check.townListerForTest = &mockSocketLister{sessions: []string{"ga-witness"}}
 	check.defaultListerForTest = &mockSocketLister{sessions: []string{"personal-stuff"}}
 
@@ -142,7 +142,7 @@ func TestSocketSplitBrainCheck_DetectsDuplicates(t *testing.T) {
 
 	check := NewSocketSplitBrainCheck()
 	check.useSocketForTest = true
-	check.socketForTest = "gt-abc123"
+	check.socketForTest = "ms-abc123"
 	check.townListerForTest = &mockSocketLister{sessions: []string{"ga-witness"}}
 	check.defaultListerForTest = &mockSocketLister{sessions: []string{"ga-witness"}}
 
@@ -172,7 +172,7 @@ func TestSocketSplitBrainCheck_DetectsOrphans(t *testing.T) {
 
 	check := NewSocketSplitBrainCheck()
 	check.useSocketForTest = true
-	check.socketForTest = "gt-abc123"
+	check.socketForTest = "ms-abc123"
 	check.townListerForTest = &mockSocketLister{sessions: []string{}}
 	check.defaultListerForTest = &mockSocketLister{sessions: []string{"ga-refinery"}}
 
@@ -199,7 +199,7 @@ func TestSocketSplitBrainCheck_MixedWithNonMineshaft(t *testing.T) {
 
 	check := NewSocketSplitBrainCheck()
 	check.useSocketForTest = true
-	check.socketForTest = "gt-abc123"
+	check.socketForTest = "ms-abc123"
 	check.townListerForTest = &mockSocketLister{sessions: []string{}}
 	check.defaultListerForTest = &mockSocketLister{sessions: []string{"ga-witness", "personal-stuff"}}
 

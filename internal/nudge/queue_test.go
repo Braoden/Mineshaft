@@ -12,7 +12,7 @@ import (
 func TestEnqueueAndDrain(t *testing.T) {
 	townRoot := t.TempDir()
 
-	session := "gt-mineshaft-crew-sean"
+	session := "ms-mineshaft-crew-sean"
 	n1 := QueuedNudge{
 		Sender:   "overseer",
 		Message:  "Check your hook",
@@ -84,7 +84,7 @@ func TestDrainEmptyQueue(t *testing.T) {
 
 func TestDrainSkipsMalformed(t *testing.T) {
 	townRoot := t.TempDir()
-	session := "gt-test"
+	session := "ms-test"
 
 	// Create queue dir and a malformed file
 	dir := filepath.Join(townRoot, ".runtime", "nudge_queue", session)
@@ -184,7 +184,7 @@ func TestPendingNonexistentDir(t *testing.T) {
 
 func TestEnqueueDefaults(t *testing.T) {
 	townRoot := t.TempDir()
-	session := "gt-test-defaults"
+	session := "ms-test-defaults"
 
 	// Enqueue with zero timestamp and empty priority — should get defaults
 	n := QueuedNudge{
@@ -220,7 +220,7 @@ func TestEnqueueDefaults(t *testing.T) {
 
 func TestEnqueueUrgentTTL(t *testing.T) {
 	townRoot := t.TempDir()
-	session := "gt-test-urgent-ttl"
+	session := "ms-test-urgent-ttl"
 
 	n := QueuedNudge{
 		Sender:   "test",
@@ -247,7 +247,7 @@ func TestEnqueueUrgentTTL(t *testing.T) {
 
 func TestEnqueueCustomExpiry(t *testing.T) {
 	townRoot := t.TempDir()
-	session := "gt-test-custom-expiry"
+	session := "ms-test-custom-expiry"
 
 	customExpiry := time.Now().Add(5 * time.Minute)
 	n := QueuedNudge{
@@ -274,7 +274,7 @@ func TestEnqueueCustomExpiry(t *testing.T) {
 
 func TestDrainSkipsExpired(t *testing.T) {
 	townRoot := t.TempDir()
-	session := "gt-test-expired"
+	session := "ms-test-expired"
 
 	// Enqueue an already-expired nudge
 	expired := QueuedNudge{
@@ -328,7 +328,7 @@ func TestDrainSkipsExpired(t *testing.T) {
 
 func TestEnqueueQueueDepthLimit(t *testing.T) {
 	townRoot := t.TempDir()
-	session := "gt-test-depth"
+	session := "ms-test-depth"
 
 	// Fill the queue to MaxQueueDepth
 	for i := 0; i < MaxQueueDepth; i++ {
@@ -377,7 +377,7 @@ func TestEnqueueQueueDepthLimit(t *testing.T) {
 
 func TestDrainSweepsOrphanedClaims(t *testing.T) {
 	townRoot := t.TempDir()
-	session := "gt-test-orphans"
+	session := "ms-test-orphans"
 
 	dir := filepath.Join(townRoot, ".runtime", "nudge_queue", session)
 	if err := os.MkdirAll(dir, 0755); err != nil {
@@ -453,7 +453,7 @@ func TestDrainSweepsOrphanedClaims(t *testing.T) {
 
 func TestConcurrentEnqueueNoDuplicateLoss(t *testing.T) {
 	townRoot := t.TempDir()
-	session := "gt-test-concurrent"
+	session := "ms-test-concurrent"
 
 	// Fire 20 concurrent enqueues — all should succeed without collision.
 	const count = 20
@@ -505,7 +505,7 @@ func TestConcurrentEnqueueNoDuplicateLoss(t *testing.T) {
 // is not returned by Drain and remains in the queue.
 func TestDrainSkipsDeferredNudge(t *testing.T) {
 	townRoot := t.TempDir()
-	session := "gt-test-deferred"
+	session := "ms-test-deferred"
 
 	deferred := QueuedNudge{
 		Sender:       "system",
@@ -538,7 +538,7 @@ func TestDrainSkipsDeferredNudge(t *testing.T) {
 // DeliverAfter is delivered normally.
 func TestDrainDeliversDeferredNudgeWhenReady(t *testing.T) {
 	townRoot := t.TempDir()
-	session := "gt-test-deferred-ready"
+	session := "ms-test-deferred-ready"
 
 	ready := QueuedNudge{
 		Sender:       "system",
@@ -565,7 +565,7 @@ func TestDrainDeliversDeferredNudgeWhenReady(t *testing.T) {
 // when a mix of deferred and immediately-deliverable nudges are queued.
 func TestDrainMixedDeferredAndReady(t *testing.T) {
 	townRoot := t.TempDir()
-	session := "gt-test-mixed-deferred"
+	session := "ms-test-mixed-deferred"
 
 	// Enqueue: immediate, then deferred, then immediate (interleaved order).
 	n1 := QueuedNudge{Sender: "overseer", Message: "immediate-1"}
@@ -615,7 +615,7 @@ func TestDrainMixedDeferredAndReady(t *testing.T) {
 
 func TestRemoveKindByThread(t *testing.T) {
 	townRoot := t.TempDir()
-	session := "gt-test-remove"
+	session := "ms-test-remove"
 
 	keep := QueuedNudge{Sender: "system", Message: "keep", Kind: "mail", ThreadID: "thread-1"}
 	removeA := QueuedNudge{Sender: "system", Message: "remove-a", Kind: "reply-reminder", ThreadID: "thread-1"}
@@ -657,7 +657,7 @@ func TestRemoveKindByThread(t *testing.T) {
 // after the deadline elapses.
 func TestDeferredNudgeDeliveredAfterDelay(t *testing.T) {
 	townRoot := t.TempDir()
-	session := "gt-test-deferred-sequence"
+	session := "ms-test-deferred-sequence"
 
 	shortDelay := QueuedNudge{
 		Sender:       "system",
@@ -706,7 +706,7 @@ func TestDeferredNudgeDeliveredAfterDelay(t *testing.T) {
 // is treated as immediately deliverable (not deferred).
 func TestZeroDeliverAfterIsImmediate(t *testing.T) {
 	townRoot := t.TempDir()
-	session := "gt-test-zero-deliver-after"
+	session := "ms-test-zero-deliver-after"
 
 	n := QueuedNudge{
 		Sender:  "overseer",
@@ -728,7 +728,7 @@ func TestZeroDeliverAfterIsImmediate(t *testing.T) {
 
 func TestConcurrentDrainNoDoubleDeli(t *testing.T) {
 	townRoot := t.TempDir()
-	session := "gt-test-drain-race"
+	session := "ms-test-drain-race"
 
 	// Enqueue 10 nudges
 	const count = 10

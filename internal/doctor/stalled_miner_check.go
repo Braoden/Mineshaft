@@ -128,7 +128,7 @@ func (c *StalledMinerCheck) Run(ctx *CheckContext) *CheckResult {
 		Message: fmt.Sprintf("Found %d stalled miner(s) with unpushed work at risk of loss",
 			len(stalled)),
 		Details: details,
-		FixHint: "Run 'gt doctor --fix' to push stalled branches to remote",
+		FixHint: "Run 'ms doctor --fix' to push stalled branches to remote",
 	}
 }
 

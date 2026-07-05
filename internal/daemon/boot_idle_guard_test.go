@@ -211,7 +211,7 @@ func TestEnsureBootRunning_IdleGuard(t *testing.T) {
 			writeFakeTmux(t, fakeBinDir) // reuse helper from boot_spawn_frequency_test.go
 			t.Setenv("PATH", fakeBinDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 			t.Setenv("TMUX_LOG", tmuxLog)
-			t.Setenv("GT_DEGRADED", "false")
+			t.Setenv("MS_DEGRADED", "false")
 
 			if tc.heartbeatAge > 0 {
 				writeSupervisorHeartbeat(t, townRoot, tc.heartbeatAge)

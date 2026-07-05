@@ -33,7 +33,7 @@ type NotificationManager struct {
 }
 
 // NewNotificationManager creates a new notification manager.
-// stateDir is where slot state files are stored (e.g., ~/gt/daemon/notifications/)
+// stateDir is where slot state files are stored (e.g., ~/ms/daemon/notifications/)
 func NewNotificationManager(stateDir string, maxAge time.Duration) *NotificationManager {
 	return &NotificationManager{
 		stateDir: stateDir,

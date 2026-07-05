@@ -23,15 +23,15 @@ type DispatchResult struct {
 }
 
 // dispatchTaskDirect dispatches a single task to its rig.
-// In production, this delegates to gt sling. Tests override this variable
+// In production, this delegates to ms sling. Tests override this variable
 // with a stub to avoid spawning real processes.
 var dispatchTaskDirect = func(townRoot, beadID, rig string) error {
-	cmd := exec.Command("gt", "sling", beadID, rig)
+	cmd := exec.Command("ms", "sling", beadID, rig)
 	cmd.Dir = townRoot
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("gt sling %s %s: %w\nstderr: %s", beadID, rig, err, strings.TrimSpace(stderr.String()))
+		return fmt.Errorf("ms sling %s %s: %w\nstderr: %s", beadID, rig, err, strings.TrimSpace(stderr.String()))
 	}
 	return nil
 }
@@ -103,7 +103,7 @@ func bdUpdateStatus(beadID, status string) error {
 }
 
 // collectBlockedRigsInDAG returns a map of parked/docked rig names to the
-// bead IDs that target them. Only considers slingable nodes. (gt-4owfd.1)
+// bead IDs that target them. Only considers slingable nodes. (ms-4owfd.1)
 func collectBlockedRigsInDAG(dag *MinecartDAG, townRoot string) map[string][]string {
 	blockedRigBeads := make(map[string][]string)
 	for _, node := range dag.Nodes {
@@ -122,7 +122,7 @@ func collectBlockedRigsInDAG(dag *MinecartDAG, townRoot string) map[string][]str
 
 // checkBlockedRigsForLaunch checks if any target rigs are parked or docked.
 // Returns an error listing all blocked rigs if any are found and force is false.
-// (gt-4owfd.1)
+// (ms-4owfd.1)
 func checkBlockedRigsForLaunch(dag *MinecartDAG, townRoot string, force bool) error {
 	blockedRigBeads := collectBlockedRigsInDAG(dag, townRoot)
 	if len(blockedRigBeads) == 0 {
@@ -151,7 +151,7 @@ func checkBlockedRigsForLaunch(dag *MinecartDAG, townRoot string, force bool) er
 		details = append(details, fmt.Sprintf("  %s: %s", rig, strings.Join(beadIDs, ", ")))
 	}
 
-	return fmt.Errorf("cannot launch: %d target rig(s) are parked or docked:\n%s\n\nUse 'gt rig unpark' or 'gt rig undock' to restore, or --force to proceed anyway",
+	return fmt.Errorf("cannot launch: %d target rig(s) are parked or docked:\n%s\n\nUse 'ms rig unpark' or 'ms rig undock' to restore, or --force to proceed anyway",
 		len(rigs), strings.Join(details, "\n"))
 }
 
@@ -199,7 +199,7 @@ func renderLaunchOutput(minecartID string, waves []Wave, results []DispatchResul
 	b.WriteString("\n")
 
 	// Section 2: Monitor command hint.
-	fmt.Fprintf(&b, "  Monitor: gt minecart status %s\n", minecartID)
+	fmt.Fprintf(&b, "  Monitor: ms minecart status %s\n", minecartID)
 	b.WriteString("\n")
 
 	// Section 3: Wave summary.
@@ -254,7 +254,7 @@ func renderLaunchOutput(minecartID string, waves []Wave, results []DispatchResul
 	b.WriteString("\n")
 
 	// Section 5: TUI hint.
-	b.WriteString("  Hint: gt minecart -i for interactive monitoring\n")
+	b.WriteString("  Hint: ms minecart -i for interactive monitoring\n")
 	b.WriteString("\n")
 
 	// Section 6: Daemon explanation.
@@ -263,7 +263,7 @@ func renderLaunchOutput(minecartID string, waves []Wave, results []DispatchResul
 	return b.String()
 }
 
-// runMinecartLaunch is the handler for `gt minecart launch`.
+// runMinecartLaunch is the handler for `ms minecart launch`.
 func runMinecartLaunch(cmd *cobra.Command, args []string) error {
 	// Step 1: Validate args.
 	if err := validateStageArgs(args); err != nil {
@@ -308,7 +308,7 @@ func runMinecartLaunch(cmd *cobra.Command, args []string) error {
 				return fmt.Errorf("resolve town root for dispatch: %w", err)
 			}
 
-			// Check for parked/docked rigs before dispatch (gt-4owfd.1, #2120)
+			// Check for parked/docked rigs before dispatch (ms-4owfd.1, #2120)
 			if err := checkBlockedRigsForLaunch(dag, townRoot, minecartLaunchForce); err != nil {
 				return err
 			}

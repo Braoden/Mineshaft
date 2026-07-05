@@ -19,8 +19,8 @@ var directiveShowCmd = &cobra.Command{
 Shows which files contribute to the directive (town-level, rig-level, or both).
 
 Examples:
-  gt directive show miner             # Show miner directive
-  gt directive show witness --rig sky   # Show witness directive for sky rig`,
+  ms directive show miner             # Show miner directive
+  ms directive show witness --rig sky   # Show witness directive for sky rig`,
 	Args: cobra.ExactArgs(1),
 	RunE: runDirectiveShow,
 }
@@ -58,7 +58,7 @@ func runDirectiveShow(cmd *cobra.Command, args []string) error {
 		if rigPath != "" {
 			fmt.Printf("  Checked: %s\n", rigPath)
 		}
-		fmt.Println("\nUse 'gt directive edit' to create one.")
+		fmt.Println("\nUse 'ms directive edit' to create one.")
 		return nil
 	}
 

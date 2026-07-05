@@ -10,7 +10,7 @@ import (
 func TestMergeHooksNoOverrides(t *testing.T) {
 	base := &HooksConfig{
 		SessionStart: []HookEntry{
-			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "gt prime"}}},
+			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "ms prime"}}},
 		},
 	}
 
@@ -19,8 +19,8 @@ func TestMergeHooksNoOverrides(t *testing.T) {
 	if len(result.SessionStart) != 1 {
 		t.Fatalf("expected 1 SessionStart, got %d", len(result.SessionStart))
 	}
-	if result.SessionStart[0].Hooks[0].Command != "gt prime" {
-		t.Errorf("expected 'gt prime', got %q", result.SessionStart[0].Hooks[0].Command)
+	if result.SessionStart[0].Hooks[0].Command != "ms prime" {
+		t.Errorf("expected 'ms prime', got %q", result.SessionStart[0].Hooks[0].Command)
 	}
 }
 
@@ -43,10 +43,10 @@ func TestMergeHooksNilBase(t *testing.T) {
 func TestMergeHooksRoleOverride(t *testing.T) {
 	base := &HooksConfig{
 		SessionStart: []HookEntry{
-			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "gt prime"}}},
+			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "ms prime"}}},
 		},
 		Stop: []HookEntry{
-			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "gt costs record"}}},
+			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "ms costs record"}}},
 		},
 	}
 
@@ -79,14 +79,14 @@ func TestMergeHooksRoleOverride(t *testing.T) {
 func TestMergeHooksSameMatcherReplaces(t *testing.T) {
 	base := &HooksConfig{
 		SessionStart: []HookEntry{
-			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "gt prime --old"}}},
+			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "ms prime --old"}}},
 		},
 	}
 
 	overrides := map[string]*HooksConfig{
 		"crew": {
 			SessionStart: []HookEntry{
-				{Matcher: "", Hooks: []Hook{{Type: "command", Command: "gt prime --new"}}},
+				{Matcher: "", Hooks: []Hook{{Type: "command", Command: "ms prime --new"}}},
 			},
 		},
 	}
@@ -96,7 +96,7 @@ func TestMergeHooksSameMatcherReplaces(t *testing.T) {
 	if len(result.SessionStart) != 1 {
 		t.Fatalf("expected 1 SessionStart (replaced), got %d", len(result.SessionStart))
 	}
-	if result.SessionStart[0].Hooks[0].Command != "gt prime --new" {
+	if result.SessionStart[0].Hooks[0].Command != "ms prime --new" {
 		t.Errorf("expected override command, got %q", result.SessionStart[0].Hooks[0].Command)
 	}
 }
@@ -126,7 +126,7 @@ func TestMergeHooksDifferentMatcherAppends(t *testing.T) {
 func TestMergeHooksEmptyHooksDisables(t *testing.T) {
 	base := &HooksConfig{
 		Stop: []HookEntry{
-			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "gt costs record"}}},
+			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "ms costs record"}}},
 		},
 	}
 
@@ -202,7 +202,7 @@ func TestMergeHooksDoesNotMutateBase(t *testing.T) {
 func TestMergeHooksOverrideAddsNewType(t *testing.T) {
 	base := &HooksConfig{
 		SessionStart: []HookEntry{
-			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "gt prime"}}},
+			{Matcher: "", Hooks: []Hook{{Type: "command", Command: "ms prime"}}},
 		},
 	}
 

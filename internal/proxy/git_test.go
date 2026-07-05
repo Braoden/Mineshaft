@@ -165,7 +165,7 @@ func TestAuthorizeReceivePack(t *testing.T) {
 	srv, err := New(Config{TownRoot: t.TempDir()}, nil)
 	require.NoError(t, err)
 
-	t.Run("CN with no gt- prefix returns 403", func(t *testing.T) {
+	t.Run("CN with no ms- prefix returns 403", func(t *testing.T) {
 		rec := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/v1/git/rig/git-receive-pack",
 			bytes.NewReader(receivePackBody()))
@@ -174,27 +174,27 @@ func TestAuthorizeReceivePack(t *testing.T) {
 		assert.Equal(t, http.StatusForbidden, rec.Code)
 	})
 
-	t.Run("CN = 'gt-' with no rig or name returns 403", func(t *testing.T) {
+	t.Run("CN = 'ms-' with no rig or name returns 403", func(t *testing.T) {
 		rec := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/v1/git/rig/git-receive-pack",
 			bytes.NewReader(receivePackBody()))
-		ok, _ := srv.authorizeReceivePack(rec, req, "gt-")
+		ok, _ := srv.authorizeReceivePack(rec, req, "ms-")
 		assert.False(t, ok)
 		assert.Equal(t, http.StatusForbidden, rec.Code)
 	})
 
 	t.Run("CN with empty rig segment returns 403", func(t *testing.T) {
-		// gt--furiosa has an empty rig; minerName now returns "" for this case.
+		// ms--furiosa has an empty rig; minerName now returns "" for this case.
 		rec := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/v1/git/rig/git-receive-pack",
 			bytes.NewReader(receivePackBody("refs/heads/miner/furiosa-abc")))
-		ok, _ := srv.authorizeReceivePack(rec, req, "gt--furiosa")
+		ok, _ := srv.authorizeReceivePack(rec, req, "ms--furiosa")
 		assert.False(t, ok)
 		assert.Equal(t, http.StatusForbidden, rec.Code)
 	})
 
 	t.Run("valid CN and valid refs — body is rewound correctly", func(t *testing.T) {
-		cn := "gt-mineshaft-furiosa"
+		cn := "ms-mineshaft-furiosa"
 		body := receivePackBody("refs/heads/miner/furiosa-abc123")
 
 		rec := httptest.NewRecorder()
@@ -211,7 +211,7 @@ func TestAuthorizeReceivePack(t *testing.T) {
 	})
 
 	t.Run("valid CN with invalid refs returns 403 and includes refs", func(t *testing.T) {
-		cn := "gt-mineshaft-furiosa"
+		cn := "ms-mineshaft-furiosa"
 		body := receivePackBody("refs/heads/main")
 
 		rec := httptest.NewRecorder()
@@ -226,7 +226,7 @@ func TestAuthorizeReceivePack(t *testing.T) {
 	})
 
 	t.Run("body read error returns 400", func(t *testing.T) {
-		cn := "gt-mineshaft-furiosa"
+		cn := "ms-mineshaft-furiosa"
 		rec := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/v1/git/rig/git-receive-pack", nil)
 		req.Body = errReadCloser{err: fmt.Errorf("simulated read error")}
@@ -238,7 +238,7 @@ func TestAuthorizeReceivePack(t *testing.T) {
 	})
 
 	t.Run("oversized body returns 400", func(t *testing.T) {
-		cn := "gt-mineshaft-furiosa"
+		cn := "ms-mineshaft-furiosa"
 		rec := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/v1/git/rig/git-receive-pack", nil)
 		req.Body = errReadCloser{err: &http.MaxBytesError{Limit: 32 << 20}}
@@ -376,10 +376,10 @@ func TestClientCN(t *testing.T) {
 		req := httptest.NewRequest("POST", "/", nil)
 		req.TLS = &tls.ConnectionState{
 			PeerCertificates: []*x509.Certificate{
-				{Subject: pkix.Name{CommonName: "gt-mineshaft-furiosa"}},
+				{Subject: pkix.Name{CommonName: "ms-mineshaft-furiosa"}},
 			},
 		}
-		assert.Equal(t, "gt-mineshaft-furiosa", clientCN(req))
+		assert.Equal(t, "ms-mineshaft-furiosa", clientCN(req))
 	})
 }
 
@@ -535,7 +535,7 @@ func TestHandleGitAuditLog(t *testing.T) {
 	t.Run("fetch info/refs emits INFO with identity and rig", func(t *testing.T) {
 		srv, _, lc := newGitServerWithLog(t)
 		req := fakeGitRequest("GET", "/v1/git/testrip/info/refs?service=git-upload-pack",
-			nil, "gt-mineshaft-furiosa")
+			nil, "ms-mineshaft-furiosa")
 		srv.handleGit(httptest.NewRecorder(), req)
 
 		e, ok := lc.findEntry(slog.LevelInfo, "git info/refs")
@@ -548,7 +548,7 @@ func TestHandleGitAuditLog(t *testing.T) {
 	t.Run("push info/refs emits INFO with op=push", func(t *testing.T) {
 		srv, _, lc := newGitServerWithLog(t)
 		req := fakeGitRequest("GET", "/v1/git/testrip/info/refs?service=git-receive-pack",
-			nil, "gt-mineshaft-furiosa")
+			nil, "ms-mineshaft-furiosa")
 		srv.handleGit(httptest.NewRecorder(), req)
 
 		e, ok := lc.findEntry(slog.LevelInfo, "git info/refs")
@@ -560,7 +560,7 @@ func TestHandleGitAuditLog(t *testing.T) {
 		srv, _, lc := newGitServerWithLog(t)
 		body := receivePackBody("refs/heads/main") // not allowed
 		req := fakeGitRequest("POST", "/v1/git/testrip/git-receive-pack",
-			body, "gt-mineshaft-furiosa")
+			body, "ms-mineshaft-furiosa")
 		rec := httptest.NewRecorder()
 		srv.handleGit(rec, req)
 
@@ -597,7 +597,7 @@ func TestHandleGitAuditLogIntegration(t *testing.T) {
 		makeBareRepo(t, gitPath, townRoot)
 
 		req := fakeGitRequest("POST", "/v1/git/testrip/git-upload-pack",
-			[]byte("0000"), "gt-mineshaft-furiosa")
+			[]byte("0000"), "ms-mineshaft-furiosa")
 		req.Header.Set("Content-Type", "application/x-git-upload-pack-request")
 		srv.handleGit(httptest.NewRecorder(), req)
 
@@ -611,7 +611,7 @@ func TestHandleGitAuditLogIntegration(t *testing.T) {
 // TestHandleReceivePackIntegration performs a full end-to-end mTLS git push
 // through a live proxy server, verifying branch authorization with a real git binary.
 //
-// The test issues a miner cert (CN "gt-mineshaft-raider" → miner name "raider"),
+// The test issues a miner cert (CN "ms-mineshaft-raider" → miner name "raider"),
 // starts the proxy with mTLS enabled, creates a local repo with a commit, then:
 //   - Asserts that a push to refs/heads/miner/raider-* (allowed) succeeds.
 //   - Asserts that a push to refs/heads/main (disallowed) is rejected.
@@ -622,9 +622,9 @@ func TestHandleReceivePackIntegration(t *testing.T) {
 	ca, err := GenerateCA(t.TempDir())
 	require.NoError(t, err)
 
-	// "raider" is the miner name extracted from "gt-mineshaft-raider" by minerName().
+	// "raider" is the miner name extracted from "ms-mineshaft-raider" by minerName().
 	// Allowed refs are refs/heads/miner/raider-*.
-	const minerCN = "gt-mineshaft-raider"
+	const minerCN = "ms-mineshaft-raider"
 	clientCertPEM, clientKeyPEM, err := ca.IssueMiner(minerCN, time.Hour)
 	require.NoError(t, err)
 
@@ -672,9 +672,9 @@ func TestHandleReceivePackIntegration(t *testing.T) {
 		"HOME="+gitHome,
 		"GIT_TERMINAL_PROMPT=0", // suppress any interactive credential prompts
 		"GIT_AUTHOR_NAME=Test Miner",
-		"GIT_AUTHOR_EMAIL=test@gt.local",
+		"GIT_AUTHOR_EMAIL=test@ms.local",
 		"GIT_COMMITTER_NAME=Test Miner",
-		"GIT_COMMITTER_EMAIL=test@gt.local",
+		"GIT_COMMITTER_EMAIL=test@ms.local",
 	)
 
 	runGit := func(dir string, args ...string) {
@@ -814,7 +814,7 @@ func TestHandleGitContextCancellation(t *testing.T) {
 		// Provide a valid mTLS CN so authorizeReceivePack passes before git runs.
 		req.TLS = &tls.ConnectionState{
 			PeerCertificates: []*x509.Certificate{
-				{Subject: pkix.Name{CommonName: "gt-testrip-furiosa"}},
+				{Subject: pkix.Name{CommonName: "ms-testrip-furiosa"}},
 			},
 		}
 		rec := httptest.NewRecorder()

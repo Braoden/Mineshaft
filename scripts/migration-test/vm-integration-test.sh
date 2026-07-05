@@ -39,7 +39,7 @@ print(s.getsockname()[1])
 s.close()
 PY
 )}"
-export GT_DOLT_PORT="$DOLT_PORT"
+export MS_DOLT_PORT="$DOLT_PORT"
 export BEADS_DOLT_PORT="$DOLT_PORT"
 REPORT_FILE="/tmp/vm-integration-results.txt"
 MASTER_BACKUP="/tmp/migration-master-backup"
@@ -54,7 +54,7 @@ TESTS_RUN=0
 
 # Run as ubuntu user (files are owned by ubuntu)
 run_as_ubuntu() {
-    sudo -u ubuntu env GT_DOLT_PORT="$DOLT_PORT" BEADS_DOLT_PORT="$DOLT_PORT" "$@"
+    sudo -u ubuntu env MS_DOLT_PORT="$DOLT_PORT" BEADS_DOLT_PORT="$DOLT_PORT" "$@"
 }
 
 # Create a master backup of all .beads dirs BEFORE any tests run.
@@ -166,7 +166,7 @@ kill_all_processes() {
 start_dolt_server() {
     log "Starting Dolt server on isolated port $DOLT_PORT..."
     local pid
-    pid=$(run_as_ubuntu bash -c 'nohup dolt sql-server --host 127.0.0.1 --port "$GT_DOLT_PORT" --data-dir "$1" > "$1/server.log" 2>&1 & echo $!' _ "$DOLT_DATA_DIR")
+    pid=$(run_as_ubuntu bash -c 'nohup dolt sql-server --host 127.0.0.1 --port "$MS_DOLT_PORT" --data-dir "$1" > "$1/server.log" 2>&1 & echo $!' _ "$DOLT_DATA_DIR")
     echo "$pid" > "$DOLT_PID_FILE"
     sleep 3
 
@@ -264,7 +264,7 @@ strip_sqlite() {
     sudo rm -f "$beads_dir"/beads.backup-pre-dolt-*.db
 }
 
-# Run migration for all rigs (bd migrate dolt) then gt dolt migrate + gt dolt start
+# Run migration for all rigs (bd migrate dolt) then ms dolt migrate + ms dolt start
 run_full_migration() {
     log "Running full migration..."
 
@@ -284,13 +284,13 @@ run_full_migration() {
         echo y | run_as_ubuntu bd migrate dolt 2>&1 || warn "$rig_name: migrate returned non-zero"
     done
 
-    # Stop dolt server before consolidation (gt dolt migrate requires it stopped)
+    # Stop dolt server before consolidation (ms dolt migrate requires it stopped)
     log "Stopping Dolt server for consolidation..."
     stop_dolt_server
 
     # Consolidate dolt databases
     cd "$TOWN_ROOT"
-    run_as_ubuntu gt dolt migrate 2>&1 || warn "gt dolt migrate returned non-zero"
+    run_as_ubuntu ms dolt migrate 2>&1 || warn "ms dolt migrate returned non-zero"
 
     # Restart dolt server
     start_dolt_server
@@ -536,7 +536,7 @@ if [[ ${#RIGS[@]} -ge 2 ]]; then
     # Consolidate (stop server first)
     stop_dolt_server
     cd "$TOWN_ROOT"
-    run_as_ubuntu gt dolt migrate 2>&1 || warn "gt dolt migrate returned non-zero"
+    run_as_ubuntu ms dolt migrate 2>&1 || warn "ms dolt migrate returned non-zero"
     start_dolt_server
 
     verify_zero_artifacts "Test4-partial-resume"
@@ -594,20 +594,20 @@ for rig_dir in "$TOWN_ROOT"/*/; do
     fi
 done
 
-# Run gt dolt migrate again (stop server first, as required)
+# Run ms dolt migrate again (stop server first, as required)
 stop_dolt_server
 cd "$TOWN_ROOT"
-output=$(run_as_ubuntu gt dolt migrate 2>&1) || true
+output=$(run_as_ubuntu ms dolt migrate 2>&1) || true
 if echo "$output" | grep -qi "fatal\|panic\|corrupt"; then
-    fail_check "Test5-idempotent: gt dolt migrate had fatal error on re-run"
+    fail_check "Test5-idempotent: ms dolt migrate had fatal error on re-run"
     IDEM_ERRORS=$((IDEM_ERRORS + 1))
 fi
 start_dolt_server
 
-# Run gt dolt fix-metadata twice (must be harmless)
+# Run ms dolt fix-metadata twice (must be harmless)
 cd "$TOWN_ROOT"
-run_as_ubuntu gt dolt fix-metadata 2>&1 || true
-run_as_ubuntu gt dolt fix-metadata 2>&1 || true
+run_as_ubuntu ms dolt fix-metadata 2>&1 || true
+run_as_ubuntu ms dolt fix-metadata 2>&1 || true
 
 verify_zero_artifacts "Test5-idempotent"
 
@@ -661,7 +661,7 @@ fi
     echo "Date: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
     echo "VM: $(hostname)"
     echo "Town: $TOWN_ROOT"
-    echo "gt: $(gt --version 2>&1 | head -1)"
+    echo "ms: $(ms --version 2>&1 | head -1)"
     echo "bd: $(bd --version 2>&1 | head -1)"
     echo "dolt: $(dolt version 2>&1 | head -1)"
     echo ""

@@ -9,18 +9,18 @@ func TestName_DefaultIsGt(t *testing.T) {
 	// Reset singleton for test isolation
 	nameOnce = sync.Once{}
 	name = ""
-	t.Setenv("GT_COMMAND", "")
+	t.Setenv("MS_COMMAND", "")
 
 	got := Name()
-	if got != "gt" {
-		t.Errorf("Name() = %q, want %q", got, "gt")
+	if got != "ms" {
+		t.Errorf("Name() = %q, want %q", got, "ms")
 	}
 }
 
 func TestName_RespectsGT_COMMAND(t *testing.T) {
 	nameOnce = sync.Once{}
 	name = ""
-	t.Setenv("GT_COMMAND", "mineshaft")
+	t.Setenv("MS_COMMAND", "mineshaft")
 
 	got := Name()
 	if got != "mineshaft" {
@@ -31,7 +31,7 @@ func TestName_RespectsGT_COMMAND(t *testing.T) {
 func TestName_OnceSemantics(t *testing.T) {
 	nameOnce = sync.Once{}
 	name = ""
-	t.Setenv("GT_COMMAND", "first")
+	t.Setenv("MS_COMMAND", "first")
 
 	first := Name()
 	if first != "first" {
@@ -39,7 +39,7 @@ func TestName_OnceSemantics(t *testing.T) {
 	}
 
 	// Changing env after first call should have no effect (sync.Once)
-	t.Setenv("GT_COMMAND", "second")
+	t.Setenv("MS_COMMAND", "second")
 	second := Name()
 	if second != "first" {
 		t.Errorf("Name() returned %q after env change, want %q (sync.Once should cache)", second, "first")

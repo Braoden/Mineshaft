@@ -9,39 +9,39 @@ import (
 	"github.com/steveyegge/mineshaft/internal/tmux"
 )
 
-// TestInitRegistry_SocketFromTownName verifies GT_TMUX_SOCKET socket selection:
+// TestInitRegistry_SocketFromTownName verifies MS_TMUX_SOCKET socket selection:
 //   - unset / "default" / "auto" → per-town socket derived from town directory path
 //   - explicit value              → that value verbatim
 func TestInitRegistry_SocketFromTownName(t *testing.T) {
 	origTMUX := os.Getenv("TMUX")
 	origSocket := tmux.GetDefaultSocket()
-	origGTSocket := os.Getenv("GT_TMUX_SOCKET")
+	origGTSocket := os.Getenv("MS_TMUX_SOCKET")
 	t.Cleanup(func() {
 		os.Setenv("TMUX", origTMUX)
-		os.Setenv("GT_TMUX_SOCKET", origGTSocket)
+		os.Setenv("MS_TMUX_SOCKET", origGTSocket)
 		tmux.SetDefaultSocket(origSocket)
 	})
 
 	tests := []struct {
 		name        string
-		gtTmuxSocket string // GT_TMUX_SOCKET value ("" = unset)
+		gtTmuxSocket string // MS_TMUX_SOCKET value ("" = unset)
 		tmuxEnv     string  // $TMUX value
 		townDir     string  // basename of the town root directory
 	}{
 		{
 			name:        "unset → derived from town path",
 			gtTmuxSocket: "",
-			townDir:     "gt",
+			townDir:     "ms",
 		},
 		{
 			name:        "explicit default → derived from town path",
 			gtTmuxSocket: "default",
-			townDir:     "gt",
+			townDir:     "ms",
 		},
 		{
 			name:        "auto → derived from town path",
 			gtTmuxSocket: "auto",
-			townDir:     "gt",
+			townDir:     "ms",
 		},
 		{
 			name:        "auto → sanitized town name with spaces",
@@ -60,9 +60,9 @@ func TestInitRegistry_SocketFromTownName(t *testing.T) {
 			tmux.SetDefaultSocket("")
 
 			if tt.gtTmuxSocket != "" {
-				os.Setenv("GT_TMUX_SOCKET", tt.gtTmuxSocket)
+				os.Setenv("MS_TMUX_SOCKET", tt.gtTmuxSocket)
 			} else {
-				os.Unsetenv("GT_TMUX_SOCKET")
+				os.Unsetenv("MS_TMUX_SOCKET")
 			}
 			if tt.tmuxEnv != "" {
 				os.Setenv("TMUX", tt.tmuxEnv)
@@ -77,7 +77,7 @@ func TestInitRegistry_SocketFromTownName(t *testing.T) {
 			got := tmux.GetDefaultSocket()
 			want := townSocketName(townRoot)
 			if got != want {
-				t.Errorf("after InitRegistry(%q) with GT_TMUX_SOCKET=%q:\n  socket = %q, want %q",
+				t.Errorf("after InitRegistry(%q) with MS_TMUX_SOCKET=%q:\n  socket = %q, want %q",
 					townRoot, tt.gtTmuxSocket, got, want)
 			}
 
@@ -93,8 +93,8 @@ func TestInitRegistry_SocketFromTownName(t *testing.T) {
 	// Explicit custom socket name bypasses path hashing
 	t.Run("explicit custom socket name", func(t *testing.T) {
 		tmux.SetDefaultSocket("")
-		os.Setenv("GT_TMUX_SOCKET", "mysocket")
-		townRoot := filepath.Join(t.TempDir(), "gt")
+		os.Setenv("MS_TMUX_SOCKET", "mysocket")
+		townRoot := filepath.Join(t.TempDir(), "ms")
 		os.MkdirAll(townRoot, 0o755)
 		_ = InitRegistry(townRoot)
 		got := tmux.GetDefaultSocket()
@@ -106,11 +106,11 @@ func TestInitRegistry_SocketFromTownName(t *testing.T) {
 	// Same basename, different parent paths → different sockets
 	t.Run("same basename different paths get unique sockets", func(t *testing.T) {
 		tmux.SetDefaultSocket("")
-		os.Unsetenv("GT_TMUX_SOCKET")
+		os.Unsetenv("MS_TMUX_SOCKET")
 
 		tmpDir := t.TempDir()
-		townA := filepath.Join(tmpDir, "a", "gt")
-		townB := filepath.Join(tmpDir, "b", "gt")
+		townA := filepath.Join(tmpDir, "a", "ms")
+		townB := filepath.Join(tmpDir, "b", "ms")
 		os.MkdirAll(townA, 0o755)
 		os.MkdirAll(townB, 0o755)
 
@@ -127,21 +127,21 @@ func TestInitRegistry_SocketFromTownName(t *testing.T) {
 		if socketA == socketB {
 			t.Errorf("different town paths should get different sockets: A=%q, B=%q", socketA, socketB)
 		}
-		if !strings.HasPrefix(socketA, "gt-") || !strings.HasPrefix(socketB, "gt-") {
-			t.Errorf("sockets should start with 'gt-': A=%q, B=%q", socketA, socketB)
+		if !strings.HasPrefix(socketA, "ms-") || !strings.HasPrefix(socketB, "ms-") {
+			t.Errorf("sockets should start with 'ms-': A=%q, B=%q", socketA, socketB)
 		}
 	})
 }
 
 func TestInitRegistry_SocketFormat(t *testing.T) {
 	origSocket := tmux.GetDefaultSocket()
-	origGTSocket := os.Getenv("GT_TMUX_SOCKET")
+	origGTSocket := os.Getenv("MS_TMUX_SOCKET")
 	t.Cleanup(func() {
-		os.Setenv("GT_TMUX_SOCKET", origGTSocket)
+		os.Setenv("MS_TMUX_SOCKET", origGTSocket)
 		tmux.SetDefaultSocket(origSocket)
 	})
 
-	os.Unsetenv("GT_TMUX_SOCKET")
+	os.Unsetenv("MS_TMUX_SOCKET")
 	tmux.SetDefaultSocket("")
 
 	townRoot := filepath.Join(t.TempDir(), "myproject")
@@ -196,16 +196,16 @@ func TestTownSocketName(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	t.Run("includes basename and hash suffix", func(t *testing.T) {
-		townRoot := filepath.Join(tmpDir, "gt")
+		townRoot := filepath.Join(tmpDir, "ms")
 		os.MkdirAll(townRoot, 0o755)
 		got := townSocketName(townRoot)
-		if !strings.HasPrefix(got, "gt-") {
-			t.Errorf("townSocketName(%q) = %q, want prefix 'gt-'", townRoot, got)
+		if !strings.HasPrefix(got, "ms-") {
+			t.Errorf("townSocketName(%q) = %q, want prefix 'ms-'", townRoot, got)
 		}
-		// Should be "gt-" + 6 hex chars = 9 chars total
+		// Should be "ms-" + 6 hex chars = 9 chars total
 		parts := strings.SplitN(got, "-", 2)
 		if len(parts) != 2 || len(parts[1]) != 6 {
-			t.Errorf("townSocketName(%q) = %q, want 'gt-XXXXXX' format", townRoot, got)
+			t.Errorf("townSocketName(%q) = %q, want 'ms-XXXXXX' format", townRoot, got)
 		}
 	})
 
@@ -233,9 +233,9 @@ func TestTownSocketName(t *testing.T) {
 }
 
 func TestLegacySocketName(t *testing.T) {
-	got := LegacySocketName("/Users/hal/gt")
-	if got != "gt" {
-		t.Errorf("LegacySocketName = %q, want %q", got, "gt")
+	got := LegacySocketName("/Users/hal/ms")
+	if got != "ms" {
+		t.Errorf("LegacySocketName = %q, want %q", got, "ms")
 	}
 	got = LegacySocketName("/home/user/My Town")
 	if got != "my-town" {

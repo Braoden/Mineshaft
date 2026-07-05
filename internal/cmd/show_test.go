@@ -15,19 +15,19 @@ func TestExtractBeadIDFromArgs(t *testing.T) {
 		want string
 	}{
 		{"simple", []string{"myproject-abc"}, "myproject-abc"},
-		{"with flags after", []string{"gt-abc123", "--json"}, "gt-abc123"},
+		{"with flags after", []string{"ms-abc123", "--json"}, "ms-abc123"},
 		{"with flags before", []string{"--json", "hq-xyz"}, "hq-xyz"},
-		{"with id flag equals", []string{"--json", "--id=gt-abc123"}, "gt-abc123"},
+		{"with id flag equals", []string{"--json", "--id=ms-abc123"}, "ms-abc123"},
 		{"with id flag value", []string{"--id", "hq-xyz", "--json"}, "hq-xyz"},
-		{"positional before id flag value", []string{"gt-abc123", "--id", "hq-xyz"}, "gt-abc123"},
-		{"positional before id flag equals", []string{"gt-abc123", "--id=hq-xyz"}, "gt-abc123"},
-		{"positional after id flag value", []string{"--id", "hq-xyz", "gt-abc123"}, "gt-abc123"},
-		{"positional after id flag equals", []string{"--id=hq-xyz", "gt-abc123"}, "gt-abc123"},
-		{"flag-like id fallback", []string{"--id=--gt-abc123"}, "--gt-abc123"},
-		{"with as-of before id", []string{"--as-of", "main", "gt-abc123"}, "gt-abc123"},
-		{"with directory before id", []string{"-C", "/tmp/work", "gt-abc123"}, "gt-abc123"},
-		{"with format before id", []string{"--format", "json", "gt-abc123"}, "gt-abc123"},
-		{"with end of flags marker", []string{"--", "gt-abc123"}, "gt-abc123"},
+		{"positional before id flag value", []string{"ms-abc123", "--id", "hq-xyz"}, "ms-abc123"},
+		{"positional before id flag equals", []string{"ms-abc123", "--id=hq-xyz"}, "ms-abc123"},
+		{"positional after id flag value", []string{"--id", "hq-xyz", "ms-abc123"}, "ms-abc123"},
+		{"positional after id flag equals", []string{"--id=hq-xyz", "ms-abc123"}, "ms-abc123"},
+		{"flag-like id fallback", []string{"--id=--ms-abc123"}, "--ms-abc123"},
+		{"with as-of before id", []string{"--as-of", "main", "ms-abc123"}, "ms-abc123"},
+		{"with directory before id", []string{"-C", "/tmp/work", "ms-abc123"}, "ms-abc123"},
+		{"with format before id", []string{"--format", "json", "ms-abc123"}, "ms-abc123"},
+		{"with end of flags marker", []string{"--", "ms-abc123"}, "ms-abc123"},
 		{"flags only", []string{"--json", "-v"}, ""},
 		{"value flag only", []string{"--as-of", "main"}, ""},
 		{"empty", []string{}, ""},
@@ -79,8 +79,8 @@ func TestBdShowInvocationPinsRoutedMetadataDatabase(t *testing.T) {
 		wantPort string
 	}{
 		{
-			name:     "gt bead pins mineshaft despite stale ambient db",
-			args:     []string{"gt-abc", "--json"},
+			name:     "ms bead pins mineshaft despite stale ambient db",
+			args:     []string{"ms-abc", "--json"},
 			wantDir:  rigDir,
 			wantDB:   "mineshaft",
 			wantHost: "127.0.0.2",
@@ -155,7 +155,7 @@ func setupShowInvocationTown(t *testing.T) string {
 		t.Fatalf("write town.json: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`,
+		`{"prefix":"ms-","path":"mineshaft/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")

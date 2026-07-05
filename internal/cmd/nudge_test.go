@@ -13,7 +13,7 @@ import (
 func setupNudgeTestRegistry(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "mineshaft")
+	reg.Register("ms", "mineshaft")
 	reg.Register("bd", "beads")
 	old := session.DefaultRegistry()
 	session.SetDefaultRegistry(reg)
@@ -48,12 +48,12 @@ func TestResolveNudgePattern(t *testing.T) {
 	agents := []*AgentSession{
 		{Name: "hq-overseer", Type: AgentOverseer},
 		{Name: "hq-supervisor", Type: AgentSupervisor},
-		{Name: "gt-witness", Type: AgentWitness, Rig: "mineshaft"},
-		{Name: "gt-refinery", Type: AgentRefinery, Rig: "mineshaft"},
-		{Name: "gt-crew-max", Type: AgentCrew, Rig: "mineshaft", AgentName: "max"},
-		{Name: "gt-crew-jack", Type: AgentCrew, Rig: "mineshaft", AgentName: "jack"},
-		{Name: "gt-alpha", Type: AgentMiner, Rig: "mineshaft", AgentName: "alpha"},
-		{Name: "gt-beta", Type: AgentMiner, Rig: "mineshaft", AgentName: "beta"},
+		{Name: "ms-witness", Type: AgentWitness, Rig: "mineshaft"},
+		{Name: "ms-refinery", Type: AgentRefinery, Rig: "mineshaft"},
+		{Name: "ms-crew-max", Type: AgentCrew, Rig: "mineshaft", AgentName: "max"},
+		{Name: "ms-crew-jack", Type: AgentCrew, Rig: "mineshaft", AgentName: "jack"},
+		{Name: "ms-alpha", Type: AgentMiner, Rig: "mineshaft", AgentName: "alpha"},
+		{Name: "ms-beta", Type: AgentMiner, Rig: "mineshaft", AgentName: "beta"},
 		{Name: "bd-witness", Type: AgentWitness, Rig: "beads"},
 		{Name: "bd-gamma", Type: AgentMiner, Rig: "beads", AgentName: "gamma"},
 	}
@@ -76,42 +76,42 @@ func TestResolveNudgePattern(t *testing.T) {
 		{
 			name:     "specific witness",
 			pattern:  "mineshaft/witness",
-			expected: []string{"gt-witness"},
+			expected: []string{"ms-witness"},
 		},
 		{
 			name:     "all witnesses",
 			pattern:  "*/witness",
-			expected: []string{"gt-witness", "bd-witness"},
+			expected: []string{"ms-witness", "bd-witness"},
 		},
 		{
 			name:     "specific refinery",
 			pattern:  "mineshaft/refinery",
-			expected: []string{"gt-refinery"},
+			expected: []string{"ms-refinery"},
 		},
 		{
 			name:     "all miners in rig",
 			pattern:  "mineshaft/miners/*",
-			expected: []string{"gt-alpha", "gt-beta"},
+			expected: []string{"ms-alpha", "ms-beta"},
 		},
 		{
 			name:     "specific miner",
 			pattern:  "mineshaft/miners/alpha",
-			expected: []string{"gt-alpha"},
+			expected: []string{"ms-alpha"},
 		},
 		{
 			name:     "all crew in rig",
 			pattern:  "mineshaft/crew/*",
-			expected: []string{"gt-crew-max", "gt-crew-jack"},
+			expected: []string{"ms-crew-max", "ms-crew-jack"},
 		},
 		{
 			name:     "specific crew member",
 			pattern:  "mineshaft/crew/max",
-			expected: []string{"gt-crew-max"},
+			expected: []string{"ms-crew-max"},
 		},
 		{
 			name:     "legacy miner format",
 			pattern:  "mineshaft/alpha",
-			expected: []string{"gt-alpha"},
+			expected: []string{"ms-alpha"},
 		},
 		{
 			name:     "no matches",
@@ -169,22 +169,22 @@ func TestSessionNameToAddress(t *testing.T) {
 		},
 		{
 			name:        "witness",
-			sessionName: "gt-witness",
+			sessionName: "ms-witness",
 			expected:    "mineshaft/witness",
 		},
 		{
 			name:        "refinery",
-			sessionName: "gt-refinery",
+			sessionName: "ms-refinery",
 			expected:    "mineshaft/refinery",
 		},
 		{
 			name:        "crew member",
-			sessionName: "gt-crew-max",
+			sessionName: "ms-crew-max",
 			expected:    "mineshaft/crew/max",
 		},
 		{
 			name:        "miner",
-			sessionName: "gt-alpha",
+			sessionName: "ms-alpha",
 			expected:    "mineshaft/alpha",
 		},
 		{
@@ -193,8 +193,8 @@ func TestSessionNameToAddress(t *testing.T) {
 			expected:    "",
 		},
 		{
-			name:        "gt prefix but no name",
-			sessionName: "gt-",
+			name:        "ms prefix but no name",
+			sessionName: "ms-",
 			expected:    "",
 		},
 	}
@@ -307,7 +307,7 @@ func TestNudgeValidModesAccepted(t *testing.T) {
 
 	// Route nudge transport to a log file so the test doesn't deliver "test"
 	// messages to live agents (overseer reported recurring synthetic nudges).
-	t.Setenv("GT_TEST_NUDGE_LOG", filepath.Join(t.TempDir(), "nudge.log"))
+	t.Setenv("MS_TEST_NUDGE_LOG", filepath.Join(t.TempDir(), "nudge.log"))
 
 	// Shorten wait-idle timeout to avoid 15s test delay
 	waitIdleTimeout = 200 * time.Millisecond
@@ -381,11 +381,11 @@ func TestIfFreshSessionAgeCheck(t *testing.T) {
 }
 
 func TestPostQueueIdleRecovery_SkipsDeliveryWhenDrainEmpty(t *testing.T) {
-	// Behavioral test (gt-y2zk): when the idle recovery path fires but
+	// Behavioral test (ms-y2zk): when the idle recovery path fires but
 	// another process already drained the queue, we must NOT deliver to
 	// avoid duplicates. This exercises the len(drained) > 0 guard.
 	townRoot := t.TempDir()
-	session := "gt-crew-test"
+	session := "ms-crew-test"
 
 	// Enqueue a nudge, then drain it (simulating a racing hook).
 	if err := nudge.Enqueue(townRoot, session, nudge.QueuedNudge{
@@ -469,7 +469,7 @@ func TestNudgeTrailingSlashNormalization(t *testing.T) {
 
 	// Route nudge transport to a log file so this test doesn't deliver to
 	// the real overseer/supervisor/witness/refinery sessions on host.
-	t.Setenv("GT_TEST_NUDGE_LOG", filepath.Join(t.TempDir(), "nudge.log"))
+	t.Setenv("MS_TEST_NUDGE_LOG", filepath.Join(t.TempDir(), "nudge.log"))
 
 	waitIdleTimeout = 200 * time.Millisecond
 	nudgeStdinFlag = false

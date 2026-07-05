@@ -25,14 +25,14 @@ import (
 type Config struct {
 	ListenAddr      string
 	AllowedCommands []string
-	// AllowedSubcommands maps each allowed command ("gt", "bd") to the set of
+	// AllowedSubcommands maps each allowed command ("ms", "bd") to the set of
 	// subcommands that miners may invoke. If a command has an entry here,
 	// argv[1] must appear in its list; absent argv[1] → 403.
 	// If a command has NO entry, subcommands are unrestricted for that command
-	// (safe for single-subcommand tools, but not intended for gt/bd).
+	// (safe for single-subcommand tools, but not intended for ms/bd).
 	AllowedSubcommands map[string][]string
-	// TownRoot is the path to the Mineshaft root directory (e.g. ~/gt).
-	// Populated from the GT_TOWN env var or ~/gt by default.
+	// TownRoot is the path to the Mineshaft root directory (e.g. ~/ms).
+	// Populated from the MS_TOWN env var or ~/ms by default.
 	TownRoot string
 	// Logger is the structured logger to use. nil uses slog.Default().
 	Logger *slog.Logger
@@ -40,7 +40,7 @@ type Config struct {
 	// Merged with auto-detected local interface IPs by Start().
 	ExtraSANIPs []net.IP
 	// ExtraSANHosts are additional DNS names to embed in the server cert as DNS SANs.
-	// Merged with the default "gt-proxy-server" DNS SAN by Start().
+	// Merged with the default "ms-proxy-server" DNS SAN by Start().
 	ExtraSANHosts []string
 	// AdminListenAddr is the address for the local admin HTTP server (no TLS).
 	// The admin server exposes management endpoints for operators running on the same host.
@@ -252,7 +252,7 @@ func (s *Server) Start(ctx context.Context) error {
 	// auto-detected because they are assigned to the router, not to any local
 	// interface. Operators must declare them explicitly via ExtraSANIPs.
 	ips := append(serverListenIPs(s.cfg.ListenAddr), s.cfg.ExtraSANIPs...)
-	certPEM, keyPEM, err := s.ca.IssueServer("gt-proxy-server", ips, s.cfg.ExtraSANHosts, 365*24*time.Hour)
+	certPEM, keyPEM, err := s.ca.IssueServer("ms-proxy-server", ips, s.cfg.ExtraSANHosts, 365*24*time.Hour)
 	if err != nil {
 		return fmt.Errorf("issue server cert: %w", err)
 	}
@@ -273,7 +273,7 @@ func (s *Server) Start(ctx context.Context) error {
 
 	errCh := make(chan error, 1)
 	go func() {
-		s.log.Info("gt-proxy-server: listening", "addr", ln.Addr(), "tls", "mTLS")
+		s.log.Info("ms-proxy-server: listening", "addr", ln.Addr(), "tls", "mTLS")
 		if err := srv.ServeTLS(ln, "", ""); err != nil && err != http.ErrServerClosed {
 			errCh <- err
 		}
@@ -305,7 +305,7 @@ func (s *Server) Start(ctx context.Context) error {
 		s.adminLn = adminLn
 		s.lnMu.Unlock()
 
-		s.log.Info("gt-proxy-server: admin listening", "addr", adminLn.Addr())
+		s.log.Info("ms-proxy-server: admin listening", "addr", adminLn.Addr())
 		go func() {
 			if err := adminSrv.Serve(adminLn); err != nil && err != http.ErrServerClosed {
 				s.log.Error("admin server error", "err", err)
@@ -446,7 +446,7 @@ func (s *Server) handleIssueCert(w http.ResponseWriter, r *http.Request) {
 		ttl = parsed
 	}
 
-	cn := "gt-" + req.Rig + "-" + req.Name
+	cn := "ms-" + req.Rig + "-" + req.Name
 	certPEM, keyPEM, err := s.ca.IssueMiner(cn, ttl)
 	if err != nil {
 		http.Error(w, "failed to issue certificate: "+err.Error(), http.StatusBadRequest)
@@ -517,7 +517,7 @@ func (s *Server) handleDenyCert(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// minimalEnv returns a minimal environment for git and gt/bd subprocesses,
+// minimalEnv returns a minimal environment for git and ms/bd subprocesses,
 // containing only HOME and PATH to avoid leaking server credentials.
 // GIT_EXEC_PATH is intentionally omitted: the git binary resolves it
 // automatically from its own installation path, so passing HOME and PATH

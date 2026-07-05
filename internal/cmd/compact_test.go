@@ -95,7 +95,7 @@ func TestHasKeepLabel(t *testing.T) {
 		{"no labels", nil, false},
 		{"other labels", []string{"bug", "urgent"}, false},
 		{"keep label", []string{"keep"}, true},
-		{"gt:keep label", []string{"bug", "gt:keep"}, true},
+		{"ms:keep label", []string{"bug", "ms:keep"}, true},
 	}
 
 	for _, tc := range tests {
@@ -200,7 +200,7 @@ func TestExtractJSONArray(t *testing.T) {
 		},
 		{
 			"warning prefix before JSON",
-			"Warning: no route found for prefix \"gt-\"\n[{\"id\":\"test\"}]",
+			"Warning: no route found for prefix \"ms-\"\n[{\"id\":\"test\"}]",
 			`[{"id":"test"}]`,
 		},
 		{

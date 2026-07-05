@@ -1,27 +1,27 @@
-# PRD: Minecart Stage & Launch (`gt minecart stage`, `gt minecart launch`)
+# PRD: Minecart Stage & Launch (`ms minecart stage`, `ms minecart launch`)
 
 ## Problem
 
-**1. No pre-flight validation before dispatching work.** `gt sling` dispatches tasks immediately with no structural analysis. A user who runs `gt sling task1 task2 task3` has no way to know beforehand that task2 has a circular dependency, task3's rig doesn't exist, or that all three tasks will try to run in parallel when they should be serialized. Problems surface only after miners are spawned and work is underway — at which point cleanup is manual and error-prone.
+**1. No pre-flight validation before dispatching work.** `ms sling` dispatches tasks immediately with no structural analysis. A user who runs `ms sling task1 task2 task3` has no way to know beforehand that task2 has a circular dependency, task3's rig doesn't exist, or that all three tasks will try to run in parallel when they should be serialized. Problems surface only after miners are spawned and work is underway — at which point cleanup is manual and error-prone.
 
 **2. No visibility into execution order.** The daemon's feeder respects `blocks` dependencies at runtime, but the user has no way to preview the dispatch plan. When `/design-to-beads` creates an epic with 15 tasks across 3 sub-epics, the user cannot see which tasks will run in Wave 1, which are blocked until Wave 2, or whether the dependency graph even makes sense. The execution order is a black box until tasks start (or fail to start).
 
-**3. Batch sling dispatches without dependency-aware ordering.** `gt sling task1 task2 task3` iterates through tasks sequentially and spawns a miner for each, regardless of dependency ordering. The daemon's `isIssueBlocked` check prevents *re-feeding* blocked tasks after a close event, but the initial batch dispatch does not check blocking deps before spawning. This means tasks that should wait for blockers to complete get miners spawned and may execute prematurely.
+**3. Batch sling dispatches without dependency-aware ordering.** `ms sling task1 task2 task3` iterates through tasks sequentially and spawns a miner for each, regardless of dependency ordering. The daemon's `isIssueBlocked` check prevents *re-feeding* blocked tasks after a close event, but the initial batch dispatch does not check blocking deps before spawning. This means tasks that should wait for blockers to complete get miners spawned and may execute prematurely.
 
 **4. No staged state for minecarts.** Minecarts go directly from creation to `open`, which immediately makes them eligible for daemon feeding. There is no way to create a minecart, inspect it, validate it, and *then* activate it. Users who want a "dry run" have no mechanism — the act of creating a minecart is the act of launching it.
 
-**5. No single command bridges design-to-beads output to dispatch.** The workflow from `/design-to-beads` (which creates epics, tasks, and dependencies) to actual miner dispatch requires the user to manually identify leaf tasks, determine the correct rig, and run `gt sling`. For a complex epic with sub-epics and cross-task dependencies, this manual step is tedious and error-prone — exactly the kind of work the system should automate.
+**5. No single command bridges design-to-beads output to dispatch.** The workflow from `/design-to-beads` (which creates epics, tasks, and dependencies) to actual miner dispatch requires the user to manually identify leaf tasks, determine the correct rig, and run `ms sling`. For a complex epic with sub-epics and cross-task dependencies, this manual step is tedious and error-prone — exactly the kind of work the system should automate.
 
 ## Overview
 
-Add `gt minecart stage` and `gt minecart launch` commands that enable a structured workflow for dispatching work: analyze bead dependencies, compute execution waves, surface problems, create a staged minecart, and dispatch Wave 1 tasks. This bridges the gap between `/design-to-beads` output (or manually created beads) and reliable multi-task minecart execution.
+Add `ms minecart stage` and `ms minecart launch` commands that enable a structured workflow for dispatching work: analyze bead dependencies, compute execution waves, surface problems, create a staged minecart, and dispatch Wave 1 tasks. This bridges the gap between `/design-to-beads` output (or manually created beads) and reliable multi-task minecart execution.
 
 The core insight: staging is a pre-flight check that catches dependency cycles, routing problems, orphaned tasks, and capacity issues **before** any miners are spawned. Launching is the act of activating a validated minecart.
 
 ## Goals
 
-- Enable `gt minecart stage <epic-id | task1 task2 ... | minecart-id>` as a pre-flight analysis and staging command
-- Enable `gt minecart launch <minecart-id>` as an alias for `gt minecart stage <minecart-id> --launch`
+- Enable `ms minecart stage <epic-id | task1 task2 ... | minecart-id>` as a pre-flight analysis and staging command
+- Enable `ms minecart launch <minecart-id>` as an alias for `ms minecart stage <minecart-id> --launch`
 - Compute execution waves from blocks deps and display them alongside the DAG tree
 - Surface errors (cycles, invalid rigs) and warnings (parked rigs, missing branches, capacity) with clear categorization
 - Create staged minecarts with `staged_ready` or `staged_warnings` status based on analysis results
@@ -40,10 +40,10 @@ go vet ./... && go build ./... && go test ./internal/cmd/... ./internal/minecart
 
 ### US-001: Bead validation and DAG construction
 
-**Description:** As a user, I want `gt minecart stage` to validate that all specified beads exist and construct the dependency graph, so that I catch typos and missing beads before any work is dispatched.
+**Description:** As a user, I want `ms minecart stage` to validate that all specified beads exist and construct the dependency graph, so that I catch typos and missing beads before any work is dispatched.
 
 **Acceptance Criteria:**
-- [ ] `gt minecart stage <bead-id>` runs `bd show` on each bead and errors if any don't exist
+- [ ] `ms minecart stage <bead-id>` runs `bd show` on each bead and errors if any don't exist
 - [ ] For epic input: walks the full parent-child tree (sub-epics, their children, recursively) to collect all descendant beads
 - [ ] For task list input: analyzes exactly the given tasks (no auto-expansion to parent epic)
 - [ ] For minecart input: reads the minecart's tracked beads via `bd dep list --type=tracks`
@@ -109,7 +109,7 @@ go vet ./... && go build ./... && go test ./internal/cmd/... ./internal/minecart
 
 ### US-007: Minecart creation with staged status
 
-**Description:** As a user, I want `gt minecart stage` to create a minecart with `staged_ready` or `staged_warnings` status, so that the minecart exists in beads and can be launched later.
+**Description:** As a user, I want `ms minecart stage` to create a minecart with `staged_ready` or `staged_warnings` status, so that the minecart exists in beads and can be launched later.
 
 **Acceptance Criteria:**
 - [ ] `staged_ready`: minecart created when analysis finds no errors and no warnings
@@ -117,12 +117,12 @@ go vet ./... && go build ./... && go test ./internal/cmd/... ./internal/minecart
 - [ ] No minecart created when analysis finds errors
 - [ ] Minecart tracks all slingable beads in the analyzed set via `tracks` deps
 - [ ] Minecart description includes wave count, task count, and staging timestamp
-- [ ] Minecart ID is printed to console for use with `gt minecart launch`
+- [ ] Minecart ID is printed to console for use with `ms minecart launch`
 - [ ] Re-staging an existing minecart-id re-analyzes and updates the status (may change from ready to warnings or vice versa)
 
 ### US-008: Launch — dispatch Wave 1
 
-**Description:** As a user, I want `gt minecart stage --launch` (or `gt minecart launch`) to activate the minecart and dispatch all Wave 1 tasks, so that work begins immediately after validation.
+**Description:** As a user, I want `ms minecart stage --launch` (or `ms minecart launch`) to activate the minecart and dispatch all Wave 1 tasks, so that work begins immediately after validation.
 
 **Acceptance Criteria:**
 - [ ] Transitions minecart status from `staged_ready` to `open`
@@ -136,26 +136,26 @@ go vet ./... && go build ./... && go test ./internal/cmd/... ./internal/minecart
 **Description:** As a user, I want rich console output after launching, so that I know how to monitor progress.
 
 **Acceptance Criteria:**
-- [ ] Prints minecart ID and `gt minecart status <minecart-id>` command
+- [ ] Prints minecart ID and `ms minecart status <minecart-id>` command
 - [ ] Prints wave summary (how many waves, how many tasks per wave)
 - [ ] Lists each dispatched Wave 1 task with its assigned miner
-- [ ] Prints hint: `gt minecart -i` for interactive TUI monitoring
+- [ ] Prints hint: `ms minecart -i` for interactive TUI monitoring
 - [ ] Explains that subsequent waves are fed automatically by the daemon as tasks complete
 
-### US-010: `gt minecart launch` as alias
+### US-010: `ms minecart launch` as alias
 
-**Description:** As a user, I want `gt minecart launch <bead-id>` to work as an alias for `gt minecart stage <bead-id> --launch`, so that I have a clean two-step workflow (stage then launch) or a one-step workflow (launch directly).
+**Description:** As a user, I want `ms minecart launch <bead-id>` to work as an alias for `ms minecart stage <bead-id> --launch`, so that I have a clean two-step workflow (stage then launch) or a one-step workflow (launch directly).
 
 **Acceptance Criteria:**
-- [ ] `gt minecart launch <epic-id>` = `gt minecart stage <epic-id> --launch`
-- [ ] `gt minecart launch <task1> <task2>` = `gt minecart stage <task1> <task2> --launch`
-- [ ] `gt minecart launch <minecart-id>` activates an already-staged minecart (no re-analysis needed if status is `staged_ready`)
-- [ ] `gt minecart launch <minecart-id>` on a `staged_warnings` minecart requires `--force`
-- [ ] `gt minecart launch <minecart-id>` on an already-`open` minecart errors: "minecart is already launched"
+- [ ] `ms minecart launch <epic-id>` = `ms minecart stage <epic-id> --launch`
+- [ ] `ms minecart launch <task1> <task2>` = `ms minecart stage <task1> <task2> --launch`
+- [ ] `ms minecart launch <minecart-id>` activates an already-staged minecart (no re-analysis needed if status is `staged_ready`)
+- [ ] `ms minecart launch <minecart-id>` on a `staged_warnings` minecart requires `--force`
+- [ ] `ms minecart launch <minecart-id>` on an already-`open` minecart errors: "minecart is already launched"
 
 ### US-011: JSON output mode
 
-**Description:** As a user (or automation tool like design-to-beads), I want `gt minecart stage --json` to output machine-readable analysis results, so that I can programmatically consume the staging output.
+**Description:** As a user (or automation tool like design-to-beads), I want `ms minecart stage --json` to output machine-readable analysis results, so that I can programmatically consume the staging output.
 
 **Acceptance Criteria:**
 - [ ] `--json` flag outputs structured JSON to stdout
@@ -165,15 +165,15 @@ go vet ./... && go build ./... && go test ./internal/cmd/... ./internal/minecart
 
 ## Functional Requirements
 
-- FR-1: `gt minecart stage` must accept three input forms: epic ID, space-separated task IDs, or minecart ID
+- FR-1: `ms minecart stage` must accept three input forms: epic ID, space-separated task IDs, or minecart ID
 - FR-2: Epic DAG walking must use the Go SDK (`beads.List(ListOptions{Parent: rootID})`) recursively, consistent with `molecule_dag.go:buildDAG`. The SDK approach avoids subprocess overhead per tree level and is faster for deep hierarchies. Integration tests stub the beads store, not the `bd` CLI.
 - FR-3: Wave computation must use topological sort on the blocks/conditional-blocks/waits-for subgraph
 - FR-4: Cycle detection must use standard graph cycle detection (DFS with back-edge detection or Kahn's algorithm failure)
 - FR-5: Rig resolution must use existing `beads.ExtractPrefix` + `beads.GetRigNameForPrefix` infrastructure
 - FR-6: Staged minecart must use `bd create --type=minecart --status=staged_ready` (or staged_warnings)
-- FR-7: Launch must dispatch Wave 1 tasks by calling internal Go dispatch functions directly (not `gt sling` CLI). Using `gt sling` would create a separate auto-minecart per task via `createAutoMinecart`, duplicating the staged minecart. The internal dispatch path reuses the sling command's core logic (rig resolution, miner spawning) without minecart creation overhead.
+- FR-7: Launch must dispatch Wave 1 tasks by calling internal Go dispatch functions directly (not `ms sling` CLI). Using `ms sling` would create a separate auto-minecart per task via `createAutoMinecart`, duplicating the staged minecart. The internal dispatch path reuses the sling command's core logic (rig resolution, miner spawning) without minecart creation overhead.
 - FR-8: Re-staging an existing minecart must update its status and re-compute waves without creating a duplicate
-- FR-9: `gt minecart launch` must be registered as a subcommand of `gt minecart` in `internal/cmd/minecart.go`
+- FR-9: `ms minecart launch` must be registered as a subcommand of `ms minecart` in `internal/cmd/minecart.go`
 - FR-10: Mixed input types (e.g., epic ID + task IDs in the same invocation) must be detected and rejected with a clear error message suggesting separate invocations
 
 ## Non-Goals (Out of Scope)
@@ -207,7 +207,7 @@ The current codebase assumes minecarts are always `open` or `closed`. Adding sta
 ### Key files expected to be modified:
 - `internal/cmd/minecart.go` — new `stage` and `launch` subcommands; update `ensureKnownMinecartStatus` and `validateMinecartStatusTransition` for staged statuses
 - `internal/cmd/minecart_stage.go` — new file: staging logic, DAG walking, wave computation, display
-- `internal/cmd/minecart_launch.go` — new file: launch logic, Wave 1 dispatch via internal Go functions (not `gt sling` CLI, to avoid auto-minecart creation)
+- `internal/cmd/minecart_launch.go` — new file: launch logic, Wave 1 dispatch via internal Go functions (not `ms sling` CLI, to avoid auto-minecart creation)
 - `internal/minecart/operations.go` — add staged-minecart guard in `CheckMinecartsForIssue` (event-driven path); `isMinecartClosed` is insufficient
 - `internal/daemon/minecart_manager.go` — ensure staged minecarts are not fed (stranded scan path is already safe via `--status=open` query)
 
@@ -221,12 +221,12 @@ The current codebase assumes minecarts are always `open` or `closed`. Adding sta
 
 ## Success Metrics
 
-- `gt minecart stage <epic-id>` correctly identifies all descendant tasks and computes waves
+- `ms minecart stage <epic-id>` correctly identifies all descendant tasks and computes waves
 - Cycle detection catches all circular dependency chains
 - Wave 1 dispatch only sends unblocked tasks
 - Daemon correctly ignores staged minecarts (only feeds open ones)
 - `--json` output is parseable and includes all analysis data
-- Round-trip works: `/design-to-beads` → `gt minecart stage` → `gt minecart launch` → tasks dispatched in correct order
+- Round-trip works: `/design-to-beads` → `ms minecart stage` → `ms minecart launch` → tasks dispatched in correct order
 
 ## Open Questions
 

@@ -1,7 +1,7 @@
 # Mineshaft OTel Data Model
 
 All Mineshaft telemetry events are OTel log records exported via OTLP
-(`GT_OTEL_LOGS_URL`). Every record carries a `run.id` attribute — a UUID
+(`MS_OTEL_LOGS_URL`). Every record carries a `run.id` attribute — a UUID
 generated once per agent spawn — so all records from a single agent session
 can be retrieved and correlated.
 
@@ -16,8 +16,8 @@ and the town root directory basename.
 
 | Attribute | Type | Description |
 |---|---|---|
-| `instance` | string | `hostname:basename(town_root)` — e.g. `"laptop:gt"` |
-| `town_root` | string | absolute path to the town root — e.g. `"/Users/pa/gt"` |
+| `instance` | string | `hostname:basename(town_root)` — e.g. `"laptop:ms"` |
+| `town_root` | string | absolute path to the town root — e.g. `"/Users/pa/ms"` |
 
 ### 1.2 Run
 
@@ -26,7 +26,7 @@ session carry the same `run.id`.
 
 | Attribute | Type | Source |
 |---|---|---|
-| `run.id` | string (UUID v4) | generated at spawn; propagated via `GT_RUN` |
+| `run.id` | string (UUID v4) | generated at spawn; propagated via `MS_RUN` |
 | `instance` | string | `hostname:basename(town_root)` |
 | `town_root` | string | absolute town root path |
 | `agent_type` | string | `"claudecode"`, `"opencode"`, `"copilot"`, … |
@@ -74,7 +74,7 @@ tmux session lifecycle events.
 
 ### `prime`
 
-Emitted on each `gt prime` invocation. The rendered formula is emitted
+Emitted on each `ms prime` invocation. The rendered formula is emitted
 separately as `prime.context` (same attributes plus `formula`).
 
 | Attribute | Type | Description |
@@ -89,13 +89,13 @@ separately as `prime.context` (same attributes plus `formula`).
 
 ### `prompt.send`
 
-Each `gt sendkeys` dispatch to an agent's tmux pane.
+Each `ms sendkeys` dispatch to an agent's tmux pane.
 
 | Attribute | Type | Description |
 |---|---|---|
 | `run.id` | string | run UUID |
 | `session` | string | tmux pane name |
-| `keys` | string | prompt text (opt-in: `GT_LOG_PROMPT_KEYS=true`; truncated to 256 bytes) |
+| `keys` | string | prompt text (opt-in: `MS_LOG_PROMPT_KEYS=true`; truncated to 256 bytes) |
 | `keys_len` | int | prompt length in bytes |
 | `debounce_ms` | int | applied debounce delay |
 | `status` | string | `"ok"` · `"error"` |
@@ -105,7 +105,7 @@ Each `gt sendkeys` dispatch to an agent's tmux pane.
 ### `agent.event`
 
 One record per content block in the agent's conversation log.
-Only emitted when `GT_LOG_AGENT_OUTPUT=true`.
+Only emitted when `MS_LOG_AGENT_OUTPUT=true`.
 
 | Attribute | Type | Description |
 |---|---|---|
@@ -115,7 +115,7 @@ Only emitted when `GT_LOG_AGENT_OUTPUT=true`.
 | `agent_type` | string | adapter name |
 | `event_type` | string | `"text"` · `"tool_use"` · `"tool_result"` · `"thinking"` |
 | `role` | string | `"assistant"` · `"user"` |
-| `content` | string | content truncated to 512 bytes (set `GT_LOG_AGENT_CONTENT_LIMIT=0` to disable) |
+| `content` | string | content truncated to 512 bytes (set `MS_LOG_AGENT_CONTENT_LIMIT=0` to disable) |
 
 For `tool_use`: `content = "<tool_name>: <truncated_json_input>"`
 For `tool_result`: `content = <truncated tool output>`
@@ -125,7 +125,7 @@ For `tool_result`: `content = <truncated tool output>`
 ### `agent.usage`
 
 One record per assistant turn (not per content block, to avoid
-double-counting). Only emitted when `GT_LOG_AGENT_OUTPUT=true`.
+double-counting). Only emitted when `MS_LOG_AGENT_OUTPUT=true`.
 
 | Attribute | Type | Description |
 |---|---|---|
@@ -150,8 +150,8 @@ in a shell.
 | `subcommand` | string | bd subcommand (`"ready"`, `"update"`, `"create"`, …) |
 | `args` | string | full argument list |
 | `duration_ms` | float | wall-clock duration in milliseconds |
-| `stdout` | string | full stdout (opt-in: `GT_LOG_BD_OUTPUT=true`) |
-| `stderr` | string | full stderr (opt-in: `GT_LOG_BD_OUTPUT=true`) |
+| `stdout` | string | full stdout (opt-in: `MS_LOG_BD_OUTPUT=true`) |
+| `stderr` | string | full stderr (opt-in: `MS_LOG_BD_OUTPUT=true`) |
 | `status` | string | `"ok"` · `"error"` |
 
 ---
@@ -168,7 +168,7 @@ All operations on the Mineshaft mail system.
 | `msg.from` | string | sender address |
 | `msg.to` | string | recipient(s), comma-separated |
 | `msg.subject` | string | subject |
-| `msg.body` | string | message body (opt-in: `GT_LOG_MAIL_BODY=true`; truncated to 256 bytes) |
+| `msg.body` | string | message body (opt-in: `MS_LOG_MAIL_BODY=true`; truncated to 256 bytes) |
 | `msg.thread_id` | string | thread ID |
 | `msg.priority` | string | `"high"` · `"normal"` · `"low"` |
 | `msg.type` | string | message type (`"work"`, `"notify"`, `"queue"`, …) |
@@ -267,7 +267,7 @@ All carry `run.id`.
 | `formula.instantiate` | `formula_name`, `bead_id`, `status` (top-level formula-on-bead result) |
 | `minecart.create` | `bead_id`, `status` |
 | `daemon.restart` | `agent_type` |
-| `pane.output` | `session`, `content` (opt-in: `GT_LOG_PANE_OUTPUT=true`) |
+| `pane.output` | `session`, `content` (opt-in: `MS_LOG_PANE_OUTPUT=true`) |
 
 ---
 
@@ -284,16 +284,16 @@ event_type, msg.thread_id, msg.from, msg.to
 
 | Variable | Set by | Description |
 |---|---|---|
-| `GT_RUN` | tmux session env + subprocess | run UUID; correlation key across all events |
-| `GT_OTEL_LOGS_URL` | daemon startup | OTLP logs endpoint URL |
-| `GT_OTEL_METRICS_URL` | daemon startup | OTLP metrics endpoint URL |
-| `GT_LOG_AGENT_OUTPUT` | operator | opt-in: stream Claude JSONL conversation events (content truncated to 512 bytes by default) |
-| `GT_LOG_AGENT_CONTENT_LIMIT` | operator | override content truncation in `agent.event`; set `0` to disable (experts only) |
-| `GT_LOG_BD_OUTPUT` | operator | opt-in: include bd stdout/stderr in `bd.call` records |
-| `GT_LOG_PANE_OUTPUT` | operator | opt-in: stream raw tmux pane output |
-| `GT_LOG_MAIL_BODY` | operator | opt-in: include mail body in `mail` records (truncated to 256 bytes) |
-| `GT_LOG_PROMPT_KEYS` | operator | opt-in: include prompt text in `prompt.send` records (truncated to 256 bytes) |
-| `GT_LOG_PRIME_CONTEXT` | operator | opt-in: log full rendered formula in `prime.context` records |
+| `MS_RUN` | tmux session env + subprocess | run UUID; correlation key across all events |
+| `MS_OTEL_LOGS_URL` | daemon startup | OTLP logs endpoint URL |
+| `MS_OTEL_METRICS_URL` | daemon startup | OTLP metrics endpoint URL |
+| `MS_LOG_AGENT_OUTPUT` | operator | opt-in: stream Claude JSONL conversation events (content truncated to 512 bytes by default) |
+| `MS_LOG_AGENT_CONTENT_LIMIT` | operator | override content truncation in `agent.event`; set `0` to disable (experts only) |
+| `MS_LOG_BD_OUTPUT` | operator | opt-in: include bd stdout/stderr in `bd.call` records |
+| `MS_LOG_PANE_OUTPUT` | operator | opt-in: stream raw tmux pane output |
+| `MS_LOG_MAIL_BODY` | operator | opt-in: include mail body in `mail` records (truncated to 256 bytes) |
+| `MS_LOG_PROMPT_KEYS` | operator | opt-in: include prompt text in `prompt.send` records (truncated to 256 bytes) |
+| `MS_LOG_PRIME_CONTEXT` | operator | opt-in: log full rendered formula in `prime.context` records |
 
-`GT_RUN` is also surfaced as `gt.run_id` in `OTEL_RESOURCE_ATTRIBUTES` for `bd`
+`MS_RUN` is also surfaced as `ms.run_id` in `OTEL_RESOURCE_ATTRIBUTES` for `bd`
 subprocesses, correlating their own telemetry to the parent run.

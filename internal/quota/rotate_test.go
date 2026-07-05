@@ -10,10 +10,10 @@ func TestPlanRotation_NoLimitedSessions(t *testing.T) {
 	setupTestRegistry(t)
 
 	tmux := &mockTmux{
-		sessions: []string{"gt-crew-bear", "gt-witness"},
+		sessions: []string{"ms-crew-bear", "ms-witness"},
 		paneContent: map[string]string{
-			"gt-crew-bear": "working normally...",
-			"gt-witness":   "watching...",
+			"ms-crew-bear": "working normally...",
+			"ms-witness":   "watching...",
 		},
 	}
 
@@ -49,14 +49,14 @@ func TestPlanRotation_AssignsAvailableAccount(t *testing.T) {
 	setupTestRegistry(t)
 
 	tmux := &mockTmux{
-		sessions: []string{"gt-crew-bear", "gt-witness"},
+		sessions: []string{"ms-crew-bear", "ms-witness"},
 		paneContent: map[string]string{
-			"gt-crew-bear": "You've hit your limit · resets 7pm (America/Los_Angeles)",
-			"gt-witness":   "watching...",
+			"ms-crew-bear": "You've hit your limit · resets 7pm (America/Los_Angeles)",
+			"ms-witness":   "watching...",
 		},
 		envVars: map[string]map[string]string{
-			"gt-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/work"},
-			"gt-witness":   {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/personal"},
+			"ms-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/work"},
+			"ms-witness":   {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/personal"},
 		},
 	}
 
@@ -95,17 +95,17 @@ func TestPlanRotation_AssignsAvailableAccount(t *testing.T) {
 	if len(plan.LimitedSessions) != 1 {
 		t.Fatalf("expected 1 limited session, got %d", len(plan.LimitedSessions))
 	}
-	if plan.LimitedSessions[0].Session != "gt-crew-bear" {
-		t.Errorf("expected limited session gt-crew-bear, got %s", plan.LimitedSessions[0].Session)
+	if plan.LimitedSessions[0].Session != "ms-crew-bear" {
+		t.Errorf("expected limited session ms-crew-bear, got %s", plan.LimitedSessions[0].Session)
 	}
 
 	if len(plan.Assignments) != 1 {
 		t.Fatalf("expected 1 assignment, got %d", len(plan.Assignments))
 	}
 
-	newAccount, ok := plan.Assignments["gt-crew-bear"]
+	newAccount, ok := plan.Assignments["ms-crew-bear"]
 	if !ok {
-		t.Fatal("expected assignment for gt-crew-bear")
+		t.Fatal("expected assignment for ms-crew-bear")
 	}
 	// Should assign "personal" since "work" is now limited
 	if newAccount != "personal" {
@@ -117,12 +117,12 @@ func TestPlanRotation_NoAvailableAccounts(t *testing.T) {
 	setupTestRegistry(t)
 
 	tmux := &mockTmux{
-		sessions: []string{"gt-crew-bear"},
+		sessions: []string{"ms-crew-bear"},
 		paneContent: map[string]string{
-			"gt-crew-bear": "You've hit your limit",
+			"ms-crew-bear": "You've hit your limit",
 		},
 		envVars: map[string]map[string]string{
-			"gt-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/work"},
+			"ms-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/work"},
 		},
 	}
 
@@ -169,12 +169,12 @@ func TestPlanRotation_SkipsSameAccount(t *testing.T) {
 	setupTestRegistry(t)
 
 	tmux := &mockTmux{
-		sessions: []string{"gt-crew-bear"},
+		sessions: []string{"ms-crew-bear"},
 		paneContent: map[string]string{
-			"gt-crew-bear": "You've hit your limit",
+			"ms-crew-bear": "You've hit your limit",
 		},
 		envVars: map[string]map[string]string{
-			"gt-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
+			"ms-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
 		},
 	}
 
@@ -213,9 +213,9 @@ func TestPlanRotation_SkipsSameAccount(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	newAccount, ok := plan.Assignments["gt-crew-bear"]
+	newAccount, ok := plan.Assignments["ms-crew-bear"]
 	if !ok {
-		t.Fatal("expected assignment for gt-crew-bear")
+		t.Fatal("expected assignment for ms-crew-bear")
 	}
 	// Should skip alpha (same account), assign beta
 	if newAccount != "beta" {
@@ -227,16 +227,16 @@ func TestPlanRotation_MultipleLimitedSessions(t *testing.T) {
 	setupTestRegistry(t)
 
 	tmux := &mockTmux{
-		sessions: []string{"hq-overseer", "gt-crew-bear", "gt-crew-wolf"},
+		sessions: []string{"hq-overseer", "ms-crew-bear", "ms-crew-wolf"},
 		paneContent: map[string]string{
 			"hq-overseer":     "You've hit your limit · resets 7pm",
-			"gt-crew-bear": "You've hit your limit · resets 7pm",
-			"gt-crew-wolf": "working fine...",
+			"ms-crew-bear": "You've hit your limit · resets 7pm",
+			"ms-crew-wolf": "working fine...",
 		},
 		envVars: map[string]map[string]string{
 			"hq-overseer":     {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
-			"gt-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
-			"gt-crew-wolf": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/beta"},
+			"ms-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
+			"ms-crew-wolf": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/beta"},
 		},
 	}
 
@@ -295,14 +295,14 @@ func TestPlanRotation_ConfigDirGrouping_SameDir(t *testing.T) {
 
 	// Two sessions on the same config dir (alpha) should produce one config dir swap.
 	tmux := &mockTmux{
-		sessions: []string{"hq-overseer", "gt-crew-bear"},
+		sessions: []string{"hq-overseer", "ms-crew-bear"},
 		paneContent: map[string]string{
 			"hq-overseer":     "You've hit your limit · resets 7pm",
-			"gt-crew-bear": "You've hit your limit · resets 7pm",
+			"ms-crew-bear": "You've hit your limit · resets 7pm",
 		},
 		envVars: map[string]map[string]string{
 			"hq-overseer":     {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
-			"gt-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
+			"ms-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
 		},
 	}
 
@@ -366,14 +366,14 @@ func TestPlanRotation_ConfigDirGrouping_DifferentDirs(t *testing.T) {
 
 	// Two sessions on different config dirs should produce separate swap entries.
 	tmux := &mockTmux{
-		sessions: []string{"hq-overseer", "gt-crew-bear"},
+		sessions: []string{"hq-overseer", "ms-crew-bear"},
 		paneContent: map[string]string{
 			"hq-overseer":     "You've hit your limit · resets 7pm",
-			"gt-crew-bear": "You've hit your limit · resets 7pm",
+			"ms-crew-bear": "You've hit your limit · resets 7pm",
 		},
 		envVars: map[string]map[string]string{
 			"hq-overseer":     {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
-			"gt-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/beta"},
+			"ms-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/beta"},
 		},
 	}
 
@@ -437,12 +437,12 @@ func TestPlanRotation_MarksLimitedAccountsInState(t *testing.T) {
 	setupTestRegistry(t)
 
 	tmux := &mockTmux{
-		sessions: []string{"gt-crew-bear"},
+		sessions: []string{"ms-crew-bear"},
 		paneContent: map[string]string{
-			"gt-crew-bear": "You've hit your limit · resets 7pm (America/Los_Angeles)",
+			"ms-crew-bear": "You've hit your limit · resets 7pm (America/Los_Angeles)",
 		},
 		envVars: map[string]map[string]string{
-			"gt-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
+			"ms-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
 		},
 	}
 
@@ -496,12 +496,12 @@ func TestPlanRotation_DryRunReturnsValidPlan(t *testing.T) {
 	setupTestRegistry(t)
 
 	tmux := &mockTmux{
-		sessions: []string{"gt-crew-bear"},
+		sessions: []string{"ms-crew-bear"},
 		paneContent: map[string]string{
-			"gt-crew-bear": "You've hit your limit · resets 7pm",
+			"ms-crew-bear": "You've hit your limit · resets 7pm",
 		},
 		envVars: map[string]map[string]string{
-			"gt-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
+			"ms-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
 		},
 	}
 
@@ -559,14 +559,14 @@ func TestPlanRotation_PreemptiveFromAccount(t *testing.T) {
 	// Two sessions: one on alpha (not rate-limited), one on beta.
 	// --from alpha should target the alpha session regardless of rate-limit status.
 	tmux := &mockTmux{
-		sessions: []string{"gt-crew-bear", "gt-crew-wolf"},
+		sessions: []string{"ms-crew-bear", "ms-crew-wolf"},
 		paneContent: map[string]string{
-			"gt-crew-bear": "working normally...",
-			"gt-crew-wolf": "also working...",
+			"ms-crew-bear": "working normally...",
+			"ms-crew-wolf": "also working...",
 		},
 		envVars: map[string]map[string]string{
-			"gt-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
-			"gt-crew-wolf": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/beta"},
+			"ms-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
+			"ms-crew-wolf": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/beta"},
 		},
 	}
 
@@ -606,15 +606,15 @@ func TestPlanRotation_PreemptiveFromAccount(t *testing.T) {
 	if len(plan.LimitedSessions) != 1 {
 		t.Fatalf("expected 1 targeted session, got %d", len(plan.LimitedSessions))
 	}
-	if plan.LimitedSessions[0].Session != "gt-crew-bear" {
-		t.Errorf("expected session gt-crew-bear, got %s", plan.LimitedSessions[0].Session)
+	if plan.LimitedSessions[0].Session != "ms-crew-bear" {
+		t.Errorf("expected session ms-crew-bear, got %s", plan.LimitedSessions[0].Session)
 	}
 
 	// Should assign a different account (gamma is LRU)
 	if len(plan.Assignments) != 1 {
 		t.Fatalf("expected 1 assignment, got %d", len(plan.Assignments))
 	}
-	newAccount := plan.Assignments["gt-crew-bear"]
+	newAccount := plan.Assignments["ms-crew-bear"]
 	if newAccount != "gamma" {
 		t.Errorf("expected assignment to 'gamma' (LRU), got %q", newAccount)
 	}
@@ -625,12 +625,12 @@ func TestPlanRotation_PreemptiveFromAccount_NoSessions(t *testing.T) {
 
 	// No sessions use the "gamma" account — --from gamma should find nothing.
 	tmux := &mockTmux{
-		sessions: []string{"gt-crew-bear"},
+		sessions: []string{"ms-crew-bear"},
 		paneContent: map[string]string{
-			"gt-crew-bear": "working normally...",
+			"ms-crew-bear": "working normally...",
 		},
 		envVars: map[string]map[string]string{
-			"gt-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
+			"ms-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
 		},
 	}
 
@@ -669,14 +669,14 @@ func TestPlanRotation_IncludeNearLimit(t *testing.T) {
 
 	// bear is near-limit (warning pattern), wolf is fine
 	tmux := &mockTmux{
-		sessions: []string{"gt-crew-bear", "gt-crew-wolf"},
+		sessions: []string{"ms-crew-bear", "ms-crew-wolf"},
 		paneContent: map[string]string{
-			"gt-crew-bear": "85% of your daily usage consumed",
-			"gt-crew-wolf": "working fine...",
+			"ms-crew-bear": "85% of your daily usage consumed",
+			"ms-crew-wolf": "working fine...",
 		},
 		envVars: map[string]map[string]string{
-			"gt-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/work"},
-			"gt-crew-wolf": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/personal"},
+			"ms-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/work"},
+			"ms-crew-wolf": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/personal"},
 		},
 	}
 
@@ -733,13 +733,13 @@ func TestPlanRotation_IncludeNearLimit(t *testing.T) {
 	if len(plan.NearLimitSessions) != 1 {
 		t.Fatalf("expected 1 near-limit session, got %d", len(plan.NearLimitSessions))
 	}
-	if plan.NearLimitSessions[0].Session != "gt-crew-bear" {
-		t.Errorf("expected near-limit session gt-crew-bear, got %s", plan.NearLimitSessions[0].Session)
+	if plan.NearLimitSessions[0].Session != "ms-crew-bear" {
+		t.Errorf("expected near-limit session ms-crew-bear, got %s", plan.NearLimitSessions[0].Session)
 	}
 	if len(plan.Assignments) != 1 {
 		t.Fatalf("expected 1 assignment with IncludeNearLimit, got %d", len(plan.Assignments))
 	}
-	newAccount := plan.Assignments["gt-crew-bear"]
+	newAccount := plan.Assignments["ms-crew-bear"]
 	if newAccount != "backup" {
 		t.Errorf("expected assignment to 'backup' (LRU), got %q", newAccount)
 	}
@@ -750,14 +750,14 @@ func TestPlanRotation_MixedHardAndNearLimit(t *testing.T) {
 
 	// bear is hard-limited, wolf is near-limit
 	tmux := &mockTmux{
-		sessions: []string{"gt-crew-bear", "gt-crew-wolf"},
+		sessions: []string{"ms-crew-bear", "ms-crew-wolf"},
 		paneContent: map[string]string{
-			"gt-crew-bear": "You've hit your limit · resets 7pm",
-			"gt-crew-wolf": "90% of your daily usage consumed",
+			"ms-crew-bear": "You've hit your limit · resets 7pm",
+			"ms-crew-wolf": "90% of your daily usage consumed",
 		},
 		envVars: map[string]map[string]string{
-			"gt-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
-			"gt-crew-wolf": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/beta"},
+			"ms-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/alpha"},
+			"ms-crew-wolf": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/beta"},
 		},
 	}
 

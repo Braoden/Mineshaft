@@ -37,16 +37,16 @@ Located in `.beads/formulas/`:
 ```bash
 # Create wisp
 bd mol wisp towers-of-hanoi-7 --json | jq -r '.new_epic_id'
-# Returns: gt-eph-xxx
+# Returns: ms-eph-xxx
 
 # Get all child IDs
-bd list --parent=gt-eph-xxx --limit=200 --json | jq -r '.[].id' > /tmp/ids.txt
+bd list --parent=ms-eph-xxx --limit=200 --json | jq -r '.[].id' > /tmp/ids.txt
 
 # Close all issues (serial)
 while read id; do bd close "$id" >/dev/null; done < /tmp/ids.txt
 
 # Burn the wisp (cleanup)
-bd mol burn gt-eph-xxx --force
+bd mol burn ms-eph-xxx --force
 ```
 
 ### Standard Demo (10 disks, ~2 minutes)
@@ -156,7 +156,7 @@ WISP=$(bd mol wisp towers-of-hanoi-10 --json | jq -r '.new_epic_id')
 # ... close some issues ...
 # Context fills, need to cycle
 
-gt handoff -s "Hanoi demo" -m "Wisp: $WISP, progress: 400/1025"
+ms handoff -s "Hanoi demo" -m "Wisp: $WISP, progress: 400/1025"
 ```
 
 ```bash

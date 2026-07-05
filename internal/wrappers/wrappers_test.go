@@ -10,7 +10,7 @@ import (
 
 // expectedWrappers is the canonical list of wrapper scripts.
 // Keep in sync with Install() and Remove() in wrappers.go.
-var expectedWrappers = []string{"gt-codex", "gt-gemini", "gt-opencode"}
+var expectedWrappers = []string{"ms-codex", "ms-gemini", "ms-opencode"}
 
 func TestEmbeddedScripts_Exist(t *testing.T) {
 	t.Parallel()
@@ -45,7 +45,7 @@ func TestEmbeddedScripts_HaveShebang(t *testing.T) {
 func TestEmbeddedScripts_HaveExecLine(t *testing.T) {
 	t.Parallel()
 	// Each wrapper should exec its target binary.
-	// gt-codex → exec codex, gt-gemini → exec gemini, gt-opencode → exec opencode
+	// ms-codex → exec codex, ms-gemini → exec gemini, ms-opencode → exec opencode
 	for _, name := range expectedWrappers {
 		t.Run(name, func(t *testing.T) {
 			content, err := scriptsFS.ReadFile("scripts/" + name)
@@ -53,8 +53,8 @@ func TestEmbeddedScripts_HaveExecLine(t *testing.T) {
 				t.Fatalf("Failed to read %s: %v", name, err)
 			}
 
-			// Extract expected binary name: gt-codex → codex
-			binary := strings.TrimPrefix(name, "gt-")
+			// Extract expected binary name: ms-codex → codex
+			binary := strings.TrimPrefix(name, "ms-")
 			expectedExec := "exec " + binary
 
 			if !strings.Contains(string(content), expectedExec) {
@@ -73,8 +73,8 @@ func TestEmbeddedScripts_HaveGtPrime(t *testing.T) {
 				t.Fatalf("Failed to read %s: %v", name, err)
 			}
 
-			if !strings.Contains(string(content), "gt prime") {
-				t.Errorf("Script %s should run 'gt prime' before launching agent", name)
+			if !strings.Contains(string(content), "ms prime") {
+				t.Errorf("Script %s should run 'ms prime' before launching agent", name)
 			}
 		})
 	}

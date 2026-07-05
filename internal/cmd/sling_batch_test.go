@@ -72,7 +72,7 @@ exit 0
 		t.Fatalf("chdir: %v", err)
 	}
 
-	beadIDs := []string{"gt-aaa", "gt-bbb", "gt-ccc"}
+	beadIDs := []string{"ms-aaa", "ms-bbb", "ms-ccc"}
 	minecartID, _, err := createBatchMinecart(beadIDs, "mineshaft", false, "mr", "")
 	if err != nil {
 		t.Fatalf("createBatchMinecart() error: %v", err)
@@ -124,7 +124,7 @@ exit 0
 	}
 }
 
-// TestCreateBatchMinecart_OwnedLabel verifies that --owned flag adds gt:owned label.
+// TestCreateBatchMinecart_OwnedLabel verifies that --owned flag adds ms:owned label.
 func TestCreateBatchMinecart_OwnedLabel(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows")
@@ -167,7 +167,7 @@ exit 0
 		t.Fatalf("chdir: %v", err)
 	}
 
-	_, _, err = createBatchMinecart([]string{"gt-aaa"}, "mineshaft", true, "direct", "")
+	_, _, err = createBatchMinecart([]string{"ms-aaa"}, "mineshaft", true, "direct", "")
 	if err != nil {
 		t.Fatalf("createBatchMinecart() error: %v", err)
 	}
@@ -178,7 +178,7 @@ exit 0
 	}
 	logContent := string(logBytes)
 
-	if !strings.Contains(logContent, "--labels=gt:minecart,gt:owned") {
+	if !strings.Contains(logContent, "--labels=ms:minecart,ms:owned") {
 		t.Errorf("create command missing minecart/owned labels in log:\n%q", logContent)
 	}
 }
@@ -226,7 +226,7 @@ exit 0
 		t.Fatalf("chdir: %v", err)
 	}
 
-	_, _, err = createBatchMinecart([]string{"gt-aaa", "gt-bbb"}, "mineshaft", false, "direct", "")
+	_, _, err = createBatchMinecart([]string{"ms-aaa", "ms-bbb"}, "mineshaft", false, "direct", "")
 	if err != nil {
 		t.Fatalf("createBatchMinecart() error: %v", err)
 	}
@@ -296,7 +296,7 @@ exit 0
 		t.Fatalf("chdir: %v", err)
 	}
 
-	_, _, err = createBatchMinecart([]string{"gt-a", "gt-b", "gt-c", "gt-d", "gt-e"}, "myrig", false, "", "")
+	_, _, err = createBatchMinecart([]string{"ms-a", "ms-b", "ms-c", "ms-d", "ms-e"}, "myrig", false, "", "")
 	if err != nil {
 		t.Fatalf("createBatchMinecart() error: %v", err)
 	}
@@ -341,7 +341,7 @@ func TestCreateBatchMinecart_PartialDepFailureContinues(t *testing.T) {
 	}
 	logPath := filepath.Join(townRoot, "bd.log")
 
-	// Stub bd: create succeeds, dep add fails for gt-bbb only
+	// Stub bd: create succeeds, dep add fails for ms-bbb only
 	bdScript := `#!/bin/sh
 echo "CMD:$*" >> "` + logPath + `"
 cmd="$1"
@@ -355,9 +355,9 @@ case "$cmd" in
     exit 0
     ;;
   dep)
-    # Fail if the bead is gt-bbb
+    # Fail if the bead is ms-bbb
     for arg in "$@"; do
-      if [ "$arg" = "gt-bbb" ]; then
+      if [ "$arg" = "ms-bbb" ]; then
         exit 1
       fi
     done
@@ -382,13 +382,13 @@ exit 0
 	}
 
 	// Should NOT return error — partial tracking is acceptable
-	minecartID, tracked, err := createBatchMinecart([]string{"gt-aaa", "gt-bbb", "gt-ccc"}, "mineshaft", false, "", "")
+	minecartID, tracked, err := createBatchMinecart([]string{"ms-aaa", "ms-bbb", "ms-ccc"}, "mineshaft", false, "", "")
 	if err != nil {
 		t.Fatalf("createBatchMinecart() should not error on partial dep failure: %v", err)
 	}
 	// Verify tracked set excludes the failed bead
 	if len(tracked) != 2 {
-		t.Errorf("expected 2 tracked beads (gt-bbb failed), got %d: %v", len(tracked), tracked)
+		t.Errorf("expected 2 tracked beads (ms-bbb failed), got %d: %v", len(tracked), tracked)
 	}
 	if minecartID == "" {
 		t.Fatal("minecart ID should not be empty")
@@ -425,7 +425,7 @@ func TestBatchSling_MinecartIDStoredInBeadFieldUpdates(t *testing.T) {
 	batchMinecartID := "hq-cv-test1"
 	mergeStrategy := "direct"
 
-	beadIDs := []string{"gt-aaa", "gt-bbb", "gt-ccc"}
+	beadIDs := []string{"ms-aaa", "ms-bbb", "ms-ccc"}
 	for _, beadID := range beadIDs {
 		fieldUpdates := beadFieldUpdates{
 			Dispatcher:    "test-actor",
@@ -452,7 +452,7 @@ func TestBatchSling_ErrorsOnAlreadyTrackedBead(t *testing.T) {
 
 	binDir := t.TempDir()
 
-	// Stub bd: dep list returns a tracking minecart for gt-bbb (already tracked),
+	// Stub bd: dep list returns a tracking minecart for ms-bbb (already tracked),
 	// empty results for everything else.
 	bdScript := `#!/bin/sh
 cmd="$1"
@@ -466,7 +466,7 @@ case "$cmd" in
   sql)
     # bdDepListRawIDs up: match beadID against typed dependency target columns.
     case "$*" in
-      *"depends_on_issue_id = 'gt-bbb'"*)
+      *"depends_on_issue_id = 'ms-bbb'"*)
         echo '[{"issue_id":"hq-cv-existing"}]'
         ;;
       *)
@@ -490,7 +490,7 @@ case "$cmd" in
   dep)
     sub="$1"; shift || true
     beadID="$1"
-    if [ "$beadID" = "gt-bbb" ]; then
+    if [ "$beadID" = "ms-bbb" ]; then
       echo '[{"id":"hq-cv-existing","issue_type":"minecart","status":"open"}]'
     else
       echo '[]'
@@ -531,13 +531,13 @@ exit 0
 	}
 
 	// Simulate the pre-loop conflict check from runBatchSling.
-	// It should detect gt-bbb as already tracked and error.
-	beadIDs := []string{"gt-aaa", "gt-bbb", "gt-ccc"}
+	// It should detect ms-bbb as already tracked and error.
+	beadIDs := []string{"ms-aaa", "ms-bbb", "ms-ccc"}
 	var conflictFound bool
 	for _, beadID := range beadIDs {
 		if existing := isTrackedByMinecart(beadID); existing != "" {
 			conflictFound = true
-			if beadID != "gt-bbb" {
+			if beadID != "ms-bbb" {
 				t.Errorf("unexpected conflict for bead %s (minecart: %s)", beadID, existing)
 			}
 			if existing != "hq-cv-existing" {
@@ -548,7 +548,7 @@ exit 0
 	}
 
 	if !conflictFound {
-		t.Fatal("expected conflict for gt-bbb but none detected")
+		t.Fatal("expected conflict for ms-bbb but none detected")
 	}
 }
 
@@ -562,13 +562,13 @@ func TestAllBeadIDs_TrueWhenAllBeadIDs(t *testing.T) {
 		args []string
 		want bool
 	}{
-		{"all beads", []string{"gt-abc", "gt-def", "gt-ghi"}, true},
-		{"mixed prefixes", []string{"gt-abc", "bd-def", "hq-ghi"}, true},
-		{"single bead", []string{"gt-abc"}, true},
-		{"last is rig name", []string{"gt-abc", "gt-def", "mineshaft"}, false},
+		{"all beads", []string{"ms-abc", "ms-def", "ms-ghi"}, true},
+		{"mixed prefixes", []string{"ms-abc", "bd-def", "hq-ghi"}, true},
+		{"single bead", []string{"ms-abc"}, true},
+		{"last is rig name", []string{"ms-abc", "ms-def", "mineshaft"}, false},
 		{"empty list", []string{}, false},
-		{"contains path", []string{"gt-abc", "mineshaft/miners/foo"}, false},
-		{"contains bare word no hyphen", []string{"gt-abc", "mineshaft"}, false},
+		{"contains path", []string{"ms-abc", "mineshaft/miners/foo"}, false},
+		{"contains bare word no hyphen", []string{"ms-abc", "mineshaft"}, false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -589,13 +589,13 @@ func TestResolveRigFromBeadIDs_AllSamePrefix(t *testing.T) {
 		t.Fatalf("mkdir: %v", err)
 	}
 
-	// Write routes.jsonl mapping gt- to mineshaft
-	routesContent := `{"prefix":"gt-","path":"mineshaft/.beads"}` + "\n"
+	// Write routes.jsonl mapping ms- to mineshaft
+	routesContent := `{"prefix":"ms-","path":"mineshaft/.beads"}` + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
 
-	rigName, err := resolveRigFromBeadIDs([]string{"gt-aaa", "gt-bbb", "gt-ccc"}, townRoot)
+	rigName, err := resolveRigFromBeadIDs([]string{"ms-aaa", "ms-bbb", "ms-ccc"}, townRoot)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -613,14 +613,14 @@ func TestResolveRigFromBeadIDs_MixedPrefixes_Errors(t *testing.T) {
 		t.Fatalf("mkdir: %v", err)
 	}
 
-	routesContent := `{"prefix":"gt-","path":"mineshaft/.beads"}
+	routesContent := `{"prefix":"ms-","path":"mineshaft/.beads"}
 {"prefix":"bd-","path":"beads/.beads"}
 `
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
 
-	_, err := resolveRigFromBeadIDs([]string{"gt-aaa", "bd-bbb", "gt-ccc"}, townRoot)
+	_, err := resolveRigFromBeadIDs([]string{"ms-aaa", "bd-bbb", "ms-ccc"}, townRoot)
 	if err == nil {
 		t.Fatal("expected error for mixed prefixes, got nil")
 	}
@@ -645,13 +645,13 @@ func TestResolveRigFromBeadIDs_UnmappedPrefix_Errors(t *testing.T) {
 		t.Fatalf("mkdir: %v", err)
 	}
 
-	// Only gt- is mapped; zz- is not
-	routesContent := `{"prefix":"gt-","path":"mineshaft/.beads"}` + "\n"
+	// Only ms- is mapped; zz- is not
+	routesContent := `{"prefix":"ms-","path":"mineshaft/.beads"}` + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
 
-	_, err := resolveRigFromBeadIDs([]string{"gt-aaa", "zz-bbb"}, townRoot)
+	_, err := resolveRigFromBeadIDs([]string{"ms-aaa", "zz-bbb"}, townRoot)
 	if err == nil {
 		t.Fatal("expected error for unmapped prefix, got nil")
 	}
@@ -725,7 +725,7 @@ fi
 shift || true
 	case "$cmd" in
 	  close)
-	    printf '%s %s|%s|%s|%s|%s|%s|%s|%s|%s|%s\n' "$cmd" "$*" "$(pwd)" "${BEADS_DIR:-}" "${BEADS_DOLT_SERVER_DATABASE:-}" "${BEADS_DB:-}" "${BD_DB:-}" "${BEADS_DOLT_DATA_DIR:-}" "${GT_DOLT_DATA:-}" "${BD_DOLT_AUTO_COMMIT:-}" "${BD_READONLY:-}" >> "` + closeLogPath + `"
+	    printf '%s %s|%s|%s|%s|%s|%s|%s|%s|%s|%s\n' "$cmd" "$*" "$(pwd)" "${BEADS_DIR:-}" "${BEADS_DOLT_SERVER_DATABASE:-}" "${BEADS_DB:-}" "${BD_DB:-}" "${BEADS_DOLT_DATA_DIR:-}" "${MS_DOLT_DATA:-}" "${BD_DOLT_AUTO_COMMIT:-}" "${BD_READONLY:-}" >> "` + closeLogPath + `"
 	    exit 0
 	    ;;
 esac
@@ -742,7 +742,7 @@ exit 0
 	t.Setenv("BEADS_DB", filepath.Join(townRoot, "wrong.db"))
 	t.Setenv("BD_DB", filepath.Join(townRoot, "wrong.bd"))
 	t.Setenv("BEADS_DOLT_DATA_DIR", filepath.Join(townRoot, "wrong-data"))
-	t.Setenv("GT_DOLT_DATA", filepath.Join(townRoot, "wrong-gt-data"))
+	t.Setenv("MS_DOLT_DATA", filepath.Join(townRoot, "wrong-ms-data"))
 	t.Setenv("BD_READONLY", "true")
 	t.Setenv("BD_DOLT_AUTO_COMMIT", "off")
 
@@ -787,7 +787,7 @@ exit 0
 		t.Fatalf("stale DB env should be stripped, got BEADS_DB=%q BD_DB=%q BEADS_DOLT_DATA_DIR=%q", fields[4], fields[5], fields[6])
 	}
 	if fields[7] != "" {
-		t.Fatalf("GT_DOLT_DATA should be stripped, got %q", fields[7])
+		t.Fatalf("MS_DOLT_DATA should be stripped, got %q", fields[7])
 	}
 	if fields[8] != "on" {
 		t.Fatalf("BD_DOLT_AUTO_COMMIT = %q, want on", fields[8])
@@ -923,7 +923,7 @@ exit 0
 	}
 	t.Cleanup(func() { addTrackingRelationFn = oldAddTracking })
 
-	minecartID, err := createAutoMinecart("gt-aaa", "Fix the widget", false, "mr", "")
+	minecartID, err := createAutoMinecart("ms-aaa", "Fix the widget", false, "mr", "")
 	if err != nil {
 		t.Fatalf("createAutoMinecart() error: %v", err)
 	}
@@ -949,15 +949,15 @@ exit 0
 	if helperMinecartID != minecartID {
 		t.Errorf("tracking helper minecartID = %q, want %q", helperMinecartID, minecartID)
 	}
-	if helperBeadID != "gt-aaa" {
-		t.Errorf("tracking helper issueID = %q, want %q", helperBeadID, "gt-aaa")
+	if helperBeadID != "ms-aaa" {
+		t.Errorf("tracking helper issueID = %q, want %q", helperBeadID, "ms-aaa")
 	}
 }
 
 // TestCreateAutoMinecart_FlagLikeTitleReturnsError verifies that a title starting
 // with "--" is rejected.
 func TestCreateAutoMinecart_FlagLikeTitleReturnsError(t *testing.T) {
-	_, err := createAutoMinecart("gt-aaa", "--verbose", false, "", "")
+	_, err := createAutoMinecart("ms-aaa", "--verbose", false, "", "")
 	if err == nil {
 		t.Fatal("expected error for flag-like title, got nil")
 	}
@@ -966,7 +966,7 @@ func TestCreateAutoMinecart_FlagLikeTitleReturnsError(t *testing.T) {
 	}
 }
 
-// TestCreateAutoMinecart_OwnedLabel verifies that owned=true adds --labels=gt:owned.
+// TestCreateAutoMinecart_OwnedLabel verifies that owned=true adds --labels=ms:owned.
 func TestCreateAutoMinecart_OwnedLabel(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows")
@@ -984,7 +984,7 @@ exit 0
 		t.Fatalf("rewrite bd stub: %v", err)
 	}
 
-	_, err := createAutoMinecart("gt-aaa", "My task", true, "direct", "")
+	_, err := createAutoMinecart("ms-aaa", "My task", true, "direct", "")
 	if err != nil {
 		t.Fatalf("createAutoMinecart() error: %v", err)
 	}
@@ -993,7 +993,7 @@ exit 0
 	if err != nil {
 		t.Fatalf("read log: %v", err)
 	}
-	if !strings.Contains(string(logBytes), "--labels=gt:minecart,gt:owned") {
+	if !strings.Contains(string(logBytes), "--labels=ms:minecart,ms:owned") {
 		t.Errorf("create should include minecart/owned labels:\n%q", string(logBytes))
 	}
 }
@@ -1032,7 +1032,7 @@ exit 0
 		t.Fatalf("rewrite bd stub: %v", err)
 	}
 
-	minecartID, err := createAutoMinecart("gt-aaa", "My task", false, "", "")
+	minecartID, err := createAutoMinecart("ms-aaa", "My task", false, "", "")
 	if err != nil {
 		t.Fatalf("expected no error (dep fail is non-fatal), got: %v", err)
 	}
@@ -1070,7 +1070,7 @@ func TestMinecartTracksBead_ExactMatch(t *testing.T) {
 
 	// bd sql returns rows with depends_on_id column
 	bdScript := `#!/bin/sh
-echo '[{"depends_on_id":"gt-aaa"},{"depends_on_id":"gt-bbb"}]'
+echo '[{"depends_on_id":"ms-aaa"},{"depends_on_id":"ms-bbb"}]'
 exit 0
 `
 	if err := os.WriteFile(filepath.Join(binDir, "bd"), []byte(bdScript), 0755); err != nil {
@@ -1079,11 +1079,11 @@ exit 0
 	origPath := os.Getenv("PATH")
 	t.Setenv("PATH", binDir+":"+origPath)
 
-	if !minecartTracksBead(beadsDir, "hq-cv-test", "gt-aaa") {
-		t.Error("expected true for exact match gt-aaa")
+	if !minecartTracksBead(beadsDir, "hq-cv-test", "ms-aaa") {
+		t.Error("expected true for exact match ms-aaa")
 	}
-	if !minecartTracksBead(beadsDir, "hq-cv-test", "gt-bbb") {
-		t.Error("expected true for exact match gt-bbb")
+	if !minecartTracksBead(beadsDir, "hq-cv-test", "ms-bbb") {
+		t.Error("expected true for exact match ms-bbb")
 	}
 }
 
@@ -1099,7 +1099,7 @@ func TestMinecartTracksBead_ExternalWrappedMatch(t *testing.T) {
 
 	// bd sql returns raw depends_on_id which may contain external: wrapping
 	bdScript := `#!/bin/sh
-echo '[{"depends_on_id":"external:gt:gt-abc"}]'
+echo '[{"depends_on_id":"external:ms:ms-abc"}]'
 exit 0
 `
 	if err := os.WriteFile(filepath.Join(binDir, "bd"), []byte(bdScript), 0755); err != nil {
@@ -1107,8 +1107,8 @@ exit 0
 	}
 	t.Setenv("PATH", binDir+":"+os.Getenv("PATH"))
 
-	if !minecartTracksBead(beadsDir, "hq-cv-test", "gt-abc") {
-		t.Error("expected true for external-wrapped match gt-abc")
+	if !minecartTracksBead(beadsDir, "hq-cv-test", "ms-abc") {
+		t.Error("expected true for external-wrapped match ms-abc")
 	}
 }
 
@@ -1122,7 +1122,7 @@ func TestMinecartTracksBead_NoMatch(t *testing.T) {
 	beadsDir := t.TempDir()
 
 	bdScript := `#!/bin/sh
-echo '[{"depends_on_id":"gt-aaa"}]'
+echo '[{"depends_on_id":"ms-aaa"}]'
 exit 0
 `
 	if err := os.WriteFile(filepath.Join(binDir, "bd"), []byte(bdScript), 0755); err != nil {
@@ -1130,7 +1130,7 @@ exit 0
 	}
 	t.Setenv("PATH", binDir+":"+os.Getenv("PATH"))
 
-	if minecartTracksBead(beadsDir, "hq-cv-test", "gt-zzz") {
+	if minecartTracksBead(beadsDir, "hq-cv-test", "ms-zzz") {
 		t.Error("expected false when bead is not tracked")
 	}
 }
@@ -1152,7 +1152,7 @@ exit 1
 	}
 	t.Setenv("PATH", binDir+":"+os.Getenv("PATH"))
 
-	if minecartTracksBead(beadsDir, "hq-cv-test", "gt-aaa") {
+	if minecartTracksBead(beadsDir, "hq-cv-test", "ms-aaa") {
 		t.Error("expected false when bd fails")
 	}
 }
@@ -1177,8 +1177,8 @@ func TestBatchSling_CrossRigGuardRejectsPrefix(t *testing.T) {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 
-	// Routes: gt- -> mineshaft, bd- -> beads
-	routesContent := `{"prefix":"gt-","path":"mineshaft/.beads"}
+	// Routes: ms- -> mineshaft, bd- -> beads
+	routesContent := `{"prefix":"ms-","path":"mineshaft/.beads"}
 {"prefix":"bd-","path":"beads/.beads"}
 `
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
@@ -1228,7 +1228,7 @@ exit 0
 
 	// Directly test the cross-rig guard logic from runBatchSling lines 32-61.
 	// A bd- bead targeting "mineshaft" should be rejected.
-	beadIDs := []string{"gt-aaa", "bd-bbb"}
+	beadIDs := []string{"ms-aaa", "bd-bbb"}
 	rigName := "mineshaft"
 	townBeadsDir := beadsDir
 
@@ -1324,7 +1324,7 @@ func TestCreateBatchMinecart_ReturnsTrackedBeadSet(t *testing.T) {
 		t.Fatalf("mkdir binDir: %v", err)
 	}
 
-	// Stub bd: create succeeds, dep add fails for gt-bbb only
+	// Stub bd: create succeeds, dep add fails for ms-bbb only
 	bdScript := `#!/bin/sh
 cmd="$1"
 if [ "$cmd" = "--allow-stale" ]; then
@@ -1336,7 +1336,7 @@ case "$cmd" in
   create) exit 0 ;;
   dep)
     for arg in "$@"; do
-      if [ "$arg" = "gt-bbb" ]; then exit 1; fi
+      if [ "$arg" = "ms-bbb" ]; then exit 1; fi
     done
     exit 0
     ;;
@@ -1358,7 +1358,7 @@ exit 0
 		t.Fatalf("chdir: %v", err)
 	}
 
-	minecartID, tracked, err := createBatchMinecart([]string{"gt-aaa", "gt-bbb", "gt-ccc"}, "mineshaft", false, "", "")
+	minecartID, tracked, err := createBatchMinecart([]string{"ms-aaa", "ms-bbb", "ms-ccc"}, "mineshaft", false, "", "")
 	if err != nil {
 		t.Fatalf("createBatchMinecart() error: %v", err)
 	}
@@ -1366,7 +1366,7 @@ exit 0
 		t.Fatal("minecart ID should not be empty")
 	}
 
-	// gt-bbb dep add failed, so only gt-aaa and gt-ccc should be in tracked set
+	// ms-bbb dep add failed, so only ms-aaa and ms-ccc should be in tracked set
 	if len(tracked) != 2 {
 		t.Errorf("expected 2 tracked beads, got %d: %v", len(tracked), tracked)
 	}
@@ -1374,14 +1374,14 @@ exit 0
 	for _, id := range tracked {
 		trackedMap[id] = true
 	}
-	if !trackedMap["gt-aaa"] {
-		t.Error("gt-aaa should be in tracked set")
+	if !trackedMap["ms-aaa"] {
+		t.Error("ms-aaa should be in tracked set")
 	}
-	if trackedMap["gt-bbb"] {
-		t.Error("gt-bbb should NOT be in tracked set (dep add failed)")
+	if trackedMap["ms-bbb"] {
+		t.Error("ms-bbb should NOT be in tracked set (dep add failed)")
 	}
-	if !trackedMap["gt-ccc"] {
-		t.Error("gt-ccc should be in tracked set")
+	if !trackedMap["ms-ccc"] {
+		t.Error("ms-ccc should be in tracked set")
 	}
 }
 
@@ -1396,14 +1396,14 @@ func TestResolveRigFromBeadIDs_MixedPrefixes_DoesNotSuggestForce(t *testing.T) {
 		t.Fatalf("mkdir: %v", err)
 	}
 
-	routesContent := `{"prefix":"gt-","path":"mineshaft/.beads"}
+	routesContent := `{"prefix":"ms-","path":"mineshaft/.beads"}
 {"prefix":"bd-","path":"beads/.beads"}
 `
 	if err := os.WriteFile(filepath.Join(beadsDir, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
 
-	_, err := resolveRigFromBeadIDs([]string{"gt-aaa", "bd-bbb"}, townRoot)
+	_, err := resolveRigFromBeadIDs([]string{"ms-aaa", "bd-bbb"}, townRoot)
 	if err == nil {
 		t.Fatal("expected error for mixed prefixes, got nil")
 	}
@@ -1453,11 +1453,11 @@ func TestBatchSling_MinecartCreationFailureIsHardError(t *testing.T) {
 // Review finding: append(beadIDs, rigName) mutates shared backing array.
 func TestBatchSling_SliceAliasingInCrossRigGuard(t *testing.T) {
 	// Simulate the slice aliasing scenario:
-	// args = ["gt-aaa", "bd-bbb", "mineshaft"]
+	// args = ["ms-aaa", "bd-bbb", "mineshaft"]
 	// beadIDs = args[:2] → shares backing array with args
 	// append(beadIDs, rigName) writes into args[2]
-	args := []string{"gt-aaa", "bd-bbb", "mineshaft"}
-	beadIDs := args[:len(args)-1] // beadIDs = ["gt-aaa", "bd-bbb"], shares backing
+	args := []string{"ms-aaa", "bd-bbb", "mineshaft"}
+	beadIDs := args[:len(args)-1] // beadIDs = ["ms-aaa", "bd-bbb"], shares backing
 	rigName := "resolved-rig"
 
 	// Before the fix, this would mutate args[2] from "mineshaft" to "resolved-rig"
@@ -1494,7 +1494,7 @@ fi
 shift || true
 case "$cmd" in
   list)
-    echo '[{"id":"hq-cv-match1","description":"Auto-created minecart tracking gt-abc"}]'
+    echo '[{"id":"hq-cv-match1","description":"Auto-created minecart tracking ms-abc"}]'
     exit 0
     ;;
 esac
@@ -1504,7 +1504,7 @@ exit 0
 		t.Fatalf("rewrite bd stub: %v", err)
 	}
 
-	got := findMinecartByDescription(townRoot, "gt-abc")
+	got := findMinecartByDescription(townRoot, "ms-abc")
 	if got != "hq-cv-match1" {
 		t.Errorf("findMinecartByDescription() = %q, want %q", got, "hq-cv-match1")
 	}
@@ -1531,7 +1531,7 @@ fi
 shift || true
 case "$cmd" in
   list)
-    echo '[{"id":"hq-cv-other","description":"Auto-created minecart tracking gt-other"}]'
+    echo '[{"id":"hq-cv-other","description":"Auto-created minecart tracking ms-other"}]'
     exit 0
     ;;
   dep)
@@ -1545,7 +1545,7 @@ exit 0
 		t.Fatalf("rewrite bd stub: %v", err)
 	}
 
-	got := findMinecartByDescription(townRoot, "gt-zzz")
+	got := findMinecartByDescription(townRoot, "ms-zzz")
 	if got != "" {
 		t.Errorf("findMinecartByDescription() = %q, want empty string", got)
 	}
@@ -1561,8 +1561,8 @@ func TestFindMinecartByDescription_FallsBackToTrackedDeps(t *testing.T) {
 
 	townRoot, logPath := setupTownWithBdStub(t, "")
 
-	// bd stub: list returns a minecart whose description does NOT match gt-abc,
-	// dep list --direction=down returns gt-abc as a tracked dep of that minecart.
+	// bd stub: list returns a minecart whose description does NOT match ms-abc,
+	// dep list --direction=down returns ms-abc as a tracked dep of that minecart.
 	bdScript := fmt.Sprintf(`#!/bin/sh
 echo "CMD:$*" >> "%s"
 cmd="$1"
@@ -1578,12 +1578,12 @@ case "$cmd" in
     ;;
   sql)
     # bdDepListRawIDs down: return tracked bead IDs
-    echo '[{"depends_on_id":"gt-abc"}]'
+    echo '[{"depends_on_id":"ms-abc"}]'
     exit 0
     ;;
   dep)
     # dep list <minecartID> --direction=down --type=tracks --json
-    echo '[{"id":"gt-abc"}]'
+    echo '[{"id":"ms-abc"}]'
     exit 0
     ;;
 esac
@@ -1593,7 +1593,7 @@ exit 0
 		t.Fatalf("rewrite bd stub: %v", err)
 	}
 
-	got := findMinecartByDescription(townRoot, "gt-abc")
+	got := findMinecartByDescription(townRoot, "ms-abc")
 	if got != "hq-cv-manual" {
 		t.Errorf("findMinecartByDescription() = %q, want %q", got, "hq-cv-manual")
 	}
@@ -1643,7 +1643,7 @@ exit 0
 		t.Fatalf("rewrite bd stub: %v", err)
 	}
 
-	got := isTrackedByMinecart("gt-abc")
+	got := isTrackedByMinecart("ms-abc")
 	if got != "hq-cv-found" {
 		t.Errorf("isTrackedByMinecart() = %q, want %q", got, "hq-cv-found")
 	}
@@ -1683,7 +1683,7 @@ exit 0
 		t.Fatalf("rewrite bd stub: %v", err)
 	}
 
-	got := isTrackedByMinecart("gt-zzz")
+	got := isTrackedByMinecart("ms-zzz")
 	if got != "" {
 		t.Errorf("isTrackedByMinecart() = %q, want empty string", got)
 	}
@@ -1721,7 +1721,7 @@ shift || true
 case "$cmd" in
   sql)
     # bdDepListRawIDs down: return tracked bead IDs for minecart
-    echo '[{"depends_on_id":"gt-aaa"},{"depends_on_id":"gt-bbb"}]'
+    echo '[{"depends_on_id":"ms-aaa"},{"depends_on_id":"ms-bbb"}]'
     exit 0
     ;;
   show)
@@ -1731,15 +1731,15 @@ case "$cmd" in
       hq-cv-test*)
         echo '[{"title":"Test minecart title","labels":[]}]'
         ;;
-      *gt-aaa*gt-bbb*|*gt-bbb*gt-aaa*)
+      *ms-aaa*ms-bbb*|*ms-bbb*ms-aaa*)
         # Batch show for issue details - return details for each ID
-        echo '[{"id":"gt-aaa","title":"First bead","status":"open","issue_type":"task"},{"id":"gt-bbb","title":"Second bead","status":"closed","issue_type":"task"}]'
+        echo '[{"id":"ms-aaa","title":"First bead","status":"open","issue_type":"task"},{"id":"ms-bbb","title":"Second bead","status":"closed","issue_type":"task"}]'
         ;;
-      *gt-aaa*)
-        echo '[{"id":"gt-aaa","title":"First bead","status":"open","issue_type":"task"}]'
+      *ms-aaa*)
+        echo '[{"id":"ms-aaa","title":"First bead","status":"open","issue_type":"task"}]'
         ;;
-      *gt-bbb*)
-        echo '[{"id":"gt-bbb","title":"Second bead","status":"closed","issue_type":"task"}]'
+      *ms-bbb*)
+        echo '[{"id":"ms-bbb","title":"Second bead","status":"closed","issue_type":"task"}]'
         ;;
       *)
         echo '[]'
@@ -1748,7 +1748,7 @@ case "$cmd" in
     exit 0
     ;;
   dep)
-    echo '[{"id":"gt-aaa","title":"First bead","status":"open","dependency_type":"tracks","issue_type":"task"},{"id":"gt-bbb","title":"Second bead","status":"closed","dependency_type":"tracks","issue_type":"task"}]'
+    echo '[{"id":"ms-aaa","title":"First bead","status":"open","dependency_type":"tracks","issue_type":"task"},{"id":"ms-bbb","title":"Second bead","status":"closed","dependency_type":"tracks","issue_type":"task"}]'
     exit 0
     ;;
   list)
@@ -1770,7 +1770,7 @@ exit 0
 	}
 	os.Stdout = w
 
-	printMinecartConflict("gt-bbb", "hq-cv-test")
+	printMinecartConflict("ms-bbb", "hq-cv-test")
 
 	w.Close()
 	os.Stdout = oldStdout
@@ -1787,8 +1787,8 @@ exit 0
 	}
 
 	// Verify conflict bead mentioned
-	if !strings.Contains(output, "gt-bbb") {
-		t.Errorf("output should contain conflict bead 'gt-bbb':\n%s", output)
+	if !strings.Contains(output, "ms-bbb") {
+		t.Errorf("output should contain conflict bead 'ms-bbb':\n%s", output)
 	}
 
 	// Verify minecart title
@@ -1868,13 +1868,13 @@ exit 1
 }
 
 // ---------------------------------------------------------------------------
-// getMinecartInfoForIssue tests (gt-9xum2: phantom minecart fix)
+// getMinecartInfoForIssue tests (ms-9xum2: phantom minecart fix)
 // ---------------------------------------------------------------------------
 
 // TestGetMinecartInfoForIssue_PhantomMinecart verifies that when isTrackedByMinecart
 // returns a minecart ID but bd show fails with "not found", the function returns
 // nil instead of partial MinecartInfo. This ensures phantom minecarts (deleted from
-// HQ but still referenced in local deps) don't break gt done MR creation.
+// HQ but still referenced in local deps) don't break ms done MR creation.
 func TestGetMinecartInfoForIssue_PhantomMinecart(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping on windows — shell stubs")
@@ -1954,7 +1954,7 @@ esac
 	}
 
 	// Call getMinecartInfoForIssue - should return nil for phantom minecart
-	got := getMinecartInfoForIssue("gt-test")
+	got := getMinecartInfoForIssue("ms-test")
 	if got != nil {
 		t.Errorf("getMinecartInfoForIssue returned %+v, want nil for phantom minecart", got)
 	}

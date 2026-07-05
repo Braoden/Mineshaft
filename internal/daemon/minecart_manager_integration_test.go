@@ -17,7 +17,7 @@ import (
 )
 
 // TestMinecartManager_FullLifecycle starts a real MinecartManager with a real beads
-// store and mock gt, lets both goroutines tick (event poll + stranded scan),
+// store and mock ms, lets both goroutines tick (event poll + stranded scan),
 // verifies log output, then stops and verifies clean shutdown.
 //
 // Exercises: S-08 (start guard), S-09 (context cancellation), S-10 (resolved paths).
@@ -31,14 +31,14 @@ func TestMinecartManager_FullLifecycle(t *testing.T) {
 
 	ctx := context.Background()
 
-	// Set up mock gt that returns stranded minecarts and logs all calls.
+	// Set up mock ms that returns stranded minecarts and logs all calls.
 	binDir := t.TempDir()
 	townRoot := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 
-	callLogPath := filepath.Join(binDir, "gt-calls.log")
+	callLogPath := filepath.Join(binDir, "ms-calls.log")
 	strandedJSON := `[{"id":"cv-test1","title":"Test Minecart","ready_count":0,"ready_issues":[]}]`
 
 	gtScript := fmt.Sprintf(`#!/bin/sh
@@ -50,9 +50,9 @@ fi
 exit 0
 `, callLogPath, strandedJSON)
 
-	gtPath := filepath.Join(binDir, "gt")
+	gtPath := filepath.Join(binDir, "ms")
 	if err := os.WriteFile(gtPath, []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write mock gt: %v", err)
+		t.Fatalf("write mock ms: %v", err)
 	}
 
 	var mu = &sync.Mutex{}
@@ -83,7 +83,7 @@ exit 0
 	// Create and close an issue AFTER seeding so the next poll detects it.
 	now := time.Now().UTC()
 	issue := &beadsdk.Issue{
-		ID:        "gt-integ1",
+		ID:        "ms-integ1",
 		Title:     "Integration Test Issue",
 		Status:    beadsdk.StatusOpen,
 		Priority:  2,
@@ -124,7 +124,7 @@ exit 0
 	foundScan := false
 	foundDoubleStart := false
 	for _, s := range logSnapshot {
-		if strings.Contains(s, "close detected") && strings.Contains(s, "gt-integ1") {
+		if strings.Contains(s, "close detected") && strings.Contains(s, "ms-integ1") {
 			foundClose = true
 		}
 		if strings.Contains(s, "auto-closing") || strings.Contains(s, "minecart check") {
@@ -136,7 +136,7 @@ exit 0
 	}
 
 	if !foundClose {
-		t.Errorf("event poll did not detect close event for gt-integ1; logs:\n%s", strings.Join(logSnapshot, "\n"))
+		t.Errorf("event poll did not detect close event for ms-integ1; logs:\n%s", strings.Join(logSnapshot, "\n"))
 	}
 	if !foundScan {
 		t.Errorf("stranded scan did not process the empty minecart; logs:\n%s", strings.Join(logSnapshot, "\n"))
@@ -145,9 +145,9 @@ exit 0
 		t.Errorf("double Start() guard did not fire; logs:\n%s", strings.Join(logSnapshot, "\n"))
 	}
 
-	// Verify gt was actually called (S-10: resolved path worked).
+	// Verify ms was actually called (S-10: resolved path worked).
 	if _, err := os.Stat(callLogPath); err != nil {
-		t.Errorf("gt was never called (resolved path may be broken): %v", err)
+		t.Errorf("ms was never called (resolved path may be broken): %v", err)
 	}
 }
 
@@ -189,7 +189,7 @@ func TestMinecartManager_LoggingFlow(t *testing.T) {
 
 	// Create tracked issue 1 (will be closed to trigger event)
 	task1 := &beadsdk.Issue{
-		ID:        "gt-logtask1",
+		ID:        "ms-logtask1",
 		Title:     "Task 1 (close me)",
 		Status:    beadsdk.StatusOpen,
 		Priority:  2,
@@ -203,7 +203,7 @@ func TestMinecartManager_LoggingFlow(t *testing.T) {
 
 	// Create tracked issue 2 (stays open, should be fed)
 	task2 := &beadsdk.Issue{
-		ID:        "gt-logtask2",
+		ID:        "ms-logtask2",
 		Title:     "Task 2 (ready to feed)",
 		Status:    beadsdk.StatusOpen,
 		Priority:  3,
@@ -234,15 +234,15 @@ func TestMinecartManager_LoggingFlow(t *testing.T) {
 		t.Fatalf("CloseIssue: %v", err)
 	}
 
-	// Set up mock gt and routes
+	// Set up mock ms and routes
 	binDir := t.TempDir()
 	townRoot := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 
-	// routes.jsonl: "gt-" prefix maps to rig "gt"
-	routes := `{"prefix":"gt-","path":"gt/.beads"}` + "\n"
+	// routes.jsonl: "ms-" prefix maps to rig "ms"
+	routes := `{"prefix":"ms-","path":"ms/.beads"}` + "\n"
 	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(routes), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
@@ -263,9 +263,9 @@ fi
 exit 0
 `, slingLogPath)
 
-	gtPath := filepath.Join(binDir, "gt")
+	gtPath := filepath.Join(binDir, "ms")
 	if err := os.WriteFile(gtPath, []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write mock gt: %v", err)
+		t.Fatalf("write mock ms: %v", err)
 	}
 
 	// Thread-safe logger
@@ -339,7 +339,7 @@ func TestMinecartManager_LoggingFlow_NoReadyIssues(t *testing.T) {
 		UpdatedAt: now,
 	}
 	task := &beadsdk.Issue{
-		ID:        "gt-nofeed1",
+		ID:        "ms-nofeed1",
 		Title:     "Only Task (will close)",
 		Status:    beadsdk.StatusOpen,
 		Priority:  2,
@@ -367,7 +367,7 @@ func TestMinecartManager_LoggingFlow_NoReadyIssues(t *testing.T) {
 		t.Fatalf("CloseIssue: %v", err)
 	}
 
-	// Mock gt
+	// Mock ms
 	binDir := t.TempDir()
 	townRoot := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
@@ -380,9 +380,9 @@ if [ "$1" = "minecart" ] && [ "$2" = "stranded" ]; then
 fi
 exit 0
 `
-	gtPath := filepath.Join(binDir, "gt")
+	gtPath := filepath.Join(binDir, "ms")
 	if err := os.WriteFile(gtPath, []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write mock gt: %v", err)
+		t.Fatalf("write mock ms: %v", err)
 	}
 
 	var mu sync.Mutex
@@ -445,7 +445,7 @@ func TestMinecartManager_MultipleTrackingMinecarts(t *testing.T) {
 		IssueType: beadsdk.TypeTask, CreatedAt: now, UpdatedAt: now,
 	}
 	task := &beadsdk.Issue{
-		ID: "gt-multi1", Title: "Shared Task",
+		ID: "ms-multi1", Title: "Shared Task",
 		Status: beadsdk.StatusOpen, Priority: 2,
 		IssueType: beadsdk.TypeTask, CreatedAt: now, UpdatedAt: now,
 	}
@@ -475,7 +475,7 @@ func TestMinecartManager_MultipleTrackingMinecarts(t *testing.T) {
 		t.Fatalf("CloseIssue: %v", err)
 	}
 
-	// Mock gt
+	// Mock ms
 	binDir := t.TempDir()
 	townRoot := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
@@ -495,9 +495,9 @@ fi
 exit 0
 `, checkLogPath)
 
-	gtPath := filepath.Join(binDir, "gt")
+	gtPath := filepath.Join(binDir, "ms")
 	if err := os.WriteFile(gtPath, []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write mock gt: %v", err)
+		t.Fatalf("write mock ms: %v", err)
 	}
 
 	var mu sync.Mutex
@@ -529,17 +529,17 @@ exit 0
 	assertLogContains(t, snapshot, "checking minecart", minecartA.ID)
 	assertLogContains(t, snapshot, "checking minecart", minecartB.ID)
 
-	// Verify gt minecart check was called for both (via mock log file).
+	// Verify ms minecart check was called for both (via mock log file).
 	data, err := os.ReadFile(checkLogPath)
 	if err != nil {
-		t.Fatalf("gt minecart check was never called: %v", err)
+		t.Fatalf("ms minecart check was never called: %v", err)
 	}
 	checkLog := string(data)
 	if !strings.Contains(checkLog, minecartA.ID) {
-		t.Errorf("gt minecart check not called for %s; log: %q", minecartA.ID, checkLog)
+		t.Errorf("ms minecart check not called for %s; log: %q", minecartA.ID, checkLog)
 	}
 	if !strings.Contains(checkLog, minecartB.ID) {
-		t.Errorf("gt minecart check not called for %s; log: %q", minecartB.ID, checkLog)
+		t.Errorf("ms minecart check not called for %s; log: %q", minecartB.ID, checkLog)
 	}
 }
 
@@ -565,12 +565,12 @@ func TestMinecartManager_ParkedRig_SkipsFeedOnEventPoll(t *testing.T) {
 		IssueType: beadsdk.TypeTask, CreatedAt: now, UpdatedAt: now,
 	}
 	task1 := &beadsdk.Issue{
-		ID: "gt-parked1", Title: "Task 1 (close me)",
+		ID: "ms-parked1", Title: "Task 1 (close me)",
 		Status: beadsdk.StatusOpen, Priority: 2,
 		IssueType: beadsdk.TypeTask, CreatedAt: now, UpdatedAt: now,
 	}
 	task2 := &beadsdk.Issue{
-		ID: "gt-parked2", Title: "Task 2 (ready but rig parked)",
+		ID: "ms-parked2", Title: "Task 2 (ready but rig parked)",
 		Status: beadsdk.StatusOpen, Priority: 3,
 		IssueType: beadsdk.TypeTask, CreatedAt: now, UpdatedAt: now,
 	}
@@ -593,13 +593,13 @@ func TestMinecartManager_ParkedRig_SkipsFeedOnEventPoll(t *testing.T) {
 		t.Fatalf("CloseIssue: %v", err)
 	}
 
-	// Mock gt with routes for "gt-" prefix → rig "gt"
+	// Mock ms with routes for "ms-" prefix → rig "ms"
 	binDir := t.TempDir()
 	townRoot := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	routes := `{"prefix":"gt-","path":"gt/.beads"}` + "\n"
+	routes := `{"prefix":"ms-","path":"ms/.beads"}` + "\n"
 	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(routes), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
@@ -619,9 +619,9 @@ if [ "$1" = "sling" ]; then
 fi
 exit 0
 `, slingLogPath)
-	gtPath := filepath.Join(binDir, "gt")
+	gtPath := filepath.Join(binDir, "ms")
 	if err := os.WriteFile(gtPath, []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write mock gt: %v", err)
+		t.Fatalf("write mock ms: %v", err)
 	}
 
 	var mu sync.Mutex
@@ -632,8 +632,8 @@ exit 0
 		logged = append(logged, fmt.Sprintf(format, args...))
 	}
 
-	// isRigParked returns true for "gt" rig
-	parked := func(rig string) bool { return rig == "gt" }
+	// isRigParked returns true for "ms" rig
+	parked := func(rig string) bool { return rig == "ms" }
 	stores := map[string]beadsdk.Storage{"hq": store}
 	m := NewMinecartManager(townRoot, logger, gtPath, 1*time.Hour, stores, nil, parked)
 	// Skip seeding so pollStoresSnapshot processes events immediately.
@@ -651,7 +651,7 @@ exit 0
 	assertLogContains(t, snapshot, "checking minecart", minecart.ID)
 
 	// Feed should be skipped because rig is parked.
-	assertLogContains(t, snapshot, "parked", "gt-parked2")
+	assertLogContains(t, snapshot, "parked", "ms-parked2")
 
 	// Sling should NOT have been called.
 	if _, err := os.Stat(slingLogPath); err == nil {
@@ -686,7 +686,7 @@ func assertLogContains(t *testing.T, logs []string, substrings ...string) {
 }
 
 // TestMinecartManager_ShutdownKillsHangingSubprocess verifies that Stop()
-// completes within bounded time even when a gt subprocess is hanging.
+// completes within bounded time even when a ms subprocess is hanging.
 // This is the critical S-09 test: without CommandContext + process group kill,
 // the wg.Wait() in Stop() would block indefinitely.
 func TestMinecartManager_ShutdownKillsHangingSubprocess(t *testing.T) {
@@ -700,7 +700,7 @@ func TestMinecartManager_ShutdownKillsHangingSubprocess(t *testing.T) {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
 
-	// Mock gt that hangs on stranded (simulates a stuck subprocess).
+	// Mock ms that hangs on stranded (simulates a stuck subprocess).
 	gtScript := `#!/bin/sh
 if [ "$1" = "minecart" ] && [ "$2" = "stranded" ]; then
   sleep 999
@@ -708,9 +708,9 @@ if [ "$1" = "minecart" ] && [ "$2" = "stranded" ]; then
 fi
 exit 0
 `
-	gtPath := filepath.Join(binDir, "gt")
+	gtPath := filepath.Join(binDir, "ms")
 	if err := os.WriteFile(gtPath, []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write mock gt: %v", err)
+		t.Fatalf("write mock ms: %v", err)
 	}
 
 	var logged []string
@@ -718,7 +718,7 @@ exit 0
 		logged = append(logged, fmt.Sprintf(format, args...))
 	}
 
-	// Short scan interval so the hanging gt fires immediately.
+	// Short scan interval so the hanging ms fires immediately.
 	m := NewMinecartManager(townRoot, logger, gtPath, 100*time.Millisecond, nil, nil, nil)
 	if err := m.Start(); err != nil {
 		t.Fatalf("Start: %v", err)

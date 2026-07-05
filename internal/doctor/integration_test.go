@@ -93,8 +93,8 @@ func TestIntegrationOrphanSessionDetection(t *testing.T) {
 
 		// Invalid sessions SHOULD be detected as orphans
 		{"unknown_prefix", "xx-witness", true},          // Unregistered prefix
-		{"unregistered_prefix", "gt-only-two", true},    // "gt" not in test registry
-		{"non_gt_prefix", "foo-mineshaft-witness", false}, // Not a GT session, ignored
+		{"unregistered_prefix", "ms-only-two", true},    // "ms" not in test registry
+		{"non_gt_prefix", "foo-mineshaft-witness", false}, // Not a MS session, ignored
 	}
 
 	check := NewOrphanSessionCheck()
@@ -283,10 +283,10 @@ func TestIntegrationEnvVarsBeadsDirMismatch(t *testing.T) {
 		sessions: []string{"ga-witness"},
 		sessionEnvs: map[string]map[string]string{
 			"ga-witness": {
-				"GT_ROLE":   "witness",
-				"GT_RIG":    "mineshaft",
+				"MS_ROLE":   "witness",
+				"MS_RIG":    "mineshaft",
 				"BEADS_DIR": townBeadsDir, // WRONG: Should be rigBeadsDir
-				"GT_ROOT":   townRoot,
+				"MS_ROOT":   townRoot,
 			},
 		},
 	}
@@ -887,21 +887,21 @@ func setupMockBeads(t *testing.T, townRoot, rigName string) {
 			"title":      rigName,
 			"status":     "open",
 			"issue_type": "rig",
-			"labels":     []string{"gt:rig"},
+			"labels":     []string{"ms:rig"},
 		},
 		{
 			"id":         beads.WitnessBeadIDWithPrefix(prefix, rigName),
 			"title":      "Witness for " + rigName,
 			"status":     "open",
 			"issue_type": "agent",
-			"labels":     []string{"gt:agent"},
+			"labels":     []string{"ms:agent"},
 		},
 		{
 			"id":         beads.RefineryBeadIDWithPrefix(prefix, rigName),
 			"title":      "Refinery for " + rigName,
 			"status":     "open",
 			"issue_type": "agent",
-			"labels":     []string{"gt:agent"},
+			"labels":     []string{"ms:agent"},
 		},
 	}
 
@@ -925,42 +925,42 @@ func setupMockBeads(t *testing.T, townRoot, rigName string) {
 			"title":      "Witness Role",
 			"status":     "open",
 			"issue_type": "role",
-			"labels":     []string{"gt:role"},
+			"labels":     []string{"ms:role"},
 		},
 		{
 			"id":         "hq-refinery-role",
 			"title":      "Refinery Role",
 			"status":     "open",
 			"issue_type": "role",
-			"labels":     []string{"gt:role"},
+			"labels":     []string{"ms:role"},
 		},
 		{
 			"id":         "hq-crew-role",
 			"title":      "Crew Role",
 			"status":     "open",
 			"issue_type": "role",
-			"labels":     []string{"gt:role"},
+			"labels":     []string{"ms:role"},
 		},
 		{
 			"id":         "hq-overseer-role",
 			"title":      "Overseer Role",
 			"status":     "open",
 			"issue_type": "role",
-			"labels":     []string{"gt:role"},
+			"labels":     []string{"ms:role"},
 		},
 		{
 			"id":         "hq-supervisor-role",
 			"title":      "Supervisor Role",
 			"status":     "open",
 			"issue_type": "role",
-			"labels":     []string{"gt:role"},
+			"labels":     []string{"ms:role"},
 		},
 		{
 			"id":         "hq-dog-role",
 			"title":      "Dog Role",
 			"status":     "open",
 			"issue_type": "role",
-			"labels":     []string{"gt:role"},
+			"labels":     []string{"ms:role"},
 		},
 	}
 

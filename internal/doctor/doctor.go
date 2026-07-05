@@ -113,7 +113,7 @@ func (d *Doctor) Fix(ctx *CheckContext) *Report {
 
 // safeFixCheck calls check.Fix() with panic recovery. If the Fix method panics
 // (e.g., due to a Dolt nil pointer dereference propagating in-process — GH#1769),
-// the panic is caught and returned as an error instead of crashing gt doctor.
+// the panic is caught and returned as an error instead of crashing ms doctor.
 func safeFixCheck(check Check, ctx *CheckContext) (retErr error) {
 	defer func() {
 		if r := recover(); r != nil {

@@ -114,12 +114,12 @@ func TestMinerName(t *testing.T) {
 		cn   string
 		want string
 	}{
-		{"gt-mineshaft-furiosa", "furiosa"},
-		{"gt-mineshaft-furiosa", "furiosa"}, // hyphenated rig
-		{"gt-mineshaft-", ""},                // empty name
-		{"gt--furiosa", ""},                // empty rig; rejected
-		{"noprefix-rig-name", ""},          // missing gt- prefix
-		{"gt-nodashinrest", ""},            // only one component after stripping gt-
+		{"ms-mineshaft-furiosa", "furiosa"},
+		{"ms-mineshaft-furiosa", "furiosa"}, // hyphenated rig
+		{"ms-mineshaft-", ""},                // empty name
+		{"ms--furiosa", ""},                // empty rig; rejected
+		{"noprefix-rig-name", ""},          // missing ms- prefix
+		{"ms-nodashinrest", ""},            // only one component after stripping ms-
 		{"", ""},                           // empty string
 	}
 	for _, tc := range cases {
@@ -136,12 +136,12 @@ func TestCnToIdentity(t *testing.T) {
 		cn   string
 		want string
 	}{
-		{"gt-mineshaft-furiosa", "mineshaft/furiosa"},
-		{"gt-mineshaft-furiosa", "mineshaft/furiosa"}, // hyphenated rig
-		{"gt-mineshaft-", ""},                         // empty name
-		{"gt--furiosa", ""},                         // empty rig (two consecutive dashes after gt-)
-		{"noprefix-rig-name", ""},                   // missing gt- prefix
-		{"gt-nodashinrest", ""},                     // only one component after stripping gt-
+		{"ms-mineshaft-furiosa", "mineshaft/furiosa"},
+		{"ms-mineshaft-furiosa", "mineshaft/furiosa"}, // hyphenated rig
+		{"ms-mineshaft-", ""},                         // empty name
+		{"ms--furiosa", ""},                         // empty rig (two consecutive dashes after ms-)
+		{"noprefix-rig-name", ""},                   // missing ms- prefix
+		{"ms-nodashinrest", ""},                     // only one component after stripping ms-
 		{"", ""},                                    // empty string
 	}
 	for _, tc := range cases {
@@ -167,7 +167,7 @@ func TestExtractIdentity(t *testing.T) {
 	})
 
 	t.Run("valid CN parses to identity", func(t *testing.T) {
-		req := makeFakeRequest("POST", "/v1/exec", "", "gt-mineshaft-rust")
+		req := makeFakeRequest("POST", "/v1/exec", "", "ms-mineshaft-rust")
 		assert.Equal(t, "mineshaft/rust", extractIdentity(req))
 	})
 }
@@ -225,8 +225,8 @@ func TestHandleExec(t *testing.T) {
 		assert.Contains(t, resp.Stdout, "hello")
 	})
 
-	t.Run("GT_PROXY_IDENTITY env var is set when CN is present", func(t *testing.T) {
-		// Write a tiny script that prints the GT_PROXY_IDENTITY env var.
+	t.Run("MS_PROXY_IDENTITY env var is set when CN is present", func(t *testing.T) {
+		// Write a tiny script that prints the MS_PROXY_IDENTITY env var.
 		// The script is placed in a temp dir added to PATH so AllowedCommands
 		// can reference it by plain name (no path separator — issue 12).
 		scriptDir := t.TempDir()
@@ -234,16 +234,16 @@ func TestHandleExec(t *testing.T) {
 		if runtime.GOOS == "windows" {
 			commandName = "printenv"
 			scriptPath := filepath.Join(scriptDir, commandName+".cmd")
-			require.NoError(t, os.WriteFile(scriptPath, []byte("@echo off\r\n<nul set /p =%GT_PROXY_IDENTITY%\r\n"), 0644))
+			require.NoError(t, os.WriteFile(scriptPath, []byte("@echo off\r\n<nul set /p =%MS_PROXY_IDENTITY%\r\n"), 0644))
 		} else {
 			scriptPath := filepath.Join(scriptDir, commandName)
-			require.NoError(t, os.WriteFile(scriptPath, []byte("#!/bin/sh\nprintf '%s' \"$GT_PROXY_IDENTITY\"\n"), 0755))
+			require.NoError(t, os.WriteFile(scriptPath, []byte("#!/bin/sh\nprintf '%s' \"$MS_PROXY_IDENTITY\"\n"), 0755))
 		}
 		t.Setenv("PATH", scriptDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
 		srv2 := newExecTestServer(t, Config{AllowedCommands: []string{commandName}})
 		body := `{"argv":["` + commandName + `"]}`
-		req := makeFakeRequest("POST", "/v1/exec", body, "gt-mineshaft-rust")
+		req := makeFakeRequest("POST", "/v1/exec", body, "ms-mineshaft-rust")
 		rec := httptest.NewRecorder()
 		srv2.handleExec(rec, req)
 
@@ -346,7 +346,7 @@ func TestHandleExec_BDCreateRepoAliasPinsCanonicalBeadsDir(t *testing.T) {
 	require.NoError(t, os.MkdirAll(townBeads, 0755))
 	require.NoError(t, os.WriteFile(filepath.Join(townBeads, "routes.jsonl"), []byte(
 		`{"prefix":"hq-","path":"."}`+"\n"+
-			`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`+"\n"), 0644))
+			`{"prefix":"ms-","path":"mineshaft/overseer/rig"}`+"\n"), 0644))
 	require.NoError(t, os.WriteFile(filepath.Join(townBeads, "metadata.json"), []byte(`{"dolt_database":"hq"}`), 0644))
 	require.NoError(t, os.WriteFile(filepath.Join(canonicalBeads, "metadata.json"), []byte(`{"dolt_database":"mineshaft"}`), 0644))
 	require.NoError(t, os.WriteFile(filepath.Join(decoyBeads, "metadata.json"), []byte(`{"dolt_database":"hq"}`), 0644))
@@ -591,7 +591,7 @@ func TestHandleExecAuditLog(t *testing.T) {
 		logger := slog.New(lc)
 		srv := newExecTestServer(t, Config{AllowedCommands: []string{"echo"}, Logger: logger})
 
-		req := makeFakeRequest("POST", "/v1/exec", `{"argv":["echo","hi"]}`, "gt-mineshaft-shiny")
+		req := makeFakeRequest("POST", "/v1/exec", `{"argv":["echo","hi"]}`, "ms-mineshaft-shiny")
 		rec := httptest.NewRecorder()
 		srv.handleExec(rec, req)
 
@@ -631,20 +631,20 @@ func TestExecRateLimit(t *testing.T) {
 	body := `{"argv":["echo","hi"]}`
 
 	// First request should succeed (consumes the single burst token).
-	req1 := makeFakeRequest("POST", "/v1/exec", body, "gt-mineshaft-ratelimitclient")
+	req1 := makeFakeRequest("POST", "/v1/exec", body, "ms-mineshaft-ratelimitclient")
 	rec1 := httptest.NewRecorder()
 	srv.handleExec(rec1, req1)
 	assert.Equal(t, http.StatusOK, rec1.Code)
 
 	// Second immediate request from the same client should be rate-limited.
-	req2 := makeFakeRequest("POST", "/v1/exec", body, "gt-mineshaft-ratelimitclient")
+	req2 := makeFakeRequest("POST", "/v1/exec", body, "ms-mineshaft-ratelimitclient")
 	rec2 := httptest.NewRecorder()
 	srv.handleExec(rec2, req2)
 	assert.Equal(t, http.StatusTooManyRequests, rec2.Code)
 	assert.Contains(t, rec2.Body.String(), "rate limit exceeded")
 
 	// A different client should still succeed (rate limits are per-client).
-	req3 := makeFakeRequest("POST", "/v1/exec", body, "gt-mineshaft-otherclient")
+	req3 := makeFakeRequest("POST", "/v1/exec", body, "ms-mineshaft-otherclient")
 	rec3 := httptest.NewRecorder()
 	srv.handleExec(rec3, req3)
 	assert.Equal(t, http.StatusOK, rec3.Code)
@@ -663,10 +663,10 @@ func TestExecRateLimitLogsWarn(t *testing.T) {
 	body := `{"argv":["echo","hi"]}`
 	// Drain the burst token.
 	srv.handleExec(httptest.NewRecorder(),
-		makeFakeRequest("POST", "/v1/exec", body, "gt-mineshaft-warntest"))
+		makeFakeRequest("POST", "/v1/exec", body, "ms-mineshaft-warntest"))
 	// This one should be rejected and logged.
 	srv.handleExec(httptest.NewRecorder(),
-		makeFakeRequest("POST", "/v1/exec", body, "gt-mineshaft-warntest"))
+		makeFakeRequest("POST", "/v1/exec", body, "ms-mineshaft-warntest"))
 
 	_, ok := lc.findEntry(slog.LevelWarn, "exec rate limit exceeded")
 	assert.True(t, ok, "expected WARN 'exec rate limit exceeded' log entry")

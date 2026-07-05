@@ -86,7 +86,7 @@ func doctorDogDatabases(config *DaemonPatrolConfig) []string {
 			return config.Patrols.DoctorDog.Databases
 		}
 	}
-	return []string{"hq", "gt", "mo"}
+	return []string{"hq", "ms", "mo"}
 }
 
 // runDoctorDog pours a mol-dog-doctor molecule for agent execution.

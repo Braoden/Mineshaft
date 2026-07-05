@@ -27,9 +27,9 @@ func TestAssessActiveMR(t *testing.T) {
 	reader := fakeActiveMRReader{issues: map[string]*beads.Issue{
 		"mr-open":        &beads.Issue{ID: "mr-open", Status: "open"},
 		"mr-closed":      &beads.Issue{ID: "mr-closed", Status: "closed"},
-		"mr-with-source": &beads.Issue{ID: "mr-with-source", Status: "closed", Description: "source_issue: gt-closed\n"},
-		"gt-closed":      &beads.Issue{ID: "gt-closed", Status: "closed"},
-		"gt-open":        &beads.Issue{ID: "gt-open", Status: "open"},
+		"mr-with-source": &beads.Issue{ID: "mr-with-source", Status: "closed", Description: "source_issue: ms-closed\n"},
+		"ms-closed":      &beads.Issue{ID: "ms-closed", Status: "closed"},
+		"ms-open":        &beads.Issue{ID: "ms-open", Status: "open"},
 	}}
 
 	tests := []struct {
@@ -40,16 +40,16 @@ func TestAssessActiveMR(t *testing.T) {
 		wantSource string
 	}{
 		{name: "empty active MR is not pending", reader: reader, input: ActiveMRInput{}, wantPend: false},
-		{name: "open MR is pending", reader: reader, input: ActiveMRInput{ActiveMR: "mr-open", SourceIssueHint: "gt-closed"}, wantPend: true},
-		{name: "closed MR with terminal source is stale", reader: reader, input: ActiveMRInput{ActiveMR: "mr-closed", SourceIssueHint: "gt-closed"}, wantPend: false, wantSource: "gt-closed"},
+		{name: "open MR is pending", reader: reader, input: ActiveMRInput{ActiveMR: "mr-open", SourceIssueHint: "ms-closed"}, wantPend: true},
+		{name: "closed MR with terminal source is stale", reader: reader, input: ActiveMRInput{ActiveMR: "mr-closed", SourceIssueHint: "ms-closed"}, wantPend: false, wantSource: "ms-closed"},
 		{name: "closed MR with unknown source is pending", reader: reader, input: ActiveMRInput{ActiveMR: "mr-closed"}, wantPend: true},
-		{name: "closed MR with open source is pending", reader: reader, input: ActiveMRInput{ActiveMR: "mr-closed", SourceIssueHint: "gt-open"}, wantPend: true, wantSource: "gt-open"},
-		{name: "missing MR with terminal source is stale", reader: reader, input: ActiveMRInput{ActiveMR: "mr-missing", SourceIssueHint: "gt-closed"}, wantPend: false, wantSource: "gt-closed"},
-		{name: "missing MR with missing source is pending", reader: reader, input: ActiveMRInput{ActiveMR: "mr-missing", SourceIssueHint: "gt-missing"}, wantPend: true, wantSource: "gt-missing"},
-		{name: "terminal MR source wins from description", reader: reader, input: ActiveMRInput{ActiveMR: "mr-with-source"}, wantPend: false, wantSource: "gt-closed"},
-		{name: "nil reader fails closed", reader: nil, input: ActiveMRInput{ActiveMR: "mr-closed", SourceIssueHint: "gt-closed"}, wantPend: true},
-		{name: "git unsafe fails closed when required", reader: reader, input: ActiveMRInput{ActiveMR: "mr-closed", SourceIssueHint: "gt-closed", RequireGitSafe: true}, wantPend: true, wantSource: "gt-closed"},
-		{name: "git safe permits stale when required", reader: reader, input: ActiveMRInput{ActiveMR: "mr-closed", SourceIssueHint: "gt-closed", RequireGitSafe: true, GitSafe: true}, wantPend: false, wantSource: "gt-closed"},
+		{name: "closed MR with open source is pending", reader: reader, input: ActiveMRInput{ActiveMR: "mr-closed", SourceIssueHint: "ms-open"}, wantPend: true, wantSource: "ms-open"},
+		{name: "missing MR with terminal source is stale", reader: reader, input: ActiveMRInput{ActiveMR: "mr-missing", SourceIssueHint: "ms-closed"}, wantPend: false, wantSource: "ms-closed"},
+		{name: "missing MR with missing source is pending", reader: reader, input: ActiveMRInput{ActiveMR: "mr-missing", SourceIssueHint: "ms-missing"}, wantPend: true, wantSource: "ms-missing"},
+		{name: "terminal MR source wins from description", reader: reader, input: ActiveMRInput{ActiveMR: "mr-with-source"}, wantPend: false, wantSource: "ms-closed"},
+		{name: "nil reader fails closed", reader: nil, input: ActiveMRInput{ActiveMR: "mr-closed", SourceIssueHint: "ms-closed"}, wantPend: true},
+		{name: "git unsafe fails closed when required", reader: reader, input: ActiveMRInput{ActiveMR: "mr-closed", SourceIssueHint: "ms-closed", RequireGitSafe: true}, wantPend: true, wantSource: "ms-closed"},
+		{name: "git safe permits stale when required", reader: reader, input: ActiveMRInput{ActiveMR: "mr-closed", SourceIssueHint: "ms-closed", RequireGitSafe: true, GitSafe: true}, wantPend: false, wantSource: "ms-closed"},
 	}
 
 	for _, tt := range tests {
@@ -67,15 +67,15 @@ func TestAssessActiveMR(t *testing.T) {
 
 func TestAssessActiveMRLookupErrorsFailClosed(t *testing.T) {
 	reader := fakeActiveMRReader{
-		issues: map[string]*beads.Issue{"gt-closed": &beads.Issue{ID: "gt-closed", Status: "closed"}},
-		errs:   map[string]error{"mr-error": errors.New("bd exploded"), "gt-error": errors.New("bd exploded")},
+		issues: map[string]*beads.Issue{"ms-closed": &beads.Issue{ID: "ms-closed", Status: "closed"}},
+		errs:   map[string]error{"mr-error": errors.New("bd exploded"), "ms-error": errors.New("bd exploded")},
 	}
 
-	if got := AssessActiveMR(reader, ActiveMRInput{ActiveMR: "mr-error", SourceIssueHint: "gt-closed"}); !got.Pending {
+	if got := AssessActiveMR(reader, ActiveMRInput{ActiveMR: "mr-error", SourceIssueHint: "ms-closed"}); !got.Pending {
 		t.Fatalf("MR lookup error Pending = false, want true")
 	}
 	reader.issues["mr-closed"] = &beads.Issue{ID: "mr-closed", Status: "closed"}
-	if got := AssessActiveMR(reader, ActiveMRInput{ActiveMR: "mr-closed", SourceIssueHint: "gt-error"}); !got.Pending {
+	if got := AssessActiveMR(reader, ActiveMRInput{ActiveMR: "mr-closed", SourceIssueHint: "ms-error"}); !got.Pending {
 		t.Fatalf("source lookup error Pending = false, want true")
 	}
 }

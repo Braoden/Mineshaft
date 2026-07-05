@@ -136,8 +136,8 @@ GET /formulas/{name}/{version}/download
 Most formulas are single `.formula.toml` files:
 
 ```bash
-gt formula install mol-miner-code-review
-# Downloads mol-miner-code-review.formula.toml to ~/gt/.beads/formulas/
+ms formula install mol-miner-code-review
+# Downloads mol-miner-code-review.formula.toml to ~/ms/.beads/formulas/
 ```
 
 ### Complex Case: Formula Bundle
@@ -163,8 +163,8 @@ mol-deploy-k8s-1.0.0.bundle.tar.gz
 
 Installation:
 ```bash
-gt formula install mol-deploy-k8s
-# Extracts to ~/gt/.beads/formulas/mol-deploy-k8s/
+ms formula install mol-deploy-k8s
+# Extracts to ~/ms/.beads/formulas/mol-deploy-k8s/
 # formula.toml is at mol-deploy-k8s/formula.toml
 ```
 
@@ -173,7 +173,7 @@ gt formula install mol-deploy-k8s
 ### Basic Install
 
 ```bash
-$ gt formula install mol-miner-code-review
+$ ms formula install mol-miner-code-review
 
 Resolving mol-miner-code-review...
   Registry: molmall.mineshaft.io
@@ -184,18 +184,18 @@ Resolving mol-miner-code-review...
 Downloading... ████████████████████ 100%
 Verifying checksum... ✓
 
-Installed to: ~/gt/.beads/formulas/mol-miner-code-review.formula.toml
+Installed to: ~/ms/.beads/formulas/mol-miner-code-review.formula.toml
 ```
 
 ### Version Pinning
 
 ```bash
-$ gt formula install mol-miner-work@4.0.0
+$ ms formula install mol-miner-work@4.0.0
 
 Installing mol-miner-work@4.0.0 (pinned)...
 ✓ Installed
 
-$ gt formula list --installed
+$ ms formula list --installed
   mol-miner-work           4.0.0   [pinned]
   mol-miner-code-review    1.2.0   [latest]
 ```
@@ -203,7 +203,7 @@ $ gt formula list --installed
 ### Upgrade Flow
 
 ```bash
-$ gt formula upgrade mol-miner-code-review
+$ ms formula upgrade mol-miner-code-review
 
 Checking for updates...
   Current: 1.2.0
@@ -222,7 +222,7 @@ Installed: mol-miner-code-review@1.3.0
 ### Lock File
 
 ```json
-// ~/gt/.beads/formulas/.lock.json
+// ~/ms/.beads/formulas/.lock.json
 {
   "version": 1,
   "formulas": {
@@ -249,15 +249,15 @@ Installed: mol-miner-code-review@1.3.0
 ### First-Time Setup
 
 ```bash
-$ gt formula publish --init
+$ ms formula publish --init
 
 Setting up Mol Mall publishing...
 
 1. Create account at https://molmall.mineshaft.io/signup
 2. Generate API token at https://molmall.mineshaft.io/settings/tokens
-3. Run: gt formula login
+3. Run: ms formula login
 
-$ gt formula login
+$ ms formula login
 Token: ********
 Logged in as: steve@mineshaft.io
 ```
@@ -265,7 +265,7 @@ Logged in as: steve@mineshaft.io
 ### Publishing
 
 ```bash
-$ gt formula publish mol-miner-work
+$ ms formula publish mol-miner-work
 
 Publishing mol-miner-work...
 
@@ -331,7 +331,7 @@ code-review = 0.3  # 30% is code review
 ### Capability-Based Search
 
 ```bash
-$ gt formula search --capabilities="security,go"
+$ ms formula search --capabilities="security,go"
 
 Formulas matching capabilities: security, go
 
@@ -404,7 +404,7 @@ Federation enables formula sharing across organizations using the Highway Operat
 ### Cross-Registry Discovery
 
 ```bash
-$ gt formula search "deploy kubernetes" --federated
+$ ms formula search "deploy kubernetes" --federated
 
 Searching across federated registries...
 
@@ -424,7 +424,7 @@ The `hop://` URI scheme provides cross-registry entity references:
 
 ```bash
 # Full HOP URI
-gt formula install hop://molmall.acme.corp/formulas/@acme/mol-deploy@2.1.0
+ms formula install hop://molmall.acme.corp/formulas/@acme/mol-deploy@2.1.0
 
 # Resolution via HOP (Highway Operations Protocol)
 1. Parse hop:// URI
@@ -444,15 +444,15 @@ See [Formula Resolution](formula-resolution.md) for the implemented three-tier r
 ### Phase 2: Manual Sharing
 
 - Formula export/import
-- `gt formula export mol-miner-work > mol-miner-work.formula.toml`
-- `gt formula import < mol-miner-work.formula.toml`
+- `ms formula export mol-miner-work > mol-miner-work.formula.toml`
+- `ms formula import < mol-miner-work.formula.toml`
 - Lock file format
 
 ### Phase 3: Public Registry
 
 - molmall.mineshaft.io launch
-- `gt formula install` from registry
-- `gt formula publish` flow
+- `ms formula install` from registry
+- `ms formula publish` flow
 - Basic search and browse
 
 ### Phase 4: Enterprise Features

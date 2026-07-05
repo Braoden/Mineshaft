@@ -30,7 +30,7 @@ const (
 //	~/.claude/projects/<hash>/<session-uuid>.jsonl
 //
 // where <hash> is derived from the working directory by replacing "/" with "-"
-// (e.g. /Users/pa/gt/overseer → -Users-pa-gt-overseer).
+// (e.g. /Users/pa/ms/overseer → -Users-pa-ms-overseer).
 //
 // The adapter finds the most recently modified JSONL file created after the
 // Mineshaft session start time (since), tails it, and automatically switches

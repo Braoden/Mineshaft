@@ -43,7 +43,7 @@ func TestEffectiveMinerState(t *testing.T) {
 			name: "session-running-done-with-issue-becomes-working",
 			item: MinerListItem{
 				State:          miner.StateDone,
-				Issue:          "gt-abc",
+				Issue:          "ms-abc",
 				SessionRunning: true,
 			},
 			want: miner.StateWorking,
@@ -93,7 +93,7 @@ func TestEffectiveMinerState(t *testing.T) {
 			name: "idle-session-running-with-issue-becomes-working",
 			item: MinerListItem{
 				State:          miner.StateIdle,
-				Issue:          "gt-abc",
+				Issue:          "ms-abc",
 				SessionRunning: true,
 			},
 			want: miner.StateWorking,
@@ -153,16 +153,16 @@ func TestActiveMRBlocksReuse(t *testing.T) {
 		{
 			name:       "closed MR with terminal source does not block reuse",
 			mrID:       "mr-1",
-			sourceHint: "gt-closed",
+			sourceHint: "ms-closed",
 			gitSafe:    true,
-			bd:         fakeReuseMapShower{issues: map[string]*beads.Issue{"mr-1": &beads.Issue{ID: "mr-1", Status: "closed"}, "gt-closed": &beads.Issue{ID: "gt-closed", Status: "closed"}}},
+			bd:         fakeReuseMapShower{issues: map[string]*beads.Issue{"mr-1": &beads.Issue{ID: "mr-1", Status: "closed"}, "ms-closed": &beads.Issue{ID: "ms-closed", Status: "closed"}}},
 			want:       false,
 		},
 		{
 			name:       "closed MR with terminal source blocks when git unsafe",
 			mrID:       "mr-1",
-			sourceHint: "gt-closed",
-			bd:         fakeReuseMapShower{issues: map[string]*beads.Issue{"mr-1": &beads.Issue{ID: "mr-1", Status: "closed"}, "gt-closed": &beads.Issue{ID: "gt-closed", Status: "closed"}}},
+			sourceHint: "ms-closed",
+			bd:         fakeReuseMapShower{issues: map[string]*beads.Issue{"mr-1": &beads.Issue{ID: "mr-1", Status: "closed"}, "ms-closed": &beads.Issue{ID: "ms-closed", Status: "closed"}}},
 			want:       true,
 		},
 		{
@@ -186,9 +186,9 @@ func TestActiveMRBlocksReuse(t *testing.T) {
 		{
 			name:       "missing MR with terminal source does not block reuse",
 			mrID:       "mr-1",
-			sourceHint: "gt-closed",
+			sourceHint: "ms-closed",
 			gitSafe:    true,
-			bd:         fakeReuseMapShower{issues: map[string]*beads.Issue{"gt-closed": &beads.Issue{ID: "gt-closed", Status: "closed"}}},
+			bd:         fakeReuseMapShower{issues: map[string]*beads.Issue{"ms-closed": &beads.Issue{ID: "ms-closed", Status: "closed"}}},
 			want:       false,
 		},
 	}
@@ -252,7 +252,7 @@ func TestWorkstateDispositionProjectionAgreement(t *testing.T) {
 		},
 		{
 			name:         "pending active mr",
-			in:           miner.WorkstateInput{State: miner.StateIdle, CleanupStatus: miner.CleanupClean, ActiveMR: "gt-mr-open", ActiveMRBlocker: "active_mr=gt-mr-open status=open"},
+			in:           miner.WorkstateInput{State: miner.StateIdle, CleanupStatus: miner.CleanupClean, ActiveMR: "ms-mr-open", ActiveMRBlocker: "active_mr=ms-mr-open status=open"},
 			wantCapacity: minerCapacitySnapshot{PendingMR: 1},
 		},
 	}

@@ -246,7 +246,7 @@ func TestGetConfig_BeadLabel(t *testing.T) {
 	// Create a minimal issues.jsonl with a rig identity bead
 	issuesPath := filepath.Join(beadsDir, "issues.jsonl")
 	rigBead := map[string]interface{}{
-		"id":     "gt-rig-testrig",
+		"id":     "ms-rig-testrig",
 		"type":   "rig",
 		"title":  "testrig",
 		"status": "open",

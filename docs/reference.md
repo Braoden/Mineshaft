@@ -6,29 +6,29 @@ Technical reference for Mineshaft internals. Read the README first.
 
 ## Beads Routing
 
-Mineshaft `gt` commands route beads work based on issue ID prefix. For direct
+Mineshaft `ms` commands route beads work based on issue ID prefix. For direct
 `bd` commands, run from the owning repository/root so the active `.beads`
 directory matches the database you intend to touch.
 
 ```bash
-bd -C ~/gt/greenplace/overseer/rig show gp-xyz  # Greenplace rig beads
-bd -C ~/gt show hq-abc                       # Town-level beads
-bd -C ~/gt/wyvern/overseer/rig show wyv-123     # Wyvern rig beads
+bd -C ~/ms/greenplace/overseer/rig show gp-xyz  # Greenplace rig beads
+bd -C ~/ms show hq-abc                       # Town-level beads
+bd -C ~/ms/wyvern/overseer/rig show wyv-123     # Wyvern rig beads
 ```
 
-**How it works**: Routes are defined in `~/gt/.beads/routes.jsonl`. Each rig's
+**How it works**: Routes are defined in `~/ms/.beads/routes.jsonl`. Each rig's
 prefix maps to its beads location (the overseer's clone in that rig).
 
 | Prefix | Routes To | Purpose |
 |--------|-----------|---------|
-| `hq-*` | `~/gt/.beads/` | Overseer mail, cross-rig coordination |
-| `gp-*` | `~/gt/greenplace/overseer/rig/.beads/` | Greenplace project issues |
-| `wyv-*` | `~/gt/wyvern/overseer/rig/.beads/` | Wyvern project issues |
+| `hq-*` | `~/ms/.beads/` | Overseer mail, cross-rig coordination |
+| `gp-*` | `~/ms/greenplace/overseer/rig/.beads/` | Greenplace project issues |
+| `wyv-*` | `~/ms/wyvern/overseer/rig/.beads/` | Wyvern project issues |
 
 Debug routing: `BD_DEBUG_ROUTING=1 bd -C <owning-root> show <id>`
 
 `bd --global` is not Mineshaft's town database. In Beads it targets a separate
-shared-server database named `beads_global`; run `bd -C ~/gt ...` for
+shared-server database named `beads_global`; run `bd -C ~/ms ...` for
 town-level Mineshaft beads.
 
 ## Configuration
@@ -49,7 +49,7 @@ town-level Mineshaft beads.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `default_branch` | `string` | `"main"` | Default branch for the rig. Auto-detected from remote during `gt rig add`. Used as the merge target by the Refinery and as the base for miners when no integration branch is active. |
+| `default_branch` | `string` | `"main"` | Default branch for the rig. Auto-detected from remote during `ms rig add`. Used as the merge target by the Refinery and as the base for miners when no integration branch is active. |
 
 ### Settings (`settings/config.json`)
 
@@ -146,7 +146,7 @@ Town-level role defaults live in `overseer/config.json` under:
 | `poll_interval` | `string` | `"30s"` | How often Refinery polls for new MRs |
 | `max_concurrent` | `int` | `1` | Maximum concurrent merges |
 | `integration_branch_miner_enabled` | `*bool` | `true` | Miners auto-source worktrees from integration branches |
-| `integration_branch_refinery_enabled` | `*bool` | `true` | `gt done` / `gt mq submit` auto-target integration branches |
+| `integration_branch_refinery_enabled` | `*bool` | `true` | `ms done` / `ms mq submit` auto-target integration branches |
 | `integration_branch_template` | `string` | `"integration/{title}"` | Branch name template (`{title}`, `{epic}`, `{prefix}`, `{user}`) |
 | `integration_branch_auto_land` | `*bool` | `false` | Refinery patrol auto-lands when all children closed |
 
@@ -161,7 +161,7 @@ Process state, PIDs, ephemeral data.
 Rigs support layered configuration through:
 1. **Wisp layer** (`.beads-wisp/config/`) - transient, local overrides
 2. **Rig identity bead labels** - persistent rig settings
-3. **Town defaults** (`~/gt/settings/config.json`)
+3. **Town defaults** (`~/ms/settings/config.json`)
 4. **System defaults** - compiled-in fallbacks
 
 #### Miner Branch Naming
@@ -171,10 +171,10 @@ Configure custom branch name templates for miners:
 ```bash
 # Set via wisp (transient - for testing)
 echo '{"miner_branch_template": "adam/{year}/{month}/{description}"}' > \
-  ~/gt/.beads-wisp/config/myrig.json
+  ~/ms/.beads-wisp/config/myrig.json
 
 # Or set via rig identity bead labels (persistent)
-bd update gt-rig-myrig --labels="miner_branch_template:adam/{year}/{month}/{description}"
+bd update ms-rig-myrig --labels="miner_branch_template:adam/{year}/{month}/{description}"
 ```
 
 **Template Variables:**
@@ -185,7 +185,7 @@ bd update gt-rig-myrig --labels="miner_branch_template:adam/{year}/{month}/{desc
 | `{year}` | Current year (YY format) | `26` |
 | `{month}` | Current month (MM format) | `01` |
 | `{name}` | Miner name | `alpha` |
-| `{issue}` | Issue ID without prefix | `123` (from `gt-123`) |
+| `{issue}` | Issue ID without prefix | `123` (from `ms-123`) |
 | `{description}` | Sanitized issue title | `fix-auth-bug` |
 | `{timestamp}` | Unique timestamp | `1ks7f9a` |
 
@@ -246,21 +246,21 @@ with = "macro-formula"
 
 **Summary**: Formula (TOML) --`bd cook`--> Protomolecule --`bd mol pour`--> Mol (persistent) or Wisp (ephemeral) --`bd squash`--> Digest.
 
-| Operation | bd (data) | gt (agent) |
+| Operation | bd (data) | ms (agent) |
 |-----------|-----------|------------|
 | Cook/pour/wisp | `bd cook`, `bd mol pour/wisp` | — |
-| Squash/burn | `bd mol squash/burn <id>` | `gt mol squash/burn` (attached) |
-| Navigate | `bd mol current`, `bd mol show` | `gt hook`, `gt mol current` |
-| Attach | — | `gt mol attach/detach` |
+| Squash/burn | `bd mol squash/burn <id>` | `ms mol squash/burn` (attached) |
+| Navigate | `bd mol current`, `bd mol show` | `ms hook`, `ms mol current` |
+| Attach | — | `ms mol attach/detach` |
 
 ## Agent Lifecycle
 
 ### Miner Shutdown
 
 ```
-1. Work through formula checklist (shown inline by gt prime)
-2. Submit to merge queue via gt done
-3. gt done nukes sandbox and exits
+1. Work through formula checklist (shown inline by ms prime)
+2. Submit to merge queue via ms done
+3. ms done nukes sandbox and exits
 4. Witness removes worktree + branch
 ```
 
@@ -268,7 +268,7 @@ with = "macro-formula"
 
 ```
 1. Agent notices context filling
-2. gt handoff (sends mail to self)
+2. ms handoff (sends mail to self)
 3. Manager kills session
 4. Manager starts new session
 5. New session reads handoff mail
@@ -283,19 +283,19 @@ These are set in tmux session environment when agents are spawned.
 
 | Variable | Purpose | Example |
 |----------|---------|---------|
-| `GT_ROLE` | Agent role type | `overseer`, `witness`, `miner`, `crew` |
-| `GT_ROOT` | Town root directory | `/home/user/gt` |
+| `MS_ROLE` | Agent role type | `overseer`, `witness`, `miner`, `crew` |
+| `MS_ROOT` | Town root directory | `/home/user/ms` |
 | `BD_ACTOR` | Agent identity for attribution | `mineshaft/miners/toast` |
 | `GIT_AUTHOR_NAME` | Commit attribution (same as BD_ACTOR) | `mineshaft/miners/toast` |
-| `BEADS_DIR` | Beads database location | `/home/user/gt/mineshaft/.beads` |
+| `BEADS_DIR` | Beads database location | `/home/user/ms/mineshaft/.beads` |
 
 ### Rig-Level Variables
 
 | Variable | Purpose | Roles |
 |----------|---------|-------|
-| `GT_RIG` | Rig name | witness, refinery, miner, crew |
-| `GT_MINER` | Miner worker name | miner only |
-| `GT_CREW` | Crew worker name | crew only |
+| `MS_RIG` | Rig name | witness, refinery, miner, crew |
+| `MS_MINER` | Miner worker name | miner only |
+| `MS_CREW` | Crew worker name | crew only |
 | `BEADS_AGENT_NAME` | Agent name for beads operations | miner, crew |
 
 ### Other Variables
@@ -303,32 +303,32 @@ These are set in tmux session environment when agents are spawned.
 | Variable | Purpose |
 |----------|---------|
 | `GIT_AUTHOR_EMAIL` | Workspace owner email (from git config) |
-| `GT_TOWN_ROOT` | Override town root detection (manual use) |
+| `MS_TOWN_ROOT` | Override town root detection (manual use) |
 | `CLAUDE_RUNTIME_CONFIG_DIR` | Custom Claude settings directory |
 
 ### Environment by Role
 
 | Role | Key Variables |
 |------|---------------|
-| **Overseer** | `GT_ROLE=overseer`, `BD_ACTOR=overseer` |
-| **Supervisor** | `GT_ROLE=supervisor`, `BD_ACTOR=supervisor` |
-| **Boot** | `GT_ROLE=supervisor/boot`, `BD_ACTOR=supervisor-boot` |
-| **Witness** | `GT_ROLE=witness`, `GT_RIG=<rig>`, `BD_ACTOR=<rig>/witness` |
-| **Refinery** | `GT_ROLE=refinery`, `GT_RIG=<rig>`, `BD_ACTOR=<rig>/refinery` |
-| **Miner** | `GT_ROLE=miner`, `GT_RIG=<rig>`, `GT_MINER=<name>`, `BD_ACTOR=<rig>/miners/<name>` |
-| **Crew** | `GT_ROLE=crew`, `GT_RIG=<rig>`, `GT_CREW=<name>`, `BD_ACTOR=<rig>/crew/<name>` |
+| **Overseer** | `MS_ROLE=overseer`, `BD_ACTOR=overseer` |
+| **Supervisor** | `MS_ROLE=supervisor`, `BD_ACTOR=supervisor` |
+| **Boot** | `MS_ROLE=supervisor/boot`, `BD_ACTOR=supervisor-boot` |
+| **Witness** | `MS_ROLE=witness`, `MS_RIG=<rig>`, `BD_ACTOR=<rig>/witness` |
+| **Refinery** | `MS_ROLE=refinery`, `MS_RIG=<rig>`, `BD_ACTOR=<rig>/refinery` |
+| **Miner** | `MS_ROLE=miner`, `MS_RIG=<rig>`, `MS_MINER=<name>`, `BD_ACTOR=<rig>/miners/<name>` |
+| **Crew** | `MS_ROLE=crew`, `MS_RIG=<rig>`, `MS_CREW=<name>`, `BD_ACTOR=<rig>/crew/<name>` |
 
 ### Doctor Check
 
-The `gt doctor` command verifies that running tmux sessions have correct
+The `ms doctor` command verifies that running tmux sessions have correct
 environment variables. Mismatches are reported as warnings:
 
 ```
 ⚠ env-vars: Found 3 env var mismatch(es) across 1 session(s)
-    hq-overseer: missing GT_ROOT (expected "/home/user/gt")
+    hq-overseer: missing MS_ROOT (expected "/home/user/ms")
 ```
 
-Fix by restarting sessions: `gt shutdown && gt up`
+Fix by restarting sessions: `ms shutdown && ms up`
 
 ## Agent Working Directories and Settings
 
@@ -339,12 +339,12 @@ Understanding this hierarchy is essential for proper configuration.
 
 | Role | Working Directory | Notes |
 |------|-------------------|-------|
-| **Overseer** | `~/gt/overseer/` | Town-level coordinator, isolated from rigs |
-| **Supervisor** | `~/gt/supervisor/` | Background supervisor daemon |
-| **Witness** | `~/gt/<rig>/witness/` | No git clone, monitors miners only |
-| **Refinery** | `~/gt/<rig>/refinery/rig/` | Worktree on main branch |
-| **Crew** | `~/gt/<rig>/crew/<name>/rig/` | Persistent human workspace clone |
-| **Miner** | `~/gt/<rig>/miners/<name>/rig/` | Miner worktree (ephemeral sandbox) |
+| **Overseer** | `~/ms/overseer/` | Town-level coordinator, isolated from rigs |
+| **Supervisor** | `~/ms/supervisor/` | Background supervisor daemon |
+| **Witness** | `~/ms/<rig>/witness/` | No git clone, monitors miners only |
+| **Refinery** | `~/ms/<rig>/refinery/rig/` | Worktree on main branch |
+| **Crew** | `~/ms/<rig>/crew/<name>/rig/` | Persistent human workspace clone |
+| **Miner** | `~/ms/<rig>/miners/<name>/rig/` | Miner worktree (ephemeral sandbox) |
 
 Note: The per-rig `<rig>/overseer/rig/` directory is NOT a working directory—it's
 a git clone that holds the canonical `.beads/` database for that rig.
@@ -355,7 +355,7 @@ Settings are installed in mineshaft-managed parent directories and passed to
 Claude Code via the `--settings` flag. This keeps customer repos clean:
 
 ```
-~/gt/
+~/ms/
 ├── overseer/.claude/settings.json              # Overseer settings (cwd = settings dir)
 ├── supervisor/.claude/settings.json             # Supervisor settings (cwd = settings dir)
 └── <rig>/
@@ -370,16 +370,16 @@ additively with any project-level settings in the customer repo.
 
 ### CLAUDE.md
 
-Only `~/gt/CLAUDE.md` exists on disk — a minimal identity anchor that prevents
+Only `~/ms/CLAUDE.md` exists on disk — a minimal identity anchor that prevents
 agents from losing their Mineshaft identity after context compaction or new sessions.
 
-Full role context (~300-500 lines per role) is injected ephemerally by `gt prime`
+Full role context (~300-500 lines per role) is injected ephemerally by `ms prime`
 via the SessionStart hook. No per-directory CLAUDE.md or AGENTS.md files are created.
 
 **Why no per-directory files?**
-- Claude Code traverses upward from CWD for CLAUDE.md — all agents under `~/gt/` find the town-root file
+- Claude Code traverses upward from CWD for CLAUDE.md — all agents under `~/ms/` find the town-root file
 - AGENTS.md (for Codex) uses downward traversal from git root — parent directories are invisible, so per-directory AGENTS.md never worked
-- The real context comes from `gt prime`, making on-disk bootstrap pointers redundant
+- The real context comes from `ms prime`, making on-disk bootstrap pointers redundant
 
 ### Customer Repo Files (CLAUDE.md and .claude/)
 
@@ -389,18 +389,18 @@ preserved in all worktrees (crew, miners, refinery, overseer/rig).
 
 Mineshaft's context comes from the town-root `CLAUDE.md` identity anchor
 (picked up by all agents via Claude Code's upward directory traversal),
-`gt prime` via the SessionStart hook, and the customer repo's own `CLAUDE.md`.
+`ms prime` via the SessionStart hook, and the customer repo's own `CLAUDE.md`.
 These coexist safely because:
 
 - **`--settings` flag provides Mineshaft settings** as a separate tier that merges
   additively with customer project settings, so both coexist cleanly
-- **`gt prime` injects role context** ephemerally via SessionStart hook, which is
+- **`ms prime` injects role context** ephemerally via SessionStart hook, which is
   additive with the customer's `CLAUDE.md` — both are loaded
 - Mineshaft settings live in parent directories (not in customer repos), so
   customer `.claude/` files are fully preserved
 
-**Doctor check**: `gt doctor` warns if legacy sparse checkout is still configured.
-Run `gt doctor --fix` to remove it. Tracked `settings.json` files in worktrees are
+**Doctor check**: `ms doctor` warns if legacy sparse checkout is still configured.
+Run `ms doctor --fix` to remove it. Tracked `settings.json` files in worktrees are
 recognized as customer project config and are not flagged as stale.
 
 ### Settings Inheritance
@@ -432,9 +432,9 @@ at session start. Interactive agents wait for user prompts.
 
 | Problem | Solution |
 |---------|----------|
-| Agent using wrong settings | Check `gt doctor`, verify `.claude/settings.json` in role parent dir |
-| Settings not found | Run `gt install` to recreate settings, or `gt doctor --fix` |
-| Source repo settings leaking | Run `gt doctor --fix` to remove legacy sparse checkout |
+| Agent using wrong settings | Check `ms doctor`, verify `.claude/settings.json` in role parent dir |
+| Settings not found | Run `ms install` to recreate settings, or `ms doctor --fix` |
+| Source repo settings leaking | Run `ms doctor --fix` to remove legacy sparse checkout |
 | Overseer settings affecting miners | Overseer should run in `overseer/`, not town root |
 
 ## CLI Reference
@@ -442,23 +442,23 @@ at session start. Interactive agents wait for user prompts.
 ### Town Management
 
 ```bash
-gt install [path]            # Create town
-gt install --git             # With git init
-gt doctor                    # Health check
-gt doctor --fix              # Auto-repair
+ms install [path]            # Create town
+ms install --git             # With git init
+ms doctor                    # Health check
+ms doctor --fix              # Auto-repair
 ```
 
 ### Configuration
 
 ```bash
 # Agent management
-gt config agent list [--json]     # List all agents (built-in + custom)
-gt config agent get <name>        # Show agent configuration
-gt config agent set <name> <cmd>  # Create or update custom agent
-gt config agent remove <name>     # Remove custom agent (built-ins protected)
+ms config agent list [--json]     # List all agents (built-in + custom)
+ms config agent get <name>        # Show agent configuration
+ms config agent set <name> <cmd>  # Create or update custom agent
+ms config agent remove <name>     # Remove custom agent (built-ins protected)
 
 # Default agent
-gt config default-agent [name]    # Get or set town default agent
+ms config default-agent [name]    # Get or set town default agent
 ```
 
 **Built-in agents**: `claude`, `gemini`, `codex`, `cursor`, `auggie`, `amp`, `opencode`, `copilot`
@@ -471,9 +471,9 @@ gt config default-agent [name]    # Get or set town default agent
 
 **Custom agents**: Define per-town via CLI or JSON:
 ```bash
-gt config agent set claude-glm "claude-glm --model glm-4"
-gt config agent set claude "claude-opus"  # Override built-in
-gt config default-agent claude-glm       # Set default
+ms config agent set claude-glm "claude-glm --model glm-4"
+ms config agent set claude "claude-opus"  # Override built-in
+ms config default-agent claude-glm       # Set default
 ```
 
 **Advanced agent config** (`settings/agents.json`):
@@ -547,20 +547,20 @@ export OPENCODE_PERMISSION='{"*":"allow"}'
 ### Rig Management
 
 ```bash
-gt rig add <name> <url>
-gt rig list
-gt rig remove <name>
+ms rig add <name> <url>
+ms rig list
+ms rig remove <name>
 ```
 
 ### Minecart Management (Primary Dashboard)
 
 ```bash
-gt minecart list                          # Dashboard of active minecarts
-gt minecart status [minecart-id]            # Show progress (🚚 hq-cv-*)
-gt minecart create "name" [issues...]     # Create minecart tracking issues
-gt minecart create "name" gt-a bd-b --notify overseer/  # With notification
-gt minecart list --all                    # Include landed minecarts
-gt minecart list --status=closed          # Only landed minecarts
+ms minecart list                          # Dashboard of active minecarts
+ms minecart status [minecart-id]            # Show progress (🚚 hq-cv-*)
+ms minecart create "name" [issues...]     # Create minecart tracking issues
+ms minecart create "name" ms-a bd-b --notify overseer/  # With notification
+ms minecart list --all                    # Include landed minecarts
+ms minecart list --status=closed          # Only landed minecarts
 ```
 
 Note: "Swarm" is ephemeral (workers on a minecart's issues). See [Minecarts](concepts/minecart.md).
@@ -569,37 +569,37 @@ Note: "Swarm" is ephemeral (workers on a minecart's issues). See [Minecarts](con
 
 ```bash
 # Standard workflow: minecart first, then sling
-gt minecart create "Feature X" gt-abc gt-def
-gt sling gt-abc <rig>                    # Assign to miner
-gt sling gt-abc <rig> --agent codex      # Override runtime for this sling/spawn
-gt sling <proto> --on gt-def <rig>       # With workflow template
+ms minecart create "Feature X" ms-abc ms-def
+ms sling ms-abc <rig>                    # Assign to miner
+ms sling ms-abc <rig> --agent codex      # Override runtime for this sling/spawn
+ms sling <proto> --on ms-def <rig>       # With workflow template
 
 # Quick sling (auto-creates minecart)
-gt sling <bead> <rig>                    # Auto-minecart for dashboard visibility
+ms sling <bead> <rig>                    # Auto-minecart for dashboard visibility
 ```
 
 Agent overrides:
 
-- `gt start --agent <alias>` overrides the Overseer/Supervisor runtime for this launch.
-- `gt overseer start|attach|restart --agent <alias>` and `gt supervisor start|attach|restart --agent <alias>` do the same.
-- `gt start crew <name> --agent <alias>` and `gt crew at <name> --agent <alias>` override the crew worker runtime.
+- `ms start --agent <alias>` overrides the Overseer/Supervisor runtime for this launch.
+- `ms overseer start|attach|restart --agent <alias>` and `ms supervisor start|attach|restart --agent <alias>` do the same.
+- `ms start crew <name> --agent <alias>` and `ms crew at <name> --agent <alias>` override the crew worker runtime.
 
 ### Communication
 
 ```bash
-gt mail inbox
-gt mail read <id>
-gt mail send <addr> -s "Subject" -m "Body"
-gt mail send --human -s "..."    # To boss
+ms mail inbox
+ms mail read <id>
+ms mail send <addr> -s "Subject" -m "Body"
+ms mail send --human -s "..."    # To boss
 ```
 
 ### Escalation
 
 ```bash
-gt escalate "topic"              # Default: MEDIUM severity
-gt escalate -s CRITICAL "msg"    # Urgent, immediate attention
-gt escalate -s HIGH "msg"        # Important blocker
-gt escalate -s MEDIUM "msg" -m "Details..."
+ms escalate "topic"              # Default: MEDIUM severity
+ms escalate -s CRITICAL "msg"    # Urgent, immediate attention
+ms escalate -s HIGH "msg"        # Important blocker
+ms escalate -s MEDIUM "msg" -m "Details..."
 ```
 
 See [escalation.md](design/escalation.md) for full protocol.
@@ -607,14 +607,14 @@ See [escalation.md](design/escalation.md) for full protocol.
 ### Sessions
 
 ```bash
-gt handoff                   # Request cycle (context-aware)
-gt handoff --shutdown        # Terminate (miners)
-gt session stop <rig>/<agent>
-gt peek <agent>              # Check health
-gt nudge <agent> "message"   # Send message to agent
-gt seance                    # List discoverable predecessor sessions
-gt seance --talk <id>        # Talk to predecessor (full context)
-gt seance --talk <id> -p "Where is X?"  # One-shot question
+ms handoff                   # Request cycle (context-aware)
+ms handoff --shutdown        # Terminate (miners)
+ms session stop <rig>/<agent>
+ms peek <agent>              # Check health
+ms nudge <agent> "message"   # Send message to agent
+ms seance                    # List discoverable predecessor sessions
+ms seance --talk <id>        # Talk to predecessor (full context)
+ms seance --talk <id> -p "Where is X?"  # One-shot question
 ```
 
 **Session Discovery**: Each session has a startup nudge that becomes searchable
@@ -626,47 +626,47 @@ in Claude's `/resume` picker:
 
 Example: `[MINESHAFT] mineshaft/crew/gus <- human • 2025-12-30T15:42 • restart`
 
-**IMPORTANT**: Always use `gt nudge` to send messages to Claude sessions.
+**IMPORTANT**: Always use `ms nudge` to send messages to Claude sessions.
 Never use raw `tmux send-keys` - it doesn't handle Claude's input correctly.
-`gt nudge` uses literal mode + debounce + separate Enter for reliable delivery.
+`ms nudge` uses literal mode + debounce + separate Enter for reliable delivery.
 
 ### Emergency
 
 ```bash
-gt stop --all                # Kill all sessions
-gt stop --rig <name>         # Kill rig sessions
+ms stop --all                # Kill all sessions
+ms stop --rig <name>         # Kill rig sessions
 ```
 
 ### Health Check
 
 ```bash
-gt supervisor health-check <agent>   # Send health check ping, track response
-gt supervisor health-state           # Show health check state for all agents
+ms supervisor health-check <agent>   # Send health check ping, track response
+ms supervisor health-state           # Show health check state for all agents
 ```
 
 ### Merge Queue (MQ)
 
 ```bash
-gt mq list [rig]             # Show the merge queue
-gt mq next [rig]             # Show highest-priority merge request
-gt mq submit                 # Submit current branch to merge queue
-gt mq status <id>            # Show detailed merge request status
-gt mq retry <id>             # Retry a failed merge request
-gt mq reject <id>            # Reject a merge request
+ms mq list [rig]             # Show the merge queue
+ms mq next [rig]             # Show highest-priority merge request
+ms mq submit                 # Submit current branch to merge queue
+ms mq status <id>            # Show detailed merge request status
+ms mq retry <id>             # Retry a failed merge request
+ms mq reject <id>            # Reject a merge request
 ```
 
 #### Integration Branch Commands
 
 ```bash
-gt mq integration create <epic-id>              # Create integration branch
-gt mq integration create <epic-id> --branch "feat/{title}"  # Custom template
-gt mq integration create <epic-id> --base-branch develop   # Non-main base
-gt mq integration status <epic-id>              # Show branch status
-gt mq integration status <epic-id> --json       # JSON output
-gt mq integration land <epic-id>                # Merge to base branch (default: main)
-gt mq integration land <epic-id> --dry-run      # Preview only
-gt mq integration land <epic-id> --force        # Land with open MRs
-gt mq integration land <epic-id> --skip-tests   # Skip test run
+ms mq integration create <epic-id>              # Create integration branch
+ms mq integration create <epic-id> --branch "feat/{title}"  # Custom template
+ms mq integration create <epic-id> --base-branch develop   # Non-main base
+ms mq integration status <epic-id>              # Show branch status
+ms mq integration status <epic-id> --json       # JSON output
+ms mq integration land <epic-id>                # Merge to base branch (default: main)
+ms mq integration land <epic-id> --dry-run      # Preview only
+ms mq integration land <epic-id> --force        # Land with open MRs
+ms mq integration land <epic-id> --skip-tests   # Skip test run
 ```
 
 See [Integration Branches](concepts/integration-branches.md) for the full workflow.
@@ -695,10 +695,10 @@ Supervisor, Witness, and Refinery run continuous patrol loops using wisps:
 | **Refinery** | `mol-refinery-patrol` | Process merge queue, review MRs, check integration branches |
 
 ```
-1. gt patrol new               # Create root-only wisp
-2. gt prime                    # Shows patrol checklist inline
+1. ms patrol new               # Create root-only wisp
+2. ms prime                    # Shows patrol checklist inline
 3. Work through each step
-4. gt patrol report --summary "..."  # Close + start next cycle
+4. ms patrol report --summary "..."  # Close + start next cycle
 ```
 
 ## Plugin Molecules
@@ -727,46 +727,46 @@ bd mol bond mol-security-scan $PATROL_ID --var scope="$SCOPE"
 Examples: `shiny`, `shiny-enterprise`, `mol-miner-work`
 
 ```bash
-gt sling <formula> --on <bead-id> <target>
-gt sling shiny-enterprise --on gt-abc123 mineshaft
+ms sling <formula> --on <bead-id> <target>
+ms sling shiny-enterprise --on ms-abc123 mineshaft
 ```
 
 ### Minecart Formulas (parallel legs, multiple miners)
 
 Examples: `code-review`
 
-**DO NOT use `gt sling` for minecart formulas!** It fails with "minecart type not supported".
+**DO NOT use `ms sling` for minecart formulas!** It fails with "minecart type not supported".
 
 ```bash
-# Correct invocation - use gt formula run:
-gt formula run code-review --pr=123
-gt formula run code-review --files="src/*.go"
+# Correct invocation - use ms formula run:
+ms formula run code-review --pr=123
+ms formula run code-review --files="src/*.go"
 
 # Dry run to preview:
-gt formula run code-review --pr=123 --dry-run
+ms formula run code-review --pr=123 --dry-run
 ```
 
 ### Identifying Formula Type
 
 ```bash
-gt formula show <name>   # Shows "Type: minecart" or "Type: workflow"
+ms formula show <name>   # Shows "Type: minecart" or "Type: workflow"
 bd formula list          # Lists formulas by type
 ```
 
 ### Why This Matters
 
-- `gt sling` attempts to cook+pour the formula, which fails for minecart type
-- `gt formula run` handles minecart dispatch directly, spawning parallel miners
+- `ms sling` attempts to cook+pour the formula, which fails for minecart type
+- `ms formula run` handles minecart dispatch directly, spawning parallel miners
 - Minecart formulas create multiple miners (one per leg) + synthesis step
 
 ## Common Issues
 
 | Problem | Solution |
 |---------|----------|
-| Agent in wrong directory | Check cwd, `gt doctor` |
+| Agent in wrong directory | Check cwd, `ms doctor` |
 | Beads prefix mismatch | Check `bd show` vs rig config |
-| Worktree conflicts | Check worktree state, `gt doctor` |
-| Stuck worker | `gt nudge`, then `gt peek` |
-| Dirty git state | Commit or discard, then `gt handoff` |
+| Worktree conflicts | Check worktree state, `ms doctor` |
+| Stuck worker | `ms nudge`, then `ms peek` |
+| Dirty git state | Commit or discard, then `ms handoff` |
 
 > For architecture details (bare repo pattern, beads as control plane, nondeterministic idempotence), see [architecture.md](design/architecture.md).

@@ -16,10 +16,10 @@ func TestGenerateMRIDWithTime(t *testing.T) {
 	}{
 		{
 			name:      "basic mineshaft MR",
-			prefix:    "gt",
-			branch:    "miner/Nux/gt-xyz",
+			prefix:    "ms",
+			branch:    "miner/Nux/ms-xyz",
 			timestamp: time.Date(2025, 12, 17, 10, 0, 0, 0, time.UTC),
-			want:      "gt-mr-", // Will verify prefix, actual hash varies
+			want:      "ms-mr-", // Will verify prefix, actual hash varies
 		},
 		{
 			name:      "different prefix",
@@ -73,8 +73,8 @@ func TestGenerateMRIDWithTime(t *testing.T) {
 
 func TestGenerateMRIDWithTime_Deterministic(t *testing.T) {
 	// Same inputs should produce same output
-	prefix := "gt"
-	branch := "miner/Nux/gt-xyz"
+	prefix := "ms"
+	branch := "miner/Nux/ms-xyz"
 	ts := time.Date(2025, 12, 17, 10, 0, 0, 0, time.UTC)
 
 	id1 := GenerateMRIDWithTime(prefix, branch, ts)
@@ -87,8 +87,8 @@ func TestGenerateMRIDWithTime_Deterministic(t *testing.T) {
 
 func TestGenerateMRIDWithTime_DifferentTimestamps(t *testing.T) {
 	// Different timestamps should produce different IDs
-	prefix := "gt"
-	branch := "miner/Nux/gt-xyz"
+	prefix := "ms"
+	branch := "miner/Nux/ms-xyz"
 	ts1 := time.Date(2025, 12, 17, 10, 0, 0, 0, time.UTC)
 	ts2 := time.Date(2025, 12, 17, 10, 0, 0, 1, time.UTC) // 1 nanosecond later
 
@@ -102,7 +102,7 @@ func TestGenerateMRIDWithTime_DifferentTimestamps(t *testing.T) {
 
 func TestGenerateMRIDWithTime_DifferentBranches(t *testing.T) {
 	// Different branches should produce different IDs
-	prefix := "gt"
+	prefix := "ms"
 	ts := time.Date(2025, 12, 17, 10, 0, 0, 0, time.UTC)
 
 	id1 := GenerateMRIDWithTime(prefix, "branch-a", ts)
@@ -115,10 +115,10 @@ func TestGenerateMRIDWithTime_DifferentBranches(t *testing.T) {
 
 func TestGenerateMRID(t *testing.T) {
 	// GenerateMRID uses current time, so we just verify format
-	id := GenerateMRID("gt", "miner/Nux/gt-xyz")
+	id := GenerateMRID("ms", "miner/Nux/ms-xyz")
 
-	if !strings.HasPrefix(id, "gt-mr-") {
-		t.Errorf("GenerateMRID() = %q, want prefix gt-mr-", id)
+	if !strings.HasPrefix(id, "ms-mr-") {
+		t.Errorf("GenerateMRID() = %q, want prefix ms-mr-", id)
 	}
 
 	parts := strings.Split(id, "-mr-")
@@ -130,7 +130,7 @@ func TestGenerateMRID(t *testing.T) {
 func TestGenerateMRID_Uniqueness(t *testing.T) {
 	// Generate multiple IDs and verify they're unique
 	ids := make(map[string]bool)
-	prefix := "gt"
+	prefix := "ms"
 	branch := "test-branch"
 
 	for i := 0; i < 100; i++ {

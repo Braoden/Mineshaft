@@ -12,7 +12,7 @@ These issues track **Cursor runtime parity**, **user-facing documentation clarit
 
 **T5 (docs + CLI)** explicitly covers:
 
-- `gt config` / `internal/cmd/config.go` help — list **all** built-in presets, not only claude/gemini/codex.
+- `ms config` / `internal/cmd/config.go` help — list **all** built-in presets, not only claude/gemini/codex.
 - **README** prerequisites — optional **Cursor Agent CLI** install; clarify **preset `cursor`** vs binaries.
 - **docs/INSTALLING.md**, **docs/reference.md** — same built-in lists as README; short note on **`cursor`** → `cursor-agent`.
 

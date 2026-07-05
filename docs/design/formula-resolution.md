@@ -8,7 +8,7 @@
 
 Formulas currently exist in multiple locations with no clear precedence:
 - `internal/formula/formulas/` (source of truth, embedded in binary)
-- `.beads/formulas/` (provisioned at runtime by `gt install`)
+- `.beads/formulas/` (provisioned at runtime by `ms install`)
 - Crew directories have their own `.beads/formulas/` (diverging copies)
 
 When an agent runs `bd cook mol-miner-work`, which version do they get?
@@ -33,16 +33,16 @@ TIER 1: PROJECT (rig-level)
   Location: <project>/.beads/formulas/
   Source:   Committed to project repo
   Use case: Project-specific workflows (deploy, test, release)
-  Example:  ~/gt/mineshaft/.beads/formulas/mol-mineshaft-release.formula.toml
+  Example:  ~/ms/mineshaft/.beads/formulas/mol-mineshaft-release.formula.toml
 
 TIER 2: TOWN (user-level)
-  Location: ~/gt/.beads/formulas/
+  Location: ~/ms/.beads/formulas/
   Source:   Mol Mall installs, user customizations
   Use case: Cross-project workflows, personal preferences
-  Example:  ~/gt/.beads/formulas/mol-miner-work.formula.toml (customized)
+  Example:  ~/ms/.beads/formulas/mol-miner-work.formula.toml (customized)
 
 TIER 3: SYSTEM (embedded)
-  Location: Compiled into gt binary
+  Location: Compiled into ms binary
   Source:   internal/formula/formulas/ at build time
   Use case: Defaults, blessed patterns, fallback
   Example:  mol-miner-work.formula.toml (factory default)
@@ -61,7 +61,7 @@ func ResolveFormula(name string, cwd string) (Formula, Tier, error) {
     }
 
     // Tier 2: Town-level
-    townDir := getTownRoot() // ~/gt or $GT_HOME
+    townDir := getTownRoot() // ~/ms or $MS_HOME
     path := filepath.Join(townDir, ".beads", "formulas", name+".formula.toml")
     if f, err := loadFormula(path); err == nil {
         return f, TierTown, nil
@@ -155,7 +155,7 @@ All crew share the rig's formulas.
 
 **Option B: Provision on Demand**
 Crew directories don't have `.beads/formulas/`. Resolution falls through to:
-1. Town-level (~/gt/.beads/formulas/)
+1. Town-level (~/ms/.beads/formulas/)
 2. System (embedded)
 
 **Option C: Gitignore Exclusion**
@@ -185,13 +185,13 @@ bd formula list
 # Show resolution path
 bd formula show mol-miner-work --resolve
   Resolving: mol-miner-work
-  ✓ Found at: ~/gt/mineshaft/.beads/formulas/mol-miner-work.formula.toml
+  ✓ Found at: ~/ms/mineshaft/.beads/formulas/mol-miner-work.formula.toml
   Tier: project
   Version: 4
 
   Resolution path checked:
-  1. [project] ~/gt/mineshaft/.beads/formulas/ ← FOUND
-  2. [town]    ~/gt/.beads/formulas/
+  1. [project] ~/ms/mineshaft/.beads/formulas/ ← FOUND
+  2. [town]    ~/ms/.beads/formulas/
   3. [system]  <embedded>
 
 # Override tier for testing
@@ -203,15 +203,15 @@ bd cook mol-miner-work --tier=town      # Force town version
 
 ```bash
 # Install from Mol Mall
-gt formula install mol-code-review-strict
-gt formula install mol-code-review-strict@2.0.0
-gt formula install hop://acme.corp/formulas/mol-deploy
+ms formula install mol-code-review-strict
+ms formula install mol-code-review-strict@2.0.0
+ms formula install hop://acme.corp/formulas/mol-deploy
 
 # Manage installed formulas
-gt formula list --installed              # What's in town-level
-gt formula upgrade mol-miner-work      # Update to latest
-gt formula pin mol-miner-work@4.0.0    # Lock version
-gt formula uninstall mol-code-review-strict
+ms formula list --installed              # What's in town-level
+ms formula upgrade mol-miner-work      # Update to latest
+ms formula pin mol-miner-work@4.0.0    # Lock version
+ms formula uninstall mol-code-review-strict
 ```
 
 ## Migration Path
@@ -225,14 +225,14 @@ gt formula uninstall mol-code-review-strict
 
 ### Phase 2: Town-Level Formulas
 
-1. Establish `~/gt/.beads/formulas/` as town formula location
-2. Add `gt formula` commands for managing town formulas
+1. Establish `~/ms/.beads/formulas/` as town formula location
+2. Add `ms formula` commands for managing town formulas
 3. Support manual installation (copy file, track in `.installed.json`)
 
 ### Phase 3: Mol Mall Integration
 
 1. Define registry API (see mol-mall-design.md)
-2. Implement `gt formula install` from remote
+2. Implement `ms formula install` from remote
 3. Add version pinning and upgrade flows
 4. Add integrity verification (checksums, optional signing)
 

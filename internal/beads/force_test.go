@@ -9,7 +9,7 @@ func TestNeedsForceForID(t *testing.T) {
 	}{
 		{id: "", want: false},
 		{id: "hq-overseer", want: false},
-		{id: "gt-abc123", want: false},
+		{id: "ms-abc123", want: false},
 		{id: "hq-overseer-role", want: true},
 		{id: "st-stockdrop-miner-nux", want: true},
 		{id: "hq-cv-abc", want: true},

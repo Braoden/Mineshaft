@@ -11,7 +11,7 @@ This is infrastructure work. You:
 1. Receive minecart ID via variable
 2. Load minecart and find ready issues
 3. Check idle miner capacity across rigs
-4. Dispatch min(ready_issues, idle_miners) using gt sling
+4. Dispatch min(ready_issues, idle_miners) using ms sling
 5. Report actions taken
 6. Return to kennel
 
@@ -55,12 +55,12 @@ Load the minecart and find issues ready for dispatch.
 
 **1. Check assignment:**
 ```bash
-gt hook               # Shows minecart in hook_bead or vars
+ms hook               # Shows minecart in hook_bead or vars
 ```
 
 **2. Load minecart details:**
 ```bash
-gt minecart status {{minecart}} --json
+ms minecart status {{minecart}} --json
 ```
 
 **3. Identify ready issues:**
@@ -84,7 +84,7 @@ bd blocked --json
 Check assignee session if set:
 ```bash
 # If assignee like "mineshaft/miners/nux"
-tmux has-session -t gt-mineshaft-miner-nux 2>/dev/null && echo "alive" || echo "dead"
+tmux has-session -t ms-mineshaft-miner-nux 2>/dev/null && echo "alive" || echo "dead"
 ```
 
 **4. Build ready list:**
@@ -107,7 +107,7 @@ Determine how many miners are available for dispatch.
 
 **1. For each rig that has ready issues:**
 ```bash
-gt miners <rig>
+ms miners <rig>
 # Shows miner status: idle, working, etc.
 ```
 
@@ -128,7 +128,7 @@ If dispatch_count = 0:
 
 **4. Match issues to rigs:**
 For each ready issue, determine target rig from issue prefix:
-- gt-* issues → mineshaft rig
+- ms-* issues → mineshaft rig
 - bd-* issues → beads rig
 - etc.
 
@@ -146,11 +146,11 @@ Sling each ready issue to an available miner.
 ```bash
 # Dispatch issue to the appropriate rig
 # This spawns a fresh miner or assigns to idle one
-gt sling <issue-id> <rig>
+ms sling <issue-id> <rig>
 
 # Example:
-gt sling gt-abc123 mineshaft
-gt sling bd-xyz789 beads
+ms sling ms-abc123 mineshaft
+ms sling bd-xyz789 beads
 ```
 
 **Track results:**
@@ -159,7 +159,7 @@ For each dispatch:
 - Failure: Note issue ID, error message
 
 **Important notes:**
-- `gt sling` handles miner selection automatically
+- `ms sling` handles miner selection automatically
 - It will spawn a new miner if none available
 - The miner gets the issue hooked and starts immediately
 - Don't wait for miner to complete - fire and forget
@@ -212,7 +212,7 @@ Create summary report of minecart feeding actions.
 
 **2. Send to Supervisor:**
 ```bash
-gt mail send supervisor/ -s "Minecart fed: {{minecart}}" -m "$(cat <<EOF
+ms mail send supervisor/ -s "Minecart fed: {{minecart}}" -m "$(cat <<EOF
 Minecart {{minecart}} feeding complete.
 
 Dispatched: {{dispatch_count}}/{{ready_count}} issues
@@ -238,7 +238,7 @@ Signal work complete and return to available pool.
 
 **1. Signal completion to Supervisor:**
 ```bash
-gt mail send supervisor/ -s "DOG_DONE $(hostname)" -m "Task: minecart-feed
+ms mail send supervisor/ -s "DOG_DONE $(hostname)" -m "Task: minecart-feed
 Minecart: {{minecart}}
 Ready: {{ready_count}}
 Dispatched: {{dispatch_count}}

@@ -45,7 +45,7 @@ func TestStaleResult(t *testing.T) {
 			},
 			wantStatus:  StatusWarning,
 			wantMessage: "Binary is 2 commits behind main (built from abc123456789, main at def456789012)",
-			wantFixHint: "gt install",
+			wantFixHint: "ms install",
 		},
 		{
 			name: "stale off build branch -> Warning, qualified fix hint",

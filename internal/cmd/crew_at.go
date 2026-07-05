@@ -22,8 +22,8 @@ var crewAtRetried bool
 func runCrewAt(cmd *cobra.Command, args []string) error {
 	var name string
 
-	// Debug mode: --debug flag or GT_DEBUG env var
-	debug := crewDebug || os.Getenv("GT_DEBUG") != ""
+	// Debug mode: --debug flag or MS_DEBUG env var
+	debug := crewDebug || os.Getenv("MS_DEBUG") != ""
 	if debug {
 		cwd, _ := os.Getwd()
 		fmt.Printf("[DEBUG] runCrewAt: args=%v, crewRig=%q, cwd=%q\n", args, crewRig, cwd)
@@ -44,7 +44,7 @@ func runCrewAt(cmd *cobra.Command, args []string) error {
 		detected, err := detectCrewFromCwd()
 		if err != nil {
 			// Try to show available crew members if we can detect the rig
-			hint := "\n\nUsage: gt crew at <name>"
+			hint := "\n\nUsage: ms crew at <name>"
 			if crewRig != "" {
 				if mgr, _, mgrErr := getCrewManager(crewRig); mgrErr == nil {
 					if members, listErr := mgr.List(); listErr == nil && len(members) > 0 {
@@ -195,7 +195,7 @@ func runCrewAt(cmd *cobra.Command, args []string) error {
 			Topic:            "start",
 			SessionName:      sessionID,
 		})
-		// Merge liveness-critical env vars (GT_AGENT, GT_PROCESS_NAMES) so that
+		// Merge liveness-critical env vars (MS_AGENT, MS_PROCESS_NAMES) so that
 		// IsAgentAlive can detect non-Claude runtimes. Without this, attach
 		// misclassifies live sessions as dead and recreates them.
 		envVars = session.MergeRuntimeLivenessEnv(envVars, runtimeConfig)
@@ -220,8 +220,8 @@ func runCrewAt(cmd *cobra.Command, args []string) error {
 		}
 
 		// Build startup beacon for predecessor discovery via /resume
-		// Use FormatStartupBeacon instead of bare "gt prime" which confuses agents
-		// The SessionStart hook handles context injection (gt prime --hook)
+		// Use FormatStartupBeacon instead of bare "ms prime" which confuses agents
+		// The SessionStart hook handles context injection (ms prime --hook)
 		address := session.BeaconRecipient("crew", name, r.Name)
 		beacon := session.FormatStartupBeacon(session.BeaconConfig{
 			Recipient: address,
@@ -231,7 +231,7 @@ func runCrewAt(cmd *cobra.Command, args []string) error {
 
 		// Use respawn-pane to replace shell with runtime directly
 		// This gives cleaner lifecycle: runtime exits → session ends (no intermediate shell)
-		// Export GT_ROLE and BD_ACTOR since tmux SetEnvironment only affects new panes
+		// Export MS_ROLE and BD_ACTOR since tmux SetEnvironment only affects new panes
 		startupCmd, err := config.BuildStartupCommandFromConfig(config.AgentEnvConfig{
 			Role:        "crew",
 			Rig:         r.Name,
@@ -291,7 +291,7 @@ func runCrewAt(cmd *cobra.Command, args []string) error {
 			}
 
 			// Build startup beacon for predecessor discovery via /resume
-			// Use FormatStartupBeacon instead of bare "gt prime" which confuses agents
+			// Use FormatStartupBeacon instead of bare "ms prime" which confuses agents
 			address := session.BeaconRecipient("crew", name, r.Name)
 			beacon := session.FormatStartupBeacon(session.BeaconConfig{
 				Recipient: address,
@@ -300,7 +300,7 @@ func runCrewAt(cmd *cobra.Command, args []string) error {
 			})
 
 			// Use respawn-pane to replace shell with runtime directly
-			// Export GT_ROLE and BD_ACTOR since tmux SetEnvironment only affects new panes
+			// Export MS_ROLE and BD_ACTOR since tmux SetEnvironment only affects new panes
 			startupCmd, err := config.BuildStartupCommandFromConfig(config.AgentEnvConfig{
 				Role:        "crew",
 				Rig:         r.Name,
@@ -382,7 +382,7 @@ func runCrewAt(cmd *cobra.Command, args []string) error {
 
 	// Outside tmux: attach unless --detached flag is set
 	if crewDetached {
-		fmt.Printf("Started %s/%s. Run 'gt crew at %s' to attach.\n", r.Name, name, name)
+		fmt.Printf("Started %s/%s. Run 'ms crew at %s' to attach.\n", r.Name, name, name)
 		return nil
 	}
 

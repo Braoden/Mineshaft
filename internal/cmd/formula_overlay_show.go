@@ -19,8 +19,8 @@ var formulaOverlayShowCmd = &cobra.Command{
 Shows which file provides the overlay (town-level or rig-level) and its contents.
 
 Examples:
-  gt formula overlay show mol-miner-work
-  gt formula overlay show mol-miner-work --rig mineshaft`,
+  ms formula overlay show mol-miner-work
+  ms formula overlay show mol-miner-work --rig mineshaft`,
 	Args: cobra.ExactArgs(1),
 	RunE: runFormulaOverlayShow,
 }
@@ -58,7 +58,7 @@ func runFormulaOverlayShow(cmd *cobra.Command, args []string) error {
 		if rigPath != "" {
 			fmt.Printf("  Checked: %s\n", rigPath)
 		}
-		fmt.Println("\nUse 'gt formula overlay edit' to create one.")
+		fmt.Println("\nUse 'ms formula overlay edit' to create one.")
 		return nil
 	}
 

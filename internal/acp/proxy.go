@@ -209,7 +209,7 @@ func (p *Proxy) Start(ctx context.Context, agentPath string, agentArgs []string,
 		return fmt.Errorf("creating stdout pipe: %w", err)
 	}
 
-	// Capture agent stderr for debugging when GT_ACP_DEBUG=1
+	// Capture agent stderr for debugging when MS_ACP_DEBUG=1
 	p.agentStderr, err = p.cmd.StderrPipe()
 	if err != nil {
 		cancel()
@@ -500,7 +500,7 @@ func (p *Proxy) forwardFromAgent() {
 		// Filter out responses to injected prompts so the UI doesn't get confused
 		isInjectedResponse := false
 		idStr := ""
-		if id, ok := msg.ID.(string); ok && strings.HasPrefix(id, "gt-inject-") {
+		if id, ok := msg.ID.(string); ok && strings.HasPrefix(id, "ms-inject-") {
 			isInjectedResponse = true
 			idStr = id
 		}
@@ -686,7 +686,7 @@ func (p *Proxy) runKeepAlive(tickerChan <-chan time.Time) {
 				currentMode := p.currentModeID
 				p.modeMux.RUnlock()
 
-				id := fmt.Sprintf("gt-inject-keepalive-%d", time.Now().UnixNano())
+				id := fmt.Sprintf("ms-inject-keepalive-%d", time.Now().UnixNano())
 
 				var msg *JSONRPCMessage
 
@@ -932,7 +932,7 @@ func (p *Proxy) InjectPrompt(prompt string) error {
 
 	req := JSONRPCMessage{
 		JSONRPC: "2.0",
-		ID:      fmt.Sprintf("gt-inject-prompt-%d", time.Now().UnixNano()),
+		ID:      fmt.Sprintf("ms-inject-prompt-%d", time.Now().UnixNano()),
 		Method:  "session/prompt",
 		Params:  paramsBytes,
 	}

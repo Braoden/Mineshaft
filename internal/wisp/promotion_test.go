@@ -53,8 +53,8 @@ func TestHasKeepLabel(t *testing.T) {
 	}{
 		{"no labels", nil, false},
 		{"empty labels", []string{}, false},
-		{"unrelated labels", []string{"gt:task", "gt:agent"}, false},
-		{"has keep label", []string{"gt:task", KeepLabel}, true},
+		{"unrelated labels", []string{"ms:task", "ms:agent"}, false},
+		{"has keep label", []string{"ms:task", KeepLabel}, true},
 		{"only keep label", []string{KeepLabel}, true},
 	}
 	for _, tt := range tests {

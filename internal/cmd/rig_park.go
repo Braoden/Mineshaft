@@ -32,11 +32,11 @@ Parking a rig:
 This is a Level 1 (local/ephemeral) operation:
   - Only affects this town
   - Disappears on wisp cleanup
-  - Use 'gt rig unpark' to resume normal operation
+  - Use 'ms rig unpark' to resume normal operation
 
 Examples:
-  gt rig park mineshaft
-  gt rig park beads mineshaft overseer`,
+  ms rig park mineshaft
+  ms rig park beads mineshaft overseer`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runRigPark,
 }
@@ -49,11 +49,11 @@ var rigUnparkCmd = &cobra.Command{
 Unparking a rig:
   - Removes the parked status from the wisp layer
   - Allows the daemon to auto-restart agents
-  - Does NOT automatically start agents (use 'gt rig start' for that)
+  - Does NOT automatically start agents (use 'ms rig start' for that)
 
 Examples:
-  gt rig unpark mineshaft
-  gt rig unpark beads mineshaft overseer`,
+  ms rig unpark mineshaft
+  ms rig unpark beads mineshaft overseer`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runRigUnpark,
 }
@@ -171,7 +171,7 @@ func unparkOneRig(rigName string) error {
 
 	fmt.Printf("%s Rig %s unparked\n", style.Success.Render("✓"), rigName)
 	fmt.Printf("  Daemon can now auto-restart agents\n")
-	fmt.Printf("  Use '%s' to start agents immediately\n", style.Dim.Render("gt rig start "+rigName))
+	fmt.Printf("  Use '%s' to start agents immediately\n", style.Dim.Render("ms rig start "+rigName))
 
 	return nil
 }

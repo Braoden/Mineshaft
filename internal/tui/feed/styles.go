@@ -181,7 +181,7 @@ var (
 		"merged":        "✓",
 		"merge_failed":  "✗",
 		"merge_skipped": "⊘",
-		// General gt events
+		// General ms events
 		"sling":   "🎯",
 		"hook":    "🪝",
 		"unhook":  "↩",

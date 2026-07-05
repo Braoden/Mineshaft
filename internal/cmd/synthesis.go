@@ -42,9 +42,9 @@ Commands:
   close     Close minecart after synthesis complete
 
 Examples:
-  gt synthesis status hq-cv-abc     # Check if ready for synthesis
-  gt synthesis start hq-cv-abc      # Start synthesis step
-  gt synthesis close hq-cv-abc      # Close minecart after synthesis`,
+  ms synthesis status hq-cv-abc     # Check if ready for synthesis
+  ms synthesis start hq-cv-abc      # Start synthesis step
+  ms synthesis close hq-cv-abc      # Close minecart after synthesis`,
 }
 
 var synthesisStartCmd = &cobra.Command{
@@ -127,7 +127,7 @@ type MinecartMeta struct {
 	LegIssues   []string `json:"leg_issues,omitempty"`   // Tracked leg issue IDs
 }
 
-// runSynthesisStart implements gt synthesis start.
+// runSynthesisStart implements ms synthesis start.
 func runSynthesisStart(cmd *cobra.Command, args []string) error {
 	minecartID := args[0]
 
@@ -235,12 +235,12 @@ func runSynthesisStart(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("%s Synthesis started\n", style.Bold.Render("✓"))
-	fmt.Printf("  Monitor: gt minecart status %s\n", minecartID)
+	fmt.Printf("  Monitor: ms minecart status %s\n", minecartID)
 
 	return nil
 }
 
-// runSynthesisStatus implements gt synthesis status.
+// runSynthesisStatus implements ms synthesis status.
 func runSynthesisStatus(cmd *cobra.Command, args []string) error {
 	minecartID := args[0]
 
@@ -290,7 +290,7 @@ func runSynthesisStatus(cmd *cobra.Command, args []string) error {
 	fmt.Printf("\n  %s\n", style.Bold.Render("Synthesis:"))
 	if allComplete {
 		fmt.Printf("    %s Ready - all legs complete\n", style.Success.Render("✓"))
-		fmt.Printf("    Run: gt synthesis start %s\n", minecartID)
+		fmt.Printf("    Run: ms synthesis start %s\n", minecartID)
 	} else {
 		completedCount := 0
 		for _, leg := range legOutputs {
@@ -313,7 +313,7 @@ func runSynthesisStatus(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// runSynthesisClose implements gt synthesis close.
+// runSynthesisClose implements ms synthesis close.
 func runSynthesisClose(cmd *cobra.Command, args []string) error {
 	minecartID := args[0]
 
@@ -582,7 +582,7 @@ func createSynthesisBead(minecartID string, meta *MinecartMeta, f *formula.Formu
 		desc.WriteString(fmt.Sprintf("\n## Output\n\nWrite synthesis to: %s\n", outputPath))
 	}
 
-	// Guard against flag-like synthesis titles (gt-e0kx5)
+	// Guard against flag-like synthesis titles (ms-e0kx5)
 	if beads.IsFlagLikeTitle(title) {
 		return "", fmt.Errorf("refusing to create synthesis bead: title %q looks like a CLI flag", title)
 	}
@@ -633,7 +633,7 @@ func createSynthesisBead(minecartID string, meta *MinecartMeta, f *formula.Formu
 // slingSynthesis slings the synthesis bead to a rig.
 func slingSynthesis(beadID, targetRig string) error {
 	slingArgs := []string{"sling", beadID, targetRig}
-	slingCmd := exec.Command("gt", slingArgs...)
+	slingCmd := exec.Command("ms", slingArgs...)
 	slingCmd.Stdout = os.Stdout
 	slingCmd.Stderr = os.Stderr
 
@@ -652,8 +652,8 @@ func findFormula(name string) (string, error) {
 		searchPaths = append(searchPaths, filepath.Join(home, ".beads", "formulas"))
 	}
 
-	// Add GT_ROOT formulas if set
-	if gtRoot := os.Getenv("GT_ROOT"); gtRoot != "" {
+	// Add MS_ROOT formulas if set
+	if gtRoot := os.Getenv("MS_ROOT"); gtRoot != "" {
 		searchPaths = append(searchPaths, filepath.Join(gtRoot, ".beads", "formulas"))
 	}
 

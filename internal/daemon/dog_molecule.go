@@ -20,7 +20,7 @@ const (
 	// dogCloseMaxAttempts / dogCloseRetryDelay bound the retry on `bd close` for
 	// dog wisps. A transient Dolt slowdown (the connection-churn window) can make
 	// a single close fail, and without a retry the wisp stays OPEN forever — a
-	// root cause of the dog wisp flood (gt-ye21). Retrying turns a transient
+	// root cause of the dog wisp flood (ms-ye21). Retrying turns a transient
 	// failure back into a clean close instead of a permanent orphan.
 	dogCloseMaxAttempts = 3
 	dogCloseRetryDelay  = 500 * time.Millisecond
@@ -47,7 +47,7 @@ func (dm *dogMol) closeWisp(id string, extra ...string) error {
 // Graceful degradation: if bd fails, the dog still does its work — molecule
 // tracking is observability, not control flow.
 type dogMol struct {
-	rootID   string            // Root wisp ID (e.g., "gt-wisp-abc123"), empty if pour failed.
+	rootID   string            // Root wisp ID (e.g., "ms-wisp-abc123"), empty if pour failed.
 	stepIDs  map[string]string // step slug -> wisp issue ID
 	bdPath   string
 	townRoot string
@@ -78,7 +78,7 @@ func (d *Daemon) pourDogMolecule(formulaName string, vars map[string]string) *do
 	}
 
 	// Parse root ID from output. bd mol wisp prints the root ID on the first line.
-	// Example output: "✓ Spawned wisp: gt-wisp-abc123 — Reap stale wisps..."
+	// Example output: "✓ Spawned wisp: ms-wisp-abc123 — Reap stale wisps..."
 	dm.rootID = parseWispID(out)
 	if dm.rootID == "" {
 		d.logger.Printf("dog_molecule: pour %s: could not parse root ID from output: %s", formulaName, out)
@@ -129,7 +129,7 @@ func (dm *dogMol) failStep(stepSlug, reason string) {
 
 // close closes all remaining open child step wisps, then closes the root molecule wisp.
 // This prevents orphan step wisps from accumulating when callers forget to
-// explicitly close individual steps (the root cause of gt-3o59).
+// explicitly close individual steps (the root cause of ms-3o59).
 func (dm *dogMol) close() {
 	if dm.rootID == "" {
 		return
@@ -321,7 +321,7 @@ func (dm *dogMol) runBd(args ...string) (string, error) {
 }
 
 // parseWispID extracts a wisp ID from bd mol wisp output.
-// Looks for patterns like "gt-wisp-abc123" or any ID containing "-wisp-".
+// Looks for patterns like "ms-wisp-abc123" or any ID containing "-wisp-".
 func parseWispID(output string) string {
 	for _, word := range strings.Fields(output) {
 		// Strip ANSI codes and punctuation.
@@ -336,7 +336,7 @@ func parseWispID(output string) string {
 		cleaned := stripANSI(word)
 		cleaned = strings.TrimRight(cleaned, ".,;:!?")
 		if len(cleaned) > 3 && strings.Contains(cleaned, "-") && !strings.HasPrefix(cleaned, "--") {
-			// Could be a bead ID like "gt-abc123".
+			// Could be a bead ID like "ms-abc123".
 			return cleaned
 		}
 	}

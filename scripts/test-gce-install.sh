@@ -101,23 +101,23 @@ fi
 # ============================================
 # STEP 3: Install Mineshaft
 # ============================================
-log "Installing Mineshaft (gt)..."
+log "Installing Mineshaft (ms)..."
 
-go install github.com/steveyegge/mineshaft/cmd/gt@latest
+go install github.com/steveyegge/mineshaft/cmd/ms@latest
 
-if command -v gt &> /dev/null; then
-    check "gt installed: $(gt --version 2>/dev/null || echo 'version unknown')"
+if command -v ms &> /dev/null; then
+    check "ms installed: $(ms --version 2>/dev/null || echo 'version unknown')"
 else
-    fail "gt installation failed - check PATH includes ~/go/bin"
+    fail "ms installation failed - check PATH includes ~/go/bin"
 fi
 
 # ============================================
 # STEP 4: Create Test Workspace
 # ============================================
-TEST_DIR="$HOME/gt-test-$$"
+TEST_DIR="$HOME/ms-test-$$"
 log "Creating test workspace at $TEST_DIR..."
 
-gt install "$TEST_DIR" --name test-town
+ms install "$TEST_DIR" --name test-town
 
 if [[ -d "$TEST_DIR" && -f "$TEST_DIR/CLAUDE.md" ]]; then
     check "Workspace created successfully"
@@ -132,11 +132,11 @@ cd "$TEST_DIR"
 # ============================================
 log "Running verification tests..."
 
-# Test 1: gt status
-if gt status &> /dev/null; then
-    check "gt status works"
+# Test 1: ms status
+if ms status &> /dev/null; then
+    check "ms status works"
 else
-    warn "gt status failed (might be OK without daemon)"
+    warn "ms status failed (might be OK without daemon)"
 fi
 
 # Test 2: beads init
@@ -161,12 +161,12 @@ else
     check "No hardcoded user paths found"
 fi
 
-# Test 5: gt doctor
-log "Running gt doctor..."
-if gt doctor 2>&1 | tee /tmp/gt-doctor.log; then
-    check "gt doctor passed"
+# Test 5: ms doctor
+log "Running ms doctor..."
+if ms doctor 2>&1 | tee /tmp/ms-doctor.log; then
+    check "ms doctor passed"
 else
-    warn "gt doctor reported issues (see /tmp/gt-doctor.log)"
+    warn "ms doctor reported issues (see /tmp/ms-doctor.log)"
 fi
 
 # ============================================
@@ -175,15 +175,15 @@ fi
 log "Testing rig add with sample repo..."
 
 # Use a small public repo for testing
-if gt rig add test-rig --remote=https://github.com/steveyegge/beads.git 2>&1; then
-    check "gt rig add works"
+if ms rig add test-rig --remote=https://github.com/steveyegge/beads.git 2>&1; then
+    check "ms rig add works"
 
     # Verify rig structure
     if [[ -d "beads" ]]; then
         check "Rig directory created"
     fi
 else
-    warn "gt rig add failed (might need auth)"
+    warn "ms rig add failed (might need auth)"
 fi
 
 # ============================================
@@ -219,7 +219,7 @@ echo "  - Go: $(go version | grep -oP 'go[0-9]+\.[0-9]+\.[0-9]+')"
 echo "  - Git: $(git --version | grep -oP '[0-9]+\.[0-9]+\.[0-9]+')"
 echo "  - tmux: $(tmux -V | grep -oP '[0-9]+\.[0-9]+')"
 echo "  - beads: $(bd --version 2>/dev/null | grep -oP '[0-9]+\.[0-9]+\.[0-9]+' || echo 'installed')"
-echo "  - gt: installed"
+echo "  - ms: installed"
 if command -v claude &> /dev/null; then
     echo "  - Claude Code: installed"
 else
@@ -227,7 +227,7 @@ else
 fi
 echo
 echo "Mineshaft is ready to use!"
-echo "  gt install ~/my-workspace"
+echo "  ms install ~/my-workspace"
 echo "  cd ~/my-workspace"
-echo "  gt rig add myproject --remote=<url>"
+echo "  ms rig add myproject --remote=<url>"
 echo

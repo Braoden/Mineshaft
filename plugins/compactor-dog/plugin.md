@@ -35,11 +35,11 @@ to decide if maintenance is needed.** Consider:
 ## Config
 
 ```bash
-DOLT_HOST="${GT_DOLT_HOST:-127.0.0.1}"
-DOLT_PORT="${GT_DOLT_PORT:-3307}"
+DOLT_HOST="${MS_DOLT_HOST:-127.0.0.1}"
+DOLT_PORT="${MS_DOLT_PORT:-3307}"
 DOLT_USER="root"
-DOLT_DATA_DIR="$HOME/gt/.dolt-data"
-STATE_FILE="$HOME/gt/.dolt-data/.compactor-state.json"
+DOLT_DATA_DIR="$HOME/ms/.dolt-data"
+STATE_FILE="$HOME/ms/.dolt-data/.compactor-state.json"
 ```
 
 ## Step 1: Discover production databases
@@ -213,7 +213,7 @@ gathered above and decide whether to escalate.
 **If you judge maintenance is needed:**
 
 ```bash
-gt escalate "Dolt compaction recommended" \
+ms escalate "Dolt compaction recommended" \
   -s MEDIUM \
   --reason "Commit growth analysis:
 $REPORT
@@ -239,24 +239,24 @@ echo "=== $SUMMARY ==="
 
 On success (no escalation needed):
 ```bash
-gt plugin record-run --plugin compactor-dog --result success \
+ms plugin record-run --plugin compactor-dog --result success \
   --title "compactor-dog: $SUMMARY" --description "$SUMMARY" >/dev/null 2>&1 || true
 ```
 
 On escalation:
 ```bash
-gt plugin record-run --plugin compactor-dog --result warning \
+ms plugin record-run --plugin compactor-dog --result warning \
   --title "compactor-dog: ESCALATED - $SUMMARY" \
   --description "Escalated to Overseer for compaction. $SUMMARY" >/dev/null 2>&1 || true
 ```
 
 On failure:
 ```bash
-gt plugin record-run --plugin compactor-dog --result failure \
+ms plugin record-run --plugin compactor-dog --result failure \
   --title "compactor-dog: FAILED" \
   --description "Compactor check failed: $ERROR" >/dev/null 2>&1 || true
 
-gt escalate "Plugin FAILED: compactor-dog" \
+ms escalate "Plugin FAILED: compactor-dog" \
   --severity medium \
   --reason "$ERROR"
 ```

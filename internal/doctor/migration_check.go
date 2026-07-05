@@ -79,7 +79,7 @@ func (c *DoltMetadataCheck) Run(ctx *CheckContext) *CheckResult {
 	for rigName := range rigs {
 		// Resolve the expected DB name: some rigs use their prefix as the
 		// database name (e.g., "lc" for laneassist) rather than the rig name.
-		// Check both rig name and prefix in .dolt-data/. (gt-85w7)
+		// Check both rig name and prefix in .dolt-data/. (ms-85w7)
 		expectedDB := rigName
 		prefix := config.GetRigPrefix(ctx.TownRoot, rigName)
 		if _, err := os.Stat(filepath.Join(doltDataDir, rigName)); os.IsNotExist(err) {
@@ -125,7 +125,7 @@ func (c *DoltMetadataCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:   StatusWarning,
 		Message:  fmt.Sprintf("%d rig(s) missing Dolt server metadata", len(missing)),
 		Details:  details,
-		FixHint:  "Run 'gt dolt fix-metadata' to update all metadata.json files",
+		FixHint:  "Run 'ms dolt fix-metadata' to update all metadata.json files",
 		Category: c.CheckCategory,
 	}
 }
@@ -186,7 +186,7 @@ func (c *DoltMetadataCheck) writeDoltMetadata(townRoot, rigName string) error {
 
 	// Resolve the correct database name. Some rigs use their prefix as the
 	// DB name (e.g., "lc" for laneassist). Preserve existing dolt_database
-	// if it matches a known prefix; otherwise fall back to rig name. (gt-85w7)
+	// if it matches a known prefix; otherwise fall back to rig name. (ms-85w7)
 	dbName := rigName
 	if existingDB, ok := existing["dolt_database"].(string); ok && existingDB != "" {
 		// Preserve the existing DB name if it's a known prefix
@@ -348,7 +348,7 @@ func (c *DoltServerReachableCheck) Run(ctx *CheckContext) *CheckResult {
 				"bd commands will fail or create isolated local databases",
 				"This is the split-brain scenario — data written now may be invisible to the server later",
 			),
-			FixHint:  "Check dolt server connectivity or run 'gt dolt start' for local server",
+			FixHint:  "Check dolt server connectivity or run 'ms dolt start' for local server",
 			Category: c.CheckCategory,
 		}
 	}
@@ -480,7 +480,7 @@ func (c *DoltServerReachableCheck) getServerAddr(beadsDir string, townRoot strin
 	}
 	if port == 0 {
 		// Use the same port resolution as Start/Stop/Status: config.yaml takes
-		// precedence over GT_DOLT_PORT env var, which takes precedence over
+		// precedence over MS_DOLT_PORT env var, which takes precedence over
 		// daemon.json, which falls back to DefaultPort (3307). This ensures
 		// the doctor probes the same port that the server actually uses.
 		port = doltserver.DefaultConfig(townRoot).Port
@@ -546,7 +546,7 @@ func (c *DoltOrphanedDatabaseCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:   StatusWarning,
 		Message:  fmt.Sprintf("%d orphaned database(s) in .dolt-data/", len(orphans)),
 		Details:  details,
-		FixHint:  "Run 'gt dolt cleanup' to remove orphaned databases",
+		FixHint:  "Run 'ms dolt cleanup' to remove orphaned databases",
 		Category: c.CheckCategory,
 	}
 }

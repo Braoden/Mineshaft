@@ -59,11 +59,11 @@ func resetCrossRigEscalationStateForTest() {
 	crossRigEscalationLast = map[string]time.Time{}
 }
 
-// fireCrossRigEscalation invokes `gt escalate` with a MEDIUM severity. Best
+// fireCrossRigEscalation invokes `ms escalate` with a MEDIUM severity. Best
 // effort — escalation failure is logged but does not block the dispatch path.
 var fireCrossRigEscalation = func(rig, prefix, beadID string) {
-	msg := fmt.Sprintf("cross-rig dispatch refused: rig=%s prefix=%s bead=%s — see gt-el4", rig, prefix, beadID)
-	cmd := exec.Command("gt", "escalate", "--severity", "medium", "--reason", "cross-rig-prefix", msg)
+	msg := fmt.Sprintf("cross-rig dispatch refused: rig=%s prefix=%s bead=%s — see ms-el4", rig, prefix, beadID)
+	cmd := exec.Command("ms", "escalate", "--severity", "medium", "--reason", "cross-rig-prefix", msg)
 	if err := cmd.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "%s cross-rig escalation failed: %v\n", style.Warning.Render("⚠"), err)
 	}
@@ -74,7 +74,7 @@ var fireCrossRigEscalation = func(rig, prefix, beadID string) {
 const maxDispatchFailures = 3
 
 // dispatchScheduledWork is the main dispatch loop for the capacity scheduler.
-// Called by both `gt scheduler run` and the daemon heartbeat.
+// Called by both `ms scheduler run` and the daemon heartbeat.
 func dispatchScheduledWork(townRoot, actor string, batchOverride int, dryRun bool) (int, error) {
 	// Acquire exclusive lock to prevent concurrent dispatch
 	runtimeDir := filepath.Join(townRoot, ".runtime")
@@ -123,8 +123,8 @@ func dispatchScheduledWork(townRoot, actor string, batchOverride int, dryRun boo
 			if len(staleBeads) > 0 {
 				fmt.Printf("%s %d context bead(s) still open from a previous deferred mode\n",
 					style.Warning.Render("⚠"), len(staleBeads))
-				fmt.Printf("  Use: gt scheduler clear  (close all sling context beads)\n")
-				fmt.Printf("  Or:  gt config set scheduler.max_miners N  (re-enable deferred dispatch)\n")
+				fmt.Printf("  Use: ms scheduler clear  (close all sling context beads)\n")
+				fmt.Printf("  Or:  ms config set scheduler.max_miners N  (re-enable deferred dispatch)\n")
 			}
 		}
 		return 0, nil
@@ -465,8 +465,8 @@ func getReadySlingContexts(townRoot string) ([]capacity.PendingBead, error) {
 	}
 
 	// 2. Batch-fetch work bead labels/status so we can defensively filter messaging
-	// beads (gt:message / gt:handoff / gt:merge-request) that should never be
-	// handed to a miner. See gt-el4 / mineshafthall/mineshaft#3800.
+	// beads (ms:message / ms:handoff / ms:merge-request) that should never be
+	// handed to a miner. See ms-el4 / mineshafthall/mineshaft#3800.
 	workBeadIDs := make([]string, 0, len(allContexts))
 	for _, ctx := range allContexts {
 		fields := beads.ParseSlingContextFields(ctx.issue.Description)
@@ -524,8 +524,8 @@ func getReadySlingContexts(townRoot string) ([]capacity.PendingBead, error) {
 		}
 		seenWork[fields.WorkBeadID] = true
 
-		// Defensive filter: messaging beads (gt:message / gt:handoff /
-		// gt:merge-request) must never reach a rig miner. Log the skip so
+		// Defensive filter: messaging beads (ms:message / ms:handoff /
+		// ms:merge-request) must never reach a rig miner. Log the skip so
 		// the gap is observable and operators can chase the upstream cause.
 		workLabels := info.Labels
 		if capacity.IsMessagingBead(workLabels) {
@@ -635,7 +635,7 @@ func validateDryRunDispatchPlan(townRoot string, plan capacity.DispatchPlan) cap
 }
 
 func validatePendingBeadForDispatch(townRoot string, b capacity.PendingBead, escalate bool) error {
-	// Cross-rig prefix guard (gt-el4). A bead whose ID prefix does not match the
+	// Cross-rig prefix guard (ms-el4). A bead whose ID prefix does not match the
 	// target rig's registered prefix must not be dispatched — the miner would
 	// land in a rig DB that cannot resolve the bead and hang in prime.
 	if b.TargetRig == "" {
@@ -658,7 +658,7 @@ func validatePendingBeadForDispatch(townRoot string, b capacity.PendingBead, esc
 
 // isDaemonDispatch returns true when dispatch is triggered by the daemon heartbeat.
 func isDaemonDispatch() bool {
-	return os.Getenv("GT_DAEMON") == "1"
+	return os.Getenv("MS_DAEMON") == "1"
 }
 
 // recordDispatchFailure increments the dispatch failure counter on the sling context bead.

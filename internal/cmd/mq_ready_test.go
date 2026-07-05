@@ -28,7 +28,7 @@ func TestIsMergeRequestReadyForSelection(t *testing.T) {
 			name: "open issue with blocking dependency is not ready",
 			issue: &beads.Issue{
 				Status:       "open",
-				Dependencies: []beads.IssueDep{{ID: "gt-blocker", Status: "open", DependencyType: "blocks"}},
+				Dependencies: []beads.IssueDep{{ID: "ms-blocker", Status: "open", DependencyType: "blocks"}},
 			},
 		},
 		{
@@ -40,7 +40,7 @@ func TestIsMergeRequestReadyForSelection(t *testing.T) {
 			issue: &beads.Issue{
 				Status:         "open",
 				BlockedByCount: 1,
-				Dependencies:   []beads.IssueDep{{ID: "gt-closed", Status: "closed", DependencyType: "blocks"}},
+				Dependencies:   []beads.IssueDep{{ID: "ms-closed", Status: "closed", DependencyType: "blocks"}},
 			},
 			want: true,
 		},
@@ -48,7 +48,7 @@ func TestIsMergeRequestReadyForSelection(t *testing.T) {
 			name: "unmerged merge-block remains not ready",
 			issue: &beads.Issue{
 				Status:       "open",
-				Dependencies: []beads.IssueDep{{ID: "gt-closed-only", Status: "closed", DependencyType: "merge-blocks"}},
+				Dependencies: []beads.IssueDep{{ID: "ms-closed-only", Status: "closed", DependencyType: "merge-blocks"}},
 			},
 		},
 	}

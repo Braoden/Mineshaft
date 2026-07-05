@@ -70,7 +70,7 @@ func TestRunIgnoresJSONLWhenDoltUnavailable(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	staleJSONL := `{"id":"gt-wisp-stale","title":"Stale wisp","ephemeral":true}` + "\n"
+	staleJSONL := `{"id":"ms-wisp-stale","title":"Stale wisp","ephemeral":true}` + "\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "issues.jsonl"), []byte(staleJSONL), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -104,7 +104,7 @@ func TestGetRigPathForPrefix_RoutesResolution(t *testing.T) {
 	// Create routes.jsonl with custom rig paths
 	routesContent := `{"prefix":"hq-","path":"."}
 {"prefix":"sw-","path":"sallaWork/overseer/rig"}
-{"prefix":"gt-","path":"mineshaft/overseer/rig"}
+{"prefix":"ms-","path":"mineshaft/overseer/rig"}
 `
 	routesPath := filepath.Join(beadsDir, "routes.jsonl")
 	if err := os.WriteFile(routesPath, []byte(routesContent), 0644); err != nil {
@@ -127,8 +127,8 @@ func TestGetRigPathForPrefix_RoutesResolution(t *testing.T) {
 			wantPath: filepath.Join(tmpDir, "sallaWork/overseer/rig"),
 		},
 		{
-			name:     "gt prefix resolves to custom path",
-			prefix:   "gt-",
+			name:     "ms prefix resolves to custom path",
+			prefix:   "ms-",
 			wantPath: filepath.Join(tmpDir, "mineshaft/overseer/rig"),
 		},
 		{
@@ -277,7 +277,7 @@ exit 0
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv("BD_SQL_LOG", logPath)
 
-	err := NewCheckMisclassifiedWisps().purgeRigBatch(&CheckContext{TownRoot: t.TempDir()}, t.TempDir(), "gt", "'gt-wisp-a'")
+	err := NewCheckMisclassifiedWisps().purgeRigBatch(&CheckContext{TownRoot: t.TempDir()}, t.TempDir(), "ms", "'ms-wisp-a'")
 	if err == nil || !strings.Contains(err.Error(), "copying wisp_dependencies") {
 		t.Fatalf("purgeRigBatch error = %v, want copying wisp_dependencies", err)
 	}

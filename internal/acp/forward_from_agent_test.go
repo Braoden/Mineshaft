@@ -40,7 +40,7 @@ func TestForwardFromAgent_StandardForwarding(t *testing.T) {
 	// 2. Injected response (propelled) - should NOT be forwarded
 	injectedMsg := JSONRPCMessage{
 		JSONRPC: "2.0",
-		ID:      "gt-inject-test",
+		ID:      "ms-inject-test",
 		Method:  "test/injected",
 		Result:  json.RawMessage(`{}`),
 	}

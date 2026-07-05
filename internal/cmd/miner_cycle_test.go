@@ -10,7 +10,7 @@ import (
 func setupMinerTestRegistry(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "mineshaft")
+	reg.Register("ms", "mineshaft")
 	reg.Register("gp", "greenplace")
 	reg.Register("bd", "beads")
 	reg.Register("mr", "my-rig")
@@ -109,8 +109,8 @@ func TestParseMinerSessionName(t *testing.T) {
 			wantOk:      false,
 		},
 		{
-			name:        "just gt prefix",
-			sessionName: "gt-",
+			name:        "just ms prefix",
+			sessionName: "ms-",
 			wantRig:     "",
 			wantMiner: "",
 			wantOk:      false,

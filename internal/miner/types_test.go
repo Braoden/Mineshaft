@@ -34,7 +34,7 @@ func TestMiner_Summary(t *testing.T) {
 		State:     StateWorking,
 		ClonePath: "/some/path",
 		Branch:    "miner/alpha",
-		Issue:     "gt-123",
+		Issue:     "ms-123",
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
@@ -46,8 +46,8 @@ func TestMiner_Summary(t *testing.T) {
 	if s.State != StateWorking {
 		t.Errorf("Summary.State = %q, want %q", s.State, StateWorking)
 	}
-	if s.Issue != "gt-123" {
-		t.Errorf("Summary.Issue = %q, want %q", s.Issue, "gt-123")
+	if s.Issue != "ms-123" {
+		t.Errorf("Summary.Issue = %q, want %q", s.Issue, "ms-123")
 	}
 }
 

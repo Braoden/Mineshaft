@@ -12,7 +12,7 @@ import (
 // suitable for session-name-format tests.
 func testRegistryForNameCheck() *session.PrefixRegistry {
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "mineshaft")
+	reg.Register("ms", "mineshaft")
 	reg.Register("nif", "niflheim")
 	reg.Register("wa", "whatsapp_automation")
 	return reg
@@ -61,7 +61,7 @@ func TestMalformedSessionNameCheck_Run_AllCorrect(t *testing.T) {
 	check.sessionListerForTest = &mockSessionLister{sessions: []string{
 		"hq-overseer",
 		"hq-supervisor",
-		"gt-witness",
+		"ms-witness",
 		"nif-refinery",
 		"wa-crew-batista",
 	}}
@@ -115,13 +115,13 @@ func TestMalformedSessionNameCheck_Run_NonMineshaftWithRigSubstring(t *testing.T
 
 // TestMalformedSessionNameCheck_Run_MinerWithRigSubstring verifies that
 // miner sessions whose names embed a rig name are NOT falsely flagged.
-// E.g., "gt-fix-mineshaft-witness" is a miner named "fix-mineshaft-witness",
+// E.g., "ms-fix-mineshaft-witness" is a miner named "fix-mineshaft-witness",
 // not a legacy mineshaft witness session.
 func TestMalformedSessionNameCheck_Run_MinerWithRigSubstring(t *testing.T) {
 	check := NewMalformedSessionNameCheck()
 	check.registryForTest = testRegistryForNameCheck()
 	check.sessionListerForTest = &mockSessionLister{sessions: []string{
-		"gt-fix-mineshaft-witness",   // miner "fix-mineshaft-witness", prefix "gt-fix" is not known
+		"ms-fix-mineshaft-witness",   // miner "fix-mineshaft-witness", prefix "ms-fix" is not known
 		"nif-debug-niflheim-refinery", // prefix "nif-debug" is not a known prefix
 	}}
 
@@ -135,15 +135,15 @@ func TestMalformedSessionNameCheck_Run_MinerWithRigSubstring(t *testing.T) {
 }
 
 // TestMalformedSessionNameCheck_Run_DetectsMismatch is the core test.
-// It verifies that a genuine legacy name (gt-niflheim-witness) is detected
+// It verifies that a genuine legacy name (ms-niflheim-witness) is detected
 // and the canonical name (nif-witness) is reported.
 func TestMalformedSessionNameCheck_Run_DetectsMismatch(t *testing.T) {
 	check := NewMalformedSessionNameCheck()
 	check.registryForTest = testRegistryForNameCheck()
 	check.sessionListerForTest = &mockSessionLister{sessions: []string{
 		"hq-overseer",
-		"gt-niflheim-witness",   // legacy: should be nif-witness
-		"gt-niflheim-refinery",  // legacy: should be nif-refinery
+		"ms-niflheim-witness",   // legacy: should be nif-witness
+		"ms-niflheim-refinery",  // legacy: should be nif-refinery
 		"nif-refinery",          // already canonical — should not be flagged
 	}}
 
@@ -160,7 +160,7 @@ func TestMalformedSessionNameCheck_Run_DetectsMismatch(t *testing.T) {
 	}
 
 	// Verify the canonical renames are present in the details.
-	for _, want := range []string{"gt-niflheim-witness", "nif-witness", "gt-niflheim-refinery", "nif-refinery"} {
+	for _, want := range []string{"ms-niflheim-witness", "nif-witness", "ms-niflheim-refinery", "nif-refinery"} {
 		found := false
 		for _, d := range result.Details {
 			if strings.Contains(d, want) {
@@ -175,12 +175,12 @@ func TestMalformedSessionNameCheck_Run_DetectsMismatch(t *testing.T) {
 }
 
 // TestMalformedSessionNameCheck_Run_LegacyWAWitness verifies the stated use
-// case: gt-whatsapp_automation-witness → wa-witness.
+// case: ms-whatsapp_automation-witness → wa-witness.
 func TestMalformedSessionNameCheck_Run_LegacyWAWitness(t *testing.T) {
 	check := NewMalformedSessionNameCheck()
 	check.registryForTest = testRegistryForNameCheck()
 	check.sessionListerForTest = &mockSessionLister{sessions: []string{
-		"gt-whatsapp_automation-witness",
+		"ms-whatsapp_automation-witness",
 	}}
 
 	ctx := &CheckContext{TownRoot: t.TempDir()}
@@ -193,7 +193,7 @@ func TestMalformedSessionNameCheck_Run_LegacyWAWitness(t *testing.T) {
 		t.Fatalf("expected 1 detail, got %d: %v", len(result.Details), result.Details)
 	}
 	d := result.Details[0]
-	if !strings.Contains(d, "gt-whatsapp_automation-witness") || !strings.Contains(d, "wa-witness") {
+	if !strings.Contains(d, "ms-whatsapp_automation-witness") || !strings.Contains(d, "wa-witness") {
 		t.Errorf("expected detail to map legacy → canonical, got: %q", d)
 	}
 }
@@ -205,7 +205,7 @@ func TestMalformedSessionNameCheck_Run_CrewSession(t *testing.T) {
 	check := NewMalformedSessionNameCheck()
 	check.registryForTest = testRegistryForNameCheck()
 	check.sessionListerForTest = &mockSessionLister{sessions: []string{
-		"gt-niflheim-crew-wolf",
+		"ms-niflheim-crew-wolf",
 	}}
 
 	ctx := &CheckContext{TownRoot: t.TempDir()}
@@ -216,7 +216,7 @@ func TestMalformedSessionNameCheck_Run_CrewSession(t *testing.T) {
 	}
 	// Detail must mention "manual rename" so the user knows --fix won't fix it.
 	for _, d := range result.Details {
-		if strings.Contains(d, "gt-niflheim-crew-wolf") {
+		if strings.Contains(d, "ms-niflheim-crew-wolf") {
 			if !strings.Contains(d, "manual") {
 				t.Errorf("crew session detail should mention manual rename, got: %q", d)
 			}
@@ -234,11 +234,11 @@ func TestMalformedSessionNameCheck_Fix_Rename(t *testing.T) {
 
 	// Pre-populate the cached malformed list (as if Run was called).
 	check.malformed = []sessionRename{
-		{oldName: "gt-niflheim-witness", newName: "nif-witness", isCrew: false},
+		{oldName: "ms-niflheim-witness", newName: "nif-witness", isCrew: false},
 	}
 
 	mt := &mockTmux{
-		sessions:     map[string]bool{"gt-niflheim-witness": true},
+		sessions:     map[string]bool{"ms-niflheim-witness": true},
 		renamedFrom:  []string{},
 		renamedTo:    []string{},
 	}
@@ -249,8 +249,8 @@ func TestMalformedSessionNameCheck_Fix_Rename(t *testing.T) {
 		t.Fatalf("Fix() returned error: %v", err)
 	}
 
-	if len(mt.renamedFrom) != 1 || mt.renamedFrom[0] != "gt-niflheim-witness" {
-		t.Errorf("expected rename from gt-niflheim-witness, got: %v", mt.renamedFrom)
+	if len(mt.renamedFrom) != 1 || mt.renamedFrom[0] != "ms-niflheim-witness" {
+		t.Errorf("expected rename from ms-niflheim-witness, got: %v", mt.renamedFrom)
 	}
 	if mt.renamedTo[0] != "nif-witness" {
 		t.Errorf("expected rename to nif-witness, got: %q", mt.renamedTo[0])
@@ -262,10 +262,10 @@ func TestMalformedSessionNameCheck_Fix_Rename(t *testing.T) {
 func TestMalformedSessionNameCheck_Fix_SkipsCrew(t *testing.T) {
 	check := NewMalformedSessionNameCheck()
 	check.malformed = []sessionRename{
-		{oldName: "gt-niflheim-crew-wolf", newName: "nif-crew-wolf", isCrew: true},
+		{oldName: "ms-niflheim-crew-wolf", newName: "nif-crew-wolf", isCrew: true},
 	}
 
-	mt := &mockTmux{sessions: map[string]bool{"gt-niflheim-crew-wolf": true}}
+	mt := &mockTmux{sessions: map[string]bool{"ms-niflheim-crew-wolf": true}}
 	check.tmuxForTest = mt
 
 	ctx := &CheckContext{TownRoot: t.TempDir()}
@@ -283,12 +283,12 @@ func TestMalformedSessionNameCheck_Fix_SkipsCrew(t *testing.T) {
 func TestMalformedSessionNameCheck_Fix_SkipsCollision(t *testing.T) {
 	check := NewMalformedSessionNameCheck()
 	check.malformed = []sessionRename{
-		{oldName: "gt-niflheim-witness", newName: "nif-witness", isCrew: false},
+		{oldName: "ms-niflheim-witness", newName: "nif-witness", isCrew: false},
 	}
 
 	mt := &mockTmux{
 		sessions: map[string]bool{
-			"gt-niflheim-witness": true,
+			"ms-niflheim-witness": true,
 			"nif-witness":         true, // target already exists
 		},
 	}
@@ -309,7 +309,7 @@ func TestMalformedSessionNameCheck_Fix_SkipsCollision(t *testing.T) {
 func TestMalformedSessionNameCheck_Fix_TOCTOUGuard(t *testing.T) {
 	check := NewMalformedSessionNameCheck()
 	check.malformed = []sessionRename{
-		{oldName: "gt-niflheim-witness", newName: "nif-witness", isCrew: false},
+		{oldName: "ms-niflheim-witness", newName: "nif-witness", isCrew: false},
 	}
 
 	mt := &mockTmux{
@@ -334,7 +334,7 @@ func TestMalformedSessionNameCheck_Fix_TOCTOUGuard(t *testing.T) {
 func TestMalformedSessionNameCheck_Fix_HasSessionError(t *testing.T) {
 	check := NewMalformedSessionNameCheck()
 	check.malformed = []sessionRename{
-		{oldName: "gt-niflheim-witness", newName: "nif-witness", isCrew: false},
+		{oldName: "ms-niflheim-witness", newName: "nif-witness", isCrew: false},
 	}
 
 	mt := &mockTmux{

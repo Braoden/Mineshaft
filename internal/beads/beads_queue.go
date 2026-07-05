@@ -156,19 +156,19 @@ func ParseQueueFields(description string) *QueueFields {
 }
 
 // QueueBeadID returns the queue bead ID for a given queue name.
-// Format: hq-q-<name> for town-level queues, gt-q-<name> for rig-level queues.
+// Format: hq-q-<name> for town-level queues, ms-q-<name> for rig-level queues.
 func QueueBeadID(name string, isTownLevel bool) string {
 	if isTownLevel {
 		return "hq-q-" + name
 	}
-	return "gt-q-" + name
+	return "ms-q-" + name
 }
 
 // CreateQueueBead creates a queue bead for tracking work queues.
-// The ID format is: <prefix>-q-<name> (e.g., gt-q-merge, hq-q-dispatch)
+// The ID format is: <prefix>-q-<name> (e.g., ms-q-merge, hq-q-dispatch)
 // The created_by field is populated from BD_ACTOR env var for provenance tracking.
 func (b *Beads) CreateQueueBead(id, title string, fields *QueueFields) (*Issue, error) {
-	// Guard against flag-like titles (gt-e0kx5: --help garbage beads)
+	// Guard against flag-like titles (ms-e0kx5: --help garbage beads)
 	if IsFlagLikeTitle(title) {
 		return nil, fmt.Errorf("refusing to create queue bead: %w (got %q)", ErrFlagTitle, title)
 	}
@@ -180,7 +180,7 @@ func (b *Beads) CreateQueueBead(id, title string, fields *QueueFields) (*Issue, 
 		"--title=" + title,
 		"--description=" + description,
 		"--type=queue",
-		"--labels=gt:queue",
+		"--labels=ms:queue",
 	}
 
 	// Default actor from BD_ACTOR env var for provenance tracking
@@ -213,8 +213,8 @@ func (b *Beads) GetQueueBead(id string) (*Issue, *QueueFields, error) {
 		return nil, nil, err
 	}
 
-	if !HasLabel(issue, "gt:queue") {
-		return nil, nil, fmt.Errorf("issue %s is not a queue bead (missing gt:queue label)", id)
+	if !HasLabel(issue, "ms:queue") {
+		return nil, nil, fmt.Errorf("issue %s is not a queue bead (missing ms:queue label)", id)
 	}
 
 	fields := ParseQueueFields(issue.Description)
@@ -272,7 +272,7 @@ func (b *Beads) UpdateQueueStatus(id, status string) error {
 
 // ListQueueBeads returns all queue beads.
 func (b *Beads) ListQueueBeads() (map[string]*Issue, error) {
-	out, err := b.run("list", "--label=gt:queue", "--json")
+	out, err := b.run("list", "--label=ms:queue", "--json")
 	if err != nil {
 		return nil, err
 	}

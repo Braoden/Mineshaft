@@ -13,7 +13,7 @@ log() { echo "[submodule-commit] $*"; }
 
 # --- Step 1: Find opt-in rigs with submodules --------------------------------
 
-RIG_JSON=$(gt rig list --json 2>/dev/null || true)
+RIG_JSON=$(ms rig list --json 2>/dev/null || true)
 if [ -z "$RIG_JSON" ]; then
   log "SKIP: could not get rig list"
   exit 0
@@ -24,7 +24,7 @@ while IFS= read -r REPO_PATH; do
   [ -z "$REPO_PATH" ] && continue
   [ ! -f "$REPO_PATH/.gitmodules" ] && continue
   RIG_NAME=$(basename "$REPO_PATH")
-  PLUGIN_ENABLED=$(gt rig show "$RIG_NAME" --json 2>/dev/null \
+  PLUGIN_ENABLED=$(ms rig show "$RIG_NAME" --json 2>/dev/null \
     | jq -r '.plugins["submodule-commit"].enabled // false' 2>/dev/null || echo "false")
   if [ "$PLUGIN_ENABLED" = "true" ]; then
     ENABLED_RIGS+=("$REPO_PATH")
@@ -52,7 +52,7 @@ for REPO_PATH in "${ENABLED_RIGS[@]}"; do
   RIG_NAME=$(basename "$REPO_PATH")
 
   # Get plugin config
-  RIG_CONFIG=$(gt rig show "$RIG_NAME" --json 2>/dev/null \
+  RIG_CONFIG=$(ms rig show "$RIG_NAME" --json 2>/dev/null \
     | jq -r '.plugins["submodule-commit"] // {}' 2>/dev/null || echo "{}")
   PUSH_ENABLED=$(echo "$RIG_CONFIG" | jq -r '.push_enabled // false')
   ALLOWLIST=$(echo "$RIG_CONFIG" | jq -r '.allowlist // [] | .[]' 2>/dev/null || true)
@@ -163,7 +163,7 @@ log "=== Summary ==="
 SUMMARY="submodule-commit: $TOTAL_COMMITTED submodule(s) committed, $TOTAL_PUSHED pushed, $TOTAL_PARENT_UPDATED parent pointer(s) updated"
 log "$SUMMARY"
 
-gt plugin record-run --plugin submodule-commit --result success \
+ms plugin record-run --plugin submodule-commit --result success \
   --title "$SUMMARY" --description "$SUMMARY" >/dev/null 2>&1 || true
 
 log "Done."

@@ -282,7 +282,7 @@ func isRalphMode(issue *beads.Issue) bool {
 
 // deriveSessionName maps bead ID components to a tmux session name.
 // Uses the naming conventions from internal/session/.
-// Note: session.*SessionName functions take a rigPrefix (e.g. "gt"),
+// Note: session.*SessionName functions take a rigPrefix (e.g. "ms"),
 // not a rig name (e.g. "mineshaft"). Use session.PrefixFor(rig) to convert.
 func deriveSessionName(rig, role, name string) string {
 	switch role {

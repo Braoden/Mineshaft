@@ -1,7 +1,7 @@
 package cmd
 
 // Shared test helpers for scheduler tests. No build tag — compiled for both
-// integration and e2e_agent builds. Helpers that need bd/gt binaries take
+// integration and e2e_agent builds. Helpers that need bd/ms binaries take
 // explicit paths and env slices so callers control isolation.
 
 import (
@@ -20,9 +20,9 @@ import (
 
 // --- Environment helpers ---
 
-// cleanSchedulerTestEnv returns os.Environ() with GT_*/BD_* variables removed
-// (except GT_DOLT_PORT and BEADS_DOLT_PORT) and HOME overridden to tmpHome.
-// This isolates gt/bd processes from the host while preserving test Dolt routing.
+// cleanSchedulerTestEnv returns os.Environ() with MS_*/BD_* variables removed
+// (except MS_DOLT_PORT and BEADS_DOLT_PORT) and HOME overridden to tmpHome.
+// This isolates ms/bd processes from the host while preserving test Dolt routing.
 func cleanSchedulerTestEnv(tmpHome string) []string {
 	return testutil.CleanGTEnv("HOME=" + tmpHome)
 }
@@ -59,9 +59,9 @@ func configureScheduler(t *testing.T, hqPath string, maxMiners, batchSize int) {
 	writeJSONFile(t, config.TownSettingsPath(hqPath), settings)
 }
 
-// --- gt command helpers ---
+// --- ms command helpers ---
 
-// runGTCmdOutput runs a gt command and returns stdout only.
+// runGTCmdOutput runs a ms command and returns stdout only.
 // Fails the test if the command exits non-zero.
 func runGTCmdOutput(t *testing.T, binary, dir string, env []string, args ...string) string {
 	t.Helper()
@@ -72,12 +72,12 @@ func runGTCmdOutput(t *testing.T, binary, dir string, env []string, args ...stri
 	cmd.Stderr = &stderr
 	out, err := cmd.Output()
 	if err != nil {
-		t.Fatalf("gt %v failed: %v\nstdout:\n%s\nstderr:\n%s", args, err, out, stderr.String())
+		t.Fatalf("ms %v failed: %v\nstdout:\n%s\nstderr:\n%s", args, err, out, stderr.String())
 	}
 	return string(out)
 }
 
-// runGTCmdMayFail runs a gt command and returns combined output and any error.
+// runGTCmdMayFail runs a ms command and returns combined output and any error.
 // Does NOT fail the test on non-zero exit.
 func runGTCmdMayFail(t *testing.T, binary, dir string, env []string, args ...string) (string, error) {
 	t.Helper()
@@ -90,7 +90,7 @@ func runGTCmdMayFail(t *testing.T, binary, dir string, env []string, args ...str
 
 // --- Scheduler query helpers ---
 
-// getSchedulerStatus runs `gt scheduler status --json` and returns the parsed output.
+// getSchedulerStatus runs `ms scheduler status --json` and returns the parsed output.
 func getSchedulerStatus(t *testing.T, gtBinary, dir string, env []string) map[string]interface{} {
 	t.Helper()
 	out := runGTCmdOutput(t, gtBinary, dir, env, "scheduler", "status", "--json")
@@ -101,7 +101,7 @@ func getSchedulerStatus(t *testing.T, gtBinary, dir string, env []string) map[st
 	return result
 }
 
-// getSchedulerList runs `gt scheduler list --json` and returns the parsed output.
+// getSchedulerList runs `ms scheduler list --json` and returns the parsed output.
 func getSchedulerList(t *testing.T, gtBinary, dir string, env []string) []map[string]interface{} {
 	t.Helper()
 	out := runGTCmdOutput(t, gtBinary, dir, env, "scheduler", "list", "--json")
@@ -264,8 +264,8 @@ func createTestBeadOfType(t *testing.T, dir, title, issueType string) string {
 	return issue.ID
 }
 
-// slingToScheduler runs `gt sling <bead> <rig> --hook-raw-bead` in deferred mode.
-// The test setup (configureScheduler) sets max_miners > 0, so gt sling
+// slingToScheduler runs `ms sling <bead> <rig> --hook-raw-bead` in deferred mode.
+// The test setup (configureScheduler) sets max_miners > 0, so ms sling
 // automatically defers dispatch without a --scheduler flag.
 // Uses --hook-raw-bead to skip formula cooking (no formula infrastructure
 // in integration tests).

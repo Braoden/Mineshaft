@@ -76,7 +76,7 @@ func (c *HookAttachmentValidCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:  StatusError,
 		Message: fmt.Sprintf("Found %d invalid hook attachment(s)", len(c.invalidAttachments)),
 		Details: details,
-		FixHint: "Run 'gt doctor --fix' to detach invalid molecules, or 'gt mol detach <pinned-bead-id>' manually",
+		FixHint: "Run 'ms doctor --fix' to detach invalid molecules, or 'ms mol detach <pinned-bead-id>' manually",
 	}
 }
 
@@ -257,7 +257,7 @@ func (c *HookSingletonCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:  StatusError,
 		Message: fmt.Sprintf("Found %d duplicate handoff bead(s)", totalDups),
 		Details: details,
-		FixHint: "Run 'gt doctor --fix' to close duplicates, or 'bd close <id>' manually",
+		FixHint: "Run 'ms doctor --fix' to close duplicates, or 'bd close <id>' manually",
 	}
 }
 
@@ -391,7 +391,7 @@ func (c *OrphanedAttachmentsCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:  StatusWarning,
 		Message: fmt.Sprintf("Found %d orphaned handoff bead(s)", len(c.orphans)),
 		Details: details,
-		FixHint: "Reassign with 'gt sling <id> <agent>', or close with 'bd close <id>'",
+		FixHint: "Reassign with 'ms sling <id> <agent>', or close with 'bd close <id>'",
 	}
 }
 

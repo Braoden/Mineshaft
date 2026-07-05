@@ -8,8 +8,8 @@ import (
 	"github.com/steveyegge/mineshaft/internal/constants"
 )
 
-// TownBeadsPrefix is the prefix used for town-level agent beads stored in ~/gt/.beads/.
-// This distinguishes them from rig-level beads (which use project prefixes like "gt-").
+// TownBeadsPrefix is the prefix used for town-level agent beads stored in ~/ms/.beads/.
+// This distinguishes them from rig-level beads (which use project prefixes like "ms-").
 const TownBeadsPrefix = "hq"
 
 // Town-level agent bead IDs use the "hq-" prefix and are stored in town beads.
@@ -42,13 +42,13 @@ func DogBeadIDTown(name string) string {
 
 // ValidAgentRoles are the known agent role types for ID pattern validation.
 var ValidAgentRoles = []string{
-	constants.RoleOverseer,    // Town-level: gt-overseer
-	constants.RoleSupervisor,   // Town-level: gt-supervisor
-	"dog",                  // Town-level with name: gt-dog-<name>
-	constants.RoleWitness,  // Per-rig: gt-<rig>-witness
-	constants.RoleRefinery, // Per-rig: gt-<rig>-refinery
-	constants.RoleCrew,    // Per-rig with name: gt-<rig>-crew-<name>
-	constants.RoleMiner, // Per-rig with name: gt-<rig>-miner-<name>
+	constants.RoleOverseer,    // Town-level: ms-overseer
+	constants.RoleSupervisor,   // Town-level: ms-supervisor
+	"dog",                  // Town-level with name: ms-dog-<name>
+	constants.RoleWitness,  // Per-rig: ms-<rig>-witness
+	constants.RoleRefinery, // Per-rig: ms-<rig>-refinery
+	constants.RoleCrew,    // Per-rig with name: ms-<rig>-crew-<name>
+	constants.RoleMiner, // Per-rig with name: ms-<rig>-miner-<name>
 }
 
 // TownLevelRoles are agent roles that don't have a rig.
@@ -117,9 +117,9 @@ func isNamedRole(s string) bool {
 // Agent IDs have the format: prefix-rig-role-name or prefix-role
 // The prefix is always the part before the first hyphen.
 // Examples:
-//   - "gt-mineshaft-miner-nux" -> "gt"
+//   - "ms-mineshaft-miner-nux" -> "ms"
 //   - "nx-nexus-miner-nux" -> "nx"
-//   - "gt-overseer" -> "gt"
+//   - "ms-overseer" -> "ms"
 //   - "bd-beads-witness" -> "bd"
 func ExtractAgentPrefix(id string) string {
 	hyphenIdx := strings.Index(id, "-")
@@ -132,12 +132,12 @@ func ExtractAgentPrefix(id string) string {
 // ValidateAgentID validates that an agent ID follows the expected pattern.
 // Canonical format: prefix-rig-role-name
 // Patterns:
-//   - Town-level: <prefix>-<role> (e.g., gt-overseer, bd-supervisor)
-//   - Town-level named: <prefix>-<role>-<name> (e.g., gt-dog-alpha)
-//   - Per-rig singleton: <prefix>-<rig>-<role> (e.g., gt-mineshaft-witness)
-//   - Per-rig named: <prefix>-<rig>-<role>-<name> (e.g., gt-mineshaft-miner-nux)
+//   - Town-level: <prefix>-<role> (e.g., ms-overseer, bd-supervisor)
+//   - Town-level named: <prefix>-<role>-<name> (e.g., ms-dog-alpha)
+//   - Per-rig singleton: <prefix>-<rig>-<role> (e.g., ms-mineshaft-witness)
+//   - Per-rig named: <prefix>-<rig>-<role>-<name> (e.g., ms-mineshaft-miner-nux)
 //
-// The prefix can be any rig's configured prefix (gt-, bd-, etc.).
+// The prefix can be any rig's configured prefix (ms-, bd-, etc.).
 // Rig names may contain hyphens (e.g., my-project), so we parse by scanning
 // for known role tokens from the right side of the ID.
 // Returns nil if the ID is valid, or an error describing the issue.
@@ -183,7 +183,7 @@ func ValidateAgentID(id string) error {
 	if len(parts) == 2 {
 		// Check if first part is a town-level named role
 		if isTownLevelNamedRole(parts[0]) {
-			return nil // Valid town-level named agent: gt-dog-alpha
+			return nil // Valid town-level named agent: ms-dog-alpha
 		}
 		// Check if first part is a named role (collapsed form: prefix-role-name)
 		if isNamedRole(parts[0]) {
@@ -191,7 +191,7 @@ func ValidateAgentID(id string) error {
 		}
 		// Check if second part is a rig-level singleton role
 		if isRigLevelRole(parts[1]) {
-			return nil // Valid rig-level singleton: gt-mineshaft-witness
+			return nil // Valid rig-level singleton: ms-mineshaft-witness
 		}
 		// Check if second part is a named role (missing name)
 		if isNamedRole(parts[1]) {
@@ -275,21 +275,21 @@ func ValidateAgentID(id string) error {
 	return fmt.Errorf("invalid agent ID format: %q", id)
 }
 
-// ===== Rig-level agent bead ID helpers (gt- prefix) =====
+// ===== Rig-level agent bead ID helpers (ms- prefix) =====
 
 // Agent bead ID naming convention:
 //   prefix-rig-role-name
 //
 // Examples:
-//   - gt-overseer (town-level, no rig)
-//   - gt-supervisor (town-level, no rig)
-//   - gt-mineshaft-witness (rig-level singleton)
-//   - gt-mineshaft-refinery (rig-level singleton)
-//   - gt-mineshaft-crew-max (rig-level named agent)
-//   - gt-mineshaft-miner-Toast (rig-level named agent)
+//   - ms-overseer (town-level, no rig)
+//   - ms-supervisor (town-level, no rig)
+//   - ms-mineshaft-witness (rig-level singleton)
+//   - ms-mineshaft-refinery (rig-level singleton)
+//   - ms-mineshaft-crew-max (rig-level named agent)
+//   - ms-mineshaft-miner-Toast (rig-level named agent)
 
 // AgentBeadIDWithPrefix generates an agent bead ID using the specified prefix.
-// The prefix should NOT include the hyphen (e.g., "gt", "bd", not "gt-", "bd-").
+// The prefix should NOT include the hyphen (e.g., "ms", "bd", not "ms-", "bd-").
 // For town-level agents (overseer, supervisor), pass empty rig and name.
 // For rig-level singletons (witness, refinery), pass empty name.
 // For named agents (crew, miner), pass all three.
@@ -313,10 +313,10 @@ func AgentBeadIDWithPrefix(prefix, rig, role, name string) string {
 	return prefix + "-" + rig + "-" + role + "-" + name
 }
 
-// AgentBeadID generates the canonical agent bead ID using "gt" prefix.
+// AgentBeadID generates the canonical agent bead ID using "ms" prefix.
 // For non-mineshaft rigs, use AgentBeadIDWithPrefix with the rig's configured prefix.
 func AgentBeadID(rig, role, name string) string {
-	return AgentBeadIDWithPrefix("gt", rig, role, name)
+	return AgentBeadIDWithPrefix("ms", rig, role, name)
 }
 
 // WitnessBeadIDWithPrefix returns the Witness agent bead ID for a rig using the specified prefix.
@@ -324,9 +324,9 @@ func WitnessBeadIDWithPrefix(prefix, rig string) string {
 	return AgentBeadIDWithPrefix(prefix, rig, constants.RoleWitness, "")
 }
 
-// WitnessBeadID returns the Witness agent bead ID for a rig using "gt" prefix.
+// WitnessBeadID returns the Witness agent bead ID for a rig using "ms" prefix.
 func WitnessBeadID(rig string) string {
-	return WitnessBeadIDWithPrefix("gt", rig)
+	return WitnessBeadIDWithPrefix("ms", rig)
 }
 
 // RefineryBeadIDWithPrefix returns the Refinery agent bead ID for a rig using the specified prefix.
@@ -334,9 +334,9 @@ func RefineryBeadIDWithPrefix(prefix, rig string) string {
 	return AgentBeadIDWithPrefix(prefix, rig, constants.RoleRefinery, "")
 }
 
-// RefineryBeadID returns the Refinery agent bead ID for a rig using "gt" prefix.
+// RefineryBeadID returns the Refinery agent bead ID for a rig using "ms" prefix.
 func RefineryBeadID(rig string) string {
-	return RefineryBeadIDWithPrefix("gt", rig)
+	return RefineryBeadIDWithPrefix("ms", rig)
 }
 
 // CrewBeadIDWithPrefix returns a Crew worker agent bead ID using the specified prefix.
@@ -344,9 +344,9 @@ func CrewBeadIDWithPrefix(prefix, rig, name string) string {
 	return AgentBeadIDWithPrefix(prefix, rig, constants.RoleCrew, name)
 }
 
-// CrewBeadID returns a Crew worker agent bead ID using "gt" prefix.
+// CrewBeadID returns a Crew worker agent bead ID using "ms" prefix.
 func CrewBeadID(rig, name string) string {
-	return CrewBeadIDWithPrefix("gt", rig, name)
+	return CrewBeadIDWithPrefix("ms", rig, name)
 }
 
 // MinerBeadIDWithPrefix returns a Miner agent bead ID using the specified prefix.
@@ -354,16 +354,16 @@ func MinerBeadIDWithPrefix(prefix, rig, name string) string {
 	return AgentBeadIDWithPrefix(prefix, rig, constants.RoleMiner, name)
 }
 
-// MinerBeadID returns a Miner agent bead ID using "gt" prefix.
+// MinerBeadID returns a Miner agent bead ID using "ms" prefix.
 func MinerBeadID(rig, name string) string {
-	return MinerBeadIDWithPrefix("gt", rig, name)
+	return MinerBeadIDWithPrefix("ms", rig, name)
 }
 
 // ParseAgentBeadID parses an agent bead ID into its components.
 // Returns rig, role, name, and whether parsing succeeded.
 // For town-level agents, rig will be empty.
 // For singletons, name will be empty.
-// Accepts any valid prefix (e.g., "gt-", "bd-"), not just "gt-".
+// Accepts any valid prefix (e.g., "ms-", "bd-"), not just "ms-".
 //
 // Handles the collapsed form where prefix == rig (e.g., "ff-witness" for rig "ff").
 // In collapsed form, the prefix is returned as the rig:
@@ -371,7 +371,7 @@ func MinerBeadID(rig, name string) string {
 //   - "ff-miner-nux" → rig="ff", role="miner", name="nux"
 func ParseAgentBeadID(id string) (rig, role, name string, ok bool) {
 	// Find the prefix (everything before the first hyphen)
-	// Valid prefixes are 2-3 characters (e.g., "gt", "bd", "hq")
+	// Valid prefixes are 2-3 characters (e.g., "ms", "bd", "hq")
 	hyphenIdx := strings.Index(id, "-")
 	if hyphenIdx < 2 || hyphenIdx > 3 {
 		return "", "", "", false
@@ -385,7 +385,7 @@ func ParseAgentBeadID(id string) (rig, role, name string, ok bool) {
 		return "", "", "", false
 	}
 
-	// Single part: town-level role (gt-overseer) or collapsed rig-level (ff-witness)
+	// Single part: town-level role (ms-overseer) or collapsed rig-level (ff-witness)
 	if len(parts) == 1 {
 		r := parts[0]
 		if isTownLevelRole(r) {
@@ -454,8 +454,8 @@ func ParseAgentBeadID(id string) (rig, role, name string, ok bool) {
 }
 
 // IsAgentSessionBead returns true if the bead ID represents an agent session molecule.
-// Agent session beads follow patterns like gt-overseer, bd-beads-witness, gt-mineshaft-crew-joe.
-// Supports any valid prefix (e.g., "gt-", "bd-"), not just "gt-".
+// Agent session beads follow patterns like ms-overseer, bd-beads-witness, ms-mineshaft-crew-joe.
+// Supports any valid prefix (e.g., "ms-", "bd-"), not just "ms-".
 // These are used to track agent state and update frequently, which can create noise.
 func IsAgentSessionBead(beadID string) bool {
 	_, role, _, ok := ParseAgentBeadID(beadID)

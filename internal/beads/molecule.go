@@ -321,7 +321,7 @@ func (b *Beads) instantiateFromChildren(ctx context.Context, mol *Issue, parent 
 		}
 		childOpts := CreateOptions{
 			Title:       tmpl.Title,
-			Labels:      []string{"gt:" + stepType},
+			Labels:      []string{"ms:" + stepType},
 			Priority:    parent.Priority,
 			Description: description,
 			Parent:      parent.ID,
@@ -415,7 +415,7 @@ func (b *Beads) instantiateFromMarkdown(ctx context.Context, mol *Issue, parent 
 		// Create the child issue
 		childOpts := CreateOptions{
 			Title:       step.Title,
-			Labels:      []string{"gt:task"},
+			Labels:      []string{"ms:task"},
 			Priority:    parent.Priority,
 			Description: description,
 			Parent:      parent.ID,

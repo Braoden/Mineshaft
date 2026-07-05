@@ -19,7 +19,7 @@ var shellCmd = &cobra.Command{
 	Long: `Manage the Mineshaft shell integration hook.
 
 The shell integration adds a cd hook to your shell RC file that automatically
-sets GT_TOWN_ROOT and GT_RIG environment variables when you enter a rig directory.
+sets MS_TOWN_ROOT and MS_RIG environment variables when you enter a rig directory.
 
 Subcommands: install, remove, status.`,
 	RunE: requireSubcommand,
@@ -31,10 +31,10 @@ var shellInstallCmd = &cobra.Command{
 	Long: `Install or update the Mineshaft shell integration.
 
 This adds a hook to your shell RC file that:
-  - Sets GT_TOWN_ROOT and GT_RIG when you cd into a Mineshaft rig
+  - Sets MS_TOWN_ROOT and MS_RIG when you cd into a Mineshaft rig
   - Offers to add new git repos to Mineshaft on first visit
 
-Run this after upgrading gt to get the latest shell hook features.`,
+Run this after upgrading ms to get the latest shell hook features.`,
 	RunE: runShellInstall,
 }
 
@@ -43,7 +43,7 @@ var shellRemoveCmd = &cobra.Command{
 	Short: "Remove shell integration",
 	Long: `Remove the Mineshaft shell integration from your shell RC file.
 
-Removes the hook that was added by 'gt shell install'. You may need
+Removes the hook that was added by 'ms shell install'. You may need
 to restart your shell or source the RC file for the change to take effect.`,
 	RunE: runShellRemove,
 }

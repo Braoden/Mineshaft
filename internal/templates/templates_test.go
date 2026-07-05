@@ -32,8 +32,8 @@ func TestRenderRole_Overseer(t *testing.T) {
 		TownName:      "town",
 		WorkDir:       "/test/town",
 		DefaultBranch: "main",
-		OverseerSession:  "gt-town-overseer",
-		SupervisorSession: "gt-town-supervisor",
+		OverseerSession:  "ms-town-overseer",
+		SupervisorSession: "ms-town-supervisor",
 	}
 
 	output, err := tmpl.RenderRole("overseer", data)
@@ -67,8 +67,8 @@ func TestRenderRole_Miner(t *testing.T) {
 		WorkDir:       "/test/town/myrig/miners/TestCat",
 		DefaultBranch: "main",
 		Miner:       "TestCat",
-		OverseerSession:  "gt-town-overseer",
-		SupervisorSession: "gt-town-supervisor",
+		OverseerSession:  "ms-town-overseer",
+		SupervisorSession: "ms-town-supervisor",
 	}
 
 	output, err := tmpl.RenderRole("miner", data)
@@ -100,8 +100,8 @@ func TestRenderRole_Supervisor(t *testing.T) {
 		TownName:      "town",
 		WorkDir:       "/test/town",
 		DefaultBranch: "main",
-		OverseerSession:  "gt-town-overseer",
-		SupervisorSession: "gt-town-supervisor",
+		OverseerSession:  "ms-town-overseer",
+		SupervisorSession: "ms-town-supervisor",
 	}
 
 	output, err := tmpl.RenderRole("supervisor", data)
@@ -141,8 +141,8 @@ func TestRenderRole_Refinery_DefaultBranch(t *testing.T) {
 		TownName:      "town",
 		WorkDir:       "/test/town/myrig/refinery/rig",
 		DefaultBranch: "develop",
-		OverseerSession:  "gt-town-overseer",
-		SupervisorSession: "gt-town-supervisor",
+		OverseerSession:  "ms-town-overseer",
+		SupervisorSession: "ms-town-supervisor",
 	}
 
 	output, err := tmpl.RenderRole("refinery", data)
@@ -195,7 +195,7 @@ func TestRenderMessage_Spawn(t *testing.T) {
 	}
 
 	data := SpawnData{
-		Issue:       "gt-123",
+		Issue:       "ms-123",
 		Title:       "Test Issue",
 		Priority:    1,
 		Description: "Test description",
@@ -210,7 +210,7 @@ func TestRenderMessage_Spawn(t *testing.T) {
 	}
 
 	// Check for key content
-	if !strings.Contains(output, "gt-123") {
+	if !strings.Contains(output, "ms-123") {
 		t.Error("output missing issue ID")
 	}
 	if !strings.Contains(output, "Test Issue") {
@@ -229,7 +229,7 @@ func TestRenderMessage_Nudge(t *testing.T) {
 		Reason:     "No progress for 30 minutes",
 		NudgeCount: 2,
 		MaxNudges:  3,
-		Issue:      "gt-123",
+		Issue:      "ms-123",
 		Status:     "in_progress",
 	}
 
@@ -260,8 +260,8 @@ func TestRenderRole_Dog(t *testing.T) {
 		TownName:      "town",
 		WorkDir:       "/test/town/supervisor/dogs/Fido",
 		DefaultBranch: "main",
-		OverseerSession:  "gt-town-overseer",
-		SupervisorSession: "gt-town-supervisor",
+		OverseerSession:  "ms-town-overseer",
+		SupervisorSession: "ms-town-supervisor",
 	}
 
 	output, err := tmpl.RenderRole("dog", data)
@@ -282,7 +282,7 @@ func TestRenderRole_Dog(t *testing.T) {
 }
 
 // TestRenderRole_Dog_NoHardcodedGtPath verifies the dog template uses {{ .TownRoot }}
-// and does not contain hardcoded ~/gt paths.
+// and does not contain hardcoded ~/ms paths.
 func TestRenderRole_Dog_NoHardcodedGtPath(t *testing.T) {
 	tmpl, err := New()
 	if err != nil {
@@ -298,8 +298,8 @@ func TestRenderRole_Dog_NoHardcodedGtPath(t *testing.T) {
 		TownName:      "instance",
 		WorkDir:       customTownRoot + "/supervisor/dogs/Rover",
 		DefaultBranch: "main",
-		OverseerSession:  "gt-instance-overseer",
-		SupervisorSession: "gt-instance-supervisor",
+		OverseerSession:  "ms-instance-overseer",
+		SupervisorSession: "ms-instance-supervisor",
 	}
 
 	output, err := tmpl.RenderRole("dog", data)
@@ -307,14 +307,14 @@ func TestRenderRole_Dog_NoHardcodedGtPath(t *testing.T) {
 		t.Fatalf("RenderRole() error = %v", err)
 	}
 
-	if strings.Contains(output, "~/gt") {
+	if strings.Contains(output, "~/ms") {
 		var offending []string
 		for i, line := range strings.Split(output, "\n") {
-			if strings.Contains(line, "~/gt") {
+			if strings.Contains(line, "~/ms") {
 				offending = append(offending, fmt.Sprintf("  line %d: %s", i+1, strings.TrimSpace(line)))
 			}
 		}
-		t.Errorf("rendered dog template still contains hardcoded ~/gt (TownRoot=%q):\n%s",
+		t.Errorf("rendered dog template still contains hardcoded ~/ms (TownRoot=%q):\n%s",
 			customTownRoot, strings.Join(offending, "\n"))
 	}
 
@@ -324,8 +324,8 @@ func TestRenderRole_Dog_NoHardcodedGtPath(t *testing.T) {
 }
 
 // TestRenderRole_NoHardcodedGtPath verifies that no role template renders
-// a literal "~/gt" path — all path references must use {{ .TownRoot }}.
-// This is a regression test for instances running outside ~/gt
+// a literal "~/ms" path — all path references must use {{ .TownRoot }}.
+// This is a regression test for instances running outside ~/ms
 // (e.g., test instances at a custom path).
 func TestRenderRole_NoHardcodedGtPath(t *testing.T) {
 	tmpl, err := New()
@@ -346,7 +346,7 @@ func TestRenderRole_NoHardcodedGtPath(t *testing.T) {
 				TownRoot: customTownRoot2, TownName: "instance",
 				WorkDir:       customTownRoot2 + "/myrig/miners/TestCat",
 				DefaultBranch: "main",
-				OverseerSession:  "gt-instance-overseer", SupervisorSession: "gt-instance-supervisor",
+				OverseerSession:  "ms-instance-overseer", SupervisorSession: "ms-instance-supervisor",
 			},
 		},
 		{
@@ -355,7 +355,7 @@ func TestRenderRole_NoHardcodedGtPath(t *testing.T) {
 				Role: "overseer", TownRoot: customTownRoot2, TownName: "instance",
 				WorkDir:       customTownRoot2,
 				DefaultBranch: "main",
-				OverseerSession:  "gt-instance-overseer", SupervisorSession: "gt-instance-supervisor",
+				OverseerSession:  "ms-instance-overseer", SupervisorSession: "ms-instance-supervisor",
 			},
 		},
 		{
@@ -366,7 +366,7 @@ func TestRenderRole_NoHardcodedGtPath(t *testing.T) {
 				WorkDir:       customTownRoot2 + "/myrig/witness",
 				DefaultBranch: "main",
 				Miners:      []string{"Cat1", "Cat2"},
-				OverseerSession:  "gt-instance-overseer", SupervisorSession: "gt-instance-supervisor",
+				OverseerSession:  "ms-instance-overseer", SupervisorSession: "ms-instance-supervisor",
 			},
 		},
 		{
@@ -376,7 +376,7 @@ func TestRenderRole_NoHardcodedGtPath(t *testing.T) {
 				TownRoot: customTownRoot2, TownName: "instance",
 				WorkDir:       customTownRoot2 + "/myrig/crew/TestCrew",
 				DefaultBranch: "main",
-				OverseerSession:  "gt-instance-overseer", SupervisorSession: "gt-instance-supervisor",
+				OverseerSession:  "ms-instance-overseer", SupervisorSession: "ms-instance-supervisor",
 			},
 		},
 		{
@@ -385,7 +385,7 @@ func TestRenderRole_NoHardcodedGtPath(t *testing.T) {
 				Role: "supervisor", TownRoot: customTownRoot2, TownName: "instance",
 				WorkDir:       customTownRoot2,
 				DefaultBranch: "main",
-				OverseerSession:  "gt-instance-overseer", SupervisorSession: "gt-instance-supervisor",
+				OverseerSession:  "ms-instance-overseer", SupervisorSession: "ms-instance-supervisor",
 			},
 		},
 		// dog tested separately in TestRenderRole_Dog_NoHardcodedGtPath
@@ -398,14 +398,14 @@ func TestRenderRole_NoHardcodedGtPath(t *testing.T) {
 			if err != nil {
 				t.Fatalf("RenderRole(%q) error = %v", tc.role, err)
 			}
-			if strings.Contains(output, "~/gt") {
+			if strings.Contains(output, "~/ms") {
 				var offending []string
 				for i, line := range strings.Split(output, "\n") {
-					if strings.Contains(line, "~/gt") {
+					if strings.Contains(line, "~/ms") {
 						offending = append(offending, fmt.Sprintf("  line %d: %s", i+1, strings.TrimSpace(line)))
 					}
 				}
-				t.Errorf("rendered %q template still contains hardcoded ~/gt (TownRoot=%q):\n%s",
+				t.Errorf("rendered %q template still contains hardcoded ~/ms (TownRoot=%q):\n%s",
 					tc.role, customTownRoot2, strings.Join(offending, "\n"))
 			}
 		})
@@ -432,7 +432,7 @@ func TestRenderRole_TownRootInOutput(t *testing.T) {
 				Role: "miner", RigName: "myrig", Miner: "Sparky",
 				TownRoot: customRoot, TownName: "my-instance",
 				WorkDir: customRoot + "/myrig/miners/Sparky", DefaultBranch: "main",
-				OverseerSession: "gt-my-instance-overseer", SupervisorSession: "gt-my-instance-supervisor",
+				OverseerSession: "ms-my-instance-overseer", SupervisorSession: "ms-my-instance-supervisor",
 			},
 		},
 		{
@@ -440,7 +440,7 @@ func TestRenderRole_TownRootInOutput(t *testing.T) {
 			data: RoleData{
 				Role: "overseer", TownRoot: customRoot, TownName: "my-instance",
 				WorkDir: customRoot, DefaultBranch: "main",
-				OverseerSession: "gt-my-instance-overseer", SupervisorSession: "gt-my-instance-supervisor",
+				OverseerSession: "ms-my-instance-overseer", SupervisorSession: "ms-my-instance-supervisor",
 			},
 		},
 		{
@@ -449,7 +449,7 @@ func TestRenderRole_TownRootInOutput(t *testing.T) {
 				Role: "witness", RigName: "myrig",
 				TownRoot: customRoot, TownName: "my-instance",
 				WorkDir: customRoot + "/myrig/witness", DefaultBranch: "main",
-				OverseerSession: "gt-my-instance-overseer", SupervisorSession: "gt-my-instance-supervisor",
+				OverseerSession: "ms-my-instance-overseer", SupervisorSession: "ms-my-instance-supervisor",
 			},
 		},
 		{
@@ -458,7 +458,7 @@ func TestRenderRole_TownRootInOutput(t *testing.T) {
 				Role: "crew", RigName: "myrig", Miner: "Sparky",
 				TownRoot: customRoot, TownName: "my-instance",
 				WorkDir: customRoot + "/myrig/crew/Sparky", DefaultBranch: "main",
-				OverseerSession: "gt-my-instance-overseer", SupervisorSession: "gt-my-instance-supervisor",
+				OverseerSession: "ms-my-instance-overseer", SupervisorSession: "ms-my-instance-supervisor",
 			},
 		},
 		{
@@ -466,7 +466,7 @@ func TestRenderRole_TownRootInOutput(t *testing.T) {
 			data: RoleData{
 				Role: "supervisor", TownRoot: customRoot, TownName: "my-instance",
 				WorkDir: customRoot, DefaultBranch: "main",
-				OverseerSession: "gt-my-instance-overseer", SupervisorSession: "gt-my-instance-supervisor",
+				OverseerSession: "ms-my-instance-overseer", SupervisorSession: "ms-my-instance-supervisor",
 			},
 		},
 	}
@@ -485,8 +485,8 @@ func TestRenderRole_TownRootInOutput(t *testing.T) {
 }
 
 // TestRenderRole_Miner_CwdInstruction verifies the critical cwd instruction
-// uses the actual town root, not a hardcoded ~/gt path.
-// Regression test: agents were following hardcoded ~/gt even in test instances.
+// uses the actual town root, not a hardcoded ~/ms path.
+// Regression test: agents were following hardcoded ~/ms even in test instances.
 func TestRenderRole_Miner_CwdInstruction(t *testing.T) {
 	tmpl, err := New()
 	if err != nil {
@@ -499,7 +499,7 @@ func TestRenderRole_Miner_CwdInstruction(t *testing.T) {
 		Role: "miner", RigName: "rig1", Miner: "Worker",
 		TownRoot: customRoot, TownName: "mineshaft-ci",
 		WorkDir: customRoot + "/rig1/miners/Worker", DefaultBranch: "main",
-		OverseerSession: "gt-mineshaft-ci-overseer", SupervisorSession: "gt-mineshaft-ci-supervisor",
+		OverseerSession: "ms-mineshaft-ci-overseer", SupervisorSession: "ms-mineshaft-ci-supervisor",
 	}
 
 	output, err := tmpl.RenderRole("miner", data)
@@ -550,14 +550,14 @@ func TestRenderRole_BootUsesNudgeNotRawTmux(t *testing.T) {
 		TownName:      "town",
 		WorkDir:       "/test/town/supervisor/dogs/boot",
 		DefaultBranch: "main",
-		OverseerSession:  "gt-town-overseer",
-		SupervisorSession: "gt-town-supervisor",
+		OverseerSession:  "ms-town-overseer",
+		SupervisorSession: "ms-town-supervisor",
 	})
 	if err != nil {
 		t.Fatalf("RenderRole() error = %v", err)
 	}
 
-	if !strings.Contains(output, `gt nudge --mode=immediate supervisor "Boot wake: check your inbox"`) {
+	if !strings.Contains(output, `ms nudge --mode=immediate supervisor "Boot wake: check your inbox"`) {
 		t.Fatalf("boot template missing immediate nudge wake guidance:\n%s", output)
 	}
 	if !strings.Contains(output, "Boot hooks block it") {
@@ -603,9 +603,9 @@ func TestCreateMinerCLAUDEmd(t *testing.T) {
 		t.Error("CLAUDE.md does not contain miner name 'furiosa'")
 	}
 
-	// Verify critical gt done instructions are present
-	if !strings.Contains(content, "gt done") {
-		t.Fatal("CLAUDE.md does not contain 'gt done' — miners will not know to call it")
+	// Verify critical ms done instructions are present
+	if !strings.Contains(content, "ms done") {
+		t.Fatal("CLAUDE.md does not contain 'ms done' — miners will not know to call it")
 	}
 	if !strings.Contains(content, "IDLE MINER HERESY") {
 		t.Error("CLAUDE.md missing 'IDLE MINER HERESY' warning section")
@@ -619,8 +619,8 @@ func TestCreateMinerCLAUDEmd_WritesToLocalWhenTrackedExists(t *testing.T) {
 	dir := t.TempDir()
 
 	// Write a CLAUDE.md with the exact town-root template content that gets
-	// tracked in repos. This is the real-world scenario: gt install creates
-	// ~/gt/CLAUDE.md with Dolt operational awareness, the user commits it to
+	// tracked in repos. This is the real-world scenario: ms install creates
+	// ~/ms/CLAUDE.md with Dolt operational awareness, the user commits it to
 	// their repo, and git worktree add checks it out in the miner worktree.
 	existing := TownRootCLAUDEmd()
 	if err := os.WriteFile(filepath.Join(dir, "CLAUDE.md"), []byte(existing), 0644); err != nil {
@@ -636,7 +636,7 @@ func TestCreateMinerCLAUDEmd_WritesToLocalWhenTrackedExists(t *testing.T) {
 	}
 
 	// CLAUDE.md must NOT be modified — it's a tracked file and modifying it
-	// creates uncommitted changes that the gt done safety net would commit onto
+	// creates uncommitted changes that the ms done safety net would commit onto
 	// the miner's branch, polluting the PR diff.
 	data, err := os.ReadFile(filepath.Join(dir, "CLAUDE.md"))
 	if err != nil {
@@ -658,8 +658,8 @@ func TestCreateMinerCLAUDEmd_WritesToLocalWhenTrackedExists(t *testing.T) {
 	if !strings.Contains(localContent, "IDLE MINER HERESY") {
 		t.Error("miner lifecycle instructions not written to CLAUDE.local.md")
 	}
-	if !strings.Contains(localContent, "gt done") {
-		t.Fatal("gt done instructions not in CLAUDE.local.md — miners will not know to call it")
+	if !strings.Contains(localContent, "ms done") {
+		t.Fatal("ms done instructions not in CLAUDE.local.md — miners will not know to call it")
 	}
 }
 
@@ -757,8 +757,8 @@ func TestCreateMinerCLAUDEmd_ReusePath(t *testing.T) {
 		t.Error("town-root content in CLAUDE.md was lost")
 	}
 	localData, _ = os.ReadFile(claudeLocalPath)
-	if !strings.Contains(string(localData), "gt done") {
-		t.Fatal("gt done instructions not found in CLAUDE.local.md")
+	if !strings.Contains(string(localData), "ms done") {
+		t.Fatal("ms done instructions not found in CLAUDE.local.md")
 	}
 }
 
@@ -836,7 +836,7 @@ func TestCreateMinerCLAUDEmd_GitCleanScenario(t *testing.T) {
 	}
 
 	data, _ := os.ReadFile(claudePath)
-	if !strings.Contains(string(data), "gt done") {
-		t.Fatal("gt done instructions not found after re-creation")
+	if !strings.Contains(string(data), "ms done") {
+		t.Fatal("ms done instructions not found after re-creation")
 	}
 }

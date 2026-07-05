@@ -24,7 +24,7 @@ func TestParseHooksFile(t *testing.T) {
 				{
 					Matcher: "",
 					Hooks: []hooks.Hook{
-						{Type: "command", Command: "gt prime"},
+						{Type: "command", Command: "ms prime"},
 					},
 				},
 			},
@@ -78,7 +78,7 @@ func TestParseHooksFile(t *testing.T) {
 	if sessionStart.Agent != "test/agent" {
 		t.Errorf("expected agent 'test/agent', got %q", sessionStart.Agent)
 	}
-	if len(sessionStart.Commands) != 1 || sessionStart.Commands[0] != "gt prime" {
+	if len(sessionStart.Commands) != 1 || sessionStart.Commands[0] != "ms prime" {
 		t.Errorf("unexpected SessionStart commands: %v", sessionStart.Commands)
 	}
 
@@ -259,7 +259,7 @@ func TestDiscoverHooksCrewLevel(t *testing.T) {
 }
 
 func TestResolveSettingsTarget(t *testing.T) {
-	townRoot := "/home/user/gt"
+	townRoot := "/home/user/ms"
 
 	tests := []struct {
 		name     string
@@ -268,48 +268,48 @@ func TestResolveSettingsTarget(t *testing.T) {
 	}{
 		{
 			name:     "crew member worktree resolves to crew parent",
-			cwd:      "/home/user/gt/myrig/crew/alice",
-			expected: "/home/user/gt/myrig/crew",
+			cwd:      "/home/user/ms/myrig/crew/alice",
+			expected: "/home/user/ms/myrig/crew",
 		},
 		{
 			name:     "deeply nested crew path resolves to crew parent",
-			cwd:      "/home/user/gt/myrig/crew/alice/src/pkg",
-			expected: "/home/user/gt/myrig/crew",
+			cwd:      "/home/user/ms/myrig/crew/alice/src/pkg",
+			expected: "/home/user/ms/myrig/crew",
 		},
 		{
 			name:     "miner worktree resolves to miners parent",
-			cwd:      "/home/user/gt/myrig/miners/toast/myrig",
-			expected: "/home/user/gt/myrig/miners",
+			cwd:      "/home/user/ms/myrig/miners/toast/myrig",
+			expected: "/home/user/ms/myrig/miners",
 		},
 		{
 			name:     "witness subdir resolves to witness parent",
-			cwd:      "/home/user/gt/myrig/witness/rig",
-			expected: "/home/user/gt/myrig/witness",
+			cwd:      "/home/user/ms/myrig/witness/rig",
+			expected: "/home/user/ms/myrig/witness",
 		},
 		{
 			name:     "refinery subdir resolves to refinery parent",
-			cwd:      "/home/user/gt/myrig/refinery/rig",
-			expected: "/home/user/gt/myrig/refinery",
+			cwd:      "/home/user/ms/myrig/refinery/rig",
+			expected: "/home/user/ms/myrig/refinery",
 		},
 		{
 			name:     "overseer stays at cwd",
-			cwd:      "/home/user/gt/overseer",
-			expected: "/home/user/gt/overseer",
+			cwd:      "/home/user/ms/overseer",
+			expected: "/home/user/ms/overseer",
 		},
 		{
 			name:     "supervisor stays at cwd",
-			cwd:      "/home/user/gt/supervisor",
-			expected: "/home/user/gt/supervisor",
+			cwd:      "/home/user/ms/supervisor",
+			expected: "/home/user/ms/supervisor",
 		},
 		{
 			name:     "town root stays at cwd",
-			cwd:      "/home/user/gt",
-			expected: "/home/user/gt",
+			cwd:      "/home/user/ms",
+			expected: "/home/user/ms",
 		},
 		{
 			name:     "rig root stays at cwd",
-			cwd:      "/home/user/gt/myrig",
-			expected: "/home/user/gt/myrig",
+			cwd:      "/home/user/ms/myrig",
+			expected: "/home/user/ms/myrig",
 		},
 	}
 

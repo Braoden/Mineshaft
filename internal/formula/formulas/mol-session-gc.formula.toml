@@ -29,7 +29,7 @@ GC is destructive. This formula errs on the side of caution:
 - Conservative mode: Only obviously dead things
 - Aggressive mode: Includes old but possibly-recoverable state
 
-Running `gt doctor --fix` handles most of this. This formula wraps it with
+Running `ms doctor --fix` handles most of this. This formula wraps it with
 reporting and multi-rig scope."""
 formula = "mol-session-gc"
 version = 1
@@ -47,7 +47,7 @@ Establish GC aggressiveness level.
 
 **1. Check assignment:**
 ```bash
-gt hook               # Shows mode in hook_bead
+ms hook               # Shows mode in hook_bead
 ```
 
 **2. Mode definitions:**
@@ -78,7 +78,7 @@ Identify garbage without removing it yet.
 
 **1. Run doctor in preview mode:**
 ```bash
-gt doctor -v
+ms doctor -v
 # Shows what would be cleaned, doesn't do it
 ```
 
@@ -96,8 +96,8 @@ git branch --list 'miner/*' | while read branch; do
 done
 
 # Old runtime state files (stored under <rig>/.runtime/ as *.json).
-# Prefer using `gt doctor -v` to enumerate stale state — it knows all locations.
-find "$GT_TOWN_ROOT" -path "*/.runtime/*.json" -mtime +7 2>/dev/null
+# Prefer using `ms doctor -v` to enumerate stale state — it knows all locations.
+find "$MS_TOWN_ROOT" -path "*/.runtime/*.json" -mtime +7 2>/dev/null
 ```
 
 **4. Compile cleanup manifest:**
@@ -118,7 +118,7 @@ Actually remove the garbage.
 
 **1. Run doctor with fix:**
 ```bash
-gt doctor --fix
+ms doctor --fix
 # This handles sessions, processes, and wisps
 ```
 
@@ -150,7 +150,7 @@ Confirm garbage was actually removed.
 
 **1. Re-run doctor to verify:**
 ```bash
-gt doctor -v
+ms doctor -v
 # Should show no issues (or fewer issues)
 ```
 
@@ -215,7 +215,7 @@ None
 
 **2. Send to Supervisor:**
 ```bash
-gt mail send supervisor/ -s "GC complete: {{total_cleaned}} items" \
+ms mail send supervisor/ -s "GC complete: {{total_cleaned}} items" \
   -m "{{report}}"
 ```
 
@@ -230,7 +230,7 @@ Signal work complete and return to available pool.
 
 **1. Signal completion to Supervisor:**
 ```bash
-gt mail send supervisor/ -s "DOG_DONE $(hostname)" -m "Task: session-gc
+ms mail send supervisor/ -s "DOG_DONE $(hostname)" -m "Task: session-gc
 Mode: {{mode}}
 Items cleaned: {{total_cleaned}}
 Space recovered: {{bytes_freed}}

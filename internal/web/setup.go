@@ -144,7 +144,7 @@ func (h *SetupAPIHandler) handleInstall(w http.ResponseWriter, r *http.Request) 
 	}
 	req.Path = expanded
 
-	// Build gt install command. Flags go first, then -- to end flag parsing,
+	// Build ms install command. Flags go first, then -- to end flag parsing,
 	// then the positional path (prevents paths like "--help" being parsed as flags).
 	args := []string{"install"}
 	if req.Name != "" {
@@ -246,7 +246,7 @@ func (h *SetupAPIHandler) handleLaunch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Use PATH lookup for gt binary. Do NOT use os.Executable() here - during
+	// Use PATH lookup for ms binary. Do NOT use os.Executable() here - during
 	// tests it returns the test binary, causing fork bombs when executed.
 
 	// Start new dashboard on a DIFFERENT port first, then we'll tell the browser to go there
@@ -259,7 +259,7 @@ func (h *SetupAPIHandler) handleLaunch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Start new dashboard process from the workspace directory
-	cmd := exec.Command("gt", "dashboard", "--port", fmt.Sprintf("%d", newPort), "--bind", bind)
+	cmd := exec.Command("ms", "dashboard", "--port", fmt.Sprintf("%d", newPort), "--bind", bind)
 	cmd.Dir = path
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -345,7 +345,7 @@ func (h *SetupAPIHandler) handleCheckWorkspace(w http.ResponseWriter, r *http.Re
 
 	// Try to get rig list from this workspace
 	var rigs []string
-	cmd := exec.CommandContext(r.Context(), "gt", "rig", "list", "--json")
+	cmd := exec.CommandContext(r.Context(), "ms", "rig", "list", "--json")
 	cmd.Dir = path
 	if output, err := cmd.Output(); err == nil {
 		// Parse JSON output for rig names
@@ -394,7 +394,7 @@ func (h *SetupAPIHandler) runGtCommand(ctx context.Context, timeout time.Duratio
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, "gt", args...)
+	cmd := exec.CommandContext(ctx, "ms", args...)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
@@ -776,7 +776,7 @@ const setupHTML = `<!DOCTYPE html>
             </p>
             <div class="form-group">
                 <label>Workspace Path</label>
-                <input type="text" id="existing-path" placeholder="~/gt" value="~/gt">
+                <input type="text" id="existing-path" placeholder="~/ms" value="~/ms">
                 <div class="hint">Path to your Mineshaft HQ directory</div>
             </div>
             <button class="btn btn-primary" id="check-btn" onclick="checkWorkspace()">Check Workspace</button>
@@ -788,7 +788,7 @@ const setupHTML = `<!DOCTYPE html>
             <h2><span class="step-number" id="step1-num">1</span> Create Workspace (HQ)</h2>
             <div class="form-group">
                 <label>Workspace Path</label>
-                <input type="text" id="install-path" placeholder="~/gt" value="~/gt">
+                <input type="text" id="install-path" placeholder="~/ms" value="~/ms">
                 <div class="hint">Where to create your Mineshaft headquarters</div>
             </div>
             <div class="form-group">
@@ -828,7 +828,7 @@ const setupHTML = `<!DOCTYPE html>
         <div class="setup-card hidden" id="step3">
             <h2><span class="step-number done">✓</span> Ready to Launch!</h2>
             <p style="color: var(--text-secondary); margin-bottom: 16px;">
-                Your workspace is ready at <code id="workspace-path" style="background: var(--bg-dark); padding: 2px 6px; border-radius: 4px;">~/gt</code>
+                Your workspace is ready at <code id="workspace-path" style="background: var(--bg-dark); padding: 2px 6px; border-radius: 4px;">~/ms</code>
             </p>
             <button class="btn btn-primary" id="step3-launch-btn" onclick="launchFromStep3()">Launch Dashboard</button>
         </div>
@@ -970,7 +970,7 @@ const setupHTML = `<!DOCTYPE html>
             btn.disabled = true;
             btn.innerHTML = '<span class="loading"></span>Creating...';
             output.className = 'output-box visible';
-            output.textContent = 'Running gt install...';
+            output.textContent = 'Running ms install...';
 
             fetch('/api/install', {
                 method: 'POST',

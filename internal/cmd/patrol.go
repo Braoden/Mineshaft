@@ -1,4 +1,4 @@
-// Package cmd provides CLI commands for the gt tool.
+// Package cmd provides CLI commands for the ms tool.
 package cmd
 
 import (
@@ -32,8 +32,8 @@ Patrol cycles (Supervisor, Witness, Refinery) create ephemeral per-cycle digests
 This command aggregates them into permanent daily summaries.
 
 Examples:
-  gt patrol digest --yesterday  # Aggregate yesterday's patrol digests
-  gt patrol digest --dry-run    # Preview what would be aggregated`,
+  ms patrol digest --yesterday  # Aggregate yesterday's patrol digests
+  ms patrol digest --dry-run    # Preview what would be aggregated`,
 }
 
 var patrolDigestCmd = &cobra.Command{
@@ -49,9 +49,9 @@ The resulting digest bead is permanent (synced via git) and provides
 an audit trail without per-cycle ephemeral pollution.
 
 Examples:
-  gt patrol digest --yesterday   # Digest yesterday's patrols (for daily patrol)
-  gt patrol digest --date 2026-01-15
-  gt patrol digest --yesterday --dry-run`,
+  ms patrol digest --yesterday   # Digest yesterday's patrols (for daily patrol)
+  ms patrol digest --date 2026-01-15
+  ms patrol digest --yesterday --dry-run`,
 	RunE: runPatrolDigest,
 }
 
@@ -99,7 +99,7 @@ func runPatrolDigest(cmd *cobra.Command, args []string) error {
 		targetDate = parsed
 	} else if patrolDigestYesterday {
 		// Use UTC: Dolt stores timestamps in UTC, so date comparisons
-		// must use UTC dates to avoid evening PDT mismatches (gt-ty4).
+		// must use UTC dates to avoid evening PDT mismatches (ms-ty4).
 		targetDate = time.Now().UTC().AddDate(0, 0, -1)
 	} else {
 		return fmt.Errorf("specify --yesterday or --date YYYY-MM-DD")
@@ -214,7 +214,7 @@ func queryPatrolDigests(targetDate time.Time) ([]PatrolCycleEntry, error) {
 		return nil, fmt.Errorf("parsing issue list: %w", err)
 	}
 
-	// Compare dates in UTC: Dolt stores timestamps in UTC (gt-ty4).
+	// Compare dates in UTC: Dolt stores timestamps in UTC (ms-ty4).
 	targetDay := targetDate.UTC().Format("2006-01-02")
 	var patrolDigests []PatrolCycleEntry
 
@@ -253,12 +253,12 @@ func queryPatrolDigests(targetDate time.Time) ([]PatrolCycleEntry, error) {
 // extractPatrolRole extracts the role from a patrol digest title.
 // "Digest: mol-supervisor-patrol" -> "supervisor"
 // "Digest: mol-witness-patrol" -> "witness"
-// "Digest: gt-wisp-abc123" -> "unknown"
+// "Digest: ms-wisp-abc123" -> "unknown"
 func extractPatrolRole(title string) string {
 	// Remove "Digest: " prefix
 	title = strings.TrimPrefix(title, "Digest: ")
 
-	// Extract role from "mol-<role>-patrol" or "gt-wisp-<id>"
+	// Extract role from "mol-<role>-patrol" or "ms-wisp-<id>"
 	if strings.HasPrefix(title, "mol-") && strings.HasSuffix(title, "-patrol") {
 		// "mol-supervisor-patrol" -> "supervisor"
 		role := strings.TrimPrefix(title, "mol-")

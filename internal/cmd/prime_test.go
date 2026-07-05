@@ -138,7 +138,7 @@ func TestGetAgentBeadID_UsesRigPrefix(t *testing.T) {
 func TestRigBeadsRootPrefersRouteResolvedRigDir(t *testing.T) {
 	townRoot := t.TempDir()
 	writeTestRoutes(t, townRoot, []beads.Route{
-		{Prefix: "gt-", Path: "mineshaft/overseer/rig"},
+		{Prefix: "ms-", Path: "mineshaft/overseer/rig"},
 		{Prefix: "hq-", Path: "."},
 	})
 
@@ -655,7 +655,7 @@ func TestDryRunSkipsSideEffects(t *testing.T) {
 		t.Fatalf("write marker: %v", err)
 	}
 
-	// Run gt prime --dry-run --explain
+	// Run ms prime --dry-run --explain
 	cmd := exec.Command(gtBin, "prime", "--dry-run", "--explain")
 	cmd.Dir = townRoot
 	output, _ := cmd.CombinedOutput()
@@ -885,7 +885,7 @@ func TestCheckHandoffMarkerParsesReason(t *testing.T) {
 func TestOutputContinuationDirective(t *testing.T) {
 	t.Run("basic_bead", func(t *testing.T) {
 		bead := &beads.Issue{
-			ID:    "gt-test123",
+			ID:    "ms-test123",
 			Title: "Test bead title",
 		}
 		output := captureStdout(t, func() {
@@ -896,7 +896,7 @@ func TestOutputContinuationDirective(t *testing.T) {
 		if !strings.Contains(output, "CONTINUE HOOKED WORK") {
 			t.Fatalf("expected 'CONTINUE HOOKED WORK' in output, got: %s", output)
 		}
-		if !strings.Contains(output, "gt-test123") {
+		if !strings.Contains(output, "ms-test123") {
 			t.Fatalf("expected bead ID in output, got: %s", output)
 		}
 
@@ -911,7 +911,7 @@ func TestOutputContinuationDirective(t *testing.T) {
 
 	t.Run("bead_with_molecule", func(t *testing.T) {
 		bead := &beads.Issue{
-			ID:    "gt-mol456",
+			ID:    "ms-mol456",
 			Title: "Molecule bead",
 		}
 		output := captureStdout(t, func() {
@@ -927,7 +927,7 @@ func TestOutputContinuationDirective(t *testing.T) {
 func TestCheckSlungWork_StandaloneFormulaUsesWorkflowOutput(t *testing.T) {
 	ctx := RoleContext{Role: RoleCrew}
 	hookedBead := &beads.Issue{
-		ID:    "gt-wisp-xyz",
+		ID:    "ms-wisp-xyz",
 		Title: "Standalone formula work",
 		Description: strings.Join([]string{
 			"attached_formula: mol-nonexistent",
@@ -967,7 +967,7 @@ func TestCheckSlungWork_RefinerySafetyStoppedSkipsWorkflowOutput(t *testing.T) {
 
 	ctx := RoleContext{Role: RoleRefinery, Rig: "testrig", TownRoot: townRoot}
 	hookedBead := &beads.Issue{
-		ID:    "gt-wisp-refinery",
+		ID:    "ms-wisp-refinery",
 		Title: constants.MolRefineryPatrol,
 		Description: strings.Join([]string{
 			"attached_formula: " + constants.MolRefineryPatrol,
@@ -1009,7 +1009,7 @@ func TestOutputStartupDirective_RefinerySafetyStoppedSkipsPatrolNew(t *testing.T
 	if !strings.Contains(output, "No patrol needed. Exit cleanly.") {
 		t.Fatalf("expected safety-stop startup directive, got:\n%s", output)
 	}
-	if strings.Contains(output, "gt patrol new") || strings.Contains(output, "create patrol") {
+	if strings.Contains(output, "ms patrol new") || strings.Contains(output, "create patrol") {
 		t.Fatalf("startup directive should not tell safety-stopped refinery to create patrol, got:\n%s", output)
 	}
 }
@@ -1027,10 +1027,10 @@ func TestCheckSlungWork_RalphModeUsesLoopDirective(t *testing.T) {
 
 	ctx := RoleContext{Role: RoleCrew}
 	hookedBead := &beads.Issue{
-		ID:    "gt-wisp-ralph",
+		ID:    "ms-wisp-ralph",
 		Title: "Ralph workflow",
 		Description: strings.Join([]string{
-			"attached_molecule: gt-wisp-ralph",
+			"attached_molecule: ms-wisp-ralph",
 			"attached_args: do the loop",
 			"mode: ralph",
 		}, "\n"),
@@ -1056,9 +1056,9 @@ func TestCheckSlungWork_RalphModeUsesLoopDirective(t *testing.T) {
 }
 
 // TestCompactResumeReminder_MinerGetsGtDone verifies that miners get a
-// gt done reminder after context compaction. This is the regression test for
-// the miners-no-gt-done bug: after long work sessions, compaction drops the
-// formula checklist and the agent forgets to call gt done.
+// ms done reminder after context compaction. This is the regression test for
+// the miners-no-ms-done bug: after long work sessions, compaction drops the
+// formula checklist and the agent forgets to call ms done.
 func TestCompactResumeReminder_MinerGetsGtDone(t *testing.T) {
 	ctx := RoleContext{Role: RoleMiner}
 	// Simulate compact source
@@ -1069,13 +1069,13 @@ func TestCompactResumeReminder_MinerGetsGtDone(t *testing.T) {
 		runPrimeCompactResume(ctx)
 	})
 
-	if !strings.Contains(output, "gt done") {
-		t.Fatalf("compact/resume for miner must remind about gt done, got:\n%s", output)
+	if !strings.Contains(output, "ms done") {
+		t.Fatalf("compact/resume for miner must remind about ms done, got:\n%s", output)
 	}
 }
 
 // TestCompactResumeReminder_NonMinerNoGtDone verifies that non-miner roles
-// do NOT get the gt done reminder (it's miner-specific).
+// do NOT get the ms done reminder (it's miner-specific).
 func TestCompactResumeReminder_NonMinerNoGtDone(t *testing.T) {
 	ctx := RoleContext{Role: RoleCrew}
 	primeHookSource = "compact"
@@ -1085,8 +1085,8 @@ func TestCompactResumeReminder_NonMinerNoGtDone(t *testing.T) {
 		runPrimeCompactResume(ctx)
 	})
 
-	if strings.Contains(output, "gt done") {
-		t.Fatalf("compact/resume for non-miner should NOT mention gt done, got:\n%s", output)
+	if strings.Contains(output, "ms done") {
+		t.Fatalf("compact/resume for non-miner should NOT mention ms done, got:\n%s", output)
 	}
 }
 

@@ -13,7 +13,7 @@ import (
 // an error when the command binary doesn't exist, instead of leaving a dead session.
 func TestNewSessionWithCommand_BadBinary(t *testing.T) {
 	tm := newTestTmux(t)
-	session := "gt-test-badbinary-" + t.Name()
+	session := "ms-test-badbinary-" + t.Name()
 	_ = tm.KillSession(session)
 	defer func() { _ = tm.KillSession(session) }()
 
@@ -28,7 +28,7 @@ func TestNewSessionWithCommand_BadBinary(t *testing.T) {
 // non-existent directories before creating the session.
 func TestNewSessionWithCommand_BadWorkDir(t *testing.T) {
 	tm := newTestTmux(t)
-	session := "gt-test-badworkdir-" + t.Name()
+	session := "ms-test-badworkdir-" + t.Name()
 	_ = tm.KillSession(session)
 	defer func() { _ = tm.KillSession(session) }()
 
@@ -42,11 +42,11 @@ func TestNewSessionWithCommand_BadWorkDir(t *testing.T) {
 // startup pattern (exec env VAR=val binary) returns an error for missing binaries.
 func TestNewSessionWithCommand_ExecEnvBadBinary(t *testing.T) {
 	tm := newTestTmux(t)
-	session := "gt-test-execenv-bad-" + t.Name()
+	session := "ms-test-execenv-bad-" + t.Name()
 	_ = tm.KillSession(session)
 	defer func() { _ = tm.KillSession(session) }()
 
-	cmd := `exec env GT_TEST=1 GT_ROLE=test /nonexistent/claude-code --settings /tmp`
+	cmd := `exec env MS_TEST=1 MS_ROLE=test /nonexistent/claude-code --settings /tmp`
 	err := tm.NewSessionWithCommand(session, "", cmd)
 	if err == nil {
 		t.Error("NewSessionWithCommand should return error for exec env with missing binary")
@@ -56,7 +56,7 @@ func TestNewSessionWithCommand_ExecEnvBadBinary(t *testing.T) {
 // TestNewSessionWithCommand_Success verifies a valid command runs and produces output.
 func TestNewSessionWithCommand_Success(t *testing.T) {
 	tm := newTestTmux(t)
-	session := "gt-test-success-" + t.Name()
+	session := "ms-test-success-" + t.Name()
 	_ = tm.KillSession(session)
 	defer func() { _ = tm.KillSession(session) }()
 
@@ -76,11 +76,11 @@ func TestNewSessionWithCommand_Success(t *testing.T) {
 // with a real binary.
 func TestNewSessionWithCommand_ExecEnvSuccess(t *testing.T) {
 	tm := newTestTmux(t)
-	session := "gt-test-execenv-ok-" + t.Name()
+	session := "ms-test-execenv-ok-" + t.Name()
 	_ = tm.KillSession(session)
 	defer func() { _ = tm.KillSession(session) }()
 
-	cmd := `exec env GT_RIG=testrig GT_MINER=testcat sleep 5`
+	cmd := `exec env MS_RIG=testrig MS_MINER=testcat sleep 5`
 	err := tm.NewSessionWithCommand(session, t.TempDir(), cmd)
 	if err != nil {
 		t.Fatalf("NewSessionWithCommand failed: %v", err)
@@ -96,7 +96,7 @@ func TestNewSessionWithCommand_ExecEnvSuccess(t *testing.T) {
 // TestNewSessionWithCommand_Duplicate verifies duplicate session creation is rejected.
 func TestNewSessionWithCommand_Duplicate(t *testing.T) {
 	tm := newTestTmux(t)
-	session := "gt-test-dup-" + t.Name()
+	session := "ms-test-dup-" + t.Name()
 	_ = tm.KillSession(session)
 	defer func() { _ = tm.KillSession(session) }()
 
@@ -114,7 +114,7 @@ func TestNewSessionWithCommand_Duplicate(t *testing.T) {
 func TestNewSessionWithCommand_Concurrent(t *testing.T) {
 	tm := newTestTmux(t)
 	n := 5
-	base := "gt-test-concurrent-"
+	base := "ms-test-concurrent-"
 
 	for i := 0; i < n; i++ {
 		_ = tm.KillSession(base + string(rune('a'+i)))
@@ -148,7 +148,7 @@ func TestNewSessionWithCommand_Concurrent(t *testing.T) {
 // pane command remains a shell (agent never started).
 func TestWaitForCommand_Timeout(t *testing.T) {
 	tm := newTestTmux(t)
-	session := "gt-test-waitcmd-" + t.Name()
+	session := "ms-test-waitcmd-" + t.Name()
 	_ = tm.KillSession(session)
 	defer func() { _ = tm.KillSession(session) }()
 
@@ -223,7 +223,7 @@ func TestContainsRewindIndicators(t *testing.T) {
 // TestSendMessageToTarget_Chunking verifies that long messages are chunked.
 func TestSendMessageToTarget_Chunking(t *testing.T) {
 	tm := newTestTmux(t)
-	session := "gt-test-chunk-" + t.Name()
+	session := "ms-test-chunk-" + t.Name()
 	_ = tm.KillSession(session)
 	defer func() { _ = tm.KillSession(session) }()
 

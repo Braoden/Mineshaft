@@ -39,71 +39,71 @@ This is THE command for assigning work in Mineshaft. It handles:
 Auto-Minecart:
   When slinging a single issue (not a formula), sling automatically creates
   a minecart to track the work unless --no-minecart is specified. This ensures
-  all work appears in 'gt minecart list', even "swarm of one" assignments.
+  all work appears in 'ms minecart list', even "swarm of one" assignments.
 
-  gt sling gt-abc mineshaft              # Creates "Work: <issue-title>" minecart
-  gt sling gt-abc mineshaft --no-minecart  # Skip auto-minecart creation
+  ms sling ms-abc mineshaft              # Creates "Work: <issue-title>" minecart
+  ms sling ms-abc mineshaft --no-minecart  # Skip auto-minecart creation
 
 Merge Strategy (--merge):
   Controls how completed work lands. Stored on the auto-minecart.
-  gt sling gt-abc mineshaft --merge=direct  # Push branch directly to main
-  gt sling gt-abc mineshaft --merge=mr      # Merge queue (default)
-  gt sling gt-abc mineshaft --merge=local   # Keep on feature branch
+  ms sling ms-abc mineshaft --merge=direct  # Push branch directly to main
+  ms sling ms-abc mineshaft --merge=mr      # Merge queue (default)
+  ms sling ms-abc mineshaft --merge=local   # Keep on feature branch
 
 Target Resolution:
-  gt sling gt-abc                       # Self (current agent)
-  gt sling gt-abc crew                  # Crew worker in current rig
-  gt sling gp-abc greenplace               # Auto-spawn miner in rig
-  gt sling gt-abc greenplace/Toast         # Specific miner
-  gt sling gt-abc mineshaft --crew mel    # Crew member mel in mineshaft
-  gt sling gt-abc overseer                 # Overseer
-  gt sling gt-abc supervisor/dogs           # Auto-dispatch to idle dog
-  gt sling gt-abc supervisor/dogs/alpha     # Specific dog
+  ms sling ms-abc                       # Self (current agent)
+  ms sling ms-abc crew                  # Crew worker in current rig
+  ms sling gp-abc greenplace               # Auto-spawn miner in rig
+  ms sling ms-abc greenplace/Toast         # Specific miner
+  ms sling ms-abc mineshaft --crew mel    # Crew member mel in mineshaft
+  ms sling ms-abc overseer                 # Overseer
+  ms sling ms-abc supervisor/dogs           # Auto-dispatch to idle dog
+  ms sling ms-abc supervisor/dogs/alpha     # Specific dog
 
 Spawning Options (when target is a rig):
-  gt sling gp-abc greenplace --create               # Create miner if missing
-  gt sling gp-abc greenplace --force                # Ignore unread mail
-  gt sling gp-abc greenplace --account work         # Use specific Claude account
+  ms sling gp-abc greenplace --create               # Create miner if missing
+  ms sling gp-abc greenplace --force                # Ignore unread mail
+  ms sling gp-abc greenplace --account work         # Use specific Claude account
 
 Natural Language Args:
-  gt sling gt-abc --args "patch release"
-  gt sling code-review --args "focus on security"
+  ms sling ms-abc --args "patch release"
+  ms sling code-review --args "focus on security"
 
-The --args string is stored in the bead and shown via gt prime. Since the
+The --args string is stored in the bead and shown via ms prime. Since the
 executor is an LLM, it interprets these instructions naturally.
 
 Stdin Mode (for shell-quoting-safe multi-line content):
-  echo "review for security issues" | gt sling gt-abc mineshaft --stdin
-  gt sling gt-abc mineshaft --stdin <<'EOF'
+  echo "review for security issues" | ms sling ms-abc mineshaft --stdin
+  ms sling ms-abc mineshaft --stdin <<'EOF'
   Focus on:
   1. SQL injection in query builders
   2. XSS in template rendering
   EOF
 
   # With --args on CLI, stdin goes to --message:
-  echo "Extra context here" | gt sling gt-abc mineshaft --args "patch release" --stdin
+  echo "Extra context here" | ms sling ms-abc mineshaft --args "patch release" --stdin
 
 Formula Slinging:
-  gt sling mol-release overseer/           # Cook + wisp + attach + nudge
-  gt sling towers-of-hanoi --var disks=3
+  ms sling mol-release overseer/           # Cook + wisp + attach + nudge
+  ms sling towers-of-hanoi --var disks=3
 
 Formula-on-Bead (--on flag):
-  gt sling mol-review --on gt-abc       # Apply formula to existing work
-  gt sling shiny --on gt-abc crew       # Apply formula, sling to crew
+  ms sling mol-review --on ms-abc       # Apply formula to existing work
+  ms sling shiny --on ms-abc crew       # Apply formula, sling to crew
 
 Compare:
-  gt hook <bead>      # Just attach (no action)
-  gt sling <bead>     # Attach + start now (keep context)
-  gt handoff <bead>   # Attach + restart (fresh context)
+  ms hook <bead>      # Just attach (no action)
+  ms sling <bead>     # Attach + start now (keep context)
+  ms handoff <bead>   # Attach + restart (fresh context)
 
 The propulsion principle: if it's on your hook, YOU RUN IT.
 
 Batch Slinging:
-  gt sling gt-abc gt-def gt-ghi mineshaft   # Sling multiple beads to a rig
-  gt sling gt-abc gt-def mineshaft --max-concurrent 3  # Spawn 3 at a time
+  ms sling ms-abc ms-def ms-ghi mineshaft   # Sling multiple beads to a rig
+  ms sling ms-abc ms-def mineshaft --max-concurrent 3  # Spawn 3 at a time
 
   When multiple beads are provided with a rig target, each bead gets its own
-  miner. This parallelizes work dispatch without running gt sling N times.
+  miner. This parallelizes work dispatch without running ms sling N times.
   Use --max-concurrent to throttle spawn rate and prevent Dolt server overload.`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runSling,
@@ -177,7 +177,7 @@ var slingRespawnResetCmd = &cobra.Command{
 	Short: "Reset the respawn counter for a bead",
 	Long: `Reset the per-bead respawn counter so it can be slung again.
 
-When a bead hits the respawn limit (3 attempts), gt sling blocks further
+When a bead hits the respawn limit (3 attempts), ms sling blocks further
 dispatches to prevent spawn storms. After investigating the root cause,
 use this command to allow re-dispatch.`,
 	Args: cobra.ExactArgs(1),
@@ -213,17 +213,17 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 		telemetry.RecordSling(ctx, bead, target, retErr)
 	}()
 	// Miners cannot sling - check early before writing anything.
-	// Check GT_ROLE first: coordinators (overseer, witness, etc.) may have a stale
-	// GT_MINER in their environment from spawning miners. Only block if the
+	// Check MS_ROLE first: coordinators (overseer, witness, etc.) may have a stale
+	// MS_MINER in their environment from spawning miners. Only block if the
 	// parsed role is actually miner (handles compound forms like
-	// "mineshaft/miners/Toast"). If GT_ROLE is unset, fall back to GT_MINER.
-	if role := os.Getenv("GT_ROLE"); role != "" {
+	// "mineshaft/miners/Toast"). If MS_ROLE is unset, fall back to MS_MINER.
+	if role := os.Getenv("MS_ROLE"); role != "" {
 		parsedRole, _, _ := parseRoleString(role)
 		if parsedRole == RoleMiner {
-			return fmt.Errorf("miners cannot sling (use gt done for handoff)")
+			return fmt.Errorf("miners cannot sling (use ms done for handoff)")
 		}
-	} else if minerName := os.Getenv("GT_MINER"); minerName != "" {
-		return fmt.Errorf("miners cannot sling (use gt done for handoff)")
+	} else if minerName := os.Getenv("MS_MINER"); minerName != "" {
+		return fmt.Errorf("miners cannot sling (use ms done for handoff)")
 	}
 
 	// Validate --merge flag if provided
@@ -254,7 +254,7 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 		fmt.Printf("%s --pr %d resolved to branch %s\n", style.Dim.Render("→"), slingResumePR, resolved)
 	}
 
-	// Disable Dolt auto-commit for all bd commands run during sling (gt-u6n6a).
+	// Disable Dolt auto-commit for all bd commands run during sling (ms-u6n6a).
 	// Under concurrent load (batch slinging), auto-commits from individual bd writes
 	// cause manifest contention and 'database is read only' errors. The Dolt server
 	// handles commits — individual auto-commits are unnecessary.
@@ -296,7 +296,7 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 	townBeadsDir := filepath.Join(townRoot, ".beads")
 
 	// Normalize target arguments: trim trailing slashes from target to handle tab-completion
-	// artifacts like "gt sling sl-123 slingshot/" → "gt sling sl-123 slingshot"
+	// artifacts like "ms sling sl-123 slingshot/" → "ms sling sl-123 slingshot"
 	// This makes sling more forgiving without breaking existing functionality.
 	// Note: Internal agent IDs like "overseer/" are outputs, not user inputs.
 	for i := range args {
@@ -304,10 +304,10 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 	}
 
 	// --crew flag: expand target from "<rig>" to "<rig>/crew/<name>"
-	// e.g., "gt sling gt-abc mineshaft --crew mel" → target becomes "mineshaft/crew/mel"
+	// e.g., "ms sling ms-abc mineshaft --crew mel" → target becomes "mineshaft/crew/mel"
 	if slingCrew != "" {
 		if len(args) < 2 {
-			return fmt.Errorf("--crew requires a rig target argument (e.g., gt sling <bead> <rig> --crew %s)", slingCrew)
+			return fmt.Errorf("--crew requires a rig target argument (e.g., ms sling <bead> <rig> --crew %s)", slingCrew)
 		}
 		target := args[len(args)-1]
 		args[len(args)-1] = target + "/crew/" + slingCrew
@@ -335,8 +335,8 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 	}
 
 	// Batch mode detection: multiple beads with optional rig target
-	// Pattern A (explicit rig):  gt sling gt-abc gt-def gt-ghi mineshaft
-	// Pattern B (auto-resolve):  gt sling gt-abc gt-def gt-ghi
+	// Pattern A (explicit rig):  ms sling ms-abc ms-def ms-ghi mineshaft
+	// Pattern B (auto-resolve):  ms sling ms-abc ms-def ms-ghi
 	// When len(args) > 2 and last arg is a rig, sling each bead to its own miner.
 	// When all args look like bead IDs, auto-resolve the rig from their prefix.
 	if len(args) > 2 {
@@ -348,7 +348,7 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 				for _, id := range beadIDs {
 					idType, typeErr := detectSchedulerIDType(id)
 					if typeErr == nil && idType != "task" {
-						return fmt.Errorf("%s '%s' cannot be batch-scheduled with an explicit rig\nUse: gt sling %s (children auto-resolve rigs)", idType, id, id)
+						return fmt.Errorf("%s '%s' cannot be batch-scheduled with an explicit rig\nUse: ms sling %s (children auto-resolve rigs)", idType, id, id)
 					}
 				}
 				return runBatchSchedule(beadIDs, rigName, townRoot)
@@ -370,7 +370,7 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 	}
 
 	// Deferred routing: formula-on-bead with rig target
-	// gt sling mol-review --on gt-abc mineshaft  (when max_miners > 0)
+	// ms sling mol-review --on ms-abc mineshaft  (when max_miners > 0)
 	if deferred && slingOnTarget != "" && len(args) >= 2 {
 		rigName, isRig := IsRigName(args[len(args)-1])
 		if isRig {
@@ -401,11 +401,11 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 	}
 
 	// Deferred routing: formula-on-bead without explicit rig (auto-resolve from bead prefix)
-	// gt sling mol-review --on gt-abc  (when max_miners > 0, no explicit rig arg)
+	// ms sling mol-review --on ms-abc  (when max_miners > 0, no explicit rig arg)
 	if deferred && slingOnTarget != "" {
 		if len(args) >= 2 {
 			// Non-rig last arg with --on in deferred mode — give clear error
-			return fmt.Errorf("'%s' is not a known rig\nUse: gt sling %s --on %s <rig>", args[len(args)-1], args[0], slingOnTarget)
+			return fmt.Errorf("'%s' is not a known rig\nUse: ms sling %s --on %s <rig>", args[len(args)-1], args[0], slingOnTarget)
 		}
 		// Auto-resolve rig from bead prefix
 		townRoot, twErr := workspace.FindFromCwdOrError()
@@ -414,7 +414,7 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 		}
 		rigName := resolveRigForBead(townRoot, slingOnTarget)
 		if rigName == "" {
-			return fmt.Errorf("cannot resolve rig for bead %s\nSpecify explicitly: gt sling %s --on %s <rig>", slingOnTarget, args[0], slingOnTarget)
+			return fmt.Errorf("cannot resolve rig for bead %s\nSpecify explicitly: ms sling %s --on %s <rig>", slingOnTarget, args[0], slingOnTarget)
 		}
 		formulaName := args[0]
 		if slingHookRawBead {
@@ -448,7 +448,7 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 			// (children auto-resolve their rigs)
 			idType, err := detectSchedulerIDType(args[0])
 			if err == nil && idType != "task" {
-				return fmt.Errorf("%s cannot be scheduled with an explicit rig\nUse: gt sling %s (children auto-resolve rigs)",
+				return fmt.Errorf("%s cannot be scheduled with an explicit rig\nUse: ms sling %s (children auto-resolve rigs)",
 					idType, args[0])
 			}
 			if verifyBeadExists(args[0]) != nil {
@@ -491,7 +491,7 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 		// scheduler is active (bead aa-4yf2).
 		if _, isDog := IsDogTarget(args[1]); !isDog {
 			// Non-rig, non-dog target in deferred mode — reject to prevent bypassing capacity control
-			return fmt.Errorf("deferred dispatch requires a rig target: gt sling %s <rig>\n'%s' is not a known rig", args[0], args[1])
+			return fmt.Errorf("deferred dispatch requires a rig target: ms sling %s <rig>\n'%s' is not a known rig", args[0], args[1])
 		}
 		// else: fall through to direct dispatch path below (resolveTarget handles dogs).
 	}
@@ -545,11 +545,11 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 		}
 		// task bead with deferred + no rig: error — must specify a rig
 		if deferred {
-			return fmt.Errorf("deferred dispatch requires a rig target: gt sling %s <rig>", args[0])
+			return fmt.Errorf("deferred dispatch requires a rig target: ms sling %s <rig>", args[0])
 		}
 	}
 
-	// 2-bead auto-resolve: gt sling gt-abc gt-def
+	// 2-bead auto-resolve: ms sling ms-abc ms-def
 	if len(args) == 2 && allBeadIDs(args) {
 		if _, isRig := IsRigName(args[1]); !isRig {
 			rigName, err := resolveRigFromBeadIDs(args, filepath.Dir(townBeadsDir))
@@ -566,7 +566,7 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 	attachedMoleculeID := ""
 
 	if slingOnTarget != "" {
-		// Formula-on-bead mode: gt sling <formula> --on <bead>
+		// Formula-on-bead mode: ms sling <formula> --on <bead>
 		formulaName = args[0]
 		beadID = slingOnTarget
 		// Verify both exist
@@ -587,13 +587,13 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 		} else {
 			// Not a verified bead - try as standalone formula
 			if err := verifyFormulaExists(firstArg, townRoot, townRoot); err == nil {
-				// Standalone formula mode: gt sling <formula> [target]
+				// Standalone formula mode: ms sling <formula> [target]
 				// Deferred dispatch is handled above for the 2-arg rig case (gh#3917).
 				return runSlingFormula(ctx, args)
 			}
 			// Not a formula either - check if it looks like a bead ID (routing issue workaround).
 			// Accept it and let the actual bd update fail later if the bead doesn't exist.
-			// This fixes: gt sling bd-ka761 beads/crew/dave failing with 'not a valid bead or formula'
+			// This fixes: ms sling bd-ka761 beads/crew/dave failing with 'not a valid bead or formula'
 			if looksLikeBeadID(firstArg) {
 				beadID = firstArg
 			} else {
@@ -618,7 +618,7 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 		return fmt.Errorf("checking bead status: %w", err)
 	}
 
-	// Guard against slinging beads with flag-like titles (gt-e0kx5).
+	// Guard against slinging beads with flag-like titles (ms-e0kx5).
 	// These are garbage beads created by flag-parsing bugs. Slinging them
 	// causes dispatch loops where miners bounce the work.
 	if beads.IsFlagLikeTitle(info.Title) {
@@ -631,7 +631,7 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 		return fmt.Errorf("bead %s is %s (work already completed)", beadID, info.Status)
 	}
 
-	// Guard against slinging deferred beads (gt-1326mw).
+	// Guard against slinging deferred beads (ms-1326mw).
 	// Deferred work (e.g., "deferred to post-launch") should not consume miner slots.
 	// Use --force to override when intentionally re-activating deferred work.
 	if isDeferredBead(info) && !slingForce {
@@ -642,7 +642,7 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 	originalAssignee := info.Assignee
 	force := slingForce // local copy to avoid mutating package-level flag
 	if (info.Status == "pinned" || info.Status == "hooked" || info.Status == "in_progress") && !force {
-		// Auto-force when hooked/in_progress agent's session is confirmed dead (gt-pqf9x, GH#1380).
+		// Auto-force when hooked/in_progress agent's session is confirmed dead (ms-pqf9x, GH#1380).
 		// This eliminates the #1 friction in minecart feeding: stale hooks from
 		// dead miners blocking re-sling without --force.
 		// IMPORTANT: Stale-hook check must run BEFORE idempotency check so that
@@ -764,13 +764,13 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 		slingVars = append(slingVars, fmt.Sprintf("base_branch=%s", newMinerInfo.BaseBranch))
 	}
 	// Inject resume_branch var when the miner was attached to an existing branch
-	// (gh#3602: gt sling --branch / --pr). Lets formulas tell the miner it is
+	// (gh#3602: ms sling --branch / --pr). Lets formulas tell the miner it is
 	// resuming an existing PR instead of creating a fresh branch.
 	if slingResumeBranch != "" {
 		slingVars = append(slingVars, fmt.Sprintf("resume_branch=%s", slingResumeBranch))
 	}
 
-	// Cross-rig guard: prevent slinging beads to miners in the wrong rig (gt-myecw).
+	// Cross-rig guard: prevent slinging beads to miners in the wrong rig (ms-myecw).
 	// Miners work in their rig's worktree and cannot fix code owned by another rig.
 	// Skip for self-sling (user knows what they're doing) and --force overrides.
 	if strings.Contains(targetAgent, "/miners/") && !force && !isSelfSling {
@@ -795,9 +795,9 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 			fmt.Printf("Would unhook %s from previous assignee\n", beadID)
 		} else {
 
-			// Determine requester identity from env vars, fall back to "gt-sling"
-			requester := "gt-sling"
-			if miner := os.Getenv("GT_MINER"); miner != "" {
+			// Determine requester identity from env vars, fall back to "ms-sling"
+			requester := "ms-sling"
+			if miner := os.Getenv("MS_MINER"); miner != "" {
 				requester = miner
 			} else if user := os.Getenv("USER"); user != "" {
 				requester = user
@@ -815,7 +815,7 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 					router := mail.NewRouter(townRoot)
 					defer router.WaitPendingNotifications()
 					shutdownMsg := &mail.Message{
-						From:     "gt-sling",
+						From:     "ms-sling",
 						To:       fmt.Sprintf("%s/witness", oldRigName),
 						Subject:  fmt.Sprintf("LIFECYCLE:Shutdown %s", oldMinerName),
 						Body:     fmt.Sprintf("Reason: work_reassigned\nRequestedBy: %s\nBead: %s\nNewAssignee: %s", requester, beadID, targetAgent),
@@ -971,8 +971,8 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 		// Record attached molecule - will be stored in BASE bead (not wisp).
 		// The base bead is hooked, and its attached_molecule points to the wisp.
 		// This enables:
-		// - gt hook/gt prime: read base bead, follow attached_molecule to show wisp steps
-		// - gt done: close attached_molecule (wisp) first, then close base bead
+		// - ms hook/ms prime: read base bead, follow attached_molecule to show wisp steps
+		// - ms done: close attached_molecule (wisp) first, then close base bead
 		// - Compound resolution: base bead -> attached_molecule -> wisp
 		attachedMoleculeID = result.WispRootID
 		if len(result.FormulaVars) > 0 {
@@ -982,12 +982,12 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 
 		// NOTE: We intentionally keep beadID as the ORIGINAL base bead, not the wisp.
 		// The base bead is hooked so that:
-		// 1. gt done closes both the base bead AND the attached molecule (wisp)
+		// 1. ms done closes both the base bead AND the attached molecule (wisp)
 		// 2. The base bead's attached_molecule field points to the wisp for compound resolution
 		// Previously, this line incorrectly set beadID = wispRootID, causing:
 		// - Wisp hooked instead of base bead
 		// - attached_molecule stored as self-reference in wisp (meaningless)
-		// - Base bead left orphaned after gt done
+		// - Base bead left orphaned after ms done
 	}
 
 	actor := detectActor()
@@ -1058,7 +1058,7 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 
 	// Update agent bead's hook_bead field (ZFC: agents track their current work)
 	// Skip if hook was already set atomically during miner spawn - avoids "agent bead not found"
-	// error when miner redirect setup fails (GH #gt-mzyk5: agent bead created in rig beads
+	// error when miner redirect setup fails (GH #ms-mzyk5: agent bead created in rig beads
 	// but updateAgentHookBead looks in miner's local beads if redirect is missing).
 	if !hookSetAtomically {
 		updateAgentHookBead(targetAgent, beadID, hookWorkDir, townBeadsDir)
@@ -1086,7 +1086,7 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 	}
 
 	// Start delayed dog session now that hook is set
-	// This ensures dog sees the hook when gt prime runs on session start
+	// This ensures dog sees the hook when ms prime runs on session start
 	if delayedDogInfo != nil {
 		pane, err := delayedDogInfo.StartDelayedSession()
 		if err != nil {
@@ -1096,13 +1096,13 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 	}
 
 	// Start miner session now that attached_molecule is set.
-	// This ensures miner sees the molecule when gt prime runs on session start.
+	// This ensures miner sees the molecule when ms prime runs on session start.
 	freshlySpawned := newMinerInfo != nil
 	if freshlySpawned {
 		pane, err := newMinerInfo.StartSession()
 		if err != nil {
 			// Rollback: session failed, clean up zombie artifacts (worktree, hooked bead).
-			// Without rollback, next sling attempt fails with "bead already hooked" (gt-jn40ft).
+			// Without rollback, next sling attempt fails with "bead already hooked" (ms-jn40ft).
 			rollbackSpawnedMiner("Session failed")
 			return fmt.Errorf("starting miner session: %w", err)
 		}
@@ -1119,14 +1119,14 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 		// Self-sling: agent already knows about the work (just slung it)
 		fmt.Printf("%s Self-sling: work hooked, will process on next turn\n", style.Dim.Render("○"))
 	} else if targetPane == "" {
-		fmt.Printf("%s No pane to nudge (agent will discover work via gt prime)\n", style.Dim.Render("○"))
+		fmt.Printf("%s No pane to nudge (agent will discover work via ms prime)\n", style.Dim.Render("○"))
 	} else {
 		// Ensure agent is ready before nudging (prevents race condition where
 		// message arrives before Claude has fully started - see issue #115)
 		sessionName := getSessionFromPane(targetPane)
 		if sessionName != "" {
 			if err := ensureAgentReady(sessionName); err != nil {
-				// Non-fatal: warn and continue, agent will discover work via gt prime
+				// Non-fatal: warn and continue, agent will discover work via ms prime
 				fmt.Printf("%s Could not verify agent ready: %v\n", style.Dim.Render("○"), err)
 			}
 		}
@@ -1134,7 +1134,7 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 		if err := injectStartPrompt(targetPane, beadID, slingSubject, slingArgs); err != nil {
 			// Graceful fallback for no-tmux mode
 			fmt.Printf("%s Could not nudge (no tmux?): %v\n", style.Dim.Render("○"), err)
-			fmt.Printf("  Agent will discover work via gt prime / bd show\n")
+			fmt.Printf("  Agent will discover work via ms prime / bd show\n")
 		} else {
 			fmt.Printf("%s Start prompt sent\n", style.Bold.Render("▶"))
 		}
@@ -1149,7 +1149,7 @@ func runSling(cmd *cobra.Command, args []string) (retErr error) {
 //
 // When the prefix maps to town root, the guard warns rather than errors: this
 // ambiguous case arises when a crew member's redirect chain is broken and their
-// rig's .beads dir shares the town-level database and prefix (gt-gbu). Blocking
+// rig's .beads dir shares the town-level database and prefix (ms-gbu). Blocking
 // here would silently swallow all miner work for the affected rig.
 //
 // Truly unknown prefixes (not in routes.jsonl at all) are still hard-rejected.
@@ -1183,9 +1183,9 @@ func checkCrossRigGuard(beadID, targetAgent, townRoot string) error {
 			// Known town-root prefix — warn but allow. A crew member may have a
 			// broken redirect chain causing rig beads to land in the town DB with
 			// the town prefix. Blocking here silently drops all their miner work
-			// (gt-gbu). The miner will surface any true mismatch on execution.
+			// (ms-gbu). The miner will surface any true mismatch on execution.
 			fmt.Printf("  %s Bead %s has prefix %q (town root) but target is rig %q — "+
-				"proceeding (broken redirect chain? see gt-gbu)\n",
+				"proceeding (broken redirect chain? see ms-gbu)\n",
 				style.Warning.Render("⚠"), beadID, strings.TrimSuffix(beadPrefix, "-"), targetRig)
 			return nil
 		}
@@ -1343,7 +1343,7 @@ func tryAcquireSlingAssigneeLock(townRoot, targetAgent string) (func(), error) {
 }
 
 // resolvePRBranch resolves a GitHub PR number to its head branch name via `gh pr view`.
-// Used by `gt sling --pr <number>` to convert the PR number into a branch name that
+// Used by `ms sling --pr <number>` to convert the PR number into a branch name that
 // the miner worktree can check out.
 func resolvePRBranch(prNumber int) (string, error) {
 	cmd := exec.Command("gh", "pr", "view", fmt.Sprintf("%d", prNumber), "--json", "headRefName", "-q", ".headRefName")

@@ -9,7 +9,7 @@ import (
 // is present (agent prompt visible), the function returns quickly without error.
 func TestAcceptWorkspaceTrustDialog_NoDialog(t *testing.T) {
 	tm := newTestTmux(t)
-	sessionName := "gt-test-trust-nodlg-" + t.Name()
+	sessionName := "ms-test-trust-nodlg-" + t.Name()
 
 	_ = tm.KillSession(sessionName)
 	if err := tm.NewSession(sessionName, ""); err != nil {
@@ -37,7 +37,7 @@ func TestAcceptWorkspaceTrustDialog_NoDialog(t *testing.T) {
 // text appears in the pane, it is detected and accepted (Enter key sent).
 func TestAcceptWorkspaceTrustDialog_DetectsDialog(t *testing.T) {
 	tm := newTestTmux(t)
-	sessionName := "gt-test-trust-dlg-" + t.Name()
+	sessionName := "ms-test-trust-dlg-" + t.Name()
 
 	_ = tm.KillSession(sessionName)
 	if err := tm.NewSession(sessionName, ""); err != nil {
@@ -65,7 +65,7 @@ func TestAcceptWorkspaceTrustDialog_DetectsDialog(t *testing.T) {
 // workspace trust prompt is treated as a trust dialog instead of an agent prompt.
 func TestAcceptWorkspaceTrustDialog_DetectsCodexDialog(t *testing.T) {
 	tm := newTestTmux(t)
-	sessionName := "gt-test-trust-codex-" + t.Name()
+	sessionName := "ms-test-trust-codex-" + t.Name()
 
 	_ = tm.KillSession(sessionName)
 	if err := tm.NewSession(sessionName, ""); err != nil {
@@ -87,7 +87,7 @@ func TestAcceptWorkspaceTrustDialog_DetectsCodexDialog(t *testing.T) {
 // permissions dialog is present, the function returns quickly without error.
 func TestAcceptBypassPermissionsWarning_NoDialog(t *testing.T) {
 	tm := newTestTmux(t)
-	sessionName := "gt-test-bypass-nodlg-" + t.Name()
+	sessionName := "ms-test-bypass-nodlg-" + t.Name()
 
 	_ = tm.KillSession(sessionName)
 	if err := tm.NewSession(sessionName, ""); err != nil {
@@ -112,7 +112,7 @@ func TestAcceptBypassPermissionsWarning_NoDialog(t *testing.T) {
 // permissions dialog text appears in the pane, it is detected and accepted.
 func TestAcceptBypassPermissionsWarning_DetectsDialog(t *testing.T) {
 	tm := newTestTmux(t)
-	sessionName := "gt-test-bypass-dlg-" + t.Name()
+	sessionName := "ms-test-bypass-dlg-" + t.Name()
 
 	_ = tm.KillSession(sessionName)
 	if err := tm.NewSession(sessionName, ""); err != nil {
@@ -136,7 +136,7 @@ func TestAcceptBypassPermissionsWarning_DetectsDialog(t *testing.T) {
 // quickly when no dialogs are present.
 func TestAcceptStartupDialogs_NoDialogs(t *testing.T) {
 	tm := newTestTmux(t)
-	sessionName := "gt-test-startup-nodlg-" + t.Name()
+	sessionName := "ms-test-startup-nodlg-" + t.Name()
 
 	_ = tm.KillSession(sessionName)
 	if err := tm.NewSession(sessionName, ""); err != nil {
@@ -164,7 +164,7 @@ func TestAcceptWorkspaceTrustDialog_InvalidSession(t *testing.T) {
 	tm := newTestTmux(t)
 
 	// Should not panic or hang — should return nil after timeout
-	err := tm.AcceptWorkspaceTrustDialog("gt-nonexistent-session-xyz")
+	err := tm.AcceptWorkspaceTrustDialog("ms-nonexistent-session-xyz")
 	// CapturePane errors are retried until timeout, then returns nil
 	if err != nil {
 		t.Fatalf("expected nil error for nonexistent session, got: %v", err)
@@ -310,7 +310,7 @@ Bypass Permissions mode
 // sends keys without error on a valid session (no screen-scraping).
 func TestDismissStartupDialogsBlind_SendsKeys(t *testing.T) {
 	tm := newTestTmux(t)
-	sessionName := "gt-test-blind-dismiss-" + t.Name()
+	sessionName := "ms-test-blind-dismiss-" + t.Name()
 
 	_ = tm.KillSession(sessionName)
 	if err := tm.NewSession(sessionName, ""); err != nil {
@@ -338,7 +338,7 @@ func TestDismissStartupDialogsBlind_SendsKeys(t *testing.T) {
 func TestDismissStartupDialogsBlind_InvalidSession(t *testing.T) {
 	tm := newTestTmux(t)
 
-	err := tm.DismissStartupDialogsBlind("gt-nonexistent-session-blind-xyz")
+	err := tm.DismissStartupDialogsBlind("ms-nonexistent-session-blind-xyz")
 	// Should return an error since the session doesn't exist
 	if err == nil {
 		t.Error("expected error for nonexistent session, got nil")

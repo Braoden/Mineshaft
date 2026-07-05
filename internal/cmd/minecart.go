@@ -50,7 +50,7 @@ func generateShortIDFromReader(r io.Reader) string {
 }
 
 // looksLikeIssueID checks if a string looks like a beads issue ID.
-// Issue IDs have the format: prefix-id (e.g., gt-abc, bd-xyz, hq-123).
+// Issue IDs have the format: prefix-id (e.g., ms-abc, bd-xyz, hq-123).
 func looksLikeIssueID(s string) bool {
 	// Check registry prefixes and legacy fallbacks via centralized helper
 	if session.HasKnownPrefix(s) {
@@ -108,7 +108,7 @@ const (
 	// status could not be resolved — typically a cross-rig bead whose rig DB
 	// is missing, parked, or unroutable from the minecart owner's cwd. Distinct
 	// from "open" so auto-close does not mistake it for pending work and
-	// `gt minecart status` can label it clearly. (gt-bs6 / GH#2786)
+	// `ms minecart status` can label it clearly. (ms-bs6 / GH#2786)
 	trackedStatusUnknown = "unknown"
 )
 
@@ -203,7 +203,7 @@ WHAT IS A SWARM:
 
 TRACKING SEMANTICS:
   - 'tracks' relation is non-blocking (tracked issues don't block minecart)
-  - Cross-prefix capable (minecart in hq-* tracks issues in gt-*, bd-*)
+  - Cross-prefix capable (minecart in hq-* tracks issues in ms-*, bd-*)
   - Landed: all tracked issues closed → notification sent to subscribers
 
 COMMANDS:
@@ -235,17 +235,17 @@ The --merge flag sets the merge strategy for all work in the minecart:
   local   Keep on feature branch (for upstream PRs, human review)
 
 Examples:
-  gt minecart create "Deploy v2.0" gt-abc bd-xyz
-  gt minecart create "Release prep" gt-abc --notify           # defaults to overseer/
-  gt minecart create "Release prep" gt-abc --notify ops/      # notify ops/
-  gt minecart create "Feature rollout" gt-a gt-b --owner overseer/ --notify ops/
-  gt minecart create "Feature rollout" gt-a gt-b gt-c --molecule mol-release
-  gt minecart create --owned "Manual deploy" gt-abc           # caller-managed lifecycle
-  gt minecart create "Quick fix" gt-abc --merge=direct        # bypass refinery
+  ms minecart create "Deploy v2.0" ms-abc bd-xyz
+  ms minecart create "Release prep" ms-abc --notify           # defaults to overseer/
+  ms minecart create "Release prep" ms-abc --notify ops/      # notify ops/
+  ms minecart create "Feature rollout" ms-a ms-b --owner overseer/ --notify ops/
+  ms minecart create "Feature rollout" ms-a ms-b ms-c --molecule mol-release
+  ms minecart create --owned "Manual deploy" ms-abc           # caller-managed lifecycle
+  ms minecart create "Quick fix" ms-abc --merge=direct        # bypass refinery
 
   # Auto-discover issues from an epic's children:
-  gt minecart create --from-epic gt-epic-abc
-  gt minecart create --from-epic gt-epic-abc --owned --merge=direct`,
+  ms minecart create --from-epic ms-epic-abc
+  ms minecart create --from-epic ms-epic-abc --owned --merge=direct`,
 	Args:         cobra.ArbitraryArgs,
 	SilenceUsage: true,
 	RunE:         runMinecartCreate,
@@ -269,11 +269,11 @@ var minecartListCmd = &cobra.Command{
 	Long: `List minecarts, showing open minecarts by default.
 
 Examples:
-  gt minecart list              # Open minecarts only (default)
-  gt minecart list --all        # All minecarts (open + closed)
-  gt minecart list --status=closed  # Recently landed
-  gt minecart list --tree       # Show minecart + child status tree
-  gt minecart list --json`,
+  ms minecart list              # Open minecarts only (default)
+  ms minecart list --all        # All minecarts (open + closed)
+  ms minecart list --status=closed  # Recently landed
+  ms minecart list --tree       # Show minecart + child status tree
+  ms minecart list --json`,
 	SilenceUsage: true,
 	RunE:         runMinecartList,
 }
@@ -286,8 +286,8 @@ var minecartAddCmd = &cobra.Command{
 If the minecart is closed, it will be automatically reopened.
 
 Examples:
-  gt minecart add hq-cv-abc gt-new-issue
-  gt minecart add hq-cv-abc gt-issue1 gt-issue2 gt-issue3`,
+  ms minecart add hq-cv-abc ms-new-issue
+  ms minecart add hq-cv-abc ms-issue1 ms-issue2 ms-issue3`,
 	Args:         cobra.MinimumNArgs(2),
 	SilenceUsage: true,
 	RunE:         runMinecartAdd,
@@ -306,9 +306,9 @@ in rig beads won't auto-close via bd close alone. This command bridges that gap.
 Can be run manually or by supervisor patrol to ensure minecarts close promptly.
 
 Examples:
-  gt minecart check              # Check all open minecarts
-  gt minecart check hq-cv-abc    # Check specific minecart
-  gt minecart check --dry-run    # Preview what would close without acting`,
+  ms minecart check              # Check all open minecarts
+  ms minecart check hq-cv-abc    # Check specific minecart
+  ms minecart check --dry-run    # Preview what would close without acting`,
 	Args:         cobra.MaximumNArgs(1),
 	SilenceUsage: true,
 	RunE:         runMinecartCheck,
@@ -330,8 +330,8 @@ Use this to detect minecarts that need feeding or cleanup. The Supervisor patrol
 runs this periodically and dispatches dogs to feed stranded minecarts.
 
 Examples:
-  gt minecart stranded              # Show stranded minecarts
-  gt minecart stranded --json       # Machine-readable output for automation`,
+  ms minecart stranded              # Show stranded minecarts
+  ms minecart stranded --json       # Machine-readable output for automation`,
 	SilenceUsage: true,
 	RunE:         runMinecartStranded,
 }
@@ -347,10 +347,10 @@ close. Use --force to close regardless of tracked issue status.
 The close is idempotent - closing an already-closed minecart is a no-op.
 
 Examples:
-  gt minecart close hq-cv-abc                           # Close (all items must be done)
-  gt minecart close hq-cv-abc --force                   # Force close abandoned minecart
-  gt minecart close hq-cv-abc --reason="no longer needed" --force
-  gt minecart close hq-cv-xyz --notify overseer/`,
+  ms minecart close hq-cv-abc                           # Close (all items must be done)
+  ms minecart close hq-cv-abc --force                   # Force close abandoned minecart
+  ms minecart close hq-cv-abc --reason="no longer needed" --force
+  ms minecart close hq-cv-xyz --notify overseer/`,
 	Args:         cobra.ExactArgs(1),
 	SilenceUsage: true,
 	RunE:         runMinecartClose,
@@ -365,19 +365,19 @@ This is the caller-managed equivalent of the witness/refinery merge pipeline.
 Use this to explicitly land a minecart when you're satisfied with the results.
 
 The command:
-  1. Verifies the minecart has the gt:owned label (refuses non-owned minecarts)
+  1. Verifies the minecart has the ms:owned label (refuses non-owned minecarts)
   2. Checks all tracked issues are done/closed (use --force to override)
   3. Cleans up miner worktrees associated with the minecart's tracked issues
   4. Closes the minecart bead with reason "Landed by owner"
   5. Sends completion notifications to owner/notify addresses
 
-Use 'gt minecart close' instead for non-owned minecarts.
+Use 'ms minecart close' instead for non-owned minecarts.
 
 Examples:
-  gt minecart land hq-cv-abc                  # Land owned minecart
-  gt minecart land hq-cv-abc --force          # Land even with open issues
-  gt minecart land hq-cv-abc --keep-worktrees # Skip worktree cleanup
-  gt minecart land hq-cv-abc --dry-run        # Preview what would happen`,
+  ms minecart land hq-cv-abc                  # Land owned minecart
+  ms minecart land hq-cv-abc --force          # Land even with open issues
+  ms minecart land hq-cv-abc --keep-worktrees # Skip worktree cleanup
+  ms minecart land hq-cv-abc --dry-run        # Preview what would happen`,
 	Args:         cobra.ExactArgs(1),
 	SilenceUsage: true,
 	RunE:         runMinecartLand,
@@ -744,7 +744,7 @@ func runMinecartCreate(cmd *cobra.Command, args []string) error {
 	} else {
 		// Standard mode: explicit issue list
 		if len(args) == 0 {
-			return fmt.Errorf("at least one argument is required\nUsage: gt minecart create <name> <issue-id> [issue-id...]\n       gt minecart create --from-epic <epic-id>")
+			return fmt.Errorf("at least one argument is required\nUsage: ms minecart create <name> <issue-id> [issue-id...]\n       ms minecart create --from-epic <epic-id>")
 		}
 		name = args[0]
 		trackedIssues = args[1:]
@@ -761,7 +761,7 @@ func runMinecartCreate(cmd *cobra.Command, args []string) error {
 		}
 
 		if len(trackedIssues) == 0 {
-			return fmt.Errorf("at least one issue ID is required\nUsage: gt minecart create <name> <issue-id> [issue-id...]")
+			return fmt.Errorf("at least one issue ID is required\nUsage: ms minecart create <name> <issue-id> [issue-id...]")
 		}
 	}
 
@@ -802,7 +802,7 @@ func runMinecartCreate(cmd *cobra.Command, args []string) error {
 	}
 	description = beads.SetMinecartFields(&beads.Issue{Description: description}, minecartFieldValues)
 
-	// Guard against flag-like minecart names (gt-e0kx5)
+	// Guard against flag-like minecart names (ms-e0kx5)
 	if beads.IsFlagLikeTitle(name) {
 		return fmt.Errorf("refusing to create minecart: name %q looks like a CLI flag", name)
 	}
@@ -874,7 +874,7 @@ func runMinecartCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	if minecartOwned {
-		fmt.Printf("\n  %s\n", style.Dim.Render("Owned minecart: caller manages lifecycle via gt minecart land"))
+		fmt.Printf("\n  %s\n", style.Dim.Render("Owned minecart: caller manages lifecycle via ms minecart land"))
 	} else {
 		fmt.Printf("\n  %s\n", style.Dim.Render("Minecart auto-closes when all tracked issues complete"))
 	}
@@ -1030,7 +1030,7 @@ func closeMinecartIfComplete(townBeads, minecartID, title string, tracked []trac
 			// counted as complete
 		case trackedStatusUnknown:
 			// Cross-rig DB unreachable — can't verify completion. Leave minecart
-			// open, treat as Info (not a minecart-level failure). (gt-bs6)
+			// open, treat as Info (not a minecart-level failure). (ms-bs6)
 			allClosed = false
 			unknownCount++
 		default:
@@ -1260,7 +1260,7 @@ func sendCloseNotification(addr, minecartID, title, reason string) {
 	body := fmt.Sprintf("Minecart %s has been closed.\n\nReason: %s", minecartID, reason)
 
 	mailArgs := []string{"mail", "send", addr, "-s", subject, "-m", body}
-	mailCmd := exec.Command("gt", mailArgs...)
+	mailCmd := exec.Command("ms", mailArgs...)
 	if err := mailCmd.Run(); err != nil {
 		style.PrintWarning("couldn't send notification: %v", err)
 	} else {
@@ -1305,9 +1305,9 @@ func runMinecartLand(cmd *cobra.Command, args []string) error {
 	}
 
 	// Verify the minecart is owned
-	if !hasLabel(minecart.Labels, "gt:owned") {
+	if !hasLabel(minecart.Labels, "ms:owned") {
 		return fmt.Errorf("minecart '%s' is not an owned minecart\n  Only minecarts created with --owned can be landed.\n  Use %s instead for non-owned minecarts.",
-			minecartID, style.Bold.Render("gt minecart close"))
+			minecartID, style.Bold.Render("ms minecart close"))
 	}
 
 	// Check if already closed
@@ -1469,11 +1469,11 @@ func findMinecartWorktrees(tracked []trackedIssueInfo) []minecartWorktreeInfo {
 	return worktrees
 }
 
-// removeMinerWorktree removes a miner worktree via gt miner remove.
+// removeMinerWorktree removes a miner worktree via ms miner remove.
 func removeMinerWorktree(wt minecartWorktreeInfo) error {
-	// gt miner remove accepts rig/miner format
+	// ms miner remove accepts rig/miner format
 	target := fmt.Sprintf("%s/%s", wt.rigName, wt.minerName)
-	cmd := exec.Command("gt", "miner", "remove", target, "--force")
+	cmd := exec.Command("ms", "miner", "remove", target, "--force")
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 
@@ -1558,7 +1558,7 @@ func runMinecartStranded(cmd *cobra.Command, args []string) error {
 	if len(feedable) > 0 {
 		fmt.Println("To feed stranded minecarts, run:")
 		for _, s := range feedable {
-			fmt.Printf("  gt sling mol-minecart-feed supervisor/dogs --var minecart=%s\n", s.ID)
+			fmt.Printf("  ms sling mol-minecart-feed supervisor/dogs --var minecart=%s\n", s.ID)
 		}
 	}
 	if len(needsAttention) > 0 {
@@ -1576,7 +1576,7 @@ func runMinecartStranded(cmd *cobra.Command, args []string) error {
 		}
 		fmt.Println("To close empty minecarts, run:")
 		for _, s := range empty {
-			fmt.Printf("  gt minecart check %s\n", s.ID)
+			fmt.Printf("  ms minecart check %s\n", s.ID)
 		}
 	}
 	fmt.Println()
@@ -1627,7 +1627,7 @@ func findStrandedMinecarts(townBeads string) ([]strandedMinecartInfo, error) {
 
 		// Find ready issues (open, not blocked, no live assignee, slingable).
 		// Town-level beads (hq- prefix with path=".") are excluded because
-		// they can't be dispatched via gt sling -- they're handled by the supervisor.
+		// they can't be dispatched via ms sling -- they're handled by the supervisor.
 		// Non-slingable types (epics, minecarts, etc.) are also excluded.
 
 		// Batch-check scheduling status for all tracked issues (single DB query).
@@ -1739,7 +1739,7 @@ func isReadyIssue(t trackedIssueInfo, scheduledSet map[string]bool) bool {
 	return false // Session exists = worker is active
 }
 
-// isSlingableBead reports whether a bead can be dispatched via gt sling.
+// isSlingableBead reports whether a bead can be dispatched via ms sling.
 // Town-level beads (hq- prefix with path=".") and beads with unknown
 // prefixes are not slingable — they're handled by the supervisor/overseer.
 func isSlingableBead(townRoot, beadID string) bool {
@@ -1868,7 +1868,7 @@ func notifyMinecartCompletion(townBeads, minecartID, title string) {
 		mailArgs := []string{"mail", "send", addr,
 			"-s", fmt.Sprintf("🚚 Minecart landed: %s", title),
 			"-m", fmt.Sprintf("Minecart %s has completed.\n\nAll tracked issues are now closed.", minecartID)}
-		mailCmd := exec.Command("gt", mailArgs...)
+		mailCmd := exec.Command("ms", mailArgs...)
 		if err := mailCmd.Run(); err != nil {
 			style.PrintWarning("could not notify %s: %v", addr, err)
 		}
@@ -1877,7 +1877,7 @@ func notifyMinecartCompletion(townBeads, minecartID, title string) {
 	// Send nudge notifications to nudge watchers.
 	for _, addr := range fields.NudgeNotificationAddresses() {
 		nudgeMsg := fmt.Sprintf("🚚 Minecart landed: %s — Minecart %s has completed. All tracked issues are now closed.", title, minecartID)
-		nudgeCmd := exec.Command("gt", "nudge", addr, "-m", nudgeMsg)
+		nudgeCmd := exec.Command("ms", "nudge", addr, "-m", nudgeMsg)
 		if err := nudgeCmd.Run(); err != nil {
 			style.PrintWarning("could not nudge %s: %v", addr, err)
 		}
@@ -1888,7 +1888,7 @@ func notifyMinecartCompletion(townBeads, minecartID, title string) {
 		mailArgs := []string{"mail", "send", "overseer/",
 			"-s", fmt.Sprintf("Minecart complete: %s", title),
 			"-m", overseerBody}
-		mailCmd := exec.Command("gt", mailArgs...)
+		mailCmd := exec.Command("ms", mailArgs...)
 		if err := mailCmd.Run(); err != nil {
 			style.PrintWarning("could not notify overseer/ of minecart completion: %v", err)
 		}
@@ -1918,7 +1918,7 @@ func notifyOverseerSession(townBeads, minecartID, title string) {
 	}
 
 	nudgeMsg := fmt.Sprintf("🚚 Minecart landed: %s — Minecart %s has completed. All tracked issues are now closed.", title, minecartID)
-	nudgeCmd := exec.Command("gt", "nudge", "overseer", "-m", nudgeMsg)
+	nudgeCmd := exec.Command("ms", "nudge", "overseer", "-m", nudgeMsg)
 	if err := nudgeCmd.Run(); err != nil {
 		style.PrintWarning("could not nudge Overseer session: %v", err)
 	}
@@ -1974,7 +1974,7 @@ func runMinecartStatus(cmd *cobra.Command, args []string) error {
 	minecart := minecarts[0]
 
 	// Check if minecart is owned (caller-managed lifecycle)
-	isOwned := hasLabel(minecart.Labels, "gt:owned")
+	isOwned := hasLabel(minecart.Labels, "ms:owned")
 
 	tracked, err := getTrackedIssues(townBeads, minecartID)
 	if err != nil {
@@ -2077,7 +2077,7 @@ func runMinecartStatus(cmd *cobra.Command, args []string) error {
 
 	// Hint for owned minecarts when all issues are complete
 	if isOwned && completed == len(tracked) && len(tracked) > 0 && normalizeMinecartStatus(minecart.Status) == minecartStatusOpen {
-		fmt.Printf("\n  %s\n", style.Dim.Render("All issues complete. Land with: gt minecart land "+minecartID))
+		fmt.Printf("\n  %s\n", style.Dim.Render("All issues complete. Land with: ms minecart land "+minecartID))
 	}
 
 	return nil
@@ -2091,7 +2091,7 @@ func showAllMinecartStatus(townBeads string) error {
 
 	if len(minecarts) == 0 {
 		fmt.Println("No active minecarts.")
-		fmt.Println("Create a minecart with: gt minecart create <name> [issues...]")
+		fmt.Println("Create a minecart with: ms minecart create <name> [issues...]")
 		return nil
 	}
 
@@ -2104,12 +2104,12 @@ func showAllMinecartStatus(townBeads string) error {
 	fmt.Printf("%s\n\n", style.Bold.Render("Active Minecarts"))
 	for _, c := range minecarts {
 		ownedTag := ""
-		if hasLabel(c.Labels, "gt:owned") {
+		if hasLabel(c.Labels, "ms:owned") {
 			ownedTag = " " + style.Warning.Render("[owned]")
 		}
 		fmt.Printf("  🚚 %s: %s%s\n", c.ID, c.Title, ownedTag)
 	}
-	fmt.Printf("\nUse 'gt minecart status <id>' for detailed status.\n")
+	fmt.Printf("\nUse 'ms minecart status <id>' for detailed status.\n")
 
 	return nil
 }
@@ -2169,7 +2169,7 @@ func runMinecartList(cmd *cobra.Command, args []string) error {
 
 	if len(minecarts) == 0 {
 		fmt.Println("No minecarts found.")
-		fmt.Println("Create a minecart with: gt minecart create <name> [issues...]")
+		fmt.Println("Create a minecart with: ms minecart create <name> [issues...]")
 		return nil
 	}
 
@@ -2182,12 +2182,12 @@ func runMinecartList(cmd *cobra.Command, args []string) error {
 	for i, c := range minecarts {
 		status := formatMinecartStatus(c.Status)
 		ownedTag := ""
-		if hasLabel(c.Labels, "gt:owned") {
+		if hasLabel(c.Labels, "ms:owned") {
 			ownedTag = " " + style.Warning.Render("[owned]")
 		}
 		fmt.Printf("  %d. 🚚 %s: %s %s%s\n", i+1, c.ID, c.Title, status, ownedTag)
 	}
-	fmt.Printf("\nUse 'gt minecart status <id>' or 'gt minecart status <n>' for detailed view.\n")
+	fmt.Printf("\nUse 'ms minecart status <id>' or 'ms minecart status <n>' for detailed view.\n")
 
 	return nil
 }
@@ -2217,7 +2217,7 @@ func printMinecartTree(townBeads string, minecarts []minecartListIssue) error {
 			progress = fmt.Sprintf(" (%d/%d)", completed, total)
 		}
 		ownedTag := ""
-		if hasLabel(c.Labels, "gt:owned") {
+		if hasLabel(c.Labels, "ms:owned") {
 			ownedTag = " " + style.Warning.Render("[owned]")
 		}
 		fmt.Printf("🚚 %s: %s%s%s\n", c.ID, c.Title, progress, ownedTag)
@@ -2251,7 +2251,7 @@ func printMinecartTree(townBeads string, minecarts []minecartListIssue) error {
 }
 
 // hasLabel checks if a label exists in a list of labels.
-func hasLabel(labels []string, target string) bool { //nolint:unparam // target is always "gt:owned" today but the API is intentionally general
+func hasLabel(labels []string, target string) bool { //nolint:unparam // target is always "ms:owned" today but the API is intentionally general
 	for _, l := range labels {
 		if l == target {
 			return true
@@ -2271,18 +2271,18 @@ type minecartListIssue struct {
 }
 
 func isMinecartIssue(issueType string, labels []string) bool {
-	return issueType == "minecart" || hasLabel(labels, "gt:minecart")
+	return issueType == "minecart" || hasLabel(labels, "ms:minecart")
 }
 
 func minecartLabels(owned bool) string {
 	if owned {
-		return "gt:minecart,gt:owned"
+		return "ms:minecart,ms:owned"
 	}
-	return "gt:minecart"
+	return "ms:minecart"
 }
 
 func listMinecartIssues(townBeads, status string, all bool, extraLabels ...string) ([]minecartListIssue, error) {
-	args := []string{"list", "--label=gt:minecart", "--json", "--limit=0"}
+	args := []string{"list", "--label=ms:minecart", "--json", "--limit=0"}
 	for _, label := range extraLabels {
 		args = append(args, "--label="+label)
 	}
@@ -2419,8 +2419,8 @@ func applyFreshIssueDetails(dep *trackedDependency, details *issueDetails) {
 	}
 	// Always refresh labels unconditionally — bd dep list may return stale
 	// labels from dependency records, but bd show returns current bead labels.
-	// This ensures isReadyIssue sees accurate queue labels (gt:queued,
-	// gt:queue-dispatched) for cross-rig beads. Assigning even when fresh
+	// This ensures isReadyIssue sees accurate queue labels (ms:queued,
+	// ms:queue-dispatched) for cross-rig beads. Assigning even when fresh
 	// labels are empty clears stale queue labels that would otherwise
 	// suppress stranded issue detection.
 	dep.Labels = details.Labels
@@ -2466,7 +2466,7 @@ func getTrackedIssues(townBeads, minecartID string) ([]trackedIssueInfo, error) 
 	// Build tracked dependency structs from fresh details. When fresh details
 	// are missing (cross-rig DB unreachable, missing, parked, or unroutable
 	// from town root), mark the dep with trackedStatusUnknown so callers can
-	// distinguish it from a legitimately open bead. (gt-bs6)
+	// distinguish it from a legitimately open bead. (ms-bs6)
 	var deps []trackedDependency
 	for _, id := range trackedIDs {
 		dep := trackedDependency{
@@ -2764,7 +2764,7 @@ func getWorkersForIssues(issueIDs []string) map[string]*workerInfo {
 		go func(workDir string) {
 			defer wg.Done()
 
-			out, err := BdCmd("list", "--label=gt:agent", "--status=open", "--json", "--limit=0", "--flat").
+			out, err := BdCmd("list", "--label=ms:agent", "--status=open", "--json", "--limit=0", "--flat").
 				Dir(workDir).
 				StripBeadsDir().
 				Stderr(io.Discard).
@@ -2827,8 +2827,8 @@ func getWorkersForIssues(issueIDs []string) map[string]*workerInfo {
 }
 
 // parseWorkerFromAgentBead extracts worker identity from agent bead ID.
-// Input: "gt-mineshaft-miner-nux" -> Output: "mineshaft/miner/nux"
-// Input: "gt-beads-crew-amber" -> Output: "beads/crew/amber"
+// Input: "ms-mineshaft-miner-nux" -> Output: "mineshaft/miner/nux"
+// Input: "ms-beads-crew-amber" -> Output: "beads/crew/amber"
 func parseWorkerFromAgentBead(agentID string) string {
 	rig, role, name, ok := beads.ParseAgentBeadID(agentID)
 	if !ok {
@@ -2877,7 +2877,7 @@ func runMinecartTUI() error {
 }
 
 // resolveMinecartNumber converts a numeric shortcut (1, 2, 3...) to a minecart ID.
-// Numbers correspond to the order shown in 'gt minecart list'.
+// Numbers correspond to the order shown in 'ms minecart list'.
 func resolveMinecartNumber(townBeads string, n int) (string, error) {
 	minecarts, err := listMinecartIssues(townBeads, "", false)
 	if err != nil {

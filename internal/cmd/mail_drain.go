@@ -43,11 +43,11 @@ By default, only archives protocol messages older than 30 minutes.
 Use --max-age to change the threshold, or --all to drain regardless of age.
 
 Examples:
-  gt mail drain                              # Drain own inbox (30m default)
-  gt mail drain --identity mineshaft/witness   # Drain witness inbox
-  gt mail drain --max-age 1h                 # Only drain messages >1h old
-  gt mail drain --all                        # Drain all protocol messages
-  gt mail drain --dry-run                    # Preview what would be drained`,
+  ms mail drain                              # Drain own inbox (30m default)
+  ms mail drain --identity mineshaft/witness   # Drain witness inbox
+  ms mail drain --max-age 1h                 # Only drain messages >1h old
+  ms mail drain --all                        # Drain all protocol messages
+  ms mail drain --dry-run                    # Preview what would be drained`,
 	RunE: runMailDrain,
 }
 

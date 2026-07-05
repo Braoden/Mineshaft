@@ -34,7 +34,7 @@ T3="$(bd create --silent "cursor-runtime: Process hygiene — orphan, doctor (YO
 T4="$(bd create --silent "cursor-runtime: Web API — detect cursor-agent and copilot in pane" --type=task -p 2 -l cursor-runtime --parent "$EPIC" \
   -d "internal/web/api.go isClaudeRunningInSession. Plan §2.")"
 T5="$(bd create --silent "cursor-runtime: Docs + CLI — Cursor clarity and full built-in lists" --type=task -p 2 -l cursor-runtime --parent "$EPIC" \
-  -d "§4+§4b: internal/cmd/config.go help (full built-ins incl. cursor). README prerequisites (Cursor Agent CLI). docs/INSTALLING.md, docs/reference.md — preset cursor vs binaries cursor-agent/agent; align lists with README (pi, omp). Optional otel GT_AGENT. Plan §4, §4b.")"
+  -d "§4+§4b: internal/cmd/config.go help (full built-ins incl. cursor). README prerequisites (Cursor Agent CLI). docs/INSTALLING.md, docs/reference.md — preset cursor vs binaries cursor-agent/agent; align lists with README (pi, omp). Optional otel MS_AGENT. Plan §4, §4b.")"
 T6="$(bd create --silent "cursor-runtime: Tests for cursor preset + related packages (§11)" --type=task -p 2 -l cursor-runtime --parent "$EPIC" \
   -d "TestEnsureSettingsForRole_CursorUsesWorkDir; orphan/down, web, doctor tests; go test ./internal/config/... ./internal/hooks/... ./internal/crew/... ./internal/tmux/... ./internal/runtime/... Plan §6, §11.")"
 T7="$(bd create --silent "cursor-runtime: Add .cursor/skills/ (Mineshaft + cursor-agent ops)" --type=task -p 2 -l cursor-runtime --parent "$EPIC" \

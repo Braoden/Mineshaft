@@ -70,17 +70,17 @@ func TestIsTestPollution(t *testing.T) {
 	}{
 		{
 			name:     "normal issue",
-			record:   map[string]interface{}{"id": "gt-abc1", "title": "Fix login bug"},
+			record:   map[string]interface{}{"id": "ms-abc1", "title": "Fix login bug"},
 			expected: false,
 		},
 		{
 			name:     "title starts with Test Issue",
-			record:   map[string]interface{}{"id": "gt-xyz2", "title": "Test Issue for validation"},
+			record:   map[string]interface{}{"id": "ms-xyz2", "title": "Test Issue for validation"},
 			expected: true,
 		},
 		{
 			name:     "title starts with test issue lowercase",
-			record:   map[string]interface{}{"id": "gt-xyz2", "title": "test issue for validation"},
+			record:   map[string]interface{}{"id": "ms-xyz2", "title": "test issue for validation"},
 			expected: true,
 		},
 		{
@@ -120,17 +120,17 @@ func TestIsTestPollution(t *testing.T) {
 		},
 		{
 			name:     "title starts with test_",
-			record:   map[string]interface{}{"id": "gt-ok1", "title": "test_something"},
+			record:   map[string]interface{}{"id": "ms-ok1", "title": "test_something"},
 			expected: true,
 		},
 		{
 			name:     "title starts with test space",
-			record:   map[string]interface{}{"id": "gt-ok1", "title": "test something"},
+			record:   map[string]interface{}{"id": "ms-ok1", "title": "test something"},
 			expected: true,
 		},
 		{
 			name:     "normal id with test in middle",
-			record:   map[string]interface{}{"id": "gt-test1", "title": "Normal title"},
+			record:   map[string]interface{}{"id": "ms-test1", "title": "Normal title"},
 			expected: false,
 		},
 		{
@@ -162,10 +162,10 @@ func TestIsTestPollution(t *testing.T) {
 
 func TestFilterTestPollution(t *testing.T) {
 	// Build JSONL with mix of good and bad records.
-	good1, _ := json.Marshal(map[string]interface{}{"id": "gt-abc1", "title": "Fix bug"})
-	good2, _ := json.Marshal(map[string]interface{}{"id": "gt-def2", "title": "Add feature"})
+	good1, _ := json.Marshal(map[string]interface{}{"id": "ms-abc1", "title": "Fix bug"})
+	good2, _ := json.Marshal(map[string]interface{}{"id": "ms-def2", "title": "Add feature"})
 	bad1, _ := json.Marshal(map[string]interface{}{"id": "bd-1", "title": "test thing"})
-	bad2, _ := json.Marshal(map[string]interface{}{"id": "gt-xyz3", "title": "Test Issue 42"})
+	bad2, _ := json.Marshal(map[string]interface{}{"id": "ms-xyz3", "title": "Test Issue 42"})
 
 	input := string(good1) + "\n" + string(bad1) + "\n" + string(good2) + "\n" + string(bad2) + "\n"
 
@@ -194,8 +194,8 @@ func TestFilterTestPollution(t *testing.T) {
 }
 
 func TestFilterTestPollution_NoRemoval(t *testing.T) {
-	good1, _ := json.Marshal(map[string]interface{}{"id": "gt-abc1", "title": "Fix bug"})
-	good2, _ := json.Marshal(map[string]interface{}{"id": "gt-def2", "title": "Add feature"})
+	good1, _ := json.Marshal(map[string]interface{}{"id": "ms-abc1", "title": "Fix bug"})
+	good2, _ := json.Marshal(map[string]interface{}{"id": "ms-def2", "title": "Add feature"})
 	input := string(good1) + "\n" + string(good2) + "\n"
 
 	filtered, removed := filterTestPollution([]byte(input))

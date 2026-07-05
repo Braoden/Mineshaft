@@ -44,7 +44,7 @@ Load the closed issue and identify cross-rig dependents.
 
 **1. Check your assignment:**
 ```bash
-gt hook               # Shows hook_bead = resolved issue ID
+ms hook               # Shows hook_bead = resolved issue ID
 bd show {{resolved_issue}}  # Full issue details
 ```
 
@@ -62,11 +62,11 @@ bd show {{resolved_issue}}
 
 **4. Identify cross-rig dependents:**
 - Same-rig dependents: Already handled by local beads (automatic unblock)
-- Cross-rig dependents: Different prefix (e.g., gt- vs bd-) need propagation
+- Cross-rig dependents: Different prefix (e.g., ms- vs bd-) need propagation
 
 ```bash
-# Example: resolved_issue is bd-xxx, blocks gt-yyy
-# gt-yyy is cross-rig and needs notification
+# Example: resolved_issue is bd-xxx, blocks ms-yyy
+# ms-yyy is cross-rig and needs notification
 ```
 
 **Exit criteria:** Resolved issue loaded, cross-rig dependents identified."""
@@ -111,13 +111,13 @@ description = """
 Send notifications to Witnesses of affected rigs.
 
 **1. Group dependents by rig:**
-- mineshaft/witness: for gt-* issues
+- mineshaft/witness: for ms-* issues
 - beads/witness: for bd-* issues
 - etc.
 
 **2. For each affected rig, send notification:**
 ```bash
-gt mail send <rig>/witness -s "Dependency resolved: {{resolved_issue}}" -m "$(cat <<EOF
+ms mail send <rig>/witness -s "Dependency resolved: {{resolved_issue}}" -m "$(cat <<EOF
 External dependency has closed, unblocking work in your rig.
 
 ## Resolved Issue
@@ -167,7 +167,7 @@ bd show <issue-id>
 **3. If triggering dispatch:**
 ```bash
 # For high priority, suggest to Overseer:
-gt mail send overseer/ -s "High-priority work unblocked: <issue>" -m "..."
+ms mail send overseer/ -s "High-priority work unblocked: <issue>" -m "..."
 ```
 
 Usually, the Witness notification (previous step) is sufficient - Witnesses
@@ -184,7 +184,7 @@ Signal work complete and return to available pool.
 
 **1. Signal completion to Supervisor:**
 ```bash
-gt mail send supervisor/ -s "DOG_DONE $(hostname)" -m "Task: dep-propagate
+ms mail send supervisor/ -s "DOG_DONE $(hostname)" -m "Task: dep-propagate
 Resolved: {{resolved_issue}}
 Cross-rig dependents: {{dependent_count}}
 Witnesses notified: {{witness_list}}

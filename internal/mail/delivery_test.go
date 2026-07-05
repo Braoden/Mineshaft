@@ -207,7 +207,7 @@ func TestDeliveryPendingRemovalNeeded(t *testing.T) {
 		labels []string
 		want   bool
 	}{
-		{"no delivery labels", []string{"gt:message"}, false},
+		{"no delivery labels", []string{"ms:message"}, false},
 		{"pending only", []string{DeliveryLabelPending}, false},
 		{"partial ack keeps pending", []string{DeliveryLabelPending, "delivery-acked-by:mineshaft/worker", "delivery-acked-at:2026-02-17T12:00:00Z"}, false},
 		{"pending and acked converges", []string{DeliveryLabelPending, DeliveryLabelAcked}, true},

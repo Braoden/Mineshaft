@@ -30,12 +30,12 @@ completion. If all tracked issues in a minecart are closed, the minecart
 is auto-closed.
 
 Examples:
-  gt close gt-abc              # Close bead gt-abc
-  gt close gt-abc gt-def       # Close multiple beads
-  gt close --reason "Done"     # Close with reason
-  gt close --comment "Done"    # Same as --reason (alias)
-  gt close --force             # Force close pinned beads
-  gt close gt-abc --cascade    # Close gt-abc and all its children`,
+  ms close ms-abc              # Close bead ms-abc
+  ms close ms-abc ms-def       # Close multiple beads
+  ms close --reason "Done"     # Close with reason
+  ms close --comment "Done"    # Same as --reason (alias)
+  ms close --force             # Force close pinned beads
+  ms close ms-abc --cascade    # Close ms-abc and all its children`,
 	DisableFlagParsing: true, // Pass all flags through to bd close
 	RunE:               runClose,
 }
@@ -50,7 +50,7 @@ func runClose(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Extract --cascade flag before passing to bd (gt-only flag)
+	// Extract --cascade flag before passing to bd (ms-only flag)
 	cascade, filteredArgs := extractCascadeFlag(args)
 
 	// Convert --comment to --reason (alias support)
@@ -263,7 +263,7 @@ func checkMinecartCompletion(beadIDs []string) {
 
 	gtPath, err := os.Executable()
 	if err != nil {
-		gtPath, _ = exec.LookPath("gt")
+		gtPath, _ = exec.LookPath("ms")
 		if gtPath == "" {
 			return
 		}

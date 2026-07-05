@@ -11,7 +11,7 @@ log() { echo "[gitignore-reconcile] $*"; }
 
 # --- Step 1: Enumerate rig repos ---------------------------------------------
 
-RIG_JSON=$(gt rig list --json 2>/dev/null || true)
+RIG_JSON=$(ms rig list --json 2>/dev/null || true)
 if [ -z "$RIG_JSON" ]; then
   log "SKIP: could not get rig list"
   exit 0
@@ -101,7 +101,7 @@ log "=== Summary ==="
 SUMMARY="gitignore-reconcile: $TOTAL_UNTRACKED file(s) untracked, $TOTAL_BEADS chore bead(s) created"
 log "$SUMMARY"
 
-gt plugin record-run --plugin gitignore-reconcile --result success \
+ms plugin record-run --plugin gitignore-reconcile --result success \
   --title "$SUMMARY" --description "$SUMMARY" >/dev/null 2>&1 || true
 
 log "Done."

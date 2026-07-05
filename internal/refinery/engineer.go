@@ -188,7 +188,7 @@ func DefaultMergeQueueConfig() *MergeQueueConfig {
 		RunTests:                true,
 		TestCommand:             "",
 		DeleteMergedBranches:    true,
-		GatesParallel:           true, // gt-8b2i: run gates concurrently (~2x speedup)
+		GatesParallel:           true, // ms-8b2i: run gates concurrently (~2x speedup)
 		RetryFlakyTests:         1,
 		PollInterval:            30 * time.Second,
 		MaxConcurrent:           1,
@@ -203,7 +203,7 @@ func DefaultMergeQueueConfig() *MergeQueueConfig {
 // MRInfo holds merge request information for display and processing.
 // This replaces mrqueue.MR after the mrqueue package removal.
 type MRInfo struct {
-	ID              string     // Bead ID (e.g., "gt-abc123")
+	ID              string     // Bead ID (e.g., "ms-abc123")
 	Branch          string     // Source branch (e.g., "miner/nux")
 	Target          string     // Target branch (e.g., "main")
 	SourceIssue     string     // The work item being merged
@@ -899,7 +899,7 @@ func (e *Engineer) recheckMRStillMergeable(mr *MRInfo, target string) ProcessRes
 		if beads.IssueStatus(strings.TrimSpace(mrIssue.Status)) != beads.StatusOpen {
 			return mergeIneligibleResult("MR %s status is %s", mrID, mrIssue.Status)
 		}
-		if beads.HasLabel(mrIssue, "gt:owned-direct") {
+		if beads.HasLabel(mrIssue, "ms:owned-direct") {
 			return e.rejectMRBeforeMerge(mr, "MR is owned-direct")
 		}
 
@@ -1020,7 +1020,7 @@ func refineryInternalIssueType(issueType string) bool {
 
 func refineryInternalIssueLabel(label string) bool {
 	switch strings.ToLower(strings.TrimSpace(label)) {
-	case "gt:wisp", "gt:message", "gt:handoff", "gt:merge-request", "gt:agent", "gt:queue", "gt:minecart", "gt:formula":
+	case "ms:wisp", "ms:message", "ms:handoff", "ms:merge-request", "ms:agent", "ms:queue", "ms:minecart", "ms:formula":
 		return true
 	default:
 		return false
@@ -1393,14 +1393,14 @@ func (e *Engineer) HandleMRInfoSuccess(mr *MRInfo, result ProcessResult) {
 	// 1. Close source issue with reference to MR.
 	// Use ForceCloseWithReason to bypass dependency checks — the source issue
 	// may have an attached molecule (wisp) whose open steps would block a
-	// normal close. This matches how gt done handles closures.
+	// normal close. This matches how ms done handles closures.
 	if mr.SourceIssue != "" {
 		closeReason := fmt.Sprintf("Merged in %s", mr.ID)
 		if result.MergeCommit != "" {
 			closeReason = fmt.Sprintf("%s\ntarget_branch: %s\ncommit_sha: %s", closeReason, mr.Target, result.MergeCommit)
 		}
 		if err := e.beads.ForceCloseWithReason(closeReason, mr.SourceIssue); err != nil {
-			// Check if already closed (by miner's gt done) — that's fine
+			// Check if already closed (by miner's ms done) — that's fine
 			if issue, showErr := e.beads.Show(mr.SourceIssue); showErr == nil && beads.IssueStatus(issue.Status).IsTerminal() {
 				_, _ = fmt.Fprintf(e.output, "[Engineer] Source issue already closed: %s\n", mr.SourceIssue)
 			} else {
@@ -1461,7 +1461,7 @@ func (e *Engineer) HandleMRInfoSuccess(mr *MRInfo, result ProcessResult) {
 	// dependent work. Without this, overseer only discovers completion by polling.
 	// Uses nudge (not mail) to avoid permanent Dolt commits for routine signals (GH#2434).
 	nudgeMsg := fmt.Sprintf("MERGED: %s issue=%s branch=%s", mr.ID, mr.SourceIssue, mr.Branch)
-	nudgeCmd := exec.Command("gt", "nudge", "overseer/", nudgeMsg)
+	nudgeCmd := exec.Command("ms", "nudge", "overseer/", nudgeMsg)
 	util.SetDetachedProcessGroup(nudgeCmd)
 	nudgeCmd.Dir = e.workDir
 	if err := nudgeCmd.Run(); err != nil {
@@ -1515,13 +1515,13 @@ func (e *Engineer) HandleMRInfoFailure(mr *MRInfo, result ProcessResult) {
 
 	// Branch-not-found: the remote branch doesn't exist. This can mean either
 	// the branch was cleanly cherry-picked to target, OR the miner's work was
-	// lost (e.g., worktree in /tmp wiped by reboot before gt done pushed).
+	// lost (e.g., worktree in /tmp wiped by reboot before ms done pushed).
 	// Escalate to overseer so lost work can be re-dispatched (gas-556).
 	if result.BranchNotFound {
 		_, _ = fmt.Fprintf(e.output, "[Engineer] MR %s: branch %s not found on remote — escalating to overseer (possible work loss)\n", mr.ID, mr.Branch)
 		overseerMsg := fmt.Sprintf("BRANCH_MISSING: MR %s branch=%s issue=%s worker=%s — branch not on origin, work may be lost; re-dispatch if needed",
 			mr.ID, mr.Branch, mr.SourceIssue, mr.Worker)
-		overseerCmd := exec.Command("gt", "nudge", "overseer/", overseerMsg)
+		overseerCmd := exec.Command("ms", "nudge", "overseer/", overseerMsg)
 		overseerCmd.Dir = e.workDir
 		if err := overseerCmd.Run(); err != nil {
 			_, _ = fmt.Fprintf(e.output, "[Engineer] Warning: failed to nudge overseer about missing branch: %v\n", err)
@@ -1541,9 +1541,9 @@ func (e *Engineer) HandleMRInfoFailure(mr *MRInfo, result ProcessResult) {
 	}
 	minerName := strings.TrimPrefix(mr.Worker, "miners/")
 	nudgeTarget := fmt.Sprintf("%s/%s", e.rig.Name, minerName)
-	nudgeMsg := fmt.Sprintf("MERGE_FAILED: branch=%s issue=%s type=%s error=%s — fix and resubmit with 'gt done'",
+	nudgeMsg := fmt.Sprintf("MERGE_FAILED: branch=%s issue=%s type=%s error=%s — fix and resubmit with 'ms done'",
 		mr.Branch, mr.SourceIssue, failureType, result.Error)
-	nudgeCmd := exec.Command("gt", "nudge", nudgeTarget, nudgeMsg)
+	nudgeCmd := exec.Command("ms", "nudge", nudgeTarget, nudgeMsg)
 	util.SetDetachedProcessGroup(nudgeCmd)
 	nudgeCmd.Dir = e.workDir
 	if err := nudgeCmd.Run(); err != nil {
@@ -1555,7 +1555,7 @@ func (e *Engineer) HandleMRInfoFailure(mr *MRInfo, result ProcessResult) {
 	// Nudge overseer about merge failure so dispatcher can unblock or reassign
 	// dependent work immediately. Mirrors the success nudge in HandleMRInfoSuccess.
 	overseerMsg := fmt.Sprintf("MERGE_FAILED: %s issue=%s branch=%s type=%s", mr.ID, mr.SourceIssue, mr.Branch, failureType)
-	overseerCmd := exec.Command("gt", "nudge", "overseer/", overseerMsg)
+	overseerCmd := exec.Command("ms", "nudge", "overseer/", overseerMsg)
 	util.SetDetachedProcessGroup(overseerCmd)
 	overseerCmd.Dir = e.workDir
 	if err := overseerCmd.Run(); err != nil {
@@ -1748,18 +1748,18 @@ The Refinery will automatically retry the merge after you force-push.`,
 	taskTitle := fmt.Sprintf("Resolve merge conflicts: %s", originalTitle)
 	task, err := e.beads.Create(beads.CreateOptions{
 		Title:       taskTitle,
-		Labels:      []string{"gt:task"},
+		Labels:      []string{"ms:task"},
 		Priority:    mr.Priority,
 		Description: description,
 		Actor:       e.rig.Name + "/refinery",
-		Rig:         e.rig.Name, // Ensure task lands in the rig's database (gt-7y7)
+		Rig:         e.rig.Name, // Ensure task lands in the rig's database (ms-7y7)
 	})
 	if err != nil {
 		releaseSlotOnError()
 		return "", fmt.Errorf("creating conflict resolution task: %w", err)
 	}
 
-	// gt-gpy: Validate task bead landed in the rig's database (warning only).
+	// ms-gpy: Validate task bead landed in the rig's database (warning only).
 	townRoot := filepath.Dir(e.rig.Path)
 	if prefixErr := beads.ValidateRigPrefix(townRoot, e.rig.Name, task.ID); prefixErr != nil {
 		_, _ = fmt.Fprintf(e.output, "[Engineer] WARNING: conflict task prefix mismatch: %v\n", prefixErr)
@@ -1958,7 +1958,7 @@ func (e *Engineer) firstOpenBlocker(issue *beads.Issue) string {
 // Sorted by priority (highest first).
 //
 // Uses bd list instead of bd ready because MRs are ephemeral beads and
-// bd ready filters out ephemeral issues (see gt-t5t6y). This matches the
+// bd ready filters out ephemeral issues (see ms-t5t6y). This matches the
 // pattern used by ListBlockedMRs and ListAllOpenMRs.
 func (e *Engineer) ListReadyMRs() ([]*MRInfo, error) {
 	// Query beads for all open merge-request issues.
@@ -1966,7 +1966,7 @@ func (e *Engineer) ListReadyMRs() ([]*MRInfo, error) {
 	// and MRs are ephemeral by design. Use List + manual blocker check instead.
 	issues, err := e.beads.ListMergeRequests(beads.ListOptions{
 		Status:   "open",
-		Label:    "gt:merge-request",
+		Label:    "ms:merge-request",
 		Priority: -1, // No priority filter
 		Rig:      e.rig.Name,
 	})
@@ -1987,10 +1987,10 @@ func (e *Engineer) ListReadyMRs() ([]*MRInfo, error) {
 			continue
 		}
 
-		// Belt-and-suspenders: skip MRs labeled gt:owned-direct.
-		// These MRs shouldn't exist (gt done skips MR creation for owned+direct
+		// Belt-and-suspenders: skip MRs labeled ms:owned-direct.
+		// These MRs shouldn't exist (ms done skips MR creation for owned+direct
 		// minecarts), but if one slips through, the refinery should not process it.
-		if beads.HasLabel(issue, "gt:owned-direct") {
+		if beads.HasLabel(issue, "ms:owned-direct") {
 			_, _ = fmt.Fprintf(e.output, "[Engineer] Skipping MR %s: owned+direct minecart (belt-and-suspenders)\n", issue.ID)
 			continue
 		}
@@ -2035,7 +2035,7 @@ func (e *Engineer) ListBlockedMRs() ([]*MRInfo, error) {
 	// Query all merge-request issues (both ready and blocked)
 	issues, err := e.beads.ListMergeRequests(beads.ListOptions{
 		Status:   "open",
-		Label:    "gt:merge-request",
+		Label:    "ms:merge-request",
 		Priority: -1, // No priority filter
 		Rig:      e.rig.Name,
 	})
@@ -2082,7 +2082,7 @@ func (e *Engineer) ListBlockedMRs() ([]*MRInfo, error) {
 func (e *Engineer) ListAllOpenMRs() ([]*MRInfo, error) {
 	issues, err := e.beads.ListMergeRequests(beads.ListOptions{
 		Status:   "open",
-		Label:    "gt:merge-request",
+		Label:    "ms:merge-request",
 		Priority: -1,
 		Rig:      e.rig.Name,
 	})
@@ -2124,7 +2124,7 @@ func (e *Engineer) ListAllOpenMRs() ([]*MRInfo, error) {
 func (e *Engineer) ListQueueAnomalies(now time.Time) ([]*MRAnomaly, error) {
 	issues, err := e.beads.ListMergeRequests(beads.ListOptions{
 		Status:   "open",
-		Label:    "gt:merge-request",
+		Label:    "ms:merge-request",
 		Priority: -1,
 		Rig:      e.rig.Name,
 	})
@@ -2228,13 +2228,13 @@ func (e *Engineer) ReleaseMR(mrID string) error {
 //
 // When a source issue is closed by a merge, any minecart tracking that issue may
 // now be complete (all tracked issues closed). This method:
-//  1. Runs `gt minecart check` to auto-close completed minecarts and notify subscribers
+//  1. Runs `ms minecart check` to auto-close completed minecarts and notify subscribers
 //  2. For completed minecarts with integration branches (swarms), triggers landing
 //  3. Cleans up stale miner branches from completed work
 //
 // All operations are best-effort: failures are logged but don't affect merge success.
 func (e *Engineer) postMergeMinecartCheck(mr *MRInfo) {
-	// Find town root from rig path (rig is at ~/gt/<rigname>, town is ~/gt)
+	// Find town root from rig path (rig is at ~/ms/<rigname>, town is ~/ms)
 	townRoot := filepath.Dir(e.rig.Path)
 	townBeads := filepath.Join(townRoot, ".beads")
 
@@ -2243,9 +2243,9 @@ func (e *Engineer) postMergeMinecartCheck(mr *MRInfo) {
 		return
 	}
 
-	// Step 1: Run `gt minecart check` to auto-close completed minecarts.
+	// Step 1: Run `ms minecart check` to auto-close completed minecarts.
 	// This handles cross-rig minecart completion: minecarts in town beads (hq-*)
-	// tracking issues in rig beads (gt-*) won't auto-close via bd close alone.
+	// tracking issues in rig beads (ms-*) won't auto-close via bd close alone.
 	closedMinecarts := e.checkAndCloseCompletedMinecarts(townRoot, townBeads)
 
 	// Step 2: For each closed minecart, check if it has a swarm with an
@@ -2280,7 +2280,7 @@ func (e *Engineer) notifySupervisorMinecartFeeding(mr *MRInfo) {
 	// The supervisor discovers minecart state from beads on next patrol cycle;
 	// this nudge just accelerates discovery.
 	nudgeMsg := fmt.Sprintf("MINECART_NEEDS_FEEDING: minecart=%s issue=%s", mr.MinecartID, mr.SourceIssue)
-	nudgeCmd := exec.Command("gt", "nudge", "supervisor", nudgeMsg)
+	nudgeCmd := exec.Command("ms", "nudge", "supervisor", nudgeMsg)
 	util.SetDetachedProcessGroup(nudgeCmd)
 	nudgeCmd.Dir = e.workDir
 	if err := nudgeCmd.Run(); err != nil {
@@ -2344,7 +2344,7 @@ func (e *Engineer) checkAndCloseCompletedMinecarts(townRoot, townBeads string) [
 	var closed []minecartInfo
 
 	for _, minecart := range minecarts {
-		if minecart.IssueType != "minecart" && !refineryHasLabel(minecart.Labels, "gt:minecart") {
+		if minecart.IssueType != "minecart" && !refineryHasLabel(minecart.Labels, "ms:minecart") {
 			continue
 		}
 		// Get tracked issues for this minecart via bd dep list
@@ -2442,7 +2442,7 @@ func (e *Engineer) notifyMinecartCompletion(townRoot, minecartID, title, descrip
 		return
 	}
 	for _, addr := range fields.NotificationAddresses() {
-		mailCmd := exec.Command("gt", "mail", "send", addr,
+		mailCmd := exec.Command("ms", "mail", "send", addr,
 			"-s", fmt.Sprintf("🚚 Minecart landed: %s", title),
 			"-m", fmt.Sprintf("Minecart %s has completed.\n\nAll tracked issues are now closed.\n\nClosed by: %s/refinery", minecartID, e.rig.Name))
 		util.SetDetachedProcessGroup(mailCmd)
@@ -2519,8 +2519,8 @@ func (e *Engineer) landMinecartSwarm(townRoot string, minecart minecartInfo) {
 
 	_, _ = fmt.Fprintf(e.output, "[Engineer] Landing integration branch %s for minecart %s...\n", integrationBranch, minecart.ID)
 
-	// Use gt swarm land to perform the landing
-	landCmd := exec.Command("gt", "swarm", "land", moleculeID)
+	// Use ms swarm land to perform the landing
+	landCmd := exec.Command("ms", "swarm", "land", moleculeID)
 	util.SetDetachedProcessGroup(landCmd)
 	landCmd.Dir = townRoot
 	var landOut, landErr bytes.Buffer

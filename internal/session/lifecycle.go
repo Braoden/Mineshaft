@@ -27,14 +27,14 @@ import (
 // Usage pattern:
 //
 //	result, err := session.StartSession(t, session.SessionConfig{
-//	    SessionID: "gt-myrig-toast",
+//	    SessionID: "ms-myrig-toast",
 //	    WorkDir:   "/path/to/worktree",
 //	    Role:      "miner",
 //	    TownRoot:  "/path/to/town",
 //	    Beacon:    session.BeaconConfig{...},
 //	})
 type SessionConfig struct {
-	// SessionID is the tmux session name (e.g., "gt-wyvern-Toast", "hq-overseer").
+	// SessionID is the tmux session name (e.g., "ms-wyvern-Toast", "hq-overseer").
 	SessionID string
 
 	// WorkDir is the working directory for the session.
@@ -43,7 +43,7 @@ type SessionConfig struct {
 	// Role is the agent role (e.g., "miner", "overseer", "boot", "supervisor").
 	Role string
 
-	// TownRoot is the root of the Mineshaft workspace (e.g., ~/gt).
+	// TownRoot is the root of the Mineshaft workspace (e.g., ~/ms).
 	TownRoot string
 
 	// RigPath is the rig directory path for config resolution.
@@ -119,7 +119,7 @@ type StartResult struct {
 	// (e.g., handling fallback nudges, legacy fallback).
 	RuntimeConfig *config.RuntimeConfig
 
-	// RunID is the GASTA run identifier (GT_RUN) generated for this session.
+	// RunID is the GASTA run identifier (MS_RUN) generated for this session.
 	// All telemetry events emitted within the session carry this ID, enabling
 	// waterfall correlation across prompts, BD calls, mail operations, and
 	// agent conversation events.
@@ -199,7 +199,7 @@ func StartSession(t *tmux.Tmux, cfg SessionConfig) (_ *StartResult, retErr error
 	// can be passed via tmux -e flags. Setting env via SetEnvironment after
 	// session creation only affects newly spawned panes — the running pane
 	// (and any subprocess the agent spawns, e.g. bd) keeps its original
-	// environment (gt-neycp).
+	// environment (ms-neycp).
 	envVars := config.AgentEnv(config.AgentEnvConfig{
 		Role:             cfg.Role,
 		Rig:              cfg.RigName,
@@ -210,7 +210,7 @@ func StartSession(t *tmux.Tmux, cfg SessionConfig) (_ *StartResult, retErr error
 		SessionName:      cfg.SessionID,
 	})
 	envVars = MergeRuntimeLivenessEnv(envVars, runtimeConfig)
-	envVars["GT_RUN"] = runID
+	envVars["MS_RUN"] = runID
 	for k, v := range cfg.ExtraEnv {
 		envVars[k] = v
 	}
@@ -287,11 +287,11 @@ func StartSession(t *tmux.Tmux, cfg SessionConfig) (_ *StartResult, retErr error
 		}
 	}
 
-	// 13. Record agent's pane_id for ZFC-compliant liveness checks (gt-qmsx).
+	// 13. Record agent's pane_id for ZFC-compliant liveness checks (ms-qmsx).
 	// Declared pane identity replaces process-tree inference in IsRuntimeRunning
-	// and FindAgentPane. Legacy sessions without GT_PANE_ID fall back to scanning.
+	// and FindAgentPane. Legacy sessions without MS_PANE_ID fall back to scanning.
 	if paneID, err := t.GetPaneID(cfg.SessionID); err == nil {
-		_ = t.SetEnvironment(cfg.SessionID, "GT_PANE_ID", paneID)
+		_ = t.SetEnvironment(cfg.SessionID, "MS_PANE_ID", paneID)
 	}
 
 	// 14. Track PID for defense-in-depth orphan cleanup.
@@ -302,7 +302,7 @@ func StartSession(t *tmux.Tmux, cfg SessionConfig) (_ *StartResult, retErr error
 	// 14. Stream agent conversation events to VictoriaLogs (opt-in).
 	// Reads ~/.claude/projects/<hash>/<session>.jsonl and emits agent.event logs.
 	// Non-fatal: observability failures must never block agent startup.
-	if os.Getenv("GT_LOG_AGENT_OUTPUT") == "true" && os.Getenv("GT_OTEL_LOGS_URL") != "" {
+	if os.Getenv("MS_LOG_AGENT_OUTPUT") == "true" && os.Getenv("MS_OTEL_LOGS_URL") != "" {
 		if err := ActivateAgentLogging(cfg.SessionID, cfg.WorkDir, runID); err != nil {
 			fmt.Fprintf(os.Stderr, "warning: agent log watcher setup failed for %s: %v\n", cfg.SessionID, err)
 		}
@@ -393,7 +393,7 @@ func mapKeysSorted(m map[string]string) []string {
 // tmux session environment table, even when agent resolution came from
 // workspace/default settings rather than an explicit --agent override.
 //
-// Call this after config.AgentEnv() to add GT_AGENT and GT_PROCESS_NAMES
+// Call this after config.AgentEnv() to add MS_AGENT and MS_PROCESS_NAMES
 // before writing env vars to the tmux session via SetEnvironment.
 func MergeRuntimeLivenessEnv(envVars map[string]string, runtimeConfig *config.RuntimeConfig) map[string]string {
 	if envVars == nil {
@@ -403,17 +403,17 @@ func MergeRuntimeLivenessEnv(envVars map[string]string, runtimeConfig *config.Ru
 		return envVars
 	}
 
-	if _, hasGTAgent := envVars["GT_AGENT"]; !hasGTAgent && runtimeConfig.ResolvedAgent != "" {
-		envVars["GT_AGENT"] = runtimeConfig.ResolvedAgent
+	if _, hasGTAgent := envVars["MS_AGENT"]; !hasGTAgent && runtimeConfig.ResolvedAgent != "" {
+		envVars["MS_AGENT"] = runtimeConfig.ResolvedAgent
 	}
 
-	if _, hasProcessNames := envVars["GT_PROCESS_NAMES"]; !hasProcessNames {
+	if _, hasProcessNames := envVars["MS_PROCESS_NAMES"]; !hasProcessNames {
 		agentForLookup := runtimeConfig.ResolvedAgent
 		commandForLookup := runtimeConfig.Command
 		argsForLookup := runtimeConfig.Args
-		if existing, ok := envVars["GT_AGENT"]; ok && existing != "" {
+		if existing, ok := envVars["MS_AGENT"]; ok && existing != "" {
 			agentForLookup = existing
-			// When GT_AGENT was set by AgentOverride (differs from the
+			// When MS_AGENT was set by AgentOverride (differs from the
 			// workspace-resolved agent), the runtimeConfig.Command/Args
 			// belong to the workspace agent, not the override. Pass empty
 			// command so ResolveProcessNames uses the preset's own command.
@@ -424,7 +424,7 @@ func MergeRuntimeLivenessEnv(envVars map[string]string, runtimeConfig *config.Ru
 		}
 		processNames := config.ResolveProcessNames(agentForLookup, commandForLookup, argsForLookup...)
 		if len(processNames) > 0 {
-			envVars["GT_PROCESS_NAMES"] = strings.Join(processNames, ",")
+			envVars["MS_PROCESS_NAMES"] = strings.Join(processNames, ",")
 		}
 	}
 

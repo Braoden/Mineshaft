@@ -102,12 +102,12 @@ if [ "$BEADS_DIR" != "%s/.beads" ]; then
 fi
 
 case "$*" in
-	  "list --label=gt:minecart --json --limit=0 --all --flat")
+	  "list --label=ms:minecart --json --limit=0 --all --flat")
 	    if [ "$PWD" != "%s" ]; then
 	      echo "expected town root, got $PWD" >&2
 	      exit 1
 	    fi
-	    echo '[{"id":"hq-cv-town","title":"Town minecart","status":"open","created_at":"2026-03-09T00:00:00Z","labels":["gt:minecart"]}]'
+	    echo '[{"id":"hq-cv-town","title":"Town minecart","status":"open","created_at":"2026-03-09T00:00:00Z","labels":["ms:minecart"]}]'
 	    ;;
 	  "list --json --limit=0 --all --flat")
 	    echo '[]'
@@ -229,8 +229,8 @@ func TestMinecartCreate_UsesTrackingHelper(t *testing.T) {
 	// config set/get which isn't relevant to routing).
 	beadsDir := filepath.Join(townRoot, ".beads")
 	typesList := "agent,role,rig,minecart,slot,queue,event,message,molecule,gate,merge-request"
-	_ = os.WriteFile(filepath.Join(beadsDir, ".gt-types-configured"), []byte(typesList), 0644)
-	_ = os.WriteFile(filepath.Join(beadsDir, ".gt-statuses-configured"), []byte("staged_ready,staged_warnings"), 0644)
+	_ = os.WriteFile(filepath.Join(beadsDir, ".ms-types-configured"), []byte(typesList), 0644)
+	_ = os.WriteFile(filepath.Join(beadsDir, ".ms-statuses-configured"), []byte("staged_ready,staged_warnings"), 0644)
 
 	var helperTownRoot, helperMinecartID, helperIssueID string
 	oldAddTracking := addTrackingRelationFn

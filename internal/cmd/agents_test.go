@@ -15,7 +15,7 @@ import (
 )
 
 func TestAgentsCmd_DefaultRunE(t *testing.T) {
-	// After the fix, `gt agents` (no subcommand) should run the list function,
+	// After the fix, `ms agents` (no subcommand) should run the list function,
 	// not the interactive popup menu. Verify the actual function pointer.
 	if agentsCmd.RunE == nil {
 		t.Fatal("agentsCmd.RunE is nil")
@@ -85,12 +85,12 @@ func TestCategorizeSession_AllTypes(t *testing.T) {
 	}{
 		{"overseer", "hq-overseer", AgentOverseer},
 		{"supervisor", "hq-supervisor", AgentSupervisor},
-		// Rig-level sessions require a registered prefix. Use "gt" which is
+		// Rig-level sessions require a registered prefix. Use "ms" which is
 		// commonly registered in the default PrefixRegistry.
-		{"witness", "gt-witness", AgentWitness},
-		{"refinery", "gt-refinery", AgentRefinery},
-		{"crew", "gt-crew-max", AgentCrew},
-		{"miner", "gt-furiosa", AgentMiner},
+		{"witness", "ms-witness", AgentWitness},
+		{"refinery", "ms-refinery", AgentRefinery},
+		{"crew", "ms-crew-max", AgentCrew},
+		{"miner", "ms-furiosa", AgentMiner},
 	}
 
 	for _, tt := range tests {
@@ -180,10 +180,10 @@ func TestDisplayLabel_AllTypes(t *testing.T) {
 	}{
 		{"overseer", AgentSession{Name: "hq-overseer", Type: AgentOverseer}, "Overseer"},
 		{"supervisor", AgentSession{Name: "hq-supervisor", Type: AgentSupervisor}, "Supervisor"},
-		{"witness", AgentSession{Name: "gt-witness", Type: AgentWitness, Rig: "mineshaft"}, "mineshaft/witness"},
-		{"refinery", AgentSession{Name: "gt-refinery", Type: AgentRefinery, Rig: "mineshaft"}, "mineshaft/refinery"},
-		{"crew", AgentSession{Name: "gt-crew-max", Type: AgentCrew, Rig: "mineshaft", AgentName: "max"}, "crew/max"},
-		{"miner", AgentSession{Name: "gt-furiosa", Type: AgentMiner, Rig: "mineshaft", AgentName: "furiosa"}, "furiosa"},
+		{"witness", AgentSession{Name: "ms-witness", Type: AgentWitness, Rig: "mineshaft"}, "mineshaft/witness"},
+		{"refinery", AgentSession{Name: "ms-refinery", Type: AgentRefinery, Rig: "mineshaft"}, "mineshaft/refinery"},
+		{"crew", AgentSession{Name: "ms-crew-max", Type: AgentCrew, Rig: "mineshaft", AgentName: "max"}, "crew/max"},
+		{"miner", AgentSession{Name: "ms-furiosa", Type: AgentMiner, Rig: "mineshaft", AgentName: "furiosa"}, "furiosa"},
 	}
 
 	for _, tt := range tests {
@@ -231,8 +231,8 @@ func TestFilterAndSortSessions_MinerFiltering(t *testing.T) {
 	setupCmdTestRegistry(t)
 	input := []string{
 		"hq-overseer",
-		"gt-furiosa", // miner
-		"gt-witness",
+		"ms-furiosa", // miner
+		"ms-witness",
 	}
 
 	// With miners excluded
@@ -284,14 +284,14 @@ func TestFilterAndSortSessions_BootSessionFiltered(t *testing.T) {
 func TestFilterAndSortSessions_SortOrder(t *testing.T) {
 	setupCmdTestRegistry(t)
 	input := []string{
-		"gt-crew-zed",   // crew (mineshaft)
-		"gt-witness",    // witness (mineshaft)
+		"ms-crew-zed",   // crew (mineshaft)
+		"ms-witness",    // witness (mineshaft)
 		"hq-supervisor",     // supervisor
-		"gt-refinery",   // refinery (mineshaft)
+		"ms-refinery",   // refinery (mineshaft)
 		"hq-overseer",      // overseer
-		"gt-furiosa",    // miner (mineshaft)
+		"ms-furiosa",    // miner (mineshaft)
 		"mr-witness",    // witness (myrig)
-		"gt-crew-alpha", // crew (mineshaft)
+		"ms-crew-alpha", // crew (mineshaft)
 	}
 
 	got := filterAndSortSessions(input, true)
@@ -311,11 +311,11 @@ func TestFilterAndSortSessions_SortOrder(t *testing.T) {
 	}{
 		{AgentOverseer, "hq-overseer"},
 		{AgentSupervisor, "hq-supervisor"},
-		{AgentRefinery, "gt-refinery"},
-		{AgentWitness, "gt-witness"},
-		{AgentCrew, "gt-crew-alpha"},
-		{AgentCrew, "gt-crew-zed"},
-		{AgentMiner, "gt-furiosa"},
+		{AgentRefinery, "ms-refinery"},
+		{AgentWitness, "ms-witness"},
+		{AgentCrew, "ms-crew-alpha"},
+		{AgentCrew, "ms-crew-zed"},
+		{AgentMiner, "ms-furiosa"},
 		{AgentWitness, "mr-witness"},
 	}
 
@@ -338,9 +338,9 @@ func TestFilterAndSortSessions_CombinedFiltering(t *testing.T) {
 	input := []string{
 		"hq-overseer",
 		"hq-boot",        // boot: always filtered
-		"gt-furiosa",     // miner: filtered when includeMiners=false
+		"ms-furiosa",     // miner: filtered when includeMiners=false
 		"random-session", // non-mineshaft: always filtered
-		"gt-witness",
+		"ms-witness",
 	}
 
 	got := filterAndSortSessions(input, false)
@@ -390,7 +390,7 @@ func TestRunAgentsList_EmptyList_Output(t *testing.T) {
 	}
 }
 
-// TestDisplayLabel_PersonalSession verifies the display format for non-GT sessions.
+// TestDisplayLabel_PersonalSession verifies the display format for non-MS sessions.
 func TestDisplayLabel_PersonalSession(t *testing.T) {
 	agent := AgentSession{Name: "fix-tmux", Type: AgentPersonal}
 	label := agent.displayLabel()
@@ -405,10 +405,10 @@ func TestDisplayLabel_PersonalSession(t *testing.T) {
 // TestBuildMenuAction_PerSessionSocket verifies that buildMenuAction uses the
 // session's own socket, not a global town socket.
 func TestBuildMenuAction_PerSessionSocket(t *testing.T) {
-	// GT session on the gt socket
-	action := buildMenuAction("gt", "hq-supervisor")
-	if !strings.Contains(action, "-L gt") {
-		t.Errorf("GT session action should use -L gt, got: %s", action)
+	// MS session on the ms socket
+	action := buildMenuAction("ms", "hq-supervisor")
+	if !strings.Contains(action, "-L ms") {
+		t.Errorf("MS session action should use -L ms, got: %s", action)
 	}
 
 	// Personal session on the default socket
@@ -436,10 +436,10 @@ func TestBuildMenuAction_CrossSocket(t *testing.T) {
 	}{
 		{
 			name:       "with town socket — cross-socket aware",
-			townSocket: "gt",
+			townSocket: "ms",
 			session:    "hq-supervisor",
 			wantContain: []string{
-				"-L gt",         // targets the town socket
+				"-L ms",         // targets the town socket
 				"switch-client", // fast path (same socket)
 				"detach-client", // fallback (cross-socket)
 				"hq-supervisor",     // session name
@@ -495,7 +495,7 @@ func TestAgentTestColor_Exists(t *testing.T) {
 }
 
 func TestDisplayLabel_TestSession(t *testing.T) {
-	agent := AgentSession{Name: "test-session-1", Type: AgentTest, Socket: "gt-test-tmux-12345"}
+	agent := AgentSession{Name: "test-session-1", Type: AgentTest, Socket: "ms-test-tmux-12345"}
 	label := agent.displayLabel()
 	if !strings.Contains(label, "test-session-1") {
 		t.Errorf("test session label should contain session name, got: %q", label)
@@ -511,9 +511,9 @@ func TestSocketDisplayName_TestSocket(t *testing.T) {
 		socket string
 		want   string
 	}{
-		{"test-tmux socket", "gt-test-tmux-12345", "testing"},
-		{"test-cmd socket", "gt-test-cmd-67890", "testing"},
-		{"test-config socket", "gt-test-config-111", "testing"},
+		{"test-tmux socket", "ms-test-tmux-12345", "testing"},
+		{"test-cmd socket", "ms-test-cmd-67890", "testing"},
+		{"test-config socket", "ms-test-config-111", "testing"},
 		{"non-test socket", "my-custom-socket", "my-custom-socket"},
 		{"default socket", "default", "default"},
 	}
@@ -529,9 +529,9 @@ func TestSocketDisplayName_TestSocket(t *testing.T) {
 }
 
 func TestBuildMenuAction_TestSocket(t *testing.T) {
-	action := buildMenuAction("gt-test-tmux-12345", "test-session")
-	if !strings.Contains(action, "-L gt-test-tmux-12345") {
-		t.Errorf("test socket action should use -L gt-test-tmux-12345, got: %s", action)
+	action := buildMenuAction("ms-test-tmux-12345", "test-session")
+	if !strings.Contains(action, "-L ms-test-tmux-12345") {
+		t.Errorf("test socket action should use -L ms-test-tmux-12345, got: %s", action)
 	}
 	if !strings.Contains(action, "test-session") {
 		t.Errorf("test socket action should target test-session, got: %s", action)
@@ -545,8 +545,8 @@ func TestBuildMenuAction_TestSocket(t *testing.T) {
 }
 
 // TestFindTestSockets_Integration verifies that findTestSockets discovers
-// active gt-test-* sockets. This test creates a temporary tmux server on a
-// gt-test-* socket, verifies discovery, then cleans up.
+// active ms-test-* sockets. This test creates a temporary tmux server on a
+// ms-test-* socket, verifies discovery, then cleans up.
 func TestFindTestSockets_Integration(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("tmux socket discovery unreliable on Windows")
@@ -555,8 +555,8 @@ func TestFindTestSockets_Integration(t *testing.T) {
 		t.Skip("tmux not available")
 	}
 
-	// Create a unique test socket with gt-test- prefix.
-	socketName := fmt.Sprintf("gt-test-discovery-%d", os.Getpid())
+	// Create a unique test socket with ms-test- prefix.
+	socketName := fmt.Sprintf("ms-test-discovery-%d", os.Getpid())
 	sessionName := "probe-session"
 
 	// Start a tmux server on this socket with a session.
@@ -585,7 +585,7 @@ func TestFindTestSockets_Integration(t *testing.T) {
 }
 
 // TestFindTestSockets_SkipsNonTestSockets verifies that findTestSockets only
-// returns gt-test-* sockets, not the town socket or other custom sockets.
+// returns ms-test-* sockets, not the town socket or other custom sockets.
 func TestFindTestSockets_SkipsNonTestSockets(t *testing.T) {
 	if _, err := exec.LookPath("tmux"); err != nil {
 		t.Skip("tmux not available")
@@ -593,7 +593,7 @@ func TestFindTestSockets_SkipsNonTestSockets(t *testing.T) {
 
 	sockets := findTestSockets()
 	for _, s := range sockets {
-		if !strings.HasPrefix(s, "gt-test-") {
+		if !strings.HasPrefix(s, "ms-test-") {
 			t.Errorf("findTestSockets() returned non-test socket: %q", s)
 		}
 	}
@@ -608,12 +608,12 @@ func TestGuessSessionFromWorkerDir(t *testing.T) {
 		workerDir string
 		want      string
 	}{
-		{"crew worker", "/town/mineshaft/crew/max", "gt-crew-max"},
-		{"miner worker", "/town/mineshaft/miners/furiosa", "gt-furiosa"},
-		{"witness worker", "/town/mineshaft/witness/main", "gt-witness"},
-		{"witness worker rig", "/town/mineshaft/witness/rig", "gt-witness"},
-		{"refinery worker", "/town/mineshaft/refinery/main", "gt-refinery"},
-		{"refinery worker rig", "/town/mineshaft/refinery/rig", "gt-refinery"},
+		{"crew worker", "/town/mineshaft/crew/max", "ms-crew-max"},
+		{"miner worker", "/town/mineshaft/miners/furiosa", "ms-furiosa"},
+		{"witness worker", "/town/mineshaft/witness/main", "ms-witness"},
+		{"witness worker rig", "/town/mineshaft/witness/rig", "ms-witness"},
+		{"refinery worker", "/town/mineshaft/refinery/main", "ms-refinery"},
+		{"refinery worker rig", "/town/mineshaft/refinery/rig", "ms-refinery"},
 		{"unknown type", "/town/mineshaft/unknown/thing", ""},
 		{"too few path parts", "/town/mineshaft", ""},
 		{"different rig", "/town/myrig/crew/alpha", "mr-crew-alpha"},

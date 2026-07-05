@@ -84,7 +84,7 @@ func (c *SettingsCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:  StatusWarning,
 		Message: fmt.Sprintf("%d rig(s) missing settings/ directory", len(missing)),
 		Details: details,
-		FixHint: "Run 'gt doctor --fix' to create missing directories",
+		FixHint: "Run 'ms doctor --fix' to create missing directories",
 	}
 }
 
@@ -250,7 +250,7 @@ func (c *LegacyMineshaftCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:  StatusWarning,
 		Message: fmt.Sprintf("%d legacy .mineshaft/ directory(ies) found", len(found)),
 		Details: found,
-		FixHint: "Run 'gt doctor --fix' to remove after verifying migration is complete",
+		FixHint: "Run 'ms doctor --fix' to remove after verifying migration is complete",
 	}
 }
 
@@ -275,8 +275,8 @@ func (c *SettingsCheck) findRigs(townRoot string) []string {
 }
 
 // SessionHookCheck verifies settings.json files use proper session_id passthrough.
-// Valid options: session-start.sh wrapper OR 'gt prime --hook'.
-// Without proper config, gt seance cannot discover sessions.
+// Valid options: session-start.sh wrapper OR 'ms prime --hook'.
+// Without proper config, ms seance cannot discover sessions.
 type SessionHookCheck struct {
 	FixableCheck
 	filesToFix []string // Cached during Run for use in Fix
@@ -333,11 +333,11 @@ func (c *SessionHookCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:  StatusWarning,
 		Message: fmt.Sprintf("%d hook issue(s) found across settings.json files", len(issues)),
 		Details: issues,
-		FixHint: "Run 'gt doctor --fix' to update hooks to use 'gt prime --hook'",
+		FixHint: "Run 'ms doctor --fix' to update hooks to use 'ms prime --hook'",
 	}
 }
 
-// Fix updates settings.json files to use 'gt prime --hook' instead of bare 'gt prime'.
+// Fix updates settings.json files to use 'ms prime --hook' instead of bare 'ms prime'.
 func (c *SessionHookCheck) Fix(ctx *CheckContext) error {
 	for _, path := range c.filesToFix {
 		if err := c.fixSettingsFile(path); err != nil {
@@ -398,10 +398,10 @@ func (c *SessionHookCheck) fixSettingsFile(path string) error {
 					continue
 				}
 
-				// Check if command has 'gt prime' without --hook
-				if strings.Contains(command, "gt prime") && !containsFlag(command, "--hook") {
-					// Replace 'gt prime' with 'gt prime --hook'
-					newCommand := strings.Replace(command, "gt prime", "gt prime --hook", -1)
+				// Check if command has 'ms prime' without --hook
+				if strings.Contains(command, "ms prime") && !containsFlag(command, "--hook") {
+					// Replace 'ms prime' with 'ms prime --hook'
+					newCommand := strings.Replace(command, "ms prime", "ms prime --hook", -1)
 					hookMap["command"] = newCommand
 					modified = true
 				}
@@ -446,14 +446,14 @@ func (c *SessionHookCheck) checkSettingsFile(path string) []string {
 	// Check for SessionStart hooks
 	if strings.Contains(content, "SessionStart") {
 		if !c.usesSessionStartScript(content, "SessionStart") {
-			problems = append(problems, "SessionStart uses bare 'gt prime' - add --hook flag or use session-start.sh")
+			problems = append(problems, "SessionStart uses bare 'ms prime' - add --hook flag or use session-start.sh")
 		}
 	}
 
 	// Check for PreCompact hooks
 	if strings.Contains(content, "PreCompact") {
 		if !c.usesSessionStartScript(content, "PreCompact") {
-			problems = append(problems, "PreCompact uses bare 'gt prime' - add --hook flag or use session-start.sh")
+			problems = append(problems, "PreCompact uses bare 'ms prime' - add --hook flag or use session-start.sh")
 		}
 	}
 
@@ -461,10 +461,10 @@ func (c *SessionHookCheck) checkSettingsFile(path string) []string {
 }
 
 // usesSessionStartScript checks if the hook configuration handles session_id properly.
-// Valid: session-start.sh wrapper OR 'gt prime --hook'. Returns true if properly configured.
+// Valid: session-start.sh wrapper OR 'ms prime --hook'. Returns true if properly configured.
 func (c *SessionHookCheck) usesSessionStartScript(content, hookType string) bool {
 	// Find the hook section - look for the hook type followed by its configuration
-	// This is a simple heuristic - we look for "gt prime" without session-start.sh
+	// This is a simple heuristic - we look for "ms prime" without session-start.sh
 
 	// Split around the hook type to find its section
 	parts := strings.SplitN(content, `"`+hookType+`"`, 2)
@@ -494,18 +494,18 @@ func (c *SessionHookCheck) usesSessionStartScript(content, hookType string) bool
 		return true // Uses the wrapper script
 	}
 
-	// Check if it uses 'gt prime --hook' which handles session_id via stdin
-	if strings.Contains(section, "gt prime") {
-		// gt prime --hook is valid - it reads session_id from stdin JSON
+	// Check if it uses 'ms prime --hook' which handles session_id via stdin
+	if strings.Contains(section, "ms prime") {
+		// ms prime --hook is valid - it reads session_id from stdin JSON
 		// Must match --hook as complete flag, not substring (e.g., --hookup)
 		if containsFlag(section, "--hook") {
 			return true
 		}
-		// Bare 'gt prime' without --hook doesn't get session_id
+		// Bare 'ms prime' without --hook doesn't get session_id
 		return false
 	}
 
-	// No gt prime or session-start.sh found - might be a different hook configuration
+	// No ms prime or session-start.sh found - might be a different hook configuration
 	return true
 }
 
@@ -661,7 +661,7 @@ func (c *CustomTypesCheck) Run(ctx *CheckContext) *CheckResult {
 				"Mineshaft custom types (agent, role, rig, minecart, slot) are not registered",
 				"This may cause bead creation/validation errors",
 			},
-			FixHint: "Run 'gt doctor --fix' or 'bd config set types.custom \"" + constants.BeadsCustomTypes + "\"'",
+			FixHint: "Run 'ms doctor --fix' or 'bd config set types.custom \"" + constants.BeadsCustomTypes + "\"'",
 		}
 	}
 
@@ -703,7 +703,7 @@ func (c *CustomTypesCheck) Run(ctx *CheckContext) *CheckResult {
 			fmt.Sprintf("Configured: %s", configuredTypes),
 			fmt.Sprintf("Required: %s", constants.BeadsCustomTypes),
 		},
-		FixHint: "Run 'gt doctor --fix' to register missing types",
+		FixHint: "Run 'ms doctor --fix' to register missing types",
 	}
 }
 
@@ -805,7 +805,7 @@ func (c *CustomStatusesCheck) Run(ctx *CheckContext) *CheckResult {
 				"Mineshaft custom statuses (staged_ready, staged_warnings) are not registered",
 				"Minecart staging will fail without these statuses",
 			},
-			FixHint: "Run 'gt doctor --fix' or 'bd config set status.custom \"" + constants.BeadsCustomStatuses + "\"'",
+			FixHint: "Run 'ms doctor --fix' or 'bd config set status.custom \"" + constants.BeadsCustomStatuses + "\"'",
 		}
 	}
 
@@ -844,7 +844,7 @@ func (c *CustomStatusesCheck) Run(ctx *CheckContext) *CheckResult {
 			fmt.Sprintf("Configured: %s", configuredStatuses),
 			fmt.Sprintf("Required: %s", constants.BeadsCustomStatuses),
 		},
-		FixHint: "Run 'gt doctor --fix' to register missing statuses",
+		FixHint: "Run 'ms doctor --fix' to register missing statuses",
 	}
 }
 

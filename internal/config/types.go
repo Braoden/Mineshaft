@@ -46,7 +46,7 @@ type TownSettings struct {
 	// CLITheme controls CLI output color scheme.
 	// Values: "dark", "light", "auto" (default).
 	// "auto" lets the terminal emulator's background color guide the choice.
-	// Can be overridden by GT_THEME environment variable.
+	// Can be overridden by MS_THEME environment variable.
 	CLITheme string `json:"cli_theme,omitempty"`
 
 	// DefaultAgent is the name of the agent preset to use by default.
@@ -322,7 +322,7 @@ type DaemonThresholds struct {
 	MinerIdleSessionTimeout string `json:"miner_idle_session_timeout,omitempty"`
 
 	// MinerSelfTerminate controls whether miners kill their own session after
-	// gt done completes (default false). When true, miners terminate 3 seconds
+	// ms done completes (default false). When true, miners terminate 3 seconds
 	// after work submission instead of transitioning to IDLE. This gives fresh
 	// context windows per task, reduces token waste, and eliminates stale state
 	// issues at scale. Worktree reuse is preserved — ReuseIdleMiner creates
@@ -455,14 +455,14 @@ type MailThresholds struct {
 	MaxConcurrentAckOps *int `json:"max_concurrent_ack_ops,omitempty"`
 
 	// ReplyReminderDelay is how long after mail delivery to nudge the recipient
-	// to reply via gt mail send rather than in chat (default "30s").
+	// to reply via ms mail send rather than in chat (default "30s").
 	// Set to "0s" to disable reply reminders entirely.
 	ReplyReminderDelay string `json:"reply_reminder_delay,omitempty"`
 }
 
 // WebThresholds configures web API thresholds.
 type WebThresholds struct {
-	// MaxConcurrentCommands is max concurrent gt subprocesses via web API (default 12).
+	// MaxConcurrentCommands is max concurrent ms subprocesses via web API (default 12).
 	MaxConcurrentCommands *int `json:"max_concurrent_commands,omitempty"`
 
 	// MaxSubjectLen is max subject length for mail API (default 500).
@@ -661,7 +661,7 @@ type RigConfig struct {
 
 // WorkflowConfig represents workflow settings for a rig.
 type WorkflowConfig struct {
-	// DefaultFormula is the formula to use when `gt formula run` is called without arguments.
+	// DefaultFormula is the formula to use when `ms formula run` is called without arguments.
 	// If empty, no default is set and a formula name must be provided.
 	DefaultFormula string `json:"default_formula,omitempty"`
 }
@@ -741,7 +741,7 @@ type RuntimeConfig struct {
 	Args []string `json:"args"`
 
 	// Env are environment variables to set when starting the agent.
-	// These are merged with the standard GT_* variables.
+	// These are merged with the standard MS_* variables.
 	// Used for agent-specific configuration like OPENCODE_PERMISSION.
 	Env map[string]string `json:"env,omitempty"`
 
@@ -780,7 +780,7 @@ type RuntimeConfig struct {
 
 	// ResolvedAgent is the agent name that was resolved during config lookup.
 	// Set by ResolveRoleAgentConfig / resolveAgentConfigInternal so that
-	// BuildStartupCommand can export GT_AGENT for process detection.
+	// BuildStartupCommand can export MS_AGENT for process detection.
 	// Not serialized — this is a runtime-only field.
 	ResolvedAgent string `json:"-"`
 }
@@ -809,7 +809,7 @@ type RuntimeHooksConfig struct {
 
 	// Informational indicates the hooks provider installs instructions files only,
 	// not executable lifecycle hooks. When true, Mineshaft sends startup fallback
-	// commands (gt prime) via nudge since hooks won't run automatically.
+	// commands (ms prime) via nudge since hooks won't run automatically.
 	// Defaults to false (backwards compatible with claude/opencode which have real hooks).
 	Informational bool `json:"informational,omitempty"`
 }
@@ -1008,7 +1008,7 @@ func normalizeRuntimeConfig(rc *RuntimeConfig) *RuntimeConfig {
 
 	// Set informational flag for providers whose "hooks" are instructions files,
 	// not executable lifecycle hooks. This tells startup fallback logic to send
-	// gt prime via nudge since hooks won't run automatically.
+	// ms prime via nudge since hooks won't run automatically.
 	if !rc.Hooks.Informational {
 		rc.Hooks.Informational = defaultHooksInformational(rc.Provider)
 	}
@@ -1157,7 +1157,7 @@ func defaultHooksFile(provider string) string {
 
 // defaultHooksInformational returns true for providers whose hooks are instructions
 // files only (not executable lifecycle hooks). For these providers, Mineshaft sends
-// startup fallback commands (gt prime) via nudge since hooks won't auto-run.
+// startup fallback commands (ms prime) via nudge since hooks won't auto-run.
 func defaultHooksInformational(provider string) bool {
 	if preset := GetAgentPresetByName(provider); preset != nil {
 		return preset.HooksInformational
@@ -1319,7 +1319,7 @@ type MergeQueueConfig struct {
 	// Nil defaults to true.
 	IntegrationBranchMinerEnabled *bool `json:"integration_branch_miner_enabled,omitempty"`
 
-	// IntegrationBranchRefineryEnabled controls whether mq submit and gt done
+	// IntegrationBranchRefineryEnabled controls whether mq submit and ms done
 	// auto-detect integration branches as MR targets.
 	// Nil defaults to true.
 	IntegrationBranchRefineryEnabled *bool `json:"integration_branch_refinery_enabled,omitempty"`
@@ -1668,7 +1668,7 @@ type EscalationConfig struct {
 	// Actions are executed in order for each escalation.
 	// Action formats:
 	//   - "bead"        → Create escalation bead (always first, implicit)
-	//   - "mail:<target>" → Send gt mail to target (e.g., "mail:overseer")
+	//   - "mail:<target>" → Send ms mail to target (e.g., "mail:overseer")
 	//   - "email:human" → Send email to contacts.human_email
 	//   - "sms:human"   → Send SMS to contacts.human_sms
 	//   - "slack"       → Post to contacts.slack_webhook

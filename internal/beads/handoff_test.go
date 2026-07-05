@@ -76,13 +76,13 @@ func TestCloseStaleHookedMailBeads(t *testing.T) {
 			Title:    "🤝 HANDOFF: prev session",
 			Status:   beadsdk.Status(StatusHooked),
 			Assignee: assignee,
-			Labels:   []string{"gt:message"},
+			Labels:   []string{"ms:message"},
 		}
-		store.labels[id] = []string{"gt:message"}
+		store.labels[id] = []string{"ms:message"}
 		return id
 	}
 
-	t.Run("closes hooked gt:message beads for agent", func(t *testing.T) {
+	t.Run("closes hooked ms:message beads for agent", func(t *testing.T) {
 		store := newMockStorage()
 		b := newTestBeads(store)
 		id := hookedMailBead(store, "mineshaft/overseer")
@@ -99,7 +99,7 @@ func TestCloseStaleHookedMailBeads(t *testing.T) {
 		}
 	})
 
-	t.Run("does not close hooked gt:task beads", func(t *testing.T) {
+	t.Run("does not close hooked ms:task beads", func(t *testing.T) {
 		store := newMockStorage()
 		b := newTestBeads(store)
 		taskID := "test-task-1"
@@ -107,19 +107,19 @@ func TestCloseStaleHookedMailBeads(t *testing.T) {
 			ID:       taskID,
 			Status:   beadsdk.Status(StatusHooked),
 			Assignee: "mineshaft/overseer",
-			Labels:   []string{"gt:task"},
+			Labels:   []string{"ms:task"},
 		}
-		store.labels[taskID] = []string{"gt:task"}
+		store.labels[taskID] = []string{"ms:task"}
 
 		n, err := b.CloseStaleHookedMailBeads("mineshaft/overseer")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
 		if n != 0 {
-			t.Errorf("want 0 (gt:task bead should be untouched), got %d", n)
+			t.Errorf("want 0 (ms:task bead should be untouched), got %d", n)
 		}
 		if store.closed[taskID] {
-			t.Errorf("gt:task bead %s was incorrectly closed", taskID)
+			t.Errorf("ms:task bead %s was incorrectly closed", taskID)
 		}
 	})
 

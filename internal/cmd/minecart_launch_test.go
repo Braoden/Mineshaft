@@ -118,7 +118,7 @@ func TestTransitionMinecartToOpen_AlreadyOpen(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Subcommand registration tests (gt-csl.6.4)
+// Subcommand registration tests (ms-csl.6.4)
 // ---------------------------------------------------------------------------
 
 // TestMinecartSubcommandRegistration verifies that minecartStageCmd and
@@ -172,10 +172,10 @@ func TestMinecartStageLaunchFlag(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Launch-as-alias tests (gt-csl.6.4)
+// Launch-as-alias tests (ms-csl.6.4)
 // ---------------------------------------------------------------------------
 
-// IT-19: gt minecart launch <epic-id> delegates to stage+launch (no "not yet
+// IT-19: ms minecart launch <epic-id> delegates to stage+launch (no "not yet
 // implemented" error). Verifies the delegation path is wired up.
 //
 // Note: rigFromBeadID() is a stub returning "", so the staging pipeline will
@@ -189,9 +189,9 @@ func TestLaunchAsAlias_EpicInput(t *testing.T) {
 
 	// Build a DAG with an epic and two child tasks.
 	td := newTestDAG(t).
-		Epic("gt-epic-1", "Test Epic").
-		Task("gt-task-1", "First task", withRig("mineshaft")).ParentOf("gt-epic-1").
-		Task("gt-task-2", "Second task", withRig("mineshaft")).ParentOf("gt-epic-1")
+		Epic("ms-epic-1", "Test Epic").
+		Task("ms-task-1", "First task", withRig("mineshaft")).ParentOf("ms-epic-1").
+		Task("ms-task-2", "Second task", withRig("mineshaft")).ParentOf("ms-epic-1")
 
 	_, logPath := td.Setup(t)
 
@@ -201,7 +201,7 @@ func TestLaunchAsAlias_EpicInput(t *testing.T) {
 		minecartLaunchForce = false
 	}()
 
-	err := runMinecartLaunch(minecartLaunchCmd, []string{"gt-epic-1"})
+	err := runMinecartLaunch(minecartLaunchCmd, []string{"ms-epic-1"})
 
 	// The error should NOT be "stage-and-launch not yet implemented".
 	// It will fail with staging errors (no-rig) because rigFromBeadID() is a
@@ -218,13 +218,13 @@ func TestLaunchAsAlias_EpicInput(t *testing.T) {
 	logContent := string(logBytes)
 
 	// Should have called bd show for the epic (proving delegation to runMinecartStage).
-	if !strings.Contains(logContent, "CMD:show gt-epic-1 --json") {
-		t.Errorf("bd.log should contain 'CMD:show gt-epic-1 --json' (staging delegation), got:\n%s", logContent)
+	if !strings.Contains(logContent, "CMD:show ms-epic-1 --json") {
+		t.Errorf("bd.log should contain 'CMD:show ms-epic-1 --json' (staging delegation), got:\n%s", logContent)
 	}
 
 	// Should have called bd dep list for child tasks (proving staging pipeline ran).
-	if !strings.Contains(logContent, "CMD:dep list gt-task-1 --json") {
-		t.Errorf("bd.log should contain 'CMD:dep list gt-task-1 --json' (staging ran), got:\n%s", logContent)
+	if !strings.Contains(logContent, "CMD:dep list ms-task-1 --json") {
+		t.Errorf("bd.log should contain 'CMD:dep list ms-task-1 --json' (staging ran), got:\n%s", logContent)
 	}
 
 	// Verify minecartStageLaunch was reset by defer in runMinecartLaunch.
@@ -233,7 +233,7 @@ func TestLaunchAsAlias_EpicInput(t *testing.T) {
 	}
 }
 
-// IT-20: gt minecart launch <task-id1> <task-id2> delegates to stage+launch for
+// IT-20: ms minecart launch <task-id1> <task-id2> delegates to stage+launch for
 // task list input.
 //
 // Note: rigFromBeadID() is a stub returning "", so the staging pipeline will
@@ -245,8 +245,8 @@ func TestLaunchAsAlias_TaskListInput(t *testing.T) {
 
 	// Build a DAG with two independent tasks.
 	td := newTestDAG(t).
-		Task("gt-t1", "Task One", withRig("mineshaft")).
-		Task("gt-t2", "Task Two", withRig("mineshaft"))
+		Task("ms-t1", "Task One", withRig("mineshaft")).
+		Task("ms-t2", "Task Two", withRig("mineshaft"))
 
 	_, logPath := td.Setup(t)
 
@@ -256,7 +256,7 @@ func TestLaunchAsAlias_TaskListInput(t *testing.T) {
 		minecartLaunchForce = false
 	}()
 
-	err := runMinecartLaunch(minecartLaunchCmd, []string{"gt-t1", "gt-t2"})
+	err := runMinecartLaunch(minecartLaunchCmd, []string{"ms-t1", "ms-t2"})
 
 	// Should NOT get "not yet implemented".
 	if err != nil && strings.Contains(err.Error(), "stage-and-launch not yet implemented") {
@@ -271,16 +271,16 @@ func TestLaunchAsAlias_TaskListInput(t *testing.T) {
 	logContent := string(logBytes)
 
 	// Should have called bd show for both tasks (proving delegation to runMinecartStage).
-	if !strings.Contains(logContent, "CMD:show gt-t1 --json") {
-		t.Errorf("bd.log should contain 'CMD:show gt-t1 --json', got:\n%s", logContent)
+	if !strings.Contains(logContent, "CMD:show ms-t1 --json") {
+		t.Errorf("bd.log should contain 'CMD:show ms-t1 --json', got:\n%s", logContent)
 	}
-	if !strings.Contains(logContent, "CMD:show gt-t2 --json") {
-		t.Errorf("bd.log should contain 'CMD:show gt-t2 --json', got:\n%s", logContent)
+	if !strings.Contains(logContent, "CMD:show ms-t2 --json") {
+		t.Errorf("bd.log should contain 'CMD:show ms-t2 --json', got:\n%s", logContent)
 	}
 
 	// Should have called bd dep list (proving staging pipeline ran).
-	if !strings.Contains(logContent, "CMD:dep list gt-t1 --json") {
-		t.Errorf("bd.log should contain 'CMD:dep list gt-t1 --json' (staging ran), got:\n%s", logContent)
+	if !strings.Contains(logContent, "CMD:dep list ms-t1 --json") {
+		t.Errorf("bd.log should contain 'CMD:dep list ms-t1 --json' (staging ran), got:\n%s", logContent)
 	}
 }
 
@@ -451,13 +451,13 @@ func TestDispatchWave1_ContinuesOnFailure(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// renderLaunchOutput tests (gt-csl.6.3)
+// renderLaunchOutput tests (ms-csl.6.3)
 // ---------------------------------------------------------------------------
 
-// IT-29: Output contains minecart ID and gt minecart status <id> command.
+// IT-29: Output contains minecart ID and ms minecart status <id> command.
 func TestRenderLaunchOutput_MinecartIDAndMonitor(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-task-1": {ID: "gt-task-1", Title: "Task One", Type: "task", Rig: "mineshaft"},
+		"ms-task-1": {ID: "ms-task-1", Title: "Task One", Type: "task", Rig: "mineshaft"},
 	}}
 
 	waves, _, err := computeWaves(dag)
@@ -466,7 +466,7 @@ func TestRenderLaunchOutput_MinecartIDAndMonitor(t *testing.T) {
 	}
 
 	results := []DispatchResult{
-		{BeadID: "gt-task-1", Rig: "mineshaft", Success: true},
+		{BeadID: "ms-task-1", Rig: "mineshaft", Success: true},
 	}
 
 	output := renderLaunchOutput("hq-cv-abc12", waves, results, dag)
@@ -474,16 +474,16 @@ func TestRenderLaunchOutput_MinecartIDAndMonitor(t *testing.T) {
 	if !strings.Contains(output, "hq-cv-abc12") {
 		t.Errorf("output should contain minecart ID 'hq-cv-abc12', got:\n%s", output)
 	}
-	if !strings.Contains(output, "gt minecart status hq-cv-abc12") {
-		t.Errorf("output should contain 'gt minecart status hq-cv-abc12', got:\n%s", output)
+	if !strings.Contains(output, "ms minecart status hq-cv-abc12") {
+		t.Errorf("output should contain 'ms minecart status hq-cv-abc12', got:\n%s", output)
 	}
 }
 
 // IT-30: Each dispatched task shows bead ID, title, and rig.
 func TestRenderLaunchOutput_DispatchedTasksWithRig(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-task-1": {ID: "gt-task-1", Title: "Task One", Type: "task", Rig: "mineshaft"},
-		"gt-task-2": {ID: "gt-task-2", Title: "Task Two", Type: "task", Rig: "beads"},
+		"ms-task-1": {ID: "ms-task-1", Title: "Task One", Type: "task", Rig: "mineshaft"},
+		"ms-task-2": {ID: "ms-task-2", Title: "Task Two", Type: "task", Rig: "beads"},
 	}}
 
 	waves, _, err := computeWaves(dag)
@@ -492,8 +492,8 @@ func TestRenderLaunchOutput_DispatchedTasksWithRig(t *testing.T) {
 	}
 
 	results := []DispatchResult{
-		{BeadID: "gt-task-1", Rig: "mineshaft", Success: true},
-		{BeadID: "gt-task-2", Rig: "beads", Success: true},
+		{BeadID: "ms-task-1", Rig: "mineshaft", Success: true},
+		{BeadID: "ms-task-2", Rig: "beads", Success: true},
 	}
 
 	output := renderLaunchOutput("hq-cv-test", waves, results, dag)
@@ -513,10 +513,10 @@ func TestRenderLaunchOutput_DispatchedTasksWithRig(t *testing.T) {
 	}
 }
 
-// IT-31: Output contains gt minecart -i TUI hint.
+// IT-31: Output contains ms minecart -i TUI hint.
 func TestRenderLaunchOutput_TUIHint(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-task-1": {ID: "gt-task-1", Title: "Task One", Type: "task", Rig: "mineshaft"},
+		"ms-task-1": {ID: "ms-task-1", Title: "Task One", Type: "task", Rig: "mineshaft"},
 	}}
 
 	waves, _, err := computeWaves(dag)
@@ -525,23 +525,23 @@ func TestRenderLaunchOutput_TUIHint(t *testing.T) {
 	}
 
 	results := []DispatchResult{
-		{BeadID: "gt-task-1", Rig: "mineshaft", Success: true},
+		{BeadID: "ms-task-1", Rig: "mineshaft", Success: true},
 	}
 
 	output := renderLaunchOutput("hq-cv-test", waves, results, dag)
 
-	if !strings.Contains(output, "gt minecart -i") {
-		t.Errorf("output should contain 'gt minecart -i' TUI hint, got:\n%s", output)
+	if !strings.Contains(output, "ms minecart -i") {
+		t.Errorf("output should contain 'ms minecart -i' TUI hint, got:\n%s", output)
 	}
 }
 
 // IT-32: Output contains daemon explanation about automatic subsequent wave dispatch.
 func TestRenderLaunchOutput_DaemonExplanation(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-task-1": {ID: "gt-task-1", Title: "Task One", Type: "task", Rig: "mineshaft"},
-		"gt-task-2": {ID: "gt-task-2", Title: "Task Two", Type: "task", Rig: "mineshaft", BlockedBy: []string{"gt-task-1"}},
+		"ms-task-1": {ID: "ms-task-1", Title: "Task One", Type: "task", Rig: "mineshaft"},
+		"ms-task-2": {ID: "ms-task-2", Title: "Task Two", Type: "task", Rig: "mineshaft", BlockedBy: []string{"ms-task-1"}},
 	}}
-	dag.Nodes["gt-task-1"].Blocks = []string{"gt-task-2"}
+	dag.Nodes["ms-task-1"].Blocks = []string{"ms-task-2"}
 
 	waves, _, err := computeWaves(dag)
 	if err != nil {
@@ -549,7 +549,7 @@ func TestRenderLaunchOutput_DaemonExplanation(t *testing.T) {
 	}
 
 	results := []DispatchResult{
-		{BeadID: "gt-task-1", Rig: "mineshaft", Success: true},
+		{BeadID: "ms-task-1", Rig: "mineshaft", Success: true},
 	}
 
 	output := renderLaunchOutput("hq-cv-test", waves, results, dag)
@@ -565,9 +565,9 @@ func TestRenderLaunchOutput_DaemonExplanation(t *testing.T) {
 // SN-03: Full output snapshot test with 2 waves, 3 tasks, some failed dispatches.
 func TestRenderLaunchOutput_Snapshot(t *testing.T) {
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-task-1": {ID: "gt-task-1", Title: "Task One", Type: "task", Rig: "mineshaft", Blocks: []string{"gt-task-3"}},
-		"gt-task-2": {ID: "gt-task-2", Title: "Task Two", Type: "task", Rig: "mineshaft"},
-		"gt-task-3": {ID: "gt-task-3", Title: "Task Three", Type: "task", Rig: "beads", BlockedBy: []string{"gt-task-1"}},
+		"ms-task-1": {ID: "ms-task-1", Title: "Task One", Type: "task", Rig: "mineshaft", Blocks: []string{"ms-task-3"}},
+		"ms-task-2": {ID: "ms-task-2", Title: "Task Two", Type: "task", Rig: "mineshaft"},
+		"ms-task-3": {ID: "ms-task-3", Title: "Task Three", Type: "task", Rig: "beads", BlockedBy: []string{"ms-task-1"}},
 	}}
 
 	waves, _, err := computeWaves(dag)
@@ -575,14 +575,14 @@ func TestRenderLaunchOutput_Snapshot(t *testing.T) {
 		t.Fatalf("computeWaves: %v", err)
 	}
 
-	// Wave 1 = [gt-task-1, gt-task-2], Wave 2 = [gt-task-3]
+	// Wave 1 = [ms-task-1, ms-task-2], Wave 2 = [ms-task-3]
 	if len(waves) != 2 {
 		t.Fatalf("expected 2 waves, got %d", len(waves))
 	}
 
 	results := []DispatchResult{
-		{BeadID: "gt-task-1", Rig: "mineshaft", Success: true},
-		{BeadID: "gt-task-2", Rig: "mineshaft", Success: false, Error: fmt.Errorf("connection failed")},
+		{BeadID: "ms-task-1", Rig: "mineshaft", Success: true},
+		{BeadID: "ms-task-2", Rig: "mineshaft", Success: false, Error: fmt.Errorf("connection failed")},
 	}
 
 	output := renderLaunchOutput("hq-cv-abc12", waves, results, dag)
@@ -593,7 +593,7 @@ func TestRenderLaunchOutput_Snapshot(t *testing.T) {
 	}
 
 	// Section 2: Monitor command
-	if !strings.Contains(output, "gt minecart status hq-cv-abc12") {
+	if !strings.Contains(output, "ms minecart status hq-cv-abc12") {
 		t.Errorf("missing monitor command, got:\n%s", output)
 	}
 
@@ -612,8 +612,8 @@ func TestRenderLaunchOutput_Snapshot(t *testing.T) {
 	}
 
 	// Section 4: Dispatched tasks with status markers
-	if !strings.Contains(output, "gt-task-1") {
-		t.Errorf("missing dispatched task gt-task-1, got:\n%s", output)
+	if !strings.Contains(output, "ms-task-1") {
+		t.Errorf("missing dispatched task ms-task-1, got:\n%s", output)
 	}
 	if !strings.Contains(output, "Task One") {
 		t.Errorf("missing title 'Task One', got:\n%s", output)
@@ -631,7 +631,7 @@ func TestRenderLaunchOutput_Snapshot(t *testing.T) {
 	}
 
 	// Section 5: TUI hint
-	if !strings.Contains(output, "gt minecart -i") {
+	if !strings.Contains(output, "ms minecart -i") {
 		t.Errorf("missing TUI hint, got:\n%s", output)
 	}
 

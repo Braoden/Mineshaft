@@ -38,7 +38,7 @@ func TestParseIntField(t *testing.T) {
 
 func TestAttachmentFieldsModeRoundTrip(t *testing.T) {
 	original := &AttachmentFields{
-		AttachedMolecule: "gt-wisp-123",
+		AttachedMolecule: "ms-wisp-123",
 		AttachedAt:       "2026-02-18T12:00:00Z",
 		Mode:             "ralph",
 	}
@@ -56,24 +56,24 @@ func TestAttachmentFieldsModeRoundTrip(t *testing.T) {
 	if parsed.Mode != "ralph" {
 		t.Errorf("Mode: got %q, want %q", parsed.Mode, "ralph")
 	}
-	if parsed.AttachedMolecule != "gt-wisp-123" {
-		t.Errorf("AttachedMolecule: got %q, want %q", parsed.AttachedMolecule, "gt-wisp-123")
+	if parsed.AttachedMolecule != "ms-wisp-123" {
+		t.Errorf("AttachedMolecule: got %q, want %q", parsed.AttachedMolecule, "ms-wisp-123")
 	}
 }
 
 func TestSetAttachmentFieldsPreservesMode(t *testing.T) {
 	issue := &Issue{
-		Description: "mode: ralph\nattached_molecule: gt-wisp-old\nSome other content",
+		Description: "mode: ralph\nattached_molecule: ms-wisp-old\nSome other content",
 	}
 	fields := &AttachmentFields{
-		AttachedMolecule: "gt-wisp-new",
+		AttachedMolecule: "ms-wisp-new",
 		Mode:             "ralph",
 	}
 	newDesc := SetAttachmentFields(issue, fields)
 	if !strings.Contains(newDesc, "mode: ralph") {
 		t.Errorf("SetAttachmentFields lost mode field, got:\n%s", newDesc)
 	}
-	if !strings.Contains(newDesc, "attached_molecule: gt-wisp-new") {
+	if !strings.Contains(newDesc, "attached_molecule: ms-wisp-new") {
 		t.Errorf("SetAttachmentFields lost attached_molecule, got:\n%s", newDesc)
 	}
 	if !strings.Contains(newDesc, "Some other content") {
@@ -84,14 +84,14 @@ func TestSetAttachmentFieldsPreservesMode(t *testing.T) {
 func TestAttachmentFormulaVarsRoundTrip(t *testing.T) {
 	fields := &AttachmentFields{
 		AttachedFormula: "mol-miner-work",
-		FormulaVars:     "feature=Bug to fix\nissue=gt-abc123\nbase_branch=main",
+		FormulaVars:     "feature=Bug to fix\nissue=ms-abc123\nbase_branch=main",
 	}
 
 	formatted := FormatAttachmentFields(fields)
-	if !strings.Contains(formatted, `formula_vars: ["feature=Bug to fix","issue=gt-abc123","base_branch=main"]`) {
+	if !strings.Contains(formatted, `formula_vars: ["feature=Bug to fix","issue=ms-abc123","base_branch=main"]`) {
 		t.Fatalf("formula_vars should use single-line JSON array, got:\n%s", formatted)
 	}
-	if strings.Contains(formatted, "\nissue=gt-abc123") {
+	if strings.Contains(formatted, "\nissue=ms-abc123") {
 		t.Fatalf("formula_vars leaked continuation lines:\n%s", formatted)
 	}
 
@@ -99,14 +99,14 @@ func TestAttachmentFormulaVarsRoundTrip(t *testing.T) {
 	if parsed == nil {
 		t.Fatal("round-trip parse returned nil")
 	}
-	want := "feature=Bug to fix\nissue=gt-abc123\nbase_branch=main"
+	want := "feature=Bug to fix\nissue=ms-abc123\nbase_branch=main"
 	if parsed.FormulaVars != want {
 		t.Fatalf("FormulaVars = %q, want %q", parsed.FormulaVars, want)
 	}
 }
 
 func TestParseAttachmentFieldsDoesNotConsumeAdjacentKeyValueLines(t *testing.T) {
-	desc := "formula_vars: feature=Bug to fix\nissue=gt-abc123\nbase_branch=main\nexample=value\nmode: ralph"
+	desc := "formula_vars: feature=Bug to fix\nissue=ms-abc123\nbase_branch=main\nexample=value\nmode: ralph"
 	fields := ParseAttachmentFields(&Issue{Description: desc})
 	if fields == nil {
 		t.Fatal("ParseAttachmentFields returned nil")
@@ -115,7 +115,7 @@ func TestParseAttachmentFieldsDoesNotConsumeAdjacentKeyValueLines(t *testing.T) 
 	if fields.FormulaVars != want {
 		t.Fatalf("FormulaVars = %q, want %q", fields.FormulaVars, want)
 	}
-	for _, adjacent := range []string{"issue=gt-abc123", "base_branch=main", "example=value"} {
+	for _, adjacent := range []string{"issue=ms-abc123", "base_branch=main", "example=value"} {
 		if strings.Contains(fields.FormulaVars, adjacent) {
 			t.Fatalf("adjacent key=value line should not be parsed as formula var: %q", fields.FormulaVars)
 		}
@@ -127,10 +127,10 @@ func TestParseAttachmentFieldsDoesNotConsumeAdjacentKeyValueLines(t *testing.T) 
 
 func TestSetAttachmentFieldsPreservesAdjacentKeyValueLines(t *testing.T) {
 	issue := &Issue{Description: "formula_vars: old=1\nissue=old\nbase_branch=old\nexample=value\n\nBody"}
-	fields := &AttachmentFields{FormulaVars: "feature=New\nissue=gt-new"}
+	fields := &AttachmentFields{FormulaVars: "feature=New\nissue=ms-new"}
 
 	newDesc := SetAttachmentFields(issue, fields)
-	if !strings.Contains(newDesc, `formula_vars: ["feature=New","issue=gt-new"]`) {
+	if !strings.Contains(newDesc, `formula_vars: ["feature=New","issue=ms-new"]`) {
 		t.Fatalf("new formula_vars missing, got:\n%s", newDesc)
 	}
 	for _, adjacent := range []string{"issue=old", "base_branch=old", "example=value"} {
@@ -150,7 +150,7 @@ func TestAgentFieldsModeRoundTrip(t *testing.T) {
 		RoleType:   "miner",
 		Rig:        "mineshaft",
 		AgentState: "working",
-		HookBead:   "gt-abc",
+		HookBead:   "ms-abc",
 		Mode:       "ralph",
 	}
 
@@ -182,7 +182,7 @@ func TestAgentFieldsModeOmittedWhenEmpty(t *testing.T) {
 	}
 }
 
-// --- Minecart fields in AttachmentFields (gt-7b6wf fix) ---
+// --- Minecart fields in AttachmentFields (ms-7b6wf fix) ---
 
 func TestParseAttachmentFieldsMinecart(t *testing.T) {
 	tests := []struct {
@@ -193,7 +193,7 @@ func TestParseAttachmentFieldsMinecart(t *testing.T) {
 	}{
 		{
 			name:              "minecart_id and merge_strategy",
-			desc:              "attached_molecule: gt-wisp-abc\nminecart_id: hq-cv-xyz\nmerge_strategy: direct",
+			desc:              "attached_molecule: ms-wisp-abc\nminecart_id: hq-cv-xyz\nmerge_strategy: direct",
 			wantMinecartID:      "hq-cv-xyz",
 			wantMergeStrategy: "direct",
 		},
@@ -217,7 +217,7 @@ func TestParseAttachmentFieldsMinecart(t *testing.T) {
 		},
 		{
 			name:              "no minecart fields",
-			desc:              "attached_molecule: gt-wisp-abc\ndispatched_by: overseer/",
+			desc:              "attached_molecule: ms-wisp-abc\ndispatched_by: overseer/",
 			wantMinecartID:      "",
 			wantMergeStrategy: "",
 		},
@@ -245,7 +245,7 @@ func TestParseAttachmentFieldsMinecart(t *testing.T) {
 
 func TestFormatAttachmentFieldsMinecart(t *testing.T) {
 	fields := &AttachmentFields{
-		AttachedMolecule: "gt-wisp-abc",
+		AttachedMolecule: "ms-wisp-abc",
 		MinecartID:         "hq-cv-xyz",
 		MergeStrategy:    "direct",
 		MinecartOwned:      true,
@@ -264,7 +264,7 @@ func TestFormatAttachmentFieldsMinecart(t *testing.T) {
 
 func TestMinecartFieldsRoundTrip(t *testing.T) {
 	original := &AttachmentFields{
-		AttachedMolecule: "gt-wisp-abc",
+		AttachedMolecule: "ms-wisp-abc",
 		DispatchedBy:     "overseer/",
 		MinecartID:         "hq-cv-xyz",
 		MergeStrategy:    "direct",
@@ -302,10 +302,10 @@ func TestMinecartOwnedFalseNotFormatted(t *testing.T) {
 
 func TestSetAttachmentFieldsPreservesMinecart(t *testing.T) {
 	issue := &Issue{
-		Description: "minecart_id: hq-cv-old\nmerge_strategy: direct\nminecart_owned: true\nattached_molecule: gt-wisp-old\nSome other content",
+		Description: "minecart_id: hq-cv-old\nmerge_strategy: direct\nminecart_owned: true\nattached_molecule: ms-wisp-old\nSome other content",
 	}
 	fields := &AttachmentFields{
-		AttachedMolecule: "gt-wisp-new",
+		AttachedMolecule: "ms-wisp-new",
 		MinecartID:         "hq-cv-new",
 		MergeStrategy:    "local",
 		MinecartOwned:      true,
@@ -345,8 +345,8 @@ func TestFormatMinecartFields(t *testing.T) {
 		},
 		{
 			name:   "all fields",
-			fields: &MinecartFields{Owner: "overseer/", Notify: "witness/", Merge: "direct", Molecule: "gt-wisp-abc"},
-			want:   "Owner: overseer/\nNotify: witness/\nMerge: direct\nMolecule: gt-wisp-abc",
+			fields: &MinecartFields{Owner: "overseer/", Notify: "witness/", Merge: "direct", Molecule: "ms-wisp-abc"},
+			want:   "Owner: overseer/\nNotify: witness/\nMerge: direct\nMolecule: ms-wisp-abc",
 		},
 		{
 			name:   "only merge",
@@ -413,7 +413,7 @@ func TestMinecartFieldsParseFormatRoundTrip(t *testing.T) {
 		Owner:                "overseer/",
 		Notify:               "witness/",
 		Merge:                "direct",
-		Molecule:             "gt-wisp-abc",
+		Molecule:             "ms-wisp-abc",
 		CompletionNotifiedAt: "2026-05-25T02:30:00Z",
 	}
 	formatted := FormatMinecartFields(original)
@@ -440,7 +440,7 @@ func TestMinecartFieldsParseFormatRoundTrip(t *testing.T) {
 
 func TestSetMinecartFieldsWithMixedContent(t *testing.T) {
 	issue := &Issue{Description: "Minecart tracking 3 issues\nOwner: old/\nSome prose line\nMerge: local\nAnother line"}
-	fields := &MinecartFields{Owner: "new/", Merge: "direct", Molecule: "gt-mol-xyz"}
+	fields := &MinecartFields{Owner: "new/", Merge: "direct", Molecule: "ms-mol-xyz"}
 	got := SetMinecartFields(issue, fields)
 
 	// Should preserve non-minecart prose
@@ -457,7 +457,7 @@ func TestSetMinecartFieldsWithMixedContent(t *testing.T) {
 	if !strings.Contains(got, "Merge: direct") {
 		t.Errorf("missing Merge, got:\n%s", got)
 	}
-	if !strings.Contains(got, "Molecule: gt-mol-xyz") {
+	if !strings.Contains(got, "Molecule: ms-mol-xyz") {
 		t.Errorf("missing Molecule, got:\n%s", got)
 	}
 	// Should NOT have old fields
@@ -472,7 +472,7 @@ func TestSetMinecartFieldsWithMixedContent(t *testing.T) {
 // --- ParseAgentFields (not covered in beads_test.go) ---
 
 func TestParseAgentFields_AllFields(t *testing.T) {
-	desc := "role_type: miner\nrig: mineshaft\nagent_state: working\nhook_bead: gt-abc\ncleanup_status: clean\nactive_mr: gt-mr1\nlast_source_issue: gt-src\nnotification_level: verbose"
+	desc := "role_type: miner\nrig: mineshaft\nagent_state: working\nhook_bead: ms-abc\ncleanup_status: clean\nactive_mr: ms-mr1\nlast_source_issue: ms-src\nnotification_level: verbose"
 	got := ParseAgentFields(desc)
 	if got.RoleType != "miner" {
 		t.Errorf("RoleType = %q, want %q", got.RoleType, "miner")
@@ -483,35 +483,35 @@ func TestParseAgentFields_AllFields(t *testing.T) {
 	if got.AgentState != "working" {
 		t.Errorf("AgentState = %q, want %q", got.AgentState, "working")
 	}
-	if got.HookBead != "gt-abc" {
-		t.Errorf("HookBead = %q, want %q", got.HookBead, "gt-abc")
+	if got.HookBead != "ms-abc" {
+		t.Errorf("HookBead = %q, want %q", got.HookBead, "ms-abc")
 	}
 	if got.CleanupStatus != "clean" {
 		t.Errorf("CleanupStatus = %q, want %q", got.CleanupStatus, "clean")
 	}
-	if got.ActiveMR != "gt-mr1" {
-		t.Errorf("ActiveMR = %q, want %q", got.ActiveMR, "gt-mr1")
+	if got.ActiveMR != "ms-mr1" {
+		t.Errorf("ActiveMR = %q, want %q", got.ActiveMR, "ms-mr1")
 	}
-	if got.LastSourceIssue != "gt-src" {
-		t.Errorf("LastSourceIssue = %q, want %q", got.LastSourceIssue, "gt-src")
+	if got.LastSourceIssue != "ms-src" {
+		t.Errorf("LastSourceIssue = %q, want %q", got.LastSourceIssue, "ms-src")
 	}
 	if got.NotificationLevel != "verbose" {
 		t.Errorf("NotificationLevel = %q, want %q", got.NotificationLevel, "verbose")
 	}
 }
 
-// --- Completion metadata fields (gt-x7t9) ---
+// --- Completion metadata fields (ms-x7t9) ---
 
 func TestAgentFieldsCompletionMetadataRoundTrip(t *testing.T) {
 	original := &AgentFields{
 		RoleType:        "miner",
 		Rig:             "mineshaft",
 		AgentState:      "done",
-		HookBead:        "gt-abc",
+		HookBead:        "ms-abc",
 		ExitType:        "COMPLETED",
-		MRID:            "gt-mr-xyz",
-		Branch:          "miner/nux/gt-abc@hash",
-		LastSourceIssue: "gt-abc",
+		MRID:            "ms-mr-xyz",
+		Branch:          "miner/nux/ms-abc@hash",
+		LastSourceIssue: "ms-abc",
 		MRFailed:        false,
 		CompletionTime:  "2026-02-28T01:00:00Z",
 	}
@@ -522,13 +522,13 @@ func TestAgentFieldsCompletionMetadataRoundTrip(t *testing.T) {
 	if !strings.Contains(formatted, "exit_type: COMPLETED") {
 		t.Errorf("missing exit_type in formatted output:\n%s", formatted)
 	}
-	if !strings.Contains(formatted, "mr_id: gt-mr-xyz") {
+	if !strings.Contains(formatted, "mr_id: ms-mr-xyz") {
 		t.Errorf("missing mr_id in formatted output:\n%s", formatted)
 	}
-	if !strings.Contains(formatted, "branch: miner/nux/gt-abc@hash") {
+	if !strings.Contains(formatted, "branch: miner/nux/ms-abc@hash") {
 		t.Errorf("missing branch in formatted output:\n%s", formatted)
 	}
-	if !strings.Contains(formatted, "last_source_issue: gt-abc") {
+	if !strings.Contains(formatted, "last_source_issue: ms-abc") {
 		t.Errorf("missing last_source_issue in formatted output:\n%s", formatted)
 	}
 	if !strings.Contains(formatted, "completion_time: 2026-02-28T01:00:00Z") {
@@ -544,14 +544,14 @@ func TestAgentFieldsCompletionMetadataRoundTrip(t *testing.T) {
 	if parsed.ExitType != "COMPLETED" {
 		t.Errorf("ExitType: got %q, want %q", parsed.ExitType, "COMPLETED")
 	}
-	if parsed.MRID != "gt-mr-xyz" {
-		t.Errorf("MRID: got %q, want %q", parsed.MRID, "gt-mr-xyz")
+	if parsed.MRID != "ms-mr-xyz" {
+		t.Errorf("MRID: got %q, want %q", parsed.MRID, "ms-mr-xyz")
 	}
-	if parsed.Branch != "miner/nux/gt-abc@hash" {
-		t.Errorf("Branch: got %q, want %q", parsed.Branch, "miner/nux/gt-abc@hash")
+	if parsed.Branch != "miner/nux/ms-abc@hash" {
+		t.Errorf("Branch: got %q, want %q", parsed.Branch, "miner/nux/ms-abc@hash")
 	}
-	if parsed.LastSourceIssue != "gt-abc" {
-		t.Errorf("LastSourceIssue: got %q, want %q", parsed.LastSourceIssue, "gt-abc")
+	if parsed.LastSourceIssue != "ms-abc" {
+		t.Errorf("LastSourceIssue: got %q, want %q", parsed.LastSourceIssue, "ms-abc")
 	}
 	if parsed.MRFailed != false {
 		t.Errorf("MRFailed: got %v, want false", parsed.MRFailed)
@@ -563,8 +563,8 @@ func TestAgentFieldsCompletionMetadataRoundTrip(t *testing.T) {
 	if parsed.RoleType != "miner" {
 		t.Errorf("RoleType: got %q, want %q", parsed.RoleType, "miner")
 	}
-	if parsed.HookBead != "gt-abc" {
-		t.Errorf("HookBead: got %q, want %q", parsed.HookBead, "gt-abc")
+	if parsed.HookBead != "ms-abc" {
+		t.Errorf("HookBead: got %q, want %q", parsed.HookBead, "ms-abc")
 	}
 }
 
@@ -605,19 +605,19 @@ func TestAgentFieldsCompletionOmittedWhenEmpty(t *testing.T) {
 }
 
 func TestParseAgentFields_WithCompletionMetadata(t *testing.T) {
-	desc := "role_type: miner\nrig: mineshaft\nagent_state: done\nhook_bead: gt-abc\nexit_type: ESCALATED\nbranch: miner/nux/gt-abc@hash\nlast_source_issue: gt-abc\nmr_failed: true\ncompletion_time: 2026-02-28T02:00:00Z"
+	desc := "role_type: miner\nrig: mineshaft\nagent_state: done\nhook_bead: ms-abc\nexit_type: ESCALATED\nbranch: miner/nux/ms-abc@hash\nlast_source_issue: ms-abc\nmr_failed: true\ncompletion_time: 2026-02-28T02:00:00Z"
 	got := ParseAgentFields(desc)
 	if got.ExitType != "ESCALATED" {
 		t.Errorf("ExitType = %q, want %q", got.ExitType, "ESCALATED")
 	}
-	if got.Branch != "miner/nux/gt-abc@hash" {
-		t.Errorf("Branch = %q, want %q", got.Branch, "miner/nux/gt-abc@hash")
+	if got.Branch != "miner/nux/ms-abc@hash" {
+		t.Errorf("Branch = %q, want %q", got.Branch, "miner/nux/ms-abc@hash")
 	}
 	if !got.MRFailed {
 		t.Errorf("MRFailed = false, want true")
 	}
-	if got.LastSourceIssue != "gt-abc" {
-		t.Errorf("LastSourceIssue = %q, want %q", got.LastSourceIssue, "gt-abc")
+	if got.LastSourceIssue != "ms-abc" {
+		t.Errorf("LastSourceIssue = %q, want %q", got.LastSourceIssue, "ms-abc")
 	}
 	if got.CompletionTime != "2026-02-28T02:00:00Z" {
 		t.Errorf("CompletionTime = %q, want %q", got.CompletionTime, "2026-02-28T02:00:00Z")

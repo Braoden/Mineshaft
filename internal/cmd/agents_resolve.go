@@ -173,7 +173,7 @@ func loadAgentBeadsFromDir(beadsDir string, issueSource, wispSource agentBeadSou
 		})
 	}
 
-	if wisps, err := db.List(beads.ListOptions{Ephemeral: true, Label: "gt:agent", Status: "all"}); err == nil {
+	if wisps, err := db.List(beads.ListOptions{Ephemeral: true, Label: "ms:agent", Status: "all"}); err == nil {
 		for _, wisp := range wisps {
 			candidates = append(candidates, agentBeadCandidate{
 				ID:       wisp.ID,
@@ -189,7 +189,7 @@ func loadAgentBeadsFromDir(beadsDir string, issueSource, wispSource agentBeadSou
 }
 
 func listAgentIssues(db *beads.Beads) ([]*beads.Issue, error) {
-	out, err := db.Run("list", "--label=gt:agent", "--include-infra", "--status=all", "--json", "--flat", "--no-pager", "--limit=0")
+	out, err := db.Run("list", "--label=ms:agent", "--include-infra", "--status=all", "--json", "--flat", "--no-pager", "--limit=0")
 	if err != nil {
 		return nil, err
 	}

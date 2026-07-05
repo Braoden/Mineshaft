@@ -2,7 +2,7 @@
 // and emitting normalized OTEL telemetry events.
 //
 // Design: AgentAdapter is the extension point. Adding support for a new agent
-// (OpenCode, Kiro, etc.) means implementing this interface. The gt agent-log command
+// (OpenCode, Kiro, etc.) means implementing this interface. The ms agent-log command
 // selects the adapter via --agent flag and defaults to "claudecode".
 package agentlog
 
@@ -15,7 +15,7 @@ import (
 // All adapters emit this type so downstream telemetry is agent-agnostic.
 type AgentEvent struct {
 	AgentType       string    // "claudecode", "opencode", …
-	SessionID       string    // Mineshaft tmux session name (e.g. "hq-overseer", "gt-wyvern-toast")
+	SessionID       string    // Mineshaft tmux session name (e.g. "hq-overseer", "ms-wyvern-toast")
 	NativeSessionID string    // agent-native session UUID (e.g. Claude Code session UUID from JSONL filename)
 	EventType       string    // "text", "tool_use", "tool_result", "thinking", "usage"
 	Role            string    // "assistant" or "user"

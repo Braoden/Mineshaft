@@ -94,7 +94,7 @@ type Daemon struct {
 	restartTracker *RestartTracker
 
 	// telemetry exports metrics and logs to VictoriaMetrics / VictoriaLogs.
-	// Nil when telemetry is disabled (GT_OTEL_METRICS_URL / GT_OTEL_LOGS_URL not set).
+	// Nil when telemetry is disabled (MS_OTEL_METRICS_URL / MS_OTEL_LOGS_URL not set).
 	otelProvider *telemetry.Provider
 	metrics      *daemonMetrics
 
@@ -245,20 +245,20 @@ func New(config *Config) (*Daemon, error) {
 		logger.Printf("Warning: failed to initialize town registry: %v", err)
 	}
 
-	// Set GT_TOWN_ROOT in the daemon process env so Go code (e.g.,
-	// sessionPrefixPattern) can read it without relying on GT_ROOT.
-	os.Setenv("GT_TOWN_ROOT", config.TownRoot)
+	// Set MS_TOWN_ROOT in the daemon process env so Go code (e.g.,
+	// sessionPrefixPattern) can read it without relying on MS_ROOT.
+	os.Setenv("MS_TOWN_ROOT", config.TownRoot)
 
-	// Also set GT_TOWN_ROOT in tmux global environment so run-shell subprocesses
-	// (e.g., gt cycle next/prev) can find the workspace even when CWD is $HOME.
+	// Also set MS_TOWN_ROOT in tmux global environment so run-shell subprocesses
+	// (e.g., ms cycle next/prev) can find the workspace even when CWD is $HOME.
 	// Non-fatal: tmux server may not be running yet — daemon creates sessions shortly.
 	t := tmux.NewTmux()
-	if err := t.SetGlobalEnvironment("GT_TOWN_ROOT", config.TownRoot); err != nil {
-		logger.Printf("Warning: failed to set GT_TOWN_ROOT in tmux global env: %v", err)
+	if err := t.SetGlobalEnvironment("MS_TOWN_ROOT", config.TownRoot); err != nil {
+		logger.Printf("Warning: failed to set MS_TOWN_ROOT in tmux global env: %v", err)
 	}
 
 	// Clear any agent identity vars that leaked into tmux global env.
-	// Only GT_TOWN_ROOT should be global. Leaked identity vars cause sessions
+	// Only MS_TOWN_ROOT should be global. Leaked identity vars cause sessions
 	// without their own session-level overrides to inherit a stale identity,
 	// misattributing beads and mail. GH#3006.
 	identityVars := agentconfig.IdentityEnvVars
@@ -308,19 +308,19 @@ func New(config *Config) (*Daemon, error) {
 		}
 	}
 
-	// Fallback: if GT_DOLT_PORT still isn't set (no DoltServerManager, daemon
-	// started independently of gt up), detect the port from dolt config.
+	// Fallback: if MS_DOLT_PORT still isn't set (no DoltServerManager, daemon
+	// started independently of ms up), detect the port from dolt config.
 	// This ensures AgentEnv() always has the port for spawned sessions. (GH#2412)
-	if os.Getenv("GT_DOLT_PORT") == "" {
+	if os.Getenv("MS_DOLT_PORT") == "" {
 		if port := agentconfig.ResolveConfiguredDoltPort(config.TownRoot); port > 0 {
 			portStr := strconv.Itoa(port)
-			os.Setenv("GT_DOLT_PORT", portStr)
+			os.Setenv("MS_DOLT_PORT", portStr)
 			os.Setenv("BEADS_DOLT_SERVER_PORT", portStr)
 			os.Setenv("BEADS_DOLT_PORT", portStr)
-			logger.Printf("Set GT_DOLT_PORT=%s from resolved Dolt config (fallback)", portStr)
+			logger.Printf("Set MS_DOLT_PORT=%s from resolved Dolt config (fallback)", portStr)
 		}
 	} else {
-		portStr := os.Getenv("GT_DOLT_PORT")
+		portStr := os.Getenv("MS_DOLT_PORT")
 		os.Setenv("BEADS_DOLT_SERVER_PORT", portStr)
 		os.Setenv("BEADS_DOLT_PORT", portStr)
 	}
@@ -332,10 +332,10 @@ func New(config *Config) (*Daemon, error) {
 	applyConfiguredDoltHostEnv(config.TownRoot, logger.Printf)
 
 	// PATCH-006: Resolve binary paths at startup.
-	gtPath, err := exec.LookPath("gt")
+	gtPath, err := exec.LookPath("ms")
 	if err != nil {
-		gtPath = "gt"
-		logger.Printf("Warning: gt not found in PATH, subprocess calls may fail")
+		gtPath = "ms"
+		logger.Printf("Warning: ms not found in PATH, subprocess calls may fail")
 	}
 	bdPath, err := exec.LookPath("bd")
 	if err != nil {
@@ -355,7 +355,7 @@ func New(config *Config) (*Daemon, error) {
 	}
 
 	// Initialize OpenTelemetry (best-effort — telemetry failure never blocks startup).
-	// Activate by setting GT_OTEL_METRICS_URL and/or GT_OTEL_LOGS_URL.
+	// Activate by setting MS_OTEL_METRICS_URL and/or MS_OTEL_LOGS_URL.
 	otelProvider, otelErr := telemetry.Init(ctx, "mineshaft-daemon", "")
 	if otelErr != nil {
 		logger.Printf("Warning: telemetry init failed: %v", otelErr)
@@ -405,19 +405,19 @@ func applyDoltServerConfigEnv(config *DoltServerConfig) {
 	}
 	if config.Port > 0 {
 		portStr := strconv.Itoa(config.Port)
-		os.Setenv("GT_DOLT_PORT", portStr)
+		os.Setenv("MS_DOLT_PORT", portStr)
 		os.Setenv("BEADS_DOLT_SERVER_PORT", portStr)
 		os.Setenv("BEADS_DOLT_PORT", portStr)
 	}
 	if config.Host != "" {
-		os.Setenv("GT_DOLT_HOST", config.Host)
+		os.Setenv("MS_DOLT_HOST", config.Host)
 		os.Setenv("BEADS_DOLT_SERVER_HOST", config.Host)
 	}
 }
 
 func applyConfiguredDoltHostEnv(townRoot string, logf func(format string, v ...interface{})) {
 	if host := agentconfig.ResolveConfiguredDoltHost(townRoot); host != "" {
-		os.Setenv("GT_DOLT_HOST", host)
+		os.Setenv("MS_DOLT_HOST", host)
 		os.Setenv("BEADS_DOLT_SERVER_HOST", host)
 		if logf != nil {
 			logf("Set BEADS_DOLT_SERVER_HOST=%s from resolved Dolt host", host)
@@ -425,7 +425,7 @@ func applyConfiguredDoltHostEnv(townRoot string, logf func(format string, v ...i
 		return
 	}
 	if _, _, ok := agentconfig.ManagedDoltEndpoint(townRoot); ok {
-		os.Unsetenv("GT_DOLT_HOST")
+		os.Unsetenv("MS_DOLT_HOST")
 	}
 	os.Unsetenv("BEADS_DOLT_SERVER_HOST")
 }
@@ -681,7 +681,7 @@ func (d *Daemon) Run() (err error) {
 
 	// Start scheduled maintenance ticker if configured.
 	// Checks periodically whether we're in the maintenance window and
-	// runs `gt maintain --force` when commit counts exceed threshold.
+	// runs `ms maintain --force` when commit counts exceed threshold.
 	var scheduledMaintenanceTicker *time.Ticker
 	var scheduledMaintenanceChan <-chan time.Time
 	if d.isPatrolActive("scheduled_maintenance") {
@@ -733,11 +733,11 @@ func (d *Daemon) Run() (err error) {
 
 		case sig := <-sigChan:
 			if isLifecycleSignal(sig) {
-				// Lifecycle signal: immediate lifecycle processing (from gt handoff)
+				// Lifecycle signal: immediate lifecycle processing (from ms handoff)
 				d.logger.Println("Received lifecycle signal, processing lifecycle requests immediately")
 				d.processLifecycleRequests()
 			} else if isReloadRestartSignal(sig) {
-				// Reload restart tracker from disk (from 'gt daemon clear-backoff')
+				// Reload restart tracker from disk (from 'ms daemon clear-backoff')
 				d.logger.Println("Received reload-restart signal, reloading restart tracker from disk")
 				if d.restartTracker != nil {
 					if err := d.restartTracker.Load(); err != nil {
@@ -807,7 +807,7 @@ func (d *Daemon) Run() (err error) {
 
 		case <-scheduledMaintenanceChan:
 			// Scheduled maintenance — checks if we're in the maintenance window
-			// and runs `gt maintain --force` when commit counts exceed threshold.
+			// and runs `ms maintain --force` when commit counts exceed threshold.
 			if !d.isShutdownInProgress() {
 				d.runScheduledMaintenance()
 			}
@@ -853,7 +853,7 @@ func (d *Daemon) recoveryHeartbeatInterval() time.Duration {
 func (d *Daemon) heartbeat(state *State) {
 	// Skip heartbeat if shutdown is in progress.
 	// This prevents the daemon from fighting shutdown by auto-restarting killed agents.
-	// The shutdown.lock file is created by gt down before terminating sessions.
+	// The shutdown.lock file is created by ms down before terminating sessions.
 	if d.isShutdownInProgress() {
 		d.logger.Println("Shutdown in progress, skipping heartbeat")
 		return
@@ -878,13 +878,13 @@ func (d *Daemon) heartbeat(state *State) {
 	d.invalidateKnownRigsCache()
 
 	// 0a. Reload prefix registry so new/changed rigs get correct session names.
-	// Without this, rigs added after daemon startup get the "gt" default prefix,
-	// causing ghost sessions like gt-witness instead of ti-witness. (hq-ouz, hq-eqf, hq-3i4)
+	// Without this, rigs added after daemon startup get the "ms" default prefix,
+	// causing ghost sessions like ms-witness instead of ti-witness. (hq-ouz, hq-eqf, hq-3i4)
 	if err := session.InitRegistry(d.config.TownRoot); err != nil {
 		d.logger.Printf("Warning: failed to reload prefix registry: %v", err)
 	}
 
-	// 0b. Kill ghost sessions left over from stale registry (default "gt" prefix).
+	// 0b. Kill ghost sessions left over from stale registry (default "ms" prefix).
 	d.killDefaultPrefixGhosts()
 
 	// 0. Ensure Dolt server is running (if configured)
@@ -975,7 +975,7 @@ func (d *Daemon) heartbeat(state *State) {
 	d.checkMinerSessionHealth()
 
 	// 12b. Reap idle miner sessions to prevent API slot burn.
-	// Miners transition to IDLE after gt done but sessions stay alive.
+	// Miners transition to IDLE after ms done but sessions stay alive.
 	// Kill sessions that have been idle longer than the configured threshold.
 	d.reapIdleMiners()
 
@@ -991,7 +991,7 @@ func (d *Daemon) heartbeat(state *State) {
 	d.pruneStaleBranches()
 
 	// 14. Dispatch scheduled work (capacity-controlled miner dispatch).
-	// Shells out to `gt scheduler run` to avoid circular import between daemon and cmd.
+	// Shells out to `ms scheduler run` to avoid circular import between daemon and cmd.
 	// Pressure-gated: miners are the primary resource consumers.
 	if p := d.checkPressure("miner"); !p.OK {
 		d.logger.Printf("Deferring miner dispatch: %s", p.Reason)
@@ -1189,12 +1189,12 @@ func checkBeadsStoreCompatibility(ctx context.Context, stores map[string]beadsdk
 		return nil
 	}
 
-	remediation := "Upgrade or rebuild `gt` against a newer beads release, or switch to a workspace created by a matching release, then retry `gt daemon start`."
+	remediation := "Upgrade or rebuild `ms` against a newer beads release, or switch to a workspace created by a matching release, then retry `ms daemon start`."
 	if binaryBeadsVersion == "" {
-		remediation = "Rebuild `gt` or use a release whose embedded beads version matches this workspace, then retry `gt daemon start`."
+		remediation = "Rebuild `ms` or use a release whose embedded beads version matches this workspace, then retry `ms daemon start`."
 	}
 
-	return fmt.Errorf("daemon startup blocked: incompatible beads workspace / gt binary combination\n\n  %s\n\n%s",
+	return fmt.Errorf("daemon startup blocked: incompatible beads workspace / ms binary combination\n\n  %s\n\n%s",
 		strings.Join(problems, "\n  "), remediation)
 }
 
@@ -1343,7 +1343,7 @@ func (d *Daemon) ensureBootRunning() {
 	b := boot.New(d.config.TownRoot)
 
 	// Idle suppression: if Boot's last run found supervisor healthy ("nothing"),
-	// suppress spawning for longer to avoid burning API calls. (fixes gt-qu883c)
+	// suppress spawning for longer to avoid burning API calls. (fixes ms-qu883c)
 	idleSuppression := d.loadOperationalConfig().GetDaemonConfig().BootIdleSuppressionD()
 	if status, err := b.LoadStatus(); err == nil && status.LastAction == "nothing" {
 		if !status.CompletedAt.IsZero() && time.Since(status.CompletedAt) < idleSuppression {
@@ -1354,7 +1354,7 @@ func (d *Daemon) ensureBootRunning() {
 	}
 
 	// Check for degraded mode
-	degraded := os.Getenv("GT_DEGRADED") == "true"
+	degraded := os.Getenv("MS_DEGRADED") == "true"
 	if degraded || !d.tmux.IsAvailable() {
 		// In degraded mode, run mechanical triage directly
 		d.logger.Println("Degraded mode: running mechanical Boot triage")
@@ -1362,11 +1362,11 @@ func (d *Daemon) ensureBootRunning() {
 		return
 	}
 
-	// Idle check: run gt-idle-check to see if the system needs waking.
+	// Idle check: run ms-idle-check to see if the system needs waking.
 	// If idle (all rigs parked, no miners, supervisor alive), skip the expensive
 	// Claude Boot session and use degraded mechanical triage instead.
 	// This saves ~480 Claude sessions/day when Mineshaft is not in active use.
-	idleCheckBin := filepath.Join(d.config.TownRoot, "bin", "gt-idle-check")
+	idleCheckBin := filepath.Join(d.config.TownRoot, "bin", "ms-idle-check")
 	if _, err := os.Stat(idleCheckBin); err == nil {
 		//nolint:gosec // G204: path is constructed from config
 		cmd := exec.Command(idleCheckBin)
@@ -1466,7 +1466,7 @@ func (d *Daemon) ensureSupervisorRunning() {
 	// Check restart tracker for backoff/crash loop
 	if d.restartTracker != nil {
 		if d.restartTracker.IsInCrashLoop(agentID) {
-			d.logger.Printf("Supervisor is in crash loop, skipping restart (use 'gt daemon clear-backoff supervisor' to reset)")
+			d.logger.Printf("Supervisor is in crash loop, skipping restart (use 'ms daemon clear-backoff supervisor' to reset)")
 			return
 		}
 		if !d.restartTracker.CanRestart(agentID) {
@@ -1507,7 +1507,7 @@ func (d *Daemon) ensureSupervisorRunning() {
 }
 
 // supervisorGracePeriod returns the config-driven supervisor grace period.
-// The Supervisor needs time to initialize Claude, run SessionStart hooks, execute gt prime,
+// The Supervisor needs time to initialize Claude, run SessionStart hooks, execute ms prime,
 // run a patrol cycle, and write a fresh heartbeat. Default: 5 minutes.
 func (d *Daemon) supervisorGracePeriod() time.Duration {
 	return d.loadOperationalConfig().GetDaemonConfig().SupervisorGracePeriodD()
@@ -1637,14 +1637,14 @@ func (d *Daemon) checkSupervisorHeartbeat() {
 
 // restartStuckSupervisor kills a stuck Supervisor session and respawns it.
 // Uses RestartTracker for exponential backoff and crash-loop prevention.
-// Notifies via gt-notify (zero token cost) if the notify script exists.
+// Notifies via ms-notify (zero token cost) if the notify script exists.
 func (d *Daemon) restartStuckSupervisor(sessionName, reason string) {
 	const agentID = "supervisor"
 
 	// Check restart tracker before acting
 	if d.restartTracker != nil {
 		if d.restartTracker.IsInCrashLoop(agentID) {
-			d.logger.Printf("Stuck-agent-dog: Supervisor in crash loop, not restarting (use 'gt daemon clear-backoff supervisor')")
+			d.logger.Printf("Stuck-agent-dog: Supervisor in crash loop, not restarting (use 'ms daemon clear-backoff supervisor')")
 			d.notifySlack("admin", "critical", fmt.Sprintf("Supervisor crash loop detected — manual intervention required. Reason: %s", reason))
 			return
 		}
@@ -1699,13 +1699,13 @@ func (d *Daemon) restartStuckSupervisor(sessionName, reason string) {
 	d.notifySlack("admin", "high", fmt.Sprintf("Supervisor was stuck (%s) — auto-restarted successfully", reason))
 }
 
-// notifySlack sends a notification via gt-notify (zero token cost).
+// notifySlack sends a notification via ms-notify (zero token cost).
 // Channel: "admin" or "status". Priority: "critical", "high", "info", "success".
-// Silently fails if gt-notify is not found — notification is best-effort.
+// Silently fails if ms-notify is not found — notification is best-effort.
 func (d *Daemon) notifySlack(channel, priority, message string) {
-	notifyBin := filepath.Join(d.config.TownRoot, "bin", "gt-notify")
+	notifyBin := filepath.Join(d.config.TownRoot, "bin", "ms-notify")
 	if _, err := os.Stat(notifyBin); err != nil {
-		d.logger.Printf("Stuck-agent-dog: gt-notify not found at %s, skipping notification", notifyBin)
+		d.logger.Printf("Stuck-agent-dog: ms-notify not found at %s, skipping notification", notifyBin)
 		return
 	}
 
@@ -1713,7 +1713,7 @@ func (d *Daemon) notifySlack(channel, priority, message string) {
 	cmd := exec.Command(notifyBin, "--channel", channel, "--priority", priority, message)
 	cmd.Env = append(os.Environ(), fmt.Sprintf("PATH=%s:%s", filepath.Join(d.config.TownRoot, "bin"), os.Getenv("PATH")))
 	if output, err := cmd.CombinedOutput(); err != nil {
-		d.logger.Printf("Stuck-agent-dog: gt-notify failed: %v (output: %s)", err, string(output))
+		d.logger.Printf("Stuck-agent-dog: ms-notify failed: %v (output: %s)", err, string(output))
 	}
 }
 
@@ -1746,14 +1746,14 @@ func (d *Daemon) hasPendingEvents(channel string) bool {
 }
 
 // ensureWitnessRunning ensures the witness for a specific rig is running.
-// Discover, don't track: uses Manager.Start() which checks tmux directly (gt-zecmc).
+// Discover, don't track: uses Manager.Start() which checks tmux directly (ms-zecmc).
 func (d *Daemon) ensureWitnessRunning(rigName string) {
 	// Check rig operational state before auto-starting
 	if operational, reason := d.isRigOperational(rigName); !operational {
 		d.logger.Printf("Skipping witness auto-start for %s: %s", rigName, reason)
 		// Kill leftover witness session if rig is not operational (docked/parked).
 		// Without this, sessions started before the rig was docked survive until
-		// the next explicit 'gt rig dock' command. (hq-snx61)
+		// the next explicit 'ms rig dock' command. (hq-snx61)
 		name := session.WitnessSessionName(session.PrefixFor(rigName))
 		if exists, _ := d.tmux.HasSession(name); exists {
 			d.logger.Printf("Killing leftover witness %s (rig %s)", name, reason)
@@ -1806,14 +1806,14 @@ func (d *Daemon) ensureRefineriesRunning() {
 }
 
 // ensureRefineryRunning ensures the refinery for a specific rig is running.
-// Discover, don't track: uses Manager.Start() which checks tmux directly (gt-zecmc).
+// Discover, don't track: uses Manager.Start() which checks tmux directly (ms-zecmc).
 func (d *Daemon) ensureRefineryRunning(rigName string) {
 	// Check rig operational state before auto-starting
 	if operational, reason := d.isRigOperational(rigName); !operational {
 		d.logger.Printf("Skipping refinery auto-start for %s: %s", rigName, reason)
 		// Kill leftover refinery session if rig is not operational (docked/parked).
 		// Without this, sessions started before the rig was docked survive until
-		// the next explicit 'gt rig dock' command. (hq-snx61)
+		// the next explicit 'ms rig dock' command. (hq-snx61)
 		name := session.RefinerySessionName(session.PrefixFor(rigName))
 		if exists, _ := d.tmux.HasSession(name); exists {
 			d.logger.Printf("Killing leftover refinery %s (rig %s)", name, reason)
@@ -1985,10 +1985,10 @@ func (d *Daemon) killRefinerySessions() {
 	})
 }
 
-// killDefaultPrefixGhosts kills tmux sessions that use the default "gt" prefix
+// killDefaultPrefixGhosts kills tmux sessions that use the default "ms" prefix
 // for roles that should use a rig-specific prefix. These ghost sessions appear
 // when the daemon starts before a rig is registered or when the registry was
-// stale. After a registry reload, any "gt-witness", "gt-refinery", or "gt-*"
+// stale. After a registry reload, any "ms-witness", "ms-refinery", or "ms-*"
 // sessions that correspond to rigs with their own prefix are stale duplicates.
 // Fix for: hq-ouz, hq-eqf, hq-3i4.
 func (d *Daemon) killDefaultPrefixGhosts() {
@@ -1998,8 +1998,8 @@ func (d *Daemon) killDefaultPrefixGhosts() {
 		return
 	}
 
-	// Check if any rig actually has "gt" as its registered prefix.
-	// If so, gt-witness is legitimate for that rig — don't kill it.
+	// Check if any rig actually has "ms" as its registered prefix.
+	// If so, ms-witness is legitimate for that rig — don't kill it.
 	gtIsLegitimate := false
 	for _, prefix := range allRigs {
 		if prefix == session.DefaultPrefix {
@@ -2011,7 +2011,7 @@ func (d *Daemon) killDefaultPrefixGhosts() {
 		return
 	}
 
-	// Kill ghost sessions using the default "gt" prefix for patrol roles.
+	// Kill ghost sessions using the default "ms" prefix for patrol roles.
 	for _, role := range []string{"witness", "refinery"} {
 		ghostName := fmt.Sprintf("%s-%s", session.DefaultPrefix, role)
 		exists, _ := d.tmux.HasSession(ghostName)
@@ -2023,12 +2023,12 @@ func (d *Daemon) killDefaultPrefixGhosts() {
 		}
 	}
 
-	// Also check for ghost miner sessions: gt-<minerName> where the miner
+	// Also check for ghost miner sessions: ms-<minerName> where the miner
 	// actually belongs to a rig with a different prefix.
 	for _, rigName := range d.getKnownRigs() {
 		rigPrefix := session.PrefixFor(rigName)
 		if rigPrefix == session.DefaultPrefix {
-			continue // This rig uses "gt" — its sessions are fine
+			continue // This rig uses "ms" — its sessions are fine
 		}
 		rigPath := filepath.Join(d.config.TownRoot, rigName, "miners")
 		entries, err := os.ReadDir(rigPath)
@@ -2204,7 +2204,7 @@ func (d *Daemon) isRigOperational(rigName string) (bool, string) {
 	}
 
 	// Check rig bead labels (global/synced docked status)
-	// This is the persistent docked state set by 'gt rig dock'
+	// This is the persistent docked state set by 'ms rig dock'
 	rigPath := filepath.Join(d.config.TownRoot, rigName)
 
 	// Try to get prefix from rig config.json, fall back to rigs.json registry
@@ -2319,7 +2319,7 @@ func (d *Daemon) Stop() {
 }
 
 // isShutdownInProgress checks if a shutdown is currently in progress.
-// The shutdown.lock file is created by gt down before terminating sessions.
+// The shutdown.lock file is created by ms down before terminating sessions.
 // This prevents the daemon from fighting shutdown by auto-restarting killed agents.
 //
 // Uses flock to check actual lock status rather than file existence, since
@@ -2381,7 +2381,7 @@ func IsShutdownInProgress(townRoot string) bool {
 // IsRunning checks if a daemon is running for the given town.
 // Uses the daemon.lock flock as the authoritative signal — if the lock is held,
 // the daemon is running. Falls back to PID file for the process ID.
-// This avoids fragile ps string matching for process identity (ZFC fix: gt-utuk).
+// This avoids fragile ps string matching for process identity (ZFC fix: ms-utuk).
 func IsRunning(townRoot string) (bool, int, error) {
 	// Primary check: is the daemon lock held?
 	lockPath := filepath.Join(townRoot, "daemon", "daemon.lock")
@@ -2458,7 +2458,7 @@ func StopDaemon(townRoot string) error {
 
 	if pid <= 0 {
 		// Lock is held but PID is unknown (race: daemon starting, or stale lock).
-		// Clean up the lock file so the next gt up can start fresh.
+		// Clean up the lock file so the next ms up can start fresh.
 		lockPath := filepath.Join(townRoot, "daemon", "daemon.lock")
 		_ = os.Remove(lockPath)
 		pidFile := filepath.Join(townRoot, "daemon", "daemon.pid")
@@ -2494,7 +2494,7 @@ func StopDaemon(townRoot string) error {
 
 // FindOrphanedDaemons detects daemon processes not tracked by the PID file.
 // Uses flock on daemon.lock to detect running daemons without relying on
-// pgrep or ps string matching (ZFC fix: gt-utuk).
+// pgrep or ps string matching (ZFC fix: ms-utuk).
 //
 // With flock-based daemon management, only one daemon can hold the lock.
 // An "orphan" is detected when the lock is held but the PID file is stale
@@ -2543,7 +2543,7 @@ func FindOrphanedDaemons(townRoot string) ([]int, error) {
 	return nil, nil
 }
 
-// KillOrphanedDaemons finds and kills any orphaned gt daemon processes.
+// KillOrphanedDaemons finds and kills any orphaned ms daemon processes.
 // Returns number of processes killed.
 func KillOrphanedDaemons(townRoot string) (int, error) {
 	pids, err := FindOrphanedDaemons(townRoot)
@@ -2679,7 +2679,7 @@ func (d *Daemon) checkMinerHealth(rigName, minerName string) {
 	}
 
 	// Stale hook guard: skip miners whose hook_bead is already closed.
-	// When a miner completes work normally (gt done), the hook_bead gets closed
+	// When a miner completes work normally (ms done), the hook_bead gets closed
 	// but may not be cleared from the agent bead before the session stops.
 	// Without this check, every heartbeat cycle fires a false CRASHED_MINER alert
 	// for the dead session + non-empty hook_bead combination.
@@ -2689,20 +2689,20 @@ func (d *Daemon) checkMinerHealth(rigName, minerName string) {
 		return
 	}
 
-	// Spawning guard: skip miners being actively started by gt sling.
+	// Spawning guard: skip miners being actively started by ms sling.
 	// agent_state='spawning' means the miner bead was created (with hook_bead
 	// set atomically) but the tmux session hasn't been launched yet. Restarting
-	// here would create a second Claude process alongside the one gt sling is
+	// here would create a second Claude process alongside the one ms sling is
 	// about to start, causing the double-spawn bug (issue #1752).
 	//
 	// Time-bound: only skip if the bead was updated recently (within 5 minutes).
-	// If gt sling crashed during spawn, the miner would be stuck in 'spawning'
+	// If ms sling crashed during spawn, the miner would be stuck in 'spawning'
 	// indefinitely. The Witness patrol also catches spawning-as-zombie, but a
 	// time-bound here makes the daemon self-sufficient for this edge case.
 	if beads.AgentState(info.State) == beads.AgentStateSpawning {
 		if updatedAt, err := time.Parse(time.RFC3339, info.LastUpdate); err == nil {
 			if time.Since(updatedAt) < 5*time.Minute {
-				d.logger.Printf("Skipping restart for %s/%s: agent_state=spawning (gt sling in progress, updated %s ago)",
+				d.logger.Printf("Skipping restart for %s/%s: agent_state=spawning (ms sling in progress, updated %s ago)",
 					rigName, minerName, time.Since(updatedAt).Round(time.Second))
 				return
 			}
@@ -2710,7 +2710,7 @@ func (d *Daemon) checkMinerHealth(rigName, minerName string) {
 				rigName, minerName, time.Since(updatedAt).Round(time.Second))
 		} else {
 			// Can't parse timestamp — be safe, skip restart during spawning
-			d.logger.Printf("Skipping restart for %s/%s: agent_state=spawning (gt sling in progress, unparseable updated_at)",
+			d.logger.Printf("Skipping restart for %s/%s: agent_state=spawning (ms sling in progress, unparseable updated_at)",
 				rigName, minerName)
 			return
 		}
@@ -2866,7 +2866,7 @@ Restart deferred to stuck-agent-dog plugin for context-aware recovery.`,
 }
 
 // reapIdleMiners kills miner tmux sessions that have been idle too long.
-// The persistent miner model (gt-4ac) keeps sessions alive after gt done for reuse,
+// The persistent miner model (ms-4ac) keeps sessions alive after ms done for reuse,
 // but idle sessions consume API slots (Claude Code process stays alive at 0% CPU).
 // This reaper checks heartbeat state and kills sessions idle longer than the threshold.
 func (d *Daemon) reapIdleMiners() {
@@ -2897,8 +2897,8 @@ func (d *Daemon) reapRigIdleMiners(rigName string, timeout time.Duration) {
 //   - Heartbeat state is "exiting" or "idle" and timestamp exceeds threshold, OR
 //   - Heartbeat state is "working" but timestamp is stale AND the miner has no
 //     hooked work (agent_state=idle in beads). This catches miners that completed
-//     gt done — persistentPreRun resets heartbeat to "working" on every gt sub-command,
-//     so after gt done finishes the heartbeat shows "working" with a stale timestamp.
+//     ms done — persistentPreRun resets heartbeat to "working" on every ms sub-command,
+//     so after ms done finishes the heartbeat shows "working" with a stale timestamp.
 func (d *Daemon) reapIdleMiner(rigName, minerName string, timeout time.Duration) {
 	sessionName := session.MinerSessionName(session.PrefixFor(rigName), minerName)
 
@@ -2928,9 +2928,9 @@ func (d *Daemon) reapIdleMiner(rigName, minerName string, timeout time.Duration)
 	}
 
 	// Heartbeat says "working" but is stale — check if miner actually has hooked work.
-	// If agent_state=idle in beads and no hook_bead, the miner finished gt done
+	// If agent_state=idle in beads and no hook_bead, the miner finished ms done
 	// and is sitting idle (heartbeat wasn't updated to "idle" because persistentPreRun
-	// resets to "working" on every gt sub-command during gt done).
+	// resets to "working" on every ms sub-command during ms done).
 	if state == miner.HeartbeatWorking {
 		prefix := beads.GetPrefixForRig(d.config.TownRoot, rigName)
 		agentBeadID := beads.MinerBeadIDWithPrefix(prefix, rigName, minerName)
@@ -2974,7 +2974,7 @@ func (d *Daemon) reapIdleMiner(rigName, minerName string, timeout time.Duration)
 		}
 
 		// No hooked work + stale heartbeat — but check if the agent process
-		// is still actively running before reaping. A failed gt sling rollback
+		// is still actively running before reaping. A failed ms sling rollback
 		// can clear the hook while the agent is still working (GH#3342).
 		if d.tmux.IsAgentAlive(sessionName) {
 			return
@@ -3067,7 +3067,7 @@ func (d *Daemon) pruneStaleBranches() {
 	pruneInDir(d.config.TownRoot, "town-root")
 }
 
-// dispatchQueuedWork shells out to `gt scheduler run` to dispatch scheduled beads.
+// dispatchQueuedWork shells out to `ms scheduler run` to dispatch scheduled beads.
 // This avoids circular import between the daemon and cmd packages.
 // Uses a 5m timeout to allow multi-bead dispatch with formula cooking and hook retries.
 //
@@ -3079,10 +3079,10 @@ func (d *Daemon) pruneStaleBranches() {
 func (d *Daemon) dispatchQueuedWork() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, "gt", "scheduler", "run")
+	cmd := exec.CommandContext(ctx, "ms", "scheduler", "run")
 	setSysProcAttr(cmd)
 	cmd.Dir = d.config.TownRoot
-	cmd.Env = append(beads.BuildMutationRoutingBDEnv(os.Environ(), filepath.Join(d.config.TownRoot, ".beads")), "GT_DAEMON=1")
+	cmd.Env = append(beads.BuildMutationRoutingBDEnv(os.Environ(), filepath.Join(d.config.TownRoot, ".beads")), "MS_DAEMON=1")
 	out, err := cmd.CombinedOutput()
 	if ctx.Err() == context.DeadlineExceeded {
 		d.logger.Printf("Scheduler dispatch timed out after 5m")

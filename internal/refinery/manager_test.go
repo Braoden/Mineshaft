@@ -71,17 +71,17 @@ func TestManager_SessionName(t *testing.T) {
 
 func TestSafetyStopFromIssue(t *testing.T) {
 	stop := safetyStopFromIssue("", &beads.Issue{
-		ID:     "gt-testrig-refinery",
-		Labels: []string{"gt:agent", "safety_stop:hq-vmrwr"},
+		ID:     "ms-testrig-refinery",
+		Labels: []string{"ms:agent", "safety_stop:hq-vmrwr"},
 	})
 	if stop == nil {
 		t.Fatal("expected safety stop")
 	}
-	if stop.AgentID != "gt-testrig-refinery" || stop.Label != "safety_stop:hq-vmrwr" || stop.StopID != "hq-vmrwr" {
+	if stop.AgentID != "ms-testrig-refinery" || stop.Label != "safety_stop:hq-vmrwr" || stop.StopID != "hq-vmrwr" {
 		t.Fatalf("stop = %+v", stop)
 	}
 
-	if got := safetyStopFromIssue("gt-testrig-refinery", &beads.Issue{Labels: []string{"gt:agent"}}); got != nil {
+	if got := safetyStopFromIssue("ms-testrig-refinery", &beads.Issue{Labels: []string{"ms:agent"}}); got != nil {
 		t.Fatalf("unexpected safety stop: %+v", got)
 	}
 }
@@ -210,7 +210,7 @@ case "$cmd" in
     echo "bd test"
     ;;
   show)
-    printf '%s\n' '[{"id":"gt-testrig-refinery","title":"Refinery","issue_type":"task","labels":["gt:agent","safety_stop:hq-vmrwr"],"status":"open","description":"role_type: refinery\nrig: testrig\nagent_state: idle"}]'
+    printf '%s\n' '[{"id":"ms-testrig-refinery","title":"Refinery","issue_type":"task","labels":["ms:agent","safety_stop:hq-vmrwr"],"status":"open","description":"role_type: refinery\nrig: testrig\nagent_state: idle"}]'
     ;;
   *)
     echo "unexpected bd command: $*" >&2
@@ -240,7 +240,7 @@ case "$cmd" in
   show)
     case "$*" in
       *bd-beads-refinery*)
-        printf '%s\n' '[{"id":"bd-beads-refinery","title":"Refinery","issue_type":"task","labels":["gt:agent","safety_stop:hq-vmrwr"],"status":"open","description":"role_type: refinery\nrig: beads\nagent_state: idle"}]'
+        printf '%s\n' '[{"id":"bd-beads-refinery","title":"Refinery","issue_type":"task","labels":["ms:agent","safety_stop:hq-vmrwr"],"status":"open","description":"role_type: refinery\nrig: beads\nagent_state: idle"}]'
         ;;
       *)
         printf '%s\n' '[]'
@@ -347,20 +347,20 @@ func TestManager_Queue_FiltersClosedMergeRequests(t *testing.T) {
 	testutil.RequireDoltContainer(t)
 	port, _ := strconv.Atoi(testutil.DoltContainerPort())
 	b := beads.NewIsolatedWithPort(rigPath, port)
-	if err := b.Init("gt"); err != nil {
+	if err := b.Init("ms"); err != nil {
 		t.Skipf("bd init unavailable in test environment: %v", err)
 	}
 
 	openIssue, err := b.Create(beads.CreateOptions{
 		Title:  "Open MR",
-		Labels: []string{"gt:merge-request"},
+		Labels: []string{"ms:merge-request"},
 	})
 	if err != nil {
 		t.Fatalf("create open merge-request issue: %v", err)
 	}
 	closedIssue, err := b.Create(beads.CreateOptions{
 		Title:  "Closed MR",
-		Labels: []string{"gt:merge-request"},
+		Labels: []string{"ms:merge-request"},
 	})
 	if err != nil {
 		t.Fatalf("create closed merge-request issue: %v", err)
@@ -408,8 +408,8 @@ func TestManager_RegisterMR_Deprecated(t *testing.T) {
 	mgr, _ := setupTestManager(t)
 
 	mr := &MergeRequest{
-		ID:     "gt-mr-test",
-		Branch: "miner/Test/gt-123",
+		ID:     "ms-mr-test",
+		Branch: "miner/Test/ms-123",
 		Worker: "Test",
 		Status: MROpen,
 	}
@@ -436,24 +436,24 @@ func TestCompareScoredIssues_UsesDeterministicIDTieBreaker(t *testing.T) {
 
 	first := scoredIssue{
 		issue: &beads.Issue{
-			ID:        "gt-1",
+			ID:        "ms-1",
 			CreatedAt: time.Now().UTC().Format(time.RFC3339),
 		},
 		score: 10,
 	}
 	second := scoredIssue{
 		issue: &beads.Issue{
-			ID:        "gt-2",
+			ID:        "ms-2",
 			CreatedAt: time.Now().UTC().Format(time.RFC3339),
 		},
 		score: 10,
 	}
 
 	if !compareScoredIssues(first, second) {
-		t.Fatalf("expected gt-1 to sort before gt-2 for equal scores")
+		t.Fatalf("expected ms-1 to sort before ms-2 for equal scores")
 	}
 	if compareScoredIssues(second, first) {
-		t.Fatalf("expected gt-2 to sort after gt-1 for equal scores")
+		t.Fatalf("expected ms-2 to sort after ms-1 for equal scores")
 	}
 }
 
@@ -462,24 +462,24 @@ func TestManager_PostMerge_ClosesMRAndSourceIssue(t *testing.T) {
 	testutil.RequireDoltContainer(t)
 	port, _ := strconv.Atoi(testutil.DoltContainerPort())
 	b := beads.NewIsolatedWithPort(rigPath, port)
-	if err := b.Init("gt"); err != nil {
+	if err := b.Init("ms"); err != nil {
 		t.Skipf("bd init unavailable: %v", err)
 	}
 
 	// Create a source issue
 	srcIssue, err := b.Create(beads.CreateOptions{
 		Title:  "Implement feature X",
-		Labels: []string{"gt:task"},
+		Labels: []string{"ms:task"},
 	})
 	if err != nil {
 		t.Fatalf("create source issue: %v", err)
 	}
 
 	// Create an MR bead with branch and source_issue fields
-	mrDesc := "branch: miner/test/gt-xyz\nsource_issue: " + srcIssue.ID + "\nworker: test\ntarget: main"
+	mrDesc := "branch: miner/test/ms-xyz\nsource_issue: " + srcIssue.ID + "\nworker: test\ntarget: main"
 	mrIssue, err := b.Create(beads.CreateOptions{
 		Title:       "MR for feature X",
-		Labels:      []string{"gt:merge-request"},
+		Labels:      []string{"ms:merge-request"},
 		Description: mrDesc,
 	})
 	if err != nil {
@@ -502,8 +502,8 @@ func TestManager_PostMerge_ClosesMRAndSourceIssue(t *testing.T) {
 	if result.SourceIssueID != srcIssue.ID {
 		t.Errorf("PostMerge() SourceIssueID = %s, want %s", result.SourceIssueID, srcIssue.ID)
 	}
-	if result.MR.Branch != "miner/test/gt-xyz" {
-		t.Errorf("PostMerge() MR.Branch = %s, want miner/test/gt-xyz", result.MR.Branch)
+	if result.MR.Branch != "miner/test/ms-xyz" {
+		t.Errorf("PostMerge() MR.Branch = %s, want miner/test/ms-xyz", result.MR.Branch)
 	}
 }
 
@@ -512,15 +512,15 @@ func TestManager_PostMerge_AlreadyClosedMR(t *testing.T) {
 	testutil.RequireDoltContainer(t)
 	port, _ := strconv.Atoi(testutil.DoltContainerPort())
 	b := beads.NewIsolatedWithPort(rigPath, port)
-	if err := b.Init("gt"); err != nil {
+	if err := b.Init("ms"); err != nil {
 		t.Skipf("bd init unavailable: %v", err)
 	}
 
 	// Create and close an MR bead
 	mrIssue, err := b.Create(beads.CreateOptions{
 		Title:       "Already merged MR",
-		Labels:      []string{"gt:merge-request"},
-		Description: "branch: miner/old/gt-old\ntarget: main",
+		Labels:      []string{"ms:merge-request"},
+		Description: "branch: miner/old/ms-old\ntarget: main",
 	})
 	if err != nil {
 		t.Fatalf("create MR issue: %v", err)

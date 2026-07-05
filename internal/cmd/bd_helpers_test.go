@@ -49,13 +49,13 @@ func TestBdCmd_Build(t *testing.T) {
 			},
 		},
 		{
-			name: "with GT_ROOT",
+			name: "with MS_ROOT",
 			setup: func() *bdCmd {
 				return BdCmd("cook", "formula").WithGTRoot("/town/root")
 			},
 			wantArgs: []string{"bd", "cook", "formula"},
 			wantEnv: map[string]string{
-				"GT_ROOT": "/town/root",
+				"MS_ROOT": "/town/root",
 			},
 		},
 		{
@@ -70,7 +70,7 @@ func TestBdCmd_Build(t *testing.T) {
 			wantDir:  "/work/dir",
 			wantEnv: map[string]string{
 				"BD_DOLT_AUTO_COMMIT": "on",
-				"GT_ROOT":             "/town/root",
+				"MS_ROOT":             "/town/root",
 				"BEADS_DIR":           "/work/dir/.beads",
 			},
 		},
@@ -176,7 +176,7 @@ sleep 5
 timeout /t 5 /nobreak >NUL
 `)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv("GT_BD_TIMEOUT_SEC", "1")
+	t.Setenv("MS_BD_TIMEOUT_SEC", "1")
 
 	start := time.Now()
 	err := BdCmd("list").Run()
@@ -339,18 +339,18 @@ func TestBdCmd_MultipleAutoCommit_DedupRemovesOld(t *testing.T) {
 }
 
 func TestBdCmd_EmptyGTRoot_Skipped(t *testing.T) {
-	// Test that empty GT_ROOT is not added to env.
-	// Use a clean env to avoid inheriting GT_ROOT from the test runner.
+	// Test that empty MS_ROOT is not added to env.
+	// Use a clean env to avoid inheriting MS_ROOT from the test runner.
 	bdc := BdCmd("show", "id").
 		WithGTRoot("")
-	bdc.env = filterEnv(bdc.env, "GT_ROOT")
+	bdc.env = filterEnv(bdc.env, "MS_ROOT")
 
 	cmd := bdc.Build()
 
-	// Check that GT_ROOT is not in env
+	// Check that MS_ROOT is not in env
 	for _, e := range cmd.Env {
-		if strings.HasPrefix(e, "GT_ROOT=") {
-			t.Errorf("GT_ROOT should not be added when empty, found: %s", e)
+		if strings.HasPrefix(e, "MS_ROOT=") {
+			t.Errorf("MS_ROOT should not be added when empty, found: %s", e)
 		}
 	}
 }
@@ -400,13 +400,13 @@ func TestBdCmd_AllCombinations(t *testing.T) {
 				}
 			}
 
-			// Check GT_ROOT
-			_, hasGTRoot := envMap["GT_ROOT"]
+			// Check MS_ROOT
+			_, hasGTRoot := envMap["MS_ROOT"]
 			if tt.wantGTRoot && !hasGTRoot {
-				t.Error("GT_ROOT should be present")
+				t.Error("MS_ROOT should be present")
 			}
 			if !tt.wantGTRoot && hasGTRoot {
-				t.Error("GT_ROOT should not be present")
+				t.Error("MS_ROOT should not be present")
 			}
 		})
 	}
@@ -517,7 +517,7 @@ func TestBdCmd_DirPinsMetadataDatabaseOverInheritedDefault(t *testing.T) {
 	}
 
 	bdc := &bdCmd{
-		args: []string{"show", "gt-abc", "--json"},
+		args: []string{"show", "ms-abc", "--json"},
 		env: []string{
 			"PATH=/usr/bin",
 			"BEADS_DIR=/town/.beads",
@@ -567,7 +567,7 @@ func TestBdCmd_WithBeadsDirFollowsRedirectBeforeMetadata(t *testing.T) {
 	}
 
 	bdc := &bdCmd{
-		args: []string{"show", "gt-abc", "--json"},
+		args: []string{"show", "ms-abc", "--json"},
 		env: []string{
 			"PATH=/usr/bin",
 			"BEADS_DIR=/town/.beads",
@@ -595,7 +595,7 @@ func TestBdCmd_WithBeadsDirFollowsRedirectBeforeMetadata(t *testing.T) {
 
 func TestBdCmd_WithBeadsDir_OverridesInherited(t *testing.T) {
 	// WithBeadsDir should override an inherited BEADS_DIR from the parent
-	// process. This is the core fix for gt-ctir: without overriding,
+	// process. This is the core fix for ms-ctir: without overriding,
 	// bd could write to the wrong database (HQ instead of rig).
 	baseEnv := []string{"PATH=/usr/bin", "BEADS_DIR=/town/.beads", "HOME=/home/user"}
 
@@ -771,7 +771,7 @@ func TestBdCmd_WithRoutingDoesNotPinBeadsDir(t *testing.T) {
 	}
 	workDir := filepath.Dir(beadsDir)
 	bdc := &bdCmd{
-		args: []string{"show", "gt-abc", "--json"},
+		args: []string{"show", "ms-abc", "--json"},
 		env: []string{
 			"PATH=/usr/bin",
 			"BEADS_DIR=/wrong",
@@ -821,7 +821,7 @@ func TestBdCmd_UsesCentralReadMutationModes(t *testing.T) {
 		{
 			name: "read pinned via Dir",
 			setup: func() *bdCmd {
-				return (&bdCmd{args: []string{"show", "gt-abc"}, env: append([]string{}, baseEnv...), stderr: os.Stderr}).Dir(rigDir)
+				return (&bdCmd{args: []string{"show", "ms-abc"}, env: append([]string{}, baseEnv...), stderr: os.Stderr}).Dir(rigDir)
 			},
 			wantPinned:     true,
 			wantReadOnly:   true,
@@ -830,7 +830,7 @@ func TestBdCmd_UsesCentralReadMutationModes(t *testing.T) {
 		{
 			name: "mutation pinned via WithBeadsDir",
 			setup: func() *bdCmd {
-				return (&bdCmd{args: []string{"update", "gt-abc", "--status=open"}, env: append([]string{}, baseEnv...), stderr: os.Stderr}).WithBeadsDir(beadsDir)
+				return (&bdCmd{args: []string{"update", "ms-abc", "--status=open"}, env: append([]string{}, baseEnv...), stderr: os.Stderr}).WithBeadsDir(beadsDir)
 			},
 			wantPinned:     true,
 			wantAutoCommit: "on",
@@ -846,7 +846,7 @@ func TestBdCmd_UsesCentralReadMutationModes(t *testing.T) {
 		{
 			name: "auto commit forces mutation for read args",
 			setup: func() *bdCmd {
-				return (&bdCmd{args: []string{"show", "gt-abc"}, env: append([]string{}, baseEnv...), stderr: os.Stderr}).Dir(rigDir).WithAutoCommit()
+				return (&bdCmd{args: []string{"show", "ms-abc"}, env: append([]string{}, baseEnv...), stderr: os.Stderr}).Dir(rigDir).WithAutoCommit()
 			},
 			wantPinned:     true,
 			wantAutoCommit: "on",

@@ -22,7 +22,7 @@ import (
 func setupTestRegistryForSession(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "mineshaft")
+	reg.Register("ms", "mineshaft")
 	reg.Register("bd", "beads")
 	old := session.DefaultRegistry()
 	session.SetDefaultRegistry(reg)
@@ -89,8 +89,8 @@ func TestSessionName(t *testing.T) {
 	m := NewSessionManager(tmux.NewTmux(), r)
 
 	name := m.SessionName("Toast")
-	if name != "gt-Toast" {
-		t.Errorf("sessionName = %q, want gt-Toast", name)
+	if name != "ms-Toast" {
+		t.Errorf("sessionName = %q, want ms-Toast", name)
 	}
 }
 
@@ -171,7 +171,7 @@ func TestSessionManagerListEmpty(t *testing.T) {
 	requireTmux(t)
 
 	// Register a unique prefix so List() won't match real sessions.
-	// Without this, PrefixFor returns "gt" (default) and matches running mineshaft sessions.
+	// Without this, PrefixFor returns "ms" (default) and matches running mineshaft sessions.
 	reg := session.NewPrefixRegistry()
 	reg.Register("xz", "test-rig-unlikely-name")
 	old := session.DefaultRegistry()
@@ -239,8 +239,8 @@ func TestInjectNotFound(t *testing.T) {
 }
 
 // TestMinerCommandFormat verifies the miner session command exports
-// GT_ROLE, GT_RIG, GT_MINER, and BD_ACTOR inline before starting Claude.
-// This is a regression test for gt-y41ep - env vars must be exported inline
+// MS_ROLE, MS_RIG, MS_MINER, and BD_ACTOR inline before starting Claude.
+// This is a regression test for ms-y41ep - env vars must be exported inline
 // because tmux SetEnvironment only affects new panes, not the current shell.
 func TestMinerCommandFormat(t *testing.T) {
 	// This test verifies the expected command format.
@@ -250,19 +250,19 @@ func TestMinerCommandFormat(t *testing.T) {
 	rigName := "mineshaft"
 	minerName := "Toast"
 	expectedBdActor := "mineshaft/miners/Toast"
-	// GT_ROLE uses compound format: rig/miners/name
+	// MS_ROLE uses compound format: rig/miners/name
 	expectedGtRole := rigName + "/miners/" + minerName
 
 	// Build the expected command format (mirrors Start() logic)
-	expectedPrefix := "export GT_ROLE=" + expectedGtRole + " GT_RIG=" + rigName + " GT_MINER=" + minerName + " BD_ACTOR=" + expectedBdActor + " GIT_AUTHOR_NAME=" + expectedBdActor
+	expectedPrefix := "export MS_ROLE=" + expectedGtRole + " MS_RIG=" + rigName + " MS_MINER=" + minerName + " BD_ACTOR=" + expectedBdActor + " GIT_AUTHOR_NAME=" + expectedBdActor
 	expectedSuffix := "&& claude --dangerously-skip-permissions"
 
 	// The command must contain all required env exports
 	requiredParts := []string{
 		"export",
-		"GT_ROLE=" + expectedGtRole,
-		"GT_RIG=" + rigName,
-		"GT_MINER=" + minerName,
+		"MS_ROLE=" + expectedGtRole,
+		"MS_RIG=" + rigName,
+		"MS_MINER=" + minerName,
 		"BD_ACTOR=" + expectedBdActor,
 		"GIT_AUTHOR_NAME=" + expectedBdActor,
 		"claude --dangerously-skip-permissions",
@@ -276,16 +276,16 @@ func TestMinerCommandFormat(t *testing.T) {
 		}
 	}
 
-	// Verify GT_ROLE uses compound format with "miners" (not "overseer", "crew", etc.)
-	if !strings.Contains(fullCommand, "GT_ROLE="+expectedGtRole) {
-		t.Errorf("GT_ROLE must be %q (compound format), not simple 'miner'", expectedGtRole)
+	// Verify MS_ROLE uses compound format with "miners" (not "overseer", "crew", etc.)
+	if !strings.Contains(fullCommand, "MS_ROLE="+expectedGtRole) {
+		t.Errorf("MS_ROLE must be %q (compound format), not simple 'miner'", expectedGtRole)
 	}
 }
 
 // TestMinerStartInjectsFallbackEnvVars verifies that the miner session
-// startup injects GT_BRANCH and GT_MINER_PATH into the startup command.
-// These env vars are critical for gt done's nuked-worktree fallback:
-// when the miner's cwd is deleted, gt done uses these to determine
+// startup injects MS_BRANCH and MS_MINER_PATH into the startup command.
+// These env vars are critical for ms done's nuked-worktree fallback:
+// when the miner's cwd is deleted, ms done uses these to determine
 // the branch and path without a working directory.
 // Regression test for PR #1402.
 func TestMinerStartInjectsFallbackEnvVars(t *testing.T) {
@@ -297,27 +297,27 @@ func TestMinerStartInjectsFallbackEnvVars(t *testing.T) {
 
 	// The env vars that should be injected via PrependEnv
 	requiredEnvVars := []string{
-		"GT_BRANCH",       // Git branch for nuked-worktree fallback
-		"GT_MINER_PATH", // Worktree path for nuked-worktree fallback
-		"GT_RIG",          // Rig name (was already there pre-PR)
-		"GT_MINER",      // Miner name (was already there pre-PR)
-		"GT_ROLE",         // Role address (was already there pre-PR)
-		"GT_TOWN_ROOT",    // Town root for FindFromCwdWithFallback after worktree nuke
+		"MS_BRANCH",       // Git branch for nuked-worktree fallback
+		"MS_MINER_PATH", // Worktree path for nuked-worktree fallback
+		"MS_RIG",          // Rig name (was already there pre-PR)
+		"MS_MINER",      // Miner name (was already there pre-PR)
+		"MS_ROLE",         // Role address (was already there pre-PR)
+		"MS_TOWN_ROOT",    // Town root for FindFromCwdWithFallback after worktree nuke
 	}
 
 	// Verify the env var map includes all required keys
 	envVars := map[string]string{
-		"GT_RIG":          rigName,
-		"GT_MINER":      minerName,
-		"GT_ROLE":         rigName + "/miners/" + minerName,
-		"GT_MINER_PATH": workDir,
-		"GT_TOWN_ROOT":    townRoot,
+		"MS_RIG":          rigName,
+		"MS_MINER":      minerName,
+		"MS_ROLE":         rigName + "/miners/" + minerName,
+		"MS_MINER_PATH": workDir,
+		"MS_TOWN_ROOT":    townRoot,
 	}
 
-	// GT_BRANCH is conditionally added (only if CurrentBranch succeeds)
+	// MS_BRANCH is conditionally added (only if CurrentBranch succeeds)
 	// In practice it's always set because the worktree exists at Start time
 	branchName := "miner/" + minerName
-	envVars["GT_BRANCH"] = branchName
+	envVars["MS_BRANCH"] = branchName
 
 	for _, key := range requiredEnvVars {
 		if _, ok := envVars[key]; !ok {
@@ -325,14 +325,14 @@ func TestMinerStartInjectsFallbackEnvVars(t *testing.T) {
 		}
 	}
 
-	// Verify GT_MINER_PATH matches workDir
-	if envVars["GT_MINER_PATH"] != workDir {
-		t.Errorf("GT_MINER_PATH = %q, want %q", envVars["GT_MINER_PATH"], workDir)
+	// Verify MS_MINER_PATH matches workDir
+	if envVars["MS_MINER_PATH"] != workDir {
+		t.Errorf("MS_MINER_PATH = %q, want %q", envVars["MS_MINER_PATH"], workDir)
 	}
 
-	// Verify GT_BRANCH matches expected branch
-	if envVars["GT_BRANCH"] != branchName {
-		t.Errorf("GT_BRANCH = %q, want %q", envVars["GT_BRANCH"], branchName)
+	// Verify MS_BRANCH matches expected branch
+	if envVars["MS_BRANCH"] != branchName {
+		t.Errorf("MS_BRANCH = %q, want %q", envVars["MS_BRANCH"], branchName)
 	}
 }
 
@@ -361,8 +361,8 @@ func TestEnsureCanonicalSessionBranch_UsesOriginDefaultBranch(t *testing.T) {
 	}
 
 	sm := NewSessionManager(tmux.NewTmux(), &rig.Rig{Name: "mineshaft", Path: workDir})
-	branch := sm.ensureCanonicalSessionBranch(repoGit, "toast", SessionStartOptions{Issue: "gt-9qb"})
-	if !strings.Contains(branch, "/gt-9qb@") {
+	branch := sm.ensureCanonicalSessionBranch(repoGit, "toast", SessionStartOptions{Issue: "ms-9qb"})
+	if !strings.Contains(branch, "/ms-9qb@") {
 		t.Fatalf("fresh session branch = %q, want issue-scoped branch", branch)
 	}
 
@@ -386,13 +386,13 @@ func TestEnsureCanonicalSessionBranch_UsesOriginDefaultBranch(t *testing.T) {
 func TestEnsureCanonicalSessionBranch_KeepsCurrentIssueBranch(t *testing.T) {
 	workDir, repoGit := setupSessionBranchTestRepo(t)
 
-	currentBranch := "miner/toast/gt-9qb@seed"
+	currentBranch := "miner/toast/ms-9qb@seed"
 	if err := repoGit.CheckoutNewBranch(currentBranch, "main"); err != nil {
 		t.Fatalf("checkout current issue branch: %v", err)
 	}
 
 	sm := NewSessionManager(tmux.NewTmux(), &rig.Rig{Name: "mineshaft", Path: workDir})
-	branch := sm.ensureCanonicalSessionBranch(repoGit, "toast", SessionStartOptions{Issue: "gt-9qb"})
+	branch := sm.ensureCanonicalSessionBranch(repoGit, "toast", SessionStartOptions{Issue: "ms-9qb"})
 	if branch != currentBranch {
 		t.Fatalf("ensureCanonicalSessionBranch changed active issue branch: got %q want %q", branch, currentBranch)
 	}
@@ -413,7 +413,7 @@ func TestSessionManager_resolveBeadsDir(t *testing.T) {
 	}
 
 	// Create routes.jsonl with cross-rig routing
-	routesContent := `{"prefix": "gt-", "path": "mineshaft/overseer/rig"}
+	routesContent := `{"prefix": "ms-", "path": "mineshaft/overseer/rig"}
 {"prefix": "bd-", "path": "beads/overseer/rig"}
 {"prefix": "hq-", "path": "."}
 `
@@ -443,7 +443,7 @@ func TestSessionManager_resolveBeadsDir(t *testing.T) {
 	}{
 		{
 			name:        "same-rig bead resolves to rig path",
-			issueID:     "gt-abc123",
+			issueID:     "ms-abc123",
 			expectedDir: filepath.Join(townRoot, "mineshaft/overseer/rig"),
 		},
 		{
@@ -476,18 +476,18 @@ func TestSessionManager_resolveBeadsDir(t *testing.T) {
 }
 
 // TestAgentEnvOmitsGTAgent_FallbackRequired verifies that the AgentEnv path
-// used by session_manager.Start does NOT include GT_AGENT when opts.Agent is
+// used by session_manager.Start does NOT include MS_AGENT when opts.Agent is
 // empty (the default dispatch path). This confirms the session_manager must
-// fall back to runtimeConfig.ResolvedAgent for setting GT_AGENT in the tmux
+// fall back to runtimeConfig.ResolvedAgent for setting MS_AGENT in the tmux
 // session table.
 //
-// Without the fallback, GT_AGENT is never written to the tmux session table,
+// Without the fallback, MS_AGENT is never written to the tmux session table,
 // and the post-startup validation kills the session with:
 //
-//	"GT_AGENT not set in session ... witness patrol will misidentify this miner"
+//	"MS_AGENT not set in session ... witness patrol will misidentify this miner"
 //
 // Regression test for the bug introduced in PR #1776 which removed the
-// unconditional runtimeConfig.ResolvedAgent → SetEnvironment("GT_AGENT") logic
+// unconditional runtimeConfig.ResolvedAgent → SetEnvironment("MS_AGENT") logic
 // and replaced it with an AgentEnv-only path that requires opts.Agent to be set.
 func TestAgentEnvOmitsGTAgent_FallbackRequired(t *testing.T) {
 	t.Parallel()
@@ -496,7 +496,7 @@ func TestAgentEnvOmitsGTAgent_FallbackRequired(t *testing.T) {
 	cases := []struct {
 		name        string
 		agent       string // opts.Agent value
-		wantGTAgent bool   // whether GT_AGENT should be in AgentEnv output
+		wantGTAgent bool   // whether MS_AGENT should be in AgentEnv output
 	}{
 		{
 			name:        "default dispatch (no --agent flag)",
@@ -525,9 +525,9 @@ func TestAgentEnvOmitsGTAgent_FallbackRequired(t *testing.T) {
 				TownRoot:  "/tmp/town",
 				Agent:     tc.agent,
 			})
-			_, hasGTAgent := env["GT_AGENT"]
+			_, hasGTAgent := env["MS_AGENT"]
 			if hasGTAgent != tc.wantGTAgent {
-				t.Errorf("AgentEnv(Agent=%q): GT_AGENT present=%v, want %v",
+				t.Errorf("AgentEnv(Agent=%q): MS_AGENT present=%v, want %v",
 					tc.agent, hasGTAgent, tc.wantGTAgent)
 			}
 		})
@@ -542,8 +542,8 @@ func TestVerifyStartupNudgeDelivery_IdleAgent(t *testing.T) {
 
 	tm := tmux.NewTmux()
 	// Use a unique session name per invocation to avoid "duplicate session" races
-	// with tmux's async cleanup when running with -count=N. (Fixes gt-eo8d)
-	sessionName := fmt.Sprintf("gt-test-nudge-%d", testSessionCounter.Add(1))
+	// with tmux's async cleanup when running with -count=N. (Fixes ms-eo8d)
+	sessionName := fmt.Sprintf("ms-test-nudge-%d", testSessionCounter.Add(1))
 
 	// Clean up any stale session from a previous crashed test run
 	_ = tm.KillSession(sessionName)
@@ -628,8 +628,8 @@ func TestPromptlessFallbackIncludesPrimeAndWorkInstructions(t *testing.T) {
 
 	prompt := session.BuildStartupPrompt(beaconConfig, gtruntime.StartupNudgeContent())
 
-	if !strings.Contains(prompt, "Run `gt prime`") {
-		t.Fatalf("prompt missing gt prime instruction: %q", prompt)
+	if !strings.Contains(prompt, "Run `ms prime`") {
+		t.Fatalf("prompt missing ms prime instruction: %q", prompt)
 	}
 	if !strings.Contains(prompt, gtruntime.StartupNudgeContent()) {
 		t.Fatalf("prompt missing startup nudge content: %q", prompt)
@@ -696,7 +696,7 @@ func TestModeAStartupVerifyIsNonBlocking(t *testing.T) {
 	requireTmux(t)
 
 	tm := tmux.NewTmux()
-	sessionName := fmt.Sprintf("gt-test-modeA-%d", testSessionCounter.Add(1))
+	sessionName := fmt.Sprintf("ms-test-modeA-%d", testSessionCounter.Add(1))
 	_ = tm.KillSession(sessionName)
 
 	if err := tm.NewSession(sessionName, os.TempDir()); err != nil {
@@ -732,7 +732,7 @@ func TestModeAStartupVerifyIsNonBlocking(t *testing.T) {
 
 	launchStart := time.Now()
 	go func() {
-		m.verifyStartupNudgeDelivery(sessionName, rc, "[MINESHAFT] test ← witness / Run `gt prime --hook`")
+		m.verifyStartupNudgeDelivery(sessionName, rc, "[MINESHAFT] test ← witness / Run `ms prime --hook`")
 		close(goroutineDone)
 	}()
 	callerReturned <- time.Since(launchStart)
@@ -755,7 +755,7 @@ func TestModeAStartupVerifyIsNonBlocking(t *testing.T) {
 func TestValidateSessionName(t *testing.T) {
 	// Register prefixes so validateSessionName can resolve them correctly.
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "mineshaft")
+	reg.Register("ms", "mineshaft")
 	reg.Register("gm", "mineshaft_manager")
 	old := session.DefaultRegistry()
 	session.SetDefaultRegistry(reg)
@@ -787,13 +787,13 @@ func TestValidateSessionName(t *testing.T) {
 		},
 		{
 			name:        "malformed double-prefix mineshaft",
-			sessionName: "gt-mineshaft-142",
+			sessionName: "ms-mineshaft-142",
 			rigName:     "mineshaft",
 			wantErr:     true,
 		},
 		{
 			name:        "different rig (can't validate)",
-			sessionName: "gt-other-rig-name",
+			sessionName: "ms-other-rig-name",
 			rigName:     "mineshaft_manager",
 			wantErr:     false,
 		},
@@ -867,9 +867,9 @@ func TestParseFreshBranchName_RoundTrip(t *testing.T) {
 		miner string
 		issue   string
 	}{
-		{name: "with issue", miner: "alpha", issue: "gt-abc"},
+		{name: "with issue", miner: "alpha", issue: "ms-abc"},
 		{name: "no issue", miner: "beta", issue: ""},
-		{name: "numeric issue", miner: "nux", issue: "gt-123"},
+		{name: "numeric issue", miner: "nux", issue: "ms-123"},
 	}
 
 	for _, c := range cases {
@@ -898,9 +898,9 @@ func TestParseFreshBranchName_Rejects(t *testing.T) {
 		"miner/",          // empty tail
 		"miner/alpha",     // no ts or issue
 		"miner/alpha-",    // trailing dash, no ts
-		"miner//gt-abc@1", // empty miner name
+		"miner//ms-abc@1", // empty miner name
 		"miner/alpha/@1",  // empty issue
-		"miner/alpha/gt-abc@", // empty ts
+		"miner/alpha/ms-abc@", // empty ts
 		"",
 	}
 	for _, b := range rejects {
@@ -923,35 +923,35 @@ func TestShouldCreateFreshSessionBranch_Structural(t *testing.T) {
 		{
 			name:            "on develop as canonical triggers fresh",
 			currentBranch:   "develop",
-			issue:           "gt-abc",
+			issue:           "ms-abc",
 			canonicalBranch: "develop",
 			want:            true,
 		},
 		{
 			name:            "on main when canonical is develop does NOT trigger fresh",
 			currentBranch:   "main",
-			issue:           "gt-abc",
+			issue:           "ms-abc",
 			canonicalBranch: "develop",
 			want:            false,
 		},
 		{
 			name:            "same-issue respawn preserves branch",
-			currentBranch:   "miner/alpha/gt-abc@xyz",
-			issue:           "gt-abc",
+			currentBranch:   "miner/alpha/ms-abc@xyz",
+			issue:           "ms-abc",
 			canonicalBranch: "main",
 			want:            false,
 		},
 		{
 			name:            "other-issue miner branch triggers fresh",
-			currentBranch:   "miner/alpha/gt-999@xyz",
-			issue:           "gt-abc",
+			currentBranch:   "miner/alpha/ms-999@xyz",
+			issue:           "ms-abc",
 			canonicalBranch: "main",
 			want:            true,
 		},
 		{
 			name:            "empty canonical with non-miner branch does not trigger",
 			currentBranch:   "feature/x",
-			issue:           "gt-abc",
+			issue:           "ms-abc",
 			canonicalBranch: "",
 			want:            false,
 		},

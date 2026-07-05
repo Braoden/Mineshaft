@@ -11,7 +11,7 @@ func TestDecideSlotReuse(t *testing.T) {
 	}{
 		{name: "clean idle", want: "reusable"},
 		{name: "working", mutate: func(in *SlotReuseInput) { in.State = StateWorking }, want: "not-idle"},
-		{name: "hook", mutate: func(in *SlotReuseInput) { in.HookBead = "gt-work" }, want: "hook-still-set"},
+		{name: "hook", mutate: func(in *SlotReuseInput) { in.HookBead = "ms-work" }, want: "hook-still-set"},
 		{name: "push failed", mutate: func(in *SlotReuseInput) { in.PushFailed = true }, want: "push-failed"},
 		{name: "mr failed", mutate: func(in *SlotReuseInput) { in.MRFailed = true }, want: "mr-failed"},
 		{name: "cleanup dirty", mutate: func(in *SlotReuseInput) { in.CleanupStatus = CleanupUnpushed }, want: "cleanup-has_unpushed"},
@@ -21,7 +21,7 @@ func TestDecideSlotReuse(t *testing.T) {
 		{name: "stash", mutate: func(in *SlotReuseInput) { in.StashCount = 1 }, want: "git-stash"},
 		{name: "unpushed", mutate: func(in *SlotReuseInput) { in.UnpushedCommits = 1 }, want: "git-unpushed"},
 		{name: "git failed", mutate: func(in *SlotReuseInput) { in.GitCheckFailed = true }, want: "git-check-failed"},
-		{name: "active MR pending", mutate: func(in *SlotReuseInput) { in.ActiveMR = "gt-mr"; in.ActiveMRBlocker = "active_mr=gt-mr status=open" }, want: "active-mr-open"},
+		{name: "active MR pending", mutate: func(in *SlotReuseInput) { in.ActiveMR = "ms-mr"; in.ActiveMRBlocker = "active_mr=ms-mr status=open" }, want: "active-mr-open"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

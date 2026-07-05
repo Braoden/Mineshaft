@@ -35,7 +35,7 @@ func TestRecordRunCreatesAndClosesReceipt(t *testing.T) {
 	fakeBD := "#!/usr/bin/env bash\n" +
 		"printf '%s\\n' \"$*\" >> \"$BD_ARGS_LOG\"\n" +
 		"case \"$1\" in\n" +
-		"  create) printf '{\\\"id\\\":\\\"gt-test-run\\\"}\\n' ;;\n" +
+		"  create) printf '{\\\"id\\\":\\\"ms-test-run\\\"}\\n' ;;\n" +
 		"  close) exit 0 ;;\n" +
 		"  *) exit 2 ;;\n" +
 		"esac\n"
@@ -57,8 +57,8 @@ func TestRecordRunCreatesAndClosesReceipt(t *testing.T) {
 	if err != nil {
 		t.Fatalf("RecordRun failed: %v", err)
 	}
-	if id != "gt-test-run" {
-		t.Fatalf("RecordRun id = %q, want gt-test-run", id)
+	if id != "ms-test-run" {
+		t.Fatalf("RecordRun id = %q, want ms-test-run", id)
 	}
 
 	data, err := os.ReadFile(logPath)
@@ -74,7 +74,7 @@ func TestRecordRunCreatesAndClosesReceipt(t *testing.T) {
 		"-l rig:mineshaft",
 		"-l source:test",
 		"--description=brew failed",
-		"close gt-test-run --reason plugin run recorded",
+		"close ms-test-run --reason plugin run recorded",
 	} {
 		if !strings.Contains(log, want) {
 			t.Fatalf("fake bd log missing %q in:\n%s", want, log)

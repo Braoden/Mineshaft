@@ -116,7 +116,7 @@ func loadMinecarts(townBeads string) ([]MinecartItem, error) {
 
 	minecarts := make([]MinecartItem, 0, len(rawMinecarts))
 	for _, rc := range rawMinecarts {
-		if rc.IssueType != "minecart" && !tuiMinecartHasLabel(rc.Labels, "gt:minecart") {
+		if rc.IssueType != "minecart" && !tuiMinecartHasLabel(rc.Labels, "ms:minecart") {
 			continue
 		}
 		issues, completed, total := loadTrackedIssues(townBeads, rc.ID)

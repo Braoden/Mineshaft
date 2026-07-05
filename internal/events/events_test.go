@@ -5,9 +5,9 @@ import (
 )
 
 func TestSlingPayload(t *testing.T) {
-	p := SlingPayload("gt-123", "mineshaft")
-	if p["bead"] != "gt-123" {
-		t.Errorf("bead = %v, want gt-123", p["bead"])
+	p := SlingPayload("ms-123", "mineshaft")
+	if p["bead"] != "ms-123" {
+		t.Errorf("bead = %v, want ms-123", p["bead"])
 	}
 	if p["target"] != "mineshaft" {
 		t.Errorf("target = %v, want mineshaft", p["target"])
@@ -15,9 +15,9 @@ func TestSlingPayload(t *testing.T) {
 }
 
 func TestHookPayload(t *testing.T) {
-	p := HookPayload("gt-456")
-	if p["bead"] != "gt-456" {
-		t.Errorf("bead = %v, want gt-456", p["bead"])
+	p := HookPayload("ms-456")
+	if p["bead"] != "ms-456" {
+		t.Errorf("bead = %v, want ms-456", p["bead"])
 	}
 	if len(p) != 1 {
 		t.Errorf("expected 1 key, got %d", len(p))
@@ -25,9 +25,9 @@ func TestHookPayload(t *testing.T) {
 }
 
 func TestUnhookPayload(t *testing.T) {
-	p := UnhookPayload("gt-789")
-	if p["bead"] != "gt-789" {
-		t.Errorf("bead = %v, want gt-789", p["bead"])
+	p := UnhookPayload("ms-789")
+	if p["bead"] != "ms-789" {
+		t.Errorf("bead = %v, want ms-789", p["bead"])
 	}
 }
 
@@ -52,9 +52,9 @@ func TestHandoffPayload_NoSubject(t *testing.T) {
 }
 
 func TestDonePayload(t *testing.T) {
-	p := DonePayload("gt-100", "miner/alpha")
-	if p["bead"] != "gt-100" {
-		t.Errorf("bead = %v, want gt-100", p["bead"])
+	p := DonePayload("ms-100", "miner/alpha")
+	if p["bead"] != "ms-100" {
+		t.Errorf("bead = %v, want ms-100", p["bead"])
 	}
 	if p["branch"] != "miner/alpha" {
 		t.Errorf("branch = %v, want miner/alpha", p["branch"])
@@ -134,9 +134,9 @@ func TestPatrolPayload_NoMessage(t *testing.T) {
 }
 
 func TestMinerCheckPayload_WithIssue(t *testing.T) {
-	p := MinerCheckPayload("mineshaft", "alpha", "working", "gt-123")
-	if p["issue"] != "gt-123" {
-		t.Errorf("issue = %v, want gt-123", p["issue"])
+	p := MinerCheckPayload("mineshaft", "alpha", "working", "ms-123")
+	if p["issue"] != "ms-123" {
+		t.Errorf("issue = %v, want ms-123", p["issue"])
 	}
 }
 
@@ -196,9 +196,9 @@ func TestHaltPayload(t *testing.T) {
 }
 
 func TestSessionDeathPayload(t *testing.T) {
-	p := SessionDeathPayload("gt-mineshaft-alpha", "mineshaft/miners/alpha", "zombie cleanup", "daemon")
-	if p["session"] != "gt-mineshaft-alpha" {
-		t.Errorf("session = %v, want gt-mineshaft-alpha", p["session"])
+	p := SessionDeathPayload("ms-mineshaft-alpha", "mineshaft/miners/alpha", "zombie cleanup", "daemon")
+	if p["session"] != "ms-mineshaft-alpha" {
+		t.Errorf("session = %v, want ms-mineshaft-alpha", p["session"])
 	}
 	if p["agent"] != "mineshaft/miners/alpha" {
 		t.Errorf("agent = %v", p["agent"])

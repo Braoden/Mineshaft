@@ -1,11 +1,11 @@
-# @mineshaft/gt
+# @mineshaft/ms
 
 Mineshaft CLI - multi-agent workspace manager for coordinating AI coding agents.
 
 ## Installation
 
 ```bash
-npm install -g @mineshaft/gt
+npm install -g @mineshaft/ms
 ```
 
 This will download the appropriate native binary for your platform during installation.
@@ -14,16 +14,16 @@ This will download the appropriate native binary for your platform during instal
 
 ```bash
 # Check version
-gt version
+ms version
 
 # Initialize a new town
-gt init
+ms init
 
 # View status
-gt status
+ms status
 
 # List rigs
-gt rig list
+ms rig list
 ```
 
 ## Supported Platforms

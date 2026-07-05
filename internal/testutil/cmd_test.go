@@ -6,8 +6,8 @@ import (
 )
 
 func TestCleanGTEnv_PreservesDoltPort(t *testing.T) {
-	t.Setenv("GT_DOLT_PORT", "13307")
-	t.Setenv("GT_TOWN_ROOT", "/some/town")
+	t.Setenv("MS_DOLT_PORT", "13307")
+	t.Setenv("MS_TOWN_ROOT", "/some/town")
 	t.Setenv("BD_ACTOR", "miner/test")
 
 	env := CleanGTEnv()
@@ -15,9 +15,9 @@ func TestCleanGTEnv_PreservesDoltPort(t *testing.T) {
 	var hasDoltPort, hasTownRoot, hasBDActor bool
 	for _, e := range env {
 		switch {
-		case strings.HasPrefix(e, "GT_DOLT_PORT="):
+		case strings.HasPrefix(e, "MS_DOLT_PORT="):
 			hasDoltPort = true
-		case strings.HasPrefix(e, "GT_TOWN_ROOT="):
+		case strings.HasPrefix(e, "MS_TOWN_ROOT="):
 			hasTownRoot = true
 		case strings.HasPrefix(e, "BD_ACTOR="):
 			hasBDActor = true
@@ -25,10 +25,10 @@ func TestCleanGTEnv_PreservesDoltPort(t *testing.T) {
 	}
 
 	if !hasDoltPort {
-		t.Error("CleanGTEnv stripped GT_DOLT_PORT — must preserve it")
+		t.Error("CleanGTEnv stripped MS_DOLT_PORT — must preserve it")
 	}
 	if hasTownRoot {
-		t.Error("CleanGTEnv preserved GT_TOWN_ROOT — must strip it")
+		t.Error("CleanGTEnv preserved MS_TOWN_ROOT — must strip it")
 	}
 	if hasBDActor {
 		t.Error("CleanGTEnv preserved BD_ACTOR — must strip it")
@@ -81,7 +81,7 @@ func TestCleanGTEnv_ExtraEnv(t *testing.T) {
 }
 
 func TestNewBDCommand_InheritsEnv(t *testing.T) {
-	t.Setenv("GT_DOLT_PORT", "13307")
+	t.Setenv("MS_DOLT_PORT", "13307")
 
 	cmd := NewBDCommand("version")
 	// cmd.Env should be nil (inherits process env)
@@ -94,8 +94,8 @@ func TestNewBDCommand_InheritsEnv(t *testing.T) {
 }
 
 func TestNewIsolatedBDCommand_SetEnv(t *testing.T) {
-	t.Setenv("GT_DOLT_PORT", "13307")
-	t.Setenv("GT_TOWN_ROOT", "/some/town")
+	t.Setenv("MS_DOLT_PORT", "13307")
+	t.Setenv("MS_TOWN_ROOT", "/some/town")
 
 	cmd := NewIsolatedBDCommand("version")
 	if cmd.Env == nil {
@@ -105,23 +105,23 @@ func TestNewIsolatedBDCommand_SetEnv(t *testing.T) {
 	var hasDoltPort, hasTownRoot bool
 	for _, e := range cmd.Env {
 		switch {
-		case strings.HasPrefix(e, "GT_DOLT_PORT="):
+		case strings.HasPrefix(e, "MS_DOLT_PORT="):
 			hasDoltPort = true
-		case strings.HasPrefix(e, "GT_TOWN_ROOT="):
+		case strings.HasPrefix(e, "MS_TOWN_ROOT="):
 			hasTownRoot = true
 		}
 	}
 
 	if !hasDoltPort {
-		t.Error("NewIsolatedBDCommand stripped GT_DOLT_PORT")
+		t.Error("NewIsolatedBDCommand stripped MS_DOLT_PORT")
 	}
 	if hasTownRoot {
-		t.Error("NewIsolatedBDCommand preserved GT_TOWN_ROOT")
+		t.Error("NewIsolatedBDCommand preserved MS_TOWN_ROOT")
 	}
 }
 
 func TestNewIsolatedGTCommand_SetEnv(t *testing.T) {
-	t.Setenv("GT_DOLT_PORT", "13307")
+	t.Setenv("MS_DOLT_PORT", "13307")
 
 	cmd := NewIsolatedGTCommand("version")
 	if cmd.Env == nil {
@@ -130,12 +130,12 @@ func TestNewIsolatedGTCommand_SetEnv(t *testing.T) {
 
 	var hasDoltPort bool
 	for _, e := range cmd.Env {
-		if strings.HasPrefix(e, "GT_DOLT_PORT=") {
+		if strings.HasPrefix(e, "MS_DOLT_PORT=") {
 			hasDoltPort = true
 		}
 	}
 
 	if !hasDoltPort {
-		t.Error("NewIsolatedGTCommand stripped GT_DOLT_PORT")
+		t.Error("NewIsolatedGTCommand stripped MS_DOLT_PORT")
 	}
 }

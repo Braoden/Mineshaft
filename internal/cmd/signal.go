@@ -29,7 +29,7 @@ Example hook configuration (.claude/settings.json):
       "Stop": [{
         "hooks": [{
           "type": "command",
-          "command": "gt signal stop"
+          "command": "ms signal stop"
         }]
       }]
     }

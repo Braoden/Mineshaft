@@ -264,7 +264,7 @@ Dispatched by mol-pr-feedback-patrol."
   echo "Created bead ${BEAD_ID} for PR #${PR_NUM} (${TYPE})"
 
   # Sling a miner to handle it
-  gt sling {{rig}} "$BEAD_ID" 2>/dev/null || echo "Warning: sling failed for ${BEAD_ID}"
+  ms sling {{rig}} "$BEAD_ID" 2>/dev/null || echo "Warning: sling failed for ${BEAD_ID}"
 
 done < /tmp/patrol-findings.txt
 ```
@@ -285,7 +285,7 @@ Context-check and either sleep for the next cycle or exit if context is filling.
 # A rough proxy: check if we're getting close to context limits
 # by checking if the session has been running for a long time.
 # Mineshaft agents typically cycle every 30-60 minutes.
-gt mol step context-check 2>/dev/null || true
+ms mol step context-check 2>/dev/null || true
 ```
 
 **2. Clean up temp files from this cycle:**
@@ -309,10 +309,10 @@ After sleep, close this step and immediately reopen list-open-prs to begin the n
 bd mol step respawn --target list-open-prs
 ```
 
-**Context filling:** If the session is near context capacity, use `gt handoff` to
+**Context filling:** If the session is near context capacity, use `ms handoff` to
 cycle to a fresh session rather than respawning:
 ```bash
-gt handoff -s "PR feedback patrol cycling" -m "Next cycle: scan {{repo}} for PR feedback and CI failures."
+ms handoff -s "PR feedback patrol cycling" -m "Next cycle: scan {{repo}} for PR feedback and CI failures."
 ```
 
 **Exit criteria:** Next patrol cycle initiated (either via respawn or handoff).

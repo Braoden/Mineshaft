@@ -70,7 +70,7 @@ const (
 
 // AgentState is an alias for beads.AgentState. Agent state constants are
 // defined in the beads package (the canonical source) and re-exported here
-// for backward compatibility. See beads/status.go and gt-4d7p.
+// for backward compatibility. See beads/status.go and ms-4d7p.
 type AgentState = beads.AgentState
 
 const (
@@ -85,7 +85,7 @@ const (
 )
 
 // ExitType constants define the completion outcome for miner work.
-// These match the exit statuses used by `gt done` and are stored on the
+// These match the exit statuses used by `ms done` and are stored on the
 // agent bead's exit_type field so the witness can discover completion
 // outcomes from beads instead of MINER_DONE mail.
 type ExitType string

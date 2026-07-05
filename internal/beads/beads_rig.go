@@ -32,7 +32,7 @@ func ValidRigState(s RigState) bool {
 // RigFields contains the fields specific to rig identity beads.
 type RigFields struct {
 	Repo   string   // Git URL for the rig's repository
-	Prefix string   // Beads prefix for this rig (e.g., "gt", "bd")
+	Prefix string   // Beads prefix for this rig (e.g., "ms", "bd")
 	State  RigState // Operational state: active, archived, maintenance
 }
 
@@ -96,9 +96,9 @@ func ParseRigFields(description string) *RigFields {
 // EnsureRigBead returns the rig identity bead, creating it if it doesn't exist.
 // This is idempotent: if the bead already exists, it is returned as-is.
 // Handles races and Dolt query hiccups where Show may fail even when the bead
-// exists (gt-d8681).
+// exists (ms-d8681).
 func (b *Beads) EnsureRigBead(name string, fields *RigFields) (*Issue, error) {
-	prefix := "gt"
+	prefix := "ms"
 	if fields != nil && fields.Prefix != "" {
 		prefix = fields.Prefix
 	}
@@ -124,11 +124,11 @@ func (b *Beads) EnsureRigBead(name string, fields *RigFields) (*Issue, error) {
 }
 
 // CreateRigBead creates a rig identity bead for tracking rig metadata.
-// The ID format is: <prefix>-rig-<name> (e.g., gt-rig-mineshaft)
+// The ID format is: <prefix>-rig-<name> (e.g., ms-rig-mineshaft)
 // The ID is constructed internally from fields.Prefix and name.
 // The created_by field is populated from BD_ACTOR env var for provenance tracking.
 func (b *Beads) CreateRigBead(name string, fields *RigFields) (*Issue, error) {
-	// Guard against flag-like rig names (gt-e0kx5: --help garbage beads)
+	// Guard against flag-like rig names (ms-e0kx5: --help garbage beads)
 	if IsFlagLikeTitle(name) {
 		return nil, fmt.Errorf("refusing to create rig bead: %w (got %q)", ErrFlagTitle, name)
 	}
@@ -137,7 +137,7 @@ func (b *Beads) CreateRigBead(name string, fields *RigFields) (*Issue, error) {
 		return nil, fmt.Errorf("invalid rig state %q: must be one of active, archived, maintenance", fields.State)
 	}
 
-	prefix := "gt"
+	prefix := "ms"
 	if fields != nil && fields.Prefix != "" {
 		prefix = fields.Prefix
 	}
@@ -153,7 +153,7 @@ func (b *Beads) CreateRigBead(name string, fields *RigFields) (*Issue, error) {
 		"--id=" + id,
 		"--title=" + name,
 		"--description=" + description,
-		"--labels=gt:rig",
+		"--labels=ms:rig",
 		"--type=rig",
 	}
 	if NeedsForceForID(id) {
@@ -191,8 +191,8 @@ func (b *Beads) GetRigBead(name string) (*Issue, *RigFields, error) {
 		return nil, nil, err
 	}
 
-	if !HasLabel(issue, "gt:rig") {
-		return nil, nil, fmt.Errorf("bead %s is not a rig bead (missing gt:rig label)", id)
+	if !HasLabel(issue, "ms:rig") {
+		return nil, nil, fmt.Errorf("bead %s is not a rig bead (missing ms:rig label)", id)
 	}
 
 	fields := ParseRigFields(issue.Description)
@@ -210,8 +210,8 @@ func (b *Beads) GetRigByID(id string) (*Issue, *RigFields, error) {
 		return nil, nil, err
 	}
 
-	if !HasLabel(issue, "gt:rig") {
-		return nil, nil, fmt.Errorf("bead %s is not a rig bead (missing gt:rig label)", id)
+	if !HasLabel(issue, "ms:rig") {
+		return nil, nil, fmt.Errorf("bead %s is not a rig bead (missing ms:rig label)", id)
 	}
 
 	fields := ParseRigFields(issue.Description)
@@ -249,7 +249,7 @@ func (b *Beads) DeleteRigBead(name string) error {
 
 // ListRigBeads returns all rig beads.
 func (b *Beads) ListRigBeads() (map[string]*RigFields, error) {
-	out, err := b.run("list", "--label=gt:rig", "--json")
+	out, err := b.run("list", "--label=ms:rig", "--json")
 	if err != nil {
 		return nil, err
 	}
@@ -274,13 +274,13 @@ func (b *Beads) ListRigBeads() (map[string]*RigFields, error) {
 }
 
 // RigBeadIDWithPrefix generates a rig identity bead ID using the specified prefix.
-// Format: <prefix>-rig-<name> (e.g., gt-rig-mineshaft)
+// Format: <prefix>-rig-<name> (e.g., ms-rig-mineshaft)
 func RigBeadIDWithPrefix(prefix, name string) string {
 	return fmt.Sprintf("%s-rig-%s", prefix, name)
 }
 
-// RigBeadID generates a rig identity bead ID using "gt" prefix.
+// RigBeadID generates a rig identity bead ID using "ms" prefix.
 // For non-mineshaft rigs, use RigBeadIDWithPrefix with the rig's configured prefix.
 func RigBeadID(name string) string {
-	return RigBeadIDWithPrefix("gt", name)
+	return RigBeadIDWithPrefix("ms", name)
 }

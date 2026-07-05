@@ -15,7 +15,7 @@ func TestIdleTimeoutCheck_Run(t *testing.T) {
 	if err := os.MkdirAll(townBeads, 0755); err != nil {
 		t.Fatal(err)
 	}
-	routesContent := `{"prefix":"gt-","path":"mineshaft"}
+	routesContent := `{"prefix":"ms-","path":"mineshaft"}
 {"prefix":"bd-","path":"beads"}
 `
 	if err := os.WriteFile(filepath.Join(townBeads, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
@@ -27,8 +27,8 @@ func TestIdleTimeoutCheck_Run(t *testing.T) {
 	if err := os.MkdirAll(mineshaftBeads, 0755); err != nil {
 		t.Fatal(err)
 	}
-	mineshaftConfig := `prefix: gt
-issue-prefix: gt
+	mineshaftConfig := `prefix: ms
+issue-prefix: ms
 dolt.idle-timeout: "0"
 `
 	if err := os.WriteFile(filepath.Join(mineshaftBeads, "config.yaml"), []byte(mineshaftConfig), 0644); err != nil {
@@ -73,7 +73,7 @@ func TestIdleTimeoutCheck_Run_AllCorrect(t *testing.T) {
 	if err := os.MkdirAll(townBeads, 0755); err != nil {
 		t.Fatal(err)
 	}
-	routesContent := `{"prefix":"gt-","path":"mineshaft"}
+	routesContent := `{"prefix":"ms-","path":"mineshaft"}
 `
 	if err := os.WriteFile(filepath.Join(townBeads, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
@@ -84,8 +84,8 @@ func TestIdleTimeoutCheck_Run_AllCorrect(t *testing.T) {
 	if err := os.MkdirAll(mineshaftBeads, 0755); err != nil {
 		t.Fatal(err)
 	}
-	mineshaftConfig := `prefix: gt
-issue-prefix: gt
+	mineshaftConfig := `prefix: ms
+issue-prefix: ms
 dolt.idle-timeout: "0"
 `
 	if err := os.WriteFile(filepath.Join(mineshaftBeads, "config.yaml"), []byte(mineshaftConfig), 0644); err != nil {
@@ -112,7 +112,7 @@ func TestIdleTimeoutCheck_Fix(t *testing.T) {
 	if err := os.MkdirAll(townBeads, 0755); err != nil {
 		t.Fatal(err)
 	}
-	routesContent := `{"prefix":"gt-","path":"mineshaft"}
+	routesContent := `{"prefix":"ms-","path":"mineshaft"}
 `
 	if err := os.WriteFile(filepath.Join(townBeads, "routes.jsonl"), []byte(routesContent), 0644); err != nil {
 		t.Fatal(err)
@@ -123,8 +123,8 @@ func TestIdleTimeoutCheck_Fix(t *testing.T) {
 	if err := os.MkdirAll(mineshaftBeads, 0755); err != nil {
 		t.Fatal(err)
 	}
-	mineshaftConfig := `prefix: gt
-issue-prefix: gt
+	mineshaftConfig := `prefix: ms
+issue-prefix: ms
 `
 	if err := os.WriteFile(filepath.Join(mineshaftBeads, "config.yaml"), []byte(mineshaftConfig), 0644); err != nil {
 		t.Fatal(err)

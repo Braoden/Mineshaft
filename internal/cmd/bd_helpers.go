@@ -62,7 +62,7 @@ func (b *bdCmd) AllowStale() *bdCmd {
 	return b
 }
 
-// WithGTRoot adds GT_ROOT=root to the environment.
+// WithGTRoot adds MS_ROOT=root to the environment.
 // This is required for bd to find town-level formulas and configuration.
 func (b *bdCmd) WithGTRoot(root string) *bdCmd {
 	b.gtRoot = root
@@ -122,11 +122,11 @@ func filterEnvKey(env []string, key string) []string {
 func (b *bdCmd) buildEnv() []string {
 	env := append([]string{}, b.env...)
 
-	// Add GT_ROOT if specified.
+	// Add MS_ROOT if specified.
 	// Filter existing entries first for the same reason as above.
 	if b.gtRoot != "" {
-		env = filterEnvKey(env, "GT_ROOT")
-		env = append(env, "GT_ROOT="+b.gtRoot)
+		env = filterEnvKey(env, "MS_ROOT")
+		env = append(env, "MS_ROOT="+b.gtRoot)
 	}
 
 	mode := beads.MutationRouting
@@ -168,7 +168,7 @@ func (b *bdCmd) Build() *exec.Cmd {
 }
 
 func resolveBdCmdTimeout() time.Duration {
-	if v := os.Getenv("GT_BD_TIMEOUT_SEC"); v != "" {
+	if v := os.Getenv("MS_BD_TIMEOUT_SEC"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil && n > 0 {
 			return time.Duration(n) * time.Second
 		}

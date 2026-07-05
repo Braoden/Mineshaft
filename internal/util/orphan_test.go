@@ -110,7 +110,7 @@ func TestIsInMineshaftWorkspace(t *testing.T) {
 	}
 
 	// Move to a non-workspace temp dir first, so the "not in workspace" check
-	// works even when tests are run from inside a real GT workspace.
+	// works even when tests are run from inside a real MS workspace.
 	nonWorkspaceDir := t.TempDir()
 	if err := os.Chdir(nonWorkspaceDir); err != nil {
 		t.Fatal(err)
@@ -118,14 +118,14 @@ func TestIsInMineshaftWorkspace(t *testing.T) {
 
 	// Our process is NOT in the temp workspace, so should return false
 	if isInMineshaftWorkspace(os.Getpid()) {
-		t.Error("isInMineshaftWorkspace(self) = true, want false (not in a GT workspace)")
+		t.Error("isInMineshaftWorkspace(self) = true, want false (not in a MS workspace)")
 	}
 
 	if err := os.Chdir(tmpDir); err != nil {
 		t.Fatal(err)
 	}
 	if !isInMineshaftWorkspace(os.Getpid()) {
-		t.Error("isInMineshaftWorkspace(self) = false, want true (in GT workspace root)")
+		t.Error("isInMineshaftWorkspace(self) = false, want true (in MS workspace root)")
 	}
 
 	// Test from a subdirectory of the workspace
@@ -137,7 +137,7 @@ func TestIsInMineshaftWorkspace(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !isInMineshaftWorkspace(os.Getpid()) {
-		t.Error("isInMineshaftWorkspace(self) = false, want true (in GT workspace subdir)")
+		t.Error("isInMineshaftWorkspace(self) = false, want true (in MS workspace subdir)")
 	}
 }
 
@@ -179,8 +179,8 @@ func TestGetTmuxSessionPIDs_CrossSocket(t *testing.T) {
 		t.Skip("tmux not installed")
 	}
 
-	socketA := fmt.Sprintf("gt-test-orphan-a-%d", os.Getpid())
-	socketB := fmt.Sprintf("gt-test-orphan-b-%d", os.Getpid())
+	socketA := fmt.Sprintf("ms-test-orphan-a-%d", os.Getpid())
+	socketB := fmt.Sprintf("ms-test-orphan-b-%d", os.Getpid())
 	t.Cleanup(func() {
 		killTmuxServer(socketA)
 		killTmuxServer(socketB)
@@ -209,7 +209,7 @@ func TestGetTmuxSessionPIDs_SingleSocket(t *testing.T) {
 		t.Skip("tmux not installed")
 	}
 
-	socket := fmt.Sprintf("gt-test-orphan-single-%d", os.Getpid())
+	socket := fmt.Sprintf("ms-test-orphan-single-%d", os.Getpid())
 	t.Cleanup(func() { killTmuxServer(socket) })
 
 	pid1 := tmuxSocketSession(t, socket, "session-1")
@@ -305,7 +305,7 @@ func TestResolveTownRoot(t *testing.T) {
 }
 
 func TestResolveTownRoot_DistinguishesAdjacentTowns(t *testing.T) {
-	// Two sibling towns under the same parent (mirrors ~/mineshaft and ~/gt-financing)
+	// Two sibling towns under the same parent (mirrors ~/mineshaft and ~/ms-financing)
 	origDir, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
@@ -315,7 +315,7 @@ func TestResolveTownRoot_DistinguishesAdjacentTowns(t *testing.T) {
 	parent := realPath(t, t.TempDir())
 
 	townA := filepath.Join(parent, "mineshaft")
-	townB := filepath.Join(parent, "gt-financing")
+	townB := filepath.Join(parent, "ms-financing")
 	for _, town := range []string{townA, townB} {
 		if err := os.MkdirAll(filepath.Join(town, "overseer"), 0o755); err != nil {
 			t.Fatal(err)

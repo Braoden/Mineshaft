@@ -71,7 +71,7 @@ var primeCmd = &cobra.Command{
 	Long: `Detect the agent role from the current directory and output context.
 
 Role detection:
-  - Town root → Neutral (no role inferred; use GT_ROLE)
+  - Town root → Neutral (no role inferred; use MS_ROLE)
   - overseer/ or <rig>/overseer/ → Overseer context
   - <rig>/witness/rig/ → Witness context
   - <rig>/refinery/rig/ → Refinery context
@@ -84,22 +84,22 @@ HOOK MODE (--hook):
   agent-ready signaling, and session persistence.
 
   Session ID resolution (first match wins):
-    1. GT_SESSION_ID env var
+    1. MS_SESSION_ID env var
     2. CLAUDE_SESSION_ID env var
     3. Persisted .runtime/session_id (from prior SessionStart)
     4. Stdin JSON (Claude Code format)
     5. Auto-generated UUID
 
-  Source resolution: GT_HOOK_SOURCE env var, then stdin JSON "source" field.
+  Source resolution: MS_HOOK_SOURCE env var, then stdin JSON "source" field.
 
   Claude Code integration (in .claude/settings.json):
-    "SessionStart": [{"hooks": [{"type": "command", "command": "gt prime --hook"}]}]
+    "SessionStart": [{"hooks": [{"type": "command", "command": "ms prime --hook"}]}]
     Claude sends JSON on stdin: {"session_id":"uuid","source":"startup|resume|compact"}
 
   Gemini CLI / other runtimes (in .gemini/settings.json):
-    "SessionStart": "export GT_SESSION_ID=$(uuidgen) GT_HOOK_SOURCE=startup && gt prime --hook"
-    "PreCompress":  "export GT_HOOK_SOURCE=compact && gt prime --hook"
-    Set GT_SESSION_ID + GT_HOOK_SOURCE as env vars to skip the stdin read entirely.`,
+    "SessionStart": "export MS_SESSION_ID=$(uuidgen) MS_HOOK_SOURCE=startup && ms prime --hook"
+    "PreCompress":  "export MS_HOOK_SOURCE=compact && ms prime --hook"
+    Set MS_SESSION_ID + MS_HOOK_SOURCE as env vars to skip the stdin read entirely.`,
 	RunE: runPrime,
 }
 
@@ -122,7 +122,7 @@ func init() {
 type RoleContext = RoleInfo
 
 func runPrime(cmd *cobra.Command, args []string) (retErr error) {
-	defer func() { telemetry.RecordPrime(context.Background(), os.Getenv("GT_ROLE"), primeHookMode, retErr) }()
+	defer func() { telemetry.RecordPrime(context.Background(), os.Getenv("MS_ROLE"), primeHookMode, retErr) }()
 	if err := validatePrimeFlags(); err != nil {
 		return err
 	}
@@ -185,12 +185,12 @@ func runPrime(cmd *cobra.Command, args []string) (retErr error) {
 	}
 
 	// P0: Fetch work context once — used for both OTel attribution and output.
-	// injectWorkContext sets GT_WORK_RIG/BEAD/MOL in the current process env and
+	// injectWorkContext sets MS_WORK_RIG/BEAD/MOL in the current process env and
 	// in the tmux session env so all subsequent subprocesses (bd, mail, …) carry
-	// the correct work attribution until the next gt prime overwrites it.
+	// the correct work attribution until the next ms prime overwrites it.
 	hookedBead, hookErr := findAgentWork(ctx)
 	if hookErr != nil {
-		// Cross-rig / unresolvable hook bead (gt-el4): the agent bead names a
+		// Cross-rig / unresolvable hook bead (ms-el4): the agent bead names a
 		// hook bead that bd show cannot find. Don't sit idle "pontificating" —
 		// emit a clear message, fire a HIGH escalation so the witness sees the
 		// dead-with-active-work state, and exit non-zero so the dog can clear
@@ -204,9 +204,9 @@ func runPrime(cmd *cobra.Command, args []string) (retErr error) {
 			return fmt.Errorf("miner prime: hook unresolvable: %w", hookErr)
 		}
 		// Database error during hook query — NOT the same as "no work assigned".
-		// Emit a loud warning so the agent does NOT run gt done / close the bead.
-		// This prevents the destructive cycle: DB error → "no work" → gt done → bead lost. (GH#2638)
-		fmt.Fprintf(os.Stderr, "\n%s\n", style.Bold.Render("## ⚠️  DATABASE ERROR — DO NOT RUN gt done ⚠️"))
+		// Emit a loud warning so the agent does NOT run ms done / close the bead.
+		// This prevents the destructive cycle: DB error → "no work" → ms done → bead lost. (GH#2638)
+		fmt.Fprintf(os.Stderr, "\n%s\n", style.Bold.Render("## ⚠️  DATABASE ERROR — DO NOT RUN ms done ⚠️"))
 		fmt.Fprintf(os.Stderr, "Hook query failed: %v\n", hookErr)
 		fmt.Fprintf(os.Stderr, "This is a database connectivity error, NOT an empty hook.\n")
 		fmt.Fprintf(os.Stderr, "Your work may still be assigned. Do NOT close any beads.\n")
@@ -220,8 +220,8 @@ func runPrime(cmd *cobra.Command, args []string) (retErr error) {
 	}
 	// Log the rendered formula to OTEL so it's visible in VictoriaLogs alongside
 	// Claude's API calls, letting operators see exactly what context each agent
-	// started with. Only emitted when GT telemetry is active (GT_OTEL_LOGS_URL set).
-	telemetry.RecordPrimeContext(context.Background(), formula, os.Getenv("GT_ROLE"), primeHookMode)
+	// started with. Only emitted when MS telemetry is active (MS_OTEL_LOGS_URL set).
+	telemetry.RecordPrimeContext(context.Background(), formula, os.Getenv("MS_ROLE"), primeHookMode)
 
 	hasSlungWork, err := checkSlungWork(ctx, hookedBead)
 	if err != nil {
@@ -250,7 +250,7 @@ func ensureRoleWorktreeIntegrity(cwd, townRoot string, role Role) error {
 		TownRoot: townRoot,
 		Require:  roleRequiresWorktreeIntegrity(role),
 	}); err != nil {
-		return fmt.Errorf("%w\nRemediation: stop using this worktree and run `gt doctor --fix`", err)
+		return fmt.Errorf("%w\nRemediation: stop using this worktree and run `ms doctor --fix`", err)
 	}
 	return nil
 }
@@ -288,10 +288,10 @@ func runPrimeCompactResume(ctx RoleContext) {
 
 	fmt.Println("\n---")
 	fmt.Println()
-	fmt.Println("**Continue your current task.** If you've lost context, run `gt prime` for full reload.")
+	fmt.Println("**Continue your current task.** If you've lost context, run `ms prime` for full reload.")
 
-	// Remind miners about gt done — after compaction the agent may have lost
-	// the formula checklist and forgotten that gt done is required to submit work.
+	// Remind miners about ms done — after compaction the agent may have lost
+	// the formula checklist and forgotten that ms done is required to submit work.
 	// Without this, miners finish implementation and sit at the prompt forever.
 	if ctx.Role == RoleMiner {
 		fmt.Printf("\n**IMPORTANT**: When all work is complete (code committed, tests pass), run `%s done` to submit to the merge queue.\n", cli.Name())
@@ -344,10 +344,10 @@ func handlePrimeHookMode(townRoot, cwd string) {
 			persistSessionID(cwd, sessionID)
 		}
 	}
-	_ = os.Setenv("GT_SESSION_ID", sessionID)
+	_ = os.Setenv("MS_SESSION_ID", sessionID)
 	_ = os.Setenv("CLAUDE_SESSION_ID", sessionID) // Legacy compatibility
 
-	// ZFC: Signal agent readiness via tmux env var (gt-sk5u).
+	// ZFC: Signal agent readiness via tmux env var (ms-sk5u).
 	// WaitForCommand polls for this instead of probing the process tree.
 	// This handles agents wrapped in shell scripts where pane_current_command
 	// remains "bash" even though the agent is running as a descendant.
@@ -377,7 +377,7 @@ func hookSessionBeaconLines(sessionID, source string) []string {
 	return lines
 }
 
-// signalAgentReady sets GT_AGENT_READY=1 in the current tmux session environment.
+// signalAgentReady sets MS_AGENT_READY=1 in the current tmux session environment.
 // Called from the agent's SessionStart hook to signal that the agent has started.
 // WaitForCommand polls for this variable as a ZFC-compliant alternative to
 // probing the process tree via IsAgentAlive.
@@ -397,7 +397,7 @@ func signalAgentReady() {
 // a brief identity confirmation plus hook/work status.
 //
 // This also returns true for compaction-triggered handoff cycles (crew workers).
-// When PreCompact runs "gt handoff --cycle --reason compaction", the new session
+// When PreCompact runs "ms handoff --cycle --reason compaction", the new session
 // gets source="startup" but the handoff marker carries reason="compaction".
 // Without this, the new session runs full prime with AUTONOMOUS WORK MODE,
 // causing the agent to re-initialize instead of continuing. (GH#1965)
@@ -405,13 +405,13 @@ func isCompactResume() bool {
 	return primeHookSource == "compact" || primeHookSource == "resume" || primeHandoffReason == "compaction"
 }
 
-// warnRoleMismatch outputs a prominent warning if GT_ROLE disagrees with cwd detection.
+// warnRoleMismatch outputs a prominent warning if MS_ROLE disagrees with cwd detection.
 func warnRoleMismatch(roleInfo RoleInfo, cwd string) {
 	if !roleInfo.Mismatch {
 		return
 	}
 	fmt.Printf("\n%s\n", style.Bold.Render("⚠️  ROLE/LOCATION MISMATCH"))
-	fmt.Printf("You are %s (from $GT_ROLE) but your cwd suggests %s.\n",
+	fmt.Printf("You are %s (from $MS_ROLE) but your cwd suggests %s.\n",
 		style.Bold.Render(string(roleInfo.Role)),
 		style.Bold.Render(string(roleInfo.CwdRole)))
 	fmt.Printf("Expected home: %s\n", roleInfo.Home)
@@ -419,7 +419,7 @@ func warnRoleMismatch(roleInfo RoleInfo, cwd string) {
 	fmt.Println()
 	fmt.Println("This can cause commands to misbehave. Either:")
 	fmt.Println("  1. cd to your home directory, OR")
-	fmt.Println("  2. Use absolute paths for gt/bd commands")
+	fmt.Println("  2. Use absolute paths for ms/bd commands")
 	fmt.Println()
 }
 
@@ -436,11 +436,11 @@ func setupPrimeSession(ctx RoleContext, roleInfo RoleInfo) error {
 		ensureBeadsRedirect(ctx)
 	}
 	repairSessionEnv(ctx, roleInfo)
-	// Only emit session_start when gt prime is running as a SessionStart or
-	// PreCompact hook. Bare gt prime calls (e.g. an agent reading another
+	// Only emit session_start when ms prime is running as a SessionStart or
+	// PreCompact hook. Bare ms prime calls (e.g. an agent reading another
 	// agent's context) must not emit session_start — doing so logs a spurious
 	// event with the target agent's persisted session_id, which pollutes the
-	// event stream and can confuse gt seance discovery.
+	// event stream and can confuse ms seance discovery.
 	if primeHookMode {
 		emitSessionEvent(ctx)
 	}
@@ -449,7 +449,7 @@ func setupPrimeSession(ctx RoleContext, roleInfo RoleInfo) error {
 
 // repairSessionEnv checks if the tmux session is missing identity env vars
 // and re-injects them from the current role context. This self-heals sessions
-// that were created through non-standard paths or older gt versions. GH#3006.
+// that were created through non-standard paths or older ms versions. GH#3006.
 func repairSessionEnv(ctx RoleContext, roleInfo RoleInfo) {
 	if os.Getenv("TMUX") == "" {
 		return
@@ -461,8 +461,8 @@ func repairSessionEnv(ctx RoleContext, roleInfo RoleInfo) {
 		return
 	}
 
-	// Quick check: if GT_ROLE is already set in the session env, assume healthy.
-	if _, err := t.GetEnvironment(session, "GT_ROLE"); err == nil {
+	// Quick check: if MS_ROLE is already set in the session env, assume healthy.
+	if _, err := t.GetEnvironment(session, "MS_ROLE"); err == nil {
 		return
 	}
 
@@ -492,9 +492,9 @@ func repairSessionEnv(ctx RoleContext, roleInfo RoleInfo) {
 	for _, k := range config.IdentityEnvVars {
 		identitySet[k] = true
 	}
-	// Also include GT_ROOT and GT_SESSION — core session identity.
-	identitySet["GT_ROOT"] = true
-	identitySet["GT_SESSION"] = true
+	// Also include MS_ROOT and MS_SESSION — core session identity.
+	identitySet["MS_ROOT"] = true
+	identitySet["MS_SESSION"] = true
 
 	var repaired int
 	for k, v := range envVars {
@@ -545,12 +545,12 @@ func outputRoleContext(ctx RoleContext) (string, error) {
 func runPrimeExternalTools(ctx RoleContext, cwd string) {
 	if primeDryRun {
 		explain(true, "memory injection: skipped in dry-run mode")
-		explain(true, "gt mail check --inject: skipped in dry-run mode")
+		explain(true, "ms mail check --inject: skipped in dry-run mode")
 		return
 	}
 	runMemoryInject(cwd)
 	if shouldSkipStartupMailInject(string(ctx.Role)) {
-		explain(true, fmt.Sprintf("gt mail check --inject: skipped for patrol role %s", ctx.Role))
+		explain(true, fmt.Sprintf("ms mail check --inject: skipped for patrol role %s", ctx.Role))
 		return
 	}
 	runMailCheckInject(cwd)
@@ -659,14 +659,14 @@ func bdKvListJSONForPrime(workDir string) (map[string]string, error) {
 	return parseBdKvListJSON(stdout.Bytes())
 }
 
-// runMailCheckInject runs `gt mail check --inject` and outputs the result.
+// runMailCheckInject runs `ms mail check --inject` and outputs the result.
 // This injects any pending mail into the agent's context.
 func runMailCheckInject(workDir string) {
-	stdout, stderr, err := runPrimeExternalCommand(workDir, "gt", "mail", "check", "--inject")
+	stdout, stderr, err := runPrimeExternalCommand(workDir, "ms", "mail", "check", "--inject")
 	if err != nil {
 		// Skip if mail check fails, but log stderr for debugging
 		if errMsg := strings.TrimSpace(stderr.String()); errMsg != "" {
-			fmt.Fprintf(os.Stderr, "gt mail check: %s\n", errMsg)
+			fmt.Fprintf(os.Stderr, "ms mail check: %s\n", errMsg)
 		}
 		return
 	}
@@ -727,10 +727,10 @@ func hasWorkflowAttachment(attachment *beads.AttachmentFields) bool {
 }
 
 // findAgentWork looks up hooked or in-progress beads assigned to this agent.
-// Primary: reads hook_bead from the agent bead (same strategy as detectSessionState/gt hook).
+// Primary: reads hook_bead from the agent bead (same strategy as detectSessionState/ms hook).
 // Fallback: queries by assignee for agents without an agent bead.
 // For miners and crew, retries up to 3 times with 2-second delays to handle
-// the timing race where hook state hasn't propagated by the time gt prime runs.
+// the timing race where hook state hasn't propagated by the time ms prime runs.
 // See: https://github.com/steveyegge/mineshaft/issues/1438
 //
 // Returns (nil, nil) if no work is found.
@@ -744,7 +744,7 @@ func findAgentWork(ctx RoleContext) (*beads.Issue, error) {
 
 	// Miners, crew, and dogs use a retry loop to handle the timing race
 	// where the hook write (status=hooked + assignee) hasn't propagated to
-	// new Dolt connections by the time gt prime runs on session startup.
+	// new Dolt connections by the time ms prime runs on session startup.
 	// Dogs are especially affected since dispatch is fire-and-forget. (GH#2748)
 	// Uses exponential backoff: 500ms, 1s, 2s, 4s, 8s (total ~15.5s max).
 	// See: https://github.com/steveyegge/mineshaft/issues/2389
@@ -782,7 +782,7 @@ func findAgentWork(ctx RoleContext) (*beads.Issue, error) {
 
 // ErrHookUnresolvable signals that the agent bead points at a hook bead that
 // cannot be resolved from the agent's CWD (e.g., cross-rig dispatch where an
-// `hq-` bead was handed to a `gt-` rig miner). See gt-el4.
+// `hq-` bead was handed to a `ms-` rig miner). See ms-el4.
 var ErrHookUnresolvable = errors.New("hooked bead not resolvable from this rig")
 
 // isBeadNotFound reports whether an error from beads.Show represents a missing
@@ -802,8 +802,8 @@ func isBeadNotFound(err error) bool {
 // sees the dead-with-active-work state immediately. Best effort — logged on
 // failure but does not gate the prime exit.
 var fireMinerHookUnresolvableEscalation = func(agentID, detail string) {
-	msg := fmt.Sprintf("miner hook unresolvable: agent=%s detail=%s — see gt-el4", agentID, detail)
-	cmd := exec.Command("gt", "escalate", "--severity", "high", "--reason", "miner-hook-unresolvable", msg)
+	msg := fmt.Sprintf("miner hook unresolvable: agent=%s detail=%s — see ms-el4", agentID, detail)
+	cmd := exec.Command("ms", "escalate", "--severity", "high", "--reason", "miner-hook-unresolvable", msg)
 	if err := cmd.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "miner prime: escalation failed: %v\n", err)
 	}
@@ -839,8 +839,8 @@ func findAgentWorkOnce(ctx RoleContext, agentID string) (*beads.Issue, error) {
 				return hookBead, nil
 			}
 			// The agent bead names a hook bead but `bd show` cannot find it.
-			// This is the cross-rig dispatch failure mode (gt-el4): an `hq-`
-			// bead was handed to a miner whose DB only resolves `gt-`. Fail
+			// This is the cross-rig dispatch failure mode (ms-el4): an `hq-`
+			// bead was handed to a miner whose DB only resolves `ms-`. Fail
 			// fast — never pontificate, the witness will clear the hook on
 			// its next sweep and the dispatcher will (or won't) re-issue.
 			if hookBead == nil || isBeadNotFound(showErr) {
@@ -877,7 +877,7 @@ func findAgentWorkOnce(ctx RoleContext, agentID string) (*beads.Issue, error) {
 
 	// Town-level fallback: rig-level agents (miners, crew) may have hooked
 	// HQ beads (hq-* prefix) stored in townRoot/.beads, not the rig's database.
-	// Matches the fallback in molecule_status.go and unsling.go. (gt-dtq7)
+	// Matches the fallback in molecule_status.go and unsling.go. (ms-dtq7)
 	if len(hookedBeads) == 0 && !isTownLevelRole(agentID) && ctx.TownRoot != "" {
 		townB := beads.New(filepath.Join(ctx.TownRoot, ".beads"))
 		if townHooked, err := townB.List(beads.ListOptions{
@@ -946,7 +946,7 @@ func outputAutonomousDirective(ctx RoleContext, hookedBead *beads.Issue, hasMole
 		fmt.Println("3. Begin execution - no waiting for user input")
 	}
 
-	// Miners MUST call gt done — this is the single most important instruction.
+	// Miners MUST call ms done — this is the single most important instruction.
 	// Without it, work lands but sessions accumulate and the merge queue stalls.
 	if ctx.Role == RoleMiner {
 		fmt.Println()
@@ -1241,7 +1241,7 @@ func acquireIdentityLock(ctx RoleContext) error {
 
 			fmt.Printf("To resolve:\n")
 			fmt.Printf("  1. Find the other session and close it, OR\n")
-			fmt.Printf("  2. Run: gt doctor --fix (cleans stale locks)\n")
+			fmt.Printf("  2. Run: ms doctor --fix (cleans stale locks)\n")
 			fmt.Printf("  3. If lock is stale: rm %s/.runtime/agent.lock\n", ctx.WorkDir)
 			fmt.Println()
 
@@ -1322,8 +1322,8 @@ func ensureBeadsRedirect(ctx RoleContext) {
 // injectWorkContext extracts the current work context (rig, bead, molecule) from the
 // hooked bead and persists it in two places so all subsequent subprocesses carry it:
 //
-//  1. Current process env (GT_WORK_RIG/BEAD/MOL via os.Setenv) — inherited by bd, mail,
-//     and any other subprocess spawned from this gt prime invocation.
+//  1. Current process env (MS_WORK_RIG/BEAD/MOL via os.Setenv) — inherited by bd, mail,
+//     and any other subprocess spawned from this ms prime invocation.
 //
 //  2. Tmux session env (via tmux set-environment) — inherited by future processes
 //     spawned in the session after a handoff or compaction (e.g. new Claude Code instance).
@@ -1349,13 +1349,13 @@ func injectWorkContext(ctx RoleContext, hookedBead *beads.Issue) {
 			workMol = attachment.AttachedMolecule
 		}
 	}
-	_ = os.Setenv("GT_WORK_RIG", workRig)
-	_ = os.Setenv("GT_WORK_BEAD", workBead)
-	_ = os.Setenv("GT_WORK_MOL", workMol)
+	_ = os.Setenv("MS_WORK_RIG", workRig)
+	_ = os.Setenv("MS_WORK_BEAD", workBead)
+	_ = os.Setenv("MS_WORK_MOL", workMol)
 	setTmuxWorkContext(workRig, workBead, workMol)
 }
 
-// setTmuxWorkContext writes GT_WORK_RIG, GT_WORK_BEAD, GT_WORK_MOL into the current
+// setTmuxWorkContext writes MS_WORK_RIG, MS_WORK_BEAD, MS_WORK_MOL into the current
 // tmux session environment. Future processes spawned in the session (e.g. a new
 // Claude Code instance after handoff/compaction) will inherit these values automatically.
 // Empty values unset the variable in the session env to prevent stale context leaking
@@ -1379,9 +1379,9 @@ func setTmuxWorkContext(workRig, workBead, workMol string) {
 			_ = exec.Command("tmux", "set-environment", "-u", "-t", session, key).Run()
 		}
 	}
-	setOrUnset("GT_WORK_RIG", workRig)
-	setOrUnset("GT_WORK_BEAD", workBead)
-	setOrUnset("GT_WORK_MOL", workMol)
+	setOrUnset("MS_WORK_RIG", workRig)
+	setOrUnset("MS_WORK_BEAD", workBead)
+	setOrUnset("MS_WORK_MOL", workMol)
 }
 
 // checkPendingEscalations queries for open escalation beads and displays them prominently.

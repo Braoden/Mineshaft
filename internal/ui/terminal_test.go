@@ -126,44 +126,44 @@ func TestShouldUseColor_CLICOLOR_FORCE(t *testing.T) {
 }
 
 func TestShouldUseEmoji_Default(t *testing.T) {
-	oldNoEmoji := os.Getenv("GT_NO_EMOJI")
+	oldNoEmoji := os.Getenv("MS_NO_EMOJI")
 	defer func() {
 		if oldNoEmoji != "" {
-			os.Setenv("GT_NO_EMOJI", oldNoEmoji)
+			os.Setenv("MS_NO_EMOJI", oldNoEmoji)
 		} else {
-			os.Unsetenv("GT_NO_EMOJI")
+			os.Unsetenv("MS_NO_EMOJI")
 		}
 	}()
 
-	os.Unsetenv("GT_NO_EMOJI")
+	os.Unsetenv("MS_NO_EMOJI")
 	result := ShouldUseEmoji()
 	_ = result // Result depends on test environment
 }
 
 func TestShouldUseEmoji_GT_NO_EMOJI(t *testing.T) {
-	oldNoEmoji := os.Getenv("GT_NO_EMOJI")
+	oldNoEmoji := os.Getenv("MS_NO_EMOJI")
 	defer func() {
 		if oldNoEmoji != "" {
-			os.Setenv("GT_NO_EMOJI", oldNoEmoji)
+			os.Setenv("MS_NO_EMOJI", oldNoEmoji)
 		} else {
-			os.Unsetenv("GT_NO_EMOJI")
+			os.Unsetenv("MS_NO_EMOJI")
 		}
 	}()
 
-	os.Setenv("GT_NO_EMOJI", "1")
+	os.Setenv("MS_NO_EMOJI", "1")
 	if ShouldUseEmoji() {
-		t.Error("ShouldUseEmoji() should return false when GT_NO_EMOJI is set")
+		t.Error("ShouldUseEmoji() should return false when MS_NO_EMOJI is set")
 	}
 }
 
 func TestIsAgentMode_Default(t *testing.T) {
-	oldAgentMode := os.Getenv("GT_AGENT_MODE")
+	oldAgentMode := os.Getenv("MS_AGENT_MODE")
 	oldClaudeCode := os.Getenv("CLAUDE_CODE")
 	defer func() {
 		if oldAgentMode != "" {
-			os.Setenv("GT_AGENT_MODE", oldAgentMode)
+			os.Setenv("MS_AGENT_MODE", oldAgentMode)
 		} else {
-			os.Unsetenv("GT_AGENT_MODE")
+			os.Unsetenv("MS_AGENT_MODE")
 		}
 		if oldClaudeCode != "" {
 			os.Setenv("CLAUDE_CODE", oldClaudeCode)
@@ -172,7 +172,7 @@ func TestIsAgentMode_Default(t *testing.T) {
 		}
 	}()
 
-	os.Unsetenv("GT_AGENT_MODE")
+	os.Unsetenv("MS_AGENT_MODE")
 	os.Unsetenv("CLAUDE_CODE")
 	if IsAgentMode() {
 		t.Error("IsAgentMode() should return false by default")
@@ -180,34 +180,34 @@ func TestIsAgentMode_Default(t *testing.T) {
 }
 
 func TestIsAgentMode_GT_AGENT_MODE(t *testing.T) {
-	oldAgentMode := os.Getenv("GT_AGENT_MODE")
+	oldAgentMode := os.Getenv("MS_AGENT_MODE")
 	defer func() {
 		if oldAgentMode != "" {
-			os.Setenv("GT_AGENT_MODE", oldAgentMode)
+			os.Setenv("MS_AGENT_MODE", oldAgentMode)
 		} else {
-			os.Unsetenv("GT_AGENT_MODE")
+			os.Unsetenv("MS_AGENT_MODE")
 		}
 	}()
 
-	os.Setenv("GT_AGENT_MODE", "1")
+	os.Setenv("MS_AGENT_MODE", "1")
 	if !IsAgentMode() {
-		t.Error("IsAgentMode() should return true when GT_AGENT_MODE=1")
+		t.Error("IsAgentMode() should return true when MS_AGENT_MODE=1")
 	}
 
-	os.Setenv("GT_AGENT_MODE", "0")
+	os.Setenv("MS_AGENT_MODE", "0")
 	if IsAgentMode() {
-		t.Error("IsAgentMode() should return false when GT_AGENT_MODE=0")
+		t.Error("IsAgentMode() should return false when MS_AGENT_MODE=0")
 	}
 }
 
 func TestIsAgentMode_CLAUDE_CODE(t *testing.T) {
- oldAgentMode := os.Getenv("GT_AGENT_MODE")
+ oldAgentMode := os.Getenv("MS_AGENT_MODE")
 	oldClaudeCode := os.Getenv("CLAUDE_CODE")
 	defer func() {
 		if oldAgentMode != "" {
-			os.Setenv("GT_AGENT_MODE", oldAgentMode)
+			os.Setenv("MS_AGENT_MODE", oldAgentMode)
 		} else {
-			os.Unsetenv("GT_AGENT_MODE")
+			os.Unsetenv("MS_AGENT_MODE")
 		}
 		if oldClaudeCode != "" {
 			os.Setenv("CLAUDE_CODE", oldClaudeCode)
@@ -216,7 +216,7 @@ func TestIsAgentMode_CLAUDE_CODE(t *testing.T) {
 		}
 	}()
 
-	os.Unsetenv("GT_AGENT_MODE")
+	os.Unsetenv("MS_AGENT_MODE")
 	os.Setenv("CLAUDE_CODE", "1")
 	if !IsAgentMode() {
 		t.Error("IsAgentMode() should return true when CLAUDE_CODE is set")
@@ -224,13 +224,13 @@ func TestIsAgentMode_CLAUDE_CODE(t *testing.T) {
 }
 
 func TestIsAgentMode_CLAUDE_CODE_AnyValue(t *testing.T) {
-	oldAgentMode := os.Getenv("GT_AGENT_MODE")
+	oldAgentMode := os.Getenv("MS_AGENT_MODE")
 	oldClaudeCode := os.Getenv("CLAUDE_CODE")
 	defer func() {
 		if oldAgentMode != "" {
-			os.Setenv("GT_AGENT_MODE", oldAgentMode)
+			os.Setenv("MS_AGENT_MODE", oldAgentMode)
 		} else {
-			os.Unsetenv("GT_AGENT_MODE")
+			os.Unsetenv("MS_AGENT_MODE")
 		}
 		if oldClaudeCode != "" {
 			os.Setenv("CLAUDE_CODE", oldClaudeCode)
@@ -239,7 +239,7 @@ func TestIsAgentMode_CLAUDE_CODE_AnyValue(t *testing.T) {
 		}
 	}()
 
-	os.Unsetenv("GT_AGENT_MODE")
+	os.Unsetenv("MS_AGENT_MODE")
 	os.Setenv("CLAUDE_CODE", "any-value")
 	if !IsAgentMode() {
 		t.Error("IsAgentMode() should return true when CLAUDE_CODE is set to any value")
@@ -247,23 +247,23 @@ func TestIsAgentMode_CLAUDE_CODE_AnyValue(t *testing.T) {
 }
 
 func TestInitTheme_EnvOverridesConfig(t *testing.T) {
-	oldGTTheme := os.Getenv("GT_THEME")
+	oldGTTheme := os.Getenv("MS_THEME")
 	defer func() {
 		if oldGTTheme != "" {
-			os.Setenv("GT_THEME", oldGTTheme)
+			os.Setenv("MS_THEME", oldGTTheme)
 		} else {
-			os.Unsetenv("GT_THEME")
+			os.Unsetenv("MS_THEME")
 		}
 	}()
 
 	// Test: env var overrides config
-	os.Setenv("GT_THEME", "dark")
+	os.Setenv("MS_THEME", "dark")
 	InitTheme("light") // config says light
 	if GetThemeMode() != ThemeModeDark {
 		t.Errorf("Expected dark mode from env var, got %s", GetThemeMode())
 	}
 
-	os.Setenv("GT_THEME", "light")
+	os.Setenv("MS_THEME", "light")
 	InitTheme("dark") // config says dark
 	if GetThemeMode() != ThemeModeLight {
 		t.Errorf("Expected light mode from env var, got %s", GetThemeMode())
@@ -271,16 +271,16 @@ func TestInitTheme_EnvOverridesConfig(t *testing.T) {
 }
 
 func TestInitTheme_ConfigUsedWhenNoEnv(t *testing.T) {
-	oldGTTheme := os.Getenv("GT_THEME")
+	oldGTTheme := os.Getenv("MS_THEME")
 	defer func() {
 		if oldGTTheme != "" {
-			os.Setenv("GT_THEME", oldGTTheme)
+			os.Setenv("MS_THEME", oldGTTheme)
 		} else {
-			os.Unsetenv("GT_THEME")
+			os.Unsetenv("MS_THEME")
 		}
 	}()
 
-	os.Unsetenv("GT_THEME")
+	os.Unsetenv("MS_THEME")
 
 	InitTheme("dark")
 	if GetThemeMode() != ThemeModeDark {
@@ -294,16 +294,16 @@ func TestInitTheme_ConfigUsedWhenNoEnv(t *testing.T) {
 }
 
 func TestInitTheme_DefaultsToAuto(t *testing.T) {
-	oldGTTheme := os.Getenv("GT_THEME")
+	oldGTTheme := os.Getenv("MS_THEME")
 	defer func() {
 		if oldGTTheme != "" {
-			os.Setenv("GT_THEME", oldGTTheme)
+			os.Setenv("MS_THEME", oldGTTheme)
 		} else {
-			os.Unsetenv("GT_THEME")
+			os.Unsetenv("MS_THEME")
 		}
 	}()
 
-	os.Unsetenv("GT_THEME")
+	os.Unsetenv("MS_THEME")
 	InitTheme("") // no config
 	if GetThemeMode() != ThemeModeAuto {
 		t.Errorf("Expected auto mode as default, got %s", GetThemeMode())
@@ -311,22 +311,22 @@ func TestInitTheme_DefaultsToAuto(t *testing.T) {
 }
 
 func TestHasDarkBackground_ForcedModes(t *testing.T) {
-	oldGTTheme := os.Getenv("GT_THEME")
+	oldGTTheme := os.Getenv("MS_THEME")
 	defer func() {
 		if oldGTTheme != "" {
-			os.Setenv("GT_THEME", oldGTTheme)
+			os.Setenv("MS_THEME", oldGTTheme)
 		} else {
-			os.Unsetenv("GT_THEME")
+			os.Unsetenv("MS_THEME")
 		}
 	}()
 
-	os.Setenv("GT_THEME", "dark")
+	os.Setenv("MS_THEME", "dark")
 	InitTheme("")
 	if !HasDarkBackground() {
 		t.Error("Expected HasDarkBackground() to return true when mode is dark")
 	}
 
-	os.Setenv("GT_THEME", "light")
+	os.Setenv("MS_THEME", "light")
 	InitTheme("")
 	if HasDarkBackground() {
 		t.Error("Expected HasDarkBackground() to return false when mode is light")

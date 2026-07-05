@@ -12,7 +12,7 @@ import (
 // Configurable via operational.miner.heartbeat_stale_threshold in settings/config.json.
 const SessionHeartbeatStaleThreshold = 3 * time.Minute
 
-// HeartbeatState represents the agent-reported state in a heartbeat v2 (gt-3vr5).
+// HeartbeatState represents the agent-reported state in a heartbeat v2 (ms-3vr5).
 // Agents report their own state; the witness makes exactly one inference:
 // "is the heartbeat fresh?" Everything else is agent-reported.
 type HeartbeatState string
@@ -22,14 +22,14 @@ const (
 	HeartbeatWorking HeartbeatState = "working"
 	// HeartbeatIdle means the agent is waiting for input.
 	HeartbeatIdle HeartbeatState = "idle"
-	// HeartbeatExiting means the agent is in the gt done flow.
+	// HeartbeatExiting means the agent is in the ms done flow.
 	HeartbeatExiting HeartbeatState = "exiting"
 	// HeartbeatStuck means the agent self-reports being stuck.
 	HeartbeatStuck HeartbeatState = "stuck"
 )
 
 // SessionHeartbeat represents a miner session's heartbeat file.
-// v1: timestamp only. v2 (gt-3vr5): adds agent-reported state, context, and bead.
+// v1: timestamp only. v2 (ms-3vr5): adds agent-reported state, context, and bead.
 type SessionHeartbeat struct {
 	Timestamp time.Time      `json:"timestamp"`
 	State     HeartbeatState `json:"state,omitempty"`   // v2: agent-reported state
@@ -38,7 +38,7 @@ type SessionHeartbeat struct {
 }
 
 // EffectiveState returns the agent-reported state, defaulting to HeartbeatWorking
-// for v1 heartbeats without a state field (backwards compatibility). See gt-3vr5.
+// for v1 heartbeats without a state field (backwards compatibility). See ms-3vr5.
 func (h *SessionHeartbeat) EffectiveState() HeartbeatState {
 	if h.State == "" {
 		return HeartbeatWorking
@@ -65,15 +65,15 @@ func heartbeatFile(townRoot, sessionName string) string {
 }
 
 // TouchSessionHeartbeat writes or updates the heartbeat file for a miner session.
-// Writes state="working" by default (heartbeat v2, gt-3vr5).
+// Writes state="working" by default (heartbeat v2, ms-3vr5).
 // This is best-effort: errors are silently ignored because heartbeat signals
-// are non-critical and should not interrupt gt commands.
+// are non-critical and should not interrupt ms commands.
 func TouchSessionHeartbeat(townRoot, sessionName string) {
 	TouchSessionHeartbeatWithState(townRoot, sessionName, HeartbeatWorking, "", "")
 }
 
 // TouchSessionHeartbeatWithState writes a heartbeat with explicit state information.
-// Used by gt done (state="exiting") and gt heartbeat (state="stuck"). See gt-3vr5.
+// Used by ms done (state="exiting") and ms heartbeat (state="stuck"). See ms-3vr5.
 // This is best-effort: errors are silently ignored.
 func TouchSessionHeartbeatWithState(townRoot, sessionName string, state HeartbeatState, context, bead string) {
 	dir := heartbeatsDir(townRoot)

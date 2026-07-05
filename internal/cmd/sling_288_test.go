@@ -27,7 +27,7 @@ func TestInstantiateFormulaOnBead(t *testing.T) {
 		t.Fatalf("mkdir rigDir: %v", err)
 	}
 	routes := strings.Join([]string{
-		`{"prefix":"gt-","path":"mineshaft/overseer/rig"}`,
+		`{"prefix":"ms-","path":"mineshaft/overseer/rig"}`,
 		`{"prefix":"hq-","path":"."}`,
 		"",
 	}, "\n")
@@ -64,7 +64,7 @@ case "$cmd" in
         exit 1
         ;;
       bond)
-        echo '{"result_id":"gt-abc123","id_mapping":{"mol-miner-work":"gt-wisp-288"}}'
+        echo '{"result_id":"ms-abc123","id_mapping":{"mol-miner-work":"ms-wisp-288"}}'
         ;;
     esac
     ;;
@@ -93,7 +93,7 @@ if "%cmd%"=="mol" (
     exit /b 1
   )
   if "%sub%"=="bond" (
-    echo {^"result_id^":^"gt-abc123^",^"id_mapping^":{^"mol-miner-work^":^"gt-wisp-288^"}}
+    echo {^"result_id^":^"ms-abc123^",^"id_mapping^":{^"mol-miner-work^":^"ms-wisp-288^"}}
     exit /b 0
   )
 )
@@ -115,8 +115,8 @@ exit /b 0
 	}
 
 	// Test the helper function directly
-	extraVars := []string{"branch=miner/furiosa/gt-abc123"}
-	result, err := InstantiateFormulaOnBead(context.Background(), "mol-miner-work", "gt-abc123", "Test Bug Fix", "", townRoot, false, extraVars)
+	extraVars := []string{"branch=miner/furiosa/ms-abc123"}
+	result, err := InstantiateFormulaOnBead(context.Background(), "mol-miner-work", "ms-abc123", "Test Bug Fix", "", townRoot, false, extraVars)
 	if err != nil {
 		t.Fatalf("InstantiateFormulaOnBead failed: %v", err)
 	}
@@ -141,10 +141,10 @@ exit /b 0
 	if strings.Contains(logContent, "mol wisp") {
 		t.Errorf("legacy mol wisp command should not be called:\n%s", logContent)
 	}
-	if !strings.Contains(logContent, "--var branch=miner/furiosa/gt-abc123") {
+	if !strings.Contains(logContent, "--var branch=miner/furiosa/ms-abc123") {
 		t.Errorf("extra vars not passed to bond command:\n%s", logContent)
 	}
-	if !strings.Contains(logContent, "mol bond mol-miner-work gt-abc123 --json --ephemeral") {
+	if !strings.Contains(logContent, "mol bond mol-miner-work ms-abc123 --json --ephemeral") {
 		t.Errorf("direct mol bond command not found in log:\n%s", logContent)
 	}
 }
@@ -162,7 +162,7 @@ func TestInstantiateFormulaOnBeadSkipCook(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	routes := `{"prefix":"gt-","path":"."}`
+	routes := `{"prefix":"ms-","path":"."}`
 	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(routes), 0644); err != nil {
 		t.Fatalf("write routes.jsonl: %v", err)
 	}
@@ -181,7 +181,7 @@ case "$cmd" in
     sub="$1"; shift || true
     case "$sub" in
       wisp) echo 'legacy mol wisp should not be called' >&2; exit 1;;
-      bond) echo '{"result_id":"gt-test","id_mapping":{"mol-miner-work":"gt-wisp-skip"}}';;
+      bond) echo '{"result_id":"ms-test","id_mapping":{"mol-miner-work":"ms-wisp-skip"}}';;
     esac;;
 esac
 exit 0
@@ -197,7 +197,7 @@ if "%cmd%"=="mol" (
     exit /b 1
   )
   if "%sub%"=="bond" (
-    echo {^"result_id^":^"gt-test^",^"id_mapping^":{^"mol-miner-work^":^"gt-wisp-skip^"}}
+    echo {^"result_id^":^"ms-test^",^"id_mapping^":{^"mol-miner-work^":^"ms-wisp-skip^"}}
     exit /b 0
   )
 )
@@ -213,7 +213,7 @@ exit /b 0
 	_ = os.Chdir(townRoot)
 
 	// Test with skipCook=true
-	_, err := InstantiateFormulaOnBead(context.Background(), "mol-miner-work", "gt-test", "Test", "", townRoot, true, nil)
+	_, err := InstantiateFormulaOnBead(context.Background(), "mol-miner-work", "ms-test", "Test", "", townRoot, true, nil)
 	if err != nil {
 		t.Fatalf("InstantiateFormulaOnBead failed: %v", err)
 	}
@@ -230,7 +230,7 @@ exit /b 0
 	if strings.Contains(logContent, "mol wisp") {
 		t.Errorf("mol wisp should not be called")
 	}
-	if !strings.Contains(logContent, "mol bond mol-miner-work gt-test --json --ephemeral") {
+	if !strings.Contains(logContent, "mol bond mol-miner-work ms-test --json --ephemeral") {
 		t.Errorf("mol bond should still be called")
 	}
 }
@@ -355,7 +355,7 @@ func TestFormulaOnBeadPassesVariables(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(`{"prefix":"gt-","path":"."}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(`{"prefix":"ms-","path":"."}`), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
 
@@ -373,7 +373,7 @@ case "$cmd" in
     sub="$1"; shift || true
     case "$sub" in
       wisp) echo 'legacy mol wisp should not be called' >&2; exit 1;;
-      bond) echo '{"result_id":"gt-abc123","id_mapping":{"mol-miner-work":"gt-wisp-var"}}';;
+      bond) echo '{"result_id":"ms-abc123","id_mapping":{"mol-miner-work":"ms-wisp-var"}}';;
     esac;;
 esac
 exit 0
@@ -390,7 +390,7 @@ if "%cmd%"=="mol" (
     exit /b 1
   )
   if "%sub%"=="bond" (
-    echo {^"result_id^":^"gt-abc123^",^"id_mapping^":{^"mol-miner-work^":^"gt-wisp-var^"}}
+    echo {^"result_id^":^"ms-abc123^",^"id_mapping^":{^"mol-miner-work^":^"ms-wisp-var^"}}
     exit /b 0
   )
 )
@@ -405,7 +405,7 @@ exit /b 0
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
 	_ = os.Chdir(townRoot)
 
-	_, err := InstantiateFormulaOnBead(context.Background(), "mol-miner-work", "gt-abc123", "My Cool Feature", "", townRoot, false, nil)
+	_, err := InstantiateFormulaOnBead(context.Background(), "mol-miner-work", "ms-abc123", "My Cool Feature", "", townRoot, false, nil)
 	if err != nil {
 		t.Fatalf("InstantiateFormulaOnBead: %v", err)
 	}
@@ -430,7 +430,7 @@ exit /b 0
 		t.Errorf("mol bond missing feature variable:\n%s", bondLine)
 	}
 
-	if !strings.Contains(bondLine, "issue=gt-abc123") {
+	if !strings.Contains(bondLine, "issue=ms-abc123") {
 		t.Errorf("mol bond missing issue variable:\n%s", bondLine)
 	}
 }
@@ -445,7 +445,7 @@ func TestInstantiateFormulaOnBead_DirectBondParsesIDMapping(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(`{"prefix":"gt-","path":"."}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(`{"prefix":"ms-","path":"."}`), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
 
@@ -469,17 +469,17 @@ case "$cmd" in
     sub="$1"; shift || true
     case "$sub" in
       wisp)
-        echo '{"new_epic_id":"gt-wisp-missing"}'
+        echo '{"new_epic_id":"ms-wisp-missing"}'
         exit 0
         ;;
       bond)
         left="$1"; shift || true
-        if [ "$left" = "gt-wisp-missing" ]; then
-          echo "Error: 'gt-wisp-missing' not found (not an issue ID or formula name)" >&2
+        if [ "$left" = "ms-wisp-missing" ]; then
+          echo "Error: 'ms-wisp-missing' not found (not an issue ID or formula name)" >&2
           exit 1
         fi
         if [ "$left" = "mol-miner-work" ]; then
-          echo '{"result_id":"gt-abc123","id_mapping":{"mol-miner-work":"gt-mol-fallback"}}'
+          echo '{"result_id":"ms-abc123","id_mapping":{"mol-miner-work":"ms-mol-fallback"}}'
           exit 0
         fi
         echo "Error: unexpected bond target: $left" >&2
@@ -499,16 +499,16 @@ set "left=%3"
 if "%cmd%"=="cook" exit /b 0
 if "%cmd%"=="mol" (
   if "%sub%"=="wisp" (
-    echo {^"new_epic_id^":^"gt-wisp-missing^"}
+    echo {^"new_epic_id^":^"ms-wisp-missing^"}
     exit /b 0
   )
   if "%sub%"=="bond" (
-    if "%left%"=="gt-wisp-missing" (
-      echo Error: 'gt-wisp-missing' not found - not an issue ID or formula name 1>&2
+    if "%left%"=="ms-wisp-missing" (
+      echo Error: 'ms-wisp-missing' not found - not an issue ID or formula name 1>&2
       exit /b 1
     )
     if "%left%"=="mol-miner-work" (
-      echo {^"result_id^":^"gt-abc123^",^"id_mapping^":{^"mol-miner-work^":^"gt-mol-fallback^"}}
+      echo {^"result_id^":^"ms-abc123^",^"id_mapping^":{^"mol-miner-work^":^"ms-mol-fallback^"}}
       exit /b 0
     )
     echo Error: unexpected bond target: %left% 1>&2
@@ -526,15 +526,15 @@ exit /b 0
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
 	_ = os.Chdir(townRoot)
 
-	result, err := InstantiateFormulaOnBead(context.Background(), "mol-miner-work", "gt-abc123", "My Cool Feature", "", townRoot, false, nil)
+	result, err := InstantiateFormulaOnBead(context.Background(), "mol-miner-work", "ms-abc123", "My Cool Feature", "", townRoot, false, nil)
 	if err != nil {
 		t.Fatalf("InstantiateFormulaOnBead: %v", err)
 	}
-	if result.WispRootID != "gt-mol-fallback" {
-		t.Fatalf("WispRootID = %q, want %q", result.WispRootID, "gt-mol-fallback")
+	if result.WispRootID != "ms-mol-fallback" {
+		t.Fatalf("WispRootID = %q, want %q", result.WispRootID, "ms-mol-fallback")
 	}
-	if result.BeadToHook != "gt-abc123" {
-		t.Fatalf("BeadToHook = %q, want %q", result.BeadToHook, "gt-abc123")
+	if result.BeadToHook != "ms-abc123" {
+		t.Fatalf("BeadToHook = %q, want %q", result.BeadToHook, "ms-abc123")
 	}
 
 	logBytes, err := os.ReadFile(logPath)
@@ -547,7 +547,7 @@ exit /b 0
 	}
 	var directBondLine string
 	for _, line := range strings.Split(logContent, "\n") {
-		if strings.Contains(line, "mol bond mol-miner-work gt-abc123 --json --ephemeral") {
+		if strings.Contains(line, "mol bond mol-miner-work ms-abc123 --json --ephemeral") {
 			directBondLine = line
 			break
 		}
@@ -558,7 +558,7 @@ exit /b 0
 	if !containsVarArg(directBondLine, "feature", "My Cool Feature") {
 		t.Fatalf("direct bond missing feature variable:\n%s", logContent)
 	}
-	if !containsVarArg(directBondLine, "issue", "gt-abc123") {
+	if !containsVarArg(directBondLine, "issue", "ms-abc123") {
 		t.Fatalf("direct bond missing issue variable:\n%s", logContent)
 	}
 	for _, required := range []struct {
@@ -599,7 +599,7 @@ func TestInstantiateFormulaOnBead_DirectBondHandlesNonGTIDs(t *testing.T) {
 	logPath := filepath.Join(townRoot, "bd.log")
 
 	// Direct bond should accept the spawned root returned by bd, even when its
-	// prefix is not gt-.
+	// prefix is not ms-.
 	bdScript := `#!/bin/sh
 set -e
 echo "CMD:$*" >> "${BD_LOG}"
@@ -695,7 +695,7 @@ func TestInstantiateFormulaOnBead_DirectBondCreatesNoOrphanCleanup(t *testing.T)
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(`{"prefix":"gt-","path":"."}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(`{"prefix":"ms-","path":"."}`), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
 
@@ -724,7 +724,7 @@ case "$cmd" in
 		  bond)
 			left="$1"; shift || true
 			if [ "$left" = "mol-miner-work" ]; then
-			  echo '{"result_id":"gt-test","id_mapping":{"mol-miner-work":"gt-wisp-clean"}}'
+			  echo '{"result_id":"ms-test","id_mapping":{"mol-miner-work":"ms-wisp-clean"}}'
           exit 0
         fi
         echo "Error: unexpected bond target: $left" >&2
@@ -752,7 +752,7 @@ if "%cmd%"=="mol" (
   )
   if "%sub%"=="bond" (
     if "%left%"=="mol-miner-work" (
-      echo {^"result_id^":^"gt-test^",^"id_mapping^":{^"mol-miner-work^":^"gt-wisp-clean^"}}
+      echo {^"result_id^":^"ms-test^",^"id_mapping^":{^"mol-miner-work^":^"ms-wisp-clean^"}}
       exit /b 0
     )
     echo Error: unexpected bond target: %left% 1>&2
@@ -771,12 +771,12 @@ exit /b 0
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
 	_ = os.Chdir(townRoot)
 
-	result, err := InstantiateFormulaOnBead(context.Background(), "mol-miner-work", "gt-test", "Test cleanup", "", townRoot, false, nil)
+	result, err := InstantiateFormulaOnBead(context.Background(), "mol-miner-work", "ms-test", "Test cleanup", "", townRoot, false, nil)
 	if err != nil {
 		t.Fatalf("InstantiateFormulaOnBead: %v", err)
 	}
-	if result.WispRootID != "gt-wisp-clean" {
-		t.Fatalf("WispRootID = %q, want %q", result.WispRootID, "gt-wisp-clean")
+	if result.WispRootID != "ms-wisp-clean" {
+		t.Fatalf("WispRootID = %q, want %q", result.WispRootID, "ms-wisp-clean")
 	}
 
 	logBytes, err := os.ReadFile(logPath)
@@ -799,7 +799,7 @@ func TestInstantiateFormulaOnBead_DirectBondParseFailure(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(townRoot, ".beads"), 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(`{"prefix":"gt-","path":"."}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(townRoot, ".beads", "routes.jsonl"), []byte(`{"prefix":"ms-","path":"."}`), 0644); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
 
@@ -871,7 +871,7 @@ exit /b 0
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
 	_ = os.Chdir(townRoot)
 
-	_, err := InstantiateFormulaOnBead(context.Background(), "mol-miner-work", "gt-abc123", "My Feature", "", townRoot, false, nil)
+	_, err := InstantiateFormulaOnBead(context.Background(), "mol-miner-work", "ms-abc123", "My Feature", "", townRoot, false, nil)
 	if err == nil {
 		t.Fatal("expected error when bond returns non-JSON and fallback fails, got nil")
 	}

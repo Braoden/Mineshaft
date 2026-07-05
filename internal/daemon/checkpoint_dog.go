@@ -112,7 +112,7 @@ func (d *Daemon) checkpointRigMiners(rigName string) (int, int) {
 		// container caused git to walk up to the top-level workspace's
 		// .git and commit "WIP: checkpoint (auto)" on the workspace's
 		// branch (usually main) instead of the miner's branch.
-		// (gt-checkpoint-workdir fix.)
+		// (ms-checkpoint-workdir fix.)
 		workDir := resolveCheckpointWorkDir(minersDir, minerName, rigName)
 		if workDir == "" {
 			continue // Neither layout has a usable .git — skip silently.
@@ -145,7 +145,7 @@ func (d *Daemon) checkpointWorktree(workDir, rigName, minerName string) bool {
 	}
 
 	// Unstage runtime/ephemeral artifacts using the same centralized policy as
-	// gt done. Scanning staged paths catches tracked nested runtime dirs that
+	// ms done. Scanning staged paths catches tracked nested runtime dirs that
 	// git add -A can restage despite ignore rules.
 	stagedOut, err := runGitCmdRaw(workDir, "diff", "--cached", "--name-only", "-z")
 	if err != nil {
@@ -162,7 +162,7 @@ func (d *Daemon) checkpointWorktree(workDir, rigName, minerName string) bool {
 	// Unstage deletions of tracked files. A checkpoint should preserve work
 	// (additions + modifications), never commit deletions of tracked files.
 	// This prevents the bug where a miner's working tree has a missing
-	// tracked file and the checkpoint commits the deletion (gt-pvx fix).
+	// tracked file and the checkpoint commits the deletion (ms-pvx fix).
 	if delOut, err := runGitCmd(workDir, "diff", "--cached", "--name-only", "--diff-filter=D"); err == nil {
 		if dels := strings.TrimSpace(delOut); dels != "" {
 			for _, f := range strings.Split(dels, "\n") {

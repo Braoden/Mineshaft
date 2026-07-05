@@ -30,19 +30,19 @@ This command is for crew workers who need to work on another rig's codebase
 while maintaining their identity. It creates a worktree in the target rig's
 crew/ directory with a name that identifies your source rig and identity.
 
-The worktree is created at: ~/gt/<target-rig>/crew/<source-rig>-<name>/
+The worktree is created at: ~/ms/<target-rig>/crew/<source-rig>-<name>/
 
-For example, if you're mineshaft/crew/joe and run 'gt worktree beads':
-- Creates worktree at ~/gt/beads/crew/mineshaft-joe/
+For example, if you're mineshaft/crew/joe and run 'ms worktree beads':
+- Creates worktree at ~/ms/beads/crew/mineshaft-joe/
 - The worktree checks out main branch
-- Your identity (BD_ACTOR, GT_ROLE) remains mineshaft/crew/joe
+- Your identity (BD_ACTOR, MS_ROLE) remains mineshaft/crew/joe
 
 Use --no-cd to just print the path without printing shell commands.
 
 Examples:
-  gt worktree beads         # Create worktree in beads rig
-  gt worktree mineshaft       # Create worktree in mineshaft rig (from another rig)
-  gt worktree beads --no-cd # Just print the path`,
+  ms worktree beads         # Create worktree in beads rig
+  ms worktree mineshaft       # Create worktree in mineshaft rig (from another rig)
+  ms worktree beads --no-cd # Just print the path`,
 	Args: cobra.ExactArgs(1),
 	RunE: runWorktree,
 }
@@ -59,8 +59,8 @@ its git status summary.
 Example output:
   Cross-rig worktrees for mineshaft/crew/joe:
 
-    beads     ~/gt/beads/crew/mineshaft-joe/     (clean)
-    overseer     ~/gt/overseer/crew/mineshaft-joe/     (2 uncommitted)`,
+    beads     ~/ms/beads/crew/mineshaft-joe/     (clean)
+    overseer     ~/ms/overseer/crew/mineshaft-joe/     (2 uncommitted)`,
 	RunE: runWorktreeList,
 }
 
@@ -74,12 +74,12 @@ var worktreeRemoveCmd = &cobra.Command{
 	Short: "Remove a cross-rig worktree",
 	Long: `Remove a git worktree created for cross-rig work.
 
-This command removes a worktree that was previously created with 'gt worktree <rig>'.
+This command removes a worktree that was previously created with 'ms worktree <rig>'.
 It will refuse to remove a worktree with uncommitted changes unless --force is used.
 
 Examples:
-  gt worktree remove beads         # Remove beads worktree
-  gt worktree remove beads --force # Force remove even with uncommitted changes`,
+  ms worktree remove beads         # Remove beads worktree
+  ms worktree remove beads --force # Force remove even with uncommitted changes`,
 	Args: cobra.ExactArgs(1),
 	RunE: runWorktreeRemove,
 }
@@ -108,16 +108,16 @@ func runWorktree(cmd *cobra.Command, args []string) error {
 
 	// Cannot create worktree in your own rig
 	if targetRig == sourceRig {
-		return fmt.Errorf("already in rig '%s' - use gt worktree to work in a different rig", targetRig)
+		return fmt.Errorf("already in rig '%s' - use ms worktree to work in a different rig", targetRig)
 	}
 
 	// Verify target rig exists
 	_, targetRigInfo, err := getRig(targetRig)
 	if err != nil {
-		return fmt.Errorf("rig '%s' not found - run 'gt rig list' to see available rigs", targetRig)
+		return fmt.Errorf("rig '%s' not found - run 'ms rig list' to see available rigs", targetRig)
 	}
 
-	// Compute worktree path: ~/gt/<target-rig>/crew/<source-rig>-<name>/
+	// Compute worktree path: ~/ms/<target-rig>/crew/<source-rig>-<name>/
 	worktreeName := fmt.Sprintf("%s-%s", sourceRig, crewName)
 	worktreePath := filepath.Join(constants.RigCrewPath(targetRigInfo.Path), worktreeName)
 
@@ -187,14 +187,14 @@ func runWorktree(cmd *cobra.Command, args []string) error {
 		fmt.Printf("Environment variables to preserve your identity:\n")
 		if runtime.GOOS == "windows" {
 			fmt.Printf("  $env:BD_ACTOR=%s\n", bdActor)
-			fmt.Printf("  $env:GT_ROLE=crew\n")
-			fmt.Printf("  $env:GT_RIG=%s\n", sourceRig)
-			fmt.Printf("  $env:GT_CREW=%s\n", crewName)
+			fmt.Printf("  $env:MS_ROLE=crew\n")
+			fmt.Printf("  $env:MS_RIG=%s\n", sourceRig)
+			fmt.Printf("  $env:MS_CREW=%s\n", crewName)
 		} else {
 			fmt.Printf("  export BD_ACTOR=%s\n", bdActor)
-			fmt.Printf("  export GT_ROLE=crew\n")
-			fmt.Printf("  export GT_RIG=%s\n", sourceRig)
-			fmt.Printf("  export GT_CREW=%s\n", crewName)
+			fmt.Printf("  export MS_ROLE=crew\n")
+			fmt.Printf("  export MS_RIG=%s\n", sourceRig)
+			fmt.Printf("  export MS_CREW=%s\n", crewName)
 		}
 	}
 
@@ -267,7 +267,7 @@ func runWorktreeList(cmd *cobra.Command, args []string) error {
 
 	if !found {
 		fmt.Printf("  (none)\n")
-		fmt.Printf("\nCreate a worktree with: gt worktree <rig>\n")
+		fmt.Printf("\nCreate a worktree with: ms worktree <rig>\n")
 	}
 
 	return nil
@@ -313,10 +313,10 @@ func runWorktreeRemove(cmd *cobra.Command, args []string) error {
 	// Verify target rig exists
 	_, targetRigInfo, err := getRig(targetRig)
 	if err != nil {
-		return fmt.Errorf("rig '%s' not found - run 'gt rig list' to see available rigs", targetRig)
+		return fmt.Errorf("rig '%s' not found - run 'ms rig list' to see available rigs", targetRig)
 	}
 
-	// Compute worktree path: ~/gt/<target-rig>/crew/<source-rig>-<name>/
+	// Compute worktree path: ~/ms/<target-rig>/crew/<source-rig>-<name>/
 	worktreeName := fmt.Sprintf("%s-%s", sourceRig, crewName)
 	worktreePath := filepath.Join(constants.RigCrewPath(targetRigInfo.Path), worktreeName)
 

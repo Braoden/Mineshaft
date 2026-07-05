@@ -10,9 +10,9 @@ import (
 func TestNewDoltServerManagerNormalizesManagedEndpointFromTownConfig(t *testing.T) {
 	townRoot := t.TempDir()
 	writeManagedDoltConfig(t, townRoot, "listener:\n  host: 127.0.0.2\n  port: 5507\n")
-	t.Setenv("GT_DOLT_IGNORE_CONFIG", "")
-	t.Setenv("GT_DOLT_HOST", "stale-env-host")
-	t.Setenv("GT_DOLT_PORT", "9999")
+	t.Setenv("MS_DOLT_IGNORE_CONFIG", "")
+	t.Setenv("MS_DOLT_HOST", "stale-env-host")
+	t.Setenv("MS_DOLT_PORT", "9999")
 	t.Setenv("BEADS_DOLT_SERVER_HOST", "stale-beads-host")
 	t.Setenv("BEADS_DOLT_SERVER_PORT", "9999")
 	t.Setenv("BEADS_DOLT_PORT", "9999")
@@ -59,7 +59,7 @@ func TestNewDoltServerManagerNormalizesManagedEndpointFromTownConfig(t *testing.
 func TestNewDoltServerManagerPortOnlyManagedConfigClearsStaleHost(t *testing.T) {
 	townRoot := t.TempDir()
 	writeManagedDoltConfig(t, townRoot, "listener:\n  port: 5507\n")
-	t.Setenv("GT_DOLT_IGNORE_CONFIG", "")
+	t.Setenv("MS_DOLT_IGNORE_CONFIG", "")
 
 	m := NewDoltServerManager(townRoot, &DoltServerConfig{Enabled: true, Host: "stale-daemon-host", Port: 9999}, func(string, ...interface{}) {})
 	if got := m.config.Host; got != "" {
@@ -73,7 +73,7 @@ func TestNewDoltServerManagerPortOnlyManagedConfigClearsStaleHost(t *testing.T) 
 func TestNewDoltServerManagerHonorsIgnoreConfig(t *testing.T) {
 	townRoot := t.TempDir()
 	writeManagedDoltConfig(t, townRoot, "listener:\n  host: 127.0.0.2\n  port: 5507\n")
-	t.Setenv("GT_DOLT_IGNORE_CONFIG", "1")
+	t.Setenv("MS_DOLT_IGNORE_CONFIG", "1")
 
 	m := NewDoltServerManager(townRoot, &DoltServerConfig{Enabled: true, Host: "daemon-host", Port: 9999}, func(string, ...interface{}) {})
 	if got := m.config.Host; got != "daemon-host" {
@@ -87,9 +87,9 @@ func TestNewDoltServerManagerHonorsIgnoreConfig(t *testing.T) {
 func TestApplyDoltServerConfigEnvUsesNormalizedManagerConfig(t *testing.T) {
 	townRoot := t.TempDir()
 	writeManagedDoltConfig(t, townRoot, "listener:\n  host: 127.0.0.2\n  port: 5507\n")
-	t.Setenv("GT_DOLT_IGNORE_CONFIG", "")
-	t.Setenv("GT_DOLT_HOST", "stale-env-host")
-	t.Setenv("GT_DOLT_PORT", "9999")
+	t.Setenv("MS_DOLT_IGNORE_CONFIG", "")
+	t.Setenv("MS_DOLT_HOST", "stale-env-host")
+	t.Setenv("MS_DOLT_PORT", "9999")
 	t.Setenv("BEADS_DOLT_SERVER_HOST", "stale-beads-host")
 	t.Setenv("BEADS_DOLT_SERVER_PORT", "9999")
 	t.Setenv("BEADS_DOLT_PORT", "9999")
@@ -97,9 +97,9 @@ func TestApplyDoltServerConfigEnvUsesNormalizedManagerConfig(t *testing.T) {
 	m := NewDoltServerManager(townRoot, &DoltServerConfig{Enabled: true, Host: "stale-daemon-host", Port: 9999}, func(string, ...interface{}) {})
 	applyDoltServerConfigEnv(m.config)
 
-	assertProcessEnv(t, "GT_DOLT_HOST", "127.0.0.2")
+	assertProcessEnv(t, "MS_DOLT_HOST", "127.0.0.2")
 	assertProcessEnv(t, "BEADS_DOLT_SERVER_HOST", "127.0.0.2")
-	assertProcessEnv(t, "GT_DOLT_PORT", "5507")
+	assertProcessEnv(t, "MS_DOLT_PORT", "5507")
 	assertProcessEnv(t, "BEADS_DOLT_SERVER_PORT", "5507")
 	assertProcessEnv(t, "BEADS_DOLT_PORT", "5507")
 }
@@ -107,14 +107,14 @@ func TestApplyDoltServerConfigEnvUsesNormalizedManagerConfig(t *testing.T) {
 func TestApplyConfiguredDoltHostEnvClearsManagedConfigWithoutHost(t *testing.T) {
 	townRoot := t.TempDir()
 	writeManagedDoltConfig(t, townRoot, "listener:\n  port: 5507\n")
-	t.Setenv("GT_DOLT_IGNORE_CONFIG", "")
-	t.Setenv("GT_DOLT_HOST", "stale-env-host")
+	t.Setenv("MS_DOLT_IGNORE_CONFIG", "")
+	t.Setenv("MS_DOLT_HOST", "stale-env-host")
 	t.Setenv("BEADS_DOLT_SERVER_HOST", "stale-beads-host")
 
 	applyConfiguredDoltHostEnv(townRoot, nil)
 
-	if got := os.Getenv("GT_DOLT_HOST"); got != "" {
-		t.Fatalf("GT_DOLT_HOST = %q, want cleared", got)
+	if got := os.Getenv("MS_DOLT_HOST"); got != "" {
+		t.Fatalf("MS_DOLT_HOST = %q, want cleared", got)
 	}
 	if got := os.Getenv("BEADS_DOLT_SERVER_HOST"); got != "" {
 		t.Fatalf("BEADS_DOLT_SERVER_HOST = %q, want cleared", got)

@@ -33,7 +33,7 @@ type Formula struct {
 	Version     int         `toml:"version"`
 	Pour        bool        `toml:"pour"`        // If true, steps are materialized as sub-wisps with checkpoint recovery. Default false (inline/root-only).
 	Agent       string      `toml:"agent"`       // Default agent for all legs (GH#2118)
-	ReviewOnly  bool        `toml:"review_only"` // If true, all legs are analysis-only — no code commits expected (gt-kvf)
+	ReviewOnly  bool        `toml:"review_only"` // If true, all legs are analysis-only — no code commits expected (ms-kvf)
 
 	// Minecart-specific
 	Inputs    map[string]Input  `toml:"inputs"`
@@ -107,7 +107,7 @@ type Leg struct {
 	Focus       string `toml:"focus"`
 	Description string `toml:"description"`
 	Agent       string `toml:"agent"`       // Per-leg agent override (GH#2118)
-	ReviewOnly  bool   `toml:"review_only"` // If true, leg is analysis-only — no code commits expected (gt-kvf)
+	ReviewOnly  bool   `toml:"review_only"` // If true, leg is analysis-only — no code commits expected (ms-kvf)
 }
 
 // Synthesis represents the synthesis step that combines leg outputs.
@@ -123,7 +123,7 @@ type Step struct {
 	Title       string   `toml:"title"`
 	Description string   `toml:"description"`
 	Needs       []string `toml:"needs"`
-	Target      string   `toml:"target"`      // Optional gt sling target for this workflow step; defaults to the formula target rig
+	Target      string   `toml:"target"`      // Optional ms sling target for this workflow step; defaults to the formula target rig
 	Parallel    bool     `toml:"parallel"`    // If true, this step can run concurrently with other parallel steps that share the same needs
 	Interactive bool     `toml:"interactive"` // If true, this step requires user dialog and runs in the current session instead of being dispatched to a miner
 	Acceptance  string   `toml:"acceptance"`  // Exit criteria for this step (used by Ralph loop mode)

@@ -958,7 +958,7 @@ func TestSaveCustomTheme_AppendName(t *testing.T) {
 		t.Fatalf("SaveCustomTheme error: %v", err)
 	}
 
-	// Read back, append, save again (simulates what `gt namepool add` does)
+	// Read back, append, save again (simulates what `ms namepool add` does)
 	existing, err := ResolveThemeNames(tmpDir, "tolkien")
 	if err != nil {
 		t.Fatalf("ResolveThemeNames error: %v", err)

@@ -30,7 +30,7 @@ var metricsCmd = &cobra.Command{
 	Use:     "metrics",
 	GroupID: GroupDiag,
 	Short:   "Show command usage statistics",
-	Long: `Reads ~/.gt/cmd-usage.jsonl and reports which gt commands are used,
+	Long: `Reads ~/.ms/cmd-usage.jsonl and reports which ms commands are used,
 how often, and by whom. Helps identify dead commands before pruning.`,
 	RunE: runMetrics,
 }
@@ -73,7 +73,7 @@ func readUsageLog() ([]usageEntry, error) {
 	f, err := os.Open(logUsagePath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("no usage data yet (run some gt commands first)")
+			return nil, fmt.Errorf("no usage data yet (run some ms commands first)")
 		}
 		return nil, err
 	}

@@ -150,10 +150,10 @@ func TestBdError_ContainsErrorPartialMatch(t *testing.T) {
 
 func TestBdError_ContainsErrorSpecialChars(t *testing.T) {
 	err := &bdError{
-		Stderr: "error: bead 'gt-123' not found (exit 1)",
+		Stderr: "error: bead 'ms-123' not found (exit 1)",
 	}
 
-	if !err.ContainsError("'gt-123'") {
+	if !err.ContainsError("'ms-123'") {
 		t.Error("Should handle quotes in substring")
 	}
 	if !err.ContainsError("(exit 1)") {
@@ -179,7 +179,7 @@ func TestParseBeadsListOutput(t *testing.T) {
 		Status:    "open",
 		Priority:  2,
 		CreatedAt: created,
-		Labels:    []string{"gt:message", "from:overseer/"},
+		Labels:    []string{"ms:message", "from:overseer/"},
 	}})
 	if err != nil {
 		t.Fatalf("marshal valid message: %v", err)
@@ -225,8 +225,8 @@ func TestParseBeadsListOutput(t *testing.T) {
 	if !got[0].CreatedAt.Equal(created) {
 		t.Fatalf("CreatedAt = %v, want %v", got[0].CreatedAt, created)
 	}
-	if len(got[0].Labels) != 2 || got[0].Labels[0] != "gt:message" || got[0].Labels[1] != "from:overseer/" {
-		t.Fatalf("Labels = %#v, want gt:message/from:overseer/", got[0].Labels)
+	if len(got[0].Labels) != 2 || got[0].Labels[0] != "ms:message" || got[0].Labels[1] != "from:overseer/" {
+		t.Fatalf("Labels = %#v, want ms:message/from:overseer/", got[0].Labels)
 	}
 }
 
@@ -430,8 +430,8 @@ func TestRunBdCommandUsesCentralEnvPolicy(t *testing.T) {
 func TestBdSubprocessEnv_AllowsRoutingWhenBeadsDirEmpty(t *testing.T) {
 	got := bdSubprocessEnv([]string{
 		"PATH=/usr/bin",
-		"GT_DOLT_HOST=127.0.0.2",
-		"GT_DOLT_PORT=5507",
+		"MS_DOLT_HOST=127.0.0.2",
+		"MS_DOLT_PORT=5507",
 		"BEADS_DIR=/wrong",
 		"BEADS_DB=/wrong.db",
 		"BEADS_DOLT_SERVER_DATABASE=wrong",
@@ -449,7 +449,7 @@ func TestBdSubprocessEnv_AllowsRoutingWhenBeadsDirEmpty(t *testing.T) {
 		t.Fatalf("expected BEADS_NO_AUTO_IMPORT=1 in env, got %v", got)
 	}
 	if !envContains(got, "BEADS_DOLT_SERVER_HOST=127.0.0.2") || !envContains(got, "BEADS_DOLT_SERVER_PORT=5507") || !envContains(got, "BEADS_DOLT_PORT=5507") {
-		t.Fatalf("expected GT_DOLT host/port fallback for routed command, got %v", got)
+		t.Fatalf("expected MS_DOLT host/port fallback for routed command, got %v", got)
 	}
 }
 

@@ -23,7 +23,7 @@ The Overseer should ONLY be nudged for genuine emergencies:
 
 Health pings to the Overseer are a ZFC violation — they burn Overseer context
 on ceremony instead of work. The Overseer is your boss, not a subordinate
-to be monitored. Use `gt mail send overseer/` for non-urgent communication.
+to be monitored. Use `ms mail send overseer/` for non-urgent communication.
 
 ## Second-Order Monitoring
 
@@ -42,7 +42,7 @@ This happens when idle_cycles >= {{idle_effort_threshold}} (no activity detected
 
 Abbreviated patrol rules:
 - **heartbeat**: ALWAYS run (required by daemon).
-- **inbox-check**: Run `gt mail drain` only. Skip individual message processing unless drain reports unprocessed HELP or RECOVERED_BEAD messages.
+- **inbox-check**: Run `ms mail drain` only. Skip individual message processing unless drain reports unprocessed HELP or RECOVERED_BEAD messages.
 - **orphan-process-cleanup**: SKIP.
 - **test-pollution-cleanup**: SKIP.
 - **gate-evaluation**: SKIP.
@@ -51,7 +51,7 @@ Abbreviated patrol rules:
 - **resolve-external-deps**: SKIP.
 - **fire-notifications**: SKIP.
 - **heartbeat-mid**: SKIP (short cycle doesn't need mid-cycle refresh).
-- **health-scan**: Quick `gt witness status` / `gt refinery status` only. Skip nudges.
+- **health-scan**: Quick `ms witness status` / `ms refinery status` only. Skip nudges.
 - **dolt-health**: SKIP.
 - **zombie-scan**: SKIP.
 - **plugin-run**: SKIP.
@@ -94,7 +94,7 @@ The daemon monitors `supervisor/heartbeat.json` and kills the Supervisor if it g
 so the daemon knows we are alive.
 
 ```bash
-gt supervisor heartbeat "starting patrol cycle"
+ms supervisor heartbeat "starting patrol cycle"
 ```
 
 This MUST run before any other step. Skipping it risks the daemon killing a healthy
@@ -125,9 +125,9 @@ Check the Overseer's inbox for messages from:
 - External triggers (webhooks, timers)
 
 ```bash
-gt mail inbox
+ms mail inbox
 # For each message:
-gt mail read <id>
+ms mail read <id>
 # Handle based on message type
 ```
 
@@ -135,14 +135,14 @@ gt mail read <id>
 Assess and handle or forward to Overseer.
 Archive after handling:
 ```bash
-gt mail archive <message-id>
+ms mail archive <message-id>
 ```
 
 **LIFECYCLE messages**:
 Miners reporting completion, refineries reporting merge results.
 Archive after processing:
 ```bash
-gt mail archive <message-id>
+ms mail archive <message-id>
 ```
 
 **DOG_DONE messages**:
@@ -151,9 +151,9 @@ Subject format: `DOG_DONE <hostname>`
 Body contains: task name, counts, status.
 ```bash
 # Parse the report, log metrics if needed
-gt mail read <id>
+ms mail read <id>
 # Archive after noting completion
-gt mail archive <message-id>
+ms mail archive <message-id>
 ```
 Dogs return to idle automatically. The report is informational - no action needed
 unless the dog reports errors that require escalation.
@@ -163,8 +163,8 @@ The daemon's MinecartManager handles minecart feeding (event-driven, 5s poll).
 Simply archive these messages — no supervisor action needed.
 ```bash
 # For each MINECART_NEEDS_FEEDING message:
-gt mail read <id>
-gt mail archive <message-id>
+ms mail read <id>
+ms mail archive <message-id>
 ```
 
 **RECOVERED_BEAD messages** (from Witness):
@@ -173,10 +173,10 @@ to open status and sends a RECOVERED_BEAD mail. The Supervisor auto re-dispatche
 Subject format: `RECOVERED_BEAD <bead-id>`
 ```bash
 # For each RECOVERED_BEAD message:
-gt mail read <id>
+ms mail read <id>
 # Extract bead ID from subject
-gt supervisor redispatch <bead-id>
-gt mail archive <message-id>
+ms supervisor redispatch <bead-id>
+ms mail archive <message-id>
 ```
 
 The `redispatch` command handles:
@@ -209,7 +209,7 @@ instances in terminals have a TTY like "pts/0".
 
 **Run cleanup:**
 ```bash
-gt supervisor cleanup-orphans
+ms supervisor cleanup-orphans
 ```
 
 This command:
@@ -224,8 +224,8 @@ Multiple Mineshaft instances may share the same machine, each with its own tmux
 socket and agent processes. `ps` output shows Claude processes from ALL towns,
 but each town's supervisor should only clean up processes belonging to its own town.
 
-- The `gt supervisor cleanup-orphans` output shows `town=<path>` for each orphan
-- Only clean up processes where the town path matches this town's root (`$GT_ROOT`)
+- The `ms supervisor cleanup-orphans` output shows `town=<path>` for each orphan
+- Only clean up processes where the town path matches this town's root (`$MS_ROOT`)
 - Processes belonging to other towns are managed by those towns' own supervisors
 - If you use manual process inspection (`ps aux`), verify a process's working
   directory is under this town's root before killing it
@@ -255,12 +255,12 @@ live processes.
 **1. Rogue dolt servers**
 
 Any `dolt sql-server` process that holds this workspace's configured port
-(set via `GT_DOLT_PORT`, default 3307) but uses a different data directory
+(set via `MS_DOLT_PORT`, default 3307) but uses a different data directory
 is an "imposter" — a leaked server from another workspace. Kill and log.
 
 ```bash
-# Use gt dolt kill-imposters which checks data-dir — safe for multi-workspace setups
-gt dolt kill-imposters 2>/dev/null || true
+# Use ms dolt kill-imposters which checks data-dir — safe for multi-workspace setups
+ms dolt kill-imposters 2>/dev/null || true
 ```
 
 **2. Stale test temp dirs**
@@ -301,7 +301,7 @@ If a dog's tmux session is dead but worktree dirs remain, prune them.
 
 ```bash
 # For each dog directory
-for dogdir in ~/gt/supervisor/dogs/*/; do
+for dogdir in ~/ms/supervisor/dogs/*/; do
   DOG=$(basename "$dogdir")
   # Check if dog has a live tmux session
   if ! tmux has-session -t "dog-$DOG" 2>/dev/null; then
@@ -398,7 +398,7 @@ bd mol show <mol-id> --json
 # Look for rig field or infer from prefix
 
 # Dispatch to that rig's miner pool
-gt sling <mol-id> <rig>/miners
+ms sling <mol-id> <rig>/miners
 ```
 
 **Step 3: Log dispatch**
@@ -422,18 +422,18 @@ Check minecart completion status.
 
 Minecarts are coordination beads that track multiple issues across rigs. When all tracked issues close, the minecart auto-closes.
 
-**IMPORTANT**: Use `gt minecart` commands (not `bd list`) because minecarts are stored in
-town-level HQ beads and the Supervisor runs from ~/gt/supervisor/. The `gt` commands are
+**IMPORTANT**: Use `ms minecart` commands (not `bd list`) because minecarts are stored in
+town-level HQ beads and the Supervisor runs from ~/ms/supervisor/. The `ms` commands are
 town-aware and will find minecarts regardless of current directory.
 
 **Step 1: Find open minecarts**
 ```bash
-gt minecart list
+ms minecart list
 ```
 
 **Step 2: Check and auto-close completed minecarts**
 ```bash
-gt minecart check
+ms minecart check
 ```
 
 This command:
@@ -442,14 +442,14 @@ This command:
 - Auto-closes minecarts where all tracked work is complete
 - Sends notifications to minecart owners
 
-If `gt minecart check` times out while `gt dolt status` is healthy, treat it as a
+If `ms minecart check` times out while `ms dolt status` is healthy, treat it as a
 control-plane wait timeout, not a Dolt outage. Escalate at MEDIUM at most and use
 a stable fingerprint such as `supervisor:minecart-check:<minecart-id>` so repeated patrols
 do not create duplicate alerts. Reserve HIGH/CRITICAL for evidence that Dolt is
 unreachable or down.
 
-**Note**: Minecarts support cross-prefix tracking (e.g., hq-* minecart can track gt-*, bd-* issues).
-The `gt minecart` commands handle cross-rig issue resolution automatically.
+**Note**: Minecarts support cross-prefix tracking (e.g., hq-* minecart can track ms-*, bd-* issues).
+The `ms minecart` commands handle cross-rig issue resolution automatically.
 
 Stranded minecart feeding is handled by the daemon's MinecartManager (event-driven + 30s periodic scan).
 The supervisor no longer feeds minecarts directly — this avoids double-dispatch races between supervisor dogs and daemon."""
@@ -465,7 +465,7 @@ When an issue in one rig closes, any dependencies in other rigs should be notifi
 
 **Step 1: Check recent closures from feed**
 ```bash
-gt feed --since 10m --plain | grep "✓"
+ms feed --since 10m --plain | grep "✓"
 # Look for recently closed issues
 ```
 
@@ -484,7 +484,7 @@ bd blocked
 ```
 
 **Cross-rig scenarios:**
-- bd-xxx closes → gt-yyy that depended on it is unblocked
+- bd-xxx closes → ms-yyy that depended on it is unblocked
 - External issue closes → internal minecart step can proceed
 - Rig A issue closes → Rig B issue waiting on it proceeds
 
@@ -502,8 +502,8 @@ After minecart completion or cross-rig dependency resolution, notify relevant pa
 **Minecart completion notifications:**
 When a minecart closes (all tracked issues done), notify the Boss:
 ```bash
-# Minecart gt-minecart-xxx just completed
-gt mail send overseer/ -s "Minecart complete: <minecart-title>" \\
+# Minecart ms-minecart-xxx just completed
+ms mail send overseer/ -s "Minecart complete: <minecart-title>" \\
   -m "Minecart <id> has completed. All tracked issues closed.
       Duration: <start to end>
       Issues: <count>
@@ -514,10 +514,10 @@ gt mail send overseer/ -s "Minecart complete: <minecart-title>" \\
 **Cross-rig resolution notifications:**
 When a cross-rig dependency resolves, notify the affected rig:
 ```bash
-# Issue bd-xxx closed, unblocking gt-yyy
-gt mail send mineshaft/witness -s "Dependency resolved: <bd-xxx>" \\
+# Issue bd-xxx closed, unblocking ms-yyy
+ms mail send mineshaft/witness -s "Dependency resolved: <bd-xxx>" \\
   -m "External dependency bd-xxx has closed.
-      Unblocked: gt-yyy (<title>)
+      Unblocked: ms-yyy (<title>)
       This issue may now proceed."
 ```
 
@@ -535,7 +535,7 @@ description = """
 Refresh the heartbeat mid-cycle to prevent the daemon from killing us during long patrols.
 
 ```bash
-gt supervisor heartbeat "mid-cycle checkpoint"
+ms supervisor heartbeat "mid-cycle checkpoint"
 ```"""
 
 [[steps]]
@@ -548,7 +548,7 @@ Check Witness and Refinery health for each rig.
 **IMPORTANT: Skip DOCKED/PARKED rigs**
 Before checking any rig, verify its operational state:
 ```bash
-gt rig status <rig>
+ms rig status <rig>
 # Check the Status: line - if DOCKED or PARKED, skip entirely
 ```
 
@@ -556,7 +556,7 @@ DOCKED rigs are intentionally offline (Overseer or human docked them). Do NOT:
 - Check their witness/refinery status
 - Send health pings
 - Attempt restarts
-- Undock the rig (NEVER run `gt rig undock`)
+- Undock the rig (NEVER run `ms rig undock`)
 - Escalate or send mail about a docked rig being offline
 - "Restore" a docked rig to operational status
 A docked rig is NOT broken. It is off on purpose. Skip it entirely.
@@ -580,19 +580,19 @@ If ACTIVE work exists:
 
 For each rig, run:
 ```bash
-gt witness status <rig>
-gt refinery status <rig>
+ms witness status <rig>
+ms refinery status <rig>
 
 # ONLY if active work exists - health ping (clears backoff as side effect)
 # Use --mode=queue to avoid interrupting in-flight tool calls
-gt nudge --mode=queue <rig>/witness 'HEALTH_CHECK from supervisor'
-gt nudge --mode=queue <rig>/refinery 'HEALTH_CHECK from supervisor'
+ms nudge --mode=queue <rig>/witness 'HEALTH_CHECK from supervisor'
+ms nudge --mode=queue <rig>/refinery 'HEALTH_CHECK from supervisor'
 ```
 
 **Health Ping Benefit**: The queued nudge commands serve as a **backoff reset** —
 any nudge resets the agent's backoff to base interval, ensuring patrol agents
 remain responsive during active work periods. Formal liveness verification is
-handled separately by `gt supervisor health-check` (which uses immediate delivery).
+handled separately by `ms supervisor health-check` (which uses immediate delivery).
 
 **Signals to assess:**
 
@@ -620,18 +620,18 @@ health_state:
 | Cycles Unresponsive | Suggested Action |
 |---------------------|------------------|
 | 1-2 | Note it, check again next cycle |
-| 3-4 | Attempt restart: gt witness restart <rig> |
+| 3-4 | Attempt restart: ms witness restart <rig> |
 | 5+ | Escalate to Overseer with context |
 
 **Restart commands:**
 ```bash
-gt witness restart <rig>
-gt refinery restart <rig>
+ms witness restart <rig>
+ms refinery restart <rig>
 ```
 
 **Escalation:**
 ```bash
-gt mail send overseer/ -s "Health: <rig> <component> unresponsive" \\
+ms mail send overseer/ -s "Health: <rig> <component> unresponsive" \\
   -m "Component has been unresponsive for N cycles. Restart attempts failed.
       Last healthy: <timestamp>
       Error signals: <details>"
@@ -644,7 +644,7 @@ id = "dolt-health"
 title = "Run Dolt data-plane health check"
 needs = ["health-scan"]
 description = """
-Run `gt health --json` to inspect the Dolt data plane and flag anomalies.
+Run `ms health --json` to inspect the Dolt data plane and flag anomalies.
 
 This step surfaces problems that individual patrol steps won't catch:
 commit bloat (compactor dog may have failed), stale backups (backup dog
@@ -652,7 +652,7 @@ may have failed), orphan databases, and zombie Dolt server processes.
 
 **Step 1: Run the health check**
 ```bash
-gt health --json
+ms health --json
 ```
 
 Parse the JSON output (HealthReport schema):
@@ -680,33 +680,33 @@ Parse the JSON output (HealthReport schema):
 
 **Server down (CRITICAL):**
 ```bash
-gt escalate -s CRITICAL "Dolt server is down"
+ms escalate -s CRITICAL "Dolt server is down"
 ```
 
 **Commit bloat (commits > 50k in any DB):**
 The compactor dog (`mol-dog-compactor`) may have failed. Dispatch a compactor:
 ```bash
-gt dog dispatch --formula mol-dog-compactor --var db=<db_name>
+ms dog dispatch --formula mol-dog-compactor --var db=<db_name>
 ```
 If no idle dogs, log for next cycle.
 
 **Stale backups:**
 The backup dog (`mol-dog-backup`) may have failed. Dispatch a backup:
 ```bash
-gt dog dispatch --formula mol-dog-backup
+ms dog dispatch --formula mol-dog-backup
 ```
 
 **Zombie processes:**
 Log the PIDs. The zombie-scan step (next) handles miner zombies;
 this catches zombie *Dolt server* processes. Kill them:
 ```bash
-gt dolt kill-imposters
+ms dolt kill-imposters
 ```
 
 **Orphan DBs:**
 Dispatch cleanup:
 ```bash
-gt dolt cleanup
+ms dolt cleanup
 ```
 
 **Pollution:**
@@ -744,25 +744,25 @@ Detection only - Boot handles termination.
 
 **Run the zombie scan (DRY RUN ONLY):**
 ```bash
-gt supervisor zombie-scan --dry-run
+ms supervisor zombie-scan --dry-run
 ```
 
 **NEVER run:**
-- `gt supervisor zombie-scan` (without --dry-run)
+- `ms supervisor zombie-scan` (without --dry-run)
 - `tmux kill-session`
-- `gt miner nuke`
+- `ms miner nuke`
 - Any command that terminates a session
 
 **If zombies detected:**
 1. Review the output to confirm they are truly abandoned
 2. File a death warrant for each detected zombie:
    ```bash
-   gt warrant file <miner> --reason "Zombie detected: no session, no hook, idle >10m"
+   ms warrant file <miner> --reason "Zombie detected: no session, no hook, idle >10m"
    ```
 3. Boot will handle interrogation and execution
 4. Notify the Overseer about Witness failure:
    ```bash
-   gt mail send overseer/ -s "Witness cleanup failure" \
+   ms mail send overseer/ -s "Witness cleanup failure" \
      -m "Filed death warrant for <miner>. Witness failed to clean up."
    ```
 
@@ -779,7 +779,7 @@ needs = ["zombie-scan"]
 description = """
 Execute registered plugins.
 
-Scan $GT_ROOT/plugins/ for plugin directories. Each plugin has a plugin.md with TOML frontmatter defining its gate (when to run) and instructions (what to do).
+Scan $MS_ROOT/plugins/ for plugin directories. Each plugin has a plugin.md with TOML frontmatter defining its gate (when to run) and instructions (what to do).
 
 See docs/supervisor-plugins.md for full documentation.
 
@@ -796,7 +796,7 @@ For each plugin:
 
 Plugins marked parallel: true can run concurrently using Task tool subagents. Sequential plugins run one at a time in directory order.
 
-Skip this step if $GT_ROOT/plugins/ does not exist or is empty."""
+Skip this step if $MS_ROOT/plugins/ does not exist or is empty."""
 
 [[steps]]
 id = "dog-pool-maintenance"
@@ -807,7 +807,7 @@ Ensure dog pool has available workers for dispatch.
 
 **Step 1: Check dog pool status**
 ```bash
-gt dog status
+ms dog status
 # Shows idle/working counts
 ```
 
@@ -815,15 +815,15 @@ gt dog status
 If idle count is 0 and working count is at capacity, consider spawning:
 ```bash
 # If no idle dogs available
-gt dog add <name>
+ms dog add <name>
 # Names: alpha, bravo, charlie, delta, etc.
 ```
 
 **Step 3: Retire stale dogs (optional)**
 Dogs that have been idle for >24 hours can be removed to save resources:
 ```bash
-gt dogs list --json
-# Check last_active in each entry; if idle > 24h: gt dog remove <name>
+ms dogs list --json
+# Check last_active in each entry; if idle > 24h: ms dog remove <name>
 ```
 
 **Pool sizing guidelines:**
@@ -840,20 +840,20 @@ needs = ["dog-pool-maintenance"]
 description = """
 Check for dogs that have been working too long (stuck).
 
-Dogs dispatched via `gt dog dispatch --plugin` are marked as "working" with
-a work description like "plugin:rebuild-gt". If a dog hangs, crashes, or
+Dogs dispatched via `ms dog dispatch --plugin` are marked as "working" with
+a work description like "plugin:rebuild-ms". If a dog hangs, crashes, or
 takes too long, it needs intervention.
 
 **Step 1: List working dogs**
 ```bash
-gt dog list --json
+ms dog list --json
 # Filter for state: "working"
 ```
 
 **Step 2: Check work duration**
 For each working dog:
 ```bash
-gt dog status <name> --json
+ms dog status <name> --json
 # Check: work_started_at, current_work
 ```
 
@@ -873,11 +873,11 @@ is_stuck = duration > stuck_threshold
 For dogs working > timeout:
 ```bash
 # Option A: File death warrant (Boot handles termination)
-gt warrant file supervisor/dogs/<name> --reason "Stuck: working on <work> for <duration>"
+ms warrant file supervisor/dogs/<name> --reason "Stuck: working on <work> for <duration>"
 
 # Option B: Force clear work and notify
-gt dog clear <name> --force
-gt mail send supervisor/ -s "DOG_TIMEOUT <name>" -m "Dog <name> timed out on <work> after <duration>"
+ms dog clear <name> --force
+ms mail send supervisor/ -s "DOG_TIMEOUT <name>" -m "Dog <name> timed out on <work> after <duration>"
 ```
 
 **Decision matrix:**
@@ -891,7 +891,7 @@ gt mail send supervisor/ -s "DOG_TIMEOUT <name>" -m "Dog <name> timed out on <wo
 **Step 4: Track chronic failures**
 If same dog gets stuck repeatedly:
 ```bash
-gt mail send overseer/ -s "Dog <name> chronic failures" \
+ms mail send overseer/ -s "Dog <name> chronic failures" \
   -m "Dog has timed out N times in last 24h. Consider removing from pool."
 ```
 
@@ -912,13 +912,13 @@ bd list --status=in_progress --json | head -20
 
 For each in_progress issue, check if assignee session exists:
 ```bash
-gt session status <rig>/<name> --json | jq -r '.running' | grep -q true && echo "alive" || echo "orphan"
+ms session status <rig>/<name> --json | jq -r '.running' | grep -q true && echo "alive" || echo "orphan"
 ```
 
 **Step 2: If orphans detected, dispatch to dog**
 ```bash
 # Sling orphan-scan formula to an idle dog
-gt sling mol-orphan-scan supervisor/dogs --var scope=town
+ms sling mol-orphan-scan supervisor/dogs --var scope=town
 ```
 
 **Important:** Do NOT fix orphans inline. Dogs handle recovery.
@@ -936,7 +936,7 @@ needs = ["orphan-check"]
 description = """
 **DETECT ONLY** - Check if cleanup is needed and dispatch to dog.
 
-**Step 1: Quick cleanup check (avoid gt doctor -v — takes 60s, blocks patrol)**
+**Step 1: Quick cleanup check (avoid ms doctor -v — takes 60s, blocks patrol)**
 ```bash
 # Fast orphan session check only
 tmux list-sessions 2>/dev/null | wc -l
@@ -947,11 +947,11 @@ bd list --status=open --json 2>/dev/null | jq length
 **Step 2: If cleanup needed, dispatch to dog**
 ```bash
 # Sling session-gc formula to an idle dog
-gt sling mol-session-gc supervisor/dogs --var mode=conservative
+ms sling mol-session-gc supervisor/dogs --var mode=conservative
 ```
 
-**Important:** Do NOT run `gt doctor -v` or `gt doctor --fix` inline.
-`gt doctor -v` takes 60+ seconds and blocks the patrol loop.
+**Important:** Do NOT run `ms doctor -v` or `ms doctor --fix` inline.
+`ms doctor -v` takes 60+ seconds and blocks the patrol loop.
 Dogs handle cleanup. The Supervisor stays lightweight - detection only.
 
 **Step 3: If nothing to clean**
@@ -973,7 +973,7 @@ Run TTL-based wisp compaction to manage storage growth.
 
 **Step 1: Preview compaction scope**
 ```bash
-gt compact --dry-run --json
+ms compact --dry-run --json
 ```
 
 Parse the JSON output:
@@ -982,7 +982,7 @@ Parse the JSON output:
 
 **Step 2: Execute compaction (if needed)**
 ```bash
-gt compact --verbose
+ms compact --verbose
 ```
 
 This runs the compaction algorithm:
@@ -1008,7 +1008,7 @@ Generate and send the daily compaction digest.
 
 **Step 1: Send daily digest (idempotent — safe to run every cycle)**
 ```bash
-gt compact report
+ms compact report
 ```
 
 This runs compaction (capturing JSON results), queries active wisps,
@@ -1021,7 +1021,7 @@ Skips automatically if today's digest was already sent.
 **Step 2: Weekly rollup (Mondays only, idempotent)**
 If today is Monday, also send the weekly rollup:
 ```bash
-gt compact report --weekly
+ms compact report --weekly
 ```
 
 This aggregates the past 7 days of compaction event beads and sends
@@ -1041,7 +1041,7 @@ Cost tracking is temporarily disabled because Claude Code does not expose
 session costs in a way that can be captured programmatically.
 
 **Why disabled:**
-- The `gt costs` command uses tmux capture-pane to find costs
+- The `ms costs` command uses tmux capture-pane to find costs
 - Claude Code displays costs in the TUI status bar, not in scrollback
 - All sessions show $0.00 because capture-pane can't see TUI chrome
 - The infrastructure is sound but has no data source
@@ -1052,7 +1052,7 @@ session costs in a way that can be captured programmatically.
 
 **Re-enable when:** Claude Code exposes cost data via API or environment.
 
-See: GH#24, gt-7awfj
+See: GH#24, ms-7awfj
 
 **Exit criteria:** Skip this step - proceed to next."""
 
@@ -1070,14 +1070,14 @@ to avoid JSONL pollution. This step aggregates them into a single permanent
 **Step 1: Check if digest is needed**
 ```bash
 # Preview yesterday's patrol digests (dry run)
-gt patrol digest --yesterday --dry-run
+ms patrol digest --yesterday --dry-run
 ```
 
 If output shows "No patrol digests found", skip to Step 3.
 
 **Step 2: Create the digest**
 ```bash
-gt patrol digest --yesterday
+ms patrol digest --yesterday
 ```
 
 This:
@@ -1105,14 +1105,14 @@ Maintain daemon logs and state files.
 The daemon automatically rotates logs every heartbeat (3 min), but the supervisor
 can trigger a force-rotation to ensure cleanup happens during patrol:
 ```bash
-gt daemon rotate-logs
+ms daemon rotate-logs
 ```
 
 This rotates Dolt server logs (dolt.log, dolt-server.log, rig-level dolt-server.log)
 using copytruncate (safe for child processes with open fds). daemon.log uses
 lumberjack for automatic rotation and is handled separately.
 
-Log locations: $GT_ROOT/daemon/dolt.log, $GT_ROOT/daemon/dolt-server.log,
+Log locations: $MS_ROOT/daemon/dolt.log, $MS_ROOT/daemon/dolt-server.log,
 and per-rig .beads/dolt-server.log files.
 
 **Step 2: Prune state.json of dead sessions**
@@ -1120,7 +1120,7 @@ and per-rig .beads/dolt-server.log files.
 The state.json tracks active sessions. Prune entries for sessions that no longer exist:
 ```bash
 # Check for stale session entries
-gt daemon status --json 2>/dev/null
+ms daemon status --json 2>/dev/null
 ```
 
 If state.json references sessions not in tmux:
@@ -1139,7 +1139,7 @@ Verify inbox hygiene before ending patrol cycle.
 
 **Step 1: Check inbox state**
 ```bash
-gt mail inbox
+ms mail inbox
 ```
 
 Inbox should be EMPTY or contain only just-arrived unprocessed messages.
@@ -1153,7 +1153,7 @@ All message types should have been archived during inbox-check processing:
 If any were missed:
 ```bash
 # For each stale message found:
-gt mail archive <message-id>
+ms mail archive <message-id>
 ```
 
 **Goal**: Inbox should have ≤2 active messages at end of cycle.
@@ -1169,7 +1169,7 @@ Check own context limit.
 The Supervisor runs in a Claude session with finite context. Check if approaching the limit:
 
 ```bash
-gt context --usage
+ms context --usage
 ```
 
 If context is high (>80%), prepare for handoff:
@@ -1191,13 +1191,13 @@ End of patrol cycle decision.
 Refresh the heartbeat again immediately before the long idle wait:
 
 ```bash
-gt supervisor heartbeat "pre-await checkpoint"
+ms supervisor heartbeat "pre-await checkpoint"
 ```
 
 Use await-signal with exponential backoff to wait for activity:
 
 ```bash
-gt mol step await-signal --agent-bead hq-supervisor \
+ms mol step await-signal --agent-bead hq-supervisor \
   --backoff-base 60s --backoff-mult 2 --backoff-max 15m
 ```
 
@@ -1215,7 +1215,7 @@ This command:
 **On signal received** (activity detected):
 Reset the idle counter and start next patrol cycle:
 ```bash
-gt agents state hq-supervisor --set idle=0
+ms agents state hq-supervisor --set idle=0
 ```
 
 **On timeout** (no activity):
@@ -1223,7 +1223,7 @@ The idle counter was auto-incremented. Continue to next patrol cycle
 (the longer backoff will apply next time).
 
 `await-signal` timeout is normal idle control flow. Do not escalate it as a Dolt
-outage unless `gt dolt status` or `gt health --json` proves Dolt is unreachable.
+outage unless `ms dolt status` or `ms health --json` proves Dolt is unreachable.
 If an outer shell/tool timeout interrupts this command while Dolt is healthy,
 escalate at MEDIUM at most with fingerprint `supervisor:await-signal:hq-supervisor` and
 include the timeout, agent bead, and Dolt status in the reason.
@@ -1255,7 +1255,7 @@ After await-signal returns (either by signal or timeout):
    in the ledger. Format: comma-separated step_id:STATUS pairs.
 3. Close current patrol and start next cycle:
 ```bash
-gt patrol report --summary "<brief summary>" \
+ms patrol report --summary "<brief summary>" \
   --steps "heartbeat:OK,inbox-check:OK,orphan-process-cleanup:SKIP,..."
 ```
 The --steps flag is REQUIRED. List ALL 26 steps with their actual status.
@@ -1264,17 +1264,17 @@ This closes the current patrol wisp and automatically creates a new one.
 4. Hand off immediately so a fresh Supervisor session picks up the newly-created
    patrol wisp from the hook:
 ```bash
-gt handoff -s "Supervisor patrol handoff" -m "Patrol cycle reported; continue with the newly-created patrol wisp from hook."
+ms handoff -s "Supervisor patrol handoff" -m "Patrol cycle reported; continue with the newly-created patrol wisp from hook."
 ```
 
-Do NOT end your turn at the prompt after `gt patrol report`. The handoff is
+Do NOT end your turn at the prompt after `ms patrol report`. The handoff is
 mandatory even when context is low; otherwise the patrol loop can stall between
 cycles with work waiting on the hook.
 
 **If context HIGH** (approaching limit):
 1. Include notable observations in the same handoff message:
 ```bash
-gt handoff -s "Supervisor patrol handoff" -m "<observations>"
+ms handoff -s "Supervisor patrol handoff" -m "<observations>"
 ```
 2. Exit cleanly - the daemon will respawn a fresh Supervisor session
 

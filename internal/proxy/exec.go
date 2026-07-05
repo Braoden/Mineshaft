@@ -33,7 +33,7 @@ func (s *Server) handleExec(w http.ResponseWriter, r *http.Request) {
 	// Limit request body to prevent a misbehaving client from exhausting memory.
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20) // 1 MiB
 
-	// Extract identity from client cert CN (format: gt-<rig>-<name>).
+	// Extract identity from client cert CN (format: ms-<rig>-<name>).
 	identity := extractIdentity(r)
 
 	var req execRequest
@@ -146,7 +146,7 @@ func subForLog(argv []string) string {
 	return s
 }
 
-// extractIdentity parses the client cert CN "gt-<rig>-<name>" into "<rig>/<name>".
+// extractIdentity parses the client cert CN "ms-<rig>-<name>" into "<rig>/<name>".
 // Uses LastIndex to correctly handle hyphenated rig names (e.g. "mineshaft").
 func extractIdentity(r *http.Request) string {
 	if r.TLS == nil || len(r.TLS.PeerCertificates) == 0 {
@@ -156,14 +156,14 @@ func extractIdentity(r *http.Request) string {
 	return cnToIdentity(cn)
 }
 
-// minerName extracts the miner name from a CN of the form "gt-<rig>-<name>".
+// minerName extracts the miner name from a CN of the form "ms-<rig>-<name>".
 // The last "-" is the rig/name separator, so hyphenated rig names are handled correctly.
 // Returns "" if the CN does not match the expected format, or if rig or name is empty.
 func minerName(cn string) string {
-	if !strings.HasPrefix(cn, "gt-") {
+	if !strings.HasPrefix(cn, "ms-") {
 		return ""
 	}
-	rest := cn[3:] // strip "gt-"
+	rest := cn[3:] // strip "ms-"
 	idx := strings.LastIndex(rest, "-")
 	// idx <= 0: idx < 0 means no separator; idx == 0 means rig is empty.
 	if idx <= 0 {
@@ -172,7 +172,7 @@ func minerName(cn string) string {
 	return rest[idx+1:]
 }
 
-// cnToIdentity converts a CN of the form "gt-<rig>-<name>" to "<rig>/<name>".
+// cnToIdentity converts a CN of the form "ms-<rig>-<name>" to "<rig>/<name>".
 // The last "-" is treated as the rig/name separator, so hyphenated rig names
 // (e.g. "mineshaft") are handled correctly.
 func cnToIdentity(cn string) string {
@@ -180,8 +180,8 @@ func cnToIdentity(cn string) string {
 	if name == "" {
 		return ""
 	}
-	// rig is everything between "gt-" and "-<name>".
-	rest := cn[3:] // strip "gt-"
+	// rig is everything between "ms-" and "-<name>".
+	rest := cn[3:] // strip "ms-"
 	rig := rest[:len(rest)-len(name)-1]
 	if rig == "" {
 		return ""
@@ -216,15 +216,15 @@ func runCommand(ctx context.Context, argv []string, identity string, envOverride
 	cmd.Stdout = &outBuf
 	cmd.Stderr = &errBuf
 	// Restrict the subprocess environment to prevent server credentials from
-	// leaking into gt/bd calls. Pass identity via env var so commands can
+	// leaking into ms/bd calls. Pass identity via env var so commands can
 	// optionally use it without requiring a --identity CLI flag on every command.
 	env := minimalEnv()
 	if len(envOverride) > 0 && envOverride[0] != nil {
 		env = envOverride[0]
 	}
 	if identity != "" {
-		env = stripEnvKey(env, "GT_PROXY_IDENTITY")
-		env = append(env, "GT_PROXY_IDENTITY="+identity)
+		env = stripEnvKey(env, "MS_PROXY_IDENTITY")
+		env = append(env, "MS_PROXY_IDENTITY="+identity)
 	}
 	cmd.Env = env
 	err := cmd.Run()

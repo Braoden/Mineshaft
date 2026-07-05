@@ -20,11 +20,11 @@ func TestTrackPID_WritesFile(t *testing.T) {
 		return "Mon Jan  1 00:00:00 2026", nil
 	}
 
-	if err := TrackPID(townRoot, "gt-myrig-witness", 12345); err != nil {
+	if err := TrackPID(townRoot, "ms-myrig-witness", 12345); err != nil {
 		t.Fatalf("TrackPID() error = %v", err)
 	}
 
-	path := pidFile(townRoot, "gt-myrig-witness")
+	path := pidFile(townRoot, "ms-myrig-witness")
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("reading PID file: %v", err)
@@ -38,7 +38,7 @@ func TestTrackPID_WritesFile(t *testing.T) {
 func TestTrackPID_CreatesDirectory(t *testing.T) {
 	townRoot := t.TempDir()
 
-	if err := TrackPID(townRoot, "gt-test-session", 99); err != nil {
+	if err := TrackPID(townRoot, "ms-test-session", 99); err != nil {
 		t.Fatalf("TrackPID() error = %v", err)
 	}
 
@@ -55,13 +55,13 @@ func TestTrackPID_CreatesDirectory(t *testing.T) {
 func TestUntrackPID_RemovesFile(t *testing.T) {
 	townRoot := t.TempDir()
 
-	if err := TrackPID(townRoot, "gt-test", 111); err != nil {
+	if err := TrackPID(townRoot, "ms-test", 111); err != nil {
 		t.Fatalf("TrackPID() error = %v", err)
 	}
 
-	UntrackPID(townRoot, "gt-test")
+	UntrackPID(townRoot, "ms-test")
 
-	path := pidFile(townRoot, "gt-test")
+	path := pidFile(townRoot, "ms-test")
 	if _, err := os.Stat(path); !os.IsNotExist(err) {
 		t.Error("PID file should be removed after UntrackPID")
 	}
@@ -89,7 +89,7 @@ func TestKillTrackedPIDs_DeadProcess(t *testing.T) {
 
 	// Write a PID file for a process that definitely doesn't exist
 	// (PID 2^22 + 1 is almost certainly not running)
-	if err := TrackPID(townRoot, "gt-dead-session", 4194305); err != nil {
+	if err := TrackPID(townRoot, "ms-dead-session", 4194305); err != nil {
 		t.Fatalf("TrackPID() error = %v", err)
 	}
 
@@ -102,7 +102,7 @@ func TestKillTrackedPIDs_DeadProcess(t *testing.T) {
 	}
 
 	// PID file should be cleaned up
-	path := pidFile(townRoot, "gt-dead-session")
+	path := pidFile(townRoot, "ms-dead-session")
 	if _, err := os.Stat(path); !os.IsNotExist(err) {
 		t.Error("PID file should be cleaned up for dead process")
 	}
@@ -116,7 +116,7 @@ func TestKillTrackedPIDs_CorruptFile(t *testing.T) {
 	}
 
 	// Write a corrupt PID file
-	path := filepath.Join(dir, "gt-corrupt.pid")
+	path := filepath.Join(dir, "ms-corrupt.pid")
 	if err := os.WriteFile(path, []byte("not-a-number\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -162,12 +162,12 @@ func TestKillTrackedPIDs_KillsSelf(t *testing.T) {
 	townRoot := t.TempDir()
 	myPID := os.Getpid()
 
-	if err := TrackPID(townRoot, "gt-self-test", myPID); err != nil {
+	if err := TrackPID(townRoot, "ms-self-test", myPID); err != nil {
 		t.Fatalf("TrackPID() error = %v", err)
 	}
 
 	// Verify the file contains our PID
-	path := pidFile(townRoot, "gt-self-test")
+	path := pidFile(townRoot, "ms-self-test")
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("reading PID file: %v", err)
@@ -182,7 +182,7 @@ func TestKillTrackedPIDs_KillsSelf(t *testing.T) {
 	}
 
 	// Clean up without killing ourselves
-	UntrackPID(townRoot, "gt-self-test")
+	UntrackPID(townRoot, "ms-self-test")
 }
 
 func TestKillTrackedPIDs_SkipsPidReuse(t *testing.T) {
@@ -199,7 +199,7 @@ func TestKillTrackedPIDs_SkipsPidReuse(t *testing.T) {
 	// reaches the start-time comparison branch rather than exiting early
 	// at the liveness check.
 	myPID := os.Getpid()
-	path := filepath.Join(dir, "gt-reused.pid")
+	path := filepath.Join(dir, "ms-reused.pid")
 	record := fmt.Sprintf("%d|old-start\n", myPID)
 	if err := os.WriteFile(path, []byte(record), 0644); err != nil {
 		t.Fatal(err)
@@ -243,7 +243,7 @@ func TestKillTrackedPIDs_PreservesFileOnLookupError(t *testing.T) {
 
 	// Use our own PID so Signal(0) succeeds and we reach the start-time check.
 	myPID := os.Getpid()
-	path := filepath.Join(dir, "gt-err-lookup.pid")
+	path := filepath.Join(dir, "ms-err-lookup.pid")
 	record := fmt.Sprintf("%d|some-start-time\n", myPID)
 	if err := os.WriteFile(path, []byte(record), 0644); err != nil {
 		t.Fatal(err)
@@ -270,8 +270,8 @@ func TestKillTrackedPIDs_PreservesFileOnLookupError(t *testing.T) {
 }
 
 func TestPidFile_Path(t *testing.T) {
-	got := pidFile("/home/user/gt", "gt-myrig-witness")
-	want := filepath.Join("/home/user/gt", ".runtime", "pids", "gt-myrig-witness.pid")
+	got := pidFile("/home/user/ms", "ms-myrig-witness")
+	want := filepath.Join("/home/user/ms", ".runtime", "pids", "ms-myrig-witness.pid")
 	if got != want {
 		t.Errorf("pidFile() = %q, want %q", got, want)
 	}

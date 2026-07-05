@@ -130,7 +130,7 @@ func EnsureLifecycleDefaults(config *DaemonPatrolConfig) bool {
 // one if it doesn't exist), applies lifecycle defaults for any unconfigured
 // patrols, and saves the result. Returns nil on success.
 //
-// This is the top-level function called by gt init and gt up.
+// This is the top-level function called by ms init and ms up.
 func EnsureLifecycleConfigFile(townRoot string) error {
 	config := LoadPatrolConfig(townRoot)
 	if config == nil {

@@ -20,11 +20,11 @@ This scans all managed .claude/settings.json files in the workspace,
 finds hooks that are common across all targets (becomes the base config),
 and identifies per-target differences (becomes overrides).
 
-After init, run 'gt hooks diff' to verify no changes would be made.
+After init, run 'ms hooks diff' to verify no changes would be made.
 
 Examples:
-  gt hooks init             # Bootstrap base and overrides
-  gt hooks init --dry-run   # Show what would be written without writing`,
+  ms hooks init             # Bootstrap base and overrides
+  ms hooks init --dry-run   # Show what would be written without writing`,
 	RunE: runHooksInit,
 }
 
@@ -41,7 +41,7 @@ func runHooksInit(cmd *cobra.Command, args []string) error {
 
 	// Check if base config already exists
 	if _, err := hooks.LoadBase(); err == nil {
-		return fmt.Errorf("base config already exists at %s\nUse 'gt hooks base' to edit it", hooks.BasePath())
+		return fmt.Errorf("base config already exists at %s\nUse 'ms hooks base' to edit it", hooks.BasePath())
 	}
 
 	// Discover all targets and load their current settings
@@ -145,7 +145,7 @@ func runHooksInit(cmd *cobra.Command, args []string) error {
 		fmt.Printf("%s Created override %s\n", style.Success.Render("✓"), o.key)
 	}
 
-	fmt.Printf("\nVerify with: %s\n", style.Dim.Render("gt hooks diff"))
+	fmt.Printf("\nVerify with: %s\n", style.Dim.Render("ms hooks diff"))
 	return nil
 }
 

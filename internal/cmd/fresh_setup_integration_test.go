@@ -34,7 +34,7 @@ func TestFreshInstallRigMinerHookIntegration(t *testing.T) {
 	doltPortString := strconv.Itoa(doltPort)
 
 	// createAutoMinecart and related helpers shell out with the process env.
-	t.Setenv("GT_DOLT_PORT", doltPortString)
+	t.Setenv("MS_DOLT_PORT", doltPortString)
 	t.Setenv("BEADS_DOLT_PORT", doltPortString)
 
 	env := freshSetupIntegrationEnv(tmpDir, doltPortString)
@@ -87,10 +87,10 @@ func TestFreshInstallRigMinerHookIntegration(t *testing.T) {
 	hookJSON := runFreshSetupOutputCmd(t, minerWorktree, env, gtBinary, "hook", "--json")
 	var hookStatus MoleculeStatusInfo
 	if err := json.Unmarshal([]byte(hookJSON), &hookStatus); err != nil {
-		t.Fatalf("parse gt hook --json output: %v\n%s", err, hookJSON)
+		t.Fatalf("parse ms hook --json output: %v\n%s", err, hookJSON)
 	}
 	if hookStatus.Target != agentID || !hookStatus.HasWork || hookStatus.PinnedBead == nil || hookStatus.PinnedBead.ID != issue.ID {
-		t.Fatalf("gt hook --json = target %q has_work %v pinned %+v, want %s hooked to %s",
+		t.Fatalf("ms hook --json = target %q has_work %v pinned %+v, want %s hooked to %s",
 			hookStatus.Target, hookStatus.HasWork, hookStatus.PinnedBead, issue.ID, agentID)
 	}
 
@@ -119,7 +119,7 @@ type freshSetupIssue struct {
 func freshSetupIntegrationEnv(homeDir, doltPort string) []string {
 	clean := make([]string, 0, len(os.Environ())+3)
 	for _, entry := range beads.StripBDTargetEnv(os.Environ()) {
-		if strings.HasPrefix(entry, "GT_") || strings.HasPrefix(entry, "BD_") {
+		if strings.HasPrefix(entry, "MS_") || strings.HasPrefix(entry, "BD_") {
 			continue
 		}
 		if strings.HasPrefix(entry, "HOME=") {
@@ -127,7 +127,7 @@ func freshSetupIntegrationEnv(homeDir, doltPort string) []string {
 		}
 		clean = append(clean, entry)
 	}
-	return append(clean, "HOME="+homeDir, "GT_DOLT_PORT="+doltPort, "BEADS_DOLT_PORT="+doltPort, "BEADS_DOLT_SERVER_PORT="+doltPort)
+	return append(clean, "HOME="+homeDir, "MS_DOLT_PORT="+doltPort, "BEADS_DOLT_PORT="+doltPort, "BEADS_DOLT_SERVER_PORT="+doltPort)
 }
 
 func configureGitIdentityForEnv(t *testing.T, env []string) {

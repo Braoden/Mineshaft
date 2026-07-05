@@ -17,7 +17,7 @@ import (
 func setupHandoffTestRegistry(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "mineshaft")
+	reg.Register("ms", "mineshaft")
 	old := session.DefaultRegistry()
 	session.SetDefaultRegistry(reg)
 	t.Cleanup(func() { session.SetDefaultRegistry(old) })
@@ -48,7 +48,7 @@ func TestHandoffStdinFlag(t *testing.T) {
 
 func TestSessionWorkDir(t *testing.T) {
 	setupHandoffTestRegistry(t)
-	townRoot := "/home/test/gt"
+	townRoot := "/home/test/ms"
 
 	tests := []struct {
 		name        string
@@ -70,19 +70,19 @@ func TestSessionWorkDir(t *testing.T) {
 		},
 		{
 			name:        "crew runs from crew subdirectory",
-			sessionName: "gt-crew-holden",
+			sessionName: "ms-crew-holden",
 			wantDir:     townRoot + "/mineshaft/crew/holden",
 			wantErr:     false,
 		},
 		{
 			name:        "witness runs from witness directory",
-			sessionName: "gt-witness",
+			sessionName: "ms-witness",
 			wantDir:     townRoot + "/mineshaft/witness",
 			wantErr:     false,
 		},
 		{
 			name:        "refinery runs from refinery/rig directory",
-			sessionName: "gt-refinery",
+			sessionName: "ms-refinery",
 			wantDir:     townRoot + "/mineshaft/refinery/rig",
 			wantErr:     false,
 		},
@@ -106,9 +106,9 @@ func TestBuildRestartCommand_UsesRoleAgentsWhenNoAgentOverride(t *testing.T) {
 	setupHandoffTestRegistry(t)
 
 	origCwd, _ := os.Getwd()
-	origGTAgent := os.Getenv("GT_AGENT")
-	origTownRoot := os.Getenv("GT_TOWN_ROOT")
-	origRoot := os.Getenv("GT_ROOT")
+	origGTAgent := os.Getenv("MS_AGENT")
+	origTownRoot := os.Getenv("MS_TOWN_ROOT")
+	origRoot := os.Getenv("MS_ROOT")
 
 	// TempDir must be called BEFORE registering the Chdir cleanup so that
 	// LIFO ordering restores the working directory before TempDir removal.
@@ -118,9 +118,9 @@ func TestBuildRestartCommand_UsesRoleAgentsWhenNoAgentOverride(t *testing.T) {
 
 	t.Cleanup(func() {
 		_ = os.Chdir(origCwd)
-		_ = os.Setenv("GT_AGENT", origGTAgent)
-		_ = os.Setenv("GT_TOWN_ROOT", origTownRoot)
-		_ = os.Setenv("GT_ROOT", origRoot)
+		_ = os.Setenv("MS_AGENT", origGTAgent)
+		_ = os.Setenv("MS_TOWN_ROOT", origTownRoot)
+		_ = os.Setenv("MS_ROOT", origRoot)
 	})
 	rigPath := filepath.Join(townRoot, "mineshaft")
 	witnessDir := filepath.Join(rigPath, "witness")
@@ -153,20 +153,20 @@ func TestBuildRestartCommand_UsesRoleAgentsWhenNoAgentOverride(t *testing.T) {
 		t.Fatalf("SaveRigSettings: %v", err)
 	}
 
-	if err := os.Setenv("GT_AGENT", ""); err != nil {
-		t.Fatalf("Setenv GT_AGENT: %v", err)
+	if err := os.Setenv("MS_AGENT", ""); err != nil {
+		t.Fatalf("Setenv MS_AGENT: %v", err)
 	}
-	if err := os.Setenv("GT_TOWN_ROOT", ""); err != nil {
-		t.Fatalf("Setenv GT_TOWN_ROOT: %v", err)
+	if err := os.Setenv("MS_TOWN_ROOT", ""); err != nil {
+		t.Fatalf("Setenv MS_TOWN_ROOT: %v", err)
 	}
-	if err := os.Setenv("GT_ROOT", ""); err != nil {
-		t.Fatalf("Setenv GT_ROOT: %v", err)
+	if err := os.Setenv("MS_ROOT", ""); err != nil {
+		t.Fatalf("Setenv MS_ROOT: %v", err)
 	}
 	if err := os.Chdir(witnessDir); err != nil {
 		t.Fatalf("chdir witness dir: %v", err)
 	}
 
-	cmd, err := buildRestartCommand("gt-witness")
+	cmd, err := buildRestartCommand("ms-witness")
 	if err != nil {
 		t.Fatalf("buildRestartCommand: %v", err)
 	}
@@ -184,17 +184,17 @@ func TestBuildRestartCommand_MergesAgentPresetEnv(t *testing.T) {
 	setupHandoffTestRegistry(t)
 
 	origCwd, _ := os.Getwd()
-	origGTAgent := os.Getenv("GT_AGENT")
-	origTownRoot := os.Getenv("GT_TOWN_ROOT")
-	origRoot := os.Getenv("GT_ROOT")
+	origGTAgent := os.Getenv("MS_AGENT")
+	origTownRoot := os.Getenv("MS_TOWN_ROOT")
+	origRoot := os.Getenv("MS_ROOT")
 
 	townRoot := t.TempDir()
 
 	t.Cleanup(func() {
 		_ = os.Chdir(origCwd)
-		_ = os.Setenv("GT_AGENT", origGTAgent)
-		_ = os.Setenv("GT_TOWN_ROOT", origTownRoot)
-		_ = os.Setenv("GT_ROOT", origRoot)
+		_ = os.Setenv("MS_AGENT", origGTAgent)
+		_ = os.Setenv("MS_TOWN_ROOT", origTownRoot)
+		_ = os.Setenv("MS_ROOT", origRoot)
 	})
 	rigPath := filepath.Join(townRoot, "mineshaft")
 	witnessDir := filepath.Join(rigPath, "witness")
@@ -229,14 +229,14 @@ func TestBuildRestartCommand_MergesAgentPresetEnv(t *testing.T) {
 		t.Fatalf("SaveRigSettings: %v", err)
 	}
 
-	_ = os.Setenv("GT_AGENT", "claude-proxy")
-	_ = os.Setenv("GT_TOWN_ROOT", "")
-	_ = os.Setenv("GT_ROOT", "")
+	_ = os.Setenv("MS_AGENT", "claude-proxy")
+	_ = os.Setenv("MS_TOWN_ROOT", "")
+	_ = os.Setenv("MS_ROOT", "")
 	if err := os.Chdir(witnessDir); err != nil {
 		t.Fatalf("chdir witness dir: %v", err)
 	}
 
-	cmd, err := buildRestartCommand("gt-witness")
+	cmd, err := buildRestartCommand("ms-witness")
 	if err != nil {
 		t.Fatalf("buildRestartCommand: %v", err)
 	}
@@ -260,17 +260,17 @@ func TestBuildRestartCommandWithOpts_ContinuePrompt(t *testing.T) {
 	setupHandoffTestRegistry(t)
 
 	origCwd, _ := os.Getwd()
-	origGTAgent := os.Getenv("GT_AGENT")
-	origTownRoot := os.Getenv("GT_TOWN_ROOT")
-	origRoot := os.Getenv("GT_ROOT")
+	origGTAgent := os.Getenv("MS_AGENT")
+	origTownRoot := os.Getenv("MS_TOWN_ROOT")
+	origRoot := os.Getenv("MS_ROOT")
 
 	townRoot := t.TempDir()
 
 	t.Cleanup(func() {
 		_ = os.Chdir(origCwd)
-		_ = os.Setenv("GT_AGENT", origGTAgent)
-		_ = os.Setenv("GT_TOWN_ROOT", origTownRoot)
-		_ = os.Setenv("GT_ROOT", origRoot)
+		_ = os.Setenv("MS_AGENT", origGTAgent)
+		_ = os.Setenv("MS_TOWN_ROOT", origTownRoot)
+		_ = os.Setenv("MS_ROOT", origRoot)
 	})
 	rigPath := filepath.Join(townRoot, "mineshaft")
 	crewDir := filepath.Join(rigPath, "crew", "bear")
@@ -294,13 +294,13 @@ func TestBuildRestartCommandWithOpts_ContinuePrompt(t *testing.T) {
 		t.Fatalf("SaveRigSettings: %v", err)
 	}
 
-	_ = os.Setenv("GT_AGENT", "")
-	_ = os.Setenv("GT_TOWN_ROOT", "")
-	_ = os.Setenv("GT_ROOT", "")
+	_ = os.Setenv("MS_AGENT", "")
+	_ = os.Setenv("MS_TOWN_ROOT", "")
+	_ = os.Setenv("MS_ROOT", "")
 	_ = os.Chdir(crewDir)
 
 	t.Run("custom ContinuePrompt overrides default", func(t *testing.T) {
-		cmd, err := buildRestartCommandWithOpts("gt-crew-bear", buildRestartCommandOpts{
+		cmd, err := buildRestartCommandWithOpts("ms-crew-bear", buildRestartCommandOpts{
 			ContinueSession: true,
 			ContinuePrompt:  "Context compacted. Continue your previous task.",
 		})
@@ -316,7 +316,7 @@ func TestBuildRestartCommandWithOpts_ContinuePrompt(t *testing.T) {
 	})
 
 	t.Run("empty ContinuePrompt falls back to default", func(t *testing.T) {
-		cmd, err := buildRestartCommandWithOpts("gt-crew-bear", buildRestartCommandOpts{
+		cmd, err := buildRestartCommandWithOpts("ms-crew-bear", buildRestartCommandOpts{
 			ContinueSession: true,
 		})
 		if err != nil {
@@ -331,7 +331,7 @@ func TestBuildRestartCommandWithOpts_ContinuePrompt(t *testing.T) {
 	})
 
 	t.Run("ContinueSession false uses beacon", func(t *testing.T) {
-		cmd, err := buildRestartCommandWithOpts("gt-crew-bear", buildRestartCommandOpts{
+		cmd, err := buildRestartCommandWithOpts("ms-crew-bear", buildRestartCommandOpts{
 			ContinueSession: false,
 		})
 		if err != nil {
@@ -345,11 +345,11 @@ func TestBuildRestartCommandWithOpts_ContinuePrompt(t *testing.T) {
 
 func TestDetectTownRootFromCwd_EnvFallback(t *testing.T) {
 	// Save original env vars and restore after test
-	origTownRoot := os.Getenv("GT_TOWN_ROOT")
-	origRoot := os.Getenv("GT_ROOT")
+	origTownRoot := os.Getenv("MS_TOWN_ROOT")
+	origRoot := os.Getenv("MS_ROOT")
 	defer func() {
-		os.Setenv("GT_TOWN_ROOT", origTownRoot)
-		os.Setenv("GT_ROOT", origRoot)
+		os.Setenv("MS_TOWN_ROOT", origTownRoot)
+		os.Setenv("MS_ROOT", origRoot)
 	}()
 
 	// Create a temp directory that looks like a valid town
@@ -364,29 +364,13 @@ func TestDetectTownRootFromCwd_EnvFallback(t *testing.T) {
 	}
 
 	// Clear both env vars initially
-	os.Setenv("GT_TOWN_ROOT", "")
-	os.Setenv("GT_ROOT", "")
+	os.Setenv("MS_TOWN_ROOT", "")
+	os.Setenv("MS_ROOT", "")
 
-	t.Run("uses GT_TOWN_ROOT when cwd detection fails", func(t *testing.T) {
-		// Set GT_TOWN_ROOT to our temp town
-		os.Setenv("GT_TOWN_ROOT", tmpTown)
-		os.Setenv("GT_ROOT", "")
-
-		// Save cwd, cd to a non-town directory, and restore after
-		origCwd, _ := os.Getwd()
-		os.Chdir(os.TempDir())
-		defer os.Chdir(origCwd)
-
-		result := detectTownRootFromCwd()
-		if result != tmpTown {
-			t.Errorf("detectTownRootFromCwd() = %q, want %q (should use GT_TOWN_ROOT fallback)", result, tmpTown)
-		}
-	})
-
-	t.Run("uses GT_ROOT when GT_TOWN_ROOT not set", func(t *testing.T) {
-		// Set only GT_ROOT
-		os.Setenv("GT_TOWN_ROOT", "")
-		os.Setenv("GT_ROOT", tmpTown)
+	t.Run("uses MS_TOWN_ROOT when cwd detection fails", func(t *testing.T) {
+		// Set MS_TOWN_ROOT to our temp town
+		os.Setenv("MS_TOWN_ROOT", tmpTown)
+		os.Setenv("MS_ROOT", "")
 
 		// Save cwd, cd to a non-town directory, and restore after
 		origCwd, _ := os.Getwd()
@@ -395,20 +379,36 @@ func TestDetectTownRootFromCwd_EnvFallback(t *testing.T) {
 
 		result := detectTownRootFromCwd()
 		if result != tmpTown {
-			t.Errorf("detectTownRootFromCwd() = %q, want %q (should use GT_ROOT fallback)", result, tmpTown)
+			t.Errorf("detectTownRootFromCwd() = %q, want %q (should use MS_TOWN_ROOT fallback)", result, tmpTown)
 		}
 	})
 
-	t.Run("prefers GT_TOWN_ROOT over GT_ROOT", func(t *testing.T) {
-		// Create another temp town for GT_ROOT
+	t.Run("uses MS_ROOT when MS_TOWN_ROOT not set", func(t *testing.T) {
+		// Set only MS_ROOT
+		os.Setenv("MS_TOWN_ROOT", "")
+		os.Setenv("MS_ROOT", tmpTown)
+
+		// Save cwd, cd to a non-town directory, and restore after
+		origCwd, _ := os.Getwd()
+		os.Chdir(os.TempDir())
+		defer os.Chdir(origCwd)
+
+		result := detectTownRootFromCwd()
+		if result != tmpTown {
+			t.Errorf("detectTownRootFromCwd() = %q, want %q (should use MS_ROOT fallback)", result, tmpTown)
+		}
+	})
+
+	t.Run("prefers MS_TOWN_ROOT over MS_ROOT", func(t *testing.T) {
+		// Create another temp town for MS_ROOT
 		anotherTown := t.TempDir()
 		anotherOverseer := filepath.Join(anotherTown, "overseer")
 		os.MkdirAll(anotherOverseer, 0755)
 		os.WriteFile(filepath.Join(anotherOverseer, "town.json"), []byte(`{"name": "other-town"}`), 0644)
 
 		// Set both env vars
-		os.Setenv("GT_TOWN_ROOT", tmpTown)
-		os.Setenv("GT_ROOT", anotherTown)
+		os.Setenv("MS_TOWN_ROOT", tmpTown)
+		os.Setenv("MS_ROOT", anotherTown)
 
 		// Save cwd, cd to a non-town directory, and restore after
 		origCwd, _ := os.Getwd()
@@ -417,14 +417,14 @@ func TestDetectTownRootFromCwd_EnvFallback(t *testing.T) {
 
 		result := detectTownRootFromCwd()
 		if result != tmpTown {
-			t.Errorf("detectTownRootFromCwd() = %q, want %q (should prefer GT_TOWN_ROOT)", result, tmpTown)
+			t.Errorf("detectTownRootFromCwd() = %q, want %q (should prefer MS_TOWN_ROOT)", result, tmpTown)
 		}
 	})
 
-	t.Run("ignores invalid GT_TOWN_ROOT", func(t *testing.T) {
-		// Set GT_TOWN_ROOT to non-existent path, GT_ROOT to valid
-		os.Setenv("GT_TOWN_ROOT", "/nonexistent/path/to/town")
-		os.Setenv("GT_ROOT", tmpTown)
+	t.Run("ignores invalid MS_TOWN_ROOT", func(t *testing.T) {
+		// Set MS_TOWN_ROOT to non-existent path, MS_ROOT to valid
+		os.Setenv("MS_TOWN_ROOT", "/nonexistent/path/to/town")
+		os.Setenv("MS_ROOT", tmpTown)
 
 		// Save cwd, cd to a non-town directory, and restore after
 		origCwd, _ := os.Getwd()
@@ -433,7 +433,7 @@ func TestDetectTownRootFromCwd_EnvFallback(t *testing.T) {
 
 		result := detectTownRootFromCwd()
 		if result != tmpTown {
-			t.Errorf("detectTownRootFromCwd() = %q, want %q (should skip invalid GT_TOWN_ROOT and use GT_ROOT)", result, tmpTown)
+			t.Errorf("detectTownRootFromCwd() = %q, want %q (should skip invalid MS_TOWN_ROOT and use MS_ROOT)", result, tmpTown)
 		}
 	})
 
@@ -443,8 +443,8 @@ func TestDetectTownRootFromCwd_EnvFallback(t *testing.T) {
 		overseerOnlyDir := filepath.Join(secondaryTown, workspace.SecondaryMarker)
 		os.MkdirAll(overseerOnlyDir, 0755)
 
-		os.Setenv("GT_TOWN_ROOT", secondaryTown)
-		os.Setenv("GT_ROOT", "")
+		os.Setenv("MS_TOWN_ROOT", secondaryTown)
+		os.Setenv("MS_ROOT", "")
 
 		// Save cwd, cd to a non-town directory, and restore after
 		origCwd, _ := os.Getwd()
@@ -481,8 +481,8 @@ func makeTestGitRepo(t *testing.T) string {
 }
 
 // TestHandoffMinerEnvCheck verifies that the miner guard in runHandoff uses
-// GT_ROLE as the authoritative check, so coordinators with a stale GT_MINER
-// in their environment are not redirected to gt done (GH #1707).
+// MS_ROLE as the authoritative check, so coordinators with a stale MS_MINER
+// in their environment are not redirected to ms done (GH #1707).
 func TestHandoffMinerEnvCheck(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -503,37 +503,37 @@ func TestHandoffMinerEnvCheck(t *testing.T) {
 			wantBlock: true,
 		},
 		{
-			name:      "overseer with stale GT_MINER is NOT redirected",
+			name:      "overseer with stale MS_MINER is NOT redirected",
 			role:      "overseer",
 			miner:   "alpha",
 			wantBlock: false,
 		},
 		{
-			name:      "compound witness with stale GT_MINER is NOT redirected",
+			name:      "compound witness with stale MS_MINER is NOT redirected",
 			role:      "mineshaft/witness",
 			miner:   "alpha",
 			wantBlock: false,
 		},
 		{
-			name:      "crew with stale GT_MINER is NOT redirected",
+			name:      "crew with stale MS_MINER is NOT redirected",
 			role:      "crew",
 			miner:   "alpha",
 			wantBlock: false,
 		},
 		{
-			name:      "compound crew with stale GT_MINER is NOT redirected",
+			name:      "compound crew with stale MS_MINER is NOT redirected",
 			role:      "mineshaft/crew/den",
 			miner:   "alpha",
 			wantBlock: false,
 		},
 		{
-			name:      "no GT_ROLE with GT_MINER set is redirected",
+			name:      "no MS_ROLE with MS_MINER set is redirected",
 			role:      "",
 			miner:   "alpha",
 			wantBlock: true,
 		},
 		{
-			name:      "no GT_ROLE and no GT_MINER is not redirected",
+			name:      "no MS_ROLE and no MS_MINER is not redirected",
 			role:      "",
 			miner:   "",
 			wantBlock: false,
@@ -543,23 +543,23 @@ func TestHandoffMinerEnvCheck(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			binDir := t.TempDir()
-			gtLog := filepath.Join(t.TempDir(), "gt.log")
+			gtLog := filepath.Join(t.TempDir(), "ms.log")
 			_ = writeBDStub(t, binDir, "#!/bin/sh\nexit 0\n", "@echo off\r\nexit /b 0\r\n")
-			gtStub := "#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"" + gtLog + "\"\nprintf 'stub gt %s\\n' \"$*\"\nexit 0\n"
-			if err := os.WriteFile(filepath.Join(binDir, "gt"), []byte(gtStub), 0755); err != nil {
-				t.Fatalf("write gt stub: %v", err)
+			gtStub := "#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"" + gtLog + "\"\nprintf 'stub ms %s\\n' \"$*\"\nexit 0\n"
+			if err := os.WriteFile(filepath.Join(binDir, "ms"), []byte(gtStub), 0755); err != nil {
+				t.Fatalf("write ms stub: %v", err)
 			}
-			gtCmdStub := "@echo off\r\necho %* >> \"" + gtLog + "\"\r\necho stub gt %*\r\nexit /b 0\r\n"
-			if err := os.WriteFile(filepath.Join(binDir, "gt.cmd"), []byte(gtCmdStub), 0644); err != nil {
-				t.Fatalf("write gt.cmd stub: %v", err)
+			gtCmdStub := "@echo off\r\necho %* >> \"" + gtLog + "\"\r\necho stub ms %*\r\nexit /b 0\r\n"
+			if err := os.WriteFile(filepath.Join(binDir, "ms.cmd"), []byte(gtCmdStub), 0644); err != nil {
+				t.Fatalf("write ms.cmd stub: %v", err)
 			}
 			t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 			isolatedRoot := t.TempDir()
-			t.Setenv("GT_TOWN_ROOT", isolatedRoot)
-			t.Setenv("GT_ROOT", isolatedRoot)
+			t.Setenv("MS_TOWN_ROOT", isolatedRoot)
+			t.Setenv("MS_ROOT", isolatedRoot)
 			t.Chdir(isolatedRoot)
-			t.Setenv("GT_ROLE", tt.role)
-			t.Setenv("GT_MINER", tt.miner)
+			t.Setenv("MS_ROLE", tt.role)
+			t.Setenv("MS_MINER", tt.miner)
 			// Ensure deterministic non-tmux execution so the non-miner
 			// paths fail predictably instead of triggering real side effects.
 			t.Setenv("TMUX", "")
@@ -578,7 +578,7 @@ func TestHandoffMinerEnvCheck(t *testing.T) {
 			handoffStdin = false
 			handoffAuto = false
 
-			// The miner path tries to exec "gt done" which will fail in tests.
+			// The miner path tries to exec "ms done" which will fail in tests.
 			// We capture stdout to detect the "Miner detected" message, which
 			// confirms the miner guard triggered. Non-miner paths will fail
 			// later (missing tmux, etc.) without printing the miner message.
@@ -595,15 +595,15 @@ func TestHandoffMinerEnvCheck(t *testing.T) {
 
 			if blocked != tt.wantBlock {
 				if tt.wantBlock {
-					t.Errorf("expected miner redirect but was not redirected (GT_ROLE=%q GT_MINER=%q)", tt.role, tt.miner)
+					t.Errorf("expected miner redirect but was not redirected (MS_ROLE=%q MS_MINER=%q)", tt.role, tt.miner)
 				} else {
-					t.Errorf("unexpected miner redirect with GT_ROLE=%q GT_MINER=%q; output: %s", tt.role, tt.miner, output)
+					t.Errorf("unexpected miner redirect with MS_ROLE=%q MS_MINER=%q; output: %s", tt.role, tt.miner, output)
 				}
 			}
 			gtLogBytes, _ := os.ReadFile(gtLog)
 			stubRan := strings.Contains(string(gtLogBytes), "done --status DEFERRED")
 			if stubRan != tt.wantBlock {
-				t.Errorf("gt stub ran = %v, want %v; log: %s", stubRan, tt.wantBlock, gtLogBytes)
+				t.Errorf("ms stub ran = %v, want %v; log: %s", stubRan, tt.wantBlock, gtLogBytes)
 			}
 		})
 	}
@@ -709,7 +709,7 @@ func TestWarnHandoffGitStatus(t *testing.T) {
 }
 
 func TestHandoffProcessNames(t *testing.T) {
-	t.Run("same-agent restart preserves GT_PROCESS_NAMES from env", func(t *testing.T) {
+	t.Run("same-agent restart preserves MS_PROCESS_NAMES from env", func(t *testing.T) {
 		setupHandoffTestRegistry(t)
 
 		tmpTown := t.TempDir()
@@ -717,24 +717,24 @@ func TestHandoffProcessNames(t *testing.T) {
 		os.MkdirAll(overseerDir, 0755)
 		os.WriteFile(filepath.Join(overseerDir, "town.json"), []byte(`{"name":"test"}`), 0644)
 
-		t.Setenv("GT_ROOT", tmpTown)
-		t.Setenv("GT_AGENT", "claude")
-		t.Setenv("GT_PROCESS_NAMES", "node,claude")
+		t.Setenv("MS_ROOT", tmpTown)
+		t.Setenv("MS_AGENT", "claude")
+		t.Setenv("MS_PROCESS_NAMES", "node,claude")
 		origCwd, _ := os.Getwd()
 		os.Chdir(os.TempDir())
 		t.Cleanup(func() { os.Chdir(origCwd) })
 
 		// Same-agent restart should preserve existing process names from env
-		cmd, err := buildRestartCommand("gt-crew-propane")
+		cmd, err := buildRestartCommand("ms-crew-propane")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		if !strings.Contains(cmd, "GT_PROCESS_NAMES") || !strings.Contains(cmd, "node,claude") {
-			t.Errorf("expected GT_PROCESS_NAMES=node,claude preserved from env, got: %q", cmd)
+		if !strings.Contains(cmd, "MS_PROCESS_NAMES") || !strings.Contains(cmd, "node,claude") {
+			t.Errorf("expected MS_PROCESS_NAMES=node,claude preserved from env, got: %q", cmd)
 		}
 	})
 
-	t.Run("first boot without GT_PROCESS_NAMES computes from config", func(t *testing.T) {
+	t.Run("first boot without MS_PROCESS_NAMES computes from config", func(t *testing.T) {
 		setupHandoffTestRegistry(t)
 
 		tmpTown := t.TempDir()
@@ -742,28 +742,28 @@ func TestHandoffProcessNames(t *testing.T) {
 		os.MkdirAll(overseerDir, 0755)
 		os.WriteFile(filepath.Join(overseerDir, "town.json"), []byte(`{"name":"test"}`), 0644)
 
-		t.Setenv("GT_ROOT", tmpTown)
-		t.Setenv("GT_AGENT", "claude")
-		// Explicitly clear GT_PROCESS_NAMES to simulate first boot
-		t.Setenv("GT_PROCESS_NAMES", "")
+		t.Setenv("MS_ROOT", tmpTown)
+		t.Setenv("MS_AGENT", "claude")
+		// Explicitly clear MS_PROCESS_NAMES to simulate first boot
+		t.Setenv("MS_PROCESS_NAMES", "")
 		origCwd, _ := os.Getwd()
 		os.Chdir(os.TempDir())
 		t.Cleanup(func() { os.Chdir(origCwd) })
 
-		// No GT_PROCESS_NAMES in env — should compute from agent config
-		cmd, err := buildRestartCommand("gt-crew-propane")
+		// No MS_PROCESS_NAMES in env — should compute from agent config
+		cmd, err := buildRestartCommand("ms-crew-propane")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
 		// Claude's default process names are "node,claude"
-		if !strings.Contains(cmd, "GT_PROCESS_NAMES") || !strings.Contains(cmd, "node,claude") {
-			t.Errorf("expected GT_PROCESS_NAMES=node,claude computed from config, got: %q", cmd)
+		if !strings.Contains(cmd, "MS_PROCESS_NAMES") || !strings.Contains(cmd, "node,claude") {
+			t.Errorf("expected MS_PROCESS_NAMES=node,claude computed from config, got: %q", cmd)
 		}
 	})
 }
 
 // TestCollectGitState verifies that collectGitState returns deterministic
-// workspace state from a git repo without shelling out to gt/bd. (GH#1996)
+// workspace state from a git repo without shelling out to ms/bd. (GH#1996)
 func TestCollectGitState(t *testing.T) {
 	t.Run("returns_state_from_git_repo", func(t *testing.T) {
 		// Create a temp git repo
@@ -855,7 +855,7 @@ func TestRecordHandoffTime(t *testing.T) {
 // - No cooldown when enough time has passed
 func TestEnforceHandoffCooldown(t *testing.T) {
 	t.Run("no cooldown without previous handoff", func(t *testing.T) {
-		t.Setenv("GT_ROLE", "")
+		t.Setenv("MS_ROLE", "")
 		tmpDir := t.TempDir()
 		t.Chdir(tmpDir)
 
@@ -870,7 +870,7 @@ func TestEnforceHandoffCooldown(t *testing.T) {
 	})
 
 	t.Run("no cooldown when last handoff is old", func(t *testing.T) {
-		t.Setenv("GT_ROLE", "")
+		t.Setenv("MS_ROLE", "")
 		tmpDir := t.TempDir()
 		t.Chdir(tmpDir)
 
@@ -894,7 +894,7 @@ func TestEnforceHandoffCooldown(t *testing.T) {
 
 	t.Run("cooldown triggers for recent handoff", func(t *testing.T) {
 		// Use a non-exempt role so cooldown applies
-		t.Setenv("GT_ROLE", "mineshaft/witness")
+		t.Setenv("MS_ROLE", "mineshaft/witness")
 		tmpDir := t.TempDir()
 		t.Chdir(tmpDir)
 
@@ -921,7 +921,7 @@ func TestEnforceHandoffCooldown(t *testing.T) {
 	})
 
 	t.Run("no cooldown for crew role", func(t *testing.T) {
-		t.Setenv("GT_ROLE", "mineshaft/crew/max")
+		t.Setenv("MS_ROLE", "mineshaft/crew/max")
 		tmpDir := t.TempDir()
 		t.Chdir(tmpDir)
 
@@ -941,7 +941,7 @@ func TestEnforceHandoffCooldown(t *testing.T) {
 	})
 
 	t.Run("no cooldown for overseer role", func(t *testing.T) {
-		t.Setenv("GT_ROLE", "overseer")
+		t.Setenv("MS_ROLE", "overseer")
 		tmpDir := t.TempDir()
 		t.Chdir(tmpDir)
 

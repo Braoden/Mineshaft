@@ -13,7 +13,7 @@ import (
 func setupCmdTestRegistry(t *testing.T) {
 	t.Helper()
 	registry := session.NewPrefixRegistry()
-	registry.Register("gt", "mineshaft")
+	registry.Register("ms", "mineshaft")
 	registry.Register("do", "coder_dotfiles")
 	registry.Register("mr", "myrig")
 	old := session.DefaultRegistry()

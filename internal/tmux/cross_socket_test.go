@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-var crossSocket = fmt.Sprintf("gt-test-cross-%d", os.Getpid())
+var crossSocket = fmt.Sprintf("ms-test-cross-%d", os.Getpid())
 
 func newCrossTestSocket(t *testing.T) *Tmux {
 	t.Helper()
@@ -24,8 +24,8 @@ func TestCrossSocketIsolation(t *testing.T) {
 	defaultTm := newTestTmux(t)
 	crossTm := newCrossTestSocket(t)
 
-	sessionA := fmt.Sprintf("gt-test-iso-a-%d", os.Getpid())
-	sessionB := fmt.Sprintf("gt-test-iso-b-%d", os.Getpid())
+	sessionA := fmt.Sprintf("ms-test-iso-a-%d", os.Getpid())
+	sessionB := fmt.Sprintf("ms-test-iso-b-%d", os.Getpid())
 
 	if err := defaultTm.NewSessionWithCommand(sessionA, ".", "sleep 300"); err != nil {
 		t.Fatalf("create session A on default socket: %v", err)
@@ -78,8 +78,8 @@ func TestCrossSocketKill(t *testing.T) {
 	defaultTm := newTestTmux(t)
 	crossTm := newCrossTestSocket(t)
 
-	defaultSession := fmt.Sprintf("gt-test-survive-%d", os.Getpid())
-	crossSession := fmt.Sprintf("gt-test-doomed-%d", os.Getpid())
+	defaultSession := fmt.Sprintf("ms-test-survive-%d", os.Getpid())
+	crossSession := fmt.Sprintf("ms-test-doomed-%d", os.Getpid())
 
 	if err := defaultTm.NewSessionWithCommand(defaultSession, ".", "sleep 300"); err != nil {
 		t.Fatalf("create session on default socket: %v", err)
@@ -108,12 +108,12 @@ func TestSessionsOnMultipleSockets(t *testing.T) {
 	crossTm := newCrossTestSocket(t)
 
 	defaultSessions := []string{
-		fmt.Sprintf("gt-test-multi-d1-%d", os.Getpid()),
-		fmt.Sprintf("gt-test-multi-d2-%d", os.Getpid()),
+		fmt.Sprintf("ms-test-multi-d1-%d", os.Getpid()),
+		fmt.Sprintf("ms-test-multi-d2-%d", os.Getpid()),
 	}
 	crossSessions := []string{
-		fmt.Sprintf("gt-test-multi-c1-%d", os.Getpid()),
-		fmt.Sprintf("gt-test-multi-c2-%d", os.Getpid()),
+		fmt.Sprintf("ms-test-multi-c1-%d", os.Getpid()),
+		fmt.Sprintf("ms-test-multi-c2-%d", os.Getpid()),
 	}
 
 	for _, name := range defaultSessions {

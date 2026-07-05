@@ -29,7 +29,7 @@ There is no confirmation.**
 
 **If you have finished your implementation work, your ONLY next action is:**
 ```bash
-gt done
+ms done
 ```
 
 Do NOT:
@@ -68,9 +68,9 @@ with either a branch push via `{{ cmd }} done` OR an explicit `bd close` on the 
 
 ```bash
 pwd                  # Should show .../miners/{{ .Miner }}/...
-# Before gt done:
+# Before ms done:
 git status && git add <files> && git commit -m "..." && git push
-gt done
+ms done
 ```
 
 ---
@@ -171,7 +171,7 @@ go here by default. But if you discover bugs/issues in OTHER projects:
 |-------------------|---------|---------|
 | This rig's code ({{ .RigName }}) | Here (default) | `bd create "..."` |
 | `bd` CLI (beads tool) | **beads** | `bd create --repo beads "..."` |
-| `gt` CLI (mineshaft tool) | **mineshaft** | `bd create --repo mineshaft "..."` |
+| `ms` CLI (mineshaft tool) | **mineshaft** | `bd create --repo mineshaft "..."` |
 | Cross-rig coordination | **HQ** | `bd create --repo hq "..."` |
 
 **The test**: "Which repo would the fix be committed to?"
@@ -211,7 +211,7 @@ go here by default. But if you discover bugs/issues in OTHER projects:
 
 ### Desire Paths
 When a command fails but your guess felt reasonable, file a bead with `desire-path` label:
-`bd new -t task "Add gt mail hook alias" -l desire-path`
+`bd new -t task "Add ms mail hook alias" -l desire-path`
 
 See `{{ .TownRoot }}/docs/AGENT-ERGONOMICS.md` for the philosophy.
 
@@ -223,15 +223,15 @@ See `{{ .TownRoot }}/docs/AGENT-ERGONOMICS.md` for the philosophy.
 > **The Universal Mineshaft Propulsion Principle: If you find something on your hook, YOU RUN IT.**
 
 ```bash
-gt hook                          # Step 1: Check your hook
+ms hook                          # Step 1: Check your hook
 # Work hooked? → Follow the formula checklist shown at prime time.
 # Hook empty? ↓
-gt mail inbox                    # Step 2: Check mail
-gt mol attach-from-mail <mail-id> # Hook attached work
-gt prime                         # Step 3: Load full context and begin
+ms mail inbox                    # Step 2: Check mail
+ms mol attach-from-mail <mail-id> # Hook attached work
+ms prime                         # Step 3: Load full context and begin
 ```
 
-**Your hook IS your work.** Formula steps are shown inline when you run `gt prime`.
+**Your hook IS your work.** Formula steps are shown inline when you run `ms prime`.
 Work through the checklist, then run `{{ cmd }} done`.
 
 **No thinking. No "should I?" questions. Hook → Execute checklist → Done.**
@@ -259,7 +259,7 @@ Your work is driven by **formulas** — structured workflow templates with step-
 ```
 Tier 1: Project   <project>/.beads/formulas/     (committed to repo)
 Tier 2: Town      {{ .TownRoot }}/.beads/formulas/     (user overrides)
-Tier 3: System    <embedded in gt binary>        (factory defaults)
+Tier 3: System    <embedded in ms binary>        (factory defaults)
 ```
 
 **Key formula commands:**
@@ -278,7 +278,7 @@ Beads (`bd`) is the issue/work tracking system backed by Dolt. Here are the exac
 
 ```bash
 # Reading
-bd show <id>                       # Full issue details (e.g., bd show gt-abc)
+bd show <id>                       # Full issue details (e.g., bd show ms-abc)
 bd list --status=open              # List open issues
 bd ready                           # Issues ready to work (no blockers)
 
@@ -344,7 +344,7 @@ If your session dies before persisting, the work is lost forever.
 
 **Report-only tasks** (audits, reviews, research): your findings ARE the
 deliverable. No code to commit. You MUST persist findings to the bead.
-Use `gt done --cleanup-status clean` when completing with no code changes.
+Use `ms done --cleanup-status clean` when completing with no code changes.
 
 ## PR Workflow (for repos that use pull requests)
 
@@ -362,7 +362,7 @@ Use `gt done --cleanup-status clean` when completing with no code changes.
 
 **You may cycle** while waiting for review:
 ```bash
-gt handoff -s "Waiting for PR review" -m "Issue: <issue>
+ms handoff -s "Waiting for PR review" -m "Issue: <issue>
 PR: #<number>
 Status: <current state>"
 ```
@@ -412,8 +412,8 @@ Your local branch is NOT landed. Run `{{ cmd }} done` to submit to the merge que
 dependency, tests fail after 2-3 attempts, need credentials or access.
 
 ```bash
-# Option 1: gt escalate (preferred)
-gt escalate "Brief description" -s HIGH -m "Details about what you tried"
+# Option 1: ms escalate (preferred)
+ms escalate "Brief description" -s HIGH -m "Details about what you tried"
 
 # Option 2: Mail the Witness (use --stdin for multi-line)
 {{ cmd }} mail send {{ .RigName }}/witness -s "HELP: <problem>" --stdin <<'BODY'
@@ -472,7 +472,7 @@ BODY
 - **Completion**: `{{ cmd }} done` handles notification automatically — do NOT mail "I'm done"
 - **Status updates**: If asked for status, respond via nudge, not mail
 
-Every `gt mail send` creates a permanent bead with a Dolt commit. Nudges are free.
+Every `ms mail send` creates a permanent bead with a Dolt commit. Nudges are free.
 
 ### Nudge Resilience
 
@@ -499,7 +499,7 @@ For long-running operations, prefer `run_in_background: true` on Task and Bash t
 | Close a sub-issue | `bd close <id>` | ~~bd complete~~ (not a command), ~~bd update --status done~~ (invalid status) |
 | Message another agent | `{{ cmd }} nudge <target> "msg"` | ~~tmux send-keys~~ (unreliable) |
 | Check workflow steps | `{{ cmd }} prime` (shows inline checklist) | ~~bd mol current~~ (steps not materialized) |
-| Create issues | `bd create "title"` | ~~gt issue create~~ (not a command) |
+| Create issues | `bd create "title"` | ~~ms issue create~~ (not a command) |
 | Escalate blocker | `{{ cmd }} escalate "desc" -s HIGH` | ~~waiting for human~~ (never wait) |
 
 **Beads valid statuses:** `open`, `in_progress`, `blocked`, `deferred`, `closed`, `pinned`, `hooked`

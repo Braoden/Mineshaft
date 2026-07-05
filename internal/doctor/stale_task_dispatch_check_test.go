@@ -23,7 +23,7 @@ func TestStaleTaskDispatchCheck_Clean(t *testing.T) {
     "PreToolUse": [
       {
         "matcher": "Bash(gh pr create*)",
-        "hooks": [{"type": "command", "command": "gt tap guard pr-workflow"}]
+        "hooks": [{"type": "command", "command": "ms tap guard pr-workflow"}]
       }
     ]
   }
@@ -57,11 +57,11 @@ func TestStaleTaskDispatchCheck_Stale(t *testing.T) {
     "PreToolUse": [
       {
         "matcher": "Task",
-        "hooks": [{"type": "command", "command": "export PATH=\"$HOME/go/bin:$HOME/.local/bin:$PATH\" && gt tap guard task-dispatch"}]
+        "hooks": [{"type": "command", "command": "export PATH=\"$HOME/go/bin:$HOME/.local/bin:$PATH\" && ms tap guard task-dispatch"}]
       },
       {
         "matcher": "Bash(gh pr create*)",
-        "hooks": [{"type": "command", "command": "gt tap guard pr-workflow"}]
+        "hooks": [{"type": "command", "command": "ms tap guard pr-workflow"}]
       }
     ]
   }
@@ -98,7 +98,7 @@ func TestStaleTaskDispatchCheck_Fix(t *testing.T) {
     "PreToolUse": [
       {
         "matcher": "Task",
-        "hooks": [{"type": "command", "command": "export PATH=\"$HOME/go/bin:$HOME/.local/bin:$PATH\" && gt tap guard task-dispatch"}]
+        "hooks": [{"type": "command", "command": "export PATH=\"$HOME/go/bin:$HOME/.local/bin:$PATH\" && ms tap guard task-dispatch"}]
       }
     ]
   }
@@ -148,7 +148,7 @@ func TestStaleTaskDispatchCheck_FixConvergesWithOverride(t *testing.T) {
 	t.Setenv("HOME", tmpDir)
 
 	// Create an on-disk overseer override that contains task-dispatch
-	overrideDir := filepath.Join(tmpDir, ".gt", "hooks-overrides")
+	overrideDir := filepath.Join(tmpDir, ".ms", "hooks-overrides")
 	if err := os.MkdirAll(overrideDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -156,7 +156,7 @@ func TestStaleTaskDispatchCheck_FixConvergesWithOverride(t *testing.T) {
   "PreToolUse": [
     {
       "matcher": "Task",
-      "hooks": [{"type": "command", "command": "gt tap guard task-dispatch"}]
+      "hooks": [{"type": "command", "command": "ms tap guard task-dispatch"}]
     }
   ]
 }
@@ -176,7 +176,7 @@ func TestStaleTaskDispatchCheck_FixConvergesWithOverride(t *testing.T) {
     "PreToolUse": [
       {
         "matcher": "Task",
-        "hooks": [{"type": "command", "command": "gt tap guard task-dispatch"}]
+        "hooks": [{"type": "command", "command": "ms tap guard task-dispatch"}]
       }
     ]
   }
@@ -233,7 +233,7 @@ func TestContainsTaskDispatch(t *testing.T) {
 			name: "no task-dispatch",
 			config: hooks.HooksConfig{
 				PreToolUse: []hooks.HookEntry{
-					{Matcher: "Bash(gh pr create*)", Hooks: []hooks.Hook{{Type: "command", Command: "gt tap guard pr-workflow"}}},
+					{Matcher: "Bash(gh pr create*)", Hooks: []hooks.Hook{{Type: "command", Command: "ms tap guard pr-workflow"}}},
 				},
 			},
 			expected: false,
@@ -242,7 +242,7 @@ func TestContainsTaskDispatch(t *testing.T) {
 			name: "has task-dispatch",
 			config: hooks.HooksConfig{
 				PreToolUse: []hooks.HookEntry{
-					{Matcher: "Task", Hooks: []hooks.Hook{{Type: "command", Command: "gt tap guard task-dispatch"}}},
+					{Matcher: "Task", Hooks: []hooks.Hook{{Type: "command", Command: "ms tap guard task-dispatch"}}},
 				},
 			},
 			expected: true,
@@ -251,7 +251,7 @@ func TestContainsTaskDispatch(t *testing.T) {
 			name: "has task-dispatch with path setup",
 			config: hooks.HooksConfig{
 				PreToolUse: []hooks.HookEntry{
-					{Matcher: "Task", Hooks: []hooks.Hook{{Type: "command", Command: "export PATH=\"$HOME/go/bin:$HOME/.local/bin:$PATH\" && gt tap guard task-dispatch"}}},
+					{Matcher: "Task", Hooks: []hooks.Hook{{Type: "command", Command: "export PATH=\"$HOME/go/bin:$HOME/.local/bin:$PATH\" && ms tap guard task-dispatch"}}},
 				},
 			},
 			expected: true,
@@ -270,8 +270,8 @@ func TestContainsTaskDispatch(t *testing.T) {
 func TestStripTaskDispatch(t *testing.T) {
 	cfg := &hooks.HooksConfig{
 		PreToolUse: []hooks.HookEntry{
-			{Matcher: "Task", Hooks: []hooks.Hook{{Type: "command", Command: "gt tap guard task-dispatch"}}},
-			{Matcher: "Bash(gh pr create*)", Hooks: []hooks.Hook{{Type: "command", Command: "gt tap guard pr-workflow"}}},
+			{Matcher: "Task", Hooks: []hooks.Hook{{Type: "command", Command: "ms tap guard task-dispatch"}}},
+			{Matcher: "Bash(gh pr create*)", Hooks: []hooks.Hook{{Type: "command", Command: "ms tap guard pr-workflow"}}},
 		},
 	}
 

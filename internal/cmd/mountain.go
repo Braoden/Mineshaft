@@ -35,14 +35,14 @@ The mountain label opts a minecart into enhanced stall detection,
 skip-after-N-failures, and active progress monitoring.
 
 Use subcommands to manage active mountains:
-  gt mountain status [id]    Show mountain progress
-  gt mountain pause <id>     Pause a mountain (stop dispatching)
-  gt mountain resume <id>    Resume a paused mountain
-  gt mountain cancel <id>    Cancel (remove mountain label)
+  ms mountain status [id]    Show mountain progress
+  ms mountain pause <id>     Pause a mountain (stop dispatching)
+  ms mountain resume <id>    Resume a paused mountain
+  ms mountain cancel <id>    Cancel (remove mountain label)
 
 Examples:
-  gt mountain gt-epic-auth       Activate mountain on an epic
-  gt mountain --force gt-epic-x  Launch even with staging warnings`,
+  ms mountain ms-epic-auth       Activate mountain on an epic
+  ms mountain --force ms-epic-x  Launch even with staging warnings`,
 	Args: cobra.ExactArgs(1),
 	RunE: runMountain,
 }
@@ -66,7 +66,7 @@ var mountainPauseCmd = &cobra.Command{
 	Long: `Pause an active mountain. Keeps the mountain label but stops
 new wave dispatch. Active miners continue their current work.
 
-Resume with 'gt mountain resume'.`,
+Resume with 'ms mountain resume'.`,
 	Args: cobra.ExactArgs(1),
 	RunE: runMountainPause,
 }
@@ -105,7 +105,7 @@ func init() {
 	rootCmd.AddCommand(mountainCmd)
 }
 
-// runMountain implements `gt mountain <epic-id>`.
+// runMountain implements `ms mountain <epic-id>`.
 // Stages a minecart from the epic, adds the mountain label, and launches Wave 1.
 func runMountain(cmd *cobra.Command, args []string) error {
 	epicID := args[0]
@@ -264,7 +264,7 @@ func runMountain(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("\nMountain active. MinecartManager will feed subsequent waves.\n")
 	fmt.Printf("Supervisor will audit progress every ~10 minutes.\n")
-	fmt.Printf("Check status: gt mountain status %s\n", minecartID)
+	fmt.Printf("Check status: ms mountain status %s\n", minecartID)
 
 	return nil
 }
@@ -328,7 +328,7 @@ func showAllMountainStatus(townBeads string) error {
 
 	if len(minecarts) == 0 {
 		fmt.Println("No active mountains.")
-		fmt.Println("Activate with: gt mountain <epic-id>")
+		fmt.Println("Activate with: ms mountain <epic-id>")
 		return nil
 	}
 
@@ -662,7 +662,7 @@ func runMountainPause(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("Mountain %s paused.\n", minecartID)
 	fmt.Printf("Active miners will finish their current work.\n")
-	fmt.Printf("Resume with: gt mountain resume %s\n", minecartID)
+	fmt.Printf("Resume with: ms mountain resume %s\n", minecartID)
 	return nil
 }
 
@@ -709,6 +709,6 @@ func runMountainCancel(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("Mountain canceled on %s.\n", minecartID)
 	fmt.Printf("Minecart remains open for manual management.\n")
-	fmt.Printf("Check minecart status: gt minecart status %s\n", minecartID)
+	fmt.Printf("Check minecart status: ms minecart status %s\n", minecartID)
 	return nil
 }

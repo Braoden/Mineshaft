@@ -360,7 +360,7 @@ func TestManagerRemove(t *testing.T) {
 
 func TestManagerGetWithStaleStateName(t *testing.T) {
 	// Regression test: state.json with wrong name should not affect Get() result
-	// See: gt-h1w - gt crew list shows wrong names
+	// See: ms-h1w - ms crew list shows wrong names
 	tmpDir, err := os.MkdirTemp("", "crew-test-stale-*")
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
@@ -477,7 +477,7 @@ func TestManagerAddSyncsRemotesFromRig(t *testing.T) {
 
 func TestManagerRenameValidatesNewName(t *testing.T) {
 	// Regression test: Rename must validate newName to prevent path traversal
-	// and invalid characters. See: gt-gt3zv
+	// and invalid characters. See: ms-gt3zv
 	tmpDir, err := os.MkdirTemp("", "crew-test-rename-*")
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)

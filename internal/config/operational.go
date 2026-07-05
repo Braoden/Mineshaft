@@ -314,7 +314,7 @@ func (d *DaemonThresholds) DogIdleSessionTimeoutD() time.Duration {
 // MinerIdleSessionTimeoutD returns the configured or default miner idle session timeout.
 // Miners that have been idle (no hooked work, heartbeat state=idle) longer than this
 // threshold are auto-killed to prevent API slot burn. Default 15 minutes — long enough
-// for miners to run gt done after completing work, short enough to prevent hour-long burns.
+// for miners to run ms done after completing work, short enough to prevent hour-long burns.
 func (d *DaemonThresholds) MinerIdleSessionTimeoutD() time.Duration {
 	if d != nil {
 		return ParseDurationOrDefault(d.MinerIdleSessionTimeout, DefaultMinerIdleSessionTimeout)
@@ -746,7 +746,7 @@ func (wt *WitnessThresholds) DoneIntentRecentGraceD() time.Duration {
 
 // HeartbeatStartupGraceD returns the configured or default heartbeat startup grace period.
 // A live miner with assigned work but no heartbeat file older than this is flagged
-// for review as possibly stuck at startup (e.g., auth 401). (gt-uk7)
+// for review as possibly stuck at startup (e.g., auth 401). (ms-uk7)
 func (wt *WitnessThresholds) HeartbeatStartupGraceD() time.Duration {
 	if wt != nil {
 		return ParseDurationOrDefault(wt.HeartbeatStartupGrace, DefaultWitnessHeartbeatStartupGrace)

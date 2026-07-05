@@ -21,18 +21,18 @@ var heartbeatCmd = &cobra.Command{
 	Long: `Update the agent heartbeat with a specific state.
 
 Used by agents to self-report their state to the witness. The witness reads
-the heartbeat state instead of inferring it from timers (ZFC: gt-3vr5).
+the heartbeat state instead of inferring it from timers (ZFC: ms-3vr5).
 
 States:
   working  - Actively processing (default)
   idle     - Waiting for input
-  exiting  - In gt done flow
+  exiting  - In ms done flow
   stuck    - Self-reporting stuck (triggers witness escalation)
 
 Examples:
-  gt heartbeat --state=stuck "blocked on auth issue"
-  gt heartbeat --state=idle
-  gt heartbeat --state=working`,
+  ms heartbeat --state=stuck "blocked on auth issue"
+  ms heartbeat --state=idle
+  ms heartbeat --state=working`,
 	RunE: runHeartbeat,
 }
 
@@ -44,9 +44,9 @@ func init() {
 }
 
 func runHeartbeat(cmd *cobra.Command, args []string) error {
-	sessionName := os.Getenv("GT_SESSION")
+	sessionName := os.Getenv("MS_SESSION")
 	if sessionName == "" {
-		return fmt.Errorf("GT_SESSION not set (not running in a Mineshaft session)")
+		return fmt.Errorf("MS_SESSION not set (not running in a Mineshaft session)")
 	}
 
 	townRoot, err := workspace.FindFromCwd()
@@ -70,8 +70,8 @@ func runHeartbeat(cmd *cobra.Command, args []string) error {
 	miner.TouchSessionHeartbeatWithState(townRoot, sessionName, state, context, "")
 
 	// Supervisor liveness has extra stores beyond session heartbeat. Keep the
-	// generic heartbeat command and `gt supervisor heartbeat` on one shared path.
-	if os.Getenv("GT_ROLE") == "supervisor" {
+	// generic heartbeat command and `ms supervisor heartbeat` on one shared path.
+	if os.Getenv("MS_ROLE") == "supervisor" {
 		if err := syncSupervisorHeartbeatStores(townRoot, context); err != nil {
 			fmt.Printf("warning: failed to touch supervisor heartbeat file: %v\n", err)
 		}
@@ -82,7 +82,7 @@ func runHeartbeat(cmd *cobra.Command, args []string) error {
 }
 
 // supervisorBeadHeartbeatSyncThreshold throttles agent-bead label refreshes from
-// gt heartbeat: each refresh is a Dolt commit, so only sync when the label is
+// ms heartbeat: each refresh is a Dolt commit, so only sync when the label is
 // stale enough to matter to watchers.
 const supervisorBeadHeartbeatSyncThreshold = supervisor.HeartbeatStaleThreshold / 2
 

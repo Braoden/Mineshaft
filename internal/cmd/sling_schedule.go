@@ -28,7 +28,7 @@ func shouldDeferDispatch() (bool, error) {
 	settingsPath := config.TownSettingsPath(townRoot)
 	settings, err := config.LoadOrCreateTownSettings(settingsPath)
 	if err != nil {
-		return false, fmt.Errorf("loading town settings: %w (dispatch blocked — fix config or use gt config set scheduler.max_miners -1)", err)
+		return false, fmt.Errorf("loading town settings: %w (dispatch blocked — fix config or use ms config set scheduler.max_miners -1)", err)
 	}
 
 	schedulerCfg := settings.Scheduler
@@ -290,8 +290,8 @@ func resolveRigForBead(townRoot, beadID string) string {
 //
 // The property layers are the primary mechanism, supporting:
 //
-//	gt rig config set <rig> default_formula mol-evolve         # wisp layer
-//	gt rig config set <rig> default_formula mol-evolve --global # bead layer
+//	ms rig config set <rig> default_formula mol-evolve         # wisp layer
+//	ms rig config set <rig> default_formula mol-evolve --global # bead layer
 func resolveFormula(explicit string, hookRawBead bool, townRoot, rigName string) string {
 	if hookRawBead {
 		return ""
@@ -299,7 +299,7 @@ func resolveFormula(explicit string, hookRawBead bool, townRoot, rigName string)
 	if explicit != "" {
 		return explicit
 	}
-	// Check rig property layers: wisp → bead → system default (issue gt-y18).
+	// Check rig property layers: wisp → bead → system default (issue ms-y18).
 	if townRoot != "" && rigName != "" {
 		r := &rig.Rig{
 			Name: rigName,
@@ -309,7 +309,7 @@ func resolveFormula(explicit string, hookRawBead bool, townRoot, rigName string)
 			return df
 		}
 	}
-	// Fallback: check rig settings file (legacy path, issue gt-boc).
+	// Fallback: check rig settings file (legacy path, issue ms-boc).
 	if townRoot != "" && rigName != "" {
 		rigPath := filepath.Join(townRoot, rigName)
 		if df := config.GetDefaultFormula(rigPath); df != "" {
@@ -409,9 +409,9 @@ func detectSchedulerIDType(id string) (string, error) {
 
 	for _, label := range info.Labels {
 		switch label {
-		case "gt:epic":
+		case "ms:epic":
 			return "epic", nil
-		case "gt:minecart":
+		case "ms:minecart":
 			return "minecart", nil
 		}
 	}

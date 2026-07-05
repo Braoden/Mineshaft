@@ -47,7 +47,7 @@ Establish the time range for this digest.
 
 **1. Check assignment:**
 ```bash
-gt hook               # Shows period type
+ms hook               # Shows period type
 ```
 
 **2. Calculate time range:**
@@ -78,7 +78,7 @@ Gather activity data from each rig in the town.
 
 **1. List accessible rigs:**
 ```bash
-gt rigs
+ms rigs
 # Returns list of rigs: mineshaft, beads, etc.
 ```
 
@@ -93,8 +93,8 @@ bd list --status=closed --updated-after={{since}}
 
 b) **Agent activity:**
 ```bash
-gt miners <rig>           # Miner activity
-gt feed --since={{since}}   # Activity feed entries
+ms miners <rig>           # Miner activity
+ms feed --since={{since}}   # Activity feed entries
 ```
 
 c) **Merges:**
@@ -176,7 +176,7 @@ Deliver digest to the Overseer.
 
 **1. Send via mail:**
 ```bash
-gt mail send overseer/ -s "Mineshaft Digest: {{date}}" -m "$(cat <<EOF
+ms mail send overseer/ -s "Mineshaft Digest: {{date}}" -m "$(cat <<EOF
 {{formatted_digest}}
 EOF
 )"
@@ -206,7 +206,7 @@ Signal work complete and return to available pool.
 
 **1. Signal completion to Supervisor:**
 ```bash
-gt mail send supervisor/ -s "DOG_DONE $(hostname)" -m "Task: digest-generate
+ms mail send supervisor/ -s "DOG_DONE $(hostname)" -m "Task: digest-generate
 Period: {{period}}
 Date range: {{since}} to {{until}}
 Status: COMPLETE

@@ -18,21 +18,21 @@ Gas City is the planned declarative layer on top of Mineshaft — a role format 
 
 Before comparing external frameworks, it's important to understand Mineshaft's architecture in detail, since the goal is to identify what to borrow for Gas City's declarative role format.
 
-**Repository:** [github.com/steveyegge/mineshaft](https://github.com/steveyegge/mineshaft) (Go, the `gt` binary)
+**Repository:** [github.com/steveyegge/mineshaft](https://github.com/steveyegge/mineshaft) (Go, the `ms` binary)
 **Companion:** [github.com/steveyegge/beads](https://github.com/steveyegge/beads) (Go, the `bd` binary)
 **Current version:** v0.6.0
 
 ### Role Hierarchy (Four Layers)
 
-Mineshaft defines operational roles across a layered hierarchy. Roles are implemented as **Go template files** at `internal/templates/roles/*.md.tmpl` and injected into Claude Code sessions via the `gt prime` command. The `GT_ROLE` environment variable determines which role template gets rendered. Role detection also works by examining the current working directory path (e.g., `<rig>/witness/rig/` triggers the Witness role).
+Mineshaft defines operational roles across a layered hierarchy. Roles are implemented as **Go template files** at `internal/templates/roles/*.md.tmpl` and injected into Claude Code sessions via the `ms prime` command. The `MS_ROLE` environment variable determines which role template gets rendered. Role detection also works by examining the current working directory path (e.g., `<rig>/witness/rig/` triggers the Witness role).
 
 **Infrastructure Layer:**
 - **Boot**: Handles initial context injection during startup — has its own template (`boot.md.tmpl`)
-- **Supervisor**: Central health supervisor at `~/gt/supervisor/` — a "daemon beacon" running continuous Patrol cycles. Monitors system health, ensures worker activity, triggers recovery. Notorious early on for bugs (Yegge warned about it "spree-killing all the other workers while on patrol" before v0.4.0 fixes)
+- **Supervisor**: Central health supervisor at `~/ms/supervisor/` — a "daemon beacon" running continuous Patrol cycles. Monitors system health, ensures worker activity, triggers recovery. Notorious early on for bugs (Yegge warned about it "spree-killing all the other workers while on patrol" before v0.4.0 fixes)
 - **Dogs**: Supervisor helper agents for infrastructure tasks (ephemeral, NOT for user work)
 
 **Global Coordination Layer:**
-- **Overseer**: Town-level coordinator at `~/gt/overseer/` — the human's primary AI concierge. Initiates Minecarts, distributes work, coordinates across all Rigs. The Overseer CAN and SHOULD edit code when it is the fastest path. "Mineshaft is a steam engine and the Overseer is the main drive shaft."
+- **Overseer**: Town-level coordinator at `~/ms/overseer/` — the human's primary AI concierge. Initiates Minecarts, distributes work, coordinates across all Rigs. The Overseer CAN and SHOULD edit code when it is the fastest path. "Mineshaft is a steam engine and the Overseer is the main drive shaft."
 
 **Per-Rig Management Layer:**
 - **Witness**: Per-rig patrol agent — oversees Miners and Refinery, monitors progress, detects stuck agents, triggers recovery
@@ -53,13 +53,13 @@ This separation of identity from session is a key differentiator — sessions ar
 
 ### How Priming Works
 
-When a session starts, `gt prime` executes a multi-step context injection:
+When a session starts, `ms prime` executes a multi-step context injection:
 1. Checks for slung work on the agent's hook
 2. Detects autonomous mode and adjusts behavior
 3. Outputs molecule context if working on a molecule step
 4. Outputs previous session checkpoint for crash recovery
 5. Runs `bd prime` to output beads workflow context
-6. Runs `gt mail check --inject` to inject pending mail
+6. Runs `ms mail check --inject` to inject pending mail
 
 ### GUPP: Mineshaft Universal Propulsion Principle
 
@@ -75,15 +75,15 @@ This ensures:
 
 Every worker has a dedicated **hook** — a pinned bead where work is attached. The flow:
 
-1. Work is assigned via `gt sling <bead-id> <rig>`
+1. Work is assigned via `ms sling <bead-id> <rig>`
 2. The work (a molecule) lands on the target agent's hook
 3. GUPP activates: the agent detects work and executes immediately
 4. On completion, the hook is cleared and the next molecule jumps to front
 
 Communication primitives around hooks:
 - **Mail**: Asynchronous persisted messaging for inter-agent coordination
-- **Nudge**: Direct session injection via tmux (`gt nudge`)
-- **Peek**: Status check without interruption (`gt peek`)
+- **Nudge**: Direct session injection via tmux (`ms nudge`)
+- **Peek**: Status check without interruption (`ms peek`)
 
 ### The Molecule/Formula Stack (Workflow Primitives)
 
@@ -111,7 +111,7 @@ Blocking conditions that enable work suspension without blocking other tasks:
 
 Beads are atomic work items stored in a **Dolt database** (version-controlled SQL with Git semantics). As of Beads v0.51.0, Dolt is the exclusive backend — the old SQLite + JSONL pipeline was removed. Dolt's **cell-level merge** means concurrent updates from multiple agents can be resolved automatically at the column level, not the line level — critical for multi-agent operation.
 
-Bead IDs use the format `prefix-XXXXX` (e.g., `gt-abc12`, `hq-x7k2m`), with hash-based IDs to prevent merge collisions across agents and branches. Beads transition through states: `open` → `working` → `done`/`parked`. The terms "bead" and "issue" are interchangeable.
+Bead IDs use the format `prefix-XXXXX` (e.g., `ms-abc12`, `hq-x7k2m`), with hash-based IDs to prevent merge collisions across agents and branches. Beads transition through states: `open` → `working` → `done`/`parked`. The terms "bead" and "issue" are interchangeable.
 
 **Bead types:**
 - **Issue beads**: Work items with IDs, descriptions, status, assignees, dependencies, and blockers
@@ -133,7 +133,7 @@ Bead IDs use the format `prefix-XXXXX` (e.g., `gt-abc12`, `hq-x7k2m`), with hash
 ### Workspace Structure
 
 ```
-~/gt/
+~/ms/
 ├── supervisor/          # Infrastructure agent
 ├── overseer/           # Town coordinator
 ├── <rig-name>/      # Per-project directory
@@ -483,7 +483,7 @@ class GitPlugin:
 ## Gaps in Mineshaft's Model (Relative to Frameworks)
 
 ### 1. No Declarative Role Schema (Yet)
-Mineshaft has named operational roles with Role Beads containing priming instructions, but roles are currently defined as **Go template files** (`internal/templates/roles/*.md.tmpl`) compiled into the `gt` binary. This means adding or modifying roles requires changing Go source code and recompiling. CrewAI's role/goal/backstory triad and Google ADK's instructions/tools/sub_agents format are both user-facing, documented, and easy to extend at runtime. **This is exactly what w-gc-001 aims to solve** — extracting role definitions into a structured, parseable format (YAML/TOML) that users can customize without touching Go code.
+Mineshaft has named operational roles with Role Beads containing priming instructions, but roles are currently defined as **Go template files** (`internal/templates/roles/*.md.tmpl`) compiled into the `ms` binary. This means adding or modifying roles requires changing Go source code and recompiling. CrewAI's role/goal/backstory triad and Google ADK's instructions/tools/sub_agents format are both user-facing, documented, and easy to extend at runtime. **This is exactly what w-gc-001 aims to solve** — extracting role definitions into a structured, parseable format (YAML/TOML) that users can customize without touching Go code.
 
 ### 2. Formulas Are TOML-Only, Not Yet a Full DSL
 Mineshaft's Formula → Protomolecule → Molecule pipeline is a powerful workflow abstraction, but formulas are currently TOML files with an ad-hoc structure. Compare to LangGraph's typed Python graph definitions or Microsoft Agent Framework's graph-based workflow API — both offer IDE support, type checking, and programmatic composition. The formula engine (w-gc-003) could benefit from a more structured DSL or schema.
@@ -498,7 +498,7 @@ OpenAI Agents SDK and Microsoft Agent Framework both include built-in tracing (O
 Mineshaft has gates (gh:run, gh:pr, timer, human, mail) for async coordination, which is good. But compare to LangGraph's conditional edges where a function inspects state and routes to different nodes — Mineshaft's molecules don't currently support arbitrary conditional branching based on agent output. The GUPP principle ("execute immediately") optimizes for throughput over routing flexibility.
 
 ### 6. Evolving Cross-Framework Portability
-Mineshaft was originally Claude Code-only, but v0.6.0 added Gemini and Copilot CLI integrations. However, the role template system (`gt prime` injecting Go templates via CLAUDE.md conventions) is still deeply tied to Claude Code's priming model. Every other framework surveyed is model-agnostic in its core abstractions. If Gas City aims to be a portable protocol, the role format should abstract over the LLM runtime, with adapter layers for Claude Code, Gemini, etc.
+Mineshaft was originally Claude Code-only, but v0.6.0 added Gemini and Copilot CLI integrations. However, the role template system (`ms prime` injecting Go templates via CLAUDE.md conventions) is still deeply tied to Claude Code's priming model. Every other framework surveyed is model-agnostic in its core abstractions. If Gas City aims to be a portable protocol, the role format should abstract over the LLM runtime, with adapter layers for Claude Code, Gemini, etc.
 
 ---
 

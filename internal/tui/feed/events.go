@@ -177,7 +177,7 @@ func parseSimpleLine(line string) *Event {
 
 // parseBeadContext extracts actor/rig/role from a bead ID
 // Uses canonical naming: prefix-rig-role-name
-// Examples: gt-mineshaft-crew-joe, gt-mineshaft-witness, gt-overseer
+// Examples: ms-mineshaft-crew-joe, ms-mineshaft-witness, ms-overseer
 func parseBeadContext(beadID string) (actor, rig, role string) {
 	if beadID == "" {
 		return
@@ -215,7 +215,7 @@ func parseBeadContext(beadID string) (actor, rig, role string) {
 	return
 }
 
-// GtEventsSource reads events from ~/gt/.events.jsonl (gt activity log)
+// GtEventsSource reads events from ~/ms/.events.jsonl (ms activity log)
 type GtEventsSource struct {
 	file   *os.File
 	events chan Event
@@ -232,7 +232,7 @@ type GtEvent struct {
 	Visibility string                 `json:"visibility"`
 }
 
-// NewGtEventsSource creates a source that tails ~/gt/.events.jsonl
+// NewGtEventsSource creates a source that tails ~/ms/.events.jsonl
 func NewGtEventsSource(townRoot string) (*GtEventsSource, error) {
 	eventsPath := filepath.Join(townRoot, ".events.jsonl")
 	file, err := os.Open(eventsPath)

@@ -1,5 +1,5 @@
 // Package telemetry — recorder.go
-// Recording helper functions for all GT telemetry events.
+// Recording helper functions for all MS telemetry events.
 // Each function emits both an OTel log event (→ VictoriaLogs) and increments
 // a metric counter (→ VictoriaMetrics).
 package telemetry
@@ -32,19 +32,19 @@ func WithRunID(ctx context.Context, runID string) context.Context {
 	return context.WithValue(ctx, runIDKey{}, runID)
 }
 
-// RunIDFromCtx extracts the run ID from ctx. Falls back to the GT_RUN
+// RunIDFromCtx extracts the run ID from ctx. Falls back to the MS_RUN
 // environment variable so that subprocess telemetry (bd, mail, …) is
 // correlated even when the ctx has no injected run ID.
 func RunIDFromCtx(ctx context.Context) string {
 	if v, ok := ctx.Value(runIDKey{}).(string); ok && v != "" {
 		return v
 	}
-	return os.Getenv("GT_RUN")
+	return os.Getenv("MS_RUN")
 }
 
 // instanceID derives a human-readable Mineshaft instance identifier from the
 // town root path and the machine hostname.
-// Format: "<hostname>:<basename(townRoot)>" (e.g. "laptop:gt").
+// Format: "<hostname>:<basename(townRoot)>" (e.g. "laptop:ms").
 // Falls back to basename alone when hostname is unavailable.
 func instanceID(townRoot string) string {
 	base := filepath.Base(townRoot)
@@ -65,7 +65,7 @@ type MailMessageInfo struct {
 	From     string // sender address
 	To       string // recipient address(es), comma-separated
 	Subject  string // message subject
-	Body     string // message body — logged only when GT_LOG_MAIL_BODY=true (truncated to 256 bytes)
+	Body     string // message body — logged only when MS_LOG_MAIL_BODY=true (truncated to 256 bytes)
 	ThreadID string // thread / conversation ID
 	Priority string // "high", "normal", "low"
 	MsgType  string // message type label (e.g. "work", "notify", "queue")
@@ -116,16 +116,16 @@ var (
 // Env vars are read once — changing them at runtime has no effect.
 var (
 	limitsOnce       sync.Once
-	agentContentLim  int // GT_LOG_AGENT_CONTENT_LIMIT, default 512
-	bdContentLim     int // GT_LOG_BD_CONTENT_LIMIT, default 2048
-	paneContentLim   int // GT_LOG_PANE_CONTENT_LIMIT, default 8192
+	agentContentLim  int // MS_LOG_AGENT_CONTENT_LIMIT, default 512
+	bdContentLim     int // MS_LOG_BD_CONTENT_LIMIT, default 2048
+	paneContentLim   int // MS_LOG_PANE_CONTENT_LIMIT, default 8192
 )
 
 func initContentLimits() {
 	limitsOnce.Do(func() {
-		agentContentLim = envInt("GT_LOG_AGENT_CONTENT_LIMIT", 512)
-		bdContentLim = envInt("GT_LOG_BD_CONTENT_LIMIT", 2048)
-		paneContentLim = envInt("GT_LOG_PANE_CONTENT_LIMIT", 8192)
+		agentContentLim = envInt("MS_LOG_AGENT_CONTENT_LIMIT", 512)
+		bdContentLim = envInt("MS_LOG_BD_CONTENT_LIMIT", 2048)
+		paneContentLim = envInt("MS_LOG_PANE_CONTENT_LIMIT", 8192)
 	})
 }
 
@@ -169,7 +169,7 @@ func initInstruments() {
 			metric.WithDescription("Total agent session instantiations (one per agent spawn)"),
 		)
 		inst.primeTotal, _ = m.Int64Counter("mineshaft.prime.total",
-			metric.WithDescription("Total gt prime invocations"),
+			metric.WithDescription("Total ms prime invocations"),
 		)
 		inst.agentStateTotal, _ = m.Int64Counter("mineshaft.agent.state_changes.total",
 			metric.WithDescription("Total agent state transitions"),
@@ -187,10 +187,10 @@ func initInstruments() {
 			metric.WithDescription("Total mail/bd SDK operations"),
 		)
 		inst.nudgeTotal, _ = m.Int64Counter("mineshaft.nudge.total",
-			metric.WithDescription("Total gt nudge invocations"),
+			metric.WithDescription("Total ms nudge invocations"),
 		)
 		inst.doneTotal, _ = m.Int64Counter("mineshaft.done.total",
-			metric.WithDescription("Total gt done invocations (miner work completions)"),
+			metric.WithDescription("Total ms done invocations (miner work completions)"),
 		)
 		inst.daemonRestartTotal, _ = m.Int64Counter("mineshaft.daemon.agent_restarts.total",
 			metric.WithDescription("Total daemon-initiated agent session restarts"),
@@ -233,7 +233,7 @@ func statusStr(err error) string {
 	return "ok"
 }
 
-// addRunID injects the run.id attribute from ctx (or GT_RUN env) into r.
+// addRunID injects the run.id attribute from ctx (or MS_RUN env) into r.
 // Called by emit and RecordAgentEvent so every telemetry event carries the
 // MINESHAFT run identifier for waterfall correlation.
 func addRunID(ctx context.Context, r *otellog.Record) {
@@ -290,7 +290,7 @@ func truncateOutput(s string, max int) string {
 // durationMs is the wall-clock time of the subprocess in milliseconds.
 // stdout and stderr are the raw process outputs; both are truncated before logging.
 //
-// stdout and stderr are only included in the log event when GT_LOG_BD_OUTPUT=true.
+// stdout and stderr are only included in the log event when MS_LOG_BD_OUTPUT=true.
 // They are opt-in because bd output may contain sensitive data (API tokens, PII).
 // See docs/OTEL-ENV-VARS.md for details.
 func RecordBDCall(ctx context.Context, args []string, durationMs float64, err error, stdout []byte, stderr string) {
@@ -314,8 +314,8 @@ func RecordBDCall(ctx context.Context, args []string, durationMs float64, err er
 		errKV(err),
 	}
 	// stdout/stderr are opt-in (may contain tokens or PII returned by bd).
-	// Truncated to GT_LOG_BD_CONTENT_LIMIT bytes (default 2048).
-	if os.Getenv("GT_LOG_BD_OUTPUT") == "true" {
+	// Truncated to MS_LOG_BD_CONTENT_LIMIT bytes (default 2048).
+	if os.Getenv("MS_LOG_BD_OUTPUT") == "true" {
 		initContentLimits()
 		kvs = append(kvs,
 			otellog.String("stdout", truncateOutput(string(stdout), bdContentLim)),
@@ -358,7 +358,7 @@ func RecordSessionStop(ctx context.Context, sessionID string, err error) {
 }
 
 // RecordPromptSend records a tmux SendKeys prompt dispatch (metrics + log event).
-// keys content is opt-in: set GT_LOG_PROMPT_KEYS=true to include it (truncated
+// keys content is opt-in: set MS_LOG_PROMPT_KEYS=true to include it (truncated
 // to 256 bytes). Default off because prompts may contain secrets or PII.
 func RecordPromptSend(ctx context.Context, session, keys string, debounceMs int, err error) {
 	initInstruments()
@@ -373,7 +373,7 @@ func RecordPromptSend(ctx context.Context, session, keys string, debounceMs int,
 		otellog.String("status", status),
 		errKV(err),
 	}
-	if os.Getenv("GT_LOG_PROMPT_KEYS") == "true" {
+	if os.Getenv("MS_LOG_PROMPT_KEYS") == "true" {
 		kvs = append(kvs, otellog.String("keys", truncateOutput(keys, 256)))
 	}
 	emit(ctx, "prompt.send", severity(err), kvs...)
@@ -383,7 +383,7 @@ func RecordPromptSend(ctx context.Context, session, keys string, debounceMs int,
 // All fields except RunID, AgentType, Role, AgentName, SessionID, and TownRoot
 // are optional; pass empty strings for unknown fields.
 type AgentInstantiateInfo struct {
-	// RunID is the MINESHAFT run UUID (GT_RUN), the waterfall primary key.
+	// RunID is the MINESHAFT run UUID (MS_RUN), the waterfall primary key.
 	RunID string
 	// AgentType is the runtime adapter name ("claudecode", "opencode", …).
 	AgentType string
@@ -397,7 +397,7 @@ type AgentInstantiateInfo struct {
 	SessionID string
 	// RigName is the rig name; empty for town-level agents (overseer, supervisor).
 	RigName string
-	// TownRoot is the absolute path to the Mineshaft town root (~/gt); used to
+	// TownRoot is the absolute path to the Mineshaft town root (~/ms); used to
 	// derive the instance identifier "hostname:basename(townRoot)".
 	TownRoot string
 	// IssueID is the bead ID of the work item assigned to this agent.
@@ -437,7 +437,7 @@ func RecordAgentInstantiate(ctx context.Context, info AgentInstantiateInfo) {
 
 // RecordMailMessage records a mail send/read/archive operation.
 // All MailMessageInfo fields are optional; pass zero values for unknown fields.
-// msg.body is opt-in: set GT_LOG_MAIL_BODY=true to include it (truncated to
+// msg.body is opt-in: set MS_LOG_MAIL_BODY=true to include it (truncated to
 // 256 bytes). Default off because mail bodies may contain secrets or PII.
 func RecordMailMessage(ctx context.Context, operation string, msg MailMessageInfo, err error) {
 	initInstruments()
@@ -460,13 +460,13 @@ func RecordMailMessage(ctx context.Context, operation string, msg MailMessageInf
 		otellog.String("status", status),
 		errKV(err),
 	}
-	if os.Getenv("GT_LOG_MAIL_BODY") == "true" {
+	if os.Getenv("MS_LOG_MAIL_BODY") == "true" {
 		kvs = append(kvs, otellog.String("msg.body", truncateOutput(msg.Body, 256)))
 	}
 	emit(ctx, "mail", severity(err), kvs...)
 }
 
-// RecordPrime records a gt prime invocation (metrics + log event).
+// RecordPrime records a ms prime invocation (metrics + log event).
 func RecordPrime(ctx context.Context, role string, hookMode bool, err error) {
 	initInstruments()
 	status := statusStr(err)
@@ -485,12 +485,12 @@ func RecordPrime(ctx context.Context, role string, hookMode bool, err error) {
 	)
 }
 
-// RecordPrimeContext logs the formula/context rendered by gt prime.
-// Opt-in: set GT_LOG_PRIME_CONTEXT=true to enable. Default off because the
-// rendered formula may contain secrets injected by gt prime (API keys, tokens).
+// RecordPrimeContext logs the formula/context rendered by ms prime.
+// Opt-in: set MS_LOG_PRIME_CONTEXT=true to enable. Default off because the
+// rendered formula may contain secrets injected by ms prime (API keys, tokens).
 // Only emits when telemetry is active and the env var is set.
 func RecordPrimeContext(ctx context.Context, formula, role string, hookMode bool) {
-	if formula == "" || os.Getenv("GT_LOG_PRIME_CONTEXT") != "true" {
+	if formula == "" || os.Getenv("MS_LOG_PRIME_CONTEXT") != "true" {
 		return
 	}
 	initInstruments()
@@ -584,7 +584,7 @@ func RecordMail(ctx context.Context, operation string, err error) {
 	)
 }
 
-// RecordNudge records a gt nudge invocation (metrics + log event).
+// RecordNudge records a ms nudge invocation (metrics + log event).
 func RecordNudge(ctx context.Context, target string, err error) {
 	initInstruments()
 	status := statusStr(err)
@@ -598,7 +598,7 @@ func RecordNudge(ctx context.Context, target string, err error) {
 	)
 }
 
-// RecordDone records a gt done invocation — miner work completion (metrics + log event).
+// RecordDone records a ms done invocation — miner work completion (metrics + log event).
 // exitType is one of COMPLETED, ESCALATED, DEFERRED.
 func RecordDone(ctx context.Context, exitType string, err error) {
 	initInstruments()
@@ -776,8 +776,8 @@ func RecordBeadCreate(ctx context.Context, beadID, parentID, molSource string) {
 }
 
 // RecordPaneOutput emits a chunk of raw pane output (ANSI already stripped) to VictoriaLogs.
-// Opt-in: only called when GT_LOG_PANE_OUTPUT=true.
-// Content is truncated to GT_LOG_PANE_CONTENT_LIMIT bytes (default 8192).
+// Opt-in: only called when MS_LOG_PANE_OUTPUT=true.
+// Content is truncated to MS_LOG_PANE_CONTENT_LIMIT bytes (default 8192).
 func RecordPaneOutput(ctx context.Context, sessionID, content string) {
 	initInstruments()
 	initContentLimits()
@@ -791,7 +791,7 @@ func RecordPaneOutput(ctx context.Context, sessionID, content string) {
 }
 
 // RecordAgentEvent emits a structured agent conversation event.
-// Opt-in: requires GT_LOG_AGENT_OUTPUT=true (enforced here so callers can't bypass it).
+// Opt-in: requires MS_LOG_AGENT_OUTPUT=true (enforced here so callers can't bypass it).
 //
 // agentType is the adapter name ("claudecode", "opencode", …).
 // eventType is one of "text", "tool_use", "tool_result", "thinking".
@@ -799,9 +799,9 @@ func RecordPaneOutput(ctx context.Context, sessionID, content string) {
 // nativeSessionID is the agent-native session UUID (e.g. Claude Code JSONL filename UUID).
 // ts is the original timestamp from the conversation log.
 // content is truncated to 512 bytes to limit PII exposure; set
-// GT_LOG_AGENT_CONTENT_LIMIT=0 to disable truncation (experts only).
+// MS_LOG_AGENT_CONTENT_LIMIT=0 to disable truncation (experts only).
 func RecordAgentEvent(ctx context.Context, sessionID, agentType, eventType, role, content, nativeSessionID string, ts time.Time) {
-	if os.Getenv("GT_LOG_AGENT_OUTPUT") != "true" {
+	if os.Getenv("MS_LOG_AGENT_OUTPUT") != "true" {
 		return
 	}
 	initInstruments()
@@ -818,7 +818,7 @@ func RecordAgentEvent(ctx context.Context, sessionID, agentType, eventType, role
 		r.SetTimestamp(ts)
 	}
 	// Truncate content to limit PII/secret exposure in telemetry backends.
-	// Limit is cached at first call; default 512 bytes. GT_LOG_AGENT_CONTENT_LIMIT=0 disables.
+	// Limit is cached at first call; default 512 bytes. MS_LOG_AGENT_CONTENT_LIMIT=0 disables.
 	initContentLimits()
 	r.AddAttributes(
 		otellog.String("session", sessionID),

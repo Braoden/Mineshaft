@@ -4,7 +4,7 @@
 // errors. This is intentional because:
 //
 //  1. Keepalive signals are non-critical - the system works without them
-//  2. Failures (disk full, permissions, etc.) should not interrupt gt commands
+//  2. Failures (disk full, permissions, etc.) should not interrupt ms commands
 //  3. The daemon tolerates missing signals by using timeouts
 //
 // Functions in this package write JSON files to .runtime/ or daemon/ directories.

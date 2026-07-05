@@ -29,7 +29,7 @@ func TestNew(t *testing.T) {
 func TestListOptions(t *testing.T) {
 	opts := ListOptions{
 		Status:   "open",
-		Label:    "gt:task",
+		Label:    "ms:task",
 		Priority: 1,
 	}
 	if opts.Status != "open" {
@@ -40,7 +40,7 @@ func TestListOptions(t *testing.T) {
 // TestListOptionsEphemeral verifies that Ephemeral flag is preserved.
 func TestListOptionsEphemeral(t *testing.T) {
 	opts := ListOptions{
-		Label:     "gt:merge-request",
+		Label:     "ms:merge-request",
 		Status:    "open",
 		Priority:  -1,
 		Ephemeral: true,
@@ -58,7 +58,7 @@ func TestListEphemeralQuotesQueryValuesAndDisablesLimit(t *testing.T) {
 	_, err := b.List(ListOptions{
 		Status:    StatusHooked,
 		Assignee:  "supervisor/dogs/alpha",
-		Parent:    "gt-wisp/root",
+		Parent:    "ms-wisp/root",
 		Priority:  -1,
 		Ephemeral: true,
 		Limit:     0,
@@ -69,7 +69,7 @@ func TestListEphemeralQuotesQueryValuesAndDisablesLimit(t *testing.T) {
 
 	logOutput := readMockBDLog(t, logPath)
 	for _, want := range []string{
-		`query --json ephemeral=true AND status="hooked" AND parent="gt-wisp/root" AND assignee="supervisor/dogs/alpha" --limit=0`,
+		`query --json ephemeral=true AND status="hooked" AND parent="ms-wisp/root" AND assignee="supervisor/dogs/alpha" --limit=0`,
 	} {
 		if !strings.Contains(logOutput, want) {
 			t.Fatalf("bd log missing %q\nlog:\n%s", want, logOutput)
@@ -81,27 +81,27 @@ func TestListEphemeralQuotesQueryValuesAndDisablesLimit(t *testing.T) {
 func TestCreateOptions(t *testing.T) {
 	opts := CreateOptions{
 		Title:       "Test issue",
-		Labels:      []string{"gt:task"},
+		Labels:      []string{"ms:task"},
 		Priority:    2,
 		Description: "A test description",
-		Parent:      "gt-abc",
+		Parent:      "ms-abc",
 	}
 	if opts.Title != "Test issue" {
 		t.Errorf("Title = %q, want 'Test issue'", opts.Title)
 	}
-	if opts.Parent != "gt-abc" {
-		t.Errorf("Parent = %q, want gt-abc", opts.Parent)
+	if opts.Parent != "ms-abc" {
+		t.Errorf("Parent = %q, want ms-abc", opts.Parent)
 	}
 }
 
-// TestCreateOptionsRig verifies the Rig field targets the correct rig database (gt-7y7).
-// When a miner works on a cross-rig bead (e.g., hq-xxx), gt done must explicitly
+// TestCreateOptionsRig verifies the Rig field targets the correct rig database (ms-7y7).
+// When a miner works on a cross-rig bead (e.g., hq-xxx), ms done must explicitly
 // set Rig on CreateOptions so the MR bead lands in the miner's rig database,
 // not the town-level database where the source bead lives.
 func TestCreateOptionsRig(t *testing.T) {
 	opts := CreateOptions{
 		Title:     "Merge: hq-abc",
-		Labels:    []string{"gt:merge-request"},
+		Labels:    []string{"ms:merge-request"},
 		Ephemeral: true,
 		Rig:       "mineshaft",
 	}
@@ -266,9 +266,9 @@ func TestBuildBDEnvConnectionOverridesAndDoesNotRestoreDataDir(t *testing.T) {
 
 	base := []string{
 		"PATH=/usr/bin",
-		"GT_DOLT_HOST=127.0.0.2",
-		"GT_DOLT_PORT=5507",
-		"GT_DOLT_DATA=/wrong/data",
+		"MS_DOLT_HOST=127.0.0.2",
+		"MS_DOLT_PORT=5507",
+		"MS_DOLT_DATA=/wrong/data",
 		"BEADS_DOLT_SERVER_HOST=stale-host",
 		"BEADS_DOLT_SERVER_PORT=9999",
 		"BEADS_DOLT_PORT=9999",
@@ -289,7 +289,7 @@ func TestBuildBDEnvConnectionOverridesAndDoesNotRestoreDataDir(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			got := envMap(tc.env)
 			if got["BEADS_DOLT_SERVER_HOST"] != "127.0.0.2" {
-				t.Fatalf("BEADS_DOLT_SERVER_HOST = %q, want GT_DOLT_HOST in %v", got["BEADS_DOLT_SERVER_HOST"], tc.env)
+				t.Fatalf("BEADS_DOLT_SERVER_HOST = %q, want MS_DOLT_HOST in %v", got["BEADS_DOLT_SERVER_HOST"], tc.env)
 			}
 			if got["BEADS_DOLT_SERVER_PORT"] != "5507" || got["BEADS_DOLT_PORT"] != "5507" {
 				t.Fatalf("Beads port aliases = server:%q legacy:%q, want 5507 in %v", got["BEADS_DOLT_SERVER_PORT"], got["BEADS_DOLT_PORT"], tc.env)
@@ -297,8 +297,8 @@ func TestBuildBDEnvConnectionOverridesAndDoesNotRestoreDataDir(t *testing.T) {
 			if _, ok := got["BEADS_DOLT_DATA_DIR"]; ok {
 				t.Fatalf("BEADS_DOLT_DATA_DIR should be stripped in %v", tc.env)
 			}
-			if _, ok := got["GT_DOLT_DATA"]; ok {
-				t.Fatalf("GT_DOLT_DATA should be stripped in %v", tc.env)
+			if _, ok := got["MS_DOLT_DATA"]; ok {
+				t.Fatalf("MS_DOLT_DATA should be stripped in %v", tc.env)
 			}
 			if tc.wantDBGone {
 				if _, ok := got["BEADS_DOLT_SERVER_DATABASE"]; ok {
@@ -385,14 +385,14 @@ func TestBuildPinnedBDEnvUsesLastCaseVariantGTDoltEndpoint(t *testing.T) {
 
 	env := BuildPinnedBDEnv([]string{
 		"PATH=/usr/bin",
-		"gt_dolt_host=stale-host",
-		"GT_DOLT_HOST=127.0.0.2",
-		"gt_dolt_port=3307",
-		"GT_DOLT_PORT=5507",
+		"ms_dolt_host=stale-host",
+		"MS_DOLT_HOST=127.0.0.2",
+		"ms_dolt_port=3307",
+		"MS_DOLT_PORT=5507",
 	}, beadsDir)
 	got := envMap(env)
 	if got["BEADS_DOLT_SERVER_HOST"] != "127.0.0.2" {
-		t.Fatalf("BEADS_DOLT_SERVER_HOST = %q, want last GT_DOLT_HOST in %v", got["BEADS_DOLT_SERVER_HOST"], env)
+		t.Fatalf("BEADS_DOLT_SERVER_HOST = %q, want last MS_DOLT_HOST in %v", got["BEADS_DOLT_SERVER_HOST"], env)
 	}
 	if got["BEADS_DOLT_SERVER_PORT"] != "5507" || got["BEADS_DOLT_PORT"] != "5507" {
 		t.Fatalf("ports = server:%q legacy:%q, want 5507 in %v", got["BEADS_DOLT_SERVER_PORT"], got["BEADS_DOLT_PORT"], env)
@@ -440,15 +440,15 @@ func TestBuildPinnedBDEnvFallsBackToGTDoltPort(t *testing.T) {
 
 	env := BuildPinnedBDEnv([]string{
 		"PATH=/usr/bin",
-		"GT_DOLT_HOST=127.0.0.2",
-		"GT_DOLT_PORT=5507",
+		"MS_DOLT_HOST=127.0.0.2",
+		"MS_DOLT_PORT=5507",
 	}, beadsDir)
 	got := envMap(env)
 	if got["BEADS_DOLT_SERVER_DATABASE"] != "rigdb" {
 		t.Fatalf("BEADS_DOLT_SERVER_DATABASE = %q, want rigdb in %v", got["BEADS_DOLT_SERVER_DATABASE"], env)
 	}
 	if got["BEADS_DOLT_SERVER_HOST"] != "127.0.0.2" {
-		t.Fatalf("BEADS_DOLT_SERVER_HOST = %q, want GT_DOLT_HOST fallback in %v", got["BEADS_DOLT_SERVER_HOST"], env)
+		t.Fatalf("BEADS_DOLT_SERVER_HOST = %q, want MS_DOLT_HOST fallback in %v", got["BEADS_DOLT_SERVER_HOST"], env)
 	}
 	if got["BEADS_DOLT_SERVER_PORT"] != "5507" || got["BEADS_DOLT_PORT"] != "5507" {
 		t.Fatalf("ports = server:%q legacy:%q, want 5507 in %v", got["BEADS_DOLT_SERVER_PORT"], got["BEADS_DOLT_PORT"], env)
@@ -572,7 +572,7 @@ func TestDeleteBeadsUseSupportedBdDeleteFlags(t *testing.T) {
 		{
 			name:   "rig",
 			delete: func() error { return b.DeleteRigBead("mineshaft") },
-			want:   "delete gt-rig-mineshaft --force",
+			want:   "delete ms-rig-mineshaft --force",
 		},
 	}
 
@@ -599,8 +599,8 @@ func TestArgsAreReadOnlyClassifiesKnownReadCommands(t *testing.T) {
 	cases := [][]string{
 		{"--version"},
 		{"--help"},
-		{"show", "gt-123", "--json"},
-		{"--allow-stale", "show", "gt-123", "--json"},
+		{"show", "ms-123", "--json"},
+		{"--allow-stale", "show", "ms-123", "--json"},
 		{"search", "term", "--json"},
 		{"query", "merge-request", "--json"},
 		{"dep", "list", "hq-cv-123", "--json"},
@@ -630,13 +630,13 @@ func TestArgsAreReadOnlyClassifiesKnownReadCommands(t *testing.T) {
 
 func TestArgsAreReadOnlyFailsClosedForMutations(t *testing.T) {
 	cases := [][]string{
-		{"--db", "hq", "show", "gt-123"},
+		{"--db", "hq", "show", "ms-123"},
 		{"--directory", "/tmp", "list"},
-		{"--repo", "mineshaft", "show", "gt-123"},
-		{"--unknown", "show", "gt-123"},
-		{"update", "gt-123", "--status=open"},
-		{"close", "gt-123"},
-		{"label", "add", "gt-123", "read"},
+		{"--repo", "mineshaft", "show", "ms-123"},
+		{"--unknown", "show", "ms-123"},
+		{"update", "ms-123", "--status=open"},
+		{"close", "ms-123"},
+		{"label", "add", "ms-123", "read"},
 		{"message", "send", "overseer", "--body", "hi"},
 		{"formula", "cook", "mol-miner-work"},
 		{"kv", "set", "key", "value"},
@@ -644,12 +644,12 @@ func TestArgsAreReadOnlyFailsClosedForMutations(t *testing.T) {
 		{"mol", "wisp", "create", "mol-test"},
 		{"sql", "UPDATE issues SET status='open'"},
 		{"sql", "DELETE FROM issues"},
-		{"sql", "INSERT INTO issues (id) VALUES ('gt-1')"},
+		{"sql", "INSERT INTO issues (id) VALUES ('ms-1')"},
 		{"sql", "WITH x AS (SELECT 1) SELECT * FROM x"},
 		{"sql", "WITH x AS (SELECT 1) UPDATE issues SET status='open'"},
 		{"sql", "WITH x AS (SELECT 1) DELETE FROM issues"},
-		{"sql", "WITH x AS (SELECT 1) INSERT INTO issues (id) VALUES ('gt-1')"},
-		{"config", "set", "issue_prefix", "gt"},
+		{"sql", "WITH x AS (SELECT 1) INSERT INTO issues (id) VALUES ('ms-1')"},
+		{"config", "set", "issue_prefix", "ms"},
 	}
 	for _, args := range cases {
 		if ArgsAreReadOnly(args) {
@@ -684,7 +684,7 @@ func withCaseInsensitiveEnvKeys(t *testing.T) {
 //
 // --repo with an absolute path triggers a second database connection while
 // BEADS_DIR already holds one, causing a pthread_cond_wait deadlock when both
-// paths resolve to the same database (miner running gt done on its own rig).
+// paths resolve to the same database (miner running ms done on its own rig).
 func TestCreateRoutesSameDatabaseViaBEADSDIR(t *testing.T) {
 	// Build a minimal town layout with a single rig.
 	townRoot := t.TempDir()
@@ -745,7 +745,7 @@ exit 0
 	origPath := os.Getenv("PATH")
 	t.Setenv("PATH", stubDir+string(os.PathListSeparator)+origPath)
 
-	// Beads instance rooted at the miner dir (same as gt done sets up).
+	// Beads instance rooted at the miner dir (same as ms done sets up).
 	b := New(minerDir)
 
 	// Force town root detection (normally lazy from workDir walk)
@@ -1070,8 +1070,8 @@ printf '{}\n'
 					t.Fatalf("town config missing %q:\n%s", want, configText)
 				}
 			}
-			if strings.Contains(configText, "prefix: gt\n") || strings.Contains(configText, "issue-prefix: gt\n") {
-				t.Fatalf("town config was rewritten as gt:\n%s", configText)
+			if strings.Contains(configText, "prefix: ms\n") || strings.Contains(configText, "issue-prefix: ms\n") {
+				t.Fatalf("town config was rewritten as ms:\n%s", configText)
 			}
 		})
 	}
@@ -1104,7 +1104,7 @@ func TestCreateWithUnknownRigErrors(t *testing.T) {
 	}
 }
 
-// TestIsFlagLikeTitle verifies flag-like title detection (gt-e0kx5).
+// TestIsFlagLikeTitle verifies flag-like title detection (ms-e0kx5).
 func TestIsFlagLikeTitle(t *testing.T) {
 	tests := []struct {
 		title string
@@ -1208,7 +1208,7 @@ func TestBdSupportsAllowStale_TimeoutTreatsProbeAsUnsupported(t *testing.T) {
 }
 
 func TestBDListSlowListDoesNotBlockUnrelatedList(t *testing.T) {
-	if os.Getenv("GT_BEADS_LIST_CONCURRENCY_HELPER") == "1" {
+	if os.Getenv("MS_BEADS_LIST_CONCURRENCY_HELPER") == "1" {
 		runBDListConcurrencyHelper(t)
 		return
 	}
@@ -1319,8 +1319,8 @@ func TestBDListSlowListDoesNotBlockUnrelatedList(t *testing.T) {
 
 func runBDListConcurrencyHelper(t *testing.T) {
 	ResetBdAllowStaleCacheForTest()
-	workDir := os.Getenv("GT_BEADS_LIST_HELPER_WORKDIR")
-	status := os.Getenv("GT_BEADS_LIST_HELPER_STATUS")
+	workDir := os.Getenv("MS_BEADS_LIST_HELPER_WORKDIR")
+	status := os.Getenv("MS_BEADS_LIST_HELPER_STATUS")
 	if workDir == "" || status == "" {
 		t.Fatalf("missing helper environment: workdir=%q status=%q", workDir, status)
 	}
@@ -1332,10 +1332,10 @@ func runBDListConcurrencyHelper(t *testing.T) {
 func bdListConcurrencyHelperCommand(ctx context.Context, path, markerDir, workDir, status string) *exec.Cmd {
 	cmd := exec.CommandContext(ctx, os.Args[0], "-test.run=^TestBDListSlowListDoesNotBlockUnrelatedList$")
 	cmd.Env = append(sanitizedBDListConcurrencyEnv(),
-		"GT_BEADS_LIST_CONCURRENCY_HELPER=1",
-		"GT_BEADS_LIST_MARKER_DIR="+markerDir,
-		"GT_BEADS_LIST_HELPER_WORKDIR="+workDir,
-		"GT_BEADS_LIST_HELPER_STATUS="+status,
+		"MS_BEADS_LIST_CONCURRENCY_HELPER=1",
+		"MS_BEADS_LIST_MARKER_DIR="+markerDir,
+		"MS_BEADS_LIST_HELPER_WORKDIR="+workDir,
+		"MS_BEADS_LIST_HELPER_STATUS="+status,
 		"PATH="+path,
 	)
 	return cmd
@@ -1348,12 +1348,12 @@ func sanitizedBDListConcurrencyEnv() []string {
 		case strings.HasPrefix(item, "PATH="),
 			strings.HasPrefix(item, "BD_ACTOR="),
 			strings.HasPrefix(item, "BEADS_"),
-			strings.HasPrefix(item, "GT_ROOT="),
+			strings.HasPrefix(item, "MS_ROOT="),
 			strings.HasPrefix(item, "HOME="),
-			strings.HasPrefix(item, "GT_BEADS_LIST_CONCURRENCY_HELPER="),
-			strings.HasPrefix(item, "GT_BEADS_LIST_MARKER_DIR="),
-			strings.HasPrefix(item, "GT_BEADS_LIST_HELPER_WORKDIR="),
-			strings.HasPrefix(item, "GT_BEADS_LIST_HELPER_STATUS="):
+			strings.HasPrefix(item, "MS_BEADS_LIST_CONCURRENCY_HELPER="),
+			strings.HasPrefix(item, "MS_BEADS_LIST_MARKER_DIR="),
+			strings.HasPrefix(item, "MS_BEADS_LIST_HELPER_WORKDIR="),
+			strings.HasPrefix(item, "MS_BEADS_LIST_HELPER_STATUS="):
 			continue
 		default:
 			env = append(env, item)
@@ -1408,9 +1408,9 @@ for arg in "$@"; do
 done
 
 if [ "$status" = "open" ]; then
-  : > "${GT_BEADS_LIST_MARKER_DIR}/slow-started"
+  : > "${MS_BEADS_LIST_MARKER_DIR}/slow-started"
   i=0
-  while [ ! -e "${GT_BEADS_LIST_MARKER_DIR}/release-slow" ]; do
+  while [ ! -e "${MS_BEADS_LIST_MARKER_DIR}/release-slow" ]; do
     i=$((i + 1))
     if [ "$i" -ge 1000 ]; then
       echo "timed out waiting for release-slow" >&2
@@ -1556,8 +1556,8 @@ func TestWrapError(t *testing.T) {
 		wantErr error
 		wantNil bool
 	}{
-		{"Issue not found: gt-xyz", ErrNotFound, false},
-		{"gt-xyz not found", ErrNotFound, false},
+		{"Issue not found: ms-xyz", ErrNotFound, false},
+		{"ms-xyz not found", ErrNotFound, false},
 	}
 
 	for _, tt := range tests {
@@ -1611,7 +1611,7 @@ func TestSearchOptions(t *testing.T) {
 	opts := SearchOptions{
 		Query:  "test failure",
 		Status: "open",
-		Label:  "gt:bug",
+		Label:  "ms:bug",
 		Limit:  5,
 	}
 	if opts.Query != "test failure" {
@@ -1620,8 +1620,8 @@ func TestSearchOptions(t *testing.T) {
 	if opts.Status != "open" {
 		t.Errorf("Status = %q, want 'open'", opts.Status)
 	}
-	if opts.Label != "gt:bug" {
-		t.Errorf("Label = %q, want 'gt:bug'", opts.Label)
+	if opts.Label != "ms:bug" {
+		t.Errorf("Label = %q, want 'ms:bug'", opts.Label)
 	}
 }
 
@@ -1731,18 +1731,18 @@ func TestParseMRFields(t *testing.T) {
 		{
 			name: "all fields",
 			issue: &Issue{
-				Description: `branch: miner/Nux/gt-xyz
+				Description: `branch: miner/Nux/ms-xyz
 target: main
-source_issue: gt-xyz
+source_issue: ms-xyz
 worker: Nux
 rig: mineshaft
 merge_commit: abc123def
 close_reason: merged`,
 			},
 			wantFields: &MRFields{
-				Branch:      "miner/Nux/gt-xyz",
+				Branch:      "miner/Nux/ms-xyz",
 				Target:      "main",
-				SourceIssue: "gt-xyz",
+				SourceIssue: "ms-xyz",
 				Worker:      "Nux",
 				Rig:         "mineshaft",
 				MergeCommit: "abc123def",
@@ -1752,24 +1752,24 @@ close_reason: merged`,
 		{
 			name: "partial fields",
 			issue: &Issue{
-				Description: `branch: miner/Toast/gt-abc
-target: integration/gt-epic
-source_issue: gt-abc
+				Description: `branch: miner/Toast/ms-abc
+target: integration/ms-epic
+source_issue: ms-abc
 worker: Toast`,
 			},
 			wantFields: &MRFields{
-				Branch:      "miner/Toast/gt-abc",
-				Target:      "integration/gt-epic",
-				SourceIssue: "gt-abc",
+				Branch:      "miner/Toast/ms-abc",
+				Target:      "integration/ms-epic",
+				SourceIssue: "ms-abc",
 				Worker:      "Toast",
 			},
 		},
 		{
 			name: "mixed with prose",
 			issue: &Issue{
-				Description: `branch: miner/Capable/gt-def
+				Description: `branch: miner/Capable/ms-def
 target: main
-source_issue: gt-def
+source_issue: ms-def
 
 This MR fixes a critical bug in the authentication system.
 Please review carefully.
@@ -1778,9 +1778,9 @@ worker: Capable
 rig: wasteland`,
 			},
 			wantFields: &MRFields{
-				Branch:      "miner/Capable/gt-def",
+				Branch:      "miner/Capable/ms-def",
 				Target:      "main",
-				SourceIssue: "gt-def",
+				SourceIssue: "ms-def",
 				Worker:      "Capable",
 				Rig:         "wasteland",
 			},
@@ -1788,26 +1788,26 @@ rig: wasteland`,
 		{
 			name: "alternate key formats",
 			issue: &Issue{
-				Description: `branch: miner/Max/gt-ghi
-source-issue: gt-ghi
+				Description: `branch: miner/Max/ms-ghi
+source-issue: ms-ghi
 merge-commit: 789xyz`,
 			},
 			wantFields: &MRFields{
-				Branch:      "miner/Max/gt-ghi",
-				SourceIssue: "gt-ghi",
+				Branch:      "miner/Max/ms-ghi",
+				SourceIssue: "ms-ghi",
 				MergeCommit: "789xyz",
 			},
 		},
 		{
 			name: "case insensitive keys",
 			issue: &Issue{
-				Description: `Branch: miner/Furiosa/gt-jkl
+				Description: `Branch: miner/Furiosa/ms-jkl
 TARGET: main
 Worker: Furiosa
 RIG: mineshaft`,
 			},
 			wantFields: &MRFields{
-				Branch: "miner/Furiosa/gt-jkl",
+				Branch: "miner/Furiosa/ms-jkl",
 				Target: "main",
 				Worker: "Furiosa",
 				Rig:    "mineshaft",
@@ -1816,12 +1816,12 @@ RIG: mineshaft`,
 		{
 			name: "extra whitespace",
 			issue: &Issue{
-				Description: `  branch:   miner/Nux/gt-mno
+				Description: `  branch:   miner/Nux/ms-mno
 target:main
   worker:   Nux  `,
 			},
 			wantFields: &MRFields{
-				Branch: "miner/Nux/gt-mno",
+				Branch: "miner/Nux/ms-mno",
 				Target: "main",
 				Worker: "Nux",
 			},
@@ -1829,13 +1829,13 @@ target:main
 		{
 			name: "ignores empty values",
 			issue: &Issue{
-				Description: `branch: miner/Nux/gt-pqr
+				Description: `branch: miner/Nux/ms-pqr
 target:
-source_issue: gt-pqr`,
+source_issue: ms-pqr`,
 			},
 			wantFields: &MRFields{
-				Branch:      "miner/Nux/gt-pqr",
-				SourceIssue: "gt-pqr",
+				Branch:      "miner/Nux/ms-pqr",
+				SourceIssue: "ms-pqr",
 			},
 		},
 		{
@@ -1858,16 +1858,16 @@ commit_sha: a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2`,
 		{
 			name: "null optional fields are empty",
 			issue: &Issue{
-				Description: `branch: miner/Nux/gt-null
+				Description: `branch: miner/Nux/ms-null
 target: main
-source_issue: gt-null
+source_issue: ms-null
 last_conflict_sha: null
 conflict_task_id: null`,
 			},
 			wantFields: &MRFields{
-				Branch:      "miner/Nux/gt-null",
+				Branch:      "miner/Nux/ms-null",
 				Target:      "main",
-				SourceIssue: "gt-null",
+				SourceIssue: "ms-null",
 			},
 		},
 	}
@@ -1941,17 +1941,17 @@ func TestFormatMRFields(t *testing.T) {
 		{
 			name: "all fields",
 			fields: &MRFields{
-				Branch:      "miner/Nux/gt-xyz",
+				Branch:      "miner/Nux/ms-xyz",
 				Target:      "main",
-				SourceIssue: "gt-xyz",
+				SourceIssue: "ms-xyz",
 				Worker:      "Nux",
 				Rig:         "mineshaft",
 				MergeCommit: "abc123def",
 				CloseReason: "merged",
 			},
-			want: `branch: miner/Nux/gt-xyz
+			want: `branch: miner/Nux/ms-xyz
 target: main
-source_issue: gt-xyz
+source_issue: ms-xyz
 worker: Nux
 rig: mineshaft
 merge_commit: abc123def
@@ -1960,14 +1960,14 @@ close_reason: merged`,
 		{
 			name: "partial fields",
 			fields: &MRFields{
-				Branch:      "miner/Toast/gt-abc",
+				Branch:      "miner/Toast/ms-abc",
 				Target:      "main",
-				SourceIssue: "gt-abc",
+				SourceIssue: "ms-abc",
 				Worker:      "Toast",
 			},
-			want: `branch: miner/Toast/gt-abc
+			want: `branch: miner/Toast/ms-abc
 target: main
-source_issue: gt-abc
+source_issue: ms-abc
 worker: Toast`,
 		},
 		{
@@ -2018,32 +2018,32 @@ func TestSetMRFields(t *testing.T) {
 			name:  "nil issue",
 			issue: nil,
 			fields: &MRFields{
-				Branch: "miner/Nux/gt-xyz",
+				Branch: "miner/Nux/ms-xyz",
 				Target: "main",
 			},
-			want: `branch: miner/Nux/gt-xyz
+			want: `branch: miner/Nux/ms-xyz
 target: main`,
 		},
 		{
 			name:  "empty description",
 			issue: &Issue{Description: ""},
 			fields: &MRFields{
-				Branch:      "miner/Nux/gt-xyz",
+				Branch:      "miner/Nux/ms-xyz",
 				Target:      "main",
-				SourceIssue: "gt-xyz",
+				SourceIssue: "ms-xyz",
 			},
-			want: `branch: miner/Nux/gt-xyz
+			want: `branch: miner/Nux/ms-xyz
 target: main
-source_issue: gt-xyz`,
+source_issue: ms-xyz`,
 		},
 		{
 			name:  "preserve prose content",
 			issue: &Issue{Description: "This is a description of the work.\n\nIt spans multiple lines."},
 			fields: &MRFields{
-				Branch: "miner/Toast/gt-abc",
+				Branch: "miner/Toast/ms-abc",
 				Worker: "Toast",
 			},
-			want: `branch: miner/Toast/gt-abc
+			want: `branch: miner/Toast/ms-abc
 worker: Toast
 
 This is a description of the work.
@@ -2053,25 +2053,25 @@ It spans multiple lines.`,
 		{
 			name: "replace existing fields",
 			issue: &Issue{
-				Description: `branch: miner/Nux/gt-old
+				Description: `branch: miner/Nux/ms-old
 target: develop
-source_issue: gt-old
+source_issue: ms-old
 commit_sha: oldsha
 worker: Nux
 
 Some existing prose content.`,
 			},
 			fields: &MRFields{
-				Branch:      "miner/Nux/gt-new",
+				Branch:      "miner/Nux/ms-new",
 				Target:      "main",
-				SourceIssue: "gt-new",
+				SourceIssue: "ms-new",
 				CommitSHA:   "newsha",
 				Worker:      "Nux",
 				MergeCommit: "abc123",
 			},
-			want: `branch: miner/Nux/gt-new
+			want: `branch: miner/Nux/ms-new
 target: main
-source_issue: gt-new
+source_issue: ms-new
 worker: Nux
 commit_sha: newsha
 merge_commit: abc123
@@ -2081,17 +2081,17 @@ Some existing prose content.`,
 		{
 			name: "preserve non-MR key-value lines",
 			issue: &Issue{
-				Description: `branch: miner/Capable/gt-def
+				Description: `branch: miner/Capable/ms-def
 custom_field: some value
 author: someone
 target: main`,
 			},
 			fields: &MRFields{
-				Branch:      "miner/Capable/gt-ghi",
+				Branch:      "miner/Capable/ms-ghi",
 				Target:      "integration/epic",
 				CloseReason: "merged",
 			},
-			want: `branch: miner/Capable/gt-ghi
+			want: `branch: miner/Capable/ms-ghi
 target: integration/epic
 close_reason: merged
 
@@ -2119,9 +2119,9 @@ author: someone`,
 // TestMRFieldsRoundTrip tests that parse/format round-trips correctly.
 func TestMRFieldsRoundTrip(t *testing.T) {
 	original := &MRFields{
-		Branch:      "miner/Nux/gt-xyz",
+		Branch:      "miner/Nux/ms-xyz",
 		Target:      "main",
-		SourceIssue: "gt-xyz",
+		SourceIssue: "ms-xyz",
 		Worker:      "Nux",
 		Rig:         "mineshaft",
 		MergeCommit: "abc123def789",
@@ -2147,9 +2147,9 @@ func TestMRFieldsRoundTrip(t *testing.T) {
 // TestParseMRFieldsFromDesignDoc tests the example from the design doc.
 func TestParseMRFieldsFromDesignDoc(t *testing.T) {
 	// Example from docs/merge-queue-design.md
-	description := `branch: miner/Nux/gt-xyz
+	description := `branch: miner/Nux/ms-xyz
 target: main
-source_issue: gt-xyz
+source_issue: ms-xyz
 worker: Nux
 rig: mineshaft`
 
@@ -2161,14 +2161,14 @@ rig: mineshaft`
 	}
 
 	// Verify all fields match the design doc
-	if fields.Branch != "miner/Nux/gt-xyz" {
-		t.Errorf("Branch = %q, want miner/Nux/gt-xyz", fields.Branch)
+	if fields.Branch != "miner/Nux/ms-xyz" {
+		t.Errorf("Branch = %q, want miner/Nux/ms-xyz", fields.Branch)
 	}
 	if fields.Target != "main" {
 		t.Errorf("Target = %q, want main", fields.Target)
 	}
-	if fields.SourceIssue != "gt-xyz" {
-		t.Errorf("SourceIssue = %q, want gt-xyz", fields.SourceIssue)
+	if fields.SourceIssue != "ms-xyz" {
+		t.Errorf("SourceIssue = %q, want ms-xyz", fields.SourceIssue)
 	}
 	if fields.Worker != "Nux" {
 		t.Errorf("Worker = %q, want Nux", fields.Worker)
@@ -2484,7 +2484,7 @@ func TestAttachmentFieldsRoundTrip(t *testing.T) {
 }
 
 // TestNoMergeField tests the no_merge field in AttachmentFields.
-// The no_merge flag tells gt done to skip the merge queue and keep work on a feature branch.
+// The no_merge flag tells ms done to skip the merge queue and keep work on a feature branch.
 func TestNoMergeField(t *testing.T) {
 	t.Run("parse no_merge true", func(t *testing.T) {
 		issue := &Issue{Description: "no_merge: true\ndispatched_by: overseer"}
@@ -2694,7 +2694,7 @@ func TestResolveBeadsDir(t *testing.T) {
 
 	t.Run("circular redirect", func(t *testing.T) {
 		// Redirect that points to itself (e.g., overseer/rig/.beads/redirect -> ../../overseer/rig/.beads)
-		// This is the bug scenario from gt-csbjj
+		// This is the bug scenario from ms-csbjj
 		workDir := filepath.Join(tmpDir, "overseer", "rig")
 		beadsDir := filepath.Join(workDir, ".beads")
 		if err := os.MkdirAll(beadsDir, 0755); err != nil {
@@ -2730,26 +2730,26 @@ func TestParseAgentBeadID(t *testing.T) {
 		wantOK   bool
 	}{
 		// Town-level agents
-		{"gt-overseer", "", "overseer", "", true},
-		{"gt-supervisor", "", "supervisor", "", true},
+		{"ms-overseer", "", "overseer", "", true},
+		{"ms-supervisor", "", "supervisor", "", true},
 		// Rig-level singletons
-		{"gt-mineshaft-witness", "mineshaft", "witness", "", true},
-		{"gt-mineshaft-refinery", "mineshaft", "refinery", "", true},
+		{"ms-mineshaft-witness", "mineshaft", "witness", "", true},
+		{"ms-mineshaft-refinery", "mineshaft", "refinery", "", true},
 		// Rig-level named agents
-		{"gt-mineshaft-crew-joe", "mineshaft", "crew", "joe", true},
-		{"gt-mineshaft-crew-max", "mineshaft", "crew", "max", true},
-		{"gt-mineshaft-miner-capable", "mineshaft", "miner", "capable", true},
+		{"ms-mineshaft-crew-joe", "mineshaft", "crew", "joe", true},
+		{"ms-mineshaft-crew-max", "mineshaft", "crew", "max", true},
+		{"ms-mineshaft-miner-capable", "mineshaft", "miner", "capable", true},
 		// Names with hyphens
-		{"gt-mineshaft-miner-my-agent", "mineshaft", "miner", "my-agent", true},
+		{"ms-mineshaft-miner-my-agent", "mineshaft", "miner", "my-agent", true},
 		// Worker name collides with role keyword
-		{"gt-mineshaft-miner-witness", "mineshaft", "miner", "witness", true},
-		{"gt-mineshaft-miner-refinery", "mineshaft", "miner", "refinery", true},
-		{"gt-mineshaft-crew-witness", "mineshaft", "crew", "witness", true},
-		{"gt-mineshaft-crew-refinery", "mineshaft", "crew", "refinery", true},
-		{"gt-mineshaft-miner-crew", "mineshaft", "miner", "crew", true},
-		{"gt-mineshaft-crew-miner", "mineshaft", "crew", "miner", true},
+		{"ms-mineshaft-miner-witness", "mineshaft", "miner", "witness", true},
+		{"ms-mineshaft-miner-refinery", "mineshaft", "miner", "refinery", true},
+		{"ms-mineshaft-crew-witness", "mineshaft", "crew", "witness", true},
+		{"ms-mineshaft-crew-refinery", "mineshaft", "crew", "refinery", true},
+		{"ms-mineshaft-miner-crew", "mineshaft", "miner", "crew", true},
+		{"ms-mineshaft-crew-miner", "mineshaft", "crew", "miner", true},
 		// Worker name collides with role keyword + hyphenated rig
-		{"gt-my-rig-miner-witness", "my-rig", "miner", "witness", true},
+		{"ms-my-rig-miner-witness", "my-rig", "miner", "witness", true},
 		// Collapsed form: prefix == rig (e.g., rig "ff" with prefix "ff")
 		{"ff-witness", "ff", "witness", "", true},                // collapsed rig-level singleton
 		{"ff-refinery", "ff", "refinery", "", true},              // collapsed rig-level singleton
@@ -2757,7 +2757,7 @@ func TestParseAgentBeadID(t *testing.T) {
 		{"ff-crew-dave", "ff", "crew", "dave", true},             // collapsed named agent
 		{"ff-miner-war-boy", "ff", "miner", "war-boy", true}, // collapsed named with hyphen
 		// Parseable but not valid agent roles (IsAgentSessionBead will reject)
-		{"gt-abc123", "", "abc123", "", true}, // Parses as town-level but not valid role
+		{"ms-abc123", "", "abc123", "", true}, // Parses as town-level but not valid role
 		// Other prefixes (bd-, hq-)
 		{"bd-overseer", "", "overseer", "", true},                           // bd prefix town-level
 		{"bd-beads-witness", "beads", "witness", "", true},            // bd prefix rig-level singleton
@@ -2794,13 +2794,13 @@ func TestIsAgentSessionBead(t *testing.T) {
 		beadID string
 		want   bool
 	}{
-		// Agent session beads with gt- prefix (should return true)
-		{"gt-overseer", true},
-		{"gt-supervisor", true},
-		{"gt-mineshaft-witness", true},
-		{"gt-mineshaft-refinery", true},
-		{"gt-mineshaft-crew-joe", true},
-		{"gt-mineshaft-miner-capable", true},
+		// Agent session beads with ms- prefix (should return true)
+		{"ms-overseer", true},
+		{"ms-supervisor", true},
+		{"ms-mineshaft-witness", true},
+		{"ms-mineshaft-refinery", true},
+		{"ms-mineshaft-crew-joe", true},
+		{"ms-mineshaft-miner-capable", true},
 		// Agent session beads with bd- prefix (should return true)
 		{"bd-overseer", true},
 		{"bd-supervisor", true},
@@ -2809,9 +2809,9 @@ func TestIsAgentSessionBead(t *testing.T) {
 		{"bd-beads-crew-joe", true},
 		{"bd-beads-miner-pearl", true},
 		// Regular work beads (should return false)
-		{"gt-abc123", false},
-		{"gt-sb6m4", false},
-		{"gt-u7dxq", false},
+		{"ms-abc123", false},
+		{"ms-sb6m4", false},
+		{"ms-u7dxq", false},
 		{"bd-abc123", false},
 		// Invalid beads
 		{"", false},
@@ -2847,26 +2847,26 @@ func TestParseRoleConfig(t *testing.T) {
 		},
 		{
 			name: "all fields",
-			description: `session_pattern: gt-{rig}-{name}
+			description: `session_pattern: ms-{rig}-{name}
 work_dir_pattern: {town}/{rig}/miners/{name}
 needs_pre_sync: true
 start_command: exec claude --dangerously-skip-permissions
-env_var: GT_ROLE=miner
-env_var: GT_RIG={rig}`,
+env_var: MS_ROLE=miner
+env_var: MS_RIG={rig}`,
 			wantConfig: &RoleConfig{
-				SessionPattern: "gt-{rig}-{name}",
+				SessionPattern: "ms-{rig}-{name}",
 				WorkDirPattern: "{town}/{rig}/miners/{name}",
 				NeedsPreSync:   true,
 				StartCommand:   "exec claude --dangerously-skip-permissions",
-				EnvVars:        map[string]string{"GT_ROLE": "miner", "GT_RIG": "{rig}"},
+				EnvVars:        map[string]string{"MS_ROLE": "miner", "MS_RIG": "{rig}"},
 			},
 		},
 		{
 			name: "partial fields",
-			description: `session_pattern: gt-overseer
+			description: `session_pattern: ms-overseer
 work_dir_pattern: {town}`,
 			wantConfig: &RoleConfig{
-				SessionPattern: "gt-overseer",
+				SessionPattern: "ms-overseer",
 				WorkDirPattern: "{town}",
 				EnvVars:        map[string]string{},
 			},
@@ -2875,13 +2875,13 @@ work_dir_pattern: {town}`,
 			name: "mixed with prose",
 			description: `You are the Witness.
 
-session_pattern: gt-{rig}-witness
+session_pattern: ms-{rig}-witness
 work_dir_pattern: {town}/{rig}
 needs_pre_sync: false
 
 Your job is to monitor workers.`,
 			wantConfig: &RoleConfig{
-				SessionPattern: "gt-{rig}-witness",
+				SessionPattern: "ms-{rig}-witness",
 				WorkDirPattern: "{town}/{rig}",
 				NeedsPreSync:   false,
 				EnvVars:        map[string]string{},
@@ -2889,11 +2889,11 @@ Your job is to monitor workers.`,
 		},
 		{
 			name: "alternate key formats (hyphen)",
-			description: `session-pattern: gt-{rig}-{name}
+			description: `session-pattern: ms-{rig}-{name}
 work-dir-pattern: {town}/{rig}/miners/{name}
 needs-pre-sync: true`,
 			wantConfig: &RoleConfig{
-				SessionPattern: "gt-{rig}-{name}",
+				SessionPattern: "ms-{rig}-{name}",
 				WorkDirPattern: "{town}/{rig}/miners/{name}",
 				NeedsPreSync:   true,
 				EnvVars:        map[string]string{},
@@ -2901,21 +2901,21 @@ needs-pre-sync: true`,
 		},
 		{
 			name: "case insensitive keys",
-			description: `SESSION_PATTERN: gt-overseer
+			description: `SESSION_PATTERN: ms-overseer
 Work_Dir_Pattern: {town}`,
 			wantConfig: &RoleConfig{
-				SessionPattern: "gt-overseer",
+				SessionPattern: "ms-overseer",
 				WorkDirPattern: "{town}",
 				EnvVars:        map[string]string{},
 			},
 		},
 		{
 			name: "ignores null values",
-			description: `session_pattern: gt-{rig}-witness
+			description: `session_pattern: ms-{rig}-witness
 work_dir_pattern: null
 needs_pre_sync: false`,
 			wantConfig: &RoleConfig{
-				SessionPattern: "gt-{rig}-witness",
+				SessionPattern: "ms-{rig}-witness",
 				EnvVars:        map[string]string{},
 			},
 		},
@@ -2972,46 +2972,46 @@ func TestExpandRolePattern(t *testing.T) {
 		want     string
 	}{
 		{
-			pattern:  "gt-overseer",
-			townRoot: "/Users/stevey/gt",
-			want:     "gt-overseer",
+			pattern:  "ms-overseer",
+			townRoot: "/Users/stevey/ms",
+			want:     "ms-overseer",
 		},
 		{
 			pattern:  "{prefix}-{role}",
-			townRoot: "/Users/stevey/gt",
+			townRoot: "/Users/stevey/ms",
 			rig:      "mineshaft",
 			role:     "witness",
-			prefix:   "gt",
-			want:     "gt-witness",
+			prefix:   "ms",
+			want:     "ms-witness",
 		},
 		{
 			pattern:  "{prefix}-{name}",
-			townRoot: "/Users/stevey/gt",
+			townRoot: "/Users/stevey/ms",
 			rig:      "mineshaft",
 			name:     "toast",
-			prefix:   "gt",
-			want:     "gt-toast",
+			prefix:   "ms",
+			want:     "ms-toast",
 		},
 		{
 			pattern:  "{town}/{rig}/miners/{name}",
-			townRoot: "/Users/stevey/gt",
+			townRoot: "/Users/stevey/ms",
 			rig:      "mineshaft",
 			name:     "toast",
-			want:     "/Users/stevey/gt/mineshaft/miners/toast",
+			want:     "/Users/stevey/ms/mineshaft/miners/toast",
 		},
 		{
 			pattern:  "{town}/{rig}/refinery/rig",
-			townRoot: "/Users/stevey/gt",
+			townRoot: "/Users/stevey/ms",
 			rig:      "mineshaft",
-			want:     "/Users/stevey/gt/mineshaft/refinery/rig",
+			want:     "/Users/stevey/ms/mineshaft/refinery/rig",
 		},
 		{
-			pattern:  "export GT_ROLE={role} GT_RIG={rig} BD_ACTOR={rig}/miners/{name}",
-			townRoot: "/Users/stevey/gt",
+			pattern:  "export MS_ROLE={role} MS_RIG={rig} BD_ACTOR={rig}/miners/{name}",
+			townRoot: "/Users/stevey/ms",
 			rig:      "mineshaft",
 			name:     "toast",
 			role:     "miner",
-			want:     "export GT_ROLE=miner GT_RIG=mineshaft BD_ACTOR=mineshaft/miners/toast",
+			want:     "export MS_ROLE=miner MS_RIG=mineshaft BD_ACTOR=mineshaft/miners/toast",
 		},
 	}
 
@@ -3045,13 +3045,13 @@ func TestFormatRoleConfig(t *testing.T) {
 		{
 			name: "all fields",
 			config: &RoleConfig{
-				SessionPattern: "gt-{rig}-{name}",
+				SessionPattern: "ms-{rig}-{name}",
 				WorkDirPattern: "{town}/{rig}/miners/{name}",
 				NeedsPreSync:   true,
 				StartCommand:   "exec claude",
 				EnvVars:        map[string]string{},
 			},
-			want: `session_pattern: gt-{rig}-{name}
+			want: `session_pattern: ms-{rig}-{name}
 work_dir_pattern: {town}/{rig}/miners/{name}
 needs_pre_sync: true
 start_command: exec claude`,
@@ -3059,10 +3059,10 @@ start_command: exec claude`,
 		{
 			name: "only session pattern",
 			config: &RoleConfig{
-				SessionPattern: "gt-overseer",
+				SessionPattern: "ms-overseer",
 				EnvVars:        map[string]string{},
 			},
-			want: "session_pattern: gt-overseer",
+			want: "session_pattern: ms-overseer",
 		},
 	}
 
@@ -3079,7 +3079,7 @@ start_command: exec claude`,
 // TestRoleConfigRoundTrip tests that parse/format round-trips correctly.
 func TestRoleConfigRoundTrip(t *testing.T) {
 	original := &RoleConfig{
-		SessionPattern: "gt-{rig}-{name}",
+		SessionPattern: "ms-{rig}-{name}",
 		WorkDirPattern: "{town}/{rig}/miners/{name}",
 		NeedsPreSync:   true,
 		StartCommand:   "exec claude --dangerously-skip-permissions",
@@ -3120,7 +3120,7 @@ func TestParseRoleConfigWispTTLs(t *testing.T) {
 	}{
 		{
 			name: "single wisp TTL",
-			description: `session_pattern: gt-{rig}-{name}
+			description: `session_pattern: ms-{rig}-{name}
 wisp_ttl_patrol: 48h`,
 			wantTTLs: map[string]string{"patrol": "48h"},
 		},
@@ -3146,7 +3146,7 @@ wisp-ttl-error: 336h`,
 		},
 		{
 			name: "mixed with other role config fields",
-			description: `session_pattern: gt-{rig}-{name}
+			description: `session_pattern: ms-{rig}-{name}
 work_dir_pattern: {town}/{rig}
 wisp_ttl_patrol: 48h
 ping_timeout: 30s
@@ -3163,7 +3163,7 @@ wisp_ttl_error: 336h`,
 		},
 		{
 			name:        "no wisp TTLs present",
-			description: `session_pattern: gt-{rig}-{name}`,
+			description: `session_pattern: ms-{rig}-{name}`,
 			wantTTLs:    map[string]string{},
 		},
 		{
@@ -3213,7 +3213,7 @@ Wisp_TTL_Error: 336h`,
 // TestFormatRoleConfigWispTTLs tests that wisp TTLs are included in format output.
 func TestFormatRoleConfigWispTTLs(t *testing.T) {
 	config := &RoleConfig{
-		SessionPattern: "gt-{rig}-{name}",
+		SessionPattern: "ms-{rig}-{name}",
 		EnvVars:        map[string]string{},
 		WispTTLs: map[string]string{
 			"patrol": "48h",
@@ -3229,7 +3229,7 @@ func TestFormatRoleConfigWispTTLs(t *testing.T) {
 	if !strings.Contains(formatted, "wisp_ttl_patrol: 48h") {
 		t.Errorf("formatted output missing wisp_ttl_patrol, got:\n%s", formatted)
 	}
-	if !strings.Contains(formatted, "session_pattern: gt-{rig}-{name}") {
+	if !strings.Contains(formatted, "session_pattern: ms-{rig}-{name}") {
 		t.Errorf("formatted output missing session_pattern, got:\n%s", formatted)
 	}
 }
@@ -3237,7 +3237,7 @@ func TestFormatRoleConfigWispTTLs(t *testing.T) {
 // TestRoleConfigWispTTLRoundTrip tests that wisp TTLs survive parse/format round-trip.
 func TestRoleConfigWispTTLRoundTrip(t *testing.T) {
 	original := &RoleConfig{
-		SessionPattern: "gt-{rig}-{name}",
+		SessionPattern: "ms-{rig}-{name}",
 		EnvVars:        map[string]string{},
 		WispTTLs: map[string]string{
 			"patrol":    "48h",
@@ -3308,7 +3308,7 @@ func TestDelegationStruct(t *testing.T) {
 			name: "full delegation",
 			delegation: Delegation{
 				Parent:      "hop://accenture.com/eng/proj-123/task-a",
-				Child:       "hop://alice@example.com/main-town/mineshaft/gt-xyz",
+				Child:       "hop://alice@example.com/main-town/mineshaft/ms-xyz",
 				DelegatedBy: "hop://accenture.com",
 				DelegatedTo: "hop://alice@example.com",
 				Terms: &DelegationTerms{
@@ -3318,17 +3318,17 @@ func TestDelegationStruct(t *testing.T) {
 				},
 				CreatedAt: "2025-01-15T10:00:00Z",
 			},
-			wantJSON: `{"parent":"hop://accenture.com/eng/proj-123/task-a","child":"hop://alice@example.com/main-town/mineshaft/gt-xyz","delegated_by":"hop://accenture.com","delegated_to":"hop://alice@example.com","terms":{"portion":"backend-api","deadline":"2025-06-01","credit_share":80},"created_at":"2025-01-15T10:00:00Z"}`,
+			wantJSON: `{"parent":"hop://accenture.com/eng/proj-123/task-a","child":"hop://alice@example.com/main-town/mineshaft/ms-xyz","delegated_by":"hop://accenture.com","delegated_to":"hop://alice@example.com","terms":{"portion":"backend-api","deadline":"2025-06-01","credit_share":80},"created_at":"2025-01-15T10:00:00Z"}`,
 		},
 		{
 			name: "minimal delegation",
 			delegation: Delegation{
-				Parent:      "gt-abc",
-				Child:       "gt-xyz",
+				Parent:      "ms-abc",
+				Child:       "ms-xyz",
 				DelegatedBy: "steve",
 				DelegatedTo: "alice",
 			},
-			wantJSON: `{"parent":"gt-abc","child":"gt-xyz","delegated_by":"steve","delegated_to":"alice"}`,
+			wantJSON: `{"parent":"ms-abc","child":"ms-xyz","delegated_by":"steve","delegated_to":"alice"}`,
 		},
 	}
 
@@ -3986,7 +3986,7 @@ func TestSetupRedirect(t *testing.T) {
 }
 
 // TestResetAgentBeadForReuse_NukeRespawnCycle tests the preferred nuke→respawn
-// lifecycle using ResetAgentBeadForReuse (gt-14b8o fix). This keeps the bead open
+// lifecycle using ResetAgentBeadForReuse (ms-14b8o fix). This keeps the bead open
 // with agent_state="nuked", avoiding the close/reopen cycle
 // that fails on Dolt backends.
 func TestResetAgentBeadForReuse_NukeRespawnCycle(t *testing.T) {
@@ -4082,7 +4082,7 @@ func TestResetAgentBeadForReuse_NukeRespawnCycle(t *testing.T) {
 }
 
 // TestIsAgentBead verifies the IsAgentBead function correctly identifies agent
-// beads by checking both the gt:agent label (preferred) and the legacy type field.
+// beads by checking both the ms:agent label (preferred) and the legacy type field.
 func TestIsAgentBead(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -4097,34 +4097,34 @@ func TestIsAgentBead(t *testing.T) {
 		{
 			name: "agent with legacy type",
 			issue: &Issue{
-				ID:     "gt-mineshaft-miner-toast",
+				ID:     "ms-mineshaft-miner-toast",
 				Type:   "agent",
 				Labels: []string{},
 			},
 			want: true,
 		},
 		{
-			name: "agent with gt:agent label",
+			name: "agent with ms:agent label",
 			issue: &Issue{
-				ID:     "gt-mineshaft-miner-toast",
+				ID:     "ms-mineshaft-miner-toast",
 				Type:   "task",
-				Labels: []string{"gt:agent"},
+				Labels: []string{"ms:agent"},
 			},
 			want: true,
 		},
 		{
 			name: "agent with both type and label",
 			issue: &Issue{
-				ID:     "gt-mineshaft-miner-toast",
+				ID:     "ms-mineshaft-miner-toast",
 				Type:   "agent",
-				Labels: []string{"gt:agent", "other-label"},
+				Labels: []string{"ms:agent", "other-label"},
 			},
 			want: true,
 		},
 		{
 			name: "not an agent - task type without label",
 			issue: &Issue{
-				ID:     "gt-abc123",
+				ID:     "ms-abc123",
 				Type:   "task",
 				Labels: []string{},
 			},
@@ -4133,18 +4133,18 @@ func TestIsAgentBead(t *testing.T) {
 		{
 			name: "not an agent - bug type with other labels",
 			issue: &Issue{
-				ID:     "gt-xyz456",
+				ID:     "ms-xyz456",
 				Type:   "bug",
 				Labels: []string{"priority-high", "blocked"},
 			},
 			want: false,
 		},
 		{
-			name: "agent with gt:agent label and other labels",
+			name: "agent with ms:agent label and other labels",
 			issue: &Issue{
-				ID:     "gt-mineshaft-witness",
+				ID:     "ms-mineshaft-witness",
 				Type:   "task",
-				Labels: []string{"priority-high", "gt:agent", "status-running"},
+				Labels: []string{"priority-high", "ms:agent", "status-running"},
 			},
 			want: true,
 		},
@@ -4179,7 +4179,7 @@ func TestFilterBeadsEnv_EmptyInput(t *testing.T) {
 	}
 }
 
-// TestFilterBeadsEnv_PreservesDoltPortVars verifies that GT_DOLT_PORT and
+// TestFilterBeadsEnv_PreservesDoltPortVars verifies that MS_DOLT_PORT and
 // BEADS_DOLT_PORT are preserved by filterBeadsEnv even though BEADS_* vars
 // are otherwise stripped. Tests need these to reach test Dolt servers.
 func TestFilterBeadsEnv_PreservesDoltPortVars(t *testing.T) {
@@ -4188,16 +4188,16 @@ func TestFilterBeadsEnv_PreservesDoltPortVars(t *testing.T) {
 		"BEADS_DIR=/tmp/beads",
 		"BEADS_DB=/tmp/beads.db",
 		"BEADS_DOLT_PORT=13306",
-		"GT_DOLT_PORT=13307",
-		"GT_DOLT_DATA=/tmp/dolt-data",
-		"GT_ROOT=/tmp/gt",
+		"MS_DOLT_PORT=13307",
+		"MS_DOLT_DATA=/tmp/dolt-data",
+		"MS_ROOT=/tmp/ms",
 		"HOME=/home/test",
 		"PATH=/usr/bin",
 	}
 	got := filterBeadsEnv(environ)
 	want := []string{
 		"BEADS_DOLT_PORT=13306",
-		"GT_DOLT_PORT=13307",
+		"MS_DOLT_PORT=13307",
 		"PATH=/usr/bin",
 	}
 	if len(got) != len(want) {
@@ -4219,16 +4219,16 @@ func TestFilterBeadsEnv_StripsCaseVariantBeadsEnv(t *testing.T) {
 		"beads_dir=/tmp/beads",
 		"Beads_Db=/tmp/beads.db",
 		"beads_dolt_data_dir=/tmp/dolt-data",
-		"gt_dolt_data=/tmp/dolt-data",
-		"gt_root=/tmp/gt",
+		"ms_dolt_data=/tmp/dolt-data",
+		"ms_root=/tmp/ms",
 		"home=/home/test",
-		"gt_dolt_port=13307",
+		"ms_dolt_port=13307",
 		"beads_dolt_server_port=13307",
 		"PATH=/usr/bin",
 	}
 	got := filterBeadsEnv(environ)
 	want := []string{
-		"gt_dolt_port=13307",
+		"ms_dolt_port=13307",
 		"beads_dolt_server_port=13307",
 		"PATH=/usr/bin",
 	}
@@ -4254,8 +4254,8 @@ func TestNewIsolatedWithPort(t *testing.T) {
 }
 
 func TestIsolatedWithPortOverridesInheritedDoltEnv(t *testing.T) {
-	t.Setenv("GT_DOLT_PORT", "3307")
-	t.Setenv("GT_DOLT_DATA", filepath.Join(t.TempDir(), "wrong-data"))
+	t.Setenv("MS_DOLT_PORT", "3307")
+	t.Setenv("MS_DOLT_DATA", filepath.Join(t.TempDir(), "wrong-data"))
 	t.Setenv("BEADS_DOLT_SERVER_PORT", "3307")
 	t.Setenv("BEADS_DOLT_PORT", "3307")
 	t.Setenv("BEADS_DOLT_AUTO_START", "1")
@@ -4268,8 +4268,8 @@ func TestIsolatedWithPortOverridesInheritedDoltEnv(t *testing.T) {
 		{name: "run", got: b.buildRunEnv()},
 		{name: "routing", got: b.buildRoutingEnv()},
 	} {
-		if got := countEnvPrefix(env.got, "GT_DOLT_PORT="); got != 1 {
-			t.Fatalf("%s env GT_DOLT_PORT count = %d, want 1", env.name, got)
+		if got := countEnvPrefix(env.got, "MS_DOLT_PORT="); got != 1 {
+			t.Fatalf("%s env MS_DOLT_PORT count = %d, want 1", env.name, got)
 		}
 		if got := countEnvPrefix(env.got, "BEADS_DOLT_PORT="); got != 1 {
 			t.Fatalf("%s env BEADS_DOLT_PORT count = %d, want 1", env.name, got)
@@ -4280,11 +4280,11 @@ func TestIsolatedWithPortOverridesInheritedDoltEnv(t *testing.T) {
 		if got := countEnvPrefix(env.got, "BEADS_DOLT_AUTO_START="); got != 1 {
 			t.Fatalf("%s env BEADS_DOLT_AUTO_START count = %d, want 1", env.name, got)
 		}
-		if !containsEnv(env.got, "GT_DOLT_PORT=19999") || !containsEnv(env.got, "BEADS_DOLT_SERVER_PORT=19999") || !containsEnv(env.got, "BEADS_DOLT_PORT=19999") || !containsEnv(env.got, "BEADS_DOLT_AUTO_START=0") {
+		if !containsEnv(env.got, "MS_DOLT_PORT=19999") || !containsEnv(env.got, "BEADS_DOLT_SERVER_PORT=19999") || !containsEnv(env.got, "BEADS_DOLT_PORT=19999") || !containsEnv(env.got, "BEADS_DOLT_AUTO_START=0") {
 			t.Fatalf("%s env missing isolated Dolt overrides", env.name)
 		}
-		if containsEnvPrefix(env.got, "GT_DOLT_DATA=") {
-			t.Fatalf("%s env should strip GT_DOLT_DATA", env.name)
+		if containsEnvPrefix(env.got, "MS_DOLT_DATA=") {
+			t.Fatalf("%s env should strip MS_DOLT_DATA", env.name)
 		}
 	}
 }
@@ -4349,7 +4349,7 @@ fi
 {
   printf 'args=%s\n' "$*"
   printf 'BEADS_DIR=%s\n' "$BEADS_DIR"
-  printf 'GT_DOLT_PORT=%s\n' "$GT_DOLT_PORT"
+  printf 'MS_DOLT_PORT=%s\n' "$MS_DOLT_PORT"
   printf 'BEADS_DOLT_SERVER_PORT=%s\n' "$BEADS_DOLT_SERVER_PORT"
   printf 'BEADS_DOLT_PORT=%s\n' "$BEADS_DOLT_PORT"
   printf 'BEADS_DOLT_AUTO_START=%s\n' "$BEADS_DOLT_AUTO_START"
@@ -4376,7 +4376,7 @@ exit 0
 	checks := []string{
 		"args=init --prefix covertest --quiet --server --server-port 19999",
 		"BEADS_DIR=" + filepath.Join(workDir, ".beads"),
-		"GT_DOLT_PORT=19999",
+		"MS_DOLT_PORT=19999",
 		"BEADS_DOLT_SERVER_PORT=19999",
 		"BEADS_DOLT_PORT=19999",
 		"BEADS_DOLT_AUTO_START=0",
@@ -4495,13 +4495,13 @@ func TestStripEnvPrefixes_CaseInsensitiveKeys(t *testing.T) {
 func TestFilterBeadsEnv_Integration(t *testing.T) {
 	t.Setenv("BD_ACTOR", "mineshaft/miners/TestMiner")
 	t.Setenv("BEADS_DIR", "/tmp/test-beads")
-	t.Setenv("GT_ROOT", "/tmp/test-gt-root")
+	t.Setenv("MS_ROOT", "/tmp/test-ms-root")
 
 	env := filterBeadsEnv(os.Environ())
 
-	// BEADS_DOLT_PORT and GT_DOLT_PORT are explicitly preserved (test server access).
+	// BEADS_DOLT_PORT and MS_DOLT_PORT are explicitly preserved (test server access).
 	// Check that other BEADS_* vars are still stripped.
-	forbidden := []string{"BD_ACTOR=", "BEADS_DIR=", "BEADS_DB=", "GT_ROOT=", "HOME="}
+	forbidden := []string{"BD_ACTOR=", "BEADS_DIR=", "BEADS_DB=", "MS_ROOT=", "HOME="}
 	for _, e := range env {
 		for _, prefix := range forbidden {
 			if strings.HasPrefix(e, prefix) {
@@ -4520,12 +4520,12 @@ func TestBdBranch_SystemScenario_FilterBeadsEnvIsolation(t *testing.T) {
 
 	t.Setenv("BD_ACTOR", "mineshaft/miners/FilterTest")
 	t.Setenv("BEADS_DIR", "/tmp/filter-test-beads")
-	t.Setenv("GT_ROOT", "/tmp/filter-test-gt")
+	t.Setenv("MS_ROOT", "/tmp/filter-test-ms")
 
 	filtered := filterBeadsEnv(os.Environ())
 
 	// Verify beads-specific vars are stripped from the filtered env.
-	forbidden := []string{"BD_ACTOR=", "BEADS_DIR=", "GT_ROOT="}
+	forbidden := []string{"BD_ACTOR=", "BEADS_DIR=", "MS_ROOT="}
 	for _, entry := range filtered {
 		for _, prefix := range forbidden {
 			if strings.HasPrefix(entry, prefix) {
@@ -4658,7 +4658,7 @@ func TestBuildRunEnv_OverridesStaleDoltPortFromBeadsDir(t *testing.T) {
 		t.Fatalf("write dolt-server.port: %v", err)
 	}
 
-	t.Setenv("GT_DOLT_PORT", "")
+	t.Setenv("MS_DOLT_PORT", "")
 	t.Setenv("BEADS_DOLT_PORT", "3307")
 
 	env := (&Beads{workDir: tmpDir}).buildRunEnv()
@@ -4687,7 +4687,7 @@ func TestBuildRoutingEnv_OverridesStaleDoltPortFromBeadsDir(t *testing.T) {
 		t.Fatalf("write dolt-server.port: %v", err)
 	}
 
-	t.Setenv("GT_DOLT_PORT", "")
+	t.Setenv("MS_DOLT_PORT", "")
 	t.Setenv("BEADS_DOLT_PORT", "3307")
 
 	env := (&Beads{workDir: tmpDir}).buildRoutingEnv()
@@ -4755,7 +4755,7 @@ if [ -n "${BEADS_DOLT_HOST:-}" ] || [ "${BEADS_DOLT_SERVER_DATABASE:-}" = "hq" ]
   exit 0
 fi
 if [ "${BEADS_DIR:-}" = "${PWD}/.beads" ]; then
-  printf 'gt\n'
+  printf 'ms\n'
   exit 0
 fi
 printf 'unknown\n'
@@ -4765,10 +4765,10 @@ printf 'unknown\n'
 	}
 	t.Setenv("PATH", stubDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv("MOCK_BD_LOG", logPath)
-	t.Setenv("BEADS_DOLT_DATA_DIR", "/home/coder/gt/.dolt-data")
+	t.Setenv("BEADS_DOLT_DATA_DIR", "/home/coder/ms/.dolt-data")
 	t.Setenv("BEADS_DOLT_HOST", "127.0.0.1")
-	t.Setenv("GT_DOLT_DATA", "")
-	t.Setenv("GT_DOLT_PORT", "")
+	t.Setenv("MS_DOLT_DATA", "")
+	t.Setenv("MS_DOLT_PORT", "")
 	t.Setenv("BEADS_DOLT_PORT", "3307")
 	t.Setenv("BEADS_DOLT_SERVER_HOST", "127.0.0.1")
 	t.Setenv("BEADS_DOLT_SERVER_PORT", "3307")
@@ -4778,8 +4778,8 @@ printf 'unknown\n'
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
-	if got := strings.TrimSpace(string(out)); got != "gt" {
-		t.Fatalf("polluted env selected prefix %q, want gt", got)
+	if got := strings.TrimSpace(string(out)); got != "ms" {
+		t.Fatalf("polluted env selected prefix %q, want ms", got)
 	}
 
 	data, err := os.ReadFile(logPath)
@@ -4788,7 +4788,7 @@ printf 'unknown\n'
 	}
 	log := string(data)
 	for _, forbidden := range []string{
-		"BEADS_DOLT_DATA_DIR=/home/coder/gt/.dolt-data",
+		"BEADS_DOLT_DATA_DIR=/home/coder/ms/.dolt-data",
 		"BEADS_DOLT_HOST=127.0.0.1",
 		"BEADS_DOLT_SERVER_DATABASE=hq",
 	} {
@@ -4831,7 +4831,7 @@ func TestIsSubprocessCrash(t *testing.T) {
 	}
 }
 
-// TestResolveBdSubprocessTimeout verifies the timeout default + GT_BD_TIMEOUT_SEC override.
+// TestResolveBdSubprocessTimeout verifies the timeout default + MS_BD_TIMEOUT_SEC override.
 func TestResolveBdSubprocessTimeout(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -4849,9 +4849,9 @@ func TestResolveBdSubprocessTimeout(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.envSet {
-				t.Setenv("GT_BD_TIMEOUT_SEC", tt.envVal)
+				t.Setenv("MS_BD_TIMEOUT_SEC", tt.envVal)
 			} else {
-				_ = os.Unsetenv("GT_BD_TIMEOUT_SEC")
+				_ = os.Unsetenv("MS_BD_TIMEOUT_SEC")
 			}
 			got := resolveBdSubprocessTimeout()
 			want := time.Duration(tt.wantSec) * time.Second

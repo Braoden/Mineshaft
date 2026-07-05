@@ -86,8 +86,8 @@ The boss uses crew for two main patterns:
    Alongside the Overseer, crew are the primary agents that dispatch miner work.
    When bugs or tasks surface during a session, file a bead and sling it:
    ```bash
-   bd new --type=bug "description of the problem"   # Creates e.g. gt-h8x
-   {{ cmd }} sling gt-h8x {{ .RigName }}             # Spawns a miner to fix it
+   bd new --type=bug "description of the problem"   # Creates e.g. ms-h8x
+   {{ cmd }} sling ms-h8x {{ .RigName }}             # Spawns a miner to fix it
    ```
    The boss also farms tasks to crew via `{{ cmd }} nudge` — a lightweight
    notification that avoids Dolt operations.
@@ -113,7 +113,7 @@ auto-execute on handoff.
 
 Most beads you file are **persistent** (durable). Wisps (`*-wisp-*`) are ephemeral
 and used for orchestration (patrols, molecules). When you `bd new` a bug or task,
-it creates a persistent bead with an adaptive-hash ID (e.g., `gt-h8x`). Let the
+it creates a persistent bead with an adaptive-hash ID (e.g., `ms-h8x`). Let the
 system choose the ID — don't force prefixes.
 
 **Use wisps for dispatch work.** When creating beads to track ephemeral tasks
@@ -177,9 +177,9 @@ over this workspace.
 When you need to work on a different rig, create a worktree in the target rig:
 
 ```bash
-gt worktree beads            # Creates {{ .TownRoot }}/beads/crew/{{ .RigName }}-{{ .Miner }}/
-gt worktree list             # List your worktrees across all rigs
-gt worktree remove beads     # Remove when done
+ms worktree beads            # Creates {{ .TownRoot }}/beads/crew/{{ .RigName }}-{{ .Miner }}/
+ms worktree list             # List your worktrees across all rigs
+ms worktree remove beads     # Remove when done
 ```
 
 **Key principles:**
@@ -206,7 +206,7 @@ go here by default. But if you discover bugs/issues in OTHER projects:
 |-------------------|---------|---------|
 | This rig's code ({{ .RigName }}) | Here (default) | `bd create "..."` |
 | `bd` CLI (beads tool) | **beads** | `bd create --repo beads "..."` |
-| `gt` CLI (mineshaft tool) | **mineshaft** | `bd create --repo mineshaft "..."` |
+| `ms` CLI (mineshaft tool) | **mineshaft** | `bd create --repo mineshaft "..."` |
 | Cross-rig coordination | **HQ** | `bd create --repo hq "..."` |
 
 **The test**: "Which repo would the fix be committed to?"
@@ -224,10 +224,10 @@ go here by default. But if you discover bugs/issues in OTHER projects:
 > **The Universal Mineshaft Propulsion Principle: If you find something on your hook, YOU RUN IT.**
 
 ```bash
-gt hook                          # Step 1: Check your hook
+ms hook                          # Step 1: Check your hook
 # Work hooked? → RUN IT. Hook empty? ↓
-gt mail inbox                    # Step 2: Check mail
-gt mol attach-from-mail <mail-id> # Hook attached work
+ms mail inbox                    # Step 2: Check mail
+ms mol attach-from-mail <mail-id> # Hook attached work
 # Still nothing? → Wait for boss
 ```
 
@@ -294,7 +294,7 @@ Get their name/email from the PR. This ensures they appear in `git log`, GitHub'
 contributor graph, and `git shortlog`. Without it, their contribution is invisible
 in git history — only a closed PR comment links them to the work.
 
-### Cross-Rig Work (gt worktree)
+### Cross-Rig Work (ms worktree)
 
 `{{ cmd }} worktree` creates a branch for working in another rig's codebase. Complete
 the work in one session if possible and submit to that rig's Refinery immediately.
@@ -370,7 +370,7 @@ BODY
 **Wake an agent after sending mail:**
 - `{{ cmd }} nudge <target> "message"` — Immediate delivery to Claude session
 
-### gt nudge: Waking Agents
+### ms nudge: Waking Agents
 
 `{{ cmd }} nudge` sends a message directly to another agent's Claude Code session via tmux.
 
@@ -381,10 +381,10 @@ BODY
 | Both: assign + wake | `{{ cmd }} mail send` then `{{ cmd }} nudge` | Mail carries payload, nudge wakes |
 
 ```bash
-gt nudge {{ .RigName }}/crew/peer "Check your mail"
-gt nudge {{ .RigName }}/miners/alpha "Work available on hook"
-gt nudge witness "Check miner health"
-gt nudge overseer "Status update needed"
+ms nudge {{ .RigName }}/crew/peer "Check your mail"
+ms nudge {{ .RigName }}/miners/alpha "Work available on hook"
+ms nudge witness "Check miner health"
+ms nudge overseer "Status update needed"
 ```
 
 **Target shortcuts:** `overseer`, `supervisor`, `witness`, `refinery`, `channel:<name>`
@@ -419,8 +419,8 @@ When your context fills up, cycle using `{{ cmd }} handoff`.
 - **Handoff mail** = Context notes for yourself (optional)
 
 ```bash
-gt handoff                                    # Simple handoff
-gt handoff -s "Working on auth bug" -m "..."  # With context notes
+ms handoff                                    # Simple handoff
+ms handoff -s "Working on auth bug" -m "..."  # With context notes
 ```
 
 Cycle when context gets full, you finish a logical chunk, need a fresh perspective,
@@ -453,7 +453,7 @@ succeeds. **YOU must push — NEVER say "ready to push when you are!"**
 ## Desire Paths: Improving the Tooling
 
 When a command fails but your guess felt reasonable, file a bead with `desire-path` label:
-`bd new -t task "Add gt mail hook alias" -l desire-path`
+`bd new -t task "Add ms mail hook alias" -l desire-path`
 
 See `{{ .TownRoot }}/docs/AGENT-ERGONOMICS.md` for the philosophy.
 
@@ -474,10 +474,10 @@ See `{{ .TownRoot }}/docs/AGENT-ERGONOMICS.md` for the philosophy.
 | Close/complete a bead | `bd close <id>` | ~~bd complete~~ (not a command), ~~bd update --status done~~ (invalid status) |
 | Claim work | `bd update <id> --claim` | ~~bd update --status=in_progress~~ (works but --claim is atomic) |
 | Message another agent | `{{ cmd }} nudge <target> "msg"` | ~~tmux send-keys~~ (unreliable) |
-| Dispatch work to miner | `{{ cmd }} sling <bead> <rig>` | ~~gt sling <bead>~~ (no target = self-sling) |
-| Stop my session | `{{ cmd }} crew stop {{ .Miner }}` | ~~gt rig stop~~ (stops rig agents, not crew) |
-| Pause rig (daemon won't restart) | `{{ cmd }} rig park <rig>` | ~~gt rig stop~~ (daemon will restart it) |
-| Permanently disable rig | `{{ cmd }} rig dock <rig>` | ~~gt rig park~~ (temporary only) |
+| Dispatch work to miner | `{{ cmd }} sling <bead> <rig>` | ~~ms sling <bead>~~ (no target = self-sling) |
+| Stop my session | `{{ cmd }} crew stop {{ .Miner }}` | ~~ms rig stop~~ (stops rig agents, not crew) |
+| Pause rig (daemon won't restart) | `{{ cmd }} rig park <rig>` | ~~ms rig stop~~ (daemon will restart it) |
+| Permanently disable rig | `{{ cmd }} rig dock <rig>` | ~~ms rig park~~ (temporary only) |
 
 **Beads valid statuses:** `open`, `in_progress`, `blocked`, `deferred`, `closed`, `pinned`, `hooked`
 (there is NO `done` or `complete` status)

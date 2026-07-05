@@ -1,8 +1,8 @@
 // Mineshaft OpenCode plugin: hooks SessionStart/Compaction via events.
-// Injects gt prime context into the system prompt via experimental.chat.system.transform.
+// Injects ms prime context into the system prompt via experimental.chat.system.transform.
 export const Mineshaft = async ({ $, directory }) => {
-  const role = (process.env.GT_ROLE || "").toLowerCase();
-  const gtBin = process.env.GT_BIN || "gt";
+  const role = (process.env.MS_ROLE || "").toLowerCase();
+  const gtBin = process.env.MS_BIN || "ms";
   let didInit = false;
 
   // Promise-based context loading ensures the system transform hook can
@@ -41,8 +41,8 @@ export const Mineshaft = async ({ $, directory }) => {
   };
 
   const isDoltBackedCommand = (cmd) =>
-    /(^|\s)(?:'[^']*\/|[^'\s]*\/)?(?:gt|bd)'?\s/.test(cmd) &&
-    !/(^|\s)(?:'[^']*\/|[^'\s]*\/)?gt'?\s+dolt\s+status(\s|$)/.test(cmd);
+    /(^|\s)(?:'[^']*\/|[^'\s]*\/)?(?:ms|bd)'?\s/.test(cmd) &&
+    !/(^|\s)(?:'[^']*\/|[^'\s]*\/)?ms'?\s+dolt\s+status(\s|$)/.test(cmd);
 
   const captureDoltStatus = async () => {
     const statusCmd = `timeout 10s ${gtCommand()} dolt status 2>&1`;
@@ -76,7 +76,7 @@ export const Mineshaft = async ({ $, directory }) => {
     if (isDoltBackedCommand(cmd)) {
       lines.push(`dolt_status_tail:\n${outputTail(await captureDoltStatus())}`);
       lines.push(
-        "suggested_recovery: If Dolt is unhealthy or another gt/bd command is hanging, capture SIGQUIT and `gt dolt status` diagnostics before escalating; otherwise retry after the timeout clears."
+        "suggested_recovery: If Dolt is unhealthy or another ms/bd command is hanging, capture SIGQUIT and `ms dolt status` diagnostics before escalating; otherwise retry after the timeout clears."
       );
     } else {
       lines.push("suggested_recovery: Inspect the command, stdout/stderr tails, and retry once the timeout or process failure is resolved.");
@@ -106,9 +106,9 @@ export const Mineshaft = async ({ $, directory }) => {
   };
 
   const loadPrime = async (source = "startup", sessionID = "") => {
-    const env = [`GT_HOOK_SOURCE=${shellQuote(source)}`];
+    const env = [`MS_HOOK_SOURCE=${shellQuote(source)}`];
     if (sessionID) {
-      env.push(`GT_SESSION_ID=${shellQuote(sessionID)}`);
+      env.push(`MS_SESSION_ID=${shellQuote(sessionID)}`);
     }
     let context = await captureRun(`${env.join(" ")} ${gtCommand()} prime --hook`);
     // NOTE: session-started nudge to supervisor removed — it interrupted
@@ -153,8 +153,8 @@ export const Mineshaft = async ({ $, directory }) => {
       output.context.push(`
 ## Mineshaft Multi-Agent System
 
-**After Compaction:** Run \`gt prime --hook\` to restore full context.
-**Check Hook:** \`gt hook\` - if work present, execute immediately (GUPP).
+**After Compaction:** Run \`ms prime --hook\` to restore full context.
+**Check Hook:** \`ms hook\` - if work present, execute immediately (GUPP).
 **Role:** ${roleDisplay}
 `);
     },

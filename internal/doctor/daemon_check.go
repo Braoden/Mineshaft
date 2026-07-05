@@ -62,7 +62,7 @@ func (c *DaemonCheck) Run(ctx *CheckContext) *CheckResult {
 		Name:    c.Name(),
 		Status:  StatusWarning,
 		Message: "Daemon is not running",
-		FixHint: "Run 'gt daemon start' or 'gt doctor --fix'",
+		FixHint: "Run 'ms daemon start' or 'ms doctor --fix'",
 	}
 }
 
@@ -72,7 +72,7 @@ func (c *DaemonCheck) Fix(ctx *CheckContext) error {
 		return ErrSkippedNoStart
 	}
 
-	// Find gt executable
+	// Find ms executable
 	gtPath, err := os.Executable()
 	if err != nil {
 		return err

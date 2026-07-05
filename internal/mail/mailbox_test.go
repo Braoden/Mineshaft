@@ -292,7 +292,7 @@ func TestMailboxMarkReadOnlyExcludesFromUnread(t *testing.T) {
 		t.Errorf("ListUnread returned %d, want 2", len(unread))
 	}
 
-	// Mark one as read-only (simulates gt mail read behavior)
+	// Mark one as read-only (simulates ms mail read behavior)
 	if err := m.MarkReadOnly("msg-001"); err != nil {
 		t.Fatalf("MarkReadOnly error: %v", err)
 	}
@@ -445,7 +445,7 @@ func TestMailboxListFromDirConvergesWispQueryAndFiltersStatuses(t *testing.T) {
 	}
 
 	beadsDir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(beadsDir, ".gt-types-configured"), []byte(strings.Join(constants.BeadsCustomTypesList(), ",")+"\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(beadsDir, ".ms-types-configured"), []byte(strings.Join(constants.BeadsCustomTypesList(), ",")+"\n"), 0644); err != nil {
 		t.Fatalf("write types sentinel: %v", err)
 	}
 
@@ -457,11 +457,11 @@ printf '%s\n' "$*" >> "$BD_LOG"
 if [ "$1" = "list" ]; then
   case "$*" in
     *"--assignee mineshaft/synth"*)
-      printf '%s\n' '[{"id":"issue-direct-open","title":"Direct open","description":"","status":"open","priority":2,"assignee":"mineshaft/synth","created_at":"2026-06-12T12:00:05Z","labels":["gt:message","from:overseer/"]},{"id":"issue-direct-hooked","title":"Direct hooked","description":"","status":"hooked","priority":2,"assignee":"mineshaft/synth","created_at":"2026-06-12T12:00:04Z","labels":["gt:message","from:overseer/"]},{"id":"issue-direct-closed","title":"Direct closed","description":"","status":"closed","priority":2,"assignee":"mineshaft/synth","created_at":"2026-06-12T12:00:03Z","labels":["gt:message","from:overseer/"]}]'
+      printf '%s\n' '[{"id":"issue-direct-open","title":"Direct open","description":"","status":"open","priority":2,"assignee":"mineshaft/synth","created_at":"2026-06-12T12:00:05Z","labels":["ms:message","from:overseer/"]},{"id":"issue-direct-hooked","title":"Direct hooked","description":"","status":"hooked","priority":2,"assignee":"mineshaft/synth","created_at":"2026-06-12T12:00:04Z","labels":["ms:message","from:overseer/"]},{"id":"issue-direct-closed","title":"Direct closed","description":"","status":"closed","priority":2,"assignee":"mineshaft/synth","created_at":"2026-06-12T12:00:03Z","labels":["ms:message","from:overseer/"]}]'
       exit 0
       ;;
     *"--label cc:mineshaft/synth"*)
-      printf '%s\n' '[{"id":"issue-cc-open","title":"CC open","description":"","status":"open","priority":2,"assignee":"overseer/","created_at":"2026-06-12T12:00:02Z","labels":["gt:message","cc:mineshaft/synth","from:overseer/"]},{"id":"issue-cc-hooked","title":"CC hooked","description":"","status":"hooked","priority":2,"assignee":"overseer/","created_at":"2026-06-12T12:00:01Z","labels":["gt:message","cc:mineshaft/synth","from:overseer/"]}]'
+      printf '%s\n' '[{"id":"issue-cc-open","title":"CC open","description":"","status":"open","priority":2,"assignee":"overseer/","created_at":"2026-06-12T12:00:02Z","labels":["ms:message","cc:mineshaft/synth","from:overseer/"]},{"id":"issue-cc-hooked","title":"CC hooked","description":"","status":"hooked","priority":2,"assignee":"overseer/","created_at":"2026-06-12T12:00:01Z","labels":["ms:message","cc:mineshaft/synth","from:overseer/"]}]'
       exit 0
       ;;
   esac
@@ -469,7 +469,7 @@ if [ "$1" = "list" ]; then
   exit 0
 fi
 if [ "$1" = "sql" ]; then
-  printf '%s\n' '[{"id":"wisp-direct-open","title":"Wisp direct open","description":"","status":"open","priority":2,"assignee":"mineshaft/synth","created_at":"2026-06-12T12:00:00Z","updated_at":"2026-06-12T12:00:00Z","labels_csv":"gt:message,from:overseer/","assignee_match":1,"cc_match":0},{"id":"wisp-direct-hooked","title":"Wisp direct hooked","description":"","status":"hooked","priority":2,"assignee":"mineshaft/synth","created_at":"2026-06-12T11:59:59Z","updated_at":"2026-06-12T11:59:59Z","labels_csv":"gt:message,from:overseer/","assignee_match":1,"cc_match":0},{"id":"wisp-cc-open","title":"Wisp CC open","description":"","status":"open","priority":2,"assignee":"overseer/","created_at":"2026-06-12T11:59:58Z","updated_at":"2026-06-12T11:59:58Z","labels_csv":"gt:message,cc:mineshaft/synth,from:overseer/","assignee_match":0,"cc_match":1},{"id":"wisp-cc-hooked","title":"Wisp CC hooked","description":"","status":"hooked","priority":2,"assignee":"overseer/","created_at":"2026-06-12T11:59:57Z","updated_at":"2026-06-12T11:59:57Z","labels_csv":"gt:message,cc:mineshaft/synth,from:overseer/","assignee_match":0,"cc_match":1},{"id":"issue-direct-open","title":"Duplicate wisp","description":"","status":"open","priority":2,"assignee":"mineshaft/synth","created_at":"2026-06-12T11:59:56Z","updated_at":"2026-06-12T11:59:56Z","labels_csv":"gt:message,from:overseer/","assignee_match":1,"cc_match":0}]'
+  printf '%s\n' '[{"id":"wisp-direct-open","title":"Wisp direct open","description":"","status":"open","priority":2,"assignee":"mineshaft/synth","created_at":"2026-06-12T12:00:00Z","updated_at":"2026-06-12T12:00:00Z","labels_csv":"ms:message,from:overseer/","assignee_match":1,"cc_match":0},{"id":"wisp-direct-hooked","title":"Wisp direct hooked","description":"","status":"hooked","priority":2,"assignee":"mineshaft/synth","created_at":"2026-06-12T11:59:59Z","updated_at":"2026-06-12T11:59:59Z","labels_csv":"ms:message,from:overseer/","assignee_match":1,"cc_match":0},{"id":"wisp-cc-open","title":"Wisp CC open","description":"","status":"open","priority":2,"assignee":"overseer/","created_at":"2026-06-12T11:59:58Z","updated_at":"2026-06-12T11:59:58Z","labels_csv":"ms:message,cc:mineshaft/synth,from:overseer/","assignee_match":0,"cc_match":1},{"id":"wisp-cc-hooked","title":"Wisp CC hooked","description":"","status":"hooked","priority":2,"assignee":"overseer/","created_at":"2026-06-12T11:59:57Z","updated_at":"2026-06-12T11:59:57Z","labels_csv":"ms:message,cc:mineshaft/synth,from:overseer/","assignee_match":0,"cc_match":1},{"id":"issue-direct-open","title":"Duplicate wisp","description":"","status":"open","priority":2,"assignee":"mineshaft/synth","created_at":"2026-06-12T11:59:56Z","updated_at":"2026-06-12T11:59:56Z","labels_csv":"ms:message,from:overseer/","assignee_match":1,"cc_match":0}]'
   exit 0
 fi
 printf 'unexpected bd args: %s\n' "$*" >&2

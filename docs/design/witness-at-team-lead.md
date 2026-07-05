@@ -5,10 +5,10 @@
 > a planned architectural change to use Claude Code Agent Teams (AT) as the
 > transport layer. No code for this exists yet.
 
-> **Bead:** gt-ky4jf
+> **Bead:** ms-ky4jf
 > **Date:** 2026-02-08
 > **Author:** furiosa (mineshaft miner)
-> **Depends on:** AT spike report (gt-3nqoz), AT integration design (agent-teams-integration.md)
+> **Depends on:** AT spike report (ms-3nqoz), AT integration design (agent-teams-integration.md)
 > **Status:** Phase 1 implementation spec
 
 ---
@@ -23,13 +23,13 @@ miner teammates for assigned work, monitors them via AT's native lifecycle hooks
 and syncs completions to beads at task boundaries.
 
 **What changes:** Session management layer (tmux → AT).
-**What stays:** Beads as ledger, gt mail for cross-rig, molecules/formulas, `gt done`.
+**What stays:** Beads as ledger, ms mail for cross-rig, molecules/formulas, `ms done`.
 
 ---
 
 ## AT Spike Findings Summary
 
-> Condensed from the AT spike report (gt-3nqoz, 2026-02-08, author: nux).
+> Condensed from the AT spike report (ms-3nqoz, 2026-02-08, author: nux).
 
 **Recommendation: CONDITIONAL GO for Phase 1 experiment.**
 
@@ -43,14 +43,14 @@ and syncs completions to beads at task boundaries.
 | Delegate mode enforcement | GO | Structural, not behavioral |
 | Teammate cycling | WORKAROUND | Handoff + respawn pattern |
 | Token cost acceptable | CONDITIONAL | Sonnet teammates reduce cost |
-| gt/bd command access | GO | PATH via SessionStart hook |
+| ms/bd command access | GO | PATH via SessionStart hook |
 | Task list with dependencies | GO | Native match to Mineshaft workflow |
 
 5/8 clear GO. 2 require workarounds (viable mitigations). 1 conditional on Phase 1 cost validation.
 
 ### Critical Blockers
 
-1. **No per-teammate working directory** — AT teammates inherit lead's cwd. Workaround: `cd` in spawn prompt + PreToolUse hook (`gt validate-worktree-scope`) for structural enforcement.
+1. **No per-teammate working directory** — AT teammates inherit lead's cwd. Workaround: `cd` in spawn prompt + PreToolUse hook (`ms validate-worktree-scope`) for structural enforcement.
 2. **No session resumption for teammates** — Crashed teammates cannot resume. Workaround: PreCompact handoff + beads state recovery + Witness respawn.
 3. **Token cost ~7x per teammate** — Mitigated by using Sonnet for miner teammates, Opus for Witness lead only.
 
@@ -94,10 +94,10 @@ New state: Delegate mode structurally removes implementation tools. The Witness
 literally *cannot* edit files. This is the strongest possible ZFC compliance —
 the constraint is in the machinery, not in the instructions.
 
-### Witness Needs Bash for gt/bd Commands
+### Witness Needs Bash for ms/bd Commands
 
 **Problem:** Delegate mode removes Bash access, but the Witness needs to run
-`gt mail`, `bd show`, `bd close`, and other coordination commands.
+`ms mail`, `bd show`, `bd close`, and other coordination commands.
 
 **Solution options (in order of preference):**
 
@@ -118,7 +118,7 @@ the constraint is in the machinery, not in the instructions.
    Mitigated by: PreToolUse hook on Bash that rejects file-modifying commands.
 
 2. **Hooks as command proxy.** The Witness doesn't run commands directly.
-   Instead, hooks fire at turn boundaries and execute gt/bd commands based on
+   Instead, hooks fire at turn boundaries and execute ms/bd commands based on
    AT task state. The Witness coordinates purely through AT tools; the hooks
    handle the beads bridge.
 
@@ -126,7 +126,7 @@ the constraint is in the machinery, not in the instructions.
    the purest delegate mode implementation.
 
 3. **Teammate as command runner.** Spawn a lightweight "ops" teammate whose
-   sole job is running gt/bd commands on the Witness's behalf. The Witness
+   sole job is running ms/bd commands on the Witness's behalf. The Witness
    sends commands via AT messaging; the ops teammate executes and returns results.
 
    **Risk:** Token overhead for a simple command proxy. But it preserves
@@ -145,14 +145,14 @@ Witness genuinely needs to read beads state for coordination decisions.
     "matcher": "Bash",
     "hooks": [{
       "type": "command",
-      "command": "gt witness-bash-guard"
+      "command": "ms witness-bash-guard"
     }]
   }]
 }
 ```
 
-The `gt witness-bash-guard` script:
-- Allows: `gt *`, `bd *`, `git status`, `git log`, read-only commands
+The `ms witness-bash-guard` script:
+- Allows: `ms *`, `bd *`, `git status`, `git log`, read-only commands
 - Blocks: `echo >`, `cat >`, `sed -i`, `vim`, `nano`, any write operation
 - Returns exit code 2 with reason on block
 
@@ -162,7 +162,7 @@ The `gt witness-bash-guard` script:
 
 ### The Spawn Flow
 
-When work arrives (via minecart, gt sling, or direct assignment):
+When work arrives (via minecart, ms sling, or direct assignment):
 
 ```
 1. Witness receives work (mail, minecart dispatch, bd ready)
@@ -234,7 +234,7 @@ Task({
   team_name: "<rig>-work",
   name: "<miner-name>",
   model: "sonnet",
-  prompt: "You are miner <name>. Your worktree is <path>.\n\nAssigned issue: <id> - <title>\n<description>\n\nWorkflow:\n1. cd <worktree>\n2. Run `gt prime` for full context\n3. Follow mol-miner-work steps\n4. When done: commit, push, run `gt done`"
+  prompt: "You are miner <name>. Your worktree is <path>.\n\nAssigned issue: <id> - <title>\n<description>\n\nWorkflow:\n1. cd <worktree>\n2. Run `ms prime` for full context\n3. Follow mol-miner-work steps\n4. When done: commit, push, run `ms done`"
 })
 ```
 
@@ -254,29 +254,29 @@ hooks:
   SessionStart:
     - hooks:
         - type: command
-          command: "export PATH=\"$HOME/go/bin:$HOME/.local/bin:$PATH\" && gt prime --hook"
+          command: "export PATH=\"$HOME/go/bin:$HOME/.local/bin:$PATH\" && ms prime --hook"
   PreToolUse:
     - matcher: "Write|Edit"
       hooks:
         - type: command
-          command: "gt validate-worktree-scope"
+          command: "ms validate-worktree-scope"
   PreCompact:
     - matcher: "auto"
       hooks:
         - type: command
-          command: "gt handoff --reason compaction"
+          command: "ms handoff --reason compaction"
   Stop:
     - hooks:
         - type: command
-          command: "gt signal stop"
+          command: "ms signal stop"
 ---
 
 You are a Mineshaft miner (persistent identity, ephemeral sessions).
 
 ## Startup
 1. `cd` to your assigned worktree (given in your spawn prompt)
-2. Run `gt prime` for full context
-3. Check your hook: `gt hook`
+2. Run `ms prime` for full context
+3. Check your hook: `ms hook`
 4. Follow molecule steps: `bd mol current`
 
 ## Work Protocol
@@ -289,7 +289,7 @@ You are a Mineshaft miner (persistent identity, ephemeral sessions).
 When all steps done:
 1. `git status` — must be clean
 2. `git push`
-3. `gt done` — submits to merge queue, nukes your sandbox
+3. `ms done` — submits to merge queue, nukes your sandbox
 ```
 
 ### Worktree Assignment
@@ -298,9 +298,9 @@ Each miner teammate operates in its own git worktree. Since AT doesn't support
 per-teammate working directories natively, enforcement is via:
 
 1. **Spawn prompt:** First instruction is `cd /path/to/worktree`
-2. **PreToolUse hook:** `gt validate-worktree-scope` rejects Write/Edit operations
+2. **PreToolUse hook:** `ms validate-worktree-scope` rejects Write/Edit operations
    targeting paths outside the assigned worktree
-3. **Environment variable:** `GT_WORKTREE=/path/to/worktree` set via SessionStart hook
+3. **Environment variable:** `MS_WORKTREE=/path/to/worktree` set via SessionStart hook
 
 The Witness creates worktrees before spawning teammates:
 ```bash
@@ -308,7 +308,7 @@ git worktree add /path/to/miners/<name>/<rig> -b miner/<name>/<issue-id>
 ```
 
 This matches the current worktree management — the change is WHO creates them
-(Witness via AT, not `gt sling` via Go daemon).
+(Witness via AT, not `ms sling` via Go daemon).
 
 ---
 
@@ -409,7 +409,7 @@ Teammate running
     │
     ├── Context filling → PreCompact hook fires
     │   │
-    │   └── gt handoff --reason compaction
+    │   └── ms handoff --reason compaction
     │       ├── Saves current molecule step to beads
     │       ├── Saves progress notes
     │       └── Saves git branch state
@@ -417,7 +417,7 @@ Teammate running
     ├── Auto-compaction occurs
     │   │
     │   └── SessionStart hook fires (source: "compact")
-    │       └── gt prime --compact-resume
+    │       └── ms prime --compact-resume
     │           └── Reads beads state, restores context
     │
     └── Teammate continues with compressed context
@@ -453,16 +453,16 @@ Teammate stops
     "matcher": "miner",
     "hooks": [{
       "type": "command",
-      "command": "gt witness-teammate-stopped"
+      "command": "ms witness-teammate-stopped"
     }]
   }]
 }
 ```
 
-The `gt witness-teammate-stopped` script:
+The `ms witness-teammate-stopped` script:
 1. Reads the stopped agent's transcript path (available in hook input)
 2. Checks AT task status — was the task completed?
-3. Checks beads — was `gt done` run?
+3. Checks beads — was `ms done` run?
 4. If completed: no action (normal lifecycle)
 5. If incomplete: outputs `{ "decision": "block", "reason": "Teammate <name> stopped before completing task <id>. Beads state: <status>. Respawn needed." }`
 
@@ -518,7 +518,7 @@ crash tracking only matters during the current team session.
 
 ```bash
 #!/bin/bash
-# gt witness-teammate-idle
+# ms witness-teammate-idle
 # Fires when a teammate is about to go idle
 
 export PATH="$HOME/go/bin:$HOME/.local/bin:$PATH"
@@ -530,13 +530,13 @@ if [ "$READY" -gt 0 ]; then
   exit 2  # Block idle, send feedback
 fi
 
-# Check if gt done was run
-if git log --oneline -1 | grep -q "gt done"; then
+# Check if ms done was run
+if git log --oneline -1 | grep -q "ms done"; then
   exit 0  # Normal completion
 fi
 
 # Teammate seems genuinely idle without completing
-echo "Your work doesn't appear complete. Run 'bd ready' to check remaining steps, or 'gt done' if finished." >&2
+echo "Your work doesn't appear complete. Run 'bd ready' to check remaining steps, or 'ms done' if finished." >&2
 exit 2
 ```
 
@@ -604,7 +604,7 @@ Minecart hq-abc arrives at mineshaft
     │
     └── All tasks done:
         ├── Witness verifies beads sync
-        ├── Witness sends minecart completion to Overseer (gt mail)
+        ├── Witness sends minecart completion to Overseer (ms mail)
         └── Team shutdown
 ```
 
@@ -654,7 +654,7 @@ replacement, not an additional teammate. The pool size stays at max_teammates.
 
 ---
 
-## 7. Mail Bridge: gt mail ↔ AT Messages
+## 7. Mail Bridge: ms mail ↔ AT Messages
 
 ### The Boundary
 
@@ -663,18 +663,18 @@ replacement, not an additional teammate. The pool size stays at max_teammates.
                     │    Witness       │
                     │  (AT Team Lead)  │
                     │                  │
-    gt mail ←──────│── Bridge ──────→ AT messaging
+    ms mail ←──────│── Bridge ──────→ AT messaging
     (cross-rig,    │                  (intra-team,
      persistent)   │                   ephemeral)
                     └─────────────────┘
 ```
 
-### Inbound: gt mail → AT message
+### Inbound: ms mail → AT message
 
-When the Witness receives gt mail relevant to an active teammate:
+When the Witness receives ms mail relevant to an active teammate:
 
 ```
-gt mail inbox
+ms mail inbox
     │
     ├── From Overseer: "Priority shift — issue X is now P0"
     │   └── Witness sends AT message to relevant teammate:
@@ -690,7 +690,7 @@ gt mail inbox
         └── Witness creates/unblocks AT task for downstream work
 ```
 
-### Outbound: AT event → gt mail
+### Outbound: AT event → ms mail
 
 When AT events need to reach entities outside the team:
 
@@ -699,13 +699,13 @@ Teammate completes final task
     │
     └── Witness detects all tasks done
         │
-        ├── gt mail send mineshaft/refinery -s "MERGE_READY: <branch>"
+        ├── ms mail send mineshaft/refinery -s "MERGE_READY: <branch>"
         │   └── Refinery processes merge queue
         │
-        ├── gt mail send overseer/ -s "MINECART COMPLETE: hq-abc"
+        ├── ms mail send overseer/ -s "MINECART COMPLETE: hq-abc"
         │   └── Overseer updates minecart tracking
         │
-        └── gt mail send mineshaft/witness -s "MINER_DONE: <name>"
+        └── ms mail send mineshaft/witness -s "MINER_DONE: <name>"
             └── (Self-mail for beads record)
 ```
 
@@ -715,14 +715,14 @@ Teammate completes final task
 |--------------|---------|-----|
 | Witness ↔ Miner | AT messaging | Same team, real-time, ephemeral |
 | Miner ↔ Miner | AT messaging | Same team, coordination chatter |
-| Witness → Refinery | gt mail | Different lifecycle, needs persistence |
-| Witness → Overseer | gt mail | Cross-rig, needs persistence |
-| Overseer → Witness | gt mail | Cross-rig, needs persistence |
-| Miner escalation | AT message to Witness, Witness relays via gt mail | Bridge pattern |
+| Witness → Refinery | ms mail | Different lifecycle, needs persistence |
+| Witness → Overseer | ms mail | Cross-rig, needs persistence |
+| Overseer → Witness | ms mail | Cross-rig, needs persistence |
+| Miner escalation | AT message to Witness, Witness relays via ms mail | Bridge pattern |
 
 ### The Relay Pattern
 
-Miners can't send gt mail directly to entities outside their team (AT
+Miners can't send ms mail directly to entities outside their team (AT
 messaging is team-scoped). Instead:
 
 ```
@@ -731,8 +731,8 @@ Miner needs to escalate to Overseer:
     ├── Miner sends AT message to Witness:
     │   "ESCALATE: Need Overseer decision on auth approach"
     │
-    └── Witness relays via gt mail:
-        gt mail send overseer/ -s "ESCALATE from miner <name>" -m "..."
+    └── Witness relays via ms mail:
+        ms mail send overseer/ -s "ESCALATE from miner <name>" -m "..."
 ```
 
 This is analogous to the current model where miners mail the Witness and
@@ -786,16 +786,16 @@ hooks:
   SessionStart:
     - hooks:
         - type: command
-          command: "export PATH=\"$HOME/go/bin:$HOME/.local/bin:$PATH\" && gt prime --hook"
+          command: "export PATH=\"$HOME/go/bin:$HOME/.local/bin:$PATH\" && ms prime --hook"
   PreToolUse:
     - matcher: "Bash"
       hooks:
         - type: command
-          command: "gt witness-bash-guard"
+          command: "ms witness-bash-guard"
   Stop:
     - hooks:
         - type: command
-          command: "gt signal stop"
+          command: "ms signal stop"
 ---
 
 You are the Mineshaft Witness for this rig.
@@ -805,22 +805,22 @@ You coordinate miner workers. You NEVER implement code directly.
 Delegate mode enforces this structurally — you cannot edit files.
 
 ## Startup
-1. Check for incoming work: `gt mail inbox`, `bd ready`
+1. Check for incoming work: `ms mail inbox`, `bd ready`
 2. Create AT team if work is available
 3. Spawn miner teammates for each issue
 4. Monitor progress via AT task list
 
 ## During Work
 - Monitor teammate progress via TaskList
-- Relay cross-rig messages (gt mail ↔ AT messages)
+- Relay cross-rig messages (ms mail ↔ AT messages)
 - Handle teammate crashes (respawn or escalate)
 - Enforce quality via plan approval
 
 ## Completion
 - Verify all AT tasks completed
 - Verify beads are synced (all issues closed)
-- Send MERGE_READY to Refinery via gt mail
-- Send minecart completion to Overseer via gt mail
+- Send MERGE_READY to Refinery via ms mail
+- Send minecart completion to Overseer via ms mail
 - Shutdown team
 ```
 
@@ -836,10 +836,10 @@ See Section 2 above for the full definition.
 
 | Component | Replacement | Notes |
 |-----------|-------------|-------|
-| `gt sling` (miner spawn) | `Teammate({ operation: "spawn" })` | AT native |
-| `gt miner nuke` | `Teammate({ operation: "requestShutdown" })` | AT native |
+| `ms sling` (miner spawn) | `Teammate({ operation: "spawn" })` | AT native |
+| `ms miner nuke` | `Teammate({ operation: "requestShutdown" })` | AT native |
 | tmux session management | AT manages teammate sessions | No more tmux for miners |
-| `gt nudge` (tmux send-keys) | `Teammate({ operation: "write" })` | AT messaging |
+| `ms nudge` (tmux send-keys) | `Teammate({ operation: "write" })` | AT messaging |
 | Zombie detection (tmux-based) | SubagentStop / TeammateIdle hooks | Structural |
 | Witness "are you stuck?" polling | TeammateIdle hook (automatic) | Event-driven |
 | Miner-to-miner isolation | Prompt + PreToolUse hook | Behavioral → hook-enforced |
@@ -849,9 +849,9 @@ See Section 2 above for the full definition.
 | Component | Why |
 |-----------|-----|
 | Beads (Dolt) | Durable ledger — AT tasks are ephemeral |
-| gt mail | Cross-rig communication — AT is team-scoped |
+| ms mail | Cross-rig communication — AT is team-scoped |
 | Molecules/formulas | Work templates — AT tasks created from these |
-| `gt done` | Miner self-clean — unchanged lifecycle |
+| `ms done` | Miner self-clean — unchanged lifecycle |
 | Git worktrees | Filesystem isolation — AT doesn't provide this |
 | Daemon/Boot/Supervisor | Health monitoring — AT has no crash recovery |
 | Refinery (separate) | Different lifecycle (Phase 2 brings it in-band) |
@@ -877,13 +877,13 @@ across minutes (task completions), not milliseconds (concurrent status updates).
 ```
 Witness session starts (managed by daemon)
     │
-    ├── SessionStart hook: gt prime --hook
+    ├── SessionStart hook: ms prime --hook
     │   └── Loads role context, checks hook
     │
     ├── Check for work:
-    │   ├── gt mail inbox (minecart dispatch, priority changes)
+    │   ├── ms mail inbox (minecart dispatch, priority changes)
     │   ├── bd ready (unblocked issues)
-    │   └── gt hook (hooked work)
+    │   └── ms hook (hooked work)
     │
     ├── If work available:
     │   │
@@ -904,7 +904,7 @@ Witness session starts (managed by daemon)
     │   └── Enter monitoring loop:
     │       ├── Watch AT task list for completions
     │       ├── Handle teammate crashes (SubagentStop)
-    │       ├── Relay gt mail ↔ AT messages
+    │       ├── Relay ms mail ↔ AT messages
     │       ├── Check for new minecart arrivals
     │       └── When all tasks done: cleanup and report
     │
@@ -919,12 +919,12 @@ Witness session starts (managed by daemon)
 
 ### In Scope
 
-1. Witness as AT team lead in delegate mode (with Bash for gt/bd)
+1. Witness as AT team lead in delegate mode (with Bash for ms/bd)
 2. Miner teammates with `.claude/agents/miner.md`
 3. Bead sync via TaskCompleted hook
 4. Session cycling via PreCompact handoff + respawn
 5. Basic error handling (crash detection, respawn, crash loop prevention)
-6. Mail bridge (gt mail ↔ AT messaging)
+6. Mail bridge (ms mail ↔ AT messaging)
 7. Single-minecart sequential processing
 
 ### Out of Scope (Phase 2+)
@@ -941,7 +941,7 @@ Witness session starts (managed by daemon)
 | Criterion | Test |
 |-----------|------|
 | Witness stays in delegate mode | Verify Witness cannot write/edit files |
-| Miners complete work | End-to-end: spawn → implement → push → gt done |
+| Miners complete work | End-to-end: spawn → implement → push → ms done |
 | Beads sync correctly | AT task completion → bd close fires → bead is closed |
 | Session cycling works | Force compaction → new teammate resumes from beads |
 | Crash recovery works | Kill a teammate → Witness detects → respawns |
@@ -963,9 +963,9 @@ validation. The Witness can fall back to tmux-based management if AT fails.
 Step 1: Enable AT feature flag in mineshaft .claude/settings.json
 Step 2: Create .claude/agents/miner.md and .claude/agents/witness-lead.md
 Step 3: Implement hook scripts (task-completed-sync, teammate-idle, teammate-stopped)
-Step 4: Implement gt witness-bash-guard
-Step 5: Implement gt validate-worktree-scope
-Step 6: Implement gt witness-teammate-stopped
+Step 4: Implement ms witness-bash-guard
+Step 5: Implement ms validate-worktree-scope
+Step 6: Implement ms witness-teammate-stopped
 Step 7: Update Witness startup to create AT team instead of tmux miner sessions
 Step 8: Test with 2 miners on a small minecart
 Step 9: Validate all criteria above

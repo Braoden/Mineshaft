@@ -99,22 +99,22 @@ no new database schema. The label IS the opt-in for Layers 1-2.
 
 ```bash
 # Activate the Mountain-Eater on an epic
-gt mountain <epic-id>
+ms mountain <epic-id>
 
 # Internally:
-#   1. gt minecart stage <epic-id>          ← validate DAG, compute waves
+#   1. ms minecart stage <epic-id>          ← validate DAG, compute waves
 #   2. bd update <minecart> --add-label mountain  ← trigger judgment layers
-#   3. gt minecart launch <minecart-id>       ← dispatch wave 1, MinecartManager takes over
+#   3. ms minecart launch <minecart-id>       ← dispatch wave 1, MinecartManager takes over
 
 # Check progress
-gt mountain status [epic-id|minecart-id]
+ms mountain status [epic-id|minecart-id]
 
 # Pause/resume (keeps label, stops/starts dispatch)
-gt mountain pause <epic-id|minecart-id>
-gt mountain resume <epic-id|minecart-id>
+ms mountain pause <epic-id|minecart-id>
+ms mountain resume <epic-id|minecart-id>
 
 # Cancel (removes label, leaves minecart for manual management)
-gt mountain cancel <epic-id|minecart-id>
+ms mountain cancel <epic-id|minecart-id>
 ```
 
 Regular minecarts (no `mountain` label) continue working exactly as today.
@@ -175,7 +175,7 @@ distinguish "miner failed" from "miner is still working."
 
 A skipped issue (`mountain:skipped` label, `blocked` status) is:
 - Excluded from the ready front (blocked status)
-- Visible in `gt mountain status` output
+- Visible in `ms mountain status` output
 - Escalated to Overseer by Layer 2 (Supervisor Dog)
 - Recoverable: `bd update <issue> --status=open --remove-label mountain:skipped`
 
@@ -244,7 +244,7 @@ Minecart: {{minecart_id}}
 Task: {{task}}
 
 If task is "stall":
-  1. Run: gt minecart status {{minecart_id}}
+  1. Run: ms minecart status {{minecart_id}}
   2. Identify why no progress:
      - Are there skipped issues (mountain:skipped label)?
      - Are all remaining issues blocked? By what?
@@ -257,14 +257,14 @@ If task is "stall":
   5. If miners are active: this is fine, no action needed
 
 If task is "complete":
-  1. Run: gt minecart status {{minecart_id}}
+  1. Run: ms minecart status {{minecart_id}}
   2. Verify all tracked issues are closed
   3. If any skipped issues remain:
      Mail Overseer: "Mountain {{minecart_id}} finished with N skipped issues.
      Review skipped work: [list issue IDs]"
   4. If all clean:
      Mail Overseer: "Mountain {{minecart_id}} complete. N issues closed in Xh Ym."
-  5. Run: gt minecart close {{minecart_id}}
+  5. Run: ms minecart close {{minecart_id}}
 """
 ```
 
@@ -308,19 +308,19 @@ Body:
   Stalled for: 15 minutes
 
   Skipped issues (miner failure):
-    gt-xyz "Migrate session store" (failed 3 times)
-    gt-abc "Update JWT validation" (failed 3 times)
+    ms-xyz "Migrate session store" (failed 3 times)
+    ms-abc "Update JWT validation" (failed 3 times)
 
   Blocked issues (DAG):
-    gt-def "Integration tests" (blocked by gt-xyz)
-    gt-ghi "E2E tests" (blocked by gt-def)
+    ms-def "Integration tests" (blocked by ms-xyz)
+    ms-ghi "E2E tests" (blocked by ms-def)
 
   Active miners: 0
   Ready issues: 0
 
   Action needed: Review skipped issues. Possible fixes:
-    bd update gt-xyz --status=open --remove-label mountain:skipped  (retry)
-    bd close gt-xyz --reason="Descoped"  (skip permanently, unblocks dependents)
+    bd update ms-xyz --status=open --remove-label mountain:skipped  (retry)
+    bd close ms-xyz --reason="Descoped"  (skip permanently, unblocks dependents)
 ```
 
 ### Completion Notification
@@ -333,8 +333,8 @@ Body:
   Elapsed: 3h 42m
 
   Skipped issues:
-    gt-xyz "Migrate session store" (failed 3 times — needs manual review)
-    gt-abc "Update JWT validation" (failed 3 times — needs manual review)
+    ms-xyz "Migrate session store" (failed 3 times — needs manual review)
+    ms-abc "Update JWT validation" (failed 3 times — needs manual review)
 ```
 
 ### Overseer's Role
@@ -355,16 +355,16 @@ involvement. The Overseer's actions are:
 ### Starting a Mountain
 
 ```bash
-$ gt mountain gt-epic-auth-rebuild
+$ ms mountain ms-epic-auth-rebuild
 
 Validating epic structure...
-  Epic: gt-epic-auth-rebuild "Rebuild auth system"
+  Epic: ms-epic-auth-rebuild "Rebuild auth system"
   Tasks: 35 (31 slingable, 4 epics)
   Waves: 6 (computed from blocking deps)
   Max parallelism: 4
 
   Warnings:
-    gt-migrate-sessions has no description (may cause miner confusion)
+    ms-migrate-sessions has no description (may cause miner confusion)
 
   Errors: none
 
@@ -373,20 +373,20 @@ Creating minecart...
   Label: mountain
 
 Launching Wave 1 (4 tasks)...
-  Slung gt-foundation-types → mineshaft
-  Slung gt-config-schema → mineshaft
-  Slung gt-test-fixtures → mineshaft
-  Slung gt-error-types → mineshaft
+  Slung ms-foundation-types → mineshaft
+  Slung ms-config-schema → mineshaft
+  Slung ms-test-fixtures → mineshaft
+  Slung ms-error-types → mineshaft
 
 Mountain active. MinecartManager will feed subsequent waves.
 Supervisor will audit progress every ~10 minutes.
-Check status: gt mountain status hq-cv-m7x
+Check status: ms mountain status hq-cv-m7x
 ```
 
 ### Checking Status
 
 ```bash
-$ gt mountain status
+$ ms mountain status
 
 Active Mountains:
   hq-cv-m7x "Rebuild auth system"
@@ -406,38 +406,38 @@ Active Mountains:
 ### Detailed Status
 
 ```bash
-$ gt mountain status hq-cv-m7x
+$ ms mountain status hq-cv-m7x
 
 Mountain: hq-cv-m7x "Rebuild auth system"
-Epic: gt-epic-auth-rebuild
+Epic: ms-epic-auth-rebuild
 
 Progress: 23/35 closed (65%)
 Elapsed: 1h 47m
 Wave: 4 of 6
 
 Completed (23):
-  ✓ gt-foundation-types, gt-config-schema, gt-test-fixtures, ...
+  ✓ ms-foundation-types, ms-config-schema, ms-test-fixtures, ...
 
 Active (3):
-  ⟳ gt-session-handler (miner: mineshaft/nux, 12m)
-  ⟳ gt-middleware-chain (miner: mineshaft/furiosa, 8m)
-  ⟳ gt-rate-limiter (miner: mineshaft/max, 3m)
+  ⟳ ms-session-handler (miner: mineshaft/nux, 12m)
+  ⟳ ms-middleware-chain (miner: mineshaft/furiosa, 8m)
+  ⟳ ms-rate-limiter (miner: mineshaft/max, 3m)
 
 Ready (1):
-  ○ gt-cache-layer (unblocked, waiting for miner)
+  ○ ms-cache-layer (unblocked, waiting for miner)
 
 Skipped (2):
-  ⊘ gt-migrate-sessions (failed 3 times — no description)
-  ⊘ gt-jwt-validation (failed 3 times — test dependency missing)
+  ⊘ ms-migrate-sessions (failed 3 times — no description)
+  ⊘ ms-jwt-validation (failed 3 times — test dependency missing)
 
 Blocked (6):
-  ◌ gt-auth-integration (needs: gt-session-handler, gt-jwt-validation⊘)
-  ◌ gt-e2e-auth-tests (needs: gt-auth-integration)
+  ◌ ms-auth-integration (needs: ms-session-handler, ms-jwt-validation⊘)
+  ◌ ms-e2e-auth-tests (needs: ms-auth-integration)
   ...
 
-Stall risk: gt-jwt-validation⊘ blocks 4 downstream issues.
-  Fix: bd update gt-jwt-validation --status=open --remove-label mountain:skipped
-  Or:  bd close gt-jwt-validation --reason="Descoped"
+Stall risk: ms-jwt-validation⊘ blocks 4 downstream issues.
+  Fix: bd update ms-jwt-validation --status=open --remove-label mountain:skipped
+  Or:  bd close ms-jwt-validation --reason="Descoped"
 ```
 
 ---
@@ -463,8 +463,8 @@ infinite sling-fail loop for all minecarts.
 
 ### 9.3 Progress Visibility
 
-`gt minecart status` should show the same rich information as
-`gt mountain status` — active miners, ready front, blocked issues,
+`ms minecart status` should show the same rich information as
+`ms mountain status` — active miners, ready front, blocked issues,
 skipped issues. This is useful for all minecarts, not just mountains.
 
 ---
@@ -502,14 +502,14 @@ See [roadmap.md](roadmap.md) Milestone 5 for the phased implementation.
 
 | Component | Change | Scope |
 |-----------|--------|-------|
-| `gt mountain` CLI | New command (stage + label + launch) | ~200 lines |
-| `gt mountain status` | New command (query + format) | ~300 lines |
-| `gt mountain pause/resume/cancel` | Label management | ~100 lines |
+| `ms mountain` CLI | New command (stage + label + launch) | ~200 lines |
+| `ms mountain status` | New command (query + format) | ~300 lines |
+| `ms mountain pause/resume/cancel` | Label management | ~100 lines |
 | Witness patrol formula | Failure tracking for minecart issues | Formula step |
 | Supervisor patrol formula | Mountain audit step | Formula step |
 | `mol-mountain-dog.formula.toml` | Dog formula for stall investigation | New formula |
 | MinecartManager stranded scan | Skip after N failures (global) | ~30 lines |
-| `gt minecart status` | Enhanced output (active, ready, blocked) | ~100 lines |
+| `ms minecart status` | Enhanced output (active, ready, blocked) | ~100 lines |
 
 ### What Does NOT Change
 
@@ -524,7 +524,7 @@ See [roadmap.md](roadmap.md) Milestone 5 for the phased implementation.
 
 ## 12. Open Questions
 
-1. **Should `gt mountain` auto-undock a docked rig?** If the epic's issues
+1. **Should `ms mountain` auto-undock a docked rig?** If the epic's issues
    route to a docked rig, should the mountain automatically undock it?
    Current thinking: no — require the rig to be active. Mountains only
    grind active rigs.

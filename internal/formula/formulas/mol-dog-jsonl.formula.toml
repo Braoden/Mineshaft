@@ -170,7 +170,7 @@ None
 
 **2. Signal completion to Supervisor:**
 ```bash
-gt mail send supervisor/ -s "DOG_DONE: jsonl" -m "Task: jsonl-git-backup
+ms mail send supervisor/ -s "DOG_DONE: jsonl" -m "Task: jsonl-git-backup
 Exported: {{exported_count}}/{{total_count}}
 Records: {{record_count}}
 Push: {{push_status}}

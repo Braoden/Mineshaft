@@ -16,15 +16,15 @@ var patrolNewCmd = &cobra.Command{
 	Long: `Create a new patrol wisp for the current role, injecting rig config
 variables so the formula has correct settings baked in.
 
-Role is auto-detected from GT_ROLE (set by the daemon). Use --role to override.
+Role is auto-detected from MS_ROLE (set by the daemon). Use --role to override.
 
 For refinery patrols, MQ config variables (run_tests, test_command,
 target_branch, etc.) are read from the rig's config.json and settings/config.json and
 passed as --var args to the wisp.
 
 Examples:
-  gt patrol new                  # Auto-detect role, create patrol
-  gt patrol new --role refinery  # Explicitly create refinery patrol`,
+  ms patrol new                  # Auto-detect role, create patrol
+  ms patrol new --role refinery  # Explicitly create refinery patrol`,
 	RunE: runPatrolNew,
 }
 
@@ -40,7 +40,7 @@ func runPatrolNew(cmd *cobra.Command, args []string) error {
 	}
 
 	// Allow --role flag to override; otherwise use the already-parsed role
-	// (GetRole already handles GT_ROLE env var internally)
+	// (GetRole already handles MS_ROLE env var internally)
 	roleName := string(roleInfo.Role)
 	if patrolNewRole != "" {
 		roleName = patrolNewRole

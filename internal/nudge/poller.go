@@ -48,7 +48,7 @@ func pollerPidFile(townRoot, session string) string {
 	return filepath.Join(pollerPidDir(townRoot), safe+".pid")
 }
 
-// StartPoller launches a background `gt nudge-poller <session>` process.
+// StartPoller launches a background `ms nudge-poller <session>` process.
 // The process is detached (Setpgid) so it survives the caller's exit.
 // Returns the PID of the launched process, or an error.
 func StartPoller(townRoot, session string) (int, error) {
@@ -62,10 +62,10 @@ func StartPoller(townRoot, session string) (int, error) {
 		return pid, nil // already running
 	}
 
-	// Find the gt binary.
+	// Find the ms binary.
 	gtBin, err := os.Executable()
 	if err != nil {
-		return 0, fmt.Errorf("finding gt binary: %w", err)
+		return 0, fmt.Errorf("finding ms binary: %w", err)
 	}
 
 	cmd := buildPollerCommand(gtBin, townRoot, session)

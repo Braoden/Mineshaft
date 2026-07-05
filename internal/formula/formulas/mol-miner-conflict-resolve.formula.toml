@@ -17,7 +17,7 @@ fails. They are identified by:
 | Aspect | Regular Work | Conflict Resolution |
 |--------|--------------|---------------------|
 | Branch source | Create new branch | Checkout existing MR branch |
-| Merge path | Submit to queue via `gt done` | Push directly to {{base_branch}} |
+| Merge path | Submit to queue via `ms done` | Push directly to {{base_branch}} |
 | Issue closure | Refinery closes after merge | Close MR bead yourself |
 | Serialization | None | Merge-slot gate required |
 
@@ -50,13 +50,13 @@ Initialize your session and understand the conflict resolution task.
 
 **1. Prime your environment:**
 ```bash
-gt prime                    # Load role context
+ms prime                    # Load role context
 bd prime                    # Load beads context
 ```
 
 **2. Check your hook:**
 ```bash
-gt hook                     # Shows your pinned molecule and hook_bead
+ms hook                     # Shows your pinned molecule and hook_bead
 ```
 
 **3. Read the conflict resolution task:**
@@ -203,7 +203,7 @@ git rebase --continue
 - Read the original issue for context: `bd show <source-issue>`
 - If still unclear, escalate to Witness:
   ```bash
-  gt mail send <rig>/witness -s "HELP: Complex conflict" -m "Task: {{task}}
+  ms mail send <rig>/witness -s "HELP: Complex conflict" -m "Task: {{task}}
   File: <conflicted-file>
   Issue: Cannot determine correct resolution"
   ```
@@ -365,7 +365,7 @@ bd close {{task}} --reason="Conflicts resolved and merged to {{base_branch}}"
 
 **4. Signal completion:**
 ```bash
-gt done
+ms done
 ```
 
 You're now recyclable. The Witness knows you've completed conflict resolution.

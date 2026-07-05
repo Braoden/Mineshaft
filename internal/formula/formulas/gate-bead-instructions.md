@@ -93,7 +93,7 @@ This ensures the gate bead becomes blocked again until all fixes are closed.
 **3. Sling each fix to a miner:**
 
 ```bash
-gt sling <fix-bead-id> <rig>
+ms sling <fix-bead-id> <rig>
 ```
 
 This dispatches the fix work to an available worker.

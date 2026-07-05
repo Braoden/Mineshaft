@@ -17,8 +17,8 @@ import (
 
 // Environment variables for role detection
 const (
-	EnvGTRole     = "GT_ROLE"
-	EnvGTRoleHome = "GT_ROLE_HOME"
+	EnvGTRole     = "MS_ROLE"
+	EnvGTRoleHome = "MS_ROLE_HOME"
 )
 
 // RoleInfo contains information about a role and its detection source.
@@ -30,7 +30,7 @@ type RoleInfo struct {
 	Home          string `json:"home"`
 	Rig           string `json:"rig,omitempty"`
 	Miner       string `json:"miner,omitempty"`
-	EnvRole       string `json:"env_role,omitempty"`    // Value of GT_ROLE if set
+	EnvRole       string `json:"env_role,omitempty"`    // Value of MS_ROLE if set
 	CwdRole       Role   `json:"cwd_role,omitempty"`    // Role detected from cwd
 	Mismatch      bool   `json:"mismatch,omitempty"`    // True if env != cwd detection
 	EnvIncomplete bool   `json:"env_incomplete,omitempty"` // True if env was set but missing rig/miner, filled from cwd
@@ -45,7 +45,7 @@ var roleCmd = &cobra.Command{
 	Long: `Display the current agent role and its detection source.
 
 Role is determined by:
-1. GT_ROLE environment variable (authoritative if set)
+1. MS_ROLE environment variable (authoritative if set)
 2. Current working directory (fallback)
 
 If both are available and disagree, a warning is shown.`,
@@ -57,7 +57,7 @@ var roleShowCmd = &cobra.Command{
 	Short: "Show current role",
 	Long: `Show the current agent role, its detection source, and associated metadata.
 
-Displays the role name, whether it was detected from the GT_ROLE environment
+Displays the role name, whether it was detected from the MS_ROLE environment
 variable or the current working directory, and the rig/worker identity if
 applicable. Warns if the two detection methods disagree.`,
 	RunE: runRoleShow,
@@ -71,9 +71,9 @@ var roleHomeCmd = &cobra.Command{
 If no role is specified, shows the home for the current role.
 
 Examples:
-  gt role home           # Home for current role
-  gt role home overseer     # Home for overseer
-  gt role home witness   # Home for witness (requires --rig)`,
+  ms role home           # Home for current role
+  ms role home overseer     # Home for overseer
+  ms role home witness   # Home for witness (requires --rig)`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runRoleHome,
 }
@@ -81,7 +81,7 @@ Examples:
 var roleDetectCmd = &cobra.Command{
 	Use:   "detect",
 	Short: "Force cwd-based role detection (debugging)",
-	Long: `Detect role from current working directory, ignoring GT_ROLE env var.
+	Long: `Detect role from current working directory, ignoring MS_ROLE env var.
 
 This is useful for debugging role detection issues.`,
 	RunE: runRoleDetect,
@@ -103,12 +103,12 @@ var roleEnvCmd = &cobra.Command{
 	Short: "Print export statements for current role",
 	Long: `Print shell export statements for the current role.
 
-Role is determined from GT_ROLE environment variable or current working directory.
+Role is determined from MS_ROLE environment variable or current working directory.
 This is a read-only command that displays the current role's env vars.
 
 Examples:
-  eval $(gt role env)    # Export current role's env vars
-  gt role env            # View what would be exported`,
+  eval $(ms role env)    # Export current role's env vars
+  ms role env            # View what would be exported`,
 	RunE: runRoleEnv,
 }
 
@@ -123,8 +123,8 @@ Role configuration is layered:
   3. Rig-level overrides (<rig>/roles/<role>.toml)
 
 Examples:
-  gt role def witness    # Show witness role definition
-  gt role def crew       # Show crew role definition`,
+  ms role def witness    # Show witness role definition
+  ms role def crew       # Show crew role definition`,
 	Args: cobra.ExactArgs(1),
 	RunE: runRoleDef,
 }
@@ -149,7 +149,7 @@ func init() {
 	roleHomeCmd.Flags().StringVar(&roleMiner, "miner", "", "Miner/crew member name")
 }
 
-// GetRole returns the current role, checking GT_ROLE first then falling back to cwd.
+// GetRole returns the current role, checking MS_ROLE first then falling back to cwd.
 // This is the canonical function for role detection.
 func GetRole() (RoleInfo, error) {
 	cwd, err := os.Getwd()
@@ -193,16 +193,16 @@ func GetRoleWithContext(cwd, townRoot string) (RoleInfo, error) {
 		info.Source = "env"
 
 		// For simple role strings like "crew" or "miner", also check
-		// GT_RIG and GT_CREW/GT_MINER env vars for the full identity
+		// MS_RIG and MS_CREW/MS_MINER env vars for the full identity
 		if info.Rig == "" {
-			if envRig := os.Getenv("GT_RIG"); envRig != "" {
+			if envRig := os.Getenv("MS_RIG"); envRig != "" {
 				info.Rig = envRig
 			}
 		}
 		if info.Miner == "" {
-			if envCrew := os.Getenv("GT_CREW"); envCrew != "" {
+			if envCrew := os.Getenv("MS_CREW"); envCrew != "" {
 				info.Miner = envCrew
-			} else if envMiner := os.Getenv("GT_MINER"); envMiner != "" {
+			} else if envMiner := os.Getenv("MS_MINER"); envMiner != "" {
 				info.Miner = envMiner
 			}
 		}
@@ -240,7 +240,7 @@ func GetRoleWithContext(cwd, townRoot string) (RoleInfo, error) {
 }
 
 // detectRole detects the agent role from the current working directory path.
-// This is the cwd-based fallback used by GetRoleWithContext when GT_ROLE is not set.
+// This is the cwd-based fallback used by GetRoleWithContext when MS_ROLE is not set.
 func detectRole(cwd, townRoot string) RoleInfo {
 	ctx := RoleInfo{
 		Role:     RoleUnknown,
@@ -368,7 +368,7 @@ func parseRoleString(s string) (Role, string, string) {
 
 	switch parts[1] {
 	case "boot":
-		// Handle compound "supervisor/boot" format from GT_ROLE env var
+		// Handle compound "supervisor/boot" format from MS_ROLE env var
 		if rig == "supervisor" && len(parts) == 2 {
 			return RoleBoot, "", ""
 		}
@@ -497,10 +497,10 @@ func runRoleShow(cmd *cobra.Command, args []string) error {
 	if info.Mismatch {
 		fmt.Println()
 		fmt.Printf("%s\n", style.Bold.Render("⚠️  ROLE MISMATCH"))
-		fmt.Printf("  GT_ROLE=%s (authoritative)\n", info.EnvRole)
+		fmt.Printf("  MS_ROLE=%s (authoritative)\n", info.EnvRole)
 		fmt.Printf("  cwd suggests: %s\n", info.CwdRole)
 		fmt.Println()
-		fmt.Println("The GT_ROLE env var takes precedence, but you may be in the wrong directory.")
+		fmt.Println("The MS_ROLE env var takes precedence, but you may be in the wrong directory.")
 		fmt.Printf("Expected home: %s\n", info.Home)
 	}
 
@@ -592,8 +592,8 @@ func runRoleDetect(cmd *cobra.Command, args []string) error {
 		parsedRole, _, _ := parseRoleString(envRole)
 		if parsedRole != ctx.Role {
 			fmt.Println()
-			fmt.Printf("%s\n", style.Bold.Render("⚠️  Mismatch with $GT_ROLE"))
-			fmt.Printf("  $GT_ROLE=%s\n", envRole)
+			fmt.Printf("%s\n", style.Bold.Render("⚠️  Mismatch with $MS_ROLE"))
+			fmt.Printf("  $MS_ROLE=%s\n", envRole)
 			fmt.Println("  The env var takes precedence in normal operation.")
 		}
 	}

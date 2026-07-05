@@ -17,26 +17,26 @@ func TestMatchesMRSourceIssue(t *testing.T) {
 	}{
 		{
 			name:        "exact match",
-			description: "branch: miner/furiosa/gt-abc@mm4heq3e\ntarget: main\nsource_issue: gt-abc\nrig: mineshaft\n",
-			issueID:     "gt-abc",
+			description: "branch: miner/furiosa/ms-abc@mm4heq3e\ntarget: main\nsource_issue: ms-abc\nrig: mineshaft\n",
+			issueID:     "ms-abc",
 			want:        true,
 		},
 		{
 			name:        "no match different issue",
-			description: "branch: miner/furiosa/gt-xyz@mm4heq3e\ntarget: main\nsource_issue: gt-xyz\nrig: mineshaft\n",
-			issueID:     "gt-abc",
+			description: "branch: miner/furiosa/ms-xyz@mm4heq3e\ntarget: main\nsource_issue: ms-xyz\nrig: mineshaft\n",
+			issueID:     "ms-abc",
 			want:        false,
 		},
 		{
 			name:        "partial ID must not match — prefix",
-			description: "branch: miner/nux/gt-abcdef@mm4heq3e\ntarget: main\nsource_issue: gt-abcdef\nrig: mineshaft\n",
-			issueID:     "gt-abc",
+			description: "branch: miner/nux/ms-abcdef@mm4heq3e\ntarget: main\nsource_issue: ms-abcdef\nrig: mineshaft\n",
+			issueID:     "ms-abc",
 			want:        false,
 		},
 		{
 			name:        "partial ID must not match — suffix",
-			description: "branch: miner/nux/gt-abc@mm4heq3e\ntarget: main\nsource_issue: gt-abc\nrig: mineshaft\n",
-			issueID:     "gt-abcdef",
+			description: "branch: miner/nux/ms-abc@mm4heq3e\ntarget: main\nsource_issue: ms-abc\nrig: mineshaft\n",
+			issueID:     "ms-abcdef",
 			want:        false,
 		},
 		{
@@ -47,25 +47,25 @@ func TestMatchesMRSourceIssue(t *testing.T) {
 		},
 		{
 			name:        "source_issue at end of description (with trailing newline)",
-			description: "branch: fix/thing\nsource_issue: gt-99\n",
-			issueID:     "gt-99",
+			description: "branch: fix/thing\nsource_issue: ms-99\n",
+			issueID:     "ms-99",
 			want:        true,
 		},
 		{
 			name:        "source_issue at end without trailing newline — no match",
-			description: "branch: fix/thing\nsource_issue: gt-99",
-			issueID:     "gt-99",
+			description: "branch: fix/thing\nsource_issue: ms-99",
+			issueID:     "ms-99",
 			want:        false,
 		},
 		{
 			name:        "empty description",
 			description: "",
-			issueID:     "gt-abc",
+			issueID:     "ms-abc",
 			want:        false,
 		},
 		{
 			name:        "empty issue ID",
-			description: "source_issue: gt-abc\n",
+			description: "source_issue: ms-abc\n",
 			issueID:     "",
 			want:        false,
 		},
@@ -90,53 +90,53 @@ func TestUnresolvedBlockingDependencyIDs(t *testing.T) {
 	}{
 		{
 			name: "open blocks dependency blocks",
-			deps: []IssueDep{{ID: "gt-blocker", Status: "open", DependencyType: "blocks"}},
-			want: []string{"gt-blocker"},
+			deps: []IssueDep{{ID: "ms-blocker", Status: "open", DependencyType: "blocks"}},
+			want: []string{"ms-blocker"},
 		},
 		{
 			name: "blocking types match ready-work semantics",
 			deps: []IssueDep{
-				{ID: "gt-conditional", Status: "open", DependencyType: "conditional-blocks"},
-				{ID: "gt-waits", Status: "open", DependencyType: "waits-for"},
-				{ID: "gt-merge", Status: "open", DependencyType: "merge-blocks"},
+				{ID: "ms-conditional", Status: "open", DependencyType: "conditional-blocks"},
+				{ID: "ms-waits", Status: "open", DependencyType: "waits-for"},
+				{ID: "ms-merge", Status: "open", DependencyType: "merge-blocks"},
 			},
-			want: []string{"gt-conditional", "gt-waits", "gt-merge"},
+			want: []string{"ms-conditional", "ms-waits", "ms-merge"},
 		},
 		{
 			name: "closed and tombstone dependencies are resolved",
 			deps: []IssueDep{
-				{ID: "gt-closed", Status: "closed", DependencyType: "blocks"},
-				{ID: "gt-tombstone", Status: "tombstone", DependencyType: "blocks"},
-				{ID: "gt-pinned", Status: "pinned", DependencyType: "blocks"},
+				{ID: "ms-closed", Status: "closed", DependencyType: "blocks"},
+				{ID: "ms-tombstone", Status: "tombstone", DependencyType: "blocks"},
+				{ID: "ms-pinned", Status: "pinned", DependencyType: "blocks"},
 			},
 		},
 		{
 			name: "merge-blocks requires merged close reason",
 			deps: []IssueDep{
-				{ID: "gt-closed-only", Status: "closed", DependencyType: "merge-blocks"},
-				{ID: "gt-merged", Status: "closed", DependencyType: "merge-blocks", CloseReason: "Merged in abc123"},
+				{ID: "ms-closed-only", Status: "closed", DependencyType: "merge-blocks"},
+				{ID: "ms-merged", Status: "closed", DependencyType: "merge-blocks", CloseReason: "Merged in abc123"},
 			},
-			want: []string{"gt-closed-only"},
+			want: []string{"ms-closed-only"},
 		},
 		{
 			name: "nonblocking dependency types do not block",
 			deps: []IssueDep{
-				{ID: "gt-empty", Status: "open"},
-				{ID: "gt-parent", Status: "open", DependencyType: "parent-child"},
-				{ID: "gt-track", Status: "open", DependencyType: "tracks"},
-				{ID: "gt-related", Status: "open", DependencyType: "related"},
-				{ID: "gt-custom", Status: "open", DependencyType: "custom-link"},
+				{ID: "ms-empty", Status: "open"},
+				{ID: "ms-parent", Status: "open", DependencyType: "parent-child"},
+				{ID: "ms-track", Status: "open", DependencyType: "tracks"},
+				{ID: "ms-related", Status: "open", DependencyType: "related"},
+				{ID: "ms-custom", Status: "open", DependencyType: "custom-link"},
 			},
 		},
 		{
 			name: "external dependency IDs are normalized",
-			deps: []IssueDep{{ID: "external:gt:gt-blocker", Status: "open", DependencyType: "blocks"}},
-			want: []string{"gt-blocker"},
+			deps: []IssueDep{{ID: "external:ms:ms-blocker", Status: "open", DependencyType: "blocks"}},
+			want: []string{"ms-blocker"},
 		},
 		{
 			name: "missing status fails closed",
-			deps: []IssueDep{{ID: "gt-unknown-status", DependencyType: "blocks"}},
-			want: []string{"gt-unknown-status"},
+			deps: []IssueDep{{ID: "ms-unknown-status", DependencyType: "blocks"}},
+			want: []string{"ms-unknown-status"},
 		},
 	}
 
@@ -160,10 +160,10 @@ func TestHasUnresolvedBlockersFallsBackToListFields(t *testing.T) {
 	if got := FirstUnresolvedBlockerID(&Issue{DependencyCount: 1}); got != "" {
 		t.Fatalf("FirstUnresolvedBlockerID() = %q, want empty when only count is available", got)
 	}
-	if got := FirstUnresolvedBlockerID(&Issue{BlockedBy: []string{"external:gt:gt-blocker"}}); got != "gt-blocker" {
-		t.Fatalf("FirstUnresolvedBlockerID() = %q, want gt-blocker", got)
+	if got := FirstUnresolvedBlockerID(&Issue{BlockedBy: []string{"external:ms:ms-blocker"}}); got != "ms-blocker" {
+		t.Fatalf("FirstUnresolvedBlockerID() = %q, want ms-blocker", got)
 	}
-	if HasUnresolvedBlockers(&Issue{Dependencies: []IssueDep{{ID: "gt-closed", Status: "closed", DependencyType: "blocks"}}, BlockedByCount: 1}) {
+	if HasUnresolvedBlockers(&Issue{Dependencies: []IssueDep{{ID: "ms-closed", Status: "closed", DependencyType: "blocks"}}, BlockedByCount: 1}) {
 		t.Fatal("detailed closed dependency should override stale list blocker count")
 	}
 }
@@ -175,7 +175,7 @@ func TestListMergeRequestsHydratesWispMRBlockers(t *testing.T) {
 	installListMergeRequestsBDStub(t, false)
 
 	b := New(t.TempDir())
-	issues, err := b.ListMergeRequests(ListOptions{Label: "gt:merge-request", Status: "open", Priority: -1})
+	issues, err := b.ListMergeRequests(ListOptions{Label: "ms:merge-request", Status: "open", Priority: -1})
 	if err != nil {
 		t.Fatalf("ListMergeRequests() error = %v", err)
 	}
@@ -190,8 +190,8 @@ func TestListMergeRequestsHydratesWispMRBlockers(t *testing.T) {
 	if !HasUnresolvedBlockers(issue) {
 		t.Fatalf("hydrated MR should be blocked: %#v", issue)
 	}
-	if got := FirstUnresolvedBlockerID(issue); got != "gt-blocker" {
-		t.Fatalf("FirstUnresolvedBlockerID() = %q, want gt-blocker", got)
+	if got := FirstUnresolvedBlockerID(issue); got != "ms-blocker" {
+		t.Fatalf("FirstUnresolvedBlockerID() = %q, want ms-blocker", got)
 	}
 	if issue.BlockedByCount != 1 {
 		t.Fatalf("BlockedByCount = %d, want 1", issue.BlockedByCount)
@@ -208,7 +208,7 @@ func TestListMergeRequestsReturnsHydrationError(t *testing.T) {
 	installListMergeRequestsBDStub(t, true)
 
 	b := New(t.TempDir())
-	_, err := b.ListMergeRequests(ListOptions{Label: "gt:merge-request", Status: "open", Priority: -1})
+	_, err := b.ListMergeRequests(ListOptions{Label: "ms:merge-request", Status: "open", Priority: -1})
 	if err == nil {
 		t.Fatal("ListMergeRequests() error = nil, want hydration error")
 	}
@@ -224,12 +224,12 @@ func TestListMergeRequestsFiltersRigBeforeHydration(t *testing.T) {
 	installListMergeRequestsRigFilterBDStub(t)
 
 	b := New(t.TempDir())
-	issues, err := b.ListMergeRequests(ListOptions{Label: "gt:merge-request", Status: "open", Priority: -1, Rig: "mineshaft"})
+	issues, err := b.ListMergeRequests(ListOptions{Label: "ms:merge-request", Status: "open", Priority: -1, Rig: "mineshaft"})
 	if err != nil {
 		t.Fatalf("ListMergeRequests() error = %v", err)
 	}
-	if len(issues) != 1 || issues[0].ID != "gt-current" {
-		t.Fatalf("ListMergeRequests() = %#v, want only gt-current", issues)
+	if len(issues) != 1 || issues[0].ID != "ms-current" {
+		t.Fatalf("ListMergeRequests() = %#v, want only ms-current", issues)
 	}
 }
 
@@ -240,7 +240,7 @@ func installListMergeRequestsBDStub(t *testing.T, failShow bool) {
 
 	binDir := t.TempDir()
 	showCase := `
-    printf '%s\n' '[{"id":"gt-wisp-mr","title":"Merge: gt-source","description":"branch: miner/test/gt-source@abc\ntarget: main\nsource_issue: gt-source\nrig: mineshaft\n","status":"open","priority":1,"created_at":"2026-06-29T00:00:00Z","updated_at":"2026-06-29T00:00:00Z","ephemeral":true,"labels":["gt:merge-request"],"dependencies":[{"id":"gt-blocker","title":"Blocker","status":"open","priority":1,"issue_type":"task","dependency_type":"blocks"}],"dependency_count":1}]'
+    printf '%s\n' '[{"id":"ms-wisp-mr","title":"Merge: ms-source","description":"branch: miner/test/ms-source@abc\ntarget: main\nsource_issue: ms-source\nrig: mineshaft\n","status":"open","priority":1,"created_at":"2026-06-29T00:00:00Z","updated_at":"2026-06-29T00:00:00Z","ephemeral":true,"labels":["ms:merge-request"],"dependencies":[{"id":"ms-blocker","title":"Blocker","status":"open","priority":1,"issue_type":"task","dependency_type":"blocks"}],"dependency_count":1}]'
     exit 0
 `
 	if failShow {
@@ -264,7 +264,7 @@ case "${1:-}" in
     exit 0
     ;;
   sql)
-    printf '%s\n' '[{"id":"gt-wisp-mr","title":"Merge: gt-source","description":"branch: miner/test/gt-source@abc\ntarget: main\nsource_issue: gt-source\nrig: mineshaft\n","status":"open","priority":1,"assignee":"","created_at":"2026-06-29T00:00:00Z","updated_at":"2026-06-29T00:00:00Z","created_by":"tester","labels_csv":"gt:merge-request"}]'
+    printf '%s\n' '[{"id":"ms-wisp-mr","title":"Merge: ms-source","description":"branch: miner/test/ms-source@abc\ntarget: main\nsource_issue: ms-source\nrig: mineshaft\n","status":"open","priority":1,"assignee":"","created_at":"2026-06-29T00:00:00Z","updated_at":"2026-06-29T00:00:00Z","created_by":"tester","labels_csv":"ms:merge-request"}]'
     exit 0
     ;;
   show)` + showCase + `
@@ -301,14 +301,14 @@ case "${1:-}" in
     exit 0
     ;;
   sql)
-    printf '%s\n' '[{"id":"gt-current","title":"Merge: gt-source","description":"branch: miner/test/gt-source@abc\ntarget: main\nsource_issue: gt-source\nrig: mineshaft\n","status":"open","priority":1,"assignee":"","created_at":"2026-06-29T00:00:00Z","updated_at":"2026-06-29T00:00:00Z","created_by":"tester","labels_csv":"gt:merge-request"},{"id":"gt-other","title":"Merge: gt-other","description":"branch: miner/test/gt-other@abc\ntarget: main\nsource_issue: gt-other-source\nrig: other-rig\n","status":"open","priority":1,"assignee":"","created_at":"2026-06-29T00:00:00Z","updated_at":"2026-06-29T00:00:00Z","created_by":"tester","labels_csv":"gt:merge-request"}]'
+    printf '%s\n' '[{"id":"ms-current","title":"Merge: ms-source","description":"branch: miner/test/ms-source@abc\ntarget: main\nsource_issue: ms-source\nrig: mineshaft\n","status":"open","priority":1,"assignee":"","created_at":"2026-06-29T00:00:00Z","updated_at":"2026-06-29T00:00:00Z","created_by":"tester","labels_csv":"ms:merge-request"},{"id":"ms-other","title":"Merge: ms-other","description":"branch: miner/test/ms-other@abc\ntarget: main\nsource_issue: ms-other-source\nrig: other-rig\n","status":"open","priority":1,"assignee":"","created_at":"2026-06-29T00:00:00Z","updated_at":"2026-06-29T00:00:00Z","created_by":"tester","labels_csv":"ms:merge-request"}]'
     exit 0
     ;;
   show)
     case "$*" in
-      *gt-other*) echo 'other rig should not be hydrated' >&2; exit 7 ;;
+      *ms-other*) echo 'other rig should not be hydrated' >&2; exit 7 ;;
     esac
-    printf '%s\n' '[{"id":"gt-current","title":"Merge: gt-source","description":"branch: miner/test/gt-source@abc\ntarget: main\nsource_issue: gt-source\nrig: mineshaft\n","status":"open","priority":1,"created_at":"2026-06-29T00:00:00Z","updated_at":"2026-06-29T00:00:00Z","ephemeral":true,"labels":["gt:merge-request"]}]'
+    printf '%s\n' '[{"id":"ms-current","title":"Merge: ms-source","description":"branch: miner/test/ms-source@abc\ntarget: main\nsource_issue: ms-source\nrig: mineshaft\n","status":"open","priority":1,"created_at":"2026-06-29T00:00:00Z","updated_at":"2026-06-29T00:00:00Z","ephemeral":true,"labels":["ms:merge-request"]}]'
     exit 0
     ;;
   *)

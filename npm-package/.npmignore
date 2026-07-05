@@ -6,7 +6,7 @@ test/
 !README.md
 
 # Ignore any local binaries (downloaded at install time)
-bin/gt
-bin/gt.exe
+bin/ms
+bin/ms.exe
 bin/*.tar.gz
 bin/*.zip

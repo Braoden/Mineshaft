@@ -1,4 +1,4 @@
-review_only = true  # All legs are analysis-only — no code commits expected (gt-kvf)
+review_only = true  # All legs are analysis-only — no code commits expected (ms-kvf)
 
 description = """
 Parallel PRD review via specialized analysts. Uncovers missing requirements,
@@ -319,7 +319,7 @@ All leg analyses from: {{.output.directory}}/
 
 **After writing the file, mail the human boss:**
 ```bash
-gt mail send --human -s "PRD Review Complete: {{.problem}}" -m "
+ms mail send --human -s "PRD Review Complete: {{.problem}}" -m "
 Review is ready: {{.output.directory}}/prd-review.md
 
 ## Summary

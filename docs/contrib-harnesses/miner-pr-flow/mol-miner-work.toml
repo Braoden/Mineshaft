@@ -4,8 +4,8 @@
 # mol-miner-work. Use this in rigs that gate work on a GitHub PR review
 # rather than the canonical Refinery merge queue.
 #
-# Install to: ~/gt/<rig>/formula-overlays/mol-miner-work.toml
-# Verify with: gt doctor  (checks overlay-health)
+# Install to: ~/ms/<rig>/formula-overlays/mol-miner-work.toml
+# Verify with: ms doctor  (checks overlay-health)
 # See also:    directives/miner.md in this harness
 
 [[step-overrides]]
@@ -14,8 +14,8 @@ mode = "append"
 description = """
 **PR-flow addendum (rig override):**
 
-Before you run `gt done`, push your branch and ensure a GitHub PR exists
-for it. In this rig, a PR is the review artifact — `gt done` alone is not
+Before you run `ms done`, push your branch and ensure a GitHub PR exists
+for it. In this rig, a PR is the review artifact — `ms done` alone is not
 sufficient.
 
 ```bash
@@ -27,6 +27,6 @@ if ! gh pr view "$BRANCH" >/dev/null 2>&1; then
 fi
 ```
 
-Only then run `gt done`. If `gh pr create` fails (auth, rate-limit, missing
+Only then run `ms done`. If `gh pr create` fails (auth, rate-limit, missing
 template, unknown base), escalate to Witness — do NOT skip PR creation.
 """

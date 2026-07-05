@@ -388,10 +388,10 @@ func TestActiveMRBlockerFromCLIUsesTerminalStatus(t *testing.T) {
 		want   string
 	}{
 		{name: "empty active mr", want: ""},
-		{name: "open mr blocks", output: `[{"status":"open"}]`, want: "active_mr=gt-mr status=open"},
+		{name: "open mr blocks", output: `[{"status":"open"}]`, want: "active_mr=ms-mr status=open"},
 		{name: "closed mr does not block", output: `[{"status":"closed"}]`, want: ""},
 		{name: "not found does not block", err: fmt.Errorf("issue not found"), want: ""},
-		{name: "lookup error blocks", err: fmt.Errorf("bd unavailable"), want: "active_mr=gt-mr status=lookup_error: bd unavailable"},
+		{name: "lookup error blocks", err: fmt.Errorf("bd unavailable"), want: "active_mr=ms-mr status=lookup_error: bd unavailable"},
 	}
 
 	for _, tt := range tests {
@@ -400,7 +400,7 @@ func TestActiveMRBlockerFromCLIUsesTerminalStatus(t *testing.T) {
 				func(args []string) (string, error) { return tt.output, tt.err },
 				func(args []string) error { return nil },
 			)
-			mrID := "gt-mr"
+			mrID := "ms-mr"
 			if tt.name == "empty active mr" {
 				mrID = ""
 			}
@@ -445,7 +445,7 @@ func TestHandleMinerDoneFromBead_NoMR(t *testing.T) {
 	fields := &beads.AgentFields{
 		ExitType:       "COMPLETED",
 		Branch:         "miner/nux",
-		HookBead:       "gt-test123",
+		HookBead:       "ms-test123",
 		CompletionTime: "2026-02-28T01:00:00Z",
 	}
 	result := HandleMinerDoneFromBead(DefaultBdCli(), "/tmp/nonexistent", "testrig", "nux", fields, nil)
@@ -476,7 +476,7 @@ func TestZombieResult_Types(t *testing.T) {
 		MinerName:    "nux",
 		AgentState:     "working",
 		Classification: ZombieSessionDeadActive,
-		HookBead:       "gt-abc123",
+		HookBead:       "ms-abc123",
 		Action:         "restarted",
 		BeadRecovered:  true,
 		Error:          nil,
@@ -491,8 +491,8 @@ func TestZombieResult_Types(t *testing.T) {
 	if z.Classification != ZombieSessionDeadActive {
 		t.Errorf("Classification = %q, want %q", z.Classification, ZombieSessionDeadActive)
 	}
-	if z.HookBead != "gt-abc123" {
-		t.Errorf("HookBead = %q, want %q", z.HookBead, "gt-abc123")
+	if z.HookBead != "ms-abc123" {
+		t.Errorf("HookBead = %q, want %q", z.HookBead, "ms-abc123")
 	}
 	if z.Action != "restarted" {
 		t.Errorf("Action = %q, want %q", z.Action, "restarted")
@@ -606,7 +606,7 @@ func TestSessionRecreated_NoSession(t *testing.T) {
 	tm := tmux.NewTmux()
 	detectedAt := time.Now()
 
-	recreated := sessionRecreated(tm, "gt-nonexistent-session-xyz", detectedAt)
+	recreated := sessionRecreated(tm, "ms-nonexistent-session-xyz", detectedAt)
 	if recreated {
 		t.Error("sessionRecreated returned true for nonexistent session, want false")
 	}
@@ -619,13 +619,13 @@ func TestSessionRecreated_DetectedAtEdgeCases(t *testing.T) {
 	tm := tmux.NewTmux()
 
 	// Try with a past timestamp
-	recreated := sessionRecreated(tm, "gt-test-nosession-abc", time.Now().Add(-1*time.Hour))
+	recreated := sessionRecreated(tm, "ms-test-nosession-abc", time.Now().Add(-1*time.Hour))
 	if recreated {
 		t.Error("sessionRecreated returned true for nonexistent session with past time")
 	}
 
 	// Try with a future timestamp
-	recreated = sessionRecreated(tm, "gt-test-nosession-def", time.Now().Add(1*time.Hour))
+	recreated = sessionRecreated(tm, "ms-test-nosession-def", time.Now().Add(1*time.Hour))
 	if recreated {
 		t.Error("sessionRecreated returned true for nonexistent session with future time")
 	}
@@ -667,7 +667,7 @@ func TestZombieClassification_HookBeadAlwaysZombie(t *testing.T) {
 	// Any miner with a hook_bead and dead session should be classified as zombie,
 	// regardless of agent_state.
 	for _, state := range []string{"", "idle", "done", "working"} {
-		hookBead := "gt-some-issue"
+		hookBead := "ms-some-issue"
 		isZombie := false
 		if hookBead != "" {
 			isZombie = true
@@ -832,7 +832,7 @@ func TestHasPendingMRFromSnapshotAssessesMRStatus(t *testing.T) {
 		{
 			name: "closed MR with terminal source is not pending",
 			show: func(id string) (string, error) {
-				if id == "gt-mr" {
+				if id == "ms-mr" {
 					return issueJSON(id, "closed", ""), nil
 				}
 				return issueJSON(id, "closed", ""), nil
@@ -841,7 +841,7 @@ func TestHasPendingMRFromSnapshotAssessesMRStatus(t *testing.T) {
 		{
 			name: "missing MR with terminal source is not pending",
 			show: func(id string) (string, error) {
-				if id == "gt-mr" {
+				if id == "ms-mr" {
 					return "", errors.New("not found")
 				}
 				return issueJSON(id, "closed", ""), nil
@@ -855,7 +855,7 @@ func TestHasPendingMRFromSnapshotAssessesMRStatus(t *testing.T) {
 		{
 			name: "closed MR with open source is pending",
 			show: func(id string) (string, error) {
-				if id == "gt-mr" {
+				if id == "ms-mr" {
 					return issueJSON(id, "closed", ""), nil
 				}
 				return issueJSON(id, "open", ""), nil
@@ -882,7 +882,7 @@ func TestHasPendingMRFromSnapshotAssessesMRStatus(t *testing.T) {
 				},
 				func(args []string) error { return nil },
 			)
-			snap := &agentBeadSnapshot{ActiveMR: "gt-mr", Fields: &beads.AgentFields{ActiveMR: "gt-mr", LastSourceIssue: "gt-src"}}
+			snap := &agentBeadSnapshot{ActiveMR: "ms-mr", Fields: &beads.AgentFields{ActiveMR: "ms-mr", LastSourceIssue: "ms-src"}}
 			if got := hasPendingMRFromSnapshot(bd, workDir, "mineshaft", "nux", snap); got != tt.want {
 				t.Fatalf("hasPendingMRFromSnapshot() = %v, want %v", got, tt.want)
 			}
@@ -902,12 +902,12 @@ func TestHasPendingMRUsesAgentLastSourceIssue(t *testing.T) {
 				return "[]", nil
 			case "show":
 				switch args[1] {
-				case "gt-agent":
-					return `[{"active_mr":"gt-mr","description":"active_mr: gt-mr\nlast_source_issue: gt-src\n"}]`, nil
-				case "gt-mr":
+				case "ms-agent":
+					return `[{"active_mr":"ms-mr","description":"active_mr: ms-mr\nlast_source_issue: ms-src\n"}]`, nil
+				case "ms-mr":
 					return "", errors.New("not found")
-				case "gt-src":
-					return `[{"id":"gt-src","status":"closed"}]`, nil
+				case "ms-src":
+					return `[{"id":"ms-src","status":"closed"}]`, nil
 				}
 			}
 			return "", errors.New("not found")
@@ -915,7 +915,7 @@ func TestHasPendingMRUsesAgentLastSourceIssue(t *testing.T) {
 		func(args []string) error { return nil },
 	)
 
-	if got := hasPendingMR(bd, workDir, "mineshaft", "nux", "gt-agent"); got {
+	if got := hasPendingMR(bd, workDir, "mineshaft", "nux", "ms-agent"); got {
 		t.Fatalf("hasPendingMR() = true, want false for missing MR with terminal source")
 	}
 }
@@ -930,16 +930,16 @@ func TestHasPendingMRFromSnapshotRequiresGitSafe(t *testing.T) {
 			case "list":
 				return "[]", nil
 			case "show":
-				if args[1] == "gt-mr" {
+				if args[1] == "ms-mr" {
 					return "", errors.New("not found")
 				}
-				return `[{"id":"gt-src","status":"closed"}]`, nil
+				return `[{"id":"ms-src","status":"closed"}]`, nil
 			}
 			return "", nil
 		},
 		func(args []string) error { return nil },
 	)
-	snap := &agentBeadSnapshot{ActiveMR: "gt-mr", Fields: &beads.AgentFields{ActiveMR: "gt-mr", LastSourceIssue: "gt-src"}}
+	snap := &agentBeadSnapshot{ActiveMR: "ms-mr", Fields: &beads.AgentFields{ActiveMR: "ms-mr", LastSourceIssue: "ms-src"}}
 	if got := hasPendingMRFromSnapshot(bd, t.TempDir(), "mineshaft", "nux", snap); !got {
 		t.Fatalf("hasPendingMRFromSnapshot() = false, want true when git is unsafe")
 	}
@@ -952,7 +952,7 @@ func TestHasPendingMRCleanupWispFailsClosed(t *testing.T) {
 		list string
 		err  error
 	}{
-		{name: "cleanup wisp present", list: `[{"id":"gt-cleanup"}]`},
+		{name: "cleanup wisp present", list: `[{"id":"ms-cleanup"}]`},
 		{name: "cleanup wisp lookup error", err: errors.New("bd exploded")},
 	}
 	for _, tt := range tests {
@@ -965,17 +965,17 @@ func TestHasPendingMRCleanupWispFailsClosed(t *testing.T) {
 					if args[0] == "list" {
 						return tt.list, tt.err
 					}
-					if args[0] == "show" && args[1] == "gt-agent" {
-						return `[{"active_mr":"gt-mr","description":"active_mr: gt-mr\nlast_source_issue: gt-src\n"}]`, nil
+					if args[0] == "show" && args[1] == "ms-agent" {
+						return `[{"active_mr":"ms-mr","description":"active_mr: ms-mr\nlast_source_issue: ms-src\n"}]`, nil
 					}
-					if args[0] == "show" && args[1] == "gt-mr" {
+					if args[0] == "show" && args[1] == "ms-mr" {
 						return "", errors.New("not found")
 					}
-					return `[{"id":"gt-src","status":"closed"}]`, nil
+					return `[{"id":"ms-src","status":"closed"}]`, nil
 				},
 				func(args []string) error { return nil },
 			)
-			if got := hasPendingMR(bd, workDir, "mineshaft", "nux", "gt-agent"); !got {
+			if got := hasPendingMR(bd, workDir, "mineshaft", "nux", "ms-agent"); !got {
 				t.Fatalf("hasPendingMR() = false, want true")
 			}
 		})
@@ -989,15 +989,15 @@ func TestTerminalSafeDoneSnapshot(t *testing.T) {
 			if len(args) == 0 || args[0] != "show" {
 				return "[]", nil
 			}
-			return `[{"id":"gt-src","status":"closed"}]`, nil
+			return `[{"id":"ms-src","status":"closed"}]`, nil
 		},
 		func(args []string) error { return nil },
 	)
-	snap := &agentBeadSnapshot{Fields: &beads.AgentFields{LastSourceIssue: "gt-src"}}
+	snap := &agentBeadSnapshot{Fields: &beads.AgentFields{LastSourceIssue: "ms-src"}}
 	if !terminalSafeDoneSnapshot(bd, workDir, "mineshaft", "nux", snap) {
 		t.Fatalf("terminalSafeDoneSnapshot() = false, want true")
 	}
-	snap.Fields.HookBead = "gt-hook"
+	snap.Fields.HookBead = "ms-hook"
 	if terminalSafeDoneSnapshot(bd, workDir, "mineshaft", "nux", snap) {
 		t.Fatalf("terminalSafeDoneSnapshot() = true with hook set, want false")
 	}
@@ -1073,7 +1073,7 @@ func TestFindAllCleanupWisps_ReturnsAllIDs(t *testing.T) {
 	bd, mock := mockBd(
 		func(args []string) (string, error) {
 			if len(args) > 0 && args[0] == "list" {
-				return `[{"id":"gt-wisp-aaa"},{"id":"gt-wisp-bbb"}]`, nil
+				return `[{"id":"ms-wisp-aaa"},{"id":"ms-wisp-bbb"}]`, nil
 			}
 			return "{}", nil
 		},
@@ -1086,8 +1086,8 @@ func TestFindAllCleanupWisps_ReturnsAllIDs(t *testing.T) {
 	if len(result) != 2 {
 		t.Fatalf("findAllCleanupWisps: got %d items, want 2", len(result))
 	}
-	if result[0] != "gt-wisp-aaa" || result[1] != "gt-wisp-bbb" {
-		t.Errorf("findAllCleanupWisps: got %v, want [gt-wisp-aaa gt-wisp-bbb]", result)
+	if result[0] != "ms-wisp-aaa" || result[1] != "ms-wisp-bbb" {
+		t.Errorf("findAllCleanupWisps: got %v, want [ms-wisp-aaa ms-wisp-bbb]", result)
 	}
 
 	got := strings.Join(mock.calls, "\n")
@@ -1123,7 +1123,7 @@ func TestUpdateCleanupWispState_UsesCorrectBdUpdateFlags(t *testing.T) {
 	// UpdateCleanupWispState first calls "bd show <id> --json", then "bd update".
 	// Our mock returns valid JSON for show with miner:testpol label,
 	// so minerName will be "testpol". Then it calls bd update with new labels.
-	_ = UpdateCleanupWispState(bd, workDir, "gt-wisp-abc", "merged")
+	_ = UpdateCleanupWispState(bd, workDir, "ms-wisp-abc", "merged")
 
 	got := strings.Join(mock.calls, "\n")
 
@@ -1152,7 +1152,7 @@ func TestExtractDoneIntent_Valid(t *testing.T) {
 	t.Parallel()
 	ts := time.Now().Add(-45 * time.Second)
 	labels := []string{
-		"gt:agent",
+		"ms:agent",
 		"idle:2",
 		fmt.Sprintf("done-intent:COMPLETED:%d", ts.Unix()),
 	}
@@ -1171,7 +1171,7 @@ func TestExtractDoneIntent_Valid(t *testing.T) {
 
 func TestExtractDoneIntent_Missing(t *testing.T) {
 	t.Parallel()
-	labels := []string{"gt:agent", "idle:2", "backoff-until:1738972900"}
+	labels := []string{"ms:agent", "idle:2", "backoff-until:1738972900"}
 
 	intent := extractDoneIntent(labels)
 	if intent != nil {
@@ -1220,7 +1220,7 @@ func TestExtractDoneIntent_AllExitTypes(t *testing.T) {
 func TestDetectZombie_DoneIntentDeadSession(t *testing.T) {
 	t.Parallel()
 	// Verify the logic: dead session + done-intent older than 30s → should be treated as zombie
-	// gt-dsgp: action is restart (not nuke), but detection logic is the same
+	// ms-dsgp: action is restart (not nuke), but detection logic is the same
 	doneIntent := &DoneIntent{
 		ExitType:  "COMPLETED",
 		Timestamp: time.Now().Add(-60 * time.Second), // 60s old
@@ -1228,7 +1228,7 @@ func TestDetectZombie_DoneIntentDeadSession(t *testing.T) {
 	sessionAlive := false
 	age := time.Since(doneIntent.Timestamp)
 
-	// Dead session + old intent → restart path (gt-dsgp: was auto-nuke)
+	// Dead session + old intent → restart path (ms-dsgp: was auto-nuke)
 	shouldRestart := !sessionAlive && doneIntent != nil && age >= config.DefaultWitnessDoneIntentStuckTimeout
 	if !shouldRestart {
 		t.Errorf("expected restart for dead session + old done-intent (age=%v)", age)
@@ -1238,7 +1238,7 @@ func TestDetectZombie_DoneIntentDeadSession(t *testing.T) {
 func TestDetectZombie_DoneIntentLiveStuck(t *testing.T) {
 	t.Parallel()
 	// Verify the logic: live session + done-intent older than 60s → should restart session
-	// gt-dsgp: restart instead of kill
+	// ms-dsgp: restart instead of kill
 	doneIntent := &DoneIntent{
 		ExitType:  "COMPLETED",
 		Timestamp: time.Now().Add(-90 * time.Second), // 90s old
@@ -1246,7 +1246,7 @@ func TestDetectZombie_DoneIntentLiveStuck(t *testing.T) {
 	sessionAlive := true
 	age := time.Since(doneIntent.Timestamp)
 
-	// Live session + old intent → restart stuck session (gt-dsgp: was kill)
+	// Live session + old intent → restart stuck session (ms-dsgp: was kill)
 	shouldRestart := sessionAlive && doneIntent != nil && age > config.DefaultWitnessDoneIntentStuckTimeout
 	if !shouldRestart {
 		t.Errorf("expected restart for live session + old done-intent (age=%v)", age)
@@ -1284,7 +1284,7 @@ func TestDetectZombie_DoneOrNukedNotZombie(t *testing.T) {
 	// Without this, isZombieState returns true (hookBead != ""), and the witness
 	// floods the overseer inbox with RECOVERY_NEEDED alerts every patrol cycle.
 	for _, state := range []beads.AgentState{beads.AgentStateDone, beads.AgentStateNuked} {
-		hookBead := "gt-some-issue"
+		hookBead := "ms-some-issue"
 		// isZombieState returns true because hookBead != ""
 		if !isZombieState(state, hookBead) {
 			t.Errorf("isZombieState(%q, %q) = false, want true (pre-condition)", state, hookBead)
@@ -1300,7 +1300,7 @@ func TestDetectZombie_DoneOrNukedNotZombie(t *testing.T) {
 func TestDetectZombie_AgentDeadInLiveSession(t *testing.T) {
 	t.Parallel()
 	// Verify the logic: live session + agent process dead → zombie
-	// This is the gt-kj6r6 fix: DetectZombieMiners now checks IsAgentAlive
+	// This is the ms-kj6r6 fix: DetectZombieMiners now checks IsAgentAlive
 	// for sessions that DO exist, catching the tmux-alive-but-agent-dead class.
 	sessionAlive := true
 	agentAlive := false
@@ -1368,7 +1368,7 @@ func TestGetBeadStatus_NoBdAvailable(t *testing.T) {
 	t.Parallel()
 	// When bd is not available (test environment), getBeadStatus
 	// should return ("", false) without panicking
-	result, ok := getBeadStatus(DefaultBdCli(), "/nonexistent", "gt-abc123")
+	result, ok := getBeadStatus(DefaultBdCli(), "/nonexistent", "ms-abc123")
 	if result != "" || ok {
 		t.Errorf("getBeadStatus = (%q, %v), want (\"\", false) when bd unavailable", result, ok)
 	}
@@ -1386,12 +1386,12 @@ func TestGetBeadStatus_EmptyBeadID(t *testing.T) {
 func TestDetectZombie_BeadClosedStillRunning(t *testing.T) {
 	t.Parallel()
 	// Verify the logic: live session + agent alive + hooked bead closed → zombie
-	// This is the gt-h1l6i fix: DetectZombieMiners now checks if the
+	// This is the ms-h1l6i fix: DetectZombieMiners now checks if the
 	// miner's hooked bead has been closed while the session is still running.
 	sessionAlive := true
 	agentAlive := true
 	var doneIntent *DoneIntent // No done-intent
-	hookBead := "gt-some-issue"
+	hookBead := "ms-some-issue"
 	beadStatus := "closed"
 
 	// Live session + agent alive + no done-intent + bead closed → should detect
@@ -1423,14 +1423,14 @@ func TestDetectZombie_BeadClosedVsDoneIntent(t *testing.T) {
 	t.Parallel()
 	// Verify done-intent takes priority over closed-bead check.
 	// If done-intent exists (recent), the miner is still working through
-	// gt done and we should NOT trigger the closed-bead path.
+	// ms done and we should NOT trigger the closed-bead path.
 	sessionAlive := true
 	agentAlive := true
 	doneIntent := &DoneIntent{
 		ExitType:  "COMPLETED",
 		Timestamp: time.Now().Add(-10 * time.Second), // Recent
 	}
-	hookBead := "gt-some-issue"
+	hookBead := "ms-some-issue"
 	beadStatus := "closed"
 
 	// Done-intent exists + bead closed → done-intent check runs first,
@@ -1462,7 +1462,7 @@ func TestResetAbandonedBead_NoRouter(t *testing.T) {
 	t.Parallel()
 	// resetAbandonedBead with nil router should not panic even if bead exists.
 	// It will return false because bd won't find the bead, but shouldn't crash.
-	result := resetAbandonedBead(DefaultBdCli(), "/tmp/nonexistent", "testrig", "gt-fake123", "nux", nil)
+	result := resetAbandonedBead(DefaultBdCli(), "/tmp/nonexistent", "testrig", "ms-fake123", "nux", nil)
 	if result {
 		t.Error("resetAbandonedBead should return false when bd commands fail")
 	}
@@ -1492,7 +1492,7 @@ func TestResetAbandonedBead_ClosesWhenWorkOnMain(t *testing.T) {
 	)
 
 	tmpDir := t.TempDir()
-	result := resetAbandonedBead(bd, tmpDir, "testrig", "gt-work123", "alpha", nil)
+	result := resetAbandonedBead(bd, tmpDir, "testrig", "ms-work123", "alpha", nil)
 	if result {
 		t.Error("resetAbandonedBead should return false when work is on main (bead closed, not re-dispatched)")
 	}
@@ -1500,7 +1500,7 @@ func TestResetAbandonedBead_ClosesWhenWorkOnMain(t *testing.T) {
 	// Verify "close" was called, NOT "update ... --status=open"
 	var foundClose, foundUpdate bool
 	for _, call := range mock.calls {
-		if strings.Contains(call, "close gt-work123") {
+		if strings.Contains(call, "close ms-work123") {
 			foundClose = true
 		}
 		if strings.Contains(call, "update") && strings.Contains(call, "--status=open") {
@@ -1539,7 +1539,7 @@ func TestResetAbandonedBead_ResetsWhenWorkNotOnMain(t *testing.T) {
 	)
 
 	tmpDir := t.TempDir()
-	result := resetAbandonedBead(bd, tmpDir, "testrig", "gt-work123", "alpha", nil)
+	result := resetAbandonedBead(bd, tmpDir, "testrig", "ms-work123", "alpha", nil)
 	if !result {
 		t.Error("resetAbandonedBead should return true when work is NOT on main (bead reset for re-dispatch)")
 	}
@@ -1729,14 +1729,14 @@ func TestDetectOrphanedBeads_ResultTypes(t *testing.T) {
 	t.Parallel()
 	// Verify the OrphanedBeadResult type has all expected fields
 	o := OrphanedBeadResult{
-		BeadID:        "gt-orphan1",
+		BeadID:        "ms-orphan1",
 		Assignee:      "testrig/miners/alpha",
 		MinerName:   "alpha",
 		BeadRecovered: true,
 	}
 
-	if o.BeadID != "gt-orphan1" {
-		t.Errorf("BeadID = %q, want %q", o.BeadID, "gt-orphan1")
+	if o.BeadID != "ms-orphan1" {
+		t.Errorf("BeadID = %q, want %q", o.BeadID, "ms-orphan1")
 	}
 	if o.Assignee != "testrig/miners/alpha" {
 		t.Errorf("Assignee = %q, want %q", o.Assignee, "testrig/miners/alpha")
@@ -1781,15 +1781,15 @@ func TestDetectOrphanedBeads_WithMockBd(t *testing.T) {
 				joined := strings.Join(args, " ")
 				if strings.Contains(joined, "--status=in_progress") {
 					return `[
-  {"id":"gt-orphan1","assignee":"testrig/miners/alpha"},
-  {"id":"gt-alive1","assignee":"testrig/miners/bravo"},
-  {"id":"gt-nocrew","assignee":"testrig/crew/sean"},
-  {"id":"gt-noassign","assignee":""},
-  {"id":"gt-otherrig","assignee":"otherrig/miners/delta"}
+  {"id":"ms-orphan1","assignee":"testrig/miners/alpha"},
+  {"id":"ms-alive1","assignee":"testrig/miners/bravo"},
+  {"id":"ms-nocrew","assignee":"testrig/crew/sean"},
+  {"id":"ms-noassign","assignee":""},
+  {"id":"ms-otherrig","assignee":"otherrig/miners/delta"}
 ]`, nil
 				}
 				if strings.Contains(joined, "--status=hooked") {
-					return `[{"id":"gt-hooked1","assignee":"testrig/miners/charlie"}]`, nil
+					return `[{"id":"ms-hooked1","assignee":"testrig/miners/charlie"}]`, nil
 				}
 				return "[]", nil
 			case "show":
@@ -1832,8 +1832,8 @@ func TestDetectOrphanedBeads_WithMockBd(t *testing.T) {
 
 	// Verify first orphan (alpha from in_progress scan)
 	orphan := result.Orphans[0]
-	if orphan.BeadID != "gt-orphan1" {
-		t.Errorf("orphan[0] BeadID = %q, want %q", orphan.BeadID, "gt-orphan1")
+	if orphan.BeadID != "ms-orphan1" {
+		t.Errorf("orphan[0] BeadID = %q, want %q", orphan.BeadID, "ms-orphan1")
 	}
 	if orphan.MinerName != "alpha" {
 		t.Errorf("orphan[0] MinerName = %q, want %q", orphan.MinerName, "alpha")
@@ -1848,8 +1848,8 @@ func TestDetectOrphanedBeads_WithMockBd(t *testing.T) {
 
 	// Verify second orphan (charlie from hooked scan)
 	orphan2 := result.Orphans[1]
-	if orphan2.BeadID != "gt-hooked1" {
-		t.Errorf("orphan[1] BeadID = %q, want %q", orphan2.BeadID, "gt-hooked1")
+	if orphan2.BeadID != "ms-hooked1" {
+		t.Errorf("orphan[1] BeadID = %q, want %q", orphan2.BeadID, "ms-hooked1")
 	}
 	if orphan2.MinerName != "charlie" {
 		t.Errorf("orphan[1] MinerName = %q, want %q", orphan2.MinerName, "charlie")
@@ -1888,19 +1888,19 @@ func TestOrphanedMoleculeResult_Types(t *testing.T) {
 	t.Parallel()
 	// Verify the result types have all expected fields.
 	r := OrphanedMoleculeResult{
-		BeadID:        "gt-work-123",
-		MoleculeID:    "gt-mol-456",
+		BeadID:        "ms-work-123",
+		MoleculeID:    "ms-mol-456",
 		Assignee:      "testrig/miners/alpha",
 		MinerName:   "alpha",
 		Closed:        5,
 		BeadRecovered: true,
 		Error:         nil,
 	}
-	if r.BeadID != "gt-work-123" {
-		t.Errorf("BeadID = %q, want %q", r.BeadID, "gt-work-123")
+	if r.BeadID != "ms-work-123" {
+		t.Errorf("BeadID = %q, want %q", r.BeadID, "ms-work-123")
 	}
-	if r.MoleculeID != "gt-mol-456" {
-		t.Errorf("MoleculeID = %q, want %q", r.MoleculeID, "gt-mol-456")
+	if r.MoleculeID != "ms-mol-456" {
+		t.Errorf("MoleculeID = %q, want %q", r.MoleculeID, "ms-mol-456")
 	}
 	if r.MinerName != "alpha" {
 		t.Errorf("MinerName = %q, want %q", r.MinerName, "alpha")
@@ -1977,7 +1977,7 @@ func TestGetAttachedMoleculeID_EmptyOutput(t *testing.T) {
 		func(args []string) (string, error) { return "", fmt.Errorf("bd: not found") },
 		func(args []string) error { return fmt.Errorf("bd: not found") },
 	)
-	result := getAttachedMoleculeID(bd, "/tmp", "gt-fake-123")
+	result := getAttachedMoleculeID(bd, "/tmp", "ms-fake-123")
 	if result != "" {
 		t.Errorf("expected empty string, got %q", result)
 	}
@@ -1987,11 +1987,11 @@ func TestHandleMinerDone_CompletedWithoutMRID_NoMergeReady(t *testing.T) {
 	t.Parallel()
 	// When Exit==COMPLETED but MRID is empty and MRFailed is true,
 	// the witness should NOT send MERGE_READY (go to no-MR path).
-	// This tests the fix for gt-xp6e9p.
+	// This tests the fix for ms-xp6e9p.
 	payload := &MinerDonePayload{
 		MinerName: "nux",
 		Exit:        "COMPLETED",
-		IssueID:     "gt-abc123",
+		IssueID:     "ms-abc123",
 		MRID:        "",
 		Branch:      "miner/nux-abc123",
 		MRFailed:    true,
@@ -2015,7 +2015,7 @@ func TestHandleMinerDone_CompletedWithMRID(t *testing.T) {
 	payload := &MinerDonePayload{
 		MinerName: "nux",
 		Exit:        "COMPLETED",
-		MRID:        "gt-mr-xyz",
+		MRID:        "ms-mr-xyz",
 		Branch:      "miner/nux-abc123",
 	}
 
@@ -2060,7 +2060,7 @@ func TestDetectOrphanedMolecules_WithMockBd(t *testing.T) {
 	// No directory for alpha (dead miner)
 
 	// Create workspace.Find marker
-	if err := os.WriteFile(filepath.Join(tmpDir, ".gt-root"), []byte(""), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, ".ms-root"), []byte(""), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -2074,29 +2074,29 @@ func TestDetectOrphanedMolecules_WithMockBd(t *testing.T) {
 			case "list":
 				if strings.Contains(joined, "--status=hooked") {
 					return `[
-  {"id":"gt-work-001","assignee":"testrig/miners/alpha"},
-  {"id":"gt-work-002","assignee":"testrig/miners/bravo"},
-  {"id":"gt-work-003","assignee":"testrig/crew/sean"},
-  {"id":"gt-work-004","assignee":""}
+  {"id":"ms-work-001","assignee":"testrig/miners/alpha"},
+  {"id":"ms-work-002","assignee":"testrig/miners/bravo"},
+  {"id":"ms-work-003","assignee":"testrig/crew/sean"},
+  {"id":"ms-work-004","assignee":""}
 ]`, nil
 				}
 				if strings.Contains(joined, "--status=in_progress") {
 					return "[]", nil
 				}
-				if strings.Contains(joined, "--parent=gt-mol-orphan") {
+				if strings.Contains(joined, "--parent=ms-mol-orphan") {
 					return `[
-  {"id":"gt-step-001","status":"open"},
-  {"id":"gt-step-002","status":"open"},
-  {"id":"gt-step-003","status":"closed"}
+  {"id":"ms-step-001","status":"open"},
+  {"id":"ms-step-002","status":"open"},
+  {"id":"ms-step-003","status":"closed"}
 ]`, nil
 				}
 				return "[]", nil
 			case "show":
 				if len(args) > 1 {
 					switch args[1] {
-					case "gt-work-001":
-						return `[{"status":"hooked","description":"attached_molecule: gt-mol-orphan\nattached_at: 2026-01-15T10:00:00Z\ndispatched_by: overseer"}]`, nil
-					case "gt-mol-orphan":
+					case "ms-work-001":
+						return `[{"status":"hooked","description":"attached_molecule: ms-mol-orphan\nattached_at: 2026-01-15T10:00:00Z\ndispatched_by: overseer"}]`, nil
+					case "ms-mol-orphan":
 						return `[{"status":"open"}]`, nil
 					}
 				}
@@ -2123,11 +2123,11 @@ func TestDetectOrphanedMolecules_WithMockBd(t *testing.T) {
 	}
 
 	orphan := result.Orphans[0]
-	if orphan.BeadID != "gt-work-001" {
-		t.Errorf("orphan.BeadID = %q, want %q", orphan.BeadID, "gt-work-001")
+	if orphan.BeadID != "ms-work-001" {
+		t.Errorf("orphan.BeadID = %q, want %q", orphan.BeadID, "ms-work-001")
 	}
-	if orphan.MoleculeID != "gt-mol-orphan" {
-		t.Errorf("orphan.MoleculeID = %q, want %q", orphan.MoleculeID, "gt-mol-orphan")
+	if orphan.MoleculeID != "ms-mol-orphan" {
+		t.Errorf("orphan.MoleculeID = %q, want %q", orphan.MoleculeID, "ms-mol-orphan")
 	}
 	if orphan.MinerName != "alpha" {
 		t.Errorf("orphan.MinerName = %q, want %q", orphan.MinerName, "alpha")
@@ -2142,17 +2142,17 @@ func TestDetectOrphanedMolecules_WithMockBd(t *testing.T) {
 
 	// Verify bd close was called by checking the mock log
 	logContent := strings.Join(mock.calls, "\n")
-	if !strings.Contains(logContent, "close gt-step-001 gt-step-002") {
+	if !strings.Contains(logContent, "close ms-step-001 ms-step-002") {
 		t.Errorf("expected bd close for step children, got log:\n%s", logContent)
 	}
-	if !strings.Contains(logContent, "close gt-mol-orphan") {
+	if !strings.Contains(logContent, "close ms-mol-orphan") {
 		t.Errorf("expected bd close for molecule, got log:\n%s", logContent)
 	}
 	// Verify bead was recovered (resetAbandonedBead called bd update)
 	if !orphan.BeadRecovered {
 		t.Error("orphan.BeadRecovered = false, want true (resetAbandonedBead should have reset the bead)")
 	}
-	if !strings.Contains(logContent, "update gt-work-001") {
+	if !strings.Contains(logContent, "update ms-work-001") {
 		t.Errorf("expected bd update for bead reset, got log:\n%s", logContent)
 	}
 }
@@ -2162,15 +2162,15 @@ func TestCompletionDiscovery_Types(t *testing.T) {
 	// Verify CompletionDiscovery has all expected fields
 	d := CompletionDiscovery{
 		MinerName:    "nux",
-		AgentBeadID:    "gt-mineshaft-miner-nux",
+		AgentBeadID:    "ms-mineshaft-miner-nux",
 		ExitType:       "COMPLETED",
-		IssueID:        "gt-abc123",
-		MRID:           "gt-mr-xyz",
-		Branch:         "miner/nux/gt-abc123@hash",
+		IssueID:        "ms-abc123",
+		MRID:           "ms-mr-xyz",
+		Branch:         "miner/nux/ms-abc123@hash",
 		MRFailed:       false,
 		CompletionTime: "2026-02-28T02:00:00Z",
 		Action:         "merge-ready-sent",
-		WispCreated:    "gt-wisp-123",
+		WispCreated:    "ms-wisp-123",
 	}
 
 	if d.MinerName != "nux" {
@@ -2179,7 +2179,7 @@ func TestCompletionDiscovery_Types(t *testing.T) {
 	if d.ExitType != "COMPLETED" {
 		t.Errorf("ExitType = %q, want %q", d.ExitType, "COMPLETED")
 	}
-	if d.Branch != "miner/nux/gt-abc123@hash" {
+	if d.Branch != "miner/nux/ms-abc123@hash" {
 		t.Errorf("Branch = %q, want correct value", d.Branch)
 	}
 }
@@ -2217,7 +2217,7 @@ func TestDiscoverCompletions_EmptyMinersDir(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Create workspace marker
-	if err := os.WriteFile(filepath.Join(tmpDir, ".gt-root"), []byte(""), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, ".ms-root"), []byte(""), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -2235,7 +2235,7 @@ func TestDiscoverCompletions_NoCompletionMetadata(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(minersDir, "nux"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(tmpDir, ".gt-root"), []byte(""), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, ".ms-root"), []byte(""), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -2243,7 +2243,7 @@ func TestDiscoverCompletions_NoCompletionMetadata(t *testing.T) {
 	bd, _ := mockBd(
 		func(args []string) (string, error) {
 			if len(args) > 0 && args[0] == "show" {
-				return `[{"id":"gt-testrig-miner-nux","description":"Agent: testrig/miners/nux\n\nrole_type: miner\nrig: testrig\nagent_state: working\nhook_bead: gt-work-001","agent_state":"working","hook_bead":"gt-work-001"}]`, nil
+				return `[{"id":"ms-testrig-miner-nux","description":"Agent: testrig/miners/nux\n\nrole_type: miner\nrig: testrig\nagent_state: working\nhook_bead: ms-work-001","agent_state":"working","hook_bead":"ms-work-001"}]`, nil
 			}
 			return "[]", nil
 		},
@@ -2306,7 +2306,7 @@ func TestGetAgentBeadFields_NoAgentBead(t *testing.T) {
 		func(args []string) (string, error) { return "", fmt.Errorf("bd: not found") },
 		func(args []string) error { return fmt.Errorf("bd: not found") },
 	)
-	fields := getAgentBeadFields(bd, "/tmp", "gt-fake-agent")
+	fields := getAgentBeadFields(bd, "/tmp", "ms-fake-agent")
 	if fields != nil {
 		t.Error("expected nil fields when bd unavailable")
 	}
@@ -2319,13 +2319,13 @@ func TestClearCompletionMetadata_NoBd(t *testing.T) {
 		func(args []string) (string, error) { return "", fmt.Errorf("bd: not found") },
 		func(args []string) error { return fmt.Errorf("bd: not found") },
 	)
-	err := clearCompletionMetadata(bd, "/tmp", "gt-fake-agent")
+	err := clearCompletionMetadata(bd, "/tmp", "ms-fake-agent")
 	if err == nil {
 		t.Error("expected error when bd unavailable")
 	}
 }
 
-// --- Heartbeat v2 tests (gt-3vr5) ---
+// --- Heartbeat v2 tests (ms-3vr5) ---
 
 func TestHeartbeatV2_ExitingStateSkipsZombieDetection(t *testing.T) {
 	t.Parallel()
@@ -2499,11 +2499,11 @@ func TestSubmittedStillRunningCandidate(t *testing.T) {
 
 	baseSnap := &agentBeadSnapshot{
 		AgentState: string(beads.AgentStateDone),
-		HookBead:   "gt-work-123",
+		HookBead:   "ms-work-123",
 		UpdatedAt:  time.Now().Add(-10 * time.Minute).Format(time.RFC3339),
 		Fields: &beads.AgentFields{
 			CleanupStatus: "clean",
-			MRID:          "gt-mr-123",
+			MRID:          "ms-mr-123",
 		},
 	}
 	staleHB := &miner.SessionHeartbeat{
@@ -2566,7 +2566,7 @@ func TestSubmittedStillRunningCandidate(t *testing.T) {
 	failedSubmitSnap := *baseSnap
 	failedSubmitSnap.Fields = &beads.AgentFields{
 		CleanupStatus: "clean",
-		MRID:          "gt-mr-123",
+		MRID:          "ms-mr-123",
 		MRFailed:      true,
 	}
 	if _, ok := isSubmittedStillRunningCandidate(&failedSubmitSnap, staleHB, config.DefaultWitnessHeartbeatStartupGrace); ok {
@@ -2576,7 +2576,7 @@ func TestSubmittedStillRunningCandidate(t *testing.T) {
 	pushFailedSnap := *baseSnap
 	pushFailedSnap.Fields = &beads.AgentFields{
 		CleanupStatus: "clean",
-		MRID:          "gt-mr-123",
+		MRID:          "ms-mr-123",
 		PushFailed:    true,
 	}
 	if _, ok := isSubmittedStillRunningCandidate(&pushFailedSnap, staleHB, config.DefaultWitnessHeartbeatStartupGrace); ok {
@@ -2604,8 +2604,8 @@ func TestNotifyRefineryMergeReady_EmitsChannelEvent(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Set GT_TEST_NUDGE_LOG to prevent actual tmux operations in nudgeRefinery
-	t.Setenv("GT_TEST_NUDGE_LOG", filepath.Join(t.TempDir(), "nudge.log"))
+	// Set MS_TEST_NUDGE_LOG to prevent actual tmux operations in nudgeRefinery
+	t.Setenv("MS_TEST_NUDGE_LOG", filepath.Join(t.TempDir(), "nudge.log"))
 
 	result := &HandlerResult{}
 	// notifyRefineryMergeReady takes workDir and calls workspace.Find(workDir) internally
@@ -2626,7 +2626,7 @@ func TestNotifyRefineryMergeReady_EmitsChannelEvent(t *testing.T) {
 	}
 
 	if len(eventFiles) == 0 {
-		t.Fatal("expected at least one .event file in ~/gt/events/refinery/, got none")
+		t.Fatal("expected at least one .event file in ~/ms/events/refinery/, got none")
 	}
 
 	// Read and verify the event content

@@ -37,10 +37,10 @@ func runMQList(cmd *cobra.Command, args []string) error {
 
 	// Build list options - query for merge-request label.
 	// Use ListMergeRequests to query both the issues table and wisps table,
-	// since MRs are created as ephemeral (wisps) by gt mq submit (GH#2446).
+	// since MRs are created as ephemeral (wisps) by ms mq submit (GH#2446).
 	// Priority -1 means no priority filter (otherwise 0 would filter to P0 only).
 	opts := beads.ListOptions{
-		Label:    "gt:merge-request",
+		Label:    "ms:merge-request",
 		Priority: -1,
 		Rig:      rigName,
 	}
@@ -58,7 +58,7 @@ func runMQList(cmd *cobra.Command, args []string) error {
 	if mqListReady {
 		// Query all open MRs and filter out blocked ones manually.
 		// Cannot use b.Ready() because it excludes ephemeral beads,
-		// and MRs are ephemeral by design (see gt-t5t6y).
+		// and MRs are ephemeral by design (see ms-t5t6y).
 		opts.Status = "open"
 		allOpen, err := b.ListMergeRequests(opts)
 		if err != nil {

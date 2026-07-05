@@ -10,7 +10,7 @@ import (
 	"github.com/steveyegge/mineshaft/internal/wisp"
 )
 
-// Regression test for gt-arz:
+// Regression test for ms-arz:
 // getPatrolRigs should filter parked/docked rigs at list-building time.
 func TestGetPatrolRigs_FiltersNonOperationalRigs(t *testing.T) {
 	townRoot := t.TempDir()

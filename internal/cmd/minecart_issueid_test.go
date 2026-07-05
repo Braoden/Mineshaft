@@ -20,7 +20,7 @@ func TestLooksLikeIssueID(t *testing.T) {
 		input string
 		want  bool
 	}{
-		{"gt-abc123", true},
+		{"ms-abc123", true},
 		{"bd-xyz789", true},
 		{"hq-overseer", true},
 		{"nx-def456", true},

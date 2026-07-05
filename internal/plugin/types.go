@@ -4,7 +4,7 @@
 // Each plugin is defined by a plugin.md file with TOML frontmatter.
 //
 // Plugin locations:
-//   - Town-level: ~/gt/plugins/ (universal, apply everywhere)
+//   - Town-level: ~/ms/plugins/ (universal, apply everywhere)
 //   - Rig-level: <rig>/plugins/ (project-specific)
 package plugin
 
@@ -55,7 +55,7 @@ type Plugin struct {
 type Location string
 
 const (
-	// LocationTown indicates a town-level plugin (~/gt/plugins/).
+	// LocationTown indicates a town-level plugin (~/ms/plugins/).
 	LocationTown Location = "town"
 
 	// LocationRig indicates a rig-level plugin (<rig>/plugins/).
@@ -209,7 +209,7 @@ func (p *Plugin) Summary() PluginSummary {
 
 // FormatMailBody formats the plugin as instructions for a dog worker.
 // This is the canonical formatting used by both the daemon dispatcher
-// and the gt dog dispatch command.
+// and the ms dog dispatch command.
 func (p *Plugin) FormatMailBody() string {
 	if p.HasRunScript {
 		return fmt.Sprintf(
@@ -220,8 +220,8 @@ func (p *Plugin) FormatMailBody() string {
 				"Run this command EXACTLY. Do NOT interpret the plugin.md instructions.\n"+
 				"Do NOT write your own implementation. Just run the script and report the output.\n\n"+
 				"After completion:\n"+
-				"1. The script should record a plugin-run receipt. If it did not, run `gt plugin record-run --plugin %s --result <outcome> --title \"Plugin run: %s\"`.\n"+
-				"2. Run `gt dog done` — this clears your work and auto-terminates the session. Run this even if recording fails.\n",
+				"1. The script should record a plugin-run receipt. If it did not, run `ms plugin record-run --plugin %s --result <outcome> --title \"Plugin run: %s\"`.\n"+
+				"2. Run `ms dog done` — this clears your work and auto-terminates the session. Run this even if recording fails.\n",
 			p.Name, p.Description, p.Path, p.Name, p.Name)
 	}
 
@@ -241,8 +241,8 @@ func (p *Plugin) FormatMailBody() string {
 	sb.WriteString(p.Instructions)
 	sb.WriteString("\n\n---\n\n")
 	sb.WriteString("After completion:\n")
-	sb.WriteString("1. Follow the plugin's recording instructions above. If none are provided, run `gt plugin record-run --plugin " + p.Name + " --result <outcome> --title \"Plugin run: " + p.Name + "\"`.\n")
-	sb.WriteString("2. Run `gt dog done` — this clears your work and auto-terminates the session. Run this even if recording fails.\n")
+	sb.WriteString("1. Follow the plugin's recording instructions above. If none are provided, run `ms plugin record-run --plugin " + p.Name + " --result <outcome> --title \"Plugin run: " + p.Name + "\"`.\n")
+	sb.WriteString("2. Run `ms dog done` — this clears your work and auto-terminates the session. Run this even if recording fails.\n")
 
 	return sb.String()
 }

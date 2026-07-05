@@ -73,7 +73,7 @@ type vitalsZombie struct {
 }
 
 // findVitalsZombies finds Dolt servers not on the production port.
-// Uses lsof-based port discovery instead of pgrep/ps string matching (ZFC fix: gt-fj87).
+// Uses lsof-based port discovery instead of pgrep/ps string matching (ZFC fix: ms-fj87).
 // Checks workspace ownership to avoid flagging sibling Mineshaft instances as zombies.
 func findVitalsZombies(townRoot string, prodPort int) []vitalsZombie {
 	listeners := doltserver.FindAllDoltListeners()

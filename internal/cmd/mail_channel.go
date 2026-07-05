@@ -37,12 +37,12 @@ Channels are pub/sub streams where messages are broadcast to subscribers.
 Messages are retained according to the channel's retention policy.
 
 Examples:
-  gt mail channel              # List all channels
-  gt mail channel alerts       # View messages from 'alerts' channel
-  gt mail channel list         # Alias for listing channels
-  gt mail channel show alerts  # Same as: gt mail channel alerts
-  gt mail channel create alerts --retain-count=100
-  gt mail channel delete alerts`,
+  ms mail channel              # List all channels
+  ms mail channel alerts       # View messages from 'alerts' channel
+  ms mail channel list         # Alias for listing channels
+  ms mail channel show alerts  # Same as: ms mail channel alerts
+  ms mail channel create alerts --retain-count=100
+  ms mail channel delete alerts`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runMailChannel,
 }
@@ -177,7 +177,7 @@ func runChannelList(cmd *cobra.Command, args []string) error {
 
 	if len(channels) == 0 {
 		fmt.Println("No channels defined.")
-		fmt.Println("\nCreate one with: gt mail channel create <name>")
+		fmt.Println("\nCreate one with: ms mail channel create <name>")
 		return nil
 	}
 
@@ -492,7 +492,7 @@ func listChannelMessages(townRoot, channelName string) ([]channelMessage, error)
 
 	// Query for messages with label channel:<name>
 	args := []string{"list",
-		"--label", "gt:message",
+		"--label", "ms:message",
 		"--label", "channel:" + channelName,
 		"--sort", "-created",
 		"--limit", "0",

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # tool-updater/run.sh — Upgrade beads (bd) and dolt via Homebrew.
 #
-# gt is managed separately via rebuild-gt (builds from source).
+# ms is managed separately via rebuild-ms (builds from source).
 # This plugin handles the Homebrew-installed tools on a weekly cadence.
 
 set -euo pipefail
@@ -31,7 +31,7 @@ done
 
 if [[ ${#OUTDATED[@]} -eq 0 ]]; then
   log "All tools current. Nothing to do."
-  gt plugin record-run --plugin tool-updater --result success \
+  ms plugin record-run --plugin tool-updater --result success \
     --title "tool-updater: all tools current (beads=$(bd version 2>/dev/null | awk '{print $3}'), dolt=$(dolt version 2>/dev/null | awk '{print $3}')" >/dev/null 2>&1 || true
   exit 0
 fi
@@ -63,11 +63,11 @@ log "=== Done === $SUMMARY"
 RESULT="success"
 [[ ${#FAILED[@]} -gt 0 ]] && RESULT="warning"
 
-gt plugin record-run --plugin tool-updater --result "$RESULT" \
+ms plugin record-run --plugin tool-updater --result "$RESULT" \
   --title "$SUMMARY" >/dev/null 2>&1 || true
 
 if [[ ${#FAILED[@]} -gt 0 ]]; then
-  gt escalate "tool-updater: ${#FAILED[@]} tool(s) failed to upgrade: ${FAILED[*]}" \
+  ms escalate "tool-updater: ${#FAILED[@]} tool(s) failed to upgrade: ${FAILED[*]}" \
     -s medium \
     --reason "Homebrew upgrade failed for: ${FAILED[*]}" 2>/dev/null || true
 fi

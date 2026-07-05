@@ -5,7 +5,7 @@
 ## Overview
 
 Mineshaft agents coordinate via mail messages routed through the beads system.
-Mail uses `type=message` beads with routing handled by `gt mail`.
+Mail uses `type=message` beads with routing handled by `ms mail`.
 
 ## Message Types
 
@@ -25,7 +25,7 @@ MR: <mr-id>          # if exit=MERGED
 Branch: <branch>
 ```
 
-**Trigger**: `gt done` command generates this automatically.
+**Trigger**: `ms done` command generates this automatically.
 
 **Handler**: Witness creates a cleanup wisp for the miner.
 
@@ -152,11 +152,11 @@ Please re-dispatch to an available miner.
 **Trigger**: Witness detects a zombie miner with work still hooked/in_progress.
 The bead is reset to open status and this mail is sent for re-dispatch.
 
-**Handler**: Supervisor runs `gt supervisor redispatch <bead-id>` which:
+**Handler**: Supervisor runs `ms supervisor redispatch <bead-id>` which:
 - Rate-limits re-dispatches (5-minute cooldown per bead)
 - Tracks failure count (after 3 failures, escalates to Overseer)
 - Auto-detects target rig from bead prefix
-- Slings the bead to an available miner via `gt sling`
+- Slings the bead to an available miner via `ms sling`
 
 ### RECOVERY_NEEDED
 
@@ -224,7 +224,7 @@ attached_at: <timestamp>
 <what successor should do>
 ```
 
-**Trigger**: `gt handoff` command, or manual send before session end.
+**Trigger**: `ms handoff` command, or manual send before session end.
 
 **Handler**: Next session reads handoff, continues from context.
 
@@ -318,7 +318,7 @@ Miner (rework needed)
    │                          │                          │
 Miner                       │                          │
    │                          │                          │
-   │ (rebases, gt done)       │                          │
+   │ (rebases, ms done)       │                          │
    │─────────────────────────>│ MERGE_READY              │
    │                          │─────────────────────────>│
    │                          │                    (retry merge)
@@ -340,8 +340,8 @@ Dead Miner               Witness                    Supervisor
      │                        │ RECOVERED_BEAD           │
      │                        │─────────────────────────>│
      │                        │                          │
-     │                        │                    gt supervisor redispatch
-     │                        │                    gt sling <bead> <rig>
+     │                        │                    ms supervisor redispatch
+     │                        │                    ms sling <bead> <rig>
      │                        │                          │
      │                        │                          ├──> New Miner
      │                        │                          │    (re-dispatched)
@@ -365,20 +365,20 @@ Witness-N ──┘
 ## Communication Hygiene: Mail vs Nudge
 
 Agents overuse mail for routine communication, generating permanent beads and
-Dolt commits for messages that should be ephemeral. Every `gt mail send` creates
+Dolt commits for messages that should be ephemeral. Every `ms mail send` creates
 a wisp bead in Dolt -- a permanent record with its own commit in the git-like
 history. This is a critical pollution source.
 
 ### The Two Channels
 
-**`gt nudge` (ephemeral, preferred for routine comms)**
+**`ms nudge` (ephemeral, preferred for routine comms)**
 - Sends a message directly to an agent's tmux session
 - No beads created. No Dolt commits. Zero storage cost.
 - Message appears as a `<system-reminder>` in the agent's context
 - Suitable for: health checks, status requests, simple instructions, "wake up" signals
 - Limitation: if the target session is dead, the nudge is lost
 
-**`gt mail send` (persistent, for structured protocol messages only)**
+**`ms mail send` (persistent, for structured protocol messages only)**
 - Creates a bead (wisp) in the Dolt database
 - Generates at least one Dolt commit (the write)
 - Persists across session restarts -- survives agent death
@@ -387,7 +387,7 @@ history. This is a critical pollution source.
 
 ### The Rule
 
-**Default to `gt nudge`. Only use `gt mail send` when the message MUST survive
+**Default to `ms nudge`. Only use `ms mail send` when the message MUST survive
 the recipient's session death.**
 
 The litmus test: "If the recipient's session dies and restarts, do they need this
@@ -397,7 +397,7 @@ message?" If yes -> mail. If no -> nudge.
 
 | Role | Mail Budget | When to Mail | When to Nudge |
 |------|-------------|-------------|---------------|
-| **Miner** | 0-1 per session | HELP/ESCALATE only (gt escalate preferred) | Everything else |
+| **Miner** | 0-1 per session | HELP/ESCALATE only (ms escalate preferred) | Everything else |
 | **Witness** | Protocol msgs only | MERGE_READY, RECOVERED_BEAD, RECOVERY_NEEDED, escalations to Overseer | Miner health checks, status pings, nudge-and-observe |
 | **Refinery** | Protocol msgs only | MERGED, MERGE_FAILED, REWORK_REQUEST | Status updates to Witness |
 | **Supervisor** | Escalations only | Escalations to Overseer, HANDOFF to self | TIMER callbacks, HEALTH_CHECK, lifecycle pokes |
@@ -415,7 +415,7 @@ normal operations:
 ### Anti-Patterns
 
 **DOG_DONE as mail** -- Dogs should not mail their completion status. Use
-`gt nudge supervisor/ "DOG_DONE: plugin-name success"` instead.
+`ms nudge supervisor/ "DOG_DONE: plugin-name success"` instead.
 
 **Duplicate escalations** -- Witnesses sending 2+ mails about the same issue
 minutes apart. Check inbox before sending: if you already sent about this topic,
@@ -435,10 +435,10 @@ responses.
 
 ```bash
 # Basic send
-gt mail send <addr> -s "Subject" -m "Body"
+ms mail send <addr> -s "Subject" -m "Body"
 
 # With structured body
-gt mail send greenplace/witness -s "MERGE_READY nux" -m "Branch: feature-xyz
+ms mail send greenplace/witness -s "MERGE_READY nux" -m "Branch: feature-xyz
 Issue: gp-abc
 Miner: nux
 Verified: clean"
@@ -448,13 +448,13 @@ Verified: clean"
 
 ```bash
 # Check inbox
-gt mail inbox
+ms mail inbox
 
 # Read specific message
-gt mail read <msg-id>
+ms mail read <msg-id>
 
 # Mark as read
-gt mail ack <msg-id>
+ms mail ack <msg-id>
 ```
 
 ### In Patrol Formulas
@@ -483,7 +483,7 @@ Beyond direct agent-to-agent mail, the messaging system supports three bead-back
 primitives for group and broadcast communication. All use the `hq-` prefix
 (town-level entities that span rigs).
 
-### Groups (`gt:group`)
+### Groups (`ms:group`)
 
 Named collections of addresses for mail distribution. Sending to a group
 delivers to all members.
@@ -494,16 +494,16 @@ delivers to all members.
 (`*/witness`, `mineshaft/crew/*`), special patterns (`@town`, `@crew`,
 `@witnesses`), or nested group names.
 
-### Queues (`gt:queue`)
+### Queues (`ms:queue`)
 
 Work queues where each message goes to exactly one claimant (unlike groups).
 
-**Bead ID format:** `hq-q-<name>` (town-level) or `gt-q-<name>` (rig-level)
+**Bead ID format:** `hq-q-<name>` (town-level) or `ms-q-<name>` (rig-level)
 
 Fields: `status` (active/paused/closed), `max_concurrency`, `processing_order`
 (fifo/priority), plus count fields (available, processing, completed, failed).
 
-### Channels (`gt:channel`)
+### Channels (`ms:channel`)
 
 Pub/sub broadcast streams with configurable message retention.
 
@@ -516,26 +516,26 @@ Fields: `subscribers`, `status` (active/closed), `retention_count`,
 
 ```bash
 # Groups
-gt mail group list
-gt mail group show <name>
-gt mail group create <name> [members...]
-gt mail group add <name> <member>
-gt mail group remove <name> <member>
-gt mail group delete <name>
+ms mail group list
+ms mail group show <name>
+ms mail group create <name> [members...]
+ms mail group add <name> <member>
+ms mail group remove <name> <member>
+ms mail group delete <name>
 
 # Channels
-gt mail channel list
-gt mail channel show <name>
-gt mail channel create <name> [--retain-count=N] [--retain-hours=N]
-gt mail channel delete <name>
+ms mail channel list
+ms mail channel show <name>
+ms mail channel create <name> [--retain-count=N] [--retain-hours=N]
+ms mail channel delete <name>
 ```
 
 ### Sending to Groups, Queues, and Channels
 
 ```bash
-gt mail send my-group -s "Subject" -m "Body"           # group (expands to members)
-gt mail send queue:my-queue -s "Work item" -m "Details" # queue (single claimant)
-gt mail send channel:alerts -s "Alert" -m "Content"     # channel (broadcast)
+ms mail send my-group -s "Subject" -m "Body"           # group (expands to members)
+ms mail send queue:my-queue -s "Work item" -m "Details" # queue (single claimant)
+ms mail send channel:alerts -s "Alert" -m "Content"     # channel (broadcast)
 ```
 
 ### Address Resolution Order

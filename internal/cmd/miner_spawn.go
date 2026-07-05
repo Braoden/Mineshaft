@@ -1,4 +1,4 @@
-// Package cmd provides miner spawning utilities for gt sling.
+// Package cmd provides miner spawning utilities for ms sling.
 package cmd
 
 import (
@@ -30,7 +30,7 @@ type SpawnedMinerInfo struct {
 	RigName     string // Rig name (e.g., "mineshaft")
 	MinerName string // Miner name (e.g., "Toast")
 	ClonePath   string // Path to miner's git worktree
-	SessionName string // Tmux session name (e.g., "gt-mineshaft-p-Toast")
+	SessionName string // Tmux session name (e.g., "ms-mineshaft-p-Toast")
 	Pane        string // Tmux pane ID (empty until StartSession is called)
 	BaseBranch  string // Effective base branch (e.g., "main", "integration/epic-id")
 	Branch      string // Git branch name (for cleanup on rollback)
@@ -71,7 +71,7 @@ func effectiveMinerDirCap(configured int) int {
 }
 
 // SpawnMinerForSling creates a fresh miner and optionally starts its session.
-// This is used by gt sling when the target is a rig name.
+// This is used by ms sling when the target is a rig name.
 // The caller (sling) handles hook attachment and nudging.
 func SpawnMinerForSling(rigName string, opts SlingSpawnOptions) (*SpawnedMinerInfo, error) {
 	// Find workspace
@@ -103,22 +103,22 @@ func SpawnMinerForSling(rigName string, opts SlingSpawnOptions) (*SpawnedMinerIn
 	t := tmux.NewTmux()
 	minerMgr := miner.NewManager(r, minerGit, t)
 
-	// Pre-spawn Dolt health check (gt-94llt7): verify Dolt is reachable before
+	// Pre-spawn Dolt health check (ms-94llt7): verify Dolt is reachable before
 	// allocating a miner. Prevents orphaned miners when Dolt is down.
 	if err := minerMgr.CheckDoltHealth(); err != nil {
 		return nil, fmt.Errorf("pre-spawn health check failed: %w", err)
 	}
 
-	// Pre-spawn admission control (gt-1obzke): verify Dolt server has connection
+	// Pre-spawn admission control (ms-1obzke): verify Dolt server has connection
 	// capacity before spawning. Prevents connection storms during mass sling.
 	if err := minerMgr.CheckDoltServerCapacity(); err != nil {
 		return nil, fmt.Errorf("admission control: %w", err)
 	}
 
 	if blocked, reason := IsRigParkedOrDocked(townRoot, rigName); blocked {
-		undoCmd := "gt rig unpark"
+		undoCmd := "ms rig unpark"
 		if reason == "docked" {
-			undoCmd = "gt rig undock"
+			undoCmd = "ms rig undock"
 		}
 		return nil, fmt.Errorf("cannot sling to %s rig %q\n%s %s", reason, rigName, undoCmd, rigName)
 	}
@@ -140,15 +140,15 @@ func SpawnMinerForSling(rigName string, opts SlingSpawnOptions) (*SpawnedMinerIn
 			maxRespawns := config.LoadOperationalConfig(townRoot).GetWitnessConfig().MaxBeadRespawnsV()
 			return nil, fmt.Errorf("respawn limit reached for %s (%d attempts). "+
 				"This bead keeps failing — investigate before re-dispatching.\n"+
-				"Override: gt sling %s %s --force\n"+
-				"Reset:    gt sling respawn-reset %s",
+				"Override: ms sling %s %s --force\n"+
+				"Reset:    ms sling respawn-reset %s",
 				opts.HookBead, maxRespawns,
 				opts.HookBead, rigName, opts.HookBead)
 		}
 		witness.RecordBeadRespawn(townRoot, opts.HookBead)
 	}
 
-	// Persistent miner model (gt-4ac): try to reuse an idle miner first.
+	// Persistent miner model (ms-4ac): try to reuse an idle miner first.
 	// Idle miners have completed their work but kept their sandbox (worktree).
 	// Reusing avoids the overhead of creating a new worktree.
 	idleMiner, findErr := minerMgr.FindIdleMiner()
@@ -217,7 +217,7 @@ func SpawnMinerForSling(rigName string, opts SlingSpawnOptions) (*SpawnedMinerIn
 			sessionName := minerSessMgr.SessionName(minerName)
 
 			fmt.Printf("%s Miner %s reused (idle → working, session start deferred)\n", style.Bold.Render("✓"), minerName)
-			_ = events.LogFeed(events.TypeSpawn, "gt", events.SpawnPayload(rigName, minerName))
+			_ = events.LogFeed(events.TypeSpawn, "ms", events.SpawnPayload(rigName, minerName))
 
 			effectiveBranch := strings.TrimPrefix(baseBranch, "origin/")
 			if effectiveBranch == "" {
@@ -255,7 +255,7 @@ func SpawnMinerForSling(rigName string, opts SlingSpawnOptions) (*SpawnedMinerIn
 		}
 		if dirCount >= maxMinerDirsPerRig {
 			return nil, fmt.Errorf("rig %s has %d miner directories (max %d). "+
-				"Resolve recovery-needed miners before allocating more slots: gt miner list %s",
+				"Resolve recovery-needed miners before allocating more slots: ms miner list %s",
 				rigName, dirCount, maxMinerDirsPerRig, rigName)
 		}
 	}
@@ -316,7 +316,7 @@ func SpawnMinerForSling(rigName string, opts SlingSpawnOptions) (*SpawnedMinerIn
 	if err := verifyWorktreeExists(minerObj.ClonePath); err != nil {
 		// Clean up the partial state before returning error
 		_ = minerMgr.Remove(minerName, true) // force=true to clean up partial state
-		return nil, fmt.Errorf("worktree verification failed for %s: %w\nHint: try 'gt miner nuke %s/%s --force' to clean up",
+		return nil, fmt.Errorf("worktree verification failed for %s: %w\nHint: try 'ms miner nuke %s/%s --force' to clean up",
 			minerName, err, rigName, minerName)
 	}
 
@@ -327,7 +327,7 @@ func SpawnMinerForSling(rigName string, opts SlingSpawnOptions) (*SpawnedMinerIn
 	fmt.Printf("%s Miner %s spawned (session start deferred)\n", style.Bold.Render("✓"), minerName)
 
 	// Log spawn event to activity feed
-	_ = events.LogFeed(events.TypeSpawn, "gt", events.SpawnPayload(rigName, minerName))
+	_ = events.LogFeed(events.TypeSpawn, "ms", events.SpawnPayload(rigName, minerName))
 
 	// Compute effective base branch (strip origin/ prefix since formula prepends it)
 	effectiveBranch := strings.TrimPrefix(baseBranch, "origin/")
@@ -353,7 +353,7 @@ func SpawnMinerForSling(rigName string, opts SlingSpawnOptions) (*SpawnedMinerIn
 
 // StartSession starts the tmux session for a spawned miner.
 // This is called after the molecule/bead is attached, so the miner
-// sees its work when gt prime runs on session start.
+// sees its work when ms prime runs on session start.
 // Returns the pane ID after session start.
 func (s *SpawnedMinerInfo) StartSession() (string, error) {
 	if s.SessionStarted() {
@@ -404,7 +404,7 @@ func (s *SpawnedMinerInfo) StartSession() (string, error) {
 	// config from the override so WaitForRuntimeReady uses the correct readiness
 	// strategy (delay-based for Codex vs prompt-polling for Claude). Without this,
 	// ResolveRoleAgentConfig returns the default agent (Claude) and polls for "❯ "
-	// in a Codex session, always timing out after 30 seconds (gt-1j3m).
+	// in a Codex session, always timing out after 30 seconds (ms-1j3m).
 	spawnTownRoot := filepath.Dir(r.Path)
 	var runtimeConfig *config.RuntimeConfig
 	if s.agent != "" {
@@ -422,7 +422,7 @@ func (s *SpawnedMinerInfo) StartSession() (string, error) {
 		style.PrintWarning("runtime may not be fully ready: %v", err)
 	}
 
-	// Update agent state with retry logic (gt-94llt7: fail-safe Dolt writes).
+	// Update agent state with retry logic (ms-94llt7: fail-safe Dolt writes).
 	// Note: warn-only, not fail-hard. The tmux session is already started above,
 	// so returning an error here would leave an orphaned session with no cleanup path.
 	// The miner can still function without the agent state update — it only affects
@@ -441,7 +441,7 @@ func (s *SpawnedMinerInfo) StartSession() (string, error) {
 	}
 
 	// Get pane — if this fails, the session may have died during startup.
-	// Kill the dead session to prevent "session already running" on next attempt (gt-jn40ft).
+	// Kill the dead session to prevent "session already running" on next attempt (ms-jn40ft).
 	pane, err := getSessionPane(s.SessionName)
 	if err != nil {
 		// Session likely died — clean up the tmux session so it doesn't block re-sling

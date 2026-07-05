@@ -785,40 +785,40 @@ func TestSdkIssueToIssueDependsOnInit(t *testing.T) {
 func TestStoreShowMultipleHydratesDependencyMetadata(t *testing.T) {
 	store := newMockStorage()
 	b := newTestBeads(store)
-	store.issues["gt-mr"] = &beadsdk.Issue{
-		ID:     "gt-mr",
+	store.issues["ms-mr"] = &beadsdk.Issue{
+		ID:     "ms-mr",
 		Title:  "merge request",
 		Status: beadsdk.StatusOpen,
 		Dependencies: []*beadsdk.Dependency{
-			{IssueID: "gt-mr", DependsOnID: "gt-blocker", Type: beadsdk.DepBlocks},
-			{IssueID: "gt-mr", DependsOnID: "gt-wait", Type: beadsdk.DependencyType("waits-for")},
-			{IssueID: "gt-mr", DependsOnID: "gt-parent", Type: beadsdk.DepParentChild},
-			{IssueID: "gt-dependent", DependsOnID: "gt-mr", Type: beadsdk.DepBlocks},
+			{IssueID: "ms-mr", DependsOnID: "ms-blocker", Type: beadsdk.DepBlocks},
+			{IssueID: "ms-mr", DependsOnID: "ms-wait", Type: beadsdk.DependencyType("waits-for")},
+			{IssueID: "ms-mr", DependsOnID: "ms-parent", Type: beadsdk.DepParentChild},
+			{IssueID: "ms-dependent", DependsOnID: "ms-mr", Type: beadsdk.DepBlocks},
 		},
 	}
-	store.issues["gt-blocker"] = &beadsdk.Issue{ID: "gt-blocker", Title: "blocker", Status: beadsdk.StatusOpen}
-	store.issues["gt-wait"] = &beadsdk.Issue{ID: "gt-wait", Title: "closed wait", Status: beadsdk.StatusClosed}
-	store.issues["gt-parent"] = &beadsdk.Issue{ID: "gt-parent", Title: "parent", Status: beadsdk.StatusOpen}
-	store.issues["gt-merge-mr"] = &beadsdk.Issue{
-		ID:     "gt-merge-mr",
+	store.issues["ms-blocker"] = &beadsdk.Issue{ID: "ms-blocker", Title: "blocker", Status: beadsdk.StatusOpen}
+	store.issues["ms-wait"] = &beadsdk.Issue{ID: "ms-wait", Title: "closed wait", Status: beadsdk.StatusClosed}
+	store.issues["ms-parent"] = &beadsdk.Issue{ID: "ms-parent", Title: "parent", Status: beadsdk.StatusOpen}
+	store.issues["ms-merge-mr"] = &beadsdk.Issue{
+		ID:     "ms-merge-mr",
 		Title:  "merge-blocked request",
 		Status: beadsdk.StatusOpen,
 		Dependencies: []*beadsdk.Dependency{
-			{IssueID: "gt-merge-mr", DependsOnID: "gt-merged", Type: beadsdk.DependencyType("merge-blocks")},
+			{IssueID: "ms-merge-mr", DependsOnID: "ms-merged", Type: beadsdk.DependencyType("merge-blocks")},
 		},
 	}
-	store.issues["gt-merged"] = &beadsdk.Issue{ID: "gt-merged", Title: "merged dependency", Status: beadsdk.StatusClosed, CloseReason: "Merged in gt-wisp"}
+	store.issues["ms-merged"] = &beadsdk.Issue{ID: "ms-merged", Title: "merged dependency", Status: beadsdk.StatusClosed, CloseReason: "Merged in ms-wisp"}
 
-	issues, err := b.storeShowMultiple([]string{"gt-mr", "gt-merge-mr"})
+	issues, err := b.storeShowMultiple([]string{"ms-mr", "ms-merge-mr"})
 	if err != nil {
 		t.Fatalf("storeShowMultiple: %v", err)
 	}
-	issue := issues["gt-mr"]
+	issue := issues["ms-mr"]
 	if issue == nil {
 		t.Fatal("missing hydrated issue")
 	}
-	if issue.Parent != "gt-parent" {
-		t.Fatalf("Parent = %q, want gt-parent", issue.Parent)
+	if issue.Parent != "ms-parent" {
+		t.Fatalf("Parent = %q, want ms-parent", issue.Parent)
 	}
 	if len(issue.DependsOn) != 2 {
 		t.Fatalf("DependsOn len = %d, want 2: %#v", len(issue.DependsOn), issue.DependsOn)
@@ -826,13 +826,13 @@ func TestStoreShowMultipleHydratesDependencyMetadata(t *testing.T) {
 	if len(issue.Dependencies) != 3 {
 		t.Fatalf("Dependencies len = %d, want 3: %#v", len(issue.Dependencies), issue.Dependencies)
 	}
-	if got := FirstUnresolvedBlockerID(issue); got != "gt-blocker" {
-		t.Fatalf("FirstUnresolvedBlockerID() = %q, want gt-blocker", got)
+	if got := FirstUnresolvedBlockerID(issue); got != "ms-blocker" {
+		t.Fatalf("FirstUnresolvedBlockerID() = %q, want ms-blocker", got)
 	}
 	if !HasUnresolvedBlockers(issue) {
 		t.Fatal("SDK dependencies should feed shared blocker semantics")
 	}
-	if HasUnresolvedBlockers(issues["gt-merge-mr"]) {
+	if HasUnresolvedBlockers(issues["ms-merge-mr"]) {
 		t.Fatal("store-backed merged merge-block should be resolved")
 	}
 }

@@ -53,10 +53,10 @@ Use --force for non-interactive mode (daemon/cron), or run interactively
 to review the plan before proceeding.
 
 Examples:
-  gt maintain                # Interactive (shows plan, asks confirmation)
-  gt maintain --force        # Non-interactive (daemon/cron use)
-  gt maintain --dry-run      # Preview what would happen
-  gt maintain --threshold 50 # Custom commit threshold`,
+  ms maintain                # Interactive (shows plan, asks confirmation)
+  ms maintain --force        # Non-interactive (daemon/cron use)
+  ms maintain --dry-run      # Preview what would happen
+  ms maintain --threshold 50 # Custom commit threshold`,
 	RunE: runMaintain,
 }
 
@@ -88,7 +88,7 @@ func runMaintain(cmd *cobra.Command, args []string) error {
 	// Verify server is running (needed for reap + flatten phases).
 	running, _, err := doltserver.IsRunning(townRoot)
 	if err != nil || !running {
-		return fmt.Errorf("Dolt server not running — start with 'gt dolt start'")
+		return fmt.Errorf("Dolt server not running — start with 'ms dolt start'")
 	}
 
 	// Phase 0: Build and display maintenance plan.
@@ -290,7 +290,7 @@ func maintainBackupSync(dataDir, dbName, backupName string) error {
 // maintainOpenDB opens a connection to the Dolt server for a database.
 func maintainOpenDB(config *doltserver.Config, dbName string) (*sql.DB, error) {
 	// wa-d6f: socket-first DSN (TCP fallback) to avoid TIME_WAIT churn from
-	// short-lived gt maintain invocations.
+	// short-lived ms maintain invocations.
 	dsn := buildDoltDSNFromConfig(config, dbName, dsnOpts{
 		ParseTime:    true,
 		Timeout:      "5s",

@@ -10,7 +10,7 @@ import "time"
 // API rate limits, memory, and CPU are shared resources across all rigs.
 //
 // Behavior is driven entirely by MaxMiners:
-//   -1 (default): direct dispatch — gt sling works as before, near-zero overhead
+//   -1 (default): direct dispatch — ms sling works as before, near-zero overhead
 //    0:           direct dispatch (same as -1)
 //    N > 0:       deferred dispatch — labels/metadata applied, daemon dispatches
 type SchedulerConfig struct {

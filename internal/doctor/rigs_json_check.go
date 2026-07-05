@@ -108,7 +108,7 @@ func (c *RigsJSONCheck) Run(ctx *CheckContext) *CheckResult {
 				fmt.Sprintf("Fallback: %s (exists)", c.fallbackPath),
 				"Likely deleted by git operation in overseer worktree",
 			},
-			FixHint: "Run 'gt doctor --fix' to restore from fallback",
+			FixHint: "Run 'ms doctor --fix' to restore from fallback",
 		}
 	}
 
@@ -122,6 +122,6 @@ func (c *RigsJSONCheck) Run(ctx *CheckContext) *CheckResult {
 			fmt.Sprintf("Fallback: %s (MISSING)", c.fallbackPath),
 			"Session cycling and nudge routing will fail silently",
 		},
-		FixHint: "Restore rigs.json or run 'gt rig list' to regenerate",
+		FixHint: "Restore rigs.json or run 'ms rig list' to regenerate",
 	}
 }

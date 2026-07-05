@@ -32,10 +32,10 @@ This enables switching between accounts (e.g., personal vs work) with
 easy account selection per spawn or globally.
 
 Commands:
-  gt account list              List registered accounts
-  gt account add <handle>      Add a new account
-  gt account default <handle>  Set the default account
-  gt account status            Show current account info`,
+  ms account list              List registered accounts
+  ms account add <handle>      Add a new account
+  ms account default <handle>  Set the default account
+  ms account status            Show current account info`,
 }
 
 var accountListCmd = &cobra.Command{
@@ -46,8 +46,8 @@ var accountListCmd = &cobra.Command{
 Shows account handles, emails, and which is the default.
 
 Examples:
-  gt account list           # Text output
-  gt account list --json    # JSON output`,
+  ms account list           # Text output
+  ms account list --json    # JSON output`,
 	RunE: runAccountList,
 }
 
@@ -61,9 +61,9 @@ the account. You'll need to run 'claude' with CLAUDE_CONFIG_DIR set to
 that directory to complete the login.
 
 Examples:
-  gt account add work
-  gt account add work --email steve@company.com
-  gt account add work --email steve@company.com --desc "Work account"`,
+  ms account add work
+  ms account add work --email steve@company.com
+  ms account add work --email steve@company.com --desc "Work account"`,
 	Args: cobra.ExactArgs(1),
 	RunE: runAccountAdd,
 }
@@ -73,12 +73,12 @@ var accountDefaultCmd = &cobra.Command{
 	Short: "Set the default account",
 	Long: `Set the default Claude Code account.
 
-The default account is used when no --account flag or GT_ACCOUNT env var
+The default account is used when no --account flag or MS_ACCOUNT env var
 is specified during spawn or attach.
 
 Examples:
-  gt account default work
-  gt account default personal`,
+  ms account default work
+  ms account default personal`,
 	Args: cobra.ExactArgs(1),
 	RunE: runAccountDefault,
 }
@@ -104,14 +104,14 @@ func runAccountList(cmd *cobra.Command, args []string) error {
 		// If file doesn't exist, show empty message
 		fmt.Println("No accounts configured.")
 		fmt.Println("\nTo add an account:")
-		fmt.Println("  gt account add <handle>")
+		fmt.Println("  ms account add <handle>")
 		return nil
 	}
 
 	if len(cfg.Accounts) == 0 {
 		fmt.Println("No accounts configured.")
 		fmt.Println("\nTo add an account:")
-		fmt.Println("  gt account add <handle>")
+		fmt.Println("  ms account add <handle>")
 		return nil
 	}
 
@@ -266,12 +266,12 @@ var accountStatusCmd = &cobra.Command{
 	Long: `Show which Claude Code account would be used for new sessions.
 
 Displays the currently resolved account based on:
-1. GT_ACCOUNT environment variable (highest priority)
+1. MS_ACCOUNT environment variable (highest priority)
 2. Default account from config
 
 Examples:
-  gt account status           # Show current account
-  GT_ACCOUNT=work gt account status  # Show with env override`,
+  ms account status           # Show current account
+  MS_ACCOUNT=work ms account status  # Show with env override`,
 	RunE: runAccountStatus,
 }
 
@@ -288,8 +288,8 @@ This command:
 After switching, you must restart Claude Code for the change to take effect.
 
 Examples:
-  gt account switch work       # Switch to work account
-  gt account switch personal   # Switch to personal account`,
+  ms account switch work       # Switch to work account
+  ms account switch personal   # Switch to personal account`,
 	Args: cobra.ExactArgs(1),
 	RunE: runAccountSwitch,
 }
@@ -311,12 +311,12 @@ func runAccountStatus(cmd *cobra.Command, args []string) error {
 	if handle == "" {
 		fmt.Println("No account configured.")
 		fmt.Println("\nTo add an account:")
-		fmt.Println("  gt account add <handle>")
+		fmt.Println("  ms account add <handle>")
 		return nil
 	}
 
-	// Check if GT_ACCOUNT is overriding
-	envAccount := os.Getenv("GT_ACCOUNT")
+	// Check if MS_ACCOUNT is overriding
+	envAccount := os.Getenv("MS_ACCOUNT")
 
 	// Load config to get full account info
 	cfg, err := config.LoadAccountsConfig(accountsPath)
@@ -340,7 +340,7 @@ func runAccountStatus(cmd *cobra.Command, args []string) error {
 	fmt.Printf("Config Dir: %s\n", configDir)
 
 	if envAccount != "" {
-		fmt.Printf("\n%s\n", style.Dim.Render("(set via GT_ACCOUNT environment variable)"))
+		fmt.Printf("\n%s\n", style.Dim.Render("(set via MS_ACCOUNT environment variable)"))
 	} else if handle == cfg.Default {
 		fmt.Printf("\n%s\n", style.Dim.Render("(default account)"))
 	}
@@ -435,7 +435,7 @@ func runAccountSwitch(cmd *cobra.Command, args []string) error {
 				}
 			}
 		} else {
-			return fmt.Errorf("~/.claude is a directory but no default account is set. Please set a default account first with 'gt account default <handle>'")
+			return fmt.Errorf("~/.claude is a directory but no default account is set. Please set a default account first with 'ms account default <handle>'")
 		}
 	} else if err == nil && fileInfo.Mode()&os.ModeSymlink != 0 {
 		// It's a symlink - remove it so we can create a new one

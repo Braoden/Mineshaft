@@ -14,7 +14,7 @@ import (
 func TestSessionInfoJSONOutput(t *testing.T) {
 	info := &miner.SessionInfo{
 		Miner:   "alpha",
-		SessionID: "gt-alpha",
+		SessionID: "ms-alpha",
 		Running:   true,
 		RigName:   "mineshaft",
 		Attached:  false,
@@ -35,8 +35,8 @@ func TestSessionInfoJSONOutput(t *testing.T) {
 	if parsed["miner"] != "alpha" {
 		t.Errorf("miner = %v, want alpha", parsed["miner"])
 	}
-	if parsed["session_id"] != "gt-alpha" {
-		t.Errorf("session_id = %v, want gt-alpha", parsed["session_id"])
+	if parsed["session_id"] != "ms-alpha" {
+		t.Errorf("session_id = %v, want ms-alpha", parsed["session_id"])
 	}
 	if parsed["running"] != true {
 		t.Errorf("running = %v, want true", parsed["running"])
@@ -82,7 +82,7 @@ func TestSessionHealthCmdFlagWiring(t *testing.T) {
 }
 
 func TestSessionHealthReportJSONContract(t *testing.T) {
-	report := newSessionHealthReport("gt-vault", tmux.AgentDead, 30*time.Minute)
+	report := newSessionHealthReport("ms-vault", tmux.AgentDead, 30*time.Minute)
 	data, err := json.Marshal(report)
 	if err != nil {
 		t.Fatalf("json.Marshal failed: %v", err)
@@ -92,8 +92,8 @@ func TestSessionHealthReportJSONContract(t *testing.T) {
 	if err := json.Unmarshal(data, &parsed); err != nil {
 		t.Fatalf("json.Unmarshal failed: %v", err)
 	}
-	if parsed["session"] != "gt-vault" {
-		t.Errorf("session = %v, want gt-vault", parsed["session"])
+	if parsed["session"] != "ms-vault" {
+		t.Errorf("session = %v, want ms-vault", parsed["session"])
 	}
 	if parsed["status"] != "agent-dead" {
 		t.Errorf("status = %v, want agent-dead", parsed["status"])
@@ -127,7 +127,7 @@ func TestRunSessionHealthJSONSessionDead(t *testing.T) {
 	}
 	os.Stdout = w
 
-	err = runSessionHealth(sessionHealthCmd, []string{"gt-session-health-test-nonexistent"})
+	err = runSessionHealth(sessionHealthCmd, []string{"ms-session-health-test-nonexistent"})
 	if closeErr := w.Close(); closeErr != nil {
 		t.Fatalf("closing pipe writer: %v", closeErr)
 	}
@@ -145,8 +145,8 @@ func TestRunSessionHealthJSONSessionDead(t *testing.T) {
 	if err := json.Unmarshal(data, &parsed); err != nil {
 		t.Fatalf("json.Unmarshal failed: %v\noutput: %s", err, string(data))
 	}
-	if parsed["session"] != "gt-session-health-test-nonexistent" {
-		t.Errorf("session = %v, want gt-session-health-test-nonexistent", parsed["session"])
+	if parsed["session"] != "ms-session-health-test-nonexistent" {
+		t.Errorf("session = %v, want ms-session-health-test-nonexistent", parsed["session"])
 	}
 	if parsed["status"] != "session-dead" {
 		t.Errorf("status = %v, want session-dead", parsed["status"])
@@ -162,7 +162,7 @@ func TestRunSessionHealthJSONSessionDead(t *testing.T) {
 func TestSessionInfoJSONOutputNotRunning(t *testing.T) {
 	info := &miner.SessionInfo{
 		Miner:   "beta",
-		SessionID: "gt-beta",
+		SessionID: "ms-beta",
 		Running:   false,
 		RigName:   "testrig",
 	}

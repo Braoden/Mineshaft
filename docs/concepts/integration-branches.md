@@ -24,20 +24,20 @@ to final land, without any manual branch targeting.
 2. **Create the integration branch.** This is the shared branch where all child
    work accumulates.
    ```bash
-   gt mq integration create gt-auth-epic
+   ms mq integration create ms-auth-epic
    ```
 
 3. **Create a minecart to track the work.** The minecart gives you a single dashboard
    for the entire epic's progress.
    ```bash
-   gt minecart create "Auth overhaul" gt-auth-tokens gt-auth-sessions gt-auth-middleware
+   ms minecart create "Auth overhaul" ms-auth-tokens ms-auth-sessions ms-auth-middleware
    ```
 
 4. **Sling the first wave.** Identify children with no blockers and sling them
    to the rig. Use `--no-minecart` since the tracking minecart already exists.
    ```bash
-   gt sling gt-auth-tokens mineshaft --no-minecart
-   gt sling gt-auth-sessions mineshaft --no-minecart
+   ms sling ms-auth-tokens mineshaft --no-minecart
+   ms sling ms-auth-sessions mineshaft --no-minecart
    ```
 
 5. **Miners process the work.** Each miner spawns its worktree from the
@@ -51,14 +51,14 @@ to final land, without any manual branch targeting.
 7. **Track progress via the minecart.** The minecart status updates each time the
    Refinery completes a task.
    ```bash
-   gt minecart status hq-cv-abc
+   ms minecart status hq-cv-abc
    ```
 
 8. **Sling the next wave.** When a wave completes and its dependent children
    unblock, sling the next batch. Those miners will start from the integration
    branch — which now contains all the work from the preceding wave.
    ```bash
-   gt sling gt-auth-middleware mineshaft --no-minecart
+   ms sling ms-auth-middleware mineshaft --no-minecart
    ```
 
 9. **Land when complete.** When all children under the epic are closed, the
@@ -66,7 +66,7 @@ to final land, without any manual branch targeting.
    enabled, the Refinery does this automatically during patrol. Otherwise,
    land manually:
    ```bash
-   gt mq integration land gt-auth-epic
+   ms mq integration land ms-auth-epic
    ```
    This merges the integration branch back to its base branch (main by
    default) as a single merge commit, deletes the branch, and closes the
@@ -92,7 +92,7 @@ together, you're relying on merge order and hoping nothing breaks between lands.
 Integration branches batch epic work on a shared branch, then land atomically:
 
 ```
-                           Epic: gt-auth-epic
+                           Epic: ms-auth-epic
                                   │
                     ┌─────────────┼─────────────┐
                     │             │             │
@@ -105,10 +105,10 @@ Integration branches batch epic work on a shared branch, then land atomically:
                    │           │           │
                    └───────────┼───────────┘
                                ▼
-                 integration/gt-auth-epic
+                 integration/ms-auth-epic
                     (shared branch)
                                │
-                               ▼ gt mq integration land
+                               ▼ ms mq integration land
                           base branch
                     (main or --base-branch)
                      (single merge commit)
@@ -133,7 +133,7 @@ each other's work. When everything is ready, one command lands it all.
 
 ```bash
 bd create --type=epic --title="Auth overhaul"
-# → gt-auth-epic
+# → ms-auth-epic
 ```
 
 Create child issues under the epic as normal.
@@ -141,8 +141,8 @@ Create child issues under the epic as normal.
 ### 2. Create the Integration Branch
 
 ```bash
-gt mq integration create gt-auth-epic
-# → Created integration/gt-auth-epic from origin/main
+ms mq integration create ms-auth-epic
+# → Created integration/ms-auth-epic from origin/main
 # → Stored branch name in epic metadata
 ```
 
@@ -153,8 +153,8 @@ This pushes a new branch to origin and records its name on the epic.
 Assign children to miners as normal:
 
 ```bash
-gt sling gt-auth-tokens mineshaft
-gt sling gt-auth-sessions mineshaft
+ms sling ms-auth-tokens mineshaft
+ms sling ms-auth-sessions mineshaft
 ```
 
 Miners auto-detect the integration branch when their issue is a child of an
@@ -162,13 +162,13 @@ epic that has one. No manual targeting needed.
 
 ### 4. MRs Merge to Integration Branch
 
-When miners run `gt done` or `gt mq submit`, auto-detection kicks in:
+When miners run `ms done` or `ms mq submit`, auto-detection kicks in:
 
 ```
-gt done
-  → Detects parent epic gt-auth-epic
-  → Finds integration/gt-auth-epic branch
-  → Submits MR targeting integration/gt-auth-epic (not main)
+ms done
+  → Detects parent epic ms-auth-epic
+  → Finds integration/ms-auth-epic branch
+  → Submits MR targeting integration/ms-auth-epic (not main)
 ```
 
 The Refinery processes these MRs and merges them to the integration branch.
@@ -178,13 +178,13 @@ The Refinery processes these MRs and merges them to the integration branch.
 Once all children are closed and all MRs merged:
 
 ```bash
-gt mq integration land gt-auth-epic
+ms mq integration land ms-auth-epic
 # → Verified all MRs merged
-# → Merged integration/gt-auth-epic → base branch (--no-ff)
+# → Merged integration/ms-auth-epic → base branch (--no-ff)
 # → Tests passed
 # → Pushed to origin
-# → Deleted integration/gt-auth-epic
-# → Closed epic gt-auth-epic
+# → Deleted integration/ms-auth-epic
+# → Closed epic ms-auth-epic
 ```
 
 ## Auto-Detection
@@ -193,25 +193,25 @@ Integration branches work without manual targeting. Three systems auto-detect th
 
 | System | What It Does | Config Gate |
 |--------|-------------|-------------|
-| `gt done` / `gt mq submit` | Targets MR at integration branch instead of main | `integration_branch_refinery_enabled` |
+| `ms done` / `ms mq submit` | Targets MR at integration branch instead of main | `integration_branch_refinery_enabled` |
 | Miner spawn | Sources worktree from integration branch | `integration_branch_miner_enabled` |
 | Refinery patrol | Checks if integration branches are ready to land | `integration_branch_auto_land` |
 
 ### Detection Algorithm
 
-When `gt done` or `gt mq submit` runs:
+When `ms done` or `ms mq submit` runs:
 
 | Step | Action | Result |
 |------|--------|--------|
 | 1 | Load config, check `integration_branch_refinery_enabled` | If false, skip detection |
-| 2 | Get current issue ID from branch name | e.g., `gt-auth-tokens` |
+| 2 | Get current issue ID from branch name | e.g., `ms-auth-tokens` |
 | 3 | Walk parent chain (max 10 levels) | Find ancestor epics |
 | 4 | For each epic: read `integration_branch:` from metadata | Get stored branch name |
 | 5 | Fallback: generate name from template | e.g., `integration/{title}` |
 | 6 | Check if branch exists (local, then remote) | Verify it's real |
 | 7 | If found, target MR at that branch | Instead of main |
 
-The `--epic` flag on `gt mq submit` bypasses auto-detection and resolves
+The `--epic` flag on `ms mq submit` bypasses auto-detection and resolves
 the target branch using the configured template (defaulting to
 `integration/{epic}`).
 
@@ -221,8 +221,8 @@ the target branch using the configured template (defaulting to
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `{epic}` | Full epic ID | `gt-auth-epic` |
-| `{prefix}` | Epic prefix (before first hyphen) | `gt` |
+| `{epic}` | Full epic ID | `ms-auth-epic` |
+| `{prefix}` | Epic prefix (before first hyphen) | `ms` |
 | `{user}` | From `git config user.name` | `klauern` |
 
 ### Precedence
@@ -246,15 +246,15 @@ the target branch using the configured template (defaulting to
 
 ```bash
 # Default template (uses epic title)
-gt mq integration create gt-auth-epic
+ms mq integration create ms-auth-epic
 # → integration/add-user-authentication  (from epic title)
 
 # Custom template in config: "{user}/{prefix}/{epic}"
-gt mq integration create RA-123
+ms mq integration create RA-123
 # → klauern/RA/RA-123
 
 # Override with --branch flag
-gt mq integration create RA-123 --branch "feature/{epic}"
+ms mq integration create RA-123 --branch "feature/{epic}"
 # → feature/RA-123
 ```
 
@@ -266,12 +266,12 @@ epic ID is appended automatically (e.g., `integration/add-auth-456`).
 
 ## Commands
 
-### `gt mq integration create <epic-id>`
+### `ms mq integration create <epic-id>`
 
 Create an integration branch for an epic.
 
 ```bash
-gt mq integration create <epic-id> [flags]
+ms mq integration create <epic-id> [flags]
 ```
 
 **Flags:**
@@ -296,12 +296,12 @@ gt mq integration create <epic-id> [flags]
 - Branch already exists
 - Invalid characters in generated branch name
 
-### `gt mq integration status <epic-id>`
+### `ms mq integration status <epic-id>`
 
 Display integration branch status for an epic.
 
 ```bash
-gt mq integration status <epic-id> [flags]
+ms mq integration status <epic-id> [flags]
 ```
 
 **Flags:**
@@ -327,12 +327,12 @@ gt mq integration status <epic-id> [flags]
 3. All children are closed
 4. No pending MRs (all submitted work is merged)
 
-### `gt mq integration land <epic-id>`
+### `ms mq integration land <epic-id>`
 
 Merge an epic's integration branch back to its base branch.
 
 ```bash
-gt mq integration land <epic-id> [flags]
+ms mq integration land <epic-id> [flags]
 ```
 
 **Flags:**
@@ -374,7 +374,7 @@ and skips directly to cleanup.
 
 ### Default Branch
 
-The rig's `default_branch` (set in `config.json`, auto-detected during `gt rig add`)
+The rig's `default_branch` (set in `config.json`, auto-detected during `ms rig add`)
 controls where work merges when no integration branch is active. It's also the
 default base branch when creating integration branches. If your project uses
 `develop` or `master` instead of `main`, set it once in rig config and the whole
@@ -407,7 +407,7 @@ All integration branch fields live under `merge_queue` in rig settings (`setting
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `integration_branch_miner_enabled` | `*bool` | `true` | Miners auto-source worktrees from integration branches |
-| `integration_branch_refinery_enabled` | `*bool` | `true` | `gt mq submit` and `gt done` auto-detect integration branches as MR targets |
+| `integration_branch_refinery_enabled` | `*bool` | `true` | `ms mq submit` and `ms done` auto-detect integration branches as MR targets |
 | `integration_branch_template` | `string` | `"integration/{title}"` | Branch name template (supports `{title}`, `{epic}`, `{prefix}`, `{user}`) |
 | `integration_branch_auto_land` | `*bool` | `false` | Refinery patrol auto-lands when all children closed |
 
@@ -425,8 +425,8 @@ lands integration branches that are ready.
 During each patrol cycle, the Refinery:
 
 1. Lists all open epics: `bd list --type=epic --status=open`
-2. Checks each epic's integration branch: `gt mq integration status <epic-id>`
-3. If `ready_to_land: true`: runs `gt mq integration land <epic-id>`
+2. Checks each epic's integration branch: `ms mq integration status <epic-id>`
+3. If `ready_to_land: true`: runs `ms mq integration land <epic-id>`
 4. If not ready: skips (epic work is incomplete)
 
 ### Conditions for Auto-Land
@@ -444,7 +444,7 @@ If either is false, the patrol step exits early.
 |----------|---------------|
 | Trusted CI, no human review needed | Enable auto-land |
 | Need human sign-off before landing | Keep disabled (default), land manually |
-| Mix of both | Keep disabled, use `gt mq integration land` for manual control |
+| Mix of both | Keep disabled, use `ms mq integration land` for manual control |
 
 ## Safety Guardrails
 
@@ -453,14 +453,14 @@ Integration branch landing is protected by a three-layer defense:
 ### Layer 1: Formula and Role Instructions
 
 The refinery formula and role template explicitly forbid landing integration
-branches via raw git commands. Only `gt mq integration land` is authorized.
+branches via raw git commands. Only `ms mq integration land` is authorized.
 
 ### Layer 2: Pre-Push Hook
 
 The `.githooks/pre-push` hook detects when a push to the default branch
 introduces integration branch content. It uses ancestry-based detection:
 if any `origin/integration/*` branch tip becomes newly reachable from the
-pushed commits, the push is blocked unless `GT_INTEGRATION_LAND=1` is set.
+pushed commits, the push is blocked unless `MS_INTEGRATION_LAND=1` is set.
 
 The default branch is detected dynamically via `refs/remotes/origin/HEAD`
 (fallback: `main`), so this works regardless of the rig's branch naming.
@@ -474,12 +474,12 @@ are not covered by the hook — Layer 1 (formula language) is the guardrail for
 those cases.
 
 **Requires**: `core.hooksPath` must be configured for the hook to be active.
-New rigs get this automatically. Existing rigs: run `gt doctor --fix`.
+New rigs get this automatically. Existing rigs: run `ms doctor --fix`.
 
 ### Layer 3: Authorized Code Path
 
-The `gt mq integration land` command uses `PushWithEnv()` to set
-`GT_INTEGRATION_LAND=1`, allowing the push through the hook. Raw `git push`
+The `ms mq integration land` command uses `PushWithEnv()` to set
+`MS_INTEGRATION_LAND=1`, allowing the push through the hook. Raw `git push`
 from any agent or user does not set this variable and will be blocked.
 Manually setting the env var is possible but is not part of the supported
 workflow — the variable is a policy-based trust boundary, not a
@@ -544,10 +544,10 @@ Commands run in this order (any can be empty = skip):
 
 Commands are auto-injected from `<rig>/settings/config.json` into formula vars:
 
-- **Refinery patrol**: `buildRefineryPatrolVars()` reads rig config during `gt prime`
-- **Miner work / sync**: `loadRigCommandVars()` reads rig config during `gt sling`
+- **Refinery patrol**: `buildRefineryPatrolVars()` reads rig config during `ms prime`
+- **Miner work / sync**: `loadRigCommandVars()` reads rig config during `ms sling`
 
-User-provided `--var` flags on `gt sling` override rig config values.
+User-provided `--var` flags on `ms sling` override rig config values.
 
 ### Empty = Skip
 
@@ -570,7 +570,7 @@ before slinging any child work.
 
 ### Manually Targeting the Integration Branch
 
-**Wrong:** Using `--branch integration/gt-epic` on `gt mq submit`.
+**Wrong:** Using `--branch integration/ms-epic` on `ms mq submit`.
 
 Auto-detection handles this. If you find yourself manually targeting, check that:
 - The integration branch actually exists

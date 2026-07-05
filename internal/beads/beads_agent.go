@@ -49,8 +49,8 @@ type AgentFields struct {
 	// Note: RoleBead field removed - role definitions are now config-based.
 	// See internal/config/roles/*.toml and config-based-roles.md.
 
-	// Completion metadata fields (gt-x7t9).
-	// Written by gt done, read by witness survey-workers to discover
+	// Completion metadata fields (ms-x7t9).
+	// Written by ms done, read by witness survey-workers to discover
 	// completion state from beads instead of MINER_DONE mail.
 	ExitType        string // COMPLETED, ESCALATED, DEFERRED, PHASE_COMPLETE (see witness.ExitType*)
 	MRID            string // MR bead ID (if MR was created)
@@ -58,7 +58,7 @@ type AgentFields struct {
 	LastSourceIssue string // Last source/work bead ID, preserved after hook_bead is cleared
 	MRFailed        bool   // True when MR creation was attempted but failed
 	PushFailed      bool   // True when branch push to origin failed (gas-556)
-	CompletionTime  string // RFC3339 timestamp of when gt done was called
+	CompletionTime  string // RFC3339 timestamp of when ms done was called
 }
 
 // Notification level constants
@@ -117,7 +117,7 @@ func FormatAgentDescription(title string, fields *AgentFields) string {
 		lines = append(lines, fmt.Sprintf("mode: %s", fields.Mode))
 	}
 
-	// Completion metadata fields (gt-x7t9)
+	// Completion metadata fields (ms-x7t9)
 	if fields.ExitType != "" {
 		lines = append(lines, fmt.Sprintf("exit_type: %s", fields.ExitType))
 	}
@@ -181,7 +181,7 @@ func ParseAgentFields(description string) *AgentFields {
 			fields.NotificationLevel = value
 		case "mode":
 			fields.Mode = value
-		// Completion metadata fields (gt-x7t9)
+		// Completion metadata fields (ms-x7t9)
 		case "exit_type":
 			fields.ExitType = value
 		case "mr_id":
@@ -203,7 +203,7 @@ func ParseAgentFields(description string) *AgentFields {
 }
 
 // CreateAgentBead creates an agent bead for tracking agent lifecycle.
-// The ID format is: <prefix>-<rig>-<role>-<name> (e.g., gt-mineshaft-miner-Toast)
+// The ID format is: <prefix>-<rig>-<role>-<name> (e.g., ms-mineshaft-miner-Toast)
 // Use AgentBeadID() helper to generate correct IDs.
 // The created_by field is populated from BD_ACTOR env var for provenance tracking.
 //
@@ -212,7 +212,7 @@ func ParseAgentFields(description string) *AgentFields {
 // where the bead may be routed to a different database than the one this wrapper
 // is connected to.
 func (b *Beads) CreateAgentBead(id, title string, fields *AgentFields) (*Issue, error) {
-	// Guard against flag-like titles (gt-e0kx5: --help garbage beads)
+	// Guard against flag-like titles (ms-e0kx5: --help garbage beads)
 	if IsFlagLikeTitle(title) {
 		return nil, fmt.Errorf("refusing to create agent bead: %w (got %q)", ErrFlagTitle, title)
 	}
@@ -236,7 +236,7 @@ func (b *Beads) CreateAgentBead(id, title string, fields *AgentFields) (*Issue, 
 			"--title=" + title,
 			"--description=" + description,
 			"--type=task",
-			"--labels=gt:agent",
+			"--labels=ms:agent",
 		}
 		if NeedsForceForID(id) {
 			a = append(a, "--force")
@@ -287,7 +287,7 @@ func (b *Beads) createAgentBeadViaStore(ctx context.Context, id, title, descript
 		CreatedAt:   now,
 		UpdatedAt:   now,
 		CreatedBy:   actor,
-		Labels:      []string{"gt:agent"},
+		Labels:      []string{"ms:agent"},
 	}
 	if err := store.CreateIssue(ctx, issue, actor); err != nil {
 		return nil, err
@@ -319,7 +319,7 @@ func (b *Beads) CreateOrReopenAgentBead(id, title string, fields *AgentFields) (
 
 	// Create failed - need to do Show→Reopen→Update which requires locking
 	// to prevent concurrent modifications (e.g., nuke clearing fields while
-	// spawn is updating them). See gt-joazs.
+	// spawn is updating them). See ms-joazs.
 	fl, lockErr := b.lockAgentBead(id)
 	if lockErr != nil {
 		return nil, fmt.Errorf("locking agent bead %s: %w", id, lockErr)
@@ -350,9 +350,9 @@ func (b *Beads) CreateOrReopenAgentBead(id, title string, fields *AgentFields) (
 		}
 	}
 
-	// Update the bead with new fields and ensure gt:agent label is set.
+	// Update the bead with new fields and ensure ms:agent label is set.
 	// Agent beads use type=task (a valid built-in type) and are identified
-	// by the gt:agent label, not by type (see IsAgentBead).
+	// by the ms:agent label, not by type (see IsAgentBead).
 	description := FormatAgentDescription(title, fields)
 	updateOpts := UpdateOptions{
 		Title:       &title,
@@ -371,8 +371,8 @@ func (b *Beads) CreateOrReopenAgentBead(id, title string, fields *AgentFields) (
 }
 
 func labelsForAgentBeadReuse(existing []string) []string {
-	labels := []string{"gt:agent"}
-	seen := map[string]bool{"gt:agent": true}
+	labels := []string{"ms:agent"}
+	seen := map[string]bool{"ms:agent": true}
 	for _, label := range existing {
 		if !strings.HasPrefix(label, "safety_stop:") || seen[label] {
 			continue
@@ -389,11 +389,11 @@ func labelsForAgentBeadReuse(existing []string) []string {
 // bd reopen failures). By keeping the bead open with agent_state="nuked",
 // CreateOrReopenAgentBead can simply update it on re-spawn without needing reopen.
 //
-// This is the standard nuke path (gt-14b8o).
+// This is the standard nuke path (ms-14b8o).
 func (b *Beads) ResetAgentBeadForReuse(id, reason string) error {
 	// Lock the agent bead to prevent concurrent read-modify-write races.
 	// Without this, a concurrent CreateOrReopenAgentBead could overwrite
-	// the nuked state we're about to set. See gt-joazs.
+	// the nuked state we're about to set. See ms-joazs.
 	fl, lockErr := b.lockAgentBead(id)
 	if lockErr != nil {
 		return fmt.Errorf("locking agent bead %s: %w", id, lockErr)
@@ -415,7 +415,7 @@ func (b *Beads) ResetAgentBeadForReuse(id, reason string) error {
 	fields.CleanupStatus = "" // Clear cleanup_status
 	fields.Mode = ""          // Clear Ralph-mode threshold marker
 	fields.AgentState = string(AgentStateNuked)
-	// Clear completion metadata (gt-x7t9)
+	// Clear completion metadata (ms-x7t9)
 	fields.ExitType = ""
 	fields.MRID = ""
 	fields.Branch = ""
@@ -457,13 +457,13 @@ func (b *Beads) UpdateAgentState(id string, state string) (retErr error) {
 // This allows multiple fields to be updated in a single read-modify-write
 // cycle, avoiding races where concurrent callers overwrite each other's changes.
 type AgentFieldUpdates struct {
-	AgentState        *string // Sync description agent_state with column (gt-ulom)
+	AgentState        *string // Sync description agent_state with column (ms-ulom)
 	CleanupStatus     *string
 	ActiveMR          *string
 	NotificationLevel *string
 	Mode              *string
-	HookBead          *string // Clear hook_bead on completion (gt-qbh)
-	// Completion metadata fields (gt-x7t9)
+	HookBead          *string // Clear hook_bead on completion (ms-qbh)
+	// Completion metadata fields (ms-x7t9)
 	ExitType        *string
 	MRID            *string
 	Branch          *string
@@ -492,7 +492,7 @@ func (b *Beads) UpdateAgentDescriptionFields(id string, updates AgentFieldUpdate
 
 	// Lock the agent bead to prevent concurrent read-modify-write races.
 	// Without this, concurrent callers updating different fields could overwrite
-	// each other's changes. See gt-joazs.
+	// each other's changes. See ms-joazs.
 	fl, lockErr := b.lockAgentBead(id)
 	if lockErr != nil {
 		return fmt.Errorf("locking agent bead %s: %w", id, lockErr)
@@ -524,7 +524,7 @@ func (b *Beads) UpdateAgentDescriptionFields(id string, updates AgentFieldUpdate
 	if updates.HookBead != nil {
 		fields.HookBead = *updates.HookBead
 	}
-	// Completion metadata fields (gt-x7t9)
+	// Completion metadata fields (ms-x7t9)
 	if updates.ExitType != nil {
 		fields.ExitType = *updates.ExitType
 	}
@@ -572,10 +572,10 @@ func (b *Beads) UpdateAgentNotificationLevel(id string, level string) error {
 	return b.UpdateAgentDescriptionFields(id, AgentFieldUpdates{NotificationLevel: &level})
 }
 
-// CompletionMetadata holds the fields written by gt done to record
+// CompletionMetadata holds the fields written by ms done to record
 // miner work completion on the agent bead. The witness survey-workers
 // step reads these fields to discover completion state from beads
-// instead of MINER_DONE mail (nudge-over-mail redesign, gt-x7t9).
+// instead of MINER_DONE mail (nudge-over-mail redesign, ms-x7t9).
 type CompletionMetadata struct {
 	ExitType       string // COMPLETED, ESCALATED, DEFERRED, PHASE_COMPLETE
 	MRID           string // MR bead ID (empty if no MR)
@@ -587,7 +587,7 @@ type CompletionMetadata struct {
 }
 
 // UpdateAgentCompletion atomically writes all completion metadata fields
-// to an agent bead. Called by gt done to record completion state.
+// to an agent bead. Called by ms done to record completion state.
 func (b *Beads) UpdateAgentCompletion(id string, meta *CompletionMetadata) error {
 	mrFailed := meta.MRFailed
 	pushFailed := meta.PushFailed
@@ -666,10 +666,10 @@ func (b *Beads) GetAgentBead(id string) (*Issue, *AgentFields, error) {
 // IDs so labels/type are preserved for doctor validation.
 func (b *Beads) ListAgentBeads() (map[string]*Issue, error) {
 	// Query issues table first. Issues include labels and type metadata used by
-	// doctor checks (for example, validating gt:agent labels).
+	// doctor checks (for example, validating ms:agent labels).
 	// Agent beads are type=agent (infrastructure), hidden by bd list default filter.
 	// Use --include-infra so they appear in results.
-	out, err := b.run("list", "--label=gt:agent", "--include-infra", "--json", "--flat", "--no-pager")
+	out, err := b.run("list", "--label=ms:agent", "--include-infra", "--json", "--flat", "--no-pager")
 	if err != nil {
 		return nil, err
 	}
@@ -741,7 +741,7 @@ func (b *Beads) ListAgentBeadsFromWisps() (map[string]*Issue, error) {
 
 // isAgentBeadByID detects agent beads by their ID naming convention.
 // Agent bead IDs follow two patterns:
-//   - Full form (prefix != rig): prefix-rig-role[-name] (e.g., gt-mineshaft-witness)
+//   - Full form (prefix != rig): prefix-rig-role[-name] (e.g., ms-mineshaft-witness)
 //   - Collapsed form (prefix == rig): prefix-role[-name] (e.g., bcc-witness)
 //
 // where role is one of: witness, refinery, crew, miner, supervisor, overseer.

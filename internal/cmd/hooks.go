@@ -25,17 +25,17 @@ Subcommands:
   install    Install a hook from the registry
 
 Config structure:
-  Base:      ~/.gt/hooks-base.json
-  Overrides: ~/.gt/hooks-overrides/<target>.json
+  Base:      ~/.ms/hooks-base.json
+  Overrides: ~/.ms/hooks-overrides/<target>.json
 
 Merge strategy: base → role → rig+role (more specific wins)
 
 Examples:
-  gt hooks sync           # Regenerate all settings.json files
-  gt hooks diff           # Preview what sync would change
-  gt hooks base           # Edit the shared base config
-  gt hooks override crew  # Edit overrides for all crew workers
-  gt hooks list           # Show managed locations and sync status`,
+  ms hooks sync           # Regenerate all settings.json files
+  ms hooks diff           # Preview what sync would change
+  ms hooks base           # Edit the shared base config
+  ms hooks override crew  # Edit overrides for all crew workers
+  ms hooks list           # Show managed locations and sync status`,
 	RunE: requireSubcommand,
 }
 

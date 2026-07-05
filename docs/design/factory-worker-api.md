@@ -2,7 +2,7 @@
 
 Design for the API boundary between Mineshaft and AI agent runtimes.
 
-Ref: gt-5zs8
+Ref: ms-5zs8
 
 ## Problem
 
@@ -24,7 +24,7 @@ tmux, macOS Keychain, or filesystem conventions that can change without notice.
 
 ## Design Principles
 
-1. **Push, not scrape.** The agent reports its state; GT doesn't guess from
+1. **Push, not scrape.** The agent reports its state; MS doesn't guess from
    terminal output.
 2. **Structured, not string-matched.** JSON messages, not regex on pane content.
 3. **Agent-agnostic.** One API, regardless of whether the worker is Claude, Gemini,
@@ -37,14 +37,14 @@ tmux, macOS Keychain, or filesystem conventions that can change without notice.
 
 ### 1. Lifecycle
 
-The runtime reports lifecycle transitions. GT does not infer them.
+The runtime reports lifecycle transitions. MS does not infer them.
 
 ```
 POST /lifecycle
 {
   "event": "started" | "ready" | "busy" | "idle" | "stopping" | "stopped",
   "run_id": "uuid",
-  "session_id": "gt-crew-max",
+  "session_id": "ms-crew-max",
   "timestamp": "2026-03-01T15:00:00Z",
   "metadata": {}           // event-specific (e.g., exit_code for "stopped")
 }
@@ -67,7 +67,7 @@ Replaces: prompt prefix matching, status bar parsing, `pane_current_command`,
 
 ### 2. Prompt Submission
 
-GT sends structured messages. No terminal injection.
+MS sends structured messages. No terminal injection.
 
 ```
 POST /prompt
@@ -78,7 +78,7 @@ POST /prompt
   "source": "nudge" | "mail" | "sling" | "prime",
   "metadata": {
     "from": "mineshaft/crew/tom",
-    "bead_id": "gt-abc12"
+    "bead_id": "ms-abc12"
   }
 }
 
@@ -109,7 +109,7 @@ POST /context
   "run_id": "uuid",
   "sections": [
     {"type": "role", "content": "You are a miner worker..."},
-    {"type": "work", "content": "AUTONOMOUS WORK MODE: gt-abc12..."},
+    {"type": "work", "content": "AUTONOMOUS WORK MODE: ms-abc12..."},
     {"type": "mail", "content": "2 unread messages..."},
     {"type": "checkpoint", "content": "Previous session state..."},
     {"type": "directive", "content": "Execute your hooked work."}
@@ -118,13 +118,13 @@ POST /context
 }
 ```
 
-Replaces: `gt prime` pipeline (10-section output), `SessionStart` hook,
+Replaces: `ms prime` pipeline (10-section output), `SessionStart` hook,
 `PreCompact` hook, beacon injection, startup nudge fallback for non-hook agents,
 role template rendering to stdout.
 
 ### 4. Tool Authorization
 
-The runtime asks GT before executing tools. GT decides.
+The runtime asks MS before executing tools. MS decides.
 
 ```
 POST /authorize
@@ -135,7 +135,7 @@ POST /authorize
   "context": {
     "role": "miner",
     "rig": "mineshaft",
-    "bead_id": "gt-abc12"
+    "bead_id": "ms-abc12"
   }
 }
 
@@ -152,7 +152,7 @@ guard, patrol-formula guard, per-agent `--dangerously-*` flags.
 **Permission model:**
 - Per-role permission sets (miner: full, witness: read-only, crew: configurable)
 - Guard rules as data, not shell scripts
-- Fail-closed: if GT is unreachable, block the tool call
+- Fail-closed: if MS is unreachable, block the tool call
 
 ### 5. Telemetry & Cost Reporting
 
@@ -185,7 +185,7 @@ POST /telemetry
 
 Replaces: JSONL transcript scraping, `extractCostFromWorkDir()`, hardcoded pricing
 table, `agentlog` package (Claude Code JSONL tailing), `RecordPaneRead`, stop hook
-`gt costs record`, 6 separate log files with no correlation.
+`ms costs record`, 6 separate log files with no correlation.
 
 **What flows:**
 - Token usage per turn (not per content block — avoids double-counting)
@@ -195,7 +195,7 @@ table, `agentlog` package (Claude Code JSONL tailing), `RecordPaneRead`, stop ho
 
 ### 6. Identity & Credentials
 
-GT assigns identity; the runtime authenticates.
+MS assigns identity; the runtime authenticates.
 
 ```
 POST /identity
@@ -204,28 +204,28 @@ POST /identity
   "role": "miner",
   "rig": "mineshaft",
   "agent_name": "alpha",
-  "session_id": "gt-mineshaft-alpha",
+  "session_id": "ms-mineshaft-alpha",
   "credentials": {
     "type": "api_key" | "oauth" | "token",
     "value": "sk-ant-...",
     "expires_at": "2026-03-02T00:00:00Z"
   },
   "env": {
-    "GT_ROLE": "mineshaft/miners/alpha",
+    "MS_ROLE": "mineshaft/miners/alpha",
     "BD_ACTOR": "mineshaft/miners/alpha",
-    "GT_ROOT": "/Users/stevey/gt"
+    "MS_ROOT": "/Users/stevey/ms"
   }
 }
 ```
 
 Replaces: `AgentEnv()` (30+ env vars via tmux `SetEnvironment` + `PrependEnv`),
 macOS keychain token swapping, `CLAUDE_CONFIG_DIR` isolation, account switching
-symlinks, `GT_QUOTA_ACCOUNT` env var, credential passthrough allowlist.
+symlinks, `MS_QUOTA_ACCOUNT` env var, credential passthrough allowlist.
 
 **Credential rotation:**
-- GT pushes new credentials when rotating; runtime applies them without restart
+- MS pushes new credentials when rotating; runtime applies them without restart
 - No keychain dependency — works on any OS
-- Runtime reports credential expiry; GT proactively rotates before it hits
+- Runtime reports credential expiry; MS proactively rotates before it hits
 
 ### 7. Health & Liveness
 
@@ -250,21 +250,21 @@ tree walking), `GetSessionActivity()` (tmux activity timestamp), heartbeat files
 `TouchSessionHeartbeat()`, zombie detection heuristics, spawn storm detection.
 
 **Context window pressure** is a new signal — the runtime knows how full its context
-is. GT can use this to trigger compaction/handoff before the agent degrades.
+is. MS can use this to trigger compaction/handoff before the agent degrades.
 
 ## Transport
 
 The API is local-only. Two options:
 
-**Unix domain socket** (preferred): `$GT_ROOT/.runtime/worker.sock`
+**Unix domain socket** (preferred): `$MS_ROOT/.runtime/worker.sock`
 - No network exposure
 - File-permission-based access control
-- GT is the server; the agent runtime is the client
+- MS is the server; the agent runtime is the client
 - Agent connects at startup, maintains persistent connection
 
 **Embedded HTTP**: localhost with random port, written to a well-known file.
 - Fallback for runtimes that can't do Unix sockets
-- Port file at `$GT_ROOT/.runtime/worker-<session>.port`
+- Port file at `$MS_ROOT/.runtime/worker-<session>.port`
 
 ## Migration
 
@@ -276,16 +276,16 @@ as a **sidecar** that:
    JSONL, send-keys)
 3. Progressively replaces tmux-mediated interactions as the sidecar matures
 
-This lets us validate the API design before building a full GT-native runtime.
+This lets us validate the API design before building a full MS-native runtime.
 
 ## Non-Goals
 
-- **Multi-machine orchestration.** This is a local API between GT and a worker on
+- **Multi-machine orchestration.** This is a local API between MS and a worker on
   the same machine.
 - **Agent intelligence.** The API is plumbing, not policy. What the agent *does*
   with prompts is its business.
 - **Backward compatibility with every agent vendor.** The sidecar handles
-  translation. The API is designed for a GT-native runtime.
+  translation. The API is designed for a MS-native runtime.
 
 ## Open Questions
 
@@ -293,7 +293,7 @@ This lets us validate the API design before building a full GT-native runtime.
    with status callbacks?
 2. Should tool authorization be per-call (latency cost) or per-session with a
    pre-negotiated capability set?
-3. How does compaction/handoff work? Does GT tell the runtime "compact now" or does
-   the runtime report context pressure and GT decides?
+3. How does compaction/handoff work? Does MS tell the runtime "compact now" or does
+   the runtime report context pressure and MS decides?
 4. Should the runtime expose its conversation history, or is the telemetry stream
-   sufficient for GT's needs?
+   sufficient for MS's needs?

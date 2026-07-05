@@ -28,7 +28,7 @@ func TestExtractPatrolRole(t *testing.T) {
 		},
 		{
 			name:     "wisp digest without patrol suffix",
-			title:    "Digest: gt-wisp-abc123",
+			title:    "Digest: ms-wisp-abc123",
 			expected: "patrol",
 		},
 		{
@@ -86,14 +86,14 @@ func TestPatrolDigestDateFormat(t *testing.T) {
 
 func TestPatrolCycleEntry(t *testing.T) {
 	entry := PatrolCycleEntry{
-		ID:          "gt-abc123",
+		ID:          "ms-abc123",
 		Role:        "supervisor",
 		Title:       "Digest: mol-supervisor-patrol",
 		Description: "Test description",
 	}
 
-	if entry.ID != "gt-abc123" {
-		t.Errorf("ID: got %q, want %q", entry.ID, "gt-abc123")
+	if entry.ID != "ms-abc123" {
+		t.Errorf("ID: got %q, want %q", entry.ID, "ms-abc123")
 	}
 
 	if entry.Role != "supervisor" {

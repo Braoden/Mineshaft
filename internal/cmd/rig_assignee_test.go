@@ -9,7 +9,7 @@ import (
 func setupAssigneeTestRegistry(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "mineshaft")
+	reg.Register("ms", "mineshaft")
 	reg.Register("bd", "beads")
 	reg.Register("st", "schema_tools")
 	old := session.DefaultRegistry()

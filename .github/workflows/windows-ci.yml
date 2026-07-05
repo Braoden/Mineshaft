@@ -38,7 +38,7 @@ jobs:
 
       - name: Build binary
         shell: msys2 {0}
-        run: go build -v ./cmd/gt
+        run: go build -v ./cmd/ms
 
       - name: Build all packages
         shell: msys2 {0}

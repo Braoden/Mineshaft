@@ -164,8 +164,8 @@ func TestSessionToAgentID_Fallback(t *testing.T) {
 }
 
 // TestSessionToAgentID_TownLevel pins down GH#3699: town-level agents (overseer,
-// supervisor) must produce a trailing-slash address so writes from gt sling match
-// the form queried by gt hook / runMoleculeStatus / buildAgentIdentity.
+// supervisor) must produce a trailing-slash address so writes from ms sling match
+// the form queried by ms hook / runMoleculeStatus / buildAgentIdentity.
 func TestSessionToAgentID_TownLevel(t *testing.T) {
 	tests := []struct {
 		session string

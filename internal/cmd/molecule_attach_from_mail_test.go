@@ -10,8 +10,8 @@ func TestExtractMoleculeIDFromMail(t *testing.T) {
 	}{
 		{
 			name:     "attached_molecule field",
-			body:     "Hello agent,\n\nattached_molecule: gt-abc123\n\nPlease work on this.",
-			expected: "gt-abc123",
+			body:     "Hello agent,\n\nattached_molecule: ms-abc123\n\nPlease work on this.",
+			expected: "ms-abc123",
 		},
 		{
 			name:     "molecule_id field",
@@ -20,13 +20,13 @@ func TestExtractMoleculeIDFromMail(t *testing.T) {
 		},
 		{
 			name:     "molecule field",
-			body:     "molecule: gt-task-42",
-			expected: "gt-task-42",
+			body:     "molecule: ms-task-42",
+			expected: "ms-task-42",
 		},
 		{
 			name:     "mol field",
-			body:     "Quick task:\nmol: gt-quick\nDo this now.",
-			expected: "gt-quick",
+			body:     "Quick task:\nmol: ms-quick\nDo this now.",
+			expected: "ms-quick",
 		},
 		{
 			name:     "no molecule field",
@@ -40,8 +40,8 @@ func TestExtractMoleculeIDFromMail(t *testing.T) {
 		},
 		{
 			name:     "molecule with extra whitespace",
-			body:     "attached_molecule:   gt-whitespace  \n\nmore text",
-			expected: "gt-whitespace",
+			body:     "attached_molecule:   ms-whitespace  \n\nmore text",
+			expected: "ms-whitespace",
 		},
 		{
 			name:     "multiple fields - first wins",
@@ -50,8 +50,8 @@ func TestExtractMoleculeIDFromMail(t *testing.T) {
 		},
 		{
 			name:     "case insensitive line matching",
-			body:     "Attached_Molecule: gt-case",
-			expected: "gt-case",
+			body:     "Attached_Molecule: ms-case",
+			expected: "ms-case",
 		},
 		{
 			name:     "molecule in multiline context",
@@ -59,13 +59,13 @@ func TestExtractMoleculeIDFromMail(t *testing.T) {
 
 This is your next task.
 
-attached_molecule: gt-multiline
+attached_molecule: ms-multiline
 
 Please complete by EOD.
 
 Thanks,
 Overseer`,
-			expected: "gt-multiline",
+			expected: "ms-multiline",
 		},
 	}
 

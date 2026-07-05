@@ -18,7 +18,7 @@ const (
 	defaultDoltBackupInterval = 15 * time.Minute
 	// doltBackupTimeout is generous so a large commit delta on a big database
 	// (e.g. hq under a wisp flood) does not blow the deadline mid-sync. The old
-	// 120s ceiling produced spurious exit-1 backup failures (gt-ye21).
+	// 120s ceiling produced spurious exit-1 backup failures (ms-ye21).
 	doltBackupTimeout = 5 * time.Minute
 	// doltBackupRetries / doltBackupRetryDelay retry a failed sync after a short
 	// pause, so a transient lock (a concurrent dolt op holding the db) does not
@@ -116,7 +116,7 @@ func (d *Daemon) syncDoltBackups() {
 
 // syncBackup runs `dolt backup sync <backup-name>` for a single database,
 // retrying once on failure so a transient lock or large delta does not fail the
-// cycle (gt-ye21).
+// cycle (ms-ye21).
 func (d *Daemon) syncBackup(dataDir, db, backupName string) error {
 	parentCtx := d.ctx
 	if parentCtx == nil {
@@ -167,7 +167,7 @@ func (d *Daemon) syncOffsiteBackup() {
 	if err != nil {
 		return
 	}
-	icloudDir := filepath.Join(homeDir, "Library", "Mobile Documents", "com~apple~CloudDocs", "gt-dolt-backup")
+	icloudDir := filepath.Join(homeDir, "Library", "Mobile Documents", "com~apple~CloudDocs", "ms-dolt-backup")
 	if err := os.MkdirAll(icloudDir, 0755); err != nil {
 		d.logger.Printf("dolt_backup: offsite: cannot create iCloud dir: %v", err)
 		return

@@ -25,7 +25,7 @@ When using Mineshaft:
 - Run in isolated environments for untrusted code
 - Review agent output before pushing to production branches
 - Use appropriate git remote permissions
-- Monitor agent activity via `gt peek` and logs
+- Monitor agent activity via `ms peek` and logs
 
 ## Supported Versions
 

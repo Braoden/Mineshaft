@@ -30,10 +30,10 @@ func TestCurator_FiltersByVisibility(t *testing.T) {
 	// Write a feed-visible event
 	feedEvent := events.Event{
 		Timestamp:  time.Now().UTC().Format(time.RFC3339),
-		Source:     "gt",
+		Source:     "ms",
 		Type:       events.TypeSling,
 		Actor:      "overseer",
-		Payload:    map[string]interface{}{"bead": "gt-123", "target": "mineshaft/slit"},
+		Payload:    map[string]interface{}{"bead": "ms-123", "target": "mineshaft/slit"},
 		Visibility: events.VisibilityFeed,
 	}
 	feedData, _ := json.Marshal(feedEvent)
@@ -41,7 +41,7 @@ func TestCurator_FiltersByVisibility(t *testing.T) {
 	// Write an audit-only event (should be filtered out)
 	auditEvent := events.Event{
 		Timestamp:  time.Now().UTC().Format(time.RFC3339),
-		Source:     "gt",
+		Source:     "ms",
 		Type:       "internal_check",
 		Actor:      "daemon",
 		Visibility: events.VisibilityAudit,
@@ -128,7 +128,7 @@ func TestCurator_DedupesDoneEvents(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		doneEvent := events.Event{
 			Timestamp:  time.Now().UTC().Format(time.RFC3339),
-			Source:     "gt",
+			Source:     "ms",
 			Type:       events.TypeDone,
 			Actor:      "mineshaft/slit",
 			Payload:    map[string]interface{}{"bead": "slit-12345"},
@@ -353,9 +353,9 @@ func TestCurator_GeneratesSummary(t *testing.T) {
 			event: &events.Event{
 				Type:    events.TypeSling,
 				Actor:   "overseer",
-				Payload: map[string]interface{}{"bead": "gt-123", "target": "mineshaft/slit"},
+				Payload: map[string]interface{}{"bead": "ms-123", "target": "mineshaft/slit"},
 			},
-			expected: "overseer assigned gt-123 to mineshaft/slit",
+			expected: "overseer assigned ms-123 to mineshaft/slit",
 		},
 		{
 			event: &events.Event{
@@ -400,7 +400,7 @@ func TestCurator_TruncatesAtMaxSize(t *testing.T) {
 	for i := 0; i < 20; i++ {
 		ev := FeedEvent{
 			Timestamp: time.Now().Add(time.Duration(i) * time.Second).UTC().Format(time.RFC3339),
-			Source:    "gt",
+			Source:    "ms",
 			Type:      "test",
 			Actor:     "test-actor",
 			Summary:   fmt.Sprintf("test event %d with some padding to make it longer", i),
@@ -419,7 +419,7 @@ func TestCurator_TruncatesAtMaxSize(t *testing.T) {
 	// Write one more event through curator (triggers truncation)
 	curator.writeFeedEvent(&events.Event{
 		Timestamp:  time.Now().UTC().Format(time.RFC3339),
-		Source:     "gt",
+		Source:     "ms",
 		Type:       events.TypeDone,
 		Actor:      "test-actor",
 		Payload:    map[string]interface{}{"bead": "test"},
@@ -467,7 +467,7 @@ func TestCurator_ReadRecentFeedEventsLargeFile(t *testing.T) {
 		ts := now.Add(-2*time.Hour + time.Duration(i)*time.Millisecond*1440)
 		ev := FeedEvent{
 			Timestamp: ts.UTC().Format(time.RFC3339),
-			Source:    "gt",
+			Source:    "ms",
 			Type:      events.TypeDone,
 			Actor:     "test-actor",
 			Summary:   fmt.Sprintf("event %d", i),
@@ -505,7 +505,7 @@ func TestCurator_FeedFilePermissions(t *testing.T) {
 
 	curator.writeFeedEvent(&events.Event{
 		Timestamp:  time.Now().UTC().Format(time.RFC3339),
-		Source:     "gt",
+		Source:     "ms",
 		Type:       events.TypeDone,
 		Actor:      "test-actor",
 		Payload:    map[string]interface{}{"bead": "test"},
@@ -577,7 +577,7 @@ func TestCurator_ConcurrentStartIsIdempotent(t *testing.T) {
 	}
 	ev := events.Event{
 		Timestamp:  time.Now().UTC().Format(time.RFC3339),
-		Source:     "gt",
+		Source:     "ms",
 		Type:       events.TypeDone,
 		Actor:      "test-actor",
 		Payload:    map[string]interface{}{"bead": "test"},
@@ -620,7 +620,7 @@ func TestCurator_ConcurrentFeedReadWrite(t *testing.T) {
 	// Seed the feed file with one event so reads have something to find.
 	curator.writeFeedEvent(&events.Event{
 		Timestamp:  time.Now().UTC().Format(time.RFC3339),
-		Source:     "gt",
+		Source:     "ms",
 		Type:       events.TypeDone,
 		Actor:      "seed-actor",
 		Payload:    map[string]interface{}{"bead": "seed"},
@@ -638,7 +638,7 @@ func TestCurator_ConcurrentFeedReadWrite(t *testing.T) {
 				defer wg.Done()
 				curator.writeFeedEvent(&events.Event{
 					Timestamp:  time.Now().UTC().Format(time.RFC3339),
-					Source:     "gt",
+					Source:     "ms",
 					Type:       events.TypeDone,
 					Actor:      fmt.Sprintf("actor-%d", n),
 					Payload:    map[string]interface{}{"bead": fmt.Sprintf("bead-%d", n)},
@@ -700,7 +700,7 @@ func TestCurator_StartErrorPersistsAcrossCalls(t *testing.T) {
 
 // TestCurator_ReadRecentFeedEvents_ScannerError verifies that IO errors
 // during scanning are returned, not silently swallowed.
-// Regression test for gt-0e4.
+// Regression test for ms-0e4.
 func TestCurator_ReadRecentFeedEvents_ScannerError(t *testing.T) {
 	tmpDir := t.TempDir()
 	feedPath := filepath.Join(tmpDir, FeedFile)
@@ -714,7 +714,7 @@ func TestCurator_ReadRecentFeedEvents_ScannerError(t *testing.T) {
 	// Write one valid event
 	ev := FeedEvent{
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
-		Source:    "gt",
+		Source:    "ms",
 		Type:      events.TypeDone,
 		Actor:     "test-actor",
 		Summary:   "valid event",
@@ -749,7 +749,7 @@ func TestCurator_ReadRecentFeedEvents_ScannerError(t *testing.T) {
 
 // TestCurator_ReadRecentEvents_ScannerError verifies that IO errors
 // during events file scanning are returned, not silently swallowed.
-// Regression test for gt-0e4.
+// Regression test for ms-0e4.
 func TestCurator_ReadRecentEvents_ScannerError(t *testing.T) {
 	tmpDir := t.TempDir()
 	eventsPath := filepath.Join(tmpDir, events.EventsFile)
@@ -761,7 +761,7 @@ func TestCurator_ReadRecentEvents_ScannerError(t *testing.T) {
 	}
 	ev := events.Event{
 		Timestamp:  time.Now().UTC().Format(time.RFC3339),
-		Source:     "gt",
+		Source:     "ms",
 		Type:       events.TypeDone,
 		Actor:      "test-actor",
 		Visibility: events.VisibilityFeed,

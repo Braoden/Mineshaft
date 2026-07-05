@@ -68,55 +68,55 @@ func TestDetectDogNameFromPath(t *testing.T) {
 	}{
 		{
 			name:     "dog worktree root",
-			path:     "/Users/user/gt/supervisor/dogs/alpha",
+			path:     "/Users/user/ms/supervisor/dogs/alpha",
 			wantName: "alpha",
 			wantOK:   true,
 		},
 		{
 			name:     "dog rig worktree",
-			path:     "/Users/user/gt/supervisor/dogs/alpha/mineshaft",
+			path:     "/Users/user/ms/supervisor/dogs/alpha/mineshaft",
 			wantName: "alpha",
 			wantOK:   true,
 		},
 		{
 			name:     "deep path in dog worktree",
-			path:     "/Users/user/gt/supervisor/dogs/bravo/beads/internal/cmd",
+			path:     "/Users/user/ms/supervisor/dogs/bravo/beads/internal/cmd",
 			wantName: "bravo",
 			wantOK:   true,
 		},
 		{
 			name:     "hyphenated dog name",
-			path:     "/Users/user/gt/supervisor/dogs/my-dog/mineshaft",
+			path:     "/Users/user/ms/supervisor/dogs/my-dog/mineshaft",
 			wantName: "my-dog",
 			wantOK:   true,
 		},
 		{
 			name:     "numeric dog name",
-			path:     "/Users/user/gt/supervisor/dogs/dog123/beads",
+			path:     "/Users/user/ms/supervisor/dogs/dog123/beads",
 			wantName: "dog123",
 			wantOK:   true,
 		},
 		{
 			name:     "not a dog path - miner",
-			path:     "/Users/user/gt/mineshaft/miners/fixer/internal",
+			path:     "/Users/user/ms/mineshaft/miners/fixer/internal",
 			wantName: "",
 			wantOK:   false,
 		},
 		{
 			name:     "not a dog path - crew",
-			path:     "/Users/user/gt/mineshaft/crew/george/internal",
+			path:     "/Users/user/ms/mineshaft/crew/george/internal",
 			wantName: "",
 			wantOK:   false,
 		},
 		{
 			name:     "supervisor but not dogs directory",
-			path:     "/Users/user/gt/supervisor/boot",
+			path:     "/Users/user/ms/supervisor/boot",
 			wantName: "",
 			wantOK:   false,
 		},
 		{
 			name:     "dogs without supervisor parent",
-			path:     "/Users/user/gt/some/dogs/alpha",
+			path:     "/Users/user/ms/some/dogs/alpha",
 			wantName: "",
 			wantOK:   false,
 		},
@@ -312,7 +312,7 @@ func TestDogClear_WorkingToIdle(t *testing.T) {
 		t.Errorf("Initial State = %q, want %q", d.State, dog.StateWorking)
 	}
 
-	// Clear the dog (simulates gt dog clear alpha)
+	// Clear the dog (simulates ms dog clear alpha)
 	err = m.ClearWork("alpha")
 	if err != nil {
 		t.Fatalf("ClearWork() error = %v", err)
@@ -392,8 +392,8 @@ func TestSplitPath(t *testing.T) {
 		want []string
 	}{
 		{
-			path: "/Users/user/gt/supervisor/dogs/alpha",
-			want: []string{"Users", "user", "gt", "supervisor", "dogs", "alpha"},
+			path: "/Users/user/ms/supervisor/dogs/alpha",
+			want: []string{"Users", "user", "ms", "supervisor", "dogs", "alpha"},
 		},
 		{
 			path: "/a/b/c",

@@ -50,9 +50,9 @@ func TestTownCLAUDEmdCheck_MissingSections(t *testing.T) {
 	// Write only the identity anchor (no Dolt or communication sections)
 	content := `# Mineshaft
 
-This is a Mineshaft workspace. Your identity and role are determined by ` + "`gt prime`" + `.
+This is a Mineshaft workspace. Your identity and role are determined by ` + "`ms prime`" + `.
 
-Run ` + "`gt prime`" + ` for full context after compaction, clear, or new session.
+Run ` + "`ms prime`" + ` for full context after compaction, clear, or new session.
 `
 	claudePath := filepath.Join(tmpDir, "CLAUDE.md")
 	if err := os.WriteFile(claudePath, []byte(content), 0644); err != nil {
@@ -276,7 +276,7 @@ func TestIsIdentityAnchor_MinimalAnchor(t *testing.T) {
 
 	content := `# Mineshaft
 
-Run ` + "`gt prime`" + ` for full context.
+Run ` + "`ms prime`" + ` for full context.
 `
 	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
 		t.Fatal(err)

@@ -12,7 +12,7 @@ func TestTouchInWorkspace(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Touch the keepalive
-	TouchInWorkspace(tmpDir, "gt status")
+	TouchInWorkspace(tmpDir, "ms status")
 
 	// Read back
 	state := Read(tmpDir)
@@ -20,8 +20,8 @@ func TestTouchInWorkspace(t *testing.T) {
 		t.Fatal("expected state to be non-nil")
 	}
 
-	if state.LastCommand != "gt status" {
-		t.Errorf("expected last_command 'gt status', got %q", state.LastCommand)
+	if state.LastCommand != "ms status" {
+		t.Errorf("expected last_command 'ms status', got %q", state.LastCommand)
 	}
 
 	// Check timestamp is recent
@@ -68,7 +68,7 @@ func TestDirectoryCreation(t *testing.T) {
 	workDir := filepath.Join(tmpDir, "some", "nested", "workspace")
 
 	// Touch should create .runtime directory
-	TouchInWorkspace(workDir, "gt test")
+	TouchInWorkspace(workDir, "ms test")
 
 	// Verify directory was created
 	runtimeDir := filepath.Join(workDir, ".runtime")
@@ -85,11 +85,11 @@ func ExampleTouchInWorkspace() {
 
 	workspaceRoot := "/path/to/workspace"
 
-	// Signal that "gt status" was run
-	TouchInWorkspace(workspaceRoot, "gt status")
+	// Signal that "ms status" was run
+	TouchInWorkspace(workspaceRoot, "ms status")
 
 	// Signal a command with arguments
-	TouchInWorkspace(workspaceRoot, "gt sling bd-abc123 ai-platform")
+	TouchInWorkspace(workspaceRoot, "ms sling bd-abc123 ai-platform")
 
 	// All errors are silently ignored (best-effort design).
 	// This is intentional - keepalive failures should never break commands.
@@ -108,7 +108,7 @@ func ExampleRead() {
 	}
 
 	// Access the last command that was run
-	_ = state.LastCommand // e.g., "gt status"
+	_ = state.LastCommand // e.g., "ms status"
 
 	// Access when the command was run
 	_ = state.Timestamp // time.Time in UTC

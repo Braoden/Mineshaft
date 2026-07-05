@@ -187,7 +187,7 @@ func TestOutputCommandQuickReferenceBootBlocksRawTmux(t *testing.T) {
 	})
 
 	for _, want := range []string{
-		"gt nudge supervisor",
+		"ms nudge supervisor",
 		"blocked; can stage unsubmitted input",
 	} {
 		if !strings.Contains(output, want) {

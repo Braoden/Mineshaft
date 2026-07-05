@@ -19,7 +19,7 @@ func TestHasAssignedOpenWork_UsesPinnedBeadsDirInsteadOfRigOrRepoFlag(t *testing
 	}
 	if err := os.WriteFile(
 		filepath.Join(townRoot, ".beads", "routes.jsonl"),
-		[]byte("{\"prefix\":\"gt-\",\"path\":\"mineshaft/overseer/rig\"}\n"),
+		[]byte("{\"prefix\":\"ms-\",\"path\":\"mineshaft/overseer/rig\"}\n"),
 		0o644,
 	); err != nil {
 		t.Fatalf("write routes.jsonl: %v", err)
@@ -46,7 +46,7 @@ if [ "$BEADS_DIR" != "` + expectedBeadsDir + `" ]; then
   exit 1
 fi
 printf 'BEADS_DIR=%s args=%s\n' "$BEADS_DIR" "$*" >> "` + logPath + `"
-printf '[{"id":"gt-123"}]\n'
+printf '[{"id":"ms-123"}]\n'
 `
 	bdPath := filepath.Join(binDir, "bd")
 	if err := os.WriteFile(bdPath, []byte(script), 0o755); err != nil {

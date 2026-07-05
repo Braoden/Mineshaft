@@ -38,12 +38,12 @@ This creates a copy of the bead in the target repository (with the new prefix)
 and closes the source bead with a reference to the new location.
 
 The target prefix determines which repository receives the bead.
-Common prefixes: gt- (mineshaft), bd- (beads), hq- (headquarters)
+Common prefixes: ms- (mineshaft), bd- (beads), hq- (headquarters)
 
 Examples:
-  gt bead move gt-abc123 bd-     # Move gt-abc123 to beads repo as bd-*
-  gt bead move hq-xyz bd-        # Move hq-xyz to beads repo
-  gt bead move bd-123 gt-        # Move bd-123 to mineshaft repo`,
+  ms bead move ms-abc123 bd-     # Move ms-abc123 to beads repo as bd-*
+  ms bead move hq-xyz bd-        # Move hq-xyz to beads repo
+  ms bead move bd-123 ms-        # Move bd-123 to mineshaft repo`,
 	Args: cobra.ExactArgs(2),
 	RunE: runBeadMove,
 }
@@ -55,13 +55,13 @@ var beadShowCmd = &cobra.Command{
 	Short: "Show details of a bead",
 	Long: `Displays the full details of a bead by ID.
 
-This is an alias for 'gt show'. All bd show flags are supported.
+This is an alias for 'ms show'. All bd show flags are supported.
 
 Examples:
-  gt bead show gt-abc123          # Show a mineshaft issue
-  gt bead show hq-xyz789          # Show a town-level bead
-  gt bead show bd-def456          # Show a beads issue
-  gt bead show gt-abc123 --json   # Output as JSON`,
+  ms bead show ms-abc123          # Show a mineshaft issue
+  ms bead show hq-xyz789          # Show a town-level bead
+  ms bead show bd-def456          # Show a beads issue
+  ms bead show ms-abc123 --json   # Output as JSON`,
 	DisableFlagParsing: true, // Pass all flags through to bd show
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runShow(cmd, args)
@@ -73,13 +73,13 @@ var beadReadCmd = &cobra.Command{
 	Short: "Show details of a bead (alias for 'show')",
 	Long: `Displays the full details of a bead by ID.
 
-This is an alias for 'gt bead show'. All bd show flags are supported.
+This is an alias for 'ms bead show'. All bd show flags are supported.
 
 Examples:
-  gt bead read gt-abc123          # Show a mineshaft issue
-  gt bead read hq-xyz789          # Show a town-level bead
-  gt bead read bd-def456          # Show a beads issue
-  gt bead read gt-abc123 --json   # Output as JSON`,
+  ms bead read ms-abc123          # Show a mineshaft issue
+  ms bead read hq-xyz789          # Show a town-level bead
+  ms bead read bd-def456          # Show a beads issue
+  ms bead read ms-abc123 --json   # Output as JSON`,
 	DisableFlagParsing: true, // Pass all flags through to bd show
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runShow(cmd, args)
@@ -144,7 +144,7 @@ func runBeadMove(cmd *cobra.Command, args []string) error {
 	fmt.Printf("  Title: %s\n", source.Title)
 	fmt.Printf("  Type: %s\n", source.Type)
 
-	// Guard against flag-like titles propagating during move (gt-e0kx5)
+	// Guard against flag-like titles propagating during move (ms-e0kx5)
 	if beads.IsFlagLikeTitle(source.Title) {
 		return fmt.Errorf("refusing to move bead: title %q looks like a CLI flag", source.Title)
 	}

@@ -37,7 +37,7 @@ type Minecart struct {
 
 // MQEntry represents a single merge request in the merge queue
 type MQEntry struct {
-	ID      string // Bead ID (e.g., "gt-mr-abc")
+	ID      string // Bead ID (e.g., "ms-mr-abc")
 	Branch  string // Source branch name
 	Status  string // queued, merging, merged, failed
 	Miner string // Miner that submitted (e.g., "nux")
@@ -125,7 +125,7 @@ func listMinecarts(beadsDir, status string) ([]minecartListItem, error) {
 
 	items := make([]minecartListItem, 0, len(rawItems))
 	for _, item := range rawItems {
-		if item.IssueType == "minecart" || feedMinecartHasLabel(item.Labels, "gt:minecart") {
+		if item.IssueType == "minecart" || feedMinecartHasLabel(item.Labels, "ms:minecart") {
 			items = append(items, item)
 		}
 	}
@@ -421,7 +421,7 @@ func listMQBeads(rigPath, status string) []mqListItem {
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, "bd", "list",
-		"--label=gt:merge-request",
+		"--label=ms:merge-request",
 		"--status="+status,
 		"--json",
 	)

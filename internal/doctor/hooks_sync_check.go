@@ -22,7 +22,7 @@ type templateTarget struct {
 	useSettingsDir bool
 }
 
-// HooksSyncCheck verifies all hook/settings files match what gt hooks sync would generate.
+// HooksSyncCheck verifies all hook/settings files match what ms hooks sync would generate.
 type HooksSyncCheck struct {
 	FixableCheck
 	outOfSync         []hooks.Target   // Claude targets
@@ -188,7 +188,7 @@ func (c *HooksSyncCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:   StatusWarning,
 		Message:  fmt.Sprintf("%d target(s) out of sync", outOfSyncCount),
 		Details:  details,
-		FixHint:  "Run 'gt doctor --fix hooks-sync' to regenerate settings files",
+		FixHint:  "Run 'ms doctor --fix hooks-sync' to regenerate settings files",
 		Category: c.Category(),
 	}
 }

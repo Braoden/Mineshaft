@@ -4,7 +4,7 @@ Detect phantom databases in .dolt-data/ that can crash the Dolt server.
 A phantom database is a directory in .dolt-data/ that has a .dolt/ subdirectory
 but is missing the noms/manifest file. When Dolt auto-discovers these dirs at
 startup, the broken noms store crashes INFORMATION_SCHEMA and can take down
-the entire server. (GH#2051, gt-hs1i2)
+the entire server. (GH#2051, ms-hs1i2)
 
 Current behavior (from doltserver.go StartServer):
 - ListDatabases() skips phantom dirs with a warning
@@ -52,7 +52,7 @@ Scan the .dolt-data/ directory for phantom database directories.
 
 **1. List all directories in .dolt-data/:**
 ```bash
-ls -d ~/gt/.dolt-data/*/
+ls -d ~/ms/.dolt-data/*/
 ```
 
 **2. For each directory, check for phantom condition:**
@@ -90,7 +90,7 @@ Skip this step — nothing to escalate.
 
 **2. If phantoms were found, escalate:**
 ```bash
-gt escalate -s HIGH "Dolt: detected {{phantom_count}} phantom database(s): {{phantom_names}} — requires Dolt server restart to resolve"
+ms escalate -s HIGH "Dolt: detected {{phantom_count}} phantom database(s): {{phantom_names}} — requires Dolt server restart to resolve"
 ```
 
 Phantom databases indicate a Dolt bug (DROP DATABASE + catalog re-materialization)
@@ -127,7 +127,7 @@ None detected — .dolt-data/ is clean.
 
 **2. Signal completion to Supervisor:**
 ```bash
-gt mail send supervisor/ -s "DOG_DONE: phantom-db" -m "Task: phantom-db-scan
+ms mail send supervisor/ -s "DOG_DONE: phantom-db" -m "Task: phantom-db-scan
 Scanned: {{scan_count}}
 Phantoms: {{phantom_count}}
 Quarantined: {{quarantined_count}}

@@ -45,7 +45,7 @@ func init() {
 var feedCmd = &cobra.Command{
 	Use:     "feed",
 	GroupID: GroupDiag,
-	Short:   "Show real-time activity feed of gt events",
+	Short:   "Show real-time activity feed of ms events",
 	Long: `Display a real-time feed of issue changes and agent activity.
 
 By default, launches an interactive TUI dashboard with:
@@ -62,7 +62,7 @@ Problems View (--problems/-p):
   - Press 'p' to toggle between activity and problems view
 
 The feed combines multiple event sources:
-  - GT events: Agent activity like patrol, sling, handoff (from .events.jsonl)
+  - MS events: Agent activity like patrol, sling, handoff (from .events.jsonl)
   - Beads activity: Issue creates, updates, completions (from bd activity, when available)
   - Minecart status: In-progress and recently-landed minecarts (refreshes every 10s)
 
@@ -97,13 +97,13 @@ MQ (Merge Queue) event symbols:
   ⊘  merge_skipped   - MR skipped (already merged, etc.)
 
 Examples:
-  gt feed                       # Launch TUI dashboard
-  gt feed --problems            # Start in problems view
-  gt feed -p                    # Short flag for problems view
-  gt feed --plain               # Plain text output (bd activity)
-  gt feed --window              # Open in dedicated tmux window
-  gt feed --since 1h            # Events from last hour
-  gt feed --rig greenplace      # Use mineshaft rig's beads`,
+  ms feed                       # Launch TUI dashboard
+  ms feed --problems            # Start in problems view
+  ms feed -p                    # Short flag for problems view
+  ms feed --plain               # Plain text output (bd activity)
+  ms feed --window              # Open in dedicated tmux window
+  ms feed --since 1h            # Events from last hour
+  ms feed --rig greenplace      # Use mineshaft rig's beads`,
 	RunE: runFeed,
 }
 
@@ -111,7 +111,7 @@ func runFeed(cmd *cobra.Command, args []string) error {
 	// Must be in a Mineshaft workspace
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
-		return fmt.Errorf("not in a Mineshaft workspace (run from ~/gt or a rig directory)")
+		return fmt.Errorf("not in a Mineshaft workspace (run from ~/ms or a rig directory)")
 	}
 
 	// Build feed arguments for window mode
@@ -251,7 +251,7 @@ func runFeedTUI(workDir string, problemsView bool) error {
 		sources = append(sources, mqSource)
 	}
 
-	// Create GT events source (optional - don't fail if not available)
+	// Create MS events source (optional - don't fail if not available)
 	gtSource, err := feed.NewGtEventsSource(townRoot)
 	if err == nil {
 		sources = append(sources, gtSource)
@@ -310,10 +310,10 @@ func runFeedInWindow(workDir string, bdArgs []string) error {
 	}
 
 	// Build the command to run in the window
-	// Use gt feed --plain instead of bd activity (which may not exist)
+	// Use ms feed --plain instead of bd activity (which may not exist)
 	gtPath, err := os.Executable()
 	if err != nil {
-		gtPath = "gt"
+		gtPath = "ms"
 	}
 	feedWindowCmd := fmt.Sprintf("cd \"%s\" && \"%s\" feed --plain --follow", workDir, gtPath)
 	if len(bdArgs) > 0 {

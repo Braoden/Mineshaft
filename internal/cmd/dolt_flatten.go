@@ -61,7 +61,7 @@ func runDoltFlatten(cmd *cobra.Command, args []string) error {
 	// Verify server is running.
 	running, _, err := doltserver.IsRunning(townRoot)
 	if err != nil || !running {
-		return fmt.Errorf("Dolt server is not running — start with 'gt dolt start'")
+		return fmt.Errorf("Dolt server is not running — start with 'ms dolt start'")
 	}
 
 	config := doltserver.DefaultConfig(townRoot)

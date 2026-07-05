@@ -76,7 +76,7 @@ func (e *minerCapacityAdmissionError) Error() string {
 		return fmt.Sprintf("miner admission denied: %s", e.Reason)
 	}
 	return fmt.Sprintf(
-		"miner admission denied: %s (max=%d occupied=%d working=%d recovery_blocked=%d reservations=%d reusable_idle=%d pending_mr=%d free=%d). Resolve recovery-needed miners or raise scheduler.max_miners; inspect with `gt scheduler status --json` or `gt miner list --all --json`",
+		"miner admission denied: %s (max=%d occupied=%d working=%d recovery_blocked=%d reservations=%d reusable_idle=%d pending_mr=%d free=%d). Resolve recovery-needed miners or raise scheduler.max_miners; inspect with `ms scheduler status --json` or `ms miner list --all --json`",
 		e.Reason,
 		e.Snapshot.Max,
 		e.Snapshot.occupied(),

@@ -30,26 +30,26 @@ type hookInput struct {
 // readHookSessionID reads session ID from available sources in hook mode.
 //
 // Priority (env vars first so non-Claude runtimes skip the stdin read entirely):
-//  1. GT_SESSION_ID / CLAUDE_SESSION_ID env var  — set by the hook command
+//  1. MS_SESSION_ID / CLAUDE_SESSION_ID env var  — set by the hook command
 //  2. Stdin JSON (Claude Code format)            — Claude sends {"session_id":…,"source":…}
 //  3. Persisted .runtime/session_id              — written by a prior SessionStart hook
 //  4. Auto-generate UUID
 //
-// Source is resolved from GT_HOOK_SOURCE env, stdin JSON, or empty.
-// Non-Claude runtimes (Gemini CLI, etc.) should set GT_SESSION_ID and
-// GT_HOOK_SOURCE in their hook commands to get full --hook behavior with
+// Source is resolved from MS_HOOK_SOURCE env, stdin JSON, or empty.
+// Non-Claude runtimes (Gemini CLI, etc.) should set MS_SESSION_ID and
+// MS_HOOK_SOURCE in their hook commands to get full --hook behavior with
 // zero stdin delay. Example:
 //
-//	SessionStart: "export GT_SESSION_ID=$(uuidgen) GT_HOOK_SOURCE=startup && gt prime --hook"
-//	PreCompress:  "export GT_HOOK_SOURCE=compact && gt prime --hook"
+//	SessionStart: "export MS_SESSION_ID=$(uuidgen) MS_HOOK_SOURCE=startup && ms prime --hook"
+//	PreCompress:  "export MS_HOOK_SOURCE=compact && ms prime --hook"
 func readHookSessionID() (sessionID, source string) {
 	primeStructuredSessionStartOutput = false
 	// Source can come from env (any runtime) or stdin JSON (Claude only).
 	// Check env first so it's available even when stdin provides the session ID.
-	source = os.Getenv("GT_HOOK_SOURCE")
+	source = os.Getenv("MS_HOOK_SOURCE")
 
 	// 1. Environment variables (fast path — skips stdin read entirely)
-	if id := os.Getenv("GT_SESSION_ID"); id != "" {
+	if id := os.Getenv("MS_SESSION_ID"); id != "" {
 		return id, source
 	}
 	if id := os.Getenv("CLAUDE_SESSION_ID"); id != "" {
@@ -81,8 +81,8 @@ func readHookSessionID() (sessionID, source string) {
 
 // stdinReadTimeout is how long readStdinJSON waits for data before giving up.
 // This is a safety net for runtimes that pipe stdin without sending data AND
-// don't set GT_SESSION_ID. Claude Code sends JSON on the first tick, so 500ms
-// is generous. Non-Claude runtimes should set GT_SESSION_ID to skip this entirely.
+// don't set MS_SESSION_ID. Claude Code sends JSON on the first tick, so 500ms
+// is generous. Non-Claude runtimes should set MS_SESSION_ID to skip this entirely.
 const stdinReadTimeout = 500 * time.Millisecond
 
 // readStdinJSON attempts to read and parse JSON from stdin.
@@ -124,7 +124,7 @@ func readStdinJSON() *hookInput {
 		line = r.line
 	case <-time.After(stdinReadTimeout):
 		// The goroutine above is still blocked on ReadString and will leak.
-		// This is intentional — gt prime is a short-lived CLI command that
+		// This is intentional — ms prime is a short-lived CLI command that
 		// exits shortly after, so the goroutine is cleaned up by process exit.
 		return nil
 	}
@@ -143,7 +143,7 @@ func readStdinJSON() *hookInput {
 }
 
 // persistSessionID writes the session ID to .runtime/session_id
-// This allows subsequent gt prime calls to find the session ID.
+// This allows subsequent ms prime calls to find the session ID.
 func persistSessionID(dir, sessionID string) {
 	runtimeDir := filepath.Join(dir, ".runtime")
 	if err := os.MkdirAll(runtimeDir, 0755); err != nil {
@@ -193,14 +193,14 @@ func readSessionFile(dir string) string {
 }
 
 // resolveSessionIDForPrime finds the session ID from available sources.
-// Priority: GT_SESSION_ID env, CLAUDE_SESSION_ID env, persisted file, fallback.
+// Priority: MS_SESSION_ID env, CLAUDE_SESSION_ID env, persisted file, fallback.
 func resolveSessionIDForPrime(actor string) string {
-	// 1. Try runtime's session ID lookup (checks GT_SESSION_ID_ENV, then CLAUDE_SESSION_ID)
+	// 1. Try runtime's session ID lookup (checks MS_SESSION_ID_ENV, then CLAUDE_SESSION_ID)
 	if id := runtime.SessionIDFromEnv(); id != "" {
 		return id
 	}
 
-	// 2. Persisted session file (from gt prime --hook)
+	// 2. Persisted session file (from ms prime --hook)
 	if id := ReadPersistedSessionID(); id != "" {
 		return id
 	}
@@ -210,8 +210,8 @@ func resolveSessionIDForPrime(actor string) string {
 }
 
 // emitSessionEvent emits a session_start event for seance discovery.
-// The event is written to ~/gt/.events.jsonl and can be queried via gt seance.
-// Session ID resolution order: GT_SESSION_ID, CLAUDE_SESSION_ID, persisted file, fallback.
+// The event is written to ~/ms/.events.jsonl and can be queried via ms seance.
+// Session ID resolution order: MS_SESSION_ID, CLAUDE_SESSION_ID, persisted file, fallback.
 func emitSessionEvent(ctx RoleContext) {
 	if ctx.Role == RoleUnknown {
 		return
@@ -239,7 +239,7 @@ func emitSessionEvent(ctx RoleContext) {
 
 // outputSessionMetadata prints a structured metadata line for seance discovery.
 // Format: [MINESHAFT] role:<role> pid:<pid> session:<session_id>
-// This enables gt seance to discover sessions from gt prime output.
+// This enables ms seance to discover sessions from ms prime output.
 func outputSessionMetadata(ctx RoleContext) {
 	if ctx.Role == RoleUnknown {
 		return
@@ -305,7 +305,7 @@ func detectSessionState(ctx RoleContext) SessionState {
 	}
 
 	// Check for hooked work (autonomous state).
-	// Primary: read hook_bead from the agent bead's DB column (same strategy as gt hook).
+	// Primary: read hook_bead from the agent bead's DB column (same strategy as ms hook).
 	// Fallback: query hooked/in_progress beads by assignee.
 	agentID := getAgentIdentity(ctx)
 	if agentID != "" {
@@ -361,7 +361,7 @@ func detectSessionState(ctx RoleContext) SessionState {
 			return state
 		}
 		// Town-level fallback: rig-level agents may have hooked HQ beads
-		// stored in townRoot/.beads. Matches prime.go and molecule_status.go. (gt-dtq7)
+		// stored in townRoot/.beads. Matches prime.go and molecule_status.go. (ms-dtq7)
 		if !isTownLevelRole(agentID) && ctx.TownRoot != "" {
 			townB := beads.New(filepath.Join(ctx.TownRoot, ".beads"))
 			if townHooked, err := townB.List(beads.ListOptions{

@@ -11,12 +11,12 @@ if [ -n "$GIT_USER" ] && [ -n "$GIT_EMAIL" ]; then
     dolt config --global --add user.email "$GIT_EMAIL"
 fi
 
-if [ ! -f /gt/overseer/town.json ]; then
-    echo "Initializing Mineshaft workspace at /gt..."
-    /app/mineshaft/gt install /gt --git
+if [ ! -f /ms/overseer/town.json ]; then
+    echo "Initializing Mineshaft workspace at /ms..."
+    /app/mineshaft/ms install /ms --git
 else
-    echo "Refreshing Mineshaft workspace at /gt..."
-    /app/mineshaft/gt install /gt --git --force
+    echo "Refreshing Mineshaft workspace at /ms..."
+    /app/mineshaft/ms install /ms --git --force
 fi
 
 exec "$@"

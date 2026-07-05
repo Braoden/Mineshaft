@@ -571,12 +571,12 @@ func TestInitBeads_TrackedBeads_CreatesRedirect(t *testing.T) {
 		t.Fatalf("mkdir overseer beads: %v", err)
 	}
 	// Create a config file to simulate a real beads directory
-	if err := os.WriteFile(filepath.Join(overseerBeadsDir, "config.yaml"), []byte("prefix: gt\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(overseerBeadsDir, "config.yaml"), []byte("prefix: ms\n"), 0644); err != nil {
 		t.Fatalf("write overseer config: %v", err)
 	}
 
 	manager := &Manager{}
-	if err := manager.InitBeads(rigPath, "gt", ""); err != nil {
+	if err := manager.InitBeads(rigPath, "ms", ""); err != nil {
 		t.Fatalf("initBeads: %v", err)
 	}
 
@@ -625,7 +625,7 @@ exit 0
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
 	manager := &Manager{}
-	if err := manager.InitBeads(rigPath, "gt", ""); err != nil {
+	if err := manager.InitBeads(rigPath, "ms", ""); err != nil {
 		t.Fatalf("initBeads: %v", err)
 	}
 
@@ -668,7 +668,7 @@ exit 1
 	t.Setenv("BEADS_DIR_LOG", beadsDirLog)
 
 	manager := &Manager{}
-	if err := manager.InitBeads(rigPath, "gt", "testrig"); err != nil {
+	if err := manager.InitBeads(rigPath, "ms", "testrig"); err != nil {
 		t.Fatalf("initBeads: %v", err)
 	}
 
@@ -677,7 +677,7 @@ exit 1
 	if err != nil {
 		t.Fatalf("reading config.yaml: %v", err)
 	}
-	want := "prefix: gt\nissue-prefix: gt\ndolt.idle-timeout: \"0\"\nexport.auto: \"false\"\n"
+	want := "prefix: ms\nissue-prefix: ms\ndolt.idle-timeout: \"0\"\nexport.auto: \"false\"\n"
 	if string(config) != want {
 		t.Fatalf("config.yaml = %q, want %q", string(config), want)
 	}
@@ -804,9 +804,9 @@ func TestBdSubprocessEnvUsesHardenedBDEnv(t *testing.T) {
 	t.Setenv("BEADS_DOLT_PORT", "9999")
 	t.Setenv("BEADS_DOLT_DATA_DIR", "/wrong/data")
 	t.Setenv("BEADS_DOLT_AUTO_START", "1")
-	t.Setenv("GT_DOLT_DATA", "/wrong/gt-data")
-	t.Setenv("GT_DOLT_HOST", "127.0.0.2")
-	t.Setenv("GT_DOLT_PORT", "5507")
+	t.Setenv("MS_DOLT_DATA", "/wrong/ms-data")
+	t.Setenv("MS_DOLT_HOST", "127.0.0.2")
+	t.Setenv("MS_DOLT_PORT", "5507")
 
 	env := bdSubprocessEnv(beadsDir, "explicit_db")
 	got := rigEnvMap(env)
@@ -817,7 +817,7 @@ func TestBdSubprocessEnvUsesHardenedBDEnv(t *testing.T) {
 		t.Fatalf("BEADS_DOLT_SERVER_DATABASE = %q, want explicit_db in %v", got["BEADS_DOLT_SERVER_DATABASE"], env)
 	}
 	if got["BEADS_DOLT_SERVER_HOST"] != "127.0.0.2" {
-		t.Fatalf("BEADS_DOLT_SERVER_HOST = %q, want GT host in %v", got["BEADS_DOLT_SERVER_HOST"], env)
+		t.Fatalf("BEADS_DOLT_SERVER_HOST = %q, want MS host in %v", got["BEADS_DOLT_SERVER_HOST"], env)
 	}
 	if got["BEADS_DOLT_SERVER_PORT"] != "5507" || got["BEADS_DOLT_PORT"] != "5507" {
 		t.Fatalf("ports = server:%q legacy:%q, want 5507 in %v", got["BEADS_DOLT_SERVER_PORT"], got["BEADS_DOLT_PORT"], env)
@@ -825,7 +825,7 @@ func TestBdSubprocessEnvUsesHardenedBDEnv(t *testing.T) {
 	if got["BEADS_DOLT_AUTO_START"] != "0" || got["BD_DOLT_AUTO_COMMIT"] != "on" {
 		t.Fatalf("bd mutation guardrails missing in %v", env)
 	}
-	for _, key := range []string{"BEADS_DB", "BD_DB", "BEADS_DOLT_DATA_DIR", "GT_DOLT_DATA"} {
+	for _, key := range []string{"BEADS_DB", "BD_DB", "BEADS_DOLT_DATA_DIR", "MS_DOLT_DATA"} {
 		if value, ok := got[key]; ok {
 			t.Fatalf("%s leaked as %q in %v", key, value, env)
 		}
@@ -852,9 +852,9 @@ func TestBdSubprocessEnvUsesTownConfigBeforeMetadataExists(t *testing.T) {
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("GT_DOLT_IGNORE_CONFIG", "")
-	t.Setenv("GT_DOLT_HOST", "stale-host")
-	t.Setenv("GT_DOLT_PORT", "9999")
+	t.Setenv("MS_DOLT_IGNORE_CONFIG", "")
+	t.Setenv("MS_DOLT_HOST", "stale-host")
+	t.Setenv("MS_DOLT_PORT", "9999")
 	t.Setenv("BEADS_DOLT_SERVER_HOST", "stale-host")
 	t.Setenv("BEADS_DOLT_SERVER_PORT", "9999")
 	t.Setenv("BEADS_DOLT_PORT", "9999")
@@ -892,10 +892,10 @@ func TestBdSubprocessEnvClearsStaleHostWhenConfigHasNoHost(t *testing.T) {
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("GT_DOLT_IGNORE_CONFIG", "")
-	t.Setenv("GT_DOLT_HOST", "stale-host")
+	t.Setenv("MS_DOLT_IGNORE_CONFIG", "")
+	t.Setenv("MS_DOLT_HOST", "stale-host")
 	t.Setenv("BEADS_DOLT_SERVER_HOST", "stale-host")
-	t.Setenv("GT_DOLT_PORT", "9999")
+	t.Setenv("MS_DOLT_PORT", "9999")
 
 	env := bdSubprocessEnv(beadsDir, "explicit_db")
 	got := rigEnvMap(env)
@@ -909,8 +909,8 @@ func TestBdSubprocessEnvClearsStaleHostWhenConfigHasNoHost(t *testing.T) {
 
 func TestBdInitServerPortConfigBeatsStaleEnv(t *testing.T) {
 	townRoot := t.TempDir()
-	t.Setenv("GT_DOLT_IGNORE_CONFIG", "")
-	t.Setenv("GT_DOLT_PORT", "9999")
+	t.Setenv("MS_DOLT_IGNORE_CONFIG", "")
+	t.Setenv("MS_DOLT_PORT", "9999")
 	doltDataDir := filepath.Join(townRoot, ".dolt-data")
 	if err := os.MkdirAll(doltDataDir, 0755); err != nil {
 		t.Fatal(err)
@@ -941,7 +941,7 @@ func TestInitAgentBeadsUsesRigBeadsDir(t *testing.T) {
 	}
 
 	// Rig-level agent beads (witness, refinery) are stored in rig beads.
-	// Town-level agents (overseer, supervisor) are created by gt install in town beads.
+	// Town-level agents (overseer, supervisor) are created by ms install in town beads.
 	// This test verifies that rig agent beads are created in the rig directory,
 	// using the resolved rig beads directory for BEADS_DIR.
 	townRoot := t.TempDir()
@@ -990,7 +990,7 @@ case "$cmd" in
     # Accept config commands (e.g., "bd config set types.custom ...")
     ;;
   init)
-    # Accept init commands (e.g., "bd init --prefix gt --server")
+    # Accept init commands (e.g., "bd init --prefix ms --server")
     ;;
   *)
     echo "unexpected command: $cmd" >&2
@@ -1009,7 +1009,7 @@ esac
 	t.Setenv("BEADS_DIR", "") // Clear any existing BEADS_DIR
 
 	manager := &Manager{townRoot: townRoot}
-	if err := manager.initAgentBeads(rigPath, "demo", "gt"); err != nil {
+	if err := manager.initAgentBeads(rigPath, "demo", "ms"); err != nil {
 		t.Fatalf("initAgentBeads: %v", err)
 	}
 
@@ -1022,8 +1022,8 @@ esac
 
 	// Should create witness and refinery for the rig
 	expectedAgents := map[string]bool{
-		"gt-demo-witness":  false,
-		"gt-demo-refinery": false,
+		"ms-demo-witness":  false,
+		"ms-demo-refinery": false,
 	}
 
 	for _, id := range createdAgents {
@@ -1046,7 +1046,7 @@ func TestIsValidBeadsPrefix(t *testing.T) {
 		want   bool
 	}{
 		// Valid prefixes
-		{"gt", true},
+		{"ms", true},
 		{"bd", true},
 		{"hq", true},
 		{"mineshaft", true},
@@ -1094,9 +1094,9 @@ func TestIsValidBeadsPrefix(t *testing.T) {
 // and asserts that exactly one rig database remains on disk.
 func TestDropRigOrphanDBs_RemovesPrefixDB(t *testing.T) {
 	// Disable the running-server check so RemoveDatabase falls through to
-	// pure filesystem cleanup. Pointing GT_DOLT_PORT at a definitely-unused
+	// pure filesystem cleanup. Pointing MS_DOLT_PORT at a definitely-unused
 	// port keeps the test independent of any real Dolt server on the host.
-	t.Setenv("GT_DOLT_PORT", "1") // privileged port, definitely not running dolt
+	t.Setenv("MS_DOLT_PORT", "1") // privileged port, definitely not running dolt
 
 	townRoot := t.TempDir()
 	dataDir := filepath.Join(townRoot, ".dolt-data")
@@ -1132,7 +1132,7 @@ func TestDropRigOrphanDBs_RemovesPrefixDB(t *testing.T) {
 // "<prefix>". Both forms must be cleaned up to keep older workspaces
 // functional after upgrade.
 func TestDropRigOrphanDBs_RemovesLegacyBeadsPrefixDB(t *testing.T) {
-	t.Setenv("GT_DOLT_PORT", "1")
+	t.Setenv("MS_DOLT_PORT", "1")
 
 	townRoot := t.TempDir()
 	dataDir := filepath.Join(townRoot, ".dolt-data")
@@ -1161,17 +1161,17 @@ func TestDropRigOrphanDBs_RemovesLegacyBeadsPrefixDB(t *testing.T) {
 
 // TestDropRigOrphanDBs_PreservesRigDB is the safety check that the helper
 // never removes a database whose name happens to match the prefix when the
-// rig itself is named after its prefix (e.g. rig "mineshaft" with prefix "gt"
+// rig itself is named after its prefix (e.g. rig "mineshaft" with prefix "ms"
 // where neither candidate is an orphan).
 func TestDropRigOrphanDBs_PreservesRigDB(t *testing.T) {
-	t.Setenv("GT_DOLT_PORT", "1")
+	t.Setenv("MS_DOLT_PORT", "1")
 
 	townRoot := t.TempDir()
 	dataDir := filepath.Join(townRoot, ".dolt-data")
 
 	// Pathological case: rigName == prefix. Nothing should be dropped.
-	const rigName = "gt"
-	const prefix = "gt"
+	const rigName = "ms"
+	const prefix = "ms"
 
 	if err := os.MkdirAll(filepath.Join(dataDir, rigName, ".dolt"), 0755); err != nil {
 		t.Fatalf("seed: %v", err)
@@ -1217,7 +1217,7 @@ func TestDeriveBeadsPrefix(t *testing.T) {
 		want string
 	}{
 		// Compound words with common suffixes should split
-		{"mineshaft", "gt"},     // gas + town
+		{"mineshaft", "ms"},     // gas + town
 		{"nashville", "nv"},   // nash + ville
 		{"bridgeport", "bp"},  // bridge + port
 		{"someplace", "sp"},   // some + place
@@ -1228,7 +1228,7 @@ func TestDeriveBeadsPrefix(t *testing.T) {
 
 		// Hyphenated names
 		{"my-project", "mp"},
-		{"mineshaft", "gt"},
+		{"mineshaft", "ms"},
 		{"some-long-name", "sln"},
 
 		// Underscored names
@@ -1473,7 +1473,7 @@ func TestDetectBeadsPrefixFromConfig_NoFallbackToJSONL(t *testing.T) {
 
 	// Write issues.jsonl with valid data — should be ignored
 	issuesPath := filepath.Join(dir, "issues.jsonl")
-	if err := os.WriteFile(issuesPath, []byte(`{"id":"gt-mawit","title":"test"}`), 0644); err != nil {
+	if err := os.WriteFile(issuesPath, []byte(`{"id":"ms-mawit","title":"test"}`), 0644); err != nil {
 		t.Fatalf("writing issues.jsonl: %v", err)
 	}
 
@@ -2074,17 +2074,17 @@ func TestBeadsConfigHasSyncRemote(t *testing.T) {
 		},
 		{
 			name:       "sync.remote absent",
-			configYAML: "prefix: gt\nissue-prefix: gt\n",
+			configYAML: "prefix: ms\nissue-prefix: ms\n",
 			want:       false,
 		},
 		{
 			name:       "sync.remote commented out",
-			configYAML: "# sync.remote: git+https://example.com/repo.git\nprefix: gt\n",
+			configYAML: "# sync.remote: git+https://example.com/repo.git\nprefix: ms\n",
 			want:       false,
 		},
 		{
 			name:       "sync.remote with prefix and other keys",
-			configYAML: "prefix: gt\nsync.remote: git+https://github.com/org/repo.git\ndolt.idle-timeout: \"0\"\n",
+			configYAML: "prefix: ms\nsync.remote: git+https://github.com/org/repo.git\ndolt.idle-timeout: \"0\"\n",
 			want:       true,
 		},
 	}
@@ -2151,7 +2151,7 @@ esac
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	configYAML := "prefix: gt\nsync.remote: \"git+https://github.com/steveyegge/mineshaft.git\"\n"
+	configYAML := "prefix: ms\nsync.remote: \"git+https://github.com/steveyegge/mineshaft.git\"\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "config.yaml"), []byte(configYAML), 0644); err != nil {
 		t.Fatalf("write config.yaml: %v", err)
 	}
@@ -2176,7 +2176,7 @@ esac
 	_, _ = manager.AddRig(AddRigOptions{
 		Name:          "testrip",
 		GitURL:        repoDir,
-		BeadsPrefix:   "gt",
+		BeadsPrefix:   "ms",
 		SkipDoltCheck: true,
 	})
 
@@ -2192,8 +2192,8 @@ esac
 	if !strings.Contains(cmds, "--discard-remote") {
 		t.Errorf("bd init missing --discard-remote; full log:\n%s", cmds)
 	}
-	if !strings.Contains(cmds, "--destroy-token=DESTROY-gt") {
-		t.Errorf("bd init missing --destroy-token=DESTROY-gt; full log:\n%s", cmds)
+	if !strings.Contains(cmds, "--destroy-token=DESTROY-ms") {
+		t.Errorf("bd init missing --destroy-token=DESTROY-ms; full log:\n%s", cmds)
 	}
 }
 
@@ -2234,7 +2234,7 @@ esac
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		t.Fatalf("mkdir .beads: %v", err)
 	}
-	configYAML := "prefix: gt\n"
+	configYAML := "prefix: ms\n"
 	if err := os.WriteFile(filepath.Join(beadsDir, "config.yaml"), []byte(configYAML), 0644); err != nil {
 		t.Fatalf("write config.yaml: %v", err)
 	}
@@ -2256,7 +2256,7 @@ esac
 	_, _ = manager.AddRig(AddRigOptions{
 		Name:          "testrip",
 		GitURL:        repoDir,
-		BeadsPrefix:   "gt",
+		BeadsPrefix:   "ms",
 		SkipDoltCheck: true,
 	})
 

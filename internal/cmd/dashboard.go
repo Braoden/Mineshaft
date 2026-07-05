@@ -37,10 +37,10 @@ The dashboard shows real-time minecart status with:
 - Auto-refresh every 30 seconds via htmx
 
 Example:
-  gt dashboard                    # Start on default port 8080
-  gt dashboard --port 3000        # Start on port 3000
-  gt dashboard --bind 0.0.0.0     # Listen on all interfaces
-  gt dashboard --open             # Start and open browser`,
+  ms dashboard                    # Start on default port 8080
+  ms dashboard --port 3000        # Start on port 3000
+  ms dashboard --bind 0.0.0.0     # Listen on all interfaces
+  ms dashboard --open             # Start and open browser`,
 	RunE: runDashboard,
 }
 
@@ -71,7 +71,7 @@ func runDashboard(cmd *cobra.Command, args []string) error {
 	} else {
 		// In a workspace - run normal dashboard
 
-		// Set BEADS_DOLT_PORT and GT_DOLT_PORT so bd/gt subprocesses connect
+		// Set BEADS_DOLT_PORT and MS_DOLT_PORT so bd/ms subprocesses connect
 		// to the actual Dolt SQL server, not the dashboard's HTTP listen port.
 		// Without this, inherited env vars could point bd at the wrong port.
 		ensureDoltPortEnv(townRoot)
@@ -161,7 +161,7 @@ func runDashboard(cmd *cobra.Command, args []string) error {
 	return server.ListenAndServe()
 }
 
-// ensureDoltPortEnv sets GT_DOLT_PORT, BEADS_DOLT_SERVER_PORT,
+// ensureDoltPortEnv sets MS_DOLT_PORT, BEADS_DOLT_SERVER_PORT,
 // BEADS_DOLT_PORT, and BEADS_DOLT_SERVER_HOST
 // to the actual Dolt server connection info. This prevents bd subprocesses from
 // inheriting stale or incorrect values from the environment.
@@ -172,12 +172,12 @@ func ensureDoltPortEnv(townRoot string) {
 		port = doltserver.DefaultPort
 	}
 	portStr := strconv.Itoa(port)
-	os.Setenv("GT_DOLT_PORT", portStr)
+	os.Setenv("MS_DOLT_PORT", portStr)
 	os.Setenv("BEADS_DOLT_SERVER_PORT", portStr)
 	os.Setenv("BEADS_DOLT_PORT", portStr)
 
 	if host := config.ResolveDoltHost(townRoot); host != "" {
-		os.Setenv("GT_DOLT_HOST", host)
+		os.Setenv("MS_DOLT_HOST", host)
 		os.Setenv("BEADS_DOLT_SERVER_HOST", host)
 	} else {
 		os.Unsetenv("BEADS_DOLT_SERVER_HOST")

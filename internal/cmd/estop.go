@@ -1,4 +1,4 @@
-// Emergency stop (gt estop / gt thaw) — pause and resume agent work.
+// Emergency stop (ms estop / ms thaw) — pause and resume agent work.
 //
 // Original implementation by outdoorsea (PR #3237). Cherry-picked for
 // manual-only operation: no daemon auto-trigger.
@@ -39,14 +39,14 @@ Use --rig to freeze a single rig instead of the whole town. Per-rig
 E-stop is useful when traveling or pausing non-critical work while
 keeping other rigs running.
 
-To resume: gt thaw [--rig <name>]
+To resume: ms thaw [--rig <name>]
 
 Examples:
-  gt estop                              # Freeze everything
-  gt estop -r "closing laptop"          # Freeze with reason
-  gt estop --rig mineshaft                # Freeze only mineshaft
-  gt estop --rig beads -r "maintenance" # Freeze beads rig`,
-	// Reject stray operands so `gt estop status` cannot fall through to runEstop.
+  ms estop                              # Freeze everything
+  ms estop -r "closing laptop"          # Freeze with reason
+  ms estop --rig mineshaft                # Freeze only mineshaft
+  ms estop --rig beads -r "maintenance" # Freeze beads rig`,
+	// Reject stray operands so `ms estop status` cannot fall through to runEstop.
 	Args: cobra.NoArgs,
 	RunE: runEstop,
 }
@@ -54,7 +54,7 @@ Examples:
 var estopStatusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Show emergency-stop state without freezing agents",
-	Long:  "Report whether a town-wide or per-rig E-stop is active. This is read-only and never freezes agents. To clear an E-stop, use 'gt thaw'.",
+	Long:  "Report whether a town-wide or per-rig E-stop is active. This is read-only and never freezes agents. To clear an E-stop, use 'ms thaw'.",
 	Args:  cobra.NoArgs,
 	RunE:  runEstopStatus,
 }
@@ -80,7 +80,7 @@ func runEstopStatus(cmd *cobra.Command, args []string) error {
 		}
 	}
 	addEstopToStatus(townRoot)
-	fmt.Printf("Clear with: %s\n", style.Bold.Render("gt thaw"))
+	fmt.Printf("Clear with: %s\n", style.Bold.Render("ms thaw"))
 	return nil
 }
 
@@ -88,14 +88,14 @@ var thawCmd = &cobra.Command{
 	Use:     "thaw",
 	GroupID: GroupServices,
 	Short:   "Resume from emergency stop — thaw all frozen agents",
-	Long: `Resume agent sessions that were frozen by gt estop.
+	Long: `Resume agent sessions that were frozen by ms estop.
 
 Sends SIGCONT to all frozen sessions, removes the ESTOP sentinel file,
 and nudges all sessions to alert them that work can continue.
 
 Examples:
-  gt thaw                    # Thaw everything
-  gt thaw --rig mineshaft      # Thaw only mineshaft`,
+  ms thaw                    # Thaw everything
+  ms thaw --rig mineshaft      # Thaw only mineshaft`,
 	RunE: runThaw,
 }
 
@@ -150,7 +150,7 @@ func runEstop(cmd *cobra.Command, args []string) error {
 
 	fmt.Println()
 	fmt.Printf("%s %d session(s) frozen\n", style.Error.Render("⛔"), frozen)
-	fmt.Printf("   Resume with: %s\n", style.Bold.Render("gt thaw"))
+	fmt.Printf("   Resume with: %s\n", style.Bold.Render("ms thaw"))
 
 	return nil
 }
@@ -184,7 +184,7 @@ func runEstopRig(townRoot, rigName string) error {
 
 	fmt.Println()
 	fmt.Printf("%s %d session(s) frozen in %s\n", style.Error.Render("⛔"), frozen, rigName)
-	fmt.Printf("   Resume with: %s\n", style.Bold.Render("gt thaw --rig "+rigName))
+	fmt.Printf("   Resume with: %s\n", style.Bold.Render("ms thaw --rig "+rigName))
 
 	return nil
 }
@@ -327,7 +327,7 @@ func thawAllSessions(t *tmux.Tmux, townRoot string, rigFilter string) int {
 	return thawed
 }
 
-// nudgeAllSessions sends a nudge to all GT sessions to alert them of resume.
+// nudgeAllSessions sends a nudge to all MS sessions to alert them of resume.
 // If rigFilter is non-empty, only sessions for that rig are nudged.
 func nudgeAllSessions(t *tmux.Tmux, townRoot string, rigFilter string) int {
 	sessions := collectGTSessions(t, townRoot)
@@ -399,7 +399,7 @@ func isGTSession(name string, rigPrefixes map[string]bool) bool {
 }
 
 // addEstopToStatus checks for E-stop and prints a banner if active.
-// Called from gt status to surface E-stop state.
+// Called from ms status to surface E-stop state.
 func addEstopToStatus(townRoot string) {
 	if estop.IsActive(townRoot) {
 		info := estop.Read(townRoot)

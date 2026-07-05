@@ -25,10 +25,10 @@ import (
 // Examples:
 //   - "overseer" -> "hq-overseer"
 //   - "supervisor" -> "hq-supervisor"
-//   - "mineshaft/witness" -> "gt-mineshaft-witness"
-//   - "mineshaft/refinery" -> "gt-mineshaft-refinery"
-//   - "mineshaft/nux" (miner) -> "gt-mineshaft-miner-nux"
-//   - "mineshaft/crew/max" -> "gt-mineshaft-crew-max"
+//   - "mineshaft/witness" -> "ms-mineshaft-witness"
+//   - "mineshaft/refinery" -> "ms-mineshaft-refinery"
+//   - "mineshaft/nux" (miner) -> "ms-mineshaft-miner-nux"
+//   - "mineshaft/crew/max" -> "ms-mineshaft-crew-max"
 //
 // If role is unknown, it tries to infer from the identity string.
 // townRoot is needed to look up the rig's configured prefix.
@@ -343,12 +343,12 @@ func runMoleculeStatus(cmd *cobra.Command, args []string) error {
 	} else {
 		// Use cwd-based detection for status display
 		// This ensures we show the hook for the agent whose directory we're in,
-		// not the agent from the GT_ROLE env var (which might be different if
+		// not the agent from the MS_ROLE env var (which might be different if
 		// we cd'd into another rig's crew/miner directory)
 		roleCtx = detectRole(cwd, townRoot)
 		if roleCtx.Role == RoleUnknown {
-			// Fall back to GT_ROLE when cwd doesn't identify an agent
-			// (e.g., at rig root like ~/gt/beads instead of ~/gt/beads/witness)
+			// Fall back to MS_ROLE when cwd doesn't identify an agent
+			// (e.g., at rig root like ~/ms/beads instead of ~/ms/beads/witness)
 			roleCtx, _ = GetRoleWithContext(cwd, townRoot)
 		}
 		target = buildAgentIdentity(roleCtx)
@@ -363,7 +363,7 @@ func runMoleculeStatus(cmd *cobra.Command, args []string) error {
 
 	// Find beads directory.
 	// First try CWD-based discovery, then resolve to the correct rig database
-	// based on the agent's identity. Without this, CWD at the town root (~/gt)
+	// based on the agent's identity. Without this, CWD at the town root (~/ms)
 	// queries the hq database instead of the rig's database where hooked beads
 	// actually live. See bd-hook-status-cwd-bug.
 	workDir, err := findLocalBeadsDir()
@@ -472,8 +472,8 @@ func runMoleculeStatus(cmd *cobra.Command, args []string) error {
 	// See: https://github.com/steveyegge/mineshaft/issues/2389
 	var hookBead *beads.Issue
 	isMiner := roleCtx.Role == RoleMiner ||
-		(os.Getenv("GT_ROLE") != "" && func() bool {
-			r, _, _ := parseRoleString(os.Getenv("GT_ROLE"))
+		(os.Getenv("MS_ROLE") != "" && func() bool {
+			r, _, _ := parseRoleString(os.Getenv("MS_ROLE"))
 			return r == RoleMiner
 		}())
 
@@ -522,11 +522,11 @@ func runMoleculeStatus(cmd *cobra.Command, args []string) error {
 
 	// Determine next action if no work is slung
 	if !status.HasWork {
-		status.NextAction = "Check inbox for work assignments: gt mail inbox"
+		status.NextAction = "Check inbox for work assignments: ms mail inbox"
 	} else if status.AttachedMolecule == "" && status.AttachedFormula == "" {
-		status.NextAction = "Attach a molecule to start work: gt mol attach <bead-id> <molecule-id>"
+		status.NextAction = "Attach a molecule to start work: ms mol attach <bead-id> <molecule-id>"
 	} else if status.AttachedFormula != "" && status.NextAction == "" && status.PinnedBead != nil {
-		status.NextAction = "Show the workflow steps: gt prime or bd mol current " + status.PinnedBead.ID
+		status.NextAction = "Show the workflow steps: ms prime or bd mol current " + status.PinnedBead.ID
 	}
 
 	// JSON output
@@ -745,7 +745,7 @@ func outputMoleculeStatus(status MoleculeStatusInfo) {
 	if status.PinnedBead.Status == "closed" {
 		fmt.Printf("%s Hooked bead %s is already closed!\n", style.Bold.Render("⚠"), status.PinnedBead.ID)
 		fmt.Printf("   Title: %s\n", status.PinnedBead.Title)
-		fmt.Printf("   This work was completed elsewhere. Clear your hook with: gt unsling\n")
+		fmt.Printf("   This work was completed elsewhere. Clear your hook with: ms unsling\n")
 		return
 	}
 
@@ -757,7 +757,7 @@ func outputMoleculeStatus(status MoleculeStatusInfo) {
 			fmt.Printf("   From: %s\n", sender)
 		}
 		fmt.Printf("   Subject: %s\n", status.PinnedBead.Title)
-		fmt.Printf("   Run: gt mail read %s\n", status.PinnedBead.ID)
+		fmt.Printf("   Run: ms mail read %s\n", status.PinnedBead.ID)
 		return
 	}
 
@@ -814,7 +814,7 @@ func outputMoleculeStatus(status MoleculeStatusInfo) {
 		}
 	}
 
-	// Git divergence warning and recent trail (gt-7w6cq)
+	// Git divergence warning and recent trail (ms-7w6cq)
 	showGitDivergenceWarning()
 	showRecentTrailSummary()
 
@@ -974,12 +974,12 @@ func runMoleculeCurrent(cmd *cobra.Command, args []string) error {
 	} else {
 		// Use cwd-based detection for status display
 		// This ensures we show the hook for the agent whose directory we're in,
-		// not the agent from the GT_ROLE env var (which might be different if
+		// not the agent from the MS_ROLE env var (which might be different if
 		// we cd'd into another rig's crew/miner directory)
 		roleCtx = detectRole(cwd, townRoot)
 		if roleCtx.Role == RoleUnknown {
-			// Fall back to GT_ROLE when cwd doesn't identify an agent
-			// (e.g., at rig root like ~/gt/beads instead of ~/gt/beads/witness)
+			// Fall back to MS_ROLE when cwd doesn't identify an agent
+			// (e.g., at rig root like ~/ms/beads instead of ~/ms/beads/witness)
 			roleCtx, _ = GetRoleWithContext(cwd, townRoot)
 		}
 		target = buildAgentIdentity(roleCtx)

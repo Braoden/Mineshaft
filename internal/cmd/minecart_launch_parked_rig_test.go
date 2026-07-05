@@ -18,8 +18,8 @@ func TestCheckBlockedRigsForLaunch_NoParkedRigs(t *testing.T) {
 	}
 
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-a": {ID: "gt-a", Type: "task", Rig: "mineshaft"},
-		"gt-b": {ID: "gt-b", Type: "task", Rig: "beads"},
+		"ms-a": {ID: "ms-a", Type: "task", Rig: "mineshaft"},
+		"ms-b": {ID: "ms-b", Type: "task", Rig: "beads"},
 	}}
 
 	err := checkBlockedRigsForLaunch(dag, townRoot, false)
@@ -52,8 +52,8 @@ func TestCheckBlockedRigsForLaunch_ParkedRig_BlocksWithoutForce(t *testing.T) {
 	}
 
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-a": {ID: "gt-a", Type: "task", Rig: rigName},
-		"gt-b": {ID: "gt-b", Type: "task", Rig: "mineshaft"},
+		"ms-a": {ID: "ms-a", Type: "task", Rig: rigName},
+		"ms-b": {ID: "ms-b", Type: "task", Rig: "mineshaft"},
 	}}
 
 	err := checkBlockedRigsForLaunch(dag, townRoot, false)
@@ -92,8 +92,8 @@ func TestCheckBlockedRigsForLaunch_ParkedRig_AllowedWithForce(t *testing.T) {
 	}
 
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-a": {ID: "gt-a", Type: "task", Rig: rigName},
-		"gt-b": {ID: "gt-b", Type: "task", Rig: "mineshaft"},
+		"ms-a": {ID: "ms-a", Type: "task", Rig: rigName},
+		"ms-b": {ID: "ms-b", Type: "task", Rig: "mineshaft"},
 	}}
 
 	err := checkBlockedRigsForLaunch(dag, townRoot, true)
@@ -126,9 +126,9 @@ func TestCollectBlockedRigsInDAG(t *testing.T) {
 	}
 
 	dag := &MinecartDAG{Nodes: map[string]*MinecartDAGNode{
-		"gt-a":   {ID: "gt-a", Type: "task", Rig: parkedRig},
-		"gt-b":   {ID: "gt-b", Type: "task", Rig: parkedRig},
-		"gt-c":   {ID: "gt-c", Type: "task", Rig: "activerig"},
+		"ms-a":   {ID: "ms-a", Type: "task", Rig: parkedRig},
+		"ms-b":   {ID: "ms-b", Type: "task", Rig: parkedRig},
+		"ms-c":   {ID: "ms-c", Type: "task", Rig: "activerig"},
 		"epic-1": {ID: "epic-1", Type: "epic", Rig: parkedRig}, // epics should be ignored
 	}}
 

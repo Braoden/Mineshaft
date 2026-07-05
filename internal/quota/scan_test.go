@@ -14,7 +14,7 @@ import (
 func setupTestRegistry(t *testing.T) {
 	t.Helper()
 	r := session.NewPrefixRegistry()
-	r.Register("gt", "mineshaft")
+	r.Register("ms", "mineshaft")
 	r.Register("bd", "beads")
 	old := session.DefaultRegistry()
 	session.SetDefaultRegistry(r)
@@ -78,22 +78,22 @@ func TestScanAll_DetectsRateLimited(t *testing.T) {
 	setupTestRegistry(t)
 
 	tmux := &mockTmux{
-		sessions: []string{"hq-overseer", "gt-crew-bear", "gt-witness", "some-other"},
+		sessions: []string{"hq-overseer", "ms-crew-bear", "ms-witness", "some-other"},
 		paneContent: map[string]string{
 			"hq-overseer": `❯ /rate-limit-options
   ⎿  You've hit your limit · resets 7pm (America/Los_Angeles)
 
 ❯ 📬 You have new mail from laser/witness.`,
-			"gt-crew-bear": `⏺ Working on implementing quota scan...
+			"ms-crew-bear": `⏺ Working on implementing quota scan...
   Bash: go test ./internal/quota/...
   All tests passed.`,
-			"gt-witness": `You've hit your limit · resets 9pm (America/Los_Angeles)`,
+			"ms-witness": `You've hit your limit · resets 9pm (America/Los_Angeles)`,
 			"some-other": `This is not a mineshaft session content`,
 		},
 		envVars: map[string]map[string]string{
 			"hq-overseer":     {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/work"},
-			"gt-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/personal"},
-			"gt-witness":   {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/work"},
+			"ms-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/personal"},
+			"ms-witness":   {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/work"},
 		},
 	}
 
@@ -114,7 +114,7 @@ func TestScanAll_DetectsRateLimited(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Should scan: hq-overseer, gt-crew-bear, gt-witness (known prefixes)
+	// Should scan: hq-overseer, ms-crew-bear, ms-witness (known prefixes)
 	// "some-other" is skipped — not a registered prefix
 	if len(results) != 3 {
 		t.Fatalf("expected 3 results, got %d", len(results))
@@ -138,19 +138,19 @@ func TestScanAll_DetectsRateLimited(t *testing.T) {
 		t.Errorf("expected resets at '7pm (America/Los_Angeles)', got %q", overseer.ResetsAt)
 	}
 
-	// gt-crew-bear should NOT be rate-limited
-	crew := resultMap["gt-crew-bear"]
+	// ms-crew-bear should NOT be rate-limited
+	crew := resultMap["ms-crew-bear"]
 	if crew.RateLimited {
-		t.Error("expected gt-crew-bear to NOT be rate-limited")
+		t.Error("expected ms-crew-bear to NOT be rate-limited")
 	}
 	if crew.AccountHandle != "personal" {
-		t.Errorf("expected gt-crew-bear account 'personal', got %q", crew.AccountHandle)
+		t.Errorf("expected ms-crew-bear account 'personal', got %q", crew.AccountHandle)
 	}
 
-	// gt-witness should be rate-limited
-	witness := resultMap["gt-witness"]
+	// ms-witness should be rate-limited
+	witness := resultMap["ms-witness"]
 	if !witness.RateLimited {
-		t.Error("expected gt-witness to be rate-limited")
+		t.Error("expected ms-witness to be rate-limited")
 	}
 	if witness.ResetsAt != "9pm (America/Los_Angeles)" {
 		t.Errorf("expected resets at '9pm (America/Los_Angeles)', got %q", witness.ResetsAt)
@@ -179,7 +179,7 @@ func TestScanAll_SkipsNonMineshaftSessions(t *testing.T) {
 	}
 	// "myapp" and "devserver" have no dashes and no hq- prefix → skipped
 	if len(results) != 0 {
-		t.Errorf("expected 0 results for non-GT sessions, got %d", len(results))
+		t.Errorf("expected 0 results for non-MS sessions, got %d", len(results))
 	}
 }
 
@@ -203,12 +203,12 @@ What do you want to do?
 Enter to confirm · Esc to cancel`
 
 	tmux := &mockTmux{
-		sessions: []string{"gt-crew-bear"},
+		sessions: []string{"ms-crew-bear"},
 		paneContent: map[string]string{
-			"gt-crew-bear": tuiPromptContent,
+			"ms-crew-bear": tuiPromptContent,
 		},
 		envVars: map[string]map[string]string{
-			"gt-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/work"},
+			"ms-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/work"},
 		},
 	}
 
@@ -254,12 +254,12 @@ func TestScanAll_DetectsAPIError429(t *testing.T) {
 ❯ `
 
 	tmux := &mockTmux{
-		sessions: []string{"gt-crew-bear"},
+		sessions: []string{"ms-crew-bear"},
 		paneContent: map[string]string{
-			"gt-crew-bear": apiErrorContent,
+			"ms-crew-bear": apiErrorContent,
 		},
 		envVars: map[string]map[string]string{
-			"gt-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/work"},
+			"ms-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/work"},
 		},
 	}
 
@@ -291,9 +291,9 @@ func TestScanAll_CustomPatterns(t *testing.T) {
 	setupTestRegistry(t)
 
 	tmux := &mockTmux{
-		sessions: []string{"gt-crew-test"},
+		sessions: []string{"ms-crew-test"},
 		paneContent: map[string]string{
-			"gt-crew-test": "CUSTOM_RATE_LIMIT_DETECTED",
+			"ms-crew-test": "CUSTOM_RATE_LIMIT_DETECTED",
 		},
 	}
 
@@ -319,7 +319,7 @@ func TestScanAll_CaptureError(t *testing.T) {
 	setupTestRegistry(t)
 
 	tmux := &mockTmux{
-		sessions:    []string{"gt-crew-dead"},
+		sessions:    []string{"ms-crew-dead"},
 		paneContent: map[string]string{}, // no content = error
 	}
 
@@ -386,8 +386,8 @@ func TestIsMineshaftSession(t *testing.T) {
 		{"hq-overseer", true},
 		{"hq-supervisor", true},
 		{"hq-boss", true},
-		{"gt-crew-bear", true},
-		{"gt-witness", true},
+		{"ms-crew-bear", true},
+		{"ms-witness", true},
 		{"bd-refinery", true},
 		{"my-app", false},       // has dash but not a known prefix
 		{"dev-server", false},   // has dash but not a known prefix
@@ -414,12 +414,12 @@ func TestResolveAccountHandle_TildeExpansion(t *testing.T) {
 	setupTestRegistry(t)
 
 	tmux := &mockTmux{
-		sessions: []string{"gt-crew-test"},
+		sessions: []string{"ms-crew-test"},
 		paneContent: map[string]string{
-			"gt-crew-test": "working...",
+			"ms-crew-test": "working...",
 		},
 		envVars: map[string]map[string]string{
-			"gt-crew-test": {"CLAUDE_CONFIG_DIR": util.ExpandHome("~/.claude-accounts/work")},
+			"ms-crew-test": {"CLAUDE_CONFIG_DIR": util.ExpandHome("~/.claude-accounts/work")},
 		},
 	}
 
@@ -471,14 +471,14 @@ func TestScanAll_DetectsNearLimit_WarningPatterns(t *testing.T) {
 	setupTestRegistry(t)
 
 	tmux := &mockTmux{
-		sessions: []string{"gt-crew-bear", "gt-crew-wolf"},
+		sessions: []string{"ms-crew-bear", "ms-crew-wolf"},
 		paneContent: map[string]string{
-			"gt-crew-bear": "Working normally...\n85% of your daily usage consumed",
-			"gt-crew-wolf": "Working normally...",
+			"ms-crew-bear": "Working normally...\n85% of your daily usage consumed",
+			"ms-crew-wolf": "Working normally...",
 		},
 		envVars: map[string]map[string]string{
-			"gt-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/work"},
-			"gt-crew-wolf": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/personal"},
+			"ms-crew-bear": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/work"},
+			"ms-crew-wolf": {"CLAUDE_CONFIG_DIR": "/home/user/.claude-accounts/personal"},
 		},
 	}
 
@@ -508,21 +508,21 @@ func TestScanAll_DetectsNearLimit_WarningPatterns(t *testing.T) {
 	}
 
 	// bear should be near-limit (not hard-limited)
-	bear := resultMap["gt-crew-bear"]
+	bear := resultMap["ms-crew-bear"]
 	if bear.RateLimited {
-		t.Error("expected gt-crew-bear to NOT be hard rate-limited")
+		t.Error("expected ms-crew-bear to NOT be hard rate-limited")
 	}
 	if !bear.NearLimit {
-		t.Error("expected gt-crew-bear to be near-limit")
+		t.Error("expected ms-crew-bear to be near-limit")
 	}
 	if bear.MatchedLine == "" {
 		t.Error("expected matched line for near-limit detection")
 	}
 
 	// wolf should be fine
-	wolf := resultMap["gt-crew-wolf"]
+	wolf := resultMap["ms-crew-wolf"]
 	if wolf.RateLimited || wolf.NearLimit {
-		t.Error("expected gt-crew-wolf to have no limit signals")
+		t.Error("expected ms-crew-wolf to have no limit signals")
 	}
 }
 
@@ -532,9 +532,9 @@ func TestScanAll_HardLimitTakesPrecedence(t *testing.T) {
 	// Session has both hard-limit and near-limit patterns.
 	// Hard limit should take precedence (NearLimit stays false).
 	tmux := &mockTmux{
-		sessions: []string{"gt-crew-bear"},
+		sessions: []string{"ms-crew-bear"},
 		paneContent: map[string]string{
-			"gt-crew-bear": "85% of your daily usage consumed\nYou've hit your limit · resets 7pm (America/Los_Angeles)",
+			"ms-crew-bear": "85% of your daily usage consumed\nYou've hit your limit · resets 7pm (America/Los_Angeles)",
 		},
 	}
 
@@ -585,9 +585,9 @@ func TestScanAll_NearLimitVariousPatterns(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tmux := &mockTmux{
-				sessions: []string{"gt-crew-test"},
+				sessions: []string{"ms-crew-test"},
 				paneContent: map[string]string{
-					"gt-crew-test": tt.content,
+					"ms-crew-test": tt.content,
 				},
 			}
 

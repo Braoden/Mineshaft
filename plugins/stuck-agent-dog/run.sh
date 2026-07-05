@@ -8,9 +8,9 @@ set -euo pipefail
 
 log() { echo "[stuck-agent-dog] $*"; }
 
-TOWN_ROOT="${GT_TOWN_ROOT:-}"
+TOWN_ROOT="${MS_TOWN_ROOT:-}"
 if [ -z "$TOWN_ROOT" ]; then
-  if ! TOWN_ROOT=$(gt town root 2>/dev/null); then
+  if ! TOWN_ROOT=$(ms town root 2>/dev/null); then
     log "SKIP: could not resolve town root"
     exit 0
   fi
@@ -31,11 +31,11 @@ integer_or_default() {
   esac
 }
 
-MINER_MAX_INACTIVITY="${GT_STUCK_AGENT_DOG_MAX_INACTIVITY:-0s}"
+MINER_MAX_INACTIVITY="${MS_STUCK_AGENT_DOG_MAX_INACTIVITY:-0s}"
 [ "$MINER_MAX_INACTIVITY" = "0" ] && MINER_MAX_INACTIVITY="0s"
-SUPERVISOR_STALE_SECONDS=$(integer_or_default "${GT_STUCK_AGENT_DOG_SUPERVISOR_STALE_SECONDS:-}" 1200)
-ACTIVITY_GRACE_SECONDS=$(integer_or_default "${GT_STUCK_AGENT_DOG_ACTIVITY_GRACE_SECONDS:-}" "$SUPERVISOR_STALE_SECONDS")
-MASS_DEATH_THRESHOLD=$(integer_or_default "${GT_STUCK_AGENT_DOG_MASS_DEATH_THRESHOLD:-}" 3)
+SUPERVISOR_STALE_SECONDS=$(integer_or_default "${MS_STUCK_AGENT_DOG_SUPERVISOR_STALE_SECONDS:-}" 1200)
+ACTIVITY_GRACE_SECONDS=$(integer_or_default "${MS_STUCK_AGENT_DOG_ACTIVITY_GRACE_SECONDS:-}" "$SUPERVISOR_STALE_SECONDS")
+MASS_DEATH_THRESHOLD=$(integer_or_default "${MS_STUCK_AGENT_DOG_MASS_DEATH_THRESHOLD:-}" 3)
 
 heartbeat_epoch() {
   local file="$1"
@@ -106,7 +106,7 @@ rig_hook_bead() {
     return 0
   fi
 
-  ( cd "$dir" 2>/dev/null && gt hook show "$rig/miners/$pcat" --json 2>/dev/null ) \
+  ( cd "$dir" 2>/dev/null && ms hook show "$rig/miners/$pcat" --json 2>/dev/null ) \
     | jq -r '.bead_id // empty' 2>/dev/null || true
 }
 
@@ -141,7 +141,7 @@ session_health_status() {
   local health_json=""
   local status=""
 
-  health_json=$(gt session health "$session_name" --json --max-inactivity "$MINER_MAX_INACTIVITY" 2>/dev/null) || return 1
+  health_json=$(ms session health "$session_name" --json --max-inactivity "$MINER_MAX_INACTIVITY" 2>/dev/null) || return 1
   status=$(printf '%s' "$health_json" | jq -r '.status // empty' 2>/dev/null || true)
   [ -n "$status" ] || return 1
   printf '%s\n' "$status"
@@ -289,7 +289,7 @@ if [ "$TOTAL_ISSUES" -ge "$MASS_DEATH_THRESHOLD" ]; then
   MASS_DEATH=1
   log ""
   log "MASS DEATH: $TOTAL_ISSUES agents down — escalating instead of restarting"
-  gt escalate "Mass agent death: $TOTAL_ISSUES agents down" \
+  ms escalate "Mass agent death: $TOTAL_ISSUES agents down" \
     -s CRITICAL 2>/dev/null || true
 fi
 
@@ -305,7 +305,7 @@ else
   for ENTRY in ${CRASHED[@]+"${CRASHED[@]}"}; do
     IFS='|' read -r SESSION RIG PCAT HOOK <<< "$ENTRY"
     log "Requesting restart for $RIG/miners/$PCAT (hook=$HOOK)"
-    gt mail send "$RIG/witness" -s "RESTART_MINER: $RIG/$PCAT" --stdin <<BODY || log "  WARN: restart mail failed for $RIG/$PCAT"
+    ms mail send "$RIG/witness" -s "RESTART_MINER: $RIG/$PCAT" --stdin <<BODY || log "  WARN: restart mail failed for $RIG/$PCAT"
 Miner $PCAT crash confirmed by stuck-agent-dog plugin.
 hook_bead: $HOOK
 action: restart requested
@@ -317,7 +317,7 @@ BODY
     IFS='|' read -r SESSION RIG PCAT HOOK REASON <<< "$ENTRY"
     log "Killing zombie session $SESSION and requesting restart"
     tmux kill-session -t "$SESSION" 2>/dev/null || true
-    gt mail send "$RIG/witness" -s "RESTART_MINER: $RIG/$PCAT (zombie cleared)" --stdin <<BODY || log "  WARN: restart mail failed for $RIG/$PCAT"
+    ms mail send "$RIG/witness" -s "RESTART_MINER: $RIG/$PCAT (zombie cleared)" --stdin <<BODY || log "  WARN: restart mail failed for $RIG/$PCAT"
 Miner $PCAT zombie session cleared by stuck-agent-dog plugin.
 hook_bead: $HOOK
 reason: $REASON
@@ -337,7 +337,7 @@ if [ -n "$SUPERVISOR_ISSUE" ]; then
 			SUPERVISOR_FINGERPRINT="stuck-agent-dog:supervisor:stuck-heartbeat"
 			;;
 	esac
-	gt escalate "Supervisor $SUPERVISOR_ISSUE detected by stuck-agent-dog" \
+	ms escalate "Supervisor $SUPERVISOR_ISSUE detected by stuck-agent-dog" \
 		-s "$SUPERVISOR_SEVERITY" \
 		--source "plugin:stuck-agent-dog" \
 		--fingerprint "$SUPERVISOR_FINGERPRINT" 2>/dev/null || true
@@ -351,5 +351,5 @@ SUMMARY="Agent health: ${#CRASHED[@]} crashed, ${#STUCK[@]} stuck, $HEALTHY heal
 log ""
 log "=== $SUMMARY ==="
 
-gt plugin record-run --plugin stuck-agent-dog --result success \
+ms plugin record-run --plugin stuck-agent-dog --result success \
   --title "stuck-agent-dog: $SUMMARY" --description "$SUMMARY" >/dev/null 2>&1 || true

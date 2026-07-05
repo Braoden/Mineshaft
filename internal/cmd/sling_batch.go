@@ -33,7 +33,7 @@ func runBatchSling(beadIDs []string, rigName string, townBeadsDir string) error 
 		}
 	}
 
-	// Cross-rig guard: check all beads match the target rig before spawning (gt-myecw)
+	// Cross-rig guard: check all beads match the target rig before spawning (ms-myecw)
 	if !slingForce {
 		for _, beadID := range beadIDs {
 			prefix := beads.ExtractPrefix(beadID)
@@ -53,11 +53,11 @@ func runBatchSling(beadIDs []string, rigName string, townBeadsDir string) error 
 				return fmt.Errorf("bead %s (prefix %q) belongs to rig %q, but target is %q\n\n"+
 					"  Options:\n"+
 					"    1. Remove the mismatched bead from this batch:\n"+
-					"         gt sling %s\n"+
+					"         ms sling %s\n"+
 					"    2. Sling the mismatched bead to its own rig:\n"+
-					"         gt sling %s %s\n"+
+					"         ms sling %s %s\n"+
 					"    3. Use --force to override the cross-rig guard:\n"+
-					"         gt sling %s --force\n",
+					"         ms sling %s --force\n",
 					beadID, strings.TrimSuffix(prefix, "-"), beadRig, rigName,
 					strings.Join(others, " "),
 					beadID, beadRig,
@@ -292,7 +292,7 @@ func resolveRigFromBeadIDs(beadIDs []string, townRoot string) (string, error) {
 			return "", fmt.Errorf("cannot resolve rig for %s: no valid prefix\n\n"+
 				"  Options:\n"+
 				"    1. Specify the rig explicitly:\n"+
-				"         gt sling %s <rig>\n"+
+				"         ms sling %s <rig>\n"+
 				"    2. Check the bead ID is correct:\n"+
 				"         bd show %s\n",
 				beadID, strings.Join(beadIDs, " "), beadID)
@@ -304,7 +304,7 @@ func resolveRigFromBeadIDs(beadIDs []string, townRoot string) (string, error) {
 				"  The prefix may belong to a town-level bead or the routes are not configured.\n\n"+
 				"  Options:\n"+
 				"    1. Specify the rig explicitly:\n"+
-				"         gt sling %s <rig>\n"+
+				"         ms sling %s <rig>\n"+
 				"    2. Check the bead's route mapping:\n"+
 				"         cat .beads/routes.jsonl | grep %s\n"+
 				"    3. Create the bead from the target rig directory instead:\n"+
@@ -322,10 +322,10 @@ func resolveRigFromBeadIDs(beadIDs []string, townRoot string) (string, error) {
 				"  All beads in a batch sling must target the same rig.\n\n"+
 				"  Options:\n"+
 				"    1. Sling each rig's beads separately:\n"+
-				"         gt sling <bead1> <bead2> ...   (beads for %s)\n"+
-				"         gt sling <bead3> <bead4> ...   (beads for %s)\n"+
+				"         ms sling <bead1> <bead2> ...   (beads for %s)\n"+
+				"         ms sling <bead3> <bead4> ...   (beads for %s)\n"+
 				"    2. Specify the target rig explicitly:\n"+
-				"         gt sling %s <rig>\n",
+				"         ms sling %s <rig>\n",
 				strings.Join(mismatches, "\n"),
 				resolvedRig, rigName,
 				strings.Join(beadIDs, " "))
@@ -351,7 +351,7 @@ func getRepoGitForRig(rigPath string) *git.Git {
 
 // deleteMinerBranch deletes a local git branch for a miner.
 // Remote branch is never deleted during nuke — the refinery owns remote
-// branch cleanup after successful merge (gt mq post-merge). (gt-v5ku)
+// branch cleanup after successful merge (ms mq post-merge). (ms-v5ku)
 func deleteMinerBranch(branchName string, repoGit *git.Git, hasPendingMR bool) {
 	_ = hasPendingMR // preserved for API compat, no longer consulted
 	if err := repoGit.DeleteBranch(branchName, true); err != nil {

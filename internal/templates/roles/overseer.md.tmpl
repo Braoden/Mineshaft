@@ -175,12 +175,12 @@ Routes defined in `{{ .TownRoot }}/.beads/routes.jsonl`. `{{ cmd }} rig add` aut
 | Issue is about... | File in | Command |
 |-------------------|---------|---------|
 | `bd` CLI (beads tool) | **beads** | `bd create --repo beads "..."` |
-| `gt` CLI (mineshaft tool) | **mineshaft** | `bd create --repo mineshaft "..."` |
+| `ms` CLI (mineshaft tool) | **mineshaft** | `bd create --repo mineshaft "..."` |
 | Miner/witness/refinery/minecart code | **mineshaft** | `bd create --repo mineshaft "..."` |
 | Wyvern game features | **wyvern** | `bd create --repo wyvern "..."` |
 | Cross-rig coordination, minecarts, mail | **HQ** | `bd create "..."` (default) |
 
-**IMPORTANT:** Issues are created with `bd create`, not `gt` commands.
+**IMPORTANT:** Issues are created with `bd create`, not `ms` commands.
 
 **The test**: "Which repo would the fix be committed to?"
 - Fix in `anthropics/beads` → file in beads rig
@@ -213,7 +213,7 @@ Routes defined in `{{ .TownRoot }}/.beads/routes.jsonl`. `{{ cmd }} rig add` aut
 - `{{ cmd }} mail send <addr> -s "Subject" -m "Message"` — Send mail
 - `{{ cmd }} mail mark-read <id>` — Mark message as read
 - `{{ cmd }} nudge <target> "message"` — Send message to agent session (default: wait-idle)
-  **ALWAYS use gt nudge, NEVER tmux send-keys**
+  **ALWAYS use ms nudge, NEVER tmux send-keys**
   Use `--mode=immediate` only for stuck agents. Default waits for idle, falls back to queue.
 
 ### Status & Coordination
@@ -227,7 +227,7 @@ Routes defined in `{{ .TownRoot }}/.beads/routes.jsonl`. `{{ cmd }} rig add` aut
 ### Work Dispatch
 
 ```bash
-gt sling <bead-id> <rig>        # Spawns miner, hooks work, starts session
+ms sling <bead-id> <rig>        # Spawns miner, hooks work, starts session
 ```
 
 This is THE command for dispatching work. **There is NO `{{ cmd }} miner spawn` command.**
@@ -247,10 +247,10 @@ This is THE command for dispatching work. **There is NO `{{ cmd }} miner spawn` 
 > **The Universal Mineshaft Propulsion Principle: If you find something on your hook, YOU RUN IT.**
 
 ```bash
-gt hook                          # Step 1: Check your hook
+ms hook                          # Step 1: Check your hook
 # Work hooked? → RUN IT. Hook empty? ↓
-gt mail inbox                    # Step 2: Check mail
-gt mol attach-from-mail <mail-id> # Hook attached work
+ms mail inbox                    # Step 2: Check mail
+ms mol attach-from-mail <mail-id> # Hook attached work
 # Still nothing? → Wait for user instructions
 ```
 
@@ -276,7 +276,7 @@ content, interpret the prose instructions, and execute them.
 [ ] git commit -m "..."     (commit code — ONLY after user approves)
 [ ] git push                (push to remote — ONLY after user approves)
 [ ] HANDOFF (if incomplete work):
-    gt mail send overseer/ -s "🤝 HANDOFF: <brief>" -m "<context>"
+    ms mail send overseer/ -s "🤝 HANDOFF: <brief>" -m "<context>"
 ```
 
 Note: Beads changes are persisted immediately to Dolt — no sync step needed.
@@ -324,12 +324,12 @@ gh pr create --repo $(git remote get-url origin | sed 's/.*github.com[:/]\(.*\)\
 | Want to... | Correct command | Common mistake |
 |------------|----------------|----------------|
 | Close/complete a bead | `bd close <id>` | ~~bd complete~~ (not a command), ~~bd update --status done~~ (invalid status) |
-| Dispatch work to miner | `{{ cmd }} sling <bead> <rig>` | ~~gt miner spawn~~ (not a command) |
+| Dispatch work to miner | `{{ cmd }} sling <bead> <rig>` | ~~ms miner spawn~~ (not a command) |
 | Message another agent | `{{ cmd }} nudge <target> "msg"` | ~~tmux send-keys~~ (unreliable) |
-| Kill stuck miner | `{{ cmd }} miner nuke <rig>/<name> --force` | ~~gt miner kill~~ (not a command) |
-| Pause rig (daemon won't restart) | `{{ cmd }} rig park <rig>` | ~~gt rig stop~~ (daemon will restart it) |
-| Permanently disable rig | `{{ cmd }} rig dock <rig>` | ~~gt rig park~~ (temporary only) |
-| Create issues | `bd create "title"` | ~~gt issue create~~ (not a command) |
+| Kill stuck miner | `{{ cmd }} miner nuke <rig>/<name> --force` | ~~ms miner kill~~ (not a command) |
+| Pause rig (daemon won't restart) | `{{ cmd }} rig park <rig>` | ~~ms rig stop~~ (daemon will restart it) |
+| Permanently disable rig | `{{ cmd }} rig dock <rig>` | ~~ms rig park~~ (temporary only) |
+| Create issues | `bd create "title"` | ~~ms issue create~~ (not a command) |
 
 **Beads valid statuses:** `open`, `in_progress`, `blocked`, `deferred`, `closed`, `pinned`, `hooked`
 (there is NO `done` or `complete` status)

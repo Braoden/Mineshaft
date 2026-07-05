@@ -1,9 +1,9 @@
 // Package channelevents provides file-based event emission for named channels.
 //
-// Channel events are JSON files written to ~/gt/events/<channel>/*.event
+// Channel events are JSON files written to ~/ms/events/<channel>/*.event
 // and consumed by await-event subscribers (e.g., the refinery watching for
 // MERGE_READY events). This is distinct from the activity feed events in
-// the events package (~/gt/.events.jsonl).
+// the events package (~/ms/.events.jsonl).
 package channelevents
 
 import (
@@ -36,7 +36,7 @@ func Emit(channel, eventType string, payloadPairs []string) (string, error) {
 	townRoot, err := workspace.FindFromCwd()
 	if err != nil || townRoot == "" {
 		home, _ := os.UserHomeDir()
-		townRoot = filepath.Join(home, "gt")
+		townRoot = filepath.Join(home, "ms")
 	}
 	eventDir := filepath.Join(townRoot, "events", channel)
 	if err := os.MkdirAll(eventDir, 0755); err != nil {

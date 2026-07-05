@@ -154,7 +154,7 @@ func cleanBeadsRuntimeFiles(beadsDir string) error {
 // Both SetupRedirect and doctor checks should use this to stay in sync.
 //
 // Parameters:
-//   - townRoot: the town root directory (e.g., ~/gt)
+//   - townRoot: the town root directory (e.g., ~/ms)
 //   - worktreePath: the worktree directory (e.g., <rig>/crew/<name> or <rig>/refinery/rig)
 //
 // Returns the redirect target path (e.g., "../../.beads" or "../../overseer/rig/.beads"),
@@ -316,7 +316,7 @@ func directRigRedirectTarget(upPath, rigRedirectPath string) (string, bool) {
 // This is used by crew, miners, and refinery worktrees to share the rig's beads database.
 //
 // Parameters:
-//   - townRoot: the town root directory (e.g., ~/gt)
+//   - townRoot: the town root directory (e.g., ~/ms)
 //   - worktreePath: the worktree directory (e.g., <rig>/crew/<name> or <rig>/refinery/rig)
 //
 // The function:

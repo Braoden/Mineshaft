@@ -38,7 +38,7 @@ var (
 	bdAllowStalePath   string
 	bdAllowStaleResult bool
 	// bdAllowStaleProbeTimeout bounds the capability probe so a wedged bd
-	// binary cannot hang higher-level commands such as gt status.
+	// binary cannot hang higher-level commands such as ms status.
 	bdAllowStaleProbeTimeout = 2 * time.Second
 )
 
@@ -254,9 +254,9 @@ func HasUncheckedCriteria(issue *Issue) int {
 	return count
 }
 
-// IsAgentBead checks if an issue is an agent bead by checking for the gt:agent
+// IsAgentBead checks if an issue is an agent bead by checking for the ms:agent
 // label (preferred) or the legacy type == "agent" field. This handles the migration
-// from type-based to label-based agent identification (see gt-vja7b).
+// from type-based to label-based agent identification (see ms-vja7b).
 func IsAgentBead(issue *Issue) bool {
 	if issue == nil {
 		return false
@@ -265,20 +265,20 @@ func IsAgentBead(issue *Issue) bool {
 	if issue.Type == "agent" {
 		return true
 	}
-	// Check for gt:agent label (current standard)
-	return HasLabel(issue, "gt:agent")
+	// Check for ms:agent label (current standard)
+	return HasLabel(issue, "ms:agent")
 }
 
 // IsProtectedBead checks if a bead has any protection labels that should
 // prevent automated status changes (AutoClose, unassign on miner removal, etc.).
-// Protected labels: gt:standing-orders, gt:keep, gt:role, gt:rig.
+// Protected labels: ms:standing-orders, ms:keep, ms:role, ms:rig.
 func IsProtectedBead(issue *Issue) bool {
 	if issue == nil {
 		return false
 	}
 	for _, l := range issue.Labels {
 		switch l {
-		case "gt:standing-orders", "gt:keep", "gt:role", "gt:rig":
+		case "ms:standing-orders", "ms:keep", "ms:role", "ms:rig":
 			return true
 		}
 	}
@@ -390,8 +390,8 @@ func isResolvedDependency(dep IssueDep) bool {
 // ListOptions specifies filters for listing issues.
 type ListOptions struct {
 	Status     string // "open", "closed", "all"
-	Type       string // Deprecated: use Label instead. Was "task", "bug", "feature", "epic"; converted to "gt:" prefix.
-	Label      string // Label filter (e.g., "gt:agent", "gt:merge-request")
+	Type       string // Deprecated: use Label instead. Was "task", "bug", "feature", "epic"; converted to "ms:" prefix.
+	Label      string // Label filter (e.g., "ms:agent", "ms:merge-request")
 	Priority   int    // 0-4, -1 for no filter
 	Parent     string // filter by parent ID
 	Assignee   string // filter by assignee (e.g., "mineshaft/Toast")
@@ -406,7 +406,7 @@ type CreateOptions struct {
 	Title       string
 	Type        string   // Deprecated: use Labels instead. Was "task", "bug", "feature", "epic".
 	Label       string   // Deprecated: use Labels instead. Backward-compatible single-label form.
-	Labels      []string // Labels to set (e.g., "gt:task", "gt:merge-request")
+	Labels      []string // Labels to set (e.g., "ms:task", "ms:merge-request")
 	Priority    int      // 0-4
 	Description string
 	Parent      string
@@ -435,7 +435,7 @@ type Beads struct {
 	workDir    string
 	beadsDir   string // Optional BEADS_DIR override for cross-database access
 	isolated   bool   // If true, suppress inherited beads env vars (for test isolation)
-	serverPort int    // If set, pass --server-port to bd init and GT_DOLT_PORT to env
+	serverPort int    // If set, pass --server-port to bd init and MS_DOLT_PORT to env
 
 	// store is an optional in-process beadsdk.Storage. When set, methods
 	// bypass the bd subprocess and use the store directly. Follows the
@@ -449,7 +449,7 @@ type Beads struct {
 	townRootOnce sync.Once
 
 	// noRoute disables prefix-based routing for this Beads instance.
-	// Used for agent-bead operations: agent beads (gt:agent label) live in
+	// Used for agent-bead operations: agent beads (ms:agent label) live in
 	// the town database regardless of their ID prefix, so prefix routing
 	// (which assumes "za-*" → zack DB) misroutes them. When set, Show()
 	// and forIssueID() skip ResolveRoutingTarget and operate against
@@ -471,7 +471,7 @@ func NewIsolated(workDir string) *Beads {
 
 // NewIsolatedWithPort creates a Beads wrapper for test isolation that targets
 // a specific Dolt server port. Init() passes --server-port to bd init, and all
-// commands get GT_DOLT_PORT in their environment. This prevents tests from
+// commands get MS_DOLT_PORT in their environment. This prevents tests from
 // creating databases on the production Dolt server (port 3307).
 func NewIsolatedWithPort(workDir string, serverPort int) *Beads {
 	return &Beads{workDir: workDir, isolated: true, serverPort: serverPort}
@@ -485,12 +485,12 @@ func NewWithBeadsDir(workDir, beadsDir string) *Beads {
 
 // ForAgentBead returns a Beads wrapper suitable for operating on agent beads.
 //
-// Agent beads (labeled gt:agent) live in the TOWN database, but their IDs
+// Agent beads (labeled ms:agent) live in the TOWN database, but their IDs
 // are prefixed with the rig prefix (e.g. "za-zack-miner-furiosa"). The
 // default prefix routing in routes.jsonl maps "za-" → zack rig database, so
 // any agent-bead operation issued from a rig context (or any context that
 // triggers routing) gets sent to the wrong DB and fails with "issue not
-// found". This silently breaks gt done's hook clearing, agent state
+// found". This silently breaks ms done's hook clearing, agent state
 // transition, completion metadata, etc.
 //
 // ForAgentBead bypasses that:
@@ -630,14 +630,14 @@ func (b *Beads) Init(prefix string) error {
 // Jetsam may SIGKILL the orphaned bd process before it ever returns.
 // 60s is large enough to cover normal slow-path retries (Dolt MySQL client
 // retries up to 30s) but short enough to fail fast and surface to callers.
-// Override via GT_BD_TIMEOUT_SEC env var for testing or unusual workloads.
+// Override via MS_BD_TIMEOUT_SEC env var for testing or unusual workloads.
 // Investigation: dc-1pq8 (forensic report 2026-05-02).
 const bdSubprocessTimeout = 60 * time.Second
 
 // resolveBdSubprocessTimeout returns the configured timeout, honoring the
-// GT_BD_TIMEOUT_SEC env var override (must parse as a positive integer).
+// MS_BD_TIMEOUT_SEC env var override (must parse as a positive integer).
 func resolveBdSubprocessTimeout() time.Duration {
-	if v := os.Getenv("GT_BD_TIMEOUT_SEC"); v != "" {
+	if v := os.Getenv("MS_BD_TIMEOUT_SEC"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil && n > 0 {
 			return time.Duration(n) * time.Second
 		}
@@ -739,7 +739,7 @@ func (b *Beads) runWithStdin(stdinData []byte, args ...string) (_ []byte, retErr
 // runWithRouting executes a bd command without setting BEADS_DIR, allowing bd's
 // native prefix-based routing via routes.jsonl to resolve cross-prefix beads.
 // This is needed for slot operations that reference beads with different prefixes
-// (e.g., setting an hq-* hook bead on a gt-* agent bead).
+// (e.g., setting an hq-* hook bead on a ms-* agent bead).
 // See: sling_helpers.go verifyBeadExists/hookBeadWithRetry for the same pattern.
 func (b *Beads) runWithRouting(args ...string) (_ []byte, retErr error) { //nolint:unparam // mirrors run() signature for consistency
 	start := time.Now()
@@ -828,13 +828,13 @@ func isSubprocessCrash(err error) bool {
 // Otherwise: strips inherited BEADS_DIR so the caller can append the correct value.
 // Without this, getenv() returns the first occurrence, so an inherited BEADS_DIR
 // (e.g., from a parent process or shell context) would shadow the explicit value
-// appended by run(). This was the root cause of gt-uygpe / GH #803.
+// appended by run(). This was the root cause of ms-uygpe / GH #803.
 func (b *Beads) buildRunEnv() []string {
 	if b.isolated {
 		env := filterBeadsEnv(os.Environ())
 		if b.serverPort > 0 {
-			env = stripEnvPrefixes(env, "GT_DOLT_PORT=", "BEADS_DOLT_SERVER_PORT=", "BEADS_DOLT_PORT=", "BEADS_DOLT_AUTO_START=")
-			env = append(env, fmt.Sprintf("GT_DOLT_PORT=%d", b.serverPort))
+			env = stripEnvPrefixes(env, "MS_DOLT_PORT=", "BEADS_DOLT_SERVER_PORT=", "BEADS_DOLT_PORT=", "BEADS_DOLT_AUTO_START=")
+			env = append(env, fmt.Sprintf("MS_DOLT_PORT=%d", b.serverPort))
 			env = append(env, fmt.Sprintf("BEADS_DOLT_SERVER_PORT=%d", b.serverPort))
 			env = append(env, fmt.Sprintf("BEADS_DOLT_PORT=%d", b.serverPort))
 			env = append(env, "BEADS_DOLT_AUTO_START=0")
@@ -851,13 +851,13 @@ func (b *Beads) buildRunEnv() []string {
 
 // buildRoutingEnv builds the environment for runWithRouting() calls.
 // Always strips BEADS_DIR so bd uses native routing.
-// In isolated mode: also strips BD_ACTOR, BEADS_*, GT_ROOT, HOME.
+// In isolated mode: also strips BD_ACTOR, BEADS_*, MS_ROOT, HOME.
 func (b *Beads) buildRoutingEnv() []string {
 	if b.isolated {
 		env := filterBeadsEnv(os.Environ())
 		if b.serverPort > 0 {
-			env = stripEnvPrefixes(env, "GT_DOLT_PORT=", "BEADS_DOLT_SERVER_PORT=", "BEADS_DOLT_PORT=", "BEADS_DOLT_AUTO_START=")
-			env = append(env, fmt.Sprintf("GT_DOLT_PORT=%d", b.serverPort))
+			env = stripEnvPrefixes(env, "MS_DOLT_PORT=", "BEADS_DOLT_SERVER_PORT=", "BEADS_DOLT_PORT=", "BEADS_DOLT_AUTO_START=")
+			env = append(env, fmt.Sprintf("MS_DOLT_PORT=%d", b.serverPort))
 			env = append(env, fmt.Sprintf("BEADS_DOLT_SERVER_PORT=%d", b.serverPort))
 			env = append(env, fmt.Sprintf("BEADS_DOLT_PORT=%d", b.serverPort))
 			env = append(env, "BEADS_DOLT_AUTO_START=0")
@@ -869,9 +869,9 @@ func (b *Beads) buildRoutingEnv() []string {
 
 // filterBeadsEnv removes beads-related environment variables from the given
 // environment slice. This ensures test isolation by preventing inherited
-// BD_ACTOR, BEADS_DB, GT_ROOT, HOME etc. from routing commands to production databases.
+// BD_ACTOR, BEADS_DB, MS_ROOT, HOME etc. from routing commands to production databases.
 //
-// Preserves GT_DOLT host/port and Beads Dolt endpoint aliases so isolated-mode
+// Preserves MS_DOLT host/port and Beads Dolt endpoint aliases so isolated-mode
 // tests can reach a test Dolt server on a non-default port/host.
 func filterBeadsEnv(environ []string) []string {
 	filtered := make([]string, 0, len(environ))
@@ -883,8 +883,8 @@ func filterBeadsEnv(environ []string) []string {
 		}
 		// Preserve Dolt connection env vars needed to reach test/remote Dolt servers.
 		// These must be checked before the broad BEADS_ prefix strip below.
-		if envKeyMatches(keyName, "GT_DOLT_HOST") ||
-			envKeyMatches(keyName, "GT_DOLT_PORT") ||
+		if envKeyMatches(keyName, "MS_DOLT_HOST") ||
+			envKeyMatches(keyName, "MS_DOLT_PORT") ||
 			envKeyMatches(keyName, "BEADS_DOLT_PORT") ||
 			envKeyMatches(keyName, "BEADS_DOLT_SERVER_PORT") ||
 			envKeyMatches(keyName, "BEADS_DOLT_SERVER_HOST") ||
@@ -894,12 +894,12 @@ func filterBeadsEnv(environ []string) []string {
 		}
 		// Skip beads-related env vars that could interfere with test isolation
 		// BD_ACTOR, BEADS_* - direct beads config
-		// GT_ROOT - causes bd to find global routes file
+		// MS_ROOT - causes bd to find global routes file
 		// HOME - causes bd to find ~/.beads-planning routing
 		if envKeyMatches(keyName, "BD_ACTOR") ||
 			envKeyHasPrefix(keyName, "BEADS_") ||
-			envKeyMatches(keyName, "GT_DOLT_DATA") ||
-			envKeyMatches(keyName, "GT_ROOT") ||
+			envKeyMatches(keyName, "MS_DOLT_DATA") ||
+			envKeyMatches(keyName, "MS_ROOT") ||
 			envKeyMatches(keyName, "HOME") {
 			continue
 		}
@@ -966,7 +966,7 @@ func (b *Beads) List(opts ListOptions) ([]*Issue, error) {
 		args = append(args, "--label="+opts.Label)
 	} else if opts.Type != "" {
 		// Deprecated: convert type to label for backward compatibility
-		args = append(args, "--label=gt:"+opts.Type)
+		args = append(args, "--label=ms:"+opts.Type)
 	}
 	if opts.Priority >= 0 {
 		args = append(args, fmt.Sprintf("--priority=%d", opts.Priority))
@@ -1017,7 +1017,7 @@ func (b *Beads) listEphemeral(opts ListOptions) ([]*Issue, error) {
 	if opts.Label != "" {
 		clauses = append(clauses, "label="+quoteBDQueryValue(opts.Label))
 	} else if opts.Type != "" {
-		clauses = append(clauses, "label="+quoteBDQueryValue("gt:"+opts.Type))
+		clauses = append(clauses, "label="+quoteBDQueryValue("ms:"+opts.Type))
 	}
 	if opts.Status != "" && opts.Status != "all" {
 		clauses = append(clauses, "status="+quoteBDQueryValue(opts.Status))
@@ -1109,13 +1109,13 @@ func isJSONBytes(b []byte) bool {
 }
 
 // ListMergeRequests returns merge-request beads from both the issues table
-// and the wisps table. MRs are created as ephemeral (wisps) by gt mq submit,
+// and the wisps table. MRs are created as ephemeral (wisps) by ms mq submit,
 // but bd list only queries the issues table. This method queries the wisps
 // table via bd sql --json, then hydrates each MR with bd show detail so
 // dependency readiness fields are consistent for display and selection.
 func (b *Beads) ListMergeRequests(opts ListOptions) ([]*Issue, error) {
 	// 1. Query issues table (bd list) — don't use Ephemeral since bd query
-	// can't parse colons in label values like "gt:merge-request".
+	// can't parse colons in label values like "ms:merge-request".
 	opts.Ephemeral = false
 	issueResults, err := b.List(opts)
 	if err != nil {
@@ -1136,7 +1136,7 @@ func (b *Beads) ListMergeRequests(opts ListOptions) ([]*Issue, error) {
 		statusFilter = fmt.Sprintf("w.status = '%s'", strings.ReplaceAll(strings.ToLower(opts.Status), "'", "''"))
 	}
 
-	labelFilter := "l.label = 'gt:merge-request'"
+	labelFilter := "l.label = 'ms:merge-request'"
 	if opts.Label != "" {
 		labelFilter = fmt.Sprintf("l.label = '%s'", strings.ReplaceAll(opts.Label, "'", "''"))
 	}
@@ -1299,7 +1299,7 @@ func (b *Beads) ListByAssignee(assignee string) ([]*Issue, error) {
 // Returns nil if no matching issue is assigned.
 func (b *Beads) GetAssignedIssue(assignee string) (*Issue, error) {
 	// Check all active work statuses: open, in_progress, and hooked
-	// "hooked" status is set by gt sling when work is attached to an agent's hook
+	// "hooked" status is set by ms sling when work is attached to an agent's hook
 	for _, status := range []string{"open", "in_progress", StatusHooked} {
 		issues, err := b.List(ListOptions{
 			Status:   status,
@@ -1363,16 +1363,16 @@ func (b *Beads) ReadyForMol(moleculeID string) ([]*Issue, error) {
 
 // ReadyWithType returns ready issues filtered by label.
 // Uses bd ready --label flag for server-side filtering.
-// The issueType is converted to a gt:<type> label (e.g., "molecule" -> "gt:molecule").
+// The issueType is converted to a ms:<type> label (e.g., "molecule" -> "ms:molecule").
 func (b *Beads) ReadyWithType(issueType string) ([]*Issue, error) {
 	if b.store != nil {
 		return b.storeReadyWithFilter(beadsdk.WorkFilter{
-			Labels: []string{"gt:" + issueType},
+			Labels: []string{"ms:" + issueType},
 			Limit:  100,
 		})
 	}
 
-	out, err := b.run("ready", "--json", "--label", "gt:"+issueType, "-n", "100")
+	out, err := b.run("ready", "--json", "--label", "ms:"+issueType, "-n", "100")
 	if err != nil {
 		return nil, err
 	}
@@ -1388,7 +1388,7 @@ func (b *Beads) ReadyWithType(issueType string) ([]*Issue, error) {
 // Show returns detailed information about an issue.
 func (b *Beads) Show(id string) (*Issue, error) {
 	// Route cross-rig queries via routes.jsonl so that rig-level bead IDs
-	// (e.g., "gt-abc123") resolve to the correct rig database.
+	// (e.g., "ms-abc123") resolve to the correct rig database.
 	// noRoute (see ForAgentBead) bypasses this for agent-bead lookups.
 	if !b.noRoute {
 		targetDir := ResolveRoutingTarget(b.getTownRoot(), id, b.getResolvedBeadsDir())
@@ -1544,7 +1544,7 @@ func (b *Beads) Blocked() ([]*Issue, error) {
 // If opts.Actor is empty, it defaults to the BD_ACTOR environment variable.
 // This ensures created_by is populated for issue provenance tracking.
 func (b *Beads) Create(opts CreateOptions) (*Issue, error) {
-	// Guard against flag-like titles (gt-e0kx5: --help garbage beads)
+	// Guard against flag-like titles (ms-e0kx5: --help garbage beads)
 	if IsFlagLikeTitle(opts.Title) {
 		return nil, fmt.Errorf("refusing to create bead: %w (got %q)", ErrFlagTitle, opts.Title)
 	}
@@ -1578,7 +1578,7 @@ func (b *Beads) Create(opts CreateOptions) (*Issue, error) {
 	} else if opts.Label != "" {
 		args = append(args, "--labels="+opts.Label)
 	} else if opts.Type != "" {
-		args = append(args, "--labels=gt:"+opts.Type)
+		args = append(args, "--labels=ms:"+opts.Type)
 	}
 	if opts.Priority >= 0 {
 		args = append(args, fmt.Sprintf("--priority=%d", opts.Priority))
@@ -1619,7 +1619,7 @@ func (b *Beads) Create(opts CreateOptions) (*Issue, error) {
 // This is useful for agent beads, role beads, and other beads that need
 // deterministic IDs rather than auto-generated ones.
 func (b *Beads) CreateWithID(id string, opts CreateOptions) (*Issue, error) {
-	// Guard against flag-like titles (gt-e0kx5: --help garbage beads)
+	// Guard against flag-like titles (ms-e0kx5: --help garbage beads)
 	if IsFlagLikeTitle(opts.Title) {
 		return nil, fmt.Errorf("refusing to create bead: %w (got %q)", ErrFlagTitle, opts.Title)
 	}
@@ -1652,7 +1652,7 @@ func (b *Beads) CreateWithID(id string, opts CreateOptions) (*Issue, error) {
 	} else if opts.Label != "" {
 		args = append(args, "--labels="+opts.Label)
 	} else if opts.Type != "" {
-		args = append(args, "--labels=gt:"+opts.Type)
+		args = append(args, "--labels=ms:"+opts.Type)
 	}
 	if opts.Priority >= 0 {
 		args = append(args, fmt.Sprintf("--priority=%d", opts.Priority))
@@ -1690,7 +1690,7 @@ func (b *Beads) CreateWithID(id string, opts CreateOptions) (*Issue, error) {
 type SearchOptions struct {
 	Query        string // Text query to search titles and descriptions
 	Status       string // "open", "closed", "all"
-	Label        string // Label filter (e.g., "gt:bug")
+	Label        string // Label filter (e.g., "ms:bug")
 	Limit        int    // Max results (0 = default)
 	DescContains string // Filter by description substring
 }
@@ -1741,7 +1741,7 @@ func (b *Beads) FindOpenBugsByTitle(title string) ([]*Issue, error) {
 	issues, err := b.Search(SearchOptions{
 		Query:  title,
 		Status: "open",
-		Label:  "gt:bug",
+		Label:  "ms:bug",
 		Limit:  10,
 	})
 	if err != nil {
@@ -1893,7 +1893,7 @@ func (b *Beads) CloseWithReason(reason string, ids ...string) error {
 }
 
 // ForceCloseWithReason closes one or more issues with --force, bypassing
-// dependency checks. Used by gt done where the miner is about to be nuked
+// dependency checks. Used by ms done where the miner is about to be nuked
 // and open molecule wisps should not block issue closure.
 func (b *Beads) ForceCloseWithReason(reason string, ids ...string) error {
 	if len(ids) == 0 {
@@ -1903,7 +1903,7 @@ func (b *Beads) ForceCloseWithReason(reason string, ids ...string) error {
 	// In-process store close doesn't enforce dependency checks (no --force
 	// needed). Note: this means the store path bypasses the dependency
 	// validation that the CLI's --force flag overrides. Callers relying on
-	// ForceCloseWithReason (e.g., gt done nuking miner wisps) are already
+	// ForceCloseWithReason (e.g., ms done nuking miner wisps) are already
 	// accepting that deps may remain dangling, so this is intentional.
 	if b.store != nil {
 		return b.storeClose(reason, runtime.SessionIDFromEnv(), ids...)
@@ -1996,7 +1996,7 @@ func (b *Beads) IsBeadsRepo() bool {
 // for crew workers. This is the fallback if the SessionStart hook fails.
 const primeContent = `# Mineshaft Worker Context
 
-> **Context Recovery**: Run ` + "`gt prime`" + ` for full context after compaction or new session.
+> **Context Recovery**: Run ` + "`ms prime`" + ` for full context after compaction or new session.
 
 ## The Propulsion Principle (GUPP)
 
@@ -2013,16 +2013,16 @@ This is physics, not politeness. Mineshaft is a steam engine - you are a piston.
 
 ## Startup Protocol
 
-1. Check your hook: ` + "`gt mol status`" + `
+1. Check your hook: ` + "`ms mol status`" + `
 2. If work is hooked → EXECUTE (no announcement, no waiting)
-3. If hook empty → Check mail: ` + "`gt mail inbox`" + `
+3. If hook empty → Check mail: ` + "`ms mail inbox`" + `
 4. Still nothing? Wait for user instructions
 
 ## Key Commands
 
-- ` + "`gt prime`" + ` - Get full role context (run after compaction)
-- ` + "`gt mol status`" + ` - Check your hooked work
-- ` + "`gt mail inbox`" + ` - Check for messages
+- ` + "`ms prime`" + ` - Get full role context (run after compaction)
+- ` + "`ms mol status`" + ` - Check your hooked work
+- ` + "`ms mail inbox`" + ` - Check for messages
 - ` + "`bd ready`" + ` - Find available work (no blockers)
 
 ## Session Close Protocol
@@ -2032,9 +2032,9 @@ Before signaling completion:
 2. git add <files> (stage code changes)
 3. git commit -m "..." (commit code)
 4. git push (push to remote)
-5. ` + "`gt done`" + ` (submit to merge queue and exit)
+5. ` + "`ms done`" + ` (submit to merge queue and exit)
 
-**Miners MUST call ` + "`gt done`" + ` - this submits work and exits the session.**
+**Miners MUST call ` + "`ms done`" + ` - this submits work and exits the session.**
 `
 
 // ProvisionPrimeMD writes the Mineshaft PRIME.md file to the specified beads directory.

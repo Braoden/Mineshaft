@@ -29,9 +29,9 @@ Uses aggressive tmux session verification to detect ALL orphaned processes,
 not just those with PPID=1.
 
 Examples:
-  gt cleanup              # Clean up orphans with confirmation
-  gt cleanup --dry-run    # Show what would be killed
-  gt cleanup --force      # Kill without confirmation`,
+  ms cleanup              # Clean up orphans with confirmation
+  ms cleanup --dry-run    # Show what would be killed
+  ms cleanup --force      # Kill without confirmation`,
 	RunE: runCleanup,
 }
 

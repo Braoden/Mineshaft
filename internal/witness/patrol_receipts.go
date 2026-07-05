@@ -13,7 +13,7 @@ const (
 // PatrolReceiptEvidence captures the primary evidence fields for a verdict.
 type PatrolReceiptEvidence struct {
 	AgentState     string               `json:"agent_state,omitempty"`
-	Classification ZombieClassification `json:"classification,omitempty"` // Typed zombie reason (gt-tsut)
+	Classification ZombieClassification `json:"classification,omitempty"` // Typed zombie reason (ms-tsut)
 	HookBead       string               `json:"hook_bead,omitempty"`
 	BeadRecovered  bool                 `json:"bead_recovered"`
 	Error          string               `json:"error,omitempty"`
@@ -30,7 +30,7 @@ type PatrolReceipt struct {
 
 // receiptVerdictForZombie derives the patrol verdict from the zombie's typed
 // Classification field rather than re-deriving from raw strings. Falls back to
-// WasActive for forward-compatibility with unknown classifications. See gt-tsut.
+// WasActive for forward-compatibility with unknown classifications. See ms-tsut.
 func receiptVerdictForZombie(z ZombieResult) PatrolVerdict {
 	if z.Classification != "" {
 		if z.Classification.ImpliesActiveWork() {

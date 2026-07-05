@@ -127,7 +127,7 @@ func RecordBeadRespawn(workDir, beadID string) int {
 }
 
 // ResetBeadRespawnCount resets the respawn counter for beadID to zero.
-// Used by `gt sling respawn-reset` to allow re-dispatch after investigation.
+// Used by `ms sling respawn-reset` to allow re-dispatch after investigation.
 func ResetBeadRespawnCount(workDir, beadID string) error {
 	respawnMu.Lock()
 	defer respawnMu.Unlock()

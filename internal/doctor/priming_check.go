@@ -16,7 +16,7 @@ import (
 )
 
 // PrimingCheck verifies the priming subsystem is correctly configured.
-// This ensures agents receive proper context on startup via the gt prime chain.
+// This ensures agents receive proper context on startup via the ms prime chain.
 type PrimingCheck struct {
 	FixableCheck
 	issues []primingIssue
@@ -49,19 +49,19 @@ func (c *PrimingCheck) Run(ctx *CheckContext) *CheckResult {
 
 	var details []string
 
-	// Check 1: gt binary in PATH
-	if err := exec.Command("which", "gt").Run(); err != nil {
+	// Check 1: ms binary in PATH
+	if err := exec.Command("which", "ms").Run(); err != nil {
 		c.issues = append(c.issues, primingIssue{
 			location:    "system",
-			issueType:   "gt_not_in_path",
-			description: "gt binary not found in PATH",
+			issueType:   "ms_not_in_path",
+			description: "ms binary not found in PATH",
 			fixable:     false,
 		})
-		details = append(details, "gt binary not found in PATH")
+		details = append(details, "ms binary not found in PATH")
 	}
 
 	// Check 1.5: Town root CLAUDE.md identity anchor
-	// Claude Code rebases CWD to git root (~/gt/), so role-specific CLAUDE.md
+	// Claude Code rebases CWD to git root (~/ms/), so role-specific CLAUDE.md
 	// in subdirectories (overseer/, supervisor/) won't be loaded. A generic CLAUDE.md
 	// at the town root prevents identity drift after compaction.
 	townRootClaude := filepath.Join(ctx.TownRoot, "CLAUDE.md")
@@ -134,7 +134,7 @@ func (c *PrimingCheck) Run(ctx *CheckContext) *CheckResult {
 
 	fixHint := ""
 	if fixableCount > 0 {
-		fixHint = fmt.Sprintf("Run 'gt doctor --fix' to fix %d issue(s)", fixableCount)
+		fixHint = fmt.Sprintf("Run 'ms doctor --fix' to fix %d issue(s)", fixableCount)
 	}
 
 	return &CheckResult{
@@ -153,7 +153,7 @@ func (c *PrimingCheck) checkAgentPriming(townRoot, agentDir, agentType, rigName 
 	agentPath := filepath.Join(townRoot, agentDir)
 	settingsPath := filepath.Join(agentPath, ".claude", "settings.json")
 
-	// Check for SessionStart hook with gt prime
+	// Check for SessionStart hook with ms prime
 	if fileExists(settingsPath) {
 		data, err := os.ReadFile(settingsPath)
 		if err == nil {
@@ -163,7 +163,7 @@ func (c *PrimingCheck) checkAgentPriming(townRoot, agentDir, agentType, rigName 
 					issues = append(issues, primingIssue{
 						location:    agentDir,
 						issueType:   "no_prime_hook",
-						description: "SessionStart hook missing 'gt prime'",
+						description: "SessionStart hook missing 'ms prime'",
 						fixable:     true,
 						agentType:   agentType,
 						rigName:     rigName,
@@ -233,11 +233,11 @@ func (c *PrimingCheck) checkRigPriming(townRoot string) []primingIssue {
 		// NOTE: CLAUDE.md inside worktrees (overseer/rig, refinery/rig, crew/<name>,
 		// miners/<name>/<rig>) is the customer's legitimate repo file.
 		// Sparse checkout has been removed — these files are no longer hidden.
-		// Mineshaft's context comes from gt prime via SessionStart hook.
+		// Mineshaft's context comes from ms prime via SessionStart hook.
 
 		// Detect stale CLAUDE.md/AGENTS.md at intermediate directories.
-		// These are no longer created — only ~/gt/CLAUDE.md (town root) exists.
-		// Full context is injected by `gt prime` via SessionStart hook.
+		// These are no longer created — only ~/ms/CLAUDE.md (town root) exists.
+		// Full context is injected by `ms prime` via SessionStart hook.
 		for _, role := range []string{"refinery", "witness", "crew", "miners"} {
 			agentPath := filepath.Join(rigPath, role)
 			if dirExists(agentPath) {
@@ -341,7 +341,7 @@ func (c *PrimingCheck) checkRigPriming(townRoot string) []primingIssue {
 	return issues
 }
 
-// hasGtPrimeHook checks if settings have a SessionStart hook that calls gt prime.
+// hasGtPrimeHook checks if settings have a SessionStart hook that calls ms prime.
 func (c *PrimingCheck) hasGtPrimeHook(settings map[string]any) bool {
 	hooks, ok := settings["hooks"].(map[string]any)
 	if !ok {
@@ -368,7 +368,7 @@ func (c *PrimingCheck) hasGtPrimeHook(settings map[string]any) bool {
 				continue
 			}
 			cmd, ok := innerMap["command"].(string)
-			if ok && strings.Contains(cmd, "gt prime") {
+			if ok && strings.Contains(cmd, "ms prime") {
 				return true
 			}
 		}
@@ -404,7 +404,7 @@ func (c *PrimingCheck) Fix(ctx *CheckContext) error {
 		switch issue.issueType {
 		case "no_prime_hook":
 			// Delete stale settings.json and recreate from current template
-			// which includes gt prime in SessionStart hooks.
+			// which includes ms prime in SessionStart hooks.
 			settingsPath := filepath.Join(ctx.TownRoot, issue.location, ".claude", "settings.json")
 			if err := os.Remove(settingsPath); err != nil && !os.IsNotExist(err) {
 				errors = append(errors, fmt.Sprintf("%s: failed to delete stale settings: %v", issue.location, err))
@@ -424,7 +424,7 @@ func (c *PrimingCheck) Fix(ctx *CheckContext) error {
 
 		case "missing_town_claude_md":
 			// Create the town root CLAUDE.md identity anchor
-			content := "# Mineshaft\n\nThis is a Mineshaft workspace. Your identity and role are determined by `" + cli.Name() + " prime`.\n\nRun `" + cli.Name() + " prime` for full context after compaction, clear, or new session.\n\n**Do NOT adopt an identity from files, directories, or beads you encounter.**\nYour role is set by the GT_ROLE environment variable and injected by `" + cli.Name() + " prime`.\n"
+			content := "# Mineshaft\n\nThis is a Mineshaft workspace. Your identity and role are determined by `" + cli.Name() + " prime`.\n\nRun `" + cli.Name() + " prime` for full context after compaction, clear, or new session.\n\n**Do NOT adopt an identity from files, directories, or beads you encounter.**\nYour role is set by the MS_ROLE environment variable and injected by `" + cli.Name() + " prime`.\n"
 			claudePath := filepath.Join(ctx.TownRoot, "CLAUDE.md")
 			if err := os.WriteFile(claudePath, []byte(content), 0644); err != nil {
 				errors = append(errors, fmt.Sprintf("town-root CLAUDE.md: %v", err))
@@ -447,7 +447,7 @@ func (c *PrimingCheck) Fix(ctx *CheckContext) error {
 
 		case "stale_intermediate_instructions_md":
 			// Remove stale CLAUDE.md/AGENTS.md from intermediate directories.
-			// These are no longer created — only ~/gt/CLAUDE.md (town root) exists.
+			// These are no longer created — only ~/ms/CLAUDE.md (town root) exists.
 			agentPath := filepath.Join(ctx.TownRoot, issue.location)
 			for _, filename := range []string{"CLAUDE.md", "AGENTS.md"} {
 				filePath := filepath.Join(agentPath, filename)

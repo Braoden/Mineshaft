@@ -7,7 +7,7 @@ import (
 
 // FindMRForBranch searches for an open merge-request bead for the given branch.
 // Returns the MR bead if found, nil if not found.
-// This enables idempotent `gt done` - if an MR already exists, we skip creation.
+// This enables idempotent `ms done` - if an MR already exists, we skip creation.
 func (b *Beads) FindMRForBranch(branch string) (*Issue, error) {
 	return b.findMRForBranch(branch, true)
 }
@@ -29,7 +29,7 @@ func (b *Beads) FindMRForBranchAny(branch string) (*Issue, error) {
 func (b *Beads) FindMRForBranchAndSHA(branch, commitSHA string) (*Issue, error) {
 	issues, err := b.ListMergeRequests(ListOptions{
 		Status: "all",
-		Label:  "gt:merge-request",
+		Label:  "ms:merge-request",
 	})
 	if err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ func (b *Beads) findMRForBranch(branch string, skipClosed bool) (*Issue, error) 
 
 	issues, err := b.ListMergeRequests(ListOptions{
 		Status: "all",
-		Label:  "gt:merge-request",
+		Label:  "ms:merge-request",
 	})
 	if err != nil {
 		return nil, err
@@ -93,7 +93,7 @@ func (b *Beads) findMRForBranch(branch string, skipClosed bool) (*Issue, error) 
 func (b *Beads) FindOpenMRsForIssue(issueID string) ([]*Issue, error) {
 	issues, err := b.ListMergeRequests(ListOptions{
 		Status: "open",
-		Label:  "gt:merge-request",
+		Label:  "ms:merge-request",
 	})
 	if err != nil {
 		return nil, err
@@ -110,8 +110,8 @@ func (b *Beads) FindOpenMRsForIssue(issueID string) ([]*Issue, error) {
 
 // MatchesMRSourceIssue returns true if the MR description contains a
 // source_issue field matching the given issue ID exactly. The trailing
-// newline in the needle prevents partial ID matches (e.g., "gt-abc"
-// must not match "gt-abcdef").
+// newline in the needle prevents partial ID matches (e.g., "ms-abc"
+// must not match "ms-abcdef").
 func MatchesMRSourceIssue(description, issueID string) bool {
 	needle := "source_issue: " + issueID + "\n"
 	return strings.Contains(description, needle)

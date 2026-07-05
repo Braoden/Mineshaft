@@ -15,7 +15,7 @@ import (
 type EscalationFields struct {
 	Severity          string // critical, high, medium, low
 	Reason            string // Why this was escalated
-	Source            string // Source identifier (e.g., plugin:rebuild-gt, patrol:supervisor)
+	Source            string // Source identifier (e.g., plugin:rebuild-ms, patrol:supervisor)
 	EscalatedBy       string // Agent address that escalated (e.g., "mineshaft/Toast")
 	EscalatedAt       string // ISO 8601 timestamp
 	AckedBy           string // Agent that acknowledged (empty if not acked)
@@ -168,7 +168,7 @@ func ParseEscalationFields(description string) *EscalationFields {
 // CreateEscalationBead creates an escalation bead for tracking escalations.
 // The created_by field is populated from BD_ACTOR env var for provenance tracking.
 func (b *Beads) CreateEscalationBead(title string, fields *EscalationFields) (*Issue, error) {
-	// Guard against flag-like titles (gt-e0kx5: --help garbage beads)
+	// Guard against flag-like titles (ms-e0kx5: --help garbage beads)
 	if IsFlagLikeTitle(title) {
 		return nil, fmt.Errorf("refusing to create escalation bead: %w (got %q)", ErrFlagTitle, title)
 	}
@@ -177,7 +177,7 @@ func (b *Beads) CreateEscalationBead(title string, fields *EscalationFields) (*I
 
 	// Pass description via stdin (--body-file=-) instead of --description=...
 	// to avoid embedding newlines in a flag value. bd 1.0.3+ rejects newline-
-	// containing flag values, which broke `gt escalate` for any escalation
+	// containing flag values, which broke `ms escalate` for any escalation
 	// with structured YAML metadata in the description.
 	args := []string{"create", "--json",
 		"--title=" + title,
@@ -185,7 +185,7 @@ func (b *Beads) CreateEscalationBead(title string, fields *EscalationFields) (*I
 		"--type=task",
 		"--ephemeral",
 		"--wisp-type=escalation",
-		"--labels=gt:escalation",
+		"--labels=ms:escalation",
 	}
 
 	// Add severity as a label for easy filtering
@@ -226,8 +226,8 @@ func (b *Beads) AckEscalation(id, ackedBy string) error {
 	}
 
 	// Verify it's an escalation
-	if !HasLabel(issue, "gt:escalation") {
-		return fmt.Errorf("issue %s is not an escalation bead (missing gt:escalation label)", id)
+	if !HasLabel(issue, "ms:escalation") {
+		return fmt.Errorf("issue %s is not an escalation bead (missing ms:escalation label)", id)
 	}
 
 	// Parse existing fields
@@ -255,8 +255,8 @@ func (b *Beads) CloseEscalation(id, closedBy, reason string) error {
 	}
 
 	// Verify it's an escalation
-	if !HasLabel(issue, "gt:escalation") {
-		return fmt.Errorf("issue %s is not an escalation bead (missing gt:escalation label)", id)
+	if !HasLabel(issue, "ms:escalation") {
+		return fmt.Errorf("issue %s is not an escalation bead (missing ms:escalation label)", id)
 	}
 
 	// Parse existing fields
@@ -291,8 +291,8 @@ func (b *Beads) GetEscalationBead(id string) (*Issue, *EscalationFields, error) 
 		return nil, nil, err
 	}
 
-	if !HasLabel(issue, "gt:escalation") {
-		return nil, nil, fmt.Errorf("issue %s is not an escalation bead (missing gt:escalation label)", id)
+	if !HasLabel(issue, "ms:escalation") {
+		return nil, nil, fmt.Errorf("issue %s is not an escalation bead (missing ms:escalation label)", id)
 	}
 
 	fields := ParseEscalationFields(issue.Description)
@@ -301,7 +301,7 @@ func (b *Beads) GetEscalationBead(id string) (*Issue, *EscalationFields, error) 
 
 // ListEscalations returns all open escalation beads.
 func (b *Beads) ListEscalations() ([]*Issue, error) {
-	out, err := b.run("list", "--label=gt:escalation", "--status=open", "--json")
+	out, err := b.run("list", "--label=ms:escalation", "--status=open", "--json")
 	if err != nil {
 		return nil, err
 	}
@@ -320,7 +320,7 @@ func (b *Beads) ListEscalationsByFingerprint(fingerprintLabel string) ([]*Issue,
 		return nil, nil
 	}
 	out, err := b.run("list",
-		"--label=gt:escalation",
+		"--label=ms:escalation",
 		"--label="+fingerprintLabel,
 		"--status=open",
 		"--json",
@@ -340,7 +340,7 @@ func (b *Beads) ListEscalationsByFingerprint(fingerprintLabel string) ([]*Issue,
 // ListEscalationsBySeverity returns open escalation beads filtered by severity.
 func (b *Beads) ListEscalationsBySeverity(severity string) ([]*Issue, error) {
 	out, err := b.run("list",
-		"--label=gt:escalation",
+		"--label=ms:escalation",
 		"--label=severity:"+severity,
 		"--status=open",
 		"--json",
@@ -360,7 +360,7 @@ func (b *Beads) ListEscalationsBySeverity(severity string) ([]*Issue, error) {
 func filterEscalationRecords(issues []*Issue) []*Issue {
 	filtered := issues[:0]
 	for _, issue := range issues {
-		if HasLabel(issue, "gt:message") {
+		if HasLabel(issue, "ms:message") {
 			continue
 		}
 		filtered = append(filtered, issue)

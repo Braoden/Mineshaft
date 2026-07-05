@@ -49,20 +49,20 @@ even a single issue - create a minecart to track it.
 
 ```bash
 # Create a minecart tracking some issues
-gt minecart create "Feature X" gt-abc gt-def --notify boss
+ms minecart create "Feature X" ms-abc ms-def --notify boss
 
 # Check progress
-gt minecart status hq-cv-abc
+ms minecart status hq-cv-abc
 
 # Dashboard of active minecarts
-gt minecart list
+ms minecart list
 ```
 
 **Why minecarts matter:**
 - Single view of "what's in flight"
-- Cross-rig tracking (minecart in hq-*, issues in gt-*, bd-*)
+- Cross-rig tracking (minecart in hq-*, issues in ms-*, bd-*)
 - Auto-notification when work lands
-- Historical record of completed work (`gt minecart list --all`)
+- Historical record of completed work (`ms minecart list --all`)
 
 The "swarm" is the set of workers currently assigned to a minecart's issues.
 When issues close, the minecart lands. See [Minecarts](concepts/minecart.md) for details.
@@ -75,7 +75,7 @@ Both do project work, but with key differences:
 |--------|------|---------|
 | **Lifecycle** | Persistent (user controls) | Transient (Witness controls) |
 | **Monitoring** | None | Witness watches, nudges, recycles |
-| **Work assignment** | Human-directed or self-assigned | Slung via `gt sling` |
+| **Work assignment** | Human-directed or self-assigned | Slung via `ms sling` |
 | **Git state** | Pushes to main directly | Works on branch, Refinery merges |
 | **Cleanup** | Manual | Automatic on completion |
 | **Identity** | `<rig>/crew/<name>` | `<rig>/miners/<name>` |
@@ -120,15 +120,15 @@ Create a worktree in the target rig:
 
 ```bash
 # mineshaft/crew/joe needs to fix a beads bug
-gt worktree beads
-# Creates ~/gt/beads/crew/mineshaft-joe/
+ms worktree beads
+# Creates ~/ms/beads/crew/mineshaft-joe/
 # Identity preserved: BD_ACTOR = mineshaft/crew/joe
 ```
 
 Directory structure:
 ```
-~/gt/beads/crew/mineshaft-joe/     # joe from mineshaft working on beads
-~/gt/mineshaft/crew/beads-wolf/    # wolf from beads working on mineshaft
+~/ms/beads/crew/mineshaft-joe/     # joe from mineshaft working on beads
+~/ms/mineshaft/crew/beads-wolf/    # wolf from beads working on mineshaft
 ```
 
 ### Option 2: Dispatch to Local Workers
@@ -140,8 +140,8 @@ For work that should be owned by the target rig:
 bd create --repo beads "Fix authentication bug"
 
 # Create minecart and sling to target rig
-gt minecart create "Auth fix" bd-xyz
-gt sling bd-xyz beads
+ms minecart create "Auth fix" bd-xyz
+ms sling bd-xyz beads
 ```
 
 ### When to Use Which
@@ -155,7 +155,7 @@ gt sling bd-xyz beads
 
 ## Directory Structure
 
-The town root (`~/gt/`) contains infrastructure directories (`overseer/`, `supervisor/`)
+The town root (`~/ms/`) contains infrastructure directories (`overseer/`, `supervisor/`)
 and per-project rigs. Each rig holds a bare repo (`.repo.git/`), a canonical beads
 database (`overseer/rig/.beads/`), and agent directories (`witness/`, `refinery/`,
 `crew/`, `miners/`).
@@ -173,7 +173,7 @@ Events:           actor: mineshaft/crew/joe
 ```
 
 Identity is preserved even when working cross-rig:
-- `mineshaft/crew/joe` working in `~/gt/beads/crew/mineshaft-joe/`
+- `mineshaft/crew/joe` working in `~/ms/beads/crew/mineshaft-joe/`
 - Commits still attributed to `mineshaft/crew/joe`
 - Work appears on joe's CV, not beads rig's workers
 

@@ -6,10 +6,10 @@ import (
 )
 
 // TestDefaultConfig_TimeZoneEmptyEnvOptsOut verifies that an explicitly empty
-// GT_DOLT_TIME_ZONE disables the override (caller wants Dolt's host-TZ default).
+// MS_DOLT_TIME_ZONE disables the override (caller wants Dolt's host-TZ default).
 func TestDefaultConfig_TimeZoneEmptyEnvOptsOut(t *testing.T) {
 	townRoot := t.TempDir()
-	t.Setenv("GT_DOLT_TIME_ZONE", "")
+	t.Setenv("MS_DOLT_TIME_ZONE", "")
 
 	config := DefaultConfig(townRoot)
 
@@ -18,11 +18,11 @@ func TestDefaultConfig_TimeZoneEmptyEnvOptsOut(t *testing.T) {
 	}
 }
 
-// TestDefaultConfig_TimeZoneEnvOverride verifies that GT_DOLT_TIME_ZONE
+// TestDefaultConfig_TimeZoneEnvOverride verifies that MS_DOLT_TIME_ZONE
 // replaces the default.
 func TestDefaultConfig_TimeZoneEnvOverride(t *testing.T) {
 	townRoot := t.TempDir()
-	t.Setenv("GT_DOLT_TIME_ZONE", "America/Los_Angeles")
+	t.Setenv("MS_DOLT_TIME_ZONE", "America/Los_Angeles")
 
 	config := DefaultConfig(townRoot)
 

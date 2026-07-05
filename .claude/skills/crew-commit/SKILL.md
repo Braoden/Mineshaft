@@ -2,9 +2,9 @@
 name: crew-commit
 description: >
   Canonical commit workflow for Mineshaft crew members: pre-flight checks,
-  branch creation, gt commit with agent identity, push, and PR creation.
+  branch creation, ms commit with agent identity, push, and PR creation.
   Use when ready to commit and submit work for review.
-allowed-tools: "Bash(git *), Bash(gt *), Bash(gh *)"
+allowed-tools: "Bash(git *), Bash(ms *), Bash(gh *)"
 version: "1.0.0"
 author: "Mineshaft"
 ---
@@ -125,13 +125,13 @@ git add -p    # Interactive staging — review each hunk
 
 ---
 
-## Step 5: Commit with gt commit
+## Step 5: Commit with ms commit
 
-Use `gt commit` instead of `git commit`. It automatically sets the correct
-agent identity (name + email) based on your `GT_ROLE`.
+Use `ms commit` instead of `git commit`. It automatically sets the correct
+agent identity (name + email) based on your `MS_ROLE`.
 
 ```bash
-gt commit -m "$(cat <<'EOF'
+ms commit -m "$(cat <<'EOF'
 <type>: <concise description of what and why>
 
 <optional body: context, motivation, or notable details>
@@ -207,7 +207,7 @@ notify "PR ready: <brief description> — #<PR number>"
 - [ ] On a feature branch (NOT main)
 - [ ] Submodules NOT accidentally staged
 - [ ] Specific files staged (no secrets, no debug code)
-- [ ] Used `gt commit` (not `git commit`)
+- [ ] Used `ms commit` (not `git commit`)
 - [ ] Branch pushed to origin
 - [ ] PR created via `gh pr create`
 
@@ -218,7 +218,7 @@ notify "PR ready: <brief description> — #<PR number>"
 | ❌ Don't | ✅ Do instead |
 |----------|--------------|
 | `git push origin main` | Push feature branch, create PR |
-| `git commit` directly | `gt commit` (sets agent identity) |
+| `git commit` directly | `ms commit` (sets agent identity) |
 | `git add .` blindly | Stage specific files, verify with `git status` |
 | Include `shared/` or `config/` without intent | Check `git submodule status` first |
 | Force-push without understanding why | Resolve the root cause |

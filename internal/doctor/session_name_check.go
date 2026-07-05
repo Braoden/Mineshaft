@@ -16,11 +16,11 @@ type tmuxRenamer interface {
 }
 
 // MalformedSessionNameCheck detects Mineshaft tmux sessions whose names use the
-// legacy naming scheme (e.g., "gt-whatsapp_automation-witness") rather than the
+// legacy naming scheme (e.g., "ms-whatsapp_automation-witness") rather than the
 // current short-prefix format (e.g., "wa-witness").
 //
 // Detection uses explicit legacy-name matching rather than a parse round-trip.
-// Round-trip detection cannot catch legacy names: "gt-whatsapp_automation-witness"
+// Round-trip detection cannot catch legacy names: "ms-whatsapp_automation-witness"
 // parses as a miner named "whatsapp_automation-witness" and round-trips to the
 // same string — no mismatch is ever reported.
 //
@@ -109,11 +109,11 @@ func (c *MalformedSessionNameCheck) Run(ctx *CheckContext) *CheckResult {
 		details = append(details, fmt.Sprintf("Outdated: %s → should be %s (crew session — manual rename required)", r.oldName, r.newName))
 	}
 
-	fixHint := "Run 'gt doctor --fix' to rename sessions to current format"
+	fixHint := "Run 'ms doctor --fix' to rename sessions to current format"
 	if len(autoFixable) == 0 && len(needsManual) > 0 {
 		fixHint = "Crew sessions must be renamed manually: tmux rename-session -t OLD NEW"
 	} else if len(needsManual) > 0 {
-		fixHint = "Run 'gt doctor --fix' for patrol sessions; crew sessions must be renamed manually"
+		fixHint = "Run 'ms doctor --fix' for patrol sessions; crew sessions must be renamed manually"
 	}
 
 	return &CheckResult{
@@ -224,7 +224,7 @@ func detectLegacySessionNames(sessions []string, reg *session.PrefixRegistry) []
 // pattern for any known rig, and returns the canonical rename if so.
 // The prefix before the rig name must be a known Mineshaft prefix to avoid
 // false-positives on non-Mineshaft sessions (e.g., "my-niflheim-witness")
-// and miner sessions whose names embed rig names (e.g., "gt-fix-mineshaft-witness").
+// and miner sessions whose names embed rig names (e.g., "ms-fix-mineshaft-witness").
 func matchLegacyName(sess string, rigs map[string]string, knownPrefixes map[string]bool) (sessionRename, bool) {
 	for rigName, shortPrefix := range rigs {
 		// Look for "-{rigName}-" anywhere in the session name.

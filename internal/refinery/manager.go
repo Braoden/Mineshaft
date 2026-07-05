@@ -205,7 +205,7 @@ func (m *Manager) Start(foreground bool, agentOverride string) error {
 		Recipient: session.BeaconRecipient("refinery", "", m.rig.Name),
 		Sender:    "supervisor",
 		Topic:     "patrol",
-	}, "Run `gt prime --hook` and begin patrol.")
+	}, "Run `ms prime --hook` and begin patrol.")
 
 	command, err := config.BuildStartupCommandFromConfig(config.AgentEnvConfig{
 		Role:             "refinery",
@@ -223,7 +223,7 @@ func (m *Manager) Start(foreground bool, agentOverride string) error {
 	// Compute environment BEFORE creating the session so it can be passed to
 	// tmux via -e flags. Setting env via SetEnvironment after session creation
 	// only affects newly spawned panes — the running pane (and Claude's
-	// subprocesses like bd) keeps its original environment (gt-neycp).
+	// subprocesses like bd) keeps its original environment (ms-neycp).
 	envVars := config.AgentEnv(config.AgentEnvConfig{
 		Role:             "refinery",
 		Rig:              m.rig.Name,
@@ -233,11 +233,11 @@ func (m *Manager) Start(foreground bool, agentOverride string) error {
 		SessionName:      sessionID,
 	})
 	envVars = session.MergeRuntimeLivenessEnv(envVars, runtimeConfig)
-	envVars["GT_REFINERY"] = "1"
+	envVars["MS_REFINERY"] = "1"
 
 	// Generate the GASTA run ID for this refinery session.
 	runID := uuid.New().String()
-	envVars["GT_RUN"] = runID
+	envVars["MS_RUN"] = runID
 
 	// Create session with command and env vars via -e flags so the initial
 	// shell — and Claude's subprocesses — inherit them from the start.
@@ -262,7 +262,7 @@ func (m *Manager) Start(foreground bool, agentOverride string) error {
 		return fmt.Errorf("waiting for refinery to start: %w", err)
 	}
 
-	// Start nudge-queue poller (gt-dgf). Claude's UserPromptSubmit hook only
+	// Start nudge-queue poller (ms-dgf). Claude's UserPromptSubmit hook only
 	// drains when the agent submits a prompt. Idle agents never submit, so
 	// queued nudges deadlock. The poller breaks the cycle by polling every 10s.
 	if _, pollerErr := nudge.StartPoller(townRoot, sessionID); pollerErr != nil {
@@ -278,7 +278,7 @@ func (m *Manager) Start(foreground bool, agentOverride string) error {
 	}
 
 	// Stream refinery's Claude Code JSONL conversation log to VictoriaLogs (opt-in).
-	if os.Getenv("GT_LOG_AGENT_OUTPUT") == "true" && os.Getenv("GT_OTEL_LOGS_URL") != "" {
+	if os.Getenv("MS_LOG_AGENT_OUTPUT") == "true" && os.Getenv("MS_OTEL_LOGS_URL") != "" {
 		if err := session.ActivateAgentLogging(sessionID, refineryRigDir, runID); err != nil {
 			log.Printf("warning: agent log watcher setup failed for %s: %v", sessionID, err)
 		}
@@ -293,7 +293,7 @@ func (m *Manager) Start(foreground bool, agentOverride string) error {
 
 // repairRefineryWorktree recreates a missing refinery/rig worktree from the
 // shared bare repo (.repo.git). The refinery worktree is created during
-// `gt rig add` but can be lost if `git worktree prune` runs, the directory
+// `ms rig add` but can be lost if `git worktree prune` runs, the directory
 // is deleted, or the .git file becomes corrupted. This self-heals on startup
 // instead of requiring manual intervention.
 func (m *Manager) repairRefineryWorktree(refineryRigDir string) error {
@@ -352,7 +352,7 @@ func (m *Manager) Queue() ([]QueueItem, error) {
 	// BeadsPath() returns the git-synced beads location
 	b := beads.New(m.rig.BeadsPath())
 	issues, err := b.ListMergeRequests(beads.ListOptions{
-		Label:    "gt:merge-request",
+		Label:    "ms:merge-request",
 		Status:   "open",
 		Priority: -1, // No priority filter
 		Rig:      m.rig.Name,
@@ -562,7 +562,7 @@ func (m *Manager) Retry(_ string, _ bool) error {
 
 // RegisterMR is deprecated - MRs are registered via beads merge-request issues.
 // ZFC-compliant: beads is the source of truth, not state file.
-// Use 'gt mr create' or create a merge-request type bead directly.
+// Use 'ms mr create' or create a merge-request type bead directly.
 func (m *Manager) RegisterMR(_ *MergeRequest) error {
 	return fmt.Errorf("RegisterMR is deprecated: use beads to create merge-request issues")
 }
@@ -644,14 +644,14 @@ func (m *Manager) PostMerge(idOrBranch string) (*PostMergeResult, error) {
 	// Close the source issue with reason and --force to bypass dependency checks.
 	// The source issue may have an attached molecule (wisp) whose open steps
 	// would block a normal bd close. ForceCloseWithReason bypasses this,
-	// matching how gt done handles closures for the no-MR path.
+	// matching how ms done handles closures for the no-MR path.
 	if mr.IssueID != "" {
 		closeReason := fmt.Sprintf("Merged in %s", mr.ID)
 		if mr.MergeCommit != "" {
 			closeReason = fmt.Sprintf("%s\ntarget_branch: %s\ncommit_sha: %s", closeReason, mr.TargetBranch, mr.MergeCommit)
 		}
 		if err := b.ForceCloseWithReason(closeReason, mr.IssueID); err != nil {
-			// Check if already closed (by miner's gt done) — that's fine
+			// Check if already closed (by miner's ms done) — that's fine
 			if issue, showErr := b.Show(mr.IssueID); showErr == nil && beads.IssueStatus(issue.Status).IsTerminal() {
 				_, _ = fmt.Fprintf(m.output, "  %s source issue already closed: %s\n", style.Dim.Render("○"), mr.IssueID)
 				result.SourceIssueClosed = true
@@ -672,9 +672,9 @@ func (m *Manager) notifyWorkerRejected(mr *MergeRequest, reason string) {
 	// Nudge miner about rejection instead of sending permanent mail.
 	minerName := strings.TrimPrefix(mr.Worker, "miners/")
 	target := fmt.Sprintf("%s/%s", m.rig.Name, minerName)
-	nudgeMsg := fmt.Sprintf("MR rejected: branch=%s issue=%s reason=%s — review feedback and resubmit with 'gt done'",
+	nudgeMsg := fmt.Sprintf("MR rejected: branch=%s issue=%s reason=%s — review feedback and resubmit with 'ms done'",
 		mr.Branch, mr.IssueID, reason)
-	nudgeCmd := exec.Command("gt", "nudge", target, nudgeMsg)
+	nudgeCmd := exec.Command("ms", "nudge", target, nudgeMsg)
 	util.SetDetachedProcessGroup(nudgeCmd)
 	nudgeCmd.Dir = m.workDir
 	if err := nudgeCmd.Run(); err != nil {
@@ -683,4 +683,4 @@ func (m *Manager) notifyWorkerRejected(mr *MergeRequest, reason string) {
 }
 
 // Town root is computed in Start() as filepath.Dir(m.rig.Path) and passed
-// through to callers — no filesystem-inference function needed (ZFC gt-qago).
+// through to callers — no filesystem-inference function needed (ZFC ms-qago).

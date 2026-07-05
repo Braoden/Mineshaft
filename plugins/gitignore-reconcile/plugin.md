@@ -30,7 +30,7 @@ rule was added continue to be tracked until manually untracked.
 ## Step 1: Enumerate rig repos
 
 ```bash
-RIG_JSON=$(gt rig list --json 2>/dev/null)
+RIG_JSON=$(ms rig list --json 2>/dev/null)
 if [ $? -ne 0 ] || [ -z "$RIG_JSON" ]; then
   echo "SKIP: could not get rig list"
   exit 0
@@ -132,6 +132,6 @@ echo "$SUMMARY"
 RESULT="success"
 [ -n "$ERRORS" ] && RESULT="warning"
 
-gt plugin record-run --plugin gitignore-reconcile --result "$RESULT" \
+ms plugin record-run --plugin gitignore-reconcile --result "$RESULT" \
   --title "$SUMMARY" --description "$SUMMARY" >/dev/null 2>&1 || true
 ```

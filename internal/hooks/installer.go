@@ -75,15 +75,15 @@ func InstallForRole(provider, settingsDir, workDir, role, hooksDir, hooksFile st
 // that should be replaced by the current template. This allows the installer
 // to auto-upgrade hooks from earlier versions without requiring manual intervention.
 func needsUpgrade(content []byte) bool {
-	// Stale pattern: export PATH=... && gt — replaced by {{GT_BIN}} in current templates.
+	// Stale pattern: export PATH=... && ms — replaced by {{MS_BIN}} in current templates.
 	// The PATH export breaks Gemini CLI's hook runner which expands $PATH into
-	// an enormous string. Also catches files missing GT_HOOK_SOURCE env vars.
+	// an enormous string. Also catches files missing MS_HOOK_SOURCE env vars.
 	if bytes.Contains(content, []byte(`export PATH=`)) {
 		return true
 	}
 	if bytes.Contains(content, []byte(`Mineshaft OpenCode plugin`)) {
-		return bytes.Contains(content, []byte(`captureRun("gt prime")`)) ||
-			bytes.Contains(content, []byte("$`gt prime`")) ||
+		return bytes.Contains(content, []byte(`captureRun("ms prime")`)) ||
+			bytes.Contains(content, []byte("$`ms prime`")) ||
 			!bytes.Contains(content, []byte(`prime --hook`))
 	}
 	return false
@@ -101,7 +101,7 @@ const (
 // SyncForRole compares the deployed hook/settings file against the current template
 // and overwrites if content differs. Returns what action was taken.
 //
-// This is the explicit sync path used by "gt hooks sync" for template-based agents
+// This is the explicit sync path used by "ms hooks sync" for template-based agents
 // (OpenCode, Copilot, Pi, OMP, etc.). It should NOT be used for agents whose settings
 // are managed by the JSON merge path (Claude), as that would clobber merged overrides.
 func SyncForRole(provider, settingsDir, workDir, role, hooksDir, hooksFile string, useSettingsDir bool) (SyncResult, error) {
@@ -162,24 +162,24 @@ func installTargetPath(settingsDir, workDir, hooksDir, hooksFile string, useSett
 	return filepath.Join(installDir, hooksDir, hooksFile)
 }
 
-// resolveAndSubstitute resolves the template and performs {{GT_BIN}} substitution.
+// resolveAndSubstitute resolves the template and performs {{MS_BIN}} substitution.
 func resolveAndSubstitute(provider, hooksFile, role string) ([]byte, error) {
 	content, err := resolveTemplate(provider, hooksFile, role)
 	if err != nil {
 		return nil, fmt.Errorf("resolving template for %s: %w", provider, err)
 	}
 
-	if bytes.Contains(content, []byte("{{GT_BIN}}")) {
+	if bytes.Contains(content, []byte("{{MS_BIN}}")) {
 		gtBin := resolveGTBinary()
 		gtBinBytes := []byte(gtBin)
 		if isSettingsFile(hooksFile) {
 			// JSON-encode the path so Windows backslashes are properly escaped.
-			// json.Marshal produces `"C:\\path\\gt.exe"` (with quotes); strip the quotes.
+			// json.Marshal produces `"C:\\path\\ms.exe"` (with quotes); strip the quotes.
 			if encoded, err := json.Marshal(gtBin); err == nil {
 				gtBinBytes = encoded[1 : len(encoded)-1]
 			}
 		}
-		content = bytes.ReplaceAll(content, []byte("{{GT_BIN}}"), gtBinBytes)
+		content = bytes.ReplaceAll(content, []byte("{{MS_BIN}}"), gtBinBytes)
 	}
 
 	return content, nil
@@ -260,22 +260,22 @@ func isSettingsFile(name string) bool {
 	return filepath.Ext(name) == ".json"
 }
 
-// resolveGTBinary returns the absolute path to the gt binary.
-// Tries os.Executable() first (most reliable when running as gt), then
+// resolveGTBinary returns the absolute path to the ms binary.
+// Tries os.Executable() first (most reliable when running as ms), then
 // falls back to exec.LookPath for PATH-based discovery. If both fail,
-// returns "gt" and hopes the runtime PATH has it.
+// returns "ms" and hopes the runtime PATH has it.
 func resolveGTBinary() string {
 	if exe, err := os.Executable(); err == nil {
 		return exe
 	}
-	if path, err := exec.LookPath("gt"); err == nil {
+	if path, err := exec.LookPath("ms"); err == nil {
 		return path
 	}
-	return "gt"
+	return "ms"
 }
 
 // ComputeExpectedTemplate returns the expected file content for a template-based
-// provider (e.g., gemini) with {{GT_BIN}} resolved to the actual gt binary path.
+// provider (e.g., gemini) with {{MS_BIN}} resolved to the actual ms binary path.
 // This is used by the doctor hooks-sync check to compare installed files against
 // current templates.
 func ComputeExpectedTemplate(provider, hooksFile, role string) ([]byte, error) {

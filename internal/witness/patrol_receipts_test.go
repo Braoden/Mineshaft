@@ -12,7 +12,7 @@ func TestBuildPatrolReceipt_StaleVerdictFromHookBead(t *testing.T) {
 		MinerName:    "atlas",
 		AgentState:     "idle",
 		Classification: ZombieSessionDeadActive,
-		HookBead:       "gt-abc123",
+		HookBead:       "ms-abc123",
 		WasActive:      true,
 		Action:         "restarted",
 	})
@@ -64,7 +64,7 @@ func TestReceiptVerdictForZombie_AllStates(t *testing.T) {
 		wasActive      bool
 		want           PatrolVerdict
 	}{
-		// Classification-based verdicts (gt-tsut: typed classification drives verdict)
+		// Classification-based verdicts (ms-tsut: typed classification drives verdict)
 		{name: "stuck-in-done", classification: ZombieStuckInDone, wasActive: true, want: PatrolVerdictStale},
 		{name: "agent-dead-in-session", classification: ZombieAgentDeadInSession, wasActive: true, want: PatrolVerdictStale},
 		{name: "bead-closed-still-running", classification: ZombieBeadClosedStillRunning, wasActive: true, want: PatrolVerdictStale},
@@ -74,7 +74,7 @@ func TestReceiptVerdictForZombie_AllStates(t *testing.T) {
 
 		// Real agent states with classification
 		{name: "active working", state: "working", classification: ZombieSessionDeadActive, wasActive: true, want: PatrolVerdictStale},
-		{name: "active with hook", state: "working", classification: ZombieSessionDeadActive, hookBead: "gt-1", wasActive: true, want: PatrolVerdictStale},
+		{name: "active with hook", state: "working", classification: ZombieSessionDeadActive, hookBead: "ms-1", wasActive: true, want: PatrolVerdictStale},
 		{name: "active running", state: "running", classification: ZombieSessionDeadActive, wasActive: true, want: PatrolVerdictStale},
 
 		// Fallback: no classification (forward-compat), uses WasActive
@@ -118,7 +118,7 @@ func TestBuildPatrolReceipts_JSONShape(t *testing.T) {
 			{
 				MinerName: "atlas",
 				AgentState:  "working",
-				HookBead:    "gt-123",
+				HookBead:    "ms-123",
 				WasActive:   true,
 				Action:      "restarted",
 			},
@@ -148,8 +148,8 @@ func TestBuildPatrolReceipts_JSONShape(t *testing.T) {
 	if !ok {
 		t.Fatalf("decoded evidence missing or wrong type: %#v", decoded["evidence"])
 	}
-	if evidence["hook_bead"] != "gt-123" {
-		t.Fatalf("decoded evidence.hook_bead = %v, want %q", evidence["hook_bead"], "gt-123")
+	if evidence["hook_bead"] != "ms-123" {
+		t.Fatalf("decoded evidence.hook_bead = %v, want %q", evidence["hook_bead"], "ms-123")
 	}
 }
 
@@ -160,7 +160,7 @@ func TestBuildPatrolReceipts_DeterministicStaleOrphanOrdering(t *testing.T) {
 			{
 				MinerName: "atlas",
 				AgentState:  "working",
-				HookBead:    "gt-123",
+				HookBead:    "ms-123",
 				WasActive:   true,
 				Action:      "restarted",
 			},

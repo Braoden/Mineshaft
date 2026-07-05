@@ -239,12 +239,12 @@ func TestIsMessagingBead(t *testing.T) {
 		labels []string
 		want   bool
 	}{
-		{"gt:message alone", []string{"gt:message"}, true},
-		{"gt:handoff alone", []string{"gt:handoff"}, true},
-		{"gt:merge-request alone", []string{"gt:merge-request"}, true},
-		{"gt:message with another label", []string{"gt:message", "from:foo"}, true},
-		{"sling-context label is not messaging", []string{"gt:sling-context"}, false},
-		{"agent label is not messaging", []string{"gt:agent"}, false},
+		{"ms:message alone", []string{"ms:message"}, true},
+		{"ms:handoff alone", []string{"ms:handoff"}, true},
+		{"ms:merge-request alone", []string{"ms:merge-request"}, true},
+		{"ms:message with another label", []string{"ms:message", "from:foo"}, true},
+		{"sling-context label is not messaging", []string{"ms:sling-context"}, false},
+		{"agent label is not messaging", []string{"ms:agent"}, false},
 		{"empty slice", []string{}, false},
 		{"nil slice", nil, false},
 		{"plain work label", []string{"area/dog", "kind/bug"}, false},
@@ -260,11 +260,11 @@ func TestIsMessagingBead(t *testing.T) {
 
 func TestFilterMessagingBeads(t *testing.T) {
 	beads := []PendingBead{
-		{ID: "ctx-1", WorkBeadID: "gt-1", Labels: []string{"area/dog"}},
-		{ID: "ctx-2", WorkBeadID: "hq-1", Labels: []string{"gt:message"}},
-		{ID: "ctx-3", WorkBeadID: "gt-2", Labels: []string{"gt:handoff"}},
-		{ID: "ctx-4", WorkBeadID: "gt-3", Labels: []string{"gt:merge-request"}},
-		{ID: "ctx-5", WorkBeadID: "gt-4", Labels: []string{"kind/bug"}},
+		{ID: "ctx-1", WorkBeadID: "ms-1", Labels: []string{"area/dog"}},
+		{ID: "ctx-2", WorkBeadID: "hq-1", Labels: []string{"ms:message"}},
+		{ID: "ctx-3", WorkBeadID: "ms-2", Labels: []string{"ms:handoff"}},
+		{ID: "ctx-4", WorkBeadID: "ms-3", Labels: []string{"ms:merge-request"}},
+		{ID: "ctx-5", WorkBeadID: "ms-4", Labels: []string{"kind/bug"}},
 	}
 	kept, removed := FilterMessagingBeads(beads)
 	if len(kept) != 2 {
@@ -284,11 +284,11 @@ func TestPlanDispatch_FiltersMessagingBeads(t *testing.T) {
 	// Mix 3 messaging-labeled beads and 2 plain work beads. PlanDispatch must
 	// keep only the 2 plain beads; Skipped must reflect the 3 messaging skips.
 	candidates := []PendingBead{
-		{ID: "ctx-1", WorkBeadID: "gt-1", Labels: []string{"area/dog"}},
-		{ID: "ctx-2", WorkBeadID: "hq-1", Labels: []string{"gt:message"}},
-		{ID: "ctx-3", WorkBeadID: "gt-2", Labels: []string{"kind/bug"}},
-		{ID: "ctx-4", WorkBeadID: "hq-2", Labels: []string{"gt:handoff"}},
-		{ID: "ctx-5", WorkBeadID: "hq-3", Labels: []string{"gt:merge-request"}},
+		{ID: "ctx-1", WorkBeadID: "ms-1", Labels: []string{"area/dog"}},
+		{ID: "ctx-2", WorkBeadID: "hq-1", Labels: []string{"ms:message"}},
+		{ID: "ctx-3", WorkBeadID: "ms-2", Labels: []string{"kind/bug"}},
+		{ID: "ctx-4", WorkBeadID: "hq-2", Labels: []string{"ms:handoff"}},
+		{ID: "ctx-5", WorkBeadID: "hq-3", Labels: []string{"ms:merge-request"}},
 	}
 	plan := PlanDispatch(100, 10, candidates)
 	if len(plan.ToDispatch) != 2 {
@@ -309,8 +309,8 @@ func TestPlanDispatch_FiltersMessagingBeads(t *testing.T) {
 
 func TestPlanDispatch_OnlyMessagingBeads(t *testing.T) {
 	candidates := []PendingBead{
-		{ID: "ctx-1", WorkBeadID: "hq-1", Labels: []string{"gt:message"}},
-		{ID: "ctx-2", WorkBeadID: "hq-2", Labels: []string{"gt:handoff"}},
+		{ID: "ctx-1", WorkBeadID: "hq-1", Labels: []string{"ms:message"}},
+		{ID: "ctx-2", WorkBeadID: "hq-2", Labels: []string{"ms:handoff"}},
 	}
 	plan := PlanDispatch(100, 10, candidates)
 	if len(plan.ToDispatch) != 0 {

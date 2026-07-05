@@ -113,7 +113,7 @@ func (l *Logger) Log(eventType EventType, agent, context string) error {
 }
 
 // formatLogLine formats an event as a human-readable log line.
-// Format: 2025-12-26 15:30:45 [spawn] mineshaft/crew/max spawned for gt-xyz
+// Format: 2025-12-26 15:30:45 [spawn] mineshaft/crew/max spawned for ms-xyz
 func formatLogLine(e Event) string {
 	ts := e.Timestamp.Format("2006-01-02 15:04:05")
 
@@ -267,7 +267,7 @@ func ParseLogLines(content string) ([]Event, error) {
 }
 
 // parseLogLine parses a single log line into an Event.
-// Format: 2025-12-26 15:30:45 [spawn] mineshaft/crew/max spawned for gt-xyz
+// Format: 2025-12-26 15:30:45 [spawn] mineshaft/crew/max spawned for ms-xyz
 func parseLogLine(line string) (Event, error) {
 	var event Event
 

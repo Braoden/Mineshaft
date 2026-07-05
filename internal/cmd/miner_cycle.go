@@ -34,11 +34,11 @@ func cycleMinerSession(direction int, sessionOverride string) error {
 }
 
 // parseMinerSessionName extracts rig and miner name from a tmux session name.
-// Format: gt-<rig>-<name> where name is NOT crew-*, witness, refinery, overseer, or supervisor.
+// Format: ms-<rig>-<name> where name is NOT crew-*, witness, refinery, overseer, or supervisor.
 // Returns empty strings and false if the format doesn't match.
 //
 // Delegates to session.ParseSessionName for consistent parsing of hyphenated
-// rig names (e.g., gt-my-rig-Toast correctly yields rig="my-rig", name="Toast").
+// rig names (e.g., ms-my-rig-Toast correctly yields rig="my-rig", name="Toast").
 func parseMinerSessionName(sessionName string) (rigName, minerName string, ok bool) { //nolint:unparam // minerName kept for API consistency
 	identity, err := session.ParseSessionName(sessionName)
 	if err != nil {
@@ -51,7 +51,7 @@ func parseMinerSessionName(sessionName string) (rigName, minerName string, ok bo
 		return "", "", false
 	}
 	// Exclude names that are reserved for other session types.
-	// Overseer/supervisor use hq- prefix in practice, but gt-<rig>-overseer/supervisor
+	// Overseer/supervisor use hq- prefix in practice, but ms-<rig>-overseer/supervisor
 	// patterns should still be excluded defensively.
 	switch identity.Name {
 	case constants.RoleOverseer, constants.RoleSupervisor:
@@ -61,7 +61,7 @@ func parseMinerSessionName(sessionName string) (rigName, minerName string, ok bo
 }
 
 // findRigMinerSessions returns all miner sessions for a given rig.
-// Finds sessions matching gt-<rig>-<name> pattern, excluding crew, witness,
+// Finds sessions matching ms-<rig>-<name> pattern, excluding crew, witness,
 // and refinery sessions.
 func findRigMinerSessions(rigName string) ([]string, error) { //nolint:unparam // error return kept for future use
 	allSessions, err := listTmuxSessions()

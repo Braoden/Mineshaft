@@ -33,7 +33,7 @@ var versionCmd = &cobra.Command{
 	GroupID:     GroupDiag,
 	Annotations: map[string]string{AnnotationMinerSafe: "true"},
 	Short:       "Print version information",
-	Long: `Print the gt version, build type, git branch, and commit hash.
+	Long: `Print the ms version, build type, git branch, and commit hash.
 
 Output includes the semantic version, whether this is a dev or release build,
 and the git revision the binary was built from (if available).`,
@@ -47,11 +47,11 @@ and the git revision the binary was built from (if available).`,
 		branch := resolveBranch()
 
 		if commit != "" && branch != "" {
-			fmt.Printf("gt version %s (%s: %s@%s)\n", Version, Build, branch, version.ShortCommit(commit))
+			fmt.Printf("ms version %s (%s: %s@%s)\n", Version, Build, branch, version.ShortCommit(commit))
 		} else if commit != "" {
-			fmt.Printf("gt version %s (%s: %s)\n", Version, Build, version.ShortCommit(commit))
+			fmt.Printf("ms version %s (%s: %s)\n", Version, Build, version.ShortCommit(commit))
 		} else {
-			fmt.Printf("gt version %s (%s)\n", Version, Build)
+			fmt.Printf("ms version %s (%s)\n", Version, Build)
 		}
 
 		if versionVerbose {

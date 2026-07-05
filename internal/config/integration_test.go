@@ -67,13 +67,13 @@ func TestRigLevelCustomAgentIntegration(t *testing.T) {
 			t.Errorf("Expected command to contain --test-mode, got: %s", cmd)
 		}
 
-		// Verify environment variables are set (GT_ROLE is compound format)
-		if !strings.Contains(cmd, "GT_ROLE=testrig/miners/test-miner") {
-			t.Errorf("Expected GT_ROLE=testrig/miners/test-miner in command, got: %s", cmd)
+		// Verify environment variables are set (MS_ROLE is compound format)
+		if !strings.Contains(cmd, "MS_ROLE=testrig/miners/test-miner") {
+			t.Errorf("Expected MS_ROLE=testrig/miners/test-miner in command, got: %s", cmd)
 		}
 
-		if !strings.Contains(cmd, "GT_MINER=test-miner") {
-			t.Errorf("Expected GT_MINER=test-miner in command, got: %s", cmd)
+		if !strings.Contains(cmd, "MS_MINER=test-miner") {
+			t.Errorf("Expected MS_MINER=test-miner in command, got: %s", cmd)
 		}
 	})
 
@@ -132,9 +132,9 @@ echo "STUB_AGENT_STARTED"
 echo "Agent: $AGENT_NAME v$AGENT_VERSION"
 echo "Args: $@"
 echo "Working Dir: $(pwd)"
-echo "GT_ROLE: ${GT_ROLE:-not_set}"
-echo "GT_MINER: ${GT_MINER:-not_set}"
-echo "GT_RIG: ${GT_RIG:-not_set}"
+echo "MS_ROLE: ${MS_ROLE:-not_set}"
+echo "MS_MINER: ${MS_MINER:-not_set}"
+echo "MS_RIG: ${MS_RIG:-not_set}"
 echo "=========================================="
 
 # Simple Q&A loop
@@ -276,7 +276,7 @@ func pollForOutput(t *testing.T, sessionName, expected string, timeout time.Dura
 func testTmuxSessionWithStubAgent(t *testing.T, tmpDir, stubAgentPath, rigName string) {
 	t.Helper()
 
-	sessionName := fmt.Sprintf("gt-test-pid%d-%d", os.Getpid(), time.Now().UnixNano())
+	sessionName := fmt.Sprintf("ms-test-pid%d-%d", os.Getpid(), time.Now().UnixNano())
 	workDir := tmpDir
 
 	exec.Command("tmux", "kill-session", "-t", sessionName).Run()
@@ -291,9 +291,9 @@ func testTmuxSessionWithStubAgent(t *testing.T, tmpDir, stubAgentPath, rigName s
 	}
 
 	envVars := map[string]string{
-		"GT_ROLE":    "miner",
-		"GT_MINER": "test-miner",
-		"GT_RIG":     rigName,
+		"MS_ROLE":    "miner",
+		"MS_MINER": "test-miner",
+		"MS_RIG":     rigName,
 	}
 
 	for key, val := range envVars {
@@ -314,8 +314,8 @@ func testTmuxSessionWithStubAgent(t *testing.T, tmpDir, stubAgentPath, rigName s
 		t.Skipf("stub agent output not detected; tmux capture unreliable. Output:\n%s", output)
 	}
 
-	if !strings.Contains(output, "GT_ROLE: miner") {
-		t.Logf("Warning: GT_ROLE not visible in agent output (tmux env may not propagate to subshell)")
+	if !strings.Contains(output, "MS_ROLE: miner") {
+		t.Logf("Warning: MS_ROLE not visible in agent output (tmux env may not propagate to subshell)")
 	}
 
 	cmd = exec.Command("tmux", "send-keys", "-t", sessionName, "ping", "Enter")

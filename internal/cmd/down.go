@@ -32,12 +32,12 @@ const (
 	shutdownLockFile    = "daemon/shutdown.lock"
 	shutdownLockTimeout = 5 * time.Second
 
-	// ShutdownSentinel is a file written during gt down to prevent agents from
+	// ShutdownSentinel is a file written during ms down to prevent agents from
 	// restarting the daemon mid-shutdown. Checked by ensureDaemon.
 	ShutdownSentinel = "daemon/shutting-down"
 
-	// defaultDownOrphanGraceSecs is the grace period for orphan cleanup during gt down.
-	// Short because gt down is meant to be quick - processes already had SIGTERM via
+	// defaultDownOrphanGraceSecs is the grace period for orphan cleanup during ms down.
+	// Short because ms down is meant to be quick - processes already had SIGTERM via
 	// KillSessionWithProcesses.
 	defaultDownOrphanGraceSecs = 5
 )
@@ -49,10 +49,10 @@ var downCmd = &cobra.Command{
 	Long: `Stop Mineshaft services (reversible pause).
 
 Shutdown levels (progressively more aggressive):
-  gt down                    Stop infrastructure (default)
-  gt down --miners         Also stop all miner sessions
-  gt down --all              Full shutdown with orphan cleanup
-  gt down --nuke             Also kill the shared tmux server
+  ms down                    Stop infrastructure (default)
+  ms down --miners         Also stop all miner sessions
+  ms down --all              Full shutdown with orphan cleanup
+  ms down --nuke             Also kill the shared tmux server
 
 Infrastructure agents stopped:
   • Crew       - Per-rig crew member sessions
@@ -64,8 +64,8 @@ Infrastructure agents stopped:
   • Daemon     - Go background process
   • Dolt       - Shared SQL database server
 
-This is a "pause" operation - use 'gt start' to bring everything back up.
-For permanent cleanup (removing worktrees), use 'gt shutdown' instead.
+This is a "pause" operation - use 'ms start' to bring everything back up.
+For permanent cleanup (removing worktrees), use 'ms shutdown' instead.
 
 Use cases:
   • Taking a break (stop token consumption)
@@ -127,7 +127,7 @@ func runDown(cmd *cobra.Command, args []string) error {
 
 		// Prevent tmux server from exiting when all sessions are killed.
 		// By default, tmux exits when there are no sessions (exit-empty on).
-		// This ensures the server stays running for subsequent `gt up`.
+		// This ensures the server stays running for subsequent `ms up`.
 		// Ignore errors - if there's no server, nothing to configure.
 		_ = t.SetExitEmpty(false)
 	}
@@ -331,8 +331,8 @@ func runDown(cmd *cobra.Command, args []string) error {
 
 	// Phase 4b-iv: Remove .beads/dolt directories.
 	// These legacy per-agent data directories trigger bd to auto-spawn local
-	// Dolt servers. Removing them prevents rogue respawn on next gt up.
-	// Data has already been migrated to .dolt-data/ by gt dolt migrate.
+	// Dolt servers. Removing them prevents rogue respawn on next ms up.
+	// Data has already been migrated to .dolt-data/ by ms dolt migrate.
 	beadsDoltDirs := findBeadsDoltDirs(townRoot)
 	if len(beadsDoltDirs) > 0 {
 		if downDryRun {
@@ -347,7 +347,7 @@ func runDown(cmd *cobra.Command, args []string) error {
 
 	// Phase 4c: Clean up legacy socket sessions.
 	// Old binaries created sessions on the "default" tmux socket or on the
-	// basename-only socket (e.g., "gt" instead of "gt-a1b2c3"). After
+	// basename-only socket (e.g., "ms" instead of "ms-a1b2c3"). After
 	// transitioning to path-hashed sockets, ghost sessions on old sockets
 	// persist and cause split-brain.
 	if !downDryRun {
@@ -399,7 +399,7 @@ func runDown(cmd *cobra.Command, args []string) error {
 			fmt.Printf("This may indicate a process manager is respawning agents.\n")
 			fmt.Printf("Check with:\n")
 			fmt.Printf("  %s\n", style.Dim.Render("ps aux | grep claude  # Find respawned processes"))
-			fmt.Printf("  %s\n", style.Dim.Render("gt status             # Verify town state"))
+			fmt.Printf("  %s\n", style.Dim.Render("ms status             # Verify town state"))
 			allOK = false
 		}
 	}
@@ -417,13 +417,13 @@ func runDown(cmd *cobra.Command, args []string) error {
 		}
 		if downDryRun {
 			printDownStatus("Tmux server", true, fmt.Sprintf("would kill (socket: %s)", socketLabel))
-		} else if os.Getenv("GT_NUKE_ACKNOWLEDGED") == "" {
+		} else if os.Getenv("MS_NUKE_ACKNOWLEDGED") == "" {
 			fmt.Println()
 			fmt.Printf("%s The --nuke flag kills this town's tmux server (socket: %s).\n",
 				style.Bold.Render("⚠ BLOCKED:"), socketLabel)
 			fmt.Printf("This will destroy all tmux sessions on this socket, including any custom windows you opened.\n")
 			fmt.Println()
-			fmt.Printf("To proceed, run with: %s\n", style.Bold.Render("GT_NUKE_ACKNOWLEDGED=1 gt down --nuke"))
+			fmt.Printf("To proceed, run with: %s\n", style.Bold.Render("MS_NUKE_ACKNOWLEDGED=1 ms down --nuke"))
 			allOK = false
 		} else {
 			if err := t.KillServer(); err != nil {
@@ -461,7 +461,7 @@ func runDown(cmd *cobra.Command, args []string) error {
 		if downNuke {
 			stoppedServices = append(stoppedServices, "tmux-server")
 		}
-		_ = events.LogFeed(events.TypeHalt, "gt", events.HaltPayload(stoppedServices))
+		_ = events.LogFeed(events.TypeHalt, "ms", events.HaltPayload(stoppedServices))
 	} else {
 		fmt.Printf("%s Some services failed to stop\n", style.Bold.Render("✗"))
 		return fmt.Errorf("not all services stopped")
@@ -718,7 +718,7 @@ func verifyShutdown(t *tmux.Tmux, townRoot string) []string {
 		var pid int
 		if _, err := fmt.Sscanf(string(pidData), "%d", &pid); err == nil {
 			if isProcessRunning(pid) {
-				respawned = append(respawned, fmt.Sprintf("gt daemon (PID %d)", pid))
+				respawned = append(respawned, fmt.Sprintf("ms daemon (PID %d)", pid))
 			}
 		}
 	}
@@ -809,8 +809,8 @@ func countLegacyDefaultSocketSessions() int {
 }
 
 // cleanupLegacyBaseSocket removes Mineshaft sessions left on the old basename-only
-// tmux socket (e.g., "gt") by binaries from before path-hashed socket names were
-// introduced (e.g., "gt-a1b2c3"). Returns the number of sessions cleaned.
+// tmux socket (e.g., "ms") by binaries from before path-hashed socket names were
+// introduced (e.g., "ms-a1b2c3"). Returns the number of sessions cleaned.
 func cleanupLegacyBaseSocket(townRoot string) int {
 	return session.CleanupLegacyBaseSocket(townRoot)
 }
@@ -930,7 +930,7 @@ func stopOrphanDoltServers(pids []int) int {
 
 // findBeadsDoltDirs finds .beads/dolt directories that trigger bd auto-spawning.
 // These are legacy per-agent data directories that should have been migrated
-// to .dolt-data/ by gt dolt migrate.
+// to .dolt-data/ by ms dolt migrate.
 func findBeadsDoltDirs(townRoot string) []string {
 	var dirs []string
 	townAbs, _ := filepath.Abs(townRoot)

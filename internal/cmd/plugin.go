@@ -44,7 +44,7 @@ var pluginCmd = &cobra.Command{
 Plugins are periodic automation tasks defined by plugin.md files with TOML frontmatter.
 
 PLUGIN LOCATIONS:
-  ~/gt/plugins/           Town-level plugins (universal, apply everywhere)
+  ~/ms/plugins/           Town-level plugins (universal, apply everywhere)
   <rig>/plugins/          Rig-level plugins (project-specific)
 
 GATE TYPES:
@@ -55,9 +55,9 @@ GATE TYPES:
   manual      Never auto-run, trigger explicitly
 
 Examples:
-  gt plugin list                    # List all discovered plugins
-  gt plugin show <name>             # Show plugin details
-  gt plugin list --json             # JSON output`,
+  ms plugin list                    # List all discovered plugins
+  ms plugin show <name>             # Show plugin details
+  ms plugin list --json             # JSON output`,
 	RunE: requireSubcommand,
 }
 
@@ -67,14 +67,14 @@ var pluginListCmd = &cobra.Command{
 	Long: `List all plugins from town and rig plugin directories.
 
 Plugins are discovered from:
-  - ~/gt/plugins/ (town-level)
+  - ~/ms/plugins/ (town-level)
   - <rig>/plugins/ for each registered rig
 
 When a plugin exists at both levels, the rig-level version takes precedence.
 
 Examples:
-  gt plugin list              # Human-readable output
-  gt plugin list --json       # JSON output for scripting`,
+  ms plugin list              # Human-readable output
+  ms plugin list --json       # JSON output for scripting`,
 	RunE: runPluginList,
 }
 
@@ -86,8 +86,8 @@ var pluginShowCmd = &cobra.Command{
 Displays the plugin's configuration, gate settings, and instructions.
 
 Examples:
-  gt plugin show rebuild-gt
-  gt plugin show rebuild-gt --json`,
+  ms plugin show rebuild-ms
+  ms plugin show rebuild-ms --json`,
 	Args: cobra.ExactArgs(1),
 	RunE: runPluginShow,
 }
@@ -101,9 +101,9 @@ By default, checks if the gate would allow execution and informs you
 if it wouldn't. Use --force to bypass gate checks.
 
 Examples:
-  gt plugin run rebuild-gt              # Run if gate allows
-  gt plugin run rebuild-gt --force      # Bypass gate check
-  gt plugin run rebuild-gt --dry-run    # Show what would happen`,
+  ms plugin run rebuild-ms              # Run if gate allows
+  ms plugin run rebuild-ms --force      # Bypass gate check
+  ms plugin run rebuild-ms --dry-run    # Show what would happen`,
 	Args: cobra.ExactArgs(1),
 	RunE: runPluginRun,
 }
@@ -116,13 +116,13 @@ var pluginSyncCmd = &cobra.Command{
 By default, auto-detects the source by walking up from the current directory
 looking for a mineshaft repo, or checks known locations within the town.
 
-Syncs to town-level plugins (~/gt/plugins/) so all rigs see the latest plugins.
+Syncs to town-level plugins (~/ms/plugins/) so all rigs see the latest plugins.
 
 Examples:
-  gt plugin sync                           # Auto-detect source, sync to town
-  gt plugin sync --source ./plugins        # Explicit source directory
-  gt plugin sync --clean                   # Remove plugins not in source
-  gt plugin sync --dry-run                 # Show what would happen`,
+  ms plugin sync                           # Auto-detect source, sync to town
+  ms plugin sync --source ./plugins        # Explicit source directory
+  ms plugin sync --clean                   # Remove plugins not in source
+  ms plugin sync --dry-run                 # Show what would happen`,
 	RunE: runPluginSync,
 }
 
@@ -134,9 +134,9 @@ var pluginHistoryCmd = &cobra.Command{
 Queries ephemeral beads (wisps) that record plugin runs.
 
 Examples:
-  gt plugin history rebuild-gt
-  gt plugin history rebuild-gt --json
-  gt plugin history rebuild-gt --limit 20`,
+  ms plugin history rebuild-ms
+  ms plugin history rebuild-ms --json
+  ms plugin history rebuild-ms --limit 20`,
 	Args: cobra.ExactArgs(1),
 	RunE: runPluginHistory,
 }
@@ -489,7 +489,7 @@ func runPluginRun(cmd *cobra.Command, args []string) error {
 
 	// Execute the plugin
 	// For manual runs, we print the instructions for the agent/user to execute
-	// Automatic execution via dogs is handled by gt-n08ix.2
+	// Automatic execution via dogs is handled by ms-n08ix.2
 	fmt.Printf("%s Running plugin: %s\n", style.Success.Render("●"), p.Name)
 	if pluginRunForce && !gateOpen {
 		fmt.Printf("  %s\n", style.Dim.Render("(gate bypassed with --force)"))
@@ -504,7 +504,7 @@ func runPluginRun(cmd *cobra.Command, args []string) error {
 		PluginName: p.Name,
 		RigName:    p.RigName,
 		Result:     plugin.ResultSuccess, // Manual runs are marked success
-		Body:       "Manual run via gt plugin run",
+		Body:       "Manual run via ms plugin run",
 	})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: failed to record run: %v\n", err)

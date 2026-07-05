@@ -107,10 +107,10 @@ The weekly rollup (--weekly) aggregates the past 7 days of compaction event
 beads and sends trend data to overseer/.
 
 Examples:
-  gt compact report              # Run compaction + send daily digest
-  gt compact report --dry-run    # Preview the report without sending
-  gt compact report --weekly     # Send weekly rollup to overseer/
-  gt compact report --json       # Output report as JSON`,
+  ms compact report              # Run compaction + send daily digest
+  ms compact report --dry-run    # Preview the report without sending
+  ms compact report --weekly     # Send weekly rollup to overseer/
+  ms compact report --json       # Output report as JSON`,
 	RunE: runCompactReport,
 }
 
@@ -155,7 +155,7 @@ func runDailyDigest() error {
 	}
 
 	// Run compaction with --json to get results
-	compactOut, err := exec.Command("gt", "compact", "--json").Output()
+	compactOut, err := exec.Command("ms", "compact", "--json").Output()
 	if err != nil {
 		return fmt.Errorf("running compaction: %w", err)
 	}
@@ -342,13 +342,13 @@ func formatDailyDigest(report *compactReport) string {
 	return sb.String()
 }
 
-// sendCompactDigest sends the daily digest via gt mail send.
+// sendCompactDigest sends the daily digest via ms mail send.
 func sendCompactDigest(dateStr, body string) error {
 	subject := fmt.Sprintf("Wisp Compaction: %s", dateStr)
 
 	// Send to overseer/ only — supervisor/ is not a valid mail address (audit bead
 	// serves as the supervisor-side record).
-	mailCmd := exec.Command("gt", "mail", "send", "overseer/",
+	mailCmd := exec.Command("ms", "mail", "send", "overseer/",
 		"-s", subject,
 		"-m", body,
 	)
@@ -471,7 +471,7 @@ func runWeeklyRollup() error {
 
 	// Send to overseer/
 	subject := fmt.Sprintf("Weekly Wisp Compaction: %s to %s", weekStart, weekEnd)
-	mailCmd := exec.Command("gt", "mail", "send", "overseer/",
+	mailCmd := exec.Command("ms", "mail", "send", "overseer/",
 		"-s", subject,
 		"-m", markdown,
 	)

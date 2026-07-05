@@ -101,7 +101,7 @@ func (c *DoltConfigCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:   StatusError,
 		Message:  fmt.Sprintf("%d shared Dolt config(s) missing explicit bd keys", len(c.targets)),
 		Details:  details,
-		FixHint:  "Run 'gt doctor --fix' to set storage.backend, dolt.server, and dolt.port",
+		FixHint:  "Run 'ms doctor --fix' to set storage.backend, dolt.server, and dolt.port",
 		Category: c.CheckCategory,
 	}
 }

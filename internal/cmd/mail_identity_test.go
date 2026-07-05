@@ -7,10 +7,10 @@ import (
 )
 
 func TestDetectSenderFromCwdUsesAgentFileWitnessIdentity(t *testing.T) {
-	t.Setenv("GT_ROLE", "")
-	t.Setenv("GT_RIG", "")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_ROLE", "")
+	t.Setenv("MS_RIG", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
 
 	tmp := t.TempDir()
 	witnessDir := filepath.Join(tmp, "x267", "witness")
@@ -18,11 +18,11 @@ func TestDetectSenderFromCwdUsesAgentFileWitnessIdentity(t *testing.T) {
 		t.Fatalf("mkdir witness dir: %v", err)
 	}
 	if err := os.WriteFile(
-		filepath.Join(witnessDir, ".gt-agent"),
+		filepath.Join(witnessDir, ".ms-agent"),
 		[]byte(`{"role":"witness","rig":"x267"}`),
 		0o644,
 	); err != nil {
-		t.Fatalf("write .gt-agent: %v", err)
+		t.Fatalf("write .ms-agent: %v", err)
 	}
 
 	oldWd, err := os.Getwd()
@@ -41,10 +41,10 @@ func TestDetectSenderFromCwdUsesAgentFileWitnessIdentity(t *testing.T) {
 }
 
 func TestDetectSenderFromCwdUsesAgentFileRefineryIdentity(t *testing.T) {
-	t.Setenv("GT_ROLE", "")
-	t.Setenv("GT_RIG", "")
-	t.Setenv("GT_MINER", "")
-	t.Setenv("GT_CREW", "")
+	t.Setenv("MS_ROLE", "")
+	t.Setenv("MS_RIG", "")
+	t.Setenv("MS_MINER", "")
+	t.Setenv("MS_CREW", "")
 
 	tmp := t.TempDir()
 	refineryDir := filepath.Join(tmp, "x267", "refinery")
@@ -52,11 +52,11 @@ func TestDetectSenderFromCwdUsesAgentFileRefineryIdentity(t *testing.T) {
 		t.Fatalf("mkdir refinery dir: %v", err)
 	}
 	if err := os.WriteFile(
-		filepath.Join(refineryDir, ".gt-agent"),
+		filepath.Join(refineryDir, ".ms-agent"),
 		[]byte(`{"role":"refinery","rig":"x267"}`),
 		0o644,
 	); err != nil {
-		t.Fatalf("write .gt-agent: %v", err)
+		t.Fatalf("write .ms-agent: %v", err)
 	}
 
 	oldWd, err := os.Getwd()

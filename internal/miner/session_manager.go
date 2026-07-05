@@ -26,9 +26,9 @@ import (
 	"github.com/steveyegge/mineshaft/internal/util"
 )
 
-// debugSession logs non-fatal errors during session startup when GT_DEBUG_SESSION=1.
+// debugSession logs non-fatal errors during session startup when MS_DEBUG_SESSION=1.
 func debugSession(context string, err error) {
-	if os.Getenv("GT_DEBUG_SESSION") != "" && err != nil {
+	if os.Getenv("MS_DEBUG_SESSION") != "" && err != nil {
 		fmt.Fprintf(os.Stderr, "[session-debug] %s: %v\n", context, err)
 	}
 }
@@ -73,7 +73,7 @@ type SessionStartOptions struct {
 	RuntimeConfigDir string
 
 	// Agent is the agent override for this miner session (e.g., "codex", "gemini").
-	// If set, GT_AGENT is written to the tmux session environment table so that
+	// If set, MS_AGENT is written to the tmux session environment table so that
 	// IsAgentAlive and waitForMinerReady read the correct process names.
 	Agent string
 }
@@ -107,7 +107,7 @@ type SessionInfo struct {
 
 // SessionName generates the tmux session name for a miner.
 // Validates that the miner name doesn't contain the rig prefix to prevent
-// double-prefix bugs (e.g., "gt-mineshaft_manager-mineshaft_manager-142").
+// double-prefix bugs (e.g., "ms-mineshaft_manager-mineshaft_manager-142").
 func (m *SessionManager) SessionName(miner string) string {
 	sessionName := session.MinerSessionName(session.PrefixFor(m.rig.Name), miner)
 
@@ -123,9 +123,9 @@ func (m *SessionManager) SessionName(miner string) string {
 
 // validateSessionName checks for double-prefix session names.
 // Returns an error if the session name has the rig prefix duplicated.
-// Example bad name: "gt-mineshaft_manager-mineshaft_manager-142"
+// Example bad name: "ms-mineshaft_manager-mineshaft_manager-142"
 func validateSessionName(sessionName, rigName string) error {
-	// Expected format: gt-<rig>-<name>
+	// Expected format: ms-<rig>-<name>
 	// Check if the name part starts with the rig prefix (indicates double-prefix bug)
 	prefix := session.PrefixFor(rigName) + "-"
 	if !strings.HasPrefix(sessionName, prefix) {
@@ -135,9 +135,9 @@ func validateSessionName(sessionName, rigName string) error {
 	namePart := strings.TrimPrefix(sessionName, prefix)
 
 	// Check if name part starts with rig name followed by hyphen
-	// This indicates overflow name included rig prefix: gt-<rig>-<rig>-N
+	// This indicates overflow name included rig prefix: ms-<rig>-<rig>-N
 	if strings.HasPrefix(namePart, rigName+"-") {
-		return fmt.Errorf("double-prefix detected: %s (expected format: gt-%s-<name>)",
+		return fmt.Errorf("double-prefix detected: %s (expected format: ms-%s-<name>)",
 			sessionName, rigName)
 	}
 
@@ -348,12 +348,12 @@ func (m *SessionManager) Start(miner string, opts SessionStartOptions) error {
 
 	// Check if session already exists.
 	// If an existing session's pane process has died, kill the stale session
-	// and proceed rather than returning ErrSessionRunning (gt-jn40ft).
+	// and proceed rather than returning ErrSessionRunning (ms-jn40ft).
 	//
 	// For zombie detection, use IsAgentAlive directly rather than the
 	// heartbeat-primary isSessionStale path. The pane process is often a
 	// shell or wrapper that outlives the agent, so heartbeat-fresh + pane-PID
-	// alive can hide a dead agent — wedging gt session restart with
+	// alive can hide a dead agent — wedging ms session restart with
 	// ErrSessionRunning on the very zombie state recovery is meant to handle
 	// (hq-k1ot / np-tt5s). A false-negative here is recoverable: Start is
 	// about to (re)create the session, so killing a transiently-misclassified
@@ -393,7 +393,7 @@ func (m *SessionManager) Start(miner string, opts SessionStartOptions) error {
 	// the correct agent config. Without this, ResolveRoleAgentConfig returns the default
 	// role agent (usually Claude), causing WaitForRuntimeReady to poll for the wrong
 	// prompt prefix and all fallback/nudge logic to use incorrect agent capabilities.
-	// This was the root cause of gt-1j3m: Codex miners sat idle because the startup
+	// This was the root cause of ms-1j3m: Codex miners sat idle because the startup
 	// sequence used Claude's ReadyPromptPrefix ("❯ ") to detect readiness in a Codex
 	// session, timing out instead of using Codex's delay-based readiness.
 	townRoot := filepath.Dir(m.rig.Path)
@@ -416,7 +416,7 @@ func (m *SessionManager) Start(miner string, opts SessionStartOptions) error {
 	}
 
 	// Get fallback info to determine beacon content based on agent capabilities.
-	// Non-hook agents need "Run gt prime" in beacon; work instructions come as delayed nudge.
+	// Non-hook agents need "Run ms prime" in beacon; work instructions come as delayed nudge.
 	fallbackInfo := runtime.GetStartupFallbackInfo(runtimeConfig)
 
 	// Build startup command with beacon for predecessor discovery.
@@ -454,10 +454,10 @@ func (m *SessionManager) Start(miner string, opts SessionStartOptions) error {
 	// Compute environment vars BEFORE creating the session so they can be
 	// passed to tmux via -e flags. Setting env via SetEnvironment after the
 	// pane starts only affects newly spawned panes — the running pane (and
-	// any subprocess Claude spawns, e.g. bd) keeps its original env (gt-neycp).
+	// any subprocess Claude spawns, e.g. bd) keeps its original env (ms-neycp).
 	//
-	// GT_BRANCH and GT_MINER_PATH are critical for gt done's nuked-worktree
-	// fallback: when the miner's cwd is deleted before gt done finishes,
+	// MS_BRANCH and MS_MINER_PATH are critical for ms done's nuked-worktree
+	// fallback: when the miner's cwd is deleted before ms done finishes,
 	// these env vars allow branch detection and path resolution without a
 	// working directory.
 	minerGitBranch := ""
@@ -476,21 +476,21 @@ func (m *SessionManager) Start(miner string, opts SessionStartOptions) error {
 		Agent:            opts.Agent,
 		SessionName:      sessionID,
 	})
-	// AgentEnv already sets GT_ROLE, GT_RIG, GT_MINER, BD_ACTOR,
+	// AgentEnv already sets MS_ROLE, MS_RIG, MS_MINER, BD_ACTOR,
 	// BD_DOLT_AUTO_COMMIT, etc. Layer in miner-session-specific vars.
-	envVars["GT_MINER_PATH"] = workDir
-	envVars["GT_TOWN_ROOT"] = townRoot
-	envVars["GT_RUN"] = runID
+	envVars["MS_MINER_PATH"] = workDir
+	envVars["MS_TOWN_ROOT"] = townRoot
+	envVars["MS_RUN"] = runID
 	envVars["MINER_SLOT"] = fmt.Sprintf("%d", m.minerSlot(miner))
-	envVars["GT_PROCESS_NAMES"] = strings.Join(config.ResolveProcessNames(runtimeConfig.ResolvedAgent, runtimeConfig.Command, runtimeConfig.Args...), ",")
+	envVars["MS_PROCESS_NAMES"] = strings.Join(config.ResolveProcessNames(runtimeConfig.ResolvedAgent, runtimeConfig.Command, runtimeConfig.Args...), ",")
 	if minerGitBranch != "" {
-		envVars["GT_BRANCH"] = minerGitBranch
+		envVars["MS_BRANCH"] = minerGitBranch
 	}
-	// AgentEnv only emits GT_AGENT when opts.Agent is non-empty (explicit override).
-	// Fallback for the no-override path so the tmux session table has GT_AGENT
+	// AgentEnv only emits MS_AGENT when opts.Agent is non-empty (explicit override).
+	// Fallback for the no-override path so the tmux session table has MS_AGENT
 	// for show-environment lookups.
-	if _, hasGTAgent := envVars["GT_AGENT"]; !hasGTAgent && runtimeConfig.ResolvedAgent != "" {
-		envVars["GT_AGENT"] = runtimeConfig.ResolvedAgent
+	if _, hasGTAgent := envVars["MS_AGENT"]; !hasGTAgent && runtimeConfig.ResolvedAgent != "" {
+		envVars["MS_AGENT"] = runtimeConfig.ResolvedAgent
 	}
 	// Custom agent config dir env (e.g., GEMINI_CONFIG_DIR) for non-Claude agents.
 	if runtimeConfig.Session != nil && runtimeConfig.Session.ConfigDirEnv != "" && opts.RuntimeConfigDir != "" {
@@ -504,11 +504,11 @@ func (m *SessionManager) Start(miner string, opts SessionStartOptions) error {
 		return fmt.Errorf("creating session: %w", err)
 	}
 
-	// Record agent's pane_id for ZFC-compliant liveness checks (gt-qmsx).
+	// Record agent's pane_id for ZFC-compliant liveness checks (ms-qmsx).
 	// Declared pane identity replaces process-tree inference in IsRuntimeRunning
-	// and FindAgentPane. Legacy sessions without GT_PANE_ID fall back to scanning.
+	// and FindAgentPane. Legacy sessions without MS_PANE_ID fall back to scanning.
 	if paneID, err := m.tmux.GetPaneID(sessionID); err == nil {
-		debugSession("SetEnvironment GT_PANE_ID", m.tmux.SetEnvironment(sessionID, "GT_PANE_ID", paneID))
+		debugSession("SetEnvironment MS_PANE_ID", m.tmux.SetEnvironment(sessionID, "MS_PANE_ID", paneID))
 	}
 
 	// Hook the issue to the miner if provided via --issue flag
@@ -555,7 +555,7 @@ func (m *SessionManager) Start(miner string, opts SessionStartOptions) error {
 			runtime.DeliverStartupPromptFallback(m.tmux, sessionID, startupPromptFallback, runtimeConfig, constants.ClaudeStartTimeout))
 	} else {
 		if fallbackInfo.StartupNudgeDelayMs > 0 {
-			// Wait for agent to finish processing the beacon + gt prime before sending
+			// Wait for agent to finish processing the beacon + ms prime before sending
 			// work instructions. Prompt-capable runtimes already got the beacon as the
 			// initial CLI prompt, so they only need the delayed startup nudge here.
 			primeWaitRC := runtime.RuntimeConfigWithMinDelay(runtimeConfig, fallbackInfo.StartupNudgeDelayMs)
@@ -585,7 +585,7 @@ func (m *SessionManager) Start(miner string, opts SessionStartOptions) error {
 	// re-deliver the work instructions via nudge to kick it into action.
 	// Runs asynchronously: verifyStartupNudgeDelivery sleeps before checking, so a
 	// synchronous call would add ~25s to every successful miner startup on the
-	// common gt sling path. Non-fatal: the witness zombie patrol handles unrecovered stalls.
+	// common ms sling path. Non-fatal: the witness zombie patrol handles unrecovered stalls.
 	if !fallbackInfo.SendBeaconNudge && !fallbackInfo.SendStartupNudge {
 		go m.verifyStartupNudgeDelivery(sessionID, runtimeConfig, startupNudgeContent)
 	}
@@ -607,13 +607,13 @@ func (m *SessionManager) Start(miner string, opts SessionStartOptions) error {
 		return fmt.Errorf("session %s unhealthy during startup: %s", sessionID, status)
 	}
 
-	// Validate GT_AGENT is set. Without GT_AGENT, IsAgentAlive falls back to
+	// Validate MS_AGENT is set. Without MS_AGENT, IsAgentAlive falls back to
 	// ["node", "claude"] process detection and witness patrol will auto-nuke
 	// miners running non-Claude agents (e.g., opencode). Fail fast.
-	gtAgent, _ := m.tmux.GetEnvironment(sessionID, "GT_AGENT")
+	gtAgent, _ := m.tmux.GetEnvironment(sessionID, "MS_AGENT")
 	if gtAgent == "" {
 		_ = m.tmux.KillSessionWithProcesses(sessionID)
-		return fmt.Errorf("GT_AGENT not set in session %s (command=%q); "+
+		return fmt.Errorf("MS_AGENT not set in session %s (command=%q); "+
 			"witness patrol will misidentify this miner as a zombie and auto-nuke it. "+
 			"Ensure RuntimeConfig.ResolvedAgent is set during agent config resolution",
 			sessionID, runtimeConfig.Command)
@@ -622,12 +622,12 @@ func (m *SessionManager) Start(miner string, opts SessionStartOptions) error {
 	// Track PID for defense-in-depth orphan cleanup (non-fatal)
 	_ = session.TrackSessionPID(townRoot, sessionID, m.tmux)
 
-	// Touch initial heartbeat so liveness detection works from the start (gt-qjtq).
-	// Subsequent touches happen on every gt command via persistentPreRun.
+	// Touch initial heartbeat so liveness detection works from the start (ms-qjtq).
+	// Subsequent touches happen on every ms command via persistentPreRun.
 	TouchSessionHeartbeat(townRoot, sessionID)
 
 	// Stream miner's Claude Code JSONL conversation log to VictoriaLogs (opt-in).
-	if os.Getenv("GT_LOG_AGENT_OUTPUT") == "true" && os.Getenv("GT_OTEL_LOGS_URL") != "" {
+	if os.Getenv("MS_LOG_AGENT_OUTPUT") == "true" && os.Getenv("MS_OTEL_LOGS_URL") != "" {
 		if err := session.ActivateAgentLogging(sessionID, workDir, runID); err != nil {
 			// Non-fatal: observability failure must never block agent startup.
 			debugSession("ActivateAgentLogging", err)
@@ -644,7 +644,7 @@ func (m *SessionManager) Start(miner string, opts SessionStartOptions) error {
 // isSessionStale checks if a tmux session's pane process has died.
 // A stale session exists in tmux but its main process (the agent) is no longer running.
 // This happens when the agent crashes during startup but tmux keeps the dead pane.
-// Delegates to isSessionProcessDead to avoid duplicating process-check logic (gt-qgzj1h).
+// Delegates to isSessionProcessDead to avoid duplicating process-check logic (ms-qgzj1h).
 func (m *SessionManager) isSessionStale(sessionID string) bool {
 	return isSessionProcessDead(m.tmux, sessionID, filepath.Dir(m.rig.Path))
 }

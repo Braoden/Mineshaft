@@ -28,7 +28,7 @@ func cleanupDoltServer() {
 }
 
 // configureTestGitIdentity sets git global config in an isolated HOME directory
-// so that EnsureDoltIdentity (called during gt install preflight) can copy
+// so that EnsureDoltIdentity (called during ms install preflight) can copy
 // identity from git to dolt.
 func configureTestGitIdentity(t *testing.T, homeDir string) {
 	t.Helper()

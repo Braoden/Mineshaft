@@ -16,7 +16,7 @@ import (
 
 // getCrewManagerForMember returns a crew manager, inferring the rig from the
 // crew member name if cwd-based inference fails. Use this when a crew member
-// name is known (e.g., gt crew at <name>).
+// name is known (e.g., ms crew at <name>).
 func getCrewManagerForMember(rigName, crewName string) (*crew.Manager, *rig.Rig, error) {
 	if rigName == "" {
 		townRoot, err := workspace.FindFromCwdOrError()
@@ -134,7 +134,7 @@ func parseCrewSessionName(sessionName string) (rigName, crewName, prefix string,
 
 // findRigCrewSessions returns all crew sessions for a given rig.
 // Finds sessions matching <prefix>-crew-* pattern.
-// rigPrefix is the rig's beads prefix (e.g., "gt", "bd") — passed directly from
+// rigPrefix is the rig's beads prefix (e.g., "ms", "bd") — passed directly from
 // the parsed session identity to avoid re-derivation failures when the registry
 // isn't loaded.
 func findRigCrewSessions(rigPrefix string) ([]string, error) { //nolint:unparam // error return kept for future use

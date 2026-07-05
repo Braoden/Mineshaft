@@ -19,8 +19,8 @@ import (
 // inherited vars), tmux global cleanup, and prime session env repair.
 // See GH#3006.
 var IdentityEnvVars = []string{
-	"GT_ROLE", "GT_RIG", "GT_CREW", "GT_MINER", "GT_DOG_NAME",
-	"GT_SESSION", "GT_AGENT", "BD_ACTOR", "GIT_AUTHOR_NAME", "BEADS_AGENT_NAME",
+	"MS_ROLE", "MS_RIG", "MS_CREW", "MS_MINER", "MS_DOG_NAME",
+	"MS_SESSION", "MS_AGENT", "BD_ACTOR", "GIT_AUTHOR_NAME", "BEADS_AGENT_NAME",
 }
 
 // AgentEnvConfig specifies the configuration for generating agent environment variables.
@@ -37,40 +37,40 @@ type AgentEnvConfig struct {
 	AgentName string
 
 	// TownRoot is the root of the Mineshaft workspace.
-	// Sets GT_ROOT environment variable.
+	// Sets MS_ROOT environment variable.
 	TownRoot string
 
 	// RuntimeConfigDir is the optional CLAUDE_CONFIG_DIR path
 	RuntimeConfigDir string
 
 	// SessionIDEnv is the environment variable name that holds the session ID.
-	// Sets GT_SESSION_ID_ENV so the runtime knows where to find the session ID.
+	// Sets MS_SESSION_ID_ENV so the runtime knows where to find the session ID.
 	SessionIDEnv string
 
 	// Agent is the agent override (e.g., "codex", "gemini").
-	// If set, GT_AGENT is written to the tmux session table via SetEnvironment
+	// If set, MS_AGENT is written to the tmux session table via SetEnvironment
 	// so that IsAgentAlive and waitForMinerReady can read it via GetEnvironment.
 	// Without this, GetEnvironment returns empty (tmux show-environment reads the
 	// session table, not the process env set via exec env in the startup command).
 	Agent string
 
 	// Prompt is the initial startup prompt/beacon given to the agent.
-	// When set, the first line (truncated) is added as gt.prompt to OTEL_RESOURCE_ATTRIBUTES
+	// When set, the first line (truncated) is added as ms.prompt to OTEL_RESOURCE_ATTRIBUTES
 	// so logs can be correlated to the specific task the agent was working on.
 	Prompt string
 
-	// Issue is the molecule/bead ID being worked (e.g., "gt-abc12").
-	// Added as gt.issue to OTEL_RESOURCE_ATTRIBUTES for filtering by ticket.
+	// Issue is the molecule/bead ID being worked (e.g., "ms-abc12").
+	// Added as ms.issue to OTEL_RESOURCE_ATTRIBUTES for filtering by ticket.
 	Issue string
 
 	// Topic is the beacon topic describing why the session was started.
 	// Examples: "assigned", "patrol", "start", "restart", "handoff".
-	// Added as gt.topic to OTEL_RESOURCE_ATTRIBUTES for filtering by work type.
+	// Added as ms.topic to OTEL_RESOURCE_ATTRIBUTES for filtering by work type.
 	Topic string
 
-	// SessionName is the tmux session name for this agent (e.g., "hq-overseer", "gt-witness").
-	// Added as gt.session to OTEL_RESOURCE_ATTRIBUTES so all Claude logs from a
-	// single GT session can be correlated, and as GT_SESSION env var.
+	// SessionName is the tmux session name for this agent (e.g., "hq-overseer", "ms-witness").
+	// Added as ms.session to OTEL_RESOURCE_ATTRIBUTES so all Claude logs from a
+	// single MS session can be correlated, and as MS_SESSION env var.
 	SessionName string
 }
 
@@ -80,61 +80,61 @@ func AgentEnv(cfg AgentEnvConfig) map[string]string {
 	env := make(map[string]string)
 
 	// Set role-specific variables
-	// GT_ROLE is set in compound format (e.g., "beads/crew/jane") so that
+	// MS_ROLE is set in compound format (e.g., "beads/crew/jane") so that
 	// beads can parse it without knowing about Mineshaft role types.
 	switch cfg.Role {
 	case constants.RoleOverseer:
-		env["GT_ROLE"] = constants.RoleOverseer
+		env["MS_ROLE"] = constants.RoleOverseer
 		env["BD_ACTOR"] = constants.RoleOverseer
 		env["GIT_AUTHOR_NAME"] = constants.RoleOverseer
 
 	case constants.RoleSupervisor:
-		env["GT_ROLE"] = constants.RoleSupervisor
+		env["MS_ROLE"] = constants.RoleSupervisor
 		env["BD_ACTOR"] = constants.RoleSupervisor
 		env["GIT_AUTHOR_NAME"] = constants.RoleSupervisor
 
 	case "boot":
-		env["GT_ROLE"] = "supervisor/boot"
+		env["MS_ROLE"] = "supervisor/boot"
 		env["BD_ACTOR"] = "supervisor-boot"
 		env["GIT_AUTHOR_NAME"] = "boot"
 
 	case constants.RoleWitness:
-		env["GT_ROLE"] = fmt.Sprintf("%s/witness", cfg.Rig)
-		env["GT_RIG"] = cfg.Rig
+		env["MS_ROLE"] = fmt.Sprintf("%s/witness", cfg.Rig)
+		env["MS_RIG"] = cfg.Rig
 		env["BD_ACTOR"] = fmt.Sprintf("%s/witness", cfg.Rig)
 		env["GIT_AUTHOR_NAME"] = fmt.Sprintf("%s/witness", cfg.Rig)
 
 	case constants.RoleRefinery:
-		env["GT_ROLE"] = fmt.Sprintf("%s/refinery", cfg.Rig)
-		env["GT_RIG"] = cfg.Rig
+		env["MS_ROLE"] = fmt.Sprintf("%s/refinery", cfg.Rig)
+		env["MS_RIG"] = cfg.Rig
 		env["BD_ACTOR"] = fmt.Sprintf("%s/refinery", cfg.Rig)
 		env["GIT_AUTHOR_NAME"] = fmt.Sprintf("%s/refinery", cfg.Rig)
 
 	case constants.RoleMiner:
-		env["GT_ROLE"] = fmt.Sprintf("%s/miners/%s", cfg.Rig, cfg.AgentName)
-		env["GT_RIG"] = cfg.Rig
-		env["GT_MINER"] = cfg.AgentName
+		env["MS_ROLE"] = fmt.Sprintf("%s/miners/%s", cfg.Rig, cfg.AgentName)
+		env["MS_RIG"] = cfg.Rig
+		env["MS_MINER"] = cfg.AgentName
 		env["BD_ACTOR"] = fmt.Sprintf("%s/miners/%s", cfg.Rig, cfg.AgentName)
 		env["GIT_AUTHOR_NAME"] = cfg.AgentName
 		// Disable Dolt auto-commit for miners. With branch-per-miner,
-		// individual commits are pointless — all changes merge at gt done time
+		// individual commits are pointless — all changes merge at ms done time
 		// via DOLT_MERGE. Without this, concurrent miners cause manifest
-		// contention leading to Dolt read-only mode (gt-5cc2p).
+		// contention leading to Dolt read-only mode (ms-5cc2p).
 		env["BD_DOLT_AUTO_COMMIT"] = "off"
 
 	case constants.RoleCrew:
-		env["GT_ROLE"] = fmt.Sprintf("%s/crew/%s", cfg.Rig, cfg.AgentName)
-		env["GT_RIG"] = cfg.Rig
-		env["GT_CREW"] = cfg.AgentName
+		env["MS_ROLE"] = fmt.Sprintf("%s/crew/%s", cfg.Rig, cfg.AgentName)
+		env["MS_RIG"] = cfg.Rig
+		env["MS_CREW"] = cfg.AgentName
 		env["BD_ACTOR"] = fmt.Sprintf("%s/crew/%s", cfg.Rig, cfg.AgentName)
 		env["GIT_AUTHOR_NAME"] = cfg.AgentName
 
 	case "dog":
 		// Dogs are town-level workers with role_agents key "dog".
-		// GT_ROLE must be set so startup command resolution can honor role_agents.dog.
-		env["GT_ROLE"] = "dog"
+		// MS_ROLE must be set so startup command resolution can honor role_agents.dog.
+		env["MS_ROLE"] = "dog"
 		if cfg.AgentName != "" {
-			env["GT_DOG_NAME"] = cfg.AgentName
+			env["MS_DOG_NAME"] = cfg.AgentName
 			env["BD_ACTOR"] = fmt.Sprintf("supervisor/dogs/%s", cfg.AgentName)
 			env["GIT_AUTHOR_NAME"] = cfg.AgentName
 		} else {
@@ -143,10 +143,10 @@ func AgentEnv(cfg AgentEnvConfig) map[string]string {
 		}
 	}
 
-	// Only set GT_ROOT if provided
+	// Only set MS_ROOT if provided
 	// Empty values would override tmux session environment
 	if cfg.TownRoot != "" {
-		env["GT_ROOT"] = cfg.TownRoot
+		env["MS_ROOT"] = cfg.TownRoot
 		// Prevent git from walking up to umbrella repo when running in rig worktrees.
 		// This stops accidental commits to the umbrella when running git commands from
 		// intermediate directories (e.g., miners/) that don't have their own .git.
@@ -165,20 +165,20 @@ func AgentEnv(cfg AgentEnvConfig) map[string]string {
 
 	// Add session ID env var name if provided
 	if cfg.SessionIDEnv != "" {
-		env["GT_SESSION_ID_ENV"] = cfg.SessionIDEnv
+		env["MS_SESSION_ID_ENV"] = cfg.SessionIDEnv
 	}
 
-	// Set GT_SESSION when a session name is provided, so gt commands and
+	// Set MS_SESSION when a session name is provided, so ms commands and
 	// cost reports can correlate activity to a specific tmux session.
 	if cfg.SessionName != "" {
-		env["GT_SESSION"] = cfg.SessionName
+		env["MS_SESSION"] = cfg.SessionName
 	}
 
-	// Set GT_AGENT when an agent override is in use.
+	// Set MS_AGENT when an agent override is in use.
 	// This makes the override visible via tmux show-environment so that
 	// IsAgentAlive and waitForMinerReady use the correct process names.
 	if cfg.Agent != "" {
-		env["GT_AGENT"] = cfg.Agent
+		env["MS_AGENT"] = cfg.Agent
 	}
 
 	// Disable bd's per-repo JSONL auto-backup for all Mineshaft agents.
@@ -216,17 +216,17 @@ func AgentEnv(cfg AgentEnvConfig) map[string]string {
 	env["CLAUDE_CODE_EFFORT_LEVEL"] = effort
 
 	// Clear CLAUDECODE to prevent nested session detection in Claude Code v2.x.
-	// When gt sling is invoked from within a Claude Code session, CLAUDECODE=1
+	// When ms sling is invoked from within a Claude Code session, CLAUDECODE=1
 	// leaks through tmux's global environment into new miner sessions, causing
 	// Claude Code to refuse to start with a "nested sessions" error.
 	// See: https://github.com/steveyegge/mineshaft/issues/1666
 	env["CLAUDECODE"] = ""
 
-	// Propagate Claude Code's own OTEL telemetry when GT telemetry is enabled.
+	// Propagate Claude Code's own OTEL telemetry when MS telemetry is enabled.
 	// Reuses the same VictoriaMetrics endpoint as mineshaft's telemetry so all
-	// metrics (gt + claude) land in the same store.
-	// Opt-in: only active when GT_OTEL_METRICS_URL is explicitly set.
-	if metricsURL := os.Getenv("GT_OTEL_METRICS_URL"); metricsURL != "" {
+	// metrics (ms + claude) land in the same store.
+	// Opt-in: only active when MS_OTEL_METRICS_URL is explicitly set.
+	if metricsURL := os.Getenv("MS_OTEL_METRICS_URL"); metricsURL != "" {
 		env["CLAUDE_CODE_ENABLE_TELEMETRY"] = "1"
 		env["OTEL_METRICS_EXPORTER"] = "otlp"
 		env["OTEL_METRIC_EXPORT_INTERVAL"] = "1000"
@@ -238,7 +238,7 @@ func AgentEnv(cfg AgentEnvConfig) map[string]string {
 		// Mirror into bd's own var names so any `bd` call inside the Claude
 		// session emits metrics/logs to the same VictoriaMetrics instance.
 		env["BD_OTEL_METRICS_URL"] = metricsURL
-		if logsURL := os.Getenv("GT_OTEL_LOGS_URL"); logsURL != "" {
+		if logsURL := os.Getenv("MS_OTEL_LOGS_URL"); logsURL != "" {
 			env["BD_OTEL_LOGS_URL"] = logsURL
 			// Claude Code supports OTLP log export; route to the same VictoriaLogs
 			// instance. Uses protobuf (VictoriaLogs rejects JSON).
@@ -247,42 +247,42 @@ func AgentEnv(cfg AgentEnvConfig) map[string]string {
 			env["OTEL_EXPORTER_OTLP_LOGS_PROTOCOL"] = "http/protobuf"
 			// Log tool usage details (which tools ran, their status).
 			env["OTEL_LOG_TOOL_DETAILS"] = "true"
-			// Log tool output content (e.g. gt prime stdout as it reaches Claude).
+			// Log tool output content (e.g. ms prime stdout as it reaches Claude).
 			env["OTEL_LOG_TOOL_CONTENT"] = "true"
 			// Log user-turn messages (initial beacon + any human prompts to Claude).
 			env["OTEL_LOG_USER_PROMPTS"] = "true"
 		}
 
-		// Attach GT context as OTEL resource attributes so Claude's metrics
+		// Attach MS context as OTEL resource attributes so Claude's metrics
 		// can be correlated with mineshaft's own telemetry in VictoriaMetrics.
 		// Claude Code's Node.js SDK picks up OTEL_RESOURCE_ATTRIBUTES automatically.
 		var attrs []string
-		if v := env["GT_ROLE"]; v != "" {
-			attrs = append(attrs, "gt.role="+v)
+		if v := env["MS_ROLE"]; v != "" {
+			attrs = append(attrs, "ms.role="+v)
 		}
 		if cfg.Rig != "" {
-			attrs = append(attrs, "gt.rig="+cfg.Rig)
+			attrs = append(attrs, "ms.rig="+cfg.Rig)
 		}
 		if v := env["BD_ACTOR"]; v != "" {
-			attrs = append(attrs, "gt.actor="+v)
+			attrs = append(attrs, "ms.actor="+v)
 		}
 		if cfg.AgentName != "" {
-			attrs = append(attrs, "gt.agent="+cfg.AgentName)
+			attrs = append(attrs, "ms.agent="+cfg.AgentName)
 		}
 		if cfg.TownRoot != "" {
-			attrs = append(attrs, "gt.town="+filepath.Base(cfg.TownRoot))
+			attrs = append(attrs, "ms.town="+filepath.Base(cfg.TownRoot))
 		}
 		if cfg.Prompt != "" {
-			attrs = append(attrs, "gt.prompt="+sanitizeOTELAttrValue(cfg.Prompt, 120))
+			attrs = append(attrs, "ms.prompt="+sanitizeOTELAttrValue(cfg.Prompt, 120))
 		}
 		if cfg.Issue != "" {
-			attrs = append(attrs, "gt.issue="+sanitizeOTELAttrValue(cfg.Issue, 40))
+			attrs = append(attrs, "ms.issue="+sanitizeOTELAttrValue(cfg.Issue, 40))
 		}
 		if cfg.Topic != "" {
-			attrs = append(attrs, "gt.topic="+sanitizeOTELAttrValue(cfg.Topic, 40))
+			attrs = append(attrs, "ms.topic="+sanitizeOTELAttrValue(cfg.Topic, 40))
 		}
 		if cfg.SessionName != "" {
-			attrs = append(attrs, "gt.session="+sanitizeOTELAttrValue(cfg.SessionName, 80))
+			attrs = append(attrs, "ms.session="+sanitizeOTELAttrValue(cfg.SessionName, 80))
 		}
 		if len(attrs) > 0 {
 			env["OTEL_RESOURCE_ATTRIBUTES"] = strings.Join(attrs, ",")
@@ -290,20 +290,20 @@ func AgentEnv(cfg AgentEnvConfig) map[string]string {
 	}
 
 	// Inject Dolt server endpoint so agents' direct bd invocations connect to
-	// gt's central server instead of auto-starting rogue per-rig servers.
+	// ms's central server instead of auto-starting rogue per-rig servers.
 	// BEADS_DOLT_* values are output aliases only; they are never authoritative.
 	if cfg.TownRoot != "" {
 		if port := ResolveDoltPort(cfg.TownRoot); port > 0 {
 			setDoltPortEnv(env, strconv.Itoa(port))
 		}
 	}
-	if _, ok := env["GT_DOLT_PORT"]; !ok {
-		if v := os.Getenv("GT_DOLT_PORT"); v != "" {
+	if _, ok := env["MS_DOLT_PORT"]; !ok {
+		if v := os.Getenv("MS_DOLT_PORT"); v != "" {
 			setDoltPortEnv(env, v)
 		}
 	}
 	// Suppress bd's Dolt auto-start for all Mineshaft agents (GH#2930).
-	// Mineshaft manages its own Dolt server (gt dolt start/stop). When the
+	// Mineshaft manages its own Dolt server (ms dolt start/stop). When the
 	// server is momentarily unreachable (restart, journal hiccup), bd's
 	// auto-start tries to launch a shadow server in the agent's .beads/dolt/
 	// directory — which conflicts with the real server on the same port and
@@ -313,10 +313,10 @@ func AgentEnv(cfg AgentEnvConfig) map[string]string {
 		env["BEADS_DOLT_AUTO_START"] = "0"
 	}
 
-	// Propagate Dolt server host. GT/config host is authoritative; stale Beads
+	// Propagate Dolt server host. MS/config host is authoritative; stale Beads
 	// aliases from the parent shell are intentionally ignored.
 	if host := ResolveDoltHost(cfg.TownRoot); host != "" {
-		env["GT_DOLT_HOST"] = host
+		env["MS_DOLT_HOST"] = host
 		env["BEADS_DOLT_SERVER_HOST"] = host
 	}
 
@@ -389,7 +389,7 @@ func AgentEnv(cfg AgentEnvConfig) map[string]string {
 }
 
 func setDoltPortEnv(env map[string]string, port string) {
-	env["GT_DOLT_PORT"] = port
+	env["MS_DOLT_PORT"] = port
 	env["BEADS_DOLT_SERVER_PORT"] = port
 	env["BEADS_DOLT_PORT"] = port
 }
@@ -414,9 +414,9 @@ func sanitizeOTELAttrValue(s string, maxLen int) string {
 // ResolveDoltPort determines the Dolt server port for the given town root.
 //
 // Resolution order:
-//  1. GT_DOLT_PORT environment variable (explicit operator intent)
+//  1. MS_DOLT_PORT environment variable (explicit operator intent)
 //  2. .dolt-data/config.yaml listener.port
-//  3. overseer/daemon.json env.GT_DOLT_PORT
+//  3. overseer/daemon.json env.MS_DOLT_PORT
 //  4. 0 (caller should skip injection — DefaultPort 3307 remains the default)
 func ResolveDoltPort(townRoot string) int {
 	if port := resolveDoltPortFromEnv(); port > 0 {
@@ -439,13 +439,13 @@ func ResolveDoltPort(townRoot string) int {
 
 // ResolveConfiguredDoltPort determines the durable configured Dolt port for
 // initializing a target town. Unlike ResolveDoltPort, it does not consult
-// ambient GT_DOLT_PORT until after the target town's managed config, which may
+// ambient MS_DOLT_PORT until after the target town's managed config, which may
 // be stale in long-lived agent sessions.
 //
 // Resolution order:
-//  1. .dolt-data/config.yaml listener.port unless GT_DOLT_IGNORE_CONFIG=1
-//  2. GT_DOLT_PORT environment variable
-//  3. overseer/daemon.json env.GT_DOLT_PORT
+//  1. .dolt-data/config.yaml listener.port unless MS_DOLT_IGNORE_CONFIG=1
+//  2. MS_DOLT_PORT environment variable
+//  3. overseer/daemon.json env.MS_DOLT_PORT
 //  4. 0 (caller should use its default)
 func ResolveConfiguredDoltPort(townRoot string) int {
 	if _, port, ok := ManagedDoltEndpoint(townRoot); ok {
@@ -462,18 +462,18 @@ func ResolveConfiguredDoltPort(townRoot string) int {
 
 // ResolveConfiguredDoltHost determines the durable configured Dolt host for
 // initializing a target town. The target town's managed config beats ambient
-// GT_DOLT_HOST, which may describe the caller's current town instead.
+// MS_DOLT_HOST, which may describe the caller's current town instead.
 //
 // Resolution order:
-//  1. .dolt-data/config.yaml listener.host unless GT_DOLT_IGNORE_CONFIG=1
-//  2. GT_DOLT_HOST environment variable
-//  3. overseer/daemon.json env.GT_DOLT_HOST
+//  1. .dolt-data/config.yaml listener.host unless MS_DOLT_IGNORE_CONFIG=1
+//  2. MS_DOLT_HOST environment variable
+//  3. overseer/daemon.json env.MS_DOLT_HOST
 //  4. "" (caller should use its default)
 func ResolveConfiguredDoltHost(townRoot string) string {
 	if host, _, ok := ManagedDoltEndpoint(townRoot); ok {
 		return host
 	}
-	if host := strings.TrimSpace(os.Getenv("GT_DOLT_HOST")); host != "" {
+	if host := strings.TrimSpace(os.Getenv("MS_DOLT_HOST")); host != "" {
 		return host
 	}
 	return resolveDoltHostFromDaemonJSON(townRoot)
@@ -481,9 +481,9 @@ func ResolveConfiguredDoltHost(townRoot string) string {
 
 // ManagedDoltEndpoint reads the target town's managed Dolt config.yaml without
 // falling back to ambient environment. The boolean reports whether the managed
-// config exists and is not disabled by GT_DOLT_IGNORE_CONFIG.
+// config exists and is not disabled by MS_DOLT_IGNORE_CONFIG.
 func ManagedDoltEndpoint(townRoot string) (host string, port int, ok bool) {
-	if townRoot == "" || os.Getenv("GT_DOLT_IGNORE_CONFIG") == "1" {
+	if townRoot == "" || os.Getenv("MS_DOLT_IGNORE_CONFIG") == "1" {
 		return "", 0, false
 	}
 	configPath := filepath.Join(townRoot, ".dolt-data", "config.yaml")
@@ -503,10 +503,10 @@ func NormalizeConfiguredDoltEnv(base []string, townRoot string) []string {
 	}
 	base = stripDoltEndpointEnv(base)
 	if host != "" {
-		base = append(base, "GT_DOLT_HOST="+host)
+		base = append(base, "MS_DOLT_HOST="+host)
 	}
 	if port > 0 {
-		base = append(base, "GT_DOLT_PORT="+strconv.Itoa(port))
+		base = append(base, "MS_DOLT_PORT="+strconv.Itoa(port))
 	}
 	return base
 }
@@ -515,7 +515,7 @@ func NormalizeConfiguredDoltEnv(base []string, townRoot string) []string {
 // process environment for target-town startup boundaries.
 func ApplyConfiguredDoltEnv(townRoot string) {
 	normalized := NormalizeConfiguredDoltEnv(os.Environ(), townRoot)
-	for _, key := range []string{"GT_DOLT_HOST", "GT_DOLT_PORT", "BEADS_DOLT_SERVER_HOST", "BEADS_DOLT_SERVER_PORT", "BEADS_DOLT_PORT"} {
+	for _, key := range []string{"MS_DOLT_HOST", "MS_DOLT_PORT", "BEADS_DOLT_SERVER_HOST", "BEADS_DOLT_SERVER_PORT", "BEADS_DOLT_PORT"} {
 		_ = os.Unsetenv(key)
 	}
 	for _, entry := range normalized {
@@ -539,7 +539,7 @@ func stripDoltEndpointEnv(env []string) []string {
 }
 
 func isDoltEndpointEnvKey(key string) bool {
-	for _, want := range []string{"GT_DOLT_HOST", "GT_DOLT_PORT", "BEADS_DOLT_SERVER_HOST", "BEADS_DOLT_SERVER_PORT", "BEADS_DOLT_PORT"} {
+	for _, want := range []string{"MS_DOLT_HOST", "MS_DOLT_PORT", "BEADS_DOLT_SERVER_HOST", "BEADS_DOLT_SERVER_PORT", "BEADS_DOLT_PORT"} {
 		if runtime.GOOS == "windows" {
 			if strings.EqualFold(key, want) {
 				return true
@@ -558,7 +558,7 @@ func resolveDoltPort(townRoot string) int {
 }
 
 func resolveDoltPortFromEnv() int {
-	if p := os.Getenv("GT_DOLT_PORT"); p != "" {
+	if p := os.Getenv("MS_DOLT_PORT"); p != "" {
 		if port, err := strconv.Atoi(p); err == nil && port > 0 {
 			return port
 		}
@@ -567,7 +567,7 @@ func resolveDoltPortFromEnv() int {
 }
 
 func resolveDoltPortFromConfigYAML(townRoot string) int {
-	if townRoot == "" || os.Getenv("GT_DOLT_IGNORE_CONFIG") == "1" {
+	if townRoot == "" || os.Getenv("MS_DOLT_IGNORE_CONFIG") == "1" {
 		return 0
 	}
 	configPath := filepath.Join(townRoot, ".dolt-data", "config.yaml")
@@ -593,7 +593,7 @@ func resolveDoltPortFromDaemonJSON(townRoot string) int {
 	if err := json.Unmarshal(data, &daemonEnv); err != nil {
 		return 0
 	}
-	if v, ok := daemonEnv.Env["GT_DOLT_PORT"]; ok {
+	if v, ok := daemonEnv.Env["MS_DOLT_PORT"]; ok {
 		if port, err := strconv.Atoi(v); err == nil && port > 0 {
 			return port
 		}
@@ -605,12 +605,12 @@ func resolveDoltPortFromDaemonJSON(townRoot string) int {
 // BEADS_DOLT_* aliases are derived outputs and are intentionally ignored.
 //
 // Resolution order:
-//  1. GT_DOLT_HOST environment variable (explicit operator intent)
-//  2. .dolt-data/config.yaml listener.host unless GT_DOLT_IGNORE_CONFIG=1
-//  3. overseer/daemon.json env.GT_DOLT_HOST
+//  1. MS_DOLT_HOST environment variable (explicit operator intent)
+//  2. .dolt-data/config.yaml listener.host unless MS_DOLT_IGNORE_CONFIG=1
+//  3. overseer/daemon.json env.MS_DOLT_HOST
 //  4. "" (caller should use its default localhost behavior)
 func ResolveDoltHost(townRoot string) string {
-	if host := strings.TrimSpace(os.Getenv("GT_DOLT_HOST")); host != "" {
+	if host := strings.TrimSpace(os.Getenv("MS_DOLT_HOST")); host != "" {
 		return host
 	}
 	if townRoot == "" {
@@ -623,7 +623,7 @@ func ResolveDoltHost(townRoot string) string {
 }
 
 func resolveDoltHostFromConfigYAML(townRoot string) string {
-	if townRoot == "" || os.Getenv("GT_DOLT_IGNORE_CONFIG") == "1" {
+	if townRoot == "" || os.Getenv("MS_DOLT_IGNORE_CONFIG") == "1" {
 		return ""
 	}
 	configPath := filepath.Join(townRoot, ".dolt-data", "config.yaml")
@@ -649,11 +649,11 @@ func resolveDoltHostFromDaemonJSON(townRoot string) string {
 	if err := json.Unmarshal(data, &daemonEnv); err != nil {
 		return ""
 	}
-	return strings.TrimSpace(daemonEnv.Env["GT_DOLT_HOST"])
+	return strings.TrimSpace(daemonEnv.Env["MS_DOLT_HOST"])
 }
 
 // parsePortFromConfigYAML extracts the listener port from a Dolt config.yaml
-// without a yaml dependency. The file is machine-generated by gt dolt start
+// without a yaml dependency. The file is machine-generated by ms dolt start
 // with the format:
 //
 //	listener:
@@ -748,7 +748,7 @@ func psQuote(s string) string {
 }
 
 // ExportPrefix builds an export statement prefix for shell commands.
-// Returns a string like "export GT_ROLE=overseer BD_ACTOR=overseer && "
+// Returns a string like "export MS_ROLE=overseer BD_ACTOR=overseer && "
 // The keys are sorted for deterministic output.
 // Values containing special characters are properly shell-quoted.
 func ExportPrefix(env map[string]string) string {

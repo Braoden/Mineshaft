@@ -171,7 +171,7 @@ func TestEmitEventPIDInFilename(t *testing.T) {
 
 func TestEmitEventResult(t *testing.T) {
 	result := EmitEventResult{
-		Path:    "/home/gt/events/refinery/12345.event",
+		Path:    "/home/ms/events/refinery/12345.event",
 		Channel: "refinery",
 		Type:    "MERGE_READY",
 	}

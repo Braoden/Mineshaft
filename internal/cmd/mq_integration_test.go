@@ -21,7 +21,7 @@ import (
 func TestLandConflictError_ErrorsAs(t *testing.T) {
 	underlying := fmt.Errorf("git merge exit 1: CONFLICT in foo.go")
 	wrapped := fmt.Errorf("integration land failed: %w", &LandConflictError{
-		EpicID:        "gt-epic-99",
+		EpicID:        "ms-epic-99",
 		Branch:        "integration/auth",
 		TargetBranch:  "main",
 		ConflictPaths: []string{"foo.go", "bar.go"},
@@ -32,8 +32,8 @@ func TestLandConflictError_ErrorsAs(t *testing.T) {
 	if !errors.As(wrapped, &lce) {
 		t.Fatalf("errors.As should match LandConflictError; got %T", wrapped)
 	}
-	if lce.EpicID != "gt-epic-99" {
-		t.Errorf("EpicID = %q, want gt-epic-99", lce.EpicID)
+	if lce.EpicID != "ms-epic-99" {
+		t.Errorf("EpicID = %q, want ms-epic-99", lce.EpicID)
 	}
 	if len(lce.ConflictPaths) != 2 {
 		t.Errorf("ConflictPaths = %v, want 2 paths", lce.ConflictPaths)
@@ -56,7 +56,7 @@ func TestLandConflictError_ErrorsAs(t *testing.T) {
 // still be informative.
 func TestLandConflictError_NoFiles(t *testing.T) {
 	lce := &LandConflictError{
-		EpicID:       "gt-epic-99",
+		EpicID:       "ms-epic-99",
 		Branch:       "integration/auth",
 		TargetBranch: "main",
 		Underlying:   fmt.Errorf("merge failed"),
@@ -71,21 +71,21 @@ func TestLandConflictError_NoFiles(t *testing.T) {
 }
 
 // TestMakeTestMR_RealisticFields verifies that makeTestMR produces MR beads
-// matching real beads structure: Type "task" with label "gt:merge-request",
+// matching real beads structure: Type "task" with label "ms:merge-request",
 // NOT Type "merge-request". This is the regression test for Bug 1 from
 // PR #1226 review: mq_integration.go queries Type: "merge-request" but
-// real MR beads have Type: "task" with label "gt:merge-request".
+// real MR beads have Type: "task" with label "ms:merge-request".
 func TestMakeTestMR_RealisticFields(t *testing.T) {
-	mr := makeTestMR("mr-1", "miner/Nux/gt-001", "main", "Nux", "open")
+	mr := makeTestMR("mr-1", "miner/Nux/ms-001", "main", "Nux", "open")
 
 	// Real MR beads have Type: "task", not "merge-request"
 	if mr.Type != "task" {
 		t.Errorf("makeTestMR() Type = %q, want %q (real MR beads use task type)", mr.Type, "task")
 	}
 
-	// Real MR beads carry the gt:merge-request label
-	if !beads.HasLabel(mr, "gt:merge-request") {
-		t.Errorf("makeTestMR() missing label 'gt:merge-request', got labels: %v", mr.Labels)
+	// Real MR beads carry the ms:merge-request label
+	if !beads.HasLabel(mr, "ms:merge-request") {
+		t.Errorf("makeTestMR() missing label 'ms:merge-request', got labels: %v", mr.Labels)
 	}
 }
 
@@ -94,8 +94,8 @@ func TestMakeTestMR_RealisticFields(t *testing.T) {
 func TestMockBeadsList_LabelFilter(t *testing.T) {
 	mock := newMockBeads()
 
-	// Add a realistic MR (Type: "task", Label: "gt:merge-request")
-	mr := makeTestMR("mr-1", "miner/Nux/gt-001", "main", "Nux", "open")
+	// Add a realistic MR (Type: "task", Label: "ms:merge-request")
+	mr := makeTestMR("mr-1", "miner/Nux/ms-001", "main", "Nux", "open")
 	mock.addIssue(mr)
 
 	// Add a plain task (no MR label)
@@ -103,12 +103,12 @@ func TestMockBeadsList_LabelFilter(t *testing.T) {
 	mock.addIssue(plainTask)
 
 	// Query by label should return only the MR
-	results, err := mock.List(beads.ListOptions{Label: "gt:merge-request"})
+	results, err := mock.List(beads.ListOptions{Label: "ms:merge-request"})
 	if err != nil {
 		t.Fatalf("List() error: %v", err)
 	}
 	if len(results) != 1 {
-		t.Errorf("List(Label: gt:merge-request) returned %d results, want 1", len(results))
+		t.Errorf("List(Label: ms:merge-request) returned %d results, want 1", len(results))
 	}
 	if len(results) == 1 && results[0].ID != "mr-1" {
 		t.Errorf("List() returned ID %q, want %q", results[0].ID, "mr-1")
@@ -118,16 +118,16 @@ func TestMockBeadsList_LabelFilter(t *testing.T) {
 // TestMockBeadsList_StatusFiltering verifies that the mock's List method
 // correctly reproduces bd's default status behavior: when Status is "",
 // closed issues are excluded (matching real bd list without --status flag).
-// This is the regression test for gt-6ck (MT-1): integration status showed
+// This is the regression test for ms-6ck (MT-1): integration status showed
 // 0 MRs because Status:"" silently excluded closed/merged MRs.
 func TestMockBeadsList_StatusFiltering(t *testing.T) {
 	mock := newMockBeads()
 
 	// Add issues in various statuses
-	mock.addIssue(makeTestMR("mr-open", "miner/A/gt-001", "integration/test", "A", "open"))
-	mock.addIssue(makeTestMR("mr-progress", "miner/B/gt-002", "integration/test", "B", "in_progress"))
-	mock.addIssue(makeTestMR("mr-closed", "miner/C/gt-003", "integration/test", "C", "closed"))
-	mock.addIssue(makeTestMR("mr-blocked", "miner/D/gt-004", "integration/test", "D", "blocked"))
+	mock.addIssue(makeTestMR("mr-open", "miner/A/ms-001", "integration/test", "A", "open"))
+	mock.addIssue(makeTestMR("mr-progress", "miner/B/ms-002", "integration/test", "B", "in_progress"))
+	mock.addIssue(makeTestMR("mr-closed", "miner/C/ms-003", "integration/test", "C", "closed"))
+	mock.addIssue(makeTestMR("mr-blocked", "miner/D/ms-004", "integration/test", "D", "blocked"))
 
 	tests := []struct {
 		name      string
@@ -170,7 +170,7 @@ func TestMockBeadsList_StatusFiltering(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			results, err := mock.List(beads.ListOptions{
-				Label:  "gt:merge-request",
+				Label:  "ms:merge-request",
 				Status: tt.status,
 			})
 			if err != nil {
@@ -226,7 +226,7 @@ func TestResolveEpicBranch_LegacyFallback(t *testing.T) {
 		{
 			name: "metadata takes precedence over all templates",
 			epic: &beads.Issue{
-				ID:          "gt-abc",
+				ID:          "ms-abc",
 				Type:        "epic",
 				Title:       "Add User Auth",
 				Description: "integration_branch: custom/my-branch\nSome description",
@@ -236,7 +236,7 @@ func TestResolveEpicBranch_LegacyFallback(t *testing.T) {
 		{
 			name: "primary title branch exists",
 			epic: &beads.Issue{
-				ID:          "gt-abc",
+				ID:          "ms-abc",
 				Type:        "epic",
 				Title:       "Add User Auth",
 				Description: "Some description",
@@ -247,29 +247,29 @@ func TestResolveEpicBranch_LegacyFallback(t *testing.T) {
 		{
 			name: "primary missing but legacy epic branch exists on remote",
 			epic: &beads.Issue{
-				ID:          "gt-abc",
+				ID:          "ms-abc",
 				Type:        "epic",
 				Title:       "Add User Auth",
 				Description: "Some description",
 			},
-			remoteBranches: map[string]bool{"origin/integration/gt-abc": true},
-			want:           "integration/gt-abc",
+			remoteBranches: map[string]bool{"origin/integration/ms-abc": true},
+			want:           "integration/ms-abc",
 		},
 		{
 			name: "primary missing but legacy exists locally",
 			epic: &beads.Issue{
-				ID:          "gt-abc",
+				ID:          "ms-abc",
 				Type:        "epic",
 				Title:       "Add User Auth",
 				Description: "Some description",
 			},
-			localBranches: map[string]bool{"integration/gt-abc": true},
-			want:          "integration/gt-abc",
+			localBranches: map[string]bool{"integration/ms-abc": true},
+			want:          "integration/ms-abc",
 		},
 		{
 			name: "neither branch exists returns primary as best guess",
 			epic: &beads.Issue{
-				ID:          "gt-abc",
+				ID:          "ms-abc",
 				Type:        "epic",
 				Title:       "Add User Auth",
 				Description: "Some description",
@@ -279,7 +279,7 @@ func TestResolveEpicBranch_LegacyFallback(t *testing.T) {
 		{
 			name: "nil checker returns primary without existence check",
 			epic: &beads.Issue{
-				ID:          "gt-abc",
+				ID:          "ms-abc",
 				Type:        "epic",
 				Title:       "Add User Auth",
 				Description: "Some description",
@@ -309,10 +309,10 @@ func TestResolveEpicBranch_LegacyFallback(t *testing.T) {
 func TestFilterMRsByTarget(t *testing.T) {
 	// Create test MRs with different targets
 	mrs := []*beads.Issue{
-		makeTestMR("mr-1", "miner/Nux/gt-001", "integration/gt-epic", "Nux", "open"),
-		makeTestMR("mr-2", "miner/Toast/gt-002", "main", "Toast", "open"),
-		makeTestMR("mr-3", "miner/Able/gt-003", "integration/gt-epic", "Able", "open"),
-		makeTestMR("mr-4", "miner/Baker/gt-004", "integration/gt-other", "Baker", "open"),
+		makeTestMR("mr-1", "miner/Nux/ms-001", "integration/ms-epic", "Nux", "open"),
+		makeTestMR("mr-2", "miner/Toast/ms-002", "main", "Toast", "open"),
+		makeTestMR("mr-3", "miner/Able/ms-003", "integration/ms-epic", "Able", "open"),
+		makeTestMR("mr-4", "miner/Baker/ms-004", "integration/ms-other", "Baker", "open"),
 	}
 
 	tests := []struct {
@@ -322,8 +322,8 @@ func TestFilterMRsByTarget(t *testing.T) {
 		wantIDs      []string
 	}{
 		{
-			name:         "filter to integration/gt-epic",
-			targetBranch: "integration/gt-epic",
+			name:         "filter to integration/ms-epic",
+			targetBranch: "integration/ms-epic",
 			wantCount:    2,
 			wantIDs:      []string{"mr-1", "mr-3"},
 		},
@@ -341,7 +341,7 @@ func TestFilterMRsByTarget(t *testing.T) {
 		},
 		{
 			name:         "filter to other integration branch",
-			targetBranch: "integration/gt-other",
+			targetBranch: "integration/ms-other",
 			wantCount:    1,
 			wantIDs:      []string{"mr-4"},
 		},
@@ -369,12 +369,12 @@ func TestFilterMRsByTarget(t *testing.T) {
 }
 
 func TestFilterMRsByTarget_EmptyInput(t *testing.T) {
-	got := filterMRsByTarget(nil, "integration/gt-epic")
+	got := filterMRsByTarget(nil, "integration/ms-epic")
 	if got != nil {
 		t.Errorf("filterMRsByTarget(nil) = %v, want nil", got)
 	}
 
-	got = filterMRsByTarget([]*beads.Issue{}, "integration/gt-epic")
+	got = filterMRsByTarget([]*beads.Issue{}, "integration/ms-epic")
 	if len(got) != 0 {
 		t.Errorf("filterMRsByTarget([]) = %v, want empty slice", got)
 	}
@@ -387,7 +387,7 @@ func TestFilterMRsByTarget_NoMRFields(t *testing.T) {
 		Title:       "Not an MR",
 		Type:        "task",
 		Status:      "open",
-		Labels:      []string{"gt:merge-request"},
+		Labels:      []string{"ms:merge-request"},
 		Description: "Just a plain description with no MR fields",
 	}
 
@@ -405,7 +405,7 @@ func TestValidateBranchName(t *testing.T) {
 	}{
 		{
 			name:       "valid simple branch",
-			branchName: "integration/gt-epic",
+			branchName: "integration/ms-epic",
 			wantErr:    false,
 		},
 		{
@@ -563,8 +563,8 @@ func TestGetIntegrationBranchField(t *testing.T) {
 		},
 		{
 			name:        "default format",
-			description: "integration_branch: integration/gt-epic\nEpic for auth work",
-			want:        "integration/gt-epic",
+			description: "integration_branch: integration/ms-epic\nEpic for auth work",
+			want:        "integration/ms-epic",
 		},
 	}
 
@@ -687,7 +687,7 @@ func TestPostMerge_DeleteRemoteBranchErrorPropagated(t *testing.T) {
 	}
 
 	// No "origin" remote is configured → git push --delete must fail.
-	err = rigGit.DeleteRemoteBranch("origin", "miner/test/gt-abc")
+	err = rigGit.DeleteRemoteBranch("origin", "miner/test/ms-abc")
 	if err == nil {
 		t.Error("expected error from DeleteRemoteBranch with no remote, got nil")
 	}
@@ -844,17 +844,17 @@ func TestResolveEpicTarget(t *testing.T) {
 	}{
 		{
 			name:      "default template produces integration/{title}",
-			epicID:    "gt-epic",
+			epicID:    "ms-epic",
 			epicTitle: "Auth Feature",
 			template:  "", // will use defaultIntegrationBranchTemplate
 			want:      "integration/auth-feature",
 		},
 		{
 			name:      "custom prefix/epic template ignores title",
-			epicID:    "gt-epic",
+			epicID:    "ms-epic",
 			epicTitle: "Ignored",
 			template:  "{prefix}/{epic}",
-			want:      "gt/gt-epic",
+			want:      "ms/ms-epic",
 		},
 		{
 			name:      "custom feature prefix template",
@@ -865,17 +865,17 @@ func TestResolveEpicTarget(t *testing.T) {
 		},
 		{
 			name:      "template with no placeholder prefix",
-			epicID:    "gt-abc",
+			epicID:    "ms-abc",
 			epicTitle: "Release Work",
 			template:  "release/{epic}",
-			want:      "release/gt-abc",
+			want:      "release/ms-abc",
 		},
 		{
 			name:      "custom template with title",
-			epicID:    "gt-42",
+			epicID:    "ms-42",
 			epicTitle: "Big Refactor",
 			template:  "{prefix}/{title}",
-			want:      "gt/big-refactor",
+			want:      "ms/big-refactor",
 		},
 	}
 
@@ -927,31 +927,31 @@ func TestBuildIntegrationBranchName_NeverProducesInvalidRef(t *testing.T) {
 		{
 			name:      "empty title with default template",
 			template:  "",
-			epicID:    "gt-99",
+			epicID:    "ms-99",
 			epicTitle: "",
 		},
 		{
 			name:      "empty title with explicit title template",
 			template:  "integration/{title}",
-			epicID:    "gt-99",
+			epicID:    "ms-99",
 			epicTitle: "",
 		},
 		{
 			name:      "special-chars-only title",
 			template:  "integration/{title}",
-			epicID:    "gt-42",
+			epicID:    "ms-42",
 			epicTitle: "!@#$%^&*()",
 		},
 		{
 			name:      "whitespace-only title",
 			template:  "integration/{title}",
-			epicID:    "gt-7",
+			epicID:    "ms-7",
 			epicTitle: "   ",
 		},
 		{
 			name:      "empty title with epic template (should always work)",
 			template:  "integration/{epic}",
-			epicID:    "gt-abc",
+			epicID:    "ms-abc",
 			epicTitle: "",
 		},
 	}
@@ -988,11 +988,11 @@ func TestExtractEpicNumericSuffix(t *testing.T) {
 		epicID string
 		want   string
 	}{
-		{"gt-123", "123"},
+		{"ms-123", "123"},
 		{"PROJ-456", "456"},
 		{"abc", "abc"},
 		{"a-b-c", "c"},
-		{"gt-", "gt-"},
+		{"ms-", "ms-"},
 	}
 
 	for _, tt := range tests {

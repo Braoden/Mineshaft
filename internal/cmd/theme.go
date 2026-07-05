@@ -33,11 +33,11 @@ Without arguments, shows the current theme assignment.
 With a name argument, sets the theme for this rig.
 
 Examples:
-  gt theme              # Show current theme
-  gt theme --list       # List available themes
-  gt theme forest       # Set theme to 'forest'
-  gt theme none         # Disable tmux theming for this rig
-  gt theme apply        # Apply theme to all running sessions in this rig`,
+  ms theme              # Show current theme
+  ms theme --list       # List available themes
+  ms theme forest       # Set theme to 'forest'
+  ms theme none         # Disable tmux theming for this rig
+  ms theme apply        # Apply theme to all running sessions in this rig`,
 	RunE: runTheme,
 }
 
@@ -65,13 +65,13 @@ Modes:
   light  - Force light mode colors (dark text for light backgrounds)
 
 The setting is stored in town settings (settings/config.json) and can
-be overridden per-session via the GT_THEME environment variable.
+be overridden per-session via the MS_THEME environment variable.
 
 Examples:
-  gt theme cli              # Show current CLI theme
-  gt theme cli dark         # Set CLI theme to dark mode
-  gt theme cli auto         # Reset to auto-detection
-  GT_THEME=light gt status  # Override for a single command`,
+  ms theme cli              # Show current CLI theme
+  ms theme cli dark         # Set CLI theme to dark mode
+  ms theme cli auto         # Reset to auto-detection
+  MS_THEME=light ms status  # Override for a single command`,
 	RunE: runThemeCLI,
 }
 
@@ -129,7 +129,7 @@ func runTheme(cmd *cobra.Command, args []string) error {
 	} else {
 		fmt.Printf("Theme '%s' saved for rig '%s'\n", themeName, rigName)
 	}
-	fmt.Println("Run 'gt theme apply' to apply to running sessions")
+	fmt.Println("Run 'ms theme apply' to apply to running sessions")
 
 	return nil
 }
@@ -235,8 +235,8 @@ func runThemeApply(cmd *cobra.Command, args []string) error {
 
 // detectCurrentRig determines the rig from environment or cwd.
 func detectCurrentRig() string {
-	// Try environment first (GT_RIG is set in tmux sessions)
-	if rig := os.Getenv("GT_RIG"); rig != "" {
+	// Try environment first (MS_RIG is set in tmux sessions)
+	if rig := os.Getenv("MS_RIG"); rig != "" {
 		return rig
 	}
 
@@ -380,7 +380,7 @@ func runThemeCLI(cmd *cobra.Command, args []string) error {
 		}
 
 		// Check for env override
-		envValue := os.Getenv("GT_THEME")
+		envValue := os.Getenv("MS_THEME")
 		effectiveMode := configValue
 		if envValue != "" {
 			effectiveMode = strings.ToLower(envValue)
@@ -389,7 +389,7 @@ func runThemeCLI(cmd *cobra.Command, args []string) error {
 		fmt.Printf("CLI Theme:\n")
 		fmt.Printf("  Configured: %s\n", configValue)
 		if envValue != "" {
-			fmt.Printf("  Override:   %s (via GT_THEME)\n", envValue)
+			fmt.Printf("  Override:   %s (via MS_THEME)\n", envValue)
 		}
 		fmt.Printf("  Effective:  %s\n", effectiveMode)
 

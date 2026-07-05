@@ -6,7 +6,7 @@ usage() {
 Usage:
   bootstrap-local-rig.sh --town-root PATH --rig NAME --local-repo PATH [options]
 
-Create a clean Mineshaft rig from a local source repo by using `gt rig add` with
+Create a clean Mineshaft rig from a local source repo by using `ms rig add` with
 `--local-repo` instead of adopting a manually assembled rig directory.
 
 Required:
@@ -17,7 +17,7 @@ Required:
 Optional:
   --remote URL           Git URL to register for the rig
                          (default: file://<local-repo>)
-  --gt-bin PATH          gt binary to use (default: ./gt if present, else gt)
+  --ms-bin PATH          ms binary to use (default: ./ms if present, else ms)
   --prefix PREFIX        Beads prefix override
   --branch NAME          Default branch override
   --miner-agent NAME   Write rig settings role_agents.miner
@@ -26,9 +26,9 @@ Optional:
 
 Example:
   ./scripts/bootstrap-local-rig.sh \
-    --town-root /gt \
+    --town-root /ms \
     --rig nightrider_local \
-    --local-repo /gt/nightRider \
+    --local-repo /ms/nightRider \
     --prefix nr \
     --miner-agent claude \
     --witness-agent codex \
@@ -37,16 +37,16 @@ EOF
 }
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DEFAULT_GT_BIN="gt"
-if [[ -x "${SCRIPT_DIR}/../gt" ]]; then
-  DEFAULT_GT_BIN="${SCRIPT_DIR}/../gt"
+DEFAULT_GT_BIN="ms"
+if [[ -x "${SCRIPT_DIR}/../ms" ]]; then
+  DEFAULT_GT_BIN="${SCRIPT_DIR}/../ms"
 fi
 
 TOWN_ROOT=""
 RIG_NAME=""
 REMOTE_URL=""
 LOCAL_REPO=""
-GT_BIN="${DEFAULT_GT_BIN}"
+MS_BIN="${DEFAULT_GT_BIN}"
 PREFIX=""
 BRANCH=""
 MINER_AGENT=""
@@ -71,8 +71,8 @@ while [[ $# -gt 0 ]]; do
       LOCAL_REPO="${2:-}"
       shift 2
       ;;
-    --gt-bin)
-      GT_BIN="${2:-}"
+    --ms-bin)
+      MS_BIN="${2:-}"
       shift 2
       ;;
     --prefix)
@@ -140,17 +140,17 @@ if [[ -e "${RIG_PATH}" ]]; then
   exit 1
 fi
 
-GT_ARGS=("rig" "add" "${RIG_NAME}" "${REMOTE_URL}" "--local-repo" "${LOCAL_REPO}")
+MS_ARGS=("rig" "add" "${RIG_NAME}" "${REMOTE_URL}" "--local-repo" "${LOCAL_REPO}")
 if [[ -n "${PREFIX}" ]]; then
-  GT_ARGS+=("--prefix" "${PREFIX}")
+  MS_ARGS+=("--prefix" "${PREFIX}")
 fi
 if [[ -n "${BRANCH}" ]]; then
-  GT_ARGS+=("--branch" "${BRANCH}")
+  MS_ARGS+=("--branch" "${BRANCH}")
 fi
 
 (
   cd "${TOWN_ROOT}"
-  "${GT_BIN}" "${GT_ARGS[@]}"
+  "${MS_BIN}" "${MS_ARGS[@]}"
 )
 
 if [[ -n "${MINER_AGENT}" || -n "${WITNESS_AGENT}" || -n "${REFINERY_AGENT}" ]]; then

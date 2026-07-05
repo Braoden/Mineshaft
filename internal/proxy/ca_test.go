@@ -265,7 +265,7 @@ func TestIssueMiner(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("cert parses and verifies against CA", func(t *testing.T) {
-		certPEM, _, err := ca.IssueMiner("gt-mineshaft-furiosa", time.Hour)
+		certPEM, _, err := ca.IssueMiner("ms-mineshaft-furiosa", time.Hour)
 		require.NoError(t, err)
 
 		block, _ := pem.Decode(certPEM)
@@ -283,7 +283,7 @@ func TestIssueMiner(t *testing.T) {
 	})
 
 	t.Run("ExtKeyUsage contains ClientAuth and NOT ServerAuth", func(t *testing.T) {
-		certPEM, _, err := ca.IssueMiner("gt-mineshaft-furiosa", time.Hour)
+		certPEM, _, err := ca.IssueMiner("ms-mineshaft-furiosa", time.Hour)
 		require.NoError(t, err)
 
 		block, _ := pem.Decode(certPEM)
@@ -305,8 +305,8 @@ func TestIssueMiner(t *testing.T) {
 
 	t.Run("CN matches and hyphenated rig round-trips", func(t *testing.T) {
 		cases := []string{
-			"gt-mineshaft-furiosa",
-			"gt-mineshaft-furiosa", // hyphenated rig name
+			"ms-mineshaft-furiosa",
+			"ms-mineshaft-furiosa", // hyphenated rig name
 		}
 		for _, cn := range cases {
 			cn := cn
@@ -324,11 +324,11 @@ func TestIssueMiner(t *testing.T) {
 
 	t.Run("malformed CNs are rejected", func(t *testing.T) {
 		cases := []string{
-			"gt--furiosa",     // empty rig segment
-			"gt-mineshaft-",     // empty name segment
-			"gt-",             // no rig or name
-			"notgt-rig-name",  // missing gt- prefix
-			"gt-nodashinrest", // no rig/name separator
+			"ms--furiosa",     // empty rig segment
+			"ms-mineshaft-",     // empty name segment
+			"ms-",             // no rig or name
+			"notgt-rig-name",  // missing ms- prefix
+			"ms-nodashinrest", // no rig/name separator
 			"",                // empty string
 		}
 		for _, cn := range cases {
@@ -342,7 +342,7 @@ func TestIssueMiner(t *testing.T) {
 
 	t.Run("TTL is respected", func(t *testing.T) {
 		ttl := 30 * time.Minute
-		certPEM, _, err := ca.IssueMiner("gt-mineshaft-test", ttl)
+		certPEM, _, err := ca.IssueMiner("ms-mineshaft-test", ttl)
 		require.NoError(t, err)
 
 		block, _ := pem.Decode(certPEM)
@@ -374,7 +374,7 @@ func TestCertEdgeCases(t *testing.T) {
 	})
 
 	t.Run("very long CN does not panic", func(t *testing.T) {
-		longCN := "gt-mineshaft-" + strings.Repeat("a", 1000)
+		longCN := "ms-mineshaft-" + strings.Repeat("a", 1000)
 		assert.NotPanics(t, func() {
 			_, _, _ = ca.IssueMiner(longCN, time.Hour)
 		})
@@ -389,7 +389,7 @@ func TestIssueServerIPSANs(t *testing.T) {
 	t.Run("IP SAN is embedded in cert", func(t *testing.T) {
 		targetIP := net.ParseIP("192.168.1.100")
 		loopback := net.ParseIP("127.0.0.1")
-		certPEM, _, err := ca.IssueServer("gt-proxy-server", []net.IP{targetIP, loopback}, nil, time.Hour)
+		certPEM, _, err := ca.IssueServer("ms-proxy-server", []net.IP{targetIP, loopback}, nil, time.Hour)
 		require.NoError(t, err)
 
 		block, _ := pem.Decode(certPEM)
@@ -404,7 +404,7 @@ func TestIssueServerIPSANs(t *testing.T) {
 
 	t.Run("cert verifies for IP SAN host", func(t *testing.T) {
 		ip := net.ParseIP("10.0.0.1")
-		certPEM, _, err := ca.IssueServer("gt-proxy-server", []net.IP{ip}, nil, time.Hour)
+		certPEM, _, err := ca.IssueServer("ms-proxy-server", []net.IP{ip}, nil, time.Hour)
 		require.NoError(t, err)
 
 		block, _ := pem.Decode(certPEM)
@@ -422,7 +422,7 @@ func TestIssueServerIPSANs(t *testing.T) {
 	})
 
 	t.Run("nil extraIPs produces no IP SANs", func(t *testing.T) {
-		certPEM, _, err := ca.IssueServer("gt-proxy-server", nil, nil, time.Hour)
+		certPEM, _, err := ca.IssueServer("ms-proxy-server", nil, nil, time.Hour)
 		require.NoError(t, err)
 
 		block, _ := pem.Decode(certPEM)

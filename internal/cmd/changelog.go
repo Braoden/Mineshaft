@@ -34,12 +34,12 @@ var changelogCmd = &cobra.Command{
 Filters out ephemeral/internal beads (wisps, patrols) to show only real work.
 
 Examples:
-  gt changelog            # This week's completed work (default)
-  gt changelog --today    # Today's completions
-  gt changelog --week     # This week's completions
-  gt changelog --since 2026-03-10  # Since a specific date
-  gt changelog --rig mineshaft       # One rig only
-  gt changelog --json              # JSON output`,
+  ms changelog            # This week's completed work (default)
+  ms changelog --today    # Today's completions
+  ms changelog --week     # This week's completions
+  ms changelog --since 2026-03-10  # Since a specific date
+  ms changelog --rig mineshaft       # One rig only
+  ms changelog --json              # JSON output`,
 	RunE: runChangelog,
 }
 

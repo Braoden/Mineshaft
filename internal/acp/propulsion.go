@@ -14,7 +14,7 @@ import (
 	"github.com/steveyegge/mineshaft/internal/townlog"
 )
 
-// acpDebugLogger provides file-based debug logging for ACP when GT_ACP_DEBUG=1.
+// acpDebugLogger provides file-based debug logging for ACP when MS_ACP_DEBUG=1.
 // It lazily opens the log file on first use and keeps it open for the session.
 type acpDebugLogger struct {
 	mu       sync.Mutex
@@ -24,7 +24,7 @@ type acpDebugLogger struct {
 }
 
 var debugLogger = &acpDebugLogger{
-	enabled: os.Getenv("GT_ACP_DEBUG") != "",
+	enabled: os.Getenv("MS_ACP_DEBUG") != "",
 }
 
 // init opens the log file if debugging is enabled. It is called lazily
@@ -90,7 +90,7 @@ func (l *acpDebugLogger) close() {
 	}
 }
 
-// debugLog logs to acp.log when GT_ACP_DEBUG=1. It lazily initializes
+// debugLog logs to acp.log when MS_ACP_DEBUG=1. It lazily initializes
 // the log file on first call with the given townRoot.
 func debugLog(townRoot, format string, args ...any) {
 	if !debugLogger.enabled {
@@ -264,10 +264,10 @@ func formatNudgesForPropeller(nudges []nudge.QueuedNudge) string {
 
 func buildSessionUpdateMeta(nudges []nudge.QueuedNudge, session string) map[string]string {
 	meta := map[string]string{
-		"gt/eventType": "nudge",
-		"gt/count":     strconv.Itoa(len(nudges)),
-		"gt/drained":   "true",
-		"gt/session":   session,
+		"ms/eventType": "nudge",
+		"ms/count":     strconv.Itoa(len(nudges)),
+		"ms/drained":   "true",
+		"ms/session":   session,
 	}
 	urgentCount := 0
 	for _, n := range nudges {
@@ -275,12 +275,12 @@ func buildSessionUpdateMeta(nudges []nudge.QueuedNudge, session string) map[stri
 			urgentCount++
 		}
 	}
-	meta["gt/urgent"] = strconv.Itoa(urgentCount)
+	meta["ms/urgent"] = strconv.Itoa(urgentCount)
 	if escalationMeta := escalationMetaFromNudges(nudges); escalationMeta != nil {
-		meta["gt/escalation"] = "true"
-		meta["gt/threadID"] = escalationMeta.ThreadID
-		meta["gt/severity"] = escalationMeta.Severity
-		meta["gt/kind"] = escalationMeta.Kind
+		meta["ms/escalation"] = "true"
+		meta["ms/threadID"] = escalationMeta.ThreadID
+		meta["ms/severity"] = escalationMeta.Severity
+		meta["ms/kind"] = escalationMeta.Kind
 	}
 	return meta
 }

@@ -20,7 +20,7 @@ import (
 //
 // Also detects orphaned agent beads from deregistered rigs — beads whose prefix
 // doesn't match any route in routes.jsonl. These accumulate when a rig is removed
-// via gt rig remove but its agent beads in the town database are not cleaned up.
+// via ms rig remove but its agent beads in the town database are not cleaned up.
 //
 // The fix closes stale beads so they no longer pollute bd ready output.
 type StaleAgentBeadsCheck struct {
@@ -115,7 +115,7 @@ func (c *StaleAgentBeadsCheck) Run(ctx *CheckContext) *CheckResult {
 			allBeads, err := bd.List(beads.ListOptions{
 				Status:   "open",
 				Priority: -1,
-				Label:    "gt:agent",
+				Label:    "ms:agent",
 			})
 			if err != nil {
 				return
@@ -158,7 +158,7 @@ func (c *StaleAgentBeadsCheck) Run(ctx *CheckContext) *CheckResult {
 	// Phase 2: Detect orphaned agent beads from deregistered rigs.
 	// Scan the town beads database for agent beads whose prefix doesn't match
 	// any route in routes.jsonl. These accumulate when a rig is removed via
-	// gt rig remove but its agent beads in the town database are not cleaned up.
+	// ms rig remove but its agent beads in the town database are not cleaned up.
 	townBeadsPath := beads.GetTownBeadsPath(ctx.TownRoot)
 	townBd := beads.New(townBeadsPath)
 	if townAgents, err := townBd.ListAgentBeads(); err == nil {
@@ -248,7 +248,7 @@ func (c *StaleAgentBeadsCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:  StatusWarning,
 		Message: fmt.Sprintf("%d stale agent bead(s) for removed workers", len(stale)),
 		Details: stale,
-		FixHint: "Run 'gt doctor --fix' to close stale agent beads",
+		FixHint: "Run 'ms doctor --fix' to close stale agent beads",
 	}
 }
 

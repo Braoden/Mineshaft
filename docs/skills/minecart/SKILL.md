@@ -1,6 +1,6 @@
 ---
 name: minecart
-description: The definitive guide for working with mineshaft's minecart system -- batch work tracking, event-driven feeding, stage-launch workflow, and dispatch safety guards. Use when writing minecart code, debugging minecart behavior, adding minecart features, testing minecart changes, or answering questions about how minecarts work. Triggers on minecart, minecart manager, minecart feeding, dispatch, stranded minecart, feedFirstReady, feedNextReadyIssue, IsSlingableType, isIssueBlocked, CheckMinecartsForIssue, gt minecart, gt sling, stage, launch, staged, wave.
+description: The definitive guide for working with mineshaft's minecart system -- batch work tracking, event-driven feeding, stage-launch workflow, and dispatch safety guards. Use when writing minecart code, debugging minecart behavior, adding minecart features, testing minecart changes, or answering questions about how minecarts work. Triggers on minecart, minecart manager, minecart feeding, dispatch, stranded minecart, feedFirstReady, feedNextReadyIssue, IsSlingableType, isIssueBlocked, CheckMinecartsForIssue, ms minecart, ms sling, stage, launch, staged, wave.
 ---
 
 # Mineshaft Minecart System
@@ -12,7 +12,7 @@ The minecart system tracks batches of work across rigs. A minecart is a bead tha
 ```
 +================================ CREATION =================================+
 |                                                                            |
-|   gt sling <beads>      gt minecart create ...     gt minecart stage <epic>    |
+|   ms sling <beads>      ms minecart create ...     ms minecart stage <epic>    |
 |        |  (auto-minecart)       |  (explicit)            |  (validated)     |
 |        v                      v                        v                  |
 |   +-----------+          +-----------+         +----------------+         |
@@ -21,7 +21,7 @@ The minecart system tracks batches of work across rigs. A minecart is a bead tha
 |   +-----------+          +-----------+         | staged:warnings|         |
 |                                                +----------------+         |
 |                                                        |                  |
-|                                              gt minecart launch             |
+|                                              ms minecart launch             |
 |                                                        |                  |
 |                                                        v                  |
 |                                                +----------------+         |
@@ -48,9 +48,9 @@ The minecart system tracks batches of work across rigs. A minecart is a bead tha
 |     v                        |   |   (iterates all ready)     |
 |   feedNextReadyIssue         |   |     |                      |
 |   (iterates all ready)       |   |     v                      |
-|     |                        |   |   gt sling <next-bead>     |
+|     |                        |   |   ms sling <next-bead>     |
 |     v                        |   |   or closeEmptyMinecart     |
-|   gt sling <next-bead>       |   |                            |
+|   ms sling <next-bead>       |   |                            |
 |                              |   +============================+
 +==============================+
 ```
@@ -93,63 +93,63 @@ Both feed paths iterate past failures instead of giving up:
 ### Stage and launch (validated creation)
 
 ```bash
-gt minecart stage <epic-id>            # analyze deps, build DAG, compute waves, create staged minecart
-gt minecart stage gt-task1 gt-task2    # stage from explicit task list
-gt minecart stage hq-cv-abc            # re-stage existing staged minecart
-gt minecart stage <epic-id> --json     # machine-readable output
-gt minecart stage <epic-id> --launch   # stage + immediately launch if no errors
-gt minecart launch hq-cv-abc           # transition staged → open, dispatch Wave 1
-gt minecart launch <epic-id>           # stage + launch in one step (delegates to stage --launch)
+ms minecart stage <epic-id>            # analyze deps, build DAG, compute waves, create staged minecart
+ms minecart stage ms-task1 ms-task2    # stage from explicit task list
+ms minecart stage hq-cv-abc            # re-stage existing staged minecart
+ms minecart stage <epic-id> --json     # machine-readable output
+ms minecart stage <epic-id> --launch   # stage + immediately launch if no errors
+ms minecart launch hq-cv-abc           # transition staged → open, dispatch Wave 1
+ms minecart launch <epic-id>           # stage + launch in one step (delegates to stage --launch)
 ```
 
 ### Create and manage
 
 ```bash
-gt minecart create "Auth overhaul" gt-task1 gt-task2 gt-task3
-gt minecart add hq-cv-abc gt-task4
+ms minecart create "Auth overhaul" ms-task1 ms-task2 ms-task3
+ms minecart add hq-cv-abc ms-task4
 ```
 
 ### Check and monitor
 
 ```bash
-gt minecart check hq-cv-abc       # auto-closes if all tracked issues done
-gt minecart check                  # check all open minecarts
-gt minecart status hq-cv-abc       # single minecart detail
-gt minecart list                   # all minecarts
-gt minecart list --all             # include closed
+ms minecart check hq-cv-abc       # auto-closes if all tracked issues done
+ms minecart check                  # check all open minecarts
+ms minecart status hq-cv-abc       # single minecart detail
+ms minecart list                   # all minecarts
+ms minecart list --all             # include closed
 ```
 
 ### Find stranded work
 
 ```bash
-gt minecart stranded               # ready work with no active workers
-gt minecart stranded --json        # machine-readable
+ms minecart stranded               # ready work with no active workers
+ms minecart stranded --json        # machine-readable
 ```
 
 ### Close and land
 
 ```bash
-gt minecart close hq-cv-abc --reason "done"
-gt minecart land hq-cv-abc         # cleanup worktrees + close
+ms minecart close hq-cv-abc --reason "done"
+ms minecart land hq-cv-abc         # cleanup worktrees + close
 ```
 
 ### Interactive TUI
 
 ```bash
-gt minecart -i                     # opens interactive minecart browser
-gt minecart --interactive          # long form
+ms minecart -i                     # opens interactive minecart browser
+ms minecart --interactive          # long form
 ```
 
 ## Batch sling behavior
 
-`gt sling <bead1> <bead2> <bead3>` creates **one minecart** tracking all beads. The rig is auto-resolved from the beads' prefixes (via `routes.jsonl`). The minecart title is `"Batch: N beads to <rig>"`. Each bead gets its own miner, but they share a single minecart for tracking.
+`ms sling <bead1> <bead2> <bead3>` creates **one minecart** tracking all beads. The rig is auto-resolved from the beads' prefixes (via `routes.jsonl`). The minecart title is `"Batch: N beads to <rig>"`. Each bead gets its own miner, but they share a single minecart for tracking.
 
-The minecart ID and merge strategy are stored on each bead, so `gt done` can find the minecart via the fast path (`getMinecartInfoFromIssue`).
+The minecart ID and merge strategy are stored on each bead, so `ms done` can find the minecart via the fast path (`getMinecartInfoFromIssue`).
 
 ### Rig resolution
 
-- **Auto-resolve (preferred):** `gt sling gt-task1 gt-task2 gt-task3` -- resolves rig from the `gt-` prefix. All beads must resolve to the same rig.
-- **Explicit rig (deprecated):** `gt sling gt-task1 gt-task2 gt-task3 myrig` -- still works, prints a deprecation warning. If any bead's prefix doesn't match the explicit rig, errors with suggested actions.
+- **Auto-resolve (preferred):** `ms sling ms-task1 ms-task2 ms-task3` -- resolves rig from the `ms-` prefix. All beads must resolve to the same rig.
+- **Explicit rig (deprecated):** `ms sling ms-task1 ms-task2 ms-task3 myrig` -- still works, prints a deprecation warning. If any bead's prefix doesn't match the explicit rig, errors with suggested actions.
 - **Mixed prefixes:** If beads resolve to different rigs, errors listing each bead's resolved rig and suggested actions (sling separately, or `--force`).
 - **Unmapped prefix:** If a prefix has no route, errors with diagnostic info (`cat .beads/routes.jsonl | grep <prefix>`).
 
@@ -159,12 +159,12 @@ If any bead is already tracked by another minecart, batch sling **errors** with 
 
 ```bash
 # Auto-resolve: one minecart, three miners (preferred)
-gt sling gt-task1 gt-task2 gt-task3
+ms sling ms-task1 ms-task2 ms-task3
 # -> Created minecart hq-cv-xxxxx tracking 3 beads
 
 # Explicit rig still works but prints deprecation warning
-gt sling gt-task1 gt-task2 gt-task3 mineshaft
-# -> Deprecation: gt sling now auto-resolves the rig from bead prefixes.
+ms sling ms-task1 ms-task2 ms-task3 mineshaft
+# -> Deprecation: ms sling now auto-resolves the rig from bead prefixes.
 # -> Created minecart hq-cv-xxxxx tracking 3 beads
 ```
 
@@ -176,13 +176,13 @@ The stage-launch workflow is a two-phase minecart creation path that validates d
 
 ### Input types
 
-`gt minecart stage` accepts three mutually exclusive input types:
+`ms minecart stage` accepts three mutually exclusive input types:
 
 | Input | Example | Behavior |
 |-------|---------|----------|
-| Epic ID | `gt minecart stage bcc-nxk2o` | BFS walks entire parent-child tree, collects all descendants |
-| Task list | `gt minecart stage gt-t1 gt-t2 gt-t3` | Analyzes exactly those tasks |
-| Minecart ID | `gt minecart stage hq-cv-abc` | Re-reads tracked beads from existing staged minecart (re-stage) |
+| Epic ID | `ms minecart stage bcc-nxk2o` | BFS walks entire parent-child tree, collects all descendants |
+| Task list | `ms minecart stage ms-t1 ms-t2 ms-t3` | Analyzes exactly those tasks |
+| Minecart ID | `ms minecart stage hq-cv-abc` | Re-reads tracked beads from existing staged minecart (re-stage) |
 
 Mixed types (e.g., epic + task together) error. Multiple epics or multiple minecarts error.
 
@@ -279,30 +279,30 @@ Valid transitions:
 
 ### Launch behavior
 
-`gt minecart launch <minecart-id>` transitions a staged minecart to open and dispatches Wave 1:
+`ms minecart launch <minecart-id>` transitions a staged minecart to open and dispatches Wave 1:
 
 1. Validate minecart exists and is staged
 2. Transition status to `open`
 3. Re-read tracked beads, rebuild DAG, recompute waves
-5. Dispatch every task in Wave 1 via `gt sling <beadID> <rig>`
+5. Dispatch every task in Wave 1 via `ms sling <beadID> <rig>`
 6. Individual sling failures do NOT abort remaining dispatches
 7. Print dispatch results (checkmark/X per task)
 8. Subsequent waves handled automatically by the daemon
 
-If `gt minecart launch` receives an epic or task list (not a staged minecart), it delegates to `gt minecart stage --launch` to stage-then-launch in one step.
+If `ms minecart launch` receives an epic or task list (not a staged minecart), it delegates to `ms minecart stage --launch` to stage-then-launch in one step.
 
 ### Staged minecart daemon safety
 
 **Staged minecarts are completely inert to the daemon.** Neither feed path processes them:
 
 - **Event-driven feeder:** `isMinecartStaged` check in `CheckMinecartsForIssue` skips any minecart with `staged:*` status. Fail-open on read errors (assumes not staged → processes, which is safe since a read error on a non-existent minecart does nothing).
-- **Stranded scan:** `gt minecart stranded` only returns open minecarts. Staged minecarts never appear.
+- **Stranded scan:** `ms minecart stranded` only returns open minecarts. Staged minecarts never appear.
 
 This means you can stage a minecart, review the wave plan, and launch when ready — no risk of premature dispatch.
 
 ### Re-staging
 
-Running `gt minecart stage <minecart-id>` on an existing staged minecart re-analyzes and updates:
+Running `ms minecart stage <minecart-id>` on an existing staged minecart re-analyzes and updates:
 - Re-reads tracked beads from the minecart's `tracks` deps
 - Rebuilds DAG, re-detects errors/warnings, recomputes waves
 - Updates status via `bd update` (e.g., `staged:warnings` → `staged:ready` if warnings resolved)
@@ -368,10 +368,10 @@ See `docs/design/minecart/testing.md` for the general minecart test plan coverin
 - **The stranded scan has its own blocked check.** `isReadyIssue` in cmd/minecart.go reads `t.Blocked` from issue details. `isIssueBlocked` in operations.go covers the event-driven path. Don't consolidate them without understanding both paths.
 - **Empty IssueType is slingable.** Beads default to type "task" when IssueType is unset. Treating empty as non-slingable would break all legacy beads.
 - **`isIssueBlocked` is fail-open.** Store errors assume not blocked. A transient Dolt error should not permanently stall a minecart -- the next feed cycle retries with fresh state.
-- **Explicit rig in batch sling is deprecated.** `gt sling beads... rig` still works but prints a warning. Prefer `gt sling beads...` with auto-resolution.
-- **Staged minecarts are inert.** The daemon ignores them completely. Don't expect auto-feeding until you `gt minecart launch`.
+- **Explicit rig in batch sling is deprecated.** `ms sling beads... rig` still works but prints a warning. Prefer `ms sling beads...` with auto-resolution.
+- **Staged minecarts are inert.** The daemon ignores them completely. Don't expect auto-feeding until you `ms minecart launch`.
 - **Review `staged:warnings` before launching.** Warnings are informational — fix and re-stage if possible, or launch anyway if they're acceptable.
-- **`gt minecart launch` on a non-staged input delegates to stage.** If you pass an epic or task list to `launch`, it runs `stage --launch` internally. Only an already-staged minecart gets the fast path.
+- **`ms minecart launch` on a non-staged input delegates to stage.** If you pass an epic or task list to `launch`, it runs `stage --launch` internally. Only an already-staged minecart gets the fast path.
 - **Wave computation is informational.** Waves are computed at stage time for display. Runtime dispatch uses the daemon's per-cycle `isIssueBlocked` checks, which are more dynamic.
 - **You cannot un-stage an open minecart.** Once launched, a minecart cannot return to staged status. The `open → staged:*` transition is rejected.
 
@@ -381,10 +381,10 @@ See `docs/design/minecart/testing.md` for the general minecart test plan coverin
 |------|-------------|
 | `internal/minecart/operations.go` | Core feeding: `CheckMinecartsForIssue`, `feedNextReadyIssue`, `IsSlingableType`, `isIssueBlocked` |
 | `internal/daemon/minecart_manager.go` | `MinecartManager` goroutines: `runEventPoll` (5s), `runStrandedScan` (30s), `feedFirstReady` |
-| `internal/cmd/minecart.go` | All `gt minecart` subcommands + `findStrandedMinecarts` type filter |
+| `internal/cmd/minecart.go` | All `ms minecart` subcommands + `findStrandedMinecarts` type filter |
 | `internal/cmd/sling.go` | Batch detection at ~242, auto-rig-resolution, deprecation warning |
 | `internal/cmd/sling_batch.go` | `runBatchSling`, `resolveRigFromBeadIDs`, `allBeadIDs`, cross-rig guard |
 | `internal/cmd/sling_minecart.go` | `createAutoMinecart`, `createBatchMinecart`, `printMinecartConflict` |
-| `internal/cmd/minecart_stage.go` | `gt minecart stage`: DAG walking, wave computation, error/warning detection, staged minecart creation |
-| `internal/cmd/minecart_launch.go` | `gt minecart launch`: status transition, Wave 1 dispatch via `dispatchWave1` |
+| `internal/cmd/minecart_stage.go` | `ms minecart stage`: DAG walking, wave computation, error/warning detection, staged minecart creation |
+| `internal/cmd/minecart_launch.go` | `ms minecart launch`: status transition, Wave 1 dispatch via `dispatchWave1` |
 | `internal/daemon/daemon.go` | Daemon startup -- creates `MinecartManager` at ~237 |

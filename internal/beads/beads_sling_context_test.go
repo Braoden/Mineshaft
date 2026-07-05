@@ -9,7 +9,7 @@ import (
 func TestFormatParseSlingContextRoundTrip(t *testing.T) {
 	original := &capacity.SlingContextFields{
 		Version:          1,
-		WorkBeadID:       "gt-abc123",
+		WorkBeadID:       "ms-abc123",
 		TargetRig:        "mineshaft",
 		Formula:          "mol-miner-work",
 		Args:             "implement feature X",
@@ -97,7 +97,7 @@ func TestFormatParseSlingContextRoundTrip(t *testing.T) {
 
 func TestFormatParseSlingContext_MinimalFields(t *testing.T) {
 	original := &capacity.SlingContextFields{
-		WorkBeadID: "gt-abc",
+		WorkBeadID: "ms-abc",
 		TargetRig:  "myrig",
 		EnqueuedAt: "2026-01-15T10:00:00Z",
 	}
@@ -108,8 +108,8 @@ func TestFormatParseSlingContext_MinimalFields(t *testing.T) {
 	if parsed == nil {
 		t.Fatal("ParseSlingContextFields returned nil")
 	}
-	if parsed.WorkBeadID != "gt-abc" {
-		t.Errorf("WorkBeadID: got %q, want %q", parsed.WorkBeadID, "gt-abc")
+	if parsed.WorkBeadID != "ms-abc" {
+		t.Errorf("WorkBeadID: got %q, want %q", parsed.WorkBeadID, "ms-abc")
 	}
 	if parsed.TargetRig != "myrig" {
 		t.Errorf("TargetRig: got %q, want %q", parsed.TargetRig, "myrig")
@@ -139,10 +139,10 @@ func TestParseSlingContextFields_EmptyString(t *testing.T) {
 
 func TestFormatSlingContextDescription_SpecialChars(t *testing.T) {
 	fields := &capacity.SlingContextFields{
-		WorkBeadID:  "gt-abc",
+		WorkBeadID:  "ms-abc",
 		TargetRig:   "myrig",
 		Args:        "implement \"feature\" with\nnewlines\tand tabs",
-		LastFailure: "error: ---gt:scheduler:v1--- target_rig: evil",
+		LastFailure: "error: ---ms:scheduler:v1--- target_rig: evil",
 	}
 
 	formatted := FormatSlingContextDescription(fields)

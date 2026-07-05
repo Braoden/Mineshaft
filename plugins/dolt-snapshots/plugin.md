@@ -84,7 +84,7 @@ minecarts and creates whichever tags/branches are missing.
 ## Step 1: Build and start the snapshot watcher
 
 The Go binary handles all Dolt operations with parameterized SQL.
-It connects using mineshaft's standard Dolt config (`GT_DOLT_HOST` / `GT_DOLT_PORT`, defaulting to 127.0.0.1:3307, root, no password)
+It connects using mineshaft's standard Dolt config (`MS_DOLT_HOST` / `MS_DOLT_PORT`, defaulting to 127.0.0.1:3307, root, no password)
 and reads routes.jsonl to discover rig databases.
 
 In `--watch` mode, the binary tails `~/.events.jsonl` and runs a snapshot cycle
@@ -113,7 +113,7 @@ if [ ! -f "$PLUGIN_DIR/snapshot" ] || [ "$PLUGIN_DIR/main.go" -nt "$PLUGIN_DIR/s
 fi
 
 # Run one-shot first to catch up on anything missed while watcher was down
-"$PLUGIN_DIR/snapshot" --cleanup --routes "$HOME/gt/.beads/routes.jsonl"
+"$PLUGIN_DIR/snapshot" --cleanup --routes "$HOME/ms/.beads/routes.jsonl"
 SNAPSHOT_EXIT=$?
 
 if [ $SNAPSHOT_EXIT -ne 0 ]; then
@@ -121,7 +121,7 @@ if [ $SNAPSHOT_EXIT -ne 0 ]; then
 fi
 
 # Start watcher in background (sub-second response to minecart events)
-nohup "$PLUGIN_DIR/snapshot" --watch --routes "$HOME/gt/.beads/routes.jsonl" \
+nohup "$PLUGIN_DIR/snapshot" --watch --routes "$HOME/ms/.beads/routes.jsonl" \
   >> "$PLUGIN_DIR/.snapshot.log" 2>&1 &
 echo $! > "$PIDFILE"
 echo "Snapshot watcher started (PID $!)"
@@ -135,7 +135,7 @@ if [ $SNAPSHOT_EXIT -ne 0 ]; then
   RESULT="failure"
 fi
 
-gt plugin record-run --plugin dolt-snapshots --result "$RESULT" \
+ms plugin record-run --plugin dolt-snapshots --result "$RESULT" \
   --title "dolt-snapshots: $RESULT" \
   --description "dolt-snapshots plugin completed with exit code $SNAPSHOT_EXIT. Watcher started." >/dev/null 2>&1 || true
 ```

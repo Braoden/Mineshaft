@@ -7,8 +7,8 @@ goroutine (NOT a Claude session) that runs the interrogation state machine.
 ## Architecture Context
 
 Dogs are lightweight workers in Boot's pool (see dog-pool-architecture.md):
-- Fixed pool of 5 goroutines (configurable via GT_DOG_POOL_SIZE)
-- State persisted to $GT_ROOT/supervisor/dogs/active/<id>.json
+- Fixed pool of 5 goroutines (configurable via MS_DOG_POOL_SIZE)
+- State persisted to $MS_ROOT/supervisor/dogs/active/<id>.json
 - Recovery on Boot restart via orphan state files
 
 ## State Machine
@@ -136,7 +136,7 @@ Entry point when Dog is allocated from pool.
 **1. Read warrant from allocation:**
 The Dog receives a Warrant struct containing:
 - ID: Bead ID of the warrant
-- Target: Session name (e.g., "gt-mineshaft-Toast")
+- Target: Session name (e.g., "ms-mineshaft-Toast")
 - Reason: Why termination requested
 - Requester: Who filed (supervisor, witness, overseer)
 - FiledAt: Timestamp
@@ -151,7 +151,7 @@ If target doesn't exist:
 - Skip to EPITAPH with outcome=already_dead
 
 **3. Initialize state file:**
-Write initial state to $GT_ROOT/supervisor/dogs/active/{dog-id}.json
+Write initial state to $MS_ROOT/supervisor/dogs/active/{dog-id}.json
 
 **4. Set initial attempt counter:**
 attempt = 1
@@ -377,7 +377,7 @@ bd close {warrant_id} --reason "Session responded at attempt {attempt}"
 
 **4. Notify requester:**
 ```bash
-gt mail send {requester}/ -s "PARDON: {target}" -m "Death warrant cancelled.
+ms mail send {requester}/ -s "PARDON: {target}" -m "Death warrant cancelled.
 Session responded after attempt {attempt}.
 Warrant: {warrant_id}
 Response detected: {timestamp}"
@@ -477,11 +477,11 @@ bd close {warrant_id} --reason "{epitaph_summary}"
 
 **3. Move state file to completed:**
 ```bash
-mv $GT_ROOT/supervisor/dogs/active/{dog-id}.json $GT_ROOT/supervisor/dogs/completed/
+mv $MS_ROOT/supervisor/dogs/active/{dog-id}.json $MS_ROOT/supervisor/dogs/completed/
 ```
 
 **4. Report to Boot:**
-Write completion file: $GT_ROOT/supervisor/dogs/active/{dog-id}.done
+Write completion file: $MS_ROOT/supervisor/dogs/active/{dog-id}.done
 ```json
 {
   "dog_id": "{dog-id}",
@@ -506,7 +506,7 @@ description = "Bead ID of the death warrant being processed"
 required = true
 
 [vars.target]
-description = "Session name to interrogate (e.g., gt-mineshaft-Toast)"
+description = "Session name to interrogate (e.g., ms-mineshaft-Toast)"
 required = true
 
 [vars.reason]

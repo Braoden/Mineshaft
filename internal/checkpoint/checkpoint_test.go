@@ -38,7 +38,7 @@ func TestReadWrite(t *testing.T) {
 		ModifiedFiles: []string{"file1.go", "file2.go"},
 		LastCommit:    "abc123",
 		Branch:        "feature/test",
-		HookedBead:    "gt-xyz",
+		HookedBead:    "ms-xyz",
 		Notes:         "Some notes",
 	}
 
@@ -226,13 +226,13 @@ func TestWithMolecule(t *testing.T) {
 
 func TestWithHookedBead(t *testing.T) {
 	cp := &Checkpoint{}
-	result := cp.WithHookedBead("gt-123")
+	result := cp.WithHookedBead("ms-123")
 
 	if result != cp {
 		t.Error("WithHookedBead should return same checkpoint")
 	}
-	if cp.HookedBead != "gt-123" {
-		t.Errorf("HookedBead = %q, want %q", cp.HookedBead, "gt-123")
+	if cp.HookedBead != "ms-123" {
+		t.Errorf("HookedBead = %q, want %q", cp.HookedBead, "ms-123")
 	}
 }
 
@@ -308,8 +308,8 @@ func TestSummary(t *testing.T) {
 		},
 		{
 			name: "hooked bead",
-			cp:   &Checkpoint{HookedBead: "gt-abc"},
-			want: "hooked: gt-abc",
+			cp:   &Checkpoint{HookedBead: "ms-abc"},
+			want: "hooked: ms-abc",
 		},
 		{
 			name: "modified files",
@@ -326,11 +326,11 @@ func TestSummary(t *testing.T) {
 			cp: &Checkpoint{
 				MoleculeID:    "mol-123",
 				CurrentStep:   "step-1",
-				HookedBead:    "gt-abc",
+				HookedBead:    "ms-abc",
 				ModifiedFiles: []string{"a.go"},
 				Branch:        "main",
 			},
-			want: "molecule mol-123, step step-1, hooked: gt-abc, 1 modified files, branch: main",
+			want: "molecule mol-123, step step-1, hooked: ms-abc, 1 modified files, branch: main",
 		},
 	}
 
@@ -352,7 +352,7 @@ func TestCheckpointJSONRoundtrip(t *testing.T) {
 		ModifiedFiles: []string{"x.go", "y.go", "z.go"},
 		LastCommit:    "deadbeef",
 		Branch:        "develop",
-		HookedBead:    "gt-roundtrip",
+		HookedBead:    "ms-roundtrip",
 		Timestamp:     time.Date(2025, 6, 15, 10, 30, 0, 0, time.UTC),
 		SessionID:     "session-123",
 		Notes:         "Testing round trip",

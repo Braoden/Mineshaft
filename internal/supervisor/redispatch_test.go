@@ -13,9 +13,9 @@ func TestParseRecoveredBeadSubject(t *testing.T) {
 		wantID   string
 		wantOK   bool
 	}{
-		{"RECOVERED_BEAD gt-abc123", "gt-abc123", true},
+		{"RECOVERED_BEAD ms-abc123", "ms-abc123", true},
 		{"RECOVERED_BEAD bd-xyz", "bd-xyz", true},
-		{"RECOVERED_BEAD   gt-abc123  ", "gt-abc123", true},
+		{"RECOVERED_BEAD   ms-abc123  ", "ms-abc123", true},
 		{"RECOVERED_BEAD", "", false},
 		{"RECOVERED_BEAD ", "", false},
 		{"MERGE_READY foo", "", false},
@@ -43,7 +43,7 @@ func TestParseRecoveredBeadBody(t *testing.T) {
 			name: "standard format",
 			body: `Recovered abandoned bead from dead miner.
 
-Bead: gt-abc123
+Bead: ms-abc123
 Miner: mineshaft/max
 Previous Status: hooked
 
@@ -91,7 +91,7 @@ func TestRedispatchState_LoadSave(t *testing.T) {
 	}
 
 	// Add some state
-	beadState := state.GetBeadState("gt-abc")
+	beadState := state.GetBeadState("ms-abc")
 	beadState.RecordAttempt("mineshaft")
 	beadState.RecordAttempt("mineshaft")
 
@@ -105,7 +105,7 @@ func TestRedispatchState_LoadSave(t *testing.T) {
 		t.Fatalf("LoadRedispatchState after save: %v", err)
 	}
 
-	loadedBead := loaded.GetBeadState("gt-abc")
+	loadedBead := loaded.GetBeadState("ms-abc")
 	if loadedBead.AttemptCount != 2 {
 		t.Errorf("expected 2 attempts, got %d", loadedBead.AttemptCount)
 	}
@@ -115,7 +115,7 @@ func TestRedispatchState_LoadSave(t *testing.T) {
 }
 
 func TestBeadRedispatchState_Cooldown(t *testing.T) {
-	state := &BeadRedispatchState{BeadID: "gt-test"}
+	state := &BeadRedispatchState{BeadID: "ms-test"}
 
 	// Not in cooldown initially
 	if state.IsInCooldown(5 * time.Minute) {
@@ -140,7 +140,7 @@ func TestBeadRedispatchState_Cooldown(t *testing.T) {
 }
 
 func TestBeadRedispatchState_ShouldEscalate(t *testing.T) {
-	state := &BeadRedispatchState{BeadID: "gt-test"}
+	state := &BeadRedispatchState{BeadID: "ms-test"}
 
 	if state.ShouldEscalate(3) {
 		t.Error("should not escalate with 0 attempts")
@@ -163,7 +163,7 @@ func TestBeadRedispatchState_ShouldEscalate(t *testing.T) {
 }
 
 func TestBeadRedispatchState_Escalation(t *testing.T) {
-	state := &BeadRedispatchState{BeadID: "gt-test"}
+	state := &BeadRedispatchState{BeadID: "ms-test"}
 
 	if state.Escalated {
 		t.Error("should not be escalated initially")
@@ -183,22 +183,22 @@ func TestRedispatchState_GetBeadState(t *testing.T) {
 	state := &RedispatchState{}
 
 	// GetBeadState creates map if nil
-	bead := state.GetBeadState("gt-new")
+	bead := state.GetBeadState("ms-new")
 	if bead == nil {
 		t.Fatal("expected non-nil bead state")
 	}
-	if bead.BeadID != "gt-new" {
-		t.Errorf("expected BeadID=gt-new, got %q", bead.BeadID)
+	if bead.BeadID != "ms-new" {
+		t.Errorf("expected BeadID=ms-new, got %q", bead.BeadID)
 	}
 
 	// Second call returns same object
-	bead2 := state.GetBeadState("gt-new")
+	bead2 := state.GetBeadState("ms-new")
 	if bead != bead2 {
 		t.Error("expected same bead state object on second call")
 	}
 
 	// Different bead returns different object
-	bead3 := state.GetBeadState("gt-other")
+	bead3 := state.GetBeadState("ms-other")
 	if bead == bead3 {
 		t.Error("expected different bead state for different ID")
 	}
@@ -300,7 +300,7 @@ func TestResolveAgentForRedispatch(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			state := &BeadRedispatchState{
-				BeadID:       "gt-test",
+				BeadID:       "ms-test",
 				AttemptCount: tt.attemptCount,
 			}
 			got := resolveAgentForRedispatch(townDir, rigName, state)
@@ -312,7 +312,7 @@ func TestResolveAgentForRedispatch(t *testing.T) {
 }
 
 func TestResolveAgentForRedispatch_NoConfig(t *testing.T) {
-	state := &BeadRedispatchState{BeadID: "gt-test", AttemptCount: 0}
+	state := &BeadRedispatchState{BeadID: "ms-test", AttemptCount: 0}
 	got := resolveAgentForRedispatch(t.TempDir(), "myrig", state)
 	if got != "" {
 		t.Errorf("expected empty agent when no config, got %q", got)
@@ -344,7 +344,7 @@ func TestResolveAgentForRedispatch_HighThreshold(t *testing.T) {
 	}
 
 	// First re-dispatch: totalFailures=1, threshold=2 → no promotion yet
-	state := &BeadRedispatchState{BeadID: "gt-test", AttemptCount: 0}
+	state := &BeadRedispatchState{BeadID: "ms-test", AttemptCount: 0}
 	got := resolveAgentForRedispatch(townDir, rigName, state)
 	if got != "" {
 		t.Errorf("expected no promotion at 1 failure with threshold 2, got %q", got)

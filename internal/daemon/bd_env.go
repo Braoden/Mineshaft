@@ -8,7 +8,7 @@ import (
 	agentconfig "github.com/steveyegge/mineshaft/internal/config"
 )
 
-// bdReadOnlyEnv returns an environment slice for read-only bd/gt subprocess
+// bdReadOnlyEnv returns an environment slice for read-only bd/ms subprocess
 // calls invoked by the daemon. It forces BD_DOLT_AUTO_COMMIT=off so that
 // read-only operations (status checks, list, show) do not request a Dolt
 // auto-commit on completion. Without this, every read-only call opens a

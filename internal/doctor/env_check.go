@@ -182,7 +182,7 @@ func (c *EnvVarsCheck) Run(ctx *CheckContext) *CheckResult {
 			Status:  StatusWarning,
 			Message: fmt.Sprintf("Found BEADS_DIR set in %d session(s)", len(beadsDirWarnings)),
 			Details: details,
-			FixHint: "Remove BEADS_DIR from session environment: gt shutdown && gt up",
+			FixHint: "Remove BEADS_DIR from session environment: ms shutdown && ms up",
 		}
 	}
 
@@ -205,13 +205,13 @@ func (c *EnvVarsCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:  StatusWarning,
 		Message: fmt.Sprintf("Found %d env var mismatch(es) across %d session(s)", len(mismatches), checkedCount),
 		Details: details,
-		FixHint: "Run 'gt doctor --fix' to apply missing env vars in-place, or 'gt shutdown && gt up' to restart",
+		FixHint: "Run 'ms doctor --fix' to apply missing env vars in-place, or 'ms shutdown && ms up' to restart",
 	}
 }
 
 // Fix applies missing or incorrect env vars to all Mineshaft tmux sessions in-place.
 // The running Claude process is unaffected (it already has env vars from startup);
-// this updates the tmux session store so future processes and gt doctor agree.
+// this updates the tmux session store so future processes and ms doctor agree.
 func (c *EnvVarsCheck) Fix(ctx *CheckContext) error {
 	accessor := c.accessor
 	if accessor == nil {

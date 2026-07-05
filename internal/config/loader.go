@@ -882,7 +882,7 @@ func (c *AccountsConfig) GetDefaultAccount() *Account {
 
 // ResolveAccountConfigDir resolves the CLAUDE_CONFIG_DIR for account selection.
 // Priority order:
-//  1. GT_ACCOUNT environment variable
+//  1. MS_ACCOUNT environment variable
 //  2. accountFlag (from --account command flag)
 //  3. Default account from config
 //
@@ -896,11 +896,11 @@ func ResolveAccountConfigDir(accountsPath, accountFlag string) (configDir, handl
 		return "", "", nil
 	}
 
-	// Priority 1: GT_ACCOUNT env var
-	if envAccount := os.Getenv("GT_ACCOUNT"); envAccount != "" {
+	// Priority 1: MS_ACCOUNT env var
+	if envAccount := os.Getenv("MS_ACCOUNT"); envAccount != "" {
 		acct := cfg.GetAccount(envAccount)
 		if acct == nil {
-			return "", "", fmt.Errorf("GT_ACCOUNT '%s' not found in accounts config", envAccount)
+			return "", "", fmt.Errorf("MS_ACCOUNT '%s' not found in accounts config", envAccount)
 		}
 		return expandPath(acct.ConfigDir), envAccount, nil
 	}
@@ -1123,8 +1123,8 @@ func SaveTownSettings(path string, settings *TownSettings) error {
 //  3. If rig has no Agent set, use town's default_agent
 //  4. Fall back to claude defaults
 //
-// townRoot is the path to the town directory (e.g., ~/gt).
-// rigPath is the path to the rig directory (e.g., ~/gt/mineshaft).
+// townRoot is the path to the town directory (e.g., ~/ms).
+// rigPath is the path to the rig directory (e.g., ~/ms/mineshaft).
 func ResolveAgentConfig(townRoot, rigPath string) *RuntimeConfig {
 	resolveConfigMu.Lock()
 	defer resolveConfigMu.Unlock()
@@ -1241,7 +1241,7 @@ func resolveAgentConfigWithOverrideInternal(townRoot, rigPath, agentOverride str
 		var rc *RuntimeConfig
 		// For subcommand-style overrides (e.g. "opencode acp"), prefer the built-in
 		// preset when one exists. Town agent registry overrides often point at wrappers
-		// like gt-opencode, but ACP/subcommand invocations need the underlying runtime
+		// like ms-opencode, but ACP/subcommand invocations need the underlying runtime
 		// binary and built-in capability metadata.
 		if len(extraArgs) > 0 {
 			if preset, ok := builtinPresets[AgentPreset(agentName)]; ok {
@@ -1346,8 +1346,8 @@ func lookupAgentConfigIfExists(name string, townSettings *TownSettings, rigSetti
 // printed to stderr and it falls back to the default agent.
 //
 // role is one of: "overseer", "supervisor", "witness", "refinery", "miner", "crew", "boot".
-// townRoot is the path to the town directory (e.g., ~/gt).
-// rigPath is the path to the rig directory (e.g., ~/gt/mineshaft), or empty for town-level roles.
+// townRoot is the path to the town directory (e.g., ~/ms).
+// rigPath is the path to the rig directory (e.g., ~/ms/mineshaft), or empty for town-level roles.
 func ResolveRoleAgentConfig(role, townRoot, rigPath string) *RuntimeConfig {
 	resolveConfigMu.Lock()
 	defer resolveConfigMu.Unlock()
@@ -1435,7 +1435,7 @@ func ResolveWorkerAgentConfig(workerName, townRoot, rigPath string) *RuntimeConf
 // Invalid effort levels are warned about and skipped.
 func ResolveRoleEffort(role, townRoot, rigPath string) string {
 	// Tier 1: ephemeral cost tier override (mirrors agent resolution)
-	if tierName := os.Getenv("GT_COST_TIER"); tierName != "" && IsValidTier(tierName) {
+	if tierName := os.Getenv("MS_COST_TIER"); tierName != "" && IsValidTier(tierName) {
 		if roleEffort := CostTierRoleEffort(CostTier(tierName)); roleEffort != nil {
 			if effort, ok := roleEffort[role]; ok {
 				return effort
@@ -1552,7 +1552,7 @@ func RoleSettingsDir(role, rigPath string) string {
 	}
 }
 
-// tryResolveFromEphemeralTier checks the GT_COST_TIER environment variable
+// tryResolveFromEphemeralTier checks the MS_COST_TIER environment variable
 // and returns the appropriate RuntimeConfig for the given role if an ephemeral
 // cost tier is set.
 //
@@ -1565,7 +1565,7 @@ func RoleSettingsDir(role, rigPath string) string {
 // explicitly wants the default agent for this role, and persisted RoleAgents
 // should be skipped to prevent stale config from leaking through.
 func tryResolveFromEphemeralTier(role string) (*RuntimeConfig, bool) {
-	tierName := os.Getenv("GT_COST_TIER")
+	tierName := os.Getenv("MS_COST_TIER")
 	if tierName == "" || !IsValidTier(tierName) {
 		return nil, false
 	}
@@ -1668,7 +1668,7 @@ func resolveRoleAgentConfigCore(role, townRoot, rigPath string) *RuntimeConfig {
 		}
 	}
 
-	// Check ephemeral cost tier (GT_COST_TIER env var)
+	// Check ephemeral cost tier (MS_COST_TIER env var)
 	tierRC, tierHandled := tryResolveFromEphemeralTier(role)
 	if tierHandled {
 		if tierRC != nil {
@@ -1738,7 +1738,7 @@ func resolveRoleAgentConfigCore(role, townRoot, rigPath string) *RuntimeConfig {
 // Returns the agent name and whether it came from role-specific configuration.
 //
 // NOTE: This function does not account for ephemeral cost tier overrides
-// (GT_COST_TIER env var). It reflects persisted config only. For the actual
+// (MS_COST_TIER env var). It reflects persisted config only. For the actual
 // runtime agent config, use ResolveRoleAgentConfig.
 func ResolveRoleAgentName(role, townRoot, rigPath string) (agentName string, isRoleSpecific bool) {
 	// Load rig settings
@@ -2000,7 +2000,7 @@ func fillRuntimeDefaults(rc *RuntimeConfig) *RuntimeConfig {
 	// Auto-fill Session defaults from preset when not explicitly set.
 	// Custom agents (e.g., "claude-opus" with Command:"claude") inherit
 	// SessionIDEnv/ConfigDirEnv from the matched preset, enabling session
-	// resume and GT_SESSION_ID_ENV propagation in handoffs.
+	// resume and MS_SESSION_ID_ENV propagation in handoffs.
 	if result.Session == nil && preset != nil && (preset.SessionIDEnv != "" || preset.ConfigDirEnv != "") {
 		result.Session = &RuntimeSessionConfig{
 			SessionIDEnv: preset.SessionIDEnv,
@@ -2074,7 +2074,7 @@ func GetRuntimeCommand(rigPath string) string {
 		}
 		return ResolveAgentConfig(townRoot, "").BuildCommand()
 	}
-	// Derive town root from rig path (rig is typically ~/gt/<rigname>)
+	// Derive town root from rig path (rig is typically ~/ms/<rigname>)
 	townRoot := filepath.Dir(rigPath)
 	return ResolveAgentConfig(townRoot, rigPath).BuildCommand()
 }
@@ -2169,8 +2169,8 @@ func findTownRootFromCwd() (string, error) {
 	}
 }
 
-// ExtractSimpleRole extracts the simple role name from a GT_ROLE value.
-// GT_ROLE can be:
+// ExtractSimpleRole extracts the simple role name from a MS_ROLE value.
+// MS_ROLE can be:
 //   - Simple: "overseer", "supervisor"
 //   - Compound: "rig/witness", "rig/refinery", "rig/crew/name", "rig/miners/name"
 //
@@ -2202,11 +2202,11 @@ func ExtractSimpleRole(gtRole string) string {
 
 // BuildStartupCommand builds a full startup command with environment exports.
 // envVars is a map of environment variable names to values.
-// rigPath is optional - if empty, uses envVars["GT_ROOT"] to find town root,
-// falling back to cwd detection if GT_ROOT is not set.
+// rigPath is optional - if empty, uses envVars["MS_ROOT"] to find town root,
+// falling back to cwd detection if MS_ROOT is not set.
 // prompt is optional - if provided, appended as the initial prompt.
 //
-// If envVars contains GT_ROLE, the function uses role-based agent resolution
+// If envVars contains MS_ROLE, the function uses role-based agent resolution
 // (ResolveRoleAgentConfig) to select the appropriate agent for the role.
 // This enables per-role model selection via role_agents in settings.
 func BuildStartupCommand(envVars map[string]string, rigPath, prompt string) string {
@@ -2214,16 +2214,16 @@ func BuildStartupCommand(envVars map[string]string, rigPath, prompt string) stri
 	var townRoot string
 
 	// Extract role from envVars for role-based agent resolution.
-	// GT_ROLE may be compound format (e.g., "rig/refinery") so we extract
+	// MS_ROLE may be compound format (e.g., "rig/refinery") so we extract
 	// the simple role name for role_agents lookup.
-	role := ExtractSimpleRole(envVars["GT_ROLE"])
+	role := ExtractSimpleRole(envVars["MS_ROLE"])
 
 	if rigPath != "" {
 		// Derive town root from rig path
 		townRoot = filepath.Dir(rigPath)
-		if role == "crew" && envVars["GT_CREW"] != "" {
+		if role == "crew" && envVars["MS_CREW"] != "" {
 			// Per-worker agent resolution: check worker_agents before role_agents
-			rc = ResolveWorkerAgentConfig(envVars["GT_CREW"], townRoot, rigPath)
+			rc = ResolveWorkerAgentConfig(envVars["MS_CREW"], townRoot, rigPath)
 		} else if role != "" {
 			// Use role-based agent resolution for per-role model selection
 			rc = ResolveRoleAgentConfig(role, townRoot, rigPath)
@@ -2231,10 +2231,10 @@ func BuildStartupCommand(envVars map[string]string, rigPath, prompt string) stri
 			rc = ResolveAgentConfig(townRoot, rigPath)
 		}
 	} else {
-		// For town-level agents (overseer, supervisor), prefer GT_ROOT from envVars
+		// For town-level agents (overseer, supervisor), prefer MS_ROOT from envVars
 		// (set by AgentEnv) over cwd detection. This ensures role_agents config
 		// is respected even when the daemon runs outside the town hierarchy.
-		townRoot = envVars["GT_ROOT"]
+		townRoot = envVars["MS_ROOT"]
 		if townRoot == "" {
 			var err error
 			townRoot, err = findTownRootFromCwd()
@@ -2262,26 +2262,26 @@ func BuildStartupCommand(envVars map[string]string, rigPath, prompt string) stri
 	for k, v := range envVars {
 		resolvedEnv[k] = v
 	}
-	// Add GT_ROOT so agents can find town-level resources (formulas, etc.)
+	// Add MS_ROOT so agents can find town-level resources (formulas, etc.)
 	if townRoot != "" {
-		resolvedEnv["GT_ROOT"] = townRoot
+		resolvedEnv["MS_ROOT"] = townRoot
 	}
 	if rc.Session != nil && rc.Session.SessionIDEnv != "" {
-		resolvedEnv["GT_SESSION_ID_ENV"] = rc.Session.SessionIDEnv
+		resolvedEnv["MS_SESSION_ID_ENV"] = rc.Session.SessionIDEnv
 	}
-	// Set GT_AGENT from resolved agent name so IsAgentAlive can detect
+	// Set MS_AGENT from resolved agent name so IsAgentAlive can detect
 	// non-Claude processes (e.g., opencode). Without this, witness patrol
 	// falls back to ["node", "claude"] process detection and auto-nukes
-	// miners running non-Claude agents. See: gt-agent-role-agents.
+	// miners running non-Claude agents. See: ms-agent-role-agents.
 	if rc.ResolvedAgent != "" {
-		resolvedEnv["GT_AGENT"] = rc.ResolvedAgent
+		resolvedEnv["MS_AGENT"] = rc.ResolvedAgent
 	}
-	// Set GT_PROCESS_NAMES for accurate liveness detection. Custom agents may
+	// Set MS_PROCESS_NAMES for accurate liveness detection. Custom agents may
 	// shadow built-in preset names (e.g., custom "codex" running "opencode"),
 	// or wrap the real binary with a launcher (e.g., `env -u VAR claude ...`).
 	// Pass rc.Args so wrapper-unwrap can find the real binary.
 	processNames := ResolveProcessNames(rc.ResolvedAgent, rc.Command, rc.Args...)
-	resolvedEnv["GT_PROCESS_NAMES"] = strings.Join(processNames, ",")
+	resolvedEnv["MS_PROCESS_NAMES"] = strings.Join(processNames, ",")
 	// Merge agent-specific env vars (e.g., OPENCODE_PERMISSION for yolo mode)
 	for k, v := range rc.Env {
 		resolvedEnv[k] = v
@@ -2316,13 +2316,13 @@ func BuildStartupCommand(envVars map[string]string, rigPath, prompt string) stri
 		scriptLines = append(scriptLines, agentCmd)
 
 		// Write script to temp file in town's daemon dir
-		townRoot := resolvedEnv["GT_ROOT"]
+		townRoot := resolvedEnv["MS_ROOT"]
 		if townRoot == "" {
 			townRoot = os.TempDir()
 		}
 		scriptDir := filepath.Join(townRoot, "daemon", "scripts")
 		_ = os.MkdirAll(scriptDir, 0755)
-		role := resolvedEnv["GT_ROLE"]
+		role := resolvedEnv["MS_ROLE"]
 		if role == "" {
 			role = "agent"
 		}
@@ -2399,7 +2399,7 @@ func SanitizeAgentEnv(resolvedEnv, callerEnv map[string]string) {
 	}
 
 	// CLAUDECODE is set by Claude Code v2.x on startup and triggers nested session
-	// detection. When gt sling is invoked from within a Claude Code session, tmux
+	// detection. When ms sling is invoked from within a Claude Code session, tmux
 	// inherits this variable into its global environment, causing new miner sessions
 	// to fail with "Nested sessions share runtime resources and will crash all active
 	// sessions." Clear it unless the caller explicitly provides it.
@@ -2438,14 +2438,14 @@ func PrependEnv(command string, envVars map[string]string) string {
 //
 // Resolution priority:
 //  1. agentOverride (explicit override)
-//  2. role_agents[GT_ROLE] (if GT_ROLE is in envVars)
+//  2. role_agents[MS_ROLE] (if MS_ROLE is in envVars)
 //  3. Default agent resolution (rig's Agent → town's DefaultAgent → "claude")
 func BuildStartupCommandWithAgentOverride(envVars map[string]string, rigPath, prompt, agentOverride string) (string, error) {
 	var rc *RuntimeConfig
 	var townRoot string
 
 	// Extract role from envVars for role-based agent resolution (when no override)
-	role := ExtractSimpleRole(envVars["GT_ROLE"])
+	role := ExtractSimpleRole(envVars["MS_ROLE"])
 
 	if rigPath != "" {
 		townRoot = filepath.Dir(rigPath)
@@ -2455,9 +2455,9 @@ func BuildStartupCommandWithAgentOverride(envVars map[string]string, rigPath, pr
 			if err != nil {
 				return "", err
 			}
-		} else if role == "crew" && envVars["GT_CREW"] != "" {
+		} else if role == "crew" && envVars["MS_CREW"] != "" {
 			// Per-worker agent resolution: check worker_agents before role_agents
-			rc = ResolveWorkerAgentConfig(envVars["GT_CREW"], townRoot, rigPath)
+			rc = ResolveWorkerAgentConfig(envVars["MS_CREW"], townRoot, rigPath)
 		} else if role != "" {
 			// No override, use role-based agent resolution
 			rc = ResolveRoleAgentConfig(role, townRoot, rigPath)
@@ -2465,16 +2465,16 @@ func BuildStartupCommandWithAgentOverride(envVars map[string]string, rigPath, pr
 			rc = ResolveAgentConfig(townRoot, rigPath)
 		}
 	} else {
-		// For town-level agents (overseer, supervisor), prefer GT_ROOT from envVars
+		// For town-level agents (overseer, supervisor), prefer MS_ROOT from envVars
 		// (set by AgentEnv) over cwd detection. This ensures role_agents config
 		// is respected even when the daemon runs outside the town hierarchy.
-		townRoot = envVars["GT_ROOT"]
+		townRoot = envVars["MS_ROOT"]
 		if townRoot == "" {
 			var err error
 			townRoot, err = findTownRootFromCwd()
 			if err != nil {
 				// Can't find town root from cwd - but if agentOverride is specified,
-				// try to use the preset directly. This allows `gt supervisor start --agent codex`
+				// try to use the preset directly. This allows `ms supervisor start --agent codex`
 				// to work even when run from outside the town directory.
 				if agentOverride != "" {
 					if preset := GetAgentPresetByName(agentOverride); preset != nil {
@@ -2519,27 +2519,27 @@ func BuildStartupCommandWithAgentOverride(envVars map[string]string, rigPath, pr
 	for k, v := range envVars {
 		resolvedEnv[k] = v
 	}
-	// Add GT_ROOT so agents can find town-level resources (formulas, etc.)
+	// Add MS_ROOT so agents can find town-level resources (formulas, etc.)
 	if townRoot != "" {
-		resolvedEnv["GT_ROOT"] = townRoot
+		resolvedEnv["MS_ROOT"] = townRoot
 	}
 	if rc.Session != nil && rc.Session.SessionIDEnv != "" {
-		resolvedEnv["GT_SESSION_ID_ENV"] = rc.Session.SessionIDEnv
+		resolvedEnv["MS_SESSION_ID_ENV"] = rc.Session.SessionIDEnv
 	}
 	// Record agent name so IsAgentAlive can detect the running process.
 	// Explicit override takes priority; fall back to resolved agent name.
 	agentForProcess := rc.ResolvedAgent
 	if agentOverride != "" {
-		resolvedEnv["GT_AGENT"] = agentOverride
+		resolvedEnv["MS_AGENT"] = agentOverride
 		agentForProcess = agentOverride
 	} else if rc.ResolvedAgent != "" {
-		resolvedEnv["GT_AGENT"] = rc.ResolvedAgent
+		resolvedEnv["MS_AGENT"] = rc.ResolvedAgent
 	}
-	// Set GT_PROCESS_NAMES for accurate liveness detection of custom agents.
+	// Set MS_PROCESS_NAMES for accurate liveness detection of custom agents.
 	// Pass rc.Args so wrapper-unwrap (env/sudo/nohup wrapping a real binary)
 	// can find the real agent binary.
 	processNamesOverride := ResolveProcessNames(agentForProcess, rc.Command, rc.Args...)
-	resolvedEnv["GT_PROCESS_NAMES"] = strings.Join(processNamesOverride, ",")
+	resolvedEnv["MS_PROCESS_NAMES"] = strings.Join(processNamesOverride, ",")
 	// Merge agent-specific env vars (e.g., OPENCODE_PERMISSION for yolo mode)
 	for k, v := range rc.Env {
 		resolvedEnv[k] = v
@@ -2572,13 +2572,13 @@ func BuildStartupCommandWithAgentOverride(envVars map[string]string, rigPath, pr
 		}
 		scriptLines = append(scriptLines, agentCmd)
 
-		townRoot := resolvedEnv["GT_ROOT"]
+		townRoot := resolvedEnv["MS_ROOT"]
 		if townRoot == "" {
 			townRoot = os.TempDir()
 		}
 		scriptDir := filepath.Join(townRoot, "daemon", "scripts")
 		_ = os.MkdirAll(scriptDir, 0755)
-		role := resolvedEnv["GT_ROLE"]
+		role := resolvedEnv["MS_ROLE"]
 		if role == "" {
 			role = "agent"
 		}
@@ -2621,7 +2621,7 @@ func BuildStartupCommandWithAgentOverride(envVars map[string]string, rigPath, pr
 
 // BuildStartupCommandFromConfig builds a startup command from a complete AgentEnvConfig.
 // Use this (instead of Build*StartupCommand helpers) when you need full OTEL context:
-// Issue (gt.issue), Topic (gt.topic), SessionName (gt.session), etc.
+// Issue (ms.issue), Topic (ms.topic), SessionName (ms.session), etc.
 // The rigPath, prompt, and agentOverride are passed through directly.
 func BuildStartupCommandFromConfig(cfg AgentEnvConfig, rigPath, prompt, agentOverride string) (string, error) {
 	envVars := AgentEnv(cfg)
@@ -2654,7 +2654,7 @@ func BuildAgentStartupCommandWithAgentOverride(role, rig, townRoot, rigPath, pro
 }
 
 // BuildMinerStartupCommand builds the startup command for a miner.
-// Sets GT_ROLE, GT_RIG, GT_MINER, BD_ACTOR, GIT_AUTHOR_NAME, and GT_ROOT.
+// Sets MS_ROLE, MS_RIG, MS_MINER, BD_ACTOR, GIT_AUTHOR_NAME, and MS_ROOT.
 func BuildMinerStartupCommand(rigName, minerName, rigPath, prompt string) string {
 	var townRoot string
 	if rigPath != "" {
@@ -2687,7 +2687,7 @@ func BuildMinerStartupCommandWithAgentOverride(rigName, minerName, rigPath, prom
 }
 
 // BuildCrewStartupCommand builds the startup command for a crew member.
-// Sets GT_ROLE, GT_RIG, GT_CREW, BD_ACTOR, GIT_AUTHOR_NAME, and GT_ROOT.
+// Sets MS_ROLE, MS_RIG, MS_CREW, BD_ACTOR, GIT_AUTHOR_NAME, and MS_ROOT.
 func BuildCrewStartupCommand(rigName, crewName, rigPath, prompt string) string {
 	var townRoot string
 	if rigPath != "" {
@@ -2748,7 +2748,7 @@ func ExpectedPaneCommands(rc *RuntimeConfig) []string {
 
 // GetDefaultFormula returns the default formula for a rig from settings/config.json.
 // Returns empty string if no default is configured.
-// rigPath is the path to the rig directory (e.g., ~/gt/mineshaft).
+// rigPath is the path to the rig directory (e.g., ~/ms/mineshaft).
 func GetDefaultFormula(rigPath string) string {
 	settingsPath := RigSettingsPath(rigPath)
 	settings, err := LoadRigSettings(settingsPath)
@@ -2762,31 +2762,31 @@ func GetDefaultFormula(rigPath string) string {
 }
 
 // GetRigPrefix returns the beads prefix for a rig from rigs.json.
-// Falls back to "gt" if the rig isn't found or has no prefix configured.
-// townRoot is the path to the town directory (e.g., ~/gt).
+// Falls back to "ms" if the rig isn't found or has no prefix configured.
+// townRoot is the path to the town directory (e.g., ~/ms).
 func GetRigPrefix(townRoot, rigName string) string {
 	rigsConfigPath := filepath.Join(townRoot, "overseer", "rigs.json")
 	rigsConfig, err := LoadRigsConfig(rigsConfigPath)
 	if err != nil {
-		return "gt" // fallback
+		return "ms" // fallback
 	}
 
 	entry, ok := rigsConfig.Rigs[rigName]
 	if !ok {
-		return "gt" // fallback
+		return "ms" // fallback
 	}
 
 	if entry.BeadsConfig == nil || entry.BeadsConfig.Prefix == "" {
-		return "gt" // fallback
+		return "ms" // fallback
 	}
 
-	// Strip trailing hyphen if present (prefix stored as "gt-" but used as "gt")
+	// Strip trailing hyphen if present (prefix stored as "ms-" but used as "ms")
 	prefix := entry.BeadsConfig.Prefix
 	return strings.TrimSuffix(prefix, "-")
 }
 
 // AllRigPrefixes returns a sorted list of all rig beads prefixes from rigs.json.
-// Trailing hyphens are stripped (e.g. "gt-" becomes "gt").
+// Trailing hyphens are stripped (e.g. "ms-" becomes "ms").
 // Returns nil on error (caller should handle the fallback).
 func AllRigPrefixes(townRoot string) []string {
 	rigsConfigPath := filepath.Join(townRoot, "overseer", "rigs.json")

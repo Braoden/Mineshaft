@@ -32,7 +32,7 @@ Reference: WAR-ROOM-SERIAL-KILLER.md, commit f3d47a96.
 ## Scope — What You May and May NOT Touch
 
 **IN SCOPE** (these are the ONLY sessions this plugin may inspect or act on):
-- Miner sessions (`<prefix>-<name>`, e.g. `gt-minuteman`)
+- Miner sessions (`<prefix>-<name>`, e.g. `ms-minuteman`)
 - Supervisor session (`hq-supervisor`)
 
 **OUT OF SCOPE — NEVER touch these, under any circumstances:**
@@ -59,7 +59,7 @@ Gather all miners and the supervisor session. We check crashed sessions
 ```bash
 echo "=== Stuck Agent Dog: Checking agent health ==="
 
-TOWN_ROOT="$HOME/gt"
+TOWN_ROOT="$HOME/ms"
 RIGS_JSON_PATH="${TOWN_ROOT}/rigs.json"
 
 # Fallback for older/runtime-copied layouts that still expose rigs.json under overseer/.
@@ -102,9 +102,9 @@ A miner is a concern if:
 - It has hooked work (hook_bead is set)
 - Its central runtime-aware health is `session-dead` OR `agent-dead`
 
-Miner liveness must use `gt session health`, which wraps the central
-`tmux.CheckSessionHealth` path. That path reads `GT_PROCESS_NAMES`, `GT_AGENT`,
-and `GT_PANE_ID`, so opencode/node/bun detection stays in the shared runtime
+Miner liveness must use `ms session health`, which wraps the central
+`tmux.CheckSessionHealth` path. That path reads `MS_PROCESS_NAMES`, `MS_AGENT`,
+and `MS_PANE_ID`, so opencode/node/bun detection stays in the shared runtime
 configuration instead of a plugin-local process regex. Treat `agent-hung` as
 observe-only for miners; quiet OpenCode research can be legitimate live work.
 
@@ -125,7 +125,7 @@ while IFS='|' read -r RIG PREFIX; do
     # Use beads prefix (not rig name) for tmux session name
     SESSION_NAME="${PREFIX}-${PCAT_NAME}"
 
-    HEALTH_STATUS=$(gt session health "$SESSION_NAME" --json --max-inactivity "${GT_STUCK_AGENT_DOG_MAX_INACTIVITY:-0s}" 2>/dev/null \
+    HEALTH_STATUS=$(ms session health "$SESSION_NAME" --json --max-inactivity "${MS_STUCK_AGENT_DOG_MAX_INACTIVITY:-0s}" 2>/dev/null \
       | jq -r '.status // empty' 2>/dev/null || true)
 
     case "$HEALTH_STATUS" in
@@ -200,13 +200,13 @@ else
     NOW=$(date +%s)
     HEARTBEAT_AGE=$(( NOW - ${HEARTBEAT_TIME:-0} ))
 
-    if [ "$HEARTBEAT_AGE" -gt "${GT_STUCK_AGENT_DOG_SUPERVISOR_STALE_SECONDS:-1200}" ]; then
+    if [ "$HEARTBEAT_AGE" -gt "${MS_STUCK_AGENT_DOG_SUPERVISOR_STALE_SECONDS:-1200}" ]; then
       ACTIVITY_TIME=$(tmux display-message -t "$SUPERVISOR_SESSION" -p '#{window_activity}' 2>/dev/null || true)
       case "$ACTIVITY_TIME" in
         ''|*[!0-9]*) ACTIVITY_AGE="" ;;
         *) ACTIVITY_AGE=$(( NOW - ACTIVITY_TIME )) ;;
       esac
-      if [ -n "$ACTIVITY_AGE" ] && [ "$ACTIVITY_AGE" -le "${GT_STUCK_AGENT_DOG_ACTIVITY_GRACE_SECONDS:-1200}" ]; then
+      if [ -n "$ACTIVITY_AGE" ] && [ "$ACTIVITY_AGE" -le "${MS_STUCK_AGENT_DOG_ACTIVITY_GRACE_SECONDS:-1200}" ]; then
         echo "  DIVERGENCE: heartbeat file stale (${HEARTBEAT_AGE}s) but session active ${ACTIVITY_AGE}s ago — write divergence, not stuck"
         SUPERVISOR_DIVERGENCE="heartbeat_write_divergence_${HEARTBEAT_AGE}s_active_${ACTIVITY_AGE}s"
       elif [ "$SUPERVISOR_PROCESS_ALIVE" -eq 1 ] && ! has_in_progress_work; then
@@ -236,7 +236,7 @@ refinery). If you find yourself considering a session not in these arrays, STOP.
 
 For CRASHED agents (session dead, work on hook):
 - This is almost always a legitimate crash needing restart
-- Exception: if the miner just ran `gt done` and the hook hasn't cleared yet
+- Exception: if the miner just ran `ms done` and the hook hasn't cleared yet
 - Check bead status: if the root wisp is closed, the miner completed normally
 
 For STUCK agents (session alive, agent dead):
@@ -267,10 +267,10 @@ restart/kill loops for that cycle.
 ```bash
 TOTAL_ISSUES=$(( ${#CRASHED[@]} + ${#STUCK[@]} ))
 MASS_DEATH=0
-if [ "$TOTAL_ISSUES" -ge "${GT_STUCK_AGENT_DOG_MASS_DEATH_THRESHOLD:-3}" ]; then
+if [ "$TOTAL_ISSUES" -ge "${MS_STUCK_AGENT_DOG_MASS_DEATH_THRESHOLD:-3}" ]; then
   MASS_DEATH=1
   echo "MASS DEATH: $TOTAL_ISSUES agents down in same cycle — escalating"
-  gt escalate "Mass agent death: $TOTAL_ISSUES agents down" -s CRITICAL
+  ms escalate "Mass agent death: $TOTAL_ISSUES agents down" -s CRITICAL
   echo "Skipping per-agent restart/kill actions during mass-death escalation"
 fi
 ```
@@ -289,7 +289,7 @@ for ENTRY in "${CRASHED[@]}"; do
 
   echo "Requesting restart for $RIG/miners/$PCAT (hook=$HOOK)"
 
-  gt mail send "$RIG/witness" \
+  ms mail send "$RIG/witness" \
     -s "RESTART_MINER: $RIG/$PCAT" \
     --stdin <<BODY
 Miner $PCAT crash confirmed by stuck-agent-dog plugin.
@@ -310,7 +310,7 @@ for ENTRY in "${STUCK[@]}"; do
   echo "Killing zombie session $SESSION and requesting restart"
   tmux kill-session -t "$SESSION" 2>/dev/null || true
 
-  gt mail send "$RIG/witness" \
+  ms mail send "$RIG/witness" \
     -s "RESTART_MINER: $RIG/$PCAT (zombie cleared)" \
     --stdin <<BODY
 Miner $PCAT zombie session cleared by stuck-agent-dog plugin.
@@ -337,7 +337,7 @@ if [ -n "$SUPERVISOR_ISSUE" ]; then
       SUPERVISOR_FINGERPRINT="stuck-agent-dog:supervisor:stuck-heartbeat"
       ;;
   esac
-  gt escalate "Supervisor $SUPERVISOR_ISSUE detected by stuck-agent-dog" \
+  ms escalate "Supervisor $SUPERVISOR_ISSUE detected by stuck-agent-dog" \
     -s "$SUPERVISOR_SEVERITY" \
     --source "plugin:stuck-agent-dog" \
     --fingerprint "$SUPERVISOR_FINGERPRINT"
@@ -356,17 +356,17 @@ echo "=== $SUMMARY ==="
 
 On success (no issues or issues handled):
 ```bash
-gt plugin record-run --plugin stuck-agent-dog --result success \
+ms plugin record-run --plugin stuck-agent-dog --result success \
   --title "stuck-agent-dog: $SUMMARY" --description "$SUMMARY" >/dev/null 2>&1 || true
 ```
 
 On failure:
 ```bash
-gt plugin record-run --plugin stuck-agent-dog --result failure \
+ms plugin record-run --plugin stuck-agent-dog --result failure \
   --title "stuck-agent-dog: FAILED" \
   --description "Agent health check failed: $ERROR" >/dev/null 2>&1 || true
 
-gt escalate "Plugin FAILED: stuck-agent-dog" \
+ms escalate "Plugin FAILED: stuck-agent-dog" \
   --severity high \
   --reason "$ERROR"
 ```

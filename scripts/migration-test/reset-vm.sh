@@ -26,9 +26,9 @@ fi
 log "Resetting $TOWN_ROOT to pre-migration state..."
 
 # Stop Dolt server if running
-if gt dolt status &>/dev/null 2>&1; then
+if ms dolt status &>/dev/null 2>&1; then
     log "Stopping Dolt server..."
-    gt dolt stop 2>/dev/null || true
+    ms dolt stop 2>/dev/null || true
 fi
 
 # Restore town-level .beads

@@ -22,7 +22,7 @@ type CommandMeta struct {
 	ArgType string
 }
 
-// AllowedCommands defines which gt commands can be executed from the dashboard.
+// AllowedCommands defines which ms commands can be executed from the dashboard.
 // Commands not in this list are blocked for security.
 var AllowedCommands = map[string]CommandMeta{
 	// === Read-only commands (always safe) ===

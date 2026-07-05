@@ -7,7 +7,7 @@ import (
 // testRegistry returns a PrefixRegistry populated with test rig prefixes.
 func testRegistry() *PrefixRegistry {
 	r := NewPrefixRegistry()
-	r.Register("gt", "mineshaft")
+	r.Register("ms", "mineshaft")
 	r.Register("bd", "beads")
 	r.Register("hop", "hop")
 	r.Register("sky", "sky")
@@ -100,10 +100,10 @@ func TestParseSessionName(t *testing.T) {
 		// Witness (new format: <prefix>-witness)
 		{
 			name:       "witness mineshaft",
-			session:    "gt-witness",
+			session:    "ms-witness",
 			wantRole:   RoleWitness,
 			wantRig:    "mineshaft",
-			wantPrefix: "gt",
+			wantPrefix: "ms",
 		},
 		{
 			name:       "witness beads",
@@ -123,10 +123,10 @@ func TestParseSessionName(t *testing.T) {
 		// Refinery (new format: <prefix>-refinery)
 		{
 			name:       "refinery mineshaft",
-			session:    "gt-refinery",
+			session:    "ms-refinery",
 			wantRole:   RoleRefinery,
 			wantRig:    "mineshaft",
-			wantPrefix: "gt",
+			wantPrefix: "ms",
 		},
 		{
 			name:       "refinery multi-word prefix",
@@ -139,11 +139,11 @@ func TestParseSessionName(t *testing.T) {
 		// Crew (new format: <prefix>-crew-<name>)
 		{
 			name:       "crew mineshaft",
-			session:    "gt-crew-max",
+			session:    "ms-crew-max",
 			wantRole:   RoleCrew,
 			wantRig:    "mineshaft",
 			wantName:   "max",
-			wantPrefix: "gt",
+			wantPrefix: "ms",
 		},
 		{
 			name:       "crew beads",
@@ -155,21 +155,21 @@ func TestParseSessionName(t *testing.T) {
 		},
 		{
 			name:       "crew hyphenated name",
-			session:    "gt-crew-my-worker",
+			session:    "ms-crew-my-worker",
 			wantRole:   RoleCrew,
 			wantRig:    "mineshaft",
 			wantName:   "my-worker",
-			wantPrefix: "gt",
+			wantPrefix: "ms",
 		},
 
 		// Miner (new format: <prefix>-<name>)
 		{
 			name:       "miner mineshaft",
-			session:    "gt-morsov",
+			session:    "ms-morsov",
 			wantRole:   RoleMiner,
 			wantRig:    "mineshaft",
 			wantName:   "morsov",
-			wantPrefix: "gt",
+			wantPrefix: "ms",
 		},
 		{
 			name:       "miner beads",
@@ -268,8 +268,8 @@ func TestAgentIdentity_SessionName(t *testing.T) {
 		},
 		{
 			name:     "witness",
-			identity: AgentIdentity{Role: RoleWitness, Rig: "mineshaft", Prefix: "gt"},
-			want:     "gt-witness",
+			identity: AgentIdentity{Role: RoleWitness, Rig: "mineshaft", Prefix: "ms"},
+			want:     "ms-witness",
 		},
 		{
 			name:     "refinery",
@@ -278,13 +278,13 @@ func TestAgentIdentity_SessionName(t *testing.T) {
 		},
 		{
 			name:     "crew",
-			identity: AgentIdentity{Role: RoleCrew, Rig: "mineshaft", Name: "max", Prefix: "gt"},
-			want:     "gt-crew-max",
+			identity: AgentIdentity{Role: RoleCrew, Rig: "mineshaft", Name: "max", Prefix: "ms"},
+			want:     "ms-crew-max",
 		},
 		{
 			name:     "miner",
-			identity: AgentIdentity{Role: RoleMiner, Rig: "mineshaft", Name: "morsov", Prefix: "gt"},
-			want:     "gt-morsov",
+			identity: AgentIdentity{Role: RoleMiner, Rig: "mineshaft", Name: "morsov", Prefix: "ms"},
+			want:     "ms-morsov",
 		},
 		{
 			name:     "miner hop",
@@ -325,7 +325,7 @@ func TestAgentIdentity_Address(t *testing.T) {
 		},
 		{
 			name:     "witness",
-			identity: AgentIdentity{Role: RoleWitness, Rig: "mineshaft", Prefix: "gt"},
+			identity: AgentIdentity{Role: RoleWitness, Rig: "mineshaft", Prefix: "ms"},
 			want:     "mineshaft/witness",
 		},
 		{
@@ -335,12 +335,12 @@ func TestAgentIdentity_Address(t *testing.T) {
 		},
 		{
 			name:     "crew",
-			identity: AgentIdentity{Role: RoleCrew, Rig: "mineshaft", Name: "max", Prefix: "gt"},
+			identity: AgentIdentity{Role: RoleCrew, Rig: "mineshaft", Name: "max", Prefix: "ms"},
 			want:     "mineshaft/crew/max",
 		},
 		{
 			name:     "miner",
-			identity: AgentIdentity{Role: RoleMiner, Rig: "mineshaft", Name: "Toast", Prefix: "gt"},
+			identity: AgentIdentity{Role: RoleMiner, Rig: "mineshaft", Name: "Toast", Prefix: "ms"},
 			want:     "mineshaft/miners/Toast",
 		},
 		{
@@ -370,10 +370,10 @@ func TestParseSessionName_RoundTrip(t *testing.T) {
 		"hq-overseer",
 		"hq-supervisor",
 		"hq-dog-alpha",
-		"gt-witness",
+		"ms-witness",
 		"bd-refinery",
-		"gt-crew-max",
-		"gt-morsov",
+		"ms-crew-max",
+		"ms-morsov",
 		"hop-ostrom",
 		"sky-furiosa",
 		"hq-witness",
@@ -465,11 +465,11 @@ func TestParseAddress(t *testing.T) {
 
 func TestPrefixRegistry(t *testing.T) {
 	r := NewPrefixRegistry()
-	r.Register("gt", "mineshaft")
+	r.Register("ms", "mineshaft")
 	r.Register("bd", "beads")
 
-	if got := r.PrefixForRig("mineshaft"); got != "gt" {
-		t.Errorf("PrefixForRig(mineshaft) = %q, want %q", got, "gt")
+	if got := r.PrefixForRig("mineshaft"); got != "ms" {
+		t.Errorf("PrefixForRig(mineshaft) = %q, want %q", got, "ms")
 	}
 	if got := r.RigForPrefix("bd"); got != "beads" {
 		t.Errorf("RigForPrefix(bd) = %q, want %q", got, "beads")

@@ -278,7 +278,7 @@ func TestWorktreeGitdirCheck_RigFilter(t *testing.T) {
 // ── New tests for hq-c6u: relocation and supervisor dogs ──────────────────── //
 
 func TestWorktreeGitdirCheck_RelocatedWorktree(t *testing.T) {
-	// Simulate rsync from /old/prefix/gt to tmpDir (new town root).
+	// Simulate rsync from /old/prefix/ms to tmpDir (new town root).
 	// The .git file contains an absolute path with the old prefix,
 	// but .repo.git exists at the new location.
 	tmpDir := t.TempDir()
@@ -298,7 +298,7 @@ func TestWorktreeGitdirCheck_RelocatedWorktree(t *testing.T) {
 
 	// Create .git file with OLD prefix path (simulating rsync from another machine)
 	gitFile := filepath.Join(rigDir, "refinery", "rig", ".git")
-	oldPath := "/Users/olduser/gt/" + rigName + "/.repo.git/worktrees/rig"
+	oldPath := "/Users/olduser/ms/" + rigName + "/.repo.git/worktrees/rig"
 	if err := os.WriteFile(gitFile, []byte("gitdir: "+oldPath+"\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -351,7 +351,7 @@ func TestWorktreeGitdirCheck_SupervisorDogs(t *testing.T) {
 	}
 
 	gitFile := filepath.Join(dogWtDir, ".git")
-	oldPath := "/old/prefix/gt/" + rigName + "/.repo.git/worktrees/myrig1"
+	oldPath := "/old/prefix/ms/" + rigName + "/.repo.git/worktrees/myrig1"
 	if err := os.WriteFile(gitFile, []byte("gitdir: "+oldPath+"\n"), 0644); err != nil {
 		t.Fatal(err)
 	}

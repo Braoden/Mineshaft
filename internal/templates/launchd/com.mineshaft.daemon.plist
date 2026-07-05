@@ -34,7 +34,7 @@
 
     <key>EnvironmentVariables</key>
     <dict>
-        <key>GT_TOWN_ROOT</key>
+        <key>MS_TOWN_ROOT</key>
         <string>{{.TownRoot}}</string>
     </dict>
 

@@ -86,7 +86,7 @@ type TierRequirements struct {
 // These are tuned for a wasteland with 50-200 active rigs.
 //
 // The progression is:
-//   - Drifter → Registered: automatic on join (handled by gt wl join)
+//   - Drifter → Registered: automatic on join (handled by ms wl join)
 //   - Registered → Contributor: 3 completions, 3 stamps, 2 validators, 7 days
 //   - Contributor → War Chief: 10 completions, 15 stamps, quality ≥3.5, 5 validators, 30 days
 func DefaultTierRequirements() []TierRequirements {

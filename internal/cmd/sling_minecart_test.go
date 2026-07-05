@@ -20,7 +20,7 @@ func TestMinecartTracksBeadExactMatch(t *testing.T) {
 
 	// Stub bd sql to return a tracked dep with raw beadID
 	bdScript := `#!/bin/sh
-echo '[{"depends_on_id":"gt-abc123"}]'
+echo '[{"depends_on_id":"ms-abc123"}]'
 `
 	bdPath := filepath.Join(binDir, "bd")
 	if err := os.WriteFile(bdPath, []byte(bdScript), 0755); err != nil {
@@ -30,7 +30,7 @@ echo '[{"depends_on_id":"gt-abc123"}]'
 	origPath := os.Getenv("PATH")
 	t.Setenv("PATH", binDir+":"+origPath)
 
-	if !minecartTracksBead(beadsDir, "hq-cv-test1", "gt-abc123") {
+	if !minecartTracksBead(beadsDir, "hq-cv-test1", "ms-abc123") {
 		t.Error("minecartTracksBead should return true for exact match")
 	}
 }
@@ -47,7 +47,7 @@ func TestMinecartTracksBeadExternalRef(t *testing.T) {
 
 	// Stub bd sql to return a tracked dep with external:prefix:beadID format
 	bdScript := `#!/bin/sh
-echo '[{"depends_on_id":"external:gt-abc:gt-abc123"}]'
+echo '[{"depends_on_id":"external:ms-abc:ms-abc123"}]'
 `
 	bdPath := filepath.Join(binDir, "bd")
 	if err := os.WriteFile(bdPath, []byte(bdScript), 0755); err != nil {
@@ -57,7 +57,7 @@ echo '[{"depends_on_id":"external:gt-abc:gt-abc123"}]'
 	origPath := os.Getenv("PATH")
 	t.Setenv("PATH", binDir+":"+origPath)
 
-	if !minecartTracksBead(beadsDir, "hq-cv-test2", "gt-abc123") {
+	if !minecartTracksBead(beadsDir, "hq-cv-test2", "ms-abc123") {
 		t.Error("minecartTracksBead should return true for external ref match")
 	}
 }
@@ -74,7 +74,7 @@ func TestMinecartTracksBeadNoMatch(t *testing.T) {
 
 	// Stub bd sql to return a tracked dep with a different beadID
 	bdScript := `#!/bin/sh
-echo '[{"depends_on_id":"gt-other456"}]'
+echo '[{"depends_on_id":"ms-other456"}]'
 `
 	bdPath := filepath.Join(binDir, "bd")
 	if err := os.WriteFile(bdPath, []byte(bdScript), 0755); err != nil {
@@ -84,7 +84,7 @@ echo '[{"depends_on_id":"gt-other456"}]'
 	origPath := os.Getenv("PATH")
 	t.Setenv("PATH", binDir+":"+origPath)
 
-	if minecartTracksBead(beadsDir, "hq-cv-test3", "gt-abc123") {
+	if minecartTracksBead(beadsDir, "hq-cv-test3", "ms-abc123") {
 		t.Error("minecartTracksBead should return false when bead not tracked")
 	}
 }
@@ -111,7 +111,7 @@ echo '[]'
 	origPath := os.Getenv("PATH")
 	t.Setenv("PATH", binDir+":"+origPath)
 
-	if minecartTracksBead(beadsDir, "hq-cv-test4", "gt-abc123") {
+	if minecartTracksBead(beadsDir, "hq-cv-test4", "ms-abc123") {
 		t.Error("minecartTracksBead should return false for empty deps")
 	}
 }
@@ -128,7 +128,7 @@ func TestMinecartTracksBeadMultipleDeps(t *testing.T) {
 
 	// Stub bd sql to return multiple tracked deps, one of which matches
 	bdScript := `#!/bin/sh
-echo '[{"depends_on_id":"gt-other1"},{"depends_on_id":"external:gt-abc:gt-abc123"},{"depends_on_id":"gt-other2"}]'
+echo '[{"depends_on_id":"ms-other1"},{"depends_on_id":"external:ms-abc:ms-abc123"},{"depends_on_id":"ms-other2"}]'
 `
 	bdPath := filepath.Join(binDir, "bd")
 	if err := os.WriteFile(bdPath, []byte(bdScript), 0755); err != nil {
@@ -138,7 +138,7 @@ echo '[{"depends_on_id":"gt-other1"},{"depends_on_id":"external:gt-abc:gt-abc123
 	origPath := os.Getenv("PATH")
 	t.Setenv("PATH", binDir+":"+origPath)
 
-	if !minecartTracksBead(beadsDir, "hq-cv-test5", "gt-abc123") {
+	if !minecartTracksBead(beadsDir, "hq-cv-test5", "ms-abc123") {
 		t.Error("minecartTracksBead should return true when bead found among multiple deps")
 	}
 }
@@ -213,8 +213,8 @@ printf '[{"depends_on_id":"external:ag:ag-95s.1"}]\n'
 }
 
 func TestSQLExternalDepTargetClauseEscapesUnderscore(t *testing.T) {
-	got := sqlExternalDepTargetClause("gt-a_b")
-	want := "depends_on_external LIKE '%:gt-a!_b' ESCAPE '!'"
+	got := sqlExternalDepTargetClause("ms-a_b")
+	want := "depends_on_external LIKE '%:ms-a!_b' ESCAPE '!'"
 	if got != want {
 		t.Fatalf("sqlExternalDepTargetClause() = %q, want %q", got, want)
 	}

@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{GT_BIN}} tap guard pr-workflow"
+            "command": "{{MS_BIN}} tap guard pr-workflow"
           }
         ]
       },
@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{GT_BIN}} tap guard pr-workflow"
+            "command": "{{MS_BIN}} tap guard pr-workflow"
           }
         ]
       },
@@ -36,7 +36,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{GT_BIN}} tap guard pr-workflow"
+            "command": "{{MS_BIN}} tap guard pr-workflow"
           }
         ]
       },
@@ -45,7 +45,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{GT_BIN}} tap guard dangerous-command"
+            "command": "{{MS_BIN}} tap guard dangerous-command"
           }
         ]
       },
@@ -54,7 +54,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{GT_BIN}} tap guard dangerous-command"
+            "command": "{{MS_BIN}} tap guard dangerous-command"
           }
         ]
       },
@@ -63,7 +63,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{GT_BIN}} tap guard dangerous-command"
+            "command": "{{MS_BIN}} tap guard dangerous-command"
           }
         ]
       },
@@ -72,7 +72,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{GT_BIN}} tap guard dangerous-command"
+            "command": "{{MS_BIN}} tap guard dangerous-command"
           }
         ]
       },
@@ -81,7 +81,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{GT_BIN}} tap guard dangerous-command"
+            "command": "{{MS_BIN}} tap guard dangerous-command"
           }
         ]
       },
@@ -90,7 +90,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{GT_BIN}} tap guard dangerous-command"
+            "command": "{{MS_BIN}} tap guard dangerous-command"
           }
         ]
       },
@@ -99,7 +99,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{GT_BIN}} tap guard dangerous-command"
+            "command": "{{MS_BIN}} tap guard dangerous-command"
           }
         ]
       }
@@ -110,7 +110,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{GT_BIN}} prime --hook"
+            "command": "{{MS_BIN}} prime --hook"
           }
         ]
       }
@@ -121,7 +121,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{GT_BIN}} prime --hook"
+            "command": "{{MS_BIN}} prime --hook"
           }
         ]
       }
@@ -132,7 +132,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "case \"${GT_ROLE:-}\" in *witness*|*refinery*|supervisor*|*boot*) exit 0 ;; *) {{GT_BIN}} mail check --inject ;; esac"
+            "command": "case \"${MS_ROLE:-}\" in *witness*|*refinery*|supervisor*|*boot*) exit 0 ;; *) {{MS_BIN}} mail check --inject ;; esac"
           }
         ]
       }
@@ -143,7 +143,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{GT_BIN}} costs record &"
+            "command": "{{MS_BIN}} costs record &"
           }
         ]
       }

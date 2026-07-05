@@ -13,15 +13,15 @@ crash after any step and resume from the last completed step.
 You are a self-cleaning worker. You:
 1. Receive work via your hook (formula checklist + issue)
 2. Work through formula steps in order (shown inline at prime time)
-3. Complete and self-clean via `gt done` (submit + nuke yourself)
+3. Complete and self-clean via `ms done` (submit + nuke yourself)
 4. You are GONE - Refinery merges from MQ
 
-**Self-cleaning:** When you run `gt done`, you push your work, submit to MQ,
+**Self-cleaning:** When you run `ms done`, you push your work, submit to MQ,
 nuke your sandbox, and exit. There is no idle state. Done means gone.
 
 **Important:** This formula defines the workflow template. Steps are shown inline
-when you run `gt prime` — there are no separate step beads to close. Work through
-the checklist, then run `gt done`.
+when you run `ms prime` — there are no separate step beads to close. Work through
+the checklist, then run `ms done`.
 
 **Speed principle:** You run the full gate suite AFTER rebasing onto the target
 branch (pre-verify step). This enables the refinery to fast-path merge your MR
@@ -35,7 +35,7 @@ to post comments and address them all before submitting to the merge queue.
 **You do NOT:**
 - Push directly to main (Refinery merges from MQ)
 - Close your own issue (Refinery closes after merge)
-- Wait for merge (you're gone after `gt done`)
+- Wait for merge (you're gone after `ms done`)
 - Fix pre-existing failures on main (Refinery owns main health)
 
 ## Variables
@@ -58,7 +58,7 @@ to post comments and address them all before submitting to the merge queue.
 | CI fails | Diagnose and fix. Re-push until green. |
 | AI reviewer comment | Fix or won't-fix, reply to every comment. |
 | Blocked on external | Mail Witness for help, mark yourself stuck |
-| Context filling | Use gt handoff to cycle to fresh session |
+| Context filling | Use ms handoff to cycle to fresh session |
 | Unsure what to do | Mail Witness, don't guess |"""
 formula = "mol-miner-work-monorepo"
 version = 2
@@ -71,13 +71,13 @@ Initialize your session and understand your assignment.
 
 **1. Prime your environment:**
 ```bash
-gt prime                    # Load role context
+ms prime                    # Load role context
 bd prime                    # Load beads context
 ```
 
 **2. Check your hook:**
 ```bash
-gt hook               # Shows your pinned molecule and hook_bead
+ms hook               # Shows your pinned molecule and hook_bead
 ```
 
 The hook_bead is your assigned issue. Read it carefully:
@@ -87,7 +87,7 @@ bd show {{issue}}           # Full issue details
 
 **3. Check inbox for additional context:**
 ```bash
-gt mail inbox
+ms mail inbox
 # Read any HANDOFF or assignment messages
 ```
 
@@ -104,7 +104,7 @@ gt mail inbox
 
 If blocked or unclear, mail Witness immediately:
 ```bash
-gt mail send <rig>/witness -s "HELP: Unclear requirements" -m "Issue: {{issue}}
+ms mail send <rig>/witness -s "HELP: Unclear requirements" -m "Issue: {{issue}}
 Question: <what you need clarified>"
 ```
 
@@ -117,7 +117,7 @@ needs = ["load-context"]
 description = """
 Ensure you're on a FRESH branch named for THIS bead, based on latest origin/{{base_branch}}.
 
-**The branch name is load-bearing metadata.** `gt done` infers the MR's
+**The branch name is load-bearing metadata.** `ms done` infers the MR's
 source_issue from the bead-id embedded in your branch name. A reused branch
 carries the PREVIOUS bead's id: your MR gets attributed to the wrong (often
 closed) bead, close credit goes to the wrong issue, and your real issue stays
@@ -235,7 +235,7 @@ Do NOT fix unrelated issues in this branch.
 **If stuck:**
 Don't spin for more than 15 minutes. Mail Witness:
 ```bash
-gt mail send <rig>/witness -s "HELP: Stuck on implementation" -m "Issue: {{issue}}
+ms mail send <rig>/witness -s "HELP: Stuck on implementation" -m "Issue: {{issue}}
 Trying to: <what you're attempting>
 Problem: <what's blocking you>
 Tried: <what you've attempted>"
@@ -366,7 +366,7 @@ This MUST show at least 1 commit. If it shows NOTHING:
 - You have NOT completed your implementation. Do NOT close this step.
 - Go back to the implement step and do the work.
 - If the task genuinely requires no code changes (already fixed upstream, etc.),
-  run `gt done --status DEFERRED` and skip remaining steps.
+  run `ms done --status DEFERRED` and skip remaining steps.
 - Do NOT proceed to cleanup or submit with zero commits.
 
 **5. VERIFY clean working tree:**
@@ -380,7 +380,7 @@ If your task produced no code changes, verify your findings are persisted to the
 ```bash
 bd show {{issue}}    # Check notes/design fields have your findings
 ```
-If findings are persisted, proceed to cleanup. `gt done --cleanup-status clean`
+If findings are persisted, proceed to cleanup. `ms done --cleanup-status clean`
 handles the no-commit case for report-only tasks.
 
 **Exit criteria:** Working tree clean AND either (a) at least 1 commit ahead of origin/{{base_branch}}, or (b) report-only task with findings persisted to bead."""
@@ -510,7 +510,7 @@ Submit your work and clean up. Your behavior depends on your base branch.
 ```bash
 git log origin/{{base_branch}}..HEAD --oneline
 ```
-This MUST show at least 1 commit. If it shows nothing, do NOT run `gt done`.
+This MUST show at least 1 commit. If it shows nothing, do NOT run `ms done`.
 
 ## Mode A: PR against main (base_branch = main)
 
@@ -522,7 +522,7 @@ CI is green, AI reviews are addressed — the PR is ready for human review.
 git push origin HEAD
 
 # Exit without submitting to merge queue — the PR is the deliverable
-gt done --no-merge
+ms done --no-merge
 ```
 
 **What happens next (not your concern):**
@@ -553,7 +553,7 @@ Skip any empty/unconfigured commands silently.
 
 **3. If all gates pass, submit to merge queue:**
 ```bash
-gt done --pre-verified --target {{base_branch}}
+ms done --pre-verified --target {{base_branch}}
 ```
 
 **4. If gates fail:** fix, commit, re-rebase, re-run gates. Do NOT submit broken code.
@@ -568,7 +568,7 @@ Check your base_branch variable:
 - If `{{base_branch}}` is `main` (or `master`) → **Mode A** (PR-only, `--no-merge`)
 - If `{{base_branch}}` is anything else → **Mode B** (merge queue, `--pre-verified`)
 
-You are GONE after `gt done`. Done means gone.
+You are GONE after `ms done`. Done means gone.
 
 **Exit criteria:** Work submitted (or PR left for review), sandbox nuked, session exited."""
 

@@ -9,7 +9,7 @@ import (
 func setupDndTestRegistry(t *testing.T) {
 	t.Helper()
 	reg := session.NewPrefixRegistry()
-	reg.Register("gt", "mineshaft")
+	reg.Register("ms", "mineshaft")
 	reg.Register("bd", "beads")
 	old := session.DefaultRegistry()
 	session.SetDefaultRegistry(reg)
@@ -25,11 +25,11 @@ func TestAddressToAgentBeadID(t *testing.T) {
 		// Overseer and supervisor use hq- prefix (town-level)
 		{"overseer", "hq-overseer"},
 		{"supervisor", "hq-supervisor"},
-		{"mineshaft/witness", "gt-witness"},
-		{"mineshaft/refinery", "gt-refinery"},
-		{"mineshaft/alpha", "gt-alpha"},
-		{"mineshaft/crew/max", "gt-crew-max"},
-		{"mineshaft/miners/alpha", "gt-alpha"},
+		{"mineshaft/witness", "ms-witness"},
+		{"mineshaft/refinery", "ms-refinery"},
+		{"mineshaft/alpha", "ms-alpha"},
+		{"mineshaft/crew/max", "ms-crew-max"},
+		{"mineshaft/miners/alpha", "ms-alpha"},
 		{"beads/miners/beta", "bd-beta"},
 		{"beads/witness", "bd-witness"},
 		{"beads/beta", "bd-beta"},

@@ -71,7 +71,7 @@ Rsync local backups to iCloud Drive for offsite replication.
 
 **2. Run offsite sync:**
 ```bash
-rsync -a --delete .dolt-backup/ ~/Library/Mobile\\ Documents/com~apple~CloudDocs/gt-dolt-backup/
+rsync -a --delete .dolt-backup/ ~/Library/Mobile\\ Documents/com~apple~CloudDocs/ms-dolt-backup/
 ```
 
 **3. Record results:**
@@ -114,7 +114,7 @@ None
 
 **2. Signal completion to Supervisor:**
 ```bash
-gt mail send supervisor/ -s "DOG_DONE: backup" -m "Task: dolt-backup
+ms mail send supervisor/ -s "DOG_DONE: backup" -m "Task: dolt-backup
 Synced: {{synced_count}}/{{total_count}}
 Offsite: {{offsite_status}}
 Status: COMPLETE"

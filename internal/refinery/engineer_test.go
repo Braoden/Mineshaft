@@ -41,28 +41,28 @@ func TestDefaultMergeQueueConfig(t *testing.T) {
 }
 
 func TestIsConflictTaskForMR(t *testing.T) {
-	task := &beads.Issue{Description: `Resolve merge conflicts for branch miner/nux/gt-real
+	task := &beads.Issue{Description: `Resolve merge conflicts for branch miner/nux/ms-real
 
 ## Metadata
-- Original MR: gt-mr1
-- Branch: miner/nux/gt-real
+- Original MR: ms-mr1
+- Branch: miner/nux/ms-real
 - Conflict with: main@abc123
-- Original issue: gt-real
+- Original issue: ms-real
 - Retry count: 1`}
 
-	if !isConflictTaskForMR(task, "gt-mr1", "gt-real") {
+	if !isConflictTaskForMR(task, "ms-mr1", "ms-real") {
 		t.Fatal("expected task metadata to verify")
 	}
-	if isConflictTaskForMR(task, "gt-other", "gt-real") {
+	if isConflictTaskForMR(task, "ms-other", "ms-real") {
 		t.Fatal("task verified for wrong MR")
 	}
-	if isConflictTaskForMR(task, "gt-mr1", "gt-other") {
+	if isConflictTaskForMR(task, "ms-mr1", "ms-other") {
 		t.Fatal("task verified for wrong source issue")
 	}
-	if isConflictTaskForMR(task, "gt-mr", "gt-real") {
+	if isConflictTaskForMR(task, "ms-mr", "ms-real") {
 		t.Fatal("task verified for MR prefix")
 	}
-	if isConflictTaskForMR(task, "gt-mr1", "gt-rea") {
+	if isConflictTaskForMR(task, "ms-mr1", "ms-rea") {
 		t.Fatal("task verified for source issue prefix")
 	}
 }
@@ -76,35 +76,35 @@ func TestEngineerFirstOpenBlockerUsesDependencySemantics(t *testing.T) {
 	}{
 		{
 			name:  "open blocking dependency blocks",
-			issue: &beads.Issue{Dependencies: []beads.IssueDep{{ID: "gt-blocker", Status: "open", DependencyType: "blocks"}}},
-			want:  "gt-blocker",
+			issue: &beads.Issue{Dependencies: []beads.IssueDep{{ID: "ms-blocker", Status: "open", DependencyType: "blocks"}}},
+			want:  "ms-blocker",
 		},
 		{
 			name:  "external blocker ID is normalized",
-			issue: &beads.Issue{Dependencies: []beads.IssueDep{{ID: "external:gt:gt-blocker", Status: "open", DependencyType: "waits-for"}}},
-			want:  "gt-blocker",
+			issue: &beads.Issue{Dependencies: []beads.IssueDep{{ID: "external:ms:ms-blocker", Status: "open", DependencyType: "waits-for"}}},
+			want:  "ms-blocker",
 		},
 		{
 			name:  "closed blocking dependency is resolved",
-			issue: &beads.Issue{Dependencies: []beads.IssueDep{{ID: "gt-closed", Status: "closed", DependencyType: "blocks"}}},
+			issue: &beads.Issue{Dependencies: []beads.IssueDep{{ID: "ms-closed", Status: "closed", DependencyType: "blocks"}}},
 		},
 		{
 			name:  "tombstone blocking dependency is resolved",
-			issue: &beads.Issue{Dependencies: []beads.IssueDep{{ID: "gt-tombstone", Status: "tombstone", DependencyType: "blocks"}}},
+			issue: &beads.Issue{Dependencies: []beads.IssueDep{{ID: "ms-tombstone", Status: "tombstone", DependencyType: "blocks"}}},
 		},
 		{
 			name:  "closed merge-block without merge reason still blocks",
-			issue: &beads.Issue{Dependencies: []beads.IssueDep{{ID: "gt-closed-only", Status: "closed", DependencyType: "merge-blocks"}}},
-			want:  "gt-closed-only",
+			issue: &beads.Issue{Dependencies: []beads.IssueDep{{ID: "ms-closed-only", Status: "closed", DependencyType: "merge-blocks"}}},
+			want:  "ms-closed-only",
 		},
 		{
 			name:  "merged merge-block is resolved",
-			issue: &beads.Issue{Dependencies: []beads.IssueDep{{ID: "gt-merged", Status: "closed", DependencyType: "merge-blocks", CloseReason: "Merged in gt-wisp"}}},
+			issue: &beads.Issue{Dependencies: []beads.IssueDep{{ID: "ms-merged", Status: "closed", DependencyType: "merge-blocks", CloseReason: "Merged in ms-wisp"}}},
 		},
 		{
 			name:  "raw blocked_by fallback uses shared normalization",
-			issue: &beads.Issue{BlockedBy: []string{"external:gt:gt-raw-blocker"}},
-			want:  "gt-raw-blocker",
+			issue: &beads.Issue{BlockedBy: []string{"external:ms:ms-raw-blocker"}},
+			want:  "ms-raw-blocker",
 		},
 	}
 
@@ -143,7 +143,7 @@ func TestEngineerClearAgentActiveMRUsesTownBeadsDir(t *testing.T) {
 	}
 	if err := beads.WriteRoutes(townBeadsDir, []beads.Route{
 		{Prefix: "hq-", Path: "."},
-		{Prefix: "gt-", Path: filepath.Join(rigName, "overseer", "rig")},
+		{Prefix: "ms-", Path: filepath.Join(rigName, "overseer", "rig")},
 	}); err != nil {
 		t.Fatalf("write routes: %v", err)
 	}
@@ -170,7 +170,7 @@ case "$cmd" in
     exit 0
     ;;
   show)
-    printf '%%s\n' '[{"id":"gt-mineshaft-miner-rust","title":"gt-mineshaft-miner-rust","issue_type":"task","labels":["gt:agent"],"status":"open","description":"role_type: miner\nrig: mineshaft\nagent_state: idle\nactive_mr: gt-mr"}]'
+    printf '%%s\n' '[{"id":"ms-mineshaft-miner-rust","title":"ms-mineshaft-miner-rust","issue_type":"task","labels":["ms:agent"],"status":"open","description":"role_type: miner\nrig: mineshaft\nagent_state: idle\nactive_mr: ms-mr"}]'
     exit 0
     ;;
   *)
@@ -188,7 +188,7 @@ esac
 		beads:  beads.NewWithBeadsDir(overseerRig, rigBeadsDir),
 		output: io.Discard,
 	}
-	if err := e.clearAgentActiveMR("gt-mineshaft-miner-rust"); err != nil {
+	if err := e.clearAgentActiveMR("ms-mineshaft-miner-rust"); err != nil {
 		t.Fatalf("clearAgentActiveMR: %v", err)
 	}
 
@@ -900,8 +900,8 @@ func TestMinerBranchAlwaysDeletedAfterMerge(t *testing.T) {
 		wantLocalDelete      bool
 		wantRemoteDelete     bool
 	}{
-		{"miner branch with config true", "miner/nux/gt-abc", true, true, true},
-		{"miner branch with config false", "miner/nux/gt-abc", false, true, true},
+		{"miner branch with config true", "miner/nux/ms-abc", true, true, true},
+		{"miner branch with config false", "miner/nux/ms-abc", false, true, true},
 		{"non-miner branch with config true", "feature/my-thing", true, true, false},
 		{"non-miner branch with config false", "feature/my-thing", false, false, false},
 		{"empty branch", "", false, false, false},
@@ -949,8 +949,8 @@ func TestPostMergeMinecartCheck_NoTownBeads(t *testing.T) {
 
 	// Call with a nil-safe MR — should not panic
 	mr := &MRInfo{
-		ID:          "gt-test",
-		SourceIssue: "gt-src",
+		ID:          "ms-test",
+		SourceIssue: "ms-src",
 		MinecartID:    "hq-cv-abc",
 	}
 	e.postMergeMinecartCheck(mr)
@@ -1091,8 +1091,8 @@ func TestNotifySupervisorMinecartFeeding_SkipsWhenNoMinecartID(t *testing.T) {
 
 	// MR without MinecartID — should produce no output
 	mr := &MRInfo{
-		ID:          "gt-test",
-		SourceIssue: "gt-src",
+		ID:          "ms-test",
+		SourceIssue: "ms-src",
 		MinecartID:    "", // No minecart
 	}
 	e.notifySupervisorMinecartFeeding(mr)
@@ -1126,8 +1126,8 @@ func TestNotifySupervisorMinecartFeeding_AttemptsWhenMinecartID(t *testing.T) {
 	e.SetOutput(&buf)
 
 	mr := &MRInfo{
-		ID:          "gt-test",
-		SourceIssue: "gt-src",
+		ID:          "ms-test",
+		SourceIssue: "ms-src",
 		MinecartID:    "hq-cv-abc",
 	}
 	e.notifySupervisorMinecartFeeding(mr)
@@ -1244,7 +1244,7 @@ func TestEngineerNotifyMinecartCompletion_StampsAndSkipsDuplicate(t *testing.T) 
 	statePath := filepath.Join(binDir, "notified.state")
 	mailLogPath := filepath.Join(binDir, "mail.log")
 	bdPath := filepath.Join(binDir, "bd")
-	gtPath := filepath.Join(binDir, "gt")
+	gtPath := filepath.Join(binDir, "ms")
 
 	bdScript := `#!/bin/sh
 STATE="` + statePath + `"
@@ -1281,7 +1281,7 @@ fi
 exit 0
 `
 	if err := os.WriteFile(gtPath, []byte(gtScript), 0755); err != nil {
-		t.Fatalf("write gt stub: %v", err)
+		t.Fatalf("write ms stub: %v", err)
 	}
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 

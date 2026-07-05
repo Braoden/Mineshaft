@@ -16,20 +16,20 @@ func TestParseBranchName(t *testing.T) {
 	}{
 		{
 			name:       "miner branch format",
-			branch:     "miner/Nux/gt-xyz",
-			wantIssue:  "gt-xyz",
+			branch:     "miner/Nux/ms-xyz",
+			wantIssue:  "ms-xyz",
 			wantWorker: "Nux",
 		},
 		{
 			name:       "miner branch with subtask",
-			branch:     "miner/Worker/gt-abc.1",
-			wantIssue:  "gt-abc.1",
+			branch:     "miner/Worker/ms-abc.1",
+			wantIssue:  "ms-abc.1",
 			wantWorker: "Worker",
 		},
 		{
 			name:       "miner branch with issue and timestamp",
-			branch:     "miner/furiosa/gt-jns7.1@mk123456",
-			wantIssue:  "gt-jns7.1",
+			branch:     "miner/furiosa/ms-jns7.1@mk123456",
+			wantIssue:  "ms-jns7.1",
 			wantWorker: "furiosa",
 		},
 		{
@@ -46,14 +46,14 @@ func TestParseBranchName(t *testing.T) {
 		},
 		{
 			name:       "simple issue branch",
-			branch:     "gt-xyz",
-			wantIssue:  "gt-xyz",
+			branch:     "ms-xyz",
+			wantIssue:  "ms-xyz",
 			wantWorker: "",
 		},
 		{
 			name:       "feature branch with issue",
-			branch:     "feature/gt-abc-impl",
-			wantIssue:  "gt-abc",
+			branch:     "feature/ms-abc-impl",
+			wantIssue:  "ms-abc",
 			wantWorker: "",
 		},
 		{
@@ -123,12 +123,12 @@ func TestGetDescriptionWithoutMRFields(t *testing.T) {
 		},
 		{
 			name:        "only MR fields",
-			description: "branch: miner/Nux/gt-xyz\ntarget: main\nworker: Nux",
+			description: "branch: miner/Nux/ms-xyz\ntarget: main\nworker: Nux",
 			want:        "",
 		},
 		{
 			name:        "mixed content",
-			description: "branch: miner/Nux/gt-xyz\nSome custom notes\ntarget: main",
+			description: "branch: miner/Nux/ms-xyz\nSome custom notes\ntarget: main",
 			want:        "Some custom notes",
 		},
 		{
@@ -334,8 +334,8 @@ func TestIssuePatternCompiledAtPackageLevel(t *testing.T) {
 		wantMatch bool
 		wantIssue string
 	}{
-		{"miner/Nux/gt-xyz", true, "gt-xyz"},
-		{"gt-abc", true, "gt-abc"},
+		{"miner/Nux/ms-xyz", true, "ms-xyz"},
+		{"ms-abc", true, "ms-abc"},
 		{"feature/proj-123-add-feature", true, "proj-123"},
 		{"main", false, ""},
 		{"", false, ""},
@@ -364,9 +364,9 @@ func TestMinerCleanupTimeoutConstant(t *testing.T) {
 	}
 }
 
-// TestMRFilteringByLabel verifies that MRs are identified by their gt:merge-request
+// TestMRFilteringByLabel verifies that MRs are identified by their ms:merge-request
 // label rather than the deprecated issue_type field. This is the fix for #816 where
-// MRs created by `gt done` have issue_type='task' but correct gt:merge-request label.
+// MRs created by `ms done` have issue_type='task' but correct ms:merge-request label.
 func TestMRFilteringByLabel(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -379,7 +379,7 @@ func TestMRFilteringByLabel(t *testing.T) {
 				ID:     "mr-1",
 				Title:  "Merge: test-branch",
 				Type:   "task", // Wrong type (default from bd create)
-				Labels: []string{"gt:merge-request"}, // Correct label
+				Labels: []string{"ms:merge-request"}, // Correct label
 			},
 			wantIsMR: true,
 		},
@@ -389,7 +389,7 @@ func TestMRFilteringByLabel(t *testing.T) {
 				ID:     "mr-2",
 				Title:  "Merge: another-branch",
 				Type:   "merge-request",
-				Labels: []string{"gt:merge-request"},
+				Labels: []string{"ms:merge-request"},
 			},
 			wantIsMR: true,
 		},
@@ -416,9 +416,9 @@ func TestMRFilteringByLabel(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := beads.HasLabel(tt.issue, "gt:merge-request")
+			got := beads.HasLabel(tt.issue, "ms:merge-request")
 			if got != tt.wantIsMR {
-				t.Errorf("HasLabel(%q, \"gt:merge-request\") = %v, want %v",
+				t.Errorf("HasLabel(%q, \"ms:merge-request\") = %v, want %v",
 					tt.issue.ID, got, tt.wantIsMR)
 			}
 		})

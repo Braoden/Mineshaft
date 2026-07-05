@@ -95,8 +95,8 @@ type DoltInfo struct {
 
 // TmuxInfo represents the tmux server status.
 type TmuxInfo struct {
-	Socket       string `json:"socket"`                // Socket name derived from town name (e.g., "gt-test")
-	SocketPath   string `json:"socket_path,omitempty"` // Full socket path (e.g., /tmp/tmux-501/gt-test)
+	Socket       string `json:"socket"`                // Socket name derived from town name (e.g., "ms-test")
+	SocketPath   string `json:"socket_path,omitempty"` // Full socket path (e.g., /tmp/tmux-501/ms-test)
 	Running      bool   `json:"running"`               // Is the tmux server running?
 	PID          int    `json:"pid,omitempty"`         // PID of the tmux server process
 	SessionCount int    `json:"session_count"`         // Number of sessions
@@ -494,7 +494,7 @@ func runStatusWatch(_ *cobra.Command, _ []string) error {
 		}
 
 		timestamp := time.Now().Format("15:04:05")
-		header := fmt.Sprintf("[%s] gt status --watch (every %ds, Ctrl+C to stop)", timestamp, statusInterval)
+		header := fmt.Sprintf("[%s] ms status --watch (every %ds, Ctrl+C to stop)", timestamp, statusInterval)
 		if isTTY {
 			fmt.Fprintf(&buf, "%s\n\n", style.Dim.Render(header))
 		} else {
@@ -652,7 +652,7 @@ func gatherStatus() (TownStatus, error) {
 	// A Mineshaft session is only considered "running" if the agent process is
 	// alive inside it, not merely if the tmux session exists. This prevents
 	// zombie sessions (tmux alive, agent dead) from showing as running.
-	// See: gt-bd6i3
+	// See: ms-bd6i3
 	allSessions := make(map[string]bool)
 	if sessions, err := t.ListSessions(); err == nil {
 		var sessionMu sync.Mutex
@@ -818,8 +818,8 @@ func gatherStatus() (TownStatus, error) {
 		port := doltCfg.Port
 		if doltRunning {
 			// Read the actual port from state — doltCfg.Port comes from
-			// DefaultConfig which reads GT_DOLT_PORT from the shell env,
-			// but gt status is typically run without that env var set.
+			// DefaultConfig which reads MS_DOLT_PORT from the shell env,
+			// but ms status is typically run without that env var set.
 			if state, err := doltserver.LoadState(townRoot); err == nil && state.Port > 0 {
 				port = state.Port
 			}
@@ -1105,7 +1105,7 @@ func outputStatusText(w io.Writer, status TownStatus) error {
 	}
 
 	if len(status.Rigs) == 0 {
-		fmt.Fprintf(w, "%s\n", style.Dim.Render("No rigs registered. Use 'gt rig add' to add one."))
+		fmt.Fprintf(w, "%s\n", style.Dim.Render("No rigs registered. Use 'ms rig add' to add one."))
 		return nil
 	}
 
@@ -1219,7 +1219,7 @@ func outputStatusText(w io.Writer, status TownStatus) error {
 // renderAgentDetails renders full agent bead details
 func renderAgentDetails(w io.Writer, agent AgentRuntime, indent string, hooks []AgentHookInfo, townRoot string) { //nolint:unparam // indent kept for future customization
 	// Line 1: Agent bead ID + status
-	// Per gt-zecmc: derive status from tmux (observable reality), not bead state.
+	// Per ms-zecmc: derive status from tmux (observable reality), not bead state.
 	// "Discover, don't track" - agent liveness is observable from tmux session.
 	sessionExists := agent.Running
 
@@ -1250,9 +1250,9 @@ func renderAgentDetails(w io.Writer, agent AgentRuntime, indent string, hooks []
 	}
 
 	// Build agent bead ID using canonical naming: prefix-rig-role-name
-	agentBeadID := "gt-" + agent.Name
+	agentBeadID := "ms-" + agent.Name
 	if agent.Address != "" && agent.Address != agent.Name {
-		// Use address for full path agents like mineshaft/crew/joe → gt-mineshaft-crew-joe
+		// Use address for full path agents like mineshaft/crew/joe → ms-mineshaft-crew-joe
 		addr := strings.TrimSuffix(agent.Address, "/") // Remove trailing slash for global agents
 		parts := strings.Split(addr, "/")
 		if len(parts) == 1 {
@@ -1378,7 +1378,7 @@ func formatMQSummaryCompact(mq *MQSummary) string {
 
 // renderAgentCompactWithSuffix renders a single-line agent status with an extra suffix
 func renderAgentCompactWithSuffix(w io.Writer, agent AgentRuntime, indent string, hooks []AgentHookInfo, _ string, suffix string) {
-	// Build status indicator (gt-zecmc: use tmux state, not bead state)
+	// Build status indicator (ms-zecmc: use tmux state, not bead state)
 	statusIndicator := buildStatusIndicator(agent)
 
 	// Get hook info
@@ -1424,7 +1424,7 @@ func renderAgentCompactWithSuffix(w io.Writer, agent AgentRuntime, indent string
 
 // renderAgentCompact renders a single-line agent status
 func renderAgentCompact(w io.Writer, agent AgentRuntime, indent string, hooks []AgentHookInfo, _ string) {
-	// Build status indicator (gt-zecmc: use tmux state, not bead state)
+	// Build status indicator (ms-zecmc: use tmux state, not bead state)
 	statusIndicator := buildStatusIndicator(agent)
 
 	// Get hook info
@@ -1469,7 +1469,7 @@ func renderAgentCompact(w io.Writer, agent AgentRuntime, indent string, hooks []
 }
 
 // buildStatusIndicator creates the visual status indicator for an agent.
-// Per gt-zecmc: uses tmux state (observable reality), not bead state.
+// Per ms-zecmc: uses tmux state (observable reality), not bead state.
 // Non-observable states (stuck, awaiting-gate, muted, etc.) are shown as suffixes.
 func buildStatusIndicator(agent AgentRuntime) string {
 	sessionExists := agent.Running
@@ -1888,7 +1888,7 @@ func getMQSummary(r *rig.Rig) *MQSummary {
 	// Single query for all non-closed merge-request issues.
 	// Status "all" fetches everything; we filter open/in_progress in memory.
 	opts := beads.ListOptions{
-		Label:    "gt:merge-request",
+		Label:    "ms:merge-request",
 		Status:   "all",
 		Priority: -1, // No priority filter
 	}

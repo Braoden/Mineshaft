@@ -459,16 +459,16 @@ func (r *Resolver) resolveChannel(name string) ([]Recipient, error) {
 }
 
 // AgentBeadIDToAddress converts an agent bead ID to a mail address.
-// Handles both gt- (rig agents) and hq- (town agents) prefixes:
+// Handles both ms- (rig agents) and hq- (town agents) prefixes:
 //   - hq-overseer → overseer/
 //   - hq-supervisor → supervisor/
-//   - gt-mineshaft-crew-max → mineshaft/crew/max
+//   - ms-mineshaft-crew-max → mineshaft/crew/max
 func AgentBeadIDToAddress(id string) string {
 	var rest string
 
-	// Handle both gt- (rig agents) and hq- (town agents) prefixes
-	if strings.HasPrefix(id, "gt-") {
-		rest = strings.TrimPrefix(id, "gt-")
+	// Handle both ms- (rig agents) and hq- (town agents) prefixes
+	if strings.HasPrefix(id, "ms-") {
+		rest = strings.TrimPrefix(id, "ms-")
 	} else if strings.HasPrefix(id, "hq-") {
 		rest = strings.TrimPrefix(id, "hq-")
 	} else {
@@ -480,7 +480,7 @@ func AgentBeadIDToAddress(id string) string {
 	parts := strings.Split(rest, "-")
 
 	if len(parts) == 1 {
-		// Town-level: gt-overseer → overseer/
+		// Town-level: ms-overseer → overseer/
 		return parts[0] + "/"
 	}
 
@@ -508,7 +508,7 @@ func AgentBeadIDToAddress(id string) string {
 			}
 			return rig + "/" + role
 		case "dog":
-			// Town-level named: gt-dog-alpha
+			// Town-level named: ms-dog-alpha
 			if i+1 < len(parts) {
 				name := strings.Join(parts[i+1:], "-")
 				return "dog/" + name

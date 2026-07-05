@@ -82,7 +82,7 @@ func (c *HooksPathAllRigsCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:  StatusWarning,
 		Message: fmt.Sprintf("%d clone(s) missing core.hooksPath across all rigs", len(c.unconfiguredClones)),
 		Details: details,
-		FixHint: "Run 'gt doctor --fix' to configure hooks",
+		FixHint: "Run 'ms doctor --fix' to configure hooks",
 	}
 }
 

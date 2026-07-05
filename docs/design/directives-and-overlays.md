@@ -29,8 +29,8 @@ formula they are running.
 **File layout:**
 
 ```
-~/gt/directives/<role>.md              # Town-level (all rigs)
-~/gt/<rig>/directives/<role>.md        # Rig-level (wins by appearing last)
+~/ms/directives/<role>.md              # Town-level (all rigs)
+~/ms/<rig>/directives/<role>.md        # Rig-level (wins by appearing last)
 ```
 
 **Injection point:** After the role template, before context files and handoff
@@ -45,7 +45,7 @@ instructions.
 **Implementation:**
 - Loader: `internal/config/directives.go` → `LoadRoleDirective(role, townRoot, rigName) string`
 - Integration: `internal/cmd/prime_output.go` → `outputRoleDirectives(ctx RoleContext)`
-- Called in the `gt prime` pipeline after `outputPrimeContext()`
+- Called in the `ms prime` pipeline after `outputPrimeContext()`
 
 ### Level 2: Formula Overlays
 
@@ -55,8 +55,8 @@ modifications applied post-parse before rendering at prime time.
 **File layout:**
 
 ```
-~/gt/formula-overlays/<formula>.toml        # Town-level
-~/gt/<rig>/formula-overlays/<formula>.toml  # Rig-level (full precedence)
+~/ms/formula-overlays/<formula>.toml        # Town-level
+~/ms/<rig>/formula-overlays/<formula>.toml  # Rig-level (full precedence)
 ```
 
 **Precedence:** Rig-level overlays **fully replace** town-level overlays (not
@@ -133,35 +133,35 @@ Follow existing patterns in the codebase.
 
 ## CLI Commands
 
-> **Note:** CLI commands are being added in gt-3kg.5. The interface below
+> **Note:** CLI commands are being added in ms-3kg.5. The interface below
 > reflects the planned design.
 
 ### Directive Commands
 
 ```bash
-gt directive show <role> [--rig <rig>]    # Show active directive with source
-gt directive edit <role> [--rig <rig>]    # Open in editor (creates file if needed)
-gt directive list                         # List all directive files
+ms directive show <role> [--rig <rig>]    # Show active directive with source
+ms directive edit <role> [--rig <rig>]    # Open in editor (creates file if needed)
+ms directive list                         # List all directive files
 ```
 
 ### Overlay Commands
 
 ```bash
-gt formula overlay show <formula> [--rig <rig>]   # Show active overlay with source
-gt formula overlay edit <formula> [--rig <rig>]   # Open in editor (creates file if needed)
-gt formula overlay list                           # List all overlay files
+ms formula overlay show <formula> [--rig <rig>]   # Show active overlay with source
+ms formula overlay edit <formula> [--rig <rig>]   # Open in editor (creates file if needed)
+ms formula overlay list                           # List all overlay files
 ```
 
 The `edit` commands create the directory and file if they don't exist (following
-the `gt hooks override` precedent). The `show` commands display the resolved
+the `ms hooks override` precedent). The `show` commands display the resolved
 content with source annotation (town vs rig).
 
-## gt doctor Integration
+## ms doctor Integration
 
 The `overlay-health` doctor check validates formula overlays:
 
 ```bash
-gt doctor                    # Runs all checks including overlay health
+ms doctor                    # Runs all checks including overlay health
 ```
 
 **What it checks:**
@@ -178,7 +178,7 @@ gt doctor                    # Runs all checks including overlay health
 **Auto-fix:**
 
 ```bash
-gt doctor --fix              # Removes stale step-override entries
+ms doctor --fix              # Removes stale step-override entries
 ```
 
 The fix removes step overrides that reference non-existent step IDs. If all
@@ -203,10 +203,10 @@ conversation instead.
 **Step 1: Create a rig-level formula overlay.**
 
 ```bash
-mkdir -p ~/gt/mineshaft/formula-overlays
+mkdir -p ~/ms/mineshaft/formula-overlays
 ```
 
-Create `~/gt/mineshaft/formula-overlays/mol-miner-work.toml`:
+Create `~/ms/mineshaft/formula-overlays/mol-miner-work.toml`:
 
 ```toml
 [[step-overrides]]
@@ -225,17 +225,17 @@ Report your review findings back to the conversation. Format as:
 Do NOT post comments to GitHub via gh pr review."""
 ```
 
-**Step 2: Verify with gt doctor.**
+**Step 2: Verify with ms doctor.**
 
 ```bash
-gt doctor
+ms doctor
 # ✓ overlay-health: 1 overlay(s) healthy
 ```
 
-**Step 3: Test with gt prime.**
+**Step 3: Test with ms prime.**
 
 ```bash
-gt prime --explain
+ms prime --explain
 # Shows: "Formula overlay: applying 1 override(s) for mol-miner-work (rig=mineshaft)"
 ```
 
@@ -244,15 +244,15 @@ replacement step instead of the original "post to GitHub" instruction.
 
 ### What If the Formula Changes?
 
-If a future `gt` release renames `submit-review` to `post-results`, the
-overlay's `step_id` becomes stale. On next `gt doctor` run:
+If a future `ms` release renames `submit-review` to `post-results`, the
+overlay's `step_id` becomes stale. On next `ms doctor` run:
 
 ```
 ⚠ overlay-health: stale step IDs in mineshaft/formula-overlays/mol-miner-work.toml:
   - step_id "submit-review" not found in formula mol-miner-work
 ```
 
-Running `gt doctor --fix` removes the stale override. The operator then
+Running `ms doctor --fix` removes the stale override. The operator then
 creates a new override targeting `post-results`.
 
 ## Design Rationale
@@ -279,15 +279,15 @@ Both are needed: directives for broad guardrails, overlays for surgical fixes.
 
 Formulas are embedded in the Go binary. Modifying them requires rebuilding
 and redeploying. Directives and overlays are external config files that take
-effect immediately on the next `gt prime`.
+effect immediately on the next `ms prime`.
 
 ### Architectural Harmony
 
-- **Fits gt prime pipeline:** Role template → directives → context → handoff → formula
-- **Follows hooks override precedent:** `~/.gt/hooks-overrides/<target>.json`
+- **Fits ms prime pipeline:** Role template → directives → context → handoff → formula
+- **Follows hooks override precedent:** `~/.ms/hooks-overrides/<target>.json`
 - **Extends property layers:** Rig > town > system precedence
 - **ZFC-compliant:** Go transports the content, agents interpret the instructions
-- **Only touches gt:** `bd` doesn't render formulas, so overlays are gt-only
+- **Only touches ms:** `bd` doesn't render formulas, so overlays are ms-only
 
 ### Dissonance to Manage
 
@@ -295,8 +295,8 @@ effect immediately on the next `gt prime`.
   mitigated with clear authority framing at injection ("Rig Policy — overrides
   formula instructions where they conflict")
 - **Unstable step IDs:** Formula steps are not a stable API; step IDs can change
-  across versions → `gt doctor` warns about stale overlays
-- **Discoverability:** `gt prime --explain` shows active directives/overlays
+  across versions → `ms doctor` warns about stale overlays
+- **Discoverability:** `ms prime --explain` shows active directives/overlays
   with source annotations
 
 ## File Reference

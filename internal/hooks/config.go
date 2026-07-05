@@ -318,18 +318,18 @@ func Merge(base, override *HooksConfig) *HooksConfig {
 }
 
 // DefaultOverrides returns built-in role-specific hook overrides.
-// On-disk overrides (in ~/.gt/hooks-overrides/) layer on top of these.
+// On-disk overrides (in ~/.ms/hooks-overrides/) layer on top of these.
 //
 // Crew workers get auto-session-cycling on PreCompact: instead of compacting
 // context (which degrades quality), the session is replaced with a fresh one.
-// The successor picks up hooked work via SessionStart hook (gt prime --hook).
+// The successor picks up hooked work via SessionStart hook (ms prime --hook).
 func DefaultOverrides() map[string]*HooksConfig {
 	return map[string]*HooksConfig{
-		// Miners: auto-run gt done on session Stop (gas-lob).
+		// Miners: auto-run ms done on session Stop (gas-lob).
 		// Catches the "idle miner" problem: miners that finish work but
-		// forget to call gt done before the session ends. The miner-stop-check
+		// forget to call ms done before the session ends. The miner-stop-check
 		// command is idempotent — it checks heartbeat state and branch commits
-		// before deciding whether to run gt done.
+		// before deciding whether to run ms done.
 		"miners": {
 			Stop: []HookEntry{
 				{
@@ -337,13 +337,13 @@ func DefaultOverrides() map[string]*HooksConfig {
 					Hooks: []Hook{
 						{
 							Type:    "command",
-							Command: gtCommand("gt tap miner-stop-check"),
+							Command: gtCommand("ms tap miner-stop-check"),
 						},
 					},
 				},
 			},
 		},
-		// Crew workers: auto-cycle session on context compaction (gt-op78).
+		// Crew workers: auto-cycle session on context compaction (ms-op78).
 		// Instead of compacting (lossy), replace with fresh session that
 		// inherits hooked work. The --cycle flag does: collect state →
 		// send handoff mail → respawn pane with fresh Claude instance.
@@ -354,13 +354,13 @@ func DefaultOverrides() map[string]*HooksConfig {
 					Hooks: []Hook{
 						{
 							Type:    "command",
-							Command: gtCommand("gt handoff --cycle --reason compaction"),
+							Command: gtCommand("ms handoff --cycle --reason compaction"),
 						},
 					},
 				},
 			},
 		},
-		// Witness roles: patrol-formula-guard (gt-e47hxn).
+		// Witness roles: patrol-formula-guard (ms-e47hxn).
 		// Blocks patrol formulas from using persistent molecules — must use wisps.
 		// Without this, witnesses could accidentally create permanent patrol molecules
 		// that survive session restarts and accumulate unbounded.
@@ -404,7 +404,7 @@ func DefaultOverrides() map[string]*HooksConfig {
 					Matcher: "Bash(*tmux*send-keys*)",
 					Hooks: []Hook{{
 						Type:    "command",
-						Command: "echo 'BLOCKED: Boot must not use raw tmux send-keys; it can leave unsubmitted text staged in the Supervisor TUI.' && echo 'Use: gt nudge --mode=immediate supervisor \"message\" (do not add --force).' && exit 2",
+						Command: "echo 'BLOCKED: Boot must not use raw tmux send-keys; it can leave unsubmitted text staged in the Supervisor TUI.' && echo 'Use: ms nudge --mode=immediate supervisor \"message\" (do not add --force).' && exit 2",
 					}},
 				},
 			},
@@ -418,21 +418,21 @@ func DefaultOverrides() map[string]*HooksConfig {
 					Matcher: "Bash(*for *seq*)",
 					Hooks: []Hook{{
 						Type:    "command",
-						Command: "echo '❌ BLOCKED: Supervisor must not batch patrol cycles with for/seq loops.' && echo 'Run one patrol cycle, then use gt patrol report or gt handoff.' && exit 2",
+						Command: "echo '❌ BLOCKED: Supervisor must not batch patrol cycles with for/seq loops.' && echo 'Run one patrol cycle, then use ms patrol report or ms handoff.' && exit 2",
 					}},
 				},
 				{
 					Matcher: "Bash(*while true*)",
 					Hooks: []Hook{{
 						Type:    "command",
-						Command: "echo '❌ BLOCKED: Supervisor must not run open-ended patrol loops.' && echo 'Run one patrol cycle, then use gt patrol report or gt handoff.' && exit 2",
+						Command: "echo '❌ BLOCKED: Supervisor must not run open-ended patrol loops.' && echo 'Run one patrol cycle, then use ms patrol report or ms handoff.' && exit 2",
 					}},
 				},
 				{
 					Matcher: "Bash(*while :*)",
 					Hooks: []Hook{{
 						Type:    "command",
-						Command: "echo '❌ BLOCKED: Supervisor must not run open-ended patrol loops.' && echo 'Run one patrol cycle, then use gt patrol report or gt handoff.' && exit 2",
+						Command: "echo '❌ BLOCKED: Supervisor must not run open-ended patrol loops.' && echo 'Run one patrol cycle, then use ms patrol report or ms handoff.' && exit 2",
 					}},
 				},
 				{
@@ -857,26 +857,26 @@ func (c *HooksConfig) AddEntry(eventType string, entry HookEntry) bool {
 	return true
 }
 
-// gtPrimaryDir returns the highest-priority .gt config directory.
-// If GT_HOME is set, returns $GT_HOME/.gt; otherwise returns ~/.gt.
+// gtPrimaryDir returns the highest-priority .ms config directory.
+// If MS_HOME is set, returns $MS_HOME/.ms; otherwise returns ~/.ms.
 // This is the target for all write operations and the first location checked
 // during cascaded reads.
 func gtPrimaryDir() string {
-	if h := os.Getenv("GT_HOME"); h != "" {
-		return filepath.Join(h, ".gt")
+	if h := os.Getenv("MS_HOME"); h != "" {
+		return filepath.Join(h, ".ms")
 	}
 	home, err := os.UserHomeDir()
 	if err != nil {
-		return filepath.Join(os.TempDir(), ".gt")
+		return filepath.Join(os.TempDir(), ".ms")
 	}
-	return filepath.Join(home, ".gt")
+	return filepath.Join(home, ".ms")
 }
 
 // gtConfigDirs returns the ordered list of directories to search for hook
 // configs, from highest to lowest priority:
 //
-//  1. $GT_HOME/.gt  (only when GT_HOME is set and differs from $HOME)
-//  2. ~/.gt
+//  1. $MS_HOME/.ms  (only when MS_HOME is set and differs from $HOME)
+//  2. ~/.ms
 //
 // The binary's built-in defaults act as the implicit final fallback and are
 // NOT represented here — callers handle them separately.
@@ -884,12 +884,12 @@ func gtConfigDirs() []string {
 	primary := gtPrimaryDir()
 	dirs := []string{primary}
 
-	// Add ~/.gt as a lower-priority fallback only when GT_HOME redirects
+	// Add ~/.ms as a lower-priority fallback only when MS_HOME redirects
 	// the primary dir away from the user's home directory.
-	if os.Getenv("GT_HOME") != "" {
+	if os.Getenv("MS_HOME") != "" {
 		home, err := os.UserHomeDir()
 		if err == nil {
-			fallback := filepath.Join(home, ".gt")
+			fallback := filepath.Join(home, ".ms")
 			if fallback != primary {
 				dirs = append(dirs, fallback)
 			}
@@ -950,14 +950,14 @@ func LoadOverride(target string) (*HooksConfig, error) {
 	return nil, os.ErrNotExist
 }
 
-// SaveBase writes the base hooks configuration to the primary .gt directory
-// ($GT_HOME/.gt if set, otherwise ~/.gt).
+// SaveBase writes the base hooks configuration to the primary .ms directory
+// ($MS_HOME/.ms if set, otherwise ~/.ms).
 func SaveBase(cfg *HooksConfig) error {
 	return saveConfig(BasePath(), cfg)
 }
 
 // SaveOverride writes an override configuration for the given target to the
-// primary .gt directory.
+// primary .ms directory.
 func SaveOverride(target string, cfg *HooksConfig) error {
 	return saveConfig(OverridePath(target), cfg)
 }
@@ -1013,7 +1013,7 @@ func ValidTarget(target string) bool {
 }
 
 // DefaultBase returns a sensible default base configuration.
-// This includes resolved gt hook commands that all agents need.
+// This includes resolved ms hook commands that all agents need.
 func DefaultBase() *HooksConfig {
 	return &HooksConfig{
 		PreToolUse: []HookEntry{
@@ -1021,42 +1021,42 @@ func DefaultBase() *HooksConfig {
 				Matcher: "Bash(gh pr create*)",
 				Hooks: []Hook{{
 					Type:    "command",
-					Command: gtCommand("gt tap guard pr-workflow"),
+					Command: gtCommand("ms tap guard pr-workflow"),
 				}},
 			},
 			{
 				Matcher: "Bash(git checkout -b*)",
 				Hooks: []Hook{{
 					Type:    "command",
-					Command: gtCommand("gt tap guard pr-workflow"),
+					Command: gtCommand("ms tap guard pr-workflow"),
 				}},
 			},
 			{
 				Matcher: "Bash(git switch -c*)",
 				Hooks: []Hook{{
 					Type:    "command",
-					Command: gtCommand("gt tap guard pr-workflow"),
+					Command: gtCommand("ms tap guard pr-workflow"),
 				}},
 			},
 			{
 				Matcher: "Bash(rm -rf /*)",
 				Hooks: []Hook{{
 					Type:    "command",
-					Command: gtCommand("gt tap guard dangerous-command"),
+					Command: gtCommand("ms tap guard dangerous-command"),
 				}},
 			},
 			{
 				Matcher: "Bash(git push --force*)",
 				Hooks: []Hook{{
 					Type:    "command",
-					Command: gtCommand("gt tap guard dangerous-command"),
+					Command: gtCommand("ms tap guard dangerous-command"),
 				}},
 			},
 			{
 				Matcher: "Bash(git push -f*)",
 				Hooks: []Hook{{
 					Type:    "command",
-					Command: gtCommand("gt tap guard dangerous-command"),
+					Command: gtCommand("ms tap guard dangerous-command"),
 				}},
 			},
 		},
@@ -1066,7 +1066,7 @@ func DefaultBase() *HooksConfig {
 				Hooks: []Hook{
 					{
 						Type:    "command",
-						Command: gtCommand("gt prime --hook"),
+						Command: gtCommand("ms prime --hook"),
 					},
 				},
 			},
@@ -1077,7 +1077,7 @@ func DefaultBase() *HooksConfig {
 				Hooks: []Hook{
 					{
 						Type:    "command",
-						Command: gtCommand("gt prime --hook"),
+						Command: gtCommand("ms prime --hook"),
 					},
 				},
 			},
@@ -1088,7 +1088,7 @@ func DefaultBase() *HooksConfig {
 				Hooks: []Hook{
 					{
 						Type:    "command",
-						Command: gtCommand("gt mail check --inject"),
+						Command: gtCommand("ms mail check --inject"),
 					},
 				},
 			},
@@ -1099,7 +1099,7 @@ func DefaultBase() *HooksConfig {
 				Hooks: []Hook{
 					{
 						Type:    "command",
-						Command: gtCommand("gt costs record &"),
+						Command: gtCommand("ms costs record &"),
 					},
 				},
 			},
@@ -1178,11 +1178,11 @@ func saveConfig(path string, cfg *HooksConfig) error {
 }
 
 func gtCommand(command string) string {
-	if command == "gt" {
+	if command == "ms" {
 		return resolveGTBinary()
 	}
-	if strings.HasPrefix(command, "gt ") {
-		return resolveGTBinary() + command[len("gt"):]
+	if strings.HasPrefix(command, "ms ") {
+		return resolveGTBinary() + command[len("ms"):]
 	}
 	return command
 }

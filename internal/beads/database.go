@@ -18,7 +18,7 @@ var bdTargetEnvKeys = []string{
 	"BEADS_DB",
 	"BD_DB",
 	"BEADS_SHARED_SERVER_DIR",
-	"GT_DOLT_DATA",
+	"MS_DOLT_DATA",
 }
 
 // DatabaseNameFromMetadata reads the dolt_database field from .beads/metadata.json.
@@ -221,7 +221,7 @@ func hasReadOnlySQLPrefix(query string) bool {
 
 // SuppressBDSideEffects disables Beads JSONL export/backup/push side effects for
 // Mineshaft-managed subprocesses. The authoritative data plane is Dolt; exporting
-// JSONL from high-frequency gt callers re-invalidates Beads' import freshness
+// JSONL from high-frequency ms callers re-invalidates Beads' import freshness
 // checks and can create a self-feeding Dolt load loop.
 func SuppressBDSideEffects(env []string) []string {
 	for _, key := range []string{
@@ -346,9 +346,9 @@ func envKeyHasPrefix(keyName, prefix string) bool {
 }
 
 func addResolvedDoltConnectionEnv(env []string, beadsDir string) []string {
-	gtHost := envValue(env, "GT_DOLT_HOST")
-	gtPort := envValue(env, "GT_DOLT_PORT")
-	// GT_DOLT_DATA is intentionally not translated to BEADS_DOLT_DATA_DIR here:
+	gtHost := envValue(env, "MS_DOLT_HOST")
+	gtPort := envValue(env, "MS_DOLT_PORT")
+	// MS_DOLT_DATA is intentionally not translated to BEADS_DOLT_DATA_DIR here:
 	// data-dir env selects direct-mode storage and can override metadata routing.
 	if gtHost != "" {
 		env = StripEnvKey(env, "BEADS_DOLT_SERVER_HOST")

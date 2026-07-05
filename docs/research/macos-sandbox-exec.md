@@ -1,8 +1,8 @@
 # macOS sandbox-exec Research Report
 
-**Bead:** gt-6qt
+**Bead:** ms-6qt
 **Date:** 2026-03-08
-**Blocks:** gt-2pb (Spike: macOS sandbox-exec miner isolation)
+**Blocks:** ms-2pb (Spike: macOS sandbox-exec miner isolation)
 
 ## 1. Is sandbox-exec still functional despite deprecation?
 

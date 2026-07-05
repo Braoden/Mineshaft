@@ -5,7 +5,7 @@
 #
 # Also enforces integration branch landing guardrails: pushes to the default
 # branch that introduce integration branch content are blocked unless
-# GT_INTEGRATION_LAND=1 is set (only gt mq integration land sets this).
+# MS_INTEGRATION_LAND=1 is set (only ms mq integration land sets this).
 
 # Detect the rig's default branch dynamically.
 # Fallback chain matches Go implementation (git.RemoteDefaultBranch):
@@ -24,7 +24,7 @@ fi
 # Allowed patterns:
 #   <default_branch>, beads-sync  - Direct work branches
 #   miner/*                     - Miner working branches (Refinery merges these)
-#   integration/*                 - Integration branches (created by gt mq integration)
+#   integration/*                 - Integration branches (created by ms mq integration)
 
 while read local_ref local_sha remote_ref remote_sha; do
   # Skip tags - they're allowed for releases
@@ -40,8 +40,8 @@ while read local_ref local_sha remote_ref remote_sha; do
   # or pushes a stale ref — the work is stranded on a branch nobody merges. Git's
   # conflict model can't catch this: it happens before any divergence exists.
   # Only fires when a local branch ref is being pushed (not HEAD:x, tags, or deletes).
-  # Override for intentional cross-branch pushes: GT_ALLOW_OFFBRANCH_PUSH=1
-  if [[ "${GT_ALLOW_OFFBRANCH_PUSH:-0}" != "1" \
+  # Override for intentional cross-branch pushes: MS_ALLOW_OFFBRANCH_PUSH=1
+  if [[ "${MS_ALLOW_OFFBRANCH_PUSH:-0}" != "1" \
         && "$local_ref" == refs/heads/* \
         && "$local_sha" != "0000000000000000000000000000000000000000" ]]; then
     head_branch=$(git symbolic-ref --short -q HEAD || echo "")
@@ -55,7 +55,7 @@ while read local_ref local_sha remote_ref remote_sha; do
       echo ""
       echo "  Check:  git status -sb ; git reflog | head"
       echo "  Fix:    git switch '$pushed_branch'   (then re-push)"
-      echo "  Intentional cross-branch push? re-run with GT_ALLOW_OFFBRANCH_PUSH=1"
+      echo "  Intentional cross-branch push? re-run with MS_ALLOW_OFFBRANCH_PUSH=1"
       exit 1
     fi
   fi
@@ -89,7 +89,7 @@ while read local_ref local_sha remote_ref remote_sha; do
   # check if any integration branch tip is newly reachable from this push.
   # This catches merges (--no-ff, --ff-only, default) and rebases.
   # Only cherry-picks (new SHAs) are not detected — Layer 1 covers those.
-  if [[ "$branch" == "$default_branch" ]] && [[ "$GT_INTEGRATION_LAND" != "1" ]]; then
+  if [[ "$branch" == "$default_branch" ]] && [[ "$MS_INTEGRATION_LAND" != "1" ]]; then
     # Skip for deletions or initial pushes
     if [[ "$remote_sha" == "0000000000000000000000000000000000000000" ]] || \
        [[ "$local_sha" == "0000000000000000000000000000000000000000" ]]; then
@@ -103,7 +103,7 @@ while read local_ref local_sha remote_ref remote_sha; do
     integration_refs=$(git ls-remote --quiet origin "refs/heads/integration/*" 2>&1) || {
       echo "WARNING: Cannot verify integration branches (remote unreachable)."
       echo "Push to $default_branch blocked. Retry when network is available,"
-      echo "or set GT_INTEGRATION_LAND=1 if this is an intentional land operation."
+      echo "or set MS_INTEGRATION_LAND=1 if this is an intentional land operation."
       exit 1
     }
     for ref in $(echo "$integration_refs" | awk '{print $1}'); do
@@ -111,10 +111,10 @@ while read local_ref local_sha remote_ref remote_sha; do
          ! git merge-base --is-ancestor "$ref" "$remote_sha"; then
         echo "BLOCKED: Push to $default_branch introduces integration branch content."
         echo ""
-        echo "Integration branches must be landed via: gt mq integration land <epic-id>"
+        echo "Integration branches must be landed via: ms mq integration land <epic-id>"
         echo ""
         echo "This guardrail prevents accidental landing of integration branches."
-        echo "The gt mq integration land command sets GT_INTEGRATION_LAND=1 to bypass this check."
+        echo "The ms mq integration land command sets MS_INTEGRATION_LAND=1 to bypass this check."
         exit 1
       fi
     done

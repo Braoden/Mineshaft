@@ -326,11 +326,11 @@ func TestAttachmentFormulaVarsRoundTripsPersistedVars(t *testing.T) {
 	desc := beads.SetAttachmentFields(&beads.Issue{Description: "Body"}, &beads.AttachmentFields{
 		AttachedFormula: "mol-miner-work",
 		AttachedVars:    []string{"feature=Attached Feature"},
-		FormulaVars:     "feature=Persisted Feature\nissue=gt-123\nbase_branch=main",
+		FormulaVars:     "feature=Persisted Feature\nissue=ms-123\nbase_branch=main",
 	})
 	attachment := beads.ParseAttachmentFields(&beads.Issue{Description: desc})
 	got := attachmentFormulaVars(attachment)
-	want := []string{"feature=Attached Feature", "issue=gt-123", "base_branch=main"}
+	want := []string{"feature=Attached Feature", "issue=ms-123", "base_branch=main"}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("attachmentFormulaVars() = %#v, want %#v\nDescription:\n%s", got, want, desc)
 	}
@@ -339,8 +339,8 @@ func TestAttachmentFormulaVarsRoundTripsPersistedVars(t *testing.T) {
 func TestApplyFormulaVarsUsesWorkflowBareSyntax(t *testing.T) {
 	t.Parallel()
 
-	got := applyFormulaVars("bd show {{issue}}\nkeep {{.issue}}", map[string]string{"issue": "gt-123"})
-	want := "bd show gt-123\nkeep {{.issue}}"
+	got := applyFormulaVars("bd show {{issue}}\nkeep {{.issue}}", map[string]string{"issue": "ms-123"})
+	want := "bd show ms-123\nkeep {{.issue}}"
 	if got != want {
 		t.Fatalf("applyFormulaVars() = %q, want %q", got, want)
 	}
@@ -349,13 +349,13 @@ func TestApplyFormulaVarsUsesWorkflowBareSyntax(t *testing.T) {
 func TestRenderTemplateUsesGoDotSyntax(t *testing.T) {
 	t.Parallel()
 
-	ctx := map[string]interface{}{"issue": "gt-123"}
+	ctx := map[string]interface{}{"issue": "ms-123"}
 	got, err := renderTemplate("bd show {{.issue}}", ctx)
 	if err != nil {
 		t.Fatalf("renderTemplate() dotted syntax error: %v", err)
 	}
-	if got != "bd show gt-123" {
-		t.Fatalf("renderTemplate() = %q, want %q", got, "bd show gt-123")
+	if got != "bd show ms-123" {
+		t.Fatalf("renderTemplate() = %q, want %q", got, "bd show ms-123")
 	}
 
 	if _, err := renderTemplate("bd show {{issue}}", ctx); err == nil {
@@ -457,7 +457,7 @@ func TestFormulaRunExamplesUseSetVars(t *testing.T) {
 			text := string(content)
 			for _, bad := range []string{"--problem=", "--context=", "--plan="} {
 				if strings.Contains(text, bad) {
-					t.Fatalf("%s still contains invalid gt formula run flag %q", name, bad)
+					t.Fatalf("%s still contains invalid ms formula run flag %q", name, bad)
 				}
 			}
 		})
@@ -489,7 +489,7 @@ func TestFormulaRunExamplesUseSetVars(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetEmbeddedFormulaContent(design): %v", err)
 	}
-	if !strings.Contains(string(design), "gt formula run design --set problem=") {
+	if !strings.Contains(string(design), "ms formula run design --set problem=") {
 		t.Fatal("design usage examples do not mention --set problem=")
 	}
 }

@@ -44,8 +44,8 @@ func TestParseMinerDone(t *testing.T) {
 	t.Parallel()
 	subject := "MINER_DONE nux"
 	body := `Exit: MERGED
-Issue: gt-abc123
-MR: gt-mr-xyz
+Issue: ms-abc123
+MR: ms-mr-xyz
 Branch: feature-branch`
 
 	payload, err := ParseMinerDone(subject, body)
@@ -59,11 +59,11 @@ Branch: feature-branch`
 	if payload.Exit != "MERGED" {
 		t.Errorf("Exit = %q, want %q", payload.Exit, "MERGED")
 	}
-	if payload.IssueID != "gt-abc123" {
-		t.Errorf("IssueID = %q, want %q", payload.IssueID, "gt-abc123")
+	if payload.IssueID != "ms-abc123" {
+		t.Errorf("IssueID = %q, want %q", payload.IssueID, "ms-abc123")
 	}
-	if payload.MRID != "gt-mr-xyz" {
-		t.Errorf("MRID = %q, want %q", payload.MRID, "gt-mr-xyz")
+	if payload.MRID != "ms-mr-xyz" {
+		t.Errorf("MRID = %q, want %q", payload.MRID, "ms-mr-xyz")
 	}
 	if payload.Branch != "feature-branch" {
 		t.Errorf("Branch = %q, want %q", payload.Branch, "feature-branch")
@@ -103,7 +103,7 @@ func TestParseMinerDone_MRFailed(t *testing.T) {
 	t.Parallel()
 	subject := "MINER_DONE nux"
 	body := `Exit: COMPLETED
-Issue: gt-abc123
+Issue: ms-abc123
 Branch: miner/nux-abc123
 MRFailed: true
 Errors: MR bead creation failed: connection refused`
@@ -129,8 +129,8 @@ func TestParseMinerDone_MRFailedAbsent(t *testing.T) {
 	// When MRFailed is not in the body, it should default to false
 	subject := "MINER_DONE nux"
 	body := `Exit: COMPLETED
-Issue: gt-abc123
-MR: gt-mr-xyz
+Issue: ms-abc123
+MR: ms-mr-xyz
 Branch: miner/nux-abc123`
 
 	payload, err := ParseMinerDone(subject, body)
@@ -147,7 +147,7 @@ func TestParseHelp(t *testing.T) {
 	t.Parallel()
 	subject := "HELP: Tests failing on CI"
 	body := `Agent: mineshaft/miners/nux
-Issue: gt-abc123
+Issue: ms-abc123
 Problem: Unit tests timeout after 30 seconds
 Tried: Increased timeout, checked for deadlocks`
 
@@ -162,8 +162,8 @@ Tried: Increased timeout, checked for deadlocks`
 	if payload.Agent != "mineshaft/miners/nux" {
 		t.Errorf("Agent = %q, want %q", payload.Agent, "mineshaft/miners/nux")
 	}
-	if payload.IssueID != "gt-abc123" {
-		t.Errorf("IssueID = %q, want %q", payload.IssueID, "gt-abc123")
+	if payload.IssueID != "ms-abc123" {
+		t.Errorf("IssueID = %q, want %q", payload.IssueID, "ms-abc123")
 	}
 	if payload.Problem != "Unit tests timeout after 30 seconds" {
 		t.Errorf("Problem = %q, want %q", payload.Problem, "Unit tests timeout after 30 seconds")
@@ -185,7 +185,7 @@ func TestParseMerged(t *testing.T) {
 	t.Parallel()
 	subject := "MERGED nux"
 	body := `Branch: feature-nux
-Issue: gt-abc123
+Issue: ms-abc123
 Merged-At: 2025-12-30T10:30:00Z`
 
 	payload, err := ParseMerged(subject, body)
@@ -199,8 +199,8 @@ Merged-At: 2025-12-30T10:30:00Z`
 	if payload.Branch != "feature-nux" {
 		t.Errorf("Branch = %q, want %q", payload.Branch, "feature-nux")
 	}
-	if payload.IssueID != "gt-abc123" {
-		t.Errorf("IssueID = %q, want %q", payload.IssueID, "gt-abc123")
+	if payload.IssueID != "ms-abc123" {
+		t.Errorf("IssueID = %q, want %q", payload.IssueID, "ms-abc123")
 	}
 	if payload.MergedAt.IsZero() {
 		t.Error("MergedAt should not be zero")
@@ -219,7 +219,7 @@ func TestParseMergeFailed(t *testing.T) {
 	t.Parallel()
 	subject := "MERGE_FAILED nux"
 	body := `Branch: feature-nux
-Issue: gt-abc123
+Issue: ms-abc123
 FailureType: tests
 Error: unit tests failed with 3 errors`
 
@@ -234,8 +234,8 @@ Error: unit tests failed with 3 errors`
 	if payload.Branch != "feature-nux" {
 		t.Errorf("Branch = %q, want %q", payload.Branch, "feature-nux")
 	}
-	if payload.IssueID != "gt-abc123" {
-		t.Errorf("IssueID = %q, want %q", payload.IssueID, "gt-abc123")
+	if payload.IssueID != "ms-abc123" {
+		t.Errorf("IssueID = %q, want %q", payload.IssueID, "ms-abc123")
 	}
 	if payload.FailureType != "tests" {
 		t.Errorf("FailureType = %q, want %q", payload.FailureType, "tests")
@@ -280,8 +280,8 @@ func TestParseMergeFailed_InvalidSubject(t *testing.T) {
 func TestParseMergeReady(t *testing.T) {
 	t.Parallel()
 	subject := "MERGE_READY nux"
-	body := `Branch: miner/nux/gt-abc123
-Issue: gt-abc123
+	body := `Branch: miner/nux/ms-abc123
+Issue: ms-abc123
 MR: mr-xyz789
 Miner: nux
 Verified: clean git state`
@@ -294,11 +294,11 @@ Verified: clean git state`
 	if payload.MinerName != "nux" {
 		t.Errorf("MinerName = %q, want %q", payload.MinerName, "nux")
 	}
-	if payload.Branch != "miner/nux/gt-abc123" {
-		t.Errorf("Branch = %q, want %q", payload.Branch, "miner/nux/gt-abc123")
+	if payload.Branch != "miner/nux/ms-abc123" {
+		t.Errorf("Branch = %q, want %q", payload.Branch, "miner/nux/ms-abc123")
 	}
-	if payload.IssueID != "gt-abc123" {
-		t.Errorf("IssueID = %q, want %q", payload.IssueID, "gt-abc123")
+	if payload.IssueID != "ms-abc123" {
+		t.Errorf("IssueID = %q, want %q", payload.IssueID, "ms-abc123")
 	}
 	if payload.MRID != "mr-xyz789" {
 		t.Errorf("MRID = %q, want %q", payload.MRID, "mr-xyz789")
@@ -409,7 +409,7 @@ func TestFormatHelpSummary_FullPayload(t *testing.T) {
 	ts := time.Date(2026, 2, 28, 12, 0, 0, 0, time.UTC)
 	payload := &HelpPayload{
 		Agent:       "mineshaft/miners/nux",
-		IssueID:     "gt-1234",
+		IssueID:     "ms-1234",
 		Topic:       "Git conflict",
 		Problem:     "Merge conflict in main.go",
 		Tried:       "Attempted rebase, still conflicts",
@@ -421,7 +421,7 @@ func TestFormatHelpSummary_FullPayload(t *testing.T) {
 	if !strings.Contains(summary, "HELP REQUEST from mineshaft/miners/nux") {
 		t.Errorf("summary should contain agent name, got: %s", summary)
 	}
-	if !strings.Contains(summary, "(issue: gt-1234)") {
+	if !strings.Contains(summary, "(issue: ms-1234)") {
 		t.Errorf("summary should contain issue ID, got: %s", summary)
 	}
 	if !strings.Contains(summary, "Topic: Git conflict") {
@@ -467,7 +467,7 @@ func TestFormatHelpSummary_MinimalPayload(t *testing.T) {
 	}
 }
 
-// --- AssessHelp tests (gt-td6p) ---
+// --- AssessHelp tests (ms-td6p) ---
 
 func TestAssessHelp_Emergency(t *testing.T) {
 	t.Parallel()
@@ -664,7 +664,7 @@ func TestClassifyMessage_DispatchTypes(t *testing.T) {
 func TestParseDispatchAttempt(t *testing.T) {
 	t.Parallel()
 	subject := "DISPATCH_ATTEMPT nux"
-	body := "Bead: gt-abc123"
+	body := "Bead: ms-abc123"
 
 	payload, err := ParseDispatchAttempt(subject, body)
 	if err != nil {
@@ -674,8 +674,8 @@ func TestParseDispatchAttempt(t *testing.T) {
 	if payload.MinerName != "nux" {
 		t.Errorf("MinerName = %q, want %q", payload.MinerName, "nux")
 	}
-	if payload.BeadID != "gt-abc123" {
-		t.Errorf("BeadID = %q, want %q", payload.BeadID, "gt-abc123")
+	if payload.BeadID != "ms-abc123" {
+		t.Errorf("BeadID = %q, want %q", payload.BeadID, "ms-abc123")
 	}
 	if payload.AttemptedAt.IsZero() {
 		t.Error("AttemptedAt should not be zero")
@@ -693,7 +693,7 @@ func TestParseDispatchAttempt_InvalidSubject(t *testing.T) {
 func TestParseDispatchOK(t *testing.T) {
 	t.Parallel()
 	subject := "DISPATCH_OK nux"
-	body := "Bead: gt-abc123"
+	body := "Bead: ms-abc123"
 
 	payload, err := ParseDispatchOK(subject, body)
 	if err != nil {
@@ -703,8 +703,8 @@ func TestParseDispatchOK(t *testing.T) {
 	if payload.MinerName != "nux" {
 		t.Errorf("MinerName = %q, want %q", payload.MinerName, "nux")
 	}
-	if payload.BeadID != "gt-abc123" {
-		t.Errorf("BeadID = %q, want %q", payload.BeadID, "gt-abc123")
+	if payload.BeadID != "ms-abc123" {
+		t.Errorf("BeadID = %q, want %q", payload.BeadID, "ms-abc123")
 	}
 	if payload.DispatchedAt.IsZero() {
 		t.Error("DispatchedAt should not be zero")
@@ -722,7 +722,7 @@ func TestParseDispatchOK_InvalidSubject(t *testing.T) {
 func TestParseDispatchFail(t *testing.T) {
 	t.Parallel()
 	subject := "DISPATCH_FAIL nux"
-	body := `Bead: gt-abc123
+	body := `Bead: ms-abc123
 Reason: bead already claimed`
 
 	payload, err := ParseDispatchFail(subject, body)
@@ -733,8 +733,8 @@ Reason: bead already claimed`
 	if payload.MinerName != "nux" {
 		t.Errorf("MinerName = %q, want %q", payload.MinerName, "nux")
 	}
-	if payload.BeadID != "gt-abc123" {
-		t.Errorf("BeadID = %q, want %q", payload.BeadID, "gt-abc123")
+	if payload.BeadID != "ms-abc123" {
+		t.Errorf("BeadID = %q, want %q", payload.BeadID, "ms-abc123")
 	}
 	if payload.Reason != "bead already claimed" {
 		t.Errorf("Reason = %q, want %q", payload.Reason, "bead already claimed")
@@ -820,7 +820,7 @@ func TestParseIdlePassivated_InvalidSubject(t *testing.T) {
 	}
 }
 
-// --- Agent state and exit type constants (gt-x7t9) ---
+// --- Agent state and exit type constants (ms-x7t9) ---
 
 func TestAgentStateConstants(t *testing.T) {
 	t.Parallel()

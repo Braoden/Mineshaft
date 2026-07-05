@@ -14,7 +14,7 @@ func TestTryAcquireSlingBeadLock_Contention(t *testing.T) {
 	t.Parallel()
 
 	townRoot := t.TempDir()
-	beadID := "gt-race123"
+	beadID := "ms-race123"
 
 	release1, err := tryAcquireSlingBeadLock(townRoot, beadID)
 	if err != nil {

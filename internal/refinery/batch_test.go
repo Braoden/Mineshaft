@@ -838,14 +838,14 @@ func TestGetMergeMessage_Fallback(t *testing.T) {
 		ID:          "mr-x",
 		Branch:      "nonexistent-branch",
 		Target:      "main",
-		SourceIssue: "gt-abc",
+		SourceIssue: "ms-abc",
 	}
 
 	msg := e.getMergeMessage(mr)
 	if !strings.Contains(msg, "Squash merge") {
 		t.Errorf("expected fallback message, got %q", msg)
 	}
-	if !strings.Contains(msg, "gt-abc") {
+	if !strings.Contains(msg, "ms-abc") {
 		t.Errorf("expected source issue in fallback, got %q", msg)
 	}
 }

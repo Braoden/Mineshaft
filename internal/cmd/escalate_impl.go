@@ -279,7 +279,7 @@ func runEscalateList(cmd *cobra.Command, args []string) error {
 	var issues []*beads.Issue
 	if escalateListAll {
 		// List all (open and closed)
-		out, err := bd.Run("list", "--label=gt:escalation", "--status=all", "--json")
+		out, err := bd.Run("list", "--label=ms:escalation", "--status=all", "--json")
 		if err != nil {
 			return fmt.Errorf("listing escalations: %w", err)
 		}
@@ -597,8 +597,8 @@ func formatReescalationMailBody(result *beads.ReescalationResult, reescalatedBy 
 	lines = append(lines, "This escalation was not acknowledged within the stale threshold and has been automatically re-escalated to a higher severity.")
 	lines = append(lines, "")
 	lines = append(lines, "---")
-	lines = append(lines, "To acknowledge: gt escalate ack "+result.ID)
-	lines = append(lines, "To close: gt escalate close "+result.ID+" --reason \"resolution\"")
+	lines = append(lines, "To acknowledge: ms escalate ack "+result.ID)
+	lines = append(lines, "To close: ms escalate close "+result.ID+" --reason \"resolution\"")
 	return strings.Join(lines, "\n")
 }
 
@@ -776,7 +776,7 @@ func sendEscalationEmail(cfg *config.EscalationConfig, beadID, severity, descrip
 		"Bead: %s\r\n"+
 		"Severity: %s\r\n"+
 		"Description: %s\r\n\r\n"+
-		"Acknowledge: gt escalate ack %s\r\n",
+		"Acknowledge: ms escalate ack %s\r\n",
 		from, to, subject, beadID, strings.ToUpper(severity), description, beadID)
 
 	addr := fmt.Sprintf("%s:%s", host, port)
@@ -802,7 +802,7 @@ func sendEscalationSlack(cfg *config.EscalationConfig, beadID, severity, descrip
 	}
 
 	payload := map[string]string{
-		"text": fmt.Sprintf("%s *[%s] Escalation %s*\n%s\n_Acknowledge: `gt escalate ack %s`_",
+		"text": fmt.Sprintf("%s *[%s] Escalation %s*\n%s\n_Acknowledge: `ms escalate ack %s`_",
 			emoji, strings.ToUpper(severity), beadID, description, beadID),
 	}
 	body, err := json.Marshal(payload)
@@ -881,8 +881,8 @@ func formatEscalationMailBody(beadID, severity, reason, from, related string) st
 	}
 	lines = append(lines, "")
 	lines = append(lines, "---")
-	lines = append(lines, "To acknowledge: gt escalate ack "+beadID)
-	lines = append(lines, "To close: gt escalate close "+beadID+" --reason \"resolution\"")
+	lines = append(lines, "To acknowledge: ms escalate ack "+beadID)
+	lines = append(lines, "To close: ms escalate close "+beadID+" --reason \"resolution\"")
 	return strings.Join(lines, "\n")
 }
 
@@ -939,8 +939,8 @@ func detectSenderFallback() string {
 	if actor := os.Getenv("BD_ACTOR"); actor != "" {
 		return actor
 	}
-	// Try GT_ROLE
-	if role := os.Getenv("GT_ROLE"); role != "" {
+	// Try MS_ROLE
+	if role := os.Getenv("MS_ROLE"); role != "" {
 		return role
 	}
 	return ""

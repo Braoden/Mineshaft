@@ -18,7 +18,7 @@ import (
 
 // PatrolMoleculesExistCheck verifies that patrol formulas are accessible.
 // Patrols use `bd mol wisp <formula-name>` to spawn workflows, so the formulas
-// must exist in the formula search path (.beads/formulas/, ~/.beads/formulas/, or $GT_ROOT/.beads/formulas/).
+// must exist in the formula search path (.beads/formulas/, ~/.beads/formulas/, or $MS_ROOT/.beads/formulas/).
 type PatrolMoleculesExistCheck struct {
 	FixableCheck
 	missingFormulas map[string][]string // rig -> missing formula names
@@ -66,7 +66,7 @@ func (c *PatrolMoleculesExistCheck) Run(ctx *CheckContext) *CheckResult {
 	for _, rigName := range rigs {
 		rigPath := filepath.Join(ctx.TownRoot, rigName)
 		// If rigPath doesn't exist, fall back to TownRoot. This handles the case
-		// where gt doctor runs from a overseer's canonical clone, where TownRoot
+		// where ms doctor runs from a overseer's canonical clone, where TownRoot
 		// resolves to the clone itself (e.g. mineshaft/overseer/rig) rather than the
 		// actual town root. The rig directory won't be a subdirectory of the clone,
 		// but patrol formulas are town-level and accessible from TownRoot itself.
@@ -86,7 +86,7 @@ func (c *PatrolMoleculesExistCheck) Run(ctx *CheckContext) *CheckResult {
 			Status:  StatusWarning,
 			Message: fmt.Sprintf("%d rig(s) missing patrol formulas", len(c.missingFormulas)),
 			Details: details,
-			FixHint: "Run 'gt doctor --fix' to provision embedded patrol formulas",
+			FixHint: "Run 'ms doctor --fix' to provision embedded patrol formulas",
 		}
 	}
 
@@ -183,7 +183,7 @@ func (c *PatrolHooksWiredCheck) Run(ctx *CheckContext) *CheckResult {
 			Name:    c.Name(),
 			Status:  StatusWarning,
 			Message: fmt.Sprintf("%s not found", relPath),
-			FixHint: "Run 'gt doctor --fix' to create default config, or 'gt daemon start' to start the daemon",
+			FixHint: "Run 'ms doctor --fix' to create default config, or 'ms daemon start' to start the daemon",
 		}
 	}
 
@@ -216,8 +216,8 @@ func (c *PatrolHooksWiredCheck) Run(ctx *CheckContext) *CheckResult {
 	return &CheckResult{
 		Name:    c.Name(),
 		Status:  StatusWarning,
-		Message: fmt.Sprintf("Configure patrols in %s or run 'gt daemon start'", relPath),
-		FixHint: "Run 'gt doctor --fix' to create default config",
+		Message: fmt.Sprintf("Configure patrols in %s or run 'ms daemon start'", relPath),
+		FixHint: "Run 'ms doctor --fix' to create default config",
 	}
 }
 
@@ -326,7 +326,7 @@ func (c *PatrolNotStuckCheck) checkStuckWispsDolt(rigPath string, rigName string
 	var stuck []string
 	// Use UTC for cutoff: Dolt stores timestamps in UTC, and time.Parse
 	// without timezone info returns UTC times. Using local time here caused
-	// false "future timestamp" alarms every evening PDT (gt-ty4).
+	// false "future timestamp" alarms every evening PDT (ms-ty4).
 	cutoff := time.Now().UTC().Add(-c.stuckThreshold)
 
 	for _, rec := range records[1:] { // Skip CSV header
@@ -401,7 +401,7 @@ func (c *PatrolPluginsAccessibleCheck) Run(ctx *CheckContext) *CheckResult {
 			Status:  StatusWarning,
 			Message: fmt.Sprintf("%d plugin directory(ies) missing", len(c.missingDirs)),
 			Details: c.missingDirs,
-			FixHint: "Run 'gt doctor --fix' to create missing directories",
+			FixHint: "Run 'ms doctor --fix' to create missing directories",
 		}
 	}
 
@@ -498,7 +498,7 @@ func (c *PatrolPluginDriftCheck) Run(ctx *CheckContext) *CheckResult {
 		Status:  StatusWarning,
 		Message: fmt.Sprintf("%d plugin(s) out of sync", len(report.Drifted)+len(report.Missing)),
 		Details: details,
-		FixHint: "Run 'gt plugin sync' to update runtime plugins",
+		FixHint: "Run 'ms plugin sync' to update runtime plugins",
 	}
 }
 

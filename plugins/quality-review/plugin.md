@@ -34,7 +34,7 @@ bd list --json --all -l type:plugin-run,plugin:quality-review-result --created-a
 If no results are found, record a run wisp and stop:
 
 ```bash
-gt plugin record-run --plugin quality-review --result success \
+ms plugin record-run --plugin quality-review --result success \
   --title "quality-review: No results in last 24h" \
   --description "No quality-review results in last 24h. Nothing to analyze." >/dev/null 2>&1 || true
 ```
@@ -67,7 +67,7 @@ Apply thresholds to each worker's average score:
 For each worker in BREACH status, send an alert:
 
 ```bash
-gt mail send overseer/ -s "Quality BREACH: <worker>" -m "Worker: <worker>
+ms mail send overseer/ -s "Quality BREACH: <worker>" -m "Worker: <worker>
 Rig: <rig>
 Avg Score: <avg>
 Reviews: <count>
@@ -80,7 +80,7 @@ Action: Review recent merges from this worker for quality issues."
 Also escalate:
 
 ```bash
-gt escalate "Quality BREACH: <worker> (avg: <avg>)" \
+ms escalate "Quality BREACH: <worker> (avg: <avg>)" \
   --severity medium \
   --reason "Worker <worker> in rig <rig> has avg quality score <avg> over <count> reviews"
 ```
@@ -90,7 +90,7 @@ gt escalate "Quality BREACH: <worker> (avg: <avg>)" \
 Record a summary wisp for this plugin run:
 
 ```bash
-gt plugin record-run --plugin quality-review --result success \
+ms plugin record-run --plugin quality-review --result success \
   --title "quality-review: Analyzed <N> workers over <M> reviews" \
   --description "Analyzed <N> workers over <M> reviews. <B> breaches, <W> warnings." >/dev/null 2>&1 || true
 ```
@@ -98,11 +98,11 @@ gt plugin record-run --plugin quality-review --result success \
 If any step fails unexpectedly, record a failure wisp and escalate:
 
 ```bash
-gt plugin record-run --plugin quality-review --result failure \
+ms plugin record-run --plugin quality-review --result failure \
   --title "quality-review: FAILED" \
   --description "<error description>" >/dev/null 2>&1 || true
 
-gt escalate "Plugin FAILED: quality-review" \
+ms escalate "Plugin FAILED: quality-review" \
   --severity medium \
   --reason "$ERROR"
 ```
@@ -115,7 +115,7 @@ This plugin does NOT record scores itself. The Refinery records result wisps dur
 merges via the `quality-review` formula step. Each merge produces a wisp like:
 
 ```bash
-gt plugin record-run --plugin quality-review-result --result success --rig <rig-name> \
+ms plugin record-run --plugin quality-review-result --result success --rig <rig-name> \
   --label worker:<miner-name> --label score:0.85 --label recommendation:approve \
   --title "quality-review: Score 0.85, approve" \
   --description "Score: 0.85, approve. Issues: 1 minor (style)" >/dev/null 2>&1 || true

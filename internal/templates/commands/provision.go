@@ -44,7 +44,7 @@ var Commands = []Command{
 		Description: "Signal work complete and submit to merge queue",
 		AgentFields: map[string][]Field{
 			"claude": {
-				{"allowed-tools", "Bash(gt done:*), Bash(git status:*), Bash(git log:*), Bash(git add:*), Bash(git commit:*), Bash(git push:*), Bash(bd close:*)"},
+				{"allowed-tools", "Bash(ms done:*), Bash(git status:*), Bash(git log:*), Bash(git add:*), Bash(git commit:*), Bash(git push:*), Bash(bd close:*)"},
 				{"argument-hint", "[--status COMPLETED|ESCALATED|DEFERRED] [--pre-verified]"},
 			},
 		},
@@ -54,7 +54,7 @@ var Commands = []Command{
 		Description: "Hand off to fresh session, work continues from hook",
 		AgentFields: map[string][]Field{
 			"claude": {
-				{"allowed-tools", "Bash(gt handoff:*)"},
+				{"allowed-tools", "Bash(ms handoff:*)"},
 				{"argument-hint", "[message]"},
 			},
 			// opencode: no extra fields, just description
