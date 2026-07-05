@@ -51,7 +51,9 @@ func hasDescendantWithNamesWindows(ppidStr string, names []string, depth int) bo
 
 	nameSet := make(map[string]bool, len(names))
 	for _, n := range names {
-		nameSet[strings.ToLower(n)] = true
+		// Strip .exe so names like "claude.exe" (from MS_PROCESS_NAMES on
+		// Windows) match snapshot names, which are also stripped below.
+		nameSet[strings.TrimSuffix(strings.ToLower(n), ".exe")] = true
 	}
 
 	// Take a snapshot of all processes.
