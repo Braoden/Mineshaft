@@ -50,8 +50,8 @@ function pxY(name, row) {
 
 // ---------------------------------------------------------------- constants
 
-const FOOT = 7 / 16;       // standing y for a 16x14 clawd centered on pos
-const CLAWD_SIZE = vec2(1, 14 / 16);
+const FOOT = 9 / 16;       // standing y for an 18x18 clawd centered on pos
+const CLAWD_SIZE = vec2(18 / 16, 18 / 16);
 const WALK_SPEED = 2.8;    // units/sec
 const HQ_X = -7, BUNK_X = -12.5, HQ_DOOR = vec2(-9, FOOT);
 const RIG_X0 = 3, RIG_W = 22;
@@ -88,6 +88,41 @@ let camX = 0, camMin = -20, camMax = 10;
 let dragging = false, dragDist = 0, lastScreenX = 0;
 const bedOwner = new Map(); // bed slot -> agent id
 
+// ------------------------------------------------- usage-driven day/night
+
+let usage = { ok: false, utilization: 30, resets_at: '' };
+let night = false;
+
+function resetsAtMs() {
+    const t = Date.parse(usage.resets_at);
+    return isNaN(t) ? 0 : t;
+}
+// true while the 5h window is exhausted and hasn't reset yet
+function computeNight() {
+    return usage.utilization >= 100 && Date.now() < resetsAtMs();
+}
+// 0 = full day, 1 = full night (drives the backdrop)
+function nightFrac() {
+    if (night) return 1;
+    return clamp((usage.utilization - 60) / 40) * 0.85;
+}
+
+function applyUsage(u) {
+    if (u && typeof u.utilization === 'number' && (u.ok || !usage.ok))
+        usage = u;
+    syncNight();
+}
+// called every frame too, so night flips locally when resets_at passes
+function syncNight() {
+    const n = computeNight();
+    if (n === night) return;
+    night = n;
+    document.getElementById('clock').classList.toggle('night', night);
+    if (!night) bedOwner.clear();
+    for (const a of agents.values())
+        if (!a.departing) a.goTo(a.desiredDest());
+}
+
 function recomputeLayout() {
     rigLayout = new Map();
     rigNames.forEach((name, i) => {
@@ -119,20 +154,24 @@ function stationFor(a) {
     return HQ_DOOR.copy();
 }
 
-// bed (or floor overflow spot) for a stopped agent
+// bunk bed (or floor overflow spot) for a sleeping agent.
+// 8 slots: 0-3 lower level, 4-7 upper level.
 function bedFor(a) {
-    const beds = BUILD_META.bunkhouse.bedCenters;
-    const bedY = pxY('bunkhouse', BUILD_META.bunkhouse.bedTopRow) + 0.28;
+    const { bedCenters, bedRows } = BUILD_META.bunkhouse;
+    const total = bedCenters.length * bedRows.length;
     let slot = [...bedOwner.entries()].find(([, id]) => id === a.id)?.[0];
     if (slot === undefined) {
-        for (let i = 0; i < beds.length && slot === undefined; i++)
+        for (let i = 0; i < total && slot === undefined; i++)
             if (!bedOwner.has(i)) slot = i;
-        if (slot === undefined) slot = beds.length + (Math.abs(hashId(a.id)) % 3); // floor
+        if (slot === undefined) slot = total + (Math.abs(hashId(a.id)) % 3); // floor
         bedOwner.set(slot, a.id);
     }
-    if (slot < beds.length)
-        return vec2(pxX('bunkhouse', BUNK_X, beds[slot]), bedY);
-    return vec2(BUNK_X + 3.2 + (slot - beds.length) * 1.2, 0.2); // floor bedroll
+    if (slot < total) {
+        const level = Math.floor(slot / bedCenters.length);
+        return vec2(pxX('bunkhouse', BUNK_X, bedCenters[slot % bedCenters.length]),
+            pxY('bunkhouse', bedRows[level]) + 0.3);
+    }
+    return vec2(BUNK_X + 3.2 + (slot - total) * 1.2, 0.2); // floor bedroll
 }
 
 function releaseBed(a) {
@@ -146,8 +185,16 @@ function hashId(s) {
     return h;
 }
 
+// climb line (ladder/stair x) for an elevated position: the bunkhouse
+// ladder for upper bunks, the HQ tower for the balcony
+function climbLineFor(pos) {
+    if (Math.abs(pos.x - BUNK_X) < 3.2)
+        return pxX('bunkhouse', BUNK_X, 81);
+    return TOWER_X();
+}
+
 // waypoint route between two positions, handling the underground tunnel
-// (via the rig's shaft) and the HQ balcony (via the tower climb line)
+// (via the rig's shaft) and elevated floors (via their climb lines)
 function route(a, from, to) {
     const wps = [];
     const rl = rigOf(a);
@@ -158,14 +205,16 @@ function route(a, from, to) {
     if (fromUnder && !toUnder) { // climb out of the tunnel first
         wps.push(vec2(shaftX, from.y), vec2(shaftX, FOOT));
     }
-    if (fromUp && !toUp) { // climb down from the balcony first
-        wps.push(vec2(TOWER_X(), from.y), vec2(TOWER_X(), FOOT));
+    if (fromUp) { // climb down from the balcony / upper bunk first
+        const cl = climbLineFor(from);
+        wps.push(vec2(cl, from.y), vec2(cl, FOOT));
     }
     if (toUnder && !fromUnder) { // walk to the shaft, then descend
         wps.push(vec2(shaftX, FOOT), vec2(shaftX, to.y));
     }
-    if (toUp && !fromUp) { // walk into the tower, then climb up
-        wps.push(vec2(TOWER_X(), FOOT), vec2(TOWER_X(), to.y));
+    if (toUp) { // walk to the ladder/tower, then climb up
+        const cl = climbLineFor(to);
+        wps.push(vec2(cl, FOOT), vec2(cl, to.y));
     }
     wps.push(to.copy());
     return wps;
@@ -231,13 +280,21 @@ class Agent extends EngineObject {
 
     goTo(dest) { this.path = route(this, this.pos, dest); }
 
+    // where this agent should be right now: at night everyone beds down in
+    // the bunkhouse; by day the overseer naps on its balcony, never a bunk
+    desiredDest() {
+        if (night) return bedFor(this);
+        if (this.running || this.role === 'overseer') {
+            releaseBed(this);
+            return stationFor(this);
+        }
+        return bedFor(this);
+    }
+
     setRunning(running, immediate) {
-        // the overseer never bunks with the crew - it sleeps on its balcony
-        const dest = running || this.role === 'overseer' ? stationFor(this) : bedFor(this);
-        if (running) releaseBed(this);
-        if (this.running === running && !this.path.length
-            && this.pos.distance(dest) < 0.8) return;
         this.running = running;
+        const dest = this.desiredDest();
+        if (!this.path.length && this.pos.distance(dest) < 0.8) return;
         if (immediate) { this.pos = dest.copy(); this.path = []; }
         else if (!this.path.length || this.path[this.path.length - 1].distance(dest) > 0.8)
             this.goTo(dest);
@@ -259,7 +316,7 @@ class Agent extends EngineObject {
     }
 
     get walking() { return this.path.length > 0; }
-    get sleeping() { return !this.running && !this.walking && !this.departing; }
+    get sleeping() { return (night || !this.running) && !this.walking && !this.departing; }
     get underground() { return this.pos.y < -0.5; }
 
     update() {
@@ -278,7 +335,7 @@ class Agent extends EngineObject {
                 this.path.shift();
                 if (!this.path.length && this.departing) { puff(this.pos); this.destroy(); }
             }
-        } else if (this.running) {
+        } else if (this.running && !night) {
             // at-station behaviors
             if (this.role === 'overseer') {
                 // pace the balcony
@@ -326,9 +383,10 @@ class Agent extends EngineObject {
         if (acc && frame !== 'clawd_sleep')
             drawTile(pos, spriteSize(acc), T(acc), WHITE, 0, mirror);
 
-        // name tag
-        drawText(this.name, pos.add(vec2(0, -0.75)), 0.32,
-            new Color().setHex(ROLE_LABEL_COLOR[this.role] || '#fff'), 0.05, BLACK);
+        // name tag (hidden while sleeping - bunkmates' tags pile up; hover works)
+        if (!this.sleeping)
+            drawText(this.name, pos.add(vec2(0, -0.75)), 0.32,
+                new Color().setHex(ROLE_LABEL_COLOR[this.role] || '#fff'), 0.05, BLACK);
 
         if (this.sleeping) {
             const zt = (time + this.phase) % 2;
@@ -431,17 +489,15 @@ function connect() {
     es.onopen = () => conn.classList.remove('down');
     es.onerror = () => conn.classList.add('down'); // EventSource auto-reconnects
     es.addEventListener('state', e => applyState(JSON.parse(e.data)));
+    es.addEventListener('usage', e => {
+        try { applyUsage(JSON.parse(e.data)); } catch { /* ignore */ }
+    });
     es.addEventListener('feed', e => {
         try { handleFeed(JSON.parse(e.data)); } catch { /* ignore bad lines */ }
     });
 }
 
 // ---------------------------------------------------------------- hud
-
-function screenScale() {
-    const r = mainCanvas.getBoundingClientRect();
-    return r.width / mainCanvas.width;
-}
 
 function updateTooltip() {
     const el = document.getElementById('tooltip');
@@ -454,10 +510,66 @@ function updateTooltip() {
         el.append(document.createElement('br'));
         el.append(hovered.recent[0]);
     }
-    const s = screenScale();
-    el.style.left = mousePosScreen.x * s + 16 + 'px';
-    el.style.top = mousePosScreen.y * s + 8 + 'px';
+    // canvas is letterboxed at a fixed resolution: map canvas px -> page px
+    const r = mainCanvas.getBoundingClientRect();
+    const s = r.width / mainCanvas.width;
+    el.style.left = r.left + mousePosScreen.x * s + 16 + 'px';
+    el.style.top = r.top + mousePosScreen.y * s + 8 + 'px';
     el.style.display = 'block';
+}
+
+// usage clock, top right: day = credits used so far (full dial = night);
+// night = wall-clock time left until the 5h window resets
+function drawClock() {
+    const cv = document.getElementById('clock');
+    const ctx = cv.getContext('2d');
+    const W = cv.width, C = W / 2, R = C - 5;
+    ctx.clearRect(0, 0, W, W);
+
+    ctx.beginPath();
+    ctx.arc(C, C, R, 0, 2 * PI);
+    ctx.fillStyle = night ? '#141026' : '#f5e9d0';
+    ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = night ? '#f2c94c' : '#5f3d22';
+    ctx.stroke();
+
+    ctx.strokeStyle = night ? '#4a3f6e' : '#b09a70';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 12; i++) {
+        const a = i * PI / 6;
+        ctx.beginPath();
+        ctx.moveTo(C + Math.cos(a) * (R - 7), C + Math.sin(a) * (R - 7));
+        ctx.lineTo(C + Math.cos(a) * (R - 3), C + Math.sin(a) * (R - 3));
+        ctx.stroke();
+    }
+
+    ctx.font = '14px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(night ? '\u{1F319}' : '☀️', C, C - R / 2.2);
+
+    let frac;
+    if (night)
+        frac = clamp((resetsAtMs() - Date.now()) / (5 * 3600 * 1000), 0, 1);
+    else
+        frac = clamp(usage.utilization / 100, 0, 1);
+    const ang = frac * 2 * PI - PI / 2;
+    ctx.beginPath();
+    ctx.moveTo(C, C);
+    ctx.lineTo(C + Math.cos(ang) * R * 0.68, C + Math.sin(ang) * R * 0.68);
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = night ? '#f2c94c' : '#b5482f';
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(C, C, 3, 0, 2 * PI);
+    ctx.fillStyle = ctx.strokeStyle;
+    ctx.fill();
+
+    cv.title = usage.ok
+        ? `5h window: ${Math.round(usage.utilization)}% used` +
+          (usage.resets_at ? `, resets ${new Date(resetsAtMs()).toLocaleTimeString()}` : '')
+        : 'usage unavailable';
 }
 
 function showPanel(a) {
@@ -492,6 +604,7 @@ function gameInit() {
     setTilesPixelated(true);
     setCanvasPixelated(true);
     setFontDefault('Courier New');
+    setCanvasFixedSize(vec2(1280, 720)); // same view on every screen, letterboxed
     camX = 0;
     connect();
 }
@@ -536,7 +649,10 @@ function gameUpdate() {
     updateTooltip();
 }
 
-function gameUpdatePost() {}
+function gameUpdatePost() {
+    syncNight(); // flips day/night locally when resets_at passes
+    drawClock();
+}
 
 function drawBuilding(name, x, label, labelColor) {
     const size = spriteSize(name);
@@ -579,13 +695,34 @@ function drawTunnel(rl) {
     drawRect(vec2(rl.faceX + 0.1, midY + 0.1), vec2(0.1, 0.1), hsl(0.13, 0.9, 0.65));
 }
 
+function mixHex(hexA, hexB, p) {
+    const a = new Color().setHex(hexA), b = new Color().setHex(hexB);
+    return new Color(lerp(a.r, b.r, p), lerp(a.g, b.g, p), lerp(a.b, b.b, p));
+}
+
 function gameRender() {
-    // sky
+    const nf = nightFrac();
+    // sky: day -> dusk -> night with credit burn
     drawRectGradient(vec2(camX, CAM_Y + 4), vec2(200, VIEW_H + 8),
-        new Color().setHex('#241b3d'), new Color().setHex('#6b4a63'));
+        mixHex('#3a6a9e', '#0d0a1f', nf), mixHex('#a8c8d8', '#2a1f3d', nf));
+
+    // stars + moon at night
+    if (nf > 0.6) {
+        const alpha = (nf - 0.6) / 0.4;
+        for (let i = 0; i < 40; i++) {
+            const sx = camMin - 20 + ((i * 53.7) % (camMax - camMin + 55));
+            const sy = 3.5 + ((i * 7.31) % 7);
+            const tw = 0.5 + 0.5 * Math.sin(time * 2 + i);
+            drawRect(vec2(sx, sy), vec2(0.09, 0.09), hsl(0, 0, 1, alpha * tw * 0.8));
+        }
+        drawTile(vec2(camX + 9, 8.6), spriteSize('moon').scale(1.5), T('moon'),
+            hsl(0, 0, 1, alpha));
+    }
+
     // ground
-    drawRect(vec2(camX, DIRT_BOTTOM / 2), vec2(200, -DIRT_BOTTOM), new Color().setHex('#4a3628'));
-    drawRect(vec2(camX, 0.06), vec2(200, 0.24), new Color().setHex('#3d7038'));
+    drawRect(vec2(camX, DIRT_BOTTOM / 2), vec2(200, -DIRT_BOTTOM),
+        mixHex('#4a3628', '#241a12', nf * 0.6));
+    drawRect(vec2(camX, 0.06), vec2(200, 0.24), mixHex('#3d7038', '#1e3a1c', nf * 0.6));
     // pebbles (deterministic scatter)
     for (let i = 0; i < 120; i++) {
         const x = -34 + i * 1.63 + Math.sin(i * 7.3) * 0.7;
@@ -617,7 +754,7 @@ function gameRender() {
 
         // refinery chimney smoke while running
         const ref = [...agents.values()].find(a => a.rig === name && a.role === 'refinery');
-        if (ref && ref.running && rand() < timeDelta / 0.5)
+        if (ref && ref.running && !night && rand() < timeDelta / 0.5)
             smoke(vec2(pxX('refinery', rl.refX, BUILD_META.refinery.chimneyX),
                 spriteSize('refinery').y + 0.2));
     }

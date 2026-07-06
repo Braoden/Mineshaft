@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -115,6 +116,78 @@ func gatherViewState(townRoot string) *viewState {
 	return st
 }
 
+// viewUsage is the 5-hour usage window snapshot for the day/night clock.
+type viewUsage struct {
+	OK          bool    `json:"ok"`
+	Utilization float64 `json:"utilization"` // percent used, 0-100
+	ResetsAt    string  `json:"resets_at,omitempty"`
+}
+
+var usageCache struct {
+	sync.Mutex
+	data    viewUsage
+	fetched time.Time
+}
+
+// fetchUsage returns the Claude 5h-window usage, cached for 60s (including
+// failures, to avoid hammering the endpoint or the credentials file).
+func fetchUsage() viewUsage {
+	usageCache.Lock()
+	defer usageCache.Unlock()
+	if time.Since(usageCache.fetched) < time.Minute {
+		return usageCache.data
+	}
+	usageCache.fetched = time.Now()
+	usageCache.data = queryOAuthUsage()
+	return usageCache.data
+}
+
+func queryOAuthUsage() viewUsage {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return viewUsage{}
+	}
+	raw, err := os.ReadFile(filepath.Join(home, ".claude", ".credentials.json"))
+	if err != nil {
+		return viewUsage{}
+	}
+	var creds struct {
+		ClaudeAiOauth struct {
+			AccessToken string `json:"accessToken"`
+		} `json:"claudeAiOauth"`
+	}
+	if err := json.Unmarshal(raw, &creds); err != nil || creds.ClaudeAiOauth.AccessToken == "" {
+		return viewUsage{}
+	}
+
+	req, err := http.NewRequest(http.MethodGet, "https://api.anthropic.com/api/oauth/usage", nil)
+	if err != nil {
+		return viewUsage{}
+	}
+	req.Header.Set("Authorization", "Bearer "+creds.ClaudeAiOauth.AccessToken)
+	req.Header.Set("anthropic-beta", "oauth-2025-04-20")
+
+	client := &http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return viewUsage{}
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return viewUsage{}
+	}
+	var body struct {
+		FiveHour struct {
+			Utilization float64 `json:"utilization"`
+			ResetsAt    string  `json:"resets_at"`
+		} `json:"five_hour"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		return viewUsage{}
+	}
+	return viewUsage{OK: true, Utilization: body.FiveHour.Utilization, ResetsAt: body.FiveHour.ResetsAt}
+}
+
 func runView(cmd *cobra.Command, args []string) error {
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
@@ -131,6 +204,12 @@ func runView(cmd *cobra.Command, args []string) error {
 	mux.HandleFunc("/api/state", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(gatherViewState(townRoot)); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	})
+	mux.HandleFunc("/api/usage", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(fetchUsage()); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	})
@@ -172,7 +251,7 @@ func serveViewEvents(w http.ResponseWriter, r *http.Request, townRoot string) {
 		feedOffset = info.Size() // start at EOF: only stream new events
 	}
 
-	var lastState string
+	var lastState, lastUsage string
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
 
@@ -182,6 +261,14 @@ func serveViewEvents(w http.ResponseWriter, r *http.Request, townRoot string) {
 			if s := string(data); s != lastState {
 				lastState = s
 				send("state", s)
+			}
+		}
+
+		// Usage snapshot (fetch is cached for 60s), only when changed.
+		if data, err := json.Marshal(fetchUsage()); err == nil {
+			if s := string(data); s != lastUsage {
+				lastUsage = s
+				send("usage", s)
 			}
 		}
 

@@ -1,15 +1,16 @@
 // Pixel art data for the Mineshaft view. Pure data, no engine deps
 // (validated standalone under node by the build check).
 //
-// Clawds are hand-drawn 16x14 grids matching the official blocky mascot.
-// Buildings are painted programmatically (cutaway/dollhouse style) and
-// export interior positions via BUILD_META (all in sprite pixels).
+// Clawds are generated at exactly 2x the official 9x7 mascot reference
+// (rounded wide body, two square eyes, three legs, #d9714f). Buildings
+// are painted programmatically (cutaway/dollhouse style); interior
+// positions are exported via BUILD_META (all in sprite pixels).
 'use strict';
 
 const SPRITE_PALETTE = {
-    o: '#da7756', // clawd body (claude orange)
+    o: '#d9714f', // clawd body (official reference color)
     O: '#b3552f', // body shade
-    k: '#2a1a12', // dark: eyes, outlines
+    k: '#000000', // eyes / dark details
     w: '#ffffff', // white
     y: '#f2c94c', // yellow
     Y: '#c9992a', // yellow shade
@@ -28,234 +29,89 @@ const SPRITE_PALETTE = {
     m: '#7a7466', // metal
 };
 
+// ------------------------------------------------------------ paint helpers
+
+function makeGrid(w, h) {
+    return Array.from({ length: h }, () => Array(w).fill('.'));
+}
+function rect(g, x, y, w, h, ch) {
+    if (x < 0 || y < 0 || y + h > g.length || x + w > g[0].length)
+        throw new Error(`rect out of bounds: ${x},${y} ${w}x${h} in ${g[0].length}x${g.length}`);
+    for (let j = y; j < y + h; j++)
+        for (let i = x; i < x + w; i++)
+            g[j][i] = ch;
+}
+function gridRows(g) { return g.map(r => r.join('')); }
+
+// ------------------------------------------------------------ clawd frames
+
+// 18x18: 4 rows of headroom for tools, body rows 4-13, legs rows 14-17.
+// Every frame is the 9x7 reference scaled 2x.
+function clawdBody(eyes) {
+    const g = makeGrid(18, 18);
+    rect(g, 4, 4, 10, 2, 'o');   // ref row 0: x2-6
+    rect(g, 2, 6, 14, 2, 'o');   // ref row 1: x1-7
+    rect(g, 0, 8, 18, 4, 'o');   // ref rows 2-3: full width
+    rect(g, 2, 12, 14, 2, 'o');  // ref row 4: x1-7
+    if (eyes) {
+        rect(g, 4, 8, 2, 2, 'k');  // ref eye at x2,y2
+        rect(g, 10, 8, 2, 2, 'k'); // ref eye at x5,y2
+    }
+    return g;
+}
+
+// legs at ref x2,4,6; mode 'all' | 'walk1' (middle up) | 'walk2' (outer up)
+function clawdLegs(g, mode) {
+    [4, 8, 12].forEach((x, i) => {
+        const short = mode === 'walk1' ? i === 1 : mode === 'walk2' ? i !== 1 : false;
+        rect(g, x, 14, 2, short ? 2 : 3, 'o');
+        if (!short) rect(g, x, 16, 2, 2, 'O');
+    });
+}
+
+function makeClawd(mode, eyes = true, tool = null) {
+    const g = clawdBody(eyes);
+    clawdLegs(g, mode);
+    if (tool === 'up') {          // pickaxe raised overhead
+        rect(g, 6, 0, 10, 2, 's');
+        rect(g, 10, 2, 2, 2, 'n');
+    } else if (tool === 'down') { // pickaxe swung down-left
+        rect(g, 2, 9, 2, 2, 'n');
+        rect(g, 1, 11, 2, 2, 'n');
+        rect(g, 0, 13, 2, 4, 's');
+    }
+    return gridRows(g);
+}
+
+function makeClawdSleep() {
+    const g = makeGrid(18, 18);
+    rect(g, 1, 12, 16, 5, 'o');   // lying flat
+    rect(g, 1, 16, 16, 1, 'O');
+    rect(g, 4, 13, 2, 1, 'k');    // closed eyes
+    rect(g, 10, 13, 2, 1, 'k');
+    return gridRows(g);
+}
+
+// accessories, 18x18, body top = row 4
+function makeAccessory(kind) {
+    const g = makeGrid(18, 18);
+    switch (kind) {
+        case 'hat_hard':   rect(g, 5, 0, 8, 3, 'y'); rect(g, 4, 3, 10, 2, 'Y'); break;
+        case 'hat_hard_g': rect(g, 5, 0, 8, 3, 'g'); rect(g, 4, 3, 10, 2, 'G'); break;
+        case 'hat_top':    rect(g, 5, 0, 8, 3, 'k'); rect(g, 3, 3, 12, 2, 'k'); break;
+        case 'hat_cap':    rect(g, 5, 0, 8, 3, 'b'); rect(g, 9, 3, 7, 2, 'B'); break;
+        case 'lantern':
+            rect(g, 0, 10, 3, 1, 'm'); rect(g, 0, 11, 3, 2, 'y'); rect(g, 0, 13, 3, 1, 'm');
+            break;
+        case 'apron':      rect(g, 4, 9, 10, 4, 'b'); rect(g, 5, 12, 8, 1, 'B'); break;
+    }
+    return gridRows(g);
+}
+
 // ------------------------------------------------------------ hand sprites
 
-// Clawd frames: 16x14, feet on the bottom row, 2 rows headroom for tools.
 const HAND_SPRITES = {
 
-clawd_idle: [
-'................',
-'................',
-'..oooooooooooo..',
-'..ookkooookkoo..',
-'oooOkkooookkOooo',
-'oo.oooooooooo.oo',
-'oo.oooooooooo.oo',
-'..oooooooooooo..',
-'..oooooooooooo..',
-'..oooooooooooo..',
-'...oo.oo.oo.oo..',
-'...oo.oo.oo.oo..',
-'...oo.oo.oo.oo..',
-'...OO.OO.OO.OO..',
-],
-
-clawd_blink: [
-'................',
-'................',
-'..oooooooooooo..',
-'..oooooooooooo..',
-'oooOooooooooOooo',
-'oo.oooooooooo.oo',
-'oo.oooooooooo.oo',
-'..oooooooooooo..',
-'..oooooooooooo..',
-'..oooooooooooo..',
-'...oo.oo.oo.oo..',
-'...oo.oo.oo.oo..',
-'...oo.oo.oo.oo..',
-'...OO.OO.OO.OO..',
-],
-
-clawd_walk1: [
-'................',
-'................',
-'..oooooooooooo..',
-'..ookkooookkoo..',
-'oooOkkooookkOooo',
-'oo.oooooooooo.oo',
-'oo.oooooooooo.oo',
-'..oooooooooooo..',
-'..oooooooooooo..',
-'..oooooooooooo..',
-'...oo.oo.oo.oo..',
-'...oo.oo.oo.oo..',
-'...oo.oo.oo.oo..',
-'......OO....OO..',
-],
-
-clawd_walk2: [
-'................',
-'................',
-'..oooooooooooo..',
-'..ookkooookkoo..',
-'oooOkkooookkOooo',
-'oo.oooooooooo.oo',
-'oo.oooooooooo.oo',
-'..oooooooooooo..',
-'..oooooooooooo..',
-'..oooooooooooo..',
-'...oo.oo.oo.oo..',
-'...oo.oo.oo.oo..',
-'...oo.oo.oo.oo..',
-'...OO....OO.....',
-],
-
-clawd_mine1: [
-'......ssssssss..',
-'.........nn.....',
-'..oooooooooooo..',
-'..ookkooookkoo..',
-'oooOkkooookkOooo',
-'oo.oooooooooo.oo',
-'oo.oooooooooo.oo',
-'..oooooooooooo..',
-'..oooooooooooo..',
-'..oooooooooooo..',
-'...oo.oo.oo.oo..',
-'...oo.oo.oo.oo..',
-'...oo.oo.oo.oo..',
-'...OO.OO.OO.OO..',
-],
-
-clawd_mine2: [
-'................',
-'................',
-'..oooooooooooo..',
-'..ookkooookkoo..',
-'oooOkkooookkOooo',
-'oo.oooooooooo.oo',
-'oo.oooooooooo.oo',
-'.nnooooooooooo..',
-'nnoooooooooooo..',
-'..oooooooooooo..',
-'ss.oo.oo.oo.oo..',
-'ss.oo.oo.oo.oo..',
-'ss.oo.oo.oo.oo..',
-'...OO.OO.OO.OO..',
-],
-
-clawd_sleep: [
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-'..oooooooooooo..',
-'..oooooooooooo..',
-'..ookkooookkoo..',
-'..oooooooooooo..',
-'oooooooooooooooo',
-'..OOOOOOOOOOOO..',
-],
-
-// accessories, 16x14, aligned over clawd frames (body top = row 2)
-hat_hard: [
-'.....yyyyyy.....',
-'....yyyyyyyy....',
-'...YYYYYYYYYY...',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-],
-
-hat_hard_g: [
-'.....gggggg.....',
-'....gggggggg....',
-'...GGGGGGGGGG...',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-],
-
-hat_top: [
-'.....kkkkkk.....',
-'.....kkkkkk.....',
-'...kkkkkkkkkk...',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-],
-
-hat_cap: [
-'.....bbbbbb.....',
-'....bbbbbbbb....',
-'........BBBBB...',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-],
-
-lantern: [
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-'................',
-'.mm.............',
-'myym............',
-'myym............',
-'.mm.............',
-'................',
-'................',
-'................',
-],
-
-apron: [
-'................',
-'................',
-'................',
-'................',
-'....b......b....',
-'....bbbbbbbb....',
-'....bbbbbbbb....',
-'....bbbbbbbb....',
-'....bBBBBBBb....',
-'................',
-'................',
-'................',
-'................',
-'................',
-],
-
-// small scenery
 tree: [
 '....gggg....',
 '..gggggggg..',
@@ -282,6 +138,17 @@ cloud: [
 '..cccccccccccccc..',
 '.cccccccccccccccc.',
 '..cccccccccccccc..',
+],
+
+moon: [
+'...cccc..',
+'..cccccc.',
+'.ccmccccc',
+'.cccccmcc',
+'.cccccccc',
+'.cmcccccc',
+'..cccccc.',
+'...cccc..',
 ],
 
 bead: [
@@ -311,20 +178,6 @@ bench: [
 '.NN..............NN.',
 ],
 };
-
-// ------------------------------------------------------------ paint helpers
-
-function makeGrid(w, h) {
-    return Array.from({ length: h }, () => Array(w).fill('.'));
-}
-function rect(g, x, y, w, h, ch) {
-    if (x < 0 || y < 0 || y + h > g.length || x + w > g[0].length)
-        throw new Error(`rect out of bounds: ${x},${y} ${w}x${h} in ${g[0].length}x${g.length}`);
-    for (let j = y; j < y + h; j++)
-        for (let i = x; i < x + w; i++)
-            g[j][i] = ch;
-}
-function gridRows(g) { return g.map(r => r.join('')); }
 
 // ------------------------------------------------------------ buildings
 
@@ -368,23 +221,29 @@ function buildHQ() {
     return gridRows(g);
 }
 
-// Bunkhouse: 88x40 cutaway with 4 beds.
+// Bunkhouse: 88x56 cutaway with double-decker bunks (2 levels x 4 beds).
 function buildBunkhouse() {
-    const g = makeGrid(88, 40);
-    rect(g, 0, 10, 88, 28, 'D');   // interior
-    rect(g, 0, 38, 88, 2, 'N');    // floor
-    rect(g, 0, 10, 2, 28, 'n');    // left wall
-    rect(g, 86, 10, 2, 28, 'n');   // right wall
-    rect(g, 86, 24, 2, 14, '.');   // door opening (right)
+    const g = makeGrid(88, 56);
+    rect(g, 0, 10, 88, 44, 'D');   // interior
+    rect(g, 0, 54, 88, 2, 'N');    // floor
+    rect(g, 0, 10, 2, 44, 'n');    // left wall
+    rect(g, 86, 10, 2, 44, 'n');   // right wall
+    rect(g, 86, 40, 2, 14, '.');   // door opening (right)
     rect(g, 0, 0, 88, 8, 'n');     // roof
     rect(g, 0, 8, 88, 2, 'N');
-    // beds: frame, mattress, pillow, blanket
-    for (const cx of [13, 33, 53, 73]) {
-        rect(g, cx - 7, 36, 2, 2, 'N');       // legs
-        rect(g, cx + 5, 36, 2, 2, 'N');
-        rect(g, cx - 7, 33, 14, 3, 'c');      // mattress
-        rect(g, cx - 7, 33, 4, 2, 'w');       // pillow
-        rect(g, cx - 1, 32, 8, 4, 'b');       // blanket
+    // upper level platform + ladder
+    rect(g, 2, 30, 78, 2, 'n');
+    rect(g, 80, 30, 2, 24, 'N');
+    for (let y = 33; y < 54; y += 4) rect(g, 79, y, 4, 1, 'n');
+    // beds on both levels: [level floor row for legs, mattress top row]
+    for (const [legRow, topRow] of [[52, 49], [28, 25]]) {
+        for (const cx of [13, 33, 53, 73]) {
+            rect(g, cx - 7, legRow, 2, 2, 'N');       // legs
+            rect(g, cx + 5, legRow, 2, 2, 'N');
+            rect(g, cx - 7, topRow, 14, 3, 'c');      // mattress
+            rect(g, cx - 7, topRow, 4, 2, 'w');       // pillow
+            rect(g, cx - 1, topRow - 1, 8, 4, 'b');   // blanket
+        }
     }
     return gridRows(g);
 }
@@ -464,6 +323,19 @@ function buildTower() {
 }
 
 const SPRITE_DATA = {
+    clawd_idle: makeClawd('all', true),
+    clawd_blink: makeClawd('all', false),
+    clawd_walk1: makeClawd('walk1', true),
+    clawd_walk2: makeClawd('walk2', true),
+    clawd_mine1: makeClawd('all', true, 'up'),
+    clawd_mine2: makeClawd('all', true, 'down'),
+    clawd_sleep: makeClawdSleep(),
+    hat_hard: makeAccessory('hat_hard'),
+    hat_hard_g: makeAccessory('hat_hard_g'),
+    hat_top: makeAccessory('hat_top'),
+    hat_cap: makeAccessory('hat_cap'),
+    lantern: makeAccessory('lantern'),
+    apron: makeAccessory('apron'),
     ...HAND_SPRITES,
     hq: buildHQ(),
     bunkhouse: buildBunkhouse(),
@@ -475,15 +347,15 @@ const SPRITE_DATA = {
 // Interior positions in sprite pixels (x from left, row from top).
 const BUILD_META = {
     hq: {
-        w: 64, h: 76,
         balcony: { x0: 8, x1: 34, floorRow: 44 }, // overseer paces here
         towerX: 50,                               // climb line inside tower
         deskX: 34,                                // supervisor works here
-        doorX: 4,
     },
-    bunkhouse: { w: 88, h: 40, bedCenters: [13, 33, 53, 73], bedTopRow: 32 },
-    mine: { w: 48, h: 44, shaftHalfPx: 7 },
-    refinery: { w: 72, h: 60, furnaceX: 30, chimneyX: 52 },
+    bunkhouse: {
+        bedCenters: [13, 33, 53, 73],
+        bedRows: [49, 25],                        // mattress top row: lower, upper level
+    },
+    refinery: { furnaceX: 30, chimneyX: 52 },
 };
 
 // Validate: every row of a sprite must be the same width, and every
