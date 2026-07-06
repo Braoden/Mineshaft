@@ -481,7 +481,7 @@ function gameRender() {
     for (let i = 0; i < 5; i++) {
         const span = camMax - camMin + 60;
         const x = camMin - 30 + ((i * 37 + time * (0.25 + i * 0.06)) % span);
-        drawTile(vec2(x, 9 + (i % 3) * 1.3), spriteSize('cloud').scale(1.4),
+        drawTile(vec2(x, 6.8 + (i % 3) * 1.1), spriteSize('cloud').scale(1.4),
             T('cloud'), hsl(0, 0, 1, 0.75));
     }
 
