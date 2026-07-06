@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mineshaft</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html, body { margin: 0; height: 100%; background: #150f1a; overflow: hidden; }
+  canvas { image-rendering: pixelated; }
+  #hud, #hud * { font-family: 'Courier New', monospace; }
+  #hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+  #header {
+    position: absolute; top: 10px; left: 12px;
+    color: #f2c94c; font-size: 14px; font-weight: bold;
+    text-shadow: 2px 2px 0 #000; letter-spacing: 2px;
+  }
+  #conn { color: #5aa053; } #conn.down { color: #b5482f; }
+  #tooltip {
+    position: absolute; display: none; max-width: 260px;
+    background: #241813; color: #e8e4d8; border: 2px solid #8a5a33;
+    padding: 6px 8px; font-size: 11px; line-height: 1.5;
+    box-shadow: 3px 3px 0 rgba(0,0,0,.5);
+  }
+  #tooltip .t-name { color: #f2c94c; font-weight: bold; }
+  #panel {
+    position: absolute; display: none; top: 40px; right: 12px; width: 280px;
+    background: #241813; color: #e8e4d8; border: 2px solid #8a5a33;
+    padding: 10px; font-size: 11px; line-height: 1.5;
+    box-shadow: 4px 4px 0 rgba(0,0,0,.5); pointer-events: auto;
+  }
+  #panel h3 { margin: 0 0 4px; color: #f2c94c; font-size: 13px; }
+  #panel .p-close {
+    position: absolute; top: 4px; right: 8px; cursor: pointer;
+    color: #b5482f; font-weight: bold; font-size: 14px;
+  }
+  #panel ul { margin: 6px 0 0; padding-left: 14px; max-height: 200px; overflow-y: auto; }
+  #panel li { margin-bottom: 4px; color: #bdb7a8; }
+  #ticker {
+    position: absolute; bottom: 8px; left: 12px; right: 12px;
+    color: #bdb7a8; font-size: 11px; line-height: 1.6;
+    text-shadow: 1px 1px 0 #000;
+  }
+  #ticker div:nth-child(2) { opacity: .7; }
+  #ticker div:nth-child(3) { opacity: .45; }
+  #ticker div:nth-child(4) { opacity: .25; }
+</style>
+</head>
+<body>
+<div id="hud">
+  <div id="header">&#9935; MINESHAFT <span id="conn">&#9679;</span></div>
+  <div id="tooltip"></div>
+  <div id="panel"></div>
+  <div id="ticker"></div>
+</div>
+<script>
+  window.onerror = (msg, src, line) => {
+    const el = document.getElementById('ticker');
+    if (el) el.textContent = 'JS ERROR: ' + msg + ' @ ' + (src || '').split('/').pop() + ':' + line;
+  };
+</script>
+<script src="littlejs.release.js"></script>
+<script src="sprites.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
