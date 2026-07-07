@@ -10,10 +10,27 @@
   #hud, #hud * { font-family: 'Courier New', monospace; }
   #hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
   #header {
-    position: absolute; top: 10px; left: 12px;
+    position: absolute; top: 10px; left: 68px;
     color: #f2c94c; font-size: 14px; font-weight: bold;
     text-shadow: 2px 2px 0 #000; letter-spacing: 2px;
   }
+  #nav {
+    position: absolute; top: 0; left: 0; bottom: 0; width: 56px;
+    background: #241813; border-right: 2px solid #8a5a33;
+    box-shadow: 3px 0 0 rgba(0,0,0,.35);
+    display: flex; flex-direction: column; align-items: center;
+    gap: 8px; padding-top: 10px; pointer-events: auto; box-sizing: border-box;
+  }
+  .nav-btn {
+    width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+    color: #bdb7a8; border: 2px solid transparent; cursor: pointer;
+    transition: color .2s, border-color .2s, background .2s;
+  }
+  .nav-btn:hover { color: #e8e4d8; border-color: #8a5a33; }
+  .nav-btn:focus-visible { outline: 2px solid #f2c94c; outline-offset: 2px; }
+  .nav-btn.active { color: #f2c94c; border-color: #8a5a33; background: #2f2019; }
+  .nav-btn svg { width: 24px; height: 24px; }
+  @media (prefers-reduced-motion: reduce) { .nav-btn { transition: none; } }
   #conn { color: #5aa053; } #conn.down { color: #b5482f; }
   #tooltip {
     position: absolute; display: none; max-width: 260px;
@@ -36,7 +53,7 @@
   #panel ul { margin: 6px 0 0; padding-left: 14px; max-height: 200px; overflow-y: auto; }
   #panel li { margin-bottom: 4px; color: #bdb7a8; }
   #ticker {
-    position: absolute; bottom: 8px; left: 12px; right: 12px;
+    position: absolute; bottom: 8px; left: 68px; right: 12px;
     color: #bdb7a8; font-size: 11px; line-height: 1.6;
     text-shadow: 1px 1px 0 #000;
   }
@@ -47,6 +64,19 @@
 </head>
 <body>
 <div id="hud">
+  <nav id="nav">
+    <a href="/" class="nav-btn active" aria-label="Home" aria-current="page" title="Town view">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M3 11 L12 3 L21 11 M5 10 V21 H10 V15 H14 V21 H19 V10"/>
+      </svg>
+    </a>
+    <a href="/dial.html" class="nav-btn" aria-label="Speed dial" title="Usage speed dial">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M4 18 A9 9 0 0 1 20 18 M12 13 L16 8"/>
+        <circle cx="12" cy="14" r="1.5" fill="currentColor" stroke="none"/>
+      </svg>
+    </a>
+  </nav>
   <div id="header">&#9935; MINESHAFT <span id="conn">&#9679;</span></div>
   <div id="tooltip"></div>
   <div id="panel"></div>
@@ -57,6 +87,12 @@
     const el = document.getElementById('ticker');
     if (el) el.textContent = 'JS ERROR: ' + msg + ' @ ' + (src || '').split('/').pop() + ':' + line;
   };
+  // keep nav clicks out of littlejs's window-level mouse/touch handlers
+  {
+    const nav = document.getElementById('nav');
+    for (const t of ['mousedown', 'mouseup', 'touchstart', 'touchend'])
+      nav.addEventListener(t, e => e.stopPropagation());
+  }
 </script>
 <script src="littlejs.release.js"></script>
 <script src="sprites.js"></script>

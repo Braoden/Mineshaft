@@ -116,11 +116,15 @@ func gatherViewState(townRoot string) *viewState {
 	return st
 }
 
-// viewUsage is the 5-hour usage window snapshot for the day/night clock.
+// viewUsage is the usage window snapshot for the day/night clock and the
+// speed-dial page. Utilization/ResetsAt are the 5-hour window (field names
+// are load-bearing: game.js day/night depends on them).
 type viewUsage struct {
-	OK          bool    `json:"ok"`
-	Utilization float64 `json:"utilization"` // percent used, 0-100
-	ResetsAt    string  `json:"resets_at,omitempty"`
+	OK              bool    `json:"ok"`
+	Utilization     float64 `json:"utilization"` // 5h window percent used, 0-100
+	ResetsAt        string  `json:"resets_at,omitempty"`
+	WeekUtilization float64 `json:"week_utilization"` // 7-day window percent used, 0-100
+	WeekResetsAt    string  `json:"week_resets_at,omitempty"`
 }
 
 var usageCache struct {
@@ -181,11 +185,21 @@ func queryOAuthUsage() viewUsage {
 			Utilization float64 `json:"utilization"`
 			ResetsAt    string  `json:"resets_at"`
 		} `json:"five_hour"`
+		SevenDay struct {
+			Utilization float64 `json:"utilization"`
+			ResetsAt    string  `json:"resets_at"`
+		} `json:"seven_day"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
 		return viewUsage{}
 	}
-	return viewUsage{OK: true, Utilization: body.FiveHour.Utilization, ResetsAt: body.FiveHour.ResetsAt}
+	return viewUsage{
+		OK:              true,
+		Utilization:     body.FiveHour.Utilization,
+		ResetsAt:        body.FiveHour.ResetsAt,
+		WeekUtilization: body.SevenDay.Utilization,
+		WeekResetsAt:    body.SevenDay.ResetsAt,
+	}
 }
 
 func runView(cmd *cobra.Command, args []string) error {

@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mineshaft — Speed Dial</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html, body { margin: 0; height: 100%; background: #150f1a; }
+  body, body * { font-family: 'Courier New', monospace; }
+  #nav {
+    position: fixed; top: 0; left: 0; bottom: 0; width: 56px;
+    background: #241813; border-right: 2px solid #8a5a33;
+    box-shadow: 3px 0 0 rgba(0,0,0,.35);
+    display: flex; flex-direction: column; align-items: center;
+    gap: 8px; padding-top: 10px; box-sizing: border-box; z-index: 10;
+  }
+  .nav-btn {
+    width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+    color: #bdb7a8; border: 2px solid transparent; cursor: pointer;
+    transition: color .2s, border-color .2s, background .2s;
+  }
+  .nav-btn:hover { color: #e8e4d8; border-color: #8a5a33; }
+  .nav-btn:focus-visible { outline: 2px solid #f2c94c; outline-offset: 2px; }
+  .nav-btn.active { color: #f2c94c; border-color: #8a5a33; background: #2f2019; }
+  .nav-btn svg { width: 24px; height: 24px; }
+
+  #page {
+    margin-left: 58px; padding: 24px 20px 40px; box-sizing: border-box;
+    max-width: 680px; color: #e8e4d8;
+  }
+  h1 {
+    margin: 0 0 20px; color: #f2c94c; font-size: 18px; font-weight: bold;
+    letter-spacing: 2px; text-shadow: 2px 2px 0 #000;
+  }
+  .card {
+    background: #241813; border: 2px solid #8a5a33;
+    box-shadow: 4px 4px 0 rgba(0,0,0,.5);
+    padding: 14px 16px; margin-bottom: 18px;
+  }
+  .card h2 {
+    margin: 0 0 10px; color: #f2c94c; font-size: 13px;
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  .bar-row { display: flex; align-items: center; gap: 12px; }
+  .bar {
+    flex: 1; height: 22px; background: #191014;
+    border: 2px solid #8a5a33; position: relative; overflow: hidden;
+  }
+  .bar-fill {
+    position: absolute; inset: 0; width: 0%;
+    background: repeating-linear-gradient(90deg, #5aa053 0 10px, #4c8946 10px 12px);
+    transition: width .3s;
+  }
+  .bar-fill.warn { background: repeating-linear-gradient(90deg, #f2c94c 0 10px, #d2ab38 10px 12px); }
+  .bar-fill.hot  { background: repeating-linear-gradient(90deg, #b5482f 0 10px, #983c27 10px 12px); }
+  .bar-pct { min-width: 52px; text-align: right; font-size: 15px; font-weight: bold; color: #f2c94c; }
+  .bar-meta { margin-top: 8px; font-size: 11px; line-height: 1.6; color: #bdb7a8; min-height: 2.4em; }
+  .bar-meta b { color: #e8e4d8; font-weight: bold; }
+
+  #report { font-size: 12px; line-height: 1.7; color: #bdb7a8; min-height: 6em; }
+  #report b { color: #e8e4d8; }
+  .state {
+    display: inline-block; padding: 1px 8px; border: 2px solid #8a5a33;
+    font-weight: bold; letter-spacing: 1px;
+  }
+  .state.day   { color: #f2c94c; }
+  .state.night { color: #7d9bd1; }
+  #meta { font-size: 10px; color: #6f6a5e; margin-top: 4px; }
+  @media (prefers-reduced-motion: reduce) { .nav-btn, .bar-fill { transition: none; } }
+</style>
+</head>
+<body>
+<nav id="nav">
+  <a href="/" class="nav-btn" aria-label="Home" title="Town view">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <path d="M3 11 L12 3 L21 11 M5 10 V21 H10 V15 H14 V21 H19 V10"/>
+    </svg>
+  </a>
+  <a href="/dial.html" class="nav-btn active" aria-label="Speed dial" aria-current="page" title="Usage speed dial">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <path d="M4 18 A9 9 0 0 1 20 18 M12 13 L16 8"/>
+      <circle cx="12" cy="14" r="1.5" fill="currentColor" stroke="none"/>
+    </svg>
+  </a>
+</nav>
+
+<main id="page">
+  <h1>&#9935; SPEED DIAL</h1>
+
+  <section class="card">
+    <h2>5-Hour Window</h2>
+    <div class="bar-row">
+      <div class="bar" role="progressbar" aria-label="5-hour window usage"
+           aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="bar5">
+        <div class="bar-fill" id="fill5"></div>
+      </div>
+      <div class="bar-pct" id="pct5">--%</div>
+    </div>
+    <div class="bar-meta" id="meta5">waiting for data&hellip;</div>
+  </section>
+
+  <section class="card">
+    <h2>7-Day Window</h2>
+    <div class="bar-row">
+      <div class="bar" role="progressbar" aria-label="7-day window usage"
+           aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="bar7">
+        <div class="bar-fill" id="fill7"></div>
+      </div>
+      <div class="bar-pct" id="pct7">--%</div>
+    </div>
+    <div class="bar-meta" id="meta7">waiting for data&hellip;</div>
+  </section>
+
+  <section class="card">
+    <h2>Usage Report</h2>
+    <div id="report">waiting for data&hellip;</div>
+    <div id="meta"></div>
+  </section>
+</main>
+
+<script>
+'use strict';
+let usage = null;      // last /api/usage payload
+let fetchedAt = null;  // Date of last successful poll
+
+const $ = id => document.getElementById(id);
+
+function remainingText(iso) {
+  const t = Date.parse(iso);
+  if (!iso || isNaN(t)) return 'unknown';
+  let s = Math.max(0, Math.floor((t - Date.now()) / 1000));
+  const d = Math.floor(s / 86400); s %= 86400;
+  const h = Math.floor(s / 3600); s %= 3600;
+  const m = Math.floor(s / 60);
+  if (d > 0) return d + 'd ' + h + 'h ' + m + 'm';
+  if (h > 0) return h + 'h ' + m + 'm';
+  return m + 'm';
+}
+
+function resetText(iso) {
+  const t = Date.parse(iso);
+  return (!iso || isNaN(t)) ? 'unknown' : new Date(t).toLocaleString();
+}
+
+function isNight() {
+  if (!usage || !usage.ok) return false;
+  const t = Date.parse(usage.resets_at);
+  return usage.utilization >= 100 && !isNaN(t) && Date.now() < t;
+}
+
+function renderBar(fillId, barId, pctId, metaId, pct, resetsAt) {
+  const p = Math.max(0, Math.min(100, pct));
+  const fill = $(fillId);
+  fill.style.width = p + '%';
+  fill.classList.toggle('warn', p >= 60 && p < 85);
+  fill.classList.toggle('hot', p >= 85);
+  $(barId).setAttribute('aria-valuenow', Math.round(p));
+  $(pctId).textContent = Math.round(pct) + '%';
+  $(metaId).innerHTML = 'resets: <b>' + resetText(resetsAt) + '</b><br>' +
+    'remaining: <b>' + remainingText(resetsAt) + '</b>';
+}
+
+function render() {
+  if (!usage || !usage.ok) {
+    $('report').textContent = usage
+      ? 'usage unavailable — could not read Claude OAuth usage (check ~/.claude/.credentials.json)'
+      : 'waiting for data…';
+    return;
+  }
+  renderBar('fill5', 'bar5', 'pct5', 'meta5', usage.utilization, usage.resets_at);
+  renderBar('fill7', 'bar7', 'pct7', 'meta7', usage.week_utilization, usage.week_resets_at);
+
+  const night = isNight();
+  $('report').innerHTML =
+    '<span class="state ' + (night ? 'night' : 'day') + '">' + (night ? 'NIGHT' : 'DAY') + '</span> ' +
+    (night
+      ? '&mdash; the 5-hour window is exhausted; the town sleeps until it resets.'
+      : '&mdash; the 5-hour window has credit left; the town is awake.') +
+    '<br>5h window: <b>' + Math.round(usage.utilization) + '% used</b>, resets ' +
+    resetText(usage.resets_at) + ' (' + remainingText(usage.resets_at) + ' remaining)' +
+    '<br>7d window: <b>' + Math.round(usage.week_utilization) + '% used</b>, resets ' +
+    resetText(usage.week_resets_at) + ' (' + remainingText(usage.week_resets_at) + ' remaining)';
+  $('meta').textContent = fetchedAt
+    ? 'last updated ' + fetchedAt.toLocaleTimeString() + ' • polls every 60s'
+    : '';
+}
+
+async function poll() {
+  try {
+    const r = await fetch('/api/usage');
+    usage = await r.json();
+    fetchedAt = new Date();
+  } catch (e) {
+    usage = usage || { ok: false };
+  }
+  render();
+}
+
+poll();
+setInterval(poll, 60000);   // re-fetch usage every 60s
+setInterval(render, 1000);  // tick the countdowns locally
+</script>
+</body>
+</html>
