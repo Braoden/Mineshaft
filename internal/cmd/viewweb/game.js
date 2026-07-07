@@ -55,9 +55,9 @@ const CLAWD_SIZE = vec2(18 / 16, 18 / 16);
 const WALK_SPEED = 2.8;    // units/sec
 const HQ_X = -7, BUNK_X = -12.5, HQ_DOOR = vec2(-9, FOOT);
 const RIG_X0 = 3, RIG_W = 22;
-const CAM_Y = 2.2, VIEW_H = 17;
-const TUNNEL_FLOOR = -4.2, TUNNEL_CEIL = -1.9;
-const DIRT_BOTTOM = -6.8;
+const CAM_Y = 1.9, VIEW_H = 18.4;
+const TUNNEL_FLOOR = -5.2, TUNNEL_CEIL = -1.7;
+const DIRT_BOTTOM = -8;
 
 const ROLE_ACCESSORY = {
     overseer: 'hat_top', supervisor: 'hat_cap', witness: 'lantern',
@@ -117,7 +117,6 @@ function syncNight() {
     const n = computeNight();
     if (n === night) return;
     night = n;
-    document.getElementById('clock').classList.toggle('night', night);
     if (!night) bedOwner.clear();
     for (const a of agents.values())
         if (!a.departing) a.goTo(a.desiredDest());
@@ -130,7 +129,7 @@ function recomputeLayout() {
         rigLayout.set(name, {
             towerX: base + 1.5, mineX: base + 8,
             refX: base + 15.5, benchX: base + 20,
-            faceX: base + 0.5, // tunnel extends left from the shaft
+            faceX: base - 10, // tunnel extends left from the shaft, under the town
         });
     });
     camMax = Math.max(4, RIG_X0 + rigNames.length * RIG_W - 8);
@@ -149,7 +148,7 @@ function stationFor(a) {
         case 'witness':    return rl ? vec2(rl.towerX + 1.5, FOOT) : HQ_DOOR.copy();
         case 'refinery':   return rl ? vec2(pxX('refinery', rl.refX, BUILD_META.refinery.furnaceX), FOOT) : HQ_DOOR.copy();
         case 'crew':       return rl ? vec2(rl.benchX + a.slot * 1.2, FOOT) : HQ_DOOR.copy();
-        case 'miner':      return rl ? vec2(rl.faceX + 0.8 + a.slot * 1.2, TUNNEL_FLOOR + FOOT) : HQ_DOOR.copy();
+        case 'miner':      return rl ? vec2(rl.faceX + 1.0 + a.slot * 1.4, TUNNEL_FLOOR + FOOT) : HQ_DOOR.copy();
     }
     return HQ_DOOR.copy();
 }
@@ -171,7 +170,7 @@ function bedFor(a) {
         return vec2(pxX('bunkhouse', BUNK_X, bedCenters[slot % bedCenters.length]),
             pxY('bunkhouse', bedRows[level]) + 0.3);
     }
-    return vec2(BUNK_X + 3.2 + (slot - total) * 1.2, 0.2); // floor bedroll
+    return vec2(BUNK_X - 1 + (slot - total) * 1.2, 0.2); // floor bedroll
 }
 
 function releaseBed(a) {
@@ -189,7 +188,7 @@ function hashId(s) {
 // ladder for upper bunks, the HQ tower for the balcony
 function climbLineFor(pos) {
     if (Math.abs(pos.x - BUNK_X) < 3.2)
-        return pxX('bunkhouse', BUNK_X, 81);
+        return pxX('bunkhouse', BUNK_X, BUILD_META.bunkhouse.ladderX);
     return TOWER_X();
 }
 
@@ -361,9 +360,19 @@ class Agent extends EngineObject {
         }
     }
 
+    // true when asleep in an actual bunk (not a floor bedroll / balcony nap)
+    get inBunk() {
+        const total = BUILD_META.bunkhouse.bedCenters.length *
+            BUILD_META.bunkhouse.bedRows.length;
+        for (const [slot, id] of bedOwner)
+            if (id === this.id) return slot < total;
+        return false;
+    }
+
     frameName() {
         const t = time + this.phase;
-        if (this.sleeping) return 'clawd_sleep';
+        if (this.sleeping) // slow breathing
+            return (t * 0.9 | 0) % 2 ? 'clawd_sleep1' : 'clawd_sleep2';
         if (this.walking) return (t * 6 | 0) % 2 ? 'clawd_walk1' : 'clawd_walk2';
         if (this.running && (this.role === 'miner' || this.role === 'crew'))
             return (t * 3 | 0) % 2 ? 'clawd_mine1' : 'clawd_mine2';
@@ -379,8 +388,10 @@ class Agent extends EngineObject {
         const mirror = this.facing < 0;
         const frame = this.frameName();
         drawTile(pos, spriteSize(frame), T(frame), WHITE, 0, mirror);
+        if (this.sleeping && this.inBunk) // tucked in under the blanket
+            drawTile(pos, spriteSize('blanket'), T('blanket'), WHITE, 0, mirror);
         const acc = ROLE_ACCESSORY[this.role];
-        if (acc && frame !== 'clawd_sleep')
+        if (acc && !this.sleeping)
             drawTile(pos, spriteSize(acc), T(acc), WHITE, 0, mirror);
 
         // name tag (hidden while sleeping - bunkmates' tags pile up; hover works)
@@ -388,10 +399,15 @@ class Agent extends EngineObject {
             drawText(this.name, pos.add(vec2(0, -0.75)), 0.32,
                 new Color().setHex(ROLE_LABEL_COLOR[this.role] || '#fff'), 0.05, BLACK);
 
-        if (this.sleeping) {
-            const zt = (time + this.phase) % 2;
-            drawText('z', this.pos.add(vec2(0.7 + zt * 0.2, 0.7 + zt * 0.5)),
-                0.3 + zt * 0.15, hsl(0, 0, 1, 1 - zt / 2));
+        if (this.sleeping) { // drifting pixel Z's
+            for (let j = 0; j < 2; j++) {
+                const zt = (time * 0.55 + this.phase + j * 0.6) % 1.2;
+                const zp = this.pos.add(vec2(
+                    0.55 + zt * 0.35 + Math.sin((time + j * 2) * 2) * 0.08,
+                    0.35 + zt * 1.0));
+                drawTile(zp, spriteSize('zee').scale(0.55 + zt * 0.5), T('zee'),
+                    hsl(0, 0, 1, 0.9 * (1 - zt / 1.2)));
+            }
         }
 
         if (this.bubble) {
@@ -501,14 +517,22 @@ function connect() {
 
 function updateTooltip() {
     const el = document.getElementById('tooltip');
-    if (!hovered || dragging) { el.style.display = 'none'; return; }
-    const st = hovered.sleeping ? 'sleeping' : hovered.walking ? 'walking' : 'working';
-    el.innerHTML = `<span class="t-name"></span><br>`;
-    el.querySelector('.t-name').textContent = `${hovered.name} (${hovered.role})`;
-    el.append(hovered.rig ? `rig: ${hovered.rig} — ${st}` : st);
-    if (hovered.recent[0]) {
-        el.append(document.createElement('br'));
-        el.append(hovered.recent[0]);
+    const overClock = !hovered &&
+        mousePos.distance(clockCenter()) < BUILD_META.hq.clock.r / 16 + 0.25;
+    if ((!hovered && !overClock) || dragging) { el.style.display = 'none'; return; }
+    if (overClock) {
+        el.innerHTML = `<span class="t-name"></span><br>`;
+        el.querySelector('.t-name').textContent = night ? 'resting' : 'usage clock';
+        el.append(clockText());
+    } else {
+        const st = hovered.sleeping ? 'sleeping' : hovered.walking ? 'walking' : 'working';
+        el.innerHTML = `<span class="t-name"></span><br>`;
+        el.querySelector('.t-name').textContent = `${hovered.name} (${hovered.role})`;
+        el.append(hovered.rig ? `rig: ${hovered.rig} — ${st}` : st);
+        if (hovered.recent[0]) {
+            el.append(document.createElement('br'));
+            el.append(hovered.recent[0]);
+        }
     }
     // canvas is letterboxed at a fixed resolution: map canvas px -> page px
     const r = mainCanvas.getBoundingClientRect();
@@ -518,58 +542,39 @@ function updateTooltip() {
     el.style.display = 'block';
 }
 
-// usage clock, top right: day = credits used so far (full dial = night);
-// night = wall-clock time left until the 5h window resets
-function drawClock() {
-    const cv = document.getElementById('clock');
-    const ctx = cv.getContext('2d');
-    const W = cv.width, C = W / 2, R = C - 5;
-    ctx.clearRect(0, 0, W, W);
-
-    ctx.beginPath();
-    ctx.arc(C, C, R, 0, 2 * PI);
-    ctx.fillStyle = night ? '#141026' : '#f5e9d0';
-    ctx.fill();
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = night ? '#f2c94c' : '#5f3d22';
-    ctx.stroke();
-
-    ctx.strokeStyle = night ? '#4a3f6e' : '#b09a70';
-    ctx.lineWidth = 2;
-    for (let i = 0; i < 12; i++) {
-        const a = i * PI / 6;
-        ctx.beginPath();
-        ctx.moveTo(C + Math.cos(a) * (R - 7), C + Math.sin(a) * (R - 7));
-        ctx.lineTo(C + Math.cos(a) * (R - 3), C + Math.sin(a) * (R - 3));
-        ctx.stroke();
-    }
-
-    ctx.font = '14px monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(night ? '\u{1F319}' : '☀️', C, C - R / 2.2);
+// usage clock on the HQ tower: day = credits used so far (full dial =
+// night); night = wall-clock time left until the 5h window resets
+function clockCenter() {
+    const m = BUILD_META.hq.clock;
+    return vec2(pxX('hq', HQ_X, m.cx + 0.5), pxY('hq', m.cyRow + 0.5));
+}
+function clockText() {
+    return usage.ok
+        ? `5h window: ${Math.round(usage.utilization)}% used` +
+          (usage.resets_at ? `, resets ${new Date(resetsAtMs()).toLocaleTimeString()}` : '')
+        : 'usage unavailable';
+}
+function drawTowerClock() {
+    const m = BUILD_META.hq.clock;
+    const c = clockCenter(), r = m.r / 16;
+    if (night) // dim the face after hours
+        drawRect(c, vec2(r * 2.1, r * 2.1), hsl(0.72, 0.4, 0.1, 0.55));
 
     let frac;
     if (night)
         frac = clamp((resetsAtMs() - Date.now()) / (5 * 3600 * 1000), 0, 1);
     else
         frac = clamp(usage.utilization / 100, 0, 1);
-    const ang = frac * 2 * PI - PI / 2;
-    ctx.beginPath();
-    ctx.moveTo(C, C);
-    ctx.lineTo(C + Math.cos(ang) * R * 0.68, C + Math.sin(ang) * R * 0.68);
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = night ? '#f2c94c' : '#b5482f';
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(C, C, 3, 0, 2 * PI);
-    ctx.fillStyle = ctx.strokeStyle;
-    ctx.fill();
-
-    cv.title = usage.ok
-        ? `5h window: ${Math.round(usage.utilization)}% used` +
-          (usage.resets_at ? `, resets ${new Date(resetsAtMs()).toLocaleTimeString()}` : '')
-        : 'usage unavailable';
+    // clockwise from 12: screen-up y means x=sin, y=cos
+    const a = frac * 2 * PI;
+    const dir = vec2(Math.sin(a), Math.cos(a));
+    const col = night ? hsl(0.13, 0.85, 0.62) : hsl(0.02, 0.6, 0.42);
+    for (let k = 1; k <= 5; k++) // chunky stepped hand
+        drawRect(c.add(dir.scale(k / 5 * r * 0.8)), vec2(0.07, 0.07), col);
+    drawRect(c, vec2(0.1, 0.1), col);
+    // day/night pip below 12 o'clock
+    drawRect(c.add(vec2(0, r * 0.45)), vec2(0.1, 0.1),
+        night ? hsl(0, 0, 0.85) : hsl(0.13, 0.9, 0.6));
 }
 
 function showPanel(a) {
@@ -651,48 +656,121 @@ function gameUpdate() {
 
 function gameUpdatePost() {
     syncNight(); // flips day/night locally when resets_at passes
-    drawClock();
 }
 
-function drawBuilding(name, x, label, labelColor) {
+function drawBuilding(name, x) {
     const size = spriteSize(name);
     drawTile(vec2(x, size.y / 2), size, T(name));
-    if (label)
-        drawText(label, vec2(x, size.y + 0.35), 0.38,
-            labelColor || hsl(0, 0, 0.85), 0.05, BLACK);
+}
+
+// ground-standing decoration sprite
+function deco(name, x) {
+    drawTile(vec2(x, spriteSize(name).y / 2), spriteSize(name), T(name));
+}
+
+// street lamps: sprites drawn in gameRender, halos drawn in
+// gameRenderPost so they sit above the night veil
+let lampXs = [];
+function drawLamp(x) {
+    deco('lamp', x);
+    lampXs.push(x);
+}
+function drawLampHalos(nf) {
+    if (nf <= 0.35) return;
+    const ly = pxY('lamp', BUILD_META.lamp.lightRow);
+    const glow = (nf - 0.35) / 0.65;
+    for (const x of lampXs)
+        for (const [s, a] of [[2.4, 0.07], [1.5, 0.13], [0.8, 0.22]])
+            drawRect(vec2(x, ly), vec2(s, s), hsl(0.12, 1, 0.75, a * glow));
+}
+
+// wooden signpost with the rig name
+function drawSign(x, name) {
+    deco('sign', x);
+    drawText(name, vec2(x, pxY('sign', 6)),
+        Math.min(0.3, 2.0 / Math.max(1, name.length)),
+        hsl(0.08, 0.55, 0.16));
 }
 
 // underground tunnel + shaft for one rig
 function drawTunnel(rl) {
     const dark = new Color().setHex('#241813');
+    const darker = new Color().setHex('#170e08');
     const wood = new Color().setHex('#5f3d22');
+    const woodL = new Color().setHex('#8a5a33');
     const tunnelH = TUNNEL_CEIL - TUNNEL_FLOOR;
     const midY = (TUNNEL_CEIL + TUNNEL_FLOOR) / 2;
 
-    // shaft from surface to tunnel
-    drawRect(vec2(rl.mineX, (TUNNEL_CEIL + 0.1) / 2), vec2(1.1, -TUNNEL_CEIL + 0.1), dark);
+    // shaft from surface to tunnel, timber-lined
+    drawRect(vec2(rl.mineX, (TUNNEL_CEIL + 0.1) / 2), vec2(1.15, -TUNNEL_CEIL + 0.1), dark);
+    drawRect(vec2(rl.mineX - 0.62, TUNNEL_CEIL / 2), vec2(0.12, -TUNNEL_CEIL), wood);
+    drawRect(vec2(rl.mineX + 0.62, TUNNEL_CEIL / 2), vec2(0.12, -TUNNEL_CEIL), wood);
     // ladder in the shaft
     for (let y = TUNNEL_CEIL + 0.2; y < 0; y += 0.35)
-        drawRect(vec2(rl.mineX, y), vec2(0.6, 0.07), wood);
+        drawRect(vec2(rl.mineX, y), vec2(0.6, 0.07), woodL);
 
     // tunnel gallery
-    const x0 = rl.faceX - 0.3, x1 = rl.mineX + 0.55;
+    const x0 = rl.faceX - 0.4, x1 = rl.mineX + 0.6;
     drawRect(vec2((x0 + x1) / 2, midY), vec2(x1 - x0, tunnelH), dark);
-    // support beams
-    for (let bx = rl.faceX + 1.2; bx < rl.mineX - 0.8; bx += 2) {
-        drawRect(vec2(bx, midY), vec2(0.18, tunnelH), wood);
-        drawRect(vec2(bx, TUNNEL_CEIL - 0.08), vec2(2, 0.16), wood);
+
+    // side alcoves with stashed barrels
+    for (const ax of [rl.faceX + 4.5, rl.faceX + 11.5]) {
+        drawRect(vec2(ax, TUNNEL_FLOOR + 0.65), vec2(1.8, 1.3), darker);
+        drawTile(vec2(ax + 0.35, TUNNEL_FLOOR + 0.38), spriteSize('barrel').scale(0.8),
+            T('barrel'));
+        drawRect(vec2(ax - 0.8, TUNNEL_FLOOR + 0.65), vec2(0.12, 1.3), wood);
+        drawRect(vec2(ax + 0.8, TUNNEL_FLOOR + 0.65), vec2(0.12, 1.3), wood);
     }
+
+    // support frames: posts + caps, alternating timber tones
+    let flip = false;
+    for (let bx = rl.faceX + 1.6; bx < rl.mineX - 0.9; bx += 2.2, flip = !flip) {
+        const c = flip ? wood : woodL;
+        drawRect(vec2(bx, midY), vec2(0.18, tunnelH), c);
+        drawRect(vec2(bx, TUNNEL_CEIL - 0.08), vec2(2.1, 0.16), c);
+        drawRect(vec2(bx, TUNNEL_CEIL - 0.24), vec2(0.5, 0.16), c); // corbel
+    }
+
+    // stalactites + ore veins (deterministic)
+    for (let i = 0; i < 9; i++) {
+        const sx = rl.faceX + 1 + ((i * 2.13 + 0.7) % (x1 - x0 - 2));
+        if (i % 2) {
+            drawRect(vec2(sx, TUNNEL_CEIL - 0.14), vec2(0.16, 0.28), hsl(0, 0, 0.22));
+            drawRect(vec2(sx, TUNNEL_CEIL - 0.34), vec2(0.08, 0.14), hsl(0, 0, 0.18));
+        } else {
+            const vy = i % 4 ? TUNNEL_FLOOR + 0.3 : TUNNEL_CEIL - 0.45;
+            drawRect(vec2(sx, vy), vec2(0.14, 0.14), hsl(0.13, 0.9, 0.55, 0.9));
+            drawRect(vec2(sx + 0.18, vy - 0.1), vec2(0.09, 0.09), hsl(0.13, 0.9, 0.62, 0.9));
+        }
+    }
+
+    // hanging lanterns with glow (mines are always dark)
+    for (let lx = rl.faceX + 2.6; lx < rl.mineX - 1.2; lx += 3.6) {
+        drawRect(vec2(lx, TUNNEL_CEIL - 0.16), vec2(0.08, 0.32), hsl(0, 0, 0.4));
+        drawRect(vec2(lx, TUNNEL_CEIL - 0.42), vec2(0.26, 0.28), hsl(0.12, 0.9, 0.65));
+        for (const [s, a] of [[1.6, 0.06], [0.9, 0.12]])
+            drawRect(vec2(lx, TUNNEL_CEIL - 0.45), vec2(s, s), hsl(0.12, 1, 0.75, a));
+    }
+
     // rails + ties
     drawRect(vec2((x0 + x1) / 2, TUNNEL_FLOOR + 0.08), vec2(x1 - x0, 0.06), hsl(0, 0, 0.45));
     for (let tx = x0 + 0.3; tx < x1; tx += 0.5)
         drawRect(vec2(tx, TUNNEL_FLOOR + 0.05), vec2(0.3, 0.05), wood);
 
+    // minecart parked mid-tunnel + rubble near the face
+    drawTile(vec2(rl.faceX + 6.5, TUNNEL_FLOOR + 0.11 + spriteSize('orecart').y / 2),
+        spriteSize('orecart'), T('orecart'));
+    drawTile(vec2(rl.faceX + 2.9, TUNNEL_FLOOR + spriteSize('orepile').y / 2),
+        spriteSize('orepile'), T('orepile'));
+    drawRect(vec2(rl.faceX + 1.2, TUNNEL_FLOOR + 0.12), vec2(0.5, 0.24), hsl(0, 0, 0.3));
+
     // rock face at the end with ore sparkles
     drawRect(vec2(rl.faceX - 0.15, midY), vec2(0.5, tunnelH), hsl(0, 0, 0.35));
     drawRect(vec2(rl.faceX + 0.05, midY + 0.5), vec2(0.25, 0.5), hsl(0, 0, 0.3));
+    drawRect(vec2(rl.faceX + 0.02, midY - 1.1), vec2(0.3, 0.4), hsl(0, 0, 0.28));
     drawRect(vec2(rl.faceX, midY - 0.6), vec2(0.14, 0.14), hsl(0.13, 0.9, 0.6));
     drawRect(vec2(rl.faceX + 0.1, midY + 0.1), vec2(0.1, 0.1), hsl(0.13, 0.9, 0.65));
+    drawRect(vec2(rl.faceX + 0.05, midY + 1.0), vec2(0.12, 0.12), hsl(0.13, 0.9, 0.58));
 }
 
 function mixHex(hexA, hexB, p) {
@@ -702,6 +780,7 @@ function mixHex(hexA, hexB, p) {
 
 function gameRender() {
     const nf = nightFrac();
+    lampXs = [];
     // sky: day -> dusk -> night with credit burn
     drawRectGradient(vec2(camX, CAM_Y + 4), vec2(200, VIEW_H + 8),
         mixHex('#3a6a9e', '#0d0a1f', nf), mixHex('#a8c8d8', '#2a1f3d', nf));
@@ -719,14 +798,20 @@ function gameRender() {
             hsl(0, 0, 1, alpha));
     }
 
-    // ground
+    // ground with rock strata
     drawRect(vec2(camX, DIRT_BOTTOM / 2), vec2(200, -DIRT_BOTTOM),
         mixHex('#4a3628', '#241a12', nf * 0.6));
+    for (const [sy, hex] of [[-2.3, '#413023'], [-4.1, '#3a2a1e'], [-6.2, '#31231a']])
+        drawRect(vec2(camX, sy), vec2(200, 0.9), mixHex(hex, '#1c130d', nf * 0.6));
     drawRect(vec2(camX, 0.06), vec2(200, 0.24), mixHex('#3d7038', '#1e3a1c', nf * 0.6));
-    // pebbles (deterministic scatter)
+    // buried pebbles + deep gold flecks (deterministic scatter)
     for (let i = 0; i < 120; i++) {
         const x = -34 + i * 1.63 + Math.sin(i * 7.3) * 0.7;
-        drawRect(vec2(x, -0.5 - (i % 5) * 1.3), vec2(0.14, 0.1), hsl(0, 0, 0.45, 0.4));
+        const y = -0.5 - (i % 6) * 1.25;
+        if (i % 9 === 4 && y < -4)
+            drawRect(vec2(x, y), vec2(0.12, 0.12), hsl(0.13, 0.8, 0.5, 0.5));
+        else
+            drawRect(vec2(x, y), vec2(0.14 + (i % 3) * 0.05, 0.1), hsl(0, 0, 0.45, 0.4));
     }
     // clouds
     for (let i = 0; i < 5; i++) {
@@ -736,21 +821,50 @@ function gameRender() {
             T('cloud'), hsl(0, 0, 1, 0.75));
     }
 
-    // town buildings
-    drawBuilding('bunkhouse', BUNK_X, 'bunkhouse');
-    drawBuilding('hq', HQ_X, 'HQ', hsl(0.13, 0.8, 0.7));
+    // town: buildings back-to-front, then street furniture
+    deco('watertower', -21.6);
+    deco('store', -18.3);
+    deco('pine', -16.6);
+    drawBuilding('bunkhouse', BUNK_X);
+    deco('rock2', -9.4);
+    drawBuilding('hq', HQ_X);
+    drawTowerClock();
+    deco('fence', -24.3);
+    deco('fence', -22.8);
+    drawLamp(-15.7);
+    deco('barrel', -4.7);
+    deco('crate', -4.15);
+    deco('well', -3.3);
+    deco('wagon', -1.7);
+    drawLamp(-0.4);
+    deco('tree', 1.4);
+
+    // scattered greenery across town + rigs (deterministic)
+    const flora = ['grass', 'grass2', 'flower_p', 'grass', 'flower_y', 'grass2', 'bush'];
+    for (let i = 0; i < 46; i++) {
+        const x = -23.5 + i * 1.73 + Math.sin(i * 5.1) * 0.9;
+        if (x > camMax + 12) break;
+        deco(flora[i % flora.length], x);
+    }
 
     // rig blocks
     for (const name of rigNames) {
         const rl = rigLayout.get(name);
         drawTunnel(rl);
         drawBuilding('tower', rl.towerX);
-        drawBuilding('mine', rl.mineX, name, hsl(0.13, 0.8, 0.7));
+        drawBuilding('mine', rl.mineX);
         drawBuilding('refinery', rl.refX);
-        drawTile(vec2(rl.benchX, spriteSize('bench').y / 2), spriteSize('bench'), T('bench'));
-        // decorations
-        drawTile(vec2(rl.mineX + 4, spriteSize('tree').y / 2), spriteSize('tree'), T('tree'));
-        drawTile(vec2(rl.towerX - 2.2, spriteSize('rock').y / 2), spriteSize('rock'), T('rock'));
+        deco('bench', rl.benchX);
+        // props + signage
+        drawSign(rl.mineX - 3.2, name);
+        deco('toolrack', rl.towerX + 1.9);
+        deco('orepile', rl.mineX - 1.8);
+        deco('orecart', rl.mineX + 1.9);
+        deco('shed', rl.mineX + 3.3);
+        deco('tree', rl.refX - 2.8);
+        deco('pine', rl.refX + 3.1);
+        drawLamp(rl.benchX + 1.5);
+        deco('rock', rl.towerX - 2.2);
 
         // refinery chimney smoke while running
         const ref = [...agents.values()].find(a => a.rig === name && a.role === 'refinery');
@@ -758,12 +872,14 @@ function gameRender() {
             smoke(vec2(pxX('refinery', rl.refX, BUILD_META.refinery.chimneyX),
                 spriteSize('refinery').y + 0.2));
     }
-    // town trees
-    drawTile(vec2(BUNK_X - 4.5, spriteSize('tree').y / 2), spriteSize('tree'), T('tree'));
-    drawTile(vec2(HQ_X - 5.5, spriteSize('rock').y / 2), spriteSize('rock'), T('rock'));
 }
 
 function gameRenderPost() {
+    // night veil dims the whole town; lamp halos punch through above it
+    const nf = nightFrac();
+    if (nf > 0)
+        drawRect(vec2(camX, CAM_Y), vec2(200, VIEW_H + 8), hsl(0.72, 0.5, 0.06, nf * 0.32));
+    drawLampHalos(nf);
     if (hovered && !dragging)
         drawRect(hovered.pos.add(vec2(0, -0.6)), vec2(1.3, 0.08), hsl(0.13, 1, 0.7, 0.8));
 }
