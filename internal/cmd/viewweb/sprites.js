@@ -108,8 +108,7 @@ function makeClawdSleep(breath) {
     rect(g, 1, top, 16, 17 - top, 'o');
     rect(g, 1, 16, 16, 1, 'O');
     g[top][1] = '.'; g[top][16] = '.';       // rounded shoulders
-    rect(g, 3, top + 2, 2, 1, 'k');          // closed eyes (head at left)
-    rect(g, 7, top + 2, 2, 1, 'k');
+    rect(g, 3, top + 2, 2, 1, 'k');          // one closed eye (lying on its side)
     rect(g, 5, 17, 2, 1, 'O');               // tucked feet
     rect(g, 11, 17, 2, 1, 'O');
     return gridRows(g);
@@ -135,7 +134,10 @@ function makeAccessory(kind) {
         case 'lantern':
             rect(g, 0, 10, 3, 1, 'm'); rect(g, 0, 11, 3, 2, 'y'); rect(g, 0, 13, 3, 1, 'm');
             break;
-        case 'apron':      rect(g, 4, 9, 10, 4, 'b'); rect(g, 5, 12, 8, 1, 'B'); break;
+        case 'wrench': // open-end wrench held up in the right hand
+            rect(g, 14, 5, 1, 2, 'm'); rect(g, 16, 5, 1, 2, 'm');
+            rect(g, 14, 7, 3, 1, 'm'); rect(g, 15, 8, 2, 6, 'M');
+            break;
     }
     return gridRows(g);
 }
@@ -164,17 +166,6 @@ cloud: [
 '..cccccccccccccc..',
 '.cccccccccccccccc.',
 '..cccccccccccccc..',
-],
-
-moon: [
-'...cccc..',
-'..cccccc.',
-'.ccmccccc',
-'.cccccmcc',
-'.cccccccc',
-'.cmcccccc',
-'..cccccc.',
-'...cccc..',
 ],
 
 bead: [
@@ -594,39 +585,50 @@ function buildBunkhouse() {
     return gridRows(g);
 }
 
-// Mineshaft headframe: 48x56, timber-lined shaft collar at bottom center.
+// Mineshaft headframe: 52x60, sloped A-frame legs, spoked sheave wheel,
+// cross bracing, timber-lined shaft collar at bottom center.
 function buildMine() {
-    const g = makeGrid(48, 56);
-    // legs
-    rect(g, 4, 12, 4, 44, 'n');
-    rect(g, 40, 12, 4, 44, 'n');
-    rect(g, 4, 12, 1, 44, 'h');
-    rect(g, 40, 12, 1, 44, 'h');
-    // crossbars + braces
-    rect(g, 8, 22, 32, 3, 'n');
-    rect(g, 8, 22, 32, 1, 'h');
-    rect(g, 8, 38, 32, 3, 'n');
-    rect(g, 8, 38, 32, 1, 'h');
-    rect(g, 12, 25, 2, 13, 'N');
-    rect(g, 34, 25, 2, 13, 'N');
-    // wheel house
-    rect(g, 12, 0, 24, 3, 'N');
-    rect(g, 12, 0, 24, 1, 'h');
-    rect(g, 14, 3, 20, 9, 'n');
-    rect(g, 14, 7, 20, 1, 'N');
-    rect(g, 18, 4, 12, 7, 'd');
-    rect(g, 20, 5, 8, 6, 's');     // wheel
-    rect(g, 23, 7, 2, 2, 'S');     // hub
+    const g = makeGrid(52, 60);
+    // wheel house on top
+    rect(g, 10, 0, 32, 3, 'N');    // roof
+    rect(g, 10, 0, 32, 1, 'h');
+    rect(g, 12, 3, 28, 11, 'n');   // housing
+    rect(g, 17, 4, 18, 9, 'd');    // open front
+    // sheave wheel with spokes
+    disc(g, 26, 8, 5, 's');
+    disc(g, 26, 8, 4, 'd');
+    rect(g, 22, 8, 9, 1, 's');
+    rect(g, 26, 4, 1, 9, 's');
+    rect(g, 25, 7, 3, 3, 'S');     // hub
+    // sloped legs (batter inward toward the housing)
+    for (let j = 0; j < 46; j += 2) {
+        const dx = Math.round(12 * j / 46);
+        rect(g, 14 - dx, 14 + j, 4, 2, 'n');
+        rect(g, 14 - dx, 14 + j, 1, 2, 'h');
+        rect(g, 34 + dx, 14 + j, 4, 2, 'n');
+        rect(g, 37 + dx, 14 + j, 1, 2, 'N');
+    }
+    // cross bracing between the legs
+    rect(g, 12, 26, 28, 2, 'n');
+    rect(g, 12, 26, 28, 1, 'h');
+    rect(g, 8, 40, 36, 2, 'n');
+    rect(g, 8, 40, 36, 1, 'h');
+    for (let i = 0; i < 12; i++) {  // X brace
+        rect(g, 14 + i * 2, 28 + i, 2, 1, 'N');
+        rect(g, 36 - i * 2, 28 + i, 2, 1, 'N');
+    }
     // cable from wheel into the shaft
-    rect(g, 23, 12, 1, 38, 'm');
+    rect(g, 25, 13, 1, 33, 'm');
     // warning sign on left leg
-    rect(g, 4, 32, 4, 4, 'y');
-    rect(g, 5, 33, 2, 2, 'k');
-    // shaft collar
-    rect(g, 13, 40, 22, 2, 'n');
-    rect(g, 15, 42, 18, 14, 'd');
-    rect(g, 13, 42, 2, 14, 'N');
-    rect(g, 33, 42, 2, 14, 'N');
+    rect(g, 3, 46, 5, 5, 'y');
+    rect(g, 4, 47, 2, 3, 'k');
+    // shaft collar with hazard-striped lintel
+    rect(g, 15, 44, 22, 2, 'n');
+    for (let x = 16; x < 36; x += 4) rect(g, x, 44, 2, 2, 'y');
+    rect(g, 17, 46, 18, 14, 'd');
+    rect(g, 15, 46, 2, 14, 'N');
+    rect(g, 35, 46, 2, 14, 'N');
+    rect(g, 25, 46, 1, 10, 'm');   // cable continues down
     return gridRows(g);
 }
 
@@ -730,7 +732,7 @@ const SPRITE_DATA = {
     hat_top: makeAccessory('hat_top'),
     hat_cap: makeAccessory('hat_cap'),
     lantern: makeAccessory('lantern'),
-    apron: makeAccessory('apron'),
+    wrench: makeAccessory('wrench'),
     ...HAND_SPRITES,
     tree: buildTree(),
     pine: buildPine(),

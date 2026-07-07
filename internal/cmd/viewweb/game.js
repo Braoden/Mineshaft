@@ -61,7 +61,7 @@ const DIRT_BOTTOM = -8;
 
 const ROLE_ACCESSORY = {
     overseer: 'hat_top', supervisor: 'hat_cap', witness: 'lantern',
-    refinery: 'apron', crew: 'hat_hard_g', miner: 'hat_hard',
+    refinery: 'wrench', crew: 'hat_hard_g', miner: 'hat_hard',
 };
 const ROLE_LABEL_COLOR = {
     overseer: '#f2c94c', supervisor: '#4a78b5', witness: '#5ad0d0',
@@ -701,12 +701,12 @@ function drawTunnel(rl) {
     const tunnelH = TUNNEL_CEIL - TUNNEL_FLOOR;
     const midY = (TUNNEL_CEIL + TUNNEL_FLOOR) / 2;
 
-    // shaft from surface to tunnel, timber-lined
+    // shaft from surface to tunnel, timber-lined all the way down
     drawRect(vec2(rl.mineX, (TUNNEL_CEIL + 0.1) / 2), vec2(1.15, -TUNNEL_CEIL + 0.1), dark);
-    drawRect(vec2(rl.mineX - 0.62, TUNNEL_CEIL / 2), vec2(0.12, -TUNNEL_CEIL), wood);
-    drawRect(vec2(rl.mineX + 0.62, TUNNEL_CEIL / 2), vec2(0.12, -TUNNEL_CEIL), wood);
-    // ladder in the shaft
-    for (let y = TUNNEL_CEIL + 0.2; y < 0; y += 0.35)
+    drawRect(vec2(rl.mineX - 0.62, TUNNEL_FLOOR / 2), vec2(0.12, -TUNNEL_FLOOR), wood);
+    drawRect(vec2(rl.mineX + 0.62, TUNNEL_FLOOR / 2), vec2(0.12, -TUNNEL_FLOOR), wood);
+    // ladder spans surface to tunnel floor
+    for (let y = TUNNEL_FLOOR + 0.25; y < 0; y += 0.35)
         drawRect(vec2(rl.mineX, y), vec2(0.6, 0.07), woodL);
 
     // tunnel gallery
@@ -785,7 +785,7 @@ function gameRender() {
     drawRectGradient(vec2(camX, CAM_Y + 4), vec2(200, VIEW_H + 8),
         mixHex('#3a6a9e', '#0d0a1f', nf), mixHex('#a8c8d8', '#2a1f3d', nf));
 
-    // stars + moon at night
+    // stars at night
     if (nf > 0.6) {
         const alpha = (nf - 0.6) / 0.4;
         for (let i = 0; i < 40; i++) {
@@ -794,8 +794,6 @@ function gameRender() {
             const tw = 0.5 + 0.5 * Math.sin(time * 2 + i);
             drawRect(vec2(sx, sy), vec2(0.09, 0.09), hsl(0, 0, 1, alpha * tw * 0.8));
         }
-        drawTile(vec2(camX + 9, 8.6), spriteSize('moon').scale(1.5), T('moon'),
-            hsl(0, 0, 1, alpha));
     }
 
     // ground with rock strata
