@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="/static/dashboard.css">
 </head>
 <body>
+    <!-- Left nav bar (placeholder, outside the htmx-refreshed area) -->
+    <nav class="sidebar" id="sidebar"></nav>
     <div class="dashboard" id="dashboard-main" hx-get="/" hx-trigger="sse:dashboard-update, every 30s [!window.pauseRefresh && !window.sseConnected]" hx-swap="morph:outerHTML" hx-ext="morph">
         <header>
             <pre class="ascii-title">  __  __    __   _____ __  _   _  __  _    ___ __  __  _ _____ ___  __  _      ______ __  _ _____ ___ ___ 

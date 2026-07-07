@@ -27,7 +27,7 @@
             font-family: 'SF Mono', 'Menlo', 'Monaco', 'Consolas', monospace;
             background: var(--bg-dark);
             color: var(--text-primary);
-            padding: 16px;
+            padding: 16px 16px 16px 72px; /* left clears the fixed sidebar */
             min-height: 100vh;
             font-size: 13px;
             line-height: 1.5;
@@ -81,13 +81,25 @@
             content: "○ ";
         }
 
-        /* Grid layout for panels - auto-fit responsive */
+        /* Grid layout for panels - fixed-width columns so panel borders don't vary with screen size */
         .panels {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fill, 480px);
             gap: 16px;
             margin-bottom: 16px;
             width: 100%;
+        }
+
+        /* Left nav bar (placeholder for future navigation) */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 56px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            z-index: 200;
         }
 
         .panel {
@@ -2386,7 +2398,7 @@
         /* Small screens / phones (< 600px) */
         @media (max-width: 600px) {
             body {
-                padding: 8px;
+                padding: 8px 8px 8px 64px;
                 font-size: 12px;
             }
 
