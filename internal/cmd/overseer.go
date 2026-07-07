@@ -150,6 +150,17 @@ func getOverseerSessionName() string {
 	return overseer.SessionName()
 }
 
+// rigQuickRef is shown on overseer start/attach so the general rig
+// workflow commands are always at hand.
+const rigQuickRef = `
+⚡ Rig workflow quick reference
+  Wake:      ms rig list · ms rig undock <rig> · ms rig start <rig>
+  Dispatch:  bd create --repo <rig> "task" · bd ready · ms sling <bead> <rig>
+  Watch:     ms status · ms minecart list · ms miner list <rig> · ms view
+  Intervene: ms nudge <target> "msg" · ms miner nuke <rig>/<name> --force
+  Sleep:     ms rig park <rig> (pause) · ms rig dock <rig> (done)
+`
+
 func runOverseerStart(cmd *cobra.Command, args []string) error {
 	mgr, err := getOverseerManager()
 	if err != nil {
@@ -167,6 +178,7 @@ func runOverseerStart(cmd *cobra.Command, args []string) error {
 	fmt.Printf("%s Overseer session started. Attach with: %s\n",
 		style.Bold.Render("✓"),
 		style.Dim.Render("ms overseer attach"))
+	fmt.Print(rigQuickRef)
 
 	return nil
 }
@@ -194,6 +206,10 @@ func runOverseerAttach(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
+	// Printed before tmux takes the screen; still in the outer terminal
+	// scrollback after detach.
+	fmt.Print(rigQuickRef)
 
 	townRoot, err := workspace.FindFromCwdOrError()
 	if err != nil {
