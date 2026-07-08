@@ -21,6 +21,7 @@ import (
 	"github.com/steveyegge/mineshaft/internal/config"
 	"github.com/steveyegge/mineshaft/internal/constants"
 	"github.com/steveyegge/mineshaft/internal/doltserver"
+	"github.com/steveyegge/mineshaft/internal/formula"
 	"github.com/steveyegge/mineshaft/internal/git"
 	"github.com/steveyegge/mineshaft/internal/hooks"
 	"github.com/steveyegge/mineshaft/internal/templates/commands"
@@ -1147,12 +1148,22 @@ func (m *Manager) InitBeads(rigPath, prefix, rigName string) error {
 		if err := os.WriteFile(redirectPath, []byte("overseer/rig/.beads\n"), 0644); err != nil {
 			return fmt.Errorf("creating redirect file: %w", err)
 		}
+		// Provision embedded formulas into the canonical beads dir so bd can
+		// resolve them when routed here (e.g. bd mol bond during ms sling).
+		if _, err := formula.ProvisionFormulas(filepath.Join(rigPath, "overseer", "rig")); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: provisioning formulas: %v\n", err)
+		}
 		return nil
 	}
 
 	// No tracked beads - create local database
 	if err := os.MkdirAll(beadsDir, 0755); err != nil {
 		return err
+	}
+
+	// Provision embedded formulas so bd can resolve them when routed here.
+	if _, err := formula.ProvisionFormulas(rigPath); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: provisioning formulas: %v\n", err)
 	}
 
 	// Pin bd to the intended .beads directory/database through the shared

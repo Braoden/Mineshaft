@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/steveyegge/mineshaft/internal/beads"
 	"github.com/steveyegge/mineshaft/internal/cli"
 	"github.com/steveyegge/mineshaft/internal/config"
 	"github.com/steveyegge/mineshaft/internal/doctor"
@@ -386,57 +388,100 @@ func upgradeHooksSync(townRoot string) upgradeResult {
 	return result
 }
 
-// upgradeFormulas updates formulas from embedded copies.
+// formulaBeadsParents returns the parent dirs of every .beads that should
+// carry embedded formulas: the town root plus each registered rig's canonical
+// beads location (following redirects, e.g. <rig>/overseer/rig for tracked beads).
+func formulaBeadsParents(townRoot string) []string {
+	parents := []string{townRoot}
+	rigsConfig, err := config.LoadRigsConfig(filepath.Join(townRoot, "overseer", "rigs.json"))
+	if err != nil {
+		return parents
+	}
+	var rigNames []string
+	for name := range rigsConfig.Rigs {
+		rigNames = append(rigNames, name)
+	}
+	sort.Strings(rigNames)
+	for _, name := range rigNames {
+		rigPath := filepath.Join(townRoot, name)
+		if _, err := os.Stat(rigPath); err != nil {
+			continue
+		}
+		parents = append(parents, filepath.Dir(beads.ResolveBeadsDir(rigPath)))
+	}
+	return parents
+}
+
+// upgradeFormulas updates formulas from embedded copies, in town-level beads
+// and in every registered rig's beads (mi-95z: rigs need formulas too, or
+// bd formula resolution fails when routed to rig-level beads).
 func upgradeFormulas(townRoot string) upgradeResult {
 	result := upgradeResult{step: "Formulas"}
 
 	fmt.Printf("\n  %s %s\n", style.Bold.Render("5."), "Updating formulas from embedded copies...")
 
+	parents := formulaBeadsParents(townRoot)
+
 	if upgradeDryRun {
 		// In dry-run mode, just check health
-		report, err := formula.CheckFormulaHealth(townRoot)
-		if err != nil {
-			result.details = append(result.details, fmt.Sprintf("health check error: %v", err))
-			fmt.Printf("     %s Could not check formulas: %v\n", style.ErrorPrefix, err)
-			return result
+		var ok, outdated, missing, newCount, untracked, modified int
+		for _, parent := range parents {
+			report, err := formula.CheckFormulaHealth(parent)
+			if err != nil {
+				result.details = append(result.details, fmt.Sprintf("health check error: %v", err))
+				fmt.Printf("     %s Could not check formulas: %v\n", style.ErrorPrefix, err)
+				return result
+			}
+			ok += report.OK
+			outdated += report.Outdated
+			missing += report.Missing
+			newCount += report.New
+			untracked += report.Untracked
+			modified += report.Modified
 		}
 
-		needsUpdate := report.Outdated + report.Missing + report.New + report.Untracked
+		needsUpdate := outdated + missing + newCount + untracked
 		if needsUpdate == 0 {
-			fmt.Printf("     %s %d formulas %s\n", style.SuccessPrefix, report.OK, style.Dim.Render("up-to-date"))
+			fmt.Printf("     %s %d formulas %s\n", style.SuccessPrefix, ok, style.Dim.Render("up-to-date"))
 			return result
 		}
 
 		result.changed = needsUpdate
-		if report.Outdated > 0 {
-			result.details = append(result.details, fmt.Sprintf("%d would update", report.Outdated))
+		if outdated > 0 {
+			result.details = append(result.details, fmt.Sprintf("%d would update", outdated))
 		}
-		if report.Missing > 0 {
-			result.details = append(result.details, fmt.Sprintf("%d would reinstall", report.Missing))
+		if missing > 0 {
+			result.details = append(result.details, fmt.Sprintf("%d would reinstall", missing))
 		}
-		if report.New > 0 {
-			result.details = append(result.details, fmt.Sprintf("%d would install", report.New))
+		if newCount > 0 {
+			result.details = append(result.details, fmt.Sprintf("%d would install", newCount))
 		}
-		if report.Modified > 0 {
-			result.skipped = report.Modified
-			result.details = append(result.details, fmt.Sprintf("%d locally modified (skipped)", report.Modified))
+		if modified > 0 {
+			result.skipped = modified
+			result.details = append(result.details, fmt.Sprintf("%d locally modified (skipped)", modified))
 		}
 
 		fmt.Printf("     %s formulas: %s\n", style.WarningPrefix, style.Dim.Render(strings.Join(result.details, ", ")))
 		return result
 	}
 
-	updated, skipped, reinstalled, err := formula.UpdateFormulas(townRoot)
-	if err != nil {
-		result.details = append(result.details, fmt.Sprintf("update error: %v", err))
-		fmt.Printf("     %s Could not update formulas: %v\n", style.ErrorPrefix, err)
-		return result
+	var updated, skipped, reinstalled int
+	for _, parent := range parents {
+		u, s, r, err := formula.UpdateFormulas(parent)
+		if err != nil {
+			result.details = append(result.details, fmt.Sprintf("update error (%s): %v", parent, err))
+			fmt.Printf("     %s Could not update formulas in %s: %v\n", style.ErrorPrefix, parent, err)
+			continue
+		}
+		updated += u
+		skipped += s
+		reinstalled += r
 	}
 
 	result.changed = updated + reinstalled
 	result.skipped = skipped
 
-	if result.changed == 0 && result.skipped == 0 {
+	if result.changed == 0 && result.skipped == 0 && len(result.details) == 0 {
 		// Check total count for display
 		report, _ := formula.CheckFormulaHealth(townRoot)
 		count := 0

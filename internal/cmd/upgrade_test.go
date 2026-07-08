@@ -197,5 +197,61 @@ func TestUpgradeBranchCheckExempt(t *testing.T) {
 	}
 }
 
+func TestFormulaBeadsParents(t *testing.T) {
+	tmpDir := t.TempDir()
+	overseerDir := filepath.Join(tmpDir, "overseer")
+	if err := os.MkdirAll(overseerDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Rig "tracked" has a redirect to overseer/rig/.beads (tracked beads).
+	trackedBeads := filepath.Join(tmpDir, "tracked", ".beads")
+	if err := os.MkdirAll(trackedBeads, 0755); err != nil {
+		t.Fatal(err)
+	}
+	trackedCanonical := filepath.Join(tmpDir, "tracked", "overseer", "rig", ".beads")
+	if err := os.MkdirAll(trackedCanonical, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(trackedBeads, "redirect"), []byte("overseer/rig/.beads\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Rig "local" has its own .beads (no redirect).
+	localBeads := filepath.Join(tmpDir, "local", ".beads")
+	if err := os.MkdirAll(localBeads, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	rigsJSON := `{"version": 1, "rigs": {"tracked": {"git_url": "x"}, "local": {"git_url": "x"}, "missing": {"git_url": "x"}}}`
+	if err := os.WriteFile(filepath.Join(overseerDir, "rigs.json"), []byte(rigsJSON), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	parents := formulaBeadsParents(tmpDir)
+
+	want := []string{
+		tmpDir,
+		filepath.Join(tmpDir, "local"),
+		filepath.Join(tmpDir, "tracked", "overseer", "rig"),
+	}
+	if len(parents) != len(want) {
+		t.Fatalf("parents = %v, want %v", parents, want)
+	}
+	for i := range want {
+		if parents[i] != want[i] {
+			t.Errorf("parents[%d] = %q, want %q", i, parents[i], want[i])
+		}
+	}
+}
+
+func TestFormulaBeadsParents_NoRigsConfig(t *testing.T) {
+	tmpDir := t.TempDir()
+	parents := formulaBeadsParents(tmpDir)
+	if len(parents) != 1 || parents[0] != tmpDir {
+		t.Errorf("parents = %v, want just town root", parents)
+	}
+}
+
 // contains is already declared in mq_test.go in this package,
 // so we reuse it here.
