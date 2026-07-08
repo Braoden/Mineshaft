@@ -597,6 +597,12 @@ func TestInitBeads_TrackedBeads_CreatesRedirect(t *testing.T) {
 	if _, err := os.Stat(rigConfigPath); !os.IsNotExist(err) {
 		t.Errorf("expected no config.yaml at rig level when using redirect, but it exists")
 	}
+
+	// Verify embedded formulas were provisioned into the canonical beads dir (mi-95z)
+	formulaPath := filepath.Join(overseerBeadsDir, "formulas", "mol-miner-work.formula.toml")
+	if _, err := os.Stat(formulaPath); err != nil {
+		t.Errorf("expected formulas provisioned at %s: %v", formulaPath, err)
+	}
 }
 
 func TestInitBeads_LocalBeads_CreatesDatabase(t *testing.T) {
@@ -639,6 +645,12 @@ exit 0
 	beadsDir := filepath.Join(rigPath, ".beads")
 	if _, err := os.Stat(beadsDir); os.IsNotExist(err) {
 		t.Errorf("expected .beads directory to be created")
+	}
+
+	// Verify embedded formulas were provisioned into the rig beads dir (mi-95z)
+	formulaPath := filepath.Join(beadsDir, "formulas", "mol-miner-work.formula.toml")
+	if _, err := os.Stat(formulaPath); err != nil {
+		t.Errorf("expected formulas provisioned at %s: %v", formulaPath, err)
 	}
 }
 
