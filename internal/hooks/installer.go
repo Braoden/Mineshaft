@@ -264,12 +264,17 @@ func isSettingsFile(name string) bool {
 // Tries os.Executable() first (most reliable when running as ms), then
 // falls back to exec.LookPath for PATH-based discovery. If both fail,
 // returns "ms" and hopes the runtime PATH has it.
+//
+// The path is always forward-slash normalized: hook commands are executed
+// via bash even on Windows, and bash strips single backslashes, turning
+// C:\Users\...\ms.exe into "C:Usersms.exe: command not found". Forward
+// slashes work for exec on Windows and need no JSON escaping.
 func resolveGTBinary() string {
 	if exe, err := os.Executable(); err == nil {
-		return exe
+		return filepath.ToSlash(exe)
 	}
 	if path, err := exec.LookPath("ms"); err == nil {
-		return path
+		return filepath.ToSlash(path)
 	}
 	return "ms"
 }

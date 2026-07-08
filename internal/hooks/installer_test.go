@@ -540,6 +540,14 @@ func TestSyncForRole_GeminiWithGTBinSubstitution(t *testing.T) {
 	}
 }
 
+func TestResolveGTBinary_NoBackslashes(t *testing.T) {
+	// Hook commands run via bash even on Windows; bash strips single
+	// backslashes, so the resolved path must be forward-slash only (mi-w2d).
+	if gtBin := resolveGTBinary(); strings.Contains(gtBin, `\`) {
+		t.Errorf("resolveGTBinary returned path with backslashes: %q", gtBin)
+	}
+}
+
 func TestInstallForRole_SettingsDirVsWorkDir(t *testing.T) {
 	settingsDir := t.TempDir()
 	workDir := t.TempDir()
