@@ -175,8 +175,29 @@ func BuildCommandContext(ctx context.Context, args ...string) *exec.Cmd {
 	}
 	allArgs = append(allArgs, args...)
 	cmd := exec.CommandContext(ctx, "tmux", allArgs...)
+	cmd.Env = sanitizedEnv()
 	hideConsoleWindow(cmd)
 	return cmd
+}
+
+// sanitizedEnv returns os.Environ() without multiplexer nesting markers
+// (TMUX, PSMUX_SESSION). When ms runs from inside a tmux/psmux session,
+// spawned tmux clients inherit these vars and the nesting guard refuses
+// new-session — psmux even exits 0 ("sessions should be nested with care"),
+// so ms sling's follow-up send-keys fails with "no server running" and the
+// miner is rolled back (mi-z9r). Socket selection never depends on these
+// vars here: commands always target an explicit -L socket or the default
+// server. TMUX_PANE is kept — tmux resolves the current pane from it.
+func sanitizedEnv() []string {
+	env := os.Environ()
+	kept := make([]string, 0, len(env))
+	for _, kv := range env {
+		if strings.HasPrefix(kv, "TMUX=") || strings.HasPrefix(kv, "PSMUX_SESSION=") {
+			continue
+		}
+		kept = append(kept, kv)
+	}
+	return kept
 }
 
 // Tmux wraps tmux operations.
@@ -229,6 +250,7 @@ func (t *Tmux) run(args ...string) (string, error) {
 	}
 	allArgs = append(allArgs, args...)
 	cmd := exec.Command("tmux", allArgs...)
+	cmd.Env = sanitizedEnv()
 	hideConsoleWindow(cmd)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
