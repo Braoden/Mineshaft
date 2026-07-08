@@ -191,9 +191,11 @@ func sanitizeKey(key string) string {
 	return key
 }
 
-// bdKvSet calls bd kv set <key> <value>.
+// bdKvSet stores a memory value. bd kv set rejects the reserved memory.*
+// namespace, so route through bd remember, which writes the same kv key
+// (bd remember --key <k> stores at memory.<k>).
 func bdKvSet(key, value string) error {
-	cmd := exec.Command("bd", "kv", "set", key, value)
+	cmd := exec.Command("bd", "remember", value, "--key", strings.TrimPrefix(key, memoryKeyPrefix))
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
@@ -208,9 +210,10 @@ func bdKvGet(key string) (string, error) {
 	return strings.TrimSpace(string(out)), nil
 }
 
-// bdKvClear calls bd kv clear <key>.
+// bdKvClear removes a memory. bd kv clear rejects the reserved memory.*
+// namespace, so route through bd forget (bd forget <k> clears memory.<k>).
 func bdKvClear(key string) error {
-	cmd := exec.Command("bd", "kv", "clear", key)
+	cmd := exec.Command("bd", "forget", strings.TrimPrefix(key, memoryKeyPrefix))
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
