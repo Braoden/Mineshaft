@@ -100,7 +100,7 @@ func runRemember(cmd *cobra.Command, args []string) error {
 		verb = "Updated"
 	}
 
-	if err := bdKvSet(fullKey, content); err != nil {
+	if err := bdRemember(memType+"."+key, content); err != nil {
 		return fmt.Errorf("storing memory: %w", err)
 	}
 
@@ -191,9 +191,11 @@ func sanitizeKey(key string) string {
 	return key
 }
 
-// bdKvSet calls bd kv set <key> <value>.
-func bdKvSet(key, value string) error {
-	cmd := exec.Command("bd", "kv", "set", key, value)
+// bdRemember calls bd remember to store a memory. bd reserves the memory.*
+// kv namespace for writes, so bd kv set is rejected — bd remember --key <key>
+// writes to the same kv table at memory.<key>. Key is WITHOUT the memory. prefix.
+func bdRemember(key, content string) error {
+	cmd := exec.Command("bd", "-q", "remember", "--key", key, "--", content)
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
@@ -208,9 +210,11 @@ func bdKvGet(key string) (string, error) {
 	return strings.TrimSpace(string(out)), nil
 }
 
-// bdKvClear calls bd kv clear <key>.
-func bdKvClear(key string) error {
-	cmd := exec.Command("bd", "kv", "clear", key)
+// bdForget calls bd forget to remove a memory. bd reserves the memory.*
+// kv namespace for writes, so bd kv clear is rejected — bd forget <key>
+// clears memory.<key>. Key is WITHOUT the memory. prefix.
+func bdForget(key string) error {
+	cmd := exec.Command("bd", "-q", "forget", key)
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
