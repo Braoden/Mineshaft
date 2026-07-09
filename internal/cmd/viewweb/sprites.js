@@ -78,25 +78,26 @@ function clawdBody(eyes) {
     return g;
 }
 
-// two legs at ref x2,x6; mode 'all' | 'walk1' (left up) | 'walk2' (right up)
-function clawdLegs(g, mode) {
-    [4, 12].forEach((x, i) => {
-        const short = mode === 'walk1' ? i === 0 : mode === 'walk2' ? i === 1 : false;
-        rect(g, x, 14, 2, short ? 2 : 3, 'o');
-        if (!short) rect(g, x, 16, 2, 2, 'O');
-    });
+// two legs, rows 14-17 (standing). Walking has no leg animation — it is
+// conveyed by the whole-sprite vertical bob in game.js.
+function clawdLegs(g) {
+    [4, 12].forEach(x => { rect(g, x, 14, 2, 3, 'o'); rect(g, x, 16, 2, 2, 'O'); });
 }
 
 function makeClawd(mode, eyes = true, tool = null) {
     const g = clawdBody(eyes);
-    clawdLegs(g, mode);
-    if (tool === 'up') {          // pickaxe raised overhead
-        rect(g, 6, 0, 10, 2, 's');
-        rect(g, 10, 2, 2, 2, 'n');
-    } else if (tool === 'down') { // pickaxe swung down-left
-        rect(g, 2, 9, 2, 2, 'n');
-        rect(g, 1, 11, 2, 2, 'n');
-        rect(g, 0, 13, 2, 4, 's');
+    clawdLegs(g);
+    if (tool === 'up') {          // full pickaxe raised, head high on the rock side
+        rect(g, 12, 3, 2, 4, 'n');  // wooden handle: hand up to head
+        rect(g, 9, 1, 8, 2, 's');   // steel head bar (row 0 kept clear as margin)
+        rect(g, 8, 2, 1, 1, 'S');   // left point
+        rect(g, 16, 3, 1, 1, 'S');  // right point
+    } else if (tool === 'down') { // full pickaxe swung down to strike
+        rect(g, 11, 5, 2, 2, 'n');  // wooden handle: upper
+        rect(g, 13, 7, 2, 2, 'n');  // wooden handle: lower
+        rect(g, 14, 9, 3, 2, 's');  // steel head bar
+        rect(g, 16, 8, 1, 1, 'S');  // upper point
+        rect(g, 13, 10, 1, 1, 'S'); // lower point
     }
     return gridRows(g);
 }
@@ -720,8 +721,6 @@ function buildTower() {
 const SPRITE_DATA = {
     clawd_idle: makeClawd('all', true),
     clawd_blink: makeClawd('all', false),
-    clawd_walk1: makeClawd('walk1', true),
-    clawd_walk2: makeClawd('walk2', true),
     clawd_mine1: makeClawd('all', true, 'up'),
     clawd_mine2: makeClawd('all', true, 'down'),
     clawd_sleep1: makeClawdSleep(0),

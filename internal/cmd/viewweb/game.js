@@ -373,7 +373,6 @@ class Agent extends EngineObject {
         const t = time + this.phase;
         if (this.sleeping) // slow breathing
             return (t * 0.9 | 0) % 2 ? 'clawd_sleep1' : 'clawd_sleep2';
-        if (this.walking) return (t * 6 | 0) % 2 ? 'clawd_walk1' : 'clawd_walk2';
         if (this.running && (this.role === 'miner' || this.role === 'crew'))
             return (t * 3 | 0) % 2 ? 'clawd_mine1' : 'clawd_mine2';
         if (this.running && this.role === 'refinery')
@@ -383,7 +382,7 @@ class Agent extends EngineObject {
 
     render() {
         const hop = this.hopT > 0 ? Math.sin(this.hopT * PI / 0.4) * 0.35 : 0;
-        const bob = this.walking ? Math.abs(Math.sin(time * 9 + this.phase)) * 0.06 : 0;
+        const bob = this.walking ? Math.abs(Math.sin(time * 9 + this.phase)) * 0.11 : 0;
         const pos = this.pos.add(vec2(0, hop + bob));
         const mirror = this.facing < 0;
         const frame = this.frameName();

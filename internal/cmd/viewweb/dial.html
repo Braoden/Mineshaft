@@ -66,6 +66,13 @@
   .state.day   { color: #f2c94c; }
   .state.night { color: #7d9bd1; }
   #meta { font-size: 10px; color: #6f6a5e; margin-top: 4px; }
+  .limit { margin-bottom: 14px; }
+  .limit:last-child { margin-bottom: 0; }
+  .limit-hd {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 5px; font-size: 12px; color: #e8e4d8;
+  }
+  .limit-hd .tag { color: #7d9bd1; font-size: 10px; letter-spacing: 1px; }
   @media (prefers-reduced-motion: reduce) { .nav-btn, .bar-fill { transition: none; } }
 </style>
 </head>
@@ -109,6 +116,11 @@
       <div class="bar-pct" id="pct7">--%</div>
     </div>
     <div class="bar-meta" id="meta7">waiting for data&hellip;</div>
+  </section>
+
+  <section class="card">
+    <h2>Limits (/usage)</h2>
+    <div id="limits">waiting for data&hellip;</div>
   </section>
 
   <section class="card">
@@ -160,7 +172,33 @@ function renderBar(fillId, barId, pctId, metaId, pct, resetsAt) {
     'remaining: <b>' + remainingText(resetsAt) + '</b>';
 }
 
+const LIMIT_NAMES = { session: 'Session (5h)', weekly_all: 'Weekly — all models', weekly_scoped: 'Weekly — scoped' };
+
+function renderLimits() {
+  const el = $('limits');
+  if (!usage || !usage.ok || !usage.limits || !usage.limits.length) {
+    el.textContent = usage ? 'no limit data' : 'waiting for data…';
+    return;
+  }
+  el.innerHTML = usage.limits.map(l => {
+    const p = Math.max(0, Math.min(100, l.percent));
+    const sev = l.severity || 'normal';
+    const cls = sev === 'critical' || p >= 85 ? 'hot' : sev === 'warning' || p >= 60 ? 'warn' : '';
+    const label = (LIMIT_NAMES[l.kind] || l.kind) + (l.scope ? ' (' + l.scope + ')' : '');
+    const reset = l.resets_at ? resetText(l.resets_at) + ' • ' + remainingText(l.resets_at) + ' left' : '—';
+    return '<div class="limit">' +
+      '<div class="limit-hd"><span>' + label +
+        (l.is_active ? ' <span class="tag">ACTIVE</span>' : '') + '</span>' +
+        '<span class="bar-pct">' + Math.round(l.percent) + '%</span></div>' +
+      '<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' +
+        Math.round(p) + '"><div class="bar-fill ' + cls + '" style="width:' + p + '%"></div></div>' +
+      '<div class="bar-meta">resets: <b>' + reset + '</b> &bull; severity: <b>' + sev + '</b></div>' +
+      '</div>';
+  }).join('');
+}
+
 function render() {
+  renderLimits();
   if (!usage || !usage.ok) {
     $('report').textContent = usage
       ? 'usage unavailable — could not read Claude OAuth usage (check ~/.claude/.credentials.json)'

@@ -125,6 +125,18 @@ type viewUsage struct {
 	ResetsAt        string  `json:"resets_at,omitempty"`
 	WeekUtilization float64 `json:"week_utilization"` // 7-day window percent used, 0-100
 	WeekResetsAt    string  `json:"week_resets_at,omitempty"`
+	// Limits is the full per-limit breakdown as shown by Claude Code's /usage
+	// (session, weekly_all, and model-scoped weekly limits).
+	Limits []usageLimit `json:"limits,omitempty"`
+}
+
+type usageLimit struct {
+	Kind     string  `json:"kind"`     // session | weekly_all | weekly_scoped
+	Percent  float64 `json:"percent"`  // 0-100
+	Severity string  `json:"severity"` // normal | warning | critical
+	ResetsAt string  `json:"resets_at,omitempty"`
+	Scope    string  `json:"scope,omitempty"` // model display name for scoped limits
+	IsActive bool    `json:"is_active"`
 }
 
 var usageCache struct {
@@ -189,9 +201,29 @@ func queryOAuthUsage() viewUsage {
 			Utilization float64 `json:"utilization"`
 			ResetsAt    string  `json:"resets_at"`
 		} `json:"seven_day"`
+		Limits []struct {
+			Kind     string  `json:"kind"`
+			Percent  float64 `json:"percent"`
+			Severity string  `json:"severity"`
+			ResetsAt string  `json:"resets_at"`
+			IsActive bool    `json:"is_active"`
+			Scope    *struct {
+				Model *struct {
+					DisplayName string `json:"display_name"`
+				} `json:"model"`
+			} `json:"scope"`
+		} `json:"limits"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
 		return viewUsage{}
+	}
+	limits := make([]usageLimit, 0, len(body.Limits))
+	for _, l := range body.Limits {
+		lim := usageLimit{Kind: l.Kind, Percent: l.Percent, Severity: l.Severity, ResetsAt: l.ResetsAt, IsActive: l.IsActive}
+		if l.Scope != nil && l.Scope.Model != nil {
+			lim.Scope = l.Scope.Model.DisplayName
+		}
+		limits = append(limits, lim)
 	}
 	return viewUsage{
 		OK:              true,
@@ -199,6 +231,7 @@ func queryOAuthUsage() viewUsage {
 		ResetsAt:        body.FiveHour.ResetsAt,
 		WeekUtilization: body.SevenDay.Utilization,
 		WeekResetsAt:    body.SevenDay.ResetsAt,
+		Limits:          limits,
 	}
 }
 
