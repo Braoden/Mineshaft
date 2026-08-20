@@ -166,7 +166,7 @@ func runMoleculeProgress(cmd *cobra.Command, args []string) error {
 	}
 
 	// Find all children of the root issue
-	children, err := b.List(beads.ListOptions{
+	children, err := b.ListWithWisps(beads.ListOptions{
 		Parent:   rootID,
 		Status:   "all",
 		Priority: -1,
@@ -414,7 +414,7 @@ func runMoleculeStatus(cmd *cobra.Command, args []string) error {
 
 		// Query for hooked beads using the authoritative source: bead status + assignee.
 		// First try status=hooked (work that's been slung but not yet claimed)
-		hookedBeads, err := b.List(beads.ListOptions{
+		hookedBeads, err := b.ListWithWisps(beads.ListOptions{
 			Status:   beads.StatusHooked,
 			Assignee: target,
 			Priority: -1,
@@ -427,7 +427,7 @@ func runMoleculeStatus(cmd *cobra.Command, args []string) error {
 		// This handles the case where work was claimed (status changed to in_progress)
 		// but the session was interrupted before completion. The hook should persist.
 		if len(hookedBeads) == 0 {
-			inProgressBeads, _ := b.List(beads.ListOptions{
+			inProgressBeads, _ := b.ListWithWisps(beads.ListOptions{
 				Status:   "in_progress",
 				Assignee: target,
 				Priority: -1,
@@ -446,13 +446,13 @@ func runMoleculeStatus(cmd *cobra.Command, args []string) error {
 		// See: https://github.com/steveyegge/mineshaft/issues/1438
 		if len(hookedBeads) == 0 && !isTownLevelRole(target) && townRoot != "" {
 			townB := beads.New(filepath.Join(townRoot, ".beads"))
-			if townHooked, err := townB.List(beads.ListOptions{
+			if townHooked, err := townB.ListWithWisps(beads.ListOptions{
 				Status:   beads.StatusHooked,
 				Assignee: target,
 				Priority: -1,
 			}); err == nil && len(townHooked) > 0 {
 				hookedBeads = townHooked
-			} else if townInProgress, err := townB.List(beads.ListOptions{
+			} else if townInProgress, err := townB.ListWithWisps(beads.ListOptions{
 				Status:   "in_progress",
 				Assignee: target,
 				Priority: -1,
@@ -588,7 +588,7 @@ func getMoleculeProgressInfo(b *beads.Beads, moleculeRootID string) (*MoleculePr
 	}
 
 	// Find all children of the root issue
-	children, err := b.List(beads.ListOptions{
+	children, err := b.ListWithWisps(beads.ListOptions{
 		Parent:   moleculeRootID,
 		Status:   "all",
 		Priority: -1,
@@ -1038,7 +1038,7 @@ func runMoleculeCurrent(cmd *cobra.Command, args []string) error {
 	info.MoleculeTitle = molRoot.Title
 
 	// Find all children (steps) of the molecule root
-	children, err := b.List(beads.ListOptions{
+	children, err := b.ListWithWisps(beads.ListOptions{
 		Parent:   attachment.AttachedMolecule,
 		Status:   "all",
 		Priority: -1,
@@ -1223,7 +1223,7 @@ func scanAllRigsForHookedBeads(townRoot, target string) []*beads.Issue {
 
 		b := beads.New(rigBeadsDir)
 		// First check for hooked beads
-		hookedBeads, err := b.List(beads.ListOptions{
+		hookedBeads, err := b.ListWithWisps(beads.ListOptions{
 			Status:   beads.StatusHooked,
 			Assignee: target,
 			Priority: -1,
@@ -1237,7 +1237,7 @@ func scanAllRigsForHookedBeads(townRoot, target string) []*beads.Issue {
 		}
 
 		// Also check for in_progress beads (work that was claimed but session interrupted)
-		inProgressBeads, err := b.List(beads.ListOptions{
+		inProgressBeads, err := b.ListWithWisps(beads.ListOptions{
 			Status:   "in_progress",
 			Assignee: target,
 			Priority: -1,

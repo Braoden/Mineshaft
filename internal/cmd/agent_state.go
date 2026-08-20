@@ -220,7 +220,7 @@ func modifyAgentState(agentBead, beadsDir string, hasIncr bool) error {
 
 	// Execute bd update
 	cmd := exec.Command("bd", args...)
-	cmd.Env = append(os.Environ(), "BEADS_DIR="+beadsDir)
+	cmd.Env = agentBeadEnv(beadsDir)
 
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
@@ -265,6 +265,24 @@ func getAgentLabels(agentBead, beadsDir string) (map[string]string, error) {
 // ceiling prevents await-event/await-signal from stalling past the patrol timeout.
 const bdCallTimeout = 30 * time.Second
 
+// agentBeadEnv builds the environment for a raw `bd` invocation targeting a
+// specific beads dir. It strips any inherited BEADS_DIR / BEADS_DB /
+// BEADS_DOLT_SERVER_DATABASE — in Dolt server mode these override the target dir
+// and misroute the query to the wrong database — then sets BEADS_DIR and the
+// database name from the dir's metadata.json. Without this, agent-bead label ops
+// for a town-resident bead run against the inherited rig database and fail with
+// "no issue found". (ms escalation hq-wisp-5feg9)
+func agentBeadEnv(beadsDir string) []string {
+	env := beads.StripEnvKey(os.Environ(), "BEADS_DIR")
+	env = beads.StripEnvKey(env, "BEADS_DB")
+	env = beads.StripEnvKey(env, "BEADS_DOLT_SERVER_DATABASE")
+	env = append(env, "BEADS_DIR="+beadsDir)
+	if dbEnv := beads.DatabaseEnv(beadsDir); dbEnv != "" {
+		env = append(env, dbEnv)
+	}
+	return env
+}
+
 // getAllAgentLabels retrieves all labels (including non-state) from an agent bead.
 func getAllAgentLabels(agentBead, beadsDir string) ([]string, error) {
 	args := []string{"show", agentBead, "--json"}
@@ -273,7 +291,7 @@ func getAllAgentLabels(agentBead, beadsDir string) ([]string, error) {
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, "bd", args...) //nolint:gosec // G204: bd is a trusted internal tool
-	cmd.Env = append(os.Environ(), "BEADS_DIR="+beadsDir)
+	cmd.Env = agentBeadEnv(beadsDir)
 
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout

@@ -944,6 +944,34 @@ func stripEnvPrefixes(environ []string, prefixes ...string) []string {
 	return filtered
 }
 
+// ListWithWisps returns issues matching opts from BOTH the issues table and the
+// wisps table. ListOptions.Ephemeral selects one table *instead of* the other, so
+// any read path that must see both -- hook lookups, molecule/patrol step children --
+// has to ask twice. Patrol roots and steps are wisps, so a plain List() on those
+// paths silently returns zero rows and the patrol looks dead.
+func (b *Beads) ListWithWisps(opts ListOptions) ([]*Issue, error) {
+	opts.Ephemeral = false
+	issues, err := b.List(opts)
+	if err != nil {
+		return nil, err
+	}
+	opts.Ephemeral = true
+	wisps, err := b.List(opts)
+	if err != nil {
+		return nil, err
+	}
+	seen := make(map[string]bool, len(issues))
+	for _, issue := range issues {
+		seen[issue.ID] = true
+	}
+	for _, wisp := range wisps {
+		if !seen[wisp.ID] {
+			issues = append(issues, wisp)
+		}
+	}
+	return issues, nil
+}
+
 // List returns issues matching the given options.
 // When Ephemeral is true, uses "bd query" with ephemeral=true to search the
 // wisps table (where ephemeral issues live in beads v0.59+). Without this,

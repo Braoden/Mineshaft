@@ -53,11 +53,14 @@ func findActivePatrol(cfg PatrolConfig) (patrolID, patrolLine string, found bool
 		b = beads.New(cfg.BeadsDir)
 	}
 
-	// Find hooked patrol beads for this agent
+	// Find hooked patrol beads for this agent. Patrol roots are created as
+	// ephemeral wisps (autoSpawnPatrol uses `mol wisp create`), so the lookup
+	// must search the wisps table — `bd list` only sees the issues table (ms-*).
 	hookedBeads, listErr := b.List(beads.ListOptions{
-		Status:   beads.StatusHooked,
-		Assignee: cfg.Assignee,
-		Priority: -1,
+		Status:    beads.StatusHooked,
+		Assignee:  cfg.Assignee,
+		Priority:  -1,
+		Ephemeral: true,
 	})
 	if listErr != nil {
 		return "", "", false, fmt.Errorf("listing hooked beads: %w", listErr)
@@ -130,7 +133,7 @@ func findActivePatrol(cfg PatrolConfig) (patrolID, patrolLine string, found bool
 // children materialized yet. This prevents findActivePatrol from closing a
 // just-created patrol during the window between root creation and step population.
 func checkHasOpenChildren(b *beads.Beads, parentID string) (bool, error) {
-	children, err := b.List(beads.ListOptions{
+	children, err := b.ListWithWisps(beads.ListOptions{
 		Parent:   parentID,
 		Status:   "all",
 		Priority: -1,
@@ -166,11 +169,14 @@ func burnPreviousPatrolWisps(cfg PatrolConfig) {
 		b = beads.New(cfg.BeadsDir)
 	}
 
-	// Find all hooked patrol beads for this agent
+	// Find all hooked patrol beads for this agent. Patrol roots are ephemeral
+	// wisps, so search the wisps table (see findActivePatrol) — otherwise old
+	// roots are never found and leak, accumulating hooked orphans.
 	hookedBeads, err := b.List(beads.ListOptions{
-		Status:   beads.StatusHooked,
-		Assignee: cfg.Assignee,
-		Priority: -1,
+		Status:    beads.StatusHooked,
+		Assignee:  cfg.Assignee,
+		Priority:  -1,
+		Ephemeral: true,
 	})
 	if err != nil {
 		style.PrintWarning("burn: could not list hooked beads: %v", err)

@@ -513,7 +513,7 @@ func runHookShow(cmd *cobra.Command, args []string) error {
 
 	b := beads.New(workDir)
 	// Query for hooked beads assigned to the target
-	hookedBeads, err := b.List(beads.ListOptions{
+	hookedBeads, err := b.ListWithWisps(beads.ListOptions{
 		Status:   beads.StatusHooked,
 		Assignee: target,
 		Priority: -1,
@@ -522,7 +522,7 @@ func runHookShow(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("listing hooked beads: %w", err)
 	}
 	if len(hookedBeads) == 0 {
-		inProgressBeads, err := b.List(beads.ListOptions{
+		inProgressBeads, err := b.ListWithWisps(beads.ListOptions{
 			Status:   "in_progress",
 			Assignee: target,
 			Priority: -1,
@@ -543,7 +543,7 @@ func runHookShow(cmd *cobra.Command, args []string) error {
 			townBeadsDir := filepath.Join(townRoot, ".beads")
 			if _, err := os.Stat(townBeadsDir); err == nil {
 				townBeads := beads.New(townBeadsDir)
-				townHooked, err := townBeads.List(beads.ListOptions{
+				townHooked, err := townBeads.ListWithWisps(beads.ListOptions{
 					Status:   beads.StatusHooked,
 					Assignee: target,
 					Priority: -1,
@@ -551,7 +551,7 @@ func runHookShow(cmd *cobra.Command, args []string) error {
 				if err == nil && len(townHooked) > 0 {
 					hookedBeads = townHooked
 				} else if err == nil {
-					townInProgress, err := townBeads.List(beads.ListOptions{
+					townInProgress, err := townBeads.ListWithWisps(beads.ListOptions{
 						Status:   "in_progress",
 						Assignee: target,
 						Priority: -1,

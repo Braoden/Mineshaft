@@ -160,9 +160,12 @@ func runMoleculeAwaitEvent(cmd *cobra.Command, args []string) error {
 	var backoffUntil time.Time
 	var beadsDir string
 	if awaitEventAgentBead != "" {
-		workDir, wdErr := findLocalBeadsDir()
-		if wdErr == nil {
-			beadsDir = beads.ResolveBeadsDir(workDir)
+		// Agent beads (ms:agent) live in the town DB regardless of role — their
+		// mi-* prefix and the rig's Dolt database would otherwise misroute the
+		// lookup. Target town explicitly for idle/backoff/heartbeat label ops.
+		// (ms escalation hq-wisp-5feg9)
+		if _, wdErr := findLocalBeadsDir(); wdErr == nil {
+			beadsDir = beads.ResolveBeadsDir(beads.GetTownBeadsPath(townRoot))
 			labels, labErr := getAgentLabels(awaitEventAgentBead, beadsDir)
 			if labErr != nil {
 				if !awaitEventQuiet {
