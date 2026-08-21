@@ -63,6 +63,11 @@ class Actor {
             this.sprites[name] = s;
         }
 
+        // provisional territory; Room.assignTerritories refines it once the
+        // full population is known
+        this.homeA = room.stationA;
+        this.homeB = room.stationB;
+        this.station = (room.stationA + room.stationB) / 2;
         this.x = rnd(room.stationA, room.stationB);
         this.facing = 1;
         this.pose = 'stand';
@@ -254,6 +259,7 @@ class Room {
             at('oreChunk', 62, 5);
             this.cart = at('oreCart', 4, 15);
             this.cartX = 16;
+            this.zone = [30, W - 16];
             this.stationA = W - 34;
             this.stationB = W - 26;
 
@@ -279,11 +285,14 @@ class Room {
             this.crate = at('crate', 26, 12);
             at('crate', 38, 12);
             this.crateX = 32;
+            this.zone = [44, W - 14];
             this.stationA = W - 38;
             this.stationB = W - 30;
 
         } else {
-            // panelled office: dark upper wall over a timber wainscot
+            // Panelled office, laid out as three worked areas so the three
+            // town-level agents each get their own furniture instead of
+            // stacking on one desk: shelf (left), desk (centre), mail (right).
             this.band(0, 0, W, fy, P.B);
             this.band(0, fy - 14, W, 14, P.T);
             this.band(0, fy - 14, W, 1, P.h);
@@ -291,16 +300,18 @@ class Room {
 
             this.band(0, fy, W, H - fy, P.T);
             this.band(0, fy, W, 1, P.t);
-            at('rug', Math.round(W / 2 - 17), 4);
 
-            at('bookshelf', 3, 34);
-            at('cabinet', 32, 26);
-            this.addProp('corkboard', Math.round(W / 2 + 4), 5);
-            this.addProp('wallClock', Math.round(W / 2 - 12), 6);
-            at('pigeonholes', W - 24, 32);
-            at('plant', W - 44, 18);
+            const third = W / 3;
+            const deskW = Math.min(38, Math.round(third + 6));
+            const dx = Math.round(third + (third - deskW) / 2);
 
-            const dx = Math.round(W / 2 - 19);
+            at('rug', Math.max(1, dx - 2), 4);
+            at('bookshelf', 2, 34);
+            this.addProp('wallClock', Math.round(third * 0.62), 5);
+            this.addProp('corkboard', Math.round(dx + deskW + 2), 4);
+            at('pigeonholes', W - 22, 32);
+            at('plant', Math.round(third * 2) - 12, 18);
+
             this.desk = at('desk', dx, 17);
             at('terminal', dx + 4, 30);
             at('deskLamp', dx + 24, 30);
@@ -308,14 +319,67 @@ class Room {
             at('mug', dx + 33, 18);
             at('chair', dx + 12, 17);
 
+            // Per-role anchors. Each is a place with something to do, so an
+            // agent working its own station still looks purposeful.
+            this.anchors = {
+                witness:    Math.round(third * 0.5),
+                overseer:   dx + 14,
+                supervisor: W - 14,
+            };
             this.deskX = dx + 14;
-            this.mailX = W - 16;
-            this.stationA = Math.round(W / 2 - 24);
-            this.stationB = Math.round(W / 2 + 14);
+            this.mailX = W - 14;
+            this.zone = [10, W - 10];
+            this.stationA = dx + 8;
+            this.stationB = dx + 20;
         }
 
         // contact shadow ties the figures to the ground
         this.band(0, fy - 1, W, 1, P.e, 0.28);
+    }
+
+    // assignTerritories gives every actor its own station and idle band, so
+    // agents sharing a room don't converge on one coordinate and stack. Called
+    // whenever the population changes, since the slices depend on the count.
+    //
+    // The office prefers per-role anchors (each is a real piece of furniture);
+    // everywhere else the working zone is sliced evenly. SPRITE_W is the floor
+    // on slice width — past that many actors the room is simply too narrow and
+    // some overlap is unavoidable, but they still spread rather than pile up.
+    assignTerritories() {
+        const SPRITE_W = 20;
+        const [z0, z1] = this.zone || [this.stationA, this.stationB];
+        const n = this.actors.length;
+        if (n === 0) return;
+
+        const taken = new Set();
+        const unanchored = [];
+
+        for (const a of this.actors) {
+            const anchor = this.anchors && this.anchors[a.role];
+            if (anchor !== undefined && !taken.has(a.role)) {
+                taken.add(a.role);
+                a.station = anchor;
+                a.homeA = anchor - 5;
+                a.homeB = anchor + 5;
+            } else {
+                unanchored.push(a);
+            }
+        }
+
+        if (unanchored.length) {
+            const span = Math.max(SPRITE_W, (z1 - z0) / unanchored.length);
+            unanchored.forEach((a, i) => {
+                const start = z0 + i * span;
+                a.homeA = start + 3;
+                a.homeB = Math.max(a.homeA + 2, start + span - 3);
+                a.station = (a.homeA + a.homeB) / 2;
+            });
+        }
+
+        // drop anyone standing outside their new territory straight into it
+        for (const a of this.actors) {
+            if (a.x < a.homeA - SPRITE_W || a.x > a.homeB + SPRITE_W) a.x = a.station;
+        }
     }
 
     // ------------------------------------------------------------ routines
@@ -332,8 +396,7 @@ class Room {
         ]);
 
         if (this.kind === 'mineshaft') {
-            const face = rnd(this.stationA, this.stationB);
-            actor.push({ to: face });
+            actor.push({ to: rnd(actor.homeA, actor.homeB) });
             const swings = 2 + Math.floor(Math.random() * 3);
             for (let i = 0; i < swings; i++) {
                 actor.push({ pose: 'workUp', ms: 190 * jitter(), face: 1 });
@@ -348,7 +411,7 @@ class Room {
         } else if (this.kind === 'refinery') {
             actor.push({ to: this.crateX });
             actor.push({ pose: 'reach', ms: 300, face: -1 });
-            actor.push({ to: rnd(this.stationA, this.stationB), carry: true, speed: 0.016 });
+            actor.push({ to: rnd(actor.homeA, actor.homeB), carry: true, speed: 0.016 });
             const pulls = 1 + Math.floor(Math.random() * 3);
             for (let i = 0; i < pulls; i++) {
                 actor.push({ pose: 'workUp', ms: 240 * jitter(), face: 1 });
@@ -359,20 +422,24 @@ class Room {
             actor.push(fidget());
 
         } else {
-            const atDesk = Math.random() < 0.6;
-            if (atDesk) {
-                actor.push({ to: this.deskX });
-                const types = 3 + Math.floor(Math.random() * 4);
-                for (let i = 0; i < types; i++) {
-                    actor.push({ pose: 'sit', ms: 260 * jitter() });
-                    actor.push({ pose: 'workUp', ms: 200 * jitter() });
-                }
-                actor.push({ pose: 'sit', ms: 700 * jitter() });
-            } else {
+            // Stay at your own station most of the time; occasionally cross the
+            // room on an errand. Only the overseer has a chair, so only the
+            // overseer sits — the others work standing at shelf and pigeonholes.
+            const errand = Math.random() < 0.28;
+            if (errand) {
                 actor.push({ to: this.mailX });
                 actor.push({ pose: 'reach', ms: 350, face: 1, fx: 'mail' });
                 actor.push({ pose: 'workUp', ms: 400 });
-                actor.push({ to: rnd(this.stationA, this.stationB) });
+                actor.push({ to: actor.station });
+            } else {
+                actor.push({ to: rnd(actor.homeA, actor.homeB) });
+                const reps = 3 + Math.floor(Math.random() * 4);
+                const seated = actor.role === 'overseer';
+                for (let i = 0; i < reps; i++) {
+                    actor.push({ pose: seated ? 'sit' : 'reach', ms: 260 * jitter() });
+                    actor.push({ pose: 'workUp', ms: 200 * jitter() });
+                }
+                if (seated) actor.push({ pose: 'sit', ms: 700 * jitter() });
             }
             actor.push(fidget());
         }
@@ -465,6 +532,8 @@ class Room {
             this.actors.push(actor);
         }
 
+        this.assignTerritories();
+
         // mineshaft goes dark when nobody is working it
         if (this.kind === 'mineshaft' && this.lamp) {
             const empty = this.actors.length === 0;
@@ -494,6 +563,7 @@ class Room {
         this.bg.removeChildren().forEach(c => c.destroy());
         this.propLayer.removeChildren().forEach(c => c.destroy());
         this.buildInterior();
+        this.assignTerritories();
     }
 }
 
