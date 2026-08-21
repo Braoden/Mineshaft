@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"reflect"
+	"strconv"
 	"testing"
 
 	"github.com/steveyegge/mineshaft/internal/session"
@@ -115,6 +116,34 @@ func TestOnlyShellAndOverseerAreWritable(t *testing.T) {
 		if isWritableTarget(agent) {
 			t.Errorf("agent target %q must be read-only", agent)
 		}
+	}
+}
+
+// clientSizes is the ONLY geometry source the sizing loop is allowed to use,
+// because psmux's display-message lies (it reported a 120x29 window for a
+// session whose sole client was 64x50). Pin the parse against real output.
+func TestClientSizesParsesListClients(t *testing.T) {
+	const out = `/dev/pts/116: hq-overseer: claude [64x50] (utf8) [activity=896s ago]
+/dev/pts/11670: hq-overseer: claude [64x49] (utf8) [activity=18s ago]`
+
+	var got [][2]int
+	for _, m := range clientSizeRe.FindAllStringSubmatch(out, -1) {
+		w, _ := strconv.Atoi(m[1])
+		h, _ := strconv.Atoi(m[2])
+		got = append(got, [2]int{w, h})
+	}
+
+	want := [][2]int{{64, 50}, {64, 49}}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("parsed %v, want %v", got, want)
+	}
+
+	// The correction must grow the small client to the large one, never the
+	// reverse: tmux sizes a window down to its smallest client, so shrinking
+	// would reflow the agent's real terminal.
+	minH, maxH := got[1][1], got[0][1]
+	if maxH-minH != 1 {
+		t.Fatalf("expected a 1-row deficit, got %d", maxH-minH)
 	}
 }
 

@@ -60,7 +60,7 @@ type termSession struct {
 	mu      sync.Mutex
 	pty     pty.Pty
 	cmd     *pty.Cmd
-	buf     []byte                  // ring of recent output, capped at termScrollback
+	buf     []byte                   // ring of recent output, capped at termScrollback
 	subs    map[chan []byte]struct{} // one channel per attached browser
 	closed  bool
 	lastUse time.Time
@@ -253,10 +253,6 @@ func (m *termManager) openAgent(name string) (*termSession, error) {
 	}
 
 	cols, rows := agentPaneSize(name)
-	// Remember what the agent's window looked like before we touched it, so
-	// holdWindowSize can tell whether our attach is what shrank it.
-	bw, bh := windowSize(name)
-	before := [2]int{bw, bh}
 
 	p, err := pty.New()
 	if err != nil {
@@ -278,59 +274,69 @@ func (m *termManager) openAgent(name string) (*termSession, error) {
 		subs: map[chan []byte]struct{}{}, lastUse: time.Now()}
 	m.sessions["agent:"+name] = s
 	go s.pump()
-	go s.holdWindowSize(name, cols, rows, before)
+	go s.holdWindowSize(name, cols, rows)
 	go m.reapWhenIdle(s)
 	return s, nil
 }
 
-// holdWindowSize corrects our own PTY until attaching has stopped shrinking the
-// agent's window.
+// holdWindowSize grows our own PTY until every client on the session agrees on
+// a size, so our attach is never the one constraining the window.
 //
-// Open-loop sizing does not survive contact: a PTY set to N rows produces a
-// client of N-1 here, and the exact loss depends on ConPTY, the multiplexer
-// build, and the status bar. Rather than encode a guess, measure what our
-// attach did to the window and give the difference back. Converges in one pass
-// in practice; capped so a session we cannot satisfy does not spin.
-func (s *termSession) holdWindowSize(name string, cols, rows int, want [2]int) {
-	if want[1] <= 0 {
-		return
-	}
-	for i := 0; i < 3; i++ {
-		time.Sleep(250 * time.Millisecond)
+// Open-loop sizing does not survive contact: a PTY set to N rows yields an N-1
+// client here, and the loss depends on ConPTY, the multiplexer build, and the
+// status bar. So we correct by measurement — but ONLY from list-clients.
+// psmux's display-message is not trustworthy for geometry: it has reported a
+// window of 120x29 for a session whose sole client was 64x50, and a
+// client_height of 51 for that same 50-row client. Acting on those readings is
+// what let a live session sit at 64x49 while its real client was 64x50.
+//
+// Being the smallest client is the failure mode we care about, since tmux sizes
+// a window down to fit. Growing to match the largest is therefore always the
+// right correction.
+func (s *termSession) holdWindowSize(name string, cols, rows int) {
+	for i := 0; i < 4; i++ {
+		time.Sleep(300 * time.Millisecond)
 		s.mu.Lock()
 		closed := s.closed
 		s.mu.Unlock()
 		if closed {
 			return
 		}
-		w, h := windowSize(name)
-		if h <= 0 || h >= want[1] {
-			return // we are not the one making it smaller
+
+		sizes := clientSizes(name)
+		if len(sizes) < 2 {
+			return // we are the only client; nothing to match
 		}
-		rows += want[1] - h
-		if w > 0 && w < want[0] {
-			cols += want[0] - w
+		minW, minH, maxW, maxH := sizes[0][0], sizes[0][1], sizes[0][0], sizes[0][1]
+		for _, wh := range sizes[1:] {
+			minW, minH = min(minW, wh[0]), min(minH, wh[1])
+			maxW, maxH = max(maxW, wh[0]), max(maxH, wh[1])
 		}
+		if minW == maxW && minH == maxH {
+			return // everyone agrees
+		}
+		// Assume the smallest client is ours and make up the difference.
+		cols += maxW - minW
+		rows += maxH - minH
 		s.resize(cols, rows)
 	}
 }
 
-// windowSize reports a session's current window dimensions, or zeroes.
-func windowSize(name string) (int, int) {
-	out, err := tmuxOutput("display-message", "-p", "-t", name, "#{window_width}x#{window_height}")
+// clientSizes reports the [WxH] of every client attached to a session.
+func clientSizes(name string) [][2]int {
+	out, err := tmuxOutput("list-clients", "-t", name)
 	if err != nil {
-		return 0, 0
+		return nil
 	}
-	w, h, ok := strings.Cut(out, "x")
-	if !ok {
-		return 0, 0
+	var sizes [][2]int
+	for _, m := range clientSizeRe.FindAllStringSubmatch(out, -1) {
+		w, err1 := strconv.Atoi(m[1])
+		h, err2 := strconv.Atoi(m[2])
+		if err1 == nil && err2 == nil && w > 0 && h > 0 {
+			sizes = append(sizes, [2]int{w, h})
+		}
 	}
-	c, err1 := strconv.Atoi(w)
-	r, err2 := strconv.Atoi(h)
-	if err1 != nil || err2 != nil {
-		return 0, 0
-	}
-	return c, r
+	return sizes
 }
 
 // reapWhenIdle detaches an agent attachment once no browser is watching, so we
