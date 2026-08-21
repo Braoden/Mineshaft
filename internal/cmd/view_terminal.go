@@ -45,6 +45,12 @@ const termScrollback = 256 * 1024
 // Shell sessions are exempt: a long build must survive a closed tab.
 const termIdleTimeout = 30 * time.Second
 
+// termSizeSlack bounds how far holdWindowSize may grow our PTY beyond the size
+// we asked for. The genuine deficit is the status bar plus a PTY off-by-one, so
+// single digits; the cap exists so a session where we are NOT the small client
+// cannot grow without limit.
+const termSizeSlack = 4
+
 type termKind string
 
 const (
@@ -294,6 +300,7 @@ func (m *termManager) openAgent(name string) (*termSession, error) {
 // a window down to fit. Growing to match the largest is therefore always the
 // right correction.
 func (s *termSession) holdWindowSize(name string, cols, rows int) {
+	baseCols, baseRows := cols, rows
 	for i := 0; i < 4; i++ {
 		time.Sleep(300 * time.Millisecond)
 		s.mu.Lock()
@@ -316,8 +323,11 @@ func (s *termSession) holdWindowSize(name string, cols, rows int) {
 			return // everyone agrees
 		}
 		// Assume the smallest client is ours and make up the difference.
-		cols += maxW - minW
-		rows += maxH - minH
+		// Capped: the real deficit is the status bar plus a PTY off-by-one, so
+		// a few cells. Without the cap, being the WIDEST client makes
+		// maxW-minW someone else's deficit and we grow every pass forever.
+		cols = min(cols+maxW-minW, baseCols+termSizeSlack)
+		rows = min(rows+maxH-minH, baseRows+termSizeSlack)
 		s.resize(cols, rows)
 	}
 }
