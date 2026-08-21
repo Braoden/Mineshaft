@@ -5,97 +5,350 @@
 <title>Mineshaft</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  html, body { margin: 0; height: 100%; background: #150f1a; overflow: hidden; }
-  canvas { image-rendering: pixelated; }
-  #hud, #hud * { font-family: 'Courier New', monospace; }
-  #hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
-  #header {
-    position: absolute; top: 10px; left: 68px;
-    color: #f2c94c; font-size: 14px; font-weight: bold;
-    text-shadow: 2px 2px 0 #000; letter-spacing: 2px;
+  /* ---------------------------------------------------------------- theme
+     Five-colour cool palette. The only warm hues on the page are the two
+     severity accents and clawd's body orange inside the room canvases. */
+  :root {
+    --bg:        #111227;
+    --card:      #272652;
+    --accent:    #2e457d;
+    --muted:     #82a0b9;
+    --text:      #d7fff7;
+
+    --warn:      #e8b04b;
+    --crit:      #e35d6a;
+
+    --card-brd:  rgba(130,160,185,.16);
+    --card-brd2: rgba(130,160,185,.28);
+    --shadow:    0 1px 2px rgba(0,0,0,.4), 0 8px 24px -8px rgba(0,0,0,.55);
+    --radius:    18px;
+    --gap:       18px;
+
+    --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   }
-  #nav {
-    position: absolute; top: 0; left: 0; bottom: 0; width: 56px;
-    background: #241813; border-right: 2px solid #8a5a33;
-    box-shadow: 3px 0 0 rgba(0,0,0,.35);
-    display: flex; flex-direction: column; align-items: center;
-    gap: 8px; padding-top: 10px; pointer-events: auto; box-sizing: border-box;
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
   }
-  .nav-btn {
-    width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
-    color: #bdb7a8; border: 2px solid transparent; cursor: pointer;
-    transition: color .2s, border-color .2s, background .2s;
+
+  /* ---------------------------------------------------------------- shell */
+  .app { display: grid; grid-template-columns: 232px 1fr; min-height: 100%; }
+
+  .sidebar {
+    background: linear-gradient(180deg, #1b1c3d 0%, var(--bg) 100%);
+    border-right: 1px solid var(--card-brd);
+    padding: 22px 16px;
+    display: flex; flex-direction: column; gap: 26px;
+    position: sticky; top: 0; height: 100vh;
   }
-  .nav-btn:hover { color: #e8e4d8; border-color: #8a5a33; }
-  .nav-btn:focus-visible { outline: 2px solid #f2c94c; outline-offset: 2px; }
-  .nav-btn.active { color: #f2c94c; border-color: #8a5a33; background: #2f2019; }
-  .nav-btn svg { width: 24px; height: 24px; }
-  @media (prefers-reduced-motion: reduce) { .nav-btn { transition: none; } }
-  #conn { color: #5aa053; } #conn.down { color: #b5482f; }
-  #tooltip {
-    position: absolute; display: none; max-width: 260px;
-    background: #241813; color: #e8e4d8; border: 2px solid #8a5a33;
-    padding: 6px 8px; font-size: 11px; line-height: 1.5;
-    box-shadow: 3px 3px 0 rgba(0,0,0,.5);
+  .brand { display: flex; align-items: center; gap: 11px; padding: 0 6px; }
+  .brand-mark {
+    width: 34px; height: 34px; border-radius: 10px; flex: none;
+    background: linear-gradient(145deg, var(--accent), #1b2a52);
+    border: 1px solid var(--card-brd2);
+    display: grid; place-items: center;
   }
-  #tooltip .t-name { color: #f2c94c; font-weight: bold; }
-  #panel {
-    position: absolute; display: none; top: 40px; right: 12px; width: 280px;
-    background: #241813; color: #e8e4d8; border: 2px solid #8a5a33;
-    padding: 10px; font-size: 11px; line-height: 1.5;
-    box-shadow: 4px 4px 0 rgba(0,0,0,.5); pointer-events: auto;
+  .brand-mark i { width: 12px; height: 12px; border-radius: 3px; background: var(--text); display: block; }
+  .brand-name { font-weight: 650; letter-spacing: .2px; }
+  .brand-sub { color: var(--muted); font-size: 11.5px; margin-top: -2px; }
+
+  .nav { display: flex; flex-direction: column; gap: 4px; }
+  .nav-label {
+    color: var(--muted); font-size: 10.5px; font-weight: 600;
+    letter-spacing: .09em; text-transform: uppercase; padding: 0 10px 8px;
   }
-  #panel h3 { margin: 0 0 4px; color: #f2c94c; font-size: 13px; }
-  #panel .p-close {
-    position: absolute; top: 4px; right: 8px; cursor: pointer;
-    color: #b5482f; font-weight: bold; font-size: 14px;
+  .nav-item {
+    display: flex; align-items: center; gap: 11px;
+    padding: 10px 12px; border-radius: 11px;
+    color: var(--muted); text-decoration: none; font-weight: 550;
+    border: 1px solid transparent; cursor: pointer;
+    transition: background .16s, color .16s, border-color .16s;
   }
-  #panel ul { margin: 6px 0 0; padding-left: 14px; max-height: 200px; overflow-y: auto; }
-  #panel li { margin-bottom: 4px; color: #bdb7a8; }
-  #ticker {
-    position: absolute; bottom: 8px; left: 68px; right: 12px;
-    color: #bdb7a8; font-size: 11px; line-height: 1.6;
-    text-shadow: 1px 1px 0 #000;
+  .nav-item:hover { color: var(--text); background: rgba(130,160,185,.07); }
+  .nav-item.active {
+    color: var(--text); background: rgba(46,69,125,.55);
+    border-color: var(--card-brd2);
   }
-  #ticker div:nth-child(2) { opacity: .7; }
-  #ticker div:nth-child(3) { opacity: .45; }
-  #ticker div:nth-child(4) { opacity: .25; }
+  .nav-item svg { width: 17px; height: 17px; flex: none; }
+
+  .side-foot { margin-top: auto; }
+  .conn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 11px 12px; border-radius: 11px;
+    background: rgba(130,160,185,.06); border: 1px solid var(--card-brd);
+    color: var(--muted); font-size: 12px;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); flex: none; }
+  .conn.live .dot { background: var(--text); box-shadow: 0 0 0 3px rgba(215,255,247,.14); }
+  .conn.down .dot { background: var(--crit); box-shadow: 0 0 0 3px rgba(227,93,106,.16); }
+
+  /* ---------------------------------------------------------------- main */
+  main { padding: 26px 30px 40px; min-width: 0; }
+  .page-head {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 20px; flex-wrap: wrap; margin-bottom: 22px;
+  }
+  h1 { font-size: 23px; font-weight: 650; margin: 0; letter-spacing: -.2px; }
+  .page-sub { color: var(--muted); font-size: 13px; margin-top: 3px; }
+  .head-meta { color: var(--muted); font-size: 12.5px; text-align: right; }
+  .head-meta b { color: var(--text); font-weight: 600; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--card-brd);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  .card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; padding: 13px 16px;
+    border-bottom: 1px solid var(--card-brd);
+  }
+  .card-title {
+    font-size: 11px; font-weight: 650; letter-spacing: .085em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .chip {
+    font-size: 10.5px; font-weight: 600; letter-spacing: .04em;
+    padding: 3px 9px; border-radius: 999px;
+    background: rgba(130,160,185,.13); color: var(--muted);
+    border: 1px solid var(--card-brd); white-space: nowrap;
+  }
+  .chip.on { background: rgba(46,69,125,.6); color: var(--text); border-color: var(--card-brd2); }
+  .chip.warn { background: rgba(232,176,75,.14); color: var(--warn); border-color: rgba(232,176,75,.35); }
+  .chip.crit { background: rgba(227,93,106,.15); color: var(--crit); border-color: rgba(227,93,106,.38); }
+
+  /* ---------------------------------------------------------------- rooms */
+  .rooms {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: var(--gap); margin-bottom: var(--gap);
+  }
+  .room .stage {
+    position: relative; height: 208px; overflow: hidden;
+    border-radius: 0 0 var(--radius) var(--radius);
+    background: #0d0e20;
+  }
+  .room canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+  .room-empty {
+    position: absolute; inset: 0; display: none;
+    flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+    text-align: center; padding: 16px; pointer-events: none;
+    background: linear-gradient(180deg, rgba(17,18,39,.55), rgba(17,18,39,.82));
+  }
+  .room-empty.show { display: flex; }
+  .room-empty b { font-size: 13px; font-weight: 600; }
+  .room-empty span { color: var(--muted); font-size: 11.5px; max-width: 200px; }
+
+  /* ---------------------------------------------------------------- stats */
+  .stats { display: grid; grid-template-columns: 1.55fr 1fr; gap: var(--gap); align-items: start; }
+  .col { display: grid; gap: var(--gap); }
+
+  .hero-body { padding: 18px 20px 8px; }
+  .hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+  .hero-num {
+    font-size: clamp(38px, 5vw, 52px); font-weight: 680;
+    letter-spacing: -1.6px; line-height: 1; font-variant-numeric: tabular-nums;
+  }
+  .hero-num small { font-size: .42em; font-weight: 600; letter-spacing: -.2px; color: var(--muted); margin-left: 5px; }
+  .hero-label { color: var(--muted); font-size: 12px; margin-top: 7px; }
+  .hero-reset { text-align: right; }
+  .reset-time { font-size: 21px; font-weight: 640; font-variant-numeric: tabular-nums; letter-spacing: -.4px; }
+  .reset-cap { color: var(--muted); font-size: 10.5px; letter-spacing: .085em; text-transform: uppercase; font-weight: 600; }
+  .chart { margin-top: 14px; }
+  .chart svg { display: block; width: 100%; height: 108px; overflow: visible; }
+  .chart-empty { color: var(--muted); font-size: 12px; padding: 34px 0 30px; text-align: center; }
+
+  .kv { display: grid; gap: 13px; padding: 15px 16px; }
+  .kv-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .kv-key { color: var(--muted); font-size: 12.5px; }
+  .kv-val { font-weight: 620; font-variant-numeric: tabular-nums; }
+  .kv-val.warn { color: var(--warn); }
+  .kv-val.crit { color: var(--crit); }
+
+  .limits { display: grid; gap: 14px; padding: 15px 16px; }
+  .limit-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+  .limit-name { font-size: 12.5px; font-weight: 550; }
+  .limit-name em { font-style: normal; color: var(--muted); font-weight: 450; }
+  .limit-pct { font-size: 12.5px; font-weight: 640; font-variant-numeric: tabular-nums; color: var(--muted); }
+  .bar { height: 7px; border-radius: 999px; background: rgba(17,18,39,.75); overflow: hidden; }
+  .bar i {
+    display: block; height: 100%; border-radius: 999px;
+    background: var(--accent); transition: width .5s ease;
+  }
+  .bar i.mint { background: var(--text); }
+  .bar i.warn { background: var(--warn); }
+  .bar i.crit { background: var(--crit); }
+
+  .agents { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; padding: 15px 16px; }
+  .agent {
+    display: flex; align-items: center; gap: 9px;
+    padding: 9px 11px; border-radius: 11px;
+    background: rgba(17,18,39,.42); border: 1px solid var(--card-brd);
+    min-width: 0;
+  }
+  .agent .dot { opacity: .45; }
+  .agent.on .dot { opacity: 1; background: var(--text); box-shadow: 0 0 0 3px rgba(215,255,247,.13); }
+  .agent-name { font-size: 12.5px; font-weight: 560; text-transform: capitalize; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .agent-rig { color: var(--muted); font-size: 10.5px; }
+
+  .feed { padding: 6px 0 8px; max-height: 292px; overflow-y: auto; }
+  .feed-item { display: flex; gap: 11px; padding: 9px 16px; align-items: flex-start; }
+  .feed-item + .feed-item { border-top: 1px solid rgba(130,160,185,.09); }
+  .feed-time { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; padding-top: 1px; flex: none; width: 42px; }
+  .feed-body { min-width: 0; }
+  .feed-kind { font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); font-weight: 620; }
+  .feed-text { font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .feed-empty { color: var(--muted); font-size: 12px; text-align: center; padding: 26px 16px; }
+
+  .feed::-webkit-scrollbar { width: 9px; }
+  .feed::-webkit-scrollbar-thumb { background: rgba(130,160,185,.2); border-radius: 99px; border: 3px solid var(--card); }
+
+  /* ---------------------------------------------------------------- responsive */
+  @media (max-width: 1180px) {
+    .stats { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 940px) {
+    .app { grid-template-columns: 76px 1fr; }
+    .sidebar { padding: 20px 12px; }
+    .brand-text, .nav-label, .nav-item span, .conn span { display: none; }
+    .nav-item { justify-content: center; padding: 11px; }
+    .conn { justify-content: center; padding: 11px; }
+    .rooms { grid-template-columns: 1fr; }
+    main { padding: 20px 18px 32px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
 </style>
 </head>
 <body>
-<div id="hud">
-  <nav id="nav">
-    <a href="/" class="nav-btn active" aria-label="Home" aria-current="page" title="Town view">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <path d="M3 11 L12 3 L21 11 M5 10 V21 H10 V15 H14 V21 H19 V10"/>
-      </svg>
-    </a>
-    <a href="/dial.html" class="nav-btn" aria-label="Speed dial" title="Usage speed dial">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <path d="M4 18 A9 9 0 0 1 20 18 M12 13 L16 8"/>
-        <circle cx="12" cy="14" r="1.5" fill="currentColor" stroke="none"/>
-      </svg>
-    </a>
-  </nav>
-  <div id="header">&#9935; MINESHAFT <span id="conn">&#9679;</span></div>
-  <div id="tooltip"></div>
-  <div id="panel"></div>
-  <div id="ticker"></div>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"><i></i></div>
+      <div class="brand-text">
+        <div class="brand-name">Mineshaft</div>
+        <div class="brand-sub" id="brand-town">town</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-label">Overview</div>
+      <a class="nav-item active" href="#" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/>
+          <rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>
+        </svg>
+        <span>Dashboard</span>
+      </a>
+    </nav>
+
+    <div class="side-foot">
+      <div class="conn" id="conn"><i class="dot"></i><span id="conn-text">connecting</span></div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="page-head">
+      <div>
+        <h1 id="greeting">Good morning</h1>
+        <div class="page-sub" id="page-sub">Loading workspace…</div>
+      </div>
+      <div class="head-meta">
+        <div id="clock">—</div>
+        <div><b id="agent-count">0</b> agents running</div>
+      </div>
+    </div>
+
+    <section class="rooms">
+      <div class="card room">
+        <div class="card-head"><span class="card-title">Mineshaft</span><span class="chip" id="chip-mineshaft">idle</span></div>
+        <div class="stage">
+          <canvas id="cv-mineshaft"></canvas>
+          <div class="room-empty" id="empty-mineshaft">
+            <b>No active miners</b>
+            <span>The seam is quiet. Sling work to a miner and the shaft lights up.</span>
+          </div>
+        </div>
+      </div>
+      <div class="card room">
+        <div class="card-head"><span class="card-title">Refinery</span><span class="chip" id="chip-refinery">idle</span></div>
+        <div class="stage">
+          <canvas id="cv-refinery"></canvas>
+          <div class="room-empty" id="empty-refinery"><b>Refinery offline</b><span>No refinery agent is running.</span></div>
+        </div>
+      </div>
+      <div class="card room">
+        <div class="card-head"><span class="card-title">Overseer</span><span class="chip" id="chip-overseer">idle</span></div>
+        <div class="stage">
+          <canvas id="cv-overseer"></canvas>
+          <div class="room-empty" id="empty-overseer"><b>Office empty</b><span>No town-level agents are running.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="stats">
+      <div class="col">
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Session usage</span>
+            <span class="chip" id="chip-usage">—</span>
+          </div>
+          <div class="hero-body">
+            <div class="hero-top">
+              <div>
+                <div class="hero-num" id="hero-num">—<small>remaining</small></div>
+                <div class="hero-label" id="hero-label">of the 5-hour window</div>
+              </div>
+              <div class="hero-reset">
+                <div class="reset-cap">Resets in</div>
+                <div class="reset-time" id="reset-time">—</div>
+              </div>
+            </div>
+            <div class="chart" id="chart"><div class="chart-empty">Collecting usage history…</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><span class="card-title">Burn rate</span></div>
+          <div class="kv">
+            <div class="kv-row"><span class="kv-key">Current burn</span><span class="kv-val" id="burn-rate">—</span></div>
+            <div class="kv-row"><span class="kv-key">Projection</span><span class="kv-val" id="burn-proj">—</span></div>
+            <div class="kv-row"><span class="kv-key">Samples recorded</span><span class="kv-val" id="burn-samples">0</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><span class="card-title">Limits</span></div>
+          <div class="limits" id="limits"><div class="feed-empty">No limit data.</div></div>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="card">
+          <div class="card-head"><span class="card-title">Agents</span><span class="chip" id="chip-agents">0</span></div>
+          <div class="agents" id="agents"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><span class="card-title">Activity</span><span class="chip" id="chip-feed">live</span></div>
+          <div class="feed" id="feed"><div class="feed-empty">Waiting for events…</div></div>
+        </div>
+      </div>
+    </section>
+  </main>
 </div>
-<script>
-  window.onerror = (msg, src, line) => {
-    const el = document.getElementById('ticker');
-    if (el) el.textContent = 'JS ERROR: ' + msg + ' @ ' + (src || '').split('/').pop() + ':' + line;
-  };
-  // keep nav clicks out of littlejs's window-level mouse/touch handlers
-  {
-    const nav = document.getElementById('nav');
-    for (const t of ['mousedown', 'mouseup', 'touchstart', 'touchend'])
-      nav.addEventListener(t, e => e.stopPropagation());
-  }
-</script>
-<script src="littlejs.release.js"></script>
+
+<script src="pixi.min.js"></script>
 <script src="sprites.js"></script>
-<script src="game.js"></script>
+<script src="rooms.js"></script>
+<script src="dashboard.js"></script>
 </body>
 </html>

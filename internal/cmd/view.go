@@ -246,6 +246,8 @@ func runView(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	startUsageSampler(townRoot)
+
 	mux := http.NewServeMux()
 	mux.Handle("/", http.FileServerFS(webRoot))
 	mux.HandleFunc("/api/state", func(w http.ResponseWriter, r *http.Request) {
@@ -257,6 +259,18 @@ func runView(cmd *cobra.Command, args []string) error {
 	mux.HandleFunc("/api/usage", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(fetchUsage()); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	})
+	mux.HandleFunc("/api/usage/history", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		usageHistoryMu.Lock()
+		points := readUsageHistory(townRoot)
+		usageHistoryMu.Unlock()
+		if points == nil {
+			points = []usagePoint{}
+		}
+		if err := json.NewEncoder(w).Encode(points); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	})
