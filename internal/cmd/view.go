@@ -25,7 +25,10 @@ import (
 //go:embed viewweb
 var viewAssets embed.FS
 
-var viewPort int
+var (
+	viewPort     int
+	viewTerminal bool
+)
 
 var viewCmd = &cobra.Command{
 	Use:     "view",
@@ -45,6 +48,8 @@ Example:
 
 func init() {
 	viewCmd.Flags().IntVar(&viewPort, "port", 8090, "HTTP port to listen on")
+	viewCmd.Flags().BoolVar(&viewTerminal, "terminal", false,
+		"enable the terminal page (grants shell access to anything that can reach the port)")
 	rootCmd.AddCommand(viewCmd)
 }
 
@@ -283,6 +288,11 @@ func runView(cmd *cobra.Command, args []string) error {
 	startUsageSampler(townRoot)
 
 	mux := http.NewServeMux()
+	// The terminal spawns real shells, so it exists only on request. Without
+	// the flag these routes are never registered at all.
+	if viewTerminal {
+		registerTerminalRoutes(mux)
+	}
 	mux.Handle("/", http.FileServerFS(webRoot))
 	mux.HandleFunc("/api/state", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -314,6 +324,10 @@ func runView(cmd *cobra.Command, args []string) error {
 
 	listenAddr := fmt.Sprintf("127.0.0.1:%d", viewPort)
 	fmt.Printf("  ms view at http://%s  •  ctrl+c to stop\n", listenAddr)
+
+	if viewTerminal {
+		fmt.Printf("  terminal enabled - this port grants shell access; loopback only\n")
+	}
 
 	server := &http.Server{
 		Addr:              listenAddr,

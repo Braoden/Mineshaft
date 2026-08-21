@@ -188,6 +188,12 @@ func BuildCommandContext(ctx context.Context, args ...string) *exec.Cmd {
 // miner is rolled back (mi-z9r). Socket selection never depends on these
 // vars here: commands always target an explicit -L socket or the default
 // server. TMUX_PANE is kept — tmux resolves the current pane from it.
+// SanitizedEnv is sanitizedEnv for callers outside this package. The web
+// terminal needs it: `ms view` may itself be running inside a pane, and the
+// multiplexer refuses to attach from within a session unless the nesting
+// variables are cleared.
+func SanitizedEnv() []string { return sanitizedEnv() }
+
 func sanitizedEnv() []string {
 	env := os.Environ()
 	kept := make([]string, 0, len(env))
