@@ -11,8 +11,18 @@
 
 const Art = window.MSArt;
 
-const FLOOR_H = 16;          // floor band height in world pixels
-const MIN_SCALE = 2;
+const FLOOR_H = 11;          // floor band height in world pixels
+
+// Scale is derived from the box HEIGHT, because what matters visually is how
+// large a clawd reads against the room — not how wide the card is. An 18px
+// mascot at scale 4 stands ~1/3 the height of the stage, which is big enough
+// to read expressions and tools at a glance.
+const TARGET_WORLD_H = 58;
+const MIN_SCALE = 3, MAX_SCALE = 6;
+
+function scaleFor(boxH) {
+    return Math.min(MAX_SCALE, Math.max(MIN_SCALE, Math.round(boxH / TARGET_WORLD_H)));
+}
 
 // texture cache — grids are deterministic, so rasterise each one once.
 const texCache = new Map();
@@ -153,7 +163,7 @@ class Room {
         const box = this.canvas.parentElement.getBoundingClientRect();
         const boxW = Math.max(160, Math.floor(box.width));
         const boxH = Math.max(100, Math.floor(box.height));
-        this.scale = Math.max(MIN_SCALE, Math.floor(boxW / 190));
+        this.scale = scaleFor(boxH);
         this.worldW = Math.ceil(boxW / this.scale);
         this.worldH = Math.ceil(boxH / this.scale);
         this.floorY = this.worldH - FLOOR_H;
@@ -212,59 +222,100 @@ class Room {
     buildInterior() {
         const W = this.worldW, H = this.worldH, fy = this.floorY;
         const P = Art.PALETTE;
+        const at = (name, x, yFromFloor, opts) => this.addProp(name, x, fy - yFromFloor, opts);
 
         if (this.kind === 'mineshaft') {
-            this.band(0, 0, W, fy, P.n);                       // rock face
-            this.band(0, fy, W, H - fy, P.S);                  // floor
-            this.band(0, fy, W, 1, P.s);
-            // hewn texture on the back wall
-            for (let i = 0; i < Math.floor(W / 14); i++) {
-                this.band(rnd(2, W - 12), rnd(4, fy - 10), rnd(4, 10), 2, P.B, 0.6);
+            // rock face, lit from the lamp side and falling off into the dark
+            this.band(0, 0, W, fy, P.K);
+            this.band(0, 0, W, 8, P.k, .55);
+            for (let i = 0; i < Math.ceil(W / 34); i++) {
+                this.addProp('strata', i * 34 + (i % 2 ? -6 : 2), 6 + (i % 3) * 11);
             }
-            this.addProp('seam', W - 20, fy - 20);
-            this.addProp('timber', 14, fy - 26);
-            this.addProp('timber', W - 46, fy - 26);
-            this.band(8, fy - 27, W - 20, 3, P.S);             // header beam
-            this.addProp('rail', 6, fy - 1);
-            this.addProp('rail', 30, fy - 1);
-            this.lamp = this.addProp('lamp', 24, 2);
-            this.cart = this.addProp('oreCart', 8, fy - 13);
-            this.cartX = 20;
+            // dirt floor over bedrock, with sleeper-bearing rails
+            this.band(0, fy, W, H - fy, P.T);
+            this.band(0, fy, W, 1, P.t);
+            this.band(0, fy + 5, W, H - fy - 5, P.K, .5);
+
+            // timber support frames give the shaft its depth
+            at('frame', 4, 34);
+            at('frame', W - 52, 34);
+
+            at('seam', W - 22, 26);
+            at('rail', 2, -3);
+            at('rail', 30, -3);
+            at('rail', 58, -3);
+            this.addProp('cable', Math.round(W * .18), 1);
+            this.lamp = this.addProp('lamp', Math.round(W * .33), 2);
+
+            at('toolRack', 20, 32);
+            at('coalPile', W - 46, 9);
+            at('barrel', W - 66, 14);
+            at('puddle', 44, 3);
+            at('oreChunk', 62, 5);
+            this.cart = at('oreCart', 4, 15);
+            this.cartX = 16;
             this.stationA = W - 34;
-            this.stationB = W - 24;
+            this.stationB = W - 26;
 
         } else if (this.kind === 'refinery') {
+            // riveted plate wall
             this.band(0, 0, W, fy, P.B);
+            this.band(0, 0, W, 10, P.n);
+            for (let x = 3; x < W; x += 9) this.band(x, 11, 1, fy - 12, P.n, .5);
+            for (let x = 6; x < W; x += 18) this.band(x, 13, 1, 1, P.S, .8);
             this.band(0, fy, W, H - fy, P.n);
-            this.band(0, fy, W, 1, P.b);
-            this.addProp('pipe', 4, 4);
-            this.addProp('pipe', W - 34, 11);
-            this.addProp('gauge', W - 14, 3);
-            this.addProp('press', W - 46, fy - 24);
-            this.addProp('chute', W - 15, fy - 16);
-            this.crate = this.addProp('crate', 8, fy - 10);
-            this.crateX = 14;
-            this.stationA = W - 40;
+            this.band(0, fy, W, 1, P.M);
+
+            this.addProp('pipe', 2, 2);
+            this.addProp('pipe', W - 40, 2);
+            at('valve', 44, 46);
+            this.addProp('gauge', W - 16, 12);
+            at('warnSign', 22, 40);
+
+            at('boiler', 4, 26);
+            at('press', W - 44, 30);
+            at('chute', W - 18, 20);
+            at('conveyor', 26, 2);
+            this.crate = at('crate', 26, 12);
+            at('crate', 38, 12);
+            this.crateX = 32;
+            this.stationA = W - 38;
             this.stationB = W - 30;
 
-        } else { // overseer / HQ office
+        } else {
+            // panelled office: dark upper wall over a timber wainscot
             this.band(0, 0, W, fy, P.B);
-            this.band(0, fy, W, H - fy, P.n);
-            this.band(0, fy, W, 1, P.b);
-            this.addProp('shelf', 4, fy - 30);
-            this.addProp('mailSlot', W - 16, fy - 32);
-            this.desk = this.addProp('desk', Math.round(W / 2 - 20), fy - 14);
-            this.addProp('terminal', Math.round(W / 2 - 12), fy - 25);
-            this.addProp('mug', Math.round(W / 2 + 12), fy - 19);
-            this.addProp('chair', Math.round(W / 2 + 22), fy - 14);
-            this.deskX = Math.round(W / 2 - 4);
-            this.mailX = W - 22;
-            this.stationA = Math.round(W / 2 - 26);
-            this.stationB = Math.round(W / 2 + 18);
+            this.band(0, fy - 14, W, 14, P.T);
+            this.band(0, fy - 14, W, 1, P.h);
+            for (let x = 4; x < W; x += 12) this.band(x, fy - 13, 1, 12, P.t, .7);
+
+            this.band(0, fy, W, H - fy, P.T);
+            this.band(0, fy, W, 1, P.t);
+            at('rug', Math.round(W / 2 - 17), 4);
+
+            at('bookshelf', 3, 34);
+            at('cabinet', 32, 26);
+            this.addProp('corkboard', Math.round(W / 2 + 4), 5);
+            this.addProp('wallClock', Math.round(W / 2 - 12), 6);
+            at('pigeonholes', W - 24, 32);
+            at('plant', W - 44, 18);
+
+            const dx = Math.round(W / 2 - 19);
+            this.desk = at('desk', dx, 17);
+            at('terminal', dx + 4, 30);
+            at('deskLamp', dx + 24, 30);
+            at('papers', dx + 21, 17);
+            at('mug', dx + 33, 18);
+            at('chair', dx + 12, 17);
+
+            this.deskX = dx + 14;
+            this.mailX = W - 16;
+            this.stationA = Math.round(W / 2 - 24);
+            this.stationB = Math.round(W / 2 + 14);
         }
 
-        // vignette floor shadow ties the figures to the ground
-        this.band(0, fy - 2, W, 2, P.e, 0.25);
+        // contact shadow ties the figures to the ground
+        this.band(0, fy - 1, W, 1, P.e, 0.28);
     }
 
     // ------------------------------------------------------------ routines
@@ -429,7 +480,7 @@ class Room {
         const box = this.canvas.parentElement.getBoundingClientRect();
         const boxW = Math.max(160, Math.floor(box.width));
         const boxH = Math.max(100, Math.floor(box.height));
-        const scale = Math.max(MIN_SCALE, Math.floor(boxW / 190));
+        const scale = scaleFor(boxH);
         const worldW = Math.ceil(boxW / scale);
         const worldH = Math.ceil(boxH / scale);
         if (scale === this.scale && worldW === this.worldW && worldH === this.worldH) return;

@@ -21,6 +21,7 @@ const roomFor = role => ROOM_OF[role] || 'overseer';
 
 const state = {
     agents: [],
+    rigs: [],
     town: '',
     usage: null,
     history: [],
@@ -265,6 +266,50 @@ function renderCountdown() {
     el.textContent = ms > 0 ? humanDuration(ms) : 'now';
 }
 
+// ---------------------------------------------------------------- rigs
+
+// A rig is "active" when at least one of its agents is running. Town-level
+// roles (overseer, supervisor) carry no rig, so they're excluded from the
+// per-rig tallies rather than being attributed to an arbitrary rig.
+function renderRigs() {
+    const host = $('rigs');
+    const rigs = state.rigs || [];
+
+    if (!rigs.length) {
+        host.innerHTML = '<div class="feed-empty">No rigs registered.</div>';
+        $('chip-rigs').textContent = '0';
+        $('chip-rigs').className = 'chip';
+        return;
+    }
+
+    const rows = rigs.map(name => {
+        const mine = state.agents.filter(a => a.rig === name);
+        const running = mine.filter(a => a.running).length;
+        const active = running > 0;
+        const roles = mine.filter(a => a.running).map(a => a.role);
+        const detail = active
+            ? `${running}/${mine.length} agents · ${[...new Set(roles)].join(', ')}`
+            : mine.length
+                ? `${mine.length} agent${mine.length === 1 ? '' : 's'} idle`
+                : 'no agents';
+        return { name, active, running, detail };
+    });
+
+    const activeCount = rows.filter(r => r.active).length;
+    $('chip-rigs').textContent = `${activeCount}/${rows.length} active`;
+    $('chip-rigs').className = activeCount ? 'chip on' : 'chip';
+
+    host.innerHTML = rows.map(r => `
+      <div class="rig ${r.active ? 'on' : ''}">
+        <i class="dot" style="${r.active ? 'background:var(--text);box-shadow:0 0 0 3px rgba(215,255,247,.13)' : 'opacity:.45'}"></i>
+        <div class="rig-body">
+          <div class="rig-name">${escapeHTML(r.name)}</div>
+          <div class="rig-meta">${escapeHTML(r.detail)}</div>
+        </div>
+        <span class="chip ${r.active ? 'on' : ''}">${r.active ? 'active' : 'inactive'}</span>
+      </div>`).join('');
+}
+
 // ---------------------------------------------------------------- agents
 
 function renderAgents() {
@@ -340,12 +385,14 @@ function escapeHTML(s) {
 function applyState(st) {
     if (!st) return;
     state.agents = st.agents || [];
+    state.rigs = st.rigs || [];
     state.town = st.town || '';
     $('brand-town').textContent = state.town || 'town';
-    const rigs = (st.rigs || []).join(', ');
-    $('page-sub').textContent = rigs
-        ? `${state.town} · ${rigs}`
+    const rigList = state.rigs.join(', ');
+    $('page-sub').textContent = rigList
+        ? `${state.town} · ${rigList}`
         : state.town;
+    renderRigs();
     renderAgents();
     applyAgentsToRooms();
 }

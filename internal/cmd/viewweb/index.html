@@ -131,7 +131,7 @@
     gap: var(--gap); margin-bottom: var(--gap);
   }
   .room .stage {
-    position: relative; height: 208px; overflow: hidden;
+    position: relative; height: 240px; overflow: hidden;
     border-radius: 0 0 var(--radius) var(--radius);
     background: #0d0e20;
   }
@@ -185,6 +185,18 @@
   .bar i.mint { background: var(--text); }
   .bar i.warn { background: var(--warn); }
   .bar i.crit { background: var(--crit); }
+
+  .rigs { display: grid; gap: 9px; padding: 15px 16px; }
+  .rig {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 12px;
+    background: rgba(17,18,39,.42); border: 1px solid var(--card-brd);
+  }
+  .rig.on { border-color: var(--card-brd2); background: rgba(46,69,125,.32); }
+  .rig-body { min-width: 0; flex: 1; }
+  .rig-name { font-size: 13px; font-weight: 600; }
+  .rig-meta { color: var(--muted); font-size: 11px; }
+  .rig .chip { flex: none; }
 
   .agents { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; padding: 15px 16px; }
   .agent {
@@ -332,6 +344,11 @@
       </div>
 
       <div class="col">
+        <div class="card">
+          <div class="card-head"><span class="card-title">Rigs</span><span class="chip" id="chip-rigs">0</span></div>
+          <div class="rigs" id="rigs"></div>
+        </div>
+
         <div class="card">
           <div class="card-head"><span class="card-title">Agents</span><span class="chip" id="chip-agents">0</span></div>
           <div class="agents" id="agents"></div>

@@ -30,6 +30,34 @@ const PALETTE = {
     y: '#e8b04b',       // lamp light / warning
     Y: '#b8862f',       // lamp shade
     r: '#e35d6a',       // spark / critical
+
+    // ---- interior materials -------------------------------------------
+    // Room interiors are deliberately NOT limited to the dashboard palette.
+    // The cards around them carry the cool scheme; inside the boxes the
+    // scenes get real materials so the rooms read as places, not diagrams.
+    t: '#8a5a33',       // timber
+    T: '#5f3d22',       // timber dark
+    h: '#a8764a',       // timber light
+    k: '#4a4550',       // rock
+    K: '#332f3d',       // rock dark
+    q: '#655f71',       // rock light
+    m: '#9a9a9a',       // steel
+    M: '#6e6e6e',       // steel dark
+    c: '#cdc8bf',       // bright metal / chrome
+    u: '#c98b4b',       // copper / brass
+    U: '#8f5f2f',       // copper dark
+    l: '#ffe9a8',       // lamp glow
+    L: '#ffc861',       // lamp core
+    g: '#5aa053',       // green (plants, ledger cloth)
+    G: '#3d7038',       // green dark
+    x: '#b5482f',       // rust / red
+    X: '#7e2f1e',       // rust dark
+    p: '#efe9db',       // paper
+    P: '#c2bcae',       // paper shade
+    z: '#2b2b33',       // coal
+    Z: '#9db4cc',       // ore glint
+    f: '#c95a78',       // flower / pin head
+    v: '#7a6a92',       // dim violet (deep shadow tint)
 };
 
 // ---------------------------------------------------------------- grid tools
@@ -345,128 +373,298 @@ function prop(w, h, paint) {
 }
 
 const PROPS = {
-    // --- mineshaft
-    oreCart: () => prop(22, 14, g => {
-        rect(g, 1, 2, 20, 7, 'b');
-        rect(g, 1, 2, 20, 1, 'i');
-        rect(g, 2, 9, 18, 1, 'e');
-        disc(g, 5, 11, 2.4, 's'); disc(g, 5, 11, 1, 'e');
-        disc(g, 16, 11, 2.4, 's'); disc(g, 16, 11, 1, 'e');
+    // ================================================== mineshaft
+    oreCart: () => prop(24, 15, g => {
+        rect(g, 1, 2, 22, 8, 't');
+        rect(g, 1, 2, 22, 1, 'h');
+        rect(g, 1, 9, 22, 1, 'T');
+        for (let x = 3; x < 22; x += 5) rect(g, x, 3, 1, 6, 'T');
+        rect(g, 0, 10, 24, 2, 'M');
+        disc(g, 5, 12, 2.6, 'M'); disc(g, 5, 12, 1.4, 'm'); px(g, 5, 12, 'K');
+        disc(g, 18, 12, 2.6, 'M'); disc(g, 18, 12, 1.4, 'm'); px(g, 18, 12, 'K');
     }),
-    oreCartFull: () => prop(22, 14, g => {
-        rect(g, 1, 2, 20, 7, 'b');
-        rect(g, 1, 2, 20, 1, 'i');
-        rect(g, 3, 0, 4, 2, 's'); rect(g, 8, 0, 5, 2, 'S'); rect(g, 14, 0, 4, 2, 's');
-        rect(g, 2, 9, 18, 1, 'e');
-        disc(g, 5, 11, 2.4, 's'); disc(g, 5, 11, 1, 'e');
-        disc(g, 16, 11, 2.4, 's'); disc(g, 16, 11, 1, 'e');
+    oreCartFull: () => prop(24, 15, g => {
+        rect(g, 2, 0, 5, 3, 'z'); rect(g, 7, 0, 6, 2, 'k'); rect(g, 13, 0, 6, 3, 'z');
+        px(g, 4, 0, 'Z'); px(g, 10, 1, 'Z'); px(g, 16, 0, 'Z');
+        rect(g, 1, 2, 22, 8, 't');
+        rect(g, 1, 2, 22, 1, 'h');
+        rect(g, 1, 9, 22, 1, 'T');
+        for (let x = 3; x < 22; x += 5) rect(g, x, 3, 1, 6, 'T');
+        rect(g, 0, 10, 24, 2, 'M');
+        disc(g, 5, 12, 2.6, 'M'); disc(g, 5, 12, 1.4, 'm'); px(g, 5, 12, 'K');
+        disc(g, 18, 12, 2.6, 'M'); disc(g, 18, 12, 1.4, 'm'); px(g, 18, 12, 'K');
     }),
-    timber: () => prop(6, 26, g => {
-        rect(g, 0, 0, 6, 26, 'S');
-        rect(g, 1, 0, 1, 26, 's');
-        rect(g, 0, 0, 6, 2, 's');
+    // full timber support frame: two posts plus a header and braces
+    frame: () => prop(46, 34, g => {
+        rect(g, 0, 0, 46, 4, 't');
+        rect(g, 0, 0, 46, 1, 'h');
+        rect(g, 0, 3, 46, 1, 'T');
+        rect(g, 1, 4, 5, 30, 't'); rect(g, 1, 4, 1, 30, 'h'); rect(g, 5, 4, 1, 30, 'T');
+        rect(g, 40, 4, 5, 30, 't'); rect(g, 40, 4, 1, 30, 'h'); rect(g, 44, 4, 1, 30, 'T');
+        // corner braces
+        for (let i = 0; i < 6; i++) { px(g, 6 + i, 5 + i, 'T'); px(g, 7 + i, 5 + i, 't'); }
+        for (let i = 0; i < 6; i++) { px(g, 39 - i, 5 + i, 'T'); px(g, 38 - i, 5 + i, 't'); }
     }),
-    seam: () => prop(14, 20, g => {
-        rect(g, 0, 0, 14, 20, 'n');
-        rect(g, 2, 3, 4, 2, 'i'); rect(g, 7, 6, 5, 2, 'b');
-        rect(g, 3, 10, 4, 2, 'i'); rect(g, 8, 14, 4, 2, 'b');
-        rect(g, 2, 17, 5, 2, 'i');
+    strata: () => prop(40, 7, g => {
+        rect(g, 0, 0, 40, 3, 'K');
+        rect(g, 2, 1, 30, 1, 'q');
+        rect(g, 0, 4, 40, 2, 'k');
+        px(g, 9, 5, 'Z'); px(g, 24, 4, 'Z');
     }),
-    oreChunk: () => prop(5, 4, g => { rect(g, 0, 1, 5, 3, 's'); rect(g, 1, 0, 3, 1, 'i'); }),
-    rail: () => prop(24, 3, g => {
-        rect(g, 0, 0, 24, 1, 's');
-        for (let x = 1; x < 24; x += 4) rect(g, x, 1, 2, 2, 'S');
+    seam: () => prop(18, 26, g => {
+        rect(g, 0, 0, 18, 26, 'K');
+        rect(g, 1, 2, 6, 3, 'z'); rect(g, 9, 5, 7, 3, 'z');
+        rect(g, 2, 10, 6, 3, 'z'); rect(g, 10, 15, 6, 3, 'z');
+        rect(g, 1, 20, 7, 3, 'z');
+        px(g, 3, 3, 'Z'); px(g, 12, 6, 'Z'); px(g, 5, 11, 'Z');
+        px(g, 13, 16, 'Z'); px(g, 4, 21, 'Z'); px(g, 15, 22, 'Z');
+        rect(g, 8, 0, 1, 26, 'q');
     }),
-    lamp: () => prop(8, 12, g => {
-        rect(g, 3, 0, 2, 3, 'S');
-        rect(g, 1, 3, 6, 2, 's');
-        rect(g, 2, 5, 4, 4, 'y');
-        rect(g, 3, 6, 2, 2, 'w');
-        rect(g, 1, 9, 6, 1, 'S');
+    oreChunk: () => prop(6, 5, g => { rect(g, 0, 1, 6, 4, 'k'); rect(g, 1, 0, 4, 1, 'q'); px(g, 2, 2, 'Z'); }),
+    coalPile: () => prop(20, 9, g => {
+        rect(g, 2, 5, 16, 4, 'z');
+        rect(g, 4, 3, 12, 2, 'z');
+        rect(g, 7, 1, 6, 2, 'k');
+        px(g, 6, 6, 'Z'); px(g, 13, 4, 'Z'); px(g, 9, 2, 'Z');
     }),
-    lampOff: () => prop(8, 12, g => {
-        rect(g, 3, 0, 2, 3, 'S');
-        rect(g, 1, 3, 6, 2, 'S');
-        rect(g, 2, 5, 4, 4, 'n');
-        rect(g, 1, 9, 6, 1, 'S');
+    rail: () => prop(28, 4, g => {
+        for (let x = 0; x < 28; x += 6) rect(g, x, 2, 4, 2, 'T');
+        rect(g, 0, 0, 28, 1, 'm');
+        rect(g, 0, 1, 28, 1, 'M');
+    }),
+    lamp: () => prop(9, 14, g => {
+        rect(g, 4, 0, 1, 4, 'M');
+        rect(g, 2, 4, 5, 1, 'M');
+        rect(g, 1, 5, 7, 6, 'u');
+        rect(g, 2, 6, 5, 4, 'l');
+        rect(g, 3, 7, 3, 2, 'L');
+        rect(g, 1, 11, 7, 1, 'U');
+        rect(g, 3, 12, 3, 1, 'M');
+    }),
+    lampOff: () => prop(9, 14, g => {
+        rect(g, 4, 0, 1, 4, 'M');
+        rect(g, 2, 4, 5, 1, 'M');
+        rect(g, 1, 5, 7, 6, 'U');
+        rect(g, 2, 6, 5, 4, 'K');
+        rect(g, 1, 11, 7, 1, 'M');
+        rect(g, 3, 12, 3, 1, 'M');
+    }),
+    cable: () => prop(34, 8, g => {
+        for (let x = 0; x < 34; x++) {
+            const y = Math.round(2 + Math.sin(x / 5) * 1.6 + 1);
+            px(g, x, y, 'K');
+        }
+        rect(g, 10, 4, 1, 2, 'M'); disc(g, 10, 7, 1.6, 'l');
+        rect(g, 26, 4, 1, 2, 'M'); disc(g, 26, 7, 1.6, 'l');
+    }),
+    toolRack: () => prop(16, 20, g => {
+        rect(g, 0, 0, 16, 2, 't');
+        rect(g, 2, 2, 1, 14, 'T'); rect(g, 2, 15, 5, 2, 'm');   // shovel
+        rect(g, 8, 2, 1, 12, 'T'); rect(g, 6, 13, 6, 2, 'm');   // pick
+        rect(g, 13, 2, 1, 10, 'T'); rect(g, 12, 11, 3, 3, 'M'); // hammer
+    }),
+    barrel: () => prop(12, 14, g => {
+        rect(g, 1, 0, 10, 14, 't');
+        rect(g, 0, 2, 12, 2, 'M');
+        rect(g, 0, 9, 12, 2, 'M');
+        rect(g, 2, 0, 1, 14, 'h');
+        rect(g, 9, 0, 1, 14, 'T');
+    }),
+    puddle: () => prop(14, 3, g => {
+        rect(g, 1, 1, 12, 2, 'v');
+        rect(g, 3, 1, 5, 1, 'Z');
     }),
 
-    // --- refinery
-    press: () => prop(26, 24, g => {
-        rect(g, 0, 6, 26, 14, 'b');
-        rect(g, 0, 6, 26, 1, 'i');
-        rect(g, 4, 0, 6, 7, 'S');        // ram
-        rect(g, 3, 0, 8, 2, 's');
-        rect(g, 2, 20, 22, 2, 'e');
-        rect(g, 15, 10, 8, 6, 'n');      // work window
-        rect(g, 16, 11, 6, 4, 'i');
+    // ================================================== refinery
+    press: () => prop(34, 30, g => {
+        rect(g, 0, 8, 34, 18, 'M');
+        rect(g, 0, 8, 34, 1, 'm');
+        rect(g, 1, 10, 32, 1, 'K');
+        rect(g, 6, 0, 8, 9, 'm');            // piston shaft
+        rect(g, 5, 0, 10, 2, 'c');
+        rect(g, 7, 2, 2, 7, 'c');
+        rect(g, 3, 9, 14, 3, 'M');           // ram head
+        rect(g, 19, 12, 12, 9, 'K');         // work window
+        rect(g, 20, 13, 10, 7, 'x');         // forge glow
+        rect(g, 22, 15, 6, 3, 'L');
+        rect(g, 0, 26, 34, 4, 'M');
+        for (let x = 2; x < 33; x += 7) rect(g, x, 27, 3, 2, 'K');
+        disc(g, 28, 5, 3, 'u'); disc(g, 28, 5, 1.6, 'c');   // flywheel
     }),
-    pipe: () => prop(30, 6, g => {
-        rect(g, 0, 1, 30, 4, 'S');
-        rect(g, 0, 1, 30, 1, 's');
-        rect(g, 6, 0, 3, 6, 's');
-        rect(g, 20, 0, 3, 6, 's');
+    boiler: () => prop(20, 26, g => {
+        rect(g, 2, 2, 16, 22, 'M');
+        rect(g, 2, 2, 16, 1, 'm');
+        rect(g, 3, 4, 14, 2, 'K');
+        disc(g, 10, 12, 5, 'K');
+        disc(g, 10, 12, 4, 'x');
+        disc(g, 10, 12, 2.4, 'L');
+        rect(g, 0, 0, 20, 2, 'U');
+        rect(g, 4, 20, 12, 2, 'u');
+        rect(g, 1, 24, 18, 2, 'M');
     }),
-    gauge: () => prop(10, 10, g => {
-        disc(g, 4.5, 4.5, 4.5, 'S');
-        disc(g, 4.5, 4.5, 3.2, 'w');
-        rect(g, 4, 2, 1, 3, 'e');
-        px(g, 4, 4, 'e');
+    pipe: () => prop(36, 7, g => {
+        rect(g, 0, 1, 36, 5, 'M');
+        rect(g, 0, 1, 36, 1, 'm');
+        rect(g, 0, 5, 36, 1, 'K');
+        rect(g, 7, 0, 4, 7, 'u');
+        rect(g, 23, 0, 4, 7, 'u');
     }),
-    crate: () => prop(12, 10, g => {
-        rect(g, 0, 0, 12, 10, 'b');
-        rect(g, 0, 0, 12, 1, 'i');
-        rect(g, 0, 4, 12, 1, 'e');
-        rect(g, 5, 0, 2, 10, 'e');
+    valve: () => prop(10, 12, g => {
+        rect(g, 4, 4, 2, 8, 'M');
+        disc(g, 5, 4, 4, 'x');
+        disc(g, 5, 4, 2, 'X');
+        rect(g, 1, 3, 8, 1, 'x');
     }),
-    chute: () => prop(14, 16, g => {
-        rect(g, 0, 0, 3, 16, 'S');
-        rect(g, 11, 0, 3, 16, 'S');
-        rect(g, 3, 12, 8, 2, 's');
+    gauge: () => prop(11, 11, g => {
+        disc(g, 5, 5, 5, 'U');
+        disc(g, 5, 5, 4, 'u');
+        disc(g, 5, 5, 3.2, 'p');
+        rect(g, 5, 2, 1, 4, 'X');
+        px(g, 5, 5, 'K');
+        px(g, 8, 3, 'x');
+    }),
+    crate: () => prop(14, 12, g => {
+        rect(g, 0, 0, 14, 12, 't');
+        rect(g, 0, 0, 14, 1, 'h');
+        rect(g, 0, 11, 14, 1, 'T');
+        rect(g, 0, 5, 14, 1, 'T');
+        rect(g, 6, 0, 1, 12, 'T');
+        rect(g, 2, 2, 3, 2, 'p');
+    }),
+    chute: () => prop(16, 20, g => {
+        rect(g, 0, 0, 4, 20, 'M');
+        rect(g, 12, 0, 4, 20, 'M');
+        rect(g, 1, 0, 1, 20, 'm');
+        rect(g, 4, 15, 8, 3, 'K');
+        rect(g, 4, 18, 8, 2, 'M');
+    }),
+    conveyor: () => prop(30, 8, g => {
+        rect(g, 0, 2, 30, 4, 'K');
+        rect(g, 0, 2, 30, 1, 'M');
+        for (let x = 1; x < 29; x += 4) rect(g, x, 3, 2, 2, 'M');
+        disc(g, 3, 4, 3, 'M'); disc(g, 26, 4, 3, 'M');
+    }),
+    steam: () => prop(10, 10, g => {
+        disc(g, 4, 7, 3, 'c');
+        disc(g, 6, 4, 2.4, 'p');
+        disc(g, 4, 1, 1.6, 'p');
+    }),
+    warnSign: () => prop(12, 10, g => {
+        rect(g, 0, 0, 12, 10, 'y');
+        rect(g, 1, 1, 10, 8, 'K');
+        rect(g, 5, 2, 2, 4, 'y');
+        rect(g, 5, 7, 2, 1, 'y');
     }),
 
-    // --- overseer office
-    desk: () => prop(28, 14, g => {
-        rect(g, 0, 3, 28, 3, 'b');
-        rect(g, 0, 3, 28, 1, 'i');
-        rect(g, 2, 6, 3, 8, 'S');
-        rect(g, 23, 6, 3, 8, 'S');
-        rect(g, 5, 7, 18, 1, 'S');
+    // ================================================== overseer office
+    desk: () => prop(38, 17, g => {
+        rect(g, 0, 3, 38, 4, 't');
+        rect(g, 0, 3, 38, 1, 'h');
+        rect(g, 0, 6, 38, 1, 'T');
+        rect(g, 2, 7, 5, 10, 't'); rect(g, 2, 7, 1, 10, 'h');
+        rect(g, 31, 7, 5, 10, 't'); rect(g, 35, 7, 1, 10, 'T');
+        rect(g, 7, 8, 24, 1, 'T');
+        rect(g, 8, 9, 8, 5, 'T');            // drawer bank
+        rect(g, 9, 10, 6, 1, 'h');
+        rect(g, 9, 12, 6, 1, 'h');
     }),
-    terminal: () => prop(14, 12, g => {
-        rect(g, 1, 0, 12, 9, 'e');
-        rect(g, 2, 1, 10, 7, 'b');
-        rect(g, 3, 2, 6, 1, 'w');
-        rect(g, 3, 4, 8, 1, 'W');
-        rect(g, 3, 6, 5, 1, 'W');
-        rect(g, 5, 9, 4, 2, 'S');
-        rect(g, 3, 11, 8, 1, 'S');
+    terminal: () => prop(16, 14, g => {
+        rect(g, 0, 0, 16, 11, 'K');
+        rect(g, 1, 1, 14, 9, 'e');
+        rect(g, 2, 2, 8, 1, 'g');
+        rect(g, 2, 4, 11, 1, 'W');
+        rect(g, 2, 6, 6, 1, 'W');
+        rect(g, 2, 8, 9, 1, 'g');
+        rect(g, 6, 11, 4, 1, 'M');
+        rect(g, 3, 12, 10, 2, 'M');
     }),
-    shelf: () => prop(20, 18, g => {
-        rect(g, 0, 0, 20, 18, 'n');
-        rect(g, 0, 5, 20, 1, 'S');
-        rect(g, 0, 11, 20, 1, 'S');
-        rect(g, 1, 1, 2, 4, 'b'); rect(g, 4, 1, 2, 4, 'i'); rect(g, 7, 2, 2, 3, 'b');
-        rect(g, 1, 7, 2, 4, 'i'); rect(g, 4, 7, 2, 4, 'b');
-        rect(g, 12, 7, 3, 4, 'S');
-        rect(g, 1, 13, 2, 4, 'b'); rect(g, 4, 13, 2, 4, 'i');
+    deskLamp: () => prop(12, 14, g => {
+        rect(g, 3, 12, 7, 2, 'U');
+        rect(g, 6, 5, 1, 7, 'u');
+        rect(g, 4, 1, 8, 4, 'g');
+        rect(g, 5, 5, 6, 1, 'l');
+        rect(g, 6, 6, 4, 3, 'l');
     }),
-    mailSlot: () => prop(12, 14, g => {
-        rect(g, 0, 0, 12, 14, 'b');
-        rect(g, 0, 0, 12, 1, 'i');
-        rect(g, 2, 4, 8, 2, 'e');
-        rect(g, 2, 9, 8, 2, 'e');
+    papers: () => prop(11, 5, g => {
+        rect(g, 0, 2, 10, 3, 'p');
+        rect(g, 1, 1, 10, 3, 'p');
+        rect(g, 2, 0, 9, 2, 'P');
+        rect(g, 3, 2, 5, 1, 'M');
     }),
-    mug: () => prop(6, 6, g => {
-        rect(g, 0, 1, 5, 5, 'w');
-        rect(g, 0, 1, 5, 1, 'W');
-        px(g, 5, 2, 'W'); px(g, 5, 3, 'W');
+    bookshelf: () => prop(26, 34, g => {
+        rect(g, 0, 0, 26, 34, 'T');
+        rect(g, 1, 1, 24, 32, 't');
+        rect(g, 1, 10, 24, 2, 'T');
+        rect(g, 1, 21, 24, 2, 'T');
+        const books = ['x', 'b', 'g', 'u', 'v', 'X', 'i', 'G'];
+        let bi = 0;
+        for (const top of [2, 13, 24]) {
+            let x = 2;
+            while (x < 23) {
+                const w = 2 + (bi % 2);
+                const h = 7 + (bi % 2);
+                rect(g, x, top + (8 - h), w, h, books[bi % books.length]);
+                x += w + 1; bi++;
+            }
+        }
     }),
-    chair: () => prop(10, 14, g => {
-        rect(g, 1, 0, 8, 8, 'b');
-        rect(g, 1, 8, 8, 2, 'i');
-        rect(g, 4, 10, 2, 4, 'S');
-        rect(g, 2, 13, 6, 1, 'S');
+    cabinet: () => prop(18, 26, g => {
+        rect(g, 0, 0, 18, 26, 'M');
+        rect(g, 0, 0, 18, 1, 'm');
+        for (const y of [2, 10, 18]) {
+            rect(g, 1, y, 16, 7, 'K');
+            rect(g, 6, y + 3, 6, 1, 'c');
+        }
+    }),
+    corkboard: () => prop(30, 20, g => {
+        rect(g, 0, 0, 30, 20, 'U');
+        rect(g, 1, 1, 28, 18, 'u');
+        rect(g, 3, 3, 8, 6, 'p'); px(g, 7, 3, 'x');
+        rect(g, 13, 2, 7, 5, 'p'); px(g, 16, 2, 'f');
+        rect(g, 22, 4, 6, 7, 'p'); px(g, 25, 4, 'g');
+        rect(g, 5, 11, 9, 6, 'p'); px(g, 9, 11, 'f');
+        rect(g, 17, 10, 10, 7, 'P'); px(g, 22, 10, 'x');
+    }),
+    wallClock: () => prop(12, 12, g => {
+        disc(g, 5, 5, 5.5, 'T');
+        disc(g, 5, 5, 4.5, 'p');
+        rect(g, 5, 2, 1, 4, 'K');
+        rect(g, 5, 5, 3, 1, 'K');
+        px(g, 5, 5, 'x');
+    }),
+    pigeonholes: () => prop(20, 18, g => {
+        rect(g, 0, 0, 20, 18, 'T');
+        for (let cy = 1; cy < 18; cy += 6) {
+            for (let cx = 1; cx < 20; cx += 6) {
+                rect(g, cx, cy, 5, 5, 'K');
+                if ((cx + cy) % 4 === 0) rect(g, cx + 1, cy + 3, 3, 2, 'p');
+            }
+        }
+    }),
+    mug: () => prop(7, 7, g => {
+        rect(g, 0, 1, 5, 6, 'p');
+        rect(g, 0, 1, 5, 1, 'P');
+        rect(g, 1, 0, 3, 1, 'c');
+        px(g, 5, 3, 'P'); px(g, 6, 3, 'P'); px(g, 5, 4, 'P');
+    }),
+    chair: () => prop(12, 17, g => {
+        rect(g, 1, 0, 10, 9, 't');
+        rect(g, 2, 1, 8, 7, 'x');
+        rect(g, 0, 9, 12, 3, 't');
+        rect(g, 5, 12, 2, 4, 'M');
+        rect(g, 2, 16, 8, 1, 'M');
+    }),
+    plant: () => prop(14, 18, g => {
+        rect(g, 4, 13, 6, 5, 'x');
+        rect(g, 4, 13, 6, 1, 'X');
+        rect(g, 6, 8, 2, 5, 'G');
+        disc(g, 4, 8, 3, 'g'); disc(g, 10, 7, 3, 'g'); disc(g, 7, 4, 3.4, 'g');
+        px(g, 4, 7, 'G'); px(g, 10, 6, 'G');
+    }),
+    rug: () => prop(34, 5, g => {
+        rect(g, 0, 1, 34, 4, 'X');
+        rect(g, 1, 2, 32, 2, 'x');
+        for (let x = 3; x < 32; x += 6) rect(g, x, 2, 2, 2, 'u');
     }),
 };
 

@@ -121,12 +121,16 @@ const cart = Art.PROPS.oreCart(), cartFull = Art.PROPS.oreCartFull();
 ok(cart.w === cartFull.w && cart.h === cartFull.h, 'ore cart variants must share dimensions');
 ok(JSON.stringify(cart.g) !== JSON.stringify(cartFull.g), 'ore cart variants are identical');
 
+// the empty-state swap depends on the lit lamp glowing and the dark one not
+const GLOW = ['l', 'L', 'y'];
+const glowPixels = g => GLOW.reduce((n, ch) => n + countGlyph(g, ch), 0);
 const lamp = Art.PROPS.lamp(), lampOff = Art.PROPS.lampOff();
 ok(lamp.w === lampOff.w && lamp.h === lampOff.h, 'lamp variants must share dimensions');
-ok(countGlyph(lamp.g, 'y') > 0, 'lit lamp should emit amber');
-ok(countGlyph(lampOff.g, 'y') === 0, 'unlit lamp should emit no amber');
+ok(glowPixels(lamp.g) > 0, 'lit lamp should emit light');
+ok(glowPixels(lampOff.g) === 0, 'unlit lamp should emit no light');
 
-// clawd orange must be the only warm hue in the room props
+// Interiors are free of the dashboard palette, but clawd's body orange stays
+// reserved: it is what makes the mascots pop out of a detailed scene.
 for (const [name, make] of Object.entries(Art.PROPS)) {
     const g = make().g;
     ok(countGlyph(g, 'o') === 0 && countGlyph(g, 'O') === 0,
