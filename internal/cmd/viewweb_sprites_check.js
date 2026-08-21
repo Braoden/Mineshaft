@@ -112,6 +112,22 @@ for (const role of ROLES) {
 const crowns = ROLES.map(r => JSON.stringify(Art.buildActor(r).stand.slice(0, 6)));
 ok(new Set(crowns).size === ROLES.length, 'two roles share the same headwear silhouette');
 
+// ---------------------------------------------------------------- avatars
+//
+// The roster reuses the 'stand' pose as a portrait, so that pose must exist,
+// rasterise at the requested scale, and be visibly different per role — the
+// entire point of showing it is telling agents apart.
+
+for (const scale of [1, 2, 3]) {
+    const c = Art.gridToCanvas(Art.buildActor('miner').stand, scale);
+    ok(c.width === 18 * scale && c.height === 18 * scale,
+        `avatar at scale ${scale}: got ${c.width}x${c.height}, want ${18 * scale}px square`);
+}
+
+const portraits = ROLES.map(r => JSON.stringify(Art.buildActor(r).stand));
+ok(new Set(portraits).size === ROLES.length,
+    'two roles render an identical portrait — the roster could not tell them apart');
+
 // ---------------------------------------------------------------- props
 
 for (const [name, make] of Object.entries(Art.PROPS)) {

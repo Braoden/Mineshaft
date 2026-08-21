@@ -266,6 +266,28 @@ function renderCountdown() {
     el.textContent = ms > 0 ? humanDuration(ms) : 'now';
 }
 
+// ---------------------------------------------------------------- avatars
+//
+// Reuse the room sprites as roster portraits. The headwear and tool already
+// encode the role, so the same art that identifies an agent in its room
+// identifies it in the list — no second icon set to keep in sync.
+
+const AVATAR_SCALE = 2;                  // 18px sprite -> 36px, an exact 2x
+const avatarCache = new Map();
+
+function avatarFor(role) {
+    if (avatarCache.has(role)) return avatarCache.get(role);
+    let url = '';
+    try {
+        const poses = window.MSArt.buildActor(role);
+        url = window.MSArt.gridToCanvas(poses.stand, AVATAR_SCALE).toDataURL();
+    } catch (err) {
+        console.error(`avatar for ${role} failed`, err);   // fall back to no image
+    }
+    avatarCache.set(role, url);
+    return url;
+}
+
 // ---------------------------------------------------------------- rigs
 
 // A rig is "active" when at least one of its agents is running. Town-level
@@ -323,14 +345,20 @@ function renderAgents() {
         host.innerHTML = '<div class="feed-empty">No agents found.</div>';
         return;
     }
-    host.innerHTML = state.agents.map(a => `
+    host.innerHTML = state.agents.map(a => {
+        const src = avatarFor(a.role);
+        const portrait = src
+            ? `<img src="${src}" alt="" width="${18 * AVATAR_SCALE}" height="${18 * AVATAR_SCALE}">`
+            : '';
+        return `
       <div class="agent ${a.running ? 'on' : ''}">
-        <i class="dot"></i>
+        <div class="agent-av">${portrait}<i class="dot"></i></div>
         <div style="min-width:0">
-          <div class="agent-name">${a.name || a.role}</div>
-          <div class="agent-rig">${a.rig || 'town'}</div>
+          <div class="agent-name">${escapeHTML(a.name || a.role)}</div>
+          <div class="agent-rig">${escapeHTML(a.role)} · ${escapeHTML(a.rig || 'town')}</div>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
 }
 
 // ---------------------------------------------------------------- feed
