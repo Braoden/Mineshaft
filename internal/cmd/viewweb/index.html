@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <title>Mineshaft</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="xterm.css">
 <style>
   /* ---------------------------------------------------------------- theme
      Five-colour cool palette. The only warm hues on the page are the two
@@ -235,9 +236,76 @@
   .feed::-webkit-scrollbar { width: 9px; }
   .feed::-webkit-scrollbar-thumb { background: rgba(130,160,185,.2); border-radius: 99px; border: 3px solid var(--card); }
 
+  /* ---------------------------------------------------------------- terminal */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* Shell and overseer share the top row; the read-only agent viewer spans
+     the full width beneath them. */
+  .term-grid {
+    display: grid; gap: 14px;
+    grid-template-columns: 1fr 1fr;
+    height: calc(100vh - 150px); min-height: 560px;
+  }
+  .term-card { display: flex; flex-direction: column; min-height: 0; }
+  .term-card-wide { grid-column: 1 / -1; }
+  .term-sub { color: var(--muted); font-size: 12px; }
+  .term-bar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 11px 14px; border-bottom: 1px solid var(--card-brd);
+  }
+  .term-bar select {
+    background: rgba(17,18,39,.6); color: var(--text);
+    border: 1px solid var(--card-brd2); border-radius: 9px;
+    padding: 7px 11px; font: inherit; font-size: 12.5px; min-width: 190px;
+  }
+  .term-bar select:focus-visible { outline: 2px solid var(--muted); outline-offset: 1px; }
+  .term-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(46,69,125,.45); color: var(--text);
+    border: 1px solid var(--card-brd2); border-radius: 9px;
+    padding: 7px 12px; font: inherit; font-size: 12.5px; font-weight: 550; cursor: pointer;
+  }
+  .term-btn:hover { background: rgba(46,69,125,.7); }
+  .term-btn.active { background: rgba(232,176,75,.16); border-color: rgba(232,176,75,.45); color: var(--warn); }
+  .term-spacer { flex: 1; }
+
+  #term-live { display: none; flex-direction: column; }
+  .term-host {
+    flex: 1; min-height: 0; overflow: hidden; padding: 8px 4px 4px 10px;
+    background: #0d0e20; border-radius: 0 0 var(--radius) var(--radius);
+  }
+  #term-host-shell .xterm { height: 100%; }
+
+  /* Attached panes are sized by the multiplexer, so they are scaled to fit
+     rather than reflowed. transform-origin keeps the scale anchored to the
+     top-left so the first row never drifts out of the box. */
+  .term-scale { transform-origin: top left; will-change: transform; }
+  #term-host-shell .term-scale { height: 100%; }
+
+  /* A read-only pane looks touchable but isn't; dim the caret so it doesn't
+     invite typing that the server will drop. */
+  .term-host.is-readonly .xterm-cursor-layer { opacity: .35; }
+
+  #term-disabled {
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    gap: 10px; text-align: center; padding: 40px 24px;
+  }
+  #term-disabled b { font-size: 14px; }
+  #term-disabled p { color: var(--muted); font-size: 12.5px; max-width: 460px; margin: 0; line-height: 1.6; }
+  #term-disabled code {
+    display: inline-block; background: rgba(17,18,39,.7); border: 1px solid var(--card-brd);
+    border-radius: 7px; padding: 3px 8px; font-size: 12px; color: var(--text);
+  }
+
   /* ---------------------------------------------------------------- responsive */
   @media (max-width: 1180px) {
     .stats { grid-template-columns: 1fr; }
+    /* Two 120-column terminals side by side stop being readable well before
+       the sidebar needs to collapse, so stack them earlier. */
+    .term-grid { grid-template-columns: 1fr; height: auto; }
+    .term-card { height: 340px; }
+    .term-card-wide { height: 380px; }
   }
   @media (max-width: 940px) {
     .app { grid-template-columns: 76px 1fr; }
@@ -266,12 +334,18 @@
 
     <nav class="nav">
       <div class="nav-label">Overview</div>
-      <a class="nav-item active" href="#" aria-current="page">
+      <a class="nav-item active" href="#dashboard" data-view="dashboard" aria-current="page">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/>
           <rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>
         </svg>
         <span>Dashboard</span>
+      </a>
+      <a class="nav-item" href="#terminal" data-view="terminal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2.5" y="4" width="19" height="16" rx="2"/><path d="M6.5 9l3 3-3 3"/><path d="M12.5 15h5"/>
+        </svg>
+        <span>Terminal</span>
       </a>
     </nav>
 
@@ -281,6 +355,7 @@
   </aside>
 
   <main>
+    <div id="view-dashboard" class="view active">
     <div class="page-head">
       <div>
         <h1 id="greeting">Good morning</h1>
@@ -373,12 +448,70 @@
         </div>
       </div>
     </section>
+    </div>
+
+    <div id="view-terminal" class="view">
+      <div class="page-head">
+        <div>
+          <h1>Terminal</h1>
+          <div class="page-sub">A real PowerShell, and a live view of any agent pane.</div>
+        </div>
+      </div>
+
+      <div id="term-disabled" class="card">
+        <b>Terminal is disabled</b>
+        <p>
+          This viewer was started with <code>--terminal=false</code>, so the terminal
+          routes were never registered. Restart <code>ms view</code> without that flag
+          to enable it. While it is on, anything that can reach this port gets shell
+          access, which is why the bind is loopback-only.
+        </p>
+      </div>
+
+      <div id="term-live" style="display:none">
+        <div class="term-grid">
+          <div class="card term-card">
+            <div class="term-bar">
+              <b>Shell</b>
+              <span class="term-sub">PowerShell</span>
+              <span class="term-spacer"></span>
+              <span class="chip" id="term-status-shell">idle</span>
+            </div>
+            <div class="term-host" id="term-host-shell"></div>
+          </div>
+
+          <div class="card term-card">
+            <div class="term-bar">
+              <b>Overseer</b>
+              <span class="term-sub" id="term-overseer-name">—</span>
+              <span class="term-spacer"></span>
+              <span class="chip" id="term-status-overseer">idle</span>
+            </div>
+            <div class="term-host" id="term-host-overseer"></div>
+          </div>
+
+          <div class="card term-card term-card-wide">
+            <div class="term-bar">
+              <b>Agents</b>
+              <select id="term-agent-target" aria-label="Agent session"></select>
+              <button class="term-btn" id="term-reconnect">reconnect</button>
+              <span class="term-spacer"></span>
+              <span class="chip" id="term-status-agent">idle</span>
+            </div>
+            <div class="term-host" id="term-host-agent"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
 </div>
 
 <script src="pixi.min.js"></script>
 <script src="sprites.js"></script>
 <script src="rooms.js"></script>
+<script src="xterm.js"></script>
+<script src="addon-fit.js"></script>
+<script src="terminal.js"></script>
 <script src="dashboard.js"></script>
 </body>
 </html>

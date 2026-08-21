@@ -515,6 +515,45 @@ function tickClock() {
     $('greeting').textContent = greetingFor(now);
 }
 
+// ---------------------------------------------------------------- views
+
+// The two pages share one document so switching is instant and the terminal
+// keeps its socket. Room tickers stop while hidden — no reason to render three
+// WebGL scenes nobody is looking at.
+function showView(name) {
+    for (const el of document.querySelectorAll('.view')) {
+        el.classList.toggle('active', el.id === `view-${name}`);
+    }
+    for (const item of document.querySelectorAll('.nav-item')) {
+        const on = item.dataset.view === name;
+        item.classList.toggle('active', on);
+        if (on) item.setAttribute('aria-current', 'page');
+        else item.removeAttribute('aria-current');
+    }
+
+    const rooms = Object.values(state.rooms);
+    if (name === 'terminal') {
+        rooms.forEach(r => r.pause());
+        if (window.MSTerminal) window.MSTerminal.activate();
+    } else {
+        rooms.forEach(r => { r.resume(); r.resize(); });
+        if (window.MSTerminal) window.MSTerminal.deactivate();
+    }
+}
+
+function initNav() {
+    for (const item of document.querySelectorAll('.nav-item[data-view]')) {
+        item.addEventListener('click', ev => {
+            ev.preventDefault();
+            const view = item.dataset.view;
+            history.replaceState(null, '', `#${view}`);
+            showView(view);
+        });
+    }
+    const initial = location.hash.replace('#', '');
+    if (initial === 'terminal') showView('terminal');
+}
+
 // ---------------------------------------------------------------- boot
 
 async function boot() {
@@ -529,6 +568,7 @@ async function boot() {
     await refreshUsage();
 
     await initRooms();
+    initNav();
     connect();
 
     setInterval(renderCountdown, 1000);

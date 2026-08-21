@@ -543,6 +543,11 @@ class Room {
         return this.actors.length;
     }
 
+    // pause/resume let the dashboard stop rendering three WebGL scenes while
+    // the terminal view is on screen
+    pause() { if (this.app) this.app.ticker.stop(); }
+    resume() { if (this.app) this.app.ticker.start(); }
+
     resize() {
         if (!this.ready) return;
         const box = this.canvas.parentElement.getBoundingClientRect();
