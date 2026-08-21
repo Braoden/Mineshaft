@@ -48,8 +48,8 @@ Example:
 
 func init() {
 	viewCmd.Flags().IntVar(&viewPort, "port", 8090, "HTTP port to listen on")
-	viewCmd.Flags().BoolVar(&viewTerminal, "terminal", false,
-		"enable the terminal page (grants shell access to anything that can reach the port)")
+	viewCmd.Flags().BoolVar(&viewTerminal, "terminal", true,
+		"serve the terminal page; --terminal=false serves the dashboard with no shell access")
 	rootCmd.AddCommand(viewCmd)
 }
 
@@ -288,8 +288,10 @@ func runView(cmd *cobra.Command, args []string) error {
 	startUsageSampler(townRoot)
 
 	mux := http.NewServeMux()
-	// The terminal spawns real shells, so it exists only on request. Without
-	// the flag these routes are never registered at all.
+	// The terminal is part of the dashboard, but it is still real shell access
+	// on this port: --terminal=false drops the routes entirely rather than
+	// hiding the page. The bind is loopback-only and the WebSocket handshake is
+	// origin-checked; see checkTerminalOrigin.
 	if viewTerminal {
 		registerTerminalRoutes(mux)
 	}
@@ -326,7 +328,7 @@ func runView(cmd *cobra.Command, args []string) error {
 	fmt.Printf("  ms view at http://%s  •  ctrl+c to stop\n", listenAddr)
 
 	if viewTerminal {
-		fmt.Printf("  terminal enabled - this port grants shell access; loopback only\n")
+		fmt.Printf("  terminal on - this port grants shell access; loopback only (--terminal=false to disable)\n")
 	}
 
 	server := &http.Server{

@@ -240,7 +240,16 @@
   .view { display: none; }
   .view.active { display: block; }
 
-  .term-card { display: flex; flex-direction: column; height: calc(100vh - 150px); min-height: 420px; }
+  /* Shell and overseer share the top row; the read-only agent viewer spans
+     the full width beneath them. */
+  .term-grid {
+    display: grid; gap: 14px;
+    grid-template-columns: 1fr 1fr;
+    height: calc(100vh - 150px); min-height: 560px;
+  }
+  .term-card { display: flex; flex-direction: column; min-height: 0; }
+  .term-card-wide { grid-column: 1 / -1; }
+  .term-sub { color: var(--muted); font-size: 12px; }
   .term-bar {
     display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
     padding: 11px 14px; border-bottom: 1px solid var(--card-brd);
@@ -261,13 +270,25 @@
   .term-btn.active { background: rgba(232,176,75,.16); border-color: rgba(232,176,75,.45); color: var(--warn); }
   .term-spacer { flex: 1; }
 
-  #term-live { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-  #term-host { flex: 1; min-height: 0; padding: 8px 4px 4px 10px; background: #0d0e20;
-               border-radius: 0 0 var(--radius) var(--radius); }
-  #term-host .xterm { height: 100%; }
+  #term-live { display: none; flex-direction: column; }
+  .term-host {
+    flex: 1; min-height: 0; overflow: hidden; padding: 8px 4px 4px 10px;
+    background: #0d0e20; border-radius: 0 0 var(--radius) var(--radius);
+  }
+  #term-host-shell .xterm { height: 100%; }
+
+  /* Attached panes are sized by the multiplexer, so they are scaled to fit
+     rather than reflowed. transform-origin keeps the scale anchored to the
+     top-left so the first row never drifts out of the box. */
+  .term-scale { transform-origin: top left; will-change: transform; }
+  #term-host-shell .term-scale { height: 100%; }
+
+  /* A read-only pane looks touchable but isn't; dim the caret so it doesn't
+     invite typing that the server will drop. */
+  .term-host.is-readonly .xterm-cursor-layer { opacity: .35; }
 
   #term-disabled {
-    flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center;
+    display: none; flex-direction: column; align-items: center; justify-content: center;
     gap: 10px; text-align: center; padding: 40px 24px;
   }
   #term-disabled b { font-size: 14px; }
@@ -280,6 +301,11 @@
   /* ---------------------------------------------------------------- responsive */
   @media (max-width: 1180px) {
     .stats { grid-template-columns: 1fr; }
+    /* Two 120-column terminals side by side stop being readable well before
+       the sidebar needs to collapse, so stack them earlier. */
+    .term-grid { grid-template-columns: 1fr; height: auto; }
+    .term-card { height: 340px; }
+    .term-card-wide { height: 380px; }
   }
   @media (max-width: 940px) {
     .app { grid-template-columns: 76px 1fr; }
@@ -432,28 +458,48 @@
         </div>
       </div>
 
-      <div class="card term-card">
-        <div class="term-bar">
-          <select id="term-target" aria-label="Terminal session">
-            <option value="shell" data-kind="shell">New shell</option>
-          </select>
-          <button class="term-btn" id="term-control" style="display:none">take control</button>
-          <button class="term-btn" id="term-reconnect">reconnect</button>
-          <span class="term-spacer"></span>
-          <span class="chip" id="term-status">idle</span>
-        </div>
+      <div id="term-disabled" class="card">
+        <b>Terminal is disabled</b>
+        <p>
+          This viewer was started with <code>--terminal=false</code>, so the terminal
+          routes were never registered. Restart <code>ms view</code> without that flag
+          to enable it. While it is on, anything that can reach this port gets shell
+          access, which is why the bind is loopback-only.
+        </p>
+      </div>
 
-        <div id="term-disabled">
-          <b>Terminal is disabled</b>
-          <p>
-            The terminal spawns real shells, so it is opt-in. Restart the viewer with
-            <code>ms view --terminal</code> to enable it. Anything that can reach this
-            port gets shell access while it is on, so it stays off by default.
-          </p>
-        </div>
+      <div id="term-live" style="display:none">
+        <div class="term-grid">
+          <div class="card term-card">
+            <div class="term-bar">
+              <b>Shell</b>
+              <span class="term-sub">PowerShell</span>
+              <span class="term-spacer"></span>
+              <span class="chip" id="term-status-shell">idle</span>
+            </div>
+            <div class="term-host" id="term-host-shell"></div>
+          </div>
 
-        <div id="term-live" style="display:none">
-          <div id="term-host"></div>
+          <div class="card term-card">
+            <div class="term-bar">
+              <b>Overseer</b>
+              <span class="term-sub" id="term-overseer-name">—</span>
+              <span class="term-spacer"></span>
+              <span class="chip" id="term-status-overseer">idle</span>
+            </div>
+            <div class="term-host" id="term-host-overseer"></div>
+          </div>
+
+          <div class="card term-card term-card-wide">
+            <div class="term-bar">
+              <b>Agents</b>
+              <select id="term-agent-target" aria-label="Agent session"></select>
+              <button class="term-btn" id="term-reconnect">reconnect</button>
+              <span class="term-spacer"></span>
+              <span class="chip" id="term-status-agent">idle</span>
+            </div>
+            <div class="term-host" id="term-host-agent"></div>
+          </div>
         </div>
       </div>
     </div>

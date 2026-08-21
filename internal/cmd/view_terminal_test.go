@@ -1,8 +1,12 @@
 package cmd
 
 import (
+	"encoding/json"
 	"net/http"
+	"reflect"
 	"testing"
+
+	"github.com/steveyegge/mineshaft/internal/session"
 )
 
 // TestCheckTerminalOrigin is the load-bearing security test for the terminal.
@@ -67,10 +71,12 @@ func TestCheckTerminalOrigin(t *testing.T) {
 	}
 }
 
-// The terminal must not exist unless it was asked for. This asserts the wiring
-// contract: registerTerminalRoutes is the only thing that adds the routes, and
-// runView calls it solely when --terminal is set.
-func TestTerminalRoutesAreOptIn(t *testing.T) {
+// The terminal ships on by default, so --terminal=false is the only thing
+// standing between a user who wants a safe viewer and shell access on the port.
+// This pins the wiring contract that makes the flag real: registerTerminalRoutes
+// is the ONLY thing that adds these routes, so skipping it removes the
+// endpoints entirely rather than merely hiding the page.
+func TestTerminalRoutesAreSkippable(t *testing.T) {
 	mux := http.NewServeMux()
 
 	for _, path := range []string{"/api/terminal/ws", "/api/terminal/sessions"} {
@@ -90,18 +96,43 @@ func TestTerminalRoutesAreOptIn(t *testing.T) {
 	}
 }
 
-// Agent attachments start read-only. This pins the default so a refactor can't
-// silently make a stray keypress land in a working agent's prompt.
-func TestAgentTargetsDefaultToReadOnly(t *testing.T) {
-	// mirrors the decision made in serveTerminalWS
-	writableFor := func(target string) bool { return target == "shell" }
-
-	if !writableFor("shell") {
-		t.Error("a spawned shell should be writable")
-	}
-	for _, agent := range []string{"hq-overseer", "mi-refinery", "hq-dog-alpha"} {
-		if writableFor(agent) {
-			t.Errorf("agent target %q must start read-only", agent)
+// Only the spawned shell and the overseer accept input. Every other agent is
+// observable but not typeable, so a stray keypress cannot land in a working
+// agent's prompt. This pins the allowlist: it is decided from the target name
+// alone, never from anything the browser sends.
+func TestOnlyShellAndOverseerAreWritable(t *testing.T) {
+	for _, target := range []string{"shell", session.OverseerSessionName()} {
+		if !isWritableTarget(target) {
+			t.Errorf("target %q should be writable", target)
 		}
+	}
+
+	// Agents doing real work. Typing into these corrupts a live session.
+	for _, agent := range []string{
+		"hq-supervisor", "mi-witness", "hq-boot",
+		"mi-refinery", "hq-dog-alpha", "ms-wyvern-Toast",
+	} {
+		if isWritableTarget(agent) {
+			t.Errorf("agent target %q must be read-only", agent)
+		}
+	}
+}
+
+// The browser must not be able to talk itself into write access. The wire
+// format carries no control verb at all, so an unknown or forged frame is
+// inert rather than privilege-granting.
+func TestClientMessageCannotGrantControl(t *testing.T) {
+	var msg termClientMsg
+	if err := json.Unmarshal([]byte(`{"t":"c","on":true}`), &msg); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if msg.T != "c" {
+		t.Fatalf("expected the verb to survive parsing, got %q", msg.T)
+	}
+
+	// serveTerminalWS switches on msg.T and has no "c" case: the frame is
+	// silently ignored. If someone reintroduces a control verb, this fails.
+	if reflect.TypeOf(msg).NumField() != 4 {
+		t.Errorf("termClientMsg gained a field; a control toggle must not come back: %+v", msg)
 	}
 }

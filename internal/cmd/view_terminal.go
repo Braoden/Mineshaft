@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os/exec"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -16,8 +17,20 @@ import (
 
 	"github.com/aymanbagabas/go-pty"
 	"github.com/coder/websocket"
+	"github.com/steveyegge/mineshaft/internal/session"
 	"github.com/steveyegge/mineshaft/internal/tmux"
 )
+
+// isWritableTarget reports whether a target accepts keystrokes from the page.
+//
+// Write access is decided here, by name, and never by anything the browser
+// sends: a client cannot talk itself into control of a pane. Only the shell we
+// spawned (whose sole screen is this page) and the overseer are writable. Every
+// other agent is observable but not typeable, so a stray keypress cannot land
+// in a working agent's prompt.
+func isWritableTarget(target string) bool {
+	return target == "shell" || target == session.OverseerSessionName()
+}
 
 // The terminal page runs real shells, so it is opt-in: without --terminal the
 // routes below are never registered and `ms view` has exactly the surface it
@@ -240,6 +253,10 @@ func (m *termManager) openAgent(name string) (*termSession, error) {
 	}
 
 	cols, rows := agentPaneSize(name)
+	// Remember what the agent's window looked like before we touched it, so
+	// holdWindowSize can tell whether our attach is what shrank it.
+	bw, bh := windowSize(name)
+	before := [2]int{bw, bh}
 
 	p, err := pty.New()
 	if err != nil {
@@ -247,13 +264,7 @@ func (m *termManager) openAgent(name string) (*termSession, error) {
 	}
 	_ = p.Resize(cols, rows)
 
-	args := []string{"-u"}
-	if sock := tmux.GetDefaultSocket(); sock != "" {
-		args = append(args, "-L", sock)
-	}
-	args = append(args, "attach-session", "-t", name)
-
-	c := p.Command("tmux", args...)
+	c := p.Command("tmux", tmuxArgs("attach-session", "-t", name)...)
 	// Strip the nesting variables: `ms view` is often itself running inside a
 	// pane, and the multiplexer refuses to attach from within a session
 	// ("sessions should be nested with care") unless they are cleared.
@@ -267,8 +278,59 @@ func (m *termManager) openAgent(name string) (*termSession, error) {
 		subs: map[chan []byte]struct{}{}, lastUse: time.Now()}
 	m.sessions["agent:"+name] = s
 	go s.pump()
+	go s.holdWindowSize(name, cols, rows, before)
 	go m.reapWhenIdle(s)
 	return s, nil
+}
+
+// holdWindowSize corrects our own PTY until attaching has stopped shrinking the
+// agent's window.
+//
+// Open-loop sizing does not survive contact: a PTY set to N rows produces a
+// client of N-1 here, and the exact loss depends on ConPTY, the multiplexer
+// build, and the status bar. Rather than encode a guess, measure what our
+// attach did to the window and give the difference back. Converges in one pass
+// in practice; capped so a session we cannot satisfy does not spin.
+func (s *termSession) holdWindowSize(name string, cols, rows int, want [2]int) {
+	if want[1] <= 0 {
+		return
+	}
+	for i := 0; i < 3; i++ {
+		time.Sleep(250 * time.Millisecond)
+		s.mu.Lock()
+		closed := s.closed
+		s.mu.Unlock()
+		if closed {
+			return
+		}
+		w, h := windowSize(name)
+		if h <= 0 || h >= want[1] {
+			return // we are not the one making it smaller
+		}
+		rows += want[1] - h
+		if w > 0 && w < want[0] {
+			cols += want[0] - w
+		}
+		s.resize(cols, rows)
+	}
+}
+
+// windowSize reports a session's current window dimensions, or zeroes.
+func windowSize(name string) (int, int) {
+	out, err := tmuxOutput("display-message", "-p", "-t", name, "#{window_width}x#{window_height}")
+	if err != nil {
+		return 0, 0
+	}
+	w, h, ok := strings.Cut(out, "x")
+	if !ok {
+		return 0, 0
+	}
+	c, err1 := strconv.Atoi(w)
+	r, err2 := strconv.Atoi(h)
+	if err1 != nil || err2 != nil {
+		return 0, 0
+	}
+	return c, r
 }
 
 // reapWhenIdle detaches an agent attachment once no browser is watching, so we
@@ -292,28 +354,67 @@ func (m *termManager) reapWhenIdle(s *termSession) {
 	}
 }
 
-// agentPaneSize reports a session's current dimensions, defaulting to a
-// conventional size when the query fails.
-func agentPaneSize(name string) (int, int) {
+// clientSizeRe pulls the [WxH] out of list-clients' default output. psmux
+// ignores -F on list-clients and its #{client_height} is unreliable, so the
+// human-readable line is the only trustworthy source.
+var clientSizeRe = regexp.MustCompile(`\[(\d+)x(\d+)\]`)
+
+func tmuxArgs(extra ...string) []string {
 	args := []string{"-u"}
 	if sock := tmux.GetDefaultSocket(); sock != "" {
 		args = append(args, "-L", sock)
 	}
-	args = append(args, "display-message", "-p", "-t", name, "#{window_width}x#{window_height}")
-	sizeCmd := exec.Command("tmux", args...)
-	sizeCmd.Env = tmux.SanitizedEnv()
-	out, err := sizeCmd.Output()
+	return append(args, extra...)
+}
+
+func tmuxOutput(extra ...string) (string, error) {
+	c := exec.Command("tmux", tmuxArgs(extra...)...)
+	c.Env = tmux.SanitizedEnv()
+	out, err := c.Output()
+	return strings.TrimSpace(string(out)), err
+}
+
+// agentPaneSize reports the size a NEW client must attach at so that attaching
+// changes nothing for anyone already watching.
+//
+// It matches an existing client exactly rather than using the window size: a
+// client is TALLER than its window by the status line, so attaching at
+// window_height silently shrinks the window by a row for every other client.
+// That was observed live — a 64x50 session dropped to 64x49 on attach.
+func agentPaneSize(name string) (int, int) {
+	// Preferred: copy whatever a real client is already using.
+	if out, err := tmuxOutput("list-clients", "-t", name); err == nil {
+		if m := clientSizeRe.FindStringSubmatch(out); m != nil {
+			c, _ := strconv.Atoi(m[1])
+			r, _ := strconv.Atoi(m[2])
+			if c > 0 && r > 0 {
+				return c, r
+			}
+		}
+	}
+
+	// Nobody attached: derive the client size from the window, adding back the
+	// rows the status bar will take.
+	out, err := tmuxOutput("display-message", "-p", "-t", name,
+		"#{window_width}x#{window_height}|#{status}")
 	if err != nil {
 		return 120, 30
 	}
-	parts := strings.SplitN(strings.TrimSpace(string(out)), "x", 2)
-	if len(parts) != 2 {
+	dims, status, _ := strings.Cut(out, "|")
+	w, h, ok := strings.Cut(dims, "x")
+	if !ok {
 		return 120, 30
 	}
-	c, err1 := strconv.Atoi(parts[0])
-	r, err2 := strconv.Atoi(parts[1])
+	c, err1 := strconv.Atoi(w)
+	r, err2 := strconv.Atoi(h)
 	if err1 != nil || err2 != nil || c <= 0 || r <= 0 {
 		return 120, 30
+	}
+	// "on" is one line; the option may also be a line count (2..5) or "off".
+	if n, convErr := strconv.Atoi(status); convErr == nil {
+		r += n
+	} else if status == "on" {
+		r++
 	}
 	return c, r
 }
@@ -360,11 +461,10 @@ func checkTerminalOrigin(r *http.Request) error {
 
 // control frames from the browser
 type termClientMsg struct {
-	T    string `json:"t"`              // "i" input, "r" resize, "c" control
-	D    string `json:"d,omitempty"`    // input payload
+	T    string `json:"t"`           // "i" input, "r" resize
+	D    string `json:"d,omitempty"` // input payload
 	Cols int    `json:"cols,omitempty"`
 	Rows int    `json:"rows,omitempty"`
-	On   bool   `json:"on,omitempty"`   // take-control toggle
 }
 
 func serveTerminalWS(w http.ResponseWriter, r *http.Request) {
@@ -383,9 +483,8 @@ func serveTerminalWS(w http.ResponseWriter, r *http.Request) {
 	var (
 		sess *termSession
 		err  error
-		// Agent panes start read-only: a stray keypress must not land in a
-		// working agent's prompt. The browser asks for control explicitly.
-		writable = target == "shell"
+		// Fixed for the life of the connection, from the target name alone.
+		writable = isWritableTarget(target)
 	)
 	if target == "shell" {
 		sess, err = terminals.openShell(cols, rows)
@@ -456,13 +555,11 @@ func serveTerminalWS(w http.ResponseWriter, r *http.Request) {
 			}
 		case "r":
 			// Never resize an agent pane from the browser: the multiplexer
-			// would reflow the agent's own terminal to match.
+			// would reflow the agent's own terminal to match. This holds for
+			// the overseer too — it is writable, but it is still someone
+			// else's live terminal.
 			if sess.kind == termShell {
 				sess.resize(msg.Cols, msg.Rows)
-			}
-		case "c":
-			if sess.kind == termAgent {
-				writable = msg.On
 			}
 		}
 	}
@@ -488,13 +585,18 @@ func registerTerminalRoutes(mux *http.ServeMux) {
 			Label    string `json:"label"`
 			Kind     string `json:"kind"`
 			Attached bool   `json:"attached"`
+			Writable bool   `json:"writable"`
+			Cols     int    `json:"cols,omitempty"` // agents only: native pane size
+			Rows     int    `json:"rows,omitempty"`
 		}
 		list := []entry{{ID: "shell", Label: "New shell", Kind: "shell",
-			Attached: terminals.get("shell") != nil}}
+			Attached: terminals.get("shell") != nil, Writable: true}}
 		for _, name := range listAgentSessions() {
 			s := terminals.get("agent:" + name)
+			cols, rows := agentPaneSize(name)
 			list = append(list, entry{ID: name, Label: name, Kind: "agent",
-				Attached: s != nil && s.subscriberCount() > 0})
+				Attached: s != nil && s.subscriberCount() > 0,
+				Writable: isWritableTarget(name), Cols: cols, Rows: rows})
 		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(list)
