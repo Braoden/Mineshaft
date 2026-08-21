@@ -166,6 +166,11 @@ const POSES = {
     walkA:   () => { const g = makeGrid(CW, CH); clawdBlob(g); clawdEyes(g); clawdLegs(g, 'walkA'); return g; },
     walkB:   () => { const g = makeGrid(CW, CH); clawdBlob(g); clawdEyes(g); clawdLegs(g, 'walkB'); return g; },
     carry:   () => { const g = makeGrid(CW, CH); clawdBlob(g); clawdEyes(g); clawdLegs(g, 'stand'); clawdArms(g, 'carry'); return g; },
+    // carrying needs its own walk cycle. Without these a hauling clawd slides
+    // across the floor with its legs frozen — most obvious in the refinery,
+    // where the carrying leg of the routine is the rightward one.
+    carryA:  () => { const g = makeGrid(CW, CH); clawdBlob(g); clawdEyes(g); clawdLegs(g, 'walkA'); clawdArms(g, 'carry'); return g; },
+    carryB:  () => { const g = makeGrid(CW, CH); clawdBlob(g); clawdEyes(g); clawdLegs(g, 'walkB'); clawdArms(g, 'carry'); return g; },
     reach:   () => { const g = makeGrid(CW, CH); clawdBlob(g); clawdEyes(g); clawdLegs(g, 'wide'); clawdArms(g, 'reach'); return g; },
     stretch: () => { const g = makeGrid(CW, CH); clawdBlob(g, -1); clawdEyes(g, -1, true); clawdLegs(g, 'wide'); clawdArms(g, 'up'); return g; },
     // work poses leave the right side clear for the tool overlay
@@ -358,7 +363,10 @@ function buildActor(role) {
     // work poses get the tool layered on top
     out.workUp = merge(out.workUp, tool.up());
     out.workHit = merge(out.workHit, tool.hit());
-    out.carry = merge(clone(out.carry), tool.up());
+    // the hauled tool rides along through the whole carry cycle
+    for (const name of ['carry', 'carryA', 'carryB']) {
+        out[name] = merge(clone(out[name]), tool.up());
+    }
     return out;
 }
 

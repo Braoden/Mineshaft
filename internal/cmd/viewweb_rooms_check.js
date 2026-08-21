@@ -11,13 +11,34 @@ const fs = require('fs');
 const path = require('path');
 const assert = require('assert');
 
-global.window = { MSArt: { PALETTE: {}, PROPS: {}, buildActor: () => ({}) } };
-global.PIXI = {};
+// Pixi stubs: just enough scene-graph surface for Actor to construct and
+// animate. Nothing here renders — we only care which pose gets shown.
+class FakeDisplay {
+    constructor() { this.x = 0; this.y = 0; this.visible = true; this.scale = { x: 1, y: 1, set() {} }; this.anchor = { set() {} }; this.children = []; }
+    addChild(...c) { this.children.push(...c); return c[0]; }
+}
+global.PIXI = {
+    Container: FakeDisplay,
+    Sprite: class extends FakeDisplay { constructor(t) { super(); this.texture = t; } },
+    Texture: { from: () => ({ source: {} }) },
+};
+
+const POSE_NAMES = ['stand', 'walkA', 'walkB', 'carry', 'carryA', 'carryB',
+                    'reach', 'stretch', 'workUp', 'workHit', 'sit', 'blink', 'sleep'];
+global.window = {
+    MSArt: {
+        PALETTE: {}, PROPS: {},
+        gridToCanvas: () => ({}),
+        // each pose gets a distinct grid so identical-frame bugs are visible
+        buildActor: () => Object.fromEntries(POSE_NAMES.map(n => [n, [[n]]])),
+    },
+};
 
 const src = fs.readFileSync(path.join(__dirname, 'viewweb', 'rooms.js'), 'utf8');
 new Function(src)();
-const { Room } = global.window.MSRooms;
+const { Room, Actor } = global.window.MSRooms;
 assert.ok(Room, 'rooms.js should export window.MSRooms.Room');
+assert.ok(Actor, 'rooms.js should export window.MSRooms.Actor');
 
 let checks = 0;
 const ok = (cond, msg) => { assert.ok(cond, msg); checks++; };
@@ -162,6 +183,47 @@ for (const n of [1, 2, 3, 6]) {
     room.assignTerritories();
     ok(room.actors[0].x === room.actors[0].station,
         'a stranded actor should be snapped to its station');
+}
+
+// ---------------------------------------------------------------- walk cycles
+//
+// The regression this guards: a carrying clawd held ONE static pose, so it slid
+// across the floor with frozen legs. It showed up as "the refinery sprite does
+// not animate walking right", because the refinery's carrying leg happens to be
+// the rightward one — the mine carries leftward, which masked the same bug.
+
+function walkPoses({ carry, dir }) {
+    const room = fakeRoom({ kind: 'refinery', worldW: 114, zone: [44, 100], actors: [] });
+    room.floorY = 40;
+    const a = new Actor(room, { id: 'x', role: 'refinery', running: true });
+    a.x = dir > 0 ? 0 : 200;
+    a.queue = [{ to: dir > 0 ? 200 : 0, carry }];
+    const seen = new Set();
+    for (let i = 0; i < 40; i++) { a.update(40); seen.add(a.pose); }
+    return seen;
+}
+
+for (const dir of [1, -1]) {
+    const label = dir > 0 ? 'right' : 'left';
+
+    const plain = walkPoses({ carry: false, dir });
+    ok(plain.size > 1, `walking ${label}: pose never changed — animation frozen`);
+    ok(plain.has('walkA') && plain.has('walkB'),
+        `walking ${label}: expected both walk frames, saw ${[...plain]}`);
+
+    const hauling = walkPoses({ carry: true, dir });
+    ok(hauling.size > 1, `carrying ${label}: pose never changed — animation frozen`);
+    ok(hauling.has('carryA') && hauling.has('carryB'),
+        `carrying ${label}: expected both carry frames, saw ${[...hauling]}`);
+    ok(!hauling.has('carry'),
+        `carrying ${label}: fell back to the static carry pose`);
+}
+
+// facing must not affect which frames play
+{
+    const r = walkPoses({ carry: true, dir: 1 });
+    const l = walkPoses({ carry: true, dir: -1 });
+    ok(r.size === l.size, 'carry animation differs by direction — it should not');
 }
 
 console.log(`rooms check: ${checks} assertions passed`);

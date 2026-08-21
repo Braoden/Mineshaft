@@ -110,9 +110,8 @@ class Actor {
             const speed = (step.speed || 0.022) * dtMs;
             this.x += Math.sign(dx) * Math.min(speed, dist);
             this.walkPhase += dtMs;
-            const carrying = step.carry ? 'carry' : null;
-            if (carrying) this.show('carry');
-            else this.show(this.walkPhase % 320 < 160 ? 'walkA' : 'walkB');
+            const lead = this.walkPhase % 320 < 160;
+            this.show(step.carry ? (lead ? 'carryA' : 'carryB') : (lead ? 'walkA' : 'walkB'));
             return;
         }
 
@@ -567,4 +566,4 @@ class Room {
     }
 }
 
-window.MSRooms = { Room };
+window.MSRooms = { Room, Actor };

@@ -94,9 +94,18 @@ for (const role of ROLES) {
     // work poses must differ from each other, or the swing has no motion
     ok(JSON.stringify(poses.workUp) !== JSON.stringify(poses.workHit),
         `${role}: workUp and workHit are identical — no swing`);
-    // walk frames must differ, or the walk cycle is static
-    ok(JSON.stringify(poses.walkA) !== JSON.stringify(poses.walkB),
-        `${role}: walkA and walkB are identical — no walk cycle`);
+
+    // Every animated cycle needs two distinct frames. A carrying clawd used to
+    // hold one static pose, which slid it across the floor with frozen legs.
+    for (const [a, b] of [['walkA', 'walkB'], ['carryA', 'carryB']]) {
+        ok(poses[a] && poses[b], `${role}: missing ${a}/${b} frames`);
+        ok(JSON.stringify(poses[a]) !== JSON.stringify(poses[b]),
+            `${role}: ${a} and ${b} are identical — cycle would not animate`);
+    }
+    // and the carry cycle must actually differ from the plain walk, or the
+    // hauled load is invisible
+    ok(JSON.stringify(poses.carryA) !== JSON.stringify(poses.walkA),
+        `${role}: carryA is identical to walkA — nothing is being carried`);
 }
 
 // each role must be visually distinguishable by its hat
