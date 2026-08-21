@@ -128,6 +128,10 @@ type viewUsage struct {
 	// Limits is the full per-limit breakdown as shown by Claude Code's /usage
 	// (session, weekly_all, and model-scoped weekly limits).
 	Limits []usageLimit `json:"limits,omitempty"`
+	// Status says WHY OK is false, so the dashboard can distinguish a
+	// rate-limited upstream from missing credentials or a dead network
+	// instead of rendering a bare dash for all three.
+	Status string `json:"status,omitempty"`
 }
 
 type usageLimit struct {
@@ -141,8 +145,25 @@ type usageLimit struct {
 
 var usageCache struct {
 	sync.Mutex
-	data    viewUsage
-	fetched time.Time
+	data     viewUsage
+	fetched  time.Time
+	failures int // consecutive failed upstream fetches, drives the backoff
+}
+
+// usageRetryAfter returns how long to wait before hitting the usage endpoint
+// again. A healthy response is cached for a minute; failures back off
+// exponentially to a 15-minute ceiling. Without this a rate-limited upstream
+// gets retried every 60s by both the sampler and every open dashboard, which
+// is the surest way to stay rate limited.
+func usageRetryAfter(failures int) time.Duration {
+	if failures <= 0 {
+		return time.Minute
+	}
+	d := time.Minute << uint(min(failures, 4)) // 2, 4, 8, 16 -> capped below
+	if d > 15*time.Minute {
+		d = 15 * time.Minute
+	}
+	return d
 }
 
 // fetchUsage returns the Claude 5h-window usage, cached for 60s (including
@@ -150,22 +171,28 @@ var usageCache struct {
 func fetchUsage() viewUsage {
 	usageCache.Lock()
 	defer usageCache.Unlock()
-	if time.Since(usageCache.fetched) < time.Minute {
+	if time.Since(usageCache.fetched) < usageRetryAfter(usageCache.failures) {
 		return usageCache.data
 	}
 	usageCache.fetched = time.Now()
-	usageCache.data = queryOAuthUsage()
+	fresh := queryOAuthUsage()
+	if fresh.OK {
+		usageCache.failures = 0
+	} else {
+		usageCache.failures++
+	}
+	usageCache.data = fresh
 	return usageCache.data
 }
 
 func queryOAuthUsage() viewUsage {
 	home, err := os.UserHomeDir()
 	if err != nil {
-		return viewUsage{}
+		return viewUsage{Status: "no_credentials"}
 	}
 	raw, err := os.ReadFile(filepath.Join(home, ".claude", ".credentials.json"))
 	if err != nil {
-		return viewUsage{}
+		return viewUsage{Status: "no_credentials"}
 	}
 	var creds struct {
 		ClaudeAiOauth struct {
@@ -173,12 +200,12 @@ func queryOAuthUsage() viewUsage {
 		} `json:"claudeAiOauth"`
 	}
 	if err := json.Unmarshal(raw, &creds); err != nil || creds.ClaudeAiOauth.AccessToken == "" {
-		return viewUsage{}
+		return viewUsage{Status: "no_credentials"}
 	}
 
 	req, err := http.NewRequest(http.MethodGet, "https://api.anthropic.com/api/oauth/usage", nil)
 	if err != nil {
-		return viewUsage{}
+		return viewUsage{Status: "error"}
 	}
 	req.Header.Set("Authorization", "Bearer "+creds.ClaudeAiOauth.AccessToken)
 	req.Header.Set("anthropic-beta", "oauth-2025-04-20")
@@ -186,11 +213,17 @@ func queryOAuthUsage() viewUsage {
 	client := &http.Client{Timeout: 5 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		return viewUsage{}
+		return viewUsage{Status: "unreachable"}
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusTooManyRequests {
+		return viewUsage{Status: "rate_limited"}
+	}
+	if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
+		return viewUsage{Status: "unauthorized"}
+	}
 	if resp.StatusCode != http.StatusOK {
-		return viewUsage{}
+		return viewUsage{Status: fmt.Sprintf("http_%d", resp.StatusCode)}
 	}
 	var body struct {
 		FiveHour struct {
@@ -215,7 +248,7 @@ func queryOAuthUsage() viewUsage {
 		} `json:"limits"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
-		return viewUsage{}
+		return viewUsage{Status: "bad_response"}
 	}
 	limits := make([]usageLimit, 0, len(body.Limits))
 	for _, l := range body.Limits {
@@ -227,6 +260,7 @@ func queryOAuthUsage() viewUsage {
 	}
 	return viewUsage{
 		OK:              true,
+		Status:          "ok",
 		Utilization:     body.FiveHour.Utilization,
 		ResetsAt:        body.FiveHour.ResetsAt,
 		WeekUtilization: body.SevenDay.Utilization,

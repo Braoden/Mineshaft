@@ -48,6 +48,13 @@ function humanDuration(ms) {
     return `${s}s`;
 }
 
+// "3m ago" / "just now" — used to date a stale reading
+function timeAgo(ts) {
+    const ms = Date.now() - new Date(ts).getTime();
+    if (!isFinite(ms) || ms < 45000) return 'just now';
+    return `${humanDuration(ms)} ago`;
+}
+
 function clockText(d) {
     return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 }
@@ -204,13 +211,40 @@ function renderBurn() {
 
 // ---------------------------------------------------------------- usage cards
 
+// why the upstream usage call failed, in words rather than a bare dash
+const STATUS_TEXT = {
+    rate_limited:   'usage API rate limited — retrying with backoff',
+    no_credentials: 'no Claude credentials found',
+    unauthorized:   'credentials rejected by the usage API',
+    unreachable:    'usage API unreachable',
+    bad_response:   'unexpected response from the usage API',
+};
+
 function renderUsage() {
     const u = state.usage;
+    const chip = $('chip-usage');
+
     if (!u || !u.ok) {
-        $('hero-num').innerHTML = '—<small>remaining</small>';
-        $('hero-label').textContent = 'usage unavailable';
-        $('chip-usage').textContent = 'offline';
-        $('chip-usage').className = 'chip';
+        const reason = STATUS_TEXT[u && u.status]
+            || (u && u.status ? `usage API error (${u.status})` : 'usage unavailable');
+
+        // Prefer the last recorded sample over a blank dash: history is real
+        // data we already hold, and a stale number with a clear label beats
+        // showing nothing while the upstream is briefly unavailable.
+        const last = state.history.length ? state.history[state.history.length - 1] : null;
+        if (last) {
+            $('hero-num').innerHTML = `${Math.round(Math.max(0, 100 - last.pct))}<small>% remaining</small>`;
+            $('hero-label').textContent = `last reading ${timeAgo(last.ts)} · ${reason}`;
+            chip.textContent = 'stale';
+            chip.className = 'chip warn';
+        } else {
+            $('hero-num').innerHTML = '—<small>remaining</small>';
+            $('hero-label').textContent = reason;
+            chip.textContent = 'offline';
+            chip.className = 'chip';
+        }
+        renderChart();      // the recorded history is still worth drawing
+        renderBurn();
         return;
     }
 
@@ -220,7 +254,6 @@ function renderUsage() {
     $('hero-label').textContent = `${Math.round(used)}% of the 5-hour window used`;
 
     const sev = severityOf(used);
-    const chip = $('chip-usage');
     chip.textContent = sev === 'ok' ? 'normal' : sev === 'warn' ? 'warning' : 'critical';
     chip.className = 'chip' + (sev === 'ok' ? ' on' : sev === 'warn' ? ' warn' : ' crit');
 
@@ -490,8 +523,10 @@ async function boot() {
 
     // paint what we can before the (async) WebGL init
     try { applyState(await getJSON('/api/state')); } catch (_) { /* SSE will fill in */ }
-    await refreshUsage();
+    // history first: renderUsage falls back to the last sample when the
+    // upstream usage call is unavailable, so it needs the samples in hand
     await refreshHistory();
+    await refreshUsage();
 
     await initRooms();
     connect();
