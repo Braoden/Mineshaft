@@ -6,6 +6,11 @@
 // Write access is still decided by the SERVER from the target name (see
 // isWritableTarget in view_terminal.go); "shell" is the writable one.
 
+// Wrapped: this file and dashboard.js share the global scope, and both had a
+// top-level connect(). dashboard.js loads last, so its SSE connect() silently
+// replaced this one and the terminal never opened its socket.
+(function () {
+
 const THEME = {
     background: '#0d0e20',
     foreground: '#d7fff7',
@@ -120,3 +125,5 @@ function deactivateTerm() {
 }
 
 window.MSTerminal = { activate: activateTerm, deactivate: deactivateTerm };
+
+})();
