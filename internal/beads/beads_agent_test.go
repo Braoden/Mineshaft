@@ -568,3 +568,17 @@ esac
 		t.Fatalf("CreateOrReopenAgentBead did not use town BEADS_DIR for existing bead path; log:\n%s", logOutput)
 	}
 }
+
+// Agent beads are P2 tasks, so every other reaper stale-close predicate matches
+// them; ms:agent is the only thing keeping the reaper off them (mi-l7w). Losing
+// it auto-closes live agent beads and kills patrol await/state.
+func TestIsProtectedBeadCoversAgentBeads(t *testing.T) {
+	for _, label := range []string{"ms:agent", "ms:standing-orders", "ms:keep", "ms:role", "ms:rig"} {
+		if !IsProtectedBead(&Issue{Labels: []string{label}}) {
+			t.Errorf("label %q should be protected from automated status changes", label)
+		}
+	}
+	if IsProtectedBead(&Issue{Labels: []string{"ms:something-else"}}) {
+		t.Error("unrelated labels must not be protected")
+	}
+}

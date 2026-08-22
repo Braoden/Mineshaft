@@ -271,14 +271,14 @@ func IsAgentBead(issue *Issue) bool {
 
 // IsProtectedBead checks if a bead has any protection labels that should
 // prevent automated status changes (AutoClose, unassign on miner removal, etc.).
-// Protected labels: ms:standing-orders, ms:keep, ms:role, ms:rig.
+// Protected labels: ms:standing-orders, ms:keep, ms:role, ms:rig, ms:agent.
 func IsProtectedBead(issue *Issue) bool {
 	if issue == nil {
 		return false
 	}
 	for _, l := range issue.Labels {
 		switch l {
-		case "ms:standing-orders", "ms:keep", "ms:role", "ms:rig":
+		case "ms:standing-orders", "ms:keep", "ms:role", "ms:rig", "ms:agent":
 			return true
 		}
 	}

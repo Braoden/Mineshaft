@@ -732,7 +732,7 @@ func AutoClose(db *sql.DB, dbName string, staleAge time.Duration, dryRun bool) (
 		AND i.issue_type NOT IN ('epic', 'minecart')
 		AND i.id NOT IN (
 			SELECT DISTINCT l.issue_id FROM `+"`%s`"+`.labels l
-			WHERE l.label IN ('ms:standing-orders', 'ms:keep', 'ms:role', 'ms:rig')
+			WHERE l.label IN ('ms:standing-orders', 'ms:keep', 'ms:role', 'ms:rig', 'ms:agent')
 		)
 		AND i.id NOT IN (
 			SELECT DISTINCT d.issue_id FROM `+"`%s`"+`.dependencies d

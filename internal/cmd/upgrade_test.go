@@ -14,8 +14,8 @@ func TestGenerateCLAUDEMD(t *testing.T) {
 	if content == "" {
 		t.Fatal("generateCLAUDEMD returned empty string")
 	}
-	if content[0:10] != "# Mineshaft" {
-		t.Errorf("expected content to start with '# Mineshaft', got: %q", content[:10])
+	if content[0:11] != "# Mineshaft" {
+		t.Errorf("expected content to start with '# Mineshaft', got: %q", content[:11])
 	}
 
 	// Must contain identity anchoring instructions
